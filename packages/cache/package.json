@@ -1,0 +1,24 @@
+{
+  "name": "@megawin/cache",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.28.2",
+  "dependencies": {
+    "@megawin/shared": "workspace:*",
+    "lodash": "^4.17.23",
+    "redis": "^5.10.0"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@types/lodash": "^4.17.23",
+    "@types/node": "^25.2.1",
+    "typescript": "^5.9.3"
+  }
+}

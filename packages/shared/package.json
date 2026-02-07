@@ -1,0 +1,33 @@
+{
+  "name": "@megawin/shared",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsc --watch",
+    "check-types": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "exports": {
+    "./utils/*": {
+      "types": "./src/utils/*.ts",
+      "default": "./dist/utils/*.js"
+    },
+    "./types/*": {
+      "types": "./src/types/*.ts",
+      "default": "./dist/types/*.js"
+    },
+    "./mappers/*": {
+      "types": "./src/mappers/*.ts",
+      "default": "./dist/mappers/*.js"
+    }
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@types/node": "^25.2.1",
+    "typescript": "5.9.3"
+  }
+}
