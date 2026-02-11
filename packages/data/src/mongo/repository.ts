@@ -315,10 +315,11 @@ export abstract class MongoRepository<
   public async insertOne(
     doc: OptionalId<Document>,
     options?: InsertOneOptions
-  ): Promise<InsertOneResult<Document>> {
+  ): Promise<string> {
     await this.initBeforeUse();
 
-    return await this._collection.insertOne(doc, options);
+    const result = await this._collection.insertOne(doc, options);
+    return result.insertedId.toString();
   }
 
   /**

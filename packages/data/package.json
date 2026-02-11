@@ -12,6 +12,16 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "exports": {
+    "./mongo/*": {
+      "types": "./src/mongo/*.ts",
+      "default": "./dist/mongo/*.js"
+    },
+    "./types/*": {
+      "types": "./src/types/*.ts",
+      "default": "./dist/types/*.js"
+    }
+  },
   "dependencies": {
     "@megawin/shared": "workspace:*",
     "mongodb": "^7.1.0"

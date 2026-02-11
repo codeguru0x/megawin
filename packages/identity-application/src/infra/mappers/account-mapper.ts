@@ -1,0 +1,23 @@
+import { MongoMapper } from "@megawin/data/mongo/mapper";
+import { AccountEntity } from "@megawin/identity-domain/accounts/account";
+import { Document } from "mongodb";
+
+export class AccountMapper extends MongoMapper<Document, AccountEntity> {
+  constructor() {
+    super();
+  }
+
+  /**
+   * Map properties from document to AccountEntity
+   * @param doc - Document to map
+   * @returns AccountEntity mapped from document
+   */
+  protected mapProps(doc: Document): AccountEntity {
+    const { _id, ...rest } = doc as any;
+
+    return {
+      id: _id.toHexString(),
+      ...rest,
+    } as AccountEntity;
+  }
+}

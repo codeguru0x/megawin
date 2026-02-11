@@ -1,4 +1,12 @@
 packages:
   - apps/*
   - packages/*
-  - "!**/test/**"
+  - tooling/*
+  - '!**/test/**'
+
+ignoredBuiltDependencies:
+  - serverless
+  - sharp
+
+onlyBuiltDependencies:
+  - esbuild

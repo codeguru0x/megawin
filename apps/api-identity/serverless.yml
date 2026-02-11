@@ -1,0 +1,16 @@
+service: megawin-identity
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs24.x
+
+build:
+  esbuild:
+    configFile: ./esbuild.config.mjs
+
+functions:
+  - ${file(src/functions/account-endpoint.yml)}
+  - ${file(src/functions/tentant-endpoint.yml)}

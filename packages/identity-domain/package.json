@@ -1,0 +1,33 @@
+{
+  "name": "@megawin/identity-domain",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsc --watch",
+    "check-types": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "exports": {
+    "./accounts/*": {
+      "types": "./src/accounts/*.ts",
+      "default": "./dist/accounts/*.js"
+    },
+    "./tenants/*": {
+      "types": "./src/tenants/*.ts",
+      "default": "./dist/tenants/*.js"
+    },
+    "./roles/*": {
+      "types": "./src/roles/*.ts",
+      "default": "./dist/roles/*.js"
+    }
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@types/node": "^25.2.1",
+    "typescript": "5.9.3"
+  }
+}
