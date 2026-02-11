@@ -18,9 +18,10 @@ import { cn } from "@/lib/utils";
 import { getPreference } from "@/server/server-actions";
 
 import { AccountSwitcher } from "@/components/sidebar/account-switcher";
-import { LayoutControls } from "@/components/sidebar/layout-controls";
-import { SearchDialog } from "@/components/sidebar/search-dialog";
+/* import { LayoutControls } from "@/components/sidebar/layout-controls";
+import { SearchDialog } from "@/components/sidebar/search-dialog"; */
 import { ThemeSwitcher } from "@/components/sidebar/theme-switcher";
+import { QueryProvider } from "@/providers/query-provider";
 
 export default async function Layout({
   children,
@@ -57,7 +58,7 @@ export default async function Layout({
                 orientation="vertical"
                 className="mx-2 data-[orientation=vertical]:h-4"
               />
-              <SearchDialog />
+              {/*  <SearchDialog /> */}
             </div>
             <div className="flex items-center gap-2">
               {/*  <LayoutControls /> */}
@@ -66,7 +67,9 @@ export default async function Layout({
             </div>
           </div>
         </header>
-        <div className="h-full p-4 md:p-6">{children}</div>
+        <div className="h-full p-4 md:p-6">
+          <QueryProvider>{children}</QueryProvider>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

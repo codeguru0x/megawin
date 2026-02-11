@@ -59,15 +59,15 @@ export const sidebarItems: NavGroup[] = [
     items: [
       {
         title: "Thắng thua",
-        url: "/dashboard/default",
+        url: "/default",
         icon: LayoutDashboard,
       },
       {
         title: "Doanh thu",
-        url: "/dashboard/crm",
+        url: "/crm",
         icon: ChartBar,
       },
-      { title: "Chi tiêu", url: "/dashboard/finance", icon: Banknote },
+      { title: "Chi tiêu", url: "/finance", icon: Banknote },
     ],
   },
   {
@@ -76,17 +76,17 @@ export const sidebarItems: NavGroup[] = [
     items: [
       {
         title: "Công ty",
-        url: "/dashboard/company",
+        url: "/accounts/company",
         icon: Building2,
       },
       {
         title: "Đối tác",
-        url: "/dashboard/tenant",
+        url: "/accounts/tenants",
         icon: Briefcase,
       },
       {
         title: "Người chơi",
-        url: "/dashboard/player",
+        url: "/accounts/players",
         icon: User,
       },
     ],
