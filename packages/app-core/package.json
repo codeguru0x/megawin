@@ -14,25 +14,33 @@
   "author": "",
   "license": "ISC",
   "exports": {
-    "./application/usecase": {
-      "types": "./src/application/usecase/index.ts",
-      "default": "./dist/application/usecase/index.js"
+    "./use-cases": {
+      "types": "./src/use-cases/index.ts",
+      "default": "./dist/use-cases/index.js"
     },
-    "./application/usecase/*": {
-      "types": "./src/application/usecase/*.ts",
-      "default": "./dist/application/usecase/*.js"
+    "./aws": {
+      "types": "./src/aws/index.ts",
+      "default": "./dist/aws/index.js"
     },
-    "./application/*": {
-      "types": "./src/application/*.ts",
-      "default": "./dist/application/*.js"
+    "./aws/cognito": {
+      "types": "./src/aws/cognito/index.ts",
+      "default": "./dist/aws/cognito/index.js"
+    },
+    "./aws/kinesis": {
+      "types": "./src/aws/kinesis/index.ts",
+      "default": "./dist/aws/kinesis/index.js"
+    },
+    "./aws/sqs": {
+      "types": "./src/aws/sqs/index.ts",
+      "default": "./dist/aws/sqs/index.js"
     },
     "./lambda": {
       "types": "./src/lambda/index.ts",
       "default": "./dist/lambda/index.js"
     },
-    "./lambda/*": {
-      "types": "./src/lambda/*.ts",
-      "default": "./dist/lambda/*.js"
+    "./lambda/middleware": {
+      "types": "./src/lambda/middleware/index.ts",
+      "default": "./dist/lambda/middleware/index.js"
     },
     "./lambda/http": {
       "types": "./src/lambda/http/index.ts",
@@ -42,13 +50,9 @@
       "types": "./src/lambda/http/*.ts",
       "default": "./dist/lambda/http/*.js"
     },
-    "./lambda/middleware": {
-      "types": "./src/lambda/middleware/index.ts",
-      "default": "./dist/lambda/middleware/index.js"
-    },
-    "./lambda/middleware/*": {
-      "types": "./src/lambda/middleware/*.ts",
-      "default": "./dist/lambda/middleware/*.js"
+    "./next": {
+      "types": "./src/next/index.ts",
+      "default": "./dist/next/index.js"
     }
   },
   "imports": {
@@ -59,12 +63,25 @@
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
-    "@types/node": "^25.2.1",
+    "@types/node": "^25.2.3",
+    "next": "^16.1.6",
     "typescript": "5.9.3",
     "vitest": "latest"
   },
   "dependencies": {
+    "@megawin/shared": "workspace:*",
+    "@aws-sdk/client-cognito-identity-provider": "*",
+    "@aws-sdk/client-kinesis": "*",
+    "@aws-sdk/client-sqs": "*",
     "@middy/core": "^7.0.2",
     "zod": "^4.3.6"
+  },
+  "peerDependencies": {
+    "next": ">=15.0.0"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    }
   }
 }

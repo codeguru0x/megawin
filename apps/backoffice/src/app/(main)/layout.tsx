@@ -9,12 +9,12 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { users } from "@/data/users";
 import {
   SIDEBAR_COLLAPSIBLE_VALUES,
   SIDEBAR_VARIANT_VALUES,
 } from "@/lib/preferences/layout";
 import { cn } from "@/lib/utils";
+import { requireSession } from "@/lib/auth-server";
 import { getPreference } from "@/server/server-actions";
 
 import { AccountSwitcher } from "@/components/sidebar/account-switcher";
@@ -26,6 +26,8 @@ import { QueryProvider } from "@/providers/query-provider";
 export default async function Layout({
   children,
 }: Readonly<{ children: ReactNode }>) {
+  // Validate session – redirect sang /login nếu chưa đăng nhập
+  await requireSession();
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
   const [variant, collapsible] = await Promise.all([
@@ -63,7 +65,7 @@ export default async function Layout({
             <div className="flex items-center gap-2">
               {/*  <LayoutControls /> */}
               <ThemeSwitcher />
-              <AccountSwitcher users={users} />
+              <AccountSwitcher />
             </div>
           </div>
         </header>

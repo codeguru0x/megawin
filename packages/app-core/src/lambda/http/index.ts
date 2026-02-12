@@ -1,25 +1,12 @@
 /**
- * Entrypoint cho Lambda HTTP (API Gateway) trong app-core.
- * Giúp import ngắn gọn, rõ ràng:
+ * Lambda HTTP helpers – authorization context & check.
+ * Dùng bởi middleware (authorizationMiddleware) để check quyền.
  *
  * import {
- *   ApiGatewayUseCase,
- *   AuthorizedApiGatewayUseCase,
+ *   getAuthContextFromApiGatewayEvent,
+ *   checkAuthorization,
  * } from "@megawin/app-core/lambda/http";
  */
-
-export {
-  type ApiGatewayParsedInput,
-  type ApiGatewayParsedInputWithAuthorizer,
-  type ApiGatewayEventWithValidated,
-  type ApiGatewayResponse,
-  parseApiGatewayBody,
-  parseApiGatewayEventToInput,
-  useCaseErrorToStatusCode,
-  toApiGatewayResponse,
-  ApiGatewayUseCase,
-  AuthorizedApiGatewayUseCase,
-} from "./usecase-api-gateway";
 
 export {
   getAuthContextFromApiGatewayEvent,

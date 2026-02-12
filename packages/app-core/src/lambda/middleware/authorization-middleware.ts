@@ -7,6 +7,7 @@
  * Thứ tự chuẩn: Authorizer (Cognito) → authorizationMiddleware → validatorZodMiddleware → handler (use case).
  */
 
+import { appErrorToStatusCode } from "@megawin/shared/errors";
 import {
   getAuthContextFromApiGatewayEvent,
   checkAuthorization,
@@ -38,7 +39,7 @@ export function authorizationMiddleware(
       const auth = getAuthContextFromApiGatewayEvent(event, adapterOptions);
       const error = checkAuthorization(auth, requirements);
       if (error) {
-        const statusCode = error.code === "UNAUTHORIZED" ? 401 : 403;
+        const statusCode = appErrorToStatusCode(error);
         request.earlyResponse = {
           statusCode,
           headers: JSON_HEADERS,
@@ -46,7 +47,7 @@ export function authorizationMiddleware(
             error: {
               code: error.code,
               message: error.message,
-              details: error.details,
+              ...(error.details !== undefined && { details: error.details }),
             },
           }),
         };

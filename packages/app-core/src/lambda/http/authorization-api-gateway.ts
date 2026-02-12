@@ -6,10 +6,7 @@
  * - roles: danh sách role cho phép (vd từ cognito:groups)
  */
 
-import {
-  USE_CASE_ERROR_CODES,
-  type UseCaseError,
-} from "#application/usecase/usecase-base";
+import { APP_ERROR_CODES, type AppError } from "@megawin/shared/errors";
 
 // ============ Auth context (sau Authorizer) ============
 
@@ -175,26 +172,26 @@ export function getAuthContextFromApiGatewayEvent(
 
 /**
  * Kiểm tra auth context có thỏa requirements không.
- * Trả về UseCaseError (FORBIDDEN) nếu không đủ quyền; void nếu OK.
+ * Trả về AppError (FORBIDDEN) nếu không đủ quyền; void nếu OK.
  */
 export function checkAuthorization(
   authContext: AuthContext | null,
   requirements: AuthRequirements
-): void | UseCaseError {
+): void | AppError {
   const { access, scope, roles: allowedRoles } = requirements;
 
   if (access === "public") {
     if (scope === undefined && !allowedRoles?.length) return;
     if (!authContext) {
       return {
-        code: USE_CASE_ERROR_CODES.FORBIDDEN,
+        code: APP_ERROR_CODES.FORBIDDEN,
         message: "This action requires authentication",
       };
     }
   } else {
     if (!authContext) {
       return {
-        code: USE_CASE_ERROR_CODES.UNAUTHORIZED,
+        code: APP_ERROR_CODES.UNAUTHORIZED,
         message: "Authentication required",
       };
     }
@@ -209,7 +206,7 @@ export function checkAuthorization(
       case "internal":
         if (!isInternal) {
           return {
-            code: USE_CASE_ERROR_CODES.FORBIDDEN,
+            code: APP_ERROR_CODES.FORBIDDEN,
             message: "Internal account required",
           };
         }
@@ -217,7 +214,7 @@ export function checkAuthorization(
       case "player":
         if (!hasTenant) {
           return {
-            code: USE_CASE_ERROR_CODES.FORBIDDEN,
+            code: APP_ERROR_CODES.FORBIDDEN,
             message: "Tenant context required",
           };
         }
@@ -225,7 +222,7 @@ export function checkAuthorization(
       case "agent":
         if (!isInternal || !hasTenant) {
           return {
-            code: USE_CASE_ERROR_CODES.FORBIDDEN,
+            code: APP_ERROR_CODES.FORBIDDEN,
             message: "Internal account with tenant context required",
           };
         }
@@ -237,7 +234,7 @@ export function checkAuthorization(
     const hasRole = allowedRoles.some((r) => auth.roles.includes(r));
     if (!hasRole) {
       return {
-        code: USE_CASE_ERROR_CODES.FORBIDDEN,
+        code: APP_ERROR_CODES.FORBIDDEN,
         message: "Insufficient permissions",
         details: { requiredRoles: allowedRoles },
       };

@@ -25,6 +25,10 @@
     "./mappers/*": {
       "types": "./src/mappers/*.ts",
       "default": "./dist/mappers/*.js"
+    },
+    "./errors": {
+      "types": "./src/errors/index.ts",
+      "default": "./dist/errors/index.js"
     }
   },
   "devDependencies": {

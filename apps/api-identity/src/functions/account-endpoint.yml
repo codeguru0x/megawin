@@ -1,6 +1,6 @@
-hello:
-  handler: handler.hello
+create-company-user:
+  handler: src/handlers/create-company-user.handler
   events:
     - httpApi:
-        path: /
-        method: get
+        path: /accounts/company
+        method: post

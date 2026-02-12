@@ -1,42 +1,36 @@
 /**
- * Middy onError: map lỗi (HTTP error, UseCaseError) thành API Gateway response.
- * Dùng cùng httpErrorHandler của Middy hoặc thay thế để format body JSON thống nhất.
+ * Middy onError: map lỗi (HTTP error, AppException, AppError) thành API Gateway response.
+ * Sử dụng appErrorToStatusCode từ @megawin/shared/errors – hỗ trợ custom statusCode trên error.
  */
 
 import {
-  type UseCaseError,
-  isUseCaseError,
-  USE_CASE_ERROR_CODES,
-} from "#application/usecase/usecase-base";
-import { useCaseErrorToStatusCode } from "#lambda/http/usecase-api-gateway";
+  type AppError,
+  isAppError,
+  AppException,
+  APP_ERROR_CODES,
+  appErrorToStatusCode,
+} from "@megawin/shared/errors";
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
-/** Error có statusCode (vd từ http-errors) hoặc UseCaseError. */
-type HttpLikeError = Error & {
+interface HttpLikeError {
   statusCode?: number;
-  expose?: boolean;
-};
+  message?: string;
+}
 
-/**
- * onError middleware: trả về response body dạng JSON { error: { code, message, details? } }
- * và statusCode từ useCaseErrorToStatusCode (nếu là UseCaseError) hoặc error.statusCode (mặc định 500).
- */
 export function httpErrorHandlerUseCaseFormat() {
   return {
     onError: (request: { error: unknown; response?: unknown }) => {
       const err = request.error;
       let statusCode = 500;
-      let body: { error: UseCaseError } = {
-        error: {
-          code: USE_CASE_ERROR_CODES.INTERNAL,
-          message: err instanceof Error ? err.message : "Unknown error",
-          details: err,
-        },
-      };
+      let body: { error: AppError };
 
-      if (isUseCaseError(err)) {
-        statusCode = useCaseErrorToStatusCode(err.code);
+      if (err instanceof AppException) {
+        const appError = err.toError();
+        statusCode = appErrorToStatusCode(appError);
+        body = { error: appError };
+      } else if (isAppError(err)) {
+        statusCode = appErrorToStatusCode(err);
         body = { error: err };
       } else if (err && typeof err === "object" && "statusCode" in err) {
         const httpErr = err as HttpLikeError;
@@ -45,9 +39,17 @@ export function httpErrorHandlerUseCaseFormat() {
           error: {
             code:
               statusCode >= 500
-                ? USE_CASE_ERROR_CODES.INTERNAL
-                : USE_CASE_ERROR_CODES.VALIDATION,
+                ? APP_ERROR_CODES.INTERNAL
+                : APP_ERROR_CODES.BAD_REQUEST,
             message: httpErr.message ?? "Error",
+            details: err,
+          },
+        };
+      } else {
+        body = {
+          error: {
+            code: APP_ERROR_CODES.INTERNAL,
+            message: err instanceof Error ? err.message : "Unknown error",
             details: err,
           },
         };
