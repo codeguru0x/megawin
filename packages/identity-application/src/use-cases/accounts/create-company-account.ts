@@ -5,8 +5,12 @@
  * Execute: tạo user Cognito + gán groups.
  */
 
-import { NextApiUseCase } from "@megawin/app-core/use-cases";
-import { APP_ERROR_CODES, AppException, type AppError } from "@megawin/shared/errors";
+import { NextApiUseCase } from "@megawin/next/server";
+import {
+  APP_ERROR_CODES,
+  AppException,
+  type AppError,
+} from "@megawin/shared/errors";
 import {
   adminCreateAccount,
   adminAddUserToGroup,
@@ -45,7 +49,7 @@ export class CreateCompanyAccountUseCase extends NextApiUseCase<
     }
 
     const invalidRoles = input.roles.filter(
-      (r) => !ALLOWED_ROLES.includes(r as (typeof ALLOWED_ROLES)[number]),
+      (r) => !ALLOWED_ROLES.includes(r as (typeof ALLOWED_ROLES)[number])
     );
     if (invalidRoles.length > 0) {
       return {
@@ -57,7 +61,7 @@ export class CreateCompanyAccountUseCase extends NextApiUseCase<
   }
 
   protected async execute(
-    input: CreateCompanyAccountInput,
+    input: CreateCompanyAccountInput
   ): Promise<CreateCompanyAccountOutput> {
     const result = await adminCreateAccount({
       username: input.username,
@@ -74,8 +78,8 @@ export class CreateCompanyAccountUseCase extends NextApiUseCase<
 
     await Promise.all(
       input.roles.map((role) =>
-        adminAddUserToGroup({ username: userId, groupName: role }),
-      ),
+        adminAddUserToGroup({ username: userId, groupName: role })
+      )
     );
 
     return {

@@ -11,13 +11,15 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 
+import { env } from "@/env";
+
 export const auth = betterAuth({
   /**
    * BETTER_AUTH_SECRET – bắt buộc, dùng để ký session.
    * BETTER_AUTH_URL – base URL của app (auto-detected trong production).
    */
-  secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL,
+  secret: env.BETTER_AUTH_SECRET,
+  baseURL: env.BETTER_AUTH_URL,
 
   /**
    * AWS Cognito social provider.
@@ -26,11 +28,10 @@ export const auth = betterAuth({
    */
   socialProviders: {
     cognito: {
-      clientId: process.env.COGNITO_CLIENT_ID as string,
-      clientSecret: process.env.COGNITO_CLIENT_SECRET as string,
-      domain: process.env.COGNITO_DOMAIN as string,
-      region: process.env.COGNITO_REGION as string,
-      userPoolId: process.env.COGNITO_USERPOOL_ID as string,
+      clientId: env.COGNITO_CLIENT_ID,
+      domain: env.COGNITO_DOMAIN,
+      region: env.COGNITO_REGION,
+      userPoolId: env.COGNITO_USERPOOL_ID,
     },
   },
 
@@ -41,7 +42,7 @@ export const auth = betterAuth({
     /** Cookie-based session (default). */
     cookieCache: {
       enabled: true,
-      maxAge: 5 * 60, // Cache session in cookie for 5 minutes
+      maxAge: 60 * 60, // Cache session in cookie for 60 minutes
     },
   },
 

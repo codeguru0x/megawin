@@ -6,10 +6,7 @@
 
 import type { NextRequest } from "next/server";
 
-import {
-  createApiRouteBuilder,
-  type RouteSession,
-} from "@megawin/app-core/next";
+import { createApiRouteBuilder, type RouteSession } from "@megawin/next/server";
 import { auth } from "@/lib/auth";
 
 /**
@@ -35,16 +32,18 @@ async function getSession(req: NextRequest): Promise<RouteSession | null> {
  * withApi – fluent builder cho tất cả API routes của backoffice.
  *
  * @example
+ * // Auth required + roles
  * export const POST = withApi()
- *   .auth({ required: true, roles: ["Admin"] })
+ *   .auth({ roles: ["Admin"] })
  *   .body(createAccountSchema)
  *   .handler(async ({ body, session }) => {
  *     const useCase = new CreateCompanyAccountUseCase();
  *     return useCase.run(body, { successStatus: 201 });
  *   });
  *
+ * // Auth required
  * export const GET = withApi()
- *   .auth({ required: true })
+ *   .auth()
  *   .query(listQuerySchema)
  *   .handler(async ({ query }) => {
  *     const useCase = new ListCompanyAccountsUseCase();

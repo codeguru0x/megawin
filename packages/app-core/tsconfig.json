@@ -5,8 +5,7 @@
     "outDir": "dist",
     "paths": {
       "#application/*": ["./src/application/*"],
-      "#lambda/*": ["./src/lambda/*"],
-      "#next/*": ["./src/next/*"]
+      "#lambda/*": ["./src/lambda/*"]
     }
   },
   "include": ["src"],

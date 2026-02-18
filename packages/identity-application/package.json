@@ -28,6 +28,7 @@
     "@megawin/identity-domain": "workspace:*",
     "@megawin/shared": "workspace:*",
     "@megawin/app-core": "workspace:*",
+    "@megawin/next": "workspace:*",
     "lodash": "^4.17.23",
     "mongodb": "^7.1.0"
   },

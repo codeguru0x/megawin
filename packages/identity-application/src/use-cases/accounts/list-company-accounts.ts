@@ -5,7 +5,7 @@
  * Output: danh sách accounts + paginationToken.
  */
 
-import { NextApiUseCase } from "@megawin/app-core/use-cases";
+import { NextApiUseCase } from "@megawin/next/server";
 import { adminListUsers } from "@megawin/app-core/aws/cognito";
 
 // ============ DTO ============
@@ -34,7 +34,7 @@ export class ListCompanyAccountsUseCase extends NextApiUseCase<
   ListCompanyAccountsOutput
 > {
   protected async execute(
-    input: ListCompanyAccountsInput,
+    input: ListCompanyAccountsInput
   ): Promise<ListCompanyAccountsOutput> {
     const result = await adminListUsers({
       limit: input.limit,

@@ -1,0 +1,45 @@
+{
+  "name": "@megawin/next",
+  "version": "1.0.0",
+  "description": "Next.js App Router v16 utilities – API route builder, REST client, standardized responses",
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./src/server/index.ts",
+      "default": "./dist/server/index.js"
+    },
+    "./client": {
+      "types": "./src/client/index.ts",
+      "default": "./dist/client/index.js"
+    }
+  },
+  "dependencies": {
+    "@megawin/shared": "workspace:*",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@megawin/vitest-config": "workspace:*",
+    "@types/node": "^25.2.3",
+    "next": "^16.1.6",
+    "typescript": "5.9.3",
+    "vitest": "latest"
+  },
+  "peerDependencies": {
+    "next": ">=15.0.0"
+  },
+  "packageManager": "pnpm@10.29.3"
+}

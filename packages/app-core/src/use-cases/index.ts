@@ -54,6 +54,3 @@ export { SnsUseCase } from "./sns";
 
 /** Step Functions */
 export { StepFunctionUseCase } from "./step-function";
-
-/** Next.js API Route */
-export { NextApiUseCase, toNextResponse } from "./next-api";

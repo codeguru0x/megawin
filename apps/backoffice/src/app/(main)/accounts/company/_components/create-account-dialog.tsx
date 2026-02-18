@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { apiClient, ApiClientError } from "@megawin/next/client";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,12 +23,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { companyAccountRoles, type CompanyAccount } from "./config";
+import { COMPANY_ACCOUNT_ROLES } from "../_lib/constants";
+import type { CreateCompanyAccountResponse } from "../_lib/types";
 
 const CreateAccountSchema = z.object({
   username: z.string().min(3, { message: "Tên tài khoản tối thiểu 3 ký tự." }),
-  password: z.string().min(6, { message: "Mật khẩu tối thiểu 6 ký tự." }),
-  roles: z.array(z.enum(companyAccountRoles)).min(1, { message: "Vui lòng chọn ít nhất 1 quyền." }),
+  password: z.string().min(8, { message: "Mật khẩu tối thiểu 8 ký tự." }),
+  roles: z.array(z.string()).min(1, { message: "Vui lòng chọn ít nhất 1 quyền." }),
 });
 
 type CreateAccountValues = z.infer<typeof CreateAccountSchema>;
@@ -35,49 +37,47 @@ type CreateAccountValues = z.infer<typeof CreateAccountSchema>;
 export function CreateAccountDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [pending, setPending] = useState(false);
 
   const form = useForm<CreateAccountValues>({
     resolver: zodResolver(CreateAccountSchema),
     defaultValues: {
       username: "",
       password: "",
-      roles: ["staff"],
+      roles: ["Staff"],
     },
   });
 
-  const onSubmit = async (values: CreateAccountValues) => {
-    setPending(true);
-
-    // TODO: Gọi API tạo tài khoản thực tế (React Query mutation)
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    const newAccount: CompanyAccount = {
-      id: `${Date.now()}`,
-      username: values.username,
-      roles: values.roles,
-      status: "active",
-      mfaEnabled: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    queryClient.setQueryData<CompanyAccount[]>(["company", "accounts"], (old) =>
-      old ? [newAccount, ...old] : [newAccount],
-    );
-
-    setPending(false);
-    setOpen(false);
-
-    toast.success("Tạo tài khoản công ty thành công (mock).", {
-      description: (
-        <span className="text-xs">
-          Tài khoản: <strong>{values.username}</strong> - Quyền:{" "}
-          <strong>{values.roles.join(", ")}</strong>
-        </span>
+  const mutation = useMutation({
+    mutationFn: (values: CreateAccountValues) =>
+      apiClient.post<CreateCompanyAccountResponse>(
+        "/accounts/company",
+        values,
       ),
-    });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["company", "accounts"] });
+      setOpen(false);
+      form.reset();
 
-    form.reset();
+      toast.success("Tạo tài khoản công ty thành công.", {
+        description: (
+          <span className="text-xs">
+            Tài khoản: <strong>{data.username}</strong> - Quyền:{" "}
+            <strong>{data.roles.join(", ")}</strong>
+          </span>
+        ),
+      });
+    },
+    onError: (error) => {
+      if (error instanceof ApiClientError) {
+        toast.error(error.message);
+      } else {
+        toast.error("Đã xảy ra lỗi khi tạo tài khoản.");
+      }
+    },
+  });
+
+  const onSubmit = (values: CreateAccountValues) => {
+    mutation.mutate(values);
   };
 
   return (
@@ -130,7 +130,7 @@ export function CreateAccountDialog() {
                 <FormItem>
                   <FormLabel>Quyền</FormLabel>
                   <div className="space-y-1">
-                    {companyAccountRoles.map((role) => {
+                    {COMPANY_ACCOUNT_ROLES.map((role) => {
                       const checked = Array.isArray(field.value) && field.value.includes(role);
                       return (
                         <label key={role} className="flex items-center gap-2 text-sm">
@@ -161,12 +161,12 @@ export function CreateAccountDialog() {
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
-                disabled={pending}
+                disabled={mutation.isPending}
               >
                 Huỷ
               </Button>
-              <Button type="submit" disabled={pending}>
-                {pending ? "Đang tạo..." : "Tạo tài khoản"}
+              <Button type="submit" disabled={mutation.isPending}>
+                {mutation.isPending ? "Đang tạo..." : "Tạo tài khoản"}
               </Button>
             </DialogFooter>
           </form>
@@ -175,4 +175,3 @@ export function CreateAccountDialog() {
     </Dialog>
   );
 }
-

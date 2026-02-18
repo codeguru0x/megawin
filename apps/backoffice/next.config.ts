@@ -1,11 +1,13 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import "./src/env";
+
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   reactCompiler: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
   experimental: {
-    // Tree-shake large packages so only used exports are bundled (best practice for icons/charts)
     optimizePackageImports: [
       "lucide-react",
       "recharts",

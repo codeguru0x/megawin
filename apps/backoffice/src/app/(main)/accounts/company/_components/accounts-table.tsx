@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@megawin/next/client";
 
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
@@ -9,30 +10,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 
 import { companyAccountsColumns } from "./columns";
-import { companyAccountSchema, type CompanyAccount } from "./config";
-
-async function fetchCompanyAccounts(): Promise<CompanyAccount[]> {
-  const res = await fetch("/api/accounts/company", {
-    method: "GET",
-  });
-
-  if (!res.ok) {
-    throw new Error("Không tải được danh sách tài khoản công ty.");
-  }
-
-  const json = await res.json();
-  const parsed = companyAccountSchema.array().parse(json);
-  return parsed;
-}
+import type { CompanyAccount } from "../_lib/schema";
+import type { ListCompanyAccountsResponse } from "../_lib/types";
 
 export function CompanyAccountsTable() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["company", "accounts"],
-    queryFn: fetchCompanyAccounts,
+    queryFn: () =>
+      apiClient.get<ListCompanyAccountsResponse>("/accounts/company"),
   });
 
   const table = useDataTableInstance<CompanyAccount, unknown>({
-    data: data ?? [],
+    data: data?.accounts ?? [],
     columns: companyAccountsColumns,
     enableRowSelection: true,
   });
@@ -49,7 +38,7 @@ export function CompanyAccountsTable() {
       </CardHeader>
       <CardContent className="flex size-full flex-col gap-4">
         {error && (
-          <p className="text-destructive text-sm">{(error as Error).message}</p>
+          <p className="text-destructive text-sm">{error.message}</p>
         )}
         <div className="overflow-hidden rounded-md border">
           {isLoading ? (
