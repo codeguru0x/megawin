@@ -1,16 +1,15 @@
-export interface ListCompanyAccountsInput {
-  limit?: number;
-  paginationToken?: string;
-}
+import type { AccountStatus, CompanyRole } from "@megawin/identity-domain/accounts/account";
 
 export interface CompanyAccountItem {
+  accountId: string;
   username: string;
-  status: string;
+  displayName: string;
+  status: AccountStatus;
+  roles: CompanyRole[];
   createdAt: string;
-  email?: string;
+  updatedAt: string;
 }
 
 export interface ListCompanyAccountsOutput {
   accounts: CompanyAccountItem[];
-  paginationToken?: string;
 }

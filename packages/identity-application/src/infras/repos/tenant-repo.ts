@@ -3,6 +3,7 @@ import {
   TenantApp,
   TenantJwksAssertionConfig,
   TenantStatus,
+  TenantOption,
 } from "@megawin/identity-domain/tenants/tenant";
 import { IdentityBaseRepo } from "./identity-base-repo";
 import { TenantMapper } from "../mappers/tenant-mapper";
@@ -13,98 +14,128 @@ export class TenantRepository extends IdentityBaseRepo<
 > {
   constructor() {
     super({
-      collName: "accounts",
+      collName: "tenants",
       dataMapper: new TenantMapper(),
     });
   }
 
-  /**
-   * Tạo tenant mới.
-   * @param tenantId - Id của tenant.
-   * @param displayName - Tên của tenant.
-   * @param description - Mô tả của tenant.
-   * @param sso - Config của SSO.
-   * @param app - Config của app.
-   * @returns
-   */
   public async createTenant({
     tenantId,
     displayName,
     description,
+    apiKey,
     sso,
     app,
   }: {
     tenantId: string;
     displayName: string;
     description?: string;
-    sso: TenantJwksAssertionConfig;
+    apiKey: string;
+    sso: Pick<TenantJwksAssertionConfig, "jwksUrl"> &
+      Partial<Pick<TenantJwksAssertionConfig, "clockSkewSec" | "maxTtlSec" | "replayWindowSec">>;
     app: TenantApp;
   }): Promise<TenantEntity | null> {
-    // tenant id là unique và lowercase
-    const tenantIdLowercase = tenantId.toLowerCase();
+    const tenantIdLower = tenantId.toLowerCase();
+    const now = new Date();
 
     return await this.findOneAndUpdate(
-      {
-        tenantId: tenantIdLowercase,
-      },
+      { tenantId: tenantIdLower },
       {
         $setOnInsert: {
-          displayName: displayName,
+          displayName,
           description: description ?? "",
-          // Khi mới tạo thì disable.
-          status: TenantStatus.DISABLED,
+          status: TenantStatus.Disabled,
+          apiKey,
+          apiKeyLastRotatedAt: now,
           sso: {
-            issuer: tenantIdLowercase,
+            issuer: tenantIdLower,
             jwksUrl: sso.jwksUrl,
             clockSkewSec: sso.clockSkewSec ?? 5,
             maxTtlSec: sso.maxTtlSec ?? 120,
             replayWindowSec: sso.replayWindowSec ?? 300,
           },
-          app: {
-            allowedOrigins: app.allowedOrigins,
-          },
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          app: { allowedOrigins: app.allowedOrigins },
+          createdAt: now,
+          updatedAt: now,
         },
       },
-      {
-        upsert: true,
-        returnDocument: "after",
-      }
+      { upsert: true, returnDocument: "after" },
     );
   }
 
-  /**
-   * Lấy tenant theo Id.
-   * @param tenantId - Id của tenant.
-   * @param projection - Projection của tenant.
-   * @returns
-   */
   public async getTenantById(
     tenantId: string,
-    projection?: object
+    projection?: object,
   ): Promise<TenantEntity | null> {
-    return await this.findOne(
-      {
-        tenantId: tenantId,
-      },
-      {
-        projection: projection,
-      }
+    return await this.findOne({ tenantId }, { projection });
+  }
+
+  public async getAllTenants(): Promise<TenantEntity[]> {
+    return await this.findAll({ sort: { createdAt: -1 } });
+  }
+
+  public async getTenantOptions(): Promise<TenantOption[]> {
+    const tenants = await this.findAll({
+      projection: { tenantId: 1, displayName: 1, status: 1 },
+      sort: { tenantId: 1 },
+    });
+    return tenants.map(({ tenantId, displayName, status }) => ({
+      tenantId,
+      displayName,
+      status,
+    }));
+  }
+
+  public async updateTenantStatus(
+    tenantId: string,
+    status: TenantStatus,
+  ): Promise<TenantEntity | null> {
+    return await this.findOneAndUpdate(
+      { tenantId },
+      { $set: { status, updatedAt: new Date() } },
+      { returnDocument: "after" },
     );
   }
 
-  /**
-   * Lấy tất cả tenants.
-   * @param projection - Projection của tenants.
-   * @returns
-   */
-  public async getAllTenants(projection?: object): Promise<TenantEntity[]> {
-    return await this.findAll({
-      projection: projection,
-      sort: {
-        tenantId: 1,
+  public async regenerateApiKey(
+    tenantId: string,
+    newApiKey: string,
+  ): Promise<TenantEntity | null> {
+    const now = new Date();
+    return await this.findOneAndUpdate(
+      { tenantId },
+      {
+        $set: {
+          apiKey: newApiKey,
+          apiKeyLastRotatedAt: now,
+          updatedAt: now,
+        },
       },
-    });
+      { returnDocument: "after" },
+    );
+  }
+
+  public async updateTenant(
+    tenantId: string,
+    fields: {
+      displayName?: string;
+      description?: string;
+      jwksUrl?: string;
+      allowedOrigins?: string[];
+    },
+  ): Promise<TenantEntity | null> {
+    const $set: Record<string, unknown> = { updatedAt: new Date() };
+
+    if (fields.displayName !== undefined) $set.displayName = fields.displayName;
+    if (fields.description !== undefined) $set.description = fields.description;
+    if (fields.jwksUrl !== undefined) $set["sso.jwksUrl"] = fields.jwksUrl;
+    if (fields.allowedOrigins !== undefined)
+      $set["app.allowedOrigins"] = fields.allowedOrigins;
+
+    return await this.findOneAndUpdate(
+      { tenantId },
+      { $set },
+      { returnDocument: "after" },
+    );
   }
 }

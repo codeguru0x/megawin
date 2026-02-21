@@ -2,16 +2,23 @@
  * Use case cho Next.js API Route – trả NextResponse chuẩn ApiResponse format.
  *
  * @example
+ * // With input:
  * class CreateUserUseCase extends NextApiUseCase<CreateUserDto, UserOutput> {
  *   protected async execute(input: CreateUserDto) {
- *     // throw AppException.conflict("Username taken");
  *     return { id: "1", name: "John" };
  *   }
  * }
- *
- * // Route handler:
  * const useCase = new CreateUserUseCase();
  * return useCase.run(dto, { successStatus: 201 });
+ *
+ * // Without input (I defaults to void):
+ * class ListUsersUseCase extends NextApiUseCase<void, UserOutput[]> {
+ *   protected async execute() {
+ *     return [{ id: "1", name: "John" }];
+ *   }
+ * }
+ * const listUseCase = new ListUsersUseCase();
+ * return listUseCase.run(); // no input needed
  */
 
 import { NextResponse } from "next/server";
@@ -51,7 +58,7 @@ export function toNextResponse<O>(
 
 // ============ NextApiUseCase ============
 
-export abstract class NextApiUseCase<I, O> {
+export abstract class NextApiUseCase<I = void, O = void> {
   protected validate(_input: I): void | AppError {
     return undefined;
   }
@@ -59,15 +66,19 @@ export abstract class NextApiUseCase<I, O> {
   protected abstract execute(input: I): Promise<O>;
 
   async run(
-    input: I,
-    options?: { successStatus?: number; meta?: ApiResponseMeta }
+    ...[input, options]: I extends void
+      ? [options?: { successStatus?: number; meta?: ApiResponseMeta }]
+      : [
+          input: I,
+          options?: { successStatus?: number; meta?: ApiResponseMeta },
+        ]
   ): Promise<NextResponse<ApiSuccessResponse<O> | ApiErrorResponse>> {
     try {
-      const validationError = this.validate(input);
+      const validationError = this.validate(input as I);
       if (validationError) {
         return appErrorToApiResponse(validationError);
       }
-      const output = await this.execute(input);
+      const output = await this.execute(input as I);
       return apiSuccess(output, {
         status: options?.successStatus ?? 200,
         meta: options?.meta,

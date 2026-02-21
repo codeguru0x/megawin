@@ -84,6 +84,25 @@ export class AccountRepository extends IdentityBaseRepo<
     )) as CompanyAccountEntity | null;
   }
 
+  public async listCompanyAccounts(): Promise<CompanyAccountEntity[]> {
+    const docs = await this.findMany({ type: AccountType.Company });
+    return docs as CompanyAccountEntity[];
+  }
+
+  public async listAgentAccounts(): Promise<AgentAccountEntity[]> {
+    const docs = await this.findMany({ type: AccountType.Agent });
+    return docs as AgentAccountEntity[];
+  }
+
+  public async findAgentByTenantId(
+    tenantId: string
+  ): Promise<AgentAccountEntity | null> {
+    return (await this.findOne({
+      type: AccountType.Agent,
+      tenantId,
+    })) as AgentAccountEntity | null;
+  }
+
   /**
    * Find or create an agent account
    * @param username - username of the agent

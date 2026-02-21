@@ -1,10 +1,14 @@
 import { z } from "zod";
 
 export const agentAccountSchema = z.object({
+  accountId: z.string(),
   username: z.string(),
+  displayName: z.string(),
   status: z.string(),
+  tenantId: z.string(),
+  roles: z.array(z.string()),
   createdAt: z.string(),
-  email: z.string().optional(),
+  updatedAt: z.string(),
 });
 
 export type AgentAccount = z.infer<typeof agentAccountSchema>;

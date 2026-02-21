@@ -3,7 +3,6 @@ import type { CompanyRole } from "@megawin/identity-domain/accounts/account";
 
 export interface ListCompanyAccountsResponse {
   accounts: CompanyAccount[];
-  paginationToken?: string;
 }
 
 export interface CreateCompanyAccountResponse {

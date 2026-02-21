@@ -2,10 +2,10 @@ import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity-domain/accounts/account";
 import {
   CreateAgentAccountUseCase,
-  ListCompanyAccountsUseCase,
+  ListAgentAccountsUseCase,
 } from "@megawin/identity-application/use-cases/accounts";
 
-import { createAgentSchema, listAgentsQuerySchema } from "./_lib/schema";
+import { createAgentSchema } from "./_lib/schema";
 
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
@@ -16,12 +16,8 @@ export const POST = withApi()
   });
 
 export const GET = withApi()
-  .auth()
-  .query(listAgentsQuerySchema)
-  .handler(async ({ query }) => {
-    const useCase = new ListCompanyAccountsUseCase();
-    return useCase.run({
-      limit: query.limit,
-      paginationToken: query.paginationToken,
-    });
+  .auth({ roles: [CompanyRole.Staff] })
+  .handler(async () => {
+    const useCase = new ListAgentAccountsUseCase();
+    return useCase.run(undefined as void);
   });

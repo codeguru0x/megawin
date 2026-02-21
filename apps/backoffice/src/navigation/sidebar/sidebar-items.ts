@@ -44,6 +44,17 @@ export interface NavGroup {
 export const sidebarItems: NavGroup[] = [
   {
     id: 1,
+    label: "Quản lý",
+    items: [
+      {
+        title: "Ứng dụng",
+        url: "/accounts/tenants",
+        icon: Briefcase,
+      },
+    ],
+  },
+  {
+    id: 2,
     label: "Thống kê",
     items: [
       {
@@ -60,7 +71,7 @@ export const sidebarItems: NavGroup[] = [
     ],
   },
   {
-    id: 2,
+    id: 3,
     label: "Tài khoản",
     items: [
       {
@@ -73,11 +84,7 @@ export const sidebarItems: NavGroup[] = [
         url: "/accounts/agents",
         icon: Users,
       },
-      {
-        title: "Đối tác",
-        url: "/accounts/tenants",
-        icon: Briefcase,
-      },
+
       {
         title: "Người chơi",
         url: "/accounts/players",
@@ -86,7 +93,7 @@ export const sidebarItems: NavGroup[] = [
     ],
   },
   {
-    id: 3,
+    id: 4,
     label: "Trò chơi",
     items: [
       {

@@ -34,6 +34,15 @@ export class CreateAgentAccountUseCase extends NextApiUseCase<
   protected async execute(
     input: CreateAgentAccountInput
   ): Promise<CreateAgentAccountOutput> {
+    const accountRepo = new AccountRepository();
+
+    const existingAgent = await accountRepo.findAgentByTenantId(input.tenantId);
+    if (existingAgent) {
+      throw AppException.conflict(
+        `Tenant "${input.tenantId}" đã có tài khoản đại lý "${existingAgent.username}".`
+      );
+    }
+
     const accountId = generateULID();
     const accountStatus = AccountStatus.Active;
     const accountType = AccountType.Agent;
@@ -65,7 +74,6 @@ export class CreateAgentAccountUseCase extends NextApiUseCase<
       result.User.Attributes?.find((attr) => attr.Name === ClaimKey.Sub)
         ?.Value ?? cognitoUsername;
 
-    const accountRepo = new AccountRepository();
     const account = await accountRepo.findOrCreateAgentAccount(
       username,
       displayName,

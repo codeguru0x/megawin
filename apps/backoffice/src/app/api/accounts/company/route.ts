@@ -6,7 +6,7 @@ import {
   type CreateCompanyAccountInput,
 } from "@megawin/identity-application/use-cases/accounts";
 
-import { createAccountSchema, listQuerySchema } from "./_lib/schema";
+import { createAccountSchema } from "./_lib/schema";
 
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
@@ -22,11 +22,7 @@ export const POST = withApi()
 
 export const GET = withApi()
   .auth()
-  .query(listQuerySchema)
-  .handler(async ({ query }) => {
+  .handler(async () => {
     const useCase = new ListCompanyAccountsUseCase();
-    return useCase.run({
-      limit: query.limit,
-      paginationToken: query.paginationToken,
-    });
+    return useCase.run();
   });

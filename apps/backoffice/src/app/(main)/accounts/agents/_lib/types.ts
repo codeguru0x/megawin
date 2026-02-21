@@ -2,7 +2,6 @@ import type { AgentAccount } from "./schema";
 
 export interface ListAgentAccountsResponse {
   accounts: AgentAccount[];
-  paginationToken?: string;
 }
 
 export interface CreateAgentAccountResponse {

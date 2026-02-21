@@ -60,7 +60,16 @@ function renderTableBody<TData, TValue>({
   return table.getRowModel().rows.map((row) => (
     <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
       {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+        <TableCell
+          key={cell.id}
+          style={{
+            width: cell.column.columnDef.size ? `${cell.column.columnDef.size}px` : undefined,
+            minWidth: cell.column.columnDef.minSize ? `${cell.column.columnDef.minSize}px` : undefined,
+            maxWidth: cell.column.columnDef.maxSize ? `${cell.column.columnDef.maxSize}px` : undefined,
+          }}
+        >
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
       ))}
     </TableRow>
   ));
@@ -95,7 +104,15 @@ export function DataTable<TData, TValue>({
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => {
               return (
-                <TableHead key={header.id} colSpan={header.colSpan}>
+                <TableHead
+                  key={header.id}
+                  colSpan={header.colSpan}
+                  style={{
+                    width: header.column.columnDef.size ? `${header.column.columnDef.size}px` : undefined,
+                    minWidth: header.column.columnDef.minSize ? `${header.column.columnDef.minSize}px` : undefined,
+                    maxWidth: header.column.columnDef.maxSize ? `${header.column.columnDef.maxSize}px` : undefined,
+                  }}
+                >
                   {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                 </TableHead>
               );

@@ -8,8 +8,3 @@ export const createAccountSchema = z.object({
     .array(z.enum(COMPANY_ROLE_VALUES as unknown as [string, ...string[]]))
     .min(1),
 });
-
-export const listQuerySchema = z.object({
-  limit: z.coerce.number().min(1).max(60).optional(),
-  paginationToken: z.string().optional(),
-});

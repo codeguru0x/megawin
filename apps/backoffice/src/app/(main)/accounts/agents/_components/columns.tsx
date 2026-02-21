@@ -3,49 +3,59 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 
 import type { AgentAccount } from "../_lib/schema";
 import { AgentRowActions } from "./row-actions";
 
+const statusMap: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "outline" | "secondary" | "destructive";
+  }
+> = {
+  active: { label: "Hoạt động", variant: "default" },
+  read_only: { label: "Chỉ đọc", variant: "secondary" },
+  suspended: { label: "Bị khoá", variant: "destructive" },
+};
+
 export const agentAccountsColumns: ColumnDef<AgentAccount>[] = [
   {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Chọn tất cả"
-        />
-      </div>
-    ),
+    id: "rowNumber",
+    header: "STT",
     cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Chọn dòng"
-        />
-      </div>
+      <span className="text-xs font-mono tabular-nums">{row.index + 1}</span>
     ),
     enableSorting: false,
     enableHiding: false,
+    size: 50,
   },
   {
     accessorKey: "username",
-    header: "Tên tài khoản",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Tên tài khoản" />
+    ),
     cell: ({ row }) => (
       <span className="font-medium">{row.original.username}</span>
     ),
   },
   {
-    accessorKey: "email",
-    header: "Email",
+    accessorKey: "displayName",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Tên hiển thị" />
+    ),
+    cell: ({ row }) => row.original.displayName,
+  },
+  {
+    accessorKey: "tenantId",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Tenant" />
+    ),
     cell: ({ row }) => (
-      <span className="text-muted-foreground text-sm">
-        {row.original.email ?? "—"}
-      </span>
+      <Badge variant="outline" className="font-mono text-xs">
+        {row.original.tenantId}
+      </Badge>
     ),
   },
   {
@@ -53,16 +63,20 @@ export const agentAccountsColumns: ColumnDef<AgentAccount>[] = [
     header: "Trạng thái",
     cell: ({ row }) => {
       const status = row.original.status;
-      const isActive = status === "CONFIRMED" || status === "active";
+      const mapped = statusMap[status];
       return (
-        <Badge variant={isActive ? "default" : "outline"}>{status}</Badge>
+        <Badge variant={mapped?.variant ?? "outline"}>
+          {mapped?.label ?? status}
+        </Badge>
       );
     },
     enableSorting: false,
   },
   {
     accessorKey: "createdAt",
-    header: "Ngày tạo",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Ngày tạo" />
+    ),
     cell: ({ row }) => (
       <span className="text-muted-foreground text-xs tabular-nums">
         {row.original.createdAt
@@ -70,7 +84,6 @@ export const agentAccountsColumns: ColumnDef<AgentAccount>[] = [
           : "—"}
       </span>
     ),
-    enableSorting: false,
   },
   {
     id: "actions",
@@ -81,5 +94,6 @@ export const agentAccountsColumns: ColumnDef<AgentAccount>[] = [
       </div>
     ),
     enableSorting: false,
+    enableHiding: false,
   },
 ];

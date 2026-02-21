@@ -4,7 +4,6 @@ export type {
 } from "./dto/create-company-account.dto";
 
 export type {
-  ListCompanyAccountsInput,
   ListCompanyAccountsOutput,
   CompanyAccountItem,
 } from "./dto/list-company-accounts.dto";
@@ -23,3 +22,9 @@ export {
   type SetAccountPasswordInput,
   type SetAccountPasswordOutput,
 } from "./set-account-password";
+
+export { ListAgentAccountsUseCase } from "./list-agent-accounts";
+export type {
+  ListAgentAccountsOutput,
+  AgentAccountItem,
+} from "./dto/list-agent-accounts.dto";

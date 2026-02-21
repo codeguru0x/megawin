@@ -28,7 +28,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useTenantOptions } from "@/hooks/use-tenant-options";
 
 import type { CreateAgentAccountResponse } from "../_lib/types";
 import { generatePassword } from "../../_shared/generate-password";
@@ -36,7 +44,7 @@ import { generatePassword } from "../../_shared/generate-password";
 const createAgentSchema = z.object({
   username: z.string().min(3, "Tên tài khoản tối thiểu 3 ký tự."),
   password: z.string().min(8, "Mật khẩu tối thiểu 8 ký tự."),
-  tenantId: z.string().min(1, "Vui lòng nhập Tenant ID."),
+  tenantId: z.string().min(1, "Vui lòng chọn Tenant."),
 });
 
 type CreateAgentValues = z.infer<typeof createAgentSchema>;
@@ -45,6 +53,9 @@ export function CreateAgentAccountDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { data: tenantData, isLoading: isLoadingTenants } = useTenantOptions();
+
+  const tenants = tenantData?.tenants ?? [];
 
   const form = useForm<CreateAgentValues>({
     resolver: zodResolver(createAgentSchema),
@@ -93,7 +104,8 @@ export function CreateAgentAccountDialog() {
             <Badge variant="secondary" className="text-xs">
               Agent
             </Badge>
-            . Mật khẩu tạm thời, người dùng sẽ phải đổi khi đăng nhập lần đầu.
+            . Mật khẩu tạm thời, người dùng sẽ phải đổi khi đăng nhập lần
+            đầu. Mỗi Tenant chỉ được gán 1 đại lý duy nhất.
           </DialogDescription>
         </DialogHeader>
 
@@ -107,10 +119,35 @@ export function CreateAgentAccountDialog() {
               name="tenantId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tenant ID</FormLabel>
-                  <FormControl>
-                    <Input placeholder="vd: tenant_abc123" {...field} />
-                  </FormControl>
+                  <FormLabel>Tenant</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            isLoadingTenants
+                              ? "Đang tải..."
+                              : "Chọn Tenant"
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {tenants.map((t) => (
+                        <SelectItem key={t.tenantId} value={t.tenantId}>
+                          {t.displayName} ({t.tenantId})
+                        </SelectItem>
+                      ))}
+                      {tenants.length === 0 && !isLoadingTenants && (
+                        <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                          Chưa có Tenant nào.
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

@@ -16,15 +16,14 @@ import type { ListAgentAccountsResponse } from "../_lib/types";
 export function AgentAccountsTable() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["agent", "accounts"],
-    queryFn: () =>
-      apiClient.get<ListAgentAccountsResponse>("/accounts/agents"),
+    queryFn: () => apiClient.get<ListAgentAccountsResponse>("/accounts/agents"),
   });
 
   const table = useDataTableInstance<AgentAccount, unknown>({
     data: data?.accounts ?? [],
     columns: agentAccountsColumns,
     enableRowSelection: true,
-    getRowId: (row) => row.username,
+    getRowId: (row) => row.accountId,
   });
 
   return (
@@ -34,13 +33,10 @@ export function AgentAccountsTable() {
           <CardTitle className="text-base md:text-lg">
             Danh sách đại lý
           </CardTitle>
-          <DataTableViewOptions table={table} />
         </div>
       </CardHeader>
       <CardContent className="flex size-full flex-col gap-4">
-        {error && (
-          <p className="text-destructive text-sm">{error.message}</p>
-        )}
+        {error && <p className="text-destructive text-sm">{error.message}</p>}
         <div className="overflow-hidden rounded-md border">
           {isLoading ? (
             <div className="h-[320px] animate-pulse bg-muted" />
