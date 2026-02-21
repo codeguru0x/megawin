@@ -24,6 +24,7 @@ export function CompanyAccountsTable() {
     data: data?.accounts ?? [],
     columns: companyAccountsColumns,
     enableRowSelection: true,
+    getRowId: (row) => row.username,
   });
 
   return (

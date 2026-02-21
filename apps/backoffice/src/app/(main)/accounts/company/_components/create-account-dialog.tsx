@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { Dices, Eye, EyeOff } from "lucide-react";
 import { apiClient, ApiClientError } from "@megawin/next/client";
+import {
+  CompanyRole,
+  COMPANY_ROLE_VALUES,
+} from "@megawin/identity-domain/accounts/account";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,52 +23,60 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { COMPANY_ACCOUNT_ROLES } from "../_lib/constants";
+import { COMPANY_ROLES_OPTIONS } from "../_lib/constants";
 import type { CreateCompanyAccountResponse } from "../_lib/types";
+import { generatePassword } from "../../_shared/generate-password";
 
-const CreateAccountSchema = z.object({
-  username: z.string().min(3, { message: "Tên tài khoản tối thiểu 3 ký tự." }),
-  password: z.string().min(8, { message: "Mật khẩu tối thiểu 8 ký tự." }),
-  roles: z.array(z.string()).min(1, { message: "Vui lòng chọn ít nhất 1 quyền." }),
+const createAccountSchema = z.object({
+  username: z.string().min(3, "Tên tài khoản tối thiểu 3 ký tự."),
+  password: z.string().min(8, "Mật khẩu tối thiểu 8 ký tự."),
+  roles: z
+    .array(z.enum(COMPANY_ROLE_VALUES as unknown as [string, ...string[]]))
+    .min(1, "Vui lòng chọn ít nhất 1 quyền."),
 });
 
-type CreateAccountValues = z.infer<typeof CreateAccountSchema>;
+type CreateAccountValues = z.infer<typeof createAccountSchema>;
 
-export function CreateAccountDialog() {
+export function CreateCompanyAccountDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<CreateAccountValues>({
-    resolver: zodResolver(CreateAccountSchema),
+    resolver: zodResolver(createAccountSchema),
     defaultValues: {
       username: "",
       password: "",
-      roles: ["Staff"],
+      roles: [CompanyRole.Staff],
     },
   });
+
+  const selectedRoles = useWatch({ control: form.control, name: "roles" });
+  const isAdminSelected = selectedRoles?.includes(CompanyRole.Admin);
 
   const mutation = useMutation({
     mutationFn: (values: CreateAccountValues) =>
       apiClient.post<CreateCompanyAccountResponse>(
         "/accounts/company",
-        values,
+        values
       ),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["company", "accounts"] });
       setOpen(false);
       form.reset();
-
-      toast.success("Tạo tài khoản công ty thành công.", {
-        description: (
-          <span className="text-xs">
-            Tài khoản: <strong>{data.username}</strong> - Quyền:{" "}
-            <strong>{data.roles.join(", ")}</strong>
-          </span>
-        ),
+      toast.success("Tạo tài khoản thành công.", {
+        description: `Tài khoản: ${data.username} – Quyền: ${data.roles.join(", ")}`,
       });
     },
     onError: (error) => {
@@ -76,9 +88,24 @@ export function CreateAccountDialog() {
     },
   });
 
-  const onSubmit = (values: CreateAccountValues) => {
-    mutation.mutate(values);
-  };
+  function handleGenerate() {
+    form.setValue("password", generatePassword(8));
+    setShowPassword(true);
+  }
+
+  function handleRoleChange(role: string, checked: boolean) {
+    const current = form.getValues("roles") ?? [];
+
+    if (role === CompanyRole.Admin && checked) {
+      form.setValue("roles", [CompanyRole.Admin], { shouldValidate: true });
+      return;
+    }
+
+    const next = checked
+      ? [...current, role]
+      : current.filter((r) => r !== role);
+    form.setValue("roles", next, { shouldValidate: true });
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -89,12 +116,16 @@ export function CreateAccountDialog() {
         <DialogHeader>
           <DialogTitle>Tạo tài khoản công ty</DialogTitle>
           <DialogDescription>
-            Nhập thông tin tài khoản mới. Mật khẩu có thể được thay đổi lại sau trong phần thao tác.
+            Tạo tài khoản mới với quyền Admin hoặc Staff. Mật khẩu tạm thời,
+            người dùng sẽ phải đổi khi đăng nhập lần đầu.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="username"
@@ -102,7 +133,11 @@ export function CreateAccountDialog() {
                 <FormItem>
                   <FormLabel>Tên tài khoản</FormLabel>
                   <FormControl>
-                    <Input placeholder="vd: admin.company" autoComplete="off" {...field} />
+                    <Input
+                      placeholder="vd: admin.company"
+                      autoComplete="off"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -115,9 +150,41 @@ export function CreateAccountDialog() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Mật khẩu</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="••••••••" autoComplete="new-password" {...field} />
-                  </FormControl>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <FormControl>
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Tối thiểu 8 ký tự"
+                          autoComplete="new-password"
+                          className="pr-10"
+                          {...field}
+                        />
+                      </FormControl>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-0 right-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={handleGenerate}
+                      title="Tạo mật khẩu ngẫu nhiên"
+                    >
+                      <Dices className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -126,31 +193,37 @@ export function CreateAccountDialog() {
             <FormField
               control={form.control}
               name="roles"
-              render={({ field }) => (
+              render={() => (
                 <FormItem>
                   <FormLabel>Quyền</FormLabel>
-                  <div className="space-y-1">
-                    {COMPANY_ACCOUNT_ROLES.map((role) => {
-                      const checked = Array.isArray(field.value) && field.value.includes(role);
+                  <div className="space-y-2">
+                    {COMPANY_ROLES_OPTIONS.map((opt) => {
+                      const checked = selectedRoles?.includes(opt.value);
+                      const disabled =
+                        isAdminSelected && opt.value !== CompanyRole.Admin;
                       return (
-                        <label key={role} className="flex items-center gap-2 text-sm">
+                        <label
+                          key={opt.value}
+                          className={`flex items-center gap-2 text-sm ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                        >
                           <Checkbox
                             checked={checked}
-                            onCheckedChange={(value) => {
-                              const isChecked = Boolean(value);
-                              const current = Array.isArray(field.value) ? field.value : [];
-                              field.onChange(
-                                isChecked
-                                  ? [...current, role]
-                                  : current.filter((r: string) => r !== role),
-                              );
-                            }}
+                            disabled={disabled}
+                            onCheckedChange={(v) =>
+                              handleRoleChange(opt.value, Boolean(v))
+                            }
                           />
-                          <span>{role}</span>
+                          <span>{opt.label}</span>
                         </label>
                       );
                     })}
                   </div>
+                  {isAdminSelected && (
+                    <p className="text-muted-foreground text-xs">
+                      Quản trị viên có toàn quyền, không cần chọn thêm quyền
+                      khác.
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

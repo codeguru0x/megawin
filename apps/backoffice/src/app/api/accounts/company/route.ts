@@ -1,17 +1,23 @@
 import { withApi } from "@/lib/api";
+import { CompanyRole } from "@megawin/identity-domain/accounts";
 import {
   CreateCompanyAccountUseCase,
   ListCompanyAccountsUseCase,
+  type CreateCompanyAccountInput,
 } from "@megawin/identity-application/use-cases/accounts";
 
 import { createAccountSchema, listQuerySchema } from "./_lib/schema";
 
 export const POST = withApi()
-  .auth({ roles: ["Admin"] })
+  .auth({ roles: [CompanyRole.Staff] })
   .body(createAccountSchema)
   .handler(async ({ body }) => {
     const useCase = new CreateCompanyAccountUseCase();
-    return useCase.run(body, { successStatus: 201 });
+    const input: CreateCompanyAccountInput = {
+      ...body,
+      roles: body.roles as CompanyRole[],
+    };
+    return useCase.run(input, { successStatus: 201 });
   });
 
 export const GET = withApi()

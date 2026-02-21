@@ -1,7 +1,7 @@
 {
   "name": "@megawin/http-client",
   "version": "1.0.0",
-  "description": "HTTP REST client for Megawin services",
+  "description": "Universal HTTP REST client – native fetch, zero dependencies",
   "scripts": {
     "dev": "tsc --watch",
     "build": "tsc",
@@ -21,6 +21,6 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "axios": "^1.13.5"
+    "@megawin/shared": "workspace:*"
   }
 }

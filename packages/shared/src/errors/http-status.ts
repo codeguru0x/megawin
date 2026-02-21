@@ -37,6 +37,8 @@ const CODE_STATUS_MAP: Record<string, number> = {
   // Business codes – thêm ở đây nếu muốn default mapping
   [APP_ERROR_CODES.INSUFFICIENT_BALANCE]: 422,
   [APP_ERROR_CODES.ACCOUNT_DISABLED]: 403,
+  [APP_ERROR_CODES.ACCOUNT_SUSPENDED]: 403,
+  [APP_ERROR_CODES.ACCOUNT_READ_ONLY]: 403,
 };
 
 /**

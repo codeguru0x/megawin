@@ -33,6 +33,8 @@ export const APP_ERROR_CODES = {
   // ---- Business (mở rộng theo domain) ----
   INSUFFICIENT_BALANCE: "INSUFFICIENT_BALANCE",
   ACCOUNT_DISABLED: "ACCOUNT_DISABLED",
+  ACCOUNT_SUSPENDED: "ACCOUNT_SUSPENDED",
+  ACCOUNT_READ_ONLY: "ACCOUNT_READ_ONLY",
 } as const;
 
 // ============ Types ============

@@ -1,68 +1,74 @@
 /**
  * Authorization cho API Gateway (sau Cognito / Lambda Authorizer).
  * Không verify token – Authorizer đã verify. Ở đây chỉ check:
- * - public vs authed (có đăng nhập hay không)
- * - scope: internal (công ty) | player (có tenant) | agent (internal + tenant)
- * - roles: danh sách role cho phép (vd từ cognito:groups)
+ * - accountType: company | agent | player (từ domain AccountType)
+ * - roles: danh sách role cho phép (admin tự động bypass qua SUPER_ROLES)
+ *
+ * Gọi middleware = bắt buộc authed. Không gọi = public.
  */
 
 import { APP_ERROR_CODES, type AppError } from "@megawin/shared/errors";
+import {
+  type AccountType,
+  type AccountStatus,
+  AccountStatus as AccountStatusEnum,
+  type AccountRole,
+  SUPER_ROLES,
+} from "@megawin/identity-domain/accounts/account";
+import { ClaimKey } from "@megawin/identity-domain/cognito/claim";
 
 // ============ Auth context (sau Authorizer) ============
 
-/**
- * Context auth đã được Authorizer (Cognito/Lambda) verify.
- * Dùng để check authorization trước khi validate + run use case.
- */
 export interface AuthContext {
-  /** User id (vd sub từ JWT). */
+  /** User id (sub từ JWT). */
   sub: string;
-  /** Username (vd cognito:username). */
+  /** Username (cognito:username). */
   username?: string;
+  /** Account type từ domain (company / agent / player). */
+  accountType: AccountType;
+  /** Account status (active / read_only / suspended). */
+  accountStatus: AccountStatus;
+  /** Account id (custom:account_id). */
+  accountId?: string;
   /** Tenant id nếu user thuộc tenant (player/agent). */
   tenantId?: string;
-  /** Là tài khoản nội bộ (công ty). */
-  isInternal: boolean;
   /** Roles từ cognito:groups hoặc custom claim. */
   roles: string[];
   /** Claims gốc để check tùy biến. */
   raw?: Record<string, unknown>;
 }
 
-// ============ Auth requirements (per use case / route) ============
-
-/** Phạm vi tài khoản: internal = công ty, player = có tenant, agent = internal + tenant. */
-export type AuthScope = "internal" | "player" | "agent";
+// ============ Auth requirements ============
 
 /**
  * Yêu cầu authorization cho một use case / route.
- * Check theo thứ tự: access → scope → roles.
+ * Gọi middleware = bắt buộc authed. Không cần `access` field.
  */
 export interface AuthRequirements {
   /**
-   * public: không cần đăng nhập (authorizer có thể không chạy).
-   * authed: bắt buộc đã đăng nhập (có auth context).
+   * Account type cho phép. Nếu set: user phải có accountType tương ứng.
+   * Cho phép single value hoặc array (OR logic).
+   * Nếu không set: bất kỳ authed user nào đều OK.
    */
-  access: "public" | "authed";
+  accountType?: AccountType | AccountType[];
 
   /**
-   * Nếu set: user phải thuộc scope tương ứng.
-   * - internal: chỉ tài khoản công ty (isInternal === true).
-   * - player: có tenant (tenantId có giá trị), thường end-user.
-   * - agent: internal + có tenant (support agent trong tenant).
+   * Roles cho phép. Nếu set: user phải có ít nhất 1 role trong danh sách.
+   * SUPER_ROLES (Admin) tự động bypass check này.
    */
-  scope?: AuthScope;
+  roles?: AccountRole[];
 
   /**
-   * Nếu set: user phải có ít nhất một role trong danh sách.
-   * Thường map từ cognito:groups.
+   * Nếu true, enforce status check theo HTTP method:
+   * - GET/HEAD/OPTIONS → cho phép Active + ReadOnly
+   * - POST/PUT/PATCH/DELETE → chỉ cho phép Active
+   * Mặc định: true khi gọi middleware.
    */
-  roles?: string[];
+  enforceStatusByMethod?: boolean;
 }
 
 // ============ Adapter: event → AuthContext ============
 
-/** Event API Gateway có requestContext (sau Authorizer). */
 export interface ApiGatewayEventWithAuthorizer {
   requestContext?: {
     authorizer?: {
@@ -77,37 +83,31 @@ export interface ApiGatewayEventWithAuthorizer {
 
 /**
  * Cấu hình map từ authorizer claims sang AuthContext.
- * Cognito: claims trong requestContext.authorizer.claims;
- * Custom Lambda authorizer: có thể dùng requestContext.authorizer.* trực tiếp.
+ * Mặc định dùng ClaimKey từ identity-domain.
  */
 export interface AuthContextAdapterOptions {
-  /**
-   * Claim key cho tenant id (vd "custom:tenantId" hoặc "tenantId").
-   */
+  /** Claim key cho tenant id. Mặc định: ClaimKey.TenantId */
   tenantIdClaim?: string;
-  /**
-   * Claim key cho roles (vd "cognito:groups"). Giá trị có thể string (comma-separated) hoặc string[].
-   */
+  /** Claim key cho roles. Mặc định: ClaimKey.Roles */
   rolesClaim?: string;
-  /**
-   * Group name hoặc claim key/giá trị để coi là internal.
-   * Nếu string: so sánh với 1 phần tử trong roles (vd "Internal").
-   * Hoặc dùng custom claim: { claim: "custom:isInternal", value: "true" }.
-   */
-  internalIndicator?: string | { claim: string; value: string | boolean };
-  /**
-   * Claim cho username (mặc định "cognito:username").
-   */
+  /** Claim key cho account type. Mặc định: ClaimKey.AccountType */
+  accountTypeClaim?: string;
+  /** Claim key cho username. Mặc định: ClaimKey.Username */
   usernameClaim?: string;
+  /** Claim key cho account status. Mặc định: ClaimKey.AccountStatus */
+  accountStatusClaim?: string;
+  /** Claim key cho account id. Mặc định: ClaimKey.AccountId */
+  accountIdClaim?: string;
 }
 
-const DEFAULT_ADAPTER_OPTIONS: Required<
-  Pick<AuthContextAdapterOptions, "rolesClaim" | "usernameClaim">
-> &
-  Pick<AuthContextAdapterOptions, "tenantIdClaim" | "internalIndicator"> = {
-  rolesClaim: "cognito:groups",
-  usernameClaim: "cognito:username",
-};
+const DEFAULT_ADAPTER_OPTIONS = {
+  rolesClaim: ClaimKey.Roles,
+  usernameClaim: ClaimKey.Username,
+  accountTypeClaim: ClaimKey.AccountType,
+  accountStatusClaim: ClaimKey.AccountStatus,
+  accountIdClaim: ClaimKey.AccountId,
+  tenantIdClaim: ClaimKey.TenantId,
+} as const;
 
 function parseRoles(value: unknown): string[] {
   if (Array.isArray(value))
@@ -122,11 +122,11 @@ function parseRoles(value: unknown): string[] {
 
 /**
  * Lấy AuthContext từ event API Gateway (sau Cognito / Lambda Authorizer).
- * Nếu không có authorizer hoặc không đủ thông tin → trả về null (request public hoặc chưa auth).
+ * Trả null nếu không có authorizer hoặc không đủ thông tin.
  */
 export function getAuthContextFromApiGatewayEvent(
   event: ApiGatewayEventWithAuthorizer,
-  options: AuthContextAdapterOptions = {}
+  options: AuthContextAdapterOptions = {},
 ): AuthContext | null {
   const opts = { ...DEFAULT_ADAPTER_OPTIONS, ...options };
   const authorizer = event.requestContext?.authorizer;
@@ -134,110 +134,107 @@ export function getAuthContextFromApiGatewayEvent(
 
   const claims = (authorizer.claims ?? authorizer) as Record<string, unknown>;
   const sub =
-    (claims.sub as string) ??
+    (claims[ClaimKey.Sub] as string) ??
     (authorizer.sub as string) ??
     (authorizer.principalId as string);
   if (!sub || typeof sub !== "string") return null;
 
   const username = (claims[opts.usernameClaim] as string) ?? undefined;
-  const tenantId = opts.tenantIdClaim
-    ? ((claims[opts.tenantIdClaim] as string) ?? undefined)
-    : undefined;
+  const tenantId = (claims[opts.tenantIdClaim] as string) ?? undefined;
   const roles = parseRoles(claims[opts.rolesClaim]);
-
-  let isInternal = false;
-  if (opts.internalIndicator !== undefined) {
-    if (typeof opts.internalIndicator === "string") {
-      isInternal = roles.some((r) => r === opts.internalIndicator);
-    } else {
-      const val = claims[opts.internalIndicator.claim];
-      isInternal =
-        val === opts.internalIndicator.value ||
-        (typeof opts.internalIndicator.value === "boolean" &&
-          val === String(opts.internalIndicator.value));
-    }
-  }
+  const accountType = (claims[opts.accountTypeClaim] as AccountType) ?? "player";
+  const accountId = (claims[opts.accountIdClaim] as string) ?? undefined;
+  const accountStatus =
+    (claims[opts.accountStatusClaim] as AccountStatus) ??
+    AccountStatusEnum.Active;
 
   return {
     sub,
     username,
+    accountType,
+    accountStatus,
+    accountId,
     tenantId,
-    isInternal,
     roles,
     raw: claims as Record<string, unknown>,
   };
 }
 
+// ============ Read-only HTTP methods ============
+
+const READ_ONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
 // ============ Check authorization ============
 
 /**
  * Kiểm tra auth context có thỏa requirements không.
- * Trả về AppError (FORBIDDEN) nếu không đủ quyền; void nếu OK.
+ *
+ * Pipeline:
+ * 1. Không có authContext → 401
+ * 2. accountStatus === suspended → 403 (ACCOUNT_SUSPENDED)
+ * 3. enforceStatusByMethod: mutation + read_only → 403 (ACCOUNT_READ_ONLY)
+ * 4. accountType set → check match → 403
+ * 5. roles set → check SUPER_ROLES bypass → check role match → 403
  */
 export function checkAuthorization(
   authContext: AuthContext | null,
-  requirements: AuthRequirements
+  requirements: AuthRequirements,
+  httpMethod?: string,
 ): void | AppError {
-  const { access, scope, roles: allowedRoles } = requirements;
+  if (!authContext) {
+    return {
+      code: APP_ERROR_CODES.UNAUTHORIZED,
+      message: "Authentication required",
+    };
+  }
 
-  if (access === "public") {
-    if (scope === undefined && !allowedRoles?.length) return;
-    if (!authContext) {
+  if (authContext.accountStatus === AccountStatusEnum.Suspended) {
+    return {
+      code: APP_ERROR_CODES.ACCOUNT_SUSPENDED,
+      message: "Account is suspended",
+    };
+  }
+
+  const enforceStatus = requirements.enforceStatusByMethod !== false;
+  if (enforceStatus && httpMethod) {
+    const isReadOnly = READ_ONLY_METHODS.has(httpMethod.toUpperCase());
+    if (
+      !isReadOnly &&
+      authContext.accountStatus === AccountStatusEnum.ReadOnly
+    ) {
       return {
-        code: APP_ERROR_CODES.FORBIDDEN,
-        message: "This action requires authentication",
-      };
-    }
-  } else {
-    if (!authContext) {
-      return {
-        code: APP_ERROR_CODES.UNAUTHORIZED,
-        message: "Authentication required",
+        code: APP_ERROR_CODES.ACCOUNT_READ_ONLY,
+        message: "Account is read-only, mutation operations are not allowed",
       };
     }
   }
 
-  const auth = authContext!;
+  const { accountType, roles: allowedRoles } = requirements;
 
-  if (scope !== undefined) {
-    const hasTenant = Boolean(auth.tenantId);
-    const isInternal = auth.isInternal;
-    switch (scope) {
-      case "internal":
-        if (!isInternal) {
-          return {
-            code: APP_ERROR_CODES.FORBIDDEN,
-            message: "Internal account required",
-          };
-        }
-        break;
-      case "player":
-        if (!hasTenant) {
-          return {
-            code: APP_ERROR_CODES.FORBIDDEN,
-            message: "Tenant context required",
-          };
-        }
-        break;
-      case "agent":
-        if (!isInternal || !hasTenant) {
-          return {
-            code: APP_ERROR_CODES.FORBIDDEN,
-            message: "Internal account with tenant context required",
-          };
-        }
-        break;
+  if (accountType !== undefined) {
+    const allowed = Array.isArray(accountType) ? accountType : [accountType];
+    if (!allowed.includes(authContext.accountType)) {
+      return {
+        code: APP_ERROR_CODES.FORBIDDEN,
+        message: "Account type not permitted",
+        details: { required: allowed, actual: authContext.accountType },
+      };
     }
   }
 
   if (allowedRoles != null && allowedRoles.length > 0) {
-    const hasRole = allowedRoles.some((r) => auth.roles.includes(r));
-    if (!hasRole) {
-      return {
-        code: APP_ERROR_CODES.FORBIDDEN,
-        message: "Insufficient permissions",
-        details: { requiredRoles: allowedRoles },
-      };
+    const hasSuperRole = SUPER_ROLES.some((r: string) =>
+      authContext.roles.includes(r),
+    );
+    if (!hasSuperRole) {
+      const hasRole = allowedRoles.some((r: string) => authContext.roles.includes(r));
+      if (!hasRole) {
+        return {
+          code: APP_ERROR_CODES.FORBIDDEN,
+          message: "Insufficient permissions",
+          details: { requiredRoles: allowedRoles },
+        };
+      }
     }
   }
 

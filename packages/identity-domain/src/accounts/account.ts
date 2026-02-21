@@ -1,114 +1,128 @@
-/**
- * Account kind
- * player: account is a player
- * internal: account is an internal account (company or tenant account)
- */
-export enum AccountKind {
-  Player = "player",
-  Internal = "internal",
-}
+// ─── Account Type (discriminator) ───
+
+export const AccountType = {
+  Company: "company",
+  Agent: "agent",
+  Player: "player",
+} as const;
+
+export type AccountType = (typeof AccountType)[keyof typeof AccountType];
+
+// ─── Account Status ───
+
+export const AccountStatus = {
+  /** Hoạt động bình thường – đọc + ghi. */
+  Active: "active",
+  /** Chỉ xem – login được nhưng mọi mutation (POST/PUT/DELETE) bị chặn. */
+  ReadOnly: "read_only",
+  /** Khoá hoàn toàn – không thể login. Cognito user bị disable. */
+  Suspended: "suspended",
+} as const;
+
+export type AccountStatus = (typeof AccountStatus)[keyof typeof AccountStatus];
+
+// ─── Roles gắn chặt với từng loại tài khoản ───
 
 /**
- * Account status
- * active: account is active
- * blocked: account is blocked
- * disabled: account is disabled
+ * Tài khoản công ty: admin, staff (mở rộng thêm ở đây khi cần).
+ * Ví dụ thêm Manager: `Manager: "manager"` rồi Cognito group tương ứng.
  */
-export enum AccountStatus {
-  Active = "active",
-  Blocked = "blocked",
-  Disabled = "disabled",
-}
+export const CompanyRole = {
+  Admin: "admin",
+  Staff: "staff",
+} as const;
+
+export type CompanyRole = (typeof CompanyRole)[keyof typeof CompanyRole];
+
+/** Tài khoản đại lý. */
+export const AgentRole = {
+  Agent: "agent",
+} as const;
+
+export type AgentRole = (typeof AgentRole)[keyof typeof AgentRole];
+
+/** Tài khoản người chơi. */
+export const PlayerRole = {
+  Player: "player",
+} as const;
+
+export type PlayerRole = (typeof PlayerRole)[keyof typeof PlayerRole];
+
+/** Union tất cả roles – dùng khi cần so sánh chung. */
+export type AccountRole = CompanyRole | AgentRole | PlayerRole;
+
+// ─── Helpers để lấy danh sách role values tại runtime ───
+
+export const COMPANY_ROLE_VALUES = Object.values(CompanyRole);
+export const AGENT_ROLE_VALUES = Object.values(AgentRole);
+export const PLAYER_ROLE_VALUES = Object.values(PlayerRole);
+export const ALL_ROLE_VALUES = [
+  ...COMPANY_ROLE_VALUES,
+  ...AGENT_ROLE_VALUES,
+  ...PLAYER_ROLE_VALUES,
+] as const;
 
 /**
- * Account scope type
- * company: account is a company account
- * tenant: account is a tenant account
+ * Super roles: bypass mọi role check khi đã authed.
+ * Admin luôn có quyền truy cập tất cả route mà không cần khai báo.
  */
-export enum AccountScope {
-  Company = "company",
-  Tenant = "tenant",
-}
+export const SUPER_ROLES: readonly AccountRole[] = [CompanyRole.Admin];
 
-/**
- * Account entity
- */
-export interface AccountEntity {
-  /**
-   * Mongodb Id của account.
-   */
+// ─── Base entity fields chung ───
+
+interface AccountBase {
+  /** MongoDB _id */
   id: string;
 
-  /**
-   * Id của account.
-   * Dùng ULID hoặc UUID
-   * Phục vụ nhiều nơi không chỉ mongodb
-   */
+  /** ULID / UUID – portable ID dùng ngoài MongoDB. */
   accountId: string;
 
   /**
-   *
-   * Nếu kind ="player" thì đây là Full user id của đối tác theo format : [tenant-id]:[subject] (ví dụ: 1234567890:john)
-   * Nếu kind ="internal" thì đây là username của tài khoản của công ty hoặc đối tác.
-   * username: này được lowercase chỉ cho phép AlphaNumeric
+   * Player: full user id format `[tenantId]:[subject]`.
+   * Company / Agent: username lowercase alphanumeric.
    */
   username: string;
 
-  /**
-   * Tên hiển thị của account.
-   * Mặc định là username bỏ phần "[tenant-id]:"
-   */
+  /** Tên hiển thị (mặc định = username bỏ prefix tenantId). */
   displayName: string;
 
-  /**
-   * Loại tài khoản. Player hoặc Internal.
-   */
-  kind: AccountKind;
-
-  /**
-   * Trạng thái của account
-   */
   status: AccountStatus;
 
-  /**
-   * Phạm vi của account.
-   * Tài khoản nội bộ là tài khoản của công ty hoặc đối tác.
-   */
-  scope: AccountScope;
-
-  /**
-   * Id của tenant.
-   * Bắt buộc phải có giá trị nếu scope là "tenant".
-   */
-  tenantId?: string;
-
-  /**
-   * Thông tin Cognito của account.
-   */
-  /**
-   * Id của pool Cognito.
-   */
   cognitoPoolId: string;
-
-  /**
-   * Id của user trong pool Cognito.
-   */
   cognitoSub: string;
 
   /**
-   * Username của user trong pool Cognito.
-   * Format: [tenant-id]:[username] (ví dụ: 1234567890:john)
-   * Mặc định dùng theo format của externalId
+   * Username trong Cognito pool.
+   * Format: `[tenantId]:[username]` hoặc plain username.
    */
   cognitoUsername: string;
 
-  /**
-   * Thời gian tạo account.
-   */
   createdAt: Date;
-
-  /**
-   * Thời gian cập nhật account.
-   */
   updatedAt: Date;
 }
+
+// ─── Discriminated Union – mỗi variant enforce đúng constraints ───
+
+export interface CompanyAccountEntity extends AccountBase {
+  type: typeof AccountType.Company;
+  roles: CompanyRole[];
+  tenantId?: never;
+}
+
+export interface AgentAccountEntity extends AccountBase {
+  type: typeof AccountType.Agent;
+  roles: AgentRole[];
+  tenantId: string;
+}
+
+export interface PlayerAccountEntity extends AccountBase {
+  type: typeof AccountType.Player;
+  roles: PlayerRole[];
+  tenantId: string;
+}
+
+/** Union type chính – dùng ở repository, mapper, use case. */
+export type AccountEntity =
+  | CompanyAccountEntity
+  | AgentAccountEntity
+  | PlayerAccountEntity;

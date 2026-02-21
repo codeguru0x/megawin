@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "build:deps": "turbo build --filter=@megawin/identity-application^...",
+    "pretest": "pnpm build:deps",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
   },
   "keywords": [],
   "author": "",
@@ -21,6 +26,10 @@
     "./use-cases/tenants": {
       "types": "./src/use-cases/tenants/index.ts",
       "default": "./dist/use-cases/tenants/index.js"
+    },
+    "./shared": {
+      "types": "./src/shared/index.ts",
+      "default": "./dist/shared/index.js"
     }
   },
   "dependencies": {
@@ -34,7 +43,11 @@
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
+    "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.2.1",
-    "typescript": "5.9.3"
+    "next": "^16.1.6",
+    "typescript": "5.9.3",
+    "vite": "latest",
+    "vitest": "latest"
   }
 }

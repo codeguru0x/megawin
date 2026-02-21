@@ -1,12 +1,18 @@
 import { AccountMapper } from "../mappers/account-mapper";
 import { IdentityBaseRepo } from "./identity-base-repo";
 import {
-  AccountEntity,
-  AccountScope,
-  AccountKind,
+  type AccountEntity,
+  type CompanyAccountEntity,
+  type AgentAccountEntity,
+  type PlayerAccountEntity,
+  type CompanyRole,
+  AccountType,
   AccountStatus,
+  AgentRole,
+  PlayerRole,
 } from "@megawin/identity-domain/accounts/account";
 import { generateULID } from "@megawin/shared/utils/unique";
+
 export class AccountRepository extends IdentityBaseRepo<
   AccountEntity,
   AccountMapper
@@ -18,11 +24,6 @@ export class AccountRepository extends IdentityBaseRepo<
     });
   }
 
-  /**
-   * Tạo tài khoản PLAYER cho đối tác vào trong hệ thống.
-   * @param externalUserId - External user id.
-   * @returns Account entity.
-   */
   public async findOrCreatePlayerAccount(
     username: string,
     displayName: string,
@@ -30,111 +31,97 @@ export class AccountRepository extends IdentityBaseRepo<
     cognitoPoolId: string,
     cognitoSub: string,
     cognitoUsername: string
-  ): Promise<AccountEntity | null> {
-    return await this.findOneAndUpdate(
-      {
-        username: username,
-      },
+  ): Promise<PlayerAccountEntity | null> {
+    return (await this.findOneAndUpdate(
+      { username },
       {
         $setOnInsert: {
           accountId: generateULID(),
-          displayName: displayName,
-          kind: AccountKind.Player,
+          displayName,
+          type: AccountType.Player,
+          roles: [PlayerRole.Player],
           status: AccountStatus.Active,
-          scope: AccountScope.Tenant,
-          tenantId: tenantId,
-          cognitoPoolId: cognitoPoolId,
-          cognitoSub: cognitoSub,
-          cognitoUsername: cognitoUsername,
+          tenantId,
+          cognitoPoolId,
+          cognitoSub,
+          cognitoUsername,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
       },
-      {
-        upsert: true,
-        returnDocument: "after",
-      }
-    );
+      { upsert: true, returnDocument: "after" }
+    )) as PlayerAccountEntity | null;
   }
 
-  /**
-   * Tìm tài khoản công ty
-   * @param username - Username của tài khoản của công ty.
-   * @param cognitoPoolId - Id của pool Cognito.
-   * @param cognitoSub - Id của user trong pool Cognito.
-   * @param cognitoUsername - Username của user trong pool Cognito.
-   * @returns Account entity.
-   */
   public async findOrCreateCompanyAccount(
     username: string,
+    displayName: string,
+    accountType: AccountType,
+    roles: CompanyRole[],
+    status: AccountStatus,
+    accountId: string,
     cognitoPoolId: string,
     cognitoSub: string,
     cognitoUsername: string
-  ): Promise<AccountEntity | null> {
-    return await this.findOneAndUpdate(
-      {
-        username: username,
-      },
+  ): Promise<CompanyAccountEntity | null> {
+    return (await this.findOneAndUpdate(
+      { username },
       {
         $setOnInsert: {
-          accountId: generateULID(),
-          displayName: username,
-          kind: AccountKind.Internal,
-          status: AccountStatus.Active,
-          scope: AccountScope.Company,
-          cognitoPoolId: cognitoPoolId,
-          cognitoSub: cognitoSub,
-          cognitoUsername: cognitoUsername,
+          accountId: accountId,
+          displayName: displayName,
+          type: accountType,
+          roles,
+          status: status,
+          cognitoPoolId,
+          cognitoSub,
+          cognitoUsername,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
       },
-      {
-        upsert: true,
-        returnDocument: "after",
-      }
-    );
+      { upsert: true, returnDocument: "after" }
+    )) as CompanyAccountEntity | null;
   }
 
   /**
-   * Tạo tài khoản cho Agent đối tác vào trong hệ thống.
-   * @param username - Username của tài khoản của đối tác.
-   * @param tenantId - Id của tenant.
-   * @param cognitoPoolId - Id của pool Cognito.
-   * @param cognitoSub - Id của user trong pool Cognito.
-   * @param cognitoUsername - Username của user trong pool Cognito.
-   * @returns Account entity.
+   * Find or create an agent account
+   * @param username - username of the agent
+   * @param displayName
+   * @param roles - roles of the agent
+   * @param tenantId - tenant id of the agent
+   * @param cognitoPoolId - cognito pool id of the agent
+   * @param cognitoSub - cognito sub of the agent
+   * @param cognitoUsername - cognito username of the agent
+   * @returns the agent account
    */
   public async findOrCreateAgentAccount(
     username: string,
+    displayName: string,
+    roles: AgentRole[],
     tenantId: string,
     cognitoPoolId: string,
     cognitoSub: string,
     cognitoUsername: string
-  ): Promise<AccountEntity | null> {
-    return await this.findOneAndUpdate(
-      {
-        username: username,
-      },
+  ): Promise<AgentAccountEntity | null> {
+    return (await this.findOneAndUpdate(
+      { username },
       {
         $setOnInsert: {
           accountId: generateULID(),
-          displayName: username,
-          kind: AccountKind.Internal,
+          displayName: displayName,
+          type: AccountType.Agent,
+          roles: roles,
           status: AccountStatus.Active,
-          scope: AccountScope.Tenant,
-          tenantId: tenantId,
-          cognitoPoolId: cognitoPoolId,
-          cognitoSub: cognitoSub,
-          cognitoUsername: cognitoUsername,
+          tenantId,
+          cognitoPoolId,
+          cognitoSub,
+          cognitoUsername,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
       },
-      {
-        upsert: true,
-        returnDocument: "after",
-      }
-    );
+      { upsert: true, returnDocument: "after" }
+    )) as AgentAccountEntity | null;
   }
 }

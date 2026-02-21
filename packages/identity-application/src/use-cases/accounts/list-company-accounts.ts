@@ -6,28 +6,16 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
-import { adminListUsers } from "@megawin/app-core/aws/cognito";
+import {
+  adminListUsers,
+  COGNITO_WORKFORCE_POOL_ID,
+} from "@megawin/app-core/aws/cognito";
 
-// ============ DTO ============
-
-export interface ListCompanyAccountsInput {
-  limit?: number;
-  paginationToken?: string;
-}
-
-export interface CompanyAccountItem {
-  username: string;
-  status: string;
-  createdAt: string;
-  email?: string;
-}
-
-export interface ListCompanyAccountsOutput {
-  accounts: CompanyAccountItem[];
-  paginationToken?: string;
-}
-
-// ============ Use Case ============
+import type {
+  ListCompanyAccountsInput,
+  ListCompanyAccountsOutput,
+  CompanyAccountItem,
+} from "./dto/list-company-accounts.dto";
 
 export class ListCompanyAccountsUseCase extends NextApiUseCase<
   ListCompanyAccountsInput,
@@ -37,6 +25,7 @@ export class ListCompanyAccountsUseCase extends NextApiUseCase<
     input: ListCompanyAccountsInput
   ): Promise<ListCompanyAccountsOutput> {
     const result = await adminListUsers({
+      userPoolId: COGNITO_WORKFORCE_POOL_ID!,
       limit: input.limit,
       paginationToken: input.paginationToken,
     });

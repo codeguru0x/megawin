@@ -85,6 +85,8 @@ export interface TenantEntity {
   /**
    * Id của tenant. Dùng map trong các hệ thống khác.
    * Ví dụ: one
+   * Chỉ cho phép AlphaNumeric
+   * tenantId: này được lowercase chỉ cho phép AlphaNumeric
    */
   tenantId: string;
 

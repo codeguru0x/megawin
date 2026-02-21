@@ -1,13 +1,12 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { EllipsisVertical } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import type { CompanyAccount } from "../_lib/schema";
+import { AccountRowActions } from "./row-actions";
 
 export const companyAccountsColumns: ColumnDef<CompanyAccount>[] = [
   {
@@ -54,12 +53,9 @@ export const companyAccountsColumns: ColumnDef<CompanyAccount>[] = [
     header: "Trạng thái",
     cell: ({ row }) => {
       const status = row.original.status;
-      const isActive =
-        status === "CONFIRMED" || status === "active";
+      const isActive = status === "CONFIRMED" || status === "active";
       return (
-        <Badge variant={isActive ? "default" : "outline"}>
-          {status}
-        </Badge>
+        <Badge variant={isActive ? "default" : "outline"}>{status}</Badge>
       );
     },
     enableSorting: false,
@@ -79,16 +75,9 @@ export const companyAccountsColumns: ColumnDef<CompanyAccount>[] = [
   {
     id: "actions",
     header: "",
-    cell: () => (
+    cell: ({ row }) => (
       <div className="flex justify-end">
-        <Button
-          variant="ghost"
-          className="size-8 text-muted-foreground"
-          size="icon"
-          aria-label="Thao tác"
-        >
-          <EllipsisVertical />
-        </Button>
+        <AccountRowActions account={row.original} />
       </div>
     ),
     enableSorting: false,

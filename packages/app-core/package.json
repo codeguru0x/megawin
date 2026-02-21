@@ -64,6 +64,7 @@
   },
   "dependencies": {
     "@megawin/shared": "workspace:*",
+    "@megawin/identity-domain": "workspace:*",
     "@aws-sdk/client-cognito-identity-provider": "*",
     "@aws-sdk/client-kinesis": "*",
     "@aws-sdk/client-sqs": "*",

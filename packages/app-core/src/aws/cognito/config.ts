@@ -1,7 +1,14 @@
-export const COGNITO_USER_POOL_ID = process.env.COGNITO_USERPOOL_ID;
+/**
+ * Cognito User Pool IDs.
+ *
+ * Project sử dụng 2 pool:
+ *  - Workforce: company + agent accounts  (env: COGNITO_WORKFORCE_USERPOOL_ID)
+ *  - Player:    player accounts per-tenant (env: COGNITO_PLAYER_USERPOOL_ID)
+ *
+ * Backward compat: COGNITO_USERPOOL_ID vẫn hoạt động như default fallback.
+ */
 
-if (!COGNITO_USER_POOL_ID) {
-  throw new Error(
-    "COGNITO_USERPOOL_ID is not configured. Please set COGNITO_USERPOOL_ID in environment variables."
-  );
-}
+export const COGNITO_WORKFORCE_POOL_ID =
+  process.env.COGNITO_WORKFORCE_USERPOOL_ID;
+
+export const COGNITO_PLAYER_POOL_ID = process.env.COGNITO_PLAYER_USERPOOL_ID;

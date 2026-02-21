@@ -1,6 +1,6 @@
 /**
  * Middy onError: map lỗi (HTTP error, AppException, AppError) thành API Gateway response.
- * Sử dụng appErrorToStatusCode từ @megawin/shared/errors – hỗ trợ custom statusCode trên error.
+ * Response format thống nhất: { success: false, error: { code, message, details? } }
  */
 
 import {
@@ -10,6 +10,7 @@ import {
   APP_ERROR_CODES,
   appErrorToStatusCode,
 } from "@megawin/shared/errors";
+import type { ApiErrorResponse } from "@megawin/shared/api-types";
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
@@ -18,41 +19,53 @@ interface HttpLikeError {
   message?: string;
 }
 
+function toErrorBody(
+  code: string,
+  message: string,
+  details?: unknown,
+): ApiErrorResponse {
+  return {
+    success: false,
+    error: {
+      code,
+      message,
+      ...(details !== undefined && { details }),
+    },
+  };
+}
+
 export function httpErrorHandlerUseCaseFormat() {
   return {
     onError: (request: { error: unknown; response?: unknown }) => {
       const err = request.error;
       let statusCode = 500;
-      let body: { error: AppError };
+      let body: ApiErrorResponse;
 
       if (err instanceof AppException) {
         const appError = err.toError();
         statusCode = appErrorToStatusCode(appError);
-        body = { error: appError };
+        body = toErrorBody(appError.code, appError.message, appError.details);
       } else if (isAppError(err)) {
         statusCode = appErrorToStatusCode(err);
-        body = { error: err };
+        body = toErrorBody(
+          (err as AppError).code,
+          (err as AppError).message,
+          (err as AppError).details,
+        );
       } else if (err && typeof err === "object" && "statusCode" in err) {
         const httpErr = err as HttpLikeError;
         statusCode = Number(httpErr.statusCode) || 500;
-        body = {
-          error: {
-            code:
-              statusCode >= 500
-                ? APP_ERROR_CODES.INTERNAL
-                : APP_ERROR_CODES.BAD_REQUEST,
-            message: httpErr.message ?? "Error",
-            details: err,
-          },
-        };
+        body = toErrorBody(
+          statusCode >= 500
+            ? APP_ERROR_CODES.INTERNAL
+            : APP_ERROR_CODES.BAD_REQUEST,
+          httpErr.message ?? "Error",
+        );
       } else {
-        body = {
-          error: {
-            code: APP_ERROR_CODES.INTERNAL,
-            message: err instanceof Error ? err.message : "Unknown error",
-            details: err,
-          },
-        };
+        body = toErrorBody(
+          APP_ERROR_CODES.INTERNAL,
+          err instanceof Error ? err.message : "Unknown error",
+        );
       }
 
       request.response = {

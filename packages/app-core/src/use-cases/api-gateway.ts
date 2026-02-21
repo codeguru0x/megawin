@@ -3,6 +3,10 @@
  *
  * ApiGatewayUseCase.run(dto) trả thẳng ApiGatewayResponse.
  * Handler chỉ cần: return useCase.run(dto)
+ *
+ * Response format thống nhất với Next.js API routes:
+ * - Success: { success: true, data: T, meta?: ... }
+ * - Error:   { success: false, error: { code, message, details? } }
  */
 
 import {
@@ -13,6 +17,11 @@ import {
   APP_ERROR_CODES,
   appErrorToStatusCode,
 } from "@megawin/shared/errors";
+import type {
+  ApiSuccessResponse,
+  ApiErrorResponse,
+  ApiResponseMeta,
+} from "@megawin/shared/api-types";
 
 // ============ Re-export cho backward compat ============
 
@@ -32,31 +41,40 @@ export interface ApiGatewayResponse {
 
 // ============ Helpers ============
 
-/** Chuyển AppResult<O> thành ApiGatewayResponse. */
+/** Chuyển AppResult<O> thành ApiGatewayResponse (format thống nhất với Next.js). */
 export function toApiGatewayResponse<O>(
   result: AppResult<O>,
   options?: {
-    serialize?: (data: O) => string;
+    successStatus?: number;
     headers?: Record<string, string>;
+    meta?: ApiResponseMeta;
   },
 ): ApiGatewayResponse {
   const defaultHeaders = { "Content-Type": "application/json" };
   const headers = { ...defaultHeaders, ...options?.headers };
 
   if (result.success) {
-    const body =
-      options?.serialize != null
-        ? options.serialize(result.data)
-        : JSON.stringify(result.data);
-    return { statusCode: 200, body, headers };
+    const body: ApiSuccessResponse<O> = { success: true, data: result.data };
+    if (options?.meta) body.meta = options.meta;
+    return {
+      statusCode: options?.successStatus ?? 200,
+      body: JSON.stringify(body),
+      headers,
+    };
   }
 
   const statusCode = appErrorToStatusCode(result.error);
-  return {
-    statusCode,
-    body: JSON.stringify({ error: result.error }),
-    headers,
+  const body: ApiErrorResponse = {
+    success: false,
+    error: {
+      code: result.error.code,
+      message: result.error.message,
+      ...(result.error.details !== undefined && {
+        details: result.error.details,
+      }),
+    },
   };
+  return { statusCode, body: JSON.stringify(body), headers };
 }
 
 // ============ ApiGatewayUseCase ============
@@ -67,14 +85,7 @@ export function toApiGatewayResponse<O>(
  * @example
  * class CreateUserUseCase extends ApiGatewayUseCase<CreateUserDto, UserOutput> {
  *   protected async execute(input: CreateUserDto) {
- *     // throw AppException anywhere → auto 4xx/5xx response
  *     throw AppException.conflict("Username taken");
- *
- *     // Custom code với explicit statusCode
- *     throw new AppException("INSUFFICIENT_BALANCE", "Not enough", {
- *       statusCode: 422,
- *       details: { balance: 100 },
- *     });
  *   }
  * }
  *
@@ -92,23 +103,31 @@ export abstract class ApiGatewayUseCase<I, O> {
     try {
       const validationError = this.validate(input);
       if (validationError) {
-        return toApiGatewayResponse<O>({ success: false, error: validationError });
+        return toApiGatewayResponse<O>({
+          success: false,
+          error: validationError,
+        });
       }
       const output = await this.execute(input);
       return toApiGatewayResponse<O>({ success: true, data: output });
     } catch (err) {
       if (err instanceof AppException) {
-        return toApiGatewayResponse<O>({ success: false, error: err.toError() });
+        return toApiGatewayResponse<O>({
+          success: false,
+          error: err.toError(),
+        });
       }
       if (isAppError(err)) {
-        return toApiGatewayResponse<O>({ success: false, error: err as AppError });
+        return toApiGatewayResponse<O>({
+          success: false,
+          error: err as AppError,
+        });
       }
       return toApiGatewayResponse<O>({
         success: false,
         error: {
           code: APP_ERROR_CODES.INTERNAL,
           message: err instanceof Error ? err.message : "Unknown error",
-          details: err,
         },
       });
     }
