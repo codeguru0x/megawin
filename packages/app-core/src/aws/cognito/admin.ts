@@ -5,9 +5,11 @@ import {
   AdminDisableUserCommand,
   AdminEnableUserCommand,
   AdminGetUserCommand,
+  AdminInitiateAuthCommand,
   AdminSetUserMFAPreferenceCommand,
   AdminSetUserMFAPreferenceCommandInput,
   AdminSetUserPasswordCommand,
+  AdminUpdateUserAttributesCommand,
   AssociateSoftwareTokenCommand,
   GetUserPoolMfaConfigCommand,
   ListUsersCommand,
@@ -362,6 +364,88 @@ export async function adminSetUserPassword(
       Permanent: permanent,
     })
   );
+}
+
+// ============ List users ============
+
+// ============ Update user attributes ============
+
+export interface AdminUpdateUserAttributesParams {
+  userPoolId: string;
+  username: string;
+  userAttributes: AttributeType[];
+}
+
+/**
+ * Cập nhật attributes cho user trong Cognito User Pool.
+ */
+export async function adminUpdateUserAttributes(
+  params: AdminUpdateUserAttributesParams
+) {
+  const { userPoolId, username, userAttributes } = params;
+  return cognitoClient.send(
+    new AdminUpdateUserAttributesCommand({
+      UserPoolId: userPoolId,
+      Username: username,
+      UserAttributes: userAttributes,
+    })
+  );
+}
+
+// ============ Admin Initiate Auth ============
+
+export interface AdminInitiateAuthParams {
+  userPoolId: string;
+  clientId: string;
+  username: string;
+  password: string;
+}
+
+export interface AdminInitiateAuthResult {
+  accessToken: string;
+  idToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  tokenType: string;
+}
+
+/**
+ * Khởi tạo auth flow ADMIN_NO_SRP_AUTH cho user.
+ * Dùng khi hệ thống tự authenticate user (server-side) mà không cần SRP.
+ */
+export async function adminInitiateAuth(
+  params: AdminInitiateAuthParams
+): Promise<AdminInitiateAuthResult> {
+  const { userPoolId, clientId, username, password } = params;
+
+  const result = await cognitoClient.send(
+    new AdminInitiateAuthCommand({
+      UserPoolId: userPoolId,
+      ClientId: clientId,
+      AuthFlow: "ADMIN_NO_SRP_AUTH",
+      AuthParameters: {
+        USERNAME: username,
+        PASSWORD: password,
+      },
+    })
+  );
+
+  if (!result.AuthenticationResult) {
+    throw new Error(
+      result.ChallengeName
+        ? `Auth challenge required: ${result.ChallengeName}`
+        : "Authentication failed: no result returned"
+    );
+  }
+
+  const auth = result.AuthenticationResult;
+  return {
+    accessToken: auth.AccessToken!,
+    idToken: auth.IdToken!,
+    refreshToken: auth.RefreshToken!,
+    expiresIn: auth.ExpiresIn ?? 3600,
+    tokenType: auth.TokenType ?? "Bearer",
+  };
 }
 
 // ============ List users ============

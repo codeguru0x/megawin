@@ -1,0 +1,16 @@
+service: megawin-player
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs24.x
+
+build:
+  esbuild:
+    configFile: ./esbuild.config.mjs
+
+functions:
+  - ${file(src/functions/game-endpoint.yml)}
+  - ${file(src/functions/balance-endpoint.yml)}

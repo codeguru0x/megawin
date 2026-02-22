@@ -1,0 +1,190 @@
+/**
+ * Keno – Match Result
+ *
+ * So sánh lựa chọn người chơi với 20 số quay để xác định kết quả.
+ * Áp dụng cho cả cách chơi cơ bản và bổ sung.
+ */
+
+import {
+  KenoBigSmallBet,
+  KenoEvenOddBet,
+  type KenoPlayType,
+} from "../entities/keno.enums";
+import { KENO_BIG_SMALL_BOUNDARY } from "../entities/keno.types";
+import {
+  lookupBasicPrize,
+  DEFAULT_BIG_SMALL_PRIZES,
+  DEFAULT_EVEN_ODD_PRIZES,
+} from "../rules/prize-tables";
+
+// ─────────────────────────────────────────────
+// Draw Result (input)
+// ─────────────────────────────────────────────
+
+export interface KenoDrawResultForMatch {
+  /** 20 số trúng thưởng. */
+  winningNumbers: number[];
+  bigCount: number;
+  smallCount: number;
+  evenCount: number;
+  oddCount: number;
+}
+
+// ─────────────────────────────────────────────
+// Basic Match (cách chơi cơ bản)
+// ─────────────────────────────────────────────
+
+export interface KenoBasicMatchResult {
+  /** Số lượng số trùng. */
+  matchCount: number;
+  /** Tổng số số đã chọn. */
+  pickCount: number;
+  /** Các số trùng. */
+  matchedNumbers: number[];
+  /** Tiền thưởng. */
+  winAmount: number;
+}
+
+/**
+ * Match 1 board cơ bản với kết quả quay.
+ */
+export function matchBasicBoard(
+  numbers: number[],
+  result: KenoDrawResultForMatch,
+  prizeTable?: Record<number, Record<number, number>>,
+): KenoBasicMatchResult {
+  const winSet = new Set(result.winningNumbers);
+  const matchedNumbers: number[] = [];
+
+  for (const n of numbers) {
+    if (winSet.has(n)) matchedNumbers.push(n);
+  }
+
+  const pickCount = numbers.length;
+  const matchCount = matchedNumbers.length;
+  const winAmount = lookupBasicPrize(pickCount, matchCount, prizeTable);
+
+  return { matchCount, pickCount, matchedNumbers, winAmount };
+}
+
+// ─────────────────────────────────────────────
+// Side Bet Match (cách chơi bổ sung)
+// ─────────────────────────────────────────────
+
+export interface KenoSideBetMatchResult {
+  /** Kết quả thực tế (outcome). */
+  outcome: string;
+  /** Có trúng không. */
+  isWin: boolean;
+  /** Tiền thưởng. */
+  winAmount: number;
+}
+
+/**
+ * Match cược Lớn/Nhỏ với kết quả quay.
+ */
+export function matchBigSmallBet(
+  bet: KenoBigSmallBet,
+  result: KenoDrawResultForMatch,
+  prizes = DEFAULT_BIG_SMALL_PRIZES,
+): KenoSideBetMatchResult {
+  const { bigCount, smallCount } = result;
+
+  switch (bet) {
+    case KenoBigSmallBet.Big: {
+      if (bigCount >= 13) return { outcome: "big13Plus", isWin: true, winAmount: prizes.big13Plus };
+      if (bigCount === 11 || bigCount === 12) return { outcome: "big1112", isWin: true, winAmount: prizes.big1112 };
+      return { outcome: `big${bigCount}`, isWin: false, winAmount: 0 };
+    }
+
+    case KenoBigSmallBet.BigSmallDraw: {
+      if (bigCount === 10 && smallCount === 10) return { outcome: "draw", isWin: true, winAmount: prizes.draw };
+      return { outcome: `big${bigCount}_small${smallCount}`, isWin: false, winAmount: 0 };
+    }
+
+    case KenoBigSmallBet.Small: {
+      if (smallCount >= 13) return { outcome: "small13Plus", isWin: true, winAmount: prizes.small13Plus };
+      if (smallCount === 11 || smallCount === 12) return { outcome: "small1112", isWin: true, winAmount: prizes.small1112 };
+      return { outcome: `small${smallCount}`, isWin: false, winAmount: 0 };
+    }
+
+    default: {
+      const _: never = bet;
+      throw new Error(`Unknown bet: ${_}`);
+    }
+  }
+}
+
+/**
+ * Match cược Chẵn/Lẻ với kết quả quay.
+ */
+export function matchEvenOddBet(
+  bet: KenoEvenOddBet,
+  result: KenoDrawResultForMatch,
+  prizes = DEFAULT_EVEN_ODD_PRIZES,
+): KenoSideBetMatchResult {
+  const { evenCount, oddCount } = result;
+
+  switch (bet) {
+    case KenoEvenOddBet.Even: {
+      if (evenCount >= 15) return { outcome: "even15Plus", isWin: true, winAmount: prizes.even15Plus };
+      if (evenCount === 13 || evenCount === 14) return { outcome: "even1314", isWin: true, winAmount: prizes.even1314 };
+      return { outcome: `even${evenCount}`, isWin: false, winAmount: 0 };
+    }
+
+    case KenoEvenOddBet.Even1112: {
+      if (evenCount === 11 || evenCount === 12) return { outcome: "even1112", isWin: true, winAmount: prizes.even1112 };
+      return { outcome: `even${evenCount}`, isWin: false, winAmount: 0 };
+    }
+
+    case KenoEvenOddBet.EvenOddDraw: {
+      if (evenCount === 10 && oddCount === 10) return { outcome: "draw", isWin: true, winAmount: prizes.draw };
+      return { outcome: `even${evenCount}_odd${oddCount}`, isWin: false, winAmount: 0 };
+    }
+
+    case KenoEvenOddBet.Odd1112: {
+      if (oddCount === 11 || oddCount === 12) return { outcome: "odd1112", isWin: true, winAmount: prizes.odd1112 };
+      return { outcome: `odd${oddCount}`, isWin: false, winAmount: 0 };
+    }
+
+    case KenoEvenOddBet.Odd: {
+      if (oddCount >= 15) return { outcome: "odd15Plus", isWin: true, winAmount: prizes.odd15Plus };
+      if (oddCount === 13 || oddCount === 14) return { outcome: "odd1314", isWin: true, winAmount: prizes.odd1314 };
+      return { outcome: `odd${oddCount}`, isWin: false, winAmount: 0 };
+    }
+
+    default: {
+      const _: never = bet;
+      throw new Error(`Unknown bet: ${_}`);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────
+// Draw Result Stats
+// ─────────────────────────────────────────────
+
+/**
+ * Tính derived stats từ 20 số quay.
+ */
+export function computeDrawStats(winningNumbers: number[]): {
+  bigCount: number;
+  smallCount: number;
+  evenCount: number;
+  oddCount: number;
+} {
+  let bigCount = 0;
+  let smallCount = 0;
+  let evenCount = 0;
+  let oddCount = 0;
+
+  for (const n of winningNumbers) {
+    if (n > KENO_BIG_SMALL_BOUNDARY) bigCount++;
+    else smallCount++;
+
+    if (n % 2 === 0) evenCount++;
+    else oddCount++;
+  }
+
+  return { bigCount, smallCount, evenCount, oddCount };
+}

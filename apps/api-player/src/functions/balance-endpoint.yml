@@ -1,0 +1,6 @@
+get-balance:
+  handler: src/handlers/get-balance.handler
+  events:
+    - httpApi:
+        path: /player/balance
+        method: get

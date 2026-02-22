@@ -14,6 +14,15 @@ import {
   ChessRook,
   ChessKnight,
   ChessPawn,
+  Trophy,
+  Settings2,
+  CalendarClock,
+  Ticket,
+  ListOrdered,
+  FileBarChart,
+  Clock,
+  Layers,
+  CircleDollarSign,
 } from "lucide-react";
 
 export interface NavSubItem {
@@ -41,7 +50,8 @@ export interface NavGroup {
   items: NavMainItem[];
 }
 
-export const sidebarItems: NavGroup[] = [
+/** Sidebar items cho scope operator (company / staff). */
+export const operatorSidebarItems: NavGroup[] = [
   {
     id: 1,
     label: "Quản lý",
@@ -84,7 +94,6 @@ export const sidebarItems: NavGroup[] = [
         url: "/accounts/agents",
         icon: Users,
       },
-
       {
         title: "Người chơi",
         url: "/accounts/players",
@@ -98,12 +107,15 @@ export const sidebarItems: NavGroup[] = [
     items: [
       {
         title: "Lotto 5/35",
-        url: "/dashboard/lotto-5_35",
+        url: "/games/lotto535",
         icon: ChessKing,
         subItems: [
-          { title: "Cấu hình", url: "/dashboard/game/1", icon: Gamepad },
-          { title: "Jackpot", url: "/dashboard/game/2", icon: Gamepad },
-          { title: "Lịch sử", url: "/dashboard/game/3", icon: Gamepad },
+          { title: "Kỳ quay", url: "/games/lotto535/draws", icon: CalendarClock },
+          { title: "Vé chờ quay", url: "/games/lotto535/pending-tickets", icon: Clock, isNew: true },
+          { title: "Vé nhiều kỳ", url: "/games/lotto535/multi-draw", icon: Layers, isNew: true },
+          { title: "Thống kê tài chính", url: "/games/lotto535/financial-reports", icon: CircleDollarSign, isNew: true },
+          { title: "Cấu hình", url: "/games/lotto535/config", icon: Settings2 },
+          { title: "Jackpot", url: "/games/lotto535/jackpot", icon: Trophy },
         ],
       },
       {
@@ -128,11 +140,13 @@ export const sidebarItems: NavGroup[] = [
       },
       {
         title: "Keno",
-        url: "/dashboard/keno",
+        url: "/games/keno",
         icon: ChessBishop,
         subItems: [
-          { title: "Cấu hình", url: "/dashboard/game/1", icon: Gamepad },
-          { title: "Lịch sử", url: "/dashboard/game/3", icon: Gamepad },
+          { title: "Kỳ quay", url: "/games/keno/draws", icon: CalendarClock },
+          { title: "Bảng giải thưởng", url: "/games/keno/prize-table", icon: Trophy, isNew: true },
+          { title: "Thống kê tài chính", url: "/games/keno/financial-reports", icon: CircleDollarSign, isNew: true },
+          { title: "Cấu hình", url: "/games/keno/config", icon: Settings2 },
         ],
       },
       {
@@ -165,3 +179,37 @@ export const sidebarItems: NavGroup[] = [
     ],
   },
 ];
+
+/** Sidebar items cho scope tenant (agent / đại lý). */
+export const tenantSidebarItems: NavGroup[] = [
+  {
+    id: 1,
+    label: "Tổng quan",
+    items: [
+      {
+        title: "Dashboard",
+        url: "/tenant",
+        icon: LayoutDashboard,
+      },
+    ],
+  },
+  {
+    id: 2,
+    label: "Trò chơi",
+    items: [
+      {
+        title: "Lotto 5/35",
+        url: "/tenant/lotto535",
+        icon: ChessKing,
+        subItems: [
+          { title: "Vé", url: "/tenant/lotto535/tickets", icon: Ticket },
+          { title: "Kết quả", url: "/tenant/lotto535/results", icon: ListOrdered },
+          { title: "Báo cáo", url: "/tenant/lotto535/reports", icon: FileBarChart },
+        ],
+      },
+    ],
+  },
+];
+
+/** @deprecated Dùng operatorSidebarItems hoặc tenantSidebarItems thay thế. */
+export const sidebarItems = operatorSidebarItems;

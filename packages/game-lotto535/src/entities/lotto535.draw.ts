@@ -1,0 +1,282 @@
+/**
+ * Lotto 5/35 – Draw Document
+ *
+ * Collection: lotto535Draws
+ *
+ * 1 document = 1 kỳ mở thưởng (draw).
+ * Game quay 2 lần/ngày (13h + 21h), tức 2 draws/ngày.
+ *
+ * Chức năng:
+ * - Quản lý lịch (open/close bán vé)
+ * - Lưu kết quả quay + Vietlott reference
+ * - Tính toán tài chính: jackpot accumulation, commission, company take
+ * - Cung cấp jackpot info cho UI người chơi
+ *
+ * Pattern naming: {Game}DrawDoc – áp dụng cho mọi game.
+ */
+
+import type {
+  DrawResultSource,
+  Lotto535DrawStatus,
+  Lotto535Product,
+} from "./lotto535.enums";
+import type {
+  ISODateString,
+  Lotto535MainTuple,
+  Lotto535Special,
+  Lotto535SplitRatios,
+} from "./lotto535.types";
+
+// ─────────────────────────────────────────────
+// Draw Document
+// ─────────────────────────────────────────────
+
+export interface Lotto535DrawDoc {
+  _id: unknown;
+
+  /** Mã game. Luôn = "lotto535". */
+  product: Lotto535Product;
+
+  /**
+   * ID kỳ quay, unique + stable.
+   * Format: "YYYY-MM-DD-NNN" (NNN = draw number 001 hoặc 002).
+   * Ví dụ: "2026-02-22-001" (kỳ 13h), "2026-02-22-002" (kỳ 21h).
+   */
+  drawId: string;
+
+  /** Ngày quay theo timezone vận hành, format "YYYY-MM-DD". */
+  drawDate: ISODateString;
+
+  /**
+   * Số thứ tự kỳ quay trong ngày (1 = 13h, 2 = 21h).
+   * Dùng cho UI hiển thị "Kỳ 1 / Kỳ 2".
+   */
+  drawNo: number;
+
+  /** Thời điểm quay chính xác (Date). */
+  drawTime: Date;
+
+  /** Trạng thái vận hành kỳ quay. */
+  status: Lotto535DrawStatus;
+
+  // ───── Sales Window ─────
+
+  /** Cửa sổ bán vé. */
+  sales: {
+    /** Thời điểm mở bán. */
+    openAt: Date;
+
+    /**
+     * Thời điểm đóng bán.
+     * Thường = drawTime - 30 phút (cấu hình trong gameConfig.play.salesCloseBeforeMinutes).
+     * Backend reject mua vé cho draw này sau closeAt.
+     */
+    closeAt: Date;
+  };
+
+  // ───── Vietlott Reference (kết nối kết quả thực) ─────
+
+  /**
+   * Tham chiếu kỳ quay Vietlott chính thức.
+   * Cho phép khách hàng biết kết quả kỳ nào của Vietlott được sử dụng.
+   * Staff nhập trên backoffice khi import kết quả.
+   */
+  vietlottRef?: {
+    /**
+     * Mã kỳ quay Vietlott (ví dụ "00123").
+     * Lấy từ website/hệ thống Vietlott.
+     */
+    drawPeriod: string;
+
+    /** Ngày quay Vietlott. */
+    drawDate: ISODateString;
+
+    /** Phiên quay: 1 = 13h, 2 = 21h. */
+    drawSession: number;
+
+    /** URL nguồn kết quả Vietlott (optional, cho audit). */
+    sourceUrl?: string;
+  };
+
+  // ───── Result ─────
+
+  /** Kết quả kỳ quay. Set khi status chuyển sang "published". */
+  result?: {
+    /** 5 số chính trúng thưởng, sorted tăng dần. */
+    winningMain: Lotto535MainTuple;
+
+    /** 1 số đặc biệt trúng thưởng. */
+    winningSpecial: Lotto535Special;
+
+    /** Thời điểm công bố. */
+    publishedAt: Date;
+
+    /** Nguồn kết quả (audit trail). */
+    source: DrawResultSource;
+
+    /** Checksum/hash để verify integrity khi import từ nhiều nguồn. */
+    checksum?: string;
+  };
+
+  // ───── Jackpot ─────
+
+  /**
+   * Thông tin Jackpot cho kỳ quay.
+   * UI người chơi đọc từ đây để hiển thị giá trị Jackpot hiện tại.
+   */
+  jackpot: {
+    /**
+     * Jackpot đầu kỳ (VND).
+     * = Jackpot cuối kỳ trước + tích luỹ từ kỳ trước (nếu có).
+     * Kỳ đầu tiên = gameConfig.jackpot.seedAmount.
+     */
+    openingAmount: number;
+
+    /**
+     * Jackpot cuối kỳ (VND).
+     * Sau settle: closingAmount = openingAmount + jackpotContribution (nếu không ai trúng)
+     *                           = seedAmount (nếu có người trúng Jackpot)
+     */
+    closingAmount?: number;
+
+    /** Phần rollover từ kỳ trước (nếu có). */
+    rolloverAmount?: number;
+
+    /**
+     * Đánh dấu kỳ này là kỳ chia giải (split cycle).
+     * true khi Jackpot >= splitThreshold và chưa có người trúng,
+     * và đây là kỳ 21h ngày hôm sau.
+     */
+    isSplitCycle?: boolean;
+
+    /** Chi tiết chia giải nếu isSplitCycle = true. */
+    split?: Lotto535DrawSplit;
+  };
+
+  // ───── Financial Breakdown (sau settle) ─────
+
+  /**
+   * Tổng kết tài chính kỳ quay.
+   * Populate sau khi settle xong.
+   *
+   * Công thức:
+   *   jackpotContribution = totalRevenue - totalFixedPrizes - totalAgentCommission - companyTake
+   */
+  financial?: {
+    /** Tổng doanh thu tiền cược (100% revenue). */
+    totalRevenue: number;
+
+    /** Tổng tiền trả giải cố định (tier1 → consolation). */
+    totalFixedPrizes: number;
+
+    /** Tổng hoa hồng đại lý (sum across all tenants). */
+    totalAgentCommission: number;
+
+    /** Công ty thu về = companyRate × totalRevenue. */
+    companyTake: number;
+
+    /**
+     * Tiền tích luỹ vào Jackpot kỳ tiếp theo.
+     * = totalRevenue - totalFixedPrizes - totalAgentCommission - companyTake
+     * Có thể âm nếu trả thưởng nhiều hơn doanh thu (company bù).
+     */
+    jackpotContribution: number;
+
+    /** Breakdown chi tiết theo từng tenant. */
+    tenantBreakdown?: Lotto535DrawTenantFinancial[];
+  };
+
+  // ───── Operational Stats ─────
+
+  /** Thống kê vận hành (cập nhật khi salesClosed + sau settle). */
+  stats?: {
+    /** Số entry tham gia kỳ này. */
+    ticketEntryCount: number;
+
+    /** Tổng lines tất cả entries (dự báo tải settle). */
+    totalLineCount: number;
+
+    /** Tổng doanh thu kỳ này. */
+    totalSalesAmount: number;
+
+    /** Tổng payout sau settle. */
+    totalPayoutAmount?: number;
+  };
+
+  // ───── Timestamps ─────
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ─────────────────────────────────────────────
+// Sub-types
+// ─────────────────────────────────────────────
+
+/** Chi tiết chia giải khi kỳ là split cycle. */
+export interface Lotto535DrawSplit {
+  /**
+   * Ngưỡng kích hoạt chia (VND).
+   * Snapshot từ gameConfig.jackpot.splitThreshold tại thời điểm xác định split.
+   */
+  thresholdAmount: number;
+
+  /** Tỷ lệ chia (snapshot từ config). */
+  splitRatios: Lotto535SplitRatios;
+
+  /**
+   * Giá trị Jackpot được chia (VND).
+   * Chính là jackpot.openingAmount tại kỳ chia.
+   */
+  splitAmount: number;
+
+  /**
+   * Chi tiết phân bổ chia cho từng tier (sau redistribute + rounding).
+   * Chỉ bao gồm tier có người trúng. Key = tier name.
+   */
+  tierAllocations?: Record<
+    string,
+    {
+      /** Phần chia ban đầu theo ratio (trước redistribute). */
+      initialAmount: number;
+      /** Phần bổ sung nhận từ tier không có người trúng. */
+      redistributedAmount: number;
+      /** Tổng = initialAmount + redistributedAmount. */
+      totalAmount: number;
+      /** Số lượng giải trúng. */
+      winnerCount: number;
+      /** Bonus mỗi giải trúng (đã làm tròn xuống 5.000 VND). */
+      bonusPerWinner: number;
+    }
+  >;
+
+  /**
+   * Phần dư do làm tròn (VND), đã cộng vào hạng giải cao nhất.
+   * Lưu cho mục đích audit.
+   */
+  roundingRemainder?: number;
+
+  /** Version rule chia để audit (ví dụ "v1-2026-02"). */
+  splitRuleVersion?: string;
+
+  /** Hint text cho UI (optional). Ví dụ: "Kỳ chia giải Jackpot". */
+  hintText?: string;
+}
+
+/** Breakdown tài chính theo từng tenant trong 1 kỳ quay. */
+export interface Lotto535DrawTenantFinancial {
+  /** ID tenant. */
+  tenantId: string;
+
+  /** Doanh thu từ tenant này trong kỳ. */
+  revenue: number;
+
+  /** Hoa hồng đại lý. */
+  commission: number;
+
+  /** Tỷ lệ hoa hồng áp dụng (snapshot). */
+  commissionRate: number;
+
+  /** Số entry từ tenant này. */
+  entryCount: number;
+}

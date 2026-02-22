@@ -39,3 +39,10 @@ export { snsParserMiddleware, parseSnsMessage } from "./sns-parser";
 
 /** Step Function parser */
 export { stepFunctionParserMiddleware } from "./step-function-parser";
+
+/** Tenant API Key auth (server-to-server) */
+export {
+  tenantApiKeyAuthMiddleware,
+  type TenantApiKeyAuthOptions,
+  type TenantContext,
+} from "./tenant-api-key-auth";

@@ -1,0 +1,38 @@
+{
+  "name": "@megawin/game-lotto535-application",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lotto 5/35 application layer – repos, mappers, use cases for backoffice",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "check-types": "tsc --noEmit"
+  },
+  "exports": {
+    "./use-cases/draws": {
+      "types": "./src/use-cases/draws/index.ts",
+      "default": "./dist/use-cases/draws/index.js"
+    },
+    "./use-cases/game-config": {
+      "types": "./src/use-cases/game-config/index.ts",
+      "default": "./dist/use-cases/game-config/index.js"
+    },
+    "./repos": {
+      "types": "./src/infras/repos/index.ts",
+      "default": "./dist/infras/repos/index.js"
+    }
+  },
+  "dependencies": {
+    "@megawin/data": "workspace:*",
+    "@megawin/game-lotto535": "workspace:*",
+    "@megawin/next": "workspace:*",
+    "@megawin/shared": "workspace:*",
+    "mongodb": "^7.1.0"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@types/node": "^25.2.1",
+    "next": "^16.1.6",
+    "typescript": "5.9.3"
+  }
+}

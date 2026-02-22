@@ -27,17 +27,22 @@
       "types": "./src/use-cases/tenants/index.ts",
       "default": "./dist/use-cases/tenants/index.js"
     },
+    "./repos": {
+      "types": "./src/infras/repos/index.ts",
+      "default": "./dist/infras/repos/index.js"
+    },
     "./shared": {
       "types": "./src/shared/index.ts",
       "default": "./dist/shared/index.js"
     }
   },
   "dependencies": {
+    "@megawin/app-core": "workspace:*",
     "@megawin/data": "workspace:*",
     "@megawin/identity-domain": "workspace:*",
-    "@megawin/shared": "workspace:*",
-    "@megawin/app-core": "workspace:*",
     "@megawin/next": "workspace:*",
+    "@megawin/shared": "workspace:*",
+    "jose": "^6.1.3",
     "lodash": "^4.17.23",
     "mongodb": "^7.1.0"
   },

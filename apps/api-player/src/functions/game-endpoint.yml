@@ -1,0 +1,20 @@
+place-bet:
+  handler: src/handlers/place-bet.handler
+  events:
+    - httpApi:
+        path: /player/games/{gameId}/bets
+        method: post
+
+get-game-result:
+  handler: src/handlers/get-game-result.handler
+  events:
+    - httpApi:
+        path: /player/games/{gameId}/results/{roundId}
+        method: get
+
+get-bet-history:
+  handler: src/handlers/get-bet-history.handler
+  events:
+    - httpApi:
+        path: /player/bets
+        method: get

@@ -1,0 +1,29 @@
+{
+  "name": "@megawin/tenant-gateway",
+  "version": "1.0.0",
+  "description": "Outbound HTTP client to call tenant server APIs (debit, credit, balance, report)",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsc --watch",
+    "check-types": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "keywords": ["megawin", "tenant", "gateway", "outbound"],
+  "author": "",
+  "license": "ISC",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@megawin/http-client": "workspace:*",
+    "@megawin/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@types/node": "^25.2.2",
+    "typescript": "5.9.3"
+  }
+}

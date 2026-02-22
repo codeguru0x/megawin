@@ -52,6 +52,77 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  apps/api-player:
+    dependencies:
+      '@megawin/app-core':
+        specifier: workspace:*
+        version: link:../../packages/app-core
+      '@megawin/identity-application':
+        specifier: workspace:*
+        version: link:../../packages/identity-application
+      '@megawin/identity-domain':
+        specifier: workspace:*
+        version: link:../../packages/identity-domain
+      '@megawin/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      '@megawin/tenant-gateway':
+        specifier: workspace:*
+        version: link:../../packages/tenant-gateway
+      '@middy/core':
+        specifier: ^7.0.2
+        version: 7.0.2
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+    devDependencies:
+      '@megawin/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@types/node':
+        specifier: ^25.2.2
+        version: 25.2.3
+      serverless-offline:
+        specifier: ^14.4.0
+        version: 14.4.0(serverless@4.31.2)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  apps/api-tenant:
+    dependencies:
+      '@megawin/app-core':
+        specifier: workspace:*
+        version: link:../../packages/app-core
+      '@megawin/identity-application':
+        specifier: workspace:*
+        version: link:../../packages/identity-application
+      '@megawin/identity-domain':
+        specifier: workspace:*
+        version: link:../../packages/identity-domain
+      '@megawin/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      '@middy/core':
+        specifier: ^7.0.2
+        version: 7.0.2
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+    devDependencies:
+      '@megawin/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@types/node':
+        specifier: ^25.2.2
+        version: 25.2.3
+      serverless-offline:
+        specifier: ^14.4.0
+        version: 14.4.0(serverless@4.31.2)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
   apps/backoffice:
     dependencies:
       '@dnd-kit/core':
@@ -290,18 +361,6 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  packages/game-5_35:
-    devDependencies:
-      '@megawin/typescript-config':
-        specifier: workspace:*
-        version: link:../../tooling/typescript-config
-      '@types/node':
-        specifier: ^25.2.1
-        version: 25.2.1
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
-
   packages/game-core:
     devDependencies:
       '@megawin/typescript-config':
@@ -322,6 +381,61 @@ importers:
       '@types/node':
         specifier: ^25.2.1
         version: 25.2.1
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/game-lotto535:
+    devDependencies:
+      '@megawin/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@types/node':
+        specifier: ^25.2.1
+        version: 25.2.3
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/game-lotto535-application:
+    dependencies:
+      '@megawin/data':
+        specifier: workspace:*
+        version: link:../data
+      '@megawin/game-lotto535':
+        specifier: workspace:*
+        version: link:../game-lotto535
+      '@megawin/next':
+        specifier: workspace:*
+        version: link:../next
+      '@megawin/shared':
+        specifier: workspace:*
+        version: link:../shared
+      mongodb:
+        specifier: ^7.1.0
+        version: 7.1.0
+    devDependencies:
+      '@megawin/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@types/node':
+        specifier: ^25.2.1
+        version: 25.2.3
+      next:
+        specifier: ^16.1.6
+        version: 16.1.6(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/game-lotto535-sdk:
+    devDependencies:
+      '@megawin/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -368,6 +482,9 @@ importers:
       '@megawin/shared':
         specifier: workspace:*
         version: link:../shared
+      jose:
+        specifier: ^6.1.3
+        version: 6.1.3
       lodash:
         specifier: ^4.17.23
         version: 4.17.23
@@ -483,6 +600,25 @@ importers:
       vitest:
         specifier: latest
         version: 4.0.18(@types/node@25.2.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)
+
+  packages/tenant-gateway:
+    dependencies:
+      '@megawin/http-client':
+        specifier: workspace:*
+        version: link:../http-client
+      '@megawin/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      '@megawin/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@types/node':
+        specifier: ^25.2.2
+        version: 25.2.3
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
 
   packages/ui:
     dependencies:

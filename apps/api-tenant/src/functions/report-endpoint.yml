@@ -1,0 +1,6 @@
+get-reports:
+  handler: src/handlers/get-reports.handler
+  events:
+    - httpApi:
+        path: /tenant/reports/revenue
+        method: get

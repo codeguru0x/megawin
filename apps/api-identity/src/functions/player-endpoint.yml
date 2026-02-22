@@ -1,0 +1,6 @@
+player-login:
+  handler: src/handlers/player-login.handler
+  events:
+    - httpApi:
+        path: /players/login
+        method: post
