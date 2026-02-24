@@ -5,7 +5,6 @@
  */
 
 import type {
-  Currency,
   KenoBigSmallBet,
   KenoEvenOddBet,
   KenoPlayType,
@@ -80,7 +79,6 @@ export interface KenoTicketSummary {
   ticketId: string;
   ticketNo: string;
   status: KenoTicketDisplayStatus;
-  currency: Currency;
   totalAmount: number;
   drawCount: number;
   settledDraws: number;

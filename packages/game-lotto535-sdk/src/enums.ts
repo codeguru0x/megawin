@@ -71,10 +71,3 @@ export const Lotto535PrizeTier = {
 
 export type Lotto535PrizeTier =
   (typeof Lotto535PrizeTier)[keyof typeof Lotto535PrizeTier];
-
-// ─────────────────────────────────────────────
-// Currency
-// ─────────────────────────────────────────────
-
-export const Currency = { VND: "VND" } as const;
-export type Currency = (typeof Currency)[keyof typeof Currency];

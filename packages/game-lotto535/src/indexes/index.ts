@@ -18,7 +18,7 @@
  * ```
  */
 
-import { Lotto535Collections } from "../entities/lotto535.enums";
+import { Lotto535Collections } from "../entities/enums";
 
 /** Mô tả 1 index cần tạo. */
 export interface IndexSpec {

@@ -1,4 +1,4 @@
-import type { Lotto535GlobalConfigDoc } from "@megawin/game-lotto535/entities";
+import type { GlobalConfigDoc } from "@megawin/game-lotto535/entities";
 import type { GlobalConfigEntity } from "../../../infras/mappers/game-config-mapper";
 
 // ─────────────────────────────────────────────
@@ -14,10 +14,10 @@ export interface GetGameConfigOutput {
 // ─────────────────────────────────────────────
 
 export interface UpdateGameConfigInput {
-  jackpot?: Partial<Lotto535GlobalConfigDoc["jackpot"]>;
-  rates?: Partial<Lotto535GlobalConfigDoc["rates"]>;
-  defaultPrizes?: Partial<Lotto535GlobalConfigDoc["defaultPrizes"]>;
-  play?: Partial<Lotto535GlobalConfigDoc["play"]>;
+  jackpot?: Partial<GlobalConfigDoc["jackpot"]>;
+  rates?: Partial<GlobalConfigDoc["rates"]>;
+  defaultPrizes?: Partial<GlobalConfigDoc["defaultPrizes"]>;
+  play?: Partial<GlobalConfigDoc["play"]>;
 }
 
 export interface UpdateGameConfigOutput {

@@ -9,8 +9,8 @@ import {
   KenoBigSmallBet,
   KenoEvenOddBet,
   type KenoPlayType,
-} from "../entities/keno.enums";
-import { KENO_BIG_SMALL_BOUNDARY } from "../entities/keno.types";
+} from "../entities/enums";
+import { KENO_BIG_SMALL_BOUNDARY } from "../entities/types";
 import {
   lookupBasicPrize,
   DEFAULT_BIG_SMALL_PRIZES,
@@ -21,7 +21,7 @@ import {
 // Draw Result (input)
 // ─────────────────────────────────────────────
 
-export interface KenoDrawResultForMatch {
+export interface DrawResultForMatch {
   /** 20 số trúng thưởng. */
   winningNumbers: number[];
   bigCount: number;
@@ -34,7 +34,7 @@ export interface KenoDrawResultForMatch {
 // Basic Match (cách chơi cơ bản)
 // ─────────────────────────────────────────────
 
-export interface KenoBasicMatchResult {
+export interface BasicMatchResult {
   /** Số lượng số trùng. */
   matchCount: number;
   /** Tổng số số đã chọn. */
@@ -50,9 +50,9 @@ export interface KenoBasicMatchResult {
  */
 export function matchBasicBoard(
   numbers: number[],
-  result: KenoDrawResultForMatch,
+  result: DrawResultForMatch,
   prizeTable?: Record<number, Record<number, number>>,
-): KenoBasicMatchResult {
+): BasicMatchResult {
   const winSet = new Set(result.winningNumbers);
   const matchedNumbers: number[] = [];
 
@@ -71,7 +71,7 @@ export function matchBasicBoard(
 // Side Bet Match (cách chơi bổ sung)
 // ─────────────────────────────────────────────
 
-export interface KenoSideBetMatchResult {
+export interface SideBetMatchResult {
   /** Kết quả thực tế (outcome). */
   outcome: string;
   /** Có trúng không. */
@@ -85,9 +85,9 @@ export interface KenoSideBetMatchResult {
  */
 export function matchBigSmallBet(
   bet: KenoBigSmallBet,
-  result: KenoDrawResultForMatch,
+  result: DrawResultForMatch,
   prizes = DEFAULT_BIG_SMALL_PRIZES,
-): KenoSideBetMatchResult {
+): SideBetMatchResult {
   const { bigCount, smallCount } = result;
 
   switch (bet) {
@@ -120,9 +120,9 @@ export function matchBigSmallBet(
  */
 export function matchEvenOddBet(
   bet: KenoEvenOddBet,
-  result: KenoDrawResultForMatch,
+  result: DrawResultForMatch,
   prizes = DEFAULT_EVEN_ODD_PRIZES,
-): KenoSideBetMatchResult {
+): SideBetMatchResult {
   const { evenCount, oddCount } = result;
 
   switch (bet) {

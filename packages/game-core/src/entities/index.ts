@@ -1,0 +1,10 @@
+/**
+ * Game Core – Entities barrel export.
+ *
+ * Import: `import { ... } from "@megawin/game-core/entities"`
+ */
+
+export * from "./game-core.enums";
+export * from "./entry-change-seq";
+export * from "./entry-feed";
+export * from "./entry-feed-mapper";

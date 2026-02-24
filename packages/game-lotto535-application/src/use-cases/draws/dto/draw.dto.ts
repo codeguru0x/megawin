@@ -1,7 +1,6 @@
+import type { DrawStatus, DrawResultSource } from "@megawin/game-core/entities";
 import type {
-  Lotto535DrawStatus,
-  DrawResultSource,
-  Lotto535PrizeTier,
+  PrizeTier,
 } from "@megawin/game-lotto535/entities";
 import type { DrawEntity } from "../../../infras/mappers/draw-mapper";
 
@@ -95,7 +94,7 @@ export interface TriggerSettleOutput {
 // ─────────────────────────────────────────────
 
 export interface ListDrawsInput {
-  status?: Lotto535DrawStatus;
+  status?: DrawStatus;
   fromDate?: string;
   toDate?: string;
   page?: number;

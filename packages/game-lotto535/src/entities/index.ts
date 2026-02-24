@@ -4,10 +4,10 @@
  * Import: `import { ... } from "@megawin/game-lotto535/entities"`
  */
 
-export * from "./lotto535.enums";
-export * from "./lotto535.types";
-export * from "./lotto535.game-config";
-export * from "./lotto535.ticket";
-export * from "./lotto535.entry";
-export * from "./lotto535.line";
-export * from "./lotto535.draw";
+export * from "./enums";
+export * from "./types";
+export * from "./game-config";
+export * from "./ticket";
+export * from "./entry";
+export * from "./line";
+export * from "./draw";

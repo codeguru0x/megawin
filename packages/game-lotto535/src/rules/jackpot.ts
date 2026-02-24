@@ -20,9 +20,9 @@
  *   - Tier nào không có người trúng → phần đó chia đều cho các tier còn lại
  */
 
-import { Lotto535PrizeTier } from "../entities/lotto535.enums";
-import type { Lotto535SplitRatios } from "../entities/lotto535.types";
-import type { Lotto535GlobalConfigDoc } from "../entities/lotto535.game-config";
+import { PrizeTier } from "../entities/enums";
+import type { SplitRatios } from "../entities/types";
+import type { GlobalConfigDoc } from "../entities/game-config";
 
 // ─────────────────────────────────────────────
 // Jackpot Accumulation
@@ -79,7 +79,7 @@ export interface DrawFinancialResult {
  * @returns Kết quả tài chính bao gồm jackpotContribution
  */
 export function calculateDrawFinancials(
-  input: DrawFinancialInput,
+  input: DrawFinancialInput
 ): DrawFinancialResult {
   const { totalRevenue, totalFixedPrizes, tenantRevenues, companyRate } = input;
 
@@ -92,7 +92,7 @@ export function calculateDrawFinancials(
 
   const totalAgentCommission = tenantBreakdown.reduce(
     (sum, t) => sum + t.commission,
-    0,
+    0
   );
 
   const companyTake = Math.round(totalRevenue * companyRate);
@@ -127,7 +127,7 @@ export function calculateNextJackpot(
   currentOpening: number,
   contribution: number,
   hasJackpotWinner: boolean,
-  seedAmount: number,
+  seedAmount: number
 ): number {
   if (hasJackpotWinner) {
     // Có người trúng → reset về seed + contribution
@@ -160,11 +160,9 @@ export function isSplitCycleDraw(
   jackpotAmount: number,
   splitThreshold: number,
   hasJackpotWinner: boolean,
-  drawNo: number,
+  drawNo: number
 ): boolean {
-  return (
-    jackpotAmount >= splitThreshold && !hasJackpotWinner && drawNo === 2
-  );
+  return jackpotAmount >= splitThreshold && !hasJackpotWinner && drawNo === 2;
 }
 
 /** Input cho tính chia giải. */
@@ -173,14 +171,14 @@ export interface SplitInput {
   jackpotAmount: number;
 
   /** Tỷ lệ chia (từ gameConfig). */
-  splitRatios: Lotto535SplitRatios;
+  splitRatios: SplitRatios;
 
   /**
    * Map: tier → số lượng giải trúng (number of winning entries/lines).
    * Tier nào không có người trúng → không có trong map hoặc = 0.
    * CHỈ bao gồm tier1-tier5 (consolation KHÔNG tham gia chia).
    */
-  winnerCountPerTier: Map<Lotto535PrizeTier, number>;
+  winnerCountPerTier: Map<PrizeTier, number>;
 }
 
 /**
@@ -213,14 +211,14 @@ export interface SplitResult {
    * Map: tier → chi tiết phân bổ chia.
    * Chỉ chứa các tier có người trúng (tier không có winner bị loại).
    */
-  details: Map<Lotto535PrizeTier, SplitTierDetail>;
+  details: Map<PrizeTier, SplitTierDetail>;
 
   /**
    * Map: tier → bonus mỗi giải trúng (VND, đã làm tròn).
    * Đây là giá trị BỔ SUNG cho giải cố định.
    * Tiện dùng: giải thưởng cuối = fixedAmount + bonusPerWinner.
    */
-  bonusPerWinner: Map<Lotto535PrizeTier, number>;
+  bonusPerWinner: Map<PrizeTier, number>;
 
   /**
    * Phần dư do làm tròn, cộng vào hạng giải cao nhất có người trúng.
@@ -272,8 +270,8 @@ function roundDown(amount: number): number {
  *   jackpotAmount: 15_000_000_000,
  *   splitRatios: { tier1: 2, tier2: 1, tier3: 1, tier4: 1, tier5: 1 },
  *   winnerCountPerTier: new Map([
- *     [Lotto535PrizeTier.Tier1, 2],
- *     [Lotto535PrizeTier.Tier5, 10],
+ *     [PrizeTier.Tier1, 2],
+ *     [PrizeTier.Tier5, 10],
  *   ]),
  * });
  * // tier1: nhận 5 tỷ + redistribute từ tier2,3,4
@@ -284,14 +282,14 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
   const { jackpotAmount, splitRatios, winnerCountPerTier } = input;
 
   const allEligible: Array<{
-    tier: Lotto535PrizeTier;
+    tier: PrizeTier;
     parts: number;
   }> = [
-    { tier: Lotto535PrizeTier.Tier1, parts: splitRatios.tier1 },
-    { tier: Lotto535PrizeTier.Tier2, parts: splitRatios.tier2 },
-    { tier: Lotto535PrizeTier.Tier3, parts: splitRatios.tier3 },
-    { tier: Lotto535PrizeTier.Tier4, parts: splitRatios.tier4 },
-    { tier: Lotto535PrizeTier.Tier5, parts: splitRatios.tier5 },
+    { tier: PrizeTier.Tier1, parts: splitRatios.tier1 },
+    { tier: PrizeTier.Tier2, parts: splitRatios.tier2 },
+    { tier: PrizeTier.Tier3, parts: splitRatios.tier3 },
+    { tier: PrizeTier.Tier4, parts: splitRatios.tier4 },
+    { tier: PrizeTier.Tier5, parts: splitRatios.tier5 },
   ];
 
   const totalParts = allEligible.reduce((s, e) => s + e.parts, 0);
@@ -310,8 +308,8 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
   // Bước 2: redistribute phần chia của tier không có winner
   const tiersWithWinners = tierAllocations.filter((t) => t.hasWinners);
 
-  const details = new Map<Lotto535PrizeTier, SplitTierDetail>();
-  const bonusPerWinnerMap = new Map<Lotto535PrizeTier, number>();
+  const details = new Map<PrizeTier, SplitTierDetail>();
+  const bonusPerWinnerMap = new Map<PrizeTier, number>();
 
   if (tiersWithWinners.length === 0) {
     // Không tier nào có người trúng → Jackpot giữ nguyên, tích luỹ tiếp
@@ -324,7 +322,7 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
 
   // Chia đều unclaimed cho các tier có winners
   const redistributedPerTier = Math.floor(
-    unclaimedTotal / tiersWithWinners.length,
+    unclaimedTotal / tiersWithWinners.length
   );
 
   // Bước 3: tính bonus per winner + làm tròn
@@ -336,8 +334,7 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
     const roundedBonus = roundDown(rawBonusPerWinner);
 
     // Phần dư = (rawBonus - roundedBonus) × winnerCount
-    const tierRemainder =
-      totalForTier - roundedBonus * t.winnerCount;
+    const tierRemainder = totalForTier - roundedBonus * t.winnerCount;
     totalRemainder += tierRemainder;
 
     details.set(t.tier, {
@@ -353,12 +350,12 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
 
   // Bước 4: phần dư cộng vào hạng giải cao nhất có người trúng
   // Thứ tự ưu tiên: tier1 > tier2 > tier3 > tier4 > tier5
-  const priorityOrder: Lotto535PrizeTier[] = [
-    Lotto535PrizeTier.Tier1,
-    Lotto535PrizeTier.Tier2,
-    Lotto535PrizeTier.Tier3,
-    Lotto535PrizeTier.Tier4,
-    Lotto535PrizeTier.Tier5,
+  const priorityOrder: PrizeTier[] = [
+    PrizeTier.Tier1,
+    PrizeTier.Tier2,
+    PrizeTier.Tier3,
+    PrizeTier.Tier4,
+    PrizeTier.Tier5,
   ];
 
   if (totalRemainder > 0) {
@@ -367,7 +364,7 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
       if (detail && detail.winnerCount > 0) {
         // Cộng phần dư (đã làm tròn xuống 5.000) cho hạng cao nhất
         const remainderPerWinner = roundDown(
-          totalRemainder / detail.winnerCount,
+          totalRemainder / detail.winnerCount
         );
         detail.bonusPerWinner += remainderPerWinner;
         bonusPerWinnerMap.set(tier, detail.bonusPerWinner);
@@ -390,7 +387,7 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
 
 /** Giá trị mặc định cho global game config. Dùng khi seed database. */
 export const DEFAULT_LOTTO535_CONFIG: Pick<
-  Lotto535GlobalConfigDoc,
+  GlobalConfigDoc,
   "jackpot" | "rates" | "defaultPrizes" | "play"
 > = {
   jackpot: {
@@ -401,7 +398,6 @@ export const DEFAULT_LOTTO535_CONFIG: Pick<
   },
   rates: {
     defaultCommissionRate: 0.2,
-    minCommissionRate: 0.1,
     companyRate: 0.15,
   },
   defaultPrizes: {
@@ -413,7 +409,6 @@ export const DEFAULT_LOTTO535_CONFIG: Pick<
     consolation: 10_000,
   },
   play: {
-    currency: "VND",
     unitPrice: 10_000,
     maxBoardsPerTicket: 5,
     maxDrawCount: 6,

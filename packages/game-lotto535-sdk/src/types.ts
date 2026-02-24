@@ -7,7 +7,6 @@
  */
 
 import type {
-  Currency,
   Lotto535PlayType,
   Lotto535PrizeTier,
   Lotto535TicketDisplayStatus,
@@ -105,10 +104,7 @@ export interface TicketSummary {
   /** Trạng thái hiển thị. */
   status: Lotto535TicketDisplayStatus;
 
-  /** Đơn vị tiền. */
-  currency: Currency;
-
-  /** Tổng tiền vé. */
+  /** Tổng tiền vé (VND). */
   totalAmount: number;
 
   /** Số kỳ tham gia. */

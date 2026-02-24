@@ -13,6 +13,10 @@
       "types": "./src/use-cases/draws/index.ts",
       "default": "./dist/use-cases/draws/index.js"
     },
+    "./use-cases/place-bet": {
+      "types": "./src/use-cases/place-bet/index.ts",
+      "default": "./dist/use-cases/place-bet/index.js"
+    },
     "./use-cases/game-config": {
       "types": "./src/use-cases/game-config/index.ts",
       "default": "./dist/use-cases/game-config/index.js"
@@ -23,7 +27,9 @@
     }
   },
   "dependencies": {
+    "@megawin/app-core": "workspace:*",
     "@megawin/data": "workspace:*",
+    "@megawin/game-core": "workspace:*",
     "@megawin/game-lotto535": "workspace:*",
     "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",

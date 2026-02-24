@@ -1,0 +1,34 @@
+{
+  "name": "@megawin/game-keno-application",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Keno application layer – repos, mappers, use cases",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "check-types": "tsc --noEmit"
+  },
+  "exports": {
+    "./use-cases/place-bet": {
+      "types": "./src/use-cases/place-bet/index.ts",
+      "default": "./dist/use-cases/place-bet/index.js"
+    },
+    "./repos": {
+      "types": "./src/infras/repos/index.ts",
+      "default": "./dist/infras/repos/index.js"
+    }
+  },
+  "dependencies": {
+    "@megawin/data": "workspace:*",
+    "@megawin/game-core": "workspace:*",
+    "@megawin/game-keno": "workspace:*",
+    "@megawin/app-core": "workspace:*",
+    "@megawin/shared": "workspace:*",
+    "mongodb": "^7.1.0"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@types/node": "^25.2.1",
+    "typescript": "5.9.3"
+  }
+}

@@ -4,8 +4,8 @@
  * Validate lựa chọn số theo play type.
  */
 
-import { KenoPlayType, KENO_BASIC_PLAY_TYPES } from "../entities/keno.enums";
-import { KENO_NUMBER_MIN, KENO_NUMBER_MAX } from "../entities/keno.types";
+import { KenoPlayType, KENO_BASIC_PLAY_TYPES } from "../entities/enums";
+import { KENO_NUMBER_MIN, KENO_NUMBER_MAX } from "../entities/types";
 import { getPickCountFromPlayType } from "./prize-tables";
 
 // ─────────────────────────────────────────────

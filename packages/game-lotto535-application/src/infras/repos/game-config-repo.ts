@@ -1,10 +1,9 @@
 import {
   Lotto535Collections,
-  GameConfigScope,
-  Lotto535Product,
 } from "@megawin/game-lotto535/entities";
-import type { Lotto535GlobalConfigDoc, Lotto535TenantConfigDoc } from "@megawin/game-lotto535/entities";
-import { Lotto535BaseRepo } from "./lotto535-base-repo";
+import { GameConfigScope, GameProduct } from "@megawin/game-core/entities";
+import type { GlobalConfigDoc, TenantConfigDoc } from "@megawin/game-lotto535/entities";
+import { BaseRepo } from "./base-repo";
 import {
   GameConfigMapper,
   TenantConfigMapper,
@@ -12,7 +11,7 @@ import {
   type TenantConfigEntity,
 } from "../mappers/game-config-mapper";
 
-export class GameConfigRepository extends Lotto535BaseRepo<
+export class GameConfigRepository extends BaseRepo<
   GlobalConfigEntity,
   GameConfigMapper
 > {
@@ -25,7 +24,7 @@ export class GameConfigRepository extends Lotto535BaseRepo<
 
   async getGlobalConfig(): Promise<GlobalConfigEntity | null> {
     return await this.findOne({
-      product: Lotto535Product,
+      product: GameProduct.Lotto535,
       scope: GameConfigScope.Global,
     });
   }
@@ -36,7 +35,7 @@ export class GameConfigRepository extends Lotto535BaseRepo<
    */
   async upsertGlobalConfig(
     config: Partial<
-      Pick<Lotto535GlobalConfigDoc, "jackpot" | "rates" | "defaultPrizes" | "play">
+      Pick<GlobalConfigDoc, "jackpot" | "rates" | "defaultPrizes" | "play">
     >,
   ): Promise<GlobalConfigEntity | null> {
     const now = new Date();
@@ -48,12 +47,12 @@ export class GameConfigRepository extends Lotto535BaseRepo<
     if (config.play) $set.play = config.play;
 
     return await this.findOneAndUpdate(
-      { product: Lotto535Product, scope: GameConfigScope.Global },
+      { product: GameProduct.Lotto535, scope: GameConfigScope.Global },
       {
         $set,
         $inc: { version: 1 },
         $setOnInsert: {
-          product: Lotto535Product,
+          product: GameProduct.Lotto535,
           scope: GameConfigScope.Global,
           tenantId: null,
           createdAt: now,
@@ -64,7 +63,7 @@ export class GameConfigRepository extends Lotto535BaseRepo<
   }
 }
 
-export class TenantConfigRepository extends Lotto535BaseRepo<
+export class TenantConfigRepository extends BaseRepo<
   TenantConfigEntity,
   TenantConfigMapper
 > {
@@ -77,7 +76,7 @@ export class TenantConfigRepository extends Lotto535BaseRepo<
 
   async getTenantConfig(tenantId: string): Promise<TenantConfigEntity | null> {
     return await this.findOne({
-      product: Lotto535Product,
+      product: GameProduct.Lotto535,
       scope: GameConfigScope.Tenant,
       tenantId,
     });
@@ -86,7 +85,7 @@ export class TenantConfigRepository extends Lotto535BaseRepo<
   async upsertTenantConfig(
     tenantId: string,
     fields: Partial<
-      Pick<Lotto535TenantConfigDoc, "commissionRate" | "isEnabled" | "prizeOverrides">
+      Pick<TenantConfigDoc, "commissionRate" | "isEnabled" | "prizeOverrides">
     >,
   ): Promise<TenantConfigEntity | null> {
     const now = new Date();
@@ -97,12 +96,12 @@ export class TenantConfigRepository extends Lotto535BaseRepo<
     if (fields.prizeOverrides !== undefined) $set.prizeOverrides = fields.prizeOverrides;
 
     return await this.findOneAndUpdate(
-      { product: Lotto535Product, scope: GameConfigScope.Tenant, tenantId },
+      { product: GameProduct.Lotto535, scope: GameConfigScope.Tenant, tenantId },
       {
         $set,
         $inc: { version: 1 },
         $setOnInsert: {
-          product: Lotto535Product,
+          product: GameProduct.Lotto535,
           scope: GameConfigScope.Tenant,
           tenantId,
           commissionRate: fields.commissionRate ?? 0.2,
@@ -117,7 +116,7 @@ export class TenantConfigRepository extends Lotto535BaseRepo<
 
   async listTenantConfigs(): Promise<TenantConfigEntity[]> {
     return await this.findMany(
-      { product: Lotto535Product, scope: GameConfigScope.Tenant },
+      { product: GameProduct.Lotto535, scope: GameConfigScope.Tenant },
       { sort: { tenantId: 1 } },
     );
   }

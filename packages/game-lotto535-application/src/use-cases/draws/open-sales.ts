@@ -1,6 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { Lotto535DrawStatus } from "@megawin/game-lotto535/entities";
+import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
 
@@ -29,8 +29,8 @@ export class OpenSalesUseCase extends NextApiUseCase<
 
     const updated = await drawRepo.transitionStatus(
       input.drawId,
-      Lotto535DrawStatus.Scheduled,
-      Lotto535DrawStatus.SalesOpen,
+      DrawStatus.Scheduled,
+      DrawStatus.SalesOpen,
     );
 
     if (!updated) {
@@ -42,8 +42,8 @@ export class OpenSalesUseCase extends NextApiUseCase<
 
     return {
       drawId: input.drawId,
-      previousStatus: Lotto535DrawStatus.Scheduled,
-      currentStatus: Lotto535DrawStatus.SalesOpen,
+      previousStatus: DrawStatus.Scheduled,
+      currentStatus: DrawStatus.SalesOpen,
     };
   }
 }

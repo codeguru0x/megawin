@@ -2,7 +2,7 @@
  * Keno – Recommended MongoDB Indexes
  */
 
-import { KenoCollections } from "../entities/keno.enums";
+import { KenoCollections } from "../entities/enums";
 
 export interface IndexSpec {
   collection: string;

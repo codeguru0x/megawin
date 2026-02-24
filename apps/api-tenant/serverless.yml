@@ -14,3 +14,4 @@ build:
 functions:
   - ${file(src/functions/player-management-endpoint.yml)}
   - ${file(src/functions/report-endpoint.yml)}
+  - ${file(src/functions/entry-feed-endpoint.yml)}

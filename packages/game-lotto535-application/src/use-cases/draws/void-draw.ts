@@ -1,14 +1,14 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { Lotto535DrawStatus } from "@megawin/game-lotto535/entities";
+import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
 
 const VOIDABLE_STATUSES = new Set<string>([
-  Lotto535DrawStatus.Scheduled,
-  Lotto535DrawStatus.SalesOpen,
-  Lotto535DrawStatus.SalesClosed,
-  Lotto535DrawStatus.Drawing,
+  DrawStatus.Scheduled,
+  DrawStatus.SalesOpen,
+  DrawStatus.SalesClosed,
+  DrawStatus.Drawing,
 ]);
 
 /**
@@ -39,7 +39,7 @@ export class VoidDrawUseCase extends NextApiUseCase<
     const updated = await drawRepo.transitionStatus(
       input.drawId,
       draw.status,
-      Lotto535DrawStatus.Void,
+      DrawStatus.Void,
     );
 
     if (!updated) {
@@ -49,7 +49,7 @@ export class VoidDrawUseCase extends NextApiUseCase<
     return {
       drawId: input.drawId,
       previousStatus: draw.status,
-      currentStatus: Lotto535DrawStatus.Void,
+      currentStatus: DrawStatus.Void,
     };
   }
 }

@@ -1,8 +1,8 @@
 import { MongoMapper } from "@megawin/data/mongo/mapper";
-import type { Lotto535TicketEntryDoc } from "@megawin/game-lotto535/entities";
+import type { TicketEntryDoc } from "@megawin/game-lotto535/entities";
 import { Document } from "mongodb";
 
-type EntryEntity = Lotto535TicketEntryDoc & { id: string };
+type EntryEntity = TicketEntryDoc & { id: string };
 
 export class EntryMapper extends MongoMapper<Document, EntryEntity> {
   constructor() {

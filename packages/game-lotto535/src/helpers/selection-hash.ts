@@ -11,7 +11,7 @@
  */
 
 import { createHash } from "node:crypto";
-import type { Lotto535Board } from "../entities/lotto535.ticket";
+import type { Board } from "../entities/ticket";
 
 /**
  * Canonicalize 1 board: sort mainNumbers + specialNumbers.
@@ -36,7 +36,7 @@ function canonicalizeBoard(board: {
  * @param boards - Danh sách boards từ ticket
  * @returns Chuỗi canonical cho hashing
  */
-export function canonicalizeSelection(boards: Lotto535Board[]): string {
+export function canonicalizeSelection(boards: Board[]): string {
   const active = boards
     .filter((b) => !b.isVoid)
     .sort((a, b) => a.boardNo.localeCompare(b.boardNo));
@@ -65,7 +65,7 @@ export function canonicalizeSelection(boards: Lotto535Board[]): string {
  * // → "a1b2c3d4..."
  * ```
  */
-export function computeSelectionHash(boards: Lotto535Board[]): string {
+export function computeSelectionHash(boards: Board[]): string {
   const canonical = canonicalizeSelection(boards);
   return createHash("sha256").update(canonical, "utf8").digest("hex");
 }

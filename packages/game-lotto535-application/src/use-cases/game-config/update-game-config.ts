@@ -67,7 +67,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
 
   private validateInput(input: UpdateGameConfigInput): void {
     if (input.rates) {
-      const { defaultCommissionRate, minCommissionRate, companyRate } =
+      const { defaultCommissionRate, companyRate } =
         input.rates;
 
       if (
@@ -76,15 +76,6 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
       ) {
         throw AppException.badRequest(
           "defaultCommissionRate phải trong range [0, 1].",
-        );
-      }
-
-      if (
-        minCommissionRate !== undefined &&
-        (minCommissionRate < 0 || minCommissionRate > 1)
-      ) {
-        throw AppException.badRequest(
-          "minCommissionRate phải trong range [0, 1].",
         );
       }
 

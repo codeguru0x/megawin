@@ -1,9 +1,9 @@
 import { MongoMapper } from "@megawin/data/mongo/mapper";
-import type { Lotto535GlobalConfigDoc, Lotto535TenantConfigDoc } from "@megawin/game-lotto535/entities";
+import type { GlobalConfigDoc, TenantConfigDoc } from "@megawin/game-lotto535/entities";
 import { Document } from "mongodb";
 
-type GlobalConfigEntity = Lotto535GlobalConfigDoc & { id: string };
-type TenantConfigEntity = Lotto535TenantConfigDoc & { id: string };
+type GlobalConfigEntity = GlobalConfigDoc & { id: string };
+type TenantConfigEntity = TenantConfigDoc & { id: string };
 
 export class GameConfigMapper extends MongoMapper<Document, GlobalConfigEntity> {
   constructor() {

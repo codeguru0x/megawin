@@ -10,7 +10,7 @@
  * DrawId là stable + unique, dùng làm join key giữa draws ↔ entries.
  */
 
-import type { ISODateString } from "../entities/lotto535.types";
+import type { ISODateString } from "../entities/types";
 
 /**
  * Tạo drawId từ ngày + số thứ tự kỳ quay.

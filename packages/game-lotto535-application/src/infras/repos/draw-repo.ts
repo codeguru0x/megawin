@@ -1,15 +1,14 @@
 import {
   Lotto535Collections,
-  Lotto535DrawStatus,
-  type DrawResultSource,
 } from "@megawin/game-lotto535/entities";
+import { DrawStatus, type DrawResultSource } from "@megawin/game-core/entities";
 import type {
-  Lotto535DrawDoc,
-  Lotto535DrawSplit,
-  Lotto535DrawTenantFinancial,
+  DrawDoc,
+  DrawSplit,
+  DrawTenantFinancial,
 } from "@megawin/game-lotto535/entities";
-import type { Lotto535MainTuple, Lotto535Special, ISODateString } from "@megawin/game-lotto535/entities";
-import { Lotto535BaseRepo } from "./lotto535-base-repo";
+import type { MainTuple, Special, ISODateString } from "@megawin/game-lotto535/entities";
+import { BaseRepo } from "./base-repo";
 import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
 
 /**
@@ -17,15 +16,15 @@ import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
  * Key = current status, Value = set of allowed next statuses.
  */
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
-  [Lotto535DrawStatus.Scheduled]: new Set([Lotto535DrawStatus.SalesOpen, Lotto535DrawStatus.Void]),
-  [Lotto535DrawStatus.SalesOpen]: new Set([Lotto535DrawStatus.SalesClosed, Lotto535DrawStatus.Void]),
-  [Lotto535DrawStatus.SalesClosed]: new Set([Lotto535DrawStatus.Drawing, Lotto535DrawStatus.Void]),
-  [Lotto535DrawStatus.Drawing]: new Set([Lotto535DrawStatus.Published, Lotto535DrawStatus.Void]),
-  [Lotto535DrawStatus.Published]: new Set([Lotto535DrawStatus.Settling]),
-  [Lotto535DrawStatus.Settling]: new Set([Lotto535DrawStatus.Settled]),
+  [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Void]),
+  [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed, DrawStatus.Void]),
+  [DrawStatus.SalesClosed]: new Set([DrawStatus.Drawing, DrawStatus.Void]),
+  [DrawStatus.Drawing]: new Set([DrawStatus.Published, DrawStatus.Void]),
+  [DrawStatus.Published]: new Set([DrawStatus.Settling]),
+  [DrawStatus.Settling]: new Set([DrawStatus.Settled]),
 };
 
-export class DrawRepository extends Lotto535BaseRepo<DrawEntity, DrawMapper> {
+export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   constructor() {
     super({
       collName: Lotto535Collections.Draws,
@@ -33,7 +32,7 @@ export class DrawRepository extends Lotto535BaseRepo<DrawEntity, DrawMapper> {
     });
   }
 
-  async createDraw(doc: Omit<Lotto535DrawDoc, "_id">): Promise<string> {
+  async createDraw(doc: Omit<DrawDoc, "_id">): Promise<string> {
     return await this.insertOne(doc as any);
   }
 
@@ -93,12 +92,12 @@ export class DrawRepository extends Lotto535BaseRepo<DrawEntity, DrawMapper> {
   async publishResult(
     drawId: string,
     result: {
-      winningMain: Lotto535MainTuple;
-      winningSpecial: Lotto535Special;
+      winningMain: MainTuple;
+      winningSpecial: Special;
       source: DrawResultSource;
       checksum?: string;
     },
-    vietlottRef?: Lotto535DrawDoc["vietlottRef"],
+    vietlottRef?: DrawDoc["vietlottRef"],
   ): Promise<DrawEntity | null> {
     const now = new Date();
     const extra: Record<string, unknown> = {
@@ -108,8 +107,8 @@ export class DrawRepository extends Lotto535BaseRepo<DrawEntity, DrawMapper> {
 
     return await this.transitionStatus(
       drawId,
-      Lotto535DrawStatus.Drawing,
-      Lotto535DrawStatus.Published,
+      DrawStatus.Drawing,
+      DrawStatus.Published,
       extra,
     );
   }
@@ -119,7 +118,7 @@ export class DrawRepository extends Lotto535BaseRepo<DrawEntity, DrawMapper> {
     jackpot: {
       closingAmount: number;
       isSplitCycle?: boolean;
-      split?: Lotto535DrawSplit;
+      split?: DrawSplit;
     },
   ): Promise<boolean> {
     const $set: Record<string, unknown> = {
@@ -143,7 +142,7 @@ export class DrawRepository extends Lotto535BaseRepo<DrawEntity, DrawMapper> {
       totalAgentCommission: number;
       companyTake: number;
       jackpotContribution: number;
-      tenantBreakdown?: Lotto535DrawTenantFinancial[];
+      tenantBreakdown?: DrawTenantFinancial[];
     },
   ): Promise<boolean> {
     return await this.updateOne(
@@ -154,7 +153,7 @@ export class DrawRepository extends Lotto535BaseRepo<DrawEntity, DrawMapper> {
 
   async updateStats(
     drawId: string,
-    stats: Lotto535DrawDoc["stats"],
+    stats: DrawDoc["stats"],
   ): Promise<boolean> {
     return await this.updateOne(
       { drawId },
@@ -164,7 +163,7 @@ export class DrawRepository extends Lotto535BaseRepo<DrawEntity, DrawMapper> {
 
   async getLatestSettledDraw(): Promise<DrawEntity | null> {
     return await this.findOne(
-      { status: Lotto535DrawStatus.Settled },
+      { status: DrawStatus.Settled },
       { sort: { drawDate: -1, drawNo: -1 } },
     );
   }

@@ -1,12 +1,12 @@
 import {
   Lotto535Collections,
-  Lotto535EntryStatus,
 } from "@megawin/game-lotto535/entities";
-import type { Lotto535MainTuple, Lotto535Special } from "@megawin/game-lotto535/entities";
-import { Lotto535BaseRepo } from "./lotto535-base-repo";
+import { EntryStatus } from "@megawin/game-core/entities";
+import type { MainTuple, Special } from "@megawin/game-lotto535/entities";
+import { BaseRepo } from "./base-repo";
 import { EntryMapper, type EntryEntity } from "../mappers/entry-mapper";
 
-export class EntryRepository extends Lotto535BaseRepo<
+export class EntryRepository extends BaseRepo<
   EntryEntity,
   EntryMapper
 > {
@@ -71,17 +71,17 @@ export class EntryRepository extends Lotto535BaseRepo<
   async stampResultOnEntries(
     drawId: string,
     result: {
-      winningMain: Lotto535MainTuple;
-      winningSpecial: Lotto535Special;
+      winningMain: MainTuple;
+      winningSpecial: Special;
       publishedAt: Date;
     },
   ): Promise<number> {
     const updated = await this.updateMany(
-      { drawId, status: Lotto535EntryStatus.Active },
+      { drawId, status: EntryStatus.Active },
       {
         $set: {
           result,
-          status: Lotto535EntryStatus.Drawn,
+          status: EntryStatus.Drawn,
           updatedAt: new Date(),
         },
       },

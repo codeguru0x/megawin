@@ -62,10 +62,3 @@ export const KenoTicketDisplayStatus = {
 
 export type KenoTicketDisplayStatus =
   (typeof KenoTicketDisplayStatus)[keyof typeof KenoTicketDisplayStatus];
-
-// ─────────────────────────────────────────────
-// Currency
-// ─────────────────────────────────────────────
-
-export const Currency = { VND: "VND" } as const;
-export type Currency = (typeof Currency)[keyof typeof Currency];

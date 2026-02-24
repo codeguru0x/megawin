@@ -12,6 +12,11 @@
   "license": "ISC",
   "dependencies": {
     "@megawin/app-core": "workspace:*",
+    "@megawin/game-core": "workspace:*",
+    "@megawin/game-keno": "workspace:*",
+    "@megawin/game-keno-application": "workspace:*",
+    "@megawin/game-lotto535": "workspace:*",
+    "@megawin/game-lotto535-application": "workspace:*",
     "@megawin/identity-application": "workspace:*",
     "@megawin/identity-domain": "workspace:*",
     "@megawin/shared": "workspace:*",

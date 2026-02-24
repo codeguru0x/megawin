@@ -8,7 +8,7 @@
  * Keno quay mỗi 10 phút, từ 06:00 đến 21:55 = ~96 kỳ/ngày.
  */
 
-import type { ISODateString } from "../entities/keno.types";
+import type { ISODateString } from "../entities/types";
 
 export function generateKenoDrawId(
   drawDate: ISODateString,

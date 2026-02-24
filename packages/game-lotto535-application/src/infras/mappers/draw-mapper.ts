@@ -1,8 +1,8 @@
 import { MongoMapper } from "@megawin/data/mongo/mapper";
-import type { Lotto535DrawDoc } from "@megawin/game-lotto535/entities";
+import type { DrawDoc } from "@megawin/game-lotto535/entities";
 import { Document } from "mongodb";
 
-type DrawEntity = Lotto535DrawDoc & { id: string };
+type DrawEntity = DrawDoc & { id: string };
 
 export class DrawMapper extends MongoMapper<Document, DrawEntity> {
   constructor() {

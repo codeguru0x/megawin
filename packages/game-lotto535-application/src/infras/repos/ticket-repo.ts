@@ -1,8 +1,8 @@
 import { Lotto535Collections } from "@megawin/game-lotto535/entities";
-import { Lotto535BaseRepo } from "./lotto535-base-repo";
+import { BaseRepo } from "./base-repo";
 import { TicketMapper, type TicketEntity } from "../mappers/ticket-mapper";
 
-export class TicketRepository extends Lotto535BaseRepo<
+export class TicketRepository extends BaseRepo<
   TicketEntity,
   TicketMapper
 > {

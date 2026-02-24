@@ -1,9 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import {
-  Lotto535DrawStatus,
-  Lotto535Product,
-} from "@megawin/game-lotto535/entities";
+import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
 import { generateDrawId } from "@megawin/game-lotto535/helpers";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
@@ -67,12 +64,12 @@ export class CreateDrawsUseCase extends NextApiUseCase<
         : new Date((draws[i - 1]! as any)._drawTime);
 
       await drawRepo.createDraw({
-        product: Lotto535Product,
+        product: GameProduct.Lotto535,
         drawId,
         drawDate,
         drawNo,
         drawTime,
-        status: Lotto535DrawStatus.Scheduled,
+        status: DrawStatus.Scheduled,
         sales: { openAt, closeAt },
         jackpot: {
           openingAmount: jackpotOpening,
@@ -86,7 +83,7 @@ export class CreateDrawsUseCase extends NextApiUseCase<
         drawDate,
         drawNo,
         drawTime: drawTime.toISOString(),
-        status: Lotto535DrawStatus.Scheduled,
+        status: DrawStatus.Scheduled,
       });
     }
 

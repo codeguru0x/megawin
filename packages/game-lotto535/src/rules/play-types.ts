@@ -27,15 +27,15 @@
  * └──────────────┴────────────────────┴──────────────────────────────────────┘
  */
 
-import { Lotto535PlayType } from "../entities/lotto535.enums";
+import { PlayType } from "../entities/enums";
 import {
   LOTTO535_MAIN_COUNT,
   LOTTO535_MAIN_MAX,
   LOTTO535_MAIN_MIN,
   LOTTO535_SPECIAL_MAX,
   LOTTO535_SPECIAL_MIN,
-  type Lotto535BoardSelection,
-} from "../entities/lotto535.types";
+  type BoardSelection,
+} from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Combination helper
@@ -73,21 +73,21 @@ const MAIN_COVER_4_LINES = 31;
  * @returns Số line con (bộ số) được tạo ra
  */
 export function calculateLineCount(
-  playType: Lotto535PlayType,
-  selection: Lotto535BoardSelection,
+  playType: PlayType,
+  selection: BoardSelection,
 ): number {
   switch (playType) {
-    case Lotto535PlayType.Standard:
-    case Lotto535PlayType.QuickPick:
+    case PlayType.Standard:
+    case PlayType.QuickPick:
       return 1;
 
-    case Lotto535PlayType.MainCover4:
+    case PlayType.MainCover4:
       return MAIN_COVER_4_LINES;
 
-    case Lotto535PlayType.MainCover:
+    case PlayType.MainCover:
       return combination(selection.mainNumbers.length, LOTTO535_MAIN_COUNT);
 
-    case Lotto535PlayType.SpecialCover:
+    case PlayType.SpecialCover:
       return selection.specialNumbers.length;
 
     default: {
@@ -115,14 +115,14 @@ export interface ValidationResult {
  * @returns Kết quả validate
  */
 export function validateSelection(
-  playType: Lotto535PlayType,
-  selection: Lotto535BoardSelection,
+  playType: PlayType,
+  selection: BoardSelection,
 ): ValidationResult {
   const errors: string[] = [];
   const { mainNumbers, specialNumbers } = selection;
 
   // QuickPick không cần validate selection (hệ thống tự sinh)
-  if (playType === Lotto535PlayType.QuickPick) {
+  if (playType === PlayType.QuickPick) {
     return { valid: true, errors };
   }
 
@@ -158,7 +158,7 @@ export function validateSelection(
 
   // Validate count theo play type
   switch (playType) {
-    case Lotto535PlayType.Standard:
+    case PlayType.Standard:
       if (mainNumbers.length !== 5) {
         errors.push("Chơi thường: cần chọn đúng 5 số chính");
       }
@@ -167,7 +167,7 @@ export function validateSelection(
       }
       break;
 
-    case Lotto535PlayType.MainCover4:
+    case PlayType.MainCover4:
       if (mainNumbers.length !== 4) {
         errors.push("Bao 4 số: cần chọn đúng 4 số chính");
       }
@@ -176,7 +176,7 @@ export function validateSelection(
       }
       break;
 
-    case Lotto535PlayType.MainCover:
+    case PlayType.MainCover:
       if (mainNumbers.length < 6 || mainNumbers.length > 15) {
         errors.push("Bao số chính: cần chọn 6-15 số chính");
       }
@@ -185,7 +185,7 @@ export function validateSelection(
       }
       break;
 
-    case Lotto535PlayType.SpecialCover:
+    case PlayType.SpecialCover:
       if (mainNumbers.length !== 5) {
         errors.push("Bao số đặc biệt: cần chọn đúng 5 số chính");
       }

@@ -1,0 +1,13 @@
+place-bet-lotto535:
+  handler: src/handlers/place-bet-lotto535.handler
+  events:
+    - httpApi:
+        path: /player/lotto535/bets
+        method: post
+
+place-bet-keno:
+  handler: src/handlers/place-bet-keno.handler
+  events:
+    - httpApi:
+        path: /player/keno/bets
+        method: post

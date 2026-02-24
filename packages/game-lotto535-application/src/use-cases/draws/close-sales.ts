@@ -1,9 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import {
-  Lotto535DrawStatus,
-  Lotto535EntryStatus,
-} from "@megawin/game-lotto535/entities";
+import { DrawStatus, EntryStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
@@ -26,8 +23,8 @@ export class CloseSalesUseCase extends NextApiUseCase<
 
     const updated = await drawRepo.transitionStatus(
       input.drawId,
-      Lotto535DrawStatus.SalesOpen,
-      Lotto535DrawStatus.SalesClosed,
+      DrawStatus.SalesOpen,
+      DrawStatus.SalesClosed,
     );
 
     if (!updated) {
@@ -43,8 +40,8 @@ export class CloseSalesUseCase extends NextApiUseCase<
 
     await entryRepo.batchTransitionByDrawId(
       input.drawId,
-      Lotto535EntryStatus.Scheduled,
-      Lotto535EntryStatus.Active,
+      EntryStatus.Scheduled,
+      EntryStatus.Active,
     );
 
     const [entryCount, totalLines, revenueData] = await Promise.all([
@@ -63,8 +60,8 @@ export class CloseSalesUseCase extends NextApiUseCase<
 
     return {
       drawId: input.drawId,
-      previousStatus: Lotto535DrawStatus.SalesOpen,
-      currentStatus: Lotto535DrawStatus.SalesClosed,
+      previousStatus: DrawStatus.SalesOpen,
+      currentStatus: DrawStatus.SalesClosed,
     };
   }
 }

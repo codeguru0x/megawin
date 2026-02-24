@@ -9,12 +9,12 @@
  * Dùng trong settle flow: expand lines → match từng line → aggregate tier counts.
  */
 
-import type { Lotto535PrizeTier } from "../entities/lotto535.enums";
+import type { PrizeTier } from "../entities/enums";
 import type {
-  Lotto535LineValue,
-  Lotto535MainTuple,
-  Lotto535Special,
-} from "../entities/lotto535.types";
+  LineValue,
+  MainTuple,
+  Special,
+} from "../entities/types";
 import { determineTier, type LineMatchResult } from "../rules/prize-tiers";
 
 // ─────────────────────────────────────────────
@@ -23,8 +23,8 @@ import { determineTier, type LineMatchResult } from "../rules/prize-tiers";
 
 /** Kết quả kỳ quay – input cho matching. */
 export interface DrawResultForMatch {
-  winningMain: Lotto535MainTuple;
-  winningSpecial: Lotto535Special;
+  winningMain: MainTuple;
+  winningSpecial: Special;
 }
 
 // ─────────────────────────────────────────────
@@ -36,8 +36,8 @@ export interface DrawResultForMatch {
  * Cả 2 đều phải sorted tăng dần (canonical).
  */
 function countMainMatches(
-  lineMain: Lotto535MainTuple,
-  winMain: Lotto535MainTuple,
+  lineMain: MainTuple,
+  winMain: MainTuple,
 ): number {
   const winSet = new Set(winMain);
   let count = 0;
@@ -55,7 +55,7 @@ function countMainMatches(
  * @returns Chi tiết match: tier, mainMatchCount, specialMatched
  */
 export function matchLine(
-  line: Lotto535LineValue,
+  line: LineValue,
   result: DrawResultForMatch,
 ): LineMatchResult {
   const mainMatchCount = countMainMatches(line.main, result.winningMain);
@@ -78,7 +78,7 @@ export interface AggregateMatchResult {
   winningLines: number;
 
   /** Chi tiết theo tier: tier → số lines trúng. */
-  tierCounts: Map<Lotto535PrizeTier, number>;
+  tierCounts: Map<PrizeTier, number>;
 }
 
 /**
@@ -89,10 +89,10 @@ export interface AggregateMatchResult {
  * @returns Aggregate: totalLines, winningLines, tierCounts
  */
 export function matchLines(
-  lines: Lotto535LineValue[],
+  lines: LineValue[],
   result: DrawResultForMatch,
 ): AggregateMatchResult {
-  const tierCounts = new Map<Lotto535PrizeTier, number>();
+  const tierCounts = new Map<PrizeTier, number>();
   let winningLines = 0;
 
   for (const line of lines) {

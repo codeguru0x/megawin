@@ -39,7 +39,7 @@
  *     Giải Khuyến Khích KHÔNG tham gia chia Jackpot.
  */
 
-import { Lotto535PrizeTier } from "../entities/lotto535.enums";
+import { PrizeTier } from "../entities/enums";
 
 // ─────────────────────────────────────────────
 // Prize Tier Rule Definition
@@ -48,7 +48,7 @@ import { Lotto535PrizeTier } from "../entities/lotto535.enums";
 /** Quy tắc match cho 1 hạng giải. */
 export interface PrizeTierRule {
   /** Mã hạng giải. */
-  tier: Lotto535PrizeTier;
+  tier: PrizeTier;
 
   /** Tên hiển thị tiếng Việt. */
   label: string;
@@ -81,7 +81,7 @@ export interface PrizeTierRule {
  */
 export const DEFAULT_PRIZE_TIER_RULES: readonly PrizeTierRule[] = [
   {
-    tier: Lotto535PrizeTier.Jackpot,
+    tier: PrizeTier.Jackpot,
     label: "Giải Độc Đắc",
     mainMatch: 5,
     specialMatch: true,
@@ -89,7 +89,7 @@ export const DEFAULT_PRIZE_TIER_RULES: readonly PrizeTierRule[] = [
     splitEligible: false,
   },
   {
-    tier: Lotto535PrizeTier.Tier1,
+    tier: PrizeTier.Tier1,
     label: "Giải Nhất",
     mainMatch: 5,
     specialMatch: false,
@@ -97,7 +97,7 @@ export const DEFAULT_PRIZE_TIER_RULES: readonly PrizeTierRule[] = [
     splitEligible: true,
   },
   {
-    tier: Lotto535PrizeTier.Tier2,
+    tier: PrizeTier.Tier2,
     label: "Giải Nhì",
     mainMatch: 4,
     specialMatch: true,
@@ -105,7 +105,7 @@ export const DEFAULT_PRIZE_TIER_RULES: readonly PrizeTierRule[] = [
     splitEligible: true,
   },
   {
-    tier: Lotto535PrizeTier.Tier3,
+    tier: PrizeTier.Tier3,
     label: "Giải Ba",
     mainMatch: 4,
     specialMatch: false,
@@ -113,7 +113,7 @@ export const DEFAULT_PRIZE_TIER_RULES: readonly PrizeTierRule[] = [
     splitEligible: true,
   },
   {
-    tier: Lotto535PrizeTier.Tier4,
+    tier: PrizeTier.Tier4,
     label: "Giải Tư",
     mainMatch: 3,
     specialMatch: true,
@@ -121,7 +121,7 @@ export const DEFAULT_PRIZE_TIER_RULES: readonly PrizeTierRule[] = [
     splitEligible: true,
   },
   {
-    tier: Lotto535PrizeTier.Tier5,
+    tier: PrizeTier.Tier5,
     label: "Giải Năm",
     mainMatch: 3,
     specialMatch: false,
@@ -129,7 +129,7 @@ export const DEFAULT_PRIZE_TIER_RULES: readonly PrizeTierRule[] = [
     splitEligible: true,
   },
   {
-    tier: Lotto535PrizeTier.Consolation,
+    tier: PrizeTier.Consolation,
     label: "Giải Khuyến Khích",
     mainMatch: 0,
     specialMatch: "only",
@@ -145,7 +145,7 @@ export const DEFAULT_PRIZE_TIER_RULES: readonly PrizeTierRule[] = [
 /** Kết quả match 1 line với kết quả quay. */
 export interface LineMatchResult {
   /** Hạng giải trúng. null nếu không trúng. */
-  tier: Lotto535PrizeTier | null;
+  tier: PrizeTier | null;
 
   /** Số lượng số chính trùng (0-5). */
   mainMatchCount: number;
@@ -180,7 +180,7 @@ export interface LineMatchResult {
 export function determineTier(
   mainMatchCount: number,
   specialMatched: boolean,
-): Lotto535PrizeTier | null {
+): PrizeTier | null {
   for (const rule of DEFAULT_PRIZE_TIER_RULES) {
     if (rule.specialMatch === "only") {
       // Consolation: trùng đặc biệt + ≤ 2 số chính (không đủ điều kiện tier cao hơn)
@@ -213,7 +213,7 @@ export function determineTier(
  * Dùng khi cần lấy label, defaultAmount, splitEligible...
  */
 export function getPrizeTierRule(
-  tier: Lotto535PrizeTier,
+  tier: PrizeTier,
 ): PrizeTierRule | undefined {
   return DEFAULT_PRIZE_TIER_RULES.find((r) => r.tier === tier);
 }
@@ -227,8 +227,8 @@ export function getPrizeTierRule(
  */
 export function buildPrizeAmountMap(
   prizeAmounts: Record<string, number>,
-): ReadonlyMap<Lotto535PrizeTier, number> {
-  const map = new Map<Lotto535PrizeTier, number>();
+): ReadonlyMap<PrizeTier, number> {
+  const map = new Map<PrizeTier, number>();
 
   for (const rule of DEFAULT_PRIZE_TIER_RULES) {
     const amount = prizeAmounts[rule.tier] ?? rule.defaultAmount;

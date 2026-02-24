@@ -1,14 +1,14 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { Lotto535DrawStatus } from "@megawin/game-lotto535/entities";
-import type { Lotto535MainTuple, Lotto535Special } from "@megawin/game-lotto535/entities";
+import { DrawStatus } from "@megawin/game-core/entities";
+import type { MainTuple, Special } from "@megawin/game-lotto535/entities";
 import {
   LOTTO535_MAIN_COUNT,
   LOTTO535_MAIN_MIN,
   LOTTO535_MAIN_MAX,
   LOTTO535_SPECIAL_MIN,
   LOTTO535_SPECIAL_MAX,
-} from "@megawin/game-lotto535/entities/lotto535.types";
+} from "@megawin/game-lotto535/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
@@ -37,19 +37,19 @@ export class PublishResultUseCase extends NextApiUseCase<
     const drawRepo = new DrawRepository();
     const entryRepo = new EntryRepository();
 
-    const sortedMain = [...input.winningMain].sort((a, b) => a - b) as unknown as Lotto535MainTuple;
-    const special = input.winningSpecial as Lotto535Special;
+    const sortedMain = [...input.winningMain].sort((a, b) => a - b) as unknown as MainTuple;
+    const special = input.winningSpecial as Special;
 
     const draw = await drawRepo.getDrawById(input.drawId);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
     }
 
-    if (draw.status === Lotto535DrawStatus.SalesClosed) {
+    if (draw.status === DrawStatus.SalesClosed) {
       await drawRepo.transitionStatus(
         input.drawId,
-        Lotto535DrawStatus.SalesClosed,
-        Lotto535DrawStatus.Drawing,
+        DrawStatus.SalesClosed,
+        DrawStatus.Drawing,
       );
     }
 
@@ -79,7 +79,7 @@ export class PublishResultUseCase extends NextApiUseCase<
 
     return {
       drawId: input.drawId,
-      status: Lotto535DrawStatus.Published,
+      status: DrawStatus.Published,
       result: {
         winningMain: sortedMain as unknown as number[],
         winningSpecial: special,

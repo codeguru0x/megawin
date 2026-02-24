@@ -57,6 +57,21 @@ importers:
       '@megawin/app-core':
         specifier: workspace:*
         version: link:../../packages/app-core
+      '@megawin/game-core':
+        specifier: workspace:*
+        version: link:../../packages/game-core
+      '@megawin/game-keno':
+        specifier: workspace:*
+        version: link:../../packages/game-keno
+      '@megawin/game-keno-application':
+        specifier: workspace:*
+        version: link:../../packages/game-keno-application
+      '@megawin/game-lotto535':
+        specifier: workspace:*
+        version: link:../../packages/game-lotto535
+      '@megawin/game-lotto535-application':
+        specifier: workspace:*
+        version: link:../../packages/game-lotto535-application
       '@megawin/identity-application':
         specifier: workspace:*
         version: link:../../packages/identity-application
@@ -94,6 +109,12 @@ importers:
       '@megawin/app-core':
         specifier: workspace:*
         version: link:../../packages/app-core
+      '@megawin/game-core':
+        specifier: workspace:*
+        version: link:../../packages/game-core
+      '@megawin/game-core-application':
+        specifier: workspace:*
+        version: link:../../packages/game-core-application
       '@megawin/identity-application':
         specifier: workspace:*
         version: link:../../packages/identity-application
@@ -362,6 +383,10 @@ importers:
         version: 5.9.3
 
   packages/game-core:
+    dependencies:
+      mongodb:
+        specifier: ^7.1.0
+        version: 7.1.0
     devDependencies:
       '@megawin/typescript-config':
         specifier: workspace:*
@@ -369,11 +394,40 @@ importers:
       '@types/node':
         specifier: ^25.2.1
         version: 25.2.1
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/game-core-application:
+    dependencies:
+      '@megawin/data':
+        specifier: workspace:*
+        version: link:../data
+      '@megawin/game-core':
+        specifier: workspace:*
+        version: link:../game-core
+      '@megawin/shared':
+        specifier: workspace:*
+        version: link:../shared
+      mongodb:
+        specifier: ^7.1.0
+        version: 7.1.0
+    devDependencies:
+      '@megawin/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@types/node':
+        specifier: ^25.2.1
+        version: 25.2.3
       typescript:
         specifier: 5.9.3
         version: 5.9.3
 
   packages/game-keno:
+    dependencies:
+      '@megawin/game-core':
+        specifier: workspace:*
+        version: link:../game-core
     devDependencies:
       '@megawin/typescript-config':
         specifier: workspace:*
@@ -385,7 +439,54 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  packages/game-keno-application:
+    dependencies:
+      '@megawin/app-core':
+        specifier: workspace:*
+        version: link:../app-core
+      '@megawin/data':
+        specifier: workspace:*
+        version: link:../data
+      '@megawin/game-core':
+        specifier: workspace:*
+        version: link:../game-core
+      '@megawin/game-keno':
+        specifier: workspace:*
+        version: link:../game-keno
+      '@megawin/shared':
+        specifier: workspace:*
+        version: link:../shared
+      mongodb:
+        specifier: ^7.1.0
+        version: 7.1.0
+    devDependencies:
+      '@megawin/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@types/node':
+        specifier: ^25.2.1
+        version: 25.2.3
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/game-keno-sdk:
+    devDependencies:
+      '@megawin/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
   packages/game-lotto535:
+    dependencies:
+      '@megawin/game-core':
+        specifier: workspace:*
+        version: link:../game-core
     devDependencies:
       '@megawin/typescript-config':
         specifier: workspace:*
@@ -399,9 +500,15 @@ importers:
 
   packages/game-lotto535-application:
     dependencies:
+      '@megawin/app-core':
+        specifier: workspace:*
+        version: link:../app-core
       '@megawin/data':
         specifier: workspace:*
         version: link:../data
+      '@megawin/game-core':
+        specifier: workspace:*
+        version: link:../game-core
       '@megawin/game-lotto535':
         specifier: workspace:*
         version: link:../game-lotto535

@@ -5,13 +5,13 @@
  * Tuy nhiên có giới hạn trả thưởng mỗi kỳ cho bậc 8, 9, 10.
  */
 
-import type { KenoGlobalConfigDoc } from "../entities/keno.game-config";
+import type { GlobalConfigDoc } from "../entities/game-config";
 
 // ─────────────────────────────────────────────
 // Draw Financial Calculation
 // ─────────────────────────────────────────────
 
-export interface KenoDrawFinancialInput {
+export interface DrawFinancialInput {
   totalRevenue: number;
   totalPrizes: number;
   tenantRevenues: Array<{
@@ -22,7 +22,7 @@ export interface KenoDrawFinancialInput {
   companyRate: number;
 }
 
-export interface KenoDrawFinancialResult {
+export interface DrawFinancialResult {
   totalRevenue: number;
   totalPrizes: number;
   totalAgentCommission: number;
@@ -37,8 +37,8 @@ export interface KenoDrawFinancialResult {
 }
 
 export function calculateKenoDrawFinancials(
-  input: KenoDrawFinancialInput,
-): KenoDrawFinancialResult {
+  input: DrawFinancialInput
+): DrawFinancialResult {
   const { totalRevenue, totalPrizes, tenantRevenues, companyRate } = input;
 
   const tenantBreakdown = tenantRevenues.map((t) => ({
@@ -50,12 +50,13 @@ export function calculateKenoDrawFinancials(
 
   const totalAgentCommission = tenantBreakdown.reduce(
     (sum, t) => sum + t.commission,
-    0,
+    0
   );
 
   const companyTake = Math.round(totalRevenue * companyRate);
 
-  const profit = totalRevenue - totalPrizes - totalAgentCommission - companyTake;
+  const profit =
+    totalRevenue - totalPrizes - totalAgentCommission - companyTake;
 
   return {
     totalRevenue,
@@ -89,7 +90,7 @@ export function calculateCappedPrize(
   fixedPrize: number,
   winnerCount: number,
   maxPerDraw: number,
-  maxSetsForFixed: number,
+  maxSetsForFixed: number
 ): number {
   if (winnerCount <= maxSetsForFixed) {
     return fixedPrize;
@@ -102,12 +103,16 @@ export function calculateCappedPrize(
 // ─────────────────────────────────────────────
 
 export const DEFAULT_KENO_CONFIG: Pick<
-  KenoGlobalConfigDoc,
-  "rates" | "basicPrizes" | "bigSmallPrizes" | "evenOddPrizes" | "payoutCaps" | "play"
+  GlobalConfigDoc,
+  | "rates"
+  | "basicPrizes"
+  | "bigSmallPrizes"
+  | "evenOddPrizes"
+  | "payoutCaps"
+  | "play"
 > = {
   rates: {
     defaultCommissionRate: 0.2,
-    minCommissionRate: 0.1,
     companyRate: 0.15,
   },
   basicPrizes: {
@@ -118,9 +123,33 @@ export const DEFAULT_KENO_CONFIG: Pick<
     pick5: { 5: 4_400_000, 4: 150_000, 3: 10_000, 2: 10_000 },
     pick6: { 6: 12_500_000, 5: 450_000, 4: 40_000, 3: 10_000 },
     pick7: { 7: 40_000_000, 6: 1_200_000, 5: 100_000, 4: 20_000, 3: 10_000 },
-    pick8: { 8: 200_000_000, 7: 5_000_000, 6: 500_000, 5: 50_000, 4: 10_000, 3: 10_000, 0: 10_000 },
-    pick9: { 9: 800_000_000, 8: 12_000_000, 7: 1_500_000, 6: 150_000, 5: 30_000, 4: 10_000, 0: 10_000 },
-    pick10: { 10: 2_000_000_000, 9: 150_000_000, 8: 8_000_000, 7: 710_000, 6: 80_000, 5: 20_000, 0: 10_000 },
+    pick8: {
+      8: 200_000_000,
+      7: 5_000_000,
+      6: 500_000,
+      5: 50_000,
+      4: 10_000,
+      3: 10_000,
+      0: 10_000,
+    },
+    pick9: {
+      9: 800_000_000,
+      8: 12_000_000,
+      7: 1_500_000,
+      6: 150_000,
+      5: 30_000,
+      4: 10_000,
+      0: 10_000,
+    },
+    pick10: {
+      10: 2_000_000_000,
+      9: 150_000_000,
+      8: 8_000_000,
+      7: 710_000,
+      6: 80_000,
+      5: 20_000,
+      0: 10_000,
+    },
   },
   bigSmallPrizes: {
     big13Plus: 26_000,
@@ -147,7 +176,6 @@ export const DEFAULT_KENO_CONFIG: Pick<
     pick10MaxSetsForFixed: 5,
   },
   play: {
-    currency: "VND",
     unitPrice: 10_000,
     maxBasicBoardsPerTicket: 2,
     maxDrawCount: 20,

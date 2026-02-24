@@ -1,4 +1,4 @@
-export { Lotto535BaseRepo } from "./lotto535-base-repo";
+export { BaseRepo } from "./base-repo";
 export { DrawRepository } from "./draw-repo";
 export { GameConfigRepository, TenantConfigRepository } from "./game-config-repo";
 export { TicketRepository } from "./ticket-repo";

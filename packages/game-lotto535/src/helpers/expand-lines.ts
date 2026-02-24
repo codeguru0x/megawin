@@ -9,15 +9,15 @@
  * - Materialize lines vào DB (expansion mode "onWrite" / "onSettle")
  */
 
-import { Lotto535PlayType } from "../entities/lotto535.enums";
+import { PlayType } from "../entities/enums";
 import {
   LOTTO535_MAIN_MAX,
   LOTTO535_MAIN_MIN,
-  type Lotto535BoardSelection,
-  type Lotto535LineValue,
-  type Lotto535MainTuple,
-} from "../entities/lotto535.types";
-import type { Lotto535Board } from "../entities/lotto535.ticket";
+  type BoardSelection,
+  type LineValue,
+  type MainTuple,
+} from "../entities/types";
+import type { Board } from "../entities/ticket";
 import { combination } from "../rules/play-types";
 
 // ─────────────────────────────────────────────
@@ -41,9 +41,9 @@ function* combinations<T>(arr: T[], k: number): Generator<T[]> {
 }
 
 /** Sort + assert tuple 5 phần tử. */
-function toMainTuple(nums: number[]): Lotto535MainTuple {
+function toMainTuple(nums: number[]): MainTuple {
   const sorted = [...nums].sort((a, b) => a - b);
-  return sorted as unknown as Lotto535MainTuple;
+  return sorted as unknown as MainTuple;
 }
 
 // ─────────────────────────────────────────────
@@ -51,7 +51,7 @@ function toMainTuple(nums: number[]): Lotto535MainTuple {
 // ─────────────────────────────────────────────
 
 /** Standard / QuickPick: 5 chính + 1 đặc biệt = 1 line. */
-function expandStandard(sel: Lotto535BoardSelection): Lotto535LineValue[] {
+function expandStandard(sel: BoardSelection): LineValue[] {
   return [
     {
       main: toMainTuple(sel.mainNumbers),
@@ -64,10 +64,10 @@ function expandStandard(sel: Lotto535BoardSelection): Lotto535LineValue[] {
  * MainCover4: chọn 4 số chính + 1 đặc biệt.
  * Hệ thống ghép lần lượt 31 số còn lại (35 - 4 = 31) thành 31 lines.
  */
-function expandMainCover4(sel: Lotto535BoardSelection): Lotto535LineValue[] {
+function expandMainCover4(sel: BoardSelection): LineValue[] {
   const chosen = new Set(sel.mainNumbers);
   const special = sel.specialNumbers[0]!;
-  const lines: Lotto535LineValue[] = [];
+  const lines: LineValue[] = [];
 
   for (let n = LOTTO535_MAIN_MIN; n <= LOTTO535_MAIN_MAX; n++) {
     if (chosen.has(n)) continue;
@@ -82,13 +82,13 @@ function expandMainCover4(sel: Lotto535BoardSelection): Lotto535LineValue[] {
  * MainCover (6-15): chọn N số chính + 1 đặc biệt.
  * Expand thành C(N,5) lines.
  */
-function expandMainCover(sel: Lotto535BoardSelection): Lotto535LineValue[] {
+function expandMainCover(sel: BoardSelection): LineValue[] {
   const special = sel.specialNumbers[0]!;
   const sorted = [...sel.mainNumbers].sort((a, b) => a - b);
-  const lines: Lotto535LineValue[] = [];
+  const lines: LineValue[] = [];
 
   for (const combo of combinations(sorted, 5)) {
-    lines.push({ main: combo as unknown as Lotto535MainTuple, special });
+    lines.push({ main: combo as unknown as MainTuple, special });
   }
 
   return lines;
@@ -99,8 +99,8 @@ function expandMainCover(sel: Lotto535BoardSelection): Lotto535LineValue[] {
  * Expand thành K lines (1 line per special number).
  */
 function expandSpecialCover(
-  sel: Lotto535BoardSelection,
-): Lotto535LineValue[] {
+  sel: BoardSelection,
+): LineValue[] {
   const main = toMainTuple(sel.mainNumbers);
 
   return sel.specialNumbers.map((special) => ({ main, special }));
@@ -118,21 +118,21 @@ function expandSpecialCover(
  * @returns Danh sách lines (mỗi line = 5 chính + 1 đặc biệt)
  */
 export function expandBoardToLines(
-  playType: Lotto535PlayType,
-  selection: Lotto535BoardSelection,
-): Lotto535LineValue[] {
+  playType: PlayType,
+  selection: BoardSelection,
+): LineValue[] {
   switch (playType) {
-    case Lotto535PlayType.Standard:
-    case Lotto535PlayType.QuickPick:
+    case PlayType.Standard:
+    case PlayType.QuickPick:
       return expandStandard(selection);
 
-    case Lotto535PlayType.MainCover4:
+    case PlayType.MainCover4:
       return expandMainCover4(selection);
 
-    case Lotto535PlayType.MainCover:
+    case PlayType.MainCover:
       return expandMainCover(selection);
 
-    case Lotto535PlayType.SpecialCover:
+    case PlayType.SpecialCover:
       return expandSpecialCover(selection);
 
     default: {
@@ -150,10 +150,10 @@ export function expandBoardToLines(
  * @returns Danh sách lines kèm metadata
  */
 export function expandAllBoards(
-  boards: Lotto535Board[],
-): Array<Lotto535LineValue & { boardNo: string; lineIndex: number }> {
+  boards: Board[],
+): Array<LineValue & { boardNo: string; lineIndex: number }> {
   const result: Array<
-    Lotto535LineValue & { boardNo: string; lineIndex: number }
+    LineValue & { boardNo: string; lineIndex: number }
   > = [];
 
   let globalIndex = 0;

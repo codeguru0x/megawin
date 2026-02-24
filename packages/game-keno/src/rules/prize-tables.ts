@@ -27,7 +27,7 @@
  * (*) Giải có giới hạn trả thưởng mỗi kỳ quay.
  */
 
-import type { KenoPlayType } from "../entities/keno.enums";
+import type { KenoPlayType } from "../entities/enums";
 
 // ─────────────────────────────────────────────
 // Basic Prize Table (cách chơi cơ bản)

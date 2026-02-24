@@ -1,6 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { Lotto535DrawStatus } from "@megawin/game-lotto535/entities";
+import { DrawStatus } from "@megawin/game-core/entities";
 import { isSplitCycleDraw } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -68,8 +68,8 @@ export class TriggerSettleUseCase extends NextApiUseCase<
 
     const updated = await drawRepo.transitionStatus(
       input.drawId,
-      Lotto535DrawStatus.Published,
-      Lotto535DrawStatus.Settling,
+      DrawStatus.Published,
+      DrawStatus.Settling,
       extraSet,
     );
 
@@ -87,7 +87,7 @@ export class TriggerSettleUseCase extends NextApiUseCase<
 
     return {
       drawId: input.drawId,
-      status: Lotto535DrawStatus.Settling,
+      status: DrawStatus.Settling,
       isSplitCycle: splitCycle,
       totalEntries,
       totalLines,

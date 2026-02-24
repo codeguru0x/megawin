@@ -13,4 +13,5 @@ build:
 
 functions:
   - ${file(src/functions/game-endpoint.yml)}
+  - ${file(src/functions/bet-endpoint.yml)}
   - ${file(src/functions/balance-endpoint.yml)}
