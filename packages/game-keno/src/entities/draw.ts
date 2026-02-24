@@ -69,6 +69,9 @@ export interface DrawDoc {
    * Kết quả kỳ quay: 20 số từ 01-80.
    * Set khi status chuyển sang "published".
    */
+  /** Ngày tài chính "YYYY-MM-DD". Thường = drawDate. */
+  financialDate?: ISODateString;
+
   result?: {
     /** 20 số trúng thưởng, sorted tăng dần. */
     winningNumbers: number[];

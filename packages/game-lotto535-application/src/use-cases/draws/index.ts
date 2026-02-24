@@ -5,7 +5,20 @@ export { PublishResultUseCase } from "./publish-result";
 export { TriggerSettleUseCase } from "./trigger-settle";
 export { ListDrawsUseCase } from "./list-draws";
 export { GetDrawDetailUseCase } from "./get-draw-detail";
+export { GetCurrentDrawUseCase } from "./get-current-draw";
 export { VoidDrawUseCase } from "./void-draw";
+export { AutoEnrollEntriesUseCase } from "./auto-enroll-entries";
+
+export type {
+  AutoEnrollInput,
+  AutoEnrollOutput,
+} from "./auto-enroll-entries";
+
+export type {
+  GetCurrentDrawInput,
+  GetCurrentDrawOutput,
+  CurrentDrawInfo,
+} from "./dto/current-draw.dto";
 
 export type {
   CreateDrawsInput,

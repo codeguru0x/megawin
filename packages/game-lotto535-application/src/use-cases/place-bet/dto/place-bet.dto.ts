@@ -18,7 +18,8 @@ export interface PlaceBetInput {
   appId?: string;
   accountId?: string;
   channel: TicketChannel;
-  startDrawId: string;
+  /** DrawId kỳ hiện tại đang mở bán – player phải gửi đúng kỳ đang mở. */
+  drawId: string;
   drawCount: number;
   boards: PlaceBetBoardInput[];
 }
@@ -34,7 +35,10 @@ export interface PlaceBetOutput {
   drawPlan: {
     startDrawId: string;
     drawCount: number;
-    drawIds: string[];
+    enrolledDrawIds: string[];
+    enrolledDraws: number;
+    remainingDraws: number;
+    fullyEnrolled: boolean;
   };
   pricing: {
     unitPrice: number;
@@ -43,5 +47,6 @@ export interface PlaceBetOutput {
     totalAmount: number;
   };
   boardCount: number;
+  /** Số entries đã tạo ngay (luôn = 1: chỉ kỳ hiện tại). */
   entryCount: number;
 }

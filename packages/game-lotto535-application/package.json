@@ -21,6 +21,22 @@
       "types": "./src/use-cases/game-config/index.ts",
       "default": "./dist/use-cases/game-config/index.js"
     },
+    "./use-cases/settle": {
+      "types": "./src/use-cases/settle/index.ts",
+      "default": "./dist/use-cases/settle/index.js"
+    },
+    "./use-cases/payout": {
+      "types": "./src/use-cases/payout/index.ts",
+      "default": "./dist/use-cases/payout/index.js"
+    },
+    "./use-cases/void": {
+      "types": "./src/use-cases/void/index.ts",
+      "default": "./dist/use-cases/void/index.js"
+    },
+    "./use-cases/feed": {
+      "types": "./src/use-cases/feed/index.ts",
+      "default": "./dist/use-cases/feed/index.js"
+    },
     "./repos": {
       "types": "./src/infras/repos/index.ts",
       "default": "./dist/infras/repos/index.js"
@@ -30,7 +46,9 @@
     "@megawin/app-core": "workspace:*",
     "@megawin/data": "workspace:*",
     "@megawin/game-core": "workspace:*",
+    "@megawin/game-core-application": "workspace:*",
     "@megawin/game-lotto535": "workspace:*",
+    "@megawin/tenant-gateway": "workspace:*",
     "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
     "mongodb": "^7.1.0"

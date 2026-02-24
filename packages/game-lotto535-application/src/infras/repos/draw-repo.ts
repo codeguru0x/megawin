@@ -14,13 +14,16 @@ import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
 /**
  * Valid status transitions.
  * Key = current status, Value = set of allowed next statuses.
+ *
+ * Flow: salesOpen ⇄ salesClosed → published → settling → settled
+ *          ↘ void      ↘ void       ↘ void
+ *
+ * salesClosed có thể quay lại salesOpen (reopen) hoặc tiến tới published/void.
  */
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
-  [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Void]),
   [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed, DrawStatus.Void]),
-  [DrawStatus.SalesClosed]: new Set([DrawStatus.Drawing, DrawStatus.Void]),
-  [DrawStatus.Drawing]: new Set([DrawStatus.Published, DrawStatus.Void]),
-  [DrawStatus.Published]: new Set([DrawStatus.Settling]),
+  [DrawStatus.SalesClosed]: new Set([DrawStatus.SalesOpen, DrawStatus.Published, DrawStatus.Void]),
+  [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Void]),
   [DrawStatus.Settling]: new Set([DrawStatus.Settled]),
 };
 
@@ -89,6 +92,10 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
   }
 
+  /**
+   * Publish kết quả quay: salesClosed → published + ghi result.
+   * Không còn trạng thái "drawing" trung gian.
+   */
   async publishResult(
     drawId: string,
     result: {
@@ -107,7 +114,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
     return await this.transitionStatus(
       drawId,
-      DrawStatus.Drawing,
+      DrawStatus.SalesClosed,
       DrawStatus.Published,
       extra,
     );
@@ -141,6 +148,8 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       totalFixedPrizes: number;
       totalAgentCommission: number;
       companyTake: number;
+      companyTakeRate: number;
+      companyTakeMax: number;
       jackpotContribution: number;
       tenantBreakdown?: DrawTenantFinancial[];
     },
@@ -165,6 +174,74 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOne(
       { status: DrawStatus.Settled },
       { sort: { drawDate: -1, drawNo: -1 } },
+    );
+  }
+
+  /**
+   * Lấy kỳ settled gần nhất TRƯỚC 1 ngày cụ thể.
+   * Dùng khi tạo kỳ mới: lấy closingAmount từ kỳ liền trước.
+   *
+   * Ưu tiên: cùng ngày drawNo nhỏ hơn, hoặc ngày trước đó drawNo lớn nhất.
+   */
+  async getLatestSettledDrawBefore(drawDate: string): Promise<DrawEntity | null> {
+    return await this.findOne(
+      {
+        status: DrawStatus.Settled,
+        drawDate: { $lte: drawDate },
+      },
+      { sort: { drawDate: -1, drawNo: -1 } },
+    );
+  }
+
+  /** Set jackpot.openingAmount + rolloverAmount cho 1 draw. */
+  async setJackpotOpening(
+    drawId: string,
+    openingAmount: number,
+  ): Promise<boolean> {
+    return await this.updateOne(
+      { drawId },
+      {
+        $set: {
+          "jackpot.openingAmount": openingAmount,
+          "jackpot.rolloverAmount": openingAmount,
+          updatedAt: new Date(),
+        },
+      },
+    );
+  }
+
+  /**
+   * Tìm draw đang mở bán hoặc ở trạng thái gần nhất.
+   * Ưu tiên: salesOpen > salesClosed > drawing > scheduled (drawTime tương lai).
+   */
+  async getCurrentDraw(
+    allowStatuses?: string[],
+  ): Promise<DrawEntity | null> {
+    const statuses = allowStatuses ?? [DrawStatus.SalesOpen];
+
+    const draw = await this.findOne(
+      { status: { $in: statuses } },
+      { sort: { drawDate: 1, drawNo: 1 } },
+    );
+    return draw;
+  }
+
+  /**
+   * Ghi tổng kết void lên draw document sau khi void flow hoàn tất.
+   * Ghi đè voidSummary – idempotent.
+   */
+  async updateVoidSummary(
+    drawId: string,
+    summary: {
+      totalVoidedEntries: number;
+      totalOriginalAmount: number;
+      totalRefundAmount: number;
+      completedAt: Date;
+    },
+  ): Promise<boolean> {
+    return await this.updateOne(
+      { drawId },
+      { $set: { voidSummary: summary, updatedAt: new Date() } },
     );
   }
 }

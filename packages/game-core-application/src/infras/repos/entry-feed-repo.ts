@@ -3,6 +3,7 @@ import type { Document } from "mongodb";
 import { GameCoreCollections } from "@megawin/game-core/entities";
 import type {
   GameProduct,
+  EntryFeedDoc,
   EntryFeedEntity,
 } from "@megawin/game-core/entities";
 import { GameCoreBaseRepo } from "./game-core-base-repo";
@@ -12,7 +13,9 @@ import { EntryFeedMapper } from "../mappers/entry-feed-mapper";
  * Repository cho collection entryFeed.
  *
  * Kế thừa đầy đủ insertOne, insertMany, findMany, paging... từ MongoRepository.
- * Chỉ thêm method pollFeed đặc thù cho tenant polling (Long conversion).
+ * Thêm:
+ * - pollFeed: tenant polling (Long → string conversion).
+ * - upsertFeedEntry: worker sync ghi/cập nhật snapshot.
  */
 export class EntryFeedRepository extends GameCoreBaseRepo<
   EntryFeedEntity,
@@ -30,8 +33,6 @@ export class EntryFeedRepository extends GameCoreBaseRepo<
    *
    * Query: version > afterVersion, sorted ASC, limit N.
    * afterVersion là string → convert sang Long để query MongoDB.
-   *
-   * @returns entities với version đã là string (safe cho JSON).
    */
   async pollFeed(params: {
     tenantId: string;
@@ -52,5 +53,67 @@ export class EntryFeedRepository extends GameCoreBaseRepo<
       sort: { version: 1 },
       limit: params.limit,
     });
+  }
+
+  /**
+   * Upsert 1 feed entry.
+   *
+   * Key: sourceEntryId (mỗi entry gốc chỉ có 1 document mới nhất trong feed).
+   * Chỉ update nếu version mới > version cũ (idempotent, tránh ghi đè ngược).
+   *
+   * @returns true nếu đã upsert (insert hoặc update), false nếu skip (version cũ hơn).
+   */
+  async upsertFeedEntry(
+    doc: Omit<EntryFeedDoc, "_id">,
+  ): Promise<boolean> {
+    const result = await this.findOneAndUpdate(
+      {
+        sourceEntryId: doc.sourceEntryId,
+        version: { $lt: doc.version },
+      },
+      {
+        $set: {
+          version: doc.version,
+          gameProduct: doc.gameProduct,
+          ticketId: doc.ticketId,
+          ticketNo: doc.ticketNo,
+          tenantId: doc.tenantId,
+          playerId: doc.playerId,
+          drawId: doc.drawId,
+          drawTime: doc.drawTime,
+          drawDate: doc.drawDate,
+          status: doc.status,
+          stakeAmount: doc.stakeAmount,
+          winAmount: doc.winAmount,
+          payoutAmount: doc.payoutAmount,
+          netAmount: doc.netAmount,
+          sourceUpdatedAt: doc.sourceUpdatedAt,
+          feedCreatedAt: doc.feedCreatedAt,
+        },
+        $setOnInsert: {
+          sourceEntryId: doc.sourceEntryId,
+        },
+      },
+      { upsert: true, returnDocument: "after" },
+    );
+
+    return result !== null;
+  }
+
+  /**
+   * Batch upsert nhiều feed entries.
+   * Mỗi entry upsert riêng (ordered, idempotent).
+   */
+  async batchUpsertFeedEntries(
+    docs: Omit<EntryFeedDoc, "_id">[],
+  ): Promise<{ upserted: number; skipped: number }> {
+    let upserted = 0;
+    let skipped = 0;
+    for (const doc of docs) {
+      const success = await this.upsertFeedEntry(doc);
+      if (success) upserted++;
+      else skipped++;
+    }
+    return { upserted, skipped };
   }
 }

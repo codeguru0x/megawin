@@ -4,8 +4,9 @@
  * Collection: entryFeed
  *
  * Unified collection chứa bản copy đơn cược từ TẤT CẢ game.
- * Mỗi khi entry thay đổi (tạo mới, chuyển status, settle), worker của game đó
- * sẽ copy 1 bản snapshot sang collection này kèm version tăng dần.
+ * Mỗi khi entry thay đổi (tạo mới, chuyển status, settle, void), worker của game đó
+ * sẽ upsert snapshot mới nhất vào collection này (key = sourceEntryId).
+ * Mỗi entry gốc chỉ có DUY NHẤT 1 document, version cập nhật mỗi lần thay đổi.
  *
  * Tenant poll qua API: GET /tenant/entries/feed?afterVersion={n}&limit={m}
  * để nhận các thay đổi mới, build báo cáo:
@@ -14,8 +15,8 @@
  *   - Doanh thu realtime
  *
  * THIẾT KẾ:
- * - version (Long/Int64): monotonically increasing, global sequence (chung cho tất cả game).
- * - Mỗi entry có thể xuất hiện nhiều lần (mỗi lần thay đổi = 1 record mới).
+ * - version (Long/Int64): lấy từ entry gốc, gốc gán từ global entryChangeSeq.
+ * - Mỗi entry gốc = 1 document duy nhất. Upsert chỉ ghi nếu version mới > cũ.
  * - Tenant dùng version làm cursor, không dùng offset/page.
  * - Worker chạy theo scheduler (Lambda), mỗi game 1 worker riêng.
  *
@@ -30,7 +31,6 @@
  * - Trong Entity (application layer): `version` là string (Long.toString()).
  * - Trong API response (JSON): `version` là string.
  * - Lý do: JSON không hỗ trợ BigInt, JS Number safe chỉ đến 2^53.
- *   MongoDB Long khi JSON.stringify sẽ ra {"low":..,"high":..} gây lỗi.
  */
 
 import type { Long } from "mongodb";
@@ -43,9 +43,9 @@ import type { EntryStatus, GameProduct } from "./game-core.enums";
 /**
  * Document lưu trong MongoDB collection `entryFeed`.
  *
- * Mỗi document là 1 snapshot trạng thái của 1 đơn cược tại thời điểm thay đổi.
- * Cùng 1 đơn cược (sourceEntryId) có thể có nhiều document với version khác nhau
- * khi trạng thái thay đổi (scheduled → active → drawn → settled).
+ * Mỗi document là snapshot trạng thái MỚI NHẤT của 1 đơn cược.
+ * Upsert key = sourceEntryId. Chỉ ghi đè khi version mới > version cũ.
+ * Unique index trên sourceEntryId đảm bảo 1 document per entry gốc.
  */
 export interface EntryFeedDoc {
   /** MongoDB ObjectId – tự sinh, không mang ý nghĩa business. */

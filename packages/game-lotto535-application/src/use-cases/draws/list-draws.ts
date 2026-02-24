@@ -10,13 +10,12 @@ export class ListDrawsUseCase extends NextApiUseCase<
   ListDrawsInput,
   ListDrawsOutput
 > {
+  private readonly drawRepo = new DrawRepository();
+
   protected async execute(input: ListDrawsInput): Promise<ListDrawsOutput> {
     const page = input.page ?? 1;
     const size = input.size ?? 20;
-
-    const drawRepo = new DrawRepository();
-
-    const draws = await drawRepo.listDraws(
+    const draws = await this.drawRepo.listDraws(
       {
         status: input.status,
         fromDate: input.fromDate,

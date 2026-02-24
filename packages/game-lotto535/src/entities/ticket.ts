@@ -120,8 +120,8 @@ export interface TicketDoc {
 
   drawPlan: {
     /**
-     * DrawId kỳ đầu tiên (ví dụ "2026-02-22-001").
-     * Dùng để generate drawIds[].
+     * DrawId kỳ đầu tiên mà player đặt cược.
+     * Entry cho kỳ này được tạo ngay khi place-bet.
      */
     startDrawId: string;
 
@@ -129,16 +129,23 @@ export interface TicketDoc {
     drawCount: number;
 
     /**
-     * Danh sách drawId cụ thể vé sẽ tham gia.
-     * Pre-create khi paid để UI hiển thị rõ ràng và vận hành settle dễ dàng.
+     * Danh sách drawId đã thực sự được enroll (có entry).
+     * Grow over time: ban đầu chỉ có [startDrawId],
+     * worker auto-enroll thêm khi mỗi kỳ mới mở bán.
      */
-    drawIds: string[];
+    enrolledDrawIds: string[];
 
-    /** Ngày bắt đầu (hiển thị cho UI/ops). */
-    startDate?: ISODateString;
+    /** Số kỳ đã enroll (= enrolledDrawIds.length). */
+    enrolledDraws: number;
 
-    /** Ngày kết thúc (hiển thị cho UI/ops). */
-    endDate?: ISODateString;
+    /** Số kỳ còn lại chưa enroll. */
+    remainingDraws: number;
+
+    /**
+     * true khi tất cả kỳ đã được enroll (enrolledDraws === drawCount).
+     * Index flag để worker biết ticket nào cần enroll tiếp.
+     */
+    fullyEnrolled: boolean;
   };
 
   // ───── Pricing ─────
@@ -215,8 +222,8 @@ export interface TicketDoc {
     /** Số kỳ đã settled. */
     settledDraws: number;
 
-    /** Số kỳ còn lại. */
-    remainingDraws: number;
+    /** Số kỳ đã enroll nhưng chưa settle. */
+    pendingDraws: number;
 
     /** DrawId kế tiếp chưa settle – UI hiển thị countdown. */
     nextDrawId?: string;
@@ -231,6 +238,31 @@ export interface TicketDoc {
 
     /** Thời điểm settle gần nhất. */
     lastSettledAt?: Date;
+  };
+
+  // ───── Void / Refund Summary ─────
+
+  /**
+   * Tóm tắt huỷ cược trên ticket (across all voided entries/draws).
+   *
+   * Multi-draw ticket: 1 hoặc nhiều kỳ bị void → partial refund.
+   * Single-draw ticket: kỳ duy nhất void → full refund, ticket status = refunded.
+   */
+  voidSummary?: {
+    /** Tổng tiền cược đã bị huỷ. */
+    totalVoidedAmount: number;
+
+    /** Tổng tiền đã hoàn trả. */
+    totalRefundedAmount: number;
+
+    /** Số kỳ bị void. */
+    voidedDrawCount: number;
+
+    /** Danh sách drawIds bị void. */
+    voidedDrawIds: string[];
+
+    /** Thời điểm void gần nhất. */
+    lastVoidedAt?: Date;
   };
 
   // ───── Status & Timestamps ─────

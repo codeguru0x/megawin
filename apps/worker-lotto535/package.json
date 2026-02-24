@@ -1,0 +1,29 @@
+{
+  "name": "@megawin/worker-lotto535",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lotto 5/35 workers – Step Function lambdas for settle, payout & auto-enroll",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@megawin/app-core": "workspace:*",
+    "@megawin/data": "workspace:*",
+    "@megawin/game-core": "workspace:*",
+    "@megawin/game-core-application": "workspace:*",
+    "@megawin/game-lotto535": "workspace:*",
+    "@megawin/game-lotto535-application": "workspace:*",
+    "@megawin/shared": "workspace:*",
+    "@megawin/tenant-gateway": "workspace:*"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@types/node": "^24.0.0",
+    "serverless-offline": "^14.4.0",
+    "typescript": "5.9.3"
+  }
+}

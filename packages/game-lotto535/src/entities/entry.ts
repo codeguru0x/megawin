@@ -20,6 +20,7 @@
 import type {
   PlayType,
   PrizeTier,
+  PayoutStatus,
 } from "./enums";
 import type { EntryStatus } from "@megawin/game-core/entities";
 import type {
@@ -68,6 +69,32 @@ export interface TicketEntryDoc {
    * Timezone: Asia/Ho_Chi_Minh (cấu hình trong gameConfig.play.timezone).
    */
   drawDate: ISODateString;
+
+  // ───── Financial Date ─────
+
+  /**
+   * Ngày tài chính mà entry này thuộc về, format "YYYY-MM-DD".
+   * Dùng cho báo cáo tài chính hàng ngày (không nhất thiết = drawDate).
+   * Business rule: financialDate = drawDate (có thể override bởi ops nếu cần).
+   * Compound index: { tenantId, financialDate } cho report query.
+   */
+  financialDate: ISODateString;
+
+  // ───── Tenant Snapshot ─────
+
+  /**
+   * Snapshot thông tin tenant tại thời điểm tạo entry.
+   * Lưu denormalized để tính toán report trực tiếp từ entry
+   * mà không cần lookup tenant config (tránh join, tăng performance).
+   */
+  tenantSnapshot: {
+    /**
+     * Tỷ lệ hoa hồng đại lý áp dụng cho entry này.
+     * Snapshot tại thời điểm tạo entry – không thay đổi dù config update sau.
+     * Ví dụ: 0.20 = 20% doanh thu.
+     */
+    commissionRate: number;
+  };
 
   // ───── Entry Status ─────
 
@@ -141,6 +168,58 @@ export interface TicketEntryDoc {
 
     /** Thời điểm settle. */
     settledAt: Date;
+
+    /**
+     * Trạng thái gửi tiền trả thưởng cho tenant.
+     * Dùng để worker dispatch-payout biết entry nào đã trả, cái nào chưa.
+     *
+     * - "pending":     chưa gửi yêu cầu trả thưởng (default khi settle)
+     * - "dispatched":  đã gửi request thành công cho tenant API
+     * - "confirmed":   tenant đã xác nhận trả tiền cho player
+     * - "failed":      gửi thất bại, cần retry
+     *
+     * Chỉ có ý nghĩa khi winAmount > 0.
+     * Entry không trúng (winAmount = 0) sẽ không có payoutStatus.
+     */
+    payoutStatus?: PayoutStatus;
+
+    /** Thời điểm dispatch gần nhất (gửi request cho tenant). */
+    payoutDispatchedAt?: Date;
+
+    /** Số lần retry dispatch (0 = lần đầu). */
+    payoutRetryCount?: number;
+
+    /** Lỗi lần dispatch gần nhất (nếu failed). */
+    payoutLastError?: string;
+  };
+
+  // ───── Void / Refund (khi draw bị huỷ) ─────
+
+  /**
+   * Thông tin huỷ cược + hoàn tiền.
+   * Chỉ có khi entry bị void (draw void / admin void).
+   */
+  voidInfo?: {
+    /** Lý do huỷ. */
+    reason: string;
+
+    /** Tiền cược gốc của entry này (= amount). */
+    originalAmount: number;
+
+    /** Tiền hoàn trả cho player. */
+    refundAmount: number;
+
+    /** Trạng thái hoàn tiền. */
+    refundStatus: "pending" | "dispatched" | "confirmed" | "failed";
+
+    /** Thời điểm huỷ. */
+    voidedAt: Date;
+
+    /** Thời điểm hoàn tiền. */
+    refundedAt?: Date;
+
+    /** Ai/hệ thống nào thực hiện void. */
+    voidedBy?: string;
   };
 
   // ───── Timestamps ─────

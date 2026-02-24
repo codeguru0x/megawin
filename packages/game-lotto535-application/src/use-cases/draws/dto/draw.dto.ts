@@ -1,7 +1,5 @@
 import type { DrawStatus, DrawResultSource } from "@megawin/game-core/entities";
-import type {
-  PrizeTier,
-} from "@megawin/game-lotto535/entities";
+ 
 import type { DrawEntity } from "../../../infras/mappers/draw-mapper";
 
 // ─────────────────────────────────────────────

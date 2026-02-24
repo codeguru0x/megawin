@@ -11,9 +11,10 @@ export class GetGameConfigUseCase extends NextApiUseCase<
   void,
   GetGameConfigOutput
 > {
+  private readonly repo = new GameConfigRepository();
+
   protected async execute(): Promise<GetGameConfigOutput> {
-    const repo = new GameConfigRepository();
-    const config = await repo.getGlobalConfig();
+    const config = await this.repo.getGlobalConfig();
 
     if (!config) {
       throw new AppException(

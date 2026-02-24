@@ -17,18 +17,18 @@ export class CloseSalesUseCase extends NextApiUseCase<
   DrawIdInput,
   DrawTransitionOutput
 > {
-  protected async execute(input: DrawIdInput): Promise<DrawTransitionOutput> {
-    const drawRepo = new DrawRepository();
-    const entryRepo = new EntryRepository();
+  private readonly drawRepo = new DrawRepository();
+  private readonly entryRepo = new EntryRepository();
 
-    const updated = await drawRepo.transitionStatus(
+  protected async execute(input: DrawIdInput): Promise<DrawTransitionOutput> {
+    const updated = await this.drawRepo.transitionStatus(
       input.drawId,
       DrawStatus.SalesOpen,
       DrawStatus.SalesClosed,
     );
 
     if (!updated) {
-      const draw = await drawRepo.getDrawById(input.drawId);
+      const draw = await this.drawRepo.getDrawById(input.drawId);
       if (!draw) {
         throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
       }
@@ -38,21 +38,21 @@ export class CloseSalesUseCase extends NextApiUseCase<
       );
     }
 
-    await entryRepo.batchTransitionByDrawId(
+    await this.entryRepo.batchTransitionByDrawId(
       input.drawId,
       EntryStatus.Scheduled,
       EntryStatus.Active,
     );
 
     const [entryCount, totalLines, revenueData] = await Promise.all([
-      entryRepo.countEntriesByDrawId(input.drawId),
-      entryRepo.countLinesByDrawId(input.drawId),
-      entryRepo.aggregateRevenueByTenant(input.drawId),
+      this.entryRepo.countEntriesByDrawId(input.drawId),
+      this.entryRepo.countLinesByDrawId(input.drawId),
+      this.entryRepo.aggregateRevenueByTenant(input.drawId),
     ]);
 
     const totalSalesAmount = revenueData.reduce((s, r) => s + r.revenue, 0);
 
-    await drawRepo.updateStats(input.drawId, {
+    await this.drawRepo.updateStats(input.drawId, {
       ticketEntryCount: entryCount,
       totalLineCount: totalLines,
       totalSalesAmount,

@@ -25,16 +25,10 @@ import {
   type TenantContext,
 } from "@megawin/app-core/lambda/middleware";
 
-import {
-  toApiGatewayResponse,
-} from "@megawin/app-core/use-cases";
-
 import { tenantAuth } from "@megawin/identity-application/shared";
-
 import { GAME_PRODUCT_VALUES } from "@megawin/game-core/entities";
-import type { EntryFeedResponse } from "@megawin/game-core/entities";
-import { EntryFeedRepository } from "@megawin/game-core-application/repos";
-import { toEntryFeedItem } from "@megawin/game-core-application/mappers";
+import type { GameProduct } from "@megawin/game-core/entities";
+import { GetEntryFeedUseCase } from "@megawin/game-core-application/use-cases";
 
 // ============ Zod schema ============
 
@@ -43,10 +37,6 @@ const querySchema = z.object({
   limit: z.string().optional(),
   gameProduct: z.enum(GAME_PRODUCT_VALUES as [string, ...string[]]).optional(),
 });
-
-// ============ Singleton repo ============
-
-const feedRepo = new EntryFeedRepository();
 
 // ============ Handler ============
 
@@ -57,38 +47,17 @@ interface ValidatedEvent {
   tenantContext: TenantContext;
 }
 
+const useCase = new GetEntryFeedUseCase();
+
 export const handler = middy(async (event: ValidatedEvent) => {
   const { tenantId } = event.tenantContext;
   const query = event.validated.queryStringParameters;
 
-  const limit = Math.min(
-    Math.max(Number(query.limit) || 100, 1),
-    500,
-  );
-
-  const entities = await feedRepo.pollFeed({
+  return useCase.run({
     tenantId,
     afterVersion: query.afterVersion,
-    limit: limit + 1,
-    gameProduct: query.gameProduct as any,
-  });
-
-  const hasMore = entities.length > limit;
-  const items = entities.slice(0, limit);
-
-  const lastVersion = items.length > 0
-    ? items[items.length - 1]!.version
-    : query.afterVersion;
-
-  const response: EntryFeedResponse = {
-    items: items.map(toEntryFeedItem),
-    lastVersion,
-    hasMore,
-  };
-
-  return toApiGatewayResponse({
-    success: true,
-    data: response,
+    limit: query.limit ? Number(query.limit) : undefined,
+    gameProduct: query.gameProduct as GameProduct | undefined,
   });
 })
   .use(tenantAuth())

@@ -5,6 +5,9 @@
  *
  * 1 document = 1 ticket tham gia 1 kỳ quay Keno cụ thể.
  * Đơn vị vận hành chính cho settle + report.
+ *
+ * Số lưu dạng string "01"-"80" trong entrySummary.boards.
+ * Kết quả quay (result.winningNumbers) dùng number[] (server-side chỉ tính toán).
  */
 
 import type {
@@ -34,6 +37,13 @@ export interface TicketEntryDoc {
   drawId: string;
   drawTime: Date;
   drawDate: ISODateString;
+  financialDate: ISODateString;
+
+  // ───── Tenant Snapshot ─────
+
+  tenantSnapshot: {
+    commissionRate: number;
+  };
 
   // ───── Entry Status ─────
 
@@ -41,13 +51,8 @@ export interface TicketEntryDoc {
 
   // ───── Stake ─────
 
-  /** Số bets trên vé. */
   betCount: number;
-
-  /** Tiền cược kỳ này (VND). */
   amount: number;
-
-  /** Giá 1 bet (snapshot). */
   unitPrice: number;
 
   // ───── Entry Summary ─────
@@ -55,18 +60,13 @@ export interface TicketEntryDoc {
   entrySummary: {
     ticketNo: string;
     ticketVersion: number;
-
-    /** Snapshot boards cơ bản. */
     boards: EntryBoardSnapshot[];
-
-    /** Snapshot side bets. */
     sideBets: EntrySideBetSnapshot[];
   };
 
   // ───── Result Snapshot ─────
 
   result?: {
-    /** 20 số trúng thưởng, sorted tăng dần. */
     winningNumbers: number[];
     publishedAt: Date;
     bigCount: number;
@@ -78,37 +78,50 @@ export interface TicketEntryDoc {
   // ───── Payout ─────
 
   payout?: {
-    /** Tổng tiền thắng kỳ này. */
     winAmount: number;
-
-    /**
-     * Tiền trả thưởng thực tế cho khách (sau thuế/phí nếu có).
-     * Hiện tại = winAmount (chưa có thuế).
-     */
     payoutAmount: number;
-
-    /** Chi tiết trả thưởng cho boards cơ bản. */
     boardPayouts: EntryBoardPayout[];
-
-    /** Chi tiết trả thưởng cho side bets. */
     sideBetPayouts: EntrySideBetPayout[];
-
     settledAt: Date;
+    payoutStatus?: string;
+    payoutDispatchedAt?: Date;
+    payoutRetryCount?: number;
+    payoutLastError?: string;
+  };
+
+  // ───── Void / Refund (khi draw bị huỷ) ─────
+
+  /**
+   * Thông tin huỷ cược + hoàn tiền.
+   * Chỉ có khi entry bị void (draw void / admin void).
+   */
+  voidInfo?: {
+    /** Lý do huỷ. */
+    reason: string;
+
+    /** Tiền cược gốc của entry này (= amount). */
+    originalAmount: number;
+
+    /** Tiền hoàn trả cho player. */
+    refundAmount: number;
+
+    /** Trạng thái hoàn tiền. */
+    refundStatus: "pending" | "dispatched" | "confirmed" | "failed";
+
+    /** Thời điểm huỷ. */
+    voidedAt: Date;
+
+    /** Thời điểm hoàn tiền. */
+    refundedAt?: Date;
+
+    /** Ai/hệ thống nào thực hiện void. */
+    voidedBy?: string;
   };
 
   // ───── Timestamps ─────
 
   createdAt: Date;
   updatedAt: Date;
-
-  // ───── Change Tracking ─────
-
-  /**
-   * Global change sequence (BSON Long / Int64).
-   * Gán từ entryChangeSeq mỗi khi entry được insert hoặc update.
-   * Worker dùng field này để detect thay đổi: version > lastProcessedVersion.
-   * Khi trả về qua API phải convert sang string (Long.toString()).
-   */
   version: Long;
 }
 
@@ -120,7 +133,8 @@ export interface EntryBoardSnapshot {
   boardNo: string;
   isVoid?: boolean;
   playType: KenoPlayType;
-  numbers: number[];
+  /** Số dạng string "01"-"80". */
+  numbers: string[];
 }
 
 export interface EntrySideBetSnapshot {
@@ -129,32 +143,18 @@ export interface EntrySideBetSnapshot {
   bet: KenoBigSmallBet | KenoEvenOddBet;
 }
 
-/** Chi tiết trả thưởng cho 1 board cơ bản. */
 export interface EntryBoardPayout {
   boardNo: string;
   playType: KenoPlayType;
-
-  /** Số lượng số trùng (hits). */
   matchCount: number;
-
-  /** Tổng số số đã chọn trên board. */
   pickCount: number;
-
-  /** Tiền thưởng board này. */
   winAmount: number;
 }
 
-/** Chi tiết trả thưởng cho 1 side bet. */
 export interface EntrySideBetPayout {
   playType: KenoPlayType;
   bet: KenoBigSmallBet | KenoEvenOddBet;
-
-  /** Kết quả xác định (ví dụ: "big", "even"). */
   outcome: string;
-
-  /** Có trúng không. */
   isWin: boolean;
-
-  /** Tiền thưởng. */
   winAmount: number;
 }

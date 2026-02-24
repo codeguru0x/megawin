@@ -116,3 +116,28 @@ export const ExpansionMode = {
 
 export type ExpansionMode =
   (typeof ExpansionMode)[keyof typeof ExpansionMode];
+
+// ─────────────────────────────────────────────
+// Payout Status
+// ─────────────────────────────────────────────
+
+/**
+ * Trạng thái gửi tiền trả thưởng cho tenant.
+ * Gắn ở entry.payout.payoutStatus.
+ *
+ * Flow: pending → dispatched → confirmed
+ *                 ↘ failed → (retry) → dispatched
+ */
+export const PayoutStatus = {
+  /** Chưa gửi yêu cầu trả thưởng. Default khi settle xong. */
+  Pending: "pending",
+  /** Đã gửi request thành công cho tenant API, chờ xác nhận. */
+  Dispatched: "dispatched",
+  /** Tenant đã xác nhận trả tiền cho player. Terminal state. */
+  Confirmed: "confirmed",
+  /** Gửi thất bại, cần retry. */
+  Failed: "failed",
+} as const;
+
+export type PayoutStatus =
+  (typeof PayoutStatus)[keyof typeof PayoutStatus];

@@ -24,14 +24,14 @@ export class TriggerSettleUseCase extends NextApiUseCase<
   TriggerSettleInput,
   TriggerSettleOutput
 > {
+  private readonly drawRepo = new DrawRepository();
+  private readonly entryRepo = new EntryRepository();
+  private readonly configRepo = new GameConfigRepository();
+
   protected async execute(
     input: TriggerSettleInput,
   ): Promise<TriggerSettleOutput> {
-    const drawRepo = new DrawRepository();
-    const entryRepo = new EntryRepository();
-    const configRepo = new GameConfigRepository();
-
-    const draw = await drawRepo.getDrawById(input.drawId);
+    const draw = await this.drawRepo.getDrawById(input.drawId);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
     }
@@ -42,7 +42,7 @@ export class TriggerSettleUseCase extends NextApiUseCase<
       );
     }
 
-    const globalConfig = await configRepo.getGlobalConfig();
+    const globalConfig = await this.configRepo.getGlobalConfig();
     if (!globalConfig) {
       throw AppException.internal("GameConfig chưa được khởi tạo.");
     }
@@ -66,7 +66,7 @@ export class TriggerSettleUseCase extends NextApiUseCase<
       };
     }
 
-    const updated = await drawRepo.transitionStatus(
+    const updated = await this.drawRepo.transitionStatus(
       input.drawId,
       DrawStatus.Published,
       DrawStatus.Settling,
@@ -81,8 +81,8 @@ export class TriggerSettleUseCase extends NextApiUseCase<
     }
 
     const [totalEntries, totalLines] = await Promise.all([
-      entryRepo.countEntriesByDrawId(input.drawId),
-      entryRepo.countLinesByDrawId(input.drawId),
+      this.entryRepo.countEntriesByDrawId(input.drawId),
+      this.entryRepo.countLinesByDrawId(input.drawId),
     ]);
 
     return {

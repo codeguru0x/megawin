@@ -1,6 +1,8 @@
 /**
  * Lambda handler: POST /player/keno/bets
  * Player đặt cược Keno — authed qua Cognito JWT Bearer token.
+ *
+ * Số Keno nhận dạng string "01"-"80" (zero-padded).
  */
 
 import middy from "@middy/core";
@@ -20,9 +22,13 @@ import { TicketChannel } from "@megawin/game-core/entities";
 
 // ============ Zod schemas ============
 
+const kenoNumberSchema = z
+  .string()
+  .regex(/^(0[1-9]|[1-7][0-9]|80)$/, "Số Keno phải từ '01' đến '80'");
+
 const boardSchema = z.object({
   boardNo: z.string().min(1),
-  numbers: z.array(z.number().int().min(1).max(80)).min(1).max(10),
+  numbers: z.array(kenoNumberSchema).min(1).max(10),
 });
 
 const SideBetPlayType = {

@@ -3,6 +3,10 @@
  *
  * So sánh lựa chọn người chơi với 20 số quay để xác định kết quả.
  * Áp dụng cho cả cách chơi cơ bản và bổ sung.
+ *
+ * LƯU Ý: Số người chơi lưu dạng string "01"-"80".
+ * Kết quả quay (winningNumbers) lưu dạng number[].
+ * matchBasicBoard nhận string[], convert sang number để so sánh.
  */
 
 import {
@@ -22,7 +26,6 @@ import {
 // ─────────────────────────────────────────────
 
 export interface DrawResultForMatch {
-  /** 20 số trúng thưởng. */
   winningNumbers: number[];
   bigCount: number;
   smallCount: number;
@@ -35,28 +38,27 @@ export interface DrawResultForMatch {
 // ─────────────────────────────────────────────
 
 export interface BasicMatchResult {
-  /** Số lượng số trùng. */
   matchCount: number;
-  /** Tổng số số đã chọn. */
   pickCount: number;
-  /** Các số trùng. */
   matchedNumbers: number[];
-  /** Tiền thưởng. */
   winAmount: number;
 }
 
 /**
  * Match 1 board cơ bản với kết quả quay.
+ * @param numbers - Số dạng string "01"-"80" từ board
+ * @param result - Kết quả quay (number[])
  */
 export function matchBasicBoard(
-  numbers: number[],
+  numbers: string[],
   result: DrawResultForMatch,
   prizeTable?: Record<number, Record<number, number>>,
 ): BasicMatchResult {
   const winSet = new Set(result.winningNumbers);
   const matchedNumbers: number[] = [];
 
-  for (const n of numbers) {
+  for (const s of numbers) {
+    const n = parseInt(s, 10);
     if (winSet.has(n)) matchedNumbers.push(n);
   }
 
@@ -72,17 +74,11 @@ export function matchBasicBoard(
 // ─────────────────────────────────────────────
 
 export interface SideBetMatchResult {
-  /** Kết quả thực tế (outcome). */
   outcome: string;
-  /** Có trúng không. */
   isWin: boolean;
-  /** Tiền thưởng. */
   winAmount: number;
 }
 
-/**
- * Match cược Lớn/Nhỏ với kết quả quay.
- */
 export function matchBigSmallBet(
   bet: KenoBigSmallBet,
   result: DrawResultForMatch,
@@ -115,9 +111,6 @@ export function matchBigSmallBet(
   }
 }
 
-/**
- * Match cược Chẵn/Lẻ với kết quả quay.
- */
 export function matchEvenOddBet(
   bet: KenoEvenOddBet,
   result: DrawResultForMatch,
@@ -164,9 +157,6 @@ export function matchEvenOddBet(
 // Draw Result Stats
 // ─────────────────────────────────────────────
 
-/**
- * Tính derived stats từ 20 số quay.
- */
 export function computeDrawStats(winningNumbers: number[]): {
   bigCount: number;
   smallCount: number;

@@ -30,6 +30,8 @@ export const GameCoreCollections = {
   EntryChangeSeq: "entryChangeSeq",
   /** Collection unified chứa feed đơn cược cho tenant polling. */
   EntryFeed: "entryFeed",
+  /** Cursor per game: version cuối cùng đã sync vào entryFeed. */
+  FeedSyncCursor: "feedSyncCursor",
 } as const;
 
 // ─────────────────────────────────────────────
@@ -133,25 +135,24 @@ export const ENTRY_STATUS_VALUES = Object.values(EntryStatus);
 /**
  * Trạng thái vận hành kỳ mở thưởng (draw) – dùng chung cho mọi game.
  *
- * Flow: scheduled → salesOpen → salesClosed → drawing → published → settling → settled
- *                                                                              ↘ void
+ * Flow: salesOpen → salesClosed → published → settling → settled
+ *                       ↘ void       ↘ void
+ *
+ * - Không có "scheduled": draw được tạo trực tiếp ở salesOpen.
+ * - Không có "drawing": kết quả được import/nhập → salesClosed chuyển thẳng published.
  */
 export const DrawStatus = {
-  /** Đã tạo lịch kỳ quay. */
-  Scheduled: "scheduled",
-  /** Đang mở bán vé. */
+  /** Đang mở bán vé. Draw được tạo ra ở trạng thái này. */
   SalesOpen: "salesOpen",
-  /** Đã đóng bán (trước giờ quay). */
+  /** Đã đóng bán (trước giờ quay). Entries chuyển scheduled → active. */
   SalesClosed: "salesClosed",
-  /** Đang quay / chờ kết quả. */
-  Drawing: "drawing",
   /** Đã công bố kết quả, chưa settle. */
   Published: "published",
   /** Đang tính thưởng cho tất cả entries. */
   Settling: "settling",
   /** Đã hoàn tất settle. */
   Settled: "settled",
-  /** Kỳ quay bị huỷ / không hợp lệ. */
+  /** Kỳ quay bị huỷ / không hợp lệ. Entries được hoàn tiền. */
   Void: "void",
 } as const;
 

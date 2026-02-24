@@ -2,7 +2,7 @@
   "name": "@megawin/game-core-application",
   "version": "1.0.0",
   "private": true,
-  "description": "Game core application layer – repos, mappers for entry feed & change sequence",
+  "description": "Game core application layer – repos, mappers, use-cases for entry feed, change sequence & daily reports",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -16,9 +16,14 @@
     "./mappers": {
       "types": "./src/infras/mappers/index.ts",
       "default": "./dist/infras/mappers/index.js"
+    },
+    "./use-cases": {
+      "types": "./src/use-cases/index.ts",
+      "default": "./dist/use-cases/index.js"
     }
   },
   "dependencies": {
+    "@megawin/app-core": "workspace:*",
     "@megawin/data": "workspace:*",
     "@megawin/game-core": "workspace:*",
     "@megawin/shared": "workspace:*",

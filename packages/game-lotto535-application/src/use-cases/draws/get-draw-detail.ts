@@ -11,11 +11,12 @@ export class GetDrawDetailUseCase extends NextApiUseCase<
   GetDrawDetailInput,
   GetDrawDetailOutput
 > {
+  private readonly drawRepo = new DrawRepository();
+
   protected async execute(
     input: GetDrawDetailInput,
   ): Promise<GetDrawDetailOutput> {
-    const drawRepo = new DrawRepository();
-    const draw = await drawRepo.getDrawById(input.drawId);
+    const draw = await this.drawRepo.getDrawById(input.drawId);
 
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);

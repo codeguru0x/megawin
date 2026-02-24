@@ -7,10 +7,10 @@
  * Mỗi vé có thể chứa cả lựa chọn cơ bản (panels A, B) và bổ sung (panel C).
  *
  * Keno cho phép:
- * - Panel A, B: chọn 1-10 số từ 01-80 (cách chơi cơ bản)
+ * - Panel A, B: chọn 1-10 số từ "01"-"80" (cách chơi cơ bản)
  * - Panel C: đặt cược Lớn/Nhỏ hoặc Chẵn/Lẻ (cách chơi bổ sung)
  * - Mệnh giá: 10.000đ mỗi lần tham gia
- * - Chơi nhiều kỳ liên tiếp (multi-draw)
+ * - Chơi nhiều kỳ liên tiếp (multi-draw, lazy enrollment)
  */
 
 import type {
@@ -27,50 +27,23 @@ import type { ISODateString } from "./types";
 
 /**
  * 1 board cách chơi cơ bản trên vé Keno.
- * Mỗi board chọn 1-10 số, tương ứng 1 play type (pick1-pick10).
+ * Số lưu dạng string "01"-"80" (zero-padded 2 chữ số).
  */
 export interface BasicBoard {
-  /**
-   * Mã board: "A", "B".
-   */
   boardNo: string;
-
   isVoid?: boolean;
-
-  /**
-   * Kiểu chơi: pick1-pick10.
-   * Xác định bởi số lượng số đã chọn.
-   */
   playType: KenoPlayType;
-
-  /** Danh sách số đã chọn (1-80), unique, sorted. */
-  numbers: number[];
+  /** Danh sách số đã chọn ("01"-"80"), unique, sorted tăng dần. */
+  numbers: string[];
 }
 
 // ─────────────────────────────────────────────
 // Side Bet – Cách chơi bổ sung (Panel C)
 // ─────────────────────────────────────────────
 
-/**
- * Cược bổ sung trên vé Keno.
- * Người chơi có thể chọn 1 trong các cách chơi bổ sung.
- * Chỉ được chọn 1 loại cược bổ sung (Lớn/Nhỏ HOẶC Chẵn/Lẻ) trên Panel C.
- */
 export interface SideBet {
   isVoid?: boolean;
-
-  /**
-   * Loại cược bổ sung.
-   * - "bigSmall": Lớn/Nhỏ
-   * - "evenOdd": Chẵn/Lẻ
-   */
   playType: typeof import("./enums").KenoPlayType.BigSmall | typeof import("./enums").KenoPlayType.EvenOdd;
-
-  /**
-   * Lựa chọn cược cụ thể.
-   * Khi playType = "bigSmall": big | bigSmallDraw | small
-   * Khi playType = "evenOdd": even | even1112 | evenOddDraw | odd1112 | odd
-   */
   bet: KenoBigSmallBet | KenoEvenOddBet;
 }
 
@@ -94,12 +67,16 @@ export interface TicketDoc {
   ticketNo: string;
   channel: TicketChannel;
 
-  // ───── Draw Plan ─────
+  // ───── Draw Plan (lazy enrollment) ─────
 
   drawPlan: {
     startDrawId: string;
     drawCount: number;
-    drawIds: string[];
+    /** drawIds đã enroll (chỉ kỳ đầu khi tạo, worker bổ sung sau). */
+    enrolledDrawIds: string[];
+    enrolledDraws: number;
+    remainingDraws: number;
+    fullyEnrolled: boolean;
     startDate?: ISODateString;
     endDate?: ISODateString;
   };
@@ -107,21 +84,16 @@ export interface TicketDoc {
   // ───── Pricing ─────
 
   pricing: {
-    /** Mệnh giá 1 lần tham gia (VND). Keno = 10.000đ. */
     unitPrice: number;
-
-    /**
-     * Số lượng "bets" trên vé cho 1 kỳ.
-     * = số boards cơ bản + số side bets.
-     * Mỗi bet = 1 × unitPrice.
-     */
     betsPerDraw: number;
-
-    /** Tiền cược mỗi kỳ = unitPrice × betsPerDraw. */
     amountPerDraw: number;
-
-    /** Tổng tiền vé = amountPerDraw × drawCount. */
     totalAmount: number;
+  };
+
+  // ───── Tenant Snapshot ─────
+
+  tenantSnapshot: {
+    commissionRate: number;
   };
 
   // ───── Boards cơ bản (Panel A/B) ─────
@@ -144,7 +116,7 @@ export interface TicketDoc {
   progress: {
     totalDraws: number;
     settledDraws: number;
-    remainingDraws: number;
+    pendingDraws: number;
     nextDrawId?: string;
   };
 
@@ -153,6 +125,21 @@ export interface TicketDoc {
   settlement?: {
     totalWinAmount: number;
     lastSettledAt?: Date;
+  };
+
+  // ───── Void / Refund Summary ─────
+
+  /**
+   * Tóm tắt huỷ cược trên ticket.
+   * Multi-draw: 1+ kỳ void → partial refund.
+   * Single-draw: kỳ duy nhất void → full refund, status = refunded.
+   */
+  voidSummary?: {
+    totalVoidedAmount: number;
+    totalRefundedAmount: number;
+    voidedDrawCount: number;
+    voidedDrawIds: string[];
+    lastVoidedAt?: Date;
   };
 
   // ───── Status & Timestamps ─────

@@ -30,6 +30,10 @@ import type {
   GetBalanceResponse,
   SubmitReportRequest,
   SubmitReportResponse,
+  BatchPayoutRequest,
+  BatchPayoutResponse,
+  BatchRefundRequest,
+  BatchRefundResponse,
 } from "./types";
 
 // ============ Retry config ============
@@ -77,6 +81,8 @@ const PATHS = {
   rollback: "/megawin/callback/rollback",
   balance: "/megawin/callback/balance",
   report: "/megawin/callback/report",
+  batchPayout: "/megawin/callback/payout/batch",
+  batchRefund: "/megawin/callback/refund/batch",
 } as const;
 
 // ============ Factory ============
@@ -113,9 +119,16 @@ export function createTenantGatewayClient(
             currency: req.currency,
           },
         }),
-      ),
+      ),   
 
     submitReport: (req: SubmitReportRequest) =>
       withRetry(() => http.post<SubmitReportResponse>(PATHS.report, req)),
+
+    batchPayout: (req: BatchPayoutRequest) =>
+      withRetry(() => http.post<BatchPayoutResponse>(PATHS.batchPayout, req)),
+
+    batchRefund: (req: BatchRefundRequest) =>
+      withRetry(() => http.post<BatchRefundResponse>(PATHS.batchRefund, req)),
   };
 }
+ 

@@ -70,9 +70,21 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: Lotto535Collections.Tickets,
+    key: { status: 1, "drawPlan.fullyEnrolled": 1, "drawPlan.remainingDraws": 1 },
+    options: { name: "idx_auto_enroll" },
+    purpose: "Auto-enroll worker: tìm tickets multi-draw cần nhập entry kỳ mới",
+  },
+  {
+    collection: Lotto535Collections.Tickets,
     key: { tenantId: 1, status: 1, createdAt: -1 },
     options: { name: "idx_tenant_status_created" },
     purpose: "Báo cáo vé theo tenant",
+  },
+  {
+    collection: Lotto535Collections.Tickets,
+    key: { "drawPlan.enrolledDrawIds": 1 },
+    options: { name: "idx_enrolledDrawIds" },
+    purpose: "Query tickets theo drawId (thay thế drawPlan.drawIds)",
   },
 
   // ─────────────────────────────────────────
@@ -107,6 +119,58 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
     key: { ticketId: 1 },
     options: { name: "idx_ticketId" },
     purpose: "Lookup entries theo ticket (xem chi tiết vé)",
+  },
+  {
+    collection: Lotto535Collections.TicketEntries,
+    key: { ticketId: 1, drawId: 1 },
+    options: { unique: true, name: "idx_ticketId_drawId_unique" },
+    purpose: "Unique guard: 1 ticket chỉ có 1 entry cho 1 draw (idempotent auto-enroll)",
+  },
+  {
+    collection: Lotto535Collections.TicketEntries,
+    key: { tenantId: 1, financialDate: 1, status: 1 },
+    options: { name: "idx_tenant_financialDate_status" },
+    purpose: "Báo cáo tài chính theo ngày tài chính (settle report)",
+  },
+  {
+    collection: Lotto535Collections.TicketEntries,
+    key: { drawId: 1, "payout.winAmount": 1 },
+    options: { name: "idx_draw_winAmount", sparse: true },
+    purpose: "Query winners cho dispatch-payouts: entries có winAmount > 0",
+  },
+  {
+    collection: Lotto535Collections.TicketEntries,
+    key: { drawId: 1, status: 1, "payout.payoutStatus": 1, "payout.winAmount": 1 },
+    options: { name: "idx_draw_payoutStatus" },
+    purpose: "Payout worker: query entries chưa dispatch (pending/failed) cho 1 draw",
+  },
+  {
+    collection: Lotto535Collections.TicketEntries,
+    key: { version: 1 },
+    options: { name: "idx_version" },
+    purpose: "Feed sync worker: scan entries thay đổi kể từ version cuối cùng đã sync",
+  },
+
+  // ─────────────────────────────────────────
+  // lotto535DailyReports
+  // ─────────────────────────────────────────
+  {
+    collection: "lotto535DailyReports",
+    key: { tenantId: 1, financialDate: 1, drawId: 1, product: 1, reportType: 1 },
+    options: { unique: true, name: "idx_tenant_report_unique" },
+    purpose: "Unique key cho tenant daily report (upsert-safe)",
+  },
+  {
+    collection: "lotto535DailyReports",
+    key: { tenantId: 1, playerId: 1, financialDate: 1, drawId: 1, product: 1, reportType: 1 },
+    options: { unique: true, name: "idx_player_report_unique" },
+    purpose: "Unique key cho player daily report (upsert-safe)",
+  },
+  {
+    collection: "lotto535DailyReports",
+    key: { financialDate: 1, reportType: 1 },
+    options: { name: "idx_financialDate_type" },
+    purpose: "Query reports theo ngày tài chính cho backoffice megawin",
   },
 
   // ─────────────────────────────────────────

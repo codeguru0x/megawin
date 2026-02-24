@@ -43,9 +43,15 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: KenoCollections.Tickets,
-    key: { status: 1, "progress.nextDrawId": 1 },
-    options: { name: "idx_status_nextDraw", sparse: true },
-    purpose: "Tìm tickets cần settle cho draw kế tiếp",
+    key: { status: 1, "drawPlan.fullyEnrolled": 1, "drawPlan.remainingDraws": 1 },
+    options: { name: "idx_auto_enroll_scan" },
+    purpose: "Auto-enroll worker: scan tickets multi-draw chưa fully enrolled",
+  },
+  {
+    collection: KenoCollections.Tickets,
+    key: { "drawPlan.enrolledDrawIds": 1 },
+    options: { name: "idx_enrolled_drawIds" },
+    purpose: "Query tickets by enrolled drawId",
   },
   {
     collection: KenoCollections.Tickets,
@@ -57,6 +63,12 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
   // ─────────────────────────────────────────
   // kenoTicketEntries
   // ─────────────────────────────────────────
+  {
+    collection: KenoCollections.TicketEntries,
+    key: { ticketId: 1, drawId: 1 },
+    options: { unique: true, name: "idx_ticket_draw_unique" },
+    purpose: "Idempotent: 1 entry per ticket per draw",
+  },
   {
     collection: KenoCollections.TicketEntries,
     key: { drawId: 1, status: 1 },
@@ -86,6 +98,12 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
     key: { ticketId: 1 },
     options: { name: "idx_ticketId" },
     purpose: "Lookup entries theo ticket",
+  },
+  {
+    collection: KenoCollections.TicketEntries,
+    key: { version: 1 },
+    options: { name: "idx_version" },
+    purpose: "Feed sync worker: scan entries thay đổi kể từ version cuối cùng đã sync",
   },
 
   // ─────────────────────────────────────────

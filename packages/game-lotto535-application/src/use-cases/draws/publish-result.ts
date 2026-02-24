@@ -1,3 +1,16 @@
+/**
+ * Use Case: Publish Result (Lotto 5/35)
+ *
+ * Nhập kết quả kỳ quay + chuyển trạng thái salesClosed → published.
+ *
+ * Validate:
+ *   - 5 số chính unique, trong range [1,35]
+ *   - 1 số đặc biệt trong range [1,12]
+ *
+ * Side effect:
+ *   - Copy result vào tất cả active entries (entries chuyển sang "drawn")
+ */
+
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
@@ -13,47 +26,21 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 
-/**
- * Nhập kết quả kỳ quay + chuyển trạng thái sang "published".
- *
- * Flow: drawing -> published
- *
- * Validate:
- * - 5 số chính unique, trong range [1,35]
- * - 1 số đặc biệt trong range [1,12]
- *
- * Side effect:
- * - Copy result vào tất cả active entries (entries chuyển sang "drawn")
- */
 export class PublishResultUseCase extends NextApiUseCase<
   PublishResultInput,
   PublishResultOutput
 > {
+  private readonly drawRepo = new DrawRepository();
+  private readonly entryRepo = new EntryRepository();
+
   protected async execute(
     input: PublishResultInput,
   ): Promise<PublishResultOutput> {
     this.validateResult(input);
-
-    const drawRepo = new DrawRepository();
-    const entryRepo = new EntryRepository();
-
     const sortedMain = [...input.winningMain].sort((a, b) => a - b) as unknown as MainTuple;
     const special = input.winningSpecial as Special;
 
-    const draw = await drawRepo.getDrawById(input.drawId);
-    if (!draw) {
-      throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
-    }
-
-    if (draw.status === DrawStatus.SalesClosed) {
-      await drawRepo.transitionStatus(
-        input.drawId,
-        DrawStatus.SalesClosed,
-        DrawStatus.Drawing,
-      );
-    }
-
-    const updated = await drawRepo.publishResult(
+    const updated = await this.drawRepo.publishResult(
       input.drawId,
       {
         winningMain: sortedMain,
@@ -65,14 +52,24 @@ export class PublishResultUseCase extends NextApiUseCase<
     );
 
     if (!updated) {
+      const draw = await this.drawRepo.getDrawById(input.drawId);
+      if (!draw) {
+        throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
+      }
+      if (draw.status === DrawStatus.Published) {
+        throw new AppException(
+          "DRAW_ALREADY_PUBLISHED",
+          `Kỳ quay ${input.drawId} đã được publish kết quả.`,
+        );
+      }
       throw new AppException(
         "DRAW_INVALID_TRANSITION",
-        `Không thể publish kết quả – draw không ở trạng thái "drawing".`,
+        `Không thể publish kết quả – draw ở trạng thái "${draw.status}", cần "salesClosed".`,
       );
     }
 
     const publishedAt = new Date();
-    const entriesUpdated = await entryRepo.stampResultOnEntries(
+    const entriesUpdated = await this.entryRepo.stampResultOnEntries(
       input.drawId,
       { winningMain: sortedMain, winningSpecial: special, publishedAt },
     );
@@ -89,6 +86,7 @@ export class PublishResultUseCase extends NextApiUseCase<
     };
   }
 
+  /** Validate kết quả quay: 5 số chính unique [1-35] + 1 đặc biệt [1-12]. */
   private validateResult(input: PublishResultInput): void {
     const { winningMain, winningSpecial } = input;
 

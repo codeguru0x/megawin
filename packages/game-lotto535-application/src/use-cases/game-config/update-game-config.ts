@@ -23,14 +23,13 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
   UpdateGameConfigInput,
   UpdateGameConfigOutput
 > {
+  private readonly repo = new GameConfigRepository();
+
   protected async execute(
     input: UpdateGameConfigInput,
   ): Promise<UpdateGameConfigOutput> {
     this.validateInput(input);
-
-    const repo = new GameConfigRepository();
-
-    const existing = await repo.getGlobalConfig();
+    const existing = await this.repo.getGlobalConfig();
 
     const merged = {
       jackpot: input.jackpot
@@ -53,7 +52,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
     if (merged.defaultPrizes) cleanMerged.defaultPrizes = merged.defaultPrizes;
     if (merged.play) cleanMerged.play = merged.play;
 
-    const updated = await repo.upsertGlobalConfig(cleanMerged as any);
+    const updated = await this.repo.upsertGlobalConfig(cleanMerged as any);
 
     if (!updated) {
       throw AppException.internal("Cập nhật GameConfig thất bại.");

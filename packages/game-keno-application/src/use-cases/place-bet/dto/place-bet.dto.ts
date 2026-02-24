@@ -7,7 +7,8 @@ import type { TicketChannel } from "@megawin/game-core/entities";
 
 export interface PlaceBetBasicBoardInput {
   boardNo: string;
-  numbers: number[];
+  /** Số dạng string "01"-"80". */
+  numbers: string[];
 }
 
 export interface PlaceBetSideBetInput {
@@ -38,7 +39,7 @@ export interface PlaceBetOutput {
   drawPlan: {
     startDrawId: string;
     drawCount: number;
-    drawIds: string[];
+    enrolledDrawIds: string[];
   };
   pricing: {
     unitPrice: number;

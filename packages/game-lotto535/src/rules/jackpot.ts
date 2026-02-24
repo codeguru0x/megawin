@@ -55,11 +55,23 @@ export interface DrawFinancialResult {
   totalRevenue: number;
   totalFixedPrizes: number;
   totalAgentCommission: number;
+
+  /**
+   * Tiền công ty thu về cấu hình (companyRate × revenue).
+   * Đây là giá trị TỐI ĐA công ty muốn thu.
+   */
   companyTake: number;
 
   /**
-   * Tiền tích luỹ vào Jackpot kỳ tiếp.
-   * Có thể âm (khi trả thưởng > doanh thu → công ty bù).
+   * Tiền công ty thực thu. Có thể < companyTake khi doanh thu kỳ
+   * không đủ bù giải thưởng + hoa hồng + 15%.
+   * = min(companyTake, max(revenue - fixedPrizes - commission, 0))
+   */
+  actualCompanyTake: number;
+
+  /**
+   * Tiền tích luỹ vào Jackpot kỳ tiếp theo.
+   * Luôn >= 0: nếu tính ra âm (doanh thu không đủ bù) thì = 0.
    */
   jackpotContribution: number;
 
@@ -75,8 +87,15 @@ export interface DrawFinancialResult {
 /**
  * Tính toán tài chính cho 1 kỳ quay.
  *
- * @param input - Dữ liệu doanh thu + hoa hồng + giải thưởng
- * @returns Kết quả tài chính bao gồm jackpotContribution
+ * Công thức:
+ *   Quỹ trả thưởng = 100% doanh thu tiền cược
+ *   remainAfterPrizes = revenue - fixedPrizes - agentCommission
+ *   actualCompanyTake = min(companyRate × revenue, max(remainAfterPrizes, 0))
+ *   jackpotContribution = max(remainAfterPrizes - actualCompanyTake, 0)
+ *
+ * Nếu doanh thu không đủ bù giải thưởng + hoa hồng thì:
+ * - Công ty thu = 0 (không có dư để thu)
+ * - Tích luỹ Jackpot = 0 (không để giá trị âm)
  */
 export function calculateDrawFinancials(
   input: DrawFinancialInput
@@ -97,14 +116,18 @@ export function calculateDrawFinancials(
 
   const companyTake = Math.round(totalRevenue * companyRate);
 
-  const jackpotContribution =
-    totalRevenue - totalFixedPrizes - totalAgentCommission - companyTake;
+  const remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission;
+
+  const actualCompanyTake = Math.min(companyTake, Math.max(remainAfterPrizes, 0));
+
+  const jackpotContribution = Math.max(remainAfterPrizes - actualCompanyTake, 0);
 
   return {
     totalRevenue,
     totalFixedPrizes,
     totalAgentCommission,
     companyTake,
+    actualCompanyTake,
     jackpotContribution,
     tenantBreakdown,
   };
@@ -117,11 +140,9 @@ export function calculateDrawFinancials(
 /**
  * Tính Jackpot cho kỳ tiếp theo.
  *
- * @param currentOpening  - Jackpot đầu kỳ hiện tại
- * @param contribution    - Tiền tích luỹ kỳ hiện tại (từ calculateDrawFinancials)
- * @param hasJackpotWinner - Có ai trúng Jackpot kỳ này không
- * @param seedAmount      - Jackpot khởi điểm khi có người trúng (từ gameConfig)
- * @returns Jackpot opening cho kỳ tiếp theo
+ * - Có người trúng Jackpot → reset về seedAmount + contribution
+ * - Không ai trúng → opening + contribution (tích luỹ)
+ * - contribution luôn >= 0 (đã đảm bảo bởi calculateDrawFinancials)
  */
 export function calculateNextJackpot(
   currentOpening: number,
@@ -130,11 +151,9 @@ export function calculateNextJackpot(
   seedAmount: number
 ): number {
   if (hasJackpotWinner) {
-    // Có người trúng → reset về seed + contribution
-    return seedAmount + Math.max(contribution, 0);
+    return seedAmount + contribution;
   }
 
-  // Không ai trúng → tích luỹ
   return currentOpening + contribution;
 }
 

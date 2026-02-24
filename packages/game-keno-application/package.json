@@ -13,6 +13,26 @@
       "types": "./src/use-cases/place-bet/index.ts",
       "default": "./dist/use-cases/place-bet/index.js"
     },
+    "./use-cases/settle": {
+      "types": "./src/use-cases/settle/index.ts",
+      "default": "./dist/use-cases/settle/index.js"
+    },
+    "./use-cases/payout": {
+      "types": "./src/use-cases/payout/index.ts",
+      "default": "./dist/use-cases/payout/index.js"
+    },
+    "./use-cases/void": {
+      "types": "./src/use-cases/void/index.ts",
+      "default": "./dist/use-cases/void/index.js"
+    },
+    "./use-cases/feed": {
+      "types": "./src/use-cases/feed/index.ts",
+      "default": "./dist/use-cases/feed/index.js"
+    },
+    "./use-cases/draws": {
+      "types": "./src/use-cases/draws/index.ts",
+      "default": "./dist/use-cases/draws/index.js"
+    },
     "./repos": {
       "types": "./src/infras/repos/index.ts",
       "default": "./dist/infras/repos/index.js"
@@ -21,9 +41,11 @@
   "dependencies": {
     "@megawin/data": "workspace:*",
     "@megawin/game-core": "workspace:*",
+    "@megawin/game-core-application": "workspace:*",
     "@megawin/game-keno": "workspace:*",
     "@megawin/app-core": "workspace:*",
     "@megawin/shared": "workspace:*",
+    "@megawin/tenant-gateway": "workspace:*",
     "mongodb": "^7.1.0"
   },
   "devDependencies": {

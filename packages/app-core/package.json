@@ -34,6 +34,10 @@
       "types": "./src/aws/sqs/index.ts",
       "default": "./dist/aws/sqs/index.js"
     },
+    "./aws/sf": {
+      "types": "./src/aws/sf/index.ts",
+      "default": "./dist/aws/sf/index.js"
+    },
     "./lambda": {
       "types": "./src/lambda/index.ts",
       "default": "./dist/lambda/index.js"
@@ -68,6 +72,7 @@
     "@aws-sdk/client-cognito-identity-provider": "*",
     "@aws-sdk/client-kinesis": "*",
     "@aws-sdk/client-sqs": "*",
+    "@aws-sdk/client-sfn": "*",
     "@middy/core": "^7.0.2",
     "zod": "^4.3.6"
   }

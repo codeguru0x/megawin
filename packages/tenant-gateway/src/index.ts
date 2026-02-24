@@ -12,4 +12,12 @@ export type {
   GetBalanceResponse,
   SubmitReportRequest,
   SubmitReportResponse,
+  BatchPayoutRequest,
+  BatchPayoutResponse,
+  PayoutItem,
+  PayoutItemResult,
+  RefundItem,
+  BatchRefundRequest,
+  BatchRefundResponse,
+  RefundItemResult,
 } from "./types";

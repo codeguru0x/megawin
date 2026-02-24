@@ -2,10 +2,11 @@
  * Keno – Play Type Validation
  *
  * Validate lựa chọn số theo play type.
+ * Số đầu vào dạng string "01"-"80" (zero-padded).
  */
 
 import { KenoPlayType, KENO_BASIC_PLAY_TYPES } from "../entities/enums";
-import { KENO_NUMBER_MIN, KENO_NUMBER_MAX } from "../entities/types";
+import { KENO_VALID_NUMBERS } from "../entities/types";
 import { getPickCountFromPlayType } from "./prize-tables";
 
 // ─────────────────────────────────────────────
@@ -21,12 +22,11 @@ export interface ValidationResult {
  * Validate lựa chọn số cho board cơ bản.
  *
  * @param playType - Kiểu chơi (pick1-pick10)
- * @param numbers - Danh sách số đã chọn
- * @returns Kết quả validate
+ * @param numbers - Danh sách số dạng string ("01"-"80")
  */
 export function validateBasicSelection(
   playType: KenoPlayType,
-  numbers: number[],
+  numbers: string[],
 ): ValidationResult {
   const errors: string[] = [];
 
@@ -46,8 +46,8 @@ export function validateBasicSelection(
   }
 
   for (const n of numbers) {
-    if (!Number.isInteger(n) || n < KENO_NUMBER_MIN || n > KENO_NUMBER_MAX) {
-      errors.push(`Số ${n} ngoài phạm vi ${KENO_NUMBER_MIN}-${KENO_NUMBER_MAX}`);
+    if (!KENO_VALID_NUMBERS.has(n)) {
+      errors.push(`Số "${n}" không hợp lệ. Phải là chuỗi 2 ký tự "01"-"80".`);
     }
   }
 
@@ -60,9 +60,6 @@ export function validateBasicSelection(
 
 /**
  * Xác định play type từ số lượng số đã chọn.
- *
- * @param count - Số lượng số đã chọn (1-10)
- * @returns KenoPlayType tương ứng hoặc null
  */
 export function getPlayTypeFromPickCount(count: number): KenoPlayType | null {
   if (count < 1 || count > 10) return null;
