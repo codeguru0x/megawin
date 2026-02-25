@@ -11,7 +11,7 @@ import { apiClient, ApiClientError } from "@megawin/next/client";
 import {
   CompanyRole,
   COMPANY_ROLE_VALUES,
-} from "@megawin/identity-domain/accounts/account";
+} from "@megawin/identity/entities/account";
 
 import { Button } from "@/components/ui/button";
 import {

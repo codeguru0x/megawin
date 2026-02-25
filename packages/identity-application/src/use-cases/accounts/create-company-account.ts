@@ -11,13 +11,13 @@ import {
   adminCreateAccount,
   COGNITO_WORKFORCE_POOL_ID,
 } from "@megawin/app-core/aws/cognito";
-import { AccountType, AccountStatus } from "@megawin/identity-domain/accounts";
+import { AccountType, AccountStatus } from "@megawin/identity/entities";
 
 import type {
   CreateCompanyAccountInput,
   CreateCompanyAccountOutput,
 } from "./dto/create-company-account.dto";
-import { ClaimKey } from "@megawin/identity-domain/cognito/claim";
+import { ClaimKey } from "@megawin/identity/entities/claim";
 import { generateULID } from "@megawin/shared/utils/unique";
 import { AccountRepository } from "../../infras/repos/account-repo";
 

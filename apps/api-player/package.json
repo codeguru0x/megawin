@@ -20,7 +20,7 @@
     "@megawin/game-lotto535": "workspace:*",
     "@megawin/game-lotto535-application": "workspace:*",
     "@megawin/identity-application": "workspace:*",
-    "@megawin/identity-domain": "workspace:*",
+    "@megawin/identity": "workspace:*",
     "@megawin/shared": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*",
     "@middy/core": "^7.1.2",

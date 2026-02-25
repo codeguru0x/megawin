@@ -1,7 +1,7 @@
 import type {
   TenantJwksAssertionConfig,
   TenantStatus,
-} from "@megawin/identity-domain/tenants/tenant";
+} from "@megawin/identity/entities/tenant";
 
 export interface CreateTenantInput {
   tenantId: string;

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { COMPANY_ROLE_VALUES } from "@megawin/identity-domain/accounts/account";
+import { COMPANY_ROLE_VALUES } from "@megawin/identity/entities/account";
 
 export const createAccountSchema = z.object({
   username: z.string().min(3).max(50),

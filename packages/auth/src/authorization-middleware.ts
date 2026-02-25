@@ -30,7 +30,7 @@ import {
   AgentRole,
   PlayerRole,
   type CompanyRole as CompanyRoleType,
-} from "@megawin/identity-domain/accounts/account";
+} from "@megawin/identity/entities/account";
 
 export type { AuthContext };
 

@@ -10,7 +10,7 @@ import {
   AccountStatus,
   AgentRole,
   PlayerRole,
-} from "@megawin/identity-domain/accounts/account";
+} from "@megawin/identity/entities/account";
 import { generateULID } from "@megawin/shared/utils/unique";
 
 export class AccountRepository extends IdentityBaseRepo<

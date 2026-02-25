@@ -11,8 +11,8 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 
-import { ClaimKey } from "@megawin/identity-domain/cognito/claim";
-import { AccountStatus } from "@megawin/identity-domain/accounts/account";
+import { ClaimKey } from "@megawin/identity/entities/claim";
+import { AccountStatus } from "@megawin/identity/entities/account";
 
 import { env } from "@/env";
 

@@ -40,7 +40,7 @@
   "dependencies": {
     "@megawin/app-core": "workspace:*",
     "@megawin/data": "workspace:*",
-    "@megawin/identity-domain": "workspace:*",
+    "@megawin/identity": "workspace:*",
     "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
     "jose": "^6.1.3",

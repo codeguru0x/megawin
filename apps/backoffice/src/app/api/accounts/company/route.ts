@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity-domain/accounts";
+import { CompanyRole } from "@megawin/identity/entities";
 import {
   CreateCompanyAccountUseCase,
   ListCompanyAccountsUseCase,

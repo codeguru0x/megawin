@@ -25,7 +25,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@megawin/app-core": "workspace:*",
     "@megawin/identity-application": "workspace:*",
-    "@megawin/identity-domain": "workspace:*",
+    "@megawin/identity": "workspace:*",
     "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.10",

@@ -14,8 +14,8 @@ import {
   AccountStatus as AccountStatusEnum,
   type AccountRole,
   SUPER_ROLES,
-} from "@megawin/identity-domain/accounts/account";
-import { ClaimKey } from "@megawin/identity-domain/cognito/claim";
+} from "@megawin/identity/entities/account";
+import { ClaimKey } from "@megawin/identity/entities/claim";
 
 // ============ Auth context (sau Authorizer) ============
 

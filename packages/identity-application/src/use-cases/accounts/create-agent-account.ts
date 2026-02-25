@@ -8,9 +8,9 @@ import {
   AccountType,
   AccountStatus,
   AgentRole,
-} from "@megawin/identity-domain/accounts";
+} from "@megawin/identity/entities";
 
-import { ClaimKey } from "@megawin/identity-domain/cognito/claim";
+import { ClaimKey } from "@megawin/identity/entities/claim";
 import { generateULID } from "@megawin/shared/utils/unique";
 import { AccountRepository } from "../../infras/repos/account-repo";
 

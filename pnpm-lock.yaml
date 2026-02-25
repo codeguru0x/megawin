@@ -23,12 +23,12 @@ importers:
       '@megawin/app-core':
         specifier: workspace:*
         version: link:../../packages/app-core
+      '@megawin/identity':
+        specifier: workspace:*
+        version: link:../../packages/identity
       '@megawin/identity-application':
         specifier: workspace:*
         version: link:../../packages/identity-application
-      '@megawin/identity-domain':
-        specifier: workspace:*
-        version: link:../../packages/identity-domain
       '@megawin/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -75,12 +75,12 @@ importers:
       '@megawin/game-lotto535-application':
         specifier: workspace:*
         version: link:../../packages/game-lotto535-application
+      '@megawin/identity':
+        specifier: workspace:*
+        version: link:../../packages/identity
       '@megawin/identity-application':
         specifier: workspace:*
         version: link:../../packages/identity-application
-      '@megawin/identity-domain':
-        specifier: workspace:*
-        version: link:../../packages/identity-domain
       '@megawin/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -121,12 +121,12 @@ importers:
       '@megawin/game-core-application':
         specifier: workspace:*
         version: link:../../packages/game-core-application
+      '@megawin/identity':
+        specifier: workspace:*
+        version: link:../../packages/identity
       '@megawin/identity-application':
         specifier: workspace:*
         version: link:../../packages/identity-application
-      '@megawin/identity-domain':
-        specifier: workspace:*
-        version: link:../../packages/identity-domain
       '@megawin/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -170,12 +170,12 @@ importers:
       '@megawin/app-core':
         specifier: workspace:*
         version: link:../../packages/app-core
+      '@megawin/identity':
+        specifier: workspace:*
+        version: link:../../packages/identity
       '@megawin/identity-application':
         specifier: workspace:*
         version: link:../../packages/identity-application
-      '@megawin/identity-domain':
-        specifier: workspace:*
-        version: link:../../packages/identity-domain
       '@megawin/next':
         specifier: workspace:*
         version: link:../../packages/next
@@ -429,12 +429,12 @@ importers:
       '@megawin/app-core':
         specifier: workspace:*
         version: link:../app-core
+      '@megawin/identity':
+        specifier: workspace:*
+        version: link:../identity
       '@megawin/identity-application':
         specifier: workspace:*
         version: link:../identity-application
-      '@megawin/identity-domain':
-        specifier: workspace:*
-        version: link:../identity-domain
       '@megawin/shared':
         specifier: workspace:*
         version: link:../shared
@@ -596,18 +596,6 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
-  packages/game-keno-sdk:
-    devDependencies:
-      '@megawin/typescript-config':
-        specifier: workspace:*
-        version: link:../../tooling/typescript-config
-      tsup:
-        specifier: ^8.5.0
-        version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
-
   packages/game-lotto535:
     dependencies:
       '@megawin/game-core':
@@ -667,18 +655,6 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
-  packages/game-lotto535-sdk:
-    devDependencies:
-      '@megawin/typescript-config':
-        specifier: workspace:*
-        version: link:../../tooling/typescript-config
-      tsup:
-        specifier: ^8.5.0
-        version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
-
   packages/game-max3d:
     devDependencies:
       '@megawin/typescript-config':
@@ -704,6 +680,18 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  packages/identity:
+    devDependencies:
+      '@megawin/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@types/node':
+        specifier: ^25.2.1
+        version: 25.2.3
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
   packages/identity-application:
     dependencies:
       '@megawin/app-core':
@@ -712,9 +700,9 @@ importers:
       '@megawin/data':
         specifier: workspace:*
         version: link:../data
-      '@megawin/identity-domain':
+      '@megawin/identity':
         specifier: workspace:*
-        version: link:../identity-domain
+        version: link:../identity
       '@megawin/next':
         specifier: workspace:*
         version: link:../next
@@ -752,18 +740,6 @@ importers:
       vitest:
         specifier: latest
         version: 4.0.18(@types/node@25.2.1)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)
-
-  packages/identity-domain:
-    devDependencies:
-      '@megawin/typescript-config':
-        specifier: workspace:*
-        version: link:../../tooling/typescript-config
-      '@types/node':
-        specifier: ^25.2.1
-        version: 25.2.1
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
 
   packages/next:
     dependencies:

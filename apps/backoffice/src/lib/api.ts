@@ -13,7 +13,7 @@ import {
   AccountStatus,
   CompanyRole,
   type AccountRole,
-} from "@megawin/identity-domain/accounts/account";
+} from "@megawin/identity/entities/account";
 import { auth } from "@/lib/auth";
 
 function parseCognitoRoles(raw: unknown): AccountRole[] {

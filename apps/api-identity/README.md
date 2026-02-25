@@ -1,69 +1,58 @@
-<!--
-title: 'AWS Simple HTTP Endpoint example in NodeJS'
-description: 'This template demonstrates how to make a simple HTTP API with Node.js running on AWS Lambda and API Gateway using the Serverless Framework.'
-layout: Doc
-framework: v4
-platform: AWS
-language: nodeJS
-authorLink: 'https://github.com/serverless'
-authorName: 'Serverless, Inc.'
-authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
--->
+# @megawin/api-identity
 
-# Serverless Framework Node HTTP API on AWS
+Identity & Account Management API — quản lý tài khoản company user và tenants.
 
-This template demonstrates how to make a simple HTTP API with Node.js running on AWS Lambda and API Gateway using the Serverless Framework.
+## Loại app
 
-This template does not include any kind of persistence (database). For more advanced examples, check out the [serverless/examples repository](https://github.com/serverless/examples/) which includes Typescript, Mongo, DynamoDB and other examples.
+| Thuộc tính | Giá trị |
+|------------|---------|
+| **Loại** | API Gateway (Serverless Lambda + API Gateway v2) |
+| **Runtime** | Node.js 24, AWS Lambda |
+| **Framework** | Serverless Framework v4 |
+| **Build** | esbuild |
 
-## Usage
+## Đối tượng sử dụng
 
-### Deployment
+**Internal — Operator (MegaWin team)**
 
-In order to deploy the example, you need to run the following command:
+API này phục vụ cho hệ thống nội bộ MegaWin, quản lý identity của company users và tenants. Không dành cho player hay tenant gọi trực tiếp.
 
-```
-serverless deploy
-```
+## Endpoints
 
-After running deploy, you should see output similar to:
+| Method | Path | Handler | Mô tả |
+|--------|------|---------|-------|
+| `POST` | `/accounts/company` | `create-company-user` | Tạo tài khoản company user |
+| `GET` | `/` | `tentant-endpoint` | Tenant endpoint (placeholder) |
 
-```
-Deploying "serverless-http-api" to stage "dev" (us-east-1)
+## Packages phụ thuộc
 
-✔ Service deployed to stack serverless-http-api-dev (91s)
+| Package | Vai trò |
+|---------|---------|
+| `@megawin/identity-application` | Use cases — tạo tenant, tạo user, xác thực |
+| `@megawin/identity-domain` | Domain entities — Tenant, User, Role |
+| `@megawin/app-core` | Lambda middleware, HTTP helpers, logging |
+| `@megawin/shared` | Shared types, API response format |
 
-endpoint: GET - https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/
-functions:
-  hello: serverless-http-api-dev-hello (1.6 kB)
-```
+## Scripts
 
-_Note_: In current form, after deployment, your API is public and can be invoked by anyone. For production deployments, you might want to configure an authorizer. For details on how to do that, refer to [HTTP API (API Gateway V2) event docs](https://www.serverless.com/framework/docs/providers/aws/events/http-api).
+```bash
+# Type check
+pnpm check-types
 
-### Invocation
+# Local development (serverless-offline)
+npx serverless offline
 
-After successful deployment, you can call the created application via HTTP:
-
-```
-curl https://xxxxxxx.execute-api.us-east-1.amazonaws.com/
+# Deploy lên AWS
+npx serverless deploy
 ```
 
-Which should result in response similar to:
-
-```json
-{ "message": "Go Serverless v4! Your function executed successfully!" }
-```
-
-### Local development
-
-The easiest way to develop and test your function is to use the `dev` command:
+## Cấu trúc thư mục
 
 ```
-serverless dev
+src/
+├── functions/
+│   ├── account-endpoint.yml      # HTTP route definitions
+│   └── tentant-endpoint.yml
+└── handlers/
+    └── create-company-user.ts    # Lambda handler
 ```
-
-This will start a local emulator of AWS Lambda and tunnel your requests to and from AWS Lambda, allowing you to interact with your function as if it were running in the cloud.
-
-Now you can invoke the function as before, but this time the function will be executed locally. Now you can develop your function locally, invoke it, and see the results immediately without having to re-deploy.
-
-When you are done developing, don't forget to run `serverless deploy` to deploy the function to the cloud.

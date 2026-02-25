@@ -24,9 +24,9 @@ import {
   AccountType,
   AccountStatus,
   PlayerRole,
-} from "@megawin/identity-domain/accounts";
-import { ClaimKey } from "@megawin/identity-domain/cognito/claim";
-import { TenantStatus } from "@megawin/identity-domain/tenants/tenant";
+} from "@megawin/identity/entities";
+import { ClaimKey } from "@megawin/identity/entities/claim";
+import { TenantStatus } from "@megawin/identity/entities/tenant";
 
 import { AccountRepository } from "../../infras/repos/account-repo";
 import { TenantRepository } from "../../infras/repos/tenant-repo";

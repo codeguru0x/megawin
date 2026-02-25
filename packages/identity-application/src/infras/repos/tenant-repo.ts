@@ -3,7 +3,7 @@ import {
   TenantJwksAssertionConfig,
   TenantStatus,
   TenantOption,
-} from "@megawin/identity-domain/tenants/tenant";
+} from "@megawin/identity/entities/tenant";
 import { IdentityBaseRepo } from "./identity-base-repo";
 import { TenantMapper } from "../mappers/tenant-mapper";
 

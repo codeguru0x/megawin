@@ -2,7 +2,7 @@ import { z } from "zod";
 import {
   TenantStatus,
   TENANT_STATUS_VALUES,
-} from "@megawin/identity-domain/tenants/tenant";
+} from "@megawin/identity/entities/tenant";
 
 export const createTenantSchema = z.object({
   tenantId: z

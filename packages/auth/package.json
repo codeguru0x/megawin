@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@megawin/app-core": "workspace:*",
-    "@megawin/identity-domain": "workspace:*",
+    "@megawin/identity": "workspace:*",
     "@megawin/identity-application": "workspace:*",
     "@megawin/shared": "workspace:*",
     "@middy/core": "^7.1.2",
