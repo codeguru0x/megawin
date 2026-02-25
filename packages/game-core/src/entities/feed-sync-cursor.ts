@@ -7,7 +7,13 @@
  * đã xử lý đến version nào. Document này persist cursor đó.
  *
  * Key = gameProduct (1 document per game).
- * Worker đọc cursor trước khi chạy, ghi lại sau khi sync xong.
+ *
+ * DISTRIBUTED LOCK:
+ * Document cũng đóng vai trò distributed lock để ngăn 2 step function
+ * executions chạy đồng thời cho cùng 1 game:
+ *   - Scheduler acquireLock(): atomic set lockedUntil + lockedBy
+ *   - SaveCursor releaseLock(): set lockedUntil = null
+ *   - Lock auto-expire: nếu step function crash, lock hết hạn sau TTL
  */
 
 import type { Long } from "mongodb";
@@ -28,4 +34,17 @@ export interface FeedSyncCursorDoc {
 
   /** Thời điểm cập nhật cursor gần nhất (UTC). */
   updatedAt: Date;
+
+  /**
+   * Lock expiry time (UTC). Null = không ai giữ lock.
+   * Scheduler set = now + TTL khi acquire. SaveCursor set = null khi release.
+   * Nếu step function crash → lock tự expire sau TTL.
+   */
+  lockedUntil: Date | null;
+
+  /**
+   * ID của execution đang giữ lock.
+   * Dùng cho debug/monitoring. SaveCursor verify trước khi release.
+   */
+  lockedBy: string | null;
 }

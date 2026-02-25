@@ -1,6 +1,6 @@
 export { SyncEntryFeedUseCase } from "./sync-entry-feed";
 export { SaveFeedCursorUseCase } from "./save-feed-cursor";
-export { ReadFeedCursorUseCase } from "./read-feed-cursor";
+export { AcquireFeedLockUseCase } from "./acquire-feed-lock";
 export type {
   SyncEntryFeedInput,
   SyncEntryFeedResult,
@@ -10,6 +10,6 @@ export type {
   SaveFeedCursorResult,
 } from "@megawin/game-core-application/use-cases";
 export type {
-  ReadFeedCursorInput,
-  ReadFeedCursorResult,
+  AcquireFeedLockInput,
+  AcquireFeedLockResult,
 } from "@megawin/game-core-application/use-cases";

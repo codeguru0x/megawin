@@ -1,8 +1,8 @@
 /**
- * Use Case: Save Feed Sync Cursor
+ * Use Case: Save Feed Cursor & Release Lock
  *
- * Ghi lastVersion vào feedSyncCursor sau khi step function sync hoàn tất.
- * Mỗi game extends và implement getGameProduct().
+ * Ghi lastVersion mới + release distributed lock.
+ * Step function gọi ở state cuối sau khi sync hoàn tất.
  */
 
 import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
@@ -27,7 +27,7 @@ export abstract class BaseSaveFeedCursorUseCase extends StepFunctionUseCase<
   protected abstract getGameProduct(): GameProduct;
 
   protected async execute(input: SaveFeedCursorInput): Promise<SaveFeedCursorResult> {
-    await this.cursorRepo.saveLastVersion(this.getGameProduct(), input.lastVersion);
+    await this.cursorRepo.saveAndRelease(this.getGameProduct(), input.lastVersion);
     return { saved: true, lastVersion: input.lastVersion };
   }
 }

@@ -11,17 +11,17 @@ export type {
   FeedSyncableEntryRepo,
 } from "./sync-entry-feed";
 
+export { BaseAcquireFeedLockUseCase } from "./acquire-feed-lock";
+export type {
+  AcquireFeedLockInput,
+  AcquireFeedLockResult,
+} from "./acquire-feed-lock";
+
 export { BaseSaveFeedCursorUseCase } from "./save-feed-cursor";
 export type {
   SaveFeedCursorInput,
   SaveFeedCursorResult,
 } from "./save-feed-cursor";
-
-export { BaseReadFeedCursorUseCase } from "./read-feed-cursor";
-export type {
-  ReadFeedCursorInput,
-  ReadFeedCursorResult,
-} from "./read-feed-cursor";
 
 export { GetEntryFeedUseCase } from "./get-entry-feed";
 export type { GetEntryFeedInput } from "./get-entry-feed";

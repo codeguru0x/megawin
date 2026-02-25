@@ -2,37 +2,38 @@
  * Lambda: feed-scheduler (Lotto 5/35)
  *
  * Chạy tự động mỗi 30s (EventBridge Schedule).
- * Đọc feedSyncCursor qua use case → lấy afterVersion → start Step Function.
  *
- * Guard: nếu execution đang chạy, skip để tránh chạy song song.
+ * CONCURRENCY GUARD (MongoDB distributed lock):
+ *   1. acquireLock() → atomic set lockedUntil + đọc afterVersion
+ *      - Thành công: an toàn start step function
+ *      - Thất bại: ai đó đang giữ lock → skip
+ *   2. Step function chạy → SaveCursor (cuối) release lock
+ *   3. Nếu crash → lock auto-expire sau 5 phút → scheduler retry
  *
- * Flow:
- *   EventBridge (rate 30s)
- *     → Lambda: ReadFeedCursorUseCase → afterVersion
- *       → startExecution({ afterVersion, batchSize })
- *         → Step Function loop sync
- *           → SaveFeedCursorUseCase (ghi cursor mới)
+ * Không cần hasRunningExecution() nữa — lock ở DB chính xác hơn
+ * SFN ListExecutions (eventual consistency).
  */
 
-import { hasRunningExecution, startExecution } from "@megawin/app-core/aws/sf";
-import { ReadFeedCursorUseCase } from "@megawin/game-lotto535-application/use-cases/feed";
+import { startExecution } from "@megawin/app-core/aws/sf";
+import { AcquireFeedLockUseCase } from "@megawin/game-lotto535-application/use-cases/feed";
 
 const STEP_FUNCTION_ARN = process.env.FEED_SYNC_SFN_ARN!;
 const BATCH_SIZE = 200;
 
-const useCase = new ReadFeedCursorUseCase();
+const acquireLockUseCase = new AcquireFeedLockUseCase();
 
 export async function handler() {
-  if (await hasRunningExecution(STEP_FUNCTION_ARN)) {
-    console.log("Feed sync step function đang chạy, skip lần này.");
+  const executionName = `lotto535-feed-sync-${Date.now()}`;
+
+  const lockResult = await acquireLockUseCase.run({ executionId: executionName });
+  if (!lockResult.success) throw new Error(lockResult.error.message);
+
+  const { acquired, afterVersion } = lockResult.data;
+
+  if (!acquired) {
+    console.log("Feed sync lock đang bị giữ, skip lần này.");
     return { skipped: true };
   }
-
-  const cursorResult = await useCase.run({});
-  if (!cursorResult.success) throw new Error(cursorResult.error.message);
-  const { afterVersion } = cursorResult.data;
-
-  const executionName = `lotto535-feed-sync-${Date.now()}`;
 
   const { executionArn } = await startExecution({
     stateMachineArn: STEP_FUNCTION_ARN,
