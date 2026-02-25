@@ -131,7 +131,7 @@ export class AutoEnrollEntriesUseCase extends StepFunctionUseCase<
             drawId,
             drawTime: draw.drawTime,
             drawDate: draw.drawDate,
-            financialDate: draw.financialDate ?? draw.drawDate,
+            financialDate: draw.financialDate,
             tenantSnapshot: { commissionRate },
             status: EntryStatus.Scheduled as any,
             betCount: ticket.pricing.betsPerDraw,

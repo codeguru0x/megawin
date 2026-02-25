@@ -15,13 +15,11 @@ import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
 /**
  * Valid status transitions cho Keno Draw.
  *
- * Flow: salesOpen ⇄ salesClosed → published → settling → settled
- *          ↘ void      ↘ void       ↘ void
- *
- * salesClosed có thể quay lại salesOpen (reopen) hoặc tiến tới published/void.
- * Keno KHÔNG có Jackpot.
+ * Flow: scheduled → salesOpen ⇄ salesClosed → published → settling → settled
+ *          ↘ void      ↘ void      ↘ void       ↘ void
  */
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
+  [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Void]),
   [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed, DrawStatus.Void]),
   [DrawStatus.SalesClosed]: new Set([DrawStatus.SalesOpen, DrawStatus.Published, DrawStatus.Void]),
   [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Void]),

@@ -15,12 +15,11 @@ import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
  * Valid status transitions.
  * Key = current status, Value = set of allowed next statuses.
  *
- * Flow: salesOpen ⇄ salesClosed → published → settling → settled
- *          ↘ void      ↘ void       ↘ void
- *
- * salesClosed có thể quay lại salesOpen (reopen) hoặc tiến tới published/void.
+ * Flow: scheduled → salesOpen ⇄ salesClosed → published → settling → settled
+ *          ↘ void      ↘ void      ↘ void       ↘ void
  */
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
+  [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Void]),
   [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed, DrawStatus.Void]),
   [DrawStatus.SalesClosed]: new Set([DrawStatus.SalesOpen, DrawStatus.Published, DrawStatus.Void]),
   [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Void]),
@@ -167,6 +166,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.updateOne(
       { drawId },
       { $set: { stats, updatedAt: new Date() } },
+    );
+  }
+
+  async getLatestDraw(): Promise<DrawEntity | null> {
+    return await this.findOne(
+      {},
+      { sort: { drawDate: -1, drawNo: -1 } },
     );
   }
 

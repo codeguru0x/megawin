@@ -229,7 +229,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       drawId: startDrawId,
       drawTime: firstDraw.drawTime,
       drawDate: firstDraw.drawDate,
-      financialDate: firstDraw.financialDate ?? firstDraw.drawDate,
+      financialDate: firstDraw.financialDate,
       tenantSnapshot: { commissionRate },
       status: EntryStatus.Scheduled as any,
       betCount: betsPerDraw,

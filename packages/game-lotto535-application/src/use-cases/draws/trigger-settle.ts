@@ -4,7 +4,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { isSplitCycleDraw } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
+import { GameConfigRepository } from "../../infras/repos/global-config-repo";
 import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
 
 /**

@@ -16,11 +16,11 @@
 
 /** Tên các MongoDB collections cho game Lotto 5/35. */
 export const Lotto535Collections = {
-  Tickets: "lotto535Tickets",
-  TicketEntries: "lotto535TicketEntries",
-  TicketLines: "lotto535TicketLines",
-  Draws: "lotto535Draws",
-  GameConfigs: "lotto535GameConfigs",
+  Tickets: "lotto535_tickets",
+  TicketEntries: "lotto535_ticket_entries",
+  TicketLines: "lotto535_ticket_lines",
+  Draws: "lotto535_draws",
+  GameConfigs: "lotto535_game_configs",
 } as const;
 
 // ─────────────────────────────────────────────
@@ -55,8 +55,7 @@ export const PrizeTier = {
   Consolation: "consolation",
 } as const;
 
-export type PrizeTier =
-  (typeof PrizeTier)[keyof typeof PrizeTier];
+export type PrizeTier = (typeof PrizeTier)[keyof typeof PrizeTier];
 
 export const LOTTO535_PRIZE_TIER_VALUES = Object.values(PrizeTier);
 
@@ -95,8 +94,7 @@ export const PlayType = {
   QuickPick: "quickPick",
 } as const;
 
-export type PlayType =
-  (typeof PlayType)[keyof typeof PlayType];
+export type PlayType = (typeof PlayType)[keyof typeof PlayType];
 
 export const LOTTO535_PLAY_TYPE_VALUES = Object.values(PlayType);
 
@@ -114,8 +112,7 @@ export const ExpansionMode = {
   OnSettle: "onSettle",
 } as const;
 
-export type ExpansionMode =
-  (typeof ExpansionMode)[keyof typeof ExpansionMode];
+export type ExpansionMode = (typeof ExpansionMode)[keyof typeof ExpansionMode];
 
 // ─────────────────────────────────────────────
 // Payout Status
@@ -139,5 +136,4 @@ export const PayoutStatus = {
   Failed: "failed",
 } as const;
 
-export type PayoutStatus =
-  (typeof PayoutStatus)[keyof typeof PayoutStatus];
+export type PayoutStatus = (typeof PayoutStatus)[keyof typeof PayoutStatus];

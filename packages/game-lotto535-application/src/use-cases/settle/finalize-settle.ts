@@ -19,6 +19,7 @@
 
 import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
+import { DrawNo } from "@megawin/game-lotto535/entities";
 import { parseDrawId, generateDrawId } from "@megawin/game-lotto535/helpers";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 
@@ -86,16 +87,16 @@ async function propagateJackpotToNextDraw(
   let nextDate = parsed.drawDate;
   let nextDrawNo = parsed.drawNo + 1;
 
-  if (nextDrawNo > 2) {
-    nextDrawNo = 1;
+  if (nextDrawNo > DrawNo.Evening) {
+    nextDrawNo = DrawNo.Morning;
     const date = new Date(parsed.drawDate + "T00:00:00");
     date.setDate(date.getDate() + 1);
     nextDate = date.toISOString().split("T")[0]!;
   }
 
-  const nextDrawId = generateDrawId(nextDate, nextDrawNo);
-  const nextDraw = await this.drawRepo.getDrawById(nextDrawId);
+  const nextDrawId = generateDrawId(nextDate, nextDrawNo as DrawNo);
+  const nextDraw = await drawRepo.getDrawById(nextDrawId);
   if (nextDraw) {
-    await this.drawRepo.setJackpotOpening(nextDrawId, nextJackpotOpening);
+    await drawRepo.setJackpotOpening(nextDrawId, nextJackpotOpening);
   }
 }

@@ -16,7 +16,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { buildPrizeAmountMap } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
+import { GameConfigRepository } from "../../infras/repos/global-config-repo";
 
 export interface PrepareSettleInput {
   drawId: string;
@@ -35,7 +35,6 @@ export interface PrepareSettleResult {
     seedAmount: number;
     splitThreshold: number;
     splitRatios: { tier1: number; tier2: number; tier3: number; tier4: number; tier5: number };
-    splitRoundingUnit: number;
     companyRate: number;
     defaultCommissionRate: number;
   };
@@ -90,7 +89,7 @@ export class PrepareSettleUseCase extends StepFunctionUseCase<
       drawId,
       drawDate: draw.drawDate,
       drawNo: draw.drawNo,
-      financialDate: draw.drawDate,
+      financialDate: draw.financialDate,
       result: {
         winningMain: draw.result.winningMain as unknown as number[],
         winningSpecial: draw.result.winningSpecial,
@@ -102,7 +101,6 @@ export class PrepareSettleUseCase extends StepFunctionUseCase<
         seedAmount: globalConfig.jackpot.seedAmount,
         splitThreshold: globalConfig.jackpot.splitThreshold,
         splitRatios: globalConfig.jackpot.splitRatios,
-        splitRoundingUnit: globalConfig.jackpot.splitRoundingUnit,
         companyRate: globalConfig.rates.companyRate,
         defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
       },

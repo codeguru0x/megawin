@@ -15,7 +15,7 @@
 /**
  * Ngày dạng ISO string "YYYY-MM-DD".
  * Dùng cho drawDate, report grouping – aggregation nhanh hơn Date object.
- * Timezone: Asia/Ho_Chi_Minh (cấu hình trong gameConfig.play.timezone).
+ * Timezone cố định: Asia/Ho_Chi_Minh.
  */
 export type ISODateString = string;
 

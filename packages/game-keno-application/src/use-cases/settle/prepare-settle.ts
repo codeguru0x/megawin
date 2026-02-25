@@ -84,7 +84,7 @@ export class PrepareSettleUseCase extends StepFunctionUseCase<
     drawId,
     drawDate: draw.drawDate,
     drawNo: draw.drawNo,
-    financialDate: draw.financialDate ?? draw.drawDate,
+    financialDate: draw.financialDate,
     result: {
       winningNumbers: draw.result.winningNumbers,
       bigCount: draw.result.bigCount,

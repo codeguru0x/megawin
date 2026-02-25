@@ -1,7 +1,7 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
+import { GameConfigRepository } from "../../infras/repos/global-config-repo";
 import type {
   UpdateGameConfigInput,
   UpdateGameConfigOutput,

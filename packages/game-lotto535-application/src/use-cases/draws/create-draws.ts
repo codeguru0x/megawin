@@ -1,23 +1,29 @@
 /**
- * Use Case: Create Draws (Lotto 5/35)
+ * Use Case: Create Draw (Lotto 5/35)
  *
- * Tạo kỳ quay cho 1 ngày (2 kỳ: 13h + 21h).
+ * Tạo 1 kỳ quay duy nhất cho 1 ngày.
+ * Lotto 5/35 có 2 kỳ/ngày (13h + 21h), staff chọn drawNo (1 hoặc 2).
  *
  * Validate:
  *   - drawDate format YYYY-MM-DD
- *   - Chưa có draw nào cho ngày này
+ *   - drawNo hợp lệ (1 → drawsPerDay)
+ *   - Kỳ quay (drawDate + drawNo) chưa tồn tại
  *   - GameConfig tồn tại
  *
- * Draw được tạo trực tiếp ở status "salesOpen" – sẵn sàng nhận đặt cược.
- * Jackpot opening = closingAmount kỳ trước hoặc seedAmount nếu là kỳ đầu.
+ * Draw tạo ở status "scheduled" – chưa mở bán.
+ * Staff cần nhấn "Mở nhận đặt cược" để chuyển sang salesOpen.
+ *
+ * Jackpot opening = closingAmount kỳ settled gần nhất hoặc seedAmount nếu là kỳ đầu.
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
 import { generateDrawId } from "@megawin/game-lotto535/helpers";
+import { getFinancialDate } from "@megawin/shared/utils/financial-date";
+import { toVNDate, subtractMinutes, nowVN } from "@megawin/shared/utils/date";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
+import { GameConfigRepository } from "../../infras/repos/global-config-repo";
 import type { CreateDrawsInput, CreateDrawsOutput } from "./dto/draw.dto";
 
 export class CreateDrawsUseCase extends NextApiUseCase<
@@ -28,15 +34,7 @@ export class CreateDrawsUseCase extends NextApiUseCase<
   private readonly configRepo = new GameConfigRepository();
 
   protected async execute(input: CreateDrawsInput): Promise<CreateDrawsOutput> {
-    const { drawDate } = input;
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(drawDate)) {
-      throw AppException.badRequest("drawDate phải có format YYYY-MM-DD.");
-    }
-    const existingDraws = await this.drawRepo.getDrawsByDate(drawDate);
-    if (existingDraws.length > 0) {
-      throw AppException.conflict(`Đã tồn tại kỳ quay cho ngày ${drawDate}.`);
-    }
+    const { drawDate, drawNo } = input;
 
     const globalConfig = await this.configRepo.getGlobalConfig();
     if (!globalConfig) {
@@ -45,56 +43,65 @@ export class CreateDrawsUseCase extends NextApiUseCase<
 
     const { play, jackpot: jackpotConfig } = globalConfig;
 
-    const latestSettled = await this.drawRepo.getLatestSettledDrawBefore(drawDate);
-
-    /**
-     * JACKPOT CHAIN:
-     * Lấy closingAmount từ kỳ settled gần nhất.
-     * Nếu chưa có kỳ nào settled → dùng seedAmount.
-     */
-    const jackpotOpening = latestSettled?.jackpot.closingAmount
-      ?? jackpotConfig.seedAmount;
-
-    const now = new Date();
-    const draws: CreateDrawsOutput["draws"] = [];
-
-    for (let i = 0; i < play.drawsPerDay; i++) {
-      const drawNo = i + 1;
-      const drawId = generateDrawId(drawDate, drawNo);
-      const drawTimeStr = play.drawTimes[i]!;
-      const drawTime = new Date(`${drawDate}T${drawTimeStr}:00+07:00`);
-
-      const salesCloseMs = play.salesCloseBeforeMinutes * 60 * 1000;
-      const closeAt = new Date(drawTime.getTime() - salesCloseMs);
-
-      const openAt = i === 0
-        ? new Date(`${drawDate}T00:00:00+07:00`)
-        : new Date((draws[i - 1]! as any)._drawTime);
-
-      await this.drawRepo.createDraw({
-        product: GameProduct.Lotto535,
-        drawId,
-        drawDate,
-        drawNo,
-        drawTime,
-        status: DrawStatus.SalesOpen,
-        sales: { openAt, closeAt },
-        jackpot: {
-          openingAmount: jackpotOpening,
-        },
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      draws.push({
-        drawId,
-        drawDate,
-        drawNo,
-        drawTime: drawTime.toISOString(),
-        status: DrawStatus.SalesOpen,
-      });
+    if (drawNo < 1 || drawNo > play.drawsPerDay) {
+      throw AppException.badRequest(
+        `drawNo phải từ 1 đến ${play.drawsPerDay}. Nhận: ${drawNo}.`
+      );
     }
 
-    return { draws };
+    const latestDraw = await this.drawRepo.getLatestDraw();
+    if (latestDraw) {
+      const terminalStatuses: string[] = [DrawStatus.Settled, DrawStatus.Void];
+      if (!terminalStatuses.includes(latestDraw.status)) {
+        throw AppException.badRequest(
+          `Kỳ quay ${latestDraw.drawId} đang ở trạng thái "${latestDraw.status}". ` +
+          `Cần hoàn thành (settled/void) kỳ trước trước khi tạo kỳ mới.`
+        );
+      }
+    }
+
+    const drawId = generateDrawId(drawDate, drawNo);
+    const existingDraw = await this.drawRepo.getDrawById(drawId);
+    if (existingDraw) {
+      throw AppException.conflict(
+        `Kỳ quay ${drawId} (kỳ ${drawNo} ngày ${drawDate}) đã tồn tại.`
+      );
+    }
+
+    const drawTimeStr = play.drawTimes[drawNo - 1]!;
+    const drawTime = toVNDate(drawDate, drawTimeStr);
+    const closeAt = subtractMinutes(drawTime, play.salesCloseBeforeMinutes);
+
+    const latestSettled =
+      await this.drawRepo.getLatestSettledDrawBefore(drawDate);
+    const jackpotOpening =
+      latestSettled?.jackpot.closingAmount ?? jackpotConfig.seedAmount;
+
+    const now = nowVN();
+
+    await this.drawRepo.createDraw({
+      product: GameProduct.Lotto535,
+      drawId,
+      drawDate,
+      financialDate: getFinancialDate(drawTime),
+      drawNo,
+      drawTime,
+      status: DrawStatus.Scheduled,
+      sales: { openAt: now, closeAt },
+      jackpot: {
+        openingAmount: jackpotOpening,
+      },
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return {
+      drawId,
+      drawDate,
+      drawNo,
+      drawTime: drawTime.toISOString(),
+      financialDate: getFinancialDate(drawTime),
+      status: DrawStatus.Scheduled,
+    };
   }
 }

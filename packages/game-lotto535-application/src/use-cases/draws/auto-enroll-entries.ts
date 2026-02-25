@@ -25,10 +25,8 @@ import type { TicketEntryDoc, EntryBoardSnapshot } from "@megawin/game-lotto535/
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import {
-  GameConfigRepository,
-  TenantConfigRepository,
-} from "../../infras/repos/game-config-repo";
+import { GameConfigRepository } from "../../infras/repos/global-config-repo";
+import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 
 const AUTO_ENROLL_BATCH_SIZE = 200;
 
@@ -141,7 +139,7 @@ export class AutoEnrollEntriesUseCase extends StepFunctionUseCase<
             drawId,
             drawTime: draw.drawTime,
             drawDate: draw.drawDate,
-            financialDate: draw.drawDate,
+            financialDate: draw.financialDate,
             tenantSnapshot: { commissionRate },
             status: EntryStatus.Scheduled as any,
             lineCount: ticket.pricing.linesPerDraw,

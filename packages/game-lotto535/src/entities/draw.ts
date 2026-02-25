@@ -19,6 +19,7 @@ import type { DrawResultSource, DrawStatus, GameProduct } from "@megawin/game-co
 import type { DrawTenantFinancial } from "@megawin/game-core/types";
 import type {
   ISODateString,
+  DrawNo,
   MainTuple,
   Special,
   SplitRatios,
@@ -45,10 +46,17 @@ export interface DrawDoc {
   drawDate: ISODateString;
 
   /**
+   * Ngày tài chính "YYYY-MM-DD".
+   * Tính từ drawTime theo rule: 11h sáng → 11h sáng hôm sau (giờ VN).
+   * Set 1 lần duy nhất khi tạo draw. Ticket/entry lấy từ đây.
+   */
+  financialDate: ISODateString;
+
+  /**
    * Số thứ tự kỳ quay trong ngày (1 = 13h, 2 = 21h).
    * Dùng cho UI hiển thị "Kỳ 1 / Kỳ 2".
    */
-  drawNo: number;
+  drawNo: DrawNo;
 
   /** Thời điểm quay chính xác (Date). */
   drawTime: Date;
@@ -242,7 +250,7 @@ export interface DrawSplit {
       totalAmount: number;
       /** Số lượng giải trúng. */
       winnerCount: number;
-      /** Bonus mỗi giải trúng (đã làm tròn xuống 5.000 VND). */
+      /** Bonus mỗi giải trúng (đã làm tròn xuống 1 VND). */
       bonusPerWinner: number;
     }
   >;

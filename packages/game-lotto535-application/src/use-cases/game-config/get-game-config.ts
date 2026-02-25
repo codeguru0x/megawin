@@ -1,6 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
+import { GameConfigRepository } from "../../infras/repos/global-config-repo";
 import type { GetGameConfigOutput } from "./dto/game-config.dto";
 
 /**

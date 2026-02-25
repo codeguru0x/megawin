@@ -10,6 +10,7 @@
  * DrawId là stable + unique, dùng làm join key giữa draws ↔ entries.
  */
 
+import { DrawNo } from "../entities/types";
 import type { ISODateString } from "../entities/types";
 
 /**
@@ -27,7 +28,7 @@ import type { ISODateString } from "../entities/types";
  */
 export function generateDrawId(
   drawDate: ISODateString,
-  drawNo: number,
+  drawNo: DrawNo,
 ): string {
   return `${drawDate}-${String(drawNo).padStart(3, "0")}`;
 }
@@ -40,13 +41,13 @@ export function generateDrawId(
  */
 export function parseDrawId(
   drawId: string,
-): { drawDate: ISODateString; drawNo: number } | null {
+): { drawDate: ISODateString; drawNo: DrawNo } | null {
   const match = /^(\d{4}-\d{2}-\d{2})-(\d{3})$/.exec(drawId);
   if (!match) return null;
 
   return {
     drawDate: match[1]!,
-    drawNo: parseInt(match[2]!, 10),
+    drawNo: parseInt(match[2]!, 10) as DrawNo,
   };
 }
 
@@ -79,15 +80,15 @@ export function generateDrawIdSequence(
 
   const ids: string[] = [];
   let currentDate = new Date(parsed.drawDate + "T00:00:00");
-  let currentDrawNo = parsed.drawNo;
+  let currentDrawNo = parsed.drawNo as number;
 
   for (let i = 0; i < drawCount; i++) {
     const dateStr = currentDate.toISOString().split("T")[0]!;
-    ids.push(generateDrawId(dateStr, currentDrawNo));
+    ids.push(generateDrawId(dateStr, currentDrawNo as DrawNo));
 
     currentDrawNo++;
-    if (currentDrawNo > drawsPerDay) {
-      currentDrawNo = 1;
+    if (currentDrawNo > DrawNo.Evening) {
+      currentDrawNo = DrawNo.Morning;
       currentDate.setDate(currentDate.getDate() + 1);
     }
   }

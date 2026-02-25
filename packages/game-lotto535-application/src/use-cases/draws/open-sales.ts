@@ -1,15 +1,13 @@
 /**
  * Use Case: Open Sales (Lotto 5/35)
  *
- * Mở (lại) bán vé cho 1 kỳ quay.
- * Transition: salesClosed → salesOpen.
+ * Mở bán vé cho 1 kỳ quay.
  *
- * Dùng khi:
- *   - Admin đóng bán sớm nhưng muốn mở lại.
- *   - Kỳ quay chưa publish result hoặc settle.
+ * Transition hợp lệ:
+ *   - scheduled   → salesOpen  (lần đầu mở bán sau khi tạo kỳ)
+ *   - salesClosed → salesOpen  (mở lại khi admin đóng sớm)
  *
  * Quy tắc:
- *   - Chỉ cho phép mở lại từ salesClosed.
  *   - Kỳ đã published/settling/settled KHÔNG mở lại được.
  *   - Kỳ đã void KHÔNG mở lại được.
  */
@@ -26,28 +24,35 @@ export class OpenSalesUseCase extends NextApiUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
 
-  /** Chuyển draw từ salesClosed → salesOpen. */
   protected async execute(input: DrawIdInput): Promise<DrawTransitionOutput> {
+    const draw = await this.drawRepo.getDrawById(input.drawId);
+    if (!draw) {
+      throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
+    }
+
+    const allowedFrom: DrawStatus[] = [DrawStatus.Scheduled, DrawStatus.SalesClosed];
+    if (!allowedFrom.includes(draw.status as DrawStatus)) {
+      throw new AppException(
+        "DRAW_INVALID_TRANSITION",
+        `Không thể mở bán – draw hiện tại ở trạng thái "${draw.status}". Chỉ mở bán từ "scheduled" hoặc "salesClosed".`,
+      );
+    }
+
     const updated = await this.drawRepo.transitionStatus(
       input.drawId,
-      DrawStatus.SalesClosed,
+      draw.status,
       DrawStatus.SalesOpen,
     );
 
     if (!updated) {
-      const draw = await this.drawRepo.getDrawById(input.drawId);
-      if (!draw) {
-        throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
-      }
-      throw new AppException(
-        "DRAW_INVALID_TRANSITION",
-        `Không thể mở bán lại – draw hiện tại ở trạng thái "${draw.status}". Chỉ mở lại từ "salesClosed".`,
+      throw AppException.internal(
+        `Không thể chuyển trạng thái draw ${input.drawId}. Vui lòng thử lại.`,
       );
     }
 
     return {
       drawId: input.drawId,
-      previousStatus: DrawStatus.SalesClosed,
+      previousStatus: draw.status,
       currentStatus: DrawStatus.SalesOpen,
     };
   }

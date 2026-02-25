@@ -40,6 +40,7 @@
  */
 
 import { PrizeTier } from "../entities/enums";
+import type { PrizeAmounts } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Prize Tier Rule Definition
@@ -226,12 +227,13 @@ export function getPrizeTierRule(
  * @returns Map<tier, amount>
  */
 export function buildPrizeAmountMap(
-  prizeAmounts: Record<string, number>,
+  prizeAmounts: PrizeAmounts,
 ): ReadonlyMap<PrizeTier, number> {
   const map = new Map<PrizeTier, number>();
 
+  const amounts = prizeAmounts as unknown as Record<string, number>;
   for (const rule of DEFAULT_PRIZE_TIER_RULES) {
-    const amount = prizeAmounts[rule.tier] ?? rule.defaultAmount;
+    const amount = amounts[rule.tier] ?? rule.defaultAmount;
     map.set(rule.tier, amount);
   }
 

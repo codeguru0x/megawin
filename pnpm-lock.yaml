@@ -321,6 +321,12 @@ importers:
       '@megawin/app-core':
         specifier: workspace:*
         version: link:../../packages/app-core
+      '@megawin/game-lotto535':
+        specifier: workspace:*
+        version: link:../../packages/game-lotto535
+      '@megawin/game-lotto535-application':
+        specifier: workspace:*
+        version: link:../../packages/game-lotto535-application
       '@megawin/identity':
         specifier: workspace:*
         version: link:../../packages/identity
@@ -799,6 +805,9 @@ importers:
       '@megawin/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
+      '@megawin/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
       '@types/node':
         specifier: ^25.2.1
         version: 25.2.3
@@ -808,6 +817,12 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
+      vite:
+        specifier: latest
+        version: 7.3.1(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)
+      vitest:
+        specifier: latest
+        version: 4.0.18(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)
 
   packages/game-max3d:
     devDependencies:
@@ -952,6 +967,12 @@ importers:
 
   packages/shared:
     dependencies:
+      '@date-fns/tz':
+        specifier: ^1.4.1
+        version: 1.4.1
+      date-fns:
+        specifier: ^4.1.0
+        version: 4.1.0
       ulid:
         specifier: ^3.0.2
         version: 3.0.2

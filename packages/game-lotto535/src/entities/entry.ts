@@ -64,9 +64,8 @@ export interface TicketEntryDoc {
   drawTime: Date;
 
   /**
-   * Ngày quay theo timezone vận hành, format "YYYY-MM-DD".
+   * Ngày quay theo timezone vận hành (Asia/Ho_Chi_Minh), format "YYYY-MM-DD".
    * Dùng cho group aggregation report.
-   * Timezone: Asia/Ho_Chi_Minh (cấu hình trong gameConfig.play.timezone).
    */
   drawDate: ISODateString;
 
@@ -75,7 +74,7 @@ export interface TicketEntryDoc {
   /**
    * Ngày tài chính mà entry này thuộc về, format "YYYY-MM-DD".
    * Dùng cho báo cáo tài chính hàng ngày (không nhất thiết = drawDate).
-   * Business rule: financialDate = drawDate (có thể override bởi ops nếu cần).
+   * Business rule: ngày tài chính tính từ 11h sáng → 11h sáng hôm sau.
    * Compound index: { tenantId, financialDate } cho report query.
    */
   financialDate: ISODateString;

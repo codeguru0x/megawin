@@ -26,7 +26,7 @@ import {
 } from "@megawin/tenant-gateway";
 import { GameProduct } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { TenantConfigRepository } from "../../infras/repos/game-config-repo";
+import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 
 const BATCH_QUERY_LIMIT = 200;
 const REFUND_CHUNK_SIZE = 50;
@@ -72,6 +72,7 @@ export class DispatchRefundBatchUseCase extends StepFunctionUseCase<
   for (const [tenantId, tenantEntries] of tenantGroups) {
     const result = await dispatchRefundToTenant(
       this.entryRepo,
+      this.tenantConfigRepo,
       tenantId,
       drawId,
       tenantEntries,
@@ -120,9 +121,10 @@ function extractId(entry: any): string {
 }
 
 async function loadGatewayClient(
+  tenantConfigRepo: TenantConfigRepository,
   tenantId: string,
 ): Promise<TenantGatewayClient | null> {
-  const tenantConfig = await this.tenantConfigRepo.getTenantConfig(tenantId);
+  const tenantConfig = await tenantConfigRepo.getTenantConfig(tenantId);
 
   const callbackBaseUrl = (tenantConfig as any)?.callbackBaseUrl;
   const apiKey = (tenantConfig as any)?.apiKey;
@@ -139,6 +141,7 @@ async function loadGatewayClient(
 
 async function dispatchRefundToTenant(
   entryRepo: EntryRepository,
+  tenantConfigRepo: TenantConfigRepository,
   tenantId: string,
   drawId: string,
   entries: any[],
@@ -153,7 +156,7 @@ async function dispatchRefundToTenant(
     0,
   );
 
-  const gateway = await loadGatewayClient(tenantId);
+  const gateway = await loadGatewayClient(tenantConfigRepo, tenantId);
 
   if (!gateway) {
     console.warn(
@@ -161,7 +164,7 @@ async function dispatchRefundToTenant(
         `${entries.length} entries, ${totalRefundAmount} VND (DRY-RUN → auto-dispatched)`,
     );
     for (const e of entries) {
-      await this.entryRepo.markRefundDispatched(extractId(e));
+      await entryRepo.markRefundDispatched(extractId(e));
     }
     return {
       tenantId,
@@ -193,10 +196,10 @@ async function dispatchRefundToTenant(
 
       for (const r of response.results) {
         if (r.status === "success" || r.status === "duplicate") {
-          await this.entryRepo.markRefundDispatched(r.entryId);
+          await entryRepo.markRefundDispatched(r.entryId);
           dispatched++;
         } else {
-          await this.entryRepo.markRefundFailed(
+          await entryRepo.markRefundFailed(
             r.entryId,
             r.error ?? "Tenant returned failed",
           );
@@ -209,7 +212,7 @@ async function dispatchRefundToTenant(
         `[dispatch-refund] Tenant ${tenantId} batch failed: ${errMsg}`,
       );
       for (const e of batch) {
-        await this.entryRepo.markRefundFailed(extractId(e), errMsg);
+        await entryRepo.markRefundFailed(extractId(e), errMsg);
       }
       failed += batch.length;
     }

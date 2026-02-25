@@ -29,10 +29,8 @@ import { computeSelectionHash } from "@megawin/game-lotto535/helpers";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import {
-  GameConfigRepository,
-  TenantConfigRepository,
-} from "../../infras/repos/game-config-repo";
+import { GameConfigRepository } from "../../infras/repos/global-config-repo";
+import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 
 const EXPANSION_THRESHOLD = 100;
@@ -246,7 +244,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       drawId,
       drawTime: currentDraw.drawTime,
       drawDate: currentDraw.drawDate,
-      financialDate: currentDraw.drawDate,
+      financialDate: currentDraw.financialDate,
       tenantSnapshot: { commissionRate },
       status: EntryStatus.Scheduled as any,
       lineCount: totalLinesPerDraw,

@@ -110,7 +110,7 @@ export interface GlobalConfigDoc {
     /** Số kỳ liên tiếp tối đa. Default: 20 */
     maxDrawCount: number;
 
-    /** Đóng bán trước giờ quay bao nhiêu phút. Default: 5 */
+    /** Đóng bán trước giờ quay bao nhiêu phút. Default: 1 */
     salesCloseBeforeMinutes: number;
 
     /**

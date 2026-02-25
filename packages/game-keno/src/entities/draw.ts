@@ -63,15 +63,21 @@ export interface DrawDoc {
     sourceUrl?: string;
   };
 
+  // ───── Financial Date ─────
+
+  /**
+   * Ngày tài chính "YYYY-MM-DD".
+   * Tính từ drawTime theo rule: 11h sáng → 11h sáng hôm sau (giờ VN).
+   * Set 1 lần duy nhất khi tạo draw. Ticket/entry lấy từ đây.
+   */
+  financialDate: ISODateString;
+
   // ───── Result ─────
 
   /**
    * Kết quả kỳ quay: 20 số từ 01-80.
    * Set khi status chuyển sang "published".
    */
-  /** Ngày tài chính "YYYY-MM-DD". Thường = drawDate. */
-  financialDate?: ISODateString;
-
   result?: {
     /** 20 số trúng thưởng, sorted tăng dần. */
     winningNumbers: number[];

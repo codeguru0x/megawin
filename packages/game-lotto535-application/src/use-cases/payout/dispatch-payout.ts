@@ -30,7 +30,7 @@ import {
 } from "@megawin/tenant-gateway";
 import { GameProduct } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { TenantConfigRepository } from "../../infras/repos/game-config-repo";
+import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 
 const BATCH_QUERY_LIMIT = 200;
 const PAYOUT_CHUNK_SIZE = 50;
@@ -85,7 +85,7 @@ export class DispatchPayoutBatchUseCase extends StepFunctionUseCase<
   let totalFailed = 0;
 
   for (const [tenantId, tenantEntries] of tenantGroups) {
-    const result = await dispatchToTenant(this.entryRepo, tenantId, drawId, tenantEntries);
+    const result = await dispatchToTenant(this.entryRepo, this.tenantConfigRepo, tenantId, drawId, tenantEntries);
     tenantResults.push(result);
     totalDispatched += result.dispatched;
     totalFailed += result.failed;
@@ -131,9 +131,10 @@ function extractId(entry: any): string {
 }
 
 async function loadGatewayClient(
+  tenantConfigRepo: TenantConfigRepository,
   tenantId: string,
 ): Promise<TenantGatewayClient | null> {
-  const tenantConfig = await this.tenantConfigRepo.getTenantConfig(tenantId);
+  const tenantConfig = await tenantConfigRepo.getTenantConfig(tenantId);
 
   const callbackBaseUrl = (tenantConfig as any)?.callbackBaseUrl;
   const apiKey = (tenantConfig as any)?.apiKey;
@@ -150,6 +151,7 @@ async function loadGatewayClient(
 
 async function dispatchToTenant(
   entryRepo: EntryRepository,
+  tenantConfigRepo: TenantConfigRepository,
   tenantId: string,
   drawId: string,
   entries: any[],
@@ -163,7 +165,7 @@ async function dispatchToTenant(
     (s: number, e: any) => s + (e.payout?.payoutAmount ?? 0), 0,
   );
 
-  const gateway = await loadGatewayClient(tenantId);
+  const gateway = await loadGatewayClient(tenantConfigRepo, tenantId);
 
   if (!gateway) {
     console.warn(
@@ -171,7 +173,7 @@ async function dispatchToTenant(
       `${entries.length} entries, ${totalAmount} VND (DRY-RUN → auto-dispatched)`,
     );
     const ids = entries.map(extractId);
-    await this.entryRepo.batchMarkPayoutDispatched(ids);
+    await entryRepo.batchMarkPayoutDispatched(ids);
     return { tenantId, dispatched: entries.length, failed: 0, totalAmount };
   }
 
@@ -209,7 +211,7 @@ async function dispatchToTenant(
       }
 
       if (succeededIds.length > 0) {
-        await this.entryRepo.batchMarkPayoutDispatched(succeededIds);
+        await entryRepo.batchMarkPayoutDispatched(succeededIds);
         dispatched += succeededIds.length;
       }
       if (failedIds.length > 0) {
@@ -217,13 +219,13 @@ async function dispatchToTenant(
           .filter((r) => r.status === "failed")
           .map((r) => r.error)
           .join("; ");
-        await this.entryRepo.batchMarkPayoutFailed(failedIds, errMsg || "Tenant returned failed");
+        await entryRepo.batchMarkPayoutFailed(failedIds, errMsg || "Tenant returned failed");
         failed += failedIds.length;
       }
     } catch (err: any) {
       const errMsg = err?.message ?? String(err);
       console.error(`[dispatch-payout] Tenant ${tenantId} batch failed: ${errMsg}`);
-      await this.entryRepo.batchMarkPayoutFailed(ids, errMsg);
+      await entryRepo.batchMarkPayoutFailed(ids, errMsg);
       failed += batch.length;
     }
   }

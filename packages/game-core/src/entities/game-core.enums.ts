@@ -135,14 +135,16 @@ export const ENTRY_STATUS_VALUES = Object.values(EntryStatus);
 /**
  * Trạng thái vận hành kỳ mở thưởng (draw) – dùng chung cho mọi game.
  *
- * Flow: salesOpen → salesClosed → published → settling → settled
- *                       ↘ void       ↘ void
+ * Flow: scheduled → salesOpen ⇄ salesClosed → published → settling → settled
+ *          ↘ void      ↘ void      ↘ void       ↘ void
  *
- * - Không có "scheduled": draw được tạo trực tiếp ở salesOpen.
+ * - scheduled: vừa tạo, chưa mở bán. Staff cần nhấn "Mở nhận đặt cược".
  * - Không có "drawing": kết quả được import/nhập → salesClosed chuyển thẳng published.
  */
 export const DrawStatus = {
-  /** Đang mở bán vé. Draw được tạo ra ở trạng thái này. */
+  /** Vừa tạo, chưa mở bán. Chờ staff mở nhận đặt cược. */
+  Scheduled: "scheduled",
+  /** Đang mở bán vé. Staff đã nhấn mở nhận đặt cược. */
   SalesOpen: "salesOpen",
   /** Đã đóng bán (trước giờ quay). Entries chuyển scheduled → active. */
   SalesClosed: "salesClosed",

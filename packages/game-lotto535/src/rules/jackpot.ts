@@ -21,8 +21,14 @@
  */
 
 import { PrizeTier } from "../entities/enums";
-import type { SplitRatios } from "../entities/types";
-import type { GlobalConfigDoc } from "../entities/game-config";
+import { DrawNo } from "../entities/types";
+import type {
+  JackpotConfig,
+  FinancialRates,
+  PrizeAmounts,
+  PlayRules,
+  SplitRatios,
+} from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Jackpot Accumulation
@@ -181,7 +187,7 @@ export function isSplitCycleDraw(
   hasJackpotWinner: boolean,
   drawNo: number
 ): boolean {
-  return jackpotAmount >= splitThreshold && !hasJackpotWinner && drawNo === 2;
+  return jackpotAmount >= splitThreshold && !hasJackpotWinner && drawNo === DrawNo.Evening;
 }
 
 /** Input cho tính chia giải. */
@@ -219,7 +225,8 @@ export interface SplitTierDetail {
 
   /**
    * Tiền bonus mỗi giải trúng = totalAmount / winnerCount.
-   * Đã làm tròn xuống đến đơn vị 5.000 VND.
+   * - Hạng giải không phải cao nhất: làm tròn xuống đến 5.000 VND.
+   * - Hạng giải cao nhất: nhận thêm phần dư từ làm tròn các hạng khác.
    */
   bonusPerWinner: number;
 }
@@ -240,63 +247,22 @@ export interface SplitResult {
   bonusPerWinner: Map<PrizeTier, number>;
 
   /**
-   * Phần dư do làm tròn, cộng vào hạng giải cao nhất có người trúng.
-   * (làm tròn xuống đến đơn vị 5.000 VND, phần dư tích lại)
+   * Phần dư còn lại sau khi chia hết (thường rất nhỏ, < winnerCount VND).
+   * Xảy ra khi remainder / winnerCount không chia hết.
    */
   roundingRemainder: number;
 }
 
 /**
- * Đơn vị làm tròn giải thưởng (VND).
- * Theo quy định Vietlott: làm tròn xuống đến đơn vị 5.000 VND.
+ * Đơn vị làm tròn xuống cho bonus chia Jackpot (Vietlott quy định 5.000 VND).
+ * Áp dụng cho các hạng giải KHÔNG phải hạng cao nhất có người trúng.
  */
-const ROUNDING_UNIT = 5_000;
+const SPLIT_ROUNDING_UNIT = 5_000;
 
-/** Làm tròn xuống đến đơn vị ROUNDING_UNIT. */
-function roundDown(amount: number): number {
-  return Math.floor(amount / ROUNDING_UNIT) * ROUNDING_UNIT;
+function roundDownToUnit(value: number, unit: number): number {
+  return Math.floor(value / unit) * unit;
 }
 
-/**
- * Tính phân bổ chia Jackpot cho các tier (Chia Giải Độc Đắc).
- *
- * Luật chính thức (từ tài liệu Vietlott Lotto 5/35):
- *
- * 1. Phần chia Độc Đắc:
- *    - tier1 (Giải Nhất) = Jackpot / 3 (tỷ lệ 2/6)
- *    - tier2 = tier3 = tier4 = tier5 = Jackpot / 6 (tỷ lệ 1/6 mỗi tier)
- *    - consolation: KHÔNG tham gia chia
- *
- * 2. Redistribute:
- *    Tier nào không có người trúng → phần đó chia đều cho các tier
- *    còn lại CÓ người trúng (ngoại trừ Giải Khuyến Khích).
- *
- * 3. Chia đều cho winners:
- *    Phần chia mỗi tier / số lượng giải trúng trong tier đó.
- *
- * 4. Làm tròn:
- *    Làm tròn XUỐNG đến đơn vị 5.000 VND.
- *    Phần dư cộng vào hạng giải CAO NHẤT có người trúng.
- *
- * 5. Nếu TẤT CẢ tier1-tier5 đều không có winner:
- *    Jackpot tích luỹ vào kỳ tiếp theo, kỳ quay cuối cùng
- *    ngày liền kề tiếp là kỳ chia giải.
- *
- * @example
- * ```ts
- * // Jackpot 15 tỷ, có 2 người trúng tier1 và 10 người trúng tier5
- * const result = calculateSplitDistribution({
- *   jackpotAmount: 15_000_000_000,
- *   splitRatios: { tier1: 2, tier2: 1, tier3: 1, tier4: 1, tier5: 1 },
- *   winnerCountPerTier: new Map([
- *     [PrizeTier.Tier1, 2],
- *     [PrizeTier.Tier5, 10],
- *   ]),
- * });
- * // tier1: nhận 5 tỷ + redistribute từ tier2,3,4
- * // tier5: nhận 2.5 tỷ + redistribute từ tier2,3,4
- * ```
- */
 export function calculateSplitDistribution(input: SplitInput): SplitResult {
   const { jackpotAmount, splitRatios, winnerCountPerTier } = input;
 
@@ -331,7 +297,6 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
   const bonusPerWinnerMap = new Map<PrizeTier, number>();
 
   if (tiersWithWinners.length === 0) {
-    // Không tier nào có người trúng → Jackpot giữ nguyên, tích luỹ tiếp
     return { details, bonusPerWinner: bonusPerWinnerMap, roundingRemainder: 0 };
   }
 
@@ -339,36 +304,11 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
     .filter((t) => !t.hasWinners)
     .reduce((s, t) => s + t.initialAmount, 0);
 
-  // Chia đều unclaimed cho các tier có winners
   const redistributedPerTier = Math.floor(
     unclaimedTotal / tiersWithWinners.length
   );
 
-  // Bước 3: tính bonus per winner + làm tròn
-  let totalRemainder = 0;
-
-  for (const t of tiersWithWinners) {
-    const totalForTier = t.initialAmount + redistributedPerTier;
-    const rawBonusPerWinner = totalForTier / t.winnerCount;
-    const roundedBonus = roundDown(rawBonusPerWinner);
-
-    // Phần dư = (rawBonus - roundedBonus) × winnerCount
-    const tierRemainder = totalForTier - roundedBonus * t.winnerCount;
-    totalRemainder += tierRemainder;
-
-    details.set(t.tier, {
-      initialAmount: t.initialAmount,
-      redistributedAmount: redistributedPerTier,
-      totalAmount: totalForTier,
-      winnerCount: t.winnerCount,
-      bonusPerWinner: roundedBonus,
-    });
-
-    bonusPerWinnerMap.set(t.tier, roundedBonus);
-  }
-
-  // Bước 4: phần dư cộng vào hạng giải cao nhất có người trúng
-  // Thứ tự ưu tiên: tier1 > tier2 > tier3 > tier4 > tier5
+  // Bước 3: xác định hạng giải cao nhất có người trúng
   const priorityOrder: PrizeTier[] = [
     PrizeTier.Tier1,
     PrizeTier.Tier2,
@@ -377,20 +317,59 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
     PrizeTier.Tier5,
   ];
 
-  if (totalRemainder > 0) {
-    for (const tier of priorityOrder) {
-      const detail = details.get(tier);
-      if (detail && detail.winnerCount > 0) {
-        // Cộng phần dư (đã làm tròn xuống 5.000) cho hạng cao nhất
-        const remainderPerWinner = roundDown(
-          totalRemainder / detail.winnerCount
-        );
-        detail.bonusPerWinner += remainderPerWinner;
-        bonusPerWinnerMap.set(tier, detail.bonusPerWinner);
-        totalRemainder -= remainderPerWinner * detail.winnerCount;
-        break;
-      }
+  const highestTierWithWinners = priorityOrder.find((tier) =>
+    tiersWithWinners.some((t) => t.tier === tier)
+  )!;
+
+  // Bước 4: tính bonus per winner
+  // - Hạng không phải cao nhất: làm tròn xuống 5.000 VND, tích phần dư
+  // - Hạng cao nhất: floor 1 VND, nhận thêm phần dư từ các hạng khác
+  let totalRemainder = 0;
+
+  for (const t of tiersWithWinners) {
+    const totalForTier = t.initialAmount + redistributedPerTier;
+
+    if (t.tier === highestTierWithWinners) {
+      const bonus = Math.floor(totalForTier / t.winnerCount);
+      const tierRemainder = totalForTier - bonus * t.winnerCount;
+      totalRemainder += tierRemainder;
+
+      details.set(t.tier, {
+        initialAmount: t.initialAmount,
+        redistributedAmount: redistributedPerTier,
+        totalAmount: totalForTier,
+        winnerCount: t.winnerCount,
+        bonusPerWinner: bonus,
+      });
+      bonusPerWinnerMap.set(t.tier, bonus);
+    } else {
+      const roundedBonus = roundDownToUnit(
+        totalForTier / t.winnerCount,
+        SPLIT_ROUNDING_UNIT
+      );
+      const tierRemainder = totalForTier - roundedBonus * t.winnerCount;
+      totalRemainder += tierRemainder;
+
+      details.set(t.tier, {
+        initialAmount: t.initialAmount,
+        redistributedAmount: redistributedPerTier,
+        totalAmount: totalForTier,
+        winnerCount: t.winnerCount,
+        bonusPerWinner: roundedBonus,
+      });
+      bonusPerWinnerMap.set(t.tier, roundedBonus);
     }
+  }
+
+  // Bước 5: cộng tổng phần dư vào hạng giải cao nhất
+  if (totalRemainder > 0) {
+    const detail = details.get(highestTierWithWinners)!;
+    const remainderPerWinner = Math.floor(
+      totalRemainder / detail.winnerCount
+    );
+    detail.bonusPerWinner += remainderPerWinner;
+    bonusPerWinnerMap.set(highestTierWithWinners, detail.bonusPerWinner);
+    totalRemainder -= remainderPerWinner * detail.winnerCount;
   }
 
   return {
@@ -405,15 +384,16 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
 // ─────────────────────────────────────────────
 
 /** Giá trị mặc định cho global game config. Dùng khi seed database. */
-export const DEFAULT_LOTTO535_CONFIG: Pick<
-  GlobalConfigDoc,
-  "jackpot" | "rates" | "defaultPrizes" | "play"
-> = {
+export const DEFAULT_LOTTO535_CONFIG: {
+  jackpot: JackpotConfig;
+  rates: FinancialRates;
+  defaultPrizes: PrizeAmounts;
+  play: PlayRules;
+} = {
   jackpot: {
     seedAmount: 1_000_000_000,
     splitThreshold: 12_000_000_000,
     splitRatios: { tier1: 2, tier2: 1, tier3: 1, tier4: 1, tier5: 1 },
-    splitRoundingUnit: 5_000,
   },
   rates: {
     defaultCommissionRate: 0.2,
@@ -431,9 +411,8 @@ export const DEFAULT_LOTTO535_CONFIG: Pick<
     unitPrice: 10_000,
     maxBoardsPerTicket: 5,
     maxDrawCount: 6,
-    salesCloseBeforeMinutes: 30,
+    salesCloseBeforeMinutes: 5,
     drawsPerDay: 2,
     drawTimes: ["13:00", "21:00"],
-    timezone: "Asia/Ho_Chi_Minh",
   },
 };

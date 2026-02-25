@@ -19,6 +19,31 @@
 export type { ISODateString } from "@megawin/game-core/types";
 
 // ─────────────────────────────────────────────
+// Draw Number (kỳ quay trong ngày)
+// ─────────────────────────────────────────────
+
+/**
+ * Số thứ tự kỳ quay trong ngày cho Lotto 5/35.
+ * Type-safe: chỉ chấp nhận 1 hoặc 2.
+ */
+export type DrawNo = typeof DrawNo.Morning | typeof DrawNo.Evening;
+
+/**
+ * Kỳ quay trong ngày.
+ * - Morning (1): kỳ 13h
+ * - Evening (2): kỳ 21h – kỳ chia giải Jackpot (split cycle) luôn là kỳ này.
+ */
+export const DrawNo = {
+  /** Kỳ 13h (kỳ 1). */
+  Morning: 1,
+  /** Kỳ 21h (kỳ 2) – kỳ chia giải Jackpot. */
+  Evening: 2,
+} as const;
+
+/** Mảng tất cả giá trị DrawNo – dùng cho validation. */
+export const DRAW_NO_VALUES: readonly DrawNo[] = [DrawNo.Morning, DrawNo.Evening];
+
+// ─────────────────────────────────────────────
 // Lotto 5/35 Number Ranges
 // ─────────────────────────────────────────────
 
@@ -91,6 +116,67 @@ export interface LineValue {
 
   /** 1 số đặc biệt. */
   special: Special;
+}
+
+// ─────────────────────────────────────────────
+// Prize Amounts (dùng chung Global & Tenant config)
+// ─────────────────────────────────────────────
+
+/**
+ * Giá trị giải thưởng cố định (VND) cho mỗi tier.
+ * Dùng chung bởi GlobalConfigDoc.defaultPrizes và TenantConfigDoc.prizeOverrides.
+ */
+export interface PrizeAmounts {
+  /** Giải Nhất: 5 số chính. */
+  tier1: number;
+  /** Giải Nhì: 4 chính + đặc biệt. */
+  tier2: number;
+  /** Giải Ba: 4 chính. */
+  tier3: number;
+  /** Giải Tư: 3 chính + đặc biệt. */
+  tier4: number;
+  /** Giải Năm: 3 chính. */
+  tier5: number;
+  /** Giải Khuyến Khích: chỉ đặc biệt. */
+  consolation: number;
+}
+
+// ─────────────────────────────────────────────
+// Game Config Sub-types (tách ra để tránh indexed access)
+// ─────────────────────────────────────────────
+
+/** Cấu hình Jackpot – dùng trong GlobalConfigDoc.jackpot. */
+export interface JackpotConfig {
+  /** Số tiền khởi điểm khi mở kỳ Jackpot mới (VND). */
+  seedAmount: number;
+  /** Ngưỡng kích hoạt chia Jackpot (VND). */
+  splitThreshold: number;
+  /** Tỷ lệ chia Jackpot cho từng tier. */
+  splitRatios: SplitRatios;
+}
+
+/** Tỷ lệ tài chính – dùng trong GlobalConfigDoc.rates. */
+export interface FinancialRates {
+  /** Hoa hồng đại lý mặc định (tỷ lệ trên doanh thu). */
+  defaultCommissionRate: number;
+  /** Tỷ lệ công ty thu về trên doanh thu. */
+  companyRate: number;
+}
+
+/** Quy tắc chơi – dùng trong GlobalConfigDoc.play. */
+export interface PlayRules {
+  /** Giá 1 line (bộ số con) cho 1 kỳ (VND). */
+  unitPrice: number;
+  /** Số board tối đa trên 1 vé (A-E). */
+  maxBoardsPerTicket: number;
+  /** Số kỳ liên tiếp tối đa (KY). */
+  maxDrawCount: number;
+  /** Đóng bán trước giờ quay bao nhiêu phút. */
+  salesCloseBeforeMinutes: number;
+  /** Số kỳ quay mỗi ngày. */
+  drawsPerDay: number;
+  /** Giờ quay trong ngày (HH:mm). Timezone cố định: Asia/Ho_Chi_Minh. */
+  drawTimes: string[];
 }
 
 // ─────────────────────────────────────────────

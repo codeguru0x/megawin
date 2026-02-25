@@ -43,6 +43,8 @@
     "vitest": "latest"
   },
   "dependencies": {
+    "@date-fns/tz": "^1.4.1",
+    "date-fns": "^4.1.0",
     "ulid": "^3.0.2"
   }
 }
