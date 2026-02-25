@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
+  serverExternalPackages: [
+    "@aws-sdk/client-cognito-identity-provider",
+    "@aws-sdk/client-sfn",
+    "mongodb",
+  ],
   experimental: {
     optimizePackageImports: [
       "lucide-react",

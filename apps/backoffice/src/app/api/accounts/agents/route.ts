@@ -19,5 +19,5 @@ export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .handler(async () => {
     const useCase = new ListAgentAccountsUseCase();
-    return useCase.run(undefined as void);
+    return useCase.run();
   });

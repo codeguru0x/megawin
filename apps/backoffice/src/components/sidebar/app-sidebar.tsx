@@ -15,27 +15,19 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { APP_CONFIG } from "@/config/app-config";
-import {
-  operatorSidebarItems,
-  tenantSidebarItems,
-} from "@/navigation/sidebar/sidebar-items";
+import { operatorSidebarItems } from "@/navigation/sidebar/sidebar-items";
 import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 
-export type SidebarScope = "operator" | "tenant";
-
-const SCOPE_ITEMS = {
-  operator: operatorSidebarItems,
-  tenant: tenantSidebarItems,
-} as const;
+export type SidebarScope = "operator";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   scope: SidebarScope;
 }
 
-export function AppSidebar({ scope, ...props }: AppSidebarProps) {
+export function AppSidebar({ scope: _scope, ...props }: AppSidebarProps) {
   const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
     useShallow((s) => ({
       sidebarVariant: s.sidebarVariant,
@@ -46,7 +38,6 @@ export function AppSidebar({ scope, ...props }: AppSidebarProps) {
 
   const variant = isSynced ? sidebarVariant : props.variant;
   const collapsible = isSynced ? sidebarCollapsible : props.collapsible;
-  const items = SCOPE_ITEMS[scope];
 
   return (
     <Sidebar {...props} variant={variant} collapsible={collapsible}>
@@ -65,7 +56,7 @@ export function AppSidebar({ scope, ...props }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={items} />
+        <NavMain items={operatorSidebarItems} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

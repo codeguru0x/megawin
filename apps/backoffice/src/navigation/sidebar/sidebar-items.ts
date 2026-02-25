@@ -17,9 +17,6 @@ import {
   Trophy,
   Settings2,
   CalendarClock,
-  Ticket,
-  ListOrdered,
-  FileBarChart,
   Clock,
   Layers,
   CircleDollarSign,
@@ -50,7 +47,6 @@ export interface NavGroup {
   items: NavMainItem[];
 }
 
-/** Sidebar items cho scope operator (company / staff). */
 export const operatorSidebarItems: NavGroup[] = [
   {
     id: 1,
@@ -180,36 +176,4 @@ export const operatorSidebarItems: NavGroup[] = [
   },
 ];
 
-/** Sidebar items cho scope tenant (agent / đại lý). */
-export const tenantSidebarItems: NavGroup[] = [
-  {
-    id: 1,
-    label: "Tổng quan",
-    items: [
-      {
-        title: "Dashboard",
-        url: "/tenant",
-        icon: LayoutDashboard,
-      },
-    ],
-  },
-  {
-    id: 2,
-    label: "Trò chơi",
-    items: [
-      {
-        title: "Lotto 5/35",
-        url: "/tenant/lotto535",
-        icon: ChessKing,
-        subItems: [
-          { title: "Vé", url: "/tenant/lotto535/tickets", icon: Ticket },
-          { title: "Kết quả", url: "/tenant/lotto535/results", icon: ListOrdered },
-          { title: "Báo cáo", url: "/tenant/lotto535/reports", icon: FileBarChart },
-        ],
-      },
-    ],
-  },
-];
-
-/** @deprecated Dùng operatorSidebarItems hoặc tenantSidebarItems thay thế. */
 export const sidebarItems = operatorSidebarItems;

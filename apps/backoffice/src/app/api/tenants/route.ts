@@ -29,7 +29,7 @@ export const GET = withApi()
   .auth({ roles: [CompanyRole.Admin] })
   .handler(async () => {
     const useCase = new ListTenantsUseCase();
-    return useCase.run(undefined as void);
+    return useCase.run();
   });
 
 export const PATCH = withApi()

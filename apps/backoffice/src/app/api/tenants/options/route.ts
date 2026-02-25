@@ -5,5 +5,5 @@ export const GET = withApi()
   .auth()
   .handler(async () => {
     const useCase = new ListTenantOptionsUseCase();
-    return useCase.run(undefined as void);
+    return useCase.run();
   });
