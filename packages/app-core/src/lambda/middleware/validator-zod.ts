@@ -1,75 +1,106 @@
 /**
- * Middy middleware: validate API Gateway event với Zod.
- * Hợp với ApiGatewayUseCase (event.validated được dùng trong parseInput).
- * Khi validation fail → trả về 400 và short-circuit (request.earlyResponse).
+ * Middy middleware: validate API Gateway event với Zod v4.
+ *
+ * Schema keys rút gọn:
+ * - body  → validate event.body (JSON)
+ * - path  → validate event.pathParameters
+ * - query → validate event.queryStringParameters
+ *
+ * Sau khi validate thành công → gán event.schema:
+ * - event.schema.body  (typed theo Zod schema)
+ * - event.schema.path  (typed theo Zod schema)
+ * - event.schema.query (typed theo Zod schema)
  *
  * @example
- * import middy from '@middy/core';
- * import { validatorZodMiddleware, httpErrorHandlerUseCaseFormat } from '@megawin/app-core/application/middy';
- * import { runUseCaseAndRespond } from '@megawin/app-core/application/middy';
- * import { z } from 'zod';
- *
  * const bodySchema = z.object({ name: z.string() });
- * const handler = middy(async (event) => {
- *   const response = await runUseCaseAndRespond((e) => myUseCase.run(e), event);
- *   return response;
- * })
- *   .use(validatorZodMiddleware({ body: bodySchema }))
- *   .use(httpErrorHandlerUseCaseFormat());
+ * const pathSchema = z.object({ id: z.string() });
+ *
+ * export const handler = withPlayerAuth(
+ *   async (event) => {
+ *     event.schema.body.name;  // string — typed!
+ *     event.schema.path.id;    // string — typed!
+ *   },
+ *   { schemas: { body: bodySchema, path: pathSchema } },
+ * );
  */
 
 import { z } from "zod";
 
-/** Schemas cho body, pathParameters, queryStringParameters. Dùng Zod object schema. */
-export interface ApiGatewayZodSchemas<TBody = unknown> {
+// ============ Schema input (dùng khi khai báo) ============
+
+export interface ApiGatewayZodSchemas<
+  TBody = unknown,
+  TPath = unknown,
+  TQuery = unknown,
+> {
   body?: z.ZodType<TBody>;
-  pathParameters?: z.ZodType<Record<string, string>>;
-  queryStringParameters?: z.ZodType<Record<string, string>>;
+  path?: z.ZodType<TPath>;
+  query?: z.ZodType<TQuery>;
 }
 
-/** Format lỗi Zod cho client (có thể tùy chỉnh). */
-export function formatZodError(error: z.ZodError): Record<string, unknown> {
+// ============ Schema output (dùng trong handler event) ============
+
+/**
+ * Type helper: infer event.schema từ Zod schemas đã khai báo.
+ *
+ * @example
+ * const bodySchema = z.object({ name: z.string() });
+ * const pathSchema = z.object({ id: z.string() });
+ *
+ * interface MyEvent extends ApiGatewayEventWithUser {
+ *   schema: SchemaOf<typeof bodySchema, typeof pathSchema>;
+ * }
+ */
+export type SchemaOf<
+  TBody extends z.ZodType | undefined = undefined,
+  TPath extends z.ZodType | undefined = undefined,
+  TQuery extends z.ZodType | undefined = undefined,
+> = {
+  body: TBody extends z.ZodType ? z.infer<TBody> : never;
+  path: TPath extends z.ZodType ? z.infer<TPath> : never;
+  query: TQuery extends z.ZodType ? z.infer<TQuery> : never;
+};
+
+// ============ Helpers ============
+
+const VALIDATION_HEADERS = { "Content-Type": "application/json" };
+
+function buildValidationErrorResponse(error: z.ZodError) {
   return {
-    message: "Validation failed",
-    code: "VALIDATION",
-    // Use new flatten signature with explicit mapper to avoid deprecated overload
-    details: error.flatten((issue) => issue.message),
+    statusCode: 400,
+    headers: VALIDATION_HEADERS,
+    body: JSON.stringify({
+      message: "Validation failed",
+      code: "VALIDATION",
+      details: z.flattenError(error),
+    }),
   };
 }
 
-/** Response 400 chuẩn cho validation error. */
-const VALIDATION_HEADERS = { "Content-Type": "application/json" };
+// ============ Middleware ============
 
 /**
- * Middleware Middy: validate event.body, pathParameters, queryStringParameters bằng Zod.
- * - Thành công: gán event.validated = { body?, pathParameters?, queryStringParameters? }.
- * - Thất bại: set request.earlyResponse = { statusCode: 400, body: JSON.stringify(error) } (short-circuit).
- *
- * Event.body nếu là string sẽ được parse JSON trước khi validate (trùng với API Gateway).
+ * Middy middleware: validate body / path / query bằng Zod.
+ * - Thành công: gán event.schema = { body?, path?, query? }
+ * - Thất bại: earlyResponse 400 (short-circuit)
  */
-export function validatorZodMiddleware<TBody = unknown>(
-  schemas: ApiGatewayZodSchemas<TBody>
-) {
+export function validatorZodMiddleware<
+  TBody = unknown,
+  TPath = unknown,
+  TQuery = unknown,
+>(schemas: ApiGatewayZodSchemas<TBody, TPath, TQuery>) {
   return {
     before: async (request: {
       event: Record<string, unknown> & {
         body?: string;
         pathParameters?: Record<string, string> | null;
         queryStringParameters?: Record<string, string> | null;
-        validated?: {
-          body?: TBody;
-          pathParameters?: Record<string, string>;
-          queryStringParameters?: Record<string, string>;
-        };
+        schema?: { body?: TBody; path?: TPath; query?: TQuery };
       };
       earlyResponse?: unknown;
     }) => {
       const { event } = request;
-      const validated: {
-        body?: TBody;
-        pathParameters?: Record<string, string>;
-        queryStringParameters?: Record<string, string>;
-      } = {};
+      const schema: { body?: TBody; path?: TPath; query?: TQuery } = {};
 
       try {
         if (schemas.body) {
@@ -89,32 +120,23 @@ export function validatorZodMiddleware<TBody = unknown>(
               return;
             }
           }
-          validated.body = schemas.body.parse(raw) as TBody;
+          schema.body = schemas.body.parse(raw) as TBody;
         }
 
-        if (schemas.pathParameters) {
-          const path = event.pathParameters ?? {};
-          validated.pathParameters = schemas.pathParameters.parse(
-            path
-          ) as Record<string, string>;
+        if (schemas.path) {
+          schema.path = schemas.path.parse(event.pathParameters ?? {}) as TPath;
         }
 
-        if (schemas.queryStringParameters) {
-          const query = event.queryStringParameters ?? {};
-          validated.queryStringParameters = schemas.queryStringParameters.parse(
-            query
-          ) as Record<string, string>;
+        if (schemas.query) {
+          schema.query = schemas.query.parse(
+            event.queryStringParameters ?? {},
+          ) as TQuery;
         }
 
-        (event as Record<string, unknown>).validated = validated;
+        (event as Record<string, unknown>).schema = schema;
       } catch (err) {
-        if (err && typeof err === "object" && "flatten" in err) {
-          const zodError = err as z.ZodError;
-          request.earlyResponse = {
-            statusCode: 400,
-            headers: VALIDATION_HEADERS,
-            body: JSON.stringify(formatZodError(zodError)),
-          };
+        if (err instanceof z.ZodError) {
+          request.earlyResponse = buildValidationErrorResponse(err);
           return;
         }
         throw err;

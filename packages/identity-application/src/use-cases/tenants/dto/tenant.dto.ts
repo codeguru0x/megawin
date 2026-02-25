@@ -1,6 +1,5 @@
 import type {
   TenantJwksAssertionConfig,
-  TenantApp,
   TenantStatus,
 } from "@megawin/identity-domain/tenants/tenant";
 
@@ -9,7 +8,7 @@ export interface CreateTenantInput {
   displayName: string;
   description?: string;
   sso: Pick<TenantJwksAssertionConfig, "jwksUrl">;
-  app: TenantApp;
+  callbackBaseUrl: string;
 }
 
 export interface CreateTenantOutput {
@@ -28,7 +27,7 @@ export interface ListTenantsOutput {
     status: string;
     apiKey: string;
     sso: TenantJwksAssertionConfig;
-    app: TenantApp;
+    callbackBaseUrl: string;
     apiKeyLastRotatedAt: string;
     createdAt: string;
     updatedAt: string;
@@ -59,7 +58,7 @@ export interface UpdateTenantInput {
   displayName?: string;
   description?: string;
   jwksUrl?: string;
-  allowedOrigins?: string[];
+  callbackBaseUrl?: string;
 }
 
 export interface UpdateTenantOutput {

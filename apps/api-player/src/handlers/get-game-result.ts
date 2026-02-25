@@ -3,20 +3,10 @@
  * Xem kết quả game round — authed qua Cognito JWT.
  */
 
-import middy from "@middy/core";
 import { z } from "zod";
 
-import {
-  authorizationMiddleware,
-  validatorZodMiddleware,
-  httpErrorHandlerUseCaseFormat,
-} from "@megawin/app-core/lambda/middleware";
-
-import {
-  toApiGatewayResponse,
-} from "@megawin/app-core/use-cases";
-
-import { AccountType } from "@megawin/identity-domain/accounts/account";
+import { withPlayerAuth } from "@megawin/auth";
+import { toApiGatewayResponse } from "@megawin/app-core/use-cases";
 
 // ============ Zod schema ============
 
@@ -27,39 +17,20 @@ const pathSchema = z.object({
 
 // ============ Handler ============
 
-interface ValidatedEvent {
-  validated: {
-    pathParameters: z.infer<typeof pathSchema>;
-  };
-  authContext: {
-    sub: string;
-    tenantId?: string;
-    accountId?: string;
-  };
-}
+export const handler = withPlayerAuth(
+  async (event) => {
+    const { gameId, roundId } = event.schema.path;
 
-export const handler = middy(async (event: ValidatedEvent) => {
-  const { gameId, roundId } = event.validated.pathParameters;
-
-  // TODO: Inject game result use case
-  return toApiGatewayResponse({
-    success: true,
-    data: {
-      gameId,
-      roundId,
-      result: null,
-      status: "pending",
-    },
-  });
-})
-  .use(
-    authorizationMiddleware({
-      accountType: AccountType.Player,
-    })
-  )
-  .use(
-    validatorZodMiddleware({
-      pathParameters: pathSchema,
-    })
-  )
-  .use(httpErrorHandlerUseCaseFormat());
+    // TODO: Inject game result use case
+    return toApiGatewayResponse({
+      success: true,
+      data: {
+        gameId,
+        roundId,
+        result: null,
+        status: "pending",
+      },
+    });
+  },
+  { schemas: { path: pathSchema } },
+);

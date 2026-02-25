@@ -16,9 +16,7 @@ export const createTenantSchema = z.object({
     .max(100),
   description: z.string().max(500).optional(),
   jwksUrl: z.url({ message: "JWKS URL không hợp lệ." }),
-  allowedOrigins: z
-    .array(z.url({ message: "Origin không hợp lệ." }))
-    .min(1, "Phải có ít nhất 1 origin."),
+  callbackBaseUrl: z.url({ message: "Callback Base URL không hợp lệ." }),
 });
 
 export const updateTenantStatusSchema = z.object({
@@ -35,8 +33,5 @@ export const updateTenantSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
   jwksUrl: z.url({ message: "JWKS URL không hợp lệ." }).optional(),
-  allowedOrigins: z
-    .array(z.url({ message: "Origin không hợp lệ." }))
-    .min(1, "Phải có ít nhất 1 origin.")
-    .optional(),
+  callbackBaseUrl: z.url({ message: "Callback Base URL không hợp lệ." }).optional(),
 });

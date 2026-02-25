@@ -1,9 +1,8 @@
 /**
  * Entrypoint tổng cho Lambda helpers trong app-core.
  *
- * - HTTP (auth context, check):  @megawin/app-core/lambda/http
- * - Middy middleware:             @megawin/app-core/lambda/middleware
+ * - Middy middleware (validator, parsers, error handler): @megawin/app-core/lambda/middleware
+ * - Auth middleware: @megawin/auth
  */
 
-export * from "./http";
 export * from "./middleware";

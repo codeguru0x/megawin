@@ -1,0 +1,15 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts", "src/keno/index.ts", "src/lotto535/index.ts"],
+  "out": "docs",
+  "name": "@megawin/player-sdk",
+  "readme": "README.md",
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "disableSources": true,
+  "includeVersion": true,
+  "categorizeByGroup": true,
+  "sort": ["source-order"],
+
+  "tsconfig": "tsconfig.json"
+}

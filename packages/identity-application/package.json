@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
+    "check-types": "tsc --noEmit",
     "build:deps": "turbo build --filter=@megawin/identity-application^...",
     "pretest": "pnpm build:deps",
     "test": "vitest run",

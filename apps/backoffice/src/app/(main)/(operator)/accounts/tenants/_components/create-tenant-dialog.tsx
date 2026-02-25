@@ -41,7 +41,7 @@ const createTenantSchema = z.object({
   displayName: z.string().min(1, "Tên hiển thị không được trống.").max(100),
   description: z.string().max(500).optional(),
   jwksUrl: z.string().url("JWKS URL không hợp lệ."),
-  allowedOrigins: z.string().min(1, "Phải có ít nhất 1 origin."),
+  callbackBaseUrl: z.string().url("Callback Base URL không hợp lệ."),
 });
 
 type CreateTenantValues = z.infer<typeof createTenantSchema>;
@@ -59,24 +59,19 @@ export function CreateTenantDialog() {
       displayName: "",
       description: "",
       jwksUrl: "",
-      allowedOrigins: "",
+      callbackBaseUrl: "",
     },
   });
 
   const mutation = useMutation({
-    mutationFn: (values: CreateTenantValues) => {
-      const origins = values.allowedOrigins
-        .split(",")
-        .map((o) => o.trim())
-        .filter(Boolean);
-      return apiClient.post<CreateTenantResponse>("/tenants", {
+    mutationFn: (values: CreateTenantValues) =>
+      apiClient.post<CreateTenantResponse>("/tenants", {
         tenantId: values.tenantId,
         displayName: values.displayName,
         description: values.description,
         jwksUrl: values.jwksUrl,
-        allowedOrigins: origins,
-      });
-    },
+        callbackBaseUrl: values.callbackBaseUrl,
+      }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
       form.reset();
@@ -238,13 +233,13 @@ export function CreateTenantDialog() {
 
             <FormField
               control={form.control}
-              name="allowedOrigins"
+              name="callbackBaseUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Allowed Origins</FormLabel>
+                  <FormLabel>Callback Base URL</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="https://app.example.com, https://admin.example.com"
+                      placeholder="https://api.example.com"
                       {...field}
                     />
                   </FormControl>

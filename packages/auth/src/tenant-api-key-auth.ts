@@ -1,21 +1,20 @@
 /**
  * Middy middleware: Xác thực server-to-server bằng API Key.
  *
- * Tenant server gửi:
- *   X-Tenant-Id: {tenantId}
- *   X-Api-Key: {apiKey}
+ * Tenant gửi api key qua:
+ *   1. Header: X-Api-Key (ưu tiên)
+ *   2. Query string: ?apiKey=xxx (fallback)
  *
- * Middleware lookup tenant trong MongoDB, so sánh apiKey.
- * Nếu hợp lệ → gán event.tenantContext.
- * Nếu sai    → earlyResponse 401/403.
- *
- * WAF đã xử lý IP allowlist + rate limit ở tầng API Gateway.
+ * Middleware lookup tenant trong MongoDB bằng api key.
+ * Nếu hợp lệ → gán event.tenant (TenantContext).
+ * Nếu sai → earlyResponse 401/403 (ApiErrorResponse format).
  */
 
-import { appErrorToStatusCode } from "@megawin/shared/errors";
 import type { ApiErrorResponse } from "@megawin/shared/api-types";
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
+
+// ============ Types ============
 
 export interface TenantContext {
   tenantId: string;
@@ -25,22 +24,20 @@ export interface TenantContext {
 }
 
 export interface TenantApiKeyAuthOptions {
-  /**
-   * Hàm lookup tenant từ DB. Middleware không import trực tiếp repo
-   * để giữ app-core tách biệt khỏi identity-application.
-   */
-  getTenant: (tenantId: string) => Promise<{
+  getTenantByApiKey: (apiKey: string) => Promise<{
     tenantId: string;
     displayName: string;
     status: string;
     apiKey: string;
   } | null>;
-
-  /**
-   * Danh sách tenant status được phép. Mặc định: ["active"].
-   */
   allowedStatuses?: string[];
 }
+
+export interface ApiGatewayEventWithTenant {
+  tenant: TenantContext;
+}
+
+// ============ Helpers ============
 
 function errorResponse(statusCode: number, code: string, message: string) {
   const body: ApiErrorResponse = {
@@ -54,51 +51,52 @@ function errorResponse(statusCode: number, code: string, message: string) {
   };
 }
 
+function extractApiKey(event: {
+  headers?: Record<string, string | undefined>;
+  queryStringParameters?: Record<string, string | undefined> | null;
+}): string | undefined {
+  const headers = event.headers ?? {};
+  const fromHeader =
+    headers["x-api-key"] ?? headers["X-Api-Key"] ?? undefined;
+  if (fromHeader) return fromHeader;
+
+  const qs = event.queryStringParameters ?? {};
+  return qs["apiKey"] ?? qs["api_key"] ?? undefined;
+}
+
+// ============ Middleware ============
+
 export function tenantApiKeyAuthMiddleware(options: TenantApiKeyAuthOptions) {
-  const { getTenant, allowedStatuses = ["active"] } = options;
+  const { getTenantByApiKey, allowedStatuses = ["active"] } = options;
 
   return {
     before: async (request: {
       event: Record<string, unknown> & {
-        headers?: Record<string, string>;
-        tenantContext?: TenantContext | null;
+        headers?: Record<string, string | undefined>;
+        queryStringParameters?: Record<string, string | undefined> | null;
+        tenant?: TenantContext | null;
       };
       earlyResponse?: unknown;
     }) => {
       const { event } = request;
-      const headers = event.headers ?? {};
+      const apiKey = extractApiKey(event);
 
-      // Header names are lowercased by API Gateway v2 (HTTP API)
-      const tenantId =
-        headers["x-tenant-id"] ?? headers["X-Tenant-Id"] ?? "";
-      const apiKey =
-        headers["x-api-key"] ?? headers["X-Api-Key"] ?? "";
-
-      if (!tenantId || !apiKey) {
+      if (!apiKey) {
         request.earlyResponse = errorResponse(
           401,
           "UNAUTHORIZED",
-          "Missing X-Tenant-Id or X-Api-Key header"
+          "Missing API key. Provide via X-Api-Key header or apiKey query parameter.",
         );
         return;
       }
 
-      const tenant = await getTenant(tenantId);
+      const tenant = await getTenantByApiKey(apiKey);
 
       if (!tenant) {
         request.earlyResponse = errorResponse(
           401,
           "UNAUTHORIZED",
-          "Invalid tenant credentials"
-        );
-        return;
-      }
-
-      if (tenant.apiKey !== apiKey) {
-        request.earlyResponse = errorResponse(
-          401,
-          "UNAUTHORIZED",
-          "Invalid tenant credentials"
+          "Invalid API key",
         );
         return;
       }
@@ -107,12 +105,12 @@ export function tenantApiKeyAuthMiddleware(options: TenantApiKeyAuthOptions) {
         request.earlyResponse = errorResponse(
           403,
           "TENANT_DISABLED",
-          `Tenant "${tenantId}" is not active`
+          `Tenant "${tenant.tenantId}" is not active`,
         );
         return;
       }
 
-      event.tenantContext = {
+      event.tenant = {
         tenantId: tenant.tenantId,
         displayName: tenant.displayName,
         status: tenant.status,

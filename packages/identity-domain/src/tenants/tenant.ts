@@ -37,14 +37,6 @@ export interface TenantJwksAssertionConfig {
   replayWindowSec?: number;
 }
 
-export interface TenantApp {
-  /**
-   * Danh sách origins được phép.
-   * Bắt buộc >= 1, không trùng nhau.
-   */
-  allowedOrigins: string[];
-}
-
 export interface TenantEntity {
   id: string;
 
@@ -77,9 +69,11 @@ export interface TenantEntity {
   sso: TenantJwksAssertionConfig;
 
   /**
-   * Config app (origins, etc.)
+   * Base URL của callback API phía tenant.
+   * MegaWin gọi ngược tenant server qua URL này (debit/credit/rollback...).
+   * Ví dụ: "https://api.acme-gaming.com"
    */
-  app: TenantApp;
+  callbackBaseUrl: string;
 
   createdAt: Date;
   updatedAt: Date;

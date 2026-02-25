@@ -1,117 +1,272 @@
+/**
+ * MegaWin Player SDK Client
+ *
+ * Entry point chính — tạo client instance để gọi MegaWin API.
+ *
+ * **Auth flow:**
+ * 1. Tenant server gọi MegaWin server-to-server API lấy tokens
+ * 2. Tenant server trả tokens về cho client app
+ * 3. Client truyền tokens vào `createPlayerClient({ tokens })` hoặc `client.auth.setTokens()`
+ * 4. SDK tự động refresh accessToken trước khi hết hạn 5 phút
+ * 5. Mọi request API tự gửi Bearer accessToken
+ *
+ * @module
+ */
+
 /// <reference lib="dom" />
 import {
   createHttpClient,
   type HttpClient,
   type RequestConfig,
-  ApiClientError,
-} from "@megawin/http-client";
+} from "./http-client";
+import { ApiClientError } from "./api-types";
 import { TokenManager, MemoryTokenStorage } from "./token-manager";
-import type {
-  AuthTokens,
-  AuthenticateInput,
-  AuthResult,
-  TokenStorage,
-} from "./types";
+import type { AuthTokens, TokenStorage } from "./types";
+
+import { createAuthApi, type AuthApi } from "./apis/auth";
+import { createKenoApi, type KenoApi } from "./apis/keno";
+import { createLotto535Api, type Lotto535Api } from "./apis/lotto535";
+import { createPlayerApi, type PlayerApi } from "./apis/player";
 
 // ============ Config ============
 
+/**
+ * Cấu hình khởi tạo Player SDK.
+ *
+ * @example
+ * ```ts
+ * // Cơ bản — set tokens sau
+ * const client = createPlayerClient({
+ *   baseUrl: "https://api.megawin.com",
+ * });
+ * await client.auth.setTokens(tokensFromServer);
+ *
+ * // Đầy đủ — truyền tokens ngay khi tạo
+ * const client = createPlayerClient({
+ *   baseUrl: "https://api.megawin.com",
+ *   tokens: {
+ *     accessToken: "eyJ...",
+ *     refreshToken: "abc...",
+ *     expiresAt: Date.now() + 3600_000,
+ *   },
+ *   onSessionExpired: () => redirectToLogin(),
+ * });
+ * ```
+ */
 export interface PlayerSdkConfig {
-  /** Base URL của API Gateway (vd "https://api.megawin.com"). */
+  /**
+   * Base URL của API Gateway.
+   *
+   * @example "https://api.megawin.com"
+   */
   baseUrl: string;
-  /** Custom token storage. Mặc định: in-memory. */
+
+  /**
+   * Tokens nhận từ tenant server.
+   *
+   * Nếu truyền ở đây, SDK sẵn sàng gọi API ngay mà không cần `client.auth.setTokens()`.
+   * SDK sẽ tự động refresh accessToken trước khi hết hạn 5 phút.
+   *
+   * @example
+   * ```ts
+   * // Tokens nhận từ tenant server
+   * const tokens = await yourServer.getPlayerTokens(playerId);
+   * const client = createPlayerClient({
+   *   baseUrl: "https://api.megawin.com",
+   *   tokens,
+   * });
+   * ```
+   */
+  tokens?: AuthTokens;
+
+  /**
+   * Custom token storage adapter.
+   *
+   * Mặc định: {@link MemoryTokenStorage} (in-memory, mất khi reload).
+   *
+   * Implement {@link TokenStorage} để persist tokens:
+   * - Browser: `localStorage` / `sessionStorage`
+   * - React Native: `AsyncStorage` / `SecureStore`
+   * - Node.js: file / database
+   *
+   * @example
+   * ```ts
+   * const client = createPlayerClient({
+   *   baseUrl: "...",
+   *   tokenStorage: {
+   *     getTokens: () => JSON.parse(localStorage.getItem("mw_tokens") ?? "null"),
+   *     setTokens: (t) => localStorage.setItem("mw_tokens", JSON.stringify(t)),
+   *     clearTokens: () => localStorage.removeItem("mw_tokens"),
+   *   },
+   * });
+   * ```
+   */
   tokenStorage?: TokenStorage;
-  /** Request timeout ms. Mặc định: 30000. */
+
+  /**
+   * Request timeout (milliseconds).
+   *
+   * @default 30000
+   */
   timeout?: number;
-  /** Default headers gửi kèm mọi request. */
+
+  /**
+   * Default headers gửi kèm mọi request.
+   *
+   * @example
+   * ```ts
+   * { headers: { "X-Tenant-Id": "tenant-abc" } }
+   * ```
+   */
   headers?: Record<string, string>;
 
-  /** Endpoint authenticate. Mặc định: "/auth/token". */
-  authPath?: string;
-  /** Endpoint refresh token. Mặc định: "/auth/refresh". */
-  refreshPath?: string;
-  /** Endpoint logout (revoke). Mặc định: "/auth/logout". */
-  logoutPath?: string;
-
-  /** Callback khi session hết hạn (refresh thất bại hoặc 401). */
+  /**
+   * Callback khi session hết hạn.
+   *
+   * Được gọi khi refresh token thất bại hoặc server trả 401.
+   * Dùng để redirect về trang login hoặc lấy token mới.
+   *
+   * @example
+   * ```ts
+   * onSessionExpired: () => {
+   *   window.location.href = "/login";
+   * }
+   * ```
+   */
   onSessionExpired?: () => void;
-  /** Callback lỗi chung. */
+
+  /**
+   * Callback lỗi chung cho mọi API request.
+   *
+   * Dùng để log, hiển thị toast, tracking, ...
+   *
+   * @example
+   * ```ts
+   * onError: (error) => {
+   *   console.error(`[MegaWin] ${error.code}: ${error.message}`);
+   *   Sentry.captureException(error);
+   * }
+   * ```
+   */
   onError?: (error: ApiClientError) => void;
 }
 
-// ============ Interface ============
+// ============ Client Interface ============
 
+/**
+ * MegaWin Player SDK Client.
+ *
+ * Facade tổng hợp tất cả API modules.
+ * Tạo bằng {@link createPlayerClient}.
+ *
+ * @example
+ * ```ts
+ * import { createPlayerClient } from "@megawin/player-sdk";
+ *
+ * // 1. Tạo client với tokens từ tenant server
+ * const client = createPlayerClient({
+ *   baseUrl: "https://api.megawin.com",
+ *   tokens: tokensFromServer,
+ *   onSessionExpired: () => redirectToLogin(),
+ * });
+ *
+ * // 2. Gọi API
+ * const balance = await client.player.getBalance();
+ * const kenoResult = await client.keno.placeBet({ ... });
+ * const lottoResult = await client.lotto535.placeBet({ ... });
+ *
+ * // 3. Logout khi cần
+ * await client.auth.logout();
+ * ```
+ */
 export interface PlayerClient {
-  /** HTTP client đã bind auth – dùng cho mọi API call. */
+  /**
+   * Raw HTTP client đã bind auth.
+   *
+   * Dùng cho API endpoints chưa có wrapper method.
+   * Tự động gửi Bearer token. Set `Authorization: ""` để bypass.
+   *
+   * @example
+   * ```ts
+   * // Gọi API tùy chỉnh
+   * const data = await client.api.get<MyType>("/player/custom-endpoint");
+   *
+   * // Bypass auth cho public route
+   * const info = await client.api.get("/public/info", {
+   *   headers: { Authorization: "" },
+   * });
+   * ```
+   */
   readonly api: HttpClient;
 
   /**
-   * Xác thực bằng signed JWT assertion.
+   * Auth API — quản lý token lifecycle.
    *
-   * Server khách hàng tạo JWT bằng private key → gửi qua SDK →
-   * MegaWin Cognito custom auth trigger verify bằng JWKS →
-   * trả Cognito tokens.
-   *
-   * Sau khi thành công, mọi request tự gửi Bearer access token.
-   * Thất bại → throw ApiClientError.
+   * @see {@link AuthApi}
    */
-  authenticate(input: AuthenticateInput): Promise<AuthTokens>;
+  readonly auth: AuthApi;
 
-  /** Logout – revoke token trên server + xóa local. */
-  logout(): Promise<void>;
+  /**
+   * Keno API — đặt cược game Keno.
+   *
+   * @see {@link KenoApi}
+   */
+  readonly keno: KenoApi;
 
-  /** Access token hiện tại (null nếu chưa authenticate). */
-  getAccessToken(): Promise<string | null>;
+  /**
+   * Lotto 5/35 API — đặt cược game Lotto 5/35.
+   *
+   * @see {@link Lotto535Api}
+   */
+  readonly lotto535: Lotto535Api;
 
-  /** Toàn bộ token info (null nếu chưa authenticate). */
-  getTokens(): Promise<AuthTokens | null>;
-
-  /** Đã authenticate và token chưa hết hạn? */
-  isAuthenticated(): Promise<boolean>;
+  /**
+   * Player API — số dư, lịch sử cược, kết quả game.
+   *
+   * @see {@link PlayerApi}
+   */
+  readonly player: PlayerApi;
 }
 
 // ============ Factory ============
 
 /**
- * Tạo Player SDK client.
+ * Tạo MegaWin Player SDK client.
+ *
+ * @param config - Cấu hình SDK
+ * @returns {@link PlayerClient} instance sẵn sàng gọi API
  *
  * @example
  * ```ts
+ * import { createPlayerClient } from "@megawin/player-sdk";
+ *
+ * // Tokens nhận từ tenant server (server-to-server call)
+ * const tokens = await yourServer.getPlayerTokens(playerId);
+ *
  * const client = createPlayerClient({
  *   baseUrl: "https://api.megawin.com",
+ *   tokens,
+ *   onSessionExpired: () => {
+ *     window.location.href = "/login";
+ *   },
  * });
  *
- * // Server khách hàng tạo signed JWT assertion bằng private key
- * const signedToken = await yourServer.createSignedJwt(playerId);
- *
- * // Gửi assertion lên MegaWin → Cognito verify → nhận tokens
- * const tokens = await client.authenticate({ token: signedToken });
- *
- * // Mọi request sau tự gửi Bearer access token (Cognito JWT)
- * const games = await client.api.get<Game[]>("/games");
- *
- * // Public route – bypass token
- * const info = await client.api.get<Info>("/public/info", {
- *   headers: { Authorization: "" },
- * });
- *
- * // Logout
- * await client.logout();
+ * // Sẵn sàng gọi API
+ * const balance = await client.player.getBalance();
  * ```
  */
 export function createPlayerClient(config: PlayerSdkConfig): PlayerClient {
   const {
     baseUrl,
+    tokens: initialTokens,
     tokenStorage = new MemoryTokenStorage(),
     timeout,
     headers: defaultHeaders,
-    authPath = "/auth/token",
-    refreshPath = "/auth/refresh",
-    logoutPath = "/auth/logout",
     onSessionExpired,
     onError,
   } = config;
 
-  const tokenManager = new TokenManager(tokenStorage, refreshAccessToken);
+  const tokenManager = new TokenManager(tokenStorage);
 
   const publicClient = createHttpClient({
     baseUrl,
@@ -159,80 +314,30 @@ export function createPlayerClient(config: PlayerSdkConfig): PlayerClient {
     if (onError) await onError(error);
   }
 
-  // ---- Refresh ----
+  // ---- Build API modules ----
 
-  async function refreshAccessToken(
-    refreshToken: string,
-  ): Promise<AuthTokens | null> {
-    try {
-      const res = await publicClient.post<AuthResult>(refreshPath, {
-        refreshToken,
-      });
+  const auth = createAuthApi({
+    publicHttp: publicClient,
+    authedHttp: authedClient,
+    tokenManager,
+    onSessionExpired,
+  });
 
-      return {
-        accessToken: res.accessToken,
-        refreshToken,
-        idToken: res.idToken,
-        expiresAt: Date.now() + res.expiresIn * 1000,
-      };
-    } catch {
-      onSessionExpired?.();
-      return null;
-    }
-  }
+  const keno = createKenoApi(authedClient);
+  const lotto535 = createLotto535Api(authedClient);
+  const player = createPlayerApi(authedClient);
 
-  // ---- Auth actions ----
+  // ---- Set initial tokens if provided ----
 
-  async function authenticate(input: AuthenticateInput): Promise<AuthTokens> {
-    const res = await publicClient.post<AuthResult>(authPath, {
-      token: input.token,
-    });
-
-    const tokens: AuthTokens = {
-      accessToken: res.accessToken,
-      refreshToken: res.refreshToken,
-      idToken: res.idToken,
-      expiresAt: Date.now() + res.expiresIn * 1000,
-    };
-
-    await tokenManager.setTokens(tokens);
-    return tokens;
-  }
-
-  async function logout(): Promise<void> {
-    const tokens = await tokenManager.getTokens();
-    try {
-      if (tokens?.refreshToken) {
-        await authedClient.post(logoutPath, {
-          refreshToken: tokens.refreshToken,
-        });
-      }
-    } catch {
-      // Best-effort – không block logout nếu server lỗi.
-    } finally {
-      await tokenManager.clearTokens();
-    }
-  }
-
-  async function getAccessToken(): Promise<string | null> {
-    return tokenManager.getAccessToken();
-  }
-
-  async function getTokens(): Promise<AuthTokens | null> {
-    return tokenManager.getTokens();
-  }
-
-  async function isAuthenticated(): Promise<boolean> {
-    const token = await tokenManager.getAccessToken();
-    return token !== null;
+  if (initialTokens) {
+    tokenManager.setTokens(initialTokens);
   }
 
   return {
     api: authedClient,
-    authenticate,
-    logout,
-    getAccessToken,
-    getTokens,
-    isAuthenticated,
+    auth,
+    keno,
+    lotto535,
+    player,
   };
 }

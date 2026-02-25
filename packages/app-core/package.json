@@ -45,14 +45,6 @@
     "./lambda/middleware": {
       "types": "./src/lambda/middleware/index.ts",
       "default": "./dist/lambda/middleware/index.js"
-    },
-    "./lambda/http": {
-      "types": "./src/lambda/http/index.ts",
-      "default": "./dist/lambda/http/index.js"
-    },
-    "./lambda/http/*": {
-      "types": "./src/lambda/http/*.ts",
-      "default": "./dist/lambda/http/*.js"
     }
   },
   "imports": {
@@ -68,12 +60,11 @@
   },
   "dependencies": {
     "@megawin/shared": "workspace:*",
-    "@megawin/identity-domain": "workspace:*",
     "@aws-sdk/client-cognito-identity-provider": "*",
     "@aws-sdk/client-kinesis": "*",
     "@aws-sdk/client-sqs": "*",
     "@aws-sdk/client-sfn": "*",
-    "@middy/core": "^7.0.2",
+    "@middy/core": "^7.1.2",
     "zod": "^4.3.6"
   }
 }

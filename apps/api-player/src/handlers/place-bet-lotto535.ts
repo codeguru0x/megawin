@@ -6,16 +6,9 @@
  * Parse sang number trước khi truyền vào use case.
  */
 
-import middy from "@middy/core";
 import { z } from "zod";
 
-import {
-  validatorZodMiddleware,
-  authorizationMiddleware,
-  httpErrorHandlerUseCaseFormat,
-} from "@megawin/app-core/lambda/middleware";
-
-import { AccountType } from "@megawin/identity-domain/accounts/account";
+import { withPlayerAuth } from "@megawin/auth";
 
 import { PlaceBetUseCase } from "@megawin/game-lotto535-application/use-cases/place-bet";
 import { PlayType } from "@megawin/game-lotto535/entities";
@@ -69,61 +62,40 @@ const bodySchema = z.object({
 
 // ============ Handler ============
 
-interface ValidatedEvent {
-  validated: {
-    body: z.infer<typeof bodySchema>;
-  };
-  authContext: {
-    sub: string;
-    accountType: string;
-    tenantId?: string;
-    accountId?: string;
-    roles: string[];
-  };
-}
-
 const useCase = new PlaceBetUseCase();
 
-export const handler = middy(async (event: ValidatedEvent) => {
-  const { sub, tenantId, accountId } = event.authContext;
-  const body = event.validated.body;
+export const handler = withPlayerAuth(
+  async (event) => {
+    const { sub, tenantId, accountId } = event.user;
+    const { drawId, drawCount, boards: rawBoards } = event.schema.body;
 
-  if (!tenantId) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({
-        success: false,
-        error: { code: "BAD_REQUEST", message: "tenantId is required." },
-      }),
-    };
-  }
+    if (!tenantId) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          success: false,
+          error: { code: "BAD_REQUEST", message: "tenantId is required." },
+        }),
+      };
+    }
 
-  const boards = body.boards.map((b) => ({
-    boardNo: b.boardNo,
-    playType: b.playType,
-    selection: {
-      mainNumbers: b.selection.mainNumbers.map((s) => parseInt(s, 10)),
-      specialNumbers: b.selection.specialNumbers.map((s) => parseInt(s, 10)),
-    },
-  }));
+    const boards = rawBoards.map((b) => ({
+      boardNo: b.boardNo,
+      playType: b.playType,
+      selection: {
+        mainNumbers: b.selection.mainNumbers.map((s) => parseInt(s, 10)),
+        specialNumbers: b.selection.specialNumbers.map((s) => parseInt(s, 10)),
+      },
+    }));
 
-  return useCase.run({
-    tenantId,
-    playerId: accountId ?? sub,
-    channel: TicketChannel.Sdk,
-    drawId: body.drawId,
-    drawCount: body.drawCount,
-    boards,
-  });
-})
-  .use(
-    authorizationMiddleware({
-      accountType: AccountType.Player,
-    }),
-  )
-  .use(
-    validatorZodMiddleware({
-      body: bodySchema,
-    }),
-  )
-  .use(httpErrorHandlerUseCaseFormat());
+    return useCase.run({
+      tenantId,
+      playerId: accountId ?? sub,
+      channel: TicketChannel.Sdk,
+      drawId,
+      drawCount,
+      boards,
+    });
+  },
+  { schemas: { body: bodySchema } },
+);

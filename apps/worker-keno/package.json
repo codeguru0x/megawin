@@ -8,6 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "check-types": "tsc --noEmit",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

@@ -4,20 +4,10 @@
  * Auth: API Key (server-to-server).
  */
 
-import middy from "@middy/core";
 import { z } from "zod";
 
-import {
-  validatorZodMiddleware,
-  httpErrorHandlerUseCaseFormat,
-  type TenantContext,
-} from "@megawin/app-core/lambda/middleware";
-
-import {
-  toApiGatewayResponse,
-} from "@megawin/app-core/use-cases";
-
-import { tenantAuth } from "@megawin/identity-application/shared";
+import { withTenantAuth } from "@megawin/auth/tenant";
+import { toApiGatewayResponse } from "@megawin/app-core/use-cases";
 
 // ============ Zod schema ============
 
@@ -32,36 +22,28 @@ const bodySchema = z.object({
 
 // ============ Handler ============
 
-interface ValidatedEvent {
-  validated: {
-    pathParameters: z.infer<typeof pathSchema>;
-    body: z.infer<typeof bodySchema>;
-  };
-  tenantContext: TenantContext;
-}
+export const handler = withTenantAuth(
+  async (event) => {
+    const { tenantId } = event.tenant;
+    const { playerId } = event.schema.path;
+    const { status, reason } = event.schema.body;
 
-export const handler = middy(async (event: ValidatedEvent) => {
-  const { tenantId } = event.tenantContext;
-  const { playerId } = event.validated.pathParameters;
-  const { status, reason } = event.validated.body;
-
-  // TODO: Inject update player status use case
-  return toApiGatewayResponse({
-    success: true,
-    data: {
-      tenantId,
-      playerId,
-      status,
-      reason,
-      updatedAt: new Date().toISOString(),
-    },
-  });
-})
-  .use(tenantAuth())
-  .use(
-    validatorZodMiddleware({
-      pathParameters: pathSchema,
+    // TODO: Inject update player status use case
+    return toApiGatewayResponse({
+      success: true,
+      data: {
+        tenantId,
+        playerId,
+        status,
+        reason,
+        updatedAt: new Date().toISOString(),
+      },
+    });
+  },
+  {
+    schemas: {
+      path: pathSchema,
       body: bodySchema,
-    })
-  )
-  .use(httpErrorHandlerUseCaseFormat());
+    },
+  },
+);

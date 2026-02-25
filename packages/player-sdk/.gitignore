@@ -1,0 +1,5 @@
+dist/
+docs/
+release/
+node_modules/
+*.tgz

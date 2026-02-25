@@ -1,29 +1,20 @@
 /**
  * Entrypoint cho Middy middleware dùng trong Lambda.
  *
- * import {
- *   validatorZodMiddleware,
- *   authorizationMiddleware,
- *   httpErrorHandlerUseCaseFormat,
- *   kinesisParserMiddleware,
- *   sqsParserMiddleware,
- *   snsParserMiddleware,
- *   stepFunctionParserMiddleware,
- * } from "@megawin/app-core/lambda/middleware";
+ * === Non-auth middleware (validator, error handler, parsers) ===
+ * import { validatorZodMiddleware, httpErrorHandlerUseCaseFormat } from "@megawin/app-core/lambda/middleware";
+ *
+ * === Auth middleware — đã chuyển sang @megawin/auth ===
+ * import { withPlayerAuth, withAgentAuth, withCompanyAuth } from "@megawin/auth";
+ * import { withTenantAuth } from "@megawin/auth/tenant";
  */
 
 /** Zod validator */
 export {
   validatorZodMiddleware,
-  formatZodError,
   type ApiGatewayZodSchemas,
+  type SchemaOf,
 } from "./validator-zod";
-
-/** Authorization */
-export {
-  authorizationMiddleware,
-  type ApiGatewayEventWithAuthContext,
-} from "./authorization-middleware";
 
 /** Error handler */
 export { httpErrorHandlerUseCaseFormat } from "./http-error-handler-use-case";
@@ -39,10 +30,3 @@ export { snsParserMiddleware, parseSnsMessage } from "./sns-parser";
 
 /** Step Function parser */
 export { stepFunctionParserMiddleware } from "./step-function-parser";
-
-/** Tenant API Key auth (server-to-server) */
-export {
-  tenantApiKeyAuthMiddleware,
-  type TenantApiKeyAuthOptions,
-  type TenantContext,
-} from "./tenant-api-key-auth";

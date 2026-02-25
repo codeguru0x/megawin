@@ -4,20 +4,10 @@
  * Auth: API Key (server-to-server).
  */
 
-import middy from "@middy/core";
 import { z } from "zod";
 
-import {
-  validatorZodMiddleware,
-  httpErrorHandlerUseCaseFormat,
-  type TenantContext,
-} from "@megawin/app-core/lambda/middleware";
-
-import {
-  toApiGatewayResponse,
-} from "@megawin/app-core/use-cases";
-
-import { tenantAuth } from "@megawin/identity-application/shared";
+import { withTenantAuth } from "@megawin/auth/tenant";
+import { toApiGatewayResponse } from "@megawin/app-core/use-cases";
 
 // ============ Zod schema ============
 
@@ -30,36 +20,29 @@ const querySchema = z.object({
 
 // ============ Handler ============
 
-interface ValidatedEvent {
-  validated: {
-    queryStringParameters: z.infer<typeof querySchema>;
-  };
-  tenantContext: TenantContext;
-}
+export const handler = withTenantAuth(
+  async (event) => {
+    const { tenantId } = event.tenant;
+    const { from, to, gameId, groupBy } = event.schema.query;
 
-export const handler = middy(async (event: ValidatedEvent) => {
-  const { tenantId } = event.tenantContext;
-  const query = event.validated.queryStringParameters;
-
-  // TODO: Inject revenue report use case
-  return toApiGatewayResponse({
-    success: true,
-    data: {
-      tenantId,
-      from: query.from,
-      to: query.to,
-      gameId: query.gameId ?? "all",
-      groupBy: query.groupBy ?? "day",
-      items: [],
-      totals: {
-        totalBets: 0,
-        totalWins: 0,
-        grossRevenue: 0,
-        currency: "VND",
+    // TODO: Inject revenue report use case
+    return toApiGatewayResponse({
+      success: true,
+      data: {
+        tenantId,
+        from,
+        to,
+        gameId: gameId ?? "all",
+        groupBy: groupBy ?? "day",
+        items: [],
+        totals: {
+          totalBets: 0,
+          totalWins: 0,
+          grossRevenue: 0,
+          currency: "VND",
+        },
       },
-    },
-  });
-})
-  .use(tenantAuth())
-  .use(validatorZodMiddleware({ queryStringParameters: querySchema }))
-  .use(httpErrorHandlerUseCaseFormat());
+    });
+  },
+  { schemas: { query: querySchema } },
+);

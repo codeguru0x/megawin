@@ -35,7 +35,7 @@ const editTenantSchema = z.object({
   displayName: z.string().min(1, "Tên hiển thị không được trống.").max(100),
   description: z.string().max(500).optional(),
   jwksUrl: z.string().url("JWKS URL không hợp lệ."),
-  allowedOrigins: z.string().min(1, "Phải có ít nhất 1 origin."),
+  callbackBaseUrl: z.string().url("Callback Base URL không hợp lệ."),
 });
 
 type EditTenantValues = z.infer<typeof editTenantSchema>;
@@ -59,7 +59,7 @@ export function EditTenantDialog({
       displayName: tenant.displayName,
       description: tenant.description ?? "",
       jwksUrl: tenant.sso.jwksUrl,
-      allowedOrigins: tenant.app.allowedOrigins.join(", "),
+      callbackBaseUrl: tenant.callbackBaseUrl,
     },
   });
 
@@ -69,25 +69,20 @@ export function EditTenantDialog({
         displayName: tenant.displayName,
         description: tenant.description ?? "",
         jwksUrl: tenant.sso.jwksUrl,
-        allowedOrigins: tenant.app.allowedOrigins.join(", "),
+        callbackBaseUrl: tenant.callbackBaseUrl,
       });
     }
   }, [open, tenant, form]);
 
   const mutation = useMutation({
-    mutationFn: (values: EditTenantValues) => {
-      const origins = values.allowedOrigins
-        .split(",")
-        .map((o) => o.trim())
-        .filter(Boolean);
-      return apiClient.patch<UpdateTenantResponse>("/tenants", {
+    mutationFn: (values: EditTenantValues) =>
+      apiClient.patch<UpdateTenantResponse>("/tenants", {
         tenantId: tenant.tenantId,
         displayName: values.displayName,
         description: values.description,
         jwksUrl: values.jwksUrl,
-        allowedOrigins: origins,
-      });
-    },
+        callbackBaseUrl: values.callbackBaseUrl,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
       onOpenChange(false);
@@ -176,13 +171,13 @@ export function EditTenantDialog({
 
             <FormField
               control={form.control}
-              name="allowedOrigins"
+              name="callbackBaseUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Allowed Origins</FormLabel>
+                  <FormLabel>Callback Base URL</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="https://app.example.com, https://admin.example.com"
+                      placeholder="https://api.example.com"
                       {...field}
                     />
                   </FormControl>

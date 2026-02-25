@@ -19,7 +19,7 @@ export const POST = withApi()
         displayName: body.displayName,
         description: body.description,
         sso: { jwksUrl: body.jwksUrl },
-        app: { allowedOrigins: body.allowedOrigins },
+        callbackBaseUrl: body.callbackBaseUrl,
       },
       { successStatus: 201 },
     );

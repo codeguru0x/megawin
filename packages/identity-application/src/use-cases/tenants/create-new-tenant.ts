@@ -30,7 +30,7 @@ export class CreateTenantUseCase extends NextApiUseCase<
       description: input.description,
       apiKey,
       sso: { jwksUrl: input.sso.jwksUrl },
-      app: input.app,
+      callbackBaseUrl: input.callbackBaseUrl,
     });
 
     if (!tenant) {

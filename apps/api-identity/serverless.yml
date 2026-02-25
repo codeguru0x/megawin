@@ -14,4 +14,3 @@ build:
 functions:
   - ${file(src/functions/account-endpoint.yml)}
   - ${file(src/functions/tentant-endpoint.yml)}
-  - ${file(src/functions/player-endpoint.yml)}

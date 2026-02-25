@@ -5,16 +5,9 @@
  * Số Keno nhận dạng string "01"-"80" (zero-padded).
  */
 
-import middy from "@middy/core";
 import { z } from "zod";
 
-import {
-  validatorZodMiddleware,
-  authorizationMiddleware,
-  httpErrorHandlerUseCaseFormat,
-} from "@megawin/app-core/lambda/middleware";
-
-import { AccountType } from "@megawin/identity-domain/accounts/account";
+import { withPlayerAuth } from "@megawin/auth";
 
 import { PlaceBetUseCase } from "@megawin/game-keno-application/use-cases/place-bet";
 import { KenoPlayType, KenoBigSmallBet, KenoEvenOddBet } from "@megawin/game-keno/entities";
@@ -52,53 +45,32 @@ const bodySchema = z.object({
 
 // ============ Handler ============
 
-interface ValidatedEvent {
-  validated: {
-    body: z.infer<typeof bodySchema>;
-  };
-  authContext: {
-    sub: string;
-    accountType: string;
-    tenantId?: string;
-    accountId?: string;
-    roles: string[];
-  };
-}
-
 const useCase = new PlaceBetUseCase();
 
-export const handler = middy(async (event: ValidatedEvent) => {
-  const { sub, tenantId, accountId } = event.authContext;
-  const body = event.validated.body;
+export const handler = withPlayerAuth(
+  async (event) => {
+    const { sub, tenantId, accountId } = event.user;
+    const { startDrawId, drawCount, boards, sideBets } = event.schema.body;
 
-  if (!tenantId) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({
-        success: false,
-        error: { code: "BAD_REQUEST", message: "tenantId is required." },
-      }),
-    };
-  }
+    if (!tenantId) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          success: false,
+          error: { code: "BAD_REQUEST", message: "tenantId is required." },
+        }),
+      };
+    }
 
-  return useCase.run({
-    tenantId,
-    playerId: accountId ?? sub,
-    channel: TicketChannel.Sdk,
-    startDrawId: body.startDrawId,
-    drawCount: body.drawCount,
-    boards: body.boards,
-    sideBets: body.sideBets,
-  });
-})
-  .use(
-    authorizationMiddleware({
-      accountType: AccountType.Player,
-    }),
-  )
-  .use(
-    validatorZodMiddleware({
-      body: bodySchema,
-    }),
-  )
-  .use(httpErrorHandlerUseCaseFormat());
+    return useCase.run({
+      tenantId,
+      playerId: accountId ?? sub,
+      channel: TicketChannel.Sdk,
+      startDrawId,
+      drawCount,
+      boards,
+      sideBets,
+    });
+  },
+  { schemas: { body: bodySchema } },
+);

@@ -14,9 +14,7 @@ export const tenantSchema = z.object({
     maxTtlSec: z.number().optional(),
     replayWindowSec: z.number().optional(),
   }),
-  app: z.object({
-    allowedOrigins: z.array(z.string()),
-  }),
+  callbackBaseUrl: z.string(),
   apiKeyLastRotatedAt: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),

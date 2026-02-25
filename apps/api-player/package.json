@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "check-types": "tsc --noEmit",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@megawin/app-core": "workspace:*",
+    "@megawin/auth": "workspace:*",
     "@megawin/game-core": "workspace:*",
     "@megawin/game-keno": "workspace:*",
     "@megawin/game-keno-application": "workspace:*",
@@ -21,7 +23,7 @@
     "@megawin/identity-domain": "workspace:*",
     "@megawin/shared": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*",
-    "@middy/core": "^7.0.2",
+    "@middy/core": "^7.1.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {

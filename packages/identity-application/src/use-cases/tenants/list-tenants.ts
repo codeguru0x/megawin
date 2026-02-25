@@ -16,7 +16,7 @@ export class ListTenantsUseCase extends NextApiUseCase<void, ListTenantsOutput> 
         status: t.status,
         apiKey: t.apiKey,
         sso: t.sso,
-        app: t.app,
+        callbackBaseUrl: t.callbackBaseUrl,
         apiKeyLastRotatedAt: t.apiKeyLastRotatedAt.toISOString?.() ?? String(t.apiKeyLastRotatedAt),
         createdAt: t.createdAt.toISOString?.() ?? String(t.createdAt),
         updatedAt: t.updatedAt.toISOString?.() ?? String(t.updatedAt),

@@ -1,7 +1,7 @@
 {
   "name": "@megawin/player-sdk",
   "version": "1.0.0",
-  "description": "MegaWin Player SDK – HTTP client cho đối tác tích hợp",
+  "description": "MegaWin Player SDK – HTTP client + game types cho đối tác tích hợp",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -16,23 +16,47 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./keno": {
+      "import": {
+        "types": "./dist/keno.d.ts",
+        "default": "./dist/keno.js"
+      },
+      "require": {
+        "types": "./dist/keno.d.cts",
+        "default": "./dist/keno.cjs"
+      }
+    },
+    "./lotto535": {
+      "import": {
+        "types": "./dist/lotto535.d.ts",
+        "default": "./dist/lotto535.js"
+      },
+      "require": {
+        "types": "./dist/lotto535.d.cts",
+        "default": "./dist/lotto535.cjs"
+      }
     }
   },
-  "files": ["dist"],
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "docs:build": "typedoc",
+    "docs:watch": "typedoc --watch",
+    "release": "pnpm build && mkdir -p release && pnpm pack --pack-gzip-level 9 --pack-destination release"
   },
-  "keywords": ["megawin", "sdk", "player", "api-client"],
+  "keywords": ["megawin", "sdk", "player", "api-client", "keno", "lotto535"],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "@megawin/http-client": "workspace:*"
-  },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "tsup": "^8.5.0",
-    "typescript": "5.9.3"
+    "typedoc": "^0.27.0",
+    "typescript": "5.9.3",
+    "vitest": "^3.0.0"
   }
 }

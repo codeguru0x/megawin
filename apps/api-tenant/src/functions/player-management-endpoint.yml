@@ -18,3 +18,10 @@ suspend-player:
     - httpApi:
         path: /tenant/players/{playerId}/status
         method: patch
+
+player-login:
+  handler: src/handlers/player-login.handler
+  events:
+    - httpApi:
+        path: /tenant/players/login
+        method: post

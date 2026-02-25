@@ -4,20 +4,10 @@
  * Auth: API Key (server-to-server).
  */
 
-import middy from "@middy/core";
 import { z } from "zod";
 
-import {
-  validatorZodMiddleware,
-  httpErrorHandlerUseCaseFormat,
-  type TenantContext,
-} from "@megawin/app-core/lambda/middleware";
-
-import {
-  toApiGatewayResponse,
-} from "@megawin/app-core/use-cases";
-
-import { tenantAuth } from "@megawin/identity-application/shared";
+import { withTenantAuth } from "@megawin/auth/tenant";
+import { toApiGatewayResponse } from "@megawin/app-core/use-cases";
 
 // ============ Zod schema ============
 
@@ -27,27 +17,20 @@ const pathSchema = z.object({
 
 // ============ Handler ============
 
-interface ValidatedEvent {
-  validated: {
-    pathParameters: z.infer<typeof pathSchema>;
-  };
-  tenantContext: TenantContext;
-}
+export const handler = withTenantAuth(
+  async (event) => {
+    const { tenantId } = event.tenant;
+    const { playerId } = event.schema.path;
 
-export const handler = middy(async (event: ValidatedEvent) => {
-  const { tenantId } = event.tenantContext;
-  const { playerId } = event.validated.pathParameters;
-
-  // TODO: Inject get player detail use case
-  return toApiGatewayResponse({
-    success: true,
-    data: {
-      tenantId,
-      playerId,
-      player: null,
-    },
-  });
-})
-  .use(tenantAuth())
-  .use(validatorZodMiddleware({ pathParameters: pathSchema }))
-  .use(httpErrorHandlerUseCaseFormat());
+    // TODO: Inject get player detail use case
+    return toApiGatewayResponse({
+      success: true,
+      data: {
+        tenantId,
+        playerId,
+        player: null,
+      },
+    });
+  },
+  { schemas: { path: pathSchema } },
+);

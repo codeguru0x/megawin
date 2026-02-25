@@ -83,25 +83,13 @@ export const tenantColumns: ColumnDef<Tenant>[] = [
     enableSorting: false,
   },
   {
-    id: "allowedOrigins",
-    header: "Allowed Origins",
-    accessorFn: (row) => row.app.allowedOrigins,
-    cell: ({ row }) => {
-      const origins = row.original.app.allowedOrigins;
-      return (
-        <div className="flex flex-wrap gap-1">
-          {origins.map((origin) => (
-            <Badge
-              key={origin}
-              variant="secondary"
-              className="text-xs font-normal"
-            >
-              {origin}
-            </Badge>
-          ))}
-        </div>
-      );
-    },
+    accessorKey: "callbackBaseUrl",
+    header: "Callback URL",
+    cell: ({ row }) => (
+      <span className="text-muted-foreground text-xs max-w-[200px] truncate block">
+        {row.original.callbackBaseUrl}
+      </span>
+    ),
     enableSorting: false,
   },
   {

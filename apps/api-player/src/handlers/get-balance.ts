@@ -3,33 +3,13 @@
  * Lấy số dư của player — authed qua Cognito JWT.
  */
 
-import middy from "@middy/core";
-
-import {
-  authorizationMiddleware,
-  httpErrorHandlerUseCaseFormat,
-} from "@megawin/app-core/lambda/middleware";
-
-import {
-  toApiGatewayResponse,
-} from "@megawin/app-core/use-cases";
-
-import { AccountType } from "@megawin/identity-domain/accounts/account";
+import { withPlayerAuth } from "@megawin/auth";
+import { toApiGatewayResponse } from "@megawin/app-core/use-cases";
 
 // ============ Handler ============
 
-interface AuthedEvent {
-  authContext: {
-    sub: string;
-    accountType: string;
-    tenantId?: string;
-    accountId?: string;
-    roles: string[];
-  };
-}
-
-export const handler = middy(async (event: AuthedEvent) => {
-  const { sub, tenantId, accountId } = event.authContext;
+export const handler = withPlayerAuth(async (event) => {
+  const { sub, tenantId, accountId } = event.user;
 
   // TODO: Inject balance use case (query tenant hoặc local cache)
   return toApiGatewayResponse({
@@ -41,10 +21,4 @@ export const handler = middy(async (event: AuthedEvent) => {
       currency: "VND",
     },
   });
-})
-  .use(
-    authorizationMiddleware({
-      accountType: AccountType.Player,
-    })
-  )
-  .use(httpErrorHandlerUseCaseFormat());
+});

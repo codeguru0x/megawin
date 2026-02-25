@@ -19,7 +19,7 @@ export class UpdateTenantUseCase extends NextApiUseCase<
       displayName: input.displayName,
       description: input.description,
       jwksUrl: input.jwksUrl,
-      allowedOrigins: input.allowedOrigins,
+      callbackBaseUrl: input.callbackBaseUrl,
     });
 
     if (!tenant) {
