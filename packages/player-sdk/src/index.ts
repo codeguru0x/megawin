@@ -28,7 +28,7 @@ export { createPlayerClient, type PlayerClient, type PlayerSdkConfig } from "./c
 export type { AuthTokens, AuthenticateInput, AuthResult, TokenStorage } from "./types";
 
 // ---- Token management ----
-export { TokenManager, MemoryTokenStorage } from "./token-manager";
+export { TokenManager, MemoryTokenStorage, SessionStorageTokenStorage } from "./token-manager";
 
 // ---- API module interfaces ----
 export type { AuthApi } from "./apis/auth";

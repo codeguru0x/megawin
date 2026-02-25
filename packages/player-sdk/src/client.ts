@@ -20,7 +20,7 @@ import {
   type RequestConfig,
 } from "./http-client";
 import { ApiClientError } from "./api-types";
-import { TokenManager, MemoryTokenStorage } from "./token-manager";
+import { TokenManager, SessionStorageTokenStorage } from "./token-manager";
 import type { AuthTokens, TokenStorage } from "./types";
 
 import { createAuthApi, type AuthApi } from "./apis/auth";
@@ -80,17 +80,31 @@ export interface PlayerSdkConfig {
   tokens?: AuthTokens;
 
   /**
-   * Custom token storage adapter.
+   * Token storage adapter.
    *
-   * Mặc định: {@link MemoryTokenStorage} (in-memory, mất khi reload).
+   * Mặc định: {@link SessionStorageTokenStorage} — dùng `sessionStorage` (browser only).
+   * Tokens tồn tại qua page reload, mất khi đóng tab.
    *
-   * Implement {@link TokenStorage} để persist tokens:
-   * - Browser: `localStorage` / `sessionStorage`
-   * - React Native: `AsyncStorage` / `SecureStore`
-   * - Node.js: file / database
+   * **Lựa chọn built-in:**
+   *
+   * | Storage                        | Persist qua reload? | Môi trường       |
+   * |-------------------------------|---------------------|------------------|
+   * | `SessionStorageTokenStorage`   | Có (trong tab)      | Browser          |
+   * | `MemoryTokenStorage`           | Không               | Mọi môi trường   |
+   *
+   * Hoặc tự implement {@link TokenStorage} cho `localStorage`, `AsyncStorage`, v.v.
    *
    * @example
    * ```ts
+   * import { createPlayerClient, MemoryTokenStorage } from "@megawin/player-sdk";
+   *
+   * // Node.js / React Native — dùng MemoryTokenStorage
+   * const client = createPlayerClient({
+   *   baseUrl: "...",
+   *   tokenStorage: new MemoryTokenStorage(),
+   * });
+   *
+   * // Custom localStorage adapter
    * const client = createPlayerClient({
    *   baseUrl: "...",
    *   tokenStorage: {
@@ -259,7 +273,7 @@ export function createPlayerClient(config: PlayerSdkConfig): PlayerClient {
   const {
     baseUrl,
     tokens: initialTokens,
-    tokenStorage = new MemoryTokenStorage(),
+    tokenStorage = new SessionStorageTokenStorage(),
     timeout,
     headers: defaultHeaders,
     onSessionExpired,

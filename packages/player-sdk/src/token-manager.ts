@@ -2,25 +2,80 @@ import type { AuthTokens, TokenStorage } from "./types";
 
 const TOKEN_EXPIRY_BUFFER_MS = 5 * 60_000; // 5 phút
 
+const SESSION_STORAGE_KEY = "mw_tokens";
+
 /**
- * In-memory token storage.
+ * Token storage dùng `sessionStorage` (browser).
  *
- * Mặc định cho môi trường không có persistent storage.
- * Consumer có thể thay bằng localStorage, AsyncStorage, secure storage, ...
+ * **Đây là storage mặc định** khi tạo client bằng {@link createPlayerClient}.
+ *
+ * Đặc điểm:
+ * - Tokens tồn tại qua page reload / navigation trong cùng tab
+ * - Tokens **mất** khi đóng tab hoặc đóng browser
+ * - Tokens **không** chia sẻ giữa các tab
+ * - **Chỉ hỗ trợ browser** — không dùng được trên Node.js / React Native
+ *
+ * Nếu cần môi trường khác, dùng {@link MemoryTokenStorage} hoặc
+ * tự implement {@link TokenStorage}.
  *
  * @example
  * ```ts
- * // Sử dụng mặc định (in-memory)
+ * // Mặc định — không cần truyền, SDK tự dùng SessionStorageTokenStorage
  * const client = createPlayerClient({ baseUrl: "..." });
  *
- * // Hoặc custom localStorage
+ * // Hoặc truyền tường minh với custom key
+ * import { SessionStorageTokenStorage } from "@megawin/player-sdk";
+ *
  * const client = createPlayerClient({
  *   baseUrl: "...",
- *   tokenStorage: {
- *     getTokens: () => JSON.parse(localStorage.getItem("tokens") ?? "null"),
- *     setTokens: (t) => localStorage.setItem("tokens", JSON.stringify(t)),
- *     clearTokens: () => localStorage.removeItem("tokens"),
- *   },
+ *   tokenStorage: new SessionStorageTokenStorage("my_app_tokens"),
+ * });
+ * ```
+ */
+export class SessionStorageTokenStorage implements TokenStorage {
+  private readonly key: string;
+
+  /**
+   * @param key - Key lưu trong sessionStorage. Mặc định: `"mw_tokens"`
+   */
+  constructor(key = SESSION_STORAGE_KEY) {
+    this.key = key;
+  }
+
+  getTokens(): AuthTokens | null {
+    const raw = sessionStorage.getItem(this.key);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as AuthTokens;
+    } catch {
+      return null;
+    }
+  }
+
+  setTokens(tokens: AuthTokens): void {
+    sessionStorage.setItem(this.key, JSON.stringify(tokens));
+  }
+
+  clearTokens(): void {
+    sessionStorage.removeItem(this.key);
+  }
+}
+
+/**
+ * Token storage in-memory — tokens mất khi reload page.
+ *
+ * Dùng cho:
+ * - **Node.js** / **React Native** (không có `sessionStorage`)
+ * - Testing / môi trường không cần persist tokens
+ *
+ * @example
+ * ```ts
+ * import { createPlayerClient, MemoryTokenStorage } from "@megawin/player-sdk";
+ *
+ * // Node.js hoặc React Native
+ * const client = createPlayerClient({
+ *   baseUrl: "https://api.megawin.com",
+ *   tokenStorage: new MemoryTokenStorage(),
  * });
  * ```
  */

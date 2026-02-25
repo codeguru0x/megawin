@@ -96,11 +96,9 @@ const client = createPlayerClient({
   },
 
   // [Tùy chọn] Custom storage để persist tokens qua page reload
-  tokenStorage: {
-    getTokens: () => JSON.parse(localStorage.getItem("mw_tokens") ?? "null"),
-    setTokens: (t) => localStorage.setItem("mw_tokens", JSON.stringify(t)),
-    clearTokens: () => localStorage.removeItem("mw_tokens"),
-  },
+  // Mặc định: sessionStorage (browser) — tokens tồn tại trong tab, mất khi đóng tab
+  // Xem phần "Token Storage" bên dưới
+  tokenStorage: new MemoryTokenStorage(), // Node.js / React Native
 
   // [Tùy chọn] Callback khi session hết hạn (refresh thất bại / 401)
   onSessionExpired: () => {
@@ -279,10 +277,66 @@ try {
 | `TIMEOUT`              | 408  | Request timeout                    |
 | `NETWORK_ERROR`        | 0    | Lỗi mạng / không kết nối được      |
 
+## Token Storage
+
+Mặc định SDK dùng `sessionStorage` (browser) để lưu tokens. Có 2 built-in storage:
+
+| Storage                      | Persist qua reload? | Chia sẻ giữa tabs? | Môi trường       |
+|------------------------------|---------------------|---------------------|------------------|
+| `SessionStorageTokenStorage` | Có (trong tab)      | Không               | Browser (mặc định) |
+| `MemoryTokenStorage`         | Không               | Không               | Mọi môi trường   |
+
+### Mặc định — `SessionStorageTokenStorage` (browser)
+
+```typescript
+// Không cần truyền tokenStorage — SDK tự dùng sessionStorage
+const client = createPlayerClient({
+  baseUrl: "https://api.megawin.com",
+  tokens: tokensFromServer,
+});
+// Tokens tồn tại khi reload page, mất khi đóng tab
+```
+
+### Node.js / React Native — `MemoryTokenStorage`
+
+```typescript
+import { createPlayerClient, MemoryTokenStorage } from "@megawin/player-sdk";
+
+const client = createPlayerClient({
+  baseUrl: "https://api.megawin.com",
+  tokens: tokensFromServer,
+  tokenStorage: new MemoryTokenStorage(),
+});
+```
+
+### Custom key cho sessionStorage
+
+```typescript
+import { createPlayerClient, SessionStorageTokenStorage } from "@megawin/player-sdk";
+
+const client = createPlayerClient({
+  baseUrl: "https://api.megawin.com",
+  tokenStorage: new SessionStorageTokenStorage("my_app_tokens"),
+});
+```
+
+### Custom adapter (localStorage, AsyncStorage, ...)
+
+```typescript
+const client = createPlayerClient({
+  baseUrl: "https://api.megawin.com",
+  tokenStorage: {
+    getTokens: () => JSON.parse(localStorage.getItem("mw_tokens") ?? "null"),
+    setTokens: (t) => localStorage.setItem("mw_tokens", JSON.stringify(t)),
+    clearTokens: () => localStorage.removeItem("mw_tokens"),
+  },
+});
+```
+
 ## Tương thích
 
-- **Browser**: Chrome, Firefox, Safari, Edge (modern)
-- **React Native**: 0.70+
-- **Node.js**: 22+ (native fetch)
+- **Browser**: Chrome, Firefox, Safari, Edge (modern) — mặc định dùng `sessionStorage`
+- **React Native**: 0.70+ — cần truyền `tokenStorage: new MemoryTokenStorage()` hoặc `AsyncStorage` adapter
+- **Node.js**: 22+ (native fetch) — cần truyền `tokenStorage: new MemoryTokenStorage()`
 - **Module**: ESM + CommonJS
 - **TypeScript**: Đầy đủ type declarations

@@ -1,5 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createPlayerClient, type PlayerClient, type PlayerSdkConfig } from "../src";
+import { createPlayerClient, MemoryTokenStorage, type PlayerClient, type PlayerSdkConfig } from "../src";
+
+/**
+ * Mock sessionStorage cho test environment (Node.js không có sessionStorage).
+ */
+function createMockSessionStorage(): Storage {
+  const store = new Map<string, string>();
+  return {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => { store.set(key, value); },
+    removeItem: (key: string) => { store.delete(key); },
+    clear: () => { store.clear(); },
+    get length() { return store.size; },
+    key: (index: number) => [...store.keys()][index] ?? null,
+  };
+}
 
 /**
  * Mock global fetch cho tất cả tests.
@@ -42,6 +57,7 @@ describe("createPlayerClient", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.stubGlobal("sessionStorage", createMockSessionStorage());
     client = createPlayerClient(BASE_CONFIG);
   });
 
@@ -60,11 +76,25 @@ describe("createPlayerClient", () => {
   });
 
   it("should not be authenticated when no tokens are provided", async () => {
+    const freshStorage = createMockSessionStorage();
+    vi.stubGlobal("sessionStorage", freshStorage);
+
     const noTokenClient = createPlayerClient({
       baseUrl: "https://api.test.com",
     });
     const isAuth = await noTokenClient.auth.isAuthenticated();
     expect(isAuth).toBe(false);
+  });
+
+  it("should work with MemoryTokenStorage", async () => {
+    const memClient = createPlayerClient({
+      ...BASE_CONFIG,
+      tokenStorage: new MemoryTokenStorage(),
+    });
+    const isAuth = await memClient.auth.isAuthenticated();
+    expect(isAuth).toBe(true);
+    const token = await memClient.auth.getAccessToken();
+    expect(token).toBe("test-access-token");
   });
 
   it("should return access token from config tokens", async () => {
@@ -79,6 +109,10 @@ describe("createPlayerClient", () => {
 });
 
 describe("auth.setTokens", () => {
+  beforeEach(() => {
+    vi.stubGlobal("sessionStorage", createMockSessionStorage());
+  });
+
   it("should update tokens", async () => {
     const client = createPlayerClient({ baseUrl: "https://api.test.com" });
 
@@ -96,6 +130,10 @@ describe("auth.setTokens", () => {
 });
 
 describe("auth.logout", () => {
+  beforeEach(() => {
+    vi.stubGlobal("sessionStorage", createMockSessionStorage());
+  });
+
   it("should clear tokens after logout", async () => {
     vi.stubGlobal("fetch", mockFetch(null));
 
@@ -133,6 +171,10 @@ describe("auth.logout", () => {
 });
 
 describe("auth - token refresh", () => {
+  beforeEach(() => {
+    vi.stubGlobal("sessionStorage", createMockSessionStorage());
+  });
+
   it("should auto-refresh expired token", async () => {
     const fetchMock = mockFetch({
       accessToken: "refreshed-token",
@@ -175,5 +217,86 @@ describe("auth - token refresh", () => {
     const token = await client.auth.getAccessToken();
     expect(token).toBeNull();
     expect(onSessionExpired).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("SessionStorageTokenStorage", () => {
+  let mockStorage: Storage;
+
+  beforeEach(() => {
+    mockStorage = createMockSessionStorage();
+    vi.stubGlobal("sessionStorage", mockStorage);
+  });
+
+  it("should store and retrieve tokens via sessionStorage", async () => {
+    const client = createPlayerClient({
+      baseUrl: "https://api.test.com",
+    });
+
+    expect(await client.auth.isAuthenticated()).toBe(false);
+
+    const tokens = {
+      accessToken: "sess-token",
+      refreshToken: "sess-refresh",
+      expiresAt: Date.now() + 3600_000,
+    };
+    await client.auth.setTokens(tokens);
+
+    expect(await client.auth.isAuthenticated()).toBe(true);
+    expect(await client.auth.getAccessToken()).toBe("sess-token");
+
+    const stored = mockStorage.getItem("mw_tokens");
+    expect(stored).not.toBeNull();
+    expect(JSON.parse(stored!)).toEqual(tokens);
+  });
+
+  it("should clear tokens from sessionStorage on logout", async () => {
+    vi.stubGlobal("fetch", mockFetch(null));
+
+    const client = createPlayerClient({
+      baseUrl: "https://api.test.com",
+      tokens: {
+        accessToken: "sess-token",
+        refreshToken: "sess-refresh",
+        expiresAt: Date.now() + 3600_000,
+      },
+    });
+
+    expect(mockStorage.getItem("mw_tokens")).not.toBeNull();
+
+    await client.auth.logout();
+
+    expect(mockStorage.getItem("mw_tokens")).toBeNull();
+    expect(await client.auth.isAuthenticated()).toBe(false);
+  });
+
+  it("should persist tokens across client instances (same sessionStorage)", async () => {
+    const tokens = {
+      accessToken: "persist-token",
+      refreshToken: "persist-refresh",
+      expiresAt: Date.now() + 3600_000,
+    };
+
+    const client1 = createPlayerClient({
+      baseUrl: "https://api.test.com",
+      tokens,
+    });
+    expect(await client1.auth.isAuthenticated()).toBe(true);
+
+    const client2 = createPlayerClient({
+      baseUrl: "https://api.test.com",
+    });
+    expect(await client2.auth.isAuthenticated()).toBe(true);
+    expect(await client2.auth.getAccessToken()).toBe("persist-token");
+  });
+
+  it("should return null for corrupted sessionStorage data", async () => {
+    mockStorage.setItem("mw_tokens", "invalid-json{{{");
+
+    const client = createPlayerClient({
+      baseUrl: "https://api.test.com",
+    });
+    expect(await client.auth.isAuthenticated()).toBe(false);
+    expect(await client.auth.getAccessToken()).toBeNull();
   });
 });

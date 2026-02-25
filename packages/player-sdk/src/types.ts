@@ -41,13 +41,23 @@ export interface AuthResult {
 }
 
 /**
- * Adapter lưu trữ token – consumer tự chọn storage.
+ * Adapter lưu trữ token — consumer tự chọn storage.
  *
- * - Browser: localStorage / sessionStorage
- * - React Native: AsyncStorage / SecureStore
- * - Node.js: file / memory
+ * **Built-in implementations:**
+ * - {@link SessionStorageTokenStorage} — `sessionStorage` (browser only, **mặc định**)
+ * - {@link MemoryTokenStorage} — in-memory (mọi môi trường, mất khi reload)
  *
- * Mặc định: MemoryTokenStorage (in-memory).
+ * Hoặc tự implement cho `localStorage`, `AsyncStorage`, `SecureStore`, v.v.
+ *
+ * @example
+ * ```ts
+ * // Custom localStorage adapter
+ * const storage: TokenStorage = {
+ *   getTokens: () => JSON.parse(localStorage.getItem("mw_tokens") ?? "null"),
+ *   setTokens: (t) => localStorage.setItem("mw_tokens", JSON.stringify(t)),
+ *   clearTokens: () => localStorage.removeItem("mw_tokens"),
+ * };
+ * ```
  */
 export interface TokenStorage {
   getTokens(): AuthTokens | null | Promise<AuthTokens | null>;
