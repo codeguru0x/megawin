@@ -13,7 +13,7 @@ import {
 } from "@megawin/tenant-gateway";
 import { GameProduct } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { TenantConfigRepository } from "../../infras/repos/game-config-repo";
+import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 
 const BATCH_QUERY_LIMIT = 200;
 const PAYOUT_CHUNK_SIZE = 50;
@@ -45,45 +45,70 @@ export class DispatchPayoutBatchUseCase extends StepFunctionUseCase<
   private readonly tenantConfigRepo = new TenantConfigRepository();
 
   /** Dispatch payout cho 1 batch Keno. Loop cho đến khi done = true. */
-  protected async execute(input: DispatchPayoutBatchInput): Promise<DispatchPayoutBatchResult> {
-  const { drawId } = input;
-  const entries = await this.entryRepo.getPendingPayoutEntries(drawId, BATCH_QUERY_LIMIT);
+  protected async execute(
+    input: DispatchPayoutBatchInput
+  ): Promise<DispatchPayoutBatchResult> {
+    const { drawId } = input;
+    const entries = await this.entryRepo.getPendingPayoutEntries(
+      drawId,
+      BATCH_QUERY_LIMIT
+    );
 
-  if (entries.length === 0) {
-    return { drawId, done: true, dispatched: 0, failed: 0, skipped: 0, tenantResults: [] };
-  }
+    if (entries.length === 0) {
+      return {
+        drawId,
+        done: true,
+        dispatched: 0,
+        failed: 0,
+        skipped: 0,
+        tenantResults: [],
+      };
+    }
 
-  const eligible = entries.filter(
-    (e) => ((e as any).payout?.payoutRetryCount ?? 0) < MAX_RETRY_COUNT,
-  );
-  const skipped = entries.length - eligible.length;
+    const eligible = entries.filter(
+      (e) => ((e as any).payout?.payoutRetryCount ?? 0) < MAX_RETRY_COUNT
+    );
+    const skipped = entries.length - eligible.length;
 
-  if (eligible.length === 0 && skipped > 0) {
-    return { drawId, done: true, dispatched: 0, failed: 0, skipped, tenantResults: [] };
-  }
+    if (eligible.length === 0 && skipped > 0) {
+      return {
+        drawId,
+        done: true,
+        dispatched: 0,
+        failed: 0,
+        skipped,
+        tenantResults: [],
+      };
+    }
 
-  const tenantGroups = groupByTenant(eligible);
-  const tenantResults: DispatchPayoutBatchResult["tenantResults"] = [];
-  let totalDispatched = 0;
-  let totalFailed = 0;
+    const tenantGroups = groupByTenant(eligible);
+    const tenantResults: DispatchPayoutBatchResult["tenantResults"] = [];
+    let totalDispatched = 0;
+    let totalFailed = 0;
 
-  for (const [tenantId, tenantEntries] of tenantGroups) {
-    const result = await dispatchToTenant(this.entryRepo, tenantId, drawId, tenantEntries);
-    tenantResults.push(result);
-    totalDispatched += result.dispatched;
-    totalFailed += result.failed;
-  }
+    for (const [tenantId, tenantEntries] of tenantGroups) {
+      const result = await dispatchToTenant(
+        this.entryRepo,
+        this.tenantConfigRepo,
+        tenantId,
+        drawId,
+        tenantEntries
+      );
+      tenantResults.push(result);
+      totalDispatched += result.dispatched;
+      totalFailed += result.failed;
+    }
 
-  const remaining = await this.entryRepo.countPendingPayoutEntries(drawId);
+    const remaining = await this.entryRepo.countPendingPayoutEntries(drawId);
 
-  return {
-    drawId,
-    done: remaining === 0,
-    dispatched: totalDispatched,
-    failed: totalFailed,
-    skipped,
-    tenantResults,
-  };
+    return {
+      drawId,
+      done: remaining === 0,
+      dispatched: totalDispatched,
+      failed: totalFailed,
+      skipped,
+      tenantResults,
+    };
   }
 }
 
@@ -110,9 +135,10 @@ function extractId(entry: any): string {
 }
 
 async function loadGatewayClient(
-  tenantId: string,
+  tenantConfigRepo: TenantConfigRepository,
+  tenantId: string
 ): Promise<TenantGatewayClient | null> {
-  const tenantConfig = await this.tenantConfigRepo.getTenantConfig(tenantId);
+  const tenantConfig = await tenantConfigRepo.getTenantConfig(tenantId);
 
   const callbackBaseUrl = (tenantConfig as any)?.callbackBaseUrl;
   const apiKey = (tenantConfig as any)?.apiKey;
@@ -129,9 +155,10 @@ async function loadGatewayClient(
 
 async function dispatchToTenant(
   entryRepo: EntryRepository,
+  tenantConfigRepo: TenantConfigRepository,
   tenantId: string,
   drawId: string,
-  entries: any[],
+  entries: any[]
 ): Promise<{
   tenantId: string;
   dispatched: number;
@@ -139,18 +166,19 @@ async function dispatchToTenant(
   totalAmount: number;
 }> {
   const totalAmount = entries.reduce(
-    (s: number, e: any) => s + (e.payout?.payoutAmount ?? 0), 0,
+    (s: number, e: any) => s + (e.payout?.payoutAmount ?? 0),
+    0
   );
 
-  const gateway = await loadGatewayClient(tenantId);
+  const gateway = await loadGatewayClient(tenantConfigRepo, tenantId);
 
   if (!gateway) {
     console.warn(
       `[dispatch-payout-keno] Tenant ${tenantId}: no callbackBaseUrl. ` +
-      `${entries.length} entries, ${totalAmount} VND (DRY-RUN → auto-dispatched)`,
+        `${entries.length} entries, ${totalAmount} VND (DRY-RUN → auto-dispatched)`
     );
     const ids = entries.map(extractId);
-    await this.entryRepo.batchMarkPayoutDispatched(ids);
+    await entryRepo.batchMarkPayoutDispatched(ids);
     return { tenantId, dispatched: entries.length, failed: 0, totalAmount };
   }
 
@@ -188,7 +216,7 @@ async function dispatchToTenant(
       }
 
       if (succeededIds.length > 0) {
-        await this.entryRepo.batchMarkPayoutDispatched(succeededIds);
+        await entryRepo.batchMarkPayoutDispatched(succeededIds);
         dispatched += succeededIds.length;
       }
       if (failedIds.length > 0) {
@@ -196,13 +224,18 @@ async function dispatchToTenant(
           .filter((r) => r.status === "failed")
           .map((r) => r.error)
           .join("; ");
-        await this.entryRepo.batchMarkPayoutFailed(failedIds, errMsg || "Tenant returned failed");
+        await entryRepo.batchMarkPayoutFailed(
+          failedIds,
+          errMsg || "Tenant returned failed"
+        );
         failed += failedIds.length;
       }
     } catch (err: any) {
       const errMsg = err?.message ?? String(err);
-      console.error(`[dispatch-payout-keno] Tenant ${tenantId} batch failed: ${errMsg}`);
-      await this.entryRepo.batchMarkPayoutFailed(ids, errMsg);
+      console.error(
+        `[dispatch-payout-keno] Tenant ${tenantId} batch failed: ${errMsg}`
+      );
+      await entryRepo.batchMarkPayoutFailed(ids, errMsg);
       failed += batch.length;
     }
   }

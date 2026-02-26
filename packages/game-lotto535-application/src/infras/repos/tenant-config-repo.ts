@@ -1,6 +1,4 @@
-import {
-  Lotto535Collections,
-} from "@megawin/game-lotto535/entities";
+import { Lotto535Collections } from "@megawin/game-lotto535/entities";
 import { GameConfigScope } from "@megawin/game-core/entities";
 import type { TenantConfigDoc } from "@megawin/game-lotto535/entities";
 import { BaseRepo } from "./base-repo";
@@ -8,6 +6,7 @@ import {
   TenantConfigMapper,
   type TenantConfigEntity,
 } from "../mappers/tenant-config-mapper";
+import { nowVN } from "@megawin/shared/utils/date";
 
 export class TenantConfigRepository extends BaseRepo<
   TenantConfigEntity,
@@ -29,39 +28,39 @@ export class TenantConfigRepository extends BaseRepo<
 
   async upsertTenantConfig(
     tenantId: string,
-    fields: Partial<
-      Pick<TenantConfigDoc, "commissionRate" | "isEnabled" | "prizeOverrides">
-    >,
+    fields: Partial<Pick<TenantConfigDoc, "commissionRate" | "isEnabled">>
   ): Promise<TenantConfigEntity | null> {
-    const now = new Date();
+    const now = nowVN();
     const $set: Record<string, unknown> = { updatedAt: now };
 
-    if (fields.commissionRate !== undefined) $set.commissionRate = fields.commissionRate;
+    if (fields.commissionRate !== undefined)
+      $set.commissionRate = fields.commissionRate;
     if (fields.isEnabled !== undefined) $set.isEnabled = fields.isEnabled;
-    if (fields.prizeOverrides !== undefined) $set.prizeOverrides = fields.prizeOverrides;
+
+    const $setOnInsert: Record<string, unknown> = {
+      scope: GameConfigScope.Tenant,
+      tenantId,
+      createdAt: now,
+    };
+
+    if (fields.commissionRate === undefined) $setOnInsert.commissionRate = 0;
+    if (fields.isEnabled === undefined) $setOnInsert.isEnabled = true;
 
     return await this.findOneAndUpdate(
       { scope: GameConfigScope.Tenant, tenantId },
       {
         $set,
         $inc: { version: 1 },
-        $setOnInsert: {
-          scope: GameConfigScope.Tenant,
-          tenantId,
-          commissionRate: fields.commissionRate ?? 0.2,
-          isEnabled: fields.isEnabled ?? true,
-          prizeOverrides: fields.prizeOverrides ?? null,
-          createdAt: now,
-        },
+        $setOnInsert,
       },
-      { upsert: true, returnDocument: "after" },
+      { upsert: true, returnDocument: "after" }
     );
   }
 
   async listTenantConfigs(): Promise<TenantConfigEntity[]> {
     return await this.findMany(
       { scope: GameConfigScope.Tenant },
-      { sort: { tenantId: 1 } },
+      { sort: { tenantId: 1 } }
     );
   }
 }

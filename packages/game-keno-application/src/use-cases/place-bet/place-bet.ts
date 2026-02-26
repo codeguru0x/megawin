@@ -31,7 +31,10 @@ import type {
   EntryBoardSnapshot,
   EntrySideBetSnapshot,
 } from "@megawin/game-keno/entities";
-import { KenoPlayType, KENO_SIDE_BET_PLAY_TYPES } from "@megawin/game-keno/entities";
+import {
+  KenoPlayType,
+  KENO_SIDE_BET_PLAY_TYPES,
+} from "@megawin/game-keno/entities";
 import {
   validateBasicSelection,
   getPlayTypeFromPickCount,
@@ -40,10 +43,8 @@ import {
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import {
-  GameConfigRepository,
-  TenantConfigRepository,
-} from "../../infras/repos/game-config-repo";
+import { GameConfigRepository } from "../../infras/repos/game-config-repo";
+import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 
 export class PlaceBetUseCase extends ApiGatewayUseCase<
@@ -80,20 +81,20 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
     // ── 2. Validate draw count ──
     if (drawCount < 1 || drawCount > play.maxDrawCount) {
       throw AppException.badRequest(
-        `drawCount phải từ 1 đến ${play.maxDrawCount}.`,
+        `drawCount phải từ 1 đến ${play.maxDrawCount}.`
       );
     }
 
     // ── 3. Validate boards + sideBets ──
     if (boardInputs.length === 0 && sideBetInputs.length === 0) {
       throw AppException.badRequest(
-        "Phải có ít nhất 1 board cơ bản hoặc 1 side bet.",
+        "Phải có ít nhất 1 board cơ bản hoặc 1 side bet."
       );
     }
 
     if (boardInputs.length > play.maxBasicBoardsPerTicket) {
       throw AppException.badRequest(
-        `Số board cơ bản tối đa là ${play.maxBasicBoardsPerTicket}.`,
+        `Số board cơ bản tối đa là ${play.maxBasicBoardsPerTicket}.`
       );
     }
 
@@ -102,13 +103,13 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       const playType = getPlayTypeFromPickCount(bi.numbers.length);
       if (!playType) {
         throw AppException.badRequest(
-          `Board ${bi.boardNo}: số lượng số ${bi.numbers.length} không hợp lệ (1-10).`,
+          `Board ${bi.boardNo}: số lượng số ${bi.numbers.length} không hợp lệ (1-10).`
         );
       }
       const valResult = validateBasicSelection(playType, bi.numbers);
       if (!valResult.valid) {
         throw AppException.badRequest(
-          `Board ${bi.boardNo}: ${valResult.errors.join("; ")}`,
+          `Board ${bi.boardNo}: ${valResult.errors.join("; ")}`
         );
       }
 
@@ -128,7 +129,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
 
       if (!KENO_SIDE_BET_PLAY_TYPES.includes(pt)) {
         throw AppException.badRequest(
-          `Side bet playType "${si.playType}" không hợp lệ.`,
+          `Side bet playType "${si.playType}" không hợp lệ.`
         );
       }
 
@@ -145,7 +146,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
     }
     if (firstDraw.status !== DrawStatus.SalesOpen) {
       throw AppException.badRequest(
-        `Kỳ quay ${startDrawId} chưa mở bán hoặc đã đóng bán.`,
+        `Kỳ quay ${startDrawId} chưa mở bán hoặc đã đóng bán.`
       );
     }
 
@@ -215,12 +216,10 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       numbers: b.numbers,
     }));
 
-    const sideBetSnapshots: EntrySideBetSnapshot[] = builtSideBets.map(
-      (s) => ({
-        playType: s.playType,
-        bet: s.bet,
-      }),
-    );
+    const sideBetSnapshots: EntrySideBetSnapshot[] = builtSideBets.map((s) => ({
+      playType: s.playType,
+      bet: s.bet,
+    }));
 
     const entryDoc: Omit<TicketEntryDoc, "_id" | "version"> = {
       tenantId,

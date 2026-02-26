@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import type { Metadata } from "next";
 
-import { Toaster } from "@/components/ui/sonner";
+import { MegawinToaster } from "@megawin/ui/components/toaster";
 import { APP_CONFIG } from "@/config/app-config";
 import { fontVars } from "@/lib/fonts/registry";
 import { PREFERENCE_DEFAULTS } from "@/lib/preferences/preferences-config";
@@ -46,7 +46,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
             font={font}
           >
             {children}
-            <Toaster />
+            <MegawinToaster />
           </PreferencesStoreProvider>
         </AuthProvider>
       </body>

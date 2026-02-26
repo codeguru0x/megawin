@@ -1,0 +1,153 @@
+/*
+ * @megawin/ui — Toast Notification Styles
+ *
+ * Professional semantic styling for sonner toasts.
+ * Import this file in your app's globals.css:
+ *   @import "@megawin/ui/styles/toast.css";
+ */
+
+/* ─── Success ─────────────────────────────────── */
+
+[data-sonner-toast][data-type="success"] {
+  --toast-bg: oklch(0.97 0.02 145);
+  --toast-border: oklch(0.85 0.08 145);
+  --toast-text: oklch(0.32 0.09 150);
+  --toast-accent: oklch(0.55 0.18 150);
+  background: var(--toast-bg) !important;
+  border-color: var(--toast-border) !important;
+  color: var(--toast-text) !important;
+  border-left: 4px solid var(--toast-accent) !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-icon] {
+  color: var(--toast-accent) !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-title] {
+  color: var(--toast-text) !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-description] {
+  color: oklch(0.45 0.06 150) !important;
+}
+
+/* ─── Error ───────────────────────────────────── */
+
+[data-sonner-toast][data-type="error"] {
+  --toast-bg: oklch(0.97 0.015 25);
+  --toast-border: oklch(0.85 0.06 25);
+  --toast-text: oklch(0.35 0.12 25);
+  --toast-accent: oklch(0.55 0.22 25);
+  background: var(--toast-bg) !important;
+  border-color: var(--toast-border) !important;
+  color: var(--toast-text) !important;
+  border-left: 4px solid var(--toast-accent) !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-icon] {
+  color: var(--toast-accent) !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-title] {
+  color: var(--toast-text) !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-description] {
+  color: oklch(0.5 0.08 25) !important;
+}
+
+/* ─── Warning ─────────────────────────────────── */
+
+[data-sonner-toast][data-type="warning"] {
+  --toast-bg: oklch(0.97 0.025 85);
+  --toast-border: oklch(0.87 0.08 85);
+  --toast-text: oklch(0.35 0.1 65);
+  --toast-accent: oklch(0.65 0.18 65);
+  background: var(--toast-bg) !important;
+  border-color: var(--toast-border) !important;
+  color: var(--toast-text) !important;
+  border-left: 4px solid var(--toast-accent) !important;
+}
+
+[data-sonner-toast][data-type="warning"] [data-icon] {
+  color: var(--toast-accent) !important;
+}
+
+[data-sonner-toast][data-type="warning"] [data-title] {
+  color: var(--toast-text) !important;
+}
+
+[data-sonner-toast][data-type="warning"] [data-description] {
+  color: oklch(0.48 0.07 65) !important;
+}
+
+/* ─── Info ────────────────────────────────────── */
+
+[data-sonner-toast][data-type="info"] {
+  --toast-bg: oklch(0.97 0.015 250);
+  --toast-border: oklch(0.85 0.06 250);
+  --toast-text: oklch(0.35 0.1 250);
+  --toast-accent: oklch(0.55 0.2 250);
+  background: var(--toast-bg) !important;
+  border-color: var(--toast-border) !important;
+  color: var(--toast-text) !important;
+  border-left: 4px solid var(--toast-accent) !important;
+}
+
+[data-sonner-toast][data-type="info"] [data-icon] {
+  color: var(--toast-accent) !important;
+}
+
+[data-sonner-toast][data-type="info"] [data-title] {
+  color: var(--toast-text) !important;
+}
+
+[data-sonner-toast][data-type="info"] [data-description] {
+  color: oklch(0.48 0.07 250) !important;
+}
+
+/* ─── Dark mode ───────────────────────────────── */
+
+.dark [data-sonner-toast][data-type="success"] {
+  --toast-bg: oklch(0.22 0.04 150);
+  --toast-border: oklch(0.3 0.06 150);
+  --toast-text: oklch(0.88 0.06 150);
+  --toast-accent: oklch(0.65 0.18 150);
+}
+
+.dark [data-sonner-toast][data-type="success"] [data-description] {
+  color: oklch(0.72 0.04 150) !important;
+}
+
+.dark [data-sonner-toast][data-type="error"] {
+  --toast-bg: oklch(0.22 0.04 20);
+  --toast-border: oklch(0.3 0.06 20);
+  --toast-text: oklch(0.88 0.06 20);
+  --toast-accent: oklch(0.65 0.2 25);
+}
+
+.dark [data-sonner-toast][data-type="error"] [data-description] {
+  color: oklch(0.72 0.04 20) !important;
+}
+
+.dark [data-sonner-toast][data-type="warning"] {
+  --toast-bg: oklch(0.22 0.04 70);
+  --toast-border: oklch(0.32 0.06 70);
+  --toast-text: oklch(0.9 0.06 75);
+  --toast-accent: oklch(0.72 0.16 70);
+}
+
+.dark [data-sonner-toast][data-type="warning"] [data-description] {
+  color: oklch(0.72 0.04 70) !important;
+}
+
+.dark [data-sonner-toast][data-type="info"] {
+  --toast-bg: oklch(0.22 0.03 250);
+  --toast-border: oklch(0.3 0.05 250);
+  --toast-text: oklch(0.88 0.05 250);
+  --toast-accent: oklch(0.65 0.18 250);
+}
+
+.dark [data-sonner-toast][data-type="info"] [data-description] {
+  color: oklch(0.72 0.04 250) !important;
+}

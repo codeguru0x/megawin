@@ -25,6 +25,10 @@
       "types": "./src/use-cases/game-config/index.ts",
       "default": "./dist/use-cases/game-config/index.js"
     },
+    "./use-cases/tenant-config": {
+      "types": "./src/use-cases/tenant-config/index.ts",
+      "default": "./dist/use-cases/tenant-config/index.js"
+    },
     "./use-cases/settle": {
       "types": "./src/use-cases/settle/index.ts",
       "default": "./dist/use-cases/settle/index.js"

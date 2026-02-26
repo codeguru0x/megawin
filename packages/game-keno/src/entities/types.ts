@@ -39,8 +39,8 @@ export const KENO_PICK_MAX = 10;
  */
 export const KENO_VALID_NUMBERS: ReadonlySet<string> = new Set(
   Array.from({ length: KENO_NUMBER_MAX }, (_, i) =>
-    String(i + 1).padStart(2, "0"),
-  ),
+    String(i + 1).padStart(2, "0")
+  )
 );
 
 /** Parse string number ("01"-"80") thành số nguyên. Trả null nếu invalid. */
@@ -92,4 +92,108 @@ export interface BigSmallSelection {
  */
 export interface EvenOddSelection {
   bet: import("./enums").KenoEvenOddBet;
+}
+
+// ─────────────────────────────────────────────
+// Prize Configuration Types (dùng chung Global & Tenant config)
+// ─────────────────────────────────────────────
+
+/**
+ * Bảng giải thưởng cách chơi cơ bản.
+ * Key: "pick{N}" (N = 1-10)
+ * Value: map từ số trùng (matchCount) → giá trị thưởng (VND).
+ *
+ * Dùng chung bởi GlobalConfigDoc.basicPrizes và TenantConfigDoc.prizeOverrides.basicPrizes.
+ */
+export type BasicPrizes = Record<string, Record<number, number>>;
+
+/**
+ * Bảng giải thưởng cách chơi bổ sung Lớn/Nhỏ.
+ */
+export interface BigSmallPrizes {
+  /** Lớn: ≥13 số từ 41-80 → 26.000đ */
+  big13Plus: number;
+  /** Lớn: 11 hoặc 12 số từ 41-80 → 10.000đ */
+  big1112: number;
+  /** Hoà Lớn Nhỏ: 10 số mỗi bên → 26.000đ */
+  draw: number;
+  /** Nhỏ: 11 hoặc 12 số từ 01-40 → 10.000đ */
+  small1112: number;
+  /** Nhỏ: ≥13 số từ 01-40 → 26.000đ */
+  small13Plus: number;
+}
+
+/**
+ * Bảng giải thưởng cách chơi bổ sung Chẵn/Lẻ.
+ */
+export interface EvenOddPrizes {
+  /** Chẵn: ≥15 số chẵn → 200.000đ */
+  even15Plus: number;
+  /** Chẵn: 13 hoặc 14 số chẵn → 40.000đ */
+  even1314: number;
+  /** Chẵn 11-12: 11 hoặc 12 số chẵn → 20.000đ */
+  even1112: number;
+  /** Hoà: 10 chẵn + 10 lẻ → 20.000đ */
+  draw: number;
+  /** Lẻ 11-12: 11 hoặc 12 số lẻ → 20.000đ */
+  odd1112: number;
+  /** Lẻ: 13 hoặc 14 số lẻ → 40.000đ */
+  odd1314: number;
+  /** Lẻ: ≥15 số lẻ → 200.000đ */
+  odd15Plus: number;
+}
+
+/**
+ * Giới hạn trả thưởng mỗi kỳ quay cho bậc cao.
+ */
+export interface PayoutCaps {
+  /** Bậc 8 trùng 8: ≤50 bộ → 200tr/bộ, >50 bộ → 10 tỷ chia đều. */
+  pick8MaxPerDraw: number;
+  pick8MaxSetsForFixed: number;
+
+  /** Bậc 9 trùng 9: ≤12 bộ → 800tr/bộ, >12 bộ → 10 tỷ chia đều. */
+  pick9MaxPerDraw: number;
+  pick9MaxSetsForFixed: number;
+
+  /** Bậc 10 trùng 10: ≤5 bộ → 2 tỷ/bộ, >5 bộ → 10 tỷ chia đều. */
+  pick10MaxPerDraw: number;
+  pick10MaxSetsForFixed: number;
+}
+
+/** Tỷ lệ tài chính – dùng trong GlobalConfigDoc.rates. */
+export interface FinancialRates {
+  /** Hoa hồng đại lý mặc định (tỷ lệ trên doanh thu). */
+  defaultCommissionRate: number;
+  /** Tỷ lệ công ty thu về trên doanh thu. */
+  companyRate: number;
+}
+
+/** Quy tắc chơi – dùng trong GlobalConfigDoc.play. */
+export interface PlayRules {
+  /** Mệnh giá 1 lần tham gia (VND). Default: 10.000 */
+  unitPrice: number;
+  /** Số panel cơ bản tối đa trên 1 vé. Default: 2 (A, B) */
+  maxBasicBoardsPerTicket: number;
+  /** Số kỳ liên tiếp tối đa. Default: 20 */
+  maxDrawCount: number;
+  /** Đóng bán trước giờ quay bao nhiêu phút. Default: 1 */
+  salesCloseBeforeMinutes: number;
+  /** Khoảng cách giữa các kỳ quay (phút). Default: 10 */
+  drawIntervalMinutes: number;
+  /** Giờ bắt đầu quay trong ngày. Default: "06:00" */
+  firstDrawTime: string;
+  /** Giờ kết thúc quay trong ngày (kỳ cuối). Default: "21:55" */
+  lastDrawTime: string;
+  /** Timezone vận hành. Default: "Asia/Ho_Chi_Minh" */
+  timezone: string;
+}
+
+/**
+ * Override giải thưởng cho tenant.
+ * Dùng chung bởi GlobalConfigDoc (default values) và TenantConfigDoc (override).
+ */
+export interface KenoPrizeOverrides {
+  basicPrizes?: BasicPrizes;
+  bigSmallPrizes?: BigSmallPrizes;
+  evenOddPrizes?: EvenOddPrizes;
 }

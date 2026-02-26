@@ -20,12 +20,15 @@
 
 import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
 import { EntryStatus, DrawStatus } from "@megawin/game-core/entities";
-import type { TicketEntryDoc, EntryBoardSnapshot } from "@megawin/game-lotto535/entities";
+import type {
+  TicketEntryDoc,
+  EntryBoardSnapshot,
+} from "@megawin/game-lotto535/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GameConfigRepository } from "../../infras/repos/global-config-repo";
+import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 
 const AUTO_ENROLL_BATCH_SIZE = 200;
@@ -68,7 +71,7 @@ export class AutoEnrollEntriesUseCase extends StepFunctionUseCase<
     }
     if (draw.status !== DrawStatus.SalesOpen) {
       throw new Error(
-        `Draw ${drawId} không đang mở bán (status: ${draw.status}).`,
+        `Draw ${drawId} không đang mở bán (status: ${draw.status}).`
       );
     }
     const globalConfig = await this.configRepo.getGlobalConfig();
@@ -84,7 +87,7 @@ export class AutoEnrollEntriesUseCase extends StepFunctionUseCase<
     while (hasMore) {
       const batch = await this.ticketRepo.findTicketsForAutoEnroll(
         AUTO_ENROLL_BATCH_SIZE,
-        lastId,
+        lastId
       );
 
       if (batch.length === 0) {
@@ -107,7 +110,7 @@ export class AutoEnrollEntriesUseCase extends StepFunctionUseCase<
           const enrolled = await this.ticketRepo.enrollDraw(
             ticket.id,
             drawId,
-            isLastDraw,
+            isLastDraw
           );
           if (!enrolled) {
             skippedCount++;
@@ -115,7 +118,7 @@ export class AutoEnrollEntriesUseCase extends StepFunctionUseCase<
           }
 
           const tenantConfig = await this.tenantConfigRepo.getTenantConfig(
-            ticket.tenantId,
+            ticket.tenantId
           );
           const commissionRate =
             tenantConfig?.commissionRate ??
@@ -128,7 +131,7 @@ export class AutoEnrollEntriesUseCase extends StepFunctionUseCase<
               mainNumbers: b.selection.mainNumbers,
               specialNumbers: b.selection.specialNumbers,
               expandedLines: b.derived.expandedLines,
-            }),
+            })
           );
 
           const now = new Date();

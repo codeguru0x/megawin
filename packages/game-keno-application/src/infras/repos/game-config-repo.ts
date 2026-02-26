@@ -1,11 +1,17 @@
 import { KenoCollections } from "@megawin/game-keno/entities";
-import { GameConfigScope, GameProduct } from "@megawin/game-core/entities";
+import { GameConfigScope } from "@megawin/game-core/entities";
+import type {
+  FinancialRates,
+  BasicPrizes,
+  BigSmallPrizes,
+  EvenOddPrizes,
+  PayoutCaps,
+  PlayRules,
+} from "@megawin/game-keno/entities";
 import { BaseRepo } from "./base-repo";
 import {
   GameConfigMapper,
-  TenantConfigMapper,
   type GlobalConfigEntity,
-  type TenantConfigEntity,
 } from "../mappers/game-config-mapper";
 
 export class GameConfigRepository extends BaseRepo<
@@ -21,28 +27,46 @@ export class GameConfigRepository extends BaseRepo<
 
   async getGlobalConfig(): Promise<GlobalConfigEntity | null> {
     return await this.findOne({
-      product: GameProduct.Keno,
       scope: GameConfigScope.Global,
     });
   }
-}
 
-export class TenantConfigRepository extends BaseRepo<
-  TenantConfigEntity,
-  TenantConfigMapper
-> {
-  constructor() {
-    super({
-      collName: KenoCollections.GameConfigs,
-      dataMapper: new TenantConfigMapper(),
-    });
-  }
+  /**
+   * Upsert global config. Uses $setOnInsert for immutable fields,
+   * $set for mutable fields. Increments version on each update.
+   */
+  async upsertGlobalConfig(
+    config: Partial<{
+      rates: FinancialRates;
+      basicPrizes: BasicPrizes;
+      bigSmallPrizes: BigSmallPrizes;
+      evenOddPrizes: EvenOddPrizes;
+      payoutCaps: PayoutCaps;
+      play: PlayRules;
+    }>
+  ): Promise<GlobalConfigEntity | null> {
+    const now = new Date();
+    const $set: Record<string, unknown> = { updatedAt: now };
 
-  async getTenantConfig(tenantId: string): Promise<TenantConfigEntity | null> {
-    return await this.findOne({
-      product: GameProduct.Keno,
-      scope: GameConfigScope.Tenant,
-      tenantId,
-    });
+    if (config.rates) $set.rates = config.rates;
+    if (config.basicPrizes) $set.basicPrizes = config.basicPrizes;
+    if (config.bigSmallPrizes) $set.bigSmallPrizes = config.bigSmallPrizes;
+    if (config.evenOddPrizes) $set.evenOddPrizes = config.evenOddPrizes;
+    if (config.payoutCaps) $set.payoutCaps = config.payoutCaps;
+    if (config.play) $set.play = config.play;
+
+    return await this.findOneAndUpdate(
+      { scope: GameConfigScope.Global },
+      {
+        $set,
+        $inc: { version: 1 },
+        $setOnInsert: {
+          scope: GameConfigScope.Global,
+          tenantId: null,
+          createdAt: now,
+        },
+      },
+      { upsert: true, returnDocument: "after" }
+    );
   }
 }

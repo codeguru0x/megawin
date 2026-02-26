@@ -1,7 +1,7 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
-import { GameConfigRepository } from "../../infras/repos/global-config-repo";
+import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import type {
   UpdateGameConfigInput,
   UpdateGameConfigOutput,
@@ -26,20 +26,30 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
   private readonly repo = new GameConfigRepository();
 
   protected async execute(
-    input: UpdateGameConfigInput,
+    input: UpdateGameConfigInput
   ): Promise<UpdateGameConfigOutput> {
     this.validateInput(input);
     const existing = await this.repo.getGlobalConfig();
 
     const merged = {
       jackpot: input.jackpot
-        ? { ...(existing?.jackpot ?? DEFAULT_LOTTO535_CONFIG.jackpot), ...input.jackpot }
+        ? {
+            ...(existing?.jackpot ?? DEFAULT_LOTTO535_CONFIG.jackpot),
+            ...input.jackpot,
+          }
         : undefined,
       rates: input.rates
-        ? { ...(existing?.rates ?? DEFAULT_LOTTO535_CONFIG.rates), ...input.rates }
+        ? {
+            ...(existing?.rates ?? DEFAULT_LOTTO535_CONFIG.rates),
+            ...input.rates,
+          }
         : undefined,
       defaultPrizes: input.defaultPrizes
-        ? { ...(existing?.defaultPrizes ?? DEFAULT_LOTTO535_CONFIG.defaultPrizes), ...input.defaultPrizes }
+        ? {
+            ...(existing?.defaultPrizes ??
+              DEFAULT_LOTTO535_CONFIG.defaultPrizes),
+            ...input.defaultPrizes,
+          }
         : undefined,
       play: input.play
         ? { ...(existing?.play ?? DEFAULT_LOTTO535_CONFIG.play), ...input.play }
@@ -66,34 +76,26 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
 
   private validateInput(input: UpdateGameConfigInput): void {
     if (input.rates) {
-      const { defaultCommissionRate, companyRate } =
-        input.rates;
+      const { defaultCommissionRate, companyRate } = input.rates;
 
       if (
         defaultCommissionRate !== undefined &&
         (defaultCommissionRate < 0 || defaultCommissionRate > 1)
       ) {
         throw AppException.badRequest(
-          "defaultCommissionRate phải trong range [0, 1].",
+          "defaultCommissionRate phải trong range [0, 1]."
         );
       }
 
-      if (
-        companyRate !== undefined &&
-        (companyRate < 0 || companyRate > 1)
-      ) {
-        throw AppException.badRequest(
-          "companyRate phải trong range [0, 1].",
-        );
+      if (companyRate !== undefined && (companyRate < 0 || companyRate > 1)) {
+        throw AppException.badRequest("companyRate phải trong range [0, 1].");
       }
     }
 
     if (input.defaultPrizes) {
       for (const [key, value] of Object.entries(input.defaultPrizes)) {
         if (value !== undefined && (typeof value !== "number" || value < 0)) {
-          throw AppException.badRequest(
-            `Giải thưởng ${key} phải là số dương.`,
-          );
+          throw AppException.badRequest(`Giải thưởng ${key} phải là số dương.`);
         }
       }
     }

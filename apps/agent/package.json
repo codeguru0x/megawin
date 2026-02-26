@@ -26,6 +26,8 @@
     "@megawin/identity": "workspace:*",
     "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
+    "@megawin/ui": "workspace:*",
+    "@megawin/ui": "workspace:*",
     "@t3-oss/env-nextjs": "^0.13.10",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-table": "^8.21.3",

@@ -1,0 +1,248 @@
+---
+globs: Dashboard UI Agent Rules  (Casino Game & Financial Analytics
+alwaysApply: false
+---
+
+# Dashboard UI Agent Rules (Casino Ops + Financial Analytics)
+**Stack:** Next.js App Router + shadcn/ui + Tailwind CSS v4  
+**Goal:** Build a consistent, enterprise-grade operations dashboard for online casino & financial analytics.  
+**Priority:** Consistency > aesthetics > novelty. Avoid “creative” UI changes that break architecture.
+
+---
+
+## 0) Non-negotiables (MUST)
+1) **Use design tokens only** (CSS variables) for colors/surfaces/borders.  
+   - Do NOT hardcode arbitrary colors (e.g. `text-blue-500`) except semantic states via tokens or pre-approved utilities.
+2) **Follow layout rhythm**: spacing scale only `4/8/12/16/24/32/48`.  
+3) **Typography scale** must be respected (see Section 2).  
+4) **Dashboard page structure** is standardized (see Section 3).  
+5) **Components must be reusable primitives**; do NOT duplicate UI patterns page by page.  
+6) **No flashy gradients, no neon, no heavy shadows**. Enterprise subtle only.
+7) **All data numbers must use `tabular-nums`** and stable alignment.
+8) **Dark mode must look premium**, not washed-out.
+
+---
+
+## 1) Design System Tokens (Colors, Surfaces, Borders)
+### 1.1 Token usage rule
+- Use `bg-background`, `bg-card`, `text-foreground`, `text-muted-foreground`, `border-border`, etc.
+- Use semantic tokens for states: `--success`, `--warning`, `--danger` and their foreground variants.
+- Prefer neutral palettes with one brand accent.
+
+### 1.2 Approved semantic meanings
+- **Success** = profit / uptrend / OK / verified
+- **Danger** = loss / downtrend / risk / block
+- **Warning** = anomaly / attention / pending
+
+### 1.3 Anti-pattern
+- ❌ Randomly mixing multiple accent colors in one view.
+- ❌ Using saturated gradients to look “cool”.
+- ❌ Using inconsistent border colors across cards.
+
+---
+
+## 2) Typography Standard (Hierarchy)
+### 2.1 Type scale (Tailwind)
+- **Page title:** `text-2xl font-semibold tracking-tight`
+- **Section title:** `text-lg font-semibold`
+- **Body:** `text-sm`
+- **Meta/caption:** `text-xs text-muted-foreground`
+- **KPI value:** `text-3xl font-semibold tracking-tight tabular-nums`
+- **Table numbers:** `text-sm tabular-nums`
+
+### 2.2 Rules
+- Always include meaningful titles and captions in dashboards.
+- Keep text density high but readable.
+- Use `leading-relaxed` only for long descriptions; otherwise default leading.
+
+---
+
+## 3) Page Architecture (Standard Dashboard Layout)
+Every dashboard-like page MUST follow:
+1) **PageHeader**
+   - Left: Title + subtitle (context)
+   - Right: Global controls (DateRange, Segment tabs, Refresh, Export)
+2) **FilterBar** (optional but recommended)
+   - tenant/game/currency/status/search
+3) **KPI Row** (3–6 cards)
+4) **Analytics Row**
+   - Charts / heatmaps / trend panels
+5) **Data Row**
+   - Table (sticky header) + optional RightDrawer for row details
+6) **States**
+   - Loading skeletons (layout-preserving)
+   - Empty states (actionable)
+   - Error states (recoverable)
+
+### 3.1 Grid & spacing
+- Use a 12-col grid pattern:
+  - `grid grid-cols-12 gap-6`
+- Cards typically span 3–4 columns depending on density.
+- Sections vertical spacing: `space-y-6` or `space-y-8` only.
+
+---
+
+## 4) Component Standards (shadcn/ui)
+### 4.1 Must-use primitives
+- `Card`, `Badge`, `Button`, `Tabs`, `DropdownMenu`, `Dialog/Drawer`, `Separator`, `Skeleton`, `Table`, `Tooltip`
+- Build project primitives in `components/dashboard/*`:
+  - `PageHeader`
+  - `FilterBar`
+  - `KpiCard`
+  - `Section`
+  - `DataTableShell`
+  - `RightDrawer`
+  - `Delta` (up/down/flat)
+  - `Metric` (label + value + hint)
+
+### 4.2 KPI Card rules
+A KPI card must include:
+- Label (meta)
+- Value (large, tabular-nums)
+- Delta (up/down/flat) with semantic color
+- Optional: sparkline slot (future extension)
+Avoid:
+- Decorative icons without meaning
+- Long paragraphs inside KPI cards
+
+### 4.3 Table rules
+- Sticky header is mandatory for long tables.
+- Row height: consistent (`h-10` / `h-11`).
+- Numeric columns right-aligned with tabular numbers.
+- Use `Badge` for categorical status.
+- Clicking a row opens RightDrawer (details, actions, audit trail).
+
+---
+
+## 5) Data Visualization Rules
+- Default: clean, minimal charts. No thick grid, no neon.
+- Charts must support dark mode well.
+- Always include:
+  - Axis labels (if meaningful)
+  - Tooltip
+  - Empty state (no data)
+  - Loading skeleton placeholder with fixed height
+- Prefer:
+  - Area chart for trend
+  - Bar for distribution
+  - Heatmap for number exposure / risk matrix (casino-style)
+- Do NOT introduce new chart libs without approval.
+
+---
+
+## 6) Interaction & UX Rules (Ops-grade)
+- Every page must be **actionable**:
+  - Filters, drill-down, export, refresh
+- Provide:
+  - Keyboard focus states
+  - Accessible labels for inputs
+  - Tooltips for ambiguous metrics
+- Avoid:
+  - Complex animations
+  - Hidden actions without discovery
+
+---
+
+## 7) Tailwind CSS v4 Conventions
+- Use semantic classes via tokens:
+  - `bg-card`, `border-border`, `text-muted-foreground`
+- Rounding:
+  - Use `rounded-xl` or `rounded-2xl` consistently (prefer `rounded-2xl` for primary cards)
+- Shadows:
+  - Only subtle: `shadow-sm` (or none). No big drop shadows.
+- Borders:
+  - Prefer borders over heavy shadows for separation.
+
+---
+
+## 8) Next.js App Router Structure (Do not break)
+### 8.1 Recommended folder layout
+- `app/(dashboard)/layout.tsx` : dashboard shell (sidebar/header)
+- `app/(dashboard)/overview/page.tsx`
+- `app/(dashboard)/risk/page.tsx`
+- `app/(dashboard)/players/page.tsx`
+- `components/dashboard/*` : reusable dashboard primitives
+- `components/ui/*` : shadcn generated components
+- `lib/format/*` : formatters (currency, percent, compact, date)
+- `lib/query/*` : query keys, fetchers (no UI)
+- `types/*` : domain types
+
+### 8.2 Separation of concerns
+- Page components: composition only (layout + wiring).
+- UI primitives: styling + structure.
+- Domain logic: never inside UI components; place in `lib/` or `domain/`.
+
+---
+
+## 9) Loading / Empty / Error State Standard
+### 9.1 Loading
+- Use `Skeleton` that matches final layout size.
+- No layout shift.
+
+### 9.2 Empty
+- Must include:
+  - “No data” message
+  - Possible reason (filters/time range)
+  - CTA: reset filters / expand range
+
+### 9.3 Error
+- Show retry button
+- Keep UI frame stable
+
+---
+
+## 10) “No Surprise Changes” Policy
+Agent must NOT:
+- Rename routes or folders without explicit instruction.
+- Replace shadcn components with custom ones unless needed.
+- Change global tokens or theming unless asked.
+- Introduce new libraries without approval.
+
+If uncertain:
+- Keep existing architecture and add new primitives instead of rewriting.
+
+---
+
+## 11) Definition of “Professional” (Quality Bar)
+The UI must feel like:
+- Trading/finance analytics dashboards (high density, clear hierarchy)
+- Casino operations monitoring (risk heatmaps, exposure tables, anomaly lists)
+Characteristics:
+- Consistent spacing + typography
+- Neutral surfaces + subtle borders
+- Clean tables and controls
+- Strong information hierarchy
+- Actionable drill-down flows
+
+---
+
+## 12) How to work (Agent Execution Plan)
+When implementing a new page:
+1) Use existing primitives first.
+2) If missing, add ONE new primitive in `components/dashboard/`.
+3) Build page composition using standard layout order (Section 3).
+4) Add loading/empty/error states.
+5) Verify: dark mode, tabular numbers, alignment, density.
+
+Deliverables per page:
+- `page.tsx`
+- `loading.tsx` (if relevant)
+- Any new primitives (minimal)
+- No breaking changes to other pages
+
+---
+
+## 13) Quick “Do / Don’t”
+✅ Do:
+- `tabular-nums`, right-align numeric columns
+- sticky header tables
+- filter bars, segments, export/refresh
+- consistent `gap-6`, `p-6`, `rounded-2xl`
+- semantic badges and deltas
+
+❌ Don’t:
+- random bright colors
+- inconsistent paddings
+- big gradients/shadows
+- same font size everywhere
+- one-off components duplicated across pages

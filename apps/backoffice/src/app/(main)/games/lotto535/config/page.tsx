@@ -1,7 +1,16 @@
 "use client";
 
+import {
+  Trophy,
+  DollarSign,
+  Percent,
+  Settings2,
+  ShieldCheck,
+} from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 import { useGameConfig, useUpdateGameConfig } from "./_lib/use-game-config";
 import { JackpotSection } from "./_lib/jackpot-section";
@@ -11,10 +20,9 @@ import { PlayRulesSection } from "./_lib/play-rules-section";
 
 function ConfigSkeleton() {
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-80 rounded-xl" />
-      ))}
+    <div className="space-y-4">
+      <Skeleton className="h-10 w-80 rounded-lg" />
+      <Skeleton className="h-[420px] rounded-xl" />
     </div>
   );
 }
@@ -26,22 +34,24 @@ export default function Lotto535ConfigPage() {
   const handleSave = (data: Record<string, unknown>) => mutation.mutate(data);
 
   return (
-    <div className="@container/main flex flex-col gap-4 md:gap-6">
+    <div className="@container/main flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight md:text-2xl">
-            Lotto 5/35 – Cấu hình game
+        <div className="flex items-center gap-2.5">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-amber-500 to-amber-600 shadow-sm">
+            <ShieldCheck className="size-4 text-white" />
+          </div>
+          <h1 className="text-base font-semibold tracking-tight text-foreground">
+            Lotto 5/35 — Cấu hình
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Cấu hình toàn cục cho game Lotto 5/35. Chỉ admin MegaWin được chỉnh
-            sửa.
-          </p>
+          {config && (
+            <Badge
+              variant="secondary"
+              className="border-amber-200 bg-amber-100 font-mono text-[11px] text-amber-700 tabular-nums dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-400"
+            >
+              v{config.version}
+            </Badge>
+          )}
         </div>
-        {config && (
-          <Badge variant="outline" className="hidden sm:flex tabular-nums">
-            v{config.version}
-          </Badge>
-        )}
       </div>
 
       {isLoading && <ConfigSkeleton />}
@@ -56,28 +66,61 @@ export default function Lotto535ConfigPage() {
       )}
 
       {config && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <JackpotSection
-            config={config}
-            onSave={handleSave}
-            isPending={mutation.isPending}
-          />
-          <RatesSection
-            config={config}
-            onSave={handleSave}
-            isPending={mutation.isPending}
-          />
-          <PrizesSection
-            config={config}
-            onSave={handleSave}
-            isPending={mutation.isPending}
-          />
-          <PlayRulesSection
-            config={config}
-            onSave={handleSave}
-            isPending={mutation.isPending}
-          />
-        </div>
+        <Tabs defaultValue="jackpot">
+          <TabsList
+            variant="line"
+            className="w-full justify-start gap-0 border-b px-0"
+          >
+            <TabsTrigger value="jackpot" className="gap-1.5">
+              <Trophy className="size-4 text-amber-500" />
+              Jackpot
+            </TabsTrigger>
+            <TabsTrigger value="prizes" className="gap-1.5">
+              <DollarSign className="size-4 text-emerald-500" />
+              Giải thưởng
+            </TabsTrigger>
+            <TabsTrigger value="rates" className="gap-1.5">
+              <Percent className="size-4 text-blue-500" />
+              Tài chính
+            </TabsTrigger>
+            <TabsTrigger value="play" className="gap-1.5">
+              <Settings2 className="size-4 text-violet-500" />
+              Luật chơi
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="jackpot" className="mt-2">
+            <JackpotSection
+              config={config}
+              onSave={handleSave}
+              isPending={mutation.isPending}
+            />
+          </TabsContent>
+
+          <TabsContent value="prizes" className="mt-2">
+            <PrizesSection
+              config={config}
+              onSave={handleSave}
+              isPending={mutation.isPending}
+            />
+          </TabsContent>
+
+          <TabsContent value="rates" className="mt-2">
+            <RatesSection
+              config={config}
+              onSave={handleSave}
+              isPending={mutation.isPending}
+            />
+          </TabsContent>
+
+          <TabsContent value="play" className="mt-2">
+            <PlayRulesSection
+              config={config}
+              onSave={handleSave}
+              isPending={mutation.isPending}
+            />
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );

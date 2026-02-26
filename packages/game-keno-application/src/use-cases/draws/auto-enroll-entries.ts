@@ -13,15 +13,17 @@
 
 import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
 import { EntryStatus, DrawStatus } from "@megawin/game-core/entities";
-import type { TicketEntryDoc, EntryBoardSnapshot, EntrySideBetSnapshot } from "@megawin/game-keno/entities";
+import type {
+  TicketEntryDoc,
+  EntryBoardSnapshot,
+  EntrySideBetSnapshot,
+} from "@megawin/game-keno/entities";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import {
-  GameConfigRepository,
-  TenantConfigRepository,
-} from "../../infras/repos/game-config-repo";
+import { GameConfigRepository } from "../../infras/repos/game-config-repo";
+import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 
 const AUTO_ENROLL_BATCH_SIZE = 200;
 
@@ -55,7 +57,7 @@ export class AutoEnrollEntriesUseCase extends StepFunctionUseCase<
     }
     if (draw.status !== DrawStatus.SalesOpen) {
       throw new Error(
-        `Draw ${drawId} không đang mở bán (status: ${draw.status}).`,
+        `Draw ${drawId} không đang mở bán (status: ${draw.status}).`
       );
     }
     const globalConfig = await this.configRepo.getGlobalConfig();
@@ -71,7 +73,7 @@ export class AutoEnrollEntriesUseCase extends StepFunctionUseCase<
     while (hasMore) {
       const batch = await this.ticketRepo.findTicketsForAutoEnroll(
         AUTO_ENROLL_BATCH_SIZE,
-        lastId,
+        lastId
       );
 
       if (batch.length === 0) {
@@ -94,7 +96,7 @@ export class AutoEnrollEntriesUseCase extends StepFunctionUseCase<
           const enrolled = await this.ticketRepo.enrollDraw(
             ticket.id,
             drawId,
-            isLastDraw,
+            isLastDraw
           );
           if (!enrolled) {
             skippedCount++;
@@ -102,7 +104,7 @@ export class AutoEnrollEntriesUseCase extends StepFunctionUseCase<
           }
 
           const tenantConfig = await this.tenantConfigRepo.getTenantConfig(
-            ticket.tenantId,
+            ticket.tenantId
           );
           const commissionRate =
             tenantConfig?.commissionRate ??
@@ -113,14 +115,14 @@ export class AutoEnrollEntriesUseCase extends StepFunctionUseCase<
               boardNo: b.boardNo,
               playType: b.playType,
               numbers: b.numbers,
-            }),
+            })
           );
 
           const sideBetSnapshots: EntrySideBetSnapshot[] = ticket.sideBets.map(
             (s) => ({
               playType: s.playType,
               bet: s.bet,
-            }),
+            })
           );
 
           const now = new Date();

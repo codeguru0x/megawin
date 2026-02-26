@@ -29,9 +29,10 @@ import { computeSelectionHash } from "@megawin/game-lotto535/helpers";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GameConfigRepository } from "../../infras/repos/global-config-repo";
+import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
+import { nowVN } from "@megawin/shared/utils/date";
 
 const EXPANSION_THRESHOLD = 100;
 const VALID_BOARD_NOS = ["A", "B", "C", "D", "E"];
@@ -69,7 +70,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
     // ── 2. Validate draw count ──
     if (drawCount < 1 || drawCount > play.maxDrawCount) {
       throw AppException.badRequest(
-        `drawCount phải từ 1 đến ${play.maxDrawCount}.`,
+        `drawCount phải từ 1 đến ${play.maxDrawCount}.`
       );
     }
 
@@ -79,7 +80,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       boardInputs.length > play.maxBoardsPerTicket
     ) {
       throw AppException.badRequest(
-        `Số board phải từ 1 đến ${play.maxBoardsPerTicket}.`,
+        `Số board phải từ 1 đến ${play.maxBoardsPerTicket}.`
       );
     }
 
@@ -91,13 +92,11 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       // Validate boardNo hợp lệ & không trùng
       if (!VALID_BOARD_NOS.includes(bi.boardNo)) {
         throw AppException.badRequest(
-          `Board "${bi.boardNo}" không hợp lệ. Chỉ chấp nhận: ${VALID_BOARD_NOS.join(", ")}.`,
+          `Board "${bi.boardNo}" không hợp lệ. Chỉ chấp nhận: ${VALID_BOARD_NOS.join(", ")}.`
         );
       }
       if (seenBoardNos.has(bi.boardNo)) {
-        throw AppException.badRequest(
-          `Board "${bi.boardNo}" bị trùng lặp.`,
-        );
+        throw AppException.badRequest(`Board "${bi.boardNo}" bị trùng lặp.`);
       }
       seenBoardNos.add(bi.boardNo);
 
@@ -112,12 +111,16 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       const valResult = validateSelection(playType, bi.selection);
       if (!valResult.valid) {
         throw AppException.badRequest(
-          `Board ${bi.boardNo}: ${valResult.errors.join("; ")}`,
+          `Board ${bi.boardNo}: ${valResult.errors.join("; ")}`
         );
       }
 
       // Validate số phải sorted & trong range (deep check)
-      validateNumberRanges(bi.boardNo, bi.selection.mainNumbers, bi.selection.specialNumbers);
+      validateNumberRanges(
+        bi.boardNo,
+        bi.selection.mainNumbers,
+        bi.selection.specialNumbers
+      );
 
       const lineCount = calculateLineCount(playType, bi.selection);
       totalLinesPerDraw += lineCount;
@@ -127,7 +130,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
         playType,
         selection: {
           mainNumbers: [...bi.selection.mainNumbers].sort((a, b) => a - b),
-          specialNumbers: [...bi.selection.specialNumbers].sort((a, b) => a - b),
+          specialNumbers: [...bi.selection.specialNumbers].sort(
+            (a, b) => a - b
+          ),
         },
         derived: {
           expandedLines: lineCount,
@@ -150,14 +155,14 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
     }
     if (currentDraw.status !== DrawStatus.SalesOpen) {
       throw AppException.badRequest(
-        `Kỳ quay ${drawId} không đang mở bán (status: ${currentDraw.status}).`,
+        `Kỳ quay ${drawId} không đang mở bán (status: ${currentDraw.status}).`
       );
     }
 
-    const now = new Date();
+    const now = nowVN();
     if (now >= currentDraw.sales.closeAt) {
       throw AppException.badRequest(
-        `Kỳ quay ${drawId} đã hết thời gian nhận cược.`,
+        `Kỳ quay ${drawId} đã hết thời gian nhận cược.`
       );
     }
 
@@ -288,17 +293,21 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
 
 // ── Helpers ──
 
-function generateQuickPick(): { mainNumbers: number[]; specialNumbers: number[] } {
+function generateQuickPick(): {
+  mainNumbers: number[];
+  specialNumbers: number[];
+} {
   const mainSet = new Set<number>();
   while (mainSet.size < LOTTO535_MAIN_COUNT) {
     mainSet.add(
       Math.floor(Math.random() * (LOTTO535_MAIN_MAX - LOTTO535_MAIN_MIN + 1)) +
-        LOTTO535_MAIN_MIN,
+        LOTTO535_MAIN_MIN
     );
   }
   const special =
-    Math.floor(Math.random() * (LOTTO535_SPECIAL_MAX - LOTTO535_SPECIAL_MIN + 1)) +
-    LOTTO535_SPECIAL_MIN;
+    Math.floor(
+      Math.random() * (LOTTO535_SPECIAL_MAX - LOTTO535_SPECIAL_MIN + 1)
+    ) + LOTTO535_SPECIAL_MIN;
 
   return {
     mainNumbers: [...mainSet].sort((a, b) => a - b),
@@ -309,31 +318,39 @@ function generateQuickPick(): { mainNumbers: number[]; specialNumbers: number[] 
 function validateNumberRanges(
   boardNo: string,
   mainNumbers: number[],
-  specialNumbers: number[],
+  specialNumbers: number[]
 ): void {
   for (const n of mainNumbers) {
-    if (!Number.isInteger(n) || n < LOTTO535_MAIN_MIN || n > LOTTO535_MAIN_MAX) {
+    if (
+      !Number.isInteger(n) ||
+      n < LOTTO535_MAIN_MIN ||
+      n > LOTTO535_MAIN_MAX
+    ) {
       throw AppException.badRequest(
-        `Board ${boardNo}: số chính ${n} ngoài phạm vi ${LOTTO535_MAIN_MIN}-${LOTTO535_MAIN_MAX}.`,
+        `Board ${boardNo}: số chính ${n} ngoài phạm vi ${LOTTO535_MAIN_MIN}-${LOTTO535_MAIN_MAX}.`
       );
     }
   }
   if (new Set(mainNumbers).size !== mainNumbers.length) {
     throw AppException.badRequest(
-      `Board ${boardNo}: số chính không được trùng nhau.`,
+      `Board ${boardNo}: số chính không được trùng nhau.`
     );
   }
 
   for (const n of specialNumbers) {
-    if (!Number.isInteger(n) || n < LOTTO535_SPECIAL_MIN || n > LOTTO535_SPECIAL_MAX) {
+    if (
+      !Number.isInteger(n) ||
+      n < LOTTO535_SPECIAL_MIN ||
+      n > LOTTO535_SPECIAL_MAX
+    ) {
       throw AppException.badRequest(
-        `Board ${boardNo}: số đặc biệt ${n} ngoài phạm vi ${LOTTO535_SPECIAL_MIN}-${LOTTO535_SPECIAL_MAX}.`,
+        `Board ${boardNo}: số đặc biệt ${n} ngoài phạm vi ${LOTTO535_SPECIAL_MIN}-${LOTTO535_SPECIAL_MAX}.`
       );
     }
   }
   if (new Set(specialNumbers).size !== specialNumbers.length) {
     throw AppException.badRequest(
-      `Board ${boardNo}: số đặc biệt không được trùng nhau.`,
+      `Board ${boardNo}: số đặc biệt không được trùng nhau.`
     );
   }
 }

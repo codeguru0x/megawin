@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@megawin/next/client";
 
-interface TenantOption {
+export interface TenantOption {
   tenantId: string;
   displayName: string;
   status: string;

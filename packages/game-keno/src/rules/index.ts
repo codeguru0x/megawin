@@ -7,3 +7,4 @@
 export * from "./prize-tables";
 export * from "./play-types";
 export * from "./financials";
+export * from "./odds";

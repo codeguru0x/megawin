@@ -16,7 +16,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { buildPrizeAmountMap } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GameConfigRepository } from "../../infras/repos/global-config-repo";
+import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 
 export interface PrepareSettleInput {
   drawId: string;
@@ -34,7 +34,13 @@ export interface PrepareSettleResult {
   config: {
     seedAmount: number;
     splitThreshold: number;
-    splitRatios: { tier1: number; tier2: number; tier3: number; tier4: number; tier5: number };
+    splitRatios: {
+      tier1: number;
+      tier2: number;
+      tier3: number;
+      tier4: number;
+      tier5: number;
+    };
     companyRate: number;
     defaultCommissionRate: number;
   };
@@ -51,7 +57,9 @@ export class PrepareSettleUseCase extends StepFunctionUseCase<
   private readonly configRepo = new GameConfigRepository();
 
   /** Load context cho settle flow. Throw nếu draw không hợp lệ. */
-  protected async execute(input: PrepareSettleInput): Promise<PrepareSettleResult> {
+  protected async execute(
+    input: PrepareSettleInput
+  ): Promise<PrepareSettleResult> {
     const { drawId } = input;
 
     const draw = await this.drawRepo.getDrawById(drawId);
@@ -61,7 +69,7 @@ export class PrepareSettleUseCase extends StepFunctionUseCase<
 
     if (draw.status !== DrawStatus.Settling) {
       throw new Error(
-        `Draw ${drawId} status = "${draw.status}", expected "settling".`,
+        `Draw ${drawId} status = "${draw.status}", expected "settling".`
       );
     }
 

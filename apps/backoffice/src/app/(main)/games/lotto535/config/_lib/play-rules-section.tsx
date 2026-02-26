@@ -1,19 +1,14 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Settings2, Save, Plus, X } from "lucide-react";
+import { Save, Clock, Globe } from "lucide-react";
+
+import { MoneyInput } from "@megawin/ui/components/money-input";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -21,26 +16,44 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import { Badge } from "@/components/ui/badge";
 
 import type { GameConfig } from "./use-game-config";
 
 const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-const playFormSchema = z.object({
-  unitPrice: z.coerce.number().int().positive("Phải > 0"),
-  maxBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
-  maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
-  salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
-  drawsPerDay: z.coerce.number().int().positive("Phải > 0"),
-  drawTimes: z
-    .array(z.object({ value: z.string().regex(timePattern, "Format HH:mm") }))
-    .min(1, "Phải có ít nhất 1 giờ quay"),
-});
+function timeToMinutes(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h! * 60 + m!;
+}
+
+const playFormSchema = z
+  .object({
+    unitPrice: z.coerce.number().int().positive("Phải > 0"),
+    maxBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
+    maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
+    salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
+    drawTime1: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
+    drawTime2: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
+  })
+  .superRefine((data, ctx) => {
+    if (!timePattern.test(data.drawTime1) || !timePattern.test(data.drawTime2))
+      return;
+
+    const t2 = timeToMinutes(data.drawTime2);
+    const gap = t2 - timeToMinutes(data.drawTime1);
+
+    if (gap < data.salesCloseBeforeMinutes) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Kỳ 2 phải sau Kỳ 1 ít nhất ${data.salesCloseBeforeMinutes} phút (= thời gian đóng bán trước giờ quay)`,
+        path: ["drawTime2"],
+      });
+    }
+  });
 
 type PlayFormValues = z.infer<typeof playFormSchema>;
 
@@ -50,7 +63,13 @@ interface PlayRulesSectionProps {
   isPending: boolean;
 }
 
-export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSectionProps) {
+const DRAWS_PER_DAY = 2;
+
+export function PlayRulesSection({
+  config,
+  onSave,
+  isPending,
+}: PlayRulesSectionProps) {
   const form = useForm<PlayFormValues>({
     resolver: zodResolver(playFormSchema) as any,
     values: {
@@ -58,14 +77,9 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
       maxBoardsPerTicket: config.play.maxBoardsPerTicket,
       maxDrawCount: config.play.maxDrawCount,
       salesCloseBeforeMinutes: config.play.salesCloseBeforeMinutes,
-      drawsPerDay: config.play.drawsPerDay,
-      drawTimes: config.play.drawTimes.map((v) => ({ value: v })),
+      drawTime1: config.play.drawTimes[0] ?? "10:00",
+      drawTime2: config.play.drawTimes[1] ?? "21:00",
     },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control: form.control,
-    name: "drawTimes",
   });
 
   function handleSubmit(values: PlayFormValues) {
@@ -75,157 +89,233 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
         maxBoardsPerTicket: values.maxBoardsPerTicket,
         maxDrawCount: values.maxDrawCount,
         salesCloseBeforeMinutes: values.salesCloseBeforeMinutes,
-        drawsPerDay: values.drawsPerDay,
-        drawTimes: values.drawTimes.map((t) => t.value),
+        drawsPerDay: DRAWS_PER_DAY,
+        drawTimes: [values.drawTime1, values.drawTime2],
       },
     });
   }
 
+  const fmt = (n: number) => n.toLocaleString("en-US");
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Settings2 className="size-5 text-violet-500" />
-          <CardTitle>Luật chơi</CardTitle>
-        </div>
-        <CardDescription>
-          Cấu hình giá vé, lịch quay và giới hạn chơi
-        </CardDescription>
-      </CardHeader>
+    <Card className="overflow-hidden py-0 gap-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="unitPrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Giá 1 line (VND)</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={1} step={1000} {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      {(field.value || 0).toLocaleString("vi-VN")}đ / line
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="maxBoardsPerTicket"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Max boards / vé</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={1} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+          <CardContent className="p-0">
+            <div className="grid gap-0 lg:grid-cols-2">
+              {/* Left: Pricing & Limits */}
+              <div className="space-y-5 p-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Giá vé & Giới hạn
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Cấu hình giá và các giới hạn chơi
+                  </p>
+                </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="maxDrawCount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Max kỳ liên tiếp</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={1} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="salesCloseBeforeMinutes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Đóng bán trước (phút)</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={1} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                <FormField
+                  control={form.control}
+                  name="unitPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Giá mỗi dòng
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <MoneyInput
+                            className="pr-14 font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 0)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                            VND
+                          </span>
+                        </div>
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        = {fmt(field.value || 0)}đ / line
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <Separator />
-
-            <FormField
-              control={form.control}
-              name="drawsPerDay"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Số kỳ / ngày</FormLabel>
-                  <FormControl>
-                    <Input type="number" min={1} className="w-24" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="space-y-2">
-              <FormLabel>Giờ quay</FormLabel>
-              <div className="flex flex-wrap gap-2">
-                {fields.map((f, idx) => (
+                <div className="grid grid-cols-3 gap-3">
                   <FormField
-                    key={f.id}
                     control={form.control}
-                    name={`drawTimes.${idx}.value`}
+                    name="maxBoardsPerTicket"
                     render={({ field }) => (
-                      <FormItem className="flex items-center gap-1">
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Max boards/vé
+                        </FormLabel>
                         <FormControl>
-                          <Input
-                            className="w-24 text-center"
-                            placeholder="HH:mm"
-                            {...field}
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 0)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
                           />
                         </FormControl>
-                        {fields.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="size-8"
-                            onClick={() => remove(idx)}
-                          >
-                            <X className="size-3.5" />
-                          </Button>
-                        )}
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => append({ value: "" })}
-                >
-                  <Plus className="mr-1 size-3.5" />
-                  Thêm
-                </Button>
+                  <FormField
+                    control={form.control}
+                    name="maxDrawCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Max kỳ liên tiếp
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 0)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="salesCloseBeforeMinutes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Đóng trước (phút)
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 0)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Right: Schedule */}
+              <div className="border-t p-6 lg:border-l lg:border-t-0">
+                <div className="mb-5">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Lịch quay số
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Cố định {DRAWS_PER_DAY} kỳ quay mỗi ngày
+                  </p>
+                </div>
+
+                <div className="mb-5">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+                    Số kỳ quay / ngày
+                  </p>
+                  <div className="flex h-9 w-20 items-center justify-center rounded-md border bg-muted/50 text-sm font-semibold tabular-nums text-muted-foreground">
+                    {DRAWS_PER_DAY}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Giờ quay
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="drawTime1"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">
+                            Kỳ 1
+                          </FormLabel>
+                          <div className="relative">
+                            <Clock className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                            <FormControl>
+                              <Input
+                                className="pl-8 text-center font-mono text-sm font-semibold"
+                                placeholder="HH:mm"
+                                {...field}
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="drawTime2"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground">
+                            Kỳ 2
+                          </FormLabel>
+                          <div className="relative">
+                            <Clock className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                            <FormControl>
+                              <Input
+                                className="pl-8 text-center font-mono text-sm font-semibold"
+                                placeholder="HH:mm"
+                                {...field}
+                              />
+                            </FormControl>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
+                  <Globe className="size-3.5 text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground">
+                    Múi giờ:{" "}
+                    <Badge
+                      variant="secondary"
+                      className="ml-1 font-mono text-[10px]"
+                    >
+                      Asia/Ho_Chi_Minh
+                    </Badge>
+                  </p>
+                </div>
               </div>
             </div>
-
-            <div className="rounded-md bg-muted/60 px-3 py-2">
-              <p className="text-xs text-muted-foreground">
-                Timezone cố định: <strong>Asia/Ho_Chi_Minh</strong>
-              </p>
-            </div>
           </CardContent>
-          <CardFooter className="border-t px-6 py-3">
-            <Button type="submit" disabled={isPending || !form.formState.isDirty}>
-              {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
+
+          <CardFooter className="justify-end border-t px-6 py-3">
+            <Button
+              type="submit"
+              disabled={isPending || !form.formState.isDirty}
+            >
+              {isPending ? (
+                <Spinner className="mr-2" />
+              ) : (
+                <Save className="mr-2 size-4" />
+              )}
               Lưu luật chơi
             </Button>
           </CardFooter>

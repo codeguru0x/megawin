@@ -3,17 +3,12 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Trophy, Save } from "lucide-react";
+import { Save, Info } from "lucide-react";
+
+import { MoneyInput } from "@megawin/ui/components/money-input";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -21,9 +16,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
@@ -48,7 +41,22 @@ interface JackpotSectionProps {
   isPending: boolean;
 }
 
-export function JackpotSection({ config, onSave, isPending }: JackpotSectionProps) {
+const TIER_LABELS: Record<
+  string,
+  { label: string; badge: string; color: string }
+> = {
+  tier1: { label: "Giải Nhất", badge: "1st", color: "bg-amber-500 text-white" },
+  tier2: { label: "Giải Nhì", badge: "2nd", color: "bg-slate-400 text-white" },
+  tier3: { label: "Giải Ba", badge: "3rd", color: "bg-amber-700 text-white" },
+  tier4: { label: "Giải Tư", badge: "4th", color: "bg-slate-500 text-white" },
+  tier5: { label: "Giải Năm", badge: "5th", color: "bg-slate-600 text-white" },
+};
+
+export function JackpotSection({
+  config,
+  onSave,
+  isPending,
+}: JackpotSectionProps) {
   const form = useForm<JackpotFormValues>({
     resolver: zodResolver(jackpotFormSchema) as any,
     values: {
@@ -78,145 +86,201 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
     });
   }
 
-  const fmt = (n: number) => n.toLocaleString("vi-VN");
+  const fmt = (n: number) => n.toLocaleString("en-US");
+  const total =
+    (form.watch("tier1") || 0) +
+    (form.watch("tier2") || 0) +
+    (form.watch("tier3") || 0) +
+    (form.watch("tier4") || 0) +
+    (form.watch("tier5") || 0);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Trophy className="size-5 text-amber-500" />
-          <CardTitle>Cấu hình Jackpot</CardTitle>
-        </div>
-        <CardDescription>
-          Quản lý seed, ngưỡng chia và tỷ lệ chia Jackpot
-        </CardDescription>
-      </CardHeader>
+    <Card className="overflow-hidden py-0 gap-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="seedAmount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Seed Amount (VND)</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={0} step={1000} {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Khởi điểm Jackpot mới: {fmt(field.value || 0)}đ
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="splitThreshold"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ngưỡng chia (VND)</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={0} step={1000} {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Kích hoạt chia khi &ge; {fmt(field.value || 0)}đ
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <Separator />
-
-            <div className="space-y-3">
-              <p className="text-sm font-medium">Tỷ lệ chia Jackpot (split ratios)</p>
-              <div className="rounded-lg border bg-amber-50/50 p-3 dark:bg-amber-950/10">
-                <div className="flex items-center gap-2 mb-3">
-                  <Badge className="bg-amber-500 text-white">Giải Nhất</Badge>
-                  <span className="text-xs text-muted-foreground">
-                    Nhận thêm phần dư làm tròn
-                  </span>
+          <CardContent className="p-0">
+            <div className="grid gap-0 lg:grid-cols-2">
+              {/* Left: Seed & Threshold */}
+              <div className="space-y-5 p-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Khởi tạo Jackpot
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Giá trị khởi điểm và ngưỡng kích hoạt chia
+                  </p>
                 </div>
+
                 <FormField
                   control={form.control}
-                  name="tier1"
+                  name="seedAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">Phần chia =</span>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min={1}
-                            className="h-8 w-20 text-center font-semibold"
-                            {...field}
+                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Seed Amount
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <MoneyInput
+                            className="pr-14 font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 0)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
                           />
-                        </FormControl>
-                        <span className="text-sm">/ tổng</span>
-                      </div>
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                            VND
+                          </span>
+                        </div>
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        = {fmt(field.value || 0)}đ khi bắt đầu Jackpot mới
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="splitThreshold"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Ngưỡng chia (Split Threshold)
+                      </FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <MoneyInput
+                            className="pr-14 font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 0)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                            VND
+                          </span>
+                        </div>
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        Kích hoạt chia khi Jackpot &ge; {fmt(field.value || 0)}đ
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              <div className="rounded-lg border bg-muted/40 p-3">
-                <div className="flex flex-wrap items-center gap-1.5 mb-3">
-                  {(["tier2", "tier3", "tier4", "tier5"] as const).map((t) => (
-                    <Badge key={t} variant="secondary">
-                      {t === "tier2" ? "Giải Nhì" : t === "tier3" ? "Giải Ba" : t === "tier4" ? "Giải Tư" : "Giải Năm"}
+              {/* Right: Split Ratios */}
+              <div className="border-t p-6 lg:border-l lg:border-t-0">
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Tỷ lệ chia Jackpot
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Phân bổ Jackpot theo tỷ lệ phần khi vượt ngưỡng
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  {(["tier1", "tier2", "tier3", "tier4", "tier5"] as const).map(
+                    (t) => {
+                      const tier = TIER_LABELS[t]!;
+                      const val = form.watch(t) || 0;
+                      const pct =
+                        total > 0 ? ((val / total) * 100).toFixed(1) : "0.0";
+                      return (
+                        <FormField
+                          key={t}
+                          control={form.control}
+                          name={t}
+                          render={({ field }) => (
+                            <FormItem>
+                              <div className="group flex items-center gap-3 rounded-lg border bg-muted/30 px-3 py-2 transition-colors hover:bg-muted/50">
+                                <Badge
+                                  className={`${tier.color} w-9 justify-center text-[10px] font-bold`}
+                                >
+                                  {tier.badge}
+                                </Badge>
+                                <span className="flex-1 text-sm font-medium">
+                                  {tier.label}
+                                </span>
+                                <FormControl>
+                                  <MoneyInput
+                                    className="h-8 w-16 text-center font-semibold"
+                                    value={field.value}
+                                    onValueChange={(v) =>
+                                      field.onChange(v ?? 1)
+                                    }
+                                    onBlur={field.onBlur}
+                                    name={field.name}
+                                    ref={field.ref}
+                                    thousandSeparator={false}
+                                  />
+                                </FormControl>
+                                <span className="w-14 text-right text-xs tabular-nums text-muted-foreground">
+                                  {pct}%
+                                </span>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      );
+                    }
+                  )}
+
+                  <div className="flex items-center gap-3 rounded-lg border border-dashed px-3 py-2">
+                    <Badge
+                      variant="outline"
+                      className="w-9 justify-center text-[10px]"
+                    >
+                      KK
                     </Badge>
-                  ))}
+                    <span className="flex-1 text-sm text-muted-foreground">
+                      Khuyến Khích
+                    </span>
+                    <span className="text-xs text-muted-foreground italic">
+                      Không tham gia
+                    </span>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {(["tier2", "tier3", "tier4", "tier5"] as const).map((t) => (
-                    <FormField
-                      key={t}
-                      control={form.control}
-                      name={t}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">
-                            {t === "tier2" ? "Nhì" : t === "tier3" ? "Ba" : t === "tier4" ? "Tư" : "Năm"}
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min={1}
-                              className="h-8 text-center font-semibold"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ))}
+
+                <Separator className="my-3" />
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Tổng phần</span>
+                  <span className="font-bold tabular-nums">{total}</span>
                 </div>
               </div>
+            </div>
 
-              <div className="rounded-lg border border-dashed p-3 flex items-center gap-2">
-                <Badge variant="outline">Khuyến Khích</Badge>
-                <span className="text-xs text-muted-foreground">
-                  Không tham gia chia Jackpot
-                </span>
-              </div>
-
-              <div className="rounded-md bg-blue-50 p-3 dark:bg-blue-950/20">
+            <div className="border-t bg-blue-50/80 px-6 py-3 dark:bg-blue-950/20">
+              <div className="flex items-start gap-2">
+                <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
                 <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
-                  <strong>Lưu ý:</strong> Đơn vị làm tròn cố định 5.000đ. Phần dư
-                  do làm tròn cộng vào hạng cao nhất có người trúng.
+                  Đơn vị làm tròn cố định <strong>5,000đ</strong>. Phần dư do
+                  làm tròn sẽ cộng vào hạng cao nhất có người trúng. Giải Nhất
+                  luôn nhận phần dư nếu có.
                 </p>
               </div>
             </div>
           </CardContent>
-          <CardFooter className="border-t px-6 py-3">
-            <Button type="submit" disabled={isPending || !form.formState.isDirty}>
-              {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
-              Lưu Jackpot
+
+          <CardFooter className="justify-end border-t px-6 py-3">
+            <Button
+              type="submit"
+              disabled={isPending || !form.formState.isDirty}
+            >
+              {isPending ? (
+                <Spinner className="mr-2" />
+              ) : (
+                <Save className="mr-2 size-4" />
+              )}
+              Lưu cấu hình Jackpot
             </Button>
           </CardFooter>
         </form>

@@ -106,11 +106,36 @@ export const operatorSidebarItems: NavGroup[] = [
         url: "/games/lotto535",
         icon: ChessKing,
         subItems: [
-          { title: "Kỳ quay", url: "/games/lotto535/draws", icon: CalendarClock },
-          { title: "Vé chờ quay", url: "/games/lotto535/pending-tickets", icon: Clock, isNew: true },
-          { title: "Vé nhiều kỳ", url: "/games/lotto535/multi-draw", icon: Layers, isNew: true },
-          { title: "Thống kê tài chính", url: "/games/lotto535/financial-reports", icon: CircleDollarSign, isNew: true },
+          {
+            title: "Kỳ quay",
+            url: "/games/lotto535/draws",
+            icon: CalendarClock,
+          },
+          {
+            title: "Vé chờ quay",
+            url: "/games/lotto535/pending-tickets",
+            icon: Clock,
+            isNew: true,
+          },
+          {
+            title: "Vé nhiều kỳ",
+            url: "/games/lotto535/multi-draw",
+            icon: Layers,
+            isNew: true,
+          },
+          {
+            title: "Thống kê tài chính",
+            url: "/games/lotto535/financial-reports",
+            icon: CircleDollarSign,
+            isNew: true,
+          },
           { title: "Cấu hình", url: "/games/lotto535/config", icon: Settings2 },
+          {
+            title: "Cấu hình đại lý",
+            url: "/games/lotto535/tenant-config",
+            icon: Building2,
+            isNew: true,
+          },
           { title: "Jackpot", url: "/games/lotto535/jackpot", icon: Trophy },
         ],
       },
@@ -140,9 +165,25 @@ export const operatorSidebarItems: NavGroup[] = [
         icon: ChessBishop,
         subItems: [
           { title: "Kỳ quay", url: "/games/keno/draws", icon: CalendarClock },
-          { title: "Bảng giải thưởng", url: "/games/keno/prize-table", icon: Trophy, isNew: true },
-          { title: "Thống kê tài chính", url: "/games/keno/financial-reports", icon: CircleDollarSign, isNew: true },
+          {
+            title: "Bảng giải thưởng",
+            url: "/games/keno/prize-table",
+            icon: Trophy,
+            isNew: true,
+          },
+          {
+            title: "Thống kê tài chính",
+            url: "/games/keno/financial-reports",
+            icon: CircleDollarSign,
+            isNew: true,
+          },
           { title: "Cấu hình", url: "/games/keno/config", icon: Settings2 },
+          {
+            title: "Cấu hình đại lý",
+            url: "/games/keno/tenant-config",
+            icon: Building2,
+            isNew: true,
+          },
         ],
       },
       {

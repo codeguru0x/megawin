@@ -4,7 +4,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { isSplitCycleDraw } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GameConfigRepository } from "../../infras/repos/global-config-repo";
+import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
 
 /**
@@ -29,7 +29,7 @@ export class TriggerSettleUseCase extends NextApiUseCase<
   private readonly configRepo = new GameConfigRepository();
 
   protected async execute(
-    input: TriggerSettleInput,
+    input: TriggerSettleInput
   ): Promise<TriggerSettleOutput> {
     const draw = await this.drawRepo.getDrawById(input.drawId);
     if (!draw) {
@@ -38,7 +38,7 @@ export class TriggerSettleUseCase extends NextApiUseCase<
 
     if (!draw.result) {
       throw AppException.badRequest(
-        "Chưa có kết quả quay – phải publish result trước khi kết sổ.",
+        "Chưa có kết quả quay – phải publish result trước khi kết sổ."
       );
     }
 
@@ -51,7 +51,7 @@ export class TriggerSettleUseCase extends NextApiUseCase<
       draw.jackpot.openingAmount,
       globalConfig.jackpot.splitThreshold,
       false, // Chưa biết có ai trúng Jackpot → worker sẽ xác định chính xác
-      draw.drawNo,
+      draw.drawNo
     );
 
     const extraSet: Record<string, unknown> = {};
@@ -70,13 +70,13 @@ export class TriggerSettleUseCase extends NextApiUseCase<
       input.drawId,
       DrawStatus.Published,
       DrawStatus.Settling,
-      extraSet,
+      extraSet
     );
 
     if (!updated) {
       throw new AppException(
         "DRAW_INVALID_TRANSITION",
-        `Không thể kết sổ – draw hiện tại không ở trạng thái "published".`,
+        `Không thể kết sổ – draw hiện tại không ở trạng thái "published".`
       );
     }
 

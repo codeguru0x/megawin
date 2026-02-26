@@ -23,7 +23,7 @@ import { generateDrawId } from "@megawin/game-lotto535/helpers";
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
 import { toVNDate, subtractMinutes, nowVN } from "@megawin/shared/utils/date";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GameConfigRepository } from "../../infras/repos/global-config-repo";
+import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import type { CreateDrawsInput, CreateDrawsOutput } from "./dto/draw.dto";
 
 export class CreateDrawsUseCase extends NextApiUseCase<
@@ -55,7 +55,7 @@ export class CreateDrawsUseCase extends NextApiUseCase<
       if (!terminalStatuses.includes(latestDraw.status)) {
         throw AppException.badRequest(
           `Kỳ quay ${latestDraw.drawId} đang ở trạng thái "${latestDraw.status}". ` +
-          `Cần hoàn thành (settled/void) kỳ trước trước khi tạo kỳ mới.`
+            `Cần hoàn thành (settled/void) kỳ trước trước khi tạo kỳ mới.`
         );
       }
     }

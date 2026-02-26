@@ -19,10 +19,10 @@
 // ─────────────────────────────────────────────
 
 export const KenoCollections = {
-  Tickets: "kenoTickets",
-  TicketEntries: "kenoTicketEntries",
-  Draws: "kenoDraws",
-  GameConfigs: "kenoGameConfigs",
+  Tickets: "keno_tickets",
+  TicketEntries: "keno_ticket_entries",
+  Draws: "keno_draws",
+  GameConfigs: "keno_game_configs",
 } as const;
 
 // ─────────────────────────────────────────────
@@ -60,8 +60,7 @@ export const KenoPlayType = {
   EvenOdd: "evenOdd",
 } as const;
 
-export type KenoPlayType =
-  (typeof KenoPlayType)[keyof typeof KenoPlayType];
+export type KenoPlayType = (typeof KenoPlayType)[keyof typeof KenoPlayType];
 
 export const KENO_PLAY_TYPE_VALUES = Object.values(KenoPlayType);
 

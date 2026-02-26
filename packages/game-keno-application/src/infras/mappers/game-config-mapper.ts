@@ -1,11 +1,15 @@
 import { MongoMapper } from "@megawin/data/mongo/mapper";
-import type { GlobalConfigDoc, TenantConfigDoc } from "@megawin/game-keno/entities";
+import type { GlobalConfigDoc } from "@megawin/game-keno/entities";
+import type { TenantConfigDoc } from "@megawin/game-keno/entities";
 import { Document } from "mongodb";
 
-type GlobalConfigEntity = GlobalConfigDoc & { id: string };
-type TenantConfigEntity = TenantConfigDoc & { id: string };
+export type GlobalConfigEntity = GlobalConfigDoc & { id: string };
+export type TenantConfigEntity = TenantConfigDoc & { id: string };
 
-export class GameConfigMapper extends MongoMapper<Document, GlobalConfigEntity> {
+export class GameConfigMapper extends MongoMapper<
+  Document,
+  GlobalConfigEntity
+> {
   constructor() {
     super();
   }
@@ -16,7 +20,10 @@ export class GameConfigMapper extends MongoMapper<Document, GlobalConfigEntity> 
   }
 }
 
-export class TenantConfigMapper extends MongoMapper<Document, TenantConfigEntity> {
+export class TenantConfigMapper extends MongoMapper<
+  Document,
+  TenantConfigEntity
+> {
   constructor() {
     super();
   }
@@ -26,5 +33,3 @@ export class TenantConfigMapper extends MongoMapper<Document, TenantConfigEntity
     return { id: _id.toHexString(), ...rest } as TenantConfigEntity;
   }
 }
-
-export type { GlobalConfigEntity, TenantConfigEntity };

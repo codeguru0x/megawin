@@ -9,7 +9,6 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
-import type { PrizeAmounts } from "./types";
 
 /**
  * Cấu hình game riêng cho từng tenant (đại lý).
@@ -34,12 +33,6 @@ export interface TenantConfigDoc {
 
   /** Tenant có được phép chơi game này không. Default: true. */
   isEnabled: boolean;
-
-  /**
-   * Override giá trị giải thưởng riêng cho tenant (hiếm khi dùng).
-   * null = dùng global defaultPrizes.
-   */
-  prizeOverrides: PrizeAmounts | null;
 
   /** Version config – tăng mỗi khi staff chỉnh sửa. */
   version: number;

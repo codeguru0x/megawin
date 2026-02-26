@@ -5,7 +5,7 @@
  * Tuy nhiên có giới hạn trả thưởng mỗi kỳ cho bậc 8, 9, 10.
  */
 
-import type { GlobalConfigDoc } from "../entities/game-config";
+import type { GlobalConfigDoc } from "../entities/global-config";
 
 // ─────────────────────────────────────────────
 // Draw Financial Calculation
