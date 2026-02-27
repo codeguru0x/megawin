@@ -75,7 +75,7 @@ function mapDrawInfo(draw: DrawEntity): CurrentDrawInfo {
     drawTime: draw.drawTime.toISOString(),
     status: draw.status,
     sales: {
-      openAt: draw.sales.openAt.toISOString(),
+      openAt: draw.sales.openAt?.toISOString(),
       closeAt: draw.sales.closeAt.toISOString(),
     },
     jackpot: {

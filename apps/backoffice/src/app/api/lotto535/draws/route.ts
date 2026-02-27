@@ -1,13 +1,32 @@
 import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities/account";
-import { CreateDrawsUseCase } from "@megawin/game-lotto535-application/use-cases/draws";
+import {
+  CreateDrawsUseCase,
+  ListDrawsUseCase,
+  type ListDrawsInput,
+} from "@megawin/game-lotto535-application/use-cases/draws";
 
-import { createDrawSchema } from "./_lib/schema";
+import { createDrawSchema, listDrawsQuerySchema } from "./_lib/schema";
+
+const createDrawsUseCase = new CreateDrawsUseCase();
+const listDrawsUseCase = new ListDrawsUseCase();
 
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(createDrawSchema)
   .handler(async ({ body }) => {
-    const useCase = new CreateDrawsUseCase();
-    return useCase.run(body, { successStatus: 201 });
+    return createDrawsUseCase.run(body, { successStatus: 201 });
+  });
+
+export const GET = withApi()
+  .auth({ roles: [CompanyRole.Staff] })
+  .query(listDrawsQuerySchema)
+  .handler(async ({ query }) => {
+    return listDrawsUseCase.run({
+      status: query.status as ListDrawsInput["status"],
+      fromDate: query.fromDate,
+      toDate: query.toDate,
+      page: query.page,
+      size: query.size,
+    });
   });

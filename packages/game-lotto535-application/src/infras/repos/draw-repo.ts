@@ -1,13 +1,11 @@
-import {
-  Lotto535Collections,
-} from "@megawin/game-lotto535/entities";
-import { DrawStatus, type DrawResultSource } from "@megawin/game-core/entities";
+import { Lotto535Collections } from "@megawin/game-lotto535/entities";
+import { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawDoc, DrawSplit } from "@megawin/game-lotto535/entities";
 import type {
-  DrawDoc,
-  DrawSplit,
-  DrawTenantFinancial,
+  MainTuple,
+  Special,
+  ISODateString,
 } from "@megawin/game-lotto535/entities";
-import type { MainTuple, Special, ISODateString } from "@megawin/game-lotto535/entities";
 import { BaseRepo } from "./base-repo";
 import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
 
@@ -21,10 +19,20 @@ import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
   [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Void]),
   [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed, DrawStatus.Void]),
-  [DrawStatus.SalesClosed]: new Set([DrawStatus.SalesOpen, DrawStatus.Published, DrawStatus.Void]),
+  [DrawStatus.SalesClosed]: new Set([
+    DrawStatus.SalesOpen,
+    DrawStatus.Published,
+    DrawStatus.Void,
+  ]),
   [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Void]),
   [DrawStatus.Settling]: new Set([DrawStatus.Settled]),
 };
+
+export interface VoidInfo {
+  reason: string;
+  voidedBy?: string;
+  voidedAt: Date;
+}
 
 export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   constructor() {
@@ -43,16 +51,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   async getDrawsByDate(drawDate: ISODateString): Promise<DrawEntity[]> {
-    return await this.findMany(
-      { drawDate },
-      { sort: { drawNo: 1 } },
-    );
+    return await this.findMany({ drawDate }, { sort: { drawNo: 1 } });
   }
 
   async listDraws(
     filter: { status?: string; fromDate?: string; toDate?: string },
     page: number,
-    size: number,
+    size: number
   ): Promise<DrawEntity[]> {
     const query: Record<string, unknown> = {};
     if (filter.status) query.status = filter.status;
@@ -62,60 +67,137 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       if (filter.toDate) dateRange.$lte = filter.toDate;
       query.drawDate = dateRange;
     }
-    return await this.paging(query, page, size, { sort: { drawDate: -1, drawNo: -1 } });
+    return await this.paging(query, page, size, {
+      sort: { drawDate: -1, drawNo: -1 },
+    });
   }
 
+  // ─── Status Transitions (atomic, type-safe) ───
+
   /**
-   * Atomic status transition with optimistic guard.
-   * Returns updated entity or null if transition is invalid / draw not found.
+   * Atomic status transition cơ bản (không kèm extra data).
    */
   async transitionStatus(
     drawId: string,
     fromStatus: string,
-    toStatus: string,
-    extraSet?: Record<string, unknown>,
+    toStatus: string
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(toStatus)) return null;
 
-    const $set: Record<string, unknown> = {
-      status: toStatus,
-      updatedAt: new Date(),
-      ...extraSet,
-    };
-
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
-      { $set },
-      { returnDocument: "after" },
+      { $set: { status: toStatus, updatedAt: new Date() } },
+      { returnDocument: "after" }
     );
   }
 
   /**
-   * Publish kết quả quay: salesClosed → published + ghi result.
-   * Không còn trạng thái "drawing" trung gian.
+   * Open sales: scheduled/salesClosed → salesOpen.
+   * Stamp sales.openAt nếu lần đầu mở bán.
+   */
+  async openSales(
+    drawId: string,
+    fromStatus: string,
+    salesOpenAt?: Date
+  ): Promise<DrawEntity | null> {
+    const allowed = VALID_TRANSITIONS[fromStatus];
+    if (!allowed?.has(DrawStatus.SalesOpen)) return null;
+
+    const $set: Record<string, unknown> = {
+      status: DrawStatus.SalesOpen,
+      updatedAt: new Date(),
+    };
+    if (salesOpenAt) {
+      $set["sales.openAt"] = salesOpenAt;
+    }
+
+    return await this.findOneAndUpdate(
+      { drawId, status: fromStatus },
+      { $set },
+      { returnDocument: "after" }
+    );
+  }
+
+  /**
+   * Void draw: transition → void + ghi voidInfo embedded doc.
+   */
+  async voidDraw(
+    drawId: string,
+    fromStatus: string,
+    voidInfo: VoidInfo
+  ): Promise<DrawEntity | null> {
+    const allowed = VALID_TRANSITIONS[fromStatus];
+    if (!allowed?.has(DrawStatus.Void)) return null;
+
+    return await this.findOneAndUpdate(
+      { drawId, status: fromStatus },
+      {
+        $set: {
+          status: DrawStatus.Void,
+          voidInfo,
+          updatedAt: new Date(),
+        },
+      },
+      { returnDocument: "after" }
+    );
+  }
+
+  /**
+   * Publish kết quả: salesClosed → published + ghi result + vietlottRef.
    */
   async publishResult(
     drawId: string,
     result: {
       winningMain: MainTuple;
       winningSpecial: Special;
-      source: DrawResultSource;
-      checksum?: string;
     },
-    vietlottRef?: DrawDoc["vietlottRef"],
+    vietlottRef?: DrawDoc["vietlottRef"]
   ): Promise<DrawEntity | null> {
     const now = new Date();
-    const extra: Record<string, unknown> = {
+    const $set: Record<string, unknown> = {
+      status: DrawStatus.Published,
       result: { ...result, publishedAt: now },
+      updatedAt: now,
     };
-    if (vietlottRef) extra.vietlottRef = vietlottRef;
+    if (vietlottRef) $set.vietlottRef = vietlottRef;
 
-    return await this.transitionStatus(
-      drawId,
-      DrawStatus.SalesClosed,
-      DrawStatus.Published,
-      extra,
+    const allowed = VALID_TRANSITIONS[DrawStatus.SalesClosed];
+    if (!allowed?.has(DrawStatus.Published)) return null;
+
+    return await this.findOneAndUpdate(
+      { drawId, status: DrawStatus.SalesClosed },
+      { $set },
+      { returnDocument: "after" }
+    );
+  }
+
+  /**
+   * Trigger settle: published → settling + ghi jackpot split info.
+   */
+  async triggerSettle(
+    drawId: string,
+    splitInfo?: {
+      isSplitCycle: boolean;
+      split: DrawSplit;
+    }
+  ): Promise<DrawEntity | null> {
+    const allowed = VALID_TRANSITIONS[DrawStatus.Published];
+    if (!allowed?.has(DrawStatus.Settling)) return null;
+
+    const $set: Record<string, unknown> = {
+      status: DrawStatus.Settling,
+      updatedAt: new Date(),
+    };
+    if (splitInfo) {
+      $set["jackpot.isSplitCycle"] = splitInfo.isSplitCycle;
+      $set["jackpot.split"] = splitInfo.split;
+    }
+
+    return await this.findOneAndUpdate(
+      { drawId, status: DrawStatus.Published },
+      { $set },
+      { returnDocument: "after" }
     );
   }
 
@@ -125,7 +207,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       closingAmount: number;
       isSplitCycle?: boolean;
       split?: DrawSplit;
-    },
+    }
   ): Promise<boolean> {
     const $set: Record<string, unknown> = {
       "jackpot.closingAmount": jackpot.closingAmount,
@@ -142,67 +224,50 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   async updateFinancial(
     drawId: string,
-    financial: {
-      totalRevenue: number;
-      totalFixedPrizes: number;
-      totalAgentCommission: number;
-      companyTake: number;
-      companyTakeRate: number;
-      companyTakeMax: number;
-      jackpotContribution: number;
-      tenantBreakdown?: DrawTenantFinancial[];
-    },
+    financial: NonNullable<DrawDoc["financial"]>
   ): Promise<boolean> {
     return await this.updateOne(
       { drawId },
-      { $set: { financial, updatedAt: new Date() } },
+      { $set: { financial, updatedAt: new Date() } }
     );
   }
 
   async updateStats(
     drawId: string,
-    stats: DrawDoc["stats"],
+    stats: NonNullable<DrawDoc["stats"]>
   ): Promise<boolean> {
     return await this.updateOne(
       { drawId },
-      { $set: { stats, updatedAt: new Date() } },
+      { $set: { stats, updatedAt: new Date() } }
     );
   }
 
   async getLatestDraw(): Promise<DrawEntity | null> {
-    return await this.findOne(
-      {},
-      { sort: { drawDate: -1, drawNo: -1 } },
-    );
+    return await this.findOne({}, { sort: { drawDate: -1, drawNo: -1 } });
   }
 
   async getLatestSettledDraw(): Promise<DrawEntity | null> {
     return await this.findOne(
       { status: DrawStatus.Settled },
-      { sort: { drawDate: -1, drawNo: -1 } },
+      { sort: { drawDate: -1, drawNo: -1 } }
     );
   }
 
-  /**
-   * Lấy kỳ settled gần nhất TRƯỚC 1 ngày cụ thể.
-   * Dùng khi tạo kỳ mới: lấy closingAmount từ kỳ liền trước.
-   *
-   * Ưu tiên: cùng ngày drawNo nhỏ hơn, hoặc ngày trước đó drawNo lớn nhất.
-   */
-  async getLatestSettledDrawBefore(drawDate: string): Promise<DrawEntity | null> {
+  async getLatestSettledDrawBefore(
+    drawDate: string
+  ): Promise<DrawEntity | null> {
     return await this.findOne(
       {
         status: DrawStatus.Settled,
         drawDate: { $lte: drawDate },
       },
-      { sort: { drawDate: -1, drawNo: -1 } },
+      { sort: { drawDate: -1, drawNo: -1 } }
     );
   }
 
-  /** Set jackpot.openingAmount + rolloverAmount cho 1 draw. */
   async setJackpotOpening(
     drawId: string,
-    openingAmount: number,
+    openingAmount: number
   ): Promise<boolean> {
     return await this.updateOne(
       { drawId },
@@ -212,42 +277,66 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
           "jackpot.rolloverAmount": openingAmount,
           updatedAt: new Date(),
         },
-      },
+      }
     );
   }
 
-  /**
-   * Tìm draw đang mở bán hoặc ở trạng thái gần nhất.
-   * Ưu tiên: salesOpen > salesClosed > drawing > scheduled (drawTime tương lai).
-   */
-  async getCurrentDraw(
-    allowStatuses?: string[],
-  ): Promise<DrawEntity | null> {
+  async getCurrentDraw(allowStatuses?: string[]): Promise<DrawEntity | null> {
     const statuses = allowStatuses ?? [DrawStatus.SalesOpen];
 
     const draw = await this.findOne(
       { status: { $in: statuses } },
-      { sort: { drawDate: 1, drawNo: 1 } },
+      { sort: { drawDate: 1, drawNo: 1 } }
     );
     return draw;
   }
 
-  /**
-   * Ghi tổng kết void lên draw document sau khi void flow hoàn tất.
-   * Ghi đè voidSummary – idempotent.
-   */
   async updateVoidSummary(
     drawId: string,
-    summary: {
-      totalVoidedEntries: number;
-      totalOriginalAmount: number;
-      totalRefundAmount: number;
-      completedAt: Date;
-    },
+    summary: NonNullable<DrawDoc["voidSummary"]>
   ): Promise<boolean> {
     return await this.updateOne(
       { drawId },
-      { $set: { voidSummary: summary, updatedAt: new Date() } },
+      { $set: { voidSummary: summary, updatedAt: new Date() } }
+    );
+  }
+
+  async updateSchedule(
+    drawId: string,
+    sales: { openAt: Date; closeAt: Date; drawTime?: Date }
+  ): Promise<boolean> {
+    const $set: Record<string, unknown> = {
+      "sales.openAt": sales.openAt,
+      "sales.closeAt": sales.closeAt,
+      updatedAt: new Date(),
+    };
+    if (sales.drawTime) {
+      $set.drawTime = sales.drawTime;
+    }
+    return await this.updateOne(
+      { drawId },
+      { $set }
+    );
+  }
+
+  async updateResult(
+    drawId: string,
+    result: {
+      winningMain: MainTuple;
+      winningSpecial: Special;
+      publishedAt: Date;
+    },
+    vietlottRef?: DrawDoc["vietlottRef"]
+  ): Promise<boolean> {
+    const $set: Record<string, unknown> = {
+      result,
+      updatedAt: new Date(),
+    };
+    if (vietlottRef) $set.vietlottRef = vietlottRef;
+
+    return await this.updateOne(
+      { drawId, status: DrawStatus.Published },
+      { $set }
     );
   }
 }

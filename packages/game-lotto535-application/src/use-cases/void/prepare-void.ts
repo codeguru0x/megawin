@@ -43,44 +43,46 @@ export class PrepareVoidUseCase extends StepFunctionUseCase<
 
   /** Validate draw + transition → void. Throw nếu không hợp lệ. */
   protected async execute(input: PrepareVoidInput): Promise<PrepareVoidResult> {
-  const { drawId, reason, voidedBy } = input;
-  const draw = await this.drawRepo.getDrawById(drawId);
-  if (!draw) {
-    throw new Error(`Draw ${drawId} không tồn tại.`);
-  }
+    const { drawId, reason, voidedBy } = input;
+    const draw = await this.drawRepo.getDrawById(drawId);
+    if (!draw) {
+      throw new Error(`Draw ${drawId} không tồn tại.`);
+    }
 
-  const VOIDABLE_STATUSES = new Set([
-    DrawStatus.SalesClosed,
-    DrawStatus.Published,
-  ]);
+    const VOIDABLE_STATUSES = new Set([
+      DrawStatus.SalesClosed,
+      DrawStatus.Published,
+    ]);
 
-  if (!VOIDABLE_STATUSES.has(draw.status as any)) {
-    throw new Error(
-      `Draw ${drawId} status = "${draw.status}" – chỉ void được khi ở salesClosed/published.`,
-    );
-  }
+    if (!VOIDABLE_STATUSES.has(draw.status as any)) {
+      throw new Error(
+        `Draw ${drawId} status = "${draw.status}" – chỉ void được khi ở salesClosed/published.`
+      );
+    }
 
-  const updated = await this.drawRepo.transitionStatus(
-    drawId,
-    draw.status,
-    DrawStatus.Void,
-    { "voidInfo.reason": reason, "voidInfo.voidedBy": voidedBy },
-  );
+    const updated = await this.drawRepo.voidDraw(drawId, draw.status, {
+      reason,
+      voidedBy,
+      voidedAt: new Date(),
+    });
 
-  if (!updated) {
-    throw new Error(`Draw ${drawId} transition → void thất bại (race condition).`);
-  }
+    if (!updated) {
+      throw new Error(
+        `Draw ${drawId} transition → void thất bại (race condition).`
+      );
+    }
 
-  const totalVoidableEntries = await this.entryRepo.countVoidableEntries(drawId);
+    const totalVoidableEntries =
+      await this.entryRepo.countVoidableEntries(drawId);
 
-  return {
-    drawId,
-    drawDate: draw.drawDate,
-    drawNo: draw.drawNo,
-    reason,
-    voidedBy,
-    previousStatus: draw.status,
-    totalVoidableEntries,
-  };
+    return {
+      drawId,
+      drawDate: draw.drawDate,
+      drawNo: draw.drawNo,
+      reason,
+      voidedBy,
+      previousStatus: draw.status,
+      totalVoidableEntries,
+    };
   }
 }

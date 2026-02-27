@@ -43,7 +43,11 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: KenoCollections.Tickets,
-    key: { status: 1, "drawPlan.fullyEnrolled": 1, "drawPlan.remainingDraws": 1 },
+    key: {
+      status: 1,
+      "drawPlan.fullyEnrolled": 1,
+      "drawPlan.remainingDraws": 1,
+    },
     options: { name: "idx_auto_enroll_scan" },
     purpose: "Auto-enroll worker: scan tickets multi-draw chưa fully enrolled",
   },
@@ -103,7 +107,8 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
     collection: KenoCollections.TicketEntries,
     key: { version: 1 },
     options: { name: "idx_version" },
-    purpose: "Feed sync worker: scan entries thay đổi kể từ version cuối cùng đã sync",
+    purpose:
+      "Feed sync worker: scan entries thay đổi kể từ version cuối cùng đã sync",
   },
 
   // ─────────────────────────────────────────
@@ -129,8 +134,25 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: KenoCollections.Draws,
+    key: { drawDate: -1, drawNo: -1 },
+    options: { name: "idx_drawDate_drawNo_desc" },
+    purpose:
+      "getLatestDraw: O(1) lookup kỳ mới nhất (đọc entry đầu tiên index B-tree)",
+  },
+  {
+    collection: KenoCollections.Draws,
     key: { "vietlottRef.drawPeriod": 1 },
     options: { name: "idx_vietlott_drawPeriod", sparse: true },
     purpose: "Lookup draw theo mã kỳ quay Vietlott",
+  },
+
+  // ─────────────────────────────────────────
+  // kenoDrawCounters
+  // ─────────────────────────────────────────
+  {
+    collection: KenoCollections.DrawCounters,
+    key: { drawDate: 1 },
+    options: { unique: true, name: "idx_drawDate_unique" },
+    purpose: "Atomic counter: 1 document per ngày, $inc drawNo race-safe",
   },
 ];

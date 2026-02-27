@@ -104,6 +104,13 @@ export function todayVN(): string {
 }
 
 /**
+ * Lấy ngày hôm qua "YYYY-MM-DD" theo giờ VN.
+ */
+export function yesterdayVN(): string {
+  return formatVNDate(subDays(new Date(), 1));
+}
+
+/**
  * Lấy thời gian hiện tại dưới dạng TZDate theo giờ VN.
  * Trả về Date object có context timezone Asia/Ho_Chi_Minh.
  */
@@ -157,4 +164,41 @@ export function endOfDayVN(date: Date): Date {
   const tzDate = new TZDate(date, VN_TIMEZONE);
   const eod = endOfDay(tzDate);
   return new Date(eod.getTime());
+}
+
+// ─────────────────────────────────────────────
+// Time Rounding (floor / ceil theo interval)
+// ─────────────────────────────────────────────
+
+/**
+ * Làm tròn xuống (floor) đến bội số `intervalMinutes` phút gần nhất.
+ *
+ * Ví dụ (intervalMinutes = 5):
+ *   15:01:25 → 15:00:00
+ *   15:07:30 → 15:05:00
+ *   15:10:00 → 15:10:00 (đã tròn)
+ *
+ * Ví dụ (intervalMinutes = 1):
+ *   15:01:25 → 15:01:00
+ */
+export function floorTime(date: Date, intervalMinutes: number = 1): Date {
+  const ms = intervalMinutes * 60_000;
+  return new Date(Math.floor(date.getTime() / ms) * ms);
+}
+
+/**
+ * Làm tròn lên (ceil) đến bội số `intervalMinutes` phút gần nhất.
+ * Nếu thời gian đã tròn → giữ nguyên.
+ *
+ * Ví dụ (intervalMinutes = 5):
+ *   15:01:25 → 15:05:00
+ *   15:07:30 → 15:10:00
+ *   15:10:00 → 15:10:00 (đã tròn)
+ *
+ * Ví dụ (intervalMinutes = 1):
+ *   15:01:25 → 15:02:00
+ */
+export function ceilTime(date: Date, intervalMinutes: number = 1): Date {
+  const ms = intervalMinutes * 60_000;
+  return new Date(Math.ceil(date.getTime() / ms) * ms);
 }

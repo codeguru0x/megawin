@@ -50,14 +50,16 @@ export class EntryChangeSeqRepository extends GameCoreBaseRepo<BaseEntity> {
         $inc: { seq: Long.fromNumber(count) },
         $set: { updatedAt: new Date() },
       },
-      { upsert: true, returnDocument: "after" },
+      { upsert: true, returnDocument: "after" }
     );
 
     if (!result) {
       throw new Error("Failed to allocate global entry change seq");
     }
 
-    const endSeq = (result as any).seq as Long;
+    const rawSeq = (result as any).seq;
+    const endSeq =
+      rawSeq instanceof Long ? rawSeq : Long.fromNumber(Number(rawSeq));
     const startSeq = Long.fromBigInt(endSeq.toBigInt() - BigInt(count - 1));
 
     return { startSeq, endSeq };

@@ -7,12 +7,14 @@ import {
 
 import { updateTenantConfigSchema } from "../_lib/schema";
 
+const getTenantConfigUseCase = new GetTenantConfigUseCase();
+const updateTenantConfigUseCase = new UpdateTenantConfigUseCase();
+
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .handler(async ({ params }) => {
     const { tenantId } = params as { tenantId: string };
-    const useCase = new GetTenantConfigUseCase();
-    return useCase.run({ tenantId });
+    return getTenantConfigUseCase.run({ tenantId });
   });
 
 export const PUT = withApi()
@@ -20,6 +22,5 @@ export const PUT = withApi()
   .body(updateTenantConfigSchema)
   .handler(async ({ params, body }) => {
     const { tenantId } = params as { tenantId: string };
-    const useCase = new UpdateTenantConfigUseCase();
-    return useCase.run({ tenantId, ...body });
+    return updateTenantConfigUseCase.run({ tenantId, ...body });
   });

@@ -46,56 +46,57 @@ export class CalculateFinancialsUseCase extends StepFunctionUseCase<
   private readonly drawRepo = new DrawRepository();
 
   /** Tính tài chính tổng hợp Keno. Idempotent – tính từ DB. */
-  protected async execute(input: CalculateFinancialsInput): Promise<CalculateFinancialsResult> {
-  const { drawId, config } = input;
-  const [tenantAgg, payoutSummary] = await Promise.all([
-    this.entryRepo.aggregateRevenueByTenant(drawId),
-    this.entryRepo.aggregateSettledPayoutSummary(drawId),
-  ]);
+  protected async execute(
+    input: CalculateFinancialsInput
+  ): Promise<CalculateFinancialsResult> {
+    const { drawId, config } = input;
+    const [tenantAgg, payoutSummary] = await Promise.all([
+      this.entryRepo.aggregateRevenueByTenant(drawId),
+      this.entryRepo.aggregateSettledPayoutSummary(drawId),
+    ]);
 
-  const fin = calculateKenoDrawFinancials({
-    totalRevenue: tenantAgg.reduce((sum, t) => sum + t.revenue, 0),
-    totalPrizes: payoutSummary.totalPrizes,
-    tenantRevenues: tenantAgg.map((t) => ({
-      tenantId: t.tenantId,
-      revenue: t.revenue,
-      commissionRate: t.commissionRate,
-    })),
-    companyRate: config.companyRate,
-  });
+    const fin = calculateKenoDrawFinancials({
+      totalRevenue: tenantAgg.reduce((sum, t) => sum + t.revenue, 0),
+      totalPrizes: payoutSummary.totalPrizes,
+      tenantRevenues: tenantAgg.map((t) => ({
+        tenantId: t.tenantId,
+        revenue: t.revenue,
+        commissionRate: t.commissionRate,
+      })),
+      companyRate: config.companyRate,
+    });
 
-  const tenantBreakdown = tenantAgg.map((t) => {
-    const fb = fin.tenantBreakdown.find((b) => b.tenantId === t.tenantId);
+    const tenantBreakdown = tenantAgg.map((t) => {
+      const fb = fin.tenantBreakdown.find((b) => b.tenantId === t.tenantId);
+      return {
+        tenantId: t.tenantId,
+        revenue: t.revenue,
+        commission: fb?.commission ?? 0,
+        commissionRate: t.commissionRate,
+        entryCount: t.entryCount,
+      };
+    });
+
+    await this.drawRepo.updateFinancial(drawId, {
+      totalRevenue: fin.totalRevenue,
+      totalPrizes: fin.totalPrizes,
+      totalAgentCommission: fin.totalAgentCommission,
+      companyTake: fin.companyTake,
+    });
+
+    await this.drawRepo.updateStats(drawId, {
+      ticketEntryCount: payoutSummary.totalSettled,
+      totalSalesAmount: fin.totalRevenue,
+      totalPayoutAmount: payoutSummary.totalPayoutAmount,
+    });
+
     return {
-      tenantId: t.tenantId,
-      revenue: t.revenue,
-      commission: fb?.commission ?? 0,
-      commissionRate: t.commissionRate,
-      entryCount: t.entryCount,
+      drawId,
+      totalRevenue: fin.totalRevenue,
+      totalPrizes: fin.totalPrizes,
+      totalAgentCommission: fin.totalAgentCommission,
+      companyTake: fin.companyTake,
+      tenantBreakdown,
     };
-  });
-
-  await this.drawRepo.updateFinancial(drawId, {
-    totalRevenue: fin.totalRevenue,
-    totalPrizes: fin.totalPrizes,
-    totalAgentCommission: fin.totalAgentCommission,
-    companyTake: fin.companyTake,
-    tenantBreakdown,
-  });
-
-  await this.drawRepo.updateStats(drawId, {
-    ticketEntryCount: payoutSummary.totalSettled,
-    totalSalesAmount: fin.totalRevenue,
-    totalPayoutAmount: payoutSummary.totalPayoutAmount,
-  });
-
-  return {
-    drawId,
-    totalRevenue: fin.totalRevenue,
-    totalPrizes: fin.totalPrizes,
-    totalAgentCommission: fin.totalAgentCommission,
-    companyTake: fin.companyTake,
-    tenantBreakdown,
-  };
   }
 }

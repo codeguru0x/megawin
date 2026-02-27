@@ -29,7 +29,7 @@ const playFormSchema = z.object({
   unitPrice: z.coerce.number().int().positive("Phải > 0"),
   maxBasicBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
   maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
-  salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
+  salesCloseBeforeSeconds: z.coerce.number().int().positive("Phải > 0"),
   drawIntervalMinutes: z.coerce.number().int().positive("Phải > 0"),
   firstDrawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
   lastDrawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
@@ -56,7 +56,7 @@ export function PlayRulesSection({
       unitPrice: config.play.unitPrice,
       maxBasicBoardsPerTicket: config.play.maxBasicBoardsPerTicket,
       maxDrawCount: config.play.maxDrawCount,
-      salesCloseBeforeMinutes: config.play.salesCloseBeforeMinutes,
+      salesCloseBeforeSeconds: config.play.salesCloseBeforeSeconds,
       drawIntervalMinutes: config.play.drawIntervalMinutes,
       firstDrawTime: config.play.firstDrawTime,
       lastDrawTime: config.play.lastDrawTime,
@@ -69,7 +69,7 @@ export function PlayRulesSection({
         unitPrice: values.unitPrice,
         maxBasicBoardsPerTicket: values.maxBasicBoardsPerTicket,
         maxDrawCount: values.maxDrawCount,
-        salesCloseBeforeMinutes: values.salesCloseBeforeMinutes,
+        salesCloseBeforeSeconds: values.salesCloseBeforeSeconds,
         drawIntervalMinutes: values.drawIntervalMinutes,
         firstDrawTime: values.firstDrawTime,
         lastDrawTime: values.lastDrawTime,
@@ -176,11 +176,11 @@ export function PlayRulesSection({
 
                 <FormField
                   control={form.control}
-                  name="salesCloseBeforeMinutes"
+                  name="salesCloseBeforeSeconds"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground">
-                        Đóng bán trước kỳ quay (phút)
+                        Đóng bán trước kỳ quay (giây)
                       </FormLabel>
                       <FormControl>
                         <MoneyInput
@@ -193,6 +193,9 @@ export function PlayRulesSection({
                           thousandSeparator={false}
                         />
                       </FormControl>
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        = {((field.value || 0) / 60).toFixed(1)} phút
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}

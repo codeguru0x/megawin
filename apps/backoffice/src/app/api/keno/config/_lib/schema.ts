@@ -74,7 +74,7 @@ const playSchema = z
     unitPrice: positiveInt,
     maxBasicBoardsPerTicket: positiveInt,
     maxDrawCount: positiveInt,
-    salesCloseBeforeMinutes: positiveInt,
+    salesCloseBeforeSeconds: positiveInt,
     drawIntervalMinutes: positiveInt,
     firstDrawTime: z.string().regex(timePattern, "Giờ phải có format HH:mm"),
     lastDrawTime: z.string().regex(timePattern, "Giờ phải có format HH:mm"),

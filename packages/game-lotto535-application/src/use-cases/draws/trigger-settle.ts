@@ -50,28 +50,24 @@ export class TriggerSettleUseCase extends NextApiUseCase<
     const splitCycle = isSplitCycleDraw(
       draw.jackpot.openingAmount,
       globalConfig.jackpot.splitThreshold,
-      false, // Chưa biết có ai trúng Jackpot → worker sẽ xác định chính xác
+      false,
       draw.drawNo
     );
 
-    const extraSet: Record<string, unknown> = {};
-    if (splitCycle) {
-      extraSet["jackpot.isSplitCycle"] = true;
-      extraSet["jackpot.split"] = {
-        thresholdAmount: globalConfig.jackpot.splitThreshold,
-        splitRatios: globalConfig.jackpot.splitRatios,
-        splitAmount: draw.jackpot.openingAmount,
-        splitRuleVersion: "v1-2026-02",
-        hintText: "Kỳ chia giải Jackpot",
-      };
-    }
+    const splitInfo = splitCycle
+      ? {
+          isSplitCycle: true,
+          split: {
+            thresholdAmount: globalConfig.jackpot.splitThreshold,
+            splitRatios: globalConfig.jackpot.splitRatios,
+            splitAmount: draw.jackpot.openingAmount,
+            splitRuleVersion: "v1-2026-02",
+            hintText: "Kỳ chia giải Jackpot",
+          },
+        }
+      : undefined;
 
-    const updated = await this.drawRepo.transitionStatus(
-      input.drawId,
-      DrawStatus.Published,
-      DrawStatus.Settling,
-      extraSet
-    );
+    const updated = await this.drawRepo.triggerSettle(input.drawId, splitInfo);
 
     if (!updated) {
       throw new AppException(

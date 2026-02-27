@@ -22,6 +22,7 @@ export const KenoCollections = {
   Tickets: "keno_tickets",
   TicketEntries: "keno_ticket_entries",
   Draws: "keno_draws",
+  DrawCounters: "keno_draw_counters",
   GameConfigs: "keno_game_configs",
 } as const;
 

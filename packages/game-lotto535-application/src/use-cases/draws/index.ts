@@ -8,6 +8,7 @@ export { GetDrawDetailUseCase } from "./get-draw-detail";
 export { GetCurrentDrawUseCase } from "./get-current-draw";
 export { VoidDrawUseCase } from "./void-draw";
 export { AutoEnrollEntriesUseCase } from "./auto-enroll-entries";
+export { UpdateScheduleUseCase } from "./update-schedule";
 
 export type {
   AutoEnrollInput,
@@ -35,3 +36,13 @@ export type {
   GetDrawDetailInput,
   GetDrawDetailOutput,
 } from "./dto/draw.dto";
+
+export type {
+  UpdateScheduleInput,
+  UpdateScheduleOutput,
+} from "./update-schedule";
+
+export type {
+  VoidDrawInput,
+  VoidDrawOutput,
+} from "./void-draw";

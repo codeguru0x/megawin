@@ -21,7 +21,7 @@ export interface CurrentDrawInfo {
   drawTime: string;
   status: string;
   sales: {
-    openAt: string;
+    openAt?: string;
     closeAt: string;
   };
   jackpot: {

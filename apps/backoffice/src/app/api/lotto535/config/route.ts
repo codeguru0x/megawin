@@ -7,17 +7,18 @@ import {
 
 import { updateGameConfigSchema } from "./_lib/schema";
 
+const getGameConfigUseCase = new GetGameConfigUseCase();
+const updateGameConfigUseCase = new UpdateGameConfigUseCase();
+
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .handler(async () => {
-    const useCase = new GetGameConfigUseCase();
-    return useCase.run();
+    return getGameConfigUseCase.run();
   });
 
 export const PUT = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(updateGameConfigSchema)
   .handler(async ({ body }) => {
-    const useCase = new UpdateGameConfigUseCase();
-    return useCase.run(body);
+    return updateGameConfigUseCase.run(body);
   });

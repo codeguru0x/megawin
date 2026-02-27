@@ -12,3 +12,4 @@ export * from "./game-config";
 export * from "./ticket";
 export * from "./entry";
 export * from "./draw";
+export * from "./draw-counter";

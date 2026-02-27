@@ -11,7 +11,6 @@ import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
  *
  * Side effect:
  * - Batch transition entries: scheduled -> active
- * - Update draw stats (ticketEntryCount, totalLineCount, totalSalesAmount)
  */
 export class CloseSalesUseCase extends NextApiUseCase<
   DrawIdInput,
@@ -24,7 +23,7 @@ export class CloseSalesUseCase extends NextApiUseCase<
     const updated = await this.drawRepo.transitionStatus(
       input.drawId,
       DrawStatus.SalesOpen,
-      DrawStatus.SalesClosed,
+      DrawStatus.SalesClosed
     );
 
     if (!updated) {
@@ -34,29 +33,15 @@ export class CloseSalesUseCase extends NextApiUseCase<
       }
       throw new AppException(
         "DRAW_INVALID_TRANSITION",
-        `Không thể đóng bán – draw hiện tại ở trạng thái "${draw.status}".`,
+        `Không thể đóng bán – draw hiện tại ở trạng thái "${draw.status}".`
       );
     }
 
     await this.entryRepo.batchTransitionByDrawId(
       input.drawId,
       EntryStatus.Scheduled,
-      EntryStatus.Active,
+      EntryStatus.Active
     );
-
-    const [entryCount, totalLines, revenueData] = await Promise.all([
-      this.entryRepo.countEntriesByDrawId(input.drawId),
-      this.entryRepo.countLinesByDrawId(input.drawId),
-      this.entryRepo.aggregateRevenueByTenant(input.drawId),
-    ]);
-
-    const totalSalesAmount = revenueData.reduce((s, r) => s + r.revenue, 0);
-
-    await this.drawRepo.updateStats(input.drawId, {
-      ticketEntryCount: entryCount,
-      totalLineCount: totalLines,
-      totalSalesAmount,
-    });
 
     return {
       drawId: input.drawId,

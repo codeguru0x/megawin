@@ -11,12 +11,9 @@
  * - Lưu kết quả quay + Vietlott reference
  * - Tính toán tài chính: jackpot accumulation, commission, company take
  * - Cung cấp jackpot info cho UI người chơi
- *
- * Pattern naming: {Game}DrawDoc – áp dụng cho mọi game.
  */
 
-import type { DrawResultSource, DrawStatus, GameProduct } from "@megawin/game-core/entities";
-import type { DrawTenantFinancial } from "@megawin/game-core/types";
+import type { DrawStatus } from "@megawin/game-core/entities";
 import type {
   ISODateString,
   DrawNo,
@@ -32,13 +29,10 @@ import type {
 export interface DrawDoc {
   _id: unknown;
 
-  /** Mã game. Luôn = "lotto535". */
-  product: typeof GameProduct.Lotto535;
-
   /**
    * ID kỳ quay, unique + stable.
-   * Format: "YYYY-MM-DD-NNN" (NNN = draw number 001 hoặc 002).
-   * Ví dụ: "2026-02-22-001" (kỳ 13h), "2026-02-22-002" (kỳ 21h).
+   * Format: "YYYY-MM-DD.NNN" (NNN = draw number 001 hoặc 002).
+   * Ví dụ: "2026-02-22.001" (kỳ 13h), "2026-02-22.002" (kỳ 21h).
    */
   drawId: string;
 
@@ -68,8 +62,8 @@ export interface DrawDoc {
 
   /** Cửa sổ bán vé. */
   sales: {
-    /** Thời điểm mở bán. */
-    openAt: Date;
+    /** Thời điểm mở bán. Chỉ có sau khi staff nhấn "Mở bán". */
+    openAt?: Date;
 
     /**
      * Thời điểm đóng bán.
@@ -98,9 +92,6 @@ export interface DrawDoc {
 
     /** Phiên quay: 1 = 13h, 2 = 21h. */
     drawSession: number;
-
-    /** URL nguồn kết quả Vietlott (optional, cho audit). */
-    sourceUrl?: string;
   };
 
   // ───── Result ─────
@@ -115,12 +106,6 @@ export interface DrawDoc {
 
     /** Thời điểm công bố. */
     publishedAt: Date;
-
-    /** Nguồn kết quả (audit trail). */
-    source: DrawResultSource;
-
-    /** Checksum/hash để verify integrity khi import từ nhiều nguồn. */
-    checksum?: string;
   };
 
   // ───── Jackpot ─────
@@ -177,8 +162,14 @@ export interface DrawDoc {
     /** Tổng hoa hồng đại lý (sum across all tenants). */
     totalAgentCommission: number;
 
-    /** Công ty thu về = companyRate × totalRevenue. */
+    /** Công ty thu về (sau cap). */
     companyTake: number;
+
+    /** Tỷ lệ company take theo config. */
+    companyTakeRate: number;
+
+    /** Company take tối đa trước cap. */
+    companyTakeMax: number;
 
     /**
      * Tiền tích luỹ vào Jackpot kỳ tiếp theo.
@@ -186,9 +177,6 @@ export interface DrawDoc {
      * Có thể âm nếu trả thưởng nhiều hơn doanh thu (company bù).
      */
     jackpotContribution: number;
-
-    /** Breakdown chi tiết theo từng tenant. */
-    tenantBreakdown?: DrawTenantFinancial[];
   };
 
   // ───── Operational Stats ─────
@@ -206,6 +194,23 @@ export interface DrawDoc {
 
     /** Tổng payout sau settle. */
     totalPayoutAmount?: number;
+  };
+
+  // ───── Void Info ─────
+
+  /** Thông tin khi kỳ quay bị huỷ. Chỉ có khi status = void. */
+  voidInfo?: {
+    reason: string;
+    voidedBy?: string;
+    voidedAt: Date;
+  };
+
+  /** Tổng kết void flow (entries refund). Ghi sau khi void step function hoàn tất. */
+  voidSummary?: {
+    totalVoidedEntries: number;
+    totalOriginalAmount: number;
+    totalRefundAmount: number;
+    completedAt: Date;
   };
 
   // ───── Timestamps ─────
@@ -267,5 +272,3 @@ export interface DrawSplit {
   /** Hint text cho UI (optional). Ví dụ: "Kỳ chia giải Jackpot". */
   hintText?: string;
 }
-
-export type { DrawTenantFinancial } from "@megawin/game-core/types";

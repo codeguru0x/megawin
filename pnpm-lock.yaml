@@ -324,6 +324,9 @@ importers:
       '@megawin/app-core':
         specifier: workspace:*
         version: link:../../packages/app-core
+      '@megawin/game-core':
+        specifier: workspace:*
+        version: link:../../packages/game-core
       '@megawin/game-keno':
         specifier: workspace:*
         version: link:../../packages/game-keno

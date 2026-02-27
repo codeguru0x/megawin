@@ -27,11 +27,11 @@
  */
 export const GameCoreCollections = {
   /** Collection singleton lưu giá trị sequence hiện tại. */
-  EntryChangeSeq: "entryChangeSeq",
+  EntryChangeSeq: "entry_change_seq",
   /** Collection unified chứa feed đơn cược cho tenant polling. */
-  EntryFeed: "entryFeed",
+  EntryFeed: "entry_feed",
   /** Cursor per game: version cuối cùng đã sync vào entryFeed. */
-  FeedSyncCursor: "feedSyncCursor",
+  FeedSyncCursor: "feed_sync_cursor",
 } as const;
 
 // ─────────────────────────────────────────────

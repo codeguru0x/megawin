@@ -1,7 +1,7 @@
 /**
  * Keno – Draw ID Generation
  *
- * Format: "YYYY-MM-DD-NNN"
+ * Format: "YYYY-MM-DD.NNN"
  *   - YYYY-MM-DD: ngày quay
  *   - NNN: số thứ tự kỳ quay trong ngày (001-288)
  *
@@ -14,13 +14,13 @@ export function generateKenoDrawId(
   drawDate: ISODateString,
   drawNo: number,
 ): string {
-  return `${drawDate}-${String(drawNo).padStart(3, "0")}`;
+  return `${drawDate}.${String(drawNo).padStart(3, "0")}`;
 }
 
 export function parseKenoDrawId(
   drawId: string,
 ): { drawDate: ISODateString; drawNo: number } | null {
-  const match = /^(\d{4}-\d{2}-\d{2})-(\d{3})$/.exec(drawId);
+  const match = /^(\d{4}-\d{2}-\d{2})\.(\d{3})$/.exec(drawId);
   if (!match) return null;
 
   return {

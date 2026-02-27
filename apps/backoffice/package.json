@@ -24,6 +24,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.2",
     "@megawin/app-core": "workspace:*",
+    "@megawin/game-core": "workspace:*",
     "@megawin/game-keno": "workspace:*",
     "@megawin/game-keno-application": "workspace:*",
     "@megawin/game-lotto535": "workspace:*",

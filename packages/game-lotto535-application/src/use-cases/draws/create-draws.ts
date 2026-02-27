@@ -18,10 +18,10 @@
 
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
+import { DrawStatus } from "@megawin/game-core/entities";
 import { generateDrawId } from "@megawin/game-lotto535/helpers";
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
-import { toVNDate, subtractMinutes, nowVN } from "@megawin/shared/utils/date";
+import { toVNDate, subtractMinutes } from "@megawin/shared/utils/date";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import type { CreateDrawsInput, CreateDrawsOutput } from "./dto/draw.dto";
@@ -77,17 +77,16 @@ export class CreateDrawsUseCase extends NextApiUseCase<
     const jackpotOpening =
       latestSettled?.jackpot.closingAmount ?? jackpotConfig.seedAmount;
 
-    const now = nowVN();
+    const now = new Date();
 
     await this.drawRepo.createDraw({
-      product: GameProduct.Lotto535,
       drawId,
       drawDate,
       financialDate: getFinancialDate(drawTime),
       drawNo,
       drawTime,
       status: DrawStatus.Scheduled,
-      sales: { openAt: now, closeAt },
+      sales: { closeAt },
       jackpot: {
         openingAmount: jackpotOpening,
       },

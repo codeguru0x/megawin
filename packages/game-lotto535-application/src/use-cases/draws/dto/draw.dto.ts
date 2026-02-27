@@ -1,4 +1,4 @@
-import type { DrawStatus, DrawResultSource } from "@megawin/game-core/entities";
+import type { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawNo } from "@megawin/game-lotto535/entities";
 import type { DrawEntity } from "../../../infras/mappers/draw-mapper";
 
@@ -50,16 +50,11 @@ export interface PublishResultInput {
   winningMain: number[];
   /** 1 số đặc biệt trúng thưởng (1-12). */
   winningSpecial: number;
-  /** Nguồn kết quả. */
-  source: DrawResultSource;
-  /** Checksum (optional). */
-  checksum?: string;
   /** Tham chiếu kỳ quay Vietlott (optional). */
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;
     drawSession: number;
-    sourceUrl?: string;
   };
 }
 
@@ -71,8 +66,6 @@ export interface PublishResultOutput {
     winningSpecial: number;
     publishedAt: string;
   };
-  /** Số entry được stamp kết quả. */
-  entriesUpdated: number;
 }
 
 // ─────────────────────────────────────────────
@@ -112,10 +105,17 @@ export interface DrawSummary {
   drawTime: string;
   status: string;
   jackpotAmount: number;
+  jackpotClosingAmount?: number;
   isSplitCycle: boolean;
   hasResult: boolean;
   ticketEntryCount?: number;
   totalRevenue?: number;
+  financial?: {
+    totalFixedPrizes: number;
+    totalAgentCommission: number;
+    companyTake: number;
+    jackpotContribution: number;
+  };
 }
 
 export interface ListDrawsOutput {

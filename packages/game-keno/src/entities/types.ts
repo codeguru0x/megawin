@@ -176,8 +176,8 @@ export interface PlayRules {
   maxBasicBoardsPerTicket: number;
   /** Số kỳ liên tiếp tối đa. Default: 20 */
   maxDrawCount: number;
-  /** Đóng bán trước giờ quay bao nhiêu phút. Default: 1 */
-  salesCloseBeforeMinutes: number;
+  /** Đóng bán trước giờ quay bao nhiêu giây. Default: 60 */
+  salesCloseBeforeSeconds: number;
   /** Khoảng cách giữa các kỳ quay (phút). Default: 10 */
   drawIntervalMinutes: number;
   /** Giờ bắt đầu quay trong ngày. Default: "06:00" */

@@ -34,7 +34,13 @@ export interface CalculateFinancialsInput {
   config: {
     seedAmount: number;
     splitThreshold: number;
-    splitRatios: { tier1: number; tier2: number; tier3: number; tier4: number; tier5: number };
+    splitRatios: {
+      tier1: number;
+      tier2: number;
+      tier3: number;
+      tier4: number;
+      tier5: number;
+    };
     companyRate: number;
   };
 }
@@ -50,13 +56,16 @@ export interface CalculateFinancialsResult {
   closingJackpot: number;
   nextJackpotOpening: number;
   hasJackpotWinner: boolean;
-  splitDetails?: Record<string, {
-    initialAmount: number;
-    redistributedAmount: number;
-    totalAmount: number;
-    winnerCount: number;
-    bonusPerWinner: number;
-  }>;
+  splitDetails?: Record<
+    string,
+    {
+      initialAmount: number;
+      redistributedAmount: number;
+      totalAmount: number;
+      winnerCount: number;
+      bonusPerWinner: number;
+    }
+  >;
   tenantBreakdown: Array<{
     tenantId: string;
     revenue: number;
@@ -74,136 +83,146 @@ export class CalculateFinancialsUseCase extends StepFunctionUseCase<
   private readonly drawRepo = new DrawRepository();
 
   /** Tính tài chính tổng hợp từ DB. Idempotent. */
-  protected async execute(input: CalculateFinancialsInput): Promise<CalculateFinancialsResult> {
-  const { drawId, config, jackpotOpeningAmount, isSplitCycle } = input;
-  /**
-   * CRASH-SAFE: Tính từ DB thay vì accumulator.
-   * aggregateSettledPayoutSummary() query tất cả settled entries
-   * → tính totalFixedPrizes + tierWinnerCounts chính xác.
-   */
-  const [tenantAgg, payoutSummary] = await Promise.all([
-    this.entryRepo.aggregateRevenueByTenant(drawId),
-    this.entryRepo.aggregateSettledPayoutSummary(drawId),
-  ]);
+  protected async execute(
+    input: CalculateFinancialsInput
+  ): Promise<CalculateFinancialsResult> {
+    const { drawId, config, jackpotOpeningAmount, isSplitCycle } = input;
+    /**
+     * CRASH-SAFE: Tính từ DB thay vì accumulator.
+     * aggregateSettledPayoutSummary() query tất cả settled entries
+     * → tính totalFixedPrizes + tierWinnerCounts chính xác.
+     */
+    const [tenantAgg, payoutSummary] = await Promise.all([
+      this.entryRepo.aggregateRevenueByTenant(drawId),
+      this.entryRepo.aggregateSettledPayoutSummary(drawId),
+    ]);
 
-  const financialInput: DrawFinancialInput = {
-    totalRevenue: tenantAgg.reduce((sum, t) => sum + t.revenue, 0),
-    totalFixedPrizes: payoutSummary.totalFixedPrizes,
-    tenantRevenues: tenantAgg.map((t) => ({
-      tenantId: t.tenantId,
-      revenue: t.revenue,
-      commissionRate: t.commissionRate,
-    })),
-    companyRate: config.companyRate,
-  };
+    const financialInput: DrawFinancialInput = {
+      totalRevenue: tenantAgg.reduce((sum, t) => sum + t.revenue, 0),
+      totalFixedPrizes: payoutSummary.totalFixedPrizes,
+      tenantRevenues: tenantAgg.map((t) => ({
+        tenantId: t.tenantId,
+        revenue: t.revenue,
+        commissionRate: t.commissionRate,
+      })),
+      companyRate: config.companyRate,
+    };
 
-  const fin = calculateDrawFinancials(financialInput);
+    const fin = calculateDrawFinancials(financialInput);
 
-  const jackpotWinnerCount = payoutSummary.tierWinnerCounts[PrizeTier.Jackpot] ?? 0;
-  const hasJackpotWinner = jackpotWinnerCount > 0;
+    const jackpotWinnerCount =
+      payoutSummary.tierWinnerCounts[PrizeTier.Jackpot] ?? 0;
+    const hasJackpotWinner = jackpotWinnerCount > 0;
 
-  let splitDetails: CalculateFinancialsResult["splitDetails"];
+    let splitDetails: CalculateFinancialsResult["splitDetails"];
 
-  if (isSplitCycle) {
-    const winnerCountPerTier = new Map<PrizeTier, number>();
-    for (const [tierStr, count] of Object.entries(payoutSummary.tierWinnerCounts)) {
-      if (tierStr === PrizeTier.Jackpot || tierStr === PrizeTier.Consolation) continue;
-      if (count > 0) winnerCountPerTier.set(tierStr as PrizeTier, count);
-    }
-
-    const splitResult = calculateSplitDistribution({
-      jackpotAmount: jackpotOpeningAmount,
-      splitRatios: config.splitRatios,
-      winnerCountPerTier,
-    });
-
-    if (splitResult.details.size > 0) {
-      splitDetails = {};
-      for (const [tier, detail] of splitResult.details) {
-        splitDetails[tier] = {
-          initialAmount: detail.initialAmount,
-          redistributedAmount: detail.redistributedAmount,
-          totalAmount: detail.totalAmount,
-          winnerCount: detail.winnerCount,
-          bonusPerWinner: detail.bonusPerWinner,
-        };
+    if (isSplitCycle) {
+      const winnerCountPerTier = new Map<PrizeTier, number>();
+      for (const [tierStr, count] of Object.entries(
+        payoutSummary.tierWinnerCounts
+      )) {
+        if (tierStr === PrizeTier.Jackpot || tierStr === PrizeTier.Consolation)
+          continue;
+        if (count > 0) winnerCountPerTier.set(tierStr as PrizeTier, count);
       }
 
+      const splitResult = calculateSplitDistribution({
+        jackpotAmount: jackpotOpeningAmount,
+        splitRatios: config.splitRatios,
+        winnerCountPerTier,
+      });
+
+      if (splitResult.details.size > 0) {
+        splitDetails = {};
+        for (const [tier, detail] of splitResult.details) {
+          splitDetails[tier] = {
+            initialAmount: detail.initialAmount,
+            redistributedAmount: detail.redistributedAmount,
+            totalAmount: detail.totalAmount,
+            winnerCount: detail.winnerCount,
+            bonusPerWinner: detail.bonusPerWinner,
+          };
+        }
+
+        await this.drawRepo.updateJackpot(drawId, {
+          closingAmount: config.seedAmount,
+          isSplitCycle: true,
+          split: {
+            thresholdAmount: config.splitThreshold,
+            splitRatios: config.splitRatios,
+            splitAmount: jackpotOpeningAmount,
+            tierAllocations: splitDetails,
+            roundingRemainder: splitResult.roundingRemainder,
+            splitRuleVersion: "v1-2026-02",
+            hintText: "Kỳ chia giải Jackpot",
+          },
+        });
+      }
+    }
+
+    /**
+     * Jackpot cuối kỳ:
+     * - Có winner → reset về seed
+     * - Không winner → opening + contribution (tích luỹ)
+     */
+    const closingJackpot = hasJackpotWinner
+      ? config.seedAmount
+      : jackpotOpeningAmount + fin.jackpotContribution;
+
+    const nextJackpotOpening = calculateNextJackpot(
+      jackpotOpeningAmount,
+      fin.jackpotContribution,
+      hasJackpotWinner,
+      config.seedAmount
+    );
+
+    const tenantBreakdown = tenantAgg.map((t) => {
+      const fb = fin.tenantBreakdown.find((b) => b.tenantId === t.tenantId);
+      return {
+        tenantId: t.tenantId,
+        revenue: t.revenue,
+        commission: fb?.commission ?? 0,
+        commissionRate: t.commissionRate,
+        entryCount: t.entryCount,
+      };
+    });
+
+    await this.drawRepo.updateFinancial(drawId, {
+      totalRevenue: fin.totalRevenue,
+      totalFixedPrizes: fin.totalFixedPrizes,
+      totalAgentCommission: fin.totalAgentCommission,
+      companyTake: fin.actualCompanyTake,
+      companyTakeRate: config.companyRate,
+      companyTakeMax: fin.companyTake,
+      jackpotContribution: fin.jackpotContribution,
+    });
+
+    if (!isSplitCycle) {
       await this.drawRepo.updateJackpot(drawId, {
-        closingAmount: config.seedAmount,
-        isSplitCycle: true,
-        split: {
-          thresholdAmount: config.splitThreshold,
-          splitRatios: config.splitRatios,
-          splitAmount: jackpotOpeningAmount,
-          tierAllocations: splitDetails,
-          roundingRemainder: splitResult.roundingRemainder,
-          splitRuleVersion: "v1-2026-02",
-          hintText: "Kỳ chia giải Jackpot",
-        },
+        closingAmount: closingJackpot,
       });
     }
-  }
 
-  /**
-   * Jackpot cuối kỳ:
-   * - Có winner → reset về seed
-   * - Không winner → opening + contribution (tích luỹ)
-   */
-  const closingJackpot = hasJackpotWinner
-    ? config.seedAmount
-    : jackpotOpeningAmount + fin.jackpotContribution;
+    await this.drawRepo.updateStats(drawId, {
+      ticketEntryCount: payoutSummary.totalSettled,
+      totalLineCount: input.totalLines,
+      totalSalesAmount: fin.totalRevenue,
+      totalPayoutAmount: payoutSummary.totalPayoutAmount,
+    });
 
-  const nextJackpotOpening = calculateNextJackpot(
-    jackpotOpeningAmount, fin.jackpotContribution, hasJackpotWinner, config.seedAmount,
-  );
-
-  const tenantBreakdown = tenantAgg.map((t) => {
-    const fb = fin.tenantBreakdown.find((b) => b.tenantId === t.tenantId);
     return {
-      tenantId: t.tenantId,
-      revenue: t.revenue,
-      commission: fb?.commission ?? 0,
-      commissionRate: t.commissionRate,
-      entryCount: t.entryCount,
+      drawId,
+      totalRevenue: fin.totalRevenue,
+      totalFixedPrizes: fin.totalFixedPrizes,
+      totalAgentCommission: fin.totalAgentCommission,
+      companyTake: fin.companyTake,
+      actualCompanyTake: fin.actualCompanyTake,
+      jackpotContribution: fin.jackpotContribution,
+      closingJackpot,
+      nextJackpotOpening,
+      hasJackpotWinner,
+      splitDetails,
+      tenantBreakdown,
     };
-  });
-
-  await this.drawRepo.updateFinancial(drawId, {
-    totalRevenue: fin.totalRevenue,
-    totalFixedPrizes: fin.totalFixedPrizes,
-    totalAgentCommission: fin.totalAgentCommission,
-    companyTake: fin.actualCompanyTake,
-    companyTakeRate: config.companyRate,
-    companyTakeMax: fin.companyTake,
-    jackpotContribution: fin.jackpotContribution,
-    tenantBreakdown,
-  });
-
-  if (!isSplitCycle) {
-    await this.drawRepo.updateJackpot(drawId, { closingAmount: closingJackpot });
-  }
-
-  await this.drawRepo.updateStats(drawId, {
-    ticketEntryCount: payoutSummary.totalSettled,
-    totalLineCount: input.totalLines,
-    totalSalesAmount: fin.totalRevenue,
-    totalPayoutAmount: payoutSummary.totalPayoutAmount,
-  });
-
-  return {
-    drawId,
-    totalRevenue: fin.totalRevenue,
-    totalFixedPrizes: fin.totalFixedPrizes,
-    totalAgentCommission: fin.totalAgentCommission,
-    companyTake: fin.companyTake,
-    actualCompanyTake: fin.actualCompanyTake,
-    jackpotContribution: fin.jackpotContribution,
-    closingJackpot,
-    nextJackpotOpening,
-    hasJackpotWinner,
-    splitDetails,
-    tenantBreakdown,
-  };
   }
 }

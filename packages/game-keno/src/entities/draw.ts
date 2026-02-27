@@ -9,8 +9,7 @@
  * Kết quả: 20 số ngẫu nhiên từ 01-80.
  */
 
-import type { DrawResultSource, DrawStatus, GameProduct } from "@megawin/game-core/entities";
-import type { DrawTenantFinancial } from "@megawin/game-core/types";
+import type { DrawStatus } from "@megawin/game-core/entities";
 import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
@@ -20,12 +19,9 @@ import type { ISODateString } from "./types";
 export interface DrawDoc {
   _id: unknown;
 
-  /** Mã game. Luôn = "keno". */
-  product: typeof GameProduct.Keno;
-
   /**
    * ID kỳ quay, unique + stable.
-   * Format: "YYYY-MM-DD-NNN" (NNN = draw sequence 001-288).
+   * Format: "YYYY-MM-DD.NNN" (NNN = draw sequence 001-288).
    */
   drawId: string;
 
@@ -47,7 +43,8 @@ export interface DrawDoc {
   // ───── Sales Window ─────
 
   sales: {
-    openAt: Date;
+    /** Thời điểm mở bán. Chỉ có sau khi staff nhấn "Mở bán". */
+    openAt?: Date;
     /**
      * Keno đóng bán 5 phút trước giờ quay (configurable).
      */
@@ -60,7 +57,6 @@ export interface DrawDoc {
     /** Mã kỳ quay Vietlott (ví dụ "123456"). */
     drawPeriod: string;
     drawDate: ISODateString;
-    sourceUrl?: string;
   };
 
   // ───── Financial Date ─────
@@ -85,11 +81,6 @@ export interface DrawDoc {
     /** Thời điểm công bố. */
     publishedAt: Date;
 
-    /** Nguồn kết quả. */
-    source: DrawResultSource;
-
-    checksum?: string;
-
     // ───── Derived stats từ 20 số quay ─────
 
     /** Số lượng số "lớn" (41-80) trong 20 số quay. */
@@ -112,7 +103,6 @@ export interface DrawDoc {
     totalPrizes: number;
     totalAgentCommission: number;
     companyTake: number;
-    tenantBreakdown?: DrawTenantFinancial[];
   };
 
   // ───── Operational Stats ─────
@@ -126,10 +116,25 @@ export interface DrawDoc {
     totalPayoutAmount?: number;
   };
 
+  // ───── Void Info ─────
+
+  /** Thông tin khi kỳ quay bị huỷ. Chỉ có khi status = void. */
+  voidInfo?: {
+    reason: string;
+    voidedBy?: string;
+    voidedAt: Date;
+  };
+
+  /** Tổng kết void flow (entries refund). */
+  voidSummary?: {
+    totalVoidedEntries: number;
+    totalOriginalAmount: number;
+    totalRefundAmount: number;
+    completedAt: Date;
+  };
+
   // ───── Timestamps ─────
 
   createdAt: Date;
   updatedAt: Date;
 }
-
-export type { DrawTenantFinancial } from "@megawin/game-core/types";

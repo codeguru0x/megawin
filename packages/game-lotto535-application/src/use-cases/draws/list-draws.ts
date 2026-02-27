@@ -1,6 +1,10 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { ListDrawsInput, ListDrawsOutput, DrawSummary } from "./dto/draw.dto";
+import type {
+  ListDrawsInput,
+  ListDrawsOutput,
+  DrawSummary,
+} from "./dto/draw.dto";
 
 /**
  * Danh sách kỳ quay cho backoffice.
@@ -22,7 +26,7 @@ export class ListDrawsUseCase extends NextApiUseCase<
         toDate: input.toDate,
       },
       page,
-      size,
+      size
     );
 
     const summaries: DrawSummary[] = draws.map((d) => ({
@@ -33,10 +37,19 @@ export class ListDrawsUseCase extends NextApiUseCase<
       drawTime: d.drawTime.toISOString(),
       status: d.status,
       jackpotAmount: d.jackpot.openingAmount,
+      jackpotClosingAmount: d.jackpot.closingAmount,
       isSplitCycle: d.jackpot.isSplitCycle ?? false,
       hasResult: !!d.result,
       ticketEntryCount: d.stats?.ticketEntryCount,
       totalRevenue: d.stats?.totalSalesAmount,
+      financial: d.financial
+        ? {
+            totalFixedPrizes: d.financial.totalFixedPrizes,
+            totalAgentCommission: d.financial.totalAgentCommission,
+            companyTake: d.financial.companyTake,
+            jackpotContribution: d.financial.jackpotContribution,
+          }
+        : undefined,
     }));
 
     return { draws: summaries, page, size };

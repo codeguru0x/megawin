@@ -128,8 +128,8 @@ describe("GameConfigRepository – Keno Global Config", () => {
     expect(config!.play.maxDrawCount).toBe(
       DEFAULT_KENO_CONFIG.play.maxDrawCount
     );
-    expect(config!.play.salesCloseBeforeMinutes).toBe(
-      DEFAULT_KENO_CONFIG.play.salesCloseBeforeMinutes
+    expect(config!.play.salesCloseBeforeSeconds).toBe(
+      DEFAULT_KENO_CONFIG.play.salesCloseBeforeSeconds
     );
     expect(config!.play.drawIntervalMinutes).toBe(
       DEFAULT_KENO_CONFIG.play.drawIntervalMinutes

@@ -9,3 +9,5 @@ export type {
   UpdateTenantConfigInput,
   UpdateTenantConfigOutput,
 } from "./dto/tenant-config.dto";
+
+export type { TenantConfigEntity } from "../../infras/mappers/game-config-mapper";

@@ -179,7 +179,7 @@ export const DEFAULT_KENO_CONFIG: Pick<
     unitPrice: 10_000,
     maxBasicBoardsPerTicket: 2,
     maxDrawCount: 20,
-    salesCloseBeforeMinutes: 5,
+    salesCloseBeforeSeconds: 60,
     drawIntervalMinutes: 10,
     firstDrawTime: "06:00",
     lastDrawTime: "21:55",

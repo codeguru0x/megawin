@@ -24,6 +24,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
 
 const VOIDABLE_STATUSES = new Set<string>([
+  DrawStatus.Scheduled,
   DrawStatus.SalesClosed,
   DrawStatus.Published,
 ]);
@@ -58,20 +59,15 @@ export class VoidDrawUseCase extends NextApiUseCase<
       throw new AppException(
         "DRAW_INVALID_TRANSITION",
         `Không thể huỷ kỳ quay ở trạng thái "${draw.status}". ` +
-          `Chỉ huỷ được khi ở salesClosed/published.`,
+          `Chỉ huỷ được khi ở scheduled/salesClosed/published.`
       );
     }
 
-    const updated = await this.drawRepo.transitionStatus(
-      input.drawId,
-      draw.status,
-      DrawStatus.Void,
-      {
-        "voidInfo.reason": input.reason,
-        "voidInfo.voidedBy": input.voidedBy,
-        "voidInfo.voidedAt": new Date(),
-      },
-    );
+    const updated = await this.drawRepo.voidDraw(input.drawId, draw.status, {
+      reason: input.reason,
+      voidedBy: input.voidedBy,
+      voidedAt: new Date(),
+    });
 
     if (!updated) {
       throw AppException.internal("Huỷ kỳ quay thất bại – race condition.");

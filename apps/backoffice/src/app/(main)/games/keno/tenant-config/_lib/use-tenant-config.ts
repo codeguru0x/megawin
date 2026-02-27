@@ -3,32 +3,27 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient, ApiClientError } from "@megawin/next/client";
 import { toast } from "sonner";
+import { kenoKeys } from "@/lib/query-keys";
 
-interface TenantConfig {
-  id: string;
-  scope: string;
-  tenantId: string;
-  commissionRate: number;
-  isEnabled: boolean;
-  version: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import type {
+  TenantConfigEntity,
+  ListTenantConfigsOutput,
+  GetTenantConfigOutput,
+  UpdateTenantConfigOutput,
+} from "@megawin/game-keno-application/use-cases/tenant-config";
 
-export type { TenantConfig };
-
-const LIST_KEY = ["keno", "tenant-configs"] as const;
+export type TenantConfig = TenantConfigEntity;
 
 function detailKey(tenantId: string) {
-  return ["keno", "tenant-config", tenantId] as const;
+  return [...kenoKeys.tenantConfigs, tenantId] as const;
 }
 
 export function useTenantConfigs() {
   return useQuery({
-    queryKey: LIST_KEY,
+    queryKey: kenoKeys.tenantConfigs,
     queryFn: () =>
       apiClient
-        .get<{ configs: TenantConfig[] }>("/keno/tenant-config")
+        .get<ListTenantConfigsOutput>("/keno/tenant-config")
         .then((r) => r.configs),
   });
 }
@@ -38,7 +33,7 @@ export function useTenantConfig(tenantId: string | null) {
     queryKey: detailKey(tenantId ?? ""),
     queryFn: () =>
       apiClient
-        .get<{ config: TenantConfig }>(`/keno/tenant-config/${tenantId}`)
+        .get<GetTenantConfigOutput>(`/keno/tenant-config/${tenantId}`)
         .then((r) => r.config),
     enabled: !!tenantId,
   });
@@ -49,13 +44,13 @@ export function useCreateTenantConfig() {
 
   return useMutation({
     mutationFn: (tenantId: string) =>
-      apiClient.put<{ config: TenantConfig; version: number }>(
+      apiClient.put<UpdateTenantConfigOutput>(
         `/keno/tenant-config/${tenantId}`,
         { isEnabled: true }
       ),
     onSuccess: (res, tenantId) => {
       queryClient.setQueryData(detailKey(tenantId), res.config);
-      queryClient.invalidateQueries({ queryKey: LIST_KEY });
+      queryClient.invalidateQueries({ queryKey: kenoKeys.tenantConfigs });
       toast.success(`Đã tạo cấu hình Keno cho đại lý "${tenantId}".`);
     },
     onError: (err) => {
@@ -73,13 +68,13 @@ export function useUpdateTenantConfig(tenantId: string) {
 
   return useMutation({
     mutationFn: (data: Record<string, unknown>) =>
-      apiClient.put<{ config: TenantConfig; version: number }>(
+      apiClient.put<UpdateTenantConfigOutput>(
         `/keno/tenant-config/${tenantId}`,
         data
       ),
     onSuccess: (res) => {
       queryClient.setQueryData(detailKey(tenantId), res.config);
-      queryClient.invalidateQueries({ queryKey: LIST_KEY });
+      queryClient.invalidateQueries({ queryKey: kenoKeys.tenantConfigs });
       toast.success(
         `Đã lưu cấu hình Keno tenant "${tenantId}" (v${res.version}).`
       );

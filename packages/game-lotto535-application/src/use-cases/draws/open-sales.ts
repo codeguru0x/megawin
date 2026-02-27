@@ -15,6 +15,7 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
+import { nowVN } from "@megawin/shared/utils/date";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
 
@@ -30,23 +31,26 @@ export class OpenSalesUseCase extends NextApiUseCase<
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
     }
 
-    const allowedFrom: DrawStatus[] = [DrawStatus.Scheduled, DrawStatus.SalesClosed];
+    const allowedFrom: DrawStatus[] = [
+      DrawStatus.Scheduled,
+      DrawStatus.SalesClosed,
+    ];
     if (!allowedFrom.includes(draw.status as DrawStatus)) {
       throw new AppException(
         "DRAW_INVALID_TRANSITION",
-        `Không thể mở bán – draw hiện tại ở trạng thái "${draw.status}". Chỉ mở bán từ "scheduled" hoặc "salesClosed".`,
+        `Không thể mở bán – draw hiện tại ở trạng thái "${draw.status}". Chỉ mở bán từ "scheduled" hoặc "salesClosed".`
       );
     }
 
-    const updated = await this.drawRepo.transitionStatus(
+    const updated = await this.drawRepo.openSales(
       input.drawId,
       draw.status,
-      DrawStatus.SalesOpen,
+      !draw.sales.openAt ? nowVN() : undefined
     );
 
     if (!updated) {
       throw AppException.internal(
-        `Không thể chuyển trạng thái draw ${input.drawId}. Vui lòng thử lại.`,
+        `Không thể chuyển trạng thái draw ${input.drawId}. Vui lòng thử lại.`
       );
     }
 
