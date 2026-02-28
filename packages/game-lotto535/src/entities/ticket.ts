@@ -19,7 +19,7 @@
  * Pattern naming: {Game}TicketDoc, {Game}Board – áp dụng cho mọi game.
  */
 
-import type { ExpansionMode, PlayType } from "./enums";
+import type { PlayType } from "./enums";
 import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
 import type { ISODateString, BoardSelection } from "./types";
 
@@ -139,23 +139,13 @@ export interface TicketDoc {
   /** Danh sách boards (A-E), tối đa 5. */
   boards: Board[];
 
-  // ───── Expansion Strategy ─────
+  // ───── Line Count ─────
 
-  expansion: {
-    /**
-     * Chiến lược lưu lines:
-     * - "none": không lưu, expand on-the-fly khi settle (line count nhỏ)
-     * - "onWrite": lưu lines ngay khi paid (bao lớn, vd 3003 lines)
-     * - "onSettle": lazy – lưu lần đầu khi settle
-     */
-    mode: ExpansionMode;
-
-    /** Lines đã được materialize vào collection lotto535TicketLines chưa. */
-    linesStored: boolean;
-
-    /** Tổng line count (= pricing.linesPerDraw). */
-    lineCount: number;
-  };
+  /**
+   * Tổng line count cho 1 kỳ (= sum boards[].derived.expandedLines).
+   * Lines được materialize vào lotto535_ticket_lines khi settle.
+   */
+  lineCount: number;
 
   // ───── Progress ─────
 
@@ -207,6 +197,12 @@ export interface TicketDoc {
   // ───── Status & Timestamps ─────
 
   status: TicketStatus;
+
+  /**
+   * Monotonic counter – incremented by SyncTicketSummaries.
+   * Dùng cho audit trail, ETag/cache invalidation, change detection.
+   */
+  version: number;
 
   createdAt: Date;
   updatedAt: Date;

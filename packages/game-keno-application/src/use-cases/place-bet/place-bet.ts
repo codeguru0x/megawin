@@ -200,6 +200,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
         settledDraws: 0,
       },
       status: TicketStatus.Paid as any,
+      version: 0,
       createdAt: now,
       updatedAt: now,
     };
@@ -219,7 +220,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       bet: s.bet,
     }));
 
-    const entryDocs: Array<Record<string, unknown>> = [];
+    const version = await this.entryRepo.nextVersion();
+
+    const entryDocs: Array<Omit<TicketEntryDoc, "_id">> = [];
 
     for (const drawId of drawIds) {
       const draw = drawMap.get(drawId)!;
@@ -229,11 +232,10 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
         username,
         ticketId,
         drawId: draw.drawId,
-        drawTime: draw.drawTime,
         drawDate: draw.drawDate,
         financialDate: draw.financialDate,
         tenant: { commissionRate, commissionAmount },
-        status: EntryStatus.Scheduled,
+        status: EntryStatus.Scheduled as any,
         betCount: betsPerDraw,
         amount: amountPerDraw,
         unitPrice,
@@ -242,6 +244,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
           boards: boardSnapshots,
           sideBets: sideBetSnapshots,
         },
+        version,
         createdAt: now,
         updatedAt: now,
       });

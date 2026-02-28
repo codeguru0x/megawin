@@ -68,7 +68,7 @@ export const getMongoClient = async ({
   }
 
   try {
-    console.log(`create mongodb client in ${process.env.NODE_ENV} env`);
+    console.log(`create mongodb client instance`);
 
     const client = new MongoClient(url, clientOptions);
     await client.connect();

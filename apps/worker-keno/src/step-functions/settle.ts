@@ -96,10 +96,23 @@ export const SETTLE_STATE_MACHINE = {
       Choices: [
         {
           Condition: "{% $states.input.settleResult.done %}",
-          Next: "CalculateFinancials",
+          Next: "SyncTicketSummaries",
         },
       ],
       Default: "SettleEntries",
+    },
+
+    SyncTicketSummaries: {
+      Type: "Task",
+      Resource:
+        "arn:aws:lambda:REGION:ACCOUNT:function:settle-sync-ticket-summaries",
+      Arguments: {
+        drawId: "{% $states.input.context.drawId %}",
+      },
+      Output:
+        "{% { 'context': $states.input.context, 'syncResult': $states.result } %}",
+      Next: "CalculateFinancials",
+      Retry: LAMBDA_RETRY,
     },
 
     CalculateFinancials: {

@@ -84,10 +84,23 @@ export const VOID_STATE_MACHINE = {
       Choices: [
         {
           Condition: "{% $states.input.voidResult.done %}",
-          Next: "DispatchRefunds",
+          Next: "SyncTicketSummaries",
         },
       ],
       Default: "VoidEntries",
+    },
+
+    SyncTicketSummaries: {
+      Type: "Task",
+      Resource:
+        "arn:aws:lambda:REGION:ACCOUNT:function:void-sync-ticket-summaries",
+      Arguments: {
+        drawId: "{% $states.input.context.drawId %}",
+      },
+      Output:
+        "{% { 'context': $states.input.context, 'syncResult': $states.result } %}",
+      Next: "DispatchRefunds",
+      Retry: LAMBDA_RETRY,
     },
 
     DispatchRefunds: {

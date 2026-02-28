@@ -13,11 +13,7 @@
  * - Chơi nhiều kỳ liên tiếp (multi-draw, lazy enrollment)
  */
 
-import type {
-  KenoBigSmallBet,
-  KenoEvenOddBet,
-  KenoPlayType,
-} from "./enums";
+import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "./enums";
 import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
 
 // ─────────────────────────────────────────────
@@ -42,7 +38,9 @@ export interface BasicBoard {
 
 export interface SideBet {
   isVoid?: boolean;
-  playType: typeof import("./enums").KenoPlayType.BigSmall | typeof import("./enums").KenoPlayType.EvenOdd;
+  playType:
+    | typeof import("./enums").KenoPlayType.BigSmall
+    | typeof import("./enums").KenoPlayType.EvenOdd;
   bet: KenoBigSmallBet | KenoEvenOddBet;
 }
 
@@ -128,6 +126,12 @@ export interface TicketDoc {
   // ───── Status & Timestamps ─────
 
   status: TicketStatus;
+
+  /**
+   * Monotonic counter – incremented by SyncTicketSummaries.
+   * Dùng cho audit trail, ETag/cache invalidation, change detection.
+   */
+  version: number;
 
   createdAt: Date;
   updatedAt: Date;

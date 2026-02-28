@@ -33,6 +33,10 @@
     "./api-types": {
       "types": "./src/api-types/index.ts",
       "default": "./dist/api-types/index.js"
+    },
+    "./constants/*": {
+      "types": "./src/constants/*.ts",
+      "default": "./dist/constants/*.js"
     }
   },
   "devDependencies": {

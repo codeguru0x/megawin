@@ -6,6 +6,7 @@
  */
 
 import type { TenantAuthContext } from "@megawin/auth";
+import { ClaimKey } from "@megawin/identity/entities/claim";
 
 export interface MockEventOptions {
   user?: Partial<TenantAuthContext>;
@@ -37,13 +38,13 @@ export function createMockEvent(options: MockEventOptions = {}) {
       httpMethod: "GET",
       authorizer: {
         claims: {
-          sub: user.sub,
-          "custom:username": user.username,
-          "custom:account_type": user.accountType,
-          "custom:account_status": user.accountStatus,
-          "custom:account_id": user.accountId,
-          "custom:tenant_id": user.tenantId,
-          "custom:roles": user.roles.join(","),
+          [ClaimKey.Sub]: user.sub,
+          [ClaimKey.Username]: user.username,
+          [ClaimKey.AccountType]: user.accountType,
+          [ClaimKey.AccountStatus]: user.accountStatus,
+          [ClaimKey.AccountId]: user.accountId,
+          [ClaimKey.TenantId]: user.tenantId,
+          [ClaimKey.Roles]: user.roles.join(","),
         },
       },
     },

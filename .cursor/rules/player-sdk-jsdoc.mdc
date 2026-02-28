@@ -1,0 +1,97 @@
+---
+description: JSDoc standards for player-sdk package — ensures TypeDoc generates clear, complete API documentation for tenants
+globs: packages/player-sdk/src/**/*.ts
+alwaysApply: false
+---
+
+# Player SDK — JSDoc Standards for TypeDoc
+
+Package `@megawin/player-sdk` generates API docs for tenants via TypeDoc (`pnpm docs:build`).
+All public exports MUST have complete JSDoc. Internal code marked `@internal` is excluded.
+
+## Rules
+
+### Every public interface/type MUST have
+
+- One-line summary describing purpose
+- `@example` with realistic usage when the type is a primary input/output
+
+### Every property MUST have
+
+- One-line description
+- Data format in description: ISO 8601, `YYYY-MM-DD`, `YYYY-MM-DD-NNN`, zero-padded `"01"-"80"`, etc.
+- Unit if applicable: `(VND)`, `(milliseconds)`, `(seconds)`
+- Possible values for string unions: describe inline or link to enum
+
+### Every API method (in `KenoApi`, `Lotto535Api`, etc.) MUST have
+
+- Summary (what it does, not how)
+- `**Endpoint:**` line with HTTP method + path
+- `@param` for each parameter with description
+- `@returns` describing the response shape
+- `@throws` with `{@link ApiClientError}` for each known error code
+- `@example` with complete, copy-pasteable code snippet
+
+### Enum constants MUST have
+
+- JSDoc on the const object (group description)
+- Inline comment or JSDoc on each value explaining its meaning
+
+## Good Example — API Method
+
+````typescript
+/**
+ * Lấy danh sách vé Keno đang chờ xử lý.
+ *
+ * Trả về các vé mà kỳ quay chưa kết thúc hoặc chưa settle xong.
+ * Hỗ trợ phân trang cursor-based.
+ *
+ * **Endpoint:** `GET /player/keno/tickets/pending`
+ *
+ * @param params - Tham số phân trang (tùy chọn)
+ * @returns Danh sách vé kèm cursor cho trang tiếp theo
+ *
+ * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+ *
+ * @example
+ * ```ts
+ * const page1 = await client.keno.listPendingTickets({ size: 10 });
+ * console.log(page1.tickets.length); // up to 10
+ *
+ * if (page1.nextCursor) {
+ *   const page2 = await client.keno.listPendingTickets({
+ *     size: 10,
+ *     cursor: page1.nextCursor,
+ *   });
+ * }
+ * ```
+ */
+listPendingTickets(params?: KenoListTicketsParams): Promise<KenoListTicketsResponse>;
+````
+
+## Good Example — Interface with Properties
+
+```typescript
+/**
+ * Tóm tắt vé Keno cho UI.
+ */
+export interface KenoTicketSummary {
+  /** ID vé trong hệ thống. */
+  id: string;
+  /** Mã vé hiển thị cho người chơi. VD: `"K-20260225-001-0001"`. */
+  ticketNo: string;
+  /** Trạng thái hiển thị. */
+  status: KenoTicketDisplayStatus;
+  /** Tổng tiền cược (VND). */
+  totalAmount: number;
+  /** Thời điểm mua vé (ISO 8601). */
+  createdAt: string;
+}
+```
+
+## Anti-patterns — Do NOT
+
+- `/** The ticket ID. */` — too generic, say what kind of ID
+- Skip `@example` on API methods — tenants copy examples directly
+- Use `@internal` on public-facing types — they won't appear in docs
+- Add JSDoc that just repeats the property name — add format, unit, or meaning

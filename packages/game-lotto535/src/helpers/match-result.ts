@@ -10,11 +10,7 @@
  */
 
 import type { PrizeTier } from "../entities/enums";
-import type {
-  LineValue,
-  MainTuple,
-  Special,
-} from "../entities/types";
+import type { LineValue, MainTuple, Special } from "../entities/types";
 import { determineTier, type LineMatchResult } from "../rules/prize-tiers";
 
 // ─────────────────────────────────────────────
@@ -35,10 +31,7 @@ export interface DrawResultForMatch {
  * Đếm số lượng số chính trùng giữa line và kết quả.
  * Cả 2 đều phải sorted tăng dần (canonical).
  */
-function countMainMatches(
-  lineMain: MainTuple,
-  winMain: MainTuple,
-): number {
+function countMainMatches(lineMain: MainTuple, winMain: MainTuple): number {
   const winSet = new Set(winMain);
   let count = 0;
   for (const n of lineMain) {
@@ -56,7 +49,7 @@ function countMainMatches(
  */
 export function matchLine(
   line: LineValue,
-  result: DrawResultForMatch,
+  result: DrawResultForMatch
 ): LineMatchResult {
   const mainMatchCount = countMainMatches(line.main, result.winningMain);
   const specialMatched = line.special === result.winningSpecial;
@@ -69,8 +62,15 @@ export function matchLine(
 // Batch Match (cho settle)
 // ─────────────────────────────────────────────
 
-/** Kết quả match aggregate cho 1 board hoặc toàn bộ ticket. */
-export interface AggregateMatchResult {
+/** Kết quả match 1 line — dùng để build TicketLineDoc. */
+export interface PerLineMatchResult {
+  mainMatchCount: number;
+  specialMatched: boolean;
+  tier: PrizeTier | null;
+}
+
+/** Kết quả match aggregate + per-line cho toàn bộ ticket. */
+export interface DetailedMatchResult {
   /** Tổng lines. */
   totalLines: number;
 
@@ -79,24 +79,31 @@ export interface AggregateMatchResult {
 
   /** Chi tiết theo tier: tier → số lines trúng. */
   tierCounts: Map<PrizeTier, number>;
+
+  /** Kết quả match từng line (1:1 với input lines array). */
+  perLineResults: PerLineMatchResult[];
 }
 
 /**
- * Match nhiều lines với kết quả quay, aggregate theo tier.
+ * Match nhiều lines với kết quả quay.
+ * Trả cả aggregate (tierCounts) lẫn per-line results trong 1 pass.
  *
  * @param lines - Danh sách lines
  * @param result - Kết quả quay
- * @returns Aggregate: totalLines, winningLines, tierCounts
+ * @returns Detailed: totalLines, winningLines, tierCounts, perLineResults
  */
 export function matchLines(
   lines: LineValue[],
-  result: DrawResultForMatch,
-): AggregateMatchResult {
+  result: DrawResultForMatch
+): DetailedMatchResult {
   const tierCounts = new Map<PrizeTier, number>();
+  const perLineResults: PerLineMatchResult[] = [];
   let winningLines = 0;
 
   for (const line of lines) {
-    const { tier } = matchLine(line, result);
+    const { tier, mainMatchCount, specialMatched } = matchLine(line, result);
+    perLineResults.push({ mainMatchCount, specialMatched, tier });
+
     if (tier != null) {
       winningLines++;
       tierCounts.set(tier, (tierCounts.get(tier) ?? 0) + 1);
@@ -107,5 +114,6 @@ export function matchLines(
     totalLines: lines.length,
     winningLines,
     tierCounts,
+    perLineResults,
   };
 }

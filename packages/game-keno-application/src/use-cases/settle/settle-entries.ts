@@ -10,6 +10,8 @@
  *
  * Keno khác Lotto: match cả boards (basic) + side bets (big/small, even/odd).
  * Không có Jackpot tích luỹ – tất cả giải thưởng cố định theo bảng.
+ *
+ * KHÔNG update ticket — SyncTicketSummaries step riêng sẽ recompute từ entries.
  */
 
 import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
@@ -31,7 +33,6 @@ import {
 } from "@megawin/game-keno/rules";
 import { EntryOutcome } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { TicketRepository } from "../../infras/repos/ticket-repo";
 
 export interface SettleEntriesBatchInput {
   drawId: string;
@@ -62,7 +63,6 @@ export interface SettleAccumulator {
   totalSettled: number;
   totalPayoutAmount: number;
   totalWinAmount: number;
-  ticketsCompleted: number;
 }
 
 export interface SettleEntriesBatchResult {
@@ -76,9 +76,7 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
   SettleEntriesBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
-  private readonly ticketRepo = new TicketRepository();
 
-  /** Settle 1 batch Keno entries. Loop cho đến khi done = true. */
   protected async execute(
     input: SettleEntriesBatchInput
   ): Promise<SettleEntriesBatchResult> {
@@ -107,23 +105,8 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
 
     const acc = emptyAccumulator();
     let batchSettled = 0;
-    const ticketCache = new Map<string, any>();
 
     for (const entry of entries) {
-      const ticketId = extractTicketId(entry.ticketId);
-
-      let ticket = ticketCache.get(ticketId);
-      if (!ticket) {
-        ticket = await this.ticketRepo.getTicketById(ticketId);
-        if (ticket) ticketCache.set(ticketId, ticket);
-      }
-      if (!ticket) {
-        console.error(
-          `Ticket ${ticketId} not found for entry ${entry.id}, skipping.`
-        );
-        continue;
-      }
-
       const boardPayouts: Array<{
         boardNo: string;
         playType: string;
@@ -218,18 +201,6 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
 
       if (!settled) continue;
 
-      const newSettledCount = (ticket.progress?.settledDraws ?? 0) + 1;
-      const isCompleted =
-        newSettledCount >=
-        (ticket.progress?.totalDraws ?? ticket.drawPlan?.drawCount ?? 1);
-
-      await this.ticketRepo.updateSettleProgress(
-        ticketId,
-        isCompleted,
-        winAmount
-      );
-      if (isCompleted) acc.ticketsCompleted++;
-
       acc.totalSettled++;
       acc.totalWinAmount += winAmount;
       acc.totalPayoutAmount += winAmount;
@@ -249,14 +220,5 @@ function emptyAccumulator(): SettleAccumulator {
     totalSettled: 0,
     totalPayoutAmount: 0,
     totalWinAmount: 0,
-    ticketsCompleted: 0,
   };
-}
-
-function extractTicketId(ticketId: unknown): string {
-  if (typeof ticketId === "string") return ticketId;
-  if (ticketId && typeof (ticketId as any).toHexString === "function") {
-    return (ticketId as any).toHexString();
-  }
-  return String(ticketId);
 }

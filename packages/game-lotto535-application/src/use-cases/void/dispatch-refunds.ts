@@ -56,41 +56,52 @@ export class DispatchRefundBatchUseCase extends StepFunctionUseCase<
   private readonly tenantConfigRepo = new TenantConfigRepository();
 
   /** Dispatch refund cho 1 batch entries đã void. Loop cho đến khi done = true. */
-  protected async execute(input: DispatchRefundBatchInput): Promise<DispatchRefundBatchResult> {
-  const { drawId } = input;
-  const entries = await this.entryRepo.getPendingRefundEntries(drawId, BATCH_QUERY_LIMIT);
-
-  if (entries.length === 0) {
-    return { drawId, done: true, dispatched: 0, failed: 0, tenantResults: [] };
-  }
-
-  const tenantGroups = groupByTenant(entries);
-  const tenantResults: DispatchRefundBatchResult["tenantResults"] = [];
-  let totalDispatched = 0;
-  let totalFailed = 0;
-
-  for (const [tenantId, tenantEntries] of tenantGroups) {
-    const result = await dispatchRefundToTenant(
-      this.entryRepo,
-      this.tenantConfigRepo,
-      tenantId,
+  protected async execute(
+    input: DispatchRefundBatchInput
+  ): Promise<DispatchRefundBatchResult> {
+    const { drawId } = input;
+    const entries = await this.entryRepo.getPendingRefundEntries(
       drawId,
-      tenantEntries,
+      BATCH_QUERY_LIMIT
     );
-    tenantResults.push(result);
-    totalDispatched += result.dispatched;
-    totalFailed += result.failed;
-  }
 
-  const remaining = await this.entryRepo.getPendingRefundEntries(drawId, 1);
+    if (entries.length === 0) {
+      return {
+        drawId,
+        done: true,
+        dispatched: 0,
+        failed: 0,
+        tenantResults: [],
+      };
+    }
 
-  return {
-    drawId,
-    done: remaining.length === 0,
-    dispatched: totalDispatched,
-    failed: totalFailed,
-    tenantResults,
-  };
+    const tenantGroups = groupByTenant(entries);
+    const tenantResults: DispatchRefundBatchResult["tenantResults"] = [];
+    let totalDispatched = 0;
+    let totalFailed = 0;
+
+    for (const [tenantId, tenantEntries] of tenantGroups) {
+      const result = await dispatchRefundToTenant(
+        this.entryRepo,
+        this.tenantConfigRepo,
+        tenantId,
+        drawId,
+        tenantEntries
+      );
+      tenantResults.push(result);
+      totalDispatched += result.dispatched;
+      totalFailed += result.failed;
+    }
+
+    const remaining = await this.entryRepo.getPendingRefundEntries(drawId, 1);
+
+    return {
+      drawId,
+      done: remaining.length === 0,
+      dispatched: totalDispatched,
+      failed: totalFailed,
+      tenantResults,
+    };
   }
 }
 
@@ -122,7 +133,7 @@ function extractId(entry: any): string {
 
 async function loadGatewayClient(
   tenantConfigRepo: TenantConfigRepository,
-  tenantId: string,
+  tenantId: string
 ): Promise<TenantGatewayClient | null> {
   const tenantConfig = await tenantConfigRepo.getTenantConfig(tenantId);
 
@@ -144,7 +155,7 @@ async function dispatchRefundToTenant(
   tenantConfigRepo: TenantConfigRepository,
   tenantId: string,
   drawId: string,
-  entries: any[],
+  entries: any[]
 ): Promise<{
   tenantId: string;
   dispatched: number;
@@ -153,7 +164,7 @@ async function dispatchRefundToTenant(
 }> {
   const totalRefundAmount = entries.reduce(
     (s: number, e: any) => s + (e.voidInfo?.refundAmount ?? 0),
-    0,
+    0
   );
 
   const gateway = await loadGatewayClient(tenantConfigRepo, tenantId);
@@ -161,7 +172,7 @@ async function dispatchRefundToTenant(
   if (!gateway) {
     console.warn(
       `[dispatch-refund] Tenant ${tenantId}: no callbackBaseUrl. ` +
-        `${entries.length} entries, ${totalRefundAmount} VND (DRY-RUN → auto-dispatched)`,
+        `${entries.length} entries, ${totalRefundAmount} VND (DRY-RUN → auto-dispatched)`
     );
     for (const e of entries) {
       await entryRepo.markRefundDispatched(extractId(e));
@@ -180,6 +191,7 @@ async function dispatchRefundToTenant(
 
   for (const batch of batches) {
     const items: RefundItem[] = batch.map((e: any) => ({
+      playerId: e.accountId,
       accountId: e.accountId,
       entryId: extractId(e),
       amount: e.voidInfo?.refundAmount ?? 0,
@@ -201,7 +213,7 @@ async function dispatchRefundToTenant(
         } else {
           await entryRepo.markRefundFailed(
             r.entryId,
-            r.error ?? "Tenant returned failed",
+            r.error ?? "Tenant returned failed"
           );
           failed++;
         }
@@ -209,7 +221,7 @@ async function dispatchRefundToTenant(
     } catch (err: any) {
       const errMsg = err?.message ?? String(err);
       console.error(
-        `[dispatch-refund] Tenant ${tenantId} batch failed: ${errMsg}`,
+        `[dispatch-refund] Tenant ${tenantId} batch failed: ${errMsg}`
       );
       for (const e of batch) {
         await entryRepo.markRefundFailed(extractId(e), errMsg);

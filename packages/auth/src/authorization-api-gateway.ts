@@ -107,7 +107,13 @@ export function getAuthContextFromApiGatewayEvent(
   const authorizer = event.requestContext?.authorizer;
   if (!authorizer) return null;
 
-  const claims = (authorizer.claims ?? authorizer) as Record<string, unknown>;
+  const jwt = authorizer.jwt as
+    | { claims?: Record<string, unknown> }
+    | undefined;
+  const claims = (jwt?.claims ?? authorizer.claims ?? authorizer) as Record<
+    string,
+    unknown
+  >;
   const sub =
     (claims[ClaimKey.Sub] as string) ??
     (authorizer.sub as string) ??

@@ -71,14 +71,12 @@ export const GAME_PRODUCT_VALUES = Object.values(GameProduct);
 /**
  * Vòng đời trạng thái của vé (ticket) – dùng chung cho mọi game.
  *
- * Flow: draft → paid → completed
- *                ↘ refunded / void
+ * Flow: paid → completed
+ *         ↘ refunded / void
  *
  * Hệ thống **không cho phép huỷ vé** (không có "cancelled").
  */
 export const TicketStatus = {
-  /** Vé nháp, chưa thanh toán – có thể chỉnh sửa boards/plan. */
-  Draft: "draft",
   /** Đã thanh toán – vé bị khoá (immutable), entries được tạo. */
   Paid: "paid",
   /** Đã hoàn tiền – chỉ xảy ra khi có lỗi hệ thống hoặc kỳ quay bị void. */

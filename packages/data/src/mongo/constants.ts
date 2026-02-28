@@ -1,9 +1,10 @@
+import { Pagination } from "@megawin/shared/constants/pagination";
+
 export const Constants = {
   HardLimit: {
-    // Số lượng tối đa bản ghi trả về cho mỗi lần request
     Paging: {
-      Size: 100,
-      Page: 1000,
+      Size: Pagination.Max.Size,
+      Page: Pagination.Max.Page,
     },
 
     MongoDBLimit: 500,
@@ -11,8 +12,8 @@ export const Constants = {
 
   Default: {
     Paging: {
-      Size: 25,
-      Page: 1,
+      Size: Pagination.Default.Size,
+      Page: Pagination.Default.Page,
     },
 
     NullString: "N/A",

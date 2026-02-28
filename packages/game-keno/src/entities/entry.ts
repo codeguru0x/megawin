@@ -38,7 +38,6 @@ export interface TicketEntryDoc {
   // ───── Draw Snapshot ─────
 
   drawId: string;
-  drawTime: Date;
   drawDate: ISODateString;
   financialDate: ISODateString;
 

@@ -11,7 +11,7 @@ import type {
   TicketEntryDoc,
   EntryBoardSnapshot,
 } from "@megawin/game-lotto535/entities";
-import { PlayType, ExpansionMode } from "@megawin/game-lotto535/entities";
+import { PlayType } from "@megawin/game-lotto535/entities";
 import {
   LOTTO535_MAIN_MIN,
   LOTTO535_MAIN_MAX,
@@ -34,7 +34,6 @@ import { buildTicketNo } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
 
-const EXPANSION_THRESHOLD = 100;
 const VALID_BOARD_NOS = ["A", "B", "C", "D", "E"];
 
 export class PlaceBetUseCase extends ApiGatewayUseCase<
@@ -178,11 +177,6 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
     const commissionAmount = Math.round(amountPerDraw * commissionRate);
 
     // ── 7. Build ticket document ──
-    const expansionMode =
-      totalLinesPerDraw > EXPANSION_THRESHOLD
-        ? ExpansionMode.OnSettle
-        : ExpansionMode.None;
-
     const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
     const ticketNo = buildTicketNo("L535", date, seq);
 
@@ -203,16 +197,13 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
         totalAmount,
       },
       boards: builtBoards,
-      expansion: {
-        mode: expansionMode,
-        linesStored: false,
-        lineCount: totalLinesPerDraw,
-      },
+      lineCount: totalLinesPerDraw,
       progress: {
         totalDraws: drawCount,
         settledDraws: 0,
       },
       status: TicketStatus.Paid as any,
+      version: 0,
       createdAt: now,
       updatedAt: now,
     };

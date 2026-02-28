@@ -3,9 +3,35 @@ service: megawin-tenant
 plugins:
   - serverless-offline
 
+custom:
+  serverless-offline:
+    httpPort: 4020
+    lambdaPort: 4021
+    noPrependStageInUrl: true
+
 provider:
   name: aws
-  runtime: nodejs24.x
+  runtime: nodejs22.x
+  stage: ${opt:stage, 'dev'}
+  region: ap-southeast-1
+
+  environment:
+    STAGE: ${self:provider.stage}
+    MONGODB_URI: ${env:MONGODB_URI, 'mongodb://localhost:27017/megawin'}
+
+  httpApi:
+    cors:
+      allowedOrigins:
+        - ${env:CORS_ALLOWED_ORIGIN, '*'}
+      allowedMethods:
+        - GET
+        - POST
+        - PATCH
+        - OPTIONS
+      allowedHeaders:
+        - Content-Type
+        - X-Api-Key
+      maxAge: 86400
 
 build:
   esbuild:

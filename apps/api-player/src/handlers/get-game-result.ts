@@ -10,9 +10,13 @@ import { toApiGatewayResponse } from "@megawin/app-core/use-cases";
 
 // ============ Zod schema ============
 
+const VALID_GAME_IDS = ["keno", "lotto535"] as const;
+
 const pathSchema = z.object({
-  gameId: z.string().min(1),
-  roundId: z.string().min(1),
+  gameId: z.enum(VALID_GAME_IDS),
+  roundId: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}\.\d{3}$/, "Format: YYYY-MM-DD.NNN"),
 });
 
 // ============ Handler ============
@@ -32,5 +36,5 @@ export const handler = withPlayerAuth(
       },
     });
   },
-  { schemas: { path: pathSchema } },
+  { schemas: { path: pathSchema } }
 );

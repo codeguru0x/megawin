@@ -9,9 +9,7 @@ export interface HttpClientConfig {
   headers?: Record<string, string>;
   timeout?: number;
   credentials?: RequestCredentials;
-  onRequest?: (
-    config: RequestConfig,
-  ) => RequestConfig | Promise<RequestConfig>;
+  onRequest?: (config: RequestConfig) => RequestConfig | Promise<RequestConfig>;
   onError?: (error: ApiClientError) => void | Promise<void>;
 }
 
@@ -35,25 +33,25 @@ export interface HttpClient {
     path: string,
     options?: RequestOptions & {
       params?: Record<string, string | number | boolean | undefined>;
-    },
+    }
   ): Promise<T>;
 
   post<T = unknown>(
     path: string,
     body?: unknown,
-    options?: RequestOptions,
+    options?: RequestOptions
   ): Promise<T>;
 
   put<T = unknown>(
     path: string,
     body?: unknown,
-    options?: RequestOptions,
+    options?: RequestOptions
   ): Promise<T>;
 
   patch<T = unknown>(
     path: string,
     body?: unknown,
-    options?: RequestOptions,
+    options?: RequestOptions
   ): Promise<T>;
 
   delete<T = unknown>(path: string, options?: RequestOptions): Promise<T>;
@@ -68,7 +66,7 @@ function normalizePath(path: string): string {
 function buildUrl(
   baseUrl: string,
   path: string,
-  params?: Record<string, string | number | boolean | undefined>,
+  params?: Record<string, string | number | boolean | undefined>
 ): string {
   const url = path.startsWith("http")
     ? path
@@ -128,7 +126,7 @@ export function createHttpClient(config: HttpClientConfig): HttpClient {
     body?: unknown,
     options?: RequestOptions & {
       params?: Record<string, string | number | boolean | undefined>;
-    },
+    }
   ): Promise<T> {
     const url = buildUrl(baseUrl, path, options?.params);
     const timeout = options?.timeout ?? defaultTimeout;
@@ -186,8 +184,7 @@ export function createHttpClient(config: HttpClientConfig): HttpClient {
         throw err;
       }
 
-      const isAbort =
-        err instanceof DOMException && err.name === "AbortError";
+      const isAbort = err instanceof Error && err.name === "AbortError";
       const clientError = new ApiClientError(isAbort ? 408 : 0, {
         code: isAbort ? "TIMEOUT" : "NETWORK_ERROR",
         message: isAbort
@@ -208,17 +205,26 @@ export function createHttpClient(config: HttpClientConfig): HttpClient {
       path: string,
       options?: RequestOptions & {
         params?: Record<string, string | number | boolean | undefined>;
-      },
+      }
     ) => request<T>("GET", path, undefined, options),
 
-    post: <T = unknown>(path: string, body?: unknown, options?: RequestOptions) =>
-      request<T>("POST", path, body, options),
+    post: <T = unknown>(
+      path: string,
+      body?: unknown,
+      options?: RequestOptions
+    ) => request<T>("POST", path, body, options),
 
-    put: <T = unknown>(path: string, body?: unknown, options?: RequestOptions) =>
-      request<T>("PUT", path, body, options),
+    put: <T = unknown>(
+      path: string,
+      body?: unknown,
+      options?: RequestOptions
+    ) => request<T>("PUT", path, body, options),
 
-    patch: <T = unknown>(path: string, body?: unknown, options?: RequestOptions) =>
-      request<T>("PATCH", path, body, options),
+    patch: <T = unknown>(
+      path: string,
+      body?: unknown,
+      options?: RequestOptions
+    ) => request<T>("PATCH", path, body, options),
 
     delete: <T = unknown>(path: string, options?: RequestOptions) =>
       request<T>("DELETE", path, undefined, options),

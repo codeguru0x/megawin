@@ -1,60 +1,32 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createPlayerClient, type PlayerClient } from "../src";
-import type { KenoTicketPurchaseInput } from "../src/keno";
-
-function mockFetch(data: unknown) {
-  return vi.fn().mockResolvedValue({
-    ok: true,
-    status: 200,
-    statusText: "OK",
-    headers: new Headers({ "content-type": "application/json" }),
-    json: () => Promise.resolve({ success: true, data }),
-  });
-}
-
-function mockFetchError(code: string, message: string, status = 400) {
-  return vi.fn().mockResolvedValue({
-    ok: false,
-    status,
-    statusText: "Error",
-    headers: new Headers({ "content-type": "application/json" }),
-    json: () =>
-      Promise.resolve({
-        success: false,
-        error: { code, message },
-      }),
-  });
-}
-
-const TOKENS = {
-  accessToken: "test-token",
-  refreshToken: "test-refresh",
-  expiresAt: Date.now() + 3600_000,
-};
+import type { PlayerClient } from "../../src";
+import type { KenoTicketPurchaseInput } from "../../src/keno";
+import { createTestClient, mockFetch, mockFetchError } from "../helpers";
 
 describe("keno.placeBet", () => {
   let client: PlayerClient;
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    client = createPlayerClient({
-      baseUrl: "https://api.test.com",
-      tokens: TOKENS,
-    });
+    client = createTestClient();
   });
 
   it("should call POST /player/keno/bets with correct body", async () => {
     const responseData = {
-      ticketId: "TKT-001",
-      ticketNo: "K-20260225-001",
-      totalAmount: 10000,
+      ticketId: "65abc123",
+      ticketNo: "K-20260225-001-0001",
+      status: "active",
+      drawPlan: { drawIds: ["2026-02-25-001"], drawCount: 1 },
+      pricing: { unitPrice: 10000, betsPerDraw: 1, amountPerDraw: 10000, totalAmount: 10000 },
+      boardCount: 1,
+      sideBetCount: 0,
+      entryCount: 1,
     };
     const fetchMock = mockFetch(responseData);
     vi.stubGlobal("fetch", fetchMock);
 
     const input: KenoTicketPurchaseInput = {
-      startDrawId: "2026-02-25-001",
-      drawCount: 1,
+      drawIds: ["2026-02-25-001"],
       boards: [{ boardNo: "A", numbers: ["01", "15", "33", "44", "60"] }],
     };
 
@@ -70,12 +42,16 @@ describe("keno.placeBet", () => {
   });
 
   it("should include Bearer token in request", async () => {
-    const fetchMock = mockFetch({ ticketId: "TKT-001", ticketNo: "K-001", totalAmount: 10000 });
+    const fetchMock = mockFetch({
+      ticketId: "65abc", ticketNo: "K-001", status: "active",
+      drawPlan: { drawIds: ["2026-02-25-001"], drawCount: 1 },
+      pricing: { unitPrice: 10000, betsPerDraw: 1, amountPerDraw: 10000, totalAmount: 10000 },
+      boardCount: 1, sideBetCount: 0, entryCount: 1,
+    });
     vi.stubGlobal("fetch", fetchMock);
 
     await client.keno.placeBet({
-      startDrawId: "2026-02-25-001",
-      drawCount: 1,
+      drawIds: ["2026-02-25-001"],
       boards: [{ boardNo: "A", numbers: ["01"] }],
     });
 
@@ -84,40 +60,45 @@ describe("keno.placeBet", () => {
   });
 
   it("should throw ApiClientError on INSUFFICIENT_BALANCE", async () => {
-    vi.stubGlobal(
-      "fetch",
-      mockFetchError("INSUFFICIENT_BALANCE", "Không đủ số dư"),
-    );
+    vi.stubGlobal("fetch", mockFetchError("INSUFFICIENT_BALANCE", "Không đủ số dư"));
 
     await expect(
       client.keno.placeBet({
-        startDrawId: "2026-02-25-001",
-        drawCount: 1,
+        drawIds: ["2026-02-25-001"],
         boards: [{ boardNo: "A", numbers: ["01"] }],
       }),
     ).rejects.toThrow("Không đủ số dư");
   });
 
-  it("should handle side bets", async () => {
+  it("should handle multiple drawIds and side bets", async () => {
     const responseData = {
-      ticketId: "TKT-002",
-      ticketNo: "K-20260225-002",
-      totalAmount: 20000,
+      ticketId: "65abc456",
+      ticketNo: "K-20260225-001-0002",
+      status: "active",
+      drawPlan: {
+        drawIds: ["2026-02-25-001", "2026-02-25-002", "2026-02-25-003"],
+        drawCount: 3,
+      },
+      pricing: { unitPrice: 10000, betsPerDraw: 3, amountPerDraw: 30000, totalAmount: 90000 },
+      boardCount: 1,
+      sideBetCount: 1,
+      entryCount: 3,
     };
     const fetchMock = mockFetch(responseData);
     vi.stubGlobal("fetch", fetchMock);
 
     const input: KenoTicketPurchaseInput = {
-      startDrawId: "2026-02-25-001",
-      drawCount: 1,
+      drawIds: ["2026-02-25-001", "2026-02-25-002", "2026-02-25-003"],
       boards: [{ boardNo: "A", numbers: ["01", "15", "33"] }],
       sideBets: [{ playType: "bigSmall", bet: "big" }],
     };
 
     const result = await client.keno.placeBet(input);
-    expect(result).toEqual(responseData);
+    expect(result.entryCount).toBe(3);
+    expect(result.sideBetCount).toBe(1);
 
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.drawIds).toHaveLength(3);
     expect(body.sideBets).toEqual([{ playType: "bigSmall", bet: "big" }]);
   });
 });

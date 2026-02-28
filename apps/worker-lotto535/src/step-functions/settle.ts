@@ -125,6 +125,34 @@ export const SETTLE_STATE_MACHINE = {
       },
       Output:
         "{% { 'context': $states.input.context, 'financials': $states.result } %}",
+      Next: "ApplySplitBonuses",
+      Retry: LAMBDA_RETRY,
+    },
+
+    ApplySplitBonuses: {
+      Type: "Task",
+      Resource:
+        "arn:aws:lambda:REGION:ACCOUNT:function:settle-apply-split-bonuses",
+      Arguments: {
+        drawId: "{% $states.input.context.drawId %}",
+        isSplitCycle: "{% $states.input.context.isSplitCycle %}",
+        splitDetails: "{% $states.input.financials.splitDetails %}",
+      },
+      Output:
+        "{% { 'context': $states.input.context, 'financials': $states.input.financials, 'splitBonusResult': $states.result } %}",
+      Next: "SyncTicketSummaries",
+      Retry: LAMBDA_RETRY,
+    },
+
+    SyncTicketSummaries: {
+      Type: "Task",
+      Resource:
+        "arn:aws:lambda:REGION:ACCOUNT:function:settle-sync-ticket-summaries",
+      Arguments: {
+        drawId: "{% $states.input.context.drawId %}",
+      },
+      Output:
+        "{% { 'context': $states.input.context, 'financials': $states.input.financials, 'syncResult': $states.result } %}",
       Next: "BuildReport",
       Retry: LAMBDA_RETRY,
     },

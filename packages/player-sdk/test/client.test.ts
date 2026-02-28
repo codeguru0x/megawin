@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createPlayerClient, MemoryTokenStorage, type PlayerClient, type PlayerSdkConfig } from "../src";
+import { mockFetch, mockFetchError } from "./helpers";
 
-/**
- * Mock sessionStorage cho test environment (Node.js không có sessionStorage).
- */
 function createMockSessionStorage(): Storage {
   const store = new Map<string, string>();
   return {
@@ -14,33 +12,6 @@ function createMockSessionStorage(): Storage {
     get length() { return store.size; },
     key: (index: number) => [...store.keys()][index] ?? null,
   };
-}
-
-/**
- * Mock global fetch cho tất cả tests.
- */
-function mockFetch(data: unknown, status = 200) {
-  return vi.fn().mockResolvedValue({
-    ok: status >= 200 && status < 300,
-    status,
-    statusText: status === 200 ? "OK" : "Error",
-    headers: new Headers({ "content-type": "application/json" }),
-    json: () => Promise.resolve({ success: true, data }),
-  });
-}
-
-function mockFetchError(code: string, message: string, status = 400) {
-  return vi.fn().mockResolvedValue({
-    ok: false,
-    status,
-    statusText: "Error",
-    headers: new Headers({ "content-type": "application/json" }),
-    json: () =>
-      Promise.resolve({
-        success: false,
-        error: { code, message },
-      }),
-  });
 }
 
 const BASE_CONFIG: PlayerSdkConfig = {

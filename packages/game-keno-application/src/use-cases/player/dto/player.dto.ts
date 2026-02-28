@@ -33,11 +33,41 @@ export interface PlayerDrawInfo {
 
 // ─── List Tickets (Player) ───
 
-export interface PlayerListTicketsInput {
+/**
+ * Cursor-based pagination cho danh sách vé.
+ *
+ * Tại sao cursor thay vì page/offset?
+ * - Collection kenoTickets có thể hàng triệu docs.
+ * - skip(page*size) phải scan qua tất cả docs bỏ qua → O(skip+limit), chậm ở page lớn.
+ * - Cursor dùng range query trên indexed field (_id hoặc createdAt) → O(limit) luôn.
+ */
+
+export const TicketSortBy = {
+  BetDate: "betDate",
+  DrawDate: "drawDate",
+} as const;
+
+export type TicketSortBy = (typeof TicketSortBy)[keyof typeof TicketSortBy];
+
+export const TICKET_SORT_BY_VALUES = Object.values(TicketSortBy);
+
+export interface PlayerListPendingTicketsInput {
   tenantId: string;
   accountId: string;
-  page: number;
   size: number;
+  cursor?: string;
+}
+
+export interface PlayerListCompletedTicketsInput {
+  tenantId: string;
+  accountId: string;
+  size: number;
+  sortBy: TicketSortBy;
+  /** ISO date string, lọc tickets hoàn thành từ ngày này. */
+  from?: string;
+  /** ISO date string, lọc tickets hoàn thành đến ngày này. */
+  to?: string;
+  cursor?: string;
 }
 
 export interface PlayerTicketSummary {
@@ -75,7 +105,7 @@ export interface PlayerTicketSummary {
 
 export interface PlayerListTicketsOutput {
   tickets: PlayerTicketSummary[];
-  page: number;
+  nextCursor: string | null;
   size: number;
 }
 
@@ -91,7 +121,6 @@ export interface PlayerEntryInfo {
   id: string;
   drawId: string;
   drawDate: string;
-  drawTime: string;
   status: string;
   amount: number;
   betCount: number;

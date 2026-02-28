@@ -7,32 +7,16 @@
  */
 
 import type { HttpClient } from "../http-client";
-import type { KenoTicketPurchaseInput } from "../keno";
+import type {
+  KenoTicketPurchaseInput,
+  KenoPlaceBetResponse,
+  KenoCurrentDrawResponse,
+  KenoListTicketsParams,
+  KenoListCompletedTicketsParams,
+  KenoListTicketsResponse,
+  KenoTicketEntriesResponse,
+} from "../keno";
 import { ENDPOINTS } from "../endpoints";
-
-// ─────────────────────────────────────────────
-// Response Types
-// ─────────────────────────────────────────────
-
-/**
- * Response khi đặt cược Keno thành công.
- *
- * @example
- * ```ts
- * const result = await client.keno.placeBet({ ... });
- * console.log(result.ticketId);    // "TKT-ABC123"
- * console.log(result.ticketNo);    // "K-20260225-001-0001"
- * console.log(result.totalAmount); // 10000
- * ```
- */
-export interface KenoPlaceBetResponse {
-  /** ID vé duy nhất trong hệ thống. */
-  ticketId: string;
-  /** Mã vé hiển thị cho người chơi. */
-  ticketNo: string;
-  /** Tổng tiền cược (VND). */
-  totalAmount: number;
-}
 
 // ─────────────────────────────────────────────
 // API Interface
@@ -46,33 +30,73 @@ export interface KenoPlaceBetResponse {
  * @example
  * ```ts
  * import { createPlayerClient } from "@megawin/player-sdk";
- * import { KenoPlayType } from "@megawin/player-sdk/keno";
  *
- * const client = createPlayerClient({ baseUrl: "https://api.megawin.com" });
+ * const client = createPlayerClient({
+ *   baseUrl: "https://api.megawin.com",
+ *   tokens: tokensFromServer,
+ * });
  *
- * // Đặt cược Keno
- * const result = await client.keno.placeBet({
- *   startDrawId: "2026-02-25-001",
- *   drawCount: 1,
+ * // Lấy kỳ quay hiện tại
+ * const draw = await client.keno.getCurrentDraw();
+ *
+ * // Đặt cược
+ * const bet = await client.keno.placeBet({
+ *   drawIds: [draw.currentDraw!.drawId],
  *   boards: [{ boardNo: "A", numbers: ["01", "15", "33", "44", "60"] }],
  * });
+ *
+ * // Xem danh sách vé
+ * const tickets = await client.keno.listPendingTickets({ size: 10 });
+ *
+ * // Xem chi tiết vé
+ * const detail = await client.keno.getTicketEntries(tickets.tickets[0].id);
  * ```
  */
 export interface KenoApi {
+  /**
+   * Lấy kỳ quay Keno hiện tại + kết quả gần nhất.
+   *
+   * Trả về kỳ quay đang mở bán (currentDraw), tất cả kỳ active,
+   * và kết quả kỳ quay gần nhất đã settle.
+   *
+   * **Endpoint:** `GET /player/keno/draws/current`
+   *
+   * @returns Thông tin kỳ quay hiện tại và kết quả gần nhất
+   *
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * const data = await client.keno.getCurrentDraw();
+   *
+   * if (data.currentDraw) {
+   *   console.log("Kỳ hiện tại:", data.currentDraw.drawId);
+   *   console.log("Đóng bán lúc:", data.currentDraw.sales.closeAt);
+   * }
+   *
+   * console.log("Số kỳ đang active:", data.activeDraws.length);
+   *
+   * if (data.lastResult) {
+   *   console.log("Kết quả gần nhất:", data.lastResult.winningNumbers);
+   * }
+   * ```
+   */
+  getCurrentDraw(): Promise<KenoCurrentDrawResponse>;
+
   /**
    * Đặt cược Keno.
    *
    * Gửi request mua vé Keno cho player đã xác thực.
    * Số Keno dạng string zero-padded `"01"` đến `"80"`.
+   * Phải có ít nhất 1 board hoặc 1 side bet.
    *
    * **Endpoint:** `POST /player/keno/bets`
    *
    * @param input - Thông tin đặt cược
+   * @param input.drawIds - Danh sách drawId kỳ quay tham gia (1-30, không trùng)
    * @param input.boards - Boards chọn số (tối đa 2). Mỗi board chọn 1-10 số.
    * @param input.sideBets - Side bets tùy chọn (Lớn/Nhỏ, Chẵn/Lẻ)
-   * @param input.startDrawId - DrawId kỳ đầu tiên. Format: `YYYY-MM-DD-NNN`
-   * @param input.drawCount - Số kỳ tham gia liên tiếp (1-20)
-   * @returns Thông tin vé vừa tạo
+   * @returns Thông tin vé vừa tạo gồm ticketId, pricing, và counts
    *
    * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
    * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
@@ -81,19 +105,19 @@ export interface KenoApi {
    *
    * @example
    * ```ts
-   * // Cược cơ bản: chọn 5 số
+   * // Cược cơ bản: chọn 5 số, 1 kỳ
    * const result = await client.keno.placeBet({
-   *   startDrawId: "2026-02-25-001",
-   *   drawCount: 1,
+   *   drawIds: ["2026-02-25-001"],
    *   boards: [
    *     { boardNo: "A", numbers: ["01", "15", "33", "44", "60"] },
    *   ],
    * });
+   * console.log(result.ticketNo);            // "K-20260225-001-0001"
+   * console.log(result.pricing.totalAmount);  // 10000
    *
-   * // Cược kèm side bet
+   * // Cược nhiều kỳ + side bet
    * const result2 = await client.keno.placeBet({
-   *   startDrawId: "2026-02-25-001",
-   *   drawCount: 5,
+   *   drawIds: ["2026-02-25-001", "2026-02-25-002", "2026-02-25-003"],
    *   boards: [
    *     { boardNo: "A", numbers: ["01", "15", "33"] },
    *     { boardNo: "B", numbers: ["22", "44", "66", "77"] },
@@ -103,25 +127,164 @@ export interface KenoApi {
    *     { playType: "evenOdd", bet: "even" },
    *   ],
    * });
-   *
-   * console.log(result2.ticketId);    // "TKT-..."
-   * console.log(result2.totalAmount); // 70000
+   * console.log(result2.entryCount); // 3
    * ```
    */
   placeBet(input: KenoTicketPurchaseInput): Promise<KenoPlaceBetResponse>;
+
+  /**
+   * Lấy danh sách vé Keno đang chờ xử lý.
+   *
+   * Trả về các vé mà kỳ quay chưa kết thúc hoặc chưa settle xong.
+   * Hỗ trợ phân trang cursor-based.
+   *
+   * **Endpoint:** `GET /player/keno/tickets/pending`
+   *
+   * @param params - Tham số phân trang (tùy chọn)
+   * @returns Danh sách vé kèm cursor cho trang tiếp theo
+   *
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * // Lấy trang đầu
+   * const page1 = await client.keno.listPendingTickets({ size: 10 });
+   * console.log(page1.tickets.length); // tối đa 10
+   *
+   * for (const ticket of page1.tickets) {
+   *   console.log(`${ticket.ticketNo}: ${ticket.pricing.totalAmount} VND`);
+   * }
+   *
+   * // Lấy trang tiếp theo
+   * if (page1.nextCursor) {
+   *   const page2 = await client.keno.listPendingTickets({
+   *     size: 10,
+   *     cursor: page1.nextCursor,
+   *   });
+   * }
+   * ```
+   */
+  listPendingTickets(
+    params?: KenoListTicketsParams,
+  ): Promise<KenoListTicketsResponse>;
+
+  /**
+   * Lấy danh sách vé Keno đã hoàn thành.
+   *
+   * Trả về các vé đã settle, refunded, hoặc void.
+   * Hỗ trợ lọc theo khoảng thời gian và sắp xếp.
+   *
+   * **Endpoint:** `GET /player/keno/tickets/completed`
+   *
+   * @param params - Tham số truy vấn: phân trang, sắp xếp, lọc ngày
+   * @returns Danh sách vé kèm cursor cho trang tiếp theo
+   *
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * // Lấy vé đã hoàn thành, sắp xếp theo ngày quay
+   * const result = await client.keno.listCompletedTickets({
+   *   size: 20,
+   *   sortBy: "drawDate",
+   * });
+   *
+   * // Lọc theo khoảng thời gian
+   * const feb = await client.keno.listCompletedTickets({
+   *   from: "2026-02-01",
+   *   to: "2026-02-28",
+   * });
+   *
+   * for (const ticket of feb.tickets) {
+   *   const win = ticket.settlement?.totalWinAmount ?? 0;
+   *   console.log(`${ticket.ticketNo}: thắng ${win} VND`);
+   * }
+   * ```
+   */
+  listCompletedTickets(
+    params?: KenoListCompletedTicketsParams,
+  ): Promise<KenoListTicketsResponse>;
+
+  /**
+   * Lấy chi tiết vé Keno + tất cả entries theo kỳ quay.
+   *
+   * Mỗi entry chứa thông tin cược, kết quả kỳ quay (nếu đã quay),
+   * và chi tiết trả thưởng (nếu đã settle).
+   *
+   * **Endpoint:** `GET /player/keno/tickets/{ticketId}/entries`
+   *
+   * @param ticketId - ID vé Keno (MongoDB ObjectId string)
+   * @returns Thông tin vé kèm danh sách entries
+   *
+   * @throws {@link ApiClientError} code `NOT_FOUND` — vé không tồn tại hoặc không thuộc player
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * const data = await client.keno.getTicketEntries("65abc123def456...");
+   *
+   * console.log(data.ticket.ticketNo); // "K-20260225-001-0001"
+   * console.log(data.entries.length);   // 5 (mua 5 kỳ = 5 entries)
+   *
+   * for (const entry of data.entries) {
+   *   console.log(`Kỳ ${entry.drawId}: ${entry.status}`);
+   *
+   *   if (entry.result) {
+   *     console.log("  Kết quả:", entry.result.winningNumbers);
+   *   }
+   *   if (entry.payout) {
+   *     console.log(`  Thắng: ${entry.payout.winAmount} VND`);
+   *     for (const bp of entry.payout.boardPayouts) {
+   *       console.log(`    Board ${bp.boardNo}: ${bp.matchCount}/${bp.pickCount} trùng`);
+   *     }
+   *   }
+   * }
+   * ```
+   */
+  getTicketEntries(ticketId: string): Promise<KenoTicketEntriesResponse>;
 }
 
 // ─────────────────────────────────────────────
 // Factory
 // ─────────────────────────────────────────────
 
-/**
- * @internal
- */
+/** @internal */
 export function createKenoApi(http: HttpClient): KenoApi {
   return {
-    async placeBet(input: KenoTicketPurchaseInput): Promise<KenoPlaceBetResponse> {
+    async getCurrentDraw(): Promise<KenoCurrentDrawResponse> {
+      return http.get<KenoCurrentDrawResponse>(ENDPOINTS.keno.getCurrentDraw);
+    },
+
+    async placeBet(
+      input: KenoTicketPurchaseInput,
+    ): Promise<KenoPlaceBetResponse> {
       return http.post<KenoPlaceBetResponse>(ENDPOINTS.keno.placeBet, input);
+    },
+
+    async listPendingTickets(
+      params?: KenoListTicketsParams,
+    ): Promise<KenoListTicketsResponse> {
+      return http.get<KenoListTicketsResponse>(
+        ENDPOINTS.keno.listPendingTickets,
+        { params: params as Record<string, string | number | undefined> },
+      );
+    },
+
+    async listCompletedTickets(
+      params?: KenoListCompletedTicketsParams,
+    ): Promise<KenoListTicketsResponse> {
+      return http.get<KenoListTicketsResponse>(
+        ENDPOINTS.keno.listCompletedTickets,
+        { params: params as Record<string, string | number | undefined> },
+      );
+    },
+
+    async getTicketEntries(
+      ticketId: string,
+    ): Promise<KenoTicketEntriesResponse> {
+      return http.get<KenoTicketEntriesResponse>(
+        ENDPOINTS.keno.getTicketEntries(ticketId),
+      );
     },
   };
 }

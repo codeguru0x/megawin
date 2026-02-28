@@ -38,5 +38,6 @@
     "typescript",
     "typescriptreact"
   ],
-  "git.ignoreLimitWarning": true
+  "git.ignoreLimitWarning": true,
+  "vitest.disableWorkspaceWarning": true
 }

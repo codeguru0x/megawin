@@ -52,11 +52,28 @@ export interface PlayerGetJackpotOutput {
 
 // ─── List Tickets (Player) ───
 
-export interface PlayerListTicketsInput {
+export type TicketSortBy = "betDate" | "drawDate";
+
+export const TICKET_SORT_BY_VALUES: readonly TicketSortBy[] = [
+  "betDate",
+  "drawDate",
+];
+
+export interface PlayerListPendingTicketsInput {
   tenantId: string;
   accountId: string;
-  page: number;
   size: number;
+  cursor?: string;
+}
+
+export interface PlayerListCompletedTicketsInput {
+  tenantId: string;
+  accountId: string;
+  size: number;
+  sortBy: TicketSortBy;
+  from?: string;
+  to?: string;
+  cursor?: string;
 }
 
 export interface PlayerTicketSummary {
@@ -94,7 +111,7 @@ export interface PlayerTicketSummary {
 
 export interface PlayerListTicketsOutput {
   tickets: PlayerTicketSummary[];
-  page: number;
+  nextCursor: string | null;
   size: number;
 }
 
@@ -145,4 +162,36 @@ export interface PlayerEntryInfo {
 export interface PlayerGetTicketEntriesOutput {
   ticket: PlayerTicketSummary;
   entries: PlayerEntryInfo[];
+}
+
+// ─── Get Entry Lines (Player) ───
+
+export interface PlayerGetEntryLinesInput {
+  tenantId: string;
+  accountId: string;
+  entryId: string;
+  page: number;
+  size: number;
+}
+
+export interface PlayerLineInfo {
+  boardNo: string;
+  lineIndex: number;
+  main: number[];
+  special: number;
+  matchResult: {
+    mainMatchCount: number;
+    specialMatched: boolean;
+    tier: string | null;
+    winAmount: number;
+  };
+}
+
+export interface PlayerGetEntryLinesOutput {
+  entryId: string;
+  drawId: string;
+  lines: PlayerLineInfo[];
+  total: number;
+  page: number;
+  size: number;
 }

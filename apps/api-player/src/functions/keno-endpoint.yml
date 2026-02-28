@@ -9,11 +9,20 @@ keno-get-current-draw:
         authorizer:
           name: cognitoPlayerAuth
 
-keno-list-tickets:
-  handler: src/handlers/keno/list-tickets.handler
+keno-list-pending-tickets:
+  handler: src/handlers/keno/list-pending-tickets.handler
   events:
     - httpApi:
-        path: /player/keno/tickets
+        path: /player/keno/tickets/pending
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+keno-list-completed-tickets:
+  handler: src/handlers/keno/list-completed-tickets.handler
+  events:
+    - httpApi:
+        path: /player/keno/tickets/completed
         method: get
         authorizer:
           name: cognitoPlayerAuth
@@ -24,5 +33,14 @@ keno-get-ticket-entries:
     - httpApi:
         path: /player/keno/tickets/{ticketId}/entries
         method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+keno-place-bet:
+  handler: src/handlers/keno/place-bet.handler
+  events:
+    - httpApi:
+        path: /player/keno/bets
+        method: post
         authorizer:
           name: cognitoPlayerAuth

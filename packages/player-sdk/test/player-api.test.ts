@@ -1,31 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createPlayerClient, type PlayerClient } from "../src";
-
-function mockFetch(data: unknown) {
-  return vi.fn().mockResolvedValue({
-    ok: true,
-    status: 200,
-    statusText: "OK",
-    headers: new Headers({ "content-type": "application/json" }),
-    json: () => Promise.resolve({ success: true, data }),
-  });
-}
-
-const TOKENS = {
-  accessToken: "test-token",
-  refreshToken: "test-refresh",
-  expiresAt: Date.now() + 3600_000,
-};
+import type { PlayerClient } from "../src";
+import { createTestClient, mockFetch } from "./helpers";
 
 describe("player.getBalance", () => {
   let client: PlayerClient;
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    client = createPlayerClient({
-      baseUrl: "https://api.test.com",
-      tokens: TOKENS,
-    });
+    client = createTestClient();
   });
 
   it("should call GET /player/balance", async () => {
@@ -52,10 +34,7 @@ describe("player.getBetHistory", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    client = createPlayerClient({
-      baseUrl: "https://api.test.com",
-      tokens: TOKENS,
-    });
+    client = createTestClient();
   });
 
   it("should call GET /player/bets without params", async () => {
@@ -89,10 +68,7 @@ describe("player.getGameResult", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
-    client = createPlayerClient({
-      baseUrl: "https://api.test.com",
-      tokens: TOKENS,
-    });
+    client = createTestClient();
   });
 
   it("should call GET /player/games/{gameId}/results/{roundId}", async () => {

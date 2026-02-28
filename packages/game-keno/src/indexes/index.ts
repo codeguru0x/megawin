@@ -39,7 +39,20 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
     collection: KenoCollections.Tickets,
     key: { tenantId: 1, accountId: 1, status: 1, createdAt: -1 },
     options: { name: "idx_tenant_account_status_created" },
-    purpose: "Query vé theo tenant + account",
+    purpose:
+      "Player pending/completed tickets: filter tenant+account+status, cursor by _id",
+  },
+  {
+    collection: KenoCollections.Tickets,
+    key: {
+      tenantId: 1,
+      accountId: 1,
+      status: 1,
+      "settlement.lastSettledAt": -1,
+    },
+    options: { name: "idx_tenant_account_status_settled" },
+    purpose:
+      "Player completed tickets sortBy=drawDate: filter by settlement date range",
   },
   {
     collection: KenoCollections.Tickets,

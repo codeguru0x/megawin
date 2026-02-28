@@ -1,5 +1,5 @@
 {
-  "extends": "@megawin/typescript-config/base.json",
+  "extends": "@megawin/typescript-config/serverless.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist"

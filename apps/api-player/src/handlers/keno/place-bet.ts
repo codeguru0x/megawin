@@ -28,10 +28,17 @@ const SideBetPlayType = {
 
 const AllSideBetValues = { ...KenoBigSmallBet, ...KenoEvenOddBet } as const;
 
-export const kenoBoardSchema = z.object({
-  boardNo: z.string().min(1),
-  numbers: z.array(kenoNumberSchema).min(1).max(10),
-});
+const KENO_BOARD_NO = ["A", "B"] as const;
+
+export const kenoBoardSchema = z
+  .object({
+    boardNo: z.enum(KENO_BOARD_NO),
+    numbers: z.array(kenoNumberSchema).min(1).max(10),
+  })
+  .refine((b) => new Set(b.numbers).size === b.numbers.length, {
+    message: "Các số trong board không được trùng nhau.",
+    path: ["numbers"],
+  });
 
 export const kenoSideBetSchema = z.object({
   playType: z.enum(SideBetPlayType),
@@ -39,18 +46,29 @@ export const kenoSideBetSchema = z.object({
 });
 
 // ─── Place bet body schema ───
-
-export const kenoPlaceBetBodySchema = z.object({
-  drawIds: z
-    .array(kenoDrawIdSchema)
-    .min(1)
-    .max(20)
-    .refine((ids) => new Set(ids).size === ids.length, {
-      message: "Các drawId không được trùng lặp.",
-    }),
-  boards: z.array(kenoBoardSchema).default([]),
-  sideBets: z.array(kenoSideBetSchema).default([]),
-});
+export const kenoPlaceBetBodySchema = z
+  .object({
+    drawIds: z
+      .array(kenoDrawIdSchema)
+      .min(1)
+      .max(30)
+      .refine((ids) => new Set(ids).size === ids.length, {
+        message: "Các drawId không được trùng lặp.",
+      }),
+    boards: z
+      .array(kenoBoardSchema)
+      .max(KENO_BOARD_NO.length)
+      .refine(
+        (boards) =>
+          new Set(boards.map((b) => b.boardNo)).size === boards.length,
+        { message: "Các boardNo không được trùng lặp." }
+      )
+      .default([]),
+    sideBets: z.array(kenoSideBetSchema).default([]),
+  })
+  .refine((data) => data.boards.length > 0 || data.sideBets.length > 0, {
+    message: "Phải có ít nhất 1 board cơ bản hoặc 1 side bet.",
+  });
 
 const useCase = new PlaceBetUseCase();
 

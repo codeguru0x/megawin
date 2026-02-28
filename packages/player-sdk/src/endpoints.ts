@@ -21,6 +21,11 @@ export const ENDPOINTS = {
 
   keno: {
     placeBet: "/player/keno/bets",
+    getCurrentDraw: "/player/keno/draws/current",
+    listPendingTickets: "/player/keno/tickets/pending",
+    listCompletedTickets: "/player/keno/tickets/completed",
+    getTicketEntries: (ticketId: string) =>
+      `/player/keno/tickets/${ticketId}/entries` as const,
   },
 
   lotto535: {

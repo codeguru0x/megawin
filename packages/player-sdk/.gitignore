@@ -3,3 +3,4 @@ docs/
 release/
 node_modules/
 *.tgz
+.env.s3.local

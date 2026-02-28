@@ -38,18 +38,32 @@
       }
     }
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "check-types": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest --watch",
-    "docs:build": "typedoc",
+    "docs:build": "rm -rf docs && typedoc",
     "docs:watch": "typedoc --watch",
-    "release": "pnpm build && mkdir -p release && pnpm pack --pack-gzip-level 9 --pack-destination release"
+    "release": "pnpm build && mkdir -p release && pnpm pack --pack-gzip-level 9 --pack-destination release",
+    "upload": "bash scripts/upload-s3.sh patch",
+    "upload:patch": "bash scripts/upload-s3.sh patch",
+    "upload:minor": "bash scripts/upload-s3.sh minor",
+    "upload:major": "bash scripts/upload-s3.sh major"
   },
-  "keywords": ["megawin", "sdk", "player", "api-client", "keno", "lotto535"],
+  "keywords": [
+    "megawin",
+    "sdk",
+    "player",
+    "api-client",
+    "keno",
+    "lotto535"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {

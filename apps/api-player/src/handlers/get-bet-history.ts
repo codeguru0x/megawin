@@ -10,10 +10,18 @@ import { toApiGatewayResponse } from "@megawin/app-core/use-cases";
 
 // ============ Zod schema ============
 
+const VALID_GAME_IDS = ["keno", "lotto535"] as const;
+
 const querySchema = z.object({
-  gameId: z.string().optional(),
-  page: z.string().optional(),
-  pageSize: z.string().optional(),
+  gameId: z.enum(VALID_GAME_IDS).optional(),
+  page: z
+    .string()
+    .default("1")
+    .transform((v) => Math.max(1, parseInt(v, 10) || 1)),
+  pageSize: z
+    .string()
+    .default("20")
+    .transform((v) => Math.min(100, Math.max(1, parseInt(v, 10) || 20))),
 });
 
 // ============ Handler ============

@@ -32,7 +32,7 @@ export { TokenManager, MemoryTokenStorage, SessionStorageTokenStorage } from "./
 
 // ---- API module interfaces ----
 export type { AuthApi } from "./apis/auth";
-export type { KenoApi, KenoPlaceBetResponse } from "./apis/keno";
+export type { KenoApi } from "./apis/keno";
 export type { Lotto535Api, Lotto535PlaceBetResponse } from "./apis/lotto535";
 export type {
   PlayerApi,

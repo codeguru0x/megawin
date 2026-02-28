@@ -60,7 +60,20 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
     collection: Lotto535Collections.Tickets,
     key: { tenantId: 1, accountId: 1, status: 1, createdAt: -1 },
     options: { name: "idx_tenant_account_status_created" },
-    purpose: "Query vé theo tenant + account (lịch sử mua, dashboard player)",
+    purpose:
+      "Player pending/completed tickets: filter tenant+account+status, cursor by _id",
+  },
+  {
+    collection: Lotto535Collections.Tickets,
+    key: {
+      tenantId: 1,
+      accountId: 1,
+      status: 1,
+      "settlement.lastSettledAt": -1,
+    },
+    options: { name: "idx_tenant_account_status_settled" },
+    purpose:
+      "Player completed tickets sortBy=drawDate: filter by settlement date range",
   },
   {
     collection: Lotto535Collections.Tickets,
@@ -227,19 +240,26 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
   },
 
   // ─────────────────────────────────────────
-  // lotto535TicketLines (optional collection)
+  // lotto535TicketLines (per-entry, tạo khi settle)
   // ─────────────────────────────────────────
   {
     collection: Lotto535Collections.TicketLines,
-    key: { ticketId: 1, lineIndex: 1 },
-    options: { name: "idx_ticket_lineIndex" },
-    purpose: "Paginate lines theo ticket + thứ tự ổn định",
+    key: { entryId: 1, lineIndex: 1 },
+    options: { unique: true, name: "idx_entryId_lineIndex_unique" },
+    purpose:
+      "Player xem lines của 1 entry + dedup key cho idempotent upsert khi retry",
   },
   {
     collection: Lotto535Collections.TicketLines,
-    key: { tenantId: 1, ticketId: 1 },
-    options: { name: "idx_tenant_ticket" },
-    purpose: "Access control: chỉ tenant sở hữu mới xem được lines",
+    key: { drawId: 1, accountId: 1 },
+    options: { name: "idx_drawId_accountId" },
+    purpose: "Query lines theo kỳ + player",
+  },
+  {
+    collection: Lotto535Collections.TicketLines,
+    key: { tenantId: 1, ticketId: 1, drawId: 1 },
+    options: { name: "idx_tenant_ticket_draw" },
+    purpose: "Access control + audit: tenant xem lines theo ticket + kỳ",
   },
 
   // ─────────────────────────────────────────

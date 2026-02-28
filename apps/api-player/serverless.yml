@@ -8,10 +8,11 @@ custom:
     httpPort: 4010
     lambdaPort: 4011
     noPrependStageInUrl: true
+    ignoreJWTSignature: true
 
 provider:
   name: aws
-  runtime: nodejs24.x
+  runtime: nodejs22.x
   stage: ${opt:stage, 'dev'}
   region: ap-southeast-1
 
@@ -47,7 +48,6 @@ build:
 
 functions:
   - ${file(src/functions/game-endpoint.yml)}
-  - ${file(src/functions/bet-endpoint.yml)}
   - ${file(src/functions/balance-endpoint.yml)}
   - ${file(src/functions/lotto535-endpoint.yml)}
   - ${file(src/functions/keno-endpoint.yml)}

@@ -174,7 +174,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       settledAt: Date;
       payoutStatus?: string;
     },
-    outcome: string,
+    outcome: string
   ): Promise<boolean> {
     const version = await this.nextVersion();
     return await this.updateOne(
@@ -605,6 +605,90 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   }
 
   // ─────────────────────────────────────────────
+  // Ticket Summary Aggregation
+  // ─────────────────────────────────────────────
+
+  /**
+   * Aggregate tóm tắt ticket từ TẤT CẢ entries của 1 ticket.
+   * Dùng cho SyncTicketSummaries — tính lại toàn bộ từ source of truth (entries).
+   */
+  async aggregateTicketSummary(ticketId: ObjectId): Promise<{
+    totalEntries: number;
+    settledCount: number;
+    voidedCount: number;
+    totalWinAmount: number;
+    totalVoidedAmount: number;
+    totalRefundedAmount: number;
+    voidedDrawIds: string[];
+  }> {
+    const result = await this.aggregate([
+      { $match: { ticketId } },
+      {
+        $group: {
+          _id: null,
+          totalEntries: { $sum: 1 },
+          settledCount: {
+            $sum: { $cond: [{ $eq: ["$status", EntryStatus.Settled] }, 1, 0] },
+          },
+          voidedCount: {
+            $sum: { $cond: [{ $eq: ["$status", EntryStatus.Void] }, 1, 0] },
+          },
+          totalWinAmount: {
+            $sum: { $ifNull: ["$payout.winAmount", 0] },
+          },
+          totalVoidedAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                { $ifNull: ["$voidInfo.originalAmount", 0] },
+                0,
+              ],
+            },
+          },
+          totalRefundedAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                { $ifNull: ["$voidInfo.refundAmount", 0] },
+                0,
+              ],
+            },
+          },
+          voidedDrawIds: {
+            $addToSet: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                "$drawId",
+                "$$REMOVE",
+              ],
+            },
+          },
+        },
+      },
+    ]);
+
+    const row = (result[0] as any) ?? {};
+    return {
+      totalEntries: row.totalEntries ?? 0,
+      settledCount: row.settledCount ?? 0,
+      voidedCount: row.voidedCount ?? 0,
+      totalWinAmount: row.totalWinAmount ?? 0,
+      totalVoidedAmount: row.totalVoidedAmount ?? 0,
+      totalRefundedAmount: row.totalRefundedAmount ?? 0,
+      voidedDrawIds: row.voidedDrawIds ?? [],
+    };
+  }
+
+  /**
+   * Lấy danh sách distinct ticketIds từ entries của 1 draw.
+   * Dùng cho SyncTicketSummaries — biết cần sync ticket nào.
+   */
+  async getDistinctTicketIdsByDrawId(drawId: string): Promise<ObjectId[]> {
+    const col = await this.getCollection();
+    return col.distinct("ticketId", { drawId }) as Promise<ObjectId[]>;
+  }
+
+  // ─────────────────────────────────────────────
   // Feed Sync (cho worker sync-entry-feed)
   // ─────────────────────────────────────────────
 
@@ -620,6 +704,79 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       { version: { $gt: afterVersion } },
       { sort: { version: 1 }, limit }
     );
+  }
+
+  // ─────────────────────────────────────────────
+  // Jackpot Split Bonus
+  // ─────────────────────────────────────────────
+
+  /**
+   * Patch bonusPerWinner cho 1 tier lên tất cả entries trúng tier đó.
+   * Idempotent: chỉ update entries chưa có tier entry với isSplitBonus=true cho tier cụ thể.
+   *
+   * - Push tier mới với isSplitBonus=true vào payout.tiers
+   * - Inc payout.winAmount + payout.payoutAmount
+   *
+   * Returns số entries đã patch.
+   */
+  async applySplitBonusForTier(
+    drawId: string,
+    tier: string,
+    bonusPerWinner: number
+  ): Promise<number> {
+    const col = await this.getCollection();
+
+    const filter = {
+      drawId,
+      status: EntryStatus.Settled,
+      "payout.tiers": {
+        $elemMatch: { tier, hitCount: { $gt: 0 }, isSplitBonus: { $ne: true } },
+      },
+      $nor: [{ "payout.tiers": { $elemMatch: { tier, isSplitBonus: true } } }],
+    };
+
+    const matchingEntries = await col
+      .find(filter, { projection: { _id: 1, "payout.tiers": 1 } })
+      .toArray();
+
+    if (matchingEntries.length === 0) return 0;
+
+    const ops = matchingEntries.map((entry) => {
+      const tierEntry = (entry.payout as any)?.tiers?.find(
+        (t: any) => t.tier === tier && t.hitCount > 0 && !t.isSplitBonus
+      );
+      const hitCount = tierEntry?.hitCount ?? 0;
+      const bonusAmount = bonusPerWinner * hitCount;
+
+      return {
+        updateOne: {
+          filter: {
+            _id: entry._id,
+            $nor: [
+              { "payout.tiers": { $elemMatch: { tier, isSplitBonus: true } } },
+            ],
+          },
+          update: {
+            $push: {
+              "payout.tiers": {
+                tier,
+                hitCount,
+                unitAmount: bonusPerWinner,
+                amount: bonusAmount,
+                isSplitBonus: true,
+              },
+            },
+            $inc: {
+              "payout.winAmount": bonusAmount,
+              "payout.payoutAmount": bonusAmount,
+            },
+          } as any,
+        },
+      };
+    });
+
+    const result = await col.bulkWrite(ops, { ordered: false });
+    return result.modifiedCount;
   }
 
   // ─────────────────────────────────────────────

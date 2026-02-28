@@ -6,9 +6,28 @@
 
 import { Lotto535Collections } from "@megawin/game-lotto535/entities";
 import { TicketStatus } from "@megawin/game-core/entities";
+import type { Document, Filter } from "mongodb";
 import { ObjectId } from "mongodb";
 import { BaseRepo } from "./base-repo";
 import { TicketMapper, type TicketEntity } from "../mappers/ticket-mapper";
+import type { TicketSortBy } from "../../use-cases/player/dto/player.dto";
+
+export interface TicketSummary {
+  settledCount: number;
+  voidedCount: number;
+  totalDraws: number;
+  totalWinAmount: number;
+  totalVoidedAmount: number;
+  totalRefundedAmount: number;
+  voidedDrawIds: string[];
+}
+
+const PENDING_STATUSES = [TicketStatus.Paid];
+const COMPLETED_STATUSES = [
+  TicketStatus.Completed,
+  TicketStatus.Refunded,
+  TicketStatus.Void,
+];
 
 export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   constructor() {
@@ -32,94 +51,126 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     return await this.count({ "drawPlan.drawIds": drawId });
   }
 
-  async getTicketsByPlayer(
-    tenantId: string,
-    accountId: string,
-    page: number,
-    size: number
-  ): Promise<TicketEntity[]> {
-    return await this.paging({ tenantId, accountId }, page, size, {
-      sort: { createdAt: -1 },
-    });
-  }
-
   async getTicketById(ticketId: string): Promise<TicketEntity | null> {
     return await this.findOneById(ticketId);
   }
 
   /**
-   * Cập nhật ticket progress sau khi settle 1 entry (1 kỳ quay).
-   * Atomic increment settledDraws.
-   * Nếu tất cả kỳ đã settle xong → status = completed.
+   * Vé đang chờ xử lý (status = paid, còn draws chưa settle/void).
+   * Cursor = _id (monotonic với createdAt), sort desc.
    */
-  async updateSettleProgress(
-    ticketId: string,
-    isCompleted: boolean,
-    entryWinAmount: number
-  ): Promise<boolean> {
-    const $set: Record<string, unknown> = {
-      "settlement.lastSettledAt": new Date(),
-      updatedAt: new Date(),
+  async getPendingTickets(
+    tenantId: string,
+    accountId: string,
+    size: number,
+    cursor?: string
+  ): Promise<TicketEntity[]> {
+    const filter: Filter<Document> = {
+      tenantId,
+      accountId,
+      status: { $in: PENDING_STATUSES },
     };
 
-    if (isCompleted) {
-      $set.status = TicketStatus.Completed;
+    if (cursor && ObjectId.isValid(cursor)) {
+      filter._id = { $lt: new ObjectId(cursor) };
     }
 
-    return await this.updateOne(
-      { _id: new ObjectId(ticketId) },
-      {
-        $set,
-        $inc: {
-          "progress.settledDraws": 1,
-          "settlement.totalWinAmount": entryWinAmount,
-        },
-      }
-    );
+    return await this.findMany(filter, {
+      sort: { _id: -1 },
+      limit: size,
+    });
   }
 
-  // ─────────────────────────────────────────────
-  // Void Draw
-  // ─────────────────────────────────────────────
-
   /**
-   * Cập nhật ticket sau khi 1 entry bị void.
-   *
-   * - Thêm drawId vào voidedDrawIds
-   * - Tăng voidedDrawCount, voidedAmount, refundedAmount
-   * - Nếu ticket chỉ có 1 kỳ (single-draw) → status = refunded
-   * - Nếu multi-draw và tất cả kỳ đã xử lý → status = completed
+   * Vé đã hoàn thành (completed | refunded | void).
+   * Hỗ trợ lọc theo khoảng ngày (betDate = createdAt, drawDate = settlement.lastSettledAt).
+   * Cursor = _id, sort desc.
    */
-  async updateVoidProgress(
-    ticketId: string,
-    drawId: string,
-    voidedAmount: number,
-    refundAmount: number,
-    isFullRefund: boolean,
-    isAllDrawsProcessed: boolean
-  ): Promise<boolean> {
-    const $set: Record<string, unknown> = {
-      "voidSummary.lastVoidedAt": new Date(),
-      updatedAt: new Date(),
+  async getCompletedTickets(
+    tenantId: string,
+    accountId: string,
+    size: number,
+    opts?: {
+      sortBy?: TicketSortBy;
+      from?: Date;
+      to?: Date;
+      cursor?: string;
+    }
+  ): Promise<TicketEntity[]> {
+    const { sortBy = "betDate", from, to, cursor } = opts ?? {};
+
+    const dateField =
+      sortBy === "drawDate" ? "settlement.lastSettledAt" : "createdAt";
+
+    const filter: Filter<Document> = {
+      tenantId,
+      accountId,
+      status: { $in: COMPLETED_STATUSES },
     };
 
-    if (isFullRefund) {
-      $set.status = TicketStatus.Refunded;
-    } else if (isAllDrawsProcessed) {
-      $set.status = TicketStatus.Completed;
+    if (from || to) {
+      const dateRange: Record<string, Date> = {};
+      if (from) dateRange.$gte = from;
+      if (to) dateRange.$lte = to;
+      filter[dateField] = dateRange;
+    }
+
+    if (cursor && ObjectId.isValid(cursor)) {
+      filter._id = { $lt: new ObjectId(cursor) };
+    }
+
+    return await this.findMany(filter, {
+      sort: { _id: -1 },
+      limit: size,
+    });
+  }
+
+  /**
+   * Idempotent: $set toàn bộ summary từ aggregate result.
+   * Tính status mới từ settledCount + voidedCount vs totalDraws.
+   */
+  async syncSummary(
+    ticketId: ObjectId,
+    summary: TicketSummary
+  ): Promise<boolean> {
+    const now = new Date();
+    const { settledCount, voidedCount, totalDraws } = summary;
+    const processedCount = settledCount + voidedCount;
+    const isCompleted = processedCount >= totalDraws;
+    const isSingleDrawVoid = totalDraws === 1 && voidedCount === 1;
+
+    let status: string | undefined;
+    if (isSingleDrawVoid) {
+      status = TicketStatus.Refunded;
+    } else if (isCompleted) {
+      status = TicketStatus.Completed;
+    }
+
+    const $set: Record<string, unknown> = {
+      "progress.settledDraws": settledCount,
+      updatedAt: now,
+    };
+
+    if (settledCount > 0) {
+      $set["settlement.totalWinAmount"] = summary.totalWinAmount;
+      $set["settlement.lastSettledAt"] = now;
+    }
+
+    if (voidedCount > 0) {
+      $set["voidSummary.voidedDrawCount"] = voidedCount;
+      $set["voidSummary.totalVoidedAmount"] = summary.totalVoidedAmount;
+      $set["voidSummary.totalRefundedAmount"] = summary.totalRefundedAmount;
+      $set["voidSummary.voidedDrawIds"] = summary.voidedDrawIds;
+      $set["voidSummary.lastVoidedAt"] = now;
+    }
+
+    if (status) {
+      $set.status = status;
     }
 
     return await this.updateOne(
-      { _id: new ObjectId(ticketId) },
-      {
-        $set,
-        $push: { "voidSummary.voidedDrawIds": drawId } as any,
-        $inc: {
-          "voidSummary.voidedDrawCount": 1,
-          "voidSummary.totalVoidedAmount": voidedAmount,
-          "voidSummary.totalRefundedAmount": refundAmount,
-        },
-      }
+      { _id: ticketId },
+      { $set, $inc: { version: 1 } }
     );
   }
 }

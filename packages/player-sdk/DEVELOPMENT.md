@@ -49,10 +49,59 @@ Output: thư mục `docs/` chứa HTML documentation. Có thể zip gửi kèm c
 
 Gửi 2 file:
 
-| File | Mô tả |
-|------|-------|
-| `release/megawin-player-sdk-<version>.tgz` | Package cài đặt |
-| `docs/` (zip) | API documentation (tùy chọn) |
+| File                                       | Mô tả                        |
+| ------------------------------------------ | ---------------------------- |
+| `release/megawin-player-sdk-<version>.tgz` | Package cài đặt              |
+| `docs/` (zip)                              | API documentation (tùy chọn) |
+
+## Upload lên S3
+
+Tự động bump version, build, pack, generate docs và upload tất cả lên S3.
+
+### Cấu hình (chỉ cần làm 1 lần)
+
+```bash
+cp .env.s3.example .env.s3.local
+```
+
+Sửa `.env.s3.local` với thông tin của bạn:
+
+```bash
+S3_BUCKET=your-sdk-bucket-name
+AWS_PROFILE=your-aws-profile
+AWS_REGION=ap-southeast-1
+```
+
+Yêu cầu: AWS CLI đã cài đặt và profile đã cấu hình.
+
+### Upload
+
+```bash
+pnpm upload          # Bump patch (1.0.0 → 1.0.1) rồi upload
+pnpm upload:minor    # Bump minor (1.0.0 → 1.1.0) rồi upload
+pnpm upload:major    # Bump major (1.0.0 → 2.0.0) rồi upload
+```
+
+Override cấu hình cho 1 lần chạy:
+
+```bash
+pnpm upload -- --profile other-profile --bucket other-bucket
+```
+
+### Cấu trúc S3
+
+```
+s3://<bucket>/player-sdk/
+  latest/
+    megawin-player-sdk.tgz    ← URL cố định, luôn là bản mới nhất
+    docs/
+  v1.0.0/
+    megawin-player-sdk.tgz    ← Archive để rollback
+    docs/
+  v1.0.1/
+    megawin-player-sdk.tgz
+    docs/
+```
 
 ## Khách hàng cài đặt
 
@@ -122,7 +171,7 @@ export const ENDPOINTS = {
   // ... existing
   keno: {
     placeBet: "/player/keno/bets",
-    getDraws: "/player/keno/draws",     // <-- thêm mới
+    getDraws: "/player/keno/draws", // <-- thêm mới
   },
 } as const;
 ```
@@ -134,7 +183,7 @@ export const ENDPOINTS = {
 ```typescript
 export interface KenoApi {
   placeBet(input: KenoTicketPurchaseInput): Promise<KenoPlaceBetResponse>;
-  getDraws(): Promise<KenoDrawInfo[]>;  // <-- thêm mới
+  getDraws(): Promise<KenoDrawInfo[]>; // <-- thêm mới
 }
 ```
 

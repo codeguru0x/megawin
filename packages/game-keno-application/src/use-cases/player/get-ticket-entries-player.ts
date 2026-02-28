@@ -40,7 +40,7 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
     }
 
     const entries = await this.entryRepo.findMany(
-      { ticketId: new ObjectId(ticket.id) },
+      { ticketId: ticket.id },
       { sort: { drawTime: 1 } }
     );
 
@@ -56,7 +56,6 @@ function mapPlayerEntry(entry: EntryEntity): PlayerEntryInfo {
     id: entry.id,
     drawId: entry.drawId,
     drawDate: entry.drawDate,
-    drawTime: entry.drawTime.toISOString(),
     status: entry.status,
     amount: entry.amount,
     betCount: entry.betCount,

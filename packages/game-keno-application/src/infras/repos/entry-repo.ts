@@ -518,6 +518,88 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     };
   }
 
+  // ─── Ticket Summary Aggregation ───
+
+  /**
+   * Aggregate tóm tắt ticket từ TẤT CẢ entries của 1 ticket.
+   * Dùng cho SyncTicketSummaries — tính lại toàn bộ từ source of truth (entries).
+   */
+  async aggregateTicketSummary(ticketId: ObjectId): Promise<{
+    totalEntries: number;
+    settledCount: number;
+    voidedCount: number;
+    totalWinAmount: number;
+    totalVoidedAmount: number;
+    totalRefundedAmount: number;
+    voidedDrawIds: string[];
+  }> {
+    const result = await this.aggregate([
+      { $match: { ticketId } },
+      {
+        $group: {
+          _id: null,
+          totalEntries: { $sum: 1 },
+          settledCount: {
+            $sum: { $cond: [{ $eq: ["$status", EntryStatus.Settled] }, 1, 0] },
+          },
+          voidedCount: {
+            $sum: { $cond: [{ $eq: ["$status", EntryStatus.Void] }, 1, 0] },
+          },
+          totalWinAmount: {
+            $sum: { $ifNull: ["$payout.winAmount", 0] },
+          },
+          totalVoidedAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                { $ifNull: ["$voidInfo.originalAmount", 0] },
+                0,
+              ],
+            },
+          },
+          totalRefundedAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                { $ifNull: ["$voidInfo.refundAmount", 0] },
+                0,
+              ],
+            },
+          },
+          voidedDrawIds: {
+            $addToSet: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                "$drawId",
+                "$$REMOVE",
+              ],
+            },
+          },
+        },
+      },
+    ]);
+
+    const row = (result[0] as any) ?? {};
+    return {
+      totalEntries: row.totalEntries ?? 0,
+      settledCount: row.settledCount ?? 0,
+      voidedCount: row.voidedCount ?? 0,
+      totalWinAmount: row.totalWinAmount ?? 0,
+      totalVoidedAmount: row.totalVoidedAmount ?? 0,
+      totalRefundedAmount: row.totalRefundedAmount ?? 0,
+      voidedDrawIds: row.voidedDrawIds ?? [],
+    };
+  }
+
+  /**
+   * Lấy danh sách distinct ticketIds từ entries của 1 draw.
+   * Dùng cho SyncTicketSummaries — biết cần sync ticket nào.
+   */
+  async getDistinctTicketIdsByDrawId(drawId: string): Promise<ObjectId[]> {
+    const col = await this.getCollection();
+    return col.distinct("ticketId", { drawId }) as Promise<ObjectId[]>;
+  }
+
   // ─── Feed Sync ───
 
   /**

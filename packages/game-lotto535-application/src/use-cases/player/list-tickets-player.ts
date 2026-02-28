@@ -1,43 +1,11 @@
 /**
- * Use Case: List Player Tickets (Lotto 5/35)
+ * Lotto 5/35 – Player Ticket Mapper
  *
- * Lấy danh sách vé của player — chỉ trả thông tin player cần.
+ * Shared mapper dùng bởi cả ListPending và ListCompleted use-cases.
  */
 
-import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
-import { TicketRepository } from "../../infras/repos/ticket-repo";
 import type { TicketEntity } from "../../infras/mappers/ticket-mapper";
-import type {
-  PlayerListTicketsInput,
-  PlayerListTicketsOutput,
-  PlayerTicketSummary,
-} from "./dto/player.dto";
-
-export class ListTicketsPlayerUseCase extends ApiGatewayUseCase<
-  PlayerListTicketsInput,
-  PlayerListTicketsOutput
-> {
-  private readonly ticketRepo = new TicketRepository();
-
-  protected async execute(
-    input: PlayerListTicketsInput
-  ): Promise<PlayerListTicketsOutput> {
-    const { tenantId, accountId, page, size } = input;
-
-    const tickets = await this.ticketRepo.getTicketsByPlayer(
-      tenantId,
-      accountId,
-      page,
-      size
-    );
-
-    return {
-      tickets: tickets.map(mapPlayerTicket),
-      page,
-      size,
-    };
-  }
-}
+import type { PlayerTicketSummary } from "./dto/player.dto";
 
 export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
   return {

@@ -6,8 +6,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createMockEvent, parseBody } from "#test/helpers/mock-event";
 
 vi.mock("@megawin/game-lotto535-application/use-cases/player", () => ({
-  GetCurrentDrawPlayerUseCase: vi.fn().mockImplementation(() => ({
-    run: vi.fn().mockResolvedValue({
+  GetCurrentDrawPlayerUseCase: class {
+    run = vi.fn().mockResolvedValue({
       statusCode: 200,
       body: JSON.stringify({
         success: true,
@@ -26,14 +26,15 @@ vi.mock("@megawin/game-lotto535-application/use-cases/player", () => ({
           lastResult: null,
         },
       }),
-    }),
-  })),
+    });
+  },
 }));
 
 describe("GET /player/lotto535/draws/current", () => {
   let handler: typeof import("../../../src/handlers/lotto535/get-current-draw").handler;
 
   beforeEach(async () => {
+    vi.resetModules();
     const mod = await import("../../../src/handlers/lotto535/get-current-draw");
     handler = mod.handler;
   });

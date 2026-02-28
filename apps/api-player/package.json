@@ -6,9 +6,13 @@
   "type": "module",
   "scripts": {
     "check-types": "tsc --noEmit",
-    "dev": "serverless offline start --stage local",
+    "dev": "node scripts/dev.mjs && serverless offline start --stage local",
+    "dev:all": "turbo watch dev --filter=@megawin/api-player... --concurrency=20",
+    "dev:token": "node scripts/dev.mjs",
     "test": "vitest run",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "deploy:dev": "set -a && . ./.env.deploy.local && set +a && serverless deploy --stage dev",
+    "deploy:prod": "set -a && . ./.env.deploy.local && set +a && serverless deploy --stage prod"
   },
   "keywords": [],
   "author": "",
@@ -35,6 +39,5 @@
     "typescript": "5.9.3",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "latest"
-  },
-  "packageManager": "pnpm@10.28.2"
+  }
 }

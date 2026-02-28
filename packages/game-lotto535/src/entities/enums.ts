@@ -100,22 +100,6 @@ export type PlayType = (typeof PlayType)[keyof typeof PlayType];
 export const LOTTO535_PLAY_TYPE_VALUES = Object.values(PlayType);
 
 // ─────────────────────────────────────────────
-// Expansion Mode
-// ─────────────────────────────────────────────
-
-/**
- * Chiến lược lưu trữ lines (bộ số con) khi bao số.
- * Quyết định khi nào expand boards → lines.
- */
-export const ExpansionMode = {
-  None: "none",
-  OnWrite: "onWrite",
-  OnSettle: "onSettle",
-} as const;
-
-export type ExpansionMode = (typeof ExpansionMode)[keyof typeof ExpansionMode];
-
-// ─────────────────────────────────────────────
 // Payout Status
 // ─────────────────────────────────────────────
 

@@ -12,9 +12,9 @@ const MOCK_TICKET_ID = "507f1f77bcf86cd799439011";
 const mockRun = vi.fn();
 
 vi.mock("@megawin/game-lotto535-application/use-cases/player", () => ({
-  GetTicketEntriesPlayerUseCase: vi.fn().mockImplementation(() => ({
-    run: mockRun,
-  })),
+  GetTicketEntriesPlayerUseCase: class {
+    run = mockRun;
+  },
 }));
 
 describe("GET /player/lotto535/tickets/{ticketId}/entries", () => {
@@ -22,6 +22,7 @@ describe("GET /player/lotto535/tickets/{ticketId}/entries", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    vi.resetModules();
     const mod =
       await import("../../../src/handlers/lotto535/get-ticket-entries");
     handler = mod.handler;
@@ -52,17 +53,20 @@ describe("GET /player/lotto535/tickets/{ticketId}/entries", () => {
     });
   });
 
-  it("should return 400 when tenantId is missing", async () => {
-    const event = createMockEvent({
-      user: { tenantId: undefined },
+  it("should return 401 when auth context is missing", async () => {
+    const event = {
+      httpMethod: "GET",
+      headers: {},
+      body: null,
       pathParameters: { ticketId: MOCK_TICKET_ID },
-    });
+      queryStringParameters: {},
+      requestContext: {},
+    };
 
     const response = await handler(event as any, {} as any);
     const body = parseBody(response as any);
 
-    expect(response).toHaveProperty("statusCode", 400);
+    expect(response).toHaveProperty("statusCode", 401);
     expect(body.success).toBe(false);
-    expect(body.error?.code).toBe("BAD_REQUEST");
   });
 });
