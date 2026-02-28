@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "check-types": "tsc --noEmit",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "serverless offline start --stage local",
+    "test": "vitest run",
+    "test:watch": "vitest --watch"
   },
   "keywords": [],
   "author": "",
@@ -19,8 +21,8 @@
     "@megawin/game-keno-application": "workspace:*",
     "@megawin/game-lotto535": "workspace:*",
     "@megawin/game-lotto535-application": "workspace:*",
-    "@megawin/identity-application": "workspace:*",
     "@megawin/identity": "workspace:*",
+    "@megawin/identity-application": "workspace:*",
     "@megawin/shared": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*",
     "@middy/core": "^7.1.2",
@@ -30,7 +32,9 @@
     "@megawin/typescript-config": "workspace:*",
     "@types/node": "^25.2.2",
     "serverless-offline": "^14.4.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "latest"
   },
   "packageManager": "pnpm@10.28.2"
 }

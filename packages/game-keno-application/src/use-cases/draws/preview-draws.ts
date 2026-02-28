@@ -1,17 +1,17 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { todayVN } from "@megawin/shared/utils/date";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { DrawCounterRepository } from "../../infras/repos/draw-counter-repo";
-import { calcDrawSlots } from "./calc-draw-slots";
+import { calcDrawSlots } from "../../helpers/calc-draw-slots";
 import type { PreviewDrawsInput, PreviewDrawsOutput } from "./dto/draw.dto";
 
 export class PreviewDrawsUseCase extends NextApiUseCase<
   PreviewDrawsInput,
   PreviewDrawsOutput
 > {
-  private readonly configRepo = new GameConfigRepository();
   private readonly counterRepo = new DrawCounterRepository();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(
     input: PreviewDrawsInput
@@ -25,10 +25,7 @@ export class PreviewDrawsUseCase extends NextApiUseCase<
       );
     }
 
-    const globalConfig = await this.configRepo.getGlobalConfig();
-    if (!globalConfig) {
-      throw AppException.internal("Keno GameConfig chưa được khởi tạo.");
-    }
+    const globalConfig = await this.getGlobalConfig.run();
 
     const counter = await this.counterRepo.findOne(
       { drawDate },

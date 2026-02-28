@@ -13,7 +13,7 @@ import {
 } from "@megawin/tenant-gateway";
 import { GameProduct } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
+import { GetTenantConfigInternalUseCase } from "../game-config/get-tenant-config-internal";
 
 const BATCH_QUERY_LIMIT = 200;
 const PAYOUT_CHUNK_SIZE = 50;
@@ -42,7 +42,7 @@ export class DispatchPayoutBatchUseCase extends StepFunctionUseCase<
   DispatchPayoutBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
-  private readonly tenantConfigRepo = new TenantConfigRepository();
+  private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
 
   /** Dispatch payout cho 1 batch Keno. Loop cho đến khi done = true. */
   protected async execute(
@@ -89,7 +89,7 @@ export class DispatchPayoutBatchUseCase extends StepFunctionUseCase<
     for (const [tenantId, tenantEntries] of tenantGroups) {
       const result = await dispatchToTenant(
         this.entryRepo,
-        this.tenantConfigRepo,
+        this.getTenantConfig,
         tenantId,
         drawId,
         tenantEntries
@@ -135,10 +135,10 @@ function extractId(entry: any): string {
 }
 
 async function loadGatewayClient(
-  tenantConfigRepo: TenantConfigRepository,
+  getTenantConfig: GetTenantConfigInternalUseCase,
   tenantId: string
 ): Promise<TenantGatewayClient | null> {
-  const tenantConfig = await tenantConfigRepo.getTenantConfig(tenantId);
+  const tenantConfig = await getTenantConfig.run({ tenantId });
 
   const callbackBaseUrl = (tenantConfig as any)?.callbackBaseUrl;
   const apiKey = (tenantConfig as any)?.apiKey;
@@ -155,7 +155,7 @@ async function loadGatewayClient(
 
 async function dispatchToTenant(
   entryRepo: EntryRepository,
-  tenantConfigRepo: TenantConfigRepository,
+  getTenantConfig: GetTenantConfigInternalUseCase,
   tenantId: string,
   drawId: string,
   entries: any[]
@@ -170,7 +170,7 @@ async function dispatchToTenant(
     0
   );
 
-  const gateway = await loadGatewayClient(tenantConfigRepo, tenantId);
+  const gateway = await loadGatewayClient(getTenantConfig, tenantId);
 
   if (!gateway) {
     console.warn(
@@ -188,7 +188,7 @@ async function dispatchToTenant(
 
   for (const batch of batches) {
     const items: PayoutItem[] = batch.map((e: any) => ({
-      playerId: e.playerId,
+      playerId: e.accountId,
       entryId: extractId(e),
       amount: e.payout?.payoutAmount ?? 0,
       currency: "VND",

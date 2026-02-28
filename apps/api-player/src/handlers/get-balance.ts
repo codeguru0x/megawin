@@ -9,13 +9,13 @@ import { toApiGatewayResponse } from "@megawin/app-core/use-cases";
 // ============ Handler ============
 
 export const handler = withPlayerAuth(async (event) => {
-  const { sub, tenantId, accountId } = event.user;
+  const { accountId, tenantId } = event.user;
 
   // TODO: Inject balance use case (query tenant hoặc local cache)
   return toApiGatewayResponse({
     success: true,
     data: {
-      playerId: accountId ?? sub,
+      accountId,
       tenantId,
       balance: 0,
       currency: "VND",

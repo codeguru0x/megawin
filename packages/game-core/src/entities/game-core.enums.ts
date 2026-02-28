@@ -32,6 +32,8 @@ export const GameCoreCollections = {
   EntryFeed: "entry_feed",
   /** Cursor per game: version cuối cùng đã sync vào entryFeed. */
   FeedSyncCursor: "feed_sync_cursor",
+  /** Counter ticketNo per account per day (shared across all games). */
+  TicketCounters: "ticket_counters",
 } as const;
 
 // ─────────────────────────────────────────────
@@ -87,8 +89,7 @@ export const TicketStatus = {
   Completed: "completed",
 } as const;
 
-export type TicketStatus =
-  (typeof TicketStatus)[keyof typeof TicketStatus];
+export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus];
 
 export const TICKET_STATUS_VALUES = Object.values(TicketStatus);
 
@@ -193,8 +194,7 @@ export const TicketChannel = {
   Sdk: "sdk",
 } as const;
 
-export type TicketChannel =
-  (typeof TicketChannel)[keyof typeof TicketChannel];
+export type TicketChannel = (typeof TicketChannel)[keyof typeof TicketChannel];
 
 // ─────────────────────────────────────────────
 // Game Config Scope (dùng chung cho tất cả game)
@@ -210,3 +210,24 @@ export const GameConfigScope = {
 
 export type GameConfigScope =
   (typeof GameConfigScope)[keyof typeof GameConfigScope];
+
+// ─────────────────────────────────────────────
+// Entry Outcome (kết quả thắng/thua – dùng chung)
+// ─────────────────────────────────────────────
+
+/**
+ * Kết quả cuối cùng của entry sau khi settle.
+ * Gán vào entry khi settle xong, dùng cho query/filter/report.
+ *
+ * Mở rộng cho các game tương lai có cơ chế half-win, push, etc.
+ */
+export const EntryOutcome = {
+  /** Thắng – có ít nhất 1 giải trúng (winAmount > 0). */
+  Win: "win",
+  /** Thua – không trúng giải nào (winAmount = 0). */
+  Loss: "loss",
+} as const;
+
+export type EntryOutcome = (typeof EntryOutcome)[keyof typeof EntryOutcome];
+
+export const ENTRY_OUTCOME_VALUES = Object.values(EntryOutcome);

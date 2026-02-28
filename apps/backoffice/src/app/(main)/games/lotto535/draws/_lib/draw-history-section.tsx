@@ -210,8 +210,21 @@ export function DrawHistorySection() {
 
 function DrawRow({ draw }: { draw: DrawSummary }) {
   return (
-    <TableRow>
-      <TableCell className="font-mono text-sm">{draw.drawId}</TableCell>
+    <TableRow
+      className={
+        draw.isSplitCycle ? "bg-amber-50/50 dark:bg-amber-950/20" : undefined
+      }
+    >
+      <TableCell className="font-mono text-sm">
+        <div className="flex items-center gap-1.5">
+          {draw.drawId}
+          {draw.isSplitCycle && (
+            <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] px-1.5 py-0">
+              Split
+            </Badge>
+          )}
+        </div>
+      </TableCell>
       <TableCell>
         <Badge variant="outline">Kỳ {draw.drawNo}</Badge>
       </TableCell>
@@ -229,7 +242,11 @@ function DrawRow({ draw }: { draw: DrawSummary }) {
         )}
       </TableCell>
       <TableCell className="text-right">
-        <JackpotDisplay amount={draw.jackpotAmount} size="sm" />
+        {draw.jackpotAmount != null ? (
+          <JackpotDisplay amount={draw.jackpotAmount} size="sm" />
+        ) : (
+          <span className="text-sm text-muted-foreground">—</span>
+        )}
       </TableCell>
       <TableCell className="text-right tabular-nums">
         {draw.ticketEntryCount != null && draw.ticketEntryCount > 0

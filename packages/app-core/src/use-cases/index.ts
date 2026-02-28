@@ -40,8 +40,8 @@ export {
   ApiGatewayUseCase,
 } from "./api-gateway";
 
-/** Internal Business */
-export { InternalBusinessUseCase as BusinessUseCase } from "./internal-business";
+/** Internal Use Case – trả raw output, throw AppException */
+export { InternalUseCase } from "./internal-use-case";
 
 /** Kinesis */
 export { KinesisUseCase } from "./kinesis";

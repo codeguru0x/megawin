@@ -3,27 +3,46 @@ import type { DrawNo } from "@megawin/game-lotto535/entities";
 import type { DrawEntity } from "../../../infras/mappers/draw-mapper";
 
 // ─────────────────────────────────────────────
-// CreateDraw (tạo 1 kỳ quay duy nhất)
+// CreateDraws (batch – tạo nhiều kỳ liên tiếp)
 // ─────────────────────────────────────────────
 
 export interface CreateDrawsInput {
-  /** Ngày tạo kỳ quay, format "YYYY-MM-DD". */
-  drawDate: string;
+  /** Số kỳ cần tạo (1-12). */
+  count: number;
+}
 
-  /**
-   * Số thứ tự kỳ quay trong ngày.
-   * Lotto 5/35 có 2 kỳ/ngày: 1 (13h) hoặc 2 (21h).
-   */
-  drawNo: DrawNo;
+export interface CreateDrawsOutputItem {
+  drawId: string;
+  drawDate: string;
+  drawNo: number;
+  drawTime: string;
+  closeAt: string;
+  financialDate: string;
+  status: string;
 }
 
 export interface CreateDrawsOutput {
-  drawId: string;
+  draws: CreateDrawsOutputItem[];
+}
+
+// ─────────────────────────────────────────────
+// PreviewDraws
+// ─────────────────────────────────────────────
+
+export interface PreviewDrawsInput {
+  count: number;
+}
+
+export interface PreviewDrawItem {
   drawDate: string;
-  drawNo: DrawNo;
+  drawNo: number;
   drawTime: string;
-  financialDate: string;
+  closeAt: string;
   status: string;
+}
+
+export interface PreviewDrawsOutput {
+  draws: PreviewDrawItem[];
 }
 
 // ─────────────────────────────────────────────
@@ -104,7 +123,8 @@ export interface DrawSummary {
   drawNo: DrawNo;
   drawTime: string;
   status: string;
-  jackpotAmount: number;
+  /** Jackpot opening — chỉ có cho draws đã settle. */
+  jackpotAmount?: number;
   jackpotClosingAmount?: number;
   isSplitCycle: boolean;
   hasResult: boolean;

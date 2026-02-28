@@ -1,0 +1,37 @@
+# Lotto 5/35 – Player endpoints
+
+lotto535-get-current-draw:
+  handler: src/handlers/lotto535/get-current-draw.handler
+  events:
+    - httpApi:
+        path: /player/lotto535/draws/current
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+lotto535-get-jackpot:
+  handler: src/handlers/lotto535/get-jackpot.handler
+  events:
+    - httpApi:
+        path: /player/lotto535/jackpot
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+lotto535-list-tickets:
+  handler: src/handlers/lotto535/list-tickets.handler
+  events:
+    - httpApi:
+        path: /player/lotto535/tickets
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+lotto535-get-ticket-entries:
+  handler: src/handlers/lotto535/get-ticket-entries.handler
+  events:
+    - httpApi:
+        path: /player/lotto535/tickets/{ticketId}/entries
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

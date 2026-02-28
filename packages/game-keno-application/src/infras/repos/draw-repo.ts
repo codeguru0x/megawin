@@ -70,6 +70,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
   }
 
+  async getDrawsByIds(drawIds: string[]): Promise<DrawEntity[]> {
+    return await this.findMany(
+      { drawId: { $in: drawIds } },
+      { sort: { drawDate: 1, drawNo: 1 } }
+    );
+  }
+
   async getDrawsByDate(drawDate: string): Promise<DrawEntity[]> {
     return await this.findMany({ drawDate }, { sort: { drawNo: 1 } });
   }

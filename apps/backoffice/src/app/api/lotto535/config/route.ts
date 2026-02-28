@@ -1,13 +1,13 @@
 import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities/account";
 import {
-  GetGameConfigUseCase,
+  GetGlobalConfigApiUseCase,
   UpdateGameConfigUseCase,
 } from "@megawin/game-lotto535-application/use-cases/game-config";
 
 import { updateGameConfigSchema } from "./_lib/schema";
 
-const getGameConfigUseCase = new GetGameConfigUseCase();
+const getGameConfigUseCase = new GetGlobalConfigApiUseCase();
 const updateGameConfigUseCase = new UpdateGameConfigUseCase();
 
 export const GET = withApi()

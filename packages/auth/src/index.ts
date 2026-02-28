@@ -15,6 +15,8 @@ export {
   getAuthContextFromApiGatewayEvent,
   checkAuthorization,
   type AuthContext,
+  type TenantAuthContext,
+  type CompanyAuthContext,
   type AuthRequirements,
   type AuthContextAdapterOptions,
   type ApiGatewayEventWithAuthorizer,
@@ -28,6 +30,8 @@ export {
   authorizationMiddleware,
   type UserAuthOptions,
   type CompanyAuthOptions,
+  type TenantUserEvent,
+  type CompanyUserEvent,
   type ApiGatewayEventWithUser,
 } from "./authorization-middleware";
 

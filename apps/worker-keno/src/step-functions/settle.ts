@@ -38,43 +38,64 @@
  *  └──────────────────────────────────────────┘
  */
 
+const LAMBDA_RETRY = [
+  {
+    ErrorEquals: [
+      "Lambda.ServiceException",
+      "Lambda.AWSLambdaException",
+      "Lambda.SdkClientException",
+      "Lambda.TooManyRequestsException",
+      "States.TaskFailed",
+      "States.Timeout",
+    ],
+    IntervalSeconds: 10,
+    MaxAttempts: 3,
+    BackoffRate: 2.0,
+  },
+];
+
 export const SETTLE_STATE_MACHINE = {
-  Comment: "Keno Settle Step Function – Kết sổ kỳ quay (crash-safe, no jackpot)",
+  Comment:
+    "Keno Settle Step Function – Kết sổ kỳ quay (crash-safe, no jackpot)",
+  QueryLanguage: "JSONata",
   StartAt: "PrepareSettle",
   States: {
     PrepareSettle: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-prepare",
-      ResultPath: "$.context",
+      Output:
+        "{% { 'context': $states.result, 'drawId': $states.input.drawId } %}",
       Next: "InitSettleLoop",
+      Retry: LAMBDA_RETRY,
     },
 
     InitSettleLoop: {
       Type: "Pass",
-      Result: { batchSize: 500 },
-      ResultPath: "$.settleLoop",
+      Output:
+        "{% { 'context': $states.input.context, 'settleLoop': { 'batchSize': 500 } } %}",
       Next: "SettleEntries",
     },
 
     SettleEntries: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-entries",
-      Parameters: {
-        "drawId.$": "$.context.drawId",
-        "result.$": "$.context.result",
-        "config.$": "$.context.config",
-        "batchSize.$": "$.settleLoop.batchSize",
+      Arguments: {
+        drawId: "{% $states.input.context.drawId %}",
+        result: "{% $states.input.context.result %}",
+        config: "{% $states.input.context.config %}",
+        batchSize: "{% $states.input.settleLoop.batchSize %}",
       },
-      ResultPath: "$.settleResult",
+      Output:
+        "{% { 'context': $states.input.context, 'settleLoop': $states.input.settleLoop, 'settleResult': $states.result } %}",
       Next: "CheckSettleDone",
+      Retry: LAMBDA_RETRY,
     },
 
     CheckSettleDone: {
       Type: "Choice",
       Choices: [
         {
-          Variable: "$.settleResult.done",
-          BooleanEquals: true,
+          Condition: "{% $states.input.settleResult.done %}",
           Next: "CalculateFinancials",
         },
       ],
@@ -83,45 +104,55 @@ export const SETTLE_STATE_MACHINE = {
 
     CalculateFinancials: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-calculate-financials",
-      Parameters: {
-        "drawId.$": "$.context.drawId",
-        "config.$": "$.context.config",
+      Resource:
+        "arn:aws:lambda:REGION:ACCOUNT:function:settle-calculate-financials",
+      Arguments: {
+        drawId: "{% $states.input.context.drawId %}",
+        config: "{% $states.input.context.config %}",
       },
-      ResultPath: "$.financials",
+      Output:
+        "{% { 'context': $states.input.context, 'financials': $states.result } %}",
       Next: "BuildReport",
+      Retry: LAMBDA_RETRY,
     },
 
     BuildReport: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-build-report",
-      Parameters: {
-        "drawId.$": "$.context.drawId",
-        "financialDate.$": "$.context.financialDate",
-        "financials.$": "$.financials",
+      Arguments: {
+        drawId: "{% $states.input.context.drawId %}",
+        financialDate: "{% $states.input.context.financialDate %}",
+        financials: "{% $states.input.financials %}",
       },
-      ResultPath: "$.reportResult",
+      Output:
+        "{% { 'context': $states.input.context, 'financials': $states.input.financials, 'reportResult': $states.result } %}",
       Next: "FinalizeSettle",
+      Retry: LAMBDA_RETRY,
     },
 
     FinalizeSettle: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-finalize",
-      Parameters: {
-        "drawId.$": "$.context.drawId",
+      Arguments: {
+        drawId: "{% $states.input.context.drawId %}",
       },
-      ResultPath: "$.finalizeResult",
+      Output:
+        "{% { 'context': $states.input.context, 'finalizeResult': $states.result } %}",
       Next: "DispatchPayouts",
+      Retry: LAMBDA_RETRY,
     },
 
     DispatchPayouts: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-dispatch-payouts",
-      Parameters: {
-        "drawId.$": "$.context.drawId",
+      Resource:
+        "arn:aws:lambda:REGION:ACCOUNT:function:settle-dispatch-payouts",
+      Arguments: {
+        drawId: "{% $states.input.context.drawId %}",
       },
-      ResultPath: "$.payoutResult",
+      Output:
+        "{% { 'context': $states.input.context, 'payoutResult': $states.result } %}",
       Next: "CheckPayoutDone",
+      Retry: LAMBDA_RETRY,
       Catch: [
         {
           ErrorEquals: ["States.ALL"],
@@ -134,8 +165,7 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Choice",
       Choices: [
         {
-          Variable: "$.payoutResult.done",
-          BooleanEquals: true,
+          Condition: "{% $states.input.payoutResult.done %}",
           Next: "PayoutComplete",
         },
       ],

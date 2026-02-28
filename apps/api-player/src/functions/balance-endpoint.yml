@@ -4,3 +4,5 @@ get-balance:
     - httpApi:
         path: /player/balance
         method: get
+        authorizer:
+          name: cognitoPlayerAuth

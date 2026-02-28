@@ -47,10 +47,7 @@
       "default": "./dist/lambda/middleware/index.js"
     }
   },
-  "imports": {
-    "#application/*": "./src/application/*",
-    "#lambda/*": "./src/lambda/*"
-  },
+  
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",

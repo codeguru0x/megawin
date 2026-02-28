@@ -4,7 +4,7 @@
  * Collection: lotto535Tickets
  *
  * 1 document = 1 vé mua (purchase intent).
- * Chứa boards (lựa chọn của người chơi) + kế hoạch tham gia nhiều kỳ (KY).
+ * Chứa boards (lựa chọn của người chơi) + danh sách kỳ đã mua.
  *
  * Vòng đời:
  *   draft → paid (immutable) → completed
@@ -13,20 +13,15 @@
  * LƯU Ý:
  * - Sau khi paid, ticket IMMUTABLE – không cho sửa boards/plan/pricing.
  * - Hệ thống KHÔNG cho phép huỷ vé (không có "cancelled").
- * - Entries được tạo ngay khi paid (pre-create cho mỗi drawId).
+ * - Entries được tạo ngay khi paid cho TẤT CẢ drawIds đã chọn.
+ * - Không còn cơ chế auto-enroll: tất cả entries vào ngay khi đặt cược.
  *
  * Pattern naming: {Game}TicketDoc, {Game}Board – áp dụng cho mọi game.
  */
 
-import type {
-  ExpansionMode,
-  PlayType,
-} from "./enums";
-import type { TicketChannel, TicketStatus, GameProduct } from "@megawin/game-core/entities";
-import type {
-  ISODateString,
-  BoardSelection,
-} from "./types";
+import type { ExpansionMode, PlayType } from "./enums";
+import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
+import type { ISODateString, BoardSelection } from "./types";
 
 // ─────────────────────────────────────────────
 // Board (lựa chọn trên 1 board A-E)
@@ -93,19 +88,13 @@ export interface TicketDoc {
    */
   tenantId: string;
 
-  /** ID người chơi. */
-  playerId: string;
+  /** ID tài khoản chung (hệ thống account service). */
+  accountId: string;
 
-  /** AppId nếu 1 tenant có nhiều ứng dụng con (optional). */
-  appId?: string;
-
-  /** AccountId hệ thống tài khoản chung (optional). */
-  accountId?: string;
+  /** Username hiển thị. */
+  username: string;
 
   // ───── Ticket Identity ─────
-
-  /** Mã sản phẩm game. Luôn = "lotto535". */
-  product: typeof GameProduct.Lotto535;
 
   /**
    * Mã vé hiển thị cho khách.
@@ -116,36 +105,14 @@ export interface TicketDoc {
   /** Kênh mua vé. */
   channel: TicketChannel;
 
-  // ───── Draw Plan: tham gia nhiều kỳ (KY 1-6) ─────
+  // ───── Draw Plan ─────
 
   drawPlan: {
-    /**
-     * DrawId kỳ đầu tiên mà player đặt cược.
-     * Entry cho kỳ này được tạo ngay khi place-bet.
-     */
-    startDrawId: string;
+    /** Danh sách drawIds mà player đặt cược (tất cả enroll ngay khi paid). */
+    drawIds: string[];
 
-    /** Số kỳ tham gia liên tiếp (1-6). */
+    /** Số kỳ tham gia (= drawIds.length). */
     drawCount: number;
-
-    /**
-     * Danh sách drawId đã thực sự được enroll (có entry).
-     * Grow over time: ban đầu chỉ có [startDrawId],
-     * worker auto-enroll thêm khi mỗi kỳ mới mở bán.
-     */
-    enrolledDrawIds: string[];
-
-    /** Số kỳ đã enroll (= enrolledDrawIds.length). */
-    enrolledDraws: number;
-
-    /** Số kỳ còn lại chưa enroll. */
-    remainingDraws: number;
-
-    /**
-     * true khi tất cả kỳ đã được enroll (enrolledDraws === drawCount).
-     * Index flag để worker biết ticket nào cần enroll tiếp.
-     */
-    fullyEnrolled: boolean;
   };
 
   // ───── Pricing ─────
@@ -188,28 +155,6 @@ export interface TicketDoc {
 
     /** Tổng line count (= pricing.linesPerDraw). */
     lineCount: number;
-
-    /**
-     * Hash canonical của toàn bộ selection.
-     * Entry snapshot hash phải khớp ticket hash (audit integrity).
-     */
-    selectionHash: string;
-  };
-
-  // ───── Immutability / Audit ─────
-
-  audit: {
-    /**
-     * Version ticket data. Freeze = 1 khi paid.
-     * Nếu có migration nội bộ, tăng version + ghi notes.
-     */
-    version: number;
-
-    /**
-     * Thời điểm ticket bị khoá (paid).
-     * Backend reject mọi update boards/pricing/drawPlan sau mốc này.
-     */
-    immutableAt?: Date;
   };
 
   // ───── Progress ─────
@@ -221,12 +166,6 @@ export interface TicketDoc {
 
     /** Số kỳ đã settled. */
     settledDraws: number;
-
-    /** Số kỳ đã enroll nhưng chưa settle. */
-    pendingDraws: number;
-
-    /** DrawId kế tiếp chưa settle – UI hiển thị countdown. */
-    nextDrawId?: string;
   };
 
   // ───── Settlement Summary ─────

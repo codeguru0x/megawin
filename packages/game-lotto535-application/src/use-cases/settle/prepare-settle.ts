@@ -16,7 +16,8 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { buildPrizeAmountMap } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
+import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 
 export interface PrepareSettleInput {
   drawId: string;
@@ -54,7 +55,8 @@ export class PrepareSettleUseCase extends StepFunctionUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
-  private readonly configRepo = new GameConfigRepository();
+  private readonly cycleRepo = new JackpotCycleRepository();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   /** Load context cho settle flow. Throw nếu draw không hợp lệ. */
   protected async execute(
@@ -77,10 +79,15 @@ export class PrepareSettleUseCase extends StepFunctionUseCase<
       throw new Error(`Draw ${drawId} chưa có kết quả quay.`);
     }
 
-    const globalConfig = await this.configRepo.getGlobalConfig();
-    if (!globalConfig) {
-      throw new Error("GameConfig global chưa được khởi tạo.");
-    }
+    const [globalConfig, activeCycle] = await Promise.all([
+      this.getGlobalConfig.run(),
+      this.cycleRepo.getActiveCycle(),
+    ]);
+
+    const jackpotOpeningAmount =
+      activeCycle?.currentAmount ?? globalConfig.jackpot.seedAmount;
+
+    const isSplitCycle = draw.jackpot?.isSplitCycle ?? false;
 
     const prizeMap = buildPrizeAmountMap(globalConfig.defaultPrizes);
     const prizeAmounts: Record<string, number> = {};
@@ -102,8 +109,8 @@ export class PrepareSettleUseCase extends StepFunctionUseCase<
         winningMain: draw.result.winningMain as unknown as number[],
         winningSpecial: draw.result.winningSpecial,
       },
-      jackpotOpeningAmount: draw.jackpot.openingAmount,
-      isSplitCycle: draw.jackpot.isSplitCycle ?? false,
+      jackpotOpeningAmount,
+      isSplitCycle,
       prizeAmounts,
       config: {
         seedAmount: globalConfig.jackpot.seedAmount,

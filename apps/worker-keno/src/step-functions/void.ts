@@ -34,36 +34,56 @@
  * Keno KHÔNG có Jackpot → không cần rollback jackpot chain.
  */
 
+const LAMBDA_RETRY = [
+  {
+    ErrorEquals: [
+      "Lambda.ServiceException",
+      "Lambda.AWSLambdaException",
+      "Lambda.SdkClientException",
+      "Lambda.TooManyRequestsException",
+      "States.TaskFailed",
+      "States.Timeout",
+    ],
+    IntervalSeconds: 10,
+    MaxAttempts: 3,
+    BackoffRate: 2.0,
+  },
+];
+
 export const VOID_STATE_MACHINE = {
-  Comment: "Keno Void Draw Step Function – Huỷ kỳ quay (crash-safe, no jackpot)",
+  Comment:
+    "Keno Void Draw Step Function – Huỷ kỳ quay (crash-safe, no jackpot)",
+  QueryLanguage: "JSONata",
   StartAt: "PrepareVoid",
   States: {
     PrepareVoid: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-prepare",
-      ResultPath: "$.context",
+      Output: "{% { 'context': $states.result } %}",
       Next: "VoidEntries",
+      Retry: LAMBDA_RETRY,
     },
 
     VoidEntries: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-entries",
       Comment: "Batch void entries. Voided entries auto-excluded.",
-      Parameters: {
-        "drawId.$": "$.context.drawId",
-        "reason.$": "$.context.reason",
-        "voidedBy.$": "$.context.voidedBy",
+      Arguments: {
+        drawId: "{% $states.input.context.drawId %}",
+        reason: "{% $states.input.context.reason %}",
+        voidedBy: "{% $states.input.context.voidedBy %}",
       },
-      ResultPath: "$.voidResult",
+      Output:
+        "{% { 'context': $states.input.context, 'voidResult': $states.result } %}",
       Next: "CheckVoidDone",
+      Retry: LAMBDA_RETRY,
     },
 
     CheckVoidDone: {
       Type: "Choice",
       Choices: [
         {
-          Variable: "$.voidResult.done",
-          BooleanEquals: true,
+          Condition: "{% $states.input.voidResult.done %}",
           Next: "DispatchRefunds",
         },
       ],
@@ -73,11 +93,13 @@ export const VOID_STATE_MACHINE = {
     DispatchRefunds: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-dispatch-refunds",
-      Parameters: {
-        "drawId.$": "$.context.drawId",
+      Arguments: {
+        drawId: "{% $states.input.context.drawId %}",
       },
-      ResultPath: "$.refundResult",
+      Output:
+        "{% { 'context': $states.input.context, 'refundResult': $states.result } %}",
       Next: "CheckRefundDone",
+      Retry: LAMBDA_RETRY,
       Catch: [
         {
           ErrorEquals: ["States.ALL"],
@@ -90,8 +112,7 @@ export const VOID_STATE_MACHINE = {
       Type: "Choice",
       Choices: [
         {
-          Variable: "$.refundResult.done",
-          BooleanEquals: true,
+          Condition: "{% $states.input.refundResult.done %}",
           Next: "FinalizeVoid",
         },
       ],
@@ -107,16 +128,17 @@ export const VOID_STATE_MACHINE = {
     FinalizeVoid: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-finalize",
-      Parameters: {
-        "drawId.$": "$.context.drawId",
+      Arguments: {
+        drawId: "{% $states.input.context.drawId %}",
       },
-      ResultPath: "$.finalizeResult",
       End: true,
+      Retry: LAMBDA_RETRY,
     },
 
     RefundFailed: {
       Type: "Pass",
-      Comment: "Refund error – void hoàn tất, entries đã void. Admin retry thủ công.",
+      Comment:
+        "Refund error – void hoàn tất, entries đã void. Admin retry thủ công.",
       End: true,
     },
   },

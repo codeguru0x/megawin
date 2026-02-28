@@ -6,32 +6,28 @@
  * Parse sang number trước khi truyền vào use case.
  */
 
-import { z } from "zod";
-
 import { withPlayerAuth } from "@megawin/auth";
 
 import { PlaceBetUseCase } from "@megawin/game-lotto535-application/use-cases/place-bet";
-import { PlayType } from "@megawin/game-lotto535/entities";
+
 import { TicketChannel } from "@megawin/game-core/entities";
+import z from "zod";
+import {
+  lotto535MainNumberSchema,
+  lotto535SpecialNumberSchema,
+  lotto535DrawIdSchema,
+  VALID_BOARD_NOS,
+} from "@megawin/game-lotto535/schemas";
+import { PlayType } from "@megawin/game-lotto535/entities";
 
-// ============ Zod schemas ============
+// ─── Composite schemas ───
 
-const VALID_BOARD_NOS = ["A", "B", "C", "D", "E"] as const;
-
-const mainNumberSchema = z
-  .string()
-  .regex(/^(0[1-9]|[12][0-9]|3[0-5])$/, "Số chính phải từ '01' đến '35'");
-
-const specialNumberSchema = z
-  .string()
-  .regex(/^(0[1-9]|1[0-2])$/, "Số đặc biệt phải từ '01' đến '12'");
-
-const selectionSchema = z.object({
-  mainNumbers: z.array(mainNumberSchema),
-  specialNumbers: z.array(specialNumberSchema),
+export const lotto535SelectionSchema = z.object({
+  mainNumbers: z.array(lotto535MainNumberSchema),
+  specialNumbers: z.array(lotto535SpecialNumberSchema),
 });
 
-const boardSchema = z.object({
+export const lotto535BoardSchema = z.object({
   boardNo: z.enum(VALID_BOARD_NOS),
   playType: z.enum([
     PlayType.Standard,
@@ -40,25 +36,30 @@ const boardSchema = z.object({
     PlayType.SpecialCover,
     PlayType.QuickPick,
   ]),
-  selection: selectionSchema,
+  selection: lotto535SelectionSchema,
 });
 
-const bodySchema = z.object({
-  drawId: z.string().regex(
-    /^\d{4}-\d{2}-\d{2}-\d{3}$/,
-    "Format: YYYY-MM-DD-NNN",
-  ),
-  drawCount: z.number().int().min(1).max(6),
+// ─── Place bet body schema ───
+
+export const lotto535PlaceBetBodySchema = z.object({
+  drawIds: z
+    .array(lotto535DrawIdSchema)
+    .min(1)
+    .max(6)
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: "Các drawId không được trùng lặp.",
+    }),
   boards: z
-    .array(boardSchema)
+    .array(lotto535BoardSchema)
     .min(1)
     .max(5)
     .refine(
-      (boards) =>
-        new Set(boards.map((b) => b.boardNo)).size === boards.length,
-      { message: "Các board không được trùng boardNo." },
+      (boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length,
+      { message: "Các board không được trùng boardNo." }
     ),
 });
+
+export type Lotto535Board = z.infer<typeof lotto535BoardSchema>;
 
 // ============ Handler ============
 
@@ -66,36 +67,30 @@ const useCase = new PlaceBetUseCase();
 
 export const handler = withPlayerAuth(
   async (event) => {
-    const { sub, tenantId, accountId } = event.user;
-    const { drawId, drawCount, boards: rawBoards } = event.schema.body;
+    const { tenantId, accountId, username } = event.user;
+    const { drawIds, boards: rawBoards } = event.schema.body;
 
-    if (!tenantId) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          success: false,
-          error: { code: "BAD_REQUEST", message: "tenantId is required." },
-        }),
-      };
-    }
-
-    const boards = rawBoards.map((b) => ({
+    const boards = rawBoards.map((b: Lotto535Board) => ({
       boardNo: b.boardNo,
       playType: b.playType,
       selection: {
-        mainNumbers: b.selection.mainNumbers.map((s) => parseInt(s, 10)),
-        specialNumbers: b.selection.specialNumbers.map((s) => parseInt(s, 10)),
+        mainNumbers: b.selection.mainNumbers.map((s: string) =>
+          parseInt(s, 10)
+        ),
+        specialNumbers: b.selection.specialNumbers.map((s: string) =>
+          parseInt(s, 10)
+        ),
       },
     }));
 
     return useCase.run({
       tenantId,
-      playerId: accountId ?? sub,
+      accountId,
+      username,
       channel: TicketChannel.Sdk,
-      drawId,
-      drawCount,
+      drawIds,
       boards,
     });
   },
-  { schemas: { body: bodySchema } },
+  { schemas: { body: lotto535PlaceBetBodySchema } }
 );

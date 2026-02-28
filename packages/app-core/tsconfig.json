@@ -2,11 +2,7 @@
   "extends": "@megawin/typescript-config/base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist",
-    "paths": {
-      "#application/*": ["./src/application/*"],
-      "#lambda/*": ["./src/lambda/*"]
-    }
+    "outDir": "dist"
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist", "test"]

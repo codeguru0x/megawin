@@ -9,9 +9,10 @@ import type {
   GetCurrentDrawOutput,
   DrawSummary,
   ListDrawsOutput,
+  CreateDrawsOutput,
+  PreviewDrawsOutput,
 } from "@megawin/game-lotto535-application/use-cases/draws";
 import { lotto535Keys } from "@/lib/query-keys";
-import { todayVN } from "@megawin/shared/utils/date";
 
 export type { CurrentDrawInfo, DrawSummary };
 
@@ -32,7 +33,7 @@ export function useCurrentDraw() {
     queryKey: lotto535Keys.currentDraw,
     queryFn: () =>
       apiClient.get<GetCurrentDrawOutput>("/lotto535/draws/current"),
-    refetchInterval: 30_000,
+    refetchInterval: 15_000,
   });
 }
 
@@ -52,9 +53,15 @@ export function useDrawsList(params: ListDrawsParams) {
   });
 }
 
-export function useTodayDraws() {
-  const today = todayVN();
-  return useDrawsList({ fromDate: today, toDate: today, page: 1, size: 10 });
+export function usePreviewDraws(count: number) {
+  return useQuery({
+    queryKey: [...lotto535Keys.all, "preview", count] as const,
+    queryFn: () =>
+      apiClient.get<PreviewDrawsOutput>("/lotto535/draws/preview", {
+        params: { count },
+      }),
+    enabled: count > 0,
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -139,11 +146,11 @@ export function useUpdateSchedule() {
 export function useCreateDraw() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { drawDate: string; drawNo: number }) =>
-      apiClient.post("/lotto535/draws", data),
-    onSuccess: () => {
+    mutationFn: (data: { count: number }) =>
+      apiClient.post<CreateDrawsOutput>("/lotto535/draws", data),
+    onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: lotto535Keys.all });
-      toast.success("Đã tạo kỳ quay mới.");
+      toast.success(`Đã tạo ${res.draws.length} kỳ quay mới.`);
     },
     onError: (err) => {
       toast.error(

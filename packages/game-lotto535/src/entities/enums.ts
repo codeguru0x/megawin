@@ -21,6 +21,7 @@ export const Lotto535Collections = {
   TicketLines: "lotto535_ticket_lines",
   Draws: "lotto535_draws",
   GameConfigs: "lotto535_game_configs",
+  JackpotCycles: "lotto535_jackpot_cycles",
 } as const;
 
 // ─────────────────────────────────────────────
@@ -137,3 +138,27 @@ export const PayoutStatus = {
 } as const;
 
 export type PayoutStatus = (typeof PayoutStatus)[keyof typeof PayoutStatus];
+
+// ─────────────────────────────────────────────
+// Refund Status
+// ─────────────────────────────────────────────
+
+/**
+ * Trạng thái hoàn tiền khi entry bị void.
+ * Gắn ở entry.voidInfo.refundStatus.
+ *
+ * Flow: pending → dispatched → confirmed
+ *                 ↘ failed → (retry) → dispatched
+ */
+export const RefundStatus = {
+  /** Chưa gửi yêu cầu hoàn tiền. Default khi void. */
+  Pending: "pending",
+  /** Đã gửi request hoàn tiền cho tenant API. */
+  Dispatched: "dispatched",
+  /** Tenant đã xác nhận hoàn tiền cho player. Terminal state. */
+  Confirmed: "confirmed",
+  /** Gửi thất bại, cần retry. */
+  Failed: "failed",
+} as const;
+
+export type RefundStatus = (typeof RefundStatus)[keyof typeof RefundStatus];

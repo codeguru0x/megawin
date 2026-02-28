@@ -27,7 +27,7 @@ export interface TenantDailyReportData {
 
 export interface PlayerDailyReportData {
   tenantId: string;
-  playerId: string;
+  accountId: string;
   financialDate: string;
   drawId: string;
   product: GameProduct;
@@ -58,7 +58,7 @@ export class ReportRepository extends BaseRepo<any, any> {
         $set: { ...data, reportType: "tenant", updatedAt: now },
         $setOnInsert: { createdAt: now },
       },
-      { upsert: true },
+      { upsert: true }
     );
   }
 
@@ -66,7 +66,7 @@ export class ReportRepository extends BaseRepo<any, any> {
     const now = new Date();
     const filter = {
       tenantId: data.tenantId,
-      playerId: data.playerId,
+      accountId: data.accountId,
       financialDate: data.financialDate,
       drawId: data.drawId,
       product: data.product,
@@ -78,7 +78,7 @@ export class ReportRepository extends BaseRepo<any, any> {
         $set: { ...data, reportType: "player", updatedAt: now },
         $setOnInsert: { createdAt: now },
       },
-      { upsert: true },
+      { upsert: true }
     );
   }
 }

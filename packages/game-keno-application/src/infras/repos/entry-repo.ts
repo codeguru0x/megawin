@@ -12,16 +12,16 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import { KenoCollections } from "@megawin/game-keno/entities";
+import {
+  KenoCollections,
+  PayoutStatus,
+  RefundStatus,
+} from "@megawin/game-keno/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
 import { ObjectId, Long } from "mongodb";
 import { BaseRepo } from "./base-repo";
 import { EntryMapper, type EntryEntity } from "../mappers/entry-mapper";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
-
-const PAYOUT_STATUS_PENDING = "pending";
-const PAYOUT_STATUS_FAILED = "failed";
-const PAYOUT_STATUS_DISPATCHED = "dispatched";
 
 /** Singleton — reuse across lambda invocations. */
 let seqRepo: EntryChangeSeqRepository | null = null;
@@ -38,24 +38,9 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     });
   }
 
-  /** Allocate 1 version mới từ global sequence. */
-  private async nextVersion(): Promise<Long> {
+  /** Allocate 1 version mới từ global sequence. Dùng cho place-bet, settle, void... */
+  async nextVersion(): Promise<Long> {
     return getSeqRepo().nextSeq();
-  }
-
-  /** Allocate N versions liên tiếp. Trả về array Long sorted ASC. */
-  private async allocateVersions(count: number): Promise<Long[]> {
-    if (count <= 0) return [];
-    const { startSeq, endSeq } = await getSeqRepo().allocateSeq(count);
-    const versions: Long[] = [];
-    let current =
-      typeof startSeq === "number" ? BigInt(startSeq) : startSeq.toBigInt();
-    const end = typeof endSeq === "number" ? BigInt(endSeq) : endSeq.toBigInt();
-    while (current <= end) {
-      versions.push(Long.fromBigInt(current));
-      current++;
-    }
-    return versions;
   }
 
   /** Insert 1 entry mới kèm version từ global sequence. */
@@ -64,15 +49,13 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     return await this.insertOne({ ...doc, version } as any);
   }
 
-  /** Insert nhiều entries kèm mỗi entry 1 version riêng. */
+  /**
+   * Insert nhiều entries đã có sẵn version.
+   * Caller phải gán version vào docs trước khi gọi.
+   */
   async insertEntries(docs: Record<string, unknown>[]): Promise<number> {
     if (docs.length === 0) return 0;
-    const versions = await this.allocateVersions(docs.length);
-    const docsWithVersion = docs.map((doc, i) => ({
-      ...doc,
-      version: versions[i]!,
-    }));
-    const result = await this.insertMany(docsWithVersion as any[]);
+    const result = await this.insertMany(docs as any[]);
     return result.insertedCount;
   }
 
@@ -180,7 +163,8 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       }>;
       settledAt: Date;
       payoutStatus?: string;
-    }
+    },
+    outcome: string
   ): Promise<boolean> {
     const version = await this.nextVersion();
     return await this.updateOne(
@@ -189,6 +173,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
         $set: {
           status: EntryStatus.Settled,
           payout,
+          outcome,
           version,
           updatedAt: new Date(),
         },
@@ -202,24 +187,27 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     Array<{
       tenantId: string;
       revenue: number;
+      commission: number;
       commissionRate: number;
       entryCount: number;
     }>
   > {
     const result = await this.aggregate([
-      { $match: { drawId } },
+      { $match: { drawId, status: { $ne: EntryStatus.Void } } },
       {
         $group: {
           _id: "$tenantId",
           revenue: { $sum: "$amount" },
+          commission: { $sum: "$tenant.commissionAmount" },
+          commissionRate: { $first: "$tenant.commissionRate" },
           entryCount: { $sum: 1 },
-          commissionRate: { $first: "$tenantSnapshot.commissionRate" },
         },
       },
     ]);
     return result.map((r: any) => ({
       tenantId: r._id,
       revenue: r.revenue,
+      commission: r.commission ?? 0,
       commissionRate: r.commissionRate ?? 0.2,
       entryCount: r.entryCount,
     }));
@@ -262,6 +250,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       totalPayout: number;
       entryCount: number;
       commissionRate: number;
+      totalCommission: number;
     }>
   > {
     const result = await this.aggregate([
@@ -273,7 +262,8 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           totalWin: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
           totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
           entryCount: { $sum: 1 },
-          commissionRate: { $first: "$tenantSnapshot.commissionRate" },
+          commissionRate: { $first: "$tenant.commissionRate" },
+          totalCommission: { $sum: "$tenant.commissionAmount" },
         },
       },
     ]);
@@ -284,6 +274,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       totalPayout: r.totalPayout,
       entryCount: r.entryCount,
       commissionRate: r.commissionRate ?? 0,
+      totalCommission: r.totalCommission ?? 0,
     }));
   }
 
@@ -293,7 +284,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   ): Promise<
     Array<{
       tenantId: string;
-      playerId: string;
+      accountId: string;
       totalStake: number;
       totalWin: number;
       totalPayout: number;
@@ -304,7 +295,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       { $match: { drawId, financialDate } },
       {
         $group: {
-          _id: { tenantId: "$tenantId", playerId: "$playerId" },
+          _id: { tenantId: "$tenantId", accountId: "$accountId" },
           totalStake: { $sum: "$amount" },
           totalWin: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
           totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
@@ -314,7 +305,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     ]);
     return result.map((r: any) => ({
       tenantId: r._id.tenantId,
-      playerId: r._id.playerId,
+      accountId: r._id.accountId,
       totalStake: r.totalStake,
       totalWin: r.totalWin,
       totalPayout: r.totalPayout,
@@ -334,8 +325,8 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
         status: EntryStatus.Settled,
         "payout.winAmount": { $gt: 0 },
         $or: [
-          { "payout.payoutStatus": PAYOUT_STATUS_PENDING },
-          { "payout.payoutStatus": PAYOUT_STATUS_FAILED },
+          { "payout.payoutStatus": PayoutStatus.Pending },
+          { "payout.payoutStatus": PayoutStatus.Failed },
           { "payout.payoutStatus": { $exists: false } },
         ],
       },
@@ -349,8 +340,8 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       status: EntryStatus.Settled,
       "payout.winAmount": { $gt: 0 },
       $or: [
-        { "payout.payoutStatus": PAYOUT_STATUS_PENDING },
-        { "payout.payoutStatus": PAYOUT_STATUS_FAILED },
+        { "payout.payoutStatus": PayoutStatus.Pending },
+        { "payout.payoutStatus": PayoutStatus.Failed },
         { "payout.payoutStatus": { $exists: false } },
       ],
     });
@@ -362,7 +353,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       { _id: { $in: objectIds } as any },
       {
         $set: {
-          "payout.payoutStatus": PAYOUT_STATUS_DISPATCHED,
+          "payout.payoutStatus": PayoutStatus.Dispatched,
           "payout.payoutDispatchedAt": new Date(),
           updatedAt: new Date(),
         },
@@ -380,7 +371,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       { _id: { $in: objectIds } as any },
       {
         $set: {
-          "payout.payoutStatus": PAYOUT_STATUS_FAILED,
+          "payout.payoutStatus": PayoutStatus.Failed,
           "payout.payoutLastError": error,
           updatedAt: new Date(),
         },
@@ -437,7 +428,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           status: EntryStatus.Void,
           voidInfo: {
             ...voidInfo,
-            refundStatus: "pending",
+            refundStatus: RefundStatus.Pending,
             voidedAt: new Date(),
           },
           version,
@@ -466,7 +457,9 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       {
         drawId,
         status: EntryStatus.Void,
-        "voidInfo.refundStatus": { $in: ["pending", "failed"] },
+        "voidInfo.refundStatus": {
+          $in: [RefundStatus.Pending, RefundStatus.Failed],
+        },
       },
       { sort: { createdAt: 1 }, limit }
     );
@@ -478,7 +471,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       { _id: new ObjectId(entryId) },
       {
         $set: {
-          "voidInfo.refundStatus": "dispatched",
+          "voidInfo.refundStatus": RefundStatus.Dispatched,
           "voidInfo.refundedAt": new Date(),
           updatedAt: new Date(),
         },
@@ -492,7 +485,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       { _id: new ObjectId(entryId) },
       {
         $set: {
-          "voidInfo.refundStatus": "failed",
+          "voidInfo.refundStatus": RefundStatus.Failed,
           "voidInfo.refundLastError": error,
           updatedAt: new Date(),
         },

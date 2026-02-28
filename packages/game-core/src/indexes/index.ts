@@ -109,3 +109,15 @@ export const GAME_DAILY_REPORT_INDEXES: IndexDescription[] = [
     name: "idx_tenant_financial_date",
   },
 ];
+
+// ─────────────────────────────────────────────
+// ticketCounters indexes
+// ─────────────────────────────────────────────
+
+export const TICKET_COUNTER_INDEXES: IndexDescription[] = [
+  {
+    key: { accountId: 1, date: 1 },
+    unique: true,
+    name: "idx_account_date_unique",
+  },
+];

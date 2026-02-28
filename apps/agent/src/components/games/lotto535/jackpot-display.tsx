@@ -1,23 +1,12 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { formatVNDCompact } from "@megawin/shared/utils/number";
 
 interface JackpotDisplayProps {
   amount: number;
   size?: "sm" | "md" | "lg";
   className?: string;
-}
-
-function formatVND(amount: number): string {
-  if (amount >= 1_000_000_000) {
-    const billions = amount / 1_000_000_000;
-    return `${billions.toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tỷ`;
-  }
-  if (amount >= 1_000_000) {
-    const millions = amount / 1_000_000;
-    return `${millions.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} triệu`;
-  }
-  return amount.toLocaleString("vi-VN") + " ₫";
 }
 
 export function JackpotDisplay({
@@ -35,10 +24,10 @@ export function JackpotDisplay({
           size === "lg" && "text-3xl"
         )}
       >
-        {formatVND(amount)}
+        {formatVNDCompact(amount)}
       </span>
     </div>
   );
 }
 
-export { formatVND };
+export { formatVNDCompact as formatVND };

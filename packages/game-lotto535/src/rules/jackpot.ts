@@ -43,12 +43,13 @@ export interface DrawFinancialInput {
   totalFixedPrizes: number;
 
   /**
-   * Danh sách doanh thu + tỷ lệ hoa hồng theo từng tenant.
-   * Dùng để tính tổng hoa hồng đại lý.
+   * Doanh thu + hoa hồng đã tính sẵn theo từng tenant.
+   * commission.amount đã snapshot lúc place-bet, SUM từ DB.
    */
   tenantRevenues: Array<{
     tenantId: string;
     revenue: number;
+    commission: number;
     commissionRate: number;
   }>;
 
@@ -111,7 +112,7 @@ export function calculateDrawFinancials(
   const tenantBreakdown = tenantRevenues.map((t) => ({
     tenantId: t.tenantId,
     revenue: t.revenue,
-    commission: Math.round(t.revenue * t.commissionRate),
+    commission: t.commission,
     commissionRate: t.commissionRate,
   }));
 
@@ -122,11 +123,18 @@ export function calculateDrawFinancials(
 
   const companyTake = Math.round(totalRevenue * companyRate);
 
-  const remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission;
+  const remainAfterPrizes =
+    totalRevenue - totalFixedPrizes - totalAgentCommission;
 
-  const actualCompanyTake = Math.min(companyTake, Math.max(remainAfterPrizes, 0));
+  const actualCompanyTake = Math.min(
+    companyTake,
+    Math.max(remainAfterPrizes, 0)
+  );
 
-  const jackpotContribution = Math.max(remainAfterPrizes - actualCompanyTake, 0);
+  const jackpotContribution = Math.max(
+    remainAfterPrizes - actualCompanyTake,
+    0
+  );
 
   return {
     totalRevenue,
@@ -187,7 +195,11 @@ export function isSplitCycleDraw(
   hasJackpotWinner: boolean,
   drawNo: number
 ): boolean {
-  return jackpotAmount >= splitThreshold && !hasJackpotWinner && drawNo === DrawNo.Evening;
+  return (
+    jackpotAmount >= splitThreshold &&
+    !hasJackpotWinner &&
+    drawNo === DrawNo.Evening
+  );
 }
 
 /** Input cho tính chia giải. */
@@ -364,9 +376,7 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
   // Bước 5: cộng tổng phần dư vào hạng giải cao nhất
   if (totalRemainder > 0) {
     const detail = details.get(highestTierWithWinners)!;
-    const remainderPerWinner = Math.floor(
-      totalRemainder / detail.winnerCount
-    );
+    const remainderPerWinner = Math.floor(totalRemainder / detail.winnerCount);
     detail.bonusPerWinner += remainderPerWinner;
     bonusPerWinnerMap.set(highestTierWithWinners, detail.bonusPerWinner);
     totalRemainder -= remainderPerWinner * detail.winnerCount;

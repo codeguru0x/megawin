@@ -12,6 +12,7 @@
  */
 
 import { formatVN, toVNDate } from "@megawin/shared/utils/date";
+import { DrawStatus } from "@megawin/game-core/entities";
 
 export interface DrawSlotConfig {
   firstDrawTime: string;
@@ -25,7 +26,7 @@ export interface DrawSlot {
   drawTimeStr: string;
   drawTime: Date;
   closeAt: Date;
-  status: "salesOpen" | "scheduled";
+  status: typeof DrawStatus.SalesOpen | typeof DrawStatus.Scheduled;
 }
 
 function findNextSlotMinutes(
@@ -86,8 +87,8 @@ export function calcDrawSlots(
       drawTime.getTime() - config.salesCloseBeforeSeconds * 1000
     );
 
-    const status: "salesOpen" | "scheduled" =
-      candidateMinutes <= lastDrawMinutes ? "salesOpen" : "scheduled";
+    const status =
+      candidateMinutes <= lastDrawMinutes ? DrawStatus.SalesOpen : DrawStatus.Scheduled;
 
     slots.push({
       minutes: candidateMinutes,

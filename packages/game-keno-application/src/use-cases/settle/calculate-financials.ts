@@ -62,6 +62,7 @@ export class CalculateFinancialsUseCase extends StepFunctionUseCase<
         tenantId: t.tenantId,
         revenue: t.revenue,
         commissionRate: t.commissionRate,
+        commission: t.commission,
       })),
       companyRate: config.companyRate,
     });

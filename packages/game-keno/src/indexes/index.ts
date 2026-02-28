@@ -31,31 +31,21 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
   // ─────────────────────────────────────────
   {
     collection: KenoCollections.Tickets,
-    key: { ticketNo: 1 },
-    options: { unique: true, name: "idx_ticketNo_unique" },
-    purpose: "Mã vé unique toàn hệ thống",
+    key: { accountId: 1, ticketNo: 1 },
+    options: { unique: true, name: "idx_account_ticketNo_unique" },
+    purpose: "Mã vé unique per account (counter per player per day)",
   },
   {
     collection: KenoCollections.Tickets,
-    key: { tenantId: 1, playerId: 1, status: 1, createdAt: -1 },
-    options: { name: "idx_tenant_player_status_created" },
-    purpose: "Query vé theo tenant + player",
+    key: { tenantId: 1, accountId: 1, status: 1, createdAt: -1 },
+    options: { name: "idx_tenant_account_status_created" },
+    purpose: "Query vé theo tenant + account",
   },
   {
     collection: KenoCollections.Tickets,
-    key: {
-      status: 1,
-      "drawPlan.fullyEnrolled": 1,
-      "drawPlan.remainingDraws": 1,
-    },
-    options: { name: "idx_auto_enroll_scan" },
-    purpose: "Auto-enroll worker: scan tickets multi-draw chưa fully enrolled",
-  },
-  {
-    collection: KenoCollections.Tickets,
-    key: { "drawPlan.enrolledDrawIds": 1 },
-    options: { name: "idx_enrolled_drawIds" },
-    purpose: "Query tickets by enrolled drawId",
+    key: { "drawPlan.drawIds": 1 },
+    options: { name: "idx_drawPlan_drawIds" },
+    purpose: "Query tickets by drawId trong drawPlan",
   },
   {
     collection: KenoCollections.Tickets,
@@ -81,8 +71,8 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: KenoCollections.TicketEntries,
-    key: { tenantId: 1, playerId: 1, drawDate: -1 },
-    options: { name: "idx_tenant_player_drawDate" },
+    key: { tenantId: 1, accountId: 1, drawDate: -1 },
+    options: { name: "idx_tenant_account_drawDate" },
     purpose: "Lịch sử chơi: player xem entries gần đây",
   },
   {

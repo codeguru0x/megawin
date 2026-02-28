@@ -1,18 +1,16 @@
 /**
  * Use Case: Place Bet (Keno)
  *
- * Đặt cược Keno với lazy enrollment cho multi-draw:
- *   - Chỉ tạo entry cho kỳ đầu tiên (startDrawId)
- *   - Worker auto-enroll sẽ tạo entries cho các kỳ tiếp theo
+ * Đặt cược Keno với tất cả entries tạo ngay (all-or-nothing):
+ *   - Player gửi danh sách drawIds đang mở bán
+ *   - Server validate tất cả draws → reject nếu 1 draw không hợp lệ
+ *   - Tạo entries cho TẤT CẢ draws ngay lập tức
  *
  * Validation:
  *   - Số dạng string "01"-"80" (zero-padded 2 ký tự)
  *   - boards: mỗi board validate theo play type (pick1-pick10)
  *   - sideBets: validate playType + bet value
- *   - drawCount: 1 → maxDrawCount
- *   - startDrawId phải đang mở bán
- *
- * Commission: snapshot commissionRate vào ticket + entry.
+ *   - Tất cả drawIds phải đang salesOpen + chưa hết hạn
  */
 
 import { AppException } from "@megawin/shared/errors";
@@ -20,7 +18,6 @@ import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import {
   DrawStatus,
   EntryStatus,
-  GameProduct,
   TicketStatus,
 } from "@megawin/game-core/entities";
 import type {
@@ -43,46 +40,47 @@ import {
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
-import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { GetTenantConfigInternalUseCase } from "../game-config/get-tenant-config-internal";
+import { TicketCounterRepository } from "@megawin/game-core-application/repos";
+import { buildTicketNo } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
+import { nowVN } from "@megawin/shared/utils/date";
 
 export class PlaceBetUseCase extends ApiGatewayUseCase<
   PlaceBetInput,
   PlaceBetOutput
 > {
-  private readonly configRepo = new GameConfigRepository();
   private readonly drawRepo = new DrawRepository();
-  private readonly tenantConfigRepo = new TenantConfigRepository();
   private readonly ticketRepo = new TicketRepository();
   private readonly entryRepo = new EntryRepository();
+  private readonly ticketCounter = new TicketCounterRepository();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
 
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
     const {
       tenantId,
-      playerId,
-      appId,
       accountId,
+      username,
       channel,
-      startDrawId,
-      drawCount,
+      drawIds,
       boards: boardInputs,
       sideBets: sideBetInputs,
     } = input;
 
     // ── 1. Load game config ──
-    const globalConfig = await this.configRepo.getGlobalConfig();
-    if (!globalConfig) {
-      throw AppException.internal("GameConfig chưa được khởi tạo.");
-    }
-
+    const globalConfig = await this.getGlobalConfig.run();
     const { play } = globalConfig;
 
-    // ── 2. Validate draw count ──
-    if (drawCount < 1 || drawCount > play.maxDrawCount) {
+    // ── 2. Validate drawIds ──
+    if (drawIds.length === 0 || drawIds.length > play.maxDrawCount) {
       throw AppException.badRequest(
-        `drawCount phải từ 1 đến ${play.maxDrawCount}.`
+        `Số kỳ phải từ 1 đến ${play.maxDrawCount}.`
       );
+    }
+    if (new Set(drawIds).size !== drawIds.length) {
+      throw AppException.badRequest("Danh sách kỳ quay chứa drawId trùng lặp.");
     }
 
     // ── 3. Validate boards + sideBets ──
@@ -139,19 +137,29 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       });
     }
 
-    // ── 4. Validate first draw ──
-    const firstDraw = await this.drawRepo.getDrawById(startDrawId);
-    if (!firstDraw) {
-      throw AppException.badRequest(`Kỳ quay ${startDrawId} không tồn tại.`);
-    }
-    if (firstDraw.status !== DrawStatus.SalesOpen) {
-      throw AppException.badRequest(
-        `Kỳ quay ${startDrawId} chưa mở bán hoặc đã đóng bán.`
-      );
+    // ── 4. Validate tất cả draws – all-or-nothing ──
+    const draws = await this.drawRepo.getDrawsByIds(drawIds);
+    const drawMap = new Map(draws.map((d) => [d.drawId, d]));
+
+    for (const drawId of drawIds) {
+      const draw = drawMap.get(drawId);
+      if (!draw) {
+        throw AppException.badRequest(`Kỳ quay ${drawId} không tồn tại.`);
+      }
+      if (draw.status !== DrawStatus.SalesOpen) {
+        throw AppException.badRequest(
+          `Kỳ quay ${drawId} không đang mở bán (status: ${draw.status}).`
+        );
+      }
+      if (draw.sales?.closeAt && new Date() >= draw.sales.closeAt) {
+        throw AppException.badRequest(
+          `Kỳ quay ${drawId} đã hết thời gian nhận cược.`
+        );
+      }
     }
 
-    // ── 5. Load commission rate ──
-    const tenantConfig = await this.tenantConfigRepo.getTenantConfig(tenantId);
+    // ── 5. Load commission rate + tính commission amount ──
+    const tenantConfig = await this.getTenantConfig.run({ tenantId });
     const commissionRate =
       tenantConfig?.commissionRate ?? globalConfig.rates.defaultCommissionRate;
 
@@ -159,28 +167,24 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
     const unitPrice = play.unitPrice;
     const betsPerDraw = builtBoards.length + builtSideBets.length;
     const amountPerDraw = unitPrice * betsPerDraw;
-    const totalAmount = amountPerDraw * drawCount;
+    const totalAmount = amountPerDraw * drawIds.length;
+    const commissionAmount = Math.round(amountPerDraw * commissionRate);
 
-    // ── 7. Build ticket document (lazy enrollment) ──
-    const now = new Date();
-    const ticketNo = `KENO-${Date.now()}`;
-    const isMultiDraw = drawCount > 1;
+    // ── 7. Build ticket document ──
+    const now = nowVN();
+    const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
+    const ticketNo = buildTicketNo("KENO", date, seq);
+    const drawCount = drawIds.length;
 
     const ticketDoc: Omit<TicketDoc, "_id"> = {
       tenantId,
-      playerId,
-      appId,
       accountId,
-      product: GameProduct.Keno as typeof GameProduct.Keno,
+      username,
       ticketNo,
       channel,
       drawPlan: {
-        startDrawId,
+        drawIds,
         drawCount,
-        enrolledDrawIds: [startDrawId],
-        enrolledDraws: 1,
-        remainingDraws: drawCount - 1,
-        fullyEnrolled: !isMultiDraw,
       },
       pricing: {
         unitPrice,
@@ -188,18 +192,12 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
         amountPerDraw,
         totalAmount,
       },
-      tenantSnapshot: { commissionRate },
+      tenant: { commissionRate },
       boards: builtBoards,
       sideBets: builtSideBets,
-      audit: {
-        version: 1,
-        immutableAt: now,
-      },
       progress: {
         totalDraws: drawCount,
         settledDraws: 0,
-        pendingDraws: drawCount,
-        nextDrawId: startDrawId,
       },
       status: TicketStatus.Paid as any,
       createdAt: now,
@@ -209,7 +207,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
     // ── 8. Insert ticket ──
     const ticketId = await this.ticketRepo.insertOne(ticketDoc as any);
 
-    // ── 9. Create entry for first draw only ──
+    // ── 9. Create entries cho TẤT CẢ draws (all-or-nothing) ──
     const boardSnapshots: EntryBoardSnapshot[] = builtBoards.map((b) => ({
       boardNo: b.boardNo,
       playType: b.playType,
@@ -221,39 +219,49 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       bet: s.bet,
     }));
 
-    const entryDoc: Omit<TicketEntryDoc, "_id" | "version"> = {
-      tenantId,
-      playerId,
-      ticketId,
-      drawId: startDrawId,
-      drawTime: firstDraw.drawTime,
-      drawDate: firstDraw.drawDate,
-      financialDate: firstDraw.financialDate,
-      tenantSnapshot: { commissionRate },
-      status: EntryStatus.Scheduled as any,
-      betCount: betsPerDraw,
-      amount: amountPerDraw,
-      unitPrice,
-      entrySummary: {
-        ticketNo,
-        ticketVersion: 1,
-        boards: boardSnapshots,
-        sideBets: sideBetSnapshots,
-      },
-      createdAt: now,
-      updatedAt: now,
-    };
+    const entryDocs: Array<Record<string, unknown>> = [];
 
-    await this.entryRepo.insertEntry(entryDoc as any);
+    for (const drawId of drawIds) {
+      const draw = drawMap.get(drawId)!;
+      entryDocs.push({
+        tenantId,
+        accountId,
+        username,
+        ticketId,
+        drawId: draw.drawId,
+        drawTime: draw.drawTime,
+        drawDate: draw.drawDate,
+        financialDate: draw.financialDate,
+        tenant: { commissionRate, commissionAmount },
+        status: EntryStatus.Scheduled,
+        betCount: betsPerDraw,
+        amount: amountPerDraw,
+        unitPrice,
+        entrySummary: {
+          ticketNo,
+          boards: boardSnapshots,
+          sideBets: sideBetSnapshots,
+        },
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    try {
+      await this.entryRepo.insertEntries(entryDocs as any[]);
+    } catch (err) {
+      throw AppException.internal(
+        "Không thể tạo entries cho các kỳ quay đã chọn. Vui lòng thử lại."
+      );
+    }
 
     return {
       ticketId,
       ticketNo,
       status: TicketStatus.Paid,
       drawPlan: {
-        startDrawId,
+        drawIds,
         drawCount,
-        enrolledDrawIds: [startDrawId],
       },
       pricing: {
         unitPrice,
@@ -263,7 +271,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       },
       boardCount: builtBoards.length,
       sideBetCount: builtSideBets.length,
-      entryCount: 1,
+      entryCount: drawCount,
     };
   }
 }

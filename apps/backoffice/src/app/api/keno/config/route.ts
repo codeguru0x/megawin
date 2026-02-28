@@ -1,7 +1,7 @@
 import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities/account";
 import {
-  GetGameConfigUseCase,
+  GetGlobalConfigApiUseCase,
   UpdateGameConfigUseCase,
 } from "@megawin/game-keno-application/use-cases/game-config";
 
@@ -10,7 +10,7 @@ import { updateKenoGameConfigSchema } from "./_lib/schema";
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .handler(async () => {
-    const useCase = new GetGameConfigUseCase();
+    const useCase = new GetGlobalConfigApiUseCase();
     return useCase.run();
   });
 

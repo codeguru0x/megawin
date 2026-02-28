@@ -33,6 +33,10 @@
       "types": "./src/use-cases/settle/index.ts",
       "default": "./dist/use-cases/settle/index.js"
     },
+    "./use-cases/jackpot": {
+      "types": "./src/use-cases/jackpot/index.ts",
+      "default": "./dist/use-cases/jackpot/index.js"
+    },
     "./use-cases/payout": {
       "types": "./src/use-cases/payout/index.ts",
       "default": "./dist/use-cases/payout/index.js"
@@ -44,6 +48,10 @@
     "./use-cases/feed": {
       "types": "./src/use-cases/feed/index.ts",
       "default": "./dist/use-cases/feed/index.js"
+    },
+    "./use-cases/player": {
+      "types": "./src/use-cases/player/index.ts",
+      "default": "./dist/use-cases/player/index.js"
     },
     "./repos": {
       "types": "./src/infras/repos/index.ts",

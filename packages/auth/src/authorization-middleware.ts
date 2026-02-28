@@ -23,6 +23,8 @@ import {
   type AuthContextAdapterOptions,
   type ApiGatewayEventWithAuthorizer,
   type AuthContext,
+  type TenantAuthContext,
+  type CompanyAuthContext,
 } from "./authorization-api-gateway";
 import {
   AccountType,
@@ -32,7 +34,7 @@ import {
   type CompanyRole as CompanyRoleType,
 } from "@megawin/identity/entities/account";
 
-export type { AuthContext };
+export type { AuthContext, TenantAuthContext, CompanyAuthContext };
 
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
@@ -43,6 +45,17 @@ export interface UserAuthOptions {
   adapterOptions?: AuthContextAdapterOptions;
 }
 
+/** Event cho player / agent handlers — tenantId luôn có. */
+export interface TenantUserEvent {
+  user: TenantAuthContext;
+}
+
+/** Event cho company handlers — không có tenantId. */
+export interface CompanyUserEvent {
+  user: CompanyAuthContext;
+}
+
+/** @deprecated Dùng TenantUserEvent hoặc CompanyUserEvent thay thế. */
 export interface ApiGatewayEventWithUser {
   user: AuthContext;
 }
@@ -52,7 +65,7 @@ export interface ApiGatewayEventWithUser {
 function buildAuthMiddleware(
   baseRequirements: AuthRequirements,
   extraRoles?: AuthRequirements["roles"],
-  adapterOptions?: AuthContextAdapterOptions,
+  adapterOptions?: AuthContextAdapterOptions
 ) {
   const requirements: AuthRequirements = {
     ...baseRequirements,
@@ -101,9 +114,12 @@ function buildAuthMiddleware(
 
 export function playerAuth(options?: UserAuthOptions) {
   return buildAuthMiddleware(
-    { accountType: AccountType.Player, roles: [PlayerRole.Player] },
+    {
+      accountType: AccountType.Player,
+      roles: [PlayerRole.Player],
+    },
     options?.roles,
-    options?.adapterOptions,
+    options?.adapterOptions
   );
 }
 
@@ -113,7 +129,7 @@ export function agentAuth(options?: UserAuthOptions) {
   return buildAuthMiddleware(
     { accountType: AccountType.Agent, roles: [AgentRole.Agent] },
     options?.roles,
-    options?.adapterOptions,
+    options?.adapterOptions
   );
 }
 
@@ -130,7 +146,7 @@ export function companyAuth(options?: CompanyAuthOptions) {
       roles: [CompanyRole.Admin, CompanyRole.Staff],
     },
     options?.roles,
-    options?.adapterOptions,
+    options?.adapterOptions
   );
 }
 
@@ -139,7 +155,7 @@ export function companyAuth(options?: CompanyAuthOptions) {
 /** @deprecated Ưu tiên dùng playerAuth(), agentAuth(), companyAuth() */
 export function authorizationMiddleware(
   requirements: AuthRequirements,
-  adapterOptions?: AuthContextAdapterOptions,
+  adapterOptions?: AuthContextAdapterOptions
 ) {
   return buildAuthMiddleware(requirements, undefined, adapterOptions);
 }

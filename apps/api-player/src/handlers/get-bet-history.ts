@@ -20,19 +20,19 @@ const querySchema = z.object({
 
 export const handler = withPlayerAuth(
   async (event) => {
-    const { accountId, sub, tenantId } = event.user;
+    const { accountId, tenantId } = event.user;
     const query = event.schema.query;
 
     // TODO: Inject bet history use case
     return toApiGatewayResponse({
       success: true,
       data: {
-        playerId: accountId ?? sub,
+        accountId,
         tenantId,
         bets: [],
         filters: query,
       },
     });
   },
-  { schemas: { query: querySchema } },
+  { schemas: { query: querySchema } }
 );

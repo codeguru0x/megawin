@@ -52,15 +52,15 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
   // ─────────────────────────────────────────
   {
     collection: Lotto535Collections.Tickets,
-    key: { ticketNo: 1 },
-    options: { unique: true, name: "idx_ticketNo_unique" },
-    purpose: "Mã vé unique toàn hệ thống",
+    key: { accountId: 1, ticketNo: 1 },
+    options: { unique: true, name: "idx_account_ticketNo_unique" },
+    purpose: "Mã vé unique per account (counter per player per day)",
   },
   {
     collection: Lotto535Collections.Tickets,
-    key: { tenantId: 1, playerId: 1, status: 1, createdAt: -1 },
-    options: { name: "idx_tenant_player_status_created" },
-    purpose: "Query vé theo tenant + player (lịch sử mua, dashboard player)",
+    key: { tenantId: 1, accountId: 1, status: 1, createdAt: -1 },
+    options: { name: "idx_tenant_account_status_created" },
+    purpose: "Query vé theo tenant + account (lịch sử mua, dashboard player)",
   },
   {
     collection: Lotto535Collections.Tickets,
@@ -70,7 +70,11 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: Lotto535Collections.Tickets,
-    key: { status: 1, "drawPlan.fullyEnrolled": 1, "drawPlan.remainingDraws": 1 },
+    key: {
+      status: 1,
+      "drawPlan.fullyEnrolled": 1,
+      "drawPlan.remainingDraws": 1,
+    },
     options: { name: "idx_auto_enroll" },
     purpose: "Auto-enroll worker: tìm tickets multi-draw cần nhập entry kỳ mới",
   },
@@ -98,8 +102,8 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: Lotto535Collections.TicketEntries,
-    key: { tenantId: 1, playerId: 1, drawDate: -1 },
-    options: { name: "idx_tenant_player_drawDate" },
+    key: { tenantId: 1, accountId: 1, drawDate: -1 },
+    options: { name: "idx_tenant_account_drawDate" },
     purpose: "Lịch sử chơi: player xem entries gần đây",
   },
   {
@@ -124,7 +128,8 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
     collection: Lotto535Collections.TicketEntries,
     key: { ticketId: 1, drawId: 1 },
     options: { unique: true, name: "idx_ticketId_drawId_unique" },
-    purpose: "Unique guard: 1 ticket chỉ có 1 entry cho 1 draw (idempotent auto-enroll)",
+    purpose:
+      "Unique guard: 1 ticket chỉ có 1 entry cho 1 draw (idempotent auto-enroll)",
   },
   {
     collection: Lotto535Collections.TicketEntries,
@@ -140,15 +145,22 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: Lotto535Collections.TicketEntries,
-    key: { drawId: 1, status: 1, "payout.payoutStatus": 1, "payout.winAmount": 1 },
+    key: {
+      drawId: 1,
+      status: 1,
+      "payout.payoutStatus": 1,
+      "payout.winAmount": 1,
+    },
     options: { name: "idx_draw_payoutStatus" },
-    purpose: "Payout worker: query entries chưa dispatch (pending/failed) cho 1 draw",
+    purpose:
+      "Payout worker: query entries chưa dispatch (pending/failed) cho 1 draw",
   },
   {
     collection: Lotto535Collections.TicketEntries,
     key: { version: 1 },
     options: { name: "idx_version" },
-    purpose: "Feed sync worker: scan entries thay đổi kể từ version cuối cùng đã sync",
+    purpose:
+      "Feed sync worker: scan entries thay đổi kể từ version cuối cùng đã sync",
   },
 
   // ─────────────────────────────────────────
@@ -156,13 +168,26 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
   // ─────────────────────────────────────────
   {
     collection: "lotto535DailyReports",
-    key: { tenantId: 1, financialDate: 1, drawId: 1, product: 1, reportType: 1 },
+    key: {
+      tenantId: 1,
+      financialDate: 1,
+      drawId: 1,
+      product: 1,
+      reportType: 1,
+    },
     options: { unique: true, name: "idx_tenant_report_unique" },
     purpose: "Unique key cho tenant daily report (upsert-safe)",
   },
   {
     collection: "lotto535DailyReports",
-    key: { tenantId: 1, playerId: 1, financialDate: 1, drawId: 1, product: 1, reportType: 1 },
+    key: {
+      tenantId: 1,
+      playerId: 1,
+      financialDate: 1,
+      drawId: 1,
+      product: 1,
+      reportType: 1,
+    },
     options: { unique: true, name: "idx_player_report_unique" },
     purpose: "Unique key cho player daily report (upsert-safe)",
   },
@@ -215,5 +240,27 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
     key: { tenantId: 1, ticketId: 1 },
     options: { name: "idx_tenant_ticket" },
     purpose: "Access control: chỉ tenant sở hữu mới xem được lines",
+  },
+
+  // ─────────────────────────────────────────
+  // lotto535JackpotCycles
+  // ─────────────────────────────────────────
+  {
+    collection: Lotto535Collections.JackpotCycles,
+    key: { status: 1 },
+    options: { name: "idx_status" },
+    purpose: "Tìm nhanh active cycle (chỉ có 1 tại 1 thời điểm)",
+  },
+  {
+    collection: Lotto535Collections.JackpotCycles,
+    key: { cycleNo: 1 },
+    options: { unique: true, name: "idx_cycleNo_unique" },
+    purpose: "Mã cycle unique, auto-increment",
+  },
+  {
+    collection: Lotto535Collections.JackpotCycles,
+    key: { status: 1, closedAt: -1 },
+    options: { name: "idx_status_closedAt" },
+    purpose: "Lịch sử cycles đã đóng, mới nhất trước",
   },
 ];

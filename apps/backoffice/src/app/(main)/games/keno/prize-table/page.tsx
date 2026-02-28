@@ -62,7 +62,7 @@ function formatPrize(amount: number): string {
 }
 
 function formatVND(amount: number): string {
-  return amount.toLocaleString("vi-VN") + "đ";
+  return (amount ?? 0).toLocaleString("vi-VN") + "đ";
 }
 
 function getBasicPrize(

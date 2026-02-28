@@ -43,7 +43,7 @@ export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
         : e.ticketId?.toHexString?.() ?? String(e.ticketId),
       ticketNo: e.entrySummary?.ticketNo ?? "",
       tenantId: e.tenantId,
-      playerId: e.playerId,
+      playerId: e.accountId,
       drawId: e.drawId,
       drawTime: e.drawTime,
       drawDate: e.drawDate,

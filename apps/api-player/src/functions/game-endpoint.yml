@@ -4,6 +4,8 @@ get-game-result:
     - httpApi:
         path: /player/games/{gameId}/results/{roundId}
         method: get
+        authorizer:
+          name: cognitoPlayerAuth
 
 get-bet-history:
   handler: src/handlers/get-bet-history.handler
@@ -11,3 +13,5 @@ get-bet-history:
     - httpApi:
         path: /player/bets
         method: get
+        authorizer:
+          name: cognitoPlayerAuth

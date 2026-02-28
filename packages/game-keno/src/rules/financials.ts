@@ -18,6 +18,8 @@ export interface DrawFinancialInput {
     tenantId: string;
     revenue: number;
     commissionRate: number;
+    /** Tổng hoa hồng tính sẵn (sum từ entry.tenant.commissionAmount). */
+    commission: number;
   }>;
   companyRate: number;
 }
@@ -44,7 +46,7 @@ export function calculateKenoDrawFinancials(
   const tenantBreakdown = tenantRevenues.map((t) => ({
     tenantId: t.tenantId,
     revenue: t.revenue,
-    commission: Math.round(t.revenue * t.commissionRate),
+    commission: t.commission,
     commissionRate: t.commissionRate,
   }));
 

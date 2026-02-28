@@ -1,4 +1,5 @@
 export { CreateDrawsUseCase } from "./create-draws";
+export { PreviewDrawsUseCase } from "./preview-draws";
 export { OpenSalesUseCase } from "./open-sales";
 export { CloseSalesUseCase } from "./close-sales";
 export { PublishResultUseCase } from "./publish-result";
@@ -24,6 +25,10 @@ export type {
 export type {
   CreateDrawsInput,
   CreateDrawsOutput,
+  CreateDrawsOutputItem,
+  PreviewDrawsInput,
+  PreviewDrawsOutput,
+  PreviewDrawItem,
   DrawIdInput,
   DrawTransitionOutput,
   PublishResultInput,

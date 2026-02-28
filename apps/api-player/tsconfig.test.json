@@ -1,0 +1,14 @@
+{
+  "extends": "@megawin/typescript-config/serverless.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist",
+    "types": ["vitest/globals"],
+    "paths": {
+      "#lib/*": ["./src/lib/*"],
+      "#test/*": ["./test/*"]
+    }
+  },
+  "include": ["src", "test"],
+  "exclude": ["node_modules", "dist"]
+}

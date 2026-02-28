@@ -9,7 +9,7 @@
 
 import { APP_ERROR_CODES, type AppError } from "@megawin/shared/errors";
 import {
-  type AccountType,
+  AccountType,
   type AccountStatus,
   AccountStatus as AccountStatusEnum,
   type AccountRole,
@@ -19,16 +19,32 @@ import { ClaimKey } from "@megawin/identity/entities/claim";
 
 // ============ Auth context (sau Authorizer) ============
 
-export interface AuthContext {
+interface BaseAuthContext {
   sub: string;
-  username?: string;
-  accountType: AccountType;
+  username: string;
   accountStatus: AccountStatus;
-  accountId?: string;
-  tenantId?: string;
+  accountId: string;
   roles: string[];
   raw?: Record<string, unknown>;
 }
+
+/** Player / Agent — luôn thuộc một tenant. */
+export interface TenantAuthContext extends BaseAuthContext {
+  accountType: typeof AccountType.Player | typeof AccountType.Agent;
+  tenantId: string;
+}
+
+/** Company — không thuộc tenant nào. */
+export interface CompanyAuthContext extends BaseAuthContext {
+  accountType: typeof AccountType.Company;
+  tenantId?: undefined;
+}
+
+/**
+ * Union type cho tất cả account types.
+ * Dùng trực tiếp khi chưa biết account type (e.g. generic middleware).
+ */
+export type AuthContext = TenantAuthContext | CompanyAuthContext;
 
 // ============ Auth requirements ============
 
@@ -36,6 +52,8 @@ export interface AuthRequirements {
   accountType?: AccountType | AccountType[];
   roles?: AccountRole[];
   enforceStatusByMethod?: boolean;
+  /** Danh sách claim keys bắt buộc phải có giá trị (non-empty). */
+  requiredClaims?: (keyof AuthContext)[];
 }
 
 // ============ Adapter: event → AuthContext ============
@@ -83,7 +101,7 @@ function parseRoles(value: unknown): string[] {
 
 export function getAuthContextFromApiGatewayEvent(
   event: ApiGatewayEventWithAuthorizer,
-  options: AuthContextAdapterOptions = {},
+  options: AuthContextAdapterOptions = {}
 ): AuthContext | null {
   const opts = { ...DEFAULT_ADAPTER_OPTIONS, ...options };
   const authorizer = event.requestContext?.authorizer;
@@ -96,25 +114,37 @@ export function getAuthContextFromApiGatewayEvent(
     (authorizer.principalId as string);
   if (!sub || typeof sub !== "string") return null;
 
-  const username = (claims[opts.usernameClaim] as string) ?? undefined;
+  const username = claims[opts.usernameClaim] as string | undefined;
+  const accountId = claims[opts.accountIdClaim] as string | undefined;
+
+  if (!username || !accountId) return null;
+
   const tenantId = (claims[opts.tenantIdClaim] as string) ?? undefined;
   const roles = parseRoles(claims[opts.rolesClaim]);
-  const accountType = (claims[opts.accountTypeClaim] as AccountType) ?? "player";
-  const accountId = (claims[opts.accountIdClaim] as string) ?? undefined;
+  const accountType =
+    (claims[opts.accountTypeClaim] as AccountType) ?? "player";
   const accountStatus =
     (claims[opts.accountStatusClaim] as AccountStatus) ??
     AccountStatusEnum.Active;
 
-  return {
+  const base = {
     sub,
     username,
-    accountType,
     accountStatus,
     accountId,
-    tenantId,
     roles,
     raw: claims as Record<string, unknown>,
   };
+
+  if (accountType === AccountType.Company) {
+    return { ...base, accountType } satisfies CompanyAuthContext;
+  }
+
+  return {
+    ...base,
+    accountType: accountType as TenantAuthContext["accountType"],
+    tenantId: tenantId ?? "",
+  } satisfies TenantAuthContext;
 }
 
 // ============ Read-only HTTP methods ============
@@ -126,7 +156,7 @@ const READ_ONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 export function checkAuthorization(
   authContext: AuthContext | null,
   requirements: AuthRequirements,
-  httpMethod?: string,
+  httpMethod?: string
 ): void | AppError {
   if (!authContext) {
     return {
@@ -158,6 +188,19 @@ export function checkAuthorization(
 
   const { accountType, roles: allowedRoles } = requirements;
 
+  if (requirements.requiredClaims) {
+    const missing = requirements.requiredClaims.filter(
+      (key) => !authContext[key]
+    );
+    if (missing.length > 0) {
+      return {
+        code: APP_ERROR_CODES.FORBIDDEN,
+        message: `Missing required claims: ${missing.join(", ")}`,
+        details: { missingClaims: missing },
+      };
+    }
+  }
+
   if (accountType !== undefined) {
     const allowed = Array.isArray(accountType) ? accountType : [accountType];
     if (!allowed.includes(authContext.accountType)) {
@@ -171,10 +214,12 @@ export function checkAuthorization(
 
   if (allowedRoles != null && allowedRoles.length > 0) {
     const hasSuperRole = SUPER_ROLES.some((r: string) =>
-      authContext.roles.includes(r),
+      authContext.roles.includes(r)
     );
     if (!hasSuperRole) {
-      const hasRole = allowedRoles.some((r: string) => authContext.roles.includes(r));
+      const hasRole = allowedRoles.some((r: string) =>
+        authContext.roles.includes(r)
+      );
       if (!hasRole) {
         return {
           code: APP_ERROR_CODES.FORBIDDEN,

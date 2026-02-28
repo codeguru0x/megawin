@@ -7,9 +7,9 @@
  *   - KHÔNG dựa vào accumulator từ step function (có thể sai/mất khi crash)
  *   - Aggregate TẤT CẢ settled entries từ DB để tính:
  *     + totalFixedPrizes, tierWinnerCounts (từ payout.tiers)
- *     + revenue per tenant (từ entries, dùng tenantSnapshot.commissionRate)
+ *     + revenue + commission per tenant (từ entries, dùng commission.amount đã tính sẵn)
  *   - Tính commission, companyTake, jackpotContribution từ rules
- *   - Ghi draw.financial + draw.jackpot.closingAmount
+ *   - Ghi draw.financial (jackpot snapshot ghi ở finalize-settle)
  *
  * IDEMPOTENT: Chạy lại bao nhiêu lần cũng cho kết quả giống nhau
  * (vì tính từ settled entries trong DB, overwrite draw.financial).
@@ -103,6 +103,7 @@ export class CalculateFinancialsUseCase extends StepFunctionUseCase<
       tenantRevenues: tenantAgg.map((t) => ({
         tenantId: t.tenantId,
         revenue: t.revenue,
+        commission: t.commission,
         commissionRate: t.commissionRate,
       })),
       companyRate: config.companyRate,
@@ -143,31 +144,18 @@ export class CalculateFinancialsUseCase extends StepFunctionUseCase<
             bonusPerWinner: detail.bonusPerWinner,
           };
         }
-
-        await this.drawRepo.updateJackpot(drawId, {
-          closingAmount: config.seedAmount,
-          isSplitCycle: true,
-          split: {
-            thresholdAmount: config.splitThreshold,
-            splitRatios: config.splitRatios,
-            splitAmount: jackpotOpeningAmount,
-            tierAllocations: splitDetails,
-            roundingRemainder: splitResult.roundingRemainder,
-            splitRuleVersion: "v1-2026-02",
-            hintText: "Kỳ chia giải Jackpot",
-          },
-        });
       }
     }
 
     /**
      * Jackpot cuối kỳ:
-     * - Có winner → reset về seed
+     * - Có winner hoặc split → reset về seed
      * - Không winner → opening + contribution (tích luỹ)
      */
-    const closingJackpot = hasJackpotWinner
-      ? config.seedAmount
-      : jackpotOpeningAmount + fin.jackpotContribution;
+    const closingJackpot =
+      hasJackpotWinner || isSplitCycle
+        ? config.seedAmount
+        : jackpotOpeningAmount + fin.jackpotContribution;
 
     const nextJackpotOpening = calculateNextJackpot(
       jackpotOpeningAmount,
@@ -176,16 +164,13 @@ export class CalculateFinancialsUseCase extends StepFunctionUseCase<
       config.seedAmount
     );
 
-    const tenantBreakdown = tenantAgg.map((t) => {
-      const fb = fin.tenantBreakdown.find((b) => b.tenantId === t.tenantId);
-      return {
-        tenantId: t.tenantId,
-        revenue: t.revenue,
-        commission: fb?.commission ?? 0,
-        commissionRate: t.commissionRate,
-        entryCount: t.entryCount,
-      };
-    });
+    const tenantBreakdown = tenantAgg.map((t) => ({
+      tenantId: t.tenantId,
+      revenue: t.revenue,
+      commission: t.commission,
+      commissionRate: t.commissionRate,
+      entryCount: t.entryCount,
+    }));
 
     await this.drawRepo.updateFinancial(drawId, {
       totalRevenue: fin.totalRevenue,
@@ -196,12 +181,6 @@ export class CalculateFinancialsUseCase extends StepFunctionUseCase<
       companyTakeMax: fin.companyTake,
       jackpotContribution: fin.jackpotContribution,
     });
-
-    if (!isSplitCycle) {
-      await this.drawRepo.updateJackpot(drawId, {
-        closingAmount: closingJackpot,
-      });
-    }
 
     await this.drawRepo.updateStats(drawId, {
       ticketEntryCount: payoutSummary.totalSettled,

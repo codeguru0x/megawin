@@ -10,3 +10,4 @@ export * from "./entry-feed";
 export * from "./entry-feed-mapper";
 export * from "./feed-sync-cursor";
 export * from "./game-daily-report";
+export * from "./ticket-counter";

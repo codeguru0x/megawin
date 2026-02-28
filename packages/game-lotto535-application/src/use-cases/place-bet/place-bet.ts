@@ -3,7 +3,6 @@ import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import {
   DrawStatus,
   EntryStatus,
-  GameProduct,
   TicketStatus,
 } from "@megawin/game-core/entities";
 import type {
@@ -24,13 +23,14 @@ import {
   calculateLineCount,
   validateSelection,
 } from "@megawin/game-lotto535/rules/play-types";
-import { computeSelectionHash } from "@megawin/game-lotto535/helpers";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
+import { TicketCounterRepository } from "@megawin/game-core-application/repos";
+import { buildTicketNo } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
 
@@ -41,37 +41,35 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
   PlaceBetInput,
   PlaceBetOutput
 > {
-  private readonly configRepo = new GameConfigRepository();
   private readonly drawRepo = new DrawRepository();
   private readonly tenantConfigRepo = new TenantConfigRepository();
   private readonly ticketRepo = new TicketRepository();
   private readonly entryRepo = new EntryRepository();
+  private readonly ticketCounter = new TicketCounterRepository();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
     const {
       tenantId,
-      playerId,
-      appId,
       accountId,
+      username,
       channel,
-      drawId,
-      drawCount,
+      drawIds,
       boards: boardInputs,
     } = input;
 
     // ── 1. Load game config ──
-    const globalConfig = await this.configRepo.getGlobalConfig();
-    if (!globalConfig) {
-      throw AppException.internal("GameConfig chưa được khởi tạo.");
-    }
-
+    const globalConfig = await this.getGlobalConfig.run();
     const { play } = globalConfig;
 
-    // ── 2. Validate draw count ──
-    if (drawCount < 1 || drawCount > play.maxDrawCount) {
+    // ── 2. Validate drawIds ──
+    if (drawIds.length === 0 || drawIds.length > play.maxDrawCount) {
       throw AppException.badRequest(
-        `drawCount phải từ 1 đến ${play.maxDrawCount}.`
+        `Số kỳ phải từ 1 đến ${play.maxDrawCount}.`
       );
+    }
+    if (new Set(drawIds).size !== drawIds.length) {
+      throw AppException.badRequest("Danh sách kỳ quay chứa drawId trùng lặp.");
     }
 
     // ── 3. Validate boards ──
@@ -89,7 +87,6 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
     let totalLinesPerDraw = 0;
 
     for (const bi of boardInputs) {
-      // Validate boardNo hợp lệ & không trùng
       if (!VALID_BOARD_NOS.includes(bi.boardNo)) {
         throw AppException.badRequest(
           `Board "${bi.boardNo}" không hợp lệ. Chỉ chấp nhận: ${VALID_BOARD_NOS.join(", ")}.`
@@ -102,12 +99,10 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
 
       const playType = bi.playType as PlayType;
 
-      // QuickPick: hệ thống sinh random
       if (playType === PlayType.QuickPick) {
         bi.selection = generateQuickPick();
       }
 
-      // Validate selection theo business rules của game
       const valResult = validateSelection(playType, bi.selection);
       if (!valResult.valid) {
         throw AppException.badRequest(
@@ -115,7 +110,6 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
         );
       }
 
-      // Validate số phải sorted & trong range (deep check)
       validateNumberRanges(
         bi.boardNo,
         bi.selection.mainNumbers,
@@ -148,59 +142,59 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       });
     }
 
-    // ── 4. Validate draw hiện tại phải đang mở bán ──
-    const currentDraw = await this.drawRepo.getDrawById(drawId);
-    if (!currentDraw) {
-      throw AppException.badRequest(`Kỳ quay ${drawId} không tồn tại.`);
-    }
-    if (currentDraw.status !== DrawStatus.SalesOpen) {
-      throw AppException.badRequest(
-        `Kỳ quay ${drawId} không đang mở bán (status: ${currentDraw.status}).`
-      );
-    }
-
+    // ── 4. Validate tất cả draws – all-or-nothing ──
     const now = nowVN();
-    if (now >= currentDraw.sales.closeAt) {
-      throw AppException.badRequest(
-        `Kỳ quay ${drawId} đã hết thời gian nhận cược.`
-      );
+    const draws = await this.drawRepo.getDrawsByIds(drawIds);
+
+    const drawMap = new Map(draws.map((d) => [d.drawId, d]));
+
+    for (const drawId of drawIds) {
+      const draw = drawMap.get(drawId);
+      if (!draw) {
+        throw AppException.badRequest(`Kỳ quay ${drawId} không tồn tại.`);
+      }
+      if (draw.status !== DrawStatus.SalesOpen) {
+        throw AppException.badRequest(
+          `Kỳ quay ${drawId} không đang mở bán (status: ${draw.status}).`
+        );
+      }
+      if (now >= draw.sales.closeAt) {
+        throw AppException.badRequest(
+          `Kỳ quay ${drawId} đã hết thời gian nhận cược.`
+        );
+      }
     }
 
     // ── 5. Calculate pricing ──
+    const drawCount = drawIds.length;
     const unitPrice = play.unitPrice;
     const amountPerDraw = unitPrice * totalLinesPerDraw;
     const totalAmount = amountPerDraw * drawCount;
 
-    // ── 6. Load tenant commission rate (snapshot vào entry) ──
+    // ── 6. Load tenant commission rate + tính commission amount ──
     const tenantConfig = await this.tenantConfigRepo.getTenantConfig(tenantId);
     const commissionRate =
       tenantConfig?.commissionRate ?? globalConfig.rates.defaultCommissionRate;
+    const commissionAmount = Math.round(amountPerDraw * commissionRate);
 
-    // ── 7. Build ticket document (lazy enrollment model) ──
-    const selectionHash = computeSelectionHash(builtBoards);
+    // ── 7. Build ticket document ──
     const expansionMode =
       totalLinesPerDraw > EXPANSION_THRESHOLD
         ? ExpansionMode.OnSettle
         : ExpansionMode.None;
 
-    const ticketNo = `L535-${Date.now()}`;
-    const isFullyEnrolled = drawCount === 1;
+    const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
+    const ticketNo = buildTicketNo("L535", date, seq);
 
     const ticketDoc: Omit<TicketDoc, "_id"> = {
       tenantId,
-      playerId,
-      appId,
       accountId,
-      product: GameProduct.Lotto535 as typeof GameProduct.Lotto535,
+      username,
       ticketNo,
       channel,
       drawPlan: {
-        startDrawId: drawId,
+        drawIds,
         drawCount,
-        enrolledDrawIds: [drawId],
-        enrolledDraws: 1,
-        remainingDraws: drawCount - 1,
-        fullyEnrolled: isFullyEnrolled,
       },
       pricing: {
         unitPrice,
@@ -213,17 +207,10 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
         mode: expansionMode,
         linesStored: false,
         lineCount: totalLinesPerDraw,
-        selectionHash,
-      },
-      audit: {
-        version: 1,
-        immutableAt: now,
       },
       progress: {
         totalDraws: drawCount,
         settledDraws: 0,
-        pendingDraws: 1,
-        nextDrawId: drawId,
       },
       status: TicketStatus.Paid as any,
       createdAt: now,
@@ -233,7 +220,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
     // ── 8. Insert ticket ──
     const ticketId = await this.ticketRepo.insertOne(ticketDoc as any);
 
-    // ── 9. Create entry CHỈ cho kỳ hiện tại ──
+    // ── 9. Create entries cho TẤT CẢ draws (all-or-nothing) ──
     const boardSnapshots: EntryBoardSnapshot[] = builtBoards.map((b) => ({
       boardNo: b.boardNo,
       playType: b.playType,
@@ -242,42 +229,51 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       expandedLines: b.derived.expandedLines,
     }));
 
-    const entryDoc: Omit<TicketEntryDoc, "_id" | "version"> = {
-      tenantId,
-      playerId,
-      ticketId,
-      drawId,
-      drawTime: currentDraw.drawTime,
-      drawDate: currentDraw.drawDate,
-      financialDate: currentDraw.financialDate,
-      tenantSnapshot: { commissionRate },
-      status: EntryStatus.Scheduled as any,
-      lineCount: totalLinesPerDraw,
-      amount: amountPerDraw,
-      unitPrice,
-      entrySummary: {
-        ticketNo,
-        selectionHash,
-        ticketVersion: 1,
-        boards: boardSnapshots,
-      },
-      createdAt: now,
-      updatedAt: now,
-    };
+    const version = await this.entryRepo.nextVersion();
 
-    await this.entryRepo.insertEntry(entryDoc as any);
+    const entryDocs: Array<Omit<TicketEntryDoc, "_id">> = [];
+
+    for (let i = 0; i < drawIds.length; i++) {
+      const draw = drawMap.get(drawIds[i]!)!;
+      entryDocs.push({
+        tenantId,
+        accountId,
+        username,
+        ticketId,
+        drawId: draw.drawId,
+        drawTime: draw.drawTime,
+        drawDate: draw.drawDate,
+        financialDate: draw.financialDate,
+        tenant: { commissionRate, commissionAmount },
+        status: EntryStatus.Scheduled as any,
+        lineCount: totalLinesPerDraw,
+        amount: amountPerDraw,
+        unitPrice,
+        entrySummary: {
+          ticketNo,
+          boards: boardSnapshots,
+        },
+        version,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    try {
+      await this.entryRepo.insertEntries(entryDocs as any[]);
+    } catch (err) {
+      throw AppException.internal(
+        "Không thể tạo entries cho các kỳ quay đã chọn. Vui lòng thử lại."
+      );
+    }
 
     return {
       ticketId,
       ticketNo,
       status: TicketStatus.Paid,
       drawPlan: {
-        startDrawId: drawId,
+        drawIds,
         drawCount,
-        enrolledDrawIds: [drawId],
-        enrolledDraws: 1,
-        remainingDraws: drawCount - 1,
-        fullyEnrolled: isFullyEnrolled,
       },
       pricing: {
         unitPrice,
@@ -286,7 +282,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
         totalAmount,
       },
       boardCount: builtBoards.length,
-      entryCount: 1,
+      entryCount: drawCount,
     };
   }
 }

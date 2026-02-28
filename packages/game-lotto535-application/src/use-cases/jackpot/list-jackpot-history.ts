@@ -1,0 +1,60 @@
+/**
+ * Use Case: List Jackpot History (draw-by-draw)
+ *
+ * Lấy lịch sử biến động Jackpot qua từng kỳ quay đã settled.
+ * Dùng cho bảng "Lịch sử Jackpot" trên backoffice.
+ */
+
+import { NextApiUseCase } from "@megawin/next/server";
+import { DrawStatus } from "@megawin/game-core/entities";
+import { PrizeTier } from "@megawin/game-lotto535/entities";
+import { DrawRepository } from "../../infras/repos/draw-repo";
+import type {
+  ListJackpotHistoryInput,
+  ListJackpotHistoryOutput,
+  JackpotHistoryItem,
+} from "./dto/jackpot.dto";
+
+export class ListJackpotHistoryUseCase extends NextApiUseCase<
+  ListJackpotHistoryInput,
+  ListJackpotHistoryOutput
+> {
+  private readonly drawRepo = new DrawRepository();
+
+  protected async execute(
+    input: ListJackpotHistoryInput
+  ): Promise<ListJackpotHistoryOutput> {
+    const page = input.page ?? 1;
+    const size = input.size ?? 20;
+
+    const draws = await this.drawRepo.findMany(
+      {
+        status: DrawStatus.Settled,
+        "jackpot.closingAmount": { $exists: true },
+      },
+      {
+        sort: { drawTime: -1 },
+        skip: (page - 1) * size,
+        limit: size,
+      }
+    );
+
+    const items: JackpotHistoryItem[] = draws.map((d) => ({
+      drawId: d.drawId,
+      drawDate: d.drawDate,
+      drawNo: d.drawNo,
+      drawTime: d.drawTime.toISOString(),
+      openingAmount: d.jackpot?.openingAmount ?? 0,
+      contribution: d.financial?.jackpotContribution ?? 0,
+      closingAmount: d.jackpot?.closingAmount ?? d.jackpot?.openingAmount ?? 0,
+      hasWinner:
+        d.jackpot?.closingAmount !== undefined &&
+        d.jackpot.closingAmount < d.jackpot.openingAmount,
+      isSplitCycle: d.jackpot?.isSplitCycle ?? false,
+      ticketEntryCount: d.stats?.ticketEntryCount ?? 0,
+      totalRevenue: d.stats?.totalSalesAmount ?? 0,
+    }));
+
+    return { draws: items, page, size };
+  }
+}

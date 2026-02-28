@@ -18,65 +18,15 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
 
   async getTicketsByPlayer(
     tenantId: string,
-    playerId: string,
+    accountId: string,
     page: number,
     size: number,
   ): Promise<TicketEntity[]> {
     return await this.paging(
-      { tenantId, playerId },
+      { tenantId, accountId },
       page,
       size,
       { sort: { createdAt: -1 } },
-    );
-  }
-
-  /**
-   * Scan tickets multi-draw chưa fully enrolled.
-   * Cursor-based pagination bằng _id > lastId.
-   */
-  async findTicketsForAutoEnroll(
-    limit: number,
-    lastId?: string,
-  ): Promise<TicketEntity[]> {
-    const filter: Record<string, unknown> = {
-      status: TicketStatus.Paid,
-      "drawPlan.fullyEnrolled": false,
-      "drawPlan.remainingDraws": { $gt: 0 },
-    };
-    if (lastId) {
-      filter._id = { $gt: new ObjectId(lastId) };
-    }
-    return await this.findMany(filter, { sort: { _id: 1 }, limit });
-  }
-
-  /**
-   * Atomic enroll 1 draw vào ticket.
-   * $ne guard: chỉ push nếu drawId chưa có trong enrolledDrawIds.
-   */
-  async enrollDraw(
-    ticketId: string,
-    drawId: string,
-    isLastDraw: boolean,
-  ): Promise<boolean> {
-    const $set: Record<string, unknown> = { updatedAt: new Date() };
-    if (isLastDraw) {
-      $set["drawPlan.fullyEnrolled"] = true;
-      $set["drawPlan.remainingDraws"] = 0;
-    }
-
-    return await this.updateOne(
-      {
-        _id: new ObjectId(ticketId),
-        "drawPlan.enrolledDrawIds": { $ne: drawId },
-      },
-      {
-        $push: { "drawPlan.enrolledDrawIds": drawId } as any,
-        $inc: {
-          "drawPlan.enrolledDraws": 1,
-          ...(!isLastDraw ? { "drawPlan.remainingDraws": -1 } : {}),
-        } as any,
-        $set,
-      },
     );
   }
 
@@ -86,14 +36,13 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
    */
   async updateSettleProgress(
     ticketId: string,
-    nextDrawId: string | null,
     isCompleted: boolean,
     winAmount: number,
   ): Promise<boolean> {
-    const $set: Record<string, unknown> = { updatedAt: new Date() };
-    if (nextDrawId) {
-      $set["progress.nextDrawId"] = nextDrawId;
-    }
+    const $set: Record<string, unknown> = {
+      "settlement.lastSettledAt": new Date(),
+      updatedAt: new Date(),
+    };
     if (isCompleted) {
       $set.status = TicketStatus.Completed;
     }
@@ -101,15 +50,11 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     return await this.updateOne(
       { _id: new ObjectId(ticketId) },
       {
+        $set,
         $inc: {
           "progress.settledDraws": 1,
-          "progress.pendingDraws": -1,
           "settlement.totalWinAmount": winAmount,
         } as any,
-        $set: {
-          ...$set,
-          "settlement.lastSettledAt": new Date(),
-        },
       },
     );
   }
@@ -149,7 +94,6 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
           "voidSummary.voidedDrawCount": 1,
           "voidSummary.totalVoidedAmount": voidedAmount,
           "voidSummary.totalRefundedAmount": refundAmount,
-          "progress.pendingDraws": -1,
         },
       },
     );

@@ -7,7 +7,7 @@
  * Đây là đơn vị vận hành chính:
  *   - Settle theo drawId
  *   - Báo cáo theo tenantId + drawDate
- *   - Lịch sử chơi theo playerId + drawDate
+ *   - Lịch sử chơi theo accountId + drawDate
  *
  * LƯU Ý cho báo cáo:
  * - tenantId luôn được lưu ở top-level để query nhanh (compound index).
@@ -17,17 +17,9 @@
  * Pattern naming: {Game}TicketEntryDoc – áp dụng cho mọi game.
  */
 
-import type {
-  PlayType,
-  PrizeTier,
-  PayoutStatus,
-} from "./enums";
-import type { EntryStatus } from "@megawin/game-core/entities";
-import type {
-  ISODateString,
-  MainTuple,
-  Special,
-} from "./types";
+import type { PlayType, PrizeTier, PayoutStatus, RefundStatus } from "./enums";
+import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
+import type { ISODateString, MainTuple, Special } from "./types";
 import type { Long } from "@megawin/game-core/types";
 
 // ─────────────────────────────────────────────
@@ -38,7 +30,6 @@ export interface TicketEntryDoc {
   _id: unknown;
 
   // ───── Partition / Ownership ─────
-  // Tất cả field này cần cho query báo cáo – luôn lưu ở top-level.
 
   /**
    * Tenant/đại lý sở hữu entry.
@@ -46,8 +37,11 @@ export interface TicketEntryDoc {
    */
   tenantId: string;
 
-  /** ID người chơi. */
-  playerId: string;
+  /** ID tài khoản chung (hệ thống account service). */
+  accountId: string;
+
+  /** Username hiển thị của player. */
+  username: string;
 
   /** Tham chiếu ticket gốc (ObjectId). */
   ticketId: unknown;
@@ -55,7 +49,7 @@ export interface TicketEntryDoc {
   // ───── Draw Snapshot ─────
 
   /**
-   * ID kỳ quay cụ thể (ví dụ "2026-02-22-001").
+   * ID kỳ quay cụ thể (ví dụ "2026-02-22.001").
    * Primary key để settle batch theo draw.
    */
   drawId: string;
@@ -79,20 +73,21 @@ export interface TicketEntryDoc {
    */
   financialDate: ISODateString;
 
-  // ───── Tenant Snapshot ─────
+  // ───── Tenant (snapshot đại lý lúc đặt cược) ─────
 
   /**
-   * Snapshot thông tin tenant tại thời điểm tạo entry.
-   * Lưu denormalized để tính toán report trực tiếp từ entry
-   * mà không cần lookup tenant config (tránh join, tăng performance).
+   * Snapshot thông tin đại lý tại thời điểm tạo entry.
+   *
+   * Snapshot cứng: dùng rate + amount tại thời điểm mua,
+   * không thay đổi dù tenant config update sau.
+   * Khi settle, agg SUM(tenant.commissionAmount) → tổng hoa hồng chính xác.
    */
-  tenantSnapshot: {
-    /**
-     * Tỷ lệ hoa hồng đại lý áp dụng cho entry này.
-     * Snapshot tại thời điểm tạo entry – không thay đổi dù config update sau.
-     * Ví dụ: 0.20 = 20% doanh thu.
-     */
+  tenant: {
+    /** Tỷ lệ hoa hồng đại lý áp dụng cho entry này. Ví dụ: 0.20 = 20%. */
     commissionRate: number;
+
+    /** Tiền hoa hồng = Math.round(amount × commissionRate). Tính sẵn lúc place-bet. */
+    commissionAmount: number;
   };
 
   // ───── Entry Status ─────
@@ -113,23 +108,12 @@ export interface TicketEntryDoc {
   /** Giá 1 line tại thời điểm mua (snapshot). */
   unitPrice: number;
 
-  // ───── Entry Summary (snapshot cho UI + audit) ─────
+  // ───── Entry Summary (snapshot cho UI) ─────
 
-  /**
-   * Snapshot tối thiểu từ ticket tại thời điểm tạo entry.
-   * Mục đích:
-   * - UI hiển thị "hôm đó cược gì" mà không cần lookup ticket.
-   * - Audit: selectionHash phải khớp ticket.expansion.selectionHash.
-   */
+  /** Snapshot tối thiểu từ ticket – UI hiển thị mà không cần lookup ticket. */
   entrySummary: {
     /** Mã vé hiển thị. */
     ticketNo: string;
-
-    /** Hash canonical selection – phải khớp ticket. */
-    selectionHash: string;
-
-    /** Version ticket tại thời điểm tạo entry. */
-    ticketVersion: number;
 
     /** Snapshot boards (lựa chọn, không phải lines expand). */
     boards: EntryBoardSnapshot[];
@@ -149,11 +133,20 @@ export interface TicketEntryDoc {
     publishedAt: Date;
   };
 
+  // ───── Outcome (kết quả thắng/thua – gán khi settle) ─────
+
+  /**
+   * Kết quả cuối cùng của entry sau khi settle.
+   * Dùng cho query/filter nhanh, hiển thị UI.
+   * Chỉ có sau khi settle xong.
+   */
+  outcome?: EntryOutcome;
+
   // ───── Payout (khi settle xong) ─────
 
-  /** Chi tiết trả thưởng cho entry này. */
+  /** Chi tiết trả thưởng cho entry này. Chỉ có sau khi settle. */
   payout?: {
-    /** Tổng tiền thắng kỳ này (VND). */
+    /** Tổng tiền thắng kỳ này (VND). = 0 khi thua, > 0 khi thắng. */
     winAmount: number;
 
     /**
@@ -170,15 +163,7 @@ export interface TicketEntryDoc {
 
     /**
      * Trạng thái gửi tiền trả thưởng cho tenant.
-     * Dùng để worker dispatch-payout biết entry nào đã trả, cái nào chưa.
-     *
-     * - "pending":     chưa gửi yêu cầu trả thưởng (default khi settle)
-     * - "dispatched":  đã gửi request thành công cho tenant API
-     * - "confirmed":   tenant đã xác nhận trả tiền cho player
-     * - "failed":      gửi thất bại, cần retry
-     *
      * Chỉ có ý nghĩa khi winAmount > 0.
-     * Entry không trúng (winAmount = 0) sẽ không có payoutStatus.
      */
     payoutStatus?: PayoutStatus;
 
@@ -209,7 +194,7 @@ export interface TicketEntryDoc {
     refundAmount: number;
 
     /** Trạng thái hoàn tiền. */
-    refundStatus: "pending" | "dispatched" | "confirmed" | "failed";
+    refundStatus: RefundStatus;
 
     /** Thời điểm huỷ. */
     voidedAt: Date;
@@ -232,7 +217,6 @@ export interface TicketEntryDoc {
    * Global change sequence (BSON Long / Int64).
    * Gán từ entryChangeSeq mỗi khi entry được insert hoặc update.
    * Worker dùng field này để detect thay đổi: version > lastProcessedVersion.
-   * Khi trả về qua API phải convert sang string (Long.toString()).
    */
   version: Long;
 }

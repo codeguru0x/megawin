@@ -23,6 +23,15 @@ export const lotto535Keys = {
     params
       ? (["lotto535", "draws", params] as const)
       : (["lotto535", "draws"] as const),
+  jackpotCurrent: ["lotto535", "jackpot-current"] as const,
+  jackpotHistory: (params?: Record<string, unknown>) =>
+    params
+      ? (["lotto535", "jackpot-history", params] as const)
+      : (["lotto535", "jackpot-history"] as const),
+  jackpotCycles: (params?: Record<string, unknown>) =>
+    params
+      ? (["lotto535", "jackpot-cycles", params] as const)
+      : (["lotto535", "jackpot-cycles"] as const),
 };
 
 // ─────────────────────────────────────────────

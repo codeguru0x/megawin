@@ -6,8 +6,8 @@ import { getFinancialDate } from "@megawin/shared/utils/financial-date";
 import { todayVN } from "@megawin/shared/utils/date";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { DrawCounterRepository } from "../../infras/repos/draw-counter-repo";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
-import { calcDrawSlots } from "./calc-draw-slots";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import { calcDrawSlots } from "../../helpers/calc-draw-slots";
 import type {
   CreateDrawInput,
   CreateDrawOutput,
@@ -20,7 +20,7 @@ export class CreateDrawUseCase extends NextApiUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly counterRepo = new DrawCounterRepository();
-  private readonly configRepo = new GameConfigRepository();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(input: CreateDrawInput): Promise<CreateDrawOutput> {
     const { drawDate, count } = input;
@@ -32,10 +32,7 @@ export class CreateDrawUseCase extends NextApiUseCase<
       );
     }
 
-    const globalConfig = await this.configRepo.getGlobalConfig();
-    if (!globalConfig) {
-      throw AppException.internal("Keno GameConfig chưa được khởi tạo.");
-    }
+    const globalConfig = await this.getGlobalConfig.run();
 
     const { play } = globalConfig;
 
@@ -59,7 +56,7 @@ export class CreateDrawUseCase extends NextApiUseCase<
       const drawNo = firstDrawNo + i;
       const drawId = generateKenoDrawId(drawDate, drawNo);
       const status =
-        slot.status === "salesOpen"
+        slot.status === DrawStatus.SalesOpen
           ? DrawStatus.SalesOpen
           : DrawStatus.Scheduled;
 

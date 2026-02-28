@@ -5,24 +5,21 @@
  * Số Keno nhận dạng string "01"-"80" (zero-padded).
  */
 
-import { z } from "zod";
-
 import { withPlayerAuth } from "@megawin/auth";
 
 import { PlaceBetUseCase } from "@megawin/game-keno-application/use-cases/place-bet";
-import { KenoPlayType, KenoBigSmallBet, KenoEvenOddBet } from "@megawin/game-keno/entities";
+import { kenoNumberSchema, kenoDrawIdSchema } from "@megawin/game-keno/schemas";
 import { TicketChannel } from "@megawin/game-core/entities";
+import {
+  KenoBigSmallBet,
+  KenoEvenOddBet,
+  KenoPlayType,
+} from "@megawin/game-keno/entities";
+import z from "zod";
 
-// ============ Zod schemas ============
+// ============ Handler ============
 
-const kenoNumberSchema = z
-  .string()
-  .regex(/^(0[1-9]|[1-7][0-9]|80)$/, "Số Keno phải từ '01' đến '80'");
-
-const boardSchema = z.object({
-  boardNo: z.string().min(1),
-  numbers: z.array(kenoNumberSchema).min(1).max(10),
-});
+// ─── Composite schemas ───
 
 const SideBetPlayType = {
   BigSmall: KenoPlayType.BigSmall,
@@ -31,46 +28,46 @@ const SideBetPlayType = {
 
 const AllSideBetValues = { ...KenoBigSmallBet, ...KenoEvenOddBet } as const;
 
-const sideBetSchema = z.object({
+export const kenoBoardSchema = z.object({
+  boardNo: z.string().min(1),
+  numbers: z.array(kenoNumberSchema).min(1).max(10),
+});
+
+export const kenoSideBetSchema = z.object({
   playType: z.enum(SideBetPlayType),
   bet: z.enum(AllSideBetValues),
 });
 
-const bodySchema = z.object({
-  startDrawId: z.string().regex(/^\d{4}-\d{2}-\d{2}-\d{3}$/, "Format: YYYY-MM-DD-NNN"),
-  drawCount: z.number().int().min(1).max(20),
-  boards: z.array(boardSchema).default([]),
-  sideBets: z.array(sideBetSchema).default([]),
-});
+// ─── Place bet body schema ───
 
-// ============ Handler ============
+export const kenoPlaceBetBodySchema = z.object({
+  drawIds: z
+    .array(kenoDrawIdSchema)
+    .min(1)
+    .max(20)
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: "Các drawId không được trùng lặp.",
+    }),
+  boards: z.array(kenoBoardSchema).default([]),
+  sideBets: z.array(kenoSideBetSchema).default([]),
+});
 
 const useCase = new PlaceBetUseCase();
 
 export const handler = withPlayerAuth(
   async (event) => {
-    const { sub, tenantId, accountId } = event.user;
-    const { startDrawId, drawCount, boards, sideBets } = event.schema.body;
-
-    if (!tenantId) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          success: false,
-          error: { code: "BAD_REQUEST", message: "tenantId is required." },
-        }),
-      };
-    }
+    const { tenantId, accountId, username } = event.user;
+    const { drawIds, boards, sideBets } = event.schema.body;
 
     return useCase.run({
       tenantId,
-      playerId: accountId ?? sub,
+      accountId,
+      username,
       channel: TicketChannel.Sdk,
-      startDrawId,
-      drawCount,
+      drawIds,
       boards,
       sideBets,
     });
   },
-  { schemas: { body: bodySchema } },
+  { schemas: { body: kenoPlaceBetBodySchema } }
 );

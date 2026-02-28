@@ -1,38 +1,26 @@
 "use client";
 
-import { CalendarClock, CheckCircle2, Loader2, Radio } from "lucide-react";
+import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
 
-import { useCurrentDraw, useTodayDraws } from "./_lib/use-draws";
-import type { DrawSummary } from "./_lib/use-draws";
+import { useCurrentDraw } from "./_lib/use-draws";
+import { useGameConfig } from "../config/_lib/use-game-config";
 import { CreateDrawDialog } from "./_lib/create-draw-dialog";
-import { ActiveDrawCard, CompletedDrawCard } from "./_lib/active-draw-card";
+import {
+  Lotto535PrimaryDrawCard,
+  Lotto535QueueDrawCard,
+} from "./_lib/active-draw-card";
 import { DrawHistorySection } from "./_lib/draw-history-section";
-import { DrawStatus } from "@megawin/game-core/entities";
-
-const ACTIVE_STATUSES: Set<string> = new Set([
-  DrawStatus.Scheduled,
-  DrawStatus.SalesOpen,
-  DrawStatus.SalesClosed,
-  DrawStatus.Published,
-  DrawStatus.Settling,
-]);
 
 export default function AdminDrawsPage() {
-  const { data: currentData, isLoading: isLoadingCurrent } = useCurrentDraw();
-  const { data: todayData, isLoading: isLoadingToday } = useTodayDraws();
+  const { data, isLoading } = useCurrentDraw();
+  const { data: gameConfig } = useGameConfig();
 
-  const currentDraw = currentData?.currentDraw ?? null;
-  const todayDraws = todayData?.draws ?? [];
+  const activeDraws = data?.activeDraws ?? [];
+  const primaryDraw = activeDraws[0] ?? null;
+  const queueDraws = activeDraws.slice(1);
 
-  const completedDraws = todayDraws
-    .filter(
-      (d: DrawSummary) =>
-        !ACTIVE_STATUSES.has(d.status) &&
-        d.drawId !== currentDraw?.drawId
-    )
-    .sort((a: DrawSummary, b: DrawSummary) => b.drawNo - a.drawNo);
-
-  const isLoading = isLoadingCurrent || isLoadingToday;
+  const drawTimes = gameConfig?.play.drawTimes ?? ["13:00", "21:00"];
+  const drawsPerDay = gameConfig?.play.drawsPerDay ?? 2;
 
   return (
     <div className="@container/main flex flex-col gap-6">
@@ -47,66 +35,57 @@ export default function AdminDrawsPage() {
               Lotto 5/35 — Quản lý kỳ quay
             </h1>
             <p className="text-xs text-muted-foreground">
-              Vận hành kỳ quay: mở/đóng bán, công bố kết quả, kết sổ
+              {drawsPerDay} kỳ/ngày ({drawTimes.join(" & ")}). Mở/đóng bán,
+              công bố kết quả, kết sổ.
             </p>
           </div>
         </div>
         <CreateDrawDialog />
       </div>
 
-      {/* Today's Draws */}
+      {/* Active Draws */}
       {isLoading ? (
         <div className="flex items-center justify-center rounded-xl border border-dashed p-16">
           <Loader2 className="size-8 animate-spin text-muted-foreground" />
         </div>
-      ) : (
+      ) : primaryDraw ? (
         <div className="space-y-5">
-          {/* Active Draw */}
-          {currentDraw ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Radio className="size-4 text-green-500 animate-pulse" />
-                <h2 className="text-sm font-semibold text-foreground">
-                  Kỳ đang vận hành
-                </h2>
-              </div>
-              <ActiveDrawCard draw={currentDraw} />
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed bg-muted/30 p-16 text-center">
-              <div className="flex size-12 items-center justify-center rounded-2xl bg-muted">
-                <CalendarClock className="size-5 text-muted-foreground/50" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  Không có kỳ đang vận hành
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Nhấn &ldquo;Tạo kỳ quay&rdquo; để bắt đầu kỳ mới.
-                </p>
-              </div>
-            </div>
-          )}
+          {/* Primary — kỳ đang xử lý */}
+          <Lotto535PrimaryDrawCard draw={primaryDraw} />
 
-          {/* Completed Draws */}
-          {completedDraws.length > 0 && (
+          {/* Queue — các kỳ tiếp theo */}
+          {queueDraws.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="size-4 text-slate-400" />
+                <ListOrdered className="size-4 text-muted-foreground" />
                 <h2 className="text-sm font-semibold text-foreground">
-                  Kỳ đã hoàn tất hôm nay
+                  Hàng chờ
                 </h2>
                 <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
-                  {completedDraws.length} kỳ
+                  {queueDraws.length} kỳ
                 </span>
               </div>
-              <div className="space-y-3">
-                {completedDraws.map((draw: DrawSummary) => (
-                  <CompletedDrawCard key={draw.drawId} draw={draw} />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {queueDraws.map((draw) => (
+                  <Lotto535QueueDrawCard key={draw.drawId} draw={draw} />
                 ))}
               </div>
             </div>
           )}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-dashed bg-muted/30 p-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-2xl bg-muted">
+            <CalendarClock className="size-5 text-muted-foreground/50" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              Không có kỳ đang vận hành
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Nhấn &ldquo;Tạo kỳ quay&rdquo; để bắt đầu kỳ mới.
+            </p>
+          </div>
         </div>
       )}
 

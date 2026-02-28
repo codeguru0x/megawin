@@ -38,35 +38,46 @@
  *   - Scheduler Lambda (EventBridge schedule rate 30s)
  */
 
+const LAMBDA_RETRY = [
+  {
+    ErrorEquals: [
+      "Lambda.ServiceException",
+      "Lambda.AWSLambdaException",
+      "Lambda.SdkClientException",
+      "Lambda.TooManyRequestsException",
+      "States.TaskFailed",
+      "States.Timeout",
+    ],
+    IntervalSeconds: 5,
+    MaxAttempts: 3,
+    BackoffRate: 2.0,
+  },
+];
+
 export const FEED_SYNC_STATE_MACHINE = {
   Comment: "Lotto 5/35 Feed Sync – Copy entries → entryFeed cho tenant polling",
+  QueryLanguage: "JSONata",
   StartAt: "SyncEntries",
   States: {
     SyncEntries: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:lotto535-feed-sync-entries",
-      Parameters: {
-        "afterVersion.$": "$.afterVersion",
-        "batchSize.$": "$.batchSize",
+      Resource:
+        "arn:aws:lambda:REGION:ACCOUNT:function:lotto535-feed-sync-entries",
+      Arguments: {
+        afterVersion: "{% $states.input.afterVersion %}",
+        batchSize: "{% $states.input.batchSize %}",
       },
-      ResultPath: "$.syncResult",
+      Output:
+        "{% { 'batchSize': $states.input.batchSize, 'syncResult': $states.result } %}",
       Next: "CheckDone",
-      Retry: [
-        {
-          ErrorEquals: ["States.TaskFailed"],
-          IntervalSeconds: 5,
-          MaxAttempts: 3,
-          BackoffRate: 2.0,
-        },
-      ],
+      Retry: LAMBDA_RETRY,
     },
 
     CheckDone: {
       Type: "Choice",
       Choices: [
         {
-          Variable: "$.syncResult.done",
-          BooleanEquals: true,
+          Condition: "{% $states.input.syncResult.done %}",
           Next: "SaveCursor",
         },
       ],
@@ -75,28 +86,20 @@ export const FEED_SYNC_STATE_MACHINE = {
 
     UpdateAfterVersion: {
       Type: "Pass",
-      Parameters: {
-        "afterVersion.$": "$.syncResult.lastVersion",
-        "batchSize.$": "$.batchSize",
-      },
+      Output:
+        "{% { 'afterVersion': $states.input.syncResult.lastVersion, 'batchSize': $states.input.batchSize } %}",
       Next: "SyncEntries",
     },
 
     SaveCursor: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:lotto535-feed-save-cursor",
-      Parameters: {
-        "lastVersion.$": "$.syncResult.lastVersion",
+      Resource:
+        "arn:aws:lambda:REGION:ACCOUNT:function:lotto535-feed-save-cursor",
+      Arguments: {
+        lastVersion: "{% $states.input.syncResult.lastVersion %}",
       },
       End: true,
-      Retry: [
-        {
-          ErrorEquals: ["States.TaskFailed"],
-          IntervalSeconds: 2,
-          MaxAttempts: 3,
-          BackoffRate: 2.0,
-        },
-      ],
+      Retry: LAMBDA_RETRY,
     },
   },
 };

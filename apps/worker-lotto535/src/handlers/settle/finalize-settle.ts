@@ -2,11 +2,11 @@
  * Lambda: finalize-settle (Lotto 5/35)
  *
  * Step 6 (cuối) của Lotto535 Settle Step Function.
- * Chuyển draw status: settling → settled. Propagate jackpot chain.
+ * Chuyển draw status: settling → settled. Ghi jackpot snapshot + update cycle.
  *
  * CRASH-SAFE: transitionStatus atomic, idempotent.
  *
- * @input  { drawId, closingJackpot, nextJackpotOpening }
+ * @input  { drawId, closingJackpot, nextJackpotOpening, hasJackpotWinner, isSplitCycle, splitDetails }
  * @output FinalizeSettleResult
  */
 
@@ -16,6 +16,18 @@ interface Input {
   drawId: string;
   closingJackpot: number;
   nextJackpotOpening: number;
+  hasJackpotWinner: boolean;
+  isSplitCycle: boolean;
+  splitDetails?: Record<
+    string,
+    {
+      initialAmount: number;
+      redistributedAmount: number;
+      totalAmount: number;
+      winnerCount: number;
+      bonusPerWinner: number;
+    }
+  >;
 }
 
 const useCase = new FinalizeSettleUseCase();
@@ -25,6 +37,9 @@ export async function handler(event: Input) {
     drawId: event.drawId,
     closingJackpot: event.closingJackpot,
     nextJackpotOpening: event.nextJackpotOpening,
+    hasJackpotWinner: event.hasJackpotWinner,
+    isSplitCycle: event.isSplitCycle,
+    splitDetails: event.splitDetails,
   });
   if (!result.success) throw new Error(result.error.message);
   return result.data;

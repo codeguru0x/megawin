@@ -180,7 +180,7 @@ async function dispatchRefundToTenant(
 
   for (const batch of batches) {
     const items: RefundItem[] = batch.map((e: any) => ({
-      playerId: e.playerId,
+      accountId: e.accountId,
       entryId: extractId(e),
       amount: e.voidInfo?.refundAmount ?? 0,
       currency: "VND",

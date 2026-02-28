@@ -11,7 +11,7 @@ import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 
 export interface PrepareSettleInput {
   drawId: string;
@@ -53,54 +53,53 @@ export class PrepareSettleUseCase extends StepFunctionUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
-  private readonly configRepo = new GameConfigRepository();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** Load context cho Keno settle flow. Throw nếu draw không hợp lệ. */
-  protected async execute(input: PrepareSettleInput): Promise<PrepareSettleResult> {
-  const { drawId } = input;
-  const draw = await this.drawRepo.getDrawById(drawId);
-  if (!draw) {
-    throw new Error(`Draw ${drawId} không tồn tại.`);
-  }
+  protected async execute(
+    input: PrepareSettleInput
+  ): Promise<PrepareSettleResult> {
+    const { drawId } = input;
+    const draw = await this.drawRepo.getDrawById(drawId);
+    if (!draw) {
+      throw new Error(`Draw ${drawId} không tồn tại.`);
+    }
 
-  if (draw.status !== DrawStatus.Settling) {
-    throw new Error(
-      `Draw ${drawId} status = "${draw.status}", expected "settling".`,
-    );
-  }
+    if (draw.status !== DrawStatus.Settling) {
+      throw new Error(
+        `Draw ${drawId} status = "${draw.status}", expected "settling".`
+      );
+    }
 
-  if (!draw.result) {
-    throw new Error(`Draw ${drawId} chưa có kết quả quay.`);
-  }
+    if (!draw.result) {
+      throw new Error(`Draw ${drawId} chưa có kết quả quay.`);
+    }
 
-  const globalConfig = await this.configRepo.getGlobalConfig();
-  if (!globalConfig) {
-    throw new Error("GameConfig global chưa được khởi tạo.");
-  }
+    const globalConfig = await this.getGlobalConfig.run();
 
-  const totalEntries = await this.entryRepo.countEntriesByDrawId(drawId);
+    const totalEntries = await this.entryRepo.countEntriesByDrawId(drawId);
 
-  return {
-    drawId,
-    drawDate: draw.drawDate,
-    drawNo: draw.drawNo,
-    financialDate: draw.financialDate,
-    result: {
-      winningNumbers: draw.result.winningNumbers,
-      bigCount: draw.result.bigCount,
-      smallCount: draw.result.smallCount,
-      evenCount: draw.result.evenCount,
-      oddCount: draw.result.oddCount,
-    },
-    config: {
-      companyRate: globalConfig.rates.companyRate,
-      defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
-      basicPrizes: globalConfig.basicPrizes,
-      bigSmallPrizes: globalConfig.bigSmallPrizes as any,
-      evenOddPrizes: globalConfig.evenOddPrizes as any,
-      payoutCaps: globalConfig.payoutCaps,
-    },
-    totalEntries,
-  };
+    return {
+      drawId,
+      drawDate: draw.drawDate,
+      drawNo: draw.drawNo,
+      financialDate: draw.financialDate,
+      result: {
+        winningNumbers: draw.result.winningNumbers,
+        bigCount: draw.result.bigCount,
+        smallCount: draw.result.smallCount,
+        evenCount: draw.result.evenCount,
+        oddCount: draw.result.oddCount,
+      },
+      config: {
+        companyRate: globalConfig.rates.companyRate,
+        defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
+        basicPrizes: globalConfig.basicPrizes,
+        bigSmallPrizes: globalConfig.bigSmallPrizes as any,
+        evenOddPrizes: globalConfig.evenOddPrizes as any,
+        payoutCaps: globalConfig.payoutCaps,
+      },
+      totalEntries,
+    };
   }
 }

@@ -45,6 +45,10 @@
       "types": "./src/use-cases/tenant-config/index.ts",
       "default": "./dist/use-cases/tenant-config/index.js"
     },
+    "./use-cases/player": {
+      "types": "./src/use-cases/player/index.ts",
+      "default": "./dist/use-cases/player/index.js"
+    },
     "./repos": {
       "types": "./src/infras/repos/index.ts",
       "default": "./dist/infras/repos/index.js"

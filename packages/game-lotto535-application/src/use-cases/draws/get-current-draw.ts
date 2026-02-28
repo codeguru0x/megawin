@@ -1,18 +1,18 @@
 /**
  * Use Case: Get Current Draw (Lotto 5/35)
  *
- * Lấy thông tin kỳ quay hiện tại + kỳ settled gần nhất.
- *
- * Dùng cho:
- *   - Player UI: hiển thị jackpot, countdown, kỳ đang mở để đặt cược
- *   - Backoffice UI: hiển thị trạng thái kỳ hiện tại, thống kê
- *
- * Không có "nextDraw" vì hệ thống không biết trước lịch mở thưởng.
+ * Lấy tất cả kỳ quay active (multi-draw support):
+ *   - activeDraws[]: tất cả kỳ active sorted by drawDate+drawNo
+ *   - currentDraw: kỳ đầu tiên (backward compat)
+ *   - lastSettledDraw: kỳ settle gần nhất
+ *   - jackpotCurrentAmount: đọc từ active jackpot cycle
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
 import type { DrawEntity } from "../../infras/mappers/draw-mapper";
 import type {
   GetCurrentDrawInput,
@@ -20,28 +20,46 @@ import type {
   CurrentDrawInfo,
 } from "./dto/current-draw.dto";
 
+const ACTIVE_STATUSES = [
+  DrawStatus.Scheduled,
+  DrawStatus.SalesOpen,
+  DrawStatus.SalesClosed,
+  DrawStatus.Published,
+  DrawStatus.Settling,
+];
+
 export class GetCurrentDrawUseCase extends NextApiUseCase<
   GetCurrentDrawInput,
   GetCurrentDrawOutput
 > {
   private readonly drawRepo = new DrawRepository();
+  private readonly cycleRepo = new JackpotCycleRepository();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(
-    input: GetCurrentDrawInput,
+    input: GetCurrentDrawInput
   ): Promise<GetCurrentDrawOutput> {
-    const allowStatuses = input.allowStatuses ?? [
-      DrawStatus.SalesOpen,
-      DrawStatus.SalesClosed,
-    ];
+    const allowStatuses = input.allowStatuses ?? ACTIVE_STATUSES;
 
-    const [currentDraw, lastSettled] = await Promise.all([
-      this.drawRepo.getCurrentDraw(allowStatuses),
-      this.drawRepo.getLatestSettledDraw(),
-    ]);
+    const [activeDraws, lastSettled, activeCycle, globalConfig] =
+      await Promise.all([
+        this.drawRepo.getActiveDraws(allowStatuses),
+        this.drawRepo.getLatestSettledDraw(),
+        this.cycleRepo.getActiveCycle(),
+        this.getGlobalConfig.run(),
+      ]);
+
+    const jackpotCurrentAmount =
+      activeCycle?.currentAmount ?? globalConfig.jackpot.seedAmount;
+
+    const mapped = activeDraws.map((d) =>
+      mapDrawInfo(d, jackpotCurrentAmount, globalConfig.jackpot.splitThreshold)
+    );
 
     return {
-      currentDraw: currentDraw ? mapDrawInfo(currentDraw) : null,
-      nextDraw: null,
+      currentDraw: mapped[0] ?? null,
+      activeDraws: mapped,
+      jackpotCurrentAmount,
       lastSettledDraw: lastSettled
         ? {
             drawId: lastSettled.drawId,
@@ -55,19 +73,24 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<
                   publishedAt: lastSettled.result.publishedAt.toISOString(),
                 }
               : undefined,
-            jackpot: {
-              openingAmount: lastSettled.jackpot.openingAmount,
-              closingAmount: lastSettled.jackpot.closingAmount,
-              isSplitCycle: lastSettled.jackpot.isSplitCycle ?? false,
-            },
+            jackpot: lastSettled.jackpot
+              ? {
+                  openingAmount: lastSettled.jackpot.openingAmount,
+                  closingAmount: lastSettled.jackpot.closingAmount,
+                  isSplitCycle: lastSettled.jackpot.isSplitCycle ?? false,
+                }
+              : undefined,
           }
         : null,
     };
   }
 }
 
-/** Map draw entity → API output. */
-function mapDrawInfo(draw: DrawEntity): CurrentDrawInfo {
+function mapDrawInfo(
+  draw: DrawEntity,
+  jackpotCurrentAmount: number,
+  splitThreshold: number
+): CurrentDrawInfo {
   return {
     drawId: draw.drawId,
     drawDate: draw.drawDate,
@@ -78,10 +101,9 @@ function mapDrawInfo(draw: DrawEntity): CurrentDrawInfo {
       openAt: draw.sales.openAt?.toISOString(),
       closeAt: draw.sales.closeAt.toISOString(),
     },
-    jackpot: {
-      openingAmount: draw.jackpot.openingAmount,
-      isSplitCycle: draw.jackpot.isSplitCycle ?? false,
-    },
+    jackpotCurrentAmount,
+    splitCycleIntent:
+      jackpotCurrentAmount >= splitThreshold && draw.drawNo === 2,
     stats: draw.stats
       ? {
           ticketEntryCount: draw.stats.ticketEntryCount,

@@ -183,7 +183,7 @@ async function dispatchToTenant(
 
   for (const batch of batches) {
     const items: PayoutItem[] = batch.map((e: any) => ({
-      playerId: e.playerId,
+      accountId: e.accountId,
       entryId: extractId(e),
       amount: e.payout?.payoutAmount ?? 0,
       currency: "VND",

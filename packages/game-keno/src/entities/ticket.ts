@@ -18,8 +18,7 @@ import type {
   KenoEvenOddBet,
   KenoPlayType,
 } from "./enums";
-import type { TicketChannel, TicketStatus, GameProduct } from "@megawin/game-core/entities";
-import type { ISODateString } from "./types";
+import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
 
 // ─────────────────────────────────────────────
 // Board – Cách chơi cơ bản (Panel A/B)
@@ -57,28 +56,21 @@ export interface TicketDoc {
   // ───── Ownership / Multi-tenant ─────
 
   tenantId: string;
-  playerId: string;
-  appId?: string;
-  accountId?: string;
+  accountId: string;
+  username: string;
 
   // ───── Ticket Identity ─────
 
-  product: typeof GameProduct.Keno;
   ticketNo: string;
   channel: TicketChannel;
 
   // ───── Draw Plan (lazy enrollment) ─────
 
   drawPlan: {
-    startDrawId: string;
+    /** Danh sách drawIds mà player đặt cược (tất cả enroll ngay khi paid). */
+    drawIds: string[];
+    /** Số kỳ tham gia (= drawIds.length). */
     drawCount: number;
-    /** drawIds đã enroll (chỉ kỳ đầu khi tạo, worker bổ sung sau). */
-    enrolledDrawIds: string[];
-    enrolledDraws: number;
-    remainingDraws: number;
-    fullyEnrolled: boolean;
-    startDate?: ISODateString;
-    endDate?: ISODateString;
   };
 
   // ───── Pricing ─────
@@ -90,9 +82,9 @@ export interface TicketDoc {
     totalAmount: number;
   };
 
-  // ───── Tenant Snapshot ─────
+  // ───── Tenant ─────
 
-  tenantSnapshot: {
+  tenant: {
     commissionRate: number;
   };
 
@@ -104,20 +96,11 @@ export interface TicketDoc {
 
   sideBets: SideBet[];
 
-  // ───── Immutability / Audit ─────
-
-  audit: {
-    version: number;
-    immutableAt?: Date;
-  };
-
   // ───── Progress ─────
 
   progress: {
     totalDraws: number;
     settledDraws: number;
-    pendingDraws: number;
-    nextDrawId?: string;
   };
 
   // ───── Settlement Summary ─────

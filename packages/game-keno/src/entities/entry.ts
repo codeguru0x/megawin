@@ -14,8 +14,10 @@ import type {
   KenoBigSmallBet,
   KenoEvenOddBet,
   KenoPlayType,
+  PayoutStatus,
+  RefundStatus,
 } from "./enums";
-import type { EntryStatus } from "@megawin/game-core/entities";
+import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
 import type { ISODateString } from "./types";
 import type { Long } from "@megawin/game-core/types";
 
@@ -29,7 +31,8 @@ export interface TicketEntryDoc {
   // ───── Partition / Ownership ─────
 
   tenantId: string;
-  playerId: string;
+  accountId: string;
+  username: string;
   ticketId: unknown;
 
   // ───── Draw Snapshot ─────
@@ -39,10 +42,13 @@ export interface TicketEntryDoc {
   drawDate: ISODateString;
   financialDate: ISODateString;
 
-  // ───── Tenant Snapshot ─────
+  // ───── Tenant (snapshot đại lý lúc đặt cược) ─────
 
-  tenantSnapshot: {
+  tenant: {
+    /** Tỷ lệ hoa hồng đại lý. Ví dụ: 0.20 = 20%. */
     commissionRate: number;
+    /** Tiền hoa hồng = Math.round(amount × commissionRate). Tính sẵn lúc place-bet. */
+    commissionAmount: number;
   };
 
   // ───── Entry Status ─────
@@ -59,7 +65,6 @@ export interface TicketEntryDoc {
 
   entrySummary: {
     ticketNo: string;
-    ticketVersion: number;
     boards: EntryBoardSnapshot[];
     sideBets: EntrySideBetSnapshot[];
   };
@@ -75,6 +80,10 @@ export interface TicketEntryDoc {
     oddCount: number;
   };
 
+  // ───── Outcome ─────
+
+  outcome?: EntryOutcome;
+
   // ───── Payout ─────
 
   payout?: {
@@ -83,7 +92,7 @@ export interface TicketEntryDoc {
     boardPayouts: EntryBoardPayout[];
     sideBetPayouts: EntrySideBetPayout[];
     settledAt: Date;
-    payoutStatus?: string;
+    payoutStatus?: PayoutStatus;
     payoutDispatchedAt?: Date;
     payoutRetryCount?: number;
     payoutLastError?: string;
@@ -106,7 +115,7 @@ export interface TicketEntryDoc {
     refundAmount: number;
 
     /** Trạng thái hoàn tiền. */
-    refundStatus: "pending" | "dispatched" | "confirmed" | "failed";
+    refundStatus: RefundStatus;
 
     /** Thời điểm huỷ. */
     voidedAt: Date;

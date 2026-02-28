@@ -108,34 +108,29 @@ export interface DrawDoc {
     publishedAt: Date;
   };
 
-  // ───── Jackpot ─────
+  // ───── Jackpot (snapshot – chỉ ghi khi settle) ─────
 
   /**
-   * Thông tin Jackpot cho kỳ quay.
-   * UI người chơi đọc từ đây để hiển thị giá trị Jackpot hiện tại.
+   * Snapshot Jackpot cho kỳ quay.
+   *
+   * KHÔNG ghi khi tạo draw — chỉ ghi lúc settle (finalize-settle).
+   * Kỳ đang active: UI đọc jackpot từ `lotto535_jackpot_cycles.currentAmount`.
+   * Kỳ đã settle: đọc từ đây (bản ghi lịch sử).
    */
-  jackpot: {
-    /**
-     * Jackpot đầu kỳ (VND).
-     * = Jackpot cuối kỳ trước + tích luỹ từ kỳ trước (nếu có).
-     * Kỳ đầu tiên = gameConfig.jackpot.seedAmount.
-     */
+  jackpot?: {
+    /** Jackpot đầu kỳ (VND). Ghi lúc settle. */
     openingAmount: number;
 
     /**
      * Jackpot cuối kỳ (VND).
-     * Sau settle: closingAmount = openingAmount + jackpotContribution (nếu không ai trúng)
-     *                           = seedAmount (nếu có người trúng Jackpot)
+     * = openingAmount + jackpotContribution (không ai trúng)
+     * = seedAmount (có người trúng Jackpot)
      */
-    closingAmount?: number;
-
-    /** Phần rollover từ kỳ trước (nếu có). */
-    rolloverAmount?: number;
+    closingAmount: number;
 
     /**
      * Đánh dấu kỳ này là kỳ chia giải (split cycle).
-     * true khi Jackpot >= splitThreshold và chưa có người trúng,
-     * và đây là kỳ 21h ngày hôm sau.
+     * true khi Jackpot >= splitThreshold và chưa có người trúng.
      */
     isSplitCycle?: boolean;
 

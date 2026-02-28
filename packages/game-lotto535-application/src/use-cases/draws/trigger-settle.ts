@@ -4,7 +4,8 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { isSplitCycleDraw } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
+import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
 
 /**
@@ -26,7 +27,8 @@ export class TriggerSettleUseCase extends NextApiUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
-  private readonly configRepo = new GameConfigRepository();
+  private readonly cycleRepo = new JackpotCycleRepository();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
   protected async execute(
     input: TriggerSettleInput
@@ -42,13 +44,16 @@ export class TriggerSettleUseCase extends NextApiUseCase<
       );
     }
 
-    const globalConfig = await this.configRepo.getGlobalConfig();
-    if (!globalConfig) {
-      throw AppException.internal("GameConfig chưa được khởi tạo.");
-    }
+    const [globalConfig, activeCycle] = await Promise.all([
+      this.getGlobalConfig.run(),
+      this.cycleRepo.getActiveCycle(),
+    ]);
+
+    const jackpotCurrentAmount =
+      activeCycle?.currentAmount ?? globalConfig.jackpot.seedAmount;
 
     const splitCycle = isSplitCycleDraw(
-      draw.jackpot.openingAmount,
+      jackpotCurrentAmount,
       globalConfig.jackpot.splitThreshold,
       false,
       draw.drawNo
@@ -60,7 +65,7 @@ export class TriggerSettleUseCase extends NextApiUseCase<
           split: {
             thresholdAmount: globalConfig.jackpot.splitThreshold,
             splitRatios: globalConfig.jackpot.splitRatios,
-            splitAmount: draw.jackpot.openingAmount,
+            splitAmount: jackpotCurrentAmount,
             splitRuleVersion: "v1-2026-02",
             hintText: "Kỳ chia giải Jackpot",
           },

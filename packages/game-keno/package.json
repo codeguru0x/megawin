@@ -36,9 +36,22 @@
     "./indexes": {
       "types": "./src/indexes/index.ts",
       "default": "./dist/indexes/index.js"
+    },
+    "./schemas": {
+      "types": "./src/schemas/index.ts",
+      "default": "./dist/schemas/index.js"
+    },
+    "./schemas/*": {
+      "types": "./src/schemas/*.ts",
+      "default": "./dist/schemas/*.js"
     }
   },
-  "keywords": ["megawin", "keno", "game", "domain"],
+  "keywords": [
+    "megawin",
+    "keno",
+    "game",
+    "domain"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -47,6 +60,7 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@megawin/game-core": "workspace:*"
+    "@megawin/game-core": "workspace:*",
+    "zod": "^4.3.6"
   }
 }

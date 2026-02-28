@@ -22,6 +22,8 @@ import {
   companyAuth,
   type UserAuthOptions,
   type CompanyAuthOptions,
+  type TenantUserEvent,
+  type CompanyUserEvent,
   type ApiGatewayEventWithUser,
 } from "./authorization-middleware";
 import {
@@ -30,7 +32,7 @@ import {
   type ApiGatewayZodSchemas,
 } from "@megawin/app-core/lambda/middleware";
 
-export type { ApiGatewayEventWithUser };
+export type { ApiGatewayEventWithUser, TenantUserEvent, CompanyUserEvent };
 
 // ============ Type-level helpers ============
 
@@ -44,7 +46,10 @@ export type InferSchema<T> = T extends {
   ? { body: ZodInfer<B>; path: ZodInfer<P>; query: ZodInfer<Q> }
   : Record<string, never>;
 
-type UserEvent<TSchemas> = ApiGatewayEventWithUser &
+type TenantEvent<TSchemas> = TenantUserEvent &
+  (TSchemas extends undefined ? unknown : { schema: InferSchema<TSchemas> });
+
+type CompanyEvent<TSchemas> = CompanyUserEvent &
   (TSchemas extends undefined ? unknown : { schema: InferSchema<TSchemas> });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,7 +74,7 @@ function buildHandler(
 export function withPlayerAuth<
   TSchemas extends ApiGatewayZodSchemas | undefined = undefined,
 >(
-  fn: (event: UserEvent<TSchemas>) => Promise<unknown>,
+  fn: (event: TenantEvent<TSchemas>) => Promise<unknown>,
   options?: UserAuthOptions & { schemas?: TSchemas },
 ) {
   const { schemas, ...authOptions } = options ?? {};
@@ -81,7 +86,7 @@ export function withPlayerAuth<
 export function withAgentAuth<
   TSchemas extends ApiGatewayZodSchemas | undefined = undefined,
 >(
-  fn: (event: UserEvent<TSchemas>) => Promise<unknown>,
+  fn: (event: TenantEvent<TSchemas>) => Promise<unknown>,
   options?: UserAuthOptions & { schemas?: TSchemas },
 ) {
   const { schemas, ...authOptions } = options ?? {};
@@ -93,7 +98,7 @@ export function withAgentAuth<
 export function withCompanyAuth<
   TSchemas extends ApiGatewayZodSchemas | undefined = undefined,
 >(
-  fn: (event: UserEvent<TSchemas>) => Promise<unknown>,
+  fn: (event: CompanyEvent<TSchemas>) => Promise<unknown>,
   options?: CompanyAuthOptions & { schemas?: TSchemas },
 ) {
   const { schemas, ...authOptions } = options ?? {};

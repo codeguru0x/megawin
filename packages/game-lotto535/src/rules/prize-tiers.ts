@@ -180,7 +180,7 @@ export interface LineMatchResult {
  */
 export function determineTier(
   mainMatchCount: number,
-  specialMatched: boolean,
+  specialMatched: boolean
 ): PrizeTier | null {
   for (const rule of DEFAULT_PRIZE_TIER_RULES) {
     if (rule.specialMatch === "only") {
@@ -198,11 +198,6 @@ export function determineTier(
       if (!rule.specialMatch && !specialMatched) {
         return rule.tier;
       }
-      // 5 chính + đặc biệt: match jackpot (rule đầu tiên)
-      // 5 chính, không đặc biệt: skip jackpot, match tier1
-      if (!rule.specialMatch && mainMatchCount >= rule.mainMatch) {
-        return rule.tier;
-      }
     }
   }
 
@@ -213,9 +208,7 @@ export function determineTier(
  * Lookup PrizeTierRule theo tier.
  * Dùng khi cần lấy label, defaultAmount, splitEligible...
  */
-export function getPrizeTierRule(
-  tier: PrizeTier,
-): PrizeTierRule | undefined {
+export function getPrizeTierRule(tier: PrizeTier): PrizeTierRule | undefined {
   return DEFAULT_PRIZE_TIER_RULES.find((r) => r.tier === tier);
 }
 
@@ -227,7 +220,7 @@ export function getPrizeTierRule(
  * @returns Map<tier, amount>
  */
 export function buildPrizeAmountMap(
-  prizeAmounts: PrizeAmounts,
+  prizeAmounts: PrizeAmounts
 ): ReadonlyMap<PrizeTier, number> {
   const map = new Map<PrizeTier, number>();
 

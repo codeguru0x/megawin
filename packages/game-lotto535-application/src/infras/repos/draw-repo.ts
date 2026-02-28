@@ -50,6 +50,15 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOne({ drawId });
   }
 
+  /** Lấy nhiều draws cùng lúc theo danh sách drawIds (1 query). */
+  async getDrawsByIds(drawIds: string[]): Promise<DrawEntity[]> {
+    if (drawIds.length === 0) return [];
+    return await this.findMany(
+      { drawId: { $in: drawIds } },
+      { sort: { drawDate: 1, drawNo: 1 } }
+    );
+  }
+
   async getDrawsByDate(drawDate: ISODateString): Promise<DrawEntity[]> {
     return await this.findMany({ drawDate }, { sort: { drawNo: 1 } });
   }
@@ -204,12 +213,14 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async updateJackpot(
     drawId: string,
     jackpot: {
+      openingAmount: number;
       closingAmount: number;
       isSplitCycle?: boolean;
       split?: DrawSplit;
     }
   ): Promise<boolean> {
     const $set: Record<string, unknown> = {
+      "jackpot.openingAmount": jackpot.openingAmount,
       "jackpot.closingAmount": jackpot.closingAmount,
       updatedAt: new Date(),
     };
@@ -265,22 +276,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
   }
 
-  async setJackpotOpening(
-    drawId: string,
-    openingAmount: number
-  ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      {
-        $set: {
-          "jackpot.openingAmount": openingAmount,
-          "jackpot.rolloverAmount": openingAmount,
-          updatedAt: new Date(),
-        },
-      }
-    );
-  }
-
   async getCurrentDraw(allowStatuses?: string[]): Promise<DrawEntity | null> {
     const statuses = allowStatuses ?? [DrawStatus.SalesOpen];
 
@@ -289,6 +284,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       { sort: { drawDate: 1, drawNo: 1 } }
     );
     return draw;
+  }
+
+  async getActiveDraws(allowStatuses: string[]): Promise<DrawEntity[]> {
+    return await this.findMany(
+      { status: { $in: allowStatuses } },
+      { sort: { drawDate: 1, drawNo: 1 } }
+    );
   }
 
   async updateVoidSummary(
@@ -313,10 +315,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     if (sales.drawTime) {
       $set.drawTime = sales.drawTime;
     }
-    return await this.updateOne(
-      { drawId },
-      { $set }
-    );
+    return await this.updateOne({ drawId }, { $set });
   }
 
   async updateResult(

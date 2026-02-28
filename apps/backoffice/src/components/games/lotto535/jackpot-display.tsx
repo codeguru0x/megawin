@@ -1,15 +1,12 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { formatVND } from "@megawin/shared/utils/number";
 
 interface JackpotDisplayProps {
   amount: number;
   size?: "sm" | "md" | "lg";
   className?: string;
-}
-
-function formatVND(amount: number): string {
-  return amount.toLocaleString("en-US") + " ₫";
 }
 
 export function JackpotDisplay({

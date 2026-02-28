@@ -22,26 +22,36 @@
  * IDEMPOTENT: safe to retry.
  */
 
+const LAMBDA_RETRY = [
+  {
+    ErrorEquals: [
+      "Lambda.ServiceException",
+      "Lambda.AWSLambdaException",
+      "Lambda.SdkClientException",
+      "Lambda.TooManyRequestsException",
+      "States.TaskFailed",
+      "States.Timeout",
+    ],
+    IntervalSeconds: 10,
+    MaxAttempts: 3,
+    BackoffRate: 2.0,
+  },
+];
+
 export const AUTO_ENROLL_STATE_MACHINE = {
   Comment: "Keno Auto-Enroll – Tự động tạo entries cho kỳ mới mở bán",
+  QueryLanguage: "JSONata",
   StartAt: "AutoEnrollEntries",
   States: {
     AutoEnrollEntries: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:enroll-auto-entries",
-      Parameters: {
-        "drawId.$": "$.drawId",
+      Arguments: {
+        drawId: "{% $states.input.drawId %}",
       },
-      ResultPath: "$.enrollResult",
+      Output: "{% $states.result %}",
       Next: "EnrollComplete",
-      Retry: [
-        {
-          ErrorEquals: ["States.TaskFailed"],
-          IntervalSeconds: 10,
-          MaxAttempts: 3,
-          BackoffRate: 2.0,
-        },
-      ],
+      Retry: LAMBDA_RETRY,
     },
 
     EnrollComplete: {

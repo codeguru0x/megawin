@@ -18,12 +18,16 @@ export interface PlaceBetSideBetInput {
 
 export interface PlaceBetInput {
   tenantId: string;
-  playerId: string;
-  appId?: string;
-  accountId?: string;
+  accountId: string;
+  username: string;
   channel: TicketChannel;
-  startDrawId: string;
-  drawCount: number;
+
+  /**
+   * Danh sách drawIds mà player muốn cược.
+   * All-or-nothing: 1 draw không hợp lệ → reject toàn bộ.
+   */
+  drawIds: string[];
+
   boards: PlaceBetBasicBoardInput[];
   sideBets: PlaceBetSideBetInput[];
 }
@@ -37,9 +41,8 @@ export interface PlaceBetOutput {
   ticketNo: string;
   status: string;
   drawPlan: {
-    startDrawId: string;
+    drawIds: string[];
     drawCount: number;
-    enrolledDrawIds: string[];
   };
   pricing: {
     unitPrice: number;

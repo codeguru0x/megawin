@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Loader2, Plus } from "lucide-react";
+import { Check, Loader2, Plus, CalendarPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,79 +15,59 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-import { useCreateDraw } from "./use-draws";
-import { useGameConfig } from "../../config/_lib/use-game-config";
+import { useCreateDraw, usePreviewDraws } from "./use-draws";
 
-function getTodayISO(): string {
-  const now = new Date();
-  const vn = new Date(
-    now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
-  );
-  const y = vn.getFullYear();
-  const m = String(vn.getMonth() + 1).padStart(2, "0");
-  const d = String(vn.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleTimeString("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
-function getVNHourMinute(): { hour: number; minute: number } {
-  const now = new Date();
-  const vn = new Date(
-    now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
-  );
-  return { hour: vn.getHours(), minute: vn.getMinutes() };
-}
-
-/**
- * Tìm drawNo (1-based) gần nhất với thời gian hiện tại.
- * Nếu đang trước tất cả kỳ → chọn kỳ 1.
- * Nếu đang sau kỳ cuối → chọn kỳ cuối.
- * Nếu đang giữa → chọn kỳ tiếp theo.
- */
-function getDefaultDrawNo(drawTimes: string[]): string {
-  if (drawTimes.length === 0) return "1";
-  const { hour, minute } = getVNHourMinute();
-  const nowMinutes = hour * 60 + minute;
-
-  for (let i = 0; i < drawTimes.length; i++) {
-    const [h, m] = drawTimes[i]!.split(":").map(Number);
-    const drawMinutes = h! * 60 + m!;
-    if (nowMinutes < drawMinutes) return String(i + 1);
-  }
-
-  return String(drawTimes.length);
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    day: "2-digit",
+    month: "2-digit",
+  });
 }
 
 export function CreateDrawDialog() {
   const [open, setOpen] = useState(false);
-  const [drawDate, setDrawDate] = useState(getTodayISO());
-  const [drawNo, setDrawNo] = useState<string | null>(null);
-  const createDraw = useCreateDraw();
-  const { data: config, isLoading: configLoading } = useGameConfig();
+  const [count, setCount] = useState(2);
 
-  const drawTimes = config?.play.drawTimes ?? [];
-  const selectedDrawNo = drawNo ?? getDefaultDrawNo(drawTimes);
+  const preview = usePreviewDraws(open ? count : 0);
+  const createDraw = useCreateDraw();
 
   function handleCreate() {
-    if (!drawDate) return;
     createDraw.mutate(
-      { drawDate, drawNo: Number(selectedDrawNo) },
+      { count },
       {
         onSuccess: () => {
           setOpen(false);
-          setDrawNo(null);
-          setDrawDate(getTodayISO());
+          setCount(2);
         },
       }
     );
   }
+
+  const draws = preview.data?.draws ?? [];
+  const openCount = draws.filter((d) => d.status === "salesOpen").length;
+  const scheduledCount = draws.filter((d) => d.status === "scheduled").length;
+  const uniqueDates = [...new Set(draws.map((d) => d.drawDate))];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -97,64 +77,129 @@ export function CreateDrawDialog() {
           Tạo kỳ quay
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Tạo kỳ quay mới</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <CalendarPlus className="size-5 text-emerald-500" />
+            Tạo kỳ quay Lotto 5/35
+          </DialogTitle>
           <DialogDescription>
-            Kỳ trước phải hoàn tất hoặc đã huỷ mới tạo được kỳ mới.
+            Tạo nhiều kỳ quay liên tiếp. Giờ quay và đóng bán tính tự động theo
+            cấu hình game (2 kỳ/ngày: 13h &amp; 21h).
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Ngày quay
-            </Label>
-            <Input
-              type="date"
-              value={drawDate}
-              min={getTodayISO()}
-              onChange={(e) => setDrawDate(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Kỳ trong ngày
-            </Label>
-            {configLoading ? (
-              <div className="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm text-muted-foreground">
-                <Loader2 className="size-4 animate-spin" />
-                Đang tải cấu hình...
+
+        <div className="space-y-4 py-2">
+          <div className="flex items-end gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                Số kỳ mở
+              </Label>
+              <Input
+                type="number"
+                min={1}
+                max={12}
+                value={count}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v) && v >= 1 && v <= 12) setCount(v);
+                }}
+                className="w-24 tabular-nums"
+              />
+            </div>
+            {draws.length > 0 && (
+              <div className="flex flex-wrap gap-2 pb-1">
+                {openCount > 0 && (
+                  <Badge variant="default" className="bg-green-600">
+                    {openCount} mở bán
+                  </Badge>
+                )}
+                {scheduledCount > 0 && (
+                  <Badge variant="secondary">{scheduledCount} chờ lịch</Badge>
+                )}
+                {uniqueDates.length > 1 && (
+                  <Badge variant="outline">{uniqueDates.length} ngày</Badge>
+                )}
               </div>
-            ) : (
-              <Select value={selectedDrawNo} onValueChange={setDrawNo}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {drawTimes.map((time, idx) => (
-                    <SelectItem key={idx} value={String(idx + 1)}>
-                      Kỳ {idx + 1} — {time}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             )}
           </div>
+
+          {preview.isLoading && (
+            <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
+              <Loader2 className="mr-2 size-4 animate-spin" />
+              Đang tính lịch...
+            </div>
+          )}
+
+          {draws.length > 0 && (
+            <div className="overflow-auto max-h-[40vh] rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-20">Ngày</TableHead>
+                    <TableHead className="w-16">Kỳ</TableHead>
+                    <TableHead>Giờ quay</TableHead>
+                    <TableHead>Đóng bán</TableHead>
+                    <TableHead className="w-24">Trạng thái</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {draws.map((d, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="tabular-nums text-muted-foreground">
+                        {formatDate(d.drawTime)}
+                      </TableCell>
+                      <TableCell className="tabular-nums font-medium">
+                        Kỳ {d.drawNo}
+                      </TableCell>
+                      <TableCell className="tabular-nums">
+                        {formatTime(d.drawTime)}
+                      </TableCell>
+                      <TableCell className="tabular-nums text-muted-foreground">
+                        {formatTime(d.closeAt)}
+                      </TableCell>
+                      <TableCell>
+                        {d.status === "salesOpen" ? (
+                          <Badge
+                            variant="default"
+                            className="bg-green-600 text-xs"
+                          >
+                            Mở bán
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">
+                            Chờ lịch
+                          </Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {!preview.isLoading && draws.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Không còn slot quay khả dụng.
+            </p>
+          )}
         </div>
+
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
             Huỷ bỏ
           </Button>
           <Button
             onClick={handleCreate}
-            disabled={!drawDate || configLoading || createDraw.isPending}
+            disabled={draws.length === 0 || createDraw.isPending}
           >
             {createDraw.isPending ? (
               <Loader2 className="mr-2 size-4 animate-spin" />
             ) : (
               <Check className="mr-2 size-4" />
             )}
-            Tạo kỳ quay
+            Tạo {draws.length} kỳ quay
           </Button>
         </DialogFooter>
       </DialogContent>

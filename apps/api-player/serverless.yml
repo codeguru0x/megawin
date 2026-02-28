@@ -3,9 +3,43 @@ service: megawin-player
 plugins:
   - serverless-offline
 
+custom:
+  serverless-offline:
+    httpPort: 4010
+    lambdaPort: 4011
+    noPrependStageInUrl: true
+
 provider:
   name: aws
   runtime: nodejs24.x
+  stage: ${opt:stage, 'dev'}
+  region: ap-southeast-1
+
+  environment:
+    STAGE: ${self:provider.stage}
+    MONGODB_URI: ${env:MONGODB_URI, 'mongodb://localhost:27017/megawin'}
+
+  httpApi:
+    cors:
+      allowedOrigins:
+        - ${env:CORS_ALLOWED_ORIGIN, '*'}
+      allowedMethods:
+        - GET
+        - POST
+        - OPTIONS
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+        - X-API-Key
+      maxAge: 86400
+
+    authorizers:
+      cognitoPlayerAuth:
+        type: jwt
+        identitySource: $request.header.Authorization
+        issuerUrl: ${env:COGNITO_ISSUER_URL}
+        audience:
+          - ${env:COGNITO_CLIENT_ID}
 
 build:
   esbuild:
@@ -15,3 +49,5 @@ functions:
   - ${file(src/functions/game-endpoint.yml)}
   - ${file(src/functions/bet-endpoint.yml)}
   - ${file(src/functions/balance-endpoint.yml)}
+  - ${file(src/functions/lotto535-endpoint.yml)}
+  - ${file(src/functions/keno-endpoint.yml)}

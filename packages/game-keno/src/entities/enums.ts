@@ -126,3 +126,29 @@ export const KenoEvenOddBet = {
 
 export type KenoEvenOddBet =
   (typeof KenoEvenOddBet)[keyof typeof KenoEvenOddBet];
+
+// ─────────────────────────────────────────────
+// Payout Status
+// ─────────────────────────────────────────────
+
+export const PayoutStatus = {
+  Pending: "pending",
+  Dispatched: "dispatched",
+  Confirmed: "confirmed",
+  Failed: "failed",
+} as const;
+
+export type PayoutStatus = (typeof PayoutStatus)[keyof typeof PayoutStatus];
+
+// ─────────────────────────────────────────────
+// Refund Status
+// ─────────────────────────────────────────────
+
+export const RefundStatus = {
+  Pending: "pending",
+  Dispatched: "dispatched",
+  Confirmed: "confirmed",
+  Failed: "failed",
+} as const;
+
+export type RefundStatus = (typeof RefundStatus)[keyof typeof RefundStatus];

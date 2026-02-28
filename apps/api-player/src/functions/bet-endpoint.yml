@@ -4,6 +4,8 @@ place-bet-lotto535:
     - httpApi:
         path: /player/lotto535/bets
         method: post
+        authorizer:
+          name: cognitoPlayerAuth
 
 place-bet-keno:
   handler: src/handlers/place-bet-keno.handler
@@ -11,3 +13,5 @@ place-bet-keno:
     - httpApi:
         path: /player/keno/bets
         method: post
+        authorizer:
+          name: cognitoPlayerAuth

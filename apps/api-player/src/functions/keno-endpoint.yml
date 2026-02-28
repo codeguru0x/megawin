@@ -1,0 +1,28 @@
+# Keno – Player endpoints
+
+keno-get-current-draw:
+  handler: src/handlers/keno/get-current-draw.handler
+  events:
+    - httpApi:
+        path: /player/keno/draws/current
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+keno-list-tickets:
+  handler: src/handlers/keno/list-tickets.handler
+  events:
+    - httpApi:
+        path: /player/keno/tickets
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+keno-get-ticket-entries:
+  handler: src/handlers/keno/get-ticket-entries.handler
+  events:
+    - httpApi:
+        path: /player/keno/tickets/{ticketId}/entries
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

@@ -3,30 +3,45 @@
  *
  * Bước cuối cùng trong settle flow:
  *   1. Chuyển draw: settling → settled (atomic, idempotent)
- *   2. Set jackpot.openingAmount cho kỳ tiếp theo
- *      (closingAmount đã được calculate-financials ghi rồi)
+ *   2. Ghi jackpot snapshot lên draw đã settle (openingAmount + closingAmount)
+ *   3. Cập nhật / đóng jackpot cycle
  *
  * CRASH-SAFE:
  *   - transitionStatus atomic: settling → settled
  *   - Nếu draw đã settled → skip (không throw)
- *   - setJackpotOpening idempotent: overwrite OK
+ *   - Jackpot snapshot overwrite OK (idempotent)
+ *   - Cycle update idempotent: overwrite stats / close OK
  *
- * JACKPOT CHAIN:
- *   Mỗi draw lưu: jackpot.openingAmount (đầu kỳ) + jackpot.closingAmount (cuối kỳ)
- *   Kỳ tiếp theo: openingAmount = closingAmount kỳ trước
- *   Khi tạo draw mới (create-draws): lấy closingAmount từ kỳ settled gần nhất
+ * JACKPOT SOURCE OF TRUTH:
+ *   Active draws không lưu jackpot — đọc từ `jackpot_cycles.currentAmount`.
+ *   Chỉ khi settle xong mới ghi snapshot lên draw (bản ghi lịch sử).
  */
 
 import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { DrawNo } from "@megawin/game-lotto535/entities";
-import { parseDrawId, generateDrawId } from "@megawin/game-lotto535/helpers";
+import { JackpotCycleCloseReason } from "@megawin/game-lotto535/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { EntryRepository } from "../../infras/repos/entry-repo";
+import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
+import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 
 export interface FinalizeSettleInput {
   drawId: string;
+  jackpotOpeningAmount: number;
   closingJackpot: number;
   nextJackpotOpening: number;
+  hasJackpotWinner: boolean;
+  isSplitCycle: boolean;
+  splitDetails?: Record<
+    string,
+    {
+      initialAmount: number;
+      redistributedAmount: number;
+      totalAmount: number;
+      winnerCount: number;
+      bonusPerWinner: number;
+    }
+  >;
 }
 
 export interface FinalizeSettleResult {
@@ -42,61 +57,167 @@ export class FinalizeSettleUseCase extends StepFunctionUseCase<
   FinalizeSettleResult
 > {
   private readonly drawRepo = new DrawRepository();
+  private readonly entryRepo = new EntryRepository();
+  private readonly cycleRepo = new JackpotCycleRepository();
+  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
 
-  /** Chuyển draw settling → settled, propagate jackpot chain. */
-  protected async execute(input: FinalizeSettleInput): Promise<FinalizeSettleResult> {
-  const { drawId, closingJackpot, nextJackpotOpening } = input;
-  const updated = await this.drawRepo.transitionStatus(
-    drawId, DrawStatus.Settling, DrawStatus.Settled,
-  );
+  protected async execute(
+    input: FinalizeSettleInput
+  ): Promise<FinalizeSettleResult> {
+    const {
+      drawId,
+      closingJackpot,
+      nextJackpotOpening,
+      hasJackpotWinner,
+      isSplitCycle,
+      splitDetails,
+    } = input;
 
-  if (!updated) {
-    const draw = await this.drawRepo.getDrawById(drawId);
-    if (draw?.status === DrawStatus.Settled) {
-      console.log(`Draw ${drawId} already settled, skipping transition.`);
-    } else {
-      throw new Error(`Cannot finalize draw ${drawId}. Current status: ${draw?.status}`);
+    const updated = await this.drawRepo.transitionStatus(
+      drawId,
+      DrawStatus.Settling,
+      DrawStatus.Settled
+    );
+
+    if (!updated) {
+      const draw = await this.drawRepo.getDrawById(drawId);
+      if (draw?.status === DrawStatus.Settled) {
+        console.log(`Draw ${drawId} already settled, skipping transition.`);
+      } else {
+        throw new Error(
+          `Cannot finalize draw ${drawId}. Current status: ${draw?.status}`
+        );
+      }
     }
+
+    await this.writeJackpotSnapshot(input);
+
+    await this.updateJackpotCycle(input);
+
+    return {
+      drawId,
+      status: DrawStatus.Settled,
+      closingJackpot,
+      nextJackpotOpening,
+      completedAt: new Date().toISOString(),
+    };
   }
 
   /**
-   * Set jackpot opening cho kỳ tiếp theo.
-   * Kỳ tiếp: drawNo+1 cùng ngày, hoặc drawNo=1 ngày hôm sau.
-   * Nếu kỳ tiếp chưa tạo thì skip (create-draws sẽ lấy từ getLatestSettledDraw).
+   * Ghi jackpot snapshot lên draw đã settle (bản ghi lịch sử).
+   * Dùng jackpotOpeningAmount từ PrepareSettle (crash-safe, không query lại cycle).
+   * Idempotent: overwrite OK.
    */
-  await propagateJackpotToNextDraw(this.drawRepo, drawId, nextJackpotOpening);
+  private async writeJackpotSnapshot(
+    input: FinalizeSettleInput
+  ): Promise<void> {
+    const { drawId, jackpotOpeningAmount, closingJackpot, isSplitCycle } =
+      input;
 
-  return {
-    drawId,
-    status: DrawStatus.Settled,
-    closingJackpot,
-    nextJackpotOpening,
-    completedAt: new Date().toISOString(),
-  };
-  }
-}
-
-async function propagateJackpotToNextDraw(
-  drawRepo: DrawRepository,
-  currentDrawId: string,
-  nextJackpotOpening: number,
-): Promise<void> {
-  const parsed = parseDrawId(currentDrawId);
-  if (!parsed) return;
-
-  let nextDate = parsed.drawDate;
-  let nextDrawNo = parsed.drawNo + 1;
-
-  if (nextDrawNo > DrawNo.Evening) {
-    nextDrawNo = DrawNo.Morning;
-    const date = new Date(parsed.drawDate + "T00:00:00");
-    date.setDate(date.getDate() + 1);
-    nextDate = date.toISOString().split("T")[0]!;
+    await this.drawRepo.updateJackpot(drawId, {
+      openingAmount: jackpotOpeningAmount,
+      closingAmount: closingJackpot,
+      isSplitCycle: isSplitCycle || undefined,
+    });
   }
 
-  const nextDrawId = generateDrawId(nextDate, nextDrawNo as DrawNo);
-  const nextDraw = await drawRepo.getDrawById(nextDrawId);
-  if (nextDraw) {
-    await drawRepo.setJackpotOpening(nextDrawId, nextJackpotOpening);
+  /**
+   * Cập nhật jackpot cycle sau settle.
+   *
+   * - Luôn update stats (currentAmount, drawCount)
+   * - Nếu có winner hoặc split → close cycle + tạo cycle mới
+   */
+  private async updateJackpotCycle(input: FinalizeSettleInput): Promise<void> {
+    const {
+      drawId,
+      closingJackpot,
+      hasJackpotWinner,
+      isSplitCycle,
+      splitDetails,
+    } = input;
+
+    const activeCycle = await this.cycleRepo.getActiveCycle();
+    if (!activeCycle) return;
+
+    const draw = await this.drawRepo.getDrawById(drawId);
+    if (!draw) return;
+
+    const contribution = draw.financial?.jackpotContribution ?? 0;
+    const newDrawCount = activeCycle.drawCount + 1;
+
+    const shouldCloseCycle = hasJackpotWinner || isSplitCycle;
+
+    if (shouldCloseCycle) {
+      let winners = undefined;
+
+      if (hasJackpotWinner) {
+        const jackpotEntries = await this.entryRepo.findJackpotWinners(drawId);
+        const jackpotPerWinner =
+          jackpotEntries.length > 0
+            ? Math.floor(input.jackpotOpeningAmount / jackpotEntries.length)
+            : 0;
+        winners = jackpotEntries.map((e) => ({
+          accountId: e.accountId,
+          tenantId: e.tenantId,
+          prizeAmount: jackpotPerWinner,
+          entryId: e.id,
+          drawId,
+        }));
+      }
+
+      let splitDetail = undefined;
+      if (isSplitCycle && splitDetails) {
+        let totalWinners = 0;
+        let totalPaid = 0;
+        for (const tier of Object.values(splitDetails)) {
+          totalWinners += tier.winnerCount;
+          totalPaid += tier.bonusPerWinner * tier.winnerCount;
+        }
+        splitDetail = {
+          splitAmount: activeCycle.currentAmount,
+          tierAllocations: Object.fromEntries(
+            Object.entries(splitDetails).map(([tier, d]) => [
+              tier,
+              {
+                winnerCount: d.winnerCount,
+                bonusPerWinner: d.bonusPerWinner,
+                totalAmount: d.totalAmount,
+              },
+            ])
+          ),
+          totalWinners,
+          totalPaid,
+        };
+      }
+
+      await this.cycleRepo.closeCycle({
+        cycleNo: activeCycle.cycleNo,
+        endDrawId: drawId,
+        closeReason: hasJackpotWinner
+          ? JackpotCycleCloseReason.Winner
+          : JackpotCycleCloseReason.Split,
+        finalAmount: activeCycle.currentAmount,
+        splitDetail,
+        winners,
+      });
+
+      const globalConfig = await this.getGlobalConfig.run();
+      await this.cycleRepo.createCycle({
+        startDrawId: drawId,
+        seedAmount: globalConfig.jackpot.seedAmount,
+        config: {
+          splitThreshold: globalConfig.jackpot.splitThreshold,
+          splitRatios: globalConfig.jackpot.splitRatios,
+        },
+      });
+    } else {
+      await this.cycleRepo.updateCycleStats({
+        cycleNo: activeCycle.cycleNo,
+        currentAmount: closingJackpot,
+        contribution: activeCycle.totalContribution + contribution,
+        drawCount: newDrawCount,
+        lastSettledDrawId: drawId,
+      });
+    }
   }
 }

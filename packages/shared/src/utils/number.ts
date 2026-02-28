@@ -59,9 +59,34 @@ export function formatCurrency(
   return `${sign}${format(n, 0)}`;
 }
 
+/**
+ * Định dạng số tiền VND đầy đủ (1,000,000 ₫).
+ * Null-safe: trả "0 ₫" cho undefined/null.
+ */
+export function formatVND(amount: number | undefined | null): string {
+  return (amount ?? 0).toLocaleString("en-US") + " ₫";
+}
+
+/**
+ * Định dạng số tiền VND dạng compact tiếng Việt (1.5 tỷ, 200 triệu).
+ * Null-safe: trả "0 ₫" cho undefined/null.
+ */
+export function formatVNDCompact(amount: number | undefined | null): string {
+  const n = amount ?? 0;
+  if (n >= 1_000_000_000) {
+    const billions = n / 1_000_000_000;
+    return `${billions.toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tỷ`;
+  }
+  if (n >= 1_000_000) {
+    const millions = n / 1_000_000;
+    return `${millions.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} triệu`;
+  }
+  return n.toLocaleString("vi-VN") + " ₫";
+}
+
 type FormatNumberOptions = {
-  decimals?: number; // số chữ số thập phân
-  trimTrailingZeros?: boolean; // bỏ .0 / .00 ở cuối
+  decimals?: number;
+  trimTrailingZeros?: boolean;
 };
 
 /**
