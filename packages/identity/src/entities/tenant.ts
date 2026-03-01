@@ -9,34 +9,6 @@ export type TenantStatus = (typeof TenantStatus)[keyof typeof TenantStatus];
 
 export const TENANT_STATUS_VALUES = Object.values(TenantStatus);
 
-export interface TenantJwksAssertionConfig {
-  /**
-   * Issuer của tenant — mặc định = tenantId.
-   */
-  issuer: string;
-
-  /**
-   * URL của JWKS endpoint.
-   * Ví dụ: https://customer.com/.well-known/jwks.json
-   */
-  jwksUrl: string;
-
-  /**
-   * Clock skew cho phép (giây). Mặc định 5.
-   */
-  clockSkewSec?: number;
-
-  /**
-   * TTL tối đa của assertion token (giây). Mặc định 120.
-   */
-  maxTtlSec?: number;
-
-  /**
-   * Replay window cho jti dedupe (giây). Mặc định 300.
-   */
-  replayWindowSec?: number;
-}
-
 export interface TenantEntity {
   id: string;
 
@@ -62,11 +34,6 @@ export interface TenantEntity {
    * Thời điểm rotate API key gần nhất.
    */
   apiKeyLastRotatedAt: Date;
-
-  /**
-   * Config JWKS Assertion để xác thực quyền player.
-   */
-  sso: TenantJwksAssertionConfig;
 
   /**
    * Base URL của callback API phía tenant.

@@ -10,12 +10,8 @@ export const createTenantSchema = z.object({
     .min(2, "Tenant ID tối thiểu 2 ký tự.")
     .max(32, "Tenant ID tối đa 32 ký tự.")
     .regex(/^[a-zA-Z0-9_]+$/, "Chỉ cho phép chữ, số và dấu gạch dưới."),
-  displayName: z
-    .string()
-    .min(1, "Tên hiển thị không được trống.")
-    .max(100),
+  displayName: z.string().min(1, "Tên hiển thị không được trống.").max(100),
   description: z.string().max(500).optional(),
-  jwksUrl: z.url({ message: "JWKS URL không hợp lệ." }),
   callbackBaseUrl: z.url({ message: "Callback Base URL không hợp lệ." }),
 });
 
@@ -32,6 +28,7 @@ export const updateTenantSchema = z.object({
   tenantId: z.string().min(1),
   displayName: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
-  jwksUrl: z.url({ message: "JWKS URL không hợp lệ." }).optional(),
-  callbackBaseUrl: z.url({ message: "Callback Base URL không hợp lệ." }).optional(),
+  callbackBaseUrl: z
+    .url({ message: "Callback Base URL không hợp lệ." })
+    .optional(),
 });

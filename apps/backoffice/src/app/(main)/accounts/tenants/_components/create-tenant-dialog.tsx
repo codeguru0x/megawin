@@ -40,7 +40,6 @@ const createTenantSchema = z.object({
     .regex(/^[a-zA-Z0-9_]+$/, "Chỉ cho phép chữ, số và dấu gạch dưới."),
   displayName: z.string().min(1, "Tên hiển thị không được trống.").max(100),
   description: z.string().max(500).optional(),
-  jwksUrl: z.string().url("JWKS URL không hợp lệ."),
   callbackBaseUrl: z.string().url("Callback Base URL không hợp lệ."),
 });
 
@@ -58,7 +57,6 @@ export function CreateTenantDialog() {
       tenantId: "",
       displayName: "",
       description: "",
-      jwksUrl: "",
       callbackBaseUrl: "",
     },
   });
@@ -69,7 +67,6 @@ export function CreateTenantDialog() {
         tenantId: values.tenantId,
         displayName: values.displayName,
         description: values.description,
-        jwksUrl: values.jwksUrl,
         callbackBaseUrl: values.callbackBaseUrl,
       }),
     onSuccess: (data) => {
@@ -216,32 +213,12 @@ export function CreateTenantDialog() {
 
             <FormField
               control={form.control}
-              name="jwksUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>JWKS URL</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="https://example.com/.well-known/jwks.json"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="callbackBaseUrl"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Callback Base URL</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="https://api.example.com"
-                      {...field}
-                    />
+                    <Input placeholder="https://api.example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

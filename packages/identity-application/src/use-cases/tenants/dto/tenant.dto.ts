@@ -1,13 +1,9 @@
-import type {
-  TenantJwksAssertionConfig,
-  TenantStatus,
-} from "@megawin/identity/entities/tenant";
+import type { TenantStatus } from "@megawin/identity/entities/tenant";
 
 export interface CreateTenantInput {
   tenantId: string;
   displayName: string;
   description?: string;
-  sso: Pick<TenantJwksAssertionConfig, "jwksUrl">;
   callbackBaseUrl: string;
 }
 
@@ -26,7 +22,6 @@ export interface ListTenantsOutput {
     description?: string;
     status: string;
     apiKey: string;
-    sso: TenantJwksAssertionConfig;
     callbackBaseUrl: string;
     apiKeyLastRotatedAt: string;
     createdAt: string;
@@ -57,7 +52,6 @@ export interface UpdateTenantInput {
   tenantId: string;
   displayName?: string;
   description?: string;
-  jwksUrl?: string;
   callbackBaseUrl?: string;
 }
 

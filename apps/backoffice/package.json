@@ -29,6 +29,8 @@
     "@megawin/game-keno-application": "workspace:*",
     "@megawin/game-lotto535": "workspace:*",
     "@megawin/game-lotto535-application": "workspace:*",
+    "@megawin/game-power655": "workspace:*",
+    "@megawin/game-power655-application": "workspace:*",
     "@megawin/identity": "workspace:*",
     "@megawin/identity-application": "workspace:*",
     "@megawin/next": "workspace:*",

@@ -71,7 +71,7 @@ console.log(`    # Player login`);
 console.log(`    curl -X POST ${baseUrl}/tenant/players/login \\`);
 console.log(`      -H "X-Api-Key: ${apiKey}" \\`);
 console.log(`      -H "Content-Type: application/json" \\`);
-console.log(`      -d '{"assertionToken":"test-token"}'`);
+console.log(`      -d '{"playerExternalId":"player001"}'`);
 console.log();
 console.log(`    # Entry feed`);
 console.log(`    curl "${baseUrl}/tenant/entries/feed?afterVersion=0" \\`);

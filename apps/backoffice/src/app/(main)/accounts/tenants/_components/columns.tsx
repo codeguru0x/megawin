@@ -93,17 +93,6 @@ export const tenantColumns: ColumnDef<Tenant>[] = [
     enableSorting: false,
   },
   {
-    id: "jwksUrl",
-    header: "JWKS URL",
-    accessorFn: (row) => row.sso.jwksUrl,
-    cell: ({ row }) => (
-      <span className="text-muted-foreground text-xs max-w-[200px] truncate block">
-        {row.original.sso.jwksUrl}
-      </span>
-    ),
-    enableSorting: false,
-  },
-  {
     accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => (

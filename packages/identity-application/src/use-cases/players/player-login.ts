@@ -1,17 +1,20 @@
 /**
- * Use case: Player Login via Tenant JWKS Assertion.
+ * Use case: Player Login (Server-to-Server).
  *
  * Luồng:
- * 1. Lấy tenant config (JWKS URL, issuer) từ MongoDB.
- * 2. Verify assertion token bằng JWKS public key của tenant.
- * 3. Tạo Cognito user nếu chưa tồn tại (adminCreateAccount).
+ * 1. Validate tenant (active).
+ * 2. Derive deterministic password từ PLAYER_PASSWORD_SECRET + username.
+ * 3. Tạo Cognito user nếu chưa tồn tại (adminCreateAccount) với accountId ULID.
  * 4. Lưu player account vào MongoDB (findOrCreate).
  * 5. Lấy Cognito token (adminInitiateAuth) và trả về client.
+ *
+ * Auth: Tenant đã được xác thực bằng API Key + IP whitelist ở handler layer.
  */
 
-import { createRemoteJWKSet, jwtVerify, type JWTPayload } from "jose";
+import { createHmac } from "crypto";
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
+import { generateULID } from "@megawin/shared/utils/unique";
 import {
   adminCreateAccount,
   adminInitiateAuth,
@@ -35,60 +38,39 @@ import type {
   PlayerLoginOutput,
 } from "./dto/player-login.dto";
 
-interface VerifiedAssertionClaims extends JWTPayload {
-  sub: string;
-}
-
-const PLAYER_TEMP_PASSWORD_LENGTH = 32;
-
-function generateSecurePassword(length: number): string {
-  const charset =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-  const array = new Uint8Array(length);
-  crypto.getRandomValues(array);
-  return Array.from(array, (byte) => charset[byte % charset.length]).join("");
-}
+const PLAYER_PASSWORD_SECRET = process.env.PLAYER_PASSWORD_SECRET;
 
 /**
- * Cache JWKS key sets theo URL — jose's createRemoteJWKSet đã có built-in cache/refresh.
+ * HMAC-SHA256 deterministic password.
+ * Kết quả luôn giống nhau cho cùng username → chỉ cần adminInitiateAuth khi login lại,
+ * không cần adminSetUserPassword mỗi lần.
  */
-const jwksCache = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
-
-function getJWKS(jwksUrl: string) {
-  let jwks = jwksCache.get(jwksUrl);
-  if (!jwks) {
-    jwks = createRemoteJWKSet(new URL(jwksUrl));
-    jwksCache.set(jwksUrl, jwks);
-  }
-  return jwks;
+function derivePlayerPassword(cognitoUsername: string): string {
+  return `Pw@68.${createHmac("sha256", PLAYER_PASSWORD_SECRET!).update(cognitoUsername).digest("base64url").slice(0, 28)}`;
 }
 
 export class PlayerLoginUseCase extends ApiGatewayUseCase<
   PlayerLoginInput,
   PlayerLoginOutput
 > {
-  protected async execute(
-    input: PlayerLoginInput
-  ): Promise<PlayerLoginOutput> {
-    const { assertionToken, tenantId } = input;
+  protected async execute(input: PlayerLoginInput): Promise<PlayerLoginOutput> {
+    const { playerExternalId, tenantId } = input;
 
-    const tenant = await this.loadAndValidateTenant(tenantId);
+    await this.loadAndValidateTenant(tenantId);
 
-    const claims = await this.verifyAssertionToken(
-      assertionToken,
-      tenant.sso
+    const cognitoUsername = `${playerExternalId}@${tenantId}`.toLowerCase();
+    const displayName = playerExternalId;
+
+    this.assertConfig();
+
+    const { account, isNewAccount } = await this.ensurePlayerAccount(
+      cognitoUsername,
+      displayName,
+      tenantId
     );
 
-    const playerSubject = claims.sub;
-    const cognitoUsername = `${tenantId}:${playerSubject}`;
-    const displayName = playerSubject;
-
-    this.assertCognitoConfig();
-
-    const { account, isNewAccount, sessionPassword } =
-      await this.ensurePlayerAccount(cognitoUsername, displayName, tenantId);
-
-    const tokens = await this.getCognitoTokens(cognitoUsername, sessionPassword);
+    const password = derivePlayerPassword(cognitoUsername);
+    const tokens = await this.getCognitoTokens(cognitoUsername, password);
 
     return {
       ...tokens,
@@ -109,53 +91,15 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
     if (!tenant) {
       throw AppException.notFound(`Tenant "${tenantId}" không tồn tại`);
     }
+
     if (tenant.status !== TenantStatus.Active) {
       throw AppException.forbidden(`Tenant "${tenantId}" đã bị vô hiệu hóa`);
-    }
-    if (!tenant.sso?.jwksUrl) {
-      throw AppException.badRequest(
-        `Tenant "${tenantId}" chưa cấu hình JWKS URL`
-      );
     }
 
     return tenant;
   }
 
-  private async verifyAssertionToken(
-    token: string,
-    ssoConfig: {
-      jwksUrl: string;
-      issuer: string;
-      clockSkewSec?: number;
-      maxTtlSec?: number;
-    }
-  ): Promise<VerifiedAssertionClaims> {
-    const jwks = getJWKS(ssoConfig.jwksUrl);
-
-    try {
-      const { payload } = await jwtVerify(token, jwks, {
-        issuer: ssoConfig.issuer,
-        clockTolerance: ssoConfig.clockSkewSec ?? 5,
-        maxTokenAge: `${ssoConfig.maxTtlSec ?? 120}s`,
-      });
-
-      if (!payload.sub) {
-        throw AppException.badRequest(
-          "Assertion token thiếu claim 'sub' (player identifier)"
-        );
-      }
-
-      return payload as VerifiedAssertionClaims;
-    } catch (err) {
-      if (err instanceof AppException) throw err;
-
-      const message =
-        err instanceof Error ? err.message : "Token verification failed";
-      throw AppException.unauthorized(`Token không hợp lệ: ${message}`);
-    }
-  }
-
-  private assertCognitoConfig() {
+  private assertConfig() {
     if (!COGNITO_PLAYER_POOL_ID) {
       throw AppException.internal(
         "COGNITO_PLAYER_USERPOOL_ID chưa được cấu hình"
@@ -166,11 +110,15 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
         "COGNITO_PLAYER_USERPOOL_CLIENT_ID chưa được cấu hình"
       );
     }
+    if (!PLAYER_PASSWORD_SECRET) {
+      throw AppException.internal("PLAYER_PASSWORD_SECRET chưa được cấu hình");
+    }
   }
 
   /**
    * Đảm bảo player account tồn tại trong cả Cognito và MongoDB.
-   * Trả về session password để authenticate ngay sau đó.
+   * - New account: adminCreateAccount + adminSetUserPassword(permanent) + MongoDB upsert
+   * - Existing account: chỉ cập nhật status nếu cần
    */
   private async ensurePlayerAccount(
     cognitoUsername: string,
@@ -178,7 +126,8 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
     tenantId: string
   ) {
     const accountRepo = new AccountRepository();
-    const sessionPassword = generateSecurePassword(PLAYER_TEMP_PASSWORD_LENGTH);
+    const accountId = generateULID();
+    const password = derivePlayerPassword(cognitoUsername);
     let isNewAccount = false;
     let cognitoSub: string;
 
@@ -186,10 +135,11 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
       const result = await adminCreateAccount({
         userPoolId: COGNITO_PLAYER_POOL_ID!,
         username: cognitoUsername,
-        temporaryPassword: sessionPassword,
+        temporaryPassword: password,
         messageActionSuppress: true,
         requirePasswordResetOnFirstLogin: false,
         userAttributes: [
+          { Name: ClaimKey.AccountId, Value: accountId },
           { Name: ClaimKey.AccountType, Value: AccountType.Player },
           { Name: ClaimKey.AccountStatus, Value: AccountStatus.Active },
           { Name: ClaimKey.Roles, Value: PlayerRole.Player },
@@ -198,28 +148,19 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
       });
 
       cognitoSub =
-        result.User?.Attributes?.find((a) => a.Name === "sub")?.Value ??
+        result.User?.Attributes?.find((a) => a.Name === ClaimKey.Sub)?.Value ??
         cognitoUsername;
 
-      // Set permanent password để thoát FORCE_CHANGE_PASSWORD
       await adminSetUserPassword({
         userPoolId: COGNITO_PLAYER_POOL_ID!,
         username: cognitoUsername,
-        password: sessionPassword,
+        password,
         permanent: true,
       });
 
       isNewAccount = true;
     } catch (err: unknown) {
       if (this.isUsernameExistsError(err)) {
-        // Player đã tồn tại — rotate password và cập nhật status
-        await adminSetUserPassword({
-          userPoolId: COGNITO_PLAYER_POOL_ID!,
-          username: cognitoUsername,
-          password: sessionPassword,
-          permanent: true,
-        });
-
         await adminUpdateUserAttributes({
           userPoolId: COGNITO_PLAYER_POOL_ID!,
           username: cognitoUsername,
@@ -241,24 +182,20 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
       cognitoUsername,
       displayName,
       tenantId,
+      accountId,
       COGNITO_PLAYER_POOL_ID!,
       cognitoSub!,
       cognitoUsername
     );
 
     if (!account) {
-      throw AppException.internal(
-        "Lưu thông tin player vào database thất bại"
-      );
+      throw AppException.internal("Lưu thông tin player vào database thất bại");
     }
 
-    return { account, isNewAccount, sessionPassword };
+    return { account, isNewAccount };
   }
 
-  private async getCognitoTokens(
-    cognitoUsername: string,
-    password: string
-  ) {
+  private async getCognitoTokens(cognitoUsername: string, password: string) {
     try {
       return await adminInitiateAuth({
         userPoolId: COGNITO_PLAYER_POOL_ID!,

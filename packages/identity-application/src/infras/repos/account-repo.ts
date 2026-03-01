@@ -28,6 +28,7 @@ export class AccountRepository extends IdentityBaseRepo<
     username: string,
     displayName: string,
     tenantId: string,
+    accountId: string,
     cognitoPoolId: string,
     cognitoSub: string,
     cognitoUsername: string
@@ -36,7 +37,7 @@ export class AccountRepository extends IdentityBaseRepo<
       { username },
       {
         $setOnInsert: {
-          accountId: generateULID(),
+          accountId,
           displayName,
           type: AccountType.Player,
           roles: [PlayerRole.Player],

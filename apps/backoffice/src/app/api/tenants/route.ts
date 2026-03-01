@@ -18,10 +18,9 @@ export const POST = withApi()
         tenantId: body.tenantId,
         displayName: body.displayName,
         description: body.description,
-        sso: { jwksUrl: body.jwksUrl },
         callbackBaseUrl: body.callbackBaseUrl,
       },
-      { successStatus: 201 },
+      { successStatus: 201 }
     );
   });
 

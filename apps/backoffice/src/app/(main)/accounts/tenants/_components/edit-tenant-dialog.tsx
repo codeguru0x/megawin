@@ -34,7 +34,6 @@ import type { UpdateTenantResponse } from "../_lib/types";
 const editTenantSchema = z.object({
   displayName: z.string().min(1, "Tên hiển thị không được trống.").max(100),
   description: z.string().max(500).optional(),
-  jwksUrl: z.string().url("JWKS URL không hợp lệ."),
   callbackBaseUrl: z.string().url("Callback Base URL không hợp lệ."),
 });
 
@@ -58,7 +57,6 @@ export function EditTenantDialog({
     defaultValues: {
       displayName: tenant.displayName,
       description: tenant.description ?? "",
-      jwksUrl: tenant.sso.jwksUrl,
       callbackBaseUrl: tenant.callbackBaseUrl,
     },
   });
@@ -68,7 +66,6 @@ export function EditTenantDialog({
       form.reset({
         displayName: tenant.displayName,
         description: tenant.description ?? "",
-        jwksUrl: tenant.sso.jwksUrl,
         callbackBaseUrl: tenant.callbackBaseUrl,
       });
     }
@@ -80,7 +77,6 @@ export function EditTenantDialog({
         tenantId: tenant.tenantId,
         displayName: values.displayName,
         description: values.description,
-        jwksUrl: values.jwksUrl,
         callbackBaseUrl: values.callbackBaseUrl,
       }),
     onSuccess: () => {
@@ -92,7 +88,7 @@ export function EditTenantDialog({
       toast.error(
         error instanceof ApiClientError
           ? error.message
-          : "Đã xảy ra lỗi khi cập nhật.",
+          : "Đã xảy ra lỗi khi cập nhật."
       );
     },
   });
@@ -104,9 +100,7 @@ export function EditTenantDialog({
           <DialogTitle>Chỉnh sửa đối tác</DialogTitle>
           <DialogDescription>
             Tenant ID:{" "}
-            <code className="font-mono text-foreground">
-              {tenant.tenantId}
-            </code>
+            <code className="font-mono text-foreground">{tenant.tenantId}</code>
           </DialogDescription>
         </DialogHeader>
 
@@ -141,28 +135,7 @@ export function EditTenantDialog({
                     </span>
                   </FormLabel>
                   <FormControl>
-                    <Textarea
-                      className="resize-none"
-                      rows={2}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="jwksUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>JWKS URL</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="https://example.com/.well-known/jwks.json"
-                      {...field}
-                    />
+                    <Textarea className="resize-none" rows={2} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -176,10 +149,7 @@ export function EditTenantDialog({
                 <FormItem>
                   <FormLabel>Callback Base URL</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="https://api.example.com"
-                      {...field}
-                    />
+                    <Input placeholder="https://api.example.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

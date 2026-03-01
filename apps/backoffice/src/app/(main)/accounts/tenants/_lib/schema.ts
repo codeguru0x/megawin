@@ -7,13 +7,6 @@ export const tenantSchema = z.object({
   description: z.string().optional(),
   status: z.string(),
   apiKey: z.string(),
-  sso: z.object({
-    issuer: z.string(),
-    jwksUrl: z.string(),
-    clockSkewSec: z.number().optional(),
-    maxTtlSec: z.number().optional(),
-    replayWindowSec: z.number().optional(),
-  }),
   callbackBaseUrl: z.string(),
   apiKeyLastRotatedAt: z.string(),
   createdAt: z.string(),

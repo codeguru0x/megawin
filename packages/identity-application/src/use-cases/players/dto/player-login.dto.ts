@@ -1,12 +1,12 @@
 export interface PlayerLoginInput {
   /**
-   * JWT assertion token từ tenant (signed bằng JWKS private key của tenant).
-   * Chứa subject (player id) và thông tin cần thiết.
+   * Player ID từ hệ thống của tenant (alphanumeric, 4-32 ký tự).
+   * Dùng làm phần đầu của username: `playerExternalId@tenantId`.
    */
-  assertionToken: string;
+  playerExternalId: string;
 
   /**
-   * Tenant ID để xác định cấu hình JWKS.
+   * Tenant ID — lấy từ API Key auth context, không từ body.
    */
   tenantId: string;
 }
