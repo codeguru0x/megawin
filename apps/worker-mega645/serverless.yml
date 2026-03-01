@@ -1,0 +1,17 @@
+service: megawin-worker-mega645
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs24.x
+
+build:
+  esbuild:
+    configFile: ./esbuild.config.mjs
+
+functions:
+  - ${file(src/functions/settle.yml)}
+  - ${file(src/functions/void.yml)}
+  - ${file(src/functions/feed.yml)}

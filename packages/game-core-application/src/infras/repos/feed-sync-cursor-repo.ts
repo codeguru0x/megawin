@@ -1,7 +1,7 @@
 import { Long } from "mongodb";
 import { GameCoreCollections } from "@megawin/game-core/entities";
 import type { GameProduct } from "@megawin/game-core/entities";
-import type { BaseEntity } from "@megawin/data/mongo/base-entity";
+import type { BaseEntity } from "@megawin/data/mongo";
 import { GameCoreBaseRepo } from "./game-core-base-repo";
 
 /** Lock TTL mặc định: 5 phút. Đủ cho step function sync xong. */

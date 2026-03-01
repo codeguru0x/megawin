@@ -1,6 +1,5 @@
-import type { BaseEntity } from "@megawin/data/mongo/base-entity";
-import { MongoRepository } from "@megawin/data/mongo/repository";
-import type { MongoMapper } from "@megawin/data/mongo/mapper";
+import { MongoRepository, Constants } from "@megawin/data/mongo";
+import type { BaseEntity, MongoMapper } from "@megawin/data/mongo";
 import type { Document } from "mongodb";
 
 export class GameCoreBaseRepo<
@@ -16,7 +15,7 @@ export class GameCoreBaseRepo<
   }) {
     super({
       collName,
-      dbName: "megawin",
+      dbName: Constants.Default.DbName,
       dataMapper,
     });
   }

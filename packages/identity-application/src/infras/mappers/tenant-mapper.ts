@@ -1,4 +1,4 @@
-import { MongoMapper } from "@megawin/data/mongo/mapper";
+import { MongoMapper } from "@megawin/data/mongo";
 import { TenantEntity } from "@megawin/identity/entities/tenant";
 import { Document } from "mongodb";
 

@@ -8,6 +8,7 @@
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { EntryStatus } from "@megawin/game-core/entities";
+import { ObjectId } from "mongodb";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { TicketLineDoc } from "@megawin/game-lotto535/entities";
@@ -29,7 +30,7 @@ export class GetEntryLinesPlayerUseCase extends ApiGatewayUseCase<
   ): Promise<PlayerGetEntryLinesOutput> {
     const { tenantId, accountId, entryId, page, size } = input;
 
-    const entry = await this.entryRepo.findById(entryId);
+    const entry = await this.entryRepo.findOne({ _id: new ObjectId(entryId) });
 
     if (!entry) {
       throw AppException.notFound("Entry not found");

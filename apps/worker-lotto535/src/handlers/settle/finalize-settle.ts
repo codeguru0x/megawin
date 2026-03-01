@@ -14,6 +14,7 @@ import { FinalizeSettleUseCase } from "@megawin/game-lotto535-application/use-ca
 
 interface Input {
   drawId: string;
+  jackpotOpeningAmount: number;
   closingJackpot: number;
   nextJackpotOpening: number;
   hasJackpotWinner: boolean;
@@ -35,6 +36,7 @@ const useCase = new FinalizeSettleUseCase();
 export async function handler(event: Input) {
   const result = await useCase.run({
     drawId: event.drawId,
+    jackpotOpeningAmount: event.jackpotOpeningAmount,
     closingJackpot: event.closingJackpot,
     nextJackpotOpening: event.nextJackpotOpening,
     hasJackpotWinner: event.hasJackpotWinner,

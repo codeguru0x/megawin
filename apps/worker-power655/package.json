@@ -1,13 +1,30 @@
 {
   "name": "@megawin/worker-power655",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "Power 6/55 workers – Step Function lambdas for settle, payout & feed sync",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
+    "check-types": "tsc --noEmit",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.30.3"
+  "dependencies": {
+    "@megawin/app-core": "workspace:*",
+    "@megawin/data": "workspace:*",
+    "@megawin/game-core": "workspace:*",
+    "@megawin/game-core-application": "workspace:*",
+    "@megawin/game-power655": "workspace:*",
+    "@megawin/game-power655-application": "workspace:*",
+    "@megawin/shared": "workspace:*",
+    "@megawin/tenant-gateway": "workspace:*"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@types/node": "^24.0.0",
+    "serverless-offline": "^14.4.0",
+    "typescript": "5.9.3"
+  }
 }

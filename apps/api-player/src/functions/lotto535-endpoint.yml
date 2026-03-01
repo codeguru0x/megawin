@@ -4,7 +4,7 @@ lotto535-get-current-draw:
   handler: src/handlers/lotto535/get-current-draw.handler
   events:
     - httpApi:
-        path: /player/lotto535/draws/current
+        path: /games/lotto535/draws/current
         method: get
         authorizer:
           name: cognitoPlayerAuth
@@ -13,7 +13,7 @@ lotto535-get-jackpot:
   handler: src/handlers/lotto535/get-jackpot.handler
   events:
     - httpApi:
-        path: /player/lotto535/jackpot
+        path: /games/lotto535/jackpot
         method: get
         authorizer:
           name: cognitoPlayerAuth
@@ -22,7 +22,7 @@ lotto535-list-pending-tickets:
   handler: src/handlers/lotto535/list-pending-tickets.handler
   events:
     - httpApi:
-        path: /player/lotto535/tickets/pending
+        path: /games/lotto535/tickets/pending
         method: get
         authorizer:
           name: cognitoPlayerAuth
@@ -31,7 +31,7 @@ lotto535-list-completed-tickets:
   handler: src/handlers/lotto535/list-completed-tickets.handler
   events:
     - httpApi:
-        path: /player/lotto535/tickets/completed
+        path: /games/lotto535/tickets/completed
         method: get
         authorizer:
           name: cognitoPlayerAuth
@@ -40,7 +40,7 @@ lotto535-get-ticket-entries:
   handler: src/handlers/lotto535/get-ticket-entries.handler
   events:
     - httpApi:
-        path: /player/lotto535/tickets/{ticketId}/entries
+        path: /games/lotto535/tickets/{ticketId}/entries
         method: get
         authorizer:
           name: cognitoPlayerAuth
@@ -49,7 +49,7 @@ lotto535-place-bet:
   handler: src/handlers/lotto535/place-bet.handler
   events:
     - httpApi:
-        path: /player/lotto535/bets
+        path: /games/lotto535/bets
         method: post
         authorizer:
           name: cognitoPlayerAuth
@@ -58,7 +58,7 @@ lotto535-get-entry-lines:
   handler: src/handlers/lotto535/get-entry-lines.handler
   events:
     - httpApi:
-        path: /player/lotto535/entries/{entryId}/lines
+        path: /games/lotto535/entries/{entryId}/lines
         method: get
         authorizer:
           name: cognitoPlayerAuth

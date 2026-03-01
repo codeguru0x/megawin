@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save, Info } from "lucide-react";
+import { Save, Info, HelpCircle } from "lucide-react";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
 
@@ -20,6 +20,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -87,6 +92,23 @@ export function JackpotSection({
   }
 
   const fmt = (n: number) => n.toLocaleString("en-US");
+
+  function LabelWithTooltip({ label, tip }: { label: string; tip: string }) {
+    return (
+      <span className="inline-flex items-center gap-1">
+        {label}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <HelpCircle className="size-3.5 text-muted-foreground/60 cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-72 text-xs">
+            {tip}
+          </TooltipContent>
+        </Tooltip>
+      </span>
+    );
+  }
+
   const total =
     (form.watch("tier1") || 0) +
     (form.watch("tier2") || 0) +
@@ -104,10 +126,11 @@ export function JackpotSection({
               <div className="space-y-5 p-6">
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">
-                    Khởi tạo Jackpot
+                    Cấu hình Jackpot
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Giá trị khởi điểm và ngưỡng kích hoạt chia
+                    Giá trị khởi điểm khi bắt đầu chu kỳ mới và ngưỡng kích hoạt
+                    chia
                   </p>
                 </div>
 
@@ -117,7 +140,10 @@ export function JackpotSection({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        Seed Amount
+                        <LabelWithTooltip
+                          label="Giá trị khởi điểm (Seed)"
+                          tip="Số tiền khởi điểm của Jackpot khi bắt đầu chu kỳ mới (sau khi có người trúng Jackpot hoặc reset). Đây là giá trị tối thiểu người chơi có thể trúng Jackpot."
+                        />
                       </FormLabel>
                       <FormControl>
                         <div className="relative">
@@ -148,7 +174,10 @@ export function JackpotSection({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        Ngưỡng chia (Split Threshold)
+                        <LabelWithTooltip
+                          label="Ngưỡng kích hoạt chia (Split)"
+                          tip="Khi quỹ Jackpot vượt ngưỡng này, hệ thống sẽ kích hoạt cơ chế chia (split) — phân bổ phần vượt vào các giải cố định theo tỷ lệ chia bên phải. Mục đích: hạn chế Jackpot tích luỹ quá lớn."
+                        />
                       </FormLabel>
                       <FormControl>
                         <div className="relative">
@@ -178,10 +207,11 @@ export function JackpotSection({
               <div className="border-t p-6 lg:border-l lg:border-t-0">
                 <div className="mb-4">
                   <h3 className="text-sm font-semibold text-foreground">
-                    Tỷ lệ chia Jackpot
+                    Tỷ lệ phân bổ khi chia (Split)
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Phân bổ Jackpot theo tỷ lệ phần khi vượt ngưỡng
+                    Phần vượt ngưỡng sẽ chia cho các giải cố định theo tỷ lệ
+                    phần dưới đây
                   </p>
                 </div>
 

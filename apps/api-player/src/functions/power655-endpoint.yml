@@ -1,0 +1,64 @@
+# Power 6/55 – Player endpoints
+
+power655-get-current-draw:
+  handler: src/handlers/power655/get-current-draw.handler
+  events:
+    - httpApi:
+        path: /games/power655/draws/current
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+power655-get-jackpot:
+  handler: src/handlers/power655/get-jackpot.handler
+  events:
+    - httpApi:
+        path: /games/power655/jackpot
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+power655-list-pending-tickets:
+  handler: src/handlers/power655/list-pending-tickets.handler
+  events:
+    - httpApi:
+        path: /games/power655/tickets/pending
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+power655-list-completed-tickets:
+  handler: src/handlers/power655/list-completed-tickets.handler
+  events:
+    - httpApi:
+        path: /games/power655/tickets/completed
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+power655-get-ticket-entries:
+  handler: src/handlers/power655/get-ticket-entries.handler
+  events:
+    - httpApi:
+        path: /games/power655/tickets/{ticketId}/entries
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+power655-place-bet:
+  handler: src/handlers/power655/place-bet.handler
+  events:
+    - httpApi:
+        path: /games/power655/bets
+        method: post
+        authorizer:
+          name: cognitoPlayerAuth
+
+power655-get-entry-lines:
+  handler: src/handlers/power655/get-entry-lines.handler
+  events:
+    - httpApi:
+        path: /games/power655/entries/{entryId}/lines
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

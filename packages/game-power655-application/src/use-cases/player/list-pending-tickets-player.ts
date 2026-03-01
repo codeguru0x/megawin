@@ -1,0 +1,48 @@
+/**
+ * Use Case: List Pending Tickets (Power 6/55) – Player
+ *
+ * Lấy danh sách vé đang chờ xử lý (còn draws chưa settle/void).
+ * Cursor-based pagination dùng _id cho collection lớn.
+ */
+
+import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { TicketRepository } from "../../infras/repos/ticket-repo";
+import { mapPlayerTicket } from "./list-tickets-player";
+import type {
+  PlayerListPendingTicketsInput,
+  PlayerListTicketsOutput,
+} from "./dto/player.dto";
+
+/**
+ * Lấy danh sách vé pending của player Power 6/55.
+ * Cursor-based pagination.
+ */
+export class ListPendingTicketsPlayerUseCase extends ApiGatewayUseCase<
+  PlayerListPendingTicketsInput,
+  PlayerListTicketsOutput
+> {
+  private readonly ticketRepo = new TicketRepository();
+
+  /** @inheritdoc */
+  protected async execute(
+    input: PlayerListPendingTicketsInput
+  ): Promise<PlayerListTicketsOutput> {
+    const { tenantId, accountId, size, cursor } = input;
+
+    const tickets = await this.ticketRepo.getPendingTickets(
+      tenantId,
+      accountId,
+      size + 1,
+      cursor
+    );
+
+    const hasMore = tickets.length > size;
+    const slice = hasMore ? tickets.slice(0, size) : tickets;
+
+    return {
+      tickets: slice.map(mapPlayerTicket),
+      nextCursor: hasMore ? slice[slice.length - 1]!.id : null,
+      size,
+    };
+  }
+}

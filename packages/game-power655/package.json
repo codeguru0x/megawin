@@ -1,12 +1,66 @@
 {
   "name": "@megawin/game-power655",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "Power 6/55 game domain – entities, rules, helpers (internal only)",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsc --watch",
+    "check-types": "tsc --noEmit",
+    "build": "tsc"
   },
-  "keywords": [],
+  "exports": {
+    "./entities": {
+      "types": "./src/entities/index.ts",
+      "default": "./dist/entities/index.js"
+    },
+    "./entities/*": {
+      "types": "./src/entities/*.ts",
+      "default": "./dist/entities/*.js"
+    },
+    "./rules": {
+      "types": "./src/rules/index.ts",
+      "default": "./dist/rules/index.js"
+    },
+    "./rules/*": {
+      "types": "./src/rules/*.ts",
+      "default": "./dist/rules/*.js"
+    },
+    "./helpers": {
+      "types": "./src/helpers/index.ts",
+      "default": "./dist/helpers/index.js"
+    },
+    "./helpers/*": {
+      "types": "./src/helpers/*.ts",
+      "default": "./dist/helpers/*.js"
+    },
+    "./indexes": {
+      "types": "./src/indexes/index.ts",
+      "default": "./dist/indexes/index.js"
+    },
+    "./schemas": {
+      "types": "./src/schemas/index.ts",
+      "default": "./dist/schemas/index.js"
+    },
+    "./schemas/*": {
+      "types": "./src/schemas/*.ts",
+      "default": "./dist/schemas/*.js"
+    }
+  },
+  "keywords": [
+    "megawin",
+    "power655",
+    "game",
+    "domain"
+  ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@types/node": "^25.2.1",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "@megawin/game-core": "workspace:*",
+    "zod": "^4.3.6"
+  }
 }

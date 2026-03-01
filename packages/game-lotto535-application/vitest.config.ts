@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => ({
   ...sharedConfig,
   test: {
     ...sharedConfig.test,
-    env: loadEnv(mode, process.cwd(), ""),
+    env: loadEnv(mode, import.meta.dirname, ""),
     include: ["test/**/*.test.ts"],
     environment: "node",
     testTimeout: 30_000,

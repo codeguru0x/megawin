@@ -354,7 +354,7 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">
-                {w.playerName ?? w.playerId}
+                {w.username ?? w.accountId}
               </p>
               <p className="text-xs text-muted-foreground">
                 Đại lý: {w.tenantName ?? w.tenantId} · Entry: {w.entryId}

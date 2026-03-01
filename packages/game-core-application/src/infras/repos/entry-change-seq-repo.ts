@@ -4,7 +4,7 @@ import {
   ENTRY_CHANGE_SEQ_KEY,
 } from "@megawin/game-core/entities";
 import type { SeqAllocation } from "@megawin/game-core/entities";
-import type { BaseEntity } from "@megawin/data/mongo/base-entity";
+import type { BaseEntity } from "@megawin/data/mongo";
 import { GameCoreBaseRepo } from "./game-core-base-repo";
 
 /**

@@ -6,7 +6,7 @@
  *
  * Khi trả API hoặc chuyển sang entity layer, phải convert sang string.
  *
- * Import: `import { longToString } from "@megawin/data/mongo/long"`
+ * Import: `import { longToString } from "@megawin/data/mongo"`
  */
 
 import type { Long } from "mongodb";

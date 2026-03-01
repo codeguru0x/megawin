@@ -1,4 +1,4 @@
-import { MongoMapper } from "@megawin/data/mongo/mapper";
+import { MongoMapper } from "@megawin/data/mongo";
 import type { TicketEntryDoc } from "@megawin/game-lotto535/entities";
 import { Document } from "mongodb";
 

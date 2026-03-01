@@ -14,7 +14,7 @@
  * Tất cả method dùng upsert → idempotent khi chạy lại settle.
  */
 
-import type { BaseEntity } from "@megawin/data/mongo/base-entity";
+import type { BaseEntity } from "@megawin/data/mongo";
 import type { GameProduct } from "@megawin/game-core/entities";
 import { GAME_DAILY_REPORT_COLLECTION } from "@megawin/game-core/entities";
 import { GameCoreBaseRepo } from "./game-core-base-repo";

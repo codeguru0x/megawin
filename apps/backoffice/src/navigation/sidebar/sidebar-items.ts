@@ -20,6 +20,7 @@ import {
   Clock,
   Layers,
   CircleDollarSign,
+  Ticket,
 } from "lucide-react";
 
 export interface NavSubItem {
@@ -141,22 +142,78 @@ export const operatorSidebarItems: NavGroup[] = [
       },
       {
         title: "Power 6/55",
-        url: "/dashboard/power-6_45",
+        url: "/games/power655",
         icon: ChessQueen,
         subItems: [
-          { title: "Cấu hình", url: "/dashboard/game/1", icon: Gamepad },
-          { title: "Jackpot", url: "/dashboard/game/2", icon: Gamepad },
-          { title: "Lịch sử", url: "/dashboard/game/3", icon: Gamepad },
+          {
+            title: "Kỳ quay",
+            url: "/games/power655/draws",
+            icon: CalendarClock,
+          },
+          {
+            title: "Vé chờ quay",
+            url: "/games/power655/pending-tickets",
+            icon: Clock,
+            isNew: true,
+          },
+          {
+            title: "Quản lý vé",
+            url: "/games/power655/tickets",
+            icon: Ticket,
+            isNew: true,
+          },
+          {
+            title: "Thống kê tài chính",
+            url: "/games/power655/financial-reports",
+            icon: CircleDollarSign,
+            isNew: true,
+          },
+          { title: "Cấu hình", url: "/games/power655/config", icon: Settings2 },
+          {
+            title: "Cấu hình đại lý",
+            url: "/games/power655/tenant-config",
+            icon: Building2,
+            isNew: true,
+          },
+          { title: "Jackpot", url: "/games/power655/jackpot", icon: Trophy },
         ],
       },
       {
         title: "Mega 6/45",
-        url: "/dashboard/mega-6_45",
+        url: "/games/mega645",
         icon: ChessRook,
         subItems: [
-          { title: "Cấu hình", url: "/dashboard/game/1", icon: Gamepad },
-          { title: "Jackpot", url: "/dashboard/game/2", icon: Gamepad },
-          { title: "Lịch sử", url: "/dashboard/game/3", icon: Gamepad },
+          {
+            title: "Kỳ quay",
+            url: "/games/mega645/draws",
+            icon: CalendarClock,
+          },
+          {
+            title: "Vé chờ quay",
+            url: "/games/mega645/pending-tickets",
+            icon: Clock,
+            isNew: true,
+          },
+          {
+            title: "Quản lý vé",
+            url: "/games/mega645/tickets",
+            icon: Ticket,
+            isNew: true,
+          },
+          {
+            title: "Thống kê tài chính",
+            url: "/games/mega645/financial-reports",
+            icon: CircleDollarSign,
+            isNew: true,
+          },
+          { title: "Cấu hình", url: "/games/mega645/config", icon: Settings2 },
+          {
+            title: "Cấu hình đại lý",
+            url: "/games/mega645/tenant-config",
+            icon: Building2,
+            isNew: true,
+          },
+          { title: "Jackpot", url: "/games/mega645/jackpot", icon: Trophy },
         ],
       },
       {

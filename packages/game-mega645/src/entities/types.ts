@@ -1,0 +1,193 @@
+/**
+ * Mega 6/45 – Shared Types
+ *
+ * Mega 6/45: chọn 6 số từ 01-45, KHÔNG có số đặc biệt.
+ * Giá vé: 10,000 VND / line.
+ * Lịch quay: 3 lần/tuần – Thứ 4, Thứ 6, Chủ nhật lúc 18:00.
+ */
+
+// ─────────────────────────────────────────────
+// Date helpers
+// ─────────────────────────────────────────────
+
+export type { ISODateString } from "@megawin/game-core/types";
+
+// ─────────────────────────────────────────────
+// Draw Number
+// ─────────────────────────────────────────────
+
+/**
+ * Mega 6/45 chỉ quay 1 kỳ/ngày (18h).
+ */
+export type DrawNo = typeof DrawNo.Single;
+
+export const DrawNo = {
+  Single: 1,
+} as const;
+
+export const DRAW_NO_VALUES: readonly DrawNo[] = [DrawNo.Single];
+
+// ─────────────────────────────────────────────
+// Mega 6/45 Number Ranges
+// ─────────────────────────────────────────────
+
+/** Số chính: 1-45. */
+export const MEGA645_MAIN_MIN = 1;
+export const MEGA645_MAIN_MAX = 45;
+/** Phải chọn đúng 6 số cho standard play. */
+export const MEGA645_MAIN_COUNT = 6;
+
+// ─────────────────────────────────────────────
+// Tuple & Value Types
+// ─────────────────────────────────────────────
+
+/**
+ * Tuple 6 số chính – enforce đúng 6 phần tử tại compile time.
+ * Luôn sorted tăng dần để canonicalize.
+ */
+export type MainTuple = readonly [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+];
+
+// ─────────────────────────────────────────────
+// Board Selection (user input)
+// ─────────────────────────────────────────────
+
+/**
+ * Lựa chọn số của người chơi trên 1 board.
+ *
+ * Mega 6/45 KHÔNG có số đặc biệt, chỉ có mainNumbers.
+ * - standard:  mainNumbers.length = 6
+ * - bao5:      mainNumbers.length = 5
+ * - bao7-18:   mainNumbers.length = 7..18
+ * - quickPick: empty (hệ thống tự sinh)
+ */
+export interface BoardSelection {
+  mainNumbers: number[];
+}
+
+// ─────────────────────────────────────────────
+// Line Value (expanded, canonical)
+// ─────────────────────────────────────────────
+
+/**
+ * Một line con (bộ 6 số) sau khi expand từ board.
+ * Đây là đơn vị nhỏ nhất để so sánh với kết quả quay.
+ */
+export interface LineValue {
+  main: MainTuple;
+}
+
+// ─────────────────────────────────────────────
+// Prize Amounts
+// ─────────────────────────────────────────────
+
+/**
+ * Giá trị giải thưởng cố định (VND) cho mỗi tier.
+ * Mega 6/45 chỉ có 3 giải cố định (Jackpot là tích luỹ).
+ */
+export interface PrizeAmounts {
+  /** Giải Nhất: 5/6 số. */
+  tier1: number;
+  /** Giải Nhì: 4/6 số. */
+  tier2: number;
+  /** Giải Ba: 3/6 số. */
+  tier3: number;
+}
+
+// ─────────────────────────────────────────────
+// Game Config Sub-types
+// ─────────────────────────────────────────────
+
+/** Cấu hình Jackpot. */
+export interface JackpotConfig {
+  /** Số tiền khởi điểm khi mở kỳ Jackpot mới (VND). Min 12 tỷ. */
+  seedAmount: number;
+  /** Ngưỡng kích hoạt chia Jackpot (VND). */
+  splitThreshold: number;
+  /** Tỷ lệ chia Jackpot cho từng tier. */
+  splitRatios: SplitRatios;
+}
+
+/** Tỷ lệ tài chính. */
+export interface FinancialRates {
+  defaultCommissionRate: number;
+  companyRate: number;
+}
+
+/**
+ * Quy tắc chơi.
+ * Mega 6/45 quay 3 lần/tuần: Thứ 4, Thứ 6, Chủ nhật.
+ */
+export interface PlayRules {
+  unitPrice: number;
+  maxBoardsPerTicket: number;
+  maxDrawCount: number;
+  salesCloseBeforeMinutes: number;
+  /** Số kỳ quay mỗi tuần (3: Wed, Fri, Sun). */
+  drawsPerWeek: number;
+  /** Các ngày quay trong tuần (0=Sun, 3=Wed, 5=Fri). */
+  drawDaysOfWeek: number[];
+  /** Giờ quay (HH:mm). */
+  drawTime: string;
+}
+
+// ─────────────────────────────────────────────
+// Split Ratios
+// ─────────────────────────────────────────────
+
+/**
+ * Tỷ lệ chia Jackpot cho các tier khi split cycle.
+ * Tổng = 5 (tier1 = 2/5, tier2 = 2/5, tier3 = 1/5).
+ */
+export interface SplitRatios {
+  tier1: number;
+  tier2: number;
+  tier3: number;
+}
+
+// ─────────────────────────────────────────────
+// Board No
+// ─────────────────────────────────────────────
+
+export type BoardNo = "A" | "B" | "C" | "D" | "E" | "F";
+
+/**
+ * Mega 6/45 cho phép tối đa 6 boards (A-F) trên vé.
+ */
+export const VALID_BOARD_NOS: readonly BoardNo[] = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+];
+
+// ─────────────────────────────────────────────
+// Bao Combinations lookup
+// ─────────────────────────────────────────────
+
+/**
+ * Bảng tra cứu nhanh số line cho từng loại bao.
+ * Bao 5 đặc biệt: chọn 5 số, số thứ 6 = 40 số còn lại → 40 lines.
+ * Bao 7-18: C(N, 6).
+ */
+export const BAO_COMBINATIONS: Record<number, number> = {
+  5: 40,
+  7: 7,
+  8: 28,
+  9: 84,
+  10: 210,
+  11: 462,
+  12: 924,
+  13: 1716,
+  14: 3003,
+  15: 5005,
+  18: 18564,
+};

@@ -1,6 +1,5 @@
-import { BaseEntity } from "@megawin/data/mongo/base-entity";
-import { MongoRepository } from "@megawin/data/mongo/repository";
-import { MongoMapper } from "@megawin/data/mongo/mapper";
+import { MongoRepository, MongoMapper, Constants } from "@megawin/data/mongo";
+import type { BaseEntity } from "@megawin/data/mongo";
 import { Document } from "mongodb";
 
 export class BaseRepo<
@@ -16,7 +15,7 @@ export class BaseRepo<
   }) {
     super({
       collName,
-      dbName: "megawin",
+      dbName: Constants.Default.DbName,
       dataMapper,
     });
   }

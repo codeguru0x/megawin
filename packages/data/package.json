@@ -13,12 +13,16 @@
   "author": "",
   "license": "ISC",
   "exports": {
+    "./mongo": {
+      "types": "./src/mongo/index.ts",
+      "default": "./dist/mongo/index.js"
+    },
     "./mongo/*": {
-      "types": "./dist/mongo/*.d.ts",
+      "types": "./src/mongo/*.ts",
       "default": "./dist/mongo/*.js"
     },
     "./types/*": {
-      "types": "./dist/types/*.d.ts",
+      "types": "./src/types/*.ts",
       "default": "./dist/types/*.js"
     }
   },

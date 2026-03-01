@@ -11,6 +11,9 @@ export const Constants = {
   },
 
   Default: {
+    /** Database name mặc định cho toàn hệ thống. Thay đổi tại đây nếu đổi tên DB. */
+    DbName: "megawin",
+
     Paging: {
       Size: Pagination.Default.Size,
       Page: Pagination.Default.Page,

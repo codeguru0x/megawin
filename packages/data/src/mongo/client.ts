@@ -1,5 +1,6 @@
 import { Db, MongoClient } from "mongodb";
 import { isDevNextJs } from "@megawin/shared/utils/env";
+import "../types/declarations/global";
 
 const __mongoClientCache__ = new Map<string, MongoClient>();
 const __mongoDbCache__ = new Map<string, Db>(); // `${envKey}::${dbName}`

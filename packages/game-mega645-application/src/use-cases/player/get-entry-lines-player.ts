@@ -1,0 +1,75 @@
+/**
+ * Use Case: Get Entry Lines for Player (Mega 6/45)
+ *
+ * Mega 6/45 lines: chỉ có main (không có special).
+ * matchResult: mainMatchCount + tier (không có specialMatched).
+ */
+
+import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
+import { EntryStatus } from "@megawin/game-core/entities";
+import { ObjectId } from "mongodb";
+import { EntryRepository } from "../../infras/repos/entry-repo";
+import { LineRepository } from "../../infras/repos/line-repo";
+import type { TicketLineDoc } from "@megawin/game-mega645/entities";
+import type {
+  PlayerGetEntryLinesInput,
+  PlayerGetEntryLinesOutput,
+  PlayerLineInfo,
+} from "./dto/player.dto";
+
+export class GetEntryLinesPlayerUseCase extends ApiGatewayUseCase<
+  PlayerGetEntryLinesInput,
+  PlayerGetEntryLinesOutput
+> {
+  private readonly entryRepo = new EntryRepository();
+  private readonly lineRepo = new LineRepository();
+
+  protected async execute(
+    input: PlayerGetEntryLinesInput
+  ): Promise<PlayerGetEntryLinesOutput> {
+    const { tenantId, accountId, entryId, page, size } = input;
+
+    const entry = await this.entryRepo.findOne({ _id: new ObjectId(entryId) });
+
+    if (!entry) {
+      throw AppException.notFound("Entry not found");
+    }
+
+    if (entry.tenantId !== tenantId || entry.accountId !== accountId) {
+      throw AppException.notFound("Entry not found");
+    }
+
+    if (entry.status !== EntryStatus.Settled) {
+      throw AppException.badRequest(
+        "Lines chỉ khả dụng khi kỳ đã được xử lý kết quả."
+      );
+    }
+
+    const { lines, total } = await this.lineRepo.getLinesByEntryId(entryId, {
+      page,
+      size,
+    });
+
+    return {
+      entryId: entry.id,
+      drawId: entry.drawId,
+      lines: lines.map(mapPlayerLine),
+      total,
+      page,
+      size,
+    };
+  }
+}
+
+function mapPlayerLine(line: TicketLineDoc): PlayerLineInfo {
+  return {
+    boardNo: line.boardNo,
+    lineIndex: line.lineIndex,
+    main: [...line.main],
+    matchResult: {
+      mainMatchCount: line.matchResult.mainMatchCount,
+      tier: line.matchResult.tier,
+      winAmount: line.matchResult.winAmount,
+    },
+  };
+}

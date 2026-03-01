@@ -1,0 +1,64 @@
+# Mega 6/45 – Player endpoints
+
+mega645-get-current-draw:
+  handler: src/handlers/mega645/get-current-draw.handler
+  events:
+    - httpApi:
+        path: /games/mega645/draws/current
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+mega645-get-jackpot:
+  handler: src/handlers/mega645/get-jackpot.handler
+  events:
+    - httpApi:
+        path: /games/mega645/jackpot
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+mega645-list-pending-tickets:
+  handler: src/handlers/mega645/list-pending-tickets.handler
+  events:
+    - httpApi:
+        path: /games/mega645/tickets/pending
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+mega645-list-completed-tickets:
+  handler: src/handlers/mega645/list-completed-tickets.handler
+  events:
+    - httpApi:
+        path: /games/mega645/tickets/completed
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+mega645-get-ticket-entries:
+  handler: src/handlers/mega645/get-ticket-entries.handler
+  events:
+    - httpApi:
+        path: /games/mega645/tickets/{ticketId}/entries
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+mega645-place-bet:
+  handler: src/handlers/mega645/place-bet.handler
+  events:
+    - httpApi:
+        path: /games/mega645/bets
+        method: post
+        authorizer:
+          name: cognitoPlayerAuth
+
+mega645-get-entry-lines:
+  handler: src/handlers/mega645/get-entry-lines.handler
+  events:
+    - httpApi:
+        path: /games/mega645/entries/{entryId}/lines
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

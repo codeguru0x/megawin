@@ -85,6 +85,11 @@ export const KENO_SIDE_BET_PLAY_TYPES: readonly KenoPlayType[] = [
   KenoPlayType.EvenOdd,
 ];
 
+/** Narrowed type cho side bet play types — dùng trong SideBet interface. */
+export type KenoSideBetPlayType =
+  | typeof KenoPlayType.BigSmall
+  | typeof KenoPlayType.EvenOdd;
+
 // ─────────────────────────────────────────────
 // Side Bet Selection – Cách chơi bổ sung
 // ─────────────────────────────────────────────

@@ -1,0 +1,30 @@
+import { z } from "zod";
+
+import { withApi } from "@/lib/api";
+import { CompanyRole } from "@megawin/identity/entities/account";
+import { UpdateScheduleUseCase } from "@megawin/game-mega645-application/use-cases/draws";
+
+const scheduleSchema = z.object({
+  salesOpenAt: z.string().datetime({
+    offset: true,
+    message: "Thời gian mở bán phải là ISO datetime.",
+  }),
+  salesCloseAt: z.string().datetime({
+    offset: true,
+    message: "Thời gian đóng bán phải là ISO datetime.",
+  }),
+  drawTime: z
+    .string()
+    .datetime({ offset: true, message: "Giờ quay số phải là ISO datetime." })
+    .optional(),
+});
+
+const updateScheduleUseCase = new UpdateScheduleUseCase();
+
+export const PATCH = withApi()
+  .auth({ roles: [CompanyRole.Staff] })
+  .body(scheduleSchema)
+  .handler(async ({ params, body }) => {
+    const { drawId } = params as { drawId: string };
+    return updateScheduleUseCase.run({ drawId, ...body });
+  });
