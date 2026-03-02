@@ -1,0 +1,55 @@
+# Max 3D Pro – Player endpoints
+
+max3dpro-get-current-draw:
+  handler: src/handlers/max3dpro/get-current-draw.handler
+  events:
+    - httpApi:
+        path: /games/max3dpro/draws/current
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+max3dpro-list-pending-tickets:
+  handler: src/handlers/max3dpro/list-pending-tickets.handler
+  events:
+    - httpApi:
+        path: /games/max3dpro/tickets/pending
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+max3dpro-list-completed-tickets:
+  handler: src/handlers/max3dpro/list-completed-tickets.handler
+  events:
+    - httpApi:
+        path: /games/max3dpro/tickets/completed
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+max3dpro-get-ticket-entries:
+  handler: src/handlers/max3dpro/get-ticket-entries.handler
+  events:
+    - httpApi:
+        path: /games/max3dpro/tickets/{ticketId}/entries
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+max3dpro-get-entry-lines:
+  handler: src/handlers/max3dpro/get-entry-lines.handler
+  events:
+    - httpApi:
+        path: /games/max3dpro/entries/{entryId}/lines
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+max3dpro-place-bet:
+  handler: src/handlers/max3dpro/place-bet.handler
+  events:
+    - httpApi:
+        path: /games/max3dpro/bets
+        method: post
+        authorizer:
+          name: cognitoPlayerAuth

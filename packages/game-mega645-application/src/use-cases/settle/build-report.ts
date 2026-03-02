@@ -12,33 +12,56 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import { ReportRepository } from "../../infras/repos/report-repo";
 
 export interface BuildReportInput {
+  /** ID kỳ quay cần tạo báo cáo. */
   drawId: string;
+  /** Ngày tài chính ghi nhận (ISO date). */
   financialDate: string;
+  /** Dữ liệu tài chính tổng hợp (từ bước CalculateFinancials). */
   financials?: {
+    /** Tổng doanh thu kỳ quay (VND). */
     totalRevenue: number;
+    /** Tổng giải thưởng cố định (VND). */
     totalFixedPrizes: number;
+    /** Tổng hoa hồng đại lý (VND). */
     totalAgentCommission: number;
+    /** Phần công ty hưởng tối đa theo tỷ lệ (VND). */
     companyTake: number;
+    /** Phần công ty thực tế hưởng (VND). */
     actualCompanyTake: number;
+    /** Đóng góp vào quỹ jackpot (VND). */
     jackpotContribution: number;
+    /** Giá trị jackpot cuối kỳ (VND). */
     closingJackpot: number;
+    /** Giá trị jackpot mở đầu kỳ tiếp theo (VND). */
     nextJackpotOpening: number;
+    /** Có người trúng jackpot không. */
     hasJackpotWinner: boolean;
+    /** Phân tích doanh thu từng tenant. */
     tenantBreakdown: Array<{
+      /** ID tenant. */
       tenantId: string;
+      /** Doanh thu tenant (VND). */
       revenue: number;
+      /** Hoa hồng tenant (VND). */
       commission: number;
+      /** Tỷ lệ hoa hồng (0-1). */
       commissionRate: number;
+      /** Số entry của tenant. */
       entryCount: number;
     }>;
   };
 }
 
 export interface BuildReportResult {
+  /** ID kỳ quay đã tạo báo cáo. */
   drawId: string;
+  /** Ngày tài chính (ISO date). */
   financialDate: string;
+  /** Số tenant đã ghi nhận báo cáo. */
   tenantsReported: number;
+  /** Số player đã ghi nhận báo cáo. */
   playersReported: number;
+  /** Đã publish báo cáo lên game-core chưa (chỉ true khi có dữ liệu financials). */
   gameCoreReportPublished: boolean;
 }
 

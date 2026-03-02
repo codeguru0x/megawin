@@ -27,12 +27,17 @@ import type { PrizeAmounts } from "../entities/types";
 // Prize Tier Rule Definition
 // ─────────────────────────────────────────────
 
+/** Định nghĩa quy tắc 1 hạng giải thưởng. */
 export interface PrizeTierRule {
+  /** Mã hạng giải (jackpot / tier1 / tier2 / tier3). */
   tier: PrizeTier;
+  /** Tên hiển thị hạng giải (tiếng Việt). */
   label: string;
-  /** Số lượng số chính cần trùng. */
+  /** Số lượng số chính cần trùng để đạt hạng (6=Jackpot, 5=Nhất, 4=Nhì, 3=Ba). */
   mainMatch: number;
+  /** Giá trị giải thưởng mặc định (VND). Jackpot = 0 vì là giải tích luỹ. */
   defaultAmount: number;
+  /** Có được nhận bonus từ split cycle hay không. Jackpot = false, các tier còn lại = true. */
   splitEligible: boolean;
 }
 
@@ -75,8 +80,11 @@ export const DEFAULT_PRIZE_TIER_RULES: readonly PrizeTierRule[] = [
 // Match Result
 // ─────────────────────────────────────────────
 
+/** Kết quả so khớp 1 line (dùng trong matching logic). */
 export interface LineMatchResult {
+  /** Hạng giải trúng (null nếu < 3 số trùng → không trúng). */
   tier: PrizeTier | null;
+  /** Số lượng số chính trùng (0-6). */
   mainMatchCount: number;
 }
 

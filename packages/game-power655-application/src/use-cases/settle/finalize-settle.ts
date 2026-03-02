@@ -23,39 +23,62 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import type { JackpotCycleClosedReason } from "@megawin/game-power655/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 
 export interface FinalizeSettleInput {
+  /** ID kỳ quay cần finalize. */
   drawId: string;
+  /** Số dư Jackpot 1 đầu kỳ (VND). */
   jp1OpeningAmount: number;
+  /** Số dư Jackpot 2 đầu kỳ (VND). */
   jp2OpeningAmount: number;
+  /** Số dư Jackpot 1 cuối kỳ (VND). Reset về seed nếu có winner/split. */
   closingJp1: number;
+  /** Số dư Jackpot 2 cuối kỳ (VND). Reset về seed nếu có winner/split. */
   closingJp2: number;
+  /** Số dư Jackpot 1 opening cho kỳ tiếp theo (VND). */
   nextJp1Opening: number;
+  /** Số dư Jackpot 2 opening cho kỳ tiếp theo (VND). */
   nextJp2Opening: number;
+  /** Có người trúng Jackpot 1 (6/6) hay không. */
   hasJackpot1Winner: boolean;
+  /** Có người trúng Jackpot 2 (5/6 + bonus) hay không. */
   hasJackpot2Winner: boolean;
+  /** Có phải kỳ chia giải (tổng JP vượt splitThreshold) hay không. */
   isSplitCycle: boolean;
+  /** Chi tiết chia giải theo tier (chỉ có khi isSplitCycle = true). */
   splitDetails?: Record<
     string,
     {
+      /** Số tiền ban đầu phân bổ cho tier (VND). */
       initialAmount: number;
+      /** Số tiền tái phân phối từ tier không có winner (VND). */
       redistributedAmount: number;
+      /** Tổng tiền cho tier (VND). */
       totalAmount: number;
+      /** Số người thắng tier này. */
       winnerCount: number;
+      /** Số tiền bonus mỗi người (VND). */
       bonusPerWinner: number;
     }
   >;
 }
 
 export interface FinalizeSettleResult {
+  /** ID kỳ quay đã finalize. */
   drawId: string;
+  /** Trạng thái mới sau finalize (= "settled"). */
   status: string;
+  /** Số dư Jackpot 1 cuối kỳ (VND). */
   closingJp1: number;
+  /** Số dư Jackpot 2 cuối kỳ (VND). */
   closingJp2: number;
+  /** Số dư Jackpot 1 opening cho kỳ tiếp theo (VND). */
   nextJp1Opening: number;
+  /** Số dư Jackpot 2 opening cho kỳ tiếp theo (VND). */
   nextJp2Opening: number;
+  /** Thời điểm hoàn thành settle (ISO 8601). */
   completedAt: string;
 }
 
@@ -69,7 +92,7 @@ export class FinalizeSettleUseCase extends StepFunctionUseCase<
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** @inheritdoc */
   protected async execute(

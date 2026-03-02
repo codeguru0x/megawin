@@ -1,0 +1,69 @@
+/**
+ * Use Case: Get Current Draw for Player (Bingo 18)
+ *
+ * Trả thông tin draw active cho player — chỉ gồm thông tin cần cho đặt cược:
+ * - Các kỳ đang mở/đóng cược
+ * - Kết quả kỳ gần nhất (numbers + sum)
+ */
+
+import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { DrawStatus } from "@megawin/game-core/entities";
+import { DrawRepository } from "../../infras/repos/draw-repo";
+import type { DrawEntity } from "../../infras/mappers/draw-mapper";
+import type {
+  PlayerGetCurrentDrawOutput,
+  PlayerDrawInfo,
+} from "./dto/player.dto";
+
+const PLAYER_STATUSES = [DrawStatus.SalesOpen, DrawStatus.SalesClosed];
+
+export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<
+  void,
+  PlayerGetCurrentDrawOutput
+> {
+  private readonly drawRepo = new DrawRepository();
+
+  protected async execute(): Promise<PlayerGetCurrentDrawOutput> {
+    const [activeDraws, lastSettled] = await Promise.all([
+      this.drawRepo.getActiveDraws(PLAYER_STATUSES),
+      this.drawRepo.findOne(
+        {
+          status: DrawStatus.Settled,
+          "result.numbers": { $exists: true },
+        },
+        { sort: { drawTime: -1 } }
+      ),
+    ]);
+
+    const mapped = activeDraws.map(mapPlayerDraw);
+
+    return {
+      currentDraw: mapped[0] ?? null,
+      activeDraws: mapped,
+      lastResult: lastSettled?.result
+        ? {
+            drawId: lastSettled.drawId,
+            drawDate: lastSettled.drawDate,
+            drawNo: lastSettled.drawNo,
+            numbers: [...lastSettled.result.numbers],
+            sum: lastSettled.result.sum,
+            publishedAt: lastSettled.result.publishedAt.toISOString(),
+          }
+        : null,
+    };
+  }
+}
+
+function mapPlayerDraw(draw: DrawEntity): PlayerDrawInfo {
+  return {
+    drawId: draw.drawId,
+    drawDate: draw.drawDate,
+    drawNo: draw.drawNo,
+    drawTime: draw.drawTime.toISOString(),
+    status: draw.status,
+    sales: {
+      openAt: draw.sales.openAt?.toISOString(),
+      closeAt: draw.sales.closeAt.toISOString(),
+    },
+  };
+}

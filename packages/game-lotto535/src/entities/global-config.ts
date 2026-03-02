@@ -71,6 +71,8 @@ export interface GlobalConfigDoc {
   /** Version config – tăng mỗi khi staff chỉnh sửa, dùng cho audit. */
   version: number;
 
+  /** Thời điểm tạo config document (lần đầu seed). */
   createdAt: Date;
+  /** Thời điểm chỉnh sửa config gần nhất. */
   updatedAt: Date;
 }

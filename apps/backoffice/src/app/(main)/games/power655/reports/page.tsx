@@ -1,11 +1,11 @@
-import { CircleDollarSign, Construction } from "lucide-react";
+import { ChartBar, Construction } from "lucide-react";
 
 export default function Power655ReportsPage() {
   return (
     <div className="@container/main flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-red-600 shadow-sm">
-          <CircleDollarSign className="size-4.5 text-white" />
+          <ChartBar className="size-4.5 text-white" />
         </div>
         <div>
           <h1 className="text-lg font-semibold tracking-tight text-foreground">

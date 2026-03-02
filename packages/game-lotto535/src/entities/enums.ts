@@ -16,11 +16,17 @@
 
 /** Tên các MongoDB collections cho game Lotto 5/35. */
 export const Lotto535Collections = {
+  /** Collection lưu vé (ticket) đã mua. */
   Tickets: "lotto535_tickets",
+  /** Collection lưu entry – mỗi entry = 1 ticket × 1 kỳ quay. */
   TicketEntries: "lotto535_ticket_entries",
+  /** Collection lưu line con (bộ số) – tạo khi settle. */
   TicketLines: "lotto535_ticket_lines",
+  /** Collection lưu kỳ quay (draw). */
   Draws: "lotto535_draws",
+  /** Collection lưu cấu hình game (global + tenant). */
   GameConfigs: "lotto535_game_configs",
+  /** Collection lưu vòng đời Jackpot (cycle tích luỹ → chia/trúng). */
   JackpotCycles: "lotto535_jackpot_cycles",
 } as const;
 

@@ -19,23 +19,37 @@ import { PrizeTier } from "@megawin/game-lotto535/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export interface ApplySplitBonusesInput {
+  /** Mã kỳ quay. */
   drawId: string;
+  /** Kỳ này có phải kỳ chia Jackpot hay không. Nếu false → skip. */
   isSplitCycle: boolean;
+  /**
+   * Chi tiết phân bổ split theo tier — từ CalculateFinancials.
+   * Key: tier name, Value: thông tin phân bổ.
+   */
   splitDetails?: Record<
     string,
     {
+      /** Số tiền ban đầu phân cho tier (VND). */
       initialAmount: number;
+      /** Số tiền tái phân bổ từ tier trống (VND). */
       redistributedAmount: number;
+      /** Tổng tiền tier nhận (VND) = initialAmount + redistributedAmount. */
       totalAmount: number;
+      /** Số người trúng tier này. */
       winnerCount: number;
+      /** Tiền bonus mỗi người (VND) = totalAmount / winnerCount. */
       bonusPerWinner: number;
     }
   >;
 }
 
 export interface ApplySplitBonusesResult {
+  /** Mã kỳ quay. */
   drawId: string;
+  /** Số entries đã được patch thêm split bonus. */
   entriesPatched: number;
+  /** true nếu bỏ qua (không phải split cycle hoặc không có splitDetails). */
   skipped: boolean;
 }
 

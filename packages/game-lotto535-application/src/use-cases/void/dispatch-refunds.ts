@@ -32,18 +32,28 @@ const BATCH_QUERY_LIMIT = 200;
 const REFUND_CHUNK_SIZE = 50;
 
 export interface DispatchRefundBatchInput {
+  /** Mã kỳ quay cần dispatch refund. */
   drawId: string;
 }
 
 export interface DispatchRefundBatchResult {
+  /** Mã kỳ quay. */
   drawId: string;
+  /** true nếu không còn entries cần refund. */
   done: boolean;
+  /** Số entries đã dispatch refund thành công. */
   dispatched: number;
+  /** Số entries dispatch thất bại (sẽ retry vòng sau). */
   failed: number;
+  /** Kết quả chi tiết theo từng tenant. */
   tenantResults: Array<{
+    /** Mã tenant. */
     tenantId: string;
+    /** Số entries dispatch thành công. */
     dispatched: number;
+    /** Số entries dispatch thất bại. */
     failed: number;
+    /** Tổng tiền hoàn cho tenant (VND) = Σ(entry.voidInfo.refundAmount). */
     totalRefundAmount: number;
   }>;
 }

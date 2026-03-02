@@ -7,15 +7,26 @@ import type { TicketChannel } from "@megawin/game-core/entities";
 // ─────────────────────────────────────────────
 
 export interface PlaceBetBoardInput {
+  /** Ký hiệu bảng (A, B, C, D, E). */
   boardNo: string;
+  /** Kiểu chơi (normal, system, ...). Quyết định cách expand thành lines. */
   playType: PlayType;
+  /**
+   * Bộ số đã chọn cho board.
+   * - mainNumbers: 5+ số chính (1-35), unique. System play cho phép chọn >5.
+   * - specialNumbers: 1+ số đặc biệt (1-12), unique.
+   */
   selection: BoardSelection;
 }
 
 export interface PlaceBetInput {
+  /** Mã tenant (đại lý / đối tác) phát hành vé. */
   tenantId: string;
+  /** Mã tài khoản player. */
   accountId: string;
+  /** Tên đăng nhập player. */
   username: string;
+  /** Kênh đặt cược (web, mobile, api, ...). */
   channel: TicketChannel;
 
   /**
@@ -25,6 +36,10 @@ export interface PlaceBetInput {
    */
   drawIds: string[];
 
+  /**
+   * Danh sách boards trên vé (tối đa maxBoardsPerTicket từ PlayRules).
+   * Mỗi board expand thành N lines tùy theo playType và số lượng số đã chọn.
+   */
   boards: PlaceBetBoardInput[];
 }
 
@@ -33,19 +48,39 @@ export interface PlaceBetInput {
 // ─────────────────────────────────────────────
 
 export interface PlaceBetOutput {
+  /** Mã vé duy nhất (MongoDB ObjectId). */
   ticketId: string;
+  /** Số vé hiển thị cho player (human-readable). */
   ticketNo: string;
+  /** Trạng thái vé sau khi tạo (thường là "active"). */
   status: string;
+  /** Kế hoạch tham gia các kỳ quay. */
   drawPlan: {
+    /** Danh sách mã kỳ quay đã đăng ký. */
     drawIds: string[];
+    /** Số kỳ quay tham gia = drawIds.length. */
     drawCount: number;
   };
+  /**
+   * Chi tiết giá vé.
+   *
+   * Công thức tính:
+   * - linesPerDraw = Σ(board.lineCount) — tổng lines từ tất cả boards
+   * - amountPerDraw = linesPerDraw × unitPrice — giá cho 1 kỳ
+   * - totalAmount = amountPerDraw × drawCount — tổng tiền toàn vé
+   */
   pricing: {
+    /** Đơn giá 1 line cho 1 kỳ (VND) — từ PlayRules.unitPrice. */
     unitPrice: number;
+    /** Tổng số lines mỗi kỳ = Σ(board.lineCount). */
     linesPerDraw: number;
+    /** Giá mỗi kỳ (VND) = linesPerDraw × unitPrice. */
     amountPerDraw: number;
+    /** Tổng tiền toàn vé (VND) = amountPerDraw × drawCount. */
     totalAmount: number;
   };
+  /** Số lượng boards trên vé. */
   boardCount: number;
+  /** Tổng entries đã tạo = boardCount logic × drawCount (mỗi draw 1 entry). */
   entryCount: number;
 }

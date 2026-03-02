@@ -45,6 +45,7 @@ export interface LineMatchResult {
 // ─────────────────────────────────────────────
 
 export interface TicketLineDoc {
+  /** MongoDB ObjectId. */
   _id: unknown;
 
   // ───── Ownership ─────
@@ -92,5 +93,6 @@ export interface TicketLineDoc {
   /** Kết quả match với draw result — gắn ngay khi tạo (settle time). */
   matchResult: LineMatchResult;
 
+  /** Thời điểm tạo line document (= thời điểm settle). Immutable sau insert. */
   createdAt: Date;
 }

@@ -68,6 +68,15 @@ export type MainTuple = readonly [
  * - quickPick: empty (hệ thống tự sinh)
  */
 export interface BoardSelection {
+  /**
+   * Danh sách các số chính người chơi đã chọn.
+   * - standard: 6 số (1 line)
+   * - bao5: 5 số (hệ thống bổ sung số thứ 6 từ 40 số còn lại → 40 lines)
+   * - bao7-18: 7..18 số (expand thành C(N,6) lines)
+   * - quickPick: mảng rỗng (hệ thống tự sinh ngẫu nhiên 6 số)
+   *
+   * Các số thuộc phạm vi [1..45].
+   */
   mainNumbers: number[];
 }
 
@@ -80,6 +89,7 @@ export interface BoardSelection {
  * Đây là đơn vị nhỏ nhất để so sánh với kết quả quay.
  */
 export interface LineValue {
+  /** 6 số chính (tuple cố định 6 phần tử), sorted tăng dần. */
   main: MainTuple;
 }
 
@@ -116,7 +126,9 @@ export interface JackpotConfig {
 
 /** Tỷ lệ tài chính. */
 export interface FinancialRates {
+  /** Tỷ lệ hoa hồng mặc định cho đại lý (tenant). Ví dụ: 0.2 = 20%. */
   defaultCommissionRate: number;
+  /** Tỷ lệ thu nhập công ty trên tổng doanh thu. Ví dụ: 0.15 = 15%. */
   companyRate: number;
 }
 
@@ -125,9 +137,13 @@ export interface FinancialRates {
  * Mega 6/45 quay 3 lần/tuần: Thứ 4, Thứ 6, Chủ nhật.
  */
 export interface PlayRules {
+  /** Đơn giá 1 line (VND). Mặc định: 10,000 VND. */
   unitPrice: number;
+  /** Số board tối đa trên 1 vé (tối đa 6 boards: A-F). */
   maxBoardsPerTicket: number;
+  /** Số kỳ quay tối đa mà 1 vé có thể tham gia liên tiếp. */
   maxDrawCount: number;
+  /** Số phút đóng bán trước giờ quay. Ví dụ: 5 = đóng bán 5 phút trước 18:00. */
   salesCloseBeforeMinutes: number;
   /** Số kỳ quay mỗi tuần (3: Wed, Fri, Sun). */
   drawsPerWeek: number;
@@ -146,8 +162,11 @@ export interface PlayRules {
  * Tổng = 5 (tier1 = 2/5, tier2 = 2/5, tier3 = 1/5).
  */
 export interface SplitRatios {
+  /** Tỷ lệ phần chia cho Giải Nhất (5/6 số). Mặc định: 2 (= 2/5 tổng Jackpot). */
   tier1: number;
+  /** Tỷ lệ phần chia cho Giải Nhì (4/6 số). Mặc định: 2 (= 2/5 tổng Jackpot). */
   tier2: number;
+  /** Tỷ lệ phần chia cho Giải Ba (3/6 số). Mặc định: 1 (= 1/5 tổng Jackpot). */
   tier3: number;
 }
 

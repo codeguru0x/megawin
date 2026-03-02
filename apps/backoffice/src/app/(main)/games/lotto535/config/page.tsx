@@ -5,7 +5,6 @@ import {
   DollarSign,
   Percent,
   Settings2,
-  ShieldCheck,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +37,7 @@ export default function Lotto535ConfigPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-amber-500 to-amber-600 shadow-sm">
-            <ShieldCheck className="size-4 text-white" />
+            <Settings2 className="size-4 text-white" />
           </div>
           <h1 className="text-base font-semibold tracking-tight text-foreground">
             Lotto 5/35 — Cấu hình

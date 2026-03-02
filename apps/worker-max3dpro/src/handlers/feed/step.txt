@@ -1,0 +1,21 @@
+Scheduler (mỗi 30s):
+  ┌─────────────────────────────────────────────────────────┐
+  │  acquireLock(gameProduct, executionId)                   │
+  │  MongoDB atomic findOneAndUpdate:                        │
+  │    filter: { gameProduct, lockedUntil = null OR < now }  │
+  │    set:    { lockedUntil = now+5min, lockedBy = execId } │
+  │    return: { afterVersion }                              │
+  └────────────────────────┬────────────────────────────────┘
+                           │
+           acquired=true   │   acquired=false
+           ┌───────────────┘   └───────────┐
+           ▼                               ▼
+    startExecution()               return { skipped }
+           │
+           ▼
+    Step Function loop...
+           │
+           ▼
+    SaveCursor (state cuối):
+      saveAndRelease(gameProduct, lastVersion)
+      → $set { lastVersion, lockedUntil: null, lockedBy: null }

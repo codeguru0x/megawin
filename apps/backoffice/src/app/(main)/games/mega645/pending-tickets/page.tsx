@@ -268,25 +268,19 @@ export default function Mega645PendingTicketsPage() {
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       {/* Page Header */}
-      <div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-          <span>Mega 6/45</span>
-          <ChevronRight className="size-3" />
-          <span>Vé chờ quay thưởng</span>
-          {selectedTenant && (
-            <>
-              <ChevronRight className="size-3" />
-              <span>{selectedTenantData?.tenantName}</span>
-            </>
-          )}
+      <div className="flex items-center gap-3">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-amber-600 shadow-sm">
+          <Clock className="size-4.5 text-white" />
         </div>
-        <h1 className="text-lg font-semibold tracking-tight md:text-2xl">
-          Vé chờ quay thưởng – Kỳ {PENDING_DRAW.drawId}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Thống kê vé tham gia phiên đang chờ quay kết quả, phân bổ theo
-          agent/tenant.
-        </p>
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
+            Mega 6/45 — Vé chờ quay
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            Thống kê vé tham gia phiên đang chờ quay kết quả, phân bổ theo
+            agent/tenant.
+          </p>
+        </div>
       </div>
 
       {/* Current Draw Info Banner */}

@@ -8,7 +8,7 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { JackpotCycleStatus } from "@megawin/game-mega645/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { GetJackpotCurrentOutput } from "./dto/jackpot.dto";
 
@@ -18,7 +18,7 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<
 > {
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly drawRepo = new DrawRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(): Promise<GetJackpotCurrentOutput> {
     const [activeCycle, globalConfig] = await Promise.all([

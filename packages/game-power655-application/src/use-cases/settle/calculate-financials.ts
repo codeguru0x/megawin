@@ -26,54 +26,114 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export interface CalculateFinancialsInput {
+  /** ID kỳ quay cần tính tài chính. */
   drawId: string;
+  /** Số dư Jackpot 1 đầu kỳ (VND). */
   jp1OpeningAmount: number;
+  /** Số dư Jackpot 2 đầu kỳ (VND). */
   jp2OpeningAmount: number;
+  /** Có phải kỳ chia giải (split cycle) hay không. */
   isSplitCycle: boolean;
+  /** Tổng số dòng cược trong kỳ quay. */
   totalLines: number;
+  /** Cấu hình tài chính + jackpot cho tính toán. */
   config: {
+    /** Giá trị khởi tạo JP1 khi bắt đầu cycle mới (VND). */
     jp1SeedAmount: number;
+    /** Giá trị khởi tạo JP2 khi bắt đầu cycle mới (VND). */
     jp2SeedAmount: number;
+    /** Tỷ lệ doanh thu đóng góp vào JP1 (0-1). */
     jp1Ratio: number;
+    /** Tỷ lệ doanh thu đóng góp vào JP2 (0-1). */
     jp2Ratio: number;
+    /** Ngưỡng tràn JP1 (VND). Phần vượt quá chuyển sang JP2. */
     jp1OverflowThreshold: number;
+    /** Ngưỡng tổng JP để kích hoạt chia giải (VND). */
     splitThreshold: number;
-    splitRatios: { tier1: number; tier2: number; tier3: number };
+    /** Tỷ lệ chia giải cho các tier khi split. */
+    splitRatios: {
+      /** Tỷ lệ chia cho tier1. */
+      tier1: number;
+      /** Tỷ lệ chia cho tier2. */
+      tier2: number;
+      /** Tỷ lệ chia cho tier3. */
+      tier3: number;
+    };
+    /** Tỷ lệ phần trăm doanh thu cho công ty (0-1). */
     companyRate: number;
   };
 }
 
 export interface CalculateFinancialsResult {
+  /** ID kỳ quay. */
   drawId: string;
+  /** Tổng doanh thu từ vé cược (VND). */
   totalRevenue: number;
+  /** Tổng giải thưởng cố định đã trả (tier3/tier4/tier5) (VND). */
   totalFixedPrizes: number;
+  /** Tổng hoa hồng đại lý (VND). */
   totalAgentCommission: number;
+  /**
+   * Phần lợi nhuận công ty trước điều chỉnh (VND).
+   * Công thức: totalRevenue × companyRate.
+   */
   companyTake: number;
+  /**
+   * Phần lợi nhuận công ty thực tế sau trừ giải thưởng cố định (VND).
+   * Công thức: companyTake - totalFixedPrizes (nếu dương).
+   */
   actualCompanyTake: number;
+  /**
+   * Đóng góp vào quỹ Jackpot 1 (VND).
+   * Công thức: totalRevenue × jp1Ratio.
+   */
   jackpot1Contribution: number;
+  /**
+   * Đóng góp vào quỹ Jackpot 2 (VND).
+   * Công thức: totalRevenue × jp2Ratio + jp1Overflow.
+   */
   jackpot2Contribution: number;
+  /** Phần tràn từ JP1 (vượt jp1OverflowThreshold) chuyển sang JP2 (VND). */
   jp1Overflow: number;
+  /** Số dư Jackpot 1 cuối kỳ (VND). Reset về seed nếu có winner hoặc split. */
   closingJp1: number;
+  /** Số dư Jackpot 2 cuối kỳ (VND). Reset về seed nếu có winner hoặc split. */
   closingJp2: number;
+  /** Số dư Jackpot 1 opening cho kỳ tiếp theo (VND). */
   nextJp1Opening: number;
+  /** Số dư Jackpot 2 opening cho kỳ tiếp theo (VND). */
   nextJp2Opening: number;
+  /** Có người trúng Jackpot 1 (6/6) hay không. */
   hasJackpot1Winner: boolean;
+  /** Có người trúng Jackpot 2 (5/6 + bonus) hay không. */
   hasJackpot2Winner: boolean;
+  /** Chi tiết chia giải theo tier (chỉ có khi isSplitCycle = true). */
   splitDetails?: Record<
     string,
     {
+      /** Số tiền ban đầu phân bổ cho tier từ tổng split (VND). */
       initialAmount: number;
+      /** Số tiền tái phân phối từ tier không có winner (VND). */
       redistributedAmount: number;
+      /** Tổng tiền cho tier = initialAmount + redistributedAmount (VND). */
       totalAmount: number;
+      /** Số người thắng tier này. */
       winnerCount: number;
+      /** Số tiền bonus mỗi người thắng (VND). Công thức: totalAmount / winnerCount. */
       bonusPerWinner: number;
     }
   >;
+  /** Chi tiết doanh thu theo từng tenant (đại lý). */
   tenantBreakdown: Array<{
+    /** ID tenant. */
     tenantId: string;
+    /** Doanh thu từ tenant này (VND). */
     revenue: number;
+    /** Hoa hồng cho tenant (VND). */
     commission: number;
+    /** Tỷ lệ hoa hồng của tenant (0-1). */
     commissionRate: number;
+    /** Số entries từ tenant này. */
     entryCount: number;
   }>;
 }

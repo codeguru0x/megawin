@@ -39,5 +39,25 @@
     "typescriptreact"
   ],
   "git.ignoreLimitWarning": true,
-  "vitest.disableWorkspaceWarning": true
+  "vitest.disableWorkspaceWarning": true,
+  "yaml.customTags": [
+    "!Ref",
+    "!Sub scalar",
+    "!Sub sequence",
+    "!GetAtt scalar",
+    "!GetAtt sequence",
+    "!Join sequence",
+    "!Select sequence",
+    "!Split sequence",
+    "!ImportValue scalar",
+    "!If sequence",
+    "!Not sequence",
+    "!Equals sequence",
+    "!And sequence",
+    "!Or sequence",
+    "!FindInMap sequence",
+    "!Base64 scalar",
+    "!Cidr sequence",
+    "!GetAZs scalar"
+  ]
 }

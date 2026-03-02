@@ -10,20 +10,18 @@
  * Cách dùng từ use case game:
  *   private readonly ticketCounter = new TicketCounterRepository();
  *   const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
- *   const ticketNo = buildTicketNo("KENO", date, seq);
+ *   const ticketNo = buildTicketNo(GameProduct.Keno, date, seq);
  */
 
-import {
-  GameCoreCollections,
-  getTodayDateVN,
-} from "@megawin/game-core/entities";
+import { GameCoreCollections } from "@megawin/game-core/entities";
+import { todayVN } from "@megawin/shared/utils/date";
 import type { BaseEntity } from "@megawin/data/mongo";
 import { GameCoreBaseRepo } from "./game-core-base-repo";
 
 export interface TicketSeqResult {
   /** Số thứ tự mới (1-based). */
   seq: number;
-  /** Ngày YYYYMMDD (Asia/Ho_Chi_Minh). */
+  /** Ngày YYYY-MM-DD (Asia/Ho_Chi_Minh). */
   date: string;
 }
 
@@ -41,7 +39,7 @@ export class TicketCounterRepository extends GameCoreBaseRepo<BaseEntity> {
    * Upsert: tự tạo document nếu chưa có (ngày mới).
    */
   async nextTicketSeq(accountId: string): Promise<TicketSeqResult> {
-    const date = getTodayDateVN();
+    const date = todayVN();
 
     const result = await this.findOneAndUpdate(
       { accountId, date },

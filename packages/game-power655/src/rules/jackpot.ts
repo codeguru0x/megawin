@@ -25,40 +25,77 @@ import type {
 
 // ─── Draw Financial Calculation ───
 
+/**
+ * Dữ liệu đầu vào để tính tài chính kỳ quay.
+ *
+ * Công thức:
+ *   totalAgentCommission = Σ(tenantRevenues[].commission)
+ *   companyTake = totalRevenue × companyRate
+ *   actualCompanyTake = min(companyTake, max(totalRevenue - totalFixedPrizes - totalAgentCommission, 0))
+ *   totalJackpotContribution = max(totalRevenue - totalFixedPrizes - totalAgentCommission - actualCompanyTake, 0)
+ *   JP1 contribution = totalJackpotContribution × jp1Ratio
+ *   JP2 contribution = totalJackpotContribution × jp2Ratio + jp1Overflow (nếu có)
+ */
 export interface DrawFinancialInput {
+  /** Tổng doanh thu bán vé (100% tiền cược). Công thức: Σ(entry.stakeAmount) cho tất cả entries trong kỳ. */
   totalRevenue: number;
+  /** Tổng tiền giải cố định phải trả (Nhất 40tr + Nhì 500k + Ba 50k × số lần trúng). */
   totalFixedPrizes: number;
+  /** Chi tiết doanh thu và hoa hồng theo từng tenant/đại lý. */
   tenantRevenues: Array<{
+    /** ID tenant/đại lý. */
     tenantId: string;
+    /** Doanh thu từ tenant này. Công thức: Σ(entry.stakeAmount) cho entries của tenant. */
     revenue: number;
+    /** Hoa hồng tenant nhận. Công thức: revenue × commissionRate. */
     commission: number;
+    /** Tỷ lệ hoa hồng (VD: 0.2 = 20%). Lấy từ TenantConfig hoặc GlobalConfig default. */
     commissionRate: number;
   }>;
+  /** Tỷ lệ công ty thu về (mặc định 0.15 = 15% doanh thu). */
   companyRate: number;
-  /** JP1 contribution ratio (default 0.9) */
+  /** Tỷ lệ JP1 nhận từ tổng tích luỹ (mặc định 0.9 = 90%). */
   jp1Ratio: number;
-  /** JP2 contribution ratio (default 0.1) */
+  /** Tỷ lệ JP2 nhận từ tổng tích luỹ (mặc định 0.1 = 10%). */
   jp2Ratio: number;
-  /** JP1 overflow threshold – phần vượt chuyển sang JP2 */
+  /** Ngưỡng tối đa JP1 (VNĐ). Phần vượt chuyển sang JP2. Mặc định 300 tỷ. */
   jp1OverflowThreshold: number;
-  /** JP1 opening amount hiện tại – để tính overflow */
+  /** Giá trị JP1 đầu kỳ hiện tại – dùng để tính overflow khi cộng contribution. */
   currentJp1Opening: number;
 }
 
+/**
+ * Kết quả tính tài chính kỳ quay.
+ * Ghi vào DrawFinancial sau khi settle xong.
+ */
 export interface DrawFinancialResult {
+  /** Tổng doanh thu bán vé (100% tiền cược). */
   totalRevenue: number;
+  /** Tổng tiền giải cố định phải trả (Nhất + Nhì + Ba). */
   totalFixedPrizes: number;
+  /** Tổng hoa hồng đại lý. Công thức: Σ(tenantBreakdown[].commission). */
   totalAgentCommission: number;
+  /** Công ty thu về dự kiến. Công thức: round(totalRevenue × companyRate). */
   companyTake: number;
+  /** Công ty thu về thực tế. Công thức: min(companyTake, max(totalRevenue - totalFixedPrizes - totalAgentCommission, 0)). */
   actualCompanyTake: number;
+  /** Tiền tích luỹ cộng vào JP1 (sau overflow). Công thức: totalJackpotContribution × jp1Ratio - jp1Overflow. */
   jackpot1Contribution: number;
+  /** Tiền tích luỹ cộng vào JP2 (bao gồm overflow). Công thức: totalJackpotContribution × jp2Ratio + jp1Overflow. */
   jackpot2Contribution: number;
+  /** Phần JP1 vượt ngưỡng chuyển sang JP2. Công thức: max(currentJp1Opening + rawJp1 - jp1OverflowThreshold, 0). */
   jp1Overflow: number;
+  /** Tổng tiền tích luỹ vào jackpot pool. Công thức: max(totalRevenue - totalFixedPrizes - totalAgentCommission - actualCompanyTake, 0). */
   totalJackpotContribution: number;
+  /** Chi tiết tài chính theo từng tenant/đại lý. */
   tenantBreakdown: Array<{
+    /** ID tenant/đại lý. */
     tenantId: string;
+    /** Doanh thu từ tenant. */
     revenue: number;
+    /** Hoa hồng tenant nhận. Công thức: revenue × commissionRate. */
     commission: number;
+    /** Tỷ lệ hoa hồng tenant. */
     commissionRate: number;
   }>;
 }
@@ -160,26 +197,50 @@ export function isSplitCycleDraw(
   return totalJackpot >= splitThreshold && !hasAnyJackpotWinner;
 }
 
+/**
+ * Dữ liệu đầu vào cho tính split cycle.
+ * Khi tổng JP vượt splitThreshold và không có winner → chia jackpot cho các giải cố định.
+ */
 export interface SplitInput {
+  /** Tổng số tiền đem chia (= JP1 + JP2 tại thời điểm split). */
   totalAmount: number;
+  /** Tỷ lệ chia cho từng hạng giải cố định. VD: {tier1: 2, tier2: 1, tier3: 1} = 50%/25%/25%. */
   splitRatios: SplitRatios;
+  /** Số lượng winner theo từng hạng giải cố định trong kỳ này. Key = PrizeTier (tier1/tier2/tier3). */
   winnerCountPerTier: Map<PrizeTier, number>;
 }
 
+/**
+ * Chi tiết split cho 1 hạng giải.
+ * Tính bởi calculateSplitDistribution().
+ */
 export interface SplitTierDetail {
+  /** Số tiền phân bổ ban đầu từ tỷ lệ splitRatios. Công thức: floor(totalAmount × parts / totalParts). */
   initialAmount: number;
+  /** Số tiền nhận thêm từ các tier không có winner. Công thức: floor(unclaimedTotal / số tier có winner). */
   redistributedAmount: number;
+  /** Tổng tiền cho tier này. Công thức: initialAmount + redistributedAmount. */
   totalAmount: number;
+  /** Số lượng winner ở tier này. */
   winnerCount: number;
+  /** Bonus mỗi winner nhận. Công thức: floor(totalAmount / winnerCount), làm tròn xuống 5.000đ (trừ tier ưu tiên cao nhất). */
   bonusPerWinner: number;
 }
 
+/**
+ * Kết quả tính phân bổ split cycle.
+ * Phần dư (rounding) giữ lại cho hệ thống, không phân bổ thêm.
+ */
 export interface SplitResult {
+  /** Chi tiết chia cho từng hạng giải. Chỉ chứa các tier có winner. */
   details: Map<PrizeTier, SplitTierDetail>;
+  /** Bonus mỗi winner nhận, key = PrizeTier. Lấy nhanh không cần truy cập details. */
   bonusPerWinner: Map<PrizeTier, number>;
+  /** Phần dư sau khi chia (do làm tròn). Giữ lại trong hệ thống. */
   roundingRemainder: number;
 }
 
+/** Đơn vị làm tròn xuống cho bonus split (5.000đ). Áp dụng cho các tier thấp hơn tier ưu tiên cao nhất. */
 const SPLIT_ROUNDING_UNIT = 5_000;
 
 function roundDownToUnit(value: number, unit: number): number {
@@ -282,6 +343,10 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
 
 // ─── Default Config Values ───
 
+/**
+ * Giá trị config mặc định cho Power 6/55 (theo thể lệ Vietlott).
+ * Dùng khi tạo GlobalConfig lần đầu.
+ */
 export const DEFAULT_POWER655_CONFIG: {
   jackpot: JackpotConfig;
   rates: FinancialRates;

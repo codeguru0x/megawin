@@ -30,6 +30,7 @@ export type JackpotCycleClosedReason =
  * MongoDB document cho chu kỳ Jackpot.
  */
 export interface JackpotCycleDoc {
+  /** MongoDB ObjectId – khóa chính nội bộ. Không dùng trong business logic. */
   _id: unknown;
   /** Số thứ tự cycle (tăng dần, unique). Dùng cho hiển thị lịch sử. */
   cycleNo: number;
@@ -56,11 +57,14 @@ export interface JackpotCycleDoc {
   closedReason?: JackpotCycleClosedReason;
   /** Thời điểm đóng cycle. */
   closedAt?: Date;
+  /** Thời điểm tạo document (= thời điểm bắt đầu cycle). */
   createdAt: Date;
+  /** Thời điểm cập nhật gần nhất (sau mỗi lần settle cộng contribution). */
   updatedAt: Date;
 }
 
 /** Application layer entity. */
 export interface JackpotCycleEntity extends Omit<JackpotCycleDoc, "_id"> {
+  /** ObjectId dạng hex string – khóa chính dùng trong application layer. */
   id: string;
 }

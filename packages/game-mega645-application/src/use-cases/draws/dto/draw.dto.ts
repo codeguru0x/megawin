@@ -12,16 +12,24 @@ export interface CreateDrawsInput {
 }
 
 export interface CreateDrawsOutputItem {
+  /** ID duy nhất của kỳ quay (UUID / ULID). */
   drawId: string;
+  /** Ngày quay thưởng, định dạng ISO date (YYYY-MM-DD). */
   drawDate: string;
+  /** Số thứ tự kỳ quay (tuần tự tăng dần). */
   drawNo: number;
+  /** Giờ quay thưởng, ví dụ "18:00". */
   drawTime: string;
+  /** Thời điểm đóng bán vé (ISO datetime). */
   closeAt: string;
+  /** Ngày tài chính để ghi nhận doanh thu/chi phí. */
   financialDate: string;
+  /** Trạng thái kỳ quay sau khi tạo (thường là "scheduled"). */
   status: string;
 }
 
 export interface CreateDrawsOutput {
+  /** Danh sách các kỳ quay vừa được tạo. */
   draws: CreateDrawsOutputItem[];
 }
 
@@ -30,18 +38,25 @@ export interface CreateDrawsOutput {
 // ─────────────────────────────────────────────
 
 export interface PreviewDrawsInput {
+  /** Số kỳ cần xem trước (1-12). */
   count: number;
 }
 
 export interface PreviewDrawItem {
+  /** Ngày quay thưởng dự kiến (ISO date). */
   drawDate: string;
+  /** Số thứ tự kỳ quay dự kiến. */
   drawNo: number;
+  /** Giờ quay thưởng dự kiến. */
   drawTime: string;
+  /** Thời điểm đóng bán vé dự kiến (ISO datetime). */
   closeAt: string;
+  /** Trạng thái dự kiến (thường là "scheduled"). */
   status: string;
 }
 
 export interface PreviewDrawsOutput {
+  /** Danh sách kỳ quay xem trước (chưa lưu vào DB). */
   draws: PreviewDrawItem[];
 }
 
@@ -50,12 +65,16 @@ export interface PreviewDrawsOutput {
 // ─────────────────────────────────────────────
 
 export interface DrawIdInput {
+  /** ID kỳ quay cần thao tác. */
   drawId: string;
 }
 
 export interface DrawTransitionOutput {
+  /** ID kỳ quay đã chuyển trạng thái. */
   drawId: string;
+  /** Trạng thái trước khi chuyển. */
   previousStatus: string;
+  /** Trạng thái hiện tại sau khi chuyển. */
   currentStatus: string;
 }
 
@@ -64,21 +83,29 @@ export interface DrawTransitionOutput {
 // ─────────────────────────────────────────────
 
 export interface PublishResultInput {
+  /** ID kỳ quay cần công bố kết quả. */
   drawId: string;
   /** 6 số chính trúng thưởng (1-45), unique, unsorted OK. */
   winningMain: number[];
   /** Tham chiếu kỳ quay Vietlott (optional). */
   vietlottRef?: {
+    /** Mã kỳ quay Vietlott gốc. */
     drawPeriod: string;
+    /** Ngày quay của Vietlott (ISO date). */
     drawDate: string;
   };
 }
 
 export interface PublishResultOutput {
+  /** ID kỳ quay đã công bố. */
   drawId: string;
+  /** Trạng thái sau khi công bố (thường là "published"). */
   status: string;
+  /** Kết quả quay thưởng đã công bố. */
   result: {
+    /** 6 số chính trúng thưởng (1-45), đã sort ascending. */
     winningMain: number[];
+    /** Thời điểm công bố kết quả (ISO datetime). */
     publishedAt: string;
   };
 }
@@ -88,15 +115,20 @@ export interface PublishResultOutput {
 // ─────────────────────────────────────────────
 
 export interface TriggerSettleInput {
+  /** ID kỳ quay cần bắt đầu settle. */
   drawId: string;
 }
 
 export interface TriggerSettleOutput {
+  /** ID kỳ quay đang được settle. */
   drawId: string;
+  /** Trạng thái sau khi trigger (thường là "settling"). */
   status: string;
+  /** Kỳ này có đang chạy split jackpot hay không. */
   isSplitCycle: boolean;
   /** Tổng entries sẽ được settle bởi worker. */
   totalEntries: number;
+  /** Tổng số dòng (lines) cần xử lý — mỗi entry có thể expand ra nhiều dòng. */
   totalLines: number;
 }
 
@@ -105,37 +137,62 @@ export interface TriggerSettleOutput {
 // ─────────────────────────────────────────────
 
 export interface ListDrawsInput {
+  /** Lọc theo trạng thái kỳ quay (tuỳ chọn). */
   status?: DrawStatus;
+  /** Ngày bắt đầu lọc (ISO date, inclusive). */
   fromDate?: string;
+  /** Ngày kết thúc lọc (ISO date, inclusive). */
   toDate?: string;
+  /** Trang hiện tại (1-based, mặc định 1). */
   page?: number;
+  /** Số lượng bản ghi mỗi trang (mặc định 20). */
   size?: number;
 }
 
 export interface DrawSummary {
+  /** MongoDB document ID. */
   id: string;
+  /** ID kỳ quay (business key). */
   drawId: string;
+  /** Ngày quay thưởng (ISO date). */
   drawDate: string;
+  /** Số thứ tự kỳ quay. */
   drawNo: DrawNo;
+  /** Giờ quay thưởng. */
   drawTime: string;
+  /** Trạng thái hiện tại của kỳ quay. */
   status: string;
+  /** Giá trị jackpot đầu kỳ (VND). */
   jackpotAmount?: number;
+  /** Giá trị jackpot cuối kỳ sau khi settle (VND). */
   jackpotClosingAmount?: number;
+  /** Có phải kỳ chia jackpot (split cycle) không. */
   isSplitCycle: boolean;
+  /** Kỳ quay đã có kết quả hay chưa. */
   hasResult: boolean;
+  /** Tổng số entry (lượt tham gia) trong kỳ. */
   ticketEntryCount?: number;
+  /** Tổng doanh thu kỳ quay (VND). */
   totalRevenue?: number;
+  /** Thông tin tài chính tổng hợp sau settle. */
   financial?: {
+    /** Tổng giải thưởng cố định đã trả (tier2 + tier3 + tier4) — VND. */
     totalFixedPrizes: number;
+    /** Tổng hoa hồng đại lý (VND). */
     totalAgentCommission: number;
+    /** Phần công ty được hưởng (VND). */
     companyTake: number;
+    /** Đóng góp vào quỹ jackpot trong kỳ (VND). */
     jackpotContribution: number;
   };
 }
 
 export interface ListDrawsOutput {
+  /** Danh sách tóm tắt các kỳ quay. */
   draws: DrawSummary[];
+  /** Trang hiện tại. */
   page: number;
+  /** Số bản ghi mỗi trang. */
   size: number;
 }
 
@@ -144,9 +201,11 @@ export interface ListDrawsOutput {
 // ─────────────────────────────────────────────
 
 export interface GetDrawDetailInput {
+  /** ID kỳ quay cần xem chi tiết. */
   drawId: string;
 }
 
 export interface GetDrawDetailOutput {
+  /** Thông tin chi tiết kỳ quay (full entity từ DB). */
   draw: DrawEntity;
 }

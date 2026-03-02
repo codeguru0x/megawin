@@ -10,7 +10,7 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { calcPower655DrawSlots } from "../../helpers/calc-draw-slots";
 import type { PreviewDrawsInput, PreviewDrawsOutput } from "./dto/draw.dto";
 
@@ -23,7 +23,7 @@ export class PreviewDrawsUseCase extends NextApiUseCase<
   PreviewDrawsOutput
 > {
   private readonly drawRepo = new DrawRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** @inheritdoc */
   protected async execute(

@@ -1,0 +1,46 @@
+# Bingo 18 – Player endpoints
+
+bingo18-get-current-draw:
+  handler: src/handlers/bingo18/get-current-draw.handler
+  events:
+    - httpApi:
+        path: /games/bingo18/draws/current
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+bingo18-list-pending-tickets:
+  handler: src/handlers/bingo18/list-pending-tickets.handler
+  events:
+    - httpApi:
+        path: /games/bingo18/tickets/pending
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+bingo18-list-completed-tickets:
+  handler: src/handlers/bingo18/list-completed-tickets.handler
+  events:
+    - httpApi:
+        path: /games/bingo18/tickets/completed
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+bingo18-get-ticket-entries:
+  handler: src/handlers/bingo18/get-ticket-entries.handler
+  events:
+    - httpApi:
+        path: /games/bingo18/tickets/{ticketId}/entries
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+bingo18-place-bet:
+  handler: src/handlers/bingo18/place-bet.handler
+  events:
+    - httpApi:
+        path: /games/bingo18/bets
+        method: post
+        authorizer:
+          name: cognitoPlayerAuth

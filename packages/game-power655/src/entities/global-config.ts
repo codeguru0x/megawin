@@ -23,6 +23,7 @@ import type {
  * MongoDB document cho global config.
  */
 export interface GlobalConfigDoc {
+  /** MongoDB ObjectId – khóa chính nội bộ. Không dùng trong business logic. */
   _id: unknown;
   /** Scope luôn = "global" cho document này. */
   scope: typeof GameConfigScope.Global;
@@ -38,11 +39,14 @@ export interface GlobalConfigDoc {
   play: PlayRules;
   /** Version tăng mỗi lần update (optimistic concurrency). */
   version: number;
+  /** Thời điểm tạo document. */
   createdAt: Date;
+  /** Thời điểm cập nhật gần nhất. */
   updatedAt: Date;
 }
 
 /** Application layer entity. */
 export interface GlobalConfigEntity extends Omit<GlobalConfigDoc, "_id"> {
+  /** ObjectId dạng hex string – khóa chính dùng trong application layer. */
   id: string;
 }

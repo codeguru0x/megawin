@@ -169,6 +169,7 @@ export interface VietlottRef {
  * Collection: power655Draws.
  */
 export interface DrawDoc {
+  /** MongoDB ObjectId – khóa chính nội bộ. Không dùng trong business logic. */
   _id: unknown;
   /** Mã kỳ quay unique. Format: "YYYY-MM-DD.001". Join key với entries. */
   drawId: string;
@@ -194,11 +195,14 @@ export interface DrawDoc {
   voidSummary?: DrawVoidSummary;
   /** Tham chiếu Vietlott chính thức. */
   vietlottRef?: VietlottRef;
+  /** Thời điểm tạo document. */
   createdAt: Date;
+  /** Thời điểm cập nhật gần nhất. */
   updatedAt: Date;
 }
 
 /** Application layer entity (thay _id bằng string id). */
 export interface DrawEntity extends Omit<DrawDoc, "_id"> {
+  /** ObjectId dạng hex string – khóa chính dùng trong application layer. */
   id: string;
 }

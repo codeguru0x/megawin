@@ -1,0 +1,11 @@
+void-prepare:
+  handler: src/handlers/void/prepare-void.handler
+
+void-entries:
+  handler: src/handlers/void/void-entries.handler
+
+void-dispatch-refunds:
+  handler: src/handlers/void/dispatch-refunds.handler
+
+void-finalize:
+  handler: src/handlers/void/finalize-void.handler

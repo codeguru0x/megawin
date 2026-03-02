@@ -15,14 +15,23 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export interface FinalizeVoidInput {
+  /** Mã kỳ quay cần finalize void. */
   drawId: string;
 }
 
 export interface FinalizeVoidResult {
+  /** Mã kỳ quay. */
   drawId: string;
+  /** Tổng entries đã void. */
   totalVoidedEntries: number;
+  /** Tổng số tiền gốc (VND) = Σ(entry.voidInfo.originalAmount). */
   totalOriginalAmount: number;
+  /**
+   * Tổng tiền hoàn (VND) = Σ(entry.voidInfo.refundAmount).
+   * Hiện tại refundAmount = originalAmount (hoàn 100%).
+   */
   totalRefundAmount: number;
+  /** Thời điểm hoàn thành void (ISO 8601). */
   completedAt: string;
 }
 

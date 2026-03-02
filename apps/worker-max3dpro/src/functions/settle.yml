@@ -1,0 +1,20 @@
+settle-prepare:
+  handler: src/handlers/settle/prepare-settle.handler
+
+settle-entries:
+  handler: src/handlers/settle/settle-entries.handler
+
+settle-calculate-financials:
+  handler: src/handlers/settle/calculate-financials.handler
+
+settle-build-report:
+  handler: src/handlers/settle/build-report.handler
+
+settle-sync-ticket-summaries:
+  handler: src/handlers/settle/sync-ticket-summaries.handler
+
+settle-finalize:
+  handler: src/handlers/settle/finalize-settle.handler
+
+settle-dispatch-payouts:
+  handler: src/handlers/settle/dispatch-payouts.handler

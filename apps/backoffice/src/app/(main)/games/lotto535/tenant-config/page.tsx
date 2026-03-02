@@ -368,6 +368,9 @@ function TenantCard({
                               ref={field.ref}
                               decimalScale={1}
                               thousandSeparator={false}
+                              isAllowed={({ floatValue }) =>
+                                floatValue === undefined || floatValue <= 100
+                              }
                             />
                           </FormControl>
                           <span className="text-lg font-semibold text-muted-foreground">

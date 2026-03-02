@@ -13,22 +13,34 @@ export interface GetCurrentDrawInput {
 }
 
 export interface CurrentDrawInfo {
+  /** Mã định danh kỳ quay (UUID). */
   drawId: string;
+  /** Ngày quay, format YYYY-MM-DD. */
   drawDate: string;
+  /** Số thứ tự kỳ trong ngày (1 = sáng 13h, 2 = tối 21h). */
   drawNo: number;
+  /** Giờ quay, format HH:mm. */
   drawTime: string;
+  /** Trạng thái hiện tại (vd: "salesOpen", "salesClosed"). */
   status: string;
+  /** Thông tin thời gian bán vé. */
   sales: {
+    /** Thời điểm mở bán (ISO 8601) — có thể undefined nếu chưa mở. */
     openAt?: string;
+    /** Thời điểm đóng bán (ISO 8601). */
     closeAt: string;
   };
   /** Jackpot hiện tại (VND) — đọc từ active cycle. */
   jackpotCurrentAmount: number;
   /** Dự kiến kỳ chia giải. */
   splitCycleIntent: boolean;
+  /** Thống kê bán vé realtime (chỉ có khi draw đang mở bán). */
   stats?: {
+    /** Tổng số entries (vé × kỳ) đã đặt. */
     ticketEntryCount: number;
+    /** Tổng số dòng (lines) từ tất cả entries. */
     totalLineCount: number;
+    /** Tổng doanh thu (VND) = Σ(entry.amount). */
     totalSalesAmount: number;
   };
 }
@@ -42,18 +54,30 @@ export interface GetCurrentDrawOutput {
   jackpotCurrentAmount: number;
   /** Kỳ đã settle gần nhất. */
   lastSettledDraw: {
+    /** Mã kỳ quay đã settle. */
     drawId: string;
+    /** Ngày quay (YYYY-MM-DD). */
     drawDate: string;
+    /** Số thứ tự kỳ trong ngày. */
     drawNo: number;
+    /** Giờ quay (HH:mm). */
     drawTime: string;
+    /** Kết quả quay — có thể undefined nếu chưa công bố. */
     result?: {
+      /** 5 số chính trúng thưởng (sorted). */
       winningMain: number[];
+      /** Số đặc biệt trúng thưởng (1-12). */
       winningSpecial: number;
+      /** Thời điểm công bố (ISO 8601). */
       publishedAt: string;
     };
+    /** Thông tin Jackpot kỳ đã settle. */
     jackpot?: {
+      /** Số tiền Jackpot đầu kỳ (VND). */
       openingAmount: number;
+      /** Số tiền Jackpot cuối kỳ (VND). */
       closingAmount: number;
+      /** Kỳ này có chia Jackpot hay không. */
       isSplitCycle: boolean;
     };
   } | null;

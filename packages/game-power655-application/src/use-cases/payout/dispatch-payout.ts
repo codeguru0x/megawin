@@ -32,19 +32,30 @@ const PAYOUT_CHUNK_SIZE = 50;
 const MAX_RETRY_COUNT = 10;
 
 export interface DispatchPayoutBatchInput {
+  /** ID kỳ quay cần dispatch trả thưởng. */
   drawId: string;
 }
 
 export interface DispatchPayoutBatchResult {
+  /** ID kỳ quay. */
   drawId: string;
+  /** true khi đã hết entries cần trả thưởng. */
   done: boolean;
+  /** Số entries đã dispatch trả thưởng thành công. */
   dispatched: number;
+  /** Số entries dispatch trả thưởng thất bại. */
   failed: number;
+  /** Số entries bị bỏ qua (vượt quá MAX_RETRY_COUNT). */
   skipped: number;
+  /** Chi tiết kết quả theo từng tenant. */
   tenantResults: Array<{
+    /** ID tenant. */
     tenantId: string;
+    /** Số entries trả thưởng thành công cho tenant. */
     dispatched: number;
+    /** Số entries trả thưởng thất bại cho tenant. */
     failed: number;
+    /** Tổng số tiền trả thưởng cho tenant (VND). */
     totalAmount: number;
   }>;
 }

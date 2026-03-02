@@ -86,13 +86,18 @@ const DAILY_REPORTS = [
 export default function KenoFinancialReportsPage() {
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
-      <div>
-        <h1 className="text-lg font-semibold tracking-tight md:text-2xl">
-          Keno – Thống kê tài chính
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Báo cáo doanh thu, trả thưởng và lợi nhuận theo ngày.
-        </p>
+      <div className="flex items-center gap-3">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-sky-500 to-indigo-600 shadow-sm">
+          <CircleDollarSign className="size-4.5 text-white" />
+        </div>
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
+            Keno — Thống kê tài chính
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            Báo cáo doanh thu, trả thưởng và lợi nhuận theo ngày.
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

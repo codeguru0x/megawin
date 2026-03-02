@@ -92,6 +92,10 @@ export interface TicketEntryDoc {
 
   // ───── Entry Status ─────
 
+  /**
+   * Trạng thái vòng đời entry.
+   * pending → settled (có kết quả) hoặc pending → voided (kỳ quay bị huỷ).
+   */
   status: EntryStatus;
 
   // ───── Stake (tiền cược kỳ này) ─────
@@ -208,7 +212,9 @@ export interface TicketEntryDoc {
 
   // ───── Timestamps ─────
 
+  /** Thời điểm tạo entry (= thời điểm place-bet thành công). */
   createdAt: Date;
+  /** Thời điểm cập nhật gần nhất (settle, void, payout dispatch...). */
   updatedAt: Date;
 
   // ───── Change Tracking ─────
@@ -227,8 +233,11 @@ export interface TicketEntryDoc {
 
 /** Snapshot 1 board trong entry – chỉ lưu selection, không lưu lines. */
 export interface EntryBoardSnapshot {
+  /** Mã board ("A", "B", "C", "D", "E"). */
   boardNo: string;
+  /** Đánh dấu board bị void (admin void), vẫn giữ lịch sử. */
   isVoid?: boolean;
+  /** Kiểu chơi của board (standard, mainCover, specialCover...). */
   playType: PlayType;
 
   /** Các số chính user chọn (raw selection, không phải lines con). */

@@ -8,16 +8,40 @@
  *
  * Cách hoạt động:
  * - Key = { accountId, date } (compound unique index)
- * - date = "YYYYMMDD" theo timezone Asia/Ho_Chi_Minh
+ * - date = "YYYY-MM-DD" theo timezone Asia/Ho_Chi_Minh
  * - Field `seq` tăng monotonically bằng atomic $inc
  * - Mỗi ngày mới, document mới tự động tạo qua upsert (counter reset về 1)
  *
  * Kết hợp với game prefix → ticketNo format:
- *   "KENO-20260227-1", "L535-20260227-2", "KENO-20260227-3"
+ *   "KENO-20260227-00001", "L535-20260227-00002", "KENO-20260227-00003"
  *
  * ticketNo unique trong scope account (compound index { accountId, ticketNo }
  * trên mỗi game tickets collection).
  */
+
+import type { GameProduct } from "./game-core.enums";
+
+// ─────────────────────────────────────────────
+// Game Ticket Prefix
+// ─────────────────────────────────────────────
+
+/**
+ * Mapping GameProduct → prefix viết tắt dùng trong ticketNo.
+ *
+ * Mỗi game có prefix ngắn gọn, unique, dễ đọc.
+ * Khi thêm game mới, thêm entry vào đây.
+ *
+ * Ví dụ ticketNo: "KENO-20260227-00001", "L535-20260227-00002"
+ */
+export const GameTicketPrefix: Record<GameProduct, string> = {
+  lotto535: "L535",
+  power655: "P655",
+  mega645: "M645",
+  keno: "KENO",
+  max3d: "M3D",
+  max3dpro: "M3P",
+  bingo18: "B18",
+} as const;
 
 // ─────────────────────────────────────────────
 // Document
@@ -29,7 +53,7 @@ export interface TicketCounterDoc {
   /** Account ID của người chơi. */
   accountId: string;
 
-  /** Ngày (YYYYMMDD) theo Asia/Ho_Chi_Minh. */
+  /** Ngày (YYYY-MM-DD) theo Asia/Ho_Chi_Minh. */
   date: string;
 
   /** Số thứ tự hiện tại — tăng bằng atomic $inc. */
@@ -43,40 +67,25 @@ export interface TicketCounterDoc {
 // Helpers
 // ─────────────────────────────────────────────
 
-const VN_TZ = "Asia/Ho_Chi_Minh";
-
 /**
- * Lấy ngày hiện tại theo timezone Asia/Ho_Chi_Minh, format YYYYMMDD.
+ * Build ticketNo từ GameProduct + date + counter.
  *
- * Dùng Intl.DateTimeFormat để tránh dependency dayjs/luxon.
- */
-export function getTodayDateVN(): string {
-  const now = new Date();
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: VN_TZ,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-
-  const y = parts.find((p) => p.type === "year")!.value;
-  const m = parts.find((p) => p.type === "month")!.value;
-  const d = parts.find((p) => p.type === "day")!.value;
-  return `${y}${m}${d}`;
-}
-
-/**
- * Build ticketNo từ game prefix + date + counter.
+ * Date input ở dạng "YYYY-MM-DD", khi build sẽ tự chuyển sang "YYYYMMDD" cho gọn.
+ * Phần seq luôn có tối thiểu 5 chữ số (pad leading zeros).
+ * Nếu seq vượt quá 5 chữ số thì giữ nguyên.
  *
- * @param gamePrefix - "KENO", "L535", etc.
- * @param date - "20260227"
+ * @param gameProduct - GameProduct value (e.g. "keno", "lotto535")
+ * @param date - "2026-02-27" (YYYY-MM-DD)
  * @param seq - 1, 2, 3...
- * @returns "KENO-20260227-1"
+ * @returns "KENO-20260227-00001"
  */
 export function buildTicketNo(
-  gamePrefix: string,
+  gameProduct: GameProduct,
   date: string,
   seq: number
 ): string {
-  return `${gamePrefix}-${date}-${seq}`;
+  const prefix = GameTicketPrefix[gameProduct];
+  const compactDate = date.replace(/-/g, "");
+  const paddedSeq = String(seq).padStart(5, "0");
+  return `${prefix}-${compactDate}-${paddedSeq}`;
 }

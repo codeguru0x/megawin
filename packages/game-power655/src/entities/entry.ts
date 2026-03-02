@@ -97,6 +97,7 @@ export interface EntrySummary {
  * Collection: power655TicketEntries.
  */
 export interface TicketEntryDoc {
+  /** MongoDB ObjectId – khóa chính nội bộ. Không dùng trong business logic. */
   _id: unknown;
   /** Reference đến ticket gốc (ObjectId as string). */
   ticketId: string;
@@ -122,7 +123,10 @@ export interface TicketEntryDoc {
   outcome?: EntryOutcome;
   /** Snapshot boards từ ticket gốc. Settle dùng field này, không join ticket. */
   boards: Board[];
-  /** Tiền cược entry = ticket.stakePerDraw. */
+  /**
+   * Tiền cược entry = ticket.stakePerDraw.
+   * Công thức: unitPrice × totalLines (trong đó totalLines = Σ(boards[].lineCount)).
+   */
   stakeAmount: number;
   /** Tóm tắt: tổng lines + hash. */
   entrySummary: EntrySummary;
@@ -136,7 +140,9 @@ export interface TicketEntryDoc {
   settledAt?: Date;
   /** Thời điểm bị void. */
   voidedAt?: Date;
+  /** Thời điểm tạo document. */
   createdAt: Date;
+  /** Thời điểm cập nhật gần nhất. */
   updatedAt: Date;
 }
 
@@ -145,7 +151,8 @@ export interface TicketEntryEntity extends Omit<
   TicketEntryDoc,
   "_id" | "version"
 > {
+  /** ObjectId dạng hex string – khóa chính dùng trong application layer. */
   id: string;
-  /** Version dạng string (BigInt serialized). */
+  /** Version dạng string (BigInt serialized). Dùng cho feed sync. */
   version: string;
 }

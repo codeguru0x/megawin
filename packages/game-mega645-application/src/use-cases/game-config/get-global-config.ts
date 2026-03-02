@@ -1,19 +1,15 @@
-import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { AppException } from "@megawin/shared/errors";
-import { GameConfigRepository } from "../../infras/repos/game-config-repo";
-import type { GlobalConfigEntity } from "../../infras/mappers/global-config-mapper";
+import { NextApiUseCase } from "@megawin/next/server";
+import { GetGlobalConfigInternalUseCase } from "./get-global-config-internal";
+import type { GetGameConfigOutput } from "./dto/game-config.dto";
 
-export class GetGlobalConfigUseCase extends InternalUseCase<
+export class GetGlobalConfigUseCase extends NextApiUseCase<
   void,
-  GlobalConfigEntity
+  GetGameConfigOutput
 > {
-  private readonly repo = new GameConfigRepository();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  protected async execute(): Promise<GlobalConfigEntity> {
-    const config = await this.repo.getGlobalConfig();
-    if (!config) {
-      throw AppException.internal("Mega 6/45 GameConfig chưa được khởi tạo.");
-    }
-    return config;
+  protected async execute(): Promise<GetGameConfigOutput> {
+    const config = await this.getGlobalConfig.run();
+    return { config };
   }
 }

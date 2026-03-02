@@ -13,6 +13,9 @@ export const MODULES = {
   keno: "keno",
   power655: "power655",
   mega645: "mega645",
+  max3d: "max3d",
+  "max3dpro": "max3dpro",
+  bingo18: "bingo18",
 } as const;
 
 /** Union type tất cả module ID hợp lệ */

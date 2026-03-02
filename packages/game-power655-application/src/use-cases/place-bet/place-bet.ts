@@ -48,10 +48,10 @@ import {
 import { computeSelectionHash } from "@megawin/game-power655/helpers";import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
-import { buildTicketNo } from "@megawin/game-core/entities";
+import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
@@ -69,7 +69,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
   private readonly ticketRepo = new TicketRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly ticketCounter = new TicketCounterRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** @inheritdoc */
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
@@ -186,7 +186,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
 
     // ── 7. Build ticket document ──
     const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
-    const ticketNo = buildTicketNo("P655", date, seq);
+    const ticketNo = buildTicketNo(GameProduct.Power655, date, seq);
     const selectionHash = computeSelectionHash(builtBoards);
 
     const ticketDoc: Omit<TicketDoc, "_id"> = {

@@ -4,7 +4,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { isSplitCycleDraw } from "@megawin/game-power655/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
 
@@ -27,7 +27,7 @@ export class TriggerSettleUseCase extends NextApiUseCase<
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** @inheritdoc */
   protected async execute(

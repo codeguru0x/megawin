@@ -57,10 +57,14 @@ export const GameProduct = {
   Power655: "power655",
   /** Keno – chọn 1-10 số từ tập 01-80, quay 20 số. */
   Keno: "keno",
-  /** Max 3D – chọn 3 chữ số 000-999. */
+  /** Max 3D – chọn 1-2 bộ ba chữ số 000-999, straight/combo/plus. */
   Max3d: "max3d",
+  /** Max 3D Pro – chọn cặp 2 bộ ba số 000-999, so khớp đúng/ngược thứ tự. */
+  Max3dpro: "max3dpro",
   /** Mega 6/45 – chọn 6 số từ tập 01-45, không có số đặc biệt. */
   Mega645: "mega645",
+  /** Bingo 18 – quay 3 số từ {1,2,3,4,5,6}, tổng 3-18. */
+  Bingo18: "bingo18",
 } as const;
 
 export type GameProduct = (typeof GameProduct)[keyof typeof GameProduct];

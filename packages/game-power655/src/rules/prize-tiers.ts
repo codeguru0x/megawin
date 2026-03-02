@@ -24,8 +24,11 @@
 import { PrizeTier } from "../entities/enums";
 
 export interface LineMatchResult {
+  /** Hạng giải trúng (null = không trúng). Chỉ trả về hạng cao nhất. */
   tier: PrizeTier | null;
+  /** Số lượng số chính trùng với kết quả quay (0-6). */
   mainMatchCount: number;
+  /** Bonus number có nằm trong 6 số player chọn không. Chỉ ảnh hưởng phân biệt JP2 vs Giải Nhất khi mainMatchCount = 5. */
   bonusMatched: boolean;
 }
 
@@ -77,7 +80,8 @@ export function determineTiers(
 }
 
 /**
- * Hạng giải cao nhất trong danh sách tiers.
+ * Thứ tự ưu tiên hạng giải từ cao đến thấp.
+ * Dùng để tìm hạng cao nhất trong danh sách tiers trúng.
  */
 const TIER_PRIORITY: PrizeTier[] = [
   PrizeTier.Jackpot1,

@@ -16,11 +16,17 @@
 
 /** Tên các MongoDB collections cho game Mega 6/45. */
 export const Mega645Collections = {
+  /** Collection vé: lưu trữ thông tin vé mua. */
   Tickets: "mega645_tickets",
+  /** Collection entry: 1 entry = 1 vé tham gia 1 kỳ quay cụ thể. */
   TicketEntries: "mega645_ticket_entries",
+  /** Collection line: 1 line = 1 bộ 6 số (đơn vị nhỏ nhất so khớp). */
   TicketLines: "mega645_ticket_lines",
+  /** Collection kỳ quay: 1 document = 1 kỳ mở thưởng. */
   Draws: "mega645_draws",
+  /** Collection cấu hình game (global + tenant). */
   GameConfigs: "mega645_game_configs",
+  /** Collection chu kỳ Jackpot: theo dõi tích luỹ & chia Jackpot. */
   JackpotCycles: "mega645_jackpot_cycles",
 } as const;
 

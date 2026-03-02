@@ -41,9 +41,9 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import { GetTenantConfigInternalUseCase } from "../game-config/get-tenant-config-internal";
+import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
-import { buildTicketNo } from "@megawin/game-core/entities";
+import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
 
@@ -173,7 +173,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
     // ── 7. Build ticket document ──
     const now = nowVN();
     const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
-    const ticketNo = buildTicketNo("KENO", date, seq);
+    const ticketNo = buildTicketNo(GameProduct.Keno, date, seq);
     const drawCount = drawIds.length;
 
     const ticketDoc: Omit<TicketDoc, "_id"> = {

@@ -1,0 +1,159 @@
+/**
+ * Max 3D Pro – Ticket Entry Document
+ *
+ * Collection: max3d_pro_ticket_entries
+ *
+ * 1 entry = 1 vé tham gia 1 kỳ quay.
+ * Primary operational unit cho settle, payout, void.
+ */
+
+import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
+import type { Long } from "@megawin/game-core/types";
+import type { PlayMode, PlayType, PrizeTier, PayoutStatus } from "./enums";
+import type { Triplet, ISODateString } from "./types";
+import type { Max3dproDrawResult } from "./draw-result";
+
+// ─────────────────────────────────────────────
+// Entry Board Snapshot
+// ─────────────────────────────────────────────
+
+export interface EntryBoardSnapshot {
+  /** Ký hiệu board: A, B, C, D. */
+  boardNo: string;
+  /** Board bị huỷ (khi void 1 phần vé). */
+  isVoid?: boolean;
+  /** Cách chơi: multiNumber / multiDigit. */
+  playMode: PlayMode;
+  /** Kiểu chơi: straight / quickPick. */
+  playType: PlayType;
+  /** Danh sách các bộ ba số (triplets) đã chọn hoặc sinh ra. */
+  triplets: Triplet[];
+  /** Chỉ cho multiDigit: 3 chữ số đầu chọn. */
+  frontDigits?: number[];
+  /** Chỉ cho multiDigit: 3 chữ số sau chọn. */
+  backDigits?: number[];
+  /** Số cặp (pairs) sinh ra từ board. multiNumber: C(n,2). */
+  lineCount: number;
+}
+
+// ─────────────────────────────────────────────
+// Entry Payout Tier
+// ─────────────────────────────────────────────
+
+export interface EntryPayoutTier {
+  /** Hạng giải: special/specialSub/first/second/third/fourth/fifth/sixth. */
+  tier: PrizeTier;
+  /** Số pairs trúng hạng giải này. */
+  hitCount: number;
+  /** Giá trị 1 lần trúng (VND). x2 nếu 2 bộ ba số giống nhau. */
+  unitAmount: number;
+  /** Tổng tiền = hitCount × unitAmount. */
+  amount: number;
+}
+
+// ─────────────────────────────────────────────
+// Ticket Entry Document
+// ─────────────────────────────────────────────
+
+export interface TicketEntryDoc {
+  _id: unknown;
+
+  /** ID đại lý (tenant). */
+  tenantId: string;
+  /** ID tài khoản người chơi. */
+  accountId: string;
+  /** Tên đăng nhập người chơi. */
+  username: string;
+  /** ID vé gốc (ticket) chứa entry này. */
+  ticketId: string;
+
+  /** ID kỳ quay entry tham gia. */
+  drawId: string;
+  /** Thời điểm quay của kỳ quay. */
+  drawTime: Date;
+  /** Ngày quay "YYYY-MM-DD". */
+  drawDate: ISODateString;
+  /** Ngày tài chính dùng cho báo cáo. */
+  financialDate: ISODateString;
+
+  /** Snapshot thông tin tenant tại thời điểm tạo entry. */
+  tenantSnapshot: {
+    /** Tỷ lệ hoa hồng snapshot tại thời điểm tạo entry. */
+    commissionRate: number;
+    /** Số tiền hoa hồng = amount × commissionRate. */
+    commissionAmount: number;
+  };
+
+  /** Tổng cặp (pairs) = Σ(board.lineCount). Mỗi pair = 1 lần dự thưởng × unitPrice. */
+  lineCount: number;
+  /** Tổng tiền cược = lineCount × unitPrice (VND). */
+  amount: number;
+  /** Mệnh giá 1 pair (VND). Snapshot từ global config. */
+  unitPrice: number;
+
+  /** Tóm tắt nội dung entry (số vé + danh sách boards). */
+  entrySummary: {
+    /** Số vé hiển thị cho người chơi. */
+    ticketNo: string;
+    /** Danh sách boards snapshot từ vé gốc. */
+    boards: EntryBoardSnapshot[];
+  };
+
+  /** Kết quả quay thưởng, gắn khi publish result. */
+  result?: Max3dproDrawResult & {
+    /** Thời điểm công bố kết quả. */
+    publishedAt: Date;
+  };
+
+  /** Kết quả đối soát: win / lose / void. */
+  outcome?: EntryOutcome;
+  /** Trạng thái entry: pending → active → settled / voided. */
+  status: EntryStatus;
+
+  /** Thông tin thanh toán thưởng. */
+  payout?: {
+    /** Tổng tiền thắng = Σ(tiers[].amount). */
+    winAmount: number;
+    /** Tiền trả cho player = winAmount. */
+    payoutAmount: number;
+    /** Chi tiết thắng theo hạng giải (8 hạng: special → sixth). */
+    tiers: EntryPayoutTier[];
+    /** Thời điểm settle entry. */
+    settledAt: Date;
+    /** Trạng thái dispatch tiền thưởng. */
+    payoutStatus?: PayoutStatus;
+    /** Thời điểm gửi lệnh trả thưởng. */
+    payoutDispatchedAt?: Date;
+    /** Thời điểm xác nhận trả thưởng thành công. */
+    payoutConfirmedAt?: Date;
+    /** Thông báo lỗi nếu trả thưởng thất bại. */
+    payoutError?: string;
+  };
+
+  /** Thông tin huỷ entry (khi void). */
+  voidInfo?: {
+    /** Lý do huỷ entry. */
+    reason: string;
+    /** Tiền cược gốc trước khi void. */
+    originalAmount: number;
+    /** Tiền hoàn trả cho người chơi. */
+    refundAmount: number;
+    /** Trạng thái hoàn tiền: pending / dispatched / confirmed / failed. */
+    refundStatus: string;
+    /** Thời điểm huỷ entry. */
+    voidedAt: Date;
+    /** Thời điểm gửi lệnh hoàn tiền. */
+    refundDispatchedAt?: Date;
+    /** Thời điểm xác nhận hoàn tiền thành công. */
+    refundConfirmedAt?: Date;
+    /** Thông báo lỗi nếu hoàn tiền thất bại. */
+    refundError?: string;
+  };
+
+  /** Phiên bản optimistic locking. */
+  version: Long;
+  /** Thời điểm tạo document. */
+  createdAt: Date;
+  /** Thời điểm cập nhật cuối. */
+  updatedAt: Date;
+}

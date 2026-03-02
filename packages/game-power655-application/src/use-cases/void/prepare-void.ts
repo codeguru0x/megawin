@@ -17,18 +17,28 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export interface PrepareVoidInput {
+  /** ID kỳ quay cần huỷ (void). */
   drawId: string;
+  /** Lý do huỷ kỳ quay. */
   reason: string;
+  /** ID người thực hiện huỷ (admin/operator). */
   voidedBy?: string;
 }
 
 export interface PrepareVoidResult {
+  /** ID kỳ quay đã chuyển sang trạng thái void. */
   drawId: string;
+  /** Ngày quay, định dạng YYYY-MM-DD. */
   drawDate: string;
+  /** Số thứ tự kỳ quay. */
   drawNo: number;
+  /** Lý do huỷ. */
   reason: string;
+  /** ID người thực hiện huỷ. */
   voidedBy?: string;
+  /** Trạng thái trước khi huỷ (salesClosed / published). */
   previousStatus: string;
+  /** Tổng số entries có thể void (status: scheduled/active/drawn). */
   totalVoidableEntries: number;
 }
 

@@ -107,9 +107,11 @@ export interface JackpotCycleDoc {
 
   // ───── Cấu hình snapshot ─────
 
-  /** Cấu hình Jackpot tại thời điểm tạo cycle. */
+  /** Cấu hình Jackpot tại thời điểm tạo cycle (snapshot, không thay đổi khi config update sau). */
   config: {
+    /** Ngưỡng kích hoạt chia giải Jackpot (VND). Khi currentAmount >= splitThreshold → trigger split. */
     splitThreshold: number;
+    /** Tỷ lệ chia Jackpot cho từng tier (snapshot từ global config). */
     splitRatios: SplitRatios;
   };
 
@@ -126,16 +128,26 @@ export interface JackpotCycleDoc {
 
   /** Chi tiết chia giải (khi closeReason = split). */
   splitDetail?: {
+    /** Tổng giá trị Jackpot được chia (VND) = currentAmount tại thời điểm chia. */
     splitAmount: number;
+    /**
+     * Phân bổ chia cho từng tier. Key = tier name (tier1..tier5).
+     * Chỉ chứa tier có người trúng.
+     */
     tierAllocations: Record<
       string,
       {
+        /** Số lượng giải trúng trong tier này. */
         winnerCount: number;
+        /** Bonus mỗi giải trúng = totalAmount / winnerCount (đã làm tròn). */
         bonusPerWinner: number;
+        /** Tổng tiền phân bổ cho tier (bao gồm phần redistribute từ tier không có winner). */
         totalAmount: number;
       }
     >;
+    /** Tổng số người trúng giải (across all tiers) trong kỳ chia. */
     totalWinners: number;
+    /** Tổng tiền bonus đã chi trả thực tế (VND). */
     totalPaid: number;
   };
 
@@ -147,6 +159,8 @@ export interface JackpotCycleDoc {
 
   // ───── Timestamps ─────
 
+  /** Thời điểm tạo cycle document. */
   createdAt: Date;
+  /** Thời điểm cập nhật gần nhất (tích luỹ, đóng cycle...). */
   updatedAt: Date;
 }

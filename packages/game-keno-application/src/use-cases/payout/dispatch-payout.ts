@@ -13,7 +13,7 @@ import {
 } from "@megawin/tenant-gateway";
 import { GameProduct } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GetTenantConfigInternalUseCase } from "../game-config/get-tenant-config-internal";
+import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 
 const BATCH_QUERY_LIMIT = 200;
 const PAYOUT_CHUNK_SIZE = 50;

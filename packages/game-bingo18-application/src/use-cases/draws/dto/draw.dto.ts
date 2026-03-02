@@ -1,0 +1,193 @@
+import type { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawEntity } from "../../../infras/mappers/draw-mapper";
+
+// ─────────────────────────────────────────────
+// CreateDraw (batch)
+// ─────────────────────────────────────────────
+
+export interface CreateDrawInput {
+  /** Ngày quay (format YYYY-MM-DD). Dùng để tính drawTime, closeAt. */
+  drawDate: string;
+  /** Số kỳ tạo 1 lúc. Default 10, max 30. */
+  count: number;
+}
+
+export interface CreateDrawOutputItem {
+  /** ID duy nhất của kỳ quay (format: bingo18_{drawDate}_{drawNo}). */
+  drawId: string;
+  /** Ngày quay (YYYY-MM-DD). */
+  drawDate: string;
+  /** Số thứ tự kỳ trong ngày (1, 2, 3, …). */
+  drawNo: number;
+  /** Thời điểm quay (ISO 8601). */
+  drawTime: string;
+  /** Thời điểm đóng bán (ISO 8601) – trước drawTime một khoảng cấu hình. */
+  closeAt: string;
+  /** Ngày tài chính áp dụng cho kỳ này (YYYY-MM-DD). */
+  financialDate: string;
+  /** Trạng thái ban đầu của kỳ quay (scheduled | salesOpen). */
+  status: string;
+}
+
+export interface CreateDrawOutput {
+  /** Danh sách các kỳ quay vừa được tạo. */
+  draws: CreateDrawOutputItem[];
+}
+
+// ─────────────────────────────────────────────
+// PreviewDraws
+// ─────────────────────────────────────────────
+
+export interface PreviewDrawsInput {
+  /** Ngày quay muốn xem trước (YYYY-MM-DD). */
+  drawDate: string;
+  /** Số kỳ muốn preview. */
+  count: number;
+}
+
+export interface PreviewDrawItem {
+  /** Số thứ tự kỳ trong ngày. */
+  drawNo: number;
+  /** Thời điểm quay dự kiến (ISO 8601). */
+  drawTime: string;
+  /** Thời điểm đóng bán dự kiến (ISO 8601). */
+  closeAt: string;
+  /** salesOpen nếu trong [firstDrawTime, lastDrawTime], scheduled nếu ngoài. */
+  status: string;
+}
+
+export interface PreviewDrawsOutput {
+  /** Danh sách kỳ quay preview (chưa lưu DB). */
+  draws: PreviewDrawItem[];
+}
+
+// ─────────────────────────────────────────────
+// OpenSales / CloseSales / VoidDraw
+// ─────────────────────────────────────────────
+
+export interface DrawIdInput {
+  /** ID của kỳ quay cần thao tác. */
+  drawId: string;
+}
+
+export interface DrawTransitionOutput {
+  /** ID kỳ quay đã chuyển trạng thái. */
+  drawId: string;
+  /** Trạng thái trước khi chuyển. */
+  previousStatus: string;
+  /** Trạng thái sau khi chuyển. */
+  currentStatus: string;
+}
+
+// ─────────────────────────────────────────────
+// PublishResult
+// ─────────────────────────────────────────────
+
+export interface PublishResultInput {
+  /** ID kỳ quay cần công bố kết quả. */
+  drawId: string;
+  /** 3 số kết quả (mỗi số 1-6), ví dụ [3, 5, 2]. */
+  numbers: number[];
+  /** Tham chiếu kết quả Vietlott (nếu đồng bộ từ Vietlott). */
+  vietlottRef?: {
+    /** Mã kỳ quay Vietlott. */
+    drawPeriod: string;
+    /** Ngày quay Vietlott (YYYY-MM-DD). */
+    drawDate: string;
+  };
+}
+
+export interface PublishResultOutput {
+  /** ID kỳ quay đã công bố. */
+  drawId: string;
+  /** Trạng thái sau khi công bố (published). */
+  status: string;
+  /** Kết quả quay. */
+  result: {
+    /** 3 số kết quả (1-6). */
+    numbers: number[];
+    /** Tổng 3 số = numbers[0] + numbers[1] + numbers[2]. */
+    sum: number;
+    /** Thời điểm công bố (ISO 8601). */
+    publishedAt: string;
+  };
+}
+
+// ─────────────────────────────────────────────
+// TriggerSettle
+// ─────────────────────────────────────────────
+
+export interface TriggerSettleInput {
+  /** ID kỳ quay cần trigger settle. */
+  drawId: string;
+}
+
+export interface TriggerSettleOutput {
+  /** ID kỳ quay đang settle. */
+  drawId: string;
+  /** Trạng thái sau khi trigger (settling). */
+  status: string;
+  /** Tổng entries cần settle. */
+  totalEntries: number;
+}
+
+// ─────────────────────────────────────────────
+// ListDraws
+// ─────────────────────────────────────────────
+
+export interface ListDrawsInput {
+  /** Lọc theo trạng thái kỳ quay (scheduled, salesOpen, salesClosed, …). */
+  status?: DrawStatus;
+  /** Lọc từ ngày (YYYY-MM-DD, inclusive). */
+  fromDate?: string;
+  /** Lọc đến ngày (YYYY-MM-DD, inclusive). */
+  toDate?: string;
+  /** Trang hiện tại (1-based). Default 1. */
+  page?: number;
+  /** Số bản ghi mỗi trang. Default 20. */
+  size?: number;
+}
+
+export interface DrawSummary {
+  /** MongoDB document ID. */
+  id: string;
+  /** ID logic kỳ quay (bingo18_{drawDate}_{drawNo}). */
+  drawId: string;
+  /** Ngày quay (YYYY-MM-DD). */
+  drawDate: string;
+  /** Số thứ tự kỳ trong ngày. */
+  drawNo: number;
+  /** Thời điểm quay (ISO 8601). */
+  drawTime: string;
+  /** Trạng thái hiện tại của kỳ quay. */
+  status: string;
+  /** true nếu đã có kết quả quay (numbers + sum). */
+  hasResult: boolean;
+  /** Số lượng entry đã tham gia kỳ này. */
+  ticketEntryCount?: number;
+  /** Tổng doanh thu (VND) từ entries. */
+  totalRevenue?: number;
+}
+
+export interface ListDrawsOutput {
+  /** Danh sách kỳ quay tóm tắt. */
+  draws: DrawSummary[];
+  /** Trang hiện tại. */
+  page: number;
+  /** Kích thước trang. */
+  size: number;
+}
+
+// ─────────────────────────────────────────────
+// GetDrawDetail
+// ─────────────────────────────────────────────
+
+export interface GetDrawDetailInput {
+  /** ID kỳ quay cần xem chi tiết. */
+  drawId: string;
+}
+
+export interface GetDrawDetailOutput {
+  /** Toàn bộ thông tin kỳ quay (entity đầy đủ). */
+  draw: DrawEntity;
+}

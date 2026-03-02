@@ -27,6 +27,7 @@ import type {
 // ─────────────────────────────────────────────
 
 export interface DrawDoc {
+  /** MongoDB ObjectId. */
   _id: unknown;
 
   /**
@@ -195,28 +196,33 @@ export interface DrawDoc {
 
   /** Thông tin khi kỳ quay bị huỷ. Chỉ có khi status = void. */
   voidInfo?: {
+    /** Lý do huỷ kỳ quay (do staff nhập). */
     reason: string;
+    /** Tài khoản staff thực hiện huỷ. */
     voidedBy?: string;
+    /** Thời điểm thực hiện huỷ kỳ quay. */
     voidedAt: Date;
   };
 
   /** Tổng kết void flow (entries refund). Ghi sau khi void step function hoàn tất. */
   voidSummary?: {
+    /** Số lượng entry đã được huỷ cược. */
     totalVoidedEntries: number;
+    /** Tổng tiền cược gốc của các entry bị huỷ (VND). */
     totalOriginalAmount: number;
+    /** Tổng tiền hoàn trả cho các player (VND). */
     totalRefundAmount: number;
+    /** Thời điểm void flow hoàn tất. */
     completedAt: Date;
   };
 
   // ───── Timestamps ─────
 
+  /** Thời điểm tạo draw document. */
   createdAt: Date;
+  /** Thời điểm cập nhật gần nhất (thay đổi status, ghi result, settle...). */
   updatedAt: Date;
 }
-
-// ─────────────────────────────────────────────
-// Sub-types
-// ─────────────────────────────────────────────
 
 /** Chi tiết chia giải khi kỳ là split cycle. */
 export interface DrawSplit {

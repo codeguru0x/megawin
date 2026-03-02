@@ -4,8 +4,8 @@
   "private": true,
   "description": "Keno application layer – repos, mappers, use cases",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
     "check-types": "tsc --noEmit",
     "build:deps": "turbo build --filter=@megawin/game-keno-application^...",
     "pretest": "pnpm build:deps",

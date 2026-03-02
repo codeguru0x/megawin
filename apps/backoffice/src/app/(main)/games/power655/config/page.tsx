@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, DollarSign, Percent, Settings2, ShieldCheck } from "lucide-react";
+import { Trophy, DollarSign, Percent, Settings2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,7 +32,7 @@ export default function Power655ConfigPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-red-500 to-red-600 shadow-sm">
-            <ShieldCheck className="size-4 text-white" />
+            <Settings2 className="size-4 text-white" />
           </div>
           <h1 className="text-base font-semibold tracking-tight text-foreground">
             Power 6/55 — Cấu hình

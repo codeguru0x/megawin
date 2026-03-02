@@ -27,50 +27,107 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export interface CalculateFinancialsInput {
+  /** Mã kỳ quay cần tính tài chính. */
   drawId: string;
+  /** Số tiền Jackpot đầu kỳ (VND) — từ PrepareSettle. */
   jackpotOpeningAmount: number;
+  /** Kỳ này có phải kỳ chia Jackpot hay không. */
   isSplitCycle: boolean;
+  /** Tổng lines trong kỳ — dùng ghi stats. */
   totalLines: number;
+  /** Cấu hình tài chính (snapshot từ GlobalConfig). */
   config: {
+    /** Số tiền khởi điểm Jackpot (VND). */
     seedAmount: number;
+    /** Ngưỡng kích hoạt chia Jackpot (VND). */
     splitThreshold: number;
+    /** Tỷ lệ chia Jackpot theo tier khi split. */
     splitRatios: {
+      /** Tỷ lệ chia cho giải Nhất. */
       tier1: number;
+      /** Tỷ lệ chia cho giải Nhì. */
       tier2: number;
+      /** Tỷ lệ chia cho giải Ba. */
       tier3: number;
+      /** Tỷ lệ chia cho giải Tư. */
       tier4: number;
+      /** Tỷ lệ chia cho giải Năm. */
       tier5: number;
     };
+    /** Tỷ lệ công ty thu về trên doanh thu (0-1). */
     companyRate: number;
   };
 }
 
 export interface CalculateFinancialsResult {
+  /** Mã kỳ quay. */
   drawId: string;
+  /** Tổng doanh thu kỳ (VND) = Σ(entry.amount). */
   totalRevenue: number;
+  /** Tổng giải thưởng cố định đã trả (VND) — không bao gồm Jackpot. */
   totalFixedPrizes: number;
+  /** Tổng hoa hồng đại lý (VND) = Σ(tenant.revenue × tenant.commissionRate). */
   totalAgentCommission: number;
+  /**
+   * Phần công ty thu về tối đa (VND).
+   * Công thức: companyTake = totalRevenue × companyRate.
+   */
   companyTake: number;
+  /**
+   * Phần công ty thực tế thu về (VND).
+   * Có thể nhỏ hơn companyTake nếu tổng chi vượt doanh thu.
+   * Công thức: actualCompanyTake = totalRevenue − totalFixedPrizes − totalAgentCommission − jackpotContribution.
+   */
   actualCompanyTake: number;
+  /**
+   * Phần đóng góp vào quỹ Jackpot (VND).
+   * Công thức: jackpotContribution = totalRevenue − totalFixedPrizes − totalAgentCommission − companyTake.
+   * (hoặc = 0 nếu kết quả âm).
+   */
   jackpotContribution: number;
+  /**
+   * Số tiền Jackpot cuối kỳ (VND).
+   * - Không có winner/split: closingJackpot = openingAmount + jackpotContribution.
+   * - Có winner hoặc split: closingJackpot = seedAmount (reset).
+   */
   closingJackpot: number;
+  /**
+   * Số tiền Jackpot mở cho kỳ tiếp theo (VND).
+   * Thường bằng closingJackpot, hoặc seedAmount nếu cycle mới.
+   */
   nextJackpotOpening: number;
+  /** Có người trúng Jackpot trong kỳ hay không. */
   hasJackpotWinner: boolean;
+  /**
+   * Chi tiết phân bổ split — chỉ có khi isSplitCycle = true.
+   * Key: tier name, Value: thông tin phân bổ cho tier đó.
+   */
   splitDetails?: Record<
     string,
     {
+      /** Số tiền ban đầu phân cho tier (VND) = jackpotAmount × splitRatio[tier]. */
       initialAmount: number;
+      /** Số tiền tái phân bổ từ tier không có winner (VND). */
       redistributedAmount: number;
+      /** Tổng tiền tier nhận (VND) = initialAmount + redistributedAmount. */
       totalAmount: number;
+      /** Số người trúng tier này. */
       winnerCount: number;
+      /** Tiền thưởng mỗi người (VND) = totalAmount / winnerCount. */
       bonusPerWinner: number;
     }
   >;
+  /** Phân tích doanh thu theo từng tenant. */
   tenantBreakdown: Array<{
+    /** Mã tenant. */
     tenantId: string;
+    /** Doanh thu tenant (VND). */
     revenue: number;
+    /** Hoa hồng tenant (VND) = revenue × commissionRate. */
     commission: number;
+    /** Tỷ lệ hoa hồng tenant (0-1). */
     commissionRate: number;
+    /** Số entries của tenant trong kỳ. */
     entryCount: number;
   }>;
 }

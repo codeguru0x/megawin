@@ -11,7 +11,7 @@ import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { DrawEntity } from "../../infras/mappers/draw-mapper";
 import type {
   PlayerGetCurrentDrawOutput,
@@ -29,7 +29,7 @@ export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(): Promise<PlayerGetCurrentDrawOutput> {
     const [activeDraws, lastSettled, activeCycle, globalConfig] =

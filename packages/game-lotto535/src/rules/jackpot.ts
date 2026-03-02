@@ -47,9 +47,13 @@ export interface DrawFinancialInput {
    * commission.amount đã snapshot lúc place-bet, SUM từ DB.
    */
   tenantRevenues: Array<{
+    /** ID tenant/đại lý. */
     tenantId: string;
+    /** Doanh thu tiền cược từ tenant này trong kỳ (VND). */
     revenue: number;
+    /** Hoa hồng đã tính sẵn = Σ(entry.tenant.commissionAmount) (VND). */
     commission: number;
+    /** Tỷ lệ hoa hồng áp dụng (snapshot từ entry.tenant.commissionRate). */
     commissionRate: number;
   }>;
 
@@ -59,8 +63,11 @@ export interface DrawFinancialInput {
 
 /** Output sau tính toán tài chính. */
 export interface DrawFinancialResult {
+  /** Tổng doanh thu tiền cược (100% revenue, VND). */
   totalRevenue: number;
+  /** Tổng tiền trả giải cố định tier1 → consolation (VND). */
   totalFixedPrizes: number;
+  /** Tổng hoa hồng đại lý = Σ(entry.tenant.commissionAmount) (VND). */
   totalAgentCommission: number;
 
   /**
@@ -78,15 +85,20 @@ export interface DrawFinancialResult {
 
   /**
    * Tiền tích luỹ vào Jackpot kỳ tiếp theo.
+   * = max(revenue - fixedPrizes - commission - actualCompanyTake, 0).
    * Luôn >= 0: nếu tính ra âm (doanh thu không đủ bù) thì = 0.
    */
   jackpotContribution: number;
 
-  /** Chi tiết hoa hồng từng tenant. */
+  /** Chi tiết hoa hồng từng tenant (dùng cho báo cáo tài chính chi tiết). */
   tenantBreakdown: Array<{
+    /** ID tenant/đại lý. */
     tenantId: string;
+    /** Doanh thu từ tenant này trong kỳ (VND). */
     revenue: number;
+    /** Hoa hồng đại lý = Math.round(revenue × commissionRate) (VND). */
     commission: number;
+    /** Tỷ lệ hoa hồng áp dụng cho tenant này. */
     commissionRate: number;
   }>;
 }

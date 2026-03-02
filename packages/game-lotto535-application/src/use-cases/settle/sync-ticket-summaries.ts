@@ -18,11 +18,14 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 
 export interface SyncTicketSummariesInput {
+  /** Mã kỳ quay — dùng để tìm tất cả entries liên quan. */
   drawId: string;
 }
 
 export interface SyncTicketSummariesResult {
+  /** Mã kỳ quay. */
   drawId: string;
+  /** Số tickets đã được sync lại summary (progress, settlement, status). */
   ticketsSynced: number;
 }
 

@@ -171,13 +171,15 @@ function mainMatchWays(k: number): number {
 
 /** Thông tin xác suất cho 1 tier. */
 export interface TierOdds {
+  /** Mã hạng giải (jackpot, tier1, tier2...). */
   tier: PrizeTier;
+  /** Tên hiển thị tiếng Việt (ví dụ: "Giải Độc Đắc"). */
   label: string;
-  /** Số cách trúng (favorable outcomes). */
+  /** Số cách trúng (favorable outcomes) trong không gian mẫu. */
   ways: number;
-  /** Xác suất P = ways / TOTAL_OUTCOMES. */
+  /** Xác suất trúng P = ways / TOTAL_OUTCOMES. */
   probability: number;
-  /** 1 in N (inverse of probability). */
+  /** Tỷ lệ nghịch đảo "1 trong N" (= 1 / probability). Ví dụ: 3,895,584 nghĩa là 1 trong gần 3.9 triệu. */
   oneInN: number;
 }
 

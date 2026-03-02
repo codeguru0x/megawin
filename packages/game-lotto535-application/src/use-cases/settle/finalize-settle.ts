@@ -22,33 +22,53 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { JackpotCycleCloseReason } from "@megawin/game-lotto535/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 
 export interface FinalizeSettleInput {
+  /** Mã kỳ quay cần finalize. */
   drawId: string;
+  /** Số tiền Jackpot đầu kỳ (VND) — từ PrepareSettle. */
   jackpotOpeningAmount: number;
+  /** Số tiền Jackpot cuối kỳ (VND) — từ CalculateFinancials. */
   closingJackpot: number;
+  /** Số tiền Jackpot mở cho kỳ tiếp theo (VND). */
   nextJackpotOpening: number;
+  /** Có người trúng Jackpot hay không. */
   hasJackpotWinner: boolean;
+  /** Kỳ này có phải kỳ chia Jackpot hay không. */
   isSplitCycle: boolean;
+  /**
+   * Chi tiết phân bổ split — chỉ có khi isSplitCycle = true.
+   * Key: tier name, Value: thông tin phân bổ.
+   */
   splitDetails?: Record<
     string,
     {
+      /** Số tiền ban đầu phân cho tier (VND). */
       initialAmount: number;
+      /** Số tiền tái phân bổ (VND). */
       redistributedAmount: number;
+      /** Tổng tiền tier nhận (VND). */
       totalAmount: number;
+      /** Số người trúng tier. */
       winnerCount: number;
+      /** Bonus mỗi người (VND). */
       bonusPerWinner: number;
     }
   >;
 }
 
 export interface FinalizeSettleResult {
+  /** Mã kỳ quay. */
   drawId: string;
+  /** Trạng thái sau finalize (= "settled"). */
   status: string;
+  /** Số tiền Jackpot cuối kỳ (VND). */
   closingJackpot: number;
+  /** Số tiền Jackpot mở kỳ tiếp theo (VND). */
   nextJackpotOpening: number;
+  /** Thời điểm hoàn thành settle (ISO 8601). */
   completedAt: string;
 }
 
@@ -59,7 +79,7 @@ export class FinalizeSettleUseCase extends StepFunctionUseCase<
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(
     input: FinalizeSettleInput

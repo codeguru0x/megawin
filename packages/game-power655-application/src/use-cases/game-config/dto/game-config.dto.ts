@@ -11,6 +11,7 @@ import type { GlobalConfigEntity } from "@megawin/game-power655/entities";
 // ─────────────────────────────────────────────
 
 export interface GetGameConfigOutput {
+  /** Toàn bộ cấu hình global của game Power 6/55. */
   config: GlobalConfigEntity;
 }
 
@@ -19,17 +20,43 @@ export interface GetGameConfigOutput {
 // ─────────────────────────────────────────────
 
 export interface UpdateGameConfigInput {
-  /** Cấu hình Jackpot: dual JP (JP1/JP2 seed, contribution ratios, overflow, split). */
+  /**
+   * Cấu hình Jackpot: dual JP (JP1/JP2 seed, contribution ratios, overflow, split).
+   * - jackpot1.seedAmount: giá trị khởi tạo JP1 khi bắt đầu cycle mới
+   * - jackpot2.seedAmount: giá trị khởi tạo JP2 khi bắt đầu cycle mới
+   * - jp1ContributionRatio: tỷ lệ doanh thu đóng góp vào JP1
+   * - jp2ContributionRatio: tỷ lệ doanh thu đóng góp vào JP2
+   * - jp1OverflowThreshold: ngưỡng tràn JP1 (VND), phần vượt chuyển sang JP2
+   * - splitThreshold: ngưỡng tổng JP để kích hoạt chia giải
+   * - splitRatios: tỷ lệ chia giải cho tier1/tier2/tier3
+   */
   jackpot?: Partial<JackpotConfig>;
-  /** Tỷ lệ tài chính: commission, company rate. */
+  /**
+   * Tỷ lệ tài chính: commission, company rate.
+   * - defaultCommissionRate: tỷ lệ hoa hồng đại lý mặc định
+   * - companyRate: tỷ lệ phần trăm doanh thu cho công ty
+   */
   rates?: Partial<FinancialRates>;
-  /** Giải thưởng cố định: Nhất, Nhì, Ba. */
+  /**
+   * Giải thưởng cố định cho các tier (VND).
+   * - tier1 (4/6): giải tư
+   * - tier2 (3/6): giải năm
+   * - tier3 (5/6): giải ba
+   */
   defaultPrizes?: Partial<PrizeAmounts>;
-  /** Luật chơi: giá vé, max boards, max draws, lịch quay. */
+  /**
+   * Luật chơi: giá vé, max boards, max draws, lịch quay.
+   * - unitPrice: giá 1 dòng cược (VND)
+   * - maxBoards: số board tối đa mỗi vé
+   * - maxDraws: số kỳ tối đa mỗi vé
+   * - schedule: lịch quay trong tuần
+   */
   play?: Partial<PlayRules>;
 }
 
 export interface UpdateGameConfigOutput {
+  /** Cấu hình global sau khi cập nhật. */
   config: GlobalConfigEntity;
+  /** Phiên bản mới của cấu hình (tăng dần mỗi lần update). */
   version: number;
 }

@@ -10,23 +10,37 @@ import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export interface ApplySplitBonusesInput {
+  /** ID kỳ quay đang settle. */
   drawId: string;
+  /** Kỳ này có thực hiện split jackpot không. */
   isSplitCycle: boolean;
+  /**
+   * Chi tiết chia jackpot theo hạng (chỉ cần khi isSplitCycle = true).
+   * Key = tier (e.g. "tier2"), value = thông tin chia.
+   */
   splitDetails?: Record<
     string,
     {
+      /** Số tiền ban đầu phân bổ cho hạng (VND). */
       initialAmount: number;
+      /** Số tiền tái phân phối từ hạng không có người trúng (VND). */
       redistributedAmount: number;
+      /** Tổng tiền hạng = initialAmount + redistributedAmount (VND). */
       totalAmount: number;
+      /** Số người trúng hạng này. */
       winnerCount: number;
+      /** Tiền thưởng mỗi người = totalAmount / winnerCount (VND). */
       bonusPerWinner: number;
     }
   >;
 }
 
 export interface ApplySplitBonusesResult {
+  /** ID kỳ quay. */
   drawId: string;
+  /** Số entry đã được patch thêm split bonus. */
   entriesPatched: number;
+  /** true nếu bỏ qua (không phải split cycle hoặc không có splitDetails). */
   skipped: boolean;
 }
 

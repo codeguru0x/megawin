@@ -20,6 +20,7 @@ import type { MainTuple, ISODateString } from "./types";
  * MongoDB document cho 1 line (1 bộ 6 số).
  */
 export interface TicketLineDoc {
+  /** MongoDB ObjectId – khóa chính nội bộ. Không dùng trong business logic. */
   _id: unknown;
   /** Reference đến entry (ObjectId as string). */
   entryId: string;
@@ -47,10 +48,12 @@ export interface TicketLineDoc {
   tier: PrizeTier | null;
   /** Tiền thưởng cho line này (giải cố định, không bao gồm split bonus). */
   prizeAmount: number;
+  /** Thời điểm tạo document (= thời điểm settle line). */
   createdAt: Date;
 }
 
 /** Application layer entity. */
 export interface TicketLineEntity extends Omit<TicketLineDoc, "_id"> {
+  /** ObjectId dạng hex string – khóa chính dùng trong application layer. */
   id: string;
 }

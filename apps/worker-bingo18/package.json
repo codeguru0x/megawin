@@ -1,0 +1,30 @@
+{
+  "name": "@megawin/worker-bingo18",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bingo 18 workers – Step Function lambdas for settle, payout & void",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@megawin/app-core": "workspace:*",
+    "@megawin/data": "workspace:*",
+    "@megawin/game-core": "workspace:*",
+    "@megawin/game-core-application": "workspace:*",
+    "@megawin/game-bingo18": "workspace:*",
+    "@megawin/game-bingo18-application": "workspace:*",
+    "@megawin/shared": "workspace:*",
+    "@megawin/tenant-gateway": "workspace:*"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@types/node": "^24.0.0",
+    "serverless-offline": "^14.4.0",
+    "typescript": "5.9.3"
+  }
+}

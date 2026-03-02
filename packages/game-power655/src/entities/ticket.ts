@@ -102,6 +102,7 @@ export interface TicketVoidSummary {
  * Collection: power655Tickets.
  */
 export interface TicketDoc {
+  /** MongoDB ObjectId – khóa chính nội bộ. Không dùng trong business logic. */
   _id: unknown;
   /** Mã vé unique format: "P655-YYYYMMDD-N" (game prefix + date + sequence). */
   ticketNo: string;
@@ -117,9 +118,15 @@ export interface TicketDoc {
   boards: Board[];
   /** Thông tin expand: tổng lines + hash verify. */
   expansion: TicketExpansion;
-  /** Tiền cược mỗi kỳ = unitPrice × totalLines. */
+  /**
+   * Tiền cược mỗi kỳ.
+   * Công thức: unitPrice × expansion.totalLines (trong đó totalLines = Σ(boards[].lineCount)).
+   */
   stakePerDraw: number;
-  /** Tổng tiền cược = stakePerDraw × drawCount. */
+  /**
+   * Tổng tiền cược toàn bộ vé.
+   * Công thức: stakePerDraw × drawPlan.drawCount.
+   */
   totalStake: number;
   /** Kế hoạch multi-draw. */
   drawPlan: TicketDrawPlan;
@@ -131,11 +138,14 @@ export interface TicketDoc {
   voidSummary?: TicketVoidSummary;
   /** Trạng thái vé: paid → completed, hoặc → refunded/void. */
   status: TicketStatus;
+  /** Thời điểm tạo document (= thời điểm mua vé). */
   createdAt: Date;
+  /** Thời điểm cập nhật gần nhất (progress/settlement update). */
   updatedAt: Date;
 }
 
 /** Application layer entity. */
 export interface TicketEntity extends Omit<TicketDoc, "_id"> {
+  /** ObjectId dạng hex string – khóa chính dùng trong application layer. */
   id: string;
 }

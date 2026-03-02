@@ -25,29 +25,60 @@ import type {
 // Draw Financial Calculation
 // ─────────────────────────────────────────────
 
+/** Đầu vào để tính toán tài chính 1 kỳ quay. */
 export interface DrawFinancialInput {
+  /** Tổng doanh thu bán vé kỳ quay (VND). Công thức: Σ(entry.amount). */
   totalRevenue: number;
+  /** Tổng giải thưởng cố định đã trả (VND). Bao gồm tier1 + tier2 + tier3. */
   totalFixedPrizes: number;
+  /** Doanh thu và hoa hồng chi tiết theo từng đại lý. */
   tenantRevenues: Array<{
+    /** ID đại lý. */
     tenantId: string;
+    /** Doanh thu từ đại lý (VND). */
     revenue: number;
+    /** Hoa hồng đại lý (VND). Công thức: revenue × commissionRate. */
     commission: number;
+    /** Tỷ lệ hoa hồng đại lý. */
     commissionRate: number;
   }>;
+  /** Tỷ lệ thu nhập công ty. Ví dụ: 0.15 = 15%. */
   companyRate: number;
 }
 
+/** Kết quả tính toán tài chính 1 kỳ quay. */
 export interface DrawFinancialResult {
+  /** Tổng doanh thu bán vé (VND). */
   totalRevenue: number;
+  /** Tổng giải thưởng cố định (VND). */
   totalFixedPrizes: number;
+  /** Tổng hoa hồng đại lý (VND). Công thức: Σ(tenantBreakdown[].commission). */
   totalAgentCommission: number;
+  /**
+   * Thu nhập công ty lý thuyết (VND).
+   * Công thức: round(totalRevenue × companyRate).
+   */
   companyTake: number;
+  /**
+   * Thu nhập công ty thực tế (VND).
+   * Công thức: min(companyTake, max(totalRevenue - totalFixedPrizes - totalAgentCommission, 0)).
+   * Bảo đảm không âm và không vượt quá phần còn lại sau giải thưởng + hoa hồng.
+   */
   actualCompanyTake: number;
+  /**
+   * Phần đóng góp vào quỹ Jackpot (VND).
+   * Công thức: max(totalRevenue - totalFixedPrizes - totalAgentCommission - actualCompanyTake, 0).
+   */
   jackpotContribution: number;
+  /** Chi tiết doanh thu và hoa hồng từng đại lý. */
   tenantBreakdown: Array<{
+    /** ID đại lý. */
     tenantId: string;
+    /** Doanh thu từ đại lý (VND). */
     revenue: number;
+    /** Hoa hồng đại lý (VND). */
     commission: number;
+    /** Tỷ lệ hoa hồng đại lý. */
     commissionRate: number;
   }>;
 }
@@ -124,23 +155,44 @@ export function isSplitCycleDraw(
   return jackpotAmount >= splitThreshold && !hasJackpotWinner;
 }
 
+/** Đầu vào cho tính toán chia Jackpot (split cycle). */
 export interface SplitInput {
+  /** Giá trị Jackpot hiện tại sẽ chia (VND). */
   jackpotAmount: number;
+  /** Tỷ lệ chia cho từng tier (tier1: 2, tier2: 2, tier3: 1). */
   splitRatios: SplitRatios;
+  /** Số người trúng theo từng tier trong kỳ quay split. Key = PrizeTier. */
   winnerCountPerTier: Map<PrizeTier, number>;
 }
 
+/** Chi tiết phân bổ cho 1 tier trong split cycle. */
 export interface SplitTierDetail {
+  /**
+   * Số tiền phân bổ ban đầu theo tỷ lệ (VND).
+   * Công thức: floor(jackpotAmount × parts / totalParts).
+   */
   initialAmount: number;
+  /** Số tiền nhận thêm từ các tier không có người trúng (VND). */
   redistributedAmount: number;
+  /** Tổng tiền cho tier (VND). Công thức: initialAmount + redistributedAmount. */
   totalAmount: number;
+  /** Số người trúng tier này. */
   winnerCount: number;
+  /**
+   * Tiền thưởng bonus cho mỗi người trúng (VND).
+   * Công thức: floor(totalAmount / winnerCount) hoặc roundDown đến bội số 5,000.
+   * Tier có ưu tiên cao nhất (tier1) nhận phần dư từ rounding.
+   */
   bonusPerWinner: number;
 }
 
+/** Kết quả tính toán chia Jackpot (split cycle). */
 export interface SplitResult {
+  /** Chi tiết phân bổ cho từng tier. Key = PrizeTier. */
   details: Map<PrizeTier, SplitTierDetail>;
+  /** Tiền bonus mỗi người trúng theo tier. Key = PrizeTier. */
   bonusPerWinner: Map<PrizeTier, number>;
+  /** Số tiền dư sau khi làm tròn (VND). Chuyển vào Jackpot kỳ sau. */
   roundingRemainder: number;
 }
 

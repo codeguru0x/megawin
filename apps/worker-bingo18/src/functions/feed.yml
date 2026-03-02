@@ -1,0 +1,14 @@
+feed-sync-entries:
+  handler: src/handlers/feed/sync-entry-feed.handler
+
+feed-save-cursor:
+  handler: src/handlers/feed/save-cursor.handler
+
+feed-scheduler:
+  handler: src/handlers/feed/feed-scheduler.handler
+  environment:
+    FEED_SYNC_SFN_ARN: !Ref Bingo18FeedSyncStateMachine
+  events:
+    - schedule:
+        rate: rate(30 seconds)
+        enabled: true

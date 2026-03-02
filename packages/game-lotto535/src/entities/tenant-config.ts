@@ -17,6 +17,7 @@ import type { GameConfigScope } from "@megawin/game-core/entities";
  * Những gì không set sẽ fallback về global config.
  */
 export interface TenantConfigDoc {
+  /** MongoDB ObjectId. */
   _id: unknown;
 
   /** Luôn = "tenant". */
@@ -37,6 +38,8 @@ export interface TenantConfigDoc {
   /** Version config – tăng mỗi khi staff chỉnh sửa. */
   version: number;
 
+  /** Thời điểm tạo tenant config (lần đầu thêm tenant vào game). */
   createdAt: Date;
+  /** Thời điểm chỉnh sửa tenant config gần nhất. */
   updatedAt: Date;
 }

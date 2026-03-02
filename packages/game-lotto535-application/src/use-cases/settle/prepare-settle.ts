@@ -16,36 +16,63 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { buildPrizeAmountMap } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 
 export interface PrepareSettleInput {
+  /** Mã kỳ quay cần settle — phải ở trạng thái "settling". */
   drawId: string;
 }
 
 export interface PrepareSettleResult {
+  /** Mã kỳ quay. */
   drawId: string;
+  /** Ngày quay (YYYY-MM-DD). */
   drawDate: string;
+  /** Số thứ tự kỳ trong ngày. */
   drawNo: number;
+  /** Ngày tài chính (YYYY-MM-DD) — dùng cho báo cáo. */
   financialDate: string;
-  result: { winningMain: number[]; winningSpecial: number };
+  /** Kết quả quay đã công bố. */
+  result: {
+    /** 5 số chính trúng thưởng. */
+    winningMain: number[];
+    /** Số đặc biệt trúng thưởng (1-12). */
+    winningSpecial: number;
+  };
+  /** Số tiền Jackpot đầu kỳ (VND) — đọc từ active cycle hoặc seed. */
   jackpotOpeningAmount: number;
+  /** Kỳ này có phải kỳ chia Jackpot hay không. */
   isSplitCycle: boolean;
+  /** Bảng giải thưởng: key = tier name, value = số tiền (VND). */
   prizeAmounts: Record<string, number>;
+  /** Cấu hình liên quan settle (snapshot từ GlobalConfig). */
   config: {
+    /** Số tiền khởi điểm Jackpot (VND). */
     seedAmount: number;
+    /** Ngưỡng kích hoạt chia Jackpot (VND). */
     splitThreshold: number;
+    /** Tỷ lệ chia Jackpot theo tier. */
     splitRatios: {
+      /** Tỷ lệ chia cho giải Nhất. */
       tier1: number;
+      /** Tỷ lệ chia cho giải Nhì. */
       tier2: number;
+      /** Tỷ lệ chia cho giải Ba. */
       tier3: number;
+      /** Tỷ lệ chia cho giải Tư. */
       tier4: number;
+      /** Tỷ lệ chia cho giải Năm. */
       tier5: number;
     };
+    /** Tỷ lệ công ty thu về trên doanh thu (0-1). */
     companyRate: number;
+    /** Tỷ lệ hoa hồng đại lý mặc định (0-1). */
     defaultCommissionRate: number;
   };
+  /** Tổng entries cần settle (chỉ đếm status = "drawn"). */
   totalEntries: number;
+  /** Tổng lines cần xử lý từ tất cả entries. */
   totalLines: number;
 }
 
@@ -56,7 +83,7 @@ export class PrepareSettleUseCase extends StepFunctionUseCase<
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** Load context cho settle flow. Throw nếu draw không hợp lệ. */
   protected async execute(

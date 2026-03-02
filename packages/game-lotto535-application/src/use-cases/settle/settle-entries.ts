@@ -38,24 +38,42 @@ import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 
 export interface SettleEntriesBatchInput {
+  /** Mã kỳ quay cần settle. */
   drawId: string;
-  result: { winningMain: number[]; winningSpecial: number };
+  /** Kết quả quay đã công bố. */
+  result: {
+    /** 5 số chính trúng thưởng. */
+    winningMain: number[];
+    /** Số đặc biệt trúng thưởng (1-12). */
+    winningSpecial: number;
+  };
+  /** Bảng giải thưởng: key = tier name, value = số tiền (VND). */
   prizeAmounts: Record<string, number>;
+  /** Kỳ này có phải kỳ chia Jackpot hay không. */
   isSplitCycle: boolean;
+  /** Số entries xử lý mỗi batch. */
   batchSize: number;
 }
 
 export interface SettleAccumulator {
+  /** Tổng entries đã settle trong batch này. */
   totalSettled: number;
+  /** Tổng tiền trả thưởng (VND) — dùng cho monitoring, KHÔNG dùng tính financials. */
   totalPayoutAmount: number;
+  /** Tổng tiền thắng (VND) — dùng cho monitoring. */
   totalWinAmount: number;
+  /** Đếm số người trúng theo tier: key = tier name, value = số lượng. */
   tierWinnerCounts: Record<string, number>;
+  /** Tổng giải cố định đã trả (VND) — không bao gồm Jackpot. */
   totalFixedPrizes: number;
 }
 
 export interface SettleEntriesBatchResult {
+  /** true nếu đã settle hết tất cả entries (entries.length < batchSize). */
   done: boolean;
+  /** Accumulator tổng hợp batch này (chỉ dùng monitoring/logging). */
   accumulator: SettleAccumulator;
+  /** Số entries đã settle thành công trong batch này. */
   batchSettled: number;
 }
 

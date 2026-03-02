@@ -19,7 +19,7 @@ import { generateDrawId } from "@megawin/game-mega645/helpers";
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
 import type { DrawNo } from "@megawin/game-mega645/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigUseCase } from "../game-config/get-global-config";
+import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { calcMega645DrawSlots } from "../../helpers/calc-draw-slots";
 import type {
@@ -34,7 +34,7 @@ export class CreateDrawsUseCase extends NextApiUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigUseCase();
+  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(input: CreateDrawsInput): Promise<CreateDrawsOutput> {
     const { count } = input;

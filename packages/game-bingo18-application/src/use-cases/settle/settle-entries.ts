@@ -1,0 +1,259 @@
+/**
+ * Use Case: Settle Entries Batch (Bingo 18)
+ *
+ * Xử lý 1 batch entries: match boards + side bets → payout → settle.
+ *
+ * CRASH-SAFE:
+ *   - Luôn query page 1 filter status = "drawn"
+ *   - settleEntry() atomic: chỉ update nếu status = "drawn"
+ *   - done = true khi không còn entries "drawn"
+ *
+ * Bingo 18 matching logic:
+ *   - SingleNum: matchSingleNum → match1/2/3 prizes
+ *   - DoubleMatch: matchDoubleMatch → win if ≥2 same
+ *   - TripleMatch: matchTripleMatch → specific/any
+ *   - SumTotal: matchSumTotal → exact sum match
+ *   - BigSmallDraw: matchBigSmallDraw → big/draw/small
+ *
+ * NO payout caps. NO Jackpot.
+ * KHÔNG update ticket — SyncTicketSummaries step riêng sẽ recompute từ entries.
+ */
+
+import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import {
+  Bingo18PlayType,
+  type Bingo18BigSmallBet,
+  type Bingo18TripleKind,
+  PayoutStatus,
+} from "@megawin/game-bingo18/entities";
+import type {
+  SingleNumPrizes,
+  DoubleMatchPrizes,
+  TripleMatchPrizes,
+  SumTotalPrizes,
+  BigSmallDrawPrizes,
+} from "@megawin/game-bingo18/entities";
+import {
+  matchSingleNum,
+  matchDoubleMatch,
+  matchTripleMatch,
+  matchSumTotal,
+  matchBigSmallDraw,
+  type DrawResultForMatch,
+} from "@megawin/game-bingo18/helpers";
+import { EntryOutcome } from "@megawin/game-core/entities";
+import { EntryRepository } from "../../infras/repos/entry-repo";
+
+export interface SettleEntriesBatchInput {
+  /** ID kỳ quay đang settle. */
+  drawId: string;
+  /** Kết quả quay. */
+  result: {
+    /** 3 số kết quả (1-6). */
+    numbers: number[];
+    /** Tổng 3 số = numbers[0] + numbers[1] + numbers[2]. */
+    sum: number;
+  };
+  /** Bảng giải thưởng dùng để tính payout. */
+  config: {
+    /** Giải cho chơi Đơn: match 1/2/3 số → prize tương ứng. */
+    singleNumPrizes: SingleNumPrizes;
+    /** Giải cho chơi Đúp: ≥2 số trùng → prize. */
+    doubleMatchPrizes: DoubleMatchPrizes;
+    /** Giải cho chơi Ba: specific triple / any triple → prize. */
+    tripleMatchPrizes: TripleMatchPrizes;
+    /** Giải cho chơi Tổng: đoán đúng tổng 3 số → prize. */
+    sumTotalPrizes: SumTotalPrizes;
+    /** Giải cho Tài/Xỉu/Hoà. */
+    bigSmallDrawPrizes: BigSmallDrawPrizes;
+  };
+  /** Số entries xử lý mỗi batch. */
+  batchSize: number;
+}
+
+export interface SettleAccumulator {
+  /** Tổng entries đã settle thành công (batch hiện tại). */
+  totalSettled: number;
+  /** Tổng tiền trả thưởng (VND) = Σ(entry.payoutAmount). */
+  totalPayoutAmount: number;
+  /** Tổng tiền thắng (VND) = Σ(entry.winAmount). */
+  totalWinAmount: number;
+}
+
+export interface SettleEntriesBatchResult {
+  /** true khi không còn entries status "drawn" → kết thúc loop. */
+  done: boolean;
+  /** Bộ tích luỹ thống kê batch hiện tại. */
+  accumulator: SettleAccumulator;
+  /** Số entries đã settle trong batch này. */
+  batchSettled: number;
+}
+
+export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
+  SettleEntriesBatchInput,
+  SettleEntriesBatchResult
+> {
+  private readonly entryRepo = new EntryRepository();
+
+  protected async execute(
+    input: SettleEntriesBatchInput
+  ): Promise<SettleEntriesBatchResult> {
+    const { drawId, result, config, batchSize } = input;
+    const drawResult: DrawResultForMatch = {
+      numbers: result.numbers,
+      sum: result.sum,
+    };
+
+    const entries = await this.entryRepo.getDrawnEntriesBatch(
+      drawId,
+      1,
+      batchSize
+    );
+
+    if (entries.length === 0) {
+      return {
+        done: true,
+        accumulator: emptyAccumulator(),
+        batchSettled: 0,
+      };
+    }
+
+    const acc = emptyAccumulator();
+    let batchSettled = 0;
+
+    for (const entry of entries) {
+      const boardPayouts: Array<{
+        boardNo: string;
+        playType: string;
+        matchCount: number;
+        winAmount: number;
+      }> = [];
+
+      const boards = entry.entrySummary?.boards ?? [];
+      for (const board of boards) {
+        if (board.isVoid) continue;
+
+        if (board.playType === Bingo18PlayType.SingleNum) {
+          const matchResult = matchSingleNum(
+            board.number!,
+            drawResult,
+            config.singleNumPrizes,
+          );
+          boardPayouts.push({
+            boardNo: board.boardNo,
+            playType: board.playType,
+            matchCount: matchResult.matchCount,
+            winAmount: matchResult.winAmount,
+          });
+        } else if (board.playType === Bingo18PlayType.DoubleMatch) {
+          const matchResult = matchDoubleMatch(
+            board.number!,
+            drawResult,
+            config.doubleMatchPrizes,
+          );
+          boardPayouts.push({
+            boardNo: board.boardNo,
+            playType: board.playType,
+            matchCount: matchResult.matchCount,
+            winAmount: matchResult.winAmount,
+          });
+        } else if (board.playType === Bingo18PlayType.TripleMatch) {
+          const matchResult = matchTripleMatch(
+            board.tripleKind as Bingo18TripleKind,
+            board.number,
+            drawResult,
+            config.tripleMatchPrizes,
+          );
+          boardPayouts.push({
+            boardNo: board.boardNo,
+            playType: board.playType,
+            matchCount: matchResult.isWin ? 3 : 0,
+            winAmount: matchResult.winAmount,
+          });
+        }
+      }
+
+      const sideBetPayouts: Array<{
+        playType: string;
+        sum?: number;
+        bet?: string;
+        outcome: string;
+        isWin: boolean;
+        winAmount: number;
+      }> = [];
+
+      const sideBets = entry.entrySummary?.sideBets ?? [];
+      for (const sb of sideBets) {
+        if (sb.isVoid) continue;
+
+        if (sb.playType === Bingo18PlayType.SumTotal) {
+          const matchResult = matchSumTotal(
+            sb.sum!,
+            drawResult,
+            config.sumTotalPrizes,
+          );
+          sideBetPayouts.push({
+            playType: sb.playType,
+            sum: sb.sum,
+            outcome: matchResult.outcome,
+            isWin: matchResult.isWin,
+            winAmount: matchResult.winAmount,
+          });
+        } else if (sb.playType === Bingo18PlayType.BigSmallDraw) {
+          const matchResult = matchBigSmallDraw(
+            sb.bet as Bingo18BigSmallBet,
+            drawResult,
+            config.bigSmallDrawPrizes,
+          );
+          sideBetPayouts.push({
+            playType: sb.playType,
+            bet: sb.bet,
+            outcome: matchResult.outcome,
+            isWin: matchResult.isWin,
+            winAmount: matchResult.winAmount,
+          });
+        }
+      }
+
+      const winAmount =
+        boardPayouts.reduce((sum, b) => sum + b.winAmount, 0) +
+        sideBetPayouts.reduce((sum, s) => sum + s.winAmount, 0);
+
+      const hasWin = winAmount > 0;
+
+      const settled = await this.entryRepo.settleEntry(
+        entry.id,
+        {
+          winAmount,
+          payoutAmount: winAmount,
+          boardPayouts,
+          sideBetPayouts,
+          settledAt: new Date(),
+          payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
+        },
+        hasWin ? EntryOutcome.Win : EntryOutcome.Loss
+      );
+
+      if (!settled) continue;
+
+      acc.totalSettled++;
+      acc.totalWinAmount += winAmount;
+      acc.totalPayoutAmount += winAmount;
+      batchSettled++;
+    }
+
+    return {
+      done: entries.length < batchSize,
+      accumulator: acc,
+      batchSettled,
+    };
+  }
+}
+
+function emptyAccumulator(): SettleAccumulator {
+  return {
+    totalSettled: 0,
+    totalPayoutAmount: 0,
+    totalWinAmount: 0,
+  };
+}

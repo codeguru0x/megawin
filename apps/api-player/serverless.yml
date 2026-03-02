@@ -53,3 +53,6 @@ functions:
   - ${file(src/functions/keno-endpoint.yml)}
   - ${file(src/functions/power655-endpoint.yml)}
   - ${file(src/functions/mega645-endpoint.yml)}
+  - ${file(src/functions/max3d-endpoint.yml)}
+  - ${file(src/functions/max3dpro-endpoint.yml)}
+  - ${file(src/functions/bingo18-endpoint.yml)}

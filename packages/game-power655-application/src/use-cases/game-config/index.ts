@@ -1,5 +1,5 @@
-export { GetGlobalConfigApiUseCase } from "./get-global-config-api";
-export { GetGlobalConfigUseCase } from "./get-global-config";
+export { GetGlobalConfigUseCase as GetGlobalConfigApiUseCase } from "./get-global-config";
+export { GetGlobalConfigInternalUseCase as GetGlobalConfigUseCase } from "./get-global-config-internal";
 export { UpdateGameConfigUseCase } from "./update-game-config";
 
 export type {

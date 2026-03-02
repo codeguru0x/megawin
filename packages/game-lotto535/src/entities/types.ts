@@ -47,13 +47,19 @@ export const DRAW_NO_VALUES: readonly DrawNo[] = [DrawNo.Morning, DrawNo.Evening
 // Lotto 5/35 Number Ranges
 // ─────────────────────────────────────────────
 
-/** Số chính: 1-35. */
+/** Giá trị nhỏ nhất của số chính (1). */
 export const LOTTO535_MAIN_MIN = 1;
+
+/** Giá trị lớn nhất của số chính (35). */
 export const LOTTO535_MAIN_MAX = 35;
+
+/** Số lượng số chính cần chọn mỗi line (5 số). */
 export const LOTTO535_MAIN_COUNT = 5;
 
-/** Số đặc biệt: 1-12. */
+/** Giá trị nhỏ nhất của số đặc biệt (1). */
 export const LOTTO535_SPECIAL_MIN = 1;
+
+/** Giá trị lớn nhất của số đặc biệt (12). */
 export const LOTTO535_SPECIAL_MAX = 12;
 
 // ─────────────────────────────────────────────
@@ -189,9 +195,14 @@ export interface PlayRules {
  * Key là PrizeTier string.
  */
 export interface SplitRatios {
+  /** Tỷ lệ phần chia cho Giải Nhất (mặc định 2/6 ≈ 33.3%). */
   tier1: number;
+  /** Tỷ lệ phần chia cho Giải Nhì (mặc định 1/6 ≈ 16.7%). */
   tier2: number;
+  /** Tỷ lệ phần chia cho Giải Ba (mặc định 1/6 ≈ 16.7%). */
   tier3: number;
+  /** Tỷ lệ phần chia cho Giải Tư (mặc định 1/6 ≈ 16.7%). */
   tier4: number;
+  /** Tỷ lệ phần chia cho Giải Năm (mặc định 1/6 ≈ 16.7%). */
   tier5: number;
 }

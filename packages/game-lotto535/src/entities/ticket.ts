@@ -196,6 +196,10 @@ export interface TicketDoc {
 
   // ───── Status & Timestamps ─────
 
+  /**
+   * Trạng thái vòng đời vé.
+   * draft → paid (immutable) → completed / refunded.
+   */
   status: TicketStatus;
 
   /**
@@ -204,6 +208,8 @@ export interface TicketDoc {
    */
   version: number;
 
+  /** Thời điểm tạo vé (= thời điểm place-bet). */
   createdAt: Date;
+  /** Thời điểm cập nhật gần nhất (settle summary, void summary...). */
   updatedAt: Date;
 }

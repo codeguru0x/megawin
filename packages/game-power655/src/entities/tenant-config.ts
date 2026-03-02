@@ -16,6 +16,7 @@ import type { GameConfigScope } from "@megawin/game-core/entities";
  * MongoDB document cho tenant config.
  */
 export interface TenantConfigDoc {
+  /** MongoDB ObjectId – khóa chính nội bộ. Không dùng trong business logic. */
   _id: unknown;
   /** Scope luôn = "tenant" cho document này. */
   scope: typeof GameConfigScope.Tenant;
@@ -29,11 +30,14 @@ export interface TenantConfigDoc {
   isEnabled: boolean;
   /** Version tăng mỗi lần update (optimistic concurrency). */
   version: number;
+  /** Thời điểm tạo document. */
   createdAt: Date;
+  /** Thời điểm cập nhật gần nhất. */
   updatedAt: Date;
 }
 
 /** Application layer entity. */
 export interface TenantConfigEntity extends Omit<TenantConfigDoc, "_id"> {
+  /** ObjectId dạng hex string – khóa chính dùng trong application layer. */
   id: string;
 }

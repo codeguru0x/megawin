@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   ArrowLeft,
   Building2,
-  ChevronRight,
   CircleDollarSign,
   Eye,
   Filter,
@@ -259,19 +258,19 @@ export default function Power655TicketsPage() {
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-          <span>Power 6/55</span>
-          <ChevronRight className="size-3" />
-          <span>Quản lý vé</span>
+      <div className="flex items-center gap-3">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-red-600 shadow-sm">
+          <Ticket className="size-4.5 text-white" />
         </div>
-        <h1 className="text-lg font-semibold tracking-tight md:text-2xl">
-          Quản lý vé Power 6/55
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Tra cứu, theo dõi tất cả vé đã bán – trạng thái entries và chi tiết
-          người chơi.
-        </p>
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
+            Power 6/55 — Quản lý vé
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            Tra cứu, theo dõi tất cả vé đã bán – trạng thái entries và chi tiết
+            người chơi.
+          </p>
+        </div>
       </div>
 
       {/* KPI */}

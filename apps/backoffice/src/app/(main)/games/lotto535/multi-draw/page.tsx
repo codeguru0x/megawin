@@ -113,19 +113,18 @@ export default function MultiDrawTicketsPage() {
 
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
-      <div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-          <span>Lotto 5/35</span>
-          <ChevronRight className="size-3" />
-          <span>Vé nhiều kỳ</span>
-          {selectedTenant && (
-            <><ChevronRight className="size-3" /><span>{selectedTenantData?.tenantName}</span></>
-          )}
+      <div className="flex items-center gap-3">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-emerald-600 shadow-sm">
+          <Layers className="size-4.5 text-white" />
         </div>
-        <h1 className="text-lg font-semibold tracking-tight md:text-2xl">Vé chơi nhiều kỳ (Multi-Draw)</h1>
-        <p className="text-sm text-muted-foreground">
-          Theo dõi vé tham gia nhiều kỳ liên tiếp, tiến trình và trạng thái từng kỳ.
-        </p>
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
+            Lotto 5/35 — Vé nhiều kỳ
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            Theo dõi vé tham gia nhiều kỳ liên tiếp, tiến trình và trạng thái từng kỳ.
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

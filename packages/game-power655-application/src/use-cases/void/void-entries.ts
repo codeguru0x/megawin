@@ -16,17 +16,26 @@ import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export interface VoidEntriesBatchInput {
+  /** ID kỳ quay đang void. */
   drawId: string;
+  /** Lý do huỷ (ghi vào từng entry). */
   reason: string;
+  /** ID người thực hiện huỷ. */
   voidedBy?: string;
+  /** Số entries xử lý mỗi batch (mặc định 100). */
   batchSize?: number;
 }
 
 export interface VoidEntriesBatchResult {
+  /** ID kỳ quay đang void. */
   drawId: string;
+  /** true khi đã hết entries cần void. */
   done: boolean;
+  /** Số entries đã void thành công trong batch. */
   batchVoided: number;
+  /** Số entries bị bỏ qua (đã void trước đó hoặc lỗi). */
   batchSkipped: number;
+  /** Tổng số tiền cần hoàn (VND) từ batch này. */
   totalRefundAmount: number;
 }
 

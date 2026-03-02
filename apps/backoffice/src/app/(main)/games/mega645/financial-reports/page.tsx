@@ -86,22 +86,18 @@ export default function Mega645FinancialReportsPage() {
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       {/* Header */}
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            <span>Mega 6/45</span>
-            <ChevronRight className="size-3" />
-            <span>Thống kê tài chính</span>
-            {selectedTenant && (
-              <><ChevronRight className="size-3" /><span>{selectedTenantData?.tenantName}</span></>
-            )}
-            {selectedPlayer && (
-              <><ChevronRight className="size-3" /><span>{selectedPlayer.playerName}</span></>
-            )}
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-amber-600 shadow-sm">
+            <CircleDollarSign className="size-4.5 text-white" />
           </div>
-          <h1 className="text-lg font-semibold tracking-tight md:text-2xl">Thống kê tài chính Mega 6/45</h1>
-          <p className="text-sm text-muted-foreground">
-            Doanh thu, tiền cược, thắng thua theo ngày tài chính – từ đại lý đến chi tiết vé.
-          </p>
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">
+              Mega 6/45 — Thống kê tài chính
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Doanh thu, tiền cược, thắng thua theo ngày tài chính – từ đại lý đến chi tiết vé.
+            </p>
+          </div>
         </div>
         <Button variant="outline"><Download className="mr-2 size-4" />Xuất Excel</Button>
       </div>

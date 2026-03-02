@@ -51,15 +51,24 @@ export { lotto535Keys } from "./lotto535";
 export { kenoKeys } from "./keno";
 export { power655Keys } from "./power655";
 export { mega645Keys } from "./mega645";
+export { max3dKeys } from "./max3d";
+export { max3dproKeys } from "./max3dpro";
+export { bingo18Keys } from "./bingo18";
 
 import { lotto535Keys } from "./lotto535";
 import { kenoKeys } from "./keno";
 import { power655Keys } from "./power655";
 import { mega645Keys } from "./mega645";
+import { max3dKeys } from "./max3d";
+import { max3dproKeys } from "./max3dpro";
+import { bingo18Keys } from "./bingo18";
 
 export const queryKeys = {
   lotto535: lotto535Keys,
   keno: kenoKeys,
   power655: power655Keys,
   mega645: mega645Keys,
+  max3d: max3dKeys,
+  "max3dpro": max3dproKeys,
+  bingo18: bingo18Keys,
 } as const;
