@@ -23,10 +23,11 @@ export class LineRepository extends BaseRepo<any> {
    * Dùng bulkWrite + $setOnInsert: nếu doc (entryId, lineIndex) đã tồn tại → skip.
    * Chạy lại bao nhiêu lần cũng cho kết quả giống nhau, không duplicate, không error.
    */
+  private static readonly BULK_CHUNK_SIZE = 500;
+
   async upsertLines(lines: Array<Omit<TicketLineDoc, "_id">>): Promise<void> {
     if (lines.length === 0) return;
 
-    const col = await this.getCollection();
     const ops = lines.map((doc) => ({
       updateOne: {
         filter: { entryId: doc.entryId, lineIndex: doc.lineIndex },
@@ -35,7 +36,10 @@ export class LineRepository extends BaseRepo<any> {
       },
     }));
 
-    await col.bulkWrite(ops, { ordered: false });
+    for (let i = 0; i < ops.length; i += LineRepository.BULK_CHUNK_SIZE) {
+      const chunk = ops.slice(i, i + LineRepository.BULK_CHUNK_SIZE);
+      await this.bulkWrite(chunk, { ordered: false });
+    }
   }
 
   /**

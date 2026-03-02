@@ -20,7 +20,11 @@ import {
   PayoutStatus,
 } from "@megawin/game-power655/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
-import type { PrizeTier } from "@megawin/game-power655/entities";
+import type {
+  PrizeTier,
+  MainTuple,
+  BonusNumber,
+} from "@megawin/game-power655/entities";
 import { ObjectId, Long } from "mongodb";
 import { BaseRepo } from "./base-repo";
 import { EntryMapper } from "../mappers/entry-mapper";
@@ -67,14 +71,14 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     });
   }
 
-  /** Lấy batch entries theo drawId + status "drawn" (cho settle batch loop). */
-  async getDrawnEntriesBatch(
+  /** Lấy batch entries theo drawId + status "scheduled" (cho settle batch loop). */
+  async getScheduledEntriesBatch(
     drawId: string,
     page: number,
     size: number
   ): Promise<TicketEntryEntity[]> {
     return await this.paging(
-      { drawId, status: EntryStatus.Drawn },
+      { drawId, status: EntryStatus.Scheduled },
       page,
       size,
       { sort: { _id: 1 } }
@@ -96,13 +100,13 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return result[0]?.total ?? 0;
   }
 
-  /** Đếm entries chưa settled (status = "drawn"). */
-  async countDrawnEntries(drawId: string): Promise<number> {
-    return await this.count({ drawId, status: EntryStatus.Drawn });
+  /** Đếm entries chưa settled (status = "scheduled"). */
+  async countScheduledEntries(drawId: string): Promise<number> {
+    return await this.count({ drawId, status: EntryStatus.Scheduled });
   }
 
   /**
-   * Batch update entry status cho 1 draw (e.g. CloseSales: scheduled→active).
+   * Batch update entry status cho 1 draw.
    * Tất cả entries trong batch nhận cùng 1 version mới.
    */
   async batchTransitionByDrawId(
@@ -129,7 +133,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   /**
    * Atomic settle 1 entry.
-   * Chỉ update nếu status = "drawn" → no duplicate khi retry.
+   * Chỉ update nếu status = "scheduled" → no duplicate khi retry.
    */
   async settleEntry(
     entryId: string,
@@ -146,7 +150,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       settledAt: Date;
       payoutStatus?: PayoutStatus;
     },
-    outcome: "win" | "loss"
+    outcome: "win" | "loss",
+    result: {
+      winningMain: MainTuple;
+      bonusNumber: BonusNumber;
+      publishedAt: Date;
+    }
   ): Promise<boolean> {
     const version = await this.nextVersion();
     const col = await this.getCollection();
@@ -154,6 +163,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     const $set: Record<string, unknown> = {
       status: EntryStatus.Settled,
       outcome,
+      result,
       "payout.winAmount": payout.winAmount,
       "payout.payoutAmount": payout.payoutAmount,
       "payout.tiers": payout.tiers,
@@ -167,12 +177,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       $set["payout.retryCount"] = 0;
     }
 
-    const result = await col.updateOne(
-      { _id: new ObjectId(entryId), status: EntryStatus.Drawn },
+    const updateResult = await col.updateOne(
+      { _id: new ObjectId(entryId), status: EntryStatus.Scheduled },
       { $set }
     );
 
-    return result.modifiedCount > 0;
+    return updateResult.modifiedCount > 0;
   }
 
   // ─── Aggregate for financials ───
@@ -399,7 +409,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       {
         drawId,
         status: EntryStatus.Settled,
-        "payout.payoutStatus": { $in: [PayoutStatus.Pending, PayoutStatus.Failed] },
+        "payout.payoutStatus": {
+          $in: [PayoutStatus.Pending, PayoutStatus.Failed],
+        },
       },
       { sort: { _id: 1 }, limit }
     );
@@ -409,7 +421,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return await this.count({
       drawId,
       status: EntryStatus.Settled,
-      "payout.payoutStatus": { $in: [PayoutStatus.Pending, PayoutStatus.Failed] },
+      "payout.payoutStatus": {
+        $in: [PayoutStatus.Pending, PayoutStatus.Failed],
+      },
     });
   }
 
@@ -452,9 +466,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   async countVoidableEntries(drawId: string): Promise<number> {
     return await this.count({
       drawId,
-      status: {
-        $in: [EntryStatus.Scheduled, EntryStatus.Active, EntryStatus.Drawn],
-      },
+      status: EntryStatus.Scheduled,
     });
   }
 
@@ -465,9 +477,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return await this.findMany(
       {
         drawId,
-        status: {
-          $in: [EntryStatus.Scheduled, EntryStatus.Active, EntryStatus.Drawn],
-        },
+        status: EntryStatus.Scheduled,
       },
       { sort: { _id: 1 }, limit }
     );
@@ -489,9 +499,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     const result = await col.updateOne(
       {
         _id: new ObjectId(entryId),
-        status: {
-          $in: [EntryStatus.Scheduled, EntryStatus.Active, EntryStatus.Drawn],
-        },
+        status: EntryStatus.Scheduled,
       },
       {
         $set: {
@@ -588,7 +596,10 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   // ─── Feed Sync ───
 
-  async getChangedEntries(afterVersion: Long, limit: number): Promise<TicketEntryEntity[]> {
+  async getChangedEntries(
+    afterVersion: Long,
+    limit: number
+  ): Promise<TicketEntryEntity[]> {
     return await this.findMany(
       { version: { $gt: afterVersion } },
       { sort: { version: 1 }, limit }

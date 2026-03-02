@@ -1,19 +1,20 @@
 /**
  * Use Case: Prepare Settle (Power 6/55)
  *
- * Load toàn bộ context cần thiết cho settle flow.
- * Chỉ ĐỌC dữ liệu, không ghi – hoàn toàn idempotent.
+ * Load toàn bộ context cần thiết cho settle flow. Pure read — không mutate entries.
+ * settle-entries sẽ ghi result + chuyển scheduled → settled trực tiếp.
  *
  * Khác biệt so với Lotto 5/35:
  *   - Load dual jackpot opening amounts (JP1 + JP2)
  *   - Config chứa jp1Ratio, jp2Ratio, jp1OverflowThreshold
  *   - Result chứa bonusNumber thay vì winningSpecial
  *
+ * IDEMPOTENT: chỉ đọc draw, config, jackpot cycle, đếm entries.
+ *
  * CRASH-SAFE: Nếu step function crash giữa chừng và chạy lại,
  * prepare-settle sẽ:
  *   - Accept draw ở status "settling" (đang settle dở)
- *   - Đếm entries CHƯA settled (status = "drawn") thay vì tổng
- *   - Accumulator bắt đầu từ zero – settle-entries chỉ query "drawn" nên safe
+ *   - Accumulator bắt đầu từ zero – settle-entries chỉ query "scheduled" nên safe
  */
 
 import { StepFunctionUseCase } from "@megawin/app-core/use-cases";

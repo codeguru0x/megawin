@@ -205,7 +205,7 @@ describe("Power 6/55 – matchLine: bonus KHÔNG THỂ match khi 6/6", () => {
     const winning: MainTuple = [10, 20, 30, 40, 50, 55];
     const bonus = 7; // ∉ winning set
 
-    const r = matchLine(line([10, 20, 30, 40, 50, 55]), result);
+    const r = matchLine(line([10, 20, 30, 40, 50, 55]), drawResult(winning, bonus));
     expect(r.mainMatchCount).toBe(6);
     expect(r.bonusMatched).toBe(false);
   });

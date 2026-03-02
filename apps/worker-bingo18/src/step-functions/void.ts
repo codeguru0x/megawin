@@ -14,7 +14,7 @@
  *           ▼
  *  ┌──────────────────────────────────────────┐
  *  │  2. VoidEntries (loop)                   │
- *  │     Batch void: scheduled/active/drawn   │
+ *  │     Batch void: scheduled   │
  *  │     done = true khi hết voidable entries │
  *  └────────┬─────────────────────────────────┘
  *           ▼

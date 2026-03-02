@@ -6,7 +6,7 @@ import { BaseRepo } from "./base-repo";
 
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
   [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Void]),
-  [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed, DrawStatus.Void]),
+  [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed]),
   [DrawStatus.SalesClosed]: new Set([
     DrawStatus.SalesOpen,
     DrawStatus.Published,
@@ -135,6 +135,32 @@ export abstract class AbstractDrawRepository<
 
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
+      { $set },
+      { returnDocument: "after" }
+    );
+  }
+
+  /**
+   * Close sales: salesOpen → salesClosed.
+   * Stamp sales.closeAt thời điểm đóng bán thực tế.
+   */
+  async closeSales(
+    drawId: string,
+    salesCloseAt?: Date
+  ): Promise<TEntity | null> {
+    const allowed = VALID_TRANSITIONS[DrawStatus.SalesOpen];
+    if (!allowed?.has(DrawStatus.SalesClosed)) return null;
+
+    const $set: Record<string, unknown> = {
+      status: DrawStatus.SalesClosed,
+      updatedAt: new Date(),
+    };
+    if (salesCloseAt) {
+      $set["sales.closeAt"] = salesCloseAt;
+    }
+
+    return await this.findOneAndUpdate(
+      { drawId, status: DrawStatus.SalesOpen },
       { $set },
       { returnDocument: "after" }
     );

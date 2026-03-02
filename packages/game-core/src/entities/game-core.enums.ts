@@ -106,25 +106,20 @@ export const TICKET_STATUS_VALUES = Object.values(TicketStatus);
 /**
  * Trạng thái đồng nhất cho entry (đơn cược tham gia 1 kỳ quay) của tất cả game.
  *
- * Flow: scheduled → active → drawn → settled
- *                               ↘ void
+ * Flow: scheduled → settled
+ *            ↘ void
  *
  * Tất cả game (Lotto535, Keno, Max3d…) dùng chung enum này.
  * entryFeed cũng dùng enum này.
  *
  * Tenant dùng status để phân loại đơn cược khi build report:
- * - scheduled + active → pending stake (tiền đang chờ quay)
- * - drawn → pending settlement
+ * - scheduled → pending stake (tiền đang chờ quay, chờ settle)
  * - settled → final (xem winAmount, payoutAmount)
  * - void → bỏ qua, không tính vào report
  */
 export const EntryStatus = {
-  /** Đã lên lịch tham gia kỳ quay. Tiền cược đã trừ nhưng chưa khoá bán. */
+  /** Đã lên lịch tham gia kỳ quay. Tiền cược đã trừ, chờ settle. */
   Scheduled: "scheduled",
-  /** Đã khoá bán, chờ quay. Entry không thể huỷ. */
-  Active: "active",
-  /** Đã có kết quả quay, chờ tính thưởng (settle). */
-  Drawn: "drawn",
   /** Đã tính thưởng xong (terminal). */
   Settled: "settled",
   /** Bị vô hiệu (draw void, lỗi hệ thống). Tiền cược được hoàn. */
@@ -142,18 +137,19 @@ export const ENTRY_STATUS_VALUES = Object.values(EntryStatus);
 /**
  * Trạng thái vận hành kỳ mở thưởng (draw) – dùng chung cho mọi game.
  *
- * Flow: scheduled → salesOpen ⇄ salesClosed → published → settling → settled
- *          ↘ void      ↘ void      ↘ void       ↘ void
+ * Flow: scheduled → salesOpen → salesClosed → published → settling → settled
+ *          ↘ void        ↑↓         ↘ void       ↘ void
  *
  * - scheduled: vừa tạo, chưa mở bán. Staff cần nhấn "Mở nhận đặt cược".
  * - Không có "drawing": kết quả được import/nhập → salesClosed chuyển thẳng published.
+ * - Muốn void phải close sales trước (không void trực tiếp từ salesOpen).
  */
 export const DrawStatus = {
   /** Vừa tạo, chưa mở bán. Chờ staff mở nhận đặt cược. */
   Scheduled: "scheduled",
   /** Đang mở bán vé. Staff đã nhấn mở nhận đặt cược. */
   SalesOpen: "salesOpen",
-  /** Đã đóng bán (trước giờ quay). Entries chuyển scheduled → active. */
+  /** Đã đóng bán (trước giờ quay). Không nhận thêm đơn cược. */
   SalesClosed: "salesClosed",
   /** Đã công bố kết quả, chưa settle. */
   Published: "published",

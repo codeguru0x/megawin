@@ -1,6 +1,8 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
+import { toExecutionName } from "@megawin/game-core/utils";
+import { startExecution } from "@megawin/app-core/aws/sf";
 import { isSplitCycleDraw } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -8,18 +10,17 @@ import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
 
+const SETTLE_SFN_ARN = process.env.LOTTO535_SETTLE_SFN_ARN!;
+
 /**
- * Nhấn "Kết sổ" -- chuyển trạng thái draw sang "settling".
+ * Kết sổ kỳ quay Lotto 5/35.
  *
- * Flow: published -> settling
- *
- * Xác định nếu kỳ này là split cycle (chia giải Jackpot):
- * - Jackpot >= splitThreshold
- * - Không ai trúng Jackpot (check after worker settle, nhưng mark intent trước)
- * - drawNo === 2 (kỳ 21h)
- *
- * KHÔNG thực hiện settle -- chỉ chuyển trạng thái.
- * Worker sẽ pick up draws có status "settling" và xử lý.
+ * Flow:
+ *   1. Validate draw (tồn tại, có result)
+ *   2. Xác định split cycle (Jackpot >= threshold + drawNo === 2)
+ *   3. Transition status: published → settling (atomic, kèm splitInfo)
+ *      - Nếu draw đã ở settling (retry) → skip transition
+ *   4. Start Settle Step Function (deterministic name → idempotent)
  */
 export class TriggerSettleUseCase extends NextApiUseCase<
   TriggerSettleInput,
@@ -44,40 +45,61 @@ export class TriggerSettleUseCase extends NextApiUseCase<
       );
     }
 
-    const [globalConfig, activeCycle] = await Promise.all([
-      this.getGlobalConfig.run(),
-      this.cycleRepo.getActiveCycle(),
-    ]);
+    let splitCycle = false;
 
-    const jackpotCurrentAmount =
-      activeCycle?.currentAmount ?? globalConfig.jackpot.seedAmount;
+    if (draw.status !== DrawStatus.Settling) {
+      const [globalConfig, activeCycle] = await Promise.all([
+        this.getGlobalConfig.run(),
+        this.cycleRepo.getActiveCycle(),
+      ]);
 
-    const splitCycle = isSplitCycleDraw(
-      jackpotCurrentAmount,
-      globalConfig.jackpot.splitThreshold,
-      false,
-      draw.drawNo
-    );
+      const jackpotCurrentAmount =
+        activeCycle?.currentAmount ?? globalConfig.jackpot.seedAmount;
 
-    const splitInfo = splitCycle
-      ? {
-          isSplitCycle: true,
-          split: {
-            thresholdAmount: globalConfig.jackpot.splitThreshold,
-            splitRatios: globalConfig.jackpot.splitRatios,
-            splitAmount: jackpotCurrentAmount,
-            splitRuleVersion: "v1-2026-02",
-            hintText: "Kỳ chia giải Jackpot",
-          },
-        }
-      : undefined;
+      splitCycle = isSplitCycleDraw(
+        jackpotCurrentAmount,
+        globalConfig.jackpot.splitThreshold,
+        false,
+        draw.drawNo
+      );
 
-    const updated = await this.drawRepo.triggerSettle(input.drawId, splitInfo);
+      const splitInfo = splitCycle
+        ? {
+            isSplitCycle: true,
+            split: {
+              thresholdAmount: globalConfig.jackpot.splitThreshold,
+              splitRatios: globalConfig.jackpot.splitRatios,
+              splitAmount: jackpotCurrentAmount,
+              splitRuleVersion: "v1-2026-02",
+              hintText: "Kỳ chia giải Jackpot",
+            },
+          }
+        : undefined;
 
-    if (!updated) {
+      const updated = await this.drawRepo.triggerSettle(
+        input.drawId,
+        splitInfo
+      );
+
+      if (!updated) {
+        throw new AppException(
+          "DRAW_INVALID_TRANSITION",
+          `Không thể kết sổ – draw hiện tại không ở trạng thái "published".`
+        );
+      }
+    }
+
+    try {
+      await startExecution({
+        stateMachineArn: SETTLE_SFN_ARN,
+        name: toExecutionName(input.drawId),
+        input: { drawId: input.drawId },
+      });
+    } catch (err) {
+      console.error(err);
       throw new AppException(
-        "DRAW_INVALID_TRANSITION",
-        `Không thể kết sổ – draw hiện tại không ở trạng thái "published".`
+        "SFN_START_FAILED",
+        `Không thể khởi chạy settle worker`
       );
     }
 

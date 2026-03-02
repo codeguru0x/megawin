@@ -14,7 +14,7 @@
  *           ▼
  *  ┌──────────────────────────────────────────┐
  *  │  2. VoidEntries (loop)                   │
- *  │     Batch void: scheduled/active/drawn   │
+ *  │     Batch void: scheduled   │
  *  │     → entry.status = void, ghi voidInfo  │
  *  │     → update ticket voidSummary          │
  *  │     done = true khi hết voidable entries │

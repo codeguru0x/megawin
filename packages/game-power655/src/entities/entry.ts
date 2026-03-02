@@ -13,8 +13,8 @@
  * không cần join ticket document.
  *
  * Lifecycle (EntryStatus từ game-core):
- *   scheduled → active → drawn → settled
- *                              ↘ void
+ *   scheduled → settled
+ *              ↘ void
  *
  * Collection: power655TicketEntries.
  */
@@ -117,7 +117,7 @@ export interface TicketEntryDoc {
   financialDate: string;
   /** Thời điểm quay chính xác (UTC). Dùng cho sort và display. */
   drawTime: Date;
-  /** Trạng thái lifecycle: scheduled → active → drawn → settled / void. */
+  /** Trạng thái lifecycle: scheduled → settled / void. */
   status: EntryStatus;
   /** Kết quả thắng/thua (ghi sau settle). */
   outcome?: EntryOutcome;

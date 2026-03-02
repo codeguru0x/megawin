@@ -5,7 +5,7 @@
  * Void 1 batch entries — CHỈ xử lý entries, KHÔNG update ticket.
  *
  * CRASH-SAFE:
- *   - Luôn query entries có status voidable (scheduled/active/drawn)
+ *   - Luôn query entries có status voidable (scheduled)
  *   - voidEntry() atomic: chỉ update nếu status đúng
  *   - done = true khi không còn entries voidable
  *

@@ -20,12 +20,12 @@ import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
 /**
  * Valid status transitions cho Keno Draw.
  *
- * Flow: scheduled → salesOpen ⇄ salesClosed → published → settling → settled
- *          ↘ void      ↘ void      ↘ void       ↘ void
+ * Flow: scheduled → salesOpen → salesClosed → published → settling → settled
+ *          ↘ void        ↑↓         ↘ void       ↘ void
  */
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
   [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Void]),
-  [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed, DrawStatus.Void]),
+  [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed]),
   [DrawStatus.SalesClosed]: new Set([
     DrawStatus.SalesOpen,
     DrawStatus.Published,
@@ -167,6 +167,32 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
+   * Close sales: salesOpen → salesClosed.
+   * Stamp sales.closeAt thời điểm đóng bán thực tế.
+   */
+  async closeSales(
+    drawId: string,
+    salesCloseAt?: Date
+  ): Promise<DrawEntity | null> {
+    const allowed = VALID_TRANSITIONS[DrawStatus.SalesOpen];
+    if (!allowed?.has(DrawStatus.SalesClosed)) return null;
+
+    const $set: Record<string, unknown> = {
+      status: DrawStatus.SalesClosed,
+      updatedAt: new Date(),
+    };
+    if (salesCloseAt) {
+      $set["sales.closeAt"] = salesCloseAt;
+    }
+
+    return await this.findOneAndUpdate(
+      { drawId, status: DrawStatus.SalesOpen },
+      { $set },
+      { returnDocument: "after" }
+    );
+  }
+
+  /**
    * Void draw: transition → void + ghi voidInfo embedded doc.
    */
   async voidDraw(
@@ -264,10 +290,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     if (sales.drawTime) {
       $set.drawTime = sales.drawTime;
     }
-    return await this.updateOne(
-      { drawId },
-      { $set }
-    );
+    return await this.updateOne({ drawId }, { $set });
   }
 
   async updateFinancial(

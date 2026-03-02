@@ -1,8 +1,10 @@
 /**
  * Use Case: Prepare Settle (Mega 6/45)
  *
- * Load toàn bộ context cần thiết cho settle flow.
- * Chỉ ĐỌC dữ liệu, không ghi – hoàn toàn idempotent.
+ * Load toàn bộ context cần thiết cho settle flow. Pure read — không mutate entries.
+ * settle-entries sẽ ghi result + chuyển scheduled → settled trực tiếp.
+ *
+ * IDEMPOTENT: chỉ đọc draw, config, jackpot cycle, đếm entries.
  */
 
 import { StepFunctionUseCase } from "@megawin/app-core/use-cases";

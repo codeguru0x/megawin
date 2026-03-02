@@ -1,10 +1,13 @@
 /**
  * Use Case: Prepare Settle (Bingo 18)
  *
- * Load context cho settle flow. Chỉ ĐỌC, không ghi – idempotent.
+ * Load context cho settle flow. Pure read — không mutate entries.
+ * settle-entries sẽ ghi result + chuyển scheduled → settled trực tiếp.
  *
  * Bingo 18: KHÔNG có Jackpot, KHÔNG có payout caps.
  * Giải thưởng cố định theo bảng prize table.
+ *
+ * IDEMPOTENT: chỉ đọc draw, config, đếm entries.
  */
 
 import { StepFunctionUseCase } from "@megawin/app-core/use-cases";

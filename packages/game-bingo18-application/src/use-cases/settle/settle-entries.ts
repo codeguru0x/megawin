@@ -4,9 +4,9 @@
  * Xử lý 1 batch entries: match boards + side bets → payout → settle.
  *
  * CRASH-SAFE:
- *   - Luôn query page 1 filter status = "drawn"
- *   - settleEntry() atomic: chỉ update nếu status = "drawn"
- *   - done = true khi không còn entries "drawn"
+ *   - Luôn query page 1 filter status = "scheduled"
+ *   - settleEntry() atomic: chỉ update nếu status = "scheduled"
+ *   - done = true khi không còn entries "scheduled"
  *
  * Bingo 18 matching logic:
  *   - SingleNum: matchSingleNum → match1/2/3 prizes
@@ -81,7 +81,7 @@ export interface SettleAccumulator {
 }
 
 export interface SettleEntriesBatchResult {
-  /** true khi không còn entries status "drawn" → kết thúc loop. */
+  /** true khi không còn entries status "scheduled" → kết thúc loop. */
   done: boolean;
   /** Bộ tích luỹ thống kê batch hiện tại. */
   accumulator: SettleAccumulator;
@@ -104,7 +104,7 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
       sum: result.sum,
     };
 
-    const entries = await this.entryRepo.getDrawnEntriesBatch(
+    const entries = await this.entryRepo.getScheduledEntriesBatch(
       drawId,
       1,
       batchSize
@@ -231,7 +231,12 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
           settledAt: new Date(),
           payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
         },
-        hasWin ? EntryOutcome.Win : EntryOutcome.Loss
+        hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
+        {
+          numbers: result.numbers,
+          sum: result.sum,
+          publishedAt: new Date(),
+        }
       );
 
       if (!settled) continue;

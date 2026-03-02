@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { GameConfigRepository } from "../../src/infras/repos/global-config-repo";
+import { GameConfigRepository } from "../../src/infras/repos/game-config-repo";
 import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
 import { GameConfigScope, GameProduct } from "@megawin/game-core/entities";
 import { insertDefaultGlobalConfig } from "./helpers/seed-global-config";

@@ -247,7 +247,7 @@ export interface Lotto535EntryResult {
   /** Ngày quay. */
   drawDate: string;
   /** Trạng thái: chờ quay / đã có kết quả / đã tính thưởng. */
-  status: "pending" | "drawn" | "settled";
+  status: "pending" | "settled";
   /** Tiền cược kỳ này (VND). */
   amount: number;
   /** Kết quả quay (nếu đã có). */

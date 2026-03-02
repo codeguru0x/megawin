@@ -14,12 +14,12 @@
  * KHÔNG update ticket — SyncTicketSummaries step riêng sẽ recompute từ entries.
  *
  * CRASH-SAFE DESIGN:
- *   - Luôn query page 1 với filter status = "drawn"
+ *   - Luôn query page 1 với filter status = "scheduled"
  *   - Entries đã settled tự filter ra → không cần track page offset
  *   - Nếu crash giữa batch: chạy lại sẽ pick up entries còn lại
- *   - settleEntry() atomic: chỉ update nếu status = "drawn" → no duplicate
+ *   - settleEntry() atomic: chỉ update nếu status = "scheduled" → no duplicate
  *   - upsertLines() dùng bulkWrite + $setOnInsert → idempotent khi retry
- *   - done = true khi không còn entries nào status = "drawn"
+ *   - done = true khi không còn entries nào status = "scheduled"
  *
  * Accumulator chỉ dùng cho monitoring/logging, KHÔNG dùng để tính financials.
  * CalculateFinancials tính lại từ DB (crash-safe).
@@ -94,7 +94,7 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
       winningSpecial: result.winningSpecial,
     };
 
-    const entries = await this.entryRepo.getDrawnEntriesBatch(
+    const entries = await this.entryRepo.getScheduledEntriesBatch(
       drawId,
       1,
       batchSize
@@ -113,7 +113,7 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
     const ticketCache = new Map<string, any>();
 
     for (const entry of entries) {
-      const ticketId = extractTicketId(entry.ticketId);
+      const ticketId = entry.ticketId as string;
 
       let ticket = ticketCache.get(ticketId);
       if (!ticket) {
@@ -182,7 +182,12 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
           settledAt: now,
           payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
         },
-        hasWin ? "win" : "loss"
+        hasWin ? "win" : "loss",
+        {
+          winningMain: result.winningMain as any,
+          winningSpecial: result.winningSpecial,
+          publishedAt: now,
+        }
       );
 
       if (!settled) continue;
@@ -221,14 +226,6 @@ function emptyAccumulator(): SettleAccumulator {
     tierWinnerCounts: {},
     totalFixedPrizes: 0,
   };
-}
-
-function extractTicketId(ticketId: unknown): string {
-  if (typeof ticketId === "string") return ticketId;
-  if (ticketId && typeof (ticketId as any).toHexString === "function") {
-    return (ticketId as any).toHexString();
-  }
-  return String(ticketId);
 }
 
 function buildPayoutTiers(

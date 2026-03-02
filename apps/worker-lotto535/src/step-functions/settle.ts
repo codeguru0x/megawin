@@ -18,8 +18,8 @@
  *           ▼
  *  ┌──────────────────────────────────────────┐
  *  │  3. SettleEntries (loop, always page 1)  │
- *  │     Filter: status = "drawn"             │
- *  │     done = true khi 0 drawn entries left │
+ *  │     Filter: status = "scheduled"          │
+ *  │     done = true khi 0 scheduled entries  │
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌────────────────────────────┐

@@ -1,15 +1,16 @@
 /**
  * Use Case: Prepare Settle (Max 3D Pro)
  *
- * Load toàn bộ context cần thiết cho settle flow.
- * Chỉ ĐỌC dữ liệu, không ghi – hoàn toàn idempotent.
+ * Load toàn bộ context cần thiết cho settle flow. Pure read — không mutate entries.
+ * settle-entries sẽ ghi result + chuyển scheduled → settled trực tiếp.
  *
  * Max 3D Pro không có Jackpot tích lũy → không load jackpot cycle.
+ *
+ * IDEMPOTENT: chỉ đọc draw, config, đếm entries.
  *
  * CRASH-SAFE: Nếu step function crash giữa chừng và chạy lại,
  * prepare-settle sẽ:
  *   - Accept draw ở status "settling" (đang settle dở)
- *   - Đếm entries CHƯA settled (status = "drawn") thay vì tổng
  */
 
 import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
@@ -72,7 +73,7 @@ export interface PrepareSettleResult {
     /** Tỷ lệ hoa hồng đại lý mặc định. */
     defaultCommissionRate: number;
   };
-  /** Tổng entries cần settle (status = drawn). */
+  /** Tổng entries cần settle. */
   totalEntries: number;
   /** Tổng pairs cần settle. */
   totalLines: number;

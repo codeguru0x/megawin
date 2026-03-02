@@ -193,8 +193,8 @@ describe("GameConfigRepository – Keno Global Config", () => {
     });
 
     expect(updated).not.toBeNull();
-    expect(updated!.basicPrizes.pick10[10]).toBe(1_500_000_000);
-    expect(updated!.basicPrizes.pick10[9]).toBe(100_000_000);
+    expect(updated!.basicPrizes.pick10?.[10]).toBe(1_500_000_000);
+    expect(updated!.basicPrizes.pick10?.[9]).toBe(100_000_000);
   });
 
   it("upsertGlobalConfig cập nhật payoutCaps", async () => {

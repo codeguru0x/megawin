@@ -136,8 +136,7 @@ export interface EntryFeedDoc {
   /**
    * Trạng thái đồng nhất của đơn cược (EntryStatus).
    * Tenant dựa vào field này để phân loại:
-   *   - "scheduled" / "active": tiền đang chờ quay (pending stake)
-   *   - "drawn": đã có kết quả, chờ tính thưởng
+   *   - "scheduled": tiền đang chờ quay (pending stake)
    *   - "settled": đã tính xong, xem winAmount/payoutAmount
    *   - "void": đơn vô hiệu, không tính vào report
    */
@@ -357,7 +356,7 @@ export interface EntryFeedItem {
 
   /**
    * Trạng thái đơn cược:
-   * "scheduled" | "active" | "drawn" | "settled" | "void".
+   * "scheduled" | "settled" | "void".
    */
   status: EntryStatus;
 

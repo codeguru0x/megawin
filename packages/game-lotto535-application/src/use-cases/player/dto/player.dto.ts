@@ -208,7 +208,7 @@ export interface PlayerEntryInfo {
   drawDate: string;
   /** Giờ quay (HH:mm). */
   drawTime: string;
-  /** Trạng thái entry (scheduled, drawn, settled, voided, ...). */
+  /** Trạng thái entry (scheduled, settled, voided, ...). */
   status: string;
   /** Số tiền đặt cược cho entry này (VND) = linesPerDraw × unitPrice. */
   amount: number;

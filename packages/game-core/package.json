@@ -24,6 +24,10 @@
     "./types": {
       "types": "./src/types/index.ts",
       "default": "./dist/types/index.js"
+    },
+    "./utils": {
+      "types": "./src/utils/index.ts",
+      "default": "./dist/utils/index.js"
     }
   },
   "keywords": [

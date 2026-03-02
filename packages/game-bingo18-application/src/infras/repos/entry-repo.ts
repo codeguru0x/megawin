@@ -71,13 +71,13 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     });
   }
 
-  async getDrawnEntriesBatch(
+  async getScheduledEntriesBatch(
     drawId: string,
     page: number,
     size: number
   ): Promise<EntryEntity[]> {
     return await this.paging(
-      { drawId, status: EntryStatus.Drawn },
+      { drawId, status: EntryStatus.Scheduled },
       page,
       size,
       { sort: { createdAt: 1 } }
@@ -111,33 +111,9 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     return result.modifiedCount;
   }
 
-  /** Copy draw result vào tất cả active entries. Gán version mới cho toàn batch. */
-  async stampResultOnEntries(
-    drawId: string,
-    result: {
-      numbers: number[];
-      sum: number;
-      publishedAt: Date;
-    }
-  ): Promise<number> {
-    const version = await this.nextVersion();
-    const updated = await this.updateMany(
-      { drawId, status: EntryStatus.Active },
-      {
-        $set: {
-          result,
-          status: EntryStatus.Drawn,
-          version,
-          updatedAt: new Date(),
-        },
-      }
-    );
-    return updated.modifiedCount;
-  }
-
   /**
-   * Settle 1 entry: drawn → settled + ghi payout + gán version.
-   * Atomic: chỉ update nếu entry đang ở status "drawn".
+   * Settle 1 entry: scheduled → settled + ghi result + payout + gán version.
+   * Atomic: chỉ update nếu entry đang ở status "scheduled".
    */
   async settleEntry(
     entryId: string,
@@ -161,14 +137,20 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       settledAt: Date;
       payoutStatus?: string;
     },
-    outcome: string
+    outcome: string,
+    result: {
+      numbers: number[];
+      sum: number;
+      publishedAt: Date;
+    }
   ): Promise<boolean> {
     const version = await this.nextVersion();
     return await this.updateOne(
-      { _id: new ObjectId(entryId), status: EntryStatus.Drawn },
+      { _id: new ObjectId(entryId), status: EntryStatus.Scheduled },
       {
         $set: {
           status: EntryStatus.Settled,
+          result,
           payout,
           outcome,
           version,
@@ -382,7 +364,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
 
   /**
    * Lấy batch entries chưa void cho 1 draw bị huỷ.
-   * Chỉ lấy entries có status scheduled/active/drawn.
+   * Chỉ lấy entries có status scheduled.
    */
   async getVoidableEntriesBatch(
     drawId: string,
@@ -391,9 +373,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     return await this.findMany(
       {
         drawId,
-        status: {
-          $in: [EntryStatus.Scheduled, EntryStatus.Active, EntryStatus.Drawn],
-        },
+        status: EntryStatus.Scheduled,
       },
       { sort: { createdAt: 1 }, limit }
     );
@@ -416,9 +396,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     return await this.updateOne(
       {
         _id: new ObjectId(entryId),
-        status: {
-          $in: [EntryStatus.Scheduled, EntryStatus.Active, EntryStatus.Drawn],
-        },
+        status: EntryStatus.Scheduled,
       },
       {
         $set: {
@@ -439,9 +417,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   async countVoidableEntries(drawId: string): Promise<number> {
     return await this.count({
       drawId,
-      status: {
-        $in: [EntryStatus.Scheduled, EntryStatus.Active, EntryStatus.Drawn],
-      },
+      status: EntryStatus.Scheduled,
     });
   }
 

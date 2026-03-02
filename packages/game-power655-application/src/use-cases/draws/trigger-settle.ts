@@ -1,6 +1,8 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
+import { toExecutionName } from "@megawin/game-core/utils";
+import { startExecution } from "@megawin/app-core/aws/sf";
 import { isSplitCycleDraw } from "@megawin/game-power655/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -8,17 +10,17 @@ import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
 
+const SETTLE_SFN_ARN = process.env.POWER655_SETTLE_SFN_ARN!;
+
 /**
- * Nhấn "Kết sổ" – chuyển trạng thái draw sang "settling".
+ * Kết sổ kỳ quay Power 6/55.
  *
- * Flow: published → settling
- *
- * Xác định nếu kỳ này là split cycle (chia giải Jackpot):
- * - Tổng JP1 + JP2 >= splitThreshold
- * - Không ai trúng Jackpot (check after worker settle, nhưng mark intent trước)
- *
- * KHÔNG thực hiện settle – chỉ chuyển trạng thái.
- * Worker sẽ pick up draws có status "settling" và xử lý.
+ * Flow:
+ *   1. Validate draw (tồn tại, có result)
+ *   2. Xác định split cycle (tổng JP1 + JP2 >= threshold)
+ *   3. Transition status: published → settling (atomic, kèm splitInfo)
+ *      - Nếu draw đã ở settling (retry) → skip transition
+ *   4. Start Settle Step Function (deterministic name → idempotent)
  */
 export class TriggerSettleUseCase extends NextApiUseCase<
   TriggerSettleInput,
@@ -29,7 +31,6 @@ export class TriggerSettleUseCase extends NextApiUseCase<
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  /** @inheritdoc */
   protected async execute(
     input: TriggerSettleInput
   ): Promise<TriggerSettleOutput> {
@@ -44,42 +45,65 @@ export class TriggerSettleUseCase extends NextApiUseCase<
       );
     }
 
-    const [globalConfig, activeCycle] = await Promise.all([
-      this.getGlobalConfig.run(),
-      this.cycleRepo.getActiveCycle(),
-    ]);
+    let splitCycle = false;
 
-    const jp1Current =
-      activeCycle?.jackpot1Current ?? globalConfig.jackpot.jackpot1.seedAmount;
-    const jp2Current =
-      activeCycle?.jackpot2Current ?? globalConfig.jackpot.jackpot2.seedAmount;
-    const totalJackpot = jp1Current + jp2Current;
+    if (draw.status !== DrawStatus.Settling) {
+      const [globalConfig, activeCycle] = await Promise.all([
+        this.getGlobalConfig.run(),
+        this.cycleRepo.getActiveCycle(),
+      ]);
 
-    const splitCycle = isSplitCycleDraw(
-      totalJackpot,
-      globalConfig.jackpot.splitThreshold,
-      false
-    );
+      const jp1Current =
+        activeCycle?.jackpot1Current ??
+        globalConfig.jackpot.jackpot1.seedAmount;
+      const jp2Current =
+        activeCycle?.jackpot2Current ??
+        globalConfig.jackpot.jackpot2.seedAmount;
+      const totalJackpot = jp1Current + jp2Current;
 
-    const splitInfo = splitCycle
-      ? {
-          isSplitCycle: true,
-          split: {
-            thresholdAmount: globalConfig.jackpot.splitThreshold,
-            splitRatios: globalConfig.jackpot.splitRatios,
-            splitAmount: totalJackpot,
-            splitRuleVersion: "v1-2026-02",
-            hintText: "Kỳ chia giải Jackpot",
-          },
-        }
-      : undefined;
+      splitCycle = isSplitCycleDraw(
+        totalJackpot,
+        globalConfig.jackpot.splitThreshold,
+        false
+      );
 
-    const updated = await this.drawRepo.triggerSettle(input.drawId, splitInfo);
+      const splitInfo = splitCycle
+        ? {
+            isSplitCycle: true,
+            split: {
+              thresholdAmount: globalConfig.jackpot.splitThreshold,
+              splitRatios: globalConfig.jackpot.splitRatios,
+              splitAmount: totalJackpot,
+              splitRuleVersion: "v1-2026-02",
+              hintText: "Kỳ chia giải Jackpot",
+            },
+          }
+        : undefined;
 
-    if (!updated) {
+      const updated = await this.drawRepo.triggerSettle(
+        input.drawId,
+        splitInfo
+      );
+
+      if (!updated) {
+        throw new AppException(
+          "DRAW_INVALID_TRANSITION",
+          `Không thể kết sổ – draw hiện tại không ở trạng thái "published".`
+        );
+      }
+    }
+
+    try {
+      await startExecution({
+        stateMachineArn: SETTLE_SFN_ARN,
+        name: toExecutionName(input.drawId),
+        input: { drawId: input.drawId },
+      });
+    } catch (err) {
+      console.error(err);
       throw new AppException(
-        "DRAW_INVALID_TRANSITION",
-        `Không thể kết sổ – draw hiện tại không ở trạng thái "published".`
+        "SFN_START_FAILED",
+        `Không thể khởi chạy settle worker`
       );
     }
 

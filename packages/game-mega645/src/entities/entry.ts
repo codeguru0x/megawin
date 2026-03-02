@@ -26,7 +26,7 @@ export interface TicketEntryDoc {
   /** Tên đăng nhập người chơi. */
   username: string;
   /** Tham chiếu đến vé gốc (mega645Tickets._id). */
-  ticketId: unknown;
+  ticketId: string;
 
   /** ID kỳ quay mà entry này tham gia. Format: "YYYY-MM-DD.001". */
   drawId: string;

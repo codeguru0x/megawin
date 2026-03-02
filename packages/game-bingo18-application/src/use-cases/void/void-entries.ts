@@ -4,7 +4,7 @@
  * Step 2 (loop) của Void Draw Step Function.
  * Void 1 batch entries — CHỈ xử lý entries, KHÔNG update ticket.
  *
- * CRASH-SAFE: query chỉ voidable entries (scheduled/active/drawn).
+ * CRASH-SAFE: query chỉ voidable entries (scheduled).
  * done = true khi không còn entries voidable.
  *
  * Ticket summary sẽ được SyncTicketSummaries recompute từ entries.

@@ -4,9 +4,9 @@
  * Xử lý 1 batch entries: match boards + side bets → payout → settle.
  *
  * CRASH-SAFE:
- *   - Luôn query page 1 filter status = "drawn"
- *   - settleEntry() atomic: chỉ update nếu status = "drawn"
- *   - done = true khi không còn entries "drawn"
+ *   - Luôn query page 1 filter status = "scheduled"
+ *   - settleEntry() atomic: chỉ update nếu status = "scheduled"
+ *   - done = true khi không còn entries "scheduled"
  *
  * Keno khác Lotto: match cả boards (basic) + side bets (big/small, even/odd).
  * Không có Jackpot tích luỹ – tất cả giải thưởng cố định theo bảng.
@@ -89,7 +89,7 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
       oddCount: result.oddCount,
     };
 
-    const entries = await this.entryRepo.getDrawnEntriesBatch(
+    const entries = await this.entryRepo.getScheduledEntriesBatch(
       drawId,
       1,
       batchSize
@@ -196,7 +196,15 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
           settledAt: new Date(),
           payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
         },
-        hasWin ? EntryOutcome.Win : EntryOutcome.Loss
+        hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
+        {
+          winningNumbers: result.winningNumbers,
+          publishedAt: new Date(),
+          bigCount: result.bigCount,
+          smallCount: result.smallCount,
+          evenCount: result.evenCount,
+          oddCount: result.oddCount,
+        }
       );
 
       if (!settled) continue;

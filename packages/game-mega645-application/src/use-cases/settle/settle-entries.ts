@@ -4,7 +4,7 @@
  * Xử lý 1 batch entries: expand → match → persist lines → settle entry.
  * Mega 6/45 lines chỉ có main (không có special).
  *
- * CRASH-SAFE: Luôn query page 1 với filter status = "drawn".
+ * CRASH-SAFE: Luôn query page 1 với filter status = "scheduled".
  */
 
 import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
@@ -73,7 +73,7 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
       winningMain: result.winningMain as any,
     };
 
-    const entries = await this.entryRepo.getDrawnEntriesBatch(
+    const entries = await this.entryRepo.getScheduledEntriesBatch(
       drawId,
       1,
       batchSize
@@ -92,7 +92,7 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
     const ticketCache = new Map<string, any>();
 
     for (const entry of entries) {
-      const ticketId = extractTicketId(entry.ticketId);
+      const ticketId = entry.ticketId;
 
       let ticket = ticketCache.get(ticketId);
       if (!ticket) {
@@ -154,7 +154,11 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
           settledAt: now,
           payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
         },
-        hasWin ? "win" : "loss"
+        hasWin ? "win" : "loss",
+        {
+          winningMain: result.winningMain as any,
+          publishedAt: now,
+        }
       );
 
       if (!settled) continue;
@@ -188,14 +192,6 @@ function emptyAccumulator(): SettleAccumulator {
     tierWinnerCounts: {},
     totalFixedPrizes: 0,
   };
-}
-
-function extractTicketId(ticketId: unknown): string {
-  if (typeof ticketId === "string") return ticketId;
-  if (ticketId && typeof (ticketId as any).toHexString === "function") {
-    return (ticketId as any).toHexString();
-  }
-  return String(ticketId);
 }
 
 function buildPayoutTiers(

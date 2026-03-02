@@ -180,7 +180,7 @@ export interface PlayerEntryInfo {
   drawId: string;
   /** Ngày quay (YYYY-MM-DD). */
   drawDate: string;
-  /** Trạng thái entry (active, drawn, settled, void). */
+  /** Trạng thái entry (scheduled, settled, void). */
   status: string;
   /** Số tiền đặt cược của entry (VND). */
   amount: number;

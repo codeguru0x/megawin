@@ -45,13 +45,13 @@ export abstract class AbstractEntryRepository<
     });
   }
 
-  async getDrawnEntriesBatch(
+  async getScheduledEntriesBatch(
     drawId: string,
     page: number,
     size: number
   ): Promise<TEntity[]> {
     return await this.paging(
-      { drawId, status: EntryStatus.Drawn },
+      { drawId, status: EntryStatus.Scheduled },
       page,
       size,
       { sort: { createdAt: 1 } }
@@ -107,25 +107,6 @@ export abstract class AbstractEntryRepository<
     return result.modifiedCount;
   }
 
-  async stampResultOnEntries(
-    drawId: string,
-    result: TDrawResult & { publishedAt: Date }
-  ): Promise<number> {
-    const version = await this.nextVersion();
-    const updated = await this.updateMany(
-      { drawId, status: EntryStatus.Active },
-      {
-        $set: {
-          result,
-          status: EntryStatus.Drawn,
-          version,
-          updatedAt: new Date(),
-        },
-      }
-    );
-    return updated.modifiedCount;
-  }
-
   async settleEntry(
     entryId: string,
     payout: {
@@ -140,14 +121,16 @@ export abstract class AbstractEntryRepository<
       settledAt: Date;
       payoutStatus?: string;
     },
-    outcome: string
+    outcome: string,
+    result: TDrawResult & { publishedAt: Date }
   ): Promise<boolean> {
     const version = await this.nextVersion();
     return await this.updateOne(
-      { _id: new ObjectId(entryId), status: EntryStatus.Drawn },
+      { _id: new ObjectId(entryId), status: EntryStatus.Scheduled },
       {
         $set: {
           status: EntryStatus.Settled,
+          result,
           payout,
           outcome,
           version,
@@ -418,9 +401,7 @@ export abstract class AbstractEntryRepository<
     return await this.findMany(
       {
         drawId,
-        status: {
-          $in: [EntryStatus.Scheduled, EntryStatus.Active, EntryStatus.Drawn],
-        },
+        status: EntryStatus.Scheduled,
       },
       { sort: { createdAt: 1 }, limit }
     );
@@ -439,9 +420,7 @@ export abstract class AbstractEntryRepository<
     return await this.updateOne(
       {
         _id: new ObjectId(entryId),
-        status: {
-          $in: [EntryStatus.Scheduled, EntryStatus.Active, EntryStatus.Drawn],
-        },
+        status: EntryStatus.Scheduled,
       },
       {
         $set: {
@@ -461,9 +440,7 @@ export abstract class AbstractEntryRepository<
   async countVoidableEntries(drawId: string): Promise<number> {
     return await this.count({
       drawId,
-      status: {
-        $in: [EntryStatus.Scheduled, EntryStatus.Active, EntryStatus.Drawn],
-      },
+      status: EntryStatus.Scheduled,
     });
   }
 

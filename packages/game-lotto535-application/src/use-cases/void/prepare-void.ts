@@ -8,7 +8,7 @@
  * Quy tắc:
  *   - Draw PHẢI ở trạng thái "salesClosed" (đã đóng bán, chưa settle).
  *   - Draw đã settled hoặc đang settling KHÔNG được void.
- *   - Entries đã settled KHÔNG được void (chỉ void scheduled/active/drawn).
+ *   - Entries đã settled KHÔNG được void (chỉ void scheduled).
  *
  * IDEMPOTENT: chỉ đọc dữ liệu.
  */
@@ -40,7 +40,7 @@ export interface PrepareVoidResult {
   voidedBy?: string;
   /** Trạng thái trước khi void (salesClosed hoặc published). */
   previousStatus: string;
-  /** Tổng entries có thể void (status = scheduled/active/drawn). */
+  /** Tổng entries có thể void (status = scheduled). */
   totalVoidableEntries: number;
 }
 

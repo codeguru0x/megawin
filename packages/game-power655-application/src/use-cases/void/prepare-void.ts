@@ -38,7 +38,7 @@ export interface PrepareVoidResult {
   voidedBy?: string;
   /** Trạng thái trước khi huỷ (salesClosed / published). */
   previousStatus: string;
-  /** Tổng số entries có thể void (status: scheduled/active/drawn). */
+  /** Tổng số entries có thể void (status: scheduled). */
   totalVoidableEntries: number;
 }
 

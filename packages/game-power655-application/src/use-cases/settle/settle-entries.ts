@@ -10,11 +10,11 @@
  *   - Line doc có bonusMatched thay vì specialMatched
  *
  * CRASH-SAFE DESIGN:
- *   - Luôn query page 1 với filter status = "drawn"
+ *   - Luôn query page 1 với filter status = "scheduled"
  *   - Entries đã settled tự filter ra → không cần track page offset
- *   - settleEntry() atomic: chỉ update nếu status = "drawn" → no duplicate
+ *   - settleEntry() atomic: chỉ update nếu status = "scheduled" → no duplicate
  *   - upsertLines() dùng bulkWrite + $setOnInsert → idempotent khi retry
- *   - done = true khi không còn entries nào status = "drawn"
+ *   - done = true khi không còn entries nào status = "scheduled"
  */
 
 import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
@@ -91,7 +91,7 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
       bonusNumber: result.bonusNumber,
     };
 
-    const entries = await this.entryRepo.getDrawnEntriesBatch(
+    const entries = await this.entryRepo.getScheduledEntriesBatch(
       drawId,
       1,
       batchSize
@@ -110,7 +110,7 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
     const ticketCache = new Map<string, any>();
 
     for (const entry of entries) {
-      const ticketId = extractTicketId(entry.ticketId);
+      const ticketId = entry.ticketId;
 
       let ticket = ticketCache.get(ticketId);
       if (!ticket) {
@@ -182,7 +182,12 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
           settledAt: now,
           payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
         },
-        hasWin ? "win" : "loss"
+        hasWin ? "win" : "loss",
+        {
+          winningMain: result.winningMain as any,
+          bonusNumber: result.bonusNumber,
+          publishedAt: now,
+        }
       );
 
       if (!settled) continue;
@@ -219,14 +224,6 @@ function emptyAccumulator(): SettleAccumulator {
     tierWinnerCounts: {},
     totalFixedPrizes: 0,
   };
-}
-
-function extractTicketId(ticketId: unknown): string {
-  if (typeof ticketId === "string") return ticketId;
-  if (ticketId && typeof (ticketId as any).toHexString === "function") {
-    return (ticketId as any).toHexString();
-  }
-  return String(ticketId);
 }
 
 function hasJackpotTier(
