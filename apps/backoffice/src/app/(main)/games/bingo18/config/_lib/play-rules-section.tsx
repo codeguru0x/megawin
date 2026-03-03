@@ -27,7 +27,7 @@ const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const playFormSchema = z.object({
   unitPrice: z.coerce.number().int().positive("Phải > 0"),
-  maxBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
+  maxBasicBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
   maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
   salesCloseBeforeSeconds: z.coerce.number().int().positive("Phải > 0"),
   drawIntervalMinutes: z.coerce.number().int().positive("Phải > 0"),
@@ -54,7 +54,7 @@ export function PlayRulesSection({
     resolver: zodResolver(playFormSchema) as any,
     values: {
       unitPrice: config.play.unitPrice,
-      maxBoardsPerTicket: config.play.maxBoardsPerTicket,
+      maxBasicBoardsPerTicket: config.play.maxBasicBoardsPerTicket,
       maxDrawCount: config.play.maxDrawCount,
       salesCloseBeforeSeconds: config.play.salesCloseBeforeSeconds,
       drawIntervalMinutes: config.play.drawIntervalMinutes,
@@ -67,7 +67,7 @@ export function PlayRulesSection({
     onSave({
       play: {
         unitPrice: values.unitPrice,
-        maxBoardsPerTicket: values.maxBoardsPerTicket,
+        maxBasicBoardsPerTicket: values.maxBasicBoardsPerTicket,
         maxDrawCount: values.maxDrawCount,
         salesCloseBeforeSeconds: values.salesCloseBeforeSeconds,
         drawIntervalMinutes: values.drawIntervalMinutes,
@@ -128,7 +128,7 @@ export function PlayRulesSection({
                 <div className="grid grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
-                    name="maxBoardsPerTicket"
+                    name="maxBasicBoardsPerTicket"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">
