@@ -1,6 +1,7 @@
 {
   "name": "@megawin/tenant-gateway",
   "version": "1.0.0",
+  "type": "module",
   "description": "Outbound HTTP client to call tenant server APIs (debit, credit, balance, report)",
   "main": "index.js",
   "scripts": {

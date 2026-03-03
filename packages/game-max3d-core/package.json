@@ -2,6 +2,7 @@
   "name": "@megawin/game-max3d-core",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Core application layer for Max 3D family – abstract repos, mappers, domain logic",
   "scripts": {
     "build": "tsc",

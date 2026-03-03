@@ -9,7 +9,7 @@ import { z } from "zod";
 import { withPlayerAuth } from "@megawin/auth";
 
 import { GetEntryLinesPlayerUseCase } from "@megawin/game-max3d-application/use-cases/player";
-import { objectIdSchema, paginationQuerySchema } from "#lib/schemas";
+import { objectIdSchema, lineCursorQuerySchema } from "#lib/schemas";
 
 const pathSchema = z.object({
   entryId: objectIdSchema,
@@ -21,9 +21,9 @@ export const handler = withPlayerAuth(
   async (event) => {
     const { tenantId, accountId } = event.user;
     const { entryId } = event.schema.path;
-    const { page, size } = event.schema.query;
+    const { size, cursor } = event.schema.query;
 
-    return useCase.run({ tenantId, accountId, entryId, page, size });
+    return useCase.run({ tenantId, accountId, entryId, size, cursor });
   },
-  { schemas: { path: pathSchema, query: paginationQuerySchema } }
+  { schemas: { path: pathSchema, query: lineCursorQuerySchema } }
 );

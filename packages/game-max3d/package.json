@@ -2,6 +2,7 @@
   "name": "@megawin/game-max3d",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Max 3D game domain – entities, rules, helpers (internal only)",
   "scripts": {
     "dev": "tsc --watch",

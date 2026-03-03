@@ -1,4 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
+import { MfaStatus } from "@megawin/identity/entities/account";
 import { AccountRepository } from "../../infras/repos/account-repo";
 import type {
   ListAgentAccountsOutput,
@@ -18,6 +19,7 @@ export class ListAgentAccountsUseCase extends NextApiUseCase<
       username: agent.username,
       displayName: agent.displayName,
       status: agent.status,
+      mfaStatus: agent.mfaStatus ?? MfaStatus.None,
       tenantId: agent.tenantId,
       roles: agent.roles,
       createdAt: agent.createdAt.toISOString?.() ?? String(agent.createdAt),

@@ -28,3 +28,39 @@ export type {
   ListAgentAccountsOutput,
   AgentAccountItem,
 } from "./dto/list-agent-accounts.dto";
+
+export {
+  ChangeMyPasswordUseCase,
+  type ChangeMyPasswordInput,
+  type ChangeMyPasswordOutput,
+} from "./change-my-password";
+
+export {
+  GetMyMfaStatusUseCase,
+  type GetMyMfaStatusInput,
+  type GetMyMfaStatusOutput,
+} from "./get-my-mfa-status";
+
+export {
+  SetupMfaUseCase,
+  type SetupMfaInput,
+  type SetupMfaOutput,
+} from "./setup-mfa";
+
+export {
+  VerifyAndEnableMfaUseCase,
+  type VerifyAndEnableMfaInput,
+  type VerifyAndEnableMfaOutput,
+} from "./verify-and-enable-mfa";
+
+export {
+  DisableMfaUseCase,
+  type DisableMfaInput,
+  type DisableMfaOutput,
+} from "./disable-mfa";
+
+export {
+  GetMyProfileUseCase,
+  type GetMyProfileInput,
+  type GetMyProfileOutput,
+} from "./get-my-profile";

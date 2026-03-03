@@ -6,7 +6,6 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
-import { DrawStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-lotto535/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type {
@@ -27,17 +26,7 @@ export class ListJackpotHistoryUseCase extends NextApiUseCase<
     const page = input.page ?? 1;
     const size = input.size ?? 20;
 
-    const draws = await this.drawRepo.findMany(
-      {
-        status: DrawStatus.Settled,
-        "jackpot.closingAmount": { $exists: true },
-      },
-      {
-        sort: { drawTime: -1 },
-        skip: (page - 1) * size,
-        limit: size,
-      }
-    );
+    const draws = await this.drawRepo.getSettledDrawsWithJackpot(page, size);
 
     const items: JackpotHistoryItem[] = draws.map((d) => ({
       drawId: d.drawId,

@@ -48,7 +48,7 @@ const claims = {
     "https://cognito-idp.ap-southeast-1.amazonaws.com/ap-southeast-1_LOCAL"
   ),
   aud: get("COGNITO_CLIENT_ID", "local-test-client"),
-  exp: Math.floor(Date.now() / 1000) + 86400,
+  exp: Math.floor(Date.now() / 1000) + 30 * 86400,
   "cognito:username": get("MOCK_USERNAME", "local_player"),
   "custom:account_type": get("MOCK_ACCOUNT_TYPE", "player"),
   "custom:account_status": get("MOCK_ACCOUNT_STATUS", "active"),

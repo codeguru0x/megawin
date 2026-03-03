@@ -5,6 +5,7 @@ export const companyAccountSchema = z.object({
   username: z.string(),
   displayName: z.string(),
   status: z.string(),
+  mfaStatus: z.string(),
   roles: z.array(z.string()),
   createdAt: z.string(),
   updatedAt: z.string(),

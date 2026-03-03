@@ -1,4 +1,5 @@
 service: megawin-player
+app: megawin-player
 
 plugins:
   - serverless-offline
@@ -10,9 +11,26 @@ custom:
     noPrependStageInUrl: true
     ignoreJWTSignature: true
 
+stages:
+  dev:
+    observability:
+      provider: axiom
+      dataset: dev-megawin-player
+    params:
+      ### Mặc định dev sẽ là 0 không cấu hình ở prod mà chỉ định luôn khi cấu hình func
+      provisionedConcurrency: 0
+
+  prod:
+    observability:
+      provider: axiom
+      dataset: prod-megawin-player
+
+  default:
+    observability: false
+
 provider:
   name: aws
-  runtime: nodejs22.x
+  runtime: nodejs24.x
   stage: ${opt:stage, 'dev'}
   region: ap-southeast-1
 

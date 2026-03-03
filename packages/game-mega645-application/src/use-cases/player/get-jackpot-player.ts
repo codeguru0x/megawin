@@ -1,5 +1,4 @@
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
@@ -27,14 +26,7 @@ export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<
       100
     );
 
-    const nextScheduled = await this.drawRepo.findOne(
-      {
-        status: {
-          $in: [DrawStatus.Scheduled, DrawStatus.SalesOpen, DrawStatus.SalesClosed],
-        },
-      },
-      { sort: { drawTime: 1 } }
-    );
+    const nextScheduled = await this.drawRepo.getNextScheduledDraw();
 
     return {
       currentAmount,

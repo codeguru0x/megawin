@@ -61,6 +61,17 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   // ─── Query ───
 
+  async getEntryById(entryId: string): Promise<TicketEntryEntity | null> {
+    return await this.findOne({ _id: new ObjectId(entryId) });
+  }
+
+  async getEntriesByTicketId(ticketId: string): Promise<TicketEntryEntity[]> {
+    return await this.findMany(
+      { ticketId: new ObjectId(ticketId) },
+      { sort: { drawTime: 1 } }
+    );
+  }
+
   async getEntriesByDrawId(
     drawId: string,
     page: number,

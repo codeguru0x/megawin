@@ -2,6 +2,7 @@
   "name": "@megawin/game-power655-application",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Power 6/55 application layer – repos, mappers, use cases",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

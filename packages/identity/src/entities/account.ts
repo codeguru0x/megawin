@@ -68,6 +68,19 @@ export const ALL_ROLE_VALUES = [
  */
 export const SUPER_ROLES: readonly AccountRole[] = [CompanyRole.Admin];
 
+// ─── MFA Status ───
+
+export const MfaStatus = {
+  /** Mới tạo, chưa từng thiết lập MFA. */
+  None: "none",
+  /** MFA đang bật – yêu cầu OTP khi login. */
+  Enabled: "enabled",
+  /** Đã từng bật MFA nhưng đã tắt. */
+  Disabled: "disabled",
+} as const;
+
+export type MfaStatus = (typeof MfaStatus)[keyof typeof MfaStatus];
+
 // ─── Base entity fields chung ───
 
 interface AccountBase {
@@ -87,6 +100,8 @@ interface AccountBase {
   displayName: string;
 
   status: AccountStatus;
+
+  mfaStatus?: MfaStatus;
 
   cognitoPoolId: string;
   cognitoSub: string;

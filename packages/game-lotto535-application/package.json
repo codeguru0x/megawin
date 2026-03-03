@@ -2,6 +2,7 @@
   "name": "@megawin/game-lotto535-application",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Lotto 5/35 application layer – repos, mappers, use cases for backoffice",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

@@ -118,6 +118,16 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
   }
 
+  async getLastSettledDrawWithResult(): Promise<DrawEntity | null> {
+    return await this.findOne(
+      {
+        status: DrawStatus.Settled,
+        "result.winningNumbers": { $exists: true },
+      },
+      { sort: { drawTime: -1 } }
+    );
+  }
+
   // ─── Status Transitions (atomic, type-safe) ───
 
   /**

@@ -2,6 +2,7 @@
   "name": "@megawin/game-core-application",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Game core application layer – repos, mappers, use-cases for entry feed, change sequence & daily reports",
   "scripts": {
     "build": "tsc",

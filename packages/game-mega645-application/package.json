@@ -2,6 +2,7 @@
   "name": "@megawin/game-mega645-application",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Mega 6/45 application layer – repos, mappers, use cases",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

@@ -6,6 +6,7 @@ import {
   type AgentAccountEntity,
   type PlayerAccountEntity,
   type CompanyRole,
+  type MfaStatus,
   AccountType,
   AccountStatus,
   AgentRole,
@@ -143,5 +144,15 @@ export class AccountRepository extends IdentityBaseRepo<
       },
       { upsert: true, returnDocument: "after" }
     )) as AgentAccountEntity | null;
+  }
+
+  public async updateMfaStatus(
+    username: string,
+    mfaStatus: MfaStatus
+  ): Promise<boolean> {
+    return this.updateOne(
+      { username },
+      { $set: { mfaStatus, updatedAt: new Date() } }
+    );
   }
 }

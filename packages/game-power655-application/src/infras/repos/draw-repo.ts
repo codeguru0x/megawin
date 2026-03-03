@@ -360,6 +360,38 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
   }
 
+  async getNextScheduledDraw(): Promise<DrawEntity | null> {
+    return await this.findOne(
+      {
+        status: {
+          $in: [
+            DrawStatus.Scheduled,
+            DrawStatus.SalesOpen,
+            DrawStatus.SalesClosed,
+          ],
+        },
+      },
+      { sort: { drawTime: 1 } }
+    );
+  }
+
+  async getSettledDrawsWithJackpot(
+    page: number,
+    size: number
+  ): Promise<DrawEntity[]> {
+    return await this.findMany(
+      {
+        status: DrawStatus.Settled,
+        "jackpot.closingJackpot1": { $exists: true },
+      },
+      {
+        sort: { drawTime: -1 },
+        skip: (page - 1) * size,
+        limit: size,
+      }
+    );
+  }
+
   /** Lấy kỳ quay đang mở bán (hoặc custom statuses). */
   async getCurrentDraw(allowStatuses?: string[]): Promise<DrawEntity | null> {
     const statuses = allowStatuses ?? [DrawStatus.SalesOpen];

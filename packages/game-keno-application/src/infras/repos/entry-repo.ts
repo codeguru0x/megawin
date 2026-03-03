@@ -88,6 +88,13 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     return await this.count({ drawId });
   }
 
+  async getEntriesByTicketId(ticketId: string): Promise<EntryEntity[]> {
+    return await this.findMany(
+      { ticketId },
+      { sort: { drawTime: 1 } }
+    );
+  }
+
   // ─── Status Transitions ───
 
   /** Batch update entry status cho 1 draw. Gán version mới cho toàn batch. */

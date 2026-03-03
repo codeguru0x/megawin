@@ -50,17 +50,22 @@ const READ_ONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 export interface RouteSession<TRole extends string = string> {
   user: {
     id: string;
-    email?: string;
-    name?: string;
-    roles?: TRole[];
-    accountStatus?: string;
+    sub: string;
+    email: string;
+    name: string;
+    username: string;
+    roles: TRole[];
+    accountStatus: string;
+    accountId: string;
+    tenantId: string;
+    accountType: string;
     [key: string]: unknown;
   };
   [key: string]: unknown;
 }
 
 export type GetSessionFn<TRole extends string = string> = (
-  req: NextRequest,
+  req: NextRequest
 ) => Promise<RouteSession<TRole> | null>;
 
 export interface RouteAuthRequirements<TRole extends string = string> {
@@ -83,7 +88,7 @@ export interface RouteContext<
 
 export type NextRouteHandler = (
   req: NextRequest,
-  ctx: { params: Promise<Record<string, string>> },
+  ctx: { params: Promise<Record<string, string>> }
 ) => Promise<NextResponse>;
 
 // ============ Parse Query Params ============
@@ -121,7 +126,7 @@ export class ApiRouteBuilder<
 
   /** Yêu cầu authentication. Truyền options nếu cần phân quyền theo roles. */
   auth(
-    requirements?: RouteAuthRequirements<TRole>,
+    requirements?: RouteAuthRequirements<TRole>
   ): ApiRouteBuilder<TBody, TQuery, TParams, TRole> {
     return new ApiRouteBuilder<TBody, TQuery, TParams, TRole>({
       ...this.config,
@@ -152,14 +157,14 @@ export class ApiRouteBuilder<
 
   handler(
     fn: (
-      ctx: RouteContext<TBody, TQuery, TParams, TRole>,
-    ) => Promise<NextResponse>,
+      ctx: RouteContext<TBody, TQuery, TParams, TRole>
+    ) => Promise<NextResponse>
   ): NextRouteHandler {
     const cfg = this.config;
 
     return async (
       req: NextRequest,
-      routeCtx: { params: Promise<Record<string, string>> },
+      routeCtx: { params: Promise<Record<string, string>> }
     ) => {
       try {
         // 1. Auth
@@ -168,7 +173,7 @@ export class ApiRouteBuilder<
           if (!cfg.getSession) {
             throw new Error(
               "ApiRouteBuilder: auth is configured but getSession is not provided. " +
-                "Use createApiRouteBuilder() to bind getSession once.",
+                "Use createApiRouteBuilder() to bind getSession once."
             );
           }
           session = await cfg.getSession(req);
@@ -203,15 +208,18 @@ export class ApiRouteBuilder<
           if (cfg.authRequirements.roles?.length) {
             const userRoles = session.user.roles ?? [];
             console.log("[auth check] userRoles:", userRoles);
-            console.log("[auth check] requiredRoles:", cfg.authRequirements.roles);
+            console.log(
+              "[auth check] requiredRoles:",
+              cfg.authRequirements.roles
+            );
             console.log("[auth check] superRoles:", cfg.superRoles);
             const hasSuperRole = cfg.superRoles?.some((r) =>
-              userRoles.includes(r),
+              userRoles.includes(r)
             );
             console.log("[auth check] hasSuperRole:", hasSuperRole);
             if (!hasSuperRole) {
               const hasRole = cfg.authRequirements.roles.some((r) =>
-                userRoles.includes(r),
+                userRoles.includes(r)
               );
               console.log("[auth check] hasRole:", hasRole);
               if (!hasRole) {
@@ -249,7 +257,7 @@ export class ApiRouteBuilder<
           if (!result.success) {
             return validationError(
               "Query validation failed",
-              result.error.flatten(),
+              result.error.flatten()
             );
           }
           query = result.data as TQuery;
@@ -263,7 +271,7 @@ export class ApiRouteBuilder<
           if (!result.success) {
             return validationError(
               "Params validation failed",
-              result.error.flatten(),
+              result.error.flatten()
             );
           }
           params = result.data as TParams;

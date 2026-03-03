@@ -2,6 +2,7 @@
   "name": "@megawin/game-core",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Shared game domain – unified entry status, change sequence, entry feed (internal only)",
   "scripts": {
     "dev": "tsc --watch",

@@ -2,6 +2,7 @@
   "name": "@megawin/game-max3d-application",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Max 3D application layer – repos, mappers, use cases",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

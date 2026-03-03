@@ -26,13 +26,7 @@ export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<
   protected async execute(): Promise<PlayerGetCurrentDrawOutput> {
     const [activeDraws, lastSettled] = await Promise.all([
       this.drawRepo.getActiveDraws(PLAYER_STATUSES),
-      this.drawRepo.findOne(
-        {
-          status: DrawStatus.Settled,
-          "result.numbers": { $exists: true },
-        },
-        { sort: { drawTime: -1 } }
-      ),
+      this.drawRepo.getLastSettledDrawWithResult(),
     ]);
 
     const mapped = activeDraws.map(mapPlayerDraw);

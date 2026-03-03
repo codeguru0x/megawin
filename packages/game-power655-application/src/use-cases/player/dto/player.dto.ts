@@ -277,10 +277,10 @@ export interface PlayerGetEntryLinesInput {
   accountId: string;
   /** ID entry cần xem chi tiết dòng cược. */
   entryId: string;
-  /** Trang hiện tại (1-based). */
-  page: number;
   /** Số lượng dòng mỗi trang. */
   size: number;
+  /** lineIndex của phần tử cuối cùng trang trước (cursor). */
+  cursor?: number;
 }
 
 export interface PlayerLineInfo {
@@ -317,10 +317,8 @@ export interface PlayerGetEntryLinesOutput {
   drawId: string;
   /** Danh sách dòng cược trong trang hiện tại. */
   lines: PlayerLineInfo[];
-  /** Tổng số dòng cược của entry. */
-  total: number;
-  /** Trang hiện tại. */
-  page: number;
+  /** Cursor cho trang tiếp theo. Null nếu hết dữ liệu. */
+  nextCursor: number | null;
   /** Số lượng mỗi trang. */
   size: number;
 }

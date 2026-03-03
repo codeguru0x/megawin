@@ -5,6 +5,7 @@ export const agentAccountSchema = z.object({
   username: z.string(),
   displayName: z.string(),
   status: z.string(),
+  mfaStatus: z.string(),
   tenantId: z.string(),
   roles: z.array(z.string()),
   createdAt: z.string(),

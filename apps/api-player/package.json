@@ -7,6 +7,7 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "dev": "node scripts/dev.mjs && serverless offline start --stage local",
+    "dev:build-deps": "turbo run build --filter=@megawin/api-player^...",
     "dev:all": "turbo watch dev --filter=@megawin/api-player... --concurrency=20",
     "dev:token": "node scripts/dev.mjs",
     "test": "vitest run",

@@ -28,24 +28,22 @@ export const sizeSchema = z
     )
   );
 
-export const pageSchema = z
-  .string()
-  .default(String(Pagination.Default.Page))
-  .transform((v) =>
-    Math.min(
-      Pagination.Max.Page,
-      Math.max(1, parseInt(v, 10) || Pagination.Default.Page)
-    )
-  );
-
 // ─── Composed shared schemas ───
-
-export const paginationQuerySchema = z.object({
-  page: pageSchema,
-  size: sizeSchema,
-});
 
 export const cursorQuerySchema = z.object({
   size: sizeSchema,
   cursor: objectIdSchema.optional(),
+});
+
+export const lineIndexCursorSchema = z
+  .string()
+  .transform((v) => {
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) && n >= 0 ? n : undefined;
+  })
+  .optional();
+
+export const lineCursorQuerySchema = z.object({
+  size: sizeSchema,
+  cursor: lineIndexCursorSchema,
 });

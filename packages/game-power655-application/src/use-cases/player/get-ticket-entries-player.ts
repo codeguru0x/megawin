@@ -8,7 +8,6 @@
  */
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
-import { ObjectId } from "mongodb";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { TicketEntryEntity } from "@megawin/game-power655/entities";
@@ -46,10 +45,7 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
       throw AppException.notFound("Ticket not found");
     }
 
-    const entries = await this.entryRepo.findMany(
-      { ticketId: new ObjectId(ticket.id) },
-      { sort: { drawTime: 1 } }
-    );
+    const entries = await this.entryRepo.getEntriesByTicketId(ticket.id);
 
     return {
       ticket: mapPlayerTicket(ticket),

@@ -5,7 +5,6 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
-import { DrawStatus } from "@megawin/game-core/entities";
 import { JackpotCycleStatus } from "@megawin/game-mega645/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
@@ -32,18 +31,7 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<
     const threshold = config.splitThreshold;
     const percentage = Math.min((currentAmount / threshold) * 100, 100);
 
-    const nextScheduled = await this.drawRepo.findOne(
-      {
-        status: {
-          $in: [
-            DrawStatus.Scheduled,
-            DrawStatus.SalesOpen,
-            DrawStatus.SalesClosed,
-          ],
-        },
-      },
-      { sort: { drawTime: 1 } }
-    );
+    const nextScheduled = await this.drawRepo.getNextScheduledDraw();
 
     const splitCycleIntent = nextScheduled
       ? currentAmount >= threshold

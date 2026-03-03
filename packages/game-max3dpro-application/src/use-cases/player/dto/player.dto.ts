@@ -245,10 +245,10 @@ export interface PlayerGetEntryLinesInput {
   accountId: string;
   /** ID entry cần lấy lines. */
   entryId: string;
-  /** Số trang (1-based). */
-  page: number;
   /** Số lượng lines mỗi trang. */
   size: number;
+  /** lineIndex của phần tử cuối cùng trang trước (cursor). */
+  cursor?: number;
 }
 
 export interface PlayerLineInfo {
@@ -276,10 +276,8 @@ export interface PlayerGetEntryLinesOutput {
   drawId: string;
   /** Danh sách lines. */
   lines: PlayerLineInfo[];
-  /** Tổng số lines. */
-  total: number;
-  /** Trang hiện tại. */
-  page: number;
+  /** Cursor cho trang tiếp theo. Null nếu hết dữ liệu. */
+  nextCursor: number | null;
   /** Kích thước trang. */
   size: number;
 }

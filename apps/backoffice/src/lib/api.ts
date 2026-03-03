@@ -30,7 +30,7 @@ function parseCognitoRoles(raw: unknown): AccountRole[] {
   return items.filter(
     (r): r is AccountRole =>
       typeof r === "string" &&
-      (ALL_ROLE_VALUES as readonly string[]).includes(r),
+      (ALL_ROLE_VALUES as readonly string[]).includes(r)
   );
 }
 
@@ -39,7 +39,7 @@ function parseCognitoRoles(raw: unknown): AccountRole[] {
  * Đọc session cookie từ request headers → trả RouteSession hoặc null.
  */
 async function getSession(
-  req: NextRequest,
+  req: NextRequest
 ): Promise<RouteSession<AccountRole> | null> {
   const session = await auth.api.getSession({ headers: req.headers });
 
@@ -48,22 +48,28 @@ async function getSession(
   const user = session.user as Record<string, unknown>;
 
   console.log("[getSession] user object:", JSON.stringify(user, null, 2));
-  console.log("[getSession] user.roles:", user.roles, "type:", typeof user.roles);
+  console.log(
+    "[getSession] user.roles:",
+    user.roles,
+    "type:",
+    typeof user.roles
+  );
 
   const roles = parseCognitoRoles(user.roles ?? []);
-  const accountStatus =
-    (user.accountStatus as string) ?? AccountStatus.Active;
-
-  console.log("[getSession] parsed roles:", roles);
-  console.log("[getSession] accountStatus:", accountStatus);
+  const accountStatus = (user.accountStatus as string) ?? AccountStatus.Active;
 
   return {
     user: {
       id: session.user.id,
+      sub: (user.sub as string) ?? "",
       email: session.user.email,
       name: session.user.name,
+      username: (user.username as string) ?? "",
       roles,
       accountStatus,
+      accountId: (user.accountId as string) ?? "",
+      tenantId: (user.tenantId as string) ?? "",
+      accountType: (user.accountType as string) ?? "",
     },
   };
 }

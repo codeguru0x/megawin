@@ -1,6 +1,7 @@
 {
   "name": "@megawin/http-client",
   "version": "1.0.0",
+  "type": "module",
   "description": "Universal HTTP REST client – native fetch, zero dependencies",
   "scripts": {
     "dev": "tsc --watch",

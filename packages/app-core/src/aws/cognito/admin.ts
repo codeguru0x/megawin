@@ -269,7 +269,9 @@ export interface MfaPoolConfig {
 /**
  * Lấy cấu hình MFA ở cấp User Pool.
  */
-export async function getMfaPoolConfig(userPoolId: string): Promise<MfaPoolConfig> {
+export async function getMfaPoolConfig(
+  userPoolId: string
+): Promise<MfaPoolConfig> {
   const result = await cognitoClient.send(
     new GetUserPoolMfaConfigCommand({
       UserPoolId: userPoolId,
@@ -277,8 +279,10 @@ export async function getMfaPoolConfig(userPoolId: string): Promise<MfaPoolConfi
   );
 
   return {
-    mfaConfiguration: (result.MfaConfiguration as MfaPoolConfig["mfaConfiguration"]) ?? "OFF",
-    softwareTokenEnabled: result.SoftwareTokenMfaConfiguration?.Enabled ?? false,
+    mfaConfiguration:
+      (result.MfaConfiguration as MfaPoolConfig["mfaConfiguration"]) ?? "OFF",
+    softwareTokenEnabled:
+      result.SoftwareTokenMfaConfiguration?.Enabled ?? false,
     smsEnabled: result.SmsMfaConfiguration !== undefined,
   };
 }
@@ -351,9 +355,7 @@ export interface AdminSetUserPasswordParams {
  * Set password cho user trong Cognito User Pool.
  * Cho phép admin chủ động đặt password mà không cần user thao tác.
  */
-export async function adminSetUserPassword(
-  params: AdminSetUserPasswordParams
-) {
+export async function adminSetUserPassword(params: AdminSetUserPasswordParams) {
   const { userPoolId, username, password, permanent = true } = params;
 
   return cognitoClient.send(
@@ -446,6 +448,41 @@ export async function adminInitiateAuth(
     expiresIn: auth.ExpiresIn ?? 3600,
     tokenType: auth.TokenType ?? "Bearer",
   };
+}
+
+// ============ Change user password (verify old + set new) ============
+
+export interface AdminChangeUserPasswordParams {
+  userPoolId: string;
+  clientId: string;
+  username: string;
+  currentPassword: string;
+  newPassword: string;
+}
+
+/**
+ * Đổi mật khẩu user: verify mật khẩu cũ qua AdminInitiateAuth,
+ * nếu đúng thì set mật khẩu mới (permanent) qua AdminSetUserPassword.
+ */
+export async function adminChangeUserPassword(
+  params: AdminChangeUserPasswordParams
+): Promise<void> {
+  const { userPoolId, clientId, username, currentPassword, newPassword } =
+    params;
+
+  await adminInitiateAuth({
+    userPoolId,
+    clientId,
+    username,
+    password: currentPassword,
+  });
+
+  await adminSetUserPassword({
+    userPoolId,
+    username,
+    password: newPassword,
+    permanent: true,
+  });
 }
 
 // ============ List users ============

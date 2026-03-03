@@ -20,6 +20,18 @@ const statusMap: Record<
   suspended: { label: "Bị khoá", variant: "destructive" },
 };
 
+const mfaStatusMap: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "outline" | "secondary" | "destructive";
+  }
+> = {
+  none: { label: "Chưa thiết lập", variant: "outline" },
+  enabled: { label: "Đang bật", variant: "default" },
+  disabled: { label: "Đã tắt", variant: "secondary" },
+};
+
 export const agentAccountsColumns: ColumnDef<AgentAccount>[] = [
   {
     id: "rowNumber",
@@ -67,6 +79,20 @@ export const agentAccountsColumns: ColumnDef<AgentAccount>[] = [
       return (
         <Badge variant={mapped?.variant ?? "outline"}>
           {mapped?.label ?? status}
+        </Badge>
+      );
+    },
+    enableSorting: false,
+  },
+  {
+    accessorKey: "mfaStatus",
+    header: "MFA",
+    cell: ({ row }) => {
+      const mfa = row.original.mfaStatus ?? "none";
+      const mapped = mfaStatusMap[mfa];
+      return (
+        <Badge variant={mapped?.variant ?? "outline"}>
+          {mapped?.label ?? mfa}
         </Badge>
       );
     },

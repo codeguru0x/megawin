@@ -48,22 +48,25 @@ export class LineRepository extends BaseRepo<any> {
    */
   async getLinesByEntryId(
     entryId: string,
-    options: { page?: number; size?: number } = {}
-  ): Promise<{ lines: TicketLineDoc[]; total: number }> {
-    const { page = 1, size = 50 } = options;
+    options: { size?: number; cursor?: number } = {}
+  ): Promise<{ lines: TicketLineDoc[]; hasMore: boolean }> {
+    const { size = 50, cursor } = options;
     const col = await this.getCollection();
-    const filter = { entryId: new ObjectId(entryId) };
+    const filter: Record<string, unknown> = { entryId: new ObjectId(entryId) };
 
-    const [lines, total] = await Promise.all([
-      col
-        .find(filter)
-        .sort({ lineIndex: 1 })
-        .skip((page - 1) * size)
-        .limit(size)
-        .toArray(),
-      col.countDocuments(filter),
-    ]);
+    if (cursor != null) {
+      filter.lineIndex = { $gt: cursor };
+    }
 
-    return { lines: lines as unknown as TicketLineDoc[], total };
+    const lines = await col
+      .find(filter)
+      .sort({ lineIndex: 1 })
+      .limit(size + 1)
+      .toArray();
+
+    const hasMore = lines.length > size;
+    const slice = hasMore ? lines.slice(0, size) : lines;
+
+    return { lines: slice as unknown as TicketLineDoc[], hasMore };
   }
 }

@@ -12,7 +12,6 @@
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { EntryStatus } from "@megawin/game-core/entities";
-import { ObjectId } from "mongodb";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { TicketLineDoc } from "@megawin/game-power655/entities";
@@ -33,13 +32,12 @@ export class GetEntryLinesPlayerUseCase extends ApiGatewayUseCase<
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 
-  /** @inheritdoc */
   protected async execute(
     input: PlayerGetEntryLinesInput
   ): Promise<PlayerGetEntryLinesOutput> {
-    const { tenantId, accountId, entryId, page, size } = input;
+    const { tenantId, accountId, entryId, size, cursor } = input;
 
-    const entry = await this.entryRepo.findOne({ _id: new ObjectId(entryId) });
+    const entry = await this.entryRepo.getEntryById(entryId);
 
     if (!entry) {
       throw AppException.notFound("Entry not found");
@@ -55,17 +53,16 @@ export class GetEntryLinesPlayerUseCase extends ApiGatewayUseCase<
       );
     }
 
-    const { lines, total } = await this.lineRepo.getLinesByEntryId(entryId, {
-      page,
+    const { lines, hasMore } = await this.lineRepo.getLinesByEntryId(entryId, {
       size,
+      cursor,
     });
 
     return {
       entryId: entry.id,
       drawId: entry.drawId,
       lines: lines.map(mapPlayerLine),
-      total,
-      page,
+      nextCursor: hasMore ? lines[lines.length - 1]!.lineIndex : null,
       size,
     };
   }

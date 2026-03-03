@@ -30,6 +30,11 @@ export const auth = betterAuth({
    */
   user: {
     additionalFields: {
+      sub: {
+        type: "string",
+        required: false,
+        input: false,
+      },
       roles: {
         type: "string",
         required: false,
@@ -57,6 +62,11 @@ export const auth = betterAuth({
         required: false,
         input: false,
       },
+      username: {
+        type: "string",
+        required: false,
+        input: false,
+      },
     },
   },
 
@@ -77,12 +87,14 @@ export const auth = betterAuth({
         const raw = profile as Record<string, unknown>;
 
         return {
+          sub: (raw[ClaimKey.Sub] as string) ?? undefined,
           accountStatus:
             (raw[ClaimKey.AccountStatus] as string) ?? AccountStatus.Active,
           accountId: (raw[ClaimKey.AccountId] as string) ?? undefined,
           roles: (raw[ClaimKey.Roles] as string) ?? "",
           tenantId: (raw[ClaimKey.TenantId] as string) ?? undefined,
           accountType: (raw[ClaimKey.AccountType] as string) ?? undefined,
+          username: (raw[ClaimKey.Username] as string) ?? undefined,
         };
       },
     },
