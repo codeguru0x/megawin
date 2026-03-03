@@ -285,10 +285,10 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@types/node':
-        specifier: ^25.2.2
+        specifier: ^25.3.3
         version: 25.3.3
       serverless-offline:
-        specifier: ^14.4.0
+        specifier: ^14.5.0
         version: 14.5.0(serverless@4.31.2)
       typescript:
         specifier: 5.9.3
@@ -334,14 +334,20 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@types/node':
-        specifier: ^25.2.2
-        version: 25.2.3
+        specifier: ^25.3.3
+        version: 25.3.3
       serverless-offline:
-        specifier: ^14.4.0
-        version: 14.4.0(serverless@4.31.2)
+        specifier: ^14.5.0
+        version: 14.5.0(serverless@4.31.2)
       typescript:
         specifier: 5.9.3
         version: 5.9.3
+      vite-tsconfig-paths:
+        specifier: ^6.1.1
+        version: 6.1.1(typescript@5.9.3)(vite@7.3.1(@types/node@25.3.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2))
+      vitest:
+        specifier: latest
+        version: 4.0.18(@types/node@25.3.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)
 
   apps/backoffice:
     dependencies:

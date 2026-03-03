@@ -6,9 +6,13 @@
   "type": "module",
   "scripts": {
     "check-types": "tsc --noEmit",
-    "dev": "node scripts/dev.mjs && serverless offline start --stage local",
-    "dev:info": "node scripts/dev.mjs",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "pnpm build:deps && node scripts/dev.mjs && serverless offline start --stage local",
+    "build:deps": "turbo run build --filter=@megawin/api-tenant^...",
+    "dev:token": "node scripts/dev.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "deploy:dev": "pnpm build:deps && set -a && . ./.env.dev && set +a && serverless deploy --stage dev",
+    "deploy:prod": "pnpm build:deps && set -a && . ./.env.prod && set +a && serverless deploy --stage prod"
   },
   "keywords": [],
   "author": "",
@@ -26,8 +30,10 @@
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
-    "@types/node": "^25.2.2",
-    "serverless-offline": "^14.4.0",
-    "typescript": "5.9.3"
+    "@types/node": "^25.3.3",
+    "serverless-offline": "^14.5.0",
+    "typescript": "5.9.3",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "latest"
   }
 }

@@ -22,7 +22,7 @@ interface HttpLikeError {
 function toErrorBody(
   code: string,
   message: string,
-  details?: unknown,
+  details?: unknown
 ): ApiErrorResponse {
   return {
     success: false,
@@ -33,6 +33,9 @@ function toErrorBody(
     },
   };
 }
+
+const UNEXPECTED_ERROR_MESSAGE =
+  "Có lỗi xảy ra trên hệ thống, hãy liên hệ quản lý để được trợ giúp.";
 
 export function httpErrorHandlerUseCaseFormat() {
   return {
@@ -50,7 +53,7 @@ export function httpErrorHandlerUseCaseFormat() {
         body = toErrorBody(
           (err as AppError).code,
           (err as AppError).message,
-          (err as AppError).details,
+          (err as AppError).details
         );
       } else if (err && typeof err === "object" && "statusCode" in err) {
         const httpErr = err as HttpLikeError;
@@ -59,13 +62,16 @@ export function httpErrorHandlerUseCaseFormat() {
           statusCode >= 500
             ? APP_ERROR_CODES.INTERNAL
             : APP_ERROR_CODES.BAD_REQUEST,
-          httpErr.message ?? "Error",
+          statusCode >= 500
+            ? UNEXPECTED_ERROR_MESSAGE
+            : (httpErr.message ?? "Error")
         );
+        if (statusCode >= 500) {
+          console.error("[UNEXPECTED_ERROR]", err);
+        }
       } else {
-        body = toErrorBody(
-          APP_ERROR_CODES.INTERNAL,
-          err instanceof Error ? err.message : "Unknown error",
-        );
+        console.error("[UNEXPECTED_ERROR]", err);
+        body = toErrorBody(APP_ERROR_CODES.INTERNAL, UNEXPECTED_ERROR_MESSAGE);
       }
 
       request.response = {

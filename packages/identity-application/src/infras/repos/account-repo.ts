@@ -1,3 +1,4 @@
+import { nowVN } from "@megawin/shared/utils/date";
 import { AccountMapper } from "../mappers/account-mapper";
 import { IdentityBaseRepo } from "./identity-base-repo";
 import {
@@ -25,15 +26,21 @@ export class AccountRepository extends IdentityBaseRepo<
     });
   }
 
+  public async usernameExists(username: string): Promise<boolean> {
+    return this.exists({ username });
+  }
+
   public async findOrCreatePlayerAccount(
     username: string,
     displayName: string,
     tenantId: string,
     accountId: string,
+    status: AccountStatus,
     cognitoPoolId: string,
     cognitoSub: string,
     cognitoUsername: string
   ): Promise<PlayerAccountEntity | null> {
+    const now = nowVN();
     return (await this.findOneAndUpdate(
       { username },
       {
@@ -42,13 +49,13 @@ export class AccountRepository extends IdentityBaseRepo<
           displayName,
           type: AccountType.Player,
           roles: [PlayerRole.Player],
-          status: AccountStatus.Active,
+          status,
           tenantId,
           cognitoPoolId,
           cognitoSub,
           cognitoUsername,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: now,
+          updatedAt: now,
         },
       },
       { upsert: true, returnDocument: "after" }

@@ -43,6 +43,8 @@ export class CreateCompanyAccountUseCase extends NextApiUseCase<
     }
   } */
 
+  private readonly accountRepo = new AccountRepository();
+
   protected async execute(
     input: CreateCompanyAccountInput
   ): Promise<CreateCompanyAccountOutput> {
@@ -90,8 +92,7 @@ export class CreateCompanyAccountUseCase extends NextApiUseCase<
       result.User.Attributes?.find((attr) => attr.Name === ClaimKey.Sub)
         ?.Value ?? cognitoUsername;
 
-    const accountRepo = new AccountRepository();
-    const account = await accountRepo.findOrCreateCompanyAccount(
+    const account = await this.accountRepo.findOrCreateCompanyAccount(
       username,
       displayName,
       accountType,

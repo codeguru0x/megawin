@@ -218,6 +218,27 @@ export async function adminVerifySoftwareToken(
   };
 }
 
+// ============ Get User ============
+
+export interface AdminGetUserParams {
+  userPoolId: string;
+  username: string;
+}
+
+export async function adminGetUser(
+  params: AdminGetUserParams,
+): Promise<{ sub: string; attributes: AttributeType[] }> {
+  const result = await cognitoClient.send(
+    new AdminGetUserCommand({
+      UserPoolId: params.userPoolId,
+      Username: params.username,
+    }),
+  );
+
+  const sub = result.UserAttributes?.find((a) => a.Name === "sub")?.Value ?? "";
+  return { sub, attributes: result.UserAttributes ?? [] };
+}
+
 // ============ MFA – Get user MFA status ============
 
 export interface AdminGetUserMfaStatusParams {

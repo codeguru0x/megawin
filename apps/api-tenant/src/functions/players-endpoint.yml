@@ -2,26 +2,30 @@ list-players:
   handler: src/handlers/list-players.handler
   events:
     - httpApi:
-        path: /tenant/players
+        path: /players
         method: get
 
 get-player-detail:
   handler: src/handlers/get-player-detail.handler
   events:
     - httpApi:
-        path: /tenant/players/{playerId}
+        path: /players/{playerId}
         method: get
 
 suspend-player:
   handler: src/handlers/suspend-player.handler
   events:
     - httpApi:
-        path: /tenant/players/{playerId}/status
+        path: /players/{playerId}/status
         method: patch
 
 player-login:
   handler: src/handlers/player-login.handler
+  environment:
+    COGNITO_PLAYER_POOL_ID: ${env:COGNITO_PLAYER_POOL_ID}
+    COGNITO_PLAYER_POOL_CLIENT_ID: ${env:COGNITO_PLAYER_POOL_CLIENT_ID}
+    PLAYER_PASSWORD_SECRET: ${env:PLAYER_PASSWORD_SECRET}
   events:
     - httpApi:
-        path: /tenant/players/login
+        path: /players/login
         method: post

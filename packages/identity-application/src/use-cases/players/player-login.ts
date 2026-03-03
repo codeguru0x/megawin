@@ -1,12 +1,31 @@
 /**
  * Use case: Player Login (Server-to-Server).
  *
- * Luồng:
- * 1. Validate tenant (active).
- * 2. Derive deterministic password từ PLAYER_PASSWORD_SECRET + username.
- * 3. Tạo Cognito user nếu chưa tồn tại (adminCreateAccount) với accountId ULID.
- * 4. Lưu player account vào MongoDB (findOrCreate).
- * 5. Lấy Cognito token (adminInitiateAuth) và trả về client.
+ * ── Tài khoản cũ (>99% requests) ──
+ * 1. MongoDB exists(username)  → true
+ * 2. Cognito adminInitiateAuth → trả token
+ * → Tổng: 1 MongoDB + 1 Cognito = 2 calls (~55ms)
+ *
+ * ── Tài khoản mới ──
+ * 1. MongoDB exists(username)    → false
+ * 2. Cognito adminCreateAccount  → tạo user với custom attributes
+ * 3. Cognito adminSetUserPassword → set permanent password (deterministic HMAC-SHA256)
+ * 4. MongoDB findOrCreate        → lưu account vào collection
+ * 5. Cognito adminInitiateAuth   → trả token
+ * → Tổng: 2 MongoDB + 3 Cognito = 5 calls (~250ms, chỉ lần đầu)
+ *
+ * ── Edge case: Cognito có nhưng MongoDB chưa có ──
+ * (Xảy ra khi lần trước tạo Cognito OK nhưng insert MongoDB fail)
+ * 1. MongoDB exists → false
+ * 2. Cognito adminCreateAccount → throw UsernameExistsException
+ * 3. Cognito adminGetUser → lấy sub chính xác
+ * 4. MongoDB findOrCreate → đồng bộ lại account
+ * 5. Cognito adminInitiateAuth → trả token
+ *
+ * ── Environment variables bắt buộc ──
+ * - COGNITO_PLAYER_USERPOOL_ID     : User Pool ID cho player (Cognito)
+ * - COGNITO_PLAYER_USERPOOL_CLIENT_ID : App Client ID cho player (Cognito)
+ * - PLAYER_PASSWORD_SECRET          : Secret key để derive deterministic password (HMAC-SHA256)
  *
  * Auth: Tenant đã được xác thực bằng API Key + IP whitelist ở handler layer.
  */
@@ -17,9 +36,9 @@ import { AppException } from "@megawin/shared/errors";
 import { generateULID } from "@megawin/shared/utils/unique";
 import {
   adminCreateAccount,
+  adminGetUser,
   adminInitiateAuth,
   adminSetUserPassword,
-  adminUpdateUserAttributes,
   COGNITO_PLAYER_POOL_ID,
   COGNITO_PLAYER_POOL_CLIENT_ID,
 } from "@megawin/app-core/aws/cognito";
@@ -29,10 +48,8 @@ import {
   PlayerRole,
 } from "@megawin/identity/entities";
 import { ClaimKey } from "@megawin/identity/entities/claim";
-import { TenantStatus } from "@megawin/identity/entities/tenant";
 
 import { AccountRepository } from "../../infras/repos/account-repo";
-import { TenantRepository } from "../../infras/repos/tenant-repo";
 import type {
   PlayerLoginInput,
   PlayerLoginOutput,
@@ -40,11 +57,6 @@ import type {
 
 const PLAYER_PASSWORD_SECRET = process.env.PLAYER_PASSWORD_SECRET;
 
-/**
- * HMAC-SHA256 deterministic password.
- * Kết quả luôn giống nhau cho cùng username → chỉ cần adminInitiateAuth khi login lại,
- * không cần adminSetUserPassword mỗi lần.
- */
 function derivePlayerPassword(cognitoUsername: string): string {
   return `Pw@68.${createHmac("sha256", PLAYER_PASSWORD_SECRET!).update(cognitoUsername).digest("base64url").slice(0, 28)}`;
 }
@@ -53,61 +65,38 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
   PlayerLoginInput,
   PlayerLoginOutput
 > {
+  private readonly accountRepo = new AccountRepository();
+
   protected async execute(input: PlayerLoginInput): Promise<PlayerLoginOutput> {
     const { playerExternalId, tenantId } = input;
-
-    await this.loadAndValidateTenant(tenantId);
-
     const cognitoUsername = `${playerExternalId}@${tenantId}`.toLowerCase();
-    const displayName = playerExternalId;
 
     this.assertConfig();
 
-    const { account, isNewAccount } = await this.ensurePlayerAccount(
+    const accountExists =
+      await this.accountRepo.usernameExists(cognitoUsername);
+
+    if (!accountExists) {
+      await this.createPlayerAccount(
+        cognitoUsername,
+        playerExternalId,
+        tenantId
+      );
+    }
+
+    return this.getCognitoTokens(
       cognitoUsername,
-      displayName,
-      tenantId
+      derivePlayerPassword(cognitoUsername)
     );
-
-    const password = derivePlayerPassword(cognitoUsername);
-    const tokens = await this.getCognitoTokens(cognitoUsername, password);
-
-    return {
-      ...tokens,
-      player: {
-        accountId: account.accountId,
-        username: cognitoUsername,
-        displayName: account.displayName,
-        tenantId,
-        isNewAccount,
-      },
-    };
-  }
-
-  private async loadAndValidateTenant(tenantId: string) {
-    const tenantRepo = new TenantRepository();
-    const tenant = await tenantRepo.getTenantById(tenantId);
-
-    if (!tenant) {
-      throw AppException.notFound(`Tenant "${tenantId}" không tồn tại`);
-    }
-
-    if (tenant.status !== TenantStatus.Active) {
-      throw AppException.forbidden(`Tenant "${tenantId}" đã bị vô hiệu hóa`);
-    }
-
-    return tenant;
   }
 
   private assertConfig() {
     if (!COGNITO_PLAYER_POOL_ID) {
-      throw AppException.internal(
-        "COGNITO_PLAYER_USERPOOL_ID chưa được cấu hình"
-      );
+      throw AppException.internal("COGNITO_PLAYER_POOL_ID chưa được cấu hình");
     }
     if (!COGNITO_PLAYER_POOL_CLIENT_ID) {
       throw AppException.internal(
-        "COGNITO_PLAYER_USERPOOL_CLIENT_ID chưa được cấu hình"
+        "COGNITO_PLAYER_POOL_CLIENT_ID chưa được cấu hình"
       );
     }
     if (!PLAYER_PASSWORD_SECRET) {
@@ -115,22 +104,43 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
     }
   }
 
-  /**
-   * Đảm bảo player account tồn tại trong cả Cognito và MongoDB.
-   * - New account: adminCreateAccount + adminSetUserPassword(permanent) + MongoDB upsert
-   * - Existing account: chỉ cập nhật status nếu cần
-   */
-  private async ensurePlayerAccount(
+  private async createPlayerAccount(
     cognitoUsername: string,
     displayName: string,
     tenantId: string
   ) {
-    const accountRepo = new AccountRepository();
     const accountId = generateULID();
     const password = derivePlayerPassword(cognitoUsername);
-    let isNewAccount = false;
-    let cognitoSub: string;
 
+    const cognitoSub = await this.ensureCognitoUser(
+      cognitoUsername,
+      password,
+      accountId,
+      tenantId
+    );
+
+    const account = await this.accountRepo.findOrCreatePlayerAccount(
+      cognitoUsername,
+      displayName,
+      tenantId,
+      accountId,
+      AccountStatus.Active,
+      COGNITO_PLAYER_POOL_ID!,
+      cognitoSub,
+      cognitoUsername
+    );
+
+    if (!account) {
+      throw AppException.internal("Lưu thông tin player vào database thất bại");
+    }
+  }
+
+  private async ensureCognitoUser(
+    cognitoUsername: string,
+    password: string,
+    accountId: string,
+    tenantId: string
+  ): Promise<string> {
     try {
       const result = await adminCreateAccount({
         userPoolId: COGNITO_PLAYER_POOL_ID!,
@@ -147,9 +157,15 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
         ],
       });
 
-      cognitoSub =
-        result.User?.Attributes?.find((a) => a.Name === ClaimKey.Sub)?.Value ??
-        cognitoUsername;
+      const sub = result.User?.Attributes?.find(
+        (a) => a.Name === ClaimKey.Sub
+      )?.Value;
+
+      if (!sub) {
+        throw AppException.internal(
+          "Cognito không trả về sub cho user vừa tạo"
+        );
+      }
 
       await adminSetUserPassword({
         userPoolId: COGNITO_PLAYER_POOL_ID!,
@@ -158,44 +174,25 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
         permanent: true,
       });
 
-      isNewAccount = true;
+      return sub;
     } catch (err: unknown) {
       if (this.isUsernameExistsError(err)) {
-        await adminUpdateUserAttributes({
+        const user = await adminGetUser({
           userPoolId: COGNITO_PLAYER_POOL_ID!,
           username: cognitoUsername,
-          userAttributes: [
-            { Name: ClaimKey.AccountStatus, Value: AccountStatus.Active },
-          ],
         });
-
-        cognitoSub = cognitoUsername;
-        isNewAccount = false;
-      } else {
-        throw AppException.internal("Tạo tài khoản Cognito thất bại", {
-          cause: err instanceof Error ? err.message : String(err),
-        });
+        return user.sub;
       }
+      throw AppException.internal("Tạo tài khoản Cognito thất bại", {
+        cause: err instanceof Error ? err.message : String(err),
+      });
     }
-
-    const account = await accountRepo.findOrCreatePlayerAccount(
-      cognitoUsername,
-      displayName,
-      tenantId,
-      accountId,
-      COGNITO_PLAYER_POOL_ID!,
-      cognitoSub!,
-      cognitoUsername
-    );
-
-    if (!account) {
-      throw AppException.internal("Lưu thông tin player vào database thất bại");
-    }
-
-    return { account, isNewAccount };
   }
 
-  private async getCognitoTokens(cognitoUsername: string, password: string) {
+  private async getCognitoTokens(
+    cognitoUsername: string,
+    password: string
+  ): Promise<PlayerLoginOutput> {
     try {
       return await adminInitiateAuth({
         userPoolId: COGNITO_PLAYER_POOL_ID!,

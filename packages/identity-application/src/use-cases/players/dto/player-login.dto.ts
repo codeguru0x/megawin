@@ -17,11 +17,4 @@ export interface PlayerLoginOutput {
   refreshToken: string;
   expiresIn: number;
   tokenType: string;
-  player: {
-    accountId: string;
-    username: string;
-    displayName: string;
-    tenantId: string;
-    isNewAccount: boolean;
-  };
 }

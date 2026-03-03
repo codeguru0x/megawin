@@ -1,5 +1,5 @@
-service: megawin-player
-app: megawin-player
+app: megawin
+service: mw-api-player
 
 plugins:
   - serverless-offline
@@ -10,12 +10,16 @@ custom:
     lambdaPort: 4011
     noPrependStageInUrl: true
     ignoreJWTSignature: true
+  prune:
+    automatic: true
+    number: 3
+    includeLayers: true
 
 stages:
   dev:
     observability:
       provider: axiom
-      dataset: dev-megawin-player
+      dataset: megawin-player-dev
     params:
       ### Mặc định dev sẽ là 0 không cấu hình ở prod mà chỉ định luôn khi cấu hình func
       provisionedConcurrency: 0
@@ -23,7 +27,7 @@ stages:
   prod:
     observability:
       provider: axiom
-      dataset: prod-megawin-player
+      dataset: megawin-player-prod
 
   default:
     observability: false
@@ -33,10 +37,46 @@ provider:
   runtime: nodejs24.x
   stage: ${opt:stage, 'dev'}
   region: ap-southeast-1
+  logRetentionInDays: 14
+  profile: sls_deploy_${opt:stage, self:provider.stage}
+
+  iam:
+    role:
+      statements:
+        ## Cognito – 2 user pools (workspace + player)
+        - Effect: Allow
+          Action: cognito-idp:*
+          Resource:
+            - arn:aws:cognito-idp:${self:provider.region}:*:userpool/${env:COGNITO_PLAYER_POOL_ID}
+
+        ## Kinesis – tất cả streams của project
+        ## Tên stream trên AWS phải bắt đầu bằng "megawin-"
+        ## Ví dụ: megawin-bet-events-dev, megawin-draw-results-prod
+        - Effect: Allow
+          Action: kinesis:*
+          Resource:
+            - arn:aws:kinesis:${self:provider.region}:*:stream/megawin-*
+
+        ## SQS – tất cả queues của project
+        ## Tên queue trên AWS phải bắt đầu bằng "megawin-"
+        ## Ví dụ: megawin-settle-queue-dev, megawin-payout-queue-prod
+        - Effect: Allow
+          Action: sqs:*
+          Resource:
+            - arn:aws:sqs:${self:provider.region}:*:megawin-*
+
+        ## Step Functions – tất cả state machines của project
+        ## Tên state machine trên AWS phải bắt đầu bằng "megawin-"
+        ## Ví dụ: megawin-settle-flow-dev, megawin-payout-flow-prod
+        - Effect: Allow
+          Action: states:*
+          Resource:
+            - arn:aws:states:${self:provider.region}:*:stateMachine:megawin-*
+            - arn:aws:states:${self:provider.region}:*:execution:megawin-*:*
 
   environment:
-    STAGE: ${self:provider.stage}
-    MONGODB_URI: ${env:MONGODB_URI, 'mongodb://localhost:27017/megawin'}
+    STAGE: ${opt:stage, self:provider.stage}
+    MONGODB_URI: ${env:MONGODB_URI, ssm:/${opt:stage, self:provider.stage}/megawin/MONGODB_URI}
 
   httpApi:
     cors:
@@ -65,7 +105,6 @@ build:
     configFile: ./esbuild.config.mjs
 
 functions:
-  - ${file(src/functions/game-endpoint.yml)}
   - ${file(src/functions/balance-endpoint.yml)}
   - ${file(src/functions/lotto535-endpoint.yml)}
   - ${file(src/functions/keno-endpoint.yml)}

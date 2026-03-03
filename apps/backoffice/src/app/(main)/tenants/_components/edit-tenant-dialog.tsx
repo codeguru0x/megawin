@@ -1,12 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { z } from "zod";
-import { apiClient, ApiClientError } from "@megawin/next/client";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 import type { Tenant } from "../_lib/schema";
-import type { UpdateTenantResponse } from "../_lib/types";
+import { useUpdateTenant } from "../_lib/use-tenants";
 
 const editTenantSchema = z.object({
   displayName: z.string().min(1, "Tên hiển thị không được trống.").max(100),
@@ -50,7 +47,7 @@ export function EditTenantDialog({
   open,
   onOpenChange,
 }: EditTenantDialogProps) {
-  const queryClient = useQueryClient();
+  const mutation = useUpdateTenant();
 
   const form = useForm<EditTenantValues>({
     resolver: zodResolver(editTenantSchema),
@@ -71,27 +68,17 @@ export function EditTenantDialog({
     }
   }, [open, tenant, form]);
 
-  const mutation = useMutation({
-    mutationFn: (values: EditTenantValues) =>
-      apiClient.patch<UpdateTenantResponse>("/tenants", {
+  function handleSubmit(values: EditTenantValues) {
+    mutation.mutate(
+      {
         tenantId: tenant.tenantId,
         displayName: values.displayName,
         description: values.description,
         callbackBaseUrl: values.callbackBaseUrl,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["tenants"] });
-      onOpenChange(false);
-      toast.success(`Đã cập nhật tenant "${tenant.tenantId}".`);
-    },
-    onError: (error) => {
-      toast.error(
-        error instanceof ApiClientError
-          ? error.message
-          : "Đã xảy ra lỗi khi cập nhật."
-      );
-    },
-  });
+      },
+      { onSuccess: () => onOpenChange(false) }
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -106,7 +93,7 @@ export function EditTenantDialog({
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
+            onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4"
           >
             <FormField

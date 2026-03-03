@@ -32,7 +32,6 @@ export {
   type CompanyAuthOptions,
   type TenantUserEvent,
   type CompanyUserEvent,
-  type ApiGatewayEventWithUser,
 } from "./authorization-middleware";
 
 /** Handler wrappers — all-in-one (auth + validator + error handler) */

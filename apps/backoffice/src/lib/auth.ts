@@ -112,6 +112,14 @@ export const auth = betterAuth({
   },
 
   /**
+   * Redirect error page sang custom page thay vì dùng trang mặc định
+   * để tránh lộ thông tin package đang sử dụng.
+   */
+  onAPIError: {
+    errorURL: `${env.BETTER_AUTH_URL}/auth/error`,
+  },
+
+  /**
    * Plugins.
    * nextCookies – tự động set cookies cho server actions.
    * PHẢI đặt cuối mảng plugins.

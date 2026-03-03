@@ -55,11 +55,6 @@ export interface CompanyUserEvent {
   user: CompanyAuthContext;
 }
 
-/** @deprecated Dùng TenantUserEvent hoặc CompanyUserEvent thay thế. */
-export interface ApiGatewayEventWithUser {
-  user: AuthContext;
-}
-
 // ============ Base authorization middleware ============
 
 function buildAuthMiddleware(

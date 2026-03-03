@@ -10,19 +10,16 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
-const PUBLIC_ROUTES = ["/login", "/api/auth"];
+const PUBLIC_ROUTES = ["/login", "/api/auth", "/auth/error"];
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 }
 
-function getAccountTypeFromCookie(
-  request: NextRequest,
-): string | undefined {
-  const raw =
-    request.cookies.get("better-auth.session_data")?.value;
+function getAccountTypeFromCookie(request: NextRequest): string | undefined {
+  const raw = request.cookies.get("better-auth.session_data")?.value;
 
   if (!raw) return undefined;
 

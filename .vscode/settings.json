@@ -8,7 +8,9 @@
     "**/.next": true,
     "**/node_modules": true,
     "**/.turbo": true,
-    "**/dist": true
+    "**/dist": true,
+    "**/.serverless": true,
+    "**/.pnpm-store": true
   },
   "files.autoSave": "afterDelay",
   "files.autoSaveDelay": 1000,

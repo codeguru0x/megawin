@@ -2,11 +2,15 @@ export default (serverless) => {
   return {
     bundle: true,
     minify: true,
-    sourcemap: true,
+    sourcemap: "linked",
     platform: "node",
-    target: "es2024",
+    target: "node24",
     format: "esm",
+    treeShaking: true,
 
-    packages: "external",
+    banner: {
+      js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
+    },
+    external: ["@aws-sdk/*"],
   };
 };

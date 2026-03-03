@@ -8,10 +8,9 @@
  * Backward compat: COGNITO_USERPOOL_ID vẫn hoạt động như default fallback.
  */
 
-export const COGNITO_WORKFORCE_POOL_ID =
-  process.env.COGNITO_WORKFORCE_USERPOOL_ID;
+export const COGNITO_WORKFORCE_POOL_ID = process.env.COGNITO_WORKFORCE_POOL_ID;
 
-export const COGNITO_PLAYER_POOL_ID = process.env.COGNITO_PLAYER_USERPOOL_ID;
+export const COGNITO_PLAYER_POOL_ID = process.env.COGNITO_PLAYER_POOL_ID;
 
 export const COGNITO_PLAYER_POOL_CLIENT_ID =
-  process.env.COGNITO_PLAYER_USERPOOL_CLIENT_ID;
+  process.env.COGNITO_PLAYER_POOL_CLIENT_ID;

@@ -24,7 +24,6 @@ import {
   type CompanyAuthOptions,
   type TenantUserEvent,
   type CompanyUserEvent,
-  type ApiGatewayEventWithUser,
 } from "./authorization-middleware";
 import {
   validatorZodMiddleware,
@@ -32,7 +31,7 @@ import {
   type ApiGatewayZodSchemas,
 } from "@megawin/app-core/lambda/middleware";
 
-export type { ApiGatewayEventWithUser, TenantUserEvent, CompanyUserEvent };
+export type { TenantUserEvent, CompanyUserEvent };
 
 // ============ Type-level helpers ============
 
@@ -53,7 +52,9 @@ type CompanyEvent<TSchemas> = CompanyUserEvent &
   (TSchemas extends undefined ? unknown : { schema: InferSchema<TSchemas> });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type MiddyMiddlewareObject = { before: (request: any) => Promise<void | unknown> };
+type MiddyMiddlewareObject = {
+  before: (request: any) => Promise<void | unknown>;
+};
 
 // ============ Internal builder ============
 
@@ -61,7 +62,7 @@ function buildHandler(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fn: (event: any) => Promise<unknown>,
   authMiddleware: MiddyMiddlewareObject,
-  schemas?: ApiGatewayZodSchemas,
+  schemas?: ApiGatewayZodSchemas
 ) {
   const wrapped = middy(fn).use(authMiddleware);
   if (schemas) wrapped.use(validatorZodMiddleware(schemas));
@@ -75,10 +76,14 @@ export function withPlayerAuth<
   TSchemas extends ApiGatewayZodSchemas | undefined = undefined,
 >(
   fn: (event: TenantEvent<TSchemas>) => Promise<unknown>,
-  options?: UserAuthOptions & { schemas?: TSchemas },
+  options?: UserAuthOptions & { schemas?: TSchemas }
 ) {
   const { schemas, ...authOptions } = options ?? {};
-  return buildHandler(fn, playerAuth(authOptions), schemas as ApiGatewayZodSchemas | undefined);
+  return buildHandler(
+    fn,
+    playerAuth(authOptions),
+    schemas as ApiGatewayZodSchemas | undefined
+  );
 }
 
 // ============ Agent ============
@@ -87,10 +92,14 @@ export function withAgentAuth<
   TSchemas extends ApiGatewayZodSchemas | undefined = undefined,
 >(
   fn: (event: TenantEvent<TSchemas>) => Promise<unknown>,
-  options?: UserAuthOptions & { schemas?: TSchemas },
+  options?: UserAuthOptions & { schemas?: TSchemas }
 ) {
   const { schemas, ...authOptions } = options ?? {};
-  return buildHandler(fn, agentAuth(authOptions), schemas as ApiGatewayZodSchemas | undefined);
+  return buildHandler(
+    fn,
+    agentAuth(authOptions),
+    schemas as ApiGatewayZodSchemas | undefined
+  );
 }
 
 // ============ Company ============
@@ -99,10 +108,14 @@ export function withCompanyAuth<
   TSchemas extends ApiGatewayZodSchemas | undefined = undefined,
 >(
   fn: (event: CompanyEvent<TSchemas>) => Promise<unknown>,
-  options?: CompanyAuthOptions & { schemas?: TSchemas },
+  options?: CompanyAuthOptions & { schemas?: TSchemas }
 ) {
   const { schemas, ...authOptions } = options ?? {};
-  return buildHandler(fn, companyAuth(authOptions), schemas as ApiGatewayZodSchemas | undefined);
+  return buildHandler(
+    fn,
+    companyAuth(authOptions),
+    schemas as ApiGatewayZodSchemas | undefined
+  );
 }
 
 // ============ Generic middleware wrapper ============
@@ -112,7 +125,7 @@ export function withMiddleware(
   fn: (event: any) => Promise<unknown>,
   authMiddleware: MiddyMiddlewareObject,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  options?: { schemas?: any },
+  options?: { schemas?: any }
 ) {
   return buildHandler(fn, authMiddleware, options?.schemas);
 }

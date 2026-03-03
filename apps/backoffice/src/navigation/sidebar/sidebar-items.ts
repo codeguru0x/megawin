@@ -54,7 +54,7 @@ export const operatorSidebarItems: NavGroup[] = [
     items: [
       {
         title: "Ứng dụng",
-        url: "/accounts/tenants",
+        url: "/tenants",
         icon: Briefcase,
       },
     ],

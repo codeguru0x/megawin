@@ -1,13 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { z } from "zod";
-import { Copy, Check } from "lucide-react";
-import { apiClient, ApiClientError } from "@megawin/next/client";
+import { Copy, Check, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-import type { CreateTenantResponse } from "../_lib/types";
+import { useCreateTenant } from "../_lib/use-tenants";
 
 const createTenantSchema = z.object({
   tenantId: z
@@ -46,10 +43,11 @@ const createTenantSchema = z.object({
 type CreateTenantValues = z.infer<typeof createTenantSchema>;
 
 export function CreateTenantDialog() {
-  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [createdApiKey, setCreatedApiKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const mutation = useCreateTenant();
 
   const form = useForm<CreateTenantValues>({
     resolver: zodResolver(createTenantSchema),
@@ -58,29 +56,6 @@ export function CreateTenantDialog() {
       displayName: "",
       description: "",
       callbackBaseUrl: "",
-    },
-  });
-
-  const mutation = useMutation({
-    mutationFn: (values: CreateTenantValues) =>
-      apiClient.post<CreateTenantResponse>("/tenants", {
-        tenantId: values.tenantId,
-        displayName: values.displayName,
-        description: values.description,
-        callbackBaseUrl: values.callbackBaseUrl,
-      }),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["tenants"] });
-      form.reset();
-      setCreatedApiKey(data.apiKey);
-      toast.success(`Tạo tenant "${data.tenantId}" thành công.`);
-    },
-    onError: (error) => {
-      if (error instanceof ApiClientError) {
-        toast.error(error.message);
-      } else {
-        toast.error("Đã xảy ra lỗi khi tạo tenant.");
-      }
     },
   });
 
@@ -101,11 +76,23 @@ export function CreateTenantDialog() {
     setOpen(value);
   }
 
+  function handleSubmit(values: CreateTenantValues) {
+    mutation.mutate(values, {
+      onSuccess: (data) => {
+        form.reset();
+        setCreatedApiKey(data.apiKey);
+      },
+    });
+  }
+
   if (createdApiKey) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogTrigger asChild>
-          <Button size="sm">Thêm đối tác</Button>
+          <Button size="sm" className="gap-1.5">
+            <Plus className="size-3.5" />
+            Thêm đối tác
+          </Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
@@ -126,9 +113,9 @@ export function CreateTenantDialog() {
               onClick={handleCopy}
             >
               {copied ? (
-                <Check className="h-4 w-4 text-green-600" />
+                <Check className="size-4 text-emerald-600" />
               ) : (
-                <Copy className="h-4 w-4" />
+                <Copy className="size-4" />
               )}
             </Button>
           </div>
@@ -143,7 +130,10 @@ export function CreateTenantDialog() {
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogTrigger asChild>
-        <Button size="sm">Thêm đối tác</Button>
+        <Button size="sm" className="gap-1.5">
+          <Plus className="size-3.5" />
+          Thêm đối tác
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
@@ -156,7 +146,7 @@ export function CreateTenantDialog() {
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
+            onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-4"
           >
             <FormField
