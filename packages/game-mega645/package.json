@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "description": "Mega 6/45 – Domain layer: entities, rules, helpers, schemas, indexes",
+  "scripts": {
+    "dev": "tsc --watch",
+    "check-types": "tsc --noEmit",
+    "build": "tsc"
+  },
   "exports": {
     "./entities": {
       "types": "./src/entities/index.ts",
