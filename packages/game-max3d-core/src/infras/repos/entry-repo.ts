@@ -71,10 +71,7 @@ export abstract class AbstractEntryRepository<
   }
 
   async findByTicketId(ticketId: string): Promise<TEntity[]> {
-    return await this.findMany(
-      { ticketId: new ObjectId(ticketId) },
-      { sort: { drawDate: 1 } }
-    );
+    return await this.findMany({ ticketId }, { sort: { drawDate: 1 } });
   }
 
   async findByEntryId(entryId: string): Promise<TEntity | null> {

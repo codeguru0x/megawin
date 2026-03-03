@@ -69,10 +69,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   }
 
   async getEntriesByTicketId(ticketId: string): Promise<EntryEntity[]> {
-    return await this.findMany(
-      { ticketId: new ObjectId(ticketId) },
-      { sort: { drawTime: 1 } }
-    );
+    return await this.findMany({ ticketId }, { sort: { drawTime: 1 } });
   }
 
   async getEntriesByDrawId(

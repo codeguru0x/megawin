@@ -98,9 +98,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     };
 
     const sortField =
-      options.sortBy === "drawDate"
-        ? "drawPlan.drawIds"
-        : "createdAt";
+      options.sortBy === "drawDate" ? "drawPlan.drawIds" : "createdAt";
 
     if (options.from || options.to) {
       const dateRange: Record<string, unknown> = {};
@@ -120,13 +118,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
    * Sync ticket summary sau settle.
    * Ghi đè (idempotent) – không dùng $inc.
    */
-  async syncSummary(
-    ticketId: unknown,
-    summary: TicketSummary
-  ): Promise<void> {
-    const oid =
-      ticketId instanceof ObjectId ? ticketId : new ObjectId(String(ticketId));
-
+  async syncSummary(ticketId: string, summary: TicketSummary): Promise<void> {
     const allDone =
       summary.settledCount + summary.voidedCount >= summary.totalDraws;
 
@@ -148,6 +140,6 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     }
 
     const col = await this.getCollection();
-    await col.updateOne({ _id: oid }, { $set });
+    await col.updateOne({ _id: new ObjectId(ticketId) }, { $set });
   }
 }

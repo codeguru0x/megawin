@@ -23,8 +23,8 @@
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
-    "@types/node": "^24.0.0",
-    "serverless-offline": "^14.4.0",
+    "@types/node": "^25.3.3",
+    "serverless-offline": "^14.5.0",
     "typescript": "5.9.3"
   }
 }

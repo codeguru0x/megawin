@@ -69,10 +69,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   }
 
   async getEntriesByTicketId(ticketId: string): Promise<EntryEntity[]> {
-    return await this.findMany(
-      { ticketId: new ObjectId(ticketId) },
-      { sort: { drawTime: 1 } }
-    );
+    return await this.findMany({ ticketId }, { sort: { drawTime: 1 } });
   }
 
   async getEntriesByDrawId(
@@ -592,7 +589,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
    * Aggregate tóm tắt ticket từ TẤT CẢ entries của 1 ticket.
    * Dùng cho SyncTicketSummaries — tính lại toàn bộ từ source of truth (entries).
    */
-  async aggregateTicketSummary(ticketId: ObjectId): Promise<{
+  async aggregateTicketSummary(ticketId: string): Promise<{
     totalEntries: number;
     settledCount: number;
     voidedCount: number;
@@ -663,9 +660,9 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
    * Lấy danh sách distinct ticketIds từ entries của 1 draw.
    * Dùng cho SyncTicketSummaries — biết cần sync ticket nào.
    */
-  async getDistinctTicketIdsByDrawId(drawId: string): Promise<ObjectId[]> {
+  async getDistinctTicketIdsByDrawId(drawId: string): Promise<string[]> {
     const col = await this.getCollection();
-    return col.distinct("ticketId", { drawId }) as Promise<ObjectId[]>;
+    return col.distinct("ticketId", { drawId }) as Promise<string[]>;
   }
 
   // ─────────────────────────────────────────────

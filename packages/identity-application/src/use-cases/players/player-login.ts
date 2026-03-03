@@ -23,8 +23,8 @@
  * 5. Cognito adminInitiateAuth → trả token
  *
  * ── Environment variables bắt buộc ──
- * - COGNITO_PLAYER_USERPOOL_ID     : User Pool ID cho player (Cognito)
- * - COGNITO_PLAYER_USERPOOL_CLIENT_ID : App Client ID cho player (Cognito)
+ * - COGNITO_PLAYER_POOL_ID     : User Pool ID cho player (Cognito)
+ * - COGNITO_PLAYER_POOL_CLIENT_ID : App Client ID cho player (Cognito)
  * - PLAYER_PASSWORD_SECRET          : Secret key để derive deterministic password (HMAC-SHA256)
  *
  * Auth: Tenant đã được xác thực bằng API Key + IP whitelist ở handler layer.

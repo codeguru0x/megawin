@@ -66,10 +66,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   }
 
   async getEntriesByTicketId(ticketId: string): Promise<TicketEntryEntity[]> {
-    return await this.findMany(
-      { ticketId: new ObjectId(ticketId) },
-      { sort: { drawTime: 1 } }
-    );
+    return await this.findMany({ ticketId }, { sort: { drawTime: 1 } });
   }
 
   async getEntriesByDrawId(
@@ -328,9 +325,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   // ─── Ticket Summary ───
 
-  async getDistinctTicketIdsByDrawId(drawId: string): Promise<ObjectId[]> {
+  async getDistinctTicketIdsByDrawId(drawId: string): Promise<string[]> {
     const col = await this.getCollection();
-    return col.distinct("ticketId", { drawId }) as Promise<ObjectId[]>;
+    return col.distinct("ticketId", { drawId }) as Promise<string[]>;
   }
 
   async aggregateTicketSummary(ticketId: unknown): Promise<{

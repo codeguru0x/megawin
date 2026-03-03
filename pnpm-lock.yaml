@@ -628,11 +628,11 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@types/node':
-        specifier: ^24.0.0
-        version: 24.10.13
+        specifier: ^25.3.3
+        version: 25.3.3
       serverless-offline:
-        specifier: ^14.4.0
-        version: 14.4.0(serverless@4.31.2)
+        specifier: ^14.5.0
+        version: 14.5.0(serverless@4.31.2)
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -668,11 +668,11 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@types/node':
-        specifier: ^24.0.0
-        version: 24.10.13
+        specifier: ^25.3.3
+        version: 25.3.3
       serverless-offline:
-        specifier: ^14.4.0
-        version: 14.4.0(serverless@4.31.2)
+        specifier: ^14.5.0
+        version: 14.5.0(serverless@4.31.2)
       typescript:
         specifier: 5.9.3
         version: 5.9.3

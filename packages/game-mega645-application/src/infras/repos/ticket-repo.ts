@@ -131,7 +131,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
    * Tính status mới từ settledCount + voidedCount vs totalDraws.
    */
   async syncSummary(
-    ticketId: ObjectId,
+    ticketId: string,
     summary: TicketSummary
   ): Promise<boolean> {
     const now = new Date();
@@ -170,7 +170,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     }
 
     return await this.updateOne(
-      { _id: ticketId },
+      { _id: new ObjectId(ticketId) },
       { $set, $inc: { version: 1 } }
     );
   }

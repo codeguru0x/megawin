@@ -77,11 +77,11 @@ export const auth = betterAuth({
    */
   socialProviders: {
     cognito: {
-      clientId: env.COGNITO_CLIENT_ID,
+      clientId: env.COGNITO_WORKFORCE_CLIENT_ID,
       //clientSecret: env.COGNITO_CLIENT_SECRET,
-      domain: env.COGNITO_DOMAIN,
-      region: env.COGNITO_REGION,
-      userPoolId: env.COGNITO_USERPOOL_ID,
+      domain: env.COGNITO_WORKFORCE_DOMAIN,
+      region: env.COGNITO_WORKFORCE_REGION,
+      userPoolId: env.COGNITO_WORKFORCE_POOL_ID,
       redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/cognito`,
       mapProfileToUser: (profile) => {
         const raw = profile as Record<string, unknown>;
