@@ -26,11 +26,7 @@ import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
   [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Void]),
   [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed]),
-  [DrawStatus.SalesClosed]: new Set([
-    DrawStatus.SalesOpen,
-    DrawStatus.Published,
-    DrawStatus.Void,
-  ]),
+  [DrawStatus.SalesClosed]: new Set([DrawStatus.SalesOpen, DrawStatus.Published, DrawStatus.Void]),
   [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Void]),
   [DrawStatus.Settling]: new Set([DrawStatus.Settled]),
 };
@@ -64,17 +60,11 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   async getNextOpenDraw(): Promise<DrawEntity | null> {
-    return await this.findOne(
-      { status: DrawStatus.SalesOpen },
-      { sort: { drawTime: 1 } }
-    );
+    return await this.findOne({ status: DrawStatus.SalesOpen }, { sort: { drawTime: 1 } });
   }
 
   async getDrawsByIds(drawIds: string[]): Promise<DrawEntity[]> {
-    return await this.findMany(
-      { drawId: { $in: drawIds } },
-      { sort: { drawDate: 1, drawNo: 1 } }
-    );
+    return await this.findMany({ drawId: { $in: drawIds } }, { sort: { drawDate: 1, drawNo: 1 } });
   }
 
   async getDrawsByDate(drawDate: string): Promise<DrawEntity[]> {
@@ -84,7 +74,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async listDraws(
     filter: { status?: string; fromDate?: string; toDate?: string },
     page: number,
-    size: number
+    size: number,
   ): Promise<DrawEntity[]> {
     const query: Record<string, unknown> = {};
     if (filter.status) query.status = filter.status;
@@ -105,16 +95,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   async getCurrentDraw(allowStatuses?: string[]): Promise<DrawEntity | null> {
     const statuses = allowStatuses ?? [DrawStatus.SalesOpen];
-    return await this.findOne(
-      { status: { $in: statuses } },
-      { sort: { drawDate: 1, drawNo: 1 } }
-    );
+    return await this.findOne({ status: { $in: statuses } }, { sort: { drawDate: 1, drawNo: 1 } });
   }
 
   async getActiveDraws(allowStatuses: string[]): Promise<DrawEntity[]> {
     return await this.findMany(
       { status: { $in: allowStatuses } },
-      { sort: { drawDate: 1, drawNo: 1 } }
+      { sort: { drawDate: 1, drawNo: 1 } },
     );
   }
 
@@ -124,7 +111,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
         status: DrawStatus.Settled,
         "result.winningNumbers": { $exists: true },
       },
-      { sort: { drawTime: -1 } }
+      { sort: { drawTime: -1 } },
     );
   }
 
@@ -137,7 +124,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async transitionStatus(
     drawId: string,
     fromStatus: string,
-    toStatus: string
+    toStatus: string,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(toStatus)) return null;
@@ -145,7 +132,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
       { $set: { status: toStatus, updatedAt: new Date() } },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -156,7 +143,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async openSales(
     drawId: string,
     fromStatus: string,
-    salesOpenAt?: Date
+    salesOpenAt?: Date,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.SalesOpen)) return null;
@@ -172,7 +159,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
       { $set },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -180,10 +167,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Close sales: salesOpen → salesClosed.
    * Stamp sales.closeAt thời điểm đóng bán thực tế.
    */
-  async closeSales(
-    drawId: string,
-    salesCloseAt?: Date
-  ): Promise<DrawEntity | null> {
+  async closeSales(drawId: string, salesCloseAt?: Date): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.SalesOpen];
     if (!allowed?.has(DrawStatus.SalesClosed)) return null;
 
@@ -198,7 +182,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.SalesOpen },
       { $set },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -208,7 +192,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async voidDraw(
     drawId: string,
     fromStatus: string,
-    voidInfo: VoidInfo
+    voidInfo: VoidInfo,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.Void)) return null;
@@ -222,7 +206,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
           updatedAt: new Date(),
         },
       },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -238,7 +222,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       evenCount: number;
       oddCount: number;
     },
-    vietlottRef?: DrawDoc["vietlottRef"]
+    vietlottRef?: DrawDoc["vietlottRef"],
   ): Promise<DrawEntity | null> {
     const now = new Date();
     const $set: Record<string, unknown> = {
@@ -254,7 +238,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.SalesClosed },
       { $set },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -272,7 +256,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       oddCount: number;
       publishedAt: Date;
     },
-    vietlottRef?: DrawDoc["vietlottRef"]
+    vietlottRef?: DrawDoc["vietlottRef"],
   ): Promise<boolean> {
     const $set: Record<string, unknown> = {
       result,
@@ -280,17 +264,14 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     };
     if (vietlottRef) $set.vietlottRef = vietlottRef;
 
-    return await this.updateOne(
-      { drawId, status: DrawStatus.Published },
-      { $set }
-    );
+    return await this.updateOne({ drawId, status: DrawStatus.Published }, { $set });
   }
 
   // ─── Data Updates (type-safe) ───
 
   async updateSchedule(
     drawId: string,
-    sales: { openAt: Date; closeAt: Date; drawTime?: Date }
+    sales: { openAt: Date; closeAt: Date; drawTime?: Date },
   ): Promise<boolean> {
     const $set: Record<string, unknown> = {
       "sales.openAt": sales.openAt,
@@ -303,24 +284,12 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.updateOne({ drawId }, { $set });
   }
 
-  async updateFinancial(
+  async updateSettleResult(
     drawId: string,
-    financial: NonNullable<DrawDoc["financial"]>
+    financial: NonNullable<DrawDoc["financial"]>,
+    stats: NonNullable<DrawDoc["stats"]>,
   ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      { $set: { financial, updatedAt: new Date() } }
-    );
-  }
-
-  async updateStats(
-    drawId: string,
-    stats: NonNullable<DrawDoc["stats"]>
-  ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      { $set: { stats, updatedAt: new Date() } }
-    );
+    return await this.updateOne({ drawId }, { $set: { financial, stats, updatedAt: new Date() } });
   }
 
   async updateVoidSummary(
@@ -330,11 +299,11 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       totalOriginalAmount: number;
       totalRefundAmount: number;
       completedAt: Date;
-    }
+    },
   ): Promise<boolean> {
     return await this.updateOne(
       { drawId },
-      { $set: { voidSummary: summary, updatedAt: new Date() } }
+      { $set: { voidSummary: summary, updatedAt: new Date() } },
     );
   }
 }

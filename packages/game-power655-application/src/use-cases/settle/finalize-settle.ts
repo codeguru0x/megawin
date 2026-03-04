@@ -25,6 +25,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import type { PowerSplitDetails } from "./types";
 
 export interface FinalizeSettleInput {
   /** ID kỳ quay cần finalize. */
@@ -48,21 +49,7 @@ export interface FinalizeSettleInput {
   /** Có phải kỳ chia giải (tổng JP vượt splitThreshold) hay không. */
   isSplitCycle: boolean;
   /** Chi tiết chia giải theo tier (chỉ có khi isSplitCycle = true). */
-  splitDetails?: Record<
-    string,
-    {
-      /** Số tiền ban đầu phân bổ cho tier (VND). */
-      initialAmount: number;
-      /** Số tiền tái phân phối từ tier không có winner (VND). */
-      redistributedAmount: number;
-      /** Tổng tiền cho tier (VND). */
-      totalAmount: number;
-      /** Số người thắng tier này. */
-      winnerCount: number;
-      /** Số tiền bonus mỗi người (VND). */
-      bonusPerWinner: number;
-    }
-  >;
+  splitDetails?: PowerSplitDetails;
 }
 
 export interface FinalizeSettleResult {

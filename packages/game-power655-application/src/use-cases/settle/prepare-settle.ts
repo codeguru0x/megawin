@@ -23,6 +23,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import type { PowerDrawResult, PowerSettleConfig } from "./types";
 
 export interface PrepareSettleInput {
   /** ID kỳ quay cần chuẩn bị settle. */
@@ -39,12 +40,7 @@ export interface PrepareSettleResult {
   /** Ngày tài chính (thường trùng drawDate, dùng cho báo cáo). */
   financialDate: string;
   /** Kết quả quay số đã công bố. */
-  result: {
-    /** 6 số chính trúng thưởng (1-55). */
-    winningMain: number[];
-    /** Số bonus (1 số từ 49 số còn lại). */
-    bonusNumber: number;
-  };
+  result: PowerDrawResult;
   /** Số dư Jackpot 1 đầu kỳ (VND), đọc từ active cycle. */
   jp1OpeningAmount: number;
   /** Số dư Jackpot 2 đầu kỳ (VND), đọc từ active cycle. */
@@ -54,33 +50,7 @@ export interface PrepareSettleResult {
   /** Giá trị giải thưởng cố định theo tier (VND). Key: tier1/tier2/tier3. */
   prizeAmounts: Record<string, number>;
   /** Cấu hình tài chính + jackpot snapshot tại thời điểm settle. */
-  config: {
-    /** Giá trị khởi tạo JP1 khi bắt đầu cycle mới (VND). */
-    jp1SeedAmount: number;
-    /** Giá trị khởi tạo JP2 khi bắt đầu cycle mới (VND). */
-    jp2SeedAmount: number;
-    /** Tỷ lệ doanh thu đóng góp vào JP1 (0-1). */
-    jp1Ratio: number;
-    /** Tỷ lệ doanh thu đóng góp vào JP2 (0-1). */
-    jp2Ratio: number;
-    /** Ngưỡng tràn JP1 (VND). Phần vượt quá sẽ chuyển sang JP2. */
-    jp1OverflowThreshold: number;
-    /** Ngưỡng tổng JP (JP1 + JP2) để kích hoạt chia giải (VND). */
-    splitThreshold: number;
-    /** Tỷ lệ chia giải cho các tier khi split. */
-    splitRatios: {
-      /** Tỷ lệ chia cho tier1. */
-      tier1: number;
-      /** Tỷ lệ chia cho tier2. */
-      tier2: number;
-      /** Tỷ lệ chia cho tier3. */
-      tier3: number;
-    };
-    /** Tỷ lệ phần trăm doanh thu cho công ty (0-1). */
-    companyRate: number;
-    /** Tỷ lệ hoa hồng đại lý mặc định (0-1). */
-    defaultCommissionRate: number;
-  };
+  config: PowerSettleConfig;
   /** Tổng số entries cần settle (chỉ đếm entries chưa settled). */
   totalEntries: number;
   /** Tổng số dòng cược từ tất cả entries. */

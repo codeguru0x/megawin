@@ -12,10 +12,10 @@
 
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { BigSmallPrizes, EvenOddPrizes } from "@megawin/game-keno/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import type { KenoDrawResult, KenoSettleConfig } from "./types";
 
 export interface PrepareSettleInput {
   drawId: string;
@@ -26,28 +26,8 @@ export interface PrepareSettleResult {
   drawDate: string;
   drawNo: number;
   financialDate: string;
-  result: {
-    winningNumbers: number[];
-    bigCount: number;
-    smallCount: number;
-    evenCount: number;
-    oddCount: number;
-  };
-  config: {
-    companyRate: number;
-    defaultCommissionRate: number;
-    basicPrizes: Record<string, Record<number, number>>;
-    bigSmallPrizes: BigSmallPrizes;
-    evenOddPrizes: EvenOddPrizes;
-    payoutCaps: {
-      pick8MaxPerDraw: number;
-      pick8MaxSetsForFixed: number;
-      pick9MaxPerDraw: number;
-      pick9MaxSetsForFixed: number;
-      pick10MaxPerDraw: number;
-      pick10MaxSetsForFixed: number;
-    };
-  };
+  result: KenoDrawResult;
+  config: KenoSettleConfig;
   totalEntries: number;
 }
 
@@ -93,7 +73,6 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Pr
       },
       config: {
         companyRate: globalConfig.rates.companyRate,
-        defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
         basicPrizes: globalConfig.basicPrizes,
         bigSmallPrizes: globalConfig.bigSmallPrizes,
         evenOddPrizes: globalConfig.evenOddPrizes,

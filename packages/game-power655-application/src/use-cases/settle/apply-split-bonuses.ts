@@ -14,6 +14,7 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-power655/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
+import type { PowerSplitDetails } from "./types";
 
 export interface ApplySplitBonusesInput {
   /** ID kỳ quay cần patch split bonus. */
@@ -21,21 +22,7 @@ export interface ApplySplitBonusesInput {
   /** Có phải kỳ chia giải (split cycle) hay không. Nếu false → skip toàn bộ. */
   isSplitCycle: boolean;
   /** Chi tiết chia giải theo tier (từ CalculateFinancials). */
-  splitDetails?: Record<
-    string,
-    {
-      /** Số tiền ban đầu phân bổ cho tier (VND). */
-      initialAmount: number;
-      /** Số tiền tái phân phối từ tier không có winner (VND). */
-      redistributedAmount: number;
-      /** Tổng tiền cho tier = initialAmount + redistributedAmount (VND). */
-      totalAmount: number;
-      /** Số người thắng tier này. */
-      winnerCount: number;
-      /** Số tiền bonus mỗi người thắng (VND). Công thức: totalAmount / winnerCount. */
-      bonusPerWinner: number;
-    }
-  >;
+  splitDetails?: PowerSplitDetails;
 }
 
 export interface ApplySplitBonusesResult {

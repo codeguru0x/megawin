@@ -11,54 +11,82 @@ import type { GlobalConfigDoc } from "../entities/global-config";
 // Draw Financial Calculation
 // ─────────────────────────────────────────────
 
+/**
+ * Input tính tài chính kỳ quay Keno.
+ *
+ * Được tổng hợp từ DB (aggregateRevenueByTenant + aggregateSettledPayoutSummary)
+ * trước khi gọi `calculateKenoDrawFinancials()`.
+ */
 export interface DrawFinancialInput {
+  /** Tổng doanh thu = Σ(entry.amount) cho tất cả entries không void (VND). */
   totalRevenue: number;
+  /** Tổng tiền thưởng = Σ(entry.payout.winAmount) cho entries thắng (VND). */
   totalPrizes: number;
+  /** Doanh thu và hoa hồng phân theo từng đại lý. */
   tenantRevenues: Array<{
+    /** ID đại lý. */
     tenantId: string;
+    /** Doanh thu riêng đại lý = Σ(entry.amount) thuộc tenant (VND). */
     revenue: number;
-    commissionRate: number;
-    /** Tổng hoa hồng tính sẵn (sum từ entry.tenant.commissionAmount). */
+    /** Tổng hoa hồng tính sẵn = Σ(entry.tenant.commissionAmount) (VND). */
     commission: number;
   }>;
+  /** Tỷ lệ phần công ty (0–1). Ví dụ: 0.15 = 15%. Lấy từ GlobalConfig. */
   companyRate: number;
 }
 
+/**
+ * Kết quả tính tài chính kỳ quay Keno.
+ * Ghi vào draw.financial sau khi settle hoàn tất.
+ */
 export interface DrawFinancialResult {
+  /** Tổng doanh thu (VND). Copy từ input. */
   totalRevenue: number;
+  /** Tổng tiền thưởng (VND). Copy từ input. */
   totalPrizes: number;
+  /** Tổng hoa hồng đại lý = Σ(tenantBreakdown[].commission) (VND). */
   totalAgentCommission: number;
+  /** Phần công ty = Math.round(totalRevenue × companyRate) (VND). */
   companyTake: number;
+  /**
+   * Lợi nhuận = totalRevenue - totalPrizes - totalAgentCommission - companyTake.
+   * Có thể âm nếu tổng giải thưởng vượt doanh thu.
+   */
   profit: number;
+  /** Chi tiết tài chính từng đại lý. */
   tenantBreakdown: Array<{
+    /** ID đại lý. */
     tenantId: string;
+    /** Doanh thu đại lý (VND). */
     revenue: number;
+    /** Hoa hồng đại lý (VND). */
     commission: number;
-    commissionRate: number;
   }>;
 }
 
-export function calculateKenoDrawFinancials(
-  input: DrawFinancialInput
-): DrawFinancialResult {
+/**
+ * Tính tài chính tổng hợp cho 1 kỳ quay Keno.
+ *
+ * Keno KHÔNG có Jackpot tích luỹ — công thức đơn giản:
+ *   profit = totalRevenue - totalPrizes - totalAgentCommission - companyTake
+ *
+ * @param input - Dữ liệu tổng hợp từ DB (revenue, prizes, commission per tenant)
+ * @returns Kết quả tài chính gồm profit và tenant breakdown
+ */
+export function calculateKenoDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const { totalRevenue, totalPrizes, tenantRevenues, companyRate } = input;
 
   const tenantBreakdown = tenantRevenues.map((t) => ({
     tenantId: t.tenantId,
     revenue: t.revenue,
     commission: t.commission,
-    commissionRate: t.commissionRate,
   }));
 
-  const totalAgentCommission = tenantBreakdown.reduce(
-    (sum, t) => sum + t.commission,
-    0
-  );
+  const totalAgentCommission = tenantBreakdown.reduce((sum, t) => sum + t.commission, 0);
 
   const companyTake = Math.round(totalRevenue * companyRate);
 
-  const profit =
-    totalRevenue - totalPrizes - totalAgentCommission - companyTake;
+  const profit = totalRevenue - totalPrizes - totalAgentCommission - companyTake;
 
   return {
     totalRevenue,
@@ -92,7 +120,7 @@ export function calculateCappedPrize(
   fixedPrize: number,
   winnerCount: number,
   maxPerDraw: number,
-  maxSetsForFixed: number
+  maxSetsForFixed: number,
 ): number {
   if (winnerCount <= maxSetsForFixed) {
     return fixedPrize;
@@ -104,19 +132,26 @@ export function calculateCappedPrize(
 // Default Config Values
 // ─────────────────────────────────────────────
 
+/**
+ * Cấu hình mặc định Keno theo quy tắc Vietlott.
+ *
+ * Dùng khi chưa có GlobalConfig trong DB, hoặc làm seed data ban đầu.
+ * Đơn vị tiền: VND. Đơn vị tỷ lệ: 0–1.
+ */
 export const DEFAULT_KENO_CONFIG: Pick<
   GlobalConfigDoc,
-  | "rates"
-  | "basicPrizes"
-  | "bigSmallPrizes"
-  | "evenOddPrizes"
-  | "payoutCaps"
-  | "play"
+  "rates" | "basicPrizes" | "bigSmallPrizes" | "evenOddPrizes" | "payoutCaps" | "play"
 > = {
+  /** Tỷ lệ tài chính: hoa hồng đại lý mặc định 20%, phần công ty 15%. */
   rates: {
     defaultCommissionRate: 0.2,
     companyRate: 0.15,
   },
+  /**
+   * Bảng giải thưởng cơ bản theo loại chơi (pick1 → pick10).
+   * Key = số trùng, Value = giải thưởng (VND) cho mỗi 10.000đ đặt cược.
+   * Key = 0 nghĩa là trùng 0 số (giải an ủi cho pick8, pick9, pick10).
+   */
   basicPrizes: {
     pick1: { 1: 20_000 },
     pick2: { 2: 90_000 },
@@ -153,6 +188,7 @@ export const DEFAULT_KENO_CONFIG: Pick<
       0: 10_000,
     },
   },
+  /** Giải thưởng Lớn/Nhỏ — cược tổng 20 số rơi vào nửa lớn/nhỏ (VND). */
   bigSmallPrizes: {
     big13Plus: 26_000,
     big1112: 10_000,
@@ -160,6 +196,7 @@ export const DEFAULT_KENO_CONFIG: Pick<
     small1112: 10_000,
     small13Plus: 26_000,
   },
+  /** Giải thưởng Chẵn/Lẻ — cược tổng 20 số chẵn/lẻ (VND). */
   evenOddPrizes: {
     even15Plus: 200_000,
     even1314: 40_000,
@@ -169,6 +206,11 @@ export const DEFAULT_KENO_CONFIG: Pick<
     odd1314: 40_000,
     odd15Plus: 200_000,
   },
+  /**
+   * Giới hạn trả thưởng mỗi kỳ cho bậc 8, 9, 10.
+   * - MaxPerDraw: tổng giải tối đa cho kỳ (VND) — 10 tỷ
+   * - MaxSetsForFixed: số bộ tối đa được trả giải cố định, vượt quá thì chia đều
+   */
   payoutCaps: {
     pick8MaxPerDraw: 10_000_000_000,
     pick8MaxSetsForFixed: 50,
@@ -177,6 +219,7 @@ export const DEFAULT_KENO_CONFIG: Pick<
     pick10MaxPerDraw: 10_000_000_000,
     pick10MaxSetsForFixed: 5,
   },
+  /** Cấu hình gameplay: giá cược, giới hạn, lịch quay. */
   play: {
     unitPrice: 10_000,
     maxBasicBoardsPerTicket: 2,

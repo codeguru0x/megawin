@@ -97,6 +97,4 @@ build:
     configFile: ./esbuild.config.mjs
 
 functions:
-  - ${file(src/functions/players-endpoint.yml)}
-  - ${file(src/functions/report-endpoint.yml)}
-  - ${file(src/functions/entry-feed-endpoint.yml)}
+  - ${file(src/functions/player-endpoint.yml)}

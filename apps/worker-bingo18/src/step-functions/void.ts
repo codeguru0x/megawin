@@ -5,28 +5,36 @@
  * FLOW (CRASH-SAFE):
  * ═══════════════════════════════════════════════════════════════════════
  *
- *  Input: { drawId: "...", reason: "...", voidedBy?: "..." }
+ *  Input: { drawId, reason, voidedBy? }
  *         │
  *         ▼
  *  ┌─────────────────────────┐
- *  │  1. PrepareVoid         │  Validate draw, transition → void
+ *  │  1. PrepareVoid         │  Validate draw, transition → voiding
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  2. VoidEntries (loop)                   │
- *  │     Batch void: scheduled   │
+ *  │  2. VoidEntries (loop, batch=100)        │
+ *  │     Batch void scheduled entries         │
  *  │     done = true khi hết voidable entries │
  *  └────────┬─────────────────────────────────┘
  *           ▼
+ *  ┌─────────────────────────┐
+ *  │  3. SyncTicketSummaries │  Recompute ticket progress
+ *  └────────┬────────────────┘
+ *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  3. DispatchRefunds (loop)               │
+ *  │  4. DispatchRefunds (loop)               │
  *  │     Gửi refund qua TenantGateway API    │
  *  │     done = true khi hết pending refunds  │
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  4. FinalizeVoid        │  Ghi summary lên draw
+ *  │  5. FinalizeVoid        │  Ghi summary lên draw
  *  └─────────────────────────┘
+ *
+ * DATA FLOW:
+ *   context = PrepareVoid output, truyền xuyên suốt.
+ *   Lambda nhận context trực tiếp, tự destructure fields cần thiết.
  *
  * CRASH RECOVERY:
  *   Mỗi step idempotent. Entries đã void/refund tự filter ra.
@@ -68,11 +76,7 @@ export const VOID_STATE_MACHINE = {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-entries",
       Comment: "Batch void entries. Voided entries auto-excluded.",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-        reason: "{% $states.input.context.reason %}",
-        voidedBy: "{% $states.input.context.voidedBy %}",
-      },
+      Arguments: "{% $states.input.context %}",
       Output:
         "{% { 'context': $states.input.context, 'voidResult': $states.result } %}",
       Next: "CheckVoidDone",
@@ -94,9 +98,7 @@ export const VOID_STATE_MACHINE = {
       Type: "Task",
       Resource:
         "arn:aws:lambda:REGION:ACCOUNT:function:void-sync-ticket-summaries",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-      },
+      Arguments: "{% $states.input.context %}",
       Output:
         "{% { 'context': $states.input.context, 'syncResult': $states.result } %}",
       Next: "DispatchRefunds",
@@ -106,9 +108,7 @@ export const VOID_STATE_MACHINE = {
     DispatchRefunds: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-dispatch-refunds",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-      },
+      Arguments: "{% $states.input.context %}",
       Output:
         "{% { 'context': $states.input.context, 'refundResult': $states.result } %}",
       Next: "CheckRefundDone",
@@ -141,9 +141,7 @@ export const VOID_STATE_MACHINE = {
     FinalizeVoid: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-finalize",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-      },
+      Arguments: "{% $states.input.context %}",
       End: true,
       Retry: LAMBDA_RETRY,
     },

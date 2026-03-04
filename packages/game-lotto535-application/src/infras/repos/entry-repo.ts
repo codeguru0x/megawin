@@ -86,6 +86,14 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     });
   }
 
+  /** Lấy entries scheduled cho settle — luôn page 1, dùng findMany + limit. */
+  async getScheduledEntries(drawId: string, limit: number): Promise<EntryEntity[]> {
+    return await this.findMany(
+      { drawId, status: EntryStatus.Scheduled },
+      { sort: { createdAt: 1 }, limit },
+    );
+  }
+
   async countEntriesByDrawId(drawId: string): Promise<number> {
     return await this.count({ drawId });
   }
@@ -175,7 +183,6 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       tenantId: string;
       revenue: number;
       commission: number;
-      commissionRate: number;
       entryCount: number;
     }>
   > {
@@ -186,7 +193,6 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           _id: "$tenantId",
           revenue: { $sum: "$amount" },
           commission: { $sum: "$tenant.commissionAmount" },
-          commissionRate: { $first: "$tenant.commissionRate" },
           entryCount: { $sum: 1 },
         },
       },
@@ -195,7 +201,6 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       tenantId: r._id,
       revenue: r.revenue,
       commission: r.commission ?? 0,
-      commissionRate: r.commissionRate ?? 0.2,
       entryCount: r.entryCount,
     }));
   }
@@ -629,6 +634,91 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       totalRefundedAmount: row.totalRefundedAmount ?? 0,
       voidedDrawIds: row.voidedDrawIds ?? [],
     };
+  }
+
+  /**
+   * Batch aggregate summaries cho nhiều tickets cùng lúc.
+   * $match ticketId ∈ batch → $group by ticketId → Map<string, summary>.
+   */
+  async aggregateTicketSummariesBatch(ticketIds: ObjectId[]): Promise<
+    Map<
+      string,
+      {
+        settledCount: number;
+        voidedCount: number;
+        totalWinAmount: number;
+        totalVoidedAmount: number;
+        totalRefundedAmount: number;
+        voidedDrawIds: string[];
+      }
+    >
+  > {
+    const result = await this.aggregate([
+      { $match: { ticketId: { $in: ticketIds } } },
+      {
+        $group: {
+          _id: "$ticketId",
+          settledCount: {
+            $sum: { $cond: [{ $eq: ["$status", EntryStatus.Settled] }, 1, 0] },
+          },
+          voidedCount: {
+            $sum: { $cond: [{ $eq: ["$status", EntryStatus.Void] }, 1, 0] },
+          },
+          totalWinAmount: {
+            $sum: { $ifNull: ["$payout.winAmount", 0] },
+          },
+          totalVoidedAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                { $ifNull: ["$voidInfo.originalAmount", 0] },
+                0,
+              ],
+            },
+          },
+          totalRefundedAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                { $ifNull: ["$voidInfo.refundAmount", 0] },
+                0,
+              ],
+            },
+          },
+          voidedDrawIds: {
+            $addToSet: {
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$drawId", "$$REMOVE"],
+            },
+          },
+        },
+      },
+    ]);
+
+    const map = new Map<
+      string,
+      {
+        settledCount: number;
+        voidedCount: number;
+        totalWinAmount: number;
+        totalVoidedAmount: number;
+        totalRefundedAmount: number;
+        voidedDrawIds: string[];
+      }
+    >();
+
+    for (const row of result) {
+      const r = row as any;
+      map.set(r._id.toString(), {
+        settledCount: r.settledCount ?? 0,
+        voidedCount: r.voidedCount ?? 0,
+        totalWinAmount: r.totalWinAmount ?? 0,
+        totalVoidedAmount: r.totalVoidedAmount ?? 0,
+        totalRefundedAmount: r.totalRefundedAmount ?? 0,
+        voidedDrawIds: r.voidedDrawIds ?? [],
+      });
+    }
+
+    return map;
   }
 
   /**

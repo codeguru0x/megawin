@@ -4,6 +4,7 @@ import {
   adminInitiateAuth,
   adminAssociateSoftwareToken,
   COGNITO_WORKFORCE_POOL_ID,
+  COGNITO_WORKFORCE_CLIENT_ID,
 } from "@megawin/app-core/aws/cognito";
 
 export interface SetupMfaInput {
@@ -18,14 +19,9 @@ export interface SetupMfaOutput {
   accessToken: string;
 }
 
-export class SetupMfaUseCase extends NextApiUseCase<
-  SetupMfaInput,
-  SetupMfaOutput
-> {
+export class SetupMfaUseCase extends NextApiUseCase<SetupMfaInput, SetupMfaOutput> {
   protected async execute(input: SetupMfaInput): Promise<SetupMfaOutput> {
-    const clientId = process.env.COGNITO_WORKFORCE_USERPOOL_CLIENT_ID;
-
-    if (!COGNITO_WORKFORCE_POOL_ID || !clientId) {
+    if (!COGNITO_WORKFORCE_POOL_ID || !COGNITO_WORKFORCE_CLIENT_ID) {
       throw AppException.internal("Cognito pool configuration is missing");
     }
 
@@ -33,25 +29,23 @@ export class SetupMfaUseCase extends NextApiUseCase<
     try {
       const authResult = await adminInitiateAuth({
         userPoolId: COGNITO_WORKFORCE_POOL_ID,
-        clientId,
+        clientId: COGNITO_WORKFORCE_CLIENT_ID,
         username: input.username,
         password: input.password,
       });
       accessToken = authResult.accessToken;
     } catch (error: unknown) {
-      const errName =
-        error instanceof Error ? error.constructor.name : "UnknownError";
+      const errName = error instanceof Error ? error.constructor.name : "UnknownError";
 
       if (
         errName === "NotAuthorizedException" ||
-        (error instanceof Error &&
-          error.message.includes("Incorrect username or password"))
+        (error instanceof Error && error.message.includes("Incorrect username or password"))
       ) {
         throw AppException.badRequest("Mật khẩu không đúng");
       }
 
       throw AppException.internal(
-        `Xác thực thất bại: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Xác thực thất bại: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
 
@@ -69,7 +63,7 @@ export class SetupMfaUseCase extends NextApiUseCase<
       };
     } catch (error: unknown) {
       throw AppException.internal(
-        `Khởi tạo MFA thất bại: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Khởi tạo MFA thất bại: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }

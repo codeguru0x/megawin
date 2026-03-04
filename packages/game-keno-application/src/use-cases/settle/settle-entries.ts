@@ -4,7 +4,7 @@
  * Xử lý 1 batch entries: match boards + side bets → payout → settle.
  *
  * CRASH-SAFE:
- *   - Luôn query page 1 filter status = "scheduled"
+ *   - Luôn query status = "scheduled" với limit cố định (DEFAULT_BATCH_SIZE)
  *   - settleEntry() atomic: chỉ update nếu status = "scheduled"
  *   - done = true khi không còn entries "scheduled"
  *
@@ -20,42 +20,18 @@ import {
   type KenoEvenOddBet,
   KenoPlayType,
   PayoutStatus,
-  type BigSmallPrizes,
-  type EvenOddPrizes,
 } from "@megawin/game-keno/entities";
-import {
-  matchBasicBoard,
-  matchBigSmallBet,
-  matchEvenOddBet,
-  type DrawResultForMatch,
-} from "@megawin/game-keno/helpers";
-import { getPickCountFromPlayType, calculateCappedPrize } from "@megawin/game-keno/rules";
+import { matchBasicBoard, matchBigSmallBet, matchEvenOddBet } from "@megawin/game-keno/helpers";
 import { EntryOutcome } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
+import type { KenoDrawResult, KenoSettleConfig } from "./types";
+
+const DEFAULT_BATCH_SIZE = 500;
 
 export interface SettleEntriesBatchInput {
   drawId: string;
-  result: {
-    winningNumbers: number[];
-    bigCount: number;
-    smallCount: number;
-    evenCount: number;
-    oddCount: number;
-  };
-  config: {
-    basicPrizes: Record<string, Record<number, number>>;
-    bigSmallPrizes: BigSmallPrizes;
-    evenOddPrizes: EvenOddPrizes;
-    payoutCaps: {
-      pick8MaxPerDraw: number;
-      pick8MaxSetsForFixed: number;
-      pick9MaxPerDraw: number;
-      pick9MaxSetsForFixed: number;
-      pick10MaxPerDraw: number;
-      pick10MaxSetsForFixed: number;
-    };
-  };
-  batchSize: number;
+  result: KenoDrawResult;
+  config: Pick<KenoSettleConfig, "basicPrizes" | "bigSmallPrizes" | "evenOddPrizes" | "payoutCaps">;
 }
 
 export interface SettleAccumulator {
@@ -77,16 +53,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(input: SettleEntriesBatchInput): Promise<SettleEntriesBatchResult> {
-    const { drawId, result, config, batchSize } = input;
-    const drawResult: DrawResultForMatch = {
-      winningNumbers: result.winningNumbers,
-      bigCount: result.bigCount,
-      smallCount: result.smallCount,
-      evenCount: result.evenCount,
-      oddCount: result.oddCount,
-    };
+    const { drawId, result, config } = input;
 
-    const entries = await this.entryRepo.getScheduledEntriesBatch(drawId, 1, batchSize);
+    const entries = await this.entryRepo.getScheduledEntries(drawId, DEFAULT_BATCH_SIZE);
 
     if (entries.length === 0) {
       return {
@@ -98,6 +67,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 
     const acc = emptyAccumulator();
     let batchSettled = 0;
+    const now = new Date();
 
     for (const entry of entries) {
       const boardPayouts: Array<{
@@ -109,14 +79,13 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       }> = [];
 
       const boards = entry.entrySummary?.boards ?? [];
-      for (const board of boards) {
-        if (board.isVoid) continue;
 
+      for (const board of boards) {
+        const playTypePrizes = config.basicPrizes[board.playType];
         const pickCount = board.numbers.length;
-        const playTypePrizes = config.basicPrizes[`pick${pickCount}`];
         const prizeTable = playTypePrizes ? { [pickCount]: playTypePrizes } : undefined;
 
-        const matchResult = matchBasicBoard(board.numbers, drawResult, prizeTable);
+        const matchResult = matchBasicBoard(board.numbers, result, prizeTable);
         boardPayouts.push({
           boardNo: board.boardNo,
           playType: board.playType,
@@ -135,13 +104,12 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       }> = [];
 
       const sideBets = entry.entrySummary?.sideBets ?? [];
-      for (const sb of sideBets) {
-        if (sb.isVoid) continue;
 
+      for (const sb of sideBets) {
         if (sb.playType === KenoPlayType.BigSmall) {
           const matchResult = matchBigSmallBet(
             sb.bet as KenoBigSmallBet,
-            drawResult,
+            result,
             config.bigSmallPrizes,
           );
           sideBetPayouts.push({
@@ -154,7 +122,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         } else if (sb.playType === KenoPlayType.EvenOdd) {
           const matchResult = matchEvenOddBet(
             sb.bet as KenoEvenOddBet,
-            drawResult,
+            result,
             config.evenOddPrizes,
           );
           sideBetPayouts.push({
@@ -180,13 +148,13 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           payoutAmount: winAmount,
           boardPayouts,
           sideBetPayouts,
-          settledAt: new Date(),
+          settledAt: now,
           payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
         },
         hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
         {
           winningNumbers: result.winningNumbers,
-          publishedAt: new Date(),
+          publishedAt: now,
           bigCount: result.bigCount,
           smallCount: result.smallCount,
           evenCount: result.evenCount,
@@ -203,7 +171,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     }
 
     return {
-      done: entries.length < batchSize,
+      done: entries.length < DEFAULT_BATCH_SIZE,
       accumulator: acc,
       batchSettled,
     };

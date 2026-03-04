@@ -7,11 +7,7 @@ import { BaseRepo } from "./base-repo";
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
   [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Void]),
   [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed]),
-  [DrawStatus.SalesClosed]: new Set([
-    DrawStatus.SalesOpen,
-    DrawStatus.Published,
-    DrawStatus.Void,
-  ]),
+  [DrawStatus.SalesClosed]: new Set([DrawStatus.SalesOpen, DrawStatus.Published, DrawStatus.Void]),
   [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Void]),
   [DrawStatus.Settling]: new Set([DrawStatus.Settled]),
 };
@@ -74,10 +70,7 @@ export abstract class AbstractDrawRepository<
 
   async getDrawsByIds(drawIds: string[]): Promise<TEntity[]> {
     if (drawIds.length === 0) return [];
-    return await this.findMany(
-      { drawId: { $in: drawIds } },
-      { sort: { drawDate: 1, drawNo: 1 } }
-    );
+    return await this.findMany({ drawId: { $in: drawIds } }, { sort: { drawDate: 1, drawNo: 1 } });
   }
 
   async getDrawsByDate(drawDate: string): Promise<TEntity[]> {
@@ -87,7 +80,7 @@ export abstract class AbstractDrawRepository<
   async listDraws(
     filter: { status?: string; fromDate?: string; toDate?: string },
     page: number,
-    size: number
+    size: number,
   ): Promise<TEntity[]> {
     const query: Record<string, unknown> = {};
     if (filter.status) query.status = filter.status;
@@ -105,7 +98,7 @@ export abstract class AbstractDrawRepository<
   async transitionStatus(
     drawId: string,
     fromStatus: string,
-    toStatus: string
+    toStatus: string,
   ): Promise<TEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(toStatus)) return null;
@@ -113,15 +106,11 @@ export abstract class AbstractDrawRepository<
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
       { $set: { status: toStatus, updatedAt: new Date() } },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
-  async openSales(
-    drawId: string,
-    fromStatus: string,
-    salesOpenAt?: Date
-  ): Promise<TEntity | null> {
+  async openSales(drawId: string, fromStatus: string, salesOpenAt?: Date): Promise<TEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.SalesOpen)) return null;
 
@@ -136,7 +125,7 @@ export abstract class AbstractDrawRepository<
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
       { $set },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -144,10 +133,7 @@ export abstract class AbstractDrawRepository<
    * Close sales: salesOpen → salesClosed.
    * Stamp sales.closeAt thời điểm đóng bán thực tế.
    */
-  async closeSales(
-    drawId: string,
-    salesCloseAt?: Date
-  ): Promise<TEntity | null> {
+  async closeSales(drawId: string, salesCloseAt?: Date): Promise<TEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.SalesOpen];
     if (!allowed?.has(DrawStatus.SalesClosed)) return null;
 
@@ -162,15 +148,11 @@ export abstract class AbstractDrawRepository<
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.SalesOpen },
       { $set },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
-  async voidDraw(
-    drawId: string,
-    fromStatus: string,
-    voidInfo: VoidInfo
-  ): Promise<TEntity | null> {
+  async voidDraw(drawId: string, fromStatus: string, voidInfo: VoidInfo): Promise<TEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.Void)) return null;
 
@@ -183,14 +165,14 @@ export abstract class AbstractDrawRepository<
           updatedAt: new Date(),
         },
       },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
   async publishResult(
     drawId: string,
     result: TDrawResult,
-    vietlottRef?: DrawDocBase["vietlottRef"]
+    vietlottRef?: DrawDocBase["vietlottRef"],
   ): Promise<TEntity | null> {
     const now = new Date();
     const $set: Record<string, unknown> = {
@@ -206,7 +188,7 @@ export abstract class AbstractDrawRepository<
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.SalesClosed },
       { $set },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -222,28 +204,16 @@ export abstract class AbstractDrawRepository<
           updatedAt: new Date(),
         },
       },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
-  async updateFinancial(
+  async updateSettleResult(
     drawId: string,
-    financial: NonNullable<DrawDocBase["financial"]>
+    financial: NonNullable<DrawDocBase["financial"]>,
+    stats: NonNullable<DrawDocBase["stats"]>,
   ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      { $set: { financial, updatedAt: new Date() } }
-    );
-  }
-
-  async updateStats(
-    drawId: string,
-    stats: NonNullable<DrawDocBase["stats"]>
-  ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      { $set: { stats, updatedAt: new Date() } }
-    );
+    return await this.updateOne({ drawId }, { $set: { financial, stats, updatedAt: new Date() } });
   }
 
   async getLatestDraw(): Promise<TEntity | null> {
@@ -253,7 +223,7 @@ export abstract class AbstractDrawRepository<
   async getLatestSettledDraw(): Promise<TEntity | null> {
     return await this.findOne(
       { status: DrawStatus.Settled },
-      { sort: { drawDate: -1, drawNo: -1 } }
+      { sort: { drawDate: -1, drawNo: -1 } },
     );
   }
 
@@ -263,38 +233,35 @@ export abstract class AbstractDrawRepository<
         status: DrawStatus.Settled,
         drawDate: { $lte: drawDate },
       },
-      { sort: { drawDate: -1, drawNo: -1 } }
+      { sort: { drawDate: -1, drawNo: -1 } },
     );
   }
 
   async getCurrentDraw(allowStatuses?: string[]): Promise<TEntity | null> {
     const statuses = allowStatuses ?? [DrawStatus.SalesOpen];
-    return await this.findOne(
-      { status: { $in: statuses } },
-      { sort: { drawDate: 1, drawNo: 1 } }
-    );
+    return await this.findOne({ status: { $in: statuses } }, { sort: { drawDate: 1, drawNo: 1 } });
   }
 
   async getActiveDraws(allowStatuses: string[]): Promise<TEntity[]> {
     return await this.findMany(
       { status: { $in: allowStatuses } },
-      { sort: { drawDate: 1, drawNo: 1 } }
+      { sort: { drawDate: 1, drawNo: 1 } },
     );
   }
 
   async updateVoidSummary(
     drawId: string,
-    summary: NonNullable<DrawDocBase["voidSummary"]>
+    summary: NonNullable<DrawDocBase["voidSummary"]>,
   ): Promise<boolean> {
     return await this.updateOne(
       { drawId },
-      { $set: { voidSummary: summary, updatedAt: new Date() } }
+      { $set: { voidSummary: summary, updatedAt: new Date() } },
     );
   }
 
   async updateSchedule(
     drawId: string,
-    sales: { openAt: Date; closeAt: Date; drawTime?: Date }
+    sales: { openAt: Date; closeAt: Date; drawTime?: Date },
   ): Promise<boolean> {
     const $set: Record<string, unknown> = {
       "sales.openAt": sales.openAt,
@@ -310,7 +277,7 @@ export abstract class AbstractDrawRepository<
   async updateResult(
     drawId: string,
     result: TDrawResult & { publishedAt: Date },
-    vietlottRef?: DrawDocBase["vietlottRef"]
+    vietlottRef?: DrawDocBase["vietlottRef"],
   ): Promise<boolean> {
     const $set: Record<string, unknown> = {
       result,
@@ -318,10 +285,7 @@ export abstract class AbstractDrawRepository<
     };
     if (vietlottRef) $set.vietlottRef = vietlottRef;
 
-    return await this.updateOne(
-      { drawId, status: DrawStatus.Published },
-      { $set }
-    );
+    return await this.updateOne({ drawId, status: DrawStatus.Published }, { $set });
   }
 
   async countByStatus(status: string): Promise<number> {
@@ -330,12 +294,9 @@ export abstract class AbstractDrawRepository<
 
   async updateVoidInfo(
     drawId: string,
-    voidInfo: NonNullable<DrawDocBase["voidInfo"]>
+    voidInfo: NonNullable<DrawDocBase["voidInfo"]>,
   ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      { $set: { voidInfo, updatedAt: new Date() } }
-    );
+    return await this.updateOne({ drawId }, { $set: { voidInfo, updatedAt: new Date() } });
   }
 }
 

@@ -15,6 +15,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { publishGameReport } from "@megawin/game-core-application/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { ReportRepository } from "../../infras/repos/report-repo";
+import type { PowerSettleFinancials } from "./types";
 
 export interface BuildReportInput {
   /** ID kỳ quay cần tạo báo cáo. */
@@ -22,46 +23,11 @@ export interface BuildReportInput {
   /** Ngày tài chính (YYYY-MM-DD), dùng làm key cho báo cáo hàng ngày. */
   financialDate: string;
   /** Dữ liệu tài chính tổng hợp (từ CalculateFinancials). Optional cho báo cáo cơ bản. */
-  financials?: {
-    /** Tổng doanh thu kỳ quay (VND). */
-    totalRevenue: number;
-    /** Tổng giải thưởng cố định đã trả (VND). */
-    totalFixedPrizes: number;
-    /** Tổng hoa hồng đại lý (VND). */
-    totalAgentCommission: number;
-    /** Phần lợi nhuận công ty trước điều chỉnh (VND). */
-    companyTake: number;
-    /** Phần lợi nhuận công ty thực tế (VND). */
-    actualCompanyTake: number;
-    /** Đóng góp vào quỹ Jackpot 1 (VND). */
-    jackpot1Contribution: number;
-    /** Đóng góp vào quỹ Jackpot 2 (VND). */
-    jackpot2Contribution: number;
-    /** Số dư Jackpot 1 cuối kỳ (VND). */
-    closingJp1: number;
-    /** Số dư Jackpot 2 cuối kỳ (VND). */
-    closingJp2: number;
+  financials?: PowerSettleFinancials & {
     /** Số dư Jackpot 1 đầu kỳ (VND). */
     jp1OpeningAmount: number;
     /** Số dư Jackpot 2 đầu kỳ (VND). */
     jp2OpeningAmount: number;
-    /** Có người trúng Jackpot 1 (6/6) hay không. */
-    hasJackpot1Winner: boolean;
-    /** Có người trúng Jackpot 2 (5/6 + bonus) hay không. */
-    hasJackpot2Winner: boolean;
-    /** Chi tiết doanh thu theo từng tenant. */
-    tenantBreakdown: Array<{
-      /** ID tenant. */
-      tenantId: string;
-      /** Doanh thu từ tenant (VND). */
-      revenue: number;
-      /** Hoa hồng cho tenant (VND). */
-      commission: number;
-      /** Tỷ lệ hoa hồng (0-1). */
-      commissionRate: number;
-      /** Số entries từ tenant. */
-      entryCount: number;
-    }>;
   };
 }
 

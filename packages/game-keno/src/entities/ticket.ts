@@ -13,12 +13,7 @@
  * - Chơi nhiều kỳ liên tiếp (multi-draw, lazy enrollment)
  */
 
-import type {
-  KenoBigSmallBet,
-  KenoEvenOddBet,
-  KenoPlayType,
-  KenoSideBetPlayType,
-} from "./enums";
+import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType, KenoSideBetPlayType } from "./enums";
 import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
 
 // ─────────────────────────────────────────────
@@ -31,7 +26,6 @@ import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
  */
 export interface BasicBoard {
   boardNo: string;
-  isVoid?: boolean;
   playType: KenoPlayType;
   /** Danh sách số đã chọn ("01"-"80"), unique, sorted tăng dần. */
   numbers: string[];
@@ -42,7 +36,6 @@ export interface BasicBoard {
 // ─────────────────────────────────────────────
 
 export interface SideBet {
-  isVoid?: boolean;
   playType: KenoSideBetPlayType;
   bet: KenoBigSmallBet | KenoEvenOddBet;
 }

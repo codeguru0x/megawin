@@ -53,8 +53,6 @@ export interface DrawFinancialInput {
     revenue: number;
     /** Hoa hồng đã tính sẵn = Σ(entry.tenant.commissionAmount) (VND). */
     commission: number;
-    /** Tỷ lệ hoa hồng áp dụng (snapshot từ entry.tenant.commissionRate). */
-    commissionRate: number;
   }>;
 
   /** Tỷ lệ công ty thu về (từ gameConfig.rates.companyRate). */
@@ -96,10 +94,8 @@ export interface DrawFinancialResult {
     tenantId: string;
     /** Doanh thu từ tenant này trong kỳ (VND). */
     revenue: number;
-    /** Hoa hồng đại lý = Math.round(revenue × commissionRate) (VND). */
+    /** Hoa hồng đại lý (VND). */
     commission: number;
-    /** Tỷ lệ hoa hồng áp dụng cho tenant này. */
-    commissionRate: number;
   }>;
 }
 
@@ -116,37 +112,24 @@ export interface DrawFinancialResult {
  * - Công ty thu = 0 (không có dư để thu)
  * - Tích luỹ Jackpot = 0 (không để giá trị âm)
  */
-export function calculateDrawFinancials(
-  input: DrawFinancialInput
-): DrawFinancialResult {
+export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const { totalRevenue, totalFixedPrizes, tenantRevenues, companyRate } = input;
 
   const tenantBreakdown = tenantRevenues.map((t) => ({
     tenantId: t.tenantId,
     revenue: t.revenue,
     commission: t.commission,
-    commissionRate: t.commissionRate,
   }));
 
-  const totalAgentCommission = tenantBreakdown.reduce(
-    (sum, t) => sum + t.commission,
-    0
-  );
+  const totalAgentCommission = tenantBreakdown.reduce((sum, t) => sum + t.commission, 0);
 
   const companyTake = Math.round(totalRevenue * companyRate);
 
-  const remainAfterPrizes =
-    totalRevenue - totalFixedPrizes - totalAgentCommission;
+  const remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission;
 
-  const actualCompanyTake = Math.min(
-    companyTake,
-    Math.max(remainAfterPrizes, 0)
-  );
+  const actualCompanyTake = Math.min(companyTake, Math.max(remainAfterPrizes, 0));
 
-  const jackpotContribution = Math.max(
-    remainAfterPrizes - actualCompanyTake,
-    0
-  );
+  const jackpotContribution = Math.max(remainAfterPrizes - actualCompanyTake, 0);
 
   return {
     totalRevenue,
@@ -174,7 +157,7 @@ export function calculateNextJackpot(
   currentOpening: number,
   contribution: number,
   hasJackpotWinner: boolean,
-  seedAmount: number
+  seedAmount: number,
 ): number {
   if (hasJackpotWinner) {
     return seedAmount + contribution;
@@ -205,13 +188,9 @@ export function isSplitCycleDraw(
   jackpotAmount: number,
   splitThreshold: number,
   hasJackpotWinner: boolean,
-  drawNo: number
+  drawNo: number,
 ): boolean {
-  return (
-    jackpotAmount >= splitThreshold &&
-    !hasJackpotWinner &&
-    drawNo === DrawNo.Evening
-  );
+  return jackpotAmount >= splitThreshold && !hasJackpotWinner && drawNo === DrawNo.Evening;
 }
 
 /** Input cho tính chia giải. */
@@ -328,9 +307,7 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
     .filter((t) => !t.hasWinners)
     .reduce((s, t) => s + t.initialAmount, 0);
 
-  const redistributedPerTier = Math.floor(
-    unclaimedTotal / tiersWithWinners.length
-  );
+  const redistributedPerTier = Math.floor(unclaimedTotal / tiersWithWinners.length);
 
   // Bước 3: xác định hạng giải cao nhất có người trúng
   const priorityOrder: PrizeTier[] = [
@@ -342,7 +319,7 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
   ];
 
   const highestTierWithWinners = priorityOrder.find((tier) =>
-    tiersWithWinners.some((t) => t.tier === tier)
+    tiersWithWinners.some((t) => t.tier === tier),
   )!;
 
   // Bước 4: tính bonus per winner
@@ -367,10 +344,7 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
       });
       bonusPerWinnerMap.set(t.tier, bonus);
     } else {
-      const roundedBonus = roundDownToUnit(
-        totalForTier / t.winnerCount,
-        SPLIT_ROUNDING_UNIT
-      );
+      const roundedBonus = roundDownToUnit(totalForTier / t.winnerCount, SPLIT_ROUNDING_UNIT);
       const tierRemainder = totalForTier - roundedBonus * t.winnerCount;
       totalRemainder += tierRemainder;
 

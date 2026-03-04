@@ -1,12 +1,12 @@
 /**
  * Lambda: settle-entries (Lotto 5/35)
  *
- * Step 3 (loop) của Lotto535 Settle Step Function.
+ * Step 2 (loop) của Lotto535 Settle Step Function.
  * Xử lý 1 batch entries: expand boards → match lines → payout → settle.
  *
  * CRASH-SAFE: entries đã settled tự filter ra bởi status.
  *
- * @input  { drawId, result, prizeAmounts, isSplitCycle, batchSize }
+ * @input  { drawId, result, prizeAmounts, isSplitCycle }
  * @output SettleEntriesBatchResult
  */
 

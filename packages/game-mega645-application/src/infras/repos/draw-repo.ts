@@ -15,12 +15,7 @@
 
 import { Mega645Collections } from "@megawin/game-mega645/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type {
-  DrawDoc,
-  DrawSplit,
-  MainTuple,
-  ISODateString,
-} from "@megawin/game-mega645/entities";
+import type { DrawDoc, DrawSplit, MainTuple, ISODateString } from "@megawin/game-mega645/entities";
 import { BaseRepo } from "./base-repo";
 import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
 
@@ -34,11 +29,7 @@ import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
   [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Void]),
   [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed]),
-  [DrawStatus.SalesClosed]: new Set([
-    DrawStatus.SalesOpen,
-    DrawStatus.Published,
-    DrawStatus.Void,
-  ]),
+  [DrawStatus.SalesClosed]: new Set([DrawStatus.SalesOpen, DrawStatus.Published, DrawStatus.Void]),
   [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Void]),
   [DrawStatus.Settling]: new Set([DrawStatus.Settled]),
 };
@@ -68,10 +59,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   /** Lấy nhiều draws cùng lúc theo danh sách drawIds (1 query). */
   async getDrawsByIds(drawIds: string[]): Promise<DrawEntity[]> {
     if (drawIds.length === 0) return [];
-    return await this.findMany(
-      { drawId: { $in: drawIds } },
-      { sort: { drawDate: 1, drawNo: 1 } }
-    );
+    return await this.findMany({ drawId: { $in: drawIds } }, { sort: { drawDate: 1, drawNo: 1 } });
   }
 
   async getDrawsByDate(drawDate: ISODateString): Promise<DrawEntity[]> {
@@ -81,7 +69,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async listDraws(
     filter: { status?: string; fromDate?: string; toDate?: string },
     page: number,
-    size: number
+    size: number,
   ): Promise<DrawEntity[]> {
     const query: Record<string, unknown> = {};
     if (filter.status) query.status = filter.status;
@@ -104,7 +92,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async transitionStatus(
     drawId: string,
     fromStatus: string,
-    toStatus: string
+    toStatus: string,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(toStatus)) return null;
@@ -112,7 +100,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
       { $set: { status: toStatus, updatedAt: new Date() } },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -123,7 +111,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async openSales(
     drawId: string,
     fromStatus: string,
-    salesOpenAt?: Date
+    salesOpenAt?: Date,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.SalesOpen)) return null;
@@ -139,7 +127,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
       { $set },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -147,10 +135,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Close sales: salesOpen → salesClosed.
    * Stamp sales.closeAt thời điểm đóng bán thực tế.
    */
-  async closeSales(
-    drawId: string,
-    salesCloseAt?: Date
-  ): Promise<DrawEntity | null> {
+  async closeSales(drawId: string, salesCloseAt?: Date): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.SalesOpen];
     if (!allowed?.has(DrawStatus.SalesClosed)) return null;
 
@@ -165,7 +150,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.SalesOpen },
       { $set },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -175,7 +160,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async voidDraw(
     drawId: string,
     fromStatus: string,
-    voidInfo: VoidInfo
+    voidInfo: VoidInfo,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.Void)) return null;
@@ -189,7 +174,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
           updatedAt: new Date(),
         },
       },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -202,7 +187,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     result: {
       winningMain: MainTuple;
     },
-    vietlottRef?: DrawDoc["vietlottRef"]
+    vietlottRef?: DrawDoc["vietlottRef"],
   ): Promise<DrawEntity | null> {
     const now = new Date();
     const $set: Record<string, unknown> = {
@@ -218,7 +203,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.SalesClosed },
       { $set },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -230,7 +215,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     splitInfo?: {
       isSplitCycle: boolean;
       split: DrawSplit;
-    }
+    },
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Published];
     if (!allowed?.has(DrawStatus.Settling)) return null;
@@ -247,7 +232,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Published },
       { $set },
-      { returnDocument: "after" }
+      { returnDocument: "after" },
     );
   }
 
@@ -258,7 +243,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       closingAmount: number;
       isSplitCycle?: boolean;
       split?: DrawSplit;
-    }
+    },
   ): Promise<boolean> {
     const $set: Record<string, unknown> = {
       "jackpot.openingAmount": jackpot.openingAmount,
@@ -274,24 +259,12 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.updateOne({ drawId }, { $set });
   }
 
-  async updateFinancial(
+  async updateSettleResult(
     drawId: string,
-    financial: NonNullable<DrawDoc["financial"]>
+    financial: NonNullable<DrawDoc["financial"]>,
+    stats: NonNullable<DrawDoc["stats"]>,
   ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      { $set: { financial, updatedAt: new Date() } }
-    );
-  }
-
-  async updateStats(
-    drawId: string,
-    stats: NonNullable<DrawDoc["stats"]>
-  ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      { $set: { stats, updatedAt: new Date() } }
-    );
+    return await this.updateOne({ drawId }, { $set: { financial, stats, updatedAt: new Date() } });
   }
 
   async getLatestDraw(): Promise<DrawEntity | null> {
@@ -301,19 +274,17 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async getLatestSettledDraw(): Promise<DrawEntity | null> {
     return await this.findOne(
       { status: DrawStatus.Settled },
-      { sort: { drawDate: -1, drawNo: -1 } }
+      { sort: { drawDate: -1, drawNo: -1 } },
     );
   }
 
-  async getLatestSettledDrawBefore(
-    drawDate: string
-  ): Promise<DrawEntity | null> {
+  async getLatestSettledDrawBefore(drawDate: string): Promise<DrawEntity | null> {
     return await this.findOne(
       {
         status: DrawStatus.Settled,
         drawDate: { $lte: drawDate },
       },
-      { sort: { drawDate: -1, drawNo: -1 } }
+      { sort: { drawDate: -1, drawNo: -1 } },
     );
   }
 
@@ -321,21 +292,14 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOne(
       {
         status: {
-          $in: [
-            DrawStatus.Scheduled,
-            DrawStatus.SalesOpen,
-            DrawStatus.SalesClosed,
-          ],
+          $in: [DrawStatus.Scheduled, DrawStatus.SalesOpen, DrawStatus.SalesClosed],
         },
       },
-      { sort: { drawTime: 1 } }
+      { sort: { drawTime: 1 } },
     );
   }
 
-  async getSettledDrawsWithJackpot(
-    page: number,
-    size: number
-  ): Promise<DrawEntity[]> {
+  async getSettledDrawsWithJackpot(page: number, size: number): Promise<DrawEntity[]> {
     return await this.findMany(
       {
         status: DrawStatus.Settled,
@@ -345,7 +309,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
         sort: { drawTime: -1 },
         skip: (page - 1) * size,
         limit: size,
-      }
+      },
     );
   }
 
@@ -354,7 +318,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
     const draw = await this.findOne(
       { status: { $in: statuses } },
-      { sort: { drawDate: 1, drawNo: 1 } }
+      { sort: { drawDate: 1, drawNo: 1 } },
     );
     return draw;
   }
@@ -362,23 +326,23 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async getActiveDraws(allowStatuses: string[]): Promise<DrawEntity[]> {
     return await this.findMany(
       { status: { $in: allowStatuses } },
-      { sort: { drawDate: 1, drawNo: 1 } }
+      { sort: { drawDate: 1, drawNo: 1 } },
     );
   }
 
   async updateVoidSummary(
     drawId: string,
-    summary: NonNullable<DrawDoc["voidSummary"]>
+    summary: NonNullable<DrawDoc["voidSummary"]>,
   ): Promise<boolean> {
     return await this.updateOne(
       { drawId },
-      { $set: { voidSummary: summary, updatedAt: new Date() } }
+      { $set: { voidSummary: summary, updatedAt: new Date() } },
     );
   }
 
   async updateSchedule(
     drawId: string,
-    sales: { openAt: Date; closeAt: Date; drawTime?: Date }
+    sales: { openAt: Date; closeAt: Date; drawTime?: Date },
   ): Promise<boolean> {
     const $set: Record<string, unknown> = {
       "sales.openAt": sales.openAt,
@@ -401,7 +365,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       winningMain: MainTuple;
       publishedAt: Date;
     },
-    vietlottRef?: DrawDoc["vietlottRef"]
+    vietlottRef?: DrawDoc["vietlottRef"],
   ): Promise<boolean> {
     const $set: Record<string, unknown> = {
       result,
@@ -409,10 +373,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     };
     if (vietlottRef) $set.vietlottRef = vietlottRef;
 
-    return await this.updateOne(
-      { drawId, status: DrawStatus.Published },
-      { $set }
-    );
+    return await this.updateOne({ drawId, status: DrawStatus.Published }, { $set });
   }
 }
 

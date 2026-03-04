@@ -2,6 +2,13 @@
  * Power 6/55 – Settle Use Cases barrel export.
  */
 
+export type {
+  PowerDrawResult,
+  PowerSettleConfig,
+  PowerSettleFinancials,
+  PowerSplitDetails,
+} from "./types";
+
 export { PrepareSettleUseCase } from "./prepare-settle";
 export type { PrepareSettleInput, PrepareSettleResult } from "./prepare-settle";
 

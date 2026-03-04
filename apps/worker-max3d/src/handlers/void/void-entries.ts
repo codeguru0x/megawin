@@ -6,7 +6,7 @@
  *
  * CRASH-SAFE: entries đã void tự filter ra.
  *
- * @input  { drawId, reason, voidedBy?, batchSize? }
+ * @input  { drawId, reason, voidedBy? }
  * @output VoidEntriesBatchResult
  */
 

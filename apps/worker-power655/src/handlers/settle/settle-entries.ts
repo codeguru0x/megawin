@@ -6,7 +6,7 @@
  *
  * CRASH-SAFE: entries đã settled tự filter ra bởi status.
  *
- * @input  { drawId, result, prizeAmounts, isSplitCycle, batchSize }
+ * @input  { drawId, result, prizeAmounts, isSplitCycle }
  * @output SettleEntriesBatchResult
  */
 

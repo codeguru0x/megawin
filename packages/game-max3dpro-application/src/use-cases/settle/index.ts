@@ -32,3 +32,10 @@ export type {
   FinalizeSettleInput,
   FinalizeSettleResult,
 } from "./finalize-settle";
+
+export type {
+  Max3dProDrawResult,
+  Max3dProSettleConfig,
+  Max3dProPrizeConfig,
+  Max3dProSettleFinancials,
+} from "./types";

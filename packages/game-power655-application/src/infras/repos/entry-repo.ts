@@ -15,16 +15,9 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import {
-  Power655Collections,
-  PayoutStatus,
-} from "@megawin/game-power655/entities";
+import { Power655Collections, PayoutStatus } from "@megawin/game-power655/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
-import type {
-  PrizeTier,
-  MainTuple,
-  BonusNumber,
-} from "@megawin/game-power655/entities";
+import type { PrizeTier, MainTuple, BonusNumber } from "@megawin/game-power655/entities";
 import { ObjectId, Long } from "mongodb";
 import { BaseRepo } from "./base-repo";
 import { EntryMapper } from "../mappers/entry-mapper";
@@ -72,7 +65,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   async getEntriesByDrawId(
     drawId: string,
     page: number,
-    size: number
+    size: number,
   ): Promise<TicketEntryEntity[]> {
     return await this.paging({ drawId }, page, size, {
       sort: { createdAt: 1 },
@@ -83,13 +76,18 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   async getScheduledEntriesBatch(
     drawId: string,
     page: number,
-    size: number
+    size: number,
   ): Promise<TicketEntryEntity[]> {
-    return await this.paging(
+    return await this.paging({ drawId, status: EntryStatus.Scheduled }, page, size, {
+      sort: { _id: 1 },
+    });
+  }
+
+  /** Lấy scheduled entries theo drawId với limit cố định (không cần page). */
+  async getScheduledEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
+    return await this.findMany(
       { drawId, status: EntryStatus.Scheduled },
-      page,
-      size,
-      { sort: { _id: 1 } }
+      { sort: { _id: 1 }, limit },
     );
   }
 
@@ -121,7 +119,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     drawId: string,
     fromStatus: string,
     toStatus: string,
-    extraSet?: Record<string, unknown>
+    extraSet?: Record<string, unknown>,
   ): Promise<number> {
     const version = await this.nextVersion();
     const $set: Record<string, unknown> = {
@@ -130,10 +128,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       updatedAt: new Date(),
       ...extraSet,
     };
-    const result = await this.updateMany(
-      { drawId, status: fromStatus },
-      { $set }
-    );
+    const result = await this.updateMany({ drawId, status: fromStatus }, { $set });
     return result.modifiedCount;
   }
 
@@ -163,7 +158,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       winningMain: MainTuple;
       bonusNumber: BonusNumber;
       publishedAt: Date;
-    }
+    },
   ): Promise<boolean> {
     const version = await this.nextVersion();
     const col = await this.getCollection();
@@ -187,7 +182,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
     const updateResult = await col.updateOne(
       { _id: new ObjectId(entryId), status: EntryStatus.Scheduled },
-      { $set }
+      { $set },
     );
 
     return updateResult.modifiedCount > 0;
@@ -200,7 +195,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       tenantId: string;
       revenue: number;
       commission: number;
-      commissionRate: number;
       entryCount: number;
     }>
   > {
@@ -213,7 +207,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             _id: "$tenantId",
             revenue: { $sum: "$stakeAmount" },
             commission: { $sum: { $ifNull: ["$commission.amount", 0] } },
-            commissionRate: { $first: { $ifNull: ["$commission.rate", 0] } },
             entryCount: { $sum: 1 },
           },
         },
@@ -223,7 +216,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             tenantId: "$_id",
             revenue: 1,
             commission: 1,
-            commissionRate: 1,
             entryCount: 1,
           },
         },
@@ -252,8 +244,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       const tiers = (e as any).payout?.tiers ?? [];
       for (const t of tiers) {
         if (t.matchCount > 0) {
-          tierWinnerCounts[t.tier] =
-            (tierWinnerCounts[t.tier] ?? 0) + t.matchCount;
+          tierWinnerCounts[t.tier] = (tierWinnerCounts[t.tier] ?? 0) + t.matchCount;
           if (t.tier !== "jackpot1" && t.tier !== "jackpot2") {
             totalFixedPrizes += t.totalPrize ?? 0;
           }
@@ -270,10 +261,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   }
 
   /** Find entries that won JP1 or JP2 in a draw. */
-  async findJackpotWinners(
-    drawId: string,
-    jackpotTier?: string
-  ): Promise<TicketEntryEntity[]> {
+  async findJackpotWinners(drawId: string, jackpotTier?: string): Promise<TicketEntryEntity[]> {
     const tierFilter = jackpotTier ?? { $in: ["jackpot1", "jackpot2"] };
     return await this.findMany({
       drawId,
@@ -297,7 +285,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   async applySplitBonusForTier(
     drawId: string,
     tier: string,
-    bonusPerWinner: number
+    bonusPerWinner: number,
   ): Promise<number> {
     const col = await this.getCollection();
     const result = await col.updateMany(
@@ -318,7 +306,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           "payout.payoutAmount": bonusPerWinner,
         },
       },
-      { arrayFilters: [{ "elem.tier": tier }] }
+      { arrayFilters: [{ "elem.tier": tier }] },
     );
     return result.modifiedCount;
   }
@@ -330,6 +318,83 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return col.distinct("ticketId", { drawId }) as Promise<string[]>;
   }
 
+  /**
+   * Batch aggregate summaries cho nhiều tickets cùng lúc.
+   * Power655: ticketId là ObjectId trong entries, $stakeAmount cho voidedAmount, $refund.refundAmount cho refund.
+   */
+  async aggregateTicketSummariesBatch(ticketIds: ObjectId[]): Promise<
+    Map<
+      string,
+      {
+        settledCount: number;
+        voidedCount: number;
+        totalWinAmount: number;
+        totalVoidedAmount: number;
+        totalRefundedAmount: number;
+        voidedDrawIds: string[];
+      }
+    >
+  > {
+    const col = await this.getCollection();
+    const result = await col
+      .aggregate([
+        { $match: { ticketId: { $in: ticketIds } } },
+        {
+          $group: {
+            _id: "$ticketId",
+            settledCount: {
+              $sum: { $cond: [{ $eq: ["$status", EntryStatus.Settled] }, 1, 0] },
+            },
+            voidedCount: {
+              $sum: { $cond: [{ $eq: ["$status", EntryStatus.Void] }, 1, 0] },
+            },
+            totalWinAmount: {
+              $sum: { $ifNull: ["$payout.winAmount", 0] },
+            },
+            totalVoidedAmount: {
+              $sum: {
+                $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$stakeAmount", 0],
+              },
+            },
+            totalRefundedAmount: {
+              $sum: { $ifNull: ["$refund.refundAmount", 0] },
+            },
+            voidedDrawIds: {
+              $addToSet: {
+                $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$drawId", "$$REMOVE"],
+              },
+            },
+          },
+        },
+      ])
+      .toArray();
+
+    const map = new Map<
+      string,
+      {
+        settledCount: number;
+        voidedCount: number;
+        totalWinAmount: number;
+        totalVoidedAmount: number;
+        totalRefundedAmount: number;
+        voidedDrawIds: string[];
+      }
+    >();
+
+    for (const r of result) {
+      map.set((r._id as ObjectId).toHexString(), {
+        settledCount: r.settledCount as number,
+        voidedCount: r.voidedCount as number,
+        totalWinAmount: r.totalWinAmount as number,
+        totalVoidedAmount: r.totalVoidedAmount as number,
+        totalRefundedAmount: r.totalRefundedAmount as number,
+        voidedDrawIds: (r.voidedDrawIds as string[]).filter(Boolean),
+      });
+    }
+
+    return map;
+  }
+
   async aggregateTicketSummary(ticketId: unknown): Promise<{
     settledCount: number;
     voidedCount: number;
@@ -339,8 +404,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     voidedDrawIds: string[];
   }> {
     const col = await this.getCollection();
-    const oid =
-      ticketId instanceof ObjectId ? ticketId : new ObjectId(String(ticketId));
+    const oid = ticketId instanceof ObjectId ? ticketId : new ObjectId(String(ticketId));
 
     const result = await col
       .aggregate([
@@ -361,11 +425,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             },
             totalVoidedAmount: {
               $sum: {
-                $cond: [
-                  { $eq: ["$status", EntryStatus.Void] },
-                  "$stakeAmount",
-                  0,
-                ],
+                $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$stakeAmount", 0],
               },
             },
             totalRefundedAmount: {
@@ -373,11 +433,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             },
             voidedDrawIds: {
               $addToSet: {
-                $cond: [
-                  { $eq: ["$status", EntryStatus.Void] },
-                  "$drawId",
-                  "$$REMOVE",
-                ],
+                $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$drawId", "$$REMOVE"],
               },
             },
           },
@@ -409,10 +465,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   // ─── Payout Dispatch ───
 
-  async getPendingPayoutEntries(
-    drawId: string,
-    limit: number
-  ): Promise<TicketEntryEntity[]> {
+  async getPendingPayoutEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
     return await this.findMany(
       {
         drawId,
@@ -421,7 +474,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           $in: [PayoutStatus.Pending, PayoutStatus.Failed],
         },
       },
-      { sort: { _id: 1 }, limit }
+      { sort: { _id: 1 }, limit },
     );
   }
 
@@ -446,14 +499,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           "payout.dispatchedAt": new Date(),
           updatedAt: new Date(),
         },
-      }
+      },
     );
   }
 
-  async batchMarkPayoutFailed(
-    entryIds: string[],
-    error: string
-  ): Promise<void> {
+  async batchMarkPayoutFailed(entryIds: string[], error: string): Promise<void> {
     const col = await this.getCollection();
     const oids = entryIds.map((id) => new ObjectId(id));
     await col.updateMany(
@@ -465,7 +515,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           updatedAt: new Date(),
         },
         $inc: { "payout.retryCount": 1 },
-      }
+      },
     );
   }
 
@@ -478,16 +528,13 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     });
   }
 
-  async getVoidableEntriesBatch(
-    drawId: string,
-    limit: number
-  ): Promise<TicketEntryEntity[]> {
+  async getVoidableEntriesBatch(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
     return await this.findMany(
       {
         drawId,
         status: EntryStatus.Scheduled,
       },
-      { sort: { _id: 1 }, limit }
+      { sort: { _id: 1 }, limit },
     );
   }
 
@@ -498,7 +545,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       originalAmount: number;
       refundAmount: number;
       voidedBy?: string;
-    }
+    },
   ): Promise<boolean> {
     const version = await this.nextVersion();
     const col = await this.getCollection();
@@ -520,23 +567,20 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           version,
           updatedAt: now,
         },
-      }
+      },
     );
 
     return result.modifiedCount > 0;
   }
 
-  async getPendingRefundEntries(
-    drawId: string,
-    limit: number
-  ): Promise<TicketEntryEntity[]> {
+  async getPendingRefundEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
     return await this.findMany(
       {
         drawId,
         status: EntryStatus.Void,
         "refund.refundStatus": { $in: ["pending", "failed"] },
       },
-      { sort: { _id: 1 }, limit }
+      { sort: { _id: 1 }, limit },
     );
   }
 
@@ -550,7 +594,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           "refund.dispatchedAt": new Date(),
           updatedAt: new Date(),
         },
-      }
+      },
     );
   }
 
@@ -565,7 +609,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           updatedAt: new Date(),
         },
         $inc: { "refund.retryCount": 1 },
-      }
+      },
     );
   }
 
@@ -604,21 +648,15 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   // ─── Feed Sync ───
 
-  async getChangedEntries(
-    afterVersion: Long,
-    limit: number
-  ): Promise<TicketEntryEntity[]> {
-    return await this.findMany(
-      { version: { $gt: afterVersion } },
-      { sort: { version: 1 }, limit }
-    );
+  async getChangedEntries(afterVersion: Long, limit: number): Promise<TicketEntryEntity[]> {
+    return await this.findMany({ version: { $gt: afterVersion } }, { sort: { version: 1 }, limit });
   }
 
   // ─── Reports ───
 
   async aggregateTenantReport(
     drawId: string,
-    financialDate: string
+    financialDate: string,
   ): Promise<
     Array<{
       tenantId: string;
@@ -665,7 +703,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   async aggregatePlayerReport(
     drawId: string,
-    financialDate: string
+    financialDate: string,
   ): Promise<
     Array<{
       tenantId: string;

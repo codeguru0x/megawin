@@ -5,45 +5,44 @@
  * FLOW (CRASH-SAFE):
  * ═══════════════════════════════════════════════════════════════════════
  *
- *  Input: { drawId: "2026-02-24-001" }
+ *  Input: { drawId }
  *         │
  *         ▼
  *  ┌─────────────────────────┐
- *  │  1. PrepareSettle       │  Load context
- *  └────────┬────────────────┘
- *           ▼
- *  ┌─────────────────────────┐
- *  │  2. InitSettleLoop      │  Set batchSize = 500
+ *  │  1. PrepareSettle       │  Load context (draw, config, counts)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  3. SettleEntries (loop, always page 1)  │
+ *  │  2. SettleEntries (loop, batch=500)      │
  *  │     Match triplets against draw result   │
  *  │     → persist lines + payout             │
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌────────────────────────────┐
- *  │  4. SyncTicketSummaries    │  Recompute ticket summaries
+ *  │  3. SyncTicketSummaries    │  Recompute ticket summaries
  *  └────────┬───────────────────┘
  *           ▼
  *  ┌────────────────────────────┐
- *  │  5. CalculateFinancials    │  Tính từ DB (no jackpot)
+ *  │  4. CalculateFinancials    │  Tính từ DB (no jackpot)
  *  └────────┬───────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  6. BuildReport         │  Daily reports
+ *  │  5. BuildReport         │  Daily reports
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  7. FinalizeSettle      │  settling → settled
+ *  │  6. FinalizeSettle      │  settling → settled
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  8. DispatchPayouts (loop)               │
+ *  │  7. DispatchPayouts (loop)               │
+ *  │     done = true khi hết pending payouts  │
  *  └──────────────────────────────────────────┘
  *
- * CRASH RECOVERY:
- *   Mỗi step idempotent. Step Function retry-safe.
+ * DATA FLOW:
+ *   context = PrepareSettle output, truyền xuyên suốt.
+ *   Lambda nhận context trực tiếp, tự destructure fields cần thiết.
+ *   batchSize cố định 500 trong use-case, không truyền từ step function.
  *
  * Max 3D Pro KHÔNG có Jackpot tích lũy.
  */
@@ -73,30 +72,17 @@ export const SETTLE_STATE_MACHINE = {
     PrepareSettle: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-prepare",
-      Output:
-        "{% { 'context': $states.result, 'drawId': $states.input.drawId } %}",
-      Next: "InitSettleLoop",
-      Retry: LAMBDA_RETRY,
-    },
-
-    InitSettleLoop: {
-      Type: "Pass",
-      Output:
-        "{% { 'context': $states.input.context, 'settleLoop': { 'batchSize': 500 } } %}",
+      Output: "{% { 'context': $states.result } %}",
       Next: "SettleEntries",
+      Retry: LAMBDA_RETRY,
     },
 
     SettleEntries: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-entries",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-        result: "{% $states.input.context.result %}",
-        prizeConfig: "{% $states.input.context.prizeConfig %}",
-        batchSize: "{% $states.input.settleLoop.batchSize %}",
-      },
+      Arguments: "{% $states.input.context %}",
       Output:
-        "{% { 'context': $states.input.context, 'settleLoop': $states.input.settleLoop, 'settleResult': $states.result } %}",
+        "{% { 'context': $states.input.context, 'settleResult': $states.result } %}",
       Next: "CheckSettleDone",
       Retry: LAMBDA_RETRY,
     },
@@ -116,9 +102,7 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Task",
       Resource:
         "arn:aws:lambda:REGION:ACCOUNT:function:settle-sync-ticket-summaries",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-      },
+      Arguments: "{% $states.input.context %}",
       Output:
         "{% { 'context': $states.input.context, 'syncResult': $states.result } %}",
       Next: "CalculateFinancials",
@@ -129,11 +113,7 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Task",
       Resource:
         "arn:aws:lambda:REGION:ACCOUNT:function:settle-calculate-financials",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-        totalLines: "{% $states.input.context.totalLines %}",
-        config: "{% $states.input.context.config %}",
-      },
+      Arguments: "{% $states.input.context %}",
       Output:
         "{% { 'context': $states.input.context, 'financials': $states.result } %}",
       Next: "BuildReport",
@@ -143,11 +123,8 @@ export const SETTLE_STATE_MACHINE = {
     BuildReport: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-build-report",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-        financialDate: "{% $states.input.context.financialDate %}",
-        financials: "{% $states.input.financials %}",
-      },
+      Arguments:
+        "{% $merge($states.input.context, { 'financials': $states.input.financials }) %}",
       Output:
         "{% { 'context': $states.input.context, 'financials': $states.input.financials, 'reportResult': $states.result } %}",
       Next: "FinalizeSettle",
@@ -157,9 +134,7 @@ export const SETTLE_STATE_MACHINE = {
     FinalizeSettle: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-finalize",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-      },
+      Arguments: "{% $states.input.context %}",
       Output:
         "{% { 'context': $states.input.context, 'finalizeResult': $states.result } %}",
       Next: "DispatchPayouts",
@@ -170,9 +145,7 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Task",
       Resource:
         "arn:aws:lambda:REGION:ACCOUNT:function:settle-dispatch-payouts",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-      },
+      Arguments: "{% $states.input.context %}",
       Output:
         "{% { 'context': $states.input.context, 'payoutResult': $states.result } %}",
       Next: "CheckPayoutDone",

@@ -8,6 +8,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
+import type { MegaSplitTierDetail } from "./types";
 
 export interface ApplySplitBonusesInput {
   /** ID kỳ quay đang settle. */
@@ -18,21 +19,7 @@ export interface ApplySplitBonusesInput {
    * Chi tiết chia jackpot theo hạng (chỉ cần khi isSplitCycle = true).
    * Key = tier (e.g. "tier2"), value = thông tin chia.
    */
-  splitDetails?: Record<
-    string,
-    {
-      /** Số tiền ban đầu phân bổ cho hạng (VND). */
-      initialAmount: number;
-      /** Số tiền tái phân phối từ hạng không có người trúng (VND). */
-      redistributedAmount: number;
-      /** Tổng tiền hạng = initialAmount + redistributedAmount (VND). */
-      totalAmount: number;
-      /** Số người trúng hạng này. */
-      winnerCount: number;
-      /** Tiền thưởng mỗi người = totalAmount / winnerCount (VND). */
-      bonusPerWinner: number;
-    }
-  >;
+  splitDetails?: Record<string, MegaSplitTierDetail>;
 }
 
 export interface ApplySplitBonusesResult {

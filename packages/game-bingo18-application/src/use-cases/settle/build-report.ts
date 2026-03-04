@@ -10,6 +10,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { publishGameReport } from "@megawin/game-core-application/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { ReportRepository } from "../../infras/repos/report-repo";
+import type { BingoSettleFinancials } from "./types";
 
 export interface BuildReportInput {
   /** ID kỳ quay cần tạo báo cáo. */
@@ -17,29 +18,7 @@ export interface BuildReportInput {
   /** Ngày tài chính (YYYY-MM-DD) dùng làm key báo cáo hàng ngày. */
   financialDate: string;
   /** Dữ liệu tài chính tổng hợp (từ CalculateFinancials). Nếu có → publish game-core report. */
-  financials?: {
-    /** Tổng doanh thu (VND). */
-    totalRevenue: number;
-    /** Tổng giải thưởng (VND). */
-    totalPrizes: number;
-    /** Tổng hoa hồng đại lý (VND). */
-    totalAgentCommission: number;
-    /** Lợi nhuận công ty (VND). */
-    companyTake: number;
-    /** Chi tiết tài chính từng tenant. */
-    tenantBreakdown: Array<{
-      /** ID tenant. */
-      tenantId: string;
-      /** Doanh thu tenant (VND). */
-      revenue: number;
-      /** Hoa hồng tenant (VND). */
-      commission: number;
-      /** Tỷ lệ hoa hồng (0-1). */
-      commissionRate: number;
-      /** Số entries của tenant. */
-      entryCount: number;
-    }>;
-  };
+  financials?: BingoSettleFinancials;
 }
 
 export interface BuildReportResult {

@@ -34,3 +34,10 @@ export type {
   ApplySplitBonusesInput,
   ApplySplitBonusesResult,
 } from "./apply-split-bonuses";
+
+export type {
+  MegaDrawResult,
+  MegaSettleConfig,
+  MegaSettleFinancials,
+  MegaSplitTierDetail,
+} from "./types";

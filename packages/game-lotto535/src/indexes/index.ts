@@ -103,6 +103,12 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
     options: { name: "idx_enrolledDrawIds" },
     purpose: "Query tickets theo drawId (thay thế drawPlan.drawIds)",
   },
+  {
+    collection: Lotto535Collections.Tickets,
+    key: { "drawPlan.drawIds": 1 },
+    options: { name: "idx_drawPlan_drawIds" },
+    purpose: "Cursor-based query tickets theo drawId cho SyncTicketSummaries",
+  },
 
   // ─────────────────────────────────────────
   // lotto535TicketEntries

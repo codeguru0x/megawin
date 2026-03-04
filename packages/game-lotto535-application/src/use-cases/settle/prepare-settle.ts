@@ -19,6 +19,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import type { LottoDrawResult, LottoSettleConfig } from "./types";
 
 export interface PrepareSettleInput {
   /** Mã kỳ quay cần settle — phải ở trạng thái "settling". */
@@ -35,12 +36,7 @@ export interface PrepareSettleResult {
   /** Ngày tài chính (YYYY-MM-DD) — dùng cho báo cáo. */
   financialDate: string;
   /** Kết quả quay đã công bố. */
-  result: {
-    /** 5 số chính trúng thưởng. */
-    winningMain: number[];
-    /** Số đặc biệt trúng thưởng (1-12). */
-    winningSpecial: number;
-  };
+  result: LottoDrawResult;
   /** Số tiền Jackpot đầu kỳ (VND) — đọc từ active cycle hoặc seed. */
   jackpotOpeningAmount: number;
   /** Kỳ này có phải kỳ chia Jackpot hay không. */
@@ -48,29 +44,7 @@ export interface PrepareSettleResult {
   /** Bảng giải thưởng: key = tier name, value = số tiền (VND). */
   prizeAmounts: Record<string, number>;
   /** Cấu hình liên quan settle (snapshot từ GlobalConfig). */
-  config: {
-    /** Số tiền khởi điểm Jackpot (VND). */
-    seedAmount: number;
-    /** Ngưỡng kích hoạt chia Jackpot (VND). */
-    splitThreshold: number;
-    /** Tỷ lệ chia Jackpot theo tier. */
-    splitRatios: {
-      /** Tỷ lệ chia cho giải Nhất. */
-      tier1: number;
-      /** Tỷ lệ chia cho giải Nhì. */
-      tier2: number;
-      /** Tỷ lệ chia cho giải Ba. */
-      tier3: number;
-      /** Tỷ lệ chia cho giải Tư. */
-      tier4: number;
-      /** Tỷ lệ chia cho giải Năm. */
-      tier5: number;
-    };
-    /** Tỷ lệ công ty thu về trên doanh thu (0-1). */
-    companyRate: number;
-    /** Tỷ lệ hoa hồng đại lý mặc định (0-1). */
-    defaultCommissionRate: number;
-  };
+  config: LottoSettleConfig;
   /** Tổng entries cần settle. */
   totalEntries: number;
   /** Tổng lines cần xử lý từ tất cả entries. */

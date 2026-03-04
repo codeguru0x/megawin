@@ -5,39 +5,49 @@
  * FLOW (CRASH-SAFE):
  * ═══════════════════════════════════════════════════════════════════════
  *
- *  Input: { drawId: "2026-02-24-001" }
+ *  Input: { drawId }
  *         │
  *         ▼
  *  ┌─────────────────────────┐
- *  │  1. PrepareSettle       │  Load context (accepts "settling" status)
- *  └────────┬────────────────┘
- *           ▼
- *  ┌─────────────────────────┐
- *  │  2. InitSettleLoop      │  Set batchSize = 500
+ *  │  1. PrepareSettle       │  Load context (draw, config, dual JP, counts)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  3. SettleEntries (loop, always page 1)  │
- *  │     Filter: status = "scheduled"          │
- *  │     done = true khi 0 scheduled entries  │
+ *  │  2. SettleEntries (loop, batch=500)      │
+ *  │     Expand boards → match lines → payout │
+ *  │     done = true khi hết scheduled        │
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌────────────────────────────┐
- *  │  4. CalculateFinancials    │  Tính TỪ DB (not accumulator)
+ *  │  3. CalculateFinancials    │  Tính từ DB (dual JP1/JP2)
  *  └────────┬───────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  5. BuildReport         │  Daily reports (idempotent upsert)
+ *  │  4. ApplySplitBonuses   │  Patch split bonus (if split cycle)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  6. FinalizeSettle      │  settling → settled + jackpot chain
+ *  │  5. SyncTicketSummaries │  Recompute ticket progress
+ *  └────────┬────────────────┘
+ *           ▼
+ *  ┌─────────────────────────┐
+ *  │  6. BuildReport         │  Daily reports (idempotent upsert)
+ *  └────────┬────────────────┘
+ *           ▼
+ *  ┌─────────────────────────┐
+ *  │  7. FinalizeSettle      │  settling → settled + dual jackpot cycle
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  7. DispatchPayouts (loop, async)        │
- *  │     Batch 200, chunk 50/API call         │
+ *  │  8. DispatchPayouts (loop, async)        │
+ *  │     done = true khi hết pending payouts  │
  *  └──────────────────────────────────────────┘
+ *
+ * DATA FLOW:
+ *   context = PrepareSettle output, truyền xuyên suốt.
+ *   Lambda nhận context trực tiếp, tự destructure fields cần thiết.
+ *   batchSize cố định 500 trong use-case, không truyền từ step function.
+ *   FinalizeSettle cần merge context (jp1/jp2 opening, isSplitCycle) + financials.
  *
  * CRASH RECOVERY:
  *   Mỗi step idempotent. Step Function retry-safe.
@@ -64,38 +74,24 @@ const LAMBDA_RETRY = [
 ];
 
 export const SETTLE_STATE_MACHINE = {
-  Comment: "Power 6/55 Settle Step Function – Kết sổ kỳ quay (crash-safe)",
+  Comment: "Power 6/55 Settle Step Function – Kết sổ kỳ quay (crash-safe, dual JP)",
   QueryLanguage: "JSONata",
   StartAt: "PrepareSettle",
   States: {
     PrepareSettle: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-prepare",
-      Output:
-        "{% { 'context': $states.result, 'drawId': $states.input.drawId } %}",
-      Next: "InitSettleLoop",
-      Retry: LAMBDA_RETRY,
-    },
-
-    InitSettleLoop: {
-      Type: "Pass",
-      Output:
-        "{% { 'context': $states.input.context, 'settleLoop': { 'batchSize': 500 } } %}",
+      Output: "{% { 'context': $states.result } %}",
       Next: "SettleEntries",
+      Retry: LAMBDA_RETRY,
     },
 
     SettleEntries: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-entries",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-        result: "{% $states.input.context.result %}",
-        prizeAmounts: "{% $states.input.context.prizeAmounts %}",
-        isSplitCycle: "{% $states.input.context.isSplitCycle %}",
-        batchSize: "{% $states.input.settleLoop.batchSize %}",
-      },
+      Arguments: "{% $states.input.context %}",
       Output:
-        "{% { 'context': $states.input.context, 'settleLoop': $states.input.settleLoop, 'settleResult': $states.result } %}",
+        "{% { 'context': $states.input.context, 'settleResult': $states.result } %}",
       Next: "CheckSettleDone",
       Retry: LAMBDA_RETRY,
     },
@@ -115,14 +111,7 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Task",
       Resource:
         "arn:aws:lambda:REGION:ACCOUNT:function:settle-calculate-financials",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-        jackpotOpeningAmount:
-          "{% $states.input.context.jackpotOpeningAmount %}",
-        isSplitCycle: "{% $states.input.context.isSplitCycle %}",
-        totalLines: "{% $states.input.context.totalLines %}",
-        config: "{% $states.input.context.config %}",
-      },
+      Arguments: "{% $states.input.context %}",
       Output:
         "{% { 'context': $states.input.context, 'financials': $states.result } %}",
       Next: "ApplySplitBonuses",
@@ -133,11 +122,8 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Task",
       Resource:
         "arn:aws:lambda:REGION:ACCOUNT:function:settle-apply-split-bonuses",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-        isSplitCycle: "{% $states.input.context.isSplitCycle %}",
-        splitDetails: "{% $states.input.financials.splitDetails %}",
-      },
+      Arguments:
+        "{% $merge($states.input.context, { 'splitDetails': $states.input.financials.splitDetails }) %}",
       Output:
         "{% { 'context': $states.input.context, 'financials': $states.input.financials, 'splitBonusResult': $states.result } %}",
       Next: "SyncTicketSummaries",
@@ -148,9 +134,7 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Task",
       Resource:
         "arn:aws:lambda:REGION:ACCOUNT:function:settle-sync-ticket-summaries",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-      },
+      Arguments: "{% $states.input.context %}",
       Output:
         "{% { 'context': $states.input.context, 'financials': $states.input.financials, 'syncResult': $states.result } %}",
       Next: "BuildReport",
@@ -160,12 +144,8 @@ export const SETTLE_STATE_MACHINE = {
     BuildReport: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-build-report",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-        drawDate: "{% $states.input.context.drawDate %}",
-        financialDate: "{% $states.input.context.financialDate %}",
-        financials: "{% $states.input.financials %}",
-      },
+      Arguments:
+        "{% $merge($states.input.context, { 'financials': $states.input.financials }) %}",
       Output:
         "{% { 'context': $states.input.context, 'financials': $states.input.financials, 'reportResult': $states.result } %}",
       Next: "FinalizeSettle",
@@ -175,16 +155,8 @@ export const SETTLE_STATE_MACHINE = {
     FinalizeSettle: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-finalize",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-        jackpotOpeningAmount:
-          "{% $states.input.context.jackpotOpeningAmount %}",
-        closingJackpot: "{% $states.input.financials.closingJackpot %}",
-        nextJackpotOpening: "{% $states.input.financials.nextJackpotOpening %}",
-        hasJackpotWinner: "{% $states.input.financials.hasJackpotWinner %}",
-        isSplitCycle: "{% $states.input.context.isSplitCycle %}",
-        splitDetails: "{% $states.input.financials.splitDetails %}",
-      },
+      Arguments:
+        "{% $merge($states.input.context, $states.input.financials) %}",
       Output:
         "{% { 'context': $states.input.context, 'finalizeResult': $states.result } %}",
       Next: "DispatchPayouts",
@@ -195,9 +167,7 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Task",
       Resource:
         "arn:aws:lambda:REGION:ACCOUNT:function:settle-dispatch-payouts",
-      Arguments: {
-        drawId: "{% $states.input.context.drawId %}",
-      },
+      Arguments: "{% $states.input.context %}",
       Output:
         "{% { 'context': $states.input.context, 'payoutResult': $states.result } %}",
       Next: "CheckPayoutDone",

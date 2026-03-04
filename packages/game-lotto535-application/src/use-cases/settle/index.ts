@@ -2,6 +2,14 @@
  * Lotto 5/35 – Settle Use Cases barrel export.
  */
 
+export type {
+  LottoDrawResult,
+  LottoSettleConfig,
+  LottoSplitTierDetail,
+  LottoSplitDetails,
+  LottoSettleFinancials,
+} from "./types";
+
 export { PrepareSettleUseCase } from "./prepare-settle";
 export type { PrepareSettleInput, PrepareSettleResult } from "./prepare-settle";
 

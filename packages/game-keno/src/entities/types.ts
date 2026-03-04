@@ -38,9 +38,7 @@ export const KENO_PICK_MAX = 10;
  * Dùng cho validation và lookup.
  */
 export const KENO_VALID_NUMBERS: ReadonlySet<string> = new Set(
-  Array.from({ length: KENO_NUMBER_MAX }, (_, i) =>
-    String(i + 1).padStart(2, "0")
-  )
+  Array.from({ length: KENO_NUMBER_MAX }, (_, i) => String(i + 1).padStart(2, "0")),
 );
 
 /** Parse string number ("01"-"80") thành số nguyên. Trả null nếu invalid. */
@@ -51,8 +49,7 @@ export function parseKenoNumber(s: string): number | null {
 
 /** Format số nguyên thành string Keno ("01"-"80"). Trả null nếu out of range. */
 export function formatKenoNumber(n: number): string | null {
-  if (n < KENO_NUMBER_MIN || n > KENO_NUMBER_MAX || !Number.isInteger(n))
-    return null;
+  if (n < KENO_NUMBER_MIN || n > KENO_NUMBER_MAX || !Number.isInteger(n)) return null;
   return String(n).padStart(2, "0");
 }
 
@@ -66,6 +63,8 @@ export function formatKenoNumber(n: number): string | null {
  * - Số từ 41-80: "lớn"
  */
 export const KENO_BIG_SMALL_BOUNDARY = 40;
+
+import type { KenoBigSmallBet, KenoEvenOddBet } from "./enums";
 
 // ─────────────────────────────────────────────
 // Board Selection (user input)
@@ -84,14 +83,14 @@ export interface NumberSelection {
  * Lựa chọn cách chơi bổ sung Lớn/Nhỏ (Panel C).
  */
 export interface BigSmallSelection {
-  bet: import("./enums").KenoBigSmallBet;
+  bet: KenoBigSmallBet;
 }
 
 /**
  * Lựa chọn cách chơi bổ sung Chẵn/Lẻ (Panel C).
  */
 export interface EvenOddSelection {
-  bet: import("./enums").KenoEvenOddBet;
+  bet: KenoEvenOddBet;
 }
 
 // ─────────────────────────────────────────────

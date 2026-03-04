@@ -1,7 +1,7 @@
 /**
  * Lambda: build-report (Lotto 5/35)
  *
- * Step 5 của Lotto535 Settle Step Function.
+ * Step 6 của Lotto535 Settle Step Function.
  * Tạo/cập nhật báo cáo tài chính hàng ngày.
  *
  * IDEMPOTENT: upsert pattern.
@@ -18,8 +18,5 @@ import {
 const useCase = new BuildReportUseCase();
 
 export async function handler(event: BuildReportInput) {
-  return useCase.run({
-    drawId: event.drawId,
-    financialDate: event.financialDate,
-  });
+  return useCase.run(event);
 }

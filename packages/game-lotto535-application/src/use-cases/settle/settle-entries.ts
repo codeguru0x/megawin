@@ -36,23 +36,19 @@ import {
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
+import type { LottoDrawResult } from "./types";
+
+const DEFAULT_BATCH_SIZE = 500;
 
 export interface SettleEntriesBatchInput {
   /** Mã kỳ quay cần settle. */
   drawId: string;
   /** Kết quả quay đã công bố. */
-  result: {
-    /** 5 số chính trúng thưởng. */
-    winningMain: number[];
-    /** Số đặc biệt trúng thưởng (1-12). */
-    winningSpecial: number;
-  };
+  result: LottoDrawResult;
   /** Bảng giải thưởng: key = tier name, value = số tiền (VND). */
   prizeAmounts: Record<string, number>;
   /** Kỳ này có phải kỳ chia Jackpot hay không. */
   isSplitCycle: boolean;
-  /** Số entries xử lý mỗi batch. */
-  batchSize: number;
 }
 
 export interface SettleAccumulator {
@@ -69,7 +65,7 @@ export interface SettleAccumulator {
 }
 
 export interface SettleEntriesBatchResult {
-  /** true nếu đã settle hết tất cả entries (entries.length < batchSize). */
+  /** true nếu đã settle hết tất cả entries (không còn scheduled entries). */
   done: boolean;
   /** Accumulator tổng hợp batch này (chỉ dùng monitoring/logging). */
   accumulator: SettleAccumulator;
@@ -88,16 +84,15 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   protected async execute(
     input: SettleEntriesBatchInput
   ): Promise<SettleEntriesBatchResult> {
-    const { drawId, result, prizeAmounts, batchSize } = input;
+    const { drawId, result, prizeAmounts } = input;
     const drawResult: DrawResultForMatch = {
       winningMain: result.winningMain as any,
       winningSpecial: result.winningSpecial,
     };
 
-    const entries = await this.entryRepo.getScheduledEntriesBatch(
+    const entries = await this.entryRepo.getScheduledEntries(
       drawId,
-      1,
-      batchSize
+      DEFAULT_BATCH_SIZE
     );
 
     if (entries.length === 0) {
@@ -111,6 +106,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     const acc = emptyAccumulator();
     let batchSettled = 0;
     const ticketCache = new Map<string, any>();
+    const now = new Date();
 
     for (const entry of entries) {
       const ticketId = entry.ticketId as string;
@@ -132,7 +128,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       const matchResult = matchLines(lines, drawResult);
 
       // ── Step 3: Build line docs với matchResult + ownership ──
-      const now = new Date();
       const lineDocs: Array<Omit<TicketLineDoc, "_id">> = lines.map(
         (line, i) => {
           const perLine = matchResult.perLineResults[i]!;
@@ -207,7 +202,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     }
 
     return {
-      done: entries.length < batchSize,
+      done: entries.length < DEFAULT_BATCH_SIZE,
       accumulator: acc,
       batchSettled,
     };

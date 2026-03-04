@@ -1,12 +1,12 @@
 /**
  * Lambda: settle-entries (Bingo 18)
  *
- * Step 3 (loop) của Bingo 18 Settle Step Function.
+ * Step 2 (loop) của Bingo 18 Settle Step Function.
  * Match boards + side bets → payout → settle.
  *
  * CRASH-SAFE: entries đã settled tự filter ra bởi status.
  *
- * @input  { drawId, result, config, batchSize }
+ * @input  { drawId, result, config }
  * @output SettleEntriesBatchResult
  */
 

@@ -1,7 +1,7 @@
 /**
  * Lambda: settle-entries (Keno)
  *
- * Step 3 (loop) của Keno Settle Step Function.
+ * Step 2 (loop) của Keno Settle Step Function.
  * Match boards + side bets → payout → settle.
  *
  * CRASH-SAFE: entries đã settled tự filter ra bởi status.

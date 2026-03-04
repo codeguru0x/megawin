@@ -1,7 +1,7 @@
 /**
  * Lambda: calculate-financials (Lotto 5/35)
  *
- * Step 4 của Lotto535 Settle Step Function.
+ * Step 3 của Lotto535 Settle Step Function.
  * Tính toán tài chính tổng hợp từ DB (aggregate settled entries).
  *
  * IDEMPOTENT: chạy lại cho kết quả giống nhau.

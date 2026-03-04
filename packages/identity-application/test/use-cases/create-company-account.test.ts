@@ -14,7 +14,7 @@ function testUsername() {
   const rand = Math.random().toString(36).slice(2, 6);
   return `test_company_${ts}_${rand}`;
 }
-
+//staff - Test@1234@!
 const TEMP_PASSWORD = "Test@1234!";
 
 describe("CreateCompanyAccountUseCase", () => {

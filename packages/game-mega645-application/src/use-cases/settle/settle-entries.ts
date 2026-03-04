@@ -4,7 +4,7 @@
  * Xử lý 1 batch entries: expand → match → persist lines → settle entry.
  * Mega 6/45 lines chỉ có main (không có special).
  *
- * CRASH-SAFE: Luôn query page 1 với filter status = "scheduled".
+ * CRASH-SAFE: Luôn query status = "scheduled" với limit cố định (DEFAULT_BATCH_SIZE).
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
@@ -18,21 +18,19 @@ import {
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
+import type { MegaDrawResult } from "./types";
+
+const DEFAULT_BATCH_SIZE = 500;
 
 export interface SettleEntriesBatchInput {
   /** ID kỳ quay đang settle. */
   drawId: string;
   /** Kết quả quay thưởng. */
-  result: {
-    /** 6 số chính trúng thưởng (1-45). */
-    winningMain: number[];
-  };
+  result: MegaDrawResult;
   /** Bảng tiền thưởng theo hạng: key = tier, value = VND. */
   prizeAmounts: Record<string, number>;
   /** Kỳ này có split jackpot không — ảnh hưởng cách tính jackpot winner. */
   isSplitCycle: boolean;
-  /** Số entry xử lý mỗi batch (page size). */
-  batchSize: number;
 }
 
 export interface SettleAccumulator {
@@ -68,15 +66,14 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   protected async execute(
     input: SettleEntriesBatchInput
   ): Promise<SettleEntriesBatchResult> {
-    const { drawId, result, prizeAmounts, batchSize } = input;
+    const { drawId, result, prizeAmounts } = input;
     const drawResult: DrawResultForMatch = {
       winningMain: result.winningMain as any,
     };
 
-    const entries = await this.entryRepo.getScheduledEntriesBatch(
+    const entries = await this.entryRepo.getScheduledEntries(
       drawId,
-      1,
-      batchSize
+      DEFAULT_BATCH_SIZE
     );
 
     if (entries.length === 0) {
@@ -90,6 +87,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     const acc = emptyAccumulator();
     let batchSettled = 0;
     const ticketCache = new Map<string, any>();
+    const now = new Date();
 
     for (const entry of entries) {
       const ticketId = entry.ticketId;
@@ -109,7 +107,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       const lines = expandAllBoards(ticket.boards);
       const matchResult = matchLines(lines, drawResult);
 
-      const now = new Date();
       const lineDocs: Array<Omit<TicketLineDoc, "_id">> = lines.map(
         (line, i) => {
           const perLine = matchResult.perLineResults[i]!;
@@ -177,7 +174,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     }
 
     return {
-      done: entries.length < batchSize,
+      done: entries.length < DEFAULT_BATCH_SIZE,
       accumulator: acc,
       batchSettled,
     };

@@ -49,8 +49,6 @@ export interface DrawFinancialInput {
     revenue: number;
     /** Hoa hồng tenant nhận. Công thức: revenue × commissionRate. */
     commission: number;
-    /** Tỷ lệ hoa hồng (VD: 0.2 = 20%). Lấy từ TenantConfig hoặc GlobalConfig default. */
-    commissionRate: number;
   }>;
   /** Tỷ lệ công ty thu về (mặc định 0.15 = 15% doanh thu). */
   companyRate: number;
@@ -93,16 +91,23 @@ export interface DrawFinancialResult {
     tenantId: string;
     /** Doanh thu từ tenant. */
     revenue: number;
-    /** Hoa hồng tenant nhận. Công thức: revenue × commissionRate. */
+    /** Hoa hồng tenant nhận. */
     commission: number;
-    /** Tỷ lệ hoa hồng tenant. */
-    commissionRate: number;
   }>;
 }
 
-export function calculateDrawFinancials(
-  input: DrawFinancialInput
-): DrawFinancialResult {
+/**
+ * Tính tài chính tổng hợp cho 1 kỳ quay Power 6/55.
+ *
+ * Power 6/55 có dual jackpot (JP1 + JP2):
+ *   totalJackpotContribution = max(revenue - fixedPrizes - commission - actualCompanyTake, 0)
+ *   JP1 contribution = totalJackpotContribution × jp1Ratio (90%)
+ *   JP2 contribution = totalJackpotContribution × jp2Ratio (10%) + jp1Overflow
+ *
+ * @param input - Dữ liệu tổng hợp từ DB + config jackpot
+ * @returns Kết quả tài chính gồm jp1/jp2 contribution, overflow, tenant breakdown
+ */
+export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const {
     totalRevenue,
     totalFixedPrizes,
@@ -118,25 +123,14 @@ export function calculateDrawFinancials(
     tenantId: t.tenantId,
     revenue: t.revenue,
     commission: t.commission,
-    commissionRate: t.commissionRate,
   }));
 
-  const totalAgentCommission = tenantBreakdown.reduce(
-    (sum, t) => sum + t.commission,
-    0
-  );
+  const totalAgentCommission = tenantBreakdown.reduce((sum, t) => sum + t.commission, 0);
 
   const companyTake = Math.round(totalRevenue * companyRate);
-  const remainAfterPrizes =
-    totalRevenue - totalFixedPrizes - totalAgentCommission;
-  const actualCompanyTake = Math.min(
-    companyTake,
-    Math.max(remainAfterPrizes, 0)
-  );
-  const totalJackpotContribution = Math.max(
-    remainAfterPrizes - actualCompanyTake,
-    0
-  );
+  const remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission;
+  const actualCompanyTake = Math.min(companyTake, Math.max(remainAfterPrizes, 0));
+  const totalJackpotContribution = Math.max(remainAfterPrizes - actualCompanyTake, 0);
 
   // Phân bổ tích luỹ: JP1 = 90%, JP2 = 10%
   let rawJp1Contribution = Math.round(totalJackpotContribution * jp1Ratio);
@@ -171,7 +165,7 @@ export function calculateNextJackpot1(
   currentOpening: number,
   contribution: number,
   hasWinner: boolean,
-  seedAmount: number
+  seedAmount: number,
 ): number {
   if (hasWinner) return seedAmount + contribution;
   return currentOpening + contribution;
@@ -181,7 +175,7 @@ export function calculateNextJackpot2(
   currentOpening: number,
   contribution: number,
   hasWinner: boolean,
-  seedAmount: number
+  seedAmount: number,
 ): number {
   if (hasWinner) return seedAmount + contribution;
   return currentOpening + contribution;
@@ -192,7 +186,7 @@ export function calculateNextJackpot2(
 export function isSplitCycleDraw(
   totalJackpot: number,
   splitThreshold: number,
-  hasAnyJackpotWinner: boolean
+  hasAnyJackpotWinner: boolean,
 ): boolean {
   return totalJackpot >= splitThreshold && !hasAnyJackpotWinner;
 }
@@ -280,17 +274,11 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
     .filter((t) => !t.hasWinners)
     .reduce((s, t) => s + t.initialAmount, 0);
 
-  const redistributedPerTier = Math.floor(
-    unclaimedTotal / tiersWithWinners.length
-  );
+  const redistributedPerTier = Math.floor(unclaimedTotal / tiersWithWinners.length);
 
-  const priorityOrder: PrizeTier[] = [
-    PrizeTier.Tier1,
-    PrizeTier.Tier2,
-    PrizeTier.Tier3,
-  ];
+  const priorityOrder: PrizeTier[] = [PrizeTier.Tier1, PrizeTier.Tier2, PrizeTier.Tier3];
   const highestTierWithWinners = priorityOrder.find((tier) =>
-    tiersWithWinners.some((t) => t.tier === tier)
+    tiersWithWinners.some((t) => t.tier === tier),
   )!;
 
   let totalRemainder = 0;
@@ -310,10 +298,7 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
       });
       bonusPerWinnerMap.set(t.tier, bonus);
     } else {
-      const roundedBonus = roundDownToUnit(
-        totalForTier / t.winnerCount,
-        SPLIT_ROUNDING_UNIT
-      );
+      const roundedBonus = roundDownToUnit(totalForTier / t.winnerCount, SPLIT_ROUNDING_UNIT);
       totalRemainder += totalForTier - roundedBonus * t.winnerCount;
       details.set(t.tier, {
         initialAmount: t.initialAmount,

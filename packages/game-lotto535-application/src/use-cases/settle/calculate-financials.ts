@@ -25,6 +25,7 @@ import {
 } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
+import type { LottoSettleConfig, LottoSettleFinancials } from "./types";
 
 export interface CalculateFinancialsInput {
   /** Mã kỳ quay cần tính tài chính. */
@@ -36,100 +37,12 @@ export interface CalculateFinancialsInput {
   /** Tổng lines trong kỳ — dùng ghi stats. */
   totalLines: number;
   /** Cấu hình tài chính (snapshot từ GlobalConfig). */
-  config: {
-    /** Số tiền khởi điểm Jackpot (VND). */
-    seedAmount: number;
-    /** Ngưỡng kích hoạt chia Jackpot (VND). */
-    splitThreshold: number;
-    /** Tỷ lệ chia Jackpot theo tier khi split. */
-    splitRatios: {
-      /** Tỷ lệ chia cho giải Nhất. */
-      tier1: number;
-      /** Tỷ lệ chia cho giải Nhì. */
-      tier2: number;
-      /** Tỷ lệ chia cho giải Ba. */
-      tier3: number;
-      /** Tỷ lệ chia cho giải Tư. */
-      tier4: number;
-      /** Tỷ lệ chia cho giải Năm. */
-      tier5: number;
-    };
-    /** Tỷ lệ công ty thu về trên doanh thu (0-1). */
-    companyRate: number;
-  };
+  config: Pick<LottoSettleConfig, "seedAmount" | "splitThreshold" | "splitRatios" | "companyRate">;
 }
 
-export interface CalculateFinancialsResult {
+export interface CalculateFinancialsResult extends LottoSettleFinancials {
   /** Mã kỳ quay. */
   drawId: string;
-  /** Tổng doanh thu kỳ (VND) = Σ(entry.amount). */
-  totalRevenue: number;
-  /** Tổng giải thưởng cố định đã trả (VND) — không bao gồm Jackpot. */
-  totalFixedPrizes: number;
-  /** Tổng hoa hồng đại lý (VND) = Σ(tenant.revenue × tenant.commissionRate). */
-  totalAgentCommission: number;
-  /**
-   * Phần công ty thu về tối đa (VND).
-   * Công thức: companyTake = totalRevenue × companyRate.
-   */
-  companyTake: number;
-  /**
-   * Phần công ty thực tế thu về (VND).
-   * Có thể nhỏ hơn companyTake nếu tổng chi vượt doanh thu.
-   * Công thức: actualCompanyTake = totalRevenue − totalFixedPrizes − totalAgentCommission − jackpotContribution.
-   */
-  actualCompanyTake: number;
-  /**
-   * Phần đóng góp vào quỹ Jackpot (VND).
-   * Công thức: jackpotContribution = totalRevenue − totalFixedPrizes − totalAgentCommission − companyTake.
-   * (hoặc = 0 nếu kết quả âm).
-   */
-  jackpotContribution: number;
-  /**
-   * Số tiền Jackpot cuối kỳ (VND).
-   * - Không có winner/split: closingJackpot = openingAmount + jackpotContribution.
-   * - Có winner hoặc split: closingJackpot = seedAmount (reset).
-   */
-  closingJackpot: number;
-  /**
-   * Số tiền Jackpot mở cho kỳ tiếp theo (VND).
-   * Thường bằng closingJackpot, hoặc seedAmount nếu cycle mới.
-   */
-  nextJackpotOpening: number;
-  /** Có người trúng Jackpot trong kỳ hay không. */
-  hasJackpotWinner: boolean;
-  /**
-   * Chi tiết phân bổ split — chỉ có khi isSplitCycle = true.
-   * Key: tier name, Value: thông tin phân bổ cho tier đó.
-   */
-  splitDetails?: Record<
-    string,
-    {
-      /** Số tiền ban đầu phân cho tier (VND) = jackpotAmount × splitRatio[tier]. */
-      initialAmount: number;
-      /** Số tiền tái phân bổ từ tier không có winner (VND). */
-      redistributedAmount: number;
-      /** Tổng tiền tier nhận (VND) = initialAmount + redistributedAmount. */
-      totalAmount: number;
-      /** Số người trúng tier này. */
-      winnerCount: number;
-      /** Tiền thưởng mỗi người (VND) = totalAmount / winnerCount. */
-      bonusPerWinner: number;
-    }
-  >;
-  /** Phân tích doanh thu theo từng tenant. */
-  tenantBreakdown: Array<{
-    /** Mã tenant. */
-    tenantId: string;
-    /** Doanh thu tenant (VND). */
-    revenue: number;
-    /** Hoa hồng tenant (VND) = revenue × commissionRate. */
-    commission: number;
-    /** Tỷ lệ hoa hồng tenant (0-1). */
-    commissionRate: number;
-    /** Số entries của tenant trong kỳ. */
-    entryCount: number;
-  }>;
 }
 
 export class CalculateFinancialsUseCase extends InternalUseCase<
@@ -140,9 +53,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
   private readonly drawRepo = new DrawRepository();
 
   /** Tính tài chính tổng hợp từ DB. Idempotent. */
-  protected async execute(
-    input: CalculateFinancialsInput
-  ): Promise<CalculateFinancialsResult> {
+  protected async execute(input: CalculateFinancialsInput): Promise<CalculateFinancialsResult> {
     const { drawId, config, jackpotOpeningAmount, isSplitCycle } = input;
     /**
      * CRASH-SAFE: Tính từ DB thay vì accumulator.
@@ -161,26 +72,21 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
         tenantId: t.tenantId,
         revenue: t.revenue,
         commission: t.commission,
-        commissionRate: t.commissionRate,
       })),
       companyRate: config.companyRate,
     };
 
     const fin = calculateDrawFinancials(financialInput);
 
-    const jackpotWinnerCount =
-      payoutSummary.tierWinnerCounts[PrizeTier.Jackpot] ?? 0;
+    const jackpotWinnerCount = payoutSummary.tierWinnerCounts[PrizeTier.Jackpot] ?? 0;
     const hasJackpotWinner = jackpotWinnerCount > 0;
 
     let splitDetails: CalculateFinancialsResult["splitDetails"];
 
     if (isSplitCycle) {
       const winnerCountPerTier = new Map<PrizeTier, number>();
-      for (const [tierStr, count] of Object.entries(
-        payoutSummary.tierWinnerCounts
-      )) {
-        if (tierStr === PrizeTier.Jackpot || tierStr === PrizeTier.Consolation)
-          continue;
+      for (const [tierStr, count] of Object.entries(payoutSummary.tierWinnerCounts)) {
+        if (tierStr === PrizeTier.Jackpot || tierStr === PrizeTier.Consolation) continue;
         if (count > 0) winnerCountPerTier.set(tierStr as PrizeTier, count);
       }
 
@@ -218,33 +124,35 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       jackpotOpeningAmount,
       fin.jackpotContribution,
       hasJackpotWinner,
-      config.seedAmount
+      config.seedAmount,
     );
 
     const tenantBreakdown = tenantAgg.map((t) => ({
       tenantId: t.tenantId,
       revenue: t.revenue,
       commission: t.commission,
-      commissionRate: t.commissionRate,
+      commissionRate: t.revenue > 0 ? t.commission / t.revenue : 0,
       entryCount: t.entryCount,
     }));
 
-    await this.drawRepo.updateFinancial(drawId, {
-      totalRevenue: fin.totalRevenue,
-      totalFixedPrizes: fin.totalFixedPrizes,
-      totalAgentCommission: fin.totalAgentCommission,
-      companyTake: fin.actualCompanyTake,
-      companyTakeRate: config.companyRate,
-      companyTakeMax: fin.companyTake,
-      jackpotContribution: fin.jackpotContribution,
-    });
-
-    await this.drawRepo.updateStats(drawId, {
-      ticketEntryCount: payoutSummary.totalSettled,
-      totalLineCount: input.totalLines,
-      totalSalesAmount: fin.totalRevenue,
-      totalPayoutAmount: payoutSummary.totalPayoutAmount,
-    });
+    await this.drawRepo.updateSettleResult(
+      drawId,
+      {
+        totalRevenue: fin.totalRevenue,
+        totalFixedPrizes: fin.totalFixedPrizes,
+        totalAgentCommission: fin.totalAgentCommission,
+        companyTake: fin.actualCompanyTake,
+        companyTakeRate: config.companyRate,
+        companyTakeMax: fin.companyTake,
+        jackpotContribution: fin.jackpotContribution,
+      },
+      {
+        ticketEntryCount: payoutSummary.totalSettled,
+        totalLineCount: input.totalLines,
+        totalSalesAmount: fin.totalRevenue,
+        totalPayoutAmount: payoutSummary.totalPayoutAmount,
+      },
+    );
 
     return {
       drawId,

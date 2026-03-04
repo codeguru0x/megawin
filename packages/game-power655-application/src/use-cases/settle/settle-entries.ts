@@ -10,7 +10,7 @@
  *   - Line doc có bonusMatched thay vì specialMatched
  *
  * CRASH-SAFE DESIGN:
- *   - Luôn query page 1 với filter status = "scheduled"
+ *   - Luôn query status = "scheduled" với limit cố định (DEFAULT_BATCH_SIZE)
  *   - Entries đã settled tự filter ra → không cần track page offset
  *   - settleEntry() atomic: chỉ update nếu status = "scheduled" → no duplicate
  *   - upsertLines() dùng bulkWrite + $setOnInsert → idempotent khi retry
@@ -28,23 +28,19 @@ import {
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
+import type { PowerDrawResult } from "./types";
+
+const DEFAULT_BATCH_SIZE = 500;
 
 export interface SettleEntriesBatchInput {
   /** ID kỳ quay đang settle. */
   drawId: string;
   /** Kết quả quay số đã công bố. */
-  result: {
-    /** 6 số chính trúng thưởng (1-55). */
-    winningMain: number[];
-    /** Số bonus (1 số từ 49 số còn lại). */
-    bonusNumber: number;
-  };
+  result: PowerDrawResult;
   /** Giá trị giải thưởng cố định theo tier (VND). Key: tier1/tier2/tier3. */
   prizeAmounts: Record<string, number>;
   /** Có phải kỳ chia giải (split cycle) hay không. */
   isSplitCycle: boolean;
-  /** Số entries xử lý mỗi batch. */
-  batchSize: number;
 }
 
 export interface SettleAccumulator {
@@ -61,7 +57,7 @@ export interface SettleAccumulator {
 }
 
 export interface SettleEntriesBatchResult {
-  /** true khi đã hết entries cần settle (entries.length < batchSize). */
+  /** true khi đã hết entries cần settle. */
   done: boolean;
   /** Dữ liệu tích lũy từ batch này (dùng để monitoring). */
   accumulator: SettleAccumulator;
@@ -85,16 +81,15 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   protected async execute(
     input: SettleEntriesBatchInput
   ): Promise<SettleEntriesBatchResult> {
-    const { drawId, result, prizeAmounts, batchSize } = input;
+    const { drawId, result, prizeAmounts } = input;
     const drawResult: DrawResultForMatch = {
       winningMain: result.winningMain as any,
       bonusNumber: result.bonusNumber,
     };
 
-    const entries = await this.entryRepo.getScheduledEntriesBatch(
+    const entries = await this.entryRepo.getScheduledEntries(
       drawId,
-      1,
-      batchSize
+      DEFAULT_BATCH_SIZE
     );
 
     if (entries.length === 0) {
@@ -108,6 +103,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     const acc = emptyAccumulator();
     let batchSettled = 0;
     const ticketCache = new Map<string, any>();
+    const now = new Date();
 
     for (const entry of entries) {
       const ticketId = entry.ticketId;
@@ -129,7 +125,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       const matchResult = matchLines(lines, drawResult);
 
       // Step 3: Build line docs with matchResult + ownership
-      const now = new Date();
       const lineDocs: Array<Omit<TicketLineDoc, "_id">> = lines.map(
         (line, i) => {
           const perLine = matchResult.perLineResults[i]!;
@@ -207,7 +202,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     }
 
     return {
-      done: entries.length < batchSize,
+      done: entries.length < DEFAULT_BATCH_SIZE,
       accumulator: acc,
       batchSettled,
     };

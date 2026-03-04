@@ -4,32 +4,32 @@
  * Recompute ticket progress/settlement/voidSummary từ entries.
  * Idempotent, self-healing — chạy lại bao nhiêu lần cũng cho cùng kết quả.
  *
- * Logic:
- *   1. distinct ticketIds từ entries của draw
- *   2. For each ticket: aggregate tất cả entries → compute summary
- *   3. $set toàn bộ (không $inc) → idempotent
+ * Flow (chunk-based, tối ưu DB calls):
+ *   1. Cursor qua tickets có drawPlan.drawIds chứa drawId (batch 500)
+ *   2. Batch aggregate entries summary cho 500 ticketIds cùng lúc
+ *   3. BulkWrite sync summaries (conditional: chỉ ghi nếu processedCount mới >= cũ)
+ *   4. Lặp cho đến hết tickets
+ *
+ * DB calls per chunk: 2 (aggregate + bulkWrite) thay vì 3N trước đây.
+ * Race-safe: conditional processedCount filter tránh ghi đè khi nhiều draw settle đồng thời.
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
+import { ObjectId } from "mongodb";
+
+const CHUNK_SIZE = 500;
 
 export interface SyncTicketSummariesInput {
-  /** ID kỳ quay cần sync ticket summaries. */
   drawId: string;
 }
 
 export interface SyncTicketSummariesResult {
-  /** ID kỳ quay đã sync. */
   drawId: string;
-  /** Số ticket đã được recompute và sync summary. */
   ticketsSynced: number;
 }
 
-/**
- * Sync ticket summaries từ entries Power 6/55.
- * Idempotent: aggregate từ DB, ghi đè summary.
- */
 export class SyncTicketSummariesUseCase extends InternalUseCase<
   SyncTicketSummariesInput,
   SyncTicketSummariesResult
@@ -37,29 +37,48 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 
-  /** @inheritdoc */
-  protected async execute(
-    input: SyncTicketSummariesInput
-  ): Promise<SyncTicketSummariesResult> {
+  protected async execute(input: SyncTicketSummariesInput): Promise<SyncTicketSummariesResult> {
     const { drawId } = input;
-
-    const ticketIds =
-      await this.entryRepo.getDistinctTicketIdsByDrawId(drawId);
     let ticketsSynced = 0;
+    let cursor: string | undefined;
 
-    for (const ticketId of ticketIds) {
-      const ticket = await this.ticketRepo.getTicketById(ticketId.toString());
-      if (!ticket) continue;
+    while (true) {
+      const chunk = await this.ticketRepo.getTicketsByDrawIdCursor(drawId, cursor, CHUNK_SIZE);
 
-      const totalDraws = ticket.drawPlan?.drawCount ?? 1;
-      const summary = await this.entryRepo.aggregateTicketSummary(ticketId);
+      if (chunk.length === 0) {
+        break;
+      }
 
-      await this.ticketRepo.syncSummary(ticketId, {
-        ...summary,
-        totalDraws,
-      });
+      const ticketIds = chunk.map((t) => new ObjectId(t.ticketId));
+      const totalDrawsMap = new Map(chunk.map((t) => [t.ticketId, t.totalDraws]));
 
-      ticketsSynced++;
+      const summaryMap = await this.entryRepo.aggregateTicketSummariesBatch(ticketIds);
+
+      const items = chunk
+        .map((t) => {
+          const summary = summaryMap.get(t.ticketId);
+
+          if (!summary) {
+            return null;
+          }
+
+          return {
+            ticketId: t.ticketId,
+            summary: { ...summary, totalDraws: totalDrawsMap.get(t.ticketId) ?? 1 },
+          };
+        })
+        .filter((item): item is NonNullable<typeof item> => item !== null);
+
+      if (items.length > 0) {
+        await this.ticketRepo.bulkSyncSummaries(items);
+      }
+
+      ticketsSynced += items.length;
+      cursor = chunk[chunk.length - 1]!.ticketId;
+
+      if (chunk.length < CHUNK_SIZE) {
+        break;
+      }
     }
 
     return { drawId, ticketsSynced };

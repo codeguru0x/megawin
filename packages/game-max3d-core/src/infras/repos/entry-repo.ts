@@ -35,26 +35,22 @@ export abstract class AbstractEntryRepository<
 
   // ─── Query ───
 
-  async getEntriesByDrawId(
-    drawId: string,
-    page: number,
-    size: number
-  ): Promise<TEntity[]> {
+  async getEntriesByDrawId(drawId: string, page: number, size: number): Promise<TEntity[]> {
     return await this.paging({ drawId }, page, size, {
       sort: { createdAt: 1 },
     });
   }
 
-  async getScheduledEntriesBatch(
-    drawId: string,
-    page: number,
-    size: number
-  ): Promise<TEntity[]> {
-    return await this.paging(
+  async getScheduledEntriesBatch(drawId: string, page: number, size: number): Promise<TEntity[]> {
+    return await this.paging({ drawId, status: EntryStatus.Scheduled }, page, size, {
+      sort: { createdAt: 1 },
+    });
+  }
+
+  async getScheduledEntries(drawId: string, limit: number): Promise<TEntity[]> {
+    return await this.findMany(
       { drawId, status: EntryStatus.Scheduled },
-      page,
-      size,
-      { sort: { createdAt: 1 } }
+      { sort: { createdAt: 1 }, limit },
     );
   }
 
@@ -88,7 +84,7 @@ export abstract class AbstractEntryRepository<
     drawId: string,
     fromStatus: string,
     toStatus: string,
-    extraSet?: Record<string, unknown>
+    extraSet?: Record<string, unknown>,
   ): Promise<number> {
     const version = await this.nextVersion();
     const $set: Record<string, unknown> = {
@@ -97,10 +93,7 @@ export abstract class AbstractEntryRepository<
       updatedAt: new Date(),
       ...extraSet,
     };
-    const result = await this.updateMany(
-      { drawId, status: fromStatus },
-      { $set }
-    );
+    const result = await this.updateMany({ drawId, status: fromStatus }, { $set });
     return result.modifiedCount;
   }
 
@@ -119,7 +112,7 @@ export abstract class AbstractEntryRepository<
       payoutStatus?: string;
     },
     outcome: string,
-    result: TDrawResult & { publishedAt: Date }
+    result: TDrawResult & { publishedAt: Date },
   ): Promise<boolean> {
     const version = await this.nextVersion();
     return await this.updateOne(
@@ -133,7 +126,7 @@ export abstract class AbstractEntryRepository<
           version,
           updatedAt: new Date(),
         },
-      }
+      },
     );
   }
 
@@ -144,7 +137,6 @@ export abstract class AbstractEntryRepository<
       tenantId: string;
       revenue: number;
       commission: number;
-      commissionRate: number;
       entryCount: number;
     }>
   > {
@@ -155,7 +147,6 @@ export abstract class AbstractEntryRepository<
           _id: "$tenantId",
           revenue: { $sum: "$amount" },
           commission: { $sum: "$tenantSnapshot.commissionAmount" },
-          commissionRate: { $first: "$tenantSnapshot.commissionRate" },
           entryCount: { $sum: 1 },
         },
       },
@@ -164,7 +155,6 @@ export abstract class AbstractEntryRepository<
       tenantId: r._id,
       revenue: r.revenue,
       commission: r.commission ?? 0,
-      commissionRate: r.commissionRate ?? 0.2,
       entryCount: r.entryCount,
     }));
   }
@@ -222,7 +212,7 @@ export abstract class AbstractEntryRepository<
 
   async aggregateTenantReport(
     drawId: string,
-    financialDate: string
+    financialDate: string,
   ): Promise<
     Array<{
       tenantId: string;
@@ -261,7 +251,7 @@ export abstract class AbstractEntryRepository<
 
   async aggregatePlayerReport(
     drawId: string,
-    financialDate: string
+    financialDate: string,
   ): Promise<
     Array<{
       tenantId: string;
@@ -296,10 +286,7 @@ export abstract class AbstractEntryRepository<
 
   // ─── Payout Dispatch ───
 
-  async getPendingPayoutEntries(
-    drawId: string,
-    limit: number
-  ): Promise<TEntity[]> {
+  async getPendingPayoutEntries(drawId: string, limit: number): Promise<TEntity[]> {
     return await this.findMany(
       {
         drawId,
@@ -311,7 +298,7 @@ export abstract class AbstractEntryRepository<
           { "payout.payoutStatus": { $exists: false } },
         ],
       },
-      { sort: { tenantId: 1, createdAt: 1 }, limit }
+      { sort: { tenantId: 1, createdAt: 1 }, limit },
     );
   }
 
@@ -337,7 +324,7 @@ export abstract class AbstractEntryRepository<
           "payout.payoutDispatchedAt": new Date(),
           updatedAt: new Date(),
         },
-      }
+      },
     );
   }
 
@@ -351,7 +338,7 @@ export abstract class AbstractEntryRepository<
           updatedAt: new Date(),
         },
         $inc: { "payout.payoutRetryCount": 1 },
-      }
+      },
     );
   }
 
@@ -365,15 +352,12 @@ export abstract class AbstractEntryRepository<
           "payout.payoutDispatchedAt": new Date(),
           updatedAt: new Date(),
         },
-      }
+      },
     );
     return result.modifiedCount;
   }
 
-  async batchMarkPayoutFailed(
-    entryIds: string[],
-    error: string
-  ): Promise<number> {
+  async batchMarkPayoutFailed(entryIds: string[], error: string): Promise<number> {
     const objectIds = entryIds.map((id) => new ObjectId(id));
     const result = await this.updateMany(
       { _id: { $in: objectIds } as any },
@@ -384,23 +368,20 @@ export abstract class AbstractEntryRepository<
           updatedAt: new Date(),
         },
         $inc: { "payout.payoutRetryCount": 1 },
-      }
+      },
     );
     return result.modifiedCount;
   }
 
   // ─── Void Draw ───
 
-  async getVoidableEntriesBatch(
-    drawId: string,
-    limit: number
-  ): Promise<TEntity[]> {
+  async getVoidableEntriesBatch(drawId: string, limit: number): Promise<TEntity[]> {
     return await this.findMany(
       {
         drawId,
         status: EntryStatus.Scheduled,
       },
-      { sort: { createdAt: 1 }, limit }
+      { sort: { createdAt: 1 }, limit },
     );
   }
 
@@ -411,7 +392,7 @@ export abstract class AbstractEntryRepository<
       originalAmount: number;
       refundAmount: number;
       voidedBy?: string;
-    }
+    },
   ): Promise<boolean> {
     const version = await this.nextVersion();
     return await this.updateOne(
@@ -430,7 +411,7 @@ export abstract class AbstractEntryRepository<
           version,
           updatedAt: new Date(),
         },
-      }
+      },
     );
   }
 
@@ -441,17 +422,14 @@ export abstract class AbstractEntryRepository<
     });
   }
 
-  async getPendingRefundEntries(
-    drawId: string,
-    limit: number
-  ): Promise<TEntity[]> {
+  async getPendingRefundEntries(drawId: string, limit: number): Promise<TEntity[]> {
     return await this.findMany(
       {
         drawId,
         status: EntryStatus.Void,
         "voidInfo.refundStatus": { $in: ["pending", "failed"] },
       },
-      { sort: { createdAt: 1 }, limit }
+      { sort: { createdAt: 1 }, limit },
     );
   }
 
@@ -464,7 +442,7 @@ export abstract class AbstractEntryRepository<
           "voidInfo.refundedAt": new Date(),
           updatedAt: new Date(),
         },
-      }
+      },
     );
   }
 
@@ -477,7 +455,7 @@ export abstract class AbstractEntryRepository<
           "voidInfo.refundLastError": error,
           updatedAt: new Date(),
         },
-      }
+      },
     );
   }
 
@@ -551,11 +529,7 @@ export abstract class AbstractEntryRepository<
           },
           voidedDrawIds: {
             $addToSet: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                "$drawId",
-                "$$REMOVE",
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$drawId", "$$REMOVE"],
             },
           },
         },
@@ -574,6 +548,78 @@ export abstract class AbstractEntryRepository<
     };
   }
 
+  async aggregateTicketSummariesBatch(ticketIds: ObjectId[]): Promise<
+    Map<
+      string,
+      {
+        settledCount: number;
+        voidedCount: number;
+        totalWinAmount: number;
+        totalVoidedAmount: number;
+        totalRefundedAmount: number;
+        voidedDrawIds: string[];
+      }
+    >
+  > {
+    const result = await this.aggregate([
+      { $match: { ticketId: { $in: ticketIds } } },
+      {
+        $group: {
+          _id: "$ticketId",
+          settledCount: { $sum: { $cond: [{ $eq: ["$status", EntryStatus.Settled] }, 1, 0] } },
+          voidedCount: { $sum: { $cond: [{ $eq: ["$status", EntryStatus.Void] }, 1, 0] } },
+          totalWinAmount: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
+          totalVoidedAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                { $ifNull: ["$voidInfo.originalAmount", 0] },
+                0,
+              ],
+            },
+          },
+          totalRefundedAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                { $ifNull: ["$voidInfo.refundAmount", 0] },
+                0,
+              ],
+            },
+          },
+          voidedDrawIds: {
+            $addToSet: { $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$drawId", "$$REMOVE"] },
+          },
+        },
+      },
+    ]);
+
+    const map = new Map<
+      string,
+      {
+        settledCount: number;
+        voidedCount: number;
+        totalWinAmount: number;
+        totalVoidedAmount: number;
+        totalRefundedAmount: number;
+        voidedDrawIds: string[];
+      }
+    >();
+
+    for (const row of result) {
+      const r = row as any;
+      map.set(r._id.toString(), {
+        settledCount: r.settledCount ?? 0,
+        voidedCount: r.voidedCount ?? 0,
+        totalWinAmount: r.totalWinAmount ?? 0,
+        totalVoidedAmount: r.totalVoidedAmount ?? 0,
+        totalRefundedAmount: r.totalRefundedAmount ?? 0,
+        voidedDrawIds: r.voidedDrawIds ?? [],
+      });
+    }
+    return map;
+  }
+
   async getDistinctTicketIdsByDrawId(drawId: string): Promise<ObjectId[]> {
     const col = await this.getCollection();
     return col.distinct("ticketId", { drawId }) as Promise<ObjectId[]>;
@@ -581,13 +627,7 @@ export abstract class AbstractEntryRepository<
 
   // ─── Feed Sync ───
 
-  async getChangedEntries(
-    afterVersion: Long,
-    limit: number
-  ): Promise<TEntity[]> {
-    return await this.findMany(
-      { version: { $gt: afterVersion } },
-      { sort: { version: 1 }, limit }
-    );
+  async getChangedEntries(afterVersion: Long, limit: number): Promise<TEntity[]> {
+    return await this.findMany({ version: { $gt: afterVersion } }, { sort: { version: 1 }, limit });
   }
 }

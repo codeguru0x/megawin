@@ -15,28 +15,16 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { calculateKenoDrawFinancials } from "@megawin/game-keno/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
+import type { KenoSettleConfig, KenoSettleFinancials } from "./types";
 
 export interface CalculateFinancialsInput {
   drawId: string;
-  config: {
-    companyRate: number;
-  };
+  config: Pick<KenoSettleConfig, "companyRate">;
 }
 
-export interface CalculateFinancialsResult {
+export type CalculateFinancialsResult = KenoSettleFinancials & {
   drawId: string;
-  totalRevenue: number;
-  totalPrizes: number;
-  totalAgentCommission: number;
-  companyTake: number;
-  tenantBreakdown: Array<{
-    tenantId: string;
-    revenue: number;
-    commission: number;
-    commissionRate: number;
-    entryCount: number;
-  }>;
-}
+};
 
 export class CalculateFinancialsUseCase extends InternalUseCase<
   CalculateFinancialsInput,
@@ -46,9 +34,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
   private readonly drawRepo = new DrawRepository();
 
   /** Tính tài chính tổng hợp Keno. Idempotent – tính từ DB. */
-  protected async execute(
-    input: CalculateFinancialsInput
-  ): Promise<CalculateFinancialsResult> {
+  protected async execute(input: CalculateFinancialsInput): Promise<CalculateFinancialsResult> {
     const { drawId, config } = input;
     const [tenantAgg, payoutSummary] = await Promise.all([
       this.entryRepo.aggregateRevenueByTenant(drawId),
@@ -61,7 +47,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       tenantRevenues: tenantAgg.map((t) => ({
         tenantId: t.tenantId,
         revenue: t.revenue,
-        commissionRate: t.commissionRate,
         commission: t.commission,
       })),
       companyRate: config.companyRate,
@@ -73,23 +58,25 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
         tenantId: t.tenantId,
         revenue: t.revenue,
         commission: fb?.commission ?? 0,
-        commissionRate: t.commissionRate,
+        commissionRate: t.revenue > 0 ? t.commission / t.revenue : 0,
         entryCount: t.entryCount,
       };
     });
 
-    await this.drawRepo.updateFinancial(drawId, {
-      totalRevenue: fin.totalRevenue,
-      totalPrizes: fin.totalPrizes,
-      totalAgentCommission: fin.totalAgentCommission,
-      companyTake: fin.companyTake,
-    });
-
-    await this.drawRepo.updateStats(drawId, {
-      ticketEntryCount: payoutSummary.totalSettled,
-      totalSalesAmount: fin.totalRevenue,
-      totalPayoutAmount: payoutSummary.totalPayoutAmount,
-    });
+    await this.drawRepo.updateSettleResult(
+      drawId,
+      {
+        totalRevenue: fin.totalRevenue,
+        totalPrizes: fin.totalPrizes,
+        totalAgentCommission: fin.totalAgentCommission,
+        companyTake: fin.companyTake,
+      },
+      {
+        ticketEntryCount: payoutSummary.totalSettled,
+        totalSalesAmount: fin.totalRevenue,
+        totalPayoutAmount: payoutSummary.totalPayoutAmount,
+      },
+    );
 
     return {
       drawId,

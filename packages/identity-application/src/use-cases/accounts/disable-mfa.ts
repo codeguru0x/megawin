@@ -5,6 +5,7 @@ import {
   adminUpdateMfa,
   adminVerifySoftwareToken,
   COGNITO_WORKFORCE_POOL_ID,
+  COGNITO_WORKFORCE_CLIENT_ID,
 } from "@megawin/app-core/aws/cognito";
 import { MfaStatus } from "@megawin/identity/entities/account";
 import { AccountRepository } from "../../infras/repos/account-repo";
@@ -19,14 +20,9 @@ export interface DisableMfaOutput {
   success: boolean;
 }
 
-export class DisableMfaUseCase extends NextApiUseCase<
-  DisableMfaInput,
-  DisableMfaOutput
-> {
+export class DisableMfaUseCase extends NextApiUseCase<DisableMfaInput, DisableMfaOutput> {
   protected async execute(input: DisableMfaInput): Promise<DisableMfaOutput> {
-    const clientId = process.env.COGNITO_WORKFORCE_USERPOOL_CLIENT_ID;
-
-    if (!COGNITO_WORKFORCE_POOL_ID || !clientId) {
+    if (!COGNITO_WORKFORCE_POOL_ID || !COGNITO_WORKFORCE_CLIENT_ID) {
       throw AppException.internal("Cognito pool configuration is missing");
     }
 
@@ -34,25 +30,23 @@ export class DisableMfaUseCase extends NextApiUseCase<
     try {
       const authResult = await adminInitiateAuth({
         userPoolId: COGNITO_WORKFORCE_POOL_ID,
-        clientId,
+        clientId: COGNITO_WORKFORCE_CLIENT_ID,
         username: input.username,
         password: input.password,
       });
       accessToken = authResult.accessToken;
     } catch (error: unknown) {
-      const errName =
-        error instanceof Error ? error.constructor.name : "UnknownError";
+      const errName = error instanceof Error ? error.constructor.name : "UnknownError";
 
       if (
         errName === "NotAuthorizedException" ||
-        (error instanceof Error &&
-          error.message.includes("Incorrect username or password"))
+        (error instanceof Error && error.message.includes("Incorrect username or password"))
       ) {
         throw AppException.badRequest("Mật khẩu không đúng");
       }
 
       throw AppException.internal(
-        `Xác thực thất bại: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Xác thực thất bại: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
 
@@ -68,20 +62,16 @@ export class DisableMfaUseCase extends NextApiUseCase<
     } catch (error: unknown) {
       if (error instanceof AppException) throw error;
 
-      const errName =
-        error instanceof Error ? error.constructor.name : "UnknownError";
+      const errName = error instanceof Error ? error.constructor.name : "UnknownError";
 
-      if (
-        errName === "CodeMismatchException" ||
-        errName === "EnableSoftwareTokenMFAException"
-      ) {
+      if (errName === "CodeMismatchException" || errName === "EnableSoftwareTokenMFAException") {
         throw AppException.badRequest(
-          "Mã xác thực không đúng. Vui lòng kiểm tra lại app Authenticator."
+          "Mã xác thực không đúng. Vui lòng kiểm tra lại app Authenticator.",
         );
       }
 
       throw AppException.internal(
-        `Xác thực TOTP thất bại: ${error instanceof Error ? error.message : "Unknown error"}`
+        `Xác thực TOTP thất bại: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
 

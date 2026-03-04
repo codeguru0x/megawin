@@ -3,6 +3,7 @@ import { AppException } from "@megawin/shared/errors";
 import {
   adminChangeUserPassword,
   COGNITO_WORKFORCE_POOL_ID,
+  COGNITO_WORKFORCE_CLIENT_ID,
 } from "@megawin/app-core/aws/cognito";
 
 export interface ChangeMyPasswordInput {
@@ -19,28 +20,22 @@ export class ChangeMyPasswordUseCase extends NextApiUseCase<
   ChangeMyPasswordInput,
   ChangeMyPasswordOutput
 > {
-  protected async execute(
-    input: ChangeMyPasswordInput
-  ): Promise<ChangeMyPasswordOutput> {
-    const clientId = process.env.COGNITO_WORKFORCE_USERPOOL_CLIENT_ID;
-
-    if (!COGNITO_WORKFORCE_POOL_ID || !clientId) {
+  protected async execute(input: ChangeMyPasswordInput): Promise<ChangeMyPasswordOutput> {
+    if (!COGNITO_WORKFORCE_POOL_ID || !COGNITO_WORKFORCE_CLIENT_ID) {
       throw AppException.internal("Cognito pool configuration is missing");
     }
 
     try {
       await adminChangeUserPassword({
         userPoolId: COGNITO_WORKFORCE_POOL_ID,
-        clientId,
+        clientId: COGNITO_WORKFORCE_CLIENT_ID,
         username: input.username,
         currentPassword: input.currentPassword,
         newPassword: input.newPassword,
       });
     } catch (error: unknown) {
-      const errName =
-        error instanceof Error ? error.constructor.name : "UnknownError";
-      const errMessage =
-        error instanceof Error ? error.message : "Unknown error";
+      const errName = error instanceof Error ? error.constructor.name : "UnknownError";
+      const errMessage = error instanceof Error ? error.message : "Unknown error";
 
       if (
         errName === "NotAuthorizedException" ||
@@ -50,9 +45,7 @@ export class ChangeMyPasswordUseCase extends NextApiUseCase<
       }
 
       if (errName === "InvalidPasswordException") {
-        throw AppException.badRequest(
-          "Mật khẩu mới không đáp ứng yêu cầu bảo mật"
-        );
+        throw AppException.badRequest("Mật khẩu mới không đáp ứng yêu cầu bảo mật");
       }
 
       throw AppException.internal(`Đổi mật khẩu thất bại: ${errMessage}`);

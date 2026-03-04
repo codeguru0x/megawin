@@ -24,7 +24,6 @@ import { PayoutStatus } from "@megawin/game-max3dpro/entities";
 import type {
   TicketLineDoc,
   EntryBoardSnapshot,
-  PrizeAmounts,
   Triplet,
 } from "@megawin/game-max3dpro/entities";
 import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
@@ -37,28 +36,17 @@ import type { PlayMode } from "@megawin/game-max3dpro/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
+import type { Max3dProDrawResult as Max3dProDrawResultInput, Max3dProPrizeConfig } from "./types";
+
+const DEFAULT_BATCH_SIZE = 500;
 
 export interface SettleEntriesBatchInput {
   /** ID kỳ quay cần settle. */
   drawId: string;
   /** Kết quả quay thưởng 20 bộ ba số. */
-  result: {
-    /** Giải Đặc biệt: 2 bộ ba số. */
-    special: [string, string];
-    /** Giải Nhất: 4 bộ ba số. */
-    first: [string, string, string, string];
-    /** Giải Nhì: 6 bộ ba số. */
-    second: [string, string, string, string, string, string];
-    /** Giải Ba: 8 bộ ba số. */
-    third: [string, string, string, string, string, string, string, string];
-  };
+  result: Max3dProDrawResultInput;
   /** Bảng giải thưởng áp dụng. */
-  prizeConfig: {
-    /** Bảng tiền thưởng chế độ Standard. */
-    standard: PrizeAmounts;
-  };
-  /** Số entries xử lý mỗi batch. */
-  batchSize: number;
+  prizeConfig: Max3dProPrizeConfig;
 }
 
 export interface SettleAccumulator {
@@ -94,7 +82,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   protected async execute(
     input: SettleEntriesBatchInput
   ): Promise<SettleEntriesBatchResult> {
-    const { drawId, result, prizeConfig, batchSize } = input;
+    const { drawId, result, prizeConfig } = input;
     const drawResult: Max3dproDrawResult = {
       special: result.special as [Triplet, Triplet],
       first: result.first as [Triplet, Triplet, Triplet, Triplet],
@@ -118,10 +106,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       ],
     };
 
-    const entries = await this.entryRepo.getScheduledEntriesBatch(
+    const entries = await this.entryRepo.getScheduledEntries(
       drawId,
-      1,
-      batchSize
+      DEFAULT_BATCH_SIZE
     );
 
     if (entries.length === 0) {
@@ -135,6 +122,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     const acc = emptyAccumulator();
     let batchSettled = 0;
     const ticketCache = new Map<string, any>();
+    const now = new Date();
 
     for (const entry of entries) {
       const ticketId = entry.ticketId;
@@ -154,7 +142,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       // ── Step 1-2: Expand pairs & match each pair against draw result ──
       const boards: EntryBoardSnapshot[] = entry.entrySummary.boards;
       const allLineDocs: Array<Omit<TicketLineDoc, "_id">> = [];
-      const now = new Date();
       let entryWinAmount = 0;
       let globalLineIndex = 0;
 
@@ -253,7 +240,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     }
 
     return {
-      done: entries.length < batchSize,
+      done: entries.length < DEFAULT_BATCH_SIZE,
       accumulator: acc,
       batchSettled,
     };

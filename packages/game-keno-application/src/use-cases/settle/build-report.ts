@@ -10,23 +10,12 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { publishGameReport } from "@megawin/game-core-application/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { ReportRepository } from "../../infras/repos/report-repo";
+import type { KenoSettleFinancials } from "./types";
 
 export interface BuildReportInput {
   drawId: string;
   financialDate: string;
-  financials?: {
-    totalRevenue: number;
-    totalPrizes: number;
-    totalAgentCommission: number;
-    companyTake: number;
-    tenantBreakdown: Array<{
-      tenantId: string;
-      revenue: number;
-      commission: number;
-      commissionRate: number;
-      entryCount: number;
-    }>;
-  };
+  financials?: KenoSettleFinancials;
 }
 
 export interface BuildReportResult {
@@ -37,20 +26,14 @@ export interface BuildReportResult {
   gameCoreReportPublished: boolean;
 }
 
-export class BuildReportUseCase extends InternalUseCase<
-  BuildReportInput,
-  BuildReportResult
-> {
+export class BuildReportUseCase extends InternalUseCase<BuildReportInput, BuildReportResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly reportRepo = new ReportRepository();
 
   /** Tạo/cập nhật báo cáo Keno. Upsert – idempotent. */
   protected async execute(input: BuildReportInput): Promise<BuildReportResult> {
     const { drawId, financialDate, financials } = input;
-    const tenantAggs = await this.entryRepo.aggregateTenantReport(
-      drawId,
-      financialDate
-    );
+    const tenantAggs = await this.entryRepo.aggregateTenantReport(drawId, financialDate);
 
     for (const t of tenantAggs) {
       await this.reportRepo.upsertTenantDailyReport({
@@ -70,10 +53,7 @@ export class BuildReportUseCase extends InternalUseCase<
       });
     }
 
-    const playerAggs = await this.entryRepo.aggregatePlayerReport(
-      drawId,
-      financialDate
-    );
+    const playerAggs = await this.entryRepo.aggregatePlayerReport(drawId, financialDate);
 
     for (const p of playerAggs) {
       await this.reportRepo.upsertPlayerDailyReport({

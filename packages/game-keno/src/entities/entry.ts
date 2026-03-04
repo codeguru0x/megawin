@@ -139,14 +139,12 @@ export interface TicketEntryDoc {
 
 export interface EntryBoardSnapshot {
   boardNo: string;
-  isVoid?: boolean;
   playType: KenoPlayType;
   /** Số dạng string "01"-"80". */
   numbers: string[];
 }
 
 export interface EntrySideBetSnapshot {
-  isVoid?: boolean;
   playType: KenoPlayType;
   bet: KenoBigSmallBet | KenoEvenOddBet;
 }

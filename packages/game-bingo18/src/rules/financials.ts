@@ -33,9 +33,7 @@ export interface DrawFinancialInput {
     tenantId: string;
     /** Doanh thu riêng đại lý = Σ(entry.amount) của entries thuộc tenant này. */
     revenue: number;
-    /** Tỷ lệ hoa hồng đại lý (0-1). Lấy từ tenant config. */
-    commissionRate: number;
-    /** Hoa hồng đại lý = revenue × commissionRate. Tính sẵn bởi caller. */
+    /** Hoa hồng đại lý. Tính sẵn bởi caller. */
     commission: number;
   }>;
   /** Tỷ lệ phần công ty (0-1). Lấy từ global config rates.companyRate. */
@@ -63,34 +61,34 @@ export interface DrawFinancialResult {
     tenantId: string;
     /** Doanh thu riêng đại lý. */
     revenue: number;
-    /** Hoa hồng đại lý = revenue × commissionRate. */
+    /** Hoa hồng đại lý. */
     commission: number;
-    /** Tỷ lệ hoa hồng áp dụng. */
-    commissionRate: number;
   }>;
 }
 
-export function calculateBingo18DrawFinancials(
-  input: DrawFinancialInput,
-): DrawFinancialResult {
+/**
+ * Tính tài chính tổng hợp cho 1 kỳ quay Bingo 18.
+ *
+ * Bingo 18 KHÔNG có Jackpot, KHÔNG có payout caps.
+ * profit = totalRevenue - totalPrizes - totalAgentCommission - companyTake (có thể âm).
+ *
+ * @param input - Dữ liệu tổng hợp từ DB
+ * @returns Kết quả tài chính gồm profit và tenant breakdown
+ */
+export function calculateBingo18DrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const { totalRevenue, totalPrizes, tenantRevenues, companyRate } = input;
 
   const tenantBreakdown = tenantRevenues.map((t) => ({
     tenantId: t.tenantId,
     revenue: t.revenue,
     commission: t.commission,
-    commissionRate: t.commissionRate,
   }));
 
-  const totalAgentCommission = tenantBreakdown.reduce(
-    (sum, t) => sum + t.commission,
-    0,
-  );
+  const totalAgentCommission = tenantBreakdown.reduce((sum, t) => sum + t.commission, 0);
 
   const companyTake = Math.round(totalRevenue * companyRate);
 
-  const profit =
-    totalRevenue - totalPrizes - totalAgentCommission - companyTake;
+  const profit = totalRevenue - totalPrizes - totalAgentCommission - companyTake;
 
   return {
     totalRevenue,

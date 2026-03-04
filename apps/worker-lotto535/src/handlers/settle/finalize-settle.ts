@@ -1,7 +1,7 @@
 /**
  * Lambda: finalize-settle (Lotto 5/35)
  *
- * Step 6 (cuối) của Lotto535 Settle Step Function.
+ * Step 7 (cuối) của Lotto535 Settle Step Function.
  * Chuyển draw status: settling → settled. Ghi jackpot snapshot + update cycle.
  *
  * CRASH-SAFE: transitionStatus atomic, idempotent.

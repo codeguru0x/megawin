@@ -18,6 +18,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import type { Max3dDrawResult, Max3dSettleConfig } from "./types";
 
 export interface PrepareSettleInput {
   /** ID kỳ quay cần settle. */
@@ -34,16 +35,7 @@ export interface PrepareSettleResult {
   /** Ngày tài chính (dùng cho báo cáo). */
   financialDate: string;
   /** Kết quả quay: 20 bộ ba số theo 4 giải. */
-  result: {
-    /** Giải Đặc biệt: 2 bộ ba số. */
-    special: [string, string];
-    /** Giải Nhất: 4 bộ ba số. */
-    first: [string, string, string, string];
-    /** Giải Nhì: 6 bộ ba số. */
-    second: [string, string, string, string, string, string];
-    /** Giải Ba: 8 bộ ba số. */
-    third: [string, string, string, string, string, string, string, string];
-  };
+  result: Max3dDrawResult;
   /** Cấu hình giải thưởng áp dụng cho kỳ này. */
   prizeConfig: {
     /** Giải thưởng chế độ Basic (basic direct/rumble). */
@@ -65,12 +57,7 @@ export interface PrepareSettleResult {
     };
   };
   /** Cấu hình tài chính áp dụng. */
-  config: {
-    /** Tỷ lệ công ty (% doanh thu). */
-    companyRate: number;
-    /** Tỷ lệ hoa hồng đại lý mặc định. */
-    defaultCommissionRate: number;
-  };
+  config: Max3dSettleConfig;
   /** Tổng entries cần settle. */
   totalEntries: number;
   /** Tổng lines cần settle. */

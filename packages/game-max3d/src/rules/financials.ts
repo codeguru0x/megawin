@@ -25,8 +25,6 @@ export interface DrawFinancialInput {
     revenue: number;
     /** Hoa hồng đại lý = revenue × commissionRate. */
     commission: number;
-    /** Tỷ lệ hoa hồng của đại lý (snapshot từ tenant config). */
-    commissionRate: number;
   }>;
   /** Tỷ lệ phần trăm công ty (từ global config). */
   companyRate: number;
@@ -61,37 +59,34 @@ export interface DrawFinancialResult {
     revenue: number;
     /** Hoa hồng đại lý. */
     commission: number;
-    /** Tỷ lệ hoa hồng. */
-    commissionRate: number;
   }>;
 }
 
-export function calculateDrawFinancials(
-  input: DrawFinancialInput
-): DrawFinancialResult {
+/**
+ * Tính tài chính tổng hợp cho 1 kỳ quay Max 3D.
+ *
+ * Max 3D không có Jackpot. Phần còn lại sau prizes + commission + companyTake → profit.
+ * actualCompanyTake được cap để không vượt quá phần remaining (bảo vệ khỏi lỗ).
+ *
+ * @param input - Dữ liệu tổng hợp từ DB
+ * @returns Kết quả tài chính gồm profit, actualCompanyTake và tenant breakdown
+ */
+export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const { totalRevenue, totalFixedPrizes, tenantRevenues, companyRate } = input;
 
   const tenantBreakdown = tenantRevenues.map((t) => ({
     tenantId: t.tenantId,
     revenue: t.revenue,
     commission: t.commission,
-    commissionRate: t.commissionRate,
   }));
 
-  const totalAgentCommission = tenantBreakdown.reduce(
-    (sum, t) => sum + t.commission,
-    0
-  );
+  const totalAgentCommission = tenantBreakdown.reduce((sum, t) => sum + t.commission, 0);
 
   const companyTake = Math.round(totalRevenue * companyRate);
 
-  const remainAfterPrizes =
-    totalRevenue - totalFixedPrizes - totalAgentCommission;
+  const remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission;
 
-  const actualCompanyTake = Math.min(
-    companyTake,
-    Math.max(remainAfterPrizes, 0)
-  );
+  const actualCompanyTake = Math.min(companyTake, Math.max(remainAfterPrizes, 0));
 
   const profit = Math.max(remainAfterPrizes - actualCompanyTake, 0);
 

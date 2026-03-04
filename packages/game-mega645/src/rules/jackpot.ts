@@ -39,8 +39,6 @@ export interface DrawFinancialInput {
     revenue: number;
     /** Hoa hồng đại lý (VND). Công thức: revenue × commissionRate. */
     commission: number;
-    /** Tỷ lệ hoa hồng đại lý. */
-    commissionRate: number;
   }>;
   /** Tỷ lệ thu nhập công ty. Ví dụ: 0.15 = 15%. */
   companyRate: number;
@@ -78,39 +76,33 @@ export interface DrawFinancialResult {
     revenue: number;
     /** Hoa hồng đại lý (VND). */
     commission: number;
-    /** Tỷ lệ hoa hồng đại lý. */
-    commissionRate: number;
   }>;
 }
 
-export function calculateDrawFinancials(
-  input: DrawFinancialInput
-): DrawFinancialResult {
+/**
+ * Tính tài chính tổng hợp cho 1 kỳ quay Mega 6/45.
+ *
+ * Mega 6/45 có 1 Jackpot tích luỹ:
+ *   jackpotContribution = max(revenue - fixedPrizes - commission - actualCompanyTake, 0)
+ *
+ * @param input - Dữ liệu tổng hợp từ DB
+ * @returns Kết quả tài chính gồm jackpotContribution, actualCompanyTake, tenant breakdown
+ */
+export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const { totalRevenue, totalFixedPrizes, tenantRevenues, companyRate } = input;
 
   const tenantBreakdown = tenantRevenues.map((t) => ({
     tenantId: t.tenantId,
     revenue: t.revenue,
     commission: t.commission,
-    commissionRate: t.commissionRate,
   }));
 
-  const totalAgentCommission = tenantBreakdown.reduce(
-    (sum, t) => sum + t.commission,
-    0
-  );
+  const totalAgentCommission = tenantBreakdown.reduce((sum, t) => sum + t.commission, 0);
 
   const companyTake = Math.round(totalRevenue * companyRate);
-  const remainAfterPrizes =
-    totalRevenue - totalFixedPrizes - totalAgentCommission;
-  const actualCompanyTake = Math.min(
-    companyTake,
-    Math.max(remainAfterPrizes, 0)
-  );
-  const jackpotContribution = Math.max(
-    remainAfterPrizes - actualCompanyTake,
-    0
-  );
+  const remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission;
+  const actualCompanyTake = Math.min(companyTake, Math.max(remainAfterPrizes, 0));
+  const jackpotContribution = Math.max(remainAfterPrizes - actualCompanyTake, 0);
 
   return {
     totalRevenue,
@@ -131,7 +123,7 @@ export function calculateNextJackpot(
   currentOpening: number,
   contribution: number,
   hasJackpotWinner: boolean,
-  seedAmount: number
+  seedAmount: number,
 ): number {
   if (hasJackpotWinner) {
     return seedAmount + contribution;
@@ -150,7 +142,7 @@ export function calculateNextJackpot(
 export function isSplitCycleDraw(
   jackpotAmount: number,
   splitThreshold: number,
-  hasJackpotWinner: boolean
+  hasJackpotWinner: boolean,
 ): boolean {
   return jackpotAmount >= splitThreshold && !hasJackpotWinner;
 }
@@ -235,18 +227,12 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
     .filter((t) => !t.hasWinners)
     .reduce((s, t) => s + t.initialAmount, 0);
 
-  const redistributedPerTier = Math.floor(
-    unclaimedTotal / tiersWithWinners.length
-  );
+  const redistributedPerTier = Math.floor(unclaimedTotal / tiersWithWinners.length);
 
-  const priorityOrder: PrizeTier[] = [
-    PrizeTier.Tier1,
-    PrizeTier.Tier2,
-    PrizeTier.Tier3,
-  ];
+  const priorityOrder: PrizeTier[] = [PrizeTier.Tier1, PrizeTier.Tier2, PrizeTier.Tier3];
 
   const highestTierWithWinners = priorityOrder.find((tier) =>
-    tiersWithWinners.some((t) => t.tier === tier)
+    tiersWithWinners.some((t) => t.tier === tier),
   )!;
 
   let totalRemainder = 0;
@@ -268,10 +254,7 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
       });
       bonusPerWinnerMap.set(t.tier, bonus);
     } else {
-      const roundedBonus = roundDownToUnit(
-        totalForTier / t.winnerCount,
-        SPLIT_ROUNDING_UNIT
-      );
+      const roundedBonus = roundDownToUnit(totalForTier / t.winnerCount, SPLIT_ROUNDING_UNIT);
       const tierRemainder = totalForTier - roundedBonus * t.winnerCount;
       totalRemainder += tierRemainder;
 

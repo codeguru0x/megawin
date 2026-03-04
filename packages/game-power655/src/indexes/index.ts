@@ -62,6 +62,12 @@ export const POWER655_INDEXES: readonly IndexSpec[] = [
     options: { name: "idx_enrolledDrawIds" },
     purpose: "Query tickets theo drawId",
   },
+  {
+    collection: Power655Collections.Tickets,
+    key: { "drawPlan.drawIds": 1 },
+    options: { name: "idx_drawPlan_drawIds" },
+    purpose: "Cursor-based query tickets theo drawId cho SyncTicketSummaries",
+  },
 
   // ─── power655TicketEntries ───
   {

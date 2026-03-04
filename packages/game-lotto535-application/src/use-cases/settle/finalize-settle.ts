@@ -24,6 +24,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import type { LottoSplitDetails } from "./types";
 
 export interface FinalizeSettleInput {
   /** Mã kỳ quay cần finalize. */
@@ -38,25 +39,8 @@ export interface FinalizeSettleInput {
   hasJackpotWinner: boolean;
   /** Kỳ này có phải kỳ chia Jackpot hay không. */
   isSplitCycle: boolean;
-  /**
-   * Chi tiết phân bổ split — chỉ có khi isSplitCycle = true.
-   * Key: tier name, Value: thông tin phân bổ.
-   */
-  splitDetails?: Record<
-    string,
-    {
-      /** Số tiền ban đầu phân cho tier (VND). */
-      initialAmount: number;
-      /** Số tiền tái phân bổ (VND). */
-      redistributedAmount: number;
-      /** Tổng tiền tier nhận (VND). */
-      totalAmount: number;
-      /** Số người trúng tier. */
-      winnerCount: number;
-      /** Bonus mỗi người (VND). */
-      bonusPerWinner: number;
-    }
-  >;
+  /** Chi tiết phân bổ split — chỉ có khi isSplitCycle = true. */
+  splitDetails?: LottoSplitDetails;
 }
 
 export interface FinalizeSettleResult {

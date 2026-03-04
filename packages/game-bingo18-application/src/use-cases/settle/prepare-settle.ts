@@ -15,13 +15,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import type {
-  SingleNumPrizes,
-  DoubleMatchPrizes,
-  TripleMatchPrizes,
-  SumTotalPrizes,
-  BigSmallDrawPrizes,
-} from "@megawin/game-bingo18/entities";
+import type { BingoDrawResult, BingoSettleConfig } from "./types";
 
 export interface PrepareSettleInput {
   /** ID kỳ quay cần settle. */
@@ -38,29 +32,9 @@ export interface PrepareSettleResult {
   /** Ngày tài chính (YYYY-MM-DD) dùng cho báo cáo. */
   financialDate: string;
   /** Kết quả quay đã publish. */
-  result: {
-    /** 3 số kết quả (1-6). */
-    numbers: number[];
-    /** Tổng 3 số = numbers[0] + numbers[1] + numbers[2]. */
-    sum: number;
-  };
+  result: BingoDrawResult;
   /** Cấu hình giải thưởng & tỷ lệ tài chính tại thời điểm settle. */
-  config: {
-    /** Tỷ lệ công ty (0-1). Dùng tính companyTake = totalRevenue × companyRate. */
-    companyRate: number;
-    /** Tỷ lệ hoa hồng mặc định cho tenant (0-1). */
-    defaultCommissionRate: number;
-    /** Bảng giải chơi Đơn (match 1/2/3 số). */
-    singleNumPrizes: SingleNumPrizes;
-    /** Bảng giải chơi Đúp (≥2 số trùng). */
-    doubleMatchPrizes: DoubleMatchPrizes;
-    /** Bảng giải chơi Ba (specific/any triple). */
-    tripleMatchPrizes: TripleMatchPrizes;
-    /** Bảng giải chơi Tổng (đoán đúng tổng 3 số). */
-    sumTotalPrizes: SumTotalPrizes;
-    /** Bảng giải Tài/Xỉu/Hoà. */
-    bigSmallDrawPrizes: BigSmallDrawPrizes;
-  };
+  config: BingoSettleConfig;
   /** Tổng entries cần settle trong kỳ này. */
   totalEntries: number;
 }

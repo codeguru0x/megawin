@@ -15,6 +15,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { publishGameReport } from "@megawin/game-core-application/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { ReportRepository } from "../../infras/repos/report-repo";
+import type { Max3dProSettleFinancials } from "./types";
 
 export interface BuildReportInput {
   /** ID kỳ quay. */
@@ -22,33 +23,7 @@ export interface BuildReportInput {
   /** Ngày tài chính (YYYY-MM-DD). */
   financialDate: string;
   /** Dữ liệu tài chính từ bước calculate-financials (optional nếu không có entries). */
-  financials?: {
-    /** Tổng doanh thu (VND). */
-    totalRevenue: number;
-    /** Tổng giải thưởng cố định đã trả (VND). */
-    totalFixedPrizes: number;
-    /** Tổng hoa hồng đại lý (VND). */
-    totalAgentCommission: number;
-    /** Phần công ty theo tỷ lệ = totalRevenue × companyRate (VND). */
-    companyTake: number;
-    /** Phần công ty thực tế = totalRevenue − totalFixedPrizes − totalAgentCommission (VND). */
-    actualCompanyTake: number;
-    /** Lợi nhuận = actualCompanyTake (VND). */
-    profit: number;
-    /** Chi tiết tài chính theo từng tenant. */
-    tenantBreakdown: Array<{
-      /** ID tenant. */
-      tenantId: string;
-      /** Doanh thu từ tenant (VND). */
-      revenue: number;
-      /** Hoa hồng đại lý (VND). */
-      commission: number;
-      /** Tỷ lệ hoa hồng (0-1). */
-      commissionRate: number;
-      /** Số entries của tenant. */
-      entryCount: number;
-    }>;
-  };
+  financials?: Max3dProSettleFinancials;
 }
 
 export interface BuildReportResult {

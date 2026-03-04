@@ -4,7 +4,7 @@
  * Xử lý 1 batch entries: match boards + side bets → payout → settle.
  *
  * CRASH-SAFE:
- *   - Luôn query page 1 filter status = "scheduled"
+ *   - Luôn query status = "scheduled" với limit cố định (DEFAULT_BATCH_SIZE)
  *   - settleEntry() atomic: chỉ update nếu status = "scheduled"
  *   - done = true khi không còn entries "scheduled"
  *
@@ -26,13 +26,6 @@ import {
   type Bingo18TripleKind,
   PayoutStatus,
 } from "@megawin/game-bingo18/entities";
-import type {
-  SingleNumPrizes,
-  DoubleMatchPrizes,
-  TripleMatchPrizes,
-  SumTotalPrizes,
-  BigSmallDrawPrizes,
-} from "@megawin/game-bingo18/entities";
 import {
   matchSingleNum,
   matchDoubleMatch,
@@ -43,32 +36,20 @@ import {
 } from "@megawin/game-bingo18/helpers";
 import { EntryOutcome } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
+import type { BingoDrawResult, BingoSettleConfig } from "./types";
+
+const DEFAULT_BATCH_SIZE = 500;
 
 export interface SettleEntriesBatchInput {
   /** ID kỳ quay đang settle. */
   drawId: string;
   /** Kết quả quay. */
-  result: {
-    /** 3 số kết quả (1-6). */
-    numbers: number[];
-    /** Tổng 3 số = numbers[0] + numbers[1] + numbers[2]. */
-    sum: number;
-  };
+  result: BingoDrawResult;
   /** Bảng giải thưởng dùng để tính payout. */
-  config: {
-    /** Giải cho chơi Đơn: match 1/2/3 số → prize tương ứng. */
-    singleNumPrizes: SingleNumPrizes;
-    /** Giải cho chơi Đúp: ≥2 số trùng → prize. */
-    doubleMatchPrizes: DoubleMatchPrizes;
-    /** Giải cho chơi Ba: specific triple / any triple → prize. */
-    tripleMatchPrizes: TripleMatchPrizes;
-    /** Giải cho chơi Tổng: đoán đúng tổng 3 số → prize. */
-    sumTotalPrizes: SumTotalPrizes;
-    /** Giải cho Tài/Xỉu/Hoà. */
-    bigSmallDrawPrizes: BigSmallDrawPrizes;
-  };
-  /** Số entries xử lý mỗi batch. */
-  batchSize: number;
+  config: Pick<
+    BingoSettleConfig,
+    "singleNumPrizes" | "doubleMatchPrizes" | "tripleMatchPrizes" | "sumTotalPrizes" | "bigSmallDrawPrizes"
+  >;
 }
 
 export interface SettleAccumulator {
@@ -98,16 +79,15 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   protected async execute(
     input: SettleEntriesBatchInput
   ): Promise<SettleEntriesBatchResult> {
-    const { drawId, result, config, batchSize } = input;
+    const { drawId, result, config } = input;
     const drawResult: DrawResultForMatch = {
       numbers: result.numbers,
       sum: result.sum,
     };
 
-    const entries = await this.entryRepo.getScheduledEntriesBatch(
+    const entries = await this.entryRepo.getScheduledEntries(
       drawId,
-      1,
-      batchSize
+      DEFAULT_BATCH_SIZE
     );
 
     if (entries.length === 0) {
@@ -120,6 +100,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 
     const acc = emptyAccumulator();
     let batchSettled = 0;
+    const now = new Date();
 
     for (const entry of entries) {
       const boardPayouts: Array<{
@@ -228,14 +209,14 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           payoutAmount: winAmount,
           boardPayouts,
           sideBetPayouts,
-          settledAt: new Date(),
+          settledAt: now,
           payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
         },
         hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
         {
           numbers: result.numbers,
           sum: result.sum,
-          publishedAt: new Date(),
+          publishedAt: now,
         }
       );
 
@@ -248,7 +229,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     }
 
     return {
-      done: entries.length < batchSize,
+      done: entries.length < DEFAULT_BATCH_SIZE,
       accumulator: acc,
       batchSettled,
     };

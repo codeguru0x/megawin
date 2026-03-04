@@ -21,6 +21,7 @@ export const config = [
     },
     rules: {
       "turbo/no-undeclared-env-vars": "warn",
+      curly: "warn",
 
       "@stylistic/padding-line-between-statements": [
         "warn",

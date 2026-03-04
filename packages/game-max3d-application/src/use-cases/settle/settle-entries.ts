@@ -26,10 +26,8 @@ import type {
   EntryBoardSnapshot,
   Max3dPrizeConfig,
   Triplet,
-  BasicPrizeTier,
-  PlusPrizeTier,
 } from "@megawin/game-max3d/entities";
-import type { Max3dDrawResult } from "@megawin/game-max3d/entities";
+import type { Max3dDrawResult as EntityDrawResult } from "@megawin/game-max3d/entities";
 import {
   matchBoard,
   type BoardMatchResult,
@@ -37,21 +35,17 @@ import {
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
+import type { Max3dDrawResult } from "./types";
+
+const DEFAULT_BATCH_SIZE = 500;
 
 export interface SettleEntriesBatchInput {
   /** ID kỳ quay cần settle. */
   drawId: string;
   /** Kết quả quay thưởng 20 bộ ba số. */
-  result: {
-    special: [string, string];
-    first: [string, string, string, string];
-    second: [string, string, string, string, string, string];
-    third: [string, string, string, string, string, string, string, string];
-  };
+  result: Max3dDrawResult;
   /** Bảng giải thưởng áp dụng. */
   prizeConfig: Max3dPrizeConfig;
-  /** Số entries xử lý mỗi batch. */
-  batchSize: number;
 }
 
 export interface SettleAccumulator {
@@ -87,8 +81,8 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   protected async execute(
     input: SettleEntriesBatchInput
   ): Promise<SettleEntriesBatchResult> {
-    const { drawId, result, prizeConfig, batchSize } = input;
-    const drawResult: Max3dDrawResult = {
+    const { drawId, result, prizeConfig } = input;
+    const drawResult: EntityDrawResult = {
       special: result.special as [Triplet, Triplet],
       first: result.first as [Triplet, Triplet, Triplet, Triplet],
       second: result.second as [
@@ -111,10 +105,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       ],
     };
 
-    const entries = await this.entryRepo.getScheduledEntriesBatch(
+    const entries = await this.entryRepo.getScheduledEntries(
       drawId,
-      1,
-      batchSize
+      DEFAULT_BATCH_SIZE
     );
 
     if (entries.length === 0) {
@@ -128,6 +121,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     const acc = emptyAccumulator();
     let batchSettled = 0;
     const ticketCache = new Map<string, any>();
+    const now = new Date();
 
     for (const entry of entries) {
       const ticketId = entry.ticketId;
@@ -148,7 +142,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       const boards: EntryBoardSnapshot[] = entry.entrySummary.boards;
       const boardResults: BoardMatchResult[] = [];
       const allLineDocs: Array<Omit<TicketLineDoc, "_id">> = [];
-      const now = new Date();
       let entryWinAmount = 0;
       let globalLineIndex = 0;
 
@@ -240,7 +233,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     }
 
     return {
-      done: entries.length < batchSize,
+      done: entries.length < DEFAULT_BATCH_SIZE,
       accumulator: acc,
       batchSettled,
     };

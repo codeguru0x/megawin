@@ -28,3 +28,5 @@ export type {
   SyncTicketSummariesInput,
   SyncTicketSummariesResult,
 } from "./sync-ticket-summaries";
+
+export type { BingoDrawResult, BingoSettleConfig, BingoSettleFinancials } from "./types";

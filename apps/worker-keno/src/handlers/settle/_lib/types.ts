@@ -11,7 +11,7 @@
 
 import type {
   PrepareSettleResult,
-  CalculateFinancialsResult,
+  KenoSettleFinancials,
 } from "@megawin/game-keno-application/use-cases/settle";
 
 /**
@@ -24,7 +24,4 @@ export type SettleContext = PrepareSettleResult;
  * Subset tài chính truyền từ CalculateFinancials → BuildReport.
  * Step function truyền `financials` field qua JSONata.
  */
-export type BuildReportFinancials = Pick<
-  CalculateFinancialsResult,
-  "totalRevenue" | "totalPrizes" | "totalAgentCommission" | "companyTake" | "tenantBreakdown"
->;
+export type BuildReportFinancials = KenoSettleFinancials;

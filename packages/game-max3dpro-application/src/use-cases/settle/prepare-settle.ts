@@ -18,6 +18,11 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
+import type {
+  Max3dProDrawResult,
+  Max3dProSettleConfig,
+  Max3dProPrizeConfig,
+} from "./types";
 
 export interface PrepareSettleInput {
   /** ID kỳ quay cần settle. */
@@ -34,45 +39,11 @@ export interface PrepareSettleResult {
   /** Ngày tài chính (dùng cho báo cáo). */
   financialDate: string;
   /** Kết quả quay: 20 bộ ba số theo 4 giải. */
-  result: {
-    /** Giải Đặc biệt: 2 bộ ba số. */
-    special: [string, string];
-    /** Giải Nhất: 4 bộ ba số. */
-    first: [string, string, string, string];
-    /** Giải Nhì: 6 bộ ba số. */
-    second: [string, string, string, string, string, string];
-    /** Giải Ba: 8 bộ ba số. */
-    third: [string, string, string, string, string, string, string, string];
-  };
+  result: Max3dProDrawResult;
   /** Cấu hình giải thưởng áp dụng cho kỳ này. */
-  prizeConfig: {
-    /** Giải thưởng chế độ Standard (8 giải: special → sixth). */
-    standard: {
-      /** Giải Đặc biệt (VND). */
-      special: number;
-      /** Giải Đặc biệt phụ (VND). */
-      specialSub: number;
-      /** Giải Nhất (VND). */
-      first: number;
-      /** Giải Nhì (VND). */
-      second: number;
-      /** Giải Ba (VND). */
-      third: number;
-      /** Giải Tư (VND). */
-      fourth: number;
-      /** Giải Năm (VND). */
-      fifth: number;
-      /** Giải Sáu (VND). */
-      sixth: number;
-    };
-  };
+  prizeConfig: Max3dProPrizeConfig;
   /** Cấu hình tài chính áp dụng. */
-  config: {
-    /** Tỷ lệ công ty (% doanh thu). */
-    companyRate: number;
-    /** Tỷ lệ hoa hồng đại lý mặc định. */
-    defaultCommissionRate: number;
-  };
+  config: Max3dProSettleConfig;
   /** Tổng entries cần settle. */
   totalEntries: number;
   /** Tổng pairs cần settle. */
