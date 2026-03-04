@@ -12,7 +12,7 @@
  * Ticket summary sẽ được SyncTicketSummaries recompute từ entries.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export interface VoidEntriesBatchInput {
@@ -45,7 +45,7 @@ const DEFAULT_BATCH_SIZE = 100;
  * Void 1 batch entries Power 6/55.
  * Chạy trong loop cho đến khi done = true.
  */
-export class VoidEntriesBatchUseCase extends StepFunctionUseCase<
+export class VoidEntriesBatchUseCase extends InternalUseCase<
   VoidEntriesBatchInput,
   VoidEntriesBatchResult
 > {

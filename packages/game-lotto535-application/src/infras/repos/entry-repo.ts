@@ -15,10 +15,7 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import {
-  Lotto535Collections,
-  PayoutStatus,
-} from "@megawin/game-lotto535/entities";
+import { Lotto535Collections, PayoutStatus } from "@megawin/game-lotto535/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
 import type { MainTuple, Special } from "@megawin/game-lotto535/entities";
 import { ObjectId, Long } from "mongodb";
@@ -72,11 +69,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     return await this.findMany({ ticketId }, { sort: { drawTime: 1 } });
   }
 
-  async getEntriesByDrawId(
-    drawId: string,
-    page: number,
-    size: number
-  ): Promise<EntryEntity[]> {
+  async getEntriesByDrawId(drawId: string, page: number, size: number): Promise<EntryEntity[]> {
     return await this.paging({ drawId }, page, size, {
       sort: { createdAt: 1 },
     });
@@ -86,14 +79,11 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   async getScheduledEntriesBatch(
     drawId: string,
     page: number,
-    size: number
+    size: number,
   ): Promise<EntryEntity[]> {
-    return await this.paging(
-      { drawId, status: EntryStatus.Scheduled },
-      page,
-      size,
-      { sort: { createdAt: 1 } }
-    );
+    return await this.paging({ drawId, status: EntryStatus.Scheduled }, page, size, {
+      sort: { createdAt: 1 },
+    });
   }
 
   async countEntriesByDrawId(drawId: string): Promise<number> {
@@ -120,7 +110,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     drawId: string,
     fromStatus: string,
     toStatus: string,
-    extraSet?: Record<string, unknown>
+    extraSet?: Record<string, unknown>,
   ): Promise<number> {
     const version = await this.nextVersion();
     const $set: Record<string, unknown> = {
@@ -129,10 +119,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       updatedAt: new Date(),
       ...extraSet,
     };
-    const result = await this.updateMany(
-      { drawId, status: fromStatus },
-      { $set }
-    );
+    const result = await this.updateMany({ drawId, status: fromStatus }, { $set });
     return result.modifiedCount;
   }
 
@@ -160,7 +147,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       winningMain: MainTuple;
       winningSpecial: Special;
       publishedAt: Date;
-    }
+    },
   ): Promise<boolean> {
     const version = await this.nextVersion();
     return await this.updateOne(
@@ -174,7 +161,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           version,
           updatedAt: new Date(),
         },
-      }
+      },
     );
   }
 
@@ -272,7 +259,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   /** Aggregate report per tenant cho 1 draw + financialDate. */
   async aggregateTenantReport(
     drawId: string,
-    financialDate: string
+    financialDate: string,
   ): Promise<
     Array<{
       tenantId: string;
@@ -312,7 +299,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   /** Aggregate report per player per tenant cho 1 draw + financialDate. */
   async aggregatePlayerReport(
     drawId: string,
-    financialDate: string
+    financialDate: string,
   ): Promise<
     Array<{
       tenantId: string;
@@ -353,10 +340,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
    * Lấy batch entries trúng thưởng chưa dispatch (hoặc failed) cho 1 draw.
    * Dùng cho payout worker loop.
    */
-  async getPendingPayoutEntries(
-    drawId: string,
-    limit: number
-  ): Promise<EntryEntity[]> {
+  async getPendingPayoutEntries(drawId: string, limit: number): Promise<EntryEntity[]> {
     return await this.findMany(
       {
         drawId,
@@ -368,7 +352,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           { "payout.payoutStatus": { $exists: false } },
         ],
       },
-      { sort: { tenantId: 1, createdAt: 1 }, limit }
+      { sort: { tenantId: 1, createdAt: 1 }, limit },
     );
   }
 
@@ -396,7 +380,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           "payout.payoutDispatchedAt": new Date(),
           updatedAt: new Date(),
         },
-      }
+      },
     );
   }
 
@@ -411,7 +395,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           updatedAt: new Date(),
         },
         $inc: { "payout.payoutRetryCount": 1 },
-      }
+      },
     );
   }
 
@@ -426,16 +410,13 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           "payout.payoutDispatchedAt": new Date(),
           updatedAt: new Date(),
         },
-      }
+      },
     );
     return result.modifiedCount;
   }
 
   /** Batch đánh dấu failed cho nhiều entries (không bump version). */
-  async batchMarkPayoutFailed(
-    entryIds: string[],
-    error: string
-  ): Promise<number> {
+  async batchMarkPayoutFailed(entryIds: string[], error: string): Promise<number> {
     const objectIds = entryIds.map((id) => new ObjectId(id));
     const result = await this.updateMany(
       { _id: { $in: objectIds } as any },
@@ -446,7 +427,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           updatedAt: new Date(),
         },
         $inc: { "payout.payoutRetryCount": 1 },
-      }
+      },
     );
     return result.modifiedCount;
   }
@@ -459,16 +440,13 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
    * Lấy batch entries chưa void cho 1 draw bị huỷ.
    * Chỉ lấy entries có status scheduled (chưa settled, chưa void).
    */
-  async getVoidableEntriesBatch(
-    drawId: string,
-    limit: number
-  ): Promise<EntryEntity[]> {
+  async getVoidableEntriesBatch(drawId: string, limit: number): Promise<EntryEntity[]> {
     return await this.findMany(
       {
         drawId,
         status: EntryStatus.Scheduled,
       },
-      { sort: { createdAt: 1 }, limit }
+      { sort: { createdAt: 1 }, limit },
     );
   }
 
@@ -483,7 +461,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       originalAmount: number;
       refundAmount: number;
       voidedBy?: string;
-    }
+    },
   ): Promise<boolean> {
     const version = await this.nextVersion();
     return await this.updateOne(
@@ -502,7 +480,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           version,
           updatedAt: new Date(),
         },
-      }
+      },
     );
   }
 
@@ -518,17 +496,14 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
    * Lấy entries đã void nhưng chưa hoàn tiền cho 1 draw.
    * Dùng cho refund dispatch loop.
    */
-  async getPendingRefundEntries(
-    drawId: string,
-    limit: number
-  ): Promise<EntryEntity[]> {
+  async getPendingRefundEntries(drawId: string, limit: number): Promise<EntryEntity[]> {
     return await this.findMany(
       {
         drawId,
         status: EntryStatus.Void,
         "voidInfo.refundStatus": { $in: ["pending", "failed"] },
       },
-      { sort: { createdAt: 1 }, limit }
+      { sort: { createdAt: 1 }, limit },
     );
   }
 
@@ -542,7 +517,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           "voidInfo.refundedAt": new Date(),
           updatedAt: new Date(),
         },
-      }
+      },
     );
   }
 
@@ -556,7 +531,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           "voidInfo.refundLastError": error,
           updatedAt: new Date(),
         },
-      }
+      },
     );
   }
 
@@ -637,11 +612,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           },
           voidedDrawIds: {
             $addToSet: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                "$drawId",
-                "$$REMOVE",
-              ],
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$drawId", "$$REMOVE"],
             },
           },
         },
@@ -677,14 +648,8 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
    * Lấy entries có version > afterVersion, sorted ASC.
    * Worker dùng để detect thay đổi → copy sang entryFeed.
    */
-  async getChangedEntries(
-    afterVersion: Long,
-    limit: number
-  ): Promise<EntryEntity[]> {
-    return await this.findMany(
-      { version: { $gt: afterVersion } },
-      { sort: { version: 1 }, limit }
-    );
+  async getChangedEntries(afterVersion: Long, limit: number): Promise<EntryEntity[]> {
+    return await this.findMany({ version: { $gt: afterVersion } }, { sort: { version: 1 }, limit });
   }
 
   // ─────────────────────────────────────────────
@@ -703,7 +668,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   async applySplitBonusForTier(
     drawId: string,
     tier: string,
-    bonusPerWinner: number
+    bonusPerWinner: number,
   ): Promise<number> {
     const col = await this.getCollection();
 
@@ -724,7 +689,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
 
     const ops = matchingEntries.map((entry) => {
       const tierEntry = (entry.payout as any)?.tiers?.find(
-        (t: any) => t.tier === tier && t.hitCount > 0 && !t.isSplitBonus
+        (t: any) => t.tier === tier && t.hitCount > 0 && !t.isSplitBonus,
       );
       const hitCount = tierEntry?.hitCount ?? 0;
       const bonusAmount = bonusPerWinner * hitCount;
@@ -733,9 +698,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
         updateOne: {
           filter: {
             _id: entry._id,
-            $nor: [
-              { "payout.tiers": { $elemMatch: { tier, isSplitBonus: true } } },
-            ],
+            $nor: [{ "payout.tiers": { $elemMatch: { tier, isSplitBonus: true } } }],
           },
           update: {
             $push: {
@@ -775,5 +738,171 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
         $elemMatch: { tier: "jackpot", hitCount: { $gt: 0 } },
       },
     });
+  }
+
+  // ─────────────────────────────────────────────
+  // Operations Dashboard Aggregations
+  // ─────────────────────────────────────────────
+
+  private buildOpsFilter(opts: { financialDate: string; drawId?: string }) {
+    const filter: Record<string, unknown> = {
+      financialDate: opts.financialDate,
+      status: { $ne: EntryStatus.Void },
+    };
+    if (opts.drawId) filter.drawId = opts.drawId;
+    return filter;
+  }
+
+  async aggregateOpsSummary(opts: { financialDate: string; drawId?: string }): Promise<{
+    totalRevenue: number;
+    totalEntries: number;
+    totalLines: number;
+    uniquePlayers: number;
+    totalCommission: number;
+    totalPayout: number;
+  }> {
+    const result = await this.aggregate([
+      { $match: this.buildOpsFilter(opts) },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$amount" },
+          totalEntries: { $sum: 1 },
+          totalLines: { $sum: "$lineCount" },
+          uniquePlayers: { $addToSet: "$accountId" },
+          totalCommission: { $sum: "$tenant.commissionAmount" },
+          totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalRevenue: 1,
+          totalEntries: 1,
+          totalLines: 1,
+          uniquePlayers: { $size: "$uniquePlayers" },
+          totalCommission: 1,
+          totalPayout: 1,
+        },
+      },
+    ]);
+    const row = (result[0] as any) ?? {};
+    return {
+      totalRevenue: row.totalRevenue ?? 0,
+      totalEntries: row.totalEntries ?? 0,
+      totalLines: row.totalLines ?? 0,
+      uniquePlayers: row.uniquePlayers ?? 0,
+      totalCommission: row.totalCommission ?? 0,
+      totalPayout: row.totalPayout ?? 0,
+    };
+  }
+
+  async aggregateTenantBreakdown(opts: { financialDate: string; drawId?: string }): Promise<
+    Array<{
+      tenantId: string;
+      entries: number;
+      lines: number;
+      players: number;
+      revenue: number;
+      commission: number;
+      payout: number;
+    }>
+  > {
+    const result = await this.aggregate([
+      { $match: this.buildOpsFilter(opts) },
+      {
+        $group: {
+          _id: "$tenantId",
+          entries: { $sum: 1 },
+          lines: { $sum: "$lineCount" },
+          players: { $addToSet: "$accountId" },
+          revenue: { $sum: "$amount" },
+          commission: { $sum: "$tenant.commissionAmount" },
+          payout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          tenantId: "$_id",
+          entries: 1,
+          lines: 1,
+          players: { $size: "$players" },
+          revenue: 1,
+          commission: 1,
+          payout: 1,
+        },
+      },
+      { $sort: { revenue: -1 } },
+    ]);
+    return result as any[];
+  }
+
+  async aggregateNumberFrequency(opts: { financialDate: string; drawId?: string }): Promise<{
+    mainNumbers: Array<{ number: number; count: number }>;
+    specialNumbers: Array<{ number: number; count: number }>;
+  }> {
+    const filter = this.buildOpsFilter(opts);
+
+    const [mainResult, specialResult] = await Promise.all([
+      this.aggregate([
+        { $match: filter },
+        { $unwind: "$entrySummary.boards" },
+        { $unwind: "$entrySummary.boards.mainNumbers" },
+        {
+          $group: {
+            _id: "$entrySummary.boards.mainNumbers",
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      this.aggregate([
+        { $match: filter },
+        { $unwind: "$entrySummary.boards" },
+        { $unwind: "$entrySummary.boards.specialNumbers" },
+        {
+          $group: {
+            _id: "$entrySummary.boards.specialNumbers",
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+    ]);
+
+    return {
+      mainNumbers: (mainResult as any[]).map((r) => ({
+        number: r._id,
+        count: r.count,
+      })),
+      specialNumbers: (specialResult as any[]).map((r) => ({
+        number: r._id,
+        count: r.count,
+      })),
+    };
+  }
+
+  async aggregatePlayTypeDistribution(opts: {
+    financialDate: string;
+    drawId?: string;
+  }): Promise<Array<{ playType: string; boardCount: number; lineCount: number }>> {
+    const result = await this.aggregate([
+      { $match: this.buildOpsFilter(opts) },
+      { $unwind: "$entrySummary.boards" },
+      {
+        $group: {
+          _id: "$entrySummary.boards.playType",
+          boardCount: { $sum: 1 },
+          lineCount: { $sum: "$entrySummary.boards.expandedLines" },
+        },
+      },
+      { $sort: { lineCount: -1 } },
+    ]);
+    return (result as any[]).map((r) => ({
+      playType: r._id,
+      boardCount: r.boardCount,
+      lineCount: r.lineCount,
+    }));
   }
 }

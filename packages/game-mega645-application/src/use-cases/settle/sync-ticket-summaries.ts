@@ -5,7 +5,7 @@
  * Idempotent, self-healing.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 
@@ -21,7 +21,7 @@ export interface SyncTicketSummariesResult {
   ticketsSynced: number;
 }
 
-export class SyncTicketSummariesUseCase extends StepFunctionUseCase<
+export class SyncTicketSummariesUseCase extends InternalUseCase<
   SyncTicketSummariesInput,
   SyncTicketSummariesResult
 > {

@@ -6,7 +6,7 @@
  * IDEMPOTENT: Check isSplitBonus=true trên tier — nếu đã patch thì skip.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export interface ApplySplitBonusesInput {
@@ -44,7 +44,7 @@ export interface ApplySplitBonusesResult {
   skipped: boolean;
 }
 
-export class ApplySplitBonusesUseCase extends StepFunctionUseCase<
+export class ApplySplitBonusesUseCase extends InternalUseCase<
   ApplySplitBonusesInput,
   ApplySplitBonusesResult
 > {

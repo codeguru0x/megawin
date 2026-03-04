@@ -14,12 +14,14 @@
  * KHÔNG update ticket — SyncTicketSummaries step riêng sẽ recompute từ entries.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import {
   type KenoBigSmallBet,
   type KenoEvenOddBet,
   KenoPlayType,
   PayoutStatus,
+  type BigSmallPrizes,
+  type EvenOddPrizes,
 } from "@megawin/game-keno/entities";
 import {
   matchBasicBoard,
@@ -27,10 +29,7 @@ import {
   matchEvenOddBet,
   type DrawResultForMatch,
 } from "@megawin/game-keno/helpers";
-import {
-  getPickCountFromPlayType,
-  calculateCappedPrize,
-} from "@megawin/game-keno/rules";
+import { getPickCountFromPlayType, calculateCappedPrize } from "@megawin/game-keno/rules";
 import { EntryOutcome } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
@@ -45,8 +44,8 @@ export interface SettleEntriesBatchInput {
   };
   config: {
     basicPrizes: Record<string, Record<number, number>>;
-    bigSmallPrizes: Record<string, number>;
-    evenOddPrizes: Record<string, number>;
+    bigSmallPrizes: BigSmallPrizes;
+    evenOddPrizes: EvenOddPrizes;
     payoutCaps: {
       pick8MaxPerDraw: number;
       pick8MaxSetsForFixed: number;
@@ -71,15 +70,13 @@ export interface SettleEntriesBatchResult {
   batchSettled: number;
 }
 
-export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
+export class SettleEntriesBatchUseCase extends InternalUseCase<
   SettleEntriesBatchInput,
   SettleEntriesBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
 
-  protected async execute(
-    input: SettleEntriesBatchInput
-  ): Promise<SettleEntriesBatchResult> {
+  protected async execute(input: SettleEntriesBatchInput): Promise<SettleEntriesBatchResult> {
     const { drawId, result, config, batchSize } = input;
     const drawResult: DrawResultForMatch = {
       winningNumbers: result.winningNumbers,
@@ -89,11 +86,7 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
       oddCount: result.oddCount,
     };
 
-    const entries = await this.entryRepo.getScheduledEntriesBatch(
-      drawId,
-      1,
-      batchSize
-    );
+    const entries = await this.entryRepo.getScheduledEntriesBatch(drawId, 1, batchSize);
 
     if (entries.length === 0) {
       return {
@@ -121,15 +114,9 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
 
         const pickCount = board.numbers.length;
         const playTypePrizes = config.basicPrizes[`pick${pickCount}`];
-        const prizeTable = playTypePrizes
-          ? { [pickCount]: playTypePrizes }
-          : undefined;
+        const prizeTable = playTypePrizes ? { [pickCount]: playTypePrizes } : undefined;
 
-        const matchResult = matchBasicBoard(
-          board.numbers,
-          drawResult,
-          prizeTable
-        );
+        const matchResult = matchBasicBoard(board.numbers, drawResult, prizeTable);
         boardPayouts.push({
           boardNo: board.boardNo,
           playType: board.playType,
@@ -155,7 +142,7 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
           const matchResult = matchBigSmallBet(
             sb.bet as KenoBigSmallBet,
             drawResult,
-            config.bigSmallPrizes as any
+            config.bigSmallPrizes,
           );
           sideBetPayouts.push({
             playType: sb.playType,
@@ -168,7 +155,7 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
           const matchResult = matchEvenOddBet(
             sb.bet as KenoEvenOddBet,
             drawResult,
-            config.evenOddPrizes as any
+            config.evenOddPrizes,
           );
           sideBetPayouts.push({
             playType: sb.playType,
@@ -204,7 +191,7 @@ export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
           smallCount: result.smallCount,
           evenCount: result.evenCount,
           oddCount: result.oddCount,
-        }
+        },
       );
 
       if (!settled) continue;

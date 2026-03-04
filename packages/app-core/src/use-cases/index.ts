@@ -51,6 +51,3 @@ export { SqsUseCase } from "./sqs";
 
 /** SNS */
 export { SnsUseCase } from "./sns";
-
-/** Step Functions */
-export { StepFunctionUseCase } from "./step-function";

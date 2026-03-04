@@ -1,14 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  Save,
-  TrendingUp,
-  TrendingDown,
-  Info,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Save, TrendingUp, TrendingDown, Info, ChevronDown, ChevronUp } from "lucide-react";
 
 import {
   analyzeProfitabilityForPick,
@@ -20,16 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { cn } from "@/lib/utils";
 
@@ -66,9 +51,7 @@ const PICK_BADGE_COLORS: Record<number, string> = {
 
 function isCapped(pick: number, match: number): boolean {
   return (
-    (pick === 10 && match === 10) ||
-    (pick === 9 && match === 9) ||
-    (pick === 8 && match === 8)
+    (pick === 10 && match === 10) || (pick === 9 && match === 9) || (pick === 8 && match === 8)
   );
 }
 
@@ -90,9 +73,7 @@ function HeaderTooltip({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span
-          className={`inline-flex items-center gap-1 cursor-help ${className ?? ""}`}
-        >
+        <span className={`inline-flex items-center gap-1 cursor-help ${className ?? ""}`}>
           {label}
           <Info className="size-3 text-muted-foreground/60" />
         </span>
@@ -115,17 +96,17 @@ function PickPrizeGroup({
   unitPrice: number;
   onChange: (pick: number, match: number, value: number) => void;
 }) {
-  const [open, setOpen] = useState(pick >= 8);
+  const [open, setOpen] = useState(pick >= 1);
   const matchCounts = PICK_MATCH_COUNTS[pick] ?? [];
 
   const profitAnalysis = useMemo(
     () => analyzeProfitabilityForPick(pick, prizes, unitPrice),
-    [pick, prizes, unitPrice]
+    [pick, prizes, unitPrice],
   );
 
   const profitMap = useMemo(
     () => new Map(profitAnalysis.tiers.map((t) => [t.matchCount, t])),
-    [profitAnalysis]
+    [profitAnalysis],
   );
 
   const marginColor =
@@ -142,15 +123,11 @@ function PickPrizeGroup({
           type="button"
           className={cn(
             "flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-muted/50",
-            open && "bg-muted/30"
+            open && "bg-muted/30",
           )}
         >
           <div className="flex items-center gap-2">
-            <Badge
-              className={cn("text-white text-xs", PICK_BADGE_COLORS[pick])}
-            >
-              Bậc {pick}
-            </Badge>
+            <Badge className={cn("text-white text-xs", PICK_BADGE_COLORS[pick])}>Bậc {pick}</Badge>
             <span className="text-sm text-muted-foreground">
               Chọn {pick} số &middot; {matchCounts.length} mức thưởng
             </span>
@@ -164,9 +141,7 @@ function PickPrizeGroup({
             )}
           </div>
           <div className="flex items-center gap-3">
-            <span
-              className={cn("text-xs tabular-nums font-semibold", marginColor)}
-            >
+            <span className={cn("text-xs tabular-nums font-semibold", marginColor)}>
               Biên: {profitAnalysis.grossMarginPercent.toFixed(1)}%
             </span>
             {open ? (
@@ -206,15 +181,14 @@ function PickPrizeGroup({
           {matchCounts.map((match) => {
             const profit = profitMap.get(match);
             const capped = isCapped(pick, match);
-            const isOverBreakEven =
-              profit && profit.currentPrize > profit.breakEvenPrize;
+            const isOverBreakEven = profit && profit.currentPrize > profit.breakEvenPrize;
 
             return (
               <div
                 key={match}
                 className={cn(
                   "grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 rounded-md px-2 py-1.5",
-                  capped && "bg-red-50 dark:bg-red-950/20"
+                  capped && "bg-red-50 dark:bg-red-950/20",
                 )}
               >
                 <div className="flex items-center gap-2">
@@ -238,8 +212,7 @@ function PickPrizeGroup({
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs">
-                    {profit &&
-                      `Xác suất: ${(profit.probability * 100).toFixed(6)}%`}
+                    {profit && `Xác suất: ${(profit.probability * 100).toFixed(6)}%`}
                   </TooltipContent>
                 </Tooltip>
                 <span className="text-right text-xs tabular-nums font-medium">
@@ -252,7 +225,7 @@ function PickPrizeGroup({
                       ? "text-red-600"
                       : profit && profit.payoutRatio > 0.5
                         ? "text-amber-600"
-                        : "text-emerald-600"
+                        : "text-emerald-600",
                   )}
                 >
                   {profit ? `${(profit.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -260,9 +233,7 @@ function PickPrizeGroup({
                 <span
                   className={cn(
                     "text-right text-xs tabular-nums",
-                    isOverBreakEven
-                      ? "text-red-600 font-bold"
-                      : "text-muted-foreground"
+                    isOverBreakEven ? "text-red-600 font-bold" : "text-muted-foreground",
                   )}
                 >
                   {profit ? `${fmt(Math.round(profit.breakEvenPrize))}` : "–"}
@@ -271,13 +242,10 @@ function PickPrizeGroup({
             );
           })}
           <div className="flex items-center justify-between px-2 py-2 border-t mt-1">
-            <span className="text-xs font-medium text-muted-foreground">
-              Tổng bậc {pick}
-            </span>
+            <span className="text-xs font-medium text-muted-foreground">Tổng bậc {pick}</span>
             <div className="flex items-center gap-4 text-xs">
               <span className="tabular-nums">
-                CP kỳ vọng:{" "}
-                {fmt(Math.round(profitAnalysis.totalExpectedPayout))} VND
+                CP kỳ vọng: {fmt(Math.round(profitAnalysis.totalExpectedPayout))} VND
               </span>
               <span className={cn("font-bold tabular-nums", marginColor)}>
                 {profitAnalysis.grossMarginPercent >= 0 ? (
@@ -295,11 +263,7 @@ function PickPrizeGroup({
   );
 }
 
-export function PrizesSection({
-  config,
-  onSave,
-  isPending,
-}: PrizesSectionProps) {
+export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps) {
   const [localPrizes, setLocalPrizes] = useState<BasicPrizes>(() => ({
     ...config.basicPrizes,
   }));
@@ -339,8 +303,7 @@ export function PrizesSection({
   }, [localPrizes, unitPrice]);
 
   const avgMargin =
-    allSummaries.reduce((s, r) => s + r.grossMarginPercent, 0) /
-    allSummaries.length;
+    allSummaries.reduce((s, r) => s + r.grossMarginPercent, 0) / allSummaries.length;
 
   return (
     <Card className="overflow-hidden py-0 gap-0">
@@ -366,7 +329,7 @@ export function PrizesSection({
                     ? "text-emerald-600"
                     : avgMargin >= 0
                       ? "text-amber-600"
-                      : "text-red-600"
+                      : "text-red-600",
                 )}
               >
                 {avgMargin >= 0 ? (
@@ -383,7 +346,7 @@ export function PrizesSection({
         <div className="border-t px-5 py-3">
           <div className="grid gap-2 lg:grid-cols-2">
             <div className="space-y-2">
-              {[10, 9, 8, 7, 6].map((pick) => (
+              {[10, 9, 8, 7].map((pick) => (
                 <PickPrizeGroup
                   key={pick}
                   pick={pick}
@@ -394,7 +357,7 @@ export function PrizesSection({
               ))}
             </div>
             <div className="space-y-2">
-              {[5, 4, 3, 2, 1].map((pick) => (
+              {[6, 5, 4, 3, 2, 1].map((pick) => (
                 <PickPrizeGroup
                   key={pick}
                   pick={pick}
@@ -409,16 +372,8 @@ export function PrizesSection({
       </CardContent>
 
       <CardFooter className="justify-end border-t px-5 py-2.5">
-        <Button
-          type="button"
-          disabled={isPending || !isDirty}
-          onClick={handleSubmit}
-        >
-          {isPending ? (
-            <Spinner className="mr-2" />
-          ) : (
-            <Save className="mr-2 size-4" />
-          )}
+        <Button type="button" disabled={isPending || !isDirty} onClick={handleSubmit}>
+          {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
           Lưu giải thưởng cơ bản
         </Button>
       </CardFooter>

@@ -12,6 +12,7 @@
     "**/.serverless": true,
     "**/.pnpm-store": true
   },
+  "editor.formatOnSaveMode": "file",
   "files.autoSave": "afterDelay",
   "files.autoSaveDelay": 1000,
   "eslint.format.enable": true,

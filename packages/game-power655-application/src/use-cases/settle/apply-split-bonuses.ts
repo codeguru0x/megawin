@@ -10,7 +10,7 @@
  * Lines KHÔNG bị update (giữ immutable) — split bonus chỉ ở mức entry.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-power655/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -51,7 +51,7 @@ export interface ApplySplitBonusesResult {
  * Patch split bonus vào entries thắng giải cố định.
  * Chỉ chạy khi kỳ quay là split cycle (tổng JP vượt ngưỡng).
  */
-export class ApplySplitBonusesUseCase extends StepFunctionUseCase<
+export class ApplySplitBonusesUseCase extends InternalUseCase<
   ApplySplitBonusesInput,
   ApplySplitBonusesResult
 > {

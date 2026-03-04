@@ -25,7 +25,7 @@
  * CalculateFinancials tính lại từ DB (crash-safe).
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { PrizeTier, PayoutStatus } from "@megawin/game-lotto535/entities";
 import type { TicketLineDoc } from "@megawin/game-lotto535/entities";
 import { expandAllBoards } from "@megawin/game-lotto535/helpers";
@@ -77,7 +77,7 @@ export interface SettleEntriesBatchResult {
   batchSettled: number;
 }
 
-export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
+export class SettleEntriesBatchUseCase extends InternalUseCase<
   SettleEntriesBatchInput,
   SettleEntriesBatchResult
 > {

@@ -12,7 +12,7 @@
  *   - Accumulator bắt đầu từ zero – settle-entries chỉ query "scheduled" nên safe
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { buildPrizeAmountMap } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -77,19 +77,14 @@ export interface PrepareSettleResult {
   totalLines: number;
 }
 
-export class PrepareSettleUseCase extends StepFunctionUseCase<
-  PrepareSettleInput,
-  PrepareSettleResult
-> {
+export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, PrepareSettleResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** Load context cho settle flow. Throw nếu draw không hợp lệ. */
-  protected async execute(
-    input: PrepareSettleInput
-  ): Promise<PrepareSettleResult> {
+  protected async execute(input: PrepareSettleInput): Promise<PrepareSettleResult> {
     const { drawId } = input;
 
     const draw = await this.drawRepo.getDrawById(drawId);
@@ -98,9 +93,7 @@ export class PrepareSettleUseCase extends StepFunctionUseCase<
     }
 
     if (draw.status !== DrawStatus.Settling) {
-      throw new Error(
-        `Draw ${drawId} status = "${draw.status}", expected "settling".`
-      );
+      throw new Error(`Draw ${drawId} status = "${draw.status}", expected "settling".`);
     }
 
     if (!draw.result) {
@@ -112,8 +105,7 @@ export class PrepareSettleUseCase extends StepFunctionUseCase<
       this.cycleRepo.getActiveCycle(),
     ]);
 
-    const jackpotOpeningAmount =
-      activeCycle?.currentAmount ?? globalConfig.jackpot.seedAmount;
+    const jackpotOpeningAmount = activeCycle?.currentAmount ?? globalConfig.jackpot.seedAmount;
 
     const isSplitCycle = draw.jackpot?.isSplitCycle ?? false;
 

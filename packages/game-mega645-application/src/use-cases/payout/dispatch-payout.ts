@@ -5,7 +5,7 @@
  * Crash-safe: Entries đã dispatched không bị gửi lại.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import {
   createTenantGatewayClient,
   type TenantGatewayClient,
@@ -48,7 +48,7 @@ export interface DispatchPayoutBatchResult {
   }>;
 }
 
-export class DispatchPayoutBatchUseCase extends StepFunctionUseCase<
+export class DispatchPayoutBatchUseCase extends InternalUseCase<
   DispatchPayoutBatchInput,
   DispatchPayoutBatchResult
 > {

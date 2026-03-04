@@ -20,6 +20,7 @@ import {
   Layers,
   CircleDollarSign,
   Ticket,
+  Activity,
 } from "lucide-react";
 
 export interface NavSubItem {
@@ -106,6 +107,12 @@ export const operatorSidebarItems: NavGroup[] = [
         url: "/games/lotto535",
         icon: ChessKing,
         subItems: [
+          {
+            title: "Vận hành",
+            url: "/games/lotto535/operations",
+            icon: Activity,
+            isNew: true,
+          },
           {
             title: "Kỳ quay",
             url: "/games/lotto535/draws",

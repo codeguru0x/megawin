@@ -13,7 +13,7 @@
  * IDEMPOTENT: chỉ đọc dữ liệu.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -44,7 +44,7 @@ export interface PrepareVoidResult {
   totalVoidableEntries: number;
 }
 
-export class PrepareVoidUseCase extends StepFunctionUseCase<
+export class PrepareVoidUseCase extends InternalUseCase<
   PrepareVoidInput,
   PrepareVoidResult
 > {

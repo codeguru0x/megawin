@@ -2,21 +2,21 @@ list-players:
   handler: src/handlers/list-players.handler
   events:
     - httpApi:
-        path: /players
+        path: /player
         method: get
 
 get-player-detail:
   handler: src/handlers/get-player-detail.handler
   events:
     - httpApi:
-        path: /players/{playerId}
+        path: /player/{playerId}
         method: get
 
 suspend-player:
   handler: src/handlers/suspend-player.handler
   events:
     - httpApi:
-        path: /players/{playerId}/status
+        path: /player/{playerId}/status
         method: patch
 
 player-login:
@@ -27,5 +27,5 @@ player-login:
     PLAYER_PASSWORD_SECRET: ${env:PLAYER_PASSWORD_SECRET}
   events:
     - httpApi:
-        path: /players/login
+        path: /player/login
         method: post

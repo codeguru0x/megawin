@@ -13,7 +13,7 @@
  *   - Nếu draw đã settled → skip (không throw)
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 
@@ -31,7 +31,7 @@ export interface FinalizeSettleResult {
   completedAt: string;
 }
 
-export class FinalizeSettleUseCase extends StepFunctionUseCase<
+export class FinalizeSettleUseCase extends InternalUseCase<
   FinalizeSettleInput,
   FinalizeSettleResult
 > {

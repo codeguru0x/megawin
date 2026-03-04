@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  determineTier,
-  buildPrizeAmountMap,
-  DEFAULT_PRIZE_TIER_RULES,
-} from "@megawin/game-lotto535/rules/prize-tiers";
+import { determineTier, buildPrizeAmountMap } from "@megawin/game-lotto535/rules/prize-tiers";
 import {
   calculateDrawFinancials,
   calculateNextJackpot,
@@ -11,23 +7,11 @@ import {
   calculateSplitDistribution,
   DEFAULT_LOTTO535_CONFIG,
 } from "@megawin/game-lotto535/rules/jackpot";
-import {
-  matchLine,
-  matchLines,
-} from "@megawin/game-lotto535/helpers/match-result";
-import {
-  expandBoardToLines,
-  expandAllBoards,
-} from "@megawin/game-lotto535/helpers/expand-lines";
-import {
-  calculateLineCount,
-  combination,
-} from "@megawin/game-lotto535/rules/play-types";
+import { matchLine, matchLines } from "@megawin/game-lotto535/helpers/match-result";
+import { expandBoardToLines } from "@megawin/game-lotto535/helpers/expand-lines";
+import { calculateLineCount, combination } from "@megawin/game-lotto535/rules/play-types";
 import { PrizeTier, PlayType } from "@megawin/game-lotto535/entities/enums";
-import type {
-  LineValue,
-  MainTuple,
-} from "@megawin/game-lotto535/entities/types";
+import type { LineValue, MainTuple } from "@megawin/game-lotto535/entities/types";
 
 // ─────────────────────────────────────────────
 // determineTier
@@ -44,12 +28,9 @@ describe("Lotto 5/35 – determineTier", () => {
     [2, true, PrizeTier.Consolation],
     [1, true, PrizeTier.Consolation],
     [0, true, PrizeTier.Consolation],
-  ])(
-    "mainMatch=%i, special=%s → %s",
-    (mainMatchCount, specialMatched, expected) => {
-      expect(determineTier(mainMatchCount, specialMatched)).toBe(expected);
-    }
-  );
+  ])("mainMatch=%i, special=%s → %s", (mainMatchCount, specialMatched, expected) => {
+    expect(determineTier(mainMatchCount, specialMatched)).toBe(expected);
+  });
 
   it.each([
     [2, false],
@@ -252,7 +233,7 @@ describe("Lotto 5/35 – expandBoardToLines", () => {
       expect(
         line.main
           .slice(0, -1)
-          .every((n: number) => [1, 2, 3, 4].some((m) => line.main.includes(m)))
+          .every((n: number) => [1, 2, 3, 4].some((m) => line.main.includes(m))),
       ).toBe(true);
     }
   });
@@ -292,7 +273,7 @@ describe("Lotto 5/35 – calculateLineCount", () => {
       calculateLineCount(PlayType.Standard, {
         mainNumbers: [1, 2, 3, 4, 5],
         specialNumbers: [1],
-      })
+      }),
     ).toBe(1);
   });
 
@@ -301,7 +282,7 @@ describe("Lotto 5/35 – calculateLineCount", () => {
       calculateLineCount(PlayType.MainCover4, {
         mainNumbers: [1, 2, 3, 4],
         specialNumbers: [1],
-      })
+      }),
     ).toBe(31);
   });
 
@@ -310,7 +291,7 @@ describe("Lotto 5/35 – calculateLineCount", () => {
       calculateLineCount(PlayType.MainCover, {
         mainNumbers: [1, 2, 3, 4, 5, 6],
         specialNumbers: [1],
-      })
+      }),
     ).toBe(6);
   });
 
@@ -320,7 +301,7 @@ describe("Lotto 5/35 – calculateLineCount", () => {
       calculateLineCount(PlayType.MainCover, {
         mainNumbers,
         specialNumbers: [1],
-      })
+      }),
     ).toBe(3003);
   });
 
@@ -329,7 +310,7 @@ describe("Lotto 5/35 – calculateLineCount", () => {
       calculateLineCount(PlayType.SpecialCover, {
         mainNumbers: [1, 2, 3, 4, 5],
         specialNumbers: [1, 2, 3, 4, 5],
-      })
+      }),
     ).toBe(5);
   });
 
@@ -429,9 +410,7 @@ describe("Lotto 5/35 – calculateDrawFinancials", () => {
     });
 
     const remain = 10_000_000 - 8_000_000 - 2_000_000;
-    expect(result.actualCompanyTake).toBe(
-      Math.min(1_500_000, Math.max(remain, 0))
-    );
+    expect(result.actualCompanyTake).toBe(Math.min(1_500_000, Math.max(remain, 0)));
     expect(result.jackpotContribution).toBe(0);
   });
 
@@ -453,15 +432,15 @@ describe("Lotto 5/35 – calculateDrawFinancials", () => {
 
 describe("Lotto 5/35 – calculateNextJackpot", () => {
   it("không có winner → tích luỹ", () => {
-    expect(
-      calculateNextJackpot(5_000_000_000, 1_000_000_000, false, 1_000_000_000)
-    ).toBe(6_000_000_000);
+    expect(calculateNextJackpot(5_000_000_000, 1_000_000_000, false, 1_000_000_000)).toBe(
+      6_000_000_000,
+    );
   });
 
   it("có winner → reset về seed + contribution", () => {
-    expect(
-      calculateNextJackpot(5_000_000_000, 1_000_000_000, true, 1_000_000_000)
-    ).toBe(2_000_000_000);
+    expect(calculateNextJackpot(5_000_000_000, 1_000_000_000, true, 1_000_000_000)).toBe(
+      2_000_000_000,
+    );
   });
 });
 
@@ -471,27 +450,19 @@ describe("Lotto 5/35 – calculateNextJackpot", () => {
 
 describe("Lotto 5/35 – isSplitCycleDraw", () => {
   it("đủ điều kiện: JP >= threshold + no winner + drawNo=2", () => {
-    expect(isSplitCycleDraw(12_000_000_000, 12_000_000_000, false, 2)).toBe(
-      true
-    );
+    expect(isSplitCycleDraw(12_000_000_000, 12_000_000_000, false, 2)).toBe(true);
   });
 
   it("JP < threshold → false", () => {
-    expect(isSplitCycleDraw(11_000_000_000, 12_000_000_000, false, 2)).toBe(
-      false
-    );
+    expect(isSplitCycleDraw(11_000_000_000, 12_000_000_000, false, 2)).toBe(false);
   });
 
   it("có winner → false", () => {
-    expect(isSplitCycleDraw(15_000_000_000, 12_000_000_000, true, 2)).toBe(
-      false
-    );
+    expect(isSplitCycleDraw(15_000_000_000, 12_000_000_000, true, 2)).toBe(false);
   });
 
   it("drawNo=1 (buổi sáng) → false", () => {
-    expect(isSplitCycleDraw(15_000_000_000, 12_000_000_000, false, 1)).toBe(
-      false
-    );
+    expect(isSplitCycleDraw(15_000_000_000, 12_000_000_000, false, 1)).toBe(false);
   });
 });
 

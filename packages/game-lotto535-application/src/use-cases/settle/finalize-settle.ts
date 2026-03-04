@@ -17,7 +17,7 @@
  *   Chỉ khi settle xong mới ghi snapshot lên draw (bản ghi lịch sử).
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { JackpotCycleCloseReason } from "@megawin/game-lotto535/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -72,7 +72,7 @@ export interface FinalizeSettleResult {
   completedAt: string;
 }
 
-export class FinalizeSettleUseCase extends StepFunctionUseCase<
+export class FinalizeSettleUseCase extends InternalUseCase<
   FinalizeSettleInput,
   FinalizeSettleResult
 > {

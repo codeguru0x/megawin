@@ -25,10 +25,7 @@ const acquireLockUseCase = new AcquireFeedLockUseCase();
 export async function handler() {
   const executionName = `max3d-feed-sync-${Date.now()}`;
 
-  const lockResult = await acquireLockUseCase.run({ executionId: executionName });
-  if (!lockResult.success) throw new Error(lockResult.error.message);
-
-  const { acquired, afterVersion } = lockResult.data;
+  const { acquired, afterVersion } = await acquireLockUseCase.run({ executionId: executionName });
 
   if (!acquired) {
     console.log("Feed sync lock đang bị giữ, skip lần này.");

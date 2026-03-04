@@ -9,7 +9,7 @@
  * Lambda sẽ không làm gì — chỉ return success.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 
 export interface AutoEnrollInput {
   drawId: string;
@@ -23,7 +23,7 @@ export interface AutoEnrollOutput {
   done: boolean;
 }
 
-export class AutoEnrollEntriesUseCase extends StepFunctionUseCase<
+export class AutoEnrollEntriesUseCase extends InternalUseCase<
   AutoEnrollInput,
   AutoEnrollOutput
 > {

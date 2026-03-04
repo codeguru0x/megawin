@@ -4,20 +4,17 @@
  * Step 1 của Keno Settle Step Function.
  * Load context: draw, game config, entry counts. Idempotent.
  *
- * @input  { drawId: string }
- * @output PrepareSettleResult
+ * @input  PrepareSettleInput
+ * @output PrepareSettleResult (= SettleContext)
  */
 
-import { PrepareSettleUseCase } from "@megawin/game-keno-application/use-cases/settle";
-
-interface Input {
-  drawId: string;
-}
+import {
+  PrepareSettleUseCase,
+  type PrepareSettleInput,
+} from "@megawin/game-keno-application/use-cases/settle";
 
 const useCase = new PrepareSettleUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({ drawId: event.drawId });
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
+export async function handler(event: PrepareSettleInput) {
+  return useCase.run(event);
 }

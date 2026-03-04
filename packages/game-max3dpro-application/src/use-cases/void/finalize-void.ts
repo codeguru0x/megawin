@@ -7,7 +7,7 @@
  * IDEMPOTENT: aggregate từ DB, ghi đè voidSummary trên draw.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
@@ -29,7 +29,7 @@ export interface FinalizeVoidResult {
   completedAt: string;
 }
 
-export class FinalizeVoidUseCase extends StepFunctionUseCase<
+export class FinalizeVoidUseCase extends InternalUseCase<
   FinalizeVoidInput,
   FinalizeVoidResult
 > {

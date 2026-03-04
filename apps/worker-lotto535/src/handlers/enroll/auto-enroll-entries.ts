@@ -7,20 +7,13 @@
  * Step Function retry-safe.
  */
 
-import { AutoEnrollEntriesUseCase } from "@megawin/game-lotto535-application/use-cases/draws";
-
-interface Input {
-  drawId: string;
-}
+import {
+  AutoEnrollEntriesUseCase,
+  type AutoEnrollInput,
+} from "@megawin/game-lotto535-application/use-cases/draws";
 
 const useCase = new AutoEnrollEntriesUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({ drawId: event.drawId });
-
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
-
-  return result.data;
+export async function handler(event: AutoEnrollInput) {
+  return useCase.run(event);
 }

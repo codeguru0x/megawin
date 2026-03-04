@@ -17,7 +17,7 @@
  *   - Accumulator bắt đầu từ zero – settle-entries chỉ query "scheduled" nên safe
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -91,7 +91,7 @@ export interface PrepareSettleResult {
  * Load context cho settle flow Power 6/55.
  * Loads dual jackpot (JP1 + JP2) opening amounts từ active cycle.
  */
-export class PrepareSettleUseCase extends StepFunctionUseCase<
+export class PrepareSettleUseCase extends InternalUseCase<
   PrepareSettleInput,
   PrepareSettleResult
 > {

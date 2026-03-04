@@ -1,4 +1,4 @@
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export interface VoidEntriesBatchInput {
@@ -27,7 +27,7 @@ export interface VoidEntriesBatchResult {
 
 const DEFAULT_BATCH_SIZE = 100;
 
-export class VoidEntriesBatchUseCase extends StepFunctionUseCase<
+export class VoidEntriesBatchUseCase extends InternalUseCase<
   VoidEntriesBatchInput,
   VoidEntriesBatchResult
 > {

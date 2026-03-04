@@ -18,7 +18,7 @@
  *   - Cycle update idempotent
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { JackpotCycleClosedReason } from "@megawin/game-power655/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -85,7 +85,7 @@ export interface FinalizeSettleResult {
 /**
  * Finalize settle: transition draw + ghi dual jackpot snapshot + update cycle.
  */
-export class FinalizeSettleUseCase extends StepFunctionUseCase<
+export class FinalizeSettleUseCase extends InternalUseCase<
   FinalizeSettleInput,
   FinalizeSettleResult
 > {

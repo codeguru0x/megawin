@@ -7,7 +7,7 @@
  * IDEMPOTENT: chỉ đọc draw, config, jackpot cycle, đếm entries.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { buildPrizeAmountMap } from "@megawin/game-mega645/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
@@ -66,7 +66,7 @@ export interface PrepareSettleResult {
   totalLines: number;
 }
 
-export class PrepareSettleUseCase extends StepFunctionUseCase<
+export class PrepareSettleUseCase extends InternalUseCase<
   PrepareSettleInput,
   PrepareSettleResult
 > {

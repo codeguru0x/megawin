@@ -11,7 +11,7 @@
  * IDEMPOTENT: transition atomic.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -46,7 +46,7 @@ export interface PrepareVoidResult {
  * Validate draw + transition → void cho Power 6/55.
  * Throw nếu draw không ở trạng thái hợp lệ.
  */
-export class PrepareVoidUseCase extends StepFunctionUseCase<
+export class PrepareVoidUseCase extends InternalUseCase<
   PrepareVoidInput,
   PrepareVoidResult
 > {

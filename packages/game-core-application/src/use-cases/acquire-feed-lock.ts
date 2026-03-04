@@ -8,7 +8,7 @@
  * Nếu acquired=true → an toàn start step function với afterVersion.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import type { GameProduct } from "@megawin/game-core/entities";
 import { FeedSyncCursorRepository } from "../infras/repos/feed-sync-cursor-repo";
 
@@ -21,7 +21,7 @@ export interface AcquireFeedLockResult {
   afterVersion: string;
 }
 
-export abstract class BaseAcquireFeedLockUseCase extends StepFunctionUseCase<
+export abstract class BaseAcquireFeedLockUseCase extends InternalUseCase<
   AcquireFeedLockInput,
   AcquireFeedLockResult
 > {

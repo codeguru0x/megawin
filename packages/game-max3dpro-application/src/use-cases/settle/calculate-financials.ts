@@ -13,7 +13,7 @@
  * IDEMPOTENT: Chạy lại bao nhiêu lần cũng cho kết quả giống nhau.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import {
   calculateDrawFinancials,
   type DrawFinancialInput,
@@ -63,7 +63,7 @@ export interface CalculateFinancialsResult {
   }>;
 }
 
-export class CalculateFinancialsUseCase extends StepFunctionUseCase<
+export class CalculateFinancialsUseCase extends InternalUseCase<
   CalculateFinancialsInput,
   CalculateFinancialsResult
 > {

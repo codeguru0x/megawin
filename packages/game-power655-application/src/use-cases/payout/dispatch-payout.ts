@@ -17,7 +17,7 @@
  *   - Failed entries retry ở vòng loop tiếp theo
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import {
   createTenantGatewayClient,
   type TenantGatewayClient,
@@ -64,7 +64,7 @@ export interface DispatchPayoutBatchResult {
  * Dispatch payout cho entries thắng Power 6/55.
  * Loop cho đến khi done = true.
  */
-export class DispatchPayoutBatchUseCase extends StepFunctionUseCase<
+export class DispatchPayoutBatchUseCase extends InternalUseCase<
   DispatchPayoutBatchInput,
   DispatchPayoutBatchResult
 > {

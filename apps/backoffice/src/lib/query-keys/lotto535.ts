@@ -17,9 +17,7 @@ export const lotto535Keys = {
 
   /** Danh sách kỳ quay (có phân trang / filter) */
   draws: (params?: Record<string, unknown>) =>
-    params
-      ? ([MODULE, "draws", params] as const)
-      : ([MODULE, "draws"] as const),
+    params ? ([MODULE, "draws", params] as const) : ([MODULE, "draws"] as const),
 
   /** Jackpot hiện tại */
   jackpotCurrent: [MODULE, "jackpot-current"] as const,
@@ -32,7 +30,27 @@ export const lotto535Keys = {
 
   /** Danh sách chu kỳ jackpot (có phân trang / filter) */
   jackpotCycles: (params?: Record<string, unknown>) =>
+    params ? ([MODULE, "jackpot-cycles", params] as const) : ([MODULE, "jackpot-cycles"] as const),
+
+  /** Operations dashboard – summary KPI */
+  opsSummary: (params?: Record<string, unknown>) =>
+    params ? ([MODULE, "ops-summary", params] as const) : ([MODULE, "ops-summary"] as const),
+
+  /** Operations dashboard – tenant breakdown */
+  opsTenantBreakdown: (params?: Record<string, unknown>) =>
     params
-      ? ([MODULE, "jackpot-cycles", params] as const)
-      : ([MODULE, "jackpot-cycles"] as const),
+      ? ([MODULE, "ops-tenant-breakdown", params] as const)
+      : ([MODULE, "ops-tenant-breakdown"] as const),
+
+  /** Operations dashboard – number frequency */
+  opsNumberFrequency: (params?: Record<string, unknown>) =>
+    params
+      ? ([MODULE, "ops-number-frequency", params] as const)
+      : ([MODULE, "ops-number-frequency"] as const),
+
+  /** Operations dashboard – play type distribution */
+  opsPlayTypeDistribution: (params?: Record<string, unknown>) =>
+    params
+      ? ([MODULE, "ops-playtype-dist", params] as const)
+      : ([MODULE, "ops-playtype-dist"] as const),
 };

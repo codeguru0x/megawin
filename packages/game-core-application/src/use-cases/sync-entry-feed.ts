@@ -26,7 +26,7 @@
  * ```
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import type { EntryFeedDoc, GameProduct } from "@megawin/game-core/entities";
 import { EntryFeedRepository } from "../infras/repos/entry-feed-repo";
 import { Long } from "mongodb";
@@ -62,7 +62,7 @@ export interface FeedSyncableEntryRepo {
  * Base use case sync entry feed — Template Method pattern.
  * Subclass chỉ cần implement 3 abstract methods.
  */
-export abstract class BaseSyncEntryFeedUseCase extends StepFunctionUseCase<
+export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<
   SyncEntryFeedInput,
   SyncEntryFeedResult
 > {

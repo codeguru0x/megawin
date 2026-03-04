@@ -10,16 +10,13 @@
  * @output FinalizeVoidResult
  */
 
-import { FinalizeVoidUseCase } from "@megawin/game-mega645-application/use-cases/void";
-
-interface Input {
-  drawId: string;
-}
+import {
+  FinalizeVoidUseCase,
+  type FinalizeVoidInput,
+} from "@megawin/game-mega645-application/use-cases/void";
 
 const useCase = new FinalizeVoidUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({ drawId: event.drawId });
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
+export async function handler(event: FinalizeVoidInput) {
+  return useCase.run(event);
 }

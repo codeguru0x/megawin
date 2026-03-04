@@ -3,20 +3,17 @@
  *
  * Ghi lastVersion vào feedSyncCursor sau khi step function loop hoàn tất.
  * State cuối trong step function – đảm bảo cursor được persist.
+ *
+ * @input SaveFeedCursorInput
  */
 
-import { SaveFeedCursorUseCase } from "@megawin/game-keno-application/use-cases/feed";
-
-interface Input {
-  lastVersion: string;
-}
+import {
+  SaveFeedCursorUseCase,
+  type SaveFeedCursorInput,
+} from "@megawin/game-keno-application/use-cases/feed";
 
 const useCase = new SaveFeedCursorUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({
-    lastVersion: event.lastVersion,
-  });
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
+export async function handler(event: SaveFeedCursorInput) {
+  return useCase.run(event);
 }

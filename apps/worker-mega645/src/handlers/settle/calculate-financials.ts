@@ -12,31 +12,13 @@
  * @output CalculateFinancialsResult
  */
 
-import { CalculateFinancialsUseCase } from "@megawin/game-mega645-application/use-cases/settle";
-
-interface Input {
-  drawId: string;
-  jackpotOpeningAmount: number;
-  isSplitCycle: boolean;
-  totalLines: number;
-  config: {
-    seedAmount: number;
-    splitThreshold: number;
-    splitRatios: { tier1: number; tier2: number; tier3: number };
-    companyRate: number;
-  };
-}
+import {
+  CalculateFinancialsUseCase,
+  type CalculateFinancialsInput,
+} from "@megawin/game-mega645-application/use-cases/settle";
 
 const useCase = new CalculateFinancialsUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({
-    drawId: event.drawId,
-    jackpotOpeningAmount: event.jackpotOpeningAmount,
-    isSplitCycle: event.isSplitCycle,
-    totalLines: event.totalLines,
-    config: event.config,
-  });
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
+export async function handler(event: CalculateFinancialsInput) {
+  return useCase.run(event);
 }

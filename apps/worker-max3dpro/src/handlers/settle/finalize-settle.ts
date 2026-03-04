@@ -12,18 +12,13 @@
  * @output FinalizeSettleResult
  */
 
-import { FinalizeSettleUseCase } from "@megawin/game-max3dpro-application/use-cases/settle";
-
-interface Input {
-  drawId: string;
-}
+import {
+  FinalizeSettleUseCase,
+  type FinalizeSettleInput,
+} from "@megawin/game-max3dpro-application/use-cases/settle";
 
 const useCase = new FinalizeSettleUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({
-    drawId: event.drawId,
-  });
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
+export async function handler(event: FinalizeSettleInput) {
+  return useCase.run(event);
 }

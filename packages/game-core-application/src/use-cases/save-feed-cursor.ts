@@ -5,7 +5,7 @@
  * Step function gọi ở state cuối sau khi sync hoàn tất.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import type { GameProduct } from "@megawin/game-core/entities";
 import { FeedSyncCursorRepository } from "../infras/repos/feed-sync-cursor-repo";
 
@@ -18,7 +18,7 @@ export interface SaveFeedCursorResult {
   lastVersion: string;
 }
 
-export abstract class BaseSaveFeedCursorUseCase extends StepFunctionUseCase<
+export abstract class BaseSaveFeedCursorUseCase extends InternalUseCase<
   SaveFeedCursorInput,
   SaveFeedCursorResult
 > {

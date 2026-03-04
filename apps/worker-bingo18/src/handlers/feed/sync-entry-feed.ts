@@ -5,20 +5,16 @@
  * Step Function loop: gọi lặp lại cho đến khi done = true.
  */
 
-import { SyncEntryFeedUseCase } from "@megawin/game-bingo18-application/use-cases/feed";
-
-interface Input {
-  afterVersion: string;
-  batchSize?: number;
-}
+import {
+  SyncEntryFeedUseCase,
+  type SyncEntryFeedInput,
+} from "@megawin/game-bingo18-application/use-cases/feed";
 
 const useCase = new SyncEntryFeedUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({
+export async function handler(event: SyncEntryFeedInput) {
+  return useCase.run({
     afterVersion: event.afterVersion ?? "0",
     batchSize: event.batchSize,
   });
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
 }

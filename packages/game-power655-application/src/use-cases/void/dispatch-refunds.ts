@@ -10,7 +10,7 @@
  *   - done = true khi hết entries cần refund
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import {
   createTenantGatewayClient,
   type TenantGatewayClient,
@@ -54,7 +54,7 @@ export interface DispatchRefundBatchResult {
  * Dispatch refund cho entries đã void Power 6/55.
  * Loop cho đến khi done = true.
  */
-export class DispatchRefundBatchUseCase extends StepFunctionUseCase<
+export class DispatchRefundBatchUseCase extends InternalUseCase<
   DispatchRefundBatchInput,
   DispatchRefundBatchResult
 > {

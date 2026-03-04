@@ -19,7 +19,7 @@
  *   - done = true khi không còn entries nào status = "scheduled"
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { PayoutStatus } from "@megawin/game-max3d/entities";
 import type {
   TicketLineDoc,
@@ -76,7 +76,7 @@ export interface SettleEntriesBatchResult {
   batchSettled: number;
 }
 
-export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
+export class SettleEntriesBatchUseCase extends InternalUseCase<
   SettleEntriesBatchInput,
   SettleEntriesBatchResult
 > {

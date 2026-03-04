@@ -12,24 +12,17 @@
  *   - Entry insert: unique index (ticketId, drawId) → duplicate key → skip
  *   - Step Function có thể retry toàn bộ an toàn
  *
- * @input  { drawId }
+ * @input  AutoEnrollInput
  * @output AutoEnrollOutput – { drawId, enrolledCount, skippedCount, entriesCreated, done }
  */
 
-import { AutoEnrollEntriesUseCase } from "@megawin/game-keno-application/use-cases/draws";
-
-interface Input {
-  drawId: string;
-}
+import {
+  AutoEnrollEntriesUseCase,
+  type AutoEnrollInput,
+} from "@megawin/game-keno-application/use-cases/draws";
 
 const useCase = new AutoEnrollEntriesUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({ drawId: event.drawId });
-
-  if (!result.success) {
-    throw new Error(result.error.message);
-  }
-
-  return result.data;
+export async function handler(event: AutoEnrollInput) {
+  return useCase.run(event);
 }

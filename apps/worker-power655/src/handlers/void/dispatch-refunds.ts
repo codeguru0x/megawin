@@ -10,16 +10,13 @@
  * @output DispatchRefundBatchResult
  */
 
-import { DispatchRefundBatchUseCase } from "@megawin/game-power655-application/use-cases/void";
-
-interface Input {
-  drawId: string;
-}
+import {
+  DispatchRefundBatchUseCase,
+  type DispatchRefundBatchInput,
+} from "@megawin/game-power655-application/use-cases/void";
 
 const useCase = new DispatchRefundBatchUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({ drawId: event.drawId });
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
+export async function handler(event: DispatchRefundBatchInput) {
+  return useCase.run(event);
 }

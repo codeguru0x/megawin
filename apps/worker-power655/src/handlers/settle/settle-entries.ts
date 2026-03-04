@@ -10,26 +10,13 @@
  * @output SettleEntriesBatchResult
  */
 
-import { SettleEntriesBatchUseCase } from "@megawin/game-power655-application/use-cases/settle";
-
-interface Input {
-  drawId: string;
-  result: { winningMain: number[]; bonusNumber: number };
-  prizeAmounts: Record<string, number>;
-  isSplitCycle: boolean;
-  batchSize: number;
-}
+import {
+  SettleEntriesBatchUseCase,
+  type SettleEntriesBatchInput,
+} from "@megawin/game-power655-application/use-cases/settle";
 
 const useCase = new SettleEntriesBatchUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({
-    drawId: event.drawId,
-    result: event.result,
-    prizeAmounts: event.prizeAmounts,
-    isSplitCycle: event.isSplitCycle,
-    batchSize: event.batchSize,
-  });
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
+export async function handler(event: SettleEntriesBatchInput) {
+  return useCase.run(event);
 }

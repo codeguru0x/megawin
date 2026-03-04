@@ -17,7 +17,7 @@
  *   - done = true khi không còn entries nào status = "scheduled"
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { PrizeTier, PayoutStatus } from "@megawin/game-power655/entities";
 import type { TicketLineDoc } from "@megawin/game-power655/entities";
 import { expandAllBoards } from "@megawin/game-power655/helpers";
@@ -73,7 +73,7 @@ export interface SettleEntriesBatchResult {
  * Settle 1 batch entries Power 6/55.
  * Expand boards → match lines (with bonus) → persist lines → settle entry.
  */
-export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
+export class SettleEntriesBatchUseCase extends InternalUseCase<
   SettleEntriesBatchInput,
   SettleEntriesBatchResult
 > {

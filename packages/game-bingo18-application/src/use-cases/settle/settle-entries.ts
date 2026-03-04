@@ -19,7 +19,7 @@
  * KHÔNG update ticket — SyncTicketSummaries step riêng sẽ recompute từ entries.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import {
   Bingo18PlayType,
   type Bingo18BigSmallBet,
@@ -89,7 +89,7 @@ export interface SettleEntriesBatchResult {
   batchSettled: number;
 }
 
-export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
+export class SettleEntriesBatchUseCase extends InternalUseCase<
   SettleEntriesBatchInput,
   SettleEntriesBatchResult
 > {

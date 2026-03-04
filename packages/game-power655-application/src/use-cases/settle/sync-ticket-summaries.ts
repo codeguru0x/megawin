@@ -10,7 +10,7 @@
  *   3. $set toàn bộ (không $inc) → idempotent
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 
@@ -30,7 +30,7 @@ export interface SyncTicketSummariesResult {
  * Sync ticket summaries từ entries Power 6/55.
  * Idempotent: aggregate từ DB, ghi đè summary.
  */
-export class SyncTicketSummariesUseCase extends StepFunctionUseCase<
+export class SyncTicketSummariesUseCase extends InternalUseCase<
   SyncTicketSummariesInput,
   SyncTicketSummariesResult
 > {

@@ -11,7 +11,10 @@
     "build:deps": "turbo build --filter=@megawin/game-lotto535-application^...",
     "pretest": "pnpm build:deps",
     "test": "vitest run",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,yml,yaml,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,md,yml,yaml,css}\""
   },
   "exports": {
     "./use-cases/draws": {
@@ -49,6 +52,10 @@
     "./use-cases/feed": {
       "types": "./src/use-cases/feed/index.ts",
       "default": "./dist/use-cases/feed/index.js"
+    },
+    "./use-cases/operations": {
+      "types": "./src/use-cases/operations/index.ts",
+      "default": "./dist/use-cases/operations/index.js"
     },
     "./use-cases/player": {
       "types": "./src/use-cases/player/index.ts",

@@ -4,26 +4,17 @@
  * Step 1 của Void Draw Step Function.
  * Validate draw có thể void, transition → void, load context.
  *
- * @input  { drawId, reason, voidedBy? }
+ * @input  PrepareVoidInput
  * @output PrepareVoidResult
  */
 
-import { PrepareVoidUseCase } from "@megawin/game-keno-application/use-cases/void";
-
-interface Input {
-  drawId: string;
-  reason: string;
-  voidedBy?: string;
-}
+import {
+  PrepareVoidUseCase,
+  type PrepareVoidInput,
+} from "@megawin/game-keno-application/use-cases/void";
 
 const useCase = new PrepareVoidUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({
-    drawId: event.drawId,
-    reason: event.reason,
-    voidedBy: event.voidedBy,
-  });
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
+export async function handler(event: PrepareVoidInput) {
+  return useCase.run(event);
 }

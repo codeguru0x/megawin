@@ -7,7 +7,7 @@
  * CRASH-SAFE: Luôn query page 1 với filter status = "scheduled".
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { PrizeTier, PayoutStatus } from "@megawin/game-mega645/entities";
 import type { TicketLineDoc } from "@megawin/game-mega645/entities";
 import { expandAllBoards } from "@megawin/game-mega645/helpers";
@@ -57,7 +57,7 @@ export interface SettleEntriesBatchResult {
   batchSettled: number;
 }
 
-export class SettleEntriesBatchUseCase extends StepFunctionUseCase<
+export class SettleEntriesBatchUseCase extends InternalUseCase<
   SettleEntriesBatchInput,
   SettleEntriesBatchResult
 > {

@@ -23,7 +23,7 @@
  */
 
 import { AppException } from "@megawin/shared/errors";
-import { APP_ERROR_CODES, isAppError } from "@megawin/shared/errors";
+import { isAppError } from "@megawin/shared/errors";
 
 export abstract class InternalUseCase<I = void, O = void> {
   protected validate(_input: I): void | AppException {

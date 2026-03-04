@@ -13,7 +13,7 @@
  * IDEMPOTENT: Chạy lại bao nhiêu lần cũng cho kết quả giống nhau.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { PrizeTier } from "@megawin/game-power655/entities";
 import {
   calculateDrawFinancials,
@@ -142,7 +142,7 @@ export interface CalculateFinancialsResult {
  * Tính tài chính tổng hợp Power 6/55 từ DB.
  * Hỗ trợ dual jackpot: JP1 (6/6) + JP2 (5/6 + bonus).
  */
-export class CalculateFinancialsUseCase extends StepFunctionUseCase<
+export class CalculateFinancialsUseCase extends InternalUseCase<
   CalculateFinancialsInput,
   CalculateFinancialsResult
 > {

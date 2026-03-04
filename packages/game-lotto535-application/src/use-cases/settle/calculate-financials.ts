@@ -15,7 +15,7 @@
  * (vì tính từ settled entries trong DB, overwrite draw.financial).
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { PrizeTier } from "@megawin/game-lotto535/entities";
 import {
   calculateDrawFinancials,
@@ -132,7 +132,7 @@ export interface CalculateFinancialsResult {
   }>;
 }
 
-export class CalculateFinancialsUseCase extends StepFunctionUseCase<
+export class CalculateFinancialsUseCase extends InternalUseCase<
   CalculateFinancialsInput,
   CalculateFinancialsResult
 > {

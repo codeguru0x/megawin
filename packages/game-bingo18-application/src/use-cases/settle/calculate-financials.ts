@@ -11,7 +11,7 @@
  * IDEMPOTENT: Chạy lại cho kết quả giống nhau (tính từ DB).
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { calculateBingo18DrawFinancials } from "@megawin/game-bingo18/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -52,7 +52,7 @@ export interface CalculateFinancialsResult {
   }>;
 }
 
-export class CalculateFinancialsUseCase extends StepFunctionUseCase<
+export class CalculateFinancialsUseCase extends InternalUseCase<
   CalculateFinancialsInput,
   CalculateFinancialsResult
 > {

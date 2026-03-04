@@ -10,8 +10,9 @@
  * IDEMPOTENT: chỉ đọc draw, config, đếm entries.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
+import type { BigSmallPrizes, EvenOddPrizes } from "@megawin/game-keno/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
@@ -36,8 +37,8 @@ export interface PrepareSettleResult {
     companyRate: number;
     defaultCommissionRate: number;
     basicPrizes: Record<string, Record<number, number>>;
-    bigSmallPrizes: Record<string, number>;
-    evenOddPrizes: Record<string, number>;
+    bigSmallPrizes: BigSmallPrizes;
+    evenOddPrizes: EvenOddPrizes;
     payoutCaps: {
       pick8MaxPerDraw: number;
       pick8MaxSetsForFixed: number;
@@ -50,32 +51,28 @@ export interface PrepareSettleResult {
   totalEntries: number;
 }
 
-export class PrepareSettleUseCase extends StepFunctionUseCase<
-  PrepareSettleInput,
-  PrepareSettleResult
-> {
+export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, PrepareSettleResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** Load context cho Keno settle flow. Throw nếu draw không hợp lệ. */
-  protected async execute(
-    input: PrepareSettleInput
-  ): Promise<PrepareSettleResult> {
+  protected async execute(input: PrepareSettleInput): Promise<PrepareSettleResult> {
     const { drawId } = input;
+
     const draw = await this.drawRepo.getDrawById(drawId);
     if (!draw) {
-      throw new Error(`Draw ${drawId} không tồn tại.`);
+      throw AppException.notFound(`Draw ${drawId} không tồn tại.`);
     }
 
     if (draw.status !== DrawStatus.Settling) {
-      throw new Error(
-        `Draw ${drawId} status = "${draw.status}", expected "settling".`
+      throw AppException.badRequest(
+        `Draw ${drawId} status = "${draw.status}", expected "settling".`,
       );
     }
 
     if (!draw.result) {
-      throw new Error(`Draw ${drawId} chưa có kết quả quay.`);
+      throw AppException.notFound(`Draw ${drawId} chưa có kết quả quay.`);
     }
 
     const globalConfig = await this.getGlobalConfig.run();
@@ -98,8 +95,8 @@ export class PrepareSettleUseCase extends StepFunctionUseCase<
         companyRate: globalConfig.rates.companyRate,
         defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
         basicPrizes: globalConfig.basicPrizes,
-        bigSmallPrizes: globalConfig.bigSmallPrizes as any,
-        evenOddPrizes: globalConfig.evenOddPrizes as any,
+        bigSmallPrizes: globalConfig.bigSmallPrizes,
+        evenOddPrizes: globalConfig.evenOddPrizes,
         payoutCaps: globalConfig.payoutCaps,
       },
       totalEntries,

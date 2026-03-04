@@ -18,7 +18,5 @@ import {
 const useCase = new SettleEntriesBatchUseCase();
 
 export async function handler(event: SettleEntriesBatchInput) {
-  const result = await useCase.run(event);
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
+  return useCase.run(event);
 }

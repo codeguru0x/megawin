@@ -8,18 +8,13 @@
  * @output SaveFeedCursorResult
  */
 
-import { SaveFeedCursorUseCase } from "@megawin/game-power655-application/use-cases/feed";
-
-interface Input {
-  lastVersion: string;
-}
+import {
+  SaveFeedCursorUseCase,
+  type SaveFeedCursorInput,
+} from "@megawin/game-power655-application/use-cases/feed";
 
 const useCase = new SaveFeedCursorUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({
-    lastVersion: event.lastVersion,
-  });
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
+export async function handler(event: SaveFeedCursorInput) {
+  return useCase.run(event);
 }

@@ -1,6 +1,6 @@
-import { GameConfigRepository } from "../../../src/infras/repos/global-config-repo";
+import { GameConfigRepository } from "../../../src/infras/repos/game-config-repo";
 import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
-import type { GlobalConfigEntity } from "../../../src/infras/mappers/global-config-mapper";
+import type { GlobalConfigDoc } from "@megawin/game-lotto535/entities";
 
 /**
  * Insert default global config vào database.
@@ -8,7 +8,7 @@ import type { GlobalConfigEntity } from "../../../src/infras/mappers/global-conf
  *
  * Dùng trong test setup (beforeAll) hoặc seed script.
  */
-export async function insertDefaultGlobalConfig(): Promise<GlobalConfigEntity> {
+export async function insertDefaultGlobalConfig(): Promise<GlobalConfigDoc> {
   const repo = new GameConfigRepository();
 
   const result = await repo.upsertGlobalConfig({

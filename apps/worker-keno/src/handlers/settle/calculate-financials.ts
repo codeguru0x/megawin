@@ -6,26 +6,17 @@
  *
  * IDEMPOTENT: chạy lại cho kết quả giống nhau.
  *
- * @input  { drawId, config: { companyRate } }
+ * @input  CalculateFinancialsInput
  * @output CalculateFinancialsResult
  */
 
-import { CalculateFinancialsUseCase } from "@megawin/game-keno-application/use-cases/settle";
-
-interface Input {
-  drawId: string;
-  config: {
-    companyRate: number;
-  };
-}
+import {
+  CalculateFinancialsUseCase,
+  type CalculateFinancialsInput,
+} from "@megawin/game-keno-application/use-cases/settle";
 
 const useCase = new CalculateFinancialsUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({
-    drawId: event.drawId,
-    config: event.config,
-  });
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
+export async function handler(event: CalculateFinancialsInput) {
+  return useCase.run(event);
 }

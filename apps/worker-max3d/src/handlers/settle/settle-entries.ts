@@ -10,44 +10,13 @@
  * @output SettleEntriesBatchResult
  */
 
-import { SettleEntriesBatchUseCase } from "@megawin/game-max3d-application/use-cases/settle";
-
-interface Input {
-  drawId: string;
-  result: {
-    special: [string, string];
-    first: [string, string, string, string];
-    second: [string, string, string, string, string, string];
-    third: [string, string, string, string, string, string, string, string];
-  };
-  prizeConfig: {
-    basic: { special: number; first: number; second: number; third: number };
-    combo: {
-      combo3: { special: number; first: number; second: number; third: number };
-      combo6: { special: number; first: number; second: number; third: number };
-    };
-    plus: {
-      special: number;
-      first: number;
-      second: number;
-      third: number;
-      fourth: number;
-      fifth: number;
-      sixth: number;
-    };
-  };
-  batchSize: number;
-}
+import {
+  SettleEntriesBatchUseCase,
+  type SettleEntriesBatchInput,
+} from "@megawin/game-max3d-application/use-cases/settle";
 
 const useCase = new SettleEntriesBatchUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({
-    drawId: event.drawId,
-    result: event.result,
-    prizeConfig: event.prizeConfig,
-    batchSize: event.batchSize,
-  });
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
+export async function handler(event: SettleEntriesBatchInput) {
+  return useCase.run(event);
 }

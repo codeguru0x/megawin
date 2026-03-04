@@ -5,7 +5,7 @@
  * Upsert pattern: idempotent khi chạy lại.
  */
 
-import { StepFunctionUseCase } from "@megawin/app-core/use-cases";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { GameProduct } from "@megawin/game-core/entities";
 import { publishGameReport } from "@megawin/game-core-application/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -65,7 +65,7 @@ export interface BuildReportResult {
   gameCoreReportPublished: boolean;
 }
 
-export class BuildReportUseCase extends StepFunctionUseCase<
+export class BuildReportUseCase extends InternalUseCase<
   BuildReportInput,
   BuildReportResult
 > {

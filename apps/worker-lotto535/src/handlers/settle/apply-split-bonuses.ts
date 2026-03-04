@@ -8,31 +8,13 @@
  * @output ApplySplitBonusesResult
  */
 
-import { ApplySplitBonusesUseCase } from "@megawin/game-lotto535-application/use-cases/settle";
-
-interface Input {
-  drawId: string;
-  isSplitCycle: boolean;
-  splitDetails?: Record<
-    string,
-    {
-      initialAmount: number;
-      redistributedAmount: number;
-      totalAmount: number;
-      winnerCount: number;
-      bonusPerWinner: number;
-    }
-  >;
-}
+import {
+  ApplySplitBonusesUseCase,
+  type ApplySplitBonusesInput,
+} from "@megawin/game-lotto535-application/use-cases/settle";
 
 const useCase = new ApplySplitBonusesUseCase();
 
-export async function handler(event: Input) {
-  const result = await useCase.run({
-    drawId: event.drawId,
-    isSplitCycle: event.isSplitCycle,
-    splitDetails: event.splitDetails,
-  });
-  if (!result.success) throw new Error(result.error.message);
-  return result.data;
+export async function handler(event: ApplySplitBonusesInput) {
+  return useCase.run(event);
 }
