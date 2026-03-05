@@ -32,10 +32,7 @@ export interface VoidDrawOutput extends DrawTransitionOutput {
  *      - Nếu draw đã ở void (retry) → skip transition
  *   3. Start Void Step Function (deterministic name → idempotent)
  */
-export class VoidDrawUseCase extends NextApiUseCase<
-  VoidDrawInput,
-  VoidDrawOutput
-> {
+export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: VoidDrawInput): Promise<VoidDrawOutput> {
@@ -44,14 +41,14 @@ export class VoidDrawUseCase extends NextApiUseCase<
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
     }
 
-    const alreadyVoid = draw.status === DrawStatus.Void;
+    const alreadyVoiding = draw.status === DrawStatus.Voiding || draw.status === DrawStatus.Void;
 
-    if (!alreadyVoid) {
+    if (!alreadyVoiding) {
       if (!VOIDABLE_STATUSES.has(draw.status)) {
         throw new AppException(
           "DRAW_INVALID_TRANSITION",
           `Không thể huỷ kỳ quay ở trạng thái "${draw.status}". ` +
-            `Chỉ huỷ được khi ở scheduled/salesClosed/published.`
+            `Chỉ huỷ được khi ở scheduled/salesClosed/published.`,
         );
       }
 
@@ -75,14 +72,14 @@ export class VoidDrawUseCase extends NextApiUseCase<
     } catch (err) {
       throw new AppException(
         "SFN_START_FAILED",
-        `Không thể khởi chạy void worker: ${(err as Error).message}`
+        `Không thể khởi chạy void worker: ${(err as Error).message}`,
       );
     }
 
     return {
       drawId: input.drawId,
-      previousStatus: alreadyVoid ? DrawStatus.Void : draw.status,
-      currentStatus: DrawStatus.Void,
+      previousStatus: alreadyVoiding ? draw.status : draw.status,
+      currentStatus: DrawStatus.Voiding,
       hasEntriesToVoid: true,
     };
   }

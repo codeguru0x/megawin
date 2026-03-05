@@ -26,11 +26,16 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
   },
   settling: {
     label: "Đang settle",
-    className: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 animate-pulse",
+    className:
+      "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 animate-pulse",
   },
   settled: {
     label: "Hoàn tất",
     className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
+  },
+  voiding: {
+    label: "Đang huỷ",
+    className: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300 animate-pulse",
   },
   void: {
     label: "Đã huỷ",

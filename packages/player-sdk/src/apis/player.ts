@@ -27,9 +27,9 @@ export interface PlayerBalance {
   playerId: string;
   /** ID tenant. */
   tenantId: string;
-  /** Số dư hiện tại. */
+  /** Số dư hiện tại (VND). */
   balance: number;
-  /** Đơn vị tiền tệ. */
+  /** Đơn vị tiền tệ. VD: `"VND"`. */
   currency: string;
 }
 
@@ -106,7 +106,7 @@ export interface GameResult {
  *
  * @example
  * ```ts
- * const client = createPlayerClient({ baseUrl: "https://api.megawin.com" });
+ * const client = createPlayerClient({ baseUrl: "https://api.domain.com" });
  *
  * const balance = await client.player.getBalance();
  * const history = await client.player.getBetHistory({ page: 1, pageSize: 10 });
@@ -117,7 +117,7 @@ export interface PlayerApi {
   /**
    * Lấy số dư hiện tại của player.
    *
-   * **Endpoint:** `GET /player/balance`
+   * **Endpoint:** `GET /me/balance`
    *
    * @returns Thông tin số dư
    *

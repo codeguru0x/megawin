@@ -18,11 +18,11 @@ bingo18-list-pending-tickets:
         authorizer:
           name: cognitoPlayerAuth
 
-bingo18-list-completed-tickets:
-  handler: src/handlers/bingo18/list-completed-tickets.handler
+bingo18-list-tickets:
+  handler: src/handlers/bingo18/list-tickets.handler
   events:
     - httpApi:
-        path: /games/bingo18/tickets/completed
+        path: /games/bingo18/tickets
         method: get
         authorizer:
           name: cognitoPlayerAuth

@@ -99,6 +99,20 @@ export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus];
 
 export const TICKET_STATUS_VALUES = Object.values(TicketStatus);
 
+/**
+ * Tất cả status mà API "list tickets" cho player được phép trả về.
+ * Dùng cho filter `status: { $in: ALL_LISTABLE_STATUSES }` trong repo.
+ *
+ * Giữ explicit thay vì dùng TICKET_STATUS_VALUES để tránh lộ status mới
+ * (vd draft/cancelled) nếu thêm vào TicketStatus trong tương lai.
+ */
+export const ALL_LISTABLE_STATUSES: readonly TicketStatus[] = [
+  TicketStatus.Paid,
+  TicketStatus.Completed,
+  TicketStatus.Refunded,
+  TicketStatus.Void,
+];
+
 // ─────────────────────────────────────────────
 // Entry Status (dùng chung cho tất cả game)
 // ─────────────────────────────────────────────
@@ -138,11 +152,14 @@ export const ENTRY_STATUS_VALUES = Object.values(EntryStatus);
  * Trạng thái vận hành kỳ mở thưởng (draw) – dùng chung cho mọi game.
  *
  * Flow: scheduled → salesOpen → salesClosed → published → settling → settled
- *          ↘ void        ↑↓         ↘ void       ↘ void
+ *          ↘ voiding      ↑↓         ↘ voiding    ↘ voiding
+ *              ↓                          ↓             ↓
+ *             void                       void          void
  *
  * - scheduled: vừa tạo, chưa mở bán. Staff cần nhấn "Mở nhận đặt cược".
  * - Không có "drawing": kết quả được import/nhập → salesClosed chuyển thẳng published.
  * - Muốn void phải close sales trước (không void trực tiếp từ salesOpen).
+ * - voiding → void: tương tự settling → settled, staff thấy "Đang huỷ" khi worker xử lý.
  */
 export const DrawStatus = {
   /** Vừa tạo, chưa mở bán. Chờ staff mở nhận đặt cược. */
@@ -157,7 +174,9 @@ export const DrawStatus = {
   Settling: "settling",
   /** Đã hoàn tất settle. */
   Settled: "settled",
-  /** Kỳ quay bị huỷ / không hợp lệ. Entries được hoàn tiền. */
+  /** Đang xử lý huỷ kỳ (void entries, refund). Worker đang chạy. */
+  Voiding: "voiding",
+  /** Kỳ quay đã huỷ hoàn tất. Entries đã void và hoàn tiền. */
   Void: "void",
 } as const;
 
@@ -179,8 +198,7 @@ export const DrawResultSource = {
   Import: "import",
 } as const;
 
-export type DrawResultSource =
-  (typeof DrawResultSource)[keyof typeof DrawResultSource];
+export type DrawResultSource = (typeof DrawResultSource)[keyof typeof DrawResultSource];
 
 // ─────────────────────────────────────────────
 // Ticket Channel (dùng chung cho tất cả game)
@@ -210,8 +228,7 @@ export const GameConfigScope = {
   Tenant: "tenant",
 } as const;
 
-export type GameConfigScope =
-  (typeof GameConfigScope)[keyof typeof GameConfigScope];
+export type GameConfigScope = (typeof GameConfigScope)[keyof typeof GameConfigScope];
 
 // ─────────────────────────────────────────────
 // Entry Outcome (kết quả thắng/thua – dùng chung)

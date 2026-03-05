@@ -13,37 +13,61 @@
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  2. SettleEntries (loop, batch=500)      │
- *  │     Match boards + side bets → payout    │
- *  │     done = true khi hết scheduled        │
+ *  │  2. SettleEntries (loop)                 │
+ *  │     Match boards + side bets → bulk      │
+ *  │     settle batch=500. Time-bounded       │
+ *  │     (13 min). done=true khi hết.         │
  *  └────────┬─────────────────────────────────┘
  *           ▼
- *  ┌─────────────────────────┐
- *  │  3. SyncTicketSummaries │  Recompute ticket progress
- *  └────────┬────────────────┘
+ *  ┌──────────────────────────────────────────┐
+ *  │  3. ApplyPayoutCaps                      │
+ *  │     Giới hạn trả thưởng bậc 8/9/10.     │
+ *  │     Nếu số bộ trúng vượt ngưỡng →       │
+ *  │     chia đều tổng 10 tỷ.                 │
+ *  └────────┬─────────────────────────────────┘
+ *           ▼
+ *  ┌──────────────────────────────────────────┐
+ *  │  4. SyncTicketSummaries (loop)           │
+ *  │     Recompute ticket progress.           │
+ *  │     Time-bounded (13 min).               │
+ *  │     done=true khi hết tickets.           │
+ *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌────────────────────────────┐
- *  │  4. CalculateFinancials    │  Tính từ DB (no jackpot)
+ *  │  5. CalculateFinancials    │  Tính từ DB (no jackpot)
  *  └────────┬───────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  5. BuildReport         │  Daily reports
+ *  │  6. BuildReport         │  Daily reports
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  6. FinalizeSettle      │  settling → settled
+ *  │  7. FinalizeSettle      │  settling → settled
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  7. DispatchPayouts (loop)               │
+ *  │  8. DispatchPayouts (loop)               │
  *  │     done = true khi hết pending payouts  │
  *  └──────────────────────────────────────────┘
  *
- * DATA FLOW:
- *   context = PrepareSettle output, truyền xuyên suốt.
- *   Lambda nhận context trực tiếp, tự destructure fields cần thiết.
+ * DATA FLOW (Assign-based):
+ *   $settleCtx  = PrepareSettle result, persisted via Assign across all states.
+ *   $financials = CalculateFinancials result, used by BuildReport & FinalizeSettle.
+ *   Lambda nhận data qua Arguments, tự destructure fields cần thiết.
  *   batchSize cố định 500 trong use-case, không truyền từ step function.
+ *
+ * USAGE (chạy từ thư mục step-functions):
+ *   npx tsx -e "import { SETTLE_STATE_MACHINE } from './settle'; console.log(JSON.stringify(SETTLE_STATE_MACHINE, null, 2))" > settle.asl.json
  */
+
+const REGION = "ap-southeast-1";
+const ACCOUNT_ID = "YOUR_ACCOUNT_ID";
+const SERVICE = "mw-worker-keno";
+const STAGE = "dev";
+
+function lambdaArn(functionName: string): string {
+  return `arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:${SERVICE}-${STAGE}-${functionName}`;
+}
 
 const LAMBDA_RETRY = [
   {
@@ -68,17 +92,17 @@ export const SETTLE_STATE_MACHINE = {
   States: {
     PrepareSettle: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-prepare",
-      Output: "{% { 'context': $states.result } %}",
+      Resource: lambdaArn("settle-prepare"),
+      Assign: { settleCtx: "{% $states.result %}" },
       Next: "SettleEntries",
       Retry: LAMBDA_RETRY,
     },
 
     SettleEntries: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-entries",
-      Arguments: "{% $states.input.context %}",
-      Output: "{% { 'context': $states.input.context, 'settleResult': $states.result } %}",
+      Resource: lambdaArn("settle-entries"),
+      Arguments: "{% $settleCtx %}",
+      Assign: { settleResult: "{% $states.result %}" },
       Next: "CheckSettleDone",
       Retry: LAMBDA_RETRY,
     },
@@ -87,55 +111,71 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Choice",
       Choices: [
         {
-          Condition: "{% $states.input.settleResult.done %}",
-          Next: "SyncTicketSummaries",
+          Condition: "{% $settleResult.done %}",
+          Next: "ApplyPayoutCaps",
         },
       ],
       Default: "SettleEntries",
     },
 
+    ApplyPayoutCaps: {
+      Type: "Task",
+      Resource: lambdaArn("settle-apply-payout-caps"),
+      Arguments: "{% $settleCtx %}",
+      Next: "SyncTicketSummaries",
+      Retry: LAMBDA_RETRY,
+    },
+
     SyncTicketSummaries: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-sync-ticket-summaries",
-      Arguments: "{% $states.input.context %}",
-      Output: "{% { 'context': $states.input.context, 'syncResult': $states.result } %}",
-      Next: "CalculateFinancials",
+      Resource: lambdaArn("settle-sync-ticket-summaries"),
+      Arguments: "{% $settleCtx %}",
+      Assign: { syncResult: "{% $states.result %}" },
+      Next: "CheckSyncDone",
       Retry: LAMBDA_RETRY,
+    },
+
+    CheckSyncDone: {
+      Type: "Choice",
+      Choices: [
+        {
+          Condition: "{% $syncResult.done %}",
+          Next: "CalculateFinancials",
+        },
+      ],
+      Default: "SyncTicketSummaries",
     },
 
     CalculateFinancials: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-calculate-financials",
-      Arguments: "{% $states.input.context %}",
-      Output: "{% { 'context': $states.input.context, 'financials': $states.result } %}",
+      Resource: lambdaArn("settle-calculate-financials"),
+      Arguments: "{% $settleCtx %}",
+      Assign: { financials: "{% $states.result %}" },
       Next: "BuildReport",
       Retry: LAMBDA_RETRY,
     },
 
     BuildReport: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-build-report",
-      Arguments: "{% $merge($states.input.context, { 'financials': $states.input.financials }) %}",
-      Output:
-        "{% { 'context': $states.input.context, 'financials': $states.input.financials, 'reportResult': $states.result } %}",
+      Resource: lambdaArn("settle-build-report"),
+      Arguments: "{% $merge($settleCtx, { 'financials': $financials }) %}",
       Next: "FinalizeSettle",
       Retry: LAMBDA_RETRY,
     },
 
     FinalizeSettle: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-finalize",
-      Arguments: "{% $states.input.context %}",
-      Output: "{% { 'context': $states.input.context, 'finalizeResult': $states.result } %}",
+      Resource: lambdaArn("settle-finalize"),
+      Arguments: "{% $settleCtx %}",
       Next: "DispatchPayouts",
       Retry: LAMBDA_RETRY,
     },
 
     DispatchPayouts: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-dispatch-payouts",
-      Arguments: "{% $states.input.context %}",
-      Output: "{% { 'context': $states.input.context, 'payoutResult': $states.result } %}",
+      Resource: lambdaArn("settle-dispatch-payouts"),
+      Arguments: "{% $settleCtx %}",
+      Assign: { payoutResult: "{% $states.result %}" },
       Next: "CheckPayoutDone",
       Retry: LAMBDA_RETRY,
       Catch: [
@@ -150,7 +190,7 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Choice",
       Choices: [
         {
-          Condition: "{% $states.input.payoutResult.done %}",
+          Condition: "{% $payoutResult.done %}",
           Next: "PayoutComplete",
         },
       ],

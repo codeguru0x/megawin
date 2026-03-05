@@ -6,8 +6,6 @@ import { startExecution } from "@megawin/app-core/aws/sf";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
 
-const VOID_SFN_ARN = process.env.KENO_VOID_SFN_ARN!;
-
 const VOIDABLE_STATUSES = new Set<string>([
   DrawStatus.Scheduled,
   DrawStatus.SalesClosed,
@@ -17,6 +15,7 @@ const VOIDABLE_STATUSES = new Set<string>([
 export interface VoidDrawInput extends DrawIdInput {
   reason: string;
   voidedBy?: string;
+  KENO_VOID_SFN_ARN: string;
 }
 
 export interface VoidDrawOutput extends DrawTransitionOutput {
@@ -32,10 +31,7 @@ export interface VoidDrawOutput extends DrawTransitionOutput {
  *      - Nếu draw đã ở void (retry) → skip transition
  *   3. Start Void Step Function (deterministic name → idempotent)
  */
-export class VoidDrawUseCase extends NextApiUseCase<
-  VoidDrawInput,
-  VoidDrawOutput
-> {
+export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: VoidDrawInput): Promise<VoidDrawOutput> {
@@ -44,14 +40,14 @@ export class VoidDrawUseCase extends NextApiUseCase<
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
     }
 
-    const alreadyVoid = draw.status === DrawStatus.Void;
+    const alreadyVoiding = draw.status === DrawStatus.Voiding || draw.status === DrawStatus.Void;
 
-    if (!alreadyVoid) {
+    if (!alreadyVoiding) {
       if (!VOIDABLE_STATUSES.has(draw.status)) {
         throw new AppException(
           "DRAW_INVALID_TRANSITION",
           `Không thể huỷ kỳ quay ở trạng thái "${draw.status}". ` +
-            `Chỉ huỷ được khi ở scheduled/salesClosed/published.`
+            `Chỉ huỷ được khi ở scheduled/salesClosed/published.`,
         );
       }
 
@@ -68,21 +64,19 @@ export class VoidDrawUseCase extends NextApiUseCase<
 
     try {
       await startExecution({
-        stateMachineArn: VOID_SFN_ARN,
+        stateMachineArn: input.KENO_VOID_SFN_ARN,
         name: toExecutionName(input.drawId),
         input: { drawId: input.drawId },
       });
     } catch (err) {
-      throw new AppException(
-        "SFN_START_FAILED",
-        `Không thể khởi chạy void worker: ${(err as Error).message}`
-      );
+      console.error(err);
+      throw AppException.internal("Không thể khởi chạy void worker");
     }
 
     return {
       drawId: input.drawId,
-      previousStatus: alreadyVoid ? DrawStatus.Void : draw.status,
-      currentStatus: DrawStatus.Void,
+      previousStatus: alreadyVoiding ? draw.status : draw.status,
+      currentStatus: DrawStatus.Voiding,
       hasEntriesToVoid: true,
     };
   }

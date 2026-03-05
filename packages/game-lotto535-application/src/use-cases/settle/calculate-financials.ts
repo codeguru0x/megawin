@@ -16,6 +16,7 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { roundTo } from "@megawin/shared/utils/number";
 import { PrizeTier } from "@megawin/game-lotto535/entities";
 import {
   calculateDrawFinancials,
@@ -131,7 +132,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       tenantId: t.tenantId,
       revenue: t.revenue,
       commission: t.commission,
-      commissionRate: t.revenue > 0 ? t.commission / t.revenue : 0,
+      commissionRate: t.revenue > 0 ? roundTo(t.commission / t.revenue, 2) : 0,
       entryCount: t.entryCount,
     }));
 

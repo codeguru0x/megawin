@@ -11,6 +11,9 @@ provider:
   region: ap-southeast-1
   logRetentionInDays: 14
   profile: sls_deploy_${opt:stage, self:provider.stage}
+  environment:
+    STAGE: ${opt:stage, self:provider.stage}
+    MONGODB_URI: ${env:MONGODB_URI, ssm:/${opt:stage, self:provider.stage}/megawin/MONGODB_URI}
 
   iam:
     role:
@@ -39,9 +42,6 @@ provider:
           Resource:
             - arn:aws:states:${self:provider.region}:*:stateMachine:megawin-*
             - arn:aws:states:${self:provider.region}:*:execution:megawin-*:*
-environment:
-  STAGE: ${opt:stage, self:provider.stage}
-  MONGODB_URI: ${env:MONGODB_URI, ssm:/${opt:stage, self:provider.stage}/megawin/MONGODB_URI}
 
 stages:
   dev:
@@ -66,6 +66,5 @@ build:
 
 functions:
   - ${file(src/functions/settle.yml)}
-  - ${file(src/functions/enroll.yml)}
   - ${file(src/functions/void.yml)}
   - ${file(src/functions/feed.yml)}

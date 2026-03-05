@@ -104,53 +104,60 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     return result.modifiedCount;
   }
 
-  /**
-   * Settle 1 entry: scheduled → settled + ghi result + payout + gán version.
-   * Atomic: chỉ update nếu entry đang ở status "scheduled".
-   */
-  async settleEntry(
-    entryId: string,
-    payout: {
-      winAmount: number;
-      payoutAmount: number;
-      boardPayouts: Array<{
-        boardNo: string;
-        playType: string;
-        matchCount: number;
+  async bulkSettleEntries(
+    items: Array<{
+      entryId: string;
+      payout: {
         winAmount: number;
-      }>;
-      sideBetPayouts: Array<{
-        playType: string;
-        sum?: number;
-        bet?: string;
-        outcome: string;
-        isWin: boolean;
-        winAmount: number;
-      }>;
-      settledAt: Date;
-      payoutStatus?: string;
-    },
-    outcome: string,
-    result: {
-      numbers: number[];
-      sum: number;
-      publishedAt: Date;
-    },
-  ): Promise<boolean> {
+        payoutAmount: number;
+        boardPayouts: Array<{
+          boardNo: string;
+          playType: string;
+          matchCount: number;
+          winAmount: number;
+        }>;
+        sideBetPayouts: Array<{
+          playType: string;
+          sum?: number;
+          bet?: string;
+          outcome: string;
+          isWin: boolean;
+          winAmount: number;
+        }>;
+        settledAt: Date;
+        payoutStatus?: string;
+      };
+      outcome: string;
+      result: {
+        numbers: number[];
+        sum: number;
+        publishedAt: Date;
+      };
+    }>,
+  ): Promise<{ modifiedCount: number }> {
+    if (items.length === 0) return { modifiedCount: 0 };
+
     const version = await this.nextVersion();
-    return await this.updateOne(
-      { _id: new ObjectId(entryId), status: EntryStatus.Scheduled },
-      {
-        $set: {
-          status: EntryStatus.Settled,
-          result,
-          payout,
-          outcome,
-          version,
-          updatedAt: new Date(),
+    const now = new Date();
+
+    const ops = items.map((item) => ({
+      updateOne: {
+        filter: { _id: new ObjectId(item.entryId), status: EntryStatus.Scheduled },
+        update: {
+          $set: {
+            status: EntryStatus.Settled,
+            result: item.result,
+            payout: item.payout,
+            outcome: item.outcome,
+            version,
+            updatedAt: now,
+          },
         },
       },
-    );
+    }));
+
+    const result = await this.bulkWrite(ops);
+    return { modifiedCount: result.modifiedCount };
   }
 
   // ─── Aggregation ───
@@ -184,7 +191,6 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
 
   async aggregateSettledPayoutSummary(drawId: string): Promise<{
     totalSettled: number;
-    totalWinAmount: number;
     totalPayoutAmount: number;
     totalPrizes: number;
   }> {
@@ -194,7 +200,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
         $group: {
           _id: null,
           totalSettled: { $sum: 1 },
-          totalWinAmount: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
+          totalPrizes: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
           totalPayoutAmount: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
         },
       },
@@ -202,9 +208,8 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     const summary = (summaryResult[0] as any) ?? {};
     return {
       totalSettled: summary.totalSettled ?? 0,
-      totalWinAmount: summary.totalWinAmount ?? 0,
       totalPayoutAmount: summary.totalPayoutAmount ?? 0,
-      totalPrizes: summary.totalWinAmount ?? 0,
+      totalPrizes: summary.totalPrizes ?? 0,
     };
   }
 
@@ -360,46 +365,35 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     );
   }
 
-  /**
-   * Void 1 entry: chuyển status → void, ghi voidInfo + gán version.
-   * Atomic: chỉ update nếu entry đang ở status voidable.
-   */
-  async voidEntry(
-    entryId: string,
-    voidInfo: {
-      reason: string;
-      originalAmount: number;
-      refundAmount: number;
-      voidedBy?: string;
-    },
-  ): Promise<boolean> {
+  async bulkVoidEntries(
+    items: Array<{ entryId: string; amount: number }>,
+  ): Promise<{ modifiedCount: number }> {
+    if (items.length === 0) return { modifiedCount: 0 };
+
     const version = await this.nextVersion();
-    return await this.updateOne(
-      {
-        _id: new ObjectId(entryId),
-        status: EntryStatus.Scheduled,
-      },
-      {
-        $set: {
-          status: EntryStatus.Void,
-          voidInfo: {
-            ...voidInfo,
-            refundStatus: RefundStatus.Pending,
-            voidedAt: new Date(),
+    const now = new Date();
+
+    const ops = items.map((item) => ({
+      updateOne: {
+        filter: { _id: new ObjectId(item.entryId), status: EntryStatus.Scheduled },
+        update: {
+          $set: {
+            status: EntryStatus.Void,
+            voidInfo: {
+              originalAmount: item.amount,
+              refundAmount: item.amount,
+              refundStatus: RefundStatus.Pending,
+              voidedAt: now,
+            },
+            version,
+            updatedAt: now,
           },
-          version,
-          updatedAt: new Date(),
         },
       },
-    );
-  }
+    }));
 
-  /** Đếm entries voidable cho 1 draw. */
-  async countVoidableEntries(drawId: string): Promise<number> {
-    return await this.count({
-      drawId,
-      status: EntryStatus.Scheduled,
-    });
+    const result = await this.bulkWrite(ops);
+    return { modifiedCount: result.modifiedCount };
   }
 
   /** Lấy entries đã void nhưng chưa hoàn tiền. */

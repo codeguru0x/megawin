@@ -97,37 +97,48 @@ export abstract class AbstractEntryRepository<
     return result.modifiedCount;
   }
 
-  async settleEntry(
-    entryId: string,
-    payout: {
-      winAmount: number;
-      payoutAmount: number;
-      tiers: Array<{
-        tier: string;
-        hitCount: number;
-        unitAmount: number;
-        amount: number;
-      }>;
-      settledAt: Date;
-      payoutStatus?: string;
-    },
-    outcome: string,
-    result: TDrawResult & { publishedAt: Date },
-  ): Promise<boolean> {
+  async bulkSettleEntries(
+    items: Array<{
+      entryId: string;
+      payout: {
+        winAmount: number;
+        payoutAmount: number;
+        tiers: Array<{
+          tier: string;
+          hitCount: number;
+          unitAmount: number;
+          amount: number;
+        }>;
+        settledAt: Date;
+        payoutStatus?: string;
+      };
+      outcome: string;
+      result: TDrawResult & { publishedAt: Date };
+    }>,
+  ): Promise<{ modifiedCount: number }> {
+    if (items.length === 0) return { modifiedCount: 0 };
+
     const version = await this.nextVersion();
-    return await this.updateOne(
-      { _id: new ObjectId(entryId), status: EntryStatus.Scheduled },
-      {
-        $set: {
-          status: EntryStatus.Settled,
-          result,
-          payout,
-          outcome,
-          version,
-          updatedAt: new Date(),
+    const now = new Date();
+
+    const ops = items.map((item) => ({
+      updateOne: {
+        filter: { _id: new ObjectId(item.entryId), status: EntryStatus.Scheduled },
+        update: {
+          $set: {
+            status: EntryStatus.Settled,
+            result: item.result,
+            payout: item.payout,
+            outcome: item.outcome,
+            version,
+            updatedAt: now,
+          },
         },
       },
-    );
+    }));
+
+    const result = await this.bulkWrite(ops);
+    return { modifiedCount: result.modifiedCount };
   }
 
   // ─── Aggregation ───
@@ -161,7 +172,6 @@ export abstract class AbstractEntryRepository<
 
   async aggregateSettledPayoutSummary(drawId: string): Promise<{
     totalSettled: number;
-    totalWinAmount: number;
     totalPayoutAmount: number;
     totalFixedPrizes: number;
     tierWinnerCounts: Record<string, number>;
@@ -192,7 +202,6 @@ export abstract class AbstractEntryRepository<
         $group: {
           _id: null,
           totalSettled: { $sum: 1 },
-          totalWinAmount: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
           totalPayoutAmount: {
             $sum: { $ifNull: ["$payout.payoutAmount", 0] },
           },
@@ -203,7 +212,6 @@ export abstract class AbstractEntryRepository<
 
     return {
       totalSettled: summary.totalSettled ?? 0,
-      totalWinAmount: summary.totalWinAmount ?? 0,
       totalPayoutAmount: summary.totalPayoutAmount ?? 0,
       totalFixedPrizes,
       tierWinnerCounts,
@@ -385,41 +393,35 @@ export abstract class AbstractEntryRepository<
     );
   }
 
-  async voidEntry(
-    entryId: string,
-    voidInfo: {
-      reason: string;
-      originalAmount: number;
-      refundAmount: number;
-      voidedBy?: string;
-    },
-  ): Promise<boolean> {
+  async bulkVoidEntries(
+    items: Array<{ entryId: string; amount: number }>,
+  ): Promise<{ modifiedCount: number }> {
+    if (items.length === 0) return { modifiedCount: 0 };
+
     const version = await this.nextVersion();
-    return await this.updateOne(
-      {
-        _id: new ObjectId(entryId),
-        status: EntryStatus.Scheduled,
-      },
-      {
-        $set: {
-          status: EntryStatus.Void,
-          voidInfo: {
-            ...voidInfo,
-            refundStatus: "pending",
-            voidedAt: new Date(),
+    const now = new Date();
+
+    const ops = items.map((item) => ({
+      updateOne: {
+        filter: { _id: new ObjectId(item.entryId), status: EntryStatus.Scheduled },
+        update: {
+          $set: {
+            status: EntryStatus.Void,
+            voidInfo: {
+              originalAmount: item.amount,
+              refundAmount: item.amount,
+              refundStatus: "pending",
+              voidedAt: now,
+            },
+            version,
+            updatedAt: now,
           },
-          version,
-          updatedAt: new Date(),
         },
       },
-    );
-  }
+    }));
 
-  async countVoidableEntries(drawId: string): Promise<number> {
-    return await this.count({
-      drawId,
-      status: EntryStatus.Scheduled,
-    });
+    const result = await this.bulkWrite(ops);
+    return { modifiedCount: result.modifiedCount };
   }
 
   async getPendingRefundEntries(drawId: string, limit: number): Promise<TEntity[]> {

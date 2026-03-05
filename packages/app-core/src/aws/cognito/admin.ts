@@ -12,6 +12,7 @@ import {
   AdminUpdateUserAttributesCommand,
   AssociateSoftwareTokenCommand,
   GetUserPoolMfaConfigCommand,
+  InitiateAuthCommand,
   ListUsersCommand,
   type ListUsersCommandInput,
   SetUserPoolMfaConfigCommand,
@@ -99,7 +100,7 @@ export async function adminAddUserToGroup(params: AdminAddUserToGroupParams) {
       UserPoolId: userPoolId,
       Username: username,
       GroupName: groupName,
-    })
+    }),
   );
 }
 
@@ -163,7 +164,7 @@ export interface AdminAssociateSoftwareTokenResult {
  * User dùng secret này để cài đặt trên authenticator app (Google Authenticator, Authy…).
  */
 export async function adminAssociateSoftwareToken(
-  params: AdminAssociateSoftwareTokenParams
+  params: AdminAssociateSoftwareTokenParams,
 ): Promise<AdminAssociateSoftwareTokenResult> {
   const { accessToken, session } = params;
 
@@ -171,7 +172,7 @@ export async function adminAssociateSoftwareToken(
     new AssociateSoftwareTokenCommand({
       AccessToken: accessToken,
       Session: session,
-    })
+    }),
   );
 
   return {
@@ -199,7 +200,7 @@ export interface AdminVerifySoftwareTokenResult {
  * Gọi sau adminAssociateSoftwareToken.
  */
 export async function adminVerifySoftwareToken(
-  params: AdminVerifySoftwareTokenParams
+  params: AdminVerifySoftwareTokenParams,
 ): Promise<AdminVerifySoftwareTokenResult> {
   const { userCode, friendlyDeviceName, accessToken, session } = params;
 
@@ -209,7 +210,7 @@ export async function adminVerifySoftwareToken(
       FriendlyDeviceName: friendlyDeviceName,
       AccessToken: accessToken,
       Session: session,
-    })
+    }),
   );
 
   return {
@@ -258,7 +259,7 @@ export interface AdminGetUserMfaStatusResult {
  * Trả về preferred MFA setting và danh sách MFA đã cấu hình.
  */
 export async function adminGetUserMfaStatus(
-  params: AdminGetUserMfaStatusParams
+  params: AdminGetUserMfaStatusParams,
 ): Promise<AdminGetUserMfaStatusResult> {
   const { userPoolId, username } = params;
 
@@ -266,7 +267,7 @@ export async function adminGetUserMfaStatus(
     new AdminGetUserCommand({
       UserPoolId: userPoolId,
       Username: username,
-    })
+    }),
   );
 
   const mfaSettingList = result.UserMFASettingList ?? [];
@@ -290,20 +291,16 @@ export interface MfaPoolConfig {
 /**
  * Lấy cấu hình MFA ở cấp User Pool.
  */
-export async function getMfaPoolConfig(
-  userPoolId: string
-): Promise<MfaPoolConfig> {
+export async function getMfaPoolConfig(userPoolId: string): Promise<MfaPoolConfig> {
   const result = await cognitoClient.send(
     new GetUserPoolMfaConfigCommand({
       UserPoolId: userPoolId,
-    })
+    }),
   );
 
   return {
-    mfaConfiguration:
-      (result.MfaConfiguration as MfaPoolConfig["mfaConfiguration"]) ?? "OFF",
-    softwareTokenEnabled:
-      result.SoftwareTokenMfaConfiguration?.Enabled ?? false,
+    mfaConfiguration: (result.MfaConfiguration as MfaPoolConfig["mfaConfiguration"]) ?? "OFF",
+    softwareTokenEnabled: result.SoftwareTokenMfaConfiguration?.Enabled ?? false,
     smsEnabled: result.SmsMfaConfiguration !== undefined,
   };
 }
@@ -344,7 +341,7 @@ export async function adminDisableAccount(params: AdminSetAccountStatusParams) {
     new AdminDisableUserCommand({
       UserPoolId: userPoolId,
       Username: username,
-    })
+    }),
   );
 }
 
@@ -354,7 +351,7 @@ export async function adminEnableAccount(params: AdminSetAccountStatusParams) {
     new AdminEnableUserCommand({
       UserPoolId: userPoolId,
       Username: username,
-    })
+    }),
   );
 }
 
@@ -385,7 +382,7 @@ export async function adminSetUserPassword(params: AdminSetUserPasswordParams) {
       Username: username,
       Password: password,
       Permanent: permanent,
-    })
+    }),
   );
 }
 
@@ -402,16 +399,14 @@ export interface AdminUpdateUserAttributesParams {
 /**
  * Cập nhật attributes cho user trong Cognito User Pool.
  */
-export async function adminUpdateUserAttributes(
-  params: AdminUpdateUserAttributesParams
-) {
+export async function adminUpdateUserAttributes(params: AdminUpdateUserAttributesParams) {
   const { userPoolId, username, userAttributes } = params;
   return cognitoClient.send(
     new AdminUpdateUserAttributesCommand({
       UserPoolId: userPoolId,
       Username: username,
       UserAttributes: userAttributes,
-    })
+    }),
   );
 }
 
@@ -437,7 +432,7 @@ export interface AdminInitiateAuthResult {
  * Dùng khi hệ thống tự authenticate user (server-side) mà không cần SRP.
  */
 export async function adminInitiateAuth(
-  params: AdminInitiateAuthParams
+  params: AdminInitiateAuthParams,
 ): Promise<AdminInitiateAuthResult> {
   const { userPoolId, clientId, username, password } = params;
 
@@ -450,14 +445,14 @@ export async function adminInitiateAuth(
         USERNAME: username,
         PASSWORD: password,
       },
-    })
+    }),
   );
 
   if (!result.AuthenticationResult) {
     throw new Error(
       result.ChallengeName
         ? `Auth challenge required: ${result.ChallengeName}`
-        : "Authentication failed: no result returned"
+        : "Authentication failed: no result returned",
     );
   }
 
@@ -486,10 +481,9 @@ export interface AdminChangeUserPasswordParams {
  * nếu đúng thì set mật khẩu mới (permanent) qua AdminSetUserPassword.
  */
 export async function adminChangeUserPassword(
-  params: AdminChangeUserPasswordParams
+  params: AdminChangeUserPasswordParams,
 ): Promise<void> {
-  const { userPoolId, clientId, username, currentPassword, newPassword } =
-    params;
+  const { userPoolId, clientId, username, currentPassword, newPassword } = params;
 
   await adminInitiateAuth({
     userPoolId,
@@ -527,9 +521,7 @@ export interface AdminListUsersResult {
  * List users trong Cognito User Pool.
  * Trả về danh sách users + pagination token.
  */
-export async function adminListUsers(
-  params: AdminListUsersParams
-): Promise<AdminListUsersResult> {
+export async function adminListUsers(params: AdminListUsersParams): Promise<AdminListUsersResult> {
   const { userPoolId, limit = 60, paginationToken, filter } = params;
 
   const input: ListUsersCommandInput = {
@@ -544,5 +536,51 @@ export async function adminListUsers(
   return {
     users: result.Users ?? [],
     paginationToken: result.PaginationToken,
+  };
+}
+
+// ============ Refresh Token (client-side flow, không cần password) ============
+
+export interface InitiateRefreshTokenParams {
+  clientId: string;
+  refreshToken: string;
+}
+
+export interface InitiateRefreshTokenResult {
+  accessToken: string;
+  idToken: string;
+  expiresIn: number;
+  tokenType: string;
+}
+
+/**
+ * Dùng REFRESH_TOKEN_AUTH flow (InitiateAuth – không phải Admin*).
+ * Flow này chỉ cần ClientId + RefreshToken, không cần UserPoolId hay password.
+ */
+export async function initiateRefreshToken(
+  params: InitiateRefreshTokenParams,
+): Promise<InitiateRefreshTokenResult> {
+  const { clientId, refreshToken } = params;
+
+  const result = await cognitoClient.send(
+    new InitiateAuthCommand({
+      ClientId: clientId,
+      AuthFlow: "REFRESH_TOKEN_AUTH",
+      AuthParameters: {
+        REFRESH_TOKEN: refreshToken,
+      },
+    }),
+  );
+
+  if (!result.AuthenticationResult) {
+    throw new Error("Refresh token failed: no authentication result returned");
+  }
+
+  const auth = result.AuthenticationResult;
+  return {
+    accessToken: auth.AccessToken!,
+    idToken: auth.IdToken!,
+    expiresIn: auth.ExpiresIn ?? 3600,
+    tokenType: auth.TokenType ?? "Bearer",
   };
 }

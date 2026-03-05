@@ -2,9 +2,8 @@
  * Use Case: Finalize Settle (Power 6/55)
  *
  * Bước cuối cùng trong settle flow:
- *   1. Chuyển draw: settling → settled (atomic, idempotent)
- *   2. Ghi dual jackpot snapshot lên draw (JP1 + JP2 opening/closing)
- *   3. Cập nhật / đóng jackpot cycle (JP1 + JP2 separately)
+ *   1. Chuyển draw: settling → settled + ghi dual jackpot snapshot (atomic, 1 query)
+ *   2. Cập nhật / đóng jackpot cycle (JP1 + JP2 separately)
  *
  * Khác biệt so với Lotto 5/35:
  *   - Dual jackpot snapshot (openingJp1/closingJp1 + openingJp2/closingJp2)
@@ -13,8 +12,7 @@
  *   - Overflow handling: JP1 cap → overflow sang JP2
  *
  * CRASH-SAFE:
- *   - transitionStatus atomic: settling → settled
- *   - Jackpot snapshot overwrite OK (idempotent)
+ *   - settleComplete atomic: settling → settled + jackpot snapshot
  *   - Cycle update idempotent
  */
 
@@ -82,30 +80,26 @@ export class FinalizeSettleUseCase extends InternalUseCase<
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** @inheritdoc */
-  protected async execute(
-    input: FinalizeSettleInput
-  ): Promise<FinalizeSettleResult> {
-    const { drawId, closingJp1, closingJp2, nextJp1Opening, nextJp2Opening } =
-      input;
+  protected async execute(input: FinalizeSettleInput): Promise<FinalizeSettleResult> {
+    const { drawId, closingJp1, closingJp2, nextJp1Opening, nextJp2Opening, isSplitCycle } = input;
 
-    const updated = await this.drawRepo.transitionStatus(
-      drawId,
-      DrawStatus.Settling,
-      DrawStatus.Settled
-    );
+    const updated = await this.drawRepo.settleComplete(drawId, {
+      openingJackpot1: input.jp1OpeningAmount,
+      closingJackpot1: closingJp1,
+      openingJackpot2: input.jp2OpeningAmount,
+      closingJackpot2: closingJp2,
+      isSplitCycle: isSplitCycle || undefined,
+    });
 
     if (!updated) {
       const draw = await this.drawRepo.getDrawById(drawId);
       if (draw?.status === DrawStatus.Settled) {
         console.log(`Draw ${drawId} already settled, skipping transition.`);
       } else {
-        throw new Error(
-          `Cannot finalize draw ${drawId}. Current status: ${draw?.status}`
-        );
+        throw new Error(`Cannot finalize draw ${drawId}. Current status: ${draw?.status}`);
       }
     }
 
-    await this.writeJackpotSnapshot(input);
     await this.updateJackpotCycle(input);
 
     return {
@@ -117,31 +111,6 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       nextJp2Opening,
       completedAt: new Date().toISOString(),
     };
-  }
-
-  /**
-   * Ghi dual jackpot snapshot lên draw đã settle (bản ghi lịch sử).
-   * Idempotent: overwrite OK.
-   */
-  private async writeJackpotSnapshot(
-    input: FinalizeSettleInput
-  ): Promise<void> {
-    const {
-      drawId,
-      jp1OpeningAmount,
-      jp2OpeningAmount,
-      closingJp1,
-      closingJp2,
-      isSplitCycle,
-    } = input;
-
-    await this.drawRepo.updateJackpot(drawId, {
-      openingJackpot1: jp1OpeningAmount,
-      closingJackpot1: closingJp1,
-      openingJackpot2: jp2OpeningAmount,
-      closingJackpot2: closingJp2,
-      isSplitCycle: isSplitCycle || undefined,
-    });
   }
 
   /**
@@ -171,8 +140,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
     if (!draw) return;
 
     const newDrawCount = activeCycle.drawCount + 1;
-    const shouldCloseCycle =
-      hasJackpot1Winner || hasJackpot2Winner || isSplitCycle;
+    const shouldCloseCycle = hasJackpot1Winner || hasJackpot2Winner || isSplitCycle;
 
     if (shouldCloseCycle) {
       let closedReason: JackpotCycleClosedReason;
@@ -190,9 +158,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       if (hasJackpot1Winner) {
         const jp1Entries = await this.entryRepo.findJackpot1Winners(drawId);
         const jp1PerWinner =
-          jp1Entries.length > 0
-            ? Math.floor(input.jp1OpeningAmount / jp1Entries.length)
-            : 0;
+          jp1Entries.length > 0 ? Math.floor(input.jp1OpeningAmount / jp1Entries.length) : 0;
         winners = jp1Entries.map((e) => ({
           accountId: e.accountId,
           tenantId: e.tenantId,
@@ -205,9 +171,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       if (hasJackpot2Winner) {
         const jp2Entries = await this.entryRepo.findJackpot2Winners(drawId);
         const jp2PerWinner =
-          jp2Entries.length > 0
-            ? Math.floor(input.jp2OpeningAmount / jp2Entries.length)
-            : 0;
+          jp2Entries.length > 0 ? Math.floor(input.jp2OpeningAmount / jp2Entries.length) : 0;
         const jp2Winners = jp2Entries.map((e) => ({
           accountId: e.accountId,
           tenantId: e.tenantId,
@@ -228,8 +192,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
           totalPaid += tier.bonusPerWinner * tier.winnerCount;
         }
         splitDetail = {
-          splitAmount:
-            activeCycle.jackpot1Current + activeCycle.jackpot2Current,
+          splitAmount: activeCycle.jackpot1Current + activeCycle.jackpot2Current,
           tierAllocations: Object.fromEntries(
             Object.entries(splitDetails).map(([tier, d]) => [
               tier,
@@ -238,7 +201,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
                 bonusPerWinner: d.bonusPerWinner,
                 totalAmount: d.totalAmount,
               },
-            ])
+            ]),
           ),
           totalWinners,
           totalPaid,

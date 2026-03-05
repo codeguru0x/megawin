@@ -31,6 +31,7 @@ export const APP_ERROR_CODES = {
   TIMEOUT: "TIMEOUT",
 
   // ---- Business (mở rộng theo domain) ----
+  BUSINESS_RULE_VIOLATION: "BUSINESS_RULE_VIOLATION",
   INSUFFICIENT_BALANCE: "INSUFFICIENT_BALANCE",
   ACCOUNT_DISABLED: "ACCOUNT_DISABLED",
   ACCOUNT_SUSPENDED: "ACCOUNT_SUSPENDED",
@@ -78,14 +79,11 @@ export interface AppError {
 }
 
 /** Result pattern: success + data hoặc error. */
-export type AppResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: AppError };
+export type AppResult<T> = { success: true; data: T } | { success: false; error: AppError };
 
 /** Type guard: kiểm tra object có phải AppError hay không. */
 export function isAppError(err: unknown): err is AppError {
-  if (typeof err !== "object" || err === null || err instanceof Error)
-    return false;
+  if (typeof err !== "object" || err === null || err instanceof Error) return false;
 
   const obj = err as Record<string, unknown>;
   return typeof obj.code === "string" && typeof obj.message === "string";

@@ -1,7 +1,7 @@
 export { GetCurrentDrawPlayerUseCase } from "./get-current-draw-player";
 export { GetJackpotPlayerUseCase } from "./get-jackpot-player";
 export { ListPendingTicketsPlayerUseCase } from "./list-pending-tickets-player";
-export { ListCompletedTicketsPlayerUseCase } from "./list-completed-tickets-player";
+export { ListTicketsPlayerUseCase } from "./list-all-tickets-player";
 export { GetTicketEntriesPlayerUseCase } from "./get-ticket-entries-player";
 export { GetEntryLinesPlayerUseCase } from "./get-entry-lines-player";
 
@@ -11,6 +11,7 @@ export type {
   PlayerGetJackpotOutput,
   PlayerListPendingTicketsInput,
   PlayerListCompletedTicketsInput,
+  PlayerListTicketsInput,
   PlayerListTicketsOutput,
   PlayerTicketSummary,
   PlayerGetTicketEntriesInput,

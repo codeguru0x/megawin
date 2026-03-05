@@ -108,8 +108,6 @@ export interface TicketEntryDoc {
 
   /** Thông tin huỷ entry (khi kỳ quay bị void). */
   voidInfo?: {
-    /** Lý do huỷ. */
-    reason: string;
     /** Số tiền gốc của entry (VND). */
     originalAmount: number;
     /** Số tiền hoàn trả (VND). Thường = originalAmount. */
@@ -120,8 +118,6 @@ export interface TicketEntryDoc {
     voidedAt: Date;
     /** Thời điểm hoàn tiền thành công. */
     refundedAt?: Date;
-    /** Người thực hiện huỷ (user ID hoặc "system"). */
-    voidedBy?: string;
   };
 
   /** Thời điểm tạo document. */

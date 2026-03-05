@@ -12,6 +12,7 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { roundTo } from "@megawin/shared/utils/number";
 import { calculateBingo18DrawFinancials } from "@megawin/game-bingo18/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -60,7 +61,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
         tenantId: t.tenantId,
         revenue: t.revenue,
         commission: fb?.commission ?? 0,
-        commissionRate: t.revenue > 0 ? t.commission / t.revenue : 0,
+        commissionRate: t.revenue > 0 ? roundTo(t.commission / t.revenue, 2) : 0,
         entryCount: t.entryCount,
       };
     });

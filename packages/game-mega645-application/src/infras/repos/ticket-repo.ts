@@ -5,7 +5,7 @@
  */
 
 import { Mega645Collections } from "@megawin/game-mega645/entities";
-import { TicketStatus } from "@megawin/game-core/entities";
+import { TicketStatus, ALL_LISTABLE_STATUSES } from "@megawin/game-core/entities";
 import type { AnyBulkWriteOperation, Document, Filter } from "mongodb";
 import { ObjectId } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -24,11 +24,7 @@ export interface TicketSummary {
 }
 
 const PENDING_STATUSES = [TicketStatus.Paid];
-const COMPLETED_STATUSES = [
-  TicketStatus.Completed,
-  TicketStatus.Refunded,
-  TicketStatus.Void,
-];
+const COMPLETED_STATUSES = [TicketStatus.Completed, TicketStatus.Refunded, TicketStatus.Void];
 
 export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   constructor() {
@@ -38,11 +34,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     });
   }
 
-  async getTicketsByDrawId(
-    drawId: string,
-    page: number,
-    size: number
-  ): Promise<TicketEntity[]> {
+  async getTicketsByDrawId(drawId: string, page: number, size: number): Promise<TicketEntity[]> {
     return await this.paging({ "drawPlan.drawIds": drawId }, page, size, {
       sort: { createdAt: -1 },
     });
@@ -86,13 +78,26 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     tenantId: string,
     accountId: string,
     size: number,
-    cursor?: string
+    opts?: {
+      from?: Date;
+      to?: Date;
+      cursor?: string;
+    },
   ): Promise<TicketEntity[]> {
+    const { from, to, cursor } = opts ?? {};
+
     const filter: Filter<Document> = {
       tenantId,
       accountId,
       status: { $in: PENDING_STATUSES },
     };
+
+    if (from || to) {
+      const dateRange: Record<string, Date> = {};
+      if (from) dateRange.$gte = from;
+      if (to) dateRange.$lte = to;
+      filter.createdAt = dateRange;
+    }
 
     if (cursor && ObjectId.isValid(cursor)) {
       filter._id = { $lt: new ObjectId(cursor) };
@@ -105,37 +110,32 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   }
 
   /**
-   * Vé đã hoàn thành (completed | refunded | void).
-   * Hỗ trợ lọc theo khoảng ngày (betDate = createdAt, drawDate = settlement.lastSettledAt).
-   * Cursor = _id, sort desc.
+   * List tất cả vé (cả pending + completed).
+   * Lọc theo ngày cược (createdAt). Cursor = _id, sort desc.
    */
-  async getCompletedTickets(
+  async getTickets(
     tenantId: string,
     accountId: string,
     size: number,
     opts?: {
-      sortBy?: TicketSortBy;
       from?: Date;
       to?: Date;
       cursor?: string;
-    }
+    },
   ): Promise<TicketEntity[]> {
-    const { sortBy = "betDate", from, to, cursor } = opts ?? {};
-
-    const dateField =
-      sortBy === "drawDate" ? "settlement.lastSettledAt" : "createdAt";
+    const { from, to, cursor } = opts ?? {};
 
     const filter: Filter<Document> = {
       tenantId,
       accountId,
-      status: { $in: COMPLETED_STATUSES },
+      status: { $in: ALL_LISTABLE_STATUSES as string[] },
     };
 
     if (from || to) {
       const dateRange: Record<string, Date> = {};
       if (from) dateRange.$gte = from;
       if (to) dateRange.$lte = to;
-      filter[dateField] = dateRange;
+      filter.createdAt = dateRange;
     }
 
     if (cursor && ObjectId.isValid(cursor)) {
@@ -220,10 +220,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
    * Idempotent: $set toàn bộ summary từ aggregate result.
    * Tính status mới từ settledCount + voidedCount vs totalDraws.
    */
-  async syncSummary(
-    ticketId: string,
-    summary: TicketSummary
-  ): Promise<boolean> {
+  async syncSummary(ticketId: string, summary: TicketSummary): Promise<boolean> {
     const now = new Date();
     const { settledCount, voidedCount, totalDraws } = summary;
     const processedCount = settledCount + voidedCount;
@@ -274,7 +271,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
           ],
         },
       },
-      { $set, $inc: { version: 1 } }
+      { $set, $inc: { version: 1 } },
     );
   }
 }

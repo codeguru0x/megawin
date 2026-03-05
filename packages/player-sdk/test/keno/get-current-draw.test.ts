@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { PlayerClient } from "../../src";
-import { createTestClient, mockFetch } from "../helpers";
+import { createTestClient, mockFetch, BASE_URL, TOKENS } from "../helpers";
 
 describe("keno.getCurrentDraw", () => {
   let client: PlayerClient;
@@ -10,7 +10,7 @@ describe("keno.getCurrentDraw", () => {
     client = createTestClient();
   });
 
-  it("should call GET /player/keno/draws/current", async () => {
+  it("should call GET /games/keno/draws/current", async () => {
     const responseData = {
       currentDraw: {
         drawId: "2026-02-25-100",
@@ -34,7 +34,9 @@ describe("keno.getCurrentDraw", () => {
         drawId: "2026-02-25-099",
         drawDate: "2026-02-25",
         drawNo: 99,
-        winningNumbers: [3, 7, 12, 18, 22, 25, 31, 36, 40, 44, 49, 53, 57, 61, 65, 69, 72, 75, 78, 80],
+        winningNumbers: [
+          3, 7, 12, 18, 22, 25, 31, 36, 40, 44, 49, 53, 57, 61, 65, 69, 72, 75, 78, 80,
+        ],
         publishedAt: "2026-02-25T12:55:00Z",
       },
     };
@@ -47,7 +49,7 @@ describe("keno.getCurrentDraw", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://api.test.com/player/keno/draws/current");
+    expect(url).toBe(`${BASE_URL}/games/keno/draws/current`);
     expect(init.method).toBe("GET");
   });
 
@@ -74,6 +76,6 @@ describe("keno.getCurrentDraw", () => {
     await client.keno.getCurrentDraw();
 
     const [, init] = fetchMock.mock.calls[0];
-    expect(init.headers["Authorization"]).toBe("Bearer test-token");
+    expect(init.headers["Authorization"]).toBe(`Bearer ${TOKENS.idToken}`);
   });
 });

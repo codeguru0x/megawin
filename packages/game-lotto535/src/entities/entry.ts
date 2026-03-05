@@ -188,9 +188,6 @@ export interface TicketEntryDoc {
    * Chỉ có khi entry bị void (draw void / admin void).
    */
   voidInfo?: {
-    /** Lý do huỷ. */
-    reason: string;
-
     /** Tiền cược gốc của entry này (= amount). */
     originalAmount: number;
 
@@ -205,9 +202,6 @@ export interface TicketEntryDoc {
 
     /** Thời điểm hoàn tiền. */
     refundedAt?: Date;
-
-    /** Ai/hệ thống nào thực hiện void. */
-    voidedBy?: string;
   };
 
   // ───── Timestamps ─────

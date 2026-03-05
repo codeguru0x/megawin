@@ -89,6 +89,8 @@ export interface PublishResultOutput {
 
 export interface TriggerSettleInput {
   drawId: string;
+  /** ARN của Step Function kết sổ Keno. */
+  KENO_SETTLE_SFN_ARN: string;
 }
 
 export interface TriggerSettleOutput {

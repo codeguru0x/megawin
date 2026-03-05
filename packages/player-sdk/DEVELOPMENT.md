@@ -19,44 +19,48 @@ pnpm test:watch     # Watch mode tests
 
 ## Release cho khách hàng
 
-### 1. Bump version
+### Một lệnh duy nhất
 
-Sửa `version` trong `package.json`:
-
-```json
-{
-  "version": "1.1.0"
-}
+```bash
+pnpm upload          # Bump patch (1.0.0 → 1.0.1) rồi upload
+pnpm upload:minor    # Bump minor (1.0.0 → 1.1.0) rồi upload
+pnpm upload:major    # Bump major (1.0.0 → 2.0.0) rồi upload
 ```
 
-### 2. Build + Pack
+Script tự động thực hiện toàn bộ quy trình:
+
+1. Bump version trong `package.json`
+2. Build SDK (ESM, CJS, Browser IIFE)
+3. Pack `.tgz`
+4. Gzip browser build (`.js.gz`)
+5. Generate API docs (TypeDoc)
+6. Upload tất cả lên S3 (versioned + latest)
+
+### Build local (kiểm tra trước khi upload)
 
 ```bash
 pnpm release
 ```
 
-Output: `release/megawin-player-sdk-<version>.tgz`
+Tạo artifacts vào thư mục `release/` mà không bump version hay upload:
 
-### 3. Generate API docs (tùy chọn)
+| File                                       | Mô tả                     |
+| ------------------------------------------ | ------------------------- |
+| `release/megawin-player-sdk-<version>.tgz` | NPM package               |
+| `release/megawin-player-sdk-browser.js.gz` | Browser IIFE build (gzip) |
+| `docs/`                                    | API documentation (HTML)  |
 
-```bash
-pnpm docs:build
-```
+### Gửi trực tiếp cho khách hàng (không qua S3)
 
-Output: thư mục `docs/` chứa HTML documentation. Có thể zip gửi kèm cho khách.
+Chạy `pnpm release`, sau đó gửi:
 
-### 4. Gửi cho khách hàng
-
-Gửi 2 file:
-
-| File                                       | Mô tả                        |
-| ------------------------------------------ | ---------------------------- |
-| `release/megawin-player-sdk-<version>.tgz` | Package cài đặt              |
-| `docs/` (zip)                              | API documentation (tùy chọn) |
+| File                                        | Mô tả                                   |
+| ------------------------------------------- | --------------------------------------- |
+| `release/megawin-player-sdk-<version>.tgz`  | Package cài đặt qua npm/pnpm/yarn       |
+| `dist/megawin-player-sdk-browser.global.js` | Browser `<script>` tag (window.MegaWin) |
+| `docs/` (zip)                               | API documentation (tùy chọn)            |
 
 ## Upload lên S3
-
-Tự động bump version, build, pack, generate docs và upload tất cả lên S3.
 
 ### Cấu hình (chỉ cần làm 1 lần)
 
@@ -93,14 +97,19 @@ pnpm upload -- --profile other-profile --bucket other-bucket
 ```
 s3://<bucket>/player-sdk/
   latest/
-    megawin-player-sdk.tgz    ← URL cố định, luôn là bản mới nhất
-    docs/
+    megawin-player-sdk.tgz                ← NPM package (luôn bản mới nhất)
+    megawin-player-sdk-browser.js         ← Browser IIFE build
+    megawin-player-sdk-browser.js.gz      ← Browser build (gzip, cho CDN)
+    megawin-player-sdk-browser.js.map     ← Source map
+    docs/                                 ← API documentation
   v1.0.0/
-    megawin-player-sdk.tgz    ← Archive để rollback
+    megawin-player-sdk.tgz
+    megawin-player-sdk-browser.js
+    megawin-player-sdk-browser.js.gz
+    megawin-player-sdk-browser.js.map
     docs/
   v1.0.1/
-    megawin-player-sdk.tgz
-    docs/
+    ...
 ```
 
 ## Khách hàng cài đặt
@@ -145,10 +154,12 @@ packages/player-sdk/
     endpoints.ts          # URL registry tập trung
     http-client.ts        # HTTP client (inline, zero deps)
     api-types.ts          # API response types
-    token-manager.ts      # Token lifecycle
-    types.ts              # Auth types
-    apis/                 # API modules
-      auth.ts             # client.auth
+    auth/                 # Auth module
+      types.ts            # AuthTokens, AuthResult, TokenStorage
+      token-manager.ts    # Token lifecycle + storage implementations
+      auth-api.ts         # client.auth (refresh, setTokens, ...)
+      index.ts            # Barrel export
+    apis/                 # Game API modules
       keno.ts             # client.keno
       lotto535.ts         # client.lotto535
       player.ts           # client.player
@@ -159,7 +170,9 @@ packages/player-sdk/
   test/                   # Vitest tests
   dist/                   # Build output (gitignored)
   docs/                   # TypeDoc output (gitignored)
-  release/                # .tgz releases (gitignored)
+  release/                # .tgz + .gz releases (gitignored)
+  scripts/
+    upload-s3.sh          # Release + upload S3 script
 ```
 
 ## Thêm API mới
@@ -192,7 +205,7 @@ export interface KenoApi {
 ### 5. Build + test + release
 
 ```bash
-pnpm check-types && pnpm test && pnpm release
+pnpm check-types && pnpm test && pnpm upload
 ```
 
 ## Thêm game mới (vd: Power 6/55)

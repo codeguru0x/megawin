@@ -18,11 +18,11 @@ max3dpro-list-pending-tickets:
         authorizer:
           name: cognitoPlayerAuth
 
-max3dpro-list-completed-tickets:
-  handler: src/handlers/max3dpro/list-completed-tickets.handler
+max3dpro-list-tickets:
+  handler: src/handlers/max3dpro/list-tickets.handler
   events:
     - httpApi:
-        path: /games/max3dpro/tickets/completed
+        path: /games/max3dpro/tickets
         method: get
         authorizer:
           name: cognitoPlayerAuth

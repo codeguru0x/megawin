@@ -15,6 +15,7 @@ export const GET = withApi()
         DrawStatus.SalesClosed,
         DrawStatus.Published,
         DrawStatus.Settling,
+        DrawStatus.Voiding,
       ],
     });
   });

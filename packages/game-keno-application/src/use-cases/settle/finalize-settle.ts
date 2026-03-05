@@ -10,6 +10,7 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { AppException } from "@megawin/shared/errors";
 
 export interface FinalizeSettleInput {
   drawId: string;
@@ -30,18 +31,14 @@ export class FinalizeSettleUseCase extends InternalUseCase<
   /** Chuyển draw settling → settled (atomic, idempotent). */
   protected async execute(input: FinalizeSettleInput): Promise<FinalizeSettleResult> {
     const { drawId } = input;
-    const updated = await this.drawRepo.transitionStatus(
-      drawId,
-      DrawStatus.Settling,
-      DrawStatus.Settled,
-    );
+    const updated = await this.drawRepo.settleComplete(drawId);
 
     if (!updated) {
       const draw = await this.drawRepo.getDrawById(drawId);
       if (draw?.status === DrawStatus.Settled) {
         console.log(`Draw ${drawId} already settled, skipping transition.`);
       } else {
-        throw new Error(
+        throw AppException.internal(
           `Cannot finalize draw ${drawId}. Current status: ${draw?.status}`,
         );
       }

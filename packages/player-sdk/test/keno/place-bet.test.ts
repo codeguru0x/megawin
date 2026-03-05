@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { PlayerClient } from "../../src";
 import type { KenoTicketPurchaseInput } from "../../src/keno";
-import { createTestClient, mockFetch, mockFetchError } from "../helpers";
+import { createTestClient, mockFetch, mockFetchError, BASE_URL, TOKENS } from "../helpers";
 
 describe("keno.placeBet", () => {
   let client: PlayerClient;
@@ -11,7 +11,7 @@ describe("keno.placeBet", () => {
     client = createTestClient();
   });
 
-  it("should call POST /player/keno/bets with correct body", async () => {
+  it("should call POST /games/keno/bets with correct body", async () => {
     const responseData = {
       ticketId: "65abc123",
       ticketNo: "K-20260225-001-0001",
@@ -36,17 +36,21 @@ describe("keno.placeBet", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://api.test.com/player/keno/bets");
+    expect(url).toBe(`${BASE_URL}/games/keno/bets`);
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body)).toEqual(input);
   });
 
   it("should include Bearer token in request", async () => {
     const fetchMock = mockFetch({
-      ticketId: "65abc", ticketNo: "K-001", status: "active",
+      ticketId: "65abc",
+      ticketNo: "K-001",
+      status: "active",
       drawPlan: { drawIds: ["2026-02-25-001"], drawCount: 1 },
       pricing: { unitPrice: 10000, betsPerDraw: 1, amountPerDraw: 10000, totalAmount: 10000 },
-      boardCount: 1, sideBetCount: 0, entryCount: 1,
+      boardCount: 1,
+      sideBetCount: 0,
+      entryCount: 1,
     });
     vi.stubGlobal("fetch", fetchMock);
 
@@ -56,7 +60,7 @@ describe("keno.placeBet", () => {
     });
 
     const [, init] = fetchMock.mock.calls[0];
-    expect(init.headers["Authorization"]).toBe("Bearer test-token");
+    expect(init.headers["Authorization"]).toBe(`Bearer ${TOKENS.idToken}`);
   });
 
   it("should throw ApiClientError on INSUFFICIENT_BALANCE", async () => {

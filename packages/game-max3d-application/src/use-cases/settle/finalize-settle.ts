@@ -37,25 +37,17 @@ export class FinalizeSettleUseCase extends InternalUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(
-    input: FinalizeSettleInput
-  ): Promise<FinalizeSettleResult> {
+  protected async execute(input: FinalizeSettleInput): Promise<FinalizeSettleResult> {
     const { drawId } = input;
 
-    const updated = await this.drawRepo.transitionStatus(
-      drawId,
-      DrawStatus.Settling,
-      DrawStatus.Settled
-    );
+    const updated = await this.drawRepo.settleComplete(drawId);
 
     if (!updated) {
       const draw = await this.drawRepo.getDrawById(drawId);
       if (draw?.status === DrawStatus.Settled) {
         console.log(`Draw ${drawId} already settled, skipping transition.`);
       } else {
-        throw new Error(
-          `Cannot finalize draw ${drawId}. Current status: ${draw?.status}`
-        );
+        throw new Error(`Cannot finalize draw ${drawId}. Current status: ${draw?.status}`);
       }
     }
 

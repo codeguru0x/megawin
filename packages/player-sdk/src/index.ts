@@ -10,7 +10,7 @@
  * import type { Lotto535TicketPurchaseInput } from "@megawin/player-sdk/lotto535";
  *
  * const client = createPlayerClient({
- *   baseUrl: "https://api.megawin.com",
+ *   baseUrl: "https://api.domain.com",
  *   tokens: tokensFromServer,
  * });
  *
@@ -25,15 +25,25 @@
 export { createPlayerClient, type PlayerClient, type PlayerSdkConfig } from "./client";
 
 // ---- Auth types ----
-export type { AuthTokens, AuthenticateInput, AuthResult, TokenStorage } from "./types";
+export type { AuthTokens, AuthenticateInput, AuthResult, TokenStorage } from "./auth/types";
 
 // ---- Token management ----
-export { TokenManager, MemoryTokenStorage, SessionStorageTokenStorage } from "./token-manager";
+export { TokenManager, MemoryTokenStorage, SessionStorageTokenStorage } from "./auth/token-manager";
 
 // ---- API module interfaces ----
-export type { AuthApi } from "./apis/auth";
+export type { AuthApi } from "./auth/auth-api";
 export type { KenoApi } from "./apis/keno";
-export type { Lotto535Api, Lotto535PlaceBetResponse } from "./apis/lotto535";
+export type {
+  Lotto535Api,
+  Lotto535PlaceBetResponse,
+  Lotto535CurrentDrawResponse,
+  Lotto535JackpotResponse,
+  Lotto535ListTicketsParams,
+  Lotto535ListAllTicketsParams,
+  Lotto535ListTicketsResponse,
+  Lotto535TicketEntriesResponse,
+  Lotto535EntryLinesResponse,
+} from "./apis/lotto535";
 export type {
   PlayerApi,
   PlayerBalance,

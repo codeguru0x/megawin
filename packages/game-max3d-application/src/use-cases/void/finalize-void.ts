@@ -1,31 +1,27 @@
 /**
  * Use Case: Finalize Void (Max 3D)
  *
- * Step 4 (cuối) của Void Draw Step Function.
- * Cập nhật draw document với tổng kết void: tổng tiền huỷ, entries voided, refund summary.
+ * Step cuối của Void Draw Step Function.
+ * Aggregate tổng kết void từ DB, transition voiding → void + ghi voidSummary (1 atomic query).
  *
- * IDEMPOTENT: aggregate từ DB, ghi đè voidSummary trên draw.
+ * IDEMPOTENT: aggregate + voidComplete atomic.
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export interface FinalizeVoidInput {
-  /** ID kỳ quay cần finalize void. */
   drawId: string;
 }
 
 export interface FinalizeVoidResult {
-  /** ID kỳ quay. */
   drawId: string;
-  /** Tổng entries đã void. */
+  status: string;
   totalVoidedEntries: number;
-  /** Tổng tiền gốc của các entries đã void (VND). */
   totalOriginalAmount: number;
-  /** Tổng tiền đã hoàn (VND). */
   totalRefundAmount: number;
-  /** Thời điểm hoàn tất void (ISO 8601). */
   completedAt: string;
 }
 
@@ -41,15 +37,27 @@ export class FinalizeVoidUseCase extends InternalUseCase<
     const summary = await this.entryRepo.aggregateVoidRefundSummary(drawId);
     const completedAt = new Date();
 
-    await this.drawRepo.updateVoidSummary(drawId, {
+    const updated = await this.drawRepo.voidComplete(drawId, {
       totalVoidedEntries: summary.totalVoidedEntries,
       totalOriginalAmount: summary.totalOriginalAmount,
       totalRefundAmount: summary.totalRefundAmount,
       completedAt,
     });
 
+    if (!updated) {
+      const draw = await this.drawRepo.getDrawById(drawId);
+      if (draw?.status === DrawStatus.Void) {
+        console.log(`Draw ${drawId} already void, skipping transition.`);
+      } else {
+        throw new Error(
+          `Cannot finalize void draw ${drawId}. Current status: ${draw?.status}`,
+        );
+      }
+    }
+
     return {
       drawId,
+      status: DrawStatus.Void,
       totalVoidedEntries: summary.totalVoidedEntries,
       totalOriginalAmount: summary.totalOriginalAmount,
       totalRefundAmount: summary.totalRefundAmount,

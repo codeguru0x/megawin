@@ -77,6 +77,22 @@ if [[ ! -f "$TGZ_FILE" ]]; then
   exit 1
 fi
 
+BROWSER_JS="$PKG_DIR/dist/megawin-player-sdk-browser.global.js"
+BROWSER_MAP="$PKG_DIR/dist/megawin-player-sdk-browser.global.js.map"
+BROWSER_GZ="$PKG_DIR/release/megawin-player-sdk-browser.js.gz"
+
+if [[ ! -f "$BROWSER_JS" ]]; then
+  echo "Error: Browser build not found: $BROWSER_JS"
+  exit 1
+fi
+
+# Tạo .gz nếu chưa có
+if [[ ! -f "$BROWSER_GZ" ]]; then
+  echo "▸ Gzipping browser build..."
+  gzip -9 -k "$BROWSER_JS"
+  mv "$BROWSER_JS.gz" "$BROWSER_GZ"
+fi
+
 # ─── Build docs ───────────────────────────────────────────────────────
 echo "▸ Generating docs..."
 pnpm docs:build
@@ -87,6 +103,12 @@ S3_PREFIX="s3://$S3_BUCKET/player-sdk"
 echo ""
 echo "▸ Uploading v$VERSION..."
 aws s3 cp "$TGZ_FILE" "$S3_PREFIX/v$VERSION/megawin-player-sdk.tgz" "${AWS_FLAGS[@]}"
+aws s3 cp "$BROWSER_JS" "$S3_PREFIX/v$VERSION/megawin-player-sdk-browser.js" \
+  --content-type "application/javascript" "${AWS_FLAGS[@]}"
+[[ -f "$BROWSER_GZ" ]] && aws s3 cp "$BROWSER_GZ" "$S3_PREFIX/v$VERSION/megawin-player-sdk-browser.js.gz" \
+  --content-type "application/javascript" --content-encoding "gzip" "${AWS_FLAGS[@]}"
+[[ -f "$BROWSER_MAP" ]] && aws s3 cp "$BROWSER_MAP" "$S3_PREFIX/v$VERSION/megawin-player-sdk-browser.js.map" \
+  --content-type "application/json" "${AWS_FLAGS[@]}"
 
 if [[ -d "$PKG_DIR/docs" ]]; then
   aws s3 sync "$PKG_DIR/docs" "$S3_PREFIX/v$VERSION/docs/" --delete "${AWS_FLAGS[@]}"
@@ -95,6 +117,12 @@ fi
 # ─── Upload latest ────────────────────────────────────────────────────
 echo "▸ Uploading latest..."
 aws s3 cp "$TGZ_FILE" "$S3_PREFIX/latest/megawin-player-sdk.tgz" "${AWS_FLAGS[@]}"
+aws s3 cp "$BROWSER_JS" "$S3_PREFIX/latest/megawin-player-sdk-browser.js" \
+  --content-type "application/javascript" "${AWS_FLAGS[@]}"
+[[ -f "$BROWSER_GZ" ]] && aws s3 cp "$BROWSER_GZ" "$S3_PREFIX/latest/megawin-player-sdk-browser.js.gz" \
+  --content-type "application/javascript" --content-encoding "gzip" "${AWS_FLAGS[@]}"
+[[ -f "$BROWSER_MAP" ]] && aws s3 cp "$BROWSER_MAP" "$S3_PREFIX/latest/megawin-player-sdk-browser.js.map" \
+  --content-type "application/json" "${AWS_FLAGS[@]}"
 
 if [[ -d "$PKG_DIR/docs" ]]; then
   aws s3 sync "$PKG_DIR/docs" "$S3_PREFIX/latest/docs/" --delete "${AWS_FLAGS[@]}"
@@ -109,8 +137,16 @@ echo ""
 echo "  SDK (v$VERSION):"
 echo "    $S3_PREFIX/v$VERSION/megawin-player-sdk.tgz"
 echo ""
+echo "  Browser (v$VERSION):"
+echo "    $S3_PREFIX/v$VERSION/megawin-player-sdk-browser.js"
+echo "    $S3_PREFIX/v$VERSION/megawin-player-sdk-browser.js.gz"
+echo ""
 echo "  SDK (latest):"
 echo "    $S3_PREFIX/latest/megawin-player-sdk.tgz"
+echo ""
+echo "  Browser (latest):"
+echo "    $S3_PREFIX/latest/megawin-player-sdk-browser.js"
+echo "    $S3_PREFIX/latest/megawin-player-sdk-browser.js.gz"
 echo ""
 echo "  Docs (v$VERSION):"
 echo "    $S3_PREFIX/v$VERSION/docs/"

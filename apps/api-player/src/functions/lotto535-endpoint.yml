@@ -27,11 +27,11 @@ lotto535-list-pending-tickets:
         authorizer:
           name: cognitoPlayerAuth
 
-lotto535-list-completed-tickets:
-  handler: src/handlers/lotto535/list-completed-tickets.handler
+lotto535-list-tickets:
+  handler: src/handlers/lotto535/list-tickets.handler
   events:
     - httpApi:
-        path: /games/lotto535/tickets/completed
+        path: /games/lotto535/tickets
         method: get
         authorizer:
           name: cognitoPlayerAuth

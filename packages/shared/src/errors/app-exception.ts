@@ -18,11 +18,7 @@
  * throw new AppException("TENANT_SUSPENDED", "Tenant is suspended");
  */
 
-import {
-  APP_ERROR_CODES,
-  type AppError,
-  type AppErrorCode,
-} from "./error-codes";
+import { APP_ERROR_CODES, type AppError, type AppErrorCode } from "./error-codes";
 
 export interface AppExceptionOptions {
   details?: unknown;
@@ -35,11 +31,7 @@ export class AppException extends Error {
   readonly details?: unknown;
   readonly statusCode?: number;
 
-  constructor(
-    code: AppErrorCode,
-    message: string,
-    options?: AppExceptionOptions
-  ) {
+  constructor(code: AppErrorCode, message: string, options?: AppExceptionOptions) {
     super(message);
     this.name = "AppException";
     this.code = code;
@@ -56,6 +48,13 @@ export class AppException extends Error {
   }
 
   // ============ Static helpers (predefined codes + auto statusCode) ============
+
+  static businessRuleViolation(message: string, details?: unknown): AppException {
+    return new AppException(APP_ERROR_CODES.BUSINESS_RULE_VIOLATION, message, {
+      details,
+      statusCode: 400,
+    });
+  }
 
   static validation(message: string, details?: unknown): AppException {
     return new AppException(APP_ERROR_CODES.VALIDATION, message, {
@@ -134,11 +133,7 @@ export class AppException extends Error {
     });
   }
 
-  static error(
-    code: AppErrorCode,
-    message: string,
-    details?: unknown
-  ): AppException {
+  static error(code: AppErrorCode, message: string, details?: unknown): AppException {
     return new AppException(code, message, {
       details,
       statusCode: 400,

@@ -29,30 +29,31 @@ function parseCognitoRoles(raw: unknown): AccountRole[] {
 
   return items.filter(
     (r): r is AccountRole =>
-      typeof r === "string" &&
-      (ALL_ROLE_VALUES as readonly string[]).includes(r),
+      typeof r === "string" && (ALL_ROLE_VALUES as readonly string[]).includes(r),
   );
 }
 
-async function getSession(
-  req: NextRequest,
-): Promise<RouteSession<AccountRole> | null> {
+async function getSession(req: NextRequest): Promise<RouteSession<AccountRole> | null> {
   const session = await auth.api.getSession({ headers: req.headers });
 
   if (!session) return null;
 
   const user = session.user as Record<string, unknown>;
   const roles = parseCognitoRoles(user.roles ?? []);
-  const accountStatus =
-    (user.accountStatus as string) ?? AccountStatus.Active;
+  const accountStatus = (user.accountStatus as string) ?? AccountStatus.Active;
 
   return {
     user: {
       id: session.user.id,
+      sub: (user.sub as string) ?? "",
       email: session.user.email,
       name: session.user.name,
+      username: (user.username as string) ?? "",
       roles,
       accountStatus,
+      accountId: (user.accountId as string) ?? "",
+      tenantId: (user.tenantId as string) ?? "",
+      accountType: (user.accountType as string) ?? "",
     },
   };
 }

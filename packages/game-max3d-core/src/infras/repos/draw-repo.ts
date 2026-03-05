@@ -5,11 +5,16 @@ import type { Document } from "mongodb";
 import { BaseRepo } from "./base-repo";
 
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
-  [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Void]),
+  [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Voiding]),
   [DrawStatus.SalesOpen]: new Set([DrawStatus.SalesClosed]),
-  [DrawStatus.SalesClosed]: new Set([DrawStatus.SalesOpen, DrawStatus.Published, DrawStatus.Void]),
-  [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Void]),
+  [DrawStatus.SalesClosed]: new Set([
+    DrawStatus.SalesOpen,
+    DrawStatus.Published,
+    DrawStatus.Voiding,
+  ]),
+  [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Voiding]),
   [DrawStatus.Settling]: new Set([DrawStatus.Settled]),
+  [DrawStatus.Voiding]: new Set([DrawStatus.Void]),
 };
 
 export interface VoidInfo {
@@ -110,6 +115,19 @@ export abstract class AbstractDrawRepository<
     );
   }
 
+  /** Chuyển draw settling → settled + stamp settledAt. Atomic, idempotent. */
+  async settleComplete(drawId: string): Promise<TEntity | null> {
+    const allowed = VALID_TRANSITIONS[DrawStatus.Settling];
+    if (!allowed?.has(DrawStatus.Settled)) return null;
+
+    const now = new Date();
+    return await this.findOneAndUpdate(
+      { drawId, status: DrawStatus.Settling },
+      { $set: { status: DrawStatus.Settled, settledAt: now, updatedAt: now } },
+      { returnDocument: "after" },
+    );
+  }
+
   async openSales(drawId: string, fromStatus: string, salesOpenAt?: Date): Promise<TEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.SalesOpen)) return null;
@@ -154,17 +172,33 @@ export abstract class AbstractDrawRepository<
 
   async voidDraw(drawId: string, fromStatus: string, voidInfo: VoidInfo): Promise<TEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
-    if (!allowed?.has(DrawStatus.Void)) return null;
+    if (!allowed?.has(DrawStatus.Voiding)) return null;
 
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
       {
         $set: {
-          status: DrawStatus.Void,
+          status: DrawStatus.Voiding,
           voidInfo,
           updatedAt: new Date(),
         },
       },
+      { returnDocument: "after" },
+    );
+  }
+
+  /** Hoàn tất void: voiding → void + stamp voidedAt + ghi voidSummary. Atomic, idempotent. */
+  async voidComplete(
+    drawId: string,
+    voidSummary: NonNullable<DrawDocBase["voidSummary"]>,
+  ): Promise<TEntity | null> {
+    const allowed = VALID_TRANSITIONS[DrawStatus.Voiding];
+    if (!allowed?.has(DrawStatus.Void)) return null;
+
+    const now = new Date();
+    return await this.findOneAndUpdate(
+      { drawId, status: DrawStatus.Voiding },
+      { $set: { status: DrawStatus.Void, voidSummary, voidedAt: now, updatedAt: now } },
       { returnDocument: "after" },
     );
   }

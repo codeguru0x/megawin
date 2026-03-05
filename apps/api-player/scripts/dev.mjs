@@ -3,7 +3,7 @@
  *
  * Token hết hạn sau 24h. Claims đọc từ .env (MOCK_*), fallback sang defaults.
  * serverless-offline chỉ decode token (không verify signature), nhưng vẫn
- * check iss/aud/exp → iss và aud phải khớp COGNITO_ISSUER_URL / COGNITO_CLIENT_ID.
+ * check iss/aud/exp → iss và aud phải khớp COGNITO_PLAYER_POOL_ISSUER_URL / COGNITO_PLAYER_POOL_CLIENT_ID.
  *
  * Usage:
  *   pnpm dev         → sinh token + khởi động serverless offline
@@ -44,10 +44,10 @@ const get = (key, fallback) => process.env[key] ?? env[key] ?? fallback;
 const claims = {
   sub: get("MOCK_SUB", "local-dev-sub-001"),
   iss: get(
-    "COGNITO_ISSUER_URL",
-    "https://cognito-idp.ap-southeast-1.amazonaws.com/ap-southeast-1_LOCAL"
+    "COGNITO_PLAYER_POOL_ISSUER_URL",
+    "https://cognito-idp.ap-southeast-1.amazonaws.com/ap-southeast-1_LOCAL",
   ),
-  aud: get("COGNITO_CLIENT_ID", "local-test-client"),
+  aud: get("COGNITO_PLAYER_POOL_CLIENT_ID", "local-test-client"),
   exp: Math.floor(Date.now() / 1000) + 30 * 86400,
   "cognito:username": get("MOCK_USERNAME", "player001"),
   "custom:account_type": get("MOCK_ACCOUNT_TYPE", "player"),
@@ -57,9 +57,7 @@ const claims = {
   "custom:roles": get("MOCK_ROLES", "player"),
 };
 
-const header = Buffer.from(
-  JSON.stringify({ alg: "HS256", typ: "JWT" })
-).toString("base64url");
+const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
 const payload = Buffer.from(JSON.stringify(claims)).toString("base64url");
 const token = `${header}.${payload}.local`;
 
@@ -81,9 +79,7 @@ console.log(`    account_type : ${claims["custom:account_type"]}`);
 console.log(`    account_id   : ${claims["custom:account_id"]}`);
 console.log(`    tenant_id    : ${claims["custom:tenant_id"]}`);
 console.log(`    roles        : ${claims["custom:roles"]}`);
-console.log(
-  `    exp          : ${new Date(claims.exp * 1000).toLocaleString()}`
-);
+console.log(`    exp          : ${new Date(claims.exp * 1000).toLocaleString()}`);
 console.log();
 console.log("  Example:");
 console.log(`    curl http://localhost:4010/player/keno/draws/current \\`);

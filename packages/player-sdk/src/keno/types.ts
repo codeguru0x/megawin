@@ -76,7 +76,7 @@ export interface KenoSideBetInput {
 /**
  * Input mua vé Keno.
  *
- * Gửi lên `POST /player/keno/bets` qua `client.keno.placeBet()`.
+ * Gửi lên `POST /games/keno/bets` qua `client.keno.placeBet()`.
  *
  * Phải có ít nhất 1 board hoặc 1 side bet.
  *
@@ -141,11 +141,19 @@ export interface KenoTicketPurchaseInput {
  * Tham số phân trang cho danh sách vé Keno đang chờ.
  *
  * Cursor-based pagination — hiệu quả hơn offset pagination cho dataset lớn.
+ * Hỗ trợ lọc theo khoảng ngày cược (giờ Việt Nam).
  *
  * @example
  * ```ts
  * // Trang đầu tiên
  * const page1 = await client.keno.listPendingTickets({ size: 10 });
+ *
+ * // Lọc theo ngày cược
+ * const filtered = await client.keno.listPendingTickets({
+ *   size: 10,
+ *   from: "2026-03-01",
+ *   to: "2026-03-05",
+ * });
  *
  * // Trang tiếp theo
  * const page2 = await client.keno.listPendingTickets({
@@ -159,39 +167,35 @@ export interface KenoListTicketsParams {
   size?: number;
   /** Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước). */
   cursor?: string;
+  /** Lọc từ ngày cược (ISO date `YYYY-MM-DD`, giờ Việt Nam). */
+  from?: string;
+  /** Lọc đến ngày cược (ISO date `YYYY-MM-DD`, giờ Việt Nam). */
+  to?: string;
 }
 
 /**
- * Tham số truy vấn danh sách vé Keno đã hoàn thành.
+ * Tham số truy vấn danh sách tất cả vé Keno (pending + completed).
  *
- * Hỗ trợ lọc theo khoảng thời gian và sắp xếp.
+ * Hỗ trợ lọc theo khoảng ngày cược (giờ Việt Nam).
  *
  * @example
  * ```ts
- * // Lọc vé đã hoàn thành trong tháng 2/2026, sắp xếp theo ngày quay
- * const result = await client.keno.listCompletedTickets({
+ * // Lấy tất cả vé trong tháng 2/2026
+ * const result = await client.keno.listTickets({
  *   size: 20,
- *   sortBy: "drawDate",
  *   from: "2026-02-01",
  *   to: "2026-02-28",
  * });
  * ```
  */
-export interface KenoListCompletedTicketsParams {
+export interface KenoListAllTicketsParams {
   /** Số lượng vé mỗi trang (mặc định 20). */
   size?: number;
   /** Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước). */
   cursor?: string;
-  /**
-   * Tiêu chí sắp xếp.
-   *
-   * - `"betDate"` — theo ngày đặt cược (mặc định)
-   * - `"drawDate"` — theo ngày kỳ quay
-   */
-  sortBy?: "betDate" | "drawDate";
-  /** Lọc từ ngày (ISO date `YYYY-MM-DD`). */
+  /** Lọc từ ngày cược (ISO date `YYYY-MM-DD`, giờ Việt Nam). */
   from?: string;
-  /** Lọc đến ngày (ISO date `YYYY-MM-DD`). */
+  /** Lọc đến ngày cược (ISO date `YYYY-MM-DD`, giờ Việt Nam). */
   to?: string;
 }
 
@@ -242,7 +246,7 @@ export interface KenoLastResult {
 }
 
 /**
- * Response từ `GET /player/keno/draws/current`.
+ * Response từ `GET /games/keno/draws/current`.
  *
  * Chứa thông tin kỳ quay hiện tại, danh sách kỳ đang mở bán, và kết quả gần nhất.
  *
@@ -363,7 +367,7 @@ export interface KenoSideBetSummary {
 /**
  * Response phân trang danh sách vé Keno.
  *
- * Dùng cho cả `listPendingTickets` và `listCompletedTickets`.
+ * Dùng cho cả `listPendingTickets` và `listTickets`.
  *
  * @example
  * ```ts
@@ -502,7 +506,7 @@ export interface KenoEntryInfo {
 }
 
 /**
- * Response từ `GET /player/keno/tickets/{ticketId}/entries`.
+ * Response từ `GET /games/keno/tickets/{ticketId}/entries`.
  *
  * Chứa thông tin vé và tất cả entries (mỗi kỳ quay 1 entry).
  *
@@ -530,7 +534,7 @@ export interface KenoTicketEntriesResponse {
 /**
  * Response khi đặt cược Keno thành công.
  *
- * Trả về từ `POST /player/keno/bets` qua `client.keno.placeBet()`.
+ * Trả về từ `POST /games/keno/bets` qua `client.keno.placeBet()`.
  *
  * @example
  * ```ts

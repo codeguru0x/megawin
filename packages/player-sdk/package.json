@@ -1,6 +1,6 @@
 {
   "name": "@megawin/player-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MegaWin Player SDK – HTTP client + game types cho đối tác tích hợp",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -36,7 +36,8 @@
         "types": "./dist/lotto535.d.cts",
         "default": "./dist/lotto535.cjs"
       }
-    }
+    },
+    "./browser": "./dist/megawin-player-sdk-browser.global.js"
   },
   "files": [
     "dist",
@@ -50,7 +51,7 @@
     "test:watch": "vitest --watch",
     "docs:build": "rm -rf docs && typedoc",
     "docs:watch": "typedoc --watch",
-    "release": "pnpm build && mkdir -p release && pnpm pack --pack-gzip-level 9 --pack-destination release",
+    "release": "pnpm build && pnpm docs:build && mkdir -p release && pnpm pack --pack-gzip-level 9 --pack-destination release && gzip -9 -k dist/megawin-player-sdk-browser.global.js && mv dist/megawin-player-sdk-browser.global.js.gz release/megawin-player-sdk-browser.js.gz",
     "upload": "bash scripts/upload-s3.sh patch",
     "upload:patch": "bash scripts/upload-s3.sh patch",
     "upload:minor": "bash scripts/upload-s3.sh minor",
@@ -59,18 +60,15 @@
   "keywords": [
     "megawin",
     "sdk",
-    "player",
-    "api-client",
-    "keno",
-    "lotto535"
+    "player"
   ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
-    "tsup": "^8.5.0",
-    "typedoc": "^0.27.0",
+    "tsup": "^8.5.1",
+    "typedoc": "^0.28.17",
     "typescript": "5.9.3",
-    "vitest": "^3.0.0"
+    "vitest": "^4.0.18"
   }
 }

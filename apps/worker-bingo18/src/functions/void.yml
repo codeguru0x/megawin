@@ -1,11 +1,15 @@
 void-prepare:
   handler: src/handlers/void/prepare-void.handler
+  timeout: 900
 
 void-entries:
   handler: src/handlers/void/void-entries.handler
+  timeout: 900
 
 void-dispatch-refunds:
   handler: src/handlers/void/dispatch-refunds.handler
+  timeout: 900
 
 void-finalize:
   handler: src/handlers/void/finalize-void.handler
+  timeout: 900

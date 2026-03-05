@@ -5,15 +5,17 @@
  * FLOW (CRASH-SAFE):
  * ═══════════════════════════════════════════════════════════════════════
  *
- *  Input: { drawId, reason, voidedBy? }
+ *  Precondition: void-draw API đã transition draw → voiding + ghi voidInfo
+ *
+ *  Input: { drawId }
  *         │
  *         ▼
  *  ┌─────────────────────────┐
- *  │  1. PrepareVoid         │  Validate draw, transition → voiding
+ *  │  1. PrepareVoid         │  Verify status = voiding, load context
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  2. VoidEntries (loop)                   │
+ *  │  2. VoidEntries (loop, batch=500)        │
  *  │     Batch void scheduled entries         │
  *  │     done = true khi hết voidable entries │
  *  └────────┬─────────────────────────────────┘
@@ -29,12 +31,12 @@
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  5. FinalizeVoid        │  Ghi summary lên draw
+ *  │  5. FinalizeVoid        │  Transition voiding → void + ghi voidSummary
  *  └─────────────────────────┘
  *
- * DATA FLOW:
- *   context = PrepareVoid output, truyền xuyên suốt.
- *   Lambda nhận context trực tiếp, tự destructure fields cần thiết.
+ * DATA FLOW (Assign-based):
+ *   $voidCtx = PrepareVoid result, persisted via Assign across all states.
+ *   Lambda nhận data qua Arguments, tự destructure fields cần thiết.
  *
  * CRASH RECOVERY:
  *   Mỗi step idempotent. Entries đã void/refund tự filter ra.
@@ -68,7 +70,7 @@ export const VOID_STATE_MACHINE = {
     PrepareVoid: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-prepare",
-      Output: "{% { 'context': $states.result } %}",
+      Assign: { voidCtx: "{% $states.result %}" },
       Next: "VoidEntries",
       Retry: LAMBDA_RETRY,
     },
@@ -76,9 +78,8 @@ export const VOID_STATE_MACHINE = {
     VoidEntries: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-entries",
-      Arguments: "{% $states.input.context %}",
-      Output:
-        "{% { 'context': $states.input.context, 'voidResult': $states.result } %}",
+      Arguments: "{% $voidCtx %}",
+      Assign: { voidResult: "{% $states.result %}" },
       Next: "CheckVoidDone",
       Retry: LAMBDA_RETRY,
     },
@@ -87,7 +88,7 @@ export const VOID_STATE_MACHINE = {
       Type: "Choice",
       Choices: [
         {
-          Condition: "{% $states.input.voidResult.done %}",
+          Condition: "{% $voidResult.done %}",
           Next: "SyncTicketSummaries",
         },
       ],
@@ -96,11 +97,8 @@ export const VOID_STATE_MACHINE = {
 
     SyncTicketSummaries: {
       Type: "Task",
-      Resource:
-        "arn:aws:lambda:REGION:ACCOUNT:function:void-sync-ticket-summaries",
-      Arguments: "{% $states.input.context %}",
-      Output:
-        "{% { 'context': $states.input.context, 'syncResult': $states.result } %}",
+      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-sync-ticket-summaries",
+      Arguments: "{% $voidCtx %}",
       Next: "DispatchRefunds",
       Retry: LAMBDA_RETRY,
     },
@@ -108,9 +106,8 @@ export const VOID_STATE_MACHINE = {
     DispatchRefunds: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-dispatch-refunds",
-      Arguments: "{% $states.input.context %}",
-      Output:
-        "{% { 'context': $states.input.context, 'refundResult': $states.result } %}",
+      Arguments: "{% $voidCtx %}",
+      Assign: { refundResult: "{% $states.result %}" },
       Next: "CheckRefundDone",
       Retry: LAMBDA_RETRY,
       Catch: [
@@ -125,7 +122,7 @@ export const VOID_STATE_MACHINE = {
       Type: "Choice",
       Choices: [
         {
-          Condition: "{% $states.input.refundResult.done %}",
+          Condition: "{% $refundResult.done %}",
           Next: "FinalizeVoid",
         },
       ],
@@ -141,15 +138,14 @@ export const VOID_STATE_MACHINE = {
     FinalizeVoid: {
       Type: "Task",
       Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-finalize",
-      Arguments: "{% $states.input.context %}",
+      Arguments: "{% $voidCtx %}",
       End: true,
       Retry: LAMBDA_RETRY,
     },
 
     RefundFailed: {
       Type: "Pass",
-      Comment:
-        "Refund error – void hoàn tất, entries đã void. Admin retry thủ công.",
+      Comment: "Refund error – void hoàn tất, entries đã void. Admin retry thủ công.",
       End: true,
     },
   },

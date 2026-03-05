@@ -1,6 +1,0 @@
-create-company-user:
-  handler: src/handlers/create-company-user.handler
-  events:
-    - httpApi:
-        path: /accounts/company
-        method: post

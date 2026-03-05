@@ -5,21 +5,23 @@
  * FLOW (CRASH-SAFE):
  * ═══════════════════════════════════════════════════════════════════════
  *
- *  Input: { drawId, reason, voidedBy? }
+ *  Precondition: void-draw API đã transition draw → voiding + ghi voidInfo
+ *
+ *  Input: { drawId }
  *         │
  *         ▼
  *  ┌─────────────────────────┐
- *  │  1. PrepareVoid         │  Validate draw, transition → voiding
+ *  │  1. PrepareVoid         │  Verify status = voiding, load context
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  2. VoidEntries (loop, batch=100)        │
- *  │     Batch void scheduled entries         │
+ *  │  2. VoidEntries (loop, batch=500)        │
+ *  │     Bulk void scheduled entries          │
  *  │     done = true khi hết voidable entries │
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  3. SyncTicketSummaries │  Recompute ticket progress
+ *  │  3. SyncTicketSummaries │  Recompute ticket progress (loop)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
@@ -29,16 +31,28 @@
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  5. FinalizeVoid        │  Ghi summary lên draw
+ *  │  5. FinalizeVoid        │  Transition voiding → void + ghi voidSummary
  *  └─────────────────────────┘
  *
- * DATA FLOW:
- *   context = PrepareVoid output, truyền xuyên suốt.
- *   Lambda nhận context trực tiếp, tự destructure fields cần thiết.
+ * DATA FLOW (Assign-based):
+ *   $voidCtx = PrepareVoid result, persisted via Assign across all states.
+ *   Lambda nhận data qua Arguments, tự destructure fields cần thiết.
  *
  * CRASH RECOVERY:
  *   Mỗi step idempotent. Entries đã void/refund tự filter ra.
+ *
+ * USAGE (chạy từ thư mục step-functions):
+ *   npx tsx -e "import { VOID_STATE_MACHINE } from './void'; console.log(JSON.stringify(VOID_STATE_MACHINE, null, 2))" > void.asl.json
  */
+
+const REGION = "ap-southeast-1";
+const ACCOUNT_ID = "YOUR_ACCOUNT_ID";
+const SERVICE = "mw-worker-keno";
+const STAGE = "dev";
+
+function lambdaArn(functionName: string): string {
+  return `arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:${SERVICE}-${STAGE}-${functionName}`;
+}
 
 const LAMBDA_RETRY = [
   {
@@ -63,17 +77,17 @@ export const VOID_STATE_MACHINE = {
   States: {
     PrepareVoid: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-prepare",
-      Output: "{% { 'context': $states.result } %}",
+      Resource: lambdaArn("void-prepare"),
+      Assign: { voidCtx: "{% $states.result %}" },
       Next: "VoidEntries",
       Retry: LAMBDA_RETRY,
     },
 
     VoidEntries: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-entries",
-      Arguments: "{% $states.input.context %}",
-      Output: "{% { 'context': $states.input.context, 'voidResult': $states.result } %}",
+      Resource: lambdaArn("void-entries"),
+      Arguments: "{% $voidCtx %}",
+      Assign: { voidResult: "{% $states.result %}" },
       Next: "CheckVoidDone",
       Retry: LAMBDA_RETRY,
     },
@@ -82,7 +96,7 @@ export const VOID_STATE_MACHINE = {
       Type: "Choice",
       Choices: [
         {
-          Condition: "{% $states.input.voidResult.done %}",
+          Condition: "{% $voidResult.done %}",
           Next: "SyncTicketSummaries",
         },
       ],
@@ -91,18 +105,29 @@ export const VOID_STATE_MACHINE = {
 
     SyncTicketSummaries: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-sync-ticket-summaries",
-      Arguments: "{% $states.input.context %}",
-      Output: "{% { 'context': $states.input.context, 'syncResult': $states.result } %}",
-      Next: "DispatchRefunds",
+      Resource: lambdaArn("void-sync-ticket-summaries"),
+      Arguments: "{% $voidCtx %}",
+      Assign: { syncResult: "{% $states.result %}" },
+      Next: "CheckSyncDone",
       Retry: LAMBDA_RETRY,
+    },
+
+    CheckSyncDone: {
+      Type: "Choice",
+      Choices: [
+        {
+          Condition: "{% $syncResult.done %}",
+          Next: "DispatchRefunds",
+        },
+      ],
+      Default: "SyncTicketSummaries",
     },
 
     DispatchRefunds: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-dispatch-refunds",
-      Arguments: "{% $states.input.context %}",
-      Output: "{% { 'context': $states.input.context, 'refundResult': $states.result } %}",
+      Resource: lambdaArn("void-dispatch-refunds"),
+      Arguments: "{% $voidCtx %}",
+      Assign: { refundResult: "{% $states.result %}" },
       Next: "CheckRefundDone",
       Retry: LAMBDA_RETRY,
       Catch: [
@@ -117,7 +142,7 @@ export const VOID_STATE_MACHINE = {
       Type: "Choice",
       Choices: [
         {
-          Condition: "{% $states.input.refundResult.done %}",
+          Condition: "{% $refundResult.done %}",
           Next: "FinalizeVoid",
         },
       ],
@@ -132,8 +157,8 @@ export const VOID_STATE_MACHINE = {
 
     FinalizeVoid: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-finalize",
-      Arguments: "{% $states.input.context %}",
+      Resource: lambdaArn("void-finalize"),
+      Arguments: "{% $voidCtx %}",
       End: true,
       Retry: LAMBDA_RETRY,
     },

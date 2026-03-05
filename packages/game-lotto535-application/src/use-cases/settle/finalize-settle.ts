@@ -2,14 +2,12 @@
  * Use Case: Finalize Settle
  *
  * Bước cuối cùng trong settle flow:
- *   1. Chuyển draw: settling → settled (atomic, idempotent)
- *   2. Ghi jackpot snapshot lên draw đã settle (openingAmount + closingAmount)
- *   3. Cập nhật / đóng jackpot cycle
+ *   1. Chuyển draw: settling → settled + ghi jackpot snapshot (atomic, 1 query)
+ *   2. Cập nhật / đóng jackpot cycle
  *
  * CRASH-SAFE:
- *   - transitionStatus atomic: settling → settled
+ *   - settleComplete atomic: settling → settled + jackpot snapshot
  *   - Nếu draw đã settled → skip (không throw)
- *   - Jackpot snapshot overwrite OK (idempotent)
  *   - Cycle update idempotent: overwrite stats / close OK
  *
  * JACKPOT SOURCE OF TRUTH:
@@ -65,9 +63,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  protected async execute(
-    input: FinalizeSettleInput
-  ): Promise<FinalizeSettleResult> {
+  protected async execute(input: FinalizeSettleInput): Promise<FinalizeSettleResult> {
     const {
       drawId,
       closingJackpot,
@@ -77,24 +73,20 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       splitDetails,
     } = input;
 
-    const updated = await this.drawRepo.transitionStatus(
-      drawId,
-      DrawStatus.Settling,
-      DrawStatus.Settled
-    );
+    const updated = await this.drawRepo.settleComplete(drawId, {
+      openingAmount: input.jackpotOpeningAmount,
+      closingAmount: closingJackpot,
+      isSplitCycle: isSplitCycle || undefined,
+    });
 
     if (!updated) {
       const draw = await this.drawRepo.getDrawById(drawId);
       if (draw?.status === DrawStatus.Settled) {
         console.log(`Draw ${drawId} already settled, skipping transition.`);
       } else {
-        throw new Error(
-          `Cannot finalize draw ${drawId}. Current status: ${draw?.status}`
-        );
+        throw new Error(`Cannot finalize draw ${drawId}. Current status: ${draw?.status}`);
       }
     }
-
-    await this.writeJackpotSnapshot(input);
 
     await this.updateJackpotCycle(input);
 
@@ -108,37 +100,13 @@ export class FinalizeSettleUseCase extends InternalUseCase<
   }
 
   /**
-   * Ghi jackpot snapshot lên draw đã settle (bản ghi lịch sử).
-   * Dùng jackpotOpeningAmount từ PrepareSettle (crash-safe, không query lại cycle).
-   * Idempotent: overwrite OK.
-   */
-  private async writeJackpotSnapshot(
-    input: FinalizeSettleInput
-  ): Promise<void> {
-    const { drawId, jackpotOpeningAmount, closingJackpot, isSplitCycle } =
-      input;
-
-    await this.drawRepo.updateJackpot(drawId, {
-      openingAmount: jackpotOpeningAmount,
-      closingAmount: closingJackpot,
-      isSplitCycle: isSplitCycle || undefined,
-    });
-  }
-
-  /**
    * Cập nhật jackpot cycle sau settle.
    *
    * - Luôn update stats (currentAmount, drawCount)
    * - Nếu có winner hoặc split → close cycle + tạo cycle mới
    */
   private async updateJackpotCycle(input: FinalizeSettleInput): Promise<void> {
-    const {
-      drawId,
-      closingJackpot,
-      hasJackpotWinner,
-      isSplitCycle,
-      splitDetails,
-    } = input;
+    const { drawId, closingJackpot, hasJackpotWinner, isSplitCycle, splitDetails } = input;
 
     const activeCycle = await this.cycleRepo.getActiveCycle();
     if (!activeCycle) return;
@@ -187,7 +155,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
                 bonusPerWinner: d.bonusPerWinner,
                 totalAmount: d.totalAmount,
               },
-            ])
+            ]),
           ),
           totalWinners,
           totalPaid,

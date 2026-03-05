@@ -51,10 +51,21 @@ export type TicketSortBy = (typeof TicketSortBy)[keyof typeof TicketSortBy];
 
 export const TICKET_SORT_BY_VALUES = Object.values(TicketSortBy);
 
+export interface PlayerListTicketsInput {
+  tenantId: string;
+  accountId: string;
+  size: number;
+  from?: string;
+  to?: string;
+  cursor?: string;
+}
+
 export interface PlayerListPendingTicketsInput {
   tenantId: string;
   accountId: string;
   size: number;
+  from?: string;
+  to?: string;
   cursor?: string;
 }
 

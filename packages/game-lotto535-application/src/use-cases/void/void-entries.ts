@@ -2,48 +2,26 @@
  * Use Case: Void Entries Batch (Lotto 5/35)
  *
  * Step 2 (loop) của Void Draw Step Function.
- * Void 1 batch entries — CHỈ xử lý entries, KHÔNG update ticket.
+ * Xử lý nhiều batch trong 1 lần gọi Lambda, dừng sớm khi sắp hết thời gian.
  *
- * CRASH-SAFE:
- *   - Luôn query entries có status voidable (scheduled)
- *   - voidEntry() atomic: chỉ update nếu status đúng
- *   - done = true khi không còn entries voidable
- *
- * Ticket summary sẽ được SyncTicketSummaries recompute từ entries.
+ * CRASH-SAFE: query chỉ entries status=scheduled → đã void thì tự skip.
+ * done = true khi không còn entries voidable.
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export interface VoidEntriesBatchInput {
-  /** Mã kỳ quay cần void entries. */
   drawId: string;
-  /** Lý do huỷ (ghi vào mỗi entry). */
-  reason: string;
-  /** Người thực hiện void (optional). */
-  voidedBy?: string;
-  /** Số entries xử lý mỗi batch (mặc định 100). */
-  batchSize?: number;
 }
 
 export interface VoidEntriesBatchResult {
-  /** Mã kỳ quay. */
   drawId: string;
-  /** true nếu không còn entries voidable (= đã xử lý hết). */
   done: boolean;
-  /** Số entries đã void thành công trong batch. */
-  batchVoided: number;
-  /** Số entries bị skip (đã void trước đó hoặc race condition). */
-  batchSkipped: number;
-  /**
-   * Tổng tiền hoàn trong batch (VND).
-   * Công thức: totalRefundAmount = Σ(entry.amount) cho các entries đã void.
-   * Mỗi entry: refundAmount = originalAmount (hoàn 100%).
-   */
-  totalRefundAmount: number;
 }
 
-const DEFAULT_BATCH_SIZE = 100;
+const BATCH_SIZE = 500;
+const MAX_EXECUTION_MS = 13 * 60 * 1000;
 
 export class VoidEntriesBatchUseCase extends InternalUseCase<
   VoidEntriesBatchInput,
@@ -52,55 +30,26 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(
-    input: VoidEntriesBatchInput
+    input: VoidEntriesBatchInput,
   ): Promise<VoidEntriesBatchResult> {
-    const { drawId, reason, voidedBy, batchSize = DEFAULT_BATCH_SIZE } = input;
-    const entries = await this.entryRepo.getVoidableEntriesBatch(
-      drawId,
-      batchSize
-    );
+    const { drawId } = input;
+    const startTime = Date.now();
 
-    if (entries.length === 0) {
-      return {
-        drawId,
-        done: true,
-        batchVoided: 0,
-        batchSkipped: 0,
-        totalRefundAmount: 0,
-      };
-    }
+    while (Date.now() - startTime < MAX_EXECUTION_MS) {
+      const entries = await this.entryRepo.getVoidableEntriesBatch(drawId, BATCH_SIZE);
 
-    let batchVoided = 0;
-    let batchSkipped = 0;
-    let totalRefundAmount = 0;
-
-    for (const entry of entries) {
-      const entryId = (entry as any)._id?.toString?.() ?? (entry as any).id;
-      const originalAmount = (entry as any).amount ?? 0;
-      const refundAmount = originalAmount;
-
-      const voided = await this.entryRepo.voidEntry(entryId, {
-        reason,
-        originalAmount,
-        refundAmount,
-        voidedBy,
-      });
-
-      if (!voided) {
-        batchSkipped++;
-        continue;
+      if (entries.length === 0) {
+        return { drawId, done: true };
       }
 
-      batchVoided++;
-      totalRefundAmount += refundAmount;
+      const items = entries.map((entry) => ({
+        entryId: entry.id,
+        amount: entry.amount ?? 0,
+      }));
+
+      await this.entryRepo.bulkVoidEntries(items);
     }
 
-    return {
-      drawId,
-      done: false,
-      batchVoided,
-      batchSkipped,
-      totalRefundAmount,
-    };
+    return { drawId, done: false };
   }
 }

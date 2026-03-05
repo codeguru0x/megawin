@@ -1,11 +1,5 @@
-/**
- * Use Case: List Pending Tickets (Max 3D Pro) – Player
- *
- * Lấy danh sách vé đang chờ xử lý (còn draws chưa settle/void).
- * Cursor-based pagination dùng _id cho collection lớn.
- */
-
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { toVNStartOfDay, toVNEndOfDay } from "@megawin/shared/utils/date";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { mapPlayerTicket } from "./list-tickets-player";
 import type {
@@ -22,13 +16,16 @@ export class ListPendingTicketsPlayerUseCase extends ApiGatewayUseCase<
   protected async execute(
     input: PlayerListPendingTicketsInput
   ): Promise<PlayerListTicketsOutput> {
-    const { tenantId, accountId, size, cursor } = input;
+    const { tenantId, accountId, size, from, to, cursor } = input;
+
+    const fromUtc = from ? toVNStartOfDay(from) : undefined;
+    const toUtc = to ? toVNEndOfDay(to) : undefined;
 
     const tickets = await this.ticketRepo.getPendingTickets(
       tenantId,
       accountId,
       size + 1,
-      cursor
+      { from: fromUtc, to: toUtc, cursor }
     );
 
     const hasMore = tickets.length > size;

@@ -1,8 +1,0 @@
-me-get-balance:
-  handler: src/handlers/get-balance.handler
-  events:
-    - httpApi:
-        path: /me/balance
-        method: get
-        authorizer:
-          name: cognitoPlayerAuth

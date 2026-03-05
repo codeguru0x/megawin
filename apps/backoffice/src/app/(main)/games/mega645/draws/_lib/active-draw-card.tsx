@@ -93,6 +93,12 @@ const STATUS_VISUALS: Record<
     iconBg: "bg-orange-100 dark:bg-orange-900",
     iconColor: "text-orange-600 dark:text-orange-400",
   },
+  [DrawStatus.Voiding]: {
+    border: "border-red-200 dark:border-red-800",
+    accent: "from-red-500 to-rose-600",
+    iconBg: "bg-red-100 dark:bg-red-900",
+    iconColor: "text-red-600 dark:text-red-400",
+  },
 };
 
 const DEFAULT_VISUAL = {
@@ -122,12 +128,14 @@ export function Mega645PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
     (status === DrawStatus.SalesClosed ||
       status === DrawStatus.Published ||
       status === DrawStatus.Settling ||
+      status === DrawStatus.Voiding ||
       status === DrawStatus.Settled);
 
   const isTerminal =
     status === DrawStatus.Settled ||
     status === DrawStatus.Void ||
-    status === DrawStatus.Settling;
+    status === DrawStatus.Settling ||
+    status === DrawStatus.Voiding;
 
   return (
     <Card
@@ -143,7 +151,9 @@ export function Mega645PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
         status === DrawStatus.Scheduled &&
           "bg-linear-to-br from-slate-50/80 via-white to-slate-50/40 dark:from-slate-950/30 dark:via-background dark:to-slate-950/20 shadow-slate-200/30 dark:shadow-slate-900/20",
         status === DrawStatus.Settling &&
-          "bg-linear-to-br from-orange-50/80 via-white to-red-50/40 dark:from-orange-950/30 dark:via-background dark:to-red-950/20 shadow-orange-200/30 dark:shadow-orange-900/20"
+          "bg-linear-to-br from-orange-50/80 via-white to-red-50/40 dark:from-orange-950/30 dark:via-background dark:to-red-950/20 shadow-orange-200/30 dark:shadow-orange-900/20",
+        status === DrawStatus.Voiding &&
+          "bg-linear-to-br from-red-50/80 via-white to-rose-50/40 dark:from-red-950/30 dark:via-background dark:to-rose-950/20 shadow-red-200/30 dark:shadow-red-900/20"
       )}
     >
       <div
@@ -165,6 +175,7 @@ export function Mega645PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                     status === DrawStatus.SalesClosed && "bg-amber-400",
                     status === DrawStatus.Published && "bg-violet-400",
                     status === DrawStatus.Settling && "bg-orange-400",
+                    status === DrawStatus.Voiding && "bg-red-400",
                     status === DrawStatus.Scheduled && "bg-slate-400"
                   )}
                 />
@@ -175,6 +186,7 @@ export function Mega645PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                     status === DrawStatus.SalesClosed && "bg-amber-500",
                     status === DrawStatus.Published && "bg-violet-500",
                     status === DrawStatus.Settling && "bg-orange-500",
+                    status === DrawStatus.Voiding && "bg-red-500",
                     status === DrawStatus.Scheduled && "bg-slate-500"
                   )}
                 />
@@ -313,7 +325,8 @@ export function Mega645QueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
   const isTerminal =
     status === DrawStatus.Settled ||
     status === DrawStatus.Void ||
-    status === DrawStatus.Settling;
+    status === DrawStatus.Settling ||
+    status === DrawStatus.Voiding;
 
   return (
     <Card className={`relative overflow-hidden ${vis.border}`}>

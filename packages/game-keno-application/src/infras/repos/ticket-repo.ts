@@ -1,5 +1,5 @@
 import { KenoCollections } from "@megawin/game-keno/entities";
-import { TicketStatus } from "@megawin/game-core/entities";
+import { TicketStatus, ALL_LISTABLE_STATUSES } from "@megawin/game-core/entities";
 import { BaseRepo } from "./base-repo";
 import { TicketMapper, type TicketEntity } from "../mappers/ticket-mapper";
 import type { TicketSortBy } from "../../use-cases/player/dto/player.dto";
@@ -39,13 +39,26 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     tenantId: string,
     accountId: string,
     size: number,
-    cursor?: string,
+    opts?: {
+      from?: Date;
+      to?: Date;
+      cursor?: string;
+    },
   ): Promise<TicketEntity[]> {
+    const { from, to, cursor } = opts ?? {};
+
     const filter: Filter<Document> = {
       tenantId,
       accountId,
       status: { $in: PENDING_STATUSES },
     };
+
+    if (from || to) {
+      const dateRange: Record<string, Date> = {};
+      if (from) dateRange.$gte = from;
+      if (to) dateRange.$lte = to;
+      filter.createdAt = dateRange;
+    }
 
     if (cursor && ObjectId.isValid(cursor)) {
       filter._id = { $lt: new ObjectId(cursor) };
@@ -58,36 +71,32 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   }
 
   /**
-   * Vé đã hoàn thành (status = completed | refunded | void).
-   * Hỗ trợ lọc theo khoảng ngày (betDate = createdAt, drawDate = ngày quay cuối).
-   * Cursor = _id, sort createdAt desc.
+   * List tất cả vé (cả pending + completed).
+   * Lọc theo ngày cược (createdAt). Cursor = _id, sort desc.
    */
-  async getCompletedTickets(
+  async getTickets(
     tenantId: string,
     accountId: string,
     size: number,
     opts?: {
-      sortBy?: TicketSortBy;
       from?: Date;
       to?: Date;
       cursor?: string;
     },
   ): Promise<TicketEntity[]> {
-    const { sortBy = "betDate", from, to, cursor } = opts ?? {};
-
-    const dateField = sortBy === "drawDate" ? "settlement.lastSettledAt" : "createdAt";
+    const { from, to, cursor } = opts ?? {};
 
     const filter: Filter<Document> = {
       tenantId,
       accountId,
-      status: { $in: COMPLETED_STATUSES },
+      status: { $in: ALL_LISTABLE_STATUSES as string[] },
     };
 
     if (from || to) {
       const dateRange: Record<string, Date> = {};
       if (from) dateRange.$gte = from;
       if (to) dateRange.$lte = to;
-      filter[dateField] = dateRange;
+      filter.createdAt = dateRange;
     }
 
     if (cursor && ObjectId.isValid(cursor)) {

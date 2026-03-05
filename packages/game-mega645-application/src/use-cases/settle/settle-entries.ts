@@ -1,58 +1,35 @@
 /**
  * Use Case: Settle Entries (Batch) — Mega 6/45
  *
- * Xử lý 1 batch entries: expand → match → persist lines → settle entry.
+ * Xử lý entries trong vòng lặp while với time-bound MAX_EXECUTION_MS.
+ * Mỗi iteration: query batch → expand → match → persist lines → collect settle ops → bulkSettle.
  * Mega 6/45 lines chỉ có main (không có special).
  *
- * CRASH-SAFE: Luôn query status = "scheduled" với limit cố định (DEFAULT_BATCH_SIZE).
+ * CRASH-SAFE: Luôn query status = "scheduled" với limit cố định (BATCH_SIZE).
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { PrizeTier, PayoutStatus } from "@megawin/game-mega645/entities";
-import type { TicketLineDoc } from "@megawin/game-mega645/entities";
+import type { TicketLineDoc, MainTuple } from "@megawin/game-mega645/entities";
 import { expandAllBoards } from "@megawin/game-mega645/helpers";
-import {
-  matchLines,
-  type DrawResultForMatch,
-} from "@megawin/game-mega645/helpers";
+import { matchLines, type DrawResultForMatch } from "@megawin/game-mega645/helpers";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { MegaDrawResult } from "./types";
 
-const DEFAULT_BATCH_SIZE = 500;
+const BATCH_SIZE = 500;
+const MAX_EXECUTION_MS = 10 * 60 * 1000;
 
 export interface SettleEntriesBatchInput {
-  /** ID kỳ quay đang settle. */
   drawId: string;
-  /** Kết quả quay thưởng. */
   result: MegaDrawResult;
-  /** Bảng tiền thưởng theo hạng: key = tier, value = VND. */
   prizeAmounts: Record<string, number>;
-  /** Kỳ này có split jackpot không — ảnh hưởng cách tính jackpot winner. */
   isSplitCycle: boolean;
 }
 
-export interface SettleAccumulator {
-  /** Tổng số entry đã settle thành công trong batch. */
-  totalSettled: number;
-  /** Tổng tiền payout đã ghi nhận (VND) — giải cố định, chưa tính jackpot bonus. */
-  totalPayoutAmount: number;
-  /** Tổng tiền thắng (VND) — bao gồm tất cả hạng giải cố định. */
-  totalWinAmount: number;
-  /** Đếm số người trúng từng hạng: key = tier (e.g. "tier2"), value = số lượng. */
-  tierWinnerCounts: Record<string, number>;
-  /** Tổng tiền giải cố định (VND) — tier2 + tier3 + tier4, không bao gồm jackpot. */
-  totalFixedPrizes: number;
-}
-
 export interface SettleEntriesBatchResult {
-  /** true nếu đã xử lý hết tất cả entry (batch cuối cùng). */
   done: boolean;
-  /** Bộ tích luỹ kết quả cho batch này. */
-  accumulator: SettleAccumulator;
-  /** Số entry settle thành công trong batch hiện tại. */
-  batchSettled: number;
 }
 
 export class SettleEntriesBatchUseCase extends InternalUseCase<
@@ -63,55 +40,61 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   private readonly ticketRepo = new TicketRepository();
   private readonly lineRepo = new LineRepository();
 
-  protected async execute(
-    input: SettleEntriesBatchInput
-  ): Promise<SettleEntriesBatchResult> {
+  protected async execute(input: SettleEntriesBatchInput): Promise<SettleEntriesBatchResult> {
     const { drawId, result, prizeAmounts } = input;
     const drawResult: DrawResultForMatch = {
       winningMain: result.winningMain as any,
     };
 
-    const entries = await this.entryRepo.getScheduledEntries(
-      drawId,
-      DEFAULT_BATCH_SIZE
-    );
-
-    if (entries.length === 0) {
-      return {
-        done: true,
-        accumulator: emptyAccumulator(),
-        batchSettled: 0,
-      };
-    }
-
-    const acc = emptyAccumulator();
-    let batchSettled = 0;
     const ticketCache = new Map<string, any>();
-    const now = new Date();
+    const startTime = Date.now();
 
-    for (const entry of entries) {
-      const ticketId = entry.ticketId;
+    while (Date.now() - startTime < MAX_EXECUTION_MS) {
+      const entries = await this.entryRepo.getScheduledEntries(drawId, BATCH_SIZE);
 
-      let ticket = ticketCache.get(ticketId);
-      if (!ticket) {
-        ticket = await this.ticketRepo.getTicketById(ticketId);
-        if (ticket) ticketCache.set(ticketId, ticket);
-      }
-      if (!ticket) {
-        console.error(
-          `Ticket ${ticketId} not found for entry ${entry.id}, skipping.`
-        );
-        continue;
+      if (entries.length === 0) {
+        return { done: true };
       }
 
-      const lines = expandAllBoards(ticket.boards);
-      const matchResult = matchLines(lines, drawResult);
+      const now = new Date();
+      const settleOps: Array<{
+        entryId: string;
+        payout: {
+          winAmount: number;
+          payoutAmount: number;
+          tiers: Array<{
+            tier: string;
+            hitCount: number;
+            unitAmount: number;
+            amount: number;
+            isSplitBonus?: boolean;
+          }>;
+          settledAt: Date;
+          payoutStatus?: string;
+        };
+        outcome: string;
+        result: { winningMain: typeof result.winningMain; publishedAt: Date };
+      }> = [];
 
-      const lineDocs: Array<Omit<TicketLineDoc, "_id">> = lines.map(
-        (line, i) => {
+      for (const entry of entries) {
+        const ticketId = entry.ticketId;
+
+        let ticket = ticketCache.get(ticketId);
+        if (!ticket) {
+          ticket = await this.ticketRepo.getTicketById(ticketId);
+          if (ticket) ticketCache.set(ticketId, ticket);
+        }
+        if (!ticket) {
+          console.error(`Ticket ${ticketId} not found for entry ${entry.id}, skipping.`);
+          continue;
+        }
+
+        const lines = expandAllBoards(ticket.boards);
+        const matchResult = matchLines(lines, drawResult);
+
+        const lineDocs: Array<Omit<TicketLineDoc, "_id">> = lines.map((line, i) => {
           const perLine = matchResult.perLineResults[i]!;
-          const unitAmount =
-            perLine.tier != null ? (prizeAmounts[perLine.tier] ?? 0) : 0;
+          const unitAmount = perLine.tier != null ? (prizeAmounts[perLine.tier] ?? 0) : 0;
 
           return {
             tenantId: ticket.tenantId,
@@ -130,70 +113,43 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             },
             createdAt: now,
           };
-        }
-      );
+        });
 
-      await this.lineRepo.upsertLines(lineDocs);
+        await this.lineRepo.upsertLines(lineDocs);
 
-      const payoutTiers = buildPayoutTiers(
-        matchResult.tierCounts,
-        prizeAmounts
-      );
-      const winAmount = payoutTiers.reduce((sum, t) => sum + t.amount, 0);
-      const hasWin = winAmount > 0;
+        const payoutTiers = buildPayoutTiers(matchResult.tierCounts, prizeAmounts);
+        const winAmount = payoutTiers.reduce((sum, t) => sum + t.amount, 0);
+        const hasWin = winAmount > 0;
 
-      const settled = await this.entryRepo.settleEntry(
-        entry.id,
-        {
-          winAmount,
-          payoutAmount: winAmount,
-          tiers: payoutTiers,
-          settledAt: now,
-          payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
-        },
-        hasWin ? "win" : "loss",
-        {
-          winningMain: result.winningMain as any,
-          publishedAt: now,
-        }
-      );
+        settleOps.push({
+          entryId: entry.id,
+          payout: {
+            winAmount,
+            payoutAmount: winAmount,
+            tiers: payoutTiers,
+            settledAt: now,
+            payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
+          },
+          outcome: hasWin ? "win" : "loss",
+          result: {
+            winningMain: result.winningMain as any,
+            publishedAt: now,
+          },
+        });
+      }
 
-      if (!settled) continue;
-
-      acc.totalSettled++;
-      acc.totalWinAmount += winAmount;
-      acc.totalPayoutAmount += winAmount;
-      batchSettled++;
-
-      for (const [tier, count] of matchResult.tierCounts) {
-        acc.tierWinnerCounts[tier] = (acc.tierWinnerCounts[tier] ?? 0) + count;
-        if (tier !== PrizeTier.Jackpot) {
-          acc.totalFixedPrizes += (prizeAmounts[tier] ?? 0) * count;
-        }
+      if (settleOps.length > 0) {
+        await this.entryRepo.bulkSettleEntries(settleOps as any);
       }
     }
 
-    return {
-      done: entries.length < DEFAULT_BATCH_SIZE,
-      accumulator: acc,
-      batchSettled,
-    };
+    return { done: false };
   }
-}
-
-function emptyAccumulator(): SettleAccumulator {
-  return {
-    totalSettled: 0,
-    totalPayoutAmount: 0,
-    totalWinAmount: 0,
-    tierWinnerCounts: {},
-    totalFixedPrizes: 0,
-  };
 }
 
 function buildPayoutTiers(
   tierCounts: Map<string, number>,
-  prizeAmounts: Record<string, number>
+  prizeAmounts: Record<string, number>,
 ): Array<{
   tier: string;
   hitCount: number;

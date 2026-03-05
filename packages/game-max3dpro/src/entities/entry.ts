@@ -132,8 +132,6 @@ export interface TicketEntryDoc {
 
   /** Thông tin huỷ entry (khi void). */
   voidInfo?: {
-    /** Lý do huỷ entry. */
-    reason: string;
     /** Tiền cược gốc trước khi void. */
     originalAmount: number;
     /** Tiền hoàn trả cho người chơi. */

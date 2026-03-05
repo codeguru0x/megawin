@@ -1,3 +1,0 @@
-enroll-auto-entries:
-  handler: src/handlers/enroll/auto-enroll-entries.handler
-  timeout: 300

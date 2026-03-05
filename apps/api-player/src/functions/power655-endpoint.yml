@@ -27,11 +27,11 @@ power655-list-pending-tickets:
         authorizer:
           name: cognitoPlayerAuth
 
-power655-list-completed-tickets:
-  handler: src/handlers/power655/list-completed-tickets.handler
+power655-list-tickets:
+  handler: src/handlers/power655/list-tickets.handler
   events:
     - httpApi:
-        path: /games/power655/tickets/completed
+        path: /games/power655/tickets
         method: get
         authorizer:
           name: cognitoPlayerAuth

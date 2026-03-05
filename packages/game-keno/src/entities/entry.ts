@@ -21,6 +21,18 @@ import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
 import type { ISODateString } from "./types";
 import type { Long } from "@megawin/game-core/types";
 
+/**
+ * Các bậc chơi (pickCount) mà giải thưởng cao nhất có giới hạn trả thưởng mỗi kỳ.
+ *
+ * Quy tắc Vietlott Keno:
+ *   - Bậc 8 trùng 8: ≤50 bộ → 200tr/bộ (cố định), >50 bộ → 10 tỷ chia đều
+ *   - Bậc 9 trùng 9: ≤12 bộ → 800tr/bộ (cố định), >12 bộ → 10 tỷ chia đều
+ *   - Bậc 10 trùng 10: ≤5 bộ → 2 tỷ/bộ (cố định), >5 bộ → 10 tỷ chia đều
+ *
+ * Dùng bởi SettleEntries (gắn flag) và ApplyPayoutCaps (query nhanh).
+ */
+export const CAPPABLE_PICK_COUNTS: ReadonlySet<number> = new Set([8, 9, 10]);
+
 // ─────────────────────────────────────────────
 // Entry Document
 // ─────────────────────────────────────────────
@@ -86,16 +98,41 @@ export interface TicketEntryDoc {
   // ───── Payout ─────
 
   payout?: {
+    /** Tổng tiền thắng = Σ(boardPayouts[].winAmount) + Σ(sideBetPayouts[].winAmount). */
     winAmount: number;
+    /** Tiền trả cho player. Thường = winAmount. Sau ApplyPayoutCaps có thể giảm. */
     payoutAmount: number;
+    /** Chi tiết thắng/thua từng board cách chơi cơ bản. */
     boardPayouts: EntryBoardPayout[];
+    /** Chi tiết thắng/thua từng side bet (Lớn/Nhỏ, Chẵn/Lẻ). */
     sideBetPayouts: EntrySideBetPayout[];
+    /** Thời điểm settle. */
     settledAt: Date;
     payoutStatus?: PayoutStatus;
     payoutDispatchedAt?: Date;
     payoutRetryCount?: number;
     payoutLastError?: string;
   };
+
+  // ───── Payout Cap Flag ─────
+
+  /**
+   * Flag đánh dấu entry có board trúng giải cao nhất ở bậc 8/9/10.
+   *
+   * Được gắn bởi SettleEntries khi entry có ít nhất 1 board mà:
+   *   pickCount ∈ {8, 9, 10} VÀ matchCount === pickCount (trúng hết)
+   *
+   * Mục đích: tối ưu query cho step ApplyPayoutCaps.
+   * Thay vì phải $unwind + $expr trên toàn bộ entries, chỉ cần
+   * filter { hasCappablePrize: true } → nhanh và index-friendly.
+   *
+   * Quy tắc Vietlott: khi tổng số bộ trúng top prize vượt ngưỡng
+   * cấu hình (maxSetsForFixed), giải thưởng phải chia đều từ maxPerDraw.
+   *
+   * Chỉ có khi entry đã settled và có board trúng top prize.
+   * Undefined/false cho các entry khác.
+   */
+  hasCappablePrize?: boolean;
 
   // ───── Void / Refund (khi draw bị huỷ) ─────
 
@@ -104,9 +141,6 @@ export interface TicketEntryDoc {
    * Chỉ có khi entry bị void (draw void / admin void).
    */
   voidInfo?: {
-    /** Lý do huỷ. */
-    reason: string;
-
     /** Tiền cược gốc của entry này (= amount). */
     originalAmount: number;
 
@@ -121,9 +155,6 @@ export interface TicketEntryDoc {
 
     /** Thời điểm hoàn tiền. */
     refundedAt?: Date;
-
-    /** Ai/hệ thống nào thực hiện void. */
-    voidedBy?: string;
   };
 
   // ───── Timestamps ─────
@@ -138,29 +169,43 @@ export interface TicketEntryDoc {
 // ─────────────────────────────────────────────
 
 export interface EntryBoardSnapshot {
+  /** Mã board: "A", "B". */
   boardNo: string;
+  /** Loại chơi: "pick1" – "pick10". */
   playType: KenoPlayType;
   /** Số dạng string "01"-"80". */
   numbers: string[];
 }
 
 export interface EntrySideBetSnapshot {
+  /** Loại side bet: "bigSmall" hoặc "evenOdd". */
   playType: KenoPlayType;
+  /** Lựa chọn cụ thể: "big"/"small"/"bigSmallDraw"/... */
   bet: KenoBigSmallBet | KenoEvenOddBet;
 }
 
 export interface EntryBoardPayout {
+  /** Mã board: "A", "B". */
   boardNo: string;
+  /** Loại chơi: "pick1" – "pick10". */
   playType: KenoPlayType;
+  /** Số trùng với kết quả quay. */
   matchCount: number;
+  /** Số lượng số người chơi đã chọn (= numbers.length). */
   pickCount: number;
+  /** Tiền thắng cho board này (VND). 0 nếu không trúng. */
   winAmount: number;
 }
 
 export interface EntrySideBetPayout {
+  /** Loại side bet: "bigSmall" hoặc "evenOdd". */
   playType: KenoPlayType;
+  /** Lựa chọn cụ thể: "big"/"small"/"bigSmallDraw"/... */
   bet: KenoBigSmallBet | KenoEvenOddBet;
+  /** Kết quả: "big13Plus", "draw", "even1314"... */
   outcome: string;
+  /** true nếu trúng. */
   isWin: boolean;
+  /** Tiền thắng (VND). 0 nếu không trúng. */
   winAmount: number;
 }

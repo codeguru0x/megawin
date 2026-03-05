@@ -1,7 +1,8 @@
 /**
  * Use Case: Settle Entries (Batch) — Max 3D
  *
- * Xử lý 1 batch entries: load boards → match against draw result → persist lines → settle entry.
+ * Xử lý entries theo batch 500: load boards → match against draw result → persist lines → bulk settle entries.
+ * Chạy trong vòng lặp time-bounded (10 phút) cho đến hết entries hoặc hết thời gian.
  *
  * SETTLE FLOW (per entry):
  *   1. Load ticket boards (from entrySummary snapshot)
@@ -9,12 +10,12 @@
  *   3. Build TicketLineDoc for each line
  *   4. lineRepo.upsertLines(lineDocs)     ← persist LINES trước (idempotent)
  *   5. Aggregate payout tiers from all boards
- *   6. entryRepo.settleEntry(payout)      ← persist ENTRY
+ *   6. Collect settle ops → bulkSettleEntries() cuối batch
  *
  * CRASH-SAFE DESIGN:
  *   - Luôn query page 1 với filter status = "scheduled"
  *   - Entries đã settled tự filter ra → không cần track page offset
- *   - settleEntry() atomic: chỉ update nếu status = "scheduled" → no duplicate
+ *   - bulkSettleEntries() atomic per entry: chỉ update nếu status = "scheduled" → no duplicate
  *   - upsertLines() dùng bulkWrite + $setOnInsert → idempotent khi retry
  *   - done = true khi không còn entries nào status = "scheduled"
  */
@@ -37,37 +38,17 @@ import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { Max3dDrawResult } from "./types";
 
-const DEFAULT_BATCH_SIZE = 500;
+const BATCH_SIZE = 500;
+const MAX_EXECUTION_MS = 10 * 60 * 1000;
 
 export interface SettleEntriesBatchInput {
-  /** ID kỳ quay cần settle. */
   drawId: string;
-  /** Kết quả quay thưởng 20 bộ ba số. */
   result: Max3dDrawResult;
-  /** Bảng giải thưởng áp dụng. */
   prizeConfig: Max3dPrizeConfig;
 }
 
-export interface SettleAccumulator {
-  /** Tổng entries đã settle trong batch. */
-  totalSettled: number;
-  /** Tổng tiền trả thưởng (VND). */
-  totalPayoutAmount: number;
-  /** Tổng tiền thắng (VND). */
-  totalWinAmount: number;
-  /** Đếm số người thắng theo từng tier. */
-  tierWinnerCounts: Record<string, number>;
-  /** Tổng giải thưởng cố định đã trả. */
-  totalFixedPrizes: number;
-}
-
 export interface SettleEntriesBatchResult {
-  /** true nếu đã hết entries cần settle. */
   done: boolean;
-  /** Bộ tích lũy kết quả batch hiện tại. */
-  accumulator: SettleAccumulator;
-  /** Số entries đã settle trong batch này. */
-  batchSettled: number;
 }
 
 export class SettleEntriesBatchUseCase extends InternalUseCase<
@@ -105,155 +86,144 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       ],
     };
 
-    const entries = await this.entryRepo.getScheduledEntries(
-      drawId,
-      DEFAULT_BATCH_SIZE
-    );
-
-    if (entries.length === 0) {
-      return {
-        done: true,
-        accumulator: emptyAccumulator(),
-        batchSettled: 0,
-      };
-    }
-
-    const acc = emptyAccumulator();
-    let batchSettled = 0;
     const ticketCache = new Map<string, any>();
-    const now = new Date();
+    const startTime = Date.now();
 
-    for (const entry of entries) {
-      const ticketId = entry.ticketId;
-
-      let ticket = ticketCache.get(ticketId);
-      if (!ticket) {
-        ticket = await this.ticketRepo.getTicketById(ticketId);
-        if (ticket) ticketCache.set(ticketId, ticket);
-      }
-      if (!ticket) {
-        console.error(
-          `Ticket ${ticketId} not found for entry ${entry.id}, skipping.`
-        );
-        continue;
-      }
-
-      // ── Step 1-2: Match each board against draw result ──
-      const boards: EntryBoardSnapshot[] = entry.entrySummary.boards;
-      const boardResults: BoardMatchResult[] = [];
-      const allLineDocs: Array<Omit<TicketLineDoc, "_id">> = [];
-      let entryWinAmount = 0;
-      let globalLineIndex = 0;
-
-      for (const board of boards) {
-        if (board.isVoid) continue;
-
-        const boardMatch = matchBoard(
-          {
-            boardNo: board.boardNo,
-            playMode: board.playMode,
-            playType: board.playType,
-            triplets: board.triplets,
-          },
-          drawResult,
-          prizeConfig
-        );
-
-        boardResults.push(boardMatch);
-        entryWinAmount += boardMatch.winAmount;
-
-        // ── Step 3: Build line docs ──
-        for (const lineResult of boardMatch.lineResults) {
-          allLineDocs.push({
-            tenantId: ticket.tenantId,
-            accountId: ticket.accountId,
-            ticketId: String(ticket._id),
-            entryId: String(entry._id),
-            drawId: entry.drawId,
-            drawDate: entry.drawDate,
-            boardNo: board.boardNo,
-            lineIndex: globalLineIndex,
-            playMode: board.playMode,
-            playType: board.playType,
-            triplets: lineResult.triplets,
-            matchResult: {
-              tier: lineResult.tier,
-              winAmount: lineResult.winAmount,
-            },
-            createdAt: now,
-          });
-          globalLineIndex++;
-        }
-      }
-
-      // ── Step 4: Persist LINES trước (idempotent) ──
-      if (allLineDocs.length > 0) {
-        await this.lineRepo.upsertLines(allLineDocs);
-      }
-
-      // ── Step 5: Build payout tiers ──
-      const payoutTiers = buildPayoutTiers(boardResults);
-      const hasWin = entryWinAmount > 0;
-
-      // ── Step 6: Persist ENTRY ──
-      const settled = await this.entryRepo.settleEntry(
-        entry.id,
-        {
-          winAmount: entryWinAmount,
-          payoutAmount: entryWinAmount,
-          tiers: payoutTiers,
-          settledAt: now,
-          payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
-        },
-        hasWin ? "win" : "loss",
-        {
-          special: result.special as [string, string],
-          first: result.first as [string, string, string, string],
-          second: result.second as [string, string, string, string, string, string],
-          third: result.third as [string, string, string, string, string, string, string, string],
-          publishedAt: now,
-        }
+    while (Date.now() - startTime < MAX_EXECUTION_MS) {
+      const entries = await this.entryRepo.getScheduledEntries(
+        drawId,
+        BATCH_SIZE
       );
 
-      if (!settled) continue;
+      if (entries.length === 0) {
+        return { done: true };
+      }
 
-      // ── Accumulator (monitoring only) ──
-      acc.totalSettled++;
-      acc.totalWinAmount += entryWinAmount;
-      acc.totalPayoutAmount += entryWinAmount;
-      acc.totalFixedPrizes += entryWinAmount;
-      batchSettled++;
+      const now = new Date();
+      const settleOps: Array<{
+        entryId: string;
+        payout: {
+          winAmount: number;
+          payoutAmount: number;
+          tiers: Array<{
+            tier: string;
+            hitCount: number;
+            unitAmount: number;
+            amount: number;
+          }>;
+          settledAt: Date;
+          payoutStatus?: string;
+        };
+        outcome: string;
+        result: {
+          special: [string, string];
+          first: [string, string, string, string];
+          second: [string, string, string, string, string, string];
+          third: [string, string, string, string, string, string, string, string];
+          publishedAt: Date;
+        };
+      }> = [];
 
-      for (const br of boardResults) {
-        if (br.tier) {
-          acc.tierWinnerCounts[br.tier] =
-            (acc.tierWinnerCounts[br.tier] ?? 0) + 1;
+      for (const entry of entries) {
+        const ticketId = entry.ticketId;
+
+        let ticket = ticketCache.get(ticketId);
+        if (!ticket) {
+          ticket = await this.ticketRepo.getTicketById(ticketId);
+          if (ticket) ticketCache.set(ticketId, ticket);
         }
+        if (!ticket) {
+          console.error(
+            `Ticket ${ticketId} not found for entry ${entry.id}, skipping.`
+          );
+          continue;
+        }
+
+        const boards: EntryBoardSnapshot[] = entry.entrySummary.boards;
+        const boardResults: BoardMatchResult[] = [];
+        const allLineDocs: Array<Omit<TicketLineDoc, "_id">> = [];
+        let entryWinAmount = 0;
+        let globalLineIndex = 0;
+
+        for (const board of boards) {
+          if (board.isVoid) continue;
+
+          const boardMatch = matchBoard(
+            {
+              boardNo: board.boardNo,
+              playMode: board.playMode,
+              playType: board.playType,
+              triplets: board.triplets,
+            },
+            drawResult,
+            prizeConfig
+          );
+
+          boardResults.push(boardMatch);
+          entryWinAmount += boardMatch.winAmount;
+
+          for (const lineResult of boardMatch.lineResults) {
+            allLineDocs.push({
+              tenantId: ticket.tenantId,
+              accountId: ticket.accountId,
+              ticketId: String(ticket._id),
+              entryId: String(entry._id),
+              drawId: entry.drawId,
+              drawDate: entry.drawDate,
+              boardNo: board.boardNo,
+              lineIndex: globalLineIndex,
+              playMode: board.playMode,
+              playType: board.playType,
+              triplets: lineResult.triplets,
+              matchResult: {
+                tier: lineResult.tier,
+                winAmount: lineResult.winAmount,
+              },
+              createdAt: now,
+            });
+            globalLineIndex++;
+          }
+        }
+
+        if (allLineDocs.length > 0) {
+          await this.lineRepo.upsertLines(allLineDocs);
+        }
+
+        const payoutTiers = buildPayoutTiers(boardResults);
+        const hasWin = entryWinAmount > 0;
+
+        settleOps.push({
+          entryId: entry.id,
+          payout: {
+            winAmount: entryWinAmount,
+            payoutAmount: entryWinAmount,
+            tiers: payoutTiers,
+            settledAt: now,
+            payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
+          },
+          outcome: hasWin ? "win" : "loss",
+          result: {
+            special: result.special as [string, string],
+            first: result.first as [string, string, string, string],
+            second: result.second as [string, string, string, string, string, string],
+            third: result.third as [string, string, string, string, string, string, string, string],
+            publishedAt: now,
+          },
+        });
+      }
+
+      if (settleOps.length > 0) {
+        await this.entryRepo.bulkSettleEntries(settleOps);
       }
     }
 
-    return {
-      done: entries.length < DEFAULT_BATCH_SIZE,
-      accumulator: acc,
-      batchSettled,
-    };
+    return { done: false };
   }
 }
 
 // ─────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────
-
-function emptyAccumulator(): SettleAccumulator {
-  return {
-    totalSettled: 0,
-    totalPayoutAmount: 0,
-    totalWinAmount: 0,
-    tierWinnerCounts: {},
-    totalFixedPrizes: 0,
-  };
-}
-
 
 function buildPayoutTiers(boardResults: BoardMatchResult[]): Array<{
   tier: string;

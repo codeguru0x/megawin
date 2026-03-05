@@ -8,11 +8,7 @@
  * @module
  */
 
-import type {
-  Lotto535PlayType,
-  Lotto535PrizeTier,
-  Lotto535TicketDisplayStatus,
-} from "./enums";
+import type { Lotto535PlayType, Lotto535PrizeTier, Lotto535TicketDisplayStatus } from "./enums";
 
 // ─────────────────────────────────────────────
 // Input Types (mua vé)
@@ -102,7 +98,7 @@ export interface Lotto535BoardInput {
 /**
  * Input mua vé Lotto 5/35.
  *
- * Gửi lên `POST /player/lotto535/bets` qua `client.lotto535.placeBet()`.
+ * Gửi lên `POST /games/lotto535/bets` qua `client.lotto535.placeBet()`.
  *
  * @example
  * ```ts

@@ -18,11 +18,11 @@ keno-list-pending-tickets:
         authorizer:
           name: cognitoPlayerAuth
 
-keno-list-completed-tickets:
-  handler: src/handlers/keno/list-completed-tickets.handler
+keno-list-tickets:
+  handler: src/handlers/keno/list-tickets.handler
   events:
     - httpApi:
-        path: /games/keno/tickets/completed
+        path: /games/keno/tickets
         method: get
         authorizer:
           name: cognitoPlayerAuth

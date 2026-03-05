@@ -5,13 +5,13 @@
  * Idempotent, self-healing — chạy lại bao nhiêu lần cũng cho cùng kết quả.
  *
  * Input:  { drawId }
- * Output: { ticketsSynced }
+ * Output: { drawId, done }
  *
  * Flow (chunk-based, tối ưu DB calls):
  *   1. Cursor qua tickets có drawPlan.drawIds chứa drawId (batch 500)
  *   2. Batch aggregate entries summary cho 500 ticketIds cùng lúc
  *   3. BulkWrite sync summaries (conditional: chỉ ghi nếu processedCount mới >= cũ)
- *   4. Lặp cho đến hết tickets
+ *   4. Lặp cho đến hết tickets hoặc hết thời gian
  *
  * DB calls per chunk: 2 (aggregate + bulkWrite) thay vì 3N trước đây.
  * Race-safe: conditional processedCount filter tránh ghi đè khi nhiều draw settle đồng thời.
@@ -22,6 +22,7 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 
 const CHUNK_SIZE = 500;
+const MAX_EXECUTION_MS = 10 * 60 * 1000;
 
 export interface SyncTicketSummariesInput {
   drawId: string;
@@ -29,7 +30,7 @@ export interface SyncTicketSummariesInput {
 
 export interface SyncTicketSummariesResult {
   drawId: string;
-  ticketsSynced: number;
+  done: boolean;
 }
 
 export class SyncTicketSummariesUseCase extends InternalUseCase<
@@ -43,14 +44,14 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
     input: SyncTicketSummariesInput,
   ): Promise<SyncTicketSummariesResult> {
     const { drawId } = input;
-    let ticketsSynced = 0;
     let cursor: string | undefined;
+    const startTime = Date.now();
 
-    while (true) {
+    while (Date.now() - startTime < MAX_EXECUTION_MS) {
       const chunk = await this.ticketRepo.getTicketsByDrawIdCursor(drawId, cursor, CHUNK_SIZE);
 
       if (chunk.length === 0) {
-        break;
+        return { drawId, done: true };
       }
 
       const ticketIds = chunk.map((t) => t.ticketId);
@@ -77,14 +78,13 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
         await this.ticketRepo.bulkSyncSummaries(items);
       }
 
-      ticketsSynced += items.length;
       cursor = chunk[chunk.length - 1]!.ticketId;
 
       if (chunk.length < CHUNK_SIZE) {
-        break;
+        return { drawId, done: true };
       }
     }
 
-    return { drawId, ticketsSynced };
+    return { drawId, done: false };
   }
 }

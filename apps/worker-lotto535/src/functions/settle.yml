@@ -1,17 +1,31 @@
 settle-prepare:
   handler: src/handlers/settle/prepare-settle.handler
+  timeout: 900
 
 settle-entries:
   handler: src/handlers/settle/settle-entries.handler
+  timeout: 900
 
 settle-calculate-financials:
   handler: src/handlers/settle/calculate-financials.handler
+  timeout: 900
 
 settle-build-report:
   handler: src/handlers/settle/build-report.handler
+  timeout: 900
 
 settle-finalize:
   handler: src/handlers/settle/finalize-settle.handler
+  timeout: 900
 
 settle-dispatch-payouts:
   handler: src/handlers/settle/dispatch-payouts.handler
+  timeout: 900
+
+settle-sync-ticket-summaries:
+  handler: src/handlers/settle/sync-ticket-summaries.handler
+  timeout: 900
+
+settle-apply-split-bonuses:
+  handler: src/handlers/settle/apply-split-bonuses.handler
+  timeout: 900

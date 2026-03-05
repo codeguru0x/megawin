@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { PlayerClient } from "../../src";
 import type { Lotto535TicketPurchaseInput } from "../../src/lotto535";
-import { createTestClient, mockFetch, mockFetchError } from "../helpers";
+import { createTestClient, mockFetch, mockFetchError, BASE_URL, TOKENS } from "../helpers";
 
 describe("lotto535.placeBet", () => {
   let client: PlayerClient;
@@ -11,7 +11,7 @@ describe("lotto535.placeBet", () => {
     client = createTestClient();
   });
 
-  it("should call POST /player/lotto535/bets with correct body", async () => {
+  it("should call POST /games/lotto535/bets with correct body", async () => {
     const responseData = {
       ticketId: "TKT-L01",
       ticketNo: "L-20260225-001",
@@ -41,7 +41,7 @@ describe("lotto535.placeBet", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://api.test.com/player/lotto535/bets");
+    expect(url).toBe(`${BASE_URL}/games/lotto535/bets`);
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body)).toEqual(input);
   });
@@ -63,14 +63,11 @@ describe("lotto535.placeBet", () => {
     });
 
     const [, init] = fetchMock.mock.calls[0];
-    expect(init.headers["Authorization"]).toBe("Bearer test-token");
+    expect(init.headers["Authorization"]).toBe(`Bearer ${TOKENS.idToken}`);
   });
 
   it("should throw ApiClientError on DRAW_CLOSED", async () => {
-    vi.stubGlobal(
-      "fetch",
-      mockFetchError("DRAW_CLOSED", "Kỳ quay đã đóng bán"),
-    );
+    vi.stubGlobal("fetch", mockFetchError("DRAW_CLOSED", "Kỳ quay đã đóng bán"));
 
     await expect(
       client.lotto535.placeBet({

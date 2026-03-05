@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { PlayerClient } from "../src";
-import { createTestClient, mockFetch } from "./helpers";
+import { createTestClient, mockFetch, BASE_URL } from "./helpers";
 
 describe("player.getBalance", () => {
   let client: PlayerClient;
@@ -10,7 +10,7 @@ describe("player.getBalance", () => {
     client = createTestClient();
   });
 
-  it("should call GET /player/balance", async () => {
+  it("should call GET /me/balance", async () => {
     const balanceData = {
       playerId: "player-001",
       tenantId: "tenant-001",
@@ -24,7 +24,7 @@ describe("player.getBalance", () => {
 
     expect(result).toEqual(balanceData);
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://api.test.com/player/balance");
+    expect(url).toBe(`${BASE_URL}/me/balance`);
     expect(init.method).toBe("GET");
   });
 });
@@ -46,7 +46,7 @@ describe("player.getBetHistory", () => {
 
     expect(result).toEqual(historyData);
     const [url] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://api.test.com/player/bets");
+    expect(url).toBe(`${BASE_URL}/player/bets`);
   });
 
   it("should include query params", async () => {
@@ -86,6 +86,6 @@ describe("player.getGameResult", () => {
 
     expect(result).toEqual(resultData);
     const [url] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://api.test.com/player/games/keno/results/2026-02-25-001");
+    expect(url).toBe(`${BASE_URL}/player/games/keno/results/2026-02-25-001`);
   });
 });

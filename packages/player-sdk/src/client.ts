@@ -8,22 +8,18 @@
  * 2. Tenant server trả tokens về cho client app
  * 3. Client truyền tokens vào `createPlayerClient({ tokens })` hoặc `client.auth.setTokens()`
  * 4. SDK tự động refresh accessToken trước khi hết hạn 5 phút
- * 5. Mọi request API tự gửi Bearer accessToken
+ * 5. SDK gửi ID token (Bearer) mỗi request, API Gateway HTTP API v2 JWT authorizer verify
  *
  * @module
  */
 
 /// <reference lib="dom" />
-import {
-  createHttpClient,
-  type HttpClient,
-  type RequestConfig,
-} from "./http-client";
+import { createHttpClient, type HttpClient, type RequestConfig } from "./http-client";
 import { ApiClientError } from "./api-types";
-import { TokenManager, SessionStorageTokenStorage } from "./token-manager";
-import type { AuthTokens, TokenStorage } from "./types";
+import { TokenManager, SessionStorageTokenStorage } from "./auth/token-manager";
+import type { AuthTokens, TokenStorage } from "./auth/types";
 
-import { createAuthApi, type AuthApi } from "./apis/auth";
+import { createAuthApi, type AuthApi } from "./auth/auth-api";
 import { createKenoApi, type KenoApi } from "./apis/keno";
 import { createLotto535Api, type Lotto535Api } from "./apis/lotto535";
 import { createPlayerApi, type PlayerApi } from "./apis/player";
@@ -37,13 +33,13 @@ import { createPlayerApi, type PlayerApi } from "./apis/player";
  * ```ts
  * // Cơ bản — set tokens sau
  * const client = createPlayerClient({
- *   baseUrl: "https://api.megawin.com",
+ *   baseUrl: "https://api.domain.com",
  * });
  * await client.auth.setTokens(tokensFromServer);
  *
  * // Đầy đủ — truyền tokens ngay khi tạo
  * const client = createPlayerClient({
- *   baseUrl: "https://api.megawin.com",
+ *   baseUrl: "https://api.domain.com",
  *   tokens: {
  *     accessToken: "eyJ...",
  *     refreshToken: "abc...",
@@ -57,7 +53,7 @@ export interface PlayerSdkConfig {
   /**
    * Base URL của API Gateway.
    *
-   * @example "https://api.megawin.com"
+   * @example "https://api.domain.com"
    */
   baseUrl: string;
 
@@ -72,7 +68,7 @@ export interface PlayerSdkConfig {
    * // Tokens nhận từ tenant server
    * const tokens = await yourServer.getPlayerTokens(playerId);
    * const client = createPlayerClient({
-   *   baseUrl: "https://api.megawin.com",
+   *   baseUrl: "https://api.domain.com",
    *   tokens,
    * });
    * ```
@@ -179,7 +175,7 @@ export interface PlayerSdkConfig {
  *
  * // 1. Tạo client với tokens từ tenant server
  * const client = createPlayerClient({
- *   baseUrl: "https://api.megawin.com",
+ *   baseUrl: "https://api.domain.com",
  *   tokens: tokensFromServer,
  *   onSessionExpired: () => redirectToLogin(),
  * });
@@ -258,7 +254,7 @@ export interface PlayerClient {
  * const tokens = await yourServer.getPlayerTokens(playerId);
  *
  * const client = createPlayerClient({
- *   baseUrl: "https://api.megawin.com",
+ *   baseUrl: "https://api.domain.com",
  *   tokens,
  *   onSessionExpired: () => {
  *     window.location.href = "/login";
@@ -299,21 +295,19 @@ export function createPlayerClient(config: PlayerSdkConfig): PlayerClient {
 
   // ---- Token injection ----
 
-  async function injectBearerToken(
-    reqConfig: RequestConfig,
-  ): Promise<RequestConfig> {
+  async function injectBearerToken(reqConfig: RequestConfig): Promise<RequestConfig> {
     if (reqConfig.headers["Authorization"] === "") {
       const { Authorization: _, ...rest } = reqConfig.headers;
       return { ...reqConfig, headers: rest };
     }
 
-    const accessToken = await tokenManager.getAccessToken();
-    if (accessToken) {
+    const bearerToken = await tokenManager.getIdToken();
+    if (bearerToken) {
       return {
         ...reqConfig,
         headers: {
           ...reqConfig.headers,
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${bearerToken}`,
         },
       };
     }

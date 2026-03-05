@@ -1,3 +1,15 @@
+/**
+ * Làm tròn số đến `decimals` chữ số thập phân.
+ *
+ * roundTo(0.12345, 2)  → 0.12
+ * roundTo(1.005, 2)    → 1.01  (tránh floating-point quirk nhờ EPSILON)
+ * roundTo(3.456, 0)    → 3
+ */
+export function roundTo(value: number, decimals: number): number {
+  const factor = 10 ** decimals;
+  return Math.round((value + Number.EPSILON) * factor) / factor;
+}
+
 type FormatCompactCurrencyOptions = {
   decimals?: number; // số chữ số thập phân mặc định
   trimTrailingZeros?: boolean; // bỏ .0 / .00 ở cuối
@@ -22,7 +34,7 @@ export function formatCurrency(
     million = "M",
     billion = "B",
     trillion = "T",
-  }: FormatCompactCurrencyOptions = {}
+  }: FormatCompactCurrencyOptions = {},
 ): string {
   if (!Number.isFinite(value)) return String(value);
 
@@ -41,16 +53,13 @@ export function formatCurrency(
   };
 
   // Nghìn tỷ
-  if (n >= 1_000_000_000_000)
-    return `${sign}${format(n / 1_000_000_000_000, decimals)}${trillion}`;
+  if (n >= 1_000_000_000_000) return `${sign}${format(n / 1_000_000_000_000, decimals)}${trillion}`;
 
   // Tỷ
-  if (n >= 1_000_000_000)
-    return `${sign}${format(n / 1_000_000_000, decimals)}${billion}`;
+  if (n >= 1_000_000_000) return `${sign}${format(n / 1_000_000_000, decimals)}${billion}`;
 
   // Triệu
-  if (n >= 1_000_000)
-    return `${sign}${format(n / 1_000_000, decimals)}${million}`;
+  if (n >= 1_000_000) return `${sign}${format(n / 1_000_000, decimals)}${million}`;
 
   // Nghìn
   if (n >= 1_000) return `${sign}${format(n / 1_000, decimals)}${thousand}`;
@@ -98,7 +107,7 @@ type FormatNumberOptions = {
  */
 export function formatNumber(
   value: number,
-  { decimals = 0, trimTrailingZeros = true }: FormatNumberOptions = {}
+  { decimals = 0, trimTrailingZeros = true }: FormatNumberOptions = {},
 ): string {
   if (!Number.isFinite(value)) return String(value);
 

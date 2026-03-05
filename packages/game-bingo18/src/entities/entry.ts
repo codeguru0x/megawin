@@ -136,8 +136,6 @@ export interface TicketEntryDoc {
    * Toàn bộ tiền cược được hoàn 100%.
    */
   voidInfo?: {
-    /** Lý do huỷ, copy từ draw.voidInfo.reason. */
-    reason: string;
     /** Tiền cược gốc trước void = entry.amount. */
     originalAmount: number;
     /** Tiền hoàn trả = originalAmount (hoàn 100%). */
@@ -148,8 +146,6 @@ export interface TicketEntryDoc {
     voidedAt: Date;
     /** Thời điểm refund hoàn tất (tiền đã vào ví player). */
     refundedAt?: Date;
-    /** ID admin thực hiện void. undefined nếu void bởi hệ thống. */
-    voidedBy?: string;
   };
 
   // ───── Timestamps ─────

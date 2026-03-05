@@ -8,27 +8,31 @@
  */
 export const ENDPOINTS = {
   auth: {
-    refresh: "/auth/refresh",
-    logout: "/auth/logout",
+    refresh: "/auth/refresh-token",
   },
 
   player: {
-    balance: "/player/balance",
+    balance: "/me/balance",
     betHistory: "/player/bets",
     gameResult: (gameId: string, roundId: string) =>
       `/player/games/${gameId}/results/${roundId}` as const,
   },
 
   keno: {
-    placeBet: "/player/keno/bets",
-    getCurrentDraw: "/player/keno/draws/current",
-    listPendingTickets: "/player/keno/tickets/pending",
-    listCompletedTickets: "/player/keno/tickets/completed",
-    getTicketEntries: (ticketId: string) =>
-      `/player/keno/tickets/${ticketId}/entries` as const,
+    placeBet: "/games/keno/bets",
+    getCurrentDraw: "/games/keno/draws/current",
+    listPendingTickets: "/games/keno/tickets/pending",
+    listTickets: "/games/keno/tickets",
+    getTicketEntries: (ticketId: string) => `/games/keno/tickets/${ticketId}/entries` as const,
   },
 
   lotto535: {
-    placeBet: "/player/lotto535/bets",
+    placeBet: "/games/lotto535/bets",
+    getCurrentDraw: "/games/lotto535/draws/current",
+    getJackpot: "/games/lotto535/jackpot",
+    listPendingTickets: "/games/lotto535/tickets/pending",
+    listTickets: "/games/lotto535/tickets",
+    getTicketEntries: (ticketId: string) => `/games/lotto535/tickets/${ticketId}/entries` as const,
+    getEntryLines: (entryId: string) => `/games/lotto535/entries/${entryId}/lines` as const,
   },
 } as const;

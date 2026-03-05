@@ -1,6 +1,6 @@
 ---
-description: JSDoc standards for player-sdk package — ensures TypeDoc generates clear, complete API documentation for tenants
-globs: packages/player-sdk/src/**/*.ts
+description: JSDoc standards & README conventions for player-sdk — ensures TypeDoc generates clear, complete API documentation for tenants
+globs: packages/player-sdk/**/*.{ts,md}
 alwaysApply: false
 ---
 
@@ -36,6 +36,17 @@ All public exports MUST have complete JSDoc. Internal code marked `@internal` is
 
 - JSDoc on the const object (group description)
 - Inline comment or JSDoc on each value explaining its meaning
+
+## README.md Conventions
+
+When writing or updating `packages/player-sdk/README.md`:
+
+- SDK download link: `https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/latest/megawin-player-sdk.tgz`
+- Browser JS link: `https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/latest/megawin-player-sdk-browser.js`
+- Browser GZ link: `https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/latest/megawin-player-sdk-browser.js.gz`
+- API base URL placeholder: `https://api.domain.com` (NOT `api.megawin.com`)
+- Always include both NPM package install AND browser `<script>` tag usage
+- Versioned links use `/v{VERSION}/` instead of `/latest/`
 
 ## Good Example — API Method
 

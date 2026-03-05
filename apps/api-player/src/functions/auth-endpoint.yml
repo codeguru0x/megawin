@@ -1,0 +1,9 @@
+# Auth – Player account endpoints
+auth-refresh-token:
+  handler: src/handlers/auth/refresh-token.handler
+  environment:
+    COGNITO_PLAYER_POOL_CLIENT_ID: ${env:COGNITO_PLAYER_POOL_CLIENT_ID}
+  events:
+    - httpApi:
+        path: /auth/refresh-token
+        method: post

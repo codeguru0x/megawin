@@ -16,7 +16,6 @@ export { SettleEntriesBatchUseCase } from "./settle-entries";
 export type {
   SettleEntriesBatchInput,
   SettleEntriesBatchResult,
-  SettleAccumulator,
 } from "./settle-entries";
 
 export { CalculateFinancialsUseCase } from "./calculate-financials";

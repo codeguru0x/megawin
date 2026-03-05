@@ -27,11 +27,11 @@ mega645-list-pending-tickets:
         authorizer:
           name: cognitoPlayerAuth
 
-mega645-list-completed-tickets:
-  handler: src/handlers/mega645/list-completed-tickets.handler
+mega645-list-tickets:
+  handler: src/handlers/mega645/list-tickets.handler
   events:
     - httpApi:
-        path: /games/mega645/tickets/completed
+        path: /games/mega645/tickets
         method: get
         authorizer:
           name: cognitoPlayerAuth

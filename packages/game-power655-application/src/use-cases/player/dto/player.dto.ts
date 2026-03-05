@@ -101,6 +101,21 @@ export const TICKET_SORT_BY_VALUES: readonly TicketSortBy[] = [
   "drawDate",
 ];
 
+export interface PlayerListTicketsInput {
+  /** ID tenant (đại lý) của người chơi. */
+  tenantId: string;
+  /** ID tài khoản người chơi. */
+  accountId: string;
+  /** Số lượng vé mỗi trang. */
+  size: number;
+  /** Lọc từ ngày (YYYY-MM-DD, inclusive). */
+  from?: string;
+  /** Lọc đến ngày (YYYY-MM-DD, inclusive). */
+  to?: string;
+  /** Cursor phân trang (lấy từ nextCursor của response trước). */
+  cursor?: string;
+}
+
 export interface PlayerListPendingTicketsInput {
   /** ID tenant (đại lý) của người chơi. */
   tenantId: string;
@@ -108,6 +123,10 @@ export interface PlayerListPendingTicketsInput {
   accountId: string;
   /** Số lượng vé mỗi trang. */
   size: number;
+  /** Lọc từ ngày (YYYY-MM-DD, inclusive). */
+  from?: string;
+  /** Lọc đến ngày (YYYY-MM-DD, inclusive). */
+  to?: string;
   /** Cursor phân trang (lấy từ nextCursor của response trước). */
   cursor?: string;
 }

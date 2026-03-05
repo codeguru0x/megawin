@@ -39,7 +39,7 @@
     "@megawin/identity-application": "workspace:*",
     "@megawin/shared": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*",
-    "@middy/core": "^7.1.2",
+    "@middy/core": "^7.1.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {

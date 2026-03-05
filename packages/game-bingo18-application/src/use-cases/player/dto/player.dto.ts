@@ -64,6 +64,21 @@ export type TicketSortBy = (typeof TicketSortBy)[keyof typeof TicketSortBy];
 
 export const TICKET_SORT_BY_VALUES = Object.values(TicketSortBy);
 
+export interface PlayerListTicketsInput {
+  /** ID tenant của player. */
+  tenantId: string;
+  /** ID tài khoản player. */
+  accountId: string;
+  /** Số lượng vé mỗi trang. */
+  size: number;
+  /** Lọc từ ngày (YYYY-MM-DD, inclusive). */
+  from?: string;
+  /** Lọc đến ngày (YYYY-MM-DD, inclusive). */
+  to?: string;
+  /** Cursor để phân trang (opaque string từ response trước). */
+  cursor?: string;
+}
+
 export interface PlayerListPendingTicketsInput {
   /** ID tenant của player. */
   tenantId: string;
@@ -71,6 +86,10 @@ export interface PlayerListPendingTicketsInput {
   accountId: string;
   /** Số lượng vé mỗi trang. */
   size: number;
+  /** Lọc từ ngày (YYYY-MM-DD, inclusive). */
+  from?: string;
+  /** Lọc đến ngày (YYYY-MM-DD, inclusive). */
+  to?: string;
   /** Cursor để phân trang (opaque string từ response trước). */
   cursor?: string;
 }

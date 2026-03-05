@@ -1,22 +1,27 @@
+/**
+ * Use Case: Finalize Void (Mega 6/45)
+ *
+ * Step cuối của Void Draw Step Function.
+ * Aggregate tổng kết void từ DB, transition voiding → void + ghi voidSummary (1 atomic query).
+ *
+ * IDEMPOTENT: aggregate + voidComplete atomic.
+ */
+
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 
 export interface FinalizeVoidInput {
-  /** ID kỳ quay cần hoàn tất huỷ. */
   drawId: string;
 }
 
 export interface FinalizeVoidResult {
-  /** ID kỳ quay đã hoàn tất huỷ. */
   drawId: string;
-  /** Tổng số entry đã void. */
+  status: string;
   totalVoidedEntries: number;
-  /** Tổng tiền gốc của các entry đã void (VND). */
   totalOriginalAmount: number;
-  /** Tổng tiền đã hoàn trả (VND) — thường bằng totalOriginalAmount. */
   totalRefundAmount: number;
-  /** Thời điểm hoàn tất void (ISO datetime). */
   completedAt: string;
 }
 
@@ -32,15 +37,27 @@ export class FinalizeVoidUseCase extends InternalUseCase<
     const summary = await this.entryRepo.aggregateVoidRefundSummary(drawId);
     const completedAt = new Date();
 
-    await this.drawRepo.updateVoidSummary(drawId, {
+    const updated = await this.drawRepo.voidComplete(drawId, {
       totalVoidedEntries: summary.totalVoidedEntries,
       totalOriginalAmount: summary.totalOriginalAmount,
       totalRefundAmount: summary.totalRefundAmount,
       completedAt,
     });
 
+    if (!updated) {
+      const draw = await this.drawRepo.getDrawById(drawId);
+      if (draw?.status === DrawStatus.Void) {
+        console.log(`Draw ${drawId} already void, skipping transition.`);
+      } else {
+        throw new Error(
+          `Cannot finalize void draw ${drawId}. Current status: ${draw?.status}`,
+        );
+      }
+    }
+
     return {
       drawId,
+      status: DrawStatus.Void,
       totalVoidedEntries: summary.totalVoidedEntries,
       totalOriginalAmount: summary.totalOriginalAmount,
       totalRefundAmount: summary.totalRefundAmount,

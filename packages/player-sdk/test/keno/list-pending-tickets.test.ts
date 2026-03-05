@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { PlayerClient } from "../../src";
-import { createTestClient, mockFetch } from "../helpers";
+import { createTestClient, mockFetch, BASE_URL, TOKENS } from "../helpers";
 
 const TICKET_SUMMARY = {
   id: "65abc001",
@@ -22,7 +22,7 @@ describe("keno.listPendingTickets", () => {
     client = createTestClient();
   });
 
-  it("should call GET /player/keno/tickets/pending without params", async () => {
+  it("should call GET /games/keno/tickets/pending without params", async () => {
     const responseData = { tickets: [TICKET_SUMMARY], nextCursor: null, size: 20 };
     const fetchMock = mockFetch(responseData);
     vi.stubGlobal("fetch", fetchMock);
@@ -32,7 +32,7 @@ describe("keno.listPendingTickets", () => {
     expect(result).toEqual(responseData);
 
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://api.test.com/player/keno/tickets/pending");
+    expect(url).toBe(`${BASE_URL}/games/keno/tickets/pending`);
     expect(init.method).toBe("GET");
   });
 
@@ -43,7 +43,7 @@ describe("keno.listPendingTickets", () => {
     await client.keno.listPendingTickets({ size: 10, cursor: "65abc999" });
 
     const [url] = fetchMock.mock.calls[0];
-    expect(url).toContain("/player/keno/tickets/pending");
+    expect(url).toContain("/games/keno/tickets/pending");
     expect(url).toContain("size=10");
     expect(url).toContain("cursor=65abc999");
   });
@@ -69,6 +69,6 @@ describe("keno.listPendingTickets", () => {
     await client.keno.listPendingTickets();
 
     const [, init] = fetchMock.mock.calls[0];
-    expect(init.headers["Authorization"]).toBe("Bearer test-token");
+    expect(init.headers["Authorization"]).toBe(`Bearer ${TOKENS.idToken}`);
   });
 });

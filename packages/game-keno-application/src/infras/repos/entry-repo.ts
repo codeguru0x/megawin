@@ -19,14 +19,8 @@ import { BaseRepo } from "./base-repo";
 import { EntryMapper, type EntryEntity } from "../mappers/entry-mapper";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
 
-/** Singleton — reuse across lambda invocations. */
-let seqRepo: EntryChangeSeqRepository | null = null;
-function getSeqRepo(): EntryChangeSeqRepository {
-  if (!seqRepo) seqRepo = new EntryChangeSeqRepository();
-  return seqRepo;
-}
-
 export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
+  private readonly seqRepo = new EntryChangeSeqRepository();
   constructor() {
     super({
       collName: KenoCollections.TicketEntries,
@@ -36,7 +30,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
 
   /** Allocate 1 version mới từ global sequence. Dùng cho place-bet, settle, void... */
   async nextVersion(): Promise<Long> {
-    return getSeqRepo().nextSeq();
+    return this.seqRepo.nextSeq();
   }
 
   /** Insert 1 entry mới kèm version từ global sequence. */
@@ -109,55 +103,82 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   }
 
   /**
-   * Settle 1 entry: scheduled → settled + ghi result + payout + gán version.
-   * Atomic: chỉ update nếu entry đang ở status "scheduled".
+   * Bulk settle entries: scheduled → settled + ghi result/payout.
+   * Mỗi entry có data khác nhau (match result), gom 1 bulkWrite.
+   *
+   * hasCappablePrize: flag đánh dấu entry có board trúng top prize bậc 8/9/10.
+   * Được SettleEntries tính sẵn → ghi vào document để ApplyPayoutCaps query nhanh.
    */
-  async settleEntry(
-    entryId: string,
-    payout: {
-      winAmount: number;
-      payoutAmount: number;
-      boardPayouts: Array<{
-        boardNo: string;
-        playType: string;
-        matchCount: number;
-        pickCount: number;
+  async bulkSettleEntries(
+    items: Array<{
+      entryId: string;
+      /**
+       * true nếu entry có ≥1 board mà pickCount ∈ {8,9,10} VÀ matchCount === pickCount.
+       * Dùng cho ApplyPayoutCaps step query index-friendly.
+       */
+      hasCappablePrize: boolean;
+      payout: {
+        /** Tổng tiền thắng (giải cố định, chưa qua cap). */
         winAmount: number;
-      }>;
-      sideBetPayouts: Array<{
-        playType: string;
-        bet: string;
-        outcome: string;
-        isWin: boolean;
-        winAmount: number;
-      }>;
-      settledAt: Date;
-      payoutStatus?: string;
-    },
-    outcome: string,
-    result: {
-      winningNumbers: number[];
-      publishedAt: Date;
-      bigCount: number;
-      smallCount: number;
-      evenCount: number;
-      oddCount: number;
-    },
-  ): Promise<boolean> {
+        /** Tiền trả cho player (= winAmount, ApplyPayoutCaps có thể giảm sau). */
+        payoutAmount: number;
+        /** Chi tiết kết quả từng board cách chơi cơ bản. */
+        boardPayouts: Array<{
+          boardNo: string;
+          playType: string;
+          matchCount: number;
+          pickCount: number;
+          winAmount: number;
+        }>;
+        /** Chi tiết kết quả từng side bet. */
+        sideBetPayouts: Array<{
+          playType: string;
+          bet: string;
+          outcome: string;
+          isWin: boolean;
+          winAmount: number;
+        }>;
+        settledAt: Date;
+        payoutStatus?: string;
+      };
+      /** "win" hoặc "loss". */
+      outcome: string;
+      /** Snapshot kết quả quay gắn vào entry. */
+      result: {
+        winningNumbers: number[];
+        publishedAt: Date;
+        bigCount: number;
+        smallCount: number;
+        evenCount: number;
+        oddCount: number;
+      };
+    }>,
+  ): Promise<{ modifiedCount: number }> {
+    if (items.length === 0) return { modifiedCount: 0 };
+
     const version = await this.nextVersion();
-    return await this.updateOne(
-      { _id: new ObjectId(entryId), status: EntryStatus.Scheduled },
-      {
-        $set: {
-          status: EntryStatus.Settled,
-          result,
-          payout,
-          outcome,
-          version,
-          updatedAt: new Date(),
+    const now = new Date();
+
+    const ops = items.map((item) => ({
+      updateOne: {
+        filter: { _id: new ObjectId(item.entryId), status: EntryStatus.Scheduled },
+        update: {
+          $set: {
+            status: EntryStatus.Settled,
+            result: item.result,
+            payout: item.payout,
+            outcome: item.outcome,
+            // Flag để ApplyPayoutCaps query nhanh: chỉ ghi true khi thực sự có board cappable
+            ...(item.hasCappablePrize ? { hasCappablePrize: true } : {}),
+            version,
+            updatedAt: now,
+          },
         },
       },
-    );
+    }));
+
+    const result = await this.bulkWrite(ops);
+    return { modifiedCount: result.modifiedCount };
   }
 
   // ─── Aggregation ───
@@ -191,7 +212,6 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
 
   async aggregateSettledPayoutSummary(drawId: string): Promise<{
     totalSettled: number;
-    totalWinAmount: number;
     totalPayoutAmount: number;
     totalPrizes: number;
   }> {
@@ -201,7 +221,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
         $group: {
           _id: null,
           totalSettled: { $sum: 1 },
-          totalWinAmount: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
+          totalPrizes: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
           totalPayoutAmount: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
         },
       },
@@ -209,9 +229,8 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     const summary = (summaryResult[0] as any) ?? {};
     return {
       totalSettled: summary.totalSettled ?? 0,
-      totalWinAmount: summary.totalWinAmount ?? 0,
       totalPayoutAmount: summary.totalPayoutAmount ?? 0,
-      totalPrizes: summary.totalWinAmount ?? 0,
+      totalPrizes: summary.totalPrizes ?? 0,
     };
   }
 
@@ -287,6 +306,166 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       totalPayout: r.totalPayout,
       entryCount: r.entryCount,
     }));
+  }
+
+  // ─── Payout Caps ───
+  //
+  // Quy tắc Vietlott Keno: giải thưởng bậc 8/9/10 (trúng hết) có giới hạn mỗi kỳ.
+  // Nếu tổng số bộ trúng top prize > ngưỡng cấu hình (maxSetsForFixed),
+  // giải mỗi bộ = maxPerDraw / winnerCount (chia đều) thay vì giải cố định.
+  //
+  // SettleEntries gắn hasCappablePrize = true cho entries cần kiểm tra.
+  // Các method dưới đây dùng flag này để query nhanh (index-friendly).
+
+  /**
+   * Đếm số bộ (board) trúng top prize cho các bậc cần cap.
+   *
+   * "Top prize" = board có pickCount === matchCount (trúng hết tất cả số đã chọn):
+   *   - pick8 trùng 8/8 (giải cố định 200tr/bộ)
+   *   - pick9 trùng 9/9 (giải cố định 800tr/bộ)
+   *   - pick10 trùng 10/10 (giải cố định 2 tỷ/bộ)
+   *
+   * Chỉ đếm entries đã settled và có flag hasCappablePrize = true.
+   * Dùng flag để pre-filter trước khi $unwind → giảm khối lượng scan.
+   *
+   * Sau $unwind, dùng $or match cụ thể từng cặp {pickCount, matchCount}
+   * thay vì $expr (không index-friendly) — vì đã pre-filter nên dataset nhỏ.
+   *
+   * Return: số bộ (KHÔNG phải số entries — 1 entry có thể có 2 boards).
+   */
+  async aggregateTopPrizeWinnerCounts(drawId: string): Promise<{
+    /** Số bộ pick8 trùng 8/8. */
+    pick8Match8: number;
+    /** Số bộ pick9 trùng 9/9. */
+    pick9Match9: number;
+    /** Số bộ pick10 trùng 10/10. */
+    pick10Match10: number;
+  }> {
+    const result = await this.aggregate([
+      // Pre-filter: chỉ entries đã đánh dấu có board trúng top prize bậc 8/9/10.
+      // hasCappablePrize = true → entry có ít nhất 1 board cappable.
+      { $match: { drawId, status: EntryStatus.Settled, hasCappablePrize: true } },
+      // Tách mảng boardPayouts → 1 document per board
+      { $unwind: "$payout.boardPayouts" },
+      // Chỉ giữ board trúng hết ở bậc 8/9/10.
+      // Dùng $or match cụ thể từng cặp (pickCount, matchCount) thay vì $expr.
+      // Lý do: sau pre-filter hasCappablePrize dataset đã rất nhỏ,
+      // nhưng 1 entry có thể có 2 boards (A, B) — cần loại board không cappable.
+      // Ví dụ: board A = pick10 trùng 10 (cappable), board B = pick3 trùng 2 (không).
+      {
+        $match: {
+          $or: [
+            { "payout.boardPayouts.pickCount": 8, "payout.boardPayouts.matchCount": 8 },
+            { "payout.boardPayouts.pickCount": 9, "payout.boardPayouts.matchCount": 9 },
+            { "payout.boardPayouts.pickCount": 10, "payout.boardPayouts.matchCount": 10 },
+          ],
+        },
+      },
+      // Đếm theo pickCount
+      {
+        $group: {
+          _id: "$payout.boardPayouts.pickCount",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const counts = { pick8Match8: 0, pick9Match9: 0, pick10Match10: 0 };
+    for (const row of result) {
+      const r = row as any;
+      if (r._id === 8) counts.pick8Match8 = r.count;
+      else if (r._id === 9) counts.pick9Match9 = r.count;
+      else if (r._id === 10) counts.pick10Match10 = r.count;
+    }
+    return counts;
+  }
+
+  /**
+   * Lấy batch entries có board trúng top prize bậc 8/9/10 (cursor pagination).
+   *
+   * Dùng cho ApplyPayoutCaps khi cần update lại winAmount sau khi xác định
+   * tổng số bộ trúng vượt ngưỡng. Filter bằng hasCappablePrize = true + $elemMatch
+   * để chỉ lấy entries có board đúng bậc cần cap.
+   *
+   * @param drawId - ID kỳ quay
+   * @param pickCount - Bậc cần lấy (8, 9, hoặc 10)
+   * @param limit - Số entries tối đa
+   * @param lastEntryId - Cursor: lấy entries có _id > lastEntryId (pagination)
+   */
+  async getCappableEntries(
+    drawId: string,
+    pickCount: number,
+    limit: number,
+    lastEntryId?: string,
+  ): Promise<EntryEntity[]> {
+    const filter: any = {
+      drawId,
+      status: EntryStatus.Settled,
+      hasCappablePrize: true,
+      "payout.boardPayouts": {
+        $elemMatch: {
+          pickCount,
+          matchCount: pickCount,
+        },
+      },
+    };
+    if (lastEntryId) {
+      filter._id = { $gt: new ObjectId(lastEntryId) };
+    }
+    return await this.findMany(filter, { sort: { _id: 1 }, limit });
+  }
+
+  /**
+   * Bulk update winAmount cho entries bị cap.
+   *
+   * Khi tổng số bộ trúng top prize vượt ngưỡng (maxSetsForFixed), giải thưởng
+   * mỗi bộ = maxPerDraw / winnerCount. Method này cập nhật:
+   *   - payout.boardPayouts[].winAmount cho board bị cap
+   *   - payout.winAmount và payout.payoutAmount (tổng mới)
+   *
+   * Chỉ update entries status = Settled (atomic).
+   *
+   * @param items - Danh sách entries cần update với giải thưởng đã tính lại
+   */
+  async bulkApplyPayoutCap(
+    items: Array<{
+      entryId: string;
+      /** Tổng tiền thắng mới sau khi cap. */
+      newWinAmount: number;
+      /** Tiền trả player mới (= newWinAmount). */
+      newPayoutAmount: number;
+      /** boardPayouts đã recalc winAmount cho board bị cap. */
+      boardPayouts: Array<{
+        boardNo: string;
+        playType: string;
+        matchCount: number;
+        pickCount: number;
+        winAmount: number;
+      }>;
+    }>,
+  ): Promise<{ modifiedCount: number }> {
+    if (items.length === 0) return { modifiedCount: 0 };
+
+    const version = await this.nextVersion();
+    const now = new Date();
+
+    const ops = items.map((item) => ({
+      updateOne: {
+        filter: { _id: new ObjectId(item.entryId), status: EntryStatus.Settled },
+        update: {
+          $set: {
+            "payout.winAmount": item.newWinAmount,
+            "payout.payoutAmount": item.newPayoutAmount,
+            "payout.boardPayouts": item.boardPayouts,
+            version,
+            updatedAt: now,
+          },
+        },
+      },
+    }));
+
+    const result = await this.bulkWrite(ops);
+    return { modifiedCount: result.modifiedCount };
   }
 
   // ─── Payout Dispatch ───
@@ -368,45 +547,38 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   }
 
   /**
-   * Void 1 entry: chuyển status → void, ghi voidInfo + gán version.
-   * Atomic: chỉ update nếu entry đang ở status voidable.
+   * Bulk void entries: chuyển status → void, ghi voidInfo.
+   * Chỉ update entries đang ở status Scheduled (atomic per entry).
    */
-  async voidEntry(
-    entryId: string,
-    voidInfo: {
-      reason: string;
-      originalAmount: number;
-      refundAmount: number;
-      voidedBy?: string;
-    },
-  ): Promise<boolean> {
+  async bulkVoidEntries(
+    items: Array<{ entryId: string; amount: number }>,
+  ): Promise<{ modifiedCount: number }> {
+    if (items.length === 0) return { modifiedCount: 0 };
+
     const version = await this.nextVersion();
-    return await this.updateOne(
-      {
-        _id: new ObjectId(entryId),
-        status: EntryStatus.Scheduled,
-      },
-      {
-        $set: {
-          status: EntryStatus.Void,
-          voidInfo: {
-            ...voidInfo,
-            refundStatus: RefundStatus.Pending,
-            voidedAt: new Date(),
+    const now = new Date();
+
+    const ops = items.map((item) => ({
+      updateOne: {
+        filter: { _id: new ObjectId(item.entryId), status: EntryStatus.Scheduled },
+        update: {
+          $set: {
+            status: EntryStatus.Void,
+            voidInfo: {
+              originalAmount: item.amount,
+              refundAmount: item.amount,
+              refundStatus: RefundStatus.Pending,
+              voidedAt: now,
+            },
+            version,
+            updatedAt: now,
           },
-          version,
-          updatedAt: new Date(),
         },
       },
-    );
-  }
+    }));
 
-  /** Đếm entries voidable cho 1 draw. */
-  async countVoidableEntries(drawId: string): Promise<number> {
-    return await this.count({
-      drawId,
-      status: EntryStatus.Scheduled,
-    });
+    const result = await this.bulkWrite(ops);
+    return { modifiedCount: result.modifiedCount };
   }
 
   /** Lấy entries đã void nhưng chưa hoàn tiền. */

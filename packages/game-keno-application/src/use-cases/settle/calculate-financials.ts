@@ -12,6 +12,7 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { roundTo } from "@megawin/shared/utils/number";
 import { calculateKenoDrawFinancials } from "@megawin/game-keno/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -36,6 +37,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
   /** Tính tài chính tổng hợp Keno. Idempotent – tính từ DB. */
   protected async execute(input: CalculateFinancialsInput): Promise<CalculateFinancialsResult> {
     const { drawId, config } = input;
+
     const [tenantAgg, payoutSummary] = await Promise.all([
       this.entryRepo.aggregateRevenueByTenant(drawId),
       this.entryRepo.aggregateSettledPayoutSummary(drawId),
@@ -58,7 +60,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
         tenantId: t.tenantId,
         revenue: t.revenue,
         commission: fb?.commission ?? 0,
-        commissionRate: t.revenue > 0 ? t.commission / t.revenue : 0,
+        commissionRate: t.revenue > 0 ? roundTo(t.commission / t.revenue, 2) : 0,
         entryCount: t.entryCount,
       };
     });

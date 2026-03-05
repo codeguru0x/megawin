@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { PlayerClient } from "../../src";
-import { createTestClient, mockFetch, mockFetchError } from "../helpers";
+import { createTestClient, mockFetch, mockFetchError, BASE_URL, TOKENS } from "../helpers";
 
 const TICKET_WITH_ENTRIES = {
   ticket: {
@@ -29,7 +29,9 @@ const TICKET_WITH_ENTRIES = {
         sideBets: [],
       },
       result: {
-        winningNumbers: [1, 7, 15, 22, 33, 38, 44, 49, 55, 60, 63, 67, 70, 72, 74, 76, 78, 79, 80, 3],
+        winningNumbers: [
+          1, 7, 15, 22, 33, 38, 44, 49, 55, 60, 63, 67, 70, 72, 74, 76, 78, 79, 80, 3,
+        ],
         publishedAt: "2026-02-25T13:05:00Z",
         bigCount: 12,
         smallCount: 8,
@@ -70,7 +72,7 @@ describe("keno.getTicketEntries", () => {
     client = createTestClient();
   });
 
-  it("should call GET /player/keno/tickets/{ticketId}/entries", async () => {
+  it("should call GET /games/keno/tickets/{ticketId}/entries", async () => {
     const fetchMock = mockFetch(TICKET_WITH_ENTRIES);
     vi.stubGlobal("fetch", fetchMock);
 
@@ -79,7 +81,7 @@ describe("keno.getTicketEntries", () => {
     expect(result).toEqual(TICKET_WITH_ENTRIES);
 
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://api.test.com/player/keno/tickets/65abc001/entries");
+    expect(url).toBe(`${BASE_URL}/games/keno/tickets/65abc001/entries`);
     expect(init.method).toBe("GET");
   });
 
@@ -109,9 +111,7 @@ describe("keno.getTicketEntries", () => {
   it("should throw ApiClientError on NOT_FOUND", async () => {
     vi.stubGlobal("fetch", mockFetchError("NOT_FOUND", "Ticket not found", 404));
 
-    await expect(
-      client.keno.getTicketEntries("nonexistent"),
-    ).rejects.toThrow("Ticket not found");
+    await expect(client.keno.getTicketEntries("nonexistent")).rejects.toThrow("Ticket not found");
   });
 
   it("should include Bearer token in request", async () => {
@@ -121,6 +121,6 @@ describe("keno.getTicketEntries", () => {
     await client.keno.getTicketEntries("65abc001");
 
     const [, init] = fetchMock.mock.calls[0];
-    expect(init.headers["Authorization"]).toBe("Bearer test-token");
+    expect(init.headers["Authorization"]).toBe(`Bearer ${TOKENS.idToken}`);
   });
 });

@@ -134,58 +134,64 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   // ─── Settle ───
 
-  /**
-   * Atomic settle 1 entry.
-   * Chỉ update nếu status = "scheduled" → no duplicate khi retry.
-   */
-  async settleEntry(
-    entryId: string,
-    payout: {
-      winAmount: number;
-      payoutAmount: number;
-      tiers: Array<{
-        tier: string;
-        matchCount: number;
-        prizePerLine: number;
-        totalPrize: number;
-        isSplitBonus?: boolean;
-      }>;
-      settledAt: Date;
-      payoutStatus?: PayoutStatus;
-    },
-    outcome: "win" | "loss",
-    result: {
-      winningMain: MainTuple;
-      bonusNumber: BonusNumber;
-      publishedAt: Date;
-    },
-  ): Promise<boolean> {
+  async bulkSettleEntries(
+    items: Array<{
+      entryId: string;
+      payout: {
+        winAmount: number;
+        payoutAmount: number;
+        tiers: Array<{
+          tier: string;
+          matchCount: number;
+          prizePerLine: number;
+          totalPrize: number;
+          isSplitBonus?: boolean;
+        }>;
+        settledAt: Date;
+        payoutStatus?: PayoutStatus;
+      };
+      outcome: "win" | "loss";
+      result: {
+        winningMain: MainTuple;
+        bonusNumber: BonusNumber;
+        publishedAt: Date;
+      };
+    }>,
+  ): Promise<{ modifiedCount: number }> {
+    if (items.length === 0) return { modifiedCount: 0 };
+
     const version = await this.nextVersion();
+    const now = new Date();
+
+    const ops = items.map((item) => {
+      const $set: Record<string, unknown> = {
+        status: EntryStatus.Settled,
+        outcome: item.outcome,
+        result: item.result,
+        "payout.winAmount": item.payout.winAmount,
+        "payout.payoutAmount": item.payout.payoutAmount,
+        "payout.tiers": item.payout.tiers,
+        settledAt: item.payout.settledAt,
+        version,
+        updatedAt: now,
+      };
+
+      if (item.payout.payoutStatus) {
+        $set["payout.payoutStatus"] = item.payout.payoutStatus;
+        $set["payout.retryCount"] = 0;
+      }
+
+      return {
+        updateOne: {
+          filter: { _id: new ObjectId(item.entryId), status: EntryStatus.Scheduled },
+          update: { $set },
+        },
+      };
+    });
+
     const col = await this.getCollection();
-
-    const $set: Record<string, unknown> = {
-      status: EntryStatus.Settled,
-      outcome,
-      result,
-      "payout.winAmount": payout.winAmount,
-      "payout.payoutAmount": payout.payoutAmount,
-      "payout.tiers": payout.tiers,
-      settledAt: payout.settledAt,
-      version,
-      updatedAt: new Date(),
-    };
-
-    if (payout.payoutStatus) {
-      $set["payout.payoutStatus"] = payout.payoutStatus;
-      $set["payout.retryCount"] = 0;
-    }
-
-    const updateResult = await col.updateOne(
-      { _id: new ObjectId(entryId), status: EntryStatus.Scheduled },
-      { $set },
-    );
-
-    return updateResult.modifiedCount > 0;
+    const result = await col.bulkWrite(ops);
+    return { modifiedCount: result.modifiedCount };
   }
 
   // ─── Aggregate for financials ───
@@ -521,13 +527,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   // ─── Void ───
 
-  async countVoidableEntries(drawId: string): Promise<number> {
-    return await this.count({
-      drawId,
-      status: EntryStatus.Scheduled,
-    });
-  }
-
   async getVoidableEntriesBatch(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
     return await this.findMany(
       {
@@ -538,39 +537,36 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     );
   }
 
-  async voidEntry(
-    entryId: string,
-    info: {
-      reason: string;
-      originalAmount: number;
-      refundAmount: number;
-      voidedBy?: string;
-    },
-  ): Promise<boolean> {
+  async bulkVoidEntries(
+    items: Array<{ entryId: string; amount: number }>,
+  ): Promise<{ modifiedCount: number }> {
+    if (items.length === 0) return { modifiedCount: 0 };
+
     const version = await this.nextVersion();
-    const col = await this.getCollection();
     const now = new Date();
 
-    const result = await col.updateOne(
-      {
-        _id: new ObjectId(entryId),
-        status: EntryStatus.Scheduled,
-      },
-      {
-        $set: {
-          status: EntryStatus.Void,
-          voidedAt: now,
-          "refund.refundAmount": info.refundAmount,
-          "refund.refundStatus": "pending",
-          "refund.reason": info.reason,
-          "refund.retryCount": 0,
-          version,
-          updatedAt: now,
+    const ops = items.map((item) => ({
+      updateOne: {
+        filter: { _id: new ObjectId(item.entryId), status: EntryStatus.Scheduled },
+        update: {
+          $set: {
+            status: EntryStatus.Void,
+            voidedAt: now,
+            refund: {
+              refundAmount: item.amount,
+              refundStatus: "pending",
+              reason: "",
+              retryCount: 0,
+            },
+            version,
+            updatedAt: now,
+          },
         },
       },
-    );
+    }));
 
-    return result.modifiedCount > 0;
+    const result = await this.bulkWrite(ops);
+    return { modifiedCount: result.modifiedCount };
   }
 
   async getPendingRefundEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {

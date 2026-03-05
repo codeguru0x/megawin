@@ -96,16 +96,16 @@ provider:
       cognitoPlayerAuth:
         type: jwt
         identitySource: $request.header.Authorization
-        issuerUrl: ${env:COGNITO_ISSUER_URL}
+        issuerUrl: ${env:COGNITO_PLAYER_POOL_ISSUER_URL}
         audience:
-          - ${env:COGNITO_CLIENT_ID}
+          - ${env:COGNITO_PLAYER_POOL_CLIENT_ID}
 
 build:
   esbuild:
     configFile: ./esbuild.config.mjs
 
 functions:
-  - ${file(src/functions/balance-endpoint.yml)}
+  - ${file(src/functions/auth-endpoint.yml)}
   - ${file(src/functions/lotto535-endpoint.yml)}
   - ${file(src/functions/keno-endpoint.yml)}
   - ${file(src/functions/power655-endpoint.yml)}

@@ -5,7 +5,7 @@
  */
 
 import { Power655Collections } from "@megawin/game-power655/entities";
-import { TicketStatus } from "@megawin/game-core/entities";
+import { TicketStatus, ALL_LISTABLE_STATUSES } from "@megawin/game-core/entities";
 import type { AnyBulkWriteOperation, Document, Filter } from "mongodb";
 import { ObjectId } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -84,51 +84,65 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     tenantId: string,
     accountId: string,
     limit: number,
-    cursor?: string,
-  ): Promise<TicketEntity[]> {
-    const filter: Record<string, unknown> = {
-      tenantId,
-      accountId,
-      status: { $in: PENDING_STATUSES },
-    };
-    if (cursor) {
-      filter._id = { $lt: new ObjectId(cursor) };
-    }
-    return await this.findMany(filter, { sort: { _id: -1 }, limit });
-  }
-
-  /**
-   * Vé đã xử lý xong (completed/refunded/void).
-   * Hỗ trợ lọc theo khoảng ngày + cursor-based pagination.
-   */
-  async getCompletedTickets(
-    tenantId: string,
-    accountId: string,
-    limit: number,
-    options: {
-      sortBy: string;
+    opts?: {
       from?: Date;
       to?: Date;
       cursor?: string;
     },
   ): Promise<TicketEntity[]> {
+    const { from, to, cursor } = opts ?? {};
+
     const filter: Record<string, unknown> = {
       tenantId,
       accountId,
-      status: { $in: COMPLETED_STATUSES },
+      status: { $in: PENDING_STATUSES },
     };
 
-    const sortField = options.sortBy === "drawDate" ? "drawPlan.drawIds" : "createdAt";
-
-    if (options.from || options.to) {
+    if (from || to) {
       const dateRange: Record<string, unknown> = {};
-      if (options.from) dateRange.$gte = options.from;
-      if (options.to) dateRange.$lte = options.to;
+      if (from) dateRange.$gte = from;
+      if (to) dateRange.$lte = to;
       filter.createdAt = dateRange;
     }
 
-    if (options.cursor) {
-      filter._id = { $lt: new ObjectId(options.cursor) };
+    if (cursor) {
+      filter._id = { $lt: new ObjectId(cursor) };
+    }
+
+    return await this.findMany(filter, { sort: { _id: -1 }, limit });
+  }
+
+  /**
+   * List tất cả vé (cả pending + completed).
+   * Lọc theo ngày cược (createdAt). Cursor = _id, sort desc.
+   */
+  async getTickets(
+    tenantId: string,
+    accountId: string,
+    limit: number,
+    opts?: {
+      from?: Date;
+      to?: Date;
+      cursor?: string;
+    },
+  ): Promise<TicketEntity[]> {
+    const { from, to, cursor } = opts ?? {};
+
+    const filter: Record<string, unknown> = {
+      tenantId,
+      accountId,
+      status: { $in: ALL_LISTABLE_STATUSES as string[] },
+    };
+
+    if (from || to) {
+      const dateRange: Record<string, unknown> = {};
+      if (from) dateRange.$gte = from;
+      if (to) dateRange.$lte = to;
+      filter.createdAt = dateRange;
+    }
+
+    if (cursor) {
+      filter._id = { $lt: new ObjectId(cursor) };
     }
 
     return await this.findMany(filter, { sort: { _id: -1 }, limit });

@@ -1,7 +1,7 @@
 /**
  * Use Case: Finalize Settle (Mega 6/45)
  *
- * Bước cuối: settling → settled + ghi jackpot snapshot + cập nhật cycle.
+ * Bước cuối: settling → settled + ghi jackpot snapshot (atomic, 1 query) + cập nhật cycle.
  * CRASH-SAFE + IDEMPOTENT.
  */
 
@@ -56,9 +56,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  protected async execute(
-    input: FinalizeSettleInput
-  ): Promise<FinalizeSettleResult> {
+  protected async execute(input: FinalizeSettleInput): Promise<FinalizeSettleResult> {
     const {
       drawId,
       closingJackpot,
@@ -68,24 +66,20 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       splitDetails,
     } = input;
 
-    const updated = await this.drawRepo.transitionStatus(
-      drawId,
-      DrawStatus.Settling,
-      DrawStatus.Settled
-    );
+    const updated = await this.drawRepo.settleComplete(drawId, {
+      openingAmount: input.jackpotOpeningAmount,
+      closingAmount: closingJackpot,
+      isSplitCycle: isSplitCycle || undefined,
+    });
 
     if (!updated) {
       const draw = await this.drawRepo.getDrawById(drawId);
       if (draw?.status === DrawStatus.Settled) {
         console.log(`Draw ${drawId} already settled, skipping transition.`);
       } else {
-        throw new Error(
-          `Cannot finalize draw ${drawId}. Current status: ${draw?.status}`
-        );
+        throw new Error(`Cannot finalize draw ${drawId}. Current status: ${draw?.status}`);
       }
     }
-
-    await this.writeJackpotSnapshot(input);
 
     await this.updateJackpotCycle(input);
 
@@ -98,27 +92,8 @@ export class FinalizeSettleUseCase extends InternalUseCase<
     };
   }
 
-  private async writeJackpotSnapshot(
-    input: FinalizeSettleInput
-  ): Promise<void> {
-    const { drawId, jackpotOpeningAmount, closingJackpot, isSplitCycle } =
-      input;
-
-    await this.drawRepo.updateJackpot(drawId, {
-      openingAmount: jackpotOpeningAmount,
-      closingAmount: closingJackpot,
-      isSplitCycle: isSplitCycle || undefined,
-    });
-  }
-
   private async updateJackpotCycle(input: FinalizeSettleInput): Promise<void> {
-    const {
-      drawId,
-      closingJackpot,
-      hasJackpotWinner,
-      isSplitCycle,
-      splitDetails,
-    } = input;
+    const { drawId, closingJackpot, hasJackpotWinner, isSplitCycle, splitDetails } = input;
 
     const activeCycle = await this.cycleRepo.getActiveCycle();
     if (!activeCycle) return;
@@ -167,7 +142,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
                 bonusPerWinner: d.bonusPerWinner,
                 totalAmount: d.totalAmount,
               },
-            ])
+            ]),
           ),
           totalWinners,
           totalPaid,

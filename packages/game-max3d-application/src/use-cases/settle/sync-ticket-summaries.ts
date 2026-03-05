@@ -4,7 +4,7 @@
  * Recompute ticket progress/settlement/voidSummary từ entries.
  * Idempotent, self-healing — chạy lại bao nhiêu lần cũng cho cùng kết quả.
  *
- * Flow (chunk-based):
+ * Flow (chunk-based, time-bounded):
  *   1. Cursor qua tickets có drawPlan.drawIds chứa drawId (batch 500)
  *   2. Batch aggregate entries summary
  *   3. BulkWrite sync summaries (conditional processedCount)
@@ -19,6 +19,7 @@ import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { ObjectId } from "mongodb";
 
 const CHUNK_SIZE = 500;
+const MAX_EXECUTION_MS = 10 * 60 * 1000;
 
 export interface SyncTicketSummariesInput {
   drawId: string;
@@ -26,7 +27,7 @@ export interface SyncTicketSummariesInput {
 
 export interface SyncTicketSummariesResult {
   drawId: string;
-  ticketsSynced: number;
+  done: boolean;
 }
 
 export class SyncTicketSummariesUseCase extends InternalUseCase<
@@ -40,12 +41,12 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
     input: SyncTicketSummariesInput,
   ): Promise<SyncTicketSummariesResult> {
     const { drawId } = input;
-    let ticketsSynced = 0;
     let cursor: string | undefined;
+    const startTime = Date.now();
 
-    while (true) {
+    while (Date.now() - startTime < MAX_EXECUTION_MS) {
       const chunk = await this.ticketRepo.getTicketsByDrawIdCursor(drawId, cursor, CHUNK_SIZE);
-      if (chunk.length === 0) break;
+      if (chunk.length === 0) return { drawId, done: true };
 
       const ticketIds = chunk.map((t) => new ObjectId(t.ticketId));
       const totalDrawsMap = new Map(chunk.map((t) => [t.ticketId, t.totalDraws]));
@@ -66,11 +67,10 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
         await this.ticketRepo.bulkSyncSummaries(items);
       }
 
-      ticketsSynced += items.length;
       cursor = chunk[chunk.length - 1]!.ticketId;
-      if (chunk.length < CHUNK_SIZE) break;
+      if (chunk.length < CHUNK_SIZE) return { drawId, done: true };
     }
 
-    return { drawId, ticketsSynced };
+    return { drawId, done: false };
   }
 }
