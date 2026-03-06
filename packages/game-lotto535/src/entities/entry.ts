@@ -44,7 +44,7 @@ export interface TicketEntryDoc {
   username: string;
 
   /** Tham chiếu ticket gốc (ObjectId). */
-  ticketId: unknown;
+  ticketId: string;
 
   // ───── Draw Snapshot ─────
 
@@ -229,16 +229,14 @@ export interface TicketEntryDoc {
 export interface EntryBoardSnapshot {
   /** Mã board ("A", "B", "C", "D", "E"). */
   boardNo: string;
-  /** Đánh dấu board bị void (admin void), vẫn giữ lịch sử. */
-  isVoid?: boolean;
   /** Kiểu chơi của board (standard, mainCover, specialCover...). */
   playType: PlayType;
 
-  /** Các số chính user chọn (raw selection, không phải lines con). */
-  mainNumbers: number[];
+  /** Các số chính user chọn — string zero-padded, sorted tăng dần. */
+  mainNumbers: string[];
 
-  /** Các số đặc biệt user chọn. */
-  specialNumbers: number[];
+  /** Các số đặc biệt user chọn — string zero-padded, sorted tăng dần. */
+  specialNumbers: string[];
 
   /** Số line con sinh ra từ board. */
   expandedLines: number;

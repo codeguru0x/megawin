@@ -41,35 +41,22 @@ import { usePublishResult } from "../use-draws";
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
 function validateMainNumbers(nums: string[]): string | null {
-  const parsed = nums.map(Number);
   for (let i = 0; i < POWER655_MAIN_COUNT; i++) {
-    const n = parsed[i];
-    if (
-      !n ||
-      !Number.isInteger(n) ||
-      n < POWER655_MAIN_MIN ||
-      n > POWER655_MAIN_MAX
-    ) {
-      return `Số chính #${i + 1} phải là số nguyên từ ${pad2(POWER655_MAIN_MIN)} đến ${pad2(POWER655_MAIN_MAX)}.`;
+    const n = nums[i];
+    if (!n || !/^(0[1-9]|[1-4][0-9]|5[0-5])$/.test(n)) {
+      return `Số chính #${i + 1} phải là chuỗi từ ${pad2(POWER655_MAIN_MIN)} đến ${pad2(POWER655_MAIN_MAX)}.`;
     }
   }
-  if (new Set(parsed).size !== POWER655_MAIN_COUNT)
+  if (new Set(nums).size !== POWER655_MAIN_COUNT)
     return "Các số chính phải khác nhau.";
   return null;
 }
 
 function validateBonusNumber(val: string, mainNumbers: string[]): string | null {
-  const n = Number(val);
-  if (
-    !n ||
-    !Number.isInteger(n) ||
-    n < POWER655_MAIN_MIN ||
-    n > POWER655_MAIN_MAX
-  ) {
-    return `Số bonus phải là số nguyên từ ${pad2(POWER655_MAIN_MIN)} đến ${pad2(POWER655_MAIN_MAX)}.`;
+  if (!val || !/^(0[1-9]|[1-4][0-9]|5[0-5])$/.test(val)) {
+    return `Số bonus phải là chuỗi từ ${pad2(POWER655_MAIN_MIN)} đến ${pad2(POWER655_MAIN_MAX)}.`;
   }
-  const mainSet = new Set(mainNumbers.map(Number));
-  if (mainSet.has(n)) {
+  if (mainNumbers.includes(val)) {
     return "Số bonus không được trùng với các số chính.";
   }
   return null;
@@ -106,12 +93,12 @@ export function PublishResultAction({
     }
 
     const body: {
-      winningMain: number[];
-      winningBonus: number;
+      winningMain: string[];
+      winningBonus: string;
       vietlottRef?: { drawPeriod: string; drawDate: string };
     } = {
-      winningMain: mainNumbers.map(Number),
-      winningBonus: Number(bonusNumber),
+      winningMain: mainNumbers.map((n) => n.padStart(2, "0")),
+      winningBonus: bonusNumber.padStart(2, "0"),
     };
 
     if (vietlotPeriod.trim()) {

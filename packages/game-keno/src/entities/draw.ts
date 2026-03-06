@@ -75,8 +75,8 @@ export interface DrawDoc {
    * Set khi status chuyển sang "published".
    */
   result?: {
-    /** 20 số trúng thưởng, sorted tăng dần. */
-    winningNumbers: number[];
+    /** 20 số trúng thưởng dạng string "01"-"80", giữ nguyên thứ tự quay. */
+    winningNumbers: string[];
 
     /** Thời điểm công bố. */
     publishedAt: Date;

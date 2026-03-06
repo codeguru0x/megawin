@@ -140,8 +140,8 @@ export interface EntryBoardSnapshot {
   isVoid?: boolean;
   /** Kiểu chơi (standard / bao5 / bao7-18 / quickPick). */
   playType: PlayType;
-  /** Danh sách số chính người chơi đã chọn (1-45). */
-  mainNumbers: number[];
+  /** Danh sách số chính người chơi đã chọn ("01"-"45"). */
+  mainNumbers: string[];
   /**
    * Số line sau khi expand từ board.
    * - standard / quickPick: 1

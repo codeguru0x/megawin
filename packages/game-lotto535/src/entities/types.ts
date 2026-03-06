@@ -4,9 +4,8 @@
  * Các kiểu dữ liệu nhỏ dùng chung giữa entities.
  * Tách file riêng để tránh circular import.
  *
- * Quy ước chung cho mọi game:
- * - Số luôn lưu dạng number (không phải string "01").
- * - Hiển thị padStart ở UI layer.
+ * Quy ước chung:
+ * - Số lưu dạng string zero-padded ("01"-"35") — WYSIWYG, khớp display.
  * - Tiền lưu dạng integer VND (không float).
  * - Ngày report dùng ISODateString "YYYY-MM-DD".
  * - Timestamp dùng Date.
@@ -44,7 +43,7 @@ export const DrawNo = {
 export const DRAW_NO_VALUES: readonly DrawNo[] = [DrawNo.Morning, DrawNo.Evening];
 
 // ─────────────────────────────────────────────
-// Lotto 5/35 Number Ranges
+// Lotto 5/35 Number Ranges (dùng cho validation)
 // ─────────────────────────────────────────────
 
 /** Giá trị nhỏ nhất của số chính (1). */
@@ -63,26 +62,40 @@ export const LOTTO535_SPECIAL_MIN = 1;
 export const LOTTO535_SPECIAL_MAX = 12;
 
 // ─────────────────────────────────────────────
+// String Number Helpers
+// ─────────────────────────────────────────────
+
+/** Tất cả số chính hợp lệ dạng string zero-padded: "01"-"35". */
+export const ALL_MAIN_NUMBERS: readonly string[] = Array.from(
+  { length: LOTTO535_MAIN_MAX - LOTTO535_MAIN_MIN + 1 },
+  (_, i) => String(i + LOTTO535_MAIN_MIN).padStart(2, "0"),
+);
+
+/** Set tra nhanh O(1) cho số chính hợp lệ. */
+export const VALID_MAIN_NUMBER_SET: ReadonlySet<string> = new Set(ALL_MAIN_NUMBERS);
+
+/** Set tra nhanh O(1) cho số đặc biệt hợp lệ: "01"-"12". */
+export const VALID_SPECIAL_NUMBER_SET: ReadonlySet<string> = new Set(
+  Array.from({ length: LOTTO535_SPECIAL_MAX - LOTTO535_SPECIAL_MIN + 1 }, (_, i) =>
+    String(i + LOTTO535_SPECIAL_MIN).padStart(2, "0"),
+  ),
+);
+
+// ─────────────────────────────────────────────
 // Tuple & Value Types
 // ─────────────────────────────────────────────
 
 /**
- * Tuple 5 số chính – enforce đúng 5 phần tử tại compile time.
- * Luôn sorted tăng dần để canonicalize (dễ so sánh, hash).
+ * Tuple 5 số chính dạng string zero-padded.
+ * Khi lưu player selection: sorted tăng dần (canonical form).
+ * Khi lưu draw result: giữ nguyên thứ tự quay (draw order).
  */
-export type MainTuple = readonly [
-  number,
-  number,
-  number,
-  number,
-  number,
-];
+export type MainTuple = readonly [string, string, string, string, string];
 
 /**
- * Số đặc biệt – 1 số từ 1 đến 12.
- * Alias cho rõ ý nghĩa domain, thực tế là number.
+ * Số đặc biệt – 1 string zero-padded "01"-"12".
  */
-export type Special = number;
+export type Special = string;
 
 // ─────────────────────────────────────────────
 // Board Selection (user input)
@@ -98,11 +111,11 @@ export type Special = number;
  * - quickPick:    empty (hệ thống tự sinh)
  */
 export interface BoardSelection {
-  /** Danh sách số chính (1-35), unique, khuyến nghị sorted tăng dần. */
-  mainNumbers: number[];
+  /** Danh sách số chính ("01"-"35"), unique, sorted tăng dần. */
+  mainNumbers: string[];
 
-  /** Danh sách số đặc biệt (1-12), unique, khuyến nghị sorted tăng dần. */
-  specialNumbers: number[];
+  /** Danh sách số đặc biệt ("01"-"12"), unique, sorted tăng dần. */
+  specialNumbers: string[];
 }
 
 // ─────────────────────────────────────────────
@@ -110,17 +123,15 @@ export interface BoardSelection {
 // ─────────────────────────────────────────────
 
 /**
- * Một line con (bộ số con) sau khi expand từ board:
- * - main: đúng 5 số chính, sorted tăng dần
- * - special: đúng 1 số đặc biệt
- *
- * Đây là đơn vị nhỏ nhất để so sánh với kết quả quay.
+ * Một line con sau khi expand từ board:
+ * - main: đúng 5 số chính string, sorted tăng dần
+ * - special: đúng 1 số đặc biệt string
  */
 export interface LineValue {
-  /** 5 số chính, sorted tăng dần (canonical form). */
+  /** 5 số chính string, sorted tăng dần (canonical form). */
   main: MainTuple;
 
-  /** 1 số đặc biệt. */
+  /** 1 số đặc biệt string. */
   special: Special;
 }
 

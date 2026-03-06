@@ -9,8 +9,7 @@
 
 import { PlayType } from "../entities/enums";
 import {
-  MEGA645_MAIN_MAX,
-  MEGA645_MAIN_MIN,
+  ALL_MAIN_NUMBERS,
   MEGA645_MAIN_COUNT,
   type BoardSelection,
   type LineValue,
@@ -34,8 +33,8 @@ function* combinations<T>(arr: T[], k: number): Generator<T[]> {
   }
 }
 
-function toMainTuple(nums: number[]): MainTuple {
-  const sorted = [...nums].sort((a, b) => a - b);
+function toMainTuple(nums: string[]): MainTuple {
+  const sorted = [...nums].sort();
   return sorted as unknown as MainTuple;
 }
 
@@ -56,7 +55,7 @@ function expandBao5(sel: BoardSelection): LineValue[] {
   const chosen = new Set(sel.mainNumbers);
   const lines: LineValue[] = [];
 
-  for (let n = MEGA645_MAIN_MIN; n <= MEGA645_MAIN_MAX; n++) {
+  for (const n of ALL_MAIN_NUMBERS) {
     if (chosen.has(n)) continue;
     const mainNums = [...sel.mainNumbers, n];
     lines.push({ main: toMainTuple(mainNums) });
@@ -69,7 +68,7 @@ function expandBao5(sel: BoardSelection): LineValue[] {
  * Bao 7-18: chọn N số, expand thành C(N,6) lines.
  */
 function expandBaoN(sel: BoardSelection): LineValue[] {
-  const sorted = [...sel.mainNumbers].sort((a, b) => a - b);
+  const sorted = [...sel.mainNumbers].sort();
   const lines: LineValue[] = [];
 
   for (const combo of combinations(sorted, MEGA645_MAIN_COUNT)) {

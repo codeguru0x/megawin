@@ -30,10 +30,8 @@
 import { PlayType } from "../entities/enums";
 import {
   LOTTO535_MAIN_COUNT,
-  LOTTO535_MAIN_MAX,
-  LOTTO535_MAIN_MIN,
-  LOTTO535_SPECIAL_MAX,
-  LOTTO535_SPECIAL_MIN,
+  VALID_MAIN_NUMBER_SET,
+  VALID_SPECIAL_NUMBER_SET,
   type BoardSelection,
 } from "../entities/types";
 
@@ -72,10 +70,7 @@ const MAIN_COVER_4_LINES = 31;
  * @param selection - Lựa chọn số
  * @returns Số line con (bộ số) được tạo ra
  */
-export function calculateLineCount(
-  playType: PlayType,
-  selection: BoardSelection,
-): number {
+export function calculateLineCount(playType: PlayType, selection: BoardSelection): number {
   switch (playType) {
     case PlayType.Standard:
     case PlayType.QuickPick:
@@ -114,10 +109,7 @@ export interface ValidationResult {
  * @param selection - Lựa chọn số cần validate
  * @returns Kết quả validate
  */
-export function validateSelection(
-  playType: PlayType,
-  selection: BoardSelection,
-): ValidationResult {
+export function validateSelection(playType: PlayType, selection: BoardSelection): ValidationResult {
   const errors: string[] = [];
   const { mainNumbers, specialNumbers } = selection;
 
@@ -126,25 +118,17 @@ export function validateSelection(
     return { valid: true, errors };
   }
 
-  // Validate main numbers range
+  // Validate main numbers — phải là string zero-padded thuộc tập hợp lệ
   for (const n of mainNumbers) {
-    if (!Number.isInteger(n) || n < LOTTO535_MAIN_MIN || n > LOTTO535_MAIN_MAX) {
-      errors.push(
-        `Số chính ${n} ngoài phạm vi ${LOTTO535_MAIN_MIN}-${LOTTO535_MAIN_MAX}`,
-      );
+    if (!VALID_MAIN_NUMBER_SET.has(n)) {
+      errors.push(`Số chính "${n}" không hợp lệ (phải từ "01" đến "35")`);
     }
   }
 
-  // Validate special numbers range
+  // Validate special numbers
   for (const n of specialNumbers) {
-    if (
-      !Number.isInteger(n) ||
-      n < LOTTO535_SPECIAL_MIN ||
-      n > LOTTO535_SPECIAL_MAX
-    ) {
-      errors.push(
-        `Số đặc biệt ${n} ngoài phạm vi ${LOTTO535_SPECIAL_MIN}-${LOTTO535_SPECIAL_MAX}`,
-      );
+    if (!VALID_SPECIAL_NUMBER_SET.has(n)) {
+      errors.push(`Số đặc biệt "${n}" không hợp lệ (phải từ "01" đến "12")`);
     }
   }
 

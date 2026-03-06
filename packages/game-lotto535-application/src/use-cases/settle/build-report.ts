@@ -1,13 +1,37 @@
 /**
- * Use Case: Build Report
+ * Use Case: Build Report (Lotto 5/35)
  *
- * Tạo/cập nhật báo cáo tài chính hàng ngày:
- *   - Per tenant per drawId per financialDate (game-specific)
- *   - Per player per tenant per drawId per financialDate (game-specific)
- *   - Publish lên game-core gameDailyReports (báo cáo chung cho dashboard)
+ * ═══════════════════════════════════════════════════════════════════════
+ * STEP 6 TRONG SETTLE FLOW
+ * ═══════════════════════════════════════════════════════════════════════
  *
- * Dùng MongoDB aggregation pipeline (server-side) – không load entries vào memory.
- * Upsert pattern: idempotent khi chạy lại.
+ * Tạo/cập nhật báo cáo tài chính hàng ngày từ entries đã settle.
+ * Dùng MongoDB aggregation pipeline (server-side) — không load entries vào memory.
+ *
+ * ────────────────────────────────────────────────
+ * 3 LOẠI BÁO CÁO:
+ * ────────────────────────────────────────────────
+ *
+ *   ① TENANT REPORT (lotto535DailyReports collection):
+ *      - Aggregate theo tenantId × drawId × financialDate
+ *      - Ghi: revenue, commission, stake, payout, win, GGR, netRevenue
+ *      - GGR (Gross Gaming Revenue) = totalStake - totalPayout
+ *      - netRevenue = totalStake - totalCommission
+ *
+ *   ② PLAYER REPORT (lotto535DailyReports collection):
+ *      - Aggregate theo accountId × tenantId × drawId × financialDate
+ *      - Ghi: stake, win, payout, entryCount, netAmount
+ *      - netAmount = totalStake - totalPayout (dương = player thua, âm = player thắng)
+ *
+ *   ③ GAME-CORE REPORT (gameDailyReports collection — dashboard chung):
+ *      - Publish tổng hợp lên game-core cho dashboard cross-game
+ *      - Gồm: tenant reports + company financials + jackpot tracking
+ *      - Chỉ publish khi có financials (từ CalculateFinancials output)
+ *
+ * ────────────────────────────────────────────────
+ * IDEMPOTENT:
+ * ────────────────────────────────────────────────
+ *   Upsert pattern: ghi đè nếu đã tồn tại → chạy lại safe.
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
@@ -22,6 +46,8 @@ export interface BuildReportInput {
   drawId: string;
   /** Ngày tài chính (YYYY-MM-DD) — key phân nhóm báo cáo. */
   financialDate: string;
+  /** Số tiền Jackpot đầu kỳ (VND) — từ PrepareSettle context. */
+  jackpotOpeningAmount?: number;
   /** Dữ liệu tài chính tổng hợp — truyền từ CalculateFinancials (optional cho void draw). */
   financials?: LottoSettleFinancials;
 }
@@ -39,21 +65,18 @@ export interface BuildReportResult {
   gameCoreReportPublished: boolean;
 }
 
-export class BuildReportUseCase extends InternalUseCase<
-  BuildReportInput,
-  BuildReportResult
-> {
+export class BuildReportUseCase extends InternalUseCase<BuildReportInput, BuildReportResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly reportRepo = new ReportRepository();
 
   /** Tạo/cập nhật báo cáo. Upsert pattern – idempotent. */
   protected async execute(input: BuildReportInput): Promise<BuildReportResult> {
     const { drawId, financialDate, financials } = input;
-    // Step 1: Game-specific tenant report (lotto535DailyReports)
-    const tenantAggs = await this.entryRepo.aggregateTenantReport(
-      drawId,
-      financialDate
-    );
+
+    // ── STEP 1: Game-specific TENANT report ──
+    // Aggregate entries theo tenant: totalStake, totalPayout, totalWin, totalCommission
+    // → Upsert vào lotto535DailyReports collection (unique key: tenantId+drawId+financialDate)
+    const tenantAggs = await this.entryRepo.aggregateTenantReport(drawId, financialDate);
 
     for (const t of tenantAggs) {
       await this.reportRepo.upsertTenantDailyReport({
@@ -68,16 +91,17 @@ export class BuildReportUseCase extends InternalUseCase<
         totalPayout: t.totalPayout,
         totalWin: t.totalWin,
         entryCount: t.entryCount,
+        // GGR = doanh thu thuần sau khi trả thưởng (Gross Gaming Revenue)
         ggr: t.totalStake - t.totalPayout,
+        // netRevenue = doanh thu sau khi trả commission đại lý
         netRevenue: t.totalStake - t.totalCommission,
       });
     }
 
-    // Step 2: Game-specific player report (lotto535DailyReports)
-    const playerAggs = await this.entryRepo.aggregatePlayerReport(
-      drawId,
-      financialDate
-    );
+    // ── STEP 2: Game-specific PLAYER report ──
+    // Aggregate entries theo player (accountId): stake, win, payout
+    // → Upsert vào lotto535DailyReports (unique key: accountId+tenantId+drawId+financialDate)
+    const playerAggs = await this.entryRepo.aggregatePlayerReport(drawId, financialDate);
 
     for (const p of playerAggs) {
       await this.reportRepo.upsertPlayerDailyReport({
@@ -90,21 +114,19 @@ export class BuildReportUseCase extends InternalUseCase<
         totalWin: p.totalWin,
         totalPayout: p.totalPayout,
         entryCount: p.entryCount,
+        // netAmount: dương = player lỗ, âm = player thắng
         netAmount: p.totalStake - p.totalPayout,
       });
     }
 
-    // Step 3: Publish lên game-core gameDailyReports (cho dashboard chung)
+    // ── STEP 3: Publish lên game-core gameDailyReports (dashboard chung) ──
+    // Chỉ publish nếu có financials (bước CalculateFinancials đã tính xong)
+    // Bao gồm: tenant reports + company financials + jackpot tracking
     let gameCoreReportPublished = false;
 
     if (financials) {
       const totalStake = financials.totalRevenue;
-      const totalPayout = financials.tenantBreakdown.reduce(
-        (s, t) =>
-          s +
-          (tenantAggs.find((a) => a.tenantId === t.tenantId)?.totalPayout ?? 0),
-        0
-      );
+      const totalPayout = tenantAggs.reduce((s, t) => s + t.totalPayout, 0);
       const totalWin = tenantAggs.reduce((s, t) => s + t.totalWin, 0);
 
       await publishGameReport({
@@ -129,8 +151,7 @@ export class BuildReportUseCase extends InternalUseCase<
           jackpotContribution: financials.jackpotContribution,
         },
         jackpotTracking: {
-          openingAmount:
-            financials.closingJackpot - financials.jackpotContribution,
+          openingAmount: input.jackpotOpeningAmount ?? 0,
           closingAmount: financials.closingJackpot,
           hasJackpotWinner: financials.hasJackpotWinner,
           totalContribution: financials.jackpotContribution,

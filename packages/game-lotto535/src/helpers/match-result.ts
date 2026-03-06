@@ -29,7 +29,7 @@ export interface DrawResultForMatch {
 
 /**
  * Đếm số lượng số chính trùng giữa line và kết quả.
- * Cả 2 đều phải sorted tăng dần (canonical).
+ * Dùng Set lookup — không phụ thuộc thứ tự phần tử.
  */
 function countMainMatches(lineMain: MainTuple, winMain: MainTuple): number {
   const winSet = new Set(winMain);
@@ -47,10 +47,7 @@ function countMainMatches(lineMain: MainTuple, winMain: MainTuple): number {
  * @param result - Kết quả quay
  * @returns Chi tiết match: tier, mainMatchCount, specialMatched
  */
-export function matchLine(
-  line: LineValue,
-  result: DrawResultForMatch
-): LineMatchResult {
+export function matchLine(line: LineValue, result: DrawResultForMatch): LineMatchResult {
   const mainMatchCount = countMainMatches(line.main, result.winningMain);
   const specialMatched = line.special === result.winningSpecial;
   const tier = determineTier(mainMatchCount, specialMatched);
@@ -92,10 +89,7 @@ export interface DetailedMatchResult {
  * @param result - Kết quả quay
  * @returns Detailed: totalLines, winningLines, tierCounts, perLineResults
  */
-export function matchLines(
-  lines: LineValue[],
-  result: DrawResultForMatch
-): DetailedMatchResult {
+export function matchLines(lines: LineValue[], result: DrawResultForMatch): DetailedMatchResult {
   const tierCounts = new Map<PrizeTier, number>();
   const perLineResults: PerLineMatchResult[] = [];
   let winningLines = 0;

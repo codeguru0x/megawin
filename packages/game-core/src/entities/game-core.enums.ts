@@ -231,20 +231,27 @@ export const GameConfigScope = {
 export type GameConfigScope = (typeof GameConfigScope)[keyof typeof GameConfigScope];
 
 // ─────────────────────────────────────────────
-// Entry Outcome (kết quả thắng/thua – dùng chung)
+// Entry Outcome (kết quả thắng/thua/huỷ – dùng chung)
 // ─────────────────────────────────────────────
 
 /**
- * Kết quả cuối cùng của entry sau khi settle.
- * Gán vào entry khi settle xong, dùng cho query/filter/report.
+ * Kết quả cuối cùng của entry – gán khi settle hoặc void xong.
+ * Dùng cho query/filter/report.
  *
- * Mở rộng cho các game tương lai có cơ chế half-win, push, etc.
+ * Casino standard outcomes:
+ *   - Win:  có ít nhất 1 giải trúng (winAmount > 0)
+ *   - Loss: không trúng giải nào (winAmount = 0)
+ *   - Void: kỳ quay bị huỷ, entry bị vô hiệu → hoàn tiền
+ *
+ * Mở rộng cho các game tương lai: push (hoà), half-win, etc.
  */
 export const EntryOutcome = {
   /** Thắng – có ít nhất 1 giải trúng (winAmount > 0). */
   Win: "win",
   /** Thua – không trúng giải nào (winAmount = 0). */
   Loss: "loss",
+  /** Huỷ – kỳ quay bị void, entry bị vô hiệu, tiền cược được hoàn. */
+  Void: "void",
 } as const;
 
 export type EntryOutcome = (typeof EntryOutcome)[keyof typeof EntryOutcome];

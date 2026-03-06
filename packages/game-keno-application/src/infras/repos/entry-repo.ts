@@ -13,7 +13,7 @@
  */
 
 import { KenoCollections, PayoutStatus, RefundStatus } from "@megawin/game-keno/entities";
-import { EntryStatus } from "@megawin/game-core/entities";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { ObjectId, Long } from "mongodb";
 import { BaseRepo } from "./base-repo";
 import { EntryMapper, type EntryEntity } from "../mappers/entry-mapper";
@@ -21,6 +21,7 @@ import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
 
 export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   private readonly seqRepo = new EntryChangeSeqRepository();
+
   constructor() {
     super({
       collName: KenoCollections.TicketEntries,
@@ -33,19 +34,15 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     return this.seqRepo.nextSeq();
   }
 
-  /** Insert 1 entry mới kèm version từ global sequence. */
-  async insertEntry(doc: Record<string, unknown>): Promise<string> {
-    const version = await this.nextVersion();
-    return await this.insertOne({ ...doc, version } as any);
-  }
-
   /**
-   * Insert nhiều entries đã có sẵn version.
-   * Caller phải gán version vào docs trước khi gọi.
+   * Insert nhiều entries — tự allocate version từ global sequence.
+   * Tất cả entries trong batch nhận cùng 1 version (atomic batch).
    */
   async insertEntries(docs: Record<string, unknown>[]): Promise<number> {
     if (docs.length === 0) return 0;
-    const result = await this.insertMany(docs as any[]);
+    const version = await this.nextVersion();
+    const stamped = docs.map((doc) => ({ ...doc, version }));
+    const result = await this.insertMany(stamped as any[]);
     return result.insertedCount;
   }
 
@@ -145,7 +142,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       outcome: string;
       /** Snapshot kết quả quay gắn vào entry. */
       result: {
-        winningNumbers: number[];
+        winningNumbers: string[];
         publishedAt: Date;
         bigCount: number;
         smallCount: number;
@@ -564,6 +561,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
         update: {
           $set: {
             status: EntryStatus.Void,
+            outcome: EntryOutcome.Void,
             voidInfo: {
               originalAmount: item.amount,
               refundAmount: item.amount,

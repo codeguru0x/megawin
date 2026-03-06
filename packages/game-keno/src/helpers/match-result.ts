@@ -4,9 +4,8 @@
  * So sánh lựa chọn người chơi với 20 số quay để xác định kết quả.
  * Áp dụng cho cả cách chơi cơ bản và bổ sung.
  *
- * LƯU Ý: Số người chơi lưu dạng string "01"-"80".
- * Kết quả quay (winningNumbers) lưu dạng number[].
- * matchBasicBoard nhận string[], convert sang number để so sánh.
+ * LƯU Ý: Cả số người chơi và kết quả quay đều dùng string "01"-"80".
+ * matchBasicBoard so sánh trực tiếp string.
  */
 
 import { KenoBigSmallBet, KenoEvenOddBet, type KenoPlayType } from "../entities/enums";
@@ -26,7 +25,7 @@ import {
 // ─────────────────────────────────────────────
 
 export interface DrawResultForMatch {
-  winningNumbers: number[];
+  winningNumbers: string[];
   bigCount: number;
   smallCount: number;
   evenCount: number;
@@ -40,14 +39,14 @@ export interface DrawResultForMatch {
 export interface BasicMatchResult {
   matchCount: number;
   pickCount: number;
-  matchedNumbers: number[];
+  matchedNumbers: string[];
   winAmount: number;
 }
 
 /**
  * Match 1 board cơ bản với kết quả quay.
  * @param numbers - Số dạng string "01"-"80" từ board
- * @param result - Kết quả quay (number[])
+ * @param result - Kết quả quay (string[] "01"-"80")
  */
 export function matchBasicBoard(
   numbers: string[],
@@ -55,11 +54,10 @@ export function matchBasicBoard(
   prizeTable?: Record<number, Record<number, number>>,
 ): BasicMatchResult {
   const winSet = new Set(result.winningNumbers);
-  const matchedNumbers: number[] = [];
+  const matchedNumbers: string[] = [];
 
   for (const s of numbers) {
-    const n = parseInt(s, 10);
-    if (winSet.has(n)) matchedNumbers.push(n);
+    if (winSet.has(s)) matchedNumbers.push(s);
   }
 
   const pickCount = numbers.length;
@@ -167,7 +165,7 @@ export function matchEvenOddBet(
 // Draw Result Stats
 // ─────────────────────────────────────────────
 
-export function computeDrawStats(winningNumbers: number[]): {
+export function computeDrawStats(winningNumbers: string[]): {
   bigCount: number;
   smallCount: number;
   evenCount: number;
@@ -178,7 +176,8 @@ export function computeDrawStats(winningNumbers: number[]): {
   let evenCount = 0;
   let oddCount = 0;
 
-  for (const n of winningNumbers) {
+  for (const s of winningNumbers) {
+    const n = parseInt(s, 10);
     if (n > KENO_BIG_SMALL_BOUNDARY) bigCount++;
     else smallCount++;
 

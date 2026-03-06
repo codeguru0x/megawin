@@ -17,7 +17,7 @@ export interface KenoCurrentDrawInfo {
     closeAt: string;
   };
   result?: {
-    winningNumbers: number[];
+    winningNumbers: string[];
     publishedAt: string;
   };
   stats?: {

@@ -56,7 +56,19 @@
  * JACKPOT SOURCE OF TRUTH:
  *   Active draws: jackpot từ `lotto535_jackpot_cycles.currentAmount`
  *   Settled draws: snapshot jackpot ghi lúc finalize-settle
+ *
+ * USAGE (chạy từ thư mục step-functions):
+ *   npx tsx -e "import { SETTLE_STATE_MACHINE } from './settle'; console.log(JSON.stringify(SETTLE_STATE_MACHINE, null, 2))" > settle.asl.json
  */
+
+const REGION = "ap-southeast-1";
+const ACCOUNT_ID = "YOUR_ACCOUNT_ID";
+const SERVICE = "mw-worker-lotto535";
+const STAGE = "dev";
+
+function lambdaArn(functionName: string): string {
+  return `arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:${SERVICE}-${STAGE}-${functionName}`;
+}
 
 const LAMBDA_RETRY = [
   {
@@ -81,7 +93,7 @@ export const SETTLE_STATE_MACHINE = {
   States: {
     PrepareSettle: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-prepare",
+      Resource: lambdaArn("settle-prepare"),
       Assign: { settleCtx: "{% $states.result %}" },
       Next: "SettleEntries",
       Retry: LAMBDA_RETRY,
@@ -89,7 +101,7 @@ export const SETTLE_STATE_MACHINE = {
 
     SettleEntries: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-entries",
+      Resource: lambdaArn("settle-entries"),
       Arguments: "{% $settleCtx %}",
       Assign: { settleResult: "{% $states.result %}" },
       Next: "CheckSettleDone",
@@ -109,7 +121,7 @@ export const SETTLE_STATE_MACHINE = {
 
     CalculateFinancials: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-calculate-financials",
+      Resource: lambdaArn("settle-calculate-financials"),
       Arguments: "{% $settleCtx %}",
       Assign: { financials: "{% $states.result %}" },
       Next: "ApplySplitBonuses",
@@ -118,7 +130,7 @@ export const SETTLE_STATE_MACHINE = {
 
     ApplySplitBonuses: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-apply-split-bonuses",
+      Resource: lambdaArn("settle-apply-split-bonuses"),
       Arguments: "{% $merge($settleCtx, { 'splitDetails': $financials.splitDetails }) %}",
       Next: "SyncTicketSummaries",
       Retry: LAMBDA_RETRY,
@@ -126,7 +138,7 @@ export const SETTLE_STATE_MACHINE = {
 
     SyncTicketSummaries: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-sync-ticket-summaries",
+      Resource: lambdaArn("settle-sync-ticket-summaries"),
       Arguments: "{% $settleCtx %}",
       Assign: { syncResult: "{% $states.result %}" },
       Next: "CheckSyncDone",
@@ -146,7 +158,7 @@ export const SETTLE_STATE_MACHINE = {
 
     BuildReport: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-build-report",
+      Resource: lambdaArn("settle-build-report"),
       Arguments: "{% $merge($settleCtx, { 'financials': $financials }) %}",
       Next: "FinalizeSettle",
       Retry: LAMBDA_RETRY,
@@ -154,7 +166,7 @@ export const SETTLE_STATE_MACHINE = {
 
     FinalizeSettle: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-finalize",
+      Resource: lambdaArn("settle-finalize"),
       Arguments: "{% $merge($settleCtx, $financials) %}",
       Next: "DispatchPayouts",
       Retry: LAMBDA_RETRY,
@@ -162,7 +174,7 @@ export const SETTLE_STATE_MACHINE = {
 
     DispatchPayouts: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:settle-dispatch-payouts",
+      Resource: lambdaArn("settle-dispatch-payouts"),
       Arguments: "{% $settleCtx %}",
       Assign: { payoutResult: "{% $states.result %}" },
       Next: "CheckPayoutDone",

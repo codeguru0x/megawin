@@ -4,30 +4,19 @@ import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities/account";
 import { PublishResultUseCase } from "@megawin/game-power655-application/use-cases/draws";
 import {
-  POWER655_MAIN_MIN,
-  POWER655_MAIN_MAX,
   POWER655_MAIN_COUNT,
 } from "@megawin/game-power655/entities";
-
-const mainNumberSchema = z
-  .number()
-  .int()
-  .min(POWER655_MAIN_MIN)
-  .max(POWER655_MAIN_MAX);
+import { power655MainNumberSchema } from "@megawin/game-power655/schemas";
 
 const publishResultSchema = z
   .object({
     winningMain: z
-      .array(mainNumberSchema)
+      .array(power655MainNumberSchema)
       .length(
         POWER655_MAIN_COUNT,
         `Phải có đúng ${POWER655_MAIN_COUNT} số chính.`
       ),
-    bonusNumber: z
-      .number()
-      .int()
-      .min(POWER655_MAIN_MIN, `Số bonus tối thiểu ${POWER655_MAIN_MIN}.`)
-      .max(POWER655_MAIN_MAX, `Số bonus tối đa ${POWER655_MAIN_MAX}.`),
+    bonusNumber: power655MainNumberSchema,
     vietlottRef: z
       .object({
         drawPeriod: z.string(),

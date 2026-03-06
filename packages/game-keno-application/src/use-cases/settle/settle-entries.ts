@@ -123,7 +123,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         };
         outcome: string;
         result: {
-          winningNumbers: number[];
+          winningNumbers: string[];
           publishedAt: Date;
           bigCount: number;
           smallCount: number;

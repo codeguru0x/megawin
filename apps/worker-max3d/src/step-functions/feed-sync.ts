@@ -3,7 +3,19 @@
  *
  * Dùng chung global entryChangeSeq → version không trùng với game khác.
  * Scheduler Lambda đọc feedSyncCursor(max3d) → start execution.
+ *
+ * USAGE (chạy từ thư mục step-functions):
+ *   npx tsx -e "import { FEED_SYNC_STATE_MACHINE } from './feed-sync'; console.log(JSON.stringify(FEED_SYNC_STATE_MACHINE, null, 2))" > feed-sync.asl.json
  */
+
+const REGION = "ap-southeast-1";
+const ACCOUNT_ID = "YOUR_ACCOUNT_ID";
+const SERVICE = "mw-worker-max3d";
+const STAGE = "dev";
+
+function lambdaArn(functionName: string): string {
+  return `arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:${SERVICE}-${STAGE}-${functionName}`;
+}
 
 const LAMBDA_RETRY = [
   {
@@ -28,14 +40,12 @@ export const FEED_SYNC_STATE_MACHINE = {
   States: {
     SyncEntries: {
       Type: "Task",
-      Resource:
-        "arn:aws:lambda:REGION:ACCOUNT:function:max3d-feed-sync-entries",
+      Resource: lambdaArn("max3d-feed-sync-entries"),
       Arguments: {
         afterVersion: "{% $states.input.afterVersion %}",
         batchSize: "{% $states.input.batchSize %}",
       },
-      Output:
-        "{% { 'batchSize': $states.input.batchSize, 'syncResult': $states.result } %}",
+      Output: "{% { 'batchSize': $states.input.batchSize, 'syncResult': $states.result } %}",
       Next: "CheckDone",
       Retry: LAMBDA_RETRY,
     },
@@ -60,8 +70,7 @@ export const FEED_SYNC_STATE_MACHINE = {
 
     SaveCursor: {
       Type: "Task",
-      Resource:
-        "arn:aws:lambda:REGION:ACCOUNT:function:max3d-feed-save-cursor",
+      Resource: lambdaArn("max3d-feed-save-cursor"),
       Arguments: {
         lastVersion: "{% $states.input.syncResult.lastVersion %}",
       },

@@ -4,7 +4,7 @@
  * Player đặt cược Mega 6/45 — authed qua Cognito JWT Bearer token.
  *
  * Mega 6/45 chỉ có mainNumbers (không có specialNumbers).
- * Số nhận dạng string "01"-"45". Parse sang number trước khi truyền vào use case.
+ * Số nhận dạng string "01"-"45".
  * PlayTypes: Standard (6 số), Bao5 (5 số), Bao7-Bao18, QuickPick (auto 6 số).
  */
 
@@ -196,9 +196,7 @@ export const handler = withPlayerAuth(
       boardNo: b.boardNo,
       playType: b.playType,
       selection: {
-        mainNumbers: b.selection.mainNumbers.map((s: string) =>
-          parseInt(s, 10)
-        ),
+        mainNumbers: b.selection.mainNumbers,
       },
     }));
 

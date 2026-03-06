@@ -7,7 +7,7 @@
  * Đơn vị vận hành chính cho settle + report.
  *
  * Số lưu dạng string "01"-"80" trong entrySummary.boards.
- * Kết quả quay (result.winningNumbers) dùng number[] (server-side chỉ tính toán).
+ * Kết quả quay (result.winningNumbers) cũng dùng string[] "01"-"80".
  */
 
 import type {
@@ -83,7 +83,7 @@ export interface TicketEntryDoc {
   // ───── Result Snapshot ─────
 
   result?: {
-    winningNumbers: number[];
+    winningNumbers: string[];
     publishedAt: Date;
     bigCount: number;
     smallCount: number;

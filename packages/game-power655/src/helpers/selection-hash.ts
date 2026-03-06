@@ -8,9 +8,9 @@ import type { Board } from "../entities/ticket";
 function canonicalizeBoard(board: {
   boardNo: string;
   playType: string;
-  mainNumbers: number[];
+  mainNumbers: string[];
 }): string {
-  const main = [...board.mainNumbers].sort((a, b) => a - b).join(",");
+  const main = [...board.mainNumbers].sort().join(",");
   return `${board.boardNo}:${board.playType}:M[${main}]`;
 }
 

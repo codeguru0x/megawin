@@ -85,8 +85,8 @@ export interface DrawTransitionOutput {
 export interface PublishResultInput {
   /** ID kỳ quay cần công bố kết quả. */
   drawId: string;
-  /** 6 số chính trúng thưởng (1-45), unique, unsorted OK. */
-  winningMain: number[];
+  /** 6 số chính trúng thưởng ("01"-"45"), unique, draw order. */
+  winningMain: string[];
   /** Tham chiếu kỳ quay Vietlott (optional). */
   vietlottRef?: {
     /** Mã kỳ quay Vietlott gốc. */
@@ -103,8 +103,8 @@ export interface PublishResultOutput {
   status: string;
   /** Kết quả quay thưởng đã công bố. */
   result: {
-    /** 6 số chính trúng thưởng (1-45), đã sort ascending. */
-    winningMain: number[];
+    /** 6 số chính trúng thưởng ("01"-"45"), draw order. */
+    winningMain: string[];
     /** Thời điểm công bố kết quả (ISO datetime). */
     publishedAt: string;
   };

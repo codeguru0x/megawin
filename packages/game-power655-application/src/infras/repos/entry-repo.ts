@@ -16,7 +16,7 @@
  */
 
 import { Power655Collections, PayoutStatus } from "@megawin/game-power655/entities";
-import { EntryStatus } from "@megawin/game-core/entities";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import type { PrizeTier, MainTuple, BonusNumber } from "@megawin/game-power655/entities";
 import { ObjectId, Long } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -39,16 +39,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return this.seqRepo.nextSeq();
   }
 
-  /** Insert 1 entry mới kèm version từ global sequence. */
-  async insertEntry(doc: Record<string, unknown>): Promise<string> {
-    const version = await this.nextVersion();
-    return await this.insertOne({ ...doc, version } as any);
-  }
-
-  /** Insert nhiều entries đã có sẵn version. */
+  /** Insert nhiều entries — tự allocate version từ global sequence. */
   async insertEntries(docs: Record<string, unknown>[]): Promise<number> {
     if (docs.length === 0) return 0;
-    const result = await this.insertMany(docs as any[]);
+    const version = await this.nextVersion();
+    const stamped = docs.map((doc) => ({ ...doc, version }));
+    const result = await this.insertMany(stamped as any[]);
     return result.insertedCount;
   }
 
@@ -551,6 +547,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         update: {
           $set: {
             status: EntryStatus.Void,
+            outcome: EntryOutcome.Void,
             voidedAt: now,
             refund: {
               refundAmount: item.amount,

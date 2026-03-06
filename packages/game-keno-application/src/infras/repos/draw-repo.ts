@@ -250,7 +250,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async publishResult(
     drawId: string,
     result: {
-      winningNumbers: number[];
+      winningNumbers: string[];
       bigCount: number;
       smallCount: number;
       evenCount: number;
@@ -283,7 +283,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async updateResult(
     drawId: string,
     result: {
-      winningNumbers: number[];
+      winningNumbers: string[];
       bigCount: number;
       smallCount: number;
       evenCount: number;

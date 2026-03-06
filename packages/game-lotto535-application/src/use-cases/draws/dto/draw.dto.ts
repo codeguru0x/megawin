@@ -85,10 +85,10 @@ export interface DrawTransitionOutput {
 export interface PublishResultInput {
   /** Mã kỳ quay cần công bố kết quả. */
   drawId: string;
-  /** 5 số chính trúng thưởng (1-35), unique, unsorted OK. */
-  winningMain: number[];
-  /** 1 số đặc biệt trúng thưởng (1-12). */
-  winningSpecial: number;
+  /** 5 số chính trúng thưởng — string zero-padded ("01"-"35"), unsorted OK. */
+  winningMain: string[];
+  /** 1 số đặc biệt trúng thưởng — string zero-padded ("01"-"12"). */
+  winningSpecial: string;
   /** Tham chiếu kỳ quay Vietlott (optional). */
   vietlottRef?: {
     /** Mã kỳ quay bên Vietlott (vd: "00123"). */
@@ -107,10 +107,10 @@ export interface PublishResultOutput {
   status: string;
   /** Kết quả quay đã được lưu. */
   result: {
-    /** 5 số chính trúng thưởng (đã sorted). */
-    winningMain: number[];
+    /** 5 số chính trúng thưởng — giữ nguyên thứ tự quay (draw order). */
+    winningMain: string[];
     /** Số đặc biệt trúng thưởng. */
-    winningSpecial: number;
+    winningSpecial: string;
     /** Thời điểm công bố kết quả (ISO 8601). */
     publishedAt: string;
   };
@@ -123,6 +123,8 @@ export interface PublishResultOutput {
 export interface TriggerSettleInput {
   /** Mã kỳ quay cần kích hoạt settle. */
   drawId: string;
+  /** ARN của Step Function kết sổ Lotto 5/35. */
+  LOTTO535_SETTLE_SFN_ARN: string;
 }
 
 export interface TriggerSettleOutput {
@@ -132,10 +134,6 @@ export interface TriggerSettleOutput {
   status: string;
   /** Kỳ này có phải kỳ chia Jackpot hay không. */
   isSplitCycle: boolean;
-  /** Tổng entries sẽ được settle bởi worker. */
-  totalEntries: number;
-  /** Tổng số dòng (lines) cần xử lý từ tất cả entries. */
-  totalLines: number;
 }
 
 // ─────────────────────────────────────────────

@@ -25,8 +25,7 @@
 import { PlayType } from "../entities/enums";
 import {
   MEGA645_MAIN_COUNT,
-  MEGA645_MAIN_MAX,
-  MEGA645_MAIN_MIN,
+  VALID_MAIN_NUMBER_SET,
   type BoardSelection,
 } from "../entities/types";
 
@@ -117,10 +116,8 @@ export function validateSelection(
   }
 
   for (const n of mainNumbers) {
-    if (!Number.isInteger(n) || n < MEGA645_MAIN_MIN || n > MEGA645_MAIN_MAX) {
-      errors.push(
-        `Số ${n} ngoài phạm vi ${MEGA645_MAIN_MIN}-${MEGA645_MAIN_MAX}`
-      );
+    if (!VALID_MAIN_NUMBER_SET.has(n)) {
+      errors.push(`Số "${n}" không hợp lệ (phải từ "01" đến "45")`);
     }
   }
 

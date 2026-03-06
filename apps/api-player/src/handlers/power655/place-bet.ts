@@ -187,9 +187,7 @@ export const handler = withPlayerAuth(
       boardNo: b.boardNo,
       playType: b.playType,
       selection: {
-        mainNumbers: b.selection.mainNumbers.map((s: string) =>
-          parseInt(s, 10)
-        ),
+        mainNumbers: b.selection.mainNumbers,
       },
     }));
 

@@ -14,13 +14,7 @@
  */
 
 import type { DrawStatus } from "@megawin/game-core/entities";
-import type {
-  ISODateString,
-  DrawNo,
-  MainTuple,
-  Special,
-  SplitRatios,
-} from "./types";
+import type { ISODateString, DrawNo, MainTuple, Special, SplitRatios } from "./types";
 
 // ─────────────────────────────────────────────
 // Draw Document

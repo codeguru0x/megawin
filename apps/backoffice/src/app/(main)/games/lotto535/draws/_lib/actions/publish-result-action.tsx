@@ -1,16 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Check,
-  Loader2,
-  Send,
-  ExternalLink,
-  CalendarDays,
-  Hash,
-  Dice5,
-  Star,
-} from "lucide-react";
+import { Check, Loader2, Send, ExternalLink, CalendarDays, Hash, Dice5, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -53,28 +44,17 @@ function validateMainNumbers(nums: string[]): string | null {
   const parsed = nums.map(Number);
   for (let i = 0; i < LOTTO535_MAIN_COUNT; i++) {
     const n = parsed[i];
-    if (
-      !n ||
-      !Number.isInteger(n) ||
-      n < LOTTO535_MAIN_MIN ||
-      n > LOTTO535_MAIN_MAX
-    ) {
+    if (!n || !Number.isInteger(n) || n < LOTTO535_MAIN_MIN || n > LOTTO535_MAIN_MAX) {
       return `Số chính #${i + 1} phải là số nguyên từ ${pad2(LOTTO535_MAIN_MIN)} đến ${pad2(LOTTO535_MAIN_MAX)}.`;
     }
   }
-  if (new Set(parsed).size !== LOTTO535_MAIN_COUNT)
-    return "Các số chính phải khác nhau.";
+  if (new Set(parsed).size !== LOTTO535_MAIN_COUNT) return "Các số chính phải khác nhau.";
   return null;
 }
 
 function validateSpecialNumber(val: string): string | null {
   const n = Number(val);
-  if (
-    !n ||
-    !Number.isInteger(n) ||
-    n < LOTTO535_SPECIAL_MIN ||
-    n > LOTTO535_SPECIAL_MAX
-  ) {
+  if (!n || !Number.isInteger(n) || n < LOTTO535_SPECIAL_MIN || n > LOTTO535_SPECIAL_MAX) {
     return `Số đặc biệt phải là số nguyên từ ${pad2(LOTTO535_SPECIAL_MIN)} đến ${pad2(LOTTO535_SPECIAL_MAX)}.`;
   }
   return null;
@@ -92,9 +72,7 @@ export function PublishResultAction({
   const [specialNumber, setSpecialNumber] = useState("");
   const [vietlotDate, setVietlotDate] = useState(todayVN());
   const [vietlotPeriod, setVietlotPeriod] = useState("");
-  const [vietlotSession, setVietlotSession] = useState(
-    String(draw.drawNo ?? 1)
-  );
+  const [vietlotSession, setVietlotSession] = useState(String(draw.drawNo ?? 1));
   const [error, setError] = useState<string | null>(null);
   const publishResult = usePublishResult();
 
@@ -114,16 +92,16 @@ export function PublishResultAction({
     }
 
     const body: {
-      winningMain: number[];
-      winningSpecial: number;
+      winningMain: string[];
+      winningSpecial: string;
       vietlottRef?: {
         drawPeriod: string;
         drawDate: string;
         drawSession: number;
       };
     } = {
-      winningMain: mainNumbers.map(Number),
-      winningSpecial: Number(specialNumber),
+      winningMain: mainNumbers.map((n) => n.padStart(2, "0")),
+      winningSpecial: specialNumber.padStart(2, "0"),
     };
 
     if (vietlotPeriod.trim()) {
@@ -146,7 +124,7 @@ export function PublishResultAction({
           setVietlotSession(String(draw.drawNo ?? 1));
           setError(null);
         },
-      }
+      },
     );
   }
 
@@ -168,11 +146,9 @@ export function PublishResultAction({
             {isRepublish ? "Sửa kết quả" : "Cập nhật kết quả"} kỳ {draw.drawId}
           </DialogTitle>
           <DialogDescription>
-            Nhập {LOTTO535_MAIN_COUNT} số chính ({pad2(LOTTO535_MAIN_MIN)}–
-            {pad2(LOTTO535_MAIN_MAX)}) và 1 số đặc biệt ({pad2(LOTTO535_SPECIAL_MIN)}–
-            {pad2(LOTTO535_SPECIAL_MAX)}).
-            {isRepublish &&
-              " Kết quả cũ sẽ bị ghi đè. Chỉ có hiệu lực trước khi kết sổ."}
+            Nhập {LOTTO535_MAIN_COUNT} số chính ({pad2(LOTTO535_MAIN_MIN)}–{pad2(LOTTO535_MAIN_MAX)}
+            ) và 1 số đặc biệt ({pad2(LOTTO535_SPECIAL_MIN)}–{pad2(LOTTO535_SPECIAL_MAX)}).
+            {isRepublish && " Kết quả cũ sẽ bị ghi đè. Chỉ có hiệu lực trước khi kết sổ."}
           </DialogDescription>
         </DialogHeader>
 
@@ -189,16 +165,13 @@ export function PublishResultAction({
                   const mains = generateUniqueRandomNumbers(
                     LOTTO535_MAIN_COUNT,
                     LOTTO535_MAIN_MIN,
-                    LOTTO535_MAIN_MAX
+                    LOTTO535_MAIN_MAX,
                   );
                   setMainNumbers(mains.map((n) => String(n).padStart(2, "0")));
                   setSpecialNumber(
                     String(
-                      generateRandomNumber(
-                        LOTTO535_SPECIAL_MIN,
-                        LOTTO535_SPECIAL_MAX
-                      )
-                    ).padStart(2, "0")
+                      generateRandomNumber(LOTTO535_SPECIAL_MIN, LOTTO535_SPECIAL_MAX),
+                    ).padStart(2, "0"),
                   );
                   setError(null);
                 }}
@@ -263,9 +236,7 @@ export function PublishResultAction({
               <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
                 <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
               </div>
-              <Label className="text-sm font-semibold">
-                Tham chiếu Vietlott
-              </Label>
+              <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
               <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                 Tùy chọn
               </span>
@@ -301,13 +272,8 @@ export function PublishResultAction({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">
-                    Phiên quay
-                  </Label>
-                  <Select
-                    value={vietlotSession}
-                    onValueChange={setVietlotSession}
-                  >
+                  <Label className="text-xs text-muted-foreground">Phiên quay</Label>
+                  <Select value={vietlotSession} onValueChange={setVietlotSession}>
                     <SelectTrigger className="font-mono text-sm">
                       <SelectValue />
                     </SelectTrigger>

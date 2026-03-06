@@ -1,10 +1,6 @@
 import { AppException } from "@megawin/shared/errors";
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import {
-  DrawStatus,
-  EntryStatus,
-  TicketStatus,
-} from "@megawin/game-core/entities";
+import { DrawStatus, EntryStatus, TicketStatus } from "@megawin/game-core/entities";
 import type {
   Board,
   TicketDoc,
@@ -13,10 +9,10 @@ import type {
 } from "@megawin/game-mega645/entities";
 import { PlayType } from "@megawin/game-mega645/entities";
 import {
-  MEGA645_MAIN_MIN,
-  MEGA645_MAIN_MAX,
   MEGA645_MAIN_COUNT,
   VALID_BOARD_NOS,
+  ALL_MAIN_NUMBERS,
+  VALID_MAIN_NUMBER_SET,
 } from "@megawin/game-mega645/entities";
 import {
   calculateLineCount,
@@ -34,10 +30,7 @@ import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
 
-export class PlaceBetUseCase extends ApiGatewayUseCase<
-  PlaceBetInput,
-  PlaceBetOutput
-> {
+export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly tenantConfigRepo = new TenantConfigRepository();
   private readonly ticketRepo = new TicketRepository();
@@ -46,34 +39,20 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
-    const {
-      tenantId,
-      accountId,
-      username,
-      channel,
-      drawIds,
-      boards: boardInputs,
-    } = input;
+    const { tenantId, accountId, username, channel, drawIds, boards: boardInputs } = input;
 
     const globalConfig = await this.getGlobalConfig.run();
     const { play } = globalConfig;
 
     if (drawIds.length === 0 || drawIds.length > play.maxDrawCount) {
-      throw AppException.badRequest(
-        `Số kỳ phải từ 1 đến ${play.maxDrawCount}.`
-      );
+      throw AppException.badRequest(`Số kỳ phải từ 1 đến ${play.maxDrawCount}.`);
     }
     if (new Set(drawIds).size !== drawIds.length) {
       throw AppException.badRequest("Danh sách kỳ quay chứa drawId trùng lặp.");
     }
 
-    if (
-      boardInputs.length === 0 ||
-      boardInputs.length > play.maxBoardsPerTicket
-    ) {
-      throw AppException.badRequest(
-        `Số board phải từ 1 đến ${play.maxBoardsPerTicket}.`
-      );
+    if (boardInputs.length === 0 || boardInputs.length > play.maxBoardsPerTicket) {
+      throw AppException.badRequest(`Số board phải từ 1 đến ${play.maxBoardsPerTicket}.`);
     }
 
     const seenBoardNos = new Set<string>();
@@ -83,7 +62,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
     for (const bi of boardInputs) {
       if (!VALID_BOARD_NOS.includes(bi.boardNo as any)) {
         throw AppException.badRequest(
-          `Board "${bi.boardNo}" không hợp lệ. Chỉ chấp nhận: ${VALID_BOARD_NOS.join(", ")}.`
+          `Board "${bi.boardNo}" không hợp lệ. Chỉ chấp nhận: ${VALID_BOARD_NOS.join(", ")}.`,
         );
       }
       if (seenBoardNos.has(bi.boardNo)) {
@@ -99,9 +78,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
 
       const valResult = validateSelection(playType, bi.selection);
       if (!valResult.valid) {
-        throw AppException.badRequest(
-          `Board ${bi.boardNo}: ${valResult.errors.join("; ")}`
-        );
+        throw AppException.badRequest(`Board ${bi.boardNo}: ${valResult.errors.join("; ")}`);
       }
 
       validateNumberRanges(bi.boardNo, bi.selection.mainNumbers);
@@ -113,7 +90,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
         boardNo: bi.boardNo,
         playType,
         selection: {
-          mainNumbers: [...bi.selection.mainNumbers].sort((a, b) => a - b),
+          mainNumbers: [...bi.selection.mainNumbers].sort(),
         },
         derived: {
           expandedLines: lineCount,
@@ -136,13 +113,11 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       }
       if (draw.status !== DrawStatus.SalesOpen) {
         throw AppException.badRequest(
-          `Kỳ quay ${drawId} không đang mở bán (status: ${draw.status}).`
+          `Kỳ quay ${drawId} không đang mở bán (status: ${draw.status}).`,
         );
       }
       if (now >= draw.sales.closeAt) {
-        throw AppException.badRequest(
-          `Kỳ quay ${drawId} đã hết thời gian nhận cược.`
-        );
+        throw AppException.badRequest(`Kỳ quay ${drawId} đã hết thời gian nhận cược.`);
       }
     }
 
@@ -152,8 +127,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
     const totalAmount = amountPerDraw * drawCount;
 
     const tenantConfig = await this.tenantConfigRepo.getTenantConfig(tenantId);
-    const commissionRate =
-      tenantConfig?.commissionRate ?? globalConfig.rates.defaultCommissionRate;
+    const commissionRate = tenantConfig?.commissionRate ?? globalConfig.rates.defaultCommissionRate;
     const commissionAmount = Math.round(amountPerDraw * commissionRate);
 
     const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
@@ -196,9 +170,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       expandedLines: b.derived.expandedLines,
     }));
 
-    const version = await this.entryRepo.nextVersion();
-
-    const entryDocs: Array<Omit<TicketEntryDoc, "_id">> = [];
+    const entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">> = [];
 
     for (let i = 0; i < drawIds.length; i++) {
       const draw = drawMap.get(drawIds[i]!)!;
@@ -220,7 +192,6 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
           ticketNo,
           boards: boardSnapshots,
         },
-        version,
         createdAt: now,
         updatedAt: now,
       });
@@ -230,7 +201,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       await this.entryRepo.insertEntries(entryDocs as any[]);
     } catch (err) {
       throw AppException.internal(
-        "Không thể tạo entries cho các kỳ quay đã chọn. Vui lòng thử lại."
+        "Không thể tạo entries cho các kỳ quay đã chọn. Vui lòng thử lại.",
       );
     }
 
@@ -254,38 +225,29 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
   }
 }
 
-function generateQuickPick(): { mainNumbers: number[] } {
-  const mainSet = new Set<number>();
-  while (mainSet.size < MEGA645_MAIN_COUNT) {
-    mainSet.add(
-      Math.floor(Math.random() * (MEGA645_MAIN_MAX - MEGA645_MAIN_MIN + 1)) +
-        MEGA645_MAIN_MIN
-    );
+function generateQuickPick(): { mainNumbers: string[] } {
+  const pool = [...ALL_MAIN_NUMBERS];
+  const picked: string[] = [];
+  for (let i = 0; i < MEGA645_MAIN_COUNT; i++) {
+    const idx = Math.floor(Math.random() * pool.length);
+    picked.push(pool[idx]!);
+    pool.splice(idx, 1);
   }
 
   return {
-    mainNumbers: [...mainSet].sort((a, b) => a - b),
+    mainNumbers: picked.sort(),
   };
 }
 
-function validateNumberRanges(
-  boardNo: string,
-  mainNumbers: number[]
-): void {
+function validateNumberRanges(boardNo: string, mainNumbers: string[]): void {
   for (const n of mainNumbers) {
-    if (
-      !Number.isInteger(n) ||
-      n < MEGA645_MAIN_MIN ||
-      n > MEGA645_MAIN_MAX
-    ) {
+    if (!VALID_MAIN_NUMBER_SET.has(n)) {
       throw AppException.badRequest(
-        `Board ${boardNo}: số chính ${n} ngoài phạm vi ${MEGA645_MAIN_MIN}-${MEGA645_MAIN_MAX}.`
+        `Board ${boardNo}: số chính "${n}" không hợp lệ (phải từ "01" đến "45").`,
       );
     }
   }
   if (new Set(mainNumbers).size !== mainNumbers.length) {
-    throw AppException.badRequest(
-      `Board ${boardNo}: số chính không được trùng nhau.`
-    );
+    throw AppException.badRequest(`Board ${boardNo}: số chính không được trùng nhau.`);
   }
 }

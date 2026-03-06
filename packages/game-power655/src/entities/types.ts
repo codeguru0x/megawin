@@ -23,20 +23,29 @@ export const POWER655_MAIN_MAX = 55;
 /** Số lượng số chính cần chọn cho 1 bộ số dự thưởng. */
 export const POWER655_MAIN_COUNT = 6;
 
+/** Tất cả số chính hợp lệ dạng string zero-padded: "01"-"55". */
+export const ALL_MAIN_NUMBERS: readonly string[] = Array.from(
+  { length: POWER655_MAIN_MAX - POWER655_MAIN_MIN + 1 },
+  (_, i) => String(i + POWER655_MAIN_MIN).padStart(2, "0"),
+);
+
+/** Set tra nhanh O(1) cho số chính hợp lệ. */
+export const VALID_MAIN_NUMBER_SET: ReadonlySet<string> = new Set(ALL_MAIN_NUMBERS);
+
 /**
- * Bộ 6 số chính đã sort tăng dần (canonical form).
- * Dùng trong LineValue, DrawResult, matching.
- * Luôn sort ascending trước khi lưu/so sánh.
+ * Bộ 6 số chính dạng string zero-padded.
+ * Khi lưu player selection: sorted tăng dần (canonical form).
+ * Khi lưu draw result: giữ nguyên thứ tự quay (draw order).
  */
-export type MainTuple = [number, number, number, number, number, number];
+export type MainTuple = readonly [string, string, string, string, string, string];
 
 /**
  * Số đặc biệt (bonus number).
  * Quay từ 49 quả bóng còn lại sau khi đã rút 6 quả chính.
- * Giá trị: 1-55, nhưng luôn KHÁC 6 số winning chính.
+ * Giá trị: "01"-"55", nhưng luôn KHÁC 6 số winning chính.
  * Dùng để xác định Jackpot 2 (trùng 5/6 + bonus).
  */
-export type BonusNumber = number;
+export type BonusNumber = string;
 
 /**
  * 1 dòng (line) = 1 bộ 6 số chính.
@@ -64,8 +73,8 @@ export type ISODateString = string;
  * - Bao N: N số (7-18)
  */
 export interface BoardSelection {
-  /** Danh sách số đã chọn. Số lượng phụ thuộc PlayType. */
-  mainNumbers: number[];
+  /** Danh sách số đã chọn dạng string zero-padded ("01"-"55"). Số lượng phụ thuộc PlayType. */
+  mainNumbers: string[];
 }
 
 /** Ký hiệu bảng trên thẻ chọn số: A, B, C, D, E (tối đa 5 bảng/vé). */

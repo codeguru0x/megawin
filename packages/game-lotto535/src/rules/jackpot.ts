@@ -147,20 +147,20 @@ export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancia
 // ─────────────────────────────────────────────
 
 /**
- * Tính Jackpot cho kỳ tiếp theo.
+ * Tính Jackpot cuối kỳ (closing).
  *
- * - Có người trúng Jackpot → reset về seedAmount + contribution
- * - Không ai trúng → opening + contribution (tích luỹ)
- * - contribution luôn >= 0 (đã đảm bảo bởi calculateDrawFinancials)
+ * - shouldReset = true (winner hoặc split thực tế) → seedAmount
+ *   Contribution kỳ này đã tính vào giải thưởng winner, không cộng vào cycle mới.
+ * - shouldReset = false → opening + contribution (tích luỹ bình thường)
  */
-export function calculateNextJackpot(
+export function calculateClosingJackpot(
   currentOpening: number,
   contribution: number,
-  hasJackpotWinner: boolean,
+  shouldReset: boolean,
   seedAmount: number,
 ): number {
-  if (hasJackpotWinner) {
-    return seedAmount + contribution;
+  if (shouldReset) {
+    return seedAmount;
   }
 
   return currentOpening + contribution;
@@ -303,10 +303,12 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
     return { details, bonusPerWinner: bonusPerWinnerMap, roundingRemainder: 0 };
   }
 
+  // Tính tổng phần chia của các tier không có winner
   const unclaimedTotal = tierAllocations
     .filter((t) => !t.hasWinners)
     .reduce((s, t) => s + t.initialAmount, 0);
 
+  // Tính phần bổ sung nhận từ các tier không có winner
   const redistributedPerTier = Math.floor(unclaimedTotal / tiersWithWinners.length);
 
   // Bước 3: xác định hạng giải cao nhất có người trúng
@@ -318,12 +320,13 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
     PrizeTier.Tier5,
   ];
 
+  // Tìm hạng giải cao nhất có người trúng
   const highestTierWithWinners = priorityOrder.find((tier) =>
     tiersWithWinners.some((t) => t.tier === tier),
   )!;
 
-  // Bước 4: tính bonus per winner
-  // - Hạng không phải cao nhất: làm tròn xuống 5.000 VND, tích phần dư
+  // Bước 4: tính bonus per winner cho các tier có người trúng
+  // - Hạng không phải cao nhất: làm tròn xuống 5.000 VND, tích phần dư vào hạng cao nhất
   // - Hạng cao nhất: floor 1 VND, nhận thêm phần dư từ các hạng khác
   let totalRemainder = 0;
 
@@ -331,6 +334,7 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
     const totalForTier = t.initialAmount + redistributedPerTier;
 
     if (t.tier === highestTierWithWinners) {
+      // Hạng cao nhất: floor 1 VND, nhận thêm phần dư từ các hạng khác
       const bonus = Math.floor(totalForTier / t.winnerCount);
       const tierRemainder = totalForTier - bonus * t.winnerCount;
       totalRemainder += tierRemainder;
@@ -348,6 +352,7 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
       const tierRemainder = totalForTier - roundedBonus * t.winnerCount;
       totalRemainder += tierRemainder;
 
+      // Hạng không phải cao nhất: làm tròn xuống 5.000 VND, tích phần dư vào hạng cao nhất
       details.set(t.tier, {
         initialAmount: t.initialAmount,
         redistributedAmount: redistributedPerTier,

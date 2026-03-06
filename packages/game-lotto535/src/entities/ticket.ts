@@ -40,9 +40,6 @@ export interface Board {
    */
   boardNo: string;
 
-  /** Đánh dấu board bị void (admin void), vẫn giữ lịch sử. */
-  isVoid?: boolean;
-
   /** Kiểu chơi của board. */
   playType: PlayType;
 

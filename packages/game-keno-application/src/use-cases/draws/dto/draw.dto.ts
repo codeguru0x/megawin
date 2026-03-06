@@ -66,8 +66,8 @@ export interface DrawTransitionOutput {
 
 export interface PublishResultInput {
   drawId: string;
-  /** 20 số trúng thưởng (1-80), unique. */
-  winningNumbers: number[];
+  /** 20 số trúng thưởng ("01"-"80"), unique, giữ nguyên thứ tự quay. */
+  winningNumbers: string[];
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;
@@ -78,7 +78,7 @@ export interface PublishResultOutput {
   drawId: string;
   status: string;
   result: {
-    winningNumbers: number[];
+    winningNumbers: string[];
     publishedAt: string;
   };
 }

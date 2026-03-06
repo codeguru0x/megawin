@@ -4,21 +4,14 @@ import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities/account";
 import { PublishResultUseCase } from "@megawin/game-mega645-application/use-cases/draws";
 import {
-  MEGA645_MAIN_MIN,
-  MEGA645_MAIN_MAX,
   MEGA645_MAIN_COUNT,
 } from "@megawin/game-mega645/entities";
-
-const mainNumberSchema = z
-  .number()
-  .int()
-  .min(MEGA645_MAIN_MIN)
-  .max(MEGA645_MAIN_MAX);
+import { mega645MainNumberSchema } from "@megawin/game-mega645/schemas";
 
 const publishResultSchema = z
   .object({
     winningMain: z
-      .array(mainNumberSchema)
+      .array(mega645MainNumberSchema)
       .length(
         MEGA645_MAIN_COUNT,
         `Phải có đúng ${MEGA645_MAIN_COUNT} số chính.`

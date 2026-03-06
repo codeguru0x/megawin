@@ -130,8 +130,8 @@ export function useCloseSales() {
 
 export function usePublishResult() {
   return useDrawAction<{
-    winningMain: number[];
-    winningBonus: number;
+    winningMain: string[];
+    winningBonus: string;
     vietlottRef?: { drawPeriod: string; drawDate: string };
   }>(
     (id) => `/power655/draws/${id}/publish-result`,

@@ -81,10 +81,10 @@ export function PublishResultAction({
     }
 
     const body: {
-      winningMain: number[];
+      winningMain: string[];
       vietlottRef?: { drawPeriod: string; drawDate: string };
     } = {
-      winningMain: mainNumbers.map(Number),
+      winningMain: mainNumbers.map((s) => s.padStart(2, "0")),
     };
 
     if (vietlotPeriod.trim()) {

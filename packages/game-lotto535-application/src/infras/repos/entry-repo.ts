@@ -15,8 +15,8 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import { Lotto535Collections, PayoutStatus } from "@megawin/game-lotto535/entities";
-import { EntryStatus } from "@megawin/game-core/entities";
+import { Lotto535Collections, PayoutStatus, PrizeTier } from "@megawin/game-lotto535/entities";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import type { MainTuple, Special } from "@megawin/game-lotto535/entities";
 import { ObjectId, Long } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -39,21 +39,14 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   }
 
   /**
-   * Insert 1 entry mới kèm version từ global sequence.
-   * Tự allocate version — dùng khi chỉ cần insert đơn lẻ.
-   */
-  async insertEntry(doc: Record<string, unknown>): Promise<string> {
-    const version = await this.nextVersion();
-    return await this.insertOne({ ...doc, version } as any);
-  }
-
-  /**
-   * Insert nhiều entries đã có sẵn version.
-   * Caller phải gán version vào docs trước khi gọi.
+   * Insert nhiều entries — tự allocate version từ global sequence.
+   * Tất cả entries trong batch nhận cùng 1 version (atomic batch).
    */
   async insertEntries(docs: Record<string, unknown>[]): Promise<number> {
     if (docs.length === 0) return 0;
-    const result = await this.insertMany(docs as any[]);
+    const version = await this.nextVersion();
+    const stamped = docs.map((doc) => ({ ...doc, version }));
+    const result = await this.insertMany(stamped as any[]);
     return result.insertedCount;
   }
 
@@ -240,7 +233,8 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
 
     for (const r of result as any[]) {
       tierWinnerCounts[r._id] = r.totalHitCount;
-      if (r._id !== "jackpot") {
+      // jackpot tier không tính vào totalFixedPrizes
+      if (r._id !== PrizeTier.Jackpot) {
         totalFixedPrizes += r.totalAmount;
       }
     }
@@ -255,6 +249,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
         },
       },
     ]);
+
     const summary = (summaryResult[0] as any) ?? {};
 
     return {
@@ -473,6 +468,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
         update: {
           $set: {
             status: EntryStatus.Void,
+            outcome: EntryOutcome.Void,
             voidInfo: {
               originalAmount: item.amount,
               refundAmount: item.amount,

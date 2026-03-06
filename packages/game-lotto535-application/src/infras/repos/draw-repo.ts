@@ -40,7 +40,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   async createDraw(doc: Omit<DrawDoc, "_id">): Promise<string> {
-    return await this.insertOne(doc as any);
+    return await this.insertOne(doc);
+  }
+
+  async createDraws(docs: Omit<DrawDoc, "_id">[]): Promise<number> {
+    if (docs.length === 0) return 0;
+    const result = await this.insertMany(docs as any[]);
+    return result.insertedCount;
   }
 
   async getDrawById(drawId: string): Promise<DrawEntity | null> {
@@ -334,6 +340,28 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findMany(
       { status: { $in: allowStatuses } },
       { sort: { drawDate: 1, drawNo: 1 } },
+    );
+  }
+
+  /** Tìm draw tiếp theo (chưa settle) sau drawId cụ thể, sắp theo thời gian quay. */
+  async findNextPendingDraw(afterDrawId: string): Promise<DrawEntity | null> {
+    const currentDraw = await this.findOne({ drawId: afterDrawId });
+    if (!currentDraw) return null;
+
+    return await this.findOne(
+      {
+        status: {
+          $in: [
+            DrawStatus.Scheduled,
+            DrawStatus.SalesOpen,
+            DrawStatus.SalesClosed,
+            DrawStatus.Published,
+            DrawStatus.Settling,
+          ],
+        },
+        drawTime: { $gt: currentDraw.drawTime },
+      },
+      { sort: { drawTime: 1 } },
     );
   }
 

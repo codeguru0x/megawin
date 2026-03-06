@@ -11,14 +11,12 @@
 
 import { PlayType } from "../entities/enums";
 import {
-  LOTTO535_MAIN_MAX,
-  LOTTO535_MAIN_MIN,
+  ALL_MAIN_NUMBERS,
   type BoardSelection,
   type LineValue,
   type MainTuple,
 } from "../entities/types";
 import type { Board } from "../entities/ticket";
-import { combination } from "../rules/play-types";
 
 // ─────────────────────────────────────────────
 // Core: generate combinations
@@ -40,9 +38,9 @@ function* combinations<T>(arr: T[], k: number): Generator<T[]> {
   }
 }
 
-/** Sort + assert tuple 5 phần tử. */
-function toMainTuple(nums: number[]): MainTuple {
-  const sorted = [...nums].sort((a, b) => a - b);
+/** Sort string numbers lexicographically (zero-padded → tương đương numeric sort). */
+function toMainTuple(nums: string[]): MainTuple {
+  const sorted = [...nums].sort();
   return sorted as unknown as MainTuple;
 }
 
@@ -69,7 +67,7 @@ function expandMainCover4(sel: BoardSelection): LineValue[] {
   const special = sel.specialNumbers[0]!;
   const lines: LineValue[] = [];
 
-  for (let n = LOTTO535_MAIN_MIN; n <= LOTTO535_MAIN_MAX; n++) {
+  for (const n of ALL_MAIN_NUMBERS) {
     if (chosen.has(n)) continue;
     const mainNums = [...sel.mainNumbers, n];
     lines.push({ main: toMainTuple(mainNums), special });
@@ -84,7 +82,7 @@ function expandMainCover4(sel: BoardSelection): LineValue[] {
  */
 function expandMainCover(sel: BoardSelection): LineValue[] {
   const special = sel.specialNumbers[0]!;
-  const sorted = [...sel.mainNumbers].sort((a, b) => a - b);
+  const sorted = [...sel.mainNumbers].sort();
   const lines: LineValue[] = [];
 
   for (const combo of combinations(sorted, 5)) {
@@ -98,9 +96,7 @@ function expandMainCover(sel: BoardSelection): LineValue[] {
  * SpecialCover: 5 số chính + K số đặc biệt (2-12).
  * Expand thành K lines (1 line per special number).
  */
-function expandSpecialCover(
-  sel: BoardSelection,
-): LineValue[] {
+function expandSpecialCover(sel: BoardSelection): LineValue[] {
   const main = toMainTuple(sel.mainNumbers);
 
   return sel.specialNumbers.map((special) => ({ main, special }));
@@ -117,10 +113,7 @@ function expandSpecialCover(
  * @param selection - Lựa chọn số
  * @returns Danh sách lines (mỗi line = 5 chính + 1 đặc biệt)
  */
-export function expandBoardToLines(
-  playType: PlayType,
-  selection: BoardSelection,
-): LineValue[] {
+export function expandBoardToLines(playType: PlayType, selection: BoardSelection): LineValue[] {
   switch (playType) {
     case PlayType.Standard:
     case PlayType.QuickPick:
@@ -152,15 +145,11 @@ export function expandBoardToLines(
 export function expandAllBoards(
   boards: Board[],
 ): Array<LineValue & { boardNo: string; lineIndex: number }> {
-  const result: Array<
-    LineValue & { boardNo: string; lineIndex: number }
-  > = [];
+  const result: Array<LineValue & { boardNo: string; lineIndex: number }> = [];
 
   let globalIndex = 0;
 
   for (const board of boards) {
-    if (board.isVoid) continue;
-
     const lines = expandBoardToLines(board.playType, board.selection);
     for (const line of lines) {
       result.push({

@@ -1,18 +1,57 @@
 /**
- * Use Case: Finalize Settle
+ * Use Case: Finalize Settle (Lotto 5/35)
  *
- * Bước cuối cùng trong settle flow:
+ * ═══════════════════════════════════════════════════════════════════════
+ * STEP 7 TRONG SETTLE FLOW (BƯỚC CUỐI TRƯỚC DISPATCH PAYOUTS)
+ * ═══════════════════════════════════════════════════════════════════════
+ *
+ * Bước cuối cùng trong settle flow (trước payout):
  *   1. Chuyển draw: settling → settled + ghi jackpot snapshot (atomic, 1 query)
  *   2. Cập nhật / đóng jackpot cycle
  *
- * CRASH-SAFE:
- *   - settleComplete atomic: settling → settled + jackpot snapshot
- *   - Nếu draw đã settled → skip (không throw)
- *   - Cycle update idempotent: overwrite stats / close OK
+ * ────────────────────────────────────────────────
+ * LOGIC CHÍNH:
+ * ────────────────────────────────────────────────
  *
+ *   A. TRANSITION DRAW STATUS:
+ *      - settling → settled (atomic update với guard status = "settling")
+ *      - Ghi jackpot snapshot lên draw:
+ *        { openingAmount, closingAmount, isSplitCycle }
+ *      - Nếu draw đã settled (retry) → skip, không throw
+ *
+ *   B. CẬP NHẬT JACKPOT CYCLE:
+ *      Có 2 trường hợp:
+ *
+ *      B1. CÓ WINNER JACKPOT hoặc SPLIT THỰC TẾ (có winner tier1-tier5):
+ *          → Đóng cycle hiện tại (closeCycle):
+ *            - closeReason: "winner" hoặc "split"
+ *            - Ghi finalAmount, winners (nếu có), splitDetail (nếu split)
+ *            - Nếu có winner Jackpot: chia đều JP cho winners
+ *              (jackpotPerWinner = (openingAmount + contribution) / số winners)
+ *            - Nếu split: ghi tierAllocations, totalWinners, totalPaid
+ *          → Tạo cycle mới NẾU có draw tiếp theo (startDrawId = next draw):
+ *            - Nếu không có draw tiếp → create-draws hoặc prepare-settle sẽ tạo
+ *
+ *      B2. KHÔNG CÓ WINNER, KHÔNG SPLIT THỰC TẾ:
+ *          → Update stats cycle hiện tại (updateCycleStats):
+ *            - currentAmount = closingJackpot (tích luỹ = opening + contribution)
+ *            - totalContribution += contribution kỳ này
+ *            - drawCount += 1
+ *            - lastSettledDrawId = drawId
+ *
+ * ────────────────────────────────────────────────
+ * CRASH-SAFE:
+ * ────────────────────────────────────────────────
+ *   - settleComplete atomic: settling → settled + jackpot snapshot
+ *   - Nếu draw đã settled → skip (không throw) → idempotent
+ *   - Cycle update idempotent: overwrite stats / close + recreate OK
+ *
+ * ────────────────────────────────────────────────
  * JACKPOT SOURCE OF TRUTH:
- *   Active draws không lưu jackpot — đọc từ `jackpot_cycles.currentAmount`.
- *   Chỉ khi settle xong mới ghi snapshot lên draw (bản ghi lịch sử).
+ * ────────────────────────────────────────────────
+ *   - Active draws: Jackpot KHÔNG lưu trên draw → đọc từ jackpot_cycles.currentAmount
+ *   - Settled draws: snapshot Jackpot được ghi lên draw tại step này (bản ghi lịch sử)
+ *   - Kỳ tiếp theo lấy Jackpot opening từ cycle mới (hoặc cycle đã update)
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
@@ -31,13 +70,11 @@ export interface FinalizeSettleInput {
   jackpotOpeningAmount: number;
   /** Số tiền Jackpot cuối kỳ (VND) — từ CalculateFinancials. */
   closingJackpot: number;
-  /** Số tiền Jackpot mở cho kỳ tiếp theo (VND). */
-  nextJackpotOpening: number;
   /** Có người trúng Jackpot hay không. */
   hasJackpotWinner: boolean;
   /** Kỳ này có phải kỳ chia Jackpot hay không. */
   isSplitCycle: boolean;
-  /** Chi tiết phân bổ split — chỉ có khi isSplitCycle = true. */
+  /** Chi tiết phân bổ split — chỉ có khi isSplitCycle = true VÀ có winner tier1-tier5. */
   splitDetails?: LottoSplitDetails;
 }
 
@@ -48,8 +85,6 @@ export interface FinalizeSettleResult {
   status: string;
   /** Số tiền Jackpot cuối kỳ (VND). */
   closingJackpot: number;
-  /** Số tiền Jackpot mở kỳ tiếp theo (VND). */
-  nextJackpotOpening: number;
   /** Thời điểm hoàn thành settle (ISO 8601). */
   completedAt: string;
 }
@@ -64,15 +99,9 @@ export class FinalizeSettleUseCase extends InternalUseCase<
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(input: FinalizeSettleInput): Promise<FinalizeSettleResult> {
-    const {
-      drawId,
-      closingJackpot,
-      nextJackpotOpening,
-      hasJackpotWinner,
-      isSplitCycle,
-      splitDetails,
-    } = input;
+    const { drawId, closingJackpot, hasJackpotWinner, isSplitCycle, splitDetails } = input;
 
+    // ── STEP A: Transition draw settling → settled + ghi jackpot snapshot ──
     const updated = await this.drawRepo.settleComplete(drawId, {
       openingAmount: input.jackpotOpeningAmount,
       closingAmount: closingJackpot,
@@ -88,13 +117,13 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       }
     }
 
+    // ── STEP B: Cập nhật Jackpot Cycle ──
     await this.updateJackpotCycle(input);
 
     return {
       drawId,
       status: DrawStatus.Settled,
       closingJackpot,
-      nextJackpotOpening,
       completedAt: new Date().toISOString(),
     };
   }
@@ -102,8 +131,13 @@ export class FinalizeSettleUseCase extends InternalUseCase<
   /**
    * Cập nhật jackpot cycle sau settle.
    *
-   * - Luôn update stats (currentAmount, drawCount)
-   * - Nếu có winner hoặc split → close cycle + tạo cycle mới
+   * 2 nhánh logic:
+   *   ① Có winner Jackpot hoặc split thực tế → ĐÓNG cycle
+   *      + tạo cycle MỚI nếu có draw tiếp theo (không gap cho player)
+   *   ② Không có winner → UPDATE stats cycle hiện tại (tích luỹ)
+   *
+   * Nếu không có draw tiếp theo, cycle mới sẽ được tạo bởi create-draws
+   * hoặc prepare-settle (safety net).
    */
   private async updateJackpotCycle(input: FinalizeSettleInput): Promise<void> {
     const { drawId, closingJackpot, hasJackpotWinner, isSplitCycle, splitDetails } = input;
@@ -117,17 +151,19 @@ export class FinalizeSettleUseCase extends InternalUseCase<
     const contribution = draw.financial?.jackpotContribution ?? 0;
     const newDrawCount = activeCycle.drawCount + 1;
 
-    const shouldCloseCycle = hasJackpotWinner || isSplitCycle;
+    const splitExecuted = isSplitCycle && splitDetails != null;
+    const shouldCloseCycle = hasJackpotWinner || splitExecuted;
 
     if (shouldCloseCycle) {
-      let winners = undefined;
+      // ── NHÁNH ①: ĐÓNG CYCLE ──
 
+      let winners = undefined;
       if (hasJackpotWinner) {
         const jackpotEntries = await this.entryRepo.findJackpotWinners(drawId);
+        // Winner nhận opening + contribution kỳ này (toàn bộ giá trị JP)
+        const totalJackpotPrize = input.jackpotOpeningAmount + contribution;
         const jackpotPerWinner =
-          jackpotEntries.length > 0
-            ? Math.floor(input.jackpotOpeningAmount / jackpotEntries.length)
-            : 0;
+          jackpotEntries.length > 0 ? Math.floor(totalJackpotPrize / jackpotEntries.length) : 0;
         winners = jackpotEntries.map((e) => ({
           accountId: e.accountId,
           tenantId: e.tenantId,
@@ -138,7 +174,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       }
 
       let splitDetail = undefined;
-      if (isSplitCycle && splitDetails) {
+      if (splitExecuted && splitDetails) {
         let totalWinners = 0;
         let totalPaid = 0;
         for (const tier of Object.values(splitDetails)) {
@@ -173,16 +209,22 @@ export class FinalizeSettleUseCase extends InternalUseCase<
         winners,
       });
 
-      const globalConfig = await this.getGlobalConfig.run();
-      await this.cycleRepo.createCycle({
-        startDrawId: drawId,
-        seedAmount: globalConfig.jackpot.seedAmount,
-        config: {
-          splitThreshold: globalConfig.jackpot.splitThreshold,
-          splitRatios: globalConfig.jackpot.splitRatios,
-        },
-      });
+      // Tạo cycle mới chỉ khi có draw tiếp theo (startDrawId chính xác).
+      // Nếu không có draw tiếp → create-draws hoặc prepare-settle sẽ tạo sau.
+      const nextDraw = await this.drawRepo.findNextPendingDraw(drawId);
+      if (nextDraw) {
+        const globalConfig = await this.getGlobalConfig.run();
+        await this.cycleRepo.createCycle({
+          startDrawId: nextDraw.drawId,
+          seedAmount: globalConfig.jackpot.seedAmount,
+          config: {
+            splitThreshold: globalConfig.jackpot.splitThreshold,
+            splitRatios: globalConfig.jackpot.splitRatios,
+          },
+        });
+      }
     } else {
+      // ── NHÁNH ②: UPDATE STATS ──
       await this.cycleRepo.updateCycleStats({
         cycleNo: activeCycle.cycleNo,
         currentAmount: closingJackpot,

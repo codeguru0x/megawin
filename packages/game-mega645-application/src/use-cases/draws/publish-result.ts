@@ -14,8 +14,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import type { MainTuple } from "@megawin/game-mega645/entities";
 import {
   MEGA645_MAIN_COUNT,
-  MEGA645_MAIN_MIN,
-  MEGA645_MAIN_MAX,
+  VALID_MAIN_NUMBER_SET,
 } from "@megawin/game-mega645/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
@@ -49,15 +48,13 @@ export class PublishResultUseCase extends NextApiUseCase<
       );
     }
 
-    const sortedMain = [...input.winningMain].sort(
-      (a, b) => a - b
-    ) as unknown as MainTuple;
+    const winningMain = [...input.winningMain] as unknown as MainTuple;
     const publishedAt = nowVN();
 
     if (draw.status === DrawStatus.SalesClosed) {
       const updated = await this.drawRepo.publishResult(
         input.drawId,
-        { winningMain: sortedMain },
+        { winningMain },
         input.vietlottRef
       );
 
@@ -69,7 +66,7 @@ export class PublishResultUseCase extends NextApiUseCase<
     } else {
       const success = await this.drawRepo.updateResult(
         input.drawId,
-        { winningMain: sortedMain, publishedAt },
+        { winningMain, publishedAt },
         input.vietlottRef
       );
 
@@ -84,7 +81,7 @@ export class PublishResultUseCase extends NextApiUseCase<
       drawId: input.drawId,
       status: DrawStatus.Published,
       result: {
-        winningMain: sortedMain as unknown as number[],
+        winningMain: input.winningMain,
         publishedAt: publishedAt.toISOString(),
       },
     };
@@ -112,14 +109,10 @@ export class PublishResultUseCase extends NextApiUseCase<
     }
 
     for (const n of winningMain) {
-      if (
-        !Number.isInteger(n) ||
-        n < MEGA645_MAIN_MIN ||
-        n > MEGA645_MAIN_MAX
-      ) {
+      if (!VALID_MAIN_NUMBER_SET.has(n)) {
         throw new AppException(
           "DRAW_RESULT_INVALID",
-          `Số chính phải là số nguyên trong range [${MEGA645_MAIN_MIN}, ${MEGA645_MAIN_MAX}].`
+          `Số chính "${n}" không hợp lệ (phải từ "01" đến "45").`
         );
       }
     }

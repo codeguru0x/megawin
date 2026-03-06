@@ -1,42 +1,21 @@
 /**
  * Power 6/55 Feed Sync – Step Function Definition (ASL)
  *
- * ═══════════════════════════════════════════════════════════════════════
- * FLOW:
- * ═══════════════════════════════════════════════════════════════════════
+ * Dùng chung global entryChangeSeq → version không trùng với game khác.
+ * Scheduler Lambda đọc feedSyncCursor(power655) → start execution.
  *
- *  Trigger: Scheduler Lambda (mỗi 30s) đọc feedSyncCursor
- *           → start execution với { afterVersion, batchSize }
- *         │
- *         ▼
- *  ┌──────────────────────────────────┐
- *  │  SyncEntries                     │  Scan entries version > afterVersion
- *  │  - Batch 200                     │  Upsert vào entryFeed
- *  │  - done = false → loop           │
- *  │  - done = true  → SaveCursor     │
- *  └──────────┬───────────────────────┘
- *             │ done = false
- *             └──────────┐
- *                        ▼
- *             ┌─────────────────────┐
- *             │ UpdateAfterVersion  │  Cập nhật afterVersion
- *             │ → quay lại Sync     │
- *             └─────────────────────┘
- *
- *  done = true
- *         │
- *         ▼
- *  ┌──────────────────────────────────┐
- *  │  SaveCursor                      │  Ghi lastVersion vào feedSyncCursor
- *  └──────────────────────────────────┘
- *
- * IDEMPOTENT:
- *   - Upsert chỉ ghi nếu version mới > cũ
- *   - Retry toàn bộ step function an toàn
- *
- * TRIGGER:
- *   - Scheduler Lambda (EventBridge schedule rate 30s)
+ * USAGE (chạy từ thư mục step-functions):
+ *   npx tsx -e "import { FEED_SYNC_STATE_MACHINE } from './feed-sync'; console.log(JSON.stringify(FEED_SYNC_STATE_MACHINE, null, 2))" > feed-sync.asl.json
  */
+
+const REGION = "ap-southeast-1";
+const ACCOUNT_ID = "YOUR_ACCOUNT_ID";
+const SERVICE = "mw-worker-power655";
+const STAGE = "dev";
+
+function lambdaArn(functionName: string): string {
+  return `arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:${SERVICE}-${STAGE}-${functionName}`;
+}
 
 const LAMBDA_RETRY = [
   {
@@ -61,14 +40,12 @@ export const FEED_SYNC_STATE_MACHINE = {
   States: {
     SyncEntries: {
       Type: "Task",
-      Resource:
-        "arn:aws:lambda:REGION:ACCOUNT:function:power655-feed-sync-entries",
+      Resource: lambdaArn("power655-feed-sync-entries"),
       Arguments: {
         afterVersion: "{% $states.input.afterVersion %}",
         batchSize: "{% $states.input.batchSize %}",
       },
-      Output:
-        "{% { 'batchSize': $states.input.batchSize, 'syncResult': $states.result } %}",
+      Output: "{% { 'batchSize': $states.input.batchSize, 'syncResult': $states.result } %}",
       Next: "CheckDone",
       Retry: LAMBDA_RETRY,
     },
@@ -93,8 +70,7 @@ export const FEED_SYNC_STATE_MACHINE = {
 
     SaveCursor: {
       Type: "Task",
-      Resource:
-        "arn:aws:lambda:REGION:ACCOUNT:function:power655-feed-save-cursor",
+      Resource: lambdaArn("power655-feed-save-cursor"),
       Arguments: {
         lastVersion: "{% $states.input.syncResult.lastVersion %}",
       },

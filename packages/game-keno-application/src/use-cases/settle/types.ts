@@ -19,8 +19,8 @@ import type { BigSmallPrizes, EvenOddPrizes, PayoutCaps } from "@megawin/game-ke
  * Mapping 1:1 với DrawResultForMatch của helpers layer.
  */
 export interface KenoDrawResult {
-  /** 20 số trúng (number[], ví dụ [3, 12, 25, ...]). */
-  winningNumbers: number[];
+  /** 20 số trúng (string[], ví dụ ["03", "12", "25", ...]). */
+  winningNumbers: string[];
   /** Số lượng số "lớn" (41-80) trong 20 số quay. */
   bigCount: number;
   /** Số lượng số "nhỏ" (1-40) trong 20 số quay. */

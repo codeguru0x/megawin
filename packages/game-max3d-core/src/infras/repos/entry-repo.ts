@@ -1,4 +1,4 @@
-import { EntryStatus } from "@megawin/game-core/entities";
+import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import type { BaseEntity } from "@megawin/data/mongo";
 import type { MongoMapper } from "@megawin/data/mongo";
 import type { Document } from "mongodb";
@@ -29,7 +29,9 @@ export abstract class AbstractEntryRepository<
 
   async insertEntries(docs: Record<string, unknown>[]): Promise<number> {
     if (docs.length === 0) return 0;
-    const result = await this.insertMany(docs as any[]);
+    const version = await this.nextVersion();
+    const stamped = docs.map((doc) => ({ ...doc, version }));
+    const result = await this.insertMany(stamped as any[]);
     return result.insertedCount;
   }
 
@@ -407,6 +409,7 @@ export abstract class AbstractEntryRepository<
         update: {
           $set: {
             status: EntryStatus.Void,
+            outcome: EntryOutcome.Void,
             voidInfo: {
               originalAmount: item.amount,
               refundAmount: item.amount,

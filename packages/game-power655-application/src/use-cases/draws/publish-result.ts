@@ -25,8 +25,7 @@ import type {
 } from "@megawin/game-power655/entities";
 import {
   POWER655_MAIN_COUNT,
-  POWER655_MAIN_MIN,
-  POWER655_MAIN_MAX,
+  VALID_MAIN_NUMBER_SET,
 } from "@megawin/game-power655/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
@@ -65,9 +64,7 @@ export class PublishResultUseCase extends NextApiUseCase<
       );
     }
 
-    const sortedMain = [...input.winningMain].sort(
-      (a, b) => a - b
-    ) as unknown as MainTuple;
+    const winningMain = input.winningMain as unknown as MainTuple;
     const bonusNumber = input.bonusNumber as BonusNumber;
     const publishedAt = nowVN();
 
@@ -83,7 +80,7 @@ export class PublishResultUseCase extends NextApiUseCase<
     if (draw.status === DrawStatus.SalesClosed) {
       const updated = await this.drawRepo.publishResult(
         input.drawId,
-        { winningMain: sortedMain, bonusNumber },
+        { winningMain, bonusNumber },
         vietlottRef
       );
 
@@ -95,7 +92,7 @@ export class PublishResultUseCase extends NextApiUseCase<
     } else {
       const success = await this.drawRepo.updateResult(
         input.drawId,
-        { winningMain: sortedMain, bonusNumber, publishedAt },
+        { winningMain, bonusNumber, publishedAt },
         vietlottRef
       );
 
@@ -110,7 +107,7 @@ export class PublishResultUseCase extends NextApiUseCase<
       drawId: input.drawId,
       status: DrawStatus.Published,
       result: {
-        winningMain: sortedMain as unknown as number[],
+        winningMain: winningMain as unknown as string[],
         bonusNumber,
         publishedAt: publishedAt.toISOString(),
       },
@@ -144,26 +141,18 @@ export class PublishResultUseCase extends NextApiUseCase<
     }
 
     for (const n of winningMain) {
-      if (
-        !Number.isInteger(n) ||
-        n < POWER655_MAIN_MIN ||
-        n > POWER655_MAIN_MAX
-      ) {
+      if (!VALID_MAIN_NUMBER_SET.has(n)) {
         throw new AppException(
           "DRAW_RESULT_INVALID",
-          `Số chính phải là số nguyên trong range [${POWER655_MAIN_MIN}, ${POWER655_MAIN_MAX}].`
+          `Số chính "${n}" không hợp lệ (phải từ "01" đến "55").`
         );
       }
     }
 
-    if (
-      !Number.isInteger(bonusNumber) ||
-      bonusNumber < POWER655_MAIN_MIN ||
-      bonusNumber > POWER655_MAIN_MAX
-    ) {
+    if (!VALID_MAIN_NUMBER_SET.has(bonusNumber)) {
       throw new AppException(
         "DRAW_RESULT_INVALID",
-        `Bonus number phải là số nguyên trong range [${POWER655_MAIN_MIN}, ${POWER655_MAIN_MAX}].`
+        `Bonus number "${bonusNumber}" không hợp lệ (phải từ "01" đến "55").`
       );
     }
 

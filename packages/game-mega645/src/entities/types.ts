@@ -38,20 +38,34 @@ export const MEGA645_MAIN_MAX = 45;
 export const MEGA645_MAIN_COUNT = 6;
 
 // ─────────────────────────────────────────────
+// String Number Helpers
+// ─────────────────────────────────────────────
+
+/** Tất cả số chính hợp lệ dạng string zero-padded: "01"-"45". */
+export const ALL_MAIN_NUMBERS: readonly string[] = Array.from(
+  { length: MEGA645_MAIN_MAX - MEGA645_MAIN_MIN + 1 },
+  (_, i) => String(i + MEGA645_MAIN_MIN).padStart(2, "0"),
+);
+
+/** Set tra nhanh O(1) cho số chính hợp lệ. */
+export const VALID_MAIN_NUMBER_SET: ReadonlySet<string> = new Set(ALL_MAIN_NUMBERS);
+
+// ─────────────────────────────────────────────
 // Tuple & Value Types
 // ─────────────────────────────────────────────
 
 /**
- * Tuple 6 số chính – enforce đúng 6 phần tử tại compile time.
- * Luôn sorted tăng dần để canonicalize.
+ * Tuple 6 số chính dạng string zero-padded.
+ * Khi lưu player selection: sorted tăng dần (canonical form).
+ * Khi lưu draw result: giữ nguyên thứ tự quay (draw order).
  */
 export type MainTuple = readonly [
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
 ];
 
 // ─────────────────────────────────────────────
@@ -69,15 +83,13 @@ export type MainTuple = readonly [
  */
 export interface BoardSelection {
   /**
-   * Danh sách các số chính người chơi đã chọn.
+   * Danh sách các số chính người chơi đã chọn ("01"-"45"), unique, sorted tăng dần.
    * - standard: 6 số (1 line)
    * - bao5: 5 số (hệ thống bổ sung số thứ 6 từ 40 số còn lại → 40 lines)
    * - bao7-18: 7..18 số (expand thành C(N,6) lines)
    * - quickPick: mảng rỗng (hệ thống tự sinh ngẫu nhiên 6 số)
-   *
-   * Các số thuộc phạm vi [1..45].
    */
-  mainNumbers: number[];
+  mainNumbers: string[];
 }
 
 // ─────────────────────────────────────────────

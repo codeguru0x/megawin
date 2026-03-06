@@ -9,10 +9,10 @@
  * Kết quả quay Lotto 5/35 — output PrepareSettle, input SettleEntries.
  */
 export interface LottoDrawResult {
-  /** 5 số chính trúng thưởng. */
-  winningMain: number[];
-  /** Số đặc biệt trúng thưởng (1-12). */
-  winningSpecial: number;
+  /** 5 số chính trúng thưởng — string zero-padded, giữ nguyên thứ tự quay. */
+  winningMain: string[];
+  /** Số đặc biệt trúng thưởng — string zero-padded "01"-"12". */
+  winningSpecial: string;
 }
 
 /**
@@ -22,8 +22,6 @@ export interface LottoDrawResult {
 export interface LottoSettleConfig {
   /** Số tiền khởi điểm Jackpot (VND). */
   seedAmount: number;
-  /** Ngưỡng kích hoạt chia Jackpot (VND). */
-  splitThreshold: number;
   /** Tỷ lệ chia Jackpot theo tier. */
   splitRatios: {
     tier1: number;
@@ -34,8 +32,6 @@ export interface LottoSettleConfig {
   };
   /** Tỷ lệ công ty thu về trên doanh thu (0-1). */
   companyRate: number;
-  /** Tỷ lệ hoa hồng đại lý mặc định (0-1). */
-  defaultCommissionRate: number;
 }
 
 /**
@@ -80,18 +76,8 @@ export interface LottoSettleFinancials {
   jackpotContribution: number;
   /** Số tiền Jackpot cuối kỳ (VND). */
   closingJackpot: number;
-  /** Số tiền Jackpot mở cho kỳ tiếp theo (VND). */
-  nextJackpotOpening: number;
   /** Có người trúng Jackpot trong kỳ hay không. */
   hasJackpotWinner: boolean;
-  /** Chi tiết phân bổ split — chỉ có khi isSplitCycle = true. */
+  /** Chi tiết phân bổ split — chỉ có khi isSplitCycle = true VÀ có winner tier1-tier5. */
   splitDetails?: LottoSplitDetails;
-  /** Phân tích doanh thu theo từng tenant. */
-  tenantBreakdown: Array<{
-    tenantId: string;
-    revenue: number;
-    commission: number;
-    commissionRate: number;
-    entryCount: number;
-  }>;
 }

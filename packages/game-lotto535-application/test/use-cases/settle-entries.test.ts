@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { determineTier, buildPrizeAmountMap } from "@megawin/game-lotto535/rules/prize-tiers";
 import {
   calculateDrawFinancials,
-  calculateNextJackpot,
+  calculateClosingJackpot,
   isSplitCycleDraw,
   calculateSplitDistribution,
   DEFAULT_LOTTO535_CONFIG,
@@ -424,19 +424,19 @@ describe("Lotto 5/35 – calculateDrawFinancials", () => {
 });
 
 // ─────────────────────────────────────────────
-// calculateNextJackpot
+// calculateClosingJackpot
 // ─────────────────────────────────────────────
 
-describe("Lotto 5/35 – calculateNextJackpot", () => {
+describe("Lotto 5/35 – calculateClosingJackpot", () => {
   it("không có winner → tích luỹ", () => {
-    expect(calculateNextJackpot(5_000_000_000, 1_000_000_000, false, 1_000_000_000)).toBe(
+    expect(calculateClosingJackpot(5_000_000_000, 1_000_000_000, false, 1_000_000_000)).toBe(
       6_000_000_000,
     );
   });
 
-  it("có winner → reset về seed + contribution", () => {
-    expect(calculateNextJackpot(5_000_000_000, 1_000_000_000, true, 1_000_000_000)).toBe(
-      2_000_000_000,
+  it("có winner → reset về seed (contribution tính vào giải winner)", () => {
+    expect(calculateClosingJackpot(5_000_000_000, 1_000_000_000, true, 1_000_000_000)).toBe(
+      1_000_000_000,
     );
   });
 });

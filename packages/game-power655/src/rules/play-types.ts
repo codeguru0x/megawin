@@ -9,8 +9,7 @@
 import { PlayType } from "../entities/enums";
 import {
   POWER655_MAIN_COUNT,
-  POWER655_MAIN_MAX,
-  POWER655_MAIN_MIN,
+  VALID_MAIN_NUMBER_SET,
 } from "../entities/types";
 
 // ─── Combinatorics ───
@@ -82,7 +81,7 @@ export function getRequiredMainCount(playType: PlayType): number {
 }
 
 export function validateMainNumbers(
-  mainNumbers: number[],
+  mainNumbers: string[],
   playType: PlayType
 ): { valid: boolean; error?: string } {
   const config = PLAY_TYPE_CONFIGS[playType];
@@ -103,14 +102,10 @@ export function validateMainNumbers(
   }
 
   for (const n of mainNumbers) {
-    if (
-      !Number.isInteger(n) ||
-      n < POWER655_MAIN_MIN ||
-      n > POWER655_MAIN_MAX
-    ) {
+    if (!VALID_MAIN_NUMBER_SET.has(n)) {
       return {
         valid: false,
-        error: `Số ${n} ngoài phạm vi ${POWER655_MAIN_MIN}-${POWER655_MAIN_MAX}`,
+        error: `Số "${n}" không hợp lệ (phải từ "01" đến "55")`,
       };
     }
   }

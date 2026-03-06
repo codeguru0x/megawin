@@ -10,8 +10,8 @@
  * Mapping 1:1 với DrawResultForMatch của helpers layer.
  */
 export interface MegaDrawResult {
-  /** 6 số chính trúng thưởng (1-45). */
-  winningMain: number[];
+  /** 6 số chính trúng thưởng ("01"-"45"). */
+  winningMain: string[];
 }
 
 /**

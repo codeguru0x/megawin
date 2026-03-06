@@ -3,10 +3,9 @@ import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import {
   KENO_DRAW_COUNT,
-  KENO_NUMBER_MIN,
-  KENO_NUMBER_MAX,
-  KENO_BIG_SMALL_BOUNDARY,
+  KENO_VALID_NUMBERS,
 } from "@megawin/game-keno/entities";
+import { computeDrawStats } from "@megawin/game-keno/helpers";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { nowVN } from "@megawin/shared/utils/date";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
@@ -39,20 +38,12 @@ export class PublishResultUseCase extends NextApiUseCase<
       );
     }
 
-    const sorted = [...input.winningNumbers].sort((a, b) => a - b);
     const publishedAt = nowVN();
-
-    const bigCount = sorted.filter((n) => n > KENO_BIG_SMALL_BOUNDARY).length;
-    const smallCount = KENO_DRAW_COUNT - bigCount;
-    const evenCount = sorted.filter((n) => n % 2 === 0).length;
-    const oddCount = KENO_DRAW_COUNT - evenCount;
+    const stats = computeDrawStats(input.winningNumbers);
 
     const resultData = {
-      winningNumbers: sorted,
-      bigCount,
-      smallCount,
-      evenCount,
-      oddCount,
+      winningNumbers: input.winningNumbers,
+      ...stats,
     };
 
     if (draw.status === DrawStatus.SalesClosed) {
@@ -85,7 +76,7 @@ export class PublishResultUseCase extends NextApiUseCase<
       drawId: input.drawId,
       status: DrawStatus.Published,
       result: {
-        winningNumbers: sorted,
+        winningNumbers: input.winningNumbers,
         publishedAt: publishedAt.toISOString(),
       },
     };
@@ -106,11 +97,11 @@ export class PublishResultUseCase extends NextApiUseCase<
       throw new AppException("DRAW_RESULT_INVALID", "Các số phải khác nhau.");
     }
 
-    for (const n of winningNumbers) {
-      if (!Number.isInteger(n) || n < KENO_NUMBER_MIN || n > KENO_NUMBER_MAX) {
+    for (const s of winningNumbers) {
+      if (!KENO_VALID_NUMBERS.has(s)) {
         throw new AppException(
           "DRAW_RESULT_INVALID",
-          `Số phải là số nguyên trong range [${KENO_NUMBER_MIN}, ${KENO_NUMBER_MAX}].`,
+          `Số "${s}" không hợp lệ. Phải là string "01"-"80".`,
         );
       }
     }

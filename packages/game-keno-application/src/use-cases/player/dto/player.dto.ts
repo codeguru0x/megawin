@@ -14,7 +14,7 @@ export interface PlayerGetCurrentDrawOutput {
     drawId: string;
     drawDate: string;
     drawNo: number;
-    winningNumbers: number[];
+    winningNumbers: string[];
     publishedAt: string;
   } | null;
 }
@@ -148,7 +148,7 @@ export interface PlayerEntryInfo {
     }>;
   };
   result?: {
-    winningNumbers: number[];
+    winningNumbers: string[];
     publishedAt: string;
     bigCount: number;
     smallCount: number;

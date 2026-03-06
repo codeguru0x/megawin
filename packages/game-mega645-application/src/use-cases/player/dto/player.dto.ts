@@ -22,8 +22,8 @@ export interface PlayerGetCurrentDrawOutput {
     drawDate: string;
     /** Số thứ tự kỳ quay. */
     drawNo: number;
-    /** 6 số chính trúng thưởng (1-45). */
-    winningMain: number[];
+    /** 6 số chính trúng thưởng ("01"-"45"). */
+    winningMain: string[];
     /** Thời điểm công bố kết quả (ISO datetime). */
     publishedAt: string;
   } | null;
@@ -169,8 +169,8 @@ export interface PlayerTicketSummary {
     playType: string;
     /** Các số đã chọn. */
     selection: {
-      /** Danh sách số chính đã chọn (6-15 số, khoảng 1-45). */
-      mainNumbers: number[];
+      /** Danh sách số chính đã chọn ("01"-"45"). */
+      mainNumbers: string[];
     };
     /** Số dòng expand ra từ board này = C(n,6) với n = số lượng mainNumbers. */
     expandedLines: number;
@@ -236,16 +236,16 @@ export interface PlayerEntryInfo {
       boardNo: string;
       /** Loại cách chơi (normal / system). */
       playType: string;
-      /** Danh sách số chính đã chọn (1-45). */
-      mainNumbers: number[];
+      /** Danh sách số chính đã chọn ("01"-"45"). */
+      mainNumbers: string[];
       /** Số dòng expand ra = C(n,6). */
       expandedLines: number;
     }>;
   };
   /** Kết quả quay thưởng (chỉ có khi kỳ đã công bố). */
   result?: {
-    /** 6 số chính trúng thưởng (1-45). */
-    winningMain: number[];
+    /** 6 số chính trúng thưởng ("01"-"45"). */
+    winningMain: string[];
     /** Thời điểm công bố kết quả (ISO datetime). */
     publishedAt: string;
   };
@@ -298,8 +298,8 @@ export interface PlayerLineInfo {
   boardNo: string;
   /** Chỉ số dòng trong board (0-based). */
   lineIndex: number;
-  /** 6 số chính của dòng (1-45), đã sort ascending. */
-  main: number[];
+  /** 6 số chính của dòng ("01"-"45"), đã sort ascending. */
+  main: string[];
   /** Kết quả so khớp dòng với kết quả quay. */
   matchResult: {
     /** Số lượng số chính khớp (0-6). */

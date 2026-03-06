@@ -10,9 +10,9 @@ import type { MainTuple, LineValue, BoardSelection } from "../entities/types";
 import { POWER655_MAIN_COUNT } from "../entities/types";
 import type { Board } from "../entities/ticket";
 
-function generateCombinations(numbers: number[], k: number): number[][] {
-  const result: number[][] = [];
-  const combo: number[] = [];
+function generateCombinations(numbers: string[], k: number): string[][] {
+  const result: string[][] = [];
+  const combo: string[] = [];
 
   function backtrack(start: number) {
     if (combo.length === k) {
@@ -34,7 +34,7 @@ export function expandBoardToLines(
   playType: PlayType,
   selection: BoardSelection
 ): LineValue[] {
-  const sorted = [...selection.mainNumbers].sort((a, b) => a - b);
+  const sorted = [...selection.mainNumbers].sort();
 
   if (playType === PlayType.Standard || playType === PlayType.QuickPick) {
     return [{ main: sorted.slice(0, POWER655_MAIN_COUNT) as MainTuple }];

@@ -6,8 +6,6 @@ import { startExecution } from "@megawin/app-core/aws/sf";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
 
-const VOID_SFN_ARN = process.env.LOTTO535_VOID_SFN_ARN!;
-
 const VOIDABLE_STATUSES = new Set<string>([
   DrawStatus.Scheduled,
   DrawStatus.SalesClosed,
@@ -15,6 +13,8 @@ const VOIDABLE_STATUSES = new Set<string>([
 ]);
 
 export interface VoidDrawInput extends DrawIdInput {
+  /** ARN của Step Function huỷ kỳ quay Lotto 5/35. */
+  LOTTO535_VOID_SFN_ARN: string;
   reason: string;
   voidedBy?: string;
 }
@@ -36,6 +36,10 @@ export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutpu
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: VoidDrawInput): Promise<VoidDrawOutput> {
+    if (!input.LOTTO535_VOID_SFN_ARN) {
+      throw AppException.badRequest("Worker huỷ kỳ quay Lotto 5/35 không được cấu hình.");
+    }
+
     const draw = await this.drawRepo.getDrawById(input.drawId);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
@@ -65,7 +69,7 @@ export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutpu
 
     try {
       await startExecution({
-        stateMachineArn: VOID_SFN_ARN,
+        stateMachineArn: input.LOTTO535_VOID_SFN_ARN,
         name: toExecutionName(input.drawId),
         input: { drawId: input.drawId },
       });

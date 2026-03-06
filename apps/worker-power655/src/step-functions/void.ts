@@ -44,7 +44,19 @@
  * REFUND LOGIC:
  *   - Multi-draw ticket: 1 kỳ void → partial refund (entry amount)
  *   - Single-draw ticket: kỳ duy nhất void → full refund, ticket status = refunded
+ *
+ * USAGE (chạy từ thư mục step-functions):
+ *   npx tsx -e "import { VOID_STATE_MACHINE } from './void'; console.log(JSON.stringify(VOID_STATE_MACHINE, null, 2))" > void.asl.json
  */
+
+const REGION = "ap-southeast-1";
+const ACCOUNT_ID = "YOUR_ACCOUNT_ID";
+const SERVICE = "mw-worker-power655";
+const STAGE = "dev";
+
+function lambdaArn(functionName: string): string {
+  return `arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:${SERVICE}-${STAGE}-${functionName}`;
+}
 
 const LAMBDA_RETRY = [
   {
@@ -69,7 +81,7 @@ export const VOID_STATE_MACHINE = {
   States: {
     PrepareVoid: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-prepare",
+      Resource: lambdaArn("void-prepare"),
       Assign: { voidCtx: "{% $states.result %}" },
       Next: "VoidEntries",
       Retry: LAMBDA_RETRY,
@@ -77,7 +89,7 @@ export const VOID_STATE_MACHINE = {
 
     VoidEntries: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-entries",
+      Resource: lambdaArn("void-entries"),
       Arguments: "{% $voidCtx %}",
       Assign: { voidResult: "{% $states.result %}" },
       Next: "CheckVoidDone",
@@ -97,15 +109,27 @@ export const VOID_STATE_MACHINE = {
 
     SyncTicketSummaries: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-sync-ticket-summaries",
+      Resource: lambdaArn("void-sync-ticket-summaries"),
       Arguments: "{% $voidCtx %}",
-      Next: "DispatchRefunds",
+      Assign: { syncResult: "{% $states.result %}" },
+      Next: "CheckSyncDone",
       Retry: LAMBDA_RETRY,
+    },
+
+    CheckSyncDone: {
+      Type: "Choice",
+      Choices: [
+        {
+          Condition: "{% $syncResult.done %}",
+          Next: "DispatchRefunds",
+        },
+      ],
+      Default: "SyncTicketSummaries",
     },
 
     DispatchRefunds: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-dispatch-refunds",
+      Resource: lambdaArn("void-dispatch-refunds"),
       Arguments: "{% $voidCtx %}",
       Assign: { refundResult: "{% $states.result %}" },
       Next: "CheckRefundDone",
@@ -137,7 +161,7 @@ export const VOID_STATE_MACHINE = {
 
     FinalizeVoid: {
       Type: "Task",
-      Resource: "arn:aws:lambda:REGION:ACCOUNT:function:void-finalize",
+      Resource: lambdaArn("void-finalize"),
       Arguments: "{% $voidCtx %}",
       End: true,
       Retry: LAMBDA_RETRY,

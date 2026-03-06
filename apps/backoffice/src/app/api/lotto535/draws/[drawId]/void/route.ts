@@ -3,6 +3,7 @@ import { z } from "zod";
 import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities/account";
 import { VoidDrawUseCase } from "@megawin/game-lotto535-application/use-cases/draws";
+import { env } from "@/env";
 
 const voidSchema = z.object({
   reason: z.string().min(1, "Lý do huỷ không được để trống."),
@@ -18,6 +19,7 @@ export const POST = withApi()
     return voidDrawUseCase.run({
       drawId,
       reason: body.reason,
-      voidedBy: session?.user.email ?? session?.user.id,
+      voidedBy: session!.user.username,
+      LOTTO535_VOID_SFN_ARN: env.LOTTO535_VOID_SFN_ARN!,
     });
   });

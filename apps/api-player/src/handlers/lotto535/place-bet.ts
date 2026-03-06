@@ -2,8 +2,7 @@
  * Lambda handler: POST /player/lotto535/bets
  * Player đặt cược Lotto 5/35 — authed qua Cognito JWT Bearer token.
  *
- * Số Lotto 5/35 nhận dạng string "01"-"35" (main), "01"-"12" (special).
- * Parse sang number trước khi truyền vào use case.
+ * Số Lotto 5/35 nhận và lưu dạng string zero-padded: "01"-"35" (main), "01"-"12" (special).
  */
 
 import { withPlayerAuth } from "@megawin/auth";
@@ -46,14 +45,14 @@ export const lotto535BoardSchema = z
 
     if (new Set(selection.mainNumbers).size !== mainLen) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Số chính không được trùng nhau.",
         path: ["selection", "mainNumbers"],
       });
     }
     if (new Set(selection.specialNumbers).size !== specialLen) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Số đặc biệt không được trùng nhau.",
         path: ["selection", "specialNumbers"],
       });
@@ -66,13 +65,13 @@ export const lotto535BoardSchema = z
       case PlayType.Standard:
         if (mainLen !== 5)
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Chơi thường: cần chọn đúng 5 số chính.",
             path: ["selection", "mainNumbers"],
           });
         if (specialLen !== 1)
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Chơi thường: cần chọn đúng 1 số đặc biệt.",
             path: ["selection", "specialNumbers"],
           });
@@ -81,13 +80,13 @@ export const lotto535BoardSchema = z
       case PlayType.MainCover4:
         if (mainLen !== 4)
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Bao 4 số: cần chọn đúng 4 số chính.",
             path: ["selection", "mainNumbers"],
           });
         if (specialLen !== 1)
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Bao 4 số: cần chọn đúng 1 số đặc biệt.",
             path: ["selection", "specialNumbers"],
           });
@@ -96,13 +95,13 @@ export const lotto535BoardSchema = z
       case PlayType.MainCover:
         if (mainLen < 6 || mainLen > 15)
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Bao số chính: cần chọn 6-15 số chính.",
             path: ["selection", "mainNumbers"],
           });
         if (specialLen !== 1)
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Bao số chính: cần chọn đúng 1 số đặc biệt.",
             path: ["selection", "specialNumbers"],
           });
@@ -111,13 +110,13 @@ export const lotto535BoardSchema = z
       case PlayType.SpecialCover:
         if (mainLen !== 5)
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Bao số đặc biệt: cần chọn đúng 5 số chính.",
             path: ["selection", "mainNumbers"],
           });
         if (specialLen < 2 || specialLen > 12)
           ctx.addIssue({
-            code: z.ZodIssueCode.custom,
+            code: "custom",
             message: "Bao số đặc biệt: cần chọn 2-12 số đặc biệt.",
             path: ["selection", "specialNumbers"],
           });
@@ -133,16 +132,15 @@ export const lotto535PlaceBetBodySchema = z.object({
     .min(1)
     .max(6)
     .refine((ids) => new Set(ids).size === ids.length, {
-      message: "Các drawId không được trùng lặp.",
+      message: "Các kỳ không được trùng lặp.",
     }),
   boards: z
     .array(lotto535BoardSchema)
     .min(1)
     .max(5)
-    .refine(
-      (boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length,
-      { message: "Các board không được trùng boardNo." }
-    ),
+    .refine((boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length, {
+      message: "Các board không được trùng boardNo.",
+    }),
 });
 
 export type Lotto535Board = z.infer<typeof lotto535BoardSchema>;
@@ -156,16 +154,13 @@ export const handler = withPlayerAuth(
     const { tenantId, accountId, username } = event.user;
     const { drawIds, boards: rawBoards } = event.schema.body;
 
+    // String zero-padded — truyền thẳng, không cần parseInt
     const boards = rawBoards.map((b: Lotto535Board) => ({
       boardNo: b.boardNo,
       playType: b.playType,
       selection: {
-        mainNumbers: b.selection.mainNumbers.map((s: string) =>
-          parseInt(s, 10)
-        ),
-        specialNumbers: b.selection.specialNumbers.map((s: string) =>
-          parseInt(s, 10)
-        ),
+        mainNumbers: b.selection.mainNumbers,
+        specialNumbers: b.selection.specialNumbers,
       },
     }));
 
@@ -178,5 +173,5 @@ export const handler = withPlayerAuth(
       boards,
     });
   },
-  { schemas: { body: lotto535PlaceBetBodySchema } }
+  { schemas: { body: lotto535PlaceBetBodySchema } },
 );

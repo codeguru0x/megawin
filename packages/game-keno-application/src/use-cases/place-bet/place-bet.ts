@@ -15,11 +15,7 @@
 
 import { AppException } from "@megawin/shared/errors";
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import {
-  DrawStatus,
-  EntryStatus,
-  TicketStatus,
-} from "@megawin/game-core/entities";
+import { DrawStatus, EntryStatus, TicketStatus } from "@megawin/game-core/entities";
 import type {
   BasicBoard,
   SideBet,
@@ -28,10 +24,7 @@ import type {
   EntryBoardSnapshot,
   EntrySideBetSnapshot,
 } from "@megawin/game-keno/entities";
-import {
-  KenoPlayType,
-  KENO_SIDE_BET_PLAY_TYPES,
-} from "@megawin/game-keno/entities";
+import { KenoPlayType, KENO_SIDE_BET_PLAY_TYPES } from "@megawin/game-keno/entities";
 import {
   validateBasicSelection,
   getPlayTypeFromPickCount,
@@ -47,10 +40,7 @@ import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
 
-export class PlaceBetUseCase extends ApiGatewayUseCase<
-  PlaceBetInput,
-  PlaceBetOutput
-> {
+export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly ticketRepo = new TicketRepository();
   private readonly entryRepo = new EntryRepository();
@@ -75,9 +65,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
 
     // ── 2. Validate drawIds ──
     if (drawIds.length === 0 || drawIds.length > play.maxDrawCount) {
-      throw AppException.badRequest(
-        `Số kỳ phải từ 1 đến ${play.maxDrawCount}.`
-      );
+      throw AppException.badRequest(`Số kỳ phải từ 1 đến ${play.maxDrawCount}.`);
     }
     if (new Set(drawIds).size !== drawIds.length) {
       throw AppException.badRequest("Danh sách kỳ quay chứa drawId trùng lặp.");
@@ -85,15 +73,11 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
 
     // ── 3. Validate boards + sideBets ──
     if (boardInputs.length === 0 && sideBetInputs.length === 0) {
-      throw AppException.badRequest(
-        "Phải có ít nhất 1 board cơ bản hoặc 1 side bet."
-      );
+      throw AppException.badRequest("Phải có ít nhất 1 board cơ bản hoặc 1 side bet.");
     }
 
     if (boardInputs.length > play.maxBasicBoardsPerTicket) {
-      throw AppException.badRequest(
-        `Số board cơ bản tối đa là ${play.maxBasicBoardsPerTicket}.`
-      );
+      throw AppException.badRequest(`Số board cơ bản tối đa là ${play.maxBasicBoardsPerTicket}.`);
     }
 
     const builtBoards: BasicBoard[] = [];
@@ -101,14 +85,12 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       const playType = getPlayTypeFromPickCount(bi.numbers.length);
       if (!playType) {
         throw AppException.badRequest(
-          `Board ${bi.boardNo}: số lượng số ${bi.numbers.length} không hợp lệ (1-10).`
+          `Board ${bi.boardNo}: số lượng số ${bi.numbers.length} không hợp lệ (1-10).`,
         );
       }
       const valResult = validateBasicSelection(playType, bi.numbers);
       if (!valResult.valid) {
-        throw AppException.badRequest(
-          `Board ${bi.boardNo}: ${valResult.errors.join("; ")}`
-        );
+        throw AppException.badRequest(`Board ${bi.boardNo}: ${valResult.errors.join("; ")}`);
       }
 
       builtBoards.push({
@@ -121,14 +103,10 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
     const builtSideBets: SideBet[] = [];
     for (const si of sideBetInputs) {
       const pt =
-        si.playType === KenoPlayType.BigSmall
-          ? KenoPlayType.BigSmall
-          : KenoPlayType.EvenOdd;
+        si.playType === KenoPlayType.BigSmall ? KenoPlayType.BigSmall : KenoPlayType.EvenOdd;
 
       if (!KENO_SIDE_BET_PLAY_TYPES.includes(pt)) {
-        throw AppException.badRequest(
-          `Side bet playType "${si.playType}" không hợp lệ.`
-        );
+        throw AppException.badRequest(`Side bet playType "${si.playType}" không hợp lệ.`);
       }
 
       builtSideBets.push({
@@ -148,20 +126,17 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       }
       if (draw.status !== DrawStatus.SalesOpen) {
         throw AppException.badRequest(
-          `Kỳ quay ${drawId} không đang mở bán (status: ${draw.status}).`
+          `Kỳ quay ${drawId} không đang mở bán (status: ${draw.status}).`,
         );
       }
       if (draw.sales?.closeAt && new Date() >= draw.sales.closeAt) {
-        throw AppException.badRequest(
-          `Kỳ quay ${drawId} đã hết thời gian nhận cược.`
-        );
+        throw AppException.badRequest(`Kỳ quay ${drawId} đã hết thời gian nhận cược.`);
       }
     }
 
     // ── 5. Load commission rate + tính commission amount ──
     const tenantConfig = await this.getTenantConfig.run({ tenantId });
-    const commissionRate =
-      tenantConfig?.commissionRate ?? globalConfig.rates.defaultCommissionRate;
+    const commissionRate = tenantConfig?.commissionRate ?? globalConfig.rates.defaultCommissionRate;
 
     // ── 6. Calculate pricing ──
     const unitPrice = play.unitPrice;
@@ -220,9 +195,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
       bet: s.bet,
     }));
 
-    const version = await this.entryRepo.nextVersion();
-
-    const entryDocs: Array<Omit<TicketEntryDoc, "_id">> = [];
+    const entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">> = [];
 
     for (const drawId of drawIds) {
       const draw = drawMap.get(drawId)!;
@@ -235,7 +208,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
         drawDate: draw.drawDate,
         financialDate: draw.financialDate,
         tenant: { commissionRate, commissionAmount },
-        status: EntryStatus.Scheduled as any,
+        status: EntryStatus.Scheduled,
         betCount: betsPerDraw,
         amount: amountPerDraw,
         unitPrice,
@@ -244,17 +217,16 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<
           boards: boardSnapshots,
           sideBets: sideBetSnapshots,
         },
-        version,
         createdAt: now,
         updatedAt: now,
       });
     }
 
     try {
-      await this.entryRepo.insertEntries(entryDocs as any[]);
+      await this.entryRepo.insertEntries(entryDocs);
     } catch (err) {
       throw AppException.internal(
-        "Không thể tạo entries cho các kỳ quay đã chọn. Vui lòng thử lại."
+        "Không thể tạo entries cho các kỳ quay đã chọn. Vui lòng thử lại.",
       );
     }
 

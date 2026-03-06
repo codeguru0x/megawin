@@ -13,8 +13,8 @@
  * 6 số chính + 1 số bonus (từ 49 số còn lại).
  */
 export interface PowerDrawResult {
-  winningMain: number[];
-  bonusNumber: number;
+  winningMain: string[];
+  bonusNumber: string;
 }
 
 /**

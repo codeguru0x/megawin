@@ -109,7 +109,7 @@ export function useCloseSales() {
 
 export function usePublishResult() {
   return useDrawAction<{
-    winningMain: number[];
+    winningMain: string[];
     vietlottRef?: { drawPeriod: string; drawDate: string };
   }>(
     (id) => `/mega645/draws/${id}/publish-result`,

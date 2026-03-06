@@ -31,8 +31,7 @@ export interface ListDrawsParams {
 export function useCurrentDraw() {
   return useQuery({
     queryKey: lotto535Keys.currentDraw,
-    queryFn: () =>
-      apiClient.get<GetCurrentDrawOutput>("/lotto535/draws/current"),
+    queryFn: () => apiClient.get<GetCurrentDrawOutput>("/lotto535/draws/current"),
     refetchInterval: 15_000,
   });
 }
@@ -71,7 +70,7 @@ export function usePreviewDraws(count: number) {
 function useDrawAction<TBody = void>(
   actionPath: (drawId: string) => string,
   method: "post" | "patch",
-  successMessage: string
+  successMessage: string,
 ) {
   const qc = useQueryClient();
   return useMutation({
@@ -84,46 +83,32 @@ function useDrawAction<TBody = void>(
       toast.success(successMessage);
     },
     onError: (err) => {
-      toast.error(
-        err instanceof ApiClientError ? err.message : "Thao tác thất bại."
-      );
+      toast.error(err instanceof ApiClientError ? err.message : "Thao tác thất bại.");
     },
   });
 }
 
 export function useOpenSales() {
-  return useDrawAction(
-    (id) => `/lotto535/draws/${id}/open-sales`,
-    "post",
-    "Đã mở bán vé."
-  );
+  return useDrawAction((id) => `/lotto535/draws/${id}/open-sales`, "post", "Đã mở bán vé.");
 }
 
 export function useCloseSales() {
-  return useDrawAction(
-    (id) => `/lotto535/draws/${id}/close-sales`,
-    "post",
-    "Đã đóng bán vé."
-  );
+  return useDrawAction((id) => `/lotto535/draws/${id}/close-sales`, "post", "Đã đóng bán vé.");
 }
 
 export function usePublishResult() {
   return useDrawAction<{
-    winningMain: number[];
-    winningSpecial: number;
+    winningMain: string[];
+    winningSpecial: string;
     vietlottRef?: { drawPeriod: string; drawDate: string; drawSession: number };
-  }>(
-    (id) => `/lotto535/draws/${id}/publish-result`,
-    "post",
-    "Đã công bố kết quả."
-  );
+  }>((id) => `/lotto535/draws/${id}/publish-result`, "post", "Đã công bố kết quả.");
 }
 
 export function useTriggerSettle() {
   return useDrawAction(
     (id) => `/lotto535/draws/${id}/trigger-settle`,
     "post",
-    "Đã bắt đầu kết sổ."
+    "Đã bắt đầu kết sổ.",
   );
 }
 
@@ -131,7 +116,7 @@ export function useVoidDraw() {
   return useDrawAction<{ reason: string }>(
     (id) => `/lotto535/draws/${id}/void`,
     "post",
-    "Đã huỷ kỳ quay."
+    "Đã huỷ kỳ quay.",
   );
 }
 
@@ -139,7 +124,7 @@ export function useUpdateSchedule() {
   return useDrawAction<{ salesOpenAt: string; salesCloseAt: string; drawTime?: string }>(
     (id) => `/lotto535/draws/${id}/schedule`,
     "patch",
-    "Đã cập nhật lịch."
+    "Đã cập nhật lịch.",
   );
 }
 
@@ -153,9 +138,7 @@ export function useCreateDraw() {
       toast.success(`Đã tạo ${res.draws.length} kỳ quay mới.`);
     },
     onError: (err) => {
-      toast.error(
-        err instanceof ApiClientError ? err.message : "Tạo kỳ quay thất bại."
-      );
+      toast.error(err instanceof ApiClientError ? err.message : "Tạo kỳ quay thất bại.");
     },
   });
 }
