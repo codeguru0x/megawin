@@ -15,29 +15,19 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import type { KenoDrawResult, KenoSettleConfig } from "./types";
+import type { SettleContext } from "./types";
 
 export interface PrepareSettleInput {
   drawId: string;
 }
 
-export interface PrepareSettleResult {
-  drawId: string;
-  drawDate: string;
-  drawNo: number;
-  financialDate: string;
-  result: KenoDrawResult;
-  config: KenoSettleConfig;
-  totalEntries: number;
-}
-
-export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, PrepareSettleResult> {
+export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, SettleContext> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** Load context cho Keno settle flow. Throw nếu draw không hợp lệ. */
-  protected async execute(input: PrepareSettleInput): Promise<PrepareSettleResult> {
+  protected async execute(input: PrepareSettleInput): Promise<SettleContext> {
     const { drawId } = input;
 
     const draw = await this.drawRepo.getDrawById(drawId);

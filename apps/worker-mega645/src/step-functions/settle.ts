@@ -46,11 +46,10 @@
  *
  * DATA FLOW (Assign-based):
  *   $settleCtx  = PrepareSettle result, persisted via Assign across all states.
- *   $financials = CalculateFinancials result, used by ApplySplitBonuses/BuildReport/FinalizeSettle.
+ *   Sau CalculateFinancials, merge financials vào $settleCtx.financials.
  *   Lambda nhận data qua Arguments, tự destructure fields cần thiết.
  *   batchSize cố định 500 trong use-case, không truyền từ step function.
- *   FinalizeSettle cần cả $settleCtx + $financials → dùng $merge.
- *   ApplySplitBonuses cần $settleCtx + splitDetails từ $financials → dùng $merge.
+ *   Tất cả step dùng chung $settleCtx — không cần biến riêng.
  *
  * CRASH RECOVERY:
  *   Mỗi step idempotent. Step Function retry-safe.
@@ -125,7 +124,7 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Task",
       Resource: lambdaArn("settle-calculate-financials"),
       Arguments: "{% $settleCtx %}",
-      Assign: { financials: "{% $states.result %}" },
+      Assign: { settleCtx: "{% $merge($settleCtx, { 'financials': $states.result }) %}" },
       Next: "ApplySplitBonuses",
       Retry: LAMBDA_RETRY,
     },
@@ -133,7 +132,7 @@ export const SETTLE_STATE_MACHINE = {
     ApplySplitBonuses: {
       Type: "Task",
       Resource: lambdaArn("settle-apply-split-bonuses"),
-      Arguments: "{% $merge($settleCtx, { 'splitDetails': $financials.splitDetails }) %}",
+      Arguments: "{% $settleCtx %}",
       Next: "SyncTicketSummaries",
       Retry: LAMBDA_RETRY,
     },
@@ -161,7 +160,7 @@ export const SETTLE_STATE_MACHINE = {
     BuildReport: {
       Type: "Task",
       Resource: lambdaArn("settle-build-report"),
-      Arguments: "{% $merge($settleCtx, { 'financials': $financials }) %}",
+      Arguments: "{% $settleCtx %}",
       Next: "FinalizeSettle",
       Retry: LAMBDA_RETRY,
     },
@@ -169,7 +168,7 @@ export const SETTLE_STATE_MACHINE = {
     FinalizeSettle: {
       Type: "Task",
       Resource: lambdaArn("settle-finalize"),
-      Arguments: "{% $merge($settleCtx, $financials) %}",
+      Arguments: "{% $settleCtx %}",
       Next: "DispatchPayouts",
       Retry: LAMBDA_RETRY,
     },

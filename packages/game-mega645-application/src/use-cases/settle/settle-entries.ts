@@ -16,31 +16,24 @@ import { matchLines, type DrawResultForMatch } from "@megawin/game-mega645/helpe
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
-import type { MegaDrawResult } from "./types";
+import type { SettleContext } from "./types";
 
 const BATCH_SIZE = 500;
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
-
-export interface SettleEntriesBatchInput {
-  drawId: string;
-  result: MegaDrawResult;
-  prizeAmounts: Record<string, number>;
-  isSplitCycle: boolean;
-}
 
 export interface SettleEntriesBatchResult {
   done: boolean;
 }
 
 export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleEntriesBatchInput,
+  SettleContext,
   SettleEntriesBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
   private readonly lineRepo = new LineRepository();
 
-  protected async execute(input: SettleEntriesBatchInput): Promise<SettleEntriesBatchResult> {
+  protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
     const { drawId, result, prizeAmounts } = input;
     const drawResult: DrawResultForMatch = {
       winningMain: result.winningMain as any,

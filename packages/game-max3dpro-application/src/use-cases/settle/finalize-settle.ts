@@ -16,11 +16,7 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-
-export interface FinalizeSettleInput {
-  /** ID kỳ quay cần finalize. */
-  drawId: string;
-}
+import type { SettleContextWithFinancials } from "./types";
 
 export interface FinalizeSettleResult {
   /** ID kỳ quay. */
@@ -32,12 +28,12 @@ export interface FinalizeSettleResult {
 }
 
 export class FinalizeSettleUseCase extends InternalUseCase<
-  FinalizeSettleInput,
+  SettleContextWithFinancials,
   FinalizeSettleResult
 > {
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(input: FinalizeSettleInput): Promise<FinalizeSettleResult> {
+  protected async execute(input: SettleContextWithFinancials): Promise<FinalizeSettleResult> {
     const { drawId } = input;
 
     const updated = await this.drawRepo.settleComplete(drawId);

@@ -16,26 +16,17 @@ import { roundTo } from "@megawin/shared/utils/number";
 import { calculateKenoDrawFinancials } from "@megawin/game-keno/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { KenoSettleConfig, KenoSettleFinancials } from "./types";
-
-export interface CalculateFinancialsInput {
-  drawId: string;
-  config: Pick<KenoSettleConfig, "companyRate">;
-}
-
-export type CalculateFinancialsResult = KenoSettleFinancials & {
-  drawId: string;
-};
+import type { SettleContext, SettleFinancials } from "./types";
 
 export class CalculateFinancialsUseCase extends InternalUseCase<
-  CalculateFinancialsInput,
-  CalculateFinancialsResult
+  SettleContext,
+  SettleFinancials
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
   /** Tính tài chính tổng hợp Keno. Idempotent – tính từ DB. */
-  protected async execute(input: CalculateFinancialsInput): Promise<CalculateFinancialsResult> {
+  protected async execute(input: SettleContext): Promise<SettleFinancials> {
     const { drawId, config } = input;
 
     const [tenantAgg, payoutSummary] = await Promise.all([
@@ -81,7 +72,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     );
 
     return {
-      drawId,
       totalRevenue: fin.totalRevenue,
       totalPrizes: fin.totalPrizes,
       totalAgentCommission: fin.totalAgentCommission,

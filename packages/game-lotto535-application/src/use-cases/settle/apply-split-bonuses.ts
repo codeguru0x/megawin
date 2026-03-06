@@ -40,16 +40,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { LottoSplitDetails } from "./types";
-
-export interface ApplySplitBonusesInput {
-  /** Mã kỳ quay. */
-  drawId: string;
-  /** Kỳ này có phải kỳ chia Jackpot hay không. Nếu false → skip. */
-  isSplitCycle: boolean;
-  /** Chi tiết phân bổ split theo tier — từ CalculateFinancials. */
-  splitDetails?: LottoSplitDetails;
-}
+import type { SettleContext } from "./types";
 
 export interface ApplySplitBonusesResult {
   /** Mã kỳ quay. */
@@ -61,13 +52,14 @@ export interface ApplySplitBonusesResult {
 }
 
 export class ApplySplitBonusesUseCase extends InternalUseCase<
-  ApplySplitBonusesInput,
+  SettleContext,
   ApplySplitBonusesResult
 > {
   private readonly entryRepo = new EntryRepository();
 
-  protected async execute(input: ApplySplitBonusesInput): Promise<ApplySplitBonusesResult> {
-    const { drawId, isSplitCycle, splitDetails } = input;
+  protected async execute(input: SettleContext): Promise<ApplySplitBonusesResult> {
+    const { drawId, isSplitCycle } = input;
+    const splitDetails = input.financials?.splitDetails;
 
     // ── Guard: skip nếu không phải kỳ chia hoặc không có dữ liệu split ──
     if (!isSplitCycle || !splitDetails || Object.keys(splitDetails).length === 0) {

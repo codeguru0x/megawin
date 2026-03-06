@@ -5,18 +5,15 @@
  * Xử lý 1 batch entries: load boards → match against draw result → persist lines → settle.
  *
  * CRASH-SAFE: entries đã settled tự filter ra bởi status.
- *
- * @input  SettleEntriesBatchInput
- * @output SettleEntriesBatchResult
  */
 
 import {
   SettleEntriesBatchUseCase,
-  type SettleEntriesBatchInput,
+  type SettleContext,
 } from "@megawin/game-max3dpro-application/use-cases/settle";
 
 const useCase = new SettleEntriesBatchUseCase();
 
-export async function handler(event: SettleEntriesBatchInput) {
+export async function handler(event: SettleContext) {
   return useCase.run(event);
 }

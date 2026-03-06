@@ -1,8 +1,11 @@
 /**
  * Use Case: Finalize Void (Max 3D)
  *
- * Step cuối của Void Draw Step Function.
- * Aggregate tổng kết void từ DB, transition voiding → void + ghi voidSummary (1 atomic query).
+ * ═══════════════════════════════════════════════════════════════════════
+ * STEP 4 TRONG VOID FLOW (BƯỚC CUỐI)
+ * ═══════════════════════════════════════════════════════════════════════
+ *
+ * Aggregate tổng kết void từ DB, transition draw: voiding → void + ghi voidSummary.
  *
  * IDEMPOTENT: aggregate + voidComplete atomic.
  */
@@ -11,10 +14,7 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-
-export interface FinalizeVoidInput {
-  drawId: string;
-}
+import type { VoidContext } from "./types";
 
 export interface FinalizeVoidResult {
   drawId: string;
@@ -25,14 +25,11 @@ export interface FinalizeVoidResult {
   completedAt: string;
 }
 
-export class FinalizeVoidUseCase extends InternalUseCase<
-  FinalizeVoidInput,
-  FinalizeVoidResult
-> {
+export class FinalizeVoidUseCase extends InternalUseCase<VoidContext, FinalizeVoidResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
 
-  protected async execute(input: FinalizeVoidInput): Promise<FinalizeVoidResult> {
+  protected async execute(input: VoidContext): Promise<FinalizeVoidResult> {
     const { drawId } = input;
     const summary = await this.entryRepo.aggregateVoidRefundSummary(drawId);
     const completedAt = new Date();

@@ -1,0 +1,340 @@
+---
+globs: packages/game-max3dpro/**,packages/game-max3dpro-application/**,apps/backoffice/src/app/(main)/games/max3dpro/**,apps/backoffice/src/app/api/max3dpro/**,apps/worker-max3dpro/**
+alwaysApply: false
+---
+
+# Max 3D Pro - Game Rules & Codebase Map
+
+Tài liệu tham chiếu cho AI Agent. ĐỌC KỸ trước khi thực hiện bất kỳ chức năng nào liên quan đến game Max 3D Pro.
+
+> **LƯU Ý QUAN TRỌNG**: Tất cả giá trị giải thưởng, tỷ lệ tài chính trong tài liệu này là giá trị THAM KHẢO MẶC ĐỊNH (default). Giá trị thực tế được cấu hình trong `GlobalConfigDoc` (game config) và có thể thay đổi bởi staff qua backoffice UI. Khi implement, LUÔN đọc từ game config thay vì hardcode giá trị.
+
+---
+
+## 1. Tổng quan
+
+Max 3D Pro là game xổ số tự chọn dạng bộ ba số (triplet) của Vietlott. Luôn chơi theo **cặp 2 bộ ba số** (TripletPair). Có 2 cách chơi bao: bao nhiều bộ số (multiNumber) và bao bộ ba số (multiDigit). **KHÔNG CÓ JACKPOT** tích luỹ.
+
+- **Kiểu số**: Bộ ba số (Triplet) 000-999 (3 chữ số, mỗi chữ số 0-9)
+- **Đơn vị cơ bản**: 1 cặp (TripletPair) = `{ first: Triplet, second: Triplet }` — **ordered pair**
+- **Không gian mẫu**: 1.000 × 1.000 = 1.000.000 (ordered pairs)
+- **Kết quả quay**: 20 bộ ba số mỗi kỳ (2 ĐB + 4 Nhất + 6 Nhì + 8 Ba)
+- **Lịch quay**: 3 lần/tuần (Thứ 3, Thứ 5, Thứ 7) lúc 18h00
+- **Giá vé**: 10.000 VND / cặp (line)
+- **Kỳ liên tiếp**: Tối đa 6 kỳ liên tiếp
+- **Board**: 1 vé có tối đa 4 board (A-D)
+- **Jackpot**: **KHÔNG CÓ** — tất cả giải thưởng CỐ ĐỊNH
+- **Hạng giải**: 8 hạng (bao gồm Giải phụ Đặc Biệt — chỉ có ở Max 3D Pro)
+
+---
+
+## 2. Kết quả quay thưởng (Draw Result)
+
+Giống Max 3D: mỗi kỳ quay **20 bộ ba số**, chia thành 4 nhóm:
+
+| Nhóm | Số bộ quay | Field trong code | Ghi chú |
+|------|-----------|------------------|---------|
+| Giải Đặc Biệt | 2 bộ ba số | `special: Triplet[]` | **Thứ tự quay quan trọng** (ĐB vs Phụ ĐB) |
+| Giải Nhất | 4 bộ ba số | `first: Triplet[]` | |
+| Giải Nhì | 6 bộ ba số | `second: Triplet[]` | |
+| Giải Ba | 8 bộ ba số | `third: Triplet[]` | |
+| **Tổng** | **20 bộ** | | |
+
+Interface: `Max3dproDrawResult { special, first, second, third }`
+
+**QUAN TRỌNG**: Thứ tự 2 bộ ĐB (`special[0]`, `special[1]`) có ý nghĩa — phân biệt Giải ĐB (đúng thứ tự) và Giải phụ ĐB (ngược thứ tự).
+
+---
+
+## 3. Cơ cấu giải thưởng — 8 hạng giải
+
+Giá trị trong bảng dưới là **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.defaultPrizes.standard`.
+
+| Hạng | Code | Điều kiện | Giá trị mặc định (VND) |
+|------|------|-----------|------------------------|
+| Giải Đặc Biệt | `special` | Trùng 2 bộ ba quay ĐB **ĐÚNG thứ tự** quay | 2.000.000.000 (2 tỷ) |
+| Giải phụ Đặc Biệt | `specialSub` | Trùng 2 bộ ba quay ĐB **NGƯỢC thứ tự** quay | 400.000.000 |
+| Giải Nhất | `first` | Trùng bất kỳ 2 trong 4 bộ ba quay giải Nhất | 30.000.000 |
+| Giải Nhì | `second` | Trùng bất kỳ 2 trong 6 bộ ba quay giải Nhì | 10.000.000 |
+| Giải Ba | `third` | Trùng bất kỳ 2 trong 8 bộ ba quay giải Ba | 4.000.000 |
+| Giải Tư | `fourth` | Trùng 2 bộ ba thuộc bất kỳ giải ĐB/Nhất/Nhì/Ba (cross-tier) | 1.000.000 |
+| Giải Năm | `fifth` | Trùng 1 bộ ba quay thưởng giải ĐB bất kỳ | 100.000 |
+| Giải Sáu | `sixth` | Trùng 1 bộ ba quay thưởng Nhất, Nhì hoặc Ba bất kỳ | 40.000 |
+
+**Quy tắc duplicate x2**: Nếu 2 bộ ba số **GIỐNG NHAU** → giải thưởng **× 2** (`multiplier = isDuplicate ? 2 : 1`).
+
+---
+
+## 4. Giải ĐB & Phụ ĐB — Điểm độc nhất Max 3D Pro
+
+Đây là tính năng **CHỈ CÓ** ở Max 3D Pro, không tồn tại trong Max 3D hay bất kỳ game nào khác:
+
+```
+Giải ĐB:     first === special[0] && second === special[1]  → 2 tỷ (ĐÚNG thứ tự quay)
+Giải phụ ĐB: first === special[1] && second === special[0]  → 400 triệu (NGƯỢC thứ tự quay)
+```
+
+So sánh với Max 3D Plus:
+- Max 3D Plus: chỉ cần cả 2 bộ đều nằm trong nhóm special (4 ways) → 1 tỷ
+- Max 3D Pro: phân biệt **thứ tự ordered pair** → ĐB (1 way, 2 tỷ) hoặc phụ ĐB (1 way, 400 triệu)
+
+**Logic matching** (`matchPair()`):
+1. Kiểm tra ĐB trước (đúng thứ tự) → `PrizeTier.Special`
+2. Kiểm tra phụ ĐB (ngược thứ tự) → `PrizeTier.SpecialSub`
+3. Cả 2 trùng cùng nhóm → Nhất/Nhì/Ba
+4. Cả 2 trùng khác nhóm → Tư (cross-tier)
+5. Chỉ 1 trùng ĐB → Năm
+6. Chỉ 1 trùng Nhất/Nhì/Ba → Sáu
+
+---
+
+## 5. Các cách chơi (Play Modes)
+
+Max 3D Pro **KHÔNG có** basic/straight/combo mode như Max 3D. Thay vào đó có 2 mode bao:
+
+### 5.1 MultiNumber — Bao nhiều bộ số
+
+PlayMode: `multiNumber` | Chọn 3-20 bộ ba số | Hệ thống tạo **C(n,2)** cặp
+
+Người chơi chọn n bộ ba số (3 ≤ n ≤ 20), hệ thống tạo tất cả C(n,2) cặp ordered pair.
+
+| Số bộ ba | Số cặp C(n,2) | Giá/kỳ (VND) |
+|----------|--------------|---------------|
+| 3 | 3 | 30.000 |
+| 4 | 6 | 60.000 |
+| 5 | 10 | 100.000 |
+| 6 | 15 | 150.000 |
+| 7 | 21 | 210.000 |
+| 8 | 28 | 280.000 |
+| 9 | 36 | 360.000 |
+| 10 | 45 | 450.000 |
+| 11 | 55 | 550.000 |
+| 12 | 66 | 660.000 |
+| 13 | 78 | 780.000 |
+| 14 | 91 | 910.000 |
+| 15 | 105 | 1.050.000 |
+| 16 | 120 | 1.200.000 |
+| 17 | 136 | 1.360.000 |
+| 18 | 153 | 1.530.000 |
+| 19 | 171 | 1.710.000 |
+| 20 | 190 | 1.900.000 |
+
+**Expansion logic**: Vòng lặp 2 lớp: `for i=0..n-1, for j=i+1..n-1 → pair(triplets[i], triplets[j])`
+
+### 5.2 MultiDigit — Bao bộ ba số (hoán vị chữ số)
+
+PlayMode: `multiDigit` | Chọn 3 chữ số đầu + 3 chữ số sau | Hệ thống expand hoán vị
+
+Người chơi chọn **3 chữ số** cho bộ ba đầu và **3 chữ số** cho bộ ba sau. Hệ thống tạo tất cả hoán vị duy nhất cho mỗi bên, rồi lấy **tích Descartes** (Cartesian product).
+
+**Số cặp = perms(front) × perms(back)**
+
+| Bộ ba đầu | Bộ ba sau | Số cặp | Giá/kỳ (VND) |
+|-----------|-----------|--------|---------------|
+| 3 số khác nhau (6 perms) | 3 số khác nhau (6 perms) | 36 | 360.000 |
+| 3 số khác nhau (6 perms) | 2 số giống (3 perms) | 18 | 180.000 |
+| 2 số giống (3 perms) | 3 số khác nhau (6 perms) | 18 | 180.000 |
+| 2 số giống (3 perms) | 2 số giống (3 perms) | 9 | 90.000 |
+| 3 số giống (1 perm) | 3 số khác nhau (6 perms) | 6 | 60.000 |
+| 3 số khác nhau (6 perms) | 3 số giống (1 perm) | 6 | 60.000 |
+| 3 số giống (1 perm) | 2 số giống (3 perms) | 3 | 30.000 |
+| 2 số giống (3 perms) | 3 số giống (1 perm) | 3 | 30.000 |
+
+**Permutation rules**:
+- 3 chữ số khác nhau (1,2,3) → 6 hoán vị
+- 2 chữ số giống (1,1,2) → 3 hoán vị
+- 3 chữ số giống (1,1,1) → 1 hoán vị (= straight)
+
+**Play Types**: Chỉ `straight` hoặc `quickPick` — **KHÔNG** có combo3/combo6.
+
+---
+
+## 6. Tỷ lệ tài chính — KHÔNG CÓ JACKPOT
+
+Tất cả tỷ lệ dưới đây là giá trị **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.rates`.
+
+| Khoản mục | Tỷ lệ mặc định | Ghi chú |
+|-----------|----------------|---------|
+| Hoa hồng đại lý | 20% revenue | Override per tenant qua TenantConfig |
+| Công ty thu | 15% revenue | Có cap khi doanh thu thấp |
+| Giải cố định | Biến thiên | Phụ thuộc kết quả quay |
+| Profit | Phần còn lại | Revenue - Commission - CompanyTake - FixedPrizes |
+
+**Phân bổ doanh thu** (không có jackpot contribution):
+```
+Revenue = 100% doanh thu tiền cược
+├── Agent Commission = Σ(commissionRate × revenue) per tenant (mặc định 20%)
+├── Company Take     = companyRate × Revenue (mặc định 15%, có cap)
+├── Fixed Prizes     = Tổng tiền trả thưởng cố định
+└── Profit           = Phần còn lại (có thể âm nếu trả thưởng lớn)
+```
+
+`actualCompanyTake = min(companyTake, max(remainAfterPrizes, 0))` — bảo vệ khi trả thưởng > doanh thu.
+
+---
+
+## 7. Xác suất & Không gian mẫu
+
+Không gian mẫu: 1.000 × 1.000 = **1.000.000** (ordered pairs)
+
+| Giải | Ways | Xác suất | 1 trong N |
+|------|------|----------|-----------|
+| Đặc Biệt | 1 (ordered exact) | 1/1.000.000 | 1.000.000 |
+| Phụ Đặc Biệt | 1 (reverse ordered) | 1/1.000.000 | 1.000.000 |
+| Nhất | 4² = 16 | 16/1.000.000 | 62.500 |
+| Nhì | 6² = 36 | 36/1.000.000 | 27.778 |
+| Ba | 8² = 64 | 64/1.000.000 | 15.625 |
+| Tư | 20² - 1 - 1 - 16 - 36 - 64 = 282 | 282/1.000.000 | 3.546 |
+| Năm | 2 × 2 × 980 = 3.920 | 3.920/1.000.000 | 255 |
+| Sáu | 2 × 18 × 980 = 35.280 | 35.280/1.000.000 | 28,3 |
+
+**So với Max 3D Plus**: Giải ĐB chỉ có **1 way** (ordered exact) thay vì 4 ways. Giải phụ ĐB thêm 1 way cho thứ tự ngược. Tổng 2 ways ĐB so với 4 ways ở Max 3D Plus, nhưng trả cao hơn nhiều (2 tỷ + 400 triệu).
+
+---
+
+## 8. Khác biệt so với Max 3D và các game khác
+
+| Đặc điểm | Max 3D Pro | Max 3D | Lotto/Mega/Power |
+|-----------|-----------|--------|------------------|
+| **Đơn vị cơ bản** | TripletPair (ordered) | Triplet (basic) hoặc pair (plus) | Line (N số) |
+| **Play Modes** | multiNumber + multiDigit | basic + plus | standard + bao |
+| **Combo play** | **KHÔNG** | Có (combo3, combo6) | Không |
+| **Bao play** | **CÓ** (3-20 bộ ba) | Không | Có (Bao N) |
+| **Giải phụ ĐB** | **CÓ** (400 triệu) | Không | Không |
+| **Giải ĐB ordered** | **CÓ** (đúng/ngược thứ tự) | Không (cùng nhóm là đủ) | N/A |
+| **Hạng giải** | 8 hạng (1 PrizeTier enum) | 4 basic + 7 plus (2 enums) | 4-7 hạng |
+| **Prize config** | 1 bộ `standard` | 3 bộ (basic/combo/plus) | 1 bộ |
+| **Lịch quay** | T3, T5, T7 | T2, T4, T6 | Khác nhau |
+| **Jackpot** | KHÔNG | KHÔNG | CÓ (trừ Keno) |
+| **BoardSelection** | `{ triplets, frontDigits?, backDigits? }` | `{ triplets }` | `{ mainNumbers }` |
+| **MultiDigit mode** | **CÓ** (expand hoán vị front × back) | Không | Không |
+| **Giá ĐB** | 2 tỷ | 1 tỷ (Plus) | N/A |
+
+---
+
+## 9. Vòng đời vận hành
+
+### 9.1 Settle pipeline
+
+```
+prepare-settle → settle-entries → calculate-financials → build-report → finalize-settle → sync-ticket-summaries
+```
+
+**KHÔNG có** `apply-split-bonuses` (vì không có Jackpot/Split).
+
+Settle entries: expand boards thành **pairs** (TripletPair[]) qua `expandSelectionToPairs()` → match từng pair qua `matchPair()` → tạo TicketLineDoc.
+
+### 9.2 Void pipeline
+
+```
+prepare-void → void-entries → dispatch-refunds → finalize-void
+```
+
+---
+
+## 10. Codebase Map
+
+### 10.1 Domain Layer — `packages/game-max3dpro/` (`@megawin/game-max3dpro`)
+
+```
+src/
+├── entities/
+│   ├── enums.ts           # PlayMode (multiNumber, multiDigit), PlayType (straight, quickPick),
+│   │                      # PrizeTier (8 hạng: special, specialSub, first-sixth),
+│   │                      # PayoutStatus, RefundStatus, Max3dproCollections
+│   ├── types.ts           # Triplet, TripletPair, BoardSelection (triplets + frontDigits/backDigits),
+│   │                      # PrizeAmounts (8 fields), Max3dproPrizeConfig, FinancialRates, PlayRules
+│   ├── draw.ts            # DrawDoc
+│   ├── draw-result.ts     # Max3dproDrawResult { special, first, second, third }
+│   ├── ticket.ts          # TicketDoc, Board (max 4 boards A-D)
+│   ├── entry.ts           # TicketEntryDoc, EntryBoardSnapshot, EntryPayoutTier
+│   ├── line.ts            # TicketLineDoc, LineMatchResult
+│   ├── global-config.ts   # GlobalConfigDoc
+│   ├── tenant-config.ts   # TenantConfigDoc
+│   └── game-config.ts     # GameConfigDoc (union type)
+├── rules/
+│   ├── prize-tiers.ts     # matchPair() (ordered: ĐB/phụ ĐB), matchBoard(), flattenDrawResult()
+│   ├── play-types.ts      # calculateLineCount(), expandSelectionToPairs() (multiNumber: C(n,2),
+│   │                      # multiDigit: perms(front) × perms(back)), validateSelection(),
+│   │                      # getUniquePermutations(), getPermutationCount()
+│   ├── odds.ts            # getProOddsTable(), analyzeProProfitability()
+│   ├── financials.ts      # calculateDrawFinancials() — đơn giản, không jackpot
+│   └── defaults.ts        # DEFAULT_MAX3D_PRO_CONFIG
+├── helpers/
+│   ├── draw-id.ts         # generateDrawId(), parseDrawId()
+│   └── selection-hash.ts  # SHA-256 dedup hash
+├── schemas/
+│   └── common.ts          # Zod schemas: triplet validation (/^\d{3}$/)
+└── indexes/
+    └── index.ts           # MongoDB indexes
+```
+
+### 10.2 Application Layer — `packages/game-max3dpro-application/` (`@megawin/game-max3dpro-application`)
+
+```
+src/
+├── infras/
+│   ├── repos/             # draw, entry, line, ticket, game-config, tenant-config repos
+│   └── mappers/           # draw, entry, ticket, config mappers
+└── use-cases/
+    ├── draws/             # create, list, get-detail, get-current, preview,
+    │                      # open-sales, close-sales, publish-result, trigger-settle, void
+    ├── settle/            # prepare → settle-entries → calculate-financials (NO split) →
+    │                      # build-report → finalize → sync-ticket
+    ├── place-bet/         # place-bet (validate playMode + selection)
+    ├── void/              # prepare → void-entries → dispatch-refunds → finalize
+    ├── payout/            # dispatch-payout
+    ├── game-config/       # get/update global config
+    ├── tenant-config/     # get/list/update tenant config
+    ├── player/            # list-tickets, get-entries, get-lines
+    ├── operations/        # summary, tenant-breakdown
+    └── feed/              # sync-entry-feed, save-cursor, acquire-lock
+```
+
+### 10.3 Worker — `apps/worker-max3dpro/`
+
+Step functions: settle, void, feed-sync.
+
+### 10.4 Backoffice UI — `apps/backoffice/src/app/(main)/games/max3dpro/`
+
+Pages: draws, config, tickets, reports, tenant-config.
+
+### 10.5 Backoffice API — `apps/backoffice/src/app/api/max3dpro/`
+
+Routes: draws, config, tenant-config, operations.
+
+---
+
+## 11. MongoDB Collections
+
+| Collection | Entity | Mô tả |
+|-----------|--------|-------|
+| `max3d_pro_tickets` | TicketDoc | Vé mua, chứa boards A-D |
+| `max3d_pro_ticket_entries` | TicketEntryDoc | 1 ticket × 1 draw |
+| `max3d_pro_ticket_lines` | TicketLineDoc | Line con (1 cặp TripletPair), tạo khi settle |
+| `max3d_pro_draws` | DrawDoc | Kỳ quay, result (20 bộ ba số) |
+| `max3d_pro_game_configs` | GlobalConfigDoc / TenantConfigDoc | Config game |
+
+**KHÔNG CÓ**: `max3d_pro_jackpot_cycles` (vì không có Jackpot).
+
+---
+
+## 12. Quy tắc quan trọng cho AI Agent
+
+1. **KHÔNG CÓ Jackpot**: Giống Max 3D — hoàn toàn cố định, không cần JackpotCycleDoc, split, overflow
+2. **TripletPair là đơn vị cơ bản**: Mọi line đều là 1 cặp ordered `{first, second}`, KHÔNG có line đơn lẻ 1 bộ ba như Max 3D basic
+3. **Thứ tự ordered pair quan trọng**: Giải ĐB (đúng thứ tự) khác Giải phụ ĐB (ngược thứ tự) — special[0]/special[1] trong draw result
+4. **8 hạng giải duy nhất**: 1 PrizeTier enum (khác Max 3D có 2 enums BasicPrizeTier + PlusPrizeTier)
+5. **Giải phụ ĐB chỉ có ở Max 3D Pro**: `PrizeTier.SpecialSub` — 400 triệu
+6. **KHÔNG có combo3/combo6**: Thay bằng multiDigit (hoán vị chữ số)
+7. **MultiNumber**: Chọn 3-20 bộ ba → C(n,2) cặp. Expansion: vòng lặp 2 lớp i < j
+8. **MultiDigit**: Chọn 3 chữ số đầu + 3 chữ số sau → perms(front) × perms(back) cặp (Cartesian product)
+9. **BoardSelection khác Max 3D**: Có thêm `frontDigits?` và `backDigits?` cho multiDigit mode
+10. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc`, có thể thay đổi bởi staff
+11. **Tiền lưu integer VND**: Không dùng float
+12. **Triplet = string "000"-"999"**: Validate bằng `/^\d{3}$/`
+13. **Duplicate x2**: 2 bộ ba giống nhau → giải thưởng nhân đôi (giống Max 3D Plus)
+14. **Lịch quay T3, T5, T7**: Khác Max 3D (T2, T4, T6) — KHÔNG TRÙNG ngày
+15. **Commission snapshot**: commissionRate snapshot lúc place-bet
+16. **4 boards A-D**: Giống Max 3D
+17. **Settle expand pairs**: `expandSelectionToPairs()` → danh sách TripletPair → match từng pair

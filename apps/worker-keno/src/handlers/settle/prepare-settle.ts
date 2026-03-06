@@ -5,7 +5,7 @@
  * Load context: draw, game config, entry counts. Idempotent.
  *
  * @input  PrepareSettleInput
- * @output PrepareSettleResult (= SettleContext)
+ * @output SettleContext
  */
 
 import {

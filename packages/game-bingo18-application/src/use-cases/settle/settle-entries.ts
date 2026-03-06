@@ -37,22 +37,10 @@ import {
 } from "@megawin/game-bingo18/helpers";
 import { EntryOutcome } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { BingoDrawResult, BingoSettleConfig } from "./types";
+import type { SettleContext } from "./types";
 
 const BATCH_SIZE = 500;
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
-
-export interface SettleEntriesBatchInput {
-  /** ID kỳ quay đang settle. */
-  drawId: string;
-  /** Kết quả quay. */
-  result: BingoDrawResult;
-  /** Bảng giải thưởng dùng để tính payout. */
-  config: Pick<
-    BingoSettleConfig,
-    "singleNumPrizes" | "doubleMatchPrizes" | "tripleMatchPrizes" | "sumTotalPrizes" | "bigSmallDrawPrizes"
-  >;
-}
 
 export interface SettleEntriesBatchResult {
   /** true khi không còn entries status "scheduled" → kết thúc loop. */
@@ -60,13 +48,13 @@ export interface SettleEntriesBatchResult {
 }
 
 export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleEntriesBatchInput,
+  SettleContext,
   SettleEntriesBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(
-    input: SettleEntriesBatchInput
+    input: SettleContext
   ): Promise<SettleEntriesBatchResult> {
     const { drawId, result, config } = input;
     const drawResult: DrawResultForMatch = {

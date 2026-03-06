@@ -18,41 +18,16 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import type {
-  Max3dProDrawResult,
-  Max3dProSettleConfig,
-  Max3dProPrizeConfig,
-} from "./types";
+import type { SettleContext } from "./types";
 
 export interface PrepareSettleInput {
   /** ID kỳ quay cần settle. */
   drawId: string;
 }
 
-export interface PrepareSettleResult {
-  /** ID kỳ quay. */
-  drawId: string;
-  /** Ngày quay (YYYY-MM-DD). */
-  drawDate: string;
-  /** Số thứ tự kỳ quay trong ngày. */
-  drawNo: number;
-  /** Ngày tài chính (dùng cho báo cáo). */
-  financialDate: string;
-  /** Kết quả quay: 20 bộ ba số theo 4 giải. */
-  result: Max3dProDrawResult;
-  /** Cấu hình giải thưởng áp dụng cho kỳ này. */
-  prizeConfig: Max3dProPrizeConfig;
-  /** Cấu hình tài chính áp dụng. */
-  config: Max3dProSettleConfig;
-  /** Tổng entries cần settle. */
-  totalEntries: number;
-  /** Tổng pairs cần settle. */
-  totalLines: number;
-}
-
 export class PrepareSettleUseCase extends InternalUseCase<
   PrepareSettleInput,
-  PrepareSettleResult
+  SettleContext
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
@@ -60,7 +35,7 @@ export class PrepareSettleUseCase extends InternalUseCase<
 
   protected async execute(
     input: PrepareSettleInput
-  ): Promise<PrepareSettleResult> {
+  ): Promise<SettleContext> {
     const { drawId } = input;
 
     const draw = await this.drawRepo.getDrawById(drawId);

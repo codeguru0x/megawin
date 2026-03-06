@@ -1,0 +1,353 @@
+---
+globs: packages/game-keno/**,packages/game-keno-application/**,apps/backoffice/src/app/(main)/games/keno/**,apps/backoffice/src/app/api/keno/**,apps/worker-keno/**
+alwaysApply: false
+---
+
+# Keno - Game Rules & Codebase Map
+
+Tài liệu tham chiếu cho AI Agent. ĐỌC KỸ trước khi thực hiện bất kỳ chức năng nào liên quan đến game Keno.
+
+> **LƯU Ý QUAN TRỌNG**: Tất cả giá trị giải thưởng, tỷ lệ tài chính trong tài liệu này là giá trị THAM KHẢO MẶC ĐỊNH (default). Giá trị thực tế được cấu hình trong `GlobalConfigDoc` (game config) và có thể thay đổi bởi staff qua backoffice UI. Khi implement, LUÔN đọc từ game config thay vì hardcode giá trị.
+
+---
+
+## 1. Tổng quan
+
+Keno là game xổ số tự chọn quay số nhanh của Vietlott, ra mắt 23/08/2019.
+
+- **Tập số**: 01 - 80 (80 số)
+- **Kết quả quay**: Hệ thống quay ngẫu nhiên **20 số** từ tập 01-80 mỗi kỳ
+- **Tần suất quay**: **10 phút/kỳ**, ~96 kỳ/ngày
+- **Phát hành**: 06h00 - 21h55, Thứ Hai - Chủ Nhật
+- **Mệnh giá**: 10.000 VND / lần tham gia dự thưởng
+- **Kỳ liên tiếp**: Tối đa 20 kỳ liên tiếp
+- **Vé**: Tối đa 2 panel cơ bản (A, B) + side bets (Panel C)
+- **Đóng bán**: 60 giây trước giờ quay (cấu hình)
+- **KHÔNG có Jackpot tích lũy** - Tất cả giải thưởng cố định theo bảng
+
+---
+
+## 2. Các cách chơi
+
+### 2.1 Cách chơi cơ bản (Panel A/B) - Chọn số
+
+Người chơi chọn từ 1 đến 10 số trong tập 01-80. So khớp với 20 số quay.
+
+| Play Type | Chọn | Mô tả |
+|-----------|------|-------|
+| `pick1` | 1 số | Chọn 1 số từ 01-80 |
+| `pick2` | 2 số | Chọn 2 số từ 01-80 |
+| `pick3` | 3 số | Chọn 3 số từ 01-80 |
+| `pick4` | 4 số | Chọn 4 số từ 01-80 |
+| `pick5` | 5 số | Chọn 5 số từ 01-80 |
+| `pick6` | 6 số | Chọn 6 số từ 01-80 |
+| `pick7` | 7 số | Chọn 7 số từ 01-80 |
+| `pick8` | 8 số | Chọn 8 số từ 01-80 |
+| `pick9` | 9 số | Chọn 9 số từ 01-80 |
+| `pick10` | 10 số | Chọn 10 số từ 01-80 |
+
+### 2.2 Cách chơi bổ sung (Panel C) - Side Bets
+
+Dựa vào kết quả 20 số quay để xác định. Mỗi side bet độc lập với cách chơi cơ bản.
+
+#### Lớn/Nhỏ (`bigSmall`)
+
+Đếm trong 20 số quay: bao nhiêu số thuộc 41-80 (Lớn) vs 01-40 (Nhỏ).
+
+| Cược | Kết quả | Giải thưởng |
+|------|---------|-------------|
+| **Lớn** (`big`) | >= 13 số từ 41-80 | 26.000 |
+| **Lớn** (`big`) | 11 hoặc 12 số từ 41-80 | 10.000 |
+| **Hoà Lớn Nhỏ** (`bigSmallDraw`) | 10 số mỗi bên | 26.000 |
+| **Nhỏ** (`small`) | 11 hoặc 12 số từ 01-40 | 10.000 |
+| **Nhỏ** (`small`) | >= 13 số từ 01-40 | 26.000 |
+
+#### Chẵn/Lẻ (`evenOdd`)
+
+Đếm trong 20 số quay: bao nhiêu số chẵn vs lẻ.
+
+| Cược | Kết quả | Giải thưởng |
+|------|---------|-------------|
+| **Chẵn** (`even`) | >= 15 số chẵn | 200.000 |
+| **Chẵn** (`even`) | 13 hoặc 14 số chẵn | 40.000 |
+| **Chẵn 11-12** (`even1112`) | 11 hoặc 12 số chẵn | 20.000 |
+| **Hoà** (`evenOddDraw`) | 10 chẵn + 10 lẻ | 20.000 |
+| **Lẻ 11-12** (`odd1112`) | 11 hoặc 12 số lẻ | 20.000 |
+| **Lẻ** (`odd`) | 13 hoặc 14 số lẻ | 40.000 |
+| **Lẻ** (`odd`) | >= 15 số lẻ | 200.000 |
+
+---
+
+## 3. Bảng giải thưởng cách chơi cơ bản
+
+Ứng với mệnh giá 10.000 VND. Cột = số bạn chơi (pickCount), Hàng = số bạn trúng (matchCount).
+
+> Giá trị trong bảng dưới là **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.basicPrizes`.
+
+| Trúng\Chọn | 10 | 9 | 8 | 7 | 6 | 5 | 4 | 3 | 2 | 1 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **10** | 2 Tỷ* | | | | | | | | | |
+| **9** | 150 tr | 800 tr* | | | | | | | | |
+| **8** | 8 tr | 12 tr | 200 tr* | | | | | | | |
+| **7** | 710.000 | 1,5 tr | 5 tr | 40 tr | | | | | | |
+| **6** | 80.000 | 150.000 | 500.000 | 1,2 tr | 12,5 tr | | | | | |
+| **5** | 20.000 | 30.000 | 50.000 | 100.000 | 450.000 | 4,4 tr | | | | |
+| **4** | | 10.000 | 10.000 | 20.000 | 40.000 | 150.000 | 400.000 | | | |
+| **3** | | | 10.000 | 10.000 | 10.000 | 10.000 | 50.000 | 200.000 | | |
+| **2** | | | | | | 10.000 | 20.000 | 90.000 | | |
+| **1** | | | | | | | | | | 20.000 |
+| **0** | 10.000 | 10.000 | 10.000 | | | | | | | |
+
+(*) Giải có giới hạn trả thưởng mỗi kỳ (xem mục Payout Caps).
+
+**Giải an ủi (trùng 0 số)**: Chỉ pick8, pick9, pick10 có giải khi trùng 0 số = 10.000 VND.
+
+---
+
+## 4. Giới hạn trả thưởng mỗi kỳ (Payout Caps)
+
+Keno giới hạn tổng tiền trả thưởng tối đa **10 tỷ VND** mỗi kỳ quay cho bậc 8, 9, 10:
+
+| Bậc | Giải cố định | Max bộ trả cố định | Khi vượt |
+|-----|-------------|--------------------|---------| 
+| **Pick 8 trùng 8** | 200 tr/bộ | <= 50 bộ | > 50 bộ: 10 tỷ chia đều |
+| **Pick 9 trùng 9** | 800 tr/bộ | <= 12 bộ | > 12 bộ: 10 tỷ chia đều |
+| **Pick 10 trùng 10** | 2 tỷ/bộ | <= 5 bộ | > 5 bộ: 10 tỷ chia đều |
+
+**Công thức**: Nếu winnerCount <= maxSetsForFixed → trả fixedPrize/bộ. Ngược lại → floor(10.000.000.000 / winnerCount) mỗi bộ.
+
+---
+
+## 5. Cách tính thưởng
+
+### 5.1 Cách chơi cơ bản
+
+1. Đếm matchCount = số lượng số người chơi trùng với 20 số quay
+2. Tra bảng: `lookupBasicPrize(pickCount, matchCount)` → winAmount
+3. Nếu matchCount thuộc bậc có payout cap (pick8=8, pick9=9, pick10=10) → áp dụng cap
+
+### 5.2 Cách chơi bổ sung
+
+1. Tính stats từ 20 số quay: bigCount, smallCount, evenCount, oddCount
+2. So khớp bet của người chơi với stats → xác định outcome + winAmount
+3. Người chơi chỉ lĩnh 1 hạng giải duy nhất tương ứng với mỗi cách chơi bổ sung
+
+### 5.3 Giá trị lĩnh thưởng
+
+Giá trị thưởng = (số lần tham gia / 10.000đ) x giá trị giải thưởng. Nếu đặt 20.000đ thì thưởng x2.
+
+---
+
+## 6. Tỷ lệ tài chính (mặc định, cấu hình trong GlobalConfig)
+
+Keno KHÔNG có Jackpot tích lũy. Công thức đơn giản:
+
+> Tất cả tỷ lệ dưới đây là giá trị **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.rates`.
+
+```
+profit = totalRevenue - totalPrizes - totalAgentCommission - companyTake
+```
+
+| Khoản mục | Tỷ lệ | Ghi chú |
+|-----------|--------|---------|
+| Hoa hồng đại lý | 20% revenue | Override per tenant qua TenantConfig |
+| Công ty thu | 15% revenue | |
+| Giải thưởng | ~65% revenue | Cố định theo bảng |
+| Lợi nhuận | Phần còn lại | Có thể âm nếu nhiều người trúng giải lớn |
+
+---
+
+## 7. Vòng đời vận hành
+
+### 7.1 Draw lifecycle
+
+```
+created → salesOpen → salesClosed → published → settled → (completed)
+                                                        → voided (hủy kỳ)
+```
+
+Keno quay mỗi 10 phút nên flow cần tự động hóa cao hơn Lotto 5/35.
+
+### 7.2 Ticket lifecycle
+
+```
+draft → paid (immutable) → completed / refunded
+```
+
+### 7.3 Entry lifecycle
+
+```
+pending → settled (có kết quả)
+       → voided (kỳ bị hủy)
+```
+
+### 7.4 Settle pipeline
+
+```
+prepare-settle → settle-entries → apply-payout-caps → calculate-financials → build-report → sync-ticket-summaries → finalize-settle
+```
+
+**Lưu ý**: Keno có thêm step `apply-payout-caps` (không có trong Lotto 5/35) để xử lý giới hạn trả thưởng bậc 8/9/10.
+
+### 7.5 Void pipeline
+
+```
+prepare-void → void-entries → dispatch-refunds → finalize-void
+```
+
+---
+
+## 8. Khác biệt chính so với Lotto 5/35
+
+| Đặc điểm | Keno | Lotto 5/35 |
+|-----------|------|-----------|
+| Tần suất quay | 10 phút/kỳ (~96 kỳ/ngày) | 2 kỳ/ngày |
+| Jackpot | KHÔNG | Có (tích lũy) |
+| Split cycle | KHÔNG | Có (khi JP >= 12 tỷ) |
+| Tập số | 01-80 (quay 20 số) | 01-35 chính + 01-12 ĐB |
+| Chọn số | 1-10 số | 5 chính + 1 ĐB |
+| Side bets | Lớn/Nhỏ, Chẵn/Lẻ | Không |
+| Payout caps | Có (bậc 8/9/10) | Không |
+| Chơi bao | Không | Có (Bao 4-15, Bao ĐB) |
+| Ticket lines | 1 (= selection) | Expand khi bao |
+| Panels | 2 basic (A,B) + side bets (C) | 5 boards (A-E) |
+| Multi-draw max | 20 kỳ | 6 kỳ |
+| Đóng bán trước | 60 giây | 5 phút |
+
+---
+
+## 9. Codebase Map
+
+### 9.1 Domain Layer — `packages/game-keno/` (`@megawin/game-keno`)
+
+Entities, types, business rules thuần túy. KHÔNG phụ thuộc database/framework.
+
+```
+src/
+├── entities/
+│   ├── enums.ts           # KenoPlayType (pick1-10, bigSmall, evenOdd),
+│   │                      # KenoBigSmallBet, KenoEvenOddBet, PayoutStatus, RefundStatus
+│   ├── types.ts           # NumberSelection, BigSmallSelection, EvenOddSelection,
+│   │                      # BasicPrizes, BigSmallPrizes, EvenOddPrizes, PayoutCaps,
+│   │                      # FinancialRates, PlayRules, KenoPrizeOverrides
+│   ├── draw.ts            # DrawDoc (20 winningNumbers, stats, financial)
+│   ├── ticket.ts          # TicketDoc (boards Panel A/B + sideBets Panel C)
+│   ├── entry.ts           # TicketEntryDoc (basic boards + side bets per draw)
+│   ├── draw-counter.ts    # DrawCounterDoc (auto-increment draw sequence)
+│   ├── global-config.ts   # GlobalConfigDoc (rates, basicPrizes, sideBetPrizes, caps, play)
+│   └── tenant-config.ts   # TenantConfigDoc (commissionRate override)
+├── rules/
+│   ├── prize-tables.ts    # DEFAULT_BASIC_PRIZE_TABLE, DEFAULT_BIG_SMALL_PRIZES,
+│   │                      # DEFAULT_EVEN_ODD_PRIZES, lookupBasicPrize()
+│   ├── play-types.ts      # validateBasicSelection(), getPlayTypeFromPickCount()
+│   ├── odds.ts            # Xác suất từng bậc
+│   └── financials.ts      # calculateKenoDrawFinancials(), calculateCappedPrize(),
+│                          # DEFAULT_KENO_CONFIG
+├── helpers/
+│   ├── match-result.ts    # matchBasicBoard(), matchBigSmallBet(), matchEvenOddBet(),
+│   │                      # computeDrawStats()
+│   └── draw-id.ts         # generateKenoDrawId()
+└── schemas/
+    └── common.ts          # Zod validation schemas
+```
+
+### 9.2 Application Layer — `packages/game-keno-application/` (`@megawin/game-keno-application`)
+
+Use cases, repos, mappers. Orchestrate domain logic với infrastructure.
+
+```
+src/
+├── infras/
+│   ├── repos/
+│   │   ├── draw-repo.ts, entry-repo.ts, ticket-repo.ts
+│   │   ├── game-config-repo.ts, tenant-config-repo.ts
+│   │   ├── report-repo.ts, base-repo.ts
+│   │   └── index.ts
+│   └── mappers/
+│       ├── draw-mapper.ts, entry-mapper.ts, ticket-mapper.ts
+│       ├── global-config-mapper.ts, tenant-config-mapper.ts
+│       └── index.ts
+└── use-cases/
+    ├── draws/           # open-sales, close-sales, list-draws, get-current-draw,
+    │                    # preview-draws, update-schedule, void-draw, auto-enroll-entries
+    ├── settle/          # prepare → settle-entries → apply-payout-caps →
+    │                    # calculate-financials → build-report → sync-ticket → finalize
+    ├── place-bet/       # place-bet (đặt cược)
+    ├── void/            # prepare → void-entries → dispatch-refunds → finalize
+    ├── payout/          # dispatch-payout (trả thưởng cho tenant)
+    ├── game-config/     # get global config (internal)
+    ├── tenant-config/   # get/list/update tenant config
+    ├── player/          # list-tickets, get-entries, get-current-draw (player-facing)
+    └── feed/            # sync-entry-feed, save-cursor, acquire-lock
+```
+
+### 9.3 Worker — `apps/worker-keno/` (`worker-keno`)
+
+Step functions cho settle, void, feed sync, auto-enroll.
+
+```
+src/
+├── step-functions/
+│   ├── settle.ts        # Settle pipeline (7 steps)
+│   ├── void.ts          # Void pipeline (5 steps)
+│   ├── feed-sync.ts     # Entry feed sync
+│   └── enroll.ts        # Auto enroll entries
+└── handlers/            # Individual Lambda handlers
+```
+
+### 9.4 Shared packages
+
+Keno sử dụng chung:
+- `packages/game-core/` (`@megawin/game-core`) — Shared enums: TicketStatus, EntryStatus, DrawStatus, GameProduct, EntryOutcome...
+- `packages/game-core-application/` (`@megawin/game-core-application`) — Entry feed, ticket counter, game report...
+- `packages/shared/` (`@megawin/shared`) — Errors, utils, pagination, date helpers...
+
+### 9.5 Backoffice UI — `apps/backoffice/src/app/(main)/games/keno/`
+
+```
+├── draws/              # Quản lý kỳ quay (active draw, history, actions)
+├── config/             # Cấu hình game (prizes, play rules, rates)
+├── tenant-config/      # Cấu hình per-tenant
+├── prize-table/        # Hiển thị bảng giải thưởng
+└── financial-reports/  # Báo cáo tài chính
+```
+
+### 9.6 Backoffice API — `apps/backoffice/src/app/api/keno/`
+
+```
+├── draws/              # CRUD draws + publish-result, trigger-settle, void
+├── config/             # GET/PUT global config
+└── tenant-config/      # GET list / GET-PUT per tenant
+```
+
+---
+
+## 10. MongoDB Collections
+
+| Collection | Entity | Mô tả |
+|-----------|--------|-------|
+| `keno_tickets` | TicketDoc | Vé mua (panels A/B + side bets C) |
+| `keno_ticket_entries` | TicketEntryDoc | 1 ticket x 1 draw, đơn vị settle |
+| `keno_draws` | DrawDoc | Kỳ quay (20 winningNumbers, stats, financial) |
+| `keno_draw_counters` | DrawCounterDoc | Auto-increment sequence cho drawId |
+| `keno_game_configs` | GlobalConfigDoc / TenantConfigDoc | Config game |
+
+**Lưu ý**: Keno KHÔNG có collection `ticket_lines` (không cần expand lines) và KHÔNG có `jackpot_cycles` (không có Jackpot).
+
+---
+
+## 11. Quy tắc quan trọng cho AI Agent
+
+1. **Số lưu dạng string zero-padded**: "01"-"80" (2 ký tự)
+2. **Tiền lưu integer VND**: Không dùng float
+3. **KHÔNG có Jackpot**: Keno hoàn toàn giải cố định, profit = revenue - prizes - commission - companyTake
+4. **Payout caps bắt buộc**: Bậc 8/9/10 phải áp dụng giới hạn 10 tỷ/kỳ khi số bộ trúng vượt ngưỡng
+5. **Side bets độc lập**: Lớn/Nhỏ và Chẵn/Lẻ là cược riêng, không phụ thuộc cách chơi cơ bản
+6. **Giải an ủi 0 số**: CHỈ pick8, pick9, pick10 có giải khi trùng 0 số (10.000 VND)
+7. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc.basicPrizes`, `bigSmallPrizes`, `evenOddPrizes`, có thể thay đổi bởi staff
+8. **Tần suất cao**: 10 phút/kỳ → settle phải nhanh, tự động hóa cao
+9. **DrawId unique**: Format khác Lotto 5/35, dùng DrawCounterDoc auto-increment
+10. **Ticket structure**: 2 panel cơ bản (boards) + side bets riêng (Panel C), KHÔNG phải 5 boards
+11. **Commission snapshot**: commissionRate snapshot lúc place-bet, không thay đổi khi config update sau
+12. **Side bet result**: Người chơi chỉ lĩnh 1 hạng giải duy nhất tương ứng với mỗi cách chơi bổ sung
+13. **Draw stats**: Kết quả quay cần tính sẵn bigCount, smallCount, evenCount, oddCount cho side bet matching

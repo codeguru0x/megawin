@@ -65,33 +65,17 @@ import {
 } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { LottoSettleConfig, LottoSettleFinancials } from "./types";
-
-export interface CalculateFinancialsInput {
-  /** Mã kỳ quay cần tính tài chính. */
-  drawId: string;
-  /** Số tiền Jackpot đầu kỳ (VND) — từ PrepareSettle. */
-  jackpotOpeningAmount: number;
-  /** Kỳ này có phải kỳ chia Jackpot hay không. */
-  isSplitCycle: boolean;
-  /** Cấu hình tài chính (snapshot từ GlobalConfig). */
-  config: Pick<LottoSettleConfig, "seedAmount" | "splitRatios" | "companyRate">;
-}
-
-export interface CalculateFinancialsResult extends LottoSettleFinancials {
-  /** Mã kỳ quay. */
-  drawId: string;
-}
+import type { SettleContext, SettleFinancials } from "./types";
 
 export class CalculateFinancialsUseCase extends InternalUseCase<
-  CalculateFinancialsInput,
-  CalculateFinancialsResult
+  SettleContext,
+  SettleFinancials
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
   /** Tính tài chính tổng hợp từ DB. Idempotent. */
-  protected async execute(input: CalculateFinancialsInput): Promise<CalculateFinancialsResult> {
+  protected async execute(input: SettleContext): Promise<SettleFinancials> {
     const { drawId, config, jackpotOpeningAmount, isSplitCycle } = input;
 
     // ── BƯỚC 1: Aggregate dữ liệu từ DB (song song) ──
@@ -140,7 +124,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     // ── BƯỚC 4: Tính split distribution (chỉ khi isSplitCycle VÀ không có JP winner) ──
     // Split chỉ xảy ra khi không ai trúng Jackpot (theo luật Vietlott).
     // Nếu có JP winner → winner nhận toàn bộ JP, không split.
-    let splitDetails: CalculateFinancialsResult["splitDetails"];
+    let splitDetails: SettleFinancials["splitDetails"];
 
     if (isSplitCycle && !hasJackpotWinner) {
       // Đếm winner theo tier (bỏ qua Jackpot và Consolation)
@@ -211,7 +195,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     );
 
     return {
-      drawId,
       totalRevenue: fin.totalRevenue,
       totalFixedPrizes: fin.totalFixedPrizes,
       totalAgentCommission: fin.totalAgentCommission,

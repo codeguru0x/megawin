@@ -6,17 +6,15 @@
  *
  * CRASH-SAFE: entries đã settled tự filter ra bởi status.
  *
- * @input  SettleEntriesBatchInput
+ * @input  SettleContext ($settleCtx)
  * @output SettleEntriesBatchResult
  */
 
-import {
-  SettleEntriesBatchUseCase,
-  type SettleEntriesBatchInput,
-} from "@megawin/game-keno-application/use-cases/settle";
+import { SettleEntriesBatchUseCase } from "@megawin/game-keno-application/use-cases/settle";
+import type { SettleContext } from "@megawin/game-keno-application/use-cases/settle";
 
 const useCase = new SettleEntriesBatchUseCase();
 
-export async function handler(event: SettleEntriesBatchInput) {
+export async function handler(event: SettleContext) {
   return useCase.run(event);
 }

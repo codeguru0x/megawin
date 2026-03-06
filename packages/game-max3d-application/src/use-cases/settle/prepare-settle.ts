@@ -1,10 +1,17 @@
 /**
  * Use Case: Prepare Settle (Max 3D)
  *
+ * ═══════════════════════════════════════════════════════════════════════
+ * STEP 1 TRONG SETTLE FLOW
+ * ═══════════════════════════════════════════════════════════════════════
+ *
  * Load toàn bộ context cần thiết cho settle flow. Pure read — không mutate entries.
  * settle-entries sẽ ghi result + chuyển scheduled → settled trực tiếp.
  *
  * Max 3D không có Jackpot tích lũy → không load jackpot cycle.
+ *
+ * OUTPUT → truyền cho TẤT CẢ steps sau (qua Step Function $settleCtx):
+ *   { drawId, drawDate, drawNo, financialDate, result, prizeConfig, config, totalEntries, totalLines }
  *
  * IDEMPOTENT: chỉ đọc draw, config, đếm entries.
  *
@@ -18,63 +25,20 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import type { Max3dDrawResult, Max3dSettleConfig } from "./types";
+import type { SettleContext } from "./types";
 
 export interface PrepareSettleInput {
-  /** ID kỳ quay cần settle. */
+  /** Mã kỳ quay cần settle — phải ở trạng thái "settling". */
   drawId: string;
 }
 
-export interface PrepareSettleResult {
-  /** ID kỳ quay. */
-  drawId: string;
-  /** Ngày quay (YYYY-MM-DD). */
-  drawDate: string;
-  /** Số thứ tự kỳ quay trong ngày. */
-  drawNo: number;
-  /** Ngày tài chính (dùng cho báo cáo). */
-  financialDate: string;
-  /** Kết quả quay: 20 bộ ba số theo 4 giải. */
-  result: Max3dDrawResult;
-  /** Cấu hình giải thưởng áp dụng cho kỳ này. */
-  prizeConfig: {
-    /** Giải thưởng chế độ Basic (basic direct/rumble). */
-    basic: { special: number; first: number; second: number; third: number };
-    /** Giải thưởng chế độ Combo (combo3, combo6). */
-    combo: {
-      combo3: { special: number; first: number; second: number; third: number };
-      combo6: { special: number; first: number; second: number; third: number };
-    };
-    /** Giải thưởng chế độ Plus (7 giải). */
-    plus: {
-      special: number;
-      first: number;
-      second: number;
-      third: number;
-      fourth: number;
-      fifth: number;
-      sixth: number;
-    };
-  };
-  /** Cấu hình tài chính áp dụng. */
-  config: Max3dSettleConfig;
-  /** Tổng entries cần settle. */
-  totalEntries: number;
-  /** Tổng lines cần settle. */
-  totalLines: number;
-}
-
-export class PrepareSettleUseCase extends InternalUseCase<
-  PrepareSettleInput,
-  PrepareSettleResult
-> {
+export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, SettleContext> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  protected async execute(
-    input: PrepareSettleInput
-  ): Promise<PrepareSettleResult> {
+  /** Load context cho settle flow. Throw nếu draw không hợp lệ. */
+  protected async execute(input: PrepareSettleInput): Promise<SettleContext> {
     const { drawId } = input;
 
     const draw = await this.drawRepo.getDrawById(drawId);

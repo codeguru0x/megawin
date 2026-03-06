@@ -61,35 +61,12 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import type { PayoutCaps } from "@megawin/game-keno/entities";
 import { calculateCappedPrize } from "@megawin/game-keno/rules";
 import { EntryRepository } from "../../infras/repos/entry-repo";
+import type { SettleContext } from "./types";
 
 /** Số entries xử lý mỗi batch khi update cappable entries. */
 const BATCH_SIZE = 500;
-
-/**
- * Input cho ApplyPayoutCaps.
- * Nhận từ step function qua $settleCtx (output của PrepareSettle).
- */
-export interface ApplyPayoutCapsInput {
-  /** ID kỳ quay đang settle. */
-  drawId: string;
-  /** Config từ GlobalConfig — chỉ cần basicPrizes + payoutCaps. */
-  config: {
-    /**
-     * Bảng giải thưởng cơ bản (pick1–pick10).
-     * Dùng để lấy fixedPrize (giải cố định): ví dụ basicPrizes.pick10[10] = 2 tỷ.
-     */
-    basicPrizes: Record<string, Record<number, number>>;
-    /**
-     * Cấu hình giới hạn trả thưởng mỗi kỳ cho bậc 8/9/10.
-     * - maxPerDraw: tổng giải tối đa cho kỳ (VND), ví dụ 10 tỷ
-     * - maxSetsForFixed: ngưỡng số bộ — vượt quá thì chia đều
-     */
-    payoutCaps: PayoutCaps;
-  };
-}
 
 /**
  * Output cho ApplyPayoutCaps — tổng số entries đã update.
@@ -116,12 +93,12 @@ interface CappedTier {
 }
 
 export class ApplyPayoutCapsUseCase extends InternalUseCase<
-  ApplyPayoutCapsInput,
+  SettleContext,
   ApplyPayoutCapsResult
 > {
   private readonly entryRepo = new EntryRepository();
 
-  protected async execute(input: ApplyPayoutCapsInput): Promise<ApplyPayoutCapsResult> {
+  protected async execute(input: SettleContext): Promise<ApplyPayoutCapsResult> {
     const { drawId, config } = input;
     const { payoutCaps, basicPrizes } = config;
 
@@ -148,7 +125,6 @@ export class ApplyPayoutCapsUseCase extends InternalUseCase<
     ];
 
     // ── Đếm tổng bộ trúng top prize cho 3 bậc (1 aggregate query) ──
-    // Query dùng hasCappablePrize = true → chỉ scan entries có board trúng, rất nhanh
     const winnerCounts = await this.entryRepo.aggregateTopPrizeWinnerCounts(drawId);
     const countMap: Record<number, number> = {
       8: winnerCounts.pick8Match8,
@@ -161,13 +137,8 @@ export class ApplyPayoutCapsUseCase extends InternalUseCase<
     for (const tier of tiers) {
       const winnerCount = countMap[tier.pickCount] ?? 0;
 
-      // Không có bộ nào trúng top prize ở bậc này → skip
       if (winnerCount === 0) continue;
 
-      // ── Kiểm tra theo SỐ BỘ: winnerCount vs ngưỡng maxSetsForFixed ──
-      // Quy tắc Vietlott: chỉ khi tổng số bộ trúng VƯỢT ngưỡng mới chia đều.
-      // Ví dụ pick10: 3 bộ trúng, ngưỡng 5 → 3 ≤ 5 → giải cố định 2 tỷ/bộ → skip.
-      //               7 bộ trúng, ngưỡng 5 → 7 > 5 → 10 tỷ / 7 ≈ 1.428 tỷ/bộ → update.
       if (winnerCount <= tier.maxSetsForFixed) continue;
 
       // ── Vượt ngưỡng → tính giải chia đều ──
@@ -179,9 +150,6 @@ export class ApplyPayoutCapsUseCase extends InternalUseCase<
       );
 
       // ── Batch update entries bị ảnh hưởng ──
-      // getCappableEntries lọc bằng hasCappablePrize + $elemMatch cho pickCount cụ thể.
-      // $elemMatch cần vì: hasCappablePrize = true chỉ nói "entry có ≥1 board cappable",
-      // nhưng ta cần entries có board đúng bậc đang xét (ví dụ pick8, không phải pick10).
       let lastEntryId: string | undefined;
 
       // eslint-disable-next-line no-constant-condition
@@ -209,17 +177,13 @@ export class ApplyPayoutCapsUseCase extends InternalUseCase<
         }> = [];
 
         for (const entry of entries) {
-          // Recalc boardPayouts: thay winAmount cho board bị cap, giữ nguyên board khác
           const boardPayouts = (entry.payout?.boardPayouts ?? []).map((bp) => {
-            // Board trúng top prize ở bậc đang xét → thay winAmount = cappedPrize
             if (bp.pickCount === tier.pickCount && bp.matchCount === tier.pickCount) {
               return { ...bp, winAmount: cappedPrize };
             }
-            // Board khác (bậc khác hoặc không trúng hết) → giữ nguyên
             return { ...bp };
           });
 
-          // Tính lại tổng winAmount cho entry (boards + side bets)
           const boardTotal = boardPayouts.reduce((sum, b) => sum + b.winAmount, 0);
           const sideBetTotal = (entry.payout?.sideBetPayouts ?? []).reduce(
             (sum, s) => sum + s.winAmount,
@@ -244,7 +208,6 @@ export class ApplyPayoutCapsUseCase extends InternalUseCase<
         await this.entryRepo.bulkApplyPayoutCap(updateOps);
         totalUpdatedEntries += updateOps.length;
 
-        // Cursor pagination: lấy tiếp từ entry cuối cùng
         lastEntryId = entries[entries.length - 1]!.id;
       }
     }

@@ -16,28 +16,16 @@ import { roundTo } from "@megawin/shared/utils/number";
 import { calculateBingo18DrawFinancials } from "@megawin/game-bingo18/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { BingoSettleConfig, BingoSettleFinancials } from "./types";
-
-export interface CalculateFinancialsInput {
-  /** ID kỳ quay cần tính tài chính. */
-  drawId: string;
-  /** Cấu hình tỷ lệ tài chính. */
-  config: Pick<BingoSettleConfig, "companyRate">;
-}
-
-export type CalculateFinancialsResult = BingoSettleFinancials & {
-  /** ID kỳ quay. */
-  drawId: string;
-};
+import type { SettleContext, SettleFinancials } from "./types";
 
 export class CalculateFinancialsUseCase extends InternalUseCase<
-  CalculateFinancialsInput,
-  CalculateFinancialsResult
+  SettleContext,
+  SettleFinancials
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(input: CalculateFinancialsInput): Promise<CalculateFinancialsResult> {
+  protected async execute(input: SettleContext): Promise<SettleFinancials> {
     const { drawId, config } = input;
     const [tenantAgg, payoutSummary] = await Promise.all([
       this.entryRepo.aggregateRevenueByTenant(drawId),
@@ -82,7 +70,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     );
 
     return {
-      drawId,
       totalRevenue: fin.totalRevenue,
       totalPrizes: fin.totalPrizes,
       totalAgentCommission: fin.totalAgentCommission,

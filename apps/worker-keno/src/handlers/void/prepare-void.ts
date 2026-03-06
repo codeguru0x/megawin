@@ -2,10 +2,10 @@
  * Lambda: void-prepare (Keno)
  *
  * Step 1 của Void Draw Step Function.
- * Validate draw có thể void, transition → void, load context.
+ * Validate draw có thể void, load context.
  *
  * @input  PrepareVoidInput
- * @output PrepareVoidResult
+ * @output VoidContext
  */
 
 import {

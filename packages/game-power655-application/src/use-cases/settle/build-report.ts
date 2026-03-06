@@ -15,21 +15,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { publishGameReport } from "@megawin/game-core-application/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { ReportRepository } from "../../infras/repos/report-repo";
-import type { PowerSettleFinancials } from "./types";
-
-export interface BuildReportInput {
-  /** ID kỳ quay cần tạo báo cáo. */
-  drawId: string;
-  /** Ngày tài chính (YYYY-MM-DD), dùng làm key cho báo cáo hàng ngày. */
-  financialDate: string;
-  /** Dữ liệu tài chính tổng hợp (từ CalculateFinancials). Optional cho báo cáo cơ bản. */
-  financials?: PowerSettleFinancials & {
-    /** Số dư Jackpot 1 đầu kỳ (VND). */
-    jp1OpeningAmount: number;
-    /** Số dư Jackpot 2 đầu kỳ (VND). */
-    jp2OpeningAmount: number;
-  };
-}
+import type { SettleContext } from "./types";
 
 export interface BuildReportResult {
   /** ID kỳ quay đã tạo báo cáo. */
@@ -49,7 +35,7 @@ export interface BuildReportResult {
  * Upsert pattern – idempotent.
  */
 export class BuildReportUseCase extends InternalUseCase<
-  BuildReportInput,
+  SettleContext,
   BuildReportResult
 > {
   private readonly entryRepo = new EntryRepository();
@@ -57,9 +43,9 @@ export class BuildReportUseCase extends InternalUseCase<
 
   /** @inheritdoc */
   protected async execute(
-    input: BuildReportInput
+    input: SettleContext
   ): Promise<BuildReportResult> {
-    const { drawId, financialDate, financials } = input;
+    const { drawId, financialDate, financials, jp1OpeningAmount, jp2OpeningAmount } = input;
 
     const tenantAggs = await this.entryRepo.aggregateTenantReport(
       drawId,
@@ -135,8 +121,7 @@ export class BuildReportUseCase extends InternalUseCase<
           jackpotContribution: totalJackpotContribution,
         },
         jackpotTracking: {
-          openingAmount:
-            financials.jp1OpeningAmount + financials.jp2OpeningAmount,
+          openingAmount: jp1OpeningAmount + jp2OpeningAmount,
           closingAmount: financials.closingJp1 + financials.closingJp2,
           hasJackpotWinner:
             financials.hasJackpot1Winner || financials.hasJackpot2Winner,

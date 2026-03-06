@@ -73,32 +73,25 @@ import { matchLines, type DrawResultForMatch } from "@megawin/game-lotto535/help
 import type { Board } from "@megawin/game-lotto535/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
-import type { LottoDrawResult } from "./types";
+import type { SettleContext } from "./types";
 
 /** Số entries xử lý mỗi batch DB query. */
 const BATCH_SIZE = 500;
 /** Giới hạn thời gian chạy trong 1 Lambda invocation (10 phút). */
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
 
-export interface SettleEntriesBatchInput {
-  drawId: string;
-  result: LottoDrawResult;
-  prizeAmounts: Record<string, number>;
-  isSplitCycle: boolean;
-}
-
 export interface SettleEntriesBatchResult {
   done: boolean;
 }
 
 export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleEntriesBatchInput,
+  SettleContext,
   SettleEntriesBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 
-  protected async execute(input: SettleEntriesBatchInput): Promise<SettleEntriesBatchResult> {
+  protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
     const { drawId, result, prizeAmounts } = input;
 
     // Chuyển drawResult sang format mà matchLines() yêu cầu

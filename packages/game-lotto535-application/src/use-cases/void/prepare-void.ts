@@ -29,21 +29,16 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import type { VoidContext } from "./types";
 
 export interface PrepareVoidInput {
   drawId: string;
 }
 
-export interface PrepareVoidResult {
-  drawId: string;
-  drawDate: string;
-  drawNo: number;
-}
-
-export class PrepareVoidUseCase extends InternalUseCase<PrepareVoidInput, PrepareVoidResult> {
+export class PrepareVoidUseCase extends InternalUseCase<PrepareVoidInput, VoidContext> {
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(input: PrepareVoidInput): Promise<PrepareVoidResult> {
+  protected async execute(input: PrepareVoidInput): Promise<VoidContext> {
     const { drawId } = input;
 
     // ── 1. Load draw từ DB ──

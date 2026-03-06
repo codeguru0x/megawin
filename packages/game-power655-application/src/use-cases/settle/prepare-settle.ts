@@ -23,38 +23,11 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import type { PowerDrawResult, PowerSettleConfig } from "./types";
+import type { SettleContext } from "./types";
 
 export interface PrepareSettleInput {
   /** ID kỳ quay cần chuẩn bị settle. */
   drawId: string;
-}
-
-export interface PrepareSettleResult {
-  /** ID kỳ quay đang được settle. */
-  drawId: string;
-  /** Ngày quay, định dạng YYYY-MM-DD. */
-  drawDate: string;
-  /** Số thứ tự kỳ quay trong năm. */
-  drawNo: number;
-  /** Ngày tài chính (thường trùng drawDate, dùng cho báo cáo). */
-  financialDate: string;
-  /** Kết quả quay số đã công bố. */
-  result: PowerDrawResult;
-  /** Số dư Jackpot 1 đầu kỳ (VND), đọc từ active cycle. */
-  jp1OpeningAmount: number;
-  /** Số dư Jackpot 2 đầu kỳ (VND), đọc từ active cycle. */
-  jp2OpeningAmount: number;
-  /** Có phải kỳ chia giải (tổng JP vượt splitThreshold) hay không. */
-  isSplitCycle: boolean;
-  /** Giá trị giải thưởng cố định theo tier (VND). Key: tier1/tier2/tier3. */
-  prizeAmounts: Record<string, number>;
-  /** Cấu hình tài chính + jackpot snapshot tại thời điểm settle. */
-  config: PowerSettleConfig;
-  /** Tổng số entries cần settle (chỉ đếm entries chưa settled). */
-  totalEntries: number;
-  /** Tổng số dòng cược từ tất cả entries. */
-  totalLines: number;
 }
 
 /**
@@ -63,7 +36,7 @@ export interface PrepareSettleResult {
  */
 export class PrepareSettleUseCase extends InternalUseCase<
   PrepareSettleInput,
-  PrepareSettleResult
+  SettleContext
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
@@ -73,7 +46,7 @@ export class PrepareSettleUseCase extends InternalUseCase<
   /** @inheritdoc */
   protected async execute(
     input: PrepareSettleInput
-  ): Promise<PrepareSettleResult> {
+  ): Promise<SettleContext> {
     const { drawId } = input;
 
     const draw = await this.drawRepo.getDrawById(drawId);

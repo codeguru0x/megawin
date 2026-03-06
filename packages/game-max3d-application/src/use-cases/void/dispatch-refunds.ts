@@ -1,7 +1,10 @@
 /**
  * Use Case: Dispatch Refund Batch (Max 3D)
  *
- * Step 3 (loop) của Void Draw Step Function.
+ * ═══════════════════════════════════════════════════════════════════════
+ * STEP 3 TRONG VOID FLOW (LOOP — gọi nhiều lần cho đến done=true)
+ * ═══════════════════════════════════════════════════════════════════════
+ *
  * Gửi yêu cầu hoàn tiền cho tenant qua TenantGateway API.
  *
  * CRASH-SAFE:
@@ -20,17 +23,13 @@ import {
 import { GameProduct } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
+import type { VoidContext } from "./types";
 
 const BATCH_QUERY_LIMIT = 200;
 const REFUND_CHUNK_SIZE = 50;
 
-export interface DispatchRefundBatchInput {
-  /** ID kỳ quay cần dispatch refund. */
-  drawId: string;
-}
-
 export interface DispatchRefundBatchResult {
-  /** ID kỳ quay. */
+  /** Mã kỳ quay. */
   drawId: string;
   /** true nếu đã hết entries cần refund. */
   done: boolean;
@@ -40,7 +39,7 @@ export interface DispatchRefundBatchResult {
   failed: number;
   /** Chi tiết kết quả refund theo từng tenant. */
   tenantResults: Array<{
-    /** ID tenant. */
+    /** Mã tenant. */
     tenantId: string;
     /** Số entries dispatch thành công. */
     dispatched: number;
@@ -52,15 +51,13 @@ export interface DispatchRefundBatchResult {
 }
 
 export class DispatchRefundBatchUseCase extends InternalUseCase<
-  DispatchRefundBatchInput,
+  VoidContext,
   DispatchRefundBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly tenantConfigRepo = new TenantConfigRepository();
 
-  protected async execute(
-    input: DispatchRefundBatchInput
-  ): Promise<DispatchRefundBatchResult> {
+  protected async execute(input: VoidContext): Promise<DispatchRefundBatchResult> {
     const { drawId } = input;
     const entries = await this.entryRepo.getPendingRefundEntries(
       drawId,

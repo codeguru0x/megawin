@@ -6,17 +6,15 @@
  *
  * CRASH-SAFE: entries đã void tự filter ra.
  *
- * @input  { drawId, reason, voidedBy?, batchSize? }
+ * @input  VoidContext ($voidCtx)
  * @output VoidEntriesBatchResult
  */
 
-import {
-  VoidEntriesBatchUseCase,
-  type VoidEntriesBatchInput,
-} from "@megawin/game-power655-application/use-cases/void";
+import { VoidEntriesBatchUseCase } from "@megawin/game-power655-application/use-cases/void";
+import type { VoidContext } from "@megawin/game-power655-application/use-cases/void";
 
 const useCase = new VoidEntriesBatchUseCase();
 
-export async function handler(event: VoidEntriesBatchInput) {
+export async function handler(event: VoidContext) {
   return useCase.run(event);
 }

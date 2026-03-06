@@ -15,33 +15,16 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import type { BingoDrawResult, BingoSettleConfig } from "./types";
+import type { SettleContext } from "./types";
 
 export interface PrepareSettleInput {
   /** ID kỳ quay cần settle. */
   drawId: string;
 }
 
-export interface PrepareSettleResult {
-  /** ID kỳ quay. */
-  drawId: string;
-  /** Ngày quay (YYYY-MM-DD). */
-  drawDate: string;
-  /** Số thứ tự kỳ trong ngày. */
-  drawNo: number;
-  /** Ngày tài chính (YYYY-MM-DD) dùng cho báo cáo. */
-  financialDate: string;
-  /** Kết quả quay đã publish. */
-  result: BingoDrawResult;
-  /** Cấu hình giải thưởng & tỷ lệ tài chính tại thời điểm settle. */
-  config: BingoSettleConfig;
-  /** Tổng entries cần settle trong kỳ này. */
-  totalEntries: number;
-}
-
 export class PrepareSettleUseCase extends InternalUseCase<
   PrepareSettleInput,
-  PrepareSettleResult
+  SettleContext
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
@@ -49,7 +32,7 @@ export class PrepareSettleUseCase extends InternalUseCase<
 
   protected async execute(
     input: PrepareSettleInput
-  ): Promise<PrepareSettleResult> {
+  ): Promise<SettleContext> {
     const { drawId } = input;
     const draw = await this.drawRepo.getDrawById(drawId);
     if (!draw) {

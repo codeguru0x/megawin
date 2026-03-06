@@ -1,18 +1,32 @@
 /**
  * Keno Settle – Shared Types
  *
- * Các interface dùng chung giữa settle steps.
- * Output step trước = Input step sau → định nghĩa 1 lần, dùng chung.
+ * ═══════════════════════════════════════════════════════════════════════
+ * SINGLE SOURCE OF TRUTH cho toàn bộ settle pipeline.
+ * ═══════════════════════════════════════════════════════════════════════
  *
- * DATA FLOW:
- *   PrepareSettle → SettleEntries → ApplyPayoutCaps → SyncTicketSummaries
- *                                                   → CalculateFinancials → ...
+ * `SettleContext` là context duy nhất xuyên suốt settle flow, được enrich
+ * dần qua các step. Step Function chỉ dùng 1 biến `$settleCtx`:
  *
- *   $settleCtx (= PrepareSettleResult) được truyền xuyên suốt qua step function.
- *   Mỗi step destructure fields cần thiết từ $settleCtx.
+ *   PrepareSettle → output = SettleContext (chưa có financials)
+ *   SettleEntries → nhận SettleContext, trả done/false (loop)
+ *   ApplyPayoutCaps → nhận SettleContext
+ *   SyncTicketSummaries → nhận SettleContext
+ *   CalculateFinancials → nhận SettleContext, trả SettleFinancials
+ *     → Step Function merge: settleCtx.financials = result
+ *   BuildReport → nhận SettleContext (có financials)
+ *   FinalizeSettle → nhận SettleContext (có financials)
+ *   DispatchPayouts → nhận SettleContext
+ *
+ * Mỗi step destructure những field cần dùng. Không define input riêng
+ * (trừ PrepareSettleInput vì step đầu chỉ nhận drawId).
  */
 
 import type { BigSmallPrizes, EvenOddPrizes, PayoutCaps } from "@megawin/game-keno/entities";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Primitive shared types
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Kết quả quay Keno — output PrepareSettle, input SettleEntries.
@@ -57,11 +71,19 @@ export interface KenoSettleConfig {
   payoutCaps: PayoutCaps;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SettleFinancials – output CalculateFinancials, nested vào SettleContext
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
- * Financials output — output CalculateFinancials, input BuildReport + FinalizeSettle.
- * Kết quả tính tài chính tổng hợp cho 1 kỳ quay.
+ * Kết quả tính toán tài chính kỳ quay — output của CalculateFinancials.
+ *
+ * Sau khi CalculateFinancials hoàn thành, Step Function merge kết quả này
+ * vào `settleCtx.financials`. Các step sau truy cập qua `ctx.financials`.
+ *
+ * Tất cả giá trị tiền tệ đều ở đơn vị VND, số nguyên (không thập phân).
  */
-export interface KenoSettleFinancials {
+export interface SettleFinancials {
   /** Tổng doanh thu = Σ(entry.amount) không void (VND). */
   totalRevenue: number;
   /** Tổng tiền thưởng = Σ(entry.payout.winAmount) entries thắng (VND). */
@@ -84,3 +106,94 @@ export interface KenoSettleFinancials {
     entryCount: number;
   }>;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SettleContext – single context xuyên suốt settle pipeline
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Context duy nhất xuyên suốt settle pipeline — progressively enriched.
+ *
+ * PrepareSettle tạo context ban đầu (không có `financials`).
+ * Sau CalculateFinancials, Step Function merge `financials` vào context.
+ * Từ đó tất cả step sau đều nhận SettleContext ĐÃ CÓ `financials`.
+ *
+ * Step Function chỉ dùng 1 biến `$settleCtx` — không cần `$financials` riêng.
+ *
+ * ┌──────────────────────────────────────────────────────────────────┐
+ * │ PrepareSettle       → SettleContext (financials = undefined)     │
+ * │ SettleEntries       ← SettleContext (loop)                      │
+ * │ ApplyPayoutCaps     ← SettleContext                             │
+ * │ SyncTicketSummaries ← SettleContext (loop)                      │
+ * │ CalculateFinancials ← SettleContext → SettleFinancials           │
+ * │   ↳ SFN merge: settleCtx.financials = result                   │
+ * │ BuildReport         ← SettleContext (financials có)              │
+ * │ FinalizeSettle      ← SettleContextWithFinancials (bắt buộc)   │
+ * │ DispatchPayouts     ← SettleContext                             │
+ * └──────────────────────────────────────────────────────────────────┘
+ */
+export interface SettleContext {
+  /**
+   * Mã kỳ quay duy nhất — primary key xuyên suốt settle flow.
+   * Tất cả step dùng drawId để query entries, draw document.
+   */
+  drawId: string;
+
+  /**
+   * Ngày quay (YYYY-MM-DD) — ngày diễn ra kỳ quay.
+   * Dùng để group các kỳ quay trong cùng ngày.
+   */
+  drawDate: string;
+
+  /**
+   * Số thứ tự kỳ quay trong ngày.
+   * Keno quay mỗi 10 phút (~96 kỳ/ngày).
+   */
+  drawNo: number;
+
+  /**
+   * Ngày tài chính (YYYY-MM-DD) — dùng làm key phân nhóm báo cáo.
+   * Có thể khác drawDate khi kỳ quay đêm khuya thuộc ngày tài chính hôm sau.
+   * BuildReport dùng field này để upsert báo cáo hàng ngày.
+   */
+  financialDate: string;
+
+  /**
+   * Kết quả quay đã công bố — 20 số trúng + thống kê lớn/nhỏ/chẵn/lẻ.
+   * SettleEntries dùng để match boards + side bets vs kết quả quay.
+   */
+  result: KenoDrawResult;
+
+  /**
+   * Cấu hình settle — snapshot từ GlobalConfig tại thời điểm PrepareSettle.
+   * Gồm companyRate, basicPrizes, bigSmallPrizes, evenOddPrizes, payoutCaps.
+   * Config snapshot KHÔNG thay đổi giữa các step.
+   */
+  config: KenoSettleConfig;
+
+  /**
+   * Tổng số entries thuộc kỳ quay — đếm từ DB tại PrepareSettle.
+   * Dùng cho logging/monitoring (biết khối lượng xử lý).
+   */
+  totalEntries: number;
+
+  /**
+   * Dữ liệu tài chính tổng hợp — output của CalculateFinancials.
+   *
+   * undefined TRƯỚC khi CalculateFinancials chạy.
+   * Sau CalculateFinancials, Step Function merge kết quả vào đây.
+   * BuildReport và FinalizeSettle truy cập financials qua field này.
+   */
+  financials?: SettleFinancials;
+}
+
+/**
+ * SettleContext với financials BẮT BUỘC — dùng cho các step SAU CalculateFinancials
+ * mà CẦN financials để hoạt động (FinalizeSettle).
+ *
+ * Tại runtime, Step Function đảm bảo financials đã được merge trước khi
+ * gọi các step này. Type này cung cấp compile-time safety.
+ */
+export type SettleContextWithFinancials = SettleContext & {
+  financials: SettleFinancials;
+};

@@ -1,20 +1,18 @@
 /**
  * Lambda: void-finalize (Keno)
  *
- * Step 4 (cuối) của Void Draw Step Function.
+ * Step cuối của Void Draw Step Function.
  * Aggregate void summary, ghi lên draw document.
  *
- * @input  FinalizeVoidInput
+ * @input  VoidContext ($voidCtx)
  * @output FinalizeVoidResult
  */
 
-import {
-  FinalizeVoidUseCase,
-  type FinalizeVoidInput,
-} from "@megawin/game-keno-application/use-cases/void";
+import { FinalizeVoidUseCase } from "@megawin/game-keno-application/use-cases/void";
+import type { VoidContext } from "@megawin/game-keno-application/use-cases/void";
 
 const useCase = new FinalizeVoidUseCase();
 
-export async function handler(event: FinalizeVoidInput) {
+export async function handler(event: VoidContext) {
   return useCase.run(event);
 }

@@ -45,15 +45,12 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { ObjectId } from "mongodb";
+import type { SettleContext } from "./types";
 
 /** Số tickets xử lý mỗi chunk. */
 const CHUNK_SIZE = 500;
 /** Giới hạn thời gian chạy trong 1 Lambda invocation (10 phút). */
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
-
-export interface SyncTicketSummariesInput {
-  drawId: string;
-}
 
 export interface SyncTicketSummariesResult {
   drawId: string;
@@ -61,13 +58,13 @@ export interface SyncTicketSummariesResult {
 }
 
 export class SyncTicketSummariesUseCase extends InternalUseCase<
-  SyncTicketSummariesInput,
+  SettleContext,
   SyncTicketSummariesResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 
-  protected async execute(input: SyncTicketSummariesInput): Promise<SyncTicketSummariesResult> {
+  protected async execute(input: SettleContext): Promise<SyncTicketSummariesResult> {
     const { drawId } = input;
     const startTime = Date.now();
     // Cursor-based pagination: dùng ticketId cuối cùng làm cursor cho batch tiếp

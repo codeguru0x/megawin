@@ -11,10 +11,7 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { AppException } from "@megawin/shared/errors";
-
-export interface FinalizeSettleInput {
-  drawId: string;
-}
+import type { SettleContext } from "./types";
 
 export interface FinalizeSettleResult {
   drawId: string;
@@ -23,13 +20,13 @@ export interface FinalizeSettleResult {
 }
 
 export class FinalizeSettleUseCase extends InternalUseCase<
-  FinalizeSettleInput,
+  SettleContext,
   FinalizeSettleResult
 > {
   private readonly drawRepo = new DrawRepository();
 
   /** Chuyển draw settling → settled (atomic, idempotent). */
-  protected async execute(input: FinalizeSettleInput): Promise<FinalizeSettleResult> {
+  protected async execute(input: SettleContext): Promise<FinalizeSettleResult> {
     const { drawId } = input;
     const updated = await this.drawRepo.settleComplete(drawId);
 

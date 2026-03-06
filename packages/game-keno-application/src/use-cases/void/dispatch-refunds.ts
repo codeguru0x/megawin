@@ -17,13 +17,10 @@ import {
 import { GameProduct } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
+import type { VoidContext } from "./types";
 
 const BATCH_QUERY_LIMIT = 200;
 const REFUND_CHUNK_SIZE = 50;
-
-export interface DispatchRefundBatchInput {
-  drawId: string;
-}
 
 export interface DispatchRefundBatchResult {
   drawId: string;
@@ -39,7 +36,7 @@ export interface DispatchRefundBatchResult {
 }
 
 export class DispatchRefundBatchUseCase extends InternalUseCase<
-  DispatchRefundBatchInput,
+  VoidContext,
   DispatchRefundBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
@@ -47,7 +44,7 @@ export class DispatchRefundBatchUseCase extends InternalUseCase<
 
   /** Dispatch refund cho 1 batch entries đã void. Loop cho đến khi done = true. */
   protected async execute(
-    input: DispatchRefundBatchInput
+    input: VoidContext
   ): Promise<DispatchRefundBatchResult> {
     const { drawId } = input;
     const entries = await this.entryRepo.getPendingRefundEntries(

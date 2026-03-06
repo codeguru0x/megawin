@@ -21,31 +21,17 @@ import {
 } from "@megawin/game-max3dpro/rules/financials";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { Max3dProSettleConfig, Max3dProSettleFinancials } from "./types";
-
-export interface CalculateFinancialsInput {
-  /** ID kỳ quay. */
-  drawId: string;
-  /** Tổng pairs trong kỳ (dùng cập nhật stats). */
-  totalLines: number;
-  /** Cấu hình tài chính. */
-  config: Pick<Max3dProSettleConfig, "companyRate">;
-}
-
-export type CalculateFinancialsResult = Max3dProSettleFinancials & {
-  /** ID kỳ quay. */
-  drawId: string;
-};
+import type { SettleContext, SettleFinancials } from "./types";
 
 export class CalculateFinancialsUseCase extends InternalUseCase<
-  CalculateFinancialsInput,
-  CalculateFinancialsResult
+  SettleContext,
+  SettleFinancials
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(input: CalculateFinancialsInput): Promise<CalculateFinancialsResult> {
-    const { drawId, config } = input;
+  protected async execute(input: SettleContext): Promise<SettleFinancials> {
+    const { drawId, totalLines, config } = input;
 
     const [tenantAgg, payoutSummary] = await Promise.all([
       this.entryRepo.aggregateRevenueByTenant(drawId),
@@ -77,7 +63,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       },
       {
         ticketEntryCount: payoutSummary.totalSettled,
-        totalLineCount: input.totalLines,
+        totalLineCount: totalLines,
         totalSalesAmount: fin.totalRevenue,
         totalPayoutAmount: payoutSummary.totalPayoutAmount,
       },
@@ -92,7 +78,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     }));
 
     return {
-      drawId,
       totalRevenue: fin.totalRevenue,
       totalFixedPrizes: fin.totalFixedPrizes,
       totalAgentCommission: fin.totalAgentCommission,

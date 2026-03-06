@@ -1,0 +1,303 @@
+---
+globs: packages/game-mega645/**,packages/game-mega645-application/**,apps/backoffice/src/app/(main)/games/mega645/**,apps/backoffice/src/app/api/mega645/**,apps/worker-mega645/**
+alwaysApply: false
+---
+
+# Mega 6/45 - Game Rules & Codebase Map
+
+Tài liệu tham chiếu cho AI Agent. ĐỌC KỸ trước khi thực hiện bất kỳ chức năng nào liên quan đến game Mega 6/45.
+
+> **LƯU Ý QUAN TRỌNG**: Tất cả giá trị giải thưởng, tỷ lệ tài chính trong tài liệu này là giá trị THAM KHẢO MẶC ĐỊNH (default). Giá trị thực tế được cấu hình trong `GlobalConfigDoc` (game config) và có thể thay đổi bởi staff qua backoffice UI. Khi implement, LUÔN đọc từ game config thay vì hardcode giá trị.
+
+---
+
+## 1. Tổng quan
+
+Mega 6/45 là game xổ số tự chọn của Vietlott. Đơn giản hơn Lotto 5/35 vì KHÔNG có số đặc biệt.
+
+- **Tập số**: 01 - 45 (45 số)
+- **Chọn số**: 6 số từ tập 01-45, KHÔNG có số đặc biệt
+- **Lịch quay**: 3 lần/tuần (Thứ 4, Thứ 6, Chủ Nhật) lúc 18h00
+- **Giá vé**: 10.000 VND / bộ số (line)
+- **Kỳ liên tiếp**: Tối đa 6 kỳ liên tiếp
+- **Board**: 1 vé có tối đa 6 board (A-F)
+- **Jackpot**: Tích lũy, tối thiểu 12 tỷ VND
+- **Không gian mẫu**: C(45,6) = 8.145.060
+
+---
+
+## 2. Cơ cấu giải thưởng (4 hạng)
+
+Mỗi line chỉ trúng hạng **CAO NHẤT** phù hợp. So khớp CHỈ dựa trên mainMatchCount (không có special).
+
+| Hạng | Code | Điều kiện | Giá trị mặc định (VND) | Split eligible |
+|------|------|-----------|------------------------|----------------|
+| Giải Đặc Biệt | `jackpot` | 6/6 số | Tích lũy (tối thiểu 12 tỷ) | Không |
+| Giải Nhất | `tier1` | 5/6 số | 10.000.000 | Có |
+| Giải Nhì | `tier2` | 4/6 số | 300.000 | Có |
+| Giải Ba | `tier3` | 3/6 số | 30.000 | Có |
+
+**Ghi chú**:
+- Trúng nhiều hạng giải → chỉ lĩnh hạng CAO NHẤT
+- Nhiều người trúng Jackpot → chia đều theo tỷ lệ giá trị tham gia
+- Giải Nhất đến Ba: giá trị = số lần tham gia (mỗi 10.000đ) x giá trị giải
+
+---
+
+## 3. Các kiểu chơi (Play Types)
+
+### 3.1 Standard (Chơi cơ bản)
+- Chọn: 6 số từ 01-45
+- Lines: 1
+- Giá: 10.000 VND/kỳ
+
+### 3.2 Bao 5 (đặc biệt)
+- Chọn: 5 số từ 01-45
+- Hệ thống ghép lần lượt 40 số còn lại (45 - 5 = 40) tạo 40 bộ số
+- Lines: 40
+- Giá: 400.000 VND/kỳ
+
+### 3.3 Bao 7 - Bao 18 (Bao số chính)
+- Chọn: N số (7 ≤ N ≤ 18) từ 01-45
+- Lines: C(N, 6) tổ hợp chập 6 từ N số
+- Giá: C(N, 6) × 10.000 VND/kỳ
+
+**Bảng tra cứu Bao số chính:**
+
+| Bao | Số chọn | Lines C(N,6) | Giá/kỳ (VND) |
+|-----|---------|--------------|---------------|
+| Bao 5 | 5 | 40 | 400.000 |
+| Bao 7 | 7 | 7 | 70.000 |
+| Bao 8 | 8 | 28 | 280.000 |
+| Bao 9 | 9 | 84 | 840.000 |
+| Bao 10 | 10 | 210 | 2.100.000 |
+| Bao 11 | 11 | 462 | 4.620.000 |
+| Bao 12 | 12 | 924 | 9.240.000 |
+| Bao 13 | 13 | 1.716 | 17.160.000 |
+| Bao 14 | 14 | 3.003 | 30.030.000 |
+| Bao 15 | 15 | 5.005 | 50.050.000 |
+| Bao 18 | 18 | 18.564 | 185.640.000 |
+
+### 3.4 QuickPick (Máy tự chọn)
+- Hệ thống chọn ngẫu nhiên 6 số
+- Lines: 1
+- Giá: 10.000 VND/kỳ
+
+---
+
+## 4. Cách tính thưởng khi chơi Bao
+
+Nguyên tắc giống Lotto 5/35: mỗi line match ĐỘC LẬP → tổng thưởng = Σ(tiền mỗi line trúng).
+
+**Bảng giải thưởng Bao (tham khảo, mệnh giá 10.000đ):**
+
+| Bao | Trúng 3 | Trúng 4 | Trúng 5 | Trúng 6 |
+|-----|---------|---------|---------|---------|
+| Bao 5 | 2.010.000 | 31.400.000 | JP + 390 tr | - |
+| Bao 7 | 120.000 | 1.020.000 | 21.500.000 | JP + 60 tr |
+| Bao 8 | 300.000 | 2.280.000 | 34.800.000 | JP + 124,5 tr |
+| Bao 9 | 600.000 | 4.200.000 | 50.200.000 | JP + 194,1 tr |
+| Bao 10 | 1.050.000 | 6.900.000 | 68.000.000 | JP + 269,4 tr |
+| Bao 11 | 1.680.000 | 10.500.000 | 88.500.000 | JP + 351 tr |
+| Bao 12 | 2.520.000 | 15.120.000 | 112.000.000 | JP + 439,5 tr |
+| Bao 13 | 3.600.000 | 20.880.000 | 138.800.000 | JP + 535,5 tr |
+| Bao 14 | 4.950.000 | 27.900.000 | 169.200.000 | JP + 639,6 tr |
+| Bao 15 | 6.600.000 | 36.300.000 | 203.500.000 | JP + 752,4 tr |
+| Bao 18 | 13.650.000 | 70.980.000 | 332.800.000 | JP + 1,149 tỷ |
+
+---
+
+## 5. Cơ chế Jackpot
+
+### 5.1 Tích lũy Jackpot
+
+Mỗi kỳ quay, Jackpot được tích lũy theo công thức:
+
+```
+JackpotContribution = max(Revenue - FixedPrizes - AgentCommission - ActualCompanyTake, 0)
+
+Trong đó:
+- Revenue = 100% doanh thu tiền cược kỳ này
+- FixedPrizes = Tổng tiền trả giải cố định (tier1 + tier2 + tier3)
+- AgentCommission = Σ(commissionRate_i × revenue_i) cho từng tenant
+- ActualCompanyTake = min(companyRate × Revenue, max(Revenue - FixedPrizes - Commission, 0))
+```
+
+### 5.2 Jackpot Cycle
+
+- **Seed**: Mỗi cycle bắt đầu với seedAmount (mặc định 12 tỷ VND)
+- **Rollover khi có winner**: closingAmount = seedAmount + contribution (contribution kỳ có winner cộng vào cycle mới)
+- **Rollover bình thường**: closingAmount = openingAmount + contribution
+
+### 5.3 Split Cycle (Chia giải Jackpot)
+
+**Điều kiện kích hoạt**:
+1. Jackpot >= splitThreshold (mặc định 12 tỷ VND)
+2. Không ai trúng Jackpot
+
+**Tỷ lệ chia** (tổng = 5 phần):
+- tier1 (Giải Nhất): 2/5 = 40%
+- tier2 (Giải Nhì): 2/5 = 40%
+- tier3 (Giải Ba): 1/5 = 20%
+
+**Quy trình chia**: Giống Lotto 5/35 — tier không có người trúng redistribute cho tier có người trúng. Làm tròn xuống 5.000 VND, phần dư cộng vào tier cao nhất.
+
+---
+
+## 6. Tỷ lệ tài chính (mặc định, cấu hình trong GlobalConfig)
+
+| Khoản mục | Tỷ lệ mặc định | Ghi chú |
+|-----------|----------------|---------|
+| Hoa hồng đại lý | 20% revenue | Override per tenant qua TenantConfig |
+| Công ty thu | 15% revenue | Có cap khi doanh thu thấp |
+| Giải cố định (kỳ vọng) | ~13.7% revenue | Dựa trên xác suất |
+| Tích lũy Jackpot | ~51.3% revenue | Phần còn lại |
+
+---
+
+## 7. Xác suất & Không gian mẫu
+
+- Tổng không gian mẫu: `C(45,6) = 8.145.060`
+
+| Giải | Main match | Favorable outcomes | Xác suất (1 trong N) |
+|------|-----------|-------------------|---------------------|
+| Jackpot | 6/6 | 1 | 1/8.145.060 |
+| Giải Nhất | 5/6 | 234 | 1/34.808 |
+| Giải Nhì | 4/6 | 11.115 | 1/733 |
+| Giải Ba | 3/6 | 182.780 | 1/44,6 |
+| Không trúng | <3 | 7.950.930 | ~97.6% |
+
+Gross margin (không tính Jackpot): ~86.3% (8.630 VND/line)
+
+---
+
+## 8. Khác biệt so với Lotto 5/35
+
+| Đặc điểm | Mega 6/45 | Lotto 5/35 |
+|-----------|-----------|-----------|
+| Tập số | 01-45, chọn 6 số | 01-35 chính + 01-12 ĐB |
+| Số đặc biệt | KHÔNG | CÓ (1 số special) |
+| Hạng giải | 4 (JP, Nhất, Nhì, Ba) | 7 (JP, 5 tier + Consolation) |
+| Matching | Chỉ mainMatchCount | mainMatchCount + specialMatched |
+| Jackpot min | 12 tỷ | 6 tỷ (tham khảo) |
+| Split ratios | 2/5, 2/5, 1/5 | 2/6, 1/6, 1/6, 1/6, 1/6 |
+| Lịch quay | 3 lần/tuần (T4, T6, CN) | 2 lần/ngày |
+| Bao types | Bao 5 + Bao 7-18 | Bao 4 + Bao 6-15 + Bao ĐB |
+| Max boards | 6 (A-F) | 5 (A-E) |
+| LineValue | `{ main: MainTuple }` | `{ main, special }` |
+
+---
+
+## 9. Vòng đời vận hành
+
+### 9.1 Settle pipeline
+
+```
+prepare-settle → settle-entries → calculate-financials → apply-split-bonuses → build-report → finalize-settle → sync-ticket-summaries
+```
+
+### 9.2 Void pipeline
+
+```
+prepare-void → void-entries → dispatch-refunds → finalize-void
+```
+
+---
+
+## 10. Codebase Map
+
+### 10.1 Domain Layer — `packages/game-mega645/` (`@megawin/game-mega645`)
+
+```
+src/
+├── entities/
+│   ├── enums.ts           # PrizeTier (jackpot, tier1-3), PlayType (standard, bao5, bao7-18, quickPick)
+│   ├── types.ts           # MainTuple (6 số), BoardSelection, LineValue, PrizeAmounts,
+│   │                      # SplitRatios, JackpotConfig, FinancialRates, PlayRules
+│   ├── draw.ts            # DrawDoc (result: winningMain only, NO special)
+│   ├── ticket.ts          # TicketDoc, Board (max 6 boards A-F)
+│   ├── entry.ts           # TicketEntryDoc
+│   ├── line.ts            # TicketLineDoc, LineMatchResult
+│   ├── jackpot-cycle.ts   # JackpotCycleDoc
+│   ├── global-config.ts   # GlobalConfigDoc
+│   └── tenant-config.ts   # TenantConfigDoc
+├── rules/
+│   ├── prize-tiers.ts     # determineTier(mainMatchCount), DEFAULT_PRIZE_TIER_RULES
+│   ├── play-types.ts      # combination(), calculateLineCount(), validateSelection()
+│   ├── odds.ts            # TOTAL_OUTCOMES = C(45,6), getOddsTable()
+│   └── jackpot.ts         # calculateDrawFinancials(), calculateClosingJackpot(),
+│                          # isSplitCycleDraw(), calculateSplitDistribution()
+├── helpers/
+│   ├── match-result.ts    # matchLine(), matchLines() (chỉ mainMatchCount, no special)
+│   ├── expand-lines.ts    # expandBoardToLines(), expandAllBoards()
+│   ├── draw-id.ts         # generateDrawId()
+│   └── selection-hash.ts  # Hash selection cho dedup
+└── schemas/
+    └── common.ts
+```
+
+### 10.2 Application Layer — `packages/game-mega645-application/` (`@megawin/game-mega645-application`)
+
+```
+src/
+├── infras/
+│   ├── repos/             # draw, entry, line, ticket, game-config, tenant-config,
+│   │                      # jackpot-cycle, report repos
+│   └── mappers/           # draw, entry, ticket, jackpot-cycle, config mappers
+└── use-cases/
+    ├── draws/             # create, list, get-detail, get-current, preview,
+    │                      # open-sales, close-sales, publish-result, trigger-settle, void
+    ├── settle/            # prepare → settle-entries → calculate-financials →
+    │                      # apply-split-bonuses → build-report → finalize → sync-ticket
+    ├── place-bet/         # place-bet
+    ├── void/              # prepare → void-entries → dispatch-refunds → finalize
+    ├── payout/            # dispatch-payout
+    ├── jackpot/           # get-current, list-cycles, list-history
+    ├── game-config/       # get/update global config
+    ├── tenant-config/     # get/list/update tenant config
+    ├── player/            # list-tickets, get-entries, get-lines, get-jackpot
+    ├── operations/        # summary, number-frequency, tenant-breakdown
+    └── feed/              # sync-entry-feed, save-cursor, acquire-lock
+```
+
+### 10.3 Worker — `apps/worker-mega645/`
+
+Step functions: settle, void, feed-sync, enroll.
+
+### 10.4 Backoffice UI — `apps/backoffice/src/app/(main)/games/mega645/`
+
+Pages: draws, config, jackpot, operations, tenant-config, financial-reports.
+
+### 10.5 Backoffice API — `apps/backoffice/src/app/api/mega645/`
+
+Routes: draws, config, tenant-config, jackpot, operations.
+
+---
+
+## 11. MongoDB Collections
+
+| Collection | Entity | Mô tả |
+|-----------|--------|-------|
+| `mega645_tickets` | TicketDoc | Vé mua, chứa boards A-F |
+| `mega645_ticket_entries` | TicketEntryDoc | 1 ticket × 1 draw |
+| `mega645_ticket_lines` | TicketLineDoc | Line con (bộ 6 số), tạo khi settle |
+| `mega645_draws` | DrawDoc | Kỳ quay, result (chỉ winningMain) |
+| `mega645_game_configs` | GlobalConfigDoc / TenantConfigDoc | Config game |
+| `mega645_jackpot_cycles` | JackpotCycleDoc | Vòng đời Jackpot |
+
+---
+
+## 12. Quy tắc quan trọng cho AI Agent
+
+1. **KHÔNG có số đặc biệt**: Mega 6/45 chỉ có mainNumbers, matching chỉ dựa trên mainMatchCount
+2. **Số lưu string zero-padded**: "01"-"45" (2 ký tự)
+3. **Tiền lưu integer VND**: Không dùng float
+4. **MainTuple = 6 số**: Khác Lotto 5/35 (5 số + 1 ĐB)
+5. **Giá trị giải thưởng là TỶ LỆ THAM KHẢO**: Thực tế đọc từ GlobalConfigDoc, có thể thay đổi bởi staff
+6. **Split ratios khác Lotto 5/35**: tier1=2/5, tier2=2/5, tier3=1/5 (Lotto 5/35 có 5 tier chia 6 phần)
+7. **Jackpot seed = 12 tỷ**: Cao hơn Lotto 5/35 (6 tỷ tham khảo)
+8. **Bao 5 đặc biệt**: Chọn 5 số, HT ghép 40 số còn lại (khác Lotto 5/35 Bao 4 ghép 31 số)
+9. **3 lần/tuần**: Ít hơn Lotto 5/35 (14 lần/tuần) và Keno (~672 lần/tuần)
+10. **6 boards A-F**: Nhiều hơn Lotto 5/35 (5 boards A-E)
+11. **determineTier chỉ cần mainMatchCount**: Không cần specialMatched parameter
+12. **Lines tạo khi settle**: Expand boards → lines khi settle, giống Lotto 5/35

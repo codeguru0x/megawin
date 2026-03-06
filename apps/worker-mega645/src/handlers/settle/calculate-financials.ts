@@ -1,24 +1,22 @@
 /**
  * Lambda: calculate-financials (Mega 6/45)
  *
- * Step 4 của Mega645 Settle Step Function.
+ * Step 3 của Mega645 Settle Step Function.
  * Tính toán tài chính tổng hợp từ DB (aggregate settled entries).
- *
- * Single jackpot (not dual JP1/JP2). SplitRatios: tier1, tier2, tier3.
  *
  * IDEMPOTENT: chạy lại cho kết quả giống nhau.
  *
- * @input  { drawId, jackpotOpeningAmount, isSplitCycle, totalLines, config }
- * @output CalculateFinancialsResult
+ * @input  SettleContext
+ * @output SettleFinancials
  */
 
 import {
   CalculateFinancialsUseCase,
-  type CalculateFinancialsInput,
+  type SettleContext,
 } from "@megawin/game-mega645-application/use-cases/settle";
 
 const useCase = new CalculateFinancialsUseCase();
 
-export async function handler(event: CalculateFinancialsInput) {
+export async function handler(event: SettleContext) {
   return useCase.run(event);
 }

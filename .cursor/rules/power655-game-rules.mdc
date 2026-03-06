@@ -1,0 +1,380 @@
+---
+globs: packages/game-power655/**,packages/game-power655-application/**,apps/backoffice/src/app/(main)/games/power655/**,apps/backoffice/src/app/api/power655/**,apps/worker-power655/**
+alwaysApply: false
+---
+
+# Power 6/55 - Game Rules & Codebase Map
+
+Tài liệu tham chiếu cho AI Agent. ĐỌC KỸ trước khi thực hiện bất kỳ chức năng nào liên quan đến game Power 6/55.
+
+> **LƯU Ý QUAN TRỌNG**: Tất cả giá trị giải thưởng, tỷ lệ tài chính trong tài liệu này là giá trị THAM KHẢO MẶC ĐỊNH (default). Giá trị thực tế được cấu hình trong `GlobalConfigDoc` (game config) và có thể thay đổi bởi staff qua backoffice UI. Khi implement, LUÔN đọc từ game config thay vì hardcode giá trị.
+
+---
+
+## 1. Tổng quan
+
+Power 6/55 là game xổ số tự chọn lớn nhất của Vietlott, có 2 giải Jackpot tích luỹ và bonus number.
+
+- **Tập số**: 01 - 55 (55 số)
+- **Chọn số**: 6 số từ tập 01-55
+- **Bonus number**: 1 số đặc biệt quay từ 49 quả bóng còn lại sau khi rút 6 quả chính
+- **Lịch quay**: 3 lần/tuần (Thứ 3, Thứ 5, Thứ 7) lúc 18h00
+- **Giá vé**: 10.000 VND / bộ số (line)
+- **Kỳ liên tiếp**: Tối đa 6 kỳ liên tiếp
+- **Board**: 1 vé có tối đa 5 board (A-E)
+- **Jackpot 1**: Tích lũy, tối thiểu 30 tỷ VND (trùng 6/6)
+- **Jackpot 2**: Tích lũy, tối thiểu 3 tỷ VND (trùng 5/6 + bonus)
+- **Không gian mẫu**: C(55,6) = 28.989.675
+
+---
+
+## 2. Bonus Number — Đặc điểm khác biệt chính
+
+Power 6/55 là game DUY NHẤT trong hệ thống có **bonus number**:
+
+- Sau khi rút 6 quả bóng chính (winning numbers), **1 quả bóng nữa** được rút từ 49 quả còn lại
+- Bonus number **LUÔN KHÁC** 6 số winning chính
+- Player chọn 6 số → nếu trùng 5/6 winning, số thứ 6 chưa trúng CÓ THỂ = bonus number → **Jackpot 2**
+- Khi trùng 6/6, cả 6 số player = 6 winning → bonus **KHÔNG THỂ** match (vì bonus ∉ winning set)
+- → **6/6 = chỉ JP1. 5/6 + bonus = chỉ JP2. Không bao giờ JP1 + JP2 cùng lúc**
+
+**Logic match trong code** (`match-result.ts`):
+```
+countMainMatches(lineMain, winMain) → 0-6
+checkBonusMatch(lineMain, bonusNumber) → boolean
+// bonusMatched = bonus number nằm trong 6 số player chọn (không phải winning)
+```
+
+---
+
+## 3. Cơ cấu giải thưởng (5 hạng)
+
+Giá trị trong bảng dưới là **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.defaultPrizes`.
+
+Mỗi line chỉ trúng hạng **CAO NHẤT** phù hợp. So khớp dựa trên mainMatchCount + bonusMatched.
+
+| Hạng | Code | Điều kiện | Giá trị mặc định (VND) | Tích luỹ? | Split eligible |
+|------|------|-----------|------------------------|-----------|----------------|
+| Jackpot 1 | `jackpot1` | 6/6 số chính | Tích lũy (tối thiểu 30 tỷ) | Có | Không |
+| Jackpot 2 | `jackpot2` | 5/6 số + bonus number | Tích lũy (tối thiểu 3 tỷ) | Có | Không |
+| Giải Nhất | `tier1` | 5/6 số (không trùng bonus) | 40.000.000 | Không | Có |
+| Giải Nhì | `tier2` | 4/6 số | 500.000 | Không | Có |
+| Giải Ba | `tier3` | 3/6 số | 50.000 | Không | Có |
+
+**Logic xác định tier** (`prize-tiers.ts`):
+```
+determineTier(mainMatchCount, bonusMatched):
+  6 → Jackpot1
+  5 + bonus → Jackpot2
+  5 (no bonus) → Tier1
+  4 → Tier2
+  3 → Tier3
+  ≤2 → null (không trúng)
+```
+
+**Ghi chú**:
+- Trúng nhiều hạng giải → chỉ lĩnh hạng CAO NHẤT
+- Nhiều người trúng Jackpot → chia đều theo tỷ lệ giá trị tham gia
+- Giải Nhất đến Ba: giá trị = prizeAmount × số lần tham gia (mỗi 10.000đ) × số lines trúng
+
+---
+
+## 4. Các kiểu chơi (Play Types)
+
+### 4.1 Standard (Chơi cơ bản)
+- Chọn: 6 số từ 01-55
+- Lines: 1
+- Giá: 10.000 VND/kỳ
+
+### 4.2 Bao 7 - Bao 18 (Bao số chính)
+- Chọn: N số (7 ≤ N ≤ 18) từ 01-55
+- Lines: C(N, 6) tổ hợp chập 6 từ N số
+- Giá: C(N, 6) × 10.000 VND/kỳ
+
+**Bảng tra cứu Bao số chính:**
+
+| Bao | Số chọn | Lines C(N,6) | Giá/kỳ (VND) |
+|-----|---------|--------------|---------------|
+| Bao 7 | 7 | 7 | 70.000 |
+| Bao 8 | 8 | 28 | 280.000 |
+| Bao 9 | 9 | 84 | 840.000 |
+| Bao 10 | 10 | 210 | 2.100.000 |
+| Bao 11 | 11 | 462 | 4.620.000 |
+| Bao 12 | 12 | 924 | 9.240.000 |
+| Bao 13 | 13 | 1.716 | 17.160.000 |
+| Bao 14 | 14 | 3.003 | 30.030.000 |
+| Bao 15 | 15 | 5.005 | 50.050.000 |
+| Bao 18 | 18 | 18.564 | 185.640.000 |
+
+### 4.3 QuickPick (Máy tự chọn)
+- Hệ thống chọn ngẫu nhiên 6 số
+- Lines: 1
+- Giá: 10.000 VND/kỳ
+
+**Lưu ý**: Power 6/55 **KHÔNG** có Bao 5 (khác Mega 6/45 có Bao 5 ghép 40 số).
+
+---
+
+## 5. Cách tính thưởng khi chơi Bao
+
+Nguyên tắc: mỗi line match ĐỘC LẬP → tổng thưởng = Σ(tiền mỗi line trúng).
+
+**Bảng giải thưởng Bao (mặc định tham khảo, mệnh giá 10.000đ):**
+
+| Bao | Trúng 3 | Trúng 4 | Trúng 5 | Trúng 5+Bonus | Trúng 6 |
+|-----|---------|---------|---------|---------------|---------|
+| Bao 7 | 200.000 | 1.700.000 | 82.500.000 | JP2* + 42,5 tr | JP1* + 240 tr |
+| Bao 8 | 500.000 | 3.800.000 | 128.000.000 | JP2* + 88 tr | JP1* + 487,5 tr |
+| Bao 9 | 1.000.000 | 7.000.000 | 177.000.000 | JP2* + 137 tr | JP1* + 743,5 tr |
+| Bao 10 | 1.750.000 | 11.500.000 | 230.000.000 | JP2* + 190 tr | JP1* + 1,00 tỷ |
+| Bao 11 | 2.800.000 | 17.500.000 | 287.500.000 | JP2* + 247,5 tr | JP1* + 1,28 tỷ |
+| Bao 12 | 4.200.000 | 25.200.000 | 350.000.000 | JP2* + 310 tr | JP1* + 1,57 tỷ |
+| Bao 13 | 6.000.000 | 34.800.000 | 418.000.000 | JP2* + 378 tr | JP1* + 1,87 tỷ |
+| Bao 14 | 8.250.000 | 46.500.000 | 492.000.000 | JP2* + 452 tr | JP1* + 2,18 tỷ |
+| Bao 15 | 11.000.000 | 60.500.000 | 572.500.000 | JP2* + 532,5 tr | JP1* + 2,51 tỷ |
+| Bao 18 | 22.750.000 | 118.300.000 | 858.000.000 | JP2* + 818 tr | JP1* + 3,59 tỷ |
+
+> JP1* = một phần chia của Jackpot 1. JP2* = Jackpot 2 được chia thành 6 phần đều nhau (nếu chỉ 1 người trúng = 100%).
+> **: Các giá trị kèm Jackpot được làm tròn đến 2 chữ số sau thập phân.
+
+---
+
+## 6. Cơ chế Dual Jackpot (JP1 + JP2)
+
+Power 6/55 có **2 giải Jackpot tích luỹ SONG SONG** — đây là khác biệt lớn nhất so với tất cả game khác.
+
+### 6.1 Tích lũy Jackpot mỗi kỳ
+
+```
+JackpotContribution = max(Revenue - FixedPrizes - AgentCommission - ActualCompanyTake, 0)
+
+Phân bổ:
+  JP1 += JackpotContribution × jp1ContributionRatio (mặc định 90%)
+  JP2 += JackpotContribution × jp2ContributionRatio (mặc định 10%)
+```
+
+### 6.2 Overflow Mechanism
+
+Khi JP1 vượt ngưỡng `jp1OverflowThreshold` (mặc định 300 tỷ):
+- Phần vượt **tự động chuyển sang JP2**
+- `jp1Overflow = projectedJp1 - jp1OverflowThreshold`
+- `JP1 contribution -= jp1Overflow`
+- `JP2 contribution += jp1Overflow`
+
+### 6.3 Jackpot Cycle
+
+- **2 jackpot chạy SONG SONG** trong cùng 1 cycle
+- `jackpot1Opening`, `jackpot1Current` (trùng 6/6)
+- `jackpot2Opening`, `jackpot2Current` (trùng 5/6 + bonus)
+- **Seed**: JP1 = 30 tỷ, JP2 = 3 tỷ
+- **Closed reasons**: `jackpot1_winner`, `jackpot2_winner`, `both_winner`, `split`
+
+### 6.4 Rollover
+
+- **Có JP1 winner**: JP1 reseed 30 tỷ + contribution kỳ đó. JP2 giữ nguyên (trừ khi cũng có winner)
+- **Có JP2 winner**: JP2 reseed 3 tỷ + contribution kỳ đó. JP1 giữ nguyên
+- **Không có winner**: JP1 = opening + contribution, JP2 = opening + contribution
+
+### 6.5 Split Cycle (Chia giải Jackpot)
+
+**Điều kiện kích hoạt**:
+1. Tổng JP1 + JP2 >= `splitThreshold` (mặc định 500 tỷ)
+2. Không ai trúng Jackpot (cả JP1 và JP2)
+
+**Tỷ lệ chia** (mặc định, tổng = 4 phần):
+- tier1 (Giải Nhất): 2/4 = 50%
+- tier2 (Giải Nhì): 1/4 = 25%
+- tier3 (Giải Ba): 1/4 = 25%
+
+**Quy trình chia**: Tier không có người trúng → redistribute cho tier có người trúng. Làm tròn xuống 5.000 VND, phần dư cộng vào tier cao nhất có winner. Sau split: JP1 reseed 30 tỷ, JP2 reseed 3 tỷ.
+
+---
+
+## 7. Tỷ lệ tài chính
+
+Tất cả tỷ lệ dưới đây là giá trị **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.rates`.
+
+| Khoản mục | Tỷ lệ mặc định | Ghi chú |
+|-----------|----------------|---------|
+| Hoa hồng đại lý | 20% revenue | Override per tenant qua TenantConfig |
+| Công ty thu | 15% revenue | Có cap khi doanh thu thấp |
+| Giải cố định (kỳ vọng) | ~13.37% revenue | Dựa trên xác suất |
+| Tích lũy Jackpot | ~51.63% revenue | Phần còn lại |
+| → JP1 nhận | 90% tích luỹ | ≈ 46.47% revenue |
+| → JP2 nhận | 10% tích luỹ | ≈ 5.16% revenue |
+
+**Phân bổ doanh thu mỗi line (10.000đ):**
+```
+100% Revenue = 10.000 VND
+├── 20% Hoa hồng đại lý    = 2.000 VND
+├── 15% Công ty thu về      = 1.500 VND
+├── ~13.37% Giải cố định    ≈ 1.337 VND
+└── ~51.63% Tích luỹ JP     ≈ 5.163 VND
+    ├── 90% → Jackpot 1     ≈ 4.647 VND
+    └── 10% → Jackpot 2     ≈ 516 VND
+```
+
+---
+
+## 8. Xác suất & Không gian mẫu
+
+- Tổng không gian mẫu: `C(55,6) = 28.989.675`
+- Bonus pool: 49 quả bóng còn lại
+
+| Giải | Main match | Bonus | Favorable outcomes | Xác suất (1 trong N) |
+|------|-----------|-------|-------------------|---------------------|
+| Jackpot 1 | 6/6 | bất kỳ | 1 | 1/28.989.675 |
+| Jackpot 2 | 5/6 | matched | 6 | 1/4.831.612 |
+| Giải Nhất | 5/6 | no match | 288 | 1/100.658 |
+| Giải Nhì | 4/6 | bất kỳ | 17.640 | 1/1.643 |
+| Giải Ba | 3/6 | bất kỳ | 368.480 | 1/78,7 |
+| Không trúng | ≤2/6 | bất kỳ | 28.603.267 | ~98.67% |
+
+Gross margin (không tính Jackpot): ~86.63% (8.663 VND/line)
+
+---
+
+## 9. Khác biệt so với các game khác
+
+| Đặc điểm | Power 6/55 | Mega 6/45 | Lotto 5/35 |
+|-----------|-----------|-----------|-----------|
+| Tập số | 01-55, chọn 6 | 01-45, chọn 6 | 01-35 chính + 01-12 ĐB |
+| Bonus number | CÓ (1 số từ 49 còn lại) | KHÔNG | KHÔNG (có special riêng) |
+| Jackpot pools | 2 (JP1 + JP2) | 1 | 1 |
+| JP1 seed | 30 tỷ | 12 tỷ | 6 tỷ |
+| JP2 seed | 3 tỷ | N/A | N/A |
+| Hạng giải | 5 (JP1, JP2, Nhất, Nhì, Ba) | 4 (JP, Nhất, Nhì, Ba) | 7 (JP, 5 tier + Consolation) |
+| JP contribution | 90% JP1 / 10% JP2 | 100% vào 1 pool | 100% vào 1 pool |
+| Overflow | JP1 > 300 tỷ → JP2 | N/A | N/A |
+| Split threshold | 500 tỷ (JP1+JP2) | 12 tỷ | 6 tỷ |
+| Split ratios | 2/4, 1/4, 1/4 | 2/5, 2/5, 1/5 | 2/6, 1/6, 1/6, 1/6, 1/6 |
+| Lịch quay | T3, T5, T7 | T4, T6, CN | 2 lần/ngày |
+| Không gian mẫu | C(55,6) = 28.989.675 | C(45,6) = 8.145.060 | C(35,5)×C(12,1) ≈ 3.892.680 |
+| Max boards | 5 (A-E) | 6 (A-F) | 5 (A-E) |
+| Bao types | Bao 7-18 | Bao 5 + Bao 7-18 | Bao 4 + Bao 6-15 + Bao ĐB |
+| DrawResult | winningMain + bonusNumber | winningMain only | winningMain + special |
+| LineMatchResult | mainMatchCount + bonusMatched | mainMatchCount only | mainMatchCount + specialMatched |
+| Giá vé | 10.000đ | 10.000đ | 10.000đ |
+| Max draws | 6 kỳ | 6 kỳ | 6 kỳ |
+
+---
+
+## 10. Vòng đời vận hành
+
+### 10.1 Settle pipeline
+
+```
+prepare-settle → settle-entries → calculate-financials → apply-split-bonuses → build-report → finalize-settle → sync-ticket-summaries
+```
+
+Đặc biệt ở Power 6/55: `calculate-financials` tính **dual jackpot** (jp1Contribution, jp2Contribution, jp1Overflow). `apply-split-bonuses` kích hoạt khi tổng JP1+JP2 >= splitThreshold.
+
+### 10.2 Void pipeline
+
+```
+prepare-void → void-entries → dispatch-refunds → finalize-void
+```
+
+---
+
+## 11. Codebase Map
+
+### 11.1 Domain Layer — `packages/game-power655/` (`@megawin/game-power655`)
+
+```
+src/
+├── entities/
+│   ├── enums.ts           # PrizeTier (jackpot1, jackpot2, tier1-3), PlayType (standard, bao7-18, quickPick)
+│   ├── types.ts           # MainTuple (6 số), BonusNumber, BoardSelection, LineValue,
+│   │                      # PrizeAmounts, JackpotConfig (dual JP), SplitRatios, FinancialRates, PlayRules
+│   ├── draw.ts            # DrawDoc (result: winningMain + bonusNumber)
+│   ├── ticket.ts          # TicketDoc, Board (max 5 boards A-E)
+│   ├── entry.ts           # TicketEntryDoc
+│   ├── line.ts            # TicketLineDoc, LineMatchResult (mainMatchCount + bonusMatched)
+│   ├── jackpot-cycle.ts   # JackpotCycleDoc (dual: jp1Opening, jp1Current, jp2Opening, jp2Current)
+│   ├── global-config.ts   # GlobalConfigDoc
+│   ├── tenant-config.ts   # TenantConfigDoc
+│   └── game-config.ts     # GameConfigDoc (merged global + tenant)
+├── rules/
+│   ├── prize-tiers.ts     # determineTier(mainMatchCount, bonusMatched), determineTiers(), highestTier()
+│   ├── play-types.ts      # combination(), calculateLineCount(), validateSelection()
+│   ├── odds.ts            # TOTAL_MAIN_OUTCOMES = C(55,6) = 28,989,675, getOddsTable(), analyzeProfitability()
+│   └── jackpot.ts         # calculateDrawFinancials() (dual JP + overflow),
+│                          # calculateNextJackpot1/2(), isSplitCycleDraw(), calculateSplitDistribution()
+├── helpers/
+│   ├── match-result.ts    # countMainMatches(), checkBonusMatch(), matchLine(), matchLines()
+│   ├── expand-lines.ts    # expandBoardToLines(), expandAllBoards()
+│   ├── draw-id.ts         # generateDrawId()
+│   └── selection-hash.ts  # Hash selection cho dedup
+└── schemas/
+    └── common.ts
+```
+
+### 11.2 Application Layer — `packages/game-power655-application/` (`@megawin/game-power655-application`)
+
+```
+src/
+├── infras/
+│   ├── repos/             # draw, entry, line, ticket, game-config, tenant-config,
+│   │                      # jackpot-cycle, report repos
+│   └── mappers/           # draw, entry, ticket, jackpot-cycle, config mappers
+└── use-cases/
+    ├── draws/             # create, list, get-detail, get-current, preview,
+    │                      # open-sales, close-sales, publish-result, trigger-settle, void
+    ├── settle/            # prepare → settle-entries → calculate-financials (dual JP) →
+    │                      # apply-split-bonuses → build-report → finalize → sync-ticket
+    ├── place-bet/         # place-bet
+    ├── void/              # prepare → void-entries → dispatch-refunds → finalize
+    ├── payout/            # dispatch-payout
+    ├── jackpot/           # get-current (JP1+JP2), list-cycles, list-history
+    ├── game-config/       # get/update global config
+    ├── tenant-config/     # get/list/update tenant config
+    ├── player/            # list-tickets, get-entries, get-lines, get-jackpot
+    ├── operations/        # summary, number-frequency, tenant-breakdown
+    └── feed/              # sync-entry-feed, save-cursor, acquire-lock
+```
+
+### 11.3 Worker — `apps/worker-power655/`
+
+Step functions: settle, void, feed-sync, enroll.
+
+### 11.4 Backoffice UI — `apps/backoffice/src/app/(main)/games/power655/`
+
+Pages: draws, config, jackpot (hiển thị cả JP1 + JP2), operations, tenant-config, financial-reports.
+
+### 11.5 Backoffice API — `apps/backoffice/src/app/api/power655/`
+
+Routes: draws, config, tenant-config, jackpot, operations.
+
+---
+
+## 12. MongoDB Collections
+
+| Collection | Entity | Mô tả |
+|-----------|--------|-------|
+| `power655_tickets` | TicketDoc | Vé mua, chứa boards A-E |
+| `power655_ticket_entries` | TicketEntryDoc | 1 ticket × 1 draw |
+| `power655_ticket_lines` | TicketLineDoc | Line con (bộ 6 số + bonusMatched), tạo khi settle |
+| `power655_draws` | DrawDoc | Kỳ quay, result (winningMain + bonusNumber) |
+| `power655_game_configs` | GlobalConfigDoc / TenantConfigDoc | Config game |
+| `power655_jackpot_cycles` | JackpotCycleDoc | Vòng đời Jackpot (dual JP1 + JP2) |
+
+---
+
+## 13. Quy tắc quan trọng cho AI Agent
+
+1. **CÓ bonus number**: Power 6/55 khác Mega 6/45 và Lotto 5/35 — DrawResult chứa `bonusNumber`, LineMatchResult chứa `bonusMatched`
+2. **DUAL Jackpot**: 2 jackpot pool tách biệt (JP1 + JP2), tích luỹ song song với tỷ lệ 90%/10%
+3. **Bonus KHÔNG THỂ match khi trùng 6/6**: Vì bonus quay từ 49 số ngoài winning → 6/6 chỉ JP1, KHÔNG có trường hợp JP1+JP2 cùng lúc
+4. **Số lưu string zero-padded**: "01"-"55" (2 ký tự)
+5. **Tiền lưu integer VND**: Không dùng float
+6. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc`, có thể thay đổi bởi staff
+7. **Overflow mechanism**: JP1 > 300 tỷ → phần vượt tự động chuyển sang JP2 — logic quan trọng trong `calculateDrawFinancials()`
+8. **Split threshold cao**: 500 tỷ (tổng JP1+JP2), cao hơn rất nhiều so với Mega 6/45 (12 tỷ) và Lotto 5/35 (6 tỷ)
+9. **Split ratios**: tier1=2/4, tier2=1/4, tier3=1/4 (50%/25%/25%) — khác Mega 6/45 (40%/40%/20%)
+10. **KHÔNG có Bao 5**: Chỉ có Bao 7-18 và Standard/QuickPick (khác Mega 6/45)
+11. **5 boards A-E**: Khác Mega 6/45 (6 boards A-F)
+12. **3 lần/tuần**: T3, T5, T7 — khác Mega 6/45 (T4, T6, CN)
+13. **determineTier cần 2 tham số**: `determineTier(mainMatchCount, bonusMatched)` — khác Mega 6/45 chỉ cần mainMatchCount
+14. **Lines tạo khi settle**: Expand boards → lines khi settle, giống Mega 6/45 và Lotto 5/35
+15. **Commission snapshot**: commissionRate snapshot lúc place-bet, không thay đổi khi config update sau

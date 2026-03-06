@@ -1,0 +1,348 @@
+---
+globs: packages/game-max3d/**,packages/game-max3d-application/**,apps/backoffice/src/app/(main)/games/max3d/**,apps/backoffice/src/app/api/max3d/**,apps/worker-max3d/**
+alwaysApply: false
+---
+
+# Max 3D - Game Rules & Codebase Map
+
+Tài liệu tham chiếu cho AI Agent. ĐỌC KỸ trước khi thực hiện bất kỳ chức năng nào liên quan đến game Max 3D.
+
+> **LƯU Ý QUAN TRỌNG**: Tất cả giá trị giải thưởng, tỷ lệ tài chính trong tài liệu này là giá trị THAM KHẢO MẶC ĐỊNH (default). Giá trị thực tế được cấu hình trong `GlobalConfigDoc` (game config) và có thể thay đổi bởi staff qua backoffice UI. Khi implement, LUÔN đọc từ game config thay vì hardcode giá trị.
+
+---
+
+## 1. Tổng quan
+
+Max 3D là game xổ số tự chọn dạng bộ ba số (triplet) của Vietlott. **KHÁC BIỆT CĂN BẢN** với tất cả game khác: dùng số 3 chữ số (000-999) thay vì chọn N số từ tập M, và **KHÔNG CÓ JACKPOT tích luỹ** — tất cả giải thưởng đều cố định.
+
+- **Kiểu số**: Bộ ba số (Triplet) 000-999 (3 chữ số, mỗi chữ số 0-9)
+- **Không gian mẫu**: 10 × 10 × 10 = 1.000 bộ ba số
+- **Kết quả quay**: 20 bộ ba số mỗi kỳ (2 ĐB + 4 Nhất + 6 Nhì + 8 Ba)
+- **Lịch quay**: 3 lần/tuần (Thứ 2, Thứ 4, Thứ 6) lúc 18h00
+- **Giá vé**: 10.000 VND / lần tham gia dự thưởng (line)
+- **Kỳ liên tiếp**: Tối đa 6 kỳ liên tiếp
+- **Board**: 1 vé có tối đa 4 board (A-D)
+- **Jackpot**: **KHÔNG CÓ** — tất cả giải thưởng CỐ ĐỊNH
+- **2 cách chơi chính**: Max 3D Cơ Bản (1 bộ ba) và Max 3D+ (2 bộ ba)
+
+---
+
+## 2. Kết quả quay thưởng (Draw Result)
+
+Mỗi kỳ quay **20 lần** để chọn ra 20 bộ ba số, chia thành 4 hạng:
+
+| Hạng | Số bộ quay | Field trong code |
+|------|-----------|------------------|
+| Giải Đặc Biệt | 2 bộ ba số | `special: Triplet[]` |
+| Giải Nhất | 4 bộ ba số | `first: Triplet[]` |
+| Giải Nhì | 6 bộ ba số | `second: Triplet[]` |
+| Giải Ba | 8 bộ ba số | `third: Triplet[]` |
+| **Tổng** | **20 bộ** | |
+
+Interface: `Max3dDrawResult { special, first, second, third }`
+
+---
+
+## 3. Cách chơi & Cơ cấu giải thưởng
+
+Giá trị trong các bảng dưới là **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.defaultPrizes`.
+
+### 3.1 Max 3D Cơ Bản — PlayMode `basic`
+
+Người chơi chọn **1 bộ ba số** (000-999). Có 3 kiểu chơi:
+
+#### A) Straight (Cơ bản — khớp ĐÚNG thứ tự)
+
+PlayType: `straight` | Lines: 1
+
+| Hạng | Code | Điều kiện | Giá trị mặc định (VND) |
+|------|------|-----------|------------------------|
+| Giải Đặc Biệt | `special` | Trùng 1 trong 2 bộ giải ĐB theo đúng thứ tự | 1.000.000 |
+| Giải Nhất | `first` | Trùng 1 trong 4 bộ giải Nhất theo đúng thứ tự | 350.000 |
+| Giải Nhì | `second` | Trùng 1 trong 6 bộ giải Nhì theo đúng thứ tự | 210.000 |
+| Giải Ba | `third` | Trùng 1 trong 8 bộ giải Ba theo đúng thứ tự | 100.000 |
+
+#### B) Tổ hợp 3 (Combo3 — 2 chữ số giống)
+
+PlayType: `combo3` | Lines: 3 hoán vị (hoặc 1 nếu 3 chữ số giống)
+
+Yêu cầu: có ít nhất 2 chữ số giống nhau (VD: 112, 221, 333).
+
+| Hạng | Code | Giá trị mặc định (VND) |
+|------|------|------------------------|
+| Giải Đặc Biệt | `special` | 340.000 |
+| Giải Nhất | `first` | 120.000 |
+| Giải Nhì | `second` | 70.000 |
+| Giải Ba | `third` | 30.000 |
+
+#### C) Tổ hợp 6 (Combo6 — 3 chữ số khác nhau)
+
+PlayType: `combo6` | Lines: 6 hoán vị
+
+Yêu cầu: 3 chữ số khác nhau (VD: 123, 456, 789).
+
+| Hạng | Code | Giá trị mặc định (VND) |
+|------|------|------------------------|
+| Giải Đặc Biệt | `special` | 170.000 |
+| Giải Nhất | `first` | 60.000 |
+| Giải Nhì | `second` | 35.000 |
+| Giải Ba | `third` | 15.000 |
+
+**Logic hoán vị** (`getPermutationCount()`):
+- 3 chữ số khác nhau (123) → 6 hoán vị (123, 132, 213, 231, 312, 321)
+- 2 chữ số giống (112) → 3 hoán vị (112, 121, 211)
+- 3 chữ số giống (111) → 1 hoán vị (111)
+
+**Matching combo**: Expand bộ ba thành tất cả hoán vị → so khớp từng hoán vị straight → tổng thưởng = Σ(giải combo tương ứng cho mỗi hoán vị trúng).
+
+#### D) QuickPick (Máy tự chọn)
+
+PlayType: `quickPick` | Lines: 1 | Map thành straight
+
+---
+
+### 3.2 Max 3D+ — PlayMode `plus`
+
+Người chơi chọn **2 bộ ba số** (có thể giống nhau). **Chỉ hỗ trợ** `straight` hoặc `quickPick`.
+
+#### 7 hạng giải:
+
+| Hạng | Code | Điều kiện | Giá trị mặc định (VND) |
+|------|------|-----------|------------------------|
+| Giải Đặc Biệt | `special` | Trùng 2 bộ ba số quay thưởng giải ĐB | 1.000.000.000 (1 tỷ) |
+| Giải Nhất | `first` | Trùng bất kỳ 2 trong 4 bộ ba quay giải Nhất | 40.000.000 |
+| Giải Nhì | `second` | Trùng bất kỳ 2 trong 6 bộ ba quay giải Nhì | 10.000.000 |
+| Giải Ba | `third` | Trùng bất kỳ 2 trong 8 bộ ba quay giải Ba | 5.000.000 |
+| Giải Tư | `fourth` | Trùng 2 bộ ba thuộc bất kỳ giải ĐB/Nhất/Nhì/Ba (cross-tier) | 1.000.000 |
+| Giải Năm | `fifth` | Trùng 1 bộ ba số quay thưởng giải ĐB bất kỳ | 150.000 |
+| Giải Sáu | `sixth` | Trùng 1 bộ ba số quay thưởng Nhất, Nhì hoặc Ba bất kỳ | 40.000 |
+
+**Quy tắc đặc biệt**: Nếu 2 bộ ba số **GIỐNG NHAU** → giải thưởng **× 2** (`multiplier = isDuplicate ? 2 : 1`).
+
+**Logic xác định giải Plus** (`matchPlus()`):
+1. Tìm tier trúng cho mỗi bộ ba (ĐB/Nhất/Nhì/Ba/null)
+2. Cả 2 trúng **CÙNG** hạng → giải Plus tương ứng (ĐB, Nhất, Nhì, Ba)
+3. Cả 2 trúng **KHÁC** hạng → Giải Tư (cross-tier)
+4. Chỉ 1 trúng ĐB → Giải Năm
+5. Chỉ 1 trúng Nhất/Nhì/Ba → Giải Sáu
+6. Không trúng → null
+
+---
+
+## 4. Matching Rules — Tổng hợp
+
+| Cách chơi | So khớp | Ưu tiên | Nhiều giải |
+|-----------|---------|---------|-----------|
+| Basic Straight | Chính xác thứ tự | Hạng cao nhất (ĐB > Nhất > Nhì > Ba) | Chỉ lĩnh hạng cao nhất |
+| Basic Combo | Tất cả hoán vị, mỗi hoán vị khớp straight | Mỗi hoán vị so riêng | Tổng thưởng = Σ(giải × hoán vị trúng) |
+| Plus | Cả 2 bộ ba, chính xác thứ tự | 7 hạng theo logic phân loại | 1 giải duy nhất |
+
+**Lưu ý quan trọng cho Basic**: Trùng nhiều hạng giải → người chơi nhận **tổng số giải thưởng** (khác với Lotto/Mega/Power chỉ lĩnh hạng cao nhất). Với combo, mỗi hoán vị trúng đều được trả thưởng riêng.
+
+---
+
+## 5. Tỷ lệ tài chính — KHÔNG CÓ JACKPOT
+
+Tất cả tỷ lệ dưới đây là giá trị **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.rates`.
+
+| Khoản mục | Tỷ lệ mặc định | Ghi chú |
+|-----------|----------------|---------|
+| Hoa hồng đại lý | 20% revenue | Override per tenant qua TenantConfig |
+| Công ty thu | 15% revenue | Có cap khi doanh thu thấp |
+| Giải cố định | Biến thiên | Phụ thuộc kết quả quay |
+| Profit | Phần còn lại | Revenue - Commission - CompanyTake - FixedPrizes |
+
+**Phân bổ doanh thu** (không có jackpot contribution):
+```
+Revenue = 100% doanh thu tiền cược
+├── Agent Commission = Σ(commissionRate × revenue) per tenant (mặc định 20%)
+├── Company Take     = companyRate × Revenue (mặc định 15%, có cap)
+├── Fixed Prizes     = Tổng tiền trả thưởng cố định
+└── Profit           = Phần còn lại (có thể âm nếu trả thưởng lớn)
+```
+
+**Không có**: Jackpot contribution, Jackpot cycle, Split cycle, Overflow mechanism.
+
+---
+
+## 6. Xác suất & Không gian mẫu
+
+### 6.1 Max 3D Cơ Bản (Straight)
+
+Không gian mẫu: 1.000 bộ ba số
+
+| Giải | Số bộ kết quả | Xác suất | 1 trong N |
+|------|--------------|----------|-----------|
+| Đặc Biệt | 2 | 2/1.000 | 500 |
+| Nhất | 4 | 4/1.000 | 250 |
+| Nhì | 6 | 6/1.000 | 166,7 |
+| Ba | 8 | 8/1.000 | 125 |
+| Trúng bất kỳ | 20 | 20/1.000 | 50 |
+| Không trúng | 980 | 980/1.000 | ~1,02 |
+
+### 6.2 Max 3D+ (2 bộ ba số)
+
+Không gian mẫu: 1.000 × 1.000 = 1.000.000
+
+| Giải | Ways | Xác suất | 1 trong N |
+|------|------|----------|-----------|
+| Đặc Biệt | 2² = 4 | 4/1.000.000 | 250.000 |
+| Nhất | 4² = 16 | 16/1.000.000 | 62.500 |
+| Nhì | 6² = 36 | 36/1.000.000 | 27.778 |
+| Ba | 8² = 64 | 64/1.000.000 | 15.625 |
+| Tư | 20² - ĐB² - Nhất² - Nhì² - Ba² = 280 | 280/1.000.000 | 3.571 |
+| Năm | 2 × 2 × 980 = 3.920 | 3.920/1.000.000 | 255 |
+| Sáu | 2 × 18 × 980 = 35.280 | 35.280/1.000.000 | 28,3 |
+
+---
+
+## 7. Khác biệt so với các game khác
+
+| Đặc điểm | Max 3D | Lotto 5/35 | Mega 6/45 | Power 6/55 | Keno |
+|-----------|--------|------------|-----------|------------|------|
+| **Kiểu số** | Triplet 000-999 | 5 từ 1-35 + ĐB | 6 từ 1-45 | 6+bonus từ 1-55 | N từ 1-80 |
+| **Matching** | So khớp bộ 3 chữ số | So khớp tập hợp số | So khớp tập hợp | Tập hợp + bonus | Tập hợp |
+| **Jackpot** | **KHÔNG** | Có | Có | Có (dual) | Không |
+| **Split cycle** | **KHÔNG** | Có | Có | Có | Không |
+| **Kết quả/kỳ** | 20 bộ 3 chữ số | 1 bộ 5+1 số | 1 bộ 6 số | 1 bộ 6+1 số | 20 số |
+| **Combo play** | **CÓ** (combo3, combo6) | Không | Không | Không | Không |
+| **Plus mode** | **CÓ** (2 bộ ba) | Không | Không | Không | Không |
+| **Duplicate x2** | **CÓ** (Plus mode) | Không | Không | Không | Không |
+| **Lịch quay** | T2, T4, T6 | 2 lần/ngày | T4, T6, CN | T3, T5, T7 | 10 phút/kỳ |
+| **Max boards** | 4 (A-D) | 5 (A-E) | 6 (A-F) | 5 (A-E) | 2 + side |
+| **Giá vé** | 10.000đ | 10.000đ | 10.000đ | 10.000đ | 10.000đ |
+| **Bao types** | Không | Bao 4-15 + ĐB | Bao 5-18 | Bao 7-18 | Không |
+
+**Điểm khác biệt cốt lõi**:
+1. **Triplet-based** thay vì number-pool-based — hoàn toàn khác mô hình dữ liệu
+2. **20 bộ số quay/kỳ** thay vì 1 bộ → xác suất trúng cao hơn nhiều (1/50 vs 1/8M+)
+3. **KHÔNG có Jackpot** → financial model đơn giản hơn (không cần JackpotCycleDoc, split, overflow)
+4. **Hỗ trợ Combo** — unique cho Max 3D, expand hoán vị khi settle
+5. **Dual-mode** (Basic vs Plus) với 2 hệ thống giải thưởng hoàn toàn tách biệt
+6. **Prize enums tách biệt**: `BasicPrizeTier` (4 hạng) vs `PlusPrizeTier` (7 hạng) — khác tất cả game khác dùng 1 PrizeTier enum
+
+---
+
+## 8. Vòng đời vận hành
+
+### 8.1 Settle pipeline
+
+```
+prepare-settle → settle-entries → calculate-financials → build-report → finalize-settle → sync-ticket-summaries
+```
+
+**KHÔNG có** `apply-split-bonuses` (vì không có Jackpot/Split).
+
+Settle entries: mỗi entry expand boards thành lines → match từng line với draw result → tính winAmount.
+
+### 8.2 Void pipeline
+
+```
+prepare-void → void-entries → dispatch-refunds → finalize-void
+```
+
+---
+
+## 9. Codebase Map
+
+### 9.1 Domain Layer — `packages/game-max3d/` (`@megawin/game-max3d`)
+
+```
+src/
+├── entities/
+│   ├── enums.ts           # PlayMode (basic, plus), PlayType (straight, combo3, combo6, quickPick),
+│   │                      # BasicPrizeTier (4 hạng), PlusPrizeTier (7 hạng),
+│   │                      # PayoutStatus, RefundStatus, Max3dCollections
+│   ├── types.ts           # Triplet, BoardSelection, BasicPrizeAmounts, ComboPrizeAmounts,
+│   │                      # PlusPrizeAmounts, Max3dPrizeConfig, FinancialRates, PlayRules
+│   ├── draw.ts            # DrawDoc
+│   ├── draw-result.ts     # Max3dDrawResult { special, first, second, third }
+│   ├── ticket.ts          # TicketDoc, Board (max 4 boards A-D)
+│   ├── entry.ts           # TicketEntryDoc, EntryBoardSnapshot, EntryPayoutTier
+│   ├── line.ts            # TicketLineDoc, LineMatchResult
+│   ├── global-config.ts   # GlobalConfigDoc
+│   ├── tenant-config.ts   # TenantConfigDoc
+│   └── game-config.ts     # GameConfigDoc (union type)
+├── rules/
+│   ├── prize-tiers.ts     # matchBasicStraight(), matchBasicCombo(), matchPlus(), matchBoard(),
+│   │                      # getUniquePermutations(), getPermutationCount(), flattenDrawResult()
+│   ├── play-types.ts      # calculateLineCount(), validateSelection(), VALID_BOARD_NOS
+│   ├── odds.ts            # getBasicOddsTable(), getPlusOddsTable(), analyzeBasicStraightProfitability(),
+│   │                      # analyzePlusProfitability()
+│   ├── financials.ts      # calculateDrawFinancials() — đơn giản, không jackpot
+│   └── defaults.ts        # DEFAULT_MAX3D_CONFIG (prizes, rates, play rules)
+├── helpers/
+│   ├── draw-id.ts         # generateDrawId(), parseDrawId()
+│   └── selection-hash.ts  # SHA-256 dedup hash
+├── schemas/
+│   └── common.ts          # Zod schemas: triplet validation (/^\d{3}$/), drawId
+└── indexes/
+    └── index.ts           # MongoDB indexes
+```
+
+### 9.2 Application Layer — `packages/game-max3d-application/` (`@megawin/game-max3d-application`)
+
+```
+src/
+├── infras/
+│   ├── repos/             # draw, entry, line, ticket, game-config, tenant-config repos
+│   └── mappers/           # draw, entry, ticket, config mappers
+└── use-cases/
+    ├── draws/             # create, list, get-detail, get-current, preview,
+    │                      # open-sales, close-sales, publish-result, trigger-settle, void
+    ├── settle/            # prepare → settle-entries → calculate-financials (NO split) →
+    │                      # build-report → finalize → sync-ticket
+    ├── place-bet/         # place-bet (validate playMode + playType + triplets)
+    ├── void/              # prepare → void-entries → dispatch-refunds → finalize
+    ├── payout/            # dispatch-payout
+    ├── game-config/       # get/update global config
+    ├── tenant-config/     # get/list/update tenant config
+    ├── player/            # list-tickets, get-entries, get-lines
+    ├── operations/        # summary, tenant-breakdown
+    └── feed/              # sync-entry-feed, save-cursor, acquire-lock
+```
+
+### 9.3 Worker — `apps/worker-max3d/`
+
+Step functions: settle, void, feed-sync.
+
+### 9.4 Backoffice UI — `apps/backoffice/src/app/(main)/games/max3d/`
+
+Pages: draws, config, tickets, reports, tenant-config.
+
+### 9.5 Backoffice API — `apps/backoffice/src/app/api/max3d/`
+
+Routes: draws, config, tenant-config, operations.
+
+---
+
+## 10. MongoDB Collections
+
+| Collection | Entity | Mô tả |
+|-----------|--------|-------|
+| `max3d_tickets` | TicketDoc | Vé mua, chứa boards A-D |
+| `max3d_ticket_entries` | TicketEntryDoc | 1 ticket × 1 draw |
+| `max3d_ticket_lines` | TicketLineDoc | Line con (1 bộ ba hoặc 1 cặp bộ ba), tạo khi settle |
+| `max3d_draws` | DrawDoc | Kỳ quay, result (20 bộ ba số) |
+| `max3d_game_configs` | GlobalConfigDoc / TenantConfigDoc | Config game |
+
+**KHÔNG CÓ**: `max3d_jackpot_cycles` (vì không có Jackpot).
+
+---
+
+## 11. Quy tắc quan trọng cho AI Agent
+
+1. **KHÔNG CÓ Jackpot**: Max 3D hoàn toàn cố định — không cần JackpotCycleDoc, split cycle, overflow, jackpot contribution. Financial model đơn giản hơn nhiều
+2. **Triplet = string "000"-"999"**: 3 chữ số zero-padded, validate bằng `/^\d{3}$/`. KHÁC HOÀN TOÀN với Lotto/Mega/Power
+3. **2 Play Modes tách biệt**: `basic` (1 bộ ba, 4 hạng giải) vs `plus` (2 bộ ba, 7 hạng giải) — prize enums khác nhau (`BasicPrizeTier` vs `PlusPrizeTier`)
+4. **Combo CHỈ cho basic**: Plus mode chỉ hỗ trợ `straight` hoặc `quickPick`
+5. **20 bộ kết quả/kỳ**: DrawResult có 4 mảng (special[2], first[4], second[6], third[8]) — khác Lotto/Mega/Power chỉ có 1 bộ kết quả
+6. **Duplicate x2 trong Plus**: Nếu 2 bộ ba giống nhau → giải thưởng × 2 (`isDuplicate ? 2 : 1`)
+7. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc`, có thể thay đổi bởi staff
+8. **Tiền lưu integer VND**: Không dùng float
+9. **4 boards A-D**: Ít hơn Lotto 5/35 (5 boards) và Mega 6/45 (6 boards)
+10. **Combo match tổng thưởng**: Mỗi hoán vị trúng đều được trả thưởng riêng (khác Lotto/Mega chỉ lĩnh hạng cao nhất)
+11. **Settle KHÔNG CÓ apply-split-bonuses**: Pipeline ngắn hơn các game có Jackpot
+12. **Commission snapshot**: commissionRate snapshot lúc place-bet, không thay đổi khi config update sau
+13. **DrawId format**: `"YYYY-MM-DD.001"` (1 kỳ/ngày)
+14. **Lịch quay T2, T4, T6**: Không trùng với Power 6/55 (T3, T5, T7) hay Mega 6/45 (T4, T6, CN)

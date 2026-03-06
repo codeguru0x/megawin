@@ -5,18 +5,15 @@
  * Max 3D Pro không có Jackpot → không tính jackpotContribution / split.
  *
  * IDEMPOTENT: chạy lại cho kết quả giống nhau.
- *
- * @input  { drawId, totalLines, config }
- * @output CalculateFinancialsResult
  */
 
 import {
   CalculateFinancialsUseCase,
-  type CalculateFinancialsInput,
+  type SettleContext,
 } from "@megawin/game-max3dpro-application/use-cases/settle";
 
 const useCase = new CalculateFinancialsUseCase();
 
-export async function handler(event: CalculateFinancialsInput) {
+export async function handler(event: SettleContext) {
   return useCase.run(event);
 }

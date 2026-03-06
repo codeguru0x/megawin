@@ -86,6 +86,8 @@ provider:
         - GET
         - POST
         - OPTIONS
+        - PUT
+        - PATCH
       allowedHeaders:
         - Content-Type
         - Authorization

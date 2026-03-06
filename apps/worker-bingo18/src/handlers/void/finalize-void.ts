@@ -4,17 +4,17 @@
  * Step 4 (cuối) của Void Draw Step Function.
  * Aggregate void summary, ghi lên draw document.
  *
- * @input  { drawId }
+ * IDEMPOTENT: aggregate + overwrite.
+ *
+ * @input  VoidContext ($voidCtx)
  * @output FinalizeVoidResult
  */
 
-import {
-  FinalizeVoidUseCase,
-  type FinalizeVoidInput,
-} from "@megawin/game-bingo18-application/use-cases/void";
+import { FinalizeVoidUseCase } from "@megawin/game-bingo18-application/use-cases/void";
+import type { VoidContext } from "@megawin/game-bingo18-application/use-cases/void";
 
 const useCase = new FinalizeVoidUseCase();
 
-export async function handler(event: FinalizeVoidInput) {
+export async function handler(event: VoidContext) {
   return useCase.run(event);
 }

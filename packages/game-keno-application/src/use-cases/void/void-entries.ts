@@ -10,10 +10,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-
-export interface VoidEntriesBatchInput {
-  drawId: string;
-}
+import type { VoidContext } from "./types";
 
 export interface VoidEntriesBatchResult {
   drawId: string;
@@ -25,19 +22,18 @@ const BATCH_SIZE = 500;
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
 
 export class VoidEntriesBatchUseCase extends InternalUseCase<
-  VoidEntriesBatchInput,
+  VoidContext,
   VoidEntriesBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
 
-  protected async execute(input: VoidEntriesBatchInput): Promise<VoidEntriesBatchResult> {
+  protected async execute(input: VoidContext): Promise<VoidEntriesBatchResult> {
     const { drawId } = input;
     const startTime = Date.now();
 
     while (Date.now() - startTime < MAX_EXECUTION_MS) {
       const entries = await this.entryRepo.getVoidableEntriesBatch(drawId, BATCH_SIZE);
 
-      // Đã hết entries cần void
       if (entries.length === 0) {
         return { drawId, done: true };
       }

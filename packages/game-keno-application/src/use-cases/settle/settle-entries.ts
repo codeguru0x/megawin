@@ -42,33 +42,13 @@ import {
 import { matchBasicBoard, matchBigSmallBet, matchEvenOddBet } from "@megawin/game-keno/helpers";
 import { EntryOutcome } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { KenoDrawResult, KenoSettleConfig } from "./types";
+import type { SettleContext } from "./types";
 
 /** Số entries xử lý mỗi lần query DB. */
 const BATCH_SIZE = 500;
 
 /** Thời gian tối đa cho 1 lần invoke Lambda (10 phút, chừa buffer cho Lambda 15 phút). */
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
-
-/**
- * Input cho SettleEntriesBatch.
- * Nhận từ step function qua $settleCtx (output của PrepareSettle).
- */
-export interface SettleEntriesBatchInput {
-  /** ID kỳ quay đang settle. */
-  drawId: string;
-  /** Kết quả quay: 20 số trúng + thống kê lớn/nhỏ/chẵn/lẻ. */
-  result: KenoDrawResult;
-  /**
-   * Config giải thưởng từ GlobalConfig:
-   * - basicPrizes: bảng giải cách chơi cơ bản (pick1–pick10)
-   * - bigSmallPrizes: bảng giải side bet Lớn/Nhỏ
-   * - evenOddPrizes: bảng giải side bet Chẵn/Lẻ
-   *
-   * Lưu ý: payoutCaps KHÔNG nằm ở đây — được xử lý ở step ApplyPayoutCaps riêng.
-   */
-  config: Pick<KenoSettleConfig, "basicPrizes" | "bigSmallPrizes" | "evenOddPrizes">;
-}
 
 /**
  * Output cho SettleEntriesBatch.
@@ -80,12 +60,12 @@ export interface SettleEntriesBatchResult {
 }
 
 export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleEntriesBatchInput,
+  SettleContext,
   SettleEntriesBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
 
-  protected async execute(input: SettleEntriesBatchInput): Promise<SettleEntriesBatchResult> {
+  protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
     const { drawId, result, config } = input;
     const startTime = Date.now();
 
@@ -159,12 +139,10 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         const boards = entry.entrySummary?.boards ?? [];
 
         for (const board of boards) {
-          // Tra bảng giải thưởng theo loại chơi (pick1–pick10)
           const playTypePrizes = config.basicPrizes[board.playType];
           const pickCount = board.numbers.length;
           const prizeTable = playTypePrizes ? { [pickCount]: playTypePrizes } : undefined;
 
-          // So sánh số người chơi với 20 số quay → matchCount + winAmount
           const matchResult = matchBasicBoard(board.numbers, result, prizeTable);
           boardPayouts.push({
             boardNo: board.boardNo,
@@ -174,7 +152,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             winAmount: matchResult.winAmount,
           });
 
-          // Gắn flag nếu board trúng top prize ở bậc cần cap (8/9/10)
           if (
             CAPPABLE_PICK_COUNTS.has(matchResult.pickCount) &&
             matchResult.matchCount === matchResult.pickCount
@@ -225,9 +202,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         }
 
         // ── Tổng hợp tiền thắng cho entry ──
-        // Lưu ý: winAmount ở đây là giải CỐ ĐỊNH theo bảng giải.
-        // Nếu bậc 8/9/10 có quá nhiều bộ trúng, ApplyPayoutCaps step
-        // sẽ tính lại winAmount = maxPerDraw / winnerCount.
         const winAmount =
           boardPayouts.reduce((sum, b) => sum + b.winAmount, 0) +
           sideBetPayouts.reduce((sum, s) => sum + s.winAmount, 0);

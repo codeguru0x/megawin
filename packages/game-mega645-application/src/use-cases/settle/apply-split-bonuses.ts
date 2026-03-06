@@ -8,19 +8,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { MegaSplitTierDetail } from "./types";
-
-export interface ApplySplitBonusesInput {
-  /** ID kỳ quay đang settle. */
-  drawId: string;
-  /** Kỳ này có thực hiện split jackpot không. */
-  isSplitCycle: boolean;
-  /**
-   * Chi tiết chia jackpot theo hạng (chỉ cần khi isSplitCycle = true).
-   * Key = tier (e.g. "tier2"), value = thông tin chia.
-   */
-  splitDetails?: Record<string, MegaSplitTierDetail>;
-}
+import type { SettleContext } from "./types";
 
 export interface ApplySplitBonusesResult {
   /** ID kỳ quay. */
@@ -32,15 +20,16 @@ export interface ApplySplitBonusesResult {
 }
 
 export class ApplySplitBonusesUseCase extends InternalUseCase<
-  ApplySplitBonusesInput,
+  SettleContext,
   ApplySplitBonusesResult
 > {
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(
-    input: ApplySplitBonusesInput
+    input: SettleContext
   ): Promise<ApplySplitBonusesResult> {
-    const { drawId, isSplitCycle, splitDetails } = input;
+    const { drawId, isSplitCycle } = input;
+    const splitDetails = input.financials?.splitDetails;
 
     if (
       !isSplitCycle ||

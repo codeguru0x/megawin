@@ -1,6 +1,10 @@
 /**
  * Use Case: Sync Ticket Summaries (Max 3D)
  *
+ * ═══════════════════════════════════════════════════════════════════════
+ * STEP 3 TRONG SETTLE FLOW (LOOP — gọi nhiều lần cho đến done=true)
+ * ═══════════════════════════════════════════════════════════════════════
+ *
  * Recompute ticket progress/settlement/voidSummary từ entries.
  * Idempotent, self-healing — chạy lại bao nhiêu lần cũng cho cùng kết quả.
  *
@@ -17,13 +21,10 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { ObjectId } from "mongodb";
+import type { SettleContext } from "./types";
 
 const CHUNK_SIZE = 500;
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
-
-export interface SyncTicketSummariesInput {
-  drawId: string;
-}
 
 export interface SyncTicketSummariesResult {
   drawId: string;
@@ -31,15 +32,13 @@ export interface SyncTicketSummariesResult {
 }
 
 export class SyncTicketSummariesUseCase extends InternalUseCase<
-  SyncTicketSummariesInput,
+  SettleContext,
   SyncTicketSummariesResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 
-  protected async execute(
-    input: SyncTicketSummariesInput,
-  ): Promise<SyncTicketSummariesResult> {
+  protected async execute(input: SettleContext): Promise<SyncTicketSummariesResult> {
     const { drawId } = input;
     let cursor: string | undefined;
     const startTime = Date.now();

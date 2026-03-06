@@ -61,22 +61,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import type { LottoSplitDetails } from "./types";
-
-export interface FinalizeSettleInput {
-  /** Mã kỳ quay cần finalize. */
-  drawId: string;
-  /** Số tiền Jackpot đầu kỳ (VND) — từ PrepareSettle. */
-  jackpotOpeningAmount: number;
-  /** Số tiền Jackpot cuối kỳ (VND) — từ CalculateFinancials. */
-  closingJackpot: number;
-  /** Có người trúng Jackpot hay không. */
-  hasJackpotWinner: boolean;
-  /** Kỳ này có phải kỳ chia Jackpot hay không. */
-  isSplitCycle: boolean;
-  /** Chi tiết phân bổ split — chỉ có khi isSplitCycle = true VÀ có winner tier1-tier5. */
-  splitDetails?: LottoSplitDetails;
-}
+import type { SettleContextWithFinancials } from "./types";
 
 export interface FinalizeSettleResult {
   /** Mã kỳ quay. */
@@ -90,7 +75,7 @@ export interface FinalizeSettleResult {
 }
 
 export class FinalizeSettleUseCase extends InternalUseCase<
-  FinalizeSettleInput,
+  SettleContextWithFinancials,
   FinalizeSettleResult
 > {
   private readonly drawRepo = new DrawRepository();
@@ -98,12 +83,13 @@ export class FinalizeSettleUseCase extends InternalUseCase<
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  protected async execute(input: FinalizeSettleInput): Promise<FinalizeSettleResult> {
-    const { drawId, closingJackpot, hasJackpotWinner, isSplitCycle, splitDetails } = input;
+  protected async execute(input: SettleContextWithFinancials): Promise<FinalizeSettleResult> {
+    const { drawId, isSplitCycle, jackpotOpeningAmount, financials } = input;
+    const { closingJackpot, hasJackpotWinner, splitDetails } = financials;
 
     // ── STEP A: Transition draw settling → settled + ghi jackpot snapshot ──
     const updated = await this.drawRepo.settleComplete(drawId, {
-      openingAmount: input.jackpotOpeningAmount,
+      openingAmount: jackpotOpeningAmount,
       closingAmount: closingJackpot,
       isSplitCycle: isSplitCycle || undefined,
     });
@@ -139,8 +125,9 @@ export class FinalizeSettleUseCase extends InternalUseCase<
    * Nếu không có draw tiếp theo, cycle mới sẽ được tạo bởi create-draws
    * hoặc prepare-settle (safety net).
    */
-  private async updateJackpotCycle(input: FinalizeSettleInput): Promise<void> {
-    const { drawId, closingJackpot, hasJackpotWinner, isSplitCycle, splitDetails } = input;
+  private async updateJackpotCycle(input: SettleContextWithFinancials): Promise<void> {
+    const { drawId, isSplitCycle, jackpotOpeningAmount, financials } = input;
+    const { closingJackpot, hasJackpotWinner, splitDetails } = financials;
 
     const activeCycle = await this.cycleRepo.getActiveCycle();
     if (!activeCycle) return;
@@ -161,7 +148,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       if (hasJackpotWinner) {
         const jackpotEntries = await this.entryRepo.findJackpotWinners(drawId);
         // Winner nhận opening + contribution kỳ này (toàn bộ giá trị JP)
-        const totalJackpotPrize = input.jackpotOpeningAmount + contribution;
+        const totalJackpotPrize = jackpotOpeningAmount + contribution;
         const jackpotPerWinner =
           jackpotEntries.length > 0 ? Math.floor(totalJackpotPrize / jackpotEntries.length) : 0;
         winners = jackpotEntries.map((e) => ({

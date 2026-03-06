@@ -35,23 +35,17 @@ import type { PlayMode } from "@megawin/game-max3dpro/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
-import type { Max3dProDrawResult as Max3dProDrawResultInput, Max3dProPrizeConfig } from "./types";
+import type { SettleContext } from "./types";
 
 const BATCH_SIZE = 500;
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
-
-export interface SettleEntriesBatchInput {
-  drawId: string;
-  result: Max3dProDrawResultInput;
-  prizeConfig: Max3dProPrizeConfig;
-}
 
 export interface SettleEntriesBatchResult {
   done: boolean;
 }
 
 export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleEntriesBatchInput,
+  SettleContext,
   SettleEntriesBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
@@ -59,7 +53,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   private readonly lineRepo = new LineRepository();
 
   protected async execute(
-    input: SettleEntriesBatchInput
+    input: SettleContext
   ): Promise<SettleEntriesBatchResult> {
     const { drawId, result, prizeConfig } = input;
     const drawResult: Max3dproDrawResult = {

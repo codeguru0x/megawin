@@ -10,13 +10,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { publishGameReport } from "@megawin/game-core-application/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { ReportRepository } from "../../infras/repos/report-repo";
-import type { KenoSettleFinancials } from "./types";
-
-export interface BuildReportInput {
-  drawId: string;
-  financialDate: string;
-  financials?: KenoSettleFinancials;
-}
+import type { SettleContext } from "./types";
 
 export interface BuildReportResult {
   drawId: string;
@@ -26,12 +20,12 @@ export interface BuildReportResult {
   gameCoreReportPublished: boolean;
 }
 
-export class BuildReportUseCase extends InternalUseCase<BuildReportInput, BuildReportResult> {
+export class BuildReportUseCase extends InternalUseCase<SettleContext, BuildReportResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly reportRepo = new ReportRepository();
 
   /** Tạo/cập nhật báo cáo Keno. Upsert – idempotent. */
-  protected async execute(input: BuildReportInput): Promise<BuildReportResult> {
+  protected async execute(input: SettleContext): Promise<BuildReportResult> {
     const { drawId, financialDate, financials } = input;
     const tenantAggs = await this.entryRepo.aggregateTenantReport(drawId, financialDate);
 

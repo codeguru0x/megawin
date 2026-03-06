@@ -15,16 +15,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { publishGameReport } from "@megawin/game-core-application/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { ReportRepository } from "../../infras/repos/report-repo";
-import type { Max3dProSettleFinancials } from "./types";
-
-export interface BuildReportInput {
-  /** ID kỳ quay. */
-  drawId: string;
-  /** Ngày tài chính (YYYY-MM-DD). */
-  financialDate: string;
-  /** Dữ liệu tài chính từ bước calculate-financials (optional nếu không có entries). */
-  financials?: Max3dProSettleFinancials;
-}
+import type { SettleContext } from "./types";
 
 export interface BuildReportResult {
   /** ID kỳ quay. */
@@ -40,13 +31,13 @@ export interface BuildReportResult {
 }
 
 export class BuildReportUseCase extends InternalUseCase<
-  BuildReportInput,
+  SettleContext,
   BuildReportResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly reportRepo = new ReportRepository();
 
-  protected async execute(input: BuildReportInput): Promise<BuildReportResult> {
+  protected async execute(input: SettleContext): Promise<BuildReportResult> {
     const { drawId, financialDate, financials } = input;
 
     // Step 1: Game-specific tenant report (max3dProDailyReports)

@@ -6,17 +6,15 @@
  *
  * IDEMPOTENT: upsert pattern.
  *
- * @input  { drawId, financialDate, financials }
+ * @input  SettleContext ($settleCtx, đã có financials)
  * @output BuildReportResult
  */
 
-import {
-  BuildReportUseCase,
-  type BuildReportInput,
-} from "@megawin/game-bingo18-application/use-cases/settle";
+import { BuildReportUseCase } from "@megawin/game-bingo18-application/use-cases/settle";
+import type { SettleContext } from "@megawin/game-bingo18-application/use-cases/settle";
 
 const useCase = new BuildReportUseCase();
 
-export async function handler(event: BuildReportInput) {
+export async function handler(event: SettleContext) {
   return useCase.run(event);
 }

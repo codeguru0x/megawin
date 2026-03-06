@@ -1,24 +1,22 @@
 /**
  * Lambda: finalize-settle (Max 3D)
  *
- * Bước cuối của Max3D Settle Step Function.
+ * Step 6 của Max3D Settle Step Function.
  * Chuyển draw status: settling → settled.
  *
  * Max 3D không có Jackpot → không cần ghi jackpot snapshot / update cycle.
  *
  * CRASH-SAFE: transitionStatus atomic, idempotent.
  *
- * @input  { drawId }
+ * @input  SettleContextWithFinancials ($settleCtx, financials bắt buộc)
  * @output FinalizeSettleResult
  */
 
-import {
-  FinalizeSettleUseCase,
-  type FinalizeSettleInput,
-} from "@megawin/game-max3d-application/use-cases/settle";
+import { FinalizeSettleUseCase } from "@megawin/game-max3d-application/use-cases/settle";
+import type { SettleContextWithFinancials } from "@megawin/game-max3d-application/use-cases/settle";
 
 const useCase = new FinalizeSettleUseCase();
 
-export async function handler(event: FinalizeSettleInput) {
+export async function handler(event: SettleContextWithFinancials) {
   return useCase.run(event);
 }

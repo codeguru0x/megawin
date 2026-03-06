@@ -25,51 +25,21 @@ import {
 } from "@megawin/game-power655/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { PowerSettleConfig, PowerSettleFinancials } from "./types";
-
-export interface CalculateFinancialsInput {
-  /** ID kỳ quay cần tính tài chính. */
-  drawId: string;
-  /** Số dư Jackpot 1 đầu kỳ (VND). */
-  jp1OpeningAmount: number;
-  /** Số dư Jackpot 2 đầu kỳ (VND). */
-  jp2OpeningAmount: number;
-  /** Có phải kỳ chia giải (split cycle) hay không. */
-  isSplitCycle: boolean;
-  /** Tổng số dòng cược trong kỳ quay. */
-  totalLines: number;
-  /** Cấu hình tài chính + jackpot cho tính toán. */
-  config: Pick<
-    PowerSettleConfig,
-    | "jp1SeedAmount"
-    | "jp2SeedAmount"
-    | "jp1Ratio"
-    | "jp2Ratio"
-    | "jp1OverflowThreshold"
-    | "splitThreshold"
-    | "splitRatios"
-    | "companyRate"
-  >;
-}
-
-export type CalculateFinancialsResult = PowerSettleFinancials & {
-  /** ID kỳ quay. */
-  drawId: string;
-};
+import type { SettleContext, SettleFinancials } from "./types";
 
 /**
  * Tính tài chính tổng hợp Power 6/55 từ DB.
  * Hỗ trợ dual jackpot: JP1 (6/6) + JP2 (5/6 + bonus).
  */
 export class CalculateFinancialsUseCase extends InternalUseCase<
-  CalculateFinancialsInput,
-  CalculateFinancialsResult
+  SettleContext,
+  SettleFinancials
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
   /** @inheritdoc */
-  protected async execute(input: CalculateFinancialsInput): Promise<CalculateFinancialsResult> {
+  protected async execute(input: SettleContext): Promise<SettleFinancials> {
     const { drawId, config, jp1OpeningAmount, jp2OpeningAmount, isSplitCycle } = input;
 
     const [tenantAgg, payoutSummary] = await Promise.all([
@@ -99,7 +69,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     const hasJackpot1Winner = jp1WinnerCount > 0;
     const hasJackpot2Winner = jp2WinnerCount > 0;
 
-    let splitDetails: CalculateFinancialsResult["splitDetails"];
+    let splitDetails: SettleFinancials["splitDetails"];
 
     if (isSplitCycle) {
       const winnerCountPerTier = new Map<string, number>();
@@ -184,7 +154,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     );
 
     return {
-      drawId,
       totalRevenue: fin.totalRevenue,
       totalFixedPrizes: fin.totalFixedPrizes,
       totalAgentCommission: fin.totalAgentCommission,

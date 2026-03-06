@@ -18,15 +18,15 @@
  *  │     done = true khi hết scheduled        │
  *  └────────┬─────────────────────────────────┘
  *           ▼
+ *  ┌────────────────────────────┐
+ *  │  3. CalculateFinancials    │  Tính từ DB (no jackpot)
+ *  └────────┬───────────────────┘
+ *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  3. SyncTicketSummaries (loop)          │
+ *  │  4. SyncTicketSummaries (loop)          │
  *  │     Recompute ticket progress           │
  *  │     done = true khi hết tickets         │
  *  └────────┬─────────────────────────────────┘
- *           ▼
- *  ┌────────────────────────────┐
- *  │  4. CalculateFinancials    │  Tính từ DB (no jackpot)
- *  └────────┬───────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
  *  │  5. BuildReport         │  Daily reports
@@ -41,11 +41,10 @@
  *  │     done = true khi hết pending payouts  │
  *  └──────────────────────────────────────────┘
  *
- * DATA FLOW (Assign-based):
- *   $settleCtx  = PrepareSettle result, persisted via Assign across all states.
- *   $financials = CalculateFinancials result, used by BuildReport & FinalizeSettle.
- *   Lambda nhận data qua Arguments, tự destructure fields cần thiết.
- *   batchSize cố định 500 trong use-case, không truyền từ step function.
+ * DATA FLOW (single $settleCtx):
+ *   $settleCtx = PrepareSettle result, enriched progressively.
+ *   After CalculateFinancials: settleCtx.financials = result.
+ *   All steps receive $settleCtx — destructure what they need.
  *
  * USAGE (chạy từ thư mục step-functions):
  *   npx tsx -e "import { SETTLE_STATE_MACHINE } from './settle'; console.log(JSON.stringify(SETTLE_STATE_MACHINE, null, 2))" > settle.asl.json
@@ -103,10 +102,21 @@ export const SETTLE_STATE_MACHINE = {
       Choices: [
         {
           Condition: "{% $settleResult.done %}",
-          Next: "SyncTicketSummaries",
+          Next: "CalculateFinancials",
         },
       ],
       Default: "SettleEntries",
+    },
+
+    CalculateFinancials: {
+      Type: "Task",
+      Resource: lambdaArn("settle-calculate-financials"),
+      Arguments: "{% $settleCtx %}",
+      Assign: {
+        settleCtx: "{% $merge($settleCtx, { 'financials': $states.result }) %}",
+      },
+      Next: "SyncTicketSummaries",
+      Retry: LAMBDA_RETRY,
     },
 
     SyncTicketSummaries: {
@@ -123,25 +133,16 @@ export const SETTLE_STATE_MACHINE = {
       Choices: [
         {
           Condition: "{% $syncResult.done %}",
-          Next: "CalculateFinancials",
+          Next: "BuildReport",
         },
       ],
       Default: "SyncTicketSummaries",
     },
 
-    CalculateFinancials: {
-      Type: "Task",
-      Resource: lambdaArn("settle-calculate-financials"),
-      Arguments: "{% $settleCtx %}",
-      Assign: { financials: "{% $states.result %}" },
-      Next: "BuildReport",
-      Retry: LAMBDA_RETRY,
-    },
-
     BuildReport: {
       Type: "Task",
       Resource: lambdaArn("settle-build-report"),
-      Arguments: "{% $merge($settleCtx, { 'financials': $financials }) %}",
+      Arguments: "{% $settleCtx %}",
       Next: "FinalizeSettle",
       Retry: LAMBDA_RETRY,
     },

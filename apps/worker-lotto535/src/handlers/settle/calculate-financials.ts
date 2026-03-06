@@ -6,17 +6,15 @@
  *
  * IDEMPOTENT: chạy lại cho kết quả giống nhau.
  *
- * @input  { drawId, jackpotOpeningAmount, isSplitCycle, totalLines, config }
- * @output CalculateFinancialsResult
+ * @input  SettleContext ($settleCtx)
+ * @output SettleFinancials
  */
 
-import {
-  CalculateFinancialsUseCase,
-  type CalculateFinancialsInput,
-} from "@megawin/game-lotto535-application/use-cases/settle";
+import { CalculateFinancialsUseCase } from "@megawin/game-lotto535-application/use-cases/settle";
+import type { SettleContext } from "@megawin/game-lotto535-application/use-cases/settle";
 
 const useCase = new CalculateFinancialsUseCase();
 
-export async function handler(event: CalculateFinancialsInput) {
+export async function handler(event: SettleContext) {
   return useCase.run(event);
 }

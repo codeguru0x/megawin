@@ -39,18 +39,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { publishGameReport } from "@megawin/game-core-application/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { ReportRepository } from "../../infras/repos/report-repo";
-import type { LottoSettleFinancials } from "./types";
-
-export interface BuildReportInput {
-  /** Mã kỳ quay cần tạo báo cáo. */
-  drawId: string;
-  /** Ngày tài chính (YYYY-MM-DD) — key phân nhóm báo cáo. */
-  financialDate: string;
-  /** Số tiền Jackpot đầu kỳ (VND) — từ PrepareSettle context. */
-  jackpotOpeningAmount?: number;
-  /** Dữ liệu tài chính tổng hợp — truyền từ CalculateFinancials (optional cho void draw). */
-  financials?: LottoSettleFinancials;
-}
+import type { SettleContext } from "./types";
 
 export interface BuildReportResult {
   /** Mã kỳ quay. */
@@ -65,13 +54,13 @@ export interface BuildReportResult {
   gameCoreReportPublished: boolean;
 }
 
-export class BuildReportUseCase extends InternalUseCase<BuildReportInput, BuildReportResult> {
+export class BuildReportUseCase extends InternalUseCase<SettleContext, BuildReportResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly reportRepo = new ReportRepository();
 
   /** Tạo/cập nhật báo cáo. Upsert pattern – idempotent. */
-  protected async execute(input: BuildReportInput): Promise<BuildReportResult> {
-    const { drawId, financialDate, financials } = input;
+  protected async execute(input: SettleContext): Promise<BuildReportResult> {
+    const { drawId, financialDate, financials, jackpotOpeningAmount } = input;
 
     // ── STEP 1: Game-specific TENANT report ──
     // Aggregate entries theo tenant: totalStake, totalPayout, totalWin, totalCommission
@@ -151,7 +140,7 @@ export class BuildReportUseCase extends InternalUseCase<BuildReportInput, BuildR
           jackpotContribution: financials.jackpotContribution,
         },
         jackpotTracking: {
-          openingAmount: input.jackpotOpeningAmount ?? 0,
+          openingAmount: jackpotOpeningAmount ?? 0,
           closingAmount: financials.closingJackpot,
           hasJackpotWinner: financials.hasJackpotWinner,
           totalContribution: financials.jackpotContribution,

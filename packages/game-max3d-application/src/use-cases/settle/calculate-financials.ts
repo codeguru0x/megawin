@@ -1,6 +1,10 @@
 /**
  * Use Case: Calculate Financials (Max 3D)
  *
+ * ═══════════════════════════════════════════════════════════════════════
+ * STEP 4 TRONG SETTLE FLOW
+ * ═══════════════════════════════════════════════════════════════════════
+ *
  * Tính toán tài chính tổng hợp sau khi TẤT CẢ entries đã settled.
  * Max 3D không có Jackpot → không tính jackpotContribution.
  *
@@ -21,28 +25,18 @@ import {
 } from "@megawin/game-max3d/rules/financials";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { Max3dSettleConfig, Max3dSettleFinancials } from "./types";
-
-export interface CalculateFinancialsInput {
-  /** ID kỳ quay. */
-  drawId: string;
-  /** Tổng lines trong kỳ (dùng cập nhật stats). */
-  totalLines: number;
-  /** Cấu hình tài chính. */
-  config: Pick<Max3dSettleConfig, "companyRate">;
-}
-
-export type CalculateFinancialsResult = { drawId: string } & Max3dSettleFinancials;
+import type { SettleContext, SettleFinancials } from "./types";
 
 export class CalculateFinancialsUseCase extends InternalUseCase<
-  CalculateFinancialsInput,
-  CalculateFinancialsResult
+  SettleContext,
+  SettleFinancials
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(input: CalculateFinancialsInput): Promise<CalculateFinancialsResult> {
-    const { drawId, config } = input;
+  /** Tính tài chính tổng hợp từ DB. Idempotent. */
+  protected async execute(input: SettleContext): Promise<SettleFinancials> {
+    const { drawId, totalLines, config } = input;
 
     const [tenantAgg, payoutSummary] = await Promise.all([
       this.entryRepo.aggregateRevenueByTenant(drawId),
@@ -74,7 +68,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       },
       {
         ticketEntryCount: payoutSummary.totalSettled,
-        totalLineCount: input.totalLines,
+        totalLineCount: totalLines,
         totalSalesAmount: fin.totalRevenue,
         totalPayoutAmount: payoutSummary.totalPayoutAmount,
       },
@@ -89,7 +83,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     }));
 
     return {
-      drawId,
       totalRevenue: fin.totalRevenue,
       totalFixedPrizes: fin.totalFixedPrizes,
       totalAgentCommission: fin.totalAgentCommission,

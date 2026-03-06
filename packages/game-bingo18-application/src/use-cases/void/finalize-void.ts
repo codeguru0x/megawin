@@ -11,28 +11,31 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-
-export interface FinalizeVoidInput {
-  drawId: string;
-}
+import type { VoidContext } from "./types";
 
 export interface FinalizeVoidResult {
+  /** ID kỳ quay. */
   drawId: string;
+  /** Trạng thái sau khi finalize (void). */
   status: string;
+  /** Tổng entries đã void thành công. */
   totalVoidedEntries: number;
+  /** Tổng tiền gốc (VND) — Σ(entry.amount). */
   totalOriginalAmount: number;
+  /** Tổng tiền hoàn (VND) — Σ(voidInfo.refundAmount). */
   totalRefundAmount: number;
+  /** Thời điểm hoàn tất void (ISO 8601). */
   completedAt: string;
 }
 
 export class FinalizeVoidUseCase extends InternalUseCase<
-  FinalizeVoidInput,
+  VoidContext,
   FinalizeVoidResult
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
 
-  protected async execute(input: FinalizeVoidInput): Promise<FinalizeVoidResult> {
+  protected async execute(input: VoidContext): Promise<FinalizeVoidResult> {
     const { drawId } = input;
     const summary = await this.entryRepo.aggregateVoidRefundSummary(drawId);
     const completedAt = new Date();

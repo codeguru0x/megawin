@@ -2,10 +2,10 @@
  * Lambda: void-prepare (Mega 6/45)
  *
  * Step 1 của Void Draw Step Function.
- * Validate draw có thể void, transition status → void, load context.
+ * Validate draw có thể void, load context.
  *
- * @input  { drawId, reason, voidedBy? }
- * @output PrepareVoidResult
+ * @input  { drawId }
+ * @output VoidContext
  */
 
 import {

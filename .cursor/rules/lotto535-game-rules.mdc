@@ -1,0 +1,425 @@
+---
+globs: packages/game-lotto535/**,packages/game-lotto535-application/**,apps/backoffice/src/app/(main)/games/lotto535/**,apps/backoffice/src/app/api/lotto535/**
+alwaysApply: false
+---
+
+# Lotto 5/35 - Game Rules & Codebase Map
+
+Tài liệu tham chiếu cho AI Agent. ĐỌC KỸ trước khi thực hiện bất kỳ chức năng nào liên quan đến game Lotto 5/35.
+
+> **LƯU Ý QUAN TRỌNG**: Tất cả giá trị giải thưởng, tỷ lệ tài chính trong tài liệu này là giá trị THAM KHẢO MẶC ĐỊNH (default). Giá trị thực tế được cấu hình trong `GlobalConfigDoc` (game config) và có thể thay đổi bởi staff qua backoffice UI. Khi implement, LUÔN đọc từ game config thay vì hardcode giá trị.
+
+---
+
+## 1. Tổng quan
+
+Lotto 5/35 là game xổ số tự chọn của Vietlott.
+
+- **Lịch quay**: 2 kỳ/ngày (13h00 kỳ 1, 21h00 kỳ 2), mỗi ngày Thứ Hai - Chủ Nhật
+- **Phát hành**: 06h00 - 22h00, vé đóng bán trước giờ quay 30 phút (cấu hình)
+- **Giá vé**: 10.000 VND / bộ số (line) cho 1 kỳ
+- **Chọn số**: 5 số chính từ tập {01-35} + 1 số đặc biệt từ tập {01-12}
+- **Kỳ liên tiếp**: Mua 1 vé cho tối đa 6 kỳ liên tiếp
+- **Board**: 1 vé có tối đa 5 board (A-E), mỗi board là 1 lựa chọn độc lập
+- **DrawId format**: `"YYYY-MM-DD.NNN"` (001 = kỳ 13h, 002 = kỳ 21h)
+- **Ngày tài chính**: Tính từ 11h sáng → 11h sáng hôm sau (Asia/Ho_Chi_Minh)
+
+---
+
+## 2. Cơ cấu giải thưởng (7 hạng)
+
+Mỗi line chỉ trúng hạng **CAO NHẤT** phù hợp. Duyệt từ Jackpot xuống Consolation.
+
+> Giá trị trong bảng dưới là **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.defaultPrizes`.
+
+| Hạng | Code | Điều kiện | Giá trị mặc định (VND) | Split eligible |
+|------|------|-----------|------------------------|----------------|
+| Giải Độc Đắc | `jackpot` | 5 chính + ĐB | Tích lũy (tối thiểu 6 tỷ) | Không |
+| Giải Nhất | `tier1` | 5 chính | 10.000.000 (*) | Có |
+| Giải Nhì | `tier2` | 4 chính + ĐB | 5.000.000 (*) | Có |
+| Giải Ba | `tier3` | 4 chính | 500.000 (*) | Có |
+| Giải Tư | `tier4` | 3 chính + ĐB | 100.000 (*) | Có |
+| Giải Năm | `tier5` | 3 chính | 30.000 (*) | Có |
+| Giải Khuyến Khích | `consolation` | ≤2 chính + ĐB | 10.000 | Không |
+
+(*) Tại kỳ "Chia giải Độc Đắc" (split cycle), các giải này được BỔ SUNG thêm tiền từ Jackpot.
+
+**Ghi chú Consolation**: Trùng đặc biệt + 0, 1, hoặc 2 số chính → Giải Khuyến Khích. Nếu trùng 3+ chính + ĐB thì rơi vào tier cao hơn (tier4, tier2, jackpot).
+
+**Ghi chú trúng nhiều hạng**: Khi vé trúng nhiều hạng giải thì chỉ lĩnh hạng giải thưởng CAO NHẤT. Tuy nhiên khi chơi BAO, mỗi line là độc lập nên 1 vé bao CÓ THỂ trúng nhiều hạng khác nhau trên các line khác nhau.
+
+---
+
+## 3. Các kiểu chơi (Play Types)
+
+### 3.1 Standard (Chơi cơ bản)
+- Chọn: 5 số chính + 1 số đặc biệt
+- Lines: 1
+- Giá: 10.000 VND/kỳ
+
+### 3.2 MainCover4 (Bao 4 số chính)
+- Chọn: 4 số chính + 1 số đặc biệt
+- Hệ thống ghép lần lượt 31 số còn lại (35 - 4 = 31) tạo 31 bộ số
+- Lines: 31
+- Giá: 310.000 VND/kỳ
+
+### 3.3 MainCover (Bao số chính 6-15)
+- Chọn: N số chính (6 ≤ N ≤ 15) + 1 số đặc biệt
+- Lines: C(N, 5) tổ hợp chập 5 từ N số
+- Giá: C(N, 5) × 10.000 VND/kỳ
+
+**Bảng tra cứu Bao số chính:**
+
+| Bao | Số chính chọn | Lines C(N,5) | Giá/kỳ (VND) |
+|-----|--------------|--------------|---------------|
+| Bao 4 | 4 | 31 | 310.000 |
+| Bao 6 | 6 | 6 | 60.000 |
+| Bao 7 | 7 | 21 | 210.000 |
+| Bao 8 | 8 | 56 | 560.000 |
+| Bao 9 | 9 | 126 | 1.260.000 |
+| Bao 10 | 10 | 252 | 2.520.000 |
+| Bao 11 | 11 | 462 | 4.620.000 |
+| Bao 12 | 12 | 792 | 7.920.000 |
+| Bao 13 | 13 | 1.287 | 12.870.000 |
+| Bao 14 | 14 | 2.002 | 20.020.000 |
+| Bao 15 | 15 | 3.003 | 30.030.000 |
+
+### 3.4 SpecialCover (Bao số đặc biệt)
+- Chọn: 5 số chính + K số đặc biệt (2 ≤ K ≤ 12)
+- Lines: K (mỗi line = 5 chính + 1 ĐB khác nhau)
+- Giá: K × 10.000 VND/kỳ
+
+**Bảng tra cứu Bao ĐB:**
+
+| Số ĐB chọn | Lines | Giá/kỳ (VND) |
+|-------------|-------|---------------|
+| 2 | 2 | 20.000 |
+| 3 | 3 | 30.000 |
+| 4 | 4 | 40.000 |
+| 5 | 5 | 50.000 |
+| 6 | 6 | 60.000 |
+| 7 | 7 | 70.000 |
+| 8 | 8 | 80.000 |
+| 9 | 9 | 90.000 |
+| 10 | 10 | 100.000 |
+| 11 | 11 | 110.000 |
+| 12 | 12 | 120.000 |
+
+### 3.5 QuickPick (Máy tự chọn)
+- Hệ thống chọn ngẫu nhiên 5 chính + 1 ĐB
+- Lines: 1
+- Giá: 10.000 VND/kỳ
+- Map sang `standard` sau khi sinh số
+
+---
+
+## 4. Cách tính thưởng khi chơi Bao
+
+**Nguyên tắc cốt lõi**: Khi chơi bao, ticket được expand thành nhiều lines. Mỗi line match ĐỘC LẬP với kết quả → tổng tiền thưởng = Σ(tiền mỗi line trúng). KHÔNG có bảng giải thưởng riêng cho bao - tất cả dựa trên tổng line trúng.
+
+### Ví dụ minh họa (Bao 6 số chính, trúng 5 chính + ĐB):
+
+Chọn 6 số chính, kết quả trúng cả 5 số chính + ĐB:
+- C(6,5) = 6 lines
+- 1 line khớp đúng 5 chính + ĐB → **Jackpot**
+- 5 lines còn lại mỗi line có 4/5 chính + ĐB → **Giải Nhì** (5.000.000 mỗi line)
+- **Tổng = Jackpot + 5 × 5.000.000 = Jackpot + 25.000.000**
+
+### Bảng giải thưởng Bao (giá trị mặc định, 1 lần tham gia = 10.000đ)
+
+Giá trị hiển thị trên bảng Vietlott cho BAO là tổng tiền thưởng của tất cả lines trúng khi kết quả rơi vào hạng tương ứng. Đây KHÔNG phải config riêng mà là kết quả tính toán.
+
+**BAO 4 (31 lines):**
+
+| Kết quả | Giá trị |
+|---------|---------|
+| Trúng 4 chính + ĐB | ĐỘC ĐẮC + 150 triệu |
+| Trúng 4 chính | 25 triệu |
+| Trúng 3 chính + ĐB | 12.9 triệu |
+| Trúng 3 chính | 1.87 triệu |
+| Trúng 2 chính + ĐB | 580.000 |
+| Trúng 2 chính | 90.000 |
+| Trúng 1 chính + ĐB hoặc trúng ĐB | 310.000 |
+
+**BAO 6 (6 lines):**
+
+| Kết quả | Giá trị |
+|---------|---------|
+| Trúng 5 chính + ĐB | ĐỘC ĐẮC + 25 triệu |
+| Trúng 5 chính | 12.5 triệu |
+| Trúng 4 chính + ĐB | 10.4 triệu |
+| Trúng 4 chính | 1.12 triệu |
+| Trúng 3 chính + ĐB | 330.000 |
+| Trúng 3 chính | 90.000 |
+| Trúng 2 chính + ĐB / 1 chính + ĐB / ĐB | 60.000 |
+
+**BAO 7 đến BAO 15**: Tương tự, giá trị tăng theo số lines. Xem hình ảnh chi tiết trong thư mục assets.
+
+---
+
+## 5. Cơ chế Jackpot
+
+### 5.1 Tích lũy Jackpot
+
+Mỗi kỳ quay, Jackpot được tích lũy theo công thức:
+
+```
+JackpotContribution = Revenue - FixedPrizes - AgentCommission - CompanyTake
+
+Trong đó:
+- Revenue = 100% doanh thu tiền cược kỳ này
+- FixedPrizes = Tổng tiền trả giải cố định (tier1 → consolation)
+- AgentCommission = Σ(commissionRate_i × revenue_i) cho từng tenant
+- CompanyTake = min(companyRate × Revenue, max(Revenue - FixedPrizes - Commission, 0))
+```
+
+Nếu doanh thu không đủ bù: CompanyTake = 0, JackpotContribution = 0 (không âm).
+
+### 5.2 Jackpot Cycle
+
+- **Seed**: Mỗi cycle bắt đầu với seedAmount (mặc định 1 tỷ VND)
+- **Tích lũy**: Mỗi kỳ settle, cộng JackpotContribution vào currentAmount
+- **Kết thúc cycle khi**:
+  - Có người trúng Jackpot → reset về seedAmount, mở cycle mới
+  - Split cycle (chia giải) → reset về seedAmount, mở cycle mới
+  - Admin reset thủ công
+
+### 5.3 Split Cycle (Chia giải Độc Đắc)
+
+**Điều kiện kích hoạt** (TẤT CẢ phải đúng):
+1. Jackpot >= splitThreshold (mặc định 12 tỷ VND)
+2. Không ai trúng Jackpot trong kỳ
+3. Đây là kỳ 21h (drawNo = 2, kỳ Evening)
+
+**Tỷ lệ chia** (tổng = 6 phần):
+- tier1 (Giải Nhất): 2/6 ≈ 33.3%
+- tier2 (Giải Nhì): 1/6 ≈ 16.7%
+- tier3 (Giải Ba): 1/6 ≈ 16.7%
+- tier4 (Giải Tư): 1/6 ≈ 16.7%
+- tier5 (Giải Năm): 1/6 ≈ 16.7%
+- consolation: KHÔNG tham gia chia
+
+**Quy trình chia:**
+1. Tính phần chia ban đầu: `initialAmount = floor(jackpotAmount × parts / totalParts)`
+2. Tier không có người trúng → phần đó redistribute chia đều cho tier CÓ người trúng
+3. Tính bonus/winner: `bonusPerWinner = totalForTier / winnerCount`
+4. Làm tròn: Tier không phải cao nhất → tròn xuống 5.000 VND. Phần dư cộng vào tier cao nhất
+5. Giải thưởng cuối = fixedPrize + bonusPerWinner
+
+---
+
+## 6. Tỷ lệ tài chính (mặc định, cấu hình trong GlobalConfig)
+
+> Tất cả tỷ lệ dưới đây là giá trị **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.rates`.
+
+| Khoản mục | Tỷ lệ | Ghi chú |
+|-----------|--------|---------|
+| Hoa hồng đại lý | 20% revenue | Override per tenant qua TenantConfig |
+| Công ty thu | 15% revenue | Có cap khi doanh thu thấp |
+| Giải cố định (kỳ vọng) | ~17.35% revenue | Dựa trên xác suất |
+| Tích lũy Jackpot | ~47.65% revenue | Phần còn lại |
+
+---
+
+## 7. Xác suất & Không gian mẫu
+
+- Tổng không gian mẫu: `C(35,5) × 12 = 324.632 × 12 = 3.895.584`
+
+| Giải | Main match | Special | Favorable outcomes | Xác suất (1 trong N) |
+|------|-----------|---------|-------------------|---------------------|
+| Jackpot | 5/5 | Yes | 1 | 1/3.895.584 |
+| Giải Nhất | 5/5 | No | 11 | 1/354.144 |
+| Giải Nhì | 4/5 | Yes | 150 | 1/25.970 |
+| Giải Ba | 4/5 | No | 1.650 | 1/2.361 |
+| Giải Tư | 3/5 | Yes | 4.350 | 1/895 |
+| Giải Năm | 3/5 | No | 47.850 | 1/81 |
+| Khuyến Khích | ≤2/5 | Yes | 320.131 | 1/12 |
+| Không trúng | | | 3.521.441 | ~90.4% |
+
+---
+
+## 8. Vòng đời vận hành
+
+### 8.1 Draw lifecycle
+
+```
+created → salesOpen → salesClosed → published → settled → (completed)
+                                                        → voided (hủy kỳ)
+```
+
+### 8.2 Ticket lifecycle
+
+```
+draft → paid (immutable) → completed / refunded
+```
+
+### 8.3 Entry lifecycle
+
+```
+pending → settled (có kết quả)
+       → voided (kỳ bị hủy)
+```
+
+### 8.4 Settle pipeline
+
+```
+prepare-settle → settle-entries → calculate-financials → apply-split-bonuses → build-report → finalize-settle → sync-ticket-summaries
+```
+
+### 8.5 Void pipeline
+
+```
+prepare-void → void-entries → dispatch-refunds → finalize-void
+```
+
+---
+
+## 9. Codebase Map
+
+### 9.1 Domain Layer — `packages/game-lotto535/` (`@megawin/game-lotto535`)
+
+Entities, types, business rules thuần túy. KHÔNG phụ thuộc database/framework.
+
+```
+src/
+├── entities/
+│   ├── enums.ts          # PrizeTier, PlayType, PayoutStatus, RefundStatus, Collections
+│   ├── types.ts          # MainTuple, Special, BoardSelection, LineValue, PrizeAmounts,
+│   │                     # SplitRatios, JackpotConfig, FinancialRates, PlayRules, DrawNo
+│   ├── draw.ts           # DrawDoc, DrawSplit
+│   ├── ticket.ts         # TicketDoc, Board
+│   ├── entry.ts          # TicketEntryDoc, EntryBoardSnapshot, EntryPayoutTier
+│   ├── line.ts           # TicketLineDoc, LineMatchResult
+│   ├── jackpot-cycle.ts  # JackpotCycleDoc, JackpotWinnerInfo
+│   ├── global-config.ts  # GlobalConfigDoc
+│   └── tenant-config.ts  # TenantConfigDoc
+├── rules/
+│   ├── prize-tiers.ts    # determineTier(), buildPrizeAmountMap(), DEFAULT_PRIZE_TIER_RULES
+│   ├── play-types.ts     # combination(), calculateLineCount(), validateSelection()
+│   ├── odds.ts           # getOddsTable(), analyzeProfitability(), TOTAL_OUTCOMES
+│   └── jackpot.ts        # calculateDrawFinancials(), calculateClosingJackpot(),
+│                         # isSplitCycleDraw(), calculateSplitDistribution()
+├── helpers/
+│   ├── match-result.ts   # matchLine(), matchLines(), DetailedMatchResult
+│   ├── expand-lines.ts   # expandBoardToLines(), expandAllBoards()
+│   └── draw-id.ts        # generateDrawId(), parseDrawId(), generateDrawIdSequence()
+└── schemas/
+    └── common.ts         # Zod schemas for validation
+```
+
+### 9.2 Application Layer — `packages/game-lotto535-application/` (`@megawin/game-lotto535-application`)
+
+Use cases, repos, mappers. Orchestrate domain logic với infrastructure.
+
+```
+src/
+├── infras/
+│   ├── repos/
+│   │   ├── draw-repo.ts, entry-repo.ts, line-repo.ts, ticket-repo.ts
+│   │   ├── game-config-repo.ts, tenant-config-repo.ts
+│   │   ├── jackpot-cycle-repo.ts, report-repo.ts
+│   │   └── base-repo.ts
+│   └── mappers/
+│       ├── draw-mapper.ts, entry-mapper.ts, ticket-mapper.ts
+│       ├── jackpot-cycle-mapper.ts, global-config-mapper.ts
+│       └── tenant-config-mapper.ts
+└── use-cases/
+    ├── draws/          # create, list, get-detail, get-current, preview,
+    │                   # open-sales, close-sales, publish-result, trigger-settle,
+    │                   # update-schedule, void-draw, auto-enroll-entries
+    ├── settle/         # prepare → settle-entries → calculate-financials →
+    │                   # apply-split-bonuses → build-report → finalize → sync-ticket
+    ├── place-bet/      # place-bet (đặt cược)
+    ├── void/           # prepare → void-entries → dispatch-refunds → finalize
+    ├── payout/         # dispatch-payout (trả thưởng cho tenant)
+    ├── jackpot/        # get-current, list-cycles, list-history
+    ├── game-config/    # get/update global config
+    ├── tenant-config/  # get/list/update tenant config
+    ├── player/         # list-tickets, get-entries, get-lines, get-jackpot (player-facing)
+    ├── operations/     # summary, playtype-distribution, number-frequency, tenant-breakdown
+    └── feed/           # sync-entry-feed, save-cursor, acquire-lock (cho tenant polling)
+```
+
+### 9.3 Shared Game Core — `packages/game-core/` (`@megawin/game-core`)
+
+Enums và types dùng chung cho TẤT CẢ game (lotto535, power655, keno, mega645...).
+
+```
+src/entities/
+├── game-core.enums.ts    # GameProduct, TicketStatus, EntryStatus, DrawStatus,
+│                         # DrawResultSource, TicketChannel, GameConfigScope, EntryOutcome
+├── entry-feed.ts         # EntryFeedDoc, EntryFeedQuery
+├── feed-sync-cursor.ts   # FeedSyncCursorDoc
+└── ticket-counter.ts     # TicketCounterDoc, buildTicketNo()
+```
+
+### 9.4 Shared Game Core Application — `packages/game-core-application/` (`@megawin/game-core-application`)
+
+```
+src/
+├── infras/repos/         # entry-feed-repo, entry-change-seq-repo, ticket-counter-repo,
+│                         # game-daily-report-repo
+└── use-cases/            # get-entry-feed, sync-entry-feed, publish-game-report
+```
+
+### 9.5 Shared Utilities — `packages/shared/` (`@megawin/shared`)
+
+```
+src/
+├── errors/               # AppException, error-codes, http-status
+├── constants/            # validation, pagination
+├── mappers/              # mapper base class
+└── utils/                # unique, number, array, date, financial-date, env
+```
+
+### 9.6 Backoffice UI — `apps/backoffice/src/app/(main)/games/lotto535/`
+
+```
+├── draws/          # Quản lý kỳ quay (active card, history, create dialog, actions)
+├── config/         # Cấu hình game (prizes, play rules, jackpot, rates)
+├── jackpot/        # Jackpot overview, cycles, history
+├── operations/     # Analytics (betting overview, number analytics, jackpot banner)
+├── tenant-config/  # Cấu hình per-tenant
+├── pending-tickets/ # Vé chờ xử lý
+├── financial-reports/ # Báo cáo tài chính
+└── multi-draw/     # Quản lý multi-draw
+```
+
+### 9.7 Backoffice API — `apps/backoffice/src/app/api/lotto535/`
+
+```
+├── draws/          # CRUD draws + actions (open-sales, close-sales, publish-result, settle, void)
+├── config/         # GET/PUT global config
+├── tenant-config/  # GET list / GET-PUT per tenant
+├── jackpot/        # GET current, cycles, history
+└── operations/     # summary, playtype-distribution, number-frequency, tenant-breakdown
+```
+
+---
+
+## 10. MongoDB Collections
+
+| Collection | Entity | Mô tả |
+|-----------|--------|-------|
+| `lotto535_tickets` | TicketDoc | Vé mua, chứa boards + draw plan |
+| `lotto535_ticket_entries` | TicketEntryDoc | 1 ticket × 1 draw, đơn vị settle |
+| `lotto535_ticket_lines` | TicketLineDoc | Line con (bộ số), tạo khi settle |
+| `lotto535_draws` | DrawDoc | Kỳ quay, result, financial |
+| `lotto535_game_configs` | GlobalConfigDoc / TenantConfigDoc | Config game |
+| `lotto535_jackpot_cycles` | JackpotCycleDoc | Vòng đời Jackpot |
+
+---
+
+## 11. Quy tắc quan trọng cho AI Agent
+
+1. **Số lưu dạng string zero-padded**: "01"-"35" cho số chính, "01"-"12" cho số ĐB
+2. **Tiền lưu integer VND**: Không dùng float, tất cả đơn vị VND nguyên
+3. **Ticket immutable sau paid**: Không cho sửa boards/plan/pricing sau khi đã thanh toán
+4. **Lines tạo khi settle**: Không materialize lines trước, chỉ expand khi settle
+5. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc.defaultPrizes`, có thể thay đổi bởi staff
+6. **Entry = đơn vị settle**: 1 entry = 1 ticket × 1 draw, settle batch theo drawId
+6. **Commission snapshot**: commissionRate snapshot lúc place-bet, không thay đổi khi config update sau
+7. **Financial date ≠ draw date**: Ngày tài chính tính từ 11h sáng → 11h sáng hôm sau
+8. **Split cycle chỉ kỳ 21h**: Chia giải Jackpot CHỈ xảy ra ở kỳ Evening (drawNo = 2)
+9. **Consolation không tham gia split**: Giải Khuyến Khích KHÔNG nhận bonus từ chia Jackpot
+10. **Mỗi line trúng hạng cao nhất**: Duyệt rules từ Jackpot xuống Consolation, lấy tier đầu tiên thỏa mãn

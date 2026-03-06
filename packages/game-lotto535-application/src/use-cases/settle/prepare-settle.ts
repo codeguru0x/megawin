@@ -34,41 +34,20 @@ import { buildPrizeAmountMap } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import type { LottoDrawResult, LottoSettleConfig } from "./types";
+import type { SettleContext } from "./types";
 
 export interface PrepareSettleInput {
   /** Mã kỳ quay cần settle — phải ở trạng thái "settling". */
   drawId: string;
 }
 
-export interface PrepareSettleResult {
-  /** Mã kỳ quay. */
-  drawId: string;
-  /** Ngày quay (YYYY-MM-DD). */
-  drawDate: string;
-  /** Số thứ tự kỳ trong ngày. */
-  drawNo: number;
-  /** Ngày tài chính (YYYY-MM-DD) — dùng cho báo cáo. */
-  financialDate: string;
-  /** Kết quả quay đã công bố. */
-  result: LottoDrawResult;
-  /** Số tiền Jackpot đầu kỳ (VND) — đọc từ active cycle hoặc seed. */
-  jackpotOpeningAmount: number;
-  /** Kỳ này có phải kỳ chia Jackpot hay không. */
-  isSplitCycle: boolean;
-  /** Bảng giải thưởng: key = tier name, value = số tiền (VND). */
-  prizeAmounts: Record<string, number>;
-  /** Cấu hình liên quan settle (snapshot từ GlobalConfig). */
-  config: LottoSettleConfig;
-}
-
-export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, PrepareSettleResult> {
+export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, SettleContext> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** Load context cho settle flow. Throw nếu draw không hợp lệ. */
-  protected async execute(input: PrepareSettleInput): Promise<PrepareSettleResult> {
+  protected async execute(input: PrepareSettleInput): Promise<SettleContext> {
     const { drawId } = input;
 
     // ── 1. Validate draw tồn tại ──

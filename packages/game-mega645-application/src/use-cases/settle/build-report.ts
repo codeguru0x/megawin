@@ -10,16 +10,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { publishGameReport } from "@megawin/game-core-application/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { ReportRepository } from "../../infras/repos/report-repo";
-import type { MegaSettleFinancials } from "./types";
-
-export interface BuildReportInput {
-  /** ID kỳ quay cần tạo báo cáo. */
-  drawId: string;
-  /** Ngày tài chính ghi nhận (ISO date). */
-  financialDate: string;
-  /** Dữ liệu tài chính tổng hợp (từ bước CalculateFinancials). */
-  financials?: MegaSettleFinancials;
-}
+import type { SettleContext } from "./types";
 
 export interface BuildReportResult {
   /** ID kỳ quay đã tạo báo cáo. */
@@ -35,14 +26,14 @@ export interface BuildReportResult {
 }
 
 export class BuildReportUseCase extends InternalUseCase<
-  BuildReportInput,
+  SettleContext,
   BuildReportResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly reportRepo = new ReportRepository();
 
-  protected async execute(input: BuildReportInput): Promise<BuildReportResult> {
-    const { drawId, financialDate, financials } = input;
+  protected async execute(input: SettleContext): Promise<BuildReportResult> {
+    const { drawId, financialDate, financials, jackpotOpeningAmount } = input;
 
     const tenantAggs = await this.entryRepo.aggregateTenantReport(
       drawId,
@@ -121,8 +112,7 @@ export class BuildReportUseCase extends InternalUseCase<
           jackpotContribution: financials.jackpotContribution,
         },
         jackpotTracking: {
-          openingAmount:
-            financials.closingJackpot - financials.jackpotContribution,
+          openingAmount: jackpotOpeningAmount,
           closingAmount: financials.closingJackpot,
           hasJackpotWinner: financials.hasJackpotWinner,
           totalContribution: financials.jackpotContribution,

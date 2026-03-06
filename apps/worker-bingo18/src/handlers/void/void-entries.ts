@@ -2,19 +2,19 @@
  * Lambda: void-entries (Bingo 18)
  *
  * Step 2 (loop) của Void Draw Step Function.
- * Void 1 batch entries + update ticket voidSummary.
+ * Void 1 batch entries + tính refund amount.
  *
- * @input  { drawId, reason, voidedBy?, batchSize? }
+ * CRASH-SAFE: entries đã void tự filter ra.
+ *
+ * @input  VoidContext ($voidCtx)
  * @output VoidEntriesBatchResult
  */
 
-import {
-  VoidEntriesBatchUseCase,
-  type VoidEntriesBatchInput,
-} from "@megawin/game-bingo18-application/use-cases/void";
+import { VoidEntriesBatchUseCase } from "@megawin/game-bingo18-application/use-cases/void";
+import type { VoidContext } from "@megawin/game-bingo18-application/use-cases/void";
 
 const useCase = new VoidEntriesBatchUseCase();
 
-export async function handler(event: VoidEntriesBatchInput) {
+export async function handler(event: VoidContext) {
   return useCase.run(event);
 }

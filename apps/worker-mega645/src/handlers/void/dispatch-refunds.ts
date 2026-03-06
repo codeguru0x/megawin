@@ -6,17 +6,17 @@
  *
  * CRASH-SAFE: entries đã dispatch refund không bị gửi lại.
  *
- * @input  { drawId }
+ * @input  VoidContext
  * @output DispatchRefundBatchResult
  */
 
 import {
   DispatchRefundBatchUseCase,
-  type DispatchRefundBatchInput,
+  type VoidContext,
 } from "@megawin/game-mega645-application/use-cases/void";
 
 const useCase = new DispatchRefundBatchUseCase();
 
-export async function handler(event: DispatchRefundBatchInput) {
+export async function handler(event: VoidContext) {
   return useCase.run(event);
 }

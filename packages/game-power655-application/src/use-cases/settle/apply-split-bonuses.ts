@@ -11,19 +11,8 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { EntryStatus } from "@megawin/game-core/entities";
-import { PrizeTier } from "@megawin/game-power655/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { PowerSplitDetails } from "./types";
-
-export interface ApplySplitBonusesInput {
-  /** ID kỳ quay cần patch split bonus. */
-  drawId: string;
-  /** Có phải kỳ chia giải (split cycle) hay không. Nếu false → skip toàn bộ. */
-  isSplitCycle: boolean;
-  /** Chi tiết chia giải theo tier (từ CalculateFinancials). */
-  splitDetails?: PowerSplitDetails;
-}
+import type { SettleContext } from "./types";
 
 export interface ApplySplitBonusesResult {
   /** ID kỳ quay. */
@@ -39,16 +28,17 @@ export interface ApplySplitBonusesResult {
  * Chỉ chạy khi kỳ quay là split cycle (tổng JP vượt ngưỡng).
  */
 export class ApplySplitBonusesUseCase extends InternalUseCase<
-  ApplySplitBonusesInput,
+  SettleContext,
   ApplySplitBonusesResult
 > {
   private readonly entryRepo = new EntryRepository();
 
   /** @inheritdoc */
   protected async execute(
-    input: ApplySplitBonusesInput
+    input: SettleContext
   ): Promise<ApplySplitBonusesResult> {
-    const { drawId, isSplitCycle, splitDetails } = input;
+    const { drawId, isSplitCycle } = input;
+    const splitDetails = input.financials?.splitDetails;
 
     if (
       !isSplitCycle ||

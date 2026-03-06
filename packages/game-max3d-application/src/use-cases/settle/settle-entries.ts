@@ -1,6 +1,10 @@
 /**
  * Use Case: Settle Entries (Batch) — Max 3D
  *
+ * ═══════════════════════════════════════════════════════════════════════
+ * STEP 2 TRONG SETTLE FLOW (LOOP — gọi nhiều lần cho đến done=true)
+ * ═══════════════════════════════════════════════════════════════════════
+ *
  * Xử lý entries theo batch 500: load boards → match against draw result → persist lines → bulk settle entries.
  * Chạy trong vòng lặp time-bounded (10 phút) cho đến hết entries hoặc hết thời gian.
  *
@@ -36,23 +40,17 @@ import {
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
-import type { Max3dDrawResult } from "./types";
+import type { SettleContext } from "./types";
 
 const BATCH_SIZE = 500;
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
-
-export interface SettleEntriesBatchInput {
-  drawId: string;
-  result: Max3dDrawResult;
-  prizeConfig: Max3dPrizeConfig;
-}
 
 export interface SettleEntriesBatchResult {
   done: boolean;
 }
 
 export class SettleEntriesBatchUseCase extends InternalUseCase<
-  SettleEntriesBatchInput,
+  SettleContext,
   SettleEntriesBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
@@ -60,7 +58,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   private readonly lineRepo = new LineRepository();
 
   protected async execute(
-    input: SettleEntriesBatchInput
+    input: SettleContext
   ): Promise<SettleEntriesBatchResult> {
     const { drawId, result, prizeConfig } = input;
     const drawResult: EntityDrawResult = {

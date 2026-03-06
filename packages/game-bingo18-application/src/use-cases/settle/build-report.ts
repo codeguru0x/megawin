@@ -10,16 +10,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { publishGameReport } from "@megawin/game-core-application/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { ReportRepository } from "../../infras/repos/report-repo";
-import type { BingoSettleFinancials } from "./types";
-
-export interface BuildReportInput {
-  /** ID kỳ quay cần tạo báo cáo. */
-  drawId: string;
-  /** Ngày tài chính (YYYY-MM-DD) dùng làm key báo cáo hàng ngày. */
-  financialDate: string;
-  /** Dữ liệu tài chính tổng hợp (từ CalculateFinancials). Nếu có → publish game-core report. */
-  financials?: BingoSettleFinancials;
-}
+import type { SettleContext } from "./types";
 
 export interface BuildReportResult {
   /** ID kỳ quay. */
@@ -35,13 +26,13 @@ export interface BuildReportResult {
 }
 
 export class BuildReportUseCase extends InternalUseCase<
-  BuildReportInput,
+  SettleContext,
   BuildReportResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly reportRepo = new ReportRepository();
 
-  protected async execute(input: BuildReportInput): Promise<BuildReportResult> {
+  protected async execute(input: SettleContext): Promise<BuildReportResult> {
     const { drawId, financialDate, financials } = input;
     const tenantAggs = await this.entryRepo.aggregateTenantReport(
       drawId,

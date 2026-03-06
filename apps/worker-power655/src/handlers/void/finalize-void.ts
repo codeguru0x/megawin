@@ -6,17 +6,15 @@
  *
  * IDEMPOTENT: aggregate + overwrite.
  *
- * @input  { drawId }
+ * @input  VoidContext ($voidCtx)
  * @output FinalizeVoidResult
  */
 
-import {
-  FinalizeVoidUseCase,
-  type FinalizeVoidInput,
-} from "@megawin/game-power655-application/use-cases/void";
+import { FinalizeVoidUseCase } from "@megawin/game-power655-application/use-cases/void";
+import type { VoidContext } from "@megawin/game-power655-application/use-cases/void";
 
 const useCase = new FinalizeVoidUseCase();
 
-export async function handler(event: FinalizeVoidInput) {
+export async function handler(event: VoidContext) {
   return useCase.run(event);
 }

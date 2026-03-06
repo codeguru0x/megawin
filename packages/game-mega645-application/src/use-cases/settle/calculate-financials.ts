@@ -16,34 +16,16 @@ import {
 } from "@megawin/game-mega645/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { MegaSettleConfig, MegaSettleFinancials } from "./types";
-
-export interface CalculateFinancialsInput {
-  /** ID kỳ quay cần tính tài chính. */
-  drawId: string;
-  /** Giá trị jackpot đầu kỳ (VND). */
-  jackpotOpeningAmount: number;
-  /** Kỳ này có thực hiện split jackpot không. */
-  isSplitCycle: boolean;
-  /** Tổng số dòng (lines) trong kỳ — dùng cho báo cáo. */
-  totalLines: number;
-  /** Cấu hình tài chính & jackpot. */
-  config: MegaSettleConfig;
-}
-
-export interface CalculateFinancialsResult extends MegaSettleFinancials {
-  /** ID kỳ quay. */
-  drawId: string;
-}
+import type { SettleContext, SettleFinancials } from "./types";
 
 export class CalculateFinancialsUseCase extends InternalUseCase<
-  CalculateFinancialsInput,
-  CalculateFinancialsResult
+  SettleContext,
+  SettleFinancials
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(input: CalculateFinancialsInput): Promise<CalculateFinancialsResult> {
+  protected async execute(input: SettleContext): Promise<SettleFinancials> {
     const { drawId, config, jackpotOpeningAmount, isSplitCycle } = input;
 
     const [tenantAgg, payoutSummary] = await Promise.all([
@@ -67,7 +49,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     const jackpotWinnerCount = payoutSummary.tierWinnerCounts[PrizeTier.Jackpot] ?? 0;
     const hasJackpotWinner = jackpotWinnerCount > 0;
 
-    let splitDetails: CalculateFinancialsResult["splitDetails"];
+    let splitDetails: SettleFinancials["splitDetails"];
 
     if (isSplitCycle) {
       const winnerCountPerTier = new Map<PrizeTier, number>();
@@ -136,7 +118,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     );
 
     return {
-      drawId,
       totalRevenue: fin.totalRevenue,
       totalFixedPrizes: fin.totalFixedPrizes,
       totalAgentCommission: fin.totalAgentCommission,

@@ -16,15 +16,11 @@ import {
 } from "@megawin/tenant-gateway";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
+import type { VoidContext } from "./types";
 
 const BATCH_QUERY_LIMIT = 200;
 const REFUND_CHUNK_SIZE = 50;
 const GAME_PRODUCT_BINGO18 = "bingo18";
-
-export interface DispatchRefundBatchInput {
-  /** ID kỳ quay cần dispatch refund. */
-  drawId: string;
-}
 
 export interface DispatchRefundBatchResult {
   /** ID kỳ quay. */
@@ -49,14 +45,14 @@ export interface DispatchRefundBatchResult {
 }
 
 export class DispatchRefundBatchUseCase extends InternalUseCase<
-  DispatchRefundBatchInput,
+  VoidContext,
   DispatchRefundBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
 
   protected async execute(
-    input: DispatchRefundBatchInput
+    input: VoidContext
   ): Promise<DispatchRefundBatchResult> {
     const { drawId } = input;
     const entries = await this.entryRepo.getPendingRefundEntries(

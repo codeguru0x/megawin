@@ -63,16 +63,12 @@ import {
 import { GameProduct } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
+import type { VoidContext } from "./types";
 
 /** Số entries query mỗi lần (nhỏ hơn settle batch vì có I/O tới tenant). */
 const BATCH_QUERY_LIMIT = 200;
 /** Max entries gửi trong 1 lần batchRefund tới tenant. */
 const REFUND_CHUNK_SIZE = 50;
-
-export interface DispatchRefundBatchInput {
-  /** Mã kỳ quay cần dispatch refund. */
-  drawId: string;
-}
 
 export interface DispatchRefundBatchResult {
   /** Mã kỳ quay. */
@@ -97,14 +93,14 @@ export interface DispatchRefundBatchResult {
 }
 
 export class DispatchRefundBatchUseCase extends InternalUseCase<
-  DispatchRefundBatchInput,
+  VoidContext,
   DispatchRefundBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly tenantConfigRepo = new TenantConfigRepository();
 
   /** Dispatch refund cho 1 batch entries đã void. Loop cho đến khi done = true. */
-  protected async execute(input: DispatchRefundBatchInput): Promise<DispatchRefundBatchResult> {
+  protected async execute(input: VoidContext): Promise<DispatchRefundBatchResult> {
     const { drawId } = input;
 
     // ── STEP 1: Query entries đã voided, refundStatus = "pending"/"failed" ──

@@ -23,32 +23,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import type { PowerSplitDetails } from "./types";
-
-export interface FinalizeSettleInput {
-  /** ID kỳ quay cần finalize. */
-  drawId: string;
-  /** Số dư Jackpot 1 đầu kỳ (VND). */
-  jp1OpeningAmount: number;
-  /** Số dư Jackpot 2 đầu kỳ (VND). */
-  jp2OpeningAmount: number;
-  /** Số dư Jackpot 1 cuối kỳ (VND). Reset về seed nếu có winner/split. */
-  closingJp1: number;
-  /** Số dư Jackpot 2 cuối kỳ (VND). Reset về seed nếu có winner/split. */
-  closingJp2: number;
-  /** Số dư Jackpot 1 opening cho kỳ tiếp theo (VND). */
-  nextJp1Opening: number;
-  /** Số dư Jackpot 2 opening cho kỳ tiếp theo (VND). */
-  nextJp2Opening: number;
-  /** Có người trúng Jackpot 1 (6/6) hay không. */
-  hasJackpot1Winner: boolean;
-  /** Có người trúng Jackpot 2 (5/6 + bonus) hay không. */
-  hasJackpot2Winner: boolean;
-  /** Có phải kỳ chia giải (tổng JP vượt splitThreshold) hay không. */
-  isSplitCycle: boolean;
-  /** Chi tiết chia giải theo tier (chỉ có khi isSplitCycle = true). */
-  splitDetails?: PowerSplitDetails;
-}
+import type { SettleContextWithFinancials } from "./types";
 
 export interface FinalizeSettleResult {
   /** ID kỳ quay đã finalize. */
@@ -71,7 +46,7 @@ export interface FinalizeSettleResult {
  * Finalize settle: transition draw + ghi dual jackpot snapshot + update cycle.
  */
 export class FinalizeSettleUseCase extends InternalUseCase<
-  FinalizeSettleInput,
+  SettleContextWithFinancials,
   FinalizeSettleResult
 > {
   private readonly drawRepo = new DrawRepository();
@@ -80,13 +55,22 @@ export class FinalizeSettleUseCase extends InternalUseCase<
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** @inheritdoc */
-  protected async execute(input: FinalizeSettleInput): Promise<FinalizeSettleResult> {
-    const { drawId, closingJp1, closingJp2, nextJp1Opening, nextJp2Opening, isSplitCycle } = input;
+  protected async execute(input: SettleContextWithFinancials): Promise<FinalizeSettleResult> {
+    const { drawId, jp1OpeningAmount, jp2OpeningAmount, isSplitCycle, financials } = input;
+    const {
+      closingJp1,
+      closingJp2,
+      nextJp1Opening,
+      nextJp2Opening,
+      hasJackpot1Winner,
+      hasJackpot2Winner,
+      splitDetails,
+    } = financials;
 
     const updated = await this.drawRepo.settleComplete(drawId, {
-      openingJackpot1: input.jp1OpeningAmount,
+      openingJackpot1: jp1OpeningAmount,
       closingJackpot1: closingJp1,
-      openingJackpot2: input.jp2OpeningAmount,
+      openingJackpot2: jp2OpeningAmount,
       closingJackpot2: closingJp2,
       isSplitCycle: isSplitCycle || undefined,
     });
@@ -122,16 +106,15 @@ export class FinalizeSettleUseCase extends InternalUseCase<
    *   - both_winner: cả JP1 và JP2 đều có winner
    *   - split: tổng JP vượt splitThreshold
    */
-  private async updateJackpotCycle(input: FinalizeSettleInput): Promise<void> {
+  private async updateJackpotCycle(input: SettleContextWithFinancials): Promise<void> {
+    const { drawId, jp1OpeningAmount, jp2OpeningAmount, isSplitCycle, financials } = input;
     const {
-      drawId,
       closingJp1,
       closingJp2,
       hasJackpot1Winner,
       hasJackpot2Winner,
-      isSplitCycle,
       splitDetails,
-    } = input;
+    } = financials;
 
     const activeCycle = await this.cycleRepo.getActiveCycle();
     if (!activeCycle) return;
@@ -158,7 +141,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       if (hasJackpot1Winner) {
         const jp1Entries = await this.entryRepo.findJackpot1Winners(drawId);
         const jp1PerWinner =
-          jp1Entries.length > 0 ? Math.floor(input.jp1OpeningAmount / jp1Entries.length) : 0;
+          jp1Entries.length > 0 ? Math.floor(jp1OpeningAmount / jp1Entries.length) : 0;
         winners = jp1Entries.map((e) => ({
           accountId: e.accountId,
           tenantId: e.tenantId,
@@ -171,7 +154,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       if (hasJackpot2Winner) {
         const jp2Entries = await this.entryRepo.findJackpot2Winners(drawId);
         const jp2PerWinner =
-          jp2Entries.length > 0 ? Math.floor(input.jp2OpeningAmount / jp2Entries.length) : 0;
+          jp2Entries.length > 0 ? Math.floor(jp2OpeningAmount / jp2Entries.length) : 0;
         const jp2Winners = jp2Entries.map((e) => ({
           accountId: e.accountId,
           tenantId: e.tenantId,

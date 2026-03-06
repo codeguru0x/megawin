@@ -5,7 +5,7 @@
  * Load context cho settle flow. Idempotent – chỉ đọc dữ liệu.
  *
  * @input  { drawId }
- * @output PrepareSettleResult
+ * @output SettleContext
  */
 
 import {

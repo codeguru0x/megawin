@@ -6,17 +6,15 @@
  *
  * CRASH-SAFE: transitionStatus atomic, idempotent.
  *
- * @input  { drawId }
+ * @input  SettleContextWithFinancials ($settleCtx, financials bắt buộc)
  * @output FinalizeSettleResult
  */
 
-import {
-  FinalizeSettleUseCase,
-  type FinalizeSettleInput,
-} from "@megawin/game-bingo18-application/use-cases/settle";
+import { FinalizeSettleUseCase } from "@megawin/game-bingo18-application/use-cases/settle";
+import type { SettleContextWithFinancials } from "@megawin/game-bingo18-application/use-cases/settle";
 
 const useCase = new FinalizeSettleUseCase();
 
-export async function handler(event: FinalizeSettleInput) {
+export async function handler(event: SettleContextWithFinancials) {
   return useCase.run(event);
 }

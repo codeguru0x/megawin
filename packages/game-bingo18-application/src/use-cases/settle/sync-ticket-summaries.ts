@@ -4,7 +4,7 @@
  * Recompute ticket progress/settlement/voidSummary từ entries.
  * Idempotent, self-healing — chạy lại bao nhiêu lần cũng cho cùng kết quả.
  *
- * Input:  { drawId }
+ * Input:  SettleContext ($settleCtx)
  * Output: { drawId, done }
  *
  * Flow (chunk-based, tối ưu DB calls):
@@ -21,27 +21,26 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { ObjectId } from "mongodb";
+import type { SettleContext } from "./types";
 
 const CHUNK_SIZE = 500;
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
 
-export interface SyncTicketSummariesInput {
-  drawId: string;
-}
-
 export interface SyncTicketSummariesResult {
+  /** ID kỳ quay. */
   drawId: string;
+  /** true khi đã sync hết tất cả tickets → kết thúc loop. */
   done: boolean;
 }
 
 export class SyncTicketSummariesUseCase extends InternalUseCase<
-  SyncTicketSummariesInput,
+  SettleContext,
   SyncTicketSummariesResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 
-  protected async execute(input: SyncTicketSummariesInput): Promise<SyncTicketSummariesResult> {
+  protected async execute(input: SettleContext): Promise<SyncTicketSummariesResult> {
     const { drawId } = input;
     let cursor: string | undefined;
     const startTime = Date.now();
