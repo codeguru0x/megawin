@@ -64,10 +64,10 @@ export interface GetCurrentDrawOutput {
     drawTime: string;
     /** Kết quả quay — có thể undefined nếu chưa công bố. */
     result?: {
-      /** 5 số chính trúng thưởng (sorted). */
-      winningMain: number[];
-      /** Số đặc biệt trúng thưởng (1-12). */
-      winningSpecial: number;
+      /** 5 số chính trúng thưởng (sorted, zero-padded "01"-"35"). */
+      winningMain: string[];
+      /** Số đặc biệt trúng thưởng ("01"-"12"). */
+      winningSpecial: string;
       /** Thời điểm công bố (ISO 8601). */
       publishedAt: string;
     };

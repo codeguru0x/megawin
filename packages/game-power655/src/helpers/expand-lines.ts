@@ -37,7 +37,7 @@ export function expandBoardToLines(
   const sorted = [...selection.mainNumbers].sort();
 
   if (playType === PlayType.Standard || playType === PlayType.QuickPick) {
-    return [{ main: sorted.slice(0, POWER655_MAIN_COUNT) as MainTuple }];
+    return [{ main: sorted.slice(0, POWER655_MAIN_COUNT) as unknown as MainTuple }];
   }
 
   // Bao: generate all C(N, 6) combinations

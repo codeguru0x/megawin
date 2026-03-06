@@ -68,10 +68,10 @@ export interface GetCurrentDrawOutput {
     drawTime: string;
     /** Kết quả quay (nếu đã công bố). */
     result?: {
-      /** 6 số chính trúng thưởng đã sắp xếp tăng dần. */
-      winningMain: number[];
-      /** Số bonus (1 số từ 49 số còn lại sau khi chọn 6 số chính). */
-      bonusNumber: number;
+      /** 6 số chính trúng thưởng đã sắp xếp tăng dần (zero-padded "01"-"55"). */
+      winningMain: string[];
+      /** Số bonus (zero-padded "01"-"55", từ 49 số còn lại sau khi chọn 6 số chính). */
+      bonusNumber: string;
       /** Thời điểm công bố kết quả (ISO 8601). */
       publishedAt: string;
     };

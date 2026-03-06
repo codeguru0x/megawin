@@ -22,10 +22,10 @@ export interface PlayerGetCurrentDrawOutput {
     drawDate: string;
     /** Số thứ tự kỳ trong ngày. */
     drawNo: number;
-    /** 5 số chính trúng thưởng (sorted). */
-    winningMain: number[];
-    /** Số đặc biệt trúng thưởng (1-12). */
-    winningSpecial: number;
+    /** 5 số chính trúng thưởng (sorted, zero-padded "01"-"35"). */
+    winningMain: string[];
+    /** Số đặc biệt trúng thưởng ("01"-"12"). */
+    winningSpecial: string;
     /** Thời điểm công bố kết quả (ISO 8601). */
     publishedAt: string;
   } | null;
@@ -82,10 +82,7 @@ export interface PlayerGetJackpotOutput {
 
 export type TicketSortBy = "betDate" | "drawDate";
 
-export const TICKET_SORT_BY_VALUES: readonly TicketSortBy[] = [
-  "betDate",
-  "drawDate",
-];
+export const TICKET_SORT_BY_VALUES: readonly TicketSortBy[] = ["betDate", "drawDate"];
 
 export interface PlayerListTicketsInput {
   /** Mã tenant của player. */
@@ -174,10 +171,10 @@ export interface PlayerTicketSummary {
     playType: string;
     /** Bộ số đã chọn. */
     selection: {
-      /** Danh sách số chính đã chọn (1-35). */
-      mainNumbers: number[];
-      /** Danh sách số đặc biệt đã chọn (1-12). */
-      specialNumbers: number[];
+      /** Danh sách số chính đã chọn ("01"-"35"). */
+      mainNumbers: string[];
+      /** Danh sách số đặc biệt đã chọn ("01"-"12"). */
+      specialNumbers: string[];
     };
     /** Số lines được expand từ selection (tùy playType). */
     expandedLines: number;
@@ -243,20 +240,20 @@ export interface PlayerEntryInfo {
       boardNo: string;
       /** Kiểu chơi. */
       playType: string;
-      /** Danh sách số chính (1-35). */
-      mainNumbers: number[];
-      /** Danh sách số đặc biệt (1-12). */
-      specialNumbers: number[];
+      /** Danh sách số chính ("01"-"35"). */
+      mainNumbers: string[];
+      /** Danh sách số đặc biệt ("01"-"12"). */
+      specialNumbers: string[];
       /** Số lines expand từ selection. */
       expandedLines: number;
     }>;
   };
   /** Kết quả quay — chỉ có khi kỳ đã công bố. */
   result?: {
-    /** 5 số chính trúng thưởng (sorted). */
-    winningMain: number[];
-    /** Số đặc biệt trúng thưởng (1-12). */
-    winningSpecial: number;
+    /** 5 số chính trúng thưởng (sorted, zero-padded "01"-"35"). */
+    winningMain: string[];
+    /** Số đặc biệt trúng thưởng ("01"-"12"). */
+    winningSpecial: string;
     /** Thời điểm công bố (ISO 8601). */
     publishedAt: string;
   };
@@ -314,10 +311,10 @@ export interface PlayerLineInfo {
   boardNo: string;
   /** Thứ tự line trong board (0-based). */
   lineIndex: number;
-  /** 5 số chính của line (1-35, sorted). */
-  main: number[];
-  /** Số đặc biệt của line (1-12). */
-  special: number;
+  /** 5 số chính của line (sorted, zero-padded "01"-"35"). */
+  main: string[];
+  /** Số đặc biệt của line ("01"-"12"). */
+  special: string;
   /** Kết quả so khớp với kết quả quay. */
   matchResult: {
     /** Số lượng số chính trùng khớp (0-5). */

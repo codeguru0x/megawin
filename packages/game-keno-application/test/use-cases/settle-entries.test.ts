@@ -20,7 +20,7 @@ function pad(n: number): string {
   return n.toString().padStart(2, "0");
 }
 
-function makeDrawResult(winningNumbers: number[]) {
+function makeDrawResult(winningNumbers: string[]) {
   const stats = computeDrawStats(winningNumbers);
   return { winningNumbers, ...stats };
 }
@@ -32,7 +32,7 @@ function makeDrawResult(winningNumbers: number[]) {
 function numbersWithCounts(opts: {
   bigCount: number;
   evenCount: number;
-}): number[] {
+}): string[] {
   const { bigCount, evenCount } = opts;
   const smallCount = 20 - bigCount;
 
@@ -47,13 +47,6 @@ function numbersWithCounts(opts: {
 
   const result: number[] = [];
 
-  // Distribute even numbers across big and small
-  // We need: evenCount total even, bigCount total big
-  // bigEven + smallEven = evenCount
-  // bigEven + bigOdd = bigCount
-  // → bigEven = evenCount - smallEven
-  // → bigOdd = bigCount - bigEven
-  // Try to maximise bigEven first
   const bigEven = Math.min(evenCount, bigCount);
   const bigOdd = bigCount - bigEven;
   const smallEven = evenCount - bigEven;
@@ -64,7 +57,7 @@ function numbersWithCounts(opts: {
   result.push(...smallEvenPool.slice(0, smallEven));
   result.push(...smallOddPool.slice(0, smallOdd));
 
-  return result;
+  return result.map(pad);
 }
 
 // ─── 1. lookupBasicPrize ────────────────────────────
@@ -101,14 +94,14 @@ describe("lookupBasicPrize – Tra cứu giải thưởng cơ bản", () => {
 // ─── 2. matchBasicBoard ─────────────────────────────
 
 describe("matchBasicBoard – Đối soát cách chơi cơ bản", () => {
-  const baseWinning = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 3, 7, 12];
+  const baseWinning = ["01", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "03", "07", "12"];
 
   it("pick1 trúng 1 số → 20,000 VND", () => {
     const result = makeDrawResult(baseWinning);
     const r = matchBasicBoard(["05"], result);
     expect(r.pickCount).toBe(1);
     expect(r.matchCount).toBe(1);
-    expect(r.matchedNumbers).toEqual([5]);
+    expect(r.matchedNumbers).toEqual(["05"]);
     expect(r.winAmount).toBe(20_000);
   });
 
@@ -196,7 +189,7 @@ describe("matchBasicBoard – Đối soát cách chơi cơ bản", () => {
   });
 
   it("pick10 match10 → 2,000,000,000 VND", () => {
-    const winning = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59];
+    const winning = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "50", "51", "52", "53", "54", "55", "56", "57", "58", "59"];
     const result = makeDrawResult(winning);
     const r = matchBasicBoard(
       ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"],
@@ -466,61 +459,60 @@ describe("matchEvenOddBet – Đối soát cược Chẵn/Lẻ", () => {
 
 describe("computeDrawStats – Thống kê kết quả quay Keno", () => {
   it("20 số đều ≤ 40 → bigCount=0, smallCount=20", () => {
-    const nums = Array.from({ length: 20 }, (_, i) => i + 1);
+    const nums = Array.from({ length: 20 }, (_, i) => pad(i + 1));
     const stats = computeDrawStats(nums);
     expect(stats.bigCount).toBe(0);
     expect(stats.smallCount).toBe(20);
   });
 
   it("20 số đều > 40 → bigCount=20, smallCount=0", () => {
-    const nums = Array.from({ length: 20 }, (_, i) => 41 + i);
+    const nums = Array.from({ length: 20 }, (_, i) => pad(41 + i));
     const stats = computeDrawStats(nums);
     expect(stats.bigCount).toBe(20);
     expect(stats.smallCount).toBe(0);
   });
 
   it("10 lớn, 10 nhỏ → bigCount=10, smallCount=10", () => {
-    const small = Array.from({ length: 10 }, (_, i) => i + 1);
-    const big = Array.from({ length: 10 }, (_, i) => 41 + i);
+    const small = Array.from({ length: 10 }, (_, i) => pad(i + 1));
+    const big = Array.from({ length: 10 }, (_, i) => pad(41 + i));
     const stats = computeDrawStats([...small, ...big]);
     expect(stats.bigCount).toBe(10);
     expect(stats.smallCount).toBe(10);
   });
 
   it("boundary: 40 is small, 41 is big", () => {
-    const stats = computeDrawStats([40, 41]);
+    const stats = computeDrawStats(["40", "41"]);
     expect(stats.smallCount).toBe(1);
     expect(stats.bigCount).toBe(1);
   });
 
   it("tất cả chẵn → evenCount=20, oddCount=0", () => {
-    const nums = Array.from({ length: 20 }, (_, i) => (i + 1) * 2);
+    const nums = Array.from({ length: 20 }, (_, i) => pad((i + 1) * 2));
     const stats = computeDrawStats(nums);
     expect(stats.evenCount).toBe(20);
     expect(stats.oddCount).toBe(0);
   });
 
   it("tất cả lẻ → evenCount=0, oddCount=20", () => {
-    const nums = Array.from({ length: 20 }, (_, i) => i * 2 + 1);
+    const nums = Array.from({ length: 20 }, (_, i) => pad(i * 2 + 1));
     const stats = computeDrawStats(nums);
     expect(stats.evenCount).toBe(0);
     expect(stats.oddCount).toBe(20);
   });
 
   it("hỗn hợp: 15 chẵn, 5 lẻ", () => {
-    const even = Array.from({ length: 15 }, (_, i) => (i + 1) * 2);
-    const odd = Array.from({ length: 5 }, (_, i) => i * 2 + 1);
+    const even = Array.from({ length: 15 }, (_, i) => pad((i + 1) * 2));
+    const odd = Array.from({ length: 5 }, (_, i) => pad(i * 2 + 1));
     const stats = computeDrawStats([...even, ...odd]);
     expect(stats.evenCount).toBe(15);
     expect(stats.oddCount).toBe(5);
   });
 
   it("xác minh đồng thời big/small và even/odd", () => {
-    // 12 big-even, 3 big-odd, 2 small-even, 3 small-odd = 15 big, 5 small, 14 even, 6 odd
-    const bigEven = [42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64];
-    const bigOdd = [41, 43, 45];
-    const smallEven = [2, 4];
-    const smallOdd = [1, 3, 5];
+    const bigEven = ["42", "44", "46", "48", "50", "52", "54", "56", "58", "60", "62", "64"];
+    const bigOdd = ["41", "43", "45"];
+    const smallEven = ["02", "04"];
+    const smallOdd = ["01", "03", "05"];
     const nums = [...bigEven, ...bigOdd, ...smallEven, ...smallOdd];
     const stats = computeDrawStats(nums);
     expect(stats.bigCount).toBe(15);

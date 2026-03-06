@@ -73,14 +73,14 @@ describe("Lotto 5/35 – buildPrizeAmountMap", () => {
 
 describe("Lotto 5/35 – matchLine", () => {
   const drawResult = {
-    winningMain: [1, 5, 10, 20, 30] as MainTuple,
-    winningSpecial: 7,
+    winningMain: ["01", "05", "10", "20", "30"] as MainTuple,
+    winningSpecial: "07",
   };
 
   it("5 chính + đặc biệt → Jackpot", () => {
     const line: LineValue = {
-      main: [1, 5, 10, 20, 30] as MainTuple,
-      special: 7,
+      main: ["01", "05", "10", "20", "30"] as MainTuple,
+      special: "07",
     };
     const r = matchLine(line, drawResult);
     expect(r.tier).toBe(PrizeTier.Jackpot);
@@ -90,8 +90,8 @@ describe("Lotto 5/35 – matchLine", () => {
 
   it("5 chính, không đặc biệt → Tier1", () => {
     const line: LineValue = {
-      main: [1, 5, 10, 20, 30] as MainTuple,
-      special: 3,
+      main: ["01", "05", "10", "20", "30"] as MainTuple,
+      special: "03",
     };
     const r = matchLine(line, drawResult);
     expect(r.tier).toBe(PrizeTier.Tier1);
@@ -101,8 +101,8 @@ describe("Lotto 5/35 – matchLine", () => {
 
   it("4 chính + đặc biệt → Tier2", () => {
     const line: LineValue = {
-      main: [1, 5, 10, 20, 35] as MainTuple,
-      special: 7,
+      main: ["01", "05", "10", "20", "35"] as MainTuple,
+      special: "07",
     };
     const r = matchLine(line, drawResult);
     expect(r.tier).toBe(PrizeTier.Tier2);
@@ -111,51 +111,51 @@ describe("Lotto 5/35 – matchLine", () => {
 
   it("4 chính → Tier3", () => {
     const line: LineValue = {
-      main: [1, 5, 10, 20, 35] as MainTuple,
-      special: 3,
+      main: ["01", "05", "10", "20", "35"] as MainTuple,
+      special: "03",
     };
     expect(matchLine(line, drawResult).tier).toBe(PrizeTier.Tier3);
   });
 
   it("3 chính + đặc biệt → Tier4", () => {
     const line: LineValue = {
-      main: [1, 5, 10, 33, 35] as MainTuple,
-      special: 7,
+      main: ["01", "05", "10", "33", "35"] as MainTuple,
+      special: "07",
     };
     expect(matchLine(line, drawResult).tier).toBe(PrizeTier.Tier4);
   });
 
   it("3 chính → Tier5", () => {
     const line: LineValue = {
-      main: [1, 5, 10, 33, 35] as MainTuple,
-      special: 3,
+      main: ["01", "05", "10", "33", "35"] as MainTuple,
+      special: "03",
     };
     expect(matchLine(line, drawResult).tier).toBe(PrizeTier.Tier5);
   });
 
   it("2 chính + đặc biệt → Consolation", () => {
     const line: LineValue = {
-      main: [1, 5, 33, 34, 35] as MainTuple,
-      special: 7,
+      main: ["01", "05", "33", "34", "35"] as MainTuple,
+      special: "07",
     };
     expect(matchLine(line, drawResult).tier).toBe(PrizeTier.Consolation);
   });
 
   it("0 chính + đặc biệt → Consolation", () => {
-    const line: LineValue = { main: [2, 3, 4, 6, 8] as MainTuple, special: 7 };
+    const line: LineValue = { main: ["02", "03", "04", "06", "08"] as MainTuple, special: "07" };
     expect(matchLine(line, drawResult).tier).toBe(PrizeTier.Consolation);
   });
 
   it("2 chính, không đặc biệt → null", () => {
     const line: LineValue = {
-      main: [1, 5, 33, 34, 35] as MainTuple,
-      special: 3,
+      main: ["01", "05", "33", "34", "35"] as MainTuple,
+      special: "03",
     };
     expect(matchLine(line, drawResult).tier).toBeNull();
   });
 
   it("0 chính, 0 đặc biệt → null", () => {
-    const line: LineValue = { main: [2, 3, 4, 6, 8] as MainTuple, special: 3 };
+    const line: LineValue = { main: ["02", "03", "04", "06", "08"] as MainTuple, special: "03" };
     expect(matchLine(line, drawResult).tier).toBeNull();
   });
 });
@@ -166,16 +166,16 @@ describe("Lotto 5/35 – matchLine", () => {
 
 describe("Lotto 5/35 – matchLines (batch)", () => {
   const drawResult = {
-    winningMain: [1, 5, 10, 20, 30] as MainTuple,
-    winningSpecial: 7,
+    winningMain: ["01", "05", "10", "20", "30"] as MainTuple,
+    winningSpecial: "07",
   };
 
   it("nhiều lines cho kết quả aggregate đúng", () => {
     const lines: LineValue[] = [
-      { main: [1, 5, 10, 20, 30] as MainTuple, special: 7 },
-      { main: [1, 5, 10, 20, 30] as MainTuple, special: 3 },
-      { main: [1, 5, 10, 20, 35] as MainTuple, special: 7 },
-      { main: [2, 3, 4, 6, 8] as MainTuple, special: 3 },
+      { main: ["01", "05", "10", "20", "30"] as MainTuple, special: "07" },
+      { main: ["01", "05", "10", "20", "30"] as MainTuple, special: "03" },
+      { main: ["01", "05", "10", "20", "35"] as MainTuple, special: "07" },
+      { main: ["02", "03", "04", "06", "08"] as MainTuple, special: "03" },
     ];
     const r = matchLines(lines, drawResult);
     expect(r.totalLines).toBe(4);
@@ -188,8 +188,8 @@ describe("Lotto 5/35 – matchLines (batch)", () => {
 
   it("tất cả lines không trúng → winningLines = 0", () => {
     const lines: LineValue[] = [
-      { main: [2, 3, 4, 6, 8] as MainTuple, special: 3 },
-      { main: [2, 3, 4, 6, 9] as MainTuple, special: 3 },
+      { main: ["02", "03", "04", "06", "08"] as MainTuple, special: "03" },
+      { main: ["02", "03", "04", "06", "09"] as MainTuple, special: "03" },
     ];
     const r = matchLines(lines, drawResult);
     expect(r.winningLines).toBe(0);
@@ -204,65 +204,65 @@ describe("Lotto 5/35 – matchLines (batch)", () => {
 describe("Lotto 5/35 – expandBoardToLines", () => {
   it("Standard → 1 line", () => {
     const lines = expandBoardToLines(PlayType.Standard, {
-      mainNumbers: [1, 2, 3, 4, 5],
-      specialNumbers: [7],
+      mainNumbers: ["01", "02", "03", "04", "05"],
+      specialNumbers: ["07"],
     });
     expect(lines).toHaveLength(1);
-    expect(lines[0]!.main).toEqual([1, 2, 3, 4, 5]);
-    expect(lines[0]!.special).toBe(7);
+    expect(lines[0]!.main).toEqual(["01", "02", "03", "04", "05"]);
+    expect(lines[0]!.special).toBe("07");
   });
 
   it("QuickPick → 1 line", () => {
     const lines = expandBoardToLines(PlayType.QuickPick, {
-      mainNumbers: [10, 20, 30, 1, 5],
-      specialNumbers: [3],
+      mainNumbers: ["10", "20", "30", "01", "05"],
+      specialNumbers: ["03"],
     });
     expect(lines).toHaveLength(1);
-    expect(lines[0]!.main).toEqual([1, 5, 10, 20, 30]);
+    expect(lines[0]!.main).toEqual(["01", "05", "10", "20", "30"]);
   });
 
   it("MainCover4 → 31 lines", () => {
     const lines = expandBoardToLines(PlayType.MainCover4, {
-      mainNumbers: [1, 2, 3, 4],
-      specialNumbers: [7],
+      mainNumbers: ["01", "02", "03", "04"],
+      specialNumbers: ["07"],
     });
     expect(lines).toHaveLength(31);
     for (const line of lines) {
       expect(line.main).toHaveLength(5);
-      expect(line.special).toBe(7);
+      expect(line.special).toBe("07");
       expect(
         line.main
           .slice(0, -1)
-          .every((n: number) => [1, 2, 3, 4].some((m) => line.main.includes(m))),
+          .every((n: string) => ["01", "02", "03", "04"].some((m) => line.main.includes(m))),
       ).toBe(true);
     }
   });
 
   it("MainCover 6 → C(6,5)=6 lines", () => {
     const lines = expandBoardToLines(PlayType.MainCover, {
-      mainNumbers: [1, 2, 3, 4, 5, 6],
-      specialNumbers: [7],
+      mainNumbers: ["01", "02", "03", "04", "05", "06"],
+      specialNumbers: ["07"],
     });
     expect(lines).toHaveLength(6);
   });
 
   it("MainCover 7 → C(7,5)=21 lines", () => {
     const lines = expandBoardToLines(PlayType.MainCover, {
-      mainNumbers: [1, 2, 3, 4, 5, 6, 7],
-      specialNumbers: [1],
+      mainNumbers: ["01", "02", "03", "04", "05", "06", "07"],
+      specialNumbers: ["01"],
     });
     expect(lines).toHaveLength(21);
   });
 
   it("SpecialCover → K lines", () => {
     const lines = expandBoardToLines(PlayType.SpecialCover, {
-      mainNumbers: [1, 2, 3, 4, 5],
-      specialNumbers: [1, 2, 3],
+      mainNumbers: ["01", "02", "03", "04", "05"],
+      specialNumbers: ["01", "02", "03"],
     });
     expect(lines).toHaveLength(3);
-    expect(lines.map((l) => l.special)).toEqual([1, 2, 3]);
+    expect(lines.map((l) => l.special)).toEqual(["01", "02", "03"]);
     for (const line of lines) {
-      expect(line.main).toEqual([1, 2, 3, 4, 5]);
+      expect(line.main).toEqual(["01", "02", "03", "04", "05"]);
     }
   });
 });
@@ -271,8 +271,8 @@ describe("Lotto 5/35 – calculateLineCount", () => {
   it("Standard → 1", () => {
     expect(
       calculateLineCount(PlayType.Standard, {
-        mainNumbers: [1, 2, 3, 4, 5],
-        specialNumbers: [1],
+        mainNumbers: ["01", "02", "03", "04", "05"],
+        specialNumbers: ["01"],
       }),
     ).toBe(1);
   });
@@ -280,8 +280,8 @@ describe("Lotto 5/35 – calculateLineCount", () => {
   it("MainCover4 → 31", () => {
     expect(
       calculateLineCount(PlayType.MainCover4, {
-        mainNumbers: [1, 2, 3, 4],
-        specialNumbers: [1],
+        mainNumbers: ["01", "02", "03", "04"],
+        specialNumbers: ["01"],
       }),
     ).toBe(31);
   });
@@ -289,18 +289,18 @@ describe("Lotto 5/35 – calculateLineCount", () => {
   it("MainCover 6 → 6", () => {
     expect(
       calculateLineCount(PlayType.MainCover, {
-        mainNumbers: [1, 2, 3, 4, 5, 6],
-        specialNumbers: [1],
+        mainNumbers: ["01", "02", "03", "04", "05", "06"],
+        specialNumbers: ["01"],
       }),
     ).toBe(6);
   });
 
   it("MainCover 15 → 3003", () => {
-    const mainNumbers = Array.from({ length: 15 }, (_, i) => i + 1);
+    const mainNumbers = Array.from({ length: 15 }, (_, i) => String(i + 1).padStart(2, "0"));
     expect(
       calculateLineCount(PlayType.MainCover, {
         mainNumbers,
-        specialNumbers: [1],
+        specialNumbers: ["01"],
       }),
     ).toBe(3003);
   });
@@ -308,8 +308,8 @@ describe("Lotto 5/35 – calculateLineCount", () => {
   it("SpecialCover 5 → 5", () => {
     expect(
       calculateLineCount(PlayType.SpecialCover, {
-        mainNumbers: [1, 2, 3, 4, 5],
-        specialNumbers: [1, 2, 3, 4, 5],
+        mainNumbers: ["01", "02", "03", "04", "05"],
+        specialNumbers: ["01", "02", "03", "04", "05"],
       }),
     ).toBe(5);
   });
@@ -330,12 +330,12 @@ describe("Lotto 5/35 – calculateLineCount", () => {
 describe("Lotto 5/35 – Tích hợp Bao 6", () => {
   it("Bao 6: 5 số winning + 1 dư, trúng ĐB → 1 Jackpot + 5 Tier2", () => {
     const drawResult = {
-      winningMain: [1, 2, 3, 4, 5] as MainTuple,
-      winningSpecial: 7,
+      winningMain: ["01", "02", "03", "04", "05"] as MainTuple,
+      winningSpecial: "07",
     };
     const lines = expandBoardToLines(PlayType.MainCover, {
-      mainNumbers: [1, 2, 3, 4, 5, 6],
-      specialNumbers: [7],
+      mainNumbers: ["01", "02", "03", "04", "05", "06"],
+      specialNumbers: ["07"],
     });
     expect(lines).toHaveLength(6);
 
@@ -347,12 +347,12 @@ describe("Lotto 5/35 – Tích hợp Bao 6", () => {
 
   it("Bao 6: 5 số winning + 1 dư, không trúng ĐB → 1 Tier1 + 5 Tier3", () => {
     const drawResult = {
-      winningMain: [1, 2, 3, 4, 5] as MainTuple,
-      winningSpecial: 7,
+      winningMain: ["01", "02", "03", "04", "05"] as MainTuple,
+      winningSpecial: "07",
     };
     const lines = expandBoardToLines(PlayType.MainCover, {
-      mainNumbers: [1, 2, 3, 4, 5, 6],
-      specialNumbers: [8],
+      mainNumbers: ["01", "02", "03", "04", "05", "06"],
+      specialNumbers: ["08"],
     });
     const result = matchLines(lines, drawResult);
     expect(result.tierCounts.get(PrizeTier.Tier1)).toBe(1);

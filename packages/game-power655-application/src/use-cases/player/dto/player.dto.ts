@@ -29,10 +29,10 @@ export interface PlayerGetCurrentDrawOutput {
     drawDate: string;
     /** Số thứ tự kỳ quay. */
     drawNo: number;
-    /** 6 số chính trúng thưởng đã sắp xếp tăng dần. */
-    winningMain: number[];
-    /** Số bonus (1 số từ 49 số còn lại). */
-    bonusNumber: number;
+    /** 6 số chính trúng thưởng đã sắp xếp tăng dần (zero-padded "01"-"55"). */
+    winningMain: string[];
+    /** Số bonus (zero-padded "01"-"55", từ 49 số còn lại). */
+    bonusNumber: string;
     /** Thời điểm công bố kết quả (ISO 8601). */
     publishedAt: string;
   } | null;
@@ -96,10 +96,7 @@ export interface PlayerGetJackpotOutput {
 /** Tiêu chí sắp xếp danh sách vé: theo ngày đặt cược hoặc ngày quay. */
 export type TicketSortBy = "betDate" | "drawDate";
 
-export const TICKET_SORT_BY_VALUES: readonly TicketSortBy[] = [
-  "betDate",
-  "drawDate",
-];
+export const TICKET_SORT_BY_VALUES: readonly TicketSortBy[] = ["betDate", "drawDate"];
 
 export interface PlayerListTicketsInput {
   /** ID tenant (đại lý) của người chơi. */
@@ -187,8 +184,8 @@ export interface PlayerTicketSummary {
     playType: string;
     /** Các số đã chọn trên board. */
     selection: {
-      /** Danh sách số chính đã chọn (6-18 số trong range [1, 55]). */
-      mainNumbers: number[];
+      /** Danh sách số chính đã chọn (6-18 số, zero-padded "01"-"55"). */
+      mainNumbers: string[];
     };
     /** Số dòng cược sinh ra từ board này. Standard=1, BaoN=C(N,6). */
     lineCount: number;
@@ -251,10 +248,10 @@ export interface PlayerEntryInfo {
   };
   /** Kết quả quay (chỉ có khi kỳ đã công bố kết quả). */
   result?: {
-    /** 6 số chính trúng thưởng. */
-    winningMain: number[];
-    /** Số bonus. */
-    bonusNumber: number;
+    /** 6 số chính trúng thưởng (zero-padded "01"-"55"). */
+    winningMain: string[];
+    /** Số bonus (zero-padded "01"-"55"). */
+    bonusNumber: string;
     /** Thời điểm công bố kết quả (ISO 8601). */
     publishedAt: string;
   };
@@ -307,8 +304,8 @@ export interface PlayerLineInfo {
   boardNo: string;
   /** Chỉ số dòng trong board (0-based). */
   lineIndex: number;
-  /** 6 số chính của dòng cược (trong range [1, 55]). */
-  main: number[];
+  /** 6 số chính của dòng cược (zero-padded "01"-"55"). */
+  main: string[];
   /** Kết quả so khớp của dòng với kết quả quay. */
   matchResult: {
     /** Số lượng số chính trùng khớp (0-6). */
