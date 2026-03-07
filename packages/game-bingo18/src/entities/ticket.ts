@@ -20,6 +20,69 @@ import type {
 import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
 
 // ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Thông tin giá vé, tính tại thời điểm mua. */
+export interface TicketPricing {
+  /** Mệnh giá 1 lần cược (VND). Snapshot từ global config. */
+  unitPrice: number;
+  /** Số lượng cược mỗi kỳ = boards.length + sideBets.length. */
+  betsPerDraw: number;
+  /** Tiền cược mỗi kỳ = betsPerDraw × unitPrice. */
+  amountPerDraw: number;
+  /** Tổng tiền vé = amountPerDraw × drawCount. Trừ từ ví player khi mua. */
+  totalAmount: number;
+}
+
+/** Kế hoạch tham gia các kỳ quay. */
+export interface TicketDrawPlan {
+  /** Danh sách drawId sẽ tham gia. Có thể chơi nhiều kỳ liên tiếp. */
+  drawIds: string[];
+  /** Số kỳ quay đăng ký = drawIds.length. */
+  drawCount: number;
+}
+
+/** Thông tin đại lý, snapshot tại thời điểm mua vé. */
+export interface TicketTenant {
+  /** Tỷ lệ hoa hồng đại lý. Lấy từ tenant config tại thời điểm mua. */
+  commissionRate: number;
+}
+
+/** Tiến trình xử lý entries qua các kỳ quay. */
+export interface TicketProgress {
+  /** Tổng kỳ đã đăng ký = drawPlan.drawCount. */
+  totalDraws: number;
+  /** Số kỳ đã xử lý xong (settled + voided). Khi settledDraws = totalDraws → ticket completed. */
+  settledDraws: number;
+}
+
+/** Tổng hợp kết quả settle qua các kỳ. Cập nhật mỗi khi 1 entry settle xong. */
+export interface TicketSettlement {
+  /** Tổng tiền thắng tích lũy qua các kỳ = Σ(entry.payout.winAmount). */
+  totalWinAmount: number;
+  /** Thời điểm settle entry gần nhất. */
+  lastSettledAt?: Date;
+}
+
+/**
+ * Tổng hợp void/refund. Cập nhật khi 1 hoặc nhiều kỳ bị void.
+ * Ticket có thể bị void 1 phần (một số kỳ void, còn lại bình thường).
+ */
+export interface TicketVoidSummary {
+  /** Tổng tiền cược gốc của các entries bị void = Σ(entry.voidInfo.originalAmount). */
+  totalVoidedAmount: number;
+  /** Tổng tiền đã hoàn trả = Σ(entry.voidInfo.refundAmount). */
+  totalRefundedAmount: number;
+  /** Số kỳ quay đã bị void. */
+  voidedDrawCount: number;
+  /** Danh sách drawId đã bị void. Dùng để kiểm tra kỳ nào đã void. */
+  voidedDrawIds: string[];
+  /** Thời điểm void gần nhất. */
+  lastVoidedAt?: Date;
+}
+
+// ─────────────────────────────────────────────
 // Board – Cách chơi cơ bản
 // ─────────────────────────────────────────────
 
@@ -81,34 +144,17 @@ export interface TicketDoc {
   // ───── Draw Plan ─────
 
   /** Kế hoạch tham gia các kỳ quay. */
-  drawPlan: {
-    /** Danh sách drawId sẽ tham gia. Có thể chơi nhiều kỳ liên tiếp. */
-    drawIds: string[];
-    /** Số kỳ quay đăng ký = drawIds.length. */
-    drawCount: number;
-  };
+  drawPlan: TicketDrawPlan;
 
   // ───── Pricing ─────
 
   /** Thông tin giá vé, tính tại thời điểm mua. */
-  pricing: {
-    /** Mệnh giá 1 lần cược (VND). Snapshot từ global config. */
-    unitPrice: number;
-    /** Số lượng cược mỗi kỳ = boards.length + sideBets.length. */
-    betsPerDraw: number;
-    /** Tiền cược mỗi kỳ = betsPerDraw × unitPrice. */
-    amountPerDraw: number;
-    /** Tổng tiền vé = amountPerDraw × drawCount. Trừ từ ví player khi mua. */
-    totalAmount: number;
-  };
+  pricing: TicketPricing;
 
   // ───── Tenant ─────
 
   /** Thông tin đại lý, snapshot tại thời điểm mua vé. */
-  tenant: {
-    /** Tỷ lệ hoa hồng đại lý. Lấy từ tenant config tại thời điểm mua. */
-    commissionRate: number;
-  };
+  tenant: TicketTenant;
 
   // ───── Boards cơ bản ─────
 
@@ -123,22 +169,12 @@ export interface TicketDoc {
   // ───── Progress ─────
 
   /** Tiến trình xử lý entries qua các kỳ quay. */
-  progress: {
-    /** Tổng kỳ đã đăng ký = drawPlan.drawCount. */
-    totalDraws: number;
-    /** Số kỳ đã xử lý xong (settled + voided). Khi settledDraws = totalDraws → ticket completed. */
-    settledDraws: number;
-  };
+  progress: TicketProgress;
 
   // ───── Settlement Summary ─────
 
   /** Tổng hợp kết quả settle qua các kỳ. Cập nhật mỗi khi 1 entry settle xong. */
-  settlement?: {
-    /** Tổng tiền thắng tích lũy qua các kỳ = Σ(entry.payout.winAmount). */
-    totalWinAmount: number;
-    /** Thời điểm settle entry gần nhất. */
-    lastSettledAt?: Date;
-  };
+  settlement?: TicketSettlement;
 
   // ───── Void / Refund Summary ─────
 
@@ -146,18 +182,7 @@ export interface TicketDoc {
    * Tổng hợp void/refund. Cập nhật khi 1 hoặc nhiều kỳ bị void.
    * Ticket có thể bị void 1 phần (một số kỳ void, còn lại bình thường).
    */
-  voidSummary?: {
-    /** Tổng tiền cược gốc của các entries bị void = Σ(entry.voidInfo.originalAmount). */
-    totalVoidedAmount: number;
-    /** Tổng tiền đã hoàn trả = Σ(entry.voidInfo.refundAmount). */
-    totalRefundedAmount: number;
-    /** Số kỳ quay đã bị void. */
-    voidedDrawCount: number;
-    /** Danh sách drawId đã bị void. Dùng để kiểm tra kỳ nào đã void. */
-    voidedDrawIds: string[];
-    /** Thời điểm void gần nhất. */
-    lastVoidedAt?: Date;
-  };
+  voidSummary?: TicketVoidSummary;
 
   // ───── Status & Timestamps ─────
 

@@ -1,20 +1,40 @@
-import { Bingo18Collections } from "@megawin/game-bingo18/entities";
+import {
+  Bingo18Collections,
+  type TicketProgress,
+  type TicketSettlement,
+  type TicketVoidSummary,
+} from "@megawin/game-bingo18/entities";
 import { TicketStatus, ALL_LISTABLE_STATUSES } from "@megawin/game-core/entities";
 import { BaseRepo } from "./base-repo";
 import { TicketMapper, type TicketEntity } from "../mappers/ticket-mapper";
-import type { TicketSortBy } from "../../use-cases/player/dto/player.dto";
 import type { AnyBulkWriteOperation, Document, Filter } from "mongodb";
 import { ObjectId } from "mongodb";
 
+/** Aggregate summary từ entries, dùng để sync lại ticket document. */
 export interface TicketSummary {
   settledCount: number;
   voidedCount: number;
+  /** Tổng kỳ của ticket – lấy từ ticket.drawPlan.drawCount. */
   totalDraws: number;
   totalWinAmount: number;
   totalVoidedAmount: number;
   totalRefundedAmount: number;
   voidedDrawIds: string[];
 }
+
+/** Typed $set payload cho ticket sync – đảm bảo dot notation khớp với entity. */
+type TicketSyncSet = {
+  "progress.settledDraws": TicketProgress["settledDraws"];
+  updatedAt: Date;
+  "settlement.totalWinAmount"?: TicketSettlement["totalWinAmount"];
+  "settlement.lastSettledAt"?: Date;
+  "voidSummary.voidedDrawCount"?: TicketVoidSummary["voidedDrawCount"];
+  "voidSummary.totalVoidedAmount"?: TicketVoidSummary["totalVoidedAmount"];
+  "voidSummary.totalRefundedAmount"?: TicketVoidSummary["totalRefundedAmount"];
+  "voidSummary.voidedDrawIds"?: TicketVoidSummary["voidedDrawIds"];
+  "voidSummary.lastVoidedAt"?: Date;
+  status?: string;
+};
 
 const PENDING_STATUSES = [TicketStatus.Paid];
 const COMPLETED_STATUSES = [TicketStatus.Completed, TicketStatus.Refunded, TicketStatus.Void];
@@ -155,7 +175,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
         status = TicketStatus.Completed;
       }
 
-      const $set: Record<string, unknown> = {
+      const $set: TicketSyncSet = {
         "progress.settledDraws": settledCount,
         updatedAt: now,
       };
@@ -193,7 +213,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
               ],
             },
           },
-          update: { $set, $inc: { version: 1 } },
+          update: { $set: $set as Record<string, unknown>, $inc: { version: 1 } },
         },
       });
     }
@@ -220,7 +240,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
       status = TicketStatus.Completed;
     }
 
-    const $set: Record<string, unknown> = {
+    const $set: TicketSyncSet = {
       "progress.settledDraws": settledCount,
       updatedAt: now,
     };
@@ -257,7 +277,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
           ],
         },
       },
-      { $set, $inc: { version: 1 } },
+      { $set: $set as Record<string, unknown>, $inc: { version: 1 } },
     );
   }
 }

@@ -52,6 +52,64 @@ export interface EntryPayoutTier {
 }
 
 // ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Snapshot thông tin tenant tại thời điểm tạo entry. */
+export interface EntryTenantSnapshot {
+  /** Tỷ lệ hoa hồng snapshot tại thời điểm tạo entry. */
+  commissionRate: number;
+  /** Số tiền hoa hồng = amount × commissionRate. */
+  commissionAmount: number;
+}
+
+/** Tóm tắt nội dung entry (số vé + danh sách boards). */
+export interface EntrySummary {
+  /** Số vé hiển thị cho người chơi. */
+  ticketNo: string;
+  /** Danh sách boards snapshot từ vé gốc. */
+  boards: EntryBoardSnapshot[];
+}
+
+/** Thông tin thanh toán thưởng. */
+export interface EntryPayout {
+  /** Tổng tiền thắng = Σ(tiers[].amount). */
+  winAmount: number;
+  /** Tiền trả cho player = winAmount. */
+  payoutAmount: number;
+  /** Chi tiết thắng theo hạng giải (8 hạng: special → sixth). */
+  tiers: EntryPayoutTier[];
+  /** Thời điểm settle entry. */
+  settledAt: Date;
+  /** Trạng thái dispatch tiền thưởng. */
+  payoutStatus?: PayoutStatus;
+  /** Thời điểm gửi lệnh trả thưởng. */
+  payoutDispatchedAt?: Date;
+  /** Thời điểm xác nhận trả thưởng thành công. */
+  payoutConfirmedAt?: Date;
+  /** Thông báo lỗi nếu trả thưởng thất bại. */
+  payoutError?: string;
+}
+
+/** Thông tin huỷ entry (khi void). */
+export interface EntryVoidInfo {
+  /** Tiền cược gốc trước khi void. */
+  originalAmount: number;
+  /** Tiền hoàn trả cho người chơi. */
+  refundAmount: number;
+  /** Trạng thái hoàn tiền: pending / dispatched / confirmed / failed. */
+  refundStatus: string;
+  /** Thời điểm huỷ entry. */
+  voidedAt: Date;
+  /** Thời điểm gửi lệnh hoàn tiền. */
+  refundDispatchedAt?: Date;
+  /** Thời điểm xác nhận hoàn tiền thành công. */
+  refundConfirmedAt?: Date;
+  /** Thông báo lỗi nếu hoàn tiền thất bại. */
+  refundError?: string;
+}
+
+// ─────────────────────────────────────────────
 // Ticket Entry Document
 // ─────────────────────────────────────────────
 
@@ -77,12 +135,7 @@ export interface TicketEntryDoc {
   financialDate: ISODateString;
 
   /** Snapshot thông tin tenant tại thời điểm tạo entry. */
-  tenantSnapshot: {
-    /** Tỷ lệ hoa hồng snapshot tại thời điểm tạo entry. */
-    commissionRate: number;
-    /** Số tiền hoa hồng = amount × commissionRate. */
-    commissionAmount: number;
-  };
+  tenantSnapshot: EntryTenantSnapshot;
 
   /** Tổng cặp (pairs) = Σ(board.lineCount). Mỗi pair = 1 lần dự thưởng × unitPrice. */
   lineCount: number;
@@ -92,12 +145,7 @@ export interface TicketEntryDoc {
   unitPrice: number;
 
   /** Tóm tắt nội dung entry (số vé + danh sách boards). */
-  entrySummary: {
-    /** Số vé hiển thị cho người chơi. */
-    ticketNo: string;
-    /** Danh sách boards snapshot từ vé gốc. */
-    boards: EntryBoardSnapshot[];
-  };
+  entrySummary: EntrySummary;
 
   /** Kết quả quay thưởng, gắn khi publish result. */
   result?: Max3dproDrawResult & {
@@ -111,42 +159,10 @@ export interface TicketEntryDoc {
   status: EntryStatus;
 
   /** Thông tin thanh toán thưởng. */
-  payout?: {
-    /** Tổng tiền thắng = Σ(tiers[].amount). */
-    winAmount: number;
-    /** Tiền trả cho player = winAmount. */
-    payoutAmount: number;
-    /** Chi tiết thắng theo hạng giải (8 hạng: special → sixth). */
-    tiers: EntryPayoutTier[];
-    /** Thời điểm settle entry. */
-    settledAt: Date;
-    /** Trạng thái dispatch tiền thưởng. */
-    payoutStatus?: PayoutStatus;
-    /** Thời điểm gửi lệnh trả thưởng. */
-    payoutDispatchedAt?: Date;
-    /** Thời điểm xác nhận trả thưởng thành công. */
-    payoutConfirmedAt?: Date;
-    /** Thông báo lỗi nếu trả thưởng thất bại. */
-    payoutError?: string;
-  };
+  payout?: EntryPayout;
 
   /** Thông tin huỷ entry (khi void). */
-  voidInfo?: {
-    /** Tiền cược gốc trước khi void. */
-    originalAmount: number;
-    /** Tiền hoàn trả cho người chơi. */
-    refundAmount: number;
-    /** Trạng thái hoàn tiền: pending / dispatched / confirmed / failed. */
-    refundStatus: string;
-    /** Thời điểm huỷ entry. */
-    voidedAt: Date;
-    /** Thời điểm gửi lệnh hoàn tiền. */
-    refundDispatchedAt?: Date;
-    /** Thời điểm xác nhận hoàn tiền thành công. */
-    refundConfirmedAt?: Date;
-    /** Thông báo lỗi nếu hoàn tiền thất bại. */
-    refundError?: string;
-  };
+  voidInfo?: EntryVoidInfo;
 
   /** Phiên bản optimistic locking. */
   version: Long;

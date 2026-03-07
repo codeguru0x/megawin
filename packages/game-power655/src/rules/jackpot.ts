@@ -85,15 +85,6 @@ export interface DrawFinancialResult {
   jp1Overflow: number;
   /** Tổng tiền tích luỹ vào jackpot pool. Công thức: max(totalRevenue - totalFixedPrizes - totalAgentCommission - actualCompanyTake, 0). */
   totalJackpotContribution: number;
-  /** Chi tiết tài chính theo từng tenant/đại lý. */
-  tenantBreakdown: Array<{
-    /** ID tenant/đại lý. */
-    tenantId: string;
-    /** Doanh thu từ tenant. */
-    revenue: number;
-    /** Hoa hồng tenant nhận. */
-    commission: number;
-  }>;
 }
 
 /**
@@ -119,13 +110,7 @@ export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancia
     currentJp1Opening,
   } = input;
 
-  const tenantBreakdown = tenantRevenues.map((t) => ({
-    tenantId: t.tenantId,
-    revenue: t.revenue,
-    commission: t.commission,
-  }));
-
-  const totalAgentCommission = tenantBreakdown.reduce((sum, t) => sum + t.commission, 0);
+  const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
 
   const companyTake = Math.round(totalRevenue * companyRate);
   const remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission;
@@ -155,7 +140,6 @@ export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancia
     jackpot2Contribution: rawJp2Contribution,
     jp1Overflow,
     totalJackpotContribution,
-    tenantBreakdown,
   };
 }
 

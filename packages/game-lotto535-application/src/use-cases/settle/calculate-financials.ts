@@ -12,9 +12,10 @@
  * CÁC BƯỚC TÍNH TOÁN:
  * ────────────────────────────────────────────────
  *
- *   1. AGGREGATE TỪ DB:
- *      - tenantAgg: doanh thu + commission theo từng tenant
- *      - payoutSummary: tổng giải cố định + số winner theo tier
+ *   1. AGGREGATE TỪ DB (song song):
+ *      - settleSummary: tất cả entries SETTLED trong kỳ (1 pipeline $facet).
+ *        Gồm: tierWinnerCounts, totalFixedPrizes, totalSettled, totalPayoutAmount, totalLines.
+ *      - tenantAgg: tất cả entries KHÔNG VOID — doanh thu + commission theo từng tenant.
  *
  *   2. TÍNH TÀI CHÍNH (calculateDrawFinancials):
  *      - totalRevenue       = Σ revenue các tenant
@@ -30,13 +31,21 @@
  *        ③ Công ty thu về (tối đa 15% tổng doanh thu)
  *        ④ Phần còn lại → tích luỹ vào quỹ Jackpot
  *
- *   3. TÍNH JACKPOT:
- *      - Có winner Jackpot HOẶC split thực tế (có ít nhất 1 winner tier1-tier5):
- *        → closingJackpot = seedAmount (reset, contribution tính vào giải winner)
- *      - Không có winner, không split thực tế:
- *        → closingJackpot = openingAmount + contribution (tích luỹ)
+ *   3. TÍNH JACKPOT CUỐI KỲ (closingJackpot):
  *
- *   4. TÍNH SPLIT (chỉ khi isSplitCycle = true):
+ *      ┌─ Có JP winner (5 main + special)?
+ *      │   YES → closingJackpot = seedAmount (reset cycle)
+ *      │         Contribution kỳ này tính vào giải thưởng winner.
+ *      │
+ *      └─ NO → Là kỳ chia thưởng (isSplitCycle)?
+ *           │   YES + có winner tier1-tier5 → tính splitDetails
+ *           │         closingJackpot = seedAmount (reset cycle)
+ *           │   YES + không ai trúng tier1-tier5 → splitDetails = undefined
+ *           │         closingJackpot = opening + contribution (tích luỹ)
+ *           │
+ *           └─ NO → closingJackpot = opening + contribution (tích luỹ)
+ *
+ *   4. TÍNH SPLIT (chỉ khi isSplitCycle = true VÀ không có JP winner):
  *      - Khi Jackpot >= 12 tỷ (splitThreshold), hệ thống chia JP cho người thắng
  *      - Tỷ lệ chia: tier1 = 2/6, tier2-tier5 = mỗi tier 1/6
  *      - Tier không có winner → phần tiền đó tái phân bổ cho các tier có winner
@@ -59,7 +68,6 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { PrizeTier } from "@megawin/game-lotto535/entities";
 import {
   calculateDrawFinancials,
-  calculateClosingJackpot,
   calculateSplitDistribution,
   type DrawFinancialInput,
 } from "@megawin/game-lotto535/rules";
@@ -67,10 +75,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext, SettleFinancials } from "./types";
 
-export class CalculateFinancialsUseCase extends InternalUseCase<
-  SettleContext,
-  SettleFinancials
-> {
+export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, SettleFinancials> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
@@ -79,15 +84,18 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     const { drawId, config, jackpotOpeningAmount, isSplitCycle } = input;
 
     // ── BƯỚC 1: Aggregate dữ liệu từ DB (song song) ──
-    // tenantAgg: doanh thu, commission, số entries theo từng tenant
-    //   → Tính từ entries đã settled, dùng commission.amount đã tính sẵn lúc mua vé
-    // payoutSummary: tổng giải cố định + số winner theo từng tier
-    //   → Tính từ entry.payout.tiers (chỉ tính tier != Jackpot cho fixedPrizes)
-    // totalLines: tổng số lines trong kỳ (SUM lineCount)
-    const [tenantAgg, payoutSummary, totalLines] = await Promise.all([
+    // Chạy 2 pipeline song song trên 2 tập dữ liệu KHÁC NHAU:
+    //
+    //   settleSummary: tất cả entries SETTLED trong kỳ.
+    //     → 1 pipeline $facet duy nhất (scan 1 lần) thay vì 3 pipeline riêng trước đây.
+    //     → Trả về: tierWinnerCounts, totalFixedPrizes, totalSettled, totalPayoutAmount, totalLines.
+    //
+    //   tenantAgg: tất cả entries KHÔNG VOID (bao gồm cả scheduled chưa settle nếu có).
+    //     → Tập khác settleSummary vì cần tính revenue + commission trước khi settle xong.
+    //     → Group theo tenantId → revenue (amount) + commission (commissionAmount).
+    const [settleSummary, tenantAgg] = await Promise.all([
+      this.entryRepo.aggregateSettleSummary(drawId),
       this.entryRepo.aggregateRevenueByTenant(drawId),
-      this.entryRepo.aggregateSettledPayoutSummary(drawId),
-      this.entryRepo.countLinesByDrawId(drawId),
     ]);
 
     // ── BƯỚC 2: Tính tài chính kỳ quay ──
@@ -105,7 +113,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     //   (công ty chịu lỗ, Jackpot không nhận đóng góp)
     const financialInput: DrawFinancialInput = {
       totalRevenue: tenantAgg.reduce((sum, t) => sum + t.revenue, 0),
-      totalFixedPrizes: payoutSummary.totalFixedPrizes,
+      totalFixedPrizes: settleSummary.totalFixedPrizes,
       tenantRevenues: tenantAgg.map((t) => ({
         tenantId: t.tenantId,
         revenue: t.revenue,
@@ -118,7 +126,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
 
     // ── BƯỚC 3: Kiểm tra có ai trúng Jackpot không ──
     // jackpotWinnerCount: đếm số entries có tier = "jackpot" (5 main + special)
-    const jackpotWinnerCount = payoutSummary.tierWinnerCounts[PrizeTier.Jackpot] ?? 0;
+    const jackpotWinnerCount = settleSummary.tierWinnerCounts[PrizeTier.Jackpot] ?? 0;
     const hasJackpotWinner = jackpotWinnerCount > 0;
 
     // ── BƯỚC 4: Tính split distribution (chỉ khi isSplitCycle VÀ không có JP winner) ──
@@ -129,7 +137,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     if (isSplitCycle && !hasJackpotWinner) {
       // Đếm winner theo tier (bỏ qua Jackpot và Consolation)
       const winnerCountPerTier = new Map<PrizeTier, number>();
-      for (const [tierStr, count] of Object.entries(payoutSummary.tierWinnerCounts)) {
+      for (const [tierStr, count] of Object.entries(settleSummary.tierWinnerCounts)) {
         if (tierStr === PrizeTier.Jackpot || tierStr === PrizeTier.Consolation) continue;
         if (count > 0) winnerCountPerTier.set(tierStr as PrizeTier, count);
       }
@@ -162,17 +170,16 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     }
 
     // ── BƯỚC 5: Tính Jackpot cuối kỳ ──
-    // Reset khi có winner Jackpot hoặc split thực tế (có người thắng tier1-tier5).
-    // Contribution kỳ này đã tính vào giải thưởng winner → không cộng vào cycle mới.
+    // Reset khi có winner Jackpot hoặc split thực tế (có người thắng tier1-tier5):
+    //   → closingJackpot = seedAmount (contribution kỳ này đã tính vào giải thưởng).
+    // Không reset: tích luỹ bình thường:
+    //   → closingJackpot = openingAmount + contribution.
     const splitExecuted = isSplitCycle && splitDetails != null;
     const shouldResetJackpot = hasJackpotWinner || splitExecuted;
 
-    const closingJackpot = calculateClosingJackpot(
-      jackpotOpeningAmount,
-      fin.jackpotContribution,
-      shouldResetJackpot,
-      config.seedAmount,
-    );
+    const closingJackpot = shouldResetJackpot
+      ? config.seedAmount
+      : jackpotOpeningAmount + fin.jackpotContribution;
 
     // ── BƯỚC 6: Ghi financial + stats vào draw document (idempotent overwrite) ──
     await this.drawRepo.updateSettleResult(
@@ -187,10 +194,10 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
         jackpotContribution: fin.jackpotContribution,
       },
       {
-        ticketEntryCount: payoutSummary.totalSettled,
-        totalLineCount: totalLines,
+        ticketEntryCount: settleSummary.totalSettled,
+        totalLineCount: settleSummary.totalLines,
         totalSalesAmount: fin.totalRevenue,
-        totalPayoutAmount: payoutSummary.totalPayoutAmount,
+        totalPayoutAmount: settleSummary.totalPayoutAmount,
       },
     );
 

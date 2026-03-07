@@ -31,33 +31,45 @@ export interface DrawDocBase {
   drawTime: Date;
   status: string;
   sales: { openAt?: Date; closeAt: Date };
-  financial?: {
-    totalRevenue: number;
-    totalFixedPrizes: number;
-    totalAgentCommission: number;
-    companyTake: number;
-    companyTakeRate: number;
-    companyTakeMax: number;
-  };
-  stats?: {
-    ticketEntryCount: number;
-    totalLineCount: number;
-    totalSalesAmount: number;
-    totalPayoutAmount: number;
-  };
-  voidInfo?: { reason: string; voidedBy?: string; voidedAt: Date };
-  voidSummary?: {
-    totalVoidedEntries: number;
-    totalOriginalAmount: number;
-    totalRefundAmount: number;
-    totalRefundDispatched?: number;
-    completedAt?: Date;
-  };
+  financial?: DrawDocBaseFinancial;
+  stats?: DrawDocBaseStats;
+  voidInfo?: DrawDocBaseVoidInfo;
+  voidSummary?: DrawDocBaseVoidSummary;
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;
     drawSession: number | string;
   };
+}
+
+export interface DrawDocBaseFinancial {
+  totalRevenue: number;
+  totalFixedPrizes: number;
+  totalAgentCommission: number;
+  companyTake: number;
+  companyTakeRate: number;
+  companyTakeMax: number;
+}
+
+export interface DrawDocBaseStats {
+  ticketEntryCount: number;
+  totalLineCount: number;
+  totalSalesAmount: number;
+  totalPayoutAmount: number;
+}
+
+export interface DrawDocBaseVoidInfo {
+  reason: string;
+  voidedBy?: string;
+  voidedAt: Date;
+}
+
+export interface DrawDocBaseVoidSummary {
+  totalVoidedEntries: number;
+  totalOriginalAmount: number;
+  totalRefundAmount: number;
+  totalRefundDispatched?: number;
+  completedAt?: Date;
 }
 
 export abstract class AbstractDrawRepository<
@@ -110,7 +122,12 @@ export abstract class AbstractDrawRepository<
 
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
-      { $set: { status: toStatus, updatedAt: new Date() } },
+      {
+        $set: {
+          status: toStatus,
+          updatedAt: new Date(),
+        },
+      },
       { returnDocument: "after" },
     );
   }
@@ -123,7 +140,13 @@ export abstract class AbstractDrawRepository<
     const now = new Date();
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Settling },
-      { $set: { status: DrawStatus.Settled, settledAt: now, updatedAt: now } },
+      {
+        $set: {
+          status: DrawStatus.Settled,
+          settledAt: now,
+          updatedAt: now,
+        },
+      },
       { returnDocument: "after" },
     );
   }
@@ -188,17 +211,21 @@ export abstract class AbstractDrawRepository<
   }
 
   /** Hoàn tất void: voiding → void + stamp voidedAt + ghi voidSummary. Atomic, idempotent. */
-  async voidComplete(
-    drawId: string,
-    voidSummary: NonNullable<DrawDocBase["voidSummary"]>,
-  ): Promise<TEntity | null> {
+  async voidComplete(drawId: string, voidSummary: DrawDocBaseVoidSummary): Promise<TEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Voiding];
     if (!allowed?.has(DrawStatus.Void)) return null;
 
     const now = new Date();
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Voiding },
-      { $set: { status: DrawStatus.Void, voidSummary, voidedAt: now, updatedAt: now } },
+      {
+        $set: {
+          status: DrawStatus.Void,
+          voidSummary,
+          voidedAt: now,
+          updatedAt: now,
+        },
+      },
       { returnDocument: "after" },
     );
   }
@@ -244,10 +271,19 @@ export abstract class AbstractDrawRepository<
 
   async updateSettleResult(
     drawId: string,
-    financial: NonNullable<DrawDocBase["financial"]>,
-    stats: NonNullable<DrawDocBase["stats"]>,
+    financial: DrawDocBaseFinancial,
+    stats: DrawDocBaseStats,
   ): Promise<boolean> {
-    return await this.updateOne({ drawId }, { $set: { financial, stats, updatedAt: new Date() } });
+    return await this.updateOne(
+      { drawId },
+      {
+        $set: {
+          financial,
+          stats,
+          updatedAt: new Date(),
+        },
+      },
+    );
   }
 
   async getLatestDraw(): Promise<TEntity | null> {
@@ -283,13 +319,15 @@ export abstract class AbstractDrawRepository<
     );
   }
 
-  async updateVoidSummary(
-    drawId: string,
-    summary: NonNullable<DrawDocBase["voidSummary"]>,
-  ): Promise<boolean> {
+  async updateVoidSummary(drawId: string, summary: DrawDocBaseVoidSummary): Promise<boolean> {
     return await this.updateOne(
       { drawId },
-      { $set: { voidSummary: summary, updatedAt: new Date() } },
+      {
+        $set: {
+          voidSummary: summary,
+          updatedAt: new Date(),
+        },
+      },
     );
   }
 
@@ -326,11 +364,16 @@ export abstract class AbstractDrawRepository<
     return await this.count({ status });
   }
 
-  async updateVoidInfo(
-    drawId: string,
-    voidInfo: NonNullable<DrawDocBase["voidInfo"]>,
-  ): Promise<boolean> {
-    return await this.updateOne({ drawId }, { $set: { voidInfo, updatedAt: new Date() } });
+  async updateVoidInfo(drawId: string, voidInfo: DrawDocBaseVoidInfo): Promise<boolean> {
+    return await this.updateOne(
+      { drawId },
+      {
+        $set: {
+          voidInfo,
+          updatedAt: new Date(),
+        },
+      },
+    );
   }
 }
 

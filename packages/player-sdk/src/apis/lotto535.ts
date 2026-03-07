@@ -12,6 +12,7 @@ import type {
   Lotto535DrawInfo,
   Lotto535TicketSummary,
   Lotto535EntryResult,
+  Lotto535GameConfigResponse,
 } from "../lotto535";
 import { ENDPOINTS } from "../endpoints";
 
@@ -261,6 +262,35 @@ export interface Lotto535EntryLinesResponse {
  */
 export interface Lotto535Api {
   /**
+   * Lấy cấu hình game Lotto 5/35 cho player.
+   *
+   * Trả về luật chơi, bảng giải thưởng, thông tin Jackpot,
+   * và trạng thái tenant (có được phép chơi không).
+   * Gọi 1 lần khi khởi động để cache lại cho frontend.
+   *
+   * **Endpoint:** `GET /games/lotto535/config`
+   *
+   * @returns Cấu hình đầy đủ để render UI game Lotto 5/35
+   *
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * const config = await client.lotto535.getGameConfig();
+   *
+   * if (!config.tenant.isEnabled) {
+   *   showDisabledMessage();
+   *   return;
+   * }
+   *
+   * console.log(config.game.unitPrice);          // 10000
+   * console.log(config.prizes.tier1);            // 10000000
+   * console.log(config.jackpot.splitThreshold);  // 12000000000
+   * ```
+   */
+  getGameConfig(): Promise<Lotto535GameConfigResponse>;
+
+  /**
    * Lấy kỳ quay Lotto 5/35 hiện tại.
    *
    * Trả về kỳ quay đang mở bán (currentDraw) và tất cả kỳ active.
@@ -507,6 +537,10 @@ export interface Lotto535Api {
 /** @internal */
 export function createLotto535Api(http: HttpClient): Lotto535Api {
   return {
+    async getGameConfig(): Promise<Lotto535GameConfigResponse> {
+      return http.get<Lotto535GameConfigResponse>(ENDPOINTS.lotto535.getGameConfig);
+    },
+
     async getCurrentDraw(): Promise<Lotto535CurrentDrawResponse> {
       return http.get<Lotto535CurrentDrawResponse>(ENDPOINTS.lotto535.getCurrentDraw);
     },

@@ -31,12 +31,11 @@ import type {
   EntryBoardSnapshot,
   Max3dPrizeConfig,
   Triplet,
+  BasicPrizeTier,
+  PlusPrizeTier,
 } from "@megawin/game-max3d/entities";
 import type { Max3dDrawResult as EntityDrawResult } from "@megawin/game-max3d/entities";
-import {
-  matchBoard,
-  type BoardMatchResult,
-} from "@megawin/game-max3d/rules/prize-tiers";
+import { matchBoard, type BoardMatchResult } from "@megawin/game-max3d/rules/prize-tiers";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
@@ -57,21 +56,12 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   private readonly ticketRepo = new TicketRepository();
   private readonly lineRepo = new LineRepository();
 
-  protected async execute(
-    input: SettleContext
-  ): Promise<SettleEntriesBatchResult> {
+  protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
     const { drawId, result, prizeConfig } = input;
     const drawResult: EntityDrawResult = {
       special: result.special as [Triplet, Triplet],
       first: result.first as [Triplet, Triplet, Triplet, Triplet],
-      second: result.second as [
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-      ],
+      second: result.second as [Triplet, Triplet, Triplet, Triplet, Triplet, Triplet],
       third: result.third as [
         Triplet,
         Triplet,
@@ -88,10 +78,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     const startTime = Date.now();
 
     while (Date.now() - startTime < MAX_EXECUTION_MS) {
-      const entries = await this.entryRepo.getScheduledEntries(
-        drawId,
-        BATCH_SIZE
-      );
+      const entries = await this.entryRepo.getScheduledEntries(drawId, BATCH_SIZE);
 
       if (entries.length === 0) {
         return { done: true };
@@ -104,13 +91,13 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           winAmount: number;
           payoutAmount: number;
           tiers: Array<{
-            tier: string;
+            tier: BasicPrizeTier | PlusPrizeTier;
             hitCount: number;
             unitAmount: number;
             amount: number;
           }>;
           settledAt: Date;
-          payoutStatus?: string;
+          payoutStatus?: PayoutStatus;
         };
         outcome: string;
         result: {
@@ -131,9 +118,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           if (ticket) ticketCache.set(ticketId, ticket);
         }
         if (!ticket) {
-          console.error(
-            `Ticket ${ticketId} not found for entry ${entry.id}, skipping.`
-          );
+          console.error(`Ticket ${ticketId} not found for entry ${entry.id}, skipping.`);
           continue;
         }
 
@@ -154,7 +139,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               triplets: board.triplets,
             },
             drawResult,
-            prizeConfig
+            prizeConfig,
           );
 
           boardResults.push(boardMatch);
@@ -224,7 +209,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 // ─────────────────────────────────────────────
 
 function buildPayoutTiers(boardResults: BoardMatchResult[]): Array<{
-  tier: string;
+  tier: BasicPrizeTier | PlusPrizeTier;
   hitCount: number;
   unitAmount: number;
   amount: number;
@@ -246,7 +231,7 @@ function buildPayoutTiers(boardResults: BoardMatchResult[]): Array<{
   }
 
   const tiers: Array<{
-    tier: string;
+    tier: BasicPrizeTier | PlusPrizeTier;
     hitCount: number;
     unitAmount: number;
     amount: number;
@@ -254,10 +239,9 @@ function buildPayoutTiers(boardResults: BoardMatchResult[]): Array<{
 
   for (const [tier, info] of tierMap) {
     tiers.push({
-      tier,
+      tier: tier as BasicPrizeTier | PlusPrizeTier,
       hitCount: info.hitCount,
-      unitAmount:
-        info.hitCount > 0 ? Math.round(info.totalAmount / info.hitCount) : 0,
+      unitAmount: info.hitCount > 0 ? Math.round(info.totalAmount / info.hitCount) : 0,
       amount: info.totalAmount,
     });
   }

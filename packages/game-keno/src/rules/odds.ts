@@ -236,15 +236,10 @@ function matchWays(k: number, m: number): bigint {
 /**
  * Tính xác suất cho tất cả mức thưởng có giải của 1 bậc chơi.
  */
-export function getOddsForPick(
-  pickCount: number,
-  matchCounts: number[]
-): KenoTierOdds[] {
+export function getOddsForPick(pickCount: number, matchCounts: number[]): KenoTierOdds[] {
   return matchCounts.map((matchCount) => {
     const waysBig = matchWays(pickCount, matchCount);
-    const probability =
-      Number((waysBig * 1_000_000_000_000n) / TOTAL_OUTCOMES) /
-      1_000_000_000_000;
+    const probability = Number((waysBig * 1_000_000_000_000n) / TOTAL_OUTCOMES) / 1_000_000_000_000;
     const oneInN = probability > 0 ? 1 / probability : Infinity;
     return { pickCount, matchCount, waysBig, probability, oneInN };
   });
@@ -301,10 +296,7 @@ export interface SideBetOdds {
 
 function sideBetWays(favorableCount: number): bigint {
   const half = KENO_BIG_SMALL_BOUNDARY; // 40
-  return (
-    combinationBig(half, favorableCount) *
-    combinationBig(half, DRAW - favorableCount)
-  );
+  return combinationBig(half, favorableCount) * combinationBig(half, DRAW - favorableCount);
 }
 
 /**
@@ -333,8 +325,7 @@ export function getBigSmallOdds(): {
   const waysDraw = sideBetWays(10);
 
   const toOdds = (label: string, count: string, w: bigint): SideBetOdds => {
-    const prob =
-      Number((w * 1_000_000_000_000n) / TOTAL_OUTCOMES) / 1_000_000_000_000;
+    const prob = Number((w * 1_000_000_000_000n) / TOTAL_OUTCOMES) / 1_000_000_000_000;
     return {
       label,
       count,
@@ -377,8 +368,7 @@ export function getEvenOddOdds(): {
   const waysDraw = sideBetWays(10);
 
   const toOdds = (label: string, count: string, w: bigint): SideBetOdds => {
-    const prob =
-      Number((w * 1_000_000_000_000n) / TOTAL_OUTCOMES) / 1_000_000_000_000;
+    const prob = Number((w * 1_000_000_000_000n) / TOTAL_OUTCOMES) / 1_000_000_000_000;
     return {
       label,
       count,
@@ -438,18 +428,17 @@ export interface PickProfitSummary {
  */
 export function analyzeProfitabilityForPick(
   pickCount: number,
-  prizes: Record<number, number>,
-  unitPrice: number
+  prizes: Record<string, number>,
+  unitPrice: number,
 ): PickProfitSummary {
   const matchCounts = PICK_MATCH_COUNTS[pickCount] ?? [];
   const odds = getOddsForPick(pickCount, matchCounts);
 
   const tiers: TierProfitAnalysis[] = odds.map((o) => {
-    const currentPrize = prizes[o.matchCount] ?? 0;
+    const currentPrize = prizes[String(o.matchCount)] ?? 0;
     const expectedPayout = o.probability * currentPrize;
     const payoutRatio = unitPrice > 0 ? expectedPayout / unitPrice : 0;
-    const breakEvenPrize =
-      o.probability > 0 ? unitPrice / o.probability : Infinity;
+    const breakEvenPrize = o.probability > 0 ? unitPrice / o.probability : Infinity;
 
     return {
       pickCount: o.pickCount,
@@ -466,8 +455,7 @@ export function analyzeProfitabilityForPick(
   const totalExpectedPayout = tiers.reduce((s, t) => s + t.expectedPayout, 0);
   const totalPayoutRatio = unitPrice > 0 ? totalExpectedPayout / unitPrice : 0;
   const grossMarginPerTicket = unitPrice - totalExpectedPayout;
-  const grossMarginPercent =
-    unitPrice > 0 ? (grossMarginPerTicket / unitPrice) * 100 : 0;
+  const grossMarginPercent = unitPrice > 0 ? (grossMarginPerTicket / unitPrice) * 100 : 0;
 
   return {
     pickCount,
@@ -487,8 +475,8 @@ export function analyzeProfitabilityForPick(
  * @param unitPrice - Mệnh giá (VND)
  */
 export function analyzeAllPicksProfitability(
-  basicPrizes: Record<string, Record<number, number>>,
-  unitPrice: number
+  basicPrizes: Record<string, Record<string, number>>,
+  unitPrice: number,
 ): PickProfitSummary[] {
   const summaries: PickProfitSummary[] = [];
   for (let pick = KENO_PICK_MIN; pick <= KENO_PICK_MAX; pick++) {
@@ -520,7 +508,7 @@ export function analyzeBigSmallProfitability(
     small1112: number;
     small13Plus: number;
   },
-  unitPrice: number
+  unitPrice: number,
 ): {
   tiers: SideBetProfitAnalysis[];
   totalExpectedPayout: number;
@@ -529,11 +517,7 @@ export function analyzeBigSmallProfitability(
 } {
   const odds = getBigSmallOdds();
 
-  const analyze = (
-    label: string,
-    prob: number,
-    prize: number
-  ): SideBetProfitAnalysis => ({
+  const analyze = (label: string, prob: number, prize: number): SideBetProfitAnalysis => ({
     label,
     probability: prob,
     oneInN: prob > 0 ? 1 / prob : Infinity,
@@ -574,7 +558,7 @@ export function analyzeEvenOddProfitability(
     odd1314: number;
     odd15Plus: number;
   },
-  unitPrice: number
+  unitPrice: number,
 ): {
   tiers: SideBetProfitAnalysis[];
   totalExpectedPayout: number;
@@ -583,11 +567,7 @@ export function analyzeEvenOddProfitability(
 } {
   const odds = getEvenOddOdds();
 
-  const analyze = (
-    label: string,
-    prob: number,
-    prize: number
-  ): SideBetProfitAnalysis => ({
+  const analyze = (label: string, prob: number, prize: number): SideBetProfitAnalysis => ({
     label,
     probability: prob,
     oneInN: prob > 0 ? 1 / prob : Infinity,

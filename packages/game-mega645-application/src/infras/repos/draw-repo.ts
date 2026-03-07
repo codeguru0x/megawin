@@ -15,7 +15,15 @@
 
 import { Mega645Collections } from "@megawin/game-mega645/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { DrawDoc, DrawSplit, MainTuple, ISODateString } from "@megawin/game-mega645/entities";
+import type {
+  DrawDoc,
+  DrawSplit,
+  DrawJackpotSnapshot,
+  DrawFinancial,
+  DrawStats,
+  MainTuple,
+  ISODateString,
+} from "@megawin/game-mega645/entities";
 import { BaseRepo } from "./base-repo";
 import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
 
@@ -104,30 +112,43 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
-      { $set: { status: toStatus, updatedAt: new Date() } },
+      {
+        $set: {
+          status: toStatus,
+          updatedAt: new Date(),
+        },
+      },
       { returnDocument: "after" },
     );
   }
 
   /**
    * Chuyển draw settling → settled + ghi jackpot snapshot.
-   * Atomic, idempotent. Gộp transition + jackpot vào 1 query.
+   * Dùng dot notation để chỉ cập nhật các field cần thiết,
+   * tránh overwrite jackpot.split đã set bởi triggerSettle().
    */
   async settleComplete(
     drawId: string,
-    jackpot: {
-      openingAmount: number;
-      closingAmount: number;
-      isSplitCycle?: boolean;
-    },
+    jackpot: Pick<DrawJackpotSnapshot, "openingAmount" | "closingAmount" | "isSplitCycle">,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Settling];
     if (!allowed?.has(DrawStatus.Settled)) return null;
 
     const now = new Date();
+    const $set: Record<string, unknown> = {
+      status: DrawStatus.Settled,
+      "jackpot.openingAmount": jackpot.openingAmount,
+      "jackpot.closingAmount": jackpot.closingAmount,
+      settledAt: now,
+      updatedAt: now,
+    };
+    if (jackpot.isSplitCycle !== undefined) {
+      $set["jackpot.isSplitCycle"] = jackpot.isSplitCycle;
+    }
+
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Settling },
-      { $set: { status: DrawStatus.Settled, jackpot, settledAt: now, updatedAt: now } },
+      { $set },
       { returnDocument: "after" },
     );
   }
@@ -217,7 +238,14 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     const now = new Date();
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Voiding },
-      { $set: { status: DrawStatus.Void, voidSummary, voidedAt: now, updatedAt: now } },
+      {
+        $set: {
+          status: DrawStatus.Void,
+          voidSummary,
+          voidedAt: now,
+          updatedAt: now,
+        },
+      },
       { returnDocument: "after" },
     );
   }
@@ -282,10 +310,19 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   async updateSettleResult(
     drawId: string,
-    financial: NonNullable<DrawDoc["financial"]>,
-    stats: NonNullable<DrawDoc["stats"]>,
+    financial: DrawFinancial,
+    stats: DrawStats,
   ): Promise<boolean> {
-    return await this.updateOne({ drawId }, { $set: { financial, stats, updatedAt: new Date() } });
+    return await this.updateOne(
+      { drawId },
+      {
+        $set: {
+          financial,
+          stats,
+          updatedAt: new Date(),
+        },
+      },
+    );
   }
 
   async getLatestDraw(): Promise<DrawEntity | null> {
@@ -357,7 +394,12 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   ): Promise<boolean> {
     return await this.updateOne(
       { drawId },
-      { $set: { voidSummary: summary, updatedAt: new Date() } },
+      {
+        $set: {
+          voidSummary: summary,
+          updatedAt: new Date(),
+        },
+      },
     );
   }
 

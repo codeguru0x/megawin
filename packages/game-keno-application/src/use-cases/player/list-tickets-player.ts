@@ -21,20 +21,17 @@ export class ListTicketsPlayerUseCase extends ApiGatewayUseCase<
 > {
   private readonly ticketRepo = new TicketRepository();
 
-  protected async execute(
-    input: PlayerListTicketsInput
-  ): Promise<PlayerListTicketsOutput> {
+  protected async execute(input: PlayerListTicketsInput): Promise<PlayerListTicketsOutput> {
     const { tenantId, accountId, size, from, to, cursor } = input;
 
     const fromUtc = from ? toVNStartOfDay(from) : undefined;
     const toUtc = to ? toVNEndOfDay(to) : undefined;
 
-    const tickets = await this.ticketRepo.getTickets(
-      tenantId,
-      accountId,
-      size + 1,
-      { from: fromUtc, to: toUtc, cursor }
-    );
+    const tickets = await this.ticketRepo.getTickets(tenantId, accountId, size + 1, {
+      from: fromUtc,
+      to: toUtc,
+      cursor,
+    });
 
     const hasMore = tickets.length > size;
     const slice = hasMore ? tickets.slice(0, size) : tickets;
@@ -76,7 +73,19 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
       settledDraws: ticket.progress.settledDraws,
     },
     settlement: ticket.settlement
-      ? { totalWinAmount: ticket.settlement.totalWinAmount }
+      ? {
+          totalWinAmount: ticket.settlement.totalWinAmount,
+          lastSettledAt: ticket.settlement.lastSettledAt?.toISOString(),
+        }
+      : undefined,
+    voidSummary: ticket.voidSummary
+      ? {
+          totalVoidedAmount: ticket.voidSummary.totalVoidedAmount,
+          totalRefundedAmount: ticket.voidSummary.totalRefundedAmount,
+          voidedDrawCount: ticket.voidSummary.voidedDrawCount,
+          voidedDrawIds: ticket.voidSummary.voidedDrawIds,
+          lastVoidedAt: ticket.voidSummary.lastVoidedAt?.toISOString(),
+        }
       : undefined,
     createdAt: ticket.createdAt.toISOString(),
   };

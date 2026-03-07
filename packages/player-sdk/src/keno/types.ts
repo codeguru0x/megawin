@@ -287,7 +287,10 @@ export interface KenoCurrentDrawResponse {
  * const { tickets } = await client.keno.listPendingTickets();
  * for (const ticket of tickets) {
  *   console.log(`${ticket.ticketNo}: ${ticket.pricing.totalAmount} VND`);
- *   console.log(`Tiến độ: ${ticket.progress.settledDraws}/${ticket.progress.totalDraws}`);
+ *   const settled = ticket.progress.settledDraws;
+ *   const total = ticket.progress.totalDraws;
+ *   const voided = ticket.voidSummary?.voidedDrawCount ?? 0;
+ *   console.log(`Tiến độ: ${settled}/${total} (${voided} kỳ void)`);
  * }
  * ```
  */
@@ -324,18 +327,51 @@ export interface KenoTicketSummary {
   /** Danh sách side bets. */
   sideBets: KenoSideBetSummary[];
 
-  /** Tiến độ settle. */
+  /**
+   * Tiến độ settle.
+   * settledDraws = số kỳ đã xử lý xong (settled + voided).
+   * Để biết bao nhiêu kỳ voided, xem voidSummary.voidedDrawCount.
+   */
   progress: {
     /** Tổng số kỳ quay. */
     totalDraws: number;
-    /** Số kỳ đã settle. */
+    /** Số kỳ đã xử lý xong (settled + voided). */
     settledDraws: number;
   };
 
   /** Thông tin trả thưởng tổng. `undefined` nếu chưa có kỳ nào settle. */
   settlement?: {
-    /** Tổng tiền thắng toàn vé (VND). */
+    /** Tổng tiền thắng cộng dồn toàn vé (VND). */
     totalWinAmount: number;
+    /** Thời điểm kỳ gần nhất được settle (ISO 8601). */
+    lastSettledAt?: string;
+  };
+
+  /**
+   * Tóm tắt huỷ cược. `undefined` nếu không có kỳ nào bị void.
+   * Multi-draw: hoàn tiền một phần.
+   * Single-draw bị void: hoàn toàn bộ, status = "refunded".
+   *
+   * @example
+   * ```ts
+   * if (ticket.voidSummary) {
+   *   console.log(`${ticket.voidSummary.voidedDrawCount} kỳ bị huỷ`);
+   *   console.log(`Đã hoàn: ${ticket.voidSummary.totalRefundedAmount} VND`);
+   *   console.log(`Kỳ bị huỷ:`, ticket.voidSummary.voidedDrawIds);
+   * }
+   * ```
+   */
+  voidSummary?: {
+    /** Tổng tiền cược gốc của các kỳ bị huỷ (VND). */
+    totalVoidedAmount: number;
+    /** Tổng tiền đã hoàn trả cho player (VND). */
+    totalRefundedAmount: number;
+    /** Số kỳ đã bị huỷ. */
+    voidedDrawCount: number;
+    /** Danh sách drawId của các kỳ đã bị huỷ. */
+    voidedDrawIds: string[];
+    /** Thời điểm kỳ gần nhất bị huỷ (ISO 8601). */
+    lastVoidedAt?: string;
   };
 
   /** Thời điểm mua vé (ISO 8601). */
@@ -584,8 +620,163 @@ export interface KenoPlaceBetResponse {
 }
 
 // ─────────────────────────────────────────────
-// Prize Table
+// Response Types — Game Config
 // ─────────────────────────────────────────────
+
+/**
+ * Luật chơi game Keno.
+ */
+export interface KenoGameRules {
+  /** Mệnh giá 1 lần tham gia (VND). VD: 10000. */
+  unitPrice: number;
+  /** Số panel cơ bản tối đa / vé. VD: 2 (A, B). */
+  maxBasicBoardsPerTicket: number;
+  /** Số kỳ liên tiếp tối đa. VD: 20. */
+  maxDrawCount: number;
+  /** Khoảng cách giữa các kỳ quay (phút). VD: 10. */
+  drawIntervalMinutes: number;
+  /** Giờ bắt đầu quay. VD: "06:00". */
+  firstDrawTime: string;
+  /** Giờ kết thúc quay (kỳ cuối). VD: "21:55". */
+  lastDrawTime: string;
+  /** Timezone vận hành. VD: "Asia/Ho_Chi_Minh". */
+  timezone: string;
+}
+
+/**
+ * Bảng giải thưởng cơ bản Keno.
+ *
+ * Truy cập: `basic[pickCount][matchCount]` = tiền thưởng (VND).
+ *
+ * @example
+ * ```ts
+ * config.prizes.basic[5][3]; // giải pick5 trùng 3 số
+ * config.prizes.basic[10][10]; // giải pick10 trùng 10 số (jackpot)
+ * ```
+ */
+export type KenoBasicPrizesConfig = Record<number, Record<number, number>>;
+
+/**
+ * Bảng giải thưởng Lớn/Nhỏ.
+ */
+export interface KenoBigSmallPrizesConfig {
+  /** >= 13 số lớn (41-80). */
+  big13Plus: number;
+  /** 11 hoặc 12 số lớn. */
+  big1112: number;
+  /** Hòa (10 lớn + 10 nhỏ). */
+  draw: number;
+  /** 11 hoặc 12 số nhỏ. */
+  small1112: number;
+  /** >= 13 số nhỏ (1-40). */
+  small13Plus: number;
+}
+
+/**
+ * Bảng giải thưởng Chẵn/Lẻ.
+ */
+export interface KenoEvenOddPrizesConfig {
+  /** >= 15 số chẵn. */
+  even15Plus: number;
+  /** 13 hoặc 14 số chẵn. */
+  even1314: number;
+  /** 11 hoặc 12 số chẵn. */
+  even1112: number;
+  /** Hòa (10 chẵn + 10 lẻ). */
+  draw: number;
+  /** 11 hoặc 12 số lẻ. */
+  odd1112: number;
+  /** 13 hoặc 14 số lẻ. */
+  odd1314: number;
+  /** >= 15 số lẻ. */
+  odd15Plus: number;
+}
+
+/**
+ * Toàn bộ bảng giải thưởng Keno.
+ */
+export interface KenoPrizesConfig {
+  /**
+   * Giải cơ bản: `basic[pickCount][matchCount]` = VND.
+   *
+   * pickCount: 1-10 (số ô đã chọn).
+   * matchCount: 0-pickCount (số trùng với kết quả quay).
+   */
+  basic: KenoBasicPrizesConfig;
+  /** Giải Lớn/Nhỏ. */
+  bigSmall: KenoBigSmallPrizesConfig;
+  /** Giải Chẵn/Lẻ. */
+  evenOdd: KenoEvenOddPrizesConfig;
+}
+
+/**
+ * Giới hạn trả thưởng mỗi kỳ quay (payout caps).
+ *
+ * Keno giới hạn tổng trả thưởng tối đa 10 tỷ VND/kỳ cho bậc 8, 9, 10.
+ * Khi số bộ trúng vượt ngưỡng `MaxSetsForFixed`, chia đều `MaxPerDraw`.
+ */
+export interface KenoPayoutCapsConfig {
+  /** Pick 8: giới hạn tổng (VND). */
+  pick8MaxPerDraw: number;
+  /** Pick 8: số bộ tối đa nhận giải cố định. */
+  pick8MaxSetsForFixed: number;
+  /** Pick 9: giới hạn tổng (VND). */
+  pick9MaxPerDraw: number;
+  /** Pick 9: số bộ tối đa nhận giải cố định. */
+  pick9MaxSetsForFixed: number;
+  /** Pick 10: giới hạn tổng (VND). */
+  pick10MaxPerDraw: number;
+  /** Pick 10: số bộ tối đa nhận giải cố định. */
+  pick10MaxSetsForFixed: number;
+}
+
+/**
+ * Cấu hình theo tenant.
+ */
+export interface KenoTenantConfig {
+  /** Tenant này có được phép chơi game Keno không. */
+  isEnabled: boolean;
+}
+
+/**
+ * Response từ `GET /games/keno/config`.
+ *
+ * Chứa toàn bộ cấu hình game cần thiết cho frontend:
+ * - Luật chơi (mệnh giá, số panel, số kỳ tối đa...)
+ * - Bảng giải thưởng (cơ bản, Lớn/Nhỏ, Chẵn/Lẻ)
+ * - Giới hạn trả thưởng bậc 8/9/10
+ * - Cấu hình tenant (có được phép chơi không)
+ *
+ * @example
+ * ```ts
+ * const config = await client.keno.getGameConfig();
+ *
+ * // Kiểm tra tenant có được phép chơi không
+ * if (!config.tenant.isEnabled) {
+ *   showDisabledMessage();
+ *   return;
+ * }
+ *
+ * // Hiển thị mệnh giá
+ * console.log("Mệnh giá:", config.game.unitPrice); // 10000
+ *
+ * // Tra bảng giải thưởng: pick5, trùng 3 số
+ * console.log("Giải pick5/match3:", config.prizes.basic[5][3]);
+ *
+ * // Giới hạn số kỳ liên tiếp
+ * console.log("Tối đa kỳ:", config.game.maxDrawCount); // 20
+ * ```
+ */
+export interface KenoGameConfigResponse {
+  /** Luật chơi. */
+  game: KenoGameRules;
+  /** Bảng giải thưởng. */
+  prizes: KenoPrizesConfig;
+  /** Giới hạn trả thưởng mỗi kỳ. */
+  payoutCaps: KenoPayoutCapsConfig;
+  /** Cấu hình theo tenant. */
+  tenant: KenoTenantConfig;
+}
 
 /**
  * Bảng giải thưởng Keno (cho trang hướng dẫn chơi).

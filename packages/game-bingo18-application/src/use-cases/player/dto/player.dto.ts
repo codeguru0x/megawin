@@ -156,17 +156,38 @@ export interface PlayerTicketSummary {
     /** Lựa chọn Tài/Xỉu/Hoà (big | small | draw). Áp dụng cho bigSmallDraw. */
     bet?: string;
   }>;
-  /** Tiến độ settle. */
+  /**
+   * Tiến độ settle. settledDraws = số kỳ đã xử lý xong (settled + voided).
+   * Để biết cụ thể bao nhiêu kỳ voided, xem voidSummary.voidedDrawCount.
+   */
   progress: {
     /** Tổng số kỳ đã đăng ký. */
     totalDraws: number;
-    /** Số kỳ đã settle xong. */
+    /** Số kỳ đã xử lý xong (settled + voided). */
     settledDraws: number;
   };
-  /** Tổng kết trả thưởng (chỉ có sau khi settle xong). */
+  /** Tổng kết trả thưởng. Undefined nếu chưa có kỳ nào settle. */
   settlement?: {
-    /** Tổng tiền thắng (VND) = Σ(entry.winAmount) qua tất cả kỳ. */
+    /** Tổng tiền thắng cộng dồn (VND) = Σ(entry.winAmount) qua tất cả kỳ settle. */
     totalWinAmount: number;
+    /** Thời điểm kỳ gần nhất được settle (ISO 8601). */
+    lastSettledAt?: string;
+  };
+  /**
+   * Tóm tắt huỷ cược. Có khi ít nhất 1 kỳ bị void.
+   * Multi-draw: hoàn tiền một phần. Single-draw: hoàn toàn bộ → status = "refunded".
+   */
+  voidSummary?: {
+    /** Tổng tiền cược gốc của các kỳ bị huỷ (VND). */
+    totalVoidedAmount: number;
+    /** Tổng tiền đã hoàn trả cho player (VND). */
+    totalRefundedAmount: number;
+    /** Số kỳ đã bị huỷ. */
+    voidedDrawCount: number;
+    /** Danh sách drawId của các kỳ đã bị huỷ. */
+    voidedDrawIds: string[];
+    /** Thời điểm kỳ gần nhất bị huỷ (ISO 8601). */
+    lastVoidedAt?: string;
   };
   /** Thời điểm tạo vé (ISO 8601). */
   createdAt: string;

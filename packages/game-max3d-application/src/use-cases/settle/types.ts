@@ -120,23 +120,6 @@ export interface SettleFinancials {
    * Có thể âm nếu giải thưởng vượt doanh thu.
    */
   profit: number;
-
-  /**
-   * Chi tiết doanh thu theo từng tenant — dùng cho báo cáo.
-   * Mỗi tenant có: doanh thu, commission, tỷ lệ commission, số entries.
-   */
-  tenantBreakdown: Array<{
-    /** Mã tenant. */
-    tenantId: string;
-    /** Doanh thu từ tenant (VND). */
-    revenue: number;
-    /** Hoa hồng đại lý (VND). */
-    commission: number;
-    /** Tỷ lệ hoa hồng thực tế (0-1). */
-    commissionRate: number;
-    /** Số entries của tenant trong kỳ. */
-    entryCount: number;
-  }>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

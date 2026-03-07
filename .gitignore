@@ -39,5 +39,6 @@ yarn-error.log*
 # Serverless directories
 .serverless
 
-
 .pnpm-store
+
+.agents

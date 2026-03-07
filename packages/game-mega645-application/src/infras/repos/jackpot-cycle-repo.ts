@@ -1,27 +1,26 @@
+/**
+ * Mega 6/45 – Jackpot Cycle Repository
+ *
+ * Collection: mega645_jackpot_cycles
+ */
+
 import {
   Mega645Collections,
   JackpotCycleStatus,
   type JackpotCycleDoc,
   type JackpotCycleCloseReason,
+  type JackpotSplitDetail,
   type JackpotWinnerInfo,
   type SplitRatios,
 } from "@megawin/game-mega645/entities";
 import { BaseRepo } from "./base-repo";
-import {
-  JackpotCycleMapper,
-  type JackpotCycleEntity,
-} from "../mappers/jackpot-cycle-mapper";
+import { JackpotCycleMapper, type JackpotCycleEntity } from "../mappers/jackpot-cycle-mapper";
 
-const mapper = new JackpotCycleMapper();
-
-export class JackpotCycleRepository extends BaseRepo<
-  JackpotCycleEntity,
-  JackpotCycleMapper
-> {
+export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, JackpotCycleMapper> {
   constructor() {
     super({
       collName: Mega645Collections.JackpotCycles,
-      dataMapper: mapper,
+      dataMapper: new JackpotCycleMapper(),
     });
   }
 
@@ -55,7 +54,7 @@ export class JackpotCycleRepository extends BaseRepo<
       updatedAt: now,
     };
 
-    await this.insertOne(doc as any);
+    await this.insertOne(doc);
   }
 
   /**
@@ -69,9 +68,11 @@ export class JackpotCycleRepository extends BaseRepo<
     drawCount: number;
     lastSettledDrawId: string;
   }): Promise<void> {
-    const col = await this.getCollection();
-    await col.updateOne(
-      { cycleNo: input.cycleNo, status: JackpotCycleStatus.Active },
+    await this.updateOne(
+      {
+        cycleNo: input.cycleNo,
+        status: JackpotCycleStatus.Active,
+      },
       {
         $set: {
           currentAmount: input.currentAmount,
@@ -81,7 +82,7 @@ export class JackpotCycleRepository extends BaseRepo<
           updatedAt: new Date(),
         },
         $max: { peakAmount: input.currentAmount },
-      }
+      },
     );
   }
 
@@ -91,13 +92,23 @@ export class JackpotCycleRepository extends BaseRepo<
     endDrawId: string;
     closeReason: JackpotCycleCloseReason;
     finalAmount: number;
-    splitDetail?: JackpotCycleDoc["splitDetail"];
+    splitDetail?: JackpotSplitDetail;
     winners?: JackpotWinnerInfo[];
   }): Promise<void> {
-    const col = await this.getCollection();
     const now = new Date();
 
-    const $set: Record<string, unknown> = {
+    type CycleCloseSet = {
+      status: JackpotCycleDoc["status"];
+      endDrawId: string;
+      closedAt: Date;
+      closeReason: JackpotCycleCloseReason;
+      currentAmount: number;
+      updatedAt: Date;
+      splitDetail?: JackpotSplitDetail;
+      winners?: JackpotWinnerInfo[];
+    };
+
+    const $set: CycleCloseSet = {
       status: JackpotCycleStatus.Closed,
       endDrawId: input.endDrawId,
       closedAt: now,
@@ -109,20 +120,27 @@ export class JackpotCycleRepository extends BaseRepo<
     if (input.splitDetail) $set.splitDetail = input.splitDetail;
     if (input.winners) $set.winners = input.winners;
 
-    await col.updateOne(
-      { cycleNo: input.cycleNo, status: JackpotCycleStatus.Active },
-      { $set, $max: { peakAmount: input.finalAmount } }
+    await this.updateOne(
+      {
+        cycleNo: input.cycleNo,
+        status: JackpotCycleStatus.Active,
+      },
+      {
+        $set: $set as unknown as Record<string, unknown>,
+        $max: { peakAmount: input.finalAmount },
+      },
     );
   }
 
   /** Lấy danh sách cycles đã đóng (mới nhất trước). */
-  async listClosedCycles(
-    page: number,
-    size: number
-  ): Promise<JackpotCycleEntity[]> {
+  async listClosedCycles(page: number, size: number): Promise<JackpotCycleEntity[]> {
     return this.findMany(
       { status: JackpotCycleStatus.Closed },
-      { sort: { closedAt: -1 }, skip: (page - 1) * size, limit: size }
+      {
+        sort: { closedAt: -1 },
+        skip: (page - 1) * size,
+        limit: size,
+      },
     );
   }
 

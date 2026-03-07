@@ -1,5 +1,14 @@
 # Lotto 5/35 – Player endpoints
 
+lotto535-get-game-config:
+  handler: src/handlers/lotto535/get-game-config.handler
+  events:
+    - httpApi:
+        path: /games/lotto535/config
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
 lotto535-get-current-draw:
   handler: src/handlers/lotto535/get-current-draw.handler
   events:

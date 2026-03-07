@@ -9,13 +9,7 @@
 
 import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
 import type { Long } from "@megawin/game-core/types";
-import type {
-  PlayMode,
-  PlayType,
-  BasicPrizeTier,
-  PlusPrizeTier,
-  PayoutStatus,
-} from "./enums";
+import type { PlayMode, PlayType, BasicPrizeTier, PlusPrizeTier, PayoutStatus } from "./enums";
 import type { Triplet, ISODateString } from "./types";
 import type { Max3dDrawResult } from "./draw-result";
 
@@ -54,6 +48,64 @@ export interface EntryPayoutTier {
 }
 
 // ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Snapshot thông tin đại lý tại thời điểm tạo entry. */
+export interface EntryTenantSnapshot {
+  /** Tỷ lệ hoa hồng snapshot tại thời điểm tạo entry. */
+  commissionRate: number;
+  /** Số tiền hoa hồng = amount × commissionRate. */
+  commissionAmount: number;
+}
+
+/** Tóm tắt nội dung vé (boards, ticketNo). */
+export interface EntrySummary {
+  /** Mã vé hiển thị cho người chơi. */
+  ticketNo: string;
+  /** Danh sách boards snapshot khi tạo entry. */
+  boards: EntryBoardSnapshot[];
+}
+
+/** Chi tiết thanh toán thưởng. Set khi settle. */
+export interface EntryPayout {
+  /** Tổng tiền thắng = Σ(tiers[].amount). */
+  winAmount: number;
+  /** Tiền trả cho player = winAmount (Max 3D không có payout cap cho từng entry). */
+  payoutAmount: number;
+  /** Chi tiết thắng theo hạng giải. */
+  tiers: EntryPayoutTier[];
+  /** Thời điểm settle. */
+  settledAt: Date;
+  /** Trạng thái dispatch payout: pending → dispatched → confirmed. */
+  payoutStatus?: PayoutStatus;
+  /** Thời điểm dispatch payout cho ví người chơi. */
+  payoutDispatchedAt?: Date;
+  /** Thời điểm xác nhận payout thành công. */
+  payoutConfirmedAt?: Date;
+  /** Thông báo lỗi nếu payout thất bại. */
+  payoutError?: string;
+}
+
+/** Thông tin huỷ entry. Set khi void. */
+export interface EntryVoidInfo {
+  /** Số tiền gốc trước khi huỷ. */
+  originalAmount: number;
+  /** Số tiền hoàn trả cho người chơi. */
+  refundAmount: number;
+  /** Trạng thái hoàn tiền: pending → dispatched → confirmed. */
+  refundStatus: string;
+  /** Thời điểm huỷ entry. */
+  voidedAt: Date;
+  /** Thời điểm dispatch hoàn tiền. */
+  refundDispatchedAt?: Date;
+  /** Thời điểm xác nhận hoàn tiền thành công. */
+  refundConfirmedAt?: Date;
+  /** Thông báo lỗi nếu hoàn tiền thất bại. */
+  refundError?: string;
+}
+
+// ─────────────────────────────────────────────
 // Ticket Entry Document
 // ─────────────────────────────────────────────
 
@@ -79,12 +131,7 @@ export interface TicketEntryDoc {
   financialDate: ISODateString;
 
   /** Snapshot thông tin đại lý tại thời điểm tạo entry. */
-  tenantSnapshot: {
-    /** Tỷ lệ hoa hồng snapshot tại thời điểm tạo entry. */
-    commissionRate: number;
-    /** Số tiền hoa hồng = amount × commissionRate. */
-    commissionAmount: number;
-  };
+  tenantSnapshot: EntryTenantSnapshot;
 
   /** Tổng lines = Σ(board.lineCount). Mỗi line = 1 lần dự thưởng × unitPrice. */
   lineCount: number;
@@ -94,12 +141,7 @@ export interface TicketEntryDoc {
   unitPrice: number;
 
   /** Tóm tắt nội dung vé (boards, ticketNo). */
-  entrySummary: {
-    /** Mã vé hiển thị cho người chơi. */
-    ticketNo: string;
-    /** Danh sách boards snapshot khi tạo entry. */
-    boards: EntryBoardSnapshot[];
-  };
+  entrySummary: EntrySummary;
 
   /** Snapshot kết quả quay. Set khi settle. */
   result?: Max3dDrawResult & {
@@ -113,42 +155,10 @@ export interface TicketEntryDoc {
   status: EntryStatus;
 
   /** Chi tiết thanh toán. Set khi settle. */
-  payout?: {
-    /** Tổng tiền thắng = Σ(tiers[].amount). */
-    winAmount: number;
-    /** Tiền trả cho player = winAmount (Max 3D không có payout cap cho từng entry). */
-    payoutAmount: number;
-    /** Chi tiết thắng theo hạng giải. */
-    tiers: EntryPayoutTier[];
-    /** Thời điểm settle. */
-    settledAt: Date;
-    /** Trạng thái dispatch payout: pending → dispatched → confirmed. */
-    payoutStatus?: PayoutStatus;
-    /** Thời điểm dispatch payout cho ví người chơi. */
-    payoutDispatchedAt?: Date;
-    /** Thời điểm xác nhận payout thành công. */
-    payoutConfirmedAt?: Date;
-    /** Thông báo lỗi nếu payout thất bại. */
-    payoutError?: string;
-  };
+  payout?: EntryPayout;
 
   /** Thông tin huỷ entry. Set khi void. */
-  voidInfo?: {
-    /** Số tiền gốc trước khi huỷ. */
-    originalAmount: number;
-    /** Số tiền hoàn trả cho người chơi. */
-    refundAmount: number;
-    /** Trạng thái hoàn tiền: pending → dispatched → confirmed. */
-    refundStatus: string;
-    /** Thời điểm huỷ entry. */
-    voidedAt: Date;
-    /** Thời điểm dispatch hoàn tiền. */
-    refundDispatchedAt?: Date;
-    /** Thời điểm xác nhận hoàn tiền thành công. */
-    refundConfirmedAt?: Date;
-    /** Thông báo lỗi nếu hoàn tiền thất bại. */
-    refundError?: string;
-  };
+  voidInfo?: EntryVoidInfo;
 
   /** Optimistic locking version. */
   version: Long;

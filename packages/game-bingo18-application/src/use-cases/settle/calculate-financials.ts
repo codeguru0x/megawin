@@ -43,16 +43,13 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       companyRate: config.companyRate,
     });
 
-    const tenantBreakdown = tenantAgg.map((t) => {
-      const fb = fin.tenantBreakdown.find((b) => b.tenantId === t.tenantId);
-      return {
-        tenantId: t.tenantId,
-        revenue: t.revenue,
-        commission: fb?.commission ?? 0,
-        commissionRate: t.revenue > 0 ? roundTo(t.commission / t.revenue, 2) : 0,
-        entryCount: t.entryCount,
-      };
-    });
+    const tenantBreakdown = tenantAgg.map((t) => ({
+      tenantId: t.tenantId,
+      revenue: t.revenue,
+      commission: t.commission,
+      commissionRate: t.revenue > 0 ? roundTo(t.commission / t.revenue, 2) : 0,
+      entryCount: t.entryCount,
+    }));
 
     await this.drawRepo.updateSettleResult(
       drawId,
@@ -74,7 +71,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       totalPrizes: fin.totalPrizes,
       totalAgentCommission: fin.totalAgentCommission,
       companyTake: fin.companyTake,
-      tenantBreakdown,
     };
   }
 }

@@ -17,6 +17,9 @@ import { Power655Collections } from "@megawin/game-power655/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type {
   DrawDoc,
+  DrawJackpot,
+  DrawFinancial,
+  DrawStats,
   SplitRatios,
   MainTuple,
   BonusNumber,
@@ -121,32 +124,46 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
-      { $set: { status: toStatus, updatedAt: new Date() } },
+      {
+        $set: {
+          status: toStatus,
+          updatedAt: new Date(),
+        },
+      },
       { returnDocument: "after" },
     );
   }
 
   /**
    * Chuyển draw settling → settled + ghi dual jackpot snapshot.
-   * Atomic, idempotent. Gộp transition + jackpot vào 1 query.
+   * Dùng dot notation để chỉ cập nhật các field cần thiết,
+   * tránh overwrite jackpot.split đã set bởi triggerSettle().
    */
   async settleComplete(
     drawId: string,
-    jackpot: {
-      openingJackpot1: number;
-      closingJackpot1: number;
-      openingJackpot2: number;
-      closingJackpot2: number;
-      isSplitCycle?: boolean;
-    },
+    jackpot: Pick<
+      DrawJackpot,
+      "openingJackpot1" | "closingJackpot1" | "openingJackpot2" | "closingJackpot2" | "isSplitCycle"
+    >,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Settling];
     if (!allowed?.has(DrawStatus.Settled)) return null;
 
     const now = new Date();
+    const $set: Record<string, unknown> = {
+      status: DrawStatus.Settled,
+      "jackpot.openingJackpot1": jackpot.openingJackpot1,
+      "jackpot.closingJackpot1": jackpot.closingJackpot1,
+      "jackpot.openingJackpot2": jackpot.openingJackpot2,
+      "jackpot.closingJackpot2": jackpot.closingJackpot2,
+      "jackpot.isSplitCycle": jackpot.isSplitCycle,
+      settledAt: now,
+      updatedAt: now,
+    };
+
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Settling },
-      { $set: { status: DrawStatus.Settled, jackpot, settledAt: now, updatedAt: now } },
+      { $set },
       { returnDocument: "after" },
     );
   }
@@ -236,7 +253,14 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     const now = new Date();
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Voiding },
-      { $set: { status: DrawStatus.Void, voidSummary, voidedAt: now, updatedAt: now } },
+      {
+        $set: {
+          status: DrawStatus.Void,
+          voidSummary,
+          voidedAt: now,
+          updatedAt: now,
+        },
+      },
       { returnDocument: "after" },
     );
   }
@@ -315,10 +339,19 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async updateSettleResult(
     drawId: string,
-    financial: NonNullable<DrawDoc["financial"]>,
-    stats: NonNullable<DrawDoc["stats"]>,
+    financial: DrawFinancial,
+    stats: DrawStats,
   ): Promise<boolean> {
-    return await this.updateOne({ drawId }, { $set: { financial, stats, updatedAt: new Date() } });
+    return await this.updateOne(
+      { drawId },
+      {
+        $set: {
+          financial,
+          stats,
+          updatedAt: new Date(),
+        },
+      },
+    );
   }
 
   /** Lấy kỳ quay gần nhất (bất kỳ status). */
@@ -396,7 +429,12 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   ): Promise<boolean> {
     return await this.updateOne(
       { drawId },
-      { $set: { voidSummary: summary, updatedAt: new Date() } },
+      {
+        $set: {
+          voidSummary: summary,
+          updatedAt: new Date(),
+        },
+      },
     );
   }
 

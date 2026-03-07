@@ -224,23 +224,6 @@ export interface SettleFinancials {
    *   - Không có ai trúng tier1-tier3 (không có ai để chia).
    */
   splitDetails?: MegaSplitDetails;
-
-  /**
-   * Phân tích doanh thu + commission theo từng tenant — dùng cho báo cáo.
-   * Mỗi item = 1 tenant đã có entry trong kỳ quay.
-   */
-  tenantBreakdown: Array<{
-    /** Mã tenant. */
-    tenantId: string;
-    /** Tổng doanh thu của tenant (VND). */
-    revenue: number;
-    /** Tổng hoa hồng tenant nhận (VND). */
-    commission: number;
-    /** Tỷ lệ hoa hồng thực tế (commission / revenue). */
-    commissionRate: number;
-    /** Số entry của tenant trong kỳ. */
-    entryCount: number;
-  }>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

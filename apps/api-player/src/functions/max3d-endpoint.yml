@@ -1,5 +1,14 @@
 # Max 3D – Player endpoints
 
+max3d-get-game-config:
+  handler: src/handlers/max3d/get-game-config.handler
+  events:
+    - httpApi:
+        path: /games/max3d/config
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
 max3d-get-current-draw:
   handler: src/handlers/max3d/get-current-draw.handler
   events:

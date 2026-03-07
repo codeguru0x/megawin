@@ -18,13 +18,31 @@
  *  │     done = true khi 0 scheduled entries  │
  *  └────────┬─────────────────────────────────┘
  *           ▼
- *  ┌────────────────────────────┐
- *  │  3. CalculateFinancials    │  Tính TỪ DB (not accumulator)
- *  └────────┬───────────────────┘
+ *  ┌────────────────────────────────────────────────────────────┐
+ *  │  3. CalculateFinancials                                    │
+ *  │     Tính TỪ DB (not accumulator)                           │
+ *  │                                                            │
+ *  │     JACKPOT LOGIC:                                         │
+ *  │     ├─ Có JP winner → closingJP = seedAmount (reset)       │
+ *  │     │                  splitDetails = undefined             │
+ *  │     └─ Không có JP winner:                                 │
+ *  │         ├─ isSplitCycle + có winner → tính splitDetails     │
+ *  │         │    closingJP = seedAmount (reset)                 │
+ *  │         ├─ isSplitCycle + không ai trúng → skip split      │
+ *  │         │    closingJP = opening + contribution             │
+ *  │         └─ Không phải split → tích luỹ                     │
+ *  │              closingJP = opening + contribution             │
+ *  └────────┬───────────────────────────────────────────────────┘
  *           ▼
- *  ┌─────────────────────────┐
- *  │  4. ApplySplitBonuses   │  Patch split bonus (if isSplitCycle)
- *  └────────┬────────────────┘
+ *  ┌─────────────────────────────────────────────────────────────┐
+ *  │  4. ApplySplitBonuses                                       │
+ *  │     Skip khi:                                               │
+ *  │       - Không phải kỳ chia (isSplitCycle = false)           │
+ *  │       - Có JP winner (splitDetails = undefined)             │
+ *  │       - Không ai trúng tier1-tier5 (splitDetails = empty)   │
+ *  │     Chạy khi: splitDetails có dữ liệu → patch bonus vào    │
+ *  │       entry.payout cho từng tier có winner                  │
+ *  └────────┬────────────────────────────────────────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
  *  │  5. SyncTicketSummaries (loop)          │  Recompute ticket summaries from entries
@@ -35,9 +53,12 @@
  *  │  6. BuildReport         │  Daily reports (idempotent upsert)
  *  └────────┬────────────────┘
  *           ▼
- *  ┌─────────────────────────┐
- *  │  7. FinalizeSettle      │  settling → settled + jackpot chain
- *  └────────┬────────────────┘
+ *  ┌─────────────────────────────────────────────────────────────┐
+ *  │  7. FinalizeSettle                                          │
+ *  │     ├─ hasJackpotWinner || splitExecuted → close cycle +    │
+ *  │     │    create new cycle (startDrawId = next future draw)  │
+ *  │     └─ Không → update cycle stats (tích luỹ)               │
+ *  └────────┬────────────────────────────────────────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
  *  │  8. DispatchPayouts (loop, async)        │

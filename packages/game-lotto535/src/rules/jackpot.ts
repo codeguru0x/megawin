@@ -87,16 +87,6 @@ export interface DrawFinancialResult {
    * Luôn >= 0: nếu tính ra âm (doanh thu không đủ bù) thì = 0.
    */
   jackpotContribution: number;
-
-  /** Chi tiết hoa hồng từng tenant (dùng cho báo cáo tài chính chi tiết). */
-  tenantBreakdown: Array<{
-    /** ID tenant/đại lý. */
-    tenantId: string;
-    /** Doanh thu từ tenant này trong kỳ (VND). */
-    revenue: number;
-    /** Hoa hồng đại lý (VND). */
-    commission: number;
-  }>;
 }
 
 /**
@@ -115,13 +105,7 @@ export interface DrawFinancialResult {
 export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const { totalRevenue, totalFixedPrizes, tenantRevenues, companyRate } = input;
 
-  const tenantBreakdown = tenantRevenues.map((t) => ({
-    tenantId: t.tenantId,
-    revenue: t.revenue,
-    commission: t.commission,
-  }));
-
-  const totalAgentCommission = tenantBreakdown.reduce((sum, t) => sum + t.commission, 0);
+  const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
 
   const companyTake = Math.round(totalRevenue * companyRate);
 
@@ -138,32 +122,7 @@ export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancia
     companyTake,
     actualCompanyTake,
     jackpotContribution,
-    tenantBreakdown,
   };
-}
-
-// ─────────────────────────────────────────────
-// Jackpot Rollover
-// ─────────────────────────────────────────────
-
-/**
- * Tính Jackpot cuối kỳ (closing).
- *
- * - shouldReset = true (winner hoặc split thực tế) → seedAmount
- *   Contribution kỳ này đã tính vào giải thưởng winner, không cộng vào cycle mới.
- * - shouldReset = false → opening + contribution (tích luỹ bình thường)
- */
-export function calculateClosingJackpot(
-  currentOpening: number,
-  contribution: number,
-  shouldReset: boolean,
-  seedAmount: number,
-): number {
-  if (shouldReset) {
-    return seedAmount;
-  }
-
-  return currentOpening + contribution;
 }
 
 // ─────────────────────────────────────────────
@@ -282,7 +241,7 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
 
   const totalParts = allEligible.reduce((s, e) => s + e.parts, 0);
 
-  // Bước 1: tính phần chia ban đầu theo ratio
+  // ── Pass 1: tính phần chia ban đầu theo ratio ──
   const tierAllocations = allEligible.map((e) => {
     const winnerCount = winnerCountPerTier.get(e.tier) ?? 0;
     return {
@@ -293,7 +252,6 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
     };
   });
 
-  // Bước 2: redistribute phần chia của tier không có winner
   const tiersWithWinners = tierAllocations.filter((t) => t.hasWinners);
 
   const details = new Map<PrizeTier, SplitTierDetail>();
@@ -303,68 +261,47 @@ export function calculateSplitDistribution(input: SplitInput): SplitResult {
     return { details, bonusPerWinner: bonusPerWinnerMap, roundingRemainder: 0 };
   }
 
-  // Tính tổng phần chia của các tier không có winner
+  // ── Pass 2: redistribute unclaimed + tính bonus per winner ──
   const unclaimedTotal = tierAllocations
     .filter((t) => !t.hasWinners)
     .reduce((s, t) => s + t.initialAmount, 0);
 
-  // Tính phần bổ sung nhận từ các tier không có winner
   const redistributedPerTier = Math.floor(unclaimedTotal / tiersWithWinners.length);
 
-  // Bước 3: xác định hạng giải cao nhất có người trúng
-  const priorityOrder: PrizeTier[] = [
-    PrizeTier.Tier1,
-    PrizeTier.Tier2,
-    PrizeTier.Tier3,
-    PrizeTier.Tier4,
-    PrizeTier.Tier5,
-  ];
+  const highestTierWithWinners = (
+    [
+      PrizeTier.Tier1,
+      PrizeTier.Tier2,
+      PrizeTier.Tier3,
+      PrizeTier.Tier4,
+      PrizeTier.Tier5,
+    ] as PrizeTier[]
+  ).find((tier) => tiersWithWinners.some((t) => t.tier === tier))!;
 
-  // Tìm hạng giải cao nhất có người trúng
-  const highestTierWithWinners = priorityOrder.find((tier) =>
-    tiersWithWinners.some((t) => t.tier === tier),
-  )!;
-
-  // Bước 4: tính bonus per winner cho các tier có người trúng
-  // - Hạng không phải cao nhất: làm tròn xuống 5.000 VND, tích phần dư vào hạng cao nhất
-  // - Hạng cao nhất: floor 1 VND, nhận thêm phần dư từ các hạng khác
   let totalRemainder = 0;
 
   for (const t of tiersWithWinners) {
     const totalForTier = t.initialAmount + redistributedPerTier;
+    const isHighest = t.tier === highestTierWithWinners;
 
-    if (t.tier === highestTierWithWinners) {
-      // Hạng cao nhất: floor 1 VND, nhận thêm phần dư từ các hạng khác
-      const bonus = Math.floor(totalForTier / t.winnerCount);
-      const tierRemainder = totalForTier - bonus * t.winnerCount;
-      totalRemainder += tierRemainder;
+    // Tier cao nhất: floor 1 VND (nhận phần dư từ các tier khác ở bước sau).
+    // Tier khác: làm tròn xuống 5.000 VND theo quy tắc Vietlott.
+    const rawBonus = Math.floor(totalForTier / t.winnerCount);
+    const bonus = isHighest ? rawBonus : roundDownToUnit(rawBonus, SPLIT_ROUNDING_UNIT);
 
-      details.set(t.tier, {
-        initialAmount: t.initialAmount,
-        redistributedAmount: redistributedPerTier,
-        totalAmount: totalForTier,
-        winnerCount: t.winnerCount,
-        bonusPerWinner: bonus,
-      });
-      bonusPerWinnerMap.set(t.tier, bonus);
-    } else {
-      const roundedBonus = roundDownToUnit(totalForTier / t.winnerCount, SPLIT_ROUNDING_UNIT);
-      const tierRemainder = totalForTier - roundedBonus * t.winnerCount;
-      totalRemainder += tierRemainder;
+    totalRemainder += totalForTier - bonus * t.winnerCount;
 
-      // Hạng không phải cao nhất: làm tròn xuống 5.000 VND, tích phần dư vào hạng cao nhất
-      details.set(t.tier, {
-        initialAmount: t.initialAmount,
-        redistributedAmount: redistributedPerTier,
-        totalAmount: totalForTier,
-        winnerCount: t.winnerCount,
-        bonusPerWinner: roundedBonus,
-      });
-      bonusPerWinnerMap.set(t.tier, roundedBonus);
-    }
+    details.set(t.tier, {
+      initialAmount: t.initialAmount,
+      redistributedAmount: redistributedPerTier,
+      totalAmount: totalForTier,
+      winnerCount: t.winnerCount,
+      bonusPerWinner: bonus,
+    });
+    bonusPerWinnerMap.set(t.tier, bonus);
   }
 
-  // Bước 5: cộng tổng phần dư vào hạng giải cao nhất
+  // ── Gom phần dư → cộng vào tier cao nhất ──
   if (totalRemainder > 0) {
     const detail = details.get(highestTierWithWinners)!;
     const remainderPerWinner = Math.floor(totalRemainder / detail.winnerCount);

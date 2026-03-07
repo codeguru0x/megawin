@@ -15,9 +15,14 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import { Mega645Collections, PayoutStatus } from "@megawin/game-mega645/entities";
+import {
+  Mega645Collections,
+  PayoutStatus,
+  type EntryPayout,
+  type EntryVoidInfo,
+  type EntryResult,
+} from "@megawin/game-mega645/entities";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
-import type { MainTuple } from "@megawin/game-mega645/entities";
 import { ObjectId, Long } from "mongodb";
 import { BaseRepo } from "./base-repo";
 import { EntryMapper, type EntryEntity } from "../mappers/entry-mapper";
@@ -136,21 +141,9 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   async bulkSettleEntries(
     items: Array<{
       entryId: string;
-      payout: {
-        winAmount: number;
-        payoutAmount: number;
-        tiers: Array<{
-          tier: string;
-          hitCount: number;
-          unitAmount: number;
-          amount: number;
-          isSplitBonus?: boolean;
-        }>;
-        settledAt: Date;
-        payoutStatus?: string;
-      };
+      payout: EntryPayout;
       outcome: string;
-      result: { winningMain: MainTuple; publishedAt: Date };
+      result: EntryResult;
     }>,
   ): Promise<{ modifiedCount: number }> {
     if (items.length === 0) return { modifiedCount: 0 };
@@ -458,7 +451,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   }
 
   async bulkVoidEntries(
-    items: Array<{ entryId: string; amount: number }>,
+    items: Array<{ entryId: string; voidInfo: EntryVoidInfo }>,
   ): Promise<{ modifiedCount: number }> {
     if (items.length === 0) return { modifiedCount: 0 };
 
@@ -472,12 +465,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           $set: {
             status: EntryStatus.Void,
             outcome: EntryOutcome.Void,
-            voidInfo: {
-              originalAmount: item.amount,
-              refundAmount: item.amount,
-              refundStatus: "pending",
-              voidedAt: now,
-            },
+            voidInfo: item.voidInfo,
             version,
             updatedAt: now,
           },

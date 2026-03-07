@@ -6,9 +6,9 @@ feed-save-cursor:
 
 feed-scheduler:
   handler: src/handlers/feed/feed-scheduler.handler
-  environment:
-    FEED_SYNC_SFN_ARN: !Ref Max3dproFeedSyncStateMachine
-  events:
-    - schedule:
-        rate: rate(30 seconds)
-        enabled: true
+  #environment:
+  #  FEED_SYNC_SFN_ARN: !Ref Max3dproFeedSyncStateMachine
+  #events:
+  #  - schedule:
+  #      rate: rate(30 seconds)
+  #      enabled: true

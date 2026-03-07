@@ -80,10 +80,7 @@ export interface PlayerGetJackpotOutput {
 
 export type TicketSortBy = "betDate" | "drawDate";
 
-export const TICKET_SORT_BY_VALUES: readonly TicketSortBy[] = [
-  "betDate",
-  "drawDate",
-];
+export const TICKET_SORT_BY_VALUES: readonly TicketSortBy[] = ["betDate", "drawDate"];
 
 export interface PlayerListTicketsInput {
   /** ID tenant của người chơi. */
@@ -175,17 +172,35 @@ export interface PlayerTicketSummary {
     /** Số dòng expand ra từ board này = C(n,6) với n = số lượng mainNumbers. */
     expandedLines: number;
   }>;
-  /** Tiến trình xử lý vé qua các kỳ quay. */
+  /** Tiến trình xử lý vé qua các kỳ quay. settledDraws = số kỳ đã xử lý xong (settled + voided). */
   progress: {
     /** Tổng số kỳ quay đã đăng ký. */
     totalDraws: number;
-    /** Số kỳ đã settle xong. */
+    /** Số kỳ đã xử lý xong (settled + voided). */
     settledDraws: number;
   };
-  /** Tổng hợp kết quả trúng thưởng (chỉ có sau khi settle). */
+  /** Tổng hợp kết quả trúng thưởng (chỉ có sau khi settle ít nhất 1 kỳ). */
   settlement?: {
     /** Tổng tiền thắng từ tất cả các kỳ đã settle (VND). */
     totalWinAmount: number;
+    /** Thời điểm kỳ gần nhất được settle (ISO 8601). */
+    lastSettledAt?: string;
+  };
+  /**
+   * Tóm tắt huỷ cược. Có khi ít nhất 1 kỳ bị void.
+   * Multi-draw: hoàn tiền một phần. Single-draw: hoàn toàn bộ → status = "refunded".
+   */
+  voidSummary?: {
+    /** Tổng tiền cược gốc của các kỳ bị huỷ (VND). */
+    totalVoidedAmount: number;
+    /** Tổng tiền đã hoàn trả cho player (VND). */
+    totalRefundedAmount: number;
+    /** Số kỳ đã bị huỷ. */
+    voidedDrawCount: number;
+    /** Danh sách drawId của các kỳ đã bị huỷ. */
+    voidedDrawIds: string[];
+    /** Thời điểm kỳ gần nhất bị huỷ (ISO 8601). */
+    lastVoidedAt?: string;
   };
   /** Thời điểm tạo vé (ISO datetime). */
   createdAt: string;

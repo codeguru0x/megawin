@@ -12,6 +12,74 @@ import type { ISODateString, MainTuple } from "./types";
 import type { Long } from "@megawin/game-core/types";
 
 // ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Snapshot thông tin đại lý tại thời điểm tạo entry. */
+export interface EntryTenantSnapshot {
+  /** Tỷ lệ hoa hồng đại lý. Ví dụ: 0.2 = 20%. */
+  commissionRate: number;
+  /**
+   * Số tiền hoa hồng đại lý (VND).
+   * Công thức: amount × commissionRate.
+   */
+  commissionAmount: number;
+}
+
+/** Tóm tắt nội dung entry (dùng cho hiển thị, truy vấn nhanh). */
+export interface EntrySummary {
+  /** Số vé (mã hiển thị cho người chơi). */
+  ticketNo: string;
+  /** Snapshot các board từ vé gốc. */
+  boards: EntryBoardSnapshot[];
+}
+
+/** Kết quả kỳ quay (ghi lại khi publish result). */
+export interface EntryResult {
+  /** 6 số trúng thưởng, sorted tăng dần. */
+  winningMain: MainTuple;
+  /** Thời điểm công bố kết quả. */
+  publishedAt: Date;
+}
+
+/** Thông tin trả thưởng (chỉ có khi trúng giải). */
+export interface EntryPayout {
+  /**
+   * Tổng tiền trúng thưởng (VND).
+   * Công thức: Σ(tiers[].amount).
+   */
+  winAmount: number;
+  /** Tổng tiền thực trả cho người chơi (VND). Thường = winAmount. */
+  payoutAmount: number;
+  /** Chi tiết trúng thưởng theo từng hạng giải. */
+  tiers: EntryPayoutTier[];
+  /** Thời điểm settle (tính toán kết quả). */
+  settledAt: Date;
+  /** Trạng thái gửi tiền trả thưởng cho tenant. */
+  payoutStatus?: PayoutStatus;
+  /** Thời điểm gửi lệnh chuyển tiền trả thưởng. */
+  payoutDispatchedAt?: Date;
+  /** Số lần retry gửi tiền trả thưởng (khi gặp lỗi). */
+  payoutRetryCount?: number;
+  /** Lỗi cuối cùng khi gửi tiền trả thưởng. */
+  payoutLastError?: string;
+}
+
+/** Thông tin huỷ entry (khi kỳ quay bị void). */
+export interface EntryVoidInfo {
+  /** Số tiền gốc của entry (VND). */
+  originalAmount: number;
+  /** Số tiền hoàn trả (VND). Thường = originalAmount. */
+  refundAmount: number;
+  /** Trạng thái hoàn tiền. */
+  refundStatus: RefundStatus;
+  /** Thời điểm huỷ. */
+  voidedAt: Date;
+  /** Thời điểm hoàn tiền thành công. */
+  refundedAt?: Date;
+}
+
+// ─────────────────────────────────────────────
 // Entry Document
 // ─────────────────────────────────────────────
 
@@ -38,15 +106,7 @@ export interface TicketEntryDoc {
   financialDate: ISODateString;
 
   /** Snapshot thông tin đại lý tại thời điểm tạo entry. */
-  tenant: {
-    /** Tỷ lệ hoa hồng đại lý. Ví dụ: 0.2 = 20%. */
-    commissionRate: number;
-    /**
-     * Số tiền hoa hồng đại lý (VND).
-     * Công thức: amount × commissionRate.
-     */
-    commissionAmount: number;
-  };
+  tenant: EntryTenantSnapshot;
 
   /** Trạng thái entry (pending → active → settled / voided). */
   status: EntryStatus;
@@ -65,60 +125,19 @@ export interface TicketEntryDoc {
   unitPrice: number;
 
   /** Tóm tắt nội dung entry (dùng cho hiển thị, truy vấn nhanh). */
-  entrySummary: {
-    /** Số vé (mã hiển thị cho người chơi). */
-    ticketNo: string;
-    /** Snapshot các board từ vé gốc. */
-    boards: EntryBoardSnapshot[];
-  };
+  entrySummary: EntrySummary;
 
   /** Kết quả kỳ quay (ghi lại khi publish result). */
-  result?: {
-    /** 6 số trúng thưởng, sorted tăng dần. */
-    winningMain: MainTuple;
-    /** Thời điểm công bố kết quả. */
-    publishedAt: Date;
-  };
+  result?: EntryResult;
 
   /** Kết quả đối soát (win / lose). Chỉ có sau khi settle. */
   outcome?: EntryOutcome;
 
   /** Thông tin trả thưởng (chỉ có khi trúng giải). */
-  payout?: {
-    /**
-     * Tổng tiền trúng thưởng (VND).
-     * Công thức: Σ(tiers[].amount).
-     */
-    winAmount: number;
-    /** Tổng tiền thực trả cho người chơi (VND). Thường = winAmount. */
-    payoutAmount: number;
-    /** Chi tiết trúng thưởng theo từng hạng giải. */
-    tiers: EntryPayoutTier[];
-    /** Thời điểm settle (tính toán kết quả). */
-    settledAt: Date;
-    /** Trạng thái gửi tiền trả thưởng cho tenant. */
-    payoutStatus?: PayoutStatus;
-    /** Thời điểm gửi lệnh chuyển tiền trả thưởng. */
-    payoutDispatchedAt?: Date;
-    /** Số lần retry gửi tiền trả thưởng (khi gặp lỗi). */
-    payoutRetryCount?: number;
-    /** Lỗi cuối cùng khi gửi tiền trả thưởng. */
-    payoutLastError?: string;
-  };
+  payout?: EntryPayout;
 
   /** Thông tin huỷ entry (khi kỳ quay bị void). */
-  voidInfo?: {
-    /** Số tiền gốc của entry (VND). */
-    originalAmount: number;
-    /** Số tiền hoàn trả (VND). Thường = originalAmount. */
-    refundAmount: number;
-    /** Trạng thái hoàn tiền. */
-    refundStatus: RefundStatus;
-    /** Thời điểm huỷ. */
-    voidedAt: Date;
-    /** Thời điểm hoàn tiền thành công. */
-    refundedAt?: Date;
-  };
+  voidInfo?: EntryVoidInfo;
 
   /** Thời điểm tạo document. */
   createdAt: Date;

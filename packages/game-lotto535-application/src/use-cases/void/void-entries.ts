@@ -40,6 +40,7 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
+import { RefundStatus } from "@megawin/game-lotto535/entities";
 
 export interface VoidEntriesBatchResult {
   drawId: string;
@@ -48,8 +49,8 @@ export interface VoidEntriesBatchResult {
 
 /** Số entries xử lý mỗi batch DB query. */
 const BATCH_SIZE = 500;
-/** Giới hạn thời gian chạy trong 1 Lambda invocation (13 phút). */
-const MAX_EXECUTION_MS = 13 * 60 * 1000;
+/** Giới hạn thời gian chạy trong 1 Lambda invocation (10 phút). */
+const MAX_EXECUTION_MS = 10 * 60 * 1000;
 
 export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
@@ -69,11 +70,17 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEn
         return { drawId, done: true };
       }
 
-      // Chuẩn bị bulk void items: mỗi entry = { entryId, amount (refund) }
+      // Chuẩn bị bulk void items: mỗi entry = { entryId, voidInfo }
       // refundAmount = entry.amount: hoàn toàn bộ tiền cược cho entry bị void
+      const now = new Date();
       const items = entries.map((entry) => ({
         entryId: entry.id,
-        amount: entry.amount ?? 0,
+        voidInfo: {
+          originalAmount: entry.amount ?? 0,
+          refundAmount: entry.amount ?? 0,
+          refundStatus: RefundStatus.Pending,
+          voidedAt: now,
+        },
       }));
 
       // Bulk void: scheduled → voided + ghi voidInfo { refundAmount, refundStatus: "pending" }

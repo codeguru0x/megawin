@@ -51,7 +51,7 @@ export interface BasicMatchResult {
 export function matchBasicBoard(
   numbers: string[],
   result: DrawResultForMatch,
-  prizeTable?: Record<number, Record<number, number>>,
+  prizeTable?: Record<string, Record<string, number>>,
 ): BasicMatchResult {
   const winSet = new Set(result.winningNumbers);
   const matchedNumbers: string[] = [];

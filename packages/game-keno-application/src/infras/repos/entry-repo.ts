@@ -12,7 +12,14 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import { KenoCollections, PayoutStatus, RefundStatus } from "@megawin/game-keno/entities";
+import {
+  KenoCollections,
+  PayoutStatus,
+  RefundStatus,
+  type EntryPayout,
+  type EntryVoidInfo,
+  type EntryResult,
+} from "@megawin/game-keno/entities";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { ObjectId, Long } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -114,41 +121,11 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
        * Dùng cho ApplyPayoutCaps step query index-friendly.
        */
       hasCappablePrize: boolean;
-      payout: {
-        /** Tổng tiền thắng (giải cố định, chưa qua cap). */
-        winAmount: number;
-        /** Tiền trả cho player (= winAmount, ApplyPayoutCaps có thể giảm sau). */
-        payoutAmount: number;
-        /** Chi tiết kết quả từng board cách chơi cơ bản. */
-        boardPayouts: Array<{
-          boardNo: string;
-          playType: string;
-          matchCount: number;
-          pickCount: number;
-          winAmount: number;
-        }>;
-        /** Chi tiết kết quả từng side bet. */
-        sideBetPayouts: Array<{
-          playType: string;
-          bet: string;
-          outcome: string;
-          isWin: boolean;
-          winAmount: number;
-        }>;
-        settledAt: Date;
-        payoutStatus?: string;
-      };
+      payout: EntryPayout;
       /** "win" hoặc "loss". */
       outcome: string;
       /** Snapshot kết quả quay gắn vào entry. */
-      result: {
-        winningNumbers: string[];
-        publishedAt: Date;
-        bigCount: number;
-        smallCount: number;
-        evenCount: number;
-        oddCount: number;
-      };
+      result: EntryResult;
     }>,
   ): Promise<{ modifiedCount: number }> {
     if (items.length === 0) return { modifiedCount: 0 };
@@ -548,7 +525,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
    * Chỉ update entries đang ở status Scheduled (atomic per entry).
    */
   async bulkVoidEntries(
-    items: Array<{ entryId: string; amount: number }>,
+    items: Array<{ entryId: string; voidInfo: EntryVoidInfo }>,
   ): Promise<{ modifiedCount: number }> {
     if (items.length === 0) return { modifiedCount: 0 };
 
@@ -562,12 +539,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           $set: {
             status: EntryStatus.Void,
             outcome: EntryOutcome.Void,
-            voidInfo: {
-              originalAmount: item.amount,
-              refundAmount: item.amount,
-              refundStatus: RefundStatus.Pending,
-              voidedAt: now,
-            },
+            voidInfo: item.voidInfo,
             version,
             updatedAt: now,
           },

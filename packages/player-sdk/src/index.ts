@@ -45,6 +45,52 @@ export type {
   Lotto535EntryLinesResponse,
 } from "./apis/lotto535";
 export type {
+  Mega645Api,
+  Mega645PlaceBetResponse,
+  Mega645CurrentDrawResponse,
+  Mega645JackpotResponse,
+  Mega645ListTicketsParams,
+  Mega645ListTicketsResponse,
+  Mega645TicketEntriesResponse,
+  Mega645EntryLinesResponse,
+} from "./apis/mega645";
+export type {
+  Power655Api,
+  Power655PlaceBetResponse,
+  Power655CurrentDrawResponse,
+  Power655JackpotResponse,
+  Power655ListTicketsParams,
+  Power655ListTicketsResponse,
+  Power655TicketEntriesResponse,
+  Power655EntryLinesResponse,
+} from "./apis/power655";
+export type {
+  Max3dApi,
+  Max3dPlaceBetResponse,
+  Max3dCurrentDrawResponse,
+  Max3dListTicketsParams,
+  Max3dListTicketsResponse,
+  Max3dTicketEntriesResponse,
+  Max3dEntryLinesResponse,
+} from "./apis/max3d";
+export type {
+  Max3dproApi,
+  Max3dproPlaceBetResponse,
+  Max3dproCurrentDrawResponse,
+  Max3dproListTicketsParams,
+  Max3dproListTicketsResponse,
+  Max3dproTicketEntriesResponse,
+  Max3dproEntryLinesResponse,
+} from "./apis/max3dpro";
+export type {
+  Bingo18Api,
+  Bingo18PlaceBetResponse,
+  Bingo18CurrentDrawResponse,
+  Bingo18ListTicketsParams,
+  Bingo18ListTicketsResponse,
+  Bingo18TicketEntriesResponse,
+} from "./apis/bingo18";
+export type {
   PlayerApi,
   PlayerBalance,
   GetBetHistoryParams,

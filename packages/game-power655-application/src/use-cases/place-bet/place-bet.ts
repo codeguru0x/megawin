@@ -44,7 +44,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
+import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
 import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
@@ -57,11 +57,11 @@ import { nowVN } from "@megawin/shared/utils/date";
  */
 export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();
-  private readonly tenantConfigRepo = new TenantConfigRepository();
   private readonly ticketRepo = new TicketRepository();
   private readonly entryRepo = new EntryRepository();
   private readonly ticketCounter = new TicketCounterRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
+  private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
 
   /** @inheritdoc */
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
@@ -154,8 +154,11 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const totalAmount = amountPerDraw * drawCount;
 
     // ── 6. Load tenant commission rate ──
-    const tenantConfig = await this.tenantConfigRepo.getTenantConfig(tenantId);
-    const commissionRate = tenantConfig?.commissionRate ?? globalConfig.rates.defaultCommissionRate;
+    const tenantConfig = await this.getTenantConfig.run({ tenantId });
+    if (!tenantConfig || tenantConfig.isEnabled !== true) {
+      throw AppException.unauthorized("Không được phép chơi game. Vui lòng liên hệ admin.");
+    }
+    const commissionRate = tenantConfig.commissionRate;
 
     // ── 7. Build ticket document ──
     const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);

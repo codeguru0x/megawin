@@ -1,18 +1,22 @@
 /**
- * Lambda: sync-ticket-summaries (Lotto 5/35)
+ * Lambda: settle-sync-ticket-summaries (Lotto 5/35)
  *
  * Recompute ticket progress/settlement/voidSummary từ entries.
  * Dùng chung cho cả settle pipeline và void pipeline.
  *
- * @input  SettleContext ($settleCtx)
+ * Step Function truyền toàn bộ $settleCtx (có drawId) → use case chỉ đọc drawId.
+ *
+ * @input  DrawSyncInput (chỉ cần { drawId })
  * @output SyncTicketSummariesResult
  */
 
-import { SyncTicketSummariesUseCase } from "@megawin/game-lotto535-application/use-cases/settle";
-import type { SettleContext } from "@megawin/game-lotto535-application/use-cases/settle";
+import {
+  SyncTicketSummariesUseCase,
+  type DrawSyncInput,
+} from "@megawin/game-lotto535-application/use-cases/settle";
 
 const useCase = new SyncTicketSummariesUseCase();
 
-export async function handler(event: SettleContext) {
+export async function handler(event: DrawSyncInput) {
   return useCase.run(event);
 }

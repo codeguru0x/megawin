@@ -68,15 +68,6 @@ export interface DrawFinancialResult {
    * Công thức: max(totalRevenue - totalFixedPrizes - totalAgentCommission - actualCompanyTake, 0).
    */
   jackpotContribution: number;
-  /** Chi tiết doanh thu và hoa hồng từng đại lý. */
-  tenantBreakdown: Array<{
-    /** ID đại lý. */
-    tenantId: string;
-    /** Doanh thu từ đại lý (VND). */
-    revenue: number;
-    /** Hoa hồng đại lý (VND). */
-    commission: number;
-  }>;
 }
 
 /**
@@ -91,13 +82,7 @@ export interface DrawFinancialResult {
 export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const { totalRevenue, totalFixedPrizes, tenantRevenues, companyRate } = input;
 
-  const tenantBreakdown = tenantRevenues.map((t) => ({
-    tenantId: t.tenantId,
-    revenue: t.revenue,
-    commission: t.commission,
-  }));
-
-  const totalAgentCommission = tenantBreakdown.reduce((sum, t) => sum + t.commission, 0);
+  const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
 
   const companyTake = Math.round(totalRevenue * companyRate);
   const remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission;
@@ -111,7 +96,6 @@ export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancia
     companyTake,
     actualCompanyTake,
     jackpotContribution,
-    tenantBreakdown,
   };
 }
 

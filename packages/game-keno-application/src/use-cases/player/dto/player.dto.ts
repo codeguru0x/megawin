@@ -104,12 +104,30 @@ export interface PlayerTicketSummary {
     playType: string;
     bet: string;
   }>;
+  /**
+   * Tiến trình xử lý — settledDraws = số kỳ đã hoàn tất (settled + voided).
+   * Để biết cụ thể bao nhiêu kỳ voided, xem voidSummary.voidedDrawCount.
+   */
   progress: {
     totalDraws: number;
     settledDraws: number;
   };
+  /** Tổng kết thắng cược. Undefined nếu chưa có kỳ nào settle. */
   settlement?: {
     totalWinAmount: number;
+    lastSettledAt?: string;
+  };
+  /**
+   * Tóm tắt huỷ cược. Có khi ít nhất 1 kỳ bị void.
+   * Multi-draw: hoàn tiền một phần.
+   * Single-draw: hoàn toàn bộ, status = "refunded".
+   */
+  voidSummary?: {
+    totalVoidedAmount: number;
+    totalRefundedAmount: number;
+    voidedDrawCount: number;
+    voidedDrawIds: string[];
+    lastVoidedAt?: string;
   };
   createdAt: string;
 }

@@ -20,15 +20,10 @@ export interface VoidEntriesBatchResult {
 const BATCH_SIZE = 500;
 const MAX_EXECUTION_MS = 13 * 60 * 1000;
 
-export class VoidEntriesBatchUseCase extends InternalUseCase<
-  VoidContext,
-  VoidEntriesBatchResult
-> {
+export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
 
-  protected async execute(
-    input: VoidContext,
-  ): Promise<VoidEntriesBatchResult> {
+  protected async execute(input: VoidContext): Promise<VoidEntriesBatchResult> {
     const { drawId } = input;
     const startTime = Date.now();
 
@@ -39,9 +34,15 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<
         return { drawId, done: true };
       }
 
+      const now = new Date();
       const items = entries.map((entry) => ({
         entryId: entry.id,
-        amount: entry.amount ?? 0,
+        voidInfo: {
+          originalAmount: entry.amount ?? 0,
+          refundAmount: entry.amount ?? 0,
+          refundStatus: "pending" as const,
+          voidedAt: now,
+        },
       }));
 
       await this.entryRepo.bulkVoidEntries(items);

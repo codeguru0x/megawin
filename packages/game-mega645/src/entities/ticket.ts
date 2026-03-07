@@ -12,6 +12,82 @@ import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
 import type { ISODateString, BoardSelection } from "./types";
 
 // ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Thông tin dẫn xuất tính toán từ selection của board. */
+export interface BoardDerived {
+  /**
+   * Số line sau khi expand từ board.
+   * - standard / quickPick: 1
+   * - bao5: 40 (chọn 5 số, hệ thống bổ sung từ 40 số còn lại)
+   * - bao7-18: C(N, 6) – tổ hợp chập 6 từ N số đã chọn
+   */
+  expandedLines: number;
+  /** Kích thước bao (chỉ khi bao5, bao7-18). */
+  baoSize?: number;
+}
+
+/** Kế hoạch tham gia các kỳ quay. */
+export interface TicketDrawPlan {
+  /** Danh sách ID các kỳ quay vé tham gia. */
+  drawIds: string[];
+  /** Số kỳ quay vé tham gia (= drawIds.length). */
+  drawCount: number;
+}
+
+/** Thông tin giá vé, snapshot tại thời điểm mua. */
+export interface TicketPricing {
+  /** Đơn giá 1 line (VND). Snapshot từ config tại thời điểm mua. */
+  unitPrice: number;
+  /**
+   * Tổng số line trên 1 kỳ quay.
+   * Công thức: Σ(boards[].derived.expandedLines) cho tất cả board không bị void.
+   */
+  linesPerDraw: number;
+  /**
+   * Tổng tiền cho 1 kỳ quay (VND).
+   * Công thức: linesPerDraw × unitPrice.
+   */
+  amountPerDraw: number;
+  /**
+   * Tổng tiền toàn bộ vé (VND).
+   * Công thức: amountPerDraw × drawCount.
+   */
+  totalAmount: number;
+}
+
+/** Tiến trình xử lý qua các kỳ quay. */
+export interface TicketProgress {
+  /** Tổng số kỳ quay vé tham gia (= drawPlan.drawCount). */
+  totalDraws: number;
+  /** Số kỳ quay đã settle xong. */
+  settledDraws: number;
+}
+
+/** Tổng kết trả thưởng qua tất cả các kỳ quay. */
+export interface TicketSettlement {
+  /** Tổng tiền trúng thưởng qua tất cả kỳ quay (VND). */
+  totalWinAmount: number;
+  /** Thời điểm settle gần nhất. */
+  lastSettledAt?: Date;
+}
+
+/** Tổng kết void (nếu có kỳ quay bị huỷ). */
+export interface TicketVoidSummary {
+  /** Tổng số tiền gốc của các entry bị void (VND). */
+  totalVoidedAmount: number;
+  /** Tổng số tiền đã hoàn trả (VND). */
+  totalRefundedAmount: number;
+  /** Số kỳ quay bị void. */
+  voidedDrawCount: number;
+  /** Danh sách drawId của các kỳ quay bị void. */
+  voidedDrawIds: string[];
+  /** Thời điểm void gần nhất. */
+  lastVoidedAt?: Date;
+}
+
+// ─────────────────────────────────────────────
 // Board
 // ─────────────────────────────────────────────
 
@@ -26,17 +102,7 @@ export interface Board {
   /** Lựa chọn số gốc của người chơi. */
   selection: BoardSelection;
   /** Thông tin tính toán từ selection. */
-  derived: {
-    /**
-     * Số line sau khi expand từ board.
-     * - standard / quickPick: 1
-     * - bao5: 40 (chọn 5 số, hệ thống bổ sung từ 40 số còn lại)
-     * - bao7-18: C(N, 6) – tổ hợp chập 6 từ N số đã chọn
-     */
-    expandedLines: number;
-    /** Kích thước bao (chỉ khi bao5, bao7-18). */
-    baoSize?: number;
-  };
+  derived: BoardDerived;
 }
 
 // ─────────────────────────────────────────────
@@ -60,33 +126,10 @@ export interface TicketDoc {
   channel: TicketChannel;
 
   /** Kế hoạch tham gia các kỳ quay. */
-  drawPlan: {
-    /** Danh sách ID các kỳ quay vé tham gia. */
-    drawIds: string[];
-    /** Số kỳ quay vé tham gia (= drawIds.length). */
-    drawCount: number;
-  };
+  drawPlan: TicketDrawPlan;
 
   /** Thông tin giá vé. */
-  pricing: {
-    /** Đơn giá 1 line (VND). Snapshot từ config tại thời điểm mua. */
-    unitPrice: number;
-    /**
-     * Tổng số line trên 1 kỳ quay.
-     * Công thức: Σ(boards[].derived.expandedLines) cho tất cả board không bị void.
-     */
-    linesPerDraw: number;
-    /**
-     * Tổng tiền cho 1 kỳ quay (VND).
-     * Công thức: linesPerDraw × unitPrice.
-     */
-    amountPerDraw: number;
-    /**
-     * Tổng tiền toàn bộ vé (VND).
-     * Công thức: amountPerDraw × drawCount.
-     */
-    totalAmount: number;
-  };
+  pricing: TicketPricing;
 
   /** Danh sách các board trên vé (tối đa 6 boards A-F). */
   boards: Board[];
@@ -97,34 +140,13 @@ export interface TicketDoc {
   lineCount: number;
 
   /** Tiến trình xử lý qua các kỳ quay. */
-  progress: {
-    /** Tổng số kỳ quay vé tham gia (= drawPlan.drawCount). */
-    totalDraws: number;
-    /** Số kỳ quay đã settle xong. */
-    settledDraws: number;
-  };
+  progress: TicketProgress;
 
   /** Tổng kết trả thưởng qua tất cả các kỳ quay. */
-  settlement?: {
-    /** Tổng tiền trúng thưởng qua tất cả kỳ quay (VND). */
-    totalWinAmount: number;
-    /** Thời điểm settle gần nhất. */
-    lastSettledAt?: Date;
-  };
+  settlement?: TicketSettlement;
 
   /** Tổng kết void (nếu có kỳ quay bị huỷ). */
-  voidSummary?: {
-    /** Tổng số tiền gốc của các entry bị void (VND). */
-    totalVoidedAmount: number;
-    /** Tổng số tiền đã hoàn trả (VND). */
-    totalRefundedAmount: number;
-    /** Số kỳ quay bị void. */
-    voidedDrawCount: number;
-    /** Danh sách drawId của các kỳ quay bị void. */
-    voidedDrawIds: string[];
-    /** Thời điểm void gần nhất. */
-    lastVoidedAt?: Date;
-  };
+  voidSummary?: TicketVoidSummary;
 
   /** Trạng thái vé (pending → active → completed / cancelled). */
   status: TicketStatus;

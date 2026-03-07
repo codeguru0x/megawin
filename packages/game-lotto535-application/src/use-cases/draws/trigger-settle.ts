@@ -57,20 +57,12 @@ export class TriggerSettleUseCase extends NextApiUseCase<TriggerSettleInput, Tri
         draw.drawNo,
       );
 
-      const splitInfo = splitCycle
-        ? {
-            isSplitCycle: true,
-            split: {
-              thresholdAmount: globalConfig.jackpot.splitThreshold,
-              splitRatios: globalConfig.jackpot.splitRatios,
-              splitAmount: jackpotCurrentAmount,
-              splitRuleVersion: "v1-2026-02",
-              hintText: "Kỳ chia giải Jackpot",
-            },
-          }
-        : undefined;
+      // isSplitCycle được ghi trước lên draw để UI hiển thị ngay khi trigger settle.
+      // Chi tiết split (tierAllocations, splitAmount...) sẽ được lưu vào JackpotCycle
+      // bởi FinalizeSettle sau khi tính toán xong — không lưu trên draw document.
+      const isSplitCycle = splitCycle ? true : undefined;
 
-      const updated = await this.drawRepo.triggerSettle(input.drawId, splitInfo);
+      const updated = await this.drawRepo.triggerSettle(input.drawId, isSplitCycle);
 
       if (!updated) {
         throw new AppException(

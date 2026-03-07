@@ -13,6 +13,77 @@ import type { DrawStatus } from "@megawin/game-core/entities";
 import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Cửa sổ bán vé cho kỳ quay. */
+export interface DrawSales {
+  /** Thời điểm mở bán. Chỉ có sau khi staff nhấn "Mở bán". */
+  openAt?: Date;
+  /** Keno đóng bán 5 phút trước giờ quay (configurable). */
+  closeAt: Date;
+}
+
+/** Tham chiếu kỳ quay Vietlott. */
+export interface DrawVietlottRef {
+  /** Mã kỳ quay Vietlott (ví dụ "123456"). */
+  drawPeriod: string;
+  drawDate: ISODateString;
+}
+
+/**
+ * Kết quả kỳ quay: 20 số từ 01-80.
+ * Set khi status chuyển sang "published".
+ */
+export interface DrawResult {
+  /** 20 số trúng thưởng dạng string "01"-"80", giữ nguyên thứ tự quay. */
+  winningNumbers: string[];
+  /** Thời điểm công bố. */
+  publishedAt: Date;
+  /** Số lượng số "lớn" (41-80) trong 20 số quay. */
+  bigCount: number;
+  /** Số lượng số "nhỏ" (1-40) trong 20 số quay. */
+  smallCount: number;
+  /** Số lượng số chẵn trong 20 số quay. */
+  evenCount: number;
+  /** Số lượng số lẻ trong 20 số quay. */
+  oddCount: number;
+}
+
+/** Phân tích tài chính kỳ quay, tính sau settle. */
+export interface DrawFinancial {
+  totalRevenue: number;
+  totalPrizes: number;
+  totalAgentCommission: number;
+  companyTake: number;
+}
+
+/** Thống kê vận hành kỳ quay. */
+export interface DrawStats {
+  /** Số entry tham gia kỳ này. */
+  ticketEntryCount: number;
+  /** Tổng doanh thu kỳ này. */
+  totalSalesAmount: number;
+  /** Tổng payout sau settle. */
+  totalPayoutAmount?: number;
+}
+
+/** Thông tin khi kỳ quay bị huỷ. Chỉ có khi status = void. */
+export interface DrawVoidInfo {
+  reason: string;
+  voidedBy?: string;
+  voidedAt: Date;
+}
+
+/** Tổng kết void flow (entries refund). */
+export interface DrawVoidSummary {
+  totalVoidedEntries: number;
+  totalOriginalAmount: number;
+  totalRefundAmount: number;
+  completedAt: Date;
+}
+
+// ─────────────────────────────────────────────
 // Draw Document
 // ─────────────────────────────────────────────
 
@@ -40,26 +111,9 @@ export interface DrawDoc {
   /** Trạng thái vận hành kỳ quay. */
   status: DrawStatus;
 
-  // ───── Sales Window ─────
+  sales: DrawSales;
 
-  sales: {
-    /** Thời điểm mở bán. Chỉ có sau khi staff nhấn "Mở bán". */
-    openAt?: Date;
-    /**
-     * Keno đóng bán 5 phút trước giờ quay (configurable).
-     */
-    closeAt: Date;
-  };
-
-  // ───── Vietlott Reference ─────
-
-  vietlottRef?: {
-    /** Mã kỳ quay Vietlott (ví dụ "123456"). */
-    drawPeriod: string;
-    drawDate: ISODateString;
-  };
-
-  // ───── Financial Date ─────
+  vietlottRef?: DrawVietlottRef;
 
   /**
    * Ngày tài chính "YYYY-MM-DD".
@@ -68,70 +122,20 @@ export interface DrawDoc {
    */
   financialDate: ISODateString;
 
-  // ───── Result ─────
+  /** Kết quả kỳ quay. */
+  result?: DrawResult;
 
-  /**
-   * Kết quả kỳ quay: 20 số từ 01-80.
-   * Set khi status chuyển sang "published".
-   */
-  result?: {
-    /** 20 số trúng thưởng dạng string "01"-"80", giữ nguyên thứ tự quay. */
-    winningNumbers: string[];
+  /** Phân tích tài chính kỳ quay. */
+  financial?: DrawFinancial;
 
-    /** Thời điểm công bố. */
-    publishedAt: Date;
+  /** Thống kê vận hành. */
+  stats?: DrawStats;
 
-    // ───── Derived stats từ 20 số quay ─────
-
-    /** Số lượng số "lớn" (41-80) trong 20 số quay. */
-    bigCount: number;
-
-    /** Số lượng số "nhỏ" (1-40) trong 20 số quay. */
-    smallCount: number;
-
-    /** Số lượng số chẵn trong 20 số quay. */
-    evenCount: number;
-
-    /** Số lượng số lẻ trong 20 số quay. */
-    oddCount: number;
-  };
-
-  // ───── Financial Breakdown (sau settle) ─────
-
-  financial?: {
-    totalRevenue: number;
-    totalPrizes: number;
-    totalAgentCommission: number;
-    companyTake: number;
-  };
-
-  // ───── Operational Stats ─────
-
-  stats?: {
-    /** Số entry tham gia kỳ này. */
-    ticketEntryCount: number;
-    /** Tổng doanh thu kỳ này. */
-    totalSalesAmount: number;
-    /** Tổng payout sau settle. */
-    totalPayoutAmount?: number;
-  };
-
-  // ───── Void Info ─────
-
-  /** Thông tin khi kỳ quay bị huỷ. Chỉ có khi status = void. */
-  voidInfo?: {
-    reason: string;
-    voidedBy?: string;
-    voidedAt: Date;
-  };
+  /** Thông tin khi kỳ quay bị huỷ. */
+  voidInfo?: DrawVoidInfo;
 
   /** Tổng kết void flow (entries refund). */
-  voidSummary?: {
-    totalVoidedEntries: number;
-    totalOriginalAmount: number;
-    totalRefundAmount: number;
-    completedAt: Date;
-  };
+  voidSummary?: DrawVoidSummary;
 
   // ───── Timestamps ─────
 

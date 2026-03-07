@@ -190,7 +190,10 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
 
     // ── 5. Load commission rate ──
     const tenantConfig = await this.getTenantConfig.run({ tenantId });
-    const commissionRate = tenantConfig?.commissionRate ?? globalConfig.rates.defaultCommissionRate;
+    if (!tenantConfig || tenantConfig.isEnabled !== true) {
+      throw AppException.unauthorized("Không được phép chơi game. Vui lòng liên hệ admin.");
+    }
+    const commissionRate = tenantConfig.commissionRate;
 
     // ── 6. Calculate pricing ──
     const unitPrice = play.unitPrice;

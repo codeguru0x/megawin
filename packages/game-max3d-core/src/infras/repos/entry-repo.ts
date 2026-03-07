@@ -11,6 +11,8 @@ export abstract class AbstractEntryRepository<
   TMapper extends MongoMapper<Document, TEntity>,
   TDrawResult extends object,
   TPayoutStatus extends string,
+  TEntryPayout extends { winAmount: number; payoutAmount: number; settledAt: Date },
+  TEntryVoidInfo extends { originalAmount: number; refundAmount: number; voidedAt: Date },
 > extends BaseRepo<TEntity, TMapper> {
   private readonly seqRepo = new EntryChangeSeqRepository();
 
@@ -102,18 +104,7 @@ export abstract class AbstractEntryRepository<
   async bulkSettleEntries(
     items: Array<{
       entryId: string;
-      payout: {
-        winAmount: number;
-        payoutAmount: number;
-        tiers: Array<{
-          tier: string;
-          hitCount: number;
-          unitAmount: number;
-          amount: number;
-        }>;
-        settledAt: Date;
-        payoutStatus?: string;
-      };
+      payout: TEntryPayout;
       outcome: string;
       result: TDrawResult & { publishedAt: Date };
     }>,
@@ -396,7 +387,7 @@ export abstract class AbstractEntryRepository<
   }
 
   async bulkVoidEntries(
-    items: Array<{ entryId: string; amount: number }>,
+    items: Array<{ entryId: string; voidInfo: TEntryVoidInfo }>,
   ): Promise<{ modifiedCount: number }> {
     if (items.length === 0) return { modifiedCount: 0 };
 
@@ -410,12 +401,7 @@ export abstract class AbstractEntryRepository<
           $set: {
             status: EntryStatus.Void,
             outcome: EntryOutcome.Void,
-            voidInfo: {
-              originalAmount: item.amount,
-              refundAmount: item.amount,
-              refundStatus: "pending",
-              voidedAt: now,
-            },
+            voidInfo: item.voidInfo,
             version,
             updatedAt: now,
           },

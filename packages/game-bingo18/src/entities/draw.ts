@@ -13,6 +13,92 @@ import type { DrawStatus } from "@megawin/game-core/entities";
 import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Cửa sổ bán vé cho kỳ quay. */
+export interface DrawSales {
+  /** Thời điểm bắt đầu bán vé. undefined nếu chưa mở bán. */
+  openAt?: Date;
+  /** Thời điểm đóng bán = drawTime - salesCloseBeforeSeconds (từ global config). */
+  closeAt: Date;
+}
+
+/** Tham chiếu kỳ quay Vietlott tương ứng (nếu liên kết). */
+export interface DrawVietlottRef {
+  /** Mã kỳ quay Vietlott. */
+  drawPeriod: string;
+  /** Ngày quay Vietlott, format "YYYY-MM-DD". */
+  drawDate: ISODateString;
+}
+
+/**
+ * Kết quả kỳ quay: 3 số từ {1,2,3,4,5,6}.
+ * Set khi status chuyển sang "published".
+ */
+export interface DrawResult {
+  /** 3 số kết quả (không sorted, giữ nguyên thứ tự quay). */
+  numbers: number[];
+  /** Tổng 3 số quay (3-18). Dùng để xác định side bet thắng/thua. */
+  sum: number;
+  /** Thời điểm công bố kết quả. Set bởi admin hoặc hệ thống tự động. */
+  publishedAt: Date;
+}
+
+/**
+ * Phân tích tài chính kỳ quay. Set sau khi settle hoàn tất.
+ * Tính bởi `calculateBingo18DrawFinancials()`.
+ */
+export interface DrawFinancial {
+  /** Tổng doanh thu = Σ(entry.amount) cho tất cả entries trong kỳ. */
+  totalRevenue: number;
+  /** Tổng tiền thưởng = Σ(entry.payout.winAmount) cho tất cả entries thắng. */
+  totalPrizes: number;
+  /** Hoa hồng đại lý = Σ(tenant.revenue × tenant.commissionRate). */
+  totalAgentCommission: number;
+  /** Phần công ty = totalRevenue × companyRate (từ global config). */
+  companyTake: number;
+}
+
+/** Thống kê vận hành kỳ quay. Cập nhật realtime khi có entry mới hoặc payout. */
+export interface DrawStats {
+  /** Tổng entries tham gia kỳ quay. Mỗi ticket cho 1 entry per draw. */
+  ticketEntryCount: number;
+  /** Tổng doanh thu bán vé = Σ(entry.amount). Cập nhật khi entry được tạo. */
+  totalSalesAmount: number;
+  /** Tổng tiền đã trả = Σ(entry.payout.payoutAmount). Set sau dispatch payout. */
+  totalPayoutAmount?: number;
+}
+
+/**
+ * Thông tin huỷ kỳ quay. Set khi admin huỷ kỳ quay (status → voided).
+ * Khi void, tất cả entries sẽ được refund.
+ */
+export interface DrawVoidInfo {
+  /** Lý do huỷ kỳ quay, do admin nhập. */
+  reason: string;
+  /** ID admin thực hiện void. undefined nếu void bởi hệ thống tự động. */
+  voidedBy?: string;
+  /** Thời điểm thực hiện void. */
+  voidedAt: Date;
+}
+
+/**
+ * Tổng hợp kết quả void sau khi refund toàn bộ entries hoàn tất.
+ * Set sau khi tất cả refund đã dispatch thành công.
+ */
+export interface DrawVoidSummary {
+  /** Tổng entries đã bị void trong kỳ. */
+  totalVoidedEntries: number;
+  /** Tổng tiền cược gốc của các entries bị void = Σ(entry.amount). */
+  totalOriginalAmount: number;
+  /** Tổng tiền đã hoàn trả = Σ(entry.voidInfo.refundAmount). Bingo 18 hoàn 100%. */
+  totalRefundAmount: number;
+  /** Thời điểm hoàn tất refund entry cuối cùng. */
+  completedAt: Date;
+}
+
+// ─────────────────────────────────────────────
 // Draw Document
 // ─────────────────────────────────────────────
 
@@ -41,106 +127,29 @@ export interface DrawDoc {
    */
   status: DrawStatus;
 
-  // ───── Sales Window ─────
-
   /** Cửa sổ bán vé cho kỳ quay. */
-  sales: {
-    /** Thời điểm bắt đầu bán vé. undefined nếu chưa mở bán. */
-    openAt?: Date;
-    /** Thời điểm đóng bán = drawTime - salesCloseBeforeSeconds (từ global config). */
-    closeAt: Date;
-  };
+  sales: DrawSales;
 
-  // ───── Vietlott Reference ─────
-
-  /** Tham chiếu kỳ quay Vietlott tương ứng (nếu liên kết). */
-  vietlottRef?: {
-    /** Mã kỳ quay Vietlott. */
-    drawPeriod: string;
-    /** Ngày quay Vietlott, format "YYYY-MM-DD". */
-    drawDate: ISODateString;
-  };
-
-  // ───── Financial Date ─────
+  /** Tham chiếu kỳ quay Vietlott. */
+  vietlottRef?: DrawVietlottRef;
 
   /** Ngày tài chính, dùng cho báo cáo. Thường = drawDate. */
   financialDate: ISODateString;
 
-  // ───── Result ─────
+  /** Kết quả kỳ quay. */
+  result?: DrawResult;
 
-  /**
-   * Kết quả kỳ quay: 3 số từ {1,2,3,4,5,6}.
-   * Set khi status chuyển sang "published".
-   */
-  result?: {
-    /** 3 số kết quả (không sorted, giữ nguyên thứ tự quay). */
-    numbers: number[];
+  /** Phân tích tài chính kỳ quay. */
+  financial?: DrawFinancial;
 
-    /** Tổng 3 số quay (3-18). Dùng để xác định side bet thắng/thua. */
-    sum: number;
+  /** Thống kê vận hành kỳ quay. */
+  stats?: DrawStats;
 
-    /** Thời điểm công bố kết quả. Set bởi admin hoặc hệ thống tự động. */
-    publishedAt: Date;
-  };
+  /** Thông tin huỷ kỳ quay. */
+  voidInfo?: DrawVoidInfo;
 
-  // ───── Financial Breakdown (sau settle) ─────
-
-  /**
-   * Phân tích tài chính kỳ quay. Set sau khi settle hoàn tất.
-   * Tính bởi `calculateBingo18DrawFinancials()`.
-   */
-  financial?: {
-    /** Tổng doanh thu = Σ(entry.amount) cho tất cả entries trong kỳ. */
-    totalRevenue: number;
-    /** Tổng tiền thưởng = Σ(entry.payout.winAmount) cho tất cả entries thắng. */
-    totalPrizes: number;
-    /** Hoa hồng đại lý = Σ(tenant.revenue × tenant.commissionRate). */
-    totalAgentCommission: number;
-    /** Phần công ty = totalRevenue × companyRate (từ global config). */
-    companyTake: number;
-  };
-
-  // ───── Operational Stats ─────
-
-  /** Thống kê vận hành kỳ quay. Cập nhật realtime khi có entry mới hoặc payout. */
-  stats?: {
-    /** Tổng entries tham gia kỳ quay. Mỗi ticket cho 1 entry per draw. */
-    ticketEntryCount: number;
-    /** Tổng doanh thu bán vé = Σ(entry.amount). Cập nhật khi entry được tạo. */
-    totalSalesAmount: number;
-    /** Tổng tiền đã trả = Σ(entry.payout.payoutAmount). Set sau dispatch payout. */
-    totalPayoutAmount?: number;
-  };
-
-  // ───── Void Info ─────
-
-  /**
-   * Thông tin huỷ kỳ quay. Set khi admin huỷ kỳ quay (status → voided).
-   * Khi void, tất cả entries sẽ được refund.
-   */
-  voidInfo?: {
-    /** Lý do huỷ kỳ quay, do admin nhập. */
-    reason: string;
-    /** ID admin thực hiện void. undefined nếu void bởi hệ thống tự động. */
-    voidedBy?: string;
-    /** Thời điểm thực hiện void. */
-    voidedAt: Date;
-  };
-
-  /**
-   * Tổng hợp kết quả void sau khi refund toàn bộ entries hoàn tất.
-   * Set sau khi tất cả refund đã dispatch thành công.
-   */
-  voidSummary?: {
-    /** Tổng entries đã bị void trong kỳ. */
-    totalVoidedEntries: number;
-    /** Tổng tiền cược gốc của các entries bị void = Σ(entry.amount). */
-    totalOriginalAmount: number;
-    /** Tổng tiền đã hoàn trả = Σ(entry.voidInfo.refundAmount). Bingo 18 hoàn 100%. */
-    totalRefundAmount: number;
-    /** Thời điểm hoàn tất refund entry cuối cùng. */
-    completedAt: Date;
-  };
+  /** Tổng hợp kết quả void. */
+  voidSummary?: DrawVoidSummary;
 
   // ───── Timestamps ─────
 

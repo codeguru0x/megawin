@@ -1,6 +1,8 @@
 import {
   Max3dproCollections,
   PayoutStatus,
+  type EntryPayout,
+  type EntryVoidInfo,
 } from "@megawin/game-max3dpro/entities";
 import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
 import { AbstractEntryRepository } from "@megawin/game-max3d-core/repos";
@@ -10,7 +12,9 @@ export class EntryRepository extends AbstractEntryRepository<
   EntryEntity,
   EntryMapper,
   Max3dproDrawResult,
-  string
+  string,
+  EntryPayout,
+  EntryVoidInfo
 > {
   constructor() {
     super({

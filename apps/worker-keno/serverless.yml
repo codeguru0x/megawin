@@ -4,6 +4,12 @@ service: mw-worker-keno
 plugins:
   - serverless-offline
 
+custom:
+  prune:
+    automatic: true
+    number: 3
+    includeLayers: true
+
 provider:
   name: aws
   runtime: nodejs24.x

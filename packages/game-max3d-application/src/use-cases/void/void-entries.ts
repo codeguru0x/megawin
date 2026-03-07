@@ -38,9 +38,15 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEn
         return { drawId, done: true };
       }
 
+      const now = new Date();
       const items = entries.map((entry) => ({
         entryId: entry.id,
-        amount: entry.amount ?? 0,
+        voidInfo: {
+          originalAmount: entry.amount ?? 0,
+          refundAmount: entry.amount ?? 0,
+          refundStatus: "pending" as const,
+          voidedAt: now,
+        },
       }));
 
       await this.entryRepo.bulkVoidEntries(items);

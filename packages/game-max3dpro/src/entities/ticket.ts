@@ -13,6 +13,75 @@ import type { PlayMode, PlayType } from "./enums";
 import type { BoardSelection, ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Dữ liệu dẫn xuất từ selection của board. */
+export interface BoardDerived {
+  /**
+   * Số cặp (pairs) hai bộ ba số = số lần tham gia dự thưởng.
+   * - multiNumber: C(n,2) cặp, n = số bộ ba số chọn (3-20)
+   * - multiDigit: tuỳ vào loại chữ số đầu × sau
+   */
+  lineCount: number;
+}
+
+/** Kế hoạch tham gia các kỳ quay. */
+export interface TicketDrawPlan {
+  /** Danh sách drawId các kỳ quay tham gia. */
+  drawIds: string[];
+  /** Số kỳ quay tham gia = drawIds.length. */
+  drawCount: number;
+}
+
+/** Thông tin giá vé. */
+export interface TicketPricing {
+  /** Mệnh giá 1 pair (VND). Snapshot từ global config. */
+  unitPrice: number;
+  /** Tổng cặp (pairs) mỗi kỳ = Σ(boards[].derived.lineCount). */
+  linesPerDraw: number;
+  /** Tiền cược mỗi kỳ = linesPerDraw × unitPrice. */
+  amountPerDraw: number;
+  /** Tổng tiền vé = amountPerDraw × drawCount. */
+  totalAmount: number;
+}
+
+/** Tiến độ đối soát kỳ quay. */
+export interface TicketProgress {
+  /** Tổng kỳ quay cần đối soát = drawPlan.drawCount. */
+  totalDraws: number;
+  /** Số kỳ quay đã đối soát xong. */
+  settledDraws: number;
+}
+
+/** Tổng kết thắng thua sau đối soát. */
+export interface TicketSettlement {
+  /** Tổng tiền thắng tích luỹ = Σ(entry.payout.winAmount) qua tất cả kỳ. */
+  totalWinAmount: number;
+  /** Thời điểm settle kỳ gần nhất. */
+  lastSettledAt?: Date;
+}
+
+/**
+ * Tổng kết khi vé bị void của Max3D Pro – void theo BOARD (không phải theo draw).
+ *
+ * Max3D Pro cho phép void 1 phần board trong vé (board-level void),
+ * khác với các game khác (draw-level void).
+ */
+export interface TicketVoidSummary {
+  /** True nếu toàn bộ vé bị void (không partial). */
+  isFullVoid: boolean;
+  /** Danh sách boardNo bị void. */
+  voidedBoards: string[];
+  /** Tiền cược gốc trước void. */
+  originalAmount: number;
+  /** Tiền hoàn trả. */
+  refundAmount: number;
+  /** Thời điểm void. */
+  voidedAt: Date;
+}
+
+// ─────────────────────────────────────────────
 // Board
 // ─────────────────────────────────────────────
 
@@ -28,14 +97,7 @@ export interface Board {
   /** Lựa chọn số của người chơi. */
   selection: BoardSelection;
   /** Dữ liệu dẫn xuất từ selection. */
-  derived: {
-    /**
-     * Số cặp (pairs) hai bộ ba số = số lần tham gia dự thưởng.
-     * - multiNumber: C(n,2) cặp, n = số bộ ba số chọn (3-20)
-     * - multiDigit: tuỳ vào loại chữ số đầu × sau
-     */
-    lineCount: number;
-  };
+  derived: BoardDerived;
 }
 
 // ─────────────────────────────────────────────
@@ -57,57 +119,22 @@ export interface TicketDoc {
   channel: TicketChannel;
 
   /** Kế hoạch tham gia các kỳ quay. */
-  drawPlan: {
-    /** Danh sách drawId các kỳ quay tham gia. */
-    drawIds: string[];
-    /** Số kỳ quay tham gia = drawIds.length. */
-    drawCount: number;
-  };
+  drawPlan: TicketDrawPlan;
 
   /** Thông tin giá vé. */
-  pricing: {
-    /** Mệnh giá 1 pair (VND). Snapshot từ global config. */
-    unitPrice: number;
-    /** Tổng cặp (pairs) mỗi kỳ = Σ(boards[].derived.lineCount). */
-    linesPerDraw: number;
-    /** Tiền cược mỗi kỳ = linesPerDraw × unitPrice. */
-    amountPerDraw: number;
-    /** Tổng tiền vé = amountPerDraw × drawCount. */
-    totalAmount: number;
-  };
+  pricing: TicketPricing;
 
   /** Danh sách boards (tối đa 4: A, B, C, D). */
   boards: Board[];
 
   /** Tiến độ đối soát kỳ quay. */
-  progress: {
-    /** Tổng kỳ quay cần đối soát = drawPlan.drawCount. */
-    totalDraws: number;
-    /** Số kỳ quay đã đối soát xong. */
-    settledDraws: number;
-  };
+  progress: TicketProgress;
 
   /** Tổng kết thắng thua sau đối soát. */
-  settlement?: {
-    /** Tổng tiền thắng tích luỹ = Σ(entry.payout.winAmount) qua tất cả kỳ. */
-    totalWinAmount: number;
-    /** Thời điểm settle kỳ gần nhất. */
-    lastSettledAt?: Date;
-  };
+  settlement?: TicketSettlement;
 
-  /** Tổng kết khi vé bị void (toàn bộ hoặc một phần). */
-  voidSummary?: {
-    /** True nếu toàn bộ vé bị void (không partial). */
-    isFullVoid: boolean;
-    /** Danh sách boardNo bị void. */
-    voidedBoards: string[];
-    /** Tiền cược gốc trước void. */
-    originalAmount: number;
-    /** Tiền hoàn trả. */
-    refundAmount: number;
-    /** Thời điểm void. */
-    voidedAt: Date;
-  };
+  /** Tổng kết khi vé bị void (toàn bộ hoặc một phần board). */
+  voidSummary?: TicketVoidSummary;
 
   /** Trạng thái vé: pending → active → completed / voided. */
   status: TicketStatus;

@@ -19,6 +19,80 @@ import type { ISODateString } from "./types";
 import type { Long } from "@megawin/game-core/types";
 
 // ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Thông tin hoa hồng đại lý, snapshot tại thời điểm tạo entry. */
+export interface EntryTenantSnapshot {
+  /** Tỷ lệ hoa hồng snapshot tại thời điểm tạo entry. Lấy từ tenant config. */
+  commissionRate: number;
+  /** Số tiền hoa hồng = amount × commissionRate. Tính sẵn để dùng trong settle. */
+  commissionAmount: number;
+}
+
+/** Tóm tắt nội dung cược, snapshot từ ticket. Dùng để hiển thị + settle. */
+export interface EntrySummary {
+  /** Mã vé (display), format do hệ thống sinh. */
+  ticketNo: string;
+  /** Danh sách boards cơ bản (singleNum, doubleMatch, tripleMatch). */
+  boards: EntryBoardSnapshot[];
+  /** Danh sách side bets (sumTotal, bigSmallDraw). */
+  sideBets: EntrySideBetSnapshot[];
+}
+
+/**
+ * Snapshot kết quả kỳ quay. Copy từ draw khi settle.
+ * Giữ local để truy vấn entry không cần join draw.
+ */
+export interface EntryResult {
+  /** 3 số kết quả quay (giữ nguyên thứ tự). */
+  numbers: number[];
+  /** Tổng 3 số quay (3-18). */
+  sum: number;
+  /** Thời điểm công bố kết quả. */
+  publishedAt: Date;
+}
+
+/** Chi tiết thanh toán. Set sau khi settle tính xong thắng/thua. */
+export interface EntryPayout {
+  /** Tổng tiền thắng = Σ(boardPayouts.winAmount) + Σ(sideBetPayouts.winAmount). */
+  winAmount: number;
+  /** Tiền trả cho player = winAmount (Bingo 18 không có payout cap). */
+  payoutAmount: number;
+  /** Chi tiết payout từng board cơ bản. */
+  boardPayouts: EntryBoardPayout[];
+  /** Chi tiết payout từng side bet. */
+  sideBetPayouts: EntrySideBetPayout[];
+  /** Thời điểm settle hoàn tất (tính toán xong thắng/thua). */
+  settledAt: Date;
+  /** Trạng thái dispatch tiền thưởng vào ví player. */
+  payoutStatus?: PayoutStatus;
+  /** Thời điểm dispatch payout vào ví player. */
+  payoutDispatchedAt?: Date;
+  /** Số lần retry dispatch payout đã thực hiện. */
+  payoutRetryCount?: number;
+  /** Lỗi cuối cùng khi dispatch payout (nếu có). Dùng để debug. */
+  payoutLastError?: string;
+}
+
+/**
+ * Thông tin void + refund. Set khi kỳ quay bị huỷ.
+ * Toàn bộ tiền cược được hoàn 100%.
+ */
+export interface EntryVoidInfo {
+  /** Tiền cược gốc trước void = entry.amount. */
+  originalAmount: number;
+  /** Tiền hoàn trả = originalAmount (hoàn 100%). */
+  refundAmount: number;
+  /** Trạng thái refund: pending → completed hoặc failed. */
+  refundStatus: RefundStatus;
+  /** Thời điểm entry bị void. */
+  voidedAt: Date;
+  /** Thời điểm refund hoàn tất (tiền đã vào ví player). */
+  refundedAt?: Date;
+}
+
+// ─────────────────────────────────────────────
 // Entry Document
 // ─────────────────────────────────────────────
 
@@ -49,12 +123,7 @@ export interface TicketEntryDoc {
   // ───── Tenant ─────
 
   /** Thông tin hoa hồng đại lý, snapshot tại thời điểm tạo entry. */
-  tenant: {
-    /** Tỷ lệ hoa hồng snapshot tại thời điểm tạo entry. Lấy từ tenant config. */
-    commissionRate: number;
-    /** Số tiền hoa hồng = amount × commissionRate. Tính sẵn để dùng trong settle. */
-    commissionAmount: number;
-  };
+  tenant: EntryTenantSnapshot;
 
   // ───── Entry Status ─────
 
@@ -76,14 +145,7 @@ export interface TicketEntryDoc {
   // ───── Entry Summary ─────
 
   /** Tóm tắt nội dung cược, snapshot từ ticket. Dùng để hiển thị + settle. */
-  entrySummary: {
-    /** Mã vé (display), format do hệ thống sinh. */
-    ticketNo: string;
-    /** Danh sách boards cơ bản (singleNum, doubleMatch, tripleMatch). */
-    boards: EntryBoardSnapshot[];
-    /** Danh sách side bets (sumTotal, bigSmallDraw). */
-    sideBets: EntrySideBetSnapshot[];
-  };
+  entrySummary: EntrySummary;
 
   // ───── Result Snapshot ─────
 
@@ -91,14 +153,7 @@ export interface TicketEntryDoc {
    * Snapshot kết quả kỳ quay. Copy từ draw khi settle.
    * Giữ local để truy vấn entry không cần join draw.
    */
-  result?: {
-    /** 3 số kết quả quay (giữ nguyên thứ tự). */
-    numbers: number[];
-    /** Tổng 3 số quay (3-18). */
-    sum: number;
-    /** Thời điểm công bố kết quả. */
-    publishedAt: Date;
-  };
+  result?: EntryResult;
 
   // ───── Outcome ─────
 
@@ -108,26 +163,7 @@ export interface TicketEntryDoc {
   // ───── Payout ─────
 
   /** Chi tiết thanh toán. Set sau khi settle tính xong thắng/thua. */
-  payout?: {
-    /** Tổng tiền thắng = Σ(boardPayouts.winAmount) + Σ(sideBetPayouts.winAmount). */
-    winAmount: number;
-    /** Tiền trả cho player = winAmount (Bingo 18 không có payout cap). */
-    payoutAmount: number;
-    /** Chi tiết payout từng board cơ bản. */
-    boardPayouts: EntryBoardPayout[];
-    /** Chi tiết payout từng side bet. */
-    sideBetPayouts: EntrySideBetPayout[];
-    /** Thời điểm settle hoàn tất (tính toán xong thắng/thua). */
-    settledAt: Date;
-    /** Trạng thái dispatch tiền thưởng vào ví player. */
-    payoutStatus?: PayoutStatus;
-    /** Thời điểm dispatch payout vào ví player. */
-    payoutDispatchedAt?: Date;
-    /** Số lần retry dispatch payout đã thực hiện. */
-    payoutRetryCount?: number;
-    /** Lỗi cuối cùng khi dispatch payout (nếu có). Dùng để debug. */
-    payoutLastError?: string;
-  };
+  payout?: EntryPayout;
 
   // ───── Void / Refund ─────
 
@@ -135,18 +171,7 @@ export interface TicketEntryDoc {
    * Thông tin void + refund. Set khi kỳ quay bị huỷ.
    * Toàn bộ tiền cược được hoàn 100%.
    */
-  voidInfo?: {
-    /** Tiền cược gốc trước void = entry.amount. */
-    originalAmount: number;
-    /** Tiền hoàn trả = originalAmount (hoàn 100%). */
-    refundAmount: number;
-    /** Trạng thái refund: pending → completed hoặc failed. */
-    refundStatus: RefundStatus;
-    /** Thời điểm entry bị void. */
-    voidedAt: Date;
-    /** Thời điểm refund hoàn tất (tiền đã vào ví player). */
-    refundedAt?: Date;
-  };
+  voidInfo?: EntryVoidInfo;
 
   // ───── Timestamps ─────
 

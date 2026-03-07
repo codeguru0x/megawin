@@ -278,22 +278,6 @@ export interface SettleFinancials {
    *   - Không có ai trúng tier1-tier3.
    */
   splitDetails?: PowerSplitDetails;
-
-  /**
-   * Chi tiết doanh thu theo từng tenant — dùng cho báo cáo tài chính.
-   */
-  tenantBreakdown: Array<{
-    /** Mã tenant. */
-    tenantId: string;
-    /** Doanh thu tenant (VND). */
-    revenue: number;
-    /** Hoa hồng tenant (VND). */
-    commission: number;
-    /** Tỷ lệ hoa hồng tenant (0-1). */
-    commissionRate: number;
-    /** Số entries của tenant. */
-    entryCount: number;
-  }>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -18,7 +18,11 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { JackpotCycleClosedReason } from "@megawin/game-power655/entities";
+import type {
+  JackpotCycleClosedReason,
+  JackpotSplitDetail,
+  JackpotWinnerInfo,
+} from "@megawin/game-power655/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
@@ -72,7 +76,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       closingJackpot1: closingJp1,
       openingJackpot2: jp2OpeningAmount,
       closingJackpot2: closingJp2,
-      isSplitCycle: isSplitCycle || undefined,
+      isSplitCycle: !!isSplitCycle,
     });
 
     if (!updated) {
@@ -108,13 +112,8 @@ export class FinalizeSettleUseCase extends InternalUseCase<
    */
   private async updateJackpotCycle(input: SettleContextWithFinancials): Promise<void> {
     const { drawId, jp1OpeningAmount, jp2OpeningAmount, isSplitCycle, financials } = input;
-    const {
-      closingJp1,
-      closingJp2,
-      hasJackpot1Winner,
-      hasJackpot2Winner,
-      splitDetails,
-    } = financials;
+    const { closingJp1, closingJp2, hasJackpot1Winner, hasJackpot2Winner, splitDetails } =
+      financials;
 
     const activeCycle = await this.cycleRepo.getActiveCycle();
     if (!activeCycle) return;
@@ -137,7 +136,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
         closedReason = "split";
       }
 
-      let winners: any[] | undefined;
+      let winners: JackpotWinnerInfo[] | undefined;
       if (hasJackpot1Winner) {
         const jp1Entries = await this.entryRepo.findJackpot1Winners(drawId);
         const jp1PerWinner =
@@ -148,25 +147,25 @@ export class FinalizeSettleUseCase extends InternalUseCase<
           prizeAmount: jp1PerWinner,
           entryId: e.id,
           drawId,
-          jackpotType: "jackpot1",
+          jackpotType: "jp1" as const,
         }));
       }
       if (hasJackpot2Winner) {
         const jp2Entries = await this.entryRepo.findJackpot2Winners(drawId);
         const jp2PerWinner =
           jp2Entries.length > 0 ? Math.floor(jp2OpeningAmount / jp2Entries.length) : 0;
-        const jp2Winners = jp2Entries.map((e) => ({
+        const jp2Winners: JackpotWinnerInfo[] = jp2Entries.map((e) => ({
           accountId: e.accountId,
           tenantId: e.tenantId,
           prizeAmount: jp2PerWinner,
           entryId: e.id,
           drawId,
-          jackpotType: "jackpot2",
+          jackpotType: "jp2" as const,
         }));
         winners = [...(winners ?? []), ...jp2Winners];
       }
 
-      let splitDetail: any;
+      let splitDetail: JackpotSplitDetail | undefined;
       if (isSplitCycle && splitDetails) {
         let totalWinners = 0;
         let totalPaid = 0;

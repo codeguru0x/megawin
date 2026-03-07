@@ -53,9 +53,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 > {
   private readonly entryRepo = new EntryRepository();
 
-  protected async execute(
-    input: SettleContext
-  ): Promise<SettleEntriesBatchResult> {
+  protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
     const { drawId, result, config } = input;
     const drawResult: DrawResultForMatch = {
       numbers: result.numbers,
@@ -65,10 +63,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     const startTime = Date.now();
 
     while (Date.now() - startTime < MAX_EXECUTION_MS) {
-      const entries = await this.entryRepo.getScheduledEntries(
-        drawId,
-        BATCH_SIZE
-      );
+      const entries = await this.entryRepo.getScheduledEntries(drawId, BATCH_SIZE);
 
       if (entries.length === 0) {
         return { done: true };
@@ -82,20 +77,20 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           payoutAmount: number;
           boardPayouts: Array<{
             boardNo: string;
-            playType: string;
+            playType: Bingo18PlayType;
             matchCount: number;
             winAmount: number;
           }>;
           sideBetPayouts: Array<{
-            playType: string;
+            playType: Bingo18PlayType;
             sum?: number;
-            bet?: string;
+            bet?: Bingo18BigSmallBet;
             outcome: string;
             isWin: boolean;
             winAmount: number;
           }>;
           settledAt: Date;
-          payoutStatus?: string;
+          payoutStatus?: PayoutStatus;
         };
         outcome: string;
         result: {
@@ -108,7 +103,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       for (const entry of entries) {
         const boardPayouts: Array<{
           boardNo: string;
-          playType: string;
+          playType: Bingo18PlayType;
           matchCount: number;
           winAmount: number;
         }> = [];
@@ -118,11 +113,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           if (board.isVoid) continue;
 
           if (board.playType === Bingo18PlayType.SingleNum) {
-            const matchResult = matchSingleNum(
-              board.number!,
-              drawResult,
-              config.singleNumPrizes,
-            );
+            const matchResult = matchSingleNum(board.number!, drawResult, config.singleNumPrizes);
             boardPayouts.push({
               boardNo: board.boardNo,
               playType: board.playType,
@@ -158,9 +149,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         }
 
         const sideBetPayouts: Array<{
-          playType: string;
+          playType: Bingo18PlayType;
           sum?: number;
-          bet?: string;
+          bet?: Bingo18BigSmallBet;
           outcome: string;
           isWin: boolean;
           winAmount: number;
@@ -171,11 +162,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           if (sb.isVoid) continue;
 
           if (sb.playType === Bingo18PlayType.SumTotal) {
-            const matchResult = matchSumTotal(
-              sb.sum!,
-              drawResult,
-              config.sumTotalPrizes,
-            );
+            const matchResult = matchSumTotal(sb.sum!, drawResult, config.sumTotalPrizes);
             sideBetPayouts.push({
               playType: sb.playType,
               sum: sb.sum,

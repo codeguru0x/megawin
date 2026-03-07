@@ -74,6 +74,7 @@ import type { Board } from "@megawin/game-lotto535/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { SettleContext } from "./types";
+import { EntryOutcome } from "@megawin/game-core/entities";
 
 /** Số entries xử lý mỗi batch DB query. */
 const BATCH_SIZE = 500;
@@ -201,9 +202,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             settledAt: now,
             payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
           },
-          outcome: hasWin ? "win" : "loss",
+          outcome: hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
           result: {
-            winningMain: result.winningMain as any,
+            winningMain: result.winningMain,
             winningSpecial: result.winningSpecial,
             publishedAt: now,
           },

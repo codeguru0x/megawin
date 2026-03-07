@@ -92,10 +92,7 @@ interface CappedTier {
   maxSetsForFixed: number;
 }
 
-export class ApplyPayoutCapsUseCase extends InternalUseCase<
-  SettleContext,
-  ApplyPayoutCapsResult
-> {
+export class ApplyPayoutCapsUseCase extends InternalUseCase<SettleContext, ApplyPayoutCapsResult> {
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(input: SettleContext): Promise<ApplyPayoutCapsResult> {
@@ -106,19 +103,19 @@ export class ApplyPayoutCapsUseCase extends InternalUseCase<
     const tiers: CappedTier[] = [
       {
         pickCount: 8,
-        fixedPrize: basicPrizes.pick8?.[8] ?? 0,
+        fixedPrize: basicPrizes.pick8?.["8"] ?? 0,
         maxPerDraw: payoutCaps.pick8MaxPerDraw,
         maxSetsForFixed: payoutCaps.pick8MaxSetsForFixed,
       },
       {
         pickCount: 9,
-        fixedPrize: basicPrizes.pick9?.[9] ?? 0,
+        fixedPrize: basicPrizes.pick9?.["9"] ?? 0,
         maxPerDraw: payoutCaps.pick9MaxPerDraw,
         maxSetsForFixed: payoutCaps.pick9MaxSetsForFixed,
       },
       {
         pickCount: 10,
-        fixedPrize: basicPrizes.pick10?.[10] ?? 0,
+        fixedPrize: basicPrizes.pick10?.["10"] ?? 0,
         maxPerDraw: payoutCaps.pick10MaxPerDraw,
         maxSetsForFixed: payoutCaps.pick10MaxSetsForFixed,
       },

@@ -15,9 +15,15 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import { Lotto535Collections, PayoutStatus, PrizeTier } from "@megawin/game-lotto535/entities";
+import {
+  Lotto535Collections,
+  PayoutStatus,
+  PrizeTier,
+  type EntryPayout,
+  type EntryVoidInfo,
+  type EntryResult,
+} from "@megawin/game-lotto535/entities";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
-import type { MainTuple, Special } from "@megawin/game-lotto535/entities";
 import { ObjectId, Long } from "mongodb";
 import { BaseRepo } from "./base-repo";
 import { EntryMapper, type EntryEntity } from "../mappers/entry-mapper";
@@ -100,6 +106,103 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   }
 
   // ─────────────────────────────────────────────
+  // Settle Summary (dùng cho CalculateFinancials)
+  // ─────────────────────────────────────────────
+
+  /**
+   * Aggregate tất cả số liệu cần cho CalculateFinancials trong 1 pipeline duy nhất.
+   *
+   * Thay thế 3 pipeline riêng biệt (aggregateSettledPayoutSummary × 2 + countLinesByDrawId):
+   *   - Trước: scan 3 lần cùng tập { drawId, status: Settled }
+   *   - Sau:   1 $match → fan-out qua $facet → scan 1 lần
+   *
+   * Recommended index: { drawId: 1, status: 1 }
+   *
+   * $facet gồm 2 nhánh chạy song song trên cùng input:
+   *   - tierSummary: $unwind + $group by tier → hitCount + amount mỗi tier
+   *   - totals:      $group all → totalSettled + totalPayoutAmount + totalLines
+   */
+  async aggregateSettleSummary(drawId: string): Promise<{
+    /** Tổng số entries đã settle. */
+    totalSettled: number;
+    /** Tổng tiền payout (winAmount sau split bonus nếu có). */
+    totalPayoutAmount: number;
+    /**
+     * Tổng tiền giải cố định (tier1–consolation, KHÔNG bao gồm Jackpot).
+     * Jackpot loại ra vì amount = 0 lúc settle, tiền thực xử lý ở ApplySplitBonuses / FinalizeSettle.
+     */
+    totalFixedPrizes: number;
+    /** Tổng số lines của tất cả entries trong kỳ này. */
+    totalLines: number;
+    /**
+     * Số lần trúng theo từng tier.
+     * Key = tier name (ví dụ "tier1", "jackpot").
+     * Value = tổng hitCount của tất cả entries có tier đó.
+     */
+    tierWinnerCounts: Record<string, number>;
+  }> {
+    const [facetResult] = await this.aggregate([
+      {
+        $match: {
+          drawId,
+          status: EntryStatus.Settled,
+        },
+      },
+      {
+        $facet: {
+          // Nhánh 1: $unwind tiers → group by tier → đếm hitCount và tiền mỗi tier
+          tierSummary: [
+            { $unwind: "$payout.tiers" },
+            {
+              $group: {
+                _id: "$payout.tiers.tier",
+                totalHitCount: { $sum: "$payout.tiers.hitCount" },
+                totalAmount: { $sum: "$payout.tiers.amount" },
+              },
+            },
+          ],
+          // Nhánh 2: đếm entries + sum lines + sum payoutAmount toàn draw
+          totals: [
+            {
+              $group: {
+                _id: null,
+                totalSettled: { $sum: 1 },
+                totalPayoutAmount: {
+                  $sum: { $ifNull: ["$payout.payoutAmount", 0] },
+                },
+                totalLines: { $sum: "$lineCount" },
+              },
+            },
+          ],
+        },
+      },
+    ]);
+
+    const totals = (facetResult as any)?.totals?.[0] ?? {};
+    const tierRows = (facetResult as any)?.tierSummary ?? [];
+
+    let totalFixedPrizes = 0;
+    const tierWinnerCounts: Record<string, number> = {};
+
+    for (const row of tierRows) {
+      tierWinnerCounts[row._id] = row.totalHitCount;
+      // Jackpot tier không tính vào totalFixedPrizes:
+      // amount = 0 khi settle, tiền Jackpot xử lý riêng ở ApplySplitBonuses / FinalizeSettle.
+      if (row._id !== PrizeTier.Jackpot) {
+        totalFixedPrizes += row.totalAmount;
+      }
+    }
+
+    return {
+      totalSettled: totals.totalSettled ?? 0,
+      totalPayoutAmount: totals.totalPayoutAmount ?? 0,
+      totalFixedPrizes,
+      totalLines: totals.totalLines ?? 0,
+      tierWinnerCounts,
+    };
+  }
+
+  // ─────────────────────────────────────────────
   // Status Transitions
   // ─────────────────────────────────────────────
 
@@ -127,25 +230,9 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   async bulkSettleEntries(
     items: Array<{
       entryId: string;
-      payout: {
-        winAmount: number;
-        payoutAmount: number;
-        tiers: Array<{
-          tier: string;
-          hitCount: number;
-          unitAmount: number;
-          amount: number;
-          isSplitBonus?: boolean;
-        }>;
-        settledAt: Date;
-        payoutStatus?: string;
-      };
+      payout: EntryPayout;
       outcome: string;
-      result: {
-        winningMain: MainTuple;
-        winningSpecial: Special;
-        publishedAt: Date;
-      };
+      result: EntryResult;
     }>,
   ): Promise<{ modifiedCount: number }> {
     if (items.length === 0) return { modifiedCount: 0 };
@@ -177,7 +264,11 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   // Aggregation (settle financials / report)
   // ─────────────────────────────────────────────
 
-  /** Revenue + commission per tenant cho 1 draw (exclude voided entries). */
+  /**
+   * Revenue + commission per tenant cho 1 draw (exclude voided entries).
+   *
+   * Recommended index: { drawId: 1, status: 1 }
+   */
   async aggregateRevenueByTenant(drawId: string): Promise<
     Array<{
       tenantId: string;
@@ -203,61 +294,6 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       commission: r.commission ?? 0,
       entryCount: r.entryCount,
     }));
-  }
-
-  /**
-   * Aggregate tổng tiền giải cố định + tier counts từ settled entries.
-   * Tính lại từ DB – không phụ thuộc accumulator.
-   * Dùng cho calculate-financials sau khi settle xong.
-   */
-  async aggregateSettledPayoutSummary(drawId: string): Promise<{
-    totalSettled: number;
-    totalPayoutAmount: number;
-    totalFixedPrizes: number;
-    tierWinnerCounts: Record<string, number>;
-  }> {
-    const result = await this.aggregate([
-      { $match: { drawId, status: EntryStatus.Settled } },
-      { $unwind: "$payout.tiers" },
-      {
-        $group: {
-          _id: "$payout.tiers.tier",
-          totalHitCount: { $sum: "$payout.tiers.hitCount" },
-          totalAmount: { $sum: "$payout.tiers.amount" },
-        },
-      },
-    ]);
-
-    let totalFixedPrizes = 0;
-    const tierWinnerCounts: Record<string, number> = {};
-
-    for (const r of result as any[]) {
-      tierWinnerCounts[r._id] = r.totalHitCount;
-      // jackpot tier không tính vào totalFixedPrizes
-      if (r._id !== PrizeTier.Jackpot) {
-        totalFixedPrizes += r.totalAmount;
-      }
-    }
-
-    const summaryResult = await this.aggregate([
-      { $match: { drawId, status: EntryStatus.Settled } },
-      {
-        $group: {
-          _id: null,
-          totalSettled: { $sum: 1 },
-          totalPayoutAmount: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
-        },
-      },
-    ]);
-
-    const summary = (summaryResult[0] as any) ?? {};
-
-    return {
-      totalSettled: summary.totalSettled ?? 0,
-      totalPayoutAmount: summary.totalPayoutAmount ?? 0,
-      totalFixedPrizes,
-      tierWinnerCounts,
-    };
   }
 
   /** Aggregate report per tenant cho 1 draw + financialDate. */
@@ -455,7 +491,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   }
 
   async bulkVoidEntries(
-    items: Array<{ entryId: string; amount: number }>,
+    items: Array<{ entryId: string; voidInfo: EntryVoidInfo }>,
   ): Promise<{ modifiedCount: number }> {
     if (items.length === 0) return { modifiedCount: 0 };
 
@@ -469,12 +505,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           $set: {
             status: EntryStatus.Void,
             outcome: EntryOutcome.Void,
-            voidInfo: {
-              originalAmount: item.amount,
-              refundAmount: item.amount,
-              refundStatus: "pending",
-              voidedAt: now,
-            },
+            voidInfo: item.voidInfo,
             version,
             updatedAt: now,
           },
@@ -737,10 +768,26 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
 
   /**
    * Patch bonusPerWinner cho 1 tier lên tất cả entries trúng tier đó.
-   * Idempotent: chỉ update entries chưa có tier entry với isSplitBonus=true cho tier cụ thể.
+  /**
+   * Patch split bonus Jackpot vào tất cả entries trúng tier trong 1 draw.
    *
-   * - Push tier mới với isSplitBonus=true vào payout.tiers
-   * - Inc payout.winAmount + payout.payoutAmount
+   * Được gọi bởi ApplySplitBonuses sau khi CalculateFinancials đã tính xong
+   * bonusPerWinner cho từng tier (tier1-tier5).
+   *
+   * ── FILTER STRATEGY ──
+   *   1. outcome: "win" — chỉ scan entries THẮNG, loại bỏ ~90%+ entries thua ngay từ index.
+   *      Entries thua không bao giờ có payout.tiers nên filter array là vô nghĩa với chúng.
+   *   2. $elemMatch: { tier, hitCount > 0 } — chỉ lấy entries thực sự trúng tier này.
+   *   3. $nor (document-level idempotent guard): đảm bảo entry CHƯA được patch tier này.
+   *      $nor cần thiết vì $elemMatch là element-level check (1 phần tử thỏa mãn điều kiện),
+   *      còn ta cần document-level check: "không tồn tại bất kỳ phần tử nào có
+   *      { tier, isSplitBonus: true }". Hai điều kiện này hoạt động ở scope khác nhau.
+   *
+   * ── IDEMPOTENT ──
+   *   $nor đảm bảo: nếu entry đã được patch (isSplitBonus = true cho tier này) thì bỏ qua.
+   *   Chạy lại bao nhiêu lần cũng cho kết quả đúng.
+   *
+   * Recommended index: { drawId: 1, status: 1, outcome: 1 }
    *
    * Returns số entries đã patch.
    */
@@ -749,20 +796,26 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     tier: string,
     bonusPerWinner: number,
   ): Promise<number> {
-    const col = await this.getCollection();
-
     const filter = {
       drawId,
       status: EntryStatus.Settled,
+      // Chỉ scan entries thắng — loại ~90%+ entries thua ngay từ index.
+      // Entries thua không có tier nào trong payout.tiers nên không bao giờ match.
+      outcome: EntryOutcome.Win,
+      // Element-level: entry này có ít nhất 1 tier element trúng
       "payout.tiers": {
-        $elemMatch: { tier, hitCount: { $gt: 0 }, isSplitBonus: { $ne: true } },
+        $elemMatch: { tier, hitCount: { $gt: 0 } },
       },
+      // Document-level idempotent guard: entry chưa được patch split bonus cho tier này.
+      // Cần $nor riêng (không gộp vào $elemMatch) vì:
+      //   $elemMatch chỉ check "có element nào đồng thời thỏa cả điều kiện" (AND trong 1 element),
+      //   còn $nor check "không có element nào có tier + isSplitBonus: true" — phạm vi document.
       $nor: [{ "payout.tiers": { $elemMatch: { tier, isSplitBonus: true } } }],
     };
 
-    const matchingEntries = await col
-      .find(filter, { projection: { _id: 1, "payout.tiers": 1 } })
-      .toArray();
+    const matchingEntries = await this.findManyAsDocuments(filter, {
+      projection: { _id: 1, "payout.tiers": 1 },
+    });
 
     if (matchingEntries.length === 0) return 0;
 
@@ -798,7 +851,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
       };
     });
 
-    const result = await col.bulkWrite(ops, { ordered: false });
+    const result = await this.bulkWrite(ops, { ordered: false });
     return result.modifiedCount;
   }
 

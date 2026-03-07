@@ -53,15 +53,6 @@ export interface DrawFinancialResult {
    * Có thể âm nếu tổng giải thưởng vượt doanh thu.
    */
   profit: number;
-  /** Chi tiết tài chính từng đại lý. */
-  tenantBreakdown: Array<{
-    /** ID đại lý. */
-    tenantId: string;
-    /** Doanh thu đại lý (VND). */
-    revenue: number;
-    /** Hoa hồng đại lý (VND). */
-    commission: number;
-  }>;
 }
 
 /**
@@ -76,13 +67,7 @@ export interface DrawFinancialResult {
 export function calculateKenoDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const { totalRevenue, totalPrizes, tenantRevenues, companyRate } = input;
 
-  const tenantBreakdown = tenantRevenues.map((t) => ({
-    tenantId: t.tenantId,
-    revenue: t.revenue,
-    commission: t.commission,
-  }));
-
-  const totalAgentCommission = tenantBreakdown.reduce((sum, t) => sum + t.commission, 0);
+  const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
 
   const companyTake = Math.round(totalRevenue * companyRate);
 
@@ -94,7 +79,6 @@ export function calculateKenoDrawFinancials(input: DrawFinancialInput): DrawFina
     totalAgentCommission,
     companyTake,
     profit,
-    tenantBreakdown,
   };
 }
 

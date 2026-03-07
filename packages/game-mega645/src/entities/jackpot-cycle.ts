@@ -11,8 +11,7 @@ export const JackpotCycleStatus = {
   Closed: "closed",
 } as const;
 
-export type JackpotCycleStatus =
-  (typeof JackpotCycleStatus)[keyof typeof JackpotCycleStatus];
+export type JackpotCycleStatus = (typeof JackpotCycleStatus)[keyof typeof JackpotCycleStatus];
 
 export const JackpotCycleCloseReason = {
   Split: "split",
@@ -39,6 +38,43 @@ export interface JackpotWinnerInfo {
   entryId: string;
   /** ID kỳ quay trúng Jackpot. */
   drawId: string;
+}
+
+// ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Cấu hình split áp dụng cho chu kỳ (snapshot từ global config khi tạo cycle). */
+export interface JackpotCycleConfig {
+  /** Ngưỡng kích hoạt chia Jackpot (VND). */
+  splitThreshold: number;
+  /** Tỷ lệ chia cho từng tier. */
+  splitRatios: SplitRatios;
+}
+
+/** Phân bổ tiền thưởng cho 1 tier trong kỳ chia. */
+export interface SplitTierAllocation {
+  /** Số người trúng tier này trong kỳ quay split. */
+  winnerCount: number;
+  /** Tiền thưởng bonus cho mỗi người trúng (VND). */
+  bonusPerWinner: number;
+  /** Tổng tiền đã trả cho tier (VND). Công thức: bonusPerWinner × winnerCount. */
+  totalAmount: number;
+}
+
+/** Chi tiết chia Jackpot (chỉ có khi closeReason = "split"). */
+export interface JackpotSplitDetail {
+  /** Tổng số tiền Jackpot được chia (VND). */
+  splitAmount: number;
+  /**
+   * Phân bổ cho từng tier.
+   * Key = PrizeTier ("tier1" | "tier2" | "tier3").
+   */
+  tierAllocations: Record<string, SplitTierAllocation>;
+  /** Tổng số người nhận bonus từ split. */
+  totalWinners: number;
+  /** Tổng tiền bonus đã trả (VND). */
+  totalPaid: number;
 }
 
 /**
@@ -79,12 +115,7 @@ export interface JackpotCycleDoc {
   lastSettledDrawId?: string;
 
   /** Cấu hình split áp dụng cho chu kỳ (snapshot từ global config khi tạo cycle). */
-  config: {
-    /** Ngưỡng kích hoạt chia Jackpot (VND). */
-    splitThreshold: number;
-    /** Tỷ lệ chia cho từng tier. */
-    splitRatios: SplitRatios;
-  };
+  config: JackpotCycleConfig;
 
   /** ID kỳ quay kết thúc chu kỳ. */
   endDrawId?: string;
@@ -94,29 +125,7 @@ export interface JackpotCycleDoc {
   closeReason?: JackpotCycleCloseReason;
 
   /** Chi tiết chia Jackpot (chỉ có khi closeReason = "split"). */
-  splitDetail?: {
-    /** Tổng số tiền Jackpot được chia (VND). */
-    splitAmount: number;
-    /**
-     * Phân bổ cho từng tier.
-     * Key = PrizeTier ("tier1" | "tier2" | "tier3").
-     */
-    tierAllocations: Record<
-      string,
-      {
-        /** Số người trúng tier này trong kỳ quay split. */
-        winnerCount: number;
-        /** Tiền thưởng bonus cho mỗi người trúng (VND). */
-        bonusPerWinner: number;
-        /** Tổng tiền đã trả cho tier (VND). Công thức: bonusPerWinner × winnerCount. */
-        totalAmount: number;
-      }
-    >;
-    /** Tổng số người nhận bonus từ split. */
-    totalWinners: number;
-    /** Tổng tiền bonus đã trả (VND). */
-    totalPaid: number;
-  };
+  splitDetail?: JackpotSplitDetail;
 
   /** Danh sách người trúng Jackpot (6/6 số) trong chu kỳ. */
   winners?: JackpotWinnerInfo[];

@@ -86,20 +86,20 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           payoutAmount: number;
           boardPayouts: Array<{
             boardNo: string;
-            playType: string;
+            playType: KenoPlayType;
             matchCount: number;
             pickCount: number;
             winAmount: number;
           }>;
           sideBetPayouts: Array<{
-            playType: string;
-            bet: string;
+            playType: KenoPlayType;
+            bet: KenoBigSmallBet | KenoEvenOddBet;
             outcome: string;
             isWin: boolean;
             winAmount: number;
           }>;
           settledAt: Date;
-          payoutStatus?: string;
+          payoutStatus?: PayoutStatus;
         };
         outcome: string;
         result: {
@@ -116,7 +116,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         // ── Match từng board cách chơi cơ bản ──
         const boardPayouts: Array<{
           boardNo: string;
-          playType: string;
+          playType: KenoPlayType;
           matchCount: number;
           pickCount: number;
           winAmount: number;
@@ -141,7 +141,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         for (const board of boards) {
           const playTypePrizes = config.basicPrizes[board.playType];
           const pickCount = board.numbers.length;
-          const prizeTable = playTypePrizes ? { [pickCount]: playTypePrizes } : undefined;
+          const prizeTable = playTypePrizes ? { [String(pickCount)]: playTypePrizes } : undefined;
 
           const matchResult = matchBasicBoard(board.numbers, result, prizeTable);
           boardPayouts.push({
@@ -162,8 +162,8 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 
         // ── Match từng side bet (Lớn/Nhỏ, Chẵn/Lẻ) ──
         const sideBetPayouts: Array<{
-          playType: string;
-          bet: string;
+          playType: KenoPlayType;
+          bet: KenoBigSmallBet | KenoEvenOddBet;
           outcome: string;
           isWin: boolean;
           winAmount: number;

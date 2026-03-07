@@ -1,3 +1,12 @@
+/**
+ * Max3D Core – Abstract Ticket Repository
+ *
+ * Shared base cho game-max3d và game-max3dpro.
+ *
+ * Mỗi subclass có thể override `buildVoidSyncSet` để xử lý
+ * void summary theo đặc thù riêng (vd: Max3D void theo board, không theo draw).
+ */
+
 import { TicketStatus, ALL_LISTABLE_STATUSES } from "@megawin/game-core/entities";
 import type { BaseEntity } from "@megawin/data/mongo";
 import type { MongoMapper } from "@megawin/data/mongo";
@@ -5,9 +14,19 @@ import type { AnyBulkWriteOperation, Document, Filter } from "mongodb";
 import { ObjectId } from "mongodb";
 import { BaseRepo } from "./base-repo";
 
+/**
+ * Kết quả aggregate từ entries cho 1 ticket.
+ * Dùng để sync lại ticket document qua bulkSyncSummaries / syncSummary.
+ *
+ * NOTE: Max3D void theo board (không phải theo draw), nên các void fields
+ * (totalVoidedAmount, voidedDrawIds...) không được map vào TicketVoidSummary
+ * của Max3D entity. Abstract class giữ đầy đủ fields để subclass có thể dùng
+ * tuỳ ý thông qua override buildVoidSyncSet().
+ */
 export interface TicketSummary {
   settledCount: number;
   voidedCount: number;
+  /** Tổng kỳ của ticket – lấy từ ticket.drawPlan.drawCount. */
   totalDraws: number;
   totalWinAmount: number;
   totalVoidedAmount: number;
@@ -44,7 +63,11 @@ export abstract class AbstractTicketRepository<
     const col = await this.getCollection();
     const docs = await col
       .find(filter, {
-        projection: { _id: 1, "progress.totalDraws": 1, "drawPlan.drawCount": 1 },
+        projection: {
+          _id: 1,
+          "progress.totalDraws": 1,
+          "drawPlan.drawCount": 1,
+        },
         sort: { _id: 1 },
         limit,
       })
@@ -133,6 +156,36 @@ export abstract class AbstractTicketRepository<
     });
   }
 
+  /**
+   * Trả về các $set fields liên quan đến voidSummary.
+   *
+   * Default: dùng draw-level void fields (voidedDrawCount, totalVoidedAmount...).
+   * Max3D/Max3DPro override để return {} vì void theo board, không theo draw.
+   */
+  protected buildVoidSyncSet(
+    summary: TicketSummary,
+    voidedCount: number,
+    now: Date,
+  ): Record<string, unknown> {
+    if (voidedCount === 0) return {};
+    return {
+      "voidSummary.voidedDrawCount": voidedCount,
+      "voidSummary.totalVoidedAmount": summary.totalVoidedAmount,
+      "voidSummary.totalRefundedAmount": summary.totalRefundedAmount,
+      "voidSummary.voidedDrawIds": summary.voidedDrawIds,
+      "voidSummary.lastVoidedAt": now,
+    };
+  }
+
+  /**
+   * Aggregate expression để lấy void count hiện tại từ document.
+   * Dùng trong filter $expr của updateOne để đảm bảo idempotent.
+   * Max3D/Max3DPro override nếu void count track theo field khác.
+   */
+  protected getVoidCountAggExpr(): unknown {
+    return { $ifNull: ["$voidSummary.voidedDrawCount", 0] };
+  }
+
   async bulkSyncSummaries(
     items: Array<{ ticketId: string; summary: TicketSummary }>,
   ): Promise<number> {
@@ -157,17 +210,15 @@ export abstract class AbstractTicketRepository<
         "progress.settledDraws": settledCount,
         updatedAt: now,
       };
+
       if (settledCount > 0) {
         $set["settlement.totalWinAmount"] = summary.totalWinAmount;
         $set["settlement.lastSettledAt"] = now;
       }
-      if (voidedCount > 0) {
-        $set["voidSummary.voidedDrawCount"] = voidedCount;
-        $set["voidSummary.totalVoidedAmount"] = summary.totalVoidedAmount;
-        $set["voidSummary.totalRefundedAmount"] = summary.totalRefundedAmount;
-        $set["voidSummary.voidedDrawIds"] = summary.voidedDrawIds;
-        $set["voidSummary.lastVoidedAt"] = now;
-      }
+
+      const voidFields = this.buildVoidSyncSet(summary, voidedCount, now);
+      Object.assign($set, voidFields);
+
       if (status) {
         $set.status = status;
       }
@@ -179,10 +230,7 @@ export abstract class AbstractTicketRepository<
             $expr: {
               $lte: [
                 {
-                  $add: [
-                    { $ifNull: ["$progress.settledDraws", 0] },
-                    { $ifNull: ["$voidSummary.voidedDrawCount", 0] },
-                  ],
+                  $add: [{ $ifNull: ["$progress.settledDraws", 0] }, this.getVoidCountAggExpr()],
                 },
                 processedCount,
               ],
@@ -220,13 +268,8 @@ export abstract class AbstractTicketRepository<
       $set["settlement.lastSettledAt"] = now;
     }
 
-    if (voidedCount > 0) {
-      $set["voidSummary.voidedDrawCount"] = voidedCount;
-      $set["voidSummary.totalVoidedAmount"] = summary.totalVoidedAmount;
-      $set["voidSummary.totalRefundedAmount"] = summary.totalRefundedAmount;
-      $set["voidSummary.voidedDrawIds"] = summary.voidedDrawIds;
-      $set["voidSummary.lastVoidedAt"] = now;
-    }
+    const voidFields = this.buildVoidSyncSet(summary, voidedCount, now);
+    Object.assign($set, voidFields);
 
     if (status) {
       $set.status = status;
@@ -238,10 +281,7 @@ export abstract class AbstractTicketRepository<
         $expr: {
           $lte: [
             {
-              $add: [
-                { $ifNull: ["$progress.settledDraws", 0] },
-                { $ifNull: ["$voidSummary.voidedDrawCount", 0] },
-              ],
+              $add: [{ $ifNull: ["$progress.settledDraws", 0] }, this.getVoidCountAggExpr()],
             },
             processedCount,
           ],

@@ -84,7 +84,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       companyTake: fin.companyTake,
       actualCompanyTake: fin.actualCompanyTake,
       profit: fin.profit,
-      tenantBreakdown,
     };
   }
 }

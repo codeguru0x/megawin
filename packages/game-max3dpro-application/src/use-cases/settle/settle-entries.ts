@@ -24,12 +24,10 @@ import type {
   TicketLineDoc,
   EntryBoardSnapshot,
   Triplet,
+  PrizeTier,
 } from "@megawin/game-max3dpro/entities";
 import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
-import {
-  matchPair,
-  type PairMatchResult,
-} from "@megawin/game-max3dpro/rules/prize-tiers";
+import { matchPair, type PairMatchResult } from "@megawin/game-max3dpro/rules/prize-tiers";
 import { expandSelectionToPairs } from "@megawin/game-max3dpro/rules/play-types";
 import type { PlayMode } from "@megawin/game-max3dpro/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -52,21 +50,12 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   private readonly ticketRepo = new TicketRepository();
   private readonly lineRepo = new LineRepository();
 
-  protected async execute(
-    input: SettleContext
-  ): Promise<SettleEntriesBatchResult> {
+  protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
     const { drawId, result, prizeConfig } = input;
     const drawResult: Max3dproDrawResult = {
       special: result.special as [Triplet, Triplet],
       first: result.first as [Triplet, Triplet, Triplet, Triplet],
-      second: result.second as [
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-      ],
+      second: result.second as [Triplet, Triplet, Triplet, Triplet, Triplet, Triplet],
       third: result.third as [
         Triplet,
         Triplet,
@@ -83,10 +72,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     const startTime = Date.now();
 
     while (Date.now() - startTime < MAX_EXECUTION_MS) {
-      const entries = await this.entryRepo.getScheduledEntries(
-        drawId,
-        BATCH_SIZE
-      );
+      const entries = await this.entryRepo.getScheduledEntries(drawId, BATCH_SIZE);
 
       if (entries.length === 0) {
         return { done: true };
@@ -98,9 +84,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         payout: {
           winAmount: number;
           payoutAmount: number;
-          tiers: Array<{ tier: string; hitCount: number; unitAmount: number; amount: number }>;
+          tiers: Array<{ tier: PrizeTier; hitCount: number; unitAmount: number; amount: number }>;
           settledAt: Date;
-          payoutStatus?: string;
+          payoutStatus?: PayoutStatus;
         };
         outcome: string;
         result: {
@@ -121,9 +107,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           if (ticket) ticketCache.set(ticketId, ticket);
         }
         if (!ticket) {
-          console.error(
-            `Ticket ${ticketId} not found for entry ${entry.id}, skipping.`
-          );
+          console.error(`Ticket ${ticketId} not found for entry ${entry.id}, skipping.`);
           continue;
         }
 
@@ -137,22 +121,14 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         for (const board of boards) {
           if (board.isVoid) continue;
 
-          const pairs = expandSelectionToPairs(
-            board.playMode as PlayMode,
-            {
-              triplets: board.triplets,
-              frontDigits: board.frontDigits,
-              backDigits: board.backDigits,
-            }
-          );
+          const pairs = expandSelectionToPairs(board.playMode as PlayMode, {
+            triplets: board.triplets,
+            frontDigits: board.frontDigits,
+            backDigits: board.backDigits,
+          });
 
           for (const pair of pairs) {
-            const pairResult = matchPair(
-              pair.first,
-              pair.second,
-              drawResult,
-              prizeConfig.standard
-            );
+            const pairResult = matchPair(pair.first, pair.second, drawResult, prizeConfig.standard);
 
             allPairResults.push(pairResult);
             entryWinAmount += pairResult.winAmount;
@@ -220,7 +196,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 // ─────────────────────────────────────────────
 
 function buildPayoutTiers(pairResults: PairMatchResult[]): Array<{
-  tier: string;
+  tier: PrizeTier;
   hitCount: number;
   unitAmount: number;
   amount: number;
@@ -240,7 +216,7 @@ function buildPayoutTiers(pairResults: PairMatchResult[]): Array<{
   }
 
   const tiers: Array<{
-    tier: string;
+    tier: PrizeTier;
     hitCount: number;
     unitAmount: number;
     amount: number;
@@ -248,10 +224,9 @@ function buildPayoutTiers(pairResults: PairMatchResult[]): Array<{
 
   for (const [tier, info] of tierMap) {
     tiers.push({
-      tier,
+      tier: tier as PrizeTier,
       hitCount: info.hitCount,
-      unitAmount:
-        info.hitCount > 0 ? Math.round(info.totalAmount / info.hitCount) : 0,
+      unitAmount: info.hitCount > 0 ? Math.round(info.totalAmount / info.hitCount) : 0,
       amount: info.totalAmount,
     });
   }

@@ -90,19 +90,6 @@ export interface SettleFinancials {
   totalAgentCommission: number;
   /** Phần công ty thu về (VND) = companyRate × totalRevenue. */
   companyTake: number;
-  /** Chi tiết tài chính theo từng tenant — dùng cho báo cáo. */
-  tenantBreakdown: Array<{
-    /** Mã tenant. */
-    tenantId: string;
-    /** Doanh thu từ tenant (VND). */
-    revenue: number;
-    /** Hoa hồng đại lý (VND). */
-    commission: number;
-    /** Tỷ lệ hoa hồng (0-1). */
-    commissionRate: number;
-    /** Số entries của tenant trong kỳ. */
-    entryCount: number;
-  }>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

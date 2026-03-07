@@ -2,19 +2,23 @@
  * Use Case: Sync Ticket Summaries (Lotto 5/35)
  *
  * ═══════════════════════════════════════════════════════════════════════
- * STEP 5 TRONG SETTLE FLOW (LOOP — gọi nhiều lần cho đến done=true)
+ * DÙNG CHUNG CHO SETTLE FLOW (step 5) VÀ VOID FLOW (step 3)
  * ═══════════════════════════════════════════════════════════════════════
  *
- * Recompute ticket progress/settlement/voidSummary từ entries đã settle.
+ * Recompute ticket progress/settlement/voidSummary từ entries.
  * Idempotent, self-healing — chạy lại bao nhiêu lần cũng cho cùng kết quả.
+ *
+ * Input: `DrawSyncInput` — chỉ cần `{ drawId }`.
+ *   → SettleContext và VoidContext đều có drawId nên cả 2 flow dùng được.
+ *   → Lambda handler của từng flow tự truyền context vào (Step Function pass toàn bộ $ctx).
  *
  * ────────────────────────────────────────────────
  * TẠI SAO CẦN STEP NÀY:
  * ────────────────────────────────────────────────
- *   - settle-entries chỉ update từng entry, KHÔNG update ticket
+ *   - settle-entries / void-entries chỉ update từng entry, KHÔNG update ticket.
  *   - Ticket cần biết tổng quan: đã settle bao nhiêu kỳ, tổng thắng,
- *     trạng thái hiện tại (active/completed)
- *   - Step này recompute từ entries → ticket summary (single source of truth)
+ *     trạng thái hiện tại (active/completed/refunded).
+ *   - Step này recompute từ entries → ticket summary (single source of truth).
  *
  * ────────────────────────────────────────────────
  * FLOW (chunk-based, tối ưu DB calls):
@@ -45,7 +49,17 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { ObjectId } from "mongodb";
-import type { SettleContext } from "./types";
+
+/**
+ * Input tối giản cho SyncTicketSummaries.
+ *
+ * Dùng chung cho cả settle flow (SettleContext có drawId) và void flow (VoidContext có drawId).
+ * Cả Step Function đều truyền context object chứa drawId — use case chỉ cần field này.
+ */
+export interface DrawSyncInput {
+  /** Mã kỳ quay cần sync ticket summaries. */
+  drawId: string;
+}
 
 /** Số tickets xử lý mỗi chunk. */
 const CHUNK_SIZE = 500;
@@ -58,13 +72,13 @@ export interface SyncTicketSummariesResult {
 }
 
 export class SyncTicketSummariesUseCase extends InternalUseCase<
-  SettleContext,
+  DrawSyncInput,
   SyncTicketSummariesResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 
-  protected async execute(input: SettleContext): Promise<SyncTicketSummariesResult> {
+  protected async execute(input: DrawSyncInput): Promise<SyncTicketSummariesResult> {
     const { drawId } = input;
     const startTime = Date.now();
     // Cursor-based pagination: dùng ticketId cuối cùng làm cursor cho batch tiếp

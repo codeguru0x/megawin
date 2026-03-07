@@ -26,6 +26,55 @@ export type JackpotCycleClosedReason =
   | "both_winner" // Cả JP1 và JP2 đều có winner trong cùng kỳ
   | "split"; // Tổng JP vượt splitThreshold → chia cho các giải cố định
 
+// ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Thông tin người trúng Jackpot. */
+export interface JackpotWinnerInfo {
+  /** ID tài khoản người chơi. */
+  accountId: string;
+  /** Username hiển thị. */
+  username?: string;
+  /** ID tenant / đại lý. */
+  tenantId: string;
+  /** Tên tenant (snapshot). */
+  tenantName?: string;
+  /** Số tiền trúng (VND). */
+  prizeAmount: number;
+  /** ID entry trúng giải. */
+  entryId: string;
+  /** ID draw trúng giải. */
+  drawId: string;
+  /** Jackpot nào trúng: "jp1" hoặc "jp2". */
+  jackpotType: "jp1" | "jp2";
+}
+
+/** Phân bổ tiền thưởng cho 1 tier trong kỳ chia. */
+export interface SplitTierAllocation {
+  /** Số lượng giải trúng trong tier này. */
+  winnerCount: number;
+  /** Bonus mỗi giải trúng = totalAmount / winnerCount (đã làm tròn). */
+  bonusPerWinner: number;
+  /** Tổng tiền phân bổ cho tier. */
+  totalAmount: number;
+}
+
+/** Chi tiết chia giải khi closedReason = split. */
+export interface JackpotSplitDetail {
+  /** Tổng giá trị Jackpot được chia (VND). */
+  splitAmount: number;
+  /**
+   * Phân bổ chia cho từng tier. Key = tier name.
+   * Chỉ chứa tier có người trúng.
+   */
+  tierAllocations: Record<string, SplitTierAllocation>;
+  /** Tổng số người trúng giải (across all tiers) trong kỳ chia. */
+  totalWinners: number;
+  /** Tổng tiền bonus đã chi trả thực tế (VND). */
+  totalPaid: number;
+}
+
 /**
  * MongoDB document cho chu kỳ Jackpot.
  */
@@ -57,6 +106,13 @@ export interface JackpotCycleDoc {
   closedReason?: JackpotCycleClosedReason;
   /** Thời điểm đóng cycle. */
   closedAt?: Date;
+
+  /** Chi tiết chia giải khi closedReason = "split". */
+  splitDetail?: JackpotSplitDetail;
+
+  /** Danh sách người trúng Jackpot (khi có winner). */
+  winners?: JackpotWinnerInfo[];
+
   /** Thời điểm tạo document (= thời điểm bắt đầu cycle). */
   createdAt: Date;
   /** Thời điểm cập nhật gần nhất (sau mỗi lần settle cộng contribution). */

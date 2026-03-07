@@ -35,7 +35,16 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
       voidDrawCount: ticket.progress.voidDrawCount,
     },
     settlement: ticket.settlement
-      ? { totalWinAmount: ticket.settlement.totalWinAmount }
+      ? {
+          totalWinAmount: ticket.settlement.totalWinAmount,
+          lastSettledAt: ticket.settlement.lastSettledAt?.toISOString(),
+        }
+      : undefined,
+    voidSummary: ticket.voidSummary
+      ? {
+          totalRefundAmount: ticket.voidSummary.totalRefundAmount,
+          voidDrawCount: ticket.voidSummary.voidDrawCount,
+        }
       : undefined,
     createdAt: ticket.createdAt.toISOString(),
   };

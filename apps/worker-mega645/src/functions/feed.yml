@@ -9,9 +9,9 @@ feed-save-cursor:
 feed-scheduler:
   handler: src/handlers/feed/feed-scheduler.handler
   timeout: 900
-  environment:
-    FEED_SYNC_SFN_ARN: !Ref Mega645FeedSyncStateMachine
-  events:
-    - schedule:
-        rate: rate(30 seconds)
-        enabled: true
+  #environment:
+  #  FEED_SYNC_SFN_ARN: !Ref Mega645FeedSyncStateMachine
+  #events:
+  #  - schedule:
+  #      rate: rate(30 seconds)
+  #      enabled: true

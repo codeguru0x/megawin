@@ -15,6 +15,7 @@ import type {
   KenoListAllTicketsParams,
   KenoListTicketsResponse,
   KenoTicketEntriesResponse,
+  KenoGameConfigResponse,
 } from "../keno";
 import { ENDPOINTS } from "../endpoints";
 
@@ -53,6 +54,41 @@ import { ENDPOINTS } from "../endpoints";
  * ```
  */
 export interface KenoApi {
+  /**
+   * Lấy cấu hình game Keno cho player.
+   *
+   * Trả về luật chơi, bảng giải thưởng, giới hạn trả thưởng,
+   * và trạng thái tenant (có được phép chơi không).
+   * Gọi 1 lần khi khởi động để cache lại cho frontend.
+   *
+   * **Endpoint:** `GET /games/keno/config`
+   *
+   * @returns Cấu hình đầy đủ để render UI game Keno
+   *
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * const config = await client.keno.getGameConfig();
+   *
+   * // Kiểm tra tenant có được chơi không
+   * if (!config.tenant.isEnabled) {
+   *   showDisabledMessage();
+   *   return;
+   * }
+   *
+   * // Mệnh giá 1 bet
+   * console.log(config.game.unitPrice); // 10000
+   *
+   * // Tra giải: pick5, trùng 3 số
+   * console.log(config.prizes.basic[5][3]); // 50000
+   *
+   * // Tối đa số kỳ liên tiếp
+   * console.log(config.game.maxDrawCount); // 20
+   * ```
+   */
+  getGameConfig(): Promise<KenoGameConfigResponse>;
+
   /**
    * Lấy kỳ quay Keno hiện tại + kết quả gần nhất.
    *
@@ -247,6 +283,10 @@ export interface KenoApi {
 /** @internal */
 export function createKenoApi(http: HttpClient): KenoApi {
   return {
+    async getGameConfig(): Promise<KenoGameConfigResponse> {
+      return http.get<KenoGameConfigResponse>(ENDPOINTS.keno.getGameConfig);
+    },
+
     async getCurrentDraw(): Promise<KenoCurrentDrawResponse> {
       return http.get<KenoCurrentDrawResponse>(ENDPOINTS.keno.getCurrentDraw);
     },

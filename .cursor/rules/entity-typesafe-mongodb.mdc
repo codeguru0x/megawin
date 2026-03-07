@@ -1,0 +1,149 @@
+---
+description: Type-safe entity design and MongoDB query patterns for DrawDoc and other entities with embedded documents
+globs:
+  - packages/game-*/src/entities/*.ts
+  - packages/game-*-application/src/infras/repos/*.ts
+  - packages/game-*-core/src/infras/repos/*.ts
+---
+
+# Type-Safe Entity & MongoDB Repository Design
+
+## 1. Extract Named Interfaces cho Embedded Documents
+
+Mỗi embedded document trong entity Doc (`DrawDoc`, `TicketEntryDoc`, ...) PHẢI được tách thành named interface riêng biệt, KHÔNG dùng inline object type.
+
+**ĐÚNG:**
+
+```typescript
+export interface DrawFinancial {
+  totalRevenue: number;
+  totalFixedPrizes: number;
+  totalAgentCommission: number;
+  companyTake: number;
+}
+
+export interface DrawDoc {
+  financial?: DrawFinancial;
+}
+```
+
+**SAI:**
+
+```typescript
+export interface DrawDoc {
+  financial?: {
+    totalRevenue: number;
+    totalFixedPrizes: number;
+    // ... inline → không tái sử dụng, dễ sai khi dùng ở repo
+  };
+}
+```
+
+**Tại sao:** Khi repo method tự định nghĩa inline param type cho embedded document, dễ thiếu field → gây data loss khi `$set` overwrite toàn bộ embedded doc. Named interface đảm bảo compiler bắt lỗi.
+
+## 2. Repo Method PHẢI Dùng Named Types cho Parameters
+
+Repo methods nhận embedded document PHẢI dùng named interface (hoặc `Pick<>`) từ entity layer, KHÔNG tự định nghĩa inline type.
+
+**ĐÚNG:**
+
+```typescript
+async updateSettleResult(drawId: string, financial: DrawFinancial, stats: DrawStats): Promise<boolean>
+```
+
+**SAI:**
+
+```typescript
+async updateSettleResult(drawId: string, financial: NonNullable<DrawDoc["financial"]>, stats: NonNullable<DrawDoc["stats"]>): Promise<boolean>
+// NonNullable<DrawDoc["financial"]> an toàn nếu financial đã là named type,
+// nhưng khi financial là inline type thì mất khả năng kiểm soát
+```
+
+## 3. Dùng Dot Notation cho Partial Update Embedded Document
+
+Khi chỉ cần cập nhật MỘT SỐ fields của embedded document (mà các fields khác đã được set trước đó bởi step khác), PHẢI dùng dot notation. KHÔNG dùng `$set: { embeddedDoc }` vì sẽ overwrite toàn bộ, xoá các fields đã set trước.
+
+**ĐÚNG:**
+
+```typescript
+// settleComplete chỉ set openingAmount + closingAmount,
+// giữ nguyên jackpot.split đã set bởi triggerSettle()
+const $set = {
+  "jackpot.openingAmount": jackpot.openingAmount,
+  "jackpot.closingAmount": jackpot.closingAmount,
+};
+```
+
+**SAI:**
+
+```typescript
+// Overwrite TOÀN BỘ jackpot → mất jackpot.split!
+const $set = { jackpot };
+```
+
+**Khi nào dùng full overwrite:** Chỉ khi embedded doc được set LẦN ĐẦU (initial set) và không có step nào khác set trước đó. Ví dụ: `$set: { financial, stats }` trong `updateSettleResult` — vì financial/stats chỉ được set 1 lần duy nhất.
+
+## 4. Convention Đặt Tên
+
+| Embedded Doc | Interface Name | Ví dụ |
+|---|---|---|
+| Jackpot snapshot | `DrawJackpotSnapshot` | Lotto535, Mega645 |
+| Jackpot (dual) | `DrawJackpot` | Power655 |
+| Financial | `DrawFinancial` | Tất cả games |
+| Stats | `DrawStats` | Tất cả games |
+| Void info | `DrawVoidInfo` | Tất cả games |
+| Void summary | `DrawVoidSummary` | Tất cả games |
+| Sales window | `DrawSales` | Tất cả games |
+| Result | `DrawResult` | Tất cả games |
+| Vietlott ref | `DrawVietlottRef` | Tất cả games |
+
+## 5. Format MongoDB Query (dễ đọc, dễ review)
+
+Khi gọi `findOneAndUpdate`, `updateOne`, `findOne`, `findMany`, v.v., **mọi object** trong MongoDB query (filter, update, options) đều phải format **mỗi field một dòng**.
+
+Prettier không hỗ trợ tự động enforce rule này (chỉ wrap khi vượt `printWidth`). Khi viết/sửa repo, format tay theo quy tắc; Prettier sẽ giữ nguyên format nhiều dòng.
+
+**ĐÚNG:**
+
+```typescript
+return await this.findOneAndUpdate(
+  {
+    drawId,
+    status: DrawStatus.Settling,
+  },
+  {
+    $set: {
+      status: DrawStatus.Settled,
+      settledAt: now,
+      updatedAt: now,
+    },
+  },
+  {
+    returnDocument: "after",
+  },
+);
+```
+
+**SAI (khó đọc, khó review diff):**
+
+```typescript
+return await this.findOneAndUpdate(
+  { drawId, status: DrawStatus.Settling },
+  { $set: { status: DrawStatus.Settled, settledAt: now, updatedAt: now } },
+  { returnDocument: "after" },
+);
+```
+
+Áp dụng cho **tất cả** các phần:
+- **Filter**: `{ drawId, status }` → mỗi key một dòng
+- **Update operators**: `$set`, `$push`, `$inc`, v.v. → mỗi field một dòng
+- **Options**: `{ returnDocument, sort, skip, limit }` → mỗi option một dòng
+
+## 6. Checklist khi Thêm/Sửa Entity
+
+1. Embedded doc mới → tạo named interface riêng, export từ entities
+2. Repo method mới → import và dùng named interface cho params
+3. Partial update → dùng dot notation, `Pick<>` nếu cần subset fields
+4. Full set lần đầu → có thể dùng object spread nhưng vẫn dùng named type cho param
+5. Format update payload: mỗi field trong `$set` / update object một dòng
+6. Review: tìm `$set: { fieldName }` patterns, kiểm tra có risk overwrite không

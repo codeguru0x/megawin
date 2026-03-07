@@ -56,10 +56,7 @@ export interface PlayerDrawInfo {
 
 export type TicketSortBy = "betDate" | "drawDate";
 
-export const TICKET_SORT_BY_VALUES: readonly TicketSortBy[] = [
-  "betDate",
-  "drawDate",
-];
+export const TICKET_SORT_BY_VALUES: readonly TicketSortBy[] = ["betDate", "drawDate"];
 
 export interface PlayerListTicketsInput {
   /** ID đại lý / tenant. */
@@ -144,17 +141,36 @@ export interface PlayerTicketSummary {
     /** Số lines phát sinh từ board này. */
     lineCount: number;
   }>;
-  /** Tiến trình settle của vé. */
+  /** Tiến trình settle của vé. settledDraws = số kỳ đã xử lý xong (settled + voided). */
   progress: {
     /** Tổng số kỳ quay của vé. */
     totalDraws: number;
-    /** Số kỳ đã settle xong. */
+    /** Số kỳ đã xử lý xong (settled + voided). */
     settledDraws: number;
   };
-  /** Thông tin thanh toán (chỉ có khi đã settle). */
+  /** Thông tin thanh toán (chỉ có khi đã settle ít nhất 1 kỳ). */
   settlement?: {
-    /** Tổng tiền thắng (VND). */
+    /** Tổng tiền thắng cộng dồn (VND). */
     totalWinAmount: number;
+    /** Thời điểm kỳ gần nhất được settle (ISO 8601). */
+    lastSettledAt?: string;
+  };
+  /**
+   * Tóm tắt huỷ cược. Max3D void theo board, không phải theo draw.
+   * isFullVoid = true: toàn bộ vé bị huỷ → status = "refunded".
+   * isFullVoid = false: một phần board bị huỷ, các kỳ còn lại vẫn chạy bình thường.
+   */
+  voidSummary?: {
+    /** True nếu toàn bộ vé bị void. */
+    isFullVoid: boolean;
+    /** Danh sách boardNo bị void. */
+    voidedBoards: string[];
+    /** Tiền cược gốc trước khi void (VND). */
+    originalAmount: number;
+    /** Tiền đã hoàn trả cho player (VND). */
+    refundAmount: number;
+    /** Thời điểm void (ISO 8601). */
+    voidedAt: string;
   };
   /** Thời điểm tạo vé (ISO 8601). */
   createdAt: string;

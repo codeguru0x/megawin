@@ -196,24 +196,68 @@ export interface Lotto535DrawResult {
 
 /**
  * Tóm tắt vé Lotto 5/35 cho UI.
+ *
+ * @example
+ * ```ts
+ * const { tickets } = await client.lotto535.listPendingTickets();
+ * for (const ticket of tickets) {
+ *   const settled = ticket.progress.settledDraws;
+ *   const total = ticket.progress.totalDraws;
+ *   const voided = ticket.voidSummary?.voidedDrawCount ?? 0;
+ *   console.log(`${ticket.ticketNo}: ${settled}/${total} kỳ (${voided} void)`);
+ *   if (ticket.settlement) {
+ *     console.log(`Thắng: ${ticket.settlement.totalWinAmount} VND`);
+ *   }
+ *   if (ticket.voidSummary) {
+ *     console.log(`Đã hoàn: ${ticket.voidSummary.totalRefundedAmount} VND`);
+ *   }
+ * }
+ * ```
  */
 export interface Lotto535TicketSummary {
   /** ID vé. */
-  ticketId: string;
+  id: string;
   /** Mã vé hiển thị. */
   ticketNo: string;
-  /** Trạng thái vé hiển thị. */
-  status: Lotto535TicketDisplayStatus;
-  /** Tổng tiền cược (VND). */
-  totalAmount: number;
-  /** Số kỳ tham gia. */
-  drawCount: number;
-  /** Số kỳ đã settle. */
-  settledDraws: number;
-  /** Tổng tiền thắng (VND). `undefined` nếu chưa settle hết. */
-  totalWinAmount?: number;
+  /** Trạng thái vé. */
+  status: string;
+  /** Kế hoạch kỳ quay. */
+  drawPlan: {
+    drawIds: string[];
+    drawCount: number;
+  };
+  /** Thông tin giá cược. */
+  pricing: {
+    unitPrice: number;
+    linesPerDraw: number;
+    amountPerDraw: number;
+    totalAmount: number;
+  };
   /** Danh sách boards. */
   boards: Lotto535BoardSummary[];
+  /**
+   * Tiến độ settle.
+   * settledDraws = số kỳ đã xử lý xong (settled + voided).
+   */
+  progress: {
+    totalDraws: number;
+    settledDraws: number;
+  };
+  /** Tổng kết trúng thưởng. `undefined` nếu chưa có kỳ nào settle. */
+  settlement?: {
+    totalWinAmount: number;
+    lastSettledAt?: string;
+  };
+  /**
+   * Tóm tắt huỷ cược. `undefined` nếu không có kỳ nào bị void.
+   */
+  voidSummary?: {
+    totalVoidedAmount: number;
+    totalRefundedAmount: number;
+    voidedDrawCount: number;
+    voidedDrawIds: string[];
+    lastVoidedAt?: string;
+  };
   /** Thời điểm mua vé (ISO 8601). */
   createdAt: string;
 }
@@ -309,4 +353,102 @@ export interface Lotto535SplitCycleInfo {
    * Đây là giá trị tham khảo khi chỉ có 1 winner mỗi tier.
    */
   estimatedBonusPerTier: Partial<Record<Lotto535PrizeTier, number>>;
+}
+
+// ─────────────────────────────────────────────
+// Response Types — Game Config
+// ─────────────────────────────────────────────
+
+/**
+ * Luật chơi game Lotto 5/35.
+ */
+export interface Lotto535GameRules {
+  /** Giá 1 line (bộ số con) cho 1 kỳ (VND). VD: 10000. */
+  unitPrice: number;
+  /** Số board tối đa trên 1 vé (A-E). VD: 5. */
+  maxBoardsPerTicket: number;
+  /** Số kỳ liên tiếp tối đa. VD: 6. */
+  maxDrawCount: number;
+  /** Số kỳ quay mỗi ngày. VD: 2. */
+  drawsPerDay: number;
+  /** Giờ quay trong ngày. VD: ["13:00", "21:00"]. */
+  drawTimes: string[];
+}
+
+/**
+ * Bảng giải thưởng cố định Lotto 5/35.
+ *
+ * Giải Jackpot (5 chính + ĐB) là tích lũy — xem `client.lotto535.getJackpot()` để biết giá trị hiện tại.
+ */
+export interface Lotto535PrizeAmounts {
+  /** Giải Nhất: 5 số chính (VND). */
+  tier1: number;
+  /** Giải Nhì: 4 chính + đặc biệt (VND). */
+  tier2: number;
+  /** Giải Ba: 4 chính (VND). */
+  tier3: number;
+  /** Giải Tư: 3 chính + đặc biệt (VND). */
+  tier4: number;
+  /** Giải Năm: 3 chính (VND). */
+  tier5: number;
+  /** Giải Khuyến Khích: chỉ đặc biệt (VND). */
+  consolation: number;
+}
+
+/**
+ * Thông tin Jackpot hiển thị cho player (từ game config).
+ */
+export interface Lotto535JackpotConfigInfo {
+  /** Số tiền khởi điểm khi mở vòng Jackpot mới (VND). */
+  seedAmount: number;
+  /** Ngưỡng kích hoạt chia giải Độc Đắc (VND). */
+  splitThreshold: number;
+}
+
+/**
+ * Cấu hình theo tenant.
+ */
+export interface Lotto535TenantConfig {
+  /** Tenant này có được phép chơi game Lotto 5/35 không. */
+  isEnabled: boolean;
+}
+
+/**
+ * Response từ `GET /games/lotto535/config`.
+ *
+ * Chứa toàn bộ cấu hình game cần thiết cho frontend:
+ * - Luật chơi (mệnh giá, số board, số kỳ tối đa, giờ quay)
+ * - Bảng giải thưởng cố định (tier1 → consolation)
+ * - Thông tin Jackpot (seed, ngưỡng chia)
+ * - Cấu hình tenant (có được phép chơi không)
+ *
+ * @example
+ * ```ts
+ * const config = await client.lotto535.getGameConfig();
+ *
+ * // Kiểm tra tenant có được chơi không
+ * if (!config.tenant.isEnabled) {
+ *   showDisabledMessage();
+ *   return;
+ * }
+ *
+ * // Mệnh giá 1 line
+ * console.log(config.game.unitPrice); // 10000
+ *
+ * // Giải Nhất
+ * console.log(config.prizes.tier1); // 10000000
+ *
+ * // Ngưỡng chia Jackpot
+ * console.log(config.jackpot.splitThreshold); // 12000000000
+ * ```
+ */
+export interface Lotto535GameConfigResponse {
+  /** Luật chơi. */
+  game: Lotto535GameRules;
+  /** Bảng giải thưởng cố định. */
+  prizes: Lotto535PrizeAmounts;
+  /** Cấu hình Jackpot (hiển thị cho player). */
+  jackpot: Lotto535JackpotConfigInfo;
+  /** Cấu hình theo tenant. */
+  tenant: Lotto535TenantConfig;
 }

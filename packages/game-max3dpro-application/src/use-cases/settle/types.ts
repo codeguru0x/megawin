@@ -93,19 +93,6 @@ export interface SettleFinancials {
   actualCompanyTake: number;
   /** Lợi nhuận kỳ quay (VND) = actualCompanyTake. */
   profit: number;
-  /** Chi tiết tài chính theo từng tenant. */
-  tenantBreakdown: Array<{
-    /** ID tenant. */
-    tenantId: string;
-    /** Doanh thu từ tenant (VND). */
-    revenue: number;
-    /** Hoa hồng đại lý (VND). */
-    commission: number;
-    /** Tỷ lệ hoa hồng (0-1). */
-    commissionRate: number;
-    /** Số entries của tenant. */
-    entryCount: number;
-  }>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

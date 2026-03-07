@@ -128,7 +128,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       nextJackpotOpening,
       hasJackpotWinner,
       splitDetails,
-      tenantBreakdown,
     };
   }
 }

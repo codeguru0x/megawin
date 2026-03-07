@@ -62,6 +62,7 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { SettleContextWithFinancials } from "./types";
+import { AppException } from "@megawin/shared/errors";
 
 export interface FinalizeSettleResult {
   /** Mã kỳ quay. */
@@ -85,7 +86,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
 
   protected async execute(input: SettleContextWithFinancials): Promise<FinalizeSettleResult> {
     const { drawId, isSplitCycle, jackpotOpeningAmount, financials } = input;
-    const { closingJackpot, hasJackpotWinner, splitDetails } = financials;
+    const { closingJackpot, splitDetails } = financials;
 
     // ── STEP A: Transition draw settling → settled + ghi jackpot snapshot ──
     const updated = await this.drawRepo.settleComplete(drawId, {
@@ -99,7 +100,9 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       if (draw?.status === DrawStatus.Settled) {
         console.log(`Draw ${drawId} already settled, skipping transition.`);
       } else {
-        throw new Error(`Cannot finalize draw ${drawId}. Current status: ${draw?.status}`);
+        throw AppException.internal(
+          `Cannot finalize draw ${drawId}. Current status: ${draw?.status}`,
+        );
       }
     }
 
@@ -127,15 +130,14 @@ export class FinalizeSettleUseCase extends InternalUseCase<
    */
   private async updateJackpotCycle(input: SettleContextWithFinancials): Promise<void> {
     const { drawId, isSplitCycle, jackpotOpeningAmount, financials } = input;
-    const { closingJackpot, hasJackpotWinner, splitDetails } = financials;
+    const { closingJackpot, hasJackpotWinner, splitDetails, jackpotContribution } = financials;
 
     const activeCycle = await this.cycleRepo.getActiveCycle();
     if (!activeCycle) return;
 
-    const draw = await this.drawRepo.getDrawById(drawId);
-    if (!draw) return;
-
-    const contribution = draw.financial?.jackpotContribution ?? 0;
+    // jackpotContribution đã được tính bởi CalculateFinancials và lưu trong financials.
+    // KHÔNG cần re-fetch draw document để lấy draw.financial.jackpotContribution.
+    const contribution = jackpotContribution;
     const newDrawCount = activeCycle.drawCount + 1;
 
     const splitExecuted = isSplitCycle && splitDetails != null;
@@ -147,10 +149,18 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       let winners = undefined;
       if (hasJackpotWinner) {
         const jackpotEntries = await this.entryRepo.findJackpotWinners(drawId);
-        // Winner nhận opening + contribution kỳ này (toàn bộ giá trị JP)
+
+        // Tổng giải Jackpot = opening + contribution kỳ này.
+        // Lý do: contribution kỳ này ban đầu sẽ tích luỹ vào pool, nhưng khi có winner
+        // → cycle đóng lại → contribution này thuộc về giải thưởng (không vào cycle mới).
+        // closingJackpot = seedAmount (reset), tức contribution đã "bị tiêu" vào giải.
         const totalJackpotPrize = jackpotOpeningAmount + contribution;
+
+        // Chia đều cho tất cả winners (làm tròn xuống để không vượt quá pool).
+        // Phần dư do làm tròn nằm lại quỹ công ty (không đáng kể).
         const jackpotPerWinner =
           jackpotEntries.length > 0 ? Math.floor(totalJackpotPrize / jackpotEntries.length) : 0;
+
         winners = jackpotEntries.map((e) => ({
           accountId: e.accountId,
           tenantId: e.tenantId,
@@ -162,12 +172,20 @@ export class FinalizeSettleUseCase extends InternalUseCase<
 
       let splitDetail = undefined;
       if (splitExecuted && splitDetails) {
+        // totalWinners: tổng số người trúng qua tất cả tier tham gia split (tier1-tier5).
+        // totalPaid: tổng tiền thực chi = Σ(bonusPerWinner × winnerCount), đã làm tròn.
+        //   Có thể nhỏ hơn splitAmount (= activeCycle.currentAmount) một chút do làm tròn.
         let totalWinners = 0;
         let totalPaid = 0;
         for (const tier of Object.values(splitDetails)) {
           totalWinners += tier.winnerCount;
           totalPaid += tier.bonusPerWinner * tier.winnerCount;
         }
+
+        // splitAmount = activeCycle.currentAmount tại thời điểm settle kỳ này.
+        // Đây chính là jackpotOpeningAmount (đã đọc từ cycle lúc PrepareSettle).
+        // Không dùng jackpotOpeningAmount từ context vì activeCycle.currentAmount
+        // là giá trị chính xác nhất (có thể có minor drift nếu updateCycleStats chạy nhiều lần).
         splitDetail = {
           splitAmount: activeCycle.currentAmount,
           tierAllocations: Object.fromEntries(

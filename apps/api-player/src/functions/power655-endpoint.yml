@@ -1,5 +1,14 @@
 # Power 6/55 – Player endpoints
 
+power655-get-game-config:
+  handler: src/handlers/power655/get-game-config.handler
+  events:
+    - httpApi:
+        path: /games/power655/config
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
 power655-get-current-draw:
   handler: src/handlers/power655/get-current-draw.handler
   events:

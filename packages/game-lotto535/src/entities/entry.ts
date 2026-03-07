@@ -23,6 +23,79 @@ import type { ISODateString, MainTuple, Special } from "./types";
 import type { Long } from "@megawin/game-core/types";
 
 // ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Snapshot thông tin đại lý tại thời điểm tạo entry. */
+export interface EntryTenantSnapshot {
+  /** Tỷ lệ hoa hồng đại lý áp dụng cho entry này. Ví dụ: 0.20 = 20%. */
+  commissionRate: number;
+  /** Tiền hoa hồng = Math.round(amount × commissionRate). Tính sẵn lúc place-bet. */
+  commissionAmount: number;
+}
+
+/** Snapshot tối thiểu từ ticket – UI hiển thị mà không cần lookup ticket. */
+export interface EntrySummary {
+  /** Mã vé hiển thị. */
+  ticketNo: string;
+  /** Snapshot boards (lựa chọn, không phải lines expand). */
+  boards: EntryBoardSnapshot[];
+}
+
+/** Kết quả kỳ quay – copy từ draw.result khi publish. */
+export interface EntryResult {
+  /** 5 số chính trúng thưởng, sorted. */
+  winningMain: MainTuple;
+  /** Số đặc biệt trúng thưởng. */
+  winningSpecial: Special;
+  /** Thời điểm công bố kết quả. */
+  publishedAt: Date;
+}
+
+/** Chi tiết trả thưởng cho entry này. Chỉ có sau khi settle. */
+export interface EntryPayout {
+  /** Tổng tiền thắng kỳ này (VND). = 0 khi thua, > 0 khi thắng. */
+  winAmount: number;
+  /**
+   * Tiền trả thưởng thực tế cho khách (sau thuế/phí nếu có).
+   * Hiện tại = winAmount (chưa có thuế).
+   */
+  payoutAmount: number;
+  /** Chi tiết theo từng hạng giải. */
+  tiers: EntryPayoutTier[];
+  /** Thời điểm settle. */
+  settledAt: Date;
+  /**
+   * Trạng thái gửi tiền trả thưởng cho tenant.
+   * Chỉ có ý nghĩa khi winAmount > 0.
+   */
+  payoutStatus?: PayoutStatus;
+  /** Thời điểm dispatch gần nhất (gửi request cho tenant). */
+  payoutDispatchedAt?: Date;
+  /** Số lần retry dispatch (0 = lần đầu). */
+  payoutRetryCount?: number;
+  /** Lỗi lần dispatch gần nhất (nếu failed). */
+  payoutLastError?: string;
+}
+
+/**
+ * Thông tin huỷ cược + hoàn tiền.
+ * Chỉ có khi entry bị void (draw void / admin void).
+ */
+export interface EntryVoidInfo {
+  /** Tiền cược gốc của entry này (= amount). */
+  originalAmount: number;
+  /** Tiền hoàn trả cho player. */
+  refundAmount: number;
+  /** Trạng thái hoàn tiền. */
+  refundStatus: RefundStatus;
+  /** Thời điểm huỷ. */
+  voidedAt: Date;
+  /** Thời điểm hoàn tiền. */
+  refundedAt?: Date;
+}
+
+// ─────────────────────────────────────────────
 // Entry Document
 // ─────────────────────────────────────────────
 
@@ -82,13 +155,7 @@ export interface TicketEntryDoc {
    * không thay đổi dù tenant config update sau.
    * Khi settle, agg SUM(tenant.commissionAmount) → tổng hoa hồng chính xác.
    */
-  tenant: {
-    /** Tỷ lệ hoa hồng đại lý áp dụng cho entry này. Ví dụ: 0.20 = 20%. */
-    commissionRate: number;
-
-    /** Tiền hoa hồng = Math.round(amount × commissionRate). Tính sẵn lúc place-bet. */
-    commissionAmount: number;
-  };
+  tenant: EntryTenantSnapshot;
 
   // ───── Entry Status ─────
 
@@ -115,27 +182,12 @@ export interface TicketEntryDoc {
   // ───── Entry Summary (snapshot cho UI) ─────
 
   /** Snapshot tối thiểu từ ticket – UI hiển thị mà không cần lookup ticket. */
-  entrySummary: {
-    /** Mã vé hiển thị. */
-    ticketNo: string;
-
-    /** Snapshot boards (lựa chọn, không phải lines expand). */
-    boards: EntryBoardSnapshot[];
-  };
+  entrySummary: EntrySummary;
 
   // ───── Result Snapshot (khi draw published) ─────
 
   /** Kết quả kỳ quay – copy từ draw.result khi publish. */
-  result?: {
-    /** 5 số chính trúng thưởng, sorted. */
-    winningMain: MainTuple;
-
-    /** Số đặc biệt trúng thưởng. */
-    winningSpecial: Special;
-
-    /** Thời điểm công bố kết quả. */
-    publishedAt: Date;
-  };
+  result?: EntryResult;
 
   // ───── Outcome (kết quả thắng/thua – gán khi settle) ─────
 
@@ -149,37 +201,7 @@ export interface TicketEntryDoc {
   // ───── Payout (khi settle xong) ─────
 
   /** Chi tiết trả thưởng cho entry này. Chỉ có sau khi settle. */
-  payout?: {
-    /** Tổng tiền thắng kỳ này (VND). = 0 khi thua, > 0 khi thắng. */
-    winAmount: number;
-
-    /**
-     * Tiền trả thưởng thực tế cho khách (sau thuế/phí nếu có).
-     * Hiện tại = winAmount (chưa có thuế).
-     */
-    payoutAmount: number;
-
-    /** Chi tiết theo từng hạng giải. */
-    tiers: EntryPayoutTier[];
-
-    /** Thời điểm settle. */
-    settledAt: Date;
-
-    /**
-     * Trạng thái gửi tiền trả thưởng cho tenant.
-     * Chỉ có ý nghĩa khi winAmount > 0.
-     */
-    payoutStatus?: PayoutStatus;
-
-    /** Thời điểm dispatch gần nhất (gửi request cho tenant). */
-    payoutDispatchedAt?: Date;
-
-    /** Số lần retry dispatch (0 = lần đầu). */
-    payoutRetryCount?: number;
-
-    /** Lỗi lần dispatch gần nhất (nếu failed). */
-    payoutLastError?: string;
-  };
+  payout?: EntryPayout;
 
   // ───── Void / Refund (khi draw bị huỷ) ─────
 
@@ -187,22 +209,7 @@ export interface TicketEntryDoc {
    * Thông tin huỷ cược + hoàn tiền.
    * Chỉ có khi entry bị void (draw void / admin void).
    */
-  voidInfo?: {
-    /** Tiền cược gốc của entry này (= amount). */
-    originalAmount: number;
-
-    /** Tiền hoàn trả cho player. */
-    refundAmount: number;
-
-    /** Trạng thái hoàn tiền. */
-    refundStatus: RefundStatus;
-
-    /** Thời điểm huỷ. */
-    voidedAt: Date;
-
-    /** Thời điểm hoàn tiền. */
-    refundedAt?: Date;
-  };
+  voidInfo?: EntryVoidInfo;
 
   // ───── Timestamps ─────
 

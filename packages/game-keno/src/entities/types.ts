@@ -100,11 +100,14 @@ export interface EvenOddSelection {
 /**
  * Bảng giải thưởng cách chơi cơ bản.
  * Key: "pick{N}" (N = 1-10)
- * Value: map từ số trùng (matchCount) → giá trị thưởng (VND).
+ * Value: map từ số trùng (matchCount dạng string) → giá trị thưởng (VND).
+ *
+ * LƯU Ý: MongoDB và JSON serialize object key luôn là STRING.
+ * Key matchCount lưu dạng "0", "1", ..., "10" (string), KHÔNG phải number.
  *
  * Dùng chung bởi GlobalConfigDoc.basicPrizes và TenantConfigDoc.prizeOverrides.basicPrizes.
  */
-export type BasicPrizes = Record<string, Record<number, number>>;
+export type BasicPrizes = Record<string, Record<string, number>>;
 
 /**
  * Bảng giải thưởng cách chơi bổ sung Lớn/Nhỏ.

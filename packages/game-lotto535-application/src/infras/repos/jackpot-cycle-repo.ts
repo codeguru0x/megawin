@@ -3,6 +3,7 @@ import {
   JackpotCycleStatus,
   type JackpotCycleDoc,
   type JackpotCycleCloseReason,
+  type JackpotSplitDetail,
   type JackpotWinnerInfo,
   type SplitRatios,
 } from "@megawin/game-lotto535/entities";
@@ -62,7 +63,10 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     lastSettledDrawId: string;
   }): Promise<void> {
     await this.updateOne(
-      { cycleNo: input.cycleNo, status: JackpotCycleStatus.Active },
+      {
+        cycleNo: input.cycleNo,
+        status: JackpotCycleStatus.Active,
+      },
       {
         $set: {
           currentAmount: input.currentAmount,
@@ -82,12 +86,23 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     endDrawId: string;
     closeReason: JackpotCycleCloseReason;
     finalAmount: number;
-    splitDetail?: JackpotCycleDoc["splitDetail"];
+    splitDetail?: JackpotSplitDetail;
     winners?: JackpotWinnerInfo[];
   }): Promise<void> {
     const now = new Date();
 
-    const $set: Record<string, unknown> = {
+    type CycleCloseSet = {
+      status: JackpotCycleDoc["status"];
+      endDrawId: string;
+      closedAt: Date;
+      closeReason: JackpotCycleCloseReason;
+      currentAmount: number;
+      updatedAt: Date;
+      splitDetail?: JackpotSplitDetail;
+      winners?: JackpotWinnerInfo[];
+    };
+
+    const $set: CycleCloseSet = {
       status: JackpotCycleStatus.Closed,
       endDrawId: input.endDrawId,
       closedAt: now,
@@ -100,8 +115,14 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     if (input.winners) $set.winners = input.winners;
 
     await this.updateOne(
-      { cycleNo: input.cycleNo, status: JackpotCycleStatus.Active },
-      { $set, $max: { peakAmount: input.finalAmount } },
+      {
+        cycleNo: input.cycleNo,
+        status: JackpotCycleStatus.Active,
+      },
+      {
+        $set: $set as unknown as Record<string, unknown>,
+        $max: { peakAmount: input.finalAmount },
+      },
     );
   }
 
@@ -109,7 +130,11 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
   async listClosedCycles(page: number, size: number): Promise<JackpotCycleEntity[]> {
     return this.findMany(
       { status: JackpotCycleStatus.Closed },
-      { sort: { closedAt: -1 }, skip: (page - 1) * size, limit: size },
+      {
+        sort: { closedAt: -1 },
+        skip: (page - 1) * size,
+        limit: size,
+      },
     );
   }
 

@@ -34,7 +34,19 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
       settledDraws: ticket.progress.settledDraws,
     },
     settlement: ticket.settlement
-      ? { totalWinAmount: ticket.settlement.totalWinAmount }
+      ? {
+          totalWinAmount: ticket.settlement.totalWinAmount,
+          lastSettledAt: ticket.settlement.lastSettledAt?.toISOString(),
+        }
+      : undefined,
+    voidSummary: ticket.voidSummary
+      ? {
+          isFullVoid: ticket.voidSummary.isFullVoid,
+          voidedBoards: ticket.voidSummary.voidedBoards,
+          originalAmount: ticket.voidSummary.originalAmount,
+          refundAmount: ticket.voidSummary.refundAmount,
+          voidedAt: ticket.voidSummary.voidedAt.toISOString(),
+        }
       : undefined,
     createdAt: ticket.createdAt.toISOString(),
   };

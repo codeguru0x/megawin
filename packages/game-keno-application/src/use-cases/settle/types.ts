@@ -58,8 +58,8 @@ export interface KenoDrawResult {
 export interface KenoSettleConfig {
   /** Tỷ lệ phần công ty (0–1). Ví dụ: 0.15 = 15%. */
   companyRate: number;
-  /** Bảng giải thưởng cách chơi cơ bản. Key: "pick{N}", Value: { matchCount: prize }. */
-  basicPrizes: Record<string, Record<number, number>>;
+  /** Bảng giải thưởng cách chơi cơ bản. Key: "pick{N}", Value: { matchCount (string): prize }. */
+  basicPrizes: Record<string, Record<string, number>>;
   /** Bảng giải thưởng side bet Lớn/Nhỏ (VND). */
   bigSmallPrizes: BigSmallPrizes;
   /** Bảng giải thưởng side bet Chẵn/Lẻ (VND). */
@@ -92,19 +92,6 @@ export interface SettleFinancials {
   totalAgentCommission: number;
   /** Phần công ty = Math.round(totalRevenue × companyRate) (VND). */
   companyTake: number;
-  /** Chi tiết tài chính từng đại lý. */
-  tenantBreakdown: Array<{
-    /** ID đại lý. */
-    tenantId: string;
-    /** Doanh thu đại lý (VND). */
-    revenue: number;
-    /** Hoa hồng đại lý (VND). */
-    commission: number;
-    /** Tỷ lệ hoa hồng (0–1). */
-    commissionRate: number;
-    /** Số entries của đại lý. */
-    entryCount: number;
-  }>;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

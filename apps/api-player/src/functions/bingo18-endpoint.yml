@@ -1,5 +1,14 @@
 # Bingo 18 – Player endpoints
 
+bingo18-get-game-config:
+  handler: src/handlers/bingo18/get-game-config.handler
+  events:
+    - httpApi:
+        path: /games/bingo18/config
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
 bingo18-get-current-draw:
   handler: src/handlers/bingo18/get-current-draw.handler
   events:

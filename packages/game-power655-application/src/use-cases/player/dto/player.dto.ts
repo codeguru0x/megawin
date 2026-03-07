@@ -201,6 +201,18 @@ export interface PlayerTicketSummary {
   settlement?: {
     /** Tổng tiền thắng từ tất cả entries đã settle (VND). */
     totalWinAmount: number;
+    /** Thời điểm kỳ gần nhất được settle (ISO 8601). */
+    lastSettledAt?: string;
+  };
+  /**
+   * Tóm tắt huỷ cược. Có khi ít nhất 1 kỳ bị void.
+   * Multi-draw: hoàn tiền một phần. Single-draw: hoàn toàn bộ → status = "refunded".
+   */
+  voidSummary?: {
+    /** Tổng tiền đã hoàn trả cho player (VND). */
+    totalRefundAmount: number;
+    /** Số kỳ đã bị huỷ. */
+    voidDrawCount: number;
   };
   /** Thời điểm tạo vé (ISO 8601). */
   createdAt: string;

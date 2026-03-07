@@ -12,7 +12,14 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import { Bingo18Collections, PayoutStatus, RefundStatus } from "@megawin/game-bingo18/entities";
+import {
+  Bingo18Collections,
+  PayoutStatus,
+  RefundStatus,
+  type EntryPayout,
+  type EntryVoidInfo,
+  type EntryResult,
+} from "@megawin/game-bingo18/entities";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { ObjectId, Long } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -98,32 +105,9 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   async bulkSettleEntries(
     items: Array<{
       entryId: string;
-      payout: {
-        winAmount: number;
-        payoutAmount: number;
-        boardPayouts: Array<{
-          boardNo: string;
-          playType: string;
-          matchCount: number;
-          winAmount: number;
-        }>;
-        sideBetPayouts: Array<{
-          playType: string;
-          sum?: number;
-          bet?: string;
-          outcome: string;
-          isWin: boolean;
-          winAmount: number;
-        }>;
-        settledAt: Date;
-        payoutStatus?: string;
-      };
+      payout: EntryPayout;
       outcome: string;
-      result: {
-        numbers: number[];
-        sum: number;
-        publishedAt: Date;
-      };
+      result: EntryResult;
     }>,
   ): Promise<{ modifiedCount: number }> {
     if (items.length === 0) return { modifiedCount: 0 };
@@ -357,7 +341,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   }
 
   async bulkVoidEntries(
-    items: Array<{ entryId: string; amount: number }>,
+    items: Array<{ entryId: string; voidInfo: EntryVoidInfo }>,
   ): Promise<{ modifiedCount: number }> {
     if (items.length === 0) return { modifiedCount: 0 };
 
@@ -371,12 +355,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
           $set: {
             status: EntryStatus.Void,
             outcome: EntryOutcome.Void,
-            voidInfo: {
-              originalAmount: item.amount,
-              refundAmount: item.amount,
-              refundStatus: RefundStatus.Pending,
-              voidedAt: now,
-            },
+            voidInfo: item.voidInfo,
             version,
             updatedAt: now,
           },

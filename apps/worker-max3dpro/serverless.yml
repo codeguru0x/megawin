@@ -1,11 +1,69 @@
-service: megawin-worker-max3dpro
+app: megawin
+service: mw-worker-max3dpro
 
 plugins:
   - serverless-offline
 
+custom:
+  prune:
+    automatic: true
+    number: 3
+    includeLayers: true
+
 provider:
   name: aws
   runtime: nodejs24.x
+  stage: ${opt:stage, 'dev'}
+  region: ap-southeast-1
+  logRetentionInDays: 14
+  profile: sls_deploy_${opt:stage, self:provider.stage}
+  environment:
+    STAGE: ${opt:stage, self:provider.stage}
+    MONGODB_URI: ${env:MONGODB_URI, ssm:/${opt:stage, self:provider.stage}/megawin/MONGODB_URI}
+  iam:
+    role:
+      statements:
+        ## Kinesis – tất cả streams của project
+        ## Tên stream trên AWS phải bắt đầu bằng "megawin-"
+        ## Ví dụ: megawin-bet-events-dev, megawin-draw-results-prod
+        - Effect: Allow
+          Action: kinesis:*
+          Resource:
+            - arn:aws:kinesis:${self:provider.region}:*:stream/megawin-*
+
+        ## SQS – tất cả queues của project
+        ## Tên queue trên AWS phải bắt đầu bằng "megawin-"
+        ## Ví dụ: megawin-settle-queue-dev, megawin-payout-queue-prod
+        - Effect: Allow
+          Action: sqs:*
+          Resource:
+            - arn:aws:sqs:${self:provider.region}:*:megawin-*
+
+        ## Step Functions – tất cả state machines của project
+        ## Tên state machine trên AWS phải bắt đầu bằng "megawin-"
+        ## Ví dụ: megawin-settle-flow-dev, megawin-payout-flow-prod
+        - Effect: Allow
+          Action: states:*
+          Resource:
+            - arn:aws:states:${self:provider.region}:*:stateMachine:megawin-*
+            - arn:aws:states:${self:provider.region}:*:execution:megawin-*:*
+
+stages:
+  dev:
+    observability:
+      provider: axiom
+      dataset: megawin-player-dev
+    params:
+      ### Mặc định dev sẽ là 0 không cấu hình ở prod mà chỉ định luôn khi cấu hình func
+      provisionedConcurrency: 0
+
+  prod:
+    observability:
+      provider: axiom
+      dataset: megawin-player-prod
+
+  default:
+    observability: false
 
 build:
   esbuild:

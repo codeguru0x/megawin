@@ -80,6 +80,14 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       throw AppException.badRequest(`Số board cơ bản tối đa là ${play.maxBasicBoardsPerTicket}.`);
     }
 
+    // ── 4. Load commission rate + tính commission amount ──
+    const tenantConfig = await this.getTenantConfig.run({ tenantId });
+    if (!tenantConfig || tenantConfig.isEnabled !== true) {
+      throw AppException.unauthorized("Không được phép chơi game. Vui lòng liên hệ admin.");
+    }
+
+    const commissionRate = tenantConfig.commissionRate;
+
     const builtBoards: BasicBoard[] = [];
     for (const bi of boardInputs) {
       const playType = getPlayTypeFromPickCount(bi.numbers.length);
@@ -115,7 +123,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       });
     }
 
-    // ── 4. Validate tất cả draws – all-or-nothing ──
+    // ── 5. Validate tất cả draws – all-or-nothing ──
     const draws = await this.drawRepo.getDrawsByIds(drawIds);
     const drawMap = new Map(draws.map((d) => [d.drawId, d]));
 
@@ -133,10 +141,6 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         throw AppException.badRequest(`Kỳ quay ${drawId} đã hết thời gian nhận cược.`);
       }
     }
-
-    // ── 5. Load commission rate + tính commission amount ──
-    const tenantConfig = await this.getTenantConfig.run({ tenantId });
-    const commissionRate = tenantConfig?.commissionRate ?? globalConfig.rates.defaultCommissionRate;
 
     // ── 6. Calculate pricing ──
     const unitPrice = play.unitPrice;

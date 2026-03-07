@@ -1,6 +1,11 @@
 import { Lotto535Collections } from "@megawin/game-lotto535/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { DrawDoc, DrawSplit } from "@megawin/game-lotto535/entities";
+import type {
+  DrawDoc,
+  DrawJackpotSnapshot,
+  DrawFinancial,
+  DrawStats,
+} from "@megawin/game-lotto535/entities";
 import type { MainTuple, Special, ISODateString } from "@megawin/game-lotto535/entities";
 import { BaseRepo } from "./base-repo";
 import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
@@ -96,30 +101,44 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
-      { $set: { status: toStatus, updatedAt: new Date() } },
+      {
+        $set: {
+          status: toStatus,
+          updatedAt: new Date(),
+        },
+      },
       { returnDocument: "after" },
     );
   }
 
   /**
    * Chuyển draw settling → settled + ghi jackpot snapshot.
-   * Atomic, idempotent. Gộp transition + jackpot vào 1 query.
+   * Dùng dot notation để chỉ cập nhật các field cần thiết,
+   * tránh overwrite jackpot.split đã set bởi triggerSettle().
    */
   async settleComplete(
     drawId: string,
-    jackpot: {
-      openingAmount: number;
-      closingAmount: number;
-      isSplitCycle?: boolean;
-    },
+    jackpot: Pick<DrawJackpotSnapshot, "openingAmount" | "closingAmount" | "isSplitCycle">,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Settling];
     if (!allowed?.has(DrawStatus.Settled)) return null;
 
     const now = new Date();
+    const $set: Record<string, unknown> = {
+      status: DrawStatus.Settled,
+      "jackpot.openingAmount": jackpot.openingAmount ?? 0,
+      "jackpot.closingAmount": jackpot.closingAmount ?? 0,
+      settledAt: now,
+      updatedAt: now,
+    };
+
+    if (jackpot.isSplitCycle !== undefined) {
+      $set["jackpot.isSplitCycle"] = jackpot.isSplitCycle;
+    }
+
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Settling },
-      { $set: { status: DrawStatus.Settled, jackpot, settledAt: now, updatedAt: now } },
+      { $set },
       { returnDocument: "after" },
     );
   }
@@ -209,7 +228,14 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     const now = new Date();
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Voiding },
-      { $set: { status: DrawStatus.Void, voidSummary, voidedAt: now, updatedAt: now } },
+      {
+        $set: {
+          status: DrawStatus.Void,
+          voidSummary,
+          voidedAt: now,
+          updatedAt: now,
+        },
+      },
       { returnDocument: "after" },
     );
   }
@@ -244,15 +270,11 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
-   * Trigger settle: published → settling + ghi jackpot split info.
+   * Trigger settle: published → settling.
+   * isSplitCycle được xác định tại thời điểm trigger nếu đã biết,
+   * nhưng cũng có thể ghi lại ở FinalizeSettle (idempotent overwrite).
    */
-  async triggerSettle(
-    drawId: string,
-    splitInfo?: {
-      isSplitCycle: boolean;
-      split: DrawSplit;
-    },
-  ): Promise<DrawEntity | null> {
+  async triggerSettle(drawId: string, isSplitCycle?: boolean): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Published];
     if (!allowed?.has(DrawStatus.Settling)) return null;
 
@@ -260,9 +282,8 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       status: DrawStatus.Settling,
       updatedAt: new Date(),
     };
-    if (splitInfo) {
-      $set["jackpot.isSplitCycle"] = splitInfo.isSplitCycle;
-      $set["jackpot.split"] = splitInfo.split;
+    if (isSplitCycle !== undefined) {
+      $set["jackpot.isSplitCycle"] = isSplitCycle;
     }
 
     return await this.findOneAndUpdate(
@@ -274,10 +295,19 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   async updateSettleResult(
     drawId: string,
-    financial: NonNullable<DrawDoc["financial"]>,
-    stats: NonNullable<DrawDoc["stats"]>,
+    financial: DrawFinancial,
+    stats: DrawStats,
   ): Promise<boolean> {
-    return await this.updateOne({ drawId }, { $set: { financial, stats, updatedAt: new Date() } });
+    return await this.updateOne(
+      { drawId },
+      {
+        $set: {
+          financial,
+          stats,
+          updatedAt: new Date(),
+        },
+      },
+    );
   }
 
   async getLatestDraw(): Promise<DrawEntity | null> {
@@ -343,13 +373,18 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
   }
 
-  /** Tìm draw tiếp theo (chưa settle) sau drawId cụ thể, sắp theo thời gian quay. */
+  /**
+   * Tìm draw tiếp theo (chưa settle) sau drawId cụ thể.
+   *
+   * drawId format "YYYY-MM-DD.NNN" → lexicographic order = chronological order,
+   * nên dùng drawId comparison trực tiếp thay vì fetch drawTime trước.
+   * Chỉ cần 1 query duy nhất. Recommended index: { drawId: 1, status: 1 }
+   * → single range scan từ afterDrawId, check status match, limit 1 dừng ngay.
+   */
   async findNextPendingDraw(afterDrawId: string): Promise<DrawEntity | null> {
-    const currentDraw = await this.findOne({ drawId: afterDrawId });
-    if (!currentDraw) return null;
-
     return await this.findOne(
       {
+        drawId: { $gt: afterDrawId },
         status: {
           $in: [
             DrawStatus.Scheduled,
@@ -359,9 +394,8 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
             DrawStatus.Settling,
           ],
         },
-        drawTime: { $gt: currentDraw.drawTime },
       },
-      { sort: { drawTime: 1 } },
+      { sort: { drawId: 1 } },
     );
   }
 
@@ -371,7 +405,12 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   ): Promise<boolean> {
     return await this.updateOne(
       { drawId },
-      { $set: { voidSummary: summary, updatedAt: new Date() } },
+      {
+        $set: {
+          voidSummary: summary,
+          updatedAt: new Date(),
+        },
+      },
     );
   }
 

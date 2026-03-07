@@ -1,4 +1,9 @@
-import { Max3dCollections, PayoutStatus } from "@megawin/game-max3d/entities";
+import {
+  Max3dCollections,
+  PayoutStatus,
+  type EntryPayout,
+  type EntryVoidInfo,
+} from "@megawin/game-max3d/entities";
 import type { Max3dDrawResult } from "@megawin/game-max3d/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
 import { AbstractEntryRepository } from "@megawin/game-max3d-core/repos";
@@ -8,7 +13,9 @@ export class EntryRepository extends AbstractEntryRepository<
   EntryEntity,
   EntryMapper,
   Max3dDrawResult,
-  string
+  string,
+  EntryPayout,
+  EntryVoidInfo
 > {
   constructor() {
     super({
@@ -27,13 +34,10 @@ export class EntryRepository extends AbstractEntryRepository<
     return PayoutStatus.Dispatched;
   }
 
-  async getScheduledEntries(
-    drawId: string,
-    limit: number
-  ): Promise<EntryEntity[]> {
+  async getScheduledEntries(drawId: string, limit: number): Promise<EntryEntity[]> {
     return await this.findMany(
       { drawId, status: EntryStatus.Scheduled },
-      { sort: { createdAt: 1 }, limit }
+      { sort: { createdAt: 1 }, limit },
     );
   }
 }

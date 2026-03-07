@@ -13,7 +13,7 @@
 
 import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { DrawDoc } from "@megawin/game-bingo18/entities";
+import type { DrawDoc, DrawFinancial, DrawStats } from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
 import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
 
@@ -136,7 +136,12 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
     return await this.findOneAndUpdate(
       { drawId, status: fromStatus },
-      { $set: { status: toStatus, updatedAt: new Date() } },
+      {
+        $set: {
+          status: toStatus,
+          updatedAt: new Date(),
+        },
+      },
       { returnDocument: "after" },
     );
   }
@@ -149,7 +154,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     const now = new Date();
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Settling },
-      { $set: { status: DrawStatus.Settled, settledAt: now, updatedAt: now } },
+      {
+        $set: {
+          status: DrawStatus.Settled,
+          settledAt: now,
+          updatedAt: now,
+        },
+      },
       { returnDocument: "after" },
     );
   }
@@ -239,7 +250,14 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     const now = new Date();
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Voiding },
-      { $set: { status: DrawStatus.Void, voidSummary, voidedAt: now, updatedAt: now } },
+      {
+        $set: {
+          status: DrawStatus.Void,
+          voidSummary,
+          voidedAt: now,
+          updatedAt: now,
+        },
+      },
       { returnDocument: "after" },
     );
   }
@@ -314,10 +332,19 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   async updateSettleResult(
     drawId: string,
-    financial: NonNullable<DrawDoc["financial"]>,
-    stats: NonNullable<DrawDoc["stats"]>,
+    financial: DrawFinancial,
+    stats: DrawStats,
   ): Promise<boolean> {
-    return await this.updateOne({ drawId }, { $set: { financial, stats, updatedAt: new Date() } });
+    return await this.updateOne(
+      { drawId },
+      {
+        $set: {
+          financial,
+          stats,
+          updatedAt: new Date(),
+        },
+      },
+    );
   }
 
   async updateVoidSummary(
@@ -331,7 +358,12 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   ): Promise<boolean> {
     return await this.updateOne(
       { drawId },
-      { $set: { voidSummary: summary, updatedAt: new Date() } },
+      {
+        $set: {
+          voidSummary: summary,
+          updatedAt: new Date(),
+        },
+      },
     );
   }
 }

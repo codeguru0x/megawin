@@ -35,11 +35,15 @@ import type { KenoPlayType } from "../entities/enums";
 
 /**
  * Bảng giải thưởng cơ bản.
- * Key: pickCount (1-10), Value: Map<matchCount, prize VND>
+ * Key: pickCount (string "1"-"10"), Value: Map<matchCount (string), prize VND>
  *
  * Chỉ bao gồm các matchCount có giải (bỏ qua matchCount không có giải).
+ *
+ * LƯU Ý: Dùng string key vì MongoDB/JSON serialize object key luôn là string.
+ * JS tự convert number literal → string key khi gán, nên { 6: 12_500_000 }
+ * thực chất lưu key là "6". Type Record<string, ...> phản ánh đúng runtime.
  */
-export const DEFAULT_BASIC_PRIZE_TABLE: Record<number, Record<number, number>> = {
+export const DEFAULT_BASIC_PRIZE_TABLE: Record<string, Record<string, number>> = {
   1: {
     1: 20_000,
   },
@@ -181,11 +185,11 @@ export const DEFAULT_EVEN_ODD_PRIZES = {
 export function lookupBasicPrize(
   pickCount: number,
   matchCount: number,
-  prizeTable: Record<number, Record<number, number>> = DEFAULT_BASIC_PRIZE_TABLE,
+  prizeTable: Record<string, Record<string, number>> = DEFAULT_BASIC_PRIZE_TABLE,
 ): number {
-  const tierPrizes = prizeTable[pickCount];
+  const tierPrizes = prizeTable[String(pickCount)];
   if (!tierPrizes) return 0;
-  return tierPrizes[matchCount] ?? 0;
+  return tierPrizes[String(matchCount)] ?? 0;
 }
 
 /**

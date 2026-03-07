@@ -22,6 +22,11 @@ import type { AuthTokens, TokenStorage } from "./auth/types";
 import { createAuthApi, type AuthApi } from "./auth/auth-api";
 import { createKenoApi, type KenoApi } from "./apis/keno";
 import { createLotto535Api, type Lotto535Api } from "./apis/lotto535";
+import { createMega645Api, type Mega645Api } from "./apis/mega645";
+import { createPower655Api, type Power655Api } from "./apis/power655";
+import { createMax3dApi, type Max3dApi } from "./apis/max3d";
+import { createMax3dproApi, type Max3dproApi } from "./apis/max3dpro";
+import { createBingo18Api, type Bingo18Api } from "./apis/bingo18";
 import { createPlayerApi, type PlayerApi } from "./apis/player";
 
 // ============ Config ============
@@ -192,48 +197,35 @@ export interface PlayerSdkConfig {
 export interface PlayerClient {
   /**
    * Raw HTTP client đã bind auth.
-   *
-   * Dùng cho API endpoints chưa có wrapper method.
-   * Tự động gửi Bearer token. Set `Authorization: ""` để bypass.
-   *
-   * @example
-   * ```ts
-   * // Gọi API tùy chỉnh
-   * const data = await client.api.get<MyType>("/player/custom-endpoint");
-   *
-   * // Bypass auth cho public route
-   * const info = await client.api.get("/public/info", {
-   *   headers: { Authorization: "" },
-   * });
-   * ```
    */
   readonly api: HttpClient;
 
-  /**
-   * Auth API — quản lý token lifecycle.
-   *
-   * @see {@link AuthApi}
-   */
+  /** Auth API — quản lý token lifecycle. */
   readonly auth: AuthApi;
 
-  /**
-   * Keno API — đặt cược game Keno.
-   *
-   * @see {@link KenoApi}
-   */
+  /** Keno API */
   readonly keno: KenoApi;
 
-  /**
-   * Lotto 5/35 API — đặt cược game Lotto 5/35.
-   *
-   * @see {@link Lotto535Api}
-   */
+  /** Lotto 5/35 API */
   readonly lotto535: Lotto535Api;
+
+  /** Mega 6/45 API */
+  readonly mega645: Mega645Api;
+
+  /** Power 6/55 API */
+  readonly power655: Power655Api;
+
+  /** Max 3D API */
+  readonly max3d: Max3dApi;
+
+  /** Max 3D Pro API */
+  readonly max3dpro: Max3dproApi;
+
+  /** Bingo 18 API */
+  readonly bingo18: Bingo18Api;
 
   /**
    * Player API — số dư, lịch sử cược, kết quả game.
-   *
-   * @see {@link PlayerApi}
    */
   readonly player: PlayerApi;
 }
@@ -333,6 +325,11 @@ export function createPlayerClient(config: PlayerSdkConfig): PlayerClient {
 
   const keno = createKenoApi(authedClient);
   const lotto535 = createLotto535Api(authedClient);
+  const mega645 = createMega645Api(authedClient);
+  const power655 = createPower655Api(authedClient);
+  const max3d = createMax3dApi(authedClient);
+  const max3dpro = createMax3dproApi(authedClient);
+  const bingo18 = createBingo18Api(authedClient);
   const player = createPlayerApi(authedClient);
 
   // ---- Set initial tokens if provided ----
@@ -346,6 +343,11 @@ export function createPlayerClient(config: PlayerSdkConfig): PlayerClient {
     auth,
     keno,
     lotto535,
+    mega645,
+    power655,
+    max3d,
+    max3dpro,
+    bingo18,
     player,
   };
 }

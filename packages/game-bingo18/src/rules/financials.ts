@@ -55,15 +55,6 @@ export interface DrawFinancialResult {
   companyTake: number;
   /** Lợi nhuận = totalRevenue - totalPrizes - totalAgentCommission - companyTake. Có thể âm. */
   profit: number;
-  /** Chi tiết tài chính từng đại lý. */
-  tenantBreakdown: Array<{
-    /** ID đại lý. */
-    tenantId: string;
-    /** Doanh thu riêng đại lý. */
-    revenue: number;
-    /** Hoa hồng đại lý. */
-    commission: number;
-  }>;
 }
 
 /**
@@ -78,13 +69,7 @@ export interface DrawFinancialResult {
 export function calculateBingo18DrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const { totalRevenue, totalPrizes, tenantRevenues, companyRate } = input;
 
-  const tenantBreakdown = tenantRevenues.map((t) => ({
-    tenantId: t.tenantId,
-    revenue: t.revenue,
-    commission: t.commission,
-  }));
-
-  const totalAgentCommission = tenantBreakdown.reduce((sum, t) => sum + t.commission, 0);
+  const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
 
   const companyTake = Math.round(totalRevenue * companyRate);
 
@@ -96,7 +81,6 @@ export function calculateBingo18DrawFinancials(input: DrawFinancialInput): DrawF
     totalAgentCommission,
     companyTake,
     profit,
-    tenantBreakdown,
   };
 }
 

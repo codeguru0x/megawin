@@ -34,6 +34,70 @@ import type { Long } from "@megawin/game-core/types";
 export const CAPPABLE_PICK_COUNTS: ReadonlySet<number> = new Set([8, 9, 10]);
 
 // ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Snapshot thông tin đại lý tại thời điểm tạo entry. */
+export interface EntryTenantSnapshot {
+  /** Tỷ lệ hoa hồng đại lý. Ví dụ: 0.20 = 20%. */
+  commissionRate: number;
+  /** Tiền hoa hồng = Math.round(amount × commissionRate). Tính sẵn lúc place-bet. */
+  commissionAmount: number;
+}
+
+/** Tóm tắt nội dung entry, snapshot từ ticket. */
+export interface EntrySummary {
+  ticketNo: string;
+  boards: EntryBoardSnapshot[];
+  sideBets: EntrySideBetSnapshot[];
+}
+
+/** Snapshot kết quả kỳ quay. Copy từ draw khi settle. */
+export interface EntryResult {
+  winningNumbers: string[];
+  publishedAt: Date;
+  bigCount: number;
+  smallCount: number;
+  evenCount: number;
+  oddCount: number;
+}
+
+/** Chi tiết thanh toán. Set sau khi settle. */
+export interface EntryPayout {
+  /** Tổng tiền thắng = Σ(boardPayouts[].winAmount) + Σ(sideBetPayouts[].winAmount). */
+  winAmount: number;
+  /** Tiền trả cho player. Thường = winAmount. Sau ApplyPayoutCaps có thể giảm. */
+  payoutAmount: number;
+  /** Chi tiết thắng/thua từng board cách chơi cơ bản. */
+  boardPayouts: EntryBoardPayout[];
+  /** Chi tiết thắng/thua từng side bet (Lớn/Nhỏ, Chẵn/Lẻ). */
+  sideBetPayouts: EntrySideBetPayout[];
+  /** Thời điểm settle. */
+  settledAt: Date;
+  payoutStatus?: PayoutStatus;
+  payoutDispatchedAt?: Date;
+  payoutRetryCount?: number;
+  payoutLastError?: string;
+}
+
+/**
+ * Thông tin huỷ cược + hoàn tiền.
+ * Chỉ có khi entry bị void (draw void / admin void).
+ */
+export interface EntryVoidInfo {
+  /** Tiền cược gốc của entry này (= amount). */
+  originalAmount: number;
+  /** Tiền hoàn trả cho player. */
+  refundAmount: number;
+  /** Trạng thái hoàn tiền. */
+  refundStatus: RefundStatus;
+  /** Thời điểm huỷ. */
+  voidedAt: Date;
+  /** Thời điểm hoàn tiền. */
+  refundedAt?: Date;
+}
+
+// ─────────────────────────────────────────────
 // Entry Document
 // ─────────────────────────────────────────────
 
@@ -55,12 +119,7 @@ export interface TicketEntryDoc {
 
   // ───── Tenant (snapshot đại lý lúc đặt cược) ─────
 
-  tenant: {
-    /** Tỷ lệ hoa hồng đại lý. Ví dụ: 0.20 = 20%. */
-    commissionRate: number;
-    /** Tiền hoa hồng = Math.round(amount × commissionRate). Tính sẵn lúc place-bet. */
-    commissionAmount: number;
-  };
+  tenant: EntryTenantSnapshot;
 
   // ───── Entry Status ─────
 
@@ -74,22 +133,11 @@ export interface TicketEntryDoc {
 
   // ───── Entry Summary ─────
 
-  entrySummary: {
-    ticketNo: string;
-    boards: EntryBoardSnapshot[];
-    sideBets: EntrySideBetSnapshot[];
-  };
+  entrySummary: EntrySummary;
 
   // ───── Result Snapshot ─────
 
-  result?: {
-    winningNumbers: string[];
-    publishedAt: Date;
-    bigCount: number;
-    smallCount: number;
-    evenCount: number;
-    oddCount: number;
-  };
+  result?: EntryResult;
 
   // ───── Outcome ─────
 
@@ -97,22 +145,7 @@ export interface TicketEntryDoc {
 
   // ───── Payout ─────
 
-  payout?: {
-    /** Tổng tiền thắng = Σ(boardPayouts[].winAmount) + Σ(sideBetPayouts[].winAmount). */
-    winAmount: number;
-    /** Tiền trả cho player. Thường = winAmount. Sau ApplyPayoutCaps có thể giảm. */
-    payoutAmount: number;
-    /** Chi tiết thắng/thua từng board cách chơi cơ bản. */
-    boardPayouts: EntryBoardPayout[];
-    /** Chi tiết thắng/thua từng side bet (Lớn/Nhỏ, Chẵn/Lẻ). */
-    sideBetPayouts: EntrySideBetPayout[];
-    /** Thời điểm settle. */
-    settledAt: Date;
-    payoutStatus?: PayoutStatus;
-    payoutDispatchedAt?: Date;
-    payoutRetryCount?: number;
-    payoutLastError?: string;
-  };
+  payout?: EntryPayout;
 
   // ───── Payout Cap Flag ─────
 
@@ -140,22 +173,7 @@ export interface TicketEntryDoc {
    * Thông tin huỷ cược + hoàn tiền.
    * Chỉ có khi entry bị void (draw void / admin void).
    */
-  voidInfo?: {
-    /** Tiền cược gốc của entry này (= amount). */
-    originalAmount: number;
-
-    /** Tiền hoàn trả cho player. */
-    refundAmount: number;
-
-    /** Trạng thái hoàn tiền. */
-    refundStatus: RefundStatus;
-
-    /** Thời điểm huỷ. */
-    voidedAt: Date;
-
-    /** Thời điểm hoàn tiền. */
-    refundedAt?: Date;
-  };
+  voidInfo?: EntryVoidInfo;
 
   // ───── Timestamps ─────
 

@@ -9,10 +9,24 @@
  * Chạy SAU CalculateFinancials (đã có splitDetails), TRƯỚC SyncTicketSummaries.
  *
  * ────────────────────────────────────────────────
+ * KHI NÀO SKIP (trả skipped = true):
+ * ────────────────────────────────────────────────
+ *   1. Không phải kỳ chia thưởng (isSplitCycle = false):
+ *      - JP chưa đạt ngưỡng splitThreshold, hoặc không phải kỳ Evening.
+ *
+ *   2. Là kỳ chia nhưng CÓ người trúng Jackpot (5 main + special):
+ *      - Theo luật Vietlott, JP winner overrides split — winner nhận toàn bộ JP pool.
+ *      - CalculateFinancials KHÔNG tính splitDetails → splitDetails = undefined.
+ *
+ *   3. Là kỳ chia nhưng KHÔNG ai trúng bất kỳ giải nào (tier1-tier5 đều 0 winner):
+ *      - Không có ai để chia → splitDetails = {} (empty object).
+ *      - JP giữ nguyên, tích luỹ tiếp sang kỳ sau.
+ *
+ * ────────────────────────────────────────────────
  * KHI NÀO CHẠY:
  * ────────────────────────────────────────────────
- *   - Chỉ chạy khi isSplitCycle = true (Jackpot >= splitThreshold, mặc định 12 tỷ)
- *   - Nếu isSplitCycle = false → skip ngay, trả skipped = true
+ *   isSplitCycle = true + không có JP winner + có ít nhất 1 winner tier1-tier5:
+ *     → splitDetails chứa chi tiết phân bổ theo tier.
  *
  * ────────────────────────────────────────────────
  * LOGIC:
@@ -42,6 +56,11 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext } from "./types";
 
+/**
+ * Kết quả bước ApplySplitBonuses.
+ * Step Function KHÔNG sử dụng output này (không có Assign).
+ * Giữ lại để debug qua CloudWatch / Step Function execution history.
+ */
 export interface ApplySplitBonusesResult {
   /** Mã kỳ quay. */
   drawId: string;
@@ -61,7 +80,11 @@ export class ApplySplitBonusesUseCase extends InternalUseCase<
     const { drawId, isSplitCycle } = input;
     const splitDetails = input.financials?.splitDetails;
 
-    // ── Guard: skip nếu không phải kỳ chia hoặc không có dữ liệu split ──
+    // ── Guard: skip khi không cần chia split bonus ──
+    // 3 trường hợp skip:
+    //   1. !isSplitCycle: không phải kỳ chia (JP < threshold hoặc không phải Evening)
+    //   2. !splitDetails: có JP winner → winner nhận hết, không split (undefined)
+    //   3. empty splitDetails: không ai trúng tier1-tier5 (không ai để chia)
     if (!isSplitCycle || !splitDetails || Object.keys(splitDetails).length === 0) {
       return { drawId, entriesPatched: 0, skipped: true };
     }
@@ -75,9 +98,9 @@ export class ApplySplitBonusesUseCase extends InternalUseCase<
       if (detail.bonusPerWinner <= 0 || detail.winnerCount <= 0) continue;
 
       // applySplitBonusForTier:
-      //   - Query entries: drawId, payout.tiers[].tier = tier, isSplitBonus != true
-      //   - Patch: payout.winAmount += bonusPerWinner, payout.payoutAmount += bonusPerWinner
-      //   - Set isSplitBonus = true trên tier item (idempotent guard)
+      //   Filter chỉ scan entries THẮNG (outcome = "win") + trúng tier cụ thể.
+      //   → Loại bỏ ~90% entries thua ngay từ index, không cần quét array payout.tiers.
+      //   $nor guard idempotent: bỏ qua entry đã được patch split bonus cho tier này.
       const patched = await this.entryRepo.applySplitBonusForTier(
         drawId,
         tier,

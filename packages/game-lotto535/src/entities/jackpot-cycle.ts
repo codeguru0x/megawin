@@ -23,8 +23,7 @@ export const JackpotCycleStatus = {
   Closed: "closed",
 } as const;
 
-export type JackpotCycleStatus =
-  (typeof JackpotCycleStatus)[keyof typeof JackpotCycleStatus];
+export type JackpotCycleStatus = (typeof JackpotCycleStatus)[keyof typeof JackpotCycleStatus];
 
 // ─────────────────────────────────────────────
 // Jackpot Cycle Close Reason
@@ -62,6 +61,43 @@ export interface JackpotWinnerInfo {
   entryId: string;
   /** ID draw trúng giải. */
   drawId: string;
+}
+
+// ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Cấu hình Jackpot snapshot tại thời điểm tạo cycle. */
+export interface JackpotCycleConfig {
+  /** Ngưỡng kích hoạt chia giải Jackpot (VND). Khi currentAmount >= splitThreshold → trigger split. */
+  splitThreshold: number;
+  /** Tỷ lệ chia Jackpot cho từng tier (snapshot từ global config). */
+  splitRatios: SplitRatios;
+}
+
+/** Phân bổ tiền thưởng cho 1 tier trong kỳ chia. */
+export interface SplitTierAllocation {
+  /** Số lượng giải trúng trong tier này. */
+  winnerCount: number;
+  /** Bonus mỗi giải trúng = totalAmount / winnerCount (đã làm tròn). */
+  bonusPerWinner: number;
+  /** Tổng tiền phân bổ cho tier (bao gồm phần redistribute từ tier không có winner). */
+  totalAmount: number;
+}
+
+/** Chi tiết chia giải khi closeReason = split. */
+export interface JackpotSplitDetail {
+  /** Tổng giá trị Jackpot được chia (VND) = currentAmount tại thời điểm chia. */
+  splitAmount: number;
+  /**
+   * Phân bổ chia cho từng tier. Key = tier name (tier1..tier5).
+   * Chỉ chứa tier có người trúng.
+   */
+  tierAllocations: Record<string, SplitTierAllocation>;
+  /** Tổng số người trúng giải (across all tiers) trong kỳ chia. */
+  totalWinners: number;
+  /** Tổng tiền bonus đã chi trả thực tế (VND). */
+  totalPaid: number;
 }
 
 // ─────────────────────────────────────────────
@@ -108,12 +144,7 @@ export interface JackpotCycleDoc {
   // ───── Cấu hình snapshot ─────
 
   /** Cấu hình Jackpot tại thời điểm tạo cycle (snapshot, không thay đổi khi config update sau). */
-  config: {
-    /** Ngưỡng kích hoạt chia giải Jackpot (VND). Khi currentAmount >= splitThreshold → trigger split. */
-    splitThreshold: number;
-    /** Tỷ lệ chia Jackpot cho từng tier (snapshot từ global config). */
-    splitRatios: SplitRatios;
-  };
+  config: JackpotCycleConfig;
 
   // ───── Kết thúc (khi status = closed) ─────
 
@@ -127,29 +158,7 @@ export interface JackpotCycleDoc {
   closeReason?: JackpotCycleCloseReason;
 
   /** Chi tiết chia giải (khi closeReason = split). */
-  splitDetail?: {
-    /** Tổng giá trị Jackpot được chia (VND) = currentAmount tại thời điểm chia. */
-    splitAmount: number;
-    /**
-     * Phân bổ chia cho từng tier. Key = tier name (tier1..tier5).
-     * Chỉ chứa tier có người trúng.
-     */
-    tierAllocations: Record<
-      string,
-      {
-        /** Số lượng giải trúng trong tier này. */
-        winnerCount: number;
-        /** Bonus mỗi giải trúng = totalAmount / winnerCount (đã làm tròn). */
-        bonusPerWinner: number;
-        /** Tổng tiền phân bổ cho tier (bao gồm phần redistribute từ tier không có winner). */
-        totalAmount: number;
-      }
-    >;
-    /** Tổng số người trúng giải (across all tiers) trong kỳ chia. */
-    totalWinners: number;
-    /** Tổng tiền bonus đã chi trả thực tế (VND). */
-    totalPaid: number;
-  };
+  splitDetail?: JackpotSplitDetail;
 
   /**
    * Danh sách người trúng Jackpot (khi closeReason = winner).

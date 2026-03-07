@@ -82,12 +82,7 @@ export class BuildReportUseCase extends InternalUseCase<
 
     if (financials) {
       const totalStake = financials.totalRevenue;
-      const totalPayout = financials.tenantBreakdown.reduce(
-        (s, t) =>
-          s +
-          (tenantAggs.find((a) => a.tenantId === t.tenantId)?.totalPayout ?? 0),
-        0
-      );
+      const totalPayout = tenantAggs.reduce((s, t) => s + t.totalPayout, 0);
       const totalWin = tenantAggs.reduce((s, t) => s + t.totalWin, 0);
 
       await publishGameReport({

@@ -1,5 +1,14 @@
 # Mega 6/45 – Player endpoints
 
+mega645-get-game-config:
+  handler: src/handlers/mega645/get-game-config.handler
+  events:
+    - httpApi:
+        path: /games/mega645/config
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
 mega645-get-current-draw:
   handler: src/handlers/mega645/get-current-draw.handler
   events:
