@@ -29,3 +29,7 @@ settle-sync-ticket-summaries:
 settle-apply-split-bonuses:
   handler: src/handlers/settle/apply-split-bonuses.handler
   timeout: 900
+
+settle-patch-jackpot-prize:
+  handler: src/handlers/settle/patch-jackpot-prize.handler
+  timeout: 900

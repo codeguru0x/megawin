@@ -59,9 +59,12 @@ export interface DrawJackpotSnapshot {
   openingAmount: number;
 
   /**
-   * Jackpot cuối kỳ (VND).
-   * = openingAmount + jackpotContribution (không ai trúng)
-   * = seedAmount (có người trúng Jackpot)
+   * Jackpot cuối kỳ (VND) = openingAmount + jackpotContribution.
+   * Luôn phản ánh giá trị quỹ JP tại thời điểm kỳ quay kết thúc.
+   *
+   * Nếu có JP winner: đây là tổng giải mà winner nhận.
+   * Nếu split: đây là quỹ JP trước khi chia cho tier1-tier5.
+   * Nếu tích luỹ: đây là quỹ JP mang sang kỳ sau.
    */
   closingAmount: number;
 

@@ -12,7 +12,10 @@
  *   SettleEntries → nhận SettleContext, trả done/false (loop)
  *   CalculateFinancials → nhận SettleContext, trả SettleFinancials
  *     → Step Function merge: settleCtx.financials = result
- *   ApplySplitBonuses → nhận SettleContext (có financials)
+ *   CheckPrizeRoute (Choice) → route dựa trên financials:
+ *     ├─ hasJackpotWinner → PatchJackpotPrize (step 4a)
+ *     ├─ splitDetails tồn tại → ApplySplitBonuses (step 4b)
+ *     └─ default → SyncTicketSummaries (skip)
  *   SyncTicketSummaries → nhận SettleContext
  *   BuildReport → nhận SettleContext (có financials)
  *   FinalizeSettle → nhận SettleContextWithFinancials (financials bắt buộc)
@@ -89,7 +92,7 @@ export interface LottoSettleConfig {
  * Chi tiết phân bổ split cho 1 tier — thông tin thưởng Jackpot chia cho
  * những người trúng tier đó trong kỳ split.
  *
- * Dùng chung giữa CalculateFinancials (tính), ApplySplitBonuses (patch entry),
+ * Dùng chung giữa CalculateFinancials (tính), ApplySplitBonuses (step 4b, patch entry),
  * FinalizeSettle (ghi vào cycle close record).
  */
 export interface LottoSplitTierDetail {
@@ -191,12 +194,15 @@ export interface SettleFinancials {
   jackpotContribution: number;
 
   /**
-   * Số tiền Jackpot cuối kỳ (VND) — giá trị Jackpot SAU khi tính toán kỳ này.
+   * Jackpot cuối kỳ (VND) = openingAmount + jackpotContribution (LUÔN LUÔN).
+   * Bản ghi lịch sử — quỹ JP trị giá bao nhiêu khi kỳ quay kết thúc.
    *
-   * Nếu reset (có winner hoặc split thực tế):
-   *   closingJackpot = seedAmount (contribution đã tính vào giải winner).
-   * Nếu tích luỹ (không reset):
-   *   closingJackpot = openingAmount + contribution.
+   * Nếu có JP winner: đây là tổng giải mà winner nhận.
+   * Nếu split: đây là quỹ JP trước khi chia cho tier1-tier5.
+   * Nếu tích luỹ: đây là quỹ JP mang sang kỳ sau.
+   *
+   * Lưu ý: seedAmount (reset cycle mới) do FinalizeSettle.createCycle() xử lý,
+   * KHÔNG phải closingJackpot.
    */
   closingJackpot: number;
 
@@ -239,7 +245,10 @@ export interface SettleFinancials {
  * │ SettleEntries     ← SettleContext                               │
  * │ CalculateFinancials ← SettleContext → SettleFinancials          │
  * │   ↳ SFN merge: settleCtx.financials = result                   │
- * │ ApplySplitBonuses ← SettleContext (financials có)               │
+ * │ CheckPrizeRoute (Choice):                                      │
+ * │   ├─ hasJackpotWinner → PatchJackpotPrize (step 4a)            │
+ * │   ├─ splitDetails != null → ApplySplitBonuses (step 4b)        │
+ * │   └─ default → SyncTicketSummaries                             │
  * │ SyncTicketSummaries ← SettleContext                             │
  * │ BuildReport       ← SettleContext (financials có)               │
  * │ FinalizeSettle    ← SettleContextWithFinancials (bắt buộc)     │
@@ -299,7 +308,7 @@ export interface SettleContext {
    *
    * Khi true VÀ không có jackpot winner VÀ có winner tier1-tier5:
    *   → CalculateFinancials tính splitDetails
-   *   → ApplySplitBonuses patch split bonus vào entries
+   *   → ApplySplitBonuses (step 4b) patch split bonus vào entries
    *   → FinalizeSettle đóng cycle + ghi split record
    */
   isSplitCycle: boolean;

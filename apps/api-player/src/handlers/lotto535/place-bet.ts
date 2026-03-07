@@ -22,8 +22,8 @@ import { PlayType } from "@megawin/game-lotto535/entities";
 // ─── Composite schemas ───
 
 export const lotto535SelectionSchema = z.object({
-  mainNumbers: z.array(lotto535MainNumberSchema).max(15),
-  specialNumbers: z.array(lotto535SpecialNumberSchema).max(12),
+  mainNumbers: z.array(lotto535MainNumberSchema).max(15, "Số chính tối đa 15 số."),
+  specialNumbers: z.array(lotto535SpecialNumberSchema).max(12, "Số đặc biệt tối đa 12 số."),
 });
 
 export const lotto535BoardSchema = z
@@ -114,10 +114,10 @@ export const lotto535BoardSchema = z
             message: "Bao số đặc biệt: cần chọn đúng 5 số chính.",
             path: ["selection", "mainNumbers"],
           });
-        if (specialLen < 2 || specialLen > 12)
+        if (specialLen < 2)
           ctx.addIssue({
             code: "custom",
-            message: "Bao số đặc biệt: cần chọn 2-12 số đặc biệt.",
+            message: "Bao số đặc biệt: cần chọn ít nhất 2 số đặc biệt.",
             path: ["selection", "specialNumbers"],
           });
         break;

@@ -1,11 +1,12 @@
 /**
  * Lambda: apply-split-bonuses (Lotto 5/35)
  *
- * Patch bonusPerWinner từ Jackpot split vào entry payout.
- * Chỉ chạy khi isSplitCycle = true VÀ financials.splitDetails tồn tại.
+ * Patch split bonus Jackpot vào entries cho người trúng tier1-tier5.
+ * Chỉ chạy khi isSplitCycle = true VÀ financials.splitDetails tồn tại
+ * VÀ hasJackpotWinner = false (route bởi Step Function).
  *
- * @input  SettleContext ($settleCtx, đã có financials)
- * @output ApplySplitBonusesResult
+ * @input  SettleContext ($settleCtx, đã có financials + splitDetails)
+ * @output ApplySplitBonusesResult { drawId, entriesPatched }
  */
 
 import { ApplySplitBonusesUseCase } from "@megawin/game-lotto535-application/use-cases/settle";

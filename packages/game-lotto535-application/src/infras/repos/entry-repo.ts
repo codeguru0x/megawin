@@ -129,7 +129,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     totalPayoutAmount: number;
     /**
      * Tổng tiền giải cố định (tier1–consolation, KHÔNG bao gồm Jackpot).
-     * Jackpot loại ra vì amount = 0 lúc settle, tiền thực xử lý ở ApplySplitBonuses / FinalizeSettle.
+     * Jackpot loại ra vì amount = 0 lúc settle, tiền thực được patch ở PatchJackpotPrize (step 4a).
      */
     totalFixedPrizes: number;
     /** Tổng số lines của tất cả entries trong kỳ này. */
@@ -187,7 +187,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     for (const row of tierRows) {
       tierWinnerCounts[row._id] = row.totalHitCount;
       // Jackpot tier không tính vào totalFixedPrizes:
-      // amount = 0 khi settle, tiền Jackpot xử lý riêng ở ApplySplitBonuses / FinalizeSettle.
+      // amount = 0 khi settle, tiền Jackpot được patch ở PatchJackpotPrize (step 4a).
       if (row._id !== PrizeTier.Jackpot) {
         totalFixedPrizes += row.totalAmount;
       }
@@ -593,7 +593,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
    * Aggregate tóm tắt ticket từ TẤT CẢ entries của 1 ticket.
    * Dùng cho SyncTicketSummaries — tính lại toàn bộ từ source of truth (entries).
    */
-  async aggregateTicketSummary(ticketId: ObjectId): Promise<{
+  async aggregateTicketSummary(ticketId: string): Promise<{
     totalEntries: number;
     settledCount: number;
     voidedCount: number;
@@ -660,7 +660,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
    * Batch aggregate summaries cho nhiều tickets cùng lúc.
    * $match ticketId ∈ batch → $group by ticketId → Map<string, summary>.
    */
-  async aggregateTicketSummariesBatch(ticketIds: ObjectId[]): Promise<
+  async aggregateTicketSummariesBatch(ticketIds: string[]): Promise<
     Map<
       string,
       {
@@ -745,9 +745,9 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
    * Lấy danh sách distinct ticketIds từ entries của 1 draw.
    * Dùng cho SyncTicketSummaries — biết cần sync ticket nào.
    */
-  async getDistinctTicketIdsByDrawId(drawId: string): Promise<ObjectId[]> {
+  async getDistinctTicketIdsByDrawId(drawId: string): Promise<string[]> {
     const col = await this.getCollection();
-    return col.distinct("ticketId", { drawId }) as Promise<ObjectId[]>;
+    return col.distinct("ticketId", { drawId }) as Promise<string[]>;
   }
 
   // ─────────────────────────────────────────────
@@ -771,7 +771,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   /**
    * Patch split bonus Jackpot vào tất cả entries trúng tier trong 1 draw.
    *
-   * Được gọi bởi ApplySplitBonuses sau khi CalculateFinancials đã tính xong
+   * Được gọi bởi ApplySplitBonuses (step 4b) sau khi CalculateFinancials đã tính xong
    * bonusPerWinner cho từng tier (tier1-tier5).
    *
    * ── FILTER STRATEGY ──
@@ -867,9 +867,89 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     return this.findMany({
       drawId,
       "payout.tiers": {
-        $elemMatch: { tier: "jackpot", hitCount: { $gt: 0 } },
+        $elemMatch: { tier: PrizeTier.Jackpot, hitCount: { $gt: 0 } },
       },
     });
+  }
+
+  /**
+   * Patch jackpot prize vào payout của entries trúng Jackpot.
+   *
+   * Được gọi bởi PatchJackpotPrize (step 4a) sau khi tính jackpotPerWinner.
+   * Cập nhật: payout.tiers[jackpot].unitAmount, amount + payout.winAmount, payoutAmount.
+   *
+   * Idempotent: chỉ update entries có payout.tiers[jackpot].amount = 0
+   * (chưa được patch). Entries đã patch (amount > 0) sẽ bị skip.
+   */
+  async patchJackpotPrize(drawId: string, jackpotPerWinner: number): Promise<number> {
+    const filter = {
+      drawId,
+      status: EntryStatus.Settled,
+      outcome: EntryOutcome.Win,
+      "payout.tiers": {
+        $elemMatch: {
+          tier: PrizeTier.Jackpot,
+          hitCount: { $gt: 0 },
+          amount: 0,
+        },
+      },
+    };
+
+    const matchingEntries = await this.findManyAsDocuments(filter, {
+      projection: {
+        _id: 1,
+        "payout.tiers": 1,
+      },
+    });
+
+    if (matchingEntries.length === 0) return 0;
+
+    const ops = matchingEntries.map((entry) => {
+      const tiers = (entry.payout as any)?.tiers ?? [];
+      const jpTier = tiers.find(
+        (t: any) => t.tier === PrizeTier.Jackpot && t.hitCount > 0 && t.amount === 0,
+      );
+      const hitCount = jpTier?.hitCount ?? 0;
+      const prizeAmount = jackpotPerWinner * hitCount;
+
+      const updatedTiers = tiers.map((t: any) => {
+        if (t.tier === PrizeTier.Jackpot && t.hitCount > 0 && t.amount === 0) {
+          return {
+            ...t,
+            unitAmount: jackpotPerWinner,
+            amount: prizeAmount,
+          };
+        }
+        return t;
+      });
+
+      return {
+        updateOne: {
+          filter: {
+            _id: entry._id,
+            "payout.tiers": {
+              $elemMatch: {
+                tier: PrizeTier.Jackpot,
+                hitCount: { $gt: 0 },
+                amount: 0,
+              },
+            },
+          },
+          update: {
+            $set: {
+              "payout.tiers": updatedTiers,
+            },
+            $inc: {
+              "payout.winAmount": prizeAmount,
+              "payout.payoutAmount": prizeAmount,
+            },
+          },
+        },
+      };
+    });
+
+    const result = await this.bulkWrite(ops, { ordered: false });
+    return result.modifiedCount;
   }
 
   // ─────────────────────────────────────────────

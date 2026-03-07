@@ -12,23 +12,6 @@ export interface PlayerGetCurrentDrawOutput {
   currentDraw: PlayerDrawInfo | null;
   /** Tất cả kỳ quay đang active, sorted theo drawDate + drawNo asc. */
   activeDraws: PlayerDrawInfo[];
-  /** Số tiền Jackpot hiện tại (VND) — đọc từ active cycle. */
-  jackpotCurrentAmount: number;
-  /** Kết quả quay gần nhất (null nếu chưa có kỳ nào settle). */
-  lastResult: {
-    /** Mã kỳ quay. */
-    drawId: string;
-    /** Ngày quay (YYYY-MM-DD). */
-    drawDate: string;
-    /** Số thứ tự kỳ trong ngày. */
-    drawNo: number;
-    /** 5 số chính trúng thưởng (sorted, zero-padded "01"-"35"). */
-    winningMain: string[];
-    /** Số đặc biệt trúng thưởng ("01"-"12"). */
-    winningSpecial: string;
-    /** Thời điểm công bố kết quả (ISO 8601). */
-    publishedAt: string;
-  } | null;
 }
 
 export interface PlayerDrawInfo {
@@ -49,32 +32,33 @@ export interface PlayerDrawInfo {
     /** Thời điểm đóng bán (ISO 8601). */
     closeAt: string;
   };
-  /** Số tiền Jackpot hiện tại (VND) — đọc từ active cycle. */
-  jackpotCurrentAmount: number;
 }
 
 // ─── Get Jackpot (Player) ───
 
 export interface PlayerGetJackpotOutput {
+  /** Số thứ tự cycle (tự tăng). */
+  cycleNo: number;
   /** Số tiền Jackpot hiện tại (VND). */
   currentAmount: number;
   /** Số tiền khởi điểm Jackpot (VND) — seed khi bắt đầu cycle mới. */
   seedAmount: number;
+  /** Số tiền Jackpot cao nhất đạt được trong cycle hiện tại (VND). */
+  peakAmount: number;
+  /** Tổng tiền đã tích lũy từ đầu cycle (VND). */
+  totalContribution: number;
+  /** Số kỳ đã settled trong cycle hiện tại. */
+  drawCount: number;
+
+  /** Mã kỳ quay bắt đầu cycle. */
+  startDrawId: string;
+
   /** Tiến trình tích luỹ Jackpot hướng tới ngưỡng chia. */
   progress: {
-    /** Số tiền hiện tại (VND) = currentAmount. */
-    current: number;
-    /** Ngưỡng kích hoạt chia Jackpot (VND) — từ JackpotConfig.splitThreshold. */
-    threshold: number;
-    /** Phần trăm tiến trình (0-100) = (current / threshold) × 100. */
+    /** Ngưỡng kích hoạt chia Jackpot (VND). */
+    splitThreshold: number;
+    /** Phần trăm tiến trình (0-100) = (currentAmount / threshold) × 100. */
     percentage: number;
-  };
-  /** Kỳ quay tiếp theo (nếu có). */
-  nextDraw?: {
-    /** Mã kỳ quay tiếp theo. */
-    drawId: string;
-    /** Giờ quay (HH:mm). */
-    drawTime: string;
   };
 }
 

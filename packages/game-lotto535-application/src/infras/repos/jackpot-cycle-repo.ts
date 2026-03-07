@@ -122,8 +122,16 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       {
         $set: $set as unknown as Record<string, unknown>,
         $max: { peakAmount: input.finalAmount },
+        // Tính kỳ quay đóng cycle vào drawCount
+        // (nhánh tích luỹ đã tăng qua updateCycleStats, nhánh đóng cycle không qua đó)
+        $inc: { drawCount: 1 },
       },
     );
+  }
+
+  /** Tìm cycle đã đóng cho 1 drawId cụ thể. */
+  async findClosedByEndDrawId(endDrawId: string): Promise<JackpotCycleEntity | null> {
+    return this.findOne({ endDrawId, status: JackpotCycleStatus.Closed });
   }
 
   /** Lấy danh sách cycles đã đóng (mới nhất trước). */

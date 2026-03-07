@@ -1,5 +1,6 @@
 import { Lotto535Collections } from "@megawin/game-lotto535/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
+import { subDays, formatVNDate } from "@megawin/shared/utils/date";
 import type {
   DrawDoc,
   DrawJackpotSnapshot,
@@ -310,6 +311,27 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
   }
 
+  /**
+   * Cộng thêm jackpot prize vào stats.totalPayoutAmount khi có JP winner.
+   * Gọi bởi PatchJackpotPrize (step 4a) SAU khi patch entries.
+   *
+   * KHÔNG tự idempotent ($inc cộng dồn) — caller phải đảm bảo chỉ gọi
+   * khi patchJackpotPrize thực sự patch (modifiedCount > 0).
+   */
+  async incrementTotalPayout(drawId: string, additionalPayout: number): Promise<boolean> {
+    return await this.updateOne(
+      { drawId },
+      {
+        $inc: {
+          "stats.totalPayoutAmount": additionalPayout,
+        },
+        $set: {
+          updatedAt: new Date(),
+        },
+      },
+    );
+  }
+
   async getLatestDraw(): Promise<DrawEntity | null> {
     return await this.findOne({}, { sort: { drawDate: -1, drawNo: -1 } });
   }
@@ -366,9 +388,25 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return draw;
   }
 
-  async getActiveDraws(allowStatuses: string[]): Promise<DrawEntity[]> {
+  /**
+   * Lấy các draws đang active theo danh sách statuses.
+   *
+   * Thêm `drawDate >= today - lookbackDays` để tận dụng compound index
+   * { status: 1, drawDate: 1 } — tránh full scan collection khi có hàng trăm nghìn draws.
+   *
+   * Active draws luôn nằm trong khoảng vài ngày gần đây (game quay 2 lần/ngày),
+   * nên lookback 7 ngày là đủ dư.
+   *
+   * Recommended index: { status: 1, drawDate: 1 }
+   */
+  async getActiveDraws(allowStatuses: string[], lookbackDays = 7): Promise<DrawEntity[]> {
+    const fromDateStr = formatVNDate(subDays(new Date(), lookbackDays));
+
     return await this.findMany(
-      { status: { $in: allowStatuses } },
+      {
+        status: { $in: allowStatuses },
+        drawDate: { $gte: fromDateStr },
+      },
       { sort: { drawDate: 1, drawNo: 1 } },
     );
   }

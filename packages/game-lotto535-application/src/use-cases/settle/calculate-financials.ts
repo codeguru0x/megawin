@@ -32,18 +32,15 @@
  *        ④ Phần còn lại → tích luỹ vào quỹ Jackpot
  *
  *   3. TÍNH JACKPOT CUỐI KỲ (closingJackpot):
+ *      closingJackpot = openingAmount + contribution (LUÔN LUÔN).
+ *      Đây là bản ghi lịch sử — quỹ JP trị giá bao nhiêu khi kỳ quay kết thúc.
  *
- *      ┌─ Có JP winner (5 main + special)?
- *      │   YES → closingJackpot = seedAmount (reset cycle)
- *      │         Contribution kỳ này tính vào giải thưởng winner.
- *      │
- *      └─ NO → Là kỳ chia thưởng (isSplitCycle)?
- *           │   YES + có winner tier1-tier5 → tính splitDetails
- *           │         closingJackpot = seedAmount (reset cycle)
- *           │   YES + không ai trúng tier1-tier5 → splitDetails = undefined
- *           │         closingJackpot = opening + contribution (tích luỹ)
- *           │
- *           └─ NO → closingJackpot = opening + contribution (tích luỹ)
+ *      - Có JP winner → closingJackpot = tổng giải winner nhận
+ *      - Split cycle  → closingJackpot = quỹ JP trước khi chia
+ *      - Tích luỹ     → closingJackpot = quỹ JP mang sang kỳ sau
+ *
+ *      Lưu ý: seedAmount (reset cycle mới) do FinalizeSettle xử lý,
+ *      KHÔNG phải closingJackpot.
  *
  *   4. TÍNH SPLIT (chỉ khi isSplitCycle = true VÀ không có JP winner):
  *      - Khi Jackpot >= 12 tỷ (splitThreshold), hệ thống chia JP cho người thắng
@@ -170,16 +167,16 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
     }
 
     // ── BƯỚC 5: Tính Jackpot cuối kỳ ──
-    // Reset khi có winner Jackpot hoặc split thực tế (có người thắng tier1-tier5):
-    //   → closingJackpot = seedAmount (contribution kỳ này đã tính vào giải thưởng).
-    // Không reset: tích luỹ bình thường:
-    //   → closingJackpot = openingAmount + contribution.
-    const splitExecuted = isSplitCycle && splitDetails != null;
-    const shouldResetJackpot = hasJackpotWinner || splitExecuted;
-
-    const closingJackpot = shouldResetJackpot
-      ? config.seedAmount
-      : jackpotOpeningAmount + fin.jackpotContribution;
+    // closingJackpot = giá trị quỹ JP tại thời điểm kỳ quay KẾT THÚC (bản ghi lịch sử).
+    // LUÔN = openingAmount + contribution, bất kể có winner hay split.
+    //
+    // Nếu có winner: closingJackpot chính là tổng giải JP mà winner nhận được.
+    // Nếu split: closingJackpot là quỹ JP trước khi chia cho tier1-tier5.
+    // Nếu tích luỹ: closingJackpot là quỹ JP tích luỹ, mang sang kỳ sau.
+    //
+    // Lưu ý: seedAmount (reset cycle mới) được xử lý bởi FinalizeSettle.createCycle(),
+    // KHÔNG liên quan đến closingJackpot ở đây.
+    const closingJackpot = jackpotOpeningAmount + fin.jackpotContribution;
 
     // ── BƯỚC 6: Ghi financial + stats vào draw document (idempotent overwrite) ──
     await this.drawRepo.updateSettleResult(

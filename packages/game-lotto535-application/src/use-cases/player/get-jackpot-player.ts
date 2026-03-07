@@ -2,52 +2,51 @@
  * Use Case: Get Jackpot for Player (Lotto 5/35)
  *
  * Trả thông tin jackpot đơn giản cho player — loại bỏ chi tiết vận hành.
+ *
+ * Dùng trực tiếp từ active JackpotCycleDoc:
+ *   - seedAmount, config.splitThreshold → đã snapshot tại thời điểm tạo cycle
+ *   - currentAmount, peakAmount, totalContribution, drawCount → cập nhật mỗi kỳ settle
+ * Không cần gọi GlobalConfig.
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import { DrawRepository } from "../../infras/repos/draw-repo";
+import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { PlayerGetJackpotOutput } from "./dto/player.dto";
 
-export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<
-  void,
-  PlayerGetJackpotOutput
-> {
+export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetJackpotOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly drawRepo = new DrawRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(): Promise<PlayerGetJackpotOutput> {
-    const [activeCycle, globalConfig] = await Promise.all([
-      this.cycleRepo.getActiveCycle(),
-      this.getGlobalConfig.run(),
-    ]);
+    const activeCycle = await this.cycleRepo.getActiveCycle();
 
-    const config = globalConfig.jackpot;
-    const currentAmount = activeCycle?.currentAmount ?? config.seedAmount;
-    const threshold = config.splitThreshold;
-    const percentage = Math.min(
-      Math.round((currentAmount / threshold) * 10000) / 100,
-      100
-    );
+    if (!activeCycle) {
+      throw AppException.notFound("Không tìm thấy jackpot hiện tại.");
+    }
 
-    const nextScheduled = await this.drawRepo.getNextScheduledDraw();
+    const {
+      cycleNo,
+      currentAmount,
+      seedAmount,
+      peakAmount,
+      totalContribution,
+      drawCount,
+      startDrawId,
+    } = activeCycle;
+    const splitThreshold = activeCycle.config.splitThreshold;
+    const percentage = Math.min(Math.round((currentAmount / splitThreshold) * 10000) / 100, 100);
 
     return {
+      cycleNo,
       currentAmount,
-      seedAmount: config.seedAmount,
+      seedAmount,
+      peakAmount,
+      totalContribution,
+      drawCount,
+      startDrawId,
       progress: {
-        current: currentAmount,
-        threshold,
+        splitThreshold,
         percentage,
       },
-      nextDraw: nextScheduled
-        ? {
-            drawId: nextScheduled.drawId,
-            drawTime: nextScheduled.drawTime.toISOString(),
-          }
-        : undefined,
     };
   }
 }

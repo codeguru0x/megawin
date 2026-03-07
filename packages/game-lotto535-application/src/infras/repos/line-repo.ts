@@ -3,13 +3,14 @@
  *
  * Collection: lotto535TicketLines
  *
- * Lines tạo tại settle time, immutable sau insert.
+ * Lines tạo tại settle time (SettleEntries — step 2).
+ * Jackpot lines ban đầu có winAmount = 0, được patch bởi
+ * PatchJackpotPrize (step 4a) qua patchJackpotLineWinAmount().
  * upsertLines() dùng bulkWrite + $setOnInsert → idempotent khi retry.
  */
 
-import { Lotto535Collections } from "@megawin/game-lotto535/entities";
+import { Lotto535Collections, PrizeTier } from "@megawin/game-lotto535/entities";
 import type { TicketLineDoc } from "@megawin/game-lotto535/entities";
-import { ObjectId } from "mongodb";
 import { BaseRepo } from "./base-repo";
 
 export class LineRepository extends BaseRepo<any> {
@@ -48,11 +49,11 @@ export class LineRepository extends BaseRepo<any> {
    */
   async getLinesByEntryId(
     entryId: string,
-    options: { size?: number; cursor?: number } = {}
+    options: { size?: number; cursor?: number } = {},
   ): Promise<{ lines: TicketLineDoc[]; hasMore: boolean }> {
     const { size = 50, cursor } = options;
     const col = await this.getCollection();
-    const filter: Record<string, unknown> = { entryId: new ObjectId(entryId) };
+    const filter: Record<string, unknown> = { entryId };
 
     if (cursor != null) {
       filter.lineIndex = { $gt: cursor };
@@ -68,5 +69,28 @@ export class LineRepository extends BaseRepo<any> {
     const slice = hasMore ? lines.slice(0, size) : lines;
 
     return { lines: slice as unknown as TicketLineDoc[], hasMore };
+  }
+
+  /**
+   * Patch winAmount vào lines trúng Jackpot cho 1 draw.
+   *
+   * Được gọi bởi PatchJackpotPrize (step 4a) sau khi tính jackpotPerWinner.
+   * Idempotent: chỉ update lines có matchResult.tier = "jackpot" và winAmount = 0.
+   */
+  async patchJackpotLineWinAmount(drawId: string, jackpotPerWinner: number): Promise<number> {
+    const result = await this.updateMany(
+      {
+        drawId,
+        "matchResult.tier": PrizeTier.Jackpot,
+        "matchResult.winAmount": 0,
+      },
+      {
+        $set: {
+          "matchResult.winAmount": jackpotPerWinner,
+        },
+      },
+    );
+
+    return result.modifiedCount;
   }
 }

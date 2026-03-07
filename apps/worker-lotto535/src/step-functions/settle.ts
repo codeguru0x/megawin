@@ -13,40 +13,36 @@
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  2. SettleEntries (loop, always page 1)  │
+ *  │  2. SettleEntries (loop)                 │
  *  │     Filter: status = "scheduled"          │
  *  │     done = true khi 0 scheduled entries  │
+ *  │     Jackpot tier: ghi hitCount, amount=0  │
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌────────────────────────────────────────────────────────────┐
  *  │  3. CalculateFinancials                                    │
- *  │     Tính TỪ DB (not accumulator)                           │
- *  │                                                            │
- *  │     JACKPOT LOGIC:                                         │
- *  │     ├─ Có JP winner → closingJP = seedAmount (reset)       │
- *  │     │                  splitDetails = undefined             │
- *  │     └─ Không có JP winner:                                 │
- *  │         ├─ isSplitCycle + có winner → tính splitDetails     │
- *  │         │    closingJP = seedAmount (reset)                 │
- *  │         ├─ isSplitCycle + không ai trúng → skip split      │
- *  │         │    closingJP = opening + contribution             │
- *  │         └─ Không phải split → tích luỹ                     │
- *  │              closingJP = opening + contribution             │
+ *  │     Tính từ DB: revenue, prizes, commission, JP contrib    │
+ *  │     Output: financials (merge vào $settleCtx)              │
  *  └────────┬───────────────────────────────────────────────────┘
  *           ▼
- *  ┌─────────────────────────────────────────────────────────────┐
- *  │  4. ApplySplitBonuses                                       │
- *  │     Skip khi:                                               │
- *  │       - Không phải kỳ chia (isSplitCycle = false)           │
- *  │       - Có JP winner (splitDetails = undefined)             │
- *  │       - Không ai trúng tier1-tier5 (splitDetails = empty)   │
- *  │     Chạy khi: splitDetails có dữ liệu → patch bonus vào    │
- *  │       entry.payout cho từng tier có winner                  │
- *  └────────┬────────────────────────────────────────────────────┘
- *           ▼
+ *  ┌──────────────────────────────────────────────────────────────────┐
+ *  │  4. CheckPrizeRoute (Choice) — ROUTING dựa trên financials:     │
+ *  │     ├─ hasJackpotWinner = true  → 4a. PatchJackpotPrize         │
+ *  │     ├─ splitDetails tồn tại    → 4b. ApplySplitBonuses          │
+ *  │     └─ default (kỳ thường)     → skip → SyncTicketSummaries     │
+ *  └──────────────────────────────────────────────────────────────────┘
+ *           │                │                │
+ *           ▼                ▼                ▼
+ *  ┌─────────────────┐ ┌──────────────────┐  │
+ *  │ 4a. PatchJP     │ │ 4b. SplitBonus   │  │
+ *  │ Patch entries   │ │ Patch entries    │  │
+ *  │ + lines + stats │ │ (split per tier) │  │
+ *  └────────┬────────┘ └────────┬─────────┘  │
+ *           └───────────┬───────┘             │
+ *                       ▼ ◄───────────────────┘
  *  ┌──────────────────────────────────────────┐
- *  │  5. SyncTicketSummaries (loop)          │  Recompute ticket summaries from entries
- *  │     done = true khi hết tickets         │
+ *  │  5. SyncTicketSummaries (loop)           │  Recompute ticket summaries
+ *  │     done = true khi hết tickets          │  (bao gồm JP/split đã patch)
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
@@ -55,15 +51,16 @@
  *           ▼
  *  ┌─────────────────────────────────────────────────────────────┐
  *  │  7. FinalizeSettle                                          │
+ *  │     ├─ Transition draw: settling → settled + JP snapshot    │
  *  │     ├─ hasJackpotWinner || splitExecuted → close cycle +    │
- *  │     │    create new cycle (startDrawId = next future draw)  │
+ *  │     │    ghi winners/splitDetail + create new cycle         │
  *  │     └─ Không → update cycle stats (tích luỹ)               │
  *  └────────┬────────────────────────────────────────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
  *  │  8. DispatchPayouts (loop, async)        │
  *  │     Batch 200, chunk 50/API call         │
- *  └─────────────────────────────────────────-┘
+ *  └──────────────────────────────────────────┘
  *
  * DATA FLOW (single $settleCtx):
  *   $settleCtx = PrepareSettle result, enriched progressively.
@@ -76,6 +73,12 @@
  * JACKPOT SOURCE OF TRUTH:
  *   Active draws: jackpot từ `lotto535_jackpot_cycles.currentAmount`
  *   Settled draws: snapshot jackpot ghi lúc finalize-settle
+ *
+ * JACKPOT PRIZE FLOW:
+ *   SettleEntries ghi jackpot tier amount = 0 (chưa biết tiền JP chính xác).
+ *   PatchJackpotPrize (step 4a) tính jackpotPerWinner và patch ngược vào
+ *   entry.payout + line.matchResult.winAmount TRƯỚC SyncTicketSummaries.
+ *   FinalizeSettle (step 7) ghi cycle close record + winners info.
  *
  * USAGE (chạy từ thư mục step-functions):
  *   npx tsx -e "import { SETTLE_STATE_MACHINE } from './settle'; console.log(JSON.stringify(SETTLE_STATE_MACHINE, null, 2))" > settle.asl.json
@@ -111,6 +114,7 @@ export const SETTLE_STATE_MACHINE = {
   QueryLanguage: "JSONata",
   StartAt: "PrepareSettle",
   States: {
+    // ── STEP 1: Load context ──
     PrepareSettle: {
       Type: "Task",
       Resource: lambdaArn("settle-prepare"),
@@ -119,6 +123,7 @@ export const SETTLE_STATE_MACHINE = {
       Retry: LAMBDA_RETRY,
     },
 
+    // ── STEP 2: Settle entries (loop) ──
     SettleEntries: {
       Type: "Task",
       Resource: lambdaArn("settle-entries"),
@@ -139,17 +144,58 @@ export const SETTLE_STATE_MACHINE = {
       Default: "SettleEntries",
     },
 
+    // ── STEP 3: Calculate financials ──
     CalculateFinancials: {
       Type: "Task",
       Resource: lambdaArn("settle-calculate-financials"),
       Arguments: "{% $settleCtx %}",
       Assign: {
-        settleCtx: "{% $merge($settleCtx, { 'financials': $states.result }) %}",
+        settleCtx: "{% $merge([$settleCtx, { 'financials': $states.result }]) %}",
       },
-      Next: "ApplySplitBonuses",
+      Next: "CheckPrizeRoute",
       Retry: LAMBDA_RETRY,
     },
 
+    // ── STEP 4: Route — quyết định bước tiếp theo dựa trên kết quả tài chính ──
+    //
+    // 3 nhánh mutually exclusive:
+    //   ① hasJackpotWinner = true → PatchJackpotPrize (patch JP prize vào entries + lines)
+    //   ② splitDetails tồn tại   → ApplySplitBonuses (patch split bonus vào entries)
+    //   ③ default (kỳ thường)    → SyncTicketSummaries (không cần patch gì thêm)
+    //
+    // Lý do route ở đây thay vì để Lambda tự kiểm tra:
+    //   - Không gọi Lambda thừa (kỳ thường 99% → skip cả 2)
+    //   - Step Function log rõ nhánh nào chạy → dễ debug
+    //   - Mỗi Lambda single responsibility, code đơn giản
+    CheckPrizeRoute: {
+      Type: "Choice",
+      Choices: [
+        {
+          Comment: "Có jackpot winner → patch jackpot prize vào entries + lines",
+          Condition: "{% $settleCtx.financials.hasJackpotWinner %}",
+          Next: "PatchJackpotPrize",
+        },
+        {
+          Comment: "Split cycle có winner tier1-tier5 → patch split bonus vào entries",
+          Condition: "{% $settleCtx.financials.splitDetails != null %}",
+          Next: "ApplySplitBonuses",
+        },
+      ],
+      Default: "SyncTicketSummaries",
+    },
+
+    // ── STEP 4a: Patch Jackpot Prize ──
+    // Chỉ chạy khi có JP winner. Tính jackpotPerWinner, patch vào entries + lines.
+    PatchJackpotPrize: {
+      Type: "Task",
+      Resource: lambdaArn("settle-patch-jackpot-prize"),
+      Arguments: "{% $settleCtx %}",
+      Next: "SyncTicketSummaries",
+      Retry: LAMBDA_RETRY,
+    },
+
+    // ── STEP 4b: Apply Split Bonuses ──
+    // Chỉ chạy khi split cycle có winner. Patch bonusPerWinner vào entries.
     ApplySplitBonuses: {
       Type: "Task",
       Resource: lambdaArn("settle-apply-split-bonuses"),
@@ -158,6 +204,7 @@ export const SETTLE_STATE_MACHINE = {
       Retry: LAMBDA_RETRY,
     },
 
+    // ── STEP 5: Sync ticket summaries (loop) ──
     SyncTicketSummaries: {
       Type: "Task",
       Resource: lambdaArn("settle-sync-ticket-summaries"),
@@ -178,6 +225,7 @@ export const SETTLE_STATE_MACHINE = {
       Default: "SyncTicketSummaries",
     },
 
+    // ── STEP 6: Build report ──
     BuildReport: {
       Type: "Task",
       Resource: lambdaArn("settle-build-report"),
@@ -186,6 +234,7 @@ export const SETTLE_STATE_MACHINE = {
       Retry: LAMBDA_RETRY,
     },
 
+    // ── STEP 7: Finalize settle ──
     FinalizeSettle: {
       Type: "Task",
       Resource: lambdaArn("settle-finalize"),
@@ -194,6 +243,7 @@ export const SETTLE_STATE_MACHINE = {
       Retry: LAMBDA_RETRY,
     },
 
+    // ── STEP 8: Dispatch payouts (loop) ──
     DispatchPayouts: {
       Type: "Task",
       Resource: lambdaArn("settle-dispatch-payouts"),

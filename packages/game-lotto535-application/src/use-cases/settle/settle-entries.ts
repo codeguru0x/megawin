@@ -34,21 +34,19 @@
  *        │ (null)   │ không trúng gì                                   │
  *        └──────────┴───────────────────────────────────────────────────┘
  *
- *   3. Build line docs: gắn matchResult + ownership (từ entry — đã có sẵn tenantId, accountId, username)
+ *   3. Build line docs: gắn matchResult + ownership (từ entry.id)
  *
  *   4. lineRepo.upsertLines(lineDocs)
  *      Persist LINES trước (idempotent — unique index trên entryId+lineIndex)
  *
  *   5. buildPayoutTiers(tierCounts, prizeAmounts) → winAmount
  *      - Tính tiền thắng cho từng tier: unitAmount × hitCount
- *      - QUAN TRỌNG: Jackpot tier ghi hitCount nhưng amount = 0
- *        (tiền Jackpot sẽ được xử lý riêng ở ApplySplitBonuses hoặc FinalizeSettle)
- *      - Giải thưởng cố định: tier1=10M, tier2=5M, tier3=500K,
- *        tier4=100K, tier5=30K, consolation=10K
+ *      - Jackpot tier: ghi hitCount nhưng amount = 0
+ *        (tiền Jackpot sẽ được patch ở PatchJackpotPrize — step 4a)
  *
  *   6. Collect settle op → settleOps array
- *      - outcome: "win" hoặc "loss"
- *      - payoutStatus: "pending" nếu thắng (cần dispatch payout sau)
+ *      - outcome: "win" hoặc "loss" (trúng jackpot → "win" dù amount tạm = 0)
+ *      - payoutStatus: "pending" nếu thắng
  *
  *   7. entryRepo.bulkSettleEntries(settleOps)
  *      Persist ENTRIES (batch) — chỉ update nếu status = "scheduled" (atomic guard)
@@ -156,7 +154,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             accountId: entry.accountId,
             username: entry.username,
             ticketId: entry.ticketId,
-            entryId: entry._id,
+            entryId: entry.id,
             drawId: entry.drawId,
             boardNo: line.boardNo,
             lineIndex: line.lineIndex,
@@ -166,7 +164,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               mainMatchCount: perLine.mainMatchCount,
               specialMatched: perLine.specialMatched,
               tier: perLine.tier,
-              // Nếu trúng jackpot sẽ tính ở bước sau (ApplySplitBonuses hoặc FinalizeSettle) → winAmount = 0
+              // Jackpot: winAmount = 0 tạm thời, sẽ được patch ở PatchJackpotPrize (step 4a)
               winAmount: perLine.tier === PrizeTier.Jackpot ? 0 : unitAmount,
             },
             createdAt: now,
@@ -179,20 +177,14 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         await this.lineRepo.upsertLines(lineDocs);
 
         // ── Step 5: Build payout tiers, tính tổng tiền thắng ──
-        // buildPayoutTiers: duyệt tierCounts, nhân hitCount × unitAmount
-        // Jackpot: amount = 0, chỉ ghi nhận hitCount (xử lý tiền ở step sau)
-        // Giải cố định: tier1=10M, tier2=5M, tier3=500K, tier4=100K, tier5=30K, consolation=10K
+        // Jackpot: amount = 0, chỉ ghi nhận hitCount (patch tiền ở PatchJackpotPrize — step 4a)
         const payoutTiers = buildPayoutTiers(matchResult.tierCounts, prizeAmounts);
         const winAmount = payoutTiers.reduce((sum, t) => sum + t.amount, 0);
-        // Kiểm tra xem có trúng Jackpot không để định nghĩa outcome và payoutStatus
         const hasJackpotHit = matchResult.tierCounts.has(PrizeTier.Jackpot);
         const hasWin = winAmount > 0 || hasJackpotHit;
 
         // ── Step 6: Collect settle operation ──
-        // outcome = "win" khi:
-        //   - winAmount > 0 (trúng giải cố định), HOẶC
-        //   - trúng Jackpot (amount tạm = 0, tiền thực tính ở FinalizeSettle/ApplySplitBonuses)
-        // payoutStatus: "pending" nếu thắng → sẽ dispatch payout ở step cuối
+        // outcome = "win" khi winAmount > 0 (giải cố định) HOẶC trúng Jackpot (amount tạm = 0)
         settleOps.push({
           entryId: entry.id,
           payout: {
@@ -245,12 +237,10 @@ function toBoardsForExpand(snapshots: EntryBoardSnapshot[]): Board[] {
 /**
  * Chuyển tierCounts (Map<PrizeTier, hitCount>) → mảng payout tier objects.
  *
- * Logic:
  * - Skip tier có hitCount = 0
  * - Jackpot: ghi nhận hitCount nhưng amount = 0
- *   (tiền Jackpot tích luỹ, xử lý ở ApplySplitBonuses / FinalizeSettle)
+ *   (tiền JP patch ở PatchJackpotPrize — step 4a)
  * - Giải cố định: amount = unitAmount × hitCount
- *   VD: tier3 (4 main) = 500.000 × hitCount
  */
 function buildPayoutTiers(
   tierCounts: Map<string, number>,
@@ -273,10 +263,7 @@ function buildPayoutTiers(
   for (const [tier, hitCount] of tierCounts) {
     if (hitCount === 0) continue;
 
-    // Jackpot: chỉ ghi nhận số lần trúng, KHÔNG tính tiền ở step này.
-    // Tiền Jackpot = tích luỹ, sẽ được xử lý bởi:
-    //   - ApplySplitBonuses (nếu isSplitCycle = true) → chia theo tỷ lệ tier
-    //   - FinalizeSettle → ghi snapshot JP + close/open cycle
+    // Jackpot: ghi nhận hitCount, amount = 0 (patch ở PatchJackpotPrize — step 4a)
     if (tier === PrizeTier.Jackpot) {
       tiers.push({
         tier,

@@ -28,11 +28,7 @@ import { z } from "zod";
 
 // ============ Schema input (dùng khi khai báo) ============
 
-export interface ApiGatewayZodSchemas<
-  TBody = unknown,
-  TPath = unknown,
-  TQuery = unknown,
-> {
+export interface ApiGatewayZodSchemas<TBody = unknown, TPath = unknown, TQuery = unknown> {
   body?: z.ZodType<TBody>;
   path?: z.ZodType<TPath>;
   query?: z.ZodType<TQuery>;
@@ -65,14 +61,32 @@ export type SchemaOf<
 
 const VALIDATION_HEADERS = { "Content-Type": "application/json" };
 
+/**
+ * Map ZodError issues → errors[] với full field path.
+ *
+ * path: (string | number)[] → "boards[0].selection.specialNumbers"
+ * path: []                  → field: "" (top-level / form error)
+ */
+function formatIssuePath(path: (string | number | symbol)[]): string {
+  return path.reduce<string>((acc, segment, i) => {
+    if (typeof segment === "number") return `${acc}[${segment}]`;
+    return i === 0 ? String(segment) : `${acc}.${String(segment)}`;
+  }, "");
+}
+
 function buildValidationErrorResponse(error: z.ZodError) {
+  const errors = error.issues.map((issue) => ({
+    field: formatIssuePath(issue.path),
+    message: issue.message,
+  }));
+
   return {
     statusCode: 400,
     headers: VALIDATION_HEADERS,
     body: JSON.stringify({
-      message: "Validation failed",
       code: "VALIDATION",
-      details: z.flattenError(error),
+      message: "Dữ liệu không hợp lệ.",
+      errors,
     }),
   };
 }
@@ -84,11 +98,9 @@ function buildValidationErrorResponse(error: z.ZodError) {
  * - Thành công: gán event.schema = { body?, path?, query? }
  * - Thất bại: earlyResponse 400 (short-circuit)
  */
-export function validatorZodMiddleware<
-  TBody = unknown,
-  TPath = unknown,
-  TQuery = unknown,
->(schemas: ApiGatewayZodSchemas<TBody, TPath, TQuery>) {
+export function validatorZodMiddleware<TBody = unknown, TPath = unknown, TQuery = unknown>(
+  schemas: ApiGatewayZodSchemas<TBody, TPath, TQuery>,
+) {
   return {
     before: async (request: {
       event: Record<string, unknown> & {
@@ -128,9 +140,7 @@ export function validatorZodMiddleware<
         }
 
         if (schemas.query) {
-          schema.query = schemas.query.parse(
-            event.queryStringParameters ?? {},
-          ) as TQuery;
+          schema.query = schemas.query.parse(event.queryStringParameters ?? {}) as TQuery;
         }
 
         (event as Record<string, unknown>).schema = schema;

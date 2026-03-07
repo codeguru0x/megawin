@@ -48,7 +48,6 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
-import { ObjectId } from "mongodb";
 
 /**
  * Input tối giản cho SyncTicketSummaries.
@@ -95,7 +94,7 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
         return { drawId, done: true };
       }
 
-      const ticketIds = chunk.map((t) => new ObjectId(t.ticketId));
+      const ticketIds = chunk.map((t) => t.ticketId);
       // Cache totalDraws: ticket multi-draw có thể tham gia nhiều kỳ
       const totalDrawsMap = new Map(chunk.map((t) => [t.ticketId, t.totalDraws]));
 

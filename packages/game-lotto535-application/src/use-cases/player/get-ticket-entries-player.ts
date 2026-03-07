@@ -24,18 +24,17 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(
-    input: PlayerGetTicketEntriesInput
+    input: PlayerGetTicketEntriesInput,
   ): Promise<PlayerGetTicketEntriesOutput> {
     const { tenantId, accountId, ticketId } = input;
 
     const ticket = await this.ticketRepo.getTicketById(ticketId);
 
-    if (!ticket) {
-      throw AppException.notFound("Ticket not found");
-    }
-
-    if (ticket.tenantId !== tenantId || ticket.accountId !== accountId) {
-      throw AppException.notFound("Ticket not found");
+    // Kiểm tra vé có tồn tại không
+    // Kiểm tra vé có thuộc tenant của player không
+    // Kiểm tra vé có thuộc account của player không
+    if (!ticket || ticket.tenantId !== tenantId || ticket.accountId !== accountId) {
+      throw AppException.notFound("Không tìm thấy vé.");
     }
 
     const entries = await this.entryRepo.getEntriesByTicketId(ticket.id);

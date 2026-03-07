@@ -30,7 +30,6 @@ export interface TicketSummary {
 }
 
 const PENDING_STATUSES = [TicketStatus.Paid];
-const COMPLETED_STATUSES = [TicketStatus.Completed, TicketStatus.Refunded, TicketStatus.Void];
 
 export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   constructor() {
@@ -104,8 +103,15 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
 
     if (from || to) {
       const dateRange: Record<string, Date> = {};
-      if (from) dateRange.$gte = from;
-      if (to) dateRange.$lte = to;
+
+      if (from) {
+        dateRange.$gte = from;
+      }
+
+      if (to) {
+        dateRange.$lte = to;
+      }
+
       filter.createdAt = dateRange;
     }
 

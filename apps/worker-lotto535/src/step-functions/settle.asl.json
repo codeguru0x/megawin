@@ -65,9 +65,46 @@
       "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-settle-calculate-financials",
       "Arguments": "{% $settleCtx %}",
       "Assign": {
-        "settleCtx": "{% $merge($settleCtx, { 'financials': $states.result }) %}"
+        "settleCtx": "{% $merge([$settleCtx, { 'financials': $states.result }]) %}"
       },
-      "Next": "ApplySplitBonuses",
+      "Next": "CheckPrizeRoute",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "CheckPrizeRoute": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Comment": "Có jackpot winner → patch jackpot prize vào entries + lines",
+          "Condition": "{% $settleCtx.financials.hasJackpotWinner %}",
+          "Next": "PatchJackpotPrize"
+        },
+        {
+          "Comment": "Split cycle có winner tier1-tier5 → patch split bonus vào entries",
+          "Condition": "{% $settleCtx.financials.splitDetails != null %}",
+          "Next": "ApplySplitBonuses"
+        }
+      ],
+      "Default": "SyncTicketSummaries"
+    },
+    "PatchJackpotPrize": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-settle-patch-jackpot-prize",
+      "Arguments": "{% $settleCtx %}",
+      "Next": "SyncTicketSummaries",
       "Retry": [
         {
           "ErrorEquals": [

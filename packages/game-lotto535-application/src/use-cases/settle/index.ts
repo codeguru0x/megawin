@@ -31,3 +31,6 @@ export type { SyncTicketSummariesResult, DrawSyncInput } from "./sync-ticket-sum
 
 export { ApplySplitBonusesUseCase } from "./apply-split-bonuses";
 export type { ApplySplitBonusesResult } from "./apply-split-bonuses";
+
+export { PatchJackpotPrizeUseCase } from "./patch-jackpot-prize";
+export type { PatchJackpotPrizeResult } from "./patch-jackpot-prize";
