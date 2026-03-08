@@ -13,6 +13,8 @@ import type {
   Lotto535TicketSummary,
   Lotto535EntryResult,
   Lotto535GameConfigResponse,
+  Lotto535DrawResultDetail,
+  Lotto535DrawResultSummary,
 } from "../lotto535";
 import { ENDPOINTS } from "../endpoints";
 
@@ -80,6 +82,42 @@ export interface Lotto535ListAllTicketsParams {
   to?: string;
 }
 
+/**
+ * Tham số truy vấn danh sách kết quả kỳ quay Lotto 5/35.
+ *
+ * Cursor-based pagination, filter từ ngày.
+ *
+ * @example
+ * ```ts
+ * // Kết quả từ ngày 1/3/2026
+ * const results = await client.lotto535.listDrawResults({
+ *   from: "2026-03-01",
+ *   size: 10,
+ * });
+ *
+ * // Trang tiếp theo
+ * if (results.nextCursor) {
+ *   const page2 = await client.lotto535.listDrawResults({
+ *     from: "2026-03-01",
+ *     size: 10,
+ *     cursor: results.nextCursor,
+ *   });
+ * }
+ * ```
+ */
+export interface Lotto535ListDrawResultsParams {
+  /** Số lượng kết quả mỗi trang (mặc định 20). */
+  size?: number;
+  /**
+   * Lọc từ ngày (ISO date `YYYY-MM-DD`, inclusive).
+   * Mặc định = ngày hôm nay (giờ VN) nếu không truyền.
+   * Khi paginate với cursor, phải truyền cùng `from` với request đầu tiên.
+   */
+  from?: string;
+  /** Cursor cho trang tiếp theo (drawId, lấy từ `nextCursor`). */
+  cursor?: string;
+}
+
 // ─────────────────────────────────────────────
 // Response Types
 // ─────────────────────────────────────────────
@@ -93,14 +131,14 @@ export interface Lotto535ListAllTicketsParams {
  * ```ts
  * const result = await client.lotto535.placeBet({ ... });
  * console.log(result.ticketId);    // "TKT-XYZ789"
- * console.log(result.ticketNo);    // "L-20260225-001-0001"
+ * console.log(result.ticketNo);    // "L535-20260307-00008"
  * console.log(result.totalAmount); // 30000
  * ```
  */
 export interface Lotto535PlaceBetResponse {
   /** ID vé duy nhất trong hệ thống. */
   ticketId: string;
-  /** Mã vé hiển thị cho người chơi. VD: `"L-20260305-001-0001"`. */
+  /** Mã vé hiển thị cho người chơi. VD: `"L535-20260307-00008"`. */
   ticketNo: string;
   /** Tổng tiền cược (VND). */
   totalAmount: number;
@@ -116,7 +154,7 @@ export interface Lotto535PlaceBetResponse {
  * const data = await client.lotto535.getCurrentDraw();
  *
  * if (data.currentDraw) {
- *   console.log(data.currentDraw.drawId);       // "2026-03-05-001"
+ *   console.log(data.currentDraw.drawId);       // "2026-03-05.001"
  *   console.log(data.currentDraw.jackpotAmount); // 12_000_000_000
  *   console.log(data.currentDraw.salesCloseAt);  // "2026-03-05T12:50:00Z"
  * }
@@ -173,7 +211,7 @@ export interface Lotto535ListTicketsResponse {
  * @example
  * ```ts
  * const data = await client.lotto535.getTicketEntries("TKT-L01...");
- * console.log(data.ticket.ticketNo); // "L-20260305-001-0001"
+ * console.log(data.ticket.ticketNo); // "L535-20260307-00008"
  * console.log(data.entries.length);   // 3 (mua 3 kỳ)
  *
  * const settled = data.entries.filter(e => e.payout);
@@ -214,6 +252,29 @@ export interface Lotto535EntryLinesResponse {
     /** 1 số đặc biệt (1-12). */
     specialNumber: number;
   }>;
+}
+
+/**
+ * Response phân trang danh sách kết quả kỳ quay Lotto 5/35.
+ *
+ * Dùng cho `listDrawResults`.
+ *
+ * @example
+ * ```ts
+ * const page = await client.lotto535.listDrawResults({ size: 10 });
+ * for (const draw of page.draws) {
+ *   console.log(`Kỳ ${draw.drawId}: ${draw.result.winningMain.join(", ")}`);
+ *   console.log(`Jackpot: ${draw.jackpot.closingAmount.toLocaleString()} VND`);
+ * }
+ * ```
+ */
+export interface Lotto535ListDrawResultsResponse {
+  /** Danh sách tóm tắt kỳ quay (không có bảng giải thưởng). */
+  draws: Lotto535DrawResultSummary[];
+  /** Cursor cho trang tiếp theo. `null` nếu hết. */
+  nextCursor: string | null;
+  /** Số lượng mỗi trang (echo lại `size`). */
+  size: number;
 }
 
 // ─────────────────────────────────────────────
@@ -346,7 +407,7 @@ export interface Lotto535Api {
    * **Endpoint:** `POST /games/lotto535/bets`
    *
    * @param input - Thông tin đặt cược
-   * @param input.drawId - DrawId kỳ đầu tiên. Format: `YYYY-MM-DD-NNN`
+   * @param input.drawId - DrawId kỳ đầu tiên. Format: `YYYY-MM-DD.NNN`
    * @param input.drawCount - Số kỳ tham gia liên tiếp (1-6)
    * @param input.boards - Danh sách boards (tối đa 5, không trùng boardNo)
    * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount
@@ -360,7 +421,7 @@ export interface Lotto535Api {
    * ```ts
    * // Vé Standard: 5 số chính + 1 số đặc biệt
    * const result = await client.lotto535.placeBet({
-   *   drawId: "2026-03-05-001",
+   *   drawId: "2026-03-05.001",
    *   drawCount: 1,
    *   boards: [{
    *     boardNo: "A",
@@ -371,12 +432,12 @@ export interface Lotto535Api {
    *     },
    *   }],
    * });
-   * console.log(result.ticketNo);    // "L-20260305-001-0001"
+   * console.log(result.ticketNo);    // "L535-20260307-00008"
    * console.log(result.totalAmount); // 30000
    *
    * // Vé Bao (MainCover): 8 số chính + 1 số đặc biệt, 3 kỳ
    * const result2 = await client.lotto535.placeBet({
-   *   drawId: "2026-03-05-001",
+   *   drawId: "2026-03-05.001",
    *   drawCount: 3,
    *   boards: [
    *     {
@@ -480,7 +541,7 @@ export interface Lotto535Api {
    * ```ts
    * const data = await client.lotto535.getTicketEntries("TKT-L01...");
    *
-   * console.log(data.ticket.ticketNo); // "L-20260305-001-0001"
+   * console.log(data.ticket.ticketNo); // "L535-20260307-00008"
    * console.log(data.entries.length);   // 3 (mua 3 kỳ = 3 entries)
    *
    * for (const entry of data.entries) {
@@ -528,6 +589,61 @@ export interface Lotto535Api {
    * ```
    */
   getEntryLines(entryId: string): Promise<Lotto535EntryLinesResponse>;
+
+  /**
+   * Lấy danh sách kết quả kỳ quay Lotto 5/35 đã settle.
+   *
+   * Chỉ trả các kỳ đã settle có kết quả.
+   * Hỗ trợ lọc từ ngày và phân trang cursor-based.
+   *
+   * **Endpoint:** `GET /games/lotto535/draw-results`
+   *
+   * @param params - Tham số truy vấn: from, size, cursor
+   * @returns Danh sách kết quả kèm cursor cho trang tiếp theo
+   *
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * const results = await client.lotto535.listDrawResults({
+   *   from: "2026-03-01",
+   *   size: 10,
+   * });
+   *
+   * for (const draw of results.draws) {
+   *   console.log(`Kỳ ${draw.drawId}:`);
+   *   console.log(`  Số: ${draw.result.winningMain.join(", ")} + ${draw.result.winningSpecial}`);
+   *   console.log(`  JP: ${draw.jackpot.closingAmount.toLocaleString()} VND`);
+   *   for (const prize of draw.prizes) {
+   *     console.log(`  ${prize.tier}: ${prize.winnerCount} người, ${prize.prizeAmount} VND`);
+   *   }
+   * }
+   * ```
+   */
+  listDrawResults(params?: Lotto535ListDrawResultsParams): Promise<Lotto535ListDrawResultsResponse>;
+
+  /**
+   * Lấy chi tiết kết quả 1 kỳ quay Lotto 5/35.
+   *
+   * Trả kết quả quay, jackpot snapshot, và bảng giải thưởng chi tiết.
+   *
+   * **Endpoint:** `GET /games/lotto535/draw-results/{drawId}`
+   *
+   * @param drawId - Mã kỳ quay (format: YYYY-MM-DD.NNN)
+   * @returns Chi tiết kết quả kỳ quay
+   *
+   * @throws {@link ApiClientError} code `NOT_FOUND` — draw không tồn tại hoặc chưa settle
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * const result = await client.lotto535.getDrawResult("2026-03-05.001");
+   * console.log(`Số chính: ${result.result.winningMain.join(", ")}`);
+   * console.log(`Số ĐB: ${result.result.winningSpecial}`);
+   * console.log(`Jackpot cuối kỳ: ${result.jackpot.closingAmount.toLocaleString()} VND`);
+   * ```
+   */
+  getDrawResult(drawId: string): Promise<Lotto535DrawResultDetail>;
 }
 
 // ─────────────────────────────────────────────
@@ -573,6 +689,18 @@ export function createLotto535Api(http: HttpClient): Lotto535Api {
 
     async getEntryLines(entryId: string): Promise<Lotto535EntryLinesResponse> {
       return http.get<Lotto535EntryLinesResponse>(ENDPOINTS.lotto535.getEntryLines(entryId));
+    },
+
+    async listDrawResults(
+      params?: Lotto535ListDrawResultsParams,
+    ): Promise<Lotto535ListDrawResultsResponse> {
+      return http.get<Lotto535ListDrawResultsResponse>(ENDPOINTS.lotto535.listDrawResults, {
+        params: params as Record<string, string | number | undefined>,
+      });
+    },
+
+    async getDrawResult(drawId: string): Promise<Lotto535DrawResultDetail> {
+      return http.get<Lotto535DrawResultDetail>(ENDPOINTS.lotto535.getDrawResult(drawId));
     },
   };
 }

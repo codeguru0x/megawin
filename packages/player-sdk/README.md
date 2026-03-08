@@ -8,46 +8,48 @@ Zero dependencies. Hỗ trợ Browser, React Native, Node.js.
 
 ### NPM / pnpm / yarn
 
-Tải file `.tgz` mới nhất và cài đặt:
+Cài trực tiếp từ URL — npm tự ghi vào `package.json`, CI/CD tự tải lại, không cần lưu file local:
 
 ```bash
-# Tải bản mới nhất
-curl -O https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/latest/megawin-player-sdk.tgz
-
-# Cài đặt
-npm install ./megawin-player-sdk.tgz
+# Bản mới nhất
+npm install https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/latest/megawin-player-sdk.tgz
 # hoặc
-pnpm add ./megawin-player-sdk.tgz
+pnpm add https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/latest/megawin-player-sdk.tgz
 # hoặc
-yarn add file:./megawin-player-sdk.tgz
+yarn add https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/latest/megawin-player-sdk.tgz
 ```
 
-Nâng cấp version mới — chạy lại lệnh trên, package manager tự thay thế bản cũ.
+Cài phiên bản cụ thể (khuyến nghị cho production — thay `v1.0.0` bằng version cần dùng):
 
-Tải phiên bản cụ thể (thay `v1.0.0` bằng version cần dùng):
+```bash
+npm install https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/v1.0.0/megawin-player-sdk.tgz
+```
 
+Sau khi cài, `package.json` sẽ ghi:
+
+```json
+{
+  "dependencies": {
+    "@megawin/player-sdk": "https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/v1.0.0/megawin-player-sdk.tgz"
+  }
+}
 ```
-https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/v1.0.0/megawin-player-sdk.tgz
-```
+
+Để **update version**, chạy lại lệnh với URL version mới — npm tự cập nhật entry trong `package.json`.
 
 ### Browser (`<script>` tag)
 
 Dùng trực tiếp trên trang web qua global `window.MegaWin`:
 
 ```html
-<!-- Bản minified -->
+<!-- Bản minified (latest) -->
 <script src="https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/latest/megawin-player-sdk-browser.js"></script>
-
-<!-- Hoặc bản gzip (nhỏ hơn, cần server hỗ trợ Content-Encoding: gzip) -->
-<!-- https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/latest/megawin-player-sdk-browser.js.gz -->
 
 <script>
   const client = MegaWin.createPlayerClient({
     baseUrl: "https://api.domain.com",
     tokens: tokensFromServer,
   });
-
-  const balance = await client.player.getBalance();
 </script>
 ```
 
@@ -55,7 +57,6 @@ Tải phiên bản cụ thể:
 
 ```
 https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/v1.0.0/megawin-player-sdk-browser.js
-https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/v1.0.0/megawin-player-sdk-browser.js.gz
 ```
 
 ### Kiểm tra version đang dùng
@@ -88,37 +89,8 @@ const client = createPlayerClient({
 
 // 3. Gọi API — Bearer token tự inject, tự refresh trước 5 phút hết hạn
 const balance = await client.player.getBalance();
+const kenoResult = await client.keno.placeBet({ ... });
 ```
-
-## Auth Flow
-
-```
-┌──────────┐     ┌───────────────┐     ┌──────────────┐
-│  Client   │     │ Tenant Server │     │ MegaWin API  │
-│  (SDK)    │     │               │     │              │
-└────┬─────┘     └──────┬────────┘     └──────┬───────┘
-     │  1. Request       │                     │
-     │  player tokens    │                     │
-     │──────────────────>│                     │
-     │                   │  2. Server-to-server│
-     │                   │  auth (API key)     │
-     │                   │────────────────────>│
-     │                   │                     │
-     │                   │  3. Return tokens   │
-     │                   │  (access, id,       │
-     │                   │   refresh, expiresIn)│
-     │                   │<────────────────────│
-     │  4. Tokens        │                     │
-     │<──────────────────│                     │
-     │                   │                     │
-     │  5. API calls (Bearer idToken auto-inject)
-     │─────────────────────────────────────────>
-     │                                         │
-     │  6. Auto-refresh trước 5 phút hết hạn   │
-     │─────────────────────────────────────────>
-```
-
-**SDK KHÔNG gọi authenticate.** Tokens được truyền trực tiếp từ tenant server.
 
 ## Imports
 
@@ -127,10 +99,13 @@ const balance = await client.player.getBalance();
 | `@megawin/player-sdk`          | Client, auth, API types  |
 | `@megawin/player-sdk/keno`     | Keno enums + types       |
 | `@megawin/player-sdk/lotto535` | Lotto 5/35 enums + types |
+| `@megawin/player-sdk/mega645`  | Mega 6/45 enums + types  |
+| `@megawin/player-sdk/power655` | Power 6/55 enums + types |
+| `@megawin/player-sdk/max3d`    | Max 3D enums + types     |
+| `@megawin/player-sdk/max3dpro` | Max 3D Pro enums + types |
+| `@megawin/player-sdk/bingo18`  | Bingo 18 enums + types   |
 
-## API Reference
-
-### Khởi tạo client
+## Khởi tạo client
 
 ```typescript
 import { createPlayerClient, MemoryTokenStorage } from "@megawin/player-sdk";
@@ -149,7 +124,6 @@ const client = createPlayerClient({
 
   // [Tùy chọn] Custom storage để persist tokens qua page reload
   // Mặc định: sessionStorage (browser) — tokens tồn tại trong tab, mất khi đóng tab
-  // Xem phần "Token Storage" bên dưới
   tokenStorage: new MemoryTokenStorage(), // Node.js / React Native
 
   // [Tùy chọn] Callback khi session hết hạn (refresh thất bại / 401)
@@ -170,37 +144,26 @@ const client = createPlayerClient({
 });
 ```
 
-### `client.auth` — Token Lifecycle
-
-```typescript
-// Set tokens (nếu không truyền trong config)
-await client.auth.setTokens({
-  accessToken: "eyJ...",
-  idToken: "eyJ...",
-  refreshToken: "abc...",
-  expiresAt: Date.now() + 3600_000,
-});
-
-// Kiểm tra session
-const isAuth = await client.auth.isAuthenticated();
-
-// Lấy access token (không trigger refresh)
-const accessToken = await client.auth.getAccessToken();
-
-// Lấy toàn bộ tokens
-const tokens = await client.auth.getTokens();
-```
+## API Reference
 
 ### `client.keno` — Game Keno
 
 ```typescript
 import type { KenoTicketPurchaseInput } from "@megawin/player-sdk/keno";
 
-// Đặt cược Keno
-// Số Keno dạng string zero-padded: "01" đến "80"
+// Lấy cấu hình game
+const config = await client.keno.getGameConfig();
+console.log(config.game.unitPrice); // 10000
+
+// Lấy kỳ quay hiện tại
+const draw = await client.keno.getCurrentDraw();
+console.log(draw.drawId); // "2026-03-07.095"
+console.log(draw.sales.closeAt); // "2026-03-07T13:04:50.000Z"
+
+// Đặt cược — số Keno dạng string zero-padded: "01" đến "80"
 const result = await client.keno.placeBet({
-  startDrawId: "2026-02-25-001", // Format: YYYY-MM-DD-NNN
-  drawCount: 5, // 1-20 kỳ liên tiếp
+  startDrawId: "2026-03-07.095",
+  drawCount: 5,
   boards: [
     { boardNo: "A", numbers: ["01", "15", "33", "44", "60"] },
     { boardNo: "B", numbers: ["22", "44", "66"] },
@@ -210,10 +173,26 @@ const result = await client.keno.placeBet({
     { playType: "evenOdd", bet: "even" },
   ],
 });
-
 console.log(result.ticketId); // "TKT-..."
-console.log(result.ticketNo); // "K-20260225-001-0001"
 console.log(result.totalAmount); // 70000
+
+// Xem danh sách vé chờ kết quả
+const pending = await client.keno.listPendingTickets({ size: 20 });
+for (const ticket of pending.tickets) {
+  console.log(ticket.ticketNo, ticket.totalAmount);
+}
+
+// Xem kết quả các kỳ quay theo ngày (cursor-based)
+const results = await client.keno.listDrawResults({ from: "2026-03-07" });
+for (const draw of results.draws) {
+  console.log(`${draw.drawId}: ${draw.result.winningNumbers.join(", ")}`);
+}
+
+// Xem chi tiết kỳ quay (bao gồm bảng giải thưởng)
+const detail = await client.keno.getDrawResult("2026-03-07.095");
+for (const prize of detail.basicPrizes) {
+  console.log(`Pick${prize.pickCount} khớp ${prize.matchCount}: ${prize.winnerCount} người`);
+}
 ```
 
 ### `client.lotto535` — Game Lotto 5/35
@@ -221,15 +200,19 @@ console.log(result.totalAmount); // 70000
 ```typescript
 import type { Lotto535TicketPurchaseInput } from "@megawin/player-sdk/lotto535";
 
-// Đặt cược Lotto 5/35
-// Số chính: "01"-"35", số đặc biệt: "01"-"12"
+// Lấy cấu hình game + Jackpot
+const config = await client.lotto535.getGameConfig();
+const jackpot = await client.lotto535.getJackpot();
+console.log(jackpot.currentAmount); // 15000000000
+
+// Đặt cược — số chính: "01"-"35", số đặc biệt: "01"-"12"
 const result = await client.lotto535.placeBet({
-  drawId: "2026-02-25-001", // Format: YYYY-MM-DD-NNN
-  drawCount: 3, // 1-6 kỳ liên tiếp
+  drawId: "2026-03-07.001",
+  drawCount: 3,
   boards: [
     {
       boardNo: "A",
-      playType: "standard", // 5 chính + 1 đặc biệt
+      playType: "standard",
       selection: {
         mainNumbers: ["01", "08", "15", "22", "35"],
         specialNumbers: ["07"],
@@ -237,7 +220,7 @@ const result = await client.lotto535.placeBet({
     },
     {
       boardNo: "B",
-      playType: "mainCover", // 6-15 chính + 1 đặc biệt (bao)
+      playType: "mainCover",
       selection: {
         mainNumbers: ["02", "05", "10", "15", "20", "25", "30"],
         specialNumbers: ["12"],
@@ -245,6 +228,25 @@ const result = await client.lotto535.placeBet({
     },
   ],
 });
+console.log(result.ticketId); // "TKT-..."
+console.log(result.totalAmount); // 93 * 3 * 10000
+
+// Xem kết quả các kỳ quay theo ngày
+const results = await client.lotto535.listDrawResults({ from: "2026-03-07" });
+for (const draw of results.draws) {
+  console.log(
+    `${draw.drawId}: [${draw.result.winningMain.join(",")}] ĐB:${draw.result.winningSpecial}`,
+  );
+  console.log(`Jackpot cuối kỳ: ${draw.jackpot.closingAmount.toLocaleString()} VND`);
+}
+
+// Xem chi tiết kỳ quay (bao gồm bảng giải thưởng)
+const detail = await client.lotto535.getDrawResult("2026-03-07.001");
+for (const prize of detail.prizes) {
+  console.log(
+    `${prize.tier}: ${prize.winnerCount} giải — ${prize.prizeAmount.toLocaleString()} VND`,
+  );
+}
 ```
 
 **Kiểu chơi (`playType`):**
@@ -253,50 +255,124 @@ const result = await client.lotto535.placeBet({
 | ---------------- | ----------------------- | -------- |
 | `"standard"`     | 5 chính + 1 đặc biệt    | 1        |
 | `"mainCover4"`   | 4 chính + 1 đặc biệt    | 31       |
-| `"mainCover"`    | 6-15 chính + 1 đặc biệt | C(N,5)   |
-| `"specialCover"` | 5 chính + 2-12 đặc biệt | K        |
+| `"mainCover"`    | 6–15 chính + 1 đặc biệt | C(N,5)   |
+| `"specialCover"` | 5 chính + 2–12 đặc biệt | K        |
 | `"quickPick"`    | Máy chọn ngẫu nhiên     | 1        |
 
-### `client.player` — Player Info
+### `client.mega645` — Game Mega 6/45
 
 ```typescript
-// Số dư
+import type { Mega645TicketPurchaseInput } from "@megawin/player-sdk/mega645";
+
+// Lấy kỳ quay hiện tại + Jackpot
+const draw = await client.mega645.getCurrentDraw();
+const jackpot = await client.mega645.getJackpot();
+console.log(jackpot.currentAmount); // 8500000000
+
+// Đặt cược — số dạng string zero-padded: "01"-"45"
+const result = await client.mega645.placeBet({
+  drawId: "2026-03-07.001",
+  drawCount: 1,
+  boards: [
+    {
+      boardNo: "A",
+      playType: "standard",
+      selection: { mainNumbers: ["05", "12", "22", "31", "40", "45"] },
+    },
+  ],
+});
+console.log(result.ticketId); // "TKT-..."
+console.log(result.totalAmount); // 10000
+
+// Xem danh sách vé chờ
+const pending = await client.mega645.listPendingTickets({ size: 20 });
+for (const ticket of pending.tickets) {
+  console.log(
+    `${ticket.ticketNo}: ${ticket.progress.settledDraws}/${ticket.progress.totalDraws} kỳ`,
+  );
+}
+```
+
+### `client.power655` — Game Power 6/55
+
+```typescript
+import type { Power655TicketPurchaseInput } from "@megawin/player-sdk/power655";
+
+// Lấy kỳ quay + Jackpot
+const draw = await client.power655.getCurrentDraw();
+const jackpot = await client.power655.getJackpot();
+console.log(jackpot.currentAmount); // 45000000000
+
+// Đặt cược — số dạng string zero-padded: "01"-"55"
+const result = await client.power655.placeBet({
+  drawId: "2026-03-07.001",
+  drawCount: 1,
+  boards: [
+    {
+      boardNo: "A",
+      playType: "standard",
+      selection: { mainNumbers: ["03", "11", "25", "38", "49", "55"] },
+    },
+  ],
+});
+console.log(result.ticketId); // "TKT-..."
+console.log(result.totalAmount); // 10000
+```
+
+### `client.max3d` — Game Max 3D
+
+```typescript
+import type { Max3dTicketPurchaseInput } from "@megawin/player-sdk/max3d";
+
+// Đặt cược Max 3D — bộ số 3 chữ số "000"-"999"
+const result = await client.max3d.placeBet({
+  drawId: "2026-03-07.001",
+  drawCount: 2,
+  boards: [
+    { boardNo: "A", playMode: "basic", playType: "straight", triplets: ["123"] },
+    { boardNo: "B", playMode: "basic", playType: "permutation", triplets: ["456"] },
+  ],
+});
+console.log(result.ticketId); // "TKT-..."
+console.log(result.totalAmount); // 40000
+```
+
+### `client.max3dpro` — Game Max 3D Pro
+
+```typescript
+import type { Max3dproTicketPurchaseInput } from "@megawin/player-sdk/max3dpro";
+
+// Tương tự Max 3D với thêm kiểu chơi "plus" (2 bộ ba số)
+const result = await client.max3dpro.placeBet({
+  drawId: "2026-03-07.001",
+  drawCount: 1,
+  boards: [{ boardNo: "A", playMode: "plus", playType: "straight", triplets: ["123", "456"] }],
+});
+console.log(result.ticketId); // "TKT-..."
+```
+
+### `client.bingo18` — Game Bingo 18
+
+```typescript
+import type { Bingo18TicketPurchaseInput } from "@megawin/player-sdk/bingo18";
+
+// Đặt cược Bingo 18 — chọn các kỳ quay trong ngày
+const result = await client.bingo18.placeBet({
+  drawIds: ["2026-03-07.001", "2026-03-07.002"],
+  boards: [{ playType: "singleNum", number: 7 }],
+  sideBets: [{ playType: "bigSmallDraw", bet: "big" }],
+});
+console.log(result.ticketId); // "TKT-..."
+console.log(result.totalAmount); // 20000
+```
+
+### `client.player` — Thông tin Player
+
+```typescript
+// Lấy số dư
 const balance = await client.player.getBalance();
 console.log(balance.balance); // 500000
 console.log(balance.currency); // "VND"
-
-// Lịch sử cược (phân trang, lọc theo game)
-const history = await client.player.getBetHistory({
-  gameId: "keno", // Tùy chọn: "keno" | "lotto535"
-  page: 1,
-  pageSize: 10,
-});
-
-for (const bet of history.bets) {
-  console.log(bet.ticketNo, bet.totalAmount, bet.status);
-}
-
-// Kết quả game
-const result = await client.player.getGameResult("keno", "2026-02-25-001");
-console.log(result.status); // "completed"
-console.log(result.publishedAt); // "2026-02-25T13:05:00Z"
-```
-
-### `client.api` — Raw HTTP Client
-
-Cho các endpoint chưa có wrapper method:
-
-```typescript
-// GET với Bearer token tự inject
-const data = await client.api.get<MyType>("/player/custom-endpoint");
-
-// POST
-const result = await client.api.post<Result>("/player/custom", { key: "value" });
-
-// Bypass auth cho public route
-const info = await client.api.get("/public/info", {
-  headers: { Authorization: "" },
-});
 ```
 
 ## Error Handling
@@ -307,13 +383,12 @@ Tất cả API methods throw `ApiClientError` khi lỗi:
 import { ApiClientError } from "@megawin/player-sdk";
 
 try {
-  await client.keno.placeBet({ ... });
+  await client.[game].placeBet({ ... });
 } catch (error) {
   if (error instanceof ApiClientError) {
     console.error(error.code);      // "INSUFFICIENT_BALANCE"
     console.error(error.message);   // "Không đủ số dư"
     console.error(error.status);    // 400
-    console.error(error.requestId); // "req-abc-123" (cho support)
   }
 }
 ```
@@ -339,7 +414,7 @@ Mặc định SDK dùng `sessionStorage` (browser) để lưu tokens. Có 2 buil
 | `SessionStorageTokenStorage` | Có (trong tab)      | Không              | Browser (mặc định) |
 | `MemoryTokenStorage`         | Không               | Không              | Mọi môi trường     |
 
-### Mặc định — `SessionStorageTokenStorage` (browser)
+### Browser (mặc định — `SessionStorageTokenStorage`)
 
 ```typescript
 // Không cần truyền tokenStorage — SDK tự dùng sessionStorage
@@ -359,17 +434,6 @@ const client = createPlayerClient({
   baseUrl: "https://api.domain.com",
   tokens: tokensFromServer,
   tokenStorage: new MemoryTokenStorage(),
-});
-```
-
-### Custom key cho sessionStorage
-
-```typescript
-import { createPlayerClient, SessionStorageTokenStorage } from "@megawin/player-sdk";
-
-const client = createPlayerClient({
-  baseUrl: "https://api.domain.com",
-  tokenStorage: new SessionStorageTokenStorage("my_app_tokens"),
 });
 ```
 

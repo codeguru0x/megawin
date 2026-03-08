@@ -13,7 +13,7 @@ describe("lotto535.getCurrentDraw", () => {
   it("should call GET /games/lotto535/draws/current", async () => {
     const responseData = {
       currentDraw: {
-        drawId: "2026-03-05-001",
+        drawId: "2026-03-05.001",
         drawDate: "2026-03-05",
         drawNo: 1,
         drawTime: "2026-03-05T13:00:00Z",
@@ -23,7 +23,7 @@ describe("lotto535.getCurrentDraw", () => {
       },
       activeDraws: [
         {
-          drawId: "2026-03-05-001",
+          drawId: "2026-03-05.001",
           drawDate: "2026-03-05",
           drawNo: 1,
           drawTime: "2026-03-05T13:00:00Z",

@@ -53,3 +53,21 @@ keno-place-bet:
         method: post
         authorizer:
           name: cognitoPlayerAuth
+
+keno-list-draw-results:
+  handler: src/handlers/keno/list-draw-results.handler
+  events:
+    - httpApi:
+        path: /games/keno/draw-results
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+keno-get-draw-result:
+  handler: src/handlers/keno/get-draw-result.handler
+  events:
+    - httpApi:
+        path: /games/keno/draw-results/{drawId}
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

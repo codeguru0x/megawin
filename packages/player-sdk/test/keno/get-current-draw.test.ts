@@ -13,7 +13,7 @@ describe("keno.getCurrentDraw", () => {
   it("should call GET /games/keno/draws/current", async () => {
     const responseData = {
       currentDraw: {
-        drawId: "2026-02-25-100",
+        drawId: "2026-02-25.100",
         drawDate: "2026-02-25",
         drawNo: 100,
         drawTime: "2026-02-25T13:00:00Z",
@@ -22,7 +22,7 @@ describe("keno.getCurrentDraw", () => {
       },
       activeDraws: [
         {
-          drawId: "2026-02-25-100",
+          drawId: "2026-02-25.100",
           drawDate: "2026-02-25",
           drawNo: 100,
           drawTime: "2026-02-25T13:00:00Z",
@@ -31,7 +31,7 @@ describe("keno.getCurrentDraw", () => {
         },
       ],
       lastResult: {
-        drawId: "2026-02-25-099",
+        drawId: "2026-02-25.099",
         drawDate: "2026-02-25",
         drawNo: 99,
         winningNumbers: [

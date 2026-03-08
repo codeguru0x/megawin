@@ -13,7 +13,12 @@
 
 import { KenoCollections } from "@megawin/game-keno/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { DrawDoc, DrawFinancial, DrawStats } from "@megawin/game-keno/entities";
+import type {
+  DrawDoc,
+  DrawFinancial,
+  DrawStats,
+  DrawSettleSummary,
+} from "@megawin/game-keno/entities";
 import { BaseRepo } from "./base-repo";
 import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
 
@@ -340,17 +345,17 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     drawId: string,
     financial: DrawFinancial,
     stats: DrawStats,
+    settleSummary?: DrawSettleSummary,
   ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      {
-        $set: {
-          financial,
-          stats,
-          updatedAt: new Date(),
-        },
-      },
-    );
+    const $set: Record<string, unknown> = {
+      financial,
+      stats,
+      updatedAt: new Date(),
+    };
+    if (settleSummary !== undefined) {
+      $set.settleSummary = settleSummary;
+    }
+    return await this.updateOne({ drawId }, { $set });
   }
 
   async updateVoidSummary(
@@ -371,6 +376,66 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
         },
       },
     );
+  }
+
+  // ─── Settle Summary (denormalize cho player API) ───
+
+  /**
+   * Ghi settleSummary lên draw — denormalize cho player API xem kết quả.
+   * Ghi 1 lần duy nhất bởi CalculateFinancials. Idempotent (overwrite toàn bộ).
+   */
+  async updateSettleSummary(drawId: string, summary: DrawSettleSummary): Promise<boolean> {
+    return await this.updateOne(
+      { drawId },
+      {
+        $set: {
+          settleSummary: summary,
+          updatedAt: new Date(),
+        },
+      },
+    );
+  }
+
+  /**
+   * Danh sách kỳ quay đã settle — cursor-based pagination, xem ngược về quá khứ.
+   * Chỉ trả draws có kết quả (status = "settled", result tồn tại).
+   * Sort: drawId desc (mới nhất trước).
+   *
+   * drawId format "YYYY-MM-DD.NNN" → lexicographic order = chronological order.
+   *
+   * `from` là upper bound (ngưỡng trên): trả về tất cả draws CŨ HƠN HOẶC BẰNG ngày from,
+   * đi ngược về quá khứ. Ví dụ: from = "2026-03-07" → trả 2026-03-07.288, ..., 2026-03-06.xxx, ...
+   *
+   * Cursor pagination:
+   *   - Trang đầu (không có cursor): filter drawId <= "${from}.999"
+   *     ".999" là safe upper bound cho mọi draw trong ngày (Keno max 288, ".999" > ".288").
+   *   - Trang tiếp theo (có cursor): filter drawId < cursor.
+   *     cursor luôn <= from.999 (vì đến từ trang trước đã bị constrain) → from không cần thiết.
+   *
+   * Index dùng: { status: 1, drawId: -1 } → idx_status_drawId_desc
+   */
+  async listSettledDraws(filter: {
+    from: string;
+    size: number;
+    cursor?: string;
+  }): Promise<DrawEntity[]> {
+    const query: Record<string, unknown> = {
+      status: DrawStatus.Settled,
+      result: { $exists: true },
+    };
+
+    if (!filter.cursor) {
+      // Trang đầu: bắt đầu từ ngày from đi về quá khứ
+      query.drawId = { $lte: `${filter.from}.999` };
+    } else {
+      // Paginate: cursor encode đầy đủ vị trí (drawDate + drawNo)
+      query.drawId = { $lt: filter.cursor };
+    }
+
+    return await this.findMany(query, {
+      sort: { drawId: -1 },
+      limit: filter.size,
+    });
   }
 }
 

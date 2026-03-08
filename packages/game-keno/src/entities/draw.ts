@@ -4,13 +4,14 @@
  * Collection: kenoDraws
  *
  * 1 document = 1 kỳ quay Keno.
- * Keno quay mỗi 10 phút, ~288 kỳ/ngày (06:00-21:55).
+ * Keno quay mỗi 8 phút, ~120 kỳ/ngày (06:00-21:52).
  *
  * Kết quả: 20 số ngẫu nhiên từ 01-80.
  */
 
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { ISODateString } from "./types";
+import type { KenoBigSmallBet, KenoEvenOddBet, KenoSideBetPlayType } from "./enums";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces
@@ -68,9 +69,69 @@ export interface DrawStats {
   totalPayoutAmount?: number;
 }
 
+/**
+ * Kết quả trúng thưởng 1 bậc chơi cơ bản trong kỳ quay (denormalize cho player API).
+ *
+ * Ví dụ: "Trúng 7 trong 20 số" → pickCount=10, matchCount=7, winnerCount=3, prizeAmount=710000
+ * (1 bộ = 1 board trên 1 entry có pickCount trùng matchCount).
+ */
+export interface DrawBasicPrizeSummary {
+  /** Bậc chơi (pickCount): 1-10. */
+  pickCount: number;
+  /** Số trùng khớp (matchCount): 0-pickCount. */
+  matchCount: number;
+  /** Tổng số bộ trúng (= tổng boards có kết quả này across tất cả entries). */
+  winnerCount: number;
+  /**
+   * Tiền thưởng mỗi bộ (VND).
+   * Bậc 8/9/10 có thể bị cap nếu vượt ngưỡng.
+   */
+  prizePerUnit: number;
+}
+
+/**
+ * Kết quả trúng thưởng side bet trong kỳ quay (denormalize cho player API).
+ *
+ * Mô hình đối xứng với DrawBasicPrizeSummary:
+ *   BasicPrize: {pickCount, matchCount} → {winnerCount, prizePerUnit}
+ *   SideBetPrize: {playType, bet}       → {winnerCount, prizePerUnit}
+ *
+ * Ví dụ: player đặt "big" trúng → playType="bigSmall", bet="big", winnerCount=5, prizePerUnit=26000.
+ * Client derive outcome ("big13Plus" v.v.) từ bet + draw.result.bigCount/smallCount nếu cần.
+ */
+export interface DrawSideBetPrizeSummary {
+  /** Loại side bet: "bigSmall" hoặc "evenOdd". */
+  playType: KenoSideBetPlayType;
+  /**
+   * Lựa chọn cụ thể người chơi đặt và trúng.
+   * bigSmall: "big" | "bigSmallDraw" | "small"
+   * evenOdd:  "even" | "even1112" | "evenOddDraw" | "odd1112" | "odd"
+   */
+  bet: KenoBigSmallBet | KenoEvenOddBet;
+  /** Số người đặt cược trúng với bet value này. */
+  winnerCount: number;
+  /** Tiền thưởng mỗi lần cược (VND). */
+  prizePerUnit: number;
+}
+
+/**
+ * Tổng kết settle kỳ quay Keno — denormalize trên draw để player API đọc trực tiếp.
+ *
+ * Ghi 1 lần bởi CalculateFinancials step, idempotent (overwrite).
+ *
+ * totalWinners và totalPrizeAmount được tính ở use case layer bằng cách sum từ basicPrizes[]:
+ *   totalWinners     = basicPrizes.reduce((s, b) => s + b.winnerCount, 0)
+ *   totalPrizeAmount = basicPrizes.reduce((s, b) => s + b.winnerCount * b.prizePerUnit, 0)
+ */
+export interface DrawSettleSummary {
+  /** Bảng giải thưởng cơ bản — chỉ chứa entries có winnerCount > 0. */
+  basicPrizes: DrawBasicPrizeSummary[];
+  /** Bảng giải thưởng side bet — chỉ chứa bet values có winnerCount > 0. */
+  sideBetPrizes: DrawSideBetPrizeSummary[];
+}
+
 /** Thông tin khi kỳ quay bị huỷ. Chỉ có khi status = void. */
 export interface DrawVoidInfo {
-  reason: string;
   voidedBy?: string;
   voidedAt: Date;
 }
@@ -92,7 +153,7 @@ export interface DrawDoc {
 
   /**
    * ID kỳ quay, unique + stable.
-   * Format: "YYYY-MM-DD.NNN" (NNN = draw sequence 001-288).
+   * Format: "YYYY-MM-DD.NNN" (NNN = draw sequence 001-120).
    */
   drawId: string;
 
@@ -100,7 +161,7 @@ export interface DrawDoc {
   drawDate: ISODateString;
 
   /**
-   * Số thứ tự kỳ quay trong ngày (1-288).
+   * Số thứ tự kỳ quay trong ngày (1-120).
    * Kỳ 1 = 06:00, kỳ 2 = 06:10, ...
    */
   drawNo: number;
@@ -136,6 +197,9 @@ export interface DrawDoc {
 
   /** Tổng kết void flow (entries refund). */
   voidSummary?: DrawVoidSummary;
+
+  /** Tổng kết settle — denormalize cho player API xem kết quả kỳ quay. */
+  settleSummary?: DrawSettleSummary;
 
   // ───── Timestamps ─────
 

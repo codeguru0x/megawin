@@ -74,7 +74,7 @@ describe("player.getGameResult", () => {
   it("should call GET /player/games/{gameId}/results/{roundId}", async () => {
     const resultData = {
       gameId: "keno",
-      roundId: "2026-02-25-001",
+      roundId: "2026-02-25.001",
       status: "completed",
       result: { winningNumbers: [1, 5, 10] },
       publishedAt: "2026-02-25T13:05:00Z",
@@ -82,10 +82,10 @@ describe("player.getGameResult", () => {
     const fetchMock = mockFetch(resultData);
     vi.stubGlobal("fetch", fetchMock);
 
-    const result = await client.player.getGameResult("keno", "2026-02-25-001");
+    const result = await client.player.getGameResult("keno", "2026-02-25.001");
 
     expect(result).toEqual(resultData);
     const [url] = fetchMock.mock.calls[0];
-    expect(url).toBe(`${BASE_URL}/player/games/keno/results/2026-02-25-001`);
+    expect(url).toBe(`${BASE_URL}/player/games/keno/results/2026-02-25.001`);
   });
 });

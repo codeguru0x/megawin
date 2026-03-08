@@ -13,9 +13,6 @@ export const ENDPOINTS = {
 
   player: {
     balance: "/me/balance",
-    betHistory: "/player/bets",
-    gameResult: (gameId: string, roundId: string) =>
-      `/player/games/${gameId}/results/${roundId}` as const,
   },
 
   keno: {
@@ -25,6 +22,8 @@ export const ENDPOINTS = {
     listPendingTickets: "/games/keno/tickets/pending",
     listTickets: "/games/keno/tickets",
     getTicketEntries: (ticketId: string) => `/games/keno/tickets/${ticketId}/entries` as const,
+    listDrawResults: "/games/keno/draw-results",
+    getDrawResult: (drawId: string) => `/games/keno/draw-results/${drawId}` as const,
   },
 
   lotto535: {
@@ -36,6 +35,8 @@ export const ENDPOINTS = {
     listTickets: "/games/lotto535/tickets",
     getTicketEntries: (ticketId: string) => `/games/lotto535/tickets/${ticketId}/entries` as const,
     getEntryLines: (entryId: string) => `/games/lotto535/entries/${entryId}/lines` as const,
+    listDrawResults: "/games/lotto535/draw-results",
+    getDrawResult: (drawId: string) => `/games/lotto535/draw-results/${drawId}` as const,
   },
 
   mega645: {

@@ -16,6 +16,9 @@ import type {
   KenoListTicketsResponse,
   KenoTicketEntriesResponse,
   KenoGameConfigResponse,
+  KenoListDrawResultsParams,
+  KenoListDrawResultsResponse,
+  KenoDrawResultDetail,
 } from "../keno";
 import { ENDPOINTS } from "../endpoints";
 
@@ -143,17 +146,17 @@ export interface KenoApi {
    * ```ts
    * // Cược cơ bản: chọn 5 số, 1 kỳ
    * const result = await client.keno.placeBet({
-   *   drawIds: ["2026-02-25-001"],
+   *   drawIds: ["2026-02-25.001"],
    *   boards: [
    *     { boardNo: "A", numbers: ["01", "15", "33", "44", "60"] },
    *   ],
    * });
-   * console.log(result.ticketNo);            // "K-20260225-001-0001"
+   * console.log(result.ticketNo);            // "KENO-20260307-00001"
    * console.log(result.pricing.totalAmount);  // 10000
    *
    * // Cược nhiều kỳ + side bet
    * const result2 = await client.keno.placeBet({
-   *   drawIds: ["2026-02-25-001", "2026-02-25-002", "2026-02-25-003"],
+   *   drawIds: ["2026-02-25.001", "2026-02-25.002", "2026-02-25.003"],
    *   boards: [
    *     { boardNo: "A", numbers: ["01", "15", "33"] },
    *     { boardNo: "B", numbers: ["22", "44", "66", "77"] },
@@ -255,7 +258,7 @@ export interface KenoApi {
    * ```ts
    * const data = await client.keno.getTicketEntries("65abc123def456...");
    *
-   * console.log(data.ticket.ticketNo); // "K-20260225-001-0001"
+   * console.log(data.ticket.ticketNo); // "KENO-20260307-00001"
    * console.log(data.entries.length);   // 5 (mua 5 kỳ = 5 entries)
    *
    * for (const entry of data.entries) {
@@ -274,6 +277,54 @@ export interface KenoApi {
    * ```
    */
   getTicketEntries(ticketId: string): Promise<KenoTicketEntriesResponse>;
+
+  /**
+   * Lấy danh sách kết quả kỳ quay Keno đã settle.
+   *
+   * Hỗ trợ phân trang cursor-based và lọc theo ngày bắt đầu.
+   * Chỉ trả về kỳ quay đã settle có kết quả.
+   *
+   * **Endpoint:** `GET /games/keno/draw-results`
+   *
+   * @param params - Tham số phân trang và lọc ngày
+   * @returns Danh sách kết quả kỳ quay kèm cursor
+   *
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * const page1 = await client.keno.listDrawResults({ size: 10 });
+   * for (const draw of page1.draws) {
+   *   console.log(`Kỳ ${draw.drawId}: ${draw.result.winningNumbers.join(", ")}`);
+   *   console.log(`Chẵn: ${draw.result.evenCount}, Lẻ: ${draw.result.oddCount}`);
+   * }
+   * ```
+   */
+  listDrawResults(params?: KenoListDrawResultsParams): Promise<KenoListDrawResultsResponse>;
+
+  /**
+   * Lấy chi tiết kết quả 1 kỳ quay Keno.
+   *
+   * Trả về 20 số trúng, stats, và bảng giải thưởng theo bậc với số lượng người trúng.
+   *
+   * **Endpoint:** `GET /games/keno/draw-results/{drawId}`
+   *
+   * @param drawId - ID kỳ quay (format `YYYY-MM-DD.NNN`)
+   * @returns Chi tiết kết quả kỳ quay
+   *
+   * @throws {@link ApiClientError} code `NOT_FOUND` — kỳ quay không tồn tại hoặc chưa settle
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * const draw = await client.keno.getDrawResult("2026-03-07.050");
+   * console.log(draw.result.winningNumbers); // ["02", "10", ...]
+   * for (const prize of draw.basicPrizes) {
+   *   console.log(`Pick${prize.pickCount} trúng ${prize.matchCount}: ${prize.winnerCount} bộ`);
+   * }
+   * ```
+   */
+  getDrawResult(drawId: string): Promise<KenoDrawResultDetail>;
 }
 
 // ─────────────────────────────────────────────
@@ -309,6 +360,18 @@ export function createKenoApi(http: HttpClient): KenoApi {
 
     async getTicketEntries(ticketId: string): Promise<KenoTicketEntriesResponse> {
       return http.get<KenoTicketEntriesResponse>(ENDPOINTS.keno.getTicketEntries(ticketId));
+    },
+
+    async listDrawResults(
+      params?: KenoListDrawResultsParams,
+    ): Promise<KenoListDrawResultsResponse> {
+      return http.get<KenoListDrawResultsResponse>(ENDPOINTS.keno.listDrawResults, {
+        params: params as Record<string, string | number | undefined>,
+      });
+    },
+
+    async getDrawResult(drawId: string): Promise<KenoDrawResultDetail> {
+      return http.get<KenoDrawResultDetail>(ENDPOINTS.keno.getDrawResult(drawId));
     },
   };
 }

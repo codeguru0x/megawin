@@ -110,7 +110,7 @@ export interface Power655DrawInfo {
 export interface Power655TicketSummary {
   /** ID vé trong hệ thống. */
   id: string;
-  /** Mã vé hiển thị cho người chơi. */
+  /** Mã vé hiển thị cho người chơi. VD: `"P655-20260307-00002"`. */
   ticketNo: string;
   /** Trạng thái vé. */
   status: string;

@@ -335,7 +335,7 @@ export function createPlayerClient(config: PlayerSdkConfig): PlayerClient {
   // ---- Set initial tokens if provided ----
 
   if (initialTokens) {
-    tokenManager.setTokens(initialTokens);
+    void auth.setTokens(initialTokens);
   }
 
   return {

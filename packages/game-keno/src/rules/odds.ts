@@ -9,7 +9,7 @@
  *   Ngoài ra có cách chơi bổ sung: Lớn/Nhỏ, Chẵn/Lẻ.
  *
  *   Giá vé: 10,000 VND / ticket.
- *   Lịch quay: mỗi 10 phút, ~288 kỳ/ngày (06:00 - 21:55).
+ *   Lịch quay: mỗi 8 phút, ~120 kỳ/ngày (06:00 - 21:52).
  *
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * II. KHÔNG GIAN MẪU (Sample Space)

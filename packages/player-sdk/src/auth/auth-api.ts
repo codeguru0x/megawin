@@ -106,6 +106,12 @@ export function createAuthApi(deps: AuthApiDeps): AuthApi {
         refreshToken,
       });
 
+      if (!res.idToken) {
+        console.error("[MegaWin SDK] refresh: idToken missing in response");
+        onSessionExpired?.();
+        return null;
+      }
+
       return {
         accessToken: res.accessToken,
         refreshToken,
@@ -122,6 +128,13 @@ export function createAuthApi(deps: AuthApiDeps): AuthApi {
 
   return {
     async setTokens(tokens: AuthTokens): Promise<void> {
+      if (!tokens.idToken) {
+        console.warn(
+          "[MegaWin SDK] setTokens: idToken is missing. " +
+            "API Gateway requires the ID Token for authorization (Bearer header). " +
+            "Requests will fail with 401 until a valid idToken is provided.",
+        );
+      }
       await tokenManager.setTokens(tokens);
     },
 

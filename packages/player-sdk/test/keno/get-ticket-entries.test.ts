@@ -7,7 +7,7 @@ const TICKET_WITH_ENTRIES = {
     id: "65abc001",
     ticketNo: "K-20260225-001-0001",
     status: "active",
-    drawPlan: { drawIds: ["2026-02-25-001", "2026-02-25-002"], drawCount: 2 },
+    drawPlan: { drawIds: ["2026-02-25.001", "2026-02-25.002"], drawCount: 2 },
     pricing: { unitPrice: 10000, betsPerDraw: 1, amountPerDraw: 10000, totalAmount: 20000 },
     boards: [{ boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] }],
     sideBets: [],
@@ -18,7 +18,7 @@ const TICKET_WITH_ENTRIES = {
   entries: [
     {
       id: "entry001",
-      drawId: "2026-02-25-001",
+      drawId: "2026-02-25.001",
       drawDate: "2026-02-25",
       status: "settled",
       amount: 10000,
@@ -50,7 +50,7 @@ const TICKET_WITH_ENTRIES = {
     },
     {
       id: "entry002",
-      drawId: "2026-02-25-002",
+      drawId: "2026-02-25.002",
       drawDate: "2026-02-25",
       status: "pending",
       amount: 10000,

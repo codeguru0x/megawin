@@ -8,30 +8,32 @@
  *   - commission per tenant
  *   - companyTake
  *
+ * Đồng thời denormalize settleSummary lên draw cho player API.
+ *
  * IDEMPOTENT: Chạy lại cho kết quả giống nhau (tính từ DB).
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { roundTo } from "@megawin/shared/utils/number";
 import { calculateKenoDrawFinancials } from "@megawin/game-keno/rules";
+import type { DrawBasicPrizeSummary, DrawSideBetPrizeSummary } from "@megawin/game-keno/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext, SettleFinancials } from "./types";
 
-export class CalculateFinancialsUseCase extends InternalUseCase<
-  SettleContext,
-  SettleFinancials
-> {
+export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, SettleFinancials> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
-  /** Tính tài chính tổng hợp Keno. Idempotent – tính từ DB. */
+  /** Tính tài chính tổng hợp Keno + denormalize settleSummary. Idempotent – tính từ DB. */
   protected async execute(input: SettleContext): Promise<SettleFinancials> {
     const { drawId, config } = input;
 
-    const [tenantAgg, payoutSummary] = await Promise.all([
+    const [tenantAgg, payoutSummary, basicPrizeSummary, sideBetPrizeSummary] = await Promise.all([
       this.entryRepo.aggregateRevenueByTenant(drawId),
       this.entryRepo.aggregateSettledPayoutSummary(drawId),
+      this.entryRepo.aggregateBasicPrizeSummary(drawId),
+      this.entryRepo.aggregateSideBetPrizeSummary(drawId),
     ]);
 
     const fin = calculateKenoDrawFinancials({
@@ -45,14 +47,22 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       companyRate: config.companyRate,
     });
 
-    const tenantBreakdown = tenantAgg.map((t) => ({
-      tenantId: t.tenantId,
-      revenue: t.revenue,
-      commission: t.commission,
-      commissionRate: t.revenue > 0 ? roundTo(t.commission / t.revenue, 2) : 0,
-      entryCount: t.entryCount,
+    // ── Build settleSummary cho player API ──
+    const basicPrizes: DrawBasicPrizeSummary[] = basicPrizeSummary.map((bp) => ({
+      pickCount: bp.pickCount,
+      matchCount: bp.matchCount,
+      winnerCount: bp.winnerCount,
+      prizePerUnit: bp.prizePerUnit,
     }));
 
+    const sideBetPrizes: DrawSideBetPrizeSummary[] = sideBetPrizeSummary.map((sb) => ({
+      playType: sb.playType as DrawSideBetPrizeSummary["playType"],
+      bet: sb.bet as DrawSideBetPrizeSummary["bet"],
+      winnerCount: sb.winnerCount,
+      prizePerUnit: sb.prizePerUnit,
+    }));
+
+    // Ghi financial + stats + settleSummary trong 1 DB call (idempotent overwrite)
     await this.drawRepo.updateSettleResult(
       drawId,
       {
@@ -66,6 +76,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
         totalSalesAmount: fin.totalRevenue,
         totalPayoutAmount: payoutSummary.totalPayoutAmount,
       },
+      { basicPrizes, sideBetPrizes },
     );
 
     return {

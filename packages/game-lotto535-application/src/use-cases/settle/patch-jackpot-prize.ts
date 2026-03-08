@@ -104,10 +104,16 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     // ── Bước 4: Cập nhật draw.stats.totalPayoutAmount ──
     // $inc KHÔNG idempotent → chỉ gọi khi entries thực sự được patch lần đầu.
     // Retry: entries đã patch (amount > 0) → modifiedCount = 0 → skip → an toàn.
+    // totalJackpotPayout = tiền JP thực chi (floor * số winner, không phải totalJackpotPrize
+    // vì làm tròn xuống có thể dư vài đồng).
+    const totalJackpotPayout = jackpotPerWinner * jackpotEntries.length;
     if (patchedEntries > 0) {
-      const totalJackpotPayoutIncrease = jackpotPerWinner * jackpotEntries.length;
-      await this.drawRepo.incrementTotalPayout(drawId, totalJackpotPayoutIncrease);
+      await this.drawRepo.incrementTotalPayout(drawId, totalJackpotPayout);
     }
+
+    // ── Bước 5: Patch settleSummary.tiers[jackpot].prizeAmount ──
+    // Dùng $set (idempotent) — luôn ghi cùng giá trị nên chạy lại không sai.
+    await this.drawRepo.patchSettleSummaryJackpotPrize(drawId, totalJackpotPayout);
 
     return { drawId, entriesPatched: patchedEntries };
   }

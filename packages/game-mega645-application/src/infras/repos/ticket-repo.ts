@@ -191,7 +191,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
       }
 
       const $set: TicketSyncSet = {
-        "progress.settledDraws": settledCount,
+        "progress.settledDraws": processedCount,
         updatedAt: now,
       };
 
@@ -217,15 +217,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
           filter: {
             _id: new ObjectId(ticketId),
             $expr: {
-              $lte: [
-                {
-                  $add: [
-                    { $ifNull: ["$progress.settledDraws", 0] },
-                    { $ifNull: ["$voidSummary.voidedDrawCount", 0] },
-                  ],
-                },
-                processedCount,
-              ],
+              $lte: [{ $ifNull: ["$progress.settledDraws", 0] }, processedCount],
             },
           },
           update: { $set: $set as Record<string, unknown>, $inc: { version: 1 } },
@@ -256,7 +248,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     }
 
     const $set: TicketSyncSet = {
-      "progress.settledDraws": settledCount,
+      "progress.settledDraws": processedCount,
       updatedAt: now,
     };
 
@@ -281,15 +273,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
       {
         _id: new ObjectId(ticketId),
         $expr: {
-          $lte: [
-            {
-              $add: [
-                { $ifNull: ["$progress.settledDraws", 0] },
-                { $ifNull: ["$voidSummary.voidedDrawCount", 0] },
-              ],
-            },
-            processedCount,
-          ],
+          $lte: [{ $ifNull: ["$progress.settledDraws", 0] }, processedCount],
         },
       },
       { $set: $set as Record<string, unknown>, $inc: { version: 1 } },

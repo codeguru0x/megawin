@@ -21,7 +21,7 @@ describe("lotto535.placeBet", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const input: Lotto535TicketPurchaseInput = {
-      drawId: "2026-02-25-001",
+      drawId: "2026-02-25.001",
       drawCount: 1,
       boards: [
         {
@@ -51,7 +51,7 @@ describe("lotto535.placeBet", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await client.lotto535.placeBet({
-      drawId: "2026-02-25-001",
+      drawId: "2026-02-25.001",
       drawCount: 1,
       boards: [
         {
@@ -71,7 +71,7 @@ describe("lotto535.placeBet", () => {
 
     await expect(
       client.lotto535.placeBet({
-        drawId: "2026-02-25-001",
+        drawId: "2026-02-25.001",
         drawCount: 1,
         boards: [
           {
@@ -89,7 +89,7 @@ describe("lotto535.placeBet", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const input: Lotto535TicketPurchaseInput = {
-      drawId: "2026-02-25-001",
+      drawId: "2026-02-25.001",
       drawCount: 3,
       boards: [
         {

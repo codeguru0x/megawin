@@ -69,7 +69,19 @@ pnpm build
 
 echo "▸ Packing .tgz..."
 mkdir -p release
+
+# Strip internal scripts khỏi package.json trước khi pack
+node "$SCRIPT_DIR/prepack.mjs"
+
+# Đảm bảo restore ngay cả khi pack lỗi
+trap 'node "$SCRIPT_DIR/postpack.mjs"' EXIT
+
 PACK_OUTPUT=$(pnpm pack --pack-gzip-level 9 --pack-destination release 2>&1)
+
+# Restore ngay sau khi pack xong (trap vẫn chạy khi exit, nhưng restore sớm để an toàn)
+node "$SCRIPT_DIR/postpack.mjs"
+trap - EXIT
+
 TGZ_FILE="$PKG_DIR/release/megawin-player-sdk-${VERSION}.tgz"
 
 if [[ ! -f "$TGZ_FILE" ]]; then

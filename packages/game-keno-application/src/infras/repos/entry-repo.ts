@@ -782,6 +782,107 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     return col.distinct("ticketId", { drawId }) as Promise<ObjectId[]>;
   }
 
+  // ─── Settle Summary (denormalize cho player API) ───
+
+  /**
+   * Aggregate số bộ trúng theo pickCount × matchCount cho tất cả entries settled.
+   *
+   * Pre-filter: chỉ entries có ít nhất 1 board thắng ($elemMatch: winAmount > 0).
+   * Sau đó unwind → group theo {pickCount, matchCount} → đếm boards + lấy prizePerUnit.
+   * Dùng bởi CalculateFinancials để denormalize vào draw.settleSummary.basicPrizes.
+   */
+  async aggregateBasicPrizeSummary(drawId: string): Promise<
+    Array<{
+      pickCount: number;
+      matchCount: number;
+      winnerCount: number;
+      prizePerUnit: number;
+    }>
+  > {
+    const result = await this.aggregate([
+      {
+        $match: {
+          drawId,
+          status: EntryStatus.Settled,
+          // $elemMatch để index-friendly: chỉ lấy entries có ít nhất 1 board thắng
+          "payout.boardPayouts": { $elemMatch: { winAmount: { $gt: 0 } } },
+        },
+      },
+      { $unwind: "$payout.boardPayouts" },
+      // Lọc từng board sau unwind (entry có nhiều board, không phải board nào cũng thắng)
+      { $match: { "payout.boardPayouts.winAmount": { $gt: 0 } } },
+      {
+        $group: {
+          _id: {
+            pickCount: "$payout.boardPayouts.pickCount",
+            matchCount: "$payout.boardPayouts.matchCount",
+          },
+          winnerCount: { $sum: 1 },
+          prizePerUnit: { $first: "$payout.boardPayouts.winAmount" },
+        },
+      },
+      { $sort: { "_id.pickCount": -1, "_id.matchCount": -1 } },
+    ]);
+
+    return result.map((r: any) => ({
+      pickCount: r._id.pickCount,
+      matchCount: r._id.matchCount,
+      winnerCount: r.winnerCount,
+      prizePerUnit: r.prizePerUnit,
+    }));
+  }
+
+  /**
+   * Aggregate số người trúng side bet (Lớn/Nhỏ, Chẵn/Lẻ) theo {playType, bet}.
+   *
+   * Pre-filter: chỉ entries có ít nhất 1 side bet thắng ($elemMatch: winAmount > 0).
+   * Sau đó unwind → group theo {playType, bet} → đếm winners + lấy prizePerUnit.
+   * Dùng bởi CalculateFinancials để denormalize vào draw.settleSummary.sideBetPrizes.
+   *
+   * Một kỳ quay có thể có nhiều bet values trúng trong cùng playType.
+   * Ví dụ bigSmall: kết quả 10 lớn + 10 nhỏ → cả "big", "small", "bigSmallDraw" có thể trúng.
+   */
+  async aggregateSideBetPrizeSummary(drawId: string): Promise<
+    Array<{
+      playType: string;
+      bet: string;
+      winnerCount: number;
+      prizePerUnit: number;
+    }>
+  > {
+    const result = await this.aggregate([
+      {
+        $match: {
+          drawId,
+          status: EntryStatus.Settled,
+          // Pre-filter index-friendly: chỉ entries có ít nhất 1 side bet thắng
+          "payout.sideBetPayouts": { $elemMatch: { winAmount: { $gt: 0 } } },
+        },
+      },
+      { $unwind: "$payout.sideBetPayouts" },
+      // Lọc từng side bet sau unwind (nhất quán với aggregateBasicPrizeSummary)
+      { $match: { "payout.sideBetPayouts.winAmount": { $gt: 0 } } },
+      {
+        $group: {
+          _id: {
+            playType: "$payout.sideBetPayouts.playType",
+            bet: "$payout.sideBetPayouts.bet",
+          },
+          winnerCount: { $sum: 1 },
+          prizePerUnit: { $first: "$payout.sideBetPayouts.winAmount" },
+        },
+      },
+      { $sort: { "_id.playType": 1, "_id.bet": 1 } },
+    ]);
+
+    return result.map((r: any) => ({
+      playType: r._id.playType,
+      bet: r._id.bet,
+      winnerCount: r.winnerCount,
+      prizePerUnit: r.prizePerUnit,
+    }));
+  }
+
   // ─── Feed Sync ───
 
   /**

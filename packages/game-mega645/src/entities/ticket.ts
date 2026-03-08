@@ -61,7 +61,7 @@ export interface TicketPricing {
 export interface TicketProgress {
   /** Tổng số kỳ quay vé tham gia (= drawPlan.drawCount). */
   totalDraws: number;
-  /** Số kỳ quay đã settle xong. */
+  /** Số kỳ đã xử lý xong = settledCount + voidedCount. Khi settledDraws === totalDraws: ticket → completed / refunded. */
   settledDraws: number;
 }
 

@@ -73,6 +73,11 @@ export function matchBasicBoard(
 
 export interface SideBetMatchResult {
   outcome: string;
+  /**
+   * Convenience alias cho `winAmount > 0`.
+   * Invariant: isWin = true ↔ winAmount > 0. Không có ngoại lệ.
+   * Lưu kèm winAmount để client đọc win/lose trực tiếp.
+   */
   isWin: boolean;
   winAmount: number;
 }

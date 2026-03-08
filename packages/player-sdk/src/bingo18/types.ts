@@ -120,7 +120,7 @@ export interface Bingo18DrawInfo {
 export interface Bingo18TicketSummary {
   /** ID vé trong hệ thống. */
   id: string;
-  /** Mã vé hiển thị cho người chơi. */
+  /** Mã vé hiển thị cho người chơi. VD: `"B18-20260307-00007"`. */
   ticketNo: string;
   /** Trạng thái vé. */
   status: string;
@@ -175,5 +175,3 @@ export interface Bingo18TicketSummary {
   /** Thời điểm mua vé (ISO 8601). */
   createdAt: string;
 }
-
-export { Bingo18PlayType };

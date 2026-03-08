@@ -1,6 +1,15 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/index.ts", "src/keno/index.ts", "src/lotto535/index.ts"],
+  "entryPoints": [
+    "src/index.ts",
+    "src/keno/index.ts",
+    "src/lotto535/index.ts",
+    "src/mega645/index.ts",
+    "src/power655/index.ts",
+    "src/max3d/index.ts",
+    "src/max3dpro/index.ts",
+    "src/bingo18/index.ts"
+  ],
   "out": "docs",
   "name": "@megawin/player-sdk",
   "readme": "README.md",

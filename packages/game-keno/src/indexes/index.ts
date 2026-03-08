@@ -39,8 +39,7 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
     collection: KenoCollections.Tickets,
     key: { tenantId: 1, accountId: 1, status: 1, createdAt: -1 },
     options: { name: "idx_tenant_account_status_created" },
-    purpose:
-      "Player pending/completed tickets: filter tenant+account+status, cursor by _id",
+    purpose: "Player pending/completed tickets: filter tenant+account+status, cursor by _id",
   },
   {
     collection: KenoCollections.Tickets,
@@ -51,8 +50,7 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
       "settlement.lastSettledAt": -1,
     },
     options: { name: "idx_tenant_account_status_settled" },
-    purpose:
-      "Player completed tickets sortBy=drawDate: filter by settlement date range",
+    purpose: "Player completed tickets sortBy=drawDate: filter by settlement date range",
   },
   {
     collection: KenoCollections.Tickets,
@@ -110,8 +108,7 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
     collection: KenoCollections.TicketEntries,
     key: { version: 1 },
     options: { name: "idx_version" },
-    purpose:
-      "Feed sync worker: scan entries thay đổi kể từ version cuối cùng đã sync",
+    purpose: "Feed sync worker: scan entries thay đổi kể từ version cuối cùng đã sync",
   },
 
   // ─────────────────────────────────────────
@@ -131,6 +128,13 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: KenoCollections.Draws,
+    key: { status: 1, drawId: -1 },
+    options: { name: "idx_status_drawId_desc" },
+    purpose:
+      "Player draw results: filter settled draws + cursor pagination theo drawId (upper bound từ ngày)",
+  },
+  {
+    collection: KenoCollections.Draws,
     key: { drawDate: 1, drawNo: 1 },
     options: { name: "idx_drawDate_drawNo" },
     purpose: "UI: hiển thị danh sách draws theo ngày",
@@ -139,8 +143,7 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
     collection: KenoCollections.Draws,
     key: { drawDate: -1, drawNo: -1 },
     options: { name: "idx_drawDate_drawNo_desc" },
-    purpose:
-      "getLatestDraw: O(1) lookup kỳ mới nhất (đọc entry đầu tiên index B-tree)",
+    purpose: "getLatestDraw: O(1) lookup kỳ mới nhất (đọc entry đầu tiên index B-tree)",
   },
   {
     collection: KenoCollections.Draws,

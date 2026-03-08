@@ -1,6 +1,6 @@
 {
   "name": "@megawin/player-sdk",
-  "version": "1.0.1",
+  "version": "1.0.7",
   "description": "MegaWin Player SDK – HTTP client + game types cho đối tác tích hợp",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -37,6 +37,56 @@
         "default": "./dist/lotto535.cjs"
       }
     },
+    "./mega645": {
+      "import": {
+        "types": "./dist/mega645.d.ts",
+        "default": "./dist/mega645.js"
+      },
+      "require": {
+        "types": "./dist/mega645.d.cts",
+        "default": "./dist/mega645.cjs"
+      }
+    },
+    "./power655": {
+      "import": {
+        "types": "./dist/power655.d.ts",
+        "default": "./dist/power655.js"
+      },
+      "require": {
+        "types": "./dist/power655.d.cts",
+        "default": "./dist/power655.cjs"
+      }
+    },
+    "./max3d": {
+      "import": {
+        "types": "./dist/max3d.d.ts",
+        "default": "./dist/max3d.js"
+      },
+      "require": {
+        "types": "./dist/max3d.d.cts",
+        "default": "./dist/max3d.cjs"
+      }
+    },
+    "./max3dpro": {
+      "import": {
+        "types": "./dist/max3dpro.d.ts",
+        "default": "./dist/max3dpro.js"
+      },
+      "require": {
+        "types": "./dist/max3dpro.d.cts",
+        "default": "./dist/max3dpro.cjs"
+      }
+    },
+    "./bingo18": {
+      "import": {
+        "types": "./dist/bingo18.d.ts",
+        "default": "./dist/bingo18.js"
+      },
+      "require": {
+        "types": "./dist/bingo18.d.cts",
+        "default": "./dist/bingo18.cjs"
+      }
+    },
     "./browser": "./dist/megawin-player-sdk-browser.global.js"
   },
   "files": [
@@ -44,6 +94,8 @@
     "README.md"
   ],
   "scripts": {
+    "prepack": "node scripts/prepack.mjs",
+    "postpack": "node scripts/postpack.mjs",
     "build": "tsup",
     "dev": "tsup --watch",
     "check-types": "tsc --noEmit",

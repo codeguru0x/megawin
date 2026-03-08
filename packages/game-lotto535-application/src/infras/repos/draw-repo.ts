@@ -1,4 +1,4 @@
-import { Lotto535Collections } from "@megawin/game-lotto535/entities";
+import { Lotto535Collections, PrizeTier } from "@megawin/game-lotto535/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { subDays, formatVNDate } from "@megawin/shared/utils/date";
 import type {
@@ -6,6 +6,7 @@ import type {
   DrawJackpotSnapshot,
   DrawFinancial,
   DrawStats,
+  DrawSettleSummary,
 } from "@megawin/game-lotto535/entities";
 import type { MainTuple, Special, ISODateString } from "@megawin/game-lotto535/entities";
 import { BaseRepo } from "./base-repo";
@@ -298,17 +299,17 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     drawId: string,
     financial: DrawFinancial,
     stats: DrawStats,
+    settleSummary?: DrawSettleSummary,
   ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      {
-        $set: {
-          financial,
-          stats,
-          updatedAt: new Date(),
-        },
-      },
-    );
+    const $set: Record<string, unknown> = {
+      financial,
+      stats,
+      updatedAt: new Date(),
+    };
+    if (settleSummary !== undefined) {
+      $set.settleSummary = settleSummary;
+    }
+    return await this.updateOne({ drawId }, { $set });
   }
 
   /**
@@ -330,6 +331,88 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
         },
       },
     );
+  }
+
+  /**
+   * Ghi settleSummary lên draw (denormalize cho player API).
+   * Gọi bởi CalculateFinancials (step 3). Overwrite toàn bộ → idempotent.
+   */
+  async updateSettleSummary(drawId: string, summary: DrawSettleSummary): Promise<boolean> {
+    return await this.updateOne(
+      { drawId },
+      {
+        $set: {
+          settleSummary: summary,
+          updatedAt: new Date(),
+        },
+      },
+    );
+  }
+
+  /**
+   * Cập nhật jackpot tier prizeAmount trong settleSummary sau khi PatchJackpotPrize chạy.
+   *
+   * Dùng dot notation để chỉ cập nhật 1 phần tử mảng (tier = "jackpot").
+   * Idempotent: set cùng giá trị nhiều lần cho kết quả giống nhau.
+   */
+  async patchSettleSummaryJackpotPrize(
+    drawId: string,
+    jackpotPrizeAmount: number,
+  ): Promise<boolean> {
+    return await this.updateOne(
+      {
+        drawId,
+        "settleSummary.tiers.tier": PrizeTier.Jackpot,
+      },
+      {
+        $set: {
+          "settleSummary.tiers.$.prizeAmount": jackpotPrizeAmount,
+          updatedAt: new Date(),
+        },
+      },
+    );
+  }
+
+  /**
+   * Danh sách kỳ quay đã settle — cursor-based pagination, xem ngược về quá khứ.
+   * Chỉ trả draws có kết quả (status = "settled", result tồn tại).
+   * Sort: drawId desc (mới nhất trước).
+   *
+   * drawId format "YYYY-MM-DD.NNN" → lexicographic order = chronological order.
+   *
+   * `from` là upper bound (ngưỡng trên): trả về tất cả draws CŨ HƠN HOẶC BẰNG ngày from,
+   * đi ngược về quá khứ. Ví dụ: from = "2026-03-07" → trả 2026-03-07.003, ..., 2026-03-06.xxx, ...
+   *
+   * Cursor pagination:
+   *   - Trang đầu (không có cursor): filter drawId <= "${from}.999"
+   *     ".999" là safe upper bound cho mọi draw trong ngày (Lotto535 max 003, ".999" > ".003").
+   *   - Trang tiếp theo (có cursor): filter drawId < cursor.
+   *     cursor luôn <= from.999 (vì đến từ trang trước đã bị constrain) → from không cần thiết.
+   *
+   * Index dùng: { status: 1, drawId: -1 } → idx_status_drawId_desc
+   */
+  async listSettledDraws(filter: {
+    from: string;
+    size: number;
+    cursor?: string;
+  }): Promise<DrawEntity[]> {
+    const query: Record<string, unknown> = {
+      status: DrawStatus.Settled,
+      result: { $exists: true },
+    };
+
+    if (!filter.cursor) {
+      // Trang đầu: bắt đầu từ ngày from đi về quá khứ
+      query.drawId = { $lte: `${filter.from}.999` };
+    } else {
+      // Paginate: cursor encode đầy đủ vị trí (drawDate + drawNo)
+      query.drawId = { $lt: filter.cursor };
+    }
+
+    return await this.findMany(query, {
+      sort: { drawId: -1 },
+      limit: filter.size,
+    });
   }
 
   async getLatestDraw(): Promise<DrawEntity | null> {

@@ -17,13 +17,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -113,15 +107,15 @@ const MOCK_TENANT_ENTRIES = [
       {
         boardNo: "A",
         playType: "standard",
-        mainNumbers: [3, 12, 17, 24, 31],
-        specialNumbers: [7],
+        mainNumbers: ["03", "12", "17", "24", "31"],
+        specialNumbers: ["07"],
         expandedLines: 1,
       },
       {
         boardNo: "B",
         playType: "mainCover",
-        mainNumbers: [1, 5, 9, 14, 22, 28],
-        specialNumbers: [3],
+        mainNumbers: ["01", "05", "09", "14", "22", "28"],
+        specialNumbers: ["03"],
         expandedLines: 6,
       },
     ],
@@ -140,8 +134,8 @@ const MOCK_TENANT_ENTRIES = [
       {
         boardNo: "A",
         playType: "standard",
-        mainNumbers: [5, 10, 15, 20, 25],
-        specialNumbers: [11],
+        mainNumbers: ["05", "10", "15", "20", "25"],
+        specialNumbers: ["11"],
         expandedLines: 1,
       },
     ],
@@ -160,22 +154,22 @@ const MOCK_TENANT_ENTRIES = [
       {
         boardNo: "A",
         playType: "specialCover",
-        mainNumbers: [2, 8, 16, 23, 35],
-        specialNumbers: [1, 4, 7, 10],
+        mainNumbers: ["02", "08", "16", "23", "35"],
+        specialNumbers: ["01", "04", "07", "10"],
         expandedLines: 4,
       },
       {
         boardNo: "B",
         playType: "standard",
-        mainNumbers: [7, 14, 21, 28, 33],
-        specialNumbers: [6],
+        mainNumbers: ["07", "14", "21", "28", "33"],
+        specialNumbers: ["06"],
         expandedLines: 1,
       },
       {
         boardNo: "C",
         playType: "mainCover4",
-        mainNumbers: [3, 11, 19, 27],
-        specialNumbers: [9],
+        mainNumbers: ["03", "11", "19", "27"],
+        specialNumbers: ["09"],
         expandedLines: 31,
       },
     ],
@@ -194,8 +188,8 @@ const MOCK_TENANT_ENTRIES = [
       {
         boardNo: "A",
         playType: "standard",
-        mainNumbers: [1, 9, 18, 26, 34],
-        specialNumbers: [12],
+        mainNumbers: ["01", "09", "18", "26", "34"],
+        specialNumbers: ["12"],
         expandedLines: 1,
       },
     ],
@@ -214,8 +208,8 @@ const MOCK_TENANT_ENTRIES = [
       {
         boardNo: "A",
         playType: "mainCover",
-        mainNumbers: [2, 6, 13, 19, 24, 30, 35],
-        specialNumbers: [5],
+        mainNumbers: ["02", "06", "13", "19", "24", "30", "35"],
+        specialNumbers: ["05"],
         expandedLines: 21,
       },
     ],
@@ -243,10 +237,7 @@ function fmtVND(n: number) {
       }) + " tỷ"
     );
   if (n >= 1_000_000)
-    return (
-      (n / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 }) +
-      " tr"
-    );
+    return (n / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 }) + " tr";
   return n.toLocaleString("vi-VN") + " ₫";
 }
 
@@ -256,26 +247,12 @@ export default function PendingTicketsPage() {
   const [selectedTenant, setSelectedTenant] = useState<string | null>(null);
   const [entryDetail, setEntryDetail] = useState<SelectedEntry | null>(null);
 
-  const selectedTenantData = MOCK_TENANT_SUMMARY.find(
-    (t) => t.tenantId === selectedTenant
-  );
+  const selectedTenantData = MOCK_TENANT_SUMMARY.find((t) => t.tenantId === selectedTenant);
 
-  const totalEntries = MOCK_TENANT_SUMMARY.reduce(
-    (s, t) => s + t.entryCount,
-    0
-  );
-  const totalAmount = MOCK_TENANT_SUMMARY.reduce(
-    (s, t) => s + t.totalAmount,
-    0
-  );
-  const totalLines = MOCK_TENANT_SUMMARY.reduce(
-    (s, t) => s + t.totalLines,
-    0
-  );
-  const totalPlayers = MOCK_TENANT_SUMMARY.reduce(
-    (s, t) => s + t.playerCount,
-    0
-  );
+  const totalEntries = MOCK_TENANT_SUMMARY.reduce((s, t) => s + t.entryCount, 0);
+  const totalAmount = MOCK_TENANT_SUMMARY.reduce((s, t) => s + t.totalAmount, 0);
+  const totalLines = MOCK_TENANT_SUMMARY.reduce((s, t) => s + t.totalLines, 0);
+  const totalPlayers = MOCK_TENANT_SUMMARY.reduce((s, t) => s + t.playerCount, 0);
 
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
@@ -289,8 +266,7 @@ export default function PendingTicketsPage() {
             Lotto 5/35 — Vé chờ quay
           </h1>
           <p className="text-xs text-muted-foreground">
-            Thống kê vé tham gia phiên đang chờ quay kết quả, phân bổ theo
-            agent/tenant.
+            Thống kê vé tham gia phiên đang chờ quay kết quả, phân bổ theo agent/tenant.
           </p>
         </div>
       </div>
@@ -303,12 +279,9 @@ export default function PendingTicketsPage() {
               <CalendarClock className="size-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Kỳ quay sắp tới
-              </p>
+              <p className="text-sm font-medium text-muted-foreground">Kỳ quay sắp tới</p>
               <p className="text-lg font-bold">
-                {PENDING_DRAW.drawDate} – Kỳ {PENDING_DRAW.drawNo} (
-                {PENDING_DRAW.drawTime})
+                {PENDING_DRAW.drawDate} – Kỳ {PENDING_DRAW.drawNo} ({PENDING_DRAW.drawTime})
               </p>
             </div>
           </div>
@@ -357,15 +330,9 @@ export default function PendingTicketsPage() {
             <SelectValue placeholder="Chọn kỳ quay" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="2026-02-22-002">
-              2026-02-22 Kỳ 2 (21:00) – Đang bán
-            </SelectItem>
-            <SelectItem value="2026-02-23-001">
-              2026-02-23 Kỳ 1 (13:00) – Đã lên lịch
-            </SelectItem>
-            <SelectItem value="2026-02-23-002">
-              2026-02-23 Kỳ 2 (21:00) – Đã lên lịch
-            </SelectItem>
+            <SelectItem value="2026-02-22-002">2026-02-22 Kỳ 2 (21:00) – Đang bán</SelectItem>
+            <SelectItem value="2026-02-23-001">2026-02-23 Kỳ 1 (13:00) – Đã lên lịch</SelectItem>
+            <SelectItem value="2026-02-23-002">2026-02-23 Kỳ 2 (21:00) – Đã lên lịch</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -375,9 +342,7 @@ export default function PendingTicketsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Phân bổ theo đại lý</CardTitle>
-            <CardDescription>
-              Chọn đại lý để xem chi tiết từng vé tham gia kỳ quay
-            </CardDescription>
+            <CardDescription>Chọn đại lý để xem chi tiết từng vé tham gia kỳ quay</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto rounded-md border">
@@ -408,9 +373,7 @@ export default function PendingTicketsPage() {
                             <Building2 className="size-4 text-muted-foreground" />
                             <div>
                               <p className="font-medium">{t.tenantName}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {t.tenantId}
-                              </p>
+                              <p className="text-xs text-muted-foreground">{t.tenantId}</p>
                             </div>
                           </div>
                         </TableCell>
@@ -423,9 +386,7 @@ export default function PendingTicketsPage() {
                         <TableCell className="text-right tabular-nums font-medium">
                           {fmtVND(t.totalAmount)}
                         </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {t.playerCount}
-                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{t.playerCount}</TableCell>
                         <TableCell className="text-right tabular-nums text-muted-foreground">
                           {fmtVND(t.avgAmountPerPlayer)}
                         </TableCell>
@@ -468,11 +429,7 @@ export default function PendingTicketsPage() {
       {selectedTenant && selectedTenantData && (
         <>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedTenant(null)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setSelectedTenant(null)}>
               <ArrowLeft className="mr-1 size-4" />
               Quay lại
             </Button>
@@ -485,9 +442,7 @@ export default function PendingTicketsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>
-                Chi tiết vé – {selectedTenantData.tenantName}
-              </CardTitle>
+              <CardTitle>Chi tiết vé – {selectedTenantData.tenantName}</CardTitle>
               <CardDescription>
                 Danh sách entries chờ quay thưởng kỳ {PENDING_DRAW.drawId}
               </CardDescription>
@@ -496,10 +451,7 @@ export default function PendingTicketsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <div className="relative w-56">
                   <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Mã vé hoặc người chơi..."
-                    className="pl-8"
-                  />
+                  <Input placeholder="Mã vé hoặc người chơi..." className="pl-8" />
                 </div>
                 <Select defaultValue="all">
                   <SelectTrigger className="w-36">
@@ -546,13 +498,9 @@ export default function PendingTicketsPage() {
                   <TableBody>
                     {MOCK_TENANT_ENTRIES.map((entry) => (
                       <TableRow key={entry.entryId}>
-                        <TableCell className="font-mono text-sm">
-                          {entry.ticketNo}
-                        </TableCell>
+                        <TableCell className="font-mono text-sm">{entry.ticketNo}</TableCell>
                         <TableCell>{entry.playerName}</TableCell>
-                        <TableCell className="text-center">
-                          {entry.boards.length}
-                        </TableCell>
+                        <TableCell className="text-center">{entry.boards.length}</TableCell>
                         <TableCell className="text-center tabular-nums">
                           {entry.lineCount}
                         </TableCell>
@@ -588,16 +536,12 @@ export default function PendingTicketsPage() {
       )}
 
       {/* ─── Entry Detail Dialog ─── */}
-      <Dialog
-        open={!!entryDetail}
-        onOpenChange={(open) => !open && setEntryDetail(null)}
-      >
+      <Dialog open={!!entryDetail} onOpenChange={(open) => !open && setEntryDetail(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Chi tiết vé – {entryDetail?.ticketNo}</DialogTitle>
             <DialogDescription>
-              Người chơi: {entryDetail?.playerName} · Entry:{" "}
-              {entryDetail?.entryId}
+              Người chơi: {entryDetail?.playerName} · Entry: {entryDetail?.entryId}
             </DialogDescription>
           </DialogHeader>
           {entryDetail && (
@@ -605,9 +549,7 @@ export default function PendingTicketsPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-lg bg-muted/50 p-3 text-center">
                   <p className="text-xs text-muted-foreground">Lines</p>
-                  <p className="text-lg font-bold tabular-nums">
-                    {entryDetail.lineCount}
-                  </p>
+                  <p className="text-lg font-bold tabular-nums">{entryDetail.lineCount}</p>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3 text-center">
                   <p className="text-xs text-muted-foreground">Tiền cược</p>
@@ -626,10 +568,7 @@ export default function PendingTicketsPage() {
               <div className="space-y-3">
                 <h4 className="text-sm font-medium">Boards</h4>
                 {entryDetail.boards.map((board) => (
-                  <div
-                    key={board.boardNo}
-                    className="rounded-lg border p-3 space-y-2"
-                  >
+                  <div key={board.boardNo} className="rounded-lg border p-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="font-mono">
@@ -649,12 +588,7 @@ export default function PendingTicketsPage() {
                       ))}
                       <span className="mx-1 text-muted-foreground">+</span>
                       {board.specialNumbers.map((n) => (
-                        <LottoNumberBall
-                          key={n}
-                          number={n}
-                          variant="special"
-                          size="sm"
-                        />
+                        <LottoNumberBall key={n} number={n} variant="special" size="sm" />
                       ))}
                     </div>
                   </div>

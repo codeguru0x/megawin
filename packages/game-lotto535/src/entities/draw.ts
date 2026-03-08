@@ -127,6 +127,44 @@ export interface DrawStats {
   totalPayoutAmount?: number;
 }
 
+/**
+ * Tóm tắt giải thưởng 1 tier trong kỳ quay (denormalize cho player API).
+ *
+ * Chứa thông tin aggregate từ tất cả entries đã settle:
+ * - Số lượng người trúng (winnerCount = tổng hitCount)
+ * - Tổng tiền thưởng tier đó (prizeAmount)
+ */
+export interface DrawTierPrizeSummary {
+  /** Hạng giải (jackpot, tier1, tier2, ..., consolation). */
+  tier: string;
+
+  /** Tổng số lượt trúng tier này trong kỳ (= Σ hitCount tất cả entries). */
+  winnerCount: number;
+
+  /**
+   * Tổng tiền thưởng tier này (VND).
+   *
+   * Giải cố định: winnerCount × unitAmount.
+   * Jackpot: 0 lúc ghi (chưa patch), sẽ được cập nhật sau PatchJackpotPrize.
+   */
+  prizeAmount: number;
+}
+
+/**
+ * Tổng kết settle kỳ quay — denormalize trên draw để player API đọc trực tiếp.
+ *
+ * Ghi 1 lần duy nhất bởi CalculateFinancials (step 3), idempotent (overwrite).
+ * Lưu ý: jackpot tier prizeAmount ban đầu = 0, được cập nhật bởi PatchJackpotPrize.
+ *
+ * totalWinners và totalPrizeAmount được tính ở use case layer bằng cách sum từ tiers[]:
+ *   totalWinners      = tiers.reduce((s, t) => s + t.winnerCount, 0)
+ *   totalPrizeAmount  = tiers.reduce((s, t) => s + t.prizeAmount, 0)
+ */
+export interface DrawSettleSummary {
+  /** Chi tiết giải thưởng từng tier. */
+  tiers: DrawTierPrizeSummary[];
+}
+
 /** Thông tin khi kỳ quay bị huỷ. Chỉ có khi status = void. */
 export interface DrawVoidInfo {
   /** Lý do huỷ kỳ quay (do staff nhập). */
@@ -222,6 +260,9 @@ export interface DrawDoc {
 
   /** Thống kê vận hành kỳ quay. */
   stats?: DrawStats;
+
+  /** Tổng kết settle: số người trúng + tiền thưởng theo tier. Ghi sau settle. */
+  settleSummary?: DrawSettleSummary;
 
   /** Thông tin khi kỳ quay bị huỷ. Chỉ có khi status = void. */
   voidInfo?: DrawVoidInfo;

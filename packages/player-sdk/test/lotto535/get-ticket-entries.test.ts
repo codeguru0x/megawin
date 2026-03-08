@@ -24,7 +24,7 @@ const TICKET_WITH_ENTRIES = {
   },
   entries: [
     {
-      drawId: "2026-03-05-001",
+      drawId: "2026-03-05.001",
       drawDate: "2026-03-05",
       status: "settled",
       amount: 30000,
@@ -41,7 +41,7 @@ const TICKET_WITH_ENTRIES = {
       },
     },
     {
-      drawId: "2026-03-05-002",
+      drawId: "2026-03-05.002",
       drawDate: "2026-03-05",
       status: "pending",
       amount: 30000,

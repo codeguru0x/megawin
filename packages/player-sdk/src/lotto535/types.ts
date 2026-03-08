@@ -105,7 +105,7 @@ export interface Lotto535BoardInput {
  * import type { Lotto535TicketPurchaseInput } from "@megawin/player-sdk/lotto535";
  *
  * const input: Lotto535TicketPurchaseInput = {
- *   drawId: "2026-02-25-001",
+ *   drawId: "2026-02-25.001",
  *   drawCount: 3,
  *   boards: [
  *     {
@@ -132,7 +132,7 @@ export interface Lotto535TicketPurchaseInput {
   /**
    * DrawId kỳ quay đầu tiên tham gia.
    *
-   * Format: `YYYY-MM-DD-NNN` (vd `"2026-02-25-001"`)
+   * Format: `YYYY-MM-DD.NNN` (vd `"2026-02-25.001"`)
    */
   drawId: string;
 
@@ -157,7 +157,7 @@ export interface Lotto535TicketPurchaseInput {
  * Thông tin kỳ quay Lotto 5/35 cho UI.
  */
 export interface Lotto535DrawInfo {
-  /** ID kỳ quay. Format: `YYYY-MM-DD-NNN`. */
+  /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
   /** Ngày quay. Format: `YYYY-MM-DD`. */
   drawDate: string;
@@ -217,7 +217,7 @@ export interface Lotto535DrawResult {
 export interface Lotto535TicketSummary {
   /** ID vé. */
   id: string;
-  /** Mã vé hiển thị. */
+  /** Mã vé hiển thị. VD: `"L535-20260307-00008"`. */
   ticketNo: string;
   /** Trạng thái vé. */
   status: string;
@@ -353,6 +353,117 @@ export interface Lotto535SplitCycleInfo {
    * Đây là giá trị tham khảo khi chỉ có 1 winner mỗi tier.
    */
   estimatedBonusPerTier: Partial<Record<Lotto535PrizeTier, number>>;
+}
+
+// ─────────────────────────────────────────────
+// Response Types — Draw Results
+// ─────────────────────────────────────────────
+
+/**
+ * Chi tiết giải thưởng 1 tier trong kết quả kỳ quay.
+ */
+export interface Lotto535DrawTierPrize {
+  /** Hạng giải (jackpot, tier1, ..., consolation). */
+  tier: Lotto535PrizeTier;
+  /** Số lượt trúng tier này. */
+  winnerCount: number;
+  /** Tổng tiền thưởng tier này (VND). */
+  prizeAmount: number;
+}
+
+/**
+ * Kết quả chi tiết 1 kỳ quay Lotto 5/35 — dùng cho trang xem kết quả.
+ *
+ * Bao gồm: kết quả quay, jackpot snapshot, bảng giải thưởng chi tiết.
+ * Chỉ có cho draws đã settle.
+ *
+ * Dùng cho endpoint chi tiết: GET /games/lotto535/draw-results/:drawId
+ */
+export interface Lotto535DrawResultDetail {
+  /** Mã kỳ quay. Format: `YYYY-MM-DD.NNN`. */
+  drawId: string;
+  /** Ngày quay. Format: `YYYY-MM-DD`. */
+  drawDate: string;
+  /** Số thứ tự kỳ trong ngày (1 = 13h, 2 = 21h). */
+  drawNo: number;
+  /** Giờ quay (ISO 8601). */
+  drawTime: string;
+  /** Kết quả quay. */
+  result: {
+    /** 5 số chính trúng thưởng (sorted, zero-padded "01"-"35"). */
+    winningMain: string[];
+    /** Số đặc biệt trúng thưởng ("01"-"12"). */
+    winningSpecial: string;
+    /** Thời điểm công bố (ISO 8601). */
+    publishedAt: string;
+  };
+  /** Jackpot snapshot kỳ quay. */
+  jackpot: {
+    /** Jackpot đầu kỳ (VND). */
+    openingAmount: number;
+    /** Jackpot cuối kỳ (VND). */
+    closingAmount: number;
+    /** Kỳ chia giải Jackpot? */
+    isSplitCycle?: boolean;
+  };
+  /** Chi tiết giải thưởng từng tier. */
+  prizes: Lotto535DrawTierPrize[];
+  /** Tham chiếu Vietlott (nếu có). */
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+    drawSession: number;
+  };
+}
+
+/**
+ * Tóm tắt 1 kỳ quay Lotto 5/35 trong danh sách — kết quả + jackpot snapshot, không có bảng giải thưởng chi tiết.
+ *
+ * Dùng cho endpoint danh sách: GET /games/lotto535/draw-results
+ * Prize details xem ở: GET /games/lotto535/draw-results/:drawId
+ *
+ * @example
+ * ```ts
+ * const { draws } = await client.lotto535.listDrawResults({ size: 10 });
+ * for (const draw of draws) {
+ *   console.log(`Kỳ ${draw.drawId}: ${draw.result.winningMain.join(", ")}`);
+ *   console.log(`Jackpot: ${draw.jackpot.closingAmount.toLocaleString()} VND`);
+ * }
+ * ```
+ */
+export interface Lotto535DrawResultSummary {
+  /** Mã kỳ quay. Format: `YYYY-MM-DD.NNN`. */
+  drawId: string;
+  /** Ngày quay. Format: `YYYY-MM-DD`. */
+  drawDate: string;
+  /** Số thứ tự kỳ trong ngày (1 = 13h, 2 = 21h). */
+  drawNo: number;
+  /** Giờ quay (ISO 8601). */
+  drawTime: string;
+  /** Kết quả quay. */
+  result: {
+    /** 5 số chính trúng thưởng (sorted, zero-padded "01"-"35"). */
+    winningMain: string[];
+    /** Số đặc biệt trúng thưởng ("01"-"12"). */
+    winningSpecial: string;
+    /** Thời điểm công bố (ISO 8601). */
+    publishedAt: string;
+  };
+  /** Jackpot snapshot kỳ quay — hữu ích để hiển thị kỳ có trúng Jackpot không. */
+  jackpot: {
+    /** Jackpot đầu kỳ (VND). */
+    openingAmount: number;
+    /** Jackpot cuối kỳ (VND). */
+    closingAmount: number;
+    /** Kỳ chia giải Jackpot? */
+    isSplitCycle?: boolean;
+  };
+  /** Tham chiếu Vietlott (nếu có). */
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+    drawSession: number;
+  };
 }
 
 // ─────────────────────────────────────────────

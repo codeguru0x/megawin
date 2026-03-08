@@ -198,3 +198,85 @@ export interface PlayerGetTicketEntriesOutput {
   ticket: PlayerTicketSummary;
   entries: PlayerEntryInfo[];
 }
+
+// ─── Draw Result (Player) ───
+
+export interface PlayerListDrawResultsInput {
+  /** Lọc từ ngày (YYYY-MM-DD, inclusive). Handler luôn truyền (default = today VN). */
+  from: string;
+  size: number;
+  cursor?: string;
+}
+
+export interface PlayerListDrawResultsOutput {
+  draws: PlayerDrawResultSummary[];
+  nextCursor: string | null;
+  size: number;
+}
+
+/** Chi tiết giải thưởng 1 bậc chơi cơ bản trong kỳ quay. */
+export interface PlayerBasicPrize {
+  pickCount: number;
+  matchCount: number;
+  winnerCount: number;
+  prizePerUnit: number;
+}
+
+/** Chi tiết giải thưởng side bet trong kỳ quay. */
+export interface PlayerSideBetPrize {
+  /** Loại side bet: "bigSmall" | "evenOdd". */
+  playType: string;
+  /** Lựa chọn người chơi đặt và trúng: "big", "small", "bigSmallDraw", "even", "odd", ... */
+  bet: string;
+  winnerCount: number;
+  prizePerUnit: number;
+}
+
+/**
+ * Tóm tắt 1 kỳ quay Keno trong danh sách — chỉ trả kết quả draw, không có bảng giải thưởng.
+ * Dùng bởi GET /games/keno/draw-results (list).
+ * Prize details xem ở GET /games/keno/draw-results/:drawId (detail).
+ */
+export interface PlayerDrawResultSummary {
+  drawId: string;
+  drawDate: string;
+  drawNo: number;
+  drawTime: string;
+  result: {
+    winningNumbers: string[];
+    publishedAt: string;
+    bigCount: number;
+    smallCount: number;
+    evenCount: number;
+    oddCount: number;
+  };
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
+/**
+ * Chi tiết đầy đủ 1 kỳ quay Keno — bao gồm bảng giải thưởng.
+ * Dùng bởi GET /games/keno/draw-results/:drawId (detail).
+ */
+export interface PlayerDrawResultInfo {
+  drawId: string;
+  drawDate: string;
+  drawNo: number;
+  drawTime: string;
+  result: {
+    winningNumbers: string[];
+    publishedAt: string;
+    bigCount: number;
+    smallCount: number;
+    evenCount: number;
+    oddCount: number;
+  };
+  basicPrizes: PlayerBasicPrize[];
+  sideBetPrizes: PlayerSideBetPrize[];
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}

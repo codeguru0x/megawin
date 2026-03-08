@@ -3,17 +3,15 @@
  *
  * Format: "YYYY-MM-DD.NNN"
  *   - YYYY-MM-DD: ngày quay
- *   - NNN: số thứ tự kỳ quay trong ngày (001-288)
+ *   - NNN: số thứ tự kỳ quay trong ngày (001-096, zero-padded 3 chữ số)
  *
- * Keno quay mỗi 10 phút, từ 06:00 đến 21:55 = ~96 kỳ/ngày.
+ * Keno quay mỗi 8 phút, từ 06:00 đến 21:52 = 120 kỳ/ngày.
+ * drawNo tối đa 120 nên regex \d{3} và padStart(3) là đủ.
  */
 
 import type { ISODateString } from "../entities/types";
 
-export function generateKenoDrawId(
-  drawDate: ISODateString,
-  drawNo: number,
-): string {
+export function generateKenoDrawId(drawDate: ISODateString, drawNo: number): string {
   return `${drawDate}.${String(drawNo).padStart(3, "0")}`;
 }
 
@@ -34,12 +32,12 @@ export function parseKenoDrawId(
  *
  * @param startDrawId - DrawId kỳ đầu tiên
  * @param drawCount - Số kỳ tham gia
- * @param drawsPerDay - Số kỳ quay mỗi ngày (mặc định 96)
+ * @param drawsPerDay - Số kỳ quay mỗi ngày (mặc định 120)
  */
 export function generateKenoDrawIdSequence(
   startDrawId: string,
   drawCount: number,
-  drawsPerDay: number = 96,
+  drawsPerDay: number = 120,
 ): string[] {
   const parsed = parseKenoDrawId(startDrawId);
   if (!parsed) {
@@ -69,13 +67,13 @@ export function generateKenoDrawIdSequence(
  *
  * @param time - Giờ:phút format "HH:mm"
  * @param firstDrawTime - Giờ kỳ đầu tiên (default "06:00")
- * @param intervalMinutes - Khoảng cách giữa các kỳ (default 10)
+ * @param intervalMinutes - Khoảng cách giữa các kỳ (default 8)
  * @returns drawNo (1-based)
  */
 export function calculateDrawNo(
   time: string,
   firstDrawTime: string = "06:00",
-  intervalMinutes: number = 10,
+  intervalMinutes: number = 8,
 ): number {
   const [h, m] = time.split(":").map(Number);
   const [fh, fm] = firstDrawTime.split(":").map(Number);

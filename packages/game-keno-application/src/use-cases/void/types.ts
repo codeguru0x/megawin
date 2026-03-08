@@ -52,7 +52,7 @@ export interface VoidContext {
 
   /**
    * Số thứ tự kỳ quay trong ngày.
-   * Keno quay mỗi 10 phút (~96 kỳ/ngày).
+   * Keno quay mỗi 8 phút (~120 kỳ/ngày).
    * Dùng cho logging và nhận diện kỳ quay.
    */
   drawNo: number;

@@ -177,15 +177,6 @@ export abstract class AbstractTicketRepository<
     };
   }
 
-  /**
-   * Aggregate expression để lấy void count hiện tại từ document.
-   * Dùng trong filter $expr của updateOne để đảm bảo idempotent.
-   * Max3D/Max3DPro override nếu void count track theo field khác.
-   */
-  protected getVoidCountAggExpr(): unknown {
-    return { $ifNull: ["$voidSummary.voidedDrawCount", 0] };
-  }
-
   async bulkSyncSummaries(
     items: Array<{ ticketId: string; summary: TicketSummary }>,
   ): Promise<number> {
@@ -207,7 +198,7 @@ export abstract class AbstractTicketRepository<
       }
 
       const $set: Record<string, unknown> = {
-        "progress.settledDraws": settledCount,
+        "progress.settledDraws": processedCount,
         updatedAt: now,
       };
 
@@ -228,12 +219,7 @@ export abstract class AbstractTicketRepository<
           filter: {
             _id: new ObjectId(ticketId),
             $expr: {
-              $lte: [
-                {
-                  $add: [{ $ifNull: ["$progress.settledDraws", 0] }, this.getVoidCountAggExpr()],
-                },
-                processedCount,
-              ],
+              $lte: [{ $ifNull: ["$progress.settledDraws", 0] }, processedCount],
             },
           },
           update: { $set, $inc: { version: 1 } },
@@ -259,7 +245,7 @@ export abstract class AbstractTicketRepository<
     }
 
     const $set: Record<string, unknown> = {
-      "progress.settledDraws": settledCount,
+      "progress.settledDraws": processedCount,
       updatedAt: now,
     };
 
@@ -279,12 +265,7 @@ export abstract class AbstractTicketRepository<
       {
         _id: ticketId,
         $expr: {
-          $lte: [
-            {
-              $add: [{ $ifNull: ["$progress.settledDraws", 0] }, this.getVoidCountAggExpr()],
-            },
-            processedCount,
-          ],
+          $lte: [{ $ifNull: ["$progress.settledDraws", 0] }, processedCount],
         },
       },
       { $set, $inc: { version: 1 } },

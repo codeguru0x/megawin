@@ -17,7 +17,7 @@ Keno là game xổ số tự chọn quay số nhanh của Vietlott, ra mắt 23/
 
 - **Tập số**: 01 - 80 (80 số)
 - **Kết quả quay**: Hệ thống quay ngẫu nhiên **20 số** từ tập 01-80 mỗi kỳ
-- **Tần suất quay**: **10 phút/kỳ**, ~96 kỳ/ngày
+- **Tần suất quay**: **8 phút/kỳ**, ~120 kỳ/ngày
 - **Phát hành**: 06h00 - 21h55, Thứ Hai - Chủ Nhật
 - **Mệnh giá**: 10.000 VND / lần tham gia dự thưởng
 - **Kỳ liên tiếp**: Tối đa 20 kỳ liên tiếp
@@ -166,7 +166,7 @@ created → salesOpen → salesClosed → published → settled → (completed)
                                                         → voided (hủy kỳ)
 ```
 
-Keno quay mỗi 10 phút nên flow cần tự động hóa cao hơn Lotto 5/35.
+Keno quay mỗi 8 phút nên flow cần tự động hóa cao hơn Lotto 5/35.
 
 ### 7.2 Ticket lifecycle
 
@@ -201,7 +201,7 @@ prepare-void → void-entries → dispatch-refunds → finalize-void
 
 | Đặc điểm | Keno | Lotto 5/35 |
 |-----------|------|-----------|
-| Tần suất quay | 10 phút/kỳ (~96 kỳ/ngày) | 2 kỳ/ngày |
+| Tần suất quay | 8 phút/kỳ (~120 kỳ/ngày) | 2 kỳ/ngày |
 | Jackpot | KHÔNG | Có (tích lũy) |
 | Split cycle | KHÔNG | Có (khi JP >= 12 tỷ) |
 | Tập số | 01-80 (quay 20 số) | 01-35 chính + 01-12 ĐB |
@@ -345,7 +345,7 @@ Keno sử dụng chung:
 5. **Side bets độc lập**: Lớn/Nhỏ và Chẵn/Lẻ là cược riêng, không phụ thuộc cách chơi cơ bản
 6. **Giải an ủi 0 số**: CHỈ pick8, pick9, pick10 có giải khi trùng 0 số (10.000 VND)
 7. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc.basicPrizes`, `bigSmallPrizes`, `evenOddPrizes`, có thể thay đổi bởi staff
-8. **Tần suất cao**: 10 phút/kỳ → settle phải nhanh, tự động hóa cao
+8. **Tần suất cao**: 8 phút/kỳ → settle phải nhanh, tự động hóa cao
 9. **DrawId unique**: Format khác Lotto 5/35, dùng DrawCounterDoc auto-increment
 10. **Ticket structure**: 2 panel cơ bản (boards) + side bets riêng (Panel C), KHÔNG phải 5 boards
 11. **Commission snapshot**: commissionRate snapshot lúc place-bet, không thay đổi khi config update sau

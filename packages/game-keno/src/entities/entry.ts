@@ -220,10 +220,24 @@ export interface EntrySideBetPayout {
   playType: KenoPlayType;
   /** Lựa chọn cụ thể: "big"/"small"/"bigSmallDraw"/... */
   bet: KenoBigSmallBet | KenoEvenOddBet;
-  /** Kết quả: "big13Plus", "draw", "even1314"... */
+  /**
+   * Kết quả draw đối với bet này: "big13Plus", "draw", "even1314"...
+   * LƯU Ý: `outcome` mô tả trạng thái draw, KHÔNG phải player win/lose.
+   * Ví dụ: player đặt "big", draw ra 8 số lớn → outcome = "big8", isWin = false.
+   *         player đặt "small", draw ra 8 số lớn → cùng outcome = "big8", isWin = true.
+   */
   outcome: string;
-  /** true nếu trúng. */
+  /**
+   * Convenience alias cho `winAmount > 0`. Invariant đảm bảo bởi matchBigSmallBet/matchEvenOddBet:
+   *   isWin = true  ↔  winAmount > 0  (luôn đúng, không có ngoại lệ)
+   *   isWin = false ↔  winAmount = 0
+   *
+   * Tại sao giữ dù redundant với winAmount?
+   *   - Client đọc win/lose trực tiếp mà không cần parse winAmount
+   *   - EntryBoardPayout không có field này vì matchCount đã là semantic richer
+   *   - Asymmetry có chủ đích: boardPayout dùng winAmount > 0, sideBetPayout dùng isWin
+   */
   isWin: boolean;
-  /** Tiền thắng (VND). 0 nếu không trúng. */
+  /** Tiền thắng (VND). 0 nếu không trúng. Ground truth của win/lose. */
   winAmount: number;
 }

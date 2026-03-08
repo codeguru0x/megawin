@@ -1,21 +1,10 @@
 "use client";
 
-import {
-  CalendarClock,
-  ChevronLeft,
-  ChevronRight,
-  Trophy,
-} from "lucide-react";
+import { CalendarClock, ChevronLeft, ChevronRight, Trophy } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -35,12 +24,10 @@ const MOCK_RESULTS = [
     drawTime: "13:00",
     status: "settled",
     jackpotAmount: 3_200_000_000,
-    result: { winningMain: [3, 12, 17, 24, 31] as const, winningSpecial: 7 },
+    result: { winningMain: ["03", "12", "17", "24", "31"] as const, winningSpecial: "07" },
     myTickets: 5,
     myWin: 60_000,
-    prizes: [
-      { tier: "Giải Năm", count: 2, amount: 60_000 },
-    ],
+    prizes: [{ tier: "Giải Năm", count: 2, amount: 60_000 }],
   },
   {
     drawId: "2026-02-21-002",
@@ -49,7 +36,7 @@ const MOCK_RESULTS = [
     drawTime: "21:00",
     status: "settled",
     jackpotAmount: 3_000_000_000,
-    result: { winningMain: [1, 14, 19, 27, 33] as const, winningSpecial: 4 },
+    result: { winningMain: ["01", "14", "19", "27", "33"] as const, winningSpecial: "04" },
     myTickets: 3,
     myWin: 0,
     prizes: [],
@@ -61,7 +48,7 @@ const MOCK_RESULTS = [
     drawTime: "13:00",
     status: "settled",
     jackpotAmount: 2_800_000_000,
-    result: { winningMain: [5, 9, 22, 28, 35] as const, winningSpecial: 11 },
+    result: { winningMain: ["05", "09", "22", "28", "35"] as const, winningSpecial: "11" },
     myTickets: 8,
     myWin: 130_000,
     prizes: [
@@ -75,9 +62,7 @@ export default function TenantResultsPage() {
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       <div>
-        <h1 className="text-lg font-semibold tracking-tight md:text-2xl">
-          Lotto 5/35 – Kết quả
-        </h1>
+        <h1 className="text-lg font-semibold tracking-tight md:text-2xl">Lotto 5/35 – Kết quả</h1>
         <p className="text-sm text-muted-foreground">
           Xem kết quả các kỳ quay và đối soát vé trúng thưởng.
         </p>
@@ -89,9 +74,7 @@ export default function TenantResultsPage() {
           <div className="flex items-center gap-3">
             <Trophy className="size-8 text-amber-500" />
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Jackpot hiện tại
-              </p>
+              <p className="text-sm font-medium text-muted-foreground">Jackpot hiện tại</p>
               <JackpotDisplay amount={3_450_000_000} size="lg" />
             </div>
           </div>
@@ -142,24 +125,17 @@ export default function TenantResultsPage() {
                   <JackpotDisplay amount={draw.jackpotAmount} size="sm" />
                 </div>
               </div>
-              <CardDescription className="font-mono text-xs">
-                {draw.drawId}
-              </CardDescription>
+              <CardDescription className="font-mono text-xs">{draw.drawId}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Winning Numbers */}
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground mr-2">
-                  Kết quả:
-                </span>
+                <span className="text-sm font-medium text-muted-foreground mr-2">Kết quả:</span>
                 {draw.result.winningMain.map((n) => (
                   <LottoNumberBall key={n} number={n} />
                 ))}
                 <span className="mx-1 text-lg text-muted-foreground">+</span>
-                <LottoNumberBall
-                  number={draw.result.winningSpecial}
-                  variant="special"
-                />
+                <LottoNumberBall number={draw.result.winningSpecial} variant="special" />
               </div>
 
               {/* My Performance */}
@@ -170,10 +146,10 @@ export default function TenantResultsPage() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Tiền thắng</p>
-                  <p className={`text-lg font-bold tabular-nums ${draw.myWin > 0 ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
-                    {draw.myWin > 0
-                      ? draw.myWin.toLocaleString("vi-VN") + " ₫"
-                      : "—"}
+                  <p
+                    className={`text-lg font-bold tabular-nums ${draw.myWin > 0 ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}
+                  >
+                    {draw.myWin > 0 ? draw.myWin.toLocaleString("vi-VN") + " ₫" : "—"}
                   </p>
                 </div>
                 {draw.prizes.length > 0 && (

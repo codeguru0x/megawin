@@ -139,12 +139,14 @@ export class TokenManager {
     if (!tokens) return null;
 
     if (!this.isExpired(tokens)) {
-      return tokens.idToken ?? tokens.accessToken;
+      // idToken là bắt buộc — không fallback sang accessToken vì API Gateway
+      // JWT authorizer yêu cầu aud claim chỉ có trên idToken.
+      return tokens.idToken ?? null;
     }
 
     const refreshed = await this.refreshIfNeeded(tokens);
     if (!refreshed) return null;
-    return refreshed.idToken ?? refreshed.accessToken;
+    return refreshed.idToken ?? null;
   }
 
   async getTokens(): Promise<AuthTokens | null> {

@@ -62,7 +62,7 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { PrizeTier } from "@megawin/game-lotto535/entities";
+import { PrizeTier, type DrawTierPrizeSummary } from "@megawin/game-lotto535/entities";
 import {
   calculateDrawFinancials,
   calculateSplitDistribution,
@@ -178,7 +178,23 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
     // KHÔNG liên quan đến closingJackpot ở đây.
     const closingJackpot = jackpotOpeningAmount + fin.jackpotContribution;
 
-    // ── BƯỚC 6: Ghi financial + stats vào draw document (idempotent overwrite) ──
+    // ── BƯỚC 6+7: Ghi financial + stats + settleSummary vào draw (1 DB call) ──
+    // settleSummary denormalize bảng giải thưởng cho player API.
+    // Jackpot tier prizeAmount = 0 ở đây — PatchJackpotPrize (step 4a) sẽ patch sau.
+    const tiers: DrawTierPrizeSummary[] = [];
+
+    for (const tier of Object.values(PrizeTier)) {
+      const winnerCount = settleSummary.tierWinnerCounts[tier] ?? 0;
+      if (winnerCount === 0) continue;
+
+      const unitAmount = input.prizeAmounts[tier] ?? 0;
+      tiers.push({
+        tier,
+        winnerCount,
+        prizeAmount: unitAmount * winnerCount,
+      });
+    }
+
     await this.drawRepo.updateSettleResult(
       drawId,
       {
@@ -196,6 +212,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
         totalSalesAmount: fin.totalRevenue,
         totalPayoutAmount: settleSummary.totalPayoutAmount,
       },
+      { tiers },
     );
 
     return {

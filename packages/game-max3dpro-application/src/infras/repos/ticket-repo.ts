@@ -34,14 +34,6 @@ export class TicketRepository extends AbstractTicketRepository<TicketEntity, Tic
   ): Record<string, unknown> {
     return {};
   }
-
-  /**
-   * Max3DPro không track voidedDrawCount trong voidSummary (board-level).
-   * Trả về 0 để processedCount filter không bị phá vỡ.
-   */
-  protected override getVoidCountAggExpr(): unknown {
-    return 0;
-  }
 }
 
 export type { TicketEntity };

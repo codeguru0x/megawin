@@ -71,3 +71,21 @@ lotto535-get-entry-lines:
         method: get
         authorizer:
           name: cognitoPlayerAuth
+
+lotto535-list-draw-results:
+  handler: src/handlers/lotto535/list-draw-results.handler
+  events:
+    - httpApi:
+        path: /games/lotto535/draw-results
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+lotto535-get-draw-result:
+  handler: src/handlers/lotto535/get-draw-result.handler
+  events:
+    - httpApi:
+        path: /games/lotto535/draw-results/{drawId}
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

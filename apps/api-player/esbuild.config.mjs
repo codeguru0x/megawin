@@ -4,10 +4,11 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default (serverless) => {
+  const stage = serverless?.service?.provider?.stage;
   return {
     bundle: true,
     minify: true,
-    sourcemap: "linked",
+    sourcemap: stage === "local" || stage === undefined ? "linked" : false,
     platform: "node",
     target: "node24",
     format: "esm",

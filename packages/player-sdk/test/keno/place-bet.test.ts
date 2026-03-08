@@ -16,7 +16,7 @@ describe("keno.placeBet", () => {
       ticketId: "65abc123",
       ticketNo: "K-20260225-001-0001",
       status: "active",
-      drawPlan: { drawIds: ["2026-02-25-001"], drawCount: 1 },
+      drawPlan: { drawIds: ["2026-02-25.001"], drawCount: 1 },
       pricing: { unitPrice: 10000, betsPerDraw: 1, amountPerDraw: 10000, totalAmount: 10000 },
       boardCount: 1,
       sideBetCount: 0,
@@ -26,7 +26,7 @@ describe("keno.placeBet", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const input: KenoTicketPurchaseInput = {
-      drawIds: ["2026-02-25-001"],
+      drawIds: ["2026-02-25.001"],
       boards: [{ boardNo: "A", numbers: ["01", "15", "33", "44", "60"] }],
     };
 
@@ -46,7 +46,7 @@ describe("keno.placeBet", () => {
       ticketId: "65abc",
       ticketNo: "K-001",
       status: "active",
-      drawPlan: { drawIds: ["2026-02-25-001"], drawCount: 1 },
+      drawPlan: { drawIds: ["2026-02-25.001"], drawCount: 1 },
       pricing: { unitPrice: 10000, betsPerDraw: 1, amountPerDraw: 10000, totalAmount: 10000 },
       boardCount: 1,
       sideBetCount: 0,
@@ -55,7 +55,7 @@ describe("keno.placeBet", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await client.keno.placeBet({
-      drawIds: ["2026-02-25-001"],
+      drawIds: ["2026-02-25.001"],
       boards: [{ boardNo: "A", numbers: ["01"] }],
     });
 
@@ -68,7 +68,7 @@ describe("keno.placeBet", () => {
 
     await expect(
       client.keno.placeBet({
-        drawIds: ["2026-02-25-001"],
+        drawIds: ["2026-02-25.001"],
         boards: [{ boardNo: "A", numbers: ["01"] }],
       }),
     ).rejects.toThrow("Không đủ số dư");
@@ -80,7 +80,7 @@ describe("keno.placeBet", () => {
       ticketNo: "K-20260225-001-0002",
       status: "active",
       drawPlan: {
-        drawIds: ["2026-02-25-001", "2026-02-25-002", "2026-02-25-003"],
+        drawIds: ["2026-02-25.001", "2026-02-25.002", "2026-02-25.003"],
         drawCount: 3,
       },
       pricing: { unitPrice: 10000, betsPerDraw: 3, amountPerDraw: 30000, totalAmount: 90000 },
@@ -92,7 +92,7 @@ describe("keno.placeBet", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const input: KenoTicketPurchaseInput = {
-      drawIds: ["2026-02-25-001", "2026-02-25-002", "2026-02-25-003"],
+      drawIds: ["2026-02-25.001", "2026-02-25.002", "2026-02-25.003"],
       boards: [{ boardNo: "A", numbers: ["01", "15", "33"] }],
       sideBets: [{ playType: "bigSmall", bet: "big" }],
     };

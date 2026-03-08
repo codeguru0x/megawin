@@ -133,9 +133,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         throw AppException.badRequest(`Kỳ quay ${drawId} không tồn tại.`);
       }
       if (draw.status !== DrawStatus.SalesOpen) {
-        throw AppException.badRequest(
-          `Kỳ quay ${drawId} không đang mở bán (status: ${draw.status}).`,
-        );
+        throw AppException.badRequest(`Kỳ quay ${drawId} không đang mở bán.`);
       }
       if (draw.sales?.closeAt && new Date() >= draw.sales.closeAt) {
         throw AppException.badRequest(`Kỳ quay ${drawId} đã hết thời gian nhận cược.`);

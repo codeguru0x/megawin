@@ -86,7 +86,7 @@ export interface KenoSideBetInput {
  *
  * // Cược cơ bản 1 kỳ
  * const input: KenoTicketPurchaseInput = {
- *   drawIds: ["2026-02-25-001"],
+ *   drawIds: ["2026-02-25.001"],
  *   boards: [
  *     { boardNo: "A", numbers: ["01", "15", "33", "44", "60"] },
  *   ],
@@ -94,7 +94,7 @@ export interface KenoSideBetInput {
  *
  * // Cược nhiều kỳ + side bet
  * const input2: KenoTicketPurchaseInput = {
- *   drawIds: ["2026-02-25-001", "2026-02-25-002", "2026-02-25-003"],
+ *   drawIds: ["2026-02-25.001", "2026-02-25.002", "2026-02-25.003"],
  *   boards: [
  *     { boardNo: "A", numbers: ["01", "15", "33", "44", "60"] },
  *     { boardNo: "B", numbers: ["22", "44", "66"] },
@@ -110,7 +110,7 @@ export interface KenoTicketPurchaseInput {
   /**
    * Danh sách drawId các kỳ quay tham gia.
    *
-   * - Format mỗi ID: `YYYY-MM-DD-NNN` (vd `"2026-02-25-001"`)
+   * - Format mỗi ID: `YYYY-MM-DD.NNN` (vd `"2026-02-25.001"`)
    * - Tối thiểu 1, tối đa 30 kỳ
    * - Không được trùng lặp
    */
@@ -209,7 +209,7 @@ export interface KenoListAllTicketsParams {
  * Khớp với `PlayerDrawInfo` từ API.
  */
 export interface KenoDrawInfo {
-  /** ID kỳ quay. Format: `YYYY-MM-DD-NNN`. */
+  /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
   /** Ngày quay. Format: `YYYY-MM-DD`. */
   drawDate: string;
@@ -233,7 +233,7 @@ export interface KenoDrawInfo {
  * Kết quả kỳ quay gần nhất.
  */
 export interface KenoLastResult {
-  /** ID kỳ quay. Format: `YYYY-MM-DD-NNN`. */
+  /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
   /** Ngày quay. Format: `YYYY-MM-DD`. */
   drawDate: string;
@@ -255,7 +255,7 @@ export interface KenoLastResult {
  * const data = await client.keno.getCurrentDraw();
  *
  * if (data.currentDraw) {
- *   console.log(data.currentDraw.drawId);           // "2026-02-25-100"
+ *   console.log(data.currentDraw.drawId);           // "2026-02-25.100"
  *   console.log(data.currentDraw.sales.closeAt);     // "2026-02-25T13:05:00Z"
  * }
  *
@@ -297,7 +297,7 @@ export interface KenoCurrentDrawResponse {
 export interface KenoTicketSummary {
   /** ID vé trong hệ thống. */
   id: string;
-  /** Mã vé hiển thị cho người chơi. VD: `"K-20260225-001-0001"`. */
+  /** Mã vé hiển thị cho người chơi. VD: `"KENO-20260307-00001"`. */
   ticketNo: string;
   /** Trạng thái vé. */
   status: string;
@@ -505,7 +505,7 @@ export interface KenoEntryPayoutSummary {
 export interface KenoEntryInfo {
   /** ID entry trong hệ thống. */
   id: string;
-  /** ID kỳ quay. Format: `YYYY-MM-DD-NNN`. */
+  /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
   /** Ngày quay. Format: `YYYY-MM-DD`. */
   drawDate: string;
@@ -518,7 +518,7 @@ export interface KenoEntryInfo {
 
   /** Bản sao thông tin cược tại thời điểm đặt. */
   entrySummary: {
-    /** Mã vé. */
+    /** Mã vé. VD: `"KENO-20260307-00001"`. */
     ticketNo: string;
     /** Boards đã cược. */
     boards: Array<{
@@ -549,7 +549,7 @@ export interface KenoEntryInfo {
  * @example
  * ```ts
  * const data = await client.keno.getTicketEntries("65abc123def456...");
- * console.log(data.ticket.ticketNo);  // "K-20260225-001-0001"
+ * console.log(data.ticket.ticketNo);  // "KENO-20260307-00001"
  * console.log(data.entries.length);    // 5 (nếu mua 5 kỳ)
  *
  * const settled = data.entries.filter(e => e.payout);
@@ -575,18 +575,18 @@ export interface KenoTicketEntriesResponse {
  * @example
  * ```ts
  * const result = await client.keno.placeBet({
- *   drawIds: ["2026-02-25-001"],
+ *   drawIds: ["2026-02-25.001"],
  *   boards: [{ boardNo: "A", numbers: ["01", "15", "33", "44", "60"] }],
  * });
  * console.log(result.ticketId);            // "65abc..."
- * console.log(result.ticketNo);            // "K-20260225-001-0001"
+ * console.log(result.ticketNo);            // "KENO-20260307-00001"
  * console.log(result.pricing.totalAmount); // 10000
  * ```
  */
 export interface KenoPlaceBetResponse {
   /** ID vé duy nhất trong hệ thống. */
   ticketId: string;
-  /** Mã vé hiển thị cho người chơi. */
+  /** Mã vé hiển thị cho người chơi. VD: `"KENO-20260307-00001"`. */
   ticketNo: string;
   /** Trạng thái vé sau khi tạo. */
   status: string;
@@ -646,15 +646,22 @@ export interface KenoGameRules {
 /**
  * Bảng giải thưởng cơ bản Keno.
  *
- * Truy cập: `basic[pickCount][matchCount]` = tiền thưởng (VND).
+ * Key ngoài là `pickCount` (số ô đã chọn: `"1"`–`"10"`),
+ * key trong là `matchCount` (số trùng với kết quả: `"0"`–`"10"`),
+ * value là tiền thưởng (VND).
+ *
+ * JSON trả về key dạng string (`"5"`, `"10"`) — dùng string khi truy cập.
  *
  * @example
  * ```ts
- * config.prizes.basic[5][3]; // giải pick5 trùng 3 số
- * config.prizes.basic[10][10]; // giải pick10 trùng 10 số (jackpot)
+ * // Giải pick5 trùng 3 số
+ * const prize = config.prizes.basic["5"]["3"]; // 10000
+ *
+ * // Giải pick10 trùng 10 số (jackpot)
+ * const jackpot = config.prizes.basic["10"]["10"]; // 1500000000
  * ```
  */
-export type KenoBasicPrizesConfig = Record<number, Record<number, number>>;
+export type KenoBasicPrizesConfig = Record<string, Record<string, number>>;
 
 /**
  * Bảng giải thưởng Lớn/Nhỏ.
@@ -816,4 +823,199 @@ export interface KenoPrizeTableInfo {
     /** Tiền thưởng (VND). */
     prize: number;
   }>;
+}
+
+// ─────────────────────────────────────────────
+// Response Types — Draw Results (kết quả kỳ quay)
+// ─────────────────────────────────────────────
+
+/**
+ * Chi tiết giải thưởng 1 bậc chơi cơ bản trong kỳ quay.
+ *
+ * Ví dụ: "Trúng 10 trong 20 số" → pickCount=10, matchCount=10, winnerCount=5, prizePerUnit=2000000000
+ */
+export interface KenoBasicPrizeDetail {
+  /** Bậc chơi (pickCount): 1-10. */
+  pickCount: number;
+  /** Số trùng khớp (matchCount): 0-pickCount. */
+  matchCount: number;
+  /** Tổng số bộ trúng. */
+  winnerCount: number;
+  /** Tiền thưởng mỗi bộ (VND). Bậc 8/9/10 có thể bị cap. */
+  prizePerUnit: number;
+}
+
+/**
+ * Chi tiết giải thưởng side bet (Lớn/Nhỏ, Chẵn/Lẻ) trong kỳ quay.
+ *
+ * Mô hình đối xứng với KenoBasicPrizeDetail:
+ *   BasicPrize:  {pickCount, matchCount} → {winnerCount, prizePerUnit}
+ *   SideBetPrize: {playType, bet}        → {winnerCount, prizePerUnit}
+ *
+ * Ví dụ: 5 người đặt "big" trúng → playType="bigSmall", bet="big", winnerCount=5, prizePerUnit=26000
+ */
+export interface KenoSideBetPrizeDetail {
+  /**
+   * Loại side bet: `"bigSmall"` (Lớn/Nhỏ) hoặc `"evenOdd"` (Chẵn/Lẻ).
+   */
+  playType: string;
+  /**
+   * Lựa chọn người chơi đặt và trúng.
+   * - bigSmall: `"big"` | `"small"` | `"bigSmallDraw"`
+   * - evenOdd:  `"even"` | `"odd"` | `"even1112"` | `"odd1112"` | `"evenOddDraw"`
+   */
+  bet: string;
+  /** Số người đặt cược trúng với bet value này. */
+  winnerCount: number;
+  /** Tiền thưởng mỗi lần cược (VND). */
+  prizePerUnit: number;
+}
+
+/**
+ * Tham số truy vấn danh sách kết quả kỳ quay Keno.
+ *
+ * @example
+ * ```ts
+ * const page1 = await client.keno.listDrawResults({ size: 10 });
+ *
+ * // Lọc từ ngày
+ * const filtered = await client.keno.listDrawResults({
+ *   size: 10,
+ *   from: "2026-03-01",
+ * });
+ *
+ * // Trang tiếp theo
+ * if (page1.nextCursor) {
+ *   const page2 = await client.keno.listDrawResults({
+ *     size: 10,
+ *     cursor: page1.nextCursor,
+ *   });
+ * }
+ * ```
+ */
+export interface KenoListDrawResultsParams {
+  /** Số kỳ mỗi trang (mặc định 20). */
+  size?: number;
+  /**
+   * Lọc từ ngày (ISO date `YYYY-MM-DD`, inclusive).
+   * Mặc định = ngày hôm nay (giờ VN) nếu không truyền.
+   * Khi paginate với cursor, phải truyền cùng `from` với request đầu tiên.
+   */
+  from?: string;
+  /** Cursor cho trang tiếp theo (drawId từ response trước). */
+  cursor?: string;
+}
+
+/**
+ * Kết quả 1 kỳ quay Keno cho player.
+ *
+ * Chứa 20 số trúng, stats Chẵn/Lẻ + Lớn/Nhỏ, và bảng giải thưởng
+ * theo bậc chơi (có số lượng người trúng).
+ *
+ * Dùng cho endpoint chi tiết: GET /games/keno/draw-results/:drawId
+ */
+export interface KenoDrawResultDetail {
+  /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
+  drawId: string;
+  /** Ngày quay. Format: `YYYY-MM-DD`. */
+  drawDate: string;
+  /** Số thứ tự kỳ quay trong ngày. */
+  drawNo: number;
+  /** Thời điểm quay (ISO 8601). */
+  drawTime: string;
+
+  /** Kết quả kỳ quay. */
+  result: {
+    /** 20 số trúng thưởng dạng string "01"-"80". */
+    winningNumbers: string[];
+    /** Thời điểm công bố (ISO 8601). */
+    publishedAt: string;
+    /** Số lượng số lớn (41-80). */
+    bigCount: number;
+    /** Số lượng số nhỏ (1-40). */
+    smallCount: number;
+    /** Số lượng số chẵn. */
+    evenCount: number;
+    /** Số lượng số lẻ. */
+    oddCount: number;
+  };
+
+  /** Bảng giải thưởng cơ bản — chỉ chứa bậc có người trúng. */
+  basicPrizes: KenoBasicPrizeDetail[];
+
+  /** Bảng giải thưởng side bet (Lớn/Nhỏ, Chẵn/Lẻ) — chỉ chứa bet values có người trúng. */
+  sideBetPrizes: KenoSideBetPrizeDetail[];
+
+  /** Tham chiếu Vietlott. */
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
+/**
+ * Tóm tắt 1 kỳ quay Keno trong danh sách — chỉ trả kết quả draw, không có bảng giải thưởng.
+ *
+ * Dùng cho endpoint danh sách: GET /games/keno/draw-results
+ * Prize details xem ở: GET /games/keno/draw-results/:drawId
+ *
+ * @example
+ * ```ts
+ * const { draws } = await client.keno.listDrawResults({ size: 10 });
+ * for (const draw of draws) {
+ *   console.log(`Kỳ ${draw.drawId}: ${draw.result.winningNumbers.join(", ")}`);
+ *   console.log(`Chẵn: ${draw.result.evenCount}, Lẻ: ${draw.result.oddCount}`);
+ * }
+ * ```
+ */
+export interface KenoDrawResultSummary {
+  /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
+  drawId: string;
+  /** Ngày quay. Format: `YYYY-MM-DD`. */
+  drawDate: string;
+  /** Số thứ tự kỳ quay trong ngày. */
+  drawNo: number;
+  /** Thời điểm quay (ISO 8601). */
+  drawTime: string;
+
+  /** Kết quả kỳ quay. */
+  result: {
+    /** 20 số trúng thưởng dạng string "01"-"80". */
+    winningNumbers: string[];
+    /** Thời điểm công bố (ISO 8601). */
+    publishedAt: string;
+    /** Số lượng số lớn (41-80). */
+    bigCount: number;
+    /** Số lượng số nhỏ (1-40). */
+    smallCount: number;
+    /** Số lượng số chẵn. */
+    evenCount: number;
+    /** Số lượng số lẻ. */
+    oddCount: number;
+  };
+
+  /** Tham chiếu Vietlott. */
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
+/**
+ * Response phân trang danh sách kết quả kỳ quay Keno.
+ *
+ * @example
+ * ```ts
+ * const page = await client.keno.listDrawResults({ size: 10 });
+ * console.log(page.draws.length);  // tối đa 10
+ * console.log(page.nextCursor);    // "2026-03-07.095" hoặc null
+ * ```
+ */
+export interface KenoListDrawResultsResponse {
+  /** Danh sách tóm tắt kỳ quay (không có bảng giải thưởng). */
+  draws: KenoDrawResultSummary[];
+  /** Cursor cho trang tiếp theo. `null` nếu hết. */
+  nextCursor: string | null;
+  /** Số lượng kỳ yêu cầu (echo lại size). */
+  size: number;
 }

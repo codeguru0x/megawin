@@ -9,7 +9,7 @@
  *   kenoTickets, kenoTicketEntries, kenoDraws, kenoGameConfigs
  *
  * Keno Vietlott:
- * - Quay 20 số từ tập 01-80, mỗi 10 phút 1 kỳ, ~288 kỳ/ngày
+ * - Quay 20 số từ tập 01-80, mỗi 8 phút 1 kỳ, ~120 kỳ/ngày
  * - Cách chơi cơ bản: chọn 1-10 số
  * - Cách chơi bổ sung: Lớn/Nhỏ, Chẵn/Lẻ
  */
@@ -86,9 +86,7 @@ export const KENO_SIDE_BET_PLAY_TYPES: readonly KenoPlayType[] = [
 ];
 
 /** Narrowed type cho side bet play types — dùng trong SideBet interface. */
-export type KenoSideBetPlayType =
-  | typeof KenoPlayType.BigSmall
-  | typeof KenoPlayType.EvenOdd;
+export type KenoSideBetPlayType = typeof KenoPlayType.BigSmall | typeof KenoPlayType.EvenOdd;
 
 // ─────────────────────────────────────────────
 // Side Bet Selection – Cách chơi bổ sung
@@ -108,8 +106,7 @@ export const KenoBigSmallBet = {
   Small: "small",
 } as const;
 
-export type KenoBigSmallBet =
-  (typeof KenoBigSmallBet)[keyof typeof KenoBigSmallBet];
+export type KenoBigSmallBet = (typeof KenoBigSmallBet)[keyof typeof KenoBigSmallBet];
 
 /**
  * Lựa chọn cách chơi bổ sung Chẵn/Lẻ.
@@ -129,8 +126,7 @@ export const KenoEvenOddBet = {
   Odd: "odd",
 } as const;
 
-export type KenoEvenOddBet =
-  (typeof KenoEvenOddBet)[keyof typeof KenoEvenOddBet];
+export type KenoEvenOddBet = (typeof KenoEvenOddBet)[keyof typeof KenoEvenOddBet];
 
 // ─────────────────────────────────────────────
 // Payout Status

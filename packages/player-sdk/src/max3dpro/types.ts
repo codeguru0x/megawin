@@ -112,7 +112,7 @@ export interface Max3dproDrawInfo {
 export interface Max3dproTicketSummary {
   /** ID vé trong hệ thống. */
   id: string;
-  /** Mã vé hiển thị cho người chơi. */
+  /** Mã vé hiển thị cho người chơi. VD: `"M3P-20260307-00004"`. */
   ticketNo: string;
   /** Trạng thái vé. */
   status: string;

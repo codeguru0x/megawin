@@ -6,7 +6,7 @@ const TICKET = {
   id: "65abc010",
   ticketNo: "K-20260220-050-0001",
   status: "settled",
-  drawPlan: { drawIds: ["2026-02-20-050"], drawCount: 1 },
+  drawPlan: { drawIds: ["2026-02-20.050"], drawCount: 1 },
   pricing: { unitPrice: 10000, betsPerDraw: 1, amountPerDraw: 10000, totalAmount: 10000 },
   boards: [{ boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] }],
   sideBets: [],

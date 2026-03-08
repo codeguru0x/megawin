@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Check,
-  Loader2,
-  Send,
-  ExternalLink,
-  CalendarDays,
-  Hash,
-} from "lucide-react";
+import { Check, Loader2, Send, ExternalLink, CalendarDays, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,11 +19,7 @@ import {
   DevRandomFillButton,
   generateUniqueRandomNumbers,
 } from "@/components/dev-random-fill-button";
-import {
-  KENO_DRAW_COUNT,
-  KENO_NUMBER_MIN,
-  KENO_NUMBER_MAX,
-} from "@megawin/game-keno/entities";
+import { KENO_DRAW_COUNT, KENO_NUMBER_MIN, KENO_NUMBER_MAX } from "@megawin/game-keno/entities";
 import { todayVN, formatVNTime } from "@megawin/shared/utils/date";
 import type { KenoCurrentDrawInfo } from "../use-draws";
 import { useKenoPublishResult } from "../use-draws";
@@ -39,16 +28,23 @@ function validateNumbers(nums: string[]): string | null {
   const parsed = nums.map(Number);
   for (let i = 0; i < KENO_DRAW_COUNT; i++) {
     const n = parsed[i];
-    if (
-      !n ||
-      !Number.isInteger(n) ||
-      n < KENO_NUMBER_MIN ||
-      n > KENO_NUMBER_MAX
-    ) {
+    if (!n || !Number.isInteger(n) || n < KENO_NUMBER_MIN || n > KENO_NUMBER_MAX) {
       return `Số #${i + 1} phải là số nguyên từ ${String(KENO_NUMBER_MIN).padStart(2, "0")} đến ${String(KENO_NUMBER_MAX).padStart(2, "0")}.`;
     }
   }
-  if (new Set(parsed).size !== KENO_DRAW_COUNT) return "Các số phải khác nhau.";
+  if (new Set(parsed).size !== KENO_DRAW_COUNT) {
+    const seen = new Set<number>();
+    const duplicates = new Set<number>();
+    for (const n of parsed) {
+      if (seen.has(n)) duplicates.add(n);
+      else seen.add(n);
+    }
+    const dupList = [...duplicates]
+      .sort((a, b) => a - b)
+      .map((n) => String(n).padStart(2, "0"))
+      .join(", ");
+    return `Số bị trùng: ${dupList}.`;
+  }
   return null;
 }
 
@@ -60,9 +56,7 @@ export function PublishResultAction({
   disabled: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const [numbers, setNumbers] = useState<string[]>(
-    Array(KENO_DRAW_COUNT).fill("")
-  );
+  const [numbers, setNumbers] = useState<string[]>(Array(KENO_DRAW_COUNT).fill(""));
   const [vietlotDate, setVietlotDate] = useState(todayVN());
   const [vietlotPeriod, setVietlotPeriod] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +96,7 @@ export function PublishResultAction({
           setVietlotDate(todayVN());
           setError(null);
         },
-      }
+      },
     );
   }
 
@@ -121,17 +115,15 @@ export function PublishResultAction({
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {isRepublish ? "Sửa kết quả" : "Cập nhật kết quả"} kỳ{" "}
-            {draw.drawId}{" "}
+            {isRepublish ? "Sửa kết quả" : "Cập nhật kết quả"} kỳ {draw.drawId}{" "}
             <span className="font-mono text-muted-foreground">
               · {formatVNTime(new Date(draw.drawTime))}
             </span>
           </DialogTitle>
           <DialogDescription>
-            Nhập {KENO_DRAW_COUNT} số từ {String(KENO_NUMBER_MIN).padStart(2, "0")}–{String(KENO_NUMBER_MAX).padStart(2, "0")},
-            không trùng.
-            {isRepublish &&
-              " Kết quả cũ sẽ bị ghi đè. Chỉ có hiệu lực trước khi kết sổ."}
+            Nhập {KENO_DRAW_COUNT} số từ {String(KENO_NUMBER_MIN).padStart(2, "0")}–
+            {String(KENO_NUMBER_MAX).padStart(2, "0")}, không trùng.
+            {isRepublish && " Kết quả cũ sẽ bị ghi đè. Chỉ có hiệu lực trước khi kết sổ."}
           </DialogDescription>
         </DialogHeader>
 
@@ -148,7 +140,7 @@ export function PublishResultAction({
                   const nums = generateUniqueRandomNumbers(
                     KENO_DRAW_COUNT,
                     KENO_NUMBER_MIN,
-                    KENO_NUMBER_MAX
+                    KENO_NUMBER_MAX,
                   );
                   setNumbers(nums.map((n) => String(n).padStart(2, "0")));
                   setError(null);
@@ -181,8 +173,7 @@ export function PublishResultAction({
                 ))}
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground/70">
-                Đã điền {numbers.filter((n) => n.trim() !== "").length}/
-                {KENO_DRAW_COUNT} số
+                Đã điền {numbers.filter((n) => n.trim() !== "").length}/{KENO_DRAW_COUNT} số
               </p>
             </div>
           </div>
@@ -195,9 +186,7 @@ export function PublishResultAction({
               <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
                 <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
               </div>
-              <Label className="text-sm font-semibold">
-                Tham chiếu Vietlott
-              </Label>
+              <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
               <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                 Tùy chọn
               </span>
