@@ -10,6 +10,8 @@ import type {
   Mega645DrawInfo,
   Mega645TicketSummary,
   Mega645EntryResult,
+  Mega645DrawResultDetail,
+  Mega645DrawResultSummary,
 } from "../mega645";
 import { ENDPOINTS } from "../endpoints";
 
@@ -39,6 +41,54 @@ export interface Mega645ListTicketsParams {
   from?: string;
   /** Lọc đến ngày (YYYY-MM-DD). */
   to?: string;
+}
+
+/**
+ * Tham số truy vấn danh sách kết quả kỳ quay Mega 6/45.
+ *
+ * Cursor-based pagination, filter từ ngày.
+ *
+ * @example
+ * ```ts
+ * // Kết quả từ ngày 1/3/2026
+ * const results = await client.mega645.listDrawResults({
+ *   from: "2026-03-01",
+ *   size: 10,
+ * });
+ *
+ * // Trang tiếp theo
+ * if (results.nextCursor) {
+ *   const page2 = await client.mega645.listDrawResults({
+ *     from: "2026-03-01",
+ *     size: 10,
+ *     cursor: results.nextCursor,
+ *   });
+ * }
+ * ```
+ */
+export interface Mega645ListDrawResultsParams {
+  /** Số lượng kết quả mỗi trang (mặc định 20). */
+  size?: number;
+  /**
+   * Lọc từ ngày (ISO date `YYYY-MM-DD`, inclusive).
+   * Mặc định = ngày hôm nay (giờ VN) nếu không truyền.
+   * Khi paginate với cursor, phải truyền cùng `from` với request đầu tiên.
+   */
+  from?: string;
+  /** Cursor cho trang tiếp theo (drawId, lấy từ `nextCursor`). */
+  cursor?: string;
+}
+
+/**
+ * Response phân trang danh sách kết quả kỳ quay Mega 6/45.
+ */
+export interface Mega645ListDrawResultsResponse {
+  /** Danh sách tóm tắt kỳ quay (6 số + jackpot, không có bảng giải thưởng). */
+  draws: Mega645DrawResultSummary[];
+  /** Cursor cho trang tiếp theo. `null` nếu hết. */
+  nextCursor: string | null;
+  /** Số lượng mỗi trang (echo lại `size`). */
+  size: number;
 }
 
 /**
@@ -298,6 +348,64 @@ export interface Mega645Api {
    * ```
    */
   getEntryLines(entryId: string): Promise<Mega645EntryLinesResponse>;
+
+  /**
+   * Lấy danh sách kết quả kỳ quay Mega 6/45 đã settle.
+   *
+   * Chỉ trả các kỳ đã settle có kết quả.
+   * Hỗ trợ lọc từ ngày và phân trang cursor-based.
+   *
+   * **Endpoint:** `GET /games/mega645/draw-results`
+   *
+   * @param params - Tham số truy vấn: from, size, cursor
+   * @returns Danh sách kết quả (6 số + jackpot snapshot) kèm cursor
+   *
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * const results = await client.mega645.listDrawResults({
+   *   from: "2026-03-01",
+   *   size: 10,
+   * });
+   *
+   * for (const draw of results.draws) {
+   *   console.log(`Kỳ ${draw.drawId}: ${draw.result.winningMain.join(", ")}`);
+   *   console.log(`JP: ${draw.jackpot.closingAmount.toLocaleString()} VND`);
+   * }
+   * ```
+   */
+  listDrawResults(params?: Mega645ListDrawResultsParams): Promise<Mega645ListDrawResultsResponse>;
+
+  /**
+   * Lấy chi tiết kết quả 1 kỳ quay Mega 6/45.
+   *
+   * Trả về 6 số chính, Jackpot snapshot, và bảng giải thưởng chi tiết (4 tiers).
+   *
+   * **Endpoint:** `GET /games/mega645/draw-results/{drawId}`
+   *
+   * @param drawId - Mã kỳ quay (format: YYYY-MM-DD.NNN)
+   * @returns Chi tiết kết quả kỳ quay
+   *
+   * @throws {@link ApiClientError} code `NOT_FOUND` — draw không tồn tại hoặc chưa settle
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * const result = await client.mega645.getDrawResult("2026-03-08.001");
+   *
+   * console.log(`Số: ${result.result.winningMain.join(", ")}`);
+   * // "Số: 06, 12, 13, 25, 31, 32"
+   *
+   * console.log(`JP: ${result.jackpot.closingAmount.toLocaleString()} VND`);
+   * // "JP: 18,851,320,000 VND"
+   *
+   * for (const prize of result.prizes) {
+   *   console.log(`${prize.tier}: ${prize.winnerCount} lượt, ${prize.prizeAmount.toLocaleString()} VND`);
+   * }
+   * ```
+   */
+  getDrawResult(drawId: string): Promise<Mega645DrawResultDetail>;
 }
 
 /** @internal */
@@ -330,6 +438,14 @@ export function createMega645Api(http: HttpClient): Mega645Api {
     },
     async getEntryLines(entryId) {
       return http.get<Mega645EntryLinesResponse>(ENDPOINTS.mega645.getEntryLines(entryId));
+    },
+    async listDrawResults(params) {
+      return http.get<Mega645ListDrawResultsResponse>(ENDPOINTS.mega645.listDrawResults, {
+        params: params as Record<string, string | number | undefined>,
+      });
+    },
+    async getDrawResult(drawId) {
+      return http.get<Mega645DrawResultDetail>(ENDPOINTS.mega645.getDrawResult(drawId));
     },
   };
 }

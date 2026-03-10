@@ -128,8 +128,6 @@ export interface TriggerSettleOutput {
   drawId: string;
   /** Trạng thái mới sau trigger (thường là "settling"). */
   status: string;
-  /** Có phải kỳ chia giải jackpot (tổng JP vượt splitThreshold) hay không. */
-  isSplitCycle: boolean;
   /** Tổng entries sẽ được settle bởi worker. */
   totalEntries: number;
   /** Tổng số dòng (lines) cần xử lý từ tất cả entries. */
@@ -174,8 +172,6 @@ export interface DrawSummary {
   jackpot1ClosingAmount?: number;
   /** Jackpot 2 closing — số dư JP2 sau khi settle (VND). */
   jackpot2ClosingAmount?: number;
-  /** Có phải kỳ chia giải jackpot (split cycle) hay không. */
-  isSplitCycle: boolean;
   /** Kỳ quay đã có kết quả (winningMain + bonusNumber) chưa. */
   hasResult: boolean;
   /** Tổng số entries tham gia kỳ quay. */

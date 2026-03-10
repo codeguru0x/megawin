@@ -31,19 +31,12 @@ export interface GetJackpotCurrentOutput {
     /** Thời điểm bắt đầu cycle (ISO 8601). */
     startedAt: string;
   };
-  /** Cấu hình chia giải (split) hiện tại. */
+  /** Cấu hình jackpot: overflow threshold. */
   config: {
-    /** Ngưỡng tổng JP (JP1 + JP2) để kích hoạt chia giải (VND). */
-    splitThreshold: number;
-    /** Tỷ lệ chia giải theo tier khi split. */
-    splitRatios: {
-      /** Tỷ lệ chia cho tier1 (trùng 5/6, không bonus). */
-      tier1: number;
-      /** Tỷ lệ chia cho tier2 (trùng 4/6). */
-      tier2: number;
-      /** Tỷ lệ chia cho tier3 (trùng 3/6). */
-      tier3: number;
-    };
+    /** Ngưỡng tràn JP1 (VND) — phần vượt chuyển sang JP2. */
+    jp1OverflowThreshold: number;
+    /** Tỷ lệ phân bổ theo tier khi split (nếu có). */
+    splitRatios?: Record<string, number>;
   };
   /** Tiến trình tích lũy Jackpot 1. */
   jackpot1Progress: {
@@ -59,16 +52,16 @@ export interface GetJackpotCurrentOutput {
     /** Giá trị seed ban đầu của JP2 (VND). */
     seed: number;
   };
-  /** Tiến trình tổng jackpot (JP1 + JP2) so với ngưỡng split. */
-  totalJackpotProgress: {
-    /** Tổng jackpot hiện tại = JP1 + JP2 (VND). */
+  /** Tiến trình tích lũy tổng hợp JP1 + JP2. */
+  totalJackpotProgress?: {
+    /** Tổng JP1 + JP2 hiện tại (VND). */
     current: number;
-    /** Ngưỡng splitThreshold (VND). */
+    /** Ngưỡng tổng (VND). */
     threshold: number;
-    /** Phần trăm tiến trình = (current / threshold) × 100. */
-    percentage: number;
-    /** Số tiền còn thiếu để đạt ngưỡng split (VND). */
+    /** Phần còn thiếu để đạt ngưỡng (VND). */
     remaining: number;
+    /** Phần trăm tiến trình (0–100+). */
+    percentage: number;
   };
   /** Kỳ quay tiếp theo (nếu có). */
   nextDraw?: {
@@ -78,8 +71,8 @@ export interface GetJackpotCurrentOutput {
     drawNo: number;
     /** Giờ quay, định dạng HH:mm. */
     drawTime: string;
-    /** Kỳ tiếp theo có dự kiến chia giải (split) hay không. */
-    splitCycleIntent: boolean;
+    /** Có ý định split jackpot trong kỳ này không. */
+    splitCycleIntent?: boolean;
   };
 }
 
@@ -123,8 +116,8 @@ export interface JackpotHistoryItem {
   hasJackpot1Winner: boolean;
   /** Có người trúng Jackpot 2 (5/6 + bonus) trong kỳ này hay không. */
   hasJackpot2Winner: boolean;
-  /** Kỳ này có phải là kỳ chia giải (tổng JP vượt splitThreshold). */
-  isSplitCycle: boolean;
+  /** Kỳ này có phải kỳ split cycle không. */
+  isSplitCycle?: boolean;
   /** Tổng số entries tham gia kỳ quay. */
   totalEntries: number;
   /** Tổng doanh thu kỳ quay (VND). */
@@ -183,7 +176,7 @@ export interface JackpotCycleSummary {
   endDrawId?: string;
   /** Thời điểm đóng cycle (ISO 8601). */
   closedAt?: string;
-  /** Lý do đóng cycle: jackpot1_winner / jackpot2_winner / both_winner / split. */
+  /** Lý do đóng cycle: jackpot1_winner / jackpot2_winner / both_winner / manual_reset. */
   closedReason?: JackpotCycleClosedReason;
   /** Số dư Jackpot 1 khi bắt đầu cycle (VND). */
   jackpot1Opening: number;
@@ -195,24 +188,24 @@ export interface JackpotCycleSummary {
   jackpot2Current: number;
   /** Số kỳ quay đã settle trong cycle. */
   drawCount: number;
-  /** Chi tiết chia giải (chỉ có khi cycle đóng do split). */
+  /** Chi tiết chia giải khi split cycle (nếu có). */
   splitDetail?: {
-    /** Tổng số tiền jackpot được chia (JP1 + JP2) (VND). */
+    /** Tổng số tiền được chia (VND). */
     splitAmount: number;
-    /** Tổng số người thắng nhận thưởng split. */
-    totalWinners: number;
-    /** Tổng số tiền đã trả cho split (VND). */
+    /** Tổng tiền đã thanh toán (VND). */
     totalPaid: number;
-    /** Chi tiết phân bổ theo tier giải. */
+    /** Tổng số người thắng. */
+    totalWinners: number;
+    /** Phân bổ theo tier. */
     tierAllocations: Record<
       string,
       {
         /** Số người thắng tier này. */
         winnerCount: number;
-        /** Số tiền bonus mỗi người thắng (VND). */
-        bonusPerWinner: number;
-        /** Tổng tiền phân bổ cho tier = bonusPerWinner × winnerCount (VND). */
+        /** Tổng tiền phân bổ cho tier (VND). */
         totalAmount: number;
+        /** Tiền bonus mỗi người thắng (VND). */
+        bonusPerWinner: number;
       }
     >;
   };

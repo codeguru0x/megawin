@@ -36,7 +36,8 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(input: CreateDrawsInput): Promise<CreateDrawsOutput> {
-    const { count } = input;
+    const { count, openSlotIndexes = [] } = input;
+    const openSet = new Set(openSlotIndexes);
 
     if (count < 1 || count > 12) {
       throw AppException.badRequest("Số kỳ tạo phải từ 1 đến 12.");
@@ -64,9 +65,13 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
     const drawDocs: Omit<DrawDoc, "_id">[] = [];
     const draws: CreateDrawsOutputItem[] = [];
 
-    for (const slot of slots) {
+    for (let slotIdx = 0; slotIdx < slots.length; slotIdx++) {
+      const slot = slots[slotIdx]!;
       const drawId = generateDrawId(slot.drawDate, slot.drawNo as any);
       if (existingDrawIds.has(drawId)) continue;
+
+      const shouldOpen = openSet.has(slotIdx);
+      const status = shouldOpen ? DrawStatus.SalesOpen : DrawStatus.Scheduled;
 
       drawDocs.push({
         drawId,
@@ -74,11 +79,8 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
         financialDate: getFinancialDate(slot.drawTime),
         drawNo: slot.drawNo as DrawNo,
         drawTime: slot.drawTime,
-        status: DrawStatus.SalesOpen,
-        sales: {
-          closeAt: slot.closeAt,
-          openAt: now,
-        },
+        status,
+        sales: shouldOpen ? { closeAt: slot.closeAt, openAt: now } : { closeAt: slot.closeAt },
         createdAt: now,
         updatedAt: now,
       });
@@ -90,7 +92,7 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
         drawTime: slot.drawTime.toISOString(),
         closeAt: slot.closeAt.toISOString(),
         financialDate: getFinancialDate(slot.drawTime),
-        status: DrawStatus.SalesOpen,
+        status,
       });
     }
 

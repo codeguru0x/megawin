@@ -22,7 +22,6 @@ export interface PlayerPrizeAmounts {
 
 export interface PlayerJackpotConfig {
   seedAmount: number;
-  splitThreshold: number;
 }
 
 export interface PlayerTenantGameConfig {

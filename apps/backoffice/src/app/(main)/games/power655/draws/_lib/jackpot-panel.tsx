@@ -19,7 +19,7 @@ export function JackpotPanel() {
 
   const { cycle, totalJackpotProgress: progress } = data;
   const totalJp = cycle.jackpot1Current + cycle.jackpot2Current;
-  const pct = progress.percentage;
+  const pct = progress?.percentage ?? 0;
   const isHot = pct >= 80;
   const isWarm = pct >= 50;
 
@@ -29,7 +29,7 @@ export function JackpotPanel() {
         "relative overflow-hidden rounded-xl border p-4",
         "bg-linear-to-br from-red-50/80 via-orange-50/60 to-amber-50/40",
         "dark:from-red-950/40 dark:via-orange-950/30 dark:to-amber-950/20",
-        "dark:border-red-800/50"
+        "dark:border-red-800/50",
       )}
     >
       <div className="pointer-events-none absolute -right-6 -top-6 size-32 rounded-full bg-linear-to-br from-red-300/20 to-orange-300/10 blur-2xl dark:from-red-500/10 dark:to-orange-500/5" />
@@ -75,9 +75,7 @@ export function JackpotPanel() {
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-[11px]">
-            <span className="font-medium text-muted-foreground">
-              Tiến trình chia giải
-            </span>
+            <span className="font-medium text-muted-foreground">Tiến trình chia giải</span>
             <span className="font-semibold tabular-nums text-red-800 dark:text-red-300">
               {pct.toFixed(1)}%
             </span>
@@ -113,7 +111,7 @@ export function JackpotPanel() {
               Ngưỡng chia
             </div>
             <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">
-              {formatVNDCompact(progress.remaining)}
+              {formatVNDCompact(progress?.remaining ?? 0)}
             </p>
           </div>
           <div className="rounded-lg bg-white/60 px-2.5 py-2 dark:bg-white/5">

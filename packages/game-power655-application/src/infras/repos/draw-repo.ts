@@ -20,7 +20,6 @@ import type {
   DrawJackpot,
   DrawFinancial,
   DrawStats,
-  SplitRatios,
   MainTuple,
   BonusNumber,
   ISODateString,
@@ -136,14 +135,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   /**
    * Chuyển draw settling → settled + ghi dual jackpot snapshot.
-   * Dùng dot notation để chỉ cập nhật các field cần thiết,
-   * tránh overwrite jackpot.split đã set bởi triggerSettle().
+   * Dùng dot notation để chỉ cập nhật các field cần thiết.
    */
   async settleComplete(
     drawId: string,
     jackpot: Pick<
       DrawJackpot,
-      "openingJackpot1" | "closingJackpot1" | "openingJackpot2" | "closingJackpot2" | "isSplitCycle"
+      "openingJackpot1" | "closingJackpot1" | "openingJackpot2" | "closingJackpot2"
     >,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Settling];
@@ -156,7 +154,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       "jackpot.closingJackpot1": jackpot.closingJackpot1,
       "jackpot.openingJackpot2": jackpot.openingJackpot2,
       "jackpot.closingJackpot2": jackpot.closingJackpot2,
-      "jackpot.isSplitCycle": jackpot.isSplitCycle,
       settledAt: now,
       updatedAt: now,
     };
@@ -299,36 +296,20 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
-   * Trigger settle: published → settling + ghi jackpot split info.
+   * Trigger settle: published → settling.
    */
-  async triggerSettle(
-    drawId: string,
-    splitInfo?: {
-      isSplitCycle: boolean;
-      split: {
-        thresholdAmount: number;
-        splitRatios: SplitRatios;
-        splitAmount: number;
-        splitRuleVersion: string;
-        hintText: string;
-      };
-    },
-  ): Promise<DrawEntity | null> {
+  async triggerSettle(drawId: string): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Published];
     if (!allowed?.has(DrawStatus.Settling)) return null;
 
-    const $set: Record<string, unknown> = {
-      status: DrawStatus.Settling,
-      updatedAt: new Date(),
-    };
-    if (splitInfo) {
-      $set["jackpot.isSplitCycle"] = splitInfo.isSplitCycle;
-      $set["jackpot.split"] = splitInfo.split;
-    }
-
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Published },
-      { $set },
+      {
+        $set: {
+          status: DrawStatus.Settling,
+          updatedAt: new Date(),
+        },
+      },
       { returnDocument: "after" },
     );
   }
@@ -477,6 +458,40 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     if (vietlottRef) $set.vietlottRef = vietlottRef;
 
     return await this.updateOne({ drawId, status: DrawStatus.Published }, { $set });
+  }
+
+  /**
+   * Tăng stats.totalPayout thêm amount sau khi patch Jackpot prize vào entries.
+   *
+   * Dùng $inc — KHÔNG idempotent, phải guard bởi caller:
+   * chỉ gọi khi patchJackpotPrize trả về modifiedCount > 0.
+   */
+  async incrementTotalPayout(drawId: string, amount: number): Promise<void> {
+    await this.updateOne({ drawId }, { $inc: { "stats.totalPayout": amount } as any });
+  }
+
+  /**
+   * Tìm draw tiếp theo (sau drawId hiện tại) đang ở trạng thái chờ xử lý.
+   * Dùng bởi FinalizeSettle để lấy startDrawId cho jackpot cycle mới.
+   *
+   * Index đề xuất: `{ drawId: 1, status: 1 }` — range scan từ afterDrawId, limit 1.
+   */
+  async findNextPendingDraw(afterDrawId: string): Promise<DrawEntity | null> {
+    return await this.findOne(
+      {
+        drawId: { $gt: afterDrawId },
+        status: {
+          $in: [
+            DrawStatus.Scheduled,
+            DrawStatus.SalesOpen,
+            DrawStatus.SalesClosed,
+            DrawStatus.Published,
+            DrawStatus.Settling,
+          ],
+        },
+      },
+      { sort: { drawId: 1 } },
+    );
   }
 }
 

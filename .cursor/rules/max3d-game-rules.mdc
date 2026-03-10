@@ -141,27 +141,27 @@ Người chơi chọn **2 bộ ba số** (có thể giống nhau). **Chỉ hỗ 
 
 ---
 
-## 5. Tỷ lệ tài chính — KHÔNG CÓ JACKPOT
+## 5. Tỷ lệ tài chính — KHÔNG CÓ JACKPOT, KHÔNG CÓ COMPANY RATE
 
 Tất cả tỷ lệ dưới đây là giá trị **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.rates`.
 
 | Khoản mục | Tỷ lệ mặc định | Ghi chú |
 |-----------|----------------|---------|
 | Hoa hồng đại lý | 20% revenue | Override per tenant qua TenantConfig |
-| Công ty thu | 15% revenue | Có cap khi doanh thu thấp |
 | Giải cố định | Biến thiên | Phụ thuộc kết quả quay |
-| Profit | Phần còn lại | Revenue - Commission - CompanyTake - FixedPrizes |
+| Profit | Phần còn lại | Revenue - Commission - FixedPrizes (công ty thu toàn bộ) |
 
-**Phân bổ doanh thu** (không có jackpot contribution):
+**Phân bổ doanh thu** (không có jackpot contribution, không có companyRate):
 ```
 Revenue = 100% doanh thu tiền cược
 ├── Agent Commission = Σ(commissionRate × revenue) per tenant (mặc định 20%)
-├── Company Take     = companyRate × Revenue (mặc định 15%, có cap)
 ├── Fixed Prizes     = Tổng tiền trả thưởng cố định
-└── Profit           = Phần còn lại (có thể âm nếu trả thưởng lớn)
+└── Profit           = Revenue - Commission - FixedPrizes (có thể âm nếu trả thưởng lớn)
 ```
 
-**Không có**: Jackpot contribution, Jackpot cycle, Split cycle, Overflow mechanism.
+> **Tại sao không có companyRate?** Các game KHÔNG CÓ Jackpot (Keno, Bingo18, Max3D, Max3D Pro) không cần tách riêng phần công ty thu (companyRate/companyTake). Vì không có Jackpot pool cần tích luỹ, công ty thu TOÀN BỘ profit còn lại sau khi trừ giải thưởng và hoa hồng đại lý. companyRate chỉ cần thiết cho các game CÓ Jackpot (Lotto, Mega, Power) nơi cần phân bổ revenue giữa công ty và Jackpot pool.
+
+**Không có**: Jackpot contribution, Jackpot cycle, Split cycle, Overflow mechanism, companyRate/companyTake.
 
 ---
 
@@ -332,7 +332,7 @@ Routes: draws, config, tenant-config, operations.
 
 ## 11. Quy tắc quan trọng cho AI Agent
 
-1. **KHÔNG CÓ Jackpot**: Max 3D hoàn toàn cố định — không cần JackpotCycleDoc, split cycle, overflow, jackpot contribution. Financial model đơn giản hơn nhiều
+1. **KHÔNG CÓ Jackpot, KHÔNG CÓ companyRate**: Max 3D hoàn toàn cố định — không cần JackpotCycleDoc, split cycle, overflow, jackpot contribution, companyRate/companyTake. Financial model: `profit = totalRevenue - totalFixedPrizes - totalAgentCommission`. Công ty thu toàn bộ profit còn lại
 2. **Triplet = string "000"-"999"**: 3 chữ số zero-padded, validate bằng `/^\d{3}$/`. KHÁC HOÀN TOÀN với Lotto/Mega/Power
 3. **2 Play Modes tách biệt**: `basic` (1 bộ ba, 4 hạng giải) vs `plus` (2 bộ ba, 7 hạng giải) — prize enums khác nhau (`BasicPrizeTier` vs `PlusPrizeTier`)
 4. **Combo CHỈ cho basic**: Plus mode chỉ hỗ trợ `straight` hoặc `quickPick`

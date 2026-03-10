@@ -62,7 +62,6 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
         oddCount: draw.result.oddCount,
       },
       config: {
-        companyRate: globalConfig.rates.companyRate,
         basicPrizes: globalConfig.basicPrizes,
         bigSmallPrizes: globalConfig.bigSmallPrizes,
         evenOddPrizes: globalConfig.evenOddPrizes,

@@ -34,23 +34,15 @@ export interface BuildReportResult {
  * Tạo/cập nhật báo cáo tài chính Power 6/55.
  * Upsert pattern – idempotent.
  */
-export class BuildReportUseCase extends InternalUseCase<
-  SettleContext,
-  BuildReportResult
-> {
+export class BuildReportUseCase extends InternalUseCase<SettleContext, BuildReportResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly reportRepo = new ReportRepository();
 
   /** @inheritdoc */
-  protected async execute(
-    input: SettleContext
-  ): Promise<BuildReportResult> {
+  protected async execute(input: SettleContext): Promise<BuildReportResult> {
     const { drawId, financialDate, financials, jp1OpeningAmount, jp2OpeningAmount } = input;
 
-    const tenantAggs = await this.entryRepo.aggregateTenantReport(
-      drawId,
-      financialDate
-    );
+    const tenantAggs = await this.entryRepo.aggregateTenantReport(drawId, financialDate);
 
     for (const t of tenantAggs) {
       await this.reportRepo.upsertTenantDailyReport({
@@ -70,10 +62,7 @@ export class BuildReportUseCase extends InternalUseCase<
       });
     }
 
-    const playerAggs = await this.entryRepo.aggregatePlayerReport(
-      drawId,
-      financialDate
-    );
+    const playerAggs = await this.entryRepo.aggregatePlayerReport(drawId, financialDate);
 
     for (const p of playerAggs) {
       await this.reportRepo.upsertPlayerDailyReport({
@@ -122,9 +111,11 @@ export class BuildReportUseCase extends InternalUseCase<
         },
         jackpotTracking: {
           openingAmount: jp1OpeningAmount + jp2OpeningAmount,
-          closingAmount: financials.closingJp1 + financials.closingJp2,
-          hasJackpotWinner:
-            financials.hasJackpot1Winner || financials.hasJackpot2Winner,
+          closingAmount:
+            jp1OpeningAmount +
+            financials.jackpot1Contribution +
+            (jp2OpeningAmount + financials.jackpot2Contribution),
+          hasJackpotWinner: financials.hasJackpot1Winner || financials.hasJackpot2Winner,
           totalContribution: totalJackpotContribution,
         },
       });

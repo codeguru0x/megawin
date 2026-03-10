@@ -1,7 +1,7 @@
 /**
  * Use Case: Get Jackpot Current (Mega 6/45)
  *
- * Mega 6/45 chỉ có 1 kỳ/ngày → splitCycleIntent không cần check drawNo.
+ * Mega 6/45 theo luật Vietlott: Jackpot chỉ roll-over, không có split threshold.
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
@@ -11,10 +11,7 @@ import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { GetJackpotCurrentOutput } from "./dto/jackpot.dto";
 
-export class GetJackpotCurrentUseCase extends NextApiUseCase<
-  void,
-  GetJackpotCurrentOutput
-> {
+export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCurrentOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly drawRepo = new DrawRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
@@ -26,16 +23,9 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<
     ]);
 
     const config = globalConfig.jackpot;
-
     const currentAmount = activeCycle?.currentAmount ?? config.seedAmount;
-    const threshold = config.splitThreshold;
-    const percentage = Math.min((currentAmount / threshold) * 100, 100);
 
     const nextScheduled = await this.drawRepo.getNextScheduledDraw();
-
-    const splitCycleIntent = nextScheduled
-      ? currentAmount >= threshold
-      : false;
 
     return {
       cycle: activeCycle
@@ -62,21 +52,10 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<
             startDrawId: "",
             startedAt: new Date().toISOString(),
           },
-      config: {
-        splitThreshold: config.splitThreshold,
-        splitRatios: config.splitRatios,
-      },
-      progress: {
-        current: currentAmount,
-        threshold,
-        percentage: Math.round(percentage * 100) / 100,
-        remaining: Math.max(threshold - currentAmount, 0),
-      },
       nextDraw: nextScheduled
         ? {
             drawId: nextScheduled.drawId,
             drawTime: nextScheduled.drawTime.toISOString(),
-            splitCycleIntent,
           }
         : undefined,
     };

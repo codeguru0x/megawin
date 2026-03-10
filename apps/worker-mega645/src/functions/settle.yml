@@ -10,8 +10,8 @@ settle-calculate-financials:
   handler: src/handlers/settle/calculate-financials.handler
   timeout: 900
 
-settle-apply-split-bonuses:
-  handler: src/handlers/settle/apply-split-bonuses.handler
+settle-patch-jackpot-prize:
+  handler: src/handlers/settle/patch-jackpot-prize.handler
   timeout: 900
 
 settle-sync-ticket-summaries:

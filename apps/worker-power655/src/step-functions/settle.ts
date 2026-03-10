@@ -19,29 +19,25 @@
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌────────────────────────────┐
- *  │  3. CalculateFinancials    │  Tính từ DB (dual JP1/JP2)
+ *  │  3. CalculateFinancials    │  Tính từ DB (dual JP1/JP2 + overflow)
  *  └────────┬───────────────────┘
  *           ▼
- *  ┌─────────────────────────┐
- *  │  4. ApplySplitBonuses   │  Patch split bonus (if split cycle)
- *  └────────┬────────────────┘
- *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  5. SyncTicketSummaries (loop)           │
+ *  │  4. SyncTicketSummaries (loop)           │
  *  │     Recompute ticket progress            │
  *  │     done = true khi hết tickets          │
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  6. BuildReport         │  Daily reports (idempotent upsert)
+ *  │  5. BuildReport         │  Daily reports (idempotent upsert)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  7. FinalizeSettle      │  settling → settled + dual jackpot cycle
+ *  │  6. FinalizeSettle      │  settling → settled + dual jackpot cycle
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  8. DispatchPayouts (loop, async)        │
+ *  │  7. DispatchPayouts (loop, async)        │
  *  │     done = true khi hết pending payouts  │
  *  └──────────────────────────────────────────┘
  *
@@ -126,14 +122,33 @@ export const SETTLE_STATE_MACHINE = {
       Assign: {
         settleCtx: "{% $merge($settleCtx, { 'financials': $states.result }) %}",
       },
-      Next: "ApplySplitBonuses",
+      Next: "CheckJackpotWinner",
       Retry: LAMBDA_RETRY,
     },
 
-    ApplySplitBonuses: {
+    // ── STEP 4: Route nếu có JP1 hoặc JP2 winner → patch prize vào entries + lines ──
+    CheckJackpotWinner: {
+      Type: "Choice",
+      Choices: [
+        {
+          Comment: "Có JP1 hoặc JP2 winner → patch jackpot prize vào entries + lines",
+          Condition:
+            "{% $settleCtx.financials.hasJackpot1Winner or $settleCtx.financials.hasJackpot2Winner %}",
+          Next: "PatchJackpotPrize",
+        },
+      ],
+      Default: "SyncTicketSummaries",
+    },
+
+    // ── STEP 4a: Patch Jackpot Prize (JP1 + JP2 độc lập) ──
+    // Merge winners vào settleCtx (top-level) để FinalizeSettle dùng — tránh re-query DB.
+    PatchJackpotPrize: {
       Type: "Task",
-      Resource: lambdaArn("settle-apply-split-bonuses"),
+      Resource: lambdaArn("settle-patch-jackpot-prize"),
       Arguments: "{% $settleCtx %}",
+      Assign: {
+        settleCtx: "{% $merge([$settleCtx, { 'jackpotWinners': $states.result.winners }]) %}",
+      },
       Next: "SyncTicketSummaries",
       Retry: LAMBDA_RETRY,
     },

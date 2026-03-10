@@ -1,15 +1,8 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type {
-  ListDrawsInput,
-  ListDrawsOutput,
-  DrawSummary,
-} from "./dto/draw.dto";
+import type { ListDrawsInput, ListDrawsOutput, DrawSummary } from "./dto/draw.dto";
 
-export class ListDrawsUseCase extends NextApiUseCase<
-  ListDrawsInput,
-  ListDrawsOutput
-> {
+export class ListDrawsUseCase extends NextApiUseCase<ListDrawsInput, ListDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: ListDrawsInput): Promise<ListDrawsOutput> {
@@ -22,7 +15,7 @@ export class ListDrawsUseCase extends NextApiUseCase<
         toDate: input.toDate,
       },
       page,
-      size
+      size,
     );
 
     const summaries: DrawSummary[] = draws.map((d) => ({
@@ -34,7 +27,6 @@ export class ListDrawsUseCase extends NextApiUseCase<
       status: d.status,
       jackpotAmount: d.jackpot?.openingAmount,
       jackpotClosingAmount: d.jackpot?.closingAmount,
-      isSplitCycle: d.jackpot?.isSplitCycle ?? false,
       hasResult: !!d.result,
       ticketEntryCount: d.stats?.ticketEntryCount,
       totalRevenue: d.stats?.totalSalesAmount,

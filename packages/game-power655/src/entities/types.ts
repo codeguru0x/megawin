@@ -112,12 +112,16 @@ export interface Jackpot2Config {
 /**
  * Cấu hình Jackpot tổng hợp.
  *
+ * Power 6/55 có 2 jackpot tích luỹ chạy song song (JP1 + JP2).
+ * Theo luật Vietlott, jackpot tích lũy không giới hạn đến khi có winner.
+ *
  * Công thức tích luỹ mỗi kỳ:
- *   Tích luỹ = Revenue(100%) - FixedPrizes - AgentCommission(20%) - CompanyTake(15%)
- *   JP1 += tích luỹ × jp1ContributionRatio (90%)
- *   JP2 += tích luỹ × jp2ContributionRatio (10%)
+ *   Tích luỹ = Revenue(100%) - FixedPrizes - AgentCommission(%) - CompanyTake(%)
+ *   JP1 += tích luỹ × jp1ContributionRatio (mặc định 90%)
+ *   JP2 += tích luỹ × jp2ContributionRatio (mặc định 10%)
  *
  * Overflow: khi JP1 > jp1OverflowThreshold → phần vượt chuyển sang JP2.
+ * Tất cả giá trị là mặc định tham khảo, đọc từ GlobalConfig khi runtime.
  */
 export interface JackpotConfig {
   /** Cấu hình Jackpot 1 (trùng 6/6). */
@@ -128,26 +132,8 @@ export interface JackpotConfig {
   jp1ContributionRatio: number;
   /** Tỷ lệ JP2 nhận từ tổng tích luỹ (0.1 = 10%). */
   jp2ContributionRatio: number;
-  /** Ngưỡng JP1 tối đa (VNĐ). Phần vượt chuyển sang JP2. Mặc định 300 tỷ. */
+  /** Ngưỡng JP1 tối đa (VNĐ). Phần vượt chuyển sang JP2. Mặc định 300 tỷ (tham khảo). */
   jp1OverflowThreshold: number;
-  /** Ngưỡng tổng JP để kích hoạt split cycle (VNĐ). Khi JP1+JP2 vượt → chia cho các giải. */
-  splitThreshold: number;
-  /** Tỷ lệ chia split cycle cho từng hạng giải cố định. */
-  splitRatios: SplitRatios;
-}
-
-/**
- * Tỷ lệ chia split cycle.
- * Khi tổng Jackpot vượt splitThreshold, chia cho Giải Nhất/Nhì/Ba.
- * Số parts xác định tỷ lệ: ví dụ {2,1,1} = 50%/25%/25%.
- */
-export interface SplitRatios {
-  /** Phần cho Giải Nhất. */
-  tier1: number;
-  /** Phần cho Giải Nhì. */
-  tier2: number;
-  /** Phần cho Giải Ba. */
-  tier3: number;
 }
 
 // ─── Financial Rates ───

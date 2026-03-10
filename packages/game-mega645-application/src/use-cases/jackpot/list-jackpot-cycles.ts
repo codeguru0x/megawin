@@ -12,9 +12,7 @@ export class ListJackpotCyclesUseCase extends NextApiUseCase<
 > {
   private readonly cycleRepo = new JackpotCycleRepository();
 
-  protected async execute(
-    input: ListJackpotCyclesInput
-  ): Promise<ListJackpotCyclesOutput> {
+  protected async execute(input: ListJackpotCyclesInput): Promise<ListJackpotCyclesOutput> {
     const page = input.page ?? 1;
     const size = input.size ?? 10;
 
@@ -37,12 +35,10 @@ export class ListJackpotCyclesUseCase extends NextApiUseCase<
       peakAmount: c.peakAmount,
       totalContribution: c.totalContribution,
       drawCount: c.drawCount,
-      splitDetail: c.splitDetail,
       winners: c.winners?.map((w) => ({
         accountId: w.accountId,
         username: w.username,
         tenantId: w.tenantId,
-        tenantName: w.tenantName,
         prizeAmount: w.prizeAmount,
         entryId: w.entryId,
         drawId: w.drawId,

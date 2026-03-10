@@ -24,6 +24,18 @@ export interface DrawResultForMatch {
   bonusNumber: BonusNumber;
 }
 
+/**
+ * Đếm số lượng số chính trùng giữa line player chọn và kết quả quay.
+ *
+ * Thuật toán: chuyển winning numbers thành Set rồi duyệt line, đếm giao.
+ * Công thức: mainMatchCount = |lineMain ∩ winMain|, kết quả 0-6.
+ *
+ * Dùng Set cho O(1) lookup → tổng O(6+6) = O(12) ≈ O(1) vì kích thước cố định.
+ *
+ * @param lineMain - 6 số chính player chọn (MainTuple)
+ * @param winMain  - 6 số chính kết quả quay (MainTuple)
+ * @returns Số lượng số trùng (0-6)
+ */
 function countMainMatches(lineMain: MainTuple, winMain: MainTuple): number {
   const winSet = new Set(winMain);
   let count = 0;
@@ -34,8 +46,15 @@ function countMainMatches(lineMain: MainTuple, winMain: MainTuple): number {
 }
 
 /**
- * Bonus match: bonus number nằm trong số player chọn.
- * Vì bonus luôn ∉ winning 6, chỉ có ý nghĩa khi player trùng < 6/6.
+ * Kiểm tra bonus number có nằm trong 6 số player chọn không.
+ *
+ * Bonus number luôn ∉ winning set (quay từ 49 quả bóng còn lại sau khi rút 6 chính).
+ * → Chỉ có ý nghĩa khi player trùng < 6/6 (1 trong các số "sai" = bonus → JP2).
+ * → Khi player trùng 6/6, cả 6 số = winning set, bonus KHÔNG THỂ match → chỉ JP1.
+ *
+ * @param lineMain    - 6 số chính player chọn (MainTuple)
+ * @param bonusNumber - Bonus number từ kết quả quay
+ * @returns true nếu bonus number nằm trong 6 số player chọn
  */
 function checkBonusMatch(
   lineMain: MainTuple,
@@ -44,6 +63,24 @@ function checkBonusMatch(
   return lineMain.includes(bonusNumber);
 }
 
+/**
+ * Match 1 line (bộ 6 số) với kết quả quay, trả về hạng giải.
+ *
+ * Pipeline: countMainMatches → checkBonusMatch → determineTiers.
+ * determineTiers áp dụng quy tắc:
+ *   6/6           → Jackpot1
+ *   5/6 + bonus   → Jackpot2
+ *   5/6 (no bonus)→ Tier1
+ *   4/6           → Tier2
+ *   3/6           → Tier3
+ *   ≤2/6          → [] (không trúng)
+ *
+ * Mỗi line chỉ trúng hạng CAO NHẤT phù hợp (tiers.length ≤ 1).
+ *
+ * @param line   - Bộ 6 số player chọn (LineValue)
+ * @param result - Kết quả quay (6 số chính + bonus number)
+ * @returns tiers (mảng hạng giải, thường 0 hoặc 1 phần tử), mainMatchCount, bonusMatched
+ */
 export function matchLine(
   line: LineValue,
   result: DrawResultForMatch
@@ -55,7 +92,7 @@ export function matchLine(
   return { tiers, mainMatchCount, bonusMatched };
 }
 
-// ─── Batch Match ───
+// ─── Batch Match ────────────────────────────────────────────────────────────────
 
 export interface PerLineMatchResult {
   mainMatchCount: number;
@@ -70,6 +107,21 @@ export interface DetailedMatchResult {
   perLineResults: PerLineMatchResult[];
 }
 
+/**
+ * Match nhiều lines cùng lúc với kết quả quay — dùng trong settle pipeline.
+ *
+ * Duyệt từng line, gọi matchLine() rồi tổng hợp:
+ * - tierCounts: Map<PrizeTier, số lần trúng> — dùng để tính thưởng cố định.
+ * - winningLines: tổng số line trúng ít nhất 1 hạng giải (≥ Tier3 = trùng 3/6).
+ * - perLineResults: kết quả chi tiết từng line (cho UI và audit trail).
+ *
+ * Với Bao N, 1 board có thể sinh C(N,6) lines → nhiều line trúng các hạng khác nhau.
+ * Ví dụ: Bao 8, trúng 6/8 số → C(6,6)=1 line JP1 + C(6,5)×C(2,1)=12 lines Tier1 + ...
+ *
+ * @param lines  - Mảng các bộ 6 số (đã expand từ boards)
+ * @param result - Kết quả quay (6 số chính + bonus number)
+ * @returns Kết quả match tổng hợp: totalLines, winningLines, tierCounts, perLineResults
+ */
 export function matchLines(
   lines: LineValue[],
   result: DrawResultForMatch

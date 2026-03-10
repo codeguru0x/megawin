@@ -1,25 +1,17 @@
 /**
- * Mega 6/45 – Jackpot Accumulation & Split Cycle
+ * Mega 6/45 – Jackpot Accumulation
+ *
+ * Theo luật Vietlott Mega 6/45:
+ * - Jackpot được tích luỹ (roll-over) vô hạn cho đến khi có người trúng 6/6 số.
+ * - Khi không có winner → closingJackpot = openingJackpot + contribution (tích luỹ sang kỳ sau).
+ * - Khi có winner → toàn bộ Jackpot được trao, chia đều nếu nhiều người trúng.
+ * - KHÔNG có cơ chế "Split Cycle" — Jackpot KHÔNG bao giờ chia cho hạng Nhất/Nhì/Ba.
  *
  * Công thức tích luỹ Jackpot mỗi kỳ quay:
  *   JackpotContribution = Revenue - FixedPrizes - AgentCommission - CompanyTake
- *
- * Cơ chế chia giải (Split Cycle):
- *   Khi Jackpot >= splitThreshold và không ai trúng Jackpot:
- *   - tier1 (5/6): nhận 2/5 giá trị Jackpot
- *   - tier2 (4/6): nhận 2/5 giá trị Jackpot
- *   - tier3 (3/6): nhận 1/5 giá trị Jackpot
- *   - Tier nào không có người trúng → phần đó chia đều cho các tier còn lại
  */
 
-import { PrizeTier } from "../entities/enums";
-import type {
-  JackpotConfig,
-  FinancialRates,
-  PrizeAmounts,
-  PlayRules,
-  SplitRatios,
-} from "../entities/types";
+import type { JackpotConfig, FinancialRates, PrizeAmounts, PlayRules } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Draw Financial Calculation
@@ -82,11 +74,30 @@ export interface DrawFinancialResult {
 export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const { totalRevenue, totalFixedPrizes, tenantRevenues, companyRate } = input;
 
+  // Tổng hoa hồng đại lý = Σ(commission từng tenant).
+  // commission từng tenant đã được tính sẵn lúc place-bet (entry.tenant.commissionAmount).
   const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
 
+  // Thu nhập công ty lý thuyết (VND).
+  // Công thức: companyTake = round(totalRevenue × companyRate).
+  // round() để tránh số lẻ VND.
   const companyTake = Math.round(totalRevenue * companyRate);
+
+  // Phần còn lại sau khi trả giải cố định và hoa hồng đại lý.
+  // Công thức: remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission.
+  // Có thể âm nếu doanh thu thấp hơn tổng giải + commission (edge case kỳ quay ít người chơi).
   const remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission;
+
+  // Thu nhập công ty thực tế (VND) — không được vượt phần còn lại và không âm.
+  // Công thức: actualCompanyTake = min(companyTake, max(remainAfterPrizes, 0)).
+  // max(..., 0): nếu remainAfterPrizes âm → công ty không thu được gì.
+  // min(companyTake, ...): công ty chỉ thu tối đa phần lý thuyết.
   const actualCompanyTake = Math.min(companyTake, Math.max(remainAfterPrizes, 0));
+
+  // Phần đóng góp vào quỹ Jackpot (VND).
+  // Công thức: jackpotContribution = max(remainAfterPrizes - actualCompanyTake, 0).
+  // Là phần dư cuối cùng sau giải + commission + phần công ty.
+  // Không thể âm — nếu không còn dư thì contribution = 0.
   const jackpotContribution = Math.max(remainAfterPrizes - actualCompanyTake, 0);
 
   return {
@@ -100,178 +111,14 @@ export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancia
 }
 
 // ─────────────────────────────────────────────
-// Jackpot Rollover
-// ─────────────────────────────────────────────
-
-export function calculateNextJackpot(
-  currentOpening: number,
-  contribution: number,
-  hasJackpotWinner: boolean,
-  seedAmount: number,
-): number {
-  if (hasJackpotWinner) {
-    return seedAmount + contribution;
-  }
-  return currentOpening + contribution;
-}
-
-// ─────────────────────────────────────────────
-// Split Cycle Logic
-// ─────────────────────────────────────────────
-
-/**
- * Mega 6/45 chỉ có 1 kỳ/ngày → không cần check drawNo.
- * Điều kiện split: Jackpot >= splitThreshold && không ai trúng.
- */
-export function isSplitCycleDraw(
-  jackpotAmount: number,
-  splitThreshold: number,
-  hasJackpotWinner: boolean,
-): boolean {
-  return jackpotAmount >= splitThreshold && !hasJackpotWinner;
-}
-
-/** Đầu vào cho tính toán chia Jackpot (split cycle). */
-export interface SplitInput {
-  /** Giá trị Jackpot hiện tại sẽ chia (VND). */
-  jackpotAmount: number;
-  /** Tỷ lệ chia cho từng tier (tier1: 2, tier2: 2, tier3: 1). */
-  splitRatios: SplitRatios;
-  /** Số người trúng theo từng tier trong kỳ quay split. Key = PrizeTier. */
-  winnerCountPerTier: Map<PrizeTier, number>;
-}
-
-/** Chi tiết phân bổ cho 1 tier trong split cycle. */
-export interface SplitTierDetail {
-  /**
-   * Số tiền phân bổ ban đầu theo tỷ lệ (VND).
-   * Công thức: floor(jackpotAmount × parts / totalParts).
-   */
-  initialAmount: number;
-  /** Số tiền nhận thêm từ các tier không có người trúng (VND). */
-  redistributedAmount: number;
-  /** Tổng tiền cho tier (VND). Công thức: initialAmount + redistributedAmount. */
-  totalAmount: number;
-  /** Số người trúng tier này. */
-  winnerCount: number;
-  /**
-   * Tiền thưởng bonus cho mỗi người trúng (VND).
-   * Công thức: floor(totalAmount / winnerCount) hoặc roundDown đến bội số 5,000.
-   * Tier có ưu tiên cao nhất (tier1) nhận phần dư từ rounding.
-   */
-  bonusPerWinner: number;
-}
-
-/** Kết quả tính toán chia Jackpot (split cycle). */
-export interface SplitResult {
-  /** Chi tiết phân bổ cho từng tier. Key = PrizeTier. */
-  details: Map<PrizeTier, SplitTierDetail>;
-  /** Tiền bonus mỗi người trúng theo tier. Key = PrizeTier. */
-  bonusPerWinner: Map<PrizeTier, number>;
-  /** Số tiền dư sau khi làm tròn (VND). Chuyển vào Jackpot kỳ sau. */
-  roundingRemainder: number;
-}
-
-const SPLIT_ROUNDING_UNIT = 5_000;
-
-function roundDownToUnit(value: number, unit: number): number {
-  return Math.floor(value / unit) * unit;
-}
-
-export function calculateSplitDistribution(input: SplitInput): SplitResult {
-  const { jackpotAmount, splitRatios, winnerCountPerTier } = input;
-
-  const allEligible: Array<{ tier: PrizeTier; parts: number }> = [
-    { tier: PrizeTier.Tier1, parts: splitRatios.tier1 },
-    { tier: PrizeTier.Tier2, parts: splitRatios.tier2 },
-    { tier: PrizeTier.Tier3, parts: splitRatios.tier3 },
-  ];
-
-  const totalParts = allEligible.reduce((s, e) => s + e.parts, 0);
-
-  const tierAllocations = allEligible.map((e) => {
-    const winnerCount = winnerCountPerTier.get(e.tier) ?? 0;
-    return {
-      tier: e.tier,
-      initialAmount: Math.floor((jackpotAmount * e.parts) / totalParts),
-      winnerCount,
-      hasWinners: winnerCount > 0,
-    };
-  });
-
-  const tiersWithWinners = tierAllocations.filter((t) => t.hasWinners);
-  const details = new Map<PrizeTier, SplitTierDetail>();
-  const bonusPerWinnerMap = new Map<PrizeTier, number>();
-
-  if (tiersWithWinners.length === 0) {
-    return { details, bonusPerWinner: bonusPerWinnerMap, roundingRemainder: 0 };
-  }
-
-  const unclaimedTotal = tierAllocations
-    .filter((t) => !t.hasWinners)
-    .reduce((s, t) => s + t.initialAmount, 0);
-
-  const redistributedPerTier = Math.floor(unclaimedTotal / tiersWithWinners.length);
-
-  const priorityOrder: PrizeTier[] = [PrizeTier.Tier1, PrizeTier.Tier2, PrizeTier.Tier3];
-
-  const highestTierWithWinners = priorityOrder.find((tier) =>
-    tiersWithWinners.some((t) => t.tier === tier),
-  )!;
-
-  let totalRemainder = 0;
-
-  for (const t of tiersWithWinners) {
-    const totalForTier = t.initialAmount + redistributedPerTier;
-
-    if (t.tier === highestTierWithWinners) {
-      const bonus = Math.floor(totalForTier / t.winnerCount);
-      const tierRemainder = totalForTier - bonus * t.winnerCount;
-      totalRemainder += tierRemainder;
-
-      details.set(t.tier, {
-        initialAmount: t.initialAmount,
-        redistributedAmount: redistributedPerTier,
-        totalAmount: totalForTier,
-        winnerCount: t.winnerCount,
-        bonusPerWinner: bonus,
-      });
-      bonusPerWinnerMap.set(t.tier, bonus);
-    } else {
-      const roundedBonus = roundDownToUnit(totalForTier / t.winnerCount, SPLIT_ROUNDING_UNIT);
-      const tierRemainder = totalForTier - roundedBonus * t.winnerCount;
-      totalRemainder += tierRemainder;
-
-      details.set(t.tier, {
-        initialAmount: t.initialAmount,
-        redistributedAmount: redistributedPerTier,
-        totalAmount: totalForTier,
-        winnerCount: t.winnerCount,
-        bonusPerWinner: roundedBonus,
-      });
-      bonusPerWinnerMap.set(t.tier, roundedBonus);
-    }
-  }
-
-  if (totalRemainder > 0) {
-    const detail = details.get(highestTierWithWinners)!;
-    const remainderPerWinner = Math.floor(totalRemainder / detail.winnerCount);
-    detail.bonusPerWinner += remainderPerWinner;
-    bonusPerWinnerMap.set(highestTierWithWinners, detail.bonusPerWinner);
-    totalRemainder -= remainderPerWinner * detail.winnerCount;
-  }
-
-  return {
-    details,
-    bonusPerWinner: bonusPerWinnerMap,
-    roundingRemainder: totalRemainder,
-  };
-}
-
-// ─────────────────────────────────────────────
 // Default Config Values
 // ─────────────────────────────────────────────
 
+/**
+ * Cấu hình mặc định theo luật Vietlott Mega 6/45.
+ * Dùng để khởi tạo GlobalConfig khi tạo game lần đầu.
+ * Có thể được override qua backoffice (UpdateGameConfig).
+ */
 export const DEFAULT_MEGA645_CONFIG: {
   jackpot: JackpotConfig;
   rates: FinancialRates;
@@ -279,26 +126,37 @@ export const DEFAULT_MEGA645_CONFIG: {
   play: PlayRules;
 } = {
   jackpot: {
+    /** Jackpot khởi điểm tối thiểu theo quy định Vietlott: 12 tỷ VND. */
     seedAmount: 12_000_000_000,
-    splitThreshold: 12_000_000_000,
-    splitRatios: { tier1: 2, tier2: 2, tier3: 1 },
   },
   rates: {
+    /** Hoa hồng đại lý mặc định: 20% doanh thu. */
     defaultCommissionRate: 0.2,
+    /** Tỷ lệ công ty thu: 15% tổng doanh thu. */
     companyRate: 0.15,
   },
   defaultPrizes: {
+    /** Giải Nhất (5/6): 10.000.000 VND. */
     tier1: 10_000_000,
+    /** Giải Nhì (4/6): 300.000 VND. */
     tier2: 300_000,
+    /** Giải Ba (3/6): 30.000 VND. */
     tier3: 30_000,
   },
   play: {
+    /** Đơn giá 1 line: 10.000 VND (theo quy định Vietlott). */
     unitPrice: 10_000,
+    /** Tối đa 6 boards/vé (A-F). */
     maxBoardsPerTicket: 6,
+    /** Tối đa tham gia 6 kỳ quay liên tiếp với 1 vé. */
     maxDrawCount: 6,
+    /** Đóng bán trước 5 phút trước giờ quay (18:00). */
     salesCloseBeforeMinutes: 5,
+    /** Quay 3 lần/tuần. */
     drawsPerWeek: 3,
+    /** Ngày quay: 0=Chủ nhật, 3=Thứ 4, 5=Thứ 6. */
     drawDaysOfWeek: [0, 3, 5],
+    /** Giờ quay: 18:00. */
     drawTime: "18:00",
   },
 };

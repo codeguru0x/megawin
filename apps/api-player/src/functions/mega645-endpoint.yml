@@ -71,3 +71,21 @@ mega645-get-entry-lines:
         method: get
         authorizer:
           name: cognitoPlayerAuth
+
+mega645-list-draw-results:
+  handler: src/handlers/mega645/list-draw-results.handler
+  events:
+    - httpApi:
+        path: /games/mega645/draw-results
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+mega645-get-draw-result:
+  handler: src/handlers/mega645/get-draw-result.handler
+  events:
+    - httpApi:
+        path: /games/mega645/draw-results/{drawId}
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

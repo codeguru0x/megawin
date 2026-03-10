@@ -83,7 +83,6 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
         plus: { ...globalConfig.defaultPrizes.plus },
       },
       config: {
-        companyRate: globalConfig.rates.companyRate,
         defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
       },
       totalEntries,

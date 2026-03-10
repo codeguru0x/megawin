@@ -18,7 +18,7 @@ export function JackpotPanel() {
   if (!data) return null;
 
   const { cycle, progress } = data;
-  const pct = progress.percentage;
+  const pct = progress?.percentage ?? 0;
   const isHot = pct >= 80;
   const isWarm = pct >= 50;
 
@@ -28,7 +28,7 @@ export function JackpotPanel() {
         "relative overflow-hidden rounded-xl border p-4",
         "bg-linear-to-br from-orange-50/80 via-amber-50/60 to-yellow-50/40",
         "dark:from-orange-950/40 dark:via-amber-950/30 dark:to-yellow-950/20",
-        "dark:border-orange-800/50"
+        "dark:border-orange-800/50",
       )}
     >
       <div className="pointer-events-none absolute -right-6 -top-6 size-32 rounded-full bg-linear-to-br from-orange-300/20 to-amber-300/10 blur-2xl dark:from-orange-500/10 dark:to-amber-500/5" />
@@ -59,9 +59,7 @@ export function JackpotPanel() {
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-[11px]">
-            <span className="font-medium text-muted-foreground">
-              Tiến trình chia giải
-            </span>
+            <span className="font-medium text-muted-foreground">Tiến trình chia giải</span>
             <span className="font-semibold tabular-nums text-orange-800 dark:text-orange-300">
               {pct.toFixed(1)}%
             </span>
@@ -97,7 +95,7 @@ export function JackpotPanel() {
               Ngưỡng chia
             </div>
             <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">
-              {formatVNDCompact(progress.threshold)}
+              {formatVNDCompact(progress?.threshold ?? 0)}
             </p>
           </div>
           <div className="rounded-lg bg-white/60 px-2.5 py-2 dark:bg-white/5">

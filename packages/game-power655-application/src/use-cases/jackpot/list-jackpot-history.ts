@@ -26,9 +26,7 @@ export class ListJackpotHistoryUseCase extends NextApiUseCase<
   private readonly drawRepo = new DrawRepository();
 
   /** @inheritdoc */
-  protected async execute(
-    input: ListJackpotHistoryInput
-  ): Promise<ListJackpotHistoryOutput> {
+  protected async execute(input: ListJackpotHistoryInput): Promise<ListJackpotHistoryOutput> {
     const page = input.page ?? 1;
     const size = input.size ?? 20;
 
@@ -45,11 +43,8 @@ export class ListJackpotHistoryUseCase extends NextApiUseCase<
       closingJackpot2: d.jackpot?.closingJackpot2 ?? 0,
       jackpot1Contribution: d.financial?.jackpot1Contribution ?? 0,
       jackpot2Contribution: d.financial?.jackpot2Contribution ?? 0,
-      hasJackpot1Winner:
-        (d.jackpot?.closingJackpot1 ?? 0) < (d.jackpot?.openingJackpot1 ?? 0),
-      hasJackpot2Winner:
-        (d.jackpot?.closingJackpot2 ?? 0) < (d.jackpot?.openingJackpot2 ?? 0),
-      isSplitCycle: d.jackpot?.isSplitCycle ?? false,
+      hasJackpot1Winner: (d.stats?.tierWinners?.[PrizeTier.Jackpot1] ?? 0) > 0,
+      hasJackpot2Winner: (d.stats?.tierWinners?.[PrizeTier.Jackpot2] ?? 0) > 0,
       totalEntries: d.stats?.totalEntries ?? 0,
       totalRevenue: d.financial?.totalRevenue ?? 0,
     }));

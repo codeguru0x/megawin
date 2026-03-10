@@ -1,7 +1,4 @@
-import type {
-  JackpotCycleStatus,
-  JackpotCycleCloseReason,
-} from "@megawin/game-mega645/entities";
+import type { JackpotCycleStatus, JackpotCycleCloseReason } from "@megawin/game-mega645/entities";
 
 // ─────────────────────────────────────────────
 // GetJackpotCurrent
@@ -31,30 +28,23 @@ export interface GetJackpotCurrentOutput {
     /** ID kỳ quay settle gần nhất trong cycle (nếu có). */
     lastSettledDrawId?: string;
   };
-  /** Cấu hình split jackpot. */
-  config: {
-    /** Ngưỡng chia jackpot (VND). Khi currentAmount ≥ threshold → tự động split. */
-    splitThreshold: number;
-    /** Tỷ lệ chia cho từng hạng khi split. */
-    splitRatios: {
-      /** Tỷ lệ chia cho người trúng tier1 / jackpot (0-1). */
-      tier1: number;
-      /** Tỷ lệ chia cho người trúng tier2 – 5/6 (0-1). */
-      tier2: number;
-      /** Tỷ lệ chia cho người trúng tier3 – 4/6 (0-1). */
-      tier3: number;
-    };
+  /** Cấu hình jackpot: ngưỡng split và tỷ lệ phân bổ theo tier. */
+  config?: {
+    /** Ngưỡng giá trị jackpot để kích hoạt split cycle (VND). */
+    splitThreshold?: number;
+    /** Tỷ lệ phân bổ jackpot theo từng tier khi split (tier → tỷ lệ %). */
+    splitRatios?: Record<string, number>;
   };
-  /** Tiến trình tới ngưỡng split. */
-  progress: {
+  /** Tiến trình tích lũy jackpot đến ngưỡng split. */
+  progress?: {
     /** Giá trị jackpot hiện tại (VND). */
     current: number;
     /** Ngưỡng split (VND). */
     threshold: number;
-    /** Phần trăm tiến trình = (current / threshold) × 100. */
-    percentage: number;
-    /** Số tiền còn thiếu để đạt ngưỡng split (VND) = threshold − current. */
+    /** Phần còn thiếu để đạt ngưỡng (VND). */
     remaining: number;
+    /** Phần trăm tiến trình (0–100+). */
+    percentage: number;
   };
   /** Kỳ quay tiếp theo (nếu có). */
   nextDraw?: {
@@ -62,8 +52,8 @@ export interface GetJackpotCurrentOutput {
     drawId: string;
     /** Giờ quay thưởng. */
     drawTime: string;
-    /** Kỳ tiếp theo có dự kiến split hay không. */
-    splitCycleIntent: boolean;
+    /** Có ý định split jackpot trong kỳ này không. */
+    splitCycleIntent?: boolean;
   };
 }
 
@@ -91,12 +81,15 @@ export interface JackpotHistoryItem {
   openingAmount: number;
   /** Đóng góp vào jackpot trong kỳ (VND). */
   contribution: number;
-  /** Giá trị jackpot cuối kỳ (VND) = openingAmount + contribution (hoặc seedAmount nếu có winner/split). */
+  /**
+   * Giá trị quỹ jackpot cuối kỳ (VND).
+   * LUÔN = openingAmount + contribution (snapshot thực tế quỹ JP).
+   */
   closingAmount: number;
   /** Có người trúng jackpot (6/6) trong kỳ không. */
   hasWinner: boolean;
-  /** Kỳ này có thực hiện split jackpot không. */
-  isSplitCycle: boolean;
+  /** Kỳ này có phải kỳ split cycle không. */
+  isSplitCycle?: boolean;
   /** Tổng số entry (lượt tham gia) trong kỳ. */
   ticketEntryCount: number;
   /** Tổng doanh thu kỳ quay (VND). */
@@ -127,10 +120,10 @@ export interface JackpotWinnerSummary {
   /** ID tài khoản người trúng. */
   accountId: string;
   /** Tên đăng nhập (có thể ẩn một phần). */
-  username?: string;
+  username: string;
   /** ID tenant của người trúng. */
   tenantId: string;
-  /** Tên tenant. */
+  /** Tên tenant (đại lý) của người trúng. */
   tenantName?: string;
   /** Số tiền thưởng jackpot (VND). */
   prizeAmount: number;
@@ -155,8 +148,8 @@ export interface JackpotCycleSummary {
   endDrawId?: string;
   /** Thời điểm đóng cycle (ISO datetime). */
   closedAt?: string;
-  /** Lý do đóng cycle: "winner" (có người trúng jackpot) | "split" (đạt ngưỡng chia). */
-  closeReason?: JackpotCycleCloseReason;
+  /** Lý do đóng cycle: "winner" | "manual_reset". */
+  closeReason?: JackpotCycleCloseReason | string;
   /** Giá trị khởi tạo cycle (VND). */
   seedAmount: number;
   /** Giá trị jackpot hiện tại/cuối cùng (VND). */
@@ -167,24 +160,24 @@ export interface JackpotCycleSummary {
   totalContribution: number;
   /** Số kỳ quay đã settle trong cycle. */
   drawCount: number;
-  /** Chi tiết chia jackpot (chỉ có khi closeReason = "split"). */
+  /** Chi tiết chia giải khi split cycle (nếu có). */
   splitDetail?: {
-    /** Tổng số tiền jackpot được chia (VND). */
+    /** Tổng số tiền được chia (VND). */
     splitAmount: number;
-    /** Tổng số người nhận tiền chia. */
-    totalWinners: number;
-    /** Tổng số tiền đã trả (VND). */
+    /** Tổng tiền đã thanh toán (VND). */
     totalPaid: number;
-    /** Phân bổ theo hạng: key = tier, value = chi tiết chia cho hạng đó. */
+    /** Tổng số người thắng. */
+    totalWinners: number;
+    /** Phân bổ theo tier. */
     tierAllocations: Record<
       string,
       {
-        /** Số người trúng hạng này. */
+        /** Số người thắng tier này. */
         winnerCount: number;
-        /** Tiền thưởng mỗi người (VND). */
-        bonusPerWinner: number;
-        /** Tổng tiền hạng này = bonusPerWinner × winnerCount (VND). */
+        /** Tổng tiền phân bổ cho tier (VND). */
         totalAmount: number;
+        /** Tiền bonus mỗi người thắng (VND). */
+        bonusPerWinner: number;
       }
     >;
   };

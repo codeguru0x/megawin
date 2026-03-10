@@ -53,4 +53,23 @@ export const lotto535Keys = {
     params
       ? ([MODULE, "ops-playtype-dist", params] as const)
       : ([MODULE, "ops-playtype-dist"] as const),
+
+  /** Operations dashboard – live feed entries cho 1 kỳ quay */
+  opsLiveEntries: (drawId: string, params?: Record<string, unknown>) =>
+    params
+      ? ([MODULE, "ops-live-entries", drawId, params] as const)
+      : ([MODULE, "ops-live-entries", drawId] as const),
+
+  /** Draw selector – danh sách các kỳ active + scheduled + recent (48h) */
+  opsDrawSelector: [MODULE, "ops-draw-selector"] as const,
+
+  /** Chi tiết 1 kỳ quay (full entity gồm result, financial, jackpot, stats) */
+  drawDetail: (drawId: string) => [MODULE, "draw-detail", drawId] as const,
+
+  /** Operations dashboard – top combos cho 1 kỳ quay */
+  opsTopCombos: (drawId: string) => [MODULE, "ops-top-combos", drawId] as const,
+
+  /** Operations dashboard – winning entries của 1 kỳ quay (cursor-based) */
+  opsWinningEntries: (drawId: string, cursor: string) =>
+    [MODULE, "ops-winning-entries", drawId, cursor] as const,
 };

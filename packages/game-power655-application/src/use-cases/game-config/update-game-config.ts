@@ -2,16 +2,13 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DEFAULT_POWER655_CONFIG } from "@megawin/game-power655/rules";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
-import type {
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput,
-} from "./dto/game-config.dto";
+import type { UpdateGameConfigInput, UpdateGameConfigOutput } from "./dto/game-config.dto";
 
 /**
  * Cập nhật cấu hình game Power 6/55 toàn cục (upsert).
  *
  * Staff MegaWin gọi use case này từ backoffice UI để chỉnh sửa:
- * - Jackpot settings (JP1/JP2 seed, contribution ratios, overflow threshold, split)
+ * - Jackpot settings (JP1/JP2 seed, contribution ratios, overflow threshold)
  * - Financial rates (commission, company rate)
  * - Prize amounts (tier1-3)
  * - Play rules (unit price, draw times, draw days, etc.)
@@ -26,9 +23,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
   private readonly repo = new GameConfigRepository();
 
   /** @inheritdoc */
-  protected async execute(
-    input: UpdateGameConfigInput
-  ): Promise<UpdateGameConfigOutput> {
+  protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {
     this.validateInput(input);
     const existing = await this.repo.getGlobalConfig();
 
@@ -47,8 +42,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
         : undefined,
       defaultPrizes: input.defaultPrizes
         ? {
-            ...(existing?.defaultPrizes ??
-              DEFAULT_POWER655_CONFIG.defaultPrizes),
+            ...(existing?.defaultPrizes ?? DEFAULT_POWER655_CONFIG.defaultPrizes),
             ...input.defaultPrizes,
           }
         : undefined,
@@ -87,9 +81,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
         defaultCommissionRate !== undefined &&
         (defaultCommissionRate < 0 || defaultCommissionRate > 1)
       ) {
-        throw AppException.badRequest(
-          "defaultCommissionRate phải trong range [0, 1]."
-        );
+        throw AppException.badRequest("defaultCommissionRate phải trong range [0, 1].");
       }
 
       if (companyRate !== undefined && (companyRate < 0 || companyRate > 1)) {
@@ -106,10 +98,16 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
     }
 
     if (input.jackpot) {
-      if (input.jackpot.jackpot1?.seedAmount !== undefined && input.jackpot.jackpot1.seedAmount < 0) {
+      if (
+        input.jackpot.jackpot1?.seedAmount !== undefined &&
+        input.jackpot.jackpot1.seedAmount < 0
+      ) {
         throw AppException.badRequest("JP1 seedAmount phải >= 0.");
       }
-      if (input.jackpot.jackpot2?.seedAmount !== undefined && input.jackpot.jackpot2.seedAmount < 0) {
+      if (
+        input.jackpot.jackpot2?.seedAmount !== undefined &&
+        input.jackpot.jackpot2.seedAmount < 0
+      ) {
         throw AppException.badRequest("JP2 seedAmount phải >= 0.");
       }
       if (
@@ -117,12 +115,6 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
         input.jackpot.jp1OverflowThreshold < 0
       ) {
         throw AppException.badRequest("jp1OverflowThreshold phải >= 0.");
-      }
-      if (
-        input.jackpot.splitThreshold !== undefined &&
-        input.jackpot.splitThreshold < 0
-      ) {
-        throw AppException.badRequest("splitThreshold phải >= 0.");
       }
       if (
         input.jackpot.jp1ContributionRatio !== undefined &&

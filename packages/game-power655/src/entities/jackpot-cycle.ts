@@ -2,15 +2,18 @@
  * Power 6/55 – Jackpot Cycle Entity (Chu kỳ Jackpot)
  *
  * Power 6/55 có 2 jackpot tích luỹ chạy SONG SONG:
- *   - Jackpot 1: giải trùng 6/6 số chính (tối thiểu 30 tỷ)
- *   - Jackpot 2: giải trùng 5/6 + bonus number (tối thiểu 3 tỷ)
+ *   - Jackpot 1: giải trùng 6/6 số chính (seed mặc định 30 tỷ)
+ *   - Jackpot 2: giải trùng 5/6 + bonus number (seed mặc định 3 tỷ)
  *
- * Chu kỳ (cycle) theo dõi tích luỹ từ seed → winner/split:
- *   1. Tạo cycle mới với seed amounts (JP1: 30 tỷ, JP2: 3 tỷ)
- *   2. Mỗi kỳ quay: cộng contribution (90% cho JP1, 10% cho JP2)
- *   3. Overflow: khi JP1 > 300 tỷ → phần vượt chuyển JP2
- *   4. Cycle kết thúc khi: có winner JP1/JP2, hoặc split threshold
+ * Chu kỳ (cycle) theo dõi tích luỹ từ seed → winner:
+ *   1. Tạo cycle mới với seed amounts (đọc từ GlobalConfig)
+ *   2. Mỗi kỳ quay: cộng contribution (jp1Ratio cho JP1, jp2Ratio cho JP2)
+ *   3. Overflow: khi JP1 > jp1OverflowThreshold → phần vượt chuyển JP2
+ *   4. Cycle kết thúc khi: có winner JP1 và/hoặc JP2
  *   5. Tạo cycle mới với seed amounts
+ *
+ * Theo luật Vietlott, Power 6/55 KHÔNG CÓ cơ chế "Split Cycle".
+ * Jackpot tích lũy không giới hạn cho đến khi có winner.
  *
  * 1 cycle active tại 1 thời điểm. Cycles đã closed lưu lịch sử.
  * Collection: power655JackpotCycles.
@@ -24,7 +27,7 @@ export type JackpotCycleClosedReason =
   | "jackpot1_winner" // Có người trúng JP1 (trùng 6/6)
   | "jackpot2_winner" // Có người trúng JP2 (trùng 5/6 + bonus)
   | "both_winner" // Cả JP1 và JP2 đều có winner trong cùng kỳ
-  | "split"; // Tổng JP vượt splitThreshold → chia cho các giải cố định
+  | "manual_reset"; // Admin reset thủ công (không phải do winner)
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces
@@ -48,31 +51,6 @@ export interface JackpotWinnerInfo {
   drawId: string;
   /** Jackpot nào trúng: "jp1" hoặc "jp2". */
   jackpotType: "jp1" | "jp2";
-}
-
-/** Phân bổ tiền thưởng cho 1 tier trong kỳ chia. */
-export interface SplitTierAllocation {
-  /** Số lượng giải trúng trong tier này. */
-  winnerCount: number;
-  /** Bonus mỗi giải trúng = totalAmount / winnerCount (đã làm tròn). */
-  bonusPerWinner: number;
-  /** Tổng tiền phân bổ cho tier. */
-  totalAmount: number;
-}
-
-/** Chi tiết chia giải khi closedReason = split. */
-export interface JackpotSplitDetail {
-  /** Tổng giá trị Jackpot được chia (VND). */
-  splitAmount: number;
-  /**
-   * Phân bổ chia cho từng tier. Key = tier name.
-   * Chỉ chứa tier có người trúng.
-   */
-  tierAllocations: Record<string, SplitTierAllocation>;
-  /** Tổng số người trúng giải (across all tiers) trong kỳ chia. */
-  totalWinners: number;
-  /** Tổng tiền bonus đã chi trả thực tế (VND). */
-  totalPaid: number;
 }
 
 /**
@@ -106,9 +84,6 @@ export interface JackpotCycleDoc {
   closedReason?: JackpotCycleClosedReason;
   /** Thời điểm đóng cycle. */
   closedAt?: Date;
-
-  /** Chi tiết chia giải khi closedReason = "split". */
-  splitDetail?: JackpotSplitDetail;
 
   /** Danh sách người trúng Jackpot (khi có winner). */
   winners?: JackpotWinnerInfo[];

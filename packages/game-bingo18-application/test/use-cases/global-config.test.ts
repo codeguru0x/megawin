@@ -26,9 +26,6 @@ describe("GameConfigRepository – Bingo18 Global Config", () => {
     expect(config!.rates.defaultCommissionRate).toBe(
       DEFAULT_BINGO18_CONFIG.rates.defaultCommissionRate
     );
-    expect(config!.rates.companyRate).toBe(
-      DEFAULT_BINGO18_CONFIG.rates.companyRate
-    );
   });
 
   it("global config có đầy đủ singleNumPrizes", async () => {
@@ -123,15 +120,12 @@ describe("GameConfigRepository – Bingo18 Global Config", () => {
     const updated = await repo.upsertGlobalConfig({
       rates: {
         ...DEFAULT_BINGO18_CONFIG.rates,
-        companyRate: 0.18,
+        defaultCommissionRate: 0.25,
       },
     });
 
     expect(updated).not.toBeNull();
-    expect(updated!.rates.companyRate).toBe(0.18);
-    expect(updated!.rates.defaultCommissionRate).toBe(
-      DEFAULT_BINGO18_CONFIG.rates.defaultCommissionRate
-    );
+    expect(updated!.rates.defaultCommissionRate).toBe(0.25);
   });
 
   it("upsertGlobalConfig tăng version mỗi lần update", async () => {

@@ -46,7 +46,7 @@ export interface TicketLineDoc {
   bonusMatched: boolean;
   /** Hạng giải trúng. null = không trúng giải nào. */
   tier: PrizeTier | null;
-  /** Tiền thưởng cho line này (giải cố định, không bao gồm split bonus). */
+  /** Tiền thưởng cho line này (giải cố định). */
   prizeAmount: number;
   /** Thời điểm tạo document (= thời điểm settle line). */
   createdAt: Date;

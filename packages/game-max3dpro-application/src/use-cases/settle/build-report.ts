@@ -111,7 +111,7 @@ export class BuildReportUseCase extends InternalUseCase<
           totalPayout,
           totalWin,
           totalCommission: financials.totalAgentCommission,
-          companyTake: financials.actualCompanyTake,
+          companyTake: financials.profit,
           jackpotContribution: 0,
         },
       });

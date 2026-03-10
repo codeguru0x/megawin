@@ -1,31 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Filter,
-  Loader2,
-  MoreHorizontal,
-} from "lucide-react";
+import { useState, useCallback } from "react";
+import Link from "next/link";
+import { ExternalLink, Filter, Loader2, CalendarIcon } from "lucide-react";
+import type { DateRange } from "react-day-picker";
+import { format } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -42,17 +27,24 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DrawStatusBadge } from "@/components/games/lotto535/draw-status-badge";
-import {
-  JackpotDisplay,
-  formatVND,
-} from "@/components/games/lotto535/jackpot-display";
+import { LottoNumberBall } from "@/components/games/lotto535/lotto-number-ball";
+import { cn } from "@/lib/utils";
+import { formatVND } from "@megawin/shared/utils/number";
+import { Pagination } from "@megawin/shared/constants/pagination";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatVNTime, yesterdayVN } from "@megawin/shared/utils/date";
+import { formatVNDate, formatVNTime, subDays, todayVN } from "@megawin/shared/utils/date";
 
 import type { DrawSummary, ListDrawsParams } from "./use-draws";
 import { useDrawsList } from "./use-draws";
 
-const PAGE_SIZE = 20;
+const OPS_BASE = "/games/lotto535/operations";
+
+function defaultRange(): DateRange {
+  return {
+    from: subDays(new Date(), 7),
+    to: new Date(),
+  };
+}
 
 const HISTORY_STATUSES = [
   { value: "all", label: "Tất cả" },
@@ -62,45 +54,121 @@ const HISTORY_STATUSES = [
   { value: DrawStatus.Void, label: "Đã huỷ" },
 ];
 
+// ─── Date Range Picker ────────────────────────────────────────────────────────
+
+interface DateRangePickerProps {
+  value: DateRange | undefined;
+  onChange: (range: DateRange | undefined) => void;
+}
+
+function DateRangePicker({ value, onChange }: DateRangePickerProps) {
+  const [open, setOpen] = useState(false);
+
+  const label = value?.from
+    ? value.to
+      ? `${format(value.from, "dd/MM/yyyy")} – ${format(value.to, "dd/MM/yyyy")}`
+      : format(value.from, "dd/MM/yyyy")
+    : "Chọn khoảng thời gian";
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            "w-64 justify-start gap-2 font-normal",
+            !value?.from && "text-muted-foreground",
+          )}
+        >
+          <CalendarIcon className="size-3.5 shrink-0" />
+          <span className="truncate text-sm">{label}</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="range"
+          selected={value}
+          onSelect={onChange}
+          numberOfMonths={2}
+          disabled={{ after: new Date() }}
+          defaultMonth={value?.from}
+        />
+        <div className="flex items-center justify-end gap-2 border-t px-3 py-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              onChange(defaultRange());
+              setOpen(false);
+            }}
+          >
+            Mặc định
+          </Button>
+          <Button size="sm" disabled={!value?.from} onClick={() => setOpen(false)}>
+            Áp dụng
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ─── Section ──────────────────────────────────────────────────────────────────
+
 export function DrawHistorySection() {
   const [status, setStatus] = useState("all");
-  const [selectedDate, setSelectedDate] = useState(yesterdayVN());
-  const [page, setPage] = useState(1);
-  const [appliedFilters, setAppliedFilters] = useState<ListDrawsParams>({
-    page: 1,
-    size: PAGE_SIZE,
-    fromDate: yesterdayVN(),
-    toDate: yesterdayVN(),
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(defaultRange);
+
+  const [appliedFilters, setAppliedFilters] = useState<ListDrawsParams>(() => ({
+    size: Pagination.Default.Size,
+    fromDate: formatVNDate(subDays(new Date(), 7)),
+    toDate: todayVN(),
+  }));
+
+  const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
+  const [pageIndex, setPageIndex] = useState(0);
+
+  const { data, isLoading, isFetching } = useDrawsList({
+    ...appliedFilters,
+    cursor: cursors[pageIndex],
   });
 
-  const { data, isLoading, isFetching } = useDrawsList(appliedFilters);
   const draws = data?.draws ?? [];
-  const hasNext = draws.length === PAGE_SIZE;
+  const nextCursor = data?.nextCursor ?? null;
 
-  function applyFilters() {
+  const applyFilters = useCallback(() => {
     const params: ListDrawsParams = {
-      page: 1,
-      size: PAGE_SIZE,
+      size: Pagination.Default.Size,
       status: status !== "all" ? (status as DrawStatus) : undefined,
-      fromDate: selectedDate || undefined,
-      toDate: selectedDate || undefined,
+      fromDate: dateRange?.from ? formatVNDate(dateRange.from) : undefined,
+      toDate: dateRange?.to ? formatVNDate(dateRange.to) : undefined,
     };
-    setPage(1);
+    setCursors([undefined]);
+    setPageIndex(0);
     setAppliedFilters(params);
+  }, [status, dateRange]);
+
+  function goNext() {
+    if (!nextCursor) return;
+    const newIndex = pageIndex + 1;
+    setCursors((prev) => {
+      const copy = [...prev];
+      copy[newIndex] = nextCursor;
+      return copy;
+    });
+    setPageIndex(newIndex);
   }
 
-  function goToPage(p: number) {
-    setPage(p);
-    setAppliedFilters((prev) => ({ ...prev, page: p }));
+  function goPrev() {
+    if (pageIndex <= 0) return;
+    setPageIndex(pageIndex - 1);
   }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Lịch sử kỳ quay</CardTitle>
-        <CardDescription>
-          Các kỳ quay đã hoàn thành, sắp xếp mới nhất trước.
-        </CardDescription>
+        <CardDescription>Các kỳ quay đã hoàn thành, sắp xếp mới nhất trước.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Filter bar */}
@@ -117,18 +185,10 @@ export function DrawHistorySection() {
               ))}
             </SelectContent>
           </Select>
-          <Input
-            type="date"
-            className="w-40"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={applyFilters}
-            disabled={isFetching}
-          >
+
+          <DateRangePicker value={dateRange} onChange={setDateRange} />
+
+          <Button variant="outline" size="sm" onClick={applyFilters} disabled={isFetching}>
             {isFetching ? (
               <Loader2 className="mr-1 size-3.5 animate-spin" />
             ) : (
@@ -143,15 +203,15 @@ export function DrawHistorySection() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-44">Draw ID</TableHead>
-                <TableHead className="w-20">Kỳ</TableHead>
-                <TableHead className="w-20">Giờ</TableHead>
+                <TableHead className="w-36">Kỳ quay</TableHead>
+                <TableHead className="w-16">Giờ</TableHead>
                 <TableHead className="w-28">Trạng thái</TableHead>
-                <TableHead>Kết quả</TableHead>
-                <TableHead className="w-32 text-right">Jackpot</TableHead>
-                <TableHead className="w-24 text-right">Vé</TableHead>
+                <TableHead className="w-56">Kết quả</TableHead>
+                <TableHead className="w-24 text-right">Entries</TableHead>
+                <TableHead className="w-24 text-right">Lines</TableHead>
                 <TableHead className="w-32 text-right">Doanh thu</TableHead>
-                <TableHead className="w-14" />
+                <TableHead className="w-36 text-right">Trả thưởng</TableHead>
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -163,11 +223,8 @@ export function DrawHistorySection() {
                 </TableRow>
               ) : draws.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    Không có kỳ quay nào.
+                  <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
+                    Không có kỳ quay nào trong khoảng thời gian đã chọn.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -180,25 +237,23 @@ export function DrawHistorySection() {
         {/* Pagination */}
         {draws.length > 0 && (
           <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Trang {page}</p>
+            <p className="text-sm text-muted-foreground">Trang {pageIndex + 1}</p>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                disabled={page <= 1 || isFetching}
-                onClick={() => goToPage(page - 1)}
+                disabled={pageIndex <= 0 || isFetching}
+                onClick={goPrev}
               >
-                <ChevronLeft className="mr-1 size-4" />
                 Trước
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!hasNext || isFetching}
-                onClick={() => goToPage(page + 1)}
+                disabled={!nextCursor || isFetching}
+                onClick={goNext}
               >
                 Sau
-                <ChevronRight className="ml-1 size-4" />
               </Button>
             </div>
           </div>
@@ -209,69 +264,68 @@ export function DrawHistorySection() {
 }
 
 function DrawRow({ draw }: { draw: DrawSummary }) {
+  const isSettled = draw.status === DrawStatus.Settled;
+
   return (
-    <TableRow
-      className={
-        draw.isSplitCycle ? "bg-amber-50/50 dark:bg-amber-950/20" : undefined
-      }
-    >
-      <TableCell className="font-mono text-sm">
+    <TableRow className={draw.isSplitCycle ? "bg-amber-50/50 dark:bg-amber-950/20" : undefined}>
+      <TableCell>
         <div className="flex items-center gap-1.5">
-          {draw.drawId}
+          <Link
+            href={`${OPS_BASE}?draw=${draw.drawId}`}
+            className="font-mono text-sm font-semibold hover:underline underline-offset-2"
+          >
+            {draw.drawId}
+          </Link>
           {draw.isSplitCycle && (
-            <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] px-1.5 py-0">
+            <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] px-1 py-0">
               Split
             </Badge>
           )}
         </div>
       </TableCell>
-      <TableCell>
-        <Badge variant="outline">Kỳ {draw.drawNo}</Badge>
-      </TableCell>
-      <TableCell className="tabular-nums">
-        {formatVNTime(new Date(draw.drawTime))}
-      </TableCell>
+      <TableCell className="tabular-nums">{formatVNTime(new Date(draw.drawTime))}</TableCell>
       <TableCell>
         <DrawStatusBadge status={draw.status} />
       </TableCell>
       <TableCell>
-        {draw.hasResult ? (
-          <span className="text-sm text-muted-foreground">Có kết quả</span>
+        {draw.result ? (
+          <div className="flex items-center gap-1 flex-wrap">
+            {draw.result.winningMain.map((n) => (
+              <LottoNumberBall key={n} number={n} variant="main" size="xs" />
+            ))}
+            <span className="w-px h-4 bg-border mx-0.5" />
+            <LottoNumberBall number={draw.result.winningSpecial} variant="special" size="xs" />
+          </div>
         ) : (
-          <span className="text-sm text-muted-foreground">—</span>
+          <span className="text-xs text-muted-foreground">—</span>
         )}
       </TableCell>
-      <TableCell className="text-right">
-        {draw.jackpotAmount != null ? (
-          <JackpotDisplay amount={draw.jackpotAmount} size="sm" />
-        ) : (
-          <span className="text-sm text-muted-foreground">—</span>
-        )}
-      </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="text-right tabular-nums text-sm">
         {draw.ticketEntryCount != null && draw.ticketEntryCount > 0
           ? draw.ticketEntryCount.toLocaleString("vi-VN")
           : "—"}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
-        {draw.totalRevenue != null && draw.totalRevenue > 0
-          ? formatVND(draw.totalRevenue)
+      <TableCell className="text-right tabular-nums text-sm">
+        {draw.totalLineCount != null && draw.totalLineCount > 0
+          ? draw.totalLineCount.toLocaleString("vi-VN")
           : "—"}
       </TableCell>
+      <TableCell className="text-right tabular-nums text-sm">
+        {draw.totalRevenue != null && draw.totalRevenue > 0 ? formatVND(draw.totalRevenue) : "—"}
+      </TableCell>
+      <TableCell className="text-right tabular-nums text-sm">
+        {isSettled && draw.totalPrizesPayout != null
+          ? formatVND(draw.totalPrizesPayout)
+          : draw.totalPrizesPayout != null && draw.totalPrizesPayout > 0
+            ? formatVND(draw.totalPrizesPayout)
+            : "—"}
+      </TableCell>
       <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8">
-              <MoreHorizontal className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-              <Eye className="mr-2 size-4" />
-              Xem chi tiết
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button variant="ghost" size="icon" className="size-7" asChild>
+          <Link href={`${OPS_BASE}?draw=${draw.drawId}`} title="Xem tại trang vận hành">
+            <ExternalLink className="size-3.5" />
+          </Link>
+        </Button>
       </TableCell>
     </TableRow>
   );

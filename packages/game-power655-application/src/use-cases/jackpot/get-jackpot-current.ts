@@ -3,9 +3,11 @@
  *
  * Lấy thông tin dual Jackpot hiện tại:
  * - Active cycle (JP1 + JP2 current amounts)
- * - Cấu hình ngưỡng chia (splitThreshold, splitRatios)
- * - Progress bar cho cả JP1, JP2, và tổng
- * - Kỳ tiếp theo (có phải kỳ chia dự kiến không)
+ * - Cấu hình overflow threshold
+ * - Progress bar cho cả JP1 và JP2
+ * - Kỳ tiếp theo
+ *
+ * Power 6/55 KHÔNG có split cycle — theo luật Vietlott gốc.
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
@@ -16,12 +18,9 @@ import type { GetJackpotCurrentOutput } from "./dto/jackpot.dto";
 
 /**
  * Lấy trạng thái dual jackpot hiện tại Power 6/55.
- * Trả về JP1 (6/6), JP2 (5/6+bonus), progress, và kỳ quay tiếp theo.
+ * Trả về JP1 (6/6), JP2 (5/6+bonus), và kỳ quay tiếp theo.
  */
-export class GetJackpotCurrentUseCase extends NextApiUseCase<
-  void,
-  GetJackpotCurrentOutput
-> {
+export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCurrentOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly drawRepo = new DrawRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
@@ -34,19 +33,10 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<
     ]);
 
     const config = globalConfig.jackpot;
-    const jp1Current =
-      activeCycle?.jackpot1Current ?? config.jackpot1.seedAmount;
-    const jp2Current =
-      activeCycle?.jackpot2Current ?? config.jackpot2.seedAmount;
-    const totalJackpot = jp1Current + jp2Current;
-    const threshold = config.splitThreshold;
-    const percentage = Math.min((totalJackpot / threshold) * 100, 100);
+    const jp1Current = activeCycle?.jackpot1Current ?? config.jackpot1.seedAmount;
+    const jp2Current = activeCycle?.jackpot2Current ?? config.jackpot2.seedAmount;
 
     const nextScheduled = await this.drawRepo.getNextScheduledDraw();
-
-    const splitCycleIntent = nextScheduled
-      ? totalJackpot >= threshold
-      : false;
 
     return {
       cycle: activeCycle
@@ -73,8 +63,7 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<
             startedAt: new Date().toISOString(),
           },
       config: {
-        splitThreshold: config.splitThreshold,
-        splitRatios: config.splitRatios,
+        jp1OverflowThreshold: config.jp1OverflowThreshold,
       },
       jackpot1Progress: {
         current: jp1Current,
@@ -84,18 +73,11 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<
         current: jp2Current,
         seed: config.jackpot2.seedAmount,
       },
-      totalJackpotProgress: {
-        current: totalJackpot,
-        threshold,
-        percentage: Math.round(percentage * 100) / 100,
-        remaining: Math.max(threshold - totalJackpot, 0),
-      },
       nextDraw: nextScheduled
         ? {
             drawId: nextScheduled.drawId,
             drawNo: nextScheduled.drawNo,
             drawTime: nextScheduled.drawTime.toISOString(),
-            splitCycleIntent,
           }
         : undefined,
     };

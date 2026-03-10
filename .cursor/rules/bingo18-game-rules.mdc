@@ -122,26 +122,27 @@ totalAmount = amountPerDraw × drawCount
 
 ---
 
-## 5. Tỷ lệ tài chính — KHÔNG CÓ JACKPOT
+## 5. Tỷ lệ tài chính — KHÔNG CÓ JACKPOT, KHÔNG CÓ COMPANY RATE
 
 Tất cả tỷ lệ dưới đây là giá trị **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.rates`.
 
 | Khoản mục | Tỷ lệ mặc định | Ghi chú |
 |-----------|----------------|---------|
 | Hoa hồng đại lý | 20% revenue | Override per tenant qua TenantConfig |
-| Công ty thu | 15% revenue | Có cap khi doanh thu thấp |
 | Giải cố định | Biến thiên | Phụ thuộc kết quả quay |
-| Profit | Phần còn lại | **Có thể âm** nếu trả thưởng lớn |
+| Profit | Phần còn lại | Revenue - Commission - FixedPrizes (công ty thu toàn bộ) |
 
+**Phân bổ doanh thu** (không có jackpot contribution, không có companyRate):
 ```
 Revenue = 100% doanh thu tiền cược
 ├── Agent Commission = Σ(commissionRate × revenue) per tenant
-├── Company Take     = companyRate × Revenue (có cap)
 ├── Fixed Prizes     = Tổng tiền trả thưởng
-└── Profit           = Revenue - Commission - CompanyTake - FixedPrizes
+└── Profit           = Revenue - Commission - FixedPrizes (có thể âm nếu trả thưởng lớn)
 ```
 
-**KHÔNG có**: Jackpot contribution, Jackpot cycle, Split cycle, Payout caps, Overflow.
+> **Tại sao không có companyRate?** Các game KHÔNG CÓ Jackpot (Keno, Bingo18, Max3D, Max3D Pro) không cần tách riêng phần công ty thu (companyRate/companyTake). Vì không có Jackpot pool cần tích luỹ, công ty thu TOÀN BỘ profit còn lại sau khi trừ giải thưởng và hoa hồng đại lý. companyRate chỉ cần thiết cho các game CÓ Jackpot (Lotto, Mega, Power) nơi cần phân bổ revenue giữa công ty và Jackpot pool.
+
+**KHÔNG có**: Jackpot contribution, Jackpot cycle, Split cycle, Payout caps, Overflow, companyRate/companyTake.
 
 ---
 
@@ -303,7 +304,7 @@ Routes: draws, config, tenant-config, draws/preview, draws/current.
 
 ## 11. Quy tắc quan trọng cho AI Agent
 
-1. **KHÔNG CÓ Jackpot/Split/Overflow**: Game đơn giản nhất — financial model chỉ cộng/trừ
+1. **KHÔNG CÓ Jackpot/Split/Overflow/companyRate**: Game đơn giản nhất — financial model: `profit = totalRevenue - totalFixedPrizes - totalAgentCommission`. Công ty thu toàn bộ profit còn lại
 2. **Board + SideBet tách biệt**: Ticket có 2 mảng riêng, entry cũng có `boardPayouts[]` + `sideBetPayouts[]`
 3. **5 cách chơi, 5 hàm match riêng**: Không dùng chung determineTier() như game khác
 4. **TripleKind**: `specific` (chọn đúng số, 1.200.000đ) vs `any` (bất kỳ 3 giống, 200.000đ) — concept riêng

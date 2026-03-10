@@ -11,9 +11,7 @@ import {
   Power655Collections,
   type JackpotCycleDoc,
   type JackpotCycleClosedReason,
-  type JackpotSplitDetail,
   type JackpotWinnerInfo,
-  type SplitRatios,
   type JackpotCycleEntity,
 } from "@megawin/game-power655/entities";
 import { BaseRepo } from "./base-repo";
@@ -32,13 +30,15 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     return this.findOne({ status: "active" });
   }
 
-  /** Tạo cycle mới với dual jackpot seed amounts. */
+  /** Tạo cycle mới với dual jackpot seed amounts. Guard: skip nếu đã có active cycle (idempotent khi retry). */
   async createCycle(input: {
     startDrawId: string;
     jp1SeedAmount: number;
     jp2SeedAmount: number;
-    config: { splitThreshold: number; splitRatios: SplitRatios };
   }): Promise<void> {
+    const existing = await this.findOne({ status: "active" });
+    if (existing) return;
+
     const maxCycle = await this.findOne({}, { sort: { cycleNo: -1 } });
     const cycleNo = (maxCycle?.cycleNo ?? 0) + 1;
     const now = new Date();
@@ -86,14 +86,13 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     );
   }
 
-  /** Đóng cycle (winner / split). */
+  /** Đóng cycle (winner). */
   async closeCycle(input: {
     cycleNo: number;
     endDrawId: string;
     closedReason: JackpotCycleClosedReason;
     finalJp1: number;
     finalJp2: number;
-    splitDetail?: JackpotSplitDetail;
     winners?: JackpotWinnerInfo[];
   }): Promise<void> {
     const now = new Date();
@@ -106,7 +105,6 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       jackpot1Current: number;
       jackpot2Current: number;
       updatedAt: Date;
-      splitDetail?: JackpotSplitDetail;
       winners?: JackpotWinnerInfo[];
     };
 
@@ -120,7 +118,6 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       updatedAt: now,
     };
 
-    if (input.splitDetail) $set.splitDetail = input.splitDetail;
     if (input.winners) $set.winners = input.winners;
 
     await this.updateOne(
@@ -130,6 +127,11 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       },
       { $set: $set as unknown as Record<string, unknown> },
     );
+  }
+
+  /** Tìm cycle đã closed có endDrawId = drawId (dùng cho retry detection trong FinalizeSettle). */
+  async findClosedByEndDrawId(drawId: string): Promise<JackpotCycleEntity | null> {
+    return this.findOne({ status: "closed", endDrawId: drawId });
   }
 
   /** Lấy danh sách cycles đã đóng (mới nhất trước). */

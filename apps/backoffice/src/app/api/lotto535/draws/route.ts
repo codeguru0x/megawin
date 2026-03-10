@@ -26,7 +26,7 @@ export const GET = withApi()
       status: query.status as ListDrawsInput["status"],
       fromDate: query.fromDate,
       toDate: query.toDate,
-      page: query.page,
+      cursor: query.cursor,
       size: query.size,
     });
   });

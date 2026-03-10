@@ -67,4 +67,29 @@ export class LineRepository extends BaseRepo<any> {
 
     return { lines: slice as unknown as TicketLineDoc[], hasMore };
   }
+
+  /**
+   * Patch winAmount cho tất cả lines trúng jackpotTier trong draw.
+   *
+   * Idempotent: chỉ update lines có matchResult.tier = jackpotTier và winAmount = 0.
+   *
+   * @param jackpotTier - "jackpot1" hoặc "jackpot2"
+   */
+  async patchJackpotLineWinAmount(
+    drawId: string,
+    jackpotTier: string,
+    jackpotPerWinner: number,
+  ): Promise<number> {
+    const result = await this.updateMany(
+      {
+        drawId,
+        "matchResult.tier": jackpotTier,
+        "matchResult.winAmount": 0,
+      },
+      {
+        $set: { "matchResult.winAmount": jackpotPerWinner },
+      },
+    );
+    return result.modifiedCount;
+  }
 }

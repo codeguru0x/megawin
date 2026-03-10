@@ -140,20 +140,23 @@ Giá trị thưởng = (số lần tham gia / 10.000đ) x giá trị giải thư
 
 ## 6. Tỷ lệ tài chính (mặc định, cấu hình trong GlobalConfig)
 
-Keno KHÔNG có Jackpot tích lũy. Công thức đơn giản:
+Keno KHÔNG có Jackpot tích luỹ. Sau khi trả giải thưởng và hoa hồng đại lý, **toàn bộ phần còn lại là lợi nhuận công ty**.
 
-> Tất cả tỷ lệ dưới đây là giá trị **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.rates`.
+> Khác biệt so với game có Jackpot (Lotto 5/35, Mega645...):
+> - Game có Jackpot: `companyRate` dùng để **CHIA** phần dư giữa công ty và quỹ Jackpot tích luỹ
+> - Keno: không có quỹ Jackpot → **không cần** `companyRate` → công ty thu toàn bộ phần dư
 
 ```
-profit = totalRevenue - totalPrizes - totalAgentCommission - companyTake
+profit = totalRevenue - totalPrizes - totalAgentCommission
 ```
 
 | Khoản mục | Tỷ lệ | Ghi chú |
 |-----------|--------|---------|
 | Hoa hồng đại lý | 20% revenue | Override per tenant qua TenantConfig |
-| Công ty thu | 15% revenue | |
-| Giải thưởng | ~65% revenue | Cố định theo bảng |
-| Lợi nhuận | Phần còn lại | Có thể âm nếu nhiều người trúng giải lớn |
+| Giải thưởng | Cố định theo bảng | Tra `GlobalConfigDoc.basicPrizes` / sideBetPrizes |
+| Lợi nhuận công ty | Phần còn lại | = revenue - prizes - commission. Có thể âm |
+
+> **LƯU Ý**: Keno `FinancialRates` chỉ có `defaultCommissionRate`, **KHÔNG** có `companyRate`. Đây là khác biệt cố ý so với các game có Jackpot.
 
 ---
 
@@ -340,7 +343,7 @@ Keno sử dụng chung:
 
 1. **Số lưu dạng string zero-padded**: "01"-"80" (2 ký tự)
 2. **Tiền lưu integer VND**: Không dùng float
-3. **KHÔNG có Jackpot**: Keno hoàn toàn giải cố định, profit = revenue - prizes - commission - companyTake
+3. **KHÔNG có Jackpot, KHÔNG có companyRate**: Keno hoàn toàn giải cố định, profit = revenue - prizes - commission. Công ty thu toàn bộ phần dư (khác game Jackpot cần chia phần dư cho quỹ tích luỹ)
 4. **Payout caps bắt buộc**: Bậc 8/9/10 phải áp dụng giới hạn 10 tỷ/kỳ khi số bộ trúng vượt ngưỡng
 5. **Side bets độc lập**: Lớn/Nhỏ và Chẵn/Lẻ là cược riêng, không phụ thuộc cách chơi cơ bản
 6. **Giải an ủi 0 số**: CHỈ pick8, pick9, pick10 có giải khi trùng 0 số (10.000 VND)

@@ -15,7 +15,6 @@
 import type { DrawStatus, DrawResultSource } from "@megawin/game-core/entities";
 import type { DrawTenantFinancial } from "@megawin/game-core/types";
 import type { MainTuple, BonusNumber, ISODateString, DrawNo } from "./types";
-import type { PrizeTier } from "./enums";
 
 /**
  * Kết quả kỳ quay.
@@ -48,41 +47,12 @@ export interface DrawSales {
 export interface DrawJackpot {
   /** Giá trị JP1 đầu kỳ (trước khi cộng tích luỹ kỳ này). */
   openingJackpot1: number;
-  /** Giá trị JP1 cuối kỳ (sau khi cộng tích luỹ, trừ winner nếu có). */
+  /** Giá trị JP1 cuối kỳ. LUÔN = openingJackpot1 + jackpot1Contribution. */
   closingJackpot1: number;
   /** Giá trị JP2 đầu kỳ. */
   openingJackpot2: number;
-  /** Giá trị JP2 cuối kỳ. */
+  /** Giá trị JP2 cuối kỳ. LUÔN = openingJackpot2 + jackpot2Contribution. */
   closingJackpot2: number;
-  /** Kỳ này có phải split cycle không (tổng JP vượt ngưỡng, không ai trúng). */
-  isSplitCycle: boolean;
-  /** Chi tiết phân bổ split (chỉ có khi isSplitCycle = true). */
-  split?: DrawSplit;
-}
-
-/**
- * Chi tiết phân bổ split cycle.
- * Khi tổng JP vượt ngưỡng splitThreshold → chia cho các giải cố định.
- */
-export interface DrawSplit {
-  /** Tổng số tiền đem chia. */
-  totalAmount: number;
-  /** Chi tiết chia cho từng hạng giải. */
-  details: Record<PrizeTier, DrawSplitTierDetail>;
-}
-
-/** Chi tiết split cho 1 hạng giải. */
-export interface DrawSplitTierDetail {
-  /** Số tiền ban đầu (trước redistribute). */
-  initialAmount: number;
-  /** Số tiền nhận thêm từ các tier không có winner. */
-  redistributedAmount: number;
-  /** Tổng = initialAmount + redistributedAmount. */
-  totalAmount: number;
-  /** Số lượng winner ở tier này. */
-  winnerCount: number;
-  /** Bonus mỗi winner nhận = totalAmount / winnerCount. */
-  bonusPerWinner: number;
 }
 
 /**
@@ -128,7 +98,7 @@ export interface DrawStats {
   totalWinners: number;
   /** Số winners theo từng hạng giải. Key = PrizeTier value. */
   tierWinners: Record<string, number>;
-  /** Tổng tiền thưởng phải trả (cố định + jackpot + split bonus). */
+  /** Tổng tiền thưởng phải trả (cố định + jackpot). */
   totalPayout: number;
 }
 

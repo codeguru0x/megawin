@@ -20,7 +20,6 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
-import type { SettleContext } from "./types";
 
 const CHUNK_SIZE = 500;
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
@@ -30,33 +29,36 @@ export interface SyncTicketSummariesResult {
   done: boolean;
 }
 
+/** Minimal input — chỉ cần drawId, compatible với SettleContext và VoidContext. */
+export interface DrawSyncInput {
+  drawId: string;
+}
+
 export class SyncTicketSummariesUseCase extends InternalUseCase<
-  SettleContext,
+  DrawSyncInput,
   SyncTicketSummariesResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 
-  protected async execute(
-    input: SettleContext,
-  ): Promise<SyncTicketSummariesResult> {
+  protected async execute(input: DrawSyncInput): Promise<SyncTicketSummariesResult> {
     const { drawId } = input;
     let cursor: string | undefined;
     const startTime = Date.now();
 
     while (Date.now() - startTime < MAX_EXECUTION_MS) {
-      const chunk = await this.ticketRepo.getTicketsByDrawIdCursor(drawId, cursor, CHUNK_SIZE);
+      const tickets = await this.ticketRepo.getTicketsByDrawIdCursor(drawId, cursor, CHUNK_SIZE);
 
-      if (chunk.length === 0) {
+      if (tickets.length === 0) {
         return { drawId, done: true };
       }
 
-      const ticketIds = chunk.map((t) => t.ticketId);
-      const totalDrawsMap = new Map(chunk.map((t) => [t.ticketId, t.totalDraws]));
+      const ticketIds = tickets.map((t) => t.ticketId);
+      const totalDrawsMap = new Map(tickets.map((t) => [t.ticketId, t.totalDraws]));
 
       const summaryMap = await this.entryRepo.aggregateTicketSummariesBatch(ticketIds);
 
-      const items = chunk
+      const items = tickets
         .map((t) => {
           const summary = summaryMap.get(t.ticketId);
 
@@ -69,15 +71,16 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
             summary: { ...summary, totalDraws: totalDrawsMap.get(t.ticketId) ?? 1 },
           };
         })
+        // Lọc ra lấy các item không phải null để sync
         .filter((item): item is NonNullable<typeof item> => item !== null);
 
       if (items.length > 0) {
         await this.ticketRepo.bulkSyncSummaries(items);
       }
 
-      cursor = chunk[chunk.length - 1]!.ticketId;
+      cursor = tickets[tickets.length - 1]!.ticketId;
 
-      if (chunk.length < CHUNK_SIZE) {
+      if (tickets.length < CHUNK_SIZE) {
         return { drawId, done: true };
       }
     }

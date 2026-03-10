@@ -6,6 +6,8 @@
  *   - currentDraw: kỳ đầu tiên (backward compat)
  *   - lastSettledDraw: kỳ settle gần nhất
  *   - jackpotCurrentAmount: đọc từ active jackpot cycle
+ *
+ * Mega 6/45 theo luật Vietlott: không có split cycle.
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
@@ -36,25 +38,19 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  protected async execute(
-    input: GetCurrentDrawInput
-  ): Promise<GetCurrentDrawOutput> {
+  protected async execute(input: GetCurrentDrawInput): Promise<GetCurrentDrawOutput> {
     const allowStatuses = input.allowStatuses ?? ACTIVE_STATUSES;
 
-    const [activeDraws, lastSettled, activeCycle, globalConfig] =
-      await Promise.all([
-        this.drawRepo.getActiveDraws(allowStatuses),
-        this.drawRepo.getLatestSettledDraw(),
-        this.cycleRepo.getActiveCycle(),
-        this.getGlobalConfig.run(),
-      ]);
+    const [activeDraws, lastSettled, activeCycle, globalConfig] = await Promise.all([
+      this.drawRepo.getActiveDraws(allowStatuses),
+      this.drawRepo.getLatestSettledDraw(),
+      this.cycleRepo.getActiveCycle(),
+      this.getGlobalConfig.run(),
+    ]);
 
-    const jackpotCurrentAmount =
-      activeCycle?.currentAmount ?? globalConfig.jackpot.seedAmount;
+    const jackpotCurrentAmount = activeCycle?.currentAmount ?? globalConfig.jackpot.seedAmount;
 
-    const mapped = activeDraws.map((d) =>
-      mapDrawInfo(d, jackpotCurrentAmount, globalConfig.jackpot.splitThreshold)
-    );
+    const mapped = activeDraws.map((d) => mapDrawInfo(d, jackpotCurrentAmount));
 
     return {
       currentDraw: mapped[0] ?? null,
@@ -76,7 +72,6 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<
               ? {
                   openingAmount: lastSettled.jackpot.openingAmount,
                   closingAmount: lastSettled.jackpot.closingAmount,
-                  isSplitCycle: lastSettled.jackpot.isSplitCycle ?? false,
                 }
               : undefined,
           }
@@ -85,11 +80,7 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<
   }
 }
 
-function mapDrawInfo(
-  draw: DrawEntity,
-  jackpotCurrentAmount: number,
-  splitThreshold: number
-): CurrentDrawInfo {
+function mapDrawInfo(draw: DrawEntity, jackpotCurrentAmount: number): CurrentDrawInfo {
   return {
     drawId: draw.drawId,
     drawDate: draw.drawDate,
@@ -101,7 +92,6 @@ function mapDrawInfo(
       closeAt: draw.sales.closeAt.toISOString(),
     },
     jackpotCurrentAmount,
-    splitCycleIntent: jackpotCurrentAmount >= splitThreshold,
     stats: draw.stats
       ? {
           ticketEntryCount: draw.stats.ticketEntryCount,

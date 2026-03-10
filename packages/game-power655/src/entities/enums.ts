@@ -20,7 +20,7 @@ export const Power655Collections = {
   TicketLines: "power655_ticket_lines",
   /** Kỳ quay mở thưởng – lifecycle: scheduled → salesOpen → salesClosed → published → settling → settled. */
   Draws: "power655_draws",
-  /** Chu kỳ Jackpot – theo dõi tích luỹ JP1 + JP2 từ seed đến khi có winner hoặc split. */
+  /** Chu kỳ Jackpot – theo dõi tích luỹ JP1 + JP2 từ seed đến khi có winner. */
   JackpotCycles: "power655_jackpot_cycles",
 } as const;
 

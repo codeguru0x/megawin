@@ -36,7 +36,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
 
   /** Tính tài chính tổng hợp từ DB. Idempotent. */
   protected async execute(input: SettleContext): Promise<SettleFinancials> {
-    const { drawId, totalLines, config } = input;
+    const { drawId, totalLines } = input;
 
     const [tenantAgg, payoutSummary] = await Promise.all([
       this.entryRepo.aggregateRevenueByTenant(drawId),
@@ -51,7 +51,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
         revenue: t.revenue,
         commission: t.commission,
       })),
-      companyRate: config.companyRate,
     };
 
     const fin = calculateDrawFinancials(financialInput);
@@ -62,9 +61,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
         totalRevenue: fin.totalRevenue,
         totalFixedPrizes: fin.totalFixedPrizes,
         totalAgentCommission: fin.totalAgentCommission,
-        companyTake: fin.actualCompanyTake,
-        companyTakeRate: config.companyRate,
-        companyTakeMax: fin.companyTake,
+        companyTake: fin.profit,
       },
       {
         ticketEntryCount: payoutSummary.totalSettled,
@@ -86,8 +83,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       totalRevenue: fin.totalRevenue,
       totalFixedPrizes: fin.totalFixedPrizes,
       totalAgentCommission: fin.totalAgentCommission,
-      companyTake: fin.companyTake,
-      actualCompanyTake: fin.actualCompanyTake,
       profit: fin.profit,
     };
   }

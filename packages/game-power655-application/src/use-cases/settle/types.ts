@@ -12,7 +12,6 @@
  *   SettleEntries → nhận SettleContext, trả done/false (loop)
  *   CalculateFinancials → nhận SettleContext, trả SettleFinancials
  *     → Step Function merge: settleCtx.financials = result
- *   ApplySplitBonuses → nhận SettleContext (có financials)
  *   SyncTicketSummaries → nhận SettleContext
  *   BuildReport → nhận SettleContext (có financials)
  *   FinalizeSettle → nhận SettleContextWithFinancials (financials bắt buộc)
@@ -20,6 +19,9 @@
  *
  * Power 6/55 có DUAL JACKPOT (JP1: 6/6, JP2: 5/6 + bonus).
  * Tất cả types đều có jp1/jp2 fields thay vì single jackpot.
+ *
+ * Theo luật Vietlott, Power 6/55 KHÔNG CÓ cơ chế Split Cycle.
+ * Jackpot tích lũy không giới hạn cho đến khi có winner.
  *
  * Mỗi step destructure những field cần dùng. Không define input riêng
  * (trừ PrepareSettleInput vì step đầu chỉ nhận drawId).
@@ -58,54 +60,39 @@ export interface PowerDrawResult {
  * Config snapshot tại thời điểm settle — KHÔNG thay đổi giữa các step.
  *
  * Power 6/55 có dual jackpot nên config chứa params riêng cho JP1 và JP2.
+ * Tất cả giá trị ngưỡng là tham khảo mặc định, đọc từ GlobalConfig khi runtime.
  */
 export interface PowerSettleConfig {
   /**
    * Số tiền khởi điểm Jackpot 1 khi bắt đầu cycle mới (VND).
-   * Khi reset JP1 (có winner hoặc split), cycle mới bắt đầu từ giá trị này.
+   * Khi reset JP1 (có winner), cycle mới bắt đầu từ giá trị này.
    */
   jp1SeedAmount: number;
 
   /**
    * Số tiền khởi điểm Jackpot 2 khi bắt đầu cycle mới (VND).
-   * Khi reset JP2 (có winner hoặc split), cycle mới bắt đầu từ giá trị này.
+   * Khi reset JP2 (có winner), cycle mới bắt đầu từ giá trị này.
    */
   jp2SeedAmount: number;
 
   /**
    * Tỷ lệ đóng góp vào Jackpot 1 từ jackpot contribution (0-1).
-   * VD: 0.6 = 60% jackpotContribution đổ vào JP1.
+   * VD: 0.9 = 90% jackpotContribution đổ vào JP1.
    */
   jp1Ratio: number;
 
   /**
    * Tỷ lệ đóng góp vào Jackpot 2 từ jackpot contribution (0-1).
-   * VD: 0.4 = 40% jackpotContribution đổ vào JP2.
+   * VD: 0.1 = 10% jackpotContribution đổ vào JP2.
    * jp1Ratio + jp2Ratio = 1.
    */
   jp2Ratio: number;
 
   /**
    * Ngưỡng tràn Jackpot 1 (VND) — khi JP1 vượt ngưỡng, phần dư chuyển sang JP2.
-   * VD: 300.000.000.000 (300 tỷ).
+   * Mặc định tham khảo: 300.000.000.000 (300 tỷ). Đọc từ GlobalConfig khi runtime.
    */
   jp1OverflowThreshold: number;
-
-  /**
-   * Ngưỡng kích hoạt chia giải (VND) — khi tổng JP1 + JP2 >= threshold.
-   * Chỉ chia ở kỳ Evening (drawNo cuối cùng trong ngày).
-   */
-  splitThreshold: number;
-
-  /**
-   * Tỷ lệ chia Jackpot cho từng tier khi split.
-   * Chỉ tier1-tier3 tham gia chia (Power 6/55 có 3 tier cố định).
-   */
-  splitRatios: {
-    tier1: number;
-    tier2: number;
-    tier3: number;
-  };
 
   /**
    * Tỷ lệ công ty thu về trên tổng doanh thu (0-1, mặc định 0.15 = 15%).
@@ -118,55 +105,20 @@ export interface PowerSettleConfig {
    * Override per tenant qua TenantConfig.
    */
   defaultCommissionRate: number;
+
+  /**
+   * Snapshot cycleNo tại thời điểm PrepareSettle.
+   * Dùng bởi FinalizeSettle để updateCycleStats đúng cycle.
+   */
+  cycleNo: number;
+
+  /**
+   * Snapshot drawCount của cycle tại thời điểm PrepareSettle.
+   * FinalizeSettle tính: newDrawCount = cycleDrawCountBefore + 1.
+   * Dùng giá trị tuyệt đối → idempotent khi retry.
+   */
+  cycleDrawCountBefore: number;
 }
-
-/**
- * Chi tiết phân bổ split cho 1 tier — thông tin thưởng Jackpot chia cho
- * những người trúng tier đó trong kỳ split.
- *
- * Dùng chung giữa CalculateFinancials (tính), ApplySplitBonuses (patch entry),
- * FinalizeSettle (ghi vào cycle close record).
- */
-export interface PowerSplitTierDetail {
-  /**
-   * Số tiền ban đầu phân cho tier (VND).
-   * Công thức: totalSplitAmount × (splitRatio[tier] / totalRatios).
-   */
-  initialAmount: number;
-
-  /**
-   * Số tiền tái phân bổ từ các tier không có winner (VND).
-   * Khi tier A không có winner → phần tiền tier A chia cho các tier có winner.
-   */
-  redistributedAmount: number;
-
-  /**
-   * Tổng tiền tier nhận (VND) = initialAmount + redistributedAmount.
-   * Đây là pool tiền để chia cho tất cả winner của tier này.
-   */
-  totalAmount: number;
-
-  /** Số người trúng tier này trong kỳ quay. */
-  winnerCount: number;
-
-  /**
-   * Tiền thưởng Jackpot mỗi người nhận (VND) = totalAmount / winnerCount.
-   * Làm tròn xuống. Tier cao nhất (có winner) nhận phần dư.
-   */
-  bonusPerWinner: number;
-}
-
-/**
- * Chi tiết phân bổ split toàn bộ — key = tier name (tier1-tier3), value = thông tin phân bổ.
- *
- * Chỉ tồn tại khi:
- * - isSplitCycle = true (tổng JP1 + JP2 >= splitThreshold)
- * - Không có jackpot1 winner VÀ không có jackpot2 winner
- * - Có ít nhất 1 winner tier1-tier3
- *
- * Nếu không có ai trúng tier1-tier3 → splitDetails = undefined.
- */
-export type PowerSplitDetails = Record<string, PowerSplitTierDetail>;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SettleFinancials – output CalculateFinancials, nested vào SettleContext
@@ -190,7 +142,7 @@ export interface SettleFinancials {
 
   /**
    * Tổng giải thưởng cố định đã trả (VND) — tier1 đến tier3.
-   * KHÔNG bao gồm Jackpot 1 và Jackpot 2 (xử lý riêng qua split/winner flow).
+   * KHÔNG bao gồm Jackpot 1 và Jackpot 2 (xử lý riêng qua winner flow).
    */
   totalFixedPrizes: number;
 
@@ -231,32 +183,6 @@ export interface SettleFinancials {
   jp1Overflow: number;
 
   /**
-   * Số tiền Jackpot 1 cuối kỳ (VND).
-   * Nếu reset (có JP1 winner hoặc split): closingJp1 = jp1SeedAmount.
-   * Nếu tích luỹ: closingJp1 = jp1OpeningAmount + jackpot1Contribution.
-   */
-  closingJp1: number;
-
-  /**
-   * Số tiền Jackpot 2 cuối kỳ (VND).
-   * Nếu reset (có JP2 winner hoặc split): closingJp2 = jp2SeedAmount.
-   * Nếu tích luỹ: closingJp2 = jp2OpeningAmount + jackpot2Contribution.
-   */
-  closingJp2: number;
-
-  /**
-   * Số dư Jackpot 1 opening cho kỳ tiếp theo (VND).
-   * Tính bởi calculateNextJackpot1() — bao gồm overflow logic.
-   */
-  nextJp1Opening: number;
-
-  /**
-   * Số dư Jackpot 2 opening cho kỳ tiếp theo (VND).
-   * Tính bởi calculateNextJackpot2().
-   */
-  nextJp2Opening: number;
-
-  /**
    * Có người trúng Jackpot 1 (6/6) trong kỳ này hay không.
    * true → winner nhận toàn bộ JP1 pool, cycle reset.
    */
@@ -267,17 +193,6 @@ export interface SettleFinancials {
    * true → winner nhận toàn bộ JP2 pool, cycle reset.
    */
   hasJackpot2Winner: boolean;
-
-  /**
-   * Chi tiết phân bổ split Jackpot theo tier — chỉ có khi:
-   *   isSplitCycle = true VÀ không có jackpot winner VÀ có winner tier1-tier3.
-   *
-   * undefined khi:
-   *   - Không phải split cycle, HOẶC
-   *   - Có jackpot1/jackpot2 winner, HOẶC
-   *   - Không có ai trúng tier1-tier3.
-   */
-  splitDetails?: PowerSplitDetails;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -301,7 +216,6 @@ export interface SettleFinancials {
  * │ SettleEntries     ← SettleContext                               │
  * │ CalculateFinancials ← SettleContext → SettleFinancials          │
  * │   ↳ SFN merge: settleCtx.financials = result                   │
- * │ ApplySplitBonuses ← SettleContext (financials có)               │
  * │ SyncTicketSummaries ← SettleContext                             │
  * │ BuildReport       ← SettleContext (financials có)               │
  * │ FinalizeSettle    ← SettleContextWithFinancials (bắt buộc)     │
@@ -324,7 +238,6 @@ export interface SettleContext {
 
   /**
    * Số thứ tự kỳ quay trong năm.
-   * Dùng để xác định isSplitCycle cùng với các điều kiện khác.
    */
   drawNo: number;
 
@@ -346,7 +259,7 @@ export interface SettleContext {
    *
    * Ý nghĩa: giá trị JP1 TRƯỚC khi tính contribution kỳ này.
    * Dùng bởi:
-   *   - CalculateFinancials: tính closingJp1, overflow, split distribution
+   *   - CalculateFinancials: tính contribution, overflow
    *   - BuildReport: ghi jackpotTracking.openingAmount
    *   - FinalizeSettle: tính totalJackpotPrize cho JP1 winner
    */
@@ -357,53 +270,29 @@ export interface SettleContext {
    *
    * Ý nghĩa: giá trị JP2 TRƯỚC khi tính contribution kỳ này.
    * Dùng bởi:
-   *   - CalculateFinancials: tính closingJp2, split distribution
+   *   - CalculateFinancials: tính contribution
    *   - BuildReport: ghi jackpotTracking.openingAmount
    *   - FinalizeSettle: tính totalJackpotPrize cho JP2 winner
    */
   jp2OpeningAmount: number;
 
   /**
-   * Kỳ này có phải kỳ chia Jackpot hay không.
-   *
-   * true khi tổng JP1 + JP2 >= splitThreshold (cấu hình từ GlobalConfig).
-   *
-   * Khi true VÀ không có jackpot winner VÀ có winner tier1-tier3:
-   *   → CalculateFinancials tính splitDetails
-   *   → ApplySplitBonuses patch split bonus vào entries
-   *   → FinalizeSettle đóng cycle + ghi split record
-   */
-  isSplitCycle: boolean;
-
-  /**
    * Bảng giải thưởng cố định: key = tier name, value = số tiền (VND).
    * VD: { "tier1": 40000000, "tier2": 500000, "tier3": 50000 }
    *
-   * Jackpot 1 (6/6) và Jackpot 2 (5/6 + bonus) xử lý riêng qua split/winner flow.
+   * Jackpot 1 (6/6) và Jackpot 2 (5/6 + bonus) xử lý riêng qua winner flow.
    * Dùng bởi SettleEntries để tính winAmount cho mỗi entry.
    */
   prizeAmounts: Record<string, number>;
 
   /**
    * Cấu hình tài chính settle — snapshot tại thời điểm PrepareSettle.
-   * Gồm jp1/jp2 seed amounts, ratios, overflow threshold, split config,
+   * Gồm jp1/jp2 seed amounts, ratios, overflow threshold,
    * companyRate, defaultCommissionRate.
    *
    * Dùng bởi CalculateFinancials để tính phân bổ doanh thu + dual jackpot.
    */
   config: PowerSettleConfig;
-
-  /**
-   * Tổng số entries cần settle (chỉ đếm entries chưa settled).
-   * Dùng cho logging và progress tracking.
-   */
-  totalEntries: number;
-
-  /**
-   * Tổng số dòng cược từ tất cả entries.
-   * Dùng bởi CalculateFinancials để ghi settle summary lên draw.
-   */
-  totalLines: number;
 
   /**
    * Dữ liệu tài chính tổng hợp — output của CalculateFinancials.
@@ -415,6 +304,14 @@ export interface SettleContext {
    * FinalizeSettle YÊU CẦU financials bắt buộc (dùng SettleContextWithFinancials).
    */
   financials?: SettleFinancials;
+
+  /**
+   * Danh sách người trúng Jackpot (JP1 + JP2) — chỉ có khi có jackpot winner.
+   * Được điền bởi PatchJackpotPrize, merge vào settleCtx qua Step Function.
+   * FinalizeSettle đọc field này để ghi vào cycle close record — tránh re-query DB.
+   * undefined khi không có JP winner (roll-over).
+   */
+  jackpotWinners?: import("@megawin/game-power655/entities").JackpotWinnerInfo[];
 }
 
 /**

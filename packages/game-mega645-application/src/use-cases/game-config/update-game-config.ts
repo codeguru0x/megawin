@@ -2,10 +2,7 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DEFAULT_MEGA645_CONFIG } from "@megawin/game-mega645/rules";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
-import type {
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput,
-} from "./dto/game-config.dto";
+import type { UpdateGameConfigInput, UpdateGameConfigOutput } from "./dto/game-config.dto";
 
 export class UpdateGameConfigUseCase extends NextApiUseCase<
   UpdateGameConfigInput,
@@ -13,9 +10,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
 > {
   private readonly repo = new GameConfigRepository();
 
-  protected async execute(
-    input: UpdateGameConfigInput
-  ): Promise<UpdateGameConfigOutput> {
+  protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {
     this.validateInput(input);
     const existing = await this.repo.getGlobalConfig();
 
@@ -34,8 +29,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
         : undefined,
       defaultPrizes: input.defaultPrizes
         ? {
-            ...(existing?.defaultPrizes ??
-              DEFAULT_MEGA645_CONFIG.defaultPrizes),
+            ...(existing?.defaultPrizes ?? DEFAULT_MEGA645_CONFIG.defaultPrizes),
             ...input.defaultPrizes,
           }
         : undefined,
@@ -70,9 +64,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
         defaultCommissionRate !== undefined &&
         (defaultCommissionRate < 0 || defaultCommissionRate > 1)
       ) {
-        throw AppException.badRequest(
-          "defaultCommissionRate phải trong range [0, 1]."
-        );
+        throw AppException.badRequest("defaultCommissionRate phải trong range [0, 1].");
       }
 
       if (companyRate !== undefined && (companyRate < 0 || companyRate > 1)) {
@@ -89,17 +81,8 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
     }
 
     if (input.jackpot) {
-      if (
-        input.jackpot.seedAmount !== undefined &&
-        input.jackpot.seedAmount < 0
-      ) {
+      if (input.jackpot.seedAmount !== undefined && input.jackpot.seedAmount < 0) {
         throw AppException.badRequest("seedAmount phải >= 0.");
-      }
-      if (
-        input.jackpot.splitThreshold !== undefined &&
-        input.jackpot.splitThreshold < 0
-      ) {
-        throw AppException.badRequest("splitThreshold phải >= 0.");
       }
     }
   }

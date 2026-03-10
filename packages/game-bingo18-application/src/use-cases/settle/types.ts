@@ -52,8 +52,6 @@ export interface BingoDrawResult {
  * Config KHÔNG thay đổi giữa các step — snapshot tại thời điểm settle.
  */
 export interface BingoSettleConfig {
-  /** Tỷ lệ công ty thu về trên tổng doanh thu (0-1, mặc định 0.15 = 15%). */
-  companyRate: number;
   /** Tỷ lệ hoa hồng đại lý mặc định (0-1), override per tenant qua TenantConfig. */
   defaultCommissionRate: number;
   /** Bảng giải thưởng cược Số Đơn — match 1/2/3 số. */
@@ -88,8 +86,8 @@ export interface SettleFinancials {
   totalPrizes: number;
   /** Tổng hoa hồng đại lý (VND) — commission đã cam kết trả cho tenant/agent. */
   totalAgentCommission: number;
-  /** Phần công ty thu về (VND) = companyRate × totalRevenue. */
-  companyTake: number;
+  /** Lợi nhuận (VND) = totalRevenue - totalPrizes - totalAgentCommission. Có thể âm. */
+  profit: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

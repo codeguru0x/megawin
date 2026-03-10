@@ -41,34 +41,23 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** @inheritdoc */
-  protected async execute(
-    input: GetCurrentDrawInput
-  ): Promise<GetCurrentDrawOutput> {
+  protected async execute(input: GetCurrentDrawInput): Promise<GetCurrentDrawOutput> {
     const allowStatuses = input.allowStatuses ?? ACTIVE_STATUSES;
 
-    const [activeDraws, lastSettled, activeCycle, globalConfig] =
-      await Promise.all([
-        this.drawRepo.getActiveDraws(allowStatuses),
-        this.drawRepo.getLatestSettledDraw(),
-        this.cycleRepo.getActiveCycle(),
-        this.getGlobalConfig.run(),
-      ]);
+    const [activeDraws, lastSettled, activeCycle, globalConfig] = await Promise.all([
+      this.drawRepo.getActiveDraws(allowStatuses),
+      this.drawRepo.getLatestSettledDraw(),
+      this.cycleRepo.getActiveCycle(),
+      this.getGlobalConfig.run(),
+    ]);
 
     const jackpot1CurrentAmount =
       activeCycle?.jackpot1Current ?? globalConfig.jackpot.jackpot1.seedAmount;
     const jackpot2CurrentAmount =
       activeCycle?.jackpot2Current ?? globalConfig.jackpot.jackpot2.seedAmount;
 
-    const totalJackpot = jackpot1CurrentAmount + jackpot2CurrentAmount;
-
     const mapped = activeDraws.map((d) =>
-      mapDrawInfo(
-        d,
-        jackpot1CurrentAmount,
-        jackpot2CurrentAmount,
-        totalJackpot,
-        globalConfig.jackpot.splitThreshold
-      )
+      mapDrawInfo(d, jackpot1CurrentAmount, jackpot2CurrentAmount),
     );
 
     return {
@@ -95,7 +84,6 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<
                   closingJackpot1: lastSettled.jackpot.closingJackpot1,
                   openingJackpot2: lastSettled.jackpot.openingJackpot2,
                   closingJackpot2: lastSettled.jackpot.closingJackpot2,
-                  isSplitCycle: lastSettled.jackpot.isSplitCycle ?? false,
                 }
               : undefined,
           }
@@ -108,8 +96,6 @@ function mapDrawInfo(
   draw: DrawEntity,
   jackpot1CurrentAmount: number,
   jackpot2CurrentAmount: number,
-  totalJackpot: number,
-  splitThreshold: number
 ): CurrentDrawInfo {
   return {
     drawId: draw.drawId,
@@ -123,7 +109,6 @@ function mapDrawInfo(
     },
     jackpot1CurrentAmount,
     jackpot2CurrentAmount,
-    splitCycleIntent: totalJackpot >= splitThreshold,
     stats: draw.stats
       ? {
           totalEntries: draw.stats.totalEntries,

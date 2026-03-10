@@ -59,14 +59,7 @@ export const VALID_MAIN_NUMBER_SET: ReadonlySet<string> = new Set(ALL_MAIN_NUMBE
  * Khi lưu player selection: sorted tăng dần (canonical form).
  * Khi lưu draw result: giữ nguyên thứ tự quay (draw order).
  */
-export type MainTuple = readonly [
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-];
+export type MainTuple = readonly [string, string, string, string, string, string];
 
 // ─────────────────────────────────────────────
 // Board Selection (user input)
@@ -126,14 +119,14 @@ export interface PrizeAmounts {
 // Game Config Sub-types
 // ─────────────────────────────────────────────
 
-/** Cấu hình Jackpot. */
+/**
+ * Cấu hình Jackpot.
+ * Mega 6/45 theo luật Vietlott: Jackpot chỉ tích luỹ (roll-over),
+ * KHÔNG có cơ chế chia giải xuống hạng dưới.
+ */
 export interface JackpotConfig {
-  /** Số tiền khởi điểm khi mở kỳ Jackpot mới (VND). Min 12 tỷ. */
+  /** Số tiền khởi điểm khi mở cycle Jackpot mới sau khi có winner (VND). Min 12 tỷ. */
   seedAmount: number;
-  /** Ngưỡng kích hoạt chia Jackpot (VND). */
-  splitThreshold: number;
-  /** Tỷ lệ chia Jackpot cho từng tier. */
-  splitRatios: SplitRatios;
 }
 
 /** Tỷ lệ tài chính. */
@@ -166,23 +159,6 @@ export interface PlayRules {
 }
 
 // ─────────────────────────────────────────────
-// Split Ratios
-// ─────────────────────────────────────────────
-
-/**
- * Tỷ lệ chia Jackpot cho các tier khi split cycle.
- * Tổng = 5 (tier1 = 2/5, tier2 = 2/5, tier3 = 1/5).
- */
-export interface SplitRatios {
-  /** Tỷ lệ phần chia cho Giải Nhất (5/6 số). Mặc định: 2 (= 2/5 tổng Jackpot). */
-  tier1: number;
-  /** Tỷ lệ phần chia cho Giải Nhì (4/6 số). Mặc định: 2 (= 2/5 tổng Jackpot). */
-  tier2: number;
-  /** Tỷ lệ phần chia cho Giải Ba (3/6 số). Mặc định: 1 (= 1/5 tổng Jackpot). */
-  tier3: number;
-}
-
-// ─────────────────────────────────────────────
 // Board No
 // ─────────────────────────────────────────────
 
@@ -191,14 +167,7 @@ export type BoardNo = "A" | "B" | "C" | "D" | "E" | "F";
 /**
  * Mega 6/45 cho phép tối đa 6 boards (A-F) trên vé.
  */
-export const VALID_BOARD_NOS: readonly BoardNo[] = [
-  "A",
-  "B",
-  "C",
-  "D",
-  "E",
-  "F",
-];
+export const VALID_BOARD_NOS: readonly BoardNo[] = ["A", "B", "C", "D", "E", "F"];
 
 // ─────────────────────────────────────────────
 // Bao Combinations lookup

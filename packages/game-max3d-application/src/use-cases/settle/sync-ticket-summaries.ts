@@ -21,7 +21,6 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { ObjectId } from "mongodb";
-import type { SettleContext } from "./types";
 
 const CHUNK_SIZE = 500;
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
@@ -31,14 +30,19 @@ export interface SyncTicketSummariesResult {
   done: boolean;
 }
 
+/** Minimal input — chỉ cần drawId, compatible với SettleContext và VoidContext. */
+export interface DrawSyncInput {
+  drawId: string;
+}
+
 export class SyncTicketSummariesUseCase extends InternalUseCase<
-  SettleContext,
+  DrawSyncInput,
   SyncTicketSummariesResult
 > {
   private readonly entryRepo = new EntryRepository();
   private readonly ticketRepo = new TicketRepository();
 
-  protected async execute(input: SettleContext): Promise<SyncTicketSummariesResult> {
+  protected async execute(input: DrawSyncInput): Promise<SyncTicketSummariesResult> {
     const { drawId } = input;
     let cursor: string | undefined;
     const startTime = Date.now();

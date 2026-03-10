@@ -308,3 +308,157 @@ export interface Mega645EntryResult {
     }>;
   };
 }
+
+// ─────────────────────────────────────────────
+// Response Types — Draw Results
+// ─────────────────────────────────────────────
+
+/**
+ * Chi tiết giải thưởng 1 tier trong kết quả kỳ quay Mega 6/45.
+ *
+ * Dùng trong {@link Mega645DrawResultDetail}.
+ */
+export interface Mega645DrawTierPrize {
+  /**
+   * Hạng giải.
+   *
+   * | Tier      | Điều kiện | Giải thưởng          |
+   * |-----------|-----------|----------------------|
+   * | jackpot   | 6/6 số    | Tích luỹ (≥ 12 tỷ)  |
+   * | tier1     | 5/6 số    | 10.000.000 VND       |
+   * | tier2     | 4/6 số    | 300.000 VND          |
+   * | tier3     | 3/6 số    | 30.000 VND           |
+   */
+  tier: Mega645PrizeTier;
+  /**
+   * Số lượt trúng tier này (tổng hit count từ tất cả entries trong kỳ).
+   * Không phải số người chơi — 1 vé bao có thể trúng nhiều lần.
+   */
+  winnerCount: number;
+  /**
+   * Tổng tiền thưởng tier này (VND).
+   * Jackpot: = openingAmount + jackpotContribution kỳ này.
+   * Non-jackpot: giải cố định × số lượt trúng.
+   */
+  prizeAmount: number;
+}
+
+/**
+ * Kết quả chi tiết 1 kỳ quay Mega 6/45 — dùng cho trang xem kết quả.
+ *
+ * Bao gồm: 6 số chính, Jackpot snapshot, bảng giải thưởng chi tiết.
+ * Chỉ có cho draws đã settle.
+ *
+ * Trả về bởi `GET /games/mega645/draw-results/:drawId`.
+ *
+ * @example
+ * ```ts
+ * const result = await client.mega645.getDrawResult("2026-03-08.001");
+ *
+ * console.log(`Số: ${result.result.winningMain.join(", ")}`);
+ * // "Số: 06, 12, 13, 25, 31, 32"
+ *
+ * console.log(`Jackpot: ${result.jackpot.closingAmount.toLocaleString()} VND`);
+ * // "Jackpot: 18,851,320,000 VND"
+ *
+ * for (const prize of result.prizes) {
+ *   console.log(`${prize.tier}: ${prize.winnerCount} lượt, ${prize.prizeAmount.toLocaleString()} VND`);
+ * }
+ * // "jackpot: 0 lượt, 18,851,320,000 VND"
+ * // "tier1: 15 lượt, 10,000,000 VND"
+ * // "tier2: 1073 lượt, 300,000 VND"
+ * // "tier3: 18030 lượt, 30,000 VND"
+ * ```
+ */
+export interface Mega645DrawResultDetail {
+  /** Mã kỳ quay. Format: `YYYY-MM-DD.NNN`. */
+  drawId: string;
+  /** Ngày quay. Format: `YYYY-MM-DD`. */
+  drawDate: string;
+  /** Số thứ tự kỳ trong ngày (luôn = 1 cho Mega 6/45). */
+  drawNo: number;
+  /** Giờ quay (ISO 8601). */
+  drawTime: string;
+  /**
+   * Kết quả kỳ quay.
+   * Mega 6/45: chỉ 6 số chính, KHÔNG có số đặc biệt.
+   */
+  result: {
+    /** 6 số chính trúng thưởng (sorted, zero-padded `"01"`–`"45"`). */
+    winningMain: string[];
+    /** Thời điểm công bố (ISO 8601). */
+    publishedAt: string;
+  };
+  /**
+   * Snapshot Jackpot tại kỳ quay.
+   * openingAmount = Jackpot trước kỳ. closingAmount = Jackpot sau kỳ (nếu có winner = seedAmount).
+   */
+  jackpot: {
+    /** Jackpot đầu kỳ (VND). */
+    openingAmount: number;
+    /** Jackpot cuối kỳ (VND). */
+    closingAmount: number;
+  };
+  /**
+   * Bảng giải thưởng chi tiết từng hạng.
+   * Tất cả 4 tiers luôn có mặt (kể cả winnerCount = 0).
+   */
+  prizes: Mega645DrawTierPrize[];
+  /** Tham chiếu kỳ Vietlott chính thức (nếu có). */
+  vietlottRef?: {
+    /** Mã kỳ Vietlott. */
+    drawPeriod: string;
+    /** Ngày quay Vietlott (YYYY-MM-DD). */
+    drawDate: string;
+  };
+}
+
+/**
+ * Tóm tắt 1 kỳ quay Mega 6/45 trong danh sách kết quả.
+ *
+ * Chỉ chứa 6 số chính + Jackpot snapshot.
+ * Không có bảng giải thưởng chi tiết (xem ở {@link Mega645DrawResultDetail}).
+ *
+ * Trả về bởi `GET /games/mega645/draw-results`.
+ *
+ * @example
+ * ```ts
+ * const { draws } = await client.mega645.listDrawResults({ size: 10 });
+ * for (const draw of draws) {
+ *   console.log(`Kỳ ${draw.drawId}: ${draw.result.winningMain.join(", ")}`);
+ *   console.log(`JP: ${draw.jackpot.closingAmount.toLocaleString()} VND`);
+ * }
+ * ```
+ */
+export interface Mega645DrawResultSummary {
+  /** Mã kỳ quay. Format: `YYYY-MM-DD.NNN`. */
+  drawId: string;
+  /** Ngày quay. Format: `YYYY-MM-DD`. */
+  drawDate: string;
+  /** Số thứ tự kỳ trong ngày. */
+  drawNo: number;
+  /** Giờ quay (ISO 8601). */
+  drawTime: string;
+  /**
+   * Kết quả kỳ quay.
+   * Mega 6/45: chỉ 6 số chính, KHÔNG có số đặc biệt.
+   */
+  result: {
+    /** 6 số chính trúng thưởng (sorted, zero-padded `"01"`–`"45"`). */
+    winningMain: string[];
+    /** Thời điểm công bố (ISO 8601). */
+    publishedAt: string;
+  };
+  /** Jackpot snapshot — hữu ích để hiển thị kỳ có trúng Jackpot không. */
+  jackpot: {
+    /** Jackpot đầu kỳ (VND). */
+    openingAmount: number;
+    /** Jackpot cuối kỳ (VND). */
+    closingAmount: number;
+  };
+  /** Tham chiếu Vietlott (nếu có). */
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}

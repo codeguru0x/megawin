@@ -14,12 +14,8 @@ import { PlaceBetUseCase } from "@megawin/game-mega645-application/use-cases/pla
 
 import { TicketChannel } from "@megawin/game-core/entities";
 import z from "zod";
-import {
-  mega645MainNumberSchema,
-  mega645DrawIdSchema,
-  VALID_BOARD_NOS,
-} from "@megawin/game-mega645/schemas";
-import { PlayType } from "@megawin/game-mega645/entities";
+import { mega645MainNumberSchema, mega645DrawIdSchema } from "@megawin/game-mega645/schemas";
+import { PlayType, VALID_BOARD_NOS } from "@megawin/game-mega645/entities";
 
 // ─── Composite schemas ───
 
@@ -175,10 +171,9 @@ export const mega645PlaceBetBodySchema = z.object({
     .array(mega645BoardSchema)
     .min(1)
     .max(6)
-    .refine(
-      (boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length,
-      { message: "Các board không được trùng boardNo." }
-    ),
+    .refine((boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length, {
+      message: "Các board không được trùng boardNo.",
+    }),
 });
 
 export type Mega645Board = z.infer<typeof mega645BoardSchema>;
@@ -209,5 +204,5 @@ export const handler = withPlayerAuth(
       boards,
     });
   },
-  { schemas: { body: mega645PlaceBetBodySchema } }
+  { schemas: { body: mega645PlaceBetBodySchema } },
 );

@@ -63,7 +63,6 @@ export class PrepareSettleUseCase extends InternalUseCase<
         sum: draw.result.sum,
       },
       config: {
-        companyRate: globalConfig.rates.companyRate,
         defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
         singleNumPrizes: globalConfig.singleNumPrizes,
         doubleMatchPrizes: globalConfig.doubleMatchPrizes,

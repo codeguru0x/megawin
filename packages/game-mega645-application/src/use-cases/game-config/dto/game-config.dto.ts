@@ -22,12 +22,12 @@ export interface GetGameConfigOutput {
 export interface UpdateGameConfigInput {
   /**
    * Cấu hình jackpot (tuỳ chọn cập nhật một phần).
-   * Bao gồm: seedAmount, splitThreshold, splitRatios (tier1/tier2/tier3).
+   * Mega 6/45 theo luật Vietlott: chỉ có seedAmount (không có splitThreshold/splitRatios).
    */
   jackpot?: Partial<JackpotConfig>;
   /**
    * Tỷ lệ tài chính (tuỳ chọn cập nhật một phần).
-   * Bao gồm: companyRate, defaultCommissionRate, jackpotContributionRate.
+   * Bao gồm: companyRate, defaultCommissionRate.
    */
   rates?: Partial<FinancialRates>;
   /**

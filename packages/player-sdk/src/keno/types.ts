@@ -637,7 +637,7 @@ export interface KenoGameRules {
   drawIntervalMinutes: number;
   /** Giờ bắt đầu quay. VD: "06:00". */
   firstDrawTime: string;
-  /** Giờ kết thúc quay (kỳ cuối). VD: "21:55". */
+  /** Giờ kết thúc quay (kỳ cuối). VD: "21:52". */
   lastDrawTime: string;
   /** Timezone vận hành. VD: "Asia/Ho_Chi_Minh". */
   timezone: string;

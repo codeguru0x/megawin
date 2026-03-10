@@ -7,7 +7,7 @@
  * CRASH-SAFE DESIGN:
  *   - KHÔNG dựa vào accumulator từ step function
  *   - Aggregate TẤT CẢ settled entries từ DB
- *   - Tính commission, companyTake từ rules
+ *   - Tính commission, profit từ rules
  *   - Ghi draw.financial
  *
  * IDEMPOTENT: Chạy lại bao nhiêu lần cũng cho kết quả giống nhau.
@@ -31,7 +31,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: SettleContext): Promise<SettleFinancials> {
-    const { drawId, totalLines, config } = input;
+    const { drawId, totalLines } = input;
 
     const [tenantAgg, payoutSummary] = await Promise.all([
       this.entryRepo.aggregateRevenueByTenant(drawId),
@@ -46,7 +46,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
         revenue: t.revenue,
         commission: t.commission,
       })),
-      companyRate: config.companyRate,
     };
 
     const fin = calculateDrawFinancials(financialInput);
@@ -57,9 +56,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
         totalRevenue: fin.totalRevenue,
         totalFixedPrizes: fin.totalFixedPrizes,
         totalAgentCommission: fin.totalAgentCommission,
-        companyTake: fin.actualCompanyTake,
-        companyTakeRate: config.companyRate,
-        companyTakeMax: fin.companyTake,
+        companyTake: fin.profit,
       },
       {
         ticketEntryCount: payoutSummary.totalSettled,
@@ -81,8 +78,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       totalRevenue: fin.totalRevenue,
       totalFixedPrizes: fin.totalFixedPrizes,
       totalAgentCommission: fin.totalAgentCommission,
-      companyTake: fin.companyTake,
-      actualCompanyTake: fin.actualCompanyTake,
       profit: fin.profit,
     };
   }

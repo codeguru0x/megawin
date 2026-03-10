@@ -3,10 +3,8 @@
  *
  * Tính toán tài chính tổng hợp sau khi TẤT CẢ entries đã settled.
  *
- * Keno KHÔNG có Jackpot – chỉ tính:
- *   - totalRevenue, totalPrizes
- *   - commission per tenant
- *   - companyTake
+ * Keno KHÔNG có Jackpot – công ty thu toàn bộ phần dư sau trả thưởng và hoa hồng:
+ *   profit = totalRevenue - totalPrizes - totalAgentCommission
  *
  * Đồng thời denormalize settleSummary lên draw cho player API.
  *
@@ -44,7 +42,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
         revenue: t.revenue,
         commission: t.commission,
       })),
-      companyRate: config.companyRate,
     });
 
     // ── Build settleSummary cho player API ──
@@ -69,7 +66,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
         totalRevenue: fin.totalRevenue,
         totalPrizes: fin.totalPrizes,
         totalAgentCommission: fin.totalAgentCommission,
-        companyTake: fin.companyTake,
+        companyTake: fin.profit,
       },
       {
         ticketEntryCount: payoutSummary.totalSettled,
@@ -83,7 +80,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
       totalRevenue: fin.totalRevenue,
       totalPrizes: fin.totalPrizes,
       totalAgentCommission: fin.totalAgentCommission,
-      companyTake: fin.companyTake,
+      profit: fin.profit,
     };
   }
 }

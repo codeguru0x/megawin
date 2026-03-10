@@ -26,9 +26,6 @@ describe("GameConfigRepository – Global Config (Max 3D)", () => {
     expect(config!.rates.defaultCommissionRate).toBe(
       DEFAULT_MAX3D_CONFIG.rates.defaultCommissionRate,
     );
-    expect(config!.rates.companyRate).toBe(
-      DEFAULT_MAX3D_CONFIG.rates.companyRate,
-    );
   });
 
   it("global config có đầy đủ default prizes – basic", async () => {
@@ -121,15 +118,12 @@ describe("GameConfigRepository – Global Config (Max 3D)", () => {
     const updated = await repo.upsertGlobalConfig({
       rates: {
         ...DEFAULT_MAX3D_CONFIG.rates,
-        companyRate: 0.18,
+        defaultCommissionRate: 0.25,
       },
     });
 
     expect(updated).not.toBeNull();
-    expect(updated!.rates.companyRate).toBe(0.18);
-    expect(updated!.rates.defaultCommissionRate).toBe(
-      DEFAULT_MAX3D_CONFIG.rates.defaultCommissionRate,
-    );
+    expect(updated!.rates.defaultCommissionRate).toBe(0.25);
   });
 
   it("upsertGlobalConfig tăng version mỗi lần update", async () => {

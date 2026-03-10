@@ -338,3 +338,141 @@ export interface PlayerGetEntryLinesOutput {
   /** Số dòng mỗi trang. */
   size: number;
 }
+
+// ─── Draw Results (Player) ───
+
+export interface PlayerListDrawResultsInput {
+  /**
+   * Lọc từ ngày (YYYY-MM-DD, inclusive).
+   * Handler luôn truyền (default = ngày hôm nay giờ VN).
+   */
+  from: string;
+  /** Số lượng kết quả mỗi trang. */
+  size: number;
+  /** Cursor phân trang (drawId cuối trang trước). */
+  cursor?: string;
+}
+
+/**
+ * Chi tiết giải thưởng 1 tier trong kết quả kỳ quay Mega 6/45.
+ * Dùng bởi GetDrawResultPlayerUseCase (detail endpoint).
+ */
+export interface PlayerDrawTierPrize {
+  /**
+   * Hạng giải: "jackpot" (6/6), "tier1" (5/6), "tier2" (4/6), "tier3" (3/6).
+   * Giá trị từ PrizeTier enum.
+   */
+  tier: string;
+  /**
+   * Số lượt trúng tier này (tổng hit count từ tất cả entries).
+   * Không phải số người chơi — 1 người chơi bao có thể trúng nhiều lần.
+   */
+  winnerCount: number;
+  /**
+   * Tổng tiền thưởng tier này (VND).
+   * Jackpot: = openingAmount + jackpotContribution kỳ này (FinalizeSettle patch).
+   * Non-jackpot: tổng tiền cố định aggregate từ entries.
+   */
+  prizeAmount: number;
+}
+
+/**
+ * Chi tiết kết quả 1 kỳ quay Mega 6/45 — dùng cho trang xem kết quả.
+ *
+ * Bao gồm: kết quả 6 số, jackpot snapshot, bảng giải thưởng chi tiết.
+ * Chỉ trả cho draws đã settle có kết quả.
+ *
+ * Dùng bởi endpoint: GET /games/mega645/draw-results/:drawId
+ */
+export interface PlayerDrawResultInfo {
+  /** Mã kỳ quay (VD: "2026-03-08.001"). */
+  drawId: string;
+  /** Ngày quay (YYYY-MM-DD). */
+  drawDate: string;
+  /** Số thứ tự kỳ trong ngày (luôn = 1 cho Mega 6/45). */
+  drawNo: number;
+  /** Giờ quay (ISO 8601). */
+  drawTime: string;
+  /**
+   * Kết quả kỳ quay.
+   * Mega 6/45: chỉ 6 số chính, KHÔNG có số đặc biệt.
+   */
+  result: {
+    /** 6 số chính trúng thưởng (sorted, zero-padded "01"-"45"). */
+    winningMain: string[];
+    /** Thời điểm công bố (ISO 8601). */
+    publishedAt: string;
+  };
+  /**
+   * Snapshot Jackpot tại kỳ quay này.
+   * openingAmount = Jackpot trước kỳ. closingAmount = Jackpot sau kỳ.
+   */
+  jackpot: {
+    /** Jackpot đầu kỳ (VND). */
+    openingAmount: number;
+    /** Jackpot cuối kỳ (VND). Luôn = openingAmount + contribution. */
+    closingAmount: number;
+  };
+  /**
+   * Bảng giải thưởng chi tiết từng hạng.
+   * Tất cả 4 tiers luôn có mặt (kể cả winnerCount = 0).
+   */
+  prizes: PlayerDrawTierPrize[];
+  /** Tham chiếu Vietlott (nếu có). */
+  vietlottRef?: {
+    /** Mã kỳ Vietlott chính thức. */
+    drawPeriod: string;
+    /** Ngày quay Vietlott (YYYY-MM-DD). */
+    drawDate: string;
+  };
+}
+
+/**
+ * Tóm tắt 1 kỳ quay Mega 6/45 trong danh sách.
+ *
+ * Chỉ chứa kết quả 6 số + jackpot snapshot.
+ * Không có bảng giải thưởng chi tiết (xem ở detail endpoint).
+ *
+ * Dùng bởi endpoint: GET /games/mega645/draw-results
+ */
+export interface PlayerDrawResultSummary {
+  /** Mã kỳ quay (VD: "2026-03-08.001"). */
+  drawId: string;
+  /** Ngày quay (YYYY-MM-DD). */
+  drawDate: string;
+  /** Số thứ tự kỳ trong ngày. */
+  drawNo: number;
+  /** Giờ quay (ISO 8601). */
+  drawTime: string;
+  /**
+   * Kết quả kỳ quay.
+   * Mega 6/45: chỉ 6 số chính, KHÔNG có số đặc biệt.
+   */
+  result: {
+    /** 6 số chính trúng thưởng (sorted, zero-padded "01"-"45"). */
+    winningMain: string[];
+    /** Thời điểm công bố (ISO 8601). */
+    publishedAt: string;
+  };
+  /** Jackpot snapshot kỳ quay — hữu ích để hiển thị kỳ có trúng Jackpot không. */
+  jackpot: {
+    /** Jackpot đầu kỳ (VND). */
+    openingAmount: number;
+    /** Jackpot cuối kỳ (VND). */
+    closingAmount: number;
+  };
+  /** Tham chiếu Vietlott (nếu có). */
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
+export interface PlayerListDrawResultsOutput {
+  /** Danh sách tóm tắt kỳ quay (kết quả + jackpot). */
+  draws: PlayerDrawResultSummary[];
+  /** Cursor cho trang tiếp theo (drawId). Null nếu hết dữ liệu. */
+  nextCursor: string | null;
+  /** Số lượng mỗi trang. */
+  size: number;
+}

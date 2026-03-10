@@ -9,8 +9,7 @@ const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const ratesSchema = z
   .object({
-    commissionRate: rate,
-    companyRate: rate,
+    defaultCommissionRate: rate,
   })
   .partial();
 
@@ -43,10 +42,7 @@ const tripleMatchPrizesSchema = z
 
 // ─────── Sum Total Prizes (sum 3-18 → multiplier) ───────
 
-const sumTotalPrizesSchema = z.record(
-  z.coerce.number().int().min(3).max(18),
-  nonNegativeInt
-);
+const sumTotalPrizesSchema = z.record(z.coerce.number().int().min(3).max(18), nonNegativeInt);
 
 // ─────── Big/Small/Draw Prizes ───────
 
@@ -94,5 +90,5 @@ export const updateBingo18GameConfigSchema = z
       data.sumTotalPrizes ||
       data.bigSmallDrawPrizes ||
       data.play,
-    { message: "Phải cung cấp ít nhất một section để cập nhật." }
+    { message: "Phải cung cấp ít nhất một section để cập nhật." },
   );

@@ -75,7 +75,6 @@ export class PrepareSettleUseCase extends InternalUseCase<
         standard: { ...globalConfig.defaultPrizes.standard },
       },
       config: {
-        companyRate: globalConfig.rates.companyRate,
         defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
       },
       totalEntries,

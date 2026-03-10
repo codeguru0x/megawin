@@ -1,0 +1,192 @@
+---
+description: Tiêu chuẩn viết code chung cho toàn project — comment, công thức toán, tái sử dụng type/interface
+alwaysApply: true
+---
+
+# Code Quality Standards
+
+## 1. Hai Loại Comment — Dùng Đúng Chỗ
+
+TypeScript/JavaScript có hai loại comment với mục đích khác nhau. **PHẢI dùng đúng loại:**
+
+### `/** JSDoc */` — Cho declarations (IDE sẽ hiển thị khi hover)
+
+IDE (VSCode, Cursor, WebStorm...) **chỉ hiển thị `/** */`** trên tooltip khi hover vào symbol.
+`//` và `/* */` thông thường **KHÔNG hiển thị** trên IDE intelligence.
+
+**BẮT BUỘC dùng `/** */` cho:**
+- `class` — mô tả mục đích, pipeline position, crash-safety, idempotency
+- `method` / `function` — mô tả tác dụng, params quan trọng, side effects
+- `interface` / `type` — mô tả cấu trúc và khi nào dùng
+- `field` trong interface/class — mô tả ý nghĩa, đơn vị (VND, %), công thức nếu có
+- `const` export — mô tả nếu không hiển nhiên
+
+```typescript
+/** ĐÚNG — IDE hiển thị khi hover vào class, method, field */
+
+/**
+ * Tính toán tài chính tổng hợp kỳ quay sau khi tất cả entries đã settled.
+ *
+ * CRASH-SAFE: aggregate từ DB → idempotent, chạy lại nhiều lần an toàn.
+ * Ghi financial + stats + settleSummary trong 1 DB call duy nhất.
+ */
+export class CalculateFinancialsUseCase extends InternalUseCase<...> { ... }
+
+/**
+ * Ghi financial + stats + settleSummary vào DrawDoc sau khi settle hoàn tất.
+ *
+ * Overwrite toàn bộ financial và stats (set lần đầu).
+ * settleSummary optional — chỉ ghi khi được truyền vào.
+ * Tất cả fields ghi trong 1 lần `$set` — tối thiểu DB call.
+ */
+async updateSettleResult(drawId: string, financial: DrawFinancial, ...): Promise<boolean>
+
+export interface DrawFinancial {
+  /** Tổng doanh thu bán vé (VND). Công thức: Σ(entry.amount). */
+  totalRevenue: number;
+  /**
+   * Phần đóng góp vào quỹ Jackpot (VND).
+   * Công thức: max(remainAfterPrizes - actualCompanyTake, 0)
+   */
+  jackpotContribution: number;
+}
+```
+
+```typescript
+/** SAI — IDE KHÔNG hiển thị khi hover */
+
+// Tính toán tài chính tổng hợp... (// không phải JSDoc)
+export class CalculateFinancialsUseCase extends InternalUseCase<...> { ... }
+
+/* Ghi financial vào DrawDoc */ // /* */ thường cũng không phải JSDoc
+async updateSettleResult(...): Promise<boolean>
+```
+
+### `//` — Cho logic bên trong function body (giải thích tại sao, không hiển thị trên hover)
+
+`//` dùng để giải thích logic **bên trong** function/method body.
+IDE không hiển thị chúng khi hover, nhưng chúng vẫn quan trọng cho người đọc code trực tiếp.
+
+```typescript
+protected async execute(input: SettleContext): Promise<SettleFinancials> {
+  // ── Bước 1: Aggregate dữ liệu từ DB ──────────────────────────────────────
+  // Chạy song song 2 queries để giảm latency.
+  const [tenantAgg, payoutSummary] = await Promise.all([...]);
+
+  // closingJackpot = seedAmount nếu có winner (cycle mới bắt đầu),
+  // hoặc openingAmount + contribution nếu roll-over.
+  const closingJackpot = hasJackpotWinner
+    ? config.seedAmount
+    : jackpotOpeningAmount + fin.jackpotContribution;
+}
+```
+
+## 2. JSDoc Cho Class và Method — Nội Dung Bắt Buộc
+
+**Class** PHẢI có JSDoc ghi:
+- Mục đích và pipeline position (bước mấy trong flow nào)
+- CRASH-SAFE / IDEMPOTENT nếu applicable
+- DB calls đặc biệt (số lần query, batch, parallel...)
+
+**Method/function** PHẢI có JSDoc nếu:
+- Có side effects không rõ ràng từ tên
+- Có điều kiện đặc biệt (idempotent, partial update vs full overwrite...)
+- Tham số có ràng buộc business (e.g. `from` là upper bound, không phải lower bound)
+- Public API hoặc repo method
+
+**Field trong interface** PHẢI có JSDoc nếu:
+- Đơn vị không rõ → ghi `(VND)`, `(%)`, `(ms)`...
+- Công thức tính → ghi inline trong JSDoc
+- Giá trị đặc biệt → ghi ý nghĩa (e.g. `0 = Jackpot tích luỹ, trao qua split`)
+
+## 3. Comment Business Logic Bên Trong Function
+
+Mỗi bước tính toán phức tạp (settle, financials, jackpot, commission...) **PHẢI** có `//` giải thích:
+- **Tại sao** bước này cần thiết (business reason)
+- **Điều kiện đặc biệt** (edge case, giới hạn, rule nghiệp vụ)
+- **Công thức** nếu không hiển nhiên từ code
+
+```typescript
+/** ĐÚNG */
+// ── Bước 3: Tính contribution Jackpot ────────────────────────────────
+// Jackpot winner: winAmount = 0 ở đây; FinalizeSettle điền sau khi biết
+// chính xác pool và số winners. Không thể tính trước vì pool phụ thuộc
+// số winners (chia đều = floor(pool / winners)).
+if (tier === PrizeTier.Jackpot) {
+  tiers.push({ tier, hitCount, unitAmount: 0, amount: 0 });
+  continue;
+}
+
+// Giải cố định: amount = unitAmount × số line trúng.
+const unitAmount = prizeAmounts[tier] ?? 0;
+tiers.push({ tier, hitCount, unitAmount, amount: unitAmount * hitCount });
+```
+
+```typescript
+/** SAI — không có comment, người đọc phải suy ngược */
+if (tier === PrizeTier.Jackpot) {
+  tiers.push({ tier, hitCount, unitAmount: 0, amount: 0 });
+  continue;
+}
+const unitAmount = prizeAmounts[tier] ?? 0;
+tiers.push({ tier, hitCount, unitAmount, amount: unitAmount * hitCount });
+```
+
+## 4. Không Được Xoá Comment — Phải Cập Nhật Khi Sửa Code
+
+- **KHÔNG xoá** comment khi sửa code, trừ khi đoạn code đó bị xoá hoàn toàn.
+- Khi logic thay đổi → **sửa comment cho khớp**. Comment sai còn tệ hơn không có comment.
+- Khi refactor → review tất cả comment liên quan, đảm bảo vẫn mô tả đúng hành vi mới.
+
+```typescript
+/** SAI — xoá comment khi refactor */
+// TRƯỚC:
+// Tính commission theo công thức: amount × commissionRate
+const commission = entry.amount * tenant.commissionRate;
+
+// SAU (xoá mất comment):
+const commission = calcCommission(entry, tenant);
+
+/** ĐÚNG — cập nhật comment cho phù hợp với refactor */
+// Tính commission đại lý: amount × commissionRate (snapshot từ TenantConfig lúc place-bet).
+// calcCommission đọc từ entry.tenant.commissionRate — không fetch lại TenantConfig.
+const commission = calcCommission(entry, tenant);
+```
+
+## 5. Tái Sử Dụng Type/Interface — DRY & KISS
+
+Trước khi định nghĩa type/interface mới, **BẮT BUỘC** tìm trong `packages/` xem đã có chưa.
+Nếu đã có → import và dùng lại. **KHÔNG tự định nghĩa lại** (kể cả inline type).
+
+```typescript
+/** ĐÚNG */
+// Import từ entity layer — type đã có sẵn, đồng bộ với DB schema.
+import type { EntryPayout, EntryResult, EntryPayoutTier } from "@megawin/game-mega645/entities";
+
+const settleOps: Array<{
+  entryId: string;
+  payout: EntryPayout;   // ← dùng lại, không tự định nghĩa inline
+  result: EntryResult;   // ← dùng lại
+}> = [];
+```
+
+```typescript
+/** SAI — tự định nghĩa inline */
+// Inline type không đồng bộ với entity → khi entity thêm field bắt buộc,
+// compiler không báo lỗi → data loss âm thầm.
+const settleOps: Array<{
+  entryId: string;
+  payout: {
+    winAmount: number;
+    payoutAmount: number;
+    tiers: Array<{ tier: string; hitCount: number; unitAmount: number; amount: number }>;
+    settledAt: Date;
+  };
+}> = [];
+```
+
+**Checklist trước khi định nghĩa type mới:**
+1. Tìm trong `packages/game-*/src/entities/` — entity doc types.
+2. Tìm trong `packages/game-*-application/src/use-cases/*/types.ts` — use case types.
+3. Tìm trong `packages/game-core/` — shared game-core types.
+4. Nếu thực sự chưa có → tạo mới trong đúng package, export ra barrel (`index.ts`).

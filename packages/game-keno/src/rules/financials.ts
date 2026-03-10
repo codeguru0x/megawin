@@ -31,8 +31,6 @@ export interface DrawFinancialInput {
     /** Tổng hoa hồng tính sẵn = Σ(entry.tenant.commissionAmount) (VND). */
     commission: number;
   }>;
-  /** Tỷ lệ phần công ty (0–1). Ví dụ: 0.15 = 15%. Lấy từ GlobalConfig. */
-  companyRate: number;
 }
 
 /**
@@ -46,10 +44,11 @@ export interface DrawFinancialResult {
   totalPrizes: number;
   /** Tổng hoa hồng đại lý = Σ(tenantBreakdown[].commission) (VND). */
   totalAgentCommission: number;
-  /** Phần công ty = Math.round(totalRevenue × companyRate) (VND). */
-  companyTake: number;
   /**
-   * Lợi nhuận = totalRevenue - totalPrizes - totalAgentCommission - companyTake.
+   * Lợi nhuận công ty = totalRevenue - totalPrizes - totalAgentCommission.
+   *
+   * Keno KHÔNG có Jackpot tích luỹ → sau khi trả giải thưởng và hoa hồng,
+   * toàn bộ phần còn lại thuộc về công ty.
    * Có thể âm nếu tổng giải thưởng vượt doanh thu.
    */
   profit: number;
@@ -58,26 +57,28 @@ export interface DrawFinancialResult {
 /**
  * Tính tài chính tổng hợp cho 1 kỳ quay Keno.
  *
- * Keno KHÔNG có Jackpot tích luỹ — công thức đơn giản:
- *   profit = totalRevenue - totalPrizes - totalAgentCommission - companyTake
+ * Keno KHÔNG có Jackpot tích luỹ — sau khi trả giải và hoa hồng,
+ * toàn bộ phần còn lại là lợi nhuận công ty:
+ *   profit = totalRevenue - totalPrizes - totalAgentCommission
+ *
+ * Khác biệt so với game có Jackpot (Lotto 5/35, Mega645...):
+ * - Game có Jackpot: companyRate dùng để CHIA phần dư giữa công ty và quỹ Jackpot
+ * - Keno: không có quỹ Jackpot → công ty thu toàn bộ phần dư
  *
  * @param input - Dữ liệu tổng hợp từ DB (revenue, prizes, commission per tenant)
- * @returns Kết quả tài chính gồm profit và tenant breakdown
+ * @returns Kết quả tài chính gồm profit
  */
 export function calculateKenoDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
-  const { totalRevenue, totalPrizes, tenantRevenues, companyRate } = input;
+  const { totalRevenue, totalPrizes, tenantRevenues } = input;
 
   const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
 
-  const companyTake = Math.round(totalRevenue * companyRate);
-
-  const profit = totalRevenue - totalPrizes - totalAgentCommission - companyTake;
+  const profit = totalRevenue - totalPrizes - totalAgentCommission;
 
   return {
     totalRevenue,
     totalPrizes,
     totalAgentCommission,
-    companyTake,
     profit,
   };
 }
@@ -126,10 +127,9 @@ export const DEFAULT_KENO_CONFIG: Pick<
   GlobalConfigDoc,
   "rates" | "basicPrizes" | "bigSmallPrizes" | "evenOddPrizes" | "payoutCaps" | "play"
 > = {
-  /** Tỷ lệ tài chính: hoa hồng đại lý mặc định 20%, phần công ty 15%. */
+  /** Tỷ lệ tài chính: hoa hồng đại lý mặc định 20%. Keno không cần companyRate (xem financials.ts). */
   rates: {
     defaultCommissionRate: 0.2,
-    companyRate: 0.15,
   },
   /**
    * Bảng giải thưởng cơ bản theo loại chơi (pick1 → pick10).
@@ -209,9 +209,9 @@ export const DEFAULT_KENO_CONFIG: Pick<
     maxBasicBoardsPerTicket: 2,
     maxDrawCount: 20,
     salesCloseBeforeSeconds: 60,
-    drawIntervalMinutes: 10,
+    drawIntervalMinutes: 8,
     firstDrawTime: "06:00",
-    lastDrawTime: "21:55",
+    lastDrawTime: "21:52",
     timezone: "Asia/Ho_Chi_Minh",
   },
 };

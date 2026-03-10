@@ -1,7 +1,4 @@
 import {
-  Banknote,
-  ChartBar,
-  LayoutDashboard,
   type LucideIcon,
   Building2,
   Briefcase,
@@ -16,10 +13,6 @@ import {
   Trophy,
   Settings2,
   CalendarClock,
-  Clock,
-  Layers,
-  CircleDollarSign,
-  Ticket,
   Activity,
 } from "lucide-react";
 
@@ -30,6 +23,8 @@ export interface NavSubItem {
   comingSoon?: boolean;
   newTab?: boolean;
   isNew?: boolean;
+  /** Nhãn phân nhóm hiển thị phía trên item (separator + label). */
+  sectionLabel?: string;
 }
 
 export interface NavMainItem {
@@ -60,6 +55,7 @@ export const operatorSidebarItems: NavGroup[] = [
       },
     ],
   },
+  /*
   {
     id: 2,
     label: "Thống kê",
@@ -77,6 +73,7 @@ export const operatorSidebarItems: NavGroup[] = [
       { title: "Chi tiêu", url: "/finance", icon: Banknote },
     ],
   },
+  */
   {
     id: 3,
     label: "Tài khoản",
@@ -111,7 +108,7 @@ export const operatorSidebarItems: NavGroup[] = [
             title: "Vận hành",
             url: "/games/lotto535/operations",
             icon: Activity,
-            isNew: true,
+            sectionLabel: "Vận hành",
           },
           {
             title: "Kỳ quay",
@@ -119,31 +116,32 @@ export const operatorSidebarItems: NavGroup[] = [
             icon: CalendarClock,
           },
           {
-            title: "Vé chờ quay",
-            url: "/games/lotto535/pending-tickets",
-            icon: Clock,
-            isNew: true,
+            title: "Jackpot",
+            url: "/games/lotto535/jackpot",
+            icon: Trophy,
           },
-          {
-            title: "Vé nhiều kỳ",
-            url: "/games/lotto535/multi-draw",
-            icon: Layers,
-            isNew: true,
-          },
-          {
-            title: "Thống kê tài chính",
+          /* {
+            title: "Tài chính",
             url: "/games/lotto535/financial-reports",
             icon: CircleDollarSign,
-            isNew: true,
+            sectionLabel: "Báo cáo",
           },
-          { title: "Cấu hình", url: "/games/lotto535/config", icon: Settings2 },
+          {
+            title: "Thống kê",
+            url: "/games/lotto535/stats",
+            icon: ChartBar,
+          }, */
+          {
+            title: "Cấu hình game",
+            url: "/games/lotto535/config",
+            icon: Settings2,
+            sectionLabel: "Cài đặt",
+          },
           {
             title: "Cấu hình đại lý",
             url: "/games/lotto535/tenant-config",
             icon: Building2,
-            isNew: true,
           },
-          { title: "Jackpot", url: "/games/lotto535/jackpot", icon: Trophy },
         ],
       },
       {
@@ -155,33 +153,24 @@ export const operatorSidebarItems: NavGroup[] = [
             title: "Kỳ quay",
             url: "/games/power655/draws",
             icon: CalendarClock,
+            sectionLabel: "Vận hành",
           },
           {
-            title: "Vé chờ quay",
-            url: "/games/power655/pending-tickets",
-            icon: Clock,
-            isNew: true,
+            title: "Jackpot",
+            url: "/games/power655/jackpot",
+            icon: Trophy,
           },
           {
-            title: "Quản lý vé",
-            url: "/games/power655/tickets",
-            icon: Ticket,
-            isNew: true,
+            title: "Cấu hình game",
+            url: "/games/power655/config",
+            icon: Settings2,
+            sectionLabel: "Cài đặt",
           },
-          {
-            title: "Thống kê tài chính",
-            url: "/games/power655/financial-reports",
-            icon: CircleDollarSign,
-            isNew: true,
-          },
-          { title: "Cấu hình", url: "/games/power655/config", icon: Settings2 },
           {
             title: "Cấu hình đại lý",
             url: "/games/power655/tenant-config",
             icon: Building2,
-            isNew: true,
           },
-          { title: "Jackpot", url: "/games/power655/jackpot", icon: Trophy },
         ],
       },
       {
@@ -193,33 +182,24 @@ export const operatorSidebarItems: NavGroup[] = [
             title: "Kỳ quay",
             url: "/games/mega645/draws",
             icon: CalendarClock,
+            sectionLabel: "Vận hành",
           },
           {
-            title: "Vé chờ quay",
-            url: "/games/mega645/pending-tickets",
-            icon: Clock,
-            isNew: true,
+            title: "Jackpot",
+            url: "/games/mega645/jackpot",
+            icon: Trophy,
           },
           {
-            title: "Quản lý vé",
-            url: "/games/mega645/tickets",
-            icon: Ticket,
-            isNew: true,
+            title: "Cấu hình game",
+            url: "/games/mega645/config",
+            icon: Settings2,
+            sectionLabel: "Cài đặt",
           },
-          {
-            title: "Thống kê tài chính",
-            url: "/games/mega645/financial-reports",
-            icon: CircleDollarSign,
-            isNew: true,
-          },
-          { title: "Cấu hình", url: "/games/mega645/config", icon: Settings2 },
           {
             title: "Cấu hình đại lý",
             url: "/games/mega645/tenant-config",
             icon: Building2,
-            isNew: true,
           },
-          { title: "Jackpot", url: "/games/mega645/jackpot", icon: Trophy },
         ],
       },
       {
@@ -227,25 +207,22 @@ export const operatorSidebarItems: NavGroup[] = [
         url: "/games/keno",
         icon: ChessBishop,
         subItems: [
-          { title: "Kỳ quay", url: "/games/keno/draws", icon: CalendarClock },
           {
-            title: "Bảng giải thưởng",
-            url: "/games/keno/prize-table",
-            icon: Trophy,
-            isNew: true,
+            title: "Kỳ quay",
+            url: "/games/keno/draws",
+            icon: CalendarClock,
+            sectionLabel: "Vận hành",
           },
           {
-            title: "Thống kê tài chính",
-            url: "/games/keno/financial-reports",
-            icon: CircleDollarSign,
-            isNew: true,
+            title: "Cấu hình game",
+            url: "/games/keno/config",
+            icon: Settings2,
+            sectionLabel: "Cài đặt",
           },
-          { title: "Cấu hình", url: "/games/keno/config", icon: Settings2 },
           {
             title: "Cấu hình đại lý",
             url: "/games/keno/tenant-config",
             icon: Building2,
-            isNew: true,
           },
         ],
       },
@@ -253,25 +230,23 @@ export const operatorSidebarItems: NavGroup[] = [
         title: "Bingo 18",
         url: "/games/bingo18",
         icon: ChessKnight,
-        isNew: true,
         subItems: [
           {
             title: "Kỳ quay",
             url: "/games/bingo18/draws",
             icon: CalendarClock,
+            sectionLabel: "Vận hành",
           },
           {
-            title: "Thống kê tài chính",
-            url: "/games/bingo18/financial-reports",
-            icon: CircleDollarSign,
-            isNew: true,
+            title: "Cấu hình game",
+            url: "/games/bingo18/config",
+            icon: Settings2,
+            sectionLabel: "Cài đặt",
           },
-          { title: "Cấu hình", url: "/games/bingo18/config", icon: Settings2 },
           {
             title: "Cấu hình đại lý",
             url: "/games/bingo18/tenant-config",
             icon: Building2,
-            isNew: true,
           },
         ],
       },
@@ -284,37 +259,18 @@ export const operatorSidebarItems: NavGroup[] = [
             title: "Kỳ quay",
             url: "/games/max3d/draws",
             icon: CalendarClock,
+            sectionLabel: "Vận hành",
           },
           {
-            title: "Vé chờ quay",
-            url: "/games/max3d/pending-tickets",
-            icon: Clock,
-            isNew: true,
+            title: "Cấu hình game",
+            url: "/games/max3d/config",
+            icon: Settings2,
+            sectionLabel: "Cài đặt",
           },
-          {
-            title: "Quản lý vé",
-            url: "/games/max3d/tickets",
-            icon: Ticket,
-            isNew: true,
-          },
-          {
-            title: "Thống kê tài chính",
-            url: "/games/max3d/financial-reports",
-            icon: CircleDollarSign,
-            isNew: true,
-          },
-          {
-            title: "Báo cáo",
-            url: "/games/max3d/reports",
-            icon: ChartBar,
-            isNew: true,
-          },
-          { title: "Cấu hình", url: "/games/max3d/config", icon: Settings2 },
           {
             title: "Cấu hình đại lý",
             url: "/games/max3d/tenant-config",
             icon: Building2,
-            isNew: true,
           },
         ],
       },
@@ -322,47 +278,23 @@ export const operatorSidebarItems: NavGroup[] = [
         title: "Max 3D Pro",
         url: "/games/max3dpro",
         icon: ChessPawn,
-        isNew: true,
         subItems: [
           {
             title: "Kỳ quay",
             url: "/games/max3dpro/draws",
             icon: CalendarClock,
+            sectionLabel: "Vận hành",
           },
           {
-            title: "Vé chờ quay",
-            url: "/games/max3dpro/pending-tickets",
-            icon: Clock,
-            isNew: true,
-          },
-          {
-            title: "Quản lý vé",
-            url: "/games/max3dpro/tickets",
-            icon: Ticket,
-            isNew: true,
-          },
-          {
-            title: "Thống kê tài chính",
-            url: "/games/max3dpro/financial-reports",
-            icon: CircleDollarSign,
-            isNew: true,
-          },
-          {
-            title: "Báo cáo",
-            url: "/games/max3dpro/reports",
-            icon: ChartBar,
-            isNew: true,
-          },
-          {
-            title: "Cấu hình",
+            title: "Cấu hình game",
             url: "/games/max3dpro/config",
             icon: Settings2,
+            sectionLabel: "Cài đặt",
           },
           {
             title: "Cấu hình đại lý",
             url: "/games/max3dpro/tenant-config",
             icon: Building2,
-            isNew: true,
           },
         ],
       },

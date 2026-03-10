@@ -25,4 +25,4 @@ export { FinalizeSettleUseCase } from "./finalize-settle";
 export type { FinalizeSettleResult } from "./finalize-settle";
 
 export { SyncTicketSummariesUseCase } from "./sync-ticket-summaries";
-export type { SyncTicketSummariesResult } from "./sync-ticket-summaries";
+export type { SyncTicketSummariesResult, DrawSyncInput } from "./sync-ticket-summaries";

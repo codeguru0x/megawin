@@ -89,7 +89,7 @@ export class BuildReportUseCase extends InternalUseCase<SettleContext, BuildRepo
           totalPayout,
           totalWin,
           totalCommission: financials.totalAgentCommission,
-          companyTake: financials.companyTake,
+          companyTake: financials.profit,
           jackpotContribution: 0,
         },
       });

@@ -151,16 +151,11 @@
  *     JP2 += 10% × JP Contribution
  *
  *   Overflow: Khi JP1 > 300 tỷ → phần vượt chuyển sang JP2
- *   Split cycle: Khi JP1 + JP2 > 500 tỷ → chia cho giải cố định (tỷ lệ 2:1:1)
  *   Reseed: Khi có winner → JP1 reseed 30 tỷ, JP2 reseed 3 tỷ
  */
 
 import { PrizeTier } from "../entities/enums";
-import {
-  POWER655_MAIN_MAX,
-  POWER655_MAIN_COUNT,
-  type PrizeAmounts,
-} from "../entities/types";
+import { POWER655_MAIN_MAX, POWER655_MAIN_COUNT, type PrizeAmounts } from "../entities/types";
 import { combination } from "./play-types";
 
 const MAIN_POOL = POWER655_MAIN_MAX; // 55
@@ -170,10 +165,7 @@ const BONUS_POOL = MAIN_POOL - MAIN_PICK; // 49
 export const TOTAL_MAIN_OUTCOMES = combination(MAIN_POOL, MAIN_PICK); // 28,989,675
 
 function mainMatchWays(k: number): number {
-  return (
-    combination(MAIN_PICK, k) *
-    combination(MAIN_POOL - MAIN_PICK, MAIN_PICK - k)
-  );
+  return combination(MAIN_PICK, k) * combination(MAIN_POOL - MAIN_PICK, MAIN_PICK - k);
 }
 
 export interface TierOdds {
@@ -220,8 +212,7 @@ function computeTierOdds(): Map<
   // favorable outcomes = 294 × (48/49) = 288
   odds.set(PrizeTier.Tier1, {
     ways: (match5ways * (BONUS_POOL - 1)) / BONUS_POOL, // 294×48/49 = 288
-    probability:
-      (match5ways / totalMainCombos) * ((BONUS_POOL - 1) / BONUS_POOL),
+    probability: (match5ways / totalMainCombos) * ((BONUS_POOL - 1) / BONUS_POOL),
     plannedPayoutRate: 3.97,
   });
 
@@ -294,16 +285,9 @@ export interface ProfitSummary {
   grossMarginPercent: number;
 }
 
-const FIXED_TIERS: PrizeTier[] = [
-  PrizeTier.Tier1,
-  PrizeTier.Tier2,
-  PrizeTier.Tier3,
-];
+const FIXED_TIERS: PrizeTier[] = [PrizeTier.Tier1, PrizeTier.Tier2, PrizeTier.Tier3];
 
-export function analyzeProfitability(
-  prizes: PrizeAmounts,
-  unitPrice: number
-): ProfitSummary {
+export function analyzeProfitability(prizes: PrizeAmounts, unitPrice: number): ProfitSummary {
   const amounts: Record<string, number> = {
     [PrizeTier.Tier1]: prizes.tier1,
     [PrizeTier.Tier2]: prizes.tier2,
@@ -331,8 +315,7 @@ export function analyzeProfitability(
   const totalExpectedPayout = tiers.reduce((s, t) => s + t.expectedPayout, 0);
   const totalPayoutRatio = unitPrice > 0 ? totalExpectedPayout / unitPrice : 0;
   const grossMarginPerLine = unitPrice - totalExpectedPayout;
-  const grossMarginPercent =
-    unitPrice > 0 ? (grossMarginPerLine / unitPrice) * 100 : 0;
+  const grossMarginPercent = unitPrice > 0 ? (grossMarginPerLine / unitPrice) * 100 : 0;
 
   return {
     unitPrice,

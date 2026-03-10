@@ -12,12 +12,7 @@
  */
 
 import type { GameConfigScope } from "@megawin/game-core/entities";
-import type {
-  JackpotConfig,
-  FinancialRates,
-  PrizeAmounts,
-  PlayRules,
-} from "./types";
+import type { JackpotConfig, FinancialRates, PrizeAmounts, PlayRules } from "./types";
 
 /**
  * MongoDB document cho global config.
@@ -29,7 +24,7 @@ export interface GlobalConfigDoc {
   scope: typeof GameConfigScope.Global;
   /** Luôn null cho global config (dùng tenantId để phân biệt global vs tenant). */
   tenantId: null;
-  /** Cấu hình Jackpot: seed amounts, tỷ lệ phân bổ, overflow, split. */
+  /** Cấu hình Jackpot: seed amounts, tỷ lệ phân bổ, overflow. */
   jackpot: JackpotConfig;
   /** Tỷ lệ tài chính: hoa hồng đại lý, công ty thu về. */
   rates: FinancialRates;

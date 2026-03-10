@@ -2,9 +2,12 @@
  * Mega 6/45 – Expand Boards to Lines
  *
  * Chuyển đổi boards thành danh sách lines (bộ 6 số).
+ * Đây là bước tiền xử lý trước khi match với kết quả quay.
  *
- * Bao 5 đặc biệt: chọn 5 số, hệ thống ghép lần lượt 40 số còn lại.
- * Bao 7-18: tạo tất cả tổ hợp C(N,6) lines.
+ * Công thức số lines theo từng loại bao:
+ *   - standard / quickPick : 1 line (6 số đã chọn)
+ *   - bao5                 : 45 - 5 = 40 lines (hệ thống ghép 40 số còn lại)
+ *   - bao N (7-18)         : C(N, 6) lines (mọi tổ hợp 6 số từ N số đã chọn)
  */
 
 import { PlayType } from "../entities/enums";
@@ -21,6 +24,14 @@ import type { Board } from "../entities/ticket";
 // Core: generate combinations
 // ─────────────────────────────────────────────
 
+/**
+ * Generator sinh tất cả tổ hợp k phần tử từ mảng arr (không lặp, giữ thứ tự).
+ * Thuật toán đệ quy: chọn phần tử đầu → đệ quy phần tử còn lại với k-1.
+ * Độ phức tạp: O(C(n,k)) — chỉ sinh đúng số kết quả cần thiết, không dư.
+ *
+ * @param arr - Mảng nguồn đã sorted (đảm bảo output canonical).
+ * @param k   - Số phần tử cần chọn.
+ */
 function* combinations<T>(arr: T[], k: number): Generator<T[]> {
   if (k === 0) {
     yield [];
@@ -33,6 +44,10 @@ function* combinations<T>(arr: T[], k: number): Generator<T[]> {
   }
 }
 
+/**
+ * Chuyển mảng số string thành MainTuple (tuple 6 phần tử, sorted tăng dần).
+ * Sort đảm bảo canonical form: cùng bộ số → cùng tuple, bất kể thứ tự input.
+ */
 function toMainTuple(nums: string[]): MainTuple {
   const sorted = [...nums].sort();
   return sorted as unknown as MainTuple;
@@ -49,7 +64,8 @@ function expandStandard(sel: BoardSelection): LineValue[] {
 
 /**
  * Bao 5: chọn 5 số, hệ thống ghép lần lượt 40 số còn lại → 40 lines.
- * Mỗi line = 5 số đã chọn + 1 số bổ sung.
+ * Công thức: lines = 45 - 5 = 40 (tất cả số trong tập 01-45 chưa được chọn).
+ * Mỗi line = 5 số đã chọn + 1 số bổ sung (sorted canonical).
  */
 function expandBao5(sel: BoardSelection): LineValue[] {
   const chosen = new Set(sel.mainNumbers);
@@ -57,6 +73,7 @@ function expandBao5(sel: BoardSelection): LineValue[] {
 
   for (const n of ALL_MAIN_NUMBERS) {
     if (chosen.has(n)) continue;
+    // Ghép số bổ sung n vào 5 số đã chọn → 1 line 6 số.
     const mainNums = [...sel.mainNumbers, n];
     lines.push({ main: toMainTuple(mainNums) });
   }
@@ -65,7 +82,11 @@ function expandBao5(sel: BoardSelection): LineValue[] {
 }
 
 /**
- * Bao 7-18: chọn N số, expand thành C(N,6) lines.
+ * Bao 7-18: chọn N số, expand thành C(N, 6) lines.
+ * Công thức: C(N, 6) = N! / (6! × (N-6)!)
+ *
+ * Ví dụ: Bao 7 → C(7,6) = 7 lines; Bao 10 → C(10,6) = 210 lines.
+ * Mỗi line là 1 tổ hợp 6 số từ N số đã chọn (duyệt qua generator combinations).
  */
 function expandBaoN(sel: BoardSelection): LineValue[] {
   const sorted = [...sel.mainNumbers].sort();
@@ -82,10 +103,11 @@ function expandBaoN(sel: BoardSelection): LineValue[] {
 // Public API
 // ─────────────────────────────────────────────
 
-export function expandBoardToLines(
-  playType: PlayType,
-  selection: BoardSelection
-): LineValue[] {
+/**
+ * Expand 1 board thành danh sách lines theo play type.
+ * Exhaustive switch — TypeScript đảm bảo không bỏ sót play type nào.
+ */
+export function expandBoardToLines(playType: PlayType, selection: BoardSelection): LineValue[] {
   switch (playType) {
     case PlayType.Standard:
     case PlayType.QuickPick:
@@ -113,8 +135,15 @@ export function expandBoardToLines(
   }
 }
 
+/**
+ * Expand tất cả boards của 1 vé thành danh sách lines đầy đủ.
+ * Boards bị void (isVoid = true) bị bỏ qua.
+ * lineIndex là chỉ số toàn cục (xuyên suốt tất cả boards, bắt đầu từ 0).
+ *
+ * @returns Mảng lines kèm boardNo và lineIndex — dùng để lưu TicketLineDoc.
+ */
 export function expandAllBoards(
-  boards: Board[]
+  boards: Board[],
 ): Array<LineValue & { boardNo: string; lineIndex: number }> {
   const result: Array<LineValue & { boardNo: string; lineIndex: number }> = [];
   let globalIndex = 0;

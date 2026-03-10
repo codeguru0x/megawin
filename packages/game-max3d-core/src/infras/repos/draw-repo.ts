@@ -46,9 +46,8 @@ export interface DrawDocBaseFinancial {
   totalRevenue: number;
   totalFixedPrizes: number;
   totalAgentCommission: number;
+  /** = profit cho game không có Jackpot (Max3D, Max3D Pro). */
   companyTake: number;
-  companyTakeRate: number;
-  companyTakeMax: number;
 }
 
 export interface DrawDocBaseStats {

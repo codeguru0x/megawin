@@ -2,10 +2,7 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DEFAULT_KENO_CONFIG } from "@megawin/game-keno/rules";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
-import type {
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput,
-} from "./dto/game-config.dto";
+import type { UpdateGameConfigInput, UpdateGameConfigOutput } from "./dto/game-config.dto";
 
 /**
  * Cập nhật cấu hình game Keno toàn cục (upsert).
@@ -26,9 +23,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
 > {
   private readonly repo = new GameConfigRepository();
 
-  protected async execute(
-    input: UpdateGameConfigInput
-  ): Promise<UpdateGameConfigOutput> {
+  protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {
     this.validateInput(input);
     const existing = await this.repo.getGlobalConfig();
 
@@ -63,8 +58,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
     const cleanMerged: Record<string, unknown> = {};
     if (merged.rates) cleanMerged.rates = merged.rates;
     if (merged.basicPrizes) cleanMerged.basicPrizes = merged.basicPrizes;
-    if (merged.bigSmallPrizes)
-      cleanMerged.bigSmallPrizes = merged.bigSmallPrizes;
+    if (merged.bigSmallPrizes) cleanMerged.bigSmallPrizes = merged.bigSmallPrizes;
     if (merged.evenOddPrizes) cleanMerged.evenOddPrizes = merged.evenOddPrizes;
     if (merged.payoutCaps) cleanMerged.payoutCaps = merged.payoutCaps;
     if (merged.play) cleanMerged.play = merged.play;
@@ -83,34 +77,24 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
 
   private validateInput(input: UpdateGameConfigInput): void {
     if (input.rates) {
-      const { defaultCommissionRate, companyRate } = input.rates;
+      const { defaultCommissionRate } = input.rates;
 
       if (
         defaultCommissionRate !== undefined &&
         (defaultCommissionRate < 0 || defaultCommissionRate > 1)
       ) {
-        throw AppException.badRequest(
-          "defaultCommissionRate phải trong range [0, 1]."
-        );
-      }
-
-      if (companyRate !== undefined && (companyRate < 0 || companyRate > 1)) {
-        throw AppException.badRequest("companyRate phải trong range [0, 1].");
+        throw AppException.badRequest("defaultCommissionRate phải trong range [0, 1].");
       }
     }
 
     if (input.basicPrizes) {
       for (const [pickKey, matchPrizes] of Object.entries(input.basicPrizes)) {
         if (!/^pick([1-9]|10)$/.test(pickKey)) {
-          throw AppException.badRequest(
-            `Key "${pickKey}" không hợp lệ. Phải là pick1-pick10.`
-          );
+          throw AppException.badRequest(`Key "${pickKey}" không hợp lệ. Phải là pick1-pick10.`);
         }
         for (const [matchStr, value] of Object.entries(matchPrizes)) {
           if (typeof value !== "number" || value < 0) {
-            throw AppException.badRequest(
-              `Giải thưởng ${pickKey}[${matchStr}] phải là số dương.`
-            );
+            throw AppException.badRequest(`Giải thưởng ${pickKey}[${matchStr}] phải là số dương.`);
           }
         }
       }

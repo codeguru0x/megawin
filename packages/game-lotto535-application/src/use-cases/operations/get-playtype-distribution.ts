@@ -4,6 +4,7 @@ import { getFinancialDateToday } from "./helpers";
 import type {
   GetPlayTypeDistributionInput,
   PlayTypeDistributionOutput,
+  PlayTypeDistributionItem,
 } from "./dto/operations.dto";
 
 export class GetPlayTypeDistributionUseCase extends NextApiUseCase<
@@ -21,6 +22,6 @@ export class GetPlayTypeDistributionUseCase extends NextApiUseCase<
       drawId: input.drawId,
     });
 
-    return { financialDate, distribution: distribution as any };
+    return { financialDate, distribution: distribution as unknown as PlayTypeDistributionItem[] };
   }
 }

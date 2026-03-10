@@ -79,6 +79,46 @@ export function formatVNTime(date: Date): string {
 }
 
 /**
+ * Format Date sang "HH:mm:ss" theo giờ VN.
+ */
+export function formatVNTimeWithSeconds(date: Date): string {
+  return format(new TZDate(date, VN_TIMEZONE), "HH:mm:ss");
+}
+
+/**
+ * Format ISO string hoặc Date thành "HH:mm" theo giờ VN cho hiển thị UI.
+ * Null-safe: trả "—" nếu input rỗng hoặc không hợp lệ.
+ */
+export function displayVNTime(value: string | Date | undefined | null): string {
+  if (!value) return "—";
+  const d = value instanceof Date ? value : new Date(value);
+  if (isNaN(d.getTime())) return "—";
+  return format(new TZDate(d, VN_TIMEZONE), "HH:mm");
+}
+
+/**
+ * Format ISO string hoặc Date thành "HH:mm:ss" theo giờ VN cho hiển thị UI.
+ * Null-safe: trả "—" nếu input rỗng hoặc không hợp lệ.
+ */
+export function displayVNTimeWithSeconds(value: string | Date | undefined | null): string {
+  if (!value) return "—";
+  const d = value instanceof Date ? value : new Date(value);
+  if (isNaN(d.getTime())) return "—";
+  return format(new TZDate(d, VN_TIMEZONE), "HH:mm:ss");
+}
+
+/**
+ * Format ISO string hoặc Date thành "DD/MM/YYYY HH:mm" theo giờ VN cho hiển thị UI.
+ * Null-safe: trả "—" nếu input rỗng hoặc không hợp lệ.
+ */
+export function displayVNDateTime(value: string | Date | undefined | null): string {
+  if (!value) return "—";
+  const d = value instanceof Date ? value : new Date(value);
+  if (isNaN(d.getTime())) return "—";
+  return format(new TZDate(d, VN_TIMEZONE), "dd/MM/yyyy HH:mm");
+}
+
+/**
  * Format Date sang "YYYY-MM-DD HH:mm:ss" theo giờ VN.
  */
 export function formatVNDateTime(date: Date): string {

@@ -31,31 +31,25 @@ describe("GameConfigRepository – Power 6/55 Global Config", () => {
     expect(config!.tenantId).toBeNull();
   });
 
-  /** Validates dual jackpot settings: JP1 seed, JP2 seed, contribution ratios, overflow threshold, split. */
+  /** Validates dual jackpot settings: JP1 seed, JP2 seed, contribution ratios, overflow threshold. */
   it("global config có đầy đủ dual jackpot settings", async () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.jackpot).toBeDefined();
     expect(config!.jackpot.jackpot1.seedAmount).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.jackpot1.seedAmount
+      DEFAULT_POWER655_CONFIG.jackpot.jackpot1.seedAmount,
     );
     expect(config!.jackpot.jackpot2.seedAmount).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.jackpot2.seedAmount
+      DEFAULT_POWER655_CONFIG.jackpot.jackpot2.seedAmount,
     );
     expect(config!.jackpot.jp1ContributionRatio).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.jp1ContributionRatio
+      DEFAULT_POWER655_CONFIG.jackpot.jp1ContributionRatio,
     );
     expect(config!.jackpot.jp2ContributionRatio).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.jp2ContributionRatio
+      DEFAULT_POWER655_CONFIG.jackpot.jp2ContributionRatio,
     );
     expect(config!.jackpot.jp1OverflowThreshold).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.jp1OverflowThreshold
-    );
-    expect(config!.jackpot.splitThreshold).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.splitThreshold
-    );
-    expect(config!.jackpot.splitRatios).toEqual(
-      DEFAULT_POWER655_CONFIG.jackpot.splitRatios
+      DEFAULT_POWER655_CONFIG.jackpot.jp1OverflowThreshold,
     );
   });
 
@@ -65,11 +59,9 @@ describe("GameConfigRepository – Power 6/55 Global Config", () => {
 
     expect(config!.rates).toBeDefined();
     expect(config!.rates.defaultCommissionRate).toBe(
-      DEFAULT_POWER655_CONFIG.rates.defaultCommissionRate
+      DEFAULT_POWER655_CONFIG.rates.defaultCommissionRate,
     );
-    expect(config!.rates.companyRate).toBe(
-      DEFAULT_POWER655_CONFIG.rates.companyRate
-    );
+    expect(config!.rates.companyRate).toBe(DEFAULT_POWER655_CONFIG.rates.companyRate);
   });
 
   /** Validates 3 prize tiers (tier1/tier2/tier3) — no tier4/tier5/consolation. */
@@ -77,15 +69,9 @@ describe("GameConfigRepository – Power 6/55 Global Config", () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.defaultPrizes).toBeDefined();
-    expect(config!.defaultPrizes.tier1).toBe(
-      DEFAULT_POWER655_CONFIG.defaultPrizes.tier1
-    );
-    expect(config!.defaultPrizes.tier2).toBe(
-      DEFAULT_POWER655_CONFIG.defaultPrizes.tier2
-    );
-    expect(config!.defaultPrizes.tier3).toBe(
-      DEFAULT_POWER655_CONFIG.defaultPrizes.tier3
-    );
+    expect(config!.defaultPrizes.tier1).toBe(DEFAULT_POWER655_CONFIG.defaultPrizes.tier1);
+    expect(config!.defaultPrizes.tier2).toBe(DEFAULT_POWER655_CONFIG.defaultPrizes.tier2);
+    expect(config!.defaultPrizes.tier3).toBe(DEFAULT_POWER655_CONFIG.defaultPrizes.tier3);
   });
 
   /** Validates play rules: unitPrice, maxBoards, maxDraws, salesClose, drawsPerDay, drawTimes, drawDaysOfWeek. */
@@ -94,24 +80,14 @@ describe("GameConfigRepository – Power 6/55 Global Config", () => {
 
     expect(config!.play).toBeDefined();
     expect(config!.play.unitPrice).toBe(DEFAULT_POWER655_CONFIG.play.unitPrice);
-    expect(config!.play.maxBoardsPerTicket).toBe(
-      DEFAULT_POWER655_CONFIG.play.maxBoardsPerTicket
-    );
-    expect(config!.play.maxDrawCount).toBe(
-      DEFAULT_POWER655_CONFIG.play.maxDrawCount
-    );
+    expect(config!.play.maxBoardsPerTicket).toBe(DEFAULT_POWER655_CONFIG.play.maxBoardsPerTicket);
+    expect(config!.play.maxDrawCount).toBe(DEFAULT_POWER655_CONFIG.play.maxDrawCount);
     expect(config!.play.salesCloseBeforeMinutes).toBe(
-      DEFAULT_POWER655_CONFIG.play.salesCloseBeforeMinutes
+      DEFAULT_POWER655_CONFIG.play.salesCloseBeforeMinutes,
     );
-    expect(config!.play.drawsPerDay).toBe(
-      DEFAULT_POWER655_CONFIG.play.drawsPerDay
-    );
-    expect(config!.play.drawTimes).toEqual(
-      DEFAULT_POWER655_CONFIG.play.drawTimes
-    );
-    expect(config!.play.drawDaysOfWeek).toEqual(
-      DEFAULT_POWER655_CONFIG.play.drawDaysOfWeek
-    );
+    expect(config!.play.drawsPerDay).toBe(DEFAULT_POWER655_CONFIG.play.drawsPerDay);
+    expect(config!.play.drawTimes).toEqual(DEFAULT_POWER655_CONFIG.play.drawTimes);
+    expect(config!.play.drawDaysOfWeek).toEqual(DEFAULT_POWER655_CONFIG.play.drawDaysOfWeek);
   });
 
   /** Validates partial upsert updates only jackpot1 seedAmount while preserving other fields. */
@@ -126,10 +102,10 @@ describe("GameConfigRepository – Power 6/55 Global Config", () => {
     expect(updated).not.toBeNull();
     expect(updated!.jackpot.jackpot1.seedAmount).toBe(50_000_000_000);
     expect(updated!.jackpot.jackpot2.seedAmount).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.jackpot2.seedAmount
+      DEFAULT_POWER655_CONFIG.jackpot.jackpot2.seedAmount,
     );
-    expect(updated!.jackpot.splitThreshold).toBe(
-      DEFAULT_POWER655_CONFIG.jackpot.splitThreshold
+    expect(updated!.jackpot.jp1OverflowThreshold).toBe(
+      DEFAULT_POWER655_CONFIG.jackpot.jp1OverflowThreshold,
     );
   });
 

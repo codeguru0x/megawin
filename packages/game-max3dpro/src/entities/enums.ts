@@ -14,11 +14,11 @@
 // ─────────────────────────────────────────────
 
 export const Max3dproCollections = {
-  Tickets: "max3d_pro_tickets",
-  TicketEntries: "max3d_pro_ticket_entries",
-  TicketLines: "max3d_pro_ticket_lines",
-  Draws: "max3d_pro_draws",
-  GameConfigs: "max3d_pro_game_configs",
+  Tickets: "max3dpro_tickets",
+  TicketEntries: "max3dpro_ticket_entries",
+  TicketLines: "max3dpro_ticket_lines",
+  Draws: "max3dpro_draws",
+  GameConfigs: "max3dpro_game_configs",
 } as const;
 
 // ─────────────────────────────────────────────

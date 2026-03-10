@@ -25,20 +25,13 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { calcPower655DrawSlots } from "../../helpers/calc-draw-slots";
-import type {
-  CreateDrawsInput,
-  CreateDrawsOutput,
-  CreateDrawsOutputItem,
-} from "./dto/draw.dto";
+import type { CreateDrawsInput, CreateDrawsOutput, CreateDrawsOutputItem } from "./dto/draw.dto";
 
 /**
  * Tạo batch kỳ quay Power 6/55.
  * Tự động tạo jackpot cycle nếu chưa có active cycle.
  */
-export class CreateDrawsUseCase extends NextApiUseCase<
-  CreateDrawsInput,
-  CreateDrawsOutput
-> {
+export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
@@ -64,12 +57,7 @@ export class CreateDrawsUseCase extends NextApiUseCase<
     ]);
     const existingDrawIds = new Set(existingActiveDraws.map((d) => d.drawId));
 
-    const slots = calcPower655DrawSlots(
-      new Date(),
-      count,
-      play,
-      existingDrawIds
-    );
+    const slots = calcPower655DrawSlots(new Date(), count, play, existingDrawIds);
     if (slots.length === 0) {
       throw AppException.badRequest("Không còn slot quay nào khả dụng.");
     }
@@ -116,10 +104,6 @@ export class CreateDrawsUseCase extends NextApiUseCase<
           startDrawId: draws[0]!.drawId,
           jp1SeedAmount: jackpotConfig.jackpot1.seedAmount,
           jp2SeedAmount: jackpotConfig.jackpot2.seedAmount,
-          config: {
-            splitThreshold: jackpotConfig.splitThreshold,
-            splitRatios: jackpotConfig.splitRatios,
-          },
         });
       }
     }

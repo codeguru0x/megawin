@@ -183,6 +183,4 @@ export interface EntryPayoutTier {
    * Công thức: hitCount × unitAmount.
    */
   amount: number;
-  /** True nếu tiền thưởng bao gồm bonus từ split cycle. */
-  isSplitBonus?: boolean;
 }

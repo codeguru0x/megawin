@@ -5,7 +5,6 @@ const rate = z.number().min(0).max(1);
 
 const ratesSchema = z.object({
   defaultCommissionRate: rate,
-  companyRate: rate,
 }).partial();
 
 const basicPrizesSchema = z.object({

@@ -56,6 +56,7 @@ export interface DrawFinancial {
   totalRevenue: number;
   totalPrizes: number;
   totalAgentCommission: number;
+  /** Keno: companyTake = profit = revenue - prizes - commission (công ty thu toàn bộ phần dư). */
   companyTake: number;
 }
 

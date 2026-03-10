@@ -8,7 +8,7 @@
  */
 
 import type { DrawStatus } from "@megawin/game-core/entities";
-import type { ISODateString, DrawNo, MainTuple, SplitRatios } from "./types";
+import type { ISODateString, DrawNo, MainTuple } from "./types";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces
@@ -43,20 +43,17 @@ export interface DrawResult {
 
 /**
  * Snapshot Jackpot tại kỳ quay, được ghi khi settle.
+ * Mega 6/45: Jackpot chỉ tích luỹ hoặc trao cho winner, không có split.
  */
 export interface DrawJackpotSnapshot {
   /** Giá trị Jackpot đầu kỳ (VND). */
   openingAmount: number;
   /**
-   * Giá trị Jackpot cuối kỳ (VND).
-   * Công thức: nếu có người trúng Jackpot → seedAmount + jackpotContribution;
-   *            nếu không → openingAmount + jackpotContribution.
+   * Giá trị quỹ Jackpot cuối kỳ (VND).
+   * LUÔN = openingAmount + jackpotContribution, bất kể có winner hay không.
+   * Khi trace chuỗi draws: closing kỳ này ≠ opening kỳ sau → có winner hoặc cycle reset.
    */
   closingAmount: number;
-  /** True nếu kỳ này kích hoạt cơ chế chia Jackpot (split cycle). */
-  isSplitCycle?: boolean;
-  /** Chi tiết chia Jackpot (chỉ có khi isSplitCycle = true). */
-  split?: DrawSplit;
 }
 
 /** Bảng phân tích tài chính kỳ quay, được tính khi settle. */
@@ -115,6 +112,42 @@ export interface DrawVoidInfo {
   voidedBy?: string;
   /** Thời điểm huỷ. */
   voidedAt: Date;
+}
+
+/**
+ * Chi tiết giải thưởng 1 tier trong kỳ quay (denormalized cho player API).
+ * Ghi vào DrawDoc.settleSummary.tiers khi settle hoàn tất.
+ */
+export interface DrawSettleSummaryTier {
+  /**
+   * Hạng giải: "jackpot" (6/6), "tier1" (5/6), "tier2" (4/6), "tier3" (3/6).
+   * Dùng PrizeTier constants từ enums.ts.
+   */
+  tier: string;
+  /** Số người trúng hạng này (winnerCount = tổng line trúng, không phải người). */
+  winnerCount: number;
+  /**
+   * Tổng tiền thưởng tier này (VND).
+   * Jackpot = 0 tại CalculateFinancials; FinalizeSettle patch lại sau khi biết pool.
+   */
+  prizeAmount: number;
+}
+
+/**
+ * Tóm tắt kết quả settle kỳ quay — denormalized cho player API.
+ *
+ * Ghi vào DrawDoc.settleSummary bởi CalculateFinancials (step 3 settle pipeline).
+ * FinalizeSettle cập nhật prizeAmount tier Jackpot sau khi biết pool chính xác.
+ *
+ * Dùng bởi GetDrawResultPlayerUseCase để trả bảng giải thưởng cho player —
+ * 1 DB call duy nhất (không cần aggregate từ entries).
+ */
+export interface DrawSettleSummary {
+  /**
+   * Bảng giải thưởng chi tiết theo từng hạng.
+   * Tất cả 4 tiers luôn có mặt (kể cả winnerCount = 0).
+   */
+  tiers: DrawSettleSummaryTier[];
 }
 
 /** Tổng kết xử lý hoàn tiền sau khi void kỳ quay. */
@@ -176,6 +209,13 @@ export interface DrawDoc {
   /** Thống kê kỳ quay. */
   stats?: DrawStats;
 
+  /**
+   * Tóm tắt kết quả settle — denormalized cho player API.
+   * Ghi bởi CalculateFinancials, patch Jackpot bởi FinalizeSettle.
+   * Giúp player API chỉ cần 1 DB call, không aggregate từ entries.
+   */
+  settleSummary?: DrawSettleSummary;
+
   /** Thông tin huỷ kỳ quay (nếu bị void). */
   voidInfo?: DrawVoidInfo;
 
@@ -188,44 +228,4 @@ export interface DrawDoc {
   createdAt: Date;
   /** Thời điểm cập nhật cuối cùng. */
   updatedAt: Date;
-}
-
-// ─────────────────────────────────────────────
-// Sub-types
-// ─────────────────────────────────────────────
-
-/** Chi tiết chia Jackpot khi split cycle được kích hoạt. */
-export interface DrawSplit {
-  /** Ngưỡng kích hoạt chia Jackpot (VND). Khi Jackpot >= giá trị này → split. */
-  thresholdAmount: number;
-  /** Tỷ lệ chia cho từng tier (tier1: 2, tier2: 2, tier3: 1 → tổng = 5). */
-  splitRatios: SplitRatios;
-  /** Tổng số tiền Jackpot được chia (VND). */
-  splitAmount: number;
-  /**
-   * Chi tiết phân bổ cho từng tier.
-   * Key = PrizeTier ("tier1" | "tier2" | "tier3").
-   * Tier nào không có người trúng sẽ được phân bổ lại cho các tier có người trúng.
-   */
-  tierAllocations?: Record<
-    string,
-    {
-      /** Số tiền phân bổ ban đầu theo tỷ lệ (VND). Công thức: jackpotAmount × parts / totalParts. */
-      initialAmount: number;
-      /** Số tiền nhận thêm từ các tier không có người trúng (VND). */
-      redistributedAmount: number;
-      /** Tổng tiền cho tier (VND). Công thức: initialAmount + redistributedAmount. */
-      totalAmount: number;
-      /** Số người trúng tier này. */
-      winnerCount: number;
-      /** Tiền thưởng bonus cho mỗi người trúng (VND). Công thức: totalAmount / winnerCount (làm tròn). */
-      bonusPerWinner: number;
-    }
-  >;
-  /** Số tiền dư sau khi làm tròn (VND). Chuyển vào Jackpot kỳ sau. */
-  roundingRemainder?: number;
-  /** Phiên bản quy tắc chia đã áp dụng. */
-  splitRuleVersion?: string;
-  /** Ghi chú mô tả ngắn về kỳ split (dùng hiển thị cho admin). */
-  hintText?: string;
 }

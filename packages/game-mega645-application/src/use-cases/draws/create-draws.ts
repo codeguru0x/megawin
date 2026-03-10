@@ -22,16 +22,9 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { calcMega645DrawSlots } from "../../helpers/calc-draw-slots";
-import type {
-  CreateDrawsInput,
-  CreateDrawsOutput,
-  CreateDrawsOutputItem,
-} from "./dto/draw.dto";
+import type { CreateDrawsInput, CreateDrawsOutput, CreateDrawsOutputItem } from "./dto/draw.dto";
 
-export class CreateDrawsUseCase extends NextApiUseCase<
-  CreateDrawsInput,
-  CreateDrawsOutput
-> {
+export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
@@ -56,12 +49,7 @@ export class CreateDrawsUseCase extends NextApiUseCase<
     ]);
     const existingDrawIds = new Set(existingActiveDraws.map((d) => d.drawId));
 
-    const slots = calcMega645DrawSlots(
-      new Date(),
-      count,
-      play,
-      existingDrawIds
-    );
+    const slots = calcMega645DrawSlots(new Date(), count, play, existingDrawIds);
     if (slots.length === 0) {
       throw AppException.badRequest("Không còn slot quay nào khả dụng.");
     }
@@ -109,10 +97,6 @@ export class CreateDrawsUseCase extends NextApiUseCase<
         await this.cycleRepo.createCycle({
           startDrawId: draws[0]!.drawId,
           seedAmount: jackpotConfig.seedAmount,
-          config: {
-            splitThreshold: jackpotConfig.splitThreshold,
-            splitRatios: jackpotConfig.splitRatios,
-          },
         });
       }
     }

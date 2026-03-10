@@ -22,25 +22,32 @@
  *  │  3. CalculateFinancials    │  Tính TỪ DB (not accumulator)
  *  └────────┬───────────────────┘
  *           ▼
- *  ┌─────────────────────────┐
- *  │  4. ApplySplitBonuses   │  Patch bonus nếu split cycle
- *  └────────┬────────────────┘
+ *  ┌──────────────────────────────────────────────────────────┐
+ *  │  4. CheckJackpotWinner (Choice)                          │
+ *  │     hasJackpotWinner = true → PatchJackpotPrize (4a)     │
+ *  │     hasJackpotWinner = false → SyncTicketSummaries (5)   │
+ *  └────────┬─────────────────────────────────────────────────┘
+ *           ▼ (if winner)
+ *  ┌─────────────────────────────────────────────────────┐
+ *  │  4a. PatchJackpotPrize                              │
+ *  │      Patch winAmount vào entries + lines trúng JP   │
+ *  └────────┬────────────────────────────────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  5. SyncTicketSummaries (loop)         │  Recompute ticket summaries
- *  │     done = true khi hết tickets        │
+ *  │  5. SyncTicketSummaries (loop)           │  Recompute ticket summaries
+ *  │     done = true khi hết tickets          │
  *  └────────┬───────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  6. BuildReport         │  Daily reports (idempotent upsert)
+ *  │  5. BuildReport         │  Daily reports (idempotent upsert)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  7. FinalizeSettle      │  settling → settled + jackpot chain
+ *  │  6. FinalizeSettle      │  settling → settled + jackpot chain
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  8. DispatchPayouts (loop, async)        │
+ *  │  7. DispatchPayouts (loop, async)        │
  *  │     done = true khi hết pending payouts  │
  *  └──────────────────────────────────────────┘
  *
@@ -125,14 +132,32 @@ export const SETTLE_STATE_MACHINE = {
       Resource: lambdaArn("settle-calculate-financials"),
       Arguments: "{% $settleCtx %}",
       Assign: { settleCtx: "{% $merge($settleCtx, { 'financials': $states.result }) %}" },
-      Next: "ApplySplitBonuses",
+      Next: "CheckJackpotWinner",
       Retry: LAMBDA_RETRY,
     },
 
-    ApplySplitBonuses: {
+    // ── STEP 4: Route nếu có Jackpot winner → patch prize vào entries + lines ──
+    CheckJackpotWinner: {
+      Type: "Choice",
+      Choices: [
+        {
+          Comment: "Có jackpot winner → patch jackpot prize vào entries + lines",
+          Condition: "{% $settleCtx.financials.hasJackpotWinner %}",
+          Next: "PatchJackpotPrize",
+        },
+      ],
+      Default: "SyncTicketSummaries",
+    },
+
+    // ── STEP 4a: Patch Jackpot Prize ──
+    // Merge winners vào settleCtx (top-level) để FinalizeSettle dùng — tránh re-query DB.
+    PatchJackpotPrize: {
       Type: "Task",
-      Resource: lambdaArn("settle-apply-split-bonuses"),
+      Resource: lambdaArn("settle-patch-jackpot-prize"),
       Arguments: "{% $settleCtx %}",
+      Assign: {
+        settleCtx: "{% $merge([$settleCtx, { 'jackpotWinners': $states.result.winners }]) %}",
+      },
       Next: "SyncTicketSummaries",
       Retry: LAMBDA_RETRY,
     },

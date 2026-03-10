@@ -9,7 +9,7 @@
 
 import type { PlayType } from "./enums";
 import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
-import type { ISODateString, BoardSelection } from "./types";
+import type { BoardSelection } from "./types";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces

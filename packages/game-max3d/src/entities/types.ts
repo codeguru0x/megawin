@@ -123,7 +123,6 @@ export interface Max3dPrizeConfig {
 /** Tỷ lệ tài chính. */
 export interface FinancialRates {
   defaultCommissionRate: number;
-  companyRate: number;
 }
 
 /** Quy tắc chơi. */

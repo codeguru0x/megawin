@@ -31,18 +31,7 @@
  *        ③ Công ty thu về (tối đa 15% tổng doanh thu)
  *        ④ Phần còn lại → tích luỹ vào quỹ Jackpot
  *
- *   3. TÍNH JACKPOT CUỐI KỲ (closingJackpot):
- *      closingJackpot = openingAmount + contribution (LUÔN LUÔN).
- *      Đây là bản ghi lịch sử — quỹ JP trị giá bao nhiêu khi kỳ quay kết thúc.
- *
- *      - Có JP winner → closingJackpot = tổng giải winner nhận
- *      - Split cycle  → closingJackpot = quỹ JP trước khi chia
- *      - Tích luỹ     → closingJackpot = quỹ JP mang sang kỳ sau
- *
- *      Lưu ý: seedAmount (reset cycle mới) do FinalizeSettle xử lý,
- *      KHÔNG phải closingJackpot.
- *
- *   4. TÍNH SPLIT (chỉ khi isSplitCycle = true VÀ không có JP winner):
+ *   3. TÍNH SPLIT (chỉ khi isSplitCycle = true VÀ không có JP winner):
  *      - Khi Jackpot >= 12 tỷ (splitThreshold), hệ thống chia JP cho người thắng
  *      - Tỷ lệ chia: tier1 = 2/6, tier2-tier5 = mỗi tier 1/6
  *      - Tier không có winner → phần tiền đó tái phân bổ cho các tier có winner
@@ -166,19 +155,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
       }
     }
 
-    // ── BƯỚC 5: Tính Jackpot cuối kỳ ──
-    // closingJackpot = giá trị quỹ JP tại thời điểm kỳ quay KẾT THÚC (bản ghi lịch sử).
-    // LUÔN = openingAmount + contribution, bất kể có winner hay split.
-    //
-    // Nếu có winner: closingJackpot chính là tổng giải JP mà winner nhận được.
-    // Nếu split: closingJackpot là quỹ JP trước khi chia cho tier1-tier5.
-    // Nếu tích luỹ: closingJackpot là quỹ JP tích luỹ, mang sang kỳ sau.
-    //
-    // Lưu ý: seedAmount (reset cycle mới) được xử lý bởi FinalizeSettle.createCycle(),
-    // KHÔNG liên quan đến closingJackpot ở đây.
-    const closingJackpot = jackpotOpeningAmount + fin.jackpotContribution;
-
-    // ── BƯỚC 6+7: Ghi financial + stats + settleSummary vào draw (1 DB call) ──
+    // ── BƯỚC 5+6: Ghi financial + stats + settleSummary vào draw (1 DB call) ──
     // settleSummary denormalize bảng giải thưởng cho player API.
     // Jackpot tier prizeAmount = 0 ở đây — PatchJackpotPrize (step 4a) sẽ patch sau.
     const tiers: DrawTierPrizeSummary[] = [];
@@ -222,7 +199,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
       companyTake: fin.companyTake,
       actualCompanyTake: fin.actualCompanyTake,
       jackpotContribution: fin.jackpotContribution,
-      closingJackpot,
       hasJackpotWinner,
       splitDetails,
     };

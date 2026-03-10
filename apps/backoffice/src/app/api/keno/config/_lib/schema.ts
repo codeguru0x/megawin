@@ -10,21 +10,17 @@ const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 const ratesSchema = z
   .object({
     defaultCommissionRate: rate,
-    companyRate: rate,
   })
   .partial();
 
 // ─────── Basic Prizes (pick1-pick10) ───────
 
-const matchPrizesSchema = z.record(
-  z.coerce.number().int().nonnegative(),
-  nonNegativeInt
-);
+const matchPrizesSchema = z.record(z.coerce.number().int().nonnegative(), nonNegativeInt);
 
 const basicPrizesSchema = z
   .record(
     z.string().regex(/^pick([1-9]|10)$/, 'Key phải là "pick1" đến "pick10"'),
-    matchPrizesSchema
+    matchPrizesSchema,
   )
   .refine((data) => Object.keys(data).length > 0, {
     message: "Phải có ít nhất 1 bậc chơi.",
@@ -101,5 +97,5 @@ export const updateKenoGameConfigSchema = z
       data.evenOddPrizes ||
       data.payoutCaps ||
       data.play,
-    { message: "Phải cung cấp ít nhất một section để cập nhật." }
+    { message: "Phải cung cấp ít nhất một section để cập nhật." },
   );

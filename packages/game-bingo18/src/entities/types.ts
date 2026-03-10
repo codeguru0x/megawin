@@ -150,7 +150,6 @@ export interface BigSmallDrawPrizes {
 /** Tỷ lệ tài chính – dùng trong GlobalConfigDoc.rates. */
 export interface FinancialRates {
   defaultCommissionRate: number;
-  companyRate: number;
 }
 
 /** Quy tắc chơi – dùng trong GlobalConfigDoc.play. */

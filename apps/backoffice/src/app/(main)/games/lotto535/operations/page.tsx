@@ -1,114 +1,185 @@
 "use client";
 
-import { useState } from "react";
-import { Activity, CalendarDays } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useCurrentDraw } from "../draws/_lib/use-draws";
-import { JackpotBanner } from "./_lib/jackpot-banner";
-import { ActiveDrawsPanel } from "./_lib/active-draws-panel";
-import { BettingOverview } from "./_lib/betting-overview";
-import { NumberAnalytics } from "./_lib/number-analytics";
-import type { OpsQueryParams } from "./_lib/use-operations";
+import { Suspense, useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { Plus, Radio, SearchX } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { lotto535Keys } from "@/lib/query-keys";
+import { displayVNTimeWithSeconds } from "@megawin/shared/utils/date";
 
-function getTodayDate(): string {
-  const now = new Date();
-  const offset = 7 * 60;
-  const vn = new Date(now.getTime() + offset * 60_000);
-  const y = vn.getUTCFullYear();
-  const m = String(vn.getUTCMonth() + 1).padStart(2, "0");
-  const d = String(vn.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+import { DrawContextProvider, useDrawContext } from "./_lib/use-draw-context";
+import { DrawSelector } from "./_lib/draw-selector";
+import { CreateDrawAction } from "./_lib/sections/draw-management/draw-actions";
+import { DrawManagementSection } from "./_lib/sections/draw-management";
+import { KpiSection } from "./_lib/sections/kpi";
+import { AnalyticsSection } from "./_lib/sections/analytics";
+import { ResultSection } from "./_lib/sections/result";
+import { JackpotHeroCard } from "../jackpot/_lib/jackpot-overview-section";
+
+// ─── Last Updated Badge ───────────────────────────────────────────────────────
+
+/**
+ * Hiển thị thời điểm cập nhật dữ liệu live cuối cùng.
+ *
+ * Theo dõi opsSummary (refetch mỗi 30s) vì đây là query phản ánh
+ * dữ liệu live chính xác nhất cho kỳ đang active. Khi opsSummary
+ * được refetch bởi React Query, timestamp trong badge sẽ cập nhật.
+ *
+ * Dùng DOM ref + setInterval để check mỗi giây, tránh re-render React
+ * khi timestamp thay đổi.
+ */
+function LastUpdatedBadge({
+  opsParams,
+}: {
+  opsParams: { drawId?: string; financialDate?: string };
+}) {
+  const qc = useQueryClient();
+  const spanRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    function tick() {
+      // Lấy state của opsSummary với đúng params để có dataUpdatedAt chính xác.
+      // opsSummary refetch mỗi 30s → là nguồn timestamp đáng tin nhất cho live data.
+      const queryKey = lotto535Keys.opsSummary(opsParams as Record<string, unknown>);
+      const state = qc.getQueryState(queryKey);
+      const ts = state?.dataUpdatedAt;
+      if (spanRef.current && ts) {
+        spanRef.current.textContent = displayVNTimeWithSeconds(new Date(ts));
+      }
+    }
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [qc, opsParams]);
+
+  return (
+    <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70 tabular-nums">
+      <span className="relative flex size-1.5">
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+        <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
+      </span>
+      Live · <span ref={spanRef} />
+    </span>
+  );
 }
 
-export default function Lotto535OperationsPage() {
-  const [financialDate, setFinancialDate] = useState(getTodayDate);
-  const [selectedDrawId, setSelectedDrawId] = useState<string>("all");
-  const { data: currentDrawData } = useCurrentDraw();
+// ─── Inner page (accesses context) ───────────────────────────────────────────
 
-  const drawOptions = currentDrawData?.activeDraws ?? [];
+function OperationsContent() {
+  const {
+    draws,
+    draw,
+    effectiveDrawId,
+    onSelectDraw,
+    drawNotFound,
+    isHistorical,
+    isActiveForRefresh,
+    opsParams,
+  } = useDrawContext();
+  const [createOpen, setCreateOpen] = useState(false);
 
-  const params: OpsQueryParams = {
-    financialDate,
-    ...(selectedDrawId !== "all" ? { drawId: selectedDrawId } : {}),
-  };
+  if (drawNotFound) return <DrawNotFound />;
 
   return (
     <div className="@container/main flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Page Header */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-indigo-600 shadow-sm">
-            <Activity className="size-4.5 text-white" />
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-emerald-600 shadow-sm">
+            <Radio className="size-4.5 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Vận hành Lotto 5/35
+              Lotto 5/35 — Vận hành
             </h1>
-            <p className="text-xs text-muted-foreground">Tổng quan hoạt động game realtime</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
+              {isActiveForRefresh ? <LastUpdatedBadge opsParams={opsParams} /> : null}
+            </div>
           </div>
         </div>
-
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="financial-date" className="text-xs whitespace-nowrap">
-              <CalendarDays className="mr-1 inline size-3.5" />
-              Ngày
-            </Label>
-            <Input
-              id="financial-date"
-              type="date"
-              className="h-8 w-36 text-xs"
-              value={financialDate}
-              onChange={(e) => setFinancialDate(e.target.value)}
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Label className="text-xs whitespace-nowrap">Kỳ</Label>
-            <Select value={selectedDrawId} onValueChange={setSelectedDrawId}>
-              <SelectTrigger className="h-8 w-44 text-xs">
-                <SelectValue placeholder="Tất cả kỳ" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả kỳ</SelectItem>
-                {drawOptions.map((d) => (
-                  <SelectItem key={d.drawId} value={d.drawId}>
-                    {d.drawId} (Kỳ {d.drawNo})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <DrawSelector
+            draws={draws}
+            selectedDrawId={effectiveDrawId}
+            onSelect={onSelectDraw}
+            historicalDraw={isHistorical ? draw : undefined}
+          />
+          <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4" />
+            Tạo kỳ quay
+          </Button>
         </div>
       </div>
 
-      {/* [A] Jackpot Banner */}
-      <JackpotBanner />
+      {/* Create draw dialog */}
+      <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
 
-      {/* [B] Active Draws */}
-      <ActiveDrawsPanel />
+      {/* Zone 1: Jackpot overview (hero card only) */}
+      <JackpotHeroCard />
 
-      {/* [C] Betting Overview (KPIs + Tenant Breakdown) */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
-            <Activity className="size-3.5 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <h2 className="text-sm font-semibold">Tổng quan cược</h2>
-        </div>
-        <BettingOverview params={params} />
-      </div>
+      {/* Zone 2: Draw management — command center + dialogs */}
+      <DrawManagementSection />
 
-      {/* [D] Number Analytics */}
-      <NumberAnalytics params={params} />
+      {/* Zone 3: KPI strip */}
+      <KpiSection />
+
+      {/* Zone 4: Result + Financial — hiển thị khi có kết quả (published/settling/settled) */}
+      <ResultSection />
+
+      {/* Zone 5: Analytics — play type, heatmap, live feed */}
+      <AnalyticsSection />
     </div>
+  );
+}
+
+// ─── Draw Not Found ──────────────────────────────────────────────────────────
+
+function DrawNotFound() {
+  return (
+    <div className="@container/main flex flex-col gap-6">
+      <div className="flex items-center gap-3">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-emerald-600 shadow-sm">
+          <Radio className="size-4.5 text-white" />
+        </div>
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
+            Lotto 5/35 — Vận hành
+          </h1>
+          <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+          <SearchX className="size-6 text-muted-foreground" />
+        </div>
+        <h2 className="mt-4 text-base font-semibold text-foreground">Không tìm thấy kỳ quay</h2>
+        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+          Kỳ quay được yêu cầu không tồn tại hoặc đã bị xóa khỏi hệ thống.
+        </p>
+        <div className="mt-5 flex items-center gap-3">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/games/lotto535/draws">Lịch sử kỳ quay</Link>
+          </Button>
+          <Button size="sm" asChild>
+            <Link href="/games/lotto535/operations">Về trang vận hành</Link>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page root (wraps with context provider) ─────────────────────────────────
+
+export default function Lotto535OperationsPage() {
+  return (
+    <Suspense>
+      <DrawContextProvider>
+        <OperationsContent />
+      </DrawContextProvider>
+    </Suspense>
   );
 }

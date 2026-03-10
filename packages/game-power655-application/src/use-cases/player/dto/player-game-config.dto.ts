@@ -25,8 +25,8 @@ export interface PlayerJackpotConfig {
   jackpot1SeedAmount: number;
   /** Số tiền khởi điểm Jackpot 2 (trùng 5/6 + bonus) khi mở vòng mới (VND). */
   jackpot2SeedAmount: number;
-  /** Ngưỡng kích hoạt chia giải (JP1 + JP2 >= threshold) (VND). */
-  splitThreshold: number;
+  /** Ngưỡng tràn JP1 — phần vượt ngưỡng chuyển sang JP2 (VND). */
+  jp1OverflowThreshold: number;
 }
 
 export interface PlayerTenantGameConfig {

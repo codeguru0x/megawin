@@ -40,7 +40,6 @@ export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
       },
       jackpot: {
         seedAmount: globalConfig.jackpot.seedAmount,
-        splitThreshold: globalConfig.jackpot.splitThreshold,
       },
       tenant: {
         isEnabled: tenantConfig?.isEnabled ?? true,

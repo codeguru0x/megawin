@@ -55,6 +55,8 @@ export type {
   Mega645ListTicketsResponse,
   Mega645TicketEntriesResponse,
   Mega645EntryLinesResponse,
+  Mega645ListDrawResultsParams,
+  Mega645ListDrawResultsResponse,
 } from "./apis/mega645";
 export type {
   Power655Api,
@@ -123,6 +125,9 @@ export type {
   Mega645DrawInfo,
   Mega645TicketSummary,
   Mega645EntryResult,
+  Mega645DrawTierPrize,
+  Mega645DrawResultDetail,
+  Mega645DrawResultSummary,
 } from "./mega645";
 export { Mega645PlayType, Mega645PrizeTier } from "./mega645";
 export type {

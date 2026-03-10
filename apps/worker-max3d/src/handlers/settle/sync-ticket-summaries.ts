@@ -1,18 +1,23 @@
 /**
- * Lambda: sync-ticket-summaries (Max 3D)
+ * Lambda: settle-sync-ticket-summaries (Max 3D)
  *
- * Step 3 (loop) của Max3D Settle Step Function.
- * Recompute ticket progress/settlement/voidSummary từ entries.
+ * Recompute ticket progress/settlement summary từ entries đã settled.
+ * Step 3 trong Settle Flow — chạy sau CalculateFinancials.
  *
- * @input  SettleContext ($settleCtx)
+ * Dùng cùng use case với void flow (SyncTicketSummariesUseCase).
+ * Step Function truyền toàn bộ $settleCtx → use case chỉ đọc drawId.
+ *
+ * @input  DrawSyncInput (chỉ cần { drawId })
  * @output SyncTicketSummariesResult
  */
 
-import { SyncTicketSummariesUseCase } from "@megawin/game-max3d-application/use-cases/settle";
-import type { SettleContext } from "@megawin/game-max3d-application/use-cases/settle";
+import {
+  SyncTicketSummariesUseCase,
+  type DrawSyncInput,
+} from "@megawin/game-max3d-application/use-cases/settle";
 
 const useCase = new SyncTicketSummariesUseCase();
 
-export async function handler(event: SettleContext) {
+export async function handler(event: DrawSyncInput) {
   return useCase.run(event);
 }

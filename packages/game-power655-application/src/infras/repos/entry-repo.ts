@@ -15,9 +15,9 @@
  * nội bộ, không thay đổi kết quả thắng thua hay số tiền trong báo cáo tenant.
  */
 
-import { Power655Collections, PayoutStatus } from "@megawin/game-power655/entities";
+import { Power655Collections, PayoutStatus, PrizeTier } from "@megawin/game-power655/entities";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
-import type { PrizeTier, MainTuple, BonusNumber } from "@megawin/game-power655/entities";
+import type { MainTuple, BonusNumber } from "@megawin/game-power655/entities";
 import { ObjectId, Long } from "mongodb";
 import { BaseRepo } from "./base-repo";
 import { EntryMapper } from "../mappers/entry-mapper";
@@ -141,7 +141,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           matchCount: number;
           prizePerLine: number;
           totalPrize: number;
-          isSplitBonus?: boolean;
         }>;
         settledAt: Date;
         payoutStatus?: PayoutStatus;
@@ -197,6 +196,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       tenantId: string;
       revenue: number;
       commission: number;
+      /** Tỷ lệ hoa hồng snapshot lúc place-bet (lấy $first — đồng nhất per tenant per draw). */
+      commissionRate: number;
       entryCount: number;
     }>
   > {
@@ -209,6 +210,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             _id: "$tenantId",
             revenue: { $sum: "$stakeAmount" },
             commission: { $sum: { $ifNull: ["$commission.amount", 0] } },
+            commissionRate: { $first: { $ifNull: ["$commission.rate", 0] } },
             entryCount: { $sum: 1 },
           },
         },
@@ -218,6 +220,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             tenantId: "$_id",
             revenue: 1,
             commission: 1,
+            commissionRate: 1,
             entryCount: 1,
           },
         },
@@ -229,35 +232,66 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     totalSettled: number;
     totalPayoutAmount: number;
     totalFixedPrizes: number;
+    /** Tổng số lines đã expand và match (sum matchCount tất cả tiers). */
+    totalLines: number;
     tierWinnerCounts: Record<string, number>;
   }> {
-    const col = await this.getCollection();
-    const entries = await col
-      .find({ drawId, status: EntryStatus.Settled })
-      .project({ "payout.tiers": 1, "payout.payoutAmount": 1 })
-      .toArray();
+    // 1 aggregation duy nhất: facet song song tiers và totals trên cùng $match.
+    const facetResult = await this.aggregate([
+      { $match: { drawId, status: EntryStatus.Settled } },
+      {
+        $facet: {
+          tiers: [
+            { $unwind: "$payout.tiers" },
+            { $match: { "payout.tiers.matchCount": { $gt: 0 } } },
+            {
+              $group: {
+                _id: "$payout.tiers.tier",
+                totalMatchCount: { $sum: "$payout.tiers.matchCount" },
+                totalPrize: { $sum: "$payout.tiers.totalPrize" },
+              },
+            },
+          ],
+          totals: [
+            {
+              $group: {
+                _id: null,
+                totalSettled: { $sum: 1 },
+                totalPayoutAmount: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+                totalLines: {
+                  $sum: {
+                    $reduce: {
+                      input: { $ifNull: ["$payout.tiers", []] },
+                      initialValue: 0,
+                      in: { $add: ["$$value", { $ifNull: ["$$this.matchCount", 0] }] },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      },
+    ]);
 
-    let totalPayoutAmount = 0;
+    const { tiers = [], totals = [] } = (facetResult[0] as any) ?? {};
+    const summary = totals[0] ?? {};
+
     let totalFixedPrizes = 0;
     const tierWinnerCounts: Record<string, number> = {};
 
-    for (const e of entries) {
-      totalPayoutAmount += (e as any).payout?.payoutAmount ?? 0;
-      const tiers = (e as any).payout?.tiers ?? [];
-      for (const t of tiers) {
-        if (t.matchCount > 0) {
-          tierWinnerCounts[t.tier] = (tierWinnerCounts[t.tier] ?? 0) + t.matchCount;
-          if (t.tier !== "jackpot1" && t.tier !== "jackpot2") {
-            totalFixedPrizes += t.totalPrize ?? 0;
-          }
-        }
+    for (const t of tiers as any[]) {
+      tierWinnerCounts[t._id] = t.totalMatchCount;
+      if (t._id !== "jackpot1" && t._id !== "jackpot2") {
+        totalFixedPrizes += t.totalPrize ?? 0;
       }
     }
 
     return {
-      totalSettled: entries.length,
-      totalPayoutAmount,
+      totalSettled: summary.totalSettled ?? 0,
+      totalPayoutAmount: summary.totalPayoutAmount ?? 0,
       totalFixedPrizes,
+      totalLines: summary.totalLines ?? 0,
       tierWinnerCounts,
     };
   }
@@ -282,39 +316,87 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return this.findJackpotWinners(drawId, "jackpot2");
   }
 
-  // ─── Split Bonus ───
+  // ─────────────────────────────────────────────
+  // Jackpot Prize Patch
+  // ─────────────────────────────────────────────
 
-  async applySplitBonusForTier(
+  /**
+   * Patch jackpotPerWinner vào tất cả entries trúng jackpotTier trong draw.
+   *
+   * Idempotent: chỉ update entries có tiers[jackpotTier].amount = 0
+   * (chưa được patch). Entries đã patch (amount > 0) sẽ bị skip.
+   *
+   * @param jackpotTier - "jackpot1" hoặc "jackpot2"
+   * Returns số entries đã patch.
+   */
+  async patchJackpotPrize(
     drawId: string,
-    tier: string,
-    bonusPerWinner: number,
+    jackpotTier: string,
+    jackpotPerWinner: number,
   ): Promise<number> {
+    const filter = {
+      drawId,
+      status: EntryStatus.Settled,
+      outcome: EntryOutcome.Win,
+      "payout.tiers": {
+        $elemMatch: {
+          tier: jackpotTier,
+          hitCount: { $gt: 0 },
+          amount: 0,
+        },
+      },
+    };
+
+    const matchingEntries = await this.findManyAsDocuments(filter, {
+      projection: { _id: 1, "payout.tiers": 1 },
+    });
+
+    if (matchingEntries.length === 0) return 0;
+
+    const ops = matchingEntries.map((entry) => {
+      const tiers = (entry.payout as any)?.tiers ?? [];
+      const jpTier = tiers.find(
+        (t: any) => t.tier === jackpotTier && t.hitCount > 0 && t.amount === 0,
+      );
+      const hitCount = jpTier?.hitCount ?? 0;
+      const prizeAmount = jackpotPerWinner * hitCount;
+
+      const updatedTiers = tiers.map((t: any) => {
+        if (t.tier === jackpotTier && t.hitCount > 0 && t.amount === 0) {
+          return { ...t, unitAmount: jackpotPerWinner, amount: prizeAmount };
+        }
+        return t;
+      });
+
+      // Tổng winAmount mới = tổng tất cả tiers sau khi patch
+      const newWinAmount = updatedTiers.reduce((s: number, t: any) => s + (t.amount ?? 0), 0);
+
+      return {
+        updateOne: {
+          filter: {
+            _id: entry._id,
+            "payout.tiers": {
+              $elemMatch: { tier: jackpotTier, hitCount: { $gt: 0 }, amount: 0 },
+            },
+          },
+          update: {
+            $set: {
+              "payout.tiers": updatedTiers,
+              "payout.winAmount": newWinAmount,
+              "payout.payoutAmount": newWinAmount,
+              updatedAt: new Date(),
+            },
+          } as any,
+        },
+      };
+    });
+
     const col = await this.getCollection();
-    const result = await col.updateMany(
-      {
-        drawId,
-        status: EntryStatus.Settled,
-        "payout.tiers": {
-          $elemMatch: { tier, isSplitBonus: { $ne: true } },
-        },
-      },
-      {
-        $set: {
-          "payout.tiers.$[elem].isSplitBonus": true,
-          "payout.tiers.$[elem].splitBonusAmount": bonusPerWinner,
-        },
-        $inc: {
-          "payout.winAmount": bonusPerWinner,
-          "payout.payoutAmount": bonusPerWinner,
-        },
-      },
-      { arrayFilters: [{ "elem.tier": tier }] },
-    );
+    const result = await col.bulkWrite(ops, { ordered: false });
     return result.modifiedCount;
   }
 
   // ─── Ticket Summary ───
-
   async getDistinctTicketIdsByDrawId(drawId: string): Promise<string[]> {
     const col = await this.getCollection();
     return col.distinct("ticketId", { drawId }) as Promise<string[]>;

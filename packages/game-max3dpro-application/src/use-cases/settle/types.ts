@@ -51,8 +51,6 @@ export interface Max3dProDrawResult {
  * Config snapshot tại thời điểm settle — KHÔNG thay đổi giữa các step.
  */
 export interface Max3dProSettleConfig {
-  /** Tỷ lệ công ty thu về trên tổng doanh thu (0-1, VD: 0.15 = 15%). */
-  companyRate: number;
   /** Tỷ lệ hoa hồng đại lý mặc định (0-1). */
   defaultCommissionRate: number;
 }
@@ -87,11 +85,7 @@ export interface SettleFinancials {
   totalFixedPrizes: number;
   /** Tổng hoa hồng đại lý (VND). */
   totalAgentCommission: number;
-  /** Phần công ty được thu tối đa (VND) = companyRate × totalRevenue. */
-  companyTake: number;
-  /** Phần công ty thực tế thu được (VND) = totalRevenue − totalFixedPrizes − totalAgentCommission. */
-  actualCompanyTake: number;
-  /** Lợi nhuận kỳ quay (VND) = actualCompanyTake. */
+  /** Lợi nhuận = revenue - prizes - commission. Có thể âm (công ty chịu lỗ). */
   profit: number;
 }
 
@@ -159,7 +153,7 @@ export interface SettleContext {
 
   /**
    * Cấu hình tài chính settle — snapshot tại thời điểm PrepareSettle.
-   * Gồm companyRate và defaultCommissionRate.
+   * Gồm defaultCommissionRate.
    * Dùng bởi CalculateFinancials để tính phân bổ doanh thu.
    */
   config: Max3dProSettleConfig;

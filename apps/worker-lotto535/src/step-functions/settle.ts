@@ -186,10 +186,14 @@ export const SETTLE_STATE_MACHINE = {
 
     // ── STEP 4a: Patch Jackpot Prize ──
     // Chỉ chạy khi có JP winner. Tính jackpotPerWinner, patch vào entries + lines.
+    // Merge winners vào settleCtx (top-level) để FinalizeSettle dùng — tránh re-query DB.
     PatchJackpotPrize: {
       Type: "Task",
       Resource: lambdaArn("settle-patch-jackpot-prize"),
       Arguments: "{% $settleCtx %}",
+      Assign: {
+        settleCtx: "{% $merge([$settleCtx, { 'jackpotWinners': $states.result.winners }]) %}",
+      },
       Next: "SyncTicketSummaries",
       Retry: LAMBDA_RETRY,
     },

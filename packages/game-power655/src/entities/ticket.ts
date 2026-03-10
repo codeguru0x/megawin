@@ -81,7 +81,7 @@ export interface TicketProgress {
 export interface TicketSettlement {
   /** Tổng tiền thắng (trước phí). */
   totalWinAmount: number;
-  /** Tổng tiền đã trả (sau phí, split bonus). */
+  /** Tổng tiền đã trả. */
   totalPayoutAmount: number;
   /** Thời điểm settle gần nhất. */
   lastSettledAt?: Date;

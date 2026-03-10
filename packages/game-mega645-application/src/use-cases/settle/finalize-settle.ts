@@ -1,16 +1,43 @@
 /**
  * Use Case: Finalize Settle (Mega 6/45)
  *
- * Bước cuối: settling → settled + ghi jackpot snapshot (atomic, 1 query) + cập nhật cycle.
+ * ─────────────────────────────────────────────────────────────────────────────
+ * TỔNG QUAN
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Bước cuối của settle pipeline: chuyển draw status settling → settled,
+ * ghi jackpot snapshot vào DrawDoc (atomic, 1 query), cập nhật JackpotCycle.
  * CRASH-SAFE + IDEMPOTENT.
+ *
+ * Mega 6/45 theo luật Vietlott: KHÔNG có Split Cycle.
+ * Cycle chỉ đóng khi có winner hoặc manual_reset.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * JACKPOT KHI CÓ WINNER
+ * ─────────────────────────────────────────────────────────────────────────────
+ * totalJackpotPrize = jackpotOpeningAmount + jackpotContribution
+ *   → Winner nhận toàn bộ pool tích luỹ + contribution kỳ này.
+ *   → Nhiều winners: chia đều = floor(totalJackpotPrize / số winners).
+ *
+ * closeCycle với finalAmount = totalJackpotPrize (ghi lịch sử Jackpot đã trao).
+ * Cycle mới bắt đầu từ seedAmount (lấy từ settleCtx.config).
+ *
+ * RETRY DETECTION cho winner flow:
+ *   - findClosedByEndDrawId: nếu đã có closed cycle → chỉ đảm bảo active cycle tồn tại.
+ *   - closeCycle filter status = "active" → idempotent (no-op nếu đã closed).
+ *   - createCycle guard getActiveCycle() → skip nếu đã tạo.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * JACKPOT KHI KHÔNG CÓ WINNER (roll-over)
+ * ─────────────────────────────────────────────────────────────────────────────
+ * DrawDoc.jackpot.closingAmount = openingAmount + contribution (snapshot quỹ JP cuối kỳ).
+ * updateCycleStats dùng giá trị snapshot từ PrepareSettle → idempotent.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { JackpotCycleCloseReason } from "@megawin/game-mega645/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { SettleContextWithFinancials } from "./types";
 
@@ -19,40 +46,51 @@ export interface FinalizeSettleResult {
   drawId: string;
   /** Trạng thái sau khi hoàn tất (= "settled"). */
   status: string;
-  /** Giá trị jackpot cuối kỳ (VND). */
+  /** Giá trị quỹ jackpot cuối kỳ (VND) = openingAmount + contribution. */
   closingJackpot: number;
-  /** Giá trị jackpot mở đầu cycle tiếp theo (VND). */
-  nextJackpotOpening: number;
   /** Thời điểm hoàn tất settle (ISO datetime). */
   completedAt: string;
 }
 
+/**
+ * Bước cuối của settle pipeline Mega 6/45: chuyển draw settling → settled,
+ * ghi jackpot snapshot, cập nhật JackpotCycle.
+ *
+ * CRASH-SAFE + IDEMPOTENT: mọi bước đều idempotent — chạy lại an toàn sau crash.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * JACKPOT KHI CÓ WINNER
+ * ─────────────────────────────────────────────────────────────────────────────
+ * totalJackpotPrize = jackpotOpeningAmount + jackpotContribution
+ *   → Winner nhận toàn bộ pool tích luỹ + contribution kỳ này.
+ *   → Nhiều winners: chia đều = floor(totalJackpotPrize / số winners).
+ *
+ * RETRY DETECTION cho winner flow:
+ *   - findClosedByEndDrawId: nếu đã có closed cycle → chỉ đảm bảo active cycle tồn tại.
+ *   - closeCycle filter status = "active" → idempotent (no-op nếu đã closed).
+ *   - createCycle guard getActiveCycle() → skip nếu đã tạo.
+ *
+ * JACKPOT KHI KHÔNG CÓ WINNER (roll-over)
+ * ─────────────────────────────────────────────────────────────────────────────
+ * closingAmount = openingAmount + contribution → tích luỹ sang kỳ sau.
+ * updateCycleStats dùng giá trị tuyệt đối (không cộng dồn từ activeCycle) → idempotent.
+ */
 export class FinalizeSettleUseCase extends InternalUseCase<
   SettleContextWithFinancials,
   FinalizeSettleResult
 > {
   private readonly drawRepo = new DrawRepository();
-  private readonly entryRepo = new EntryRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(input: SettleContextWithFinancials): Promise<FinalizeSettleResult> {
-    const {
-      drawId,
-      jackpotOpeningAmount,
-      isSplitCycle,
-    } = input;
-    const {
-      closingJackpot,
-      nextJackpotOpening,
-      hasJackpotWinner,
-      splitDetails,
-    } = input.financials;
+    const { drawId, jackpotOpeningAmount, financials } = input;
+    const closingAmount = jackpotOpeningAmount + financials.jackpotContribution;
 
+    // ── Bước 1: Chuyển draw status settling → settled + ghi jackpot snapshot ──
+    // settleComplete filter status = "settling" → idempotent (no-op nếu đã settled).
     const updated = await this.drawRepo.settleComplete(drawId, {
-      openingAmount: input.jackpotOpeningAmount,
-      closingAmount: closingJackpot,
-      isSplitCycle: isSplitCycle || undefined,
+      openingAmount: jackpotOpeningAmount,
+      closingAmount,
     });
 
     if (!updated) {
@@ -60,107 +98,123 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       if (draw?.status === DrawStatus.Settled) {
         console.log(`Draw ${drawId} already settled, skipping transition.`);
       } else {
-        throw new Error(`Cannot finalize draw ${drawId}. Current status: ${draw?.status}`);
+        throw AppException.internal(
+          `Cannot finalize draw ${drawId}. Current status: ${draw?.status}`,
+        );
       }
     }
 
+    // ── Bước 2: Cập nhật JackpotCycle ─────────────────────────────────────────
     await this.updateJackpotCycle(input);
 
     return {
       drawId,
       status: DrawStatus.Settled,
-      closingJackpot,
-      nextJackpotOpening,
+      closingJackpot: closingAmount,
       completedAt: new Date().toISOString(),
     };
   }
 
+  /**
+   * Cập nhật jackpot cycle sau settle.
+   *
+   * Winner flow (crash-safe):
+   *   1. findClosedByEndDrawId(drawId) → nếu đã closed (retry) → chỉ ensureNextCycle.
+   *   2. getActiveCycle → lấy cycle hiện tại.
+   *   3. closeCycle (filter status=active → idempotent).
+   *   4. ensureNextCycleExists (guard getActiveCycle → idempotent).
+   *
+   * Roll-over flow (idempotent):
+   *   - updateCycleStats dùng giá trị snapshot từ PrepareSettle:
+   *     contribution = cycleContributionBefore + jackpotContribution (tuyệt đối)
+   *     drawCount = cycleDrawCountBefore + 1 (tuyệt đối)
+   *   → chạy lại nhiều lần cho kết quả giống nhau.
+   */
   private async updateJackpotCycle(input: SettleContextWithFinancials): Promise<void> {
-    const { drawId, isSplitCycle } = input;
-    const { closingJackpot, hasJackpotWinner, splitDetails } = input.financials;
+    const { drawId, financials } = input;
 
-    const activeCycle = await this.cycleRepo.getActiveCycle();
-    if (!activeCycle) return;
+    if (financials.hasJackpotWinner) {
+      // ── Winner flow ─────────────────────────────────────────────────────────
 
-    const draw = await this.drawRepo.getDrawById(drawId);
-    if (!draw) return;
-
-    const contribution = draw.financial?.jackpotContribution ?? 0;
-    const newDrawCount = activeCycle.drawCount + 1;
-
-    const shouldCloseCycle = hasJackpotWinner || isSplitCycle;
-
-    if (shouldCloseCycle) {
-      let winners = undefined;
-
-      if (hasJackpotWinner) {
-        const jackpotEntries = await this.entryRepo.findJackpotWinners(drawId);
-        const jackpotPerWinner =
-          jackpotEntries.length > 0
-            ? Math.floor(input.jackpotOpeningAmount / jackpotEntries.length)
-            : 0;
-        winners = jackpotEntries.map((e) => ({
-          accountId: e.accountId,
-          tenantId: e.tenantId,
-          prizeAmount: jackpotPerWinner,
-          entryId: e.id,
-          drawId,
-        }));
+      // Retry detection: nếu đã có closed cycle với endDrawId = drawId
+      // → closeCycle đã chạy thành công lần trước → chỉ đảm bảo active cycle tồn tại.
+      const alreadyClosed = await this.cycleRepo.findClosedByEndDrawId(drawId);
+      if (alreadyClosed) {
+        console.log(
+          `Cycle ${alreadyClosed.cycleNo} already closed for draw ${drawId}, ensuring next cycle exists.`,
+        );
+        await this.ensureNextCycleExists(drawId, input.config);
+        return;
       }
 
-      let splitDetail = undefined;
-      if (isSplitCycle && splitDetails) {
-        let totalWinners = 0;
-        let totalPaid = 0;
-        for (const tier of Object.values(splitDetails)) {
-          totalWinners += tier.winnerCount;
-          totalPaid += tier.bonusPerWinner * tier.winnerCount;
-        }
-        splitDetail = {
-          splitAmount: activeCycle.currentAmount,
-          tierAllocations: Object.fromEntries(
-            Object.entries(splitDetails).map(([tier, d]) => [
-              tier,
-              {
-                winnerCount: d.winnerCount,
-                bonusPerWinner: d.bonusPerWinner,
-                totalAmount: d.totalAmount,
-              },
-            ]),
-          ),
-          totalWinners,
-          totalPaid,
-        };
-      }
+      const activeCycle = await this.cycleRepo.getActiveCycle();
+      if (!activeCycle) return;
 
-      await this.cycleRepo.closeCycle({
-        cycleNo: activeCycle.cycleNo,
-        endDrawId: drawId,
-        closeReason: hasJackpotWinner
-          ? JackpotCycleCloseReason.Winner
-          : JackpotCycleCloseReason.Split,
-        finalAmount: activeCycle.currentAmount,
-        splitDetail,
-        winners,
-      });
-
-      const globalConfig = await this.getGlobalConfig.run();
-      await this.cycleRepo.createCycle({
-        startDrawId: drawId,
-        seedAmount: globalConfig.jackpot.seedAmount,
-        config: {
-          splitThreshold: globalConfig.jackpot.splitThreshold,
-          splitRatios: globalConfig.jackpot.splitRatios,
-        },
-      });
+      await this.closeAndCreateNextCycle(activeCycle, input);
     } else {
+      // ── Roll-over flow ──────────────────────────────────────────────────────
+      // Không có winner: tích luỹ tiếp.
+      // Dùng giá trị snapshot từ PrepareSettle (cycleContributionBefore, cycleDrawCountBefore)
+      // thay vì đọc lại activeCycle → idempotent khi retry (không cộng dồn 2 lần).
+      const activeCycle = await this.cycleRepo.getActiveCycle();
+      if (!activeCycle) return;
+
       await this.cycleRepo.updateCycleStats({
-        cycleNo: activeCycle.cycleNo,
-        currentAmount: closingJackpot,
-        contribution: activeCycle.totalContribution + contribution,
-        drawCount: newDrawCount,
+        cycleNo: input.config.cycleNo,
+        currentAmount: input.jackpotOpeningAmount + financials.jackpotContribution,
+        contribution: input.config.cycleContributionBefore + financials.jackpotContribution,
+        drawCount: input.config.cycleDrawCountBefore + 1,
         lastSettledDrawId: drawId,
       });
     }
+  }
+
+  /**
+   * Đóng cycle hiện tại + tạo cycle mới.
+   *
+   * closeCycle idempotent: filter status = "active" → nếu đã closed thì no-op.
+   * ensureNextCycleExists: kiểm tra active cycle trước khi tạo → không duplicate.
+   */
+  private async closeAndCreateNextCycle(
+    activeCycle: { cycleNo: number; currentAmount: number },
+    input: SettleContextWithFinancials,
+  ): Promise<void> {
+    const { drawId, jackpotOpeningAmount, financials } = input;
+    const { hasJackpotWinner } = financials;
+
+    const totalJackpotPrize = jackpotOpeningAmount + financials.jackpotContribution;
+
+    // ── Đóng cycle (idempotent: filter status = "active") ──
+    await this.cycleRepo.closeCycle({
+      cycleNo: activeCycle.cycleNo,
+      endDrawId: drawId,
+      closeReason: JackpotCycleCloseReason.Winner,
+      finalAmount: totalJackpotPrize,
+      winners: hasJackpotWinner ? (input.jackpotWinners ?? []) : undefined,
+    });
+
+    // ── Tạo cycle mới ──
+    await this.ensureNextCycleExists(drawId, input.config);
+  }
+
+  /**
+   * Đảm bảo có active cycle cho draw tiếp theo.
+   * createCycle có guard findOne({ status: Active }) → skip nếu đã tồn tại (idempotent).
+   * Nếu không có draw tiếp → skip (create-draws hoặc prepare-settle sẽ tạo sau).
+   */
+  private async ensureNextCycleExists(
+    drawId: string,
+    config: SettleContextWithFinancials["config"],
+  ): Promise<void> {
+    const existingActive = await this.cycleRepo.getActiveCycle();
+    if (existingActive) return;
+
+    const nextDraw = await this.drawRepo.findNextPendingDraw(drawId);
+    if (!nextDraw) return;
+
+    await this.cycleRepo.createCycle({
+      startDrawId: nextDraw.drawId,
+      seedAmount: config.seedAmount,
+    });
   }
 }

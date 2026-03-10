@@ -29,7 +29,7 @@ import type { ISODateString } from "./types";
  * Ghi sau settle – dùng cho dispatch payout worker.
  */
 export interface EntryPayout {
-  /** Tổng tiền thắng (giải cố định + split bonus nếu có). */
+  /** Tổng tiền thắng (giải cố định). */
   winAmount: number;
   /** Tiền thực trả (= winAmount, có thể điều chỉnh trong tương lai). */
   payoutAmount: number;
@@ -58,10 +58,6 @@ export interface EntryPayoutTier {
   prizePerLine: number;
   /** Tổng = matchCount × prizePerLine. */
   totalPrize: number;
-  /** True nếu đây là bonus từ split cycle (patch thêm sau settle). */
-  isSplitBonus?: boolean;
-  /** Số tiền split bonus mỗi winner nhận. */
-  splitBonusAmount?: number;
 }
 
 /**
@@ -147,10 +143,7 @@ export interface TicketEntryDoc {
 }
 
 /** Application layer entity (version chuyển Long → string). */
-export interface TicketEntryEntity extends Omit<
-  TicketEntryDoc,
-  "_id" | "version"
-> {
+export interface TicketEntryEntity extends Omit<TicketEntryDoc, "_id" | "version"> {
   /** ObjectId dạng hex string – khóa chính dùng trong application layer. */
   id: string;
   /** Version dạng string (BigInt serialized). Dùng cho feed sync. */

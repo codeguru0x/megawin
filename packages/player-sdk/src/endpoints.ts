@@ -48,6 +48,8 @@ export const ENDPOINTS = {
     listTickets: "/games/mega645/tickets",
     getTicketEntries: (ticketId: string) => `/games/mega645/tickets/${ticketId}/entries` as const,
     getEntryLines: (entryId: string) => `/games/mega645/entries/${entryId}/lines` as const,
+    listDrawResults: "/games/mega645/draw-results",
+    getDrawResult: (drawId: string) => `/games/mega645/draw-results/${drawId}` as const,
   },
 
   power655: {

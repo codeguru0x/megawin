@@ -88,6 +88,33 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     });
   }
 
+  /**
+   * Cursor-based pagination: dùng _id thay vì skip/offset.
+   * Sort: drawDate DESC, drawNo DESC (mới nhất trước).
+   * Trả về size+1 để biết có trang tiếp hay không.
+   */
+  async listDrawsCursor(
+    filter: { status?: string; fromDate?: string; toDate?: string },
+    cursor: string | undefined,
+    size: number,
+  ): Promise<DrawEntity[]> {
+    const query: Record<string, unknown> = {};
+    if (filter.status) query.status = filter.status;
+    if (filter.fromDate || filter.toDate) {
+      const dateRange: Record<string, unknown> = {};
+      if (filter.fromDate) dateRange.$gte = filter.fromDate;
+      if (filter.toDate) dateRange.$lte = filter.toDate;
+      query.drawDate = dateRange;
+    }
+    if (cursor) {
+      query.drawId = { ...((query.drawId as Record<string, unknown>) ?? {}), $lt: cursor };
+    }
+    return await this.findMany(query, {
+      sort: { drawDate: -1, drawNo: -1 },
+      limit: size + 1,
+    });
+  }
+
   // ─── Status Transitions (atomic, type-safe) ───
 
   /**
@@ -327,22 +354,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
           "stats.totalPayoutAmount": additionalPayout,
         },
         $set: {
-          updatedAt: new Date(),
-        },
-      },
-    );
-  }
-
-  /**
-   * Ghi settleSummary lên draw (denormalize cho player API).
-   * Gọi bởi CalculateFinancials (step 3). Overwrite toàn bộ → idempotent.
-   */
-  async updateSettleSummary(drawId: string, summary: DrawSettleSummary): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      {
-        $set: {
-          settleSummary: summary,
           updatedAt: new Date(),
         },
       },

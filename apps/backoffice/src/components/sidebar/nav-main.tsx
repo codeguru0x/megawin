@@ -5,11 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { ChevronRight } from "lucide-react";
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 import {
   DropdownMenu,
@@ -29,16 +25,14 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import type { NavGroup, NavMainItem } from "@/navigation/sidebar/sidebar-items";
+import type { NavGroup, NavMainItem, NavSubItem } from "@/navigation/sidebar/sidebar-items";
 
 interface NavMainProps {
   readonly items: readonly NavGroup[];
 }
 
 const IsComingSoon = () => (
-  <span className="ml-auto rounded-md bg-gray-200 px-2 py-1 text-xs dark:text-gray-800">
-    Soon
-  </span>
+  <span className="ml-auto rounded-md bg-gray-200 px-2 py-1 text-xs dark:text-gray-800">Soon</span>
 );
 
 const NavItemExpanded = ({
@@ -77,11 +71,7 @@ const NavItemExpanded = ({
               isActive={isActive(item.url)}
               tooltip={item.title}
             >
-              <Link
-                prefetch={false}
-                href={item.url}
-                target={item.newTab ? "_blank" : undefined}
-              >
+              <Link prefetch={false} href={item.url} target={item.newTab ? "_blank" : undefined}>
                 {item.icon && <item.icon />}
                 <span>{item.title}</span>
                 {item.comingSoon && <IsComingSoon />}
@@ -94,6 +84,11 @@ const NavItemExpanded = ({
             <SidebarMenuSub>
               {item.subItems.map((subItem) => (
                 <SidebarMenuSubItem key={subItem.title}>
+                  {subItem.sectionLabel && (
+                    <p className="px-2 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                      {subItem.sectionLabel}
+                    </p>
+                  )}
                   <SidebarMenuSubButton
                     aria-disabled={subItem.comingSoon}
                     isActive={isActive(subItem.url)}
@@ -140,13 +135,14 @@ const NavItemCollapsed = ({
             <ChevronRight />
           </SidebarMenuButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent
-          className="w-50 space-y-1"
-          side="right"
-          align="start"
-        >
+        <DropdownMenuContent className="w-50 space-y-1" side="right" align="start">
           {item.subItems?.map((subItem) => (
             <DropdownMenuItem key={subItem.title} asChild>
+              {subItem.sectionLabel && (
+                <p className="px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 pointer-events-none">
+                  {subItem.sectionLabel}
+                </p>
+              )}
               <SidebarMenuSubButton
                 key={subItem.title}
                 asChild
@@ -159,9 +155,7 @@ const NavItemCollapsed = ({
                   href={subItem.url}
                   target={subItem.newTab ? "_blank" : undefined}
                 >
-                  {subItem.icon && (
-                    <subItem.icon className="[&>svg]:text-sidebar-foreground" />
-                  )}
+                  {subItem.icon && <subItem.icon className="[&>svg]:text-sidebar-foreground" />}
                   <span>{subItem.title}</span>
                   {subItem.comingSoon && <IsComingSoon />}
                 </Link>
@@ -244,13 +238,7 @@ export function NavMain({ items }: NavMainProps) {
                     );
                   }
                   // Otherwise, render the dropdown as before
-                  return (
-                    <NavItemCollapsed
-                      key={item.title}
-                      item={item}
-                      isActive={isItemActive}
-                    />
-                  );
+                  return <NavItemCollapsed key={item.title} item={item} isActive={isItemActive} />;
                 }
                 // Expanded view
                 return (

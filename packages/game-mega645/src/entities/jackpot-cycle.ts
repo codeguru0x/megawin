@@ -4,7 +4,7 @@
  * Collection: mega645_jackpot_cycles
  */
 
-import type { ISODateString, SplitRatios } from "./types";
+import type { ISODateString } from "./types";
 
 export const JackpotCycleStatus = {
   Active: "active",
@@ -14,7 +14,6 @@ export const JackpotCycleStatus = {
 export type JackpotCycleStatus = (typeof JackpotCycleStatus)[keyof typeof JackpotCycleStatus];
 
 export const JackpotCycleCloseReason = {
-  Split: "split",
   Winner: "winner",
   ManualReset: "manual_reset",
 } as const;
@@ -27,11 +26,9 @@ export interface JackpotWinnerInfo {
   /** ID tài khoản người trúng. */
   accountId: string;
   /** Tên đăng nhập người trúng. */
-  username?: string;
+  username: string;
   /** ID đại lý (tenant) bán vé trúng. */
   tenantId: string;
-  /** Tên đại lý. */
-  tenantName?: string;
   /** Số tiền Jackpot trúng (VND). */
   prizeAmount: number;
   /** ID entry trúng Jackpot. */
@@ -44,42 +41,10 @@ export interface JackpotWinnerInfo {
 // Embedded Document Interfaces
 // ─────────────────────────────────────────────
 
-/** Cấu hình split áp dụng cho chu kỳ (snapshot từ global config khi tạo cycle). */
-export interface JackpotCycleConfig {
-  /** Ngưỡng kích hoạt chia Jackpot (VND). */
-  splitThreshold: number;
-  /** Tỷ lệ chia cho từng tier. */
-  splitRatios: SplitRatios;
-}
-
-/** Phân bổ tiền thưởng cho 1 tier trong kỳ chia. */
-export interface SplitTierAllocation {
-  /** Số người trúng tier này trong kỳ quay split. */
-  winnerCount: number;
-  /** Tiền thưởng bonus cho mỗi người trúng (VND). */
-  bonusPerWinner: number;
-  /** Tổng tiền đã trả cho tier (VND). Công thức: bonusPerWinner × winnerCount. */
-  totalAmount: number;
-}
-
-/** Chi tiết chia Jackpot (chỉ có khi closeReason = "split"). */
-export interface JackpotSplitDetail {
-  /** Tổng số tiền Jackpot được chia (VND). */
-  splitAmount: number;
-  /**
-   * Phân bổ cho từng tier.
-   * Key = PrizeTier ("tier1" | "tier2" | "tier3").
-   */
-  tierAllocations: Record<string, SplitTierAllocation>;
-  /** Tổng số người nhận bonus từ split. */
-  totalWinners: number;
-  /** Tổng tiền bonus đã trả (VND). */
-  totalPaid: number;
-}
-
 /**
  * Document theo dõi chu kỳ tích luỹ Jackpot.
- * Mỗi cycle bắt đầu từ seedAmount và kết thúc khi có người trúng hoặc split.
+ * Mỗi cycle bắt đầu từ seedAmount và kết thúc khi có người trúng hoặc manual reset.
+ * Mega 6/45 không có Split Cycle — Jackpot chỉ roll-over cho đến khi có winner.
  */
 export interface JackpotCycleDoc {
   /** MongoDB document ID. */
@@ -99,7 +64,7 @@ export interface JackpotCycleDoc {
 
   /**
    * Giá trị Jackpot hiện tại (VND).
-   * Công thức: seedAmount + totalContribution - (tiền Jackpot đã trả nếu có).
+   * Công thức: seedAmount + totalContribution.
    */
   currentAmount: number;
   /** Giá trị Jackpot cao nhất đạt được trong chu kỳ (VND). */
@@ -114,18 +79,12 @@ export interface JackpotCycleDoc {
   /** ID kỳ quay cuối cùng đã settle trong chu kỳ. */
   lastSettledDrawId?: string;
 
-  /** Cấu hình split áp dụng cho chu kỳ (snapshot từ global config khi tạo cycle). */
-  config: JackpotCycleConfig;
-
   /** ID kỳ quay kết thúc chu kỳ. */
   endDrawId?: string;
   /** Thời điểm đóng chu kỳ. */
   closedAt?: Date;
-  /** Lý do đóng chu kỳ (split / winner / manual_reset). */
+  /** Lý do đóng chu kỳ (winner / manual_reset). */
   closeReason?: JackpotCycleCloseReason;
-
-  /** Chi tiết chia Jackpot (chỉ có khi closeReason = "split"). */
-  splitDetail?: JackpotSplitDetail;
 
   /** Danh sách người trúng Jackpot (6/6 số) trong chu kỳ. */
   winners?: JackpotWinnerInfo[];

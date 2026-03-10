@@ -3,7 +3,7 @@
  *
  * Validates CRUD operations on the global config document:
  * - Seeded config matches DEFAULT_MEGA645_CONFIG
- * - Single jackpot settings (seedAmount, splitThreshold, splitRatios)
+ * - Jackpot settings (seedAmount only — Mega 6/45 không có split)
  * - Financial rates, prize amounts (3 tiers: tier1=10M, tier2=300K, tier3=30K)
  * - Play rules (unitPrice, drawsPerWeek, drawDaysOfWeek, drawTime)
  * - Partial upsert preserves untouched fields
@@ -31,22 +31,11 @@ describe("GameConfigRepository – Mega 6/45 Global Config", () => {
     expect(config!.tenantId).toBeNull();
   });
 
-  it("global config có đầy đủ single jackpot settings", async () => {
+  it("global config có jackpot seedAmount đúng", async () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.jackpot).toBeDefined();
-    expect(config!.jackpot.seedAmount).toBe(
-      DEFAULT_MEGA645_CONFIG.jackpot.seedAmount
-    );
-    expect(config!.jackpot.splitThreshold).toBe(
-      DEFAULT_MEGA645_CONFIG.jackpot.splitThreshold
-    );
-    expect(config!.jackpot.splitRatios).toEqual(
-      DEFAULT_MEGA645_CONFIG.jackpot.splitRatios
-    );
-    expect(config!.jackpot.splitRatios.tier1).toBe(2);
-    expect(config!.jackpot.splitRatios.tier2).toBe(2);
-    expect(config!.jackpot.splitRatios.tier3).toBe(1);
+    expect(config!.jackpot.seedAmount).toBe(DEFAULT_MEGA645_CONFIG.jackpot.seedAmount);
   });
 
   it("global config có đầy đủ financial rates", async () => {
@@ -54,11 +43,9 @@ describe("GameConfigRepository – Mega 6/45 Global Config", () => {
 
     expect(config!.rates).toBeDefined();
     expect(config!.rates.defaultCommissionRate).toBe(
-      DEFAULT_MEGA645_CONFIG.rates.defaultCommissionRate
+      DEFAULT_MEGA645_CONFIG.rates.defaultCommissionRate,
     );
-    expect(config!.rates.companyRate).toBe(
-      DEFAULT_MEGA645_CONFIG.rates.companyRate
-    );
+    expect(config!.rates.companyRate).toBe(DEFAULT_MEGA645_CONFIG.rates.companyRate);
   });
 
   it("global config có đầy đủ default prizes (3 tiers)", async () => {
@@ -75,14 +62,10 @@ describe("GameConfigRepository – Mega 6/45 Global Config", () => {
 
     expect(config!.play).toBeDefined();
     expect(config!.play.unitPrice).toBe(10_000);
-    expect(config!.play.maxBoardsPerTicket).toBe(
-      DEFAULT_MEGA645_CONFIG.play.maxBoardsPerTicket
-    );
-    expect(config!.play.maxDrawCount).toBe(
-      DEFAULT_MEGA645_CONFIG.play.maxDrawCount
-    );
+    expect(config!.play.maxBoardsPerTicket).toBe(DEFAULT_MEGA645_CONFIG.play.maxBoardsPerTicket);
+    expect(config!.play.maxDrawCount).toBe(DEFAULT_MEGA645_CONFIG.play.maxDrawCount);
     expect(config!.play.salesCloseBeforeMinutes).toBe(
-      DEFAULT_MEGA645_CONFIG.play.salesCloseBeforeMinutes
+      DEFAULT_MEGA645_CONFIG.play.salesCloseBeforeMinutes,
     );
     expect(config!.play.drawsPerWeek).toBe(3);
     expect(config!.play.drawDaysOfWeek).toEqual([0, 3, 5]);
@@ -99,12 +82,6 @@ describe("GameConfigRepository – Mega 6/45 Global Config", () => {
 
     expect(updated).not.toBeNull();
     expect(updated!.jackpot.seedAmount).toBe(20_000_000_000);
-    expect(updated!.jackpot.splitThreshold).toBe(
-      DEFAULT_MEGA645_CONFIG.jackpot.splitThreshold
-    );
-    expect(updated!.jackpot.splitRatios).toEqual(
-      DEFAULT_MEGA645_CONFIG.jackpot.splitRatios
-    );
   });
 
   it("upsertGlobalConfig tăng version mỗi lần update", async () => {

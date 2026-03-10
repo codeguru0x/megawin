@@ -35,15 +35,13 @@ export function JackpotOverviewSection() {
   if (!data) return null;
 
   const { cycle, config, progress, nextDraw } = data;
-  const pct = progress.percentage;
+  const pct = progress?.percentage ?? 0;
   const isHot = pct >= 80;
   const isWarm = pct >= 50;
 
   const growthPct =
     cycle.seedAmount > 0
-      ? Math.round(
-          ((cycle.currentAmount - cycle.seedAmount) / cycle.seedAmount) * 100
-        )
+      ? Math.round(((cycle.currentAmount - cycle.seedAmount) / cycle.seedAmount) * 100)
       : 0;
 
   return (
@@ -56,7 +54,7 @@ export function JackpotOverviewSection() {
           "dark:from-orange-950/50 dark:via-amber-950/40 dark:to-yellow-950/30",
           isHot
             ? "border-red-300 dark:border-red-800/60"
-            : "border-orange-200 dark:border-orange-800/50"
+            : "border-orange-200 dark:border-orange-800/50",
         )}
       >
         <div className="pointer-events-none absolute -right-10 -top-10 size-48 rounded-full bg-linear-to-br from-orange-300/25 to-amber-300/15 blur-3xl dark:from-orange-500/10 dark:to-amber-500/5" />
@@ -98,8 +96,7 @@ export function JackpotOverviewSection() {
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium text-orange-800/70 dark:text-orange-300/70">
-                Tiến trình đến ngưỡng chia —{" "}
-                {formatVNDCompact(progress.threshold)}
+                Tiến trình đến ngưỡng chia — {formatVNDCompact(progress?.threshold ?? 0)}
               </span>
               <span className="font-bold tabular-nums text-orange-900 dark:text-orange-200">
                 {pct.toFixed(1)}%
@@ -119,9 +116,7 @@ export function JackpotOverviewSection() {
               />
             </div>
             <div className="flex items-center justify-between text-[11px] text-orange-700/60 dark:text-orange-400/50">
-              <span>
-                Còn {formatVNDCompact(progress.remaining)} để đạt ngưỡng
-              </span>
+              <span>Còn {formatVNDCompact(progress?.remaining ?? 0)} để đạt ngưỡng</span>
               {nextDraw && (
                 <span>
                   Kỳ tiếp: {nextDraw.drawId} —{" "}
@@ -135,16 +130,18 @@ export function JackpotOverviewSection() {
           </div>
 
           {/* Split ratios preview */}
-          <div className="flex flex-wrap gap-1.5">
-            {Object.entries(config.splitRatios).map(([tier, ratio]) => (
-              <span
-                key={tier}
-                className="rounded-md bg-white/70 px-2 py-0.5 text-[10px] font-medium text-orange-800/80 dark:bg-white/10 dark:text-orange-300/80"
-              >
-                {tier.replace("tier", "T")}: {ratio}%
-              </span>
-            ))}
-          </div>
+          {config?.splitRatios && Object.keys(config.splitRatios).length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {Object.entries(config.splitRatios).map(([tier, ratio]) => (
+                <span
+                  key={tier}
+                  className="rounded-md bg-white/70 px-2 py-0.5 text-[10px] font-medium text-orange-800/80 dark:bg-white/10 dark:text-orange-300/80"
+                >
+                  {tier.replace("tier", "T")}: {ratio as number}%
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -169,9 +166,7 @@ export function JackpotOverviewSection() {
               ? `+${growthPct}% so với seed`
               : `Seed: ${formatVNDCompact(cycle.seedAmount)}`
           }
-          trend={
-            growthPct > 0 ? { value: growthPct, isPositive: true } : undefined
-          }
+          trend={growthPct > 0 ? { value: growthPct, isPositive: true } : undefined}
         />
         <KpiCard
           icon={TrendingUp}
@@ -186,7 +181,7 @@ export function JackpotOverviewSection() {
           iconBg="bg-orange-100 dark:bg-orange-900/50"
           iconColor="text-orange-600 dark:text-orange-400"
           label="Ngưỡng chia"
-          value={formatVNDCompact(progress.threshold)}
+          value={formatVNDCompact(progress?.threshold ?? 0)}
           sub={`Seed: ${formatVNDCompact(cycle.seedAmount)}`}
         />
       </div>
@@ -213,27 +208,20 @@ function KpiCard({
 }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
-      <div
-        className={cn(
-          "flex size-10 shrink-0 items-center justify-center rounded-lg",
-          iconBg
-        )}
-      >
+      <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
         <div className="flex items-baseline gap-1.5">
-          <p className="text-lg font-bold tabular-nums text-foreground">
-            {value}
-          </p>
+          <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
           {trend && (
             <span
               className={cn(
                 "text-xs font-semibold",
                 trend.isPositive
                   ? "text-green-600 dark:text-green-400"
-                  : "text-red-600 dark:text-red-400"
+                  : "text-red-600 dark:text-red-400",
               )}
             >
               {trend.isPositive ? "+" : ""}
@@ -241,9 +229,7 @@ function KpiCard({
             </span>
           )}
         </div>
-        {sub && (
-          <p className="truncate text-[11px] text-muted-foreground">{sub}</p>
-        )}
+        {sub && <p className="truncate text-[11px] text-muted-foreground">{sub}</p>}
       </div>
     </div>
   );

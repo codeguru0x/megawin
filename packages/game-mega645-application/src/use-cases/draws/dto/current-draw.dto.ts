@@ -29,8 +29,8 @@ export interface CurrentDrawInfo {
   };
   /** Jackpot hiện tại (VND) — đọc từ active cycle. */
   jackpotCurrentAmount: number;
-  /** Dự kiến kỳ chia giải (split cycle) — true nếu jackpot đạt ngưỡng split. */
-  splitCycleIntent: boolean;
+  /** Có ý định split jackpot trong kỳ này không. */
+  splitCycleIntent?: boolean;
   /** Thống kê bán vé (chỉ có khi kỳ đã mở bán). */
   stats?: {
     /** Tổng số entry (lượt tham gia). */
@@ -72,8 +72,6 @@ export interface GetCurrentDrawOutput {
       openingAmount: number;
       /** Giá trị jackpot cuối kỳ (VND). */
       closingAmount: number;
-      /** Có phải kỳ chia jackpot không. */
-      isSplitCycle: boolean;
     };
   } | null;
 }

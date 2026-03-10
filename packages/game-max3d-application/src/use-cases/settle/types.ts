@@ -50,15 +50,10 @@ export interface Max3dDrawResult {
  *
  * Được tạo bởi PrepareSettle, sử dụng bởi CalculateFinancials.
  * Config snapshot tại thời điểm settle — KHÔNG thay đổi giữa các step.
+ *
+ * Max 3D không có Jackpot — công ty thu toàn bộ phần còn lại.
  */
 export interface Max3dSettleConfig {
-  /**
-   * Tỷ lệ công ty thu về trên tổng doanh thu (0-1, mặc định 0.15 = 15%).
-   * Công ty chỉ được thu SAU khi đã trả giải cố định + commission đại lý.
-   * Nếu doanh thu không đủ → actualCompanyTake < companyTake (hoặc = 0).
-   */
-  companyRate: number;
-
   /**
    * Tỷ lệ hoa hồng mặc định cho đại lý (0-1).
    * Override per tenant qua TenantConfig.
@@ -101,23 +96,9 @@ export interface SettleFinancials {
   totalAgentCommission: number;
 
   /**
-   * Phần công ty được thu tối đa (VND) = companyRate × totalRevenue.
-   * Đây là mức trần, thực tế có thể thấp hơn nếu doanh thu không đủ.
-   */
-  companyTake: number;
-
-  /**
-   * Phần công ty thực tế thu được (VND).
-   * = min(companyTake, max(remainAfterPrizes, 0))
-   * Trong đó: remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission.
-   * Nếu doanh thu không đủ trả giải + commission → actualCompanyTake = 0.
-   */
-  actualCompanyTake: number;
-
-  /**
    * Lợi nhuận ròng kỳ quay (VND).
    * = totalRevenue - totalFixedPrizes - totalAgentCommission.
-   * Có thể âm nếu giải thưởng vượt doanh thu.
+   * Có thể âm nếu giải thưởng vượt doanh thu (công ty chịu lỗ).
    */
   profit: number;
 }
@@ -205,7 +186,7 @@ export interface SettleContext {
 
   /**
    * Cấu hình tài chính settle — snapshot tại thời điểm PrepareSettle.
-   * Gồm companyRate (từ GlobalConfig.rates), defaultCommissionRate.
+   * Gồm defaultCommissionRate (từ GlobalConfig.rates).
    *
    * Dùng bởi CalculateFinancials để tính phân bổ doanh thu.
    */

@@ -136,8 +136,8 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             allLineDocs.push({
               tenantId: ticket.tenantId,
               accountId: ticket.accountId,
-              ticketId: String(ticket._id),
-              entryId: String(entry._id),
+              ticketId: String(ticket.id),
+              entryId: entry.id,
               drawId: entry.drawId,
               drawDate: entry.drawDate,
               boardNo: board.boardNo,

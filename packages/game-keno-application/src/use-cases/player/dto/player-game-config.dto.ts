@@ -18,7 +18,7 @@ export interface PlayerGameRules {
   drawIntervalMinutes: number;
   /** Giờ bắt đầu quay trong ngày. VD: "06:00". */
   firstDrawTime: string;
-  /** Giờ kết thúc quay trong ngày. VD: "21:55". */
+  /** Giờ kết thúc quay trong ngày. VD: "21:52". */
   lastDrawTime: string;
   /** Timezone vận hành. VD: "Asia/Ho_Chi_Minh". */
   timezone: string;

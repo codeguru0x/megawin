@@ -36,8 +36,6 @@ export interface DrawFinancialInput {
     /** Hoa hồng đại lý. Tính sẵn bởi caller. */
     commission: number;
   }>;
-  /** Tỷ lệ phần công ty (0-1). Lấy từ global config rates.companyRate. */
-  companyRate: number;
 }
 
 /**
@@ -51,9 +49,7 @@ export interface DrawFinancialResult {
   totalPrizes: number;
   /** Tổng hoa hồng đại lý = Σ(tenant.commission). */
   totalAgentCommission: number;
-  /** Phần công ty = Math.round(totalRevenue × companyRate). */
-  companyTake: number;
-  /** Lợi nhuận = totalRevenue - totalPrizes - totalAgentCommission - companyTake. Có thể âm. */
+  /** Lợi nhuận = totalRevenue - totalPrizes - totalAgentCommission. Có thể âm. */
   profit: number;
 }
 
@@ -61,25 +57,22 @@ export interface DrawFinancialResult {
  * Tính tài chính tổng hợp cho 1 kỳ quay Bingo 18.
  *
  * Bingo 18 KHÔNG có Jackpot, KHÔNG có payout caps.
- * profit = totalRevenue - totalPrizes - totalAgentCommission - companyTake (có thể âm).
+ * profit = totalRevenue - totalPrizes - totalAgentCommission (có thể âm).
  *
  * @param input - Dữ liệu tổng hợp từ DB
  * @returns Kết quả tài chính gồm profit và tenant breakdown
  */
 export function calculateBingo18DrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
-  const { totalRevenue, totalPrizes, tenantRevenues, companyRate } = input;
+  const { totalRevenue, totalPrizes, tenantRevenues } = input;
 
   const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
 
-  const companyTake = Math.round(totalRevenue * companyRate);
-
-  const profit = totalRevenue - totalPrizes - totalAgentCommission - companyTake;
+  const profit = totalRevenue - totalPrizes - totalAgentCommission;
 
   return {
     totalRevenue,
     totalPrizes,
     totalAgentCommission,
-    companyTake,
     profit,
   };
 }
@@ -100,7 +93,6 @@ export const DEFAULT_BINGO18_CONFIG: Pick<
 > = {
   rates: {
     defaultCommissionRate: 0.2,
-    companyRate: 0.15,
   },
   singleNumPrizes: { ...DEFAULT_SINGLE_NUM_PRIZES },
   doubleMatchPrizes: { ...DEFAULT_DOUBLE_MATCH_PRIZES },

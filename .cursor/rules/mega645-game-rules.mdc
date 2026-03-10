@@ -1,8 +1,8 @@
 ---
-globs: packages/game-mega645/**,packages/game-mega645-application/**,apps/backoffice/src/app/(main)/games/mega645/**,apps/backoffice/src/app/api/mega645/**,apps/worker-mega645/**
+description: 
+globs: 
 alwaysApply: false
 ---
-
 # Mega 6/45 - Game Rules & Codebase Map
 
 Tài liệu tham chiếu cho AI Agent. ĐỌC KỸ trước khi thực hiện bất kỳ chức năng nào liên quan đến game Mega 6/45.
@@ -30,34 +30,96 @@ Mega 6/45 là game xổ số tự chọn của Vietlott. Đơn giản hơn Lotto
 
 Mỗi line chỉ trúng hạng **CAO NHẤT** phù hợp. So khớp CHỈ dựa trên mainMatchCount (không có special).
 
-| Hạng | Code | Điều kiện | Giá trị mặc định (VND) | Split eligible |
-|------|------|-----------|------------------------|----------------|
-| Giải Đặc Biệt | `jackpot` | 6/6 số | Tích lũy (tối thiểu 12 tỷ) | Không |
-| Giải Nhất | `tier1` | 5/6 số | 10.000.000 | Có |
-| Giải Nhì | `tier2` | 4/6 số | 300.000 | Có |
-| Giải Ba | `tier3` | 3/6 số | 30.000 | Có |
+| Hạng | Code | Điều kiện | Giá trị mặc định (VND) |
+|------|------|-----------|------------------------|
+| Giải Đặc Biệt | `jackpot` | 6/6 số | Tích lũy (tối thiểu 12 tỷ) |
+| Giải Nhất | `tier1` | 5/6 số | 10.000.000 |
+| Giải Nhì | `tier2` | 4/6 số | 300.000 |
+| Giải Ba | `tier3` | 3/6 số | 30.000 |
 
 **Ghi chú**:
 - Trúng nhiều hạng giải → chỉ lĩnh hạng CAO NHẤT
-- Nhiều người trúng Jackpot → chia đều theo tỷ lệ giá trị tham gia
-- Giải Nhất đến Ba: giá trị = số lần tham gia (mỗi 10.000đ) x giá trị giải
+- Giải Nhất đến Ba: giá trị cố định, không phụ thuộc vào doanh thu hay Jackpot
+- Giải Nhất đến Ba khi chơi Bao: tính theo **số lần tham gia dự thưởng** (= số lines trúng hạng đó × giá trị giải)
+- Nhiều người trúng Jackpot → xem chi tiết tại mục 3.4
 
 ---
 
-## 3. Các kiểu chơi (Play Types)
+## 3. Cơ chế Jackpot (theo luật Vietlott)
 
-### 3.1 Standard (Chơi cơ bản)
+### 3.1 Tích lũy Jackpot (Roll-over)
+
+Mỗi kỳ quay, Jackpot được tích lũy theo công thức:
+
+```
+JackpotContribution = max(Revenue - FixedPrizes - AgentCommission - ActualCompanyTake, 0)
+
+Trong đó:
+- Revenue = 100% doanh thu tiền cược kỳ này
+- FixedPrizes = Tổng tiền trả giải cố định (tier1 + tier2 + tier3)
+- AgentCommission = Σ(commissionRate_i × revenue_i) cho từng tenant
+- ActualCompanyTake = min(companyRate × Revenue, max(Revenue - FixedPrizes - Commission, 0))
+```
+
+### 3.2 Jackpot Cycle
+
+- **Seed**: Mỗi cycle bắt đầu với seedAmount (mặc định 12 tỷ VND, lấy từ GlobalConfig)
+- **Không có winner**: closingAmount = openingAmount + contribution → **tích lũy sang kỳ tiếp theo**
+- **Có winner**: Winner nhận toàn bộ Jackpot pool = openingAmount + contribution kỳ đó. Nhiều winners → chia đều (floor). Cycle mới bắt đầu từ **seedAmount** (lấy từ GlobalConfig, KHÔNG cộng contribution vì đã trao cho winner)
+
+### 3.3 Khi không có người trúng Jackpot
+
+**Theo luật Vietlott**: Toàn bộ quỹ Jackpot **cộng dồn (roll-over) sang kỳ tiếp theo** — không có trần và không có cơ chế chia Jackpot xuống hạng dưới.
+
+Giải Nhất/Nhì/Ba luôn có giá trị **cố định** bất kể Jackpot bao nhiêu.
+
+> **KHÔNG có "Split Cycle"** — đây là điểm khác biệt quan trọng so với một số game khác. Mega 6/45 không có cơ chế chia Jackpot cho người trúng hạng Nhất/Nhì/Ba khi không có người trúng Jackpot.
+
+### 3.4 Chia Jackpot khi có nhiều người trúng
+
+**Nguồn**: Thể lệ chính thức — QĐ 205/QĐ-VIETLOTT ngày 28/09/2022, Điều 8.
+
+> "Trong trường hợp có nhiều người trúng thưởng Giải Jackpot thì Giải Jackpot được **chia đều theo tỷ lệ giá trị tham gia dự thưởng** của người trúng thưởng."
+
+**Phân tích và áp dụng trong code:**
+
+Cụm "giá trị tham gia dự thưởng" = 10.000 VND × số bộ số (lines) tham gia.
+Tuy nhiên, **Jackpot yêu cầu trùng 6/6 số** và vì C(6,6) = 1, mỗi entry (bất kể Standard hay Bao mấy) chỉ có **đúng 1 line trúng Jackpot**. Do đó "giá trị tham gia dự thưởng" cho hạng Jackpot = **10.000 VND cho mọi entry**.
+
+→ **Kết quả**: Jackpot được **chia đều** cho số entry trúng (tỷ lệ luôn là 1:1:1...).
+
+```
+totalJackpotPrize = jackpotOpeningAmount + jackpotContribution
+jackpotPerWinner  = floor(totalJackpotPrize / winnerEntryCount)
+```
+
+**Chứng minh bằng toán**:
+- Bao 8 chọn 8 số, trong đó 6 số trùng kết quả, 2 số không trùng:
+  - Lines 6/6 (JP):   C(6,6) × C(2,0) = **1 line**
+  - Lines 5/6 (Tier1): C(6,5) × C(2,1) = **12 lines** → 12 × 10.000.000 = 120.000.000
+  - Lines 4/6 (Tier2): C(6,4) × C(2,2) = **15 lines** → 15 × 300.000 = 4.500.000
+  - Tổng giải cố định = 120.000.000 + 4.500.000 = **124.500.000** ← đúng bảng Bao 8
+
+- Bảng Bao ghi "JP + 124,5 triệu" — tức nhận **1 phần JP** (toàn bộ nếu 1 winner), KHÔNG nhân JP × 28 lines.
+
+**Quy tắc cho code**: `PatchJackpotPrizeUseCase` chia `totalJackpotPrize / jackpotEntries.length`, KHÔNG chia theo tổng lines của entry.
+
+---
+
+## 4. Các kiểu chơi (Play Types)
+
+### 4.1 Standard (Chơi cơ bản)
 - Chọn: 6 số từ 01-45
 - Lines: 1
 - Giá: 10.000 VND/kỳ
 
-### 3.2 Bao 5 (đặc biệt)
+### 4.2 Bao 5 (đặc biệt)
 - Chọn: 5 số từ 01-45
 - Hệ thống ghép lần lượt 40 số còn lại (45 - 5 = 40) tạo 40 bộ số
 - Lines: 40
 - Giá: 400.000 VND/kỳ
 
-### 3.3 Bao 7 - Bao 18 (Bao số chính)
+### 4.3 Bao 7 - Bao 18 (Bao số chính)
 - Chọn: N số (7 ≤ N ≤ 18) từ 01-45
 - Lines: C(N, 6) tổ hợp chập 6 từ N số
 - Giá: C(N, 6) × 10.000 VND/kỳ
@@ -78,16 +140,33 @@ Mỗi line chỉ trúng hạng **CAO NHẤT** phù hợp. So khớp CHỈ dựa 
 | Bao 15 | 15 | 5.005 | 50.050.000 |
 | Bao 18 | 18 | 18.564 | 185.640.000 |
 
-### 3.4 QuickPick (Máy tự chọn)
+### 4.4 QuickPick (Máy tự chọn)
 - Hệ thống chọn ngẫu nhiên 6 số
 - Lines: 1
 - Giá: 10.000 VND/kỳ
 
 ---
 
-## 4. Cách tính thưởng khi chơi Bao
+## 5. Cách tính thưởng khi chơi Bao
 
-Nguyên tắc giống Lotto 5/35: mỗi line match ĐỘC LẬP → tổng thưởng = Σ(tiền mỗi line trúng).
+Nguyên tắc: mỗi line match ĐỘC LẬP → tổng thưởng = Σ(tiền mỗi line trúng).
+
+**Nguồn**: Thể lệ chính thức Điều 8:
+> "Giá trị lĩnh thưởng của các giải thưởng từ Giải Nhất đến Giải Ba được tính theo số lần tham gia dự thưởng của số trúng thưởng (01 lần tham gia dự thưởng mệnh giá 10.000 đồng) nhân với giá trị giải thưởng tương ứng."
+
+**Ví dụ Bao 8 trúng 6 số** (chọn 8 số, 6 số trùng kết quả, 2 số không trùng):
+
+| Tier | Điều kiện | Số lines trúng | Công thức | Tiền thưởng |
+|------|-----------|----------------|-----------|-------------|
+| JP | 6/6 | C(6,6)×C(2,0) = 1 | 1 × JP | JP |
+| Tier1 | 5/6 | C(6,5)×C(2,1) = 12 | 12 × 10.000.000 | 120.000.000 |
+| Tier2 | 4/6 | C(6,4)×C(2,2) = 15 | 15 × 300.000 | 4.500.000 |
+| | | | **Tổng cố định** | **124.500.000** |
+
+→ Tổng: **JP + 124,5 triệu** ← khớp bảng Bao 8 bên dưới.
+
+> **LƯU Ý**: Jackpot chỉ trúng tối đa **1 line** mỗi entry (C(6,6)=1), bất kể chơi Bao mấy.
+> Các giải cố định (Tier1-3) CÓ THỂ trúng **nhiều lines** nhờ Bao.
 
 **Bảng giải thưởng Bao (tham khảo, mệnh giá 10.000đ):**
 
@@ -104,43 +183,6 @@ Nguyên tắc giống Lotto 5/35: mỗi line match ĐỘC LẬP → tổng thư�
 | Bao 14 | 4.950.000 | 27.900.000 | 169.200.000 | JP + 639,6 tr |
 | Bao 15 | 6.600.000 | 36.300.000 | 203.500.000 | JP + 752,4 tr |
 | Bao 18 | 13.650.000 | 70.980.000 | 332.800.000 | JP + 1,149 tỷ |
-
----
-
-## 5. Cơ chế Jackpot
-
-### 5.1 Tích lũy Jackpot
-
-Mỗi kỳ quay, Jackpot được tích lũy theo công thức:
-
-```
-JackpotContribution = max(Revenue - FixedPrizes - AgentCommission - ActualCompanyTake, 0)
-
-Trong đó:
-- Revenue = 100% doanh thu tiền cược kỳ này
-- FixedPrizes = Tổng tiền trả giải cố định (tier1 + tier2 + tier3)
-- AgentCommission = Σ(commissionRate_i × revenue_i) cho từng tenant
-- ActualCompanyTake = min(companyRate × Revenue, max(Revenue - FixedPrizes - Commission, 0))
-```
-
-### 5.2 Jackpot Cycle
-
-- **Seed**: Mỗi cycle bắt đầu với seedAmount (mặc định 12 tỷ VND)
-- **Rollover khi có winner**: closingAmount = seedAmount + contribution (contribution kỳ có winner cộng vào cycle mới)
-- **Rollover bình thường**: closingAmount = openingAmount + contribution
-
-### 5.3 Split Cycle (Chia giải Jackpot)
-
-**Điều kiện kích hoạt**:
-1. Jackpot >= splitThreshold (mặc định 12 tỷ VND)
-2. Không ai trúng Jackpot
-
-**Tỷ lệ chia** (tổng = 5 phần):
-- tier1 (Giải Nhất): 2/5 = 40%
-- tier2 (Giải Nhì): 2/5 = 40%
-- tier3 (Giải Ba): 1/5 = 20%
-
-**Quy trình chia**: Giống Lotto 5/35 — tier không có người trúng redistribute cho tier có người trúng. Làm tròn xuống 5.000 VND, phần dư cộng vào tier cao nhất.
 
 ---
 
@@ -180,7 +222,8 @@ Gross margin (không tính Jackpot): ~86.3% (8.630 VND/line)
 | Hạng giải | 4 (JP, Nhất, Nhì, Ba) | 7 (JP, 5 tier + Consolation) |
 | Matching | Chỉ mainMatchCount | mainMatchCount + specialMatched |
 | Jackpot min | 12 tỷ | 6 tỷ (tham khảo) |
-| Split ratios | 2/5, 2/5, 1/5 | 2/6, 1/6, 1/6, 1/6, 1/6 |
+| Split Cycle | **KHÔNG CÓ** | Có (tùy game config) |
+| Jackpot rollover | Tích lũy vô hạn | Tích lũy vô hạn |
 | Lịch quay | 3 lần/tuần (T4, T6, CN) | 2 lần/ngày |
 | Bao types | Bao 5 + Bao 7-18 | Bao 4 + Bao 6-15 + Bao ĐB |
 | Max boards | 6 (A-F) | 5 (A-E) |
@@ -193,7 +236,7 @@ Gross margin (không tính Jackpot): ~86.3% (8.630 VND/line)
 ### 9.1 Settle pipeline
 
 ```
-prepare-settle → settle-entries → calculate-financials → apply-split-bonuses → build-report → finalize-settle → sync-ticket-summaries
+prepare-settle → settle-entries → calculate-financials → [if JP winner] patch-jackpot-prize → build-report → finalize-settle → sync-ticket-summaries
 ```
 
 ### 9.2 Void pipeline
@@ -213,12 +256,12 @@ src/
 ├── entities/
 │   ├── enums.ts           # PrizeTier (jackpot, tier1-3), PlayType (standard, bao5, bao7-18, quickPick)
 │   ├── types.ts           # MainTuple (6 số), BoardSelection, LineValue, PrizeAmounts,
-│   │                      # SplitRatios, JackpotConfig, FinancialRates, PlayRules
-│   ├── draw.ts            # DrawDoc (result: winningMain only, NO special)
+│   │                      # JackpotConfig (seedAmount only), FinancialRates, PlayRules
+│   ├── draw.ts            # DrawDoc (result: winningMain only, jackpot: openingAmount + closingAmount)
 │   ├── ticket.ts          # TicketDoc, Board (max 6 boards A-F)
 │   ├── entry.ts           # TicketEntryDoc
 │   ├── line.ts            # TicketLineDoc, LineMatchResult
-│   ├── jackpot-cycle.ts   # JackpotCycleDoc
+│   ├── jackpot-cycle.ts   # JackpotCycleDoc (closeReason: winner | manual_reset only)
 │   ├── global-config.ts   # GlobalConfigDoc
 │   └── tenant-config.ts   # TenantConfigDoc
 ├── rules/
@@ -226,7 +269,7 @@ src/
 │   ├── play-types.ts      # combination(), calculateLineCount(), validateSelection()
 │   ├── odds.ts            # TOTAL_OUTCOMES = C(45,6), getOddsTable()
 │   └── jackpot.ts         # calculateDrawFinancials(), calculateClosingJackpot(),
-│                          # isSplitCycleDraw(), calculateSplitDistribution()
+│                          # calculateNextJackpot() — KHÔNG có split logic
 ├── helpers/
 │   ├── match-result.ts    # matchLine(), matchLines() (chỉ mainMatchCount, no special)
 │   ├── expand-lines.ts    # expandBoardToLines(), expandAllBoards()
@@ -248,7 +291,7 @@ src/
     ├── draws/             # create, list, get-detail, get-current, preview,
     │                      # open-sales, close-sales, publish-result, trigger-settle, void
     ├── settle/            # prepare → settle-entries → calculate-financials →
-    │                      # apply-split-bonuses → build-report → finalize → sync-ticket
+    │                      # build-report → finalize → sync-ticket
     ├── place-bet/         # place-bet
     ├── void/              # prepare → void-entries → dispatch-refunds → finalize
     ├── payout/            # dispatch-payout
@@ -294,10 +337,13 @@ Routes: draws, config, tenant-config, jackpot, operations.
 3. **Tiền lưu integer VND**: Không dùng float
 4. **MainTuple = 6 số**: Khác Lotto 5/35 (5 số + 1 ĐB)
 5. **Giá trị giải thưởng là TỶ LỆ THAM KHẢO**: Thực tế đọc từ GlobalConfigDoc, có thể thay đổi bởi staff
-6. **Split ratios khác Lotto 5/35**: tier1=2/5, tier2=2/5, tier3=1/5 (Lotto 5/35 có 5 tier chia 6 phần)
+6. **KHÔNG có Split Cycle**: Khi Jackpot không có winner → roll-over toàn bộ sang kỳ tiếp theo. Giải Nhất/Nhì/Ba luôn cố định
 7. **Jackpot seed = 12 tỷ**: Cao hơn Lotto 5/35 (6 tỷ tham khảo)
 8. **Bao 5 đặc biệt**: Chọn 5 số, HT ghép 40 số còn lại (khác Lotto 5/35 Bao 4 ghép 31 số)
 9. **3 lần/tuần**: Ít hơn Lotto 5/35 (14 lần/tuần) và Keno (~672 lần/tuần)
 10. **6 boards A-F**: Nhiều hơn Lotto 5/35 (5 boards A-E)
 11. **determineTier chỉ cần mainMatchCount**: Không cần specialMatched parameter
 12. **Lines tạo khi settle**: Expand boards → lines khi settle, giống Lotto 5/35
+13. **Cycle đóng chỉ khi có winner hoặc manual_reset**: Không có close reason "split"
+14. **Jackpot hitCount luôn = 1 per entry**: Vì C(6,6) = 1, nên mỗi entry (dù Bao mấy) chỉ có tối đa 1 line trúng Jackpot. Chia JP chia đều theo `winnerEntryCount`, KHÔNG theo tổng lines
+15. **Giải cố định tính theo lines**: Tier1-3 nhân `hitCount × prizeAmount`, Bao có thể có nhiều lines trúng cùng tier

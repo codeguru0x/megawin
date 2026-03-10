@@ -23,7 +23,7 @@ export interface GetGameConfigOutput {
 // ─────────────────────────────────────────────
 
 export interface UpdateGameConfigInput {
-  /** Tỷ lệ tài chính (companyRate, defaultCommissionRate, …). */
+  /** Tỷ lệ tài chính (defaultCommissionRate). */
   rates?: Partial<FinancialRates>;
   /** Bảng giải cho loại chơi Đơn (match 1/2/3 số). */
   singleNumPrizes?: Partial<SingleNumPrizes>;

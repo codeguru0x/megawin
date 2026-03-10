@@ -28,21 +28,23 @@ export class ListJackpotHistoryUseCase extends NextApiUseCase<
 
     const draws = await this.drawRepo.getSettledDrawsWithJackpot(page, size);
 
-    const items: JackpotHistoryItem[] = draws.map((d) => ({
-      drawId: d.drawId,
-      drawDate: d.drawDate,
-      drawNo: d.drawNo,
-      drawTime: d.drawTime.toISOString(),
-      openingAmount: d.jackpot?.openingAmount ?? 0,
-      contribution: d.financial?.jackpotContribution ?? 0,
-      closingAmount: d.jackpot?.closingAmount ?? d.jackpot?.openingAmount ?? 0,
-      hasWinner:
-        d.jackpot?.closingAmount !== undefined &&
-        d.jackpot.closingAmount < d.jackpot.openingAmount,
-      isSplitCycle: d.jackpot?.isSplitCycle ?? false,
-      ticketEntryCount: d.stats?.ticketEntryCount ?? 0,
-      totalRevenue: d.stats?.totalSalesAmount ?? 0,
-    }));
+    const items: JackpotHistoryItem[] = draws.map((d) => {
+      const jpTier = d.settleSummary?.tiers?.find((t) => t.tier === PrizeTier.Jackpot);
+
+      return {
+        drawId: d.drawId,
+        drawDate: d.drawDate,
+        drawNo: d.drawNo,
+        drawTime: d.drawTime.toISOString(),
+        openingAmount: d.jackpot?.openingAmount ?? 0,
+        contribution: d.financial?.jackpotContribution ?? 0,
+        closingAmount: d.jackpot?.closingAmount ?? d.jackpot?.openingAmount ?? 0,
+        hasWinner: (jpTier?.winnerCount ?? 0) > 0,
+        isSplitCycle: d.jackpot?.isSplitCycle ?? false,
+        ticketEntryCount: d.stats?.ticketEntryCount ?? 0,
+        totalRevenue: d.stats?.totalSalesAmount ?? 0,
+      };
+    });
 
     return { draws: items, page, size };
   }

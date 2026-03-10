@@ -15,10 +15,7 @@ import type { PlayerGetJackpotOutput } from "./dto/player.dto";
  * Lấy thông tin dual jackpot Power 6/55 cho player.
  * JP1 = trùng 6/6, JP2 = trùng 5/6 + bonus.
  */
-export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<
-  void,
-  PlayerGetJackpotOutput
-> {
+export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetJackpotOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly drawRepo = new DrawRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
@@ -31,16 +28,8 @@ export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<
     ]);
 
     const config = globalConfig.jackpot;
-    const jp1Amount =
-      activeCycle?.jackpot1Current ?? config.jackpot1.seedAmount;
-    const jp2Amount =
-      activeCycle?.jackpot2Current ?? config.jackpot2.seedAmount;
-    const totalCurrent = jp1Amount + jp2Amount;
-    const threshold = config.splitThreshold;
-    const percentage = Math.min(
-      Math.round((totalCurrent / threshold) * 10000) / 100,
-      100
-    );
+    const jp1Amount = activeCycle?.jackpot1Current ?? config.jackpot1.seedAmount;
+    const jp2Amount = activeCycle?.jackpot2Current ?? config.jackpot2.seedAmount;
 
     const nextScheduled = await this.drawRepo.getNextScheduledDraw();
 
@@ -49,11 +38,6 @@ export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<
       jackpot2Amount: jp2Amount,
       jp1SeedAmount: config.jackpot1.seedAmount,
       jp2SeedAmount: config.jackpot2.seedAmount,
-      progress: {
-        totalCurrent,
-        threshold,
-        percentage,
-      },
       nextDraw: nextScheduled
         ? {
             drawId: nextScheduled.drawId,

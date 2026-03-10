@@ -9,6 +9,12 @@ import type { DrawEntity } from "../../../infras/mappers/draw-mapper";
 export interface CreateDrawsInput {
   /** Số kỳ cần tạo (1-12). */
   count: number;
+  /**
+   * Danh sách drawId (slot index 0-based) sẽ được mở bán ngay.
+   * Các kỳ không có trong danh sách sẽ được tạo với trạng thái "scheduled".
+   * Mặc định rỗng → tất cả kỳ ở trạng thái "scheduled".
+   */
+  openSlotIndexes?: number[];
 }
 
 export interface CreateDrawsOutputItem {
@@ -24,7 +30,7 @@ export interface CreateDrawsOutputItem {
   closeAt: string;
   /** Ngày tài chính (YYYY-MM-DD) — dùng cho báo cáo và đối soát. */
   financialDate: string;
-  /** Trạng thái kỳ quay sau khi tạo (thường là "scheduled"). */
+  /** Trạng thái kỳ quay sau khi tạo ("salesOpen" hoặc "scheduled"). */
   status: string;
 }
 
@@ -147,10 +153,12 @@ export interface ListDrawsInput {
   fromDate?: string;
   /** Lọc đến ngày (YYYY-MM-DD, inclusive). */
   toDate?: string;
-  /** Trang hiện tại (1-based, mặc định 1). */
-  page?: number;
+  /** Cursor: ID document cuối trang trước (cursor-based pagination). */
+  cursor?: string;
   /** Số lượng mỗi trang (mặc định 20). */
   size?: number;
+  /** @deprecated Dùng cursor thay thế. Trang hiện tại (1-based). */
+  page?: number;
 }
 
 export interface DrawSummary {
@@ -174,10 +182,21 @@ export interface DrawSummary {
   isSplitCycle: boolean;
   /** Đã có kết quả quay chưa (winningMain + winningSpecial). */
   hasResult: boolean;
+  /** Kết quả quay — chỉ có khi hasResult = true. */
+  result?: {
+    /** 5 số chính trúng thưởng. */
+    winningMain: string[];
+    /** 1 số đặc biệt trúng thưởng. */
+    winningSpecial: string;
+  };
   /** Tổng số entries (vé × kỳ) tham gia kỳ quay này. */
   ticketEntryCount?: number;
+  /** Tổng số lines (bộ số) tham gia kỳ quay này. */
+  totalLineCount?: number;
   /** Tổng doanh thu kỳ quay (VND) = Σ(entry.amount). */
   totalRevenue?: number;
+  /** Tổng tiền trả thưởng (VND) — chỉ có sau khi settle. */
+  totalPrizesPayout?: number;
   /** Thông tin tài chính tổng hợp — chỉ có sau khi settle. */
   financial?: {
     /** Tổng giải thưởng cố định đã trả (VND) — không bao gồm Jackpot. */
@@ -201,8 +220,8 @@ export interface DrawSummary {
 export interface ListDrawsOutput {
   /** Danh sách kỳ quay tóm tắt. */
   draws: DrawSummary[];
-  /** Trang hiện tại (1-based). */
-  page: number;
+  /** Cursor cho trang tiếp theo (null nếu hết dữ liệu). */
+  nextCursor: string | null;
   /** Số lượng mỗi trang. */
   size: number;
 }
@@ -219,4 +238,10 @@ export interface GetDrawDetailInput {
 export interface GetDrawDetailOutput {
   /** Toàn bộ dữ liệu kỳ quay (entity đầy đủ từ DB). */
   draw: DrawEntity;
+  /**
+   * Mức giải thưởng đơn vị theo từng tier (VND/line), từ game config.
+   * Dùng để hiển thị cột "Tiền/line" ngay cả khi tier đó không có winner.
+   * Key là PrizeTier string (vd: "tier1", "jackpot").
+   */
+  prizeAmounts: Record<string, number>;
 }

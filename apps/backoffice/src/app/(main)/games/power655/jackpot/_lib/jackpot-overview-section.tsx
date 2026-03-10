@@ -37,15 +37,16 @@ export function JackpotOverviewSection() {
 
   if (!data) return null;
 
-  const { cycle, config, totalJackpotProgress, jackpot1Progress, jackpot2Progress, nextDraw } = data;
+  const { cycle, config, totalJackpotProgress, jackpot1Progress, jackpot2Progress, nextDraw } =
+    data;
   const jp1 = cycle.jackpot1Current;
   const jp2 = cycle.jackpot2Current;
   const totalJp = jp1 + jp2;
-  const pct = totalJackpotProgress.percentage;
+  const pct = totalJackpotProgress?.percentage ?? 0;
   const isHot = pct >= 80;
   const isWarm = pct >= 50;
 
-  const jp1Ratio = config.splitRatios.tier1 ?? 90;
+  const jp1Ratio = config.splitRatios?.tier1 ?? 90;
   const jp2Ratio = 100 - jp1Ratio;
 
   return (
@@ -56,9 +57,7 @@ export function JackpotOverviewSection() {
           "relative overflow-hidden rounded-2xl border-2 p-6",
           "bg-linear-to-br from-red-50/90 via-orange-50/70 to-amber-50/50",
           "dark:from-red-950/50 dark:via-orange-950/40 dark:to-amber-950/30",
-          isHot
-            ? "border-red-300 dark:border-red-800/60"
-            : "border-red-200 dark:border-red-800/50"
+          isHot ? "border-red-300 dark:border-red-800/60" : "border-red-200 dark:border-red-800/50",
         )}
       >
         {/* Decorative orbs */}
@@ -118,7 +117,7 @@ export function JackpotOverviewSection() {
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium text-red-800/70 dark:text-red-300/70">
                 Tiến trình đến ngưỡng chia —{" "}
-                {formatVNDCompact(totalJackpotProgress.threshold)}
+                {formatVNDCompact(totalJackpotProgress?.threshold ?? 0)}
               </span>
               <span className="font-bold tabular-nums text-red-900 dark:text-red-200">
                 {pct.toFixed(1)}%
@@ -139,8 +138,7 @@ export function JackpotOverviewSection() {
             </div>
             <div className="flex items-center justify-between text-[11px] text-red-700/60 dark:text-red-400/50">
               <span>
-                Còn {formatVNDCompact(totalJackpotProgress.remaining)} để đạt
-                ngưỡng
+                Còn {formatVNDCompact(totalJackpotProgress?.remaining ?? 0)} để đạt ngưỡng
               </span>
               {nextDraw && (
                 <span className="flex items-center gap-1">
@@ -195,14 +193,15 @@ export function JackpotOverviewSection() {
               </div>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {Object.entries(config.splitRatios).map(([tier, ratio]) => (
-                <span
-                  key={tier}
-                  className="rounded-md bg-white/70 px-2 py-0.5 text-[10px] font-medium text-red-800/80 dark:bg-white/10 dark:text-red-300/80"
-                >
-                  {tier.replace("tier", "T")}: {ratio}%
-                </span>
-              ))}
+              {config.splitRatios &&
+                Object.entries(config.splitRatios).map(([tier, ratio]) => (
+                  <span
+                    key={tier}
+                    className="rounded-md bg-white/70 px-2 py-0.5 text-[10px] font-medium text-red-800/80 dark:bg-white/10 dark:text-red-300/80"
+                  >
+                    {tier.replace("tier", "T")}: {ratio as number}%
+                  </span>
+                ))}
             </div>
           </div>
         </div>
@@ -231,8 +230,8 @@ export function JackpotOverviewSection() {
           iconBg="bg-purple-100 dark:bg-purple-900/50"
           iconColor="text-purple-600 dark:text-purple-400"
           label="Ngưỡng chia"
-          value={formatVNDCompact(totalJackpotProgress.threshold)}
-          sub={`Còn ${formatVNDCompact(totalJackpotProgress.remaining)}`}
+          value={formatVNDCompact(totalJackpotProgress?.threshold ?? 0)}
+          sub={`Còn ${formatVNDCompact(totalJackpotProgress?.remaining ?? 0)}`}
         />
         <KpiCard
           icon={Target}
@@ -313,27 +312,20 @@ function KpiCard({
 }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
-      <div
-        className={cn(
-          "flex size-10 shrink-0 items-center justify-center rounded-lg",
-          iconBg
-        )}
-      >
+      <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
         <div className="flex items-baseline gap-1.5">
-          <p className="text-lg font-bold tabular-nums text-foreground">
-            {value}
-          </p>
+          <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
           {trend && (
             <span
               className={cn(
                 "text-xs font-semibold",
                 trend.isPositive
                   ? "text-green-600 dark:text-green-400"
-                  : "text-red-600 dark:text-red-400"
+                  : "text-red-600 dark:text-red-400",
               )}
             >
               {trend.isPositive ? "+" : ""}
@@ -341,9 +333,7 @@ function KpiCard({
             </span>
           )}
         </div>
-        {sub && (
-          <p className="truncate text-[11px] text-muted-foreground">{sub}</p>
-        )}
+        {sub && <p className="truncate text-[11px] text-muted-foreground">{sub}</p>}
       </div>
     </div>
   );

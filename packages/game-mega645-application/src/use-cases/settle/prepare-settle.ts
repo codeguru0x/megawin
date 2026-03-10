@@ -4,14 +4,16 @@
  * Load toàn bộ context cần thiết cho settle flow. Pure read — không mutate entries.
  * settle-entries sẽ ghi result + chuyển scheduled → settled trực tiếp.
  *
- * IDEMPOTENT: chỉ đọc draw, config, jackpot cycle, đếm entries.
+ * IDEMPOTENT: chỉ đọc draw, config, jackpot cycle.
+ * Step Function retry tại chính step này nếu lỗi — draw vẫn là "settling".
+ *
+ * Mega 6/45 theo luật Vietlott: không có Split Cycle, không cần isSplitCycle.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { buildPrizeAmountMap } from "@megawin/game-mega645/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { SettleContext } from "./types";
@@ -21,33 +23,27 @@ export interface PrepareSettleInput {
   drawId: string;
 }
 
-export class PrepareSettleUseCase extends InternalUseCase<
-  PrepareSettleInput,
-  SettleContext
-> {
+export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, SettleContext> {
   private readonly drawRepo = new DrawRepository();
-  private readonly entryRepo = new EntryRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  protected async execute(
-    input: PrepareSettleInput
-  ): Promise<SettleContext> {
+  protected async execute(input: PrepareSettleInput): Promise<SettleContext> {
     const { drawId } = input;
 
     const draw = await this.drawRepo.getDrawById(drawId);
     if (!draw) {
-      throw new Error(`Draw ${drawId} không tồn tại.`);
+      throw AppException.notFound(`Draw ${drawId} không tồn tại.`);
     }
 
     if (draw.status !== DrawStatus.Settling) {
-      throw new Error(
-        `Draw ${drawId} status = "${draw.status}", expected "settling".`
+      throw AppException.businessRuleViolation(
+        `Draw ${drawId} status = "${draw.status}", expected "settling".`,
       );
     }
 
     if (!draw.result) {
-      throw new Error(`Draw ${drawId} chưa có kết quả quay.`);
+      throw AppException.businessRuleViolation(`Draw ${drawId} chưa có kết quả quay.`);
     }
 
     const [globalConfig, activeCycle] = await Promise.all([
@@ -55,21 +51,27 @@ export class PrepareSettleUseCase extends InternalUseCase<
       this.cycleRepo.getActiveCycle(),
     ]);
 
-    const jackpotOpeningAmount =
-      activeCycle?.currentAmount ?? globalConfig.jackpot.seedAmount;
+    if (!globalConfig) {
+      throw AppException.businessRuleViolation(`Không tìm thấy cấu hình game.`);
+    }
 
-    const isSplitCycle = draw.jackpot?.isSplitCycle ?? false;
+    if (!activeCycle) {
+      throw AppException.businessRuleViolation(`Không tìm thấy Jackpot Cycle.`);
+    }
+
+    // Snapshot cycle stats tại thời điểm PrepareSettle.
+    // FinalizeSettle dùng các giá trị này để updateCycleStats với giá trị tuyệt đối
+    // → idempotent khi FinalizeSettle bị retry (không cộng dồn 2 lần từ activeCycle).
+    const jackpotOpeningAmount = activeCycle.currentAmount;
+    const cycleNo = activeCycle.cycleNo;
+    const cycleContributionBefore = activeCycle.totalContribution;
+    const cycleDrawCountBefore = activeCycle.drawCount;
 
     const prizeMap = buildPrizeAmountMap(globalConfig.defaultPrizes);
     const prizeAmounts: Record<string, number> = {};
     for (const [tier, amount] of prizeMap) {
       prizeAmounts[tier] = amount;
     }
-
-    const [totalEntries, totalLines] = await Promise.all([
-      this.entryRepo.countEntriesByDrawId(drawId),
-      this.entryRepo.countLinesByDrawId(drawId),
-    ]);
 
     return {
       drawId,
@@ -80,17 +82,14 @@ export class PrepareSettleUseCase extends InternalUseCase<
         winningMain: draw.result.winningMain as unknown as string[],
       },
       jackpotOpeningAmount,
-      isSplitCycle,
       prizeAmounts,
       config: {
         seedAmount: globalConfig.jackpot.seedAmount,
-        splitThreshold: globalConfig.jackpot.splitThreshold,
-        splitRatios: globalConfig.jackpot.splitRatios,
         companyRate: globalConfig.rates.companyRate,
-        defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
+        cycleNo,
+        cycleContributionBefore,
+        cycleDrawCountBefore,
       },
-      totalEntries,
-      totalLines,
     };
   }
 }

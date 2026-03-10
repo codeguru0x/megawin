@@ -23,7 +23,7 @@ export interface GetGameConfigOutput {
 // ─────────────────────────────────────────────
 
 export interface UpdateGameConfigInput {
-  /** Tỷ lệ tài chính (companyRate, defaultCommissionRate, …). */
+  /** Tỷ lệ tài chính (defaultCommissionRate, …). */
   rates?: Partial<FinancialRates>;
   /** Bảng giải thưởng mặc định (standard). DeepPartial cho phép cập nhật từng phần. */
   defaultPrizes?: DeepPartial<Max3dproPrizeConfig>;

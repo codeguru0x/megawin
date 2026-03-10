@@ -133,6 +133,10 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
         seedAmount: activeCycle.seedAmount,
         splitRatios: activeCycle.config.splitRatios,
         companyRate: globalConfig.rates.companyRate,
+        splitThreshold: activeCycle.config.splitThreshold,
+        cycleNo: activeCycle.cycleNo,
+        cycleContributionBefore: activeCycle.totalContribution,
+        cycleDrawCountBefore: activeCycle.drawCount,
       },
     };
   }

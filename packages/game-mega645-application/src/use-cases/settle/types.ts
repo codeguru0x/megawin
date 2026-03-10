@@ -12,7 +12,6 @@
  *   SettleEntries → nhận SettleContext, trả done/false (loop)
  *   CalculateFinancials → nhận SettleContext, trả SettleFinancials
  *     → Step Function merge: settleCtx.financials = result
- *   ApplySplitBonuses → nhận SettleContext (có financials)
  *   SyncTicketSummaries → nhận SettleContext
  *   BuildReport → nhận SettleContext (có financials)
  *   FinalizeSettle → nhận SettleContextWithFinancials (financials bắt buộc)
@@ -20,6 +19,9 @@
  *
  * Mỗi step destructure những field cần dùng. Không define input riêng
  * (trừ PrepareSettleInput vì step đầu chỉ nhận drawId).
+ *
+ * Mega 6/45 theo luật Vietlott: KHÔNG có Split Cycle.
+ * Jackpot chỉ tích luỹ (roll-over) hoặc trao cho winner.
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -42,37 +44,18 @@ export interface MegaDrawResult {
 }
 
 /**
- * Config tài chính cho settle — snapshot từ JackpotCycle (seed, split) và GlobalConfig (rates).
+ * Config tài chính cho settle — snapshot từ JackpotCycle (seed) và GlobalConfig (rates).
  *
  * Được tạo bởi PrepareSettle, sử dụng bởi CalculateFinancials.
  * Config snapshot tại thời điểm settle — KHÔNG thay đổi giữa các step.
+ *
+ * Mega 6/45 theo luật Vietlott: không có splitThreshold hay splitRatios.
  */
 export interface MegaSettleConfig {
   /**
-   * Số tiền khởi điểm Jackpot khi bắt đầu cycle mới (VND).
-   * Khi reset Jackpot (có winner hoặc split), cycle mới bắt đầu từ giá trị này.
+   * Số tiền khởi điểm Jackpot khi bắt đầu cycle mới sau winner (VND).
    */
   seedAmount: number;
-
-  /**
-   * Ngưỡng chia Jackpot (VND).
-   * Khi jackpot >= splitThreshold và đủ điều kiện → kích hoạt split cycle.
-   */
-  splitThreshold: number;
-
-  /**
-   * Tỷ lệ chia Jackpot cho từng tier khi split.
-   * Mega 6/45 chỉ có 3 tier chia: tier1 (jackpot), tier2 (5/6), tier3 (4/6).
-   * Tier không có winner → phần tiền tái phân bổ cho tier có winner.
-   */
-  splitRatios: {
-    /** Tỷ lệ chia cho tier1 / jackpot (0-1). */
-    tier1: number;
-    /** Tỷ lệ chia cho tier2 – 5/6 (0-1). */
-    tier2: number;
-    /** Tỷ lệ chia cho tier3 – 4/6 (0-1). */
-    tier3: number;
-  };
 
   /**
    * Tỷ lệ công ty thu về trên tổng doanh thu (0-1, mặc định 0.15 = 15%).
@@ -82,60 +65,25 @@ export interface MegaSettleConfig {
   companyRate: number;
 
   /**
-   * Tỷ lệ hoa hồng mặc định cho đại lý (0-1).
-   * Override per tenant qua TenantConfig.
+   * Snapshot cycleNo tại thời điểm PrepareSettle.
+   * Dùng bởi FinalizeSettle để updateCycleStats đúng cycle.
    */
-  defaultCommissionRate: number;
+  cycleNo: number;
+
+  /**
+   * Snapshot totalContribution của cycle tại thời điểm PrepareSettle (VND).
+   * FinalizeSettle tính: newContribution = cycleContributionBefore + jackpotContribution.
+   * Dùng giá trị tuyệt đối → idempotent khi retry (không cộng dồn từ activeCycle mới nhất).
+   */
+  cycleContributionBefore: number;
+
+  /**
+   * Snapshot drawCount của cycle tại thời điểm PrepareSettle.
+   * FinalizeSettle tính: newDrawCount = cycleDrawCountBefore + 1.
+   * Dùng giá trị tuyệt đối → idempotent khi retry.
+   */
+  cycleDrawCountBefore: number;
 }
-
-/**
- * Chi tiết phân bổ split cho 1 tier — thông tin thưởng Jackpot chia cho
- * những người trúng tier đó trong kỳ split.
- *
- * Dùng chung giữa CalculateFinancials (tính), ApplySplitBonuses (patch entry),
- * FinalizeSettle (ghi vào cycle close record).
- */
-export interface MegaSplitTierDetail {
-  /**
-   * Số tiền ban đầu phân cho tier (VND).
-   * Công thức: jackpotAmount × splitRatio[tier].
-   */
-  initialAmount: number;
-
-  /**
-   * Số tiền tái phân bổ từ các tier không có winner (VND).
-   * Khi tier A không có winner → phần tiền tier A chia cho các tier có winner
-   * theo tỷ lệ ratio tương ứng.
-   */
-  redistributedAmount: number;
-
-  /**
-   * Tổng tiền tier nhận (VND) = initialAmount + redistributedAmount.
-   * Đây là pool tiền để chia cho tất cả winner của tier này.
-   */
-  totalAmount: number;
-
-  /** Số người trúng tier này trong kỳ quay. */
-  winnerCount: number;
-
-  /**
-   * Tiền thưởng Jackpot mỗi người nhận (VND) = totalAmount / winnerCount.
-   * Làm tròn xuống bội 5.000 VND. Tier cao nhất (có winner) nhận phần dư.
-   */
-  bonusPerWinner: number;
-}
-
-/**
- * Chi tiết phân bổ split toàn bộ — key = tier name, value = thông tin phân bổ.
- *
- * Chỉ tồn tại khi:
- * - isSplitCycle = true (Jackpot >= splitThreshold)
- * - Không có jackpot winner (6/6)
- * - Có ít nhất 1 winner tier1-tier3
- *
- * Nếu không có ai trúng tier1-tier3 → splitDetails = undefined (Jackpot giữ nguyên).
- */
-export type MegaSplitDetails = Record<string, MegaSplitTierDetail>;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SettleFinancials – output CalculateFinancials, nested vào SettleContext
@@ -157,8 +105,8 @@ export interface SettleFinancials {
   totalRevenue: number;
 
   /**
-   * Tổng giải thưởng cố định đã trả (VND) — từ jackpot đến tier cuối.
-   * KHÔNG bao gồm Jackpot (Jackpot xử lý riêng qua split/winner flow).
+   * Tổng giải thưởng cố định đã trả (VND).
+   * KHÔNG bao gồm Jackpot (Jackpot xử lý riêng qua winner flow).
    */
   totalFixedPrizes: number;
 
@@ -189,41 +137,11 @@ export interface SettleFinancials {
   jackpotContribution: number;
 
   /**
-   * Số tiền Jackpot cuối kỳ (VND) — giá trị Jackpot SAU khi tính toán kỳ này.
-   *
-   * Nếu reset (có winner hoặc split):
-   *   closingJackpot = seedAmount (contribution đã tính vào giải winner).
-   * Nếu tích luỹ (không reset):
-   *   closingJackpot = openingAmount + contribution.
-   */
-  closingJackpot: number;
-
-  /**
-   * Giá trị Jackpot mở đầu cycle tiếp theo (VND).
-   * Khác closingJackpot khi cycle reset (= seedAmount + contribution kỳ này).
-   * Khi không reset: nextJackpotOpening = closingJackpot.
-   */
-  nextJackpotOpening: number;
-
-  /**
    * Có người trúng Jackpot (6/6) trong kỳ này hay không.
-   * Quyết định:
-   *   - true → winner nhận toàn bộ JP pool, cycle reset
-   *   - false + isSplitCycle → chia JP cho tier1-tier3 winners
-   *   - false + !isSplitCycle → JP tích luỹ tiếp
+   * true → winner nhận toàn bộ JP pool, cycle reset.
+   * false → JP tích luỹ tiếp (roll-over).
    */
   hasJackpotWinner: boolean;
-
-  /**
-   * Chi tiết phân bổ split Jackpot theo tier — chỉ có khi:
-   *   isSplitCycle = true VÀ hasJackpotWinner = false VÀ có winner tier1-tier3.
-   *
-   * undefined khi:
-   *   - Không phải split cycle, HOẶC
-   *   - Có jackpot winner (winner nhận hết, không split), HOẶC
-   *   - Không có ai trúng tier1-tier3 (không có ai để chia).
-   */
-  splitDetails?: MegaSplitDetails;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -244,7 +162,6 @@ export interface SettleFinancials {
  * │ SettleEntries     ← SettleContext                               │
  * │ CalculateFinancials ← SettleContext → SettleFinancials          │
  * │   ↳ SFN merge: settleCtx.financials = result                   │
- * │ ApplySplitBonuses ← SettleContext (financials có)               │
  * │ SyncTicketSummaries ← SettleContext                             │
  * │ BuildReport       ← SettleContext (financials có)               │
  * │ FinalizeSettle    ← SettleContextWithFinancials (bắt buộc)     │
@@ -266,7 +183,7 @@ export interface SettleContext {
 
   /**
    * Số thứ tự kỳ quay trong ngày.
-   * Dùng để xác định isSplitCycle và logging.
+   * Mega 6/45 chỉ có 1 kỳ/ngày (drawNo = 1).
    */
   drawNo: number;
 
@@ -288,62 +205,51 @@ export interface SettleContext {
    *
    * Ý nghĩa: giá trị Jackpot TRƯỚC khi tính contribution kỳ này.
    * Dùng bởi:
-   *   - CalculateFinancials: tính closingJackpot, split distribution
+   *   - CalculateFinancials: tính contribution + closingAmount cho DrawDoc
    *   - BuildReport: ghi jackpotTracking.openingAmount
    *   - FinalizeSettle: tính totalJackpotPrize cho winner
    */
   jackpotOpeningAmount: number;
 
   /**
-   * Kỳ này có phải kỳ chia Jackpot hay không.
-   *
-   * true khi jackpotOpeningAmount >= splitThreshold.
-   * Khi true VÀ không có jackpot winner VÀ có winner tier1-tier3:
-   *   → CalculateFinancials tính splitDetails
-   *   → ApplySplitBonuses patch split bonus vào entries
-   *   → FinalizeSettle đóng cycle + ghi split record
-   */
-  isSplitCycle: boolean;
-
-  /**
    * Bảng giải thưởng cố định: key = tier name, value = số tiền (VND).
-   * VD: { "jackpot": 0, "tier1": 10000000, "tier2": 5000000, ... }
+   * VD: { "jackpot": 0, "tier1": 10000000, "tier2": 300000, "tier3": 30000 }
    *
-   * Jackpot ghi amount = 0 (xử lý riêng qua split/winner flow).
+   * Jackpot ghi amount = 0 (xử lý riêng qua winner flow).
    * Dùng bởi SettleEntries để tính winAmount cho mỗi entry.
    */
   prizeAmounts: Record<string, number>;
 
   /**
    * Cấu hình tài chính settle — snapshot tại thời điểm PrepareSettle.
-   * Gồm seedAmount, splitThreshold, splitRatios, companyRate, defaultCommissionRate.
+   * Gồm seedAmount, companyRate, cycleNo, cycleContributionBefore, cycleDrawCountBefore.
    *
    * Dùng bởi CalculateFinancials để tính phân bổ doanh thu + jackpot.
+   * Dùng bởi FinalizeSettle để updateCycleStats idempotent.
    */
   config: MegaSettleConfig;
-
-  /**
-   * Tổng số entry cần settle trong kỳ.
-   * Dùng cho logging và monitoring tiến độ.
-   */
-  totalEntries: number;
-
-  /**
-   * Tổng số dòng (lines) cần xử lý — expand từ tất cả entry.
-   * Dùng bởi CalculateFinancials để ghi vào draw summary.
-   */
-  totalLines: number;
 
   /**
    * Dữ liệu tài chính tổng hợp — output của CalculateFinancials.
    *
    * undefined TRƯỚC khi CalculateFinancials chạy (step 1-2).
    * Sau step 3 (CalculateFinancials), Step Function merge kết quả vào đây.
-   * Các step 4-7 truy cập financials qua field này.
+   * Các step 4-6 truy cập financials qua field này.
    *
    * FinalizeSettle YÊU CẦU financials bắt buộc (dùng SettleContextWithFinancials).
    */
   financials?: SettleFinancials;
+
+  /**
+   * Danh sách người trúng Jackpot — chỉ có khi financials.hasJackpotWinner = true.
+   *
+   * Được điền bởi PatchJackpotPrize (step patch-jackpot-prize), merge vào settleCtx
+   * qua Step Function. FinalizeSettle đọc field này để ghi vào cycle close record
+   * — tránh re-query DB.
+   *
+   * undefined khi không có JP winner (roll-over).
+   */
+  jackpotWinners?: import("@megawin/game-mega645/entities").JackpotWinnerInfo[];
 }
 
 /**

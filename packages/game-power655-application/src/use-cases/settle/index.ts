@@ -5,8 +5,6 @@
 export type {
   PowerDrawResult,
   PowerSettleConfig,
-  PowerSplitTierDetail,
-  PowerSplitDetails,
   SettleFinancials,
   SettleContext,
   SettleContextWithFinancials,
@@ -26,8 +24,8 @@ export type { BuildReportResult } from "./build-report";
 export { FinalizeSettleUseCase } from "./finalize-settle";
 export type { FinalizeSettleResult } from "./finalize-settle";
 
-export { SyncTicketSummariesUseCase } from "./sync-ticket-summaries";
-export type { SyncTicketSummariesResult } from "./sync-ticket-summaries";
+export { PatchJackpotPrizeUseCase } from "./patch-jackpot-prize";
+export type { PatchJackpotPrizeResult } from "./patch-jackpot-prize";
 
-export { ApplySplitBonusesUseCase } from "./apply-split-bonuses";
-export type { ApplySplitBonusesResult } from "./apply-split-bonuses";
+export { SyncTicketSummariesUseCase } from "./sync-ticket-summaries";
+export type { SyncTicketSummariesResult, DrawSyncInput } from "./sync-ticket-summaries";

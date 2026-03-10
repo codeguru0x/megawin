@@ -6,7 +6,7 @@
  * Bingo 18 KHÔNG có Jackpot, KHÔNG có payout caps – chỉ tính:
  *   - totalRevenue, totalPrizes
  *   - commission per tenant
- *   - companyTake
+ *   - profit
  *
  * IDEMPOTENT: Chạy lại cho kết quả giống nhau (tính từ DB).
  */
@@ -40,7 +40,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
         revenue: t.revenue,
         commission: t.commission,
       })),
-      companyRate: config.companyRate,
     });
 
     const tenantBreakdown = tenantAgg.map((t) => ({
@@ -57,7 +56,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
         totalRevenue: fin.totalRevenue,
         totalPrizes: fin.totalPrizes,
         totalAgentCommission: fin.totalAgentCommission,
-        companyTake: fin.companyTake,
+        companyTake: fin.profit,
       },
       {
         ticketEntryCount: payoutSummary.totalSettled,
@@ -70,7 +69,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       totalRevenue: fin.totalRevenue,
       totalPrizes: fin.totalPrizes,
       totalAgentCommission: fin.totalAgentCommission,
-      companyTake: fin.companyTake,
+      profit: fin.profit,
     };
   }
 }

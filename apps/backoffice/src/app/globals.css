@@ -214,3 +214,13 @@ html {
 .disable-transitions * {
   transition: none !important;
 }
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  60%,
+  100% {
+    transform: translateX(200%);
+  }
+}

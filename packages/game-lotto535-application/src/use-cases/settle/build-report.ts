@@ -141,7 +141,7 @@ export class BuildReportUseCase extends InternalUseCase<SettleContext, BuildRepo
         },
         jackpotTracking: {
           openingAmount: jackpotOpeningAmount ?? 0,
-          closingAmount: financials.closingJackpot,
+          closingAmount: (jackpotOpeningAmount ?? 0) + financials.jackpotContribution,
           hasJackpotWinner: financials.hasJackpotWinner,
           totalContribution: financials.jackpotContribution,
         },

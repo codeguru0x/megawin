@@ -73,15 +73,6 @@ export interface PlayerGetJackpotOutput {
   jp1SeedAmount: number;
   /** Giá trị khởi tạo JP2 khi bắt đầu cycle mới (VND). */
   jp2SeedAmount: number;
-  /** Tiến trình tích lũy jackpot tổng (JP1 + JP2). */
-  progress: {
-    /** Tổng jackpot hiện tại = jackpot1Amount + jackpot2Amount (VND). */
-    totalCurrent: number;
-    /** Ngưỡng kích hoạt chia giải (splitThreshold) (VND). */
-    threshold: number;
-    /** Phần trăm tiến trình = (totalCurrent / threshold) × 100. */
-    percentage: number;
-  };
   /** Kỳ quay tiếp theo (nếu có). */
   nextDraw?: {
     /** ID kỳ quay tiếp theo. */

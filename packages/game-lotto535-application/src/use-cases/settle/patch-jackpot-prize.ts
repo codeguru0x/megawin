@@ -24,6 +24,7 @@
  *   3. Patch song song (idempotent — chỉ patch docs có amount = 0):
  *      a. entry.payout.tiers[jackpot] → cập nhật unitAmount, amount, winAmount, payoutAmount
  *      b. line.matchResult.winAmount  → cập nhật winAmount cho từng line trúng JP
+ *      c. draw.settleSummary.tiers[jackpot].prizeAmount → player API đọc đúng giá trị ($set)
  *
  *   4. Cập nhật draw.stats.totalPayoutAmount (+= totalJackpotPayout):
  *      CHỈ gọi khi bước 3a thực sự patch entries (modifiedCount > 0).
@@ -54,11 +55,14 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import type { JackpotWinnerInfo } from "@megawin/game-lotto535/entities";
 import type { SettleContext } from "./types";
 
 export interface PatchJackpotPrizeResult {
   drawId: string;
   entriesPatched: number;
+  /** Danh sách người trúng JP — truyền sang FinalizeSettle để ghi cycle record. */
+  winners: JackpotWinnerInfo[];
 }
 
 export class PatchJackpotPrizeUseCase extends InternalUseCase<
@@ -79,7 +83,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     const jackpotEntries = await this.entryRepo.findJackpotWinners(drawId);
 
     if (jackpotEntries.length === 0) {
-      return { drawId, entriesPatched: 0 };
+      return { drawId, entriesPatched: 0, winners: [] };
     }
 
     // ── Bước 2: Tính tiền thưởng Jackpot mỗi người ──
@@ -89,16 +93,19 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     const jackpotPerWinner = Math.floor(totalJackpotPrize / jackpotEntries.length);
 
     if (jackpotPerWinner <= 0) {
-      return { drawId, entriesPatched: 0 };
+      return { drawId, entriesPatched: 0, winners: [] };
     }
 
-    // ── Bước 3: Patch entries + lines song song ──
-    // Cả 2 đều idempotent: chỉ update docs có amount/winAmount = 0
+    // ── Bước 3: Patch entries + lines + settleSummary song song ──
+    // Tất cả đều idempotent: entries/lines chỉ update docs có amount/winAmount = 0,
+    // settleSummary dùng $set → ghi cùng giá trị nhiều lần không sai.
     const [patchedEntries] = await Promise.all([
       // 3a. Patch entry.payout: tiers[jackpot].amount + winAmount + payoutAmount
       this.entryRepo.patchJackpotPrize(drawId, jackpotPerWinner),
       // 3b. Patch line.matchResult.winAmount cho các line trúng jackpot
       this.lineRepo.patchJackpotLineWinAmount(drawId, jackpotPerWinner),
+      // 3c. Patch draw.settleSummary.tiers[jackpot].prizeAmount → player API đọc đúng giá trị
+      this.drawRepo.patchSettleSummaryJackpotPrize(drawId, totalJackpotPrize),
     ]);
 
     // ── Bước 4: Cập nhật draw.stats.totalPayoutAmount ──
@@ -111,10 +118,17 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
       await this.drawRepo.incrementTotalPayout(drawId, totalJackpotPayout);
     }
 
-    // ── Bước 5: Patch settleSummary.tiers[jackpot].prizeAmount ──
-    // Dùng $set (idempotent) — luôn ghi cùng giá trị nên chạy lại không sai.
-    await this.drawRepo.patchSettleSummaryJackpotPrize(drawId, totalJackpotPayout);
+    // ── Build winners list để truyền sang FinalizeSettle ──
+    // FinalizeSettle sẽ ghi vào cycle close record — tránh re-query DB lần 2.
+    const winners: JackpotWinnerInfo[] = jackpotEntries.map((e) => ({
+      accountId: e.accountId,
+      username: e.username,
+      tenantId: e.tenantId,
+      prizeAmount: jackpotPerWinner,
+      entryId: e.id,
+      drawId,
+    }));
 
-    return { drawId, entriesPatched: patchedEntries };
+    return { drawId, entriesPatched: patchedEntries, winners };
   }
 }

@@ -20,7 +20,6 @@ export const DEFAULT_MAX3D_CONFIG: {
 } = {
   rates: {
     defaultCommissionRate: 0.2,
-    companyRate: 0.15,
   },
   defaultPrizes: {
     basic: {

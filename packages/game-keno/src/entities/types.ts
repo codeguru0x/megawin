@@ -166,8 +166,6 @@ export interface PayoutCaps {
 export interface FinancialRates {
   /** Hoa hồng đại lý mặc định (tỷ lệ trên doanh thu). */
   defaultCommissionRate: number;
-  /** Tỷ lệ công ty thu về trên doanh thu. */
-  companyRate: number;
 }
 
 /** Quy tắc chơi – dùng trong GlobalConfigDoc.play. */
@@ -184,7 +182,7 @@ export interface PlayRules {
   drawIntervalMinutes: number;
   /** Giờ bắt đầu quay trong ngày. Default: "06:00" */
   firstDrawTime: string;
-  /** Giờ kết thúc quay trong ngày (kỳ cuối). Default: "21:55" */
+  /** Giờ kết thúc quay trong ngày (kỳ cuối). Default: "21:52" */
   lastDrawTime: string;
   /** Timezone vận hành. Default: "Asia/Ho_Chi_Minh" */
   timezone: string;

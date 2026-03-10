@@ -17,10 +17,9 @@
  *   - Accumulator bắt đầu từ zero – settle-entries chỉ query "scheduled" nên safe
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { SettleContext } from "./types";
@@ -34,34 +33,28 @@ export interface PrepareSettleInput {
  * Load context cho settle flow Power 6/55.
  * Loads dual jackpot (JP1 + JP2) opening amounts từ active cycle.
  */
-export class PrepareSettleUseCase extends InternalUseCase<
-  PrepareSettleInput,
-  SettleContext
-> {
+export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, SettleContext> {
   private readonly drawRepo = new DrawRepository();
-  private readonly entryRepo = new EntryRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** @inheritdoc */
-  protected async execute(
-    input: PrepareSettleInput
-  ): Promise<SettleContext> {
+  protected async execute(input: PrepareSettleInput): Promise<SettleContext> {
     const { drawId } = input;
 
     const draw = await this.drawRepo.getDrawById(drawId);
     if (!draw) {
-      throw new Error(`Draw ${drawId} không tồn tại.`);
+      throw AppException.notFound(`Draw ${drawId} không tồn tại.`);
     }
 
     if (draw.status !== DrawStatus.Settling) {
-      throw new Error(
-        `Draw ${drawId} status = "${draw.status}", expected "settling".`
+      throw AppException.businessRuleViolation(
+        `Draw ${drawId} status = "${draw.status}", expected "settling".`,
       );
     }
 
     if (!draw.result) {
-      throw new Error(`Draw ${drawId} chưa có kết quả quay.`);
+      throw AppException.businessRuleViolation(`Draw ${drawId} chưa có kết quả quay.`);
     }
 
     const [globalConfig, activeCycle] = await Promise.all([
@@ -69,23 +62,24 @@ export class PrepareSettleUseCase extends InternalUseCase<
       this.cycleRepo.getActiveCycle(),
     ]);
 
+    if (!globalConfig) {
+      throw AppException.businessRuleViolation(`Không tìm thấy cấu hình game.`);
+    }
+
+    if (!activeCycle) {
+      throw AppException.businessRuleViolation(`Không tìm thấy Jackpot Cycle.`);
+    }
+
     const jp1OpeningAmount =
       activeCycle?.jackpot1Current ?? globalConfig.jackpot.jackpot1.seedAmount;
     const jp2OpeningAmount =
       activeCycle?.jackpot2Current ?? globalConfig.jackpot.jackpot2.seedAmount;
-
-    const isSplitCycle = draw.jackpot?.isSplitCycle ?? false;
 
     const prizeAmounts: Record<string, number> = {
       tier1: globalConfig.defaultPrizes.tier1,
       tier2: globalConfig.defaultPrizes.tier2,
       tier3: globalConfig.defaultPrizes.tier3,
     };
-
-    const [totalEntries, totalLines] = await Promise.all([
-      this.entryRepo.countEntriesByDrawId(drawId),
-      this.entryRepo.countLinesByDrawId(drawId),
-    ]);
 
     return {
       drawId,
@@ -98,7 +92,6 @@ export class PrepareSettleUseCase extends InternalUseCase<
       },
       jp1OpeningAmount,
       jp2OpeningAmount,
-      isSplitCycle,
       prizeAmounts,
       config: {
         jp1SeedAmount: globalConfig.jackpot.jackpot1.seedAmount,
@@ -106,13 +99,11 @@ export class PrepareSettleUseCase extends InternalUseCase<
         jp1Ratio: globalConfig.jackpot.jp1ContributionRatio,
         jp2Ratio: globalConfig.jackpot.jp2ContributionRatio,
         jp1OverflowThreshold: globalConfig.jackpot.jp1OverflowThreshold,
-        splitThreshold: globalConfig.jackpot.splitThreshold,
-        splitRatios: globalConfig.jackpot.splitRatios,
         companyRate: globalConfig.rates.companyRate,
         defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
+        cycleNo: activeCycle?.cycleNo ?? 0,
+        cycleDrawCountBefore: activeCycle?.drawCount ?? 0,
       },
-      totalEntries,
-      totalLines,
     };
   }
 }

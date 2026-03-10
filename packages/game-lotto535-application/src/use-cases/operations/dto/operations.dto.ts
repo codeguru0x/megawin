@@ -69,8 +69,16 @@ export interface GetNumberFrequencyInput {
 }
 
 export interface NumberFrequencyItem {
+  /** Số (1–35 cho main, 1–12 cho special). */
   number: number;
+  /** Số boards chứa số này (= số lần được chọn). */
   count: number;
+  /** Tổng expandedLines của các boards chứa số này. */
+  lines: number;
+  /** Số entries distinct có board chứa số này. */
+  entries: number;
+  /** Xấp xỉ doanh thu từ boards chứa số này (VND). */
+  revenue: number;
 }
 
 export interface NumberFrequencyOutput {
@@ -90,8 +98,14 @@ export interface GetPlayTypeDistributionInput {
 
 export interface PlayTypeDistributionItem {
   playType: PlayType;
+  /** Số boards (tức số selections của kiểu chơi đó). */
   boardCount: number;
+  /** Tổng lines đã expand. */
   lineCount: number;
+  /** Số entries chứa ít nhất 1 board kiểu này. */
+  entryCount: number;
+  /** Tổng doanh thu (VND) từ entries kiểu này. */
+  revenue: number;
 }
 
 export interface PlayTypeDistributionOutput {

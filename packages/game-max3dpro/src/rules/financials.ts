@@ -2,15 +2,12 @@
  * Max 3D Pro – Financial Calculations
  *
  * Max 3D Pro không có Jackpot tích lũy. Tất cả giải thưởng cố định.
+ * Công ty thu TOÀN BỘ phần còn lại sau giải thưởng và hoa hồng.
  *
- * Công thức phân bổ doanh thu:
- *   Revenue = 100% doanh thu tiền cược
- *   ├── Agent Commission = Σ(commissionRate_i × revenue_i) per tenant
- *   ├── Company Take     = companyRate × Revenue
- *   └── Remaining        = Revenue - Commission - CompanyTake - FixedPrizes
+ * Công thức:
+ *   profit = totalRevenue - totalFixedPrizes - totalAgentCommission
+ *   (profit có thể âm — công ty chịu lỗ)
  */
-
-import type { FinancialRates } from "../entities/types";
 
 export interface DrawFinancialInput {
   /** Tổng doanh thu = Σ(entry.amount). */
@@ -26,8 +23,6 @@ export interface DrawFinancialInput {
     /** Hoa hồng = revenue × commissionRate. */
     commission: number;
   }>;
-  /** Tỷ lệ phần trăm phần công ty (từ config). */
-  companyRate: number;
 }
 
 export interface DrawFinancialResult {
@@ -37,42 +32,28 @@ export interface DrawFinancialResult {
   totalFixedPrizes: number;
   /** Tổng hoa hồng đại lý = Σ(tenant.commission). */
   totalAgentCommission: number;
-  /** Phần công ty (requested) = companyRate × totalRevenue. */
-  companyTake: number;
-  /** Phần công ty thực tế = min(companyTake, revenue - prizes - commission). Bảo vệ khỏi lỗ. */
-  actualCompanyTake: number;
-  /** Lợi nhuận = revenue - prizes - commission - actualCompanyTake. Luôn >= 0. */
+  /** Lợi nhuận = revenue - prizes - commission. Có thể âm (công ty chịu lỗ). */
   profit: number;
 }
 
 /**
  * Tính tài chính tổng hợp cho 1 kỳ quay Max 3D Pro.
  *
- * Max 3D Pro không có Jackpot. Phần còn lại sau prizes + commission + companyTake → profit.
- * actualCompanyTake được cap để không vượt quá phần remaining (bảo vệ khỏi lỗ).
- *
- * @param input - Dữ liệu tổng hợp từ DB
- * @returns Kết quả tài chính gồm profit, actualCompanyTake và tenant breakdown
+ * Max 3D Pro không có Jackpot. Công ty thu toàn bộ phần còn lại.
+ * profit = totalRevenue - totalFixedPrizes - totalAgentCommission
+ * profit có thể âm khi tổng giải thưởng + hoa hồng > doanh thu.
  */
 export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
-  const { totalRevenue, totalFixedPrizes, tenantRevenues, companyRate } = input;
+  const { totalRevenue, totalFixedPrizes, tenantRevenues } = input;
 
   const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
 
-  const companyTake = Math.round(totalRevenue * companyRate);
-
-  const remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission;
-
-  const actualCompanyTake = Math.min(companyTake, Math.max(remainAfterPrizes, 0));
-
-  const profit = Math.max(remainAfterPrizes - actualCompanyTake, 0);
+  const profit = totalRevenue - totalFixedPrizes - totalAgentCommission;
 
   return {
     totalRevenue,
     totalFixedPrizes,
     totalAgentCommission,
-    companyTake,
-    actualCompanyTake,
     profit,
   };
 }

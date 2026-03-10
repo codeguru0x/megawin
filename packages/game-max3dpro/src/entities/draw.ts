@@ -41,12 +41,8 @@ export interface DrawFinancial {
   totalFixedPrizes: number;
   /** Hoa hồng đại lý = Σ(tenant.revenue × tenant.commissionRate). */
   totalAgentCommission: number;
-  /** Phần công ty (requested) = companyRate × totalRevenue. */
+  /** = profit cho games không có Jackpot. */
   companyTake: number;
-  /** Tỷ lệ phần trăm công ty (snapshot từ config). */
-  companyTakeRate: number;
-  /** Giá trị tối đa company take = companyRate × totalRevenue. */
-  companyTakeMax: number;
 }
 
 /** Thống kê tổng hợp kỳ quay. */

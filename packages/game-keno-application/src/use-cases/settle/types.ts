@@ -49,15 +49,14 @@ export interface KenoDrawResult {
  * Config settle — output PrepareSettle, dùng bởi nhiều steps.
  *
  * Chứa tất cả config cần thiết cho settle flow:
- *   - companyRate         → CalculateFinancials (tính phần công ty)
  *   - basicPrizes         → SettleEntries (tra bảng giải) + ApplyPayoutCaps (lấy fixedPrize)
  *   - bigSmallPrizes      → SettleEntries (match side bet Lớn/Nhỏ)
  *   - evenOddPrizes       → SettleEntries (match side bet Chẵn/Lẻ)
  *   - payoutCaps          → ApplyPayoutCaps (giới hạn trả thưởng bậc 8/9/10)
+ *
+ * Keno không cần companyRate — không có Jackpot, công ty thu toàn bộ phần dư.
  */
 export interface KenoSettleConfig {
-  /** Tỷ lệ phần công ty (0–1). Ví dụ: 0.15 = 15%. */
-  companyRate: number;
   /** Bảng giải thưởng cách chơi cơ bản. Key: "pick{N}", Value: { matchCount (string): prize }. */
   basicPrizes: Record<string, Record<string, number>>;
   /** Bảng giải thưởng side bet Lớn/Nhỏ (VND). */
@@ -90,8 +89,8 @@ export interface SettleFinancials {
   totalPrizes: number;
   /** Tổng hoa hồng đại lý = Σ(tenant commission) (VND). */
   totalAgentCommission: number;
-  /** Phần công ty = Math.round(totalRevenue × companyRate) (VND). */
-  companyTake: number;
+  /** Lợi nhuận công ty = totalRevenue - totalPrizes - totalAgentCommission (VND). Có thể âm. */
+  profit: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -153,7 +152,7 @@ export interface SettleContext {
 
   /**
    * Cấu hình settle — snapshot từ GlobalConfig tại thời điểm PrepareSettle.
-   * Gồm companyRate, basicPrizes, bigSmallPrizes, evenOddPrizes, payoutCaps.
+   * Gồm basicPrizes, bigSmallPrizes, evenOddPrizes, payoutCaps.
    * Config snapshot KHÔNG thay đổi giữa các step.
    */
   config: KenoSettleConfig;

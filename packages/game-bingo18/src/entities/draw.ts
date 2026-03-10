@@ -56,7 +56,7 @@ export interface DrawFinancial {
   totalPrizes: number;
   /** Hoa hồng đại lý = Σ(tenant.revenue × tenant.commissionRate). */
   totalAgentCommission: number;
-  /** Phần công ty = totalRevenue × companyRate (từ global config). */
+  /** Phần công ty. Bingo 18 không có Jackpot nên companyTake = profit (toàn bộ phần còn lại sau giải thưởng và hoa hồng). */
   companyTake: number;
 }
 

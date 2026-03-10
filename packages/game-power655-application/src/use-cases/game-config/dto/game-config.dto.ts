@@ -21,14 +21,14 @@ export interface GetGameConfigOutput {
 
 export interface UpdateGameConfigInput {
   /**
-   * Cấu hình Jackpot: dual JP (JP1/JP2 seed, contribution ratios, overflow, split).
+   * Cấu hình Jackpot: dual JP (JP1/JP2 seed, contribution ratios, overflow threshold).
    * - jackpot1.seedAmount: giá trị khởi tạo JP1 khi bắt đầu cycle mới
    * - jackpot2.seedAmount: giá trị khởi tạo JP2 khi bắt đầu cycle mới
    * - jp1ContributionRatio: tỷ lệ doanh thu đóng góp vào JP1
    * - jp2ContributionRatio: tỷ lệ doanh thu đóng góp vào JP2
    * - jp1OverflowThreshold: ngưỡng tràn JP1 (VND), phần vượt chuyển sang JP2
-   * - splitThreshold: ngưỡng tổng JP để kích hoạt chia giải
-   * - splitRatios: tỷ lệ chia giải cho tier1/tier2/tier3
+   *
+   * Theo luật Vietlott, Power 6/55 KHÔNG CÓ Split Cycle.
    */
   jackpot?: Partial<JackpotConfig>;
   /**

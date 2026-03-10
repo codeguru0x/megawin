@@ -1,19 +1,12 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type {
-  ListDrawsInput,
-  ListDrawsOutput,
-  DrawSummary,
-} from "./dto/draw.dto";
+import type { ListDrawsInput, ListDrawsOutput, DrawSummary } from "./dto/draw.dto";
 
 /**
  * Danh sách kỳ quay Power 6/55 cho backoffice.
  * Hỗ trợ filter theo status, date range, pagination.
  */
-export class ListDrawsUseCase extends NextApiUseCase<
-  ListDrawsInput,
-  ListDrawsOutput
-> {
+export class ListDrawsUseCase extends NextApiUseCase<ListDrawsInput, ListDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
 
   /** @inheritdoc */
@@ -27,7 +20,7 @@ export class ListDrawsUseCase extends NextApiUseCase<
         toDate: input.toDate,
       },
       page,
-      size
+      size,
     );
 
     const summaries: DrawSummary[] = draws.map((d) => ({
@@ -41,7 +34,6 @@ export class ListDrawsUseCase extends NextApiUseCase<
       jackpot2Amount: d.jackpot?.openingJackpot2,
       jackpot1ClosingAmount: d.jackpot?.closingJackpot1,
       jackpot2ClosingAmount: d.jackpot?.closingJackpot2,
-      isSplitCycle: d.jackpot?.isSplitCycle ?? false,
       hasResult: !!d.result,
       totalEntries: d.stats?.totalEntries,
       totalRevenue: d.financial?.totalRevenue,

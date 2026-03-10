@@ -13,14 +13,14 @@
  *   - Financial: jackpotContribution (single)
  */
 
-import { Mega645Collections } from "@megawin/game-mega645/entities";
+import { Mega645Collections, PrizeTier } from "@megawin/game-mega645/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type {
   DrawDoc,
-  DrawSplit,
   DrawJackpotSnapshot,
   DrawFinancial,
   DrawStats,
+  DrawSettleSummary,
   MainTuple,
   ISODateString,
 } from "@megawin/game-mega645/entities";
@@ -124,12 +124,11 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   /**
    * Chuyển draw settling → settled + ghi jackpot snapshot.
-   * Dùng dot notation để chỉ cập nhật các field cần thiết,
-   * tránh overwrite jackpot.split đã set bởi triggerSettle().
+   * Dùng dot notation để chỉ cập nhật các field cần thiết.
    */
   async settleComplete(
     drawId: string,
-    jackpot: Pick<DrawJackpotSnapshot, "openingAmount" | "closingAmount" | "isSplitCycle">,
+    jackpot: Pick<DrawJackpotSnapshot, "openingAmount" | "closingAmount">,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Settling];
     if (!allowed?.has(DrawStatus.Settled)) return null;
@@ -142,9 +141,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       settledAt: now,
       updatedAt: now,
     };
-    if (jackpot.isSplitCycle !== undefined) {
-      $set["jackpot.isSplitCycle"] = jackpot.isSplitCycle;
-    }
 
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Settling },
@@ -280,49 +276,113 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
-   * Trigger settle: published → settling + ghi jackpot split info.
+   * Trigger settle: published → settling.
+   * Mega 6/45 không có split info — chỉ chuyển status.
    */
-  async triggerSettle(
-    drawId: string,
-    splitInfo?: {
-      isSplitCycle: boolean;
-      split: DrawSplit;
-    },
-  ): Promise<DrawEntity | null> {
+  async triggerSettle(drawId: string): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Published];
     if (!allowed?.has(DrawStatus.Settling)) return null;
 
-    const $set: Record<string, unknown> = {
-      status: DrawStatus.Settling,
-      updatedAt: new Date(),
-    };
-    if (splitInfo) {
-      $set["jackpot.isSplitCycle"] = splitInfo.isSplitCycle;
-      $set["jackpot.split"] = splitInfo.split;
-    }
-
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Published },
-      { $set },
+      {
+        $set: {
+          status: DrawStatus.Settling,
+          updatedAt: new Date(),
+        },
+      },
       { returnDocument: "after" },
     );
   }
 
+  /**
+   * Ghi financial + stats + settleSummary vào DrawDoc sau khi settle hoàn tất.
+   *
+   * Overwrite toàn bộ financial và stats (set lần đầu, không partial update).
+   * settleSummary là optional — chỉ ghi khi được truyền vào.
+   *
+   * Tất cả fields ghi trong 1 lần `$set` duy nhất — tối thiểu DB call.
+   */
   async updateSettleResult(
     drawId: string,
     financial: DrawFinancial,
     stats: DrawStats,
+    settleSummary?: DrawSettleSummary,
+  ): Promise<boolean> {
+    const $set: Record<string, unknown> = {
+      financial,
+      stats,
+      updatedAt: new Date(),
+    };
+    if (settleSummary !== undefined) {
+      $set.settleSummary = settleSummary;
+    }
+    return await this.updateOne({ drawId }, { $set });
+  }
+
+  /**
+   * Cập nhật jackpot tier prizeAmount trong settleSummary sau khi FinalizeSettle tính pool.
+   *
+   * Dùng dot notation để chỉ cập nhật 1 phần tử mảng (tier = "jackpot").
+   * Idempotent: set cùng giá trị nhiều lần cho kết quả giống nhau.
+   */
+  async patchSettleSummaryJackpotPrize(
+    drawId: string,
+    jackpotPrizeAmount: number,
   ): Promise<boolean> {
     return await this.updateOne(
-      { drawId },
+      {
+        drawId,
+        "settleSummary.tiers.tier": PrizeTier.Jackpot,
+      },
       {
         $set: {
-          financial,
-          stats,
+          "settleSummary.tiers.$.prizeAmount": jackpotPrizeAmount,
           updatedAt: new Date(),
         },
       },
     );
+  }
+
+  /**
+   * Danh sách kỳ quay đã settle — cursor-based pagination, xem ngược về quá khứ.
+   * Chỉ trả draws có kết quả (status = "settled", result tồn tại).
+   * Sort: drawId desc (mới nhất trước).
+   *
+   * drawId format "YYYY-MM-DD.NNN" → lexicographic order = chronological order.
+   *
+   * `from` là upper bound: trả về tất cả draws CŨ HƠN HOẶC BẰNG ngày from,
+   * đi ngược về quá khứ.
+   *
+   * Cursor pagination:
+   *   - Trang đầu (không có cursor): filter drawId <= "${from}.999"
+   *   - Trang tiếp theo (có cursor): filter drawId < cursor.
+   *
+   * Index dùng: { status: 1, drawId: -1 } → idx_status_drawId_desc
+   */
+  async listSettledDraws(filter: {
+    from: string;
+    size: number;
+    cursor?: string;
+  }): Promise<DrawEntity[]> {
+    const query: Record<string, unknown> = {
+      status: DrawStatus.Settled,
+      result: { $exists: true },
+    };
+
+    if (!filter.cursor) {
+      // Trang đầu: bắt đầu từ ngày from đi về quá khứ.
+      // ".999" là safe upper bound (Mega645 chỉ quay 1 kỳ/ngày, ".001" < ".999").
+      query.drawId = { $lte: `${filter.from}.999` };
+    } else {
+      // Paginate: cursor encode đầy đủ vị trí
+      query.drawId = { $lt: filter.cursor };
+    }
+
+    return await this.findMany(query, {
+      sort: { drawId: -1 },
+      limit: filter.size,
+    });
   }
 
   async getLatestDraw(): Promise<DrawEntity | null> {
@@ -437,6 +497,41 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     if (vietlottRef) $set.vietlottRef = vietlottRef;
 
     return await this.updateOne({ drawId, status: DrawStatus.Published }, { $set });
+  }
+
+  /**
+   * Tăng stats.totalPayoutAmount thêm amount sau khi patch Jackpot prize vào entries.
+   *
+   * Dùng $inc — KHÔNG idempotent, phải guard bởi caller:
+   * chỉ gọi khi patchJackpotPrize trả về modifiedCount > 0
+   * (entries chưa được patch → $inc chạy đúng 1 lần).
+   */
+  async incrementTotalPayout(drawId: string, amount: number): Promise<void> {
+    await this.updateOne({ drawId }, { $inc: { "stats.totalPayoutAmount": amount } as any });
+  }
+
+  /**
+   * Tìm draw tiếp theo (sau drawId hiện tại) đang ở trạng thái chờ xử lý.
+   * Dùng bởi FinalizeSettle để lấy startDrawId cho jackpot cycle mới.
+   *
+   * Index đề xuất: `{ drawId: 1, status: 1 }` — range scan từ afterDrawId, limit 1.
+   */
+  async findNextPendingDraw(afterDrawId: string): Promise<DrawEntity | null> {
+    return await this.findOne(
+      {
+        drawId: { $gt: afterDrawId },
+        status: {
+          $in: [
+            DrawStatus.Scheduled,
+            DrawStatus.SalesOpen,
+            DrawStatus.SalesClosed,
+            DrawStatus.Published,
+            DrawStatus.Settling,
+          ],
+        },
+      },
+      { sort: { drawId: 1 } },
+    );
   }
 }
 

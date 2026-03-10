@@ -49,13 +49,11 @@ export type JackpotCycleCloseReason =
 export interface JackpotWinnerInfo {
   /** ID tài khoản người chơi. */
   accountId: string;
-  /** Username hiển thị. */
-  username?: string;
+  /** Tên đăng nhập người trúng. */
+  username: string;
   /** ID tenant / đại lý. */
   tenantId: string;
-  /** Tên tenant (snapshot). */
-  tenantName?: string;
-  /** Số tiền trúng. */
+  /** Số tiền trúng (VND). */
   prizeAmount: number;
   /** ID entry trúng giải. */
   entryId: string;

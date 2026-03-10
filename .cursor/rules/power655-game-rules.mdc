@@ -53,13 +53,13 @@ Giá trị trong bảng dưới là **mặc định tham khảo**. Thực tế �
 
 Mỗi line chỉ trúng hạng **CAO NHẤT** phù hợp. So khớp dựa trên mainMatchCount + bonusMatched.
 
-| Hạng | Code | Điều kiện | Giá trị mặc định (VND) | Tích luỹ? | Split eligible |
-|------|------|-----------|------------------------|-----------|----------------|
-| Jackpot 1 | `jackpot1` | 6/6 số chính | Tích lũy (tối thiểu 30 tỷ) | Có | Không |
-| Jackpot 2 | `jackpot2` | 5/6 số + bonus number | Tích lũy (tối thiểu 3 tỷ) | Có | Không |
-| Giải Nhất | `tier1` | 5/6 số (không trùng bonus) | 40.000.000 | Không | Có |
-| Giải Nhì | `tier2` | 4/6 số | 500.000 | Không | Có |
-| Giải Ba | `tier3` | 3/6 số | 50.000 | Không | Có |
+| Hạng | Code | Điều kiện | Giá trị mặc định (VND) | Tích luỹ? |
+|------|------|-----------|------------------------|-----------|
+| Jackpot 1 | `jackpot1` | 6/6 số chính | Tích lũy (seed mặc định 30 tỷ) | Có |
+| Jackpot 2 | `jackpot2` | 5/6 số + bonus number | Tích lũy (seed mặc định 3 tỷ) | Có |
+| Giải Nhất | `tier1` | 5/6 số (không trùng bonus) | 40.000.000 | Không |
+| Giải Nhì | `tier2` | 4/6 số | 500.000 | Không |
+| Giải Ba | `tier3` | 3/6 số | 50.000 | Không |
 
 **Logic xác định tier** (`prize-tiers.ts`):
 ```
@@ -166,27 +166,17 @@ Khi JP1 vượt ngưỡng `jp1OverflowThreshold` (mặc định 300 tỷ):
 - **2 jackpot chạy SONG SONG** trong cùng 1 cycle
 - `jackpot1Opening`, `jackpot1Current` (trùng 6/6)
 - `jackpot2Opening`, `jackpot2Current` (trùng 5/6 + bonus)
-- **Seed**: JP1 = 30 tỷ, JP2 = 3 tỷ
-- **Closed reasons**: `jackpot1_winner`, `jackpot2_winner`, `both_winner`, `split`
+- **Seed**: JP1 seed amount, JP2 seed amount (cấu hình trong GlobalConfig, mặc định 30 tỷ và 3 tỷ)
+- **Closed reasons**: `jackpot1_winner`, `jackpot2_winner`, `both_winner`, `manual_reset`
 
-### 6.4 Rollover
+### 6.4 Rollover (Theo luật Vietlott chính thức)
 
-- **Có JP1 winner**: JP1 reseed 30 tỷ + contribution kỳ đó. JP2 giữ nguyên (trừ khi cũng có winner)
-- **Có JP2 winner**: JP2 reseed 3 tỷ + contribution kỳ đó. JP1 giữ nguyên
-- **Không có winner**: JP1 = opening + contribution, JP2 = opening + contribution
+- **Có JP1 winner**: Winner nhận toàn bộ JP1 pool = jp1OpeningAmount + jp1Contribution kỳ đó. Nhiều winners → chia đều (floor). Cycle mới bắt đầu từ **jp1SeedAmount** (lấy từ GlobalConfig, KHÔNG cộng contribution vì đã trao cho winner). JP2 giữ nguyên (trừ khi cũng có winner)
+- **Có JP2 winner**: Winner nhận toàn bộ JP2 pool = jp2OpeningAmount + jp2Contribution kỳ đó. Nhiều winners → chia đều (floor). Cycle mới bắt đầu từ **jp2SeedAmount** (lấy từ GlobalConfig, KHÔNG cộng contribution vì đã trao cho winner). JP1 giữ nguyên
+- **Không có winner**: JP1 = opening + jp1Contribution, JP2 = opening + jp2Contribution
+- **Không có winner, JP1 > overflow threshold**: phần vượt ngưỡng chuyển sang JP2 (xem 6.2)
 
-### 6.5 Split Cycle (Chia giải Jackpot)
-
-**Điều kiện kích hoạt**:
-1. Tổng JP1 + JP2 >= `splitThreshold` (mặc định 500 tỷ)
-2. Không ai trúng Jackpot (cả JP1 và JP2)
-
-**Tỷ lệ chia** (mặc định, tổng = 4 phần):
-- tier1 (Giải Nhất): 2/4 = 50%
-- tier2 (Giải Nhì): 1/4 = 25%
-- tier3 (Giải Ba): 1/4 = 25%
-
-**Quy trình chia**: Tier không có người trúng → redistribute cho tier có người trúng. Làm tròn xuống 5.000 VND, phần dư cộng vào tier cao nhất có winner. Sau split: JP1 reseed 30 tỷ, JP2 reseed 3 tỷ.
+> **QUAN TRỌNG**: Power 6/55 theo luật Vietlott **KHÔNG CÓ** cơ chế "Split Cycle" chia Jackpot xuống giải Nhất/Nhì/Ba khi vượt ngưỡng. Jackpot luôn tích lũy không giới hạn cho đến khi có winner.
 
 ---
 
@@ -241,13 +231,12 @@ Gross margin (không tính Jackpot): ~86.63% (8.663 VND/line)
 | Tập số | 01-55, chọn 6 | 01-45, chọn 6 | 01-35 chính + 01-12 ĐB |
 | Bonus number | CÓ (1 số từ 49 còn lại) | KHÔNG | KHÔNG (có special riêng) |
 | Jackpot pools | 2 (JP1 + JP2) | 1 | 1 |
-| JP1 seed | 30 tỷ | 12 tỷ | 6 tỷ |
-| JP2 seed | 3 tỷ | N/A | N/A |
+| JP1 seed | 30 tỷ (mặc định) | 12 tỷ (mặc định) | 6 tỷ (mặc định) |
+| JP2 seed | 3 tỷ (mặc định) | N/A | N/A |
 | Hạng giải | 5 (JP1, JP2, Nhất, Nhì, Ba) | 4 (JP, Nhất, Nhì, Ba) | 7 (JP, 5 tier + Consolation) |
 | JP contribution | 90% JP1 / 10% JP2 | 100% vào 1 pool | 100% vào 1 pool |
-| Overflow | JP1 > 300 tỷ → JP2 | N/A | N/A |
-| Split threshold | 500 tỷ (JP1+JP2) | 12 tỷ | 6 tỷ |
-| Split ratios | 2/4, 1/4, 1/4 | 2/5, 2/5, 1/5 | 2/6, 1/6, 1/6, 1/6, 1/6 |
+| Overflow | JP1 > overflow threshold → JP2 | N/A | N/A |
+| Split cycle | **KHÔNG CÓ** (theo luật Vietlott) | **KHÔNG CÓ** (theo luật Vietlott) | N/A |
 | Lịch quay | T3, T5, T7 | T4, T6, CN | 2 lần/ngày |
 | Không gian mẫu | C(55,6) = 28.989.675 | C(45,6) = 8.145.060 | C(35,5)×C(12,1) ≈ 3.892.680 |
 | Max boards | 5 (A-E) | 6 (A-F) | 5 (A-E) |
@@ -264,10 +253,10 @@ Gross margin (không tính Jackpot): ~86.63% (8.663 VND/line)
 ### 10.1 Settle pipeline
 
 ```
-prepare-settle → settle-entries → calculate-financials → apply-split-bonuses → build-report → finalize-settle → sync-ticket-summaries
+prepare-settle → settle-entries → calculate-financials → sync-ticket-summaries → build-report → finalize-settle → dispatch-payouts
 ```
 
-Đặc biệt ở Power 6/55: `calculate-financials` tính **dual jackpot** (jp1Contribution, jp2Contribution, jp1Overflow). `apply-split-bonuses` kích hoạt khi tổng JP1+JP2 >= splitThreshold.
+Đặc biệt ở Power 6/55: `calculate-financials` tính **dual jackpot** (jp1Contribution, jp2Contribution, jp1Overflow). **Không có bước apply-split-bonuses** vì Power 6/55 không có cơ chế split cycle.
 
 ### 10.2 Void pipeline
 
@@ -286,7 +275,7 @@ src/
 ├── entities/
 │   ├── enums.ts           # PrizeTier (jackpot1, jackpot2, tier1-3), PlayType (standard, bao7-18, quickPick)
 │   ├── types.ts           # MainTuple (6 số), BonusNumber, BoardSelection, LineValue,
-│   │                      # PrizeAmounts, JackpotConfig (dual JP), SplitRatios, FinancialRates, PlayRules
+│   │                      # PrizeAmounts, JackpotConfig (dual JP + overflow), FinancialRates, PlayRules
 │   ├── draw.ts            # DrawDoc (result: winningMain + bonusNumber)
 │   ├── ticket.ts          # TicketDoc, Board (max 5 boards A-E)
 │   ├── entry.ts           # TicketEntryDoc
@@ -300,7 +289,7 @@ src/
 │   ├── play-types.ts      # combination(), calculateLineCount(), validateSelection()
 │   ├── odds.ts            # TOTAL_MAIN_OUTCOMES = C(55,6) = 28,989,675, getOddsTable(), analyzeProfitability()
 │   └── jackpot.ts         # calculateDrawFinancials() (dual JP + overflow),
-│                          # calculateNextJackpot1/2(), isSplitCycleDraw(), calculateSplitDistribution()
+│                          # calculateDrawFinancials() (dual JP + overflow) — KHÔNG CÓ split logic
 ├── helpers/
 │   ├── match-result.ts    # countMainMatches(), checkBonusMatch(), matchLine(), matchLines()
 │   ├── expand-lines.ts    # expandBoardToLines(), expandAllBoards()
@@ -322,7 +311,7 @@ src/
     ├── draws/             # create, list, get-detail, get-current, preview,
     │                      # open-sales, close-sales, publish-result, trigger-settle, void
     ├── settle/            # prepare → settle-entries → calculate-financials (dual JP) →
-    │                      # apply-split-bonuses → build-report → finalize → sync-ticket
+    │                      # sync-ticket-summaries → build-report → finalize → dispatch-payouts
     ├── place-bet/         # place-bet
     ├── void/              # prepare → void-entries → dispatch-refunds → finalize
     ├── payout/            # dispatch-payout
@@ -369,12 +358,12 @@ Routes: draws, config, tenant-config, jackpot, operations.
 4. **Số lưu string zero-padded**: "01"-"55" (2 ký tự)
 5. **Tiền lưu integer VND**: Không dùng float
 6. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc`, có thể thay đổi bởi staff
-7. **Overflow mechanism**: JP1 > 300 tỷ → phần vượt tự động chuyển sang JP2 — logic quan trọng trong `calculateDrawFinancials()`
-8. **Split threshold cao**: 500 tỷ (tổng JP1+JP2), cao hơn rất nhiều so với Mega 6/45 (12 tỷ) và Lotto 5/35 (6 tỷ)
-9. **Split ratios**: tier1=2/4, tier2=1/4, tier3=1/4 (50%/25%/25%) — khác Mega 6/45 (40%/40%/20%)
-10. **KHÔNG có Bao 5**: Chỉ có Bao 7-18 và Standard/QuickPick (khác Mega 6/45)
-11. **5 boards A-E**: Khác Mega 6/45 (6 boards A-F)
-12. **3 lần/tuần**: T3, T5, T7 — khác Mega 6/45 (T4, T6, CN)
-13. **determineTier cần 2 tham số**: `determineTier(mainMatchCount, bonusMatched)` — khác Mega 6/45 chỉ cần mainMatchCount
-14. **Lines tạo khi settle**: Expand boards → lines khi settle, giống Mega 6/45 và Lotto 5/35
-15. **Commission snapshot**: commissionRate snapshot lúc place-bet, không thay đổi khi config update sau
+7. **Overflow mechanism**: JP1 > jp1OverflowThreshold → phần vượt tự động chuyển sang JP2 — logic quan trọng trong `calculateDrawFinancials()`. Giá trị ngưỡng cấu hình trong GlobalConfig (mặc định 300 tỷ).
+8. **KHÔNG CÓ Split Cycle**: Theo luật Vietlott gốc, Power 6/55 KHÔNG có cơ chế chia Jackpot xuống giải Nhất/Nhì/Ba. Jackpot chỉ tích lũy đến khi có winner.
+9. **KHÔNG có Bao 5**: Chỉ có Bao 7-18 và Standard/QuickPick (khác Mega 6/45)
+10. **5 boards A-E**: Khác Mega 6/45 (6 boards A-F)
+11. **3 lần/tuần**: T3, T5, T7 — khác Mega 6/45 (T4, T6, CN)
+12. **determineTier cần 2 tham số**: `determineTier(mainMatchCount, bonusMatched)` — khác Mega 6/45 chỉ cần mainMatchCount
+13. **Lines tạo khi settle**: Expand boards → lines khi settle, giống Mega 6/45 và Lotto 5/35
+14. **Commission snapshot**: commissionRate snapshot lúc place-bet, không thay đổi khi config update sau
+15. **Các giá trị ngưỡng là mặc định tham khảo**: jp1OverflowThreshold (mặc định 300 tỷ), jp1SeedAmount (mặc định 30 tỷ), jp2SeedAmount (mặc định 3 tỷ) — tất cả đọc từ GlobalConfig, operator có thể thay đổi.

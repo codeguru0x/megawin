@@ -1,26 +1,22 @@
 "use client";
 
-import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
+import Link from "next/link";
+import { CalendarClock, ExternalLink, ListOrdered, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { useCurrentDraw } from "./_lib/use-draws";
-import { useGameConfig } from "../config/_lib/use-game-config";
-import { CreateDrawDialog } from "./_lib/create-draw-dialog";
 import {
   Lotto535PrimaryDrawCard,
   Lotto535QueueDrawCard,
-} from "./_lib/active-draw-card";
+} from "@/components/games/lotto535/active-draw-card";
 import { DrawHistorySection } from "./_lib/draw-history-section";
 
 export default function AdminDrawsPage() {
   const { data, isLoading } = useCurrentDraw();
-  const { data: gameConfig } = useGameConfig();
 
   const activeDraws = data?.activeDraws ?? [];
   const primaryDraw = activeDraws[0] ?? null;
   const queueDraws = activeDraws.slice(1);
-
-  const drawTimes = gameConfig?.play.drawTimes ?? ["13:00", "21:00"];
-  const drawsPerDay = gameConfig?.play.drawsPerDay ?? 2;
 
   return (
     <div className="@container/main flex flex-col gap-6">
@@ -32,15 +28,11 @@ export default function AdminDrawsPage() {
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Lotto 5/35 — Quản lý kỳ quay
+              Lotto 5/35 — Kỳ quay
             </h1>
-            <p className="text-xs text-muted-foreground">
-              {drawsPerDay} kỳ/ngày ({drawTimes.join(" & ")}). Mở/đóng bán,
-              công bố kết quả, kết sổ.
-            </p>
+            <p className="text-xs text-muted-foreground">Tổng quan kỳ quay hiện tại và lịch sử</p>
           </div>
         </div>
-        <CreateDrawDialog />
       </div>
 
       {/* Active Draws */}
@@ -50,17 +42,13 @@ export default function AdminDrawsPage() {
         </div>
       ) : primaryDraw ? (
         <div className="space-y-5">
-          {/* Primary — kỳ đang xử lý */}
           <Lotto535PrimaryDrawCard draw={primaryDraw} />
 
-          {/* Queue — các kỳ tiếp theo */}
           {queueDraws.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <ListOrdered className="size-4 text-muted-foreground" />
-                <h2 className="text-sm font-semibold text-foreground">
-                  Hàng chờ
-                </h2>
+                <h2 className="text-sm font-semibold text-foreground">Hàng chờ</h2>
                 <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
                   {queueDraws.length} kỳ
                 </span>
@@ -79,11 +67,16 @@ export default function AdminDrawsPage() {
             <CalendarClock className="size-5 text-muted-foreground/50" />
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">
-              Không có kỳ đang vận hành
-            </p>
+            <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Nhấn &ldquo;Tạo kỳ quay&rdquo; để bắt đầu kỳ mới.
+              Vào trang{" "}
+              <Link
+                href="/games/lotto535/operations"
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                Vận hành
+              </Link>{" "}
+              để tạo kỳ mới.
             </p>
           </div>
         </div>

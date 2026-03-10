@@ -23,12 +23,15 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     return this.findOne({ status: JackpotCycleStatus.Active });
   }
 
-  /** Tạo cycle mới. */
+  /** Tạo cycle mới. Guard: skip nếu đã có active cycle (idempotent khi retry). */
   async createCycle(input: {
     startDrawId: string;
     seedAmount: number;
     config: { splitThreshold: number; splitRatios: SplitRatios };
   }): Promise<void> {
+    const existing = await this.findOne({ status: JackpotCycleStatus.Active });
+    if (existing) return;
+
     const maxCycle = await this.findOne({}, { sort: { cycleNo: -1 } });
     const cycleNo = (maxCycle?.cycleNo ?? 0) + 1;
     const now = new Date();

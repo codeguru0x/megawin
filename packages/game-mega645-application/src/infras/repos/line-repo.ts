@@ -7,7 +7,7 @@
  * upsertLines() dùng bulkWrite + $setOnInsert → idempotent khi retry.
  */
 
-import { Mega645Collections } from "@megawin/game-mega645/entities";
+import { Mega645Collections, PrizeTier } from "@megawin/game-mega645/entities";
 import type { TicketLineDoc } from "@megawin/game-mega645/entities";
 import { ObjectId } from "mongodb";
 import { BaseRepo } from "./base-repo";
@@ -48,7 +48,7 @@ export class LineRepository extends BaseRepo<any> {
    */
   async getLinesByEntryId(
     entryId: string,
-    options: { size?: number; cursor?: number } = {}
+    options: { size?: number; cursor?: number } = {},
   ): Promise<{ lines: TicketLineDoc[]; hasMore: boolean }> {
     const { size = 50, cursor } = options;
     const col = await this.getCollection();
@@ -68,5 +68,26 @@ export class LineRepository extends BaseRepo<any> {
     const slice = hasMore ? lines.slice(0, size) : lines;
 
     return { lines: slice as unknown as TicketLineDoc[], hasMore };
+  }
+
+  /**
+   * Patch winAmount cho tất cả lines trúng Jackpot trong draw.
+   *
+   * Idempotent: chỉ update lines có matchResult.tier = "jackpot" và winAmount = 0
+   * (chưa được patch lần nào). Lines đã có winAmount > 0 sẽ bị skip.
+   */
+  async patchJackpotLineWinAmount(drawId: string, jackpotPerWinner: number): Promise<number> {
+    const result = await this.updateMany(
+      {
+        drawId,
+        "matchResult.tier": PrizeTier.Jackpot,
+        // Chỉ update lines có winAmount = 0 tránh cập nhật lại
+        "matchResult.winAmount": 0,
+      },
+      {
+        $set: { "matchResult.winAmount": jackpotPerWinner },
+      },
+    );
+    return result.modifiedCount;
   }
 }

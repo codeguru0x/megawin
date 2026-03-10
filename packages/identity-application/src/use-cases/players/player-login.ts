@@ -42,18 +42,12 @@ import {
   COGNITO_PLAYER_POOL_ID,
   COGNITO_PLAYER_POOL_CLIENT_ID,
 } from "@megawin/app-core/aws/cognito";
-import {
-  AccountType,
-  AccountStatus,
-  PlayerRole,
-} from "@megawin/identity/entities";
+import { AccountType, AccountStatus, PlayerRole } from "@megawin/identity/entities";
 import { ClaimKey } from "@megawin/identity/entities/claim";
 
 import { AccountRepository } from "../../infras/repos/account-repo";
-import type {
-  PlayerLoginInput,
-  PlayerLoginOutput,
-} from "./dto/player-login.dto";
+import type { PlayerLoginInput, PlayerLoginOutput } from "./dto/player-login.dto";
+import { toUsername } from "../../shared";
 
 const PLAYER_PASSWORD_SECRET = process.env.PLAYER_PASSWORD_SECRET;
 
@@ -61,33 +55,22 @@ function derivePlayerPassword(cognitoUsername: string): string {
   return `Pw@68.${createHmac("sha256", PLAYER_PASSWORD_SECRET!).update(cognitoUsername).digest("base64url").slice(0, 28)}`;
 }
 
-export class PlayerLoginUseCase extends ApiGatewayUseCase<
-  PlayerLoginInput,
-  PlayerLoginOutput
-> {
+export class PlayerLoginUseCase extends ApiGatewayUseCase<PlayerLoginInput, PlayerLoginOutput> {
   private readonly accountRepo = new AccountRepository();
 
   protected async execute(input: PlayerLoginInput): Promise<PlayerLoginOutput> {
     const { playerExternalId, tenantId } = input;
-    const cognitoUsername = `${playerExternalId}@${tenantId}`.toLowerCase();
+    const cognitoUsername = toUsername(playerExternalId, tenantId);
 
     this.assertConfig();
 
-    const accountExists =
-      await this.accountRepo.usernameExists(cognitoUsername);
+    const accountExists = await this.accountRepo.usernameExists(cognitoUsername);
 
     if (!accountExists) {
-      await this.createPlayerAccount(
-        cognitoUsername,
-        playerExternalId,
-        tenantId
-      );
+      await this.createPlayerAccount(cognitoUsername, playerExternalId, tenantId);
     }
 
-    return this.getCognitoTokens(
-      cognitoUsername,
-      derivePlayerPassword(cognitoUsername)
-    );
+    return this.getCognitoTokens(cognitoUsername, derivePlayerPassword(cognitoUsername));
   }
 
   private assertConfig() {
@@ -95,9 +78,7 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
       throw AppException.internal("COGNITO_PLAYER_POOL_ID chưa được cấu hình");
     }
     if (!COGNITO_PLAYER_POOL_CLIENT_ID) {
-      throw AppException.internal(
-        "COGNITO_PLAYER_POOL_CLIENT_ID chưa được cấu hình"
-      );
+      throw AppException.internal("COGNITO_PLAYER_POOL_CLIENT_ID chưa được cấu hình");
     }
     if (!PLAYER_PASSWORD_SECRET) {
       throw AppException.internal("PLAYER_PASSWORD_SECRET chưa được cấu hình");
@@ -107,17 +88,12 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
   private async createPlayerAccount(
     cognitoUsername: string,
     displayName: string,
-    tenantId: string
+    tenantId: string,
   ) {
     const accountId = generateULID();
     const password = derivePlayerPassword(cognitoUsername);
 
-    const cognitoSub = await this.ensureCognitoUser(
-      cognitoUsername,
-      password,
-      accountId,
-      tenantId
-    );
+    const cognitoSub = await this.ensureCognitoUser(cognitoUsername, password, accountId, tenantId);
 
     const account = await this.accountRepo.findOrCreatePlayerAccount(
       cognitoUsername,
@@ -127,7 +103,7 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
       AccountStatus.Active,
       COGNITO_PLAYER_POOL_ID!,
       cognitoSub,
-      cognitoUsername
+      cognitoUsername,
     );
 
     if (!account) {
@@ -139,7 +115,7 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
     cognitoUsername: string,
     password: string,
     accountId: string,
-    tenantId: string
+    tenantId: string,
   ): Promise<string> {
     try {
       const result = await adminCreateAccount({
@@ -157,14 +133,10 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
         ],
       });
 
-      const sub = result.User?.Attributes?.find(
-        (a) => a.Name === ClaimKey.Sub
-      )?.Value;
+      const sub = result.User?.Attributes?.find((a) => a.Name === ClaimKey.Sub)?.Value;
 
       if (!sub) {
-        throw AppException.internal(
-          "Cognito không trả về sub cho user vừa tạo"
-        );
+        throw AppException.internal("Cognito không trả về sub cho user vừa tạo");
       }
 
       await adminSetUserPassword({
@@ -191,7 +163,7 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<
 
   private async getCognitoTokens(
     cognitoUsername: string,
-    password: string
+    password: string,
   ): Promise<PlayerLoginOutput> {
     try {
       return await adminInitiateAuth({

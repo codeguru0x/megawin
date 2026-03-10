@@ -25,6 +25,8 @@
  * (trừ PrepareSettleInput vì step đầu chỉ nhận drawId).
  */
 
+import { JackpotWinnerInfo } from "@megawin/game-lotto535/entities";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Primitive shared types
 // ─────────────────────────────────────────────────────────────────────────────
@@ -86,6 +88,32 @@ export interface LottoSettleConfig {
    * Nếu doanh thu không đủ → actualCompanyTake < companyTake (hoặc = 0).
    */
   companyRate: number;
+
+  /**
+   * Ngưỡng split Jackpot (VND) — snapshot từ JackpotCycle.config.splitThreshold.
+   * Dùng bởi FinalizeSettle khi tạo cycle mới (truyền vào createCycle).
+   */
+  splitThreshold: number;
+
+  /**
+   * Snapshot cycleNo tại thời điểm PrepareSettle.
+   * Dùng bởi FinalizeSettle để updateCycleStats đúng cycle.
+   */
+  cycleNo: number;
+
+  /**
+   * Snapshot totalContribution của cycle tại thời điểm PrepareSettle (VND).
+   * FinalizeSettle tính: newContribution = cycleContributionBefore + jackpotContribution.
+   * Dùng giá trị tuyệt đối → idempotent khi retry (không cộng dồn từ activeCycle mới nhất).
+   */
+  cycleContributionBefore: number;
+
+  /**
+   * Snapshot drawCount của cycle tại thời điểm PrepareSettle.
+   * FinalizeSettle tính: newDrawCount = cycleDrawCountBefore + 1.
+   * Dùng giá trị tuyệt đối → idempotent khi retry.
+   */
+  cycleDrawCountBefore: number;
 }
 
 /**
@@ -194,19 +222,6 @@ export interface SettleFinancials {
   jackpotContribution: number;
 
   /**
-   * Jackpot cuối kỳ (VND) = openingAmount + jackpotContribution (LUÔN LUÔN).
-   * Bản ghi lịch sử — quỹ JP trị giá bao nhiêu khi kỳ quay kết thúc.
-   *
-   * Nếu có JP winner: đây là tổng giải mà winner nhận.
-   * Nếu split: đây là quỹ JP trước khi chia cho tier1-tier5.
-   * Nếu tích luỹ: đây là quỹ JP mang sang kỳ sau.
-   *
-   * Lưu ý: seedAmount (reset cycle mới) do FinalizeSettle.createCycle() xử lý,
-   * KHÔNG phải closingJackpot.
-   */
-  closingJackpot: number;
-
-  /**
    * Có người trúng Jackpot (5 main + special) trong kỳ này hay không.
    * Quyết định:
    *   - true → winner nhận toàn bộ JP pool, cycle reset
@@ -293,7 +308,7 @@ export interface SettleContext {
    *
    * Ý nghĩa: giá trị Jackpot TRƯỚC khi tính contribution kỳ này.
    * Dùng bởi:
-   *   - CalculateFinancials: tính closingJackpot, split distribution
+   *   - CalculateFinancials: tính contribution, split distribution
    *   - BuildReport: ghi jackpotTracking.openingAmount
    *   - FinalizeSettle: tính totalJackpotPrize cho winner
    */
@@ -344,6 +359,16 @@ export interface SettleContext {
    * FinalizeSettle YÊU CẦU financials bắt buộc (dùng SettleContextWithFinancials).
    */
   financials?: SettleFinancials;
+
+  /**
+   * Danh sách người trúng Jackpot — chỉ có khi financials.hasJackpotWinner = true.
+   *
+   * Được điền bởi PatchJackpotPrize (step 4a), merge vào settleCtx qua Step Function.
+   * FinalizeSettle đọc field này để ghi vào cycle close record — tránh re-query DB.
+   *
+   * undefined khi không có JP winner (roll-over hoặc split).
+   */
+  jackpotWinners?: JackpotWinnerInfo[];
 }
 
 /**
