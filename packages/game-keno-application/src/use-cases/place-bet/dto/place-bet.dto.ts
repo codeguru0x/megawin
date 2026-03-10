@@ -21,6 +21,8 @@ export interface PlaceBetInput {
   accountId: string;
   username: string;
   channel: TicketChannel;
+  /** IP address của player lúc đặt cược. Lấy từ CF-Connecting-IP hoặc X-Forwarded-For. */
+  ipAddress?: string;
 
   /**
    * Danh sách drawIds mà player muốn cược.

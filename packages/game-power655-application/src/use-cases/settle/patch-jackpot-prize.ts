@@ -42,6 +42,7 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { JackpotWinnerInfo } from "@megawin/game-power655/entities";
+import { JackpotType } from "@megawin/game-power655/entities";
 import type { SettleContextWithFinancials } from "./types";
 
 export interface PatchJackpotPrizeResult {
@@ -99,7 +100,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
             prizeAmount: jp1PerWinner,
             entryId: e.id,
             drawId,
-            jackpotType: "jp1",
+            jackpotType: JackpotType.Jp1,
           });
         }
       }
@@ -130,17 +131,44 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
             prizeAmount: jp2PerWinner,
             entryId: e.id,
             drawId,
-            jackpotType: "jp2",
+            jackpotType: JackpotType.Jp2,
           });
         }
       }
     }
 
-    // ── Cập nhật draw.stats.totalPayout ────────────────────────────────────
-    // $inc KHÔNG idempotent → chỉ gọi khi có ít nhất 1 entry được patch lần đầu.
-    if (totalIncrementAmount > 0) {
-      await this.drawRepo.incrementTotalPayout(drawId, totalIncrementAmount);
+    // ── Cập nhật draw.stats.totalPayout + settleSummary Jackpot prizeAmount ───
+    // incrementTotalPayout: $inc KHÔNG idempotent → guard bởi totalIncrementAmount > 0.
+    // patchSettleSummaryJackpot: $set → idempotent (set giá trị, không cộng).
+    const jackpotPatches: Array<{ tier: string; prizeAmount: number }> = [];
+
+    if (jp1EntriesPatched > 0 && hasJackpot1Winner) {
+      const totalJp1 = jp1OpeningAmount + jackpot1Contribution;
+      jackpotPatches.push({
+        tier: "jackpot1",
+        prizeAmount:
+          Math.floor(totalJp1 / (winners.filter((w) => w.jackpotType === "jp1").length || 1)) *
+          winners.filter((w) => w.jackpotType === "jp1").length,
+      });
     }
+    if (jp2EntriesPatched > 0 && hasJackpot2Winner) {
+      const totalJp2 = jp2OpeningAmount + jackpot2Contribution;
+      jackpotPatches.push({
+        tier: "jackpot2",
+        prizeAmount:
+          Math.floor(totalJp2 / (winners.filter((w) => w.jackpotType === "jp2").length || 1)) *
+          winners.filter((w) => w.jackpotType === "jp2").length,
+      });
+    }
+
+    await Promise.all([
+      totalIncrementAmount > 0
+        ? this.drawRepo.incrementTotalPayout(drawId, totalIncrementAmount)
+        : Promise.resolve(),
+      jackpotPatches.length > 0
+        ? this.drawRepo.patchSettleSummaryJackpot(drawId, jackpotPatches)
+        : Promise.resolve(),
+    ]);
 
     return { drawId, jp1EntriesPatched, jp2EntriesPatched, winners };
   }

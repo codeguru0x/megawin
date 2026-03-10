@@ -39,7 +39,6 @@ import {
   VALID_MAIN_NUMBER_SET,
 } from "@megawin/game-power655/entities";
 import { getLineCount, validateMainNumbers } from "@megawin/game-power655/rules/play-types";
-import { computeSelectionHash } from "@megawin/game-power655/helpers";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -65,7 +64,15 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
 
   /** @inheritdoc */
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
-    const { tenantId, accountId, username, channel, drawIds, boards: boardInputs } = input;
+    const {
+      tenantId,
+      accountId,
+      username,
+      channel,
+      ipAddress,
+      drawIds,
+      boards: boardInputs,
+    } = input;
 
     // ── 1. Load game config ──
     const globalConfig = await this.getGlobalConfig.run();
@@ -94,9 +101,11 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
           `Board "${bi.boardNo}" không hợp lệ. Chỉ chấp nhận: ${VALID_BOARD_NOS.join(", ")}.`,
         );
       }
+
       if (seenBoardNos.has(bi.boardNo)) {
         throw AppException.badRequest(`Board "${bi.boardNo}" bị trùng lặp.`);
       }
+
       seenBoardNos.add(bi.boardNo);
 
       const playType = bi.playType as PlayType;
@@ -121,7 +130,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         selection: {
           mainNumbers: [...bi.selection.mainNumbers].sort(),
         },
-        lineCount,
+        derived: { expandedLines: lineCount },
         isVoid: false,
       });
     }
@@ -163,37 +172,33 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     // ── 7. Build ticket document ──
     const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
     const ticketNo = buildTicketNo(GameProduct.Power655, date, seq);
-    const selectionHash = computeSelectionHash(builtBoards);
 
     const ticketDoc: Omit<TicketDoc, "_id"> = {
       ticketNo,
       tenantId,
       accountId,
-      playerId: username,
+      username,
       channel,
+      ipAddress,
       boards: builtBoards,
-      expansion: {
-        totalLines: totalLinesPerDraw,
-        selectionHash,
+      pricing: {
+        unitPrice,
+        linesPerDraw: totalLinesPerDraw,
+        amountPerDraw,
+        totalAmount,
       },
-      stakePerDraw: amountPerDraw,
-      totalStake: totalAmount,
+      lineCount: totalLinesPerDraw,
       drawPlan: {
         drawIds,
-        enrolledDrawIds: drawIds,
         drawCount,
-        remainingDraws: drawCount,
-        fullyEnrolled: true,
       },
       progress: {
-        settledDrawCount: 0,
-        voidDrawCount: 0,
+        totalDraws: drawCount,
+        settledDraws: 0,
       },
-      settlement: {
-        totalWinAmount: 0,
-        totalPayoutAmount: 0,
-      },
+      financialDate: getFinancialDate(now),
       status: TicketStatus.Paid as any,
+      version: 0,
       createdAt: now,
       updatedAt: now,
     };
@@ -203,27 +208,36 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
 
     // ── 9. Create entries cho TẤT CẢ draws (all-or-nothing) ──
     const entrySummary: EntrySummary = {
-      totalLines: totalLinesPerDraw,
-      selectionHash,
+      ticketNo,
+      boards: builtBoards.map((b) => ({
+        boardNo: String(b.boardNo),
+        playType: b.playType,
+        mainNumbers: b.selection.mainNumbers,
+        expandedLines: b.derived.expandedLines,
+      })),
     };
 
     const entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">> = [];
 
     for (let i = 0; i < drawIds.length; i++) {
       const draw = drawMap.get(drawIds[i]!)!;
+      // commissionAmount tính sẵn lúc place-bet: snapshot cứng, không thay đổi dù rate update sau.
+      const commissionAmount = Math.round(amountPerDraw * commissionRate);
       entryDocs.push({
         ticketId,
-        ticketNo,
         tenantId,
         accountId,
-        playerId: username,
+        username,
+        ipAddress,
         drawId: draw.drawId,
         drawDate: draw.drawDate,
-        financialDate: getFinancialDate(draw.drawTime),
+        financialDate: draw.financialDate,
         drawTime: draw.drawTime,
+        tenant: { commissionRate, commissionAmount },
         status: EntryStatus.Scheduled as any,
-        boards: builtBoards,
-        stakeAmount: amountPerDraw,
+        lineCount: totalLinesPerDraw,
+        amount: amountPerDraw,
+        unitPrice,
         entrySummary,
         createdAt: now,
         updatedAt: now,

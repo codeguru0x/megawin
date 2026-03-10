@@ -19,7 +19,7 @@
  */
 
 import type { PrizeTier } from "./enums";
-import type { MainTuple, Special } from "./types";
+import type { MainTuple, Special, ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
 // Line Match Result
@@ -69,6 +69,15 @@ export interface TicketLineDoc {
 
   /** ID kỳ quay mà line thuộc về. */
   drawId: string;
+
+  // ───── Timing ─────
+
+  /**
+   * Ngày tài chính "YYYY-MM-DD" — ngày dùng cho báo cáo doanh thu.
+   * Tính từ 11h sáng → 11h sáng hôm sau (Asia/Ho_Chi_Minh).
+   * Có thể khác drawDate nếu kỳ quay qua đêm.
+   */
+  financialDate: ISODateString;
 
   // ───── Line Data ─────
 

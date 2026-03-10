@@ -69,9 +69,9 @@ export class LineRepository extends BaseRepo<any> {
   }
 
   /**
-   * Patch winAmount cho tất cả lines trúng jackpotTier trong draw.
+   * Patch prizeAmount cho tất cả lines trúng jackpotTier trong draw.
    *
-   * Idempotent: chỉ update lines có matchResult.tier = jackpotTier và winAmount = 0.
+   * Idempotent: chỉ update lines có tier = jackpotTier và prizeAmount = 0.
    *
    * @param jackpotTier - "jackpot1" hoặc "jackpot2"
    */
@@ -83,11 +83,11 @@ export class LineRepository extends BaseRepo<any> {
     const result = await this.updateMany(
       {
         drawId,
-        "matchResult.tier": jackpotTier,
-        "matchResult.winAmount": 0,
+        tier: jackpotTier,
+        prizeAmount: 0,
       },
       {
-        $set: { "matchResult.winAmount": jackpotPerWinner },
+        $set: { prizeAmount: jackpotPerWinner },
       },
     );
     return result.modifiedCount;

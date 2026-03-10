@@ -10,11 +10,7 @@ import { withPlayerAuth } from "@megawin/auth";
 import { PlaceBetUseCase } from "@megawin/game-keno-application/use-cases/place-bet";
 import { kenoNumberSchema, kenoDrawIdSchema } from "@megawin/game-keno/schemas";
 import { TicketChannel } from "@megawin/game-core/entities";
-import {
-  KenoBigSmallBet,
-  KenoEvenOddBet,
-  KenoPlayType,
-} from "@megawin/game-keno/entities";
+import { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "@megawin/game-keno/entities";
 import z from "zod";
 
 // ============ Handler ============
@@ -58,11 +54,9 @@ export const kenoPlaceBetBodySchema = z
     boards: z
       .array(kenoBoardSchema)
       .max(KENO_BOARD_NO.length)
-      .refine(
-        (boards) =>
-          new Set(boards.map((b) => b.boardNo)).size === boards.length,
-        { message: "Các boardNo không được trùng lặp." }
-      )
+      .refine((boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length, {
+        message: "Các boardNo không được trùng lặp.",
+      })
       .default([]),
     sideBets: z.array(kenoSideBetSchema).default([]),
   })
@@ -76,16 +70,18 @@ export const handler = withPlayerAuth(
   async (event) => {
     const { tenantId, accountId, username } = event.user;
     const { drawIds, boards, sideBets } = event.schema.body;
+    const ipAddress = event.requestContext.http.sourceIp;
 
     return useCase.run({
       tenantId,
       accountId,
       username,
       channel: TicketChannel.Sdk,
+      ipAddress,
       drawIds,
       boards,
       sideBets,
     });
   },
-  { schemas: { body: kenoPlaceBetBodySchema } }
+  { schemas: { body: kenoPlaceBetBodySchema } },
 );

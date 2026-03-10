@@ -168,6 +168,8 @@ export abstract class AbstractEntryRepository<
     totalPayoutAmount: number;
     totalFixedPrizes: number;
     tierWinnerCounts: Record<string, number>;
+    /** Tổng tiền thưởng từng hạng giải (VND). Key = tier string. */
+    tierPrizeAmounts: Record<string, number>;
   }> {
     const result = await this.aggregate([
       { $match: { drawId, status: EntryStatus.Settled } },
@@ -183,9 +185,11 @@ export abstract class AbstractEntryRepository<
 
     let totalFixedPrizes = 0;
     const tierWinnerCounts: Record<string, number> = {};
+    const tierPrizeAmounts: Record<string, number> = {};
 
     for (const r of result as any[]) {
       tierWinnerCounts[r._id] = r.totalHitCount;
+      tierPrizeAmounts[r._id] = r.totalAmount;
       totalFixedPrizes += r.totalAmount;
     }
 
@@ -208,6 +212,7 @@ export abstract class AbstractEntryRepository<
       totalPayoutAmount: summary.totalPayoutAmount ?? 0,
       totalFixedPrizes,
       tierWinnerCounts,
+      tierPrizeAmounts,
     };
   }
 

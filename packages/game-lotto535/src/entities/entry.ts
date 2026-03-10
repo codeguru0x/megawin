@@ -116,6 +116,12 @@ export interface TicketEntryDoc {
   /** Username hiển thị của player. */
   username: string;
 
+  /**
+   * IP address của player lúc đặt cược (IPv4 hoặc IPv6).
+   * Snapshot từ ticket, lưu để audit trail.
+   */
+  ipAddress?: string;
+
   /** Tham chiếu ticket gốc (ObjectId). */
   ticketId: string;
 

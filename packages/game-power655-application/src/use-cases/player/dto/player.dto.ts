@@ -341,3 +341,160 @@ export interface PlayerGetEntryLinesOutput {
   /** Số lượng mỗi trang. */
   size: number;
 }
+
+// ─── Draw Results (Player) ───
+
+export interface PlayerListDrawResultsInput {
+  /**
+   * Lọc từ ngày (YYYY-MM-DD, inclusive).
+   * Handler luôn truyền (default = ngày hôm nay giờ VN).
+   */
+  from: string;
+  /** Số lượng kết quả mỗi trang. */
+  size: number;
+  /** Cursor phân trang (drawId cuối trang trước). */
+  cursor?: string;
+}
+
+/**
+ * Chi tiết giải thưởng 1 hạng trong kết quả kỳ quay Power 6/55.
+ *
+ * Power 6/55 có 5 hạng giải:
+ *   - jackpot1: trùng 6/6 số chính (tích luỹ)
+ *   - jackpot2: trùng 5/6 số chính + bonus number (tích luỹ)
+ *   - tier1:    trùng 5/6 (cố định 40.000.000đ)
+ *   - tier2:    trùng 4/6 (cố định 500.000đ)
+ *   - tier3:    trùng 3/6 (cố định 50.000đ)
+ */
+export interface PlayerDrawTierPrize {
+  /**
+   * Hạng giải — giá trị từ PrizeTier enum.
+   * "jackpot1" | "jackpot2" | "tier1" | "tier2" | "tier3"
+   */
+  tier: string;
+  /**
+   * Số lượt trúng hạng này (tổng hit count từ tất cả entries).
+   * Không phải số người chơi — 1 người chơi bao có thể trúng nhiều lần.
+   */
+  winnerCount: number;
+  /**
+   * Tổng tiền thưởng hạng này (VND).
+   * jackpot1/jackpot2: = pool đầu kỳ + contribution (sau FinalizeSettle).
+   * tier1/tier2/tier3: tổng tiền cố định aggregate từ entries.
+   * 0 nếu winnerCount = 0.
+   */
+  prizeAmount: number;
+}
+
+/**
+ * Chi tiết kết quả 1 kỳ quay Power 6/55 — dùng cho trang xem kết quả.
+ *
+ * Khác Mega 6/45: có thêm `bonusNumber` + dual jackpot (jackpot1 + jackpot2).
+ * Bao gồm: kết quả 6 số + bonus, jackpot snapshot, bảng giải thưởng 5 hạng.
+ * Chỉ trả cho draws đã settle có kết quả.
+ *
+ * Dùng bởi endpoint: GET /games/power655/draw-results/:drawId
+ */
+export interface PlayerDrawResultInfo {
+  /** Mã kỳ quay (VD: "2026-03-08.001"). */
+  drawId: string;
+  /** Ngày quay (YYYY-MM-DD). */
+  drawDate: string;
+  /** Số thứ tự kỳ trong ngày (luôn = 1 cho Power 6/55). */
+  drawNo: number;
+  /** Giờ quay (ISO 8601). */
+  drawTime: string;
+  /**
+   * Kết quả kỳ quay.
+   * Power 6/55: 6 số chính + 1 bonus number (từ 49 số còn lại).
+   */
+  result: {
+    /** 6 số chính trúng thưởng (sorted, zero-padded "01"-"55"). */
+    winningMain: string[];
+    /** Số đặc biệt (bonus number), zero-padded "01"-"55". */
+    bonusNumber: string;
+    /** Thời điểm công bố (ISO 8601). */
+    publishedAt: string;
+  };
+  /**
+   * Snapshot dual Jackpot tại kỳ quay này.
+   * Power 6/55 có 2 jackpot tích luỹ chạy song song.
+   */
+  jackpot: {
+    /** Jackpot 1 đầu kỳ (VND) — giải trùng 6/6. */
+    openingJackpot1: number;
+    /** Jackpot 1 cuối kỳ (VND). */
+    closingJackpot1: number;
+    /** Jackpot 2 đầu kỳ (VND) — giải trùng 5/6 + bonus. */
+    openingJackpot2: number;
+    /** Jackpot 2 cuối kỳ (VND). */
+    closingJackpot2: number;
+  };
+  /**
+   * Bảng giải thưởng chi tiết — 5 hạng, luôn có mặt đủ (kể cả winnerCount = 0).
+   * Thứ tự: jackpot1, jackpot2, tier1, tier2, tier3.
+   */
+  prizes: PlayerDrawTierPrize[];
+  /** Tham chiếu Vietlott (nếu có). */
+  vietlottRef?: {
+    /** Mã kỳ Vietlott chính thức. */
+    drawPeriod: string;
+    /** Ngày quay Vietlott (YYYY-MM-DD). */
+    drawDate: string;
+  };
+}
+
+/**
+ * Tóm tắt 1 kỳ quay Power 6/55 trong danh sách.
+ *
+ * Chứa kết quả 6 số + bonus + jackpot snapshot.
+ * Không có bảng giải thưởng chi tiết (xem ở detail endpoint).
+ *
+ * Dùng bởi endpoint: GET /games/power655/draw-results
+ */
+export interface PlayerDrawResultSummary {
+  /** Mã kỳ quay (VD: "2026-03-08.001"). */
+  drawId: string;
+  /** Ngày quay (YYYY-MM-DD). */
+  drawDate: string;
+  /** Số thứ tự kỳ trong ngày. */
+  drawNo: number;
+  /** Giờ quay (ISO 8601). */
+  drawTime: string;
+  /**
+   * Kết quả kỳ quay — 6 số chính + bonus number.
+   */
+  result: {
+    /** 6 số chính trúng thưởng (sorted, zero-padded "01"-"55"). */
+    winningMain: string[];
+    /** Số bonus, zero-padded "01"-"55". */
+    bonusNumber: string;
+    /** Thời điểm công bố (ISO 8601). */
+    publishedAt: string;
+  };
+  /** Dual jackpot snapshot — hữu ích để hiển thị kỳ có trúng Jackpot không. */
+  jackpot: {
+    /** JP1 đầu kỳ (VND). */
+    openingJackpot1: number;
+    /** JP1 cuối kỳ (VND). */
+    closingJackpot1: number;
+    /** JP2 đầu kỳ (VND). */
+    openingJackpot2: number;
+    /** JP2 cuối kỳ (VND). */
+    closingJackpot2: number;
+  };
+  /** Tham chiếu Vietlott (nếu có). */
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
+export interface PlayerListDrawResultsOutput {
+  /** Danh sách tóm tắt kỳ quay. */
+  draws: PlayerDrawResultSummary[];
+  /** Cursor cho trang tiếp theo (drawId). Null nếu hết dữ liệu. */
+  nextCursor: string | null;
+  /** Số lượng mỗi trang. */
+  size: number;
+}

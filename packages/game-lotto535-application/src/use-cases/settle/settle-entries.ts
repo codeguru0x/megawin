@@ -156,6 +156,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             ticketId: entry.ticketId,
             entryId: entry.id,
             drawId: entry.drawId,
+            financialDate: entry.financialDate,
             boardNo: line.boardNo,
             lineIndex: line.lineIndex,
             main: line.main,

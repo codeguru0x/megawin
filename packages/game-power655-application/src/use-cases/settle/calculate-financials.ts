@@ -24,6 +24,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { PrizeTier } from "@megawin/game-power655/entities";
+import type { DrawSettleSummary, DrawSettleSummaryTier } from "@megawin/game-power655/entities";
 import { calculateDrawFinancials, type DrawFinancialInput } from "@megawin/game-power655/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -81,7 +82,26 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
     const hasJackpot1Winner = jp1WinnerCount > 0;
     const hasJackpot2Winner = jp2WinnerCount > 0;
 
-    // ── Bước 5: Ghi kết quả tài chính vào DrawDoc ────────────────────
+    // ── Bước 5: Ghi kết quả tài chính + settleSummary vào DrawDoc ─────
+    // settleSummary.tiers: tất cả 5 tiers, JP = 0 tại đây.
+    // FinalizeSettle sẽ patch prizeAmount JP1/JP2 sau khi biết pool + winners.
+    const ALL_TIERS = [
+      PrizeTier.Jackpot1,
+      PrizeTier.Jackpot2,
+      PrizeTier.Tier1,
+      PrizeTier.Tier2,
+      PrizeTier.Tier3,
+    ] as const;
+
+    const settleSummaryTiers: DrawSettleSummaryTier[] = ALL_TIERS.map((tier) => ({
+      tier,
+      winnerCount: payoutSummary.tierWinnerCounts[tier] ?? 0,
+      // JP1/JP2: prizeAmount = 0 tại đây; FinalizeSettle patch sau khi biết pool.
+      prizeAmount: payoutSummary.tierPrizeAmounts[tier] ?? 0,
+    }));
+
+    const settleSummary: DrawSettleSummary = { tiers: settleSummaryTiers };
+
     await this.drawRepo.updateSettleResult(
       drawId,
       {
@@ -102,12 +122,12 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
         })),
       },
       {
-        totalEntries: payoutSummary.totalSettled,
-        totalLines: payoutSummary.totalLines,
-        totalWinners: 0,
-        tierWinners: payoutSummary.tierWinnerCounts,
-        totalPayout: payoutSummary.totalPayoutAmount,
+        ticketEntryCount: payoutSummary.totalSettled,
+        totalLineCount: payoutSummary.totalLines,
+        totalSalesAmount: tenantAgg.reduce((sum, t) => sum + t.revenue, 0),
+        totalPayoutAmount: payoutSummary.totalPayoutAmount,
       },
+      settleSummary,
     );
 
     return {

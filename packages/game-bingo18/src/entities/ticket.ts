@@ -18,6 +18,7 @@ import type {
   Bingo18TripleKind,
 } from "./enums";
 import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
+import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces
@@ -140,6 +141,12 @@ export interface TicketDoc {
   ticketNo: string;
   /** Kênh mua vé: "web" | "mobile" | "api" | "pos". */
   channel: TicketChannel;
+  /**
+   * IP address của player lúc đặt cược (IPv4 hoặc IPv6).
+   * Lấy từ CF-Connecting-IP (qua Cloudflare) → X-Forwarded-For → sourceIp.
+   * Optional: có thể thiếu nếu request không có header phù hợp.
+   */
+  ipAddress?: string;
 
   // ───── Draw Plan ─────
 
@@ -185,6 +192,20 @@ export interface TicketDoc {
   voidSummary?: TicketVoidSummary;
 
   // ───── Status & Timestamps ─────
+
+  /**
+   * Ngày tài chính của **thời điểm mua vé** "YYYY-MM-DD".
+   *
+   * Dùng để gom doanh thu bán vé theo ngày tài chính cho báo cáo.
+   * Business rule: ngày tài chính tính từ 11h sáng → 11h sáng hôm sau.
+   *
+   * QUAN TRỌNG – Ticket vs Entry:
+   * - Ticket.financialDate = ngày tài chính lúc **cược** (thời điểm place-bet).
+   *   Vé multi-draw trải dài nhiều ngày nhưng chỉ ghi nhận doanh thu 1 lần vào ngày mua.
+   * - Entry.financialDate = ngày tài chính của **kỳ draw** cụ thể (riêng từng entry).
+   *   Dùng cho báo cáo thưởng/quyết toán theo kỳ.
+   */
+  financialDate: ISODateString;
 
   /**
    * Trạng thái vé.

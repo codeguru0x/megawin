@@ -36,11 +36,11 @@ import type {
   EntryPayout,
   EntryPayoutTier,
   EntryResult,
+  PrizeAmounts,
 } from "@megawin/game-mega645/entities";
 import { expandAllBoards } from "@megawin/game-mega645/helpers";
 import { matchLines, type DrawResultForMatch } from "@megawin/game-mega645/helpers";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { SettleContext } from "./types";
 import { EntryOutcome } from "@megawin/game-core/entities";
@@ -87,12 +87,12 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 
       const now = new Date();
 
-      // settleOps: dùng EntryPayout + EntryResult từ entity layer
-      // để bulkSettleEntries type-safe, không cần `as any`.
+      // settleOps: dùng EntryPayout + EntryResult + EntryOutcome từ entity layer
+      // → bulkSettleEntries type-safe, không cần `as any`.
       const settleOps: Array<{
         entryId: string;
         payout: EntryPayout;
-        outcome: string;
+        outcome: EntryOutcome;
         result: EntryResult;
       }> = [];
 
@@ -113,7 +113,12 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         // Jackpot winAmount = 0 tại đây; FinalizeSettle cập nhật sau.
         const lineDocs: Array<Omit<TicketLineDoc, "_id">> = lines.map((line, i) => {
           const perLine = matchResult.perLineResults[i]!;
-          const unitAmount = perLine.tier != null ? (prizeAmounts[perLine.tier] ?? 0) : 0;
+          // Jackpot tier không có trong PrizeAmounts (giá trị pool xử lý riêng).
+          // Giải cố định: lấy từ prizeAmounts theo keyof PrizeAmounts.
+          const unitAmount =
+            perLine.tier != null && perLine.tier !== PrizeTier.Jackpot
+              ? (prizeAmounts[perLine.tier as keyof PrizeAmounts] ?? 0)
+              : 0;
 
           return {
             // Các field identity copy từ entry (snapshot lúc place-bet).
@@ -191,11 +196,11 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
  * Dù amount = 0, entry vẫn được đánh dấu outcome = "win" nếu hitCount > 0.
  *
  * @param tierCounts  Map<tier, số line trúng> — output của matchLines.
- * @param prizeAmounts  Bảng tiền thưởng cố định: tier → VND.
+ * @param prizeAmounts  Bảng tiền thưởng cố định từ entity — tier → VND.
  */
 function buildPayoutTiers(
   tierCounts: Map<string, number>,
-  prizeAmounts: Record<string, number>,
+  prizeAmounts: PrizeAmounts,
 ): EntryPayoutTier[] {
   const tiers: EntryPayoutTier[] = [];
 
@@ -214,7 +219,7 @@ function buildPayoutTiers(
     }
 
     // Giải cố định: amount = unitAmount × số line trúng.
-    const unitAmount = prizeAmounts[tier] ?? 0;
+    const unitAmount = prizeAmounts[tier as keyof PrizeAmounts] ?? 0;
     tiers.push({
       tier: tier as EntryPayoutTier["tier"],
       hitCount,

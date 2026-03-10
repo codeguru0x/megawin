@@ -25,12 +25,7 @@ export const max3dBoardSchema = z
   .object({
     boardNo: z.enum(VALID_BOARD_NOS),
     playMode: z.enum([PlayMode.Basic, PlayMode.Plus]),
-    playType: z.enum([
-      PlayType.Straight,
-      PlayType.Combo3,
-      PlayType.Combo6,
-      PlayType.QuickPick,
-    ]),
+    playType: z.enum([PlayType.Straight, PlayType.Combo3, PlayType.Combo6, PlayType.QuickPick]),
     triplets: z.array(max3dTripletSchema).min(1).max(2),
   })
   .superRefine((board, ctx) => {
@@ -55,10 +50,7 @@ export const max3dBoardSchema = z
         });
       }
 
-      if (
-        playType !== PlayType.Straight &&
-        playType !== PlayType.QuickPick
-      ) {
+      if (playType !== PlayType.Straight && playType !== PlayType.QuickPick) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Max 3D+ chỉ hỗ trợ kiểu chơi Straight hoặc QuickPick.",
@@ -82,10 +74,9 @@ export const max3dPlaceBetBodySchema = z.object({
     .array(max3dBoardSchema)
     .min(1)
     .max(4)
-    .refine(
-      (boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length,
-      { message: "Các board không được trùng boardNo." }
-    ),
+    .refine((boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length, {
+      message: "Các board không được trùng boardNo.",
+    }),
 });
 
 export type Max3dBoard = z.infer<typeof max3dBoardSchema>;
@@ -98,6 +89,7 @@ export const handler = withPlayerAuth(
   async (event) => {
     const { tenantId, accountId, username } = event.user;
     const { drawIds, boards: rawBoards } = event.schema.body;
+    const ipAddress = event.requestContext.http.sourceIp;
 
     const boards = rawBoards.map((b: Max3dBoard) => ({
       boardNo: b.boardNo,
@@ -113,9 +105,10 @@ export const handler = withPlayerAuth(
       accountId,
       username,
       channel: TicketChannel.Sdk,
+      ipAddress,
       drawIds,
       boards,
     });
   },
-  { schemas: { body: max3dPlaceBetBodySchema } }
+  { schemas: { body: max3dPlaceBetBodySchema } },
 );

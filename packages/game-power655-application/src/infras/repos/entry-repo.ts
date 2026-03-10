@@ -17,7 +17,7 @@
 
 import { Power655Collections, PayoutStatus, PrizeTier } from "@megawin/game-power655/entities";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
-import type { MainTuple, BonusNumber } from "@megawin/game-power655/entities";
+import type { EntryPayout, EntryResult } from "@megawin/game-power655/entities";
 import { ObjectId, Long } from "mongodb";
 import { BaseRepo } from "./base-repo";
 import { EntryMapper } from "../mappers/entry-mapper";
@@ -94,10 +94,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   async countLinesByDrawId(drawId: string): Promise<number> {
     const col = await this.getCollection();
     const result = await col
-      .aggregate([
-        { $match: { drawId } },
-        { $group: { _id: null, total: { $sum: "$entrySummary.totalLines" } } },
-      ])
+      .aggregate([{ $match: { drawId } }, { $group: { _id: null, total: { $sum: "$lineCount" } } }])
       .toArray();
     return result[0]?.total ?? 0;
   }
@@ -130,27 +127,19 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   // ─── Settle ───
 
+  /**
+   * Bulk settle entries sau khi match lines xong.
+   *
+   * Dùng named types EntryPayout và EntryResult từ entity layer để compiler
+   * bắt lỗi nếu thêm/đổi field trong entity. outcome dùng EntryOutcome enum.
+   * Atomic per item: filter status = "scheduled" → không double-settle.
+   */
   async bulkSettleEntries(
     items: Array<{
       entryId: string;
-      payout: {
-        winAmount: number;
-        payoutAmount: number;
-        tiers: Array<{
-          tier: string;
-          matchCount: number;
-          prizePerLine: number;
-          totalPrize: number;
-        }>;
-        settledAt: Date;
-        payoutStatus?: PayoutStatus;
-      };
-      outcome: "win" | "loss";
-      result: {
-        winningMain: MainTuple;
-        bonusNumber: BonusNumber;
-        publishedAt: Date;
-      };
+      payout: EntryPayout;
+      outcome: EntryOutcome;
+      result: EntryResult;
     }>,
   ): Promise<{ modifiedCount: number }> {
     if (items.length === 0) return { modifiedCount: 0 };
@@ -166,14 +155,14 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         "payout.winAmount": item.payout.winAmount,
         "payout.payoutAmount": item.payout.payoutAmount,
         "payout.tiers": item.payout.tiers,
-        settledAt: item.payout.settledAt,
+        "payout.settledAt": item.payout.settledAt,
         version,
         updatedAt: now,
       };
 
       if (item.payout.payoutStatus) {
         $set["payout.payoutStatus"] = item.payout.payoutStatus;
-        $set["payout.retryCount"] = 0;
+        $set["payout.payoutRetryCount"] = 0;
       }
 
       return {
@@ -208,9 +197,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         {
           $group: {
             _id: "$tenantId",
-            revenue: { $sum: "$stakeAmount" },
-            commission: { $sum: { $ifNull: ["$commission.amount", 0] } },
-            commissionRate: { $first: { $ifNull: ["$commission.rate", 0] } },
+            revenue: { $sum: "$amount" },
+            commission: { $sum: "$tenant.commissionAmount" },
+            commissionRate: { $first: "$tenant.commissionRate" },
             entryCount: { $sum: 1 },
           },
         },
@@ -234,7 +223,10 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     totalFixedPrizes: number;
     /** Tổng số lines đã expand và match (sum matchCount tất cả tiers). */
     totalLines: number;
+    /** Số lượt trúng per tier: { jackpot1: N, jackpot2: N, tier1: N, ... }. */
     tierWinnerCounts: Record<string, number>;
+    /** Tổng tiền thưởng per tier (VND): { tier1: N, tier2: N, ... }. JP = 0. */
+    tierPrizeAmounts: Record<string, number>;
   }> {
     // 1 aggregation duy nhất: facet song song tiers và totals trên cùng $match.
     const facetResult = await this.aggregate([
@@ -243,12 +235,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         $facet: {
           tiers: [
             { $unwind: "$payout.tiers" },
-            { $match: { "payout.tiers.matchCount": { $gt: 0 } } },
+            { $match: { "payout.tiers.hitCount": { $gt: 0 } } },
             {
               $group: {
                 _id: "$payout.tiers.tier",
-                totalMatchCount: { $sum: "$payout.tiers.matchCount" },
-                totalPrize: { $sum: "$payout.tiers.totalPrize" },
+                totalMatchCount: { $sum: "$payout.tiers.hitCount" },
+                totalPrize: { $sum: "$payout.tiers.amount" },
               },
             },
           ],
@@ -263,7 +255,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
                     $reduce: {
                       input: { $ifNull: ["$payout.tiers", []] },
                       initialValue: 0,
-                      in: { $add: ["$$value", { $ifNull: ["$$this.matchCount", 0] }] },
+                      in: { $add: ["$$value", { $ifNull: ["$$this.hitCount", 0] }] },
                     },
                   },
                 },
@@ -279,9 +271,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
     let totalFixedPrizes = 0;
     const tierWinnerCounts: Record<string, number> = {};
+    const tierPrizeAmounts: Record<string, number> = {};
 
     for (const t of tiers as any[]) {
       tierWinnerCounts[t._id] = t.totalMatchCount;
+      tierPrizeAmounts[t._id] = t.totalPrize ?? 0;
       if (t._id !== "jackpot1" && t._id !== "jackpot2") {
         totalFixedPrizes += t.totalPrize ?? 0;
       }
@@ -293,6 +287,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       totalFixedPrizes,
       totalLines: summary.totalLines ?? 0,
       tierWinnerCounts,
+      tierPrizeAmounts,
     };
   }
 
@@ -346,7 +341,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         },
       },
     };
-
     const matchingEntries = await this.findManyAsDocuments(filter, {
       projection: { _id: 1, "payout.tiers": 1 },
     });
@@ -404,7 +398,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   /**
    * Batch aggregate summaries cho nhiều tickets cùng lúc.
-   * Power655: ticketId là ObjectId trong entries, $stakeAmount cho voidedAmount, $refund.refundAmount cho refund.
+   * Power655: $amount cho voidedAmount, $voidInfo.refundAmount cho refund.
    */
   async aggregateTicketSummariesBatch(ticketIds: ObjectId[]): Promise<
     Map<
@@ -437,11 +431,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             },
             totalVoidedAmount: {
               $sum: {
-                $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$stakeAmount", 0],
+                $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$amount", 0],
               },
             },
             totalRefundedAmount: {
-              $sum: { $ifNull: ["$refund.refundAmount", 0] },
+              $sum: { $ifNull: ["$voidInfo.refundAmount", 0] },
             },
             voidedDrawIds: {
               $addToSet: {
@@ -509,11 +503,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             },
             totalVoidedAmount: {
               $sum: {
-                $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$stakeAmount", 0],
+                $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$amount", 0],
               },
             },
             totalRefundedAmount: {
-              $sum: { $ifNull: ["$refund.refundAmount", 0] },
+              $sum: { $ifNull: ["$voidInfo.refundAmount", 0] },
             },
             voidedDrawIds: {
               $addToSet: {
@@ -580,7 +574,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       {
         $set: {
           "payout.payoutStatus": PayoutStatus.Dispatched,
-          "payout.dispatchedAt": new Date(),
+          "payout.payoutDispatchedAt": new Date(),
           updatedAt: new Date(),
         },
       },
@@ -595,10 +589,10 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       {
         $set: {
           "payout.payoutStatus": PayoutStatus.Failed,
-          "payout.lastError": error,
+          "payout.payoutLastError": error,
           updatedAt: new Date(),
         },
-        $inc: { "payout.retryCount": 1 },
+        $inc: { "payout.payoutRetryCount": 1 },
       },
     );
   }
@@ -630,12 +624,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           $set: {
             status: EntryStatus.Void,
             outcome: EntryOutcome.Void,
-            voidedAt: now,
-            refund: {
+            voidInfo: {
+              originalAmount: item.amount,
               refundAmount: item.amount,
               refundStatus: "pending",
-              reason: "",
-              retryCount: 0,
+              voidedAt: now,
             },
             version,
             updatedAt: now,
@@ -653,7 +646,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       {
         drawId,
         status: EntryStatus.Void,
-        "refund.refundStatus": { $in: ["pending", "failed"] },
+        "voidInfo.refundStatus": { $in: ["pending", "failed"] },
       },
       { sort: { _id: 1 }, limit },
     );
@@ -665,8 +658,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       { _id: new ObjectId(entryId) },
       {
         $set: {
-          "refund.refundStatus": "dispatched",
-          "refund.dispatchedAt": new Date(),
+          "voidInfo.refundStatus": "dispatched",
+          "voidInfo.refundedAt": new Date(),
           updatedAt: new Date(),
         },
       },
@@ -679,11 +672,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       { _id: new ObjectId(entryId) },
       {
         $set: {
-          "refund.refundStatus": "failed",
-          "refund.lastError": error,
+          "voidInfo.refundStatus": "failed",
           updatedAt: new Date(),
         },
-        $inc: { "refund.retryCount": 1 },
       },
     );
   }
@@ -701,9 +692,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           $group: {
             _id: null,
             totalVoidedEntries: { $sum: 1 },
-            totalOriginalAmount: { $sum: "$stakeAmount" },
+            totalOriginalAmount: { $sum: "$amount" },
             totalRefundAmount: {
-              $sum: { $ifNull: ["$refund.refundAmount", 0] },
+              $sum: { $ifNull: ["$voidInfo.refundAmount", 0] },
             },
           },
         },
@@ -750,9 +741,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         {
           $group: {
             _id: "$tenantId",
-            totalStake: { $sum: "$stakeAmount" },
-            totalCommission: { $sum: { $ifNull: ["$commission.amount", 0] } },
-            commissionRate: { $first: { $ifNull: ["$commission.rate", 0] } },
+            totalStake: { $sum: "$amount" },
+            totalCommission: { $sum: "$tenant.commissionAmount" },
+            commissionRate: { $first: "$tenant.commissionRate" },
             totalPayout: {
               $sum: { $ifNull: ["$payout.payoutAmount", 0] },
             },
@@ -796,7 +787,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         {
           $group: {
             _id: { tenantId: "$tenantId", accountId: "$accountId" },
-            totalStake: { $sum: "$stakeAmount" },
+            totalStake: { $sum: "$amount" },
             totalWin: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
             totalPayout: {
               $sum: { $ifNull: ["$payout.payoutAmount", 0] },

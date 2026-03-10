@@ -19,6 +19,7 @@
 
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
+import type { PrizeAmounts } from "@megawin/game-power655/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
@@ -70,12 +71,10 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
       throw AppException.businessRuleViolation(`Không tìm thấy Jackpot Cycle.`);
     }
 
-    const jp1OpeningAmount =
-      activeCycle?.jackpot1Current ?? globalConfig.jackpot.jackpot1.seedAmount;
-    const jp2OpeningAmount =
-      activeCycle?.jackpot2Current ?? globalConfig.jackpot.jackpot2.seedAmount;
+    const jp1OpeningAmount = activeCycle.jackpot1Current;
+    const jp2OpeningAmount = activeCycle.jackpot2Current;
 
-    const prizeAmounts: Record<string, number> = {
+    const fixedPrizeAmounts: PrizeAmounts = {
       tier1: globalConfig.defaultPrizes.tier1,
       tier2: globalConfig.defaultPrizes.tier2,
       tier3: globalConfig.defaultPrizes.tier3,
@@ -85,14 +84,14 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
       drawId,
       drawDate: draw.drawDate,
       drawNo: draw.drawNo,
-      financialDate: (draw as any).financialDate ?? draw.drawDate,
+      financialDate: draw.financialDate,
       result: {
         winningMain: [...draw.result.winningMain],
         bonusNumber: draw.result.bonusNumber,
       },
       jp1OpeningAmount,
       jp2OpeningAmount,
-      prizeAmounts,
+      fixedPrizeAmounts,
       config: {
         jp1SeedAmount: globalConfig.jackpot.jackpot1.seedAmount,
         jp2SeedAmount: globalConfig.jackpot.jackpot2.seedAmount,
@@ -101,8 +100,8 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
         jp1OverflowThreshold: globalConfig.jackpot.jp1OverflowThreshold,
         companyRate: globalConfig.rates.companyRate,
         defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
-        cycleNo: activeCycle?.cycleNo ?? 0,
-        cycleDrawCountBefore: activeCycle?.drawCount ?? 0,
+        cycleNo: activeCycle.cycleNo,
+        cycleDrawCountBefore: activeCycle.drawCount,
       },
     };
   }

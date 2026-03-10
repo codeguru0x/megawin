@@ -13,6 +13,7 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { RefundStatus, type EntryVoidInfo } from "@megawin/game-max3d/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
 
@@ -44,9 +45,9 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEn
         voidInfo: {
           originalAmount: entry.amount ?? 0,
           refundAmount: entry.amount ?? 0,
-          refundStatus: "pending" as const,
+          refundStatus: RefundStatus.Pending,
           voidedAt: now,
-        },
+        } satisfies EntryVoidInfo,
       }));
 
       await this.entryRepo.bulkVoidEntries(items);

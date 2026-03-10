@@ -318,3 +318,78 @@ export interface PlayerGetEntryLinesOutput {
   /** Số lines mỗi trang. */
   size: number;
 }
+
+// ─── Draw Results (Player) ───
+
+/** Thông tin giải thưởng 1 hạng trong kỳ quay — dùng cho GetDrawResult API. */
+export interface PlayerDrawTierPrize {
+  /** Tên hạng giải: "special", "first", "second", "third", "fourth", "fifth", "sixth". */
+  tier: string;
+  /** Số lượt trúng hạng này trong kỳ quay (tổng hit count). */
+  winnerCount: number;
+  /** Tổng tiền thưởng hạng này (VND). */
+  prizeAmount: number;
+}
+
+/** Kết quả chi tiết 1 kỳ quay đã settle — dùng cho GetDrawResult API. */
+export interface PlayerDrawResultInfo {
+  drawId: string;
+  drawDate: string;
+  drawNo: number;
+  drawTime: string;
+  /** Kết quả quay thưởng. */
+  result: {
+    /** Giải Đặc Biệt (2 bộ ba số). */
+    special: string[];
+    /** Giải Nhất (4 bộ ba số). */
+    first: string[];
+    /** Giải Nhì (6 bộ ba số). */
+    second: string[];
+    /** Giải Ba (8 bộ ba số). */
+    third: string[];
+    /** Thời điểm công bố kết quả (ISO 8601). */
+    publishedAt: string;
+  };
+  /** Bảng giải thưởng theo từng hạng. */
+  prizes: PlayerDrawTierPrize[];
+  /** Tham chiếu kỳ quay Vietlott. */
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
+/** Tóm tắt 1 kỳ quay trong danh sách — dùng cho ListDrawResults API. */
+export interface PlayerDrawResultSummary {
+  drawId: string;
+  drawDate: string;
+  drawNo: number;
+  drawTime: string;
+  result: {
+    special: string[];
+    first: string[];
+    second: string[];
+    third: string[];
+    publishedAt: string;
+  };
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
+export interface PlayerListDrawResultsInput {
+  /** Lấy các kỳ trước ngày này (YYYY-MM-DD), inclusive. Mặc định = hôm nay. */
+  from: string;
+  /** Số kỳ tối đa mỗi trang. */
+  size: number;
+  /** Cursor từ response trước: drawId kỳ cuối trang. */
+  cursor?: string;
+}
+
+export interface PlayerListDrawResultsOutput {
+  draws: PlayerDrawResultSummary[];
+  /** Cursor cho trang tiếp theo. Null nếu hết kết quả. */
+  nextCursor: string | null;
+  size: number;
+}

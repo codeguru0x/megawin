@@ -153,6 +153,7 @@ export const handler = withPlayerAuth(
   async (event) => {
     const { tenantId, accountId, username } = event.user;
     const { drawIds, boards: rawBoards } = event.schema.body;
+    const ipAddress = event.requestContext.http.sourceIp;
 
     // String zero-padded — truyền thẳng, không cần parseInt
     const boards = rawBoards.map((b: Lotto535Board) => ({
@@ -169,6 +170,7 @@ export const handler = withPlayerAuth(
       accountId,
       username,
       channel: TicketChannel.Sdk,
+      ipAddress,
       drawIds,
       boards,
     });

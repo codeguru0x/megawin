@@ -15,6 +15,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { GetJackpotCurrentOutput } from "./dto/jackpot.dto";
+import { JackpotCycleStatus } from "@megawin/game-power655/entities";
 
 /**
  * Lấy trạng thái dual jackpot hiện tại Power 6/55.
@@ -53,7 +54,7 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCur
           }
         : {
             cycleNo: 0,
-            status: "active",
+            status: JackpotCycleStatus.Active,
             jackpot1Current: config.jackpot1.seedAmount,
             jackpot2Current: config.jackpot2.seedAmount,
             jackpot1Opening: config.jackpot1.seedAmount,

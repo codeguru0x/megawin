@@ -13,7 +13,12 @@
 
 import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { DrawDoc, DrawFinancial, DrawStats } from "@megawin/game-bingo18/entities";
+import type {
+  DrawDoc,
+  DrawFinancial,
+  DrawStats,
+  DrawSettleSummary,
+} from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
 import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
 
@@ -330,21 +335,57 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.updateOne({ drawId }, { $set });
   }
 
+  /**
+   * Ghi financial, stats và settleSummary vào DrawDoc sau khi settle hoàn tất.
+   *
+   * settleSummary optional — chỉ ghi khi được truyền vào.
+   * IDEMPOTENT: Overwrite toàn bộ financial + stats + settleSummary.
+   */
   async updateSettleResult(
     drawId: string,
     financial: DrawFinancial,
     stats: DrawStats,
+    settleSummary?: DrawSettleSummary,
   ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      {
-        $set: {
-          financial,
-          stats,
-          updatedAt: new Date(),
-        },
-      },
-    );
+    const $set: Record<string, unknown> = {
+      financial,
+      stats,
+      updatedAt: new Date(),
+    };
+    if (settleSummary) {
+      $set.settleSummary = settleSummary;
+    }
+    return await this.updateOne({ drawId }, { $set });
+  }
+
+  /**
+   * Lấy danh sách kỳ đã settled cho player API — cursor-based pagination.
+   *
+   * @param filter.from - Upper bound drawDate (YYYY-MM-DD), exclusive.
+   * @param filter.size - Số lượng kỳ cần lấy.
+   * @param filter.cursor - drawId kỳ cuối trang trước.
+   */
+  async listSettledDraws(filter: {
+    from: string;
+    size: number;
+    cursor?: string;
+  }): Promise<DrawEntity[]> {
+    const { from, size, cursor } = filter;
+    const query: Record<string, unknown> = {
+      status: DrawStatus.Settled,
+      drawDate: { $lt: from },
+    };
+    if (cursor) {
+      const cursorDraw = await this.findOne({ drawId: cursor });
+      if (cursorDraw) {
+        query.drawDate = { $lte: cursorDraw.drawDate };
+        query.$or = [
+          { drawDate: { $lt: cursorDraw.drawDate } },
+          { drawDate: cursorDraw.drawDate, drawId: { $gt: cursor } },
+        ];
+      }
+    }
+    return await this.findMany(query, { sort: { drawDate: -1, drawId: -1 }, limit: size });
   }
 
   async updateVoidSummary(

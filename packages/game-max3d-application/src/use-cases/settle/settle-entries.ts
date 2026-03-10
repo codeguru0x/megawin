@@ -147,12 +147,14 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 
           for (const lineResult of boardMatch.lineResults) {
             allLineDocs.push({
-              tenantId: ticket.tenantId,
-              accountId: ticket.accountId,
-              ticketId: String(ticket.id),
+              tenantId: entry.tenantId,
+              accountId: entry.accountId,
+              username: entry.username,
+              ticketId: entry.ticketId,
               entryId: entry.id,
               drawId: entry.drawId,
               drawDate: entry.drawDate,
+              financialDate: entry.financialDate,
               boardNo: board.boardNo,
               lineIndex: globalLineIndex,
               playMode: board.playMode,

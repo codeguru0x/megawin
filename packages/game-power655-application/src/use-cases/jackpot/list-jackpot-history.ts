@@ -7,7 +7,6 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
-import { PrizeTier } from "@megawin/game-power655/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type {
   ListJackpotHistoryInput,
@@ -43,9 +42,17 @@ export class ListJackpotHistoryUseCase extends NextApiUseCase<
       closingJackpot2: d.jackpot?.closingJackpot2 ?? 0,
       jackpot1Contribution: d.financial?.jackpot1Contribution ?? 0,
       jackpot2Contribution: d.financial?.jackpot2Contribution ?? 0,
-      hasJackpot1Winner: (d.stats?.tierWinners?.[PrizeTier.Jackpot1] ?? 0) > 0,
-      hasJackpot2Winner: (d.stats?.tierWinners?.[PrizeTier.Jackpot2] ?? 0) > 0,
-      totalEntries: d.stats?.totalEntries ?? 0,
+      // Có JP1 winner khi jackpot cycle reset: closingJP1 = seedAmount (nhỏ hơn opening + contribution)
+      // Nếu chưa có stats/jackpot thì giả định không có winner.
+      hasJackpot1Winner:
+        d.jackpot != null &&
+        d.financial != null &&
+        d.jackpot.closingJackpot1 < d.jackpot.openingJackpot1 + d.financial.jackpot1Contribution,
+      hasJackpot2Winner:
+        d.jackpot != null &&
+        d.financial != null &&
+        d.jackpot.closingJackpot2 < d.jackpot.openingJackpot2 + d.financial.jackpot2Contribution,
+      totalEntries: d.stats?.ticketEntryCount ?? 0,
       totalRevenue: d.financial?.totalRevenue ?? 0,
     }));
 

@@ -12,7 +12,7 @@
  * Kết quả quay: 6 số chính (01-55) + 1 bonus number (từ 49 còn lại).
  */
 
-import type { DrawStatus, DrawResultSource } from "@megawin/game-core/entities";
+import type { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawTenantFinancial } from "@megawin/game-core/types";
 import type { MainTuple, BonusNumber, ISODateString, DrawNo } from "./types";
 
@@ -90,16 +90,14 @@ export interface DrawFinancial {
  * Dùng cho dashboard và báo cáo.
  */
 export interface DrawStats {
-  /** Tổng số entries tham gia kỳ này. */
-  totalEntries: number;
-  /** Tổng số lines (bộ số) đã expand và match. */
-  totalLines: number;
-  /** Tổng số entries thắng (có ít nhất 1 line trúng giải). */
-  totalWinners: number;
-  /** Số winners theo từng hạng giải. Key = PrizeTier value. */
-  tierWinners: Record<string, number>;
-  /** Tổng tiền thưởng phải trả (cố định + jackpot). */
-  totalPayout: number;
+  /** Tổng số entry tham gia kỳ quay. */
+  ticketEntryCount: number;
+  /** Tổng số line (bộ số) đã expand và match. */
+  totalLineCount: number;
+  /** Tổng doanh thu bán vé (VND). */
+  totalSalesAmount: number;
+  /** Tổng tiền thưởng phải trả (cố định + jackpot) (VND). Chỉ có sau khi settle. */
+  totalPayoutAmount?: number;
 }
 
 /**
@@ -127,16 +125,57 @@ export interface DrawVoidSummary {
  * Tham chiếu đến kỳ quay Vietlott chính thức.
  * Dùng để đối soát kết quả và audit.
  */
-export interface VietlottRef {
+export interface DrawVietlottRef {
   /** Mã kỳ quay Vietlott (VD: "00123"). */
   drawPeriod: string;
-  /** Nguồn kết quả: "vietlott" (import tự động), "manual" (nhập tay), "import" (batch). */
-  source: DrawResultSource;
+  /** Ngày quay Vietlott "YYYY-MM-DD". */
+  drawDate: ISODateString;
+}
+
+/**
+ * Chi tiết giải thưởng 1 hạng trong kỳ quay.
+ *
+ * Ghi vào DrawDoc.settleSummary.tiers khi settle hoàn tất.
+ * Power 6/55 có 5 hạng: jackpot1 (6/6), jackpot2 (5/6+bonus),
+ * tier1 (5/6), tier2 (4/6), tier3 (3/6).
+ */
+export interface DrawSettleSummaryTier {
+  /**
+   * Hạng giải — giá trị từ PrizeTier enum.
+   * "jackpot1" | "jackpot2" | "tier1" | "tier2" | "tier3"
+   */
+  tier: string;
+  /** Số lượt trúng hạng này (tổng hit count từ tất cả entries, không phải số người). */
+  winnerCount: number;
+  /**
+   * Tổng tiền thưởng hạng này (VND).
+   * jackpot1/jackpot2: = 0 tại CalculateFinancials, FinalizeSettle patch sau khi biết pool.
+   * tier1/tier2/tier3: = Σ(entry.payout.tiers[tier].amount) aggregate từ entries.
+   */
+  prizeAmount: number;
+}
+
+/**
+ * Tổng kết bảng giải thưởng kỳ quay — denormalized cho API player.
+ *
+ * Ghi vào DrawDoc.settleSummary bởi CalculateFinancials (step 3 settle pipeline).
+ * FinalizeSettle patch prizeAmount cho jackpot1/jackpot2 sau khi biết pool chính xác.
+ *
+ * Dùng bởi GetDrawResultPlayerUseCase để trả bảng giải thưởng —
+ * 1 DB call duy nhất, không cần aggregate từ entries.
+ */
+export interface DrawSettleSummary {
+  /**
+   * Bảng giải thưởng chi tiết theo từng hạng.
+   * Tất cả 5 tiers luôn có mặt (kể cả winnerCount = 0).
+   * Thứ tự: jackpot1, jackpot2, tier1, tier2, tier3.
+   */
+  tiers: DrawSettleSummaryTier[];
 }
 
 /**
  * MongoDB document cho kỳ quay Power 6/55.
- * Collection: power655Draws.
+ * Collection: power655_draws.
  */
 export interface DrawDoc {
   /** MongoDB ObjectId – khóa chính nội bộ. Không dùng trong business logic. */
@@ -145,6 +184,12 @@ export interface DrawDoc {
   drawId: string;
   /** Ngày quay format "YYYY-MM-DD" (timezone VN). */
   drawDate: ISODateString;
+  /**
+   * Ngày tài chính "YYYY-MM-DD".
+   * Dùng để gom kết quả tài chính theo ngày.
+   * Business rule: ngày tài chính tính từ 11h sáng → 11h sáng hôm sau.
+   */
+  financialDate: ISODateString;
   /** Số thứ tự kỳ trong ngày. Power 6/55 luôn = 1 (Single). */
   drawNo: DrawNo;
   /** Thời điểm quay chính xác (UTC). */
@@ -161,10 +206,12 @@ export interface DrawDoc {
   financial?: DrawFinancial;
   /** Thống kê settle (ghi sau settle). */
   stats?: DrawStats;
+  /** Tổng kết bảng giải thưởng (ghi sau settle, dùng cho API player). */
+  settleSummary?: DrawSettleSummary;
   /** Thông tin void (chỉ có khi status = void). */
   voidSummary?: DrawVoidSummary;
   /** Tham chiếu Vietlott chính thức. */
-  vietlottRef?: VietlottRef;
+  vietlottRef?: DrawVietlottRef;
   /** Thời điểm tạo document. */
   createdAt: Date;
   /** Thời điểm cập nhật gần nhất. */

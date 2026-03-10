@@ -61,10 +61,10 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     drawDate: entry.drawDate,
     drawTime: entry.drawTime.toISOString(),
     status: entry.status,
-    stakeAmount: entry.stakeAmount,
-    lineCount: entry.entrySummary.totalLines,
+    stakeAmount: entry.amount,
+    lineCount: entry.lineCount,
     entrySummary: {
-      totalLines: entry.entrySummary.totalLines,
+      totalLines: entry.lineCount,
     },
     result: (entry as any).result
       ? {
@@ -80,9 +80,9 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
           payoutAmount: entry.payout.payoutAmount,
           tiers: entry.payout.tiers.map((t) => ({
             tier: t.tier,
-            matchCount: t.matchCount,
-            prizePerLine: t.prizePerLine,
-            totalPrize: t.totalPrize,
+            matchCount: t.hitCount,
+            prizePerLine: t.unitAmount,
+            totalPrize: t.amount,
           })),
         }
       : undefined,

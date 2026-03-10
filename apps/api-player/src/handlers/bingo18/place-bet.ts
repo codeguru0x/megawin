@@ -42,10 +42,7 @@ export const bingo18BoardSchema = z
   })
   .refine(
     (b) => {
-      if (
-        b.playType === Bingo18PlayType.SingleNum ||
-        b.playType === Bingo18PlayType.DoubleMatch
-      ) {
+      if (b.playType === Bingo18PlayType.SingleNum || b.playType === Bingo18PlayType.DoubleMatch) {
         return b.number != null && b.number >= 1 && b.number <= 6;
       }
       return true;
@@ -53,7 +50,7 @@ export const bingo18BoardSchema = z
     {
       message: "number (1-6) bắt buộc cho singleNum và doubleMatch.",
       path: ["number"],
-    }
+    },
   )
   .refine(
     (b) => {
@@ -63,10 +60,9 @@ export const bingo18BoardSchema = z
       return true;
     },
     {
-      message:
-        'tripleKind ("specific" | "any") bắt buộc cho tripleMatch.',
+      message: 'tripleKind ("specific" | "any") bắt buộc cho tripleMatch.',
       path: ["tripleKind"],
-    }
+    },
   )
   .refine(
     (b) => {
@@ -81,7 +77,7 @@ export const bingo18BoardSchema = z
     {
       message: "number (1-6) bắt buộc cho tripleMatch specific.",
       path: ["number"],
-    }
+    },
   );
 
 // ─── Side bet schemas ───
@@ -107,7 +103,7 @@ export const bingo18SideBetSchema = z
     {
       message: "sum (3-18) bắt buộc cho sumTotal.",
       path: ["sum"],
-    }
+    },
   )
   .refine(
     (sb) => {
@@ -119,7 +115,7 @@ export const bingo18SideBetSchema = z
     {
       message: 'bet ("big" | "draw" | "small") bắt buộc cho bigSmallDraw.',
       path: ["bet"],
-    }
+    },
   );
 
 // ─── Place bet body schema ───
@@ -136,11 +132,9 @@ export const bingo18PlaceBetBodySchema = z
     boards: z
       .array(bingo18BoardSchema)
       .max(BINGO18_BOARD_NO.length)
-      .refine(
-        (boards) =>
-          new Set(boards.map((b) => b.boardNo)).size === boards.length,
-        { message: "Các boardNo không được trùng lặp." }
-      )
+      .refine((boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length, {
+        message: "Các boardNo không được trùng lặp.",
+      })
       .default([]),
     sideBets: z.array(bingo18SideBetSchema).default([]),
   })
@@ -154,16 +148,18 @@ export const handler = withPlayerAuth(
   async (event) => {
     const { tenantId, accountId, username } = event.user;
     const { drawIds, boards, sideBets } = event.schema.body;
+    const ipAddress = event.requestContext.http.sourceIp;
 
     return useCase.run({
       tenantId,
       accountId,
       username,
       channel: TicketChannel.Sdk,
+      ipAddress,
       drawIds,
       boards,
       sideBets,
     });
   },
-  { schemas: { body: bingo18PlaceBetBodySchema } }
+  { schemas: { body: bingo18PlaceBetBodySchema } },
 );

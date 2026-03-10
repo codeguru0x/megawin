@@ -14,6 +14,7 @@
  * Sau khi verify → gán event.user (AuthContext).
  */
 
+import type { APIGatewayProxyEventV2WithJWTAuthorizer } from "aws-lambda/trigger/api-gateway-proxy";
 import { appErrorToStatusCode } from "@megawin/shared/errors";
 import type { ApiErrorResponse } from "@megawin/shared/api-types";
 import {
@@ -45,13 +46,20 @@ export interface UserAuthOptions {
   adapterOptions?: AuthContextAdapterOptions;
 }
 
-/** Event cho player / agent handlers — tenantId luôn có. */
-export interface TenantUserEvent {
+/**
+ * Event gốc HTTP API v2 + augmented `user` field từ auth middleware.
+ * Giữ nguyên tất cả properties của API Gateway event (headers, requestContext, body, etc.)
+ * để handler có thể truy cập trực tiếp, ví dụ: `event.requestContext.http.sourceIp`.
+ */
+export interface TenantUserEvent extends APIGatewayProxyEventV2WithJWTAuthorizer {
   user: TenantAuthContext;
 }
 
-/** Event cho company handlers — không có tenantId. */
-export interface CompanyUserEvent {
+/**
+ * Event gốc HTTP API v2 + augmented `user` field cho company handlers.
+ * Giữ nguyên tất cả properties của API Gateway event.
+ */
+export interface CompanyUserEvent extends APIGatewayProxyEventV2WithJWTAuthorizer {
   user: CompanyAuthContext;
 }
 
@@ -60,7 +68,7 @@ export interface CompanyUserEvent {
 function buildAuthMiddleware(
   baseRequirements: AuthRequirements,
   extraRoles?: AuthRequirements["roles"],
-  adapterOptions?: AuthContextAdapterOptions
+  adapterOptions?: AuthContextAdapterOptions,
 ) {
   const requirements: AuthRequirements = {
     ...baseRequirements,
@@ -78,8 +86,7 @@ function buildAuthMiddleware(
     }) => {
       const event = request.event;
       const auth = getAuthContextFromApiGatewayEvent(event, adapterOptions);
-      const httpMethod =
-        event.httpMethod ?? event.requestContext?.httpMethod ?? undefined;
+      const httpMethod = event.httpMethod ?? event.requestContext?.httpMethod ?? undefined;
       const error = checkAuthorization(auth, requirements, httpMethod);
 
       if (error) {
@@ -114,7 +121,7 @@ export function playerAuth(options?: UserAuthOptions) {
       roles: [PlayerRole.Player],
     },
     options?.roles,
-    options?.adapterOptions
+    options?.adapterOptions,
   );
 }
 
@@ -124,7 +131,7 @@ export function agentAuth(options?: UserAuthOptions) {
   return buildAuthMiddleware(
     { accountType: AccountType.Agent, roles: [AgentRole.Agent] },
     options?.roles,
-    options?.adapterOptions
+    options?.adapterOptions,
   );
 }
 
@@ -141,7 +148,7 @@ export function companyAuth(options?: CompanyAuthOptions) {
       roles: [CompanyRole.Admin, CompanyRole.Staff],
     },
     options?.roles,
-    options?.adapterOptions
+    options?.adapterOptions,
   );
 }
 
@@ -150,7 +157,7 @@ export function companyAuth(options?: CompanyAuthOptions) {
 /** @deprecated Ưu tiên dùng playerAuth(), agentAuth(), companyAuth() */
 export function authorizationMiddleware(
   requirements: AuthRequirements,
-  adapterOptions?: AuthContextAdapterOptions
+  adapterOptions?: AuthContextAdapterOptions,
 ) {
   return buildAuthMiddleware(requirements, undefined, adapterOptions);
 }

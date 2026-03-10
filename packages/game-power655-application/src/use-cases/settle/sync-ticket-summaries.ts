@@ -45,18 +45,18 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
     let cursor: string | undefined;
 
     while (Date.now() - startTime < MAX_EXECUTION_MS) {
-      const chunk = await this.ticketRepo.getTicketsByDrawIdCursor(drawId, cursor, CHUNK_SIZE);
+      const tickets = await this.ticketRepo.getTicketsByDrawIdCursor(drawId, cursor, CHUNK_SIZE);
 
-      if (chunk.length === 0) {
+      if (tickets.length === 0) {
         return { drawId, done: true };
       }
 
-      const ticketIds = chunk.map((t) => new ObjectId(t.ticketId));
-      const totalDrawsMap = new Map(chunk.map((t) => [t.ticketId, t.totalDraws]));
+      const ticketIds = tickets.map((t) => new ObjectId(t.ticketId));
+      const totalDrawsMap = new Map(tickets.map((t) => [t.ticketId, t.totalDraws]));
 
       const summaryMap = await this.entryRepo.aggregateTicketSummariesBatch(ticketIds);
 
-      const items = chunk
+      const items = tickets
         .map((t) => {
           const summary = summaryMap.get(t.ticketId);
 
@@ -69,15 +69,16 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
             summary: { ...summary, totalDraws: totalDrawsMap.get(t.ticketId) ?? 1 },
           };
         })
+        // Lọc ra lấy các item không phải null để sync
         .filter((item): item is NonNullable<typeof item> => item !== null);
 
       if (items.length > 0) {
         await this.ticketRepo.bulkSyncSummaries(items);
       }
 
-      cursor = chunk[chunk.length - 1]!.ticketId;
+      cursor = tickets[tickets.length - 1]!.ticketId;
 
-      if (chunk.length < CHUNK_SIZE) {
+      if (tickets.length < CHUNK_SIZE) {
         return { drawId, done: true };
       }
     }

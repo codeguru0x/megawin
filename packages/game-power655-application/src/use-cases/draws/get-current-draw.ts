@@ -111,8 +111,8 @@ function mapDrawInfo(
     jackpot2CurrentAmount,
     stats: draw.stats
       ? {
-          totalEntries: draw.stats.totalEntries,
-          totalLines: draw.stats.totalLines,
+          totalEntries: draw.stats.ticketEntryCount,
+          totalLines: draw.stats.totalLineCount,
         }
       : undefined,
   };

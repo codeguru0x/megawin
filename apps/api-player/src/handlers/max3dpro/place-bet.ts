@@ -88,10 +88,9 @@ export const max3dproPlaceBetBodySchema = z.object({
     .array(max3dproBoardSchema)
     .min(1)
     .max(4)
-    .refine(
-      (boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length,
-      { message: "Các board không được trùng boardNo." }
-    ),
+    .refine((boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length, {
+      message: "Các board không được trùng boardNo.",
+    }),
 });
 
 export type Max3dproBoard = z.infer<typeof max3dproBoardSchema>;
@@ -104,6 +103,7 @@ export const handler = withPlayerAuth(
   async (event) => {
     const { tenantId, accountId, username } = event.user;
     const { drawIds, boards: rawBoards } = event.schema.body;
+    const ipAddress = event.requestContext.http.sourceIp;
 
     const boards = rawBoards.map((b: Max3dproBoard) => ({
       boardNo: b.boardNo,
@@ -121,9 +121,10 @@ export const handler = withPlayerAuth(
       accountId,
       username,
       channel: TicketChannel.Sdk,
+      ipAddress,
       drawIds,
       boards,
     });
   },
-  { schemas: { body: max3dproPlaceBetBodySchema } }
+  { schemas: { body: max3dproPlaceBetBodySchema } },
 );

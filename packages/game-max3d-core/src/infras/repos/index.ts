@@ -4,6 +4,8 @@ export {
   VALID_TRANSITIONS,
   type VoidInfo,
   type DrawDocBase,
+  type DrawSettleSummary,
+  type DrawSettleSummaryTier,
 } from "./draw-repo";
 export { AbstractEntryRepository } from "./entry-repo";
 export { AbstractTicketRepository, type TicketSummary } from "./ticket-repo";

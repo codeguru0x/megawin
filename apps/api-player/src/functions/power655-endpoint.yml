@@ -71,3 +71,21 @@ power655-get-entry-lines:
         method: get
         authorizer:
           name: cognitoPlayerAuth
+
+power655-list-draw-results:
+  handler: src/handlers/power655/list-draw-results.handler
+  events:
+    - httpApi:
+        path: /games/power655/draw-results
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+power655-get-draw-result:
+  handler: src/handlers/power655/get-draw-result.handler
+  events:
+    - httpApi:
+        path: /games/power655/draw-results/{drawId}
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

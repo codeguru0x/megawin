@@ -10,6 +10,7 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { ISODateString, DrawNo } from "./types";
 import type { Max3dproDrawResult } from "./draw-result";
+import type { DrawSettleSummary } from "@megawin/game-max3d-core/repos";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces
@@ -117,6 +118,14 @@ export interface DrawDoc {
   financial?: DrawFinancial;
 
   stats?: DrawStats;
+
+  /**
+   * Tổng kết bảng giải thưởng kỳ quay — denormalized cho API player.
+   *
+   * Ghi bởi CalculateFinancials (step 4 trong settle pipeline) sau khi tất cả entries settled.
+   * Dùng bởi GetDrawResultPlayerUseCase để trả bảng giải thưởng — 1 DB call, không join entries.
+   */
+  settleSummary?: DrawSettleSummary;
 
   voidInfo?: DrawVoidInfo;
 

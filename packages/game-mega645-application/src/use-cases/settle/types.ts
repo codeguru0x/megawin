@@ -24,6 +24,8 @@
  * Jackpot chỉ tích luỹ (roll-over) hoặc trao cho winner.
  */
 
+import type { PrizeAmounts, JackpotWinnerInfo } from "@megawin/game-mega645/entities";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Primitive shared types
 // ─────────────────────────────────────────────────────────────────────────────
@@ -212,13 +214,14 @@ export interface SettleContext {
   jackpotOpeningAmount: number;
 
   /**
-   * Bảng giải thưởng cố định: key = tier name, value = số tiền (VND).
-   * VD: { "jackpot": 0, "tier1": 10000000, "tier2": 300000, "tier3": 30000 }
+   * Bảng giải thưởng cố định — snapshot từ GlobalConfig tại thời điểm PrepareSettle.
    *
+   * Chỉ bao gồm các hạng giải cố định (tier1, tier2, tier3).
    * Jackpot ghi amount = 0 (xử lý riêng qua winner flow).
    * Dùng bởi SettleEntries để tính winAmount cho mỗi entry.
+   * Đồng bộ với `PrizeAmounts` từ entity layer — compiler bắt lỗi nếu thêm tier mới.
    */
-  prizeAmounts: Record<string, number>;
+  prizeAmounts: PrizeAmounts;
 
   /**
    * Cấu hình tài chính settle — snapshot tại thời điểm PrepareSettle.
@@ -249,7 +252,7 @@ export interface SettleContext {
    *
    * undefined khi không có JP winner (roll-over).
    */
-  jackpotWinners?: import("@megawin/game-mega645/entities").JackpotWinnerInfo[];
+  jackpotWinners?: JackpotWinnerInfo[];
 }
 
 /**

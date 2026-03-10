@@ -31,6 +31,8 @@ export interface PlaceBetInput {
   username: string;
   /** Kênh đặt vé (web, mobile, api...). */
   channel: TicketChannel;
+  /** IP address của player lúc đặt cược. Lấy từ CF-Connecting-IP hoặc X-Forwarded-For. */
+  ipAddress?: string;
   /**
    * Danh sách ID các kỳ quay muốn tham gia.
    * Hỗ trợ mua nhiều kỳ (multi-draw), mỗi drawId tạo 1 entry.

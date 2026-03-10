@@ -20,6 +20,8 @@ import type {
   DrawJackpot,
   DrawFinancial,
   DrawStats,
+  DrawSettleSummary,
+  DrawVoidSummary,
   MainTuple,
   BonusNumber,
   ISODateString,
@@ -47,12 +49,6 @@ const VALID_TRANSITIONS: Record<string, Set<string>> = {
   [DrawStatus.Settling]: new Set([DrawStatus.Settled]),
   [DrawStatus.Voiding]: new Set([DrawStatus.Void]),
 };
-
-export interface VoidInfo {
-  reason: string;
-  voidedBy?: string;
-  voidedAt: Date;
-}
 
 /**
  * Repository cho kỳ quay Power 6/55.
@@ -154,7 +150,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       "jackpot.closingJackpot1": jackpot.closingJackpot1,
       "jackpot.openingJackpot2": jackpot.openingJackpot2,
       "jackpot.closingJackpot2": jackpot.closingJackpot2,
-      settledAt: now,
       updatedAt: now,
     };
 
@@ -216,12 +211,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
-   * Void draw: transition → void + ghi voidInfo embedded doc.
+   * Void draw: transition → voiding + ghi thông tin void ban đầu vào voidSummary.
+   * Stats (totalEntriesVoided, ...) được điền sau bởi voidComplete().
    */
   async voidDraw(
     drawId: string,
     fromStatus: string,
-    voidInfo: VoidInfo,
+    voidInfo: Pick<DrawVoidSummary, "reason" | "voidedBy" | "voidedAt">,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.Voiding)) return null;
@@ -231,7 +227,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       {
         $set: {
           status: DrawStatus.Voiding,
-          voidInfo,
+          voidSummary: voidInfo,
           updatedAt: new Date(),
         },
       },
@@ -239,11 +235,8 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
   }
 
-  /** Hoàn tất void: voiding → void + stamp voidedAt + ghi voidSummary. Atomic, idempotent. */
-  async voidComplete(
-    drawId: string,
-    voidSummary: NonNullable<DrawDoc["voidSummary"]>,
-  ): Promise<DrawEntity | null> {
+  /** Hoàn tất void: voiding → void + ghi voidSummary đầy đủ. Atomic, idempotent. */
+  async voidComplete(drawId: string, voidSummary: DrawVoidSummary): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Voiding];
     if (!allowed?.has(DrawStatus.Void)) return null;
 
@@ -254,7 +247,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
         $set: {
           status: DrawStatus.Void,
           voidSummary,
-          voidedAt: now,
           updatedAt: now,
         },
       },
@@ -317,11 +309,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   /**
    * Cập nhật tổng kết tài chính kỳ quay.
    * Bao gồm jackpot1Contribution, jackpot2Contribution, jp1Overflow.
+   * settleSummary: bảng giải thưởng denormalized cho API player.
    */
   async updateSettleResult(
     drawId: string,
     financial: DrawFinancial,
     stats: DrawStats,
+    settleSummary: DrawSettleSummary,
   ): Promise<boolean> {
     return await this.updateOne(
       { drawId },
@@ -329,6 +323,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
         $set: {
           financial,
           stats,
+          settleSummary,
           updatedAt: new Date(),
         },
       },
@@ -461,13 +456,71 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
-   * Tăng stats.totalPayout thêm amount sau khi patch Jackpot prize vào entries.
+   * Patch prizeAmount cho JP1 và/hoặc JP2 trong settleSummary.
+   * Dùng dot notation với $set trên array element theo filter.
+   * Idempotent: ghi đè giá trị (set, không cộng dồn).
+   */
+  async patchSettleSummaryJackpot(
+    drawId: string,
+    patches: Array<{ tier: string; prizeAmount: number }>,
+  ): Promise<void> {
+    if (patches.length === 0) return;
+
+    // Update từng tier trong array bằng arrayFilters — MongoDB 3.6+.
+    const $set: Record<string, unknown> = { updatedAt: new Date() };
+    const arrayFilters: Record<string, unknown>[] = [];
+
+    for (let i = 0; i < patches.length; i++) {
+      const alias = `tier${i}`;
+      $set[`settleSummary.tiers.$[${alias}].prizeAmount`] = patches[i]!.prizeAmount;
+      arrayFilters.push({ [`${alias}.tier`]: patches[i]!.tier });
+    }
+
+    await this.updateOne({ drawId }, { $set }, { arrayFilters } as any);
+  }
+
+  /**
+   * Tăng stats.totalPayoutAmount thêm amount sau khi patch Jackpot prize vào entries.
    *
    * Dùng $inc — KHÔNG idempotent, phải guard bởi caller:
    * chỉ gọi khi patchJackpotPrize trả về modifiedCount > 0.
    */
   async incrementTotalPayout(drawId: string, amount: number): Promise<void> {
-    await this.updateOne({ drawId }, { $inc: { "stats.totalPayout": amount } as any });
+    await this.updateOne({ drawId }, { $inc: { "stats.totalPayoutAmount": amount } as any });
+  }
+
+  /**
+   * Cursor-based list kỳ quay đã settle có kết quả cho API player.
+   *
+   * Trang đầu (không cursor): drawId ≤ from.999 → đi về quá khứ.
+   * Paginate (có cursor): drawId < cursor.
+   * Power 6/55 chỉ có 1 kỳ/ngày → ".999" là safe upper bound.
+   *
+   * Index đề xuất: `{ status: 1, drawId: -1 }` — range scan hiệu quả.
+   */
+  async listSettledDraws(filter: {
+    from: string;
+    size: number;
+    cursor?: string;
+  }): Promise<DrawEntity[]> {
+    const query: Record<string, unknown> = {
+      status: DrawStatus.Settled,
+      result: { $exists: true },
+    };
+
+    if (!filter.cursor) {
+      // Trang đầu: bắt đầu từ ngày from đi về quá khứ.
+      // ".999" là safe upper bound (Power 6/55 chỉ quay 1 kỳ/ngày, ".001" < ".999").
+      query.drawId = { $lte: `${filter.from}.999` };
+    } else {
+      // Paginate: cursor encode đầy đủ vị trí.
+      query.drawId = { $lt: filter.cursor };
+    }
+
+    return await this.findMany(query, {
+      sort: { drawId: -1 },
+      limit: filter.size,
+    });
   }
 
   /**

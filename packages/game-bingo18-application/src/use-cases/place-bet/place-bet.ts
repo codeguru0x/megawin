@@ -44,6 +44,7 @@ import { TicketCounterRepository } from "@megawin/game-core-application/repos";
 import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
+import { getFinancialDate } from "@megawin/shared/utils/financial-date";
 
 export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();
@@ -59,6 +60,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       accountId,
       username,
       channel,
+      ipAddress,
       drawIds,
       boards: boardInputs,
       sideBets: sideBetInputs,
@@ -214,6 +216,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       username,
       ticketNo,
       channel,
+      ipAddress,
       drawPlan: {
         drawIds,
         drawCount,
@@ -231,6 +234,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         totalDraws: drawCount,
         settledDraws: 0,
       },
+      financialDate: getFinancialDate(now),
       status: TicketStatus.Paid as any,
       version: 0,
       createdAt: now,
@@ -262,6 +266,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         tenantId,
         accountId,
         username,
+        ipAddress,
         ticketId,
         drawId: draw.drawId,
         drawDate: draw.drawDate,

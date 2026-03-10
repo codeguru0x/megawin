@@ -303,3 +303,113 @@ export interface PlayerGetTicketEntriesOutput {
   /** Danh sách entries thuộc vé, mỗi entry ứng với 1 kỳ quay. */
   entries: PlayerEntryInfo[];
 }
+
+// ─── Draw Results (Player) ───
+
+/**
+ * Giải thưởng 1 loại cược cơ bản trong kỳ quay — dùng cho GetDrawResult API.
+ *
+ * Chỉ trả những loại chơi có winnerCount > 0 trong kỳ.
+ */
+export interface PlayerBasicPrize {
+  /**
+   * Loại cược: "singleNum" | "doubleMatch" | "tripleMatch".
+   */
+  playType: string;
+  /**
+   * Số lần số đã chọn xuất hiện trong kết quả (1-3).
+   * singleNum: giải thưởng khác nhau theo matchCount.
+   * doubleMatch / tripleMatch: luôn = 1.
+   */
+  matchCount: number;
+  /** Số lượt cược trúng tổ hợp này. */
+  winnerCount: number;
+  /** Tiền thưởng mỗi lần cược (VND). */
+  prizePerUnit: number;
+}
+
+/**
+ * Giải thưởng 1 loại side bet trong kỳ quay — dùng cho GetDrawResult API.
+ *
+ * Chỉ trả những (playType, bet) có winnerCount > 0 trong kỳ.
+ */
+export interface PlayerSideBetPrize {
+  /**
+   * Loại side bet: "sumTotal" | "bigSmallDraw".
+   */
+  playType: string;
+  /**
+   * Giá trị đặt cược đã trúng.
+   * sumTotal: tổng cụ thể (3-18) dạng string.
+   * bigSmallDraw: "big" | "draw" | "small".
+   */
+  bet: string;
+  /** Số lượt cược trúng (playType, bet) này. */
+  winnerCount: number;
+  /** Tiền thưởng mỗi lần cược (VND). */
+  prizePerUnit: number;
+}
+
+/** Kết quả chi tiết 1 kỳ quay đã settle — dùng cho GetDrawResult API. */
+export interface PlayerDrawResultInfo {
+  drawId: string;
+  drawDate: string;
+  drawNo: number;
+  drawTime: string;
+  /** Kết quả quay thưởng. */
+  result: {
+    /** 3 số kết quả (giữ nguyên thứ tự quay). */
+    numbers: number[];
+    /** Tổng 3 số (3-18). */
+    sum: number;
+    /** Thời điểm công bố kết quả (ISO 8601). */
+    publishedAt: string;
+  };
+  /**
+   * Bảng giải thưởng cơ bản — chỉ chứa loại chơi có người trúng.
+   * Grouped theo (playType, matchCount).
+   */
+  basicPrizes: PlayerBasicPrize[];
+  /**
+   * Bảng giải thưởng side bet — chỉ chứa (playType, bet) có người trúng.
+   */
+  sideBetPrizes: PlayerSideBetPrize[];
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
+/**
+ * Tóm tắt 1 kỳ quay trong danh sách — không có bảng giải chi tiết.
+ * Dùng bởi GET /games/bingo18/draw-results (list).
+ * Bảng giải chi tiết xem tại GET /games/bingo18/draw-results/:drawId.
+ */
+export interface PlayerDrawResultSummary {
+  drawId: string;
+  drawDate: string;
+  drawNo: number;
+  drawTime: string;
+  result: {
+    numbers: number[];
+    sum: number;
+    publishedAt: string;
+  };
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
+export interface PlayerListDrawResultsInput {
+  /** Lọc từ ngày (YYYY-MM-DD, inclusive). Handler luôn truyền (default = today VN). */
+  from: string;
+  size: number;
+  cursor?: string;
+}
+
+export interface PlayerListDrawResultsOutput {
+  draws: PlayerDrawResultSummary[];
+  nextCursor: string | null;
+  size: number;
+}

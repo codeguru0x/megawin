@@ -27,6 +27,9 @@
  * (trừ PrepareSettleInput vì step đầu chỉ nhận drawId).
  */
 
+import type { PrizeAmounts } from "@megawin/game-power655/entities";
+import type { JackpotWinnerInfo } from "@megawin/game-power655/entities";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Primitive shared types
 // ─────────────────────────────────────────────────────────────────────────────
@@ -277,13 +280,17 @@ export interface SettleContext {
   jp2OpeningAmount: number;
 
   /**
-   * Bảng giải thưởng cố định: key = tier name, value = số tiền (VND).
-   * VD: { "tier1": 40000000, "tier2": 500000, "tier3": 50000 }
+   * Bảng giải thưởng cố định — snapshot từ GlobalConfig tại thời điểm PrepareSettle.
    *
-   * Jackpot 1 (6/6) và Jackpot 2 (5/6 + bonus) xử lý riêng qua winner flow.
+   * Chỉ bao gồm 3 hạng giải cố định: tier1 (5/6), tier2 (4/6), tier3 (3/6).
+   * JP1 (6/6) và JP2 (5/6 + bonus) KHÔNG có trong bảng này —
+   * winAmount của jackpot luôn = 0 ở SettleEntries, được tính sau ở FinalizeSettle
+   * khi đã biết chính xác pool và số winners.
+   *
    * Dùng bởi SettleEntries để tính winAmount cho mỗi entry.
+   * Đồng bộ với `PrizeAmounts` từ entity layer — compiler bắt lỗi nếu thêm tier mới.
    */
-  prizeAmounts: Record<string, number>;
+  fixedPrizeAmounts: PrizeAmounts;
 
   /**
    * Cấu hình tài chính settle — snapshot tại thời điểm PrepareSettle.
@@ -311,7 +318,7 @@ export interface SettleContext {
    * FinalizeSettle đọc field này để ghi vào cycle close record — tránh re-query DB.
    * undefined khi không có JP winner (roll-over).
    */
-  jackpotWinners?: import("@megawin/game-power655/entities").JackpotWinnerInfo[];
+  jackpotWinners?: JackpotWinnerInfo[];
 }
 
 /**

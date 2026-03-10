@@ -68,11 +68,11 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<
 
       // Map sang { entryId, amount } để bulkVoidEntries cập nhật atomic:
       // - Chuyển entry.status → voided
-      // - Ghi refund.refundAmount = stakeAmount (số tiền hoàn lại cho player)
-      // stakeAmount fallback 0 phòng trường hợp data migration thiếu field.
+      // - Ghi voidInfo.refundAmount = amount (số tiền hoàn lại cho player)
+      // amount fallback 0 phòng trường hợp data migration thiếu field.
       const items = entries.map((entry) => ({
         entryId: entry.id,
-        amount: entry.stakeAmount ?? 0,
+        amount: entry.amount ?? 0,
       }));
 
       // Atomic bulk operation: void toàn bộ batch trong 1 DB call.

@@ -4,6 +4,8 @@ export { ListTicketsPlayerUseCase } from "./list-all-tickets-player";
 export { GetTicketEntriesPlayerUseCase } from "./get-ticket-entries-player";
 export { GetEntryLinesPlayerUseCase } from "./get-entry-lines-player";
 export { GetGameConfigPlayerUseCase } from "./get-game-config-player";
+export { GetDrawResultPlayerUseCase } from "./get-draw-result-player";
+export { ListDrawResultsPlayerUseCase } from "./list-draw-results-player";
 
 export type {
   PlayerGetCurrentDrawOutput,
@@ -20,6 +22,11 @@ export type {
   PlayerGetEntryLinesOutput,
   PlayerLineInfo,
   TicketSortBy,
+  PlayerDrawTierPrize,
+  PlayerDrawResultInfo,
+  PlayerDrawResultSummary,
+  PlayerListDrawResultsInput,
+  PlayerListDrawResultsOutput,
 } from "./dto/player.dto";
 
 export type { GetGameConfigPlayerInput } from "./get-game-config-player";

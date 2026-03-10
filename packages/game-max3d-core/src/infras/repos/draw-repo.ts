@@ -57,6 +57,39 @@ export interface DrawDocBaseStats {
   totalPayoutAmount: number;
 }
 
+/**
+ * Chi tiết giải thưởng 1 hạng trong kỳ quay — denormalized cho API player.
+ *
+ * Ghi vào DrawDoc.settleSummary bởi CalculateFinancials khi settle hoàn tất.
+ * Dùng bởi GetDrawResultPlayerUseCase để trả bảng giải thưởng — 1 DB call.
+ */
+export interface DrawSettleSummaryTier {
+  /** Hạng giải: "special", "first", "second", "third", ... (giá trị từ PrizeTier của game). */
+  tier: string;
+  /** Số lượt trúng hạng này (tổng hit count từ tất cả entries). */
+  winnerCount: number;
+  /**
+   * Tổng tiền thưởng hạng này (VND).
+   * = Σ(entry.payout.tiers[tier].amount) aggregate từ entries.
+   */
+  prizeAmount: number;
+}
+
+/**
+ * Tổng kết bảng giải thưởng kỳ quay — denormalized cho API player.
+ *
+ * Ghi vào DrawDoc.settleSummary bởi CalculateFinancials (step 4 settle pipeline).
+ * Tất cả tiers có winnerCount > 0 được ghi; tiers không có winner được bỏ qua
+ * hoặc ghi với winnerCount = 0 tùy game.
+ */
+export interface DrawSettleSummary {
+  /**
+   * Bảng giải thưởng theo từng hạng.
+   * Tất cả tiers luôn có mặt (kể cả winnerCount = 0).
+   */
+  tiers: DrawSettleSummaryTier[];
+}
+
 export interface DrawDocBaseVoidInfo {
   reason: string;
   voidedBy?: string;
@@ -268,21 +301,89 @@ export abstract class AbstractDrawRepository<
     );
   }
 
+  /**
+   * Ghi financial, stats và settleSummary vào DrawDoc sau khi settle hoàn tất.
+   *
+   * Overwrite toàn bộ financial, stats, settleSummary (set lần đầu).
+   * settleSummary optional — chỉ ghi khi được truyền vào.
+   * Tất cả fields ghi trong 1 lần `$set` — tối thiểu DB call.
+   */
   async updateSettleResult(
     drawId: string,
     financial: DrawDocBaseFinancial,
     stats: DrawDocBaseStats,
+    settleSummary?: DrawSettleSummary,
   ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      {
-        $set: {
-          financial,
-          stats,
-          updatedAt: new Date(),
-        },
-      },
-    );
+    const $set: Record<string, unknown> = {
+      financial,
+      stats,
+      updatedAt: new Date(),
+    };
+    if (settleSummary) {
+      $set.settleSummary = settleSummary;
+    }
+    return await this.updateOne({ drawId }, { $set });
+  }
+
+  /**
+   * Lấy danh sách kỳ đã settled cho player API — cursor-based pagination.
+   *
+   * @param filter.from - Upper bound drawDate (YYYY-MM-DD), exclusive (< from).
+   *                      Khác với ý nghĩa thông thường — đây là "trước ngày from".
+   * @param filter.size - Số lượng kỳ cần lấy.
+   * @param filter.cursor - Cursor từ response trước: drawId của kỳ cuối.
+   */
+  async listSettledDraws(filter: {
+    from: string;
+    size: number;
+    cursor?: string;
+  }): Promise<TEntity[]> {
+    const { from, size, cursor } = filter;
+    const query: Record<string, unknown> = {
+      status: DrawStatus.Settled,
+      drawDate: { $lt: from },
+    };
+    if (cursor) {
+      const cursorDraw = await this.findOne({ drawId: cursor });
+      if (cursorDraw) {
+        const doc = cursorDraw as unknown as DrawDocBase;
+        query.drawDate = { $lte: doc.drawDate };
+        query.$or = [
+          { drawDate: { $lt: doc.drawDate } },
+          { drawDate: doc.drawDate, drawId: { $gt: cursor } },
+        ];
+      }
+    }
+    return await this.findMany(query, { sort: { drawDate: -1, drawId: -1 }, limit: size });
+  }
+
+  /**
+   * Cập nhật prizeAmount cho các tiers trong settleSummary — dùng arrayFilters.
+   *
+   * Dùng sau khi biết chính xác số tiền thưởng (ví dụ sau dispatch hoặc sau finalize).
+   * Idempotent — ghi đè nếu chạy lại.
+   */
+  async patchSettleSummaryTiers(
+    drawId: string,
+    patches: Array<{ tier: string; prizeAmount: number; winnerCount?: number }>,
+  ): Promise<void> {
+    if (patches.length === 0) return;
+
+    const $set: Record<string, unknown> = {};
+    for (let i = 0; i < patches.length; i++) {
+      const patch = patches[i];
+      if (!patch) continue;
+      $set[`settleSummary.tiers.$[tier${i}].prizeAmount`] = patch.prizeAmount;
+      if (patch.winnerCount !== undefined) {
+        $set[`settleSummary.tiers.$[tier${i}].winnerCount`] = patch.winnerCount;
+      }
+    }
+
+    const arrayFilters = patches.map((p, i) => ({
+      [`tier${i}.tier`]: p.tier,
+    }));
+
+    await this.updateOne({ drawId }, { $set }, { arrayFilters });
   }
 
   async getLatestDraw(): Promise<TEntity | null> {

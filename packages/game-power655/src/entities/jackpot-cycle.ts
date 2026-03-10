@@ -23,11 +23,42 @@
  * Lý do đóng chu kỳ jackpot.
  * Dùng cho audit và hiển thị lịch sử.
  */
+export const JackpotCycleClosedReasons = {
+  /** Có người trúng JP1 (trùng 6/6 số chính). */
+  Jackpot1Winner: "jackpot1_winner",
+  /** Có người trúng JP2 (trùng 5/6 + bonus number). */
+  Jackpot2Winner: "jackpot2_winner",
+  /** Cả JP1 và JP2 đều có winner trong cùng kỳ. */
+  BothWinner: "both_winner",
+  /** Admin reset thủ công (không phải do winner). */
+  ManualReset: "manual_reset",
+} as const;
+
+/** Union type của các lý do đóng cycle. */
 export type JackpotCycleClosedReason =
-  | "jackpot1_winner" // Có người trúng JP1 (trùng 6/6)
-  | "jackpot2_winner" // Có người trúng JP2 (trùng 5/6 + bonus)
-  | "both_winner" // Cả JP1 và JP2 đều có winner trong cùng kỳ
-  | "manual_reset"; // Admin reset thủ công (không phải do winner)
+  (typeof JackpotCycleClosedReasons)[keyof typeof JackpotCycleClosedReasons];
+
+/** Trạng thái chu kỳ jackpot. */
+export const JackpotCycleStatus = {
+  /** Đang tích luỹ, chưa có winner. */
+  Active: "active",
+  /** Đã kết thúc (có winner hoặc admin reset). */
+  Closed: "closed",
+} as const;
+
+/** Union type trạng thái cycle. */
+export type JackpotCycleStatusValue = (typeof JackpotCycleStatus)[keyof typeof JackpotCycleStatus];
+
+/** Loại jackpot trong Power 6/55. */
+export const JackpotType = {
+  /** Jackpot 1: trùng 6/6 số chính. */
+  Jp1: "jp1",
+  /** Jackpot 2: trùng 5/6 + bonus number. */
+  Jp2: "jp2",
+} as const;
+
+/** Union type loại jackpot. */
+export type JackpotTypeValue = (typeof JackpotType)[keyof typeof JackpotType];
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces
@@ -49,8 +80,8 @@ export interface JackpotWinnerInfo {
   entryId: string;
   /** ID draw trúng giải. */
   drawId: string;
-  /** Jackpot nào trúng: "jp1" hoặc "jp2". */
-  jackpotType: "jp1" | "jp2";
+  /** Jackpot nào trúng. */
+  jackpotType: JackpotTypeValue;
 }
 
 /**
@@ -61,8 +92,8 @@ export interface JackpotCycleDoc {
   _id: unknown;
   /** Số thứ tự cycle (tăng dần, unique). Dùng cho hiển thị lịch sử. */
   cycleNo: number;
-  /** Trạng thái: "active" (đang tích luỹ) hoặc "closed" (đã kết thúc). */
-  status: "active" | "closed";
+  /** Trạng thái: active (đang tích luỹ) hoặc closed (đã kết thúc). */
+  status: JackpotCycleStatusValue;
 
   /** Giá trị JP1 khi bắt đầu cycle (= seedAmount cho cycle mới). */
   jackpot1Opening: number;

@@ -7,13 +7,13 @@
  * Gửi yêu cầu hoàn tiền cho từng tenant qua TenantGateway API.
  *
  * LUỒNG XỬ LÝ:
- *   1. Query tối đa BATCH_QUERY_LIMIT entries có refund.refundStatus = pending/failed
+ *   1. Query tối đa BATCH_QUERY_LIMIT entries có voidInfo.refundStatus = pending/failed
  *   2. Group entries theo tenantId (mỗi tenant có endpoint gateway riêng)
  *   3. Với mỗi tenant: load gateway client → chia nhỏ thành chunks → dispatch từng chunk
  *   4. Kiểm tra xem còn entries pending → trả done = true/false
  *
  * CRASH-SAFE:
- *   - Query chỉ entries có refund.refundStatus = pending/failed
+ *   - Query chỉ entries có voidInfo.refundStatus = pending/failed
  *   - Entries đã dispatch (refundStatus = dispatched) không bị gửi lại
  *   - Mỗi entry được mark dispatched/failed ngay sau khi có kết quả
  *   - done = true khi hết entries cần refund
@@ -88,7 +88,7 @@ export class DispatchRefundBatchUseCase extends InternalUseCase<
     const { drawId } = input;
 
     // ── Bước 1: Query entries cần dispatch refund ──────────────────────
-    // Chỉ lấy entries có refund.refundStatus = pending hoặc failed (retry).
+    // Chỉ lấy entries có voidInfo.refundStatus = pending hoặc failed (retry).
     const entries = await this.entryRepo.getPendingRefundEntries(
       drawId,
       BATCH_QUERY_LIMIT
@@ -278,7 +278,7 @@ async function dispatchRefundToTenant(
       playerId: e.accountId,
       accountId: e.accountId,
       entryId: extractId(e),
-      amount: e.refund?.refundAmount ?? 0,
+      amount: e.voidInfo?.refundAmount ?? 0,
       currency: "VND",
       transactionId: `refund-${drawId}-${extractId(e)}`,
       gameId: GameProduct.Power655,

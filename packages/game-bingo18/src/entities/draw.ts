@@ -10,6 +10,7 @@
  */
 
 import type { DrawStatus } from "@megawin/game-core/entities";
+import type { Bingo18PlayType, Bingo18BigSmallBet } from "./enums";
 import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
@@ -83,8 +84,7 @@ export interface DrawVoidInfo {
   voidedAt: Date;
 }
 
-/**
- * Tổng hợp kết quả void sau khi refund toàn bộ entries hoàn tất.
+/** Tổng hợp kết quả void sau khi refund toàn bộ entries hoàn tất.
  * Set sau khi tất cả refund đã dispatch thành công.
  */
 export interface DrawVoidSummary {
@@ -96,6 +96,80 @@ export interface DrawVoidSummary {
   totalRefundAmount: number;
   /** Thời điểm hoàn tất refund entry cuối cùng. */
   completedAt: Date;
+}
+
+// ─────────────────────────────────────────────
+// Settle Summary (denormalized for player API)
+// ─────────────────────────────────────────────
+
+/**
+ * Giải thưởng 1 loại cược cơ bản đã có người trúng trong kỳ quay.
+ *
+ * Chỉ ghi các combination có winnerCount > 0 — giảm kích thước document.
+ * Dùng bởi GetDrawResultPlayerUseCase để trả bảng giải — 1 DB call.
+ */
+export interface DrawBasicPrizeSummary {
+  /**
+   * Loại cược: "singleNum" | "doubleMatch" | "tripleMatch".
+   * Quyết định ý nghĩa của number + matchCount.
+   */
+  playType: Bingo18PlayType;
+  /**
+   * Số đã chọn (1-6). Có với singleNum và doubleMatch.
+   * undefined với tripleMatch any.
+   */
+  number?: number;
+  /**
+   * Số lần xuất hiện trong kết quả (1, 2, 3).
+   * Chỉ relevant với singleNum (1 lần / 2 lần / 3 lần = giải thưởng khác nhau).
+   * Với doubleMatch, tripleMatch: luôn = 1 (trúng hoặc không).
+   */
+  matchCount: number;
+  /** Số lượt cược trúng tổ hợp này trong kỳ quay. */
+  winnerCount: number;
+  /** Tiền thưởng mỗi lần cược (VND). */
+  prizePerUnit: number;
+}
+
+/**
+ * Giải thưởng 1 loại side bet đã có người trúng trong kỳ quay.
+ *
+ * Chỉ ghi các (playType, bet) có winnerCount > 0 — giảm kích thước document.
+ */
+export interface DrawSideBetPrizeSummary {
+  /** Loại side bet: "sumTotal" | "bigSmallDraw". */
+  playType: Bingo18PlayType;
+  /**
+   * Giá trị đặt cược đã trúng.
+   * sumTotal: tổng cụ thể (3-18) dưới dạng string.
+   * bigSmallDraw: "big" | "draw" | "small".
+   */
+  bet: string;
+  /** Số lượt cược trúng với (playType, bet) này trong kỳ quay. */
+  winnerCount: number;
+  /** Tiền thưởng mỗi lần cược (VND). */
+  prizePerUnit: number;
+}
+
+/**
+ * Tổng kết settle kỳ quay Bingo 18 — denormalized cho player API.
+ *
+ * Ghi 1 lần bởi CalculateFinancials step (IDEMPOTENT, overwrite).
+ * Chỉ chứa combinations có winnerCount > 0 → compact document.
+ *
+ * Dùng bởi GetDrawResultPlayerUseCase: 1 DB call trả bảng giải đầy đủ.
+ */
+export interface DrawSettleSummary {
+  /**
+   * Giải thưởng cơ bản có người trúng.
+   * Mỗi entry = 1 (playType, number?, matchCount) unique có winnerCount > 0.
+   */
+  basicPrizes: DrawBasicPrizeSummary[];
+  /**
+   * Giải thưởng side bet có người trúng.
+   * Mỗi entry = 1 (playType, bet) unique có winnerCount > 0.
+   */
+  sideBetPrizes: DrawSideBetPrizeSummary[];
 }
 
 // ─────────────────────────────────────────────
@@ -144,6 +218,15 @@ export interface DrawDoc {
 
   /** Thống kê vận hành kỳ quay. */
   stats?: DrawStats;
+
+  /**
+   * Tổng kết bảng giải thưởng kỳ quay — denormalized cho player API.
+   *
+   * Ghi bởi CalculateFinancials (trong settle pipeline) sau khi tất cả entries settled.
+   * Chỉ chứa combinations có winnerCount > 0 — document compact, query nhanh.
+   * Dùng bởi GetDrawResultPlayerUseCase: 1 DB call, không join entries.
+   */
+  settleSummary?: DrawSettleSummary;
 
   /** Thông tin huỷ kỳ quay. */
   voidInfo?: DrawVoidInfo;

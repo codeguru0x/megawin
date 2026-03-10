@@ -606,4 +606,105 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   async getChangedEntries(afterVersion: Long, limit: number): Promise<EntryEntity[]> {
     return await this.findMany({ version: { $gt: afterVersion } }, { sort: { version: 1 }, limit });
   }
+
+  /**
+   * Aggregate giải thưởng cơ bản có người trúng trong kỳ quay.
+   *
+   * Chỉ trả các (playType, matchCount) có winnerCount > 0.
+   * Dùng bởi CalculateFinancials để build settleSummary.basicPrizes.
+   */
+  async aggregateBasicPrizeSummary(drawId: string): Promise<
+    Array<{
+      playType: string;
+      matchCount: number;
+      winnerCount: number;
+      prizePerUnit: number;
+    }>
+  > {
+    const result = await this.aggregate([
+      {
+        $match: {
+          drawId,
+          status: EntryStatus.Settled,
+          // index-friendly: chỉ lấy entries có ít nhất 1 board thắng
+          "payout.boardPayouts": { $elemMatch: { winAmount: { $gt: 0 } } },
+        },
+      },
+      { $unwind: "$payout.boardPayouts" },
+      // Lọc từng board sau unwind — entry có nhiều board, không phải board nào cũng thắng
+      { $match: { "payout.boardPayouts.winAmount": { $gt: 0 } } },
+      {
+        $group: {
+          _id: {
+            playType: "$payout.boardPayouts.playType",
+            matchCount: "$payout.boardPayouts.matchCount",
+          },
+          winnerCount: { $sum: 1 },
+          prizePerUnit: { $first: "$payout.boardPayouts.winAmount" },
+        },
+      },
+      { $sort: { "_id.playType": 1, "_id.matchCount": -1 } },
+    ]);
+
+    return result.map((r: any) => ({
+      playType: r._id.playType,
+      matchCount: r._id.matchCount,
+      winnerCount: r.winnerCount,
+      prizePerUnit: r.prizePerUnit,
+    }));
+  }
+
+  /**
+   * Aggregate giải thưởng side bet có người trúng trong kỳ quay.
+   *
+   * Chỉ trả các (playType, bet) có winnerCount > 0.
+   * Dùng bởi CalculateFinancials để build settleSummary.sideBetPrizes.
+   */
+  async aggregateSideBetPrizeSummary(drawId: string): Promise<
+    Array<{
+      playType: string;
+      bet: string;
+      winnerCount: number;
+      prizePerUnit: number;
+    }>
+  > {
+    const result = await this.aggregate([
+      {
+        $match: {
+          drawId,
+          status: EntryStatus.Settled,
+          // index-friendly: chỉ lấy entries có ít nhất 1 side bet thắng
+          "payout.sideBetPayouts": { $elemMatch: { isWin: true } },
+        },
+      },
+      { $unwind: "$payout.sideBetPayouts" },
+      // Lọc từng side bet sau unwind — chỉ lấy bet đã thắng
+      { $match: { "payout.sideBetPayouts.isWin": true } },
+      {
+        $group: {
+          _id: {
+            playType: "$payout.sideBetPayouts.playType",
+            // sumTotal: dùng sum (số) làm bet key; bigSmallDraw: dùng bet string
+            bet: {
+              $cond: [
+                { $eq: ["$payout.sideBetPayouts.playType", "sumTotal"] },
+                { $toString: "$payout.sideBetPayouts.sum" },
+                "$payout.sideBetPayouts.bet",
+              ],
+            },
+          },
+          winnerCount: { $sum: 1 },
+          prizePerUnit: { $first: "$payout.sideBetPayouts.winAmount" },
+        },
+      },
+      { $sort: { "_id.playType": 1, "_id.bet": 1 } },
+    ]);
+
+    return result.map((r: any) => ({
+      playType: r._id.playType,
+      bet: r._id.bet,
+      winnerCount: r.winnerCount,
+      prizePerUnit: r.prizePerUnit,
+    }));
+  }
 }

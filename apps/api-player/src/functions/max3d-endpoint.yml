@@ -62,3 +62,21 @@ max3d-place-bet:
         method: post
         authorizer:
           name: cognitoPlayerAuth
+
+max3d-list-draw-results:
+  handler: src/handlers/max3d/list-draw-results.handler
+  events:
+    - httpApi:
+        path: /games/max3d/draw-results
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+max3d-get-draw-result:
+  handler: src/handlers/max3d/get-draw-result.handler
+  events:
+    - httpApi:
+        path: /games/max3d/draw-results/{drawId}
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

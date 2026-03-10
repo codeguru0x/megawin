@@ -27,6 +27,7 @@ import { PlayType } from "../entities/enums";
 import type { MainTuple, LineValue, BoardSelection } from "../entities/types";
 import { POWER655_MAIN_COUNT } from "../entities/types";
 import type { Board } from "../entities/ticket";
+import type { EntryBoardSnapshot } from "../entities/entry";
 
 /**
  * Sinh tất cả tổ hợp chập k từ mảng numbers (backtracking).
@@ -104,18 +105,23 @@ export function expandBoardToLines(
  *
  * Boards đã void (bị huỷ một phần) được skip hoàn toàn.
  *
- * @param boards - Mảng boards từ TicketDoc (tối đa 5 boards A-E)
+ * @param boards - Mảng `Board[]` (từ TicketDoc, có `isVoid`) hoặc `EntryBoardSnapshot[]` (từ EntryDoc, không có `isVoid` → không bao giờ skip)
  * @returns Flat array of lines, mỗi phần tử gồm LineValue + boardNo + lineIndex
  */
 export function expandAllBoards(
-  boards: Board[]
+  boards: Board[] | EntryBoardSnapshot[]
 ): Array<LineValue & { boardNo: string; lineIndex: number }> {
   const result: Array<LineValue & { boardNo: string; lineIndex: number }> = [];
   let globalIndex = 0;
 
   for (const board of boards) {
-    if (board.isVoid) continue;
-    const lines = expandBoardToLines(board.playType, board.selection);
+    // Board[] có isVoid; EntryBoardSnapshot không có → không bao giờ skip
+    if ("isVoid" in board && board.isVoid) continue;
+    const selection: BoardSelection = { mainNumbers: board.playType === PlayType.Standard || board.playType === PlayType.QuickPick
+      ? (board as Board).selection?.mainNumbers ?? (board as EntryBoardSnapshot).mainNumbers
+      : (board as Board).selection?.mainNumbers ?? (board as EntryBoardSnapshot).mainNumbers
+    };
+    const lines = expandBoardToLines(board.playType, selection);
     for (const line of lines) {
       result.push({
         ...line,

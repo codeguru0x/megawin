@@ -4,7 +4,7 @@
  * Extends BaseSyncEntryFeedUseCase — chỉ cung cấp game-specific logic:
  * - GameProduct: Power655
  * - EntryRepo: Power655 EntryRepository
- * - Mapping: extract stakeAmount, winAmount, payoutAmount từ Power655 entry
+ * - Mapping: extract amount (tiền cược), winAmount, payoutAmount từ Power655 entry
  */
 
 import { GameProduct } from "@megawin/game-core/entities";
@@ -36,7 +36,8 @@ export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
     const e = entry as Record<string, any>;
     const winAmount = e.payout?.winAmount ?? 0;
     const payoutAmount = e.payout?.payoutAmount ?? 0;
-    const stakeAmount = e.stakeAmount ?? 0;
+    // Tiền cược: entry dùng field `amount` (đồng bộ với mega645 / lotto535)
+    const stakeAmount = e.amount ?? 0;
 
     return {
       version: e.version ?? Long.fromNumber(0),

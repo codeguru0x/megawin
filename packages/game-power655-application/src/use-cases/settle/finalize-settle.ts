@@ -40,6 +40,7 @@
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { JackpotCycleClosedReason } from "@megawin/game-power655/entities";
+import { JackpotCycleClosedReasons } from "@megawin/game-power655/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { SettleContextWithFinancials } from "./types";
@@ -194,11 +195,11 @@ export class FinalizeSettleUseCase extends InternalUseCase<
     // ── Xác định close reason ──────────────────────────────────────────────
     let closedReason: JackpotCycleClosedReason;
     if (hasJackpot1Winner && hasJackpot2Winner) {
-      closedReason = "both_winner";
+      closedReason = JackpotCycleClosedReasons.BothWinner;
     } else if (hasJackpot1Winner) {
-      closedReason = "jackpot1_winner";
+      closedReason = JackpotCycleClosedReasons.Jackpot1Winner;
     } else {
-      closedReason = "jackpot2_winner";
+      closedReason = JackpotCycleClosedReasons.Jackpot2Winner;
     }
 
     // ── finalJp1/finalJp2: toàn bộ pool đã trao cho winner ────────────────

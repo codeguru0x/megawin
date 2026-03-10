@@ -8,136 +8,220 @@
  * Vé là IMMUTABLE sau khi tạo – không sửa boards/selection.
  * Chỉ update: progress (sau settle), settlement (tổng thắng), voidSummary.
  *
- * Giá vé = unitPrice × totalLines × drawCount.
- * Collection: power655Tickets.
+ * Collection: power655_tickets.
  */
 
 import type { TicketStatus, TicketChannel } from "@megawin/game-core/entities";
 import type { PlayType } from "./enums";
-import type { BoardSelection, BoardNo } from "./types";
+import type { BoardSelection, BoardNo, ISODateString } from "./types";
 
-/**
- * 1 bảng trên vé (A-E).
- * Mỗi bảng có loại chơi riêng (Standard, Bao, QuickPick).
- */
-export interface Board {
-  /** Ký hiệu bảng: "A", "B", "C", "D", "E". */
-  boardNo: BoardNo;
-  /** Loại chơi: standard, bao7-bao18, quickPick. */
-  playType: PlayType;
-  /** Các số đã chọn. Số lượng phụ thuộc playType. */
-  selection: BoardSelection;
-  /** Số bộ số (lines) expand từ bảng này. Standard=1, Bao7=7, Bao18=18564, etc. */
-  lineCount: number;
-  /** Bảng bị void (chỉ khi có lỗi nghiêm trọng – hiếm khi dùng). */
-  isVoid: boolean;
+// ─────────────────────────────────────────────
+// Embedded Document Interfaces
+// ─────────────────────────────────────────────
+
+/** Thông tin dẫn xuất tính toán từ selection của board. */
+export interface BoardDerived {
+  /**
+   * Số bộ số (lines) expand từ board này.
+   * - Standard / QuickPick: 1
+   * - Bao7: C(7,6) = 7, Bao8: C(8,6) = 28, ..., Bao18: C(18,6) = 18.564
+   */
+  expandedLines: number;
 }
 
-/**
- * Thông tin expand của vé.
- * Tính 1 lần khi tạo vé, dùng cho tính giá và verify.
- */
-export interface TicketExpansion {
-  /** Tổng số lines = sum(board.lineCount) cho tất cả boards active. */
-  totalLines: number;
-  /** SHA-256 hash của canonical selection. Dùng verify entry khớp ticket gốc. */
-  selectionHash: string;
-}
-
-/**
- * Kế hoạch tham gia kỳ quay.
- * Hỗ trợ multi-draw: 1 vé có thể tham gia 1-6 kỳ liên tiếp.
- */
+/** Kế hoạch tham gia các kỳ quay. */
 export interface TicketDrawPlan {
   /** Danh sách drawIds đăng ký (VD: ["2026-03-03.001", "2026-03-05.001"]). */
   drawIds: string[];
-  /** Danh sách drawIds đã tạo entry (ban đầu = drawIds, có thể < drawIds nếu void). */
-  enrolledDrawIds: string[];
-  /** Tổng số kỳ đăng ký. */
+  /** Tổng số kỳ đăng ký (= drawIds.length). */
   drawCount: number;
-  /** Số kỳ chưa settle/void. */
-  remainingDraws: number;
-  /** True khi tất cả entries đã tạo cho mọi kỳ. */
-  fullyEnrolled: boolean;
 }
 
-/**
- * Tiến độ settle của vé.
- * Cập nhật sau mỗi kỳ settle bởi SyncTicketSummaries use case.
- */
+/** Thông tin giá vé, snapshot tại thời điểm mua. */
+export interface TicketPricing {
+  /** Đơn giá 1 line (VND). Snapshot từ config tại thời điểm mua. */
+  unitPrice: number;
+  /**
+   * Tổng số line trên 1 kỳ quay.
+   * Công thức: Σ(boards[].derived.expandedLines) cho tất cả boards không bị void.
+   */
+  linesPerDraw: number;
+  /**
+   * Tiền cược mỗi kỳ (VND).
+   * Công thức: unitPrice × linesPerDraw.
+   */
+  amountPerDraw: number;
+  /**
+   * Tổng tiền toàn bộ vé (VND).
+   * Công thức: amountPerDraw × drawPlan.drawCount.
+   */
+  totalAmount: number;
+}
+
+/** Tiến trình xử lý qua các kỳ quay. */
 export interface TicketProgress {
-  /** DrawId kỳ tiếp theo chưa settle (null khi xong hết). */
-  nextDrawId?: string;
-  /** Số kỳ đã settle xong. */
-  settledDrawCount: number;
-  /** Số kỳ bị void. */
-  voidDrawCount: number;
+  /** Tổng số kỳ quay vé tham gia (= drawPlan.drawCount). */
+  totalDraws: number;
+  /**
+   * Số kỳ đã xử lý xong = settledCount + voidedCount.
+   * Khi settledDraws === totalDraws: ticket → completed / refunded.
+   */
+  settledDraws: number;
 }
 
-/**
- * Tổng kết thưởng sau settle.
- * Aggregate từ tất cả entries đã settled.
- */
+/** Tổng kết trả thưởng qua tất cả các kỳ quay. */
 export interface TicketSettlement {
-  /** Tổng tiền thắng (trước phí). */
+  /** Tổng tiền trúng thưởng qua tất cả kỳ quay (VND). */
   totalWinAmount: number;
-  /** Tổng tiền đã trả. */
-  totalPayoutAmount: number;
   /** Thời điểm settle gần nhất. */
   lastSettledAt?: Date;
 }
 
 /**
- * Tổng kết hoàn tiền khi có kỳ quay bị void.
+ * Tổng kết void (nếu có kỳ quay bị huỷ).
+ *
+ * Multi-draw ticket: 1 hoặc nhiều kỳ bị void → partial refund.
+ * Single-draw ticket: kỳ duy nhất void → full refund, ticket status = refunded.
  */
 export interface TicketVoidSummary {
-  /** Tổng tiền đã hoàn. */
-  totalRefundAmount: number;
+  /** Tổng số tiền gốc của các entry bị void (VND). */
+  totalVoidedAmount: number;
+  /** Tổng số tiền đã hoàn trả (VND). */
+  totalRefundedAmount: number;
   /** Số kỳ bị void. */
-  voidDrawCount: number;
+  voidedDrawCount: number;
+  /** Danh sách drawId của các kỳ bị void. */
+  voidedDrawIds: string[];
+  /** Thời điểm void gần nhất. */
+  lastVoidedAt?: Date;
 }
+
+// ─────────────────────────────────────────────
+// Board (lựa chọn trên 1 board A-E)
+// ─────────────────────────────────────────────
+
+/**
+ * 1 bảng trên vé (A-E).
+ *
+ * Mỗi vé có tối đa 5 boards (A-E), mỗi board là 1 lựa chọn độc lập.
+ * Board chứa selection (user input) + derived (thông tin tính toán).
+ */
+export interface Board {
+  /**
+   * Ký hiệu bảng: "A", "B", "C", "D", "E".
+   * Dùng để tham chiếu khi hiển thị kết quả.
+   */
+  boardNo: BoardNo;
+  /** Loại chơi: standard, bao7-bao18, quickPick. */
+  playType: PlayType;
+  /** Các số đã chọn. Số lượng phụ thuộc playType. */
+  selection: BoardSelection;
+  /** Thông tin tính toán từ selection. */
+  derived: BoardDerived;
+  /** Bảng bị void (chỉ khi có lỗi nghiêm trọng – hiếm khi dùng). */
+  isVoid: boolean;
+}
+
+// ─────────────────────────────────────────────
+// Ticket Document
+// ─────────────────────────────────────────────
 
 /**
  * MongoDB document cho vé Power 6/55.
- * Collection: power655Tickets.
+ * Collection: power655_tickets.
  */
 export interface TicketDoc {
   /** MongoDB ObjectId – khóa chính nội bộ. Không dùng trong business logic. */
   _id: unknown;
-  /** Mã vé unique format: "P655-YYYYMMDD-N" (game prefix + date + sequence). */
-  ticketNo: string;
+
+  // ───── Ownership ─────
+
   /** ID tenant/đại lý bán vé. */
   tenantId: string;
-  /** ID tài khoản Megawin (internal). */
+  /** ID tài khoản người chơi. */
   accountId: string;
-  /** ID người chơi (external, từ tenant). */
-  playerId: string;
+  /** Tên đăng nhập người chơi (snapshot lúc place-bet). */
+  username: string;
+
+  // ───── Ticket Identity ─────
+
+  /** Mã vé unique format: "P655-YYYYMMDD-N" (game prefix + date + sequence). */
+  ticketNo: string;
   /** Kênh bán: "pos" (điểm bán), "web", "sdk". */
   channel: TicketChannel;
-  /** Danh sách bảng đã chọn (1-5 bảng). */
-  boards: Board[];
-  /** Thông tin expand: tổng lines + hash verify. */
-  expansion: TicketExpansion;
   /**
-   * Tiền cược mỗi kỳ.
-   * Công thức: unitPrice × expansion.totalLines (trong đó totalLines = Σ(boards[].lineCount)).
+   * IP address của player lúc đặt cược (IPv4 hoặc IPv6).
+   * Lấy từ CF-Connecting-IP (qua Cloudflare) → X-Forwarded-For → sourceIp.
+   * Optional: có thể thiếu nếu request không có header phù hợp.
    */
-  stakePerDraw: number;
-  /**
-   * Tổng tiền cược toàn bộ vé.
-   * Công thức: stakePerDraw × drawPlan.drawCount.
-   */
-  totalStake: number;
+  ipAddress?: string;
+
+  // ───── Draw Plan ─────
+
   /** Kế hoạch multi-draw. */
   drawPlan: TicketDrawPlan;
+
+  // ───── Pricing ─────
+
+  /** Thông tin giá vé: unitPrice, linesPerDraw, amountPerDraw, totalAmount. */
+  pricing: TicketPricing;
+
+  // ───── Boards ─────
+
+  /** Danh sách bảng đã chọn (1-5 bảng A-E). */
+  boards: Board[];
+
+  // ───── Line Count ─────
+
+  /**
+   * Tổng line count cho 1 kỳ (= pricing.linesPerDraw = Σ boards[].derived.expandedLines).
+   * Tiện truy vấn nhanh ở top-level, tránh unwind boards.
+   */
+  lineCount: number;
+
+  // ───── Progress ─────
+
   /** Tiến độ settle. Cập nhật bởi worker sau mỗi kỳ. */
   progress: TicketProgress;
+
+  // ───── Settlement Summary ─────
+
   /** Tổng kết thắng/thua. Cập nhật bởi worker. */
-  settlement: TicketSettlement;
-  /** Tổng kết void (chỉ có khi có kỳ bị void). */
+  settlement?: TicketSettlement;
+
+  // ───── Void / Refund Summary ─────
+
+  /**
+   * Tổng kết void (chỉ có khi có kỳ bị void).
+   *
+   * Multi-draw ticket: 1 hoặc nhiều kỳ bị void → partial refund.
+   * Single-draw ticket: kỳ duy nhất void → full refund, ticket status = refunded.
+   */
   voidSummary?: TicketVoidSummary;
+
+  // ───── Status & Timestamps ─────
+
+  /**
+   * Ngày tài chính của **thời điểm mua vé** "YYYY-MM-DD".
+   *
+   * Dùng để gom doanh thu bán vé theo ngày tài chính cho báo cáo.
+   * Business rule: ngày tài chính tính từ 11h sáng → 11h sáng hôm sau.
+   *
+   * QUAN TRỌNG – Ticket vs Entry:
+   * - Ticket.financialDate = ngày tài chính lúc **cược** (thời điểm place-bet).
+   *   Vé multi-draw trải dài nhiều ngày nhưng chỉ ghi nhận doanh thu 1 lần vào ngày mua.
+   * - Entry.financialDate = ngày tài chính của **kỳ draw** cụ thể (riêng từng entry).
+   *   Dùng cho báo cáo thưởng/quyết toán theo kỳ.
+   */
+  financialDate: ISODateString;
+
   /** Trạng thái vé: paid → completed, hoặc → refunded/void. */
   status: TicketStatus;
+  /**
+   * Monotonic counter – incremented by SyncTicketSummaries.
+   * Dùng cho audit trail, ETag/cache invalidation, change detection.
+   */
+  version: number;
   /** Thời điểm tạo document (= thời điểm mua vé). */
   createdAt: Date;
   /** Thời điểm cập nhật gần nhất (progress/settlement update). */

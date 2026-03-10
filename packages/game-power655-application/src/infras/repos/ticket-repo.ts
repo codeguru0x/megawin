@@ -53,14 +53,11 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
       filter._id = { $gt: new ObjectId(cursor) };
     }
 
-    const col = await this.getCollection();
-    const docs = await col
-      .find(filter, {
-        projection: { _id: 1, "drawPlan.drawCount": 1 },
-        sort: { _id: 1 },
-        limit,
-      })
-      .toArray();
+    const docs = await this.findManyAsDocuments(filter, {
+      projection: { _id: 1, "drawPlan.drawCount": 1 },
+      sort: { _id: 1 },
+      limit,
+    });
 
     return docs.map((d) => ({
       ticketId: (d._id as ObjectId).toHexString(),
@@ -151,7 +148,6 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   /**
    * Bulk sync summaries cho nhiều tickets cùng lúc.
    * Conditional filter: chỉ ghi nếu processedCount mới >= cũ. Race-safe + idempotent.
-   * Power655: dùng progress.settledDrawCount, progress.voidDrawCount (khác games khác).
    */
   async bulkSyncSummaries(
     items: Array<{ ticketId: string; summary: TicketSummary }>,
@@ -162,20 +158,23 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     const ops: AnyBulkWriteOperation<Document>[] = [];
 
     for (const { ticketId, summary } of items) {
+      // progress.settledDraws = settled + voided (tất cả draws đã xử lý xong).
       const processedCount = summary.settledCount + summary.voidedCount;
       const allDone = processedCount >= summary.totalDraws;
 
       const $set: Record<string, unknown> = {
-        "progress.settledDrawCount": summary.settledCount,
-        "progress.voidDrawCount": summary.voidedCount,
+        "progress.settledDraws": processedCount,
         "settlement.totalWinAmount": summary.totalWinAmount,
-        "settlement.totalPayoutAmount": summary.totalWinAmount,
+        "settlement.lastSettledAt": now,
         updatedAt: now,
       };
 
       if (summary.voidedCount > 0) {
-        $set["voidSummary.totalRefundAmount"] = summary.totalRefundedAmount;
-        $set["voidSummary.voidDrawCount"] = summary.voidedCount;
+        $set["voidSummary.totalVoidedAmount"] = summary.totalVoidedAmount;
+        $set["voidSummary.totalRefundedAmount"] = summary.totalRefundedAmount;
+        $set["voidSummary.voidedDrawCount"] = summary.voidedCount;
+        $set["voidSummary.voidedDrawIds"] = summary.voidedDrawIds;
+        $set["voidSummary.lastVoidedAt"] = now;
       }
 
       if (allDone) {
@@ -186,14 +185,10 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
         updateOne: {
           filter: {
             _id: new ObjectId(ticketId),
+            // Race-safe: chỉ ghi nếu processedCount mới >= giá trị hiện tại.
             $expr: {
               $lte: [
-                {
-                  $add: [
-                    { $ifNull: ["$progress.settledDrawCount", 0] },
-                    { $ifNull: ["$progress.voidDrawCount", 0] },
-                  ],
-                },
+                { $ifNull: ["$progress.settledDraws", 0] },
                 processedCount,
               ],
             },
@@ -213,38 +208,37 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
    * Conditional: chỉ ghi nếu processedCount mới >= giá trị hiện tại (race-safe).
    */
   async syncSummary(ticketId: string, summary: TicketSummary): Promise<void> {
-    const allDone = summary.settledCount + summary.voidedCount >= summary.totalDraws;
+    // progress.settledDraws = settled + voided (tất cả draws đã xử lý xong).
     const processedCount = summary.settledCount + summary.voidedCount;
+    const allDone = processedCount >= summary.totalDraws;
+    const now = new Date();
 
     const $set: Record<string, unknown> = {
-      "progress.settledDrawCount": summary.settledCount,
-      "progress.voidDrawCount": summary.voidedCount,
+      "progress.settledDraws": processedCount,
       "settlement.totalWinAmount": summary.totalWinAmount,
-      "settlement.totalPayoutAmount": summary.totalWinAmount,
-      updatedAt: new Date(),
+      "settlement.lastSettledAt": now,
+      updatedAt: now,
     };
 
     if (summary.voidedCount > 0) {
-      $set["voidSummary.totalRefundAmount"] = summary.totalRefundedAmount;
-      $set["voidSummary.voidDrawCount"] = summary.voidedCount;
+      $set["voidSummary.totalVoidedAmount"] = summary.totalVoidedAmount;
+      $set["voidSummary.totalRefundedAmount"] = summary.totalRefundedAmount;
+      $set["voidSummary.voidedDrawCount"] = summary.voidedCount;
+      $set["voidSummary.voidedDrawIds"] = summary.voidedDrawIds;
+      $set["voidSummary.lastVoidedAt"] = now;
     }
 
     if (allDone) {
       $set.status = TicketStatus.Completed;
     }
 
-    const col = await this.getCollection();
-    await col.updateOne(
+    await this.updateOne(
       {
         _id: new ObjectId(ticketId),
+        // Race-safe: chỉ ghi nếu processedCount mới >= giá trị hiện tại.
         $expr: {
           $lte: [
-            {
-              $add: [
-                { $ifNull: ["$progress.settledDrawCount", 0] },
-                { $ifNull: ["$progress.voidDrawCount", 0] },
-              ],
-            },
+            { $ifNull: ["$progress.settledDraws", 0] },
             processedCount,
           ],
         },

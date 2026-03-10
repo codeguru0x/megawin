@@ -53,3 +53,21 @@ bingo18-place-bet:
         method: post
         authorizer:
           name: cognitoPlayerAuth
+
+bingo18-list-draw-results:
+  handler: src/handlers/bingo18/list-draw-results.handler
+  events:
+    - httpApi:
+        path: /games/bingo18/draw-results
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth
+
+bingo18-get-draw-result:
+  handler: src/handlers/bingo18/get-draw-result.handler
+  events:
+    - httpApi:
+        path: /games/bingo18/draw-results/{drawId}
+        method: get
+        authorizer:
+          name: cognitoPlayerAuth

@@ -13,6 +13,8 @@ import {
   type JackpotCycleClosedReason,
   type JackpotWinnerInfo,
   type JackpotCycleEntity,
+  JackpotCycleStatus,
+  JackpotCycleClosedReasons,
 } from "@megawin/game-power655/entities";
 import { BaseRepo } from "./base-repo";
 import { JackpotCycleMapper } from "../mappers/jackpot-cycle-mapper";
@@ -27,7 +29,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
 
   /** Lấy cycle đang active (chỉ có 1 tại 1 thời điểm). */
   async getActiveCycle(): Promise<JackpotCycleEntity | null> {
-    return this.findOne({ status: "active" });
+    return this.findOne({ status: JackpotCycleStatus.Active });
   }
 
   /** Tạo cycle mới với dual jackpot seed amounts. Guard: skip nếu đã có active cycle (idempotent khi retry). */
@@ -36,7 +38,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     jp1SeedAmount: number;
     jp2SeedAmount: number;
   }): Promise<void> {
-    const existing = await this.findOne({ status: "active" });
+    const existing = await this.findOne({ status: JackpotCycleStatus.Active });
     if (existing) return;
 
     const maxCycle = await this.findOne({}, { sort: { cycleNo: -1 } });
@@ -45,7 +47,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
 
     const doc: Omit<JackpotCycleDoc, "_id"> = {
       cycleNo,
-      status: "active",
+      status: JackpotCycleStatus.Active,
       startDrawId: input.startDrawId,
       jackpot1Opening: input.jp1SeedAmount,
       jackpot1Current: input.jp1SeedAmount,
@@ -73,7 +75,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     await this.updateOne(
       {
         cycleNo: input.cycleNo,
-        status: "active",
+        status: JackpotCycleStatus.Active,
       },
       {
         $set: {
@@ -109,7 +111,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     };
 
     const $set: CycleCloseSet = {
-      status: "closed",
+      status: JackpotCycleStatus.Closed,
       endDrawId: input.endDrawId,
       closedAt: now,
       closedReason: input.closedReason,
@@ -123,7 +125,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     await this.updateOne(
       {
         cycleNo: input.cycleNo,
-        status: "active",
+        status: JackpotCycleStatus.Active,
       },
       { $set: $set as unknown as Record<string, unknown> },
     );
@@ -131,13 +133,13 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
 
   /** Tìm cycle đã closed có endDrawId = drawId (dùng cho retry detection trong FinalizeSettle). */
   async findClosedByEndDrawId(drawId: string): Promise<JackpotCycleEntity | null> {
-    return this.findOne({ status: "closed", endDrawId: drawId });
+    return this.findOne({ status: JackpotCycleStatus.Closed, endDrawId: drawId });
   }
 
   /** Lấy danh sách cycles đã đóng (mới nhất trước). */
   async listClosedCycles(page: number, size: number): Promise<JackpotCycleEntity[]> {
     return this.findMany(
-      { status: "closed" },
+      { status: JackpotCycleStatus.Closed },
       {
         sort: { closedAt: -1 },
         skip: (page - 1) * size,
@@ -148,6 +150,6 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
 
   /** Đếm tổng cycles đã đóng. */
   async countClosedCycles(): Promise<number> {
-    return this.count({ status: "closed" });
+    return this.count({ status: JackpotCycleStatus.Closed });
   }
 }

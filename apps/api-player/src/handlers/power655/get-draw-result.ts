@@ -1,0 +1,28 @@
+/**
+ * Lambda handler: GET /games/power655/draw-results/{drawId}
+ * Chi tiết kết quả 1 kỳ quay Power 6/55.
+ *
+ * Trả kết quả 6 số chính + bonus number, dual jackpot snapshot,
+ * và bảng giải thưởng 5 hạng (jackpot1, jackpot2, tier1, tier2, tier3).
+ * Chỉ trả khi draw đã settle và có kết quả.
+ */
+
+import { z } from "zod";
+import { withPlayerAuth } from "@megawin/auth";
+import { GetDrawResultPlayerUseCase } from "@megawin/game-power655-application/use-cases/player";
+import { DRAW_ID_REGEX } from "@megawin/shared/constants/validation";
+
+const pathSchema = z.object({
+  drawId: z.string().regex(DRAW_ID_REGEX, "Kỳ quay thưởng phải có định dạng YYYY-MM-DD.NNN"),
+});
+
+const useCase = new GetDrawResultPlayerUseCase();
+
+export const handler = withPlayerAuth(
+  async (event) => {
+    const { drawId } = event.schema.path;
+
+    return useCase.run({ drawId });
+  },
+  { schemas: { path: pathSchema } },
+);

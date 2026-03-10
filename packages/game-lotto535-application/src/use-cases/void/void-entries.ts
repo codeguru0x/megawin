@@ -38,9 +38,9 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { RefundStatus, type EntryVoidInfo } from "@megawin/game-lotto535/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
-import { RefundStatus } from "@megawin/game-lotto535/entities";
 
 export interface VoidEntriesBatchResult {
   drawId: string;
@@ -80,7 +80,7 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEn
           refundAmount: entry.amount ?? 0,
           refundStatus: RefundStatus.Pending,
           voidedAt: now,
-        },
+        } satisfies EntryVoidInfo,
       }));
 
       // Bulk void: scheduled → voided + ghi voidInfo { refundAmount, refundStatus: "pending" }

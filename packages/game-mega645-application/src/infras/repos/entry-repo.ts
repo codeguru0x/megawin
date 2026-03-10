@@ -143,7 +143,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     items: Array<{
       entryId: string;
       payout: EntryPayout;
-      outcome: string;
+      outcome: EntryOutcome;
       result: EntryResult;
     }>,
   ): Promise<{ modifiedCount: number }> {
