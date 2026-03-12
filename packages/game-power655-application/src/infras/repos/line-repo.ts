@@ -46,7 +46,7 @@ export class LineRepository extends BaseRepo<any> {
    */
   async getLinesByEntryId(
     entryId: string,
-    options: { size?: number; cursor?: number } = {}
+    options: { size?: number; cursor?: number } = {},
   ): Promise<{ lines: TicketLineDoc[]; hasMore: boolean }> {
     const { size = 50, cursor } = options;
     const col = await this.getCollection();
@@ -69,9 +69,9 @@ export class LineRepository extends BaseRepo<any> {
   }
 
   /**
-   * Patch prizeAmount cho tất cả lines trúng jackpotTier trong draw.
+   * Patch winAmount cho tất cả lines trúng jackpotTier trong draw.
    *
-   * Idempotent: chỉ update lines có tier = jackpotTier và prizeAmount = 0.
+   * Idempotent: chỉ update lines có matchResult.tier = jackpotTier và matchResult.winAmount = 0.
    *
    * @param jackpotTier - "jackpot1" hoặc "jackpot2"
    */
@@ -83,11 +83,11 @@ export class LineRepository extends BaseRepo<any> {
     const result = await this.updateMany(
       {
         drawId,
-        tier: jackpotTier,
-        prizeAmount: 0,
+        "matchResult.tier": jackpotTier,
+        "matchResult.winAmount": 0,
       },
       {
-        $set: { prizeAmount: jackpotPerWinner },
+        $set: { "matchResult.winAmount": jackpotPerWinner },
       },
     );
     return result.modifiedCount;

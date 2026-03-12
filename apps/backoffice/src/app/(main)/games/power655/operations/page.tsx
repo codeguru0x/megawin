@@ -1,0 +1,236 @@
+"use client";
+
+/**
+ * Power 6/55 — Trang Vận hành
+ *
+ * Trang tổng hợp quản lý và giám sát kỳ quay Power 6/55.
+ * Power 6/55: 3 kỳ/tuần (T3, T5, T7), có bonusNumber, jackpot kép (JP1 + JP2).
+ *
+ * Zones:
+ *   1. Jackpot Hero Card (inline từ jackpot page)
+ *   2. Draw Management (command center + dialogs)
+ *   3. KPI Strip
+ *   4. Result & Financial (chỉ hiện khi published/settling/settled)
+ *   5. Analytics (play type, heatmap 55 số, live feed)
+ */
+
+import { Suspense, useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { Plus, Radio, SearchX } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { power655Keys } from "@/lib/query-keys";
+import { displayVNTimeWithSeconds } from "@megawin/shared/utils/date";
+
+import { DrawContextProvider, useDrawContext } from "./_lib/use-draw-context";
+import { DrawSelector } from "./_lib/draw-selector";
+import { CreateDrawAction } from "./_lib/sections/draw-management/draw-actions";
+import { DrawManagementSection } from "./_lib/sections/draw-management";
+import { KpiSection } from "./_lib/sections/kpi";
+import { AnalyticsSection } from "./_lib/sections/analytics";
+import { ResultSection } from "./_lib/sections/result";
+import { JackpotOverviewSection } from "../jackpot/_lib/jackpot-overview-section";
+
+// ─── Last Updated Badge ───────────────────────────────────────────────────────
+
+/**
+ * Hiển thị thời điểm cập nhật dữ liệu live cuối cùng.
+ * Theo dõi opsSummary (refetch mỗi 30s) — query phản ánh dữ liệu live chính xác nhất.
+ * Dùng DOM ref + setInterval để check mỗi giây, tránh re-render React.
+ */
+function LastUpdatedBadge({
+  opsParams,
+}: {
+  opsParams: { drawId?: string; financialDate?: string };
+}) {
+  const qc = useQueryClient();
+  const spanRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    function tick() {
+      const queryKey = power655Keys.opsSummary(opsParams as Record<string, unknown>);
+      const state = qc.getQueryState(queryKey);
+      const ts = state?.dataUpdatedAt;
+      if (spanRef.current && ts) {
+        spanRef.current.textContent = displayVNTimeWithSeconds(new Date(ts));
+      }
+    }
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [qc, opsParams]);
+
+  return (
+    <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70 tabular-nums">
+      <span className="relative flex size-1.5">
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-purple-400 opacity-60" />
+        <span className="relative inline-flex size-1.5 rounded-full bg-purple-500" />
+      </span>
+      Live · <span ref={spanRef} />
+    </span>
+  );
+}
+
+// ─── Inner page (accesses context) ───────────────────────────────────────────
+
+function OperationsContent() {
+  const {
+    draws,
+    draw,
+    effectiveDrawId,
+    onSelectDraw,
+    drawNotFound,
+    noDrawAvailable,
+    isHistorical,
+    isActiveForRefresh,
+    opsParams,
+  } = useDrawContext();
+  const [createOpen, setCreateOpen] = useState(false);
+
+  if (drawNotFound || noDrawAvailable)
+    return (
+      <DrawNotFound
+        noData={noDrawAvailable}
+        onCreateOpen={() => setCreateOpen(true)}
+        createOpen={createOpen}
+        setCreateOpen={setCreateOpen}
+      />
+    );
+
+  return (
+    <div className="@container/main flex flex-col gap-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-purple-500 to-purple-700 shadow-sm">
+            <Radio className="size-4.5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">
+              Power 6/55 — Vận hành
+            </h1>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
+              {isActiveForRefresh ? <LastUpdatedBadge opsParams={opsParams} /> : null}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <DrawSelector
+            draws={draws}
+            selectedDrawId={effectiveDrawId}
+            onSelect={onSelectDraw}
+            historicalDraw={isHistorical ? draw : undefined}
+          />
+          <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4" />
+            Tạo kỳ quay
+          </Button>
+        </div>
+      </div>
+
+      {/* Create draw dialog */}
+      <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
+
+      {/* Zone 1: Jackpot hero card — purple/indigo Power 6/55 theme */}
+      {draw && <JackpotOverviewSection />}
+
+      {/* Zone 2: Draw management — command center + dialogs */}
+      <DrawManagementSection />
+
+      {/* Zone 3: KPI strip */}
+      <KpiSection />
+
+      {/* Zone 4: Result + Financial — khi published/settling/settled */}
+      <ResultSection />
+
+      {/* Zone 5: Analytics — kiểu chơi, heatmap 55 số, live feed */}
+      <AnalyticsSection />
+    </div>
+  );
+}
+
+// ─── Draw Not Found ──────────────────────────────────────────────────────────
+
+function DrawNotFound({
+  noData = false,
+  onCreateOpen,
+  createOpen,
+  setCreateOpen,
+}: {
+  noData?: boolean;
+  onCreateOpen?: () => void;
+  createOpen?: boolean;
+  setCreateOpen?: (open: boolean) => void;
+}) {
+  return (
+    <div className="@container/main flex flex-col gap-6">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-purple-500 to-purple-700 shadow-sm">
+            <Radio className="size-4.5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">
+              Power 6/55 — Vận hành
+            </h1>
+            <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
+          </div>
+        </div>
+        {noData && onCreateOpen && (
+          <div className="flex items-center gap-3">
+            <Button size="sm" className="gap-2" onClick={onCreateOpen}>
+              <Plus className="size-4" />
+              Tạo kỳ quay
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {noData && createOpen !== undefined && setCreateOpen && (
+        <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
+      )}
+
+      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+          <SearchX className="size-6 text-muted-foreground" />
+        </div>
+        <h2 className="mt-4 text-base font-semibold text-foreground">
+          {noData ? "Chưa có kỳ quay nào" : "Không tìm thấy kỳ quay"}
+        </h2>
+        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+          {noData
+            ? "Hệ thống chưa có kỳ quay nào được tạo. Hãy tạo kỳ quay đầu tiên để bắt đầu vận hành."
+            : "Kỳ quay được yêu cầu không tồn tại hoặc đã bị xóa khỏi hệ thống."}
+        </p>
+        <div className="mt-5 flex items-center gap-3">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/games/power655/draws">Lịch sử kỳ quay</Link>
+          </Button>
+          {noData ? (
+            <Button size="sm" className="gap-2" onClick={onCreateOpen}>
+              <Plus className="size-4" />
+              Tạo kỳ quay
+            </Button>
+          ) : (
+            <Button size="sm" asChild>
+              <Link href="/games/power655/operations">Về trang vận hành</Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page root (wraps with context provider) ─────────────────────────────────
+
+export default function Power655OperationsPage() {
+  return (
+    <Suspense>
+      <DrawContextProvider>
+        <OperationsContent />
+      </DrawContextProvider>
+    </Suspense>
+  );
+}

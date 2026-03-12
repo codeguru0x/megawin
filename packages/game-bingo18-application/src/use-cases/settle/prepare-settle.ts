@@ -7,13 +7,12 @@
  * Bingo 18: KHÔNG có Jackpot, KHÔNG có payout caps.
  * Giải thưởng cố định theo bảng prize table.
  *
- * IDEMPOTENT: chỉ đọc draw, config, đếm entries.
+ * IDEMPOTENT: chỉ đọc draw + config.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { SettleContext } from "./types";
 
@@ -22,27 +21,19 @@ export interface PrepareSettleInput {
   drawId: string;
 }
 
-export class PrepareSettleUseCase extends InternalUseCase<
-  PrepareSettleInput,
-  SettleContext
-> {
+export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, SettleContext> {
   private readonly drawRepo = new DrawRepository();
-  private readonly entryRepo = new EntryRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  protected async execute(
-    input: PrepareSettleInput
-  ): Promise<SettleContext> {
+  protected async execute(input: PrepareSettleInput): Promise<SettleContext> {
     const { drawId } = input;
     const draw = await this.drawRepo.getDrawById(drawId);
     if (!draw) {
-      throw new Error(`Draw ${drawId} không tồn tại.`);
+      throw AppException.notFound(`Draw ${drawId} không tồn tại.`);
     }
 
     if (draw.status !== DrawStatus.Settling) {
-      throw new Error(
-        `Draw ${drawId} status = "${draw.status}", expected "settling".`
-      );
+      throw new Error(`Draw ${drawId} status = "${draw.status}", expected "settling".`);
     }
 
     if (!draw.result) {
@@ -50,8 +41,6 @@ export class PrepareSettleUseCase extends InternalUseCase<
     }
 
     const globalConfig = await this.getGlobalConfig.run();
-
-    const totalEntries = await this.entryRepo.countEntriesByDrawId(drawId);
 
     return {
       drawId,
@@ -63,14 +52,12 @@ export class PrepareSettleUseCase extends InternalUseCase<
         sum: draw.result.sum,
       },
       config: {
-        defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
         singleNumPrizes: globalConfig.singleNumPrizes,
         doubleMatchPrizes: globalConfig.doubleMatchPrizes,
         tripleMatchPrizes: globalConfig.tripleMatchPrizes,
         sumTotalPrizes: globalConfig.sumTotalPrizes,
         bigSmallDrawPrizes: globalConfig.bigSmallDrawPrizes,
       },
-      totalEntries,
     };
   }
 }

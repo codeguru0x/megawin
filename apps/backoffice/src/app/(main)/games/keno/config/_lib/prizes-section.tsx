@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Save, TrendingUp, TrendingDown, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { formatNumber } from "@megawin/shared/utils/number";
 
 import {
   analyzeProfitabilityForPick,
@@ -34,7 +35,7 @@ const PICK_MATCH_COUNTS: Record<number, number[]> = {
   10: [10, 9, 8, 7, 6, 5, 0],
 };
 
-const fmt = (n: number) => n.toLocaleString("en-US");
+const fmt = formatNumber;
 
 const PICK_BADGE_COLORS: Record<number, string> = {
   10: "bg-red-500",

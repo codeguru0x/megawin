@@ -39,7 +39,6 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  /** @inheritdoc */
   protected async execute(input: PrepareSettleInput): Promise<SettleContext> {
     const { drawId } = input;
 
@@ -71,8 +70,8 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
       throw AppException.businessRuleViolation(`Không tìm thấy Jackpot Cycle.`);
     }
 
-    const jp1OpeningAmount = activeCycle.jackpot1Current;
-    const jp2OpeningAmount = activeCycle.jackpot2Current;
+    const jp1CurrentAmount = activeCycle.jackpot1CurrentAmount;
+    const jp2CurrentAmount = activeCycle.jackpot2CurrentAmount;
 
     const fixedPrizeAmounts: PrizeAmounts = {
       tier1: globalConfig.defaultPrizes.tier1,
@@ -89,17 +88,19 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
         winningMain: [...draw.result.winningMain],
         bonusNumber: draw.result.bonusNumber,
       },
-      jp1OpeningAmount,
-      jp2OpeningAmount,
+      jp1CurrentAmount,
+      jp2CurrentAmount,
       fixedPrizeAmounts,
       config: {
+        companyRate: globalConfig.rates.companyRate,
         jp1SeedAmount: globalConfig.jackpot.jackpot1.seedAmount,
         jp2SeedAmount: globalConfig.jackpot.jackpot2.seedAmount,
-        jp1Ratio: globalConfig.jackpot.jp1ContributionRatio,
-        jp2Ratio: globalConfig.jackpot.jp2ContributionRatio,
-        jp1OverflowThreshold: globalConfig.jackpot.jp1OverflowThreshold,
-        companyRate: globalConfig.rates.companyRate,
-        defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
+        // Đọc ratios từ cycle.config (snapshot tại thời điểm tạo cycle).
+        // Operator có thể thay đổi GlobalConfig sau khi cycle bắt đầu,
+        // nhưng cycle đang chạy phải dùng config gốc để đảm bảo tính nhất quán.
+        jp1Ratio: activeCycle.config.jp1ContributionRatio,
+        jp2Ratio: activeCycle.config.jp2ContributionRatio,
+        jp1OverflowThreshold: activeCycle.config.jp1OverflowThreshold,
         cycleNo: activeCycle.cycleNo,
         cycleDrawCountBefore: activeCycle.drawCount,
       },

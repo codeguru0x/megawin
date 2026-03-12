@@ -5,6 +5,7 @@ import { toExecutionName } from "@megawin/game-core/utils";
 import { startExecution } from "@megawin/app-core/aws/sf";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
+import type { DrawVoidInfo } from "@megawin/game-power655/entities";
 
 const VOID_SFN_ARN = process.env.POWER655_VOID_SFN_ARN!;
 
@@ -52,11 +53,13 @@ export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutpu
         );
       }
 
-      const updated = await this.drawRepo.voidDraw(input.drawId, draw.status, {
+      // Build DrawVoidInfo typed — compiler bắt lỗi nếu thiếu field.
+      const voidInfo: DrawVoidInfo = {
         reason: input.reason,
         voidedBy: input.voidedBy,
         voidedAt: new Date(),
-      });
+      };
+      const updated = await this.drawRepo.voidDraw(input.drawId, draw.status, voidInfo);
 
       if (!updated) {
         throw AppException.internal("Huỷ kỳ quay thất bại – race condition.");

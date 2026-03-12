@@ -74,7 +74,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   }
 
   async getEntriesByTicketId(ticketId: string): Promise<EntryEntity[]> {
-    return await this.findMany({ ticketId }, { sort: { drawTime: 1 } });
+    return await this.findMany({ ticketId }, { sort: { drawId: 1 } });
   }
 
   async getEntriesByDrawId(drawId: string, page: number, size: number): Promise<EntryEntity[]> {
@@ -176,32 +176,30 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   // Aggregation (settle financials / report)
   // ─────────────────────────────────────────────
 
-  /** Revenue + commission per tenant cho 1 draw (exclude voided entries). */
-  async aggregateRevenueByTenant(drawId: string): Promise<
-    Array<{
-      tenantId: string;
-      revenue: number;
-      commission: number;
-      entryCount: number;
-    }>
-  > {
+  /**
+   * Aggregate tổng doanh thu và hoa hồng cho 1 draw (exclude voided entries).
+   * Group by null — 1 document kết quả, hiệu quả hơn aggregateRevenueByTenant
+   * khi caller chỉ cần 2 scalar tổng.
+   */
+  async aggregateTotalRevenue(drawId: string): Promise<{
+    totalRevenue: number;
+    totalAgentCommission: number;
+  }> {
     const result = await this.aggregate([
       { $match: { drawId, status: { $ne: EntryStatus.Void } } },
       {
         $group: {
-          _id: "$tenantId",
-          revenue: { $sum: "$amount" },
-          commission: { $sum: "$tenant.commissionAmount" },
-          entryCount: { $sum: 1 },
+          _id: null,
+          totalRevenue: { $sum: "$amount" },
+          totalAgentCommission: { $sum: "$tenant.commissionAmount" },
         },
       },
     ]);
-    return result.map((r: any) => ({
-      tenantId: r._id,
-      revenue: r.revenue,
-      commission: r.commission ?? 0,
-      entryCount: r.entryCount,
-    }));
+    const row = result[0] as any;
+    return {
+      totalRevenue: row?.totalRevenue ?? 0,
+      totalAgentCommission: row?.totalAgentCommission ?? 0,
+    };
   }
 
   /**
@@ -215,9 +213,10 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     totalFixedPrizes: number;
     /** Tổng số lines đã expand và match (sum hitCount tất cả tiers). */
     totalLines: number;
-    tierWinnerCounts: Record<string, number>;
-    /** Tổng tiền thưởng đã tính theo tier (VND). Jackpot = 0 tại bước này. */
-    tierPrizeAmounts: Record<string, number>;
+    /** Số lượt trúng per tier. Key = PrizeTier (vd. "jackpot", "tier1", ...). */
+    tierWinnerCounts: Partial<Record<PrizeTier, number>>;
+    /** Tổng tiền thưởng đã tính theo tier (VND). Key = PrizeTier. Jackpot = 0 tại bước này. */
+    tierPrizeAmounts: Partial<Record<PrizeTier, number>>;
   }> {
     // 1 aggregation duy nhất: facet song song tiers và totals trên cùng $match.
     const facetResult = await this.aggregate([
@@ -262,12 +261,12 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     const summary = totals[0] ?? {};
 
     let totalFixedPrizes = 0;
-    const tierWinnerCounts: Record<string, number> = {};
-    const tierPrizeAmounts: Record<string, number> = {};
+    const tierWinnerCounts: Partial<Record<PrizeTier, number>> = {};
+    const tierPrizeAmounts: Partial<Record<PrizeTier, number>> = {};
 
     for (const r of tiers as any[]) {
-      tierWinnerCounts[r._id] = r.totalHitCount;
-      tierPrizeAmounts[r._id] = r.totalAmount;
+      tierWinnerCounts[r._id as PrizeTier] = r.totalHitCount;
+      tierPrizeAmounts[r._id as PrizeTier] = r.totalAmount;
       if (r._id !== PrizeTier.Jackpot) {
         totalFixedPrizes += r.totalAmount;
       }
@@ -747,6 +746,411 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   // ─────────────────────────────────────────────
   // Jackpot Winners
   // ─────────────────────────────────────────────
+
+  // ─────────────────────────────────────────────
+  // Operations Dashboard – Query methods
+  // ─────────────────────────────────────────────
+
+  /**
+   * Lấy N entries mới nhất của một kỳ quay (cho live feed).
+   * Sort createdAt desc → entries mới nhất lên đầu.
+   */
+  async getLatestEntriesByDrawId(drawId: string, limit: number): Promise<EntryEntity[]> {
+    return this.findMany({ drawId }, { sort: { createdAt: -1 }, limit });
+  }
+
+  /**
+   * Lấy danh sách entries trúng thưởng của 1 kỳ quay (cursor-based).
+   *
+   * Chỉ trả về entries đã settle với winAmount > 0.
+   * cursorId: entryId của record cuối trang trước (ObjectId gt).
+   */
+  async getWinningEntries(
+    drawId: string,
+    limit: number,
+    cursorId?: string,
+  ): Promise<EntryEntity[]> {
+    const filter: Record<string, unknown> = {
+      drawId,
+      status: EntryStatus.Settled,
+      outcome: EntryOutcome.Win,
+    };
+    if (cursorId) {
+      filter._id = { $gt: new ObjectId(cursorId) };
+    }
+    return this.findMany(filter, { sort: { _id: 1 }, limit });
+  }
+
+  /**
+   * Tính tổng hợp entries trúng thưởng của 1 kỳ quay.
+   * Trả về: tổng entries trúng, tổng lines trúng, tổng tiền thưởng.
+   */
+  async getWinningEntriesSummary(drawId: string): Promise<{
+    totalWinningEntries: number;
+    totalWinningLines: number;
+    totalWinAmount: number;
+  }> {
+    const result = await this.aggregate([
+      { $match: { drawId, status: EntryStatus.Settled, outcome: EntryOutcome.Win } },
+      {
+        $group: {
+          _id: null,
+          totalWinningEntries: { $sum: 1 },
+          totalWinningLines: {
+            $sum: {
+              $reduce: {
+                input: { $ifNull: ["$payout.tiers", []] },
+                initialValue: 0,
+                in: { $add: ["$$value", "$$this.hitCount"] },
+              },
+            },
+          },
+          totalWinAmount: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
+        },
+      },
+      { $project: { _id: 0, totalWinningEntries: 1, totalWinningLines: 1, totalWinAmount: 1 } },
+    ]);
+    const row = (result[0] as any) ?? {};
+    return {
+      totalWinningEntries: row.totalWinningEntries ?? 0,
+      totalWinningLines: row.totalWinningLines ?? 0,
+      totalWinAmount: row.totalWinAmount ?? 0,
+    };
+  }
+
+  // ─────────────────────────────────────────────
+  // Operations Dashboard – Aggregation methods
+  // ─────────────────────────────────────────────
+
+  private buildOpsFilter(opts: { financialDate: string; drawId?: string }) {
+    const filter: Record<string, unknown> = {
+      financialDate: opts.financialDate,
+      status: { $ne: EntryStatus.Void },
+    };
+    if (opts.drawId) filter.drawId = opts.drawId;
+    return filter;
+  }
+
+  /**
+   * Tổng hợp KPI cho dashboard vận hành: revenue, entries, lines, players, commission, payout.
+   * Filter theo financialDate (hoặc kết hợp với drawId).
+   */
+  async aggregateOpsSummary(opts: { financialDate: string; drawId?: string }): Promise<{
+    totalRevenue: number;
+    totalEntries: number;
+    totalLines: number;
+    uniquePlayers: number;
+    totalCommission: number;
+    totalPayout: number;
+  }> {
+    const result = await this.aggregate([
+      { $match: this.buildOpsFilter(opts) },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$amount" },
+          totalEntries: { $sum: 1 },
+          totalLines: { $sum: "$lineCount" },
+          uniquePlayers: { $addToSet: "$accountId" },
+          totalCommission: { $sum: "$tenant.commissionAmount" },
+          totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          totalRevenue: 1,
+          totalEntries: 1,
+          totalLines: 1,
+          uniquePlayers: { $size: "$uniquePlayers" },
+          totalCommission: 1,
+          totalPayout: 1,
+        },
+      },
+    ]);
+    const row = (result[0] as any) ?? {};
+    return {
+      totalRevenue: row.totalRevenue ?? 0,
+      totalEntries: row.totalEntries ?? 0,
+      totalLines: row.totalLines ?? 0,
+      uniquePlayers: row.uniquePlayers ?? 0,
+      totalCommission: row.totalCommission ?? 0,
+      totalPayout: row.totalPayout ?? 0,
+    };
+  }
+
+  /**
+   * Phân tích doanh thu theo đại lý (tenant breakdown).
+   * Sort theo revenue desc.
+   */
+  async aggregateTenantBreakdown(opts: { financialDate: string; drawId?: string }): Promise<
+    Array<{
+      tenantId: string;
+      entries: number;
+      lines: number;
+      players: number;
+      revenue: number;
+      commission: number;
+      payout: number;
+    }>
+  > {
+    const result = await this.aggregate([
+      { $match: this.buildOpsFilter(opts) },
+      {
+        $group: {
+          _id: "$tenantId",
+          entries: { $sum: 1 },
+          lines: { $sum: "$lineCount" },
+          players: { $addToSet: "$accountId" },
+          revenue: { $sum: "$amount" },
+          commission: { $sum: "$tenant.commissionAmount" },
+          payout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          tenantId: "$_id",
+          entries: 1,
+          lines: 1,
+          players: { $size: "$players" },
+          revenue: 1,
+          commission: 1,
+          payout: 1,
+        },
+      },
+      { $sort: { revenue: -1 } },
+    ]);
+    return result as any[];
+  }
+
+  /**
+   * Tần suất xuất hiện của từng số trong các bộ cược.
+   *
+   * Mega 6/45: chỉ có mainNumbers (01-45), không có specialNumbers.
+   * Với mỗi số:
+   * - count   = số boards chứa số đó
+   * - lines   = tổng expandedLines của những boards đó
+   * - entries = số entries distinct có board chứa số đó
+   * - revenue = xấp xỉ doanh thu từ boards chứa số đó
+   */
+  async aggregateNumberFrequency(opts: { financialDate: string; drawId?: string }): Promise<{
+    mainNumbers: Array<{
+      number: string;
+      count: number;
+      lines: number;
+      entries: number;
+      revenue: number;
+    }>;
+  }> {
+    const filter = this.buildOpsFilter(opts);
+
+    // Revenue xấp xỉ: phân bổ entry.amount theo tỉ lệ expandedLines của board
+    const revenueExpr = {
+      $multiply: [
+        "$amount",
+        {
+          $cond: [
+            { $gt: ["$lineCount", 0] },
+            { $divide: ["$entrySummary.boards.expandedLines", "$lineCount"] },
+            0,
+          ],
+        },
+      ],
+    };
+
+    const mainResult = await this.aggregate([
+      { $match: filter },
+      { $unwind: "$entrySummary.boards" },
+      { $unwind: "$entrySummary.boards.mainNumbers" },
+      {
+        $group: {
+          _id: "$entrySummary.boards.mainNumbers",
+          count: { $sum: 1 },
+          lines: { $sum: "$entrySummary.boards.expandedLines" },
+          entryIds: { $addToSet: "$_id" },
+          revenue: { $sum: revenueExpr },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          number: "$_id",
+          count: 1,
+          lines: 1,
+          entries: { $size: "$entryIds" },
+          revenue: { $round: ["$revenue", 0] },
+        },
+      },
+      { $sort: { number: 1 } },
+    ]);
+
+    return {
+      mainNumbers: (mainResult as any[]).map((r) => ({
+        number: r.number,
+        count: r.count,
+        lines: r.lines,
+        entries: r.entries,
+        revenue: r.revenue ?? 0,
+      })),
+    };
+  }
+
+  /**
+   * Top combos (bộ số phổ biến nhất) trong một kỳ quay.
+   *
+   * Mega 6/45: combo key = `${playType}|${sortedMain.join(",")}` (không có specialNumbers).
+   * Sort entryCount desc → trả top N.
+   */
+  async aggregateTopCombos(opts: { drawId: string; limit?: number }): Promise<
+    Array<{
+      playType: string;
+      mainNumbers: string[];
+      entryCount: number;
+      totalAmount: number;
+    }>
+  > {
+    const limit = Math.min(opts.limit ?? 10, 20);
+
+    const result = await this.aggregate([
+      { $match: { drawId: opts.drawId } },
+      { $unwind: "$entrySummary.boards" },
+      {
+        $project: {
+          // Key dùng để group: playType + sorted mainNumbers
+          comboKey: {
+            $concat: [
+              "$entrySummary.boards.playType",
+              "|",
+              {
+                $reduce: {
+                  input: { $sortArray: { input: "$entrySummary.boards.mainNumbers", sortBy: 1 } },
+                  initialValue: "",
+                  in: {
+                    $cond: [
+                      { $eq: ["$$value", ""] },
+                      "$$this",
+                      { $concat: ["$$value", ",", "$$this"] },
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+          playType: "$entrySummary.boards.playType",
+          mainNumbers: {
+            $sortArray: { input: "$entrySummary.boards.mainNumbers", sortBy: 1 },
+          },
+          expandedLines: "$entrySummary.boards.expandedLines",
+          entryAmount: "$amount",
+          entryLineCount: "$lineCount",
+        },
+      },
+      {
+        $group: {
+          _id: "$comboKey",
+          playType: { $first: "$playType" },
+          mainNumbers: { $first: "$mainNumbers" },
+          entryIds: { $addToSet: "$_id" },
+          totalAmount: {
+            $sum: {
+              $multiply: [
+                "$entryAmount",
+                {
+                  $cond: [
+                    { $gt: ["$entryLineCount", 0] },
+                    { $divide: ["$expandedLines", "$entryLineCount"] },
+                    0,
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          playType: 1,
+          mainNumbers: 1,
+          entryCount: { $size: "$entryIds" },
+          totalAmount: { $round: ["$totalAmount", 0] },
+        },
+      },
+      { $sort: { entryCount: -1, totalAmount: -1 } },
+      { $limit: limit },
+    ]);
+
+    return result as Array<{
+      playType: string;
+      mainNumbers: string[];
+      entryCount: number;
+      totalAmount: number;
+    }>;
+  }
+
+  /**
+   * Phân bổ cược theo kiểu chơi (PlayType).
+   *
+   * Tổng hợp boardCount, lineCount, entryCount, revenue.
+   * Revenue là xấp xỉ — phân bổ theo tỷ lệ lines vì entry.amount không tách riêng theo board.
+   */
+  async aggregatePlayTypeDistribution(opts: { financialDate: string; drawId?: string }): Promise<
+    Array<{
+      playType: string;
+      boardCount: number;
+      lineCount: number;
+      entryCount: number;
+      revenue: number;
+    }>
+  > {
+    const result = await this.aggregate([
+      { $match: this.buildOpsFilter(opts) },
+      { $unwind: "$entrySummary.boards" },
+      {
+        $group: {
+          _id: "$entrySummary.boards.playType",
+          boardCount: { $sum: 1 },
+          lineCount: { $sum: "$entrySummary.boards.expandedLines" },
+          // distinct entry IDs để đếm số entries có kiểu chơi này
+          entryIds: { $addToSet: "$_id" },
+          // xấp xỉ revenue: tổng (entry.amount × board.expandedLines / entry.lineCount)
+          revenue: {
+            $sum: {
+              $multiply: [
+                "$amount",
+                {
+                  $cond: [
+                    { $gt: ["$lineCount", 0] },
+                    { $divide: ["$entrySummary.boards.expandedLines", "$lineCount"] },
+                    0,
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          playType: "$_id",
+          boardCount: 1,
+          lineCount: 1,
+          entryCount: { $size: "$entryIds" },
+          revenue: { $round: ["$revenue", 0] },
+        },
+      },
+      { $sort: { lineCount: -1 } },
+    ]);
+    return (result as any[]).map((r) => ({
+      playType: r.playType,
+      boardCount: r.boardCount,
+      lineCount: r.lineCount,
+      entryCount: r.entryCount,
+      revenue: r.revenue,
+    }));
+  }
 
   /**
    * Tìm entries trúng giải Jackpot trong 1 draw.

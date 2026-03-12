@@ -88,8 +88,7 @@ export const auth = betterAuth({
 
         return {
           sub: (raw[ClaimKey.Sub] as string) ?? undefined,
-          accountStatus:
-            (raw[ClaimKey.AccountStatus] as string) ?? AccountStatus.Active,
+          accountStatus: (raw[ClaimKey.AccountStatus] as string) ?? AccountStatus.Active,
           accountId: (raw[ClaimKey.AccountId] as string) ?? undefined,
           roles: (raw[ClaimKey.Roles] as string) ?? "",
           tenantId: (raw[ClaimKey.TenantId] as string) ?? undefined,
@@ -102,12 +101,21 @@ export const auth = betterAuth({
 
   /**
    * Session configuration.
+   *
+   * App này chạy DB-less (không có `database` config) → better-auth dùng stateless
+   * cookie-only session. Trong chế độ này `cookieCache.maxAge` CHÍNH LÀ thời gian
+   * sống thực của session (không có DB để fallback). `session.expiresIn` chỉ ảnh
+   * hưởng đến cookie `session_token`; cookie `session_data` (chứa user data) dùng
+   * `cookieCache.maxAge` — khi `session_data` expire → user bị logout.
+   *
+   * Đặt `maxAge` = 24h để khớp với Cognito ID Token TTL.
    */
   session: {
-    /** Cookie-based session (default). */
+    expiresIn: 60 * 60 * 24,
     cookieCache: {
       enabled: true,
-      maxAge: 60 * 60,
+      /** 24h — khớp với Cognito ID Token TTL. */
+      maxAge: 60 * 60 * 24,
     },
   },
 

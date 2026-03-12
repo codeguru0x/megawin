@@ -5,10 +5,7 @@
  * Dùng cho cả API response và client-side type.
  */
 
-import type {
-  JackpotCycleStatus,
-  JackpotCycleCloseReason,
-} from "@megawin/game-lotto535/entities";
+import type { JackpotCycleStatus, JackpotCycleCloseReason } from "@megawin/game-lotto535/entities";
 
 // ─────────────────────────────────────────────
 // GetJackpotCurrent
@@ -66,17 +63,6 @@ export interface GetJackpotCurrentOutput {
     percentage: number;
     /** Số tiền còn thiếu để đạt ngưỡng (VND) = threshold − current. */
     remaining: number;
-  };
-  /** Kỳ quay tiếp theo (nếu có kỳ active). */
-  nextDraw?: {
-    /** Mã kỳ quay. */
-    drawId: string;
-    /** Số thứ tự kỳ trong ngày. */
-    drawNo: number;
-    /** Giờ quay (HH:mm). */
-    drawTime: string;
-    /** Kỳ này dự kiến sẽ chia Jackpot hay không. */
-    splitCycleIntent: boolean;
   };
 }
 

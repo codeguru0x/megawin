@@ -10,7 +10,7 @@
  */
 
 import type { DrawStatus } from "@megawin/game-core/entities";
-import type { Bingo18PlayType, Bingo18BigSmallBet } from "./enums";
+import type { Bingo18PlayType, Bingo18BigSmallBet, Bingo18TripleKind } from "./enums";
 import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
@@ -107,24 +107,30 @@ export interface DrawVoidSummary {
  *
  * Chỉ ghi các combination có winnerCount > 0 — giảm kích thước document.
  * Dùng bởi GetDrawResultPlayerUseCase để trả bảng giải — 1 DB call.
+ *
+ * Group key: (playType, matchCount, tripleKind?).
+ * - singleNum: group theo matchCount (1/2/3) — giải thưởng khác nhau.
+ * - doubleMatch: matchCount = 1 (trúng hoặc không).
+ * - tripleMatch: cần thêm tripleKind để phân biệt specific (1.2tr) vs any (200k).
  */
 export interface DrawBasicPrizeSummary {
   /**
    * Loại cược: "singleNum" | "doubleMatch" | "tripleMatch".
-   * Quyết định ý nghĩa của number + matchCount.
+   * Cùng với matchCount + tripleKind xác định duy nhất 1 bậc giải.
    */
   playType: Bingo18PlayType;
   /**
-   * Số đã chọn (1-6). Có với singleNum và doubleMatch.
-   * undefined với tripleMatch any.
-   */
-  number?: number;
-  /**
    * Số lần xuất hiện trong kết quả (1, 2, 3).
-   * Chỉ relevant với singleNum (1 lần / 2 lần / 3 lần = giải thưởng khác nhau).
-   * Với doubleMatch, tripleMatch: luôn = 1 (trúng hoặc không).
+   * singleNum: 1/2/3 tương ứng giải khác nhau (12k/20k/30k).
+   * doubleMatch + tripleMatch: luôn = 1 (trúng hoặc không).
    */
   matchCount: number;
+  /**
+   * Phân loại triple: "specific" (chọn số cụ thể, 1.200.000đ) hoặc "any" (bất kỳ bộ ba, 200.000đ).
+   * Chỉ set cho tripleMatch — undefined với singleNum và doubleMatch.
+   * Bắt buộc để phân biệt 2 mức giải của tripleMatch.
+   */
+  tripleKind?: Bingo18TripleKind;
   /** Số lượt cược trúng tổ hợp này trong kỳ quay. */
   winnerCount: number;
   /** Tiền thưởng mỗi lần cược (VND). */
@@ -134,18 +140,25 @@ export interface DrawBasicPrizeSummary {
 /**
  * Giải thưởng 1 loại side bet đã có người trúng trong kỳ quay.
  *
- * Chỉ ghi các (playType, bet) có winnerCount > 0 — giảm kích thước document.
+ * Chỉ ghi các (playType, sum/bet) có winnerCount > 0 — giảm kích thước document.
+ *
+ * Mirror structure của `EntrySideBetSnapshot`: dùng `sum` hoặc `bet` tuỳ playType,
+ * không dùng string chung để tránh nhầm lẫn kiểu dữ liệu.
  */
 export interface DrawSideBetPrizeSummary {
   /** Loại side bet: "sumTotal" | "bigSmallDraw". */
   playType: Bingo18PlayType;
   /**
-   * Giá trị đặt cược đã trúng.
-   * sumTotal: tổng cụ thể (3-18) dưới dạng string.
-   * bigSmallDraw: "big" | "draw" | "small".
+   * Tổng cụ thể đã trúng (3-18). Chỉ set cho sumTotal.
+   * undefined với bigSmallDraw.
    */
-  bet: string;
-  /** Số lượt cược trúng với (playType, bet) này trong kỳ quay. */
+  sum?: number;
+  /**
+   * Cược Lớn/Hòa/Nhỏ đã trúng. Chỉ set cho bigSmallDraw.
+   * undefined với sumTotal.
+   */
+  bet?: Bingo18BigSmallBet;
+  /** Số lượt cược trúng với (playType, sum/bet) này trong kỳ quay. */
   winnerCount: number;
   /** Tiền thưởng mỗi lần cược (VND). */
   prizePerUnit: number;
@@ -162,12 +175,12 @@ export interface DrawSideBetPrizeSummary {
 export interface DrawSettleSummary {
   /**
    * Giải thưởng cơ bản có người trúng.
-   * Mỗi entry = 1 (playType, number?, matchCount) unique có winnerCount > 0.
+   * Mỗi entry = 1 (playType, matchCount, tripleKind?) unique có winnerCount > 0.
    */
   basicPrizes: DrawBasicPrizeSummary[];
   /**
    * Giải thưởng side bet có người trúng.
-   * Mỗi entry = 1 (playType, bet) unique có winnerCount > 0.
+   * Mỗi entry = 1 (playType, sum/bet) unique có winnerCount > 0.
    */
   sideBetPrizes: DrawSideBetPrizeSummary[];
 }

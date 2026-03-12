@@ -133,15 +133,23 @@ export interface DrawSettleSummary {
 
 /** Thông tin khi kỳ quay bị huỷ. Chỉ có khi status = void. */
 export interface DrawVoidInfo {
+  /** Lý do huỷ kỳ quay, do admin nhập. */
+  reason: string;
+  /** ID admin thực hiện void. undefined nếu void bởi hệ thống tự động. */
   voidedBy?: string;
+  /** Thời điểm thực hiện void. */
   voidedAt: Date;
 }
 
-/** Tổng kết void flow (entries refund). */
+/** Tổng kết void flow (entries refund). Ghi sau khi FinalizeVoid hoàn tất. */
 export interface DrawVoidSummary {
+  /** Tổng entries đã bị void. */
   totalVoidedEntries: number;
+  /** Tổng tiền cược gốc của các entries bị void (VND) = Σ(entry.amount). */
   totalOriginalAmount: number;
+  /** Tổng tiền hoàn trả cho người chơi (VND) = Σ(entry.voidInfo.refundAmount). */
   totalRefundAmount: number;
+  /** Thời điểm hoàn tất xử lý void. */
   completedAt: Date;
 }
 

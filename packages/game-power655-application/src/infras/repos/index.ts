@@ -12,4 +12,4 @@ export type {
   PlayerDailyReportData,
 } from "./report-repo";
 export type { TicketSummary } from "./ticket-repo";
-export type { VoidInfo } from "./draw-repo";
+export type { DrawEntity } from "../mappers/draw-mapper";

@@ -237,6 +237,8 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       finalAmount: hasJackpotWinner
         ? jackpotOpeningAmount + jackpotContribution
         : activeCycle.currentAmount,
+      // cycleDrawCountBefore + 1 = số kỳ bao gồm kỳ đang đóng (tuyệt đối → idempotent khi retry).
+      drawCount: input.config.cycleDrawCountBefore + 1,
       splitDetail,
       winners: hasJackpotWinner ? (input.jackpotWinners ?? []) : undefined,
     });

@@ -19,7 +19,7 @@
  */
 
 import type { PrizeTier } from "./enums";
-import type { MainTuple, Special, ISODateString } from "./types";
+import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
 // Line Match Result
@@ -92,10 +92,10 @@ export interface TicketLineDoc {
   lineIndex: number;
 
   /** 5 số chính của line, sorted tăng dần (canonical). */
-  main: MainTuple;
+  main: string[];
 
   /** 1 số đặc biệt của line. */
-  special: Special;
+  special: string;
 
   // ───── Match Result ─────
 

@@ -166,6 +166,11 @@ export interface DrawSummary {
   jackpotClosingAmount?: number;
   /** Kỳ quay đã có kết quả hay chưa. */
   hasResult: boolean;
+  /** Kết quả quay thưởng (nếu có). */
+  result?: {
+    /** 6 số chính trúng thưởng ("01"-"45"), draw order. */
+    winningMain: string[];
+  };
   /** Kỳ này có phải kỳ split cycle không. */
   isSplitCycle?: boolean;
   /** Tổng số entry (lượt tham gia) trong kỳ. */

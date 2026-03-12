@@ -50,8 +50,6 @@ function mapPlayerEntry(entry: EntryEntity): PlayerEntryInfo {
   return {
     id: entry.id,
     drawId: entry.drawId,
-    drawDate: entry.drawDate,
-    drawTime: entry.drawTime.toISOString(),
     status: entry.status,
     amount: entry.amount,
     lineCount: entry.lineCount,

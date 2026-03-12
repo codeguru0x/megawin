@@ -32,9 +32,7 @@ export class GetEntryLinesPlayerUseCase extends ApiGatewayUseCase<
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 
-  protected async execute(
-    input: PlayerGetEntryLinesInput
-  ): Promise<PlayerGetEntryLinesOutput> {
+  protected async execute(input: PlayerGetEntryLinesInput): Promise<PlayerGetEntryLinesOutput> {
     const { tenantId, accountId, entryId, size, cursor } = input;
 
     const entry = await this.entryRepo.getEntryById(entryId);
@@ -48,9 +46,7 @@ export class GetEntryLinesPlayerUseCase extends ApiGatewayUseCase<
     }
 
     if (entry.status !== EntryStatus.Settled) {
-      throw AppException.badRequest(
-        "Lines chỉ khả dụng khi kỳ đã được xử lý kết quả."
-      );
+      throw AppException.badRequest("Lines chỉ khả dụng khi kỳ đã được xử lý kết quả.");
     }
 
     const { lines, hasMore } = await this.lineRepo.getLinesByEntryId(entryId, {
@@ -74,10 +70,10 @@ function mapPlayerLine(line: TicketLineDoc): PlayerLineInfo {
     lineIndex: line.lineIndex,
     main: [...line.main],
     matchResult: {
-      mainMatchCount: line.mainMatchCount,
-      bonusMatched: line.bonusMatched,
-      tier: line.tier,
-      prizeAmount: line.prizeAmount,
+      mainMatchCount: line.matchResult.mainMatchCount,
+      bonusMatched: line.matchResult.bonusMatched,
+      tier: line.matchResult.tier,
+      prizeAmount: line.matchResult.winAmount,
     },
   };
 }

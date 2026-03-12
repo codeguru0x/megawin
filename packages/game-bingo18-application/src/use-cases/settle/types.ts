@@ -48,12 +48,12 @@ export interface BingoDrawResult {
 /**
  * Config settle — snapshot từ GlobalConfig tại thời điểm PrepareSettle.
  *
- * Chứa tỷ lệ tài chính + bảng giải thưởng cho tất cả loại cược.
+ * Chứa bảng giải thưởng cho tất cả loại cược.
+ * Commission được tính trực tiếp từ entry.tenant.commissionAmount (snapshot lúc place-bet)
+ * nên không cần defaultCommissionRate ở đây.
  * Config KHÔNG thay đổi giữa các step — snapshot tại thời điểm settle.
  */
 export interface BingoSettleConfig {
-  /** Tỷ lệ hoa hồng đại lý mặc định (0-1), override per tenant qua TenantConfig. */
-  defaultCommissionRate: number;
   /** Bảng giải thưởng cược Số Đơn — match 1/2/3 số. */
   singleNumPrizes: SingleNumPrizes;
   /** Bảng giải thưởng cược Số Đôi — match ≥2 số giống nhau. */
@@ -86,8 +86,11 @@ export interface SettleFinancials {
   totalPrizes: number;
   /** Tổng hoa hồng đại lý (VND) — commission đã cam kết trả cho tenant/agent. */
   totalAgentCommission: number;
-  /** Lợi nhuận (VND) = totalRevenue - totalPrizes - totalAgentCommission. Có thể âm. */
-  profit: number;
+  /**
+   * Phần công ty thu (VND) = totalRevenue - totalPrizes - totalAgentCommission.
+   * Có thể âm — Bingo 18 không có Jackpot pool để buffer. Monitor để cảnh báo sớm.
+   */
+  companyTake: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -151,12 +154,6 @@ export interface SettleContext {
    * Snapshot từ GlobalConfig — KHÔNG thay đổi giữa các step.
    */
   config: BingoSettleConfig;
-
-  /**
-   * Tổng entries cần settle trong kỳ này.
-   * Dùng cho logging/monitoring, không ảnh hưởng logic settle.
-   */
-  totalEntries: number;
 
   /**
    * Dữ liệu tài chính tổng hợp — output của CalculateFinancials.

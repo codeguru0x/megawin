@@ -34,7 +34,6 @@ export const lotto535BoardSchema = z
       PlayType.MainCover,
       PlayType.MainCover4,
       PlayType.SpecialCover,
-      PlayType.QuickPick,
     ]),
     selection: lotto535SelectionSchema,
   })
@@ -59,9 +58,6 @@ export const lotto535BoardSchema = z
     }
 
     switch (playType) {
-      case PlayType.QuickPick:
-        break;
-
       case PlayType.Standard:
         if (mainLen !== 5)
           ctx.addIssue({

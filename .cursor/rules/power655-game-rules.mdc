@@ -36,7 +36,9 @@ Power 6/55 là game DUY NHẤT trong hệ thống có **bonus number**:
 - Bonus number **LUÔN KHÁC** 6 số winning chính
 - Player chọn 6 số → nếu trùng 5/6 winning, số thứ 6 chưa trúng CÓ THỂ = bonus number → **Jackpot 2**
 - Khi trùng 6/6, cả 6 số player = 6 winning → bonus **KHÔNG THỂ** match (vì bonus ∉ winning set)
-- → **6/6 = chỉ JP1. 5/6 + bonus = chỉ JP2. Không bao giờ JP1 + JP2 cùng lúc**
+- → **1 LINE: 6/6 = chỉ JP1. 5/6 + bonus = chỉ JP2. 1 line không bao giờ trúng cả JP1 + JP2**
+- → **1 ENTRY (Bao): CÓ THỂ trúng cả JP1 VÀ JP2** qua các lines khác nhau
+  - Ví dụ Bao 7: chọn 7 số gồm 6 winning + bonus → 1 line 6/6 (JP1) + 6 lines 5/6+bonus (JP2)
 
 **Logic match trong code** (`match-result.ts`):
 ```
@@ -153,28 +155,69 @@ Phân bổ:
   JP2 += JackpotContribution × jp2ContributionRatio (mặc định 10%)
 ```
 
-### 6.2 Overflow Mechanism
+### 6.2 Overflow Mechanism (theo thể lệ Vietlott chính thức)
 
-Khi JP1 vượt ngưỡng `jp1OverflowThreshold` (mặc định 300 tỷ):
-- Phần vượt **tự động chuyển sang JP2**
+Overflow **chỉ kích hoạt khi đủ 3 điều kiện**:
+1. JP1 vượt ngưỡng `jp1OverflowThreshold` (mặc định 300 tỷ)
+2. **Không có JP1 winner** kỳ đó
+3. **Có JP2 winner** kỳ đó (overflow cần người nhận)
+
+**Trường hợp A — Có JP1 winner kỳ đó:**
+- Overflow mechanism **KHÔNG kích hoạt**
+- JP1 winner nhận toàn bộ pool: `jp1CurrentAmount + rawJp1Contribution` (= `projectedJp1`, không bị cap)
+- JP2 nhận contribution bình thường (10% tích luỹ), không nhận overflow
+
+**Trường hợp B — Không có JP1 winner, CÓ JP2 winner kỳ đó (overflow kích hoạt):**
+- JP1 được cap tại threshold; phần vượt (`jp1Overflow`) **chuyển sang JP2** kỳ đó
+- JP2 winner nhận: `jp2CurrentAmount + jp2Contribution + jp1Overflow`
 - `jp1Overflow = projectedJp1 - jp1OverflowThreshold`
 - `JP1 contribution -= jp1Overflow`
 - `JP2 contribution += jp1Overflow`
 
+**Trường hợp C — Không ai trúng cả JP1 lẫn JP2:**
+- Overflow **KHÔNG kích hoạt** (thiếu điều kiện 3: không có JP2 winner)
+- JP1 và JP2 **tiếp tục tăng lên** bình thường cho kỳ QSMT tiếp theo
+- JP1 CÓ THỂ vượt 300 tỷ mà **KHÔNG bị cap** — theo thể lệ Vietlott: "giá trị Jackpot 1 và Jackpot 2 tiếp tục tăng lên"
+- `jp1Overflow = 0`, `jackpot1Contribution = rawJp1 đầy đủ`
+
+> **Nguồn**: Thể lệ Vietlott Power 6/55, điều khoản overflow Jackpot 1.
+
+Overflow được implement trong `calculateDrawFinancials()` (`jackpot.ts`)
+với điều kiện: `!hasJackpot1Winner && hasJackpot2Winner && projectedJp1 > threshold`.
+
 ### 6.3 Jackpot Cycle
+
+**Cycle đại diện cho vòng đời tích lũy của JP1** — từ khi JP1 bắt đầu đến khi JP1 có winner.
 
 - **2 jackpot chạy SONG SONG** trong cùng 1 cycle
 - `jackpot1Opening`, `jackpot1Current` (trùng 6/6)
 - `jackpot2Opening`, `jackpot2Current` (trùng 5/6 + bonus)
+- `jackpot2ResetCount`: số lần JP2 đã reset trong cycle (= 0 khi mới tạo)
+- `jackpot2Resets[]`: lịch sử mỗi lần JP2 reset (winner info, prizePool, drawId, resetAt)
 - **Seed**: JP1 seed amount, JP2 seed amount (cấu hình trong GlobalConfig, mặc định 30 tỷ và 3 tỷ)
-- **Closed reasons**: `jackpot1_winner`, `jackpot2_winner`, `both_winner`, `manual_reset`
+- **Closed reasons**: `jackpot1_winner`, `both_winner`, `manual_reset`
+  - `jackpot2_winner` **KHÔNG TỒN TẠI** — JP2 winner không đóng cycle
+
+**Bảng sự kiện và hành động:**
+
+| Sự kiện | JP1 | JP2 | Đóng cycle? | Ghi nhận |
+|---------|-----|-----|-------------|----------|
+| JP1 winner | Reset → seed | **Carry over** | **CÓ** | `cycle.winners[]` (JP1 only) |
+| JP1 + JP2 winner | Reset → seed | Reset → seed | **CÓ** | `cycle.winners[]` (JP1) + `jackpot2Resets[]` |
+| JP2 winner only | Tiếp tục | Reset → seed | **KHÔNG** | `jackpot2Resets[]` |
+| Không ai trúng | Tiếp tục | Tiếp tục | KHÔNG | — |
+
+**Quy tắc quan trọng:**
+- Khi đóng cycle do JP1 win: cycle mới JP2 seed = `closingJp2` (carry over, KHÔNG phải config seed).
+  Trừ khi BothWinner → JP2 seed = `jp2SeedAmount` (config).
+- JP2 `resetAt` trong `jackpot2Resets[]` là thời điểm `FinalizeSettle` xử lý, không phải thời điểm quay.
 
 ### 6.4 Rollover (Theo luật Vietlott chính thức)
 
-- **Có JP1 winner**: Winner nhận toàn bộ JP1 pool = jp1OpeningAmount + jp1Contribution kỳ đó. Nhiều winners → chia đều (floor). Cycle mới bắt đầu từ **jp1SeedAmount** (lấy từ GlobalConfig, KHÔNG cộng contribution vì đã trao cho winner). JP2 giữ nguyên (trừ khi cũng có winner)
-- **Có JP2 winner**: Winner nhận toàn bộ JP2 pool = jp2OpeningAmount + jp2Contribution kỳ đó. Nhiều winners → chia đều (floor). Cycle mới bắt đầu từ **jp2SeedAmount** (lấy từ GlobalConfig, KHÔNG cộng contribution vì đã trao cho winner). JP1 giữ nguyên
-- **Không có winner**: JP1 = opening + jp1Contribution, JP2 = opening + jp2Contribution
-- **Không có winner, JP1 > overflow threshold**: phần vượt ngưỡng chuyển sang JP2 (xem 6.2)
+- **Có JP1 winner**: Winner nhận toàn bộ JP1 pool = jp1OpeningAmount + jp1Contribution kỳ đó. Nhiều winners → chia đều (floor). **Cycle đóng lại**. Cycle mới: JP1 seed = `jp1SeedAmount` (config). JP2 **CARRY OVER** = `closingJp2` (tiếp tục từ giá trị hiện tại, KHÔNG reset về seed). Trừ khi cùng kỳ JP2 cũng trúng (BothWinner) → JP2 seed = `jp2SeedAmount` (config).
+- **Có JP2 winner only**: Winner nhận toàn bộ JP2 pool = jp2OpeningAmount + jp2Contribution kỳ đó (có thể bao gồm jp1Overflow). Nhiều winners → chia đều (floor). **Cycle KHÔNG đóng**. JP2 reset về `jp2SeedAmount` trong cycle hiện tại. JP1 tiếp tục tích lũy bình thường. Ghi lịch sử vào `jackpot2Resets[]`.
+- **Không có winner**: JP1 = opening + jp1Contribution, JP2 = opening + jp2Contribution (tiếp tục tích lũy)
+- **Không có winner, JP1 > overflow threshold**: phần vượt ngưỡng xử lý theo overflow rule (xem 6.2)
 
 > **QUAN TRỌNG**: Power 6/55 theo luật Vietlott **KHÔNG CÓ** cơ chế "Split Cycle" chia Jackpot xuống giải Nhất/Nhì/Ba khi vượt ngưỡng. Jackpot luôn tích lũy không giới hạn cho đến khi có winner.
 
@@ -354,12 +397,13 @@ Routes: draws, config, tenant-config, jackpot, operations.
 
 1. **CÓ bonus number**: Power 6/55 khác Mega 6/45 và Lotto 5/35 — DrawResult chứa `bonusNumber`, LineMatchResult chứa `bonusMatched`
 2. **DUAL Jackpot**: 2 jackpot pool tách biệt (JP1 + JP2), tích luỹ song song với tỷ lệ 90%/10%
-3. **Bonus KHÔNG THỂ match khi trùng 6/6**: Vì bonus quay từ 49 số ngoài winning → 6/6 chỉ JP1, KHÔNG có trường hợp JP1+JP2 cùng lúc
+3. **Bonus KHÔNG THỂ match khi trùng 6/6 (per LINE)**: Vì bonus quay từ 49 số ngoài winning → 1 line: 6/6 chỉ JP1. Nhưng 1 ENTRY (Bao) CÓ THỂ trúng cả JP1+JP2 qua lines khác nhau
 4. **Số lưu string zero-padded**: "01"-"55" (2 ký tự)
 5. **Tiền lưu integer VND**: Không dùng float
 6. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc`, có thể thay đổi bởi staff
-7. **Overflow mechanism**: JP1 > jp1OverflowThreshold → phần vượt tự động chuyển sang JP2 — logic quan trọng trong `calculateDrawFinancials()`. Giá trị ngưỡng cấu hình trong GlobalConfig (mặc định 300 tỷ).
+7. **Overflow mechanism (conditional)**: Chỉ kích hoạt khi ĐỦ 3 điều kiện: JP1 > threshold, KHÔNG có JP1 winner, CÓ JP2 winner. Khi kích hoạt: overflow chuyển sang JP2 (trao JP2 winner kỳ này), JP1 cap tại threshold. **Nếu không ai trúng cả JP1 lẫn JP2 → JP1 tiếp tục vượt threshold bình thường, KHÔNG bị cap** (theo luật: "tiếp tục tăng lên"). Logic ở `calculateDrawFinancials()` với điều kiện `!hasJackpot1Winner && hasJackpot2Winner`. Giá trị ngưỡng cấu hình trong GlobalConfig (mặc định 300 tỷ).
 8. **KHÔNG CÓ Split Cycle**: Theo luật Vietlott gốc, Power 6/55 KHÔNG có cơ chế chia Jackpot xuống giải Nhất/Nhì/Ba. Jackpot chỉ tích lũy đến khi có winner.
+9. **JP2 winner KHÔNG đóng cycle**: Cycle chỉ đóng khi JP1 winner (hoặc admin reset). JP2 winner → JP2 reset về seed trong cycle, JP1 tiếp tục. Lịch sử JP2 reset lưu trong `jackpot2Resets[]`. `JackpotCycleClosedReasons.Jackpot2Winner` đã bị xoá — không dùng.
 9. **KHÔNG có Bao 5**: Chỉ có Bao 7-18 và Standard/QuickPick (khác Mega 6/45)
 10. **5 boards A-E**: Khác Mega 6/45 (6 boards A-F)
 11. **3 lần/tuần**: T3, T5, T7 — khác Mega 6/45 (T4, T6, CN)

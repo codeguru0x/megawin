@@ -14,7 +14,7 @@
  */
 
 import type { DrawStatus } from "@megawin/game-core/entities";
-import type { ISODateString, DrawNo, MainTuple, Special } from "./types";
+import type { ISODateString, DrawNo } from "./types";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces
@@ -37,11 +37,19 @@ export interface DrawSales {
  * Kết quả kỳ quay. Set khi status chuyển sang "published".
  */
 export interface DrawResult {
-  /** 5 số chính trúng thưởng, sorted tăng dần. */
-  winningMain: MainTuple;
+  /**
+   * 5 số chính trúng thưởng theo thứ tự quay gốc (không sort).
+   *
+   * Thứ tự quay gốc phải được bảo toàn để hiển thị đúng với kết quả Vietlott công bố.
+   * Lưu dạng string[] (zero-padded "01"-"35") — dùng trực tiếp từ MongoDB, tránh cast.
+   */
+  winningMain: string[];
 
-  /** 1 số đặc biệt trúng thưởng. */
-  winningSpecial: Special;
+  /**
+   * 1 số đặc biệt trúng thưởng theo thứ tự quay gốc.
+   * Lưu dạng string (zero-padded "01"-"12").
+   */
+  winningSpecial: string;
 
   /** Thời điểm công bố. */
   publishedAt: Date;
@@ -95,14 +103,14 @@ export interface DrawFinancial {
   /** Tổng hoa hồng đại lý (sum across all tenants). */
   totalAgentCommission: number;
 
-  /** Công ty thu về (sau cap). */
-  companyTake: number;
+  /** Công ty thu về (sau cap). Công thức: min(companyTake, max(remain, 0)). */
+  actualCompanyTake: number;
 
   /** Tỷ lệ company take theo config. */
   companyTakeRate: number;
 
-  /** Company take tối đa trước cap. */
-  companyTakeMax: number;
+  /** Company take lý thuyết trước cap. Công thức: round(totalRevenue × companyTakeRate). */
+  companyTake: number;
 
   /**
    * Tiền tích luỹ vào Jackpot kỳ tiếp theo.

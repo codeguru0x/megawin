@@ -44,6 +44,8 @@ interface DrawContextValue {
   isActiveForRefresh: boolean;
   /** URL yêu cầu kỳ cụ thể nhưng không tìm thấy trong hệ thống. */
   drawNotFound: boolean;
+  /** Selector đã load xong nhưng không có kỳ nào để hiển thị (chưa tạo kỳ). */
+  noDrawAvailable: boolean;
   /** Kỳ đang chọn là kỳ cũ (không có trong dropdown selector). */
   isHistorical: boolean;
   /** Hàm chọn draw. */
@@ -86,16 +88,20 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   const isHistorical =
     !!selectedDrawId && !selectorLoading && draws.length > 0 && !selectedInList && !!remoteDraw;
 
-  // Không tồn tại trong DB: selector đã load, draw detail đã load xong, vẫn không có
+  // Không tồn tại trong DB: URL có ?draw=xxx, selector đã load xong,
+  // draw không có trong list VÀ detail cũng không tìm thấy (error hoặc null).
+  // Bỏ điều kiện draws.length > 0 vì kể cả khi list rỗng, nếu detail không có
+  // thì vẫn phải hiển thị DrawNotFound.
   const drawNotFound =
     !!selectedDrawId &&
     !selectorLoading &&
-    draws.length > 0 &&
     !selectedInList &&
     !remoteLoading &&
     (remoteError || !remoteDraw);
 
-  // draw từ selector (nếu trong list), fallback từ remoteDraw (kỳ cũ).
+  // Chưa có kỳ nào: không có ?draw param, selector đã load xong nhưng list rỗng.
+  // Phân biệt với drawNotFound (có param nhưng không tìm thấy).
+  const noDrawAvailable = !selectedDrawId && !selectorLoading && draws.length === 0;
   // Các section luôn cần draw có giá trị để render — selector tick logic độc lập (selectedInList).
   const drawFromSelector = draws.find((d) => d.drawId === effectiveDrawId);
   const drawFromRemote: DrawSelectorItem | undefined =
@@ -139,6 +145,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
     isVoided,
     isActiveForRefresh,
     drawNotFound: !!drawNotFound,
+    noDrawAvailable,
     isHistorical,
     onSelectDraw,
   };

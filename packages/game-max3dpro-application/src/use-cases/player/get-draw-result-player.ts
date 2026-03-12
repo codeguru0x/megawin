@@ -19,6 +19,7 @@ import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawEntity } from "../../infras/repos/draw-repo";
+import type { DrawSettleSummaryTier } from "@megawin/game-max3dpro/entities";
 import type { PlayerDrawResultInfo, PlayerDrawTierPrize } from "./dto/player.dto";
 
 export interface GetDrawResultPlayerInput {
@@ -53,11 +54,13 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
 
   // settleSummary.tiers chứa winnerCount + prizeAmount per tier đã tính sẵn.
   // Đủ 8 tiers: special, specialSub, first ... sixth (kể cả winnerCount = 0).
-  const prizes: PlayerDrawTierPrize[] = (draw.settleSummary?.tiers ?? []).map((t) => ({
-    tier: t.tier,
-    winnerCount: t.winnerCount,
-    prizeAmount: t.prizeAmount,
-  }));
+  const prizes: PlayerDrawTierPrize[] = (draw.settleSummary?.tiers ?? []).map(
+    (t: DrawSettleSummaryTier) => ({
+      tier: t.tier,
+      winnerCount: t.winnerCount,
+      prizeAmount: t.prizeAmount,
+    }),
+  );
 
   return {
     drawId: draw.drawId,

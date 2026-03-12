@@ -4,7 +4,7 @@
 
 export type {
   MegaDrawResult,
-  MegaSettleConfig,
+  SettleConfig as MegaSettleConfig,
   SettleFinancials,
   SettleContext,
   SettleContextWithFinancials,

@@ -15,3 +15,4 @@ export {
   type AccountGuardResult,
   type AccountGuardSession,
 } from "./account-guard";
+export { formatErrorToast, type ErrorToast } from "./format-error-toast";

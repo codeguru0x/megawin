@@ -13,18 +13,28 @@
  */
 
 import type { DrawStatus } from "@megawin/game-core/entities";
-import type { DrawTenantFinancial } from "@megawin/game-core/types";
-import type { MainTuple, BonusNumber, ISODateString, DrawNo } from "./types";
+import type { ISODateString, DrawNo } from "./types";
 
 /**
  * Kết quả kỳ quay.
+ *
  * Ghi nhận sau khi staff nhập kết quả hoặc import từ Vietlott.
+ * Số lưu dạng string zero-padded ("01"-"55"), giữ nguyên thứ tự quay gốc.
+ * Không sort ascending — thứ tự quay gốc có giá trị hiển thị cho người chơi.
  */
 export interface DrawResult {
-  /** 6 số chính trúng thưởng, sorted ascending. */
-  winningMain: MainTuple;
-  /** Số đặc biệt (bonus number) – quay từ 49 quả bóng còn lại sau khi rút 6. */
-  bonusNumber: BonusNumber;
+  /**
+   * 6 số chính trúng thưởng (string zero-padded "01"-"55").
+   * Thứ tự quay gốc — không sort ascending.
+   * Match engine dùng Set intersection nên không phụ thuộc thứ tự.
+   */
+  winningMain: string[];
+  /**
+   * Số bonus — quay từ 49 quả bóng còn lại sau khi rút 6 số chính.
+   * Luôn khác tất cả 6 số trong winningMain.
+   */
+  bonusNumber: string;
+
   /** Thời điểm công bố kết quả. */
   publishedAt: Date;
 }
@@ -42,16 +52,32 @@ export interface DrawSales {
 
 /**
  * Snapshot Jackpot tại kỳ quay này.
- * Ghi nhận sau khi settle xong – dùng cho báo cáo và audit.
+ * Ghi nhận sau khi settle xong — dùng cho báo cáo và audit.
+ *
+ * closingJackpot1/2 = openingJackpot1/2 + jackpot1/2Contribution.
+ * jackpot1Contribution đã trừ jp1Overflow nếu overflow kích hoạt (JP1 cap tại threshold).
+ * jackpot2Contribution đã cộng jp1Overflow nếu overflow kích hoạt VÀ có JP2 winner kỳ đó.
  */
 export interface DrawJackpot {
   /** Giá trị JP1 đầu kỳ (trước khi cộng tích luỹ kỳ này). */
   openingJackpot1: number;
-  /** Giá trị JP1 cuối kỳ. LUÔN = openingJackpot1 + jackpot1Contribution. */
+  /**
+   * Giá trị JP1 cuối kỳ = openingJackpot1 + jackpot1Contribution.
+   * Nếu JP1 winner: = tổng pool JP1 winner nhận.
+   * Nếu overflow (!JP1 winner, có JP2 winner, JP1 > threshold): = threshold (đã cap).
+   * Nếu không ai trúng: = opening + contribution đầy đủ (JP1 vượt threshold bình thường).
+   */
   closingJackpot1: number;
-  /** Giá trị JP2 đầu kỳ. */
+
+  /** Giá trị JP2 đầu kỳ (trước khi cộng tích luỹ kỳ này). */
   openingJackpot2: number;
-  /** Giá trị JP2 cuối kỳ. LUÔN = openingJackpot2 + jackpot2Contribution. */
+
+  /**
+   * Giá trị JP2 cuối kỳ = openingJackpot2 + jackpot2Contribution.
+   * Nếu overflow kích hoạt VÀ JP2 winner: jackpot2Contribution bao gồm jp1Overflow
+   *   → closingJackpot2 = tổng pool JP2 winner nhận (opening + rawJp2 + overflow).
+   * Nếu roll-over hoặc không có JP2 winner: = opening + rawJp2 bình thường.
+   */
   closingJackpot2: number;
 }
 
@@ -71,18 +97,34 @@ export interface DrawFinancial {
   totalFixedPrizes: number;
   /** Tổng hoa hồng đại lý (~ 20% revenue). */
   totalAgentCommission: number;
-  /** Công ty thu về dự kiến (15% × revenue). */
+  /** Công ty thu về dự kiến (round(revenue × companyTakeRate)). */
   companyTake: number;
-  /** Công ty thu về thực tế (≤ companyTake, giới hạn bởi số dư). */
+  /** Tỷ lệ thu nhập công ty theo config (ví dụ: 0.15 = 15%). */
+  companyTakeRate: number;
+  /** Công ty thu về thực tế (= min(companyTake, max(remain, 0))). */
   actualCompanyTake: number;
-  /** Tiền tích luỹ cộng vào Jackpot 1 (sau overflow). */
+  /**
+   * Tiền tích luỹ cộng vào Jackpot 1 kỳ này (VND).
+   * = round(totalJackpotContribution × jp1Ratio) - jp1Overflow (khi overflow kích hoạt).
+   * Nếu có JP1 winner: overflow không kích hoạt; = round(total × jp1Ratio) đầy đủ.
+   */
   jackpot1Contribution: number;
-  /** Tiền tích luỹ cộng vào Jackpot 2 (bao gồm phần overflow từ JP1). */
+  /**
+   * Tiền tích luỹ cộng vào Jackpot 2 kỳ này (VND).
+   * = totalJackpotContribution - jackpot1Contribution.
+   * + jp1Overflow nếu overflow kích hoạt VÀ có JP2 winner (overflow chuyển sang JP2).
+   * KHÔNG cộng jp1Overflow nếu overflow kích hoạt nhưng không có JP2 winner.
+   */
   jackpot2Contribution: number;
-  /** Phần JP1 vượt ngưỡng (300 tỷ) chuyển sang JP2 (0 nếu không overflow). */
+  /**
+   * Lượng tiền vượt ngưỡng JP1 (VND) kỳ này.
+   * = max(0, jp1CurrentAmount + rawJp1 - jp1OverflowThreshold).
+   * Hướng xử lý phụ thuộc vào hasJackpot2Winner lúc settle:
+   *   true  → đã cộng vào jackpot2Contribution (trao cho JP2 winner kỳ này).
+   *   false → CHƯA cộng vào JP2; FinalizeSettle hoàn về JP1 kỳ tiếp.
+   * jp1Overflow = 0 nếu không overflow hoặc có JP1 winner.
+   */
   jp1Overflow: number;
-  /** Chi tiết tài chính theo từng tenant/đại lý. */
-  tenantBreakdown: DrawTenantFinancial[];
 }
 
 /**
@@ -101,24 +143,31 @@ export interface DrawStats {
 }
 
 /**
- * Thông tin kỳ quay bị huỷ (void).
- * Ghi nhận khi admin void kỳ quay – entries được hoàn tiền.
+ * Thông tin huỷ kỳ quay.
+ * Ghi nhận khi admin void kỳ quay (status → voiding) – entries sẽ được hoàn tiền.
+ */
+export interface DrawVoidInfo {
+  /** Lý do huỷ kỳ quay, do admin nhập. */
+  reason: string;
+  /** ID admin thực hiện void. undefined nếu void bởi hệ thống tự động. */
+  voidedBy?: string;
+  /** Thời điểm thực hiện void. */
+  voidedAt: Date;
+}
+
+/**
+ * Tổng kết hoàn tiền sau khi void kỳ quay hoàn tất.
+ * Ghi sau khi FinalizeVoid hoàn tất toàn bộ entries.
  */
 export interface DrawVoidSummary {
-  /** Lý do huỷ kỳ quay. */
-  reason: string;
-  /** Người thực hiện void (admin ID). */
-  voidedBy?: string;
-  /** Thời điểm void. */
-  voidedAt: Date;
-  /** Tổng entries bị void. */
-  totalEntriesVoided: number;
-  /** Tổng tiền cần hoàn. */
+  /** Tổng entries đã bị void. */
+  totalVoidedEntries: number;
+  /** Tổng tiền cược gốc của các entries bị void (VND) = Σ(entry.amount). */
+  totalOriginalAmount: number;
+  /** Tổng tiền hoàn trả cho người chơi (VND) = Σ(entry.voidInfo.refundAmount). */
   totalRefundAmount: number;
-  /** Số entries đã gửi lệnh hoàn thành công. */
-  totalRefundDispatched: number;
-  /** Số entries gửi lệnh hoàn thất bại. */
-  totalRefundFailed: number;
+  /** Thời điểm hoàn tất xử lý void. */
+  completedAt: Date;
 }
 
 /**
@@ -208,7 +257,9 @@ export interface DrawDoc {
   stats?: DrawStats;
   /** Tổng kết bảng giải thưởng (ghi sau settle, dùng cho API player). */
   settleSummary?: DrawSettleSummary;
-  /** Thông tin void (chỉ có khi status = void). */
+  /** Thông tin void (ghi khi admin void, chỉ có khi status = voiding/void). */
+  voidInfo?: DrawVoidInfo;
+  /** Tổng kết void flow (entries refund). Ghi sau FinalizeVoid hoàn tất. */
   voidSummary?: DrawVoidSummary;
   /** Tham chiếu Vietlott chính thức. */
   vietlottRef?: DrawVietlottRef;

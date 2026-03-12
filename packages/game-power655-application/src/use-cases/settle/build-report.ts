@@ -40,7 +40,7 @@ export class BuildReportUseCase extends InternalUseCase<SettleContext, BuildRepo
 
   /** @inheritdoc */
   protected async execute(input: SettleContext): Promise<BuildReportResult> {
-    const { drawId, financialDate, financials, jp1OpeningAmount, jp2OpeningAmount } = input;
+    const { drawId, financialDate, financials, jp1CurrentAmount, jp2CurrentAmount } = input;
 
     const tenantAggs = await this.entryRepo.aggregateTenantReport(drawId, financialDate);
 
@@ -110,11 +110,11 @@ export class BuildReportUseCase extends InternalUseCase<SettleContext, BuildRepo
           jackpotContribution: totalJackpotContribution,
         },
         jackpotTracking: {
-          openingAmount: jp1OpeningAmount + jp2OpeningAmount,
+          openingAmount: jp1CurrentAmount + jp2CurrentAmount,
           closingAmount:
-            jp1OpeningAmount +
+            jp1CurrentAmount +
             financials.jackpot1Contribution +
-            (jp2OpeningAmount + financials.jackpot2Contribution),
+            (jp2CurrentAmount + financials.jackpot2Contribution),
           hasJackpotWinner: financials.hasJackpot1Winner || financials.hasJackpot2Winner,
           totalContribution: totalJackpotContribution,
         },

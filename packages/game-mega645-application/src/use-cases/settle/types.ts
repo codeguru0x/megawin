@@ -53,7 +53,7 @@ export interface MegaDrawResult {
  *
  * Mega 6/45 theo luật Vietlott: không có splitThreshold hay splitRatios.
  */
-export interface MegaSettleConfig {
+export interface SettleConfig {
   /**
    * Số tiền khởi điểm Jackpot khi bắt đầu cycle mới sau winner (VND).
    */
@@ -230,7 +230,7 @@ export interface SettleContext {
    * Dùng bởi CalculateFinancials để tính phân bổ doanh thu + jackpot.
    * Dùng bởi FinalizeSettle để updateCycleStats idempotent.
    */
-  config: MegaSettleConfig;
+  config: SettleConfig;
 
   /**
    * Dữ liệu tài chính tổng hợp — output của CalculateFinancials.

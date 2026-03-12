@@ -54,9 +54,6 @@ export interface TicketLineDoc {
 
   // ───── Timing ─────
 
-  /** Ngày quay "YYYY-MM-DD". */
-  drawDate: ISODateString;
-
   /**
    * Ngày tài chính "YYYY-MM-DD" — ngày dùng cho báo cáo doanh thu.
    * Tính từ 11h sáng → 11h sáng hôm sau (Asia/Ho_Chi_Minh).

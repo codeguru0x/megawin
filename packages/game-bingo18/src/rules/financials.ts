@@ -27,53 +27,55 @@ export interface DrawFinancialInput {
   totalRevenue: number;
   /** Tổng tiền thưởng = Σ(entry.payout.winAmount) cho tất cả entries thắng. */
   totalPrizes: number;
-  /** Doanh thu phân theo từng đại lý, dùng để tính hoa hồng riêng từng tenant. */
-  tenantRevenues: Array<{
-    /** ID đại lý. */
-    tenantId: string;
-    /** Doanh thu riêng đại lý = Σ(entry.amount) của entries thuộc tenant này. */
-    revenue: number;
-    /** Hoa hồng đại lý. Tính sẵn bởi caller. */
-    commission: number;
-  }>;
+  /** Tổng hoa hồng đại lý (VND). Công thức: Σ(tenantAgg[].commission). */
+  totalAgentCommission: number;
 }
 
 /**
  * Kết quả tính tài chính kỳ quay.
- * Lưu vào draw.financial sau khi settle hoàn tất.
+ *
+ * Output của `calculateBingo18DrawFinancials()`.
+ * Map trực tiếp lên `DrawFinancial` entity để ghi vào draw document.
+ *
+ * Bingo 18 KHÔNG có Jackpot → `companyTake` = toàn bộ profit còn lại
+ * (revenue - prizes - commission). Có thể âm nếu trả thưởng lớn.
  */
 export interface DrawFinancialResult {
   /** Tổng doanh thu = Σ(entry.amount). Copy từ input. */
   totalRevenue: number;
   /** Tổng tiền thưởng = Σ(entry.payout.winAmount). Copy từ input. */
   totalPrizes: number;
-  /** Tổng hoa hồng đại lý = Σ(tenant.commission). */
+  /** Tổng hoa hồng đại lý = Σ(tenant.commissionAmount). */
   totalAgentCommission: number;
-  /** Lợi nhuận = totalRevenue - totalPrizes - totalAgentCommission. Có thể âm. */
-  profit: number;
+  /**
+   * Phần công ty thu (VND) = totalRevenue - totalPrizes - totalAgentCommission.
+   * Bingo 18 không có Jackpot pool → companyTake = toàn bộ profit, có thể âm.
+   * Map lên `DrawFinancial.companyTake` khi ghi vào DB.
+   */
+  companyTake: number;
 }
 
 /**
  * Tính tài chính tổng hợp cho 1 kỳ quay Bingo 18.
  *
  * Bingo 18 KHÔNG có Jackpot, KHÔNG có payout caps.
- * profit = totalRevenue - totalPrizes - totalAgentCommission (có thể âm).
+ * Công thức: companyTake = totalRevenue - totalPrizes - totalAgentCommission (có thể âm).
  *
- * @param input - Dữ liệu tổng hợp từ DB
- * @returns Kết quả tài chính gồm profit và tenant breakdown
+ * @param input - Dữ liệu tổng hợp từ DB sau khi tất cả entries đã settled.
+ * @returns Kết quả tài chính map trực tiếp lên DrawFinancial entity.
  */
 export function calculateBingo18DrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
-  const { totalRevenue, totalPrizes, tenantRevenues } = input;
+  const { totalRevenue, totalPrizes, totalAgentCommission } = input;
 
-  const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
-
-  const profit = totalRevenue - totalPrizes - totalAgentCommission;
+  // companyTake = phần còn lại sau khi trừ giải thưởng + hoa hồng.
+  // Không có Jackpot pool → công ty thu toàn bộ phần này. Có thể âm khi giải lớn.
+  const companyTake = totalRevenue - totalPrizes - totalAgentCommission;
 
   return {
     totalRevenue,
     totalPrizes,
     totalAgentCommission,
-    profit,
+    companyTake,
   };
 }
 

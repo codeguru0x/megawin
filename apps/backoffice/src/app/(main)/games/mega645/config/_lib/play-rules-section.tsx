@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Save, Clock, Globe, CalendarDays } from "lucide-react";
+import { formatNumber } from "@megawin/shared/utils/number";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
 
@@ -54,11 +55,7 @@ interface PlayRulesSectionProps {
   isPending: boolean;
 }
 
-export function PlayRulesSection({
-  config,
-  onSave,
-  isPending,
-}: PlayRulesSectionProps) {
+export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSectionProps) {
   const form = useForm<PlayFormValues>({
     resolver: zodResolver(playFormSchema) as any,
     values: {
@@ -86,7 +83,7 @@ export function PlayRulesSection({
     });
   }
 
-  const fmt = (n: number) => n.toLocaleString("en-US");
+  const fmt = formatNumber;
   const watchedDays = form.watch("drawDaysOfWeek") ?? [];
 
   return (
@@ -98,9 +95,7 @@ export function PlayRulesSection({
               {/* Left: Pricing & Limits */}
               <div className="space-y-5 p-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Giá vé & Giới hạn
-                  </h3>
+                  <h3 className="text-sm font-semibold text-foreground">Giá vé & Giới hạn</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Cấu hình giá và các giới hạn chơi
                   </p>
@@ -213,9 +208,7 @@ export function PlayRulesSection({
               {/* Right: Schedule */}
               <div className="border-t p-6 lg:border-l lg:border-t-0">
                 <div className="mb-5">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Lịch quay số
-                  </h3>
+                  <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Cố định {form.watch("drawsPerWeek")} kỳ quay mỗi tuần
                   </p>
@@ -317,10 +310,7 @@ export function PlayRulesSection({
                   <Globe className="size-3.5 text-muted-foreground" />
                   <p className="text-xs text-muted-foreground">
                     Múi giờ:{" "}
-                    <Badge
-                      variant="secondary"
-                      className="ml-1 font-mono text-[10px]"
-                    >
+                    <Badge variant="secondary" className="ml-1 font-mono text-[10px]">
                       Asia/Ho_Chi_Minh
                     </Badge>
                   </p>
@@ -330,15 +320,8 @@ export function PlayRulesSection({
           </CardContent>
 
           <CardFooter className="justify-end border-t px-6 py-3">
-            <Button
-              type="submit"
-              disabled={isPending || !form.formState.isDirty}
-            >
-              {isPending ? (
-                <Spinner className="mr-2" />
-              ) : (
-                <Save className="mr-2 size-4" />
-              )}
+            <Button type="submit" disabled={isPending || !form.formState.isDirty}>
+              {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
               Lưu luật chơi
             </Button>
           </CardFooter>

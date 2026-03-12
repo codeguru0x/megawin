@@ -1,49 +1,45 @@
 /**
  * Use Case: Get Jackpot for Player (Power 6/55)
  *
- * Trả thông tin dual jackpot đơn giản cho player — loại bỏ chi tiết vận hành.
- * Hiển thị JP1 (6/6) + JP2 (5/6+bonus) + progress tổng hợp.
+ * Trả thông tin dual jackpot cho player — bao gồm:
+ *   - JP1 (6/6) + JP2 (5/6+bonus) current amounts
+ *   - Cycle info: cycleNo, drawCount, jackpot2ResetCount
+ *   - Overflow threshold (player hiểu cơ chế "JP1 gần ngưỡng 300 tỷ!")
+ *
+ * Loại bỏ chi tiết vận hành (config snapshot, winners, closedReason...).
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import { DrawRepository } from "../../infras/repos/draw-repo";
+import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { PlayerGetJackpotOutput } from "./dto/player.dto";
 
 /**
  * Lấy thông tin dual jackpot Power 6/55 cho player.
+ *
  * JP1 = trùng 6/6, JP2 = trùng 5/6 + bonus.
+ * Trả cycle info đơn giản + overflow threshold để UI hiển thị.
  */
 export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetJackpotOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly drawRepo = new DrawRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** @inheritdoc */
   protected async execute(): Promise<PlayerGetJackpotOutput> {
-    const [activeCycle, globalConfig] = await Promise.all([
-      this.cycleRepo.getActiveCycle(),
-      this.getGlobalConfig.run(),
-    ]);
+    const activeCycle = await this.cycleRepo.getActiveCycle();
 
-    const config = globalConfig.jackpot;
-    const jp1Amount = activeCycle?.jackpot1Current ?? config.jackpot1.seedAmount;
-    const jp2Amount = activeCycle?.jackpot2Current ?? config.jackpot2.seedAmount;
-
-    const nextScheduled = await this.drawRepo.getNextScheduledDraw();
+    if (activeCycle == null) {
+      throw AppException.notFound("Không tìm thấy Jackpot hiện tại.");
+    }
 
     return {
-      jackpot1Amount: jp1Amount,
-      jackpot2Amount: jp2Amount,
-      jp1SeedAmount: config.jackpot1.seedAmount,
-      jp2SeedAmount: config.jackpot2.seedAmount,
-      nextDraw: nextScheduled
-        ? {
-            drawId: nextScheduled.drawId,
-            drawTime: nextScheduled.drawTime.toISOString(),
-          }
-        : undefined,
+      jackpot1CurrentAmount: activeCycle.jackpot1CurrentAmount,
+      jackpot2CurrentAmount: activeCycle.jackpot2CurrentAmount,
+      jackpot1SeedAmount: activeCycle.jackpot1SeedAmount,
+      jackpot2SeedAmount: activeCycle.jackpot2SeedAmount,
+      jackpot1OverflowThreshold: activeCycle.config.jp1OverflowThreshold,
+      cycleNo: activeCycle.cycleNo,
+      drawCount: activeCycle.drawCount,
+      jackpot2ResetCount: activeCycle.jackpot2ResetCount,
+      startedAt: activeCycle.createdAt.toISOString(),
     };
   }
 }

@@ -5,30 +5,17 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Save, TrendingUp, TrendingDown, Info } from "lucide-react";
+import { formatNumber } from "@megawin/shared/utils/number";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
-import {
-  analyzeProfitability,
-  getOddsTable,
-  TOTAL_OUTCOMES,
-} from "@megawin/game-mega645/rules";
+import { analyzeProfitability, getOddsTable, TOTAL_OUTCOMES } from "@megawin/game-mega645/rules";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -73,7 +60,7 @@ interface PrizesSectionProps {
 const oddsTable = getOddsTable();
 const oddsMap = new Map(oddsTable.map((o) => [o.tier, o]));
 
-const fmt = (n: number) => n.toLocaleString("en-US");
+const fmt = formatNumber;
 
 function HeaderTooltip({
   label,
@@ -87,9 +74,7 @@ function HeaderTooltip({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span
-          className={`inline-flex items-center gap-1 cursor-help ${className ?? ""}`}
-        >
+        <span className={`inline-flex items-center gap-1 cursor-help ${className ?? ""}`}>
           {label}
           <Info className="size-3 text-muted-foreground/60" />
         </span>
@@ -101,11 +86,7 @@ function HeaderTooltip({
   );
 }
 
-export function PrizesSection({
-  config,
-  onSave,
-  isPending,
-}: PrizesSectionProps) {
+export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps) {
   const form = useForm<PrizesFormValues>({
     resolver: zodResolver(prizesFormSchema),
     values: { ...config.defaultPrizes },
@@ -116,12 +97,12 @@ export function PrizesSection({
 
   const profitAnalysis = useMemo(
     () => analyzeProfitability(watchedValues, unitPrice),
-    [watchedValues, unitPrice]
+    [watchedValues, unitPrice],
   );
 
   const profitMap = useMemo(
     () => new Map(profitAnalysis.tiers.map((t) => [t.tier, t])),
-    [profitAnalysis]
+    [profitAnalysis],
   );
 
   function handleSubmit(values: PrizesFormValues) {
@@ -141,29 +122,22 @@ export function PrizesSection({
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Giá trị giải thưởng mặc định cho từng hạng giải (VND)
-                    {" · "}Tổng không gian mẫu:{" "}
-                    <strong>{fmt(TOTAL_OUTCOMES)}</strong>
+                    {" · "}Tổng không gian mẫu: <strong>{fmt(TOTAL_OUTCOMES)}</strong>
                     {" · "}Giá 1 line: <strong>{fmt(unitPrice)} VND</strong>
                   </p>
                 </div>
                 <div className="flex items-center gap-4 text-xs shrink-0">
                   <div className="text-right">
-                    <span className="text-muted-foreground">
-                      Trả thưởng kỳ vọng / line
-                    </span>
+                    <span className="text-muted-foreground">Trả thưởng kỳ vọng / line</span>
                     <div className="font-semibold tabular-nums">
                       {fmt(Math.round(profitAnalysis.totalExpectedPayout))} VND
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-muted-foreground">
-                      Biên lợi nhuận gộp
-                    </span>
+                    <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
                     <div
                       className={`font-bold tabular-nums ${
-                        profitAnalysis.grossMarginPercent >= 0
-                          ? "text-emerald-600"
-                          : "text-red-600"
+                        profitAnalysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"
                       }`}
                     >
                       {profitAnalysis.grossMarginPercent >= 0 ? (
@@ -173,8 +147,7 @@ export function PrizesSection({
                       )}
                       {profitAnalysis.grossMarginPercent.toFixed(2)}%
                       <span className="ml-1 font-normal text-muted-foreground">
-                        ({fmt(Math.round(profitAnalysis.grossMarginPerLine))}{" "}
-                        VND/line)
+                        ({fmt(Math.round(profitAnalysis.grossMarginPerLine))} VND/line)
                       </span>
                     </div>
                   </div>
@@ -215,8 +188,7 @@ export function PrizesSection({
               {PRIZE_FIELDS.map((p, idx) => {
                 const odds = oddsMap.get(p.key);
                 const profit = profitMap.get(p.key);
-                const isOverBreakEven =
-                  profit && profit.currentPrize > profit.breakEvenPrize;
+                const isOverBreakEven = profit && profit.currentPrize > profit.breakEvenPrize;
 
                 return (
                   <FormField
@@ -230,18 +202,12 @@ export function PrizesSection({
                             idx < PRIZE_FIELDS.length - 1 ? "border-b" : ""
                           }`}
                         >
-                          <Badge
-                            className={`${p.color} w-9 justify-center text-[10px] font-bold`}
-                          >
+                          <Badge className={`${p.color} w-9 justify-center text-[10px] font-bold`}>
                             {p.badge}
                           </Badge>
                           <div>
-                            <span className="text-sm font-medium">
-                              {p.label}
-                            </span>
-                            <span className="ml-2 text-xs text-muted-foreground">
-                              {p.desc}
-                            </span>
+                            <span className="text-sm font-medium">{p.label}</span>
+                            <span className="ml-2 text-xs text-muted-foreground">{p.desc}</span>
                           </div>
                           <FormControl>
                             <MoneyInput
@@ -259,30 +225,21 @@ export function PrizesSection({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span className="text-right text-xs tabular-nums text-muted-foreground cursor-help">
-                                {odds
-                                  ? `1 : ${fmt(Math.round(odds.oneInN))}`
-                                  : "–"}
+                                {odds ? `1 : ${fmt(Math.round(odds.oneInN))}` : "–"}
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent
-                              side="top"
-                              className="max-w-72 text-xs"
-                            >
+                            <TooltipContent side="top" className="max-w-72 text-xs">
                               {odds && (
                                 <>
-                                  Số cách trúng: {fmt(odds.ways)} /{" "}
-                                  {fmt(TOTAL_OUTCOMES)}
+                                  Số cách trúng: {fmt(odds.ways)} / {fmt(TOTAL_OUTCOMES)}
                                   <br />
-                                  Xác suất:{" "}
-                                  {(odds.probability * 100).toFixed(6)}%
+                                  Xác suất: {(odds.probability * 100).toFixed(6)}%
                                 </>
                               )}
                             </TooltipContent>
                           </Tooltip>
                           <span className="text-right text-xs tabular-nums font-medium">
-                            {profit
-                              ? `${fmt(Math.round(profit.expectedPayout))} VND`
-                              : "–"}
+                            {profit ? `${fmt(Math.round(profit.expectedPayout))} VND` : "–"}
                           </span>
                           <span
                             className={`text-right text-xs tabular-nums font-semibold ${
@@ -293,9 +250,7 @@ export function PrizesSection({
                                   : "text-emerald-600"
                             }`}
                           >
-                            {profit
-                              ? `${(profit.payoutRatio * 100).toFixed(2)}%`
-                              : "–"}
+                            {profit ? `${(profit.payoutRatio * 100).toFixed(2)}%` : "–"}
                           </span>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -306,15 +261,10 @@ export function PrizesSection({
                                     : "text-muted-foreground"
                                 }`}
                               >
-                                {profit
-                                  ? `${fmt(Math.round(profit.breakEvenPrize))} VND`
-                                  : "–"}
+                                {profit ? `${fmt(Math.round(profit.breakEvenPrize))} VND` : "–"}
                               </span>
                             </TooltipTrigger>
-                            <TooltipContent
-                              side="top"
-                              className="max-w-80 text-xs"
-                            >
+                            <TooltipContent side="top" className="max-w-80 text-xs">
                               {isOverBreakEven
                                 ? `Giải thưởng hiện tại (${fmt(profit!.currentPrize)} VND) đã vượt mức hoà vốn (${fmt(Math.round(profit!.breakEvenPrize))} VND) → giải này đang LỖ`
                                 : profit
@@ -333,15 +283,8 @@ export function PrizesSection({
           </CardContent>
 
           <CardFooter className="justify-end border-t px-6 py-3">
-            <Button
-              type="submit"
-              disabled={isPending || !form.formState.isDirty}
-            >
-              {isPending ? (
-                <Spinner className="mr-2" />
-              ) : (
-                <Save className="mr-2 size-4" />
-              )}
+            <Button type="submit" disabled={isPending || !form.formState.isDirty}>
+              {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
               Lưu giải thưởng
             </Button>
           </CardFooter>

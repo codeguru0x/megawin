@@ -12,20 +12,12 @@ const jackpot2Schema = z.object({
   seedAmount: nonNegativeInt,
 });
 
-const splitRatiosSchema = z.object({
-  tier1: positiveInt,
-  tier2: positiveInt,
-  tier3: positiveInt,
-});
-
 const jackpotSchema = z.object({
   jackpot1: jackpot1Schema.optional(),
   jackpot2: jackpot2Schema.optional(),
   jp1ContributionRatio: rate,
   jp2ContributionRatio: rate,
   jp1OverflowThreshold: nonNegativeInt,
-  splitThreshold: nonNegativeInt,
-  splitRatios: splitRatiosSchema,
 }).partial();
 
 const ratesSchema = z.object({

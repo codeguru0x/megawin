@@ -12,5 +12,5 @@ import { GetJackpotPlayerUseCase } from "@megawin/game-power655-application/use-
 const useCase = new GetJackpotPlayerUseCase();
 
 export const handler = withPlayerAuth(async () => {
-  return useCase.run(undefined as void);
+  return useCase.run();
 });

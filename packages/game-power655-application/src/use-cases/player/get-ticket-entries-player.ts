@@ -31,7 +31,7 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
 
   /** @inheritdoc */
   protected async execute(
-    input: PlayerGetTicketEntriesInput
+    input: PlayerGetTicketEntriesInput,
   ): Promise<PlayerGetTicketEntriesOutput> {
     const { tenantId, accountId, ticketId } = input;
 
@@ -58,8 +58,6 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
   return {
     id: entry.id,
     drawId: entry.drawId,
-    drawDate: entry.drawDate,
-    drawTime: entry.drawTime.toISOString(),
     status: entry.status,
     stakeAmount: entry.amount,
     lineCount: entry.lineCount,

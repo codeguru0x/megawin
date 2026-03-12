@@ -17,6 +17,8 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
+import type { EntryVoidInfo } from "@megawin/game-power655/entities";
+import { RefundStatus } from "@megawin/game-power655/entities";
 
 export interface VoidEntriesBatchResult {
   /** ID kỳ quay đang void. */
@@ -30,10 +32,10 @@ const BATCH_SIZE = 500;
 
 /**
  * Thời gian tối đa cho phép xử lý trong 1 lần gọi Lambda (13 phút).
- * Lambda timeout = 15 phút → dừng sớm 2 phút để có thời gian trả kết quả
+ * Lambda timeout = 15 phút → dừng sớm 5 phút để có thời gian trả kết quả
  * và Step Function lên lịch lần gọi tiếp.
  */
-const MAX_EXECUTION_MS = 13 * 60 * 1000;
+const MAX_EXECUTION_MS = 12 * 60 * 1000;
 
 /**
  * Void entries theo batch cho draw bị huỷ.
@@ -44,15 +46,10 @@ const MAX_EXECUTION_MS = 13 * 60 * 1000;
  * @param input.drawId - ID kỳ quay cần void
  * @returns done = true nếu đã void hết, false nếu cần gọi tiếp
  */
-export class VoidEntriesBatchUseCase extends InternalUseCase<
-  VoidContext,
-  VoidEntriesBatchResult
-> {
+export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEntriesBatchResult> {
   private readonly entryRepo = new EntryRepository();
 
-  protected async execute(
-    input: VoidContext,
-  ): Promise<VoidEntriesBatchResult> {
+  protected async execute(input: VoidContext): Promise<VoidEntriesBatchResult> {
     const { drawId } = input;
     const startTime = Date.now();
 
@@ -66,14 +63,21 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<
         return { drawId, done: true };
       }
 
-      // Map sang { entryId, amount } để bulkVoidEntries cập nhật atomic:
-      // - Chuyển entry.status → voided
-      // - Ghi voidInfo.refundAmount = amount (số tiền hoàn lại cho player)
+      // Map sang { entryId, voidInfo } — business rule: refundAmount = amount,
+      // refundStatus = pending, voidedAt = now (thời điểm xử lý batch này).
       // amount fallback 0 phòng trường hợp data migration thiếu field.
-      const items = entries.map((entry) => ({
-        entryId: entry.id,
-        amount: entry.amount ?? 0,
-      }));
+      const now = new Date();
+      const items = entries.map((entry) => {
+        return {
+          entryId: entry.id,
+          voidInfo: {
+            originalAmount: entry.amount ?? 0,
+            refundAmount: entry.amount ?? 0,
+            refundStatus: RefundStatus.Pending,
+            voidedAt: now,
+          } satisfies EntryVoidInfo,
+        };
+      });
 
       // Atomic bulk operation: void toàn bộ batch trong 1 DB call.
       // Nếu fail giữa chừng → crash-safe nhờ status filter ở query kế tiếp.

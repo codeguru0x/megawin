@@ -65,7 +65,7 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   }
 
   async getEntriesByTicketId(ticketId: string): Promise<EntryEntity[]> {
-    return await this.findMany({ ticketId }, { sort: { drawTime: 1 } });
+    return await this.findMany({ ticketId }, { sort: { drawId: 1 } });
   }
 
   async getEntriesByDrawId(drawId: string, page: number, size: number): Promise<EntryEntity[]> {
@@ -225,11 +225,10 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     /** Tổng số lines của tất cả entries trong kỳ này. */
     totalLines: number;
     /**
-     * Số lần trúng theo từng tier.
-     * Key = tier name (ví dụ "tier1", "jackpot").
+     * Số lần trúng theo từng tier. Key = PrizeTier (vd. "tier1", "jackpot").
      * Value = tổng hitCount của tất cả entries có tier đó.
      */
-    tierWinnerCounts: Record<string, number>;
+    tierWinnerCounts: Partial<Record<PrizeTier, number>>;
   }> {
     const [facetResult] = await this.aggregate([
       {
@@ -272,10 +271,10 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
     const tierRows = (facetResult as any)?.tierSummary ?? [];
 
     let totalFixedPrizes = 0;
-    const tierWinnerCounts: Record<string, number> = {};
+    const tierWinnerCounts: Partial<Record<PrizeTier, number>> = {};
 
     for (const row of tierRows) {
-      tierWinnerCounts[row._id] = row.totalHitCount;
+      tierWinnerCounts[row._id as PrizeTier] = row.totalHitCount;
       // Jackpot tier không tính vào totalFixedPrizes:
       // amount = 0 khi settle, tiền Jackpot được patch ở PatchJackpotPrize (step 4a).
       if (row._id !== PrizeTier.Jackpot) {
@@ -355,35 +354,31 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   // ─────────────────────────────────────────────
 
   /**
-   * Revenue + commission per tenant cho 1 draw (exclude voided entries).
+   * Aggregate tổng doanh thu và hoa hồng cho 1 draw (exclude voided entries).
+   * Group by null — 1 document kết quả, hiệu quả hơn group by tenant
+   * khi caller chỉ cần 2 scalar tổng.
    *
    * Recommended index: { drawId: 1, status: 1 }
    */
-  async aggregateRevenueByTenant(drawId: string): Promise<
-    Array<{
-      tenantId: string;
-      revenue: number;
-      commission: number;
-      entryCount: number;
-    }>
-  > {
+  async aggregateTotalRevenue(drawId: string): Promise<{
+    totalRevenue: number;
+    totalAgentCommission: number;
+  }> {
     const result = await this.aggregate([
       { $match: { drawId, status: { $ne: EntryStatus.Void } } },
       {
         $group: {
-          _id: "$tenantId",
-          revenue: { $sum: "$amount" },
-          commission: { $sum: "$tenant.commissionAmount" },
-          entryCount: { $sum: 1 },
+          _id: null,
+          totalRevenue: { $sum: "$amount" },
+          totalAgentCommission: { $sum: "$tenant.commissionAmount" },
         },
       },
     ]);
-    return result.map((r: any) => ({
-      tenantId: r._id,
-      revenue: r.revenue,
-      commission: r.commission ?? 0,
-      entryCount: r.entryCount,
-    }));
+    const row = result[0] as any;
+    return {
+      totalRevenue: row?.totalRevenue ?? 0,
+      totalAgentCommission: row?.totalAgentCommission ?? 0,
+    };
   }
 
   /** Aggregate report per tenant cho 1 draw + financialDate. */

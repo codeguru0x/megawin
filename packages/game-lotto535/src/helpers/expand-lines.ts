@@ -10,12 +10,7 @@
  */
 
 import { PlayType } from "../entities/enums";
-import {
-  ALL_MAIN_NUMBERS,
-  type BoardSelection,
-  type LineValue,
-  type MainTuple,
-} from "../entities/types";
+import { ALL_MAIN_NUMBERS, type BoardSelection, type LineValue } from "../entities/types";
 import type { Board } from "../entities/ticket";
 
 // ─────────────────────────────────────────────
@@ -38,21 +33,11 @@ function* combinations<T>(arr: T[], k: number): Generator<T[]> {
   }
 }
 
-/** Sort string numbers lexicographically (zero-padded → tương đương numeric sort). */
-function toMainTuple(nums: string[]): MainTuple {
-  const sorted = [...nums].sort();
-  return sorted as unknown as MainTuple;
-}
-
-// ─────────────────────────────────────────────
-// Expand functions per play type
-// ─────────────────────────────────────────────
-
 /** Standard / QuickPick: 5 chính + 1 đặc biệt = 1 line. */
 function expandStandard(sel: BoardSelection): LineValue[] {
   return [
     {
-      main: toMainTuple(sel.mainNumbers),
+      main: [...sel.mainNumbers].sort(),
       special: sel.specialNumbers[0]!,
     },
   ];
@@ -70,7 +55,7 @@ function expandMainCover4(sel: BoardSelection): LineValue[] {
   for (const n of ALL_MAIN_NUMBERS) {
     if (chosen.has(n)) continue;
     const mainNums = [...sel.mainNumbers, n];
-    lines.push({ main: toMainTuple(mainNums), special });
+    lines.push({ main: mainNums.sort(), special });
   }
 
   return lines;
@@ -86,7 +71,7 @@ function expandMainCover(sel: BoardSelection): LineValue[] {
   const lines: LineValue[] = [];
 
   for (const combo of combinations(sorted, 5)) {
-    lines.push({ main: combo as unknown as MainTuple, special });
+    lines.push({ main: combo, special });
   }
 
   return lines;
@@ -97,7 +82,7 @@ function expandMainCover(sel: BoardSelection): LineValue[] {
  * Expand thành K lines (1 line per special number).
  */
 function expandSpecialCover(sel: BoardSelection): LineValue[] {
-  const main = toMainTuple(sel.mainNumbers);
+  const main = [...sel.mainNumbers].sort();
 
   return sel.specialNumbers.map((special) => ({ main, special }));
 }

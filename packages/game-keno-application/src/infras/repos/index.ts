@@ -5,3 +5,4 @@ export { TenantConfigRepository } from "./tenant-config-repo";
 export { TicketRepository } from "./ticket-repo";
 export { EntryRepository } from "./entry-repo";
 export { ReportRepository } from "./report-repo";
+export type { DrawEntity } from "../mappers/draw-mapper";

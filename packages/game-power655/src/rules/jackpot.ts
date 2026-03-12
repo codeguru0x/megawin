@@ -32,33 +32,48 @@ import type { JackpotConfig, FinancialRates, PrizeAmounts, PlayRules } from "../
  *   companyTake = totalRevenue × companyRate
  *   actualCompanyTake = min(companyTake, max(totalRevenue - totalFixedPrizes - totalAgentCommission, 0))
  *   totalJackpotContribution = max(totalRevenue - totalFixedPrizes - totalAgentCommission - actualCompanyTake, 0)
- *   JP1 contribution = totalJackpotContribution × jp1Ratio
- *   JP2 contribution = totalJackpotContribution × jp2Ratio + jp1Overflow (nếu có)
+ *   JP1 contribution = totalJackpotContribution × jp1Ratio  [- jp1Overflow nếu có JP2 winner]
+ *   JP2 contribution = totalJackpotContribution × jp2Ratio  [+ jp1Overflow nếu có JP2 winner]
+ *
+ * Overflow rule (theo thể lệ Vietlott):
+ *   Chỉ kích hoạt khi ĐỦ 3 điều kiện:
+ *     1. JP1 vượt jp1OverflowThreshold
+ *     2. KHÔNG CÓ JP1 winner
+ *     3. CÓ JP2 winner (overflow cần người nhận)
+ *   Nếu không ai trúng cả JP1 lẫn JP2 → JP1 tiếp tục vượt threshold,
+ *     KHÔNG bị cap. Theo luật: "tiếp tục tăng lên cho kỳ QSMT tiếp theo".
+ *   Nếu CÓ JP1 winner → overflow KHÔNG kích hoạt; JP1 winner nhận toàn bộ projectedJp1.
  */
 export interface DrawFinancialInput {
   /** Tổng doanh thu bán vé (100% tiền cược). Công thức: Σ(entry.stakeAmount) cho tất cả entries trong kỳ. */
   totalRevenue: number;
   /** Tổng tiền giải cố định phải trả (Nhất 40tr + Nhì 500k + Ba 50k × số lần trúng). */
   totalFixedPrizes: number;
-  /** Chi tiết doanh thu và hoa hồng theo từng tenant/đại lý. */
-  tenantRevenues: Array<{
-    /** ID tenant/đại lý. */
-    tenantId: string;
-    /** Doanh thu từ tenant này. Công thức: Σ(entry.stakeAmount) cho entries của tenant. */
-    revenue: number;
-    /** Hoa hồng tenant nhận. Công thức: revenue × commissionRate. */
-    commission: number;
-  }>;
+  /** Tổng hoa hồng đại lý. Công thức: Σ(tenantAgg[].commission). */
+  totalAgentCommission: number;
   /** Tỷ lệ công ty thu về (mặc định 0.15 = 15% doanh thu). */
   companyRate: number;
   /** Tỷ lệ JP1 nhận từ tổng tích luỹ (mặc định 0.9 = 90%). */
   jp1Ratio: number;
   /** Tỷ lệ JP2 nhận từ tổng tích luỹ (mặc định 0.1 = 10%). */
   jp2Ratio: number;
-  /** Ngưỡng tối đa JP1 (VNĐ). Phần vượt chuyển sang JP2. Mặc định 300 tỷ. */
+  /** Ngưỡng tối đa JP1 (VNĐ). Chỉ áp dụng khi không có JP1 winner. Mặc định 300 tỷ. */
   jp1OverflowThreshold: number;
   /** Giá trị JP1 đầu kỳ hiện tại – dùng để tính overflow khi cộng contribution. */
-  currentJp1Opening: number;
+  jp1CurrentAmount: number;
+  /**
+   * Có người trúng JP1 (6/6) trong kỳ này không.
+   * Khi true → overflow mechanism KHÔNG kích hoạt dù JP1 vượt threshold;
+   * JP1 winner nhận toàn bộ pool (jp1CurrentAmount + rawJp1Contribution).
+   */
+  hasJackpot1Winner: boolean;
+  /**
+   * Có người trúng JP2 (5/6 + bonus) trong kỳ này không.
+   * Là 1 trong 3 điều kiện kích hoạt overflow (cùng với !hasJackpot1Winner và JP1 > threshold).
+   * Nếu false → overflow KHÔNG kích hoạt dù JP1 vượt threshold.
+   * JP1 tiếp tục tăng bình thường (theo luật Vietlott: "tiếp tục tăng lên").
+   */
+  hasJackpot2Winner: boolean;
 }
 
 /**
@@ -74,13 +89,30 @@ export interface DrawFinancialResult {
   totalAgentCommission: number;
   /** Công ty thu về dự kiến. Công thức: round(totalRevenue × companyRate). */
   companyTake: number;
+  /** Tỷ lệ thu nhập công ty theo config (ví dụ: 0.15 = 15%). Snapshot từ config lúc settle. */
+  companyTakeRate: number;
   /** Công ty thu về thực tế. Công thức: min(companyTake, max(totalRevenue - totalFixedPrizes - totalAgentCommission, 0)). */
   actualCompanyTake: number;
-  /** Tiền tích luỹ cộng vào JP1 (sau overflow). Công thức: totalJackpotContribution × jp1Ratio - jp1Overflow. */
+  /**
+   * Tiền tích luỹ cộng vào JP1 kỳ này (VND).
+   * = round(totalJackpotContribution × jp1Ratio) - jp1Overflow (nếu overflow kích hoạt).
+   * Nếu có JP1 winner → overflow KHÔNG kích hoạt; = round(total × jp1Ratio) đầy đủ.
+   */
   jackpot1Contribution: number;
-  /** Tiền tích luỹ cộng vào JP2 (bao gồm overflow). Công thức: totalJackpotContribution × jp2Ratio + jp1Overflow. */
+  /**
+   * Tiền tích luỹ cộng vào JP2 kỳ này (VND).
+   * = totalJackpotContribution - jackpot1Contribution.
+   * + jp1Overflow nếu overflow kích hoạt VÀ có JP2 winner (overflow chuyển sang JP2).
+   * KHÔNG cộng jp1Overflow nếu overflow kích hoạt nhưng không có JP2 winner.
+   */
   jackpot2Contribution: number;
-  /** Phần JP1 vượt ngưỡng chuyển sang JP2. Công thức: max(currentJp1Opening + rawJp1 - jp1OverflowThreshold, 0). */
+  /**
+   * Lượng tiền vượt ngưỡng JP1 (VND) kỳ này.
+   * = max(0, jp1CurrentAmount + rawJp1 - jp1OverflowThreshold).
+   * Chỉ > 0 khi overflow kích hoạt: !hasJackpot1Winner && hasJackpot2Winner && JP1 > threshold.
+   * Khi > 0: đã được cộng vào jackpot2Contribution (trao cho JP2 winner kỳ này).
+   * = 0 nếu: có JP1 winner, hoặc không có JP2 winner, hoặc JP1 ≤ threshold.
+   */
   jp1Overflow: number;
   /** Tổng tiền tích luỹ vào jackpot pool. Công thức: max(totalRevenue - totalFixedPrizes - totalAgentCommission - actualCompanyTake, 0). */
   totalJackpotContribution: number;
@@ -89,51 +121,109 @@ export interface DrawFinancialResult {
 /**
  * Tính tài chính tổng hợp cho 1 kỳ quay Power 6/55.
  *
- * Power 6/55 có dual jackpot (JP1 + JP2):
- *   totalJackpotContribution = max(revenue - fixedPrizes - commission - actualCompanyTake, 0)
- *   JP1 contribution = totalJackpotContribution × jp1Ratio (90%)
- *   JP2 contribution = totalJackpotContribution × jp2Ratio (10%) + jp1Overflow
+ * Pipeline tính toán (theo thứ tự phụ thuộc):
+ *   1. companyTake = round(totalRevenue × companyRate)
+ *   2. remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission
+ *   3. actualCompanyTake = min(companyTake, max(remainAfterPrizes, 0))
+ *      → Giới hạn để tránh companyTake âm khi giải thưởng > doanh thu.
+ *   4. totalJackpotContribution = max(remainAfterPrizes - actualCompanyTake, 0)
+ *   5. rawJp1 = round(totalJackpotContribution × jp1Ratio)
+ *      rawJp2 = totalJackpotContribution - rawJp1  (lấy phần còn lại, tránh lỗi làm tròn)
+ *   6. Overflow (conditional theo thể lệ Vietlott):
+ *      Khi (jp1CurrentAmount + rawJp1) > jp1OverflowThreshold
+ *        VÀ KHÔNG có JP1 winner VÀ CÓ JP2 winner:
+ *        → jp1Overflow chuyển sang JP2 (trao cho JP2 winner kỳ này)
+ *        → JP1 cap tại threshold
+ *      Nếu không ai trúng cả JP1 lẫn JP2 → JP1 tiếp tục vượt threshold bình thường,
+ *        KHÔNG bị cap (theo luật: "tiếp tục tăng lên cho kỳ QSMT tiếp theo").
+ *      Nếu CÓ JP1 winner → overflow KHÔNG kích hoạt; JP1 winner nhận đủ projectedJp1.
  *
- * @param input - Dữ liệu tổng hợp từ DB + config jackpot
- * @returns Kết quả tài chính gồm jp1/jp2 contribution, overflow, tenant breakdown
+ * @param input - Dữ liệu tổng hợp từ DB + config jackpot của kỳ quay
+ * @returns Kết quả tài chính kỳ quay, bao gồm jp1/jp2 contribution và overflow
  */
 export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const {
     totalRevenue,
     totalFixedPrizes,
-    tenantRevenues,
+    totalAgentCommission,
     companyRate,
     jp1Ratio,
-    jp2Ratio,
     jp1OverflowThreshold,
-    currentJp1Opening,
+    jp1CurrentAmount,
+    hasJackpot1Winner,
+    hasJackpot2Winner,
   } = input;
 
-  const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
-
+  // ── Bước 1: Tính phần công ty thu về (dự kiến) ──────────────────────────
+  // companyTake là mức dự kiến tính theo tỷ lệ; có thể không đủ nếu doanh thu
+  // thấp hơn tổng giải + hoa hồng (round để tránh lẻ đồng).
   const companyTake = Math.round(totalRevenue * companyRate);
+
+  // ── Bước 2: Phần còn lại sau khi trừ giải thưởng và hoa hồng ────────────
+  // remainAfterPrizes có thể âm nếu kỳ có nhiều người trúng giải cao hơn doanh thu.
   const remainAfterPrizes = totalRevenue - totalFixedPrizes - totalAgentCommission;
+
+  // ── Bước 3: Công ty thực thu (không được lấy quá số còn lại) ────────────
+  // Nếu remainAfterPrizes âm, công ty không thu gì (0), chứ không thu âm.
+  // Công thức: min(companyTake, max(remainAfterPrizes, 0))
   const actualCompanyTake = Math.min(companyTake, Math.max(remainAfterPrizes, 0));
+
+  // ── Bước 4: Tổng tích luỹ vào jackpot pool ──────────────────────────────
+  // Phần còn lại sau khi trừ cả companyTake mới được tích luỹ vào JP.
+  // Floor về 0 để tránh contribution âm khi doanh thu quá thấp.
   const totalJackpotContribution = Math.max(remainAfterPrizes - actualCompanyTake, 0);
 
-  // Phân bổ tích luỹ: JP1 = 90%, JP2 = 10%
+  // ── Bước 5: Phân bổ tích luỹ theo tỷ lệ JP1/JP2 ────────────────────────
+  // JP1 lấy jp1Ratio (90%), JP2 lấy phần còn lại (10%) — không dùng jp2Ratio × total
+  // vì sẽ tạo ra sai số làm tròn; rawJp1 + rawJp2 = totalJackpotContribution chính xác.
   let rawJp1Contribution = Math.round(totalJackpotContribution * jp1Ratio);
   let rawJp2Contribution = totalJackpotContribution - rawJp1Contribution;
 
-  // Overflow: nếu JP1 sau khi cộng vượt ngưỡng → phần vượt chuyển sang JP2
+  // ── Bước 6: Xử lý overflow JP1 (conditional — theo thể lệ Vietlott) ─────
+  // Điều kiện kích hoạt đầy đủ (cả 4 phải đúng):
+  //   1. Không có JP1 winner kỳ này (nếu có → winner nhận toàn bộ projectedJp1, không cap)
+  //   2. CÓ JP2 winner kỳ này (overflow chỉ xảy ra khi có người nhận phần vượt)
+  //   3. JP1 sau khi cộng contribution vượt ngưỡng jp1OverflowThreshold
+  //   4. jp1OverflowThreshold > 0 (guard để skip khi operator tắt tính năng overflow)
+  //
+  // Theo thể lệ Vietlott:
+  //   - Không ai trúng cả JP1 lẫn JP2 → JP1 và JP2 "tiếp tục tăng lên", KHÔNG bị cap.
+  //     JP1 có thể vượt 300 tỷ mà không bị trừ overflow.
+  //   - Chỉ khi có JP2 winner (và không có JP1 winner): phần vượt chuyển sang JP2,
+  //     JP1 được cap tại threshold (300 tỷ).
+  //
+  // Khi overflow kích hoạt:
+  //   jp1Overflow = projectedJp1 - threshold → chuyển sang JP2 (trao cho JP2 winner).
+  //   rawJp1Contribution -= jp1Overflow → JP1 cap tại threshold.
+  //   rawJp2Contribution += jp1Overflow → JP2 winner nhận thêm phần overflow.
   let jp1Overflow = 0;
-  const projectedJp1 = currentJp1Opening + rawJp1Contribution;
-  if (projectedJp1 > jp1OverflowThreshold && jp1OverflowThreshold > 0) {
+  const projectedJp1 = jp1CurrentAmount + rawJp1Contribution;
+  if (
+    !hasJackpot1Winner &&
+    hasJackpot2Winner &&
+    projectedJp1 > jp1OverflowThreshold &&
+    jp1OverflowThreshold > 0
+  ) {
+    // Tính tiền vượt ngưỡng = tổng JP1 sau contribution - threshold
     jp1Overflow = projectedJp1 - jp1OverflowThreshold;
+    // JP1 cap tại threshold: trừ overflow khỏi contribution
     rawJp1Contribution -= jp1Overflow;
+    // Overflow chuyển sang JP2 để trao cho JP2 winner kỳ này.
     rawJp2Contribution += jp1Overflow;
   }
+  // Nếu có JP1 winner: overflow không kích hoạt.
+  // jackpot1Contribution = rawJp1Contribution (không bị trừ) → JP1 winner nhận đủ projectedJp1.
+  //
+  // Nếu không ai trúng cả JP1 lẫn JP2: overflow cũng không kích hoạt.
+  // JP1 tiếp tục vượt threshold bình thường — theo luật Vietlott "tiếp tục tăng lên".
+  // jackpot1Contribution = rawJp1Contribution (đầy đủ, không bị cap).
 
   return {
     totalRevenue,
     totalFixedPrizes,
     totalAgentCommission,
     companyTake,
+    companyTakeRate: companyRate,
     actualCompanyTake,
     jackpot1Contribution: rawJp1Contribution,
     jackpot2Contribution: rawJp2Contribution,

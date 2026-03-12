@@ -76,11 +76,21 @@ export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<
   /**
    * Map 1 entry entity (game-specific) → EntryFeedDoc.
    * Subclass biết structure cụ thể của entry để extract financial fields.
+   * `ctx` là context tùy chọn do `buildBatchContext` cung cấp (ví dụ: drawMap).
    */
   protected abstract mapToFeedDoc(
     entry: unknown,
     feedCreatedAt: Date,
+    ctx?: unknown,
   ): Omit<EntryFeedDoc, "_id">;
+
+  /**
+   * Tùy chọn: build context cho cả batch (ví dụ: bulk load draws).
+   * Gọi 1 lần trước khi map từng entry. Default: trả về undefined.
+   */
+  protected buildBatchContext(_entries: unknown[]): Promise<unknown> {
+    return Promise.resolve(undefined);
+  }
 
   /** Scan entries thay đổi, upsert vào entryFeed. */
   protected async execute(input: SyncEntryFeedInput): Promise<SyncEntryFeedResult> {
@@ -100,7 +110,8 @@ export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<
     }
 
     const now = new Date();
-    const feedDocs = entries.map((entry) => this.mapToFeedDoc(entry, now));
+    const ctx = await this.buildBatchContext(entries);
+    const feedDocs = entries.map((entry) => this.mapToFeedDoc(entry, now, ctx));
     const { upserted, skipped } = await this.feedRepo.batchUpsertFeedEntries(feedDocs);
 
     const lastEntry = entries[entries.length - 1] as any;

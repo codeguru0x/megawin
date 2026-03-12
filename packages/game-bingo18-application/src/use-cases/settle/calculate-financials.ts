@@ -5,17 +5,17 @@
  *
  * Bingo 18 KHÔNG có Jackpot, KHÔNG có payout caps – chỉ tính:
  *   - totalRevenue, totalPrizes
- *   - commission per tenant
- *   - profit
+ *   - totalAgentCommission (từ entry.tenant.commissionAmount snapshot)
+ *   - companyTake = revenue - prizes - commission
  *
  * Đồng thời denormalize settleSummary lên draw cho player API.
  * Chỉ lưu các giải có winnerCount > 0 — compact document.
  *
- * IDEMPOTENT: Chạy lại cho kết quả giống nhau (tính từ DB).
+ * IDEMPOTENT: aggregate từ DB → chạy lại cho kết quả giống nhau.
+ * Ghi financial + stats + settleSummary trong 1 DB call duy nhất.
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { roundTo } from "@megawin/shared/utils/number";
 import { calculateBingo18DrawFinancials } from "@megawin/game-bingo18/rules";
 import type {
   DrawBasicPrizeSummary,
@@ -26,6 +26,12 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext, SettleFinancials } from "./types";
 
+/**
+ * Tính tài chính tổng hợp Bingo 18 sau khi tất cả entries đã settled.
+ *
+ * CRASH-SAFE + IDEMPOTENT: aggregate từ DB → có thể chạy lại nhiều lần an toàn.
+ * Ghi financial + stats + settleSummary vào DrawDoc trong 1 DB call duy nhất.
+ */
 export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, SettleFinancials> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
@@ -35,24 +41,25 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
    * Idempotent — tính từ DB, ghi đè nếu chạy lại.
    */
   protected async execute(input: SettleContext): Promise<SettleFinancials> {
-    const { drawId, config } = input;
+    const { drawId } = input;
 
     // Chạy song song 4 queries để giảm latency.
-    const [tenantAgg, payoutSummary, basicPrizeSummary, sideBetPrizeSummary] = await Promise.all([
-      this.entryRepo.aggregateRevenueByTenant(drawId),
+    const [
+      { totalRevenue, totalAgentCommission },
+      payoutSummary,
+      basicPrizeSummary,
+      sideBetPrizeSummary,
+    ] = await Promise.all([
+      this.entryRepo.aggregateTotalRevenue(drawId),
       this.entryRepo.aggregateSettledPayoutSummary(drawId),
       this.entryRepo.aggregateBasicPrizeSummary(drawId),
       this.entryRepo.aggregateSideBetPrizeSummary(drawId),
     ]);
 
     const fin = calculateBingo18DrawFinancials({
-      totalRevenue: tenantAgg.reduce((sum, t) => sum + t.revenue, 0),
+      totalRevenue,
       totalPrizes: payoutSummary.totalPrizes,
-      tenantRevenues: tenantAgg.map((t) => ({
-        tenantId: t.tenantId,
-        revenue: t.revenue,
-        commission: t.commission,
-      })),
+      totalAgentCommission,
     });
 
     // ── Build settleSummary cho player API ─────────────────────────────────
@@ -62,35 +69,34 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
     const basicPrizes: DrawBasicPrizeSummary[] = basicPrizeSummary.map((bp) => ({
       playType: bp.playType as DrawBasicPrizeSummary["playType"],
       matchCount: bp.matchCount,
+      // tripleKind chỉ có ý nghĩa với tripleMatch; null từ aggregation → bỏ qua (undefined).
+      ...(bp.tripleKind != null && {
+        tripleKind: bp.tripleKind as DrawBasicPrizeSummary["tripleKind"],
+      }),
       winnerCount: bp.winnerCount,
       prizePerUnit: bp.prizePerUnit,
     }));
 
     const sideBetPrizes: DrawSideBetPrizeSummary[] = sideBetPrizeSummary.map((sb) => ({
       playType: sb.playType as DrawSideBetPrizeSummary["playType"],
-      bet: sb.bet,
+      // sum (number) cho sumTotal, bet (string) cho bigSmallDraw — không trộn lẫn.
+      ...(sb.sum != null && { sum: sb.sum }),
+      ...(sb.bet != null && { bet: sb.bet as DrawSideBetPrizeSummary["bet"] }),
       winnerCount: sb.winnerCount,
       prizePerUnit: sb.prizePerUnit,
     }));
 
     const settleSummary: DrawSettleSummary = { basicPrizes, sideBetPrizes };
 
-    const tenantBreakdown = tenantAgg.map((t) => ({
-      tenantId: t.tenantId,
-      revenue: t.revenue,
-      commission: t.commission,
-      commissionRate: t.revenue > 0 ? roundTo(t.commission / t.revenue, 2) : 0,
-      entryCount: t.entryCount,
-    }));
-
-    // Ghi financial + stats + settleSummary trong 1 DB call (idempotent overwrite)
+    // Ghi financial + stats + settleSummary trong 1 DB call (idempotent overwrite).
+    // 3 embedded docs này chỉ được set 1 lần duy nhất → full overwrite an toàn.
     await this.drawRepo.updateSettleResult(
       drawId,
       {
         totalRevenue: fin.totalRevenue,
         totalPrizes: fin.totalPrizes,
         totalAgentCommission: fin.totalAgentCommission,
-        companyTake: fin.profit,
+        companyTake: fin.companyTake,
       },
       {
         ticketEntryCount: payoutSummary.totalSettled,
@@ -104,7 +110,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
       totalRevenue: fin.totalRevenue,
       totalPrizes: fin.totalPrizes,
       totalAgentCommission: fin.totalAgentCommission,
-      profit: fin.profit,
+      companyTake: fin.companyTake,
     };
   }
 }

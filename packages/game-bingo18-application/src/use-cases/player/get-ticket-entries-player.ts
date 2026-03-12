@@ -24,7 +24,7 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(
-    input: PlayerGetTicketEntriesInput
+    input: PlayerGetTicketEntriesInput,
   ): Promise<PlayerGetTicketEntriesOutput> {
     const { tenantId, accountId, ticketId } = input;
 
@@ -38,10 +38,7 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
       throw AppException.notFound("Ticket not found");
     }
 
-    const entries = await this.entryRepo.findMany(
-      { ticketId: ticket.id },
-      { sort: { drawTime: 1 } }
-    );
+    const entries = await this.entryRepo.findMany({ ticketId: ticket.id }, { sort: { drawId: 1 } });
 
     return {
       ticket: mapPlayerTicket(ticket),
@@ -54,7 +51,6 @@ function mapPlayerEntry(entry: EntryEntity): PlayerEntryInfo {
   return {
     id: entry.id,
     drawId: entry.drawId,
-    drawDate: entry.drawDate,
     status: entry.status,
     amount: entry.amount,
     betCount: entry.betCount,

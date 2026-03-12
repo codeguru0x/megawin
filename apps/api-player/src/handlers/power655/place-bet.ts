@@ -5,7 +5,7 @@
  *
  * Power 6/55 chỉ có mainNumbers (không có specialNumbers).
  * Số nhận dạng string "01"-"55". Parse sang number trước khi truyền vào use case.
- * PlayTypes: Standard (6 số), Bao7-Bao18, QuickPick (auto 6 số).
+ * PlayTypes: Standard (6 số), Bao7-Bao18.
  */
 
 import { withPlayerAuth } from "@megawin/auth";
@@ -42,7 +42,6 @@ export const power655BoardSchema = z
       PlayType.Bao14,
       PlayType.Bao15,
       PlayType.Bao18,
-      PlayType.QuickPick,
     ]),
     selection: power655SelectionSchema,
   })
@@ -59,8 +58,6 @@ export const power655BoardSchema = z
     }
 
     switch (playType) {
-      case PlayType.QuickPick:
-        break;
       case PlayType.Standard:
         if (mainLen !== 6)
           ctx.addIssue({

@@ -174,6 +174,13 @@ export interface DrawSummary {
   jackpot2ClosingAmount?: number;
   /** Kỳ quay đã có kết quả (winningMain + bonusNumber) chưa. */
   hasResult: boolean;
+  /** Kết quả quay số (chỉ có khi hasResult = true). */
+  result?: {
+    /** 6 số chính (01-55), zero-padded. */
+    winningMain: string[];
+    /** Số thưởng (bonus number), zero-padded. */
+    bonusNumber: string;
+  };
   /** Tổng số entries tham gia kỳ quay. */
   totalEntries?: number;
   /** Tổng doanh thu từ vé cược (VND). */

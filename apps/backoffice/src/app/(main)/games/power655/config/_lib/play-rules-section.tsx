@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Save, Clock, Globe } from "lucide-react";
+import { formatNumber } from "@megawin/shared/utils/number";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
 
@@ -26,7 +27,13 @@ import { Label } from "@/components/ui/label";
 import type { GameConfig } from "./use-game-config";
 
 const DAY_LABELS: Record<number, string> = {
-  0: "CN", 1: "T2", 2: "T3", 3: "T4", 4: "T5", 5: "T6", 6: "T7",
+  0: "CN",
+  1: "T2",
+  2: "T3",
+  3: "T4",
+  4: "T5",
+  5: "T6",
+  6: "T7",
 };
 
 const playFormSchema = z.object({
@@ -83,7 +90,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
     });
   }
 
-  const fmt = (n: number) => n.toLocaleString("en-US");
+  const fmt = formatNumber;
 
   return (
     <Card className="overflow-hidden py-0 gap-0">
@@ -94,7 +101,9 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
               <div className="space-y-5 p-6">
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">Giá vé & Giới hạn</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">Cấu hình giá và các giới hạn chơi</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Cấu hình giá và các giới hạn chơi
+                  </p>
                 </div>
 
                 <FormField
@@ -102,47 +111,102 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                   name="unitPrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giá mỗi bộ số</FormLabel>
+                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Giá mỗi bộ số
+                      </FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <MoneyInput className="pr-14 font-semibold" value={field.value} onValueChange={(v) => field.onChange(v ?? 0)} onBlur={field.onBlur} name={field.name} ref={field.ref} />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">VND</span>
+                          <MoneyInput
+                            className="pr-14 font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 0)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                            VND
+                          </span>
                         </div>
                       </FormControl>
-                      <p className="text-xs text-muted-foreground tabular-nums">= {fmt(field.value || 0)}đ / bộ số</p>
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        = {fmt(field.value || 0)}đ / bộ số
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
                 <div className="grid grid-cols-3 gap-3">
-                  <FormField control={form.control} name="maxBoardsPerTicket" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Max boards/vé</FormLabel>
-                      <FormControl>
-                        <MoneyInput className="text-center font-semibold" value={field.value} onValueChange={(v) => field.onChange(v ?? 0)} onBlur={field.onBlur} name={field.name} ref={field.ref} thousandSeparator={false} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="maxDrawCount" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Max kỳ liên tiếp</FormLabel>
-                      <FormControl>
-                        <MoneyInput className="text-center font-semibold" value={field.value} onValueChange={(v) => field.onChange(v ?? 0)} onBlur={field.onBlur} name={field.name} ref={field.ref} thousandSeparator={false} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="salesCloseBeforeMinutes" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs text-muted-foreground">Đóng trước (phút)</FormLabel>
-                      <FormControl>
-                        <MoneyInput className="text-center font-semibold" value={field.value} onValueChange={(v) => field.onChange(v ?? 0)} onBlur={field.onBlur} name={field.name} ref={field.ref} thousandSeparator={false} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
+                  <FormField
+                    control={form.control}
+                    name="maxBoardsPerTicket"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Max boards/vé
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 0)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maxDrawCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Max kỳ liên tiếp
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 0)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="salesCloseBeforeMinutes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Đóng trước (phút)
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 0)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
 
@@ -162,7 +226,11 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <div className="relative">
                           <Clock className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                           <FormControl>
-                            <Input className="pl-8 text-center font-mono text-sm font-semibold" placeholder="HH:mm" {...field} />
+                            <Input
+                              className="pl-8 text-center font-mono text-sm font-semibold"
+                              placeholder="HH:mm"
+                              {...field}
+                            />
                           </FormControl>
                         </div>
                         <FormMessage />
@@ -188,14 +256,21 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         </button>
                       ))}
                     </div>
-                    <FormField control={form.control} name="drawDaysOfWeek" render={() => <FormMessage />} />
+                    <FormField
+                      control={form.control}
+                      name="drawDaysOfWeek"
+                      render={() => <FormMessage />}
+                    />
                   </div>
                 </div>
 
                 <div className="mt-4 flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
                   <Globe className="size-3.5 text-muted-foreground" />
                   <p className="text-xs text-muted-foreground">
-                    Múi giờ: <Badge variant="secondary" className="ml-1 font-mono text-[10px]">Asia/Ho_Chi_Minh</Badge>
+                    Múi giờ:{" "}
+                    <Badge variant="secondary" className="ml-1 font-mono text-[10px]">
+                      Asia/Ho_Chi_Minh
+                    </Badge>
                   </p>
                 </div>
               </div>

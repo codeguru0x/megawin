@@ -4,17 +4,24 @@
  * Collection: power655JackpotCycles
  *
  * Power 6/55 có 2 jackpot (JP1 + JP2) chạy song song trong 1 cycle.
- * Cycle document lưu cả jackpot1Current và jackpot2Current.
+ * Cycle document lưu cả jackpot1CurrentAmount và jackpot2CurrentAmount.
+ *
+ * Theo thể lệ Vietlott:
+ *   - Cycle chỉ đóng khi JP1 có winner (hoặc admin reset).
+ *   - JP2 winner KHÔNG đóng cycle — JP2 reset về seed trong cycle,
+ *     ghi lịch sử vào jackpot2Resets[] qua resetJp2InCycle().
+ *   - JP2 có thể reset nhiều lần trong 1 cycle.
  */
 
 import {
   Power655Collections,
   type JackpotCycleDoc,
+  type JackpotCycleConfig,
   type JackpotCycleClosedReason,
   type JackpotWinnerInfo,
+  type Jackpot2ResetRecord,
   type JackpotCycleEntity,
   JackpotCycleStatus,
-  JackpotCycleClosedReasons,
 } from "@megawin/game-power655/entities";
 import { BaseRepo } from "./base-repo";
 import { JackpotCycleMapper } from "../mappers/jackpot-cycle-mapper";
@@ -32,11 +39,17 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     return this.findOne({ status: JackpotCycleStatus.Active });
   }
 
-  /** Tạo cycle mới với dual jackpot seed amounts. Guard: skip nếu đã có active cycle (idempotent khi retry). */
+  /**
+   * Tạo cycle mới với dual jackpot seed amounts và config snapshot.
+   *
+   * Guard: skip nếu đã có active cycle → idempotent khi retry.
+   * jackpot2ResetCount = 0, jackpot2Resets = [] (chưa có JP2 reset nào).
+   */
   async createCycle(input: {
     startDrawId: string;
     jp1SeedAmount: number;
     jp2SeedAmount: number;
+    config: JackpotCycleConfig;
   }): Promise<void> {
     const existing = await this.findOne({ status: JackpotCycleStatus.Active });
     if (existing) return;
@@ -49,11 +62,14 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       cycleNo,
       status: JackpotCycleStatus.Active,
       startDrawId: input.startDrawId,
-      jackpot1Opening: input.jp1SeedAmount,
-      jackpot1Current: input.jp1SeedAmount,
-      jackpot2Opening: input.jp2SeedAmount,
-      jackpot2Current: input.jp2SeedAmount,
+      jackpot1SeedAmount: input.jp1SeedAmount,
+      jackpot1CurrentAmount: input.jp1SeedAmount,
+      jackpot2SeedAmount: input.jp2SeedAmount,
+      jackpot2CurrentAmount: input.jp2SeedAmount,
       drawCount: 0,
+      config: input.config,
+      jackpot2ResetCount: 0,
+      jackpot2Resets: [],
       createdAt: now,
       updatedAt: now,
     };
@@ -62,13 +78,15 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
   }
 
   /**
-   * Cập nhật dual jackpot stats sau mỗi draw settle.
-   * Idempotent: ghi đè giá trị dựa trên draw cuối cùng.
+   * Cập nhật dual jackpot stats sau mỗi draw settle (roll-over, không có winner).
+   *
+   * Idempotent: ghi đè giá trị tuyệt đối (không $inc).
+   * Chỉ dùng cho roll-over flow — khi JP2 winner, dùng resetJp2InCycle() thay thế.
    */
   async updateCycleStats(input: {
     cycleNo: number;
-    jackpot1Current: number;
-    jackpot2Current: number;
+    jackpot1CurrentAmount: number;
+    jackpot2CurrentAmount: number;
     drawCount: number;
     lastSettledDrawId: string;
   }): Promise<void> {
@@ -79,8 +97,8 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       },
       {
         $set: {
-          jackpot1Current: input.jackpot1Current,
-          jackpot2Current: input.jackpot2Current,
+          jackpot1CurrentAmount: input.jackpot1CurrentAmount,
+          jackpot2CurrentAmount: input.jackpot2CurrentAmount,
           drawCount: input.drawCount,
           updatedAt: new Date(),
         },
@@ -88,13 +106,77 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     );
   }
 
-  /** Đóng cycle (winner). */
+  /**
+   * Reset JP2 về seed trong cycle hiện tại sau khi JP2 có winner.
+   *
+   * Theo thể lệ Vietlott: JP2 winner KHÔNG đóng cycle — chỉ reset jackpot2CurrentAmount
+   * về seed, JP1 tiếp tục tích lũy bình thường.
+   *
+   * Sau khi chạy, cả 2 CurrentAmount đều = "số tiền thực tế trong pool":
+   *   - jackpot1CurrentAmount = opening + contribution (JP1 tiếp tục tích lũy)
+   *   - jackpot2CurrentAmount = seedAmount (JP2 đã trao thưởng, pool reset về seed)
+   *   → Giá trị closing JP2 TRƯỚC reset lưu trong jackpot2Resets[].jackpot2PrizePool.
+   *
+   * Idempotent nhờ filter: chỉ reset khi jackpot2CurrentAmount ≠ seedAmount.
+   * Nếu đã reset (retry), jackpot2CurrentAmount = seed → no-op.
+   *
+   * Ghi lịch sử reset vào jackpot2Resets[] qua $push (append) và tăng jackpot2ResetCount.
+   * JP1 stats (jackpot1CurrentAmount, drawCount) cũng được cập nhật trong cùng 1 call.
+   */
+  async resetJp2InCycle(input: {
+    cycleNo: number;
+    /** Số tiền JP1 hiện tại sau settle (VND) = opening + contribution. */
+    jackpot1CurrentAmount: number;
+    /** Số tiền JP2 hiện tại sau reset (VND) = seedAmount (pool đã trao cho winners). */
+    jackpot2CurrentAmount: number;
+    drawCount: number;
+    resetRecord: Jackpot2ResetRecord;
+  }): Promise<void> {
+    const now = new Date();
+
+    // $push và $inc cần cast do mongodb driver typing strict với Document
+    const update = {
+      $set: {
+        // JP1 tiếp tục tích lũy: opening + contribution kỳ này
+        jackpot1CurrentAmount: input.jackpot1CurrentAmount,
+        // JP2 reset về seed: pool đã trao cho winners, bắt đầu tích lũy lại
+        jackpot2CurrentAmount: input.jackpot2CurrentAmount,
+        drawCount: input.drawCount,
+        updatedAt: now,
+      },
+      $push: { jackpot2Resets: input.resetRecord },
+      $inc: { jackpot2ResetCount: 1 },
+    } as unknown as Record<string, unknown>;
+
+    await this.updateOne(
+      {
+        cycleNo: input.cycleNo,
+        status: JackpotCycleStatus.Active,
+        // Idempotent guard: chỉ reset nếu JP2 chưa được reset về seed.
+        // Nếu jackpot2CurrentAmount đã = giá trị mới (seed) → đã reset trước đó → no-op.
+        jackpot2CurrentAmount: { $ne: input.jackpot2CurrentAmount },
+      },
+      update,
+    );
+  }
+
+  /**
+   * Đóng cycle khi JP1 có winner (hoặc manual reset).
+   *
+   * Chỉ đóng khi status = "active" → idempotent (no-op nếu đã closed).
+   * winners: chỉ chứa JP1 winners — JP2 winners lưu trong jackpot2Resets[].
+   *
+   * jackpot2CurrentAmount được ghi với giá trị carry-over (không reset về seed),
+   * trừ khi cùng kỳ JP2 cũng có winner (BothWinner) — khi đó JP2 đã reset trong
+   * resetJp2InCycle() trước bước này, jackpot2CurrentAmount sẽ = jp2SeedAmount.
+   */
   async closeCycle(input: {
     cycleNo: number;
     endDrawId: string;
     closedReason: JackpotCycleClosedReason;
     finalJp1: number;
     finalJp2: number;
+    drawCount: number;
     winners?: JackpotWinnerInfo[];
   }): Promise<void> {
     const now = new Date();
@@ -104,8 +186,9 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       endDrawId: string;
       closedAt: Date;
       closedReason: JackpotCycleClosedReason;
-      jackpot1Current: number;
-      jackpot2Current: number;
+      jackpot1CurrentAmount: number;
+      jackpot2CurrentAmount: number;
+      drawCount: number;
       updatedAt: Date;
       winners?: JackpotWinnerInfo[];
     };
@@ -115,8 +198,9 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       endDrawId: input.endDrawId,
       closedAt: now,
       closedReason: input.closedReason,
-      jackpot1Current: input.finalJp1,
-      jackpot2Current: input.finalJp2,
+      jackpot1CurrentAmount: input.finalJp1,
+      jackpot2CurrentAmount: input.finalJp2,
+      drawCount: input.drawCount,
       updatedAt: now,
     };
 
@@ -134,6 +218,28 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
   /** Tìm cycle đã closed có endDrawId = drawId (dùng cho retry detection trong FinalizeSettle). */
   async findClosedByEndDrawId(drawId: string): Promise<JackpotCycleEntity | null> {
     return this.findOne({ status: JackpotCycleStatus.Closed, endDrawId: drawId });
+  }
+
+  /**
+   * Tìm cycle đã có JP2 reset trong kỳ drawId (dùng cho retry detection khi JP2 winner).
+   *
+   * Nếu jackpot2Resets có phần tử với drawId → resetJp2InCycle đã chạy thành công.
+   */
+  async findCycleWithJp2ResetForDraw(drawId: string): Promise<JackpotCycleEntity | null> {
+    return this.findOne({ "jackpot2Resets.drawId": drawId });
+  }
+
+  /**
+   * Tìm cycle closed gần nhất (theo cycleNo giảm dần).
+   *
+   * Dùng trong create-draws để xác định JP2 carry-over khi không có active cycle
+   * (recovery sau crash giữa settle).
+   *
+   * Return giá trị đầy đủ bao gồm closedReason và jackpot2CurrentAmount (= finalJp2
+   * tại thời điểm đóng cycle) để caller quyết định JP2 seed cycle mới.
+   */
+  async findLastClosedCycle(): Promise<JackpotCycleEntity | null> {
+    return this.findOne({ status: JackpotCycleStatus.Closed }, { sort: { cycleNo: -1 } });
   }
 
   /** Lấy danh sách cycles đã đóng (mới nhất trước). */

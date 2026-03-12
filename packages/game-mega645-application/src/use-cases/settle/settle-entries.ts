@@ -32,7 +32,6 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { PrizeTier, PayoutStatus } from "@megawin/game-mega645/entities";
 import type {
   TicketLineDoc,
-  MainTuple,
   EntryPayout,
   EntryPayoutTier,
   EntryResult,
@@ -68,9 +67,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
     const { drawId, result, prizeAmounts } = input;
 
-    // DrawResultForMatch chỉ cần winningMain — cast MainTuple từ string[].
+    // DrawResultForMatch chỉ cần winningMain — string[] từ DB, tương thích trực tiếp.
     const drawResult: DrawResultForMatch = {
-      winningMain: result.winningMain as any,
+      winningMain: result.winningMain,
     };
 
     const startTime = Date.now();
@@ -113,12 +112,8 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         // Jackpot winAmount = 0 tại đây; FinalizeSettle cập nhật sau.
         const lineDocs: Array<Omit<TicketLineDoc, "_id">> = lines.map((line, i) => {
           const perLine = matchResult.perLineResults[i]!;
-          // Jackpot tier không có trong PrizeAmounts (giá trị pool xử lý riêng).
-          // Giải cố định: lấy từ prizeAmounts theo keyof PrizeAmounts.
-          const unitAmount =
-            perLine.tier != null && perLine.tier !== PrizeTier.Jackpot
-              ? (prizeAmounts[perLine.tier as keyof PrizeAmounts] ?? 0)
-              : 0;
+          // Jackpot → 0 (FinalizeSettle tính sau); tier1/2/3 → từ config.
+          const unitAmount = getFixedPrizeAmount(perLine.tier, prizeAmounts);
 
           return {
             // Các field identity copy từ entry (snapshot lúc place-bet).
@@ -128,6 +123,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             ticketId: entry.ticketId,
             entryId: entry.id,
             drawId: entry.drawId,
+            financialDate: entry.financialDate,
             // Chi tiết line.
             boardNo: line.boardNo,
             lineIndex: line.lineIndex,
@@ -168,7 +164,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           } satisfies EntryPayout,
           outcome: hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
           result: {
-            winningMain: result.winningMain as unknown as MainTuple,
+            winningMain: result.winningMain,
             publishedAt: now,
           } satisfies EntryResult,
         });
@@ -188,6 +184,19 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 }
 
 /**
+ * Trả về giá trị giải cố định cho tier. Jackpot → 0 (xử lý bởi FinalizeSettle).
+ *
+ * Tách hàm riêng để tránh dùng `as keyof` cast không an toàn tại call-site.
+ */
+function getFixedPrizeAmount(tier: PrizeTier | null, prizeAmounts: PrizeAmounts): number {
+  if (tier === PrizeTier.Tier1) return prizeAmounts.tier1;
+  if (tier === PrizeTier.Tier2) return prizeAmounts.tier2;
+  if (tier === PrizeTier.Tier3) return prizeAmounts.tier3;
+  // Jackpot hoặc null: giải tích luỹ — FinalizeSettle tính sau khi biết pool + số winners.
+  return 0;
+}
+
+/**
  * Chuyển `tierCounts` (Map từ matchLines) thành danh sách `EntryPayoutTier`
  * để ghi vào `entry.payout.tiers`.
  *
@@ -195,11 +204,11 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
  * sau khi tính được pool Jackpot cuối kỳ và số winners thực tế.
  * Dù amount = 0, entry vẫn được đánh dấu outcome = "win" nếu hitCount > 0.
  *
- * @param tierCounts  Map<tier, số line trúng> — output của matchLines.
+ * @param tierCounts  Map<PrizeTier, số line trúng> — output của matchLines.
  * @param prizeAmounts  Bảng tiền thưởng cố định từ entity — tier → VND.
  */
 function buildPayoutTiers(
-  tierCounts: Map<string, number>,
+  tierCounts: Map<PrizeTier, number>,
   prizeAmounts: PrizeAmounts,
 ): EntryPayoutTier[] {
   const tiers: EntryPayoutTier[] = [];
@@ -210,7 +219,7 @@ function buildPayoutTiers(
     if (tier === PrizeTier.Jackpot) {
       // Jackpot: placeholder amount = 0, FinalizeSettle điền sau.
       tiers.push({
-        tier: tier as EntryPayoutTier["tier"],
+        tier,
         hitCount,
         unitAmount: 0,
         amount: 0,
@@ -219,9 +228,9 @@ function buildPayoutTiers(
     }
 
     // Giải cố định: amount = unitAmount × số line trúng.
-    const unitAmount = prizeAmounts[tier as keyof PrizeAmounts] ?? 0;
+    const unitAmount = getFixedPrizeAmount(tier, prizeAmounts);
     tiers.push({
-      tier: tier as EntryPayoutTier["tier"],
+      tier,
       hitCount,
       unitAmount,
       amount: unitAmount * hitCount,

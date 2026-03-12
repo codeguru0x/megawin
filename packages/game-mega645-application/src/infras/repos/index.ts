@@ -12,3 +12,4 @@ export type {
   PlayerDailyReportData,
 } from "./report-repo";
 export type { JackpotCycleEntity } from "../mappers/jackpot-cycle-mapper";
+export type { DrawEntity } from "../mappers/draw-mapper";

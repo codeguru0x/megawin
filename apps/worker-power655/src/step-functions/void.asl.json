@@ -1,0 +1,171 @@
+{
+  "Comment": "Power 6/55 Void Draw Step Function – Huỷ kỳ quay (crash-safe)",
+  "QueryLanguage": "JSONata",
+  "StartAt": "PrepareVoid",
+  "States": {
+    "PrepareVoid": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-power655-dev-void-prepare",
+      "Assign": {
+        "voidCtx": "{% $states.result %}"
+      },
+      "Next": "VoidEntries",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "VoidEntries": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-power655-dev-void-entries",
+      "Arguments": "{% $voidCtx %}",
+      "Assign": {
+        "voidResult": "{% $states.result %}"
+      },
+      "Next": "CheckVoidDone",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "CheckVoidDone": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $voidResult.done %}",
+          "Next": "SyncTicketSummaries"
+        }
+      ],
+      "Default": "VoidEntries"
+    },
+    "SyncTicketSummaries": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-power655-dev-void-sync-ticket-summaries",
+      "Arguments": "{% $voidCtx %}",
+      "Assign": {
+        "syncResult": "{% $states.result %}"
+      },
+      "Next": "CheckSyncDone",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "CheckSyncDone": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $syncResult.done %}",
+          "Next": "DispatchRefunds"
+        }
+      ],
+      "Default": "SyncTicketSummaries"
+    },
+    "DispatchRefunds": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-power655-dev-void-dispatch-refunds",
+      "Arguments": "{% $voidCtx %}",
+      "Assign": {
+        "refundResult": "{% $states.result %}"
+      },
+      "Next": "CheckRefundDone",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "RefundFailed"
+        }
+      ]
+    },
+    "CheckRefundDone": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $refundResult.done %}",
+          "Next": "FinalizeVoid"
+        }
+      ],
+      "Default": "RefundWait"
+    },
+    "RefundWait": {
+      "Type": "Wait",
+      "Seconds": 5,
+      "Next": "DispatchRefunds"
+    },
+    "FinalizeVoid": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-power655-dev-void-finalize",
+      "Arguments": "{% $voidCtx %}",
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "RefundFailed": {
+      "Type": "Pass",
+      "Comment": "Refund error – void hoàn tất, entries đã void. Admin retry thủ công.",
+      "End": true
+    }
+  }
+}

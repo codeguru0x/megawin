@@ -28,32 +28,26 @@ export interface GetJackpotCurrentOutput {
     /** ID kỳ quay settle gần nhất trong cycle (nếu có). */
     lastSettledDrawId?: string;
   };
-  /** Cấu hình jackpot: ngưỡng split và tỷ lệ phân bổ theo tier. */
-  config?: {
-    /** Ngưỡng giá trị jackpot để kích hoạt split cycle (VND). */
-    splitThreshold?: number;
-    /** Tỷ lệ phân bổ jackpot theo từng tier khi split (tier → tỷ lệ %). */
-    splitRatios?: Record<string, number>;
-  };
-  /** Tiến trình tích lũy jackpot đến ngưỡng split. */
-  progress?: {
+  /**
+   * Tiến trình tích lũy jackpot đến ngưỡng milestone giả định.
+   *
+   * Mega 6/45 không có giới hạn trần — dùng ngưỡng milestone giả định
+   * tính từ seedAmount để hiển thị tiến trình có ý nghĩa cho staff.
+   * Ngưỡng tăng dần mỗi khi vượt qua: x10 seed → x15 → x20 → ...
+   */
+  progress: {
     /** Giá trị jackpot hiện tại (VND). */
     current: number;
-    /** Ngưỡng split (VND). */
-    threshold: number;
-    /** Phần còn thiếu để đạt ngưỡng (VND). */
+    /** Ngưỡng milestone giả định (VND). */
+    milestoneThreshold: number;
+    /** Phần còn thiếu để đạt ngưỡng (VND). Bằng 0 nếu đã vượt ngưỡng. */
     remaining: number;
-    /** Phần trăm tiến trình (0–100+). */
+    /** Phần trăm tiến trình (0–100+, có thể > 100 khi vượt ngưỡng). */
     percentage: number;
-  };
-  /** Kỳ quay tiếp theo (nếu có). */
-  nextDraw?: {
-    /** ID kỳ quay tiếp theo. */
-    drawId: string;
-    /** Giờ quay thưởng. */
-    drawTime: string;
-    /** Có ý định split jackpot trong kỳ này không. */
-    splitCycleIntent?: boolean;
+    /** Bội số hiện tại so với seed (ví dụ 10 = x10 seed). */
+    currentMultiple: number;
+    /** Bội số mốc tiếp theo (ví dụ 15 sau x10). */
+    nextMultiple: number;
   };
 }
 
@@ -88,8 +82,6 @@ export interface JackpotHistoryItem {
   closingAmount: number;
   /** Có người trúng jackpot (6/6) trong kỳ không. */
   hasWinner: boolean;
-  /** Kỳ này có phải kỳ split cycle không. */
-  isSplitCycle?: boolean;
   /** Tổng số entry (lượt tham gia) trong kỳ. */
   ticketEntryCount: number;
   /** Tổng doanh thu kỳ quay (VND). */
@@ -160,27 +152,6 @@ export interface JackpotCycleSummary {
   totalContribution: number;
   /** Số kỳ quay đã settle trong cycle. */
   drawCount: number;
-  /** Chi tiết chia giải khi split cycle (nếu có). */
-  splitDetail?: {
-    /** Tổng số tiền được chia (VND). */
-    splitAmount: number;
-    /** Tổng tiền đã thanh toán (VND). */
-    totalPaid: number;
-    /** Tổng số người thắng. */
-    totalWinners: number;
-    /** Phân bổ theo tier. */
-    tierAllocations: Record<
-      string,
-      {
-        /** Số người thắng tier này. */
-        winnerCount: number;
-        /** Tổng tiền phân bổ cho tier (VND). */
-        totalAmount: number;
-        /** Tiền bonus mỗi người thắng (VND). */
-        bonusPerWinner: number;
-      }
-    >;
-  };
   /** Danh sách người trúng jackpot (chỉ có khi closeReason = "winner"). */
   winners?: JackpotWinnerSummary[];
 }

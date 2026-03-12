@@ -1,31 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Filter,
-  Loader2,
-  MoreHorizontal,
-} from "lucide-react";
+/**
+ * Mega 6/45 — Draw History Section
+ *
+ * Danh sách lịch sử kỳ quay với filter theo trạng thái, khoảng ngày.
+ * Offset pagination (page/size) — khác với lotto535 dùng cursor.
+ * Mỗi row có link đến trang vận hành.
+ *
+ * Mega 6/45: không có specialNumbers trong kết quả, không có isSplitCycle.
+ */
+
+import { useState, useCallback } from "react";
+import Link from "next/link";
+import { ExternalLink, Filter, Loader2, CalendarIcon } from "lucide-react";
+import type { DateRange } from "react-day-picker";
+import { format } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -42,17 +37,24 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DrawStatusBadge } from "@/components/games/mega645/draw-status-badge";
-import {
-  JackpotDisplay,
-  formatVND,
-} from "@/components/games/mega645/jackpot-display";
+import { MegaNumberBall } from "@/components/games/mega645/mega-number-ball";
+import { cn } from "@/lib/utils";
+import { formatVND, formatNumber } from "@megawin/shared/utils/number";
+import { Pagination } from "@megawin/shared/constants/pagination";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatVNTime, yesterdayVN } from "@megawin/shared/utils/date";
+import { formatVNDate, formatVNTime, subDays, todayVN } from "@megawin/shared/utils/date";
 
 import type { DrawSummary, ListDrawsParams } from "./use-draws";
 import { useDrawsList } from "./use-draws";
 
-const PAGE_SIZE = 20;
+const OPS_BASE = "/games/mega645/operations";
+
+function defaultRange(): DateRange {
+  return {
+    from: subDays(new Date(), 7),
+    to: new Date(),
+  };
+}
 
 const HISTORY_STATUSES = [
   { value: "all", label: "Tất cả" },
@@ -62,47 +64,119 @@ const HISTORY_STATUSES = [
   { value: DrawStatus.Void, label: "Đã huỷ" },
 ];
 
+// ─── Date Range Picker ────────────────────────────────────────────────────────
+
+function DateRangePicker({
+  value,
+  onChange,
+}: {
+  value: DateRange | undefined;
+  onChange: (range: DateRange | undefined) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const label = value?.from
+    ? value.to
+      ? `${format(value.from, "dd/MM/yyyy")} – ${format(value.to, "dd/MM/yyyy")}`
+      : format(value.from, "dd/MM/yyyy")
+    : "Chọn khoảng thời gian";
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            "w-64 justify-start gap-2 font-normal",
+            !value?.from && "text-muted-foreground",
+          )}
+        >
+          <CalendarIcon className="size-3.5 shrink-0" />
+          <span className="truncate text-sm">{label}</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="range"
+          selected={value}
+          onSelect={onChange}
+          numberOfMonths={2}
+          disabled={{ after: new Date() }}
+          defaultMonth={value?.from}
+        />
+        <div className="flex items-center justify-end gap-2 border-t px-3 py-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              onChange(defaultRange());
+              setOpen(false);
+            }}
+          >
+            Mặc định
+          </Button>
+          <Button size="sm" disabled={!value?.from} onClick={() => setOpen(false)}>
+            Áp dụng
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ─── Section ──────────────────────────────────────────────────────────────────
+
 export function DrawHistorySection() {
   const [status, setStatus] = useState("all");
-  const [selectedDate, setSelectedDate] = useState(yesterdayVN());
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(defaultRange);
   const [page, setPage] = useState(1);
-  const [appliedFilters, setAppliedFilters] = useState<ListDrawsParams>({
+
+  const [appliedFilters, setAppliedFilters] = useState<ListDrawsParams>(() => ({
+    size: Pagination.Default.Size,
+    fromDate: formatVNDate(subDays(new Date(), 7)),
+    toDate: todayVN(),
     page: 1,
-    size: PAGE_SIZE,
-    fromDate: yesterdayVN(),
-    toDate: yesterdayVN(),
-  });
+  }));
 
   const { data, isLoading, isFetching } = useDrawsList(appliedFilters);
-  const draws = data?.draws ?? [];
-  const hasNext = draws.length === PAGE_SIZE;
 
-  function applyFilters() {
+  const draws = data?.draws ?? [];
+  const totalPage = Math.ceil((data?.size ?? Pagination.Default.Size) / (data?.size ?? 1));
+  const hasMore = draws.length === (appliedFilters.size ?? Pagination.Default.Size);
+
+  const applyFilters = useCallback(() => {
     const params: ListDrawsParams = {
-      page: 1,
-      size: PAGE_SIZE,
+      size: Pagination.Default.Size,
       status: status !== "all" ? (status as DrawStatus) : undefined,
-      fromDate: selectedDate || undefined,
-      toDate: selectedDate || undefined,
+      fromDate: dateRange?.from ? formatVNDate(dateRange.from) : undefined,
+      toDate: dateRange?.to ? formatVNDate(dateRange.to) : undefined,
+      page: 1,
     };
     setPage(1);
     setAppliedFilters(params);
+  }, [status, dateRange]);
+
+  function goNext() {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    setAppliedFilters((prev) => ({ ...prev, page: nextPage }));
   }
 
-  function goToPage(p: number) {
-    setPage(p);
-    setAppliedFilters((prev) => ({ ...prev, page: p }));
+  function goPrev() {
+    if (page <= 1) return;
+    const prevPage = page - 1;
+    setPage(prevPage);
+    setAppliedFilters((prev) => ({ ...prev, page: prevPage }));
   }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Lịch sử kỳ quay</CardTitle>
-        <CardDescription>
-          Các kỳ quay đã hoàn thành, sắp xếp mới nhất trước.
-        </CardDescription>
+        <CardDescription>Các kỳ quay đã hoàn thành, sắp xếp mới nhất trước.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Filter bar */}
         <div className="flex flex-wrap items-center gap-2">
           <Select value={status} onValueChange={setStatus}>
             <SelectTrigger className="w-40">
@@ -116,18 +190,10 @@ export function DrawHistorySection() {
               ))}
             </SelectContent>
           </Select>
-          <Input
-            type="date"
-            className="w-40"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={applyFilters}
-            disabled={isFetching}
-          >
+
+          <DateRangePicker value={dateRange} onChange={setDateRange} />
+
+          <Button variant="outline" size="sm" onClick={applyFilters} disabled={isFetching}>
             {isFetching ? (
               <Loader2 className="mr-1 size-3.5 animate-spin" />
             ) : (
@@ -137,35 +203,32 @@ export function DrawHistorySection() {
           </Button>
         </div>
 
+        {/* Table */}
         <div className="overflow-x-auto rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-44">Draw ID</TableHead>
-                <TableHead className="w-20">Kỳ</TableHead>
+                <TableHead className="w-48">Kỳ quay</TableHead>
                 <TableHead className="w-20">Giờ</TableHead>
                 <TableHead className="w-28">Trạng thái</TableHead>
-                <TableHead>Kết quả</TableHead>
-                <TableHead className="w-32 text-right">Jackpot</TableHead>
-                <TableHead className="w-24 text-right">Vé</TableHead>
+                <TableHead className="min-w-52">Kết quả (6 số)</TableHead>
+                <TableHead className="w-24 text-right">Entries</TableHead>
                 <TableHead className="w-32 text-right">Doanh thu</TableHead>
-                <TableHead className="w-14" />
+                <TableHead className="w-32 text-right">Jackpot</TableHead>
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-24 text-center">
+                  <TableCell colSpan={8} className="h-24 text-center">
                     <Loader2 className="mx-auto size-6 animate-spin text-muted-foreground" />
                   </TableCell>
                 </TableRow>
               ) : draws.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    Không có kỳ quay nào.
+                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                    Không có kỳ quay nào trong khoảng thời gian đã chọn.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -175,6 +238,7 @@ export function DrawHistorySection() {
           </Table>
         </div>
 
+        {/* Pagination */}
         {draws.length > 0 && (
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">Trang {page}</p>
@@ -183,19 +247,17 @@ export function DrawHistorySection() {
                 variant="outline"
                 size="sm"
                 disabled={page <= 1 || isFetching}
-                onClick={() => goToPage(page - 1)}
+                onClick={goPrev}
               >
-                <ChevronLeft className="mr-1 size-4" />
                 Trước
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!hasNext || isFetching}
-                onClick={() => goToPage(page + 1)}
+                disabled={!hasMore || isFetching}
+                onClick={goNext}
               >
                 Sau
-                <ChevronRight className="ml-1 size-4" />
               </Button>
             </div>
           </div>
@@ -205,70 +267,59 @@ export function DrawHistorySection() {
   );
 }
 
+// ─── Draw Row ─────────────────────────────────────────────────────────────────
+
 function DrawRow({ draw }: { draw: DrawSummary }) {
   return (
-    <TableRow
-      className={
-        draw.isSplitCycle ? "bg-amber-50/50 dark:bg-amber-950/20" : undefined
-      }
-    >
-      <TableCell className="font-mono text-sm">
-        <div className="flex items-center gap-1.5">
-          {draw.drawId}
-          {draw.isSplitCycle && (
-            <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] px-1.5 py-0">
-              Split
-            </Badge>
-          )}
+    <TableRow>
+      <TableCell>
+        <div className="space-y-0.5">
+          <Link
+            href={`${OPS_BASE}?draw=${draw.drawId}`}
+            className="font-mono text-sm font-semibold hover:underline underline-offset-2"
+          >
+            {draw.drawDate}
+          </Link>
+          <p className="font-mono text-[10px] text-muted-foreground/60">{draw.drawId}</p>
         </div>
       </TableCell>
-      <TableCell>
-        <Badge variant="outline">Kỳ {draw.drawNo}</Badge>
-      </TableCell>
-      <TableCell className="tabular-nums">
+      <TableCell className="tabular-nums text-sm">
         {formatVNTime(new Date(draw.drawTime))}
       </TableCell>
       <TableCell>
         <DrawStatusBadge status={draw.status} />
       </TableCell>
       <TableCell>
-        {draw.hasResult ? (
-          <span className="text-sm text-muted-foreground">Có kết quả</span>
+        {/* Mega 6/45: hiển thị 6 số chính, không có specialNumber */}
+        {draw.result ? (
+          <div className="flex items-center gap-1 flex-wrap">
+            {draw.result.winningMain.map((n) => (
+              <MegaNumberBall key={n} number={Number(n)} size="sm" />
+            ))}
+          </div>
         ) : (
-          <span className="text-sm text-muted-foreground">—</span>
+          <span className="text-xs text-muted-foreground">—</span>
         )}
       </TableCell>
-      <TableCell className="text-right">
-        {draw.jackpotAmount != null ? (
-          <JackpotDisplay amount={draw.jackpotAmount} size="sm" />
-        ) : (
-          <span className="text-sm text-muted-foreground">—</span>
-        )}
-      </TableCell>
-      <TableCell className="text-right tabular-nums">
+      <TableCell className="text-right tabular-nums text-sm">
         {draw.ticketEntryCount != null && draw.ticketEntryCount > 0
-          ? draw.ticketEntryCount.toLocaleString("vi-VN")
+          ? formatNumber(draw.ticketEntryCount)
           : "—"}
       </TableCell>
-      <TableCell className="text-right tabular-nums">
-        {draw.totalRevenue != null && draw.totalRevenue > 0
-          ? formatVND(draw.totalRevenue)
+      <TableCell className="text-right tabular-nums text-sm">
+        {draw.totalRevenue != null && draw.totalRevenue > 0 ? formatVND(draw.totalRevenue) : "—"}
+      </TableCell>
+      <TableCell className="text-right tabular-nums text-sm">
+        {draw.jackpotClosingAmount != null && draw.jackpotClosingAmount > 0
+          ? formatVND(draw.jackpotClosingAmount)
           : "—"}
       </TableCell>
       <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8">
-              <MoreHorizontal className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-              <Eye className="mr-2 size-4" />
-              Xem chi tiết
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button variant="ghost" size="icon" className="size-7" asChild>
+          <Link href={`${OPS_BASE}?draw=${draw.drawId}`} title="Xem tại trang vận hành">
+            <ExternalLink className="size-3.5" />
+          </Link>
+        </Button>
       </TableCell>
     </TableRow>
   );

@@ -17,11 +17,9 @@
 
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { DrawStatus, DrawResultSource } from "@megawin/game-core/entities";
+import { DrawStatus } from "@megawin/game-core/entities";
 import type {
-  MainTuple,
-  BonusNumber,
-  VietlottRef,
+  DrawVietlottRef,
 } from "@megawin/game-power655/entities";
 import {
   POWER655_MAIN_COUNT,
@@ -64,16 +62,14 @@ export class PublishResultUseCase extends NextApiUseCase<
       );
     }
 
-    const winningMain = input.winningMain as unknown as MainTuple;
-    const bonusNumber = input.bonusNumber as BonusNumber;
+    const winningMain = input.winningMain;
+    const bonusNumber = input.bonusNumber;
     const publishedAt = nowVN();
 
-    const vietlottRef: VietlottRef | undefined = input.vietlottRef
+    const vietlottRef: DrawVietlottRef | undefined = input.vietlottRef
       ? {
           drawPeriod: input.vietlottRef.drawPeriod,
-          source:
-            (input.vietlottRef.source as DrawResultSource) ??
-            DrawResultSource.Manual,
+          drawDate: input.vietlottRef.drawDate,
         }
       : undefined;
 
@@ -107,7 +103,7 @@ export class PublishResultUseCase extends NextApiUseCase<
       drawId: input.drawId,
       status: DrawStatus.Published,
       result: {
-        winningMain: winningMain as unknown as string[],
+        winningMain,
         bonusNumber,
         publishedAt: publishedAt.toISOString(),
       },

@@ -7,23 +7,16 @@ import {
   ChevronRight,
   Crown,
   Loader2,
+  RefreshCcw,
   Sparkles,
-  Split,
   Trophy,
   User,
 } from "lucide-react";
+import { Pagination } from "@megawin/shared/constants/pagination";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { formatVND, formatVNDCompact, formatNumber } from "@megawin/shared/utils/number";
 import {
@@ -33,32 +26,25 @@ import {
 } from "./use-jackpot";
 import { JackpotCycleCloseReason } from "@megawin/game-mega645/entities";
 
-const PAGE_SIZE = 10;
-
 export function JackpotCyclesSection() {
   const [page, setPage] = useState(1);
-  const { data, isLoading, isFetching } = useJackpotCycles({
-    page,
-    size: PAGE_SIZE,
-  });
+  const { data, isLoading, isFetching } = useJackpotCycles({ page });
 
   const cycles = data?.cycles ?? [];
   const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  const hasNext = page * PAGE_SIZE < total;
+  const totalPages = Math.ceil(total / Pagination.Default.Size);
+  const hasNext = page * Pagination.Default.Size < total;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2.5">
-        <div className="flex size-8 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/50">
-          <Crown className="size-4 text-violet-600 dark:text-violet-400" />
+        <div className="flex size-8 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-900/50">
+          <Crown className="size-4 text-teal-600 dark:text-teal-400" />
         </div>
         <div>
-          <h2 className="text-sm font-semibold text-foreground">
-            Lịch sử chia giải / Trúng Jackpot
-          </h2>
+          <h2 className="text-sm font-semibold text-foreground">Lịch sử Jackpot Cycle</h2>
           <p className="text-[11px] text-muted-foreground">
-            Danh sách các Jackpot Cycle đã đóng ({formatNumber(total)} cycle)
+            Danh sách các chu kỳ tích lũy đã kết thúc ({formatNumber(total)} cycle)
           </p>
         </div>
       </div>
@@ -71,9 +57,7 @@ export function JackpotCyclesSection() {
         ) : cycles.length === 0 ? (
           <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-xl border border-dashed bg-muted/20">
             <Crown className="size-6 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">
-              Chưa có lịch sử chia giải hoặc trúng Jackpot.
-            </p>
+            <p className="text-sm text-muted-foreground">Chưa có Jackpot Cycle nào đã đóng.</p>
           </div>
         ) : (
           cycles.map((cycle) => <CycleCard key={cycle.id} cycle={cycle} />)
@@ -81,7 +65,7 @@ export function JackpotCyclesSection() {
 
         {cycles.length > 0 && (
           <div className="flex items-center justify-between pt-1">
-            <p className="text-xs text-muted-foreground tabular-nums">
+            <p className="text-xs tabular-nums text-muted-foreground">
               Trang {page} / {totalPages}
             </p>
             <div className="flex items-center gap-2">
@@ -112,46 +96,43 @@ export function JackpotCyclesSection() {
 }
 
 function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
-  const isSplit = cycle.closeReason === "split";
   const isWinner = cycle.closeReason === JackpotCycleCloseReason.Winner;
+  const isManual = cycle.closeReason === "manual_reset";
 
   return (
     <Collapsible>
       <div
         className={cn(
           "overflow-hidden rounded-xl border shadow-sm transition-colors",
-          isSplit &&
-            "border-amber-200 bg-amber-50/30 dark:border-amber-800/50 dark:bg-amber-950/10",
-          isWinner &&
-            "border-green-200 bg-green-50/30 dark:border-green-800/50 dark:bg-green-950/10",
-          !isSplit && !isWinner && "bg-card",
+          isWinner && "border-teal-200 bg-teal-50/30 dark:border-teal-800/50 dark:bg-teal-950/10",
+          isManual &&
+            "border-slate-200 bg-slate-50/30 dark:border-slate-700/40 dark:bg-slate-950/10",
+          !isWinner && !isManual && "bg-card",
         )}
       >
         <CollapsibleTrigger asChild>
           <button className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-accent/30">
+            {/* Icon */}
             <div
               className={cn(
                 "flex size-11 shrink-0 items-center justify-center rounded-xl",
                 isWinner
-                  ? "bg-linear-to-br from-green-400 to-emerald-500 shadow-md shadow-green-500/20"
-                  : isSplit
-                    ? "bg-linear-to-br from-orange-400 to-amber-500 shadow-md shadow-orange-500/20"
-                    : "bg-muted",
+                  ? "bg-linear-to-br from-teal-400 to-emerald-500 shadow-md shadow-teal-500/20"
+                  : "bg-muted",
               )}
             >
               {isWinner ? (
                 <Trophy className="size-5 text-white" />
-              ) : isSplit ? (
-                <Split className="size-5 text-white" />
               ) : (
-                <Split className="size-5 text-muted-foreground" />
+                <RefreshCcw className="size-5 text-muted-foreground" />
               )}
             </div>
 
+            {/* Info */}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-sm font-bold">
-                  JP-{String(cycle.cycleNo).padStart(3, "0")}
+                  Cycle #{String(cycle.cycleNo).padStart(3, "0")}
                 </span>
                 <CycleReasonBadge reason={cycle.closeReason} />
               </div>
@@ -170,13 +151,12 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
               </div>
             </div>
 
+            {/* Amount */}
             <div className="text-right">
               <p
                 className={cn(
                   "text-lg font-bold tabular-nums",
-                  isWinner
-                    ? "text-green-700 dark:text-green-400"
-                    : "text-orange-700 dark:text-orange-400",
+                  isWinner ? "text-teal-700 dark:text-teal-400" : "text-foreground",
                 )}
               >
                 {formatVNDCompact(cycle.currentAmount)}
@@ -193,11 +173,13 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
             <div className="grid gap-2 sm:grid-cols-4">
               <StatMini label="Seed khởi điểm" value={formatVND(cycle.seedAmount)} />
               <StatMini label="Tổng tích lũy" value={formatVND(cycle.totalContribution)} />
-              <StatMini label="Đỉnh cao nhất" value={formatVND(cycle.peakAmount)} />
-              <StatMini label="Số kỳ" value={formatNumber(cycle.drawCount)} />
+              <StatMini
+                label="Đỉnh cao nhất"
+                value={formatVND(cycle.peakAmount)}
+                highlight={isWinner}
+              />
+              <StatMini label="Số kỳ quay" value={formatNumber(cycle.drawCount)} />
             </div>
-
-            {isSplit && cycle.splitDetail && <SplitDetailTable detail={cycle.splitDetail} />}
 
             {isWinner && cycle.winners && cycle.winners.length > 0 && (
               <WinnerList winners={cycle.winners} />
@@ -209,13 +191,28 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
   );
 }
 
-function StatMini({ label, value }: { label: string; value: string }) {
+function StatMini({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+}) {
   return (
     <div className="rounded-lg bg-muted/40 px-3 py-2.5">
       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
-      <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{value}</p>
+      <p
+        className={cn(
+          "mt-0.5 text-sm font-semibold tabular-nums",
+          highlight ? "text-teal-700 dark:text-teal-400" : "text-foreground",
+        )}
+      >
+        {value}
+      </p>
     </div>
   );
 }
@@ -223,74 +220,22 @@ function StatMini({ label, value }: { label: string; value: string }) {
 function CycleReasonBadge({ reason }: { reason?: string }) {
   if (reason === JackpotCycleCloseReason.Winner) {
     return (
-      <Badge className="gap-1 border-green-500/30 bg-green-500/15 text-green-700 dark:text-green-400">
+      <Badge className="gap-1 border-teal-500/30 bg-teal-500/15 text-teal-700 dark:text-teal-400">
         <Sparkles className="size-3" />
         Trúng Jackpot
       </Badge>
     );
   }
-  if (reason === "split") {
+  if (reason === "manual_reset") {
     return (
-      <Badge className="gap-1 border-amber-500/30 bg-amber-500/15 text-amber-700 dark:text-amber-400">
-        <Split className="size-3" />
-        Chia giải
+      <Badge variant="outline" className="border-slate-400/40 text-slate-600 dark:text-slate-400">
+        <RefreshCcw className="mr-1 size-3" />
+        Reset thủ công
       </Badge>
     );
   }
-  return <Badge variant="outline">Manual</Badge>;
-}
-
-function SplitDetailTable({ detail }: { detail: NonNullable<JackpotCycleSummary["splitDetail"]> }) {
-  type TierAlloc = { winnerCount: number; totalAmount: number; bonusPerWinner: number };
-  const tiers = Object.entries(detail.tierAllocations) as [string, TierAlloc][];
-
-  return (
-    <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Chi tiết chia giải
-      </p>
-      <div className="overflow-hidden rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/30 hover:bg-muted/30">
-              <TableHead className="font-semibold">Tier</TableHead>
-              <TableHead className="text-right font-semibold">Số người trúng</TableHead>
-              <TableHead className="text-right font-semibold">Tổng phân bổ</TableHead>
-              <TableHead className="text-right font-semibold">Bonus / người</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tiers.map(([tier, d]) => (
-              <TableRow key={tier}>
-                <TableCell className="font-medium capitalize">{tier}</TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatNumber(d.winnerCount)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatVND(d.totalAmount)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums font-semibold text-orange-700 dark:text-orange-400">
-                  {formatVND(d.bonusPerWinner)}
-                </TableCell>
-              </TableRow>
-            ))}
-            <TableRow className="bg-muted/20 font-semibold">
-              <TableCell>Tổng</TableCell>
-              <TableCell className="text-right tabular-nums">
-                {formatNumber(detail.totalWinners)}
-              </TableCell>
-              <TableCell className="text-right tabular-nums">
-                {formatVND(detail.splitAmount)}
-              </TableCell>
-              <TableCell className="text-right tabular-nums">
-                {formatVND(detail.totalPaid)}
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
-    </div>
-  );
+  // Active cycle — không nên hiện trong closed list nhưng guard lại an toàn.
+  return <Badge variant="outline">Không rõ</Badge>;
 }
 
 function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
@@ -303,9 +248,9 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
         {winners.map((w, idx) => (
           <div
             key={`${w.entryId}-${idx}`}
-            className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50/50 p-3.5 dark:border-green-800/50 dark:bg-green-950/20"
+            className="flex items-center gap-3 rounded-xl border border-teal-200 bg-teal-50/50 p-3.5 dark:border-teal-800/50 dark:bg-teal-950/20"
           >
-            <div className="flex size-10 items-center justify-center rounded-lg bg-linear-to-br from-green-400 to-emerald-500 shadow-md shadow-green-500/20">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-linear-to-br from-teal-400 to-emerald-500 shadow-md shadow-teal-500/20">
               <User className="size-4.5 text-white" />
             </div>
             <div className="min-w-0 flex-1">
@@ -314,7 +259,7 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
                 Đại lý: {w.tenantName ?? w.tenantId} · Entry: {w.entryId}
               </p>
             </div>
-            <p className="text-lg font-bold tabular-nums text-green-700 dark:text-green-400">
+            <p className="text-lg font-bold tabular-nums text-teal-700 dark:text-teal-400">
               {formatVND(w.prizeAmount)}
             </p>
           </div>

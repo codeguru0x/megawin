@@ -119,7 +119,6 @@ export interface TicketEntryDoc {
   // ───── Draw Snapshot ─────
 
   drawId: string;
-  drawDate: ISODateString;
   financialDate: ISODateString;
 
   // ───── Tenant (snapshot đại lý lúc đặt cược) ─────

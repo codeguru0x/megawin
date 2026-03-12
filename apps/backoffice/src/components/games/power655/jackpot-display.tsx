@@ -23,7 +23,7 @@ export function DualJackpotDisplay({
           "rounded-md px-1.5 py-0.5 text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
           size === "sm" && "text-[9px]",
         )}>
-          JP1
+          Jackpot 1
         </span>
         <span
           className={cn(
@@ -41,7 +41,7 @@ export function DualJackpotDisplay({
           "rounded-md px-1.5 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
           size === "sm" && "text-[9px]",
         )}>
-          JP2
+          Jackpot 2
         </span>
         <span
           className={cn(

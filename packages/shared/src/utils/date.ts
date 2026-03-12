@@ -26,6 +26,7 @@ import {
   isBefore,
   isAfter,
   isEqual,
+  getDay,
 } from "date-fns";
 
 export const VN_TIMEZONE = "Asia/Ho_Chi_Minh";
@@ -169,7 +170,7 @@ export function currentVNHour(): number {
 // Arithmetic helpers (trả Date chuẩn)
 // ─────────────────────────────────────────────
 
-export { addMinutes, subMinutes, addDays, subDays, addHours, subHours };
+export { addMinutes, subMinutes, addDays, subDays, addHours, subHours, getDay };
 
 /**
  * Trừ phút từ 1 Date, trả về Date mới.
@@ -183,6 +184,8 @@ export function subtractMinutes(date: Date, minutes: number): Date {
 // ─────────────────────────────────────────────
 
 export { isBefore, isAfter, isEqual };
+
+export { TZDate };
 
 // ─────────────────────────────────────────────
 // Start/End of day theo giờ VN

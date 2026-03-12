@@ -8,9 +8,10 @@ import type {
   DrawStats,
   DrawSettleSummary,
 } from "@megawin/game-lotto535/entities";
-import type { MainTuple, Special, ISODateString } from "@megawin/game-lotto535/entities";
+import type { ISODateString } from "@megawin/game-lotto535/entities";
 import { BaseRepo } from "./base-repo";
-import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
+import type { DrawEntity } from "../mappers/draw-mapper";
+import { DrawMapper } from "../mappers/draw-mapper";
 
 /**
  * Valid status transitions.
@@ -275,8 +276,8 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async publishResult(
     drawId: string,
     result: {
-      winningMain: MainTuple;
-      winningSpecial: Special;
+      winningMain: string[];
+      winningSpecial: string;
     },
     vietlottRef?: DrawDoc["vietlottRef"],
   ): Promise<DrawEntity | null> {
@@ -557,6 +558,8 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     };
     if (sales.drawTime) {
       $set.drawTime = sales.drawTime;
+      // drawDate phải đồng bộ với ngày của drawTime theo giờ VN.
+      $set.drawDate = formatVNDate(sales.drawTime);
     }
     return await this.updateOne({ drawId }, { $set });
   }
@@ -564,8 +567,8 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async updateResult(
     drawId: string,
     result: {
-      winningMain: MainTuple;
-      winningSpecial: Special;
+      winningMain: string[];
+      winningSpecial: string;
       publishedAt: Date;
     },
     vietlottRef?: DrawDoc["vietlottRef"],

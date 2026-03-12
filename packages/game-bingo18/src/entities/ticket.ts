@@ -91,8 +91,6 @@ export interface TicketVoidSummary {
 export interface BasicBoard {
   /** Mã board, format "B01", "B02",... Unique trong 1 ticket. */
   boardNo: string;
-  /** Board đã bị void (admin void board cụ thể). true = không tính khi settle. */
-  isVoid?: boolean;
   /** Loại cược: "singleNum" | "doubleMatch" | "tripleMatch". Quyết định cách tính thưởng. */
   playType: Bingo18PlayType;
   /** Số đã chọn (1-6) cho singleNum/doubleMatch, hoặc undefined cho tripleMatch any. */
@@ -107,8 +105,6 @@ export interface BasicBoard {
 
 /** Side Bet — cược bổ sung ngoài board cơ bản. */
 export interface SideBet {
-  /** Side bet đã bị void. true = không tính khi settle. */
-  isVoid?: boolean;
   /** Loại side bet: "sumTotal" (đoán tổng) hoặc "bigSmallDraw" (lớn/hoà/nhỏ). */
   playType: Bingo18SideBetPlayType;
   /** Tổng cụ thể (3-18) cho sumTotal, hoặc big/draw/small cho bigSmallDraw. */

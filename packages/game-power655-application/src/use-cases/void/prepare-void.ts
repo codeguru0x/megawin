@@ -22,6 +22,7 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { VoidContext } from "./types";
+import { AppException } from "@megawin/app-core/use-cases";
 
 export interface PrepareVoidInput {
   /** ID kỳ quay cần void. */
@@ -42,11 +43,13 @@ export class PrepareVoidUseCase extends InternalUseCase<PrepareVoidInput, VoidCo
     const { drawId } = input;
     const draw = await this.drawRepo.getDrawById(drawId);
     if (!draw) {
-      throw new Error(`Draw ${drawId} không tồn tại.`);
+      throw AppException.notFound(`Draw ${drawId} không tồn tại.`);
     }
 
     if (draw.status !== DrawStatus.Voiding) {
-      throw new Error(`Draw ${drawId} status = "${draw.status}" – expected "voiding".`);
+      throw AppException.businessRuleViolation(
+        `Draw ${drawId} status = "${draw.status}" – expected "voiding".`,
+      );
     }
 
     return {

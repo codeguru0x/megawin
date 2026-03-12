@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { formatNumber } from "@megawin/shared/utils/number";
 import { Save, Info } from "lucide-react";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
@@ -40,7 +41,7 @@ interface PayoutCapsSectionProps {
   isPending: boolean;
 }
 
-const fmt = (n: number) => n.toLocaleString("en-US");
+const fmt = formatNumber;
 
 const CAP_ROWS = [
   {
@@ -63,11 +64,7 @@ const CAP_ROWS = [
   },
 ] as const;
 
-export function PayoutCapsSection({
-  config,
-  onSave,
-  isPending,
-}: PayoutCapsSectionProps) {
+export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSectionProps) {
   const form = useForm<CapsFormValues>({
     resolver: zodResolver(capsFormSchema) as any,
     values: { ...config.payoutCaps },
@@ -83,12 +80,9 @@ export function PayoutCapsSection({
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
             <div className="px-5 py-3">
-              <h3 className="text-sm font-semibold text-foreground">
-                Giới hạn trả thưởng mỗi kỳ
-              </h3>
+              <h3 className="text-sm font-semibold text-foreground">Giới hạn trả thưởng mỗi kỳ</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Giới hạn tổng giải thưởng cho bậc cao (8, 9, 10) khi có nhiều bộ
-                trúng
+                Giới hạn tổng giải thưởng cho bậc cao (8, 9, 10) khi có nhiều bộ trúng
               </p>
             </div>
 
@@ -96,8 +90,8 @@ export function PayoutCapsSection({
               <div className="flex items-start gap-2">
                 <Info className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
                 <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-400">
-                  Nếu số bộ trúng vượt ngưỡng, tổng giải tối đa / kỳ sẽ được
-                  chia đều cho số bộ trúng thay vì trả giải cố định.
+                  Nếu số bộ trúng vượt ngưỡng, tổng giải tối đa / kỳ sẽ được chia đều cho số bộ
+                  trúng thay vì trả giải cố định.
                 </p>
               </div>
             </div>
@@ -106,18 +100,12 @@ export function PayoutCapsSection({
               {CAP_ROWS.map((cap) => {
                 const maxPerDraw = form.watch(cap.maxPerDrawField);
                 const maxSets = form.watch(cap.maxSetsField);
-                const fixedPrize =
-                  config.basicPrizes[`pick${cap.pick}`]?.[cap.pick] ?? 0;
+                const fixedPrize = config.basicPrizes[`pick${cap.pick}`]?.[cap.pick] ?? 0;
 
                 return (
-                  <div
-                    key={cap.pick}
-                    className="rounded-lg border p-4 space-y-3"
-                  >
+                  <div key={cap.pick} className="rounded-lg border p-4 space-y-3">
                     <div className="flex items-center gap-2">
-                      <Badge className={cn("text-white", cap.badge)}>
-                        Bậc {cap.pick}
-                      </Badge>
+                      <Badge className={cn("text-white", cap.badge)}>Bậc {cap.pick}</Badge>
                       <span className="text-xs text-muted-foreground">
                         Trùng {cap.pick}/{cap.pick} số · Giải cố định:{" "}
                         <strong>{fmt(fixedPrize)} VND</strong>
@@ -183,15 +171,8 @@ export function PayoutCapsSection({
           </CardContent>
 
           <CardFooter className="justify-end border-t px-5 py-2.5">
-            <Button
-              type="submit"
-              disabled={isPending || !form.formState.isDirty}
-            >
-              {isPending ? (
-                <Spinner className="mr-2" />
-              ) : (
-                <Save className="mr-2 size-4" />
-              )}
+            <Button type="submit" disabled={isPending || !form.formState.isDirty}>
+              {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
               Lưu giới hạn trả thưởng
             </Button>
           </CardFooter>

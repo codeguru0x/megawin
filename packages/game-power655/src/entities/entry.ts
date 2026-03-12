@@ -42,8 +42,10 @@ export interface EntrySummary {
 export interface EntryResult {
   /** 6 số chính trúng thưởng, sorted ascending. */
   winningMain: string[];
+
   /** Số bonus – quay từ 49 quả bóng còn lại sau khi rút 6. */
   bonusNumber: string;
+
   /** Thời điểm công bố kết quả. */
   publishedAt: Date;
 }
@@ -146,10 +148,6 @@ export interface TicketEntryDoc {
 
   /** Mã kỳ quay: "YYYY-MM-DD.001". Join key với draws. */
   drawId: string;
-  /** Thời điểm quay chính xác (UTC). Dùng cho sort và display. */
-  drawTime: Date;
-  /** Ngày quay "YYYY-MM-DD". Dùng cho filter/report. */
-  drawDate: ISODateString;
 
   // ───── Financial Date ─────
 
@@ -180,11 +178,13 @@ export interface TicketEntryDoc {
 
   /** Tổng line của entry trong kỳ này (= Σ boards[].derived.expandedLines). */
   lineCount: number;
+
   /**
    * Tiền cược kỳ này (VND) = lineCount × unitPrice.
    * Lưu sẵn (denormalized) để report nhanh, tránh join ticket.
    */
   amount: number;
+
   /** Giá 1 line tại thời điểm mua (snapshot từ config). */
   unitPrice: number;
 
@@ -265,13 +265,16 @@ export interface EntryBoardSnapshot {
 export interface EntryPayoutTier {
   /** Hạng giải: jackpot1, jackpot2, tier1, tier2, tier3. */
   tier: PrizeTier;
+
   /** Số lines trúng hạng này. */
   hitCount: number;
+
   /**
    * Tiền thưởng mỗi hit (VND).
    * JP1/JP2: = 0 tại SettleEntries, patch ở FinalizeSettle khi biết pool chính xác.
    */
   unitAmount: number;
+
   /**
    * Tổng tiền hạng này (VND).
    * Công thức: hitCount × unitAmount.

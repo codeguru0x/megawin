@@ -22,22 +22,36 @@
  *  │  3. CalculateFinancials    │  Tính từ DB (dual JP1/JP2 + overflow)
  *  └────────┬───────────────────┘
  *           ▼
+ *  ┌─────────────────────────────────────────────────┐
+ *  │  4. CheckJackpotWinner (Choice)                 │
+ *  │     hasJackpot1Winner || hasJackpot2Winner?     │
+ *  └──┬──────────────────────────────────┬───────────┘
+ *   Yes                                  No
+ *     ▼                                  │
+ *  ┌──────────────────────────────┐      │
+ *  │  4a. PatchJackpotPrize       │      │
+ *  │      Ghi prizeAmount vào     │      │
+ *  │      JP lines + entries;     │      │
+ *  │      trả về winners list     │      │
+ *  └────────┬─────────────────────┘      │
+ *           └──────────┬─────────────────┘
+ *                      ▼
  *  ┌──────────────────────────────────────────┐
- *  │  4. SyncTicketSummaries (loop)           │
+ *  │  5. SyncTicketSummaries (loop)           │
  *  │     Recompute ticket progress            │
  *  │     done = true khi hết tickets          │
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  5. BuildReport         │  Daily reports (idempotent upsert)
+ *  │  6. BuildReport         │  Daily reports (idempotent upsert)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  6. FinalizeSettle      │  settling → settled + dual jackpot cycle
+ *  │  7. FinalizeSettle      │  settling → settled + dual jackpot cycle
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  7. DispatchPayouts (loop, async)        │
+ *  │  8. DispatchPayouts (loop, async)        │
  *  │     done = true khi hết pending payouts  │
  *  └──────────────────────────────────────────┘
  *
@@ -120,7 +134,7 @@ export const SETTLE_STATE_MACHINE = {
       Resource: lambdaArn("settle-calculate-financials"),
       Arguments: "{% $settleCtx %}",
       Assign: {
-        settleCtx: "{% $merge($settleCtx, { 'financials': $states.result }) %}",
+        settleCtx: "{% $merge([$settleCtx, { 'financials': $states.result }]) %}",
       },
       Next: "CheckJackpotWinner",
       Retry: LAMBDA_RETRY,

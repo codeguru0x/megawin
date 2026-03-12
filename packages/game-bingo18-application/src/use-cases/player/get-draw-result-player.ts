@@ -60,12 +60,14 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
   const basicPrizes: PlayerBasicPrize[] = (summary?.basicPrizes ?? []).map((bp) => ({
     playType: bp.playType,
     matchCount: bp.matchCount,
+    tripleKind: bp.tripleKind,
     winnerCount: bp.winnerCount,
     prizePerUnit: bp.prizePerUnit,
   }));
 
   const sideBetPrizes: PlayerSideBetPrize[] = (summary?.sideBetPrizes ?? []).map((sb) => ({
     playType: sb.playType,
+    sum: sb.sum,
     bet: sb.bet,
     winnerCount: sb.winnerCount,
     prizePerUnit: sb.prizePerUnit,

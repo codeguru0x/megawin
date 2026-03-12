@@ -52,7 +52,15 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
 
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
-    const { tenantId, accountId, username, channel, ipAddress, drawIds, boards: boardInputs } = input;
+    const {
+      tenantId,
+      accountId,
+      username,
+      channel,
+      ipAddress,
+      drawIds,
+      boards: boardInputs,
+    } = input;
 
     // ── 1. Load game config ──
     const globalConfig = await this.getGlobalConfig.run();
@@ -212,10 +220,8 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         ipAddress,
         ticketId,
         drawId: draw.drawId,
-        drawTime: draw.drawTime,
-        drawDate: draw.drawDate,
         financialDate: draw.financialDate,
-        tenantSnapshot: { commissionRate, commissionAmount },
+        tenant: { commissionRate, commissionAmount },
         status: EntryStatus.Scheduled as any,
         lineCount: totalLinesPerDraw,
         amount: amountPerDraw,

@@ -23,7 +23,6 @@ import { JackpotCycleStatus } from "@megawin/game-power655/entities";
  */
 export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCurrentOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly drawRepo = new DrawRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** @inheritdoc */
@@ -34,20 +33,18 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCur
     ]);
 
     const config = globalConfig.jackpot;
-    const jp1Current = activeCycle?.jackpot1Current ?? config.jackpot1.seedAmount;
-    const jp2Current = activeCycle?.jackpot2Current ?? config.jackpot2.seedAmount;
-
-    const nextScheduled = await this.drawRepo.getNextScheduledDraw();
+    const jp1Current = activeCycle?.jackpot1CurrentAmount ?? config.jackpot1.seedAmount;
+    const jp2Current = activeCycle?.jackpot2CurrentAmount ?? config.jackpot2.seedAmount;
 
     return {
       cycle: activeCycle
         ? {
             cycleNo: activeCycle.cycleNo,
             status: activeCycle.status,
-            jackpot1Current: activeCycle.jackpot1Current,
-            jackpot2Current: activeCycle.jackpot2Current,
-            jackpot1Opening: activeCycle.jackpot1Opening,
-            jackpot2Opening: activeCycle.jackpot2Opening,
+            jackpot1CurrentAmount: activeCycle.jackpot1CurrentAmount,
+            jackpot2CurrentAmount: activeCycle.jackpot2CurrentAmount,
+            jackpot1SeedAmount: activeCycle.jackpot1SeedAmount,
+            jackpot2SeedAmount: activeCycle.jackpot2SeedAmount,
             drawCount: activeCycle.drawCount,
             startDrawId: activeCycle.startDrawId,
             startedAt: activeCycle.createdAt.toISOString(),
@@ -55,10 +52,10 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCur
         : {
             cycleNo: 0,
             status: JackpotCycleStatus.Active,
-            jackpot1Current: config.jackpot1.seedAmount,
-            jackpot2Current: config.jackpot2.seedAmount,
-            jackpot1Opening: config.jackpot1.seedAmount,
-            jackpot2Opening: config.jackpot2.seedAmount,
+            jackpot1CurrentAmount: config.jackpot1.seedAmount,
+            jackpot2CurrentAmount: config.jackpot2.seedAmount,
+            jackpot1SeedAmount: config.jackpot1.seedAmount,
+            jackpot2SeedAmount: config.jackpot2.seedAmount,
             drawCount: 0,
             startDrawId: "",
             startedAt: new Date().toISOString(),
@@ -74,13 +71,6 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCur
         current: jp2Current,
         seed: config.jackpot2.seedAmount,
       },
-      nextDraw: nextScheduled
-        ? {
-            drawId: nextScheduled.drawId,
-            drawNo: nextScheduled.drawNo,
-            drawTime: nextScheduled.drawTime.toISOString(),
-          }
-        : undefined,
     };
   }
 }

@@ -23,20 +23,20 @@ import {
 } from "@megawin/game-mega645/helpers/match-result";
 import type { DrawResultForMatch } from "@megawin/game-mega645/helpers/match-result";
 import { PrizeTier } from "@megawin/game-mega645/entities/enums";
-import type { LineValue, MainTuple } from "@megawin/game-mega645/entities/types";
+import type { LineValue } from "@megawin/game-mega645/entities/types";
 import { expandBoardToLines } from "@megawin/game-mega645/helpers/expand-lines";
 import { PlayType } from "@megawin/game-mega645/entities/enums";
 
 // ─── Helpers ─────────────────────────────────────────────
 
 function line(nums: readonly [string, string, string, string, string, string]): LineValue {
-  return { main: nums };
+  return { main: [...nums] };
 }
 
 function drawResult(
   winning: readonly [string, string, string, string, string, string],
 ): DrawResultForMatch {
-  return { winningMain: winning };
+  return { winningMain: [...winning] };
 }
 
 // ─── determineTier ───────────────────────────────────────
@@ -117,7 +117,7 @@ describe("Mega 6/45 – buildPrizeAmountMap: bản đồ giải thưởng", () =
 // ─── matchLine ───────────────────────────────────────────
 
 describe("Mega 6/45 – matchLine: so khớp 1 line với kết quả quay", () => {
-  const winning: MainTuple = ["01", "02", "03", "04", "05", "06"];
+  const winning: readonly [string, string, string, string, string, string] = ["01", "02", "03", "04", "05", "06"];
   const result = drawResult(winning);
 
   it("6/6 → jackpot", () => {

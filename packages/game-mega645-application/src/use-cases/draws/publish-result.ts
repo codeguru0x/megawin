@@ -11,7 +11,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { MainTuple } from "@megawin/game-mega645/entities";
 import {
   MEGA645_MAIN_COUNT,
   VALID_MAIN_NUMBER_SET,
@@ -48,7 +47,7 @@ export class PublishResultUseCase extends NextApiUseCase<
       );
     }
 
-    const winningMain = [...input.winningMain] as unknown as MainTuple;
+    const winningMain = [...input.winningMain];
     const publishedAt = nowVN();
 
     if (draw.status === DrawStatus.SalesClosed) {

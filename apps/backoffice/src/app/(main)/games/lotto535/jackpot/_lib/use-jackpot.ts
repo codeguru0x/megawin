@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@megawin/next/client";
+import { Pagination } from "@megawin/shared/constants/pagination";
 import { lotto535Keys } from "@/lib/query-keys";
 import type {
   GetJackpotCurrentOutput,
@@ -9,11 +10,7 @@ import type {
   ListJackpotCyclesOutput,
 } from "@megawin/game-lotto535-application/use-cases/jackpot";
 
-export type {
-  GetJackpotCurrentOutput,
-  ListJackpotHistoryOutput,
-  ListJackpotCyclesOutput,
-};
+export type { GetJackpotCurrentOutput, ListJackpotHistoryOutput, ListJackpotCyclesOutput };
 export type {
   JackpotHistoryItem,
   JackpotCycleSummary,
@@ -23,38 +20,37 @@ export type {
 export function useJackpotCurrent() {
   return useQuery({
     queryKey: lotto535Keys.jackpotCurrent,
-    queryFn: () =>
-      apiClient.get<GetJackpotCurrentOutput>("/lotto535/jackpot/current"),
+    queryFn: () => apiClient.get<GetJackpotCurrentOutput>("/lotto535/jackpot/current"),
     refetchInterval: 30_000,
   });
 }
 
 export interface JackpotHistoryParams {
   page: number;
-  size: number;
 }
 
 export function useJackpotHistory(params: JackpotHistoryParams) {
+  const size = Pagination.Default.Size;
   return useQuery({
-    queryKey: lotto535Keys.jackpotHistory(params as unknown as Record<string, unknown>),
+    queryKey: lotto535Keys.jackpotHistory({ page: params.page, size }),
     queryFn: () =>
       apiClient.get<ListJackpotHistoryOutput>("/lotto535/jackpot", {
-        params: { page: params.page, size: params.size },
+        params: { page: params.page, size },
       }),
   });
 }
 
 export interface JackpotCyclesParams {
   page: number;
-  size: number;
 }
 
 export function useJackpotCycles(params: JackpotCyclesParams) {
+  const size = Pagination.Default.Size;
   return useQuery({
-    queryKey: lotto535Keys.jackpotCycles(params as unknown as Record<string, unknown>),
+    queryKey: lotto535Keys.jackpotCycles({ page: params.page, size }),
     queryFn: () =>
       apiClient.get<ListJackpotCyclesOutput>("/lotto535/jackpot/cycles", {
-        params: { page: params.page, size: params.size },
+        params: { page: params.page, size },
       }),
   });
 }

@@ -39,7 +39,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { JackpotCycleCloseReason } from "@megawin/game-mega645/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import type { SettleContextWithFinancials } from "./types";
+import type { SettleConfig, SettleContextWithFinancials } from "./types";
 
 export interface FinalizeSettleResult {
   /** ID kỳ quay đã hoàn tất settle. */
@@ -96,10 +96,10 @@ export class FinalizeSettleUseCase extends InternalUseCase<
     if (!updated) {
       const draw = await this.drawRepo.getDrawById(drawId);
       if (draw?.status === DrawStatus.Settled) {
-        console.log(`Draw ${drawId} already settled, skipping transition.`);
+        console.log(`Draw ${drawId} đã được hoàn tất, bỏ qua chuyển trạng thái.`);
       } else {
         throw AppException.internal(
-          `Cannot finalize draw ${drawId}. Current status: ${draw?.status}`,
+          `Không thể hoàn tất draw ${drawId}. Trạng thái hiện tại: ${draw?.status}`,
         );
       }
     }
@@ -141,7 +141,7 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       const alreadyClosed = await this.cycleRepo.findClosedByEndDrawId(drawId);
       if (alreadyClosed) {
         console.log(
-          `Cycle ${alreadyClosed.cycleNo} already closed for draw ${drawId}, ensuring next cycle exists.`,
+          `Cycle ${alreadyClosed.cycleNo} đã đóng cho draw ${drawId}, đảm bảo cycle tiếp theo tồn tại.`,
         );
         await this.ensureNextCycleExists(drawId, input.config);
         return;
@@ -190,6 +190,8 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       endDrawId: drawId,
       closeReason: JackpotCycleCloseReason.Winner,
       finalAmount: totalJackpotPrize,
+      // cycleDrawCountBefore + 1 = số kỳ bao gồm kỳ đang đóng (tuyệt đối → idempotent khi retry).
+      drawCount: input.config.cycleDrawCountBefore + 1,
       winners: hasJackpotWinner ? (input.jackpotWinners ?? []) : undefined,
     });
 
@@ -202,15 +204,16 @@ export class FinalizeSettleUseCase extends InternalUseCase<
    * createCycle có guard findOne({ status: Active }) → skip nếu đã tồn tại (idempotent).
    * Nếu không có draw tiếp → skip (create-draws hoặc prepare-settle sẽ tạo sau).
    */
-  private async ensureNextCycleExists(
-    drawId: string,
-    config: SettleContextWithFinancials["config"],
-  ): Promise<void> {
+  private async ensureNextCycleExists(drawId: string, config: SettleConfig): Promise<void> {
     const existingActive = await this.cycleRepo.getActiveCycle();
-    if (existingActive) return;
+    if (existingActive) {
+      return;
+    }
 
     const nextDraw = await this.drawRepo.findNextPendingDraw(drawId);
-    if (!nextDraw) return;
+    if (!nextDraw) {
+      return;
+    }
 
     await this.cycleRepo.createCycle({
       startDrawId: nextDraw.drawId,

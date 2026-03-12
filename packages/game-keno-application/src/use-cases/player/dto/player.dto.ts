@@ -149,7 +149,6 @@ export interface PlayerGetTicketEntriesInput {
 export interface PlayerEntryInfo {
   id: string;
   drawId: string;
-  drawDate: string;
   status: string;
   amount: number;
   betCount: number;

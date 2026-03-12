@@ -14,7 +14,27 @@
  */
 
 import type { PrizeTier } from "./enums";
-import type { MainTuple, ISODateString } from "./types";
+import type { ISODateString } from "./types";
+
+// ─────────────────────────────────────────────
+// Line Match Result
+// ─────────────────────────────────────────────
+
+/** Kết quả so khớp 1 line với kết quả quay – ghi ngay khi settle. */
+export interface LineMatchResult {
+  /** Số lượng số chính trùng với kết quả (0-6). */
+  mainMatchCount: number;
+  /** Bonus number có nằm trong 6 số này không. Chỉ ảnh hưởng JP2 (5/6 + bonus). */
+  bonusMatched: boolean;
+  /** Hạng giải trúng. null = không trúng giải nào. */
+  tier: PrizeTier | null;
+  /** Tiền thưởng cho line này (VND). JP1/JP2 = 0 ở đây, FinalizeSettle điền sau. */
+  winAmount: number;
+}
+
+// ─────────────────────────────────────────────
+// Line Document
+// ─────────────────────────────────────────────
 
 /**
  * MongoDB document cho 1 line (1 bộ 6 số).
@@ -47,9 +67,6 @@ export interface TicketLineDoc {
 
   // ───── Timing ─────
 
-  /** Ngày quay "YYYY-MM-DD". */
-  drawDate: ISODateString;
-
   /**
    * Ngày tài chính "YYYY-MM-DD" — ngày dùng cho báo cáo doanh thu.
    * Tính từ 11h sáng → 11h sáng hôm sau (Asia/Ho_Chi_Minh).
@@ -69,21 +86,10 @@ export interface TicketLineDoc {
   lineIndex: number;
 
   /** 6 số chính đã sort ascending. Đây là bộ số player chọn (hoặc expand từ Bao). */
-  main: MainTuple;
+  main: string[];
 
-  // ───── Match Result ─────
-
-  /** Số lượng số chính trùng với kết quả (0-6). */
-  mainMatchCount: number;
-
-  /** Bonus number có nằm trong 6 số này không. Chỉ ảnh hưởng JP2 (5/6 + bonus). */
-  bonusMatched: boolean;
-
-  /** Hạng giải trúng. null = không trúng giải nào. */
-  tier: PrizeTier | null;
-
-  /** Tiền thưởng cho line này (VND). Giải cố định: tier1/tier2/tier3. JP1/JP2 = 0 ở đây, FinalizeSettle điền sau. */
-  prizeAmount: number;
+  /** Kết quả so khớp line với kết quả quay. */
+  matchResult: LineMatchResult;
 
   /** Thời điểm tạo document (= thời điểm settle line). Immutable sau insert. */
   createdAt: Date;

@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  CircleDollarSign,
-  Flame,
-  Layers,
-  Sparkles,
-  Target,
-  TrendingUp,
-  Trophy,
-} from "lucide-react";
+import { CircleDollarSign, Flame, Layers, Target, TrendingUp, Trophy } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,7 +20,7 @@ export function JackpotHeroCard() {
   if (isLoading) return <Skeleton className="h-[200px] rounded-2xl" />;
   if (!data) return null;
 
-  const { cycle, progress, nextDraw } = data;
+  const { cycle, progress } = data;
   const pct = progress.percentage;
   const isHot = pct >= 80;
   const isWarm = pct >= 50;
@@ -72,12 +64,6 @@ export function JackpotHeroCard() {
                 Nóng
               </Badge>
             )}
-            {nextDraw?.splitCycleIntent && (
-              <Badge className="gap-1 border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-300">
-                <Sparkles className="size-3" />
-                Sắp chia
-              </Badge>
-            )}
           </div>
         </div>
 
@@ -85,7 +71,8 @@ export function JackpotHeroCard() {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="font-medium text-amber-800/70 dark:text-amber-300/70">
-              Tiến trình đến ngưỡng chia — {formatVNDCompact(progress.threshold)}
+              Tiến trình đến ngưỡng chia —{" "}
+              <span className="font-semibold">{formatVNDCompact(progress.threshold)}</span>
             </span>
             <span className="font-bold tabular-nums text-amber-900 dark:text-amber-200">
               {pct.toFixed(1)}%
@@ -105,16 +92,12 @@ export function JackpotHeroCard() {
             />
           </div>
           <div className="flex items-center justify-between text-[11px] text-amber-700/60 dark:text-amber-400/50">
-            <span>Còn {formatVNDCompact(progress.remaining)} để đạt ngưỡng</span>
-            {nextDraw && (
-              <span>
-                Kỳ tiếp: #{nextDraw.drawNo} —{" "}
-                {new Date(nextDraw.drawTime).toLocaleTimeString("vi-VN", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            )}
+            <span>
+              {progress.remaining > 0
+                ? `Còn thiếu ${formatVNDCompact(progress.remaining)}`
+                : "Đã đạt ngưỡng chia"}
+            </span>
+            <span>Seed {formatVNDCompact(cycle.seedAmount)}</span>
           </div>
         </div>
       </div>
@@ -186,7 +169,11 @@ export function JackpotKpiCards() {
         iconColor="text-amber-600 dark:text-amber-400"
         label="Ngưỡng chia"
         value={formatVNDCompact(progress.threshold)}
-        sub={`Seed: ${formatVNDCompact(cycle.seedAmount)}`}
+        sub={
+          progress.remaining > 0
+            ? `Còn thiếu ${formatVNDCompact(progress.remaining)}`
+            : "Đã đạt ngưỡng"
+        }
       />
     </div>
   );

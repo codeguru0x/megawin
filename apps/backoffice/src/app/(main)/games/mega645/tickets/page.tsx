@@ -1,25 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Building2,
-  CircleDollarSign,
-  Eye,
-  Filter,
-  Layers,
-  Search,
-  Ticket,
-} from "lucide-react";
+import { Building2, CircleDollarSign, Eye, Filter, Layers, Search, Ticket } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -47,6 +33,7 @@ import { StatCard } from "@/components/games/mega645/stat-card";
 import { TicketStatusBadge } from "@/components/games/mega645/ticket-status-badge";
 import { EntryStatusBadge } from "@/components/games/mega645/entry-status-badge";
 import { MegaNumberBall } from "@/components/games/mega645/mega-number-ball";
+import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils/number";
 
 const PLAY_TYPE_LABELS: Record<string, string> = {
   standard: "Thường",
@@ -62,21 +49,6 @@ const PLAY_TYPE_LABELS: Record<string, string> = {
   bao18: "Bao 18",
   quickPick: "Tự chọn",
 };
-
-function fmtVND(n: number) {
-  if (n >= 1_000_000_000)
-    return (
-      (n / 1_000_000_000).toLocaleString("vi-VN", {
-        maximumFractionDigits: 2,
-      }) + " tỷ"
-    );
-  if (n >= 1_000_000)
-    return (
-      (n / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 }) +
-      " tr"
-    );
-  return n.toLocaleString("vi-VN") + " ₫";
-}
 
 // ─── Mock Data ───
 
@@ -108,9 +80,30 @@ const MOCK_TICKETS = [
     status: "paid",
     createdAt: "2026-03-01 08:30",
     entries: [
-      { drawId: "2026-03-01-T7", drawDate: "01/03", schedule: "T7", status: "scheduled", amount: 290_000, winAmount: 0 },
-      { drawId: "2026-03-04-T3", drawDate: "04/03", schedule: "T3", status: "scheduled", amount: 290_000, winAmount: 0 },
-      { drawId: "2026-03-06-T5", drawDate: "06/03", schedule: "T5", status: "scheduled", amount: 290_000, winAmount: 0 },
+      {
+        drawId: "2026-03-01-T7",
+        drawDate: "01/03",
+        schedule: "T7",
+        status: "scheduled",
+        amount: 290_000,
+        winAmount: 0,
+      },
+      {
+        drawId: "2026-03-04-T3",
+        drawDate: "04/03",
+        schedule: "T3",
+        status: "scheduled",
+        amount: 290_000,
+        winAmount: 0,
+      },
+      {
+        drawId: "2026-03-06-T5",
+        drawDate: "06/03",
+        schedule: "T5",
+        status: "scheduled",
+        amount: 290_000,
+        winAmount: 0,
+      },
     ],
     progress: { total: 3, settled: 0, remaining: 3 },
   },
@@ -135,7 +128,14 @@ const MOCK_TICKETS = [
     status: "completed",
     createdAt: "2026-02-27 14:15",
     entries: [
-      { drawId: "2026-02-27-T5", drawDate: "27/02", schedule: "T5", status: "settled", amount: 10_000, winAmount: 0 },
+      {
+        drawId: "2026-02-27-T5",
+        drawDate: "27/02",
+        schedule: "T5",
+        status: "settled",
+        amount: 10_000,
+        winAmount: 0,
+      },
     ],
     progress: { total: 1, settled: 1, remaining: 0 },
   },
@@ -160,11 +160,46 @@ const MOCK_TICKETS = [
     status: "paid",
     createdAt: "2026-02-25 09:45",
     entries: [
-      { drawId: "2026-02-25-T3", drawDate: "25/02", schedule: "T3", status: "settled", amount: 9_240_000, winAmount: 1_200_000 },
-      { drawId: "2026-02-27-T5", drawDate: "27/02", schedule: "T5", status: "settled", amount: 9_240_000, winAmount: 0 },
-      { drawId: "2026-03-01-T7", drawDate: "01/03", schedule: "T7", status: "scheduled", amount: 9_240_000, winAmount: 0 },
-      { drawId: "2026-03-04-T3", drawDate: "04/03", schedule: "T3", status: "scheduled", amount: 9_240_000, winAmount: 0 },
-      { drawId: "2026-03-06-T5", drawDate: "06/03", schedule: "T5", status: "scheduled", amount: 9_240_000, winAmount: 0 },
+      {
+        drawId: "2026-02-25-T3",
+        drawDate: "25/02",
+        schedule: "T3",
+        status: "settled",
+        amount: 9_240_000,
+        winAmount: 1_200_000,
+      },
+      {
+        drawId: "2026-02-27-T5",
+        drawDate: "27/02",
+        schedule: "T5",
+        status: "settled",
+        amount: 9_240_000,
+        winAmount: 0,
+      },
+      {
+        drawId: "2026-03-01-T7",
+        drawDate: "01/03",
+        schedule: "T7",
+        status: "scheduled",
+        amount: 9_240_000,
+        winAmount: 0,
+      },
+      {
+        drawId: "2026-03-04-T3",
+        drawDate: "04/03",
+        schedule: "T3",
+        status: "scheduled",
+        amount: 9_240_000,
+        winAmount: 0,
+      },
+      {
+        drawId: "2026-03-06-T5",
+        drawDate: "06/03",
+        schedule: "T5",
+        status: "scheduled",
+        amount: 9_240_000,
+        winAmount: 0,
+      },
     ],
     progress: { total: 5, settled: 2, remaining: 3 },
   },
@@ -189,13 +224,62 @@ const MOCK_TICKETS = [
     status: "paid",
     createdAt: "2026-03-01 10:20",
     entries: [
-      { drawId: "2026-03-01-T7", drawDate: "01/03", schedule: "T7", status: "scheduled", amount: 10_000, winAmount: 0 },
-      { drawId: "2026-03-04-T3", drawDate: "04/03", schedule: "T3", status: "scheduled", amount: 10_000, winAmount: 0 },
-      { drawId: "2026-03-06-T5", drawDate: "06/03", schedule: "T5", status: "scheduled", amount: 10_000, winAmount: 0 },
-      { drawId: "2026-03-08-T7", drawDate: "08/03", schedule: "T7", status: "scheduled", amount: 10_000, winAmount: 0 },
-      { drawId: "2026-03-11-T3", drawDate: "11/03", schedule: "T3", status: "scheduled", amount: 10_000, winAmount: 0 },
-      { drawId: "2026-03-13-T5", drawDate: "13/03", schedule: "T5", status: "scheduled", amount: 10_000, winAmount: 0 },
-      { drawId: "2026-03-15-T7", drawDate: "15/03", schedule: "T7", status: "scheduled", amount: 10_000, winAmount: 0 },
+      {
+        drawId: "2026-03-01-T7",
+        drawDate: "01/03",
+        schedule: "T7",
+        status: "scheduled",
+        amount: 10_000,
+        winAmount: 0,
+      },
+      {
+        drawId: "2026-03-04-T3",
+        drawDate: "04/03",
+        schedule: "T3",
+        status: "scheduled",
+        amount: 10_000,
+        winAmount: 0,
+      },
+      {
+        drawId: "2026-03-06-T5",
+        drawDate: "06/03",
+        schedule: "T5",
+        status: "scheduled",
+        amount: 10_000,
+        winAmount: 0,
+      },
+      {
+        drawId: "2026-03-08-T7",
+        drawDate: "08/03",
+        schedule: "T7",
+        status: "scheduled",
+        amount: 10_000,
+        winAmount: 0,
+      },
+      {
+        drawId: "2026-03-11-T3",
+        drawDate: "11/03",
+        schedule: "T3",
+        status: "scheduled",
+        amount: 10_000,
+        winAmount: 0,
+      },
+      {
+        drawId: "2026-03-13-T5",
+        drawDate: "13/03",
+        schedule: "T5",
+        status: "scheduled",
+        amount: 10_000,
+        winAmount: 0,
+      },
+      {
+        drawId: "2026-03-15-T7",
+        drawDate: "15/03",
+        schedule: "T7",
+        status: "scheduled",
+        amount: 10_000,
+        winAmount: 0,
+      },
     ],
     progress: { total: 7, settled: 0, remaining: 7 },
   },
@@ -220,9 +304,30 @@ const MOCK_TICKETS = [
     status: "completed",
     createdAt: "2026-02-23 16:05",
     entries: [
-      { drawId: "2026-02-23-T7", drawDate: "23/02", schedule: "T7", status: "settled", amount: 70_000, winAmount: 250_000 },
-      { drawId: "2026-02-25-T3", drawDate: "25/02", schedule: "T3", status: "settled", amount: 70_000, winAmount: 0 },
-      { drawId: "2026-02-27-T5", drawDate: "27/02", schedule: "T5", status: "settled", amount: 70_000, winAmount: 0 },
+      {
+        drawId: "2026-02-23-T7",
+        drawDate: "23/02",
+        schedule: "T7",
+        status: "settled",
+        amount: 70_000,
+        winAmount: 250_000,
+      },
+      {
+        drawId: "2026-02-25-T3",
+        drawDate: "25/02",
+        schedule: "T3",
+        status: "settled",
+        amount: 70_000,
+        winAmount: 0,
+      },
+      {
+        drawId: "2026-02-27-T5",
+        drawDate: "27/02",
+        schedule: "T5",
+        status: "settled",
+        amount: 70_000,
+        winAmount: 0,
+      },
     ],
     progress: { total: 3, settled: 3, remaining: 0 },
   },
@@ -264,8 +369,7 @@ export default function Mega645TicketsPage() {
             Mega 6/45 — Quản lý vé
           </h1>
           <p className="text-xs text-muted-foreground">
-            Tra cứu, theo dõi tất cả vé đã bán – trạng thái entries và chi tiết
-            người chơi.
+            Tra cứu, theo dõi tất cả vé đã bán – trạng thái entries và chi tiết người chơi.
           </p>
         </div>
       </div>
@@ -274,7 +378,7 @@ export default function Mega645TicketsPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Tổng vé"
-          value={totalTickets.toLocaleString("vi-VN")}
+          value={formatNumber(totalTickets)}
           description="Trong kết quả lọc"
           icon={Ticket}
         />
@@ -286,7 +390,7 @@ export default function Mega645TicketsPage() {
         />
         <StatCard
           title="Vé nhiều kỳ"
-          value={multiDrawCount.toLocaleString("vi-VN")}
+          value={formatNumber(multiDrawCount)}
           description="drawCount > 1"
           icon={Layers}
         />
@@ -371,29 +475,21 @@ export default function Mega645TicketsPage() {
               <TableBody>
                 {filteredTickets.map((t) => (
                   <TableRow key={t.ticketNo}>
-                    <TableCell className="font-mono text-sm">
-                      {t.ticketNo}
-                    </TableCell>
+                    <TableCell className="font-mono text-sm">{t.ticketNo}</TableCell>
                     <TableCell>
                       <div>
                         <p className="text-sm">{t.tenantName}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {t.tenantId}
-                        </p>
+                        <p className="text-xs text-muted-foreground">{t.tenantId}</p>
                       </div>
                     </TableCell>
                     <TableCell>{t.playerName}</TableCell>
-                    <TableCell className="text-center">
-                      {t.boards.length}
-                    </TableCell>
-                    <TableCell className="text-center tabular-nums">
-                      {t.linesPerDraw}
-                    </TableCell>
+                    <TableCell className="text-center">{t.boards.length}</TableCell>
+                    <TableCell className="text-center tabular-nums">{t.linesPerDraw}</TableCell>
                     <TableCell className="text-center">
                       <Badge variant="outline">{t.drawCount}</Badge>
                     </TableCell>
                     <TableCell className="text-right tabular-nums font-medium">
-                      {t.totalAmount.toLocaleString("vi-VN")} ₫
+                      {formatNumber(t.totalAmount)} ₫
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
@@ -427,10 +523,7 @@ export default function Mega645TicketsPage() {
                 ))}
                 {filteredTickets.length === 0 && (
                   <TableRow>
-                    <TableCell
-                      colSpan={10}
-                      className="h-24 text-center text-muted-foreground"
-                    >
+                    <TableCell colSpan={10} className="h-24 text-center text-muted-foreground">
                       Không tìm thấy vé nào phù hợp.
                     </TableCell>
                   </TableRow>
@@ -442,17 +535,13 @@ export default function Mega645TicketsPage() {
       </Card>
 
       {/* Ticket Detail Dialog */}
-      <Dialog
-        open={!!ticketDetail}
-        onOpenChange={(open) => !open && setTicketDetail(null)}
-      >
+      <Dialog open={!!ticketDetail} onOpenChange={(open) => !open && setTicketDetail(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Chi tiết vé – {ticketDetail?.ticketNo}</DialogTitle>
             <DialogDescription>
-              {ticketDetail?.playerName} · {ticketDetail?.tenantName} ·{" "}
-              {ticketDetail?.drawCount} kỳ ·{" "}
-              {ticketDetail && fmtVND(ticketDetail.totalAmount)}
+              {ticketDetail?.playerName} · {ticketDetail?.tenantName} · {ticketDetail?.drawCount} kỳ
+              · {ticketDetail && fmtVND(ticketDetail.totalAmount)}
             </DialogDescription>
           </DialogHeader>
           {ticketDetail && (
@@ -466,8 +555,7 @@ export default function Mega645TicketsPage() {
                   },
                   {
                     label: "Tiền/kỳ",
-                    val:
-                      ticketDetail.amountPerDraw.toLocaleString("vi-VN") + " ₫",
+                    val: formatVND(ticketDetail.amountPerDraw),
                   },
                   {
                     label: "Đã settle",
@@ -475,24 +563,12 @@ export default function Mega645TicketsPage() {
                   },
                   {
                     label: "Tổng thắng",
-                    val: fmtVND(
-                      ticketDetail.entries.reduce(
-                        (s, e) => s + e.winAmount,
-                        0
-                      )
-                    ),
+                    val: fmtVND(ticketDetail.entries.reduce((s, e) => s + e.winAmount, 0)),
                   },
                 ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="rounded-lg bg-muted/50 p-3 text-center"
-                  >
-                    <p className="text-xs text-muted-foreground">
-                      {item.label}
-                    </p>
-                    <p className="text-base font-bold tabular-nums">
-                      {item.val}
-                    </p>
+                  <div key={item.label} className="rounded-lg bg-muted/50 p-3 text-center">
+                    <p className="text-xs text-muted-foreground">{item.label}</p>
+                    <p className="text-base font-bold tabular-nums">{item.val}</p>
                   </div>
                 ))}
               </div>
@@ -501,23 +577,14 @@ export default function Mega645TicketsPage() {
               <div className="space-y-2">
                 <h4 className="text-sm font-medium">Boards</h4>
                 {ticketDetail.boards.map((b) => (
-                  <div
-                    key={b.boardNo}
-                    className="flex items-center gap-3 rounded-lg border p-2.5"
-                  >
+                  <div key={b.boardNo} className="flex items-center gap-3 rounded-lg border p-2.5">
                     <Badge variant="outline" className="font-mono">
                       {b.boardNo}
                     </Badge>
-                    <Badge variant="secondary">
-                      {PLAY_TYPE_LABELS[b.playType] ?? b.playType}
-                    </Badge>
+                    <Badge variant="secondary">{PLAY_TYPE_LABELS[b.playType] ?? b.playType}</Badge>
                     <div className="flex flex-wrap items-center gap-1">
                       {b.numbers.map((n, idx) => (
-                        <MegaNumberBall
-                          key={`${n}-${idx}`}
-                          number={n}
-                          size="sm"
-                        />
+                        <MegaNumberBall key={`${n}-${idx}`} number={n} size="sm" />
                       ))}
                     </div>
                     <span className="ml-auto text-xs text-muted-foreground">
@@ -545,9 +612,7 @@ export default function Mega645TicketsPage() {
                     <TableBody>
                       {ticketDetail.entries.map((e) => (
                         <TableRow key={e.drawId}>
-                          <TableCell className="font-mono text-sm">
-                            {e.drawId}
-                          </TableCell>
+                          <TableCell className="font-mono text-sm">{e.drawId}</TableCell>
                           <TableCell>{e.drawDate}</TableCell>
                           <TableCell>
                             <Badge variant="outline">{e.schedule}</Badge>
@@ -556,17 +621,15 @@ export default function Mega645TicketsPage() {
                             <EntryStatusBadge status={e.status} />
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
-                            {e.amount.toLocaleString("vi-VN")} ₫
+                            {formatNumber(e.amount)} ₫
                           </TableCell>
                           <TableCell className="text-right tabular-nums">
                             {e.status === "settled" && e.winAmount > 0 ? (
                               <span className="font-medium text-green-600 dark:text-green-400">
-                                {e.winAmount.toLocaleString("vi-VN")} ₫
+                                {formatNumber(e.winAmount)} ₫
                               </span>
                             ) : e.status === "settled" ? (
-                              <span className="text-muted-foreground">
-                                0 ₫
-                              </span>
+                              <span className="text-muted-foreground">0 ₫</span>
                             ) : (
                               <span className="text-muted-foreground">—</span>
                             )}

@@ -10,7 +10,6 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { ISODateString, DrawNo } from "./types";
 import type { Max3dproDrawResult } from "./draw-result";
-import type { DrawSettleSummary } from "@megawin/game-max3d-core/repos";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces
@@ -83,6 +82,31 @@ export interface DrawVoidSummary {
 // ─────────────────────────────────────────────
 // Draw Document
 // ─────────────────────────────────────────────
+
+/**
+ * Chi tiết giải thưởng 1 hạng trong kỳ quay — denormalized cho API player.
+ *
+ * Ghi vào DrawDoc.settleSummary bởi CalculateFinancials khi settle hoàn tất.
+ */
+export interface DrawSettleSummaryTier {
+  /** Hạng giải (giá trị từ PrizeTier Max 3D Pro). */
+  tier: string;
+  /** Tổng số lượt trúng hạng này (Σ hitCount từ tất cả entries). */
+  winnerCount: number;
+  /** Tổng tiền thưởng hạng này (VND). = Σ(entry.payout.tiers[tier].amount). */
+  prizeAmount: number;
+}
+
+/**
+ * Tổng kết bảng giải thưởng kỳ quay — denormalized cho API player.
+ *
+ * Ghi vào DrawDoc.settleSummary bởi CalculateFinancials (step 4 settle pipeline).
+ * Đủ 8 tiers (special → sixth) kể cả winnerCount = 0.
+ */
+export interface DrawSettleSummary {
+  /** Bảng giải thưởng theo từng hạng. */
+  tiers: DrawSettleSummaryTier[];
+}
 
 export interface DrawDoc {
   _id: unknown;

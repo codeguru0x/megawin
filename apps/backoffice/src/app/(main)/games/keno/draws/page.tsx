@@ -1,46 +1,47 @@
 "use client";
 
+/**
+ * Keno — Trang Kỳ quay
+ *
+ * Tổng quan kỳ quay Keno đang active và lịch sử.
+ * Keno: ~120 kỳ/ngày, 8 phút/kỳ — hiển thị drawNo + drawTime.
+ * Link đến trang vận hành để quản lý chi tiết.
+ * Theme: orange.
+ */
+
+import Link from "next/link";
 import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { useKenoCurrentDraw } from "./_lib/use-draws";
-import { useKenoGameConfig } from "../config/_lib/use-game-config";
-import { KenoCreateDrawDialog } from "./_lib/create-draw-dialog";
-import {
-  KenoPrimaryDrawCard,
-  KenoQueueDrawCard,
-} from "./_lib/active-draw-card";
-import { KenoDrawHistorySection } from "./_lib/draw-history-section";
+import { KenoPrimaryDrawCard, KenoQueueDrawCard } from "./_lib/active-draw-card";
+import { DrawHistorySection } from "./_lib/draw-history-section";
 
 export default function KenoDrawsPage() {
   const { data, isLoading } = useKenoCurrentDraw();
-  const { data: gameConfig } = useKenoGameConfig();
+
   const activeDraws = data?.activeDraws ?? [];
   const primaryDraw = activeDraws[0] ?? null;
   const queueDraws = activeDraws.slice(1);
-
-  const interval = gameConfig?.play.drawIntervalMinutes ?? 10;
-  const firstDraw = gameConfig?.play.firstDrawTime ?? "06:00";
-  const lastDraw = gameConfig?.play.lastDrawTime ?? "21:55";
 
   return (
     <div className="@container/main flex flex-col gap-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-sky-500 to-indigo-600 shadow-sm">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-orange-600 shadow-sm">
             <CalendarClock className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Keno — Quản lý kỳ quay
-            </h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Keno — Kỳ quay</h1>
             <p className="text-xs text-muted-foreground">
-              Quay mỗi {interval} phút ({firstDraw}–{lastDraw}). Mở/đóng bán,
-              công bố kết quả, kết sổ.
+              Tổng quan kỳ quay hiện tại và lịch sử (~120 kỳ/ngày)
             </p>
           </div>
         </div>
-        <KenoCreateDrawDialog />
+        <Button size="sm" variant="outline" asChild>
+          <Link href="/games/keno/operations">Trang vận hành</Link>
+        </Button>
       </div>
 
       {/* Active Draws */}
@@ -58,9 +59,7 @@ export default function KenoDrawsPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <ListOrdered className="size-4 text-muted-foreground" />
-                <h2 className="text-sm font-semibold text-foreground">
-                  Hàng chờ
-                </h2>
+                <h2 className="text-sm font-semibold text-foreground">Hàng chờ</h2>
                 <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
                   {queueDraws.length} kỳ
                 </span>
@@ -79,18 +78,23 @@ export default function KenoDrawsPage() {
             <CalendarClock className="size-5 text-muted-foreground/50" />
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">
-              Không có kỳ đang vận hành
-            </p>
+            <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Nhấn &ldquo;Tạo kỳ quay&rdquo; để bắt đầu kỳ mới.
+              Vào trang{" "}
+              <Link
+                href="/games/keno/operations"
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                Vận hành
+              </Link>{" "}
+              để tạo kỳ mới.
             </p>
           </div>
         </div>
       )}
 
       {/* History */}
-      <KenoDrawHistorySection />
+      <DrawHistorySection />
     </div>
   );
 }

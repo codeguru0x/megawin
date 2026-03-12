@@ -39,6 +39,12 @@ import {
   PayoutStatus,
   CAPPABLE_PICK_COUNTS,
 } from "@megawin/game-keno/entities";
+import type {
+  EntryPayout,
+  EntryResult,
+  EntryBoardPayout,
+  EntrySideBetPayout,
+} from "@megawin/game-keno/entities";
 import { matchBasicBoard, matchBigSmallBet, matchEvenOddBet } from "@megawin/game-keno/helpers";
 import { EntryOutcome } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -81,46 +87,14 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         entryId: string;
         /** true khi entry có board trúng top prize bậc 8/9/10 (dùng cho ApplyPayoutCaps). */
         hasCappablePrize: boolean;
-        payout: {
-          winAmount: number;
-          payoutAmount: number;
-          boardPayouts: Array<{
-            boardNo: string;
-            playType: KenoPlayType;
-            matchCount: number;
-            pickCount: number;
-            winAmount: number;
-          }>;
-          sideBetPayouts: Array<{
-            playType: KenoPlayType;
-            bet: KenoBigSmallBet | KenoEvenOddBet;
-            outcome: string;
-            isWin: boolean;
-            winAmount: number;
-          }>;
-          settledAt: Date;
-          payoutStatus?: PayoutStatus;
-        };
+        payout: EntryPayout;
         outcome: string;
-        result: {
-          winningNumbers: string[];
-          publishedAt: Date;
-          bigCount: number;
-          smallCount: number;
-          evenCount: number;
-          oddCount: number;
-        };
+        result: EntryResult;
       }> = [];
 
       for (const entry of entries) {
         // ── Match từng board cách chơi cơ bản ──
-        const boardPayouts: Array<{
-          boardNo: string;
-          playType: KenoPlayType;
-          matchCount: number;
-          pickCount: number;
-          winAmount: number;
-        }> = [];
+        const boardPayouts: EntryBoardPayout[] = [];
 
         /**
          * Flag đánh dấu entry có ít nhất 1 board trúng top prize ở bậc 8/9/10.
@@ -161,13 +135,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         }
 
         // ── Match từng side bet (Lớn/Nhỏ, Chẵn/Lẻ) ──
-        const sideBetPayouts: Array<{
-          playType: KenoPlayType;
-          bet: KenoBigSmallBet | KenoEvenOddBet;
-          outcome: string;
-          isWin: boolean;
-          winAmount: number;
-        }> = [];
+        const sideBetPayouts: EntrySideBetPayout[] = [];
 
         const sideBets = entry.entrySummary?.sideBets ?? [];
 
@@ -217,7 +185,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             sideBetPayouts,
             settledAt: now,
             payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
-          },
+          } satisfies EntryPayout,
           outcome: hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
           result: {
             winningNumbers: result.winningNumbers,
@@ -226,11 +194,13 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             smallCount: result.smallCount,
             evenCount: result.evenCount,
             oddCount: result.oddCount,
-          },
+          } satisfies EntryResult,
         });
       }
 
-      await this.entryRepo.bulkSettleEntries(settleOps);
+      if (settleOps.length > 0) {
+        await this.entryRepo.bulkSettleEntries(settleOps);
+      }
     }
 
     return { done: false };

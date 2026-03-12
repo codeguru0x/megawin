@@ -20,26 +20,20 @@ import {
   determineTiers,
   highestTier,
 } from "@megawin/game-power655/rules/prize-tiers";
-import {
-  matchLine,
-  matchLines,
-} from "@megawin/game-power655/helpers/match-result";
+import { matchLine, matchLines } from "@megawin/game-power655/helpers/match-result";
 import type { DrawResultForMatch } from "@megawin/game-power655/helpers/match-result";
 import { PrizeTier } from "@megawin/game-power655/entities/enums";
-import type { LineValue, MainTuple } from "@megawin/game-power655/entities/types";
+import type { LineValue } from "@megawin/game-power655/entities/types";
 import { expandBoardToLines } from "@megawin/game-power655/helpers/expand-lines";
 import { PlayType } from "@megawin/game-power655/entities/enums";
 
 // ─── Helpers ─────────────────────────────────────────────
 
-function line(nums: MainTuple): LineValue {
+function line(nums: string[]): LineValue {
   return { main: nums };
 }
 
-function drawResult(
-  winning: MainTuple,
-  bonus: string,
-): DrawResultForMatch {
+function drawResult(winning: string[], bonus: string): DrawResultForMatch {
   return { winningMain: winning, bonusNumber: bonus };
 }
 
@@ -106,15 +100,13 @@ describe("Power 6/55 – determineTiers: trả về mảng hạng giải", () =>
 
 describe("Power 6/55 – highestTier: chọn hạng cao nhất", () => {
   it("jackpot1 luôn ưu tiên cao nhất", () => {
-    expect(
-      highestTier([PrizeTier.Tier3, PrizeTier.Jackpot1, PrizeTier.Tier1]),
-    ).toBe(PrizeTier.Jackpot1);
+    expect(highestTier([PrizeTier.Tier3, PrizeTier.Jackpot1, PrizeTier.Tier1])).toBe(
+      PrizeTier.Jackpot1,
+    );
   });
 
   it("jackpot2 ưu tiên trên tier1", () => {
-    expect(highestTier([PrizeTier.Tier2, PrizeTier.Jackpot2])).toBe(
-      PrizeTier.Jackpot2,
-    );
+    expect(highestTier([PrizeTier.Tier2, PrizeTier.Jackpot2])).toBe(PrizeTier.Jackpot2);
   });
 
   it("tier1 > tier2 > tier3", () => {
@@ -134,7 +126,7 @@ describe("Power 6/55 – highestTier: chọn hạng cao nhất", () => {
 // ─── matchLine ───────────────────────────────────────────
 
 describe("Power 6/55 – matchLine: so khớp 1 line với kết quả quay", () => {
-  const winning: MainTuple = ["01", "02", "03", "04", "05", "06"];
+  const winning: string[] = ["01", "02", "03", "04", "05", "06"];
   const bonus = "10";
   const result = drawResult(winning, bonus);
 
@@ -202,7 +194,7 @@ describe("Power 6/55 – matchLine: bonus KHÔNG THỂ match khi 6/6", () => {
   it("bonus number KHÔNG BAO GIỜ trùng winning 6 (invariant)", () => {
     // Nếu winning = [10,20,30,40,50,55] thì bonus phải ∈ {07..55} \ winning
     // Khi player match 6/6, cả 6 số của họ đều là winning → bonus nằm ngoài
-    const winning: MainTuple = ["10", "20", "30", "40", "50", "55"];
+    const winning: string[] = ["10", "20", "30", "40", "50", "55"];
     const bonus = "07"; // ∉ winning set
 
     const r = matchLine(line(["10", "20", "30", "40", "50", "55"]), drawResult(winning, bonus));
@@ -228,11 +220,11 @@ describe("Power 6/55 – matchLines: batch match nhiều lines", () => {
 
   it("batch mixed results: tổng hợp đúng tier counts", () => {
     const lines: LineValue[] = [
-      line(["01", "02", "03", "04", "05", "06"]),   // JP1
-      line(["01", "02", "03", "04", "05", "10"]),  // JP2 (bonus match)
-      line(["01", "02", "03", "04", "05", "20"]),  // Tier1
+      line(["01", "02", "03", "04", "05", "06"]), // JP1
+      line(["01", "02", "03", "04", "05", "10"]), // JP2 (bonus match)
+      line(["01", "02", "03", "04", "05", "20"]), // Tier1
       line(["01", "02", "03", "04", "30", "40"]), // Tier2
-      line(["01", "02", "03", "40", "41", "42"]),// Tier3
+      line(["01", "02", "03", "40", "41", "42"]), // Tier3
       line(["01", "02", "40", "41", "42", "43"]), // no win
     ];
 
@@ -261,7 +253,7 @@ describe("Power 6/55 – matchLines: batch match nhiều lines", () => {
 
   it("perLineResults giữ đúng thứ tự", () => {
     const lines: LineValue[] = [
-      line(["01", "02", "03", "04", "05", "06"]),   // JP1
+      line(["01", "02", "03", "04", "05", "06"]), // JP1
       line(["01", "02", "40", "41", "42", "43"]), // no win
     ];
 
@@ -278,7 +270,7 @@ describe("Power 6/55 – Integration: Bao 7 (C(7,6) = 7 lines)", () => {
   it("7 số chứa cả 6 winning → 1 JP1 + 6 Tier1 (hoặc JP2)", () => {
     // Winning: [01,02,03,04,05,06], bonus = 10
     // Player chọn 7 số: [01,02,03,04,05,06,10] (chứa cả 6 winning + bonus)
-    const winning: MainTuple = ["01", "02", "03", "04", "05", "06"];
+    const winning: string[] = ["01", "02", "03", "04", "05", "06"];
     const bonus = "10";
     const result = drawResult(winning, bonus);
 
@@ -306,7 +298,7 @@ describe("Power 6/55 – Integration: Bao 7 (C(7,6) = 7 lines)", () => {
   it("7 số chứa 6 winning + non-bonus → 1 JP1 + 6 Tier1", () => {
     // Winning: [01,02,03,04,05,06], bonus = 10
     // Player chọn: [01,02,03,04,05,06,20] – 20 ≠ bonus
-    const winning: MainTuple = ["01", "02", "03", "04", "05", "06"];
+    const winning: string[] = ["01", "02", "03", "04", "05", "06"];
     const bonus = "10";
     const result = drawResult(winning, bonus);
 

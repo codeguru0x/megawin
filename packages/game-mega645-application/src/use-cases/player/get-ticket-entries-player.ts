@@ -24,7 +24,7 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
   private readonly entryRepo = new EntryRepository();
 
   protected async execute(
-    input: PlayerGetTicketEntriesInput
+    input: PlayerGetTicketEntriesInput,
   ): Promise<PlayerGetTicketEntriesOutput> {
     const { tenantId, accountId, ticketId } = input;
 
@@ -51,8 +51,6 @@ function mapPlayerEntry(entry: EntryEntity): PlayerEntryInfo {
   return {
     id: entry.id,
     drawId: entry.drawId,
-    drawDate: entry.drawDate,
-    drawTime: entry.drawTime.toISOString(),
     status: entry.status,
     amount: entry.amount,
     lineCount: entry.lineCount,

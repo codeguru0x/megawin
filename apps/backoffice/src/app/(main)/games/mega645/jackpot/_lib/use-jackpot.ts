@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@megawin/next/client";
+import { Pagination } from "@megawin/shared/constants/pagination";
 import { mega645Keys } from "@/lib/query-keys";
 import type {
   GetJackpotCurrentOutput,
@@ -9,11 +10,7 @@ import type {
   ListJackpotCyclesOutput,
 } from "@megawin/game-mega645-application/use-cases/jackpot";
 
-export type {
-  GetJackpotCurrentOutput,
-  ListJackpotHistoryOutput,
-  ListJackpotCyclesOutput,
-};
+export type { GetJackpotCurrentOutput, ListJackpotHistoryOutput, ListJackpotCyclesOutput };
 export type {
   JackpotHistoryItem,
   JackpotCycleSummary,
@@ -23,15 +20,13 @@ export type {
 export function useJackpotCurrent() {
   return useQuery({
     queryKey: mega645Keys.jackpotCurrent,
-    queryFn: () =>
-      apiClient.get<GetJackpotCurrentOutput>("/mega645/jackpot/current"),
+    queryFn: () => apiClient.get<GetJackpotCurrentOutput>("/mega645/jackpot/current"),
     refetchInterval: 30_000,
   });
 }
 
 export interface JackpotHistoryParams {
   page: number;
-  size: number;
 }
 
 export function useJackpotHistory(params: JackpotHistoryParams) {
@@ -39,14 +34,13 @@ export function useJackpotHistory(params: JackpotHistoryParams) {
     queryKey: mega645Keys.jackpotHistory(params as unknown as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<ListJackpotHistoryOutput>("/mega645/jackpot", {
-        params: { page: params.page, size: params.size },
+        params: { page: params.page, size: Pagination.Default.Size },
       }),
   });
 }
 
 export interface JackpotCyclesParams {
   page: number;
-  size: number;
 }
 
 export function useJackpotCycles(params: JackpotCyclesParams) {
@@ -54,7 +48,7 @@ export function useJackpotCycles(params: JackpotCyclesParams) {
     queryKey: mega645Keys.jackpotCycles(params as unknown as Record<string, unknown>),
     queryFn: () =>
       apiClient.get<ListJackpotCyclesOutput>("/mega645/jackpot/cycles", {
-        params: { page: params.page, size: params.size },
+        params: { page: params.page, size: Pagination.Default.Size },
       }),
   });
 }

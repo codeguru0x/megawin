@@ -2,13 +2,14 @@
  * Use Case: Finalize Void (Power 6/55)
  *
  * Step cuối của Void Draw Step Function.
- * Pipeline: prepare-void → void-entries → dispatch-refunds → **finalize-void**
+ * Pipeline: prepare-void → void-entries → sync-ticket-summaries → dispatch-refunds → **finalize-void**
  *
  * Tổng kết quá trình void và chuyển draw sang trạng thái cuối cùng (void).
  *
  * LUỒNG XỬ LÝ:
- *   1. Aggregate tổng kết từ entries (totalVoidedEntries, totalRefundAmount)
- *   2. Atomic transition: voiding → void + ghi voidSummary trong 1 DB query
+ *   1. Load draw để lấy voidInfo + check status idempotency
+ *   2. Aggregate tổng kết từ entries (totalVoidedEntries, totalOriginalAmount, totalRefundAmount)
+ *   3. Atomic transition: voiding → void + ghi voidSummary trong 1 DB query
  *      (voidComplete dùng findOneAndUpdate với filter status = voiding)
  *
  * IDEMPOTENT:
@@ -17,11 +18,12 @@
  *   - aggregate + voidComplete atomic: gọi lại cho kết quả giống nhau
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
+import type { DrawVoidSummary } from "@megawin/game-power655/entities";
 
 export interface FinalizeVoidResult {
   /** ID kỳ quay đã void. */
@@ -49,37 +51,42 @@ export class FinalizeVoidUseCase extends InternalUseCase<VoidContext, FinalizeVo
   protected async execute(input: VoidContext): Promise<FinalizeVoidResult> {
     const { drawId } = input;
 
-    // ── Bước 1: Load draw hiện tại để lấy voidInfo (reason, voidedBy, voidedAt) ──
+    // ── Bước 1: Load draw để lấy voidInfo (reason, voidedBy, voidedAt) ─────
+    // draw.voidInfo được ghi bởi voidDraw API (PrepareVoid step).
     const draw = await this.drawRepo.getDrawById(drawId);
 
-    // ── Bước 2: Aggregate tổng kết void từ entries ───────────────────
+    // ── Bước 2: Aggregate tổng kết void từ entries ───────────────────────
     // Đếm entries đã void + tổng refundAmount → ghi vào draw.voidSummary.
     const summary = await this.entryRepo.aggregateVoidRefundSummary(drawId);
     const completedAt = new Date();
 
-    // ── Bước 3: Atomic transition voiding → void ─────────────────────
+    // ── Bước 3: Build DrawVoidSummary đầy đủ từ aggregate ─────────────────
+    // draw.voidInfo (ghi lúc PrepareVoid) chứa reason/voidedBy/voidedAt.
+    // FinalizeVoid bổ sung các stats từ aggregate entries.
+    const voidSummary: DrawVoidSummary = {
+      totalVoidedEntries: summary.totalVoidedEntries,
+      totalOriginalAmount: summary.totalOriginalAmount,
+      totalRefundAmount: summary.totalRefundAmount,
+      completedAt,
+    };
+
+    // ── Bước 4: Atomic transition voiding → void ─────────────────────────
     // voidComplete thực hiện findOneAndUpdate với filter { status: "voiding" }:
     // - Chuyển status → void
-    // - Ghi voidSummary (totalEntriesVoided, totalRefundAmount, ...)
-    // - Trả về null nếu draw không ở status voiding (đã void hoặc status khác)
-    const updated = await this.drawRepo.voidComplete(drawId, {
-      reason: (draw as any)?.voidInfo?.reason ?? "",
-      voidedBy: (draw as any)?.voidInfo?.voidedBy,
-      voidedAt: (draw as any)?.voidInfo?.voidedAt ?? completedAt,
-      totalEntriesVoided: summary.totalVoidedEntries,
-      totalRefundAmount: summary.totalRefundAmount,
-      totalRefundDispatched: summary.totalVoidedEntries,
-      totalRefundFailed: 0,
-    });
+    // - Ghi voidSummary đầy đủ (overwrite toàn bộ — set lần đầu duy nhất)
+    // - Trả về null nếu draw không ở status voiding
+    const updated = await this.drawRepo.voidComplete(drawId, voidSummary);
 
-    // ── Bước 4: Xử lý idempotency ──────────────────────────────────
+    // ── Bước 5: Xử lý idempotency ──────────────────────────────────────
     // updated = null → voidComplete không match filter (draw không ở status voiding).
     // Nếu đã void → idempotent skip. Nếu status khác → state machine lỗi → throw.
     if (!updated) {
       if (draw?.status === DrawStatus.Void) {
         console.log(`Draw ${drawId} already void, skipping transition.`);
       } else {
-        throw new Error(`Cannot finalize void draw ${drawId}. Current status: ${draw?.status}`);
+        throw AppException.businessRuleViolation(
+          `Cannot finalize void draw ${drawId}. Current status: ${draw?.status}`,
+        );
       }
     }
 

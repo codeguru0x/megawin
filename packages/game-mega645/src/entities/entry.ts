@@ -8,7 +8,7 @@
 
 import type { PlayType, PrizeTier, PayoutStatus, RefundStatus } from "./enums";
 import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
-import type { ISODateString, MainTuple } from "./types";
+import type { ISODateString } from "./types";
 import type { Long } from "@megawin/game-core/types";
 
 // ─────────────────────────────────────────────
@@ -34,10 +34,13 @@ export interface EntrySummary {
   boards: EntryBoardSnapshot[];
 }
 
-/** Kết quả kỳ quay (ghi lại khi publish result). */
+/** Kết quả kỳ quay (ghi lại khi settle). */
 export interface EntryResult {
-  /** 6 số trúng thưởng, sorted tăng dần. */
-  winningMain: MainTuple;
+  /**
+   * 6 số trúng thưởng theo thứ tự quay gốc (không sort).
+   * Lưu dạng string[] (zero-padded "01"-"45") — dùng trực tiếp từ MongoDB, tránh cast.
+   */
+  winningMain: string[];
   /** Thời điểm công bố kết quả. */
   publishedAt: Date;
 }
@@ -103,10 +106,6 @@ export interface TicketEntryDoc {
 
   /** ID kỳ quay mà entry này tham gia. Format: "YYYY-MM-DD.001". */
   drawId: string;
-  /** Thời điểm quay thưởng. */
-  drawTime: Date;
-  /** Ngày quay "YYYY-MM-DD". */
-  drawDate: ISODateString;
   /** Ngày tài chính "YYYY-MM-DD". */
   financialDate: ISODateString;
 

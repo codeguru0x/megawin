@@ -52,9 +52,9 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<
     ]);
 
     const jackpot1CurrentAmount =
-      activeCycle?.jackpot1Current ?? globalConfig.jackpot.jackpot1.seedAmount;
+      activeCycle?.jackpot1CurrentAmount ?? globalConfig.jackpot.jackpot1.seedAmount;
     const jackpot2CurrentAmount =
-      activeCycle?.jackpot2Current ?? globalConfig.jackpot.jackpot2.seedAmount;
+      activeCycle?.jackpot2CurrentAmount ?? globalConfig.jackpot.jackpot2.seedAmount;
 
     const mapped = activeDraws.map((d) =>
       mapDrawInfo(d, jackpot1CurrentAmount, jackpot2CurrentAmount),

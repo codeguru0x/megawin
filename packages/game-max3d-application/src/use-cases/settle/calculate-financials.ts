@@ -18,7 +18,6 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { roundTo } from "@megawin/shared/utils/number";
 import {
   calculateDrawFinancials,
   type DrawFinancialInput,
@@ -34,10 +33,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext, SettleFinancials } from "./types";
 
-export class CalculateFinancialsUseCase extends InternalUseCase<
-  SettleContext,
-  SettleFinancials
-> {
+export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, SettleFinancials> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
@@ -48,19 +44,15 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
   protected async execute(input: SettleContext): Promise<SettleFinancials> {
     const { drawId, totalLines } = input;
 
-    const [tenantAgg, payoutSummary] = await Promise.all([
-      this.entryRepo.aggregateRevenueByTenant(drawId),
+    const [{ totalRevenue, totalAgentCommission }, payoutSummary] = await Promise.all([
+      this.entryRepo.aggregateTotalRevenue(drawId),
       this.entryRepo.aggregateSettledPayoutSummary(drawId),
     ]);
 
     const financialInput: DrawFinancialInput = {
-      totalRevenue: tenantAgg.reduce((sum, t) => sum + t.revenue, 0),
+      totalRevenue,
       totalFixedPrizes: payoutSummary.totalFixedPrizes,
-      tenantRevenues: tenantAgg.map((t) => ({
-        tenantId: t.tenantId,
-        revenue: t.revenue,
-        commission: t.commission,
-      })),
+      totalAgentCommission,
     };
 
     const fin = calculateDrawFinancials(financialInput);
@@ -68,9 +60,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
     // ── Build settleSummary cho player API ─────────────────────────────────
     // Gộp tất cả tiers từ cả basic (4) lẫn plus (7) mode vào 1 bảng.
     // Tiers có winnerCount = 0 vẫn được ghi để API luôn trả đủ bảng giải.
-    const allTiers = Array.from(
-      new Set([...BASIC_PRIZE_TIER_VALUES, ...PLUS_PRIZE_TIER_VALUES]),
-    );
+    const allTiers = Array.from(new Set([...BASIC_PRIZE_TIER_VALUES, ...PLUS_PRIZE_TIER_VALUES]));
     const settleSummary: DrawSettleSummary = {
       tiers: allTiers.map((tier) => ({
         tier,
@@ -95,14 +85,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<
       },
       settleSummary,
     );
-
-    const tenantBreakdown = tenantAgg.map((t) => ({
-      tenantId: t.tenantId,
-      revenue: t.revenue,
-      commission: t.commission,
-      commissionRate: t.revenue > 0 ? roundTo(t.commission / t.revenue, 2) : 0,
-      entryCount: t.entryCount,
-    }));
 
     return {
       totalRevenue: fin.totalRevenue,

@@ -120,8 +120,6 @@ export interface TicketEntryDoc {
 
   /** ID kỳ quay mà entry tham gia. Format: "YYYY-MM-DD.NNN". */
   drawId: string;
-  /** Ngày quay, format "YYYY-MM-DD". Snapshot từ draw. */
-  drawDate: ISODateString;
   /** Ngày tài chính của kỳ quay. Snapshot từ draw, dùng cho báo cáo. */
   financialDate: ISODateString;
 
@@ -196,8 +194,6 @@ export interface TicketEntryDoc {
 export interface EntryBoardSnapshot {
   /** Mã board, format "B01", "B02",... Unique trong 1 ticket. */
   boardNo: string;
-  /** Board đã bị void (admin void 1 board cụ thể). true = bỏ qua khi settle. */
-  isVoid?: boolean;
   /** Loại cược: "singleNum" | "doubleMatch" | "tripleMatch". Quyết định cách tính thưởng. */
   playType: Bingo18PlayType;
   /** Số đã chọn (1-6). Dùng cho singleNum + doubleMatch. undefined cho tripleMatch any. */
@@ -208,8 +204,6 @@ export interface EntryBoardSnapshot {
 
 /** Snapshot 1 side bet từ ticket. Lưu cùng entry để settle. */
 export interface EntrySideBetSnapshot {
-  /** Side bet đã bị void. true = bỏ qua khi settle. */
-  isVoid?: boolean;
   /** Loại side bet: "sumTotal" | "bigSmallDraw". */
   playType: Bingo18PlayType;
   /** Tổng cụ thể đã chọn (3-18). Chỉ dùng cho sumTotal. */
@@ -224,6 +218,12 @@ export interface EntryBoardPayout {
   boardNo: string;
   /** Loại cược của board. */
   playType: Bingo18PlayType;
+  /**
+   * Phân loại triple: "specific" (1.200.000đ) hoặc "any" (200.000đ).
+   * Chỉ set cho tripleMatch — undefined với singleNum và doubleMatch.
+   * Lưu vào payout để aggregation settleSummary có thể phân biệt 2 mức giải.
+   */
+  tripleKind?: Bingo18TripleKind;
   /** Số lần số đã chọn xuất hiện trong kết quả (0-3). Chỉ relevant cho singleNum. */
   matchCount: number;
   /** Tiền thắng board này. = 0 nếu thua, tra bảng prize theo playType + matchCount nếu thắng. */

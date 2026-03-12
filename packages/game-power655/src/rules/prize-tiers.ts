@@ -39,10 +39,7 @@ export interface LineMatchResult {
  * @param bonusMatched - Bonus number có nằm trong dãy số player chọn không
  * @returns PrizeTier hoặc null nếu không trúng
  */
-export function determineTier(
-  mainMatchCount: number,
-  bonusMatched: boolean
-): PrizeTier | null {
+export function determineTier(mainMatchCount: number, bonusMatched: boolean): PrizeTier | null {
   switch (mainMatchCount) {
     case 6:
       return PrizeTier.Jackpot1;
@@ -61,20 +58,22 @@ export function determineTier(
  * Xác định TẤT CẢ các giải trúng cho 1 line.
  *
  * Theo thể lệ: trùng nhiều hạng → chỉ lĩnh hạng cao nhất.
- * Nhưng trường hợp đặc biệt: trùng 6/6 + bonus → trúng CẢ JP1 VÀ JP2.
  *
- * Giải thích: Khi trùng 6/6, player đã trùng 6 số winning.
- * Bonus number nằm trong 6 số player chọn nhưng KHÔNG nằm trong 6 số winning
- * (vì bonus quay từ 49 số còn lại). Vì vậy khi trùng 6/6 thì player
- * không thể match bonus (bonus nằm ngoài 6 số winning).
+ * Lưu ý quan trọng — 1 LINE chỉ trúng 1 giải:
+ *   - 6/6 → JP1 (bonus KHÔNG BAO GIỜ match vì bonus ∉ winning set)
+ *   - 5/6 + bonus → JP2 (KHÔNG phải Giải Nhất)
+ *   - 5/6 (no bonus) → Giải Nhất
  *
- * → Kết luận: 6/6 = chỉ JP1. 5/6 + bonus = chỉ JP2.
- * → determineTiers trả về mảng 1 phần tử (hoặc rỗng).
+ * Tuy nhiên, 1 ENTRY (Bao) CÓ THỂ trúng cả JP1 VÀ JP2 qua các lines khác nhau.
+ * Ví dụ Bao 7: chọn 7 số gồm 6 winning + bonus → 7 lines:
+ *   - 1 line 6/6 → JP1
+ *   - 6 lines 5/6 + bonus → JP2
+ *
+ * → Function này trả về mảng 1 phần tử (hoặc rỗng) cho MỖI LINE.
+ *   Caller (settle-entries) tổng hợp tier counts qua nhiều lines để xác định
+ *   entry có trúng JP1 + JP2 đồng thời hay không.
  */
-export function determineTiers(
-  mainMatchCount: number,
-  bonusMatched: boolean
-): PrizeTier[] {
+export function determineTiers(mainMatchCount: number, bonusMatched: boolean): PrizeTier[] {
   const tier = determineTier(mainMatchCount, bonusMatched);
   return tier ? [tier] : [];
 }

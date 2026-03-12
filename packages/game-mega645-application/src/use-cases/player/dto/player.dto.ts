@@ -53,27 +53,27 @@ export interface PlayerDrawInfo {
 
 // ─── Get Jackpot (Player) ───
 
+/**
+ * Thông tin Jackpot Mega 6/45 trả cho player.
+ *
+ * Mega 6/45 KHÔNG có Split Cycle — Jackpot tích luỹ vô hạn cho đến khi có người trúng 6/6.
+ * Không có splitThreshold, không có progress percentage.
+ */
 export interface PlayerGetJackpotOutput {
-  /** Giá trị jackpot hiện tại (VND). */
+  /** Số thứ tự cycle (tự tăng). */
+  cycleNo: number;
+  /** Số tiền Jackpot hiện tại (VND). */
   currentAmount: number;
-  /** Giá trị khởi tạo (seed) khi bắt đầu cycle mới (VND). */
+  /** Số tiền khởi điểm Jackpot (VND) — seed khi bắt đầu cycle mới. */
   seedAmount: number;
-  /** Tiến trình jackpot hướng tới ngưỡng split. */
-  progress: {
-    /** Giá trị jackpot hiện tại (VND) — bằng currentAmount. */
-    current: number;
-    /** Ngưỡng split jackpot (VND). Khi đạt → tự động chia. */
-    threshold: number;
-    /** Phần trăm tiến trình = (current / threshold) × 100. */
-    percentage: number;
-  };
-  /** Kỳ quay tiếp theo (nếu có). */
-  nextDraw?: {
-    /** ID kỳ quay tiếp theo. */
-    drawId: string;
-    /** Giờ quay thưởng của kỳ tiếp theo. */
-    drawTime: string;
-  };
+  /** Số tiền Jackpot cao nhất đạt được trong cycle hiện tại (VND). */
+  peakAmount: number;
+  /** Tổng tiền đã tích lũy từ đầu cycle (VND). */
+  totalContribution: number;
+  /** Số kỳ đã settled trong cycle hiện tại. */
+  drawCount: number;
+  /** Mã kỳ quay bắt đầu cycle. */
+  startDrawId: string;
 }
 
 // ─── List Tickets (Player) ───
@@ -231,10 +231,6 @@ export interface PlayerEntryInfo {
   id: string;
   /** ID kỳ quay entry thuộc về. */
   drawId: string;
-  /** Ngày quay thưởng (ISO date). */
-  drawDate: string;
-  /** Giờ quay thưởng. */
-  drawTime: string;
   /** Trạng thái entry (drawn, settled, voided...). */
   status: string;
   /** Số tiền entry = unitPrice × tổng dòng (VND). */

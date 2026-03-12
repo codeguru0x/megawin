@@ -11,7 +11,7 @@
  *
  * LƯU Ý cho báo cáo:
  * - tenantId luôn được lưu ở top-level để query nhanh (compound index).
- * - drawDate (ISODateString) dùng cho group aggregation.
+ * - financialDate (ISODateString) dùng cho report/aggregation hàng ngày.
  * - amount (tiền cược) lưu sẵn để tránh join với ticket khi report.
  *
  * Pattern naming: {Game}TicketEntryDoc – áp dụng cho mọi game.
@@ -19,7 +19,7 @@
 
 import type { PlayType, PrizeTier, PayoutStatus, RefundStatus } from "./enums";
 import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
-import type { ISODateString, MainTuple, Special } from "./types";
+import type { ISODateString } from "./types";
 import type { Long } from "@megawin/game-core/types";
 
 // ─────────────────────────────────────────────
@@ -42,12 +42,18 @@ export interface EntrySummary {
   boards: EntryBoardSnapshot[];
 }
 
-/** Kết quả kỳ quay – copy từ draw.result khi publish. */
+/** Kết quả kỳ quay – copy từ draw.result khi settle. */
 export interface EntryResult {
-  /** 5 số chính trúng thưởng, sorted. */
-  winningMain: MainTuple;
-  /** Số đặc biệt trúng thưởng. */
-  winningSpecial: Special;
+  /**
+   * 5 số chính trúng thưởng theo thứ tự quay gốc (không sort).
+   * Lưu dạng string[] (zero-padded "01"-"35") — dùng trực tiếp từ MongoDB, tránh cast.
+   */
+  winningMain: string[];
+  /**
+   * Số đặc biệt trúng thưởng theo thứ tự quay gốc.
+   * Lưu dạng string (zero-padded "01"-"12").
+   */
+  winningSpecial: string;
   /** Thời điểm công bố kết quả. */
   publishedAt: Date;
 }
@@ -132,15 +138,6 @@ export interface TicketEntryDoc {
    * Primary key để settle batch theo draw.
    */
   drawId: string;
-
-  /** Thời điểm quay – dùng sort timeline, query theo range. */
-  drawTime: Date;
-
-  /**
-   * Ngày quay theo timezone vận hành (Asia/Ho_Chi_Minh), format "YYYY-MM-DD".
-   * Dùng cho group aggregation report.
-   */
-  drawDate: ISODateString;
 
   // ───── Financial Date ─────
 

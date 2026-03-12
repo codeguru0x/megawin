@@ -5,7 +5,7 @@
  *
  * Mega 6/45 chỉ có mainNumbers (không có specialNumbers).
  * Số nhận dạng string "01"-"45".
- * PlayTypes: Standard (6 số), Bao5 (5 số), Bao7-Bao18, QuickPick (auto 6 số).
+ * PlayTypes: Standard (6 số), Bao5 (5 số), Bao7-Bao18.
  */
 
 import { withPlayerAuth } from "@megawin/auth";
@@ -39,7 +39,6 @@ export const mega645BoardSchema = z
       PlayType.Bao14,
       PlayType.Bao15,
       PlayType.Bao18,
-      PlayType.QuickPick,
     ]),
     selection: mega645SelectionSchema,
   })
@@ -56,8 +55,6 @@ export const mega645BoardSchema = z
     }
 
     switch (playType) {
-      case PlayType.QuickPick:
-        break;
       case PlayType.Standard:
         if (mainLen !== 6)
           ctx.addIssue({

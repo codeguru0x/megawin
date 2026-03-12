@@ -65,7 +65,7 @@ export interface RouteSession<TRole extends string = string> {
 }
 
 export type GetSessionFn<TRole extends string = string> = (
-  req: NextRequest
+  req: NextRequest,
 ) => Promise<RouteSession<TRole> | null>;
 
 export interface RouteAuthRequirements<TRole extends string = string> {
@@ -88,7 +88,7 @@ export interface RouteContext<
 
 export type NextRouteHandler = (
   req: NextRequest,
-  ctx: { params: Promise<Record<string, string>> }
+  ctx: { params: Promise<Record<string, string>> },
 ) => Promise<NextResponse>;
 
 // ============ Parse Query Params ============
@@ -126,7 +126,7 @@ export class ApiRouteBuilder<
 
   /** Yêu cầu authentication. Truyền options nếu cần phân quyền theo roles. */
   auth(
-    requirements?: RouteAuthRequirements<TRole>
+    requirements?: RouteAuthRequirements<TRole>,
   ): ApiRouteBuilder<TBody, TQuery, TParams, TRole> {
     return new ApiRouteBuilder<TBody, TQuery, TParams, TRole>({
       ...this.config,
@@ -156,16 +156,11 @@ export class ApiRouteBuilder<
   }
 
   handler(
-    fn: (
-      ctx: RouteContext<TBody, TQuery, TParams, TRole>
-    ) => Promise<NextResponse>
+    fn: (ctx: RouteContext<TBody, TQuery, TParams, TRole>) => Promise<NextResponse>,
   ): NextRouteHandler {
     const cfg = this.config;
 
-    return async (
-      req: NextRequest,
-      routeCtx: { params: Promise<Record<string, string>> }
-    ) => {
+    return async (req: NextRequest, routeCtx: { params: Promise<Record<string, string>> }) => {
       try {
         // 1. Auth
         let session: RouteSession<TRole> | null = null;
@@ -173,7 +168,7 @@ export class ApiRouteBuilder<
           if (!cfg.getSession) {
             throw new Error(
               "ApiRouteBuilder: auth is configured but getSession is not provided. " +
-                "Use createApiRouteBuilder() to bind getSession once."
+                "Use createApiRouteBuilder() to bind getSession once.",
             );
           }
           session = await cfg.getSession(req);
@@ -199,8 +194,7 @@ export class ApiRouteBuilder<
             if (!isReadOnly) {
               return apiError(403, {
                 code: APP_ERROR_CODES.ACCOUNT_READ_ONLY,
-                message:
-                  "Account is read-only, mutation operations are not allowed",
+                message: "Account is read-only, mutation operations are not allowed",
               });
             }
           }
@@ -208,19 +202,12 @@ export class ApiRouteBuilder<
           if (cfg.authRequirements.roles?.length) {
             const userRoles = session.user.roles ?? [];
             console.log("[auth check] userRoles:", userRoles);
-            console.log(
-              "[auth check] requiredRoles:",
-              cfg.authRequirements.roles
-            );
+            console.log("[auth check] requiredRoles:", cfg.authRequirements.roles);
             console.log("[auth check] superRoles:", cfg.superRoles);
-            const hasSuperRole = cfg.superRoles?.some((r) =>
-              userRoles.includes(r)
-            );
+            const hasSuperRole = cfg.superRoles?.some((r) => userRoles.includes(r));
             console.log("[auth check] hasSuperRole:", hasSuperRole);
             if (!hasSuperRole) {
-              const hasRole = cfg.authRequirements.roles.some((r) =>
-                userRoles.includes(r)
-              );
+              const hasRole = cfg.authRequirements.roles.some((r) => userRoles.includes(r));
               console.log("[auth check] hasRole:", hasRole);
               if (!hasRole) {
                 return apiError(403, {
@@ -244,7 +231,7 @@ export class ApiRouteBuilder<
           }
           const result = cfg.bodySchema.safeParse(rawBody);
           if (!result.success) {
-            return validationError("Validation failed", result.error.flatten());
+            return validationError("Validation failed", result.error);
           }
           body = result.data as TBody;
         }
@@ -255,10 +242,7 @@ export class ApiRouteBuilder<
           const rawQuery = parseQueryParams(req);
           const result = cfg.querySchema.safeParse(rawQuery);
           if (!result.success) {
-            return validationError(
-              "Query validation failed",
-              result.error.flatten()
-            );
+            return validationError("Query validation failed", result.error);
           }
           query = result.data as TQuery;
         }
@@ -269,10 +253,7 @@ export class ApiRouteBuilder<
         if (cfg.paramsSchema) {
           const result = cfg.paramsSchema.safeParse(rawParams);
           if (!result.success) {
-            return validationError(
-              "Params validation failed",
-              result.error.flatten()
-            );
+            return validationError("Params validation failed", result.error);
           }
           params = result.data as TParams;
         } else {
@@ -315,18 +296,8 @@ export function createApiRouteBuilder<TRole extends string = string>(defaults: {
   getSession: GetSessionFn<TRole>;
   superRoles?: TRole[];
 }) {
-  return function withApi(): ApiRouteBuilder<
-    undefined,
-    undefined,
-    Record<string, string>,
-    TRole
-  > {
-    return new ApiRouteBuilder<
-      undefined,
-      undefined,
-      Record<string, string>,
-      TRole
-    >({
+  return function withApi(): ApiRouteBuilder<undefined, undefined, Record<string, string>, TRole> {
+    return new ApiRouteBuilder<undefined, undefined, Record<string, string>, TRole>({
       getSession: defaults.getSession,
       superRoles: defaults.superRoles,
     });

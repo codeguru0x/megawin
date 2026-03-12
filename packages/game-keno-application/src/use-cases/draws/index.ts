@@ -11,6 +11,7 @@ export { ListDrawsUseCase } from "./list-draws";
 export { GetCurrentDrawUseCase } from "./get-current-draw";
 export { VoidDrawUseCase } from "./void-draw";
 export { UpdateScheduleUseCase } from "./update-schedule";
+export { GetDrawDetailUseCase } from "./get-draw-detail";
 
 export type {
   GetCurrentDrawInput,
@@ -38,9 +39,6 @@ export type {
   GetDrawDetailOutput,
 } from "./dto/draw.dto";
 
-export type {
-  UpdateScheduleInput,
-  UpdateScheduleOutput,
-} from "./update-schedule";
+export type { UpdateScheduleInput, UpdateScheduleOutput } from "./update-schedule";
 
 export type { VoidDrawInput, VoidDrawOutput } from "./void-draw";

@@ -16,12 +16,16 @@
  */
 
 import type { PrizeTier } from "../entities/enums";
-import type { LineValue, MainTuple, BonusNumber } from "../entities/types";
-import { determineTiers, type LineMatchResult } from "../rules/prize-tiers";
+import type { LineValue } from "../entities/types";
+import { determineTiers } from "../rules/prize-tiers";
 
 export interface DrawResultForMatch {
-  winningMain: MainTuple;
-  bonusNumber: BonusNumber;
+  /**
+   * 6 số chính trúng thưởng (string zero-padded "01"-"55").
+   * Thứ tự không quan trọng — match dùng Set intersection.
+   */
+  winningMain: readonly string[];
+  bonusNumber: string;
 }
 
 /**
@@ -31,12 +35,13 @@ export interface DrawResultForMatch {
  * Công thức: mainMatchCount = |lineMain ∩ winMain|, kết quả 0-6.
  *
  * Dùng Set cho O(1) lookup → tổng O(6+6) = O(12) ≈ O(1) vì kích thước cố định.
+ * Thứ tự của winMain không ảnh hưởng kết quả (Set lookup).
  *
- * @param lineMain - 6 số chính player chọn (MainTuple)
- * @param winMain  - 6 số chính kết quả quay (MainTuple)
+ * @param lineMain - 6 số chính player chọn
+ * @param winMain  - 6 số chính kết quả quay (string[])
  * @returns Số lượng số trùng (0-6)
  */
-function countMainMatches(lineMain: MainTuple, winMain: MainTuple): number {
+function countMainMatches(lineMain: string[], winMain: readonly string[]): number {
   const winSet = new Set(winMain);
   let count = 0;
   for (const n of lineMain) {
@@ -52,14 +57,11 @@ function countMainMatches(lineMain: MainTuple, winMain: MainTuple): number {
  * → Chỉ có ý nghĩa khi player trùng < 6/6 (1 trong các số "sai" = bonus → JP2).
  * → Khi player trùng 6/6, cả 6 số = winning set, bonus KHÔNG THỂ match → chỉ JP1.
  *
- * @param lineMain    - 6 số chính player chọn (MainTuple)
- * @param bonusNumber - Bonus number từ kết quả quay
+ * @param lineMain    - 6 số chính player chọn
+ * @param bonusNumber - Bonus number từ kết quả quay (string zero-padded)
  * @returns true nếu bonus number nằm trong 6 số player chọn
  */
-function checkBonusMatch(
-  lineMain: MainTuple,
-  bonusNumber: BonusNumber,
-): boolean {
+function checkBonusMatch(lineMain: string[], bonusNumber: string): boolean {
   return lineMain.includes(bonusNumber);
 }
 
@@ -83,7 +85,7 @@ function checkBonusMatch(
  */
 export function matchLine(
   line: LineValue,
-  result: DrawResultForMatch
+  result: DrawResultForMatch,
 ): { tiers: PrizeTier[]; mainMatchCount: number; bonusMatched: boolean } {
   const mainMatchCount = countMainMatches(line.main, result.winningMain);
   const bonusMatched = checkBonusMatch(line.main, result.bonusNumber);
@@ -122,16 +124,14 @@ export interface DetailedMatchResult {
  * @param result - Kết quả quay (6 số chính + bonus number)
  * @returns Kết quả match tổng hợp: totalLines, winningLines, tierCounts, perLineResults
  */
-export function matchLines(
-  lines: LineValue[],
-  result: DrawResultForMatch
-): DetailedMatchResult {
+export function matchLines(lines: LineValue[], result: DrawResultForMatch): DetailedMatchResult {
   const tierCounts = new Map<PrizeTier, number>();
   const perLineResults: PerLineMatchResult[] = [];
   let winningLines = 0;
 
   for (const line of lines) {
     const { tiers, mainMatchCount, bonusMatched } = matchLine(line, result);
+
     perLineResults.push({ mainMatchCount, bonusMatched, tiers });
 
     if (tiers.length > 0) {

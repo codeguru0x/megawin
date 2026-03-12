@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient, ApiClientError } from "@megawin/next/client";
+import { apiClient, formatErrorToast } from "@megawin/next/client";
 import { toast } from "sonner";
 import { lotto535Keys } from "@/lib/query-keys";
 import type {
@@ -236,7 +236,8 @@ function useDrawAction<TBody = void>(
       toast.success(successMessage);
     },
     onError: (err) => {
-      toast.error(err instanceof ApiClientError ? err.message : "Thao tác thất bại.");
+      const { title, description } = formatErrorToast(err, "Thao tác thất bại.");
+      toast.error(title, { description });
     },
   });
 }
@@ -295,14 +296,21 @@ export function usePreviewDraws(count: number) {
 export function useCreateDraw() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { count: number; openSlotIndexes?: number[] }) =>
-      apiClient.post<{ draws: { drawId: string }[] }>("/lotto535/draws", data),
+    mutationFn: (data: {
+      draws: Array<{
+        drawDate: string;
+        drawNo: 1 | 2;
+        drawTime: string;
+        openNow: boolean;
+      }>;
+    }) => apiClient.post<{ draws: { drawId: string }[] }>("/lotto535/draws", data),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: lotto535Keys.all });
       toast.success(`Đã tạo ${res.draws.length} kỳ quay mới.`);
     },
     onError: (err) => {
-      toast.error(err instanceof ApiClientError ? err.message : "Tạo kỳ quay thất bại.");
+      const { title, description } = formatErrorToast(err, "Tạo kỳ quay thất bại.");
+      toast.error(title, { description });
     },
   });
 }

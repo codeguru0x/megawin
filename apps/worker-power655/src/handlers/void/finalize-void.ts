@@ -1,7 +1,7 @@
 /**
  * Lambda: void-finalize (Power 6/55)
  *
- * Step 4 (cuối) của Void Draw Step Function.
+ * Step 5 (cuối) của Void Draw Step Function.
  * Aggregate tổng kết void từ DB, ghi voidSummary lên draw document.
  *
  * IDEMPOTENT: aggregate + overwrite.

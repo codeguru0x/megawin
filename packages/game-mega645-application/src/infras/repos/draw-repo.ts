@@ -8,7 +8,7 @@
  *      ↘ void      ↘ void      ↘ void       ↘ void
  *
  * Khác biệt so với Lotto 5/35:
- *   - Kết quả: chỉ có 6 số chính (winningMain: MainTuple), KHÔNG có winningSpecial
+ *   - Kết quả: chỉ có 6 số chính (winningMain: string[], thứ tự quay gốc), KHÔNG có winningSpecial
  *   - Single jackpot (openingAmount / closingAmount)
  *   - Financial: jackpotContribution (single)
  */
@@ -21,8 +21,8 @@ import type {
   DrawFinancial,
   DrawStats,
   DrawSettleSummary,
-  MainTuple,
-  ISODateString,
+  ISODateString,  
+  DrawVoidSummary,
 } from "@megawin/game-mega645/entities";
 import { BaseRepo } from "./base-repo";
 import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
@@ -226,7 +226,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   /** Hoàn tất void: voiding → void + stamp voidedAt + ghi voidSummary. Atomic, idempotent. */
   async voidComplete(
     drawId: string,
-    voidSummary: NonNullable<DrawDoc["voidSummary"]>,
+    voidSummary: DrawVoidSummary,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Voiding];
     if (!allowed?.has(DrawStatus.Void)) return null;
@@ -248,12 +248,12 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   /**
    * Publish kết quả: salesClosed → published.
-   * Mega 6/45: chỉ có winningMain (6 số chính), KHÔNG có winningSpecial.
+   * Mega 6/45: chỉ có winningMain (6 số chính, thứ tự quay gốc), KHÔNG có winningSpecial.
    */
   async publishResult(
     drawId: string,
     result: {
-      winningMain: MainTuple;
+      winningMain: string[];
     },
     vietlottRef?: DrawDoc["vietlottRef"],
   ): Promise<DrawEntity | null> {
@@ -480,12 +480,12 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   /**
    * Cập nhật kết quả (khi cần sửa sau publish).
-   * Mega 6/45: chỉ có winningMain, KHÔNG có winningSpecial.
+   * Mega 6/45: chỉ có winningMain (thứ tự quay gốc), KHÔNG có winningSpecial.
    */
   async updateResult(
     drawId: string,
     result: {
-      winningMain: MainTuple;
+      winningMain: string[];
       publishedAt: Date;
     },
     vietlottRef?: DrawDoc["vietlottRef"],

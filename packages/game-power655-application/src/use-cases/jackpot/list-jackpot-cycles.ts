@@ -16,7 +16,7 @@ import type {
 
 /**
  * Lấy danh sách các cycle jackpot đã đóng.
- * Mỗi cycle chứa thông tin dual JP (JP1 opening/current, JP2 opening/current).
+ * Mỗi cycle chứa thông tin dual JP (JP1 seedAmount/current, JP2 seedAmount/current).
  */
 export class ListJackpotCyclesUseCase extends NextApiUseCase<
   ListJackpotCyclesInput,
@@ -43,16 +43,15 @@ export class ListJackpotCyclesUseCase extends NextApiUseCase<
       endDrawId: c.endDrawId,
       closedAt: c.closedAt?.toISOString(),
       closedReason: c.closedReason,
-      jackpot1Opening: c.jackpot1Opening,
-      jackpot1Current: c.jackpot1Current,
-      jackpot2Opening: c.jackpot2Opening,
-      jackpot2Current: c.jackpot2Current,
+      jackpot1SeedAmount: c.jackpot1SeedAmount,
+      jackpot1CurrentAmount: c.jackpot1CurrentAmount,
+      jackpot2SeedAmount: c.jackpot2SeedAmount,
+      jackpot2CurrentAmount: c.jackpot2CurrentAmount,
       drawCount: c.drawCount,
       winners: (c as any).winners?.map((w: any) => ({
         accountId: w.accountId,
         username: w.username,
         tenantId: w.tenantId,
-        tenantName: w.tenantName,
         prizeAmount: w.prizeAmount,
         entryId: w.entryId,
         drawId: w.drawId,

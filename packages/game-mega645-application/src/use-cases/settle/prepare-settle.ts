@@ -12,7 +12,7 @@
 
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { buildPrizeAmountMap } from "@megawin/game-mega645/rules";
+import type { PrizeAmounts } from "@megawin/game-mega645/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
@@ -67,11 +67,7 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
     const cycleContributionBefore = activeCycle.totalContribution;
     const cycleDrawCountBefore = activeCycle.drawCount;
 
-    const prizeMap = buildPrizeAmountMap(globalConfig.defaultPrizes);
-    const prizeAmounts: Record<string, number> = {};
-    for (const [tier, amount] of prizeMap) {
-      prizeAmounts[tier] = amount;
-    }
+    const prizeAmounts: PrizeAmounts = globalConfig.defaultPrizes;
 
     return {
       drawId,

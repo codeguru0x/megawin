@@ -65,10 +65,16 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { PrizeTier, PayoutStatus } from "@megawin/game-lotto535/entities";
-import type { TicketLineDoc, EntryBoardSnapshot } from "@megawin/game-lotto535/entities";
+import type {
+  TicketLineDoc,
+  EntryBoardSnapshot,
+  EntryPayout,
+  EntryResult,
+  EntryPayoutTier,
+  Board,
+} from "@megawin/game-lotto535/entities";
 import { expandAllBoards } from "@megawin/game-lotto535/helpers";
 import { matchLines, type DrawResultForMatch } from "@megawin/game-lotto535/helpers";
-import type { Board } from "@megawin/game-lotto535/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { SettleContext } from "./types";
@@ -93,9 +99,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
     const { drawId, result, prizeAmounts } = input;
 
-    // Chuyển drawResult sang format mà matchLines() yêu cầu
+    // DrawResultForMatch tương thích string[] trực tiếp — không cần cast.
     const drawResult: DrawResultForMatch = {
-      winningMain: result.winningMain as any,
+      winningMain: result.winningMain,
       winningSpecial: result.winningSpecial,
     };
 
@@ -114,25 +120,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       const now = new Date();
       const settleOps: Array<{
         entryId: string;
-        payout: {
-          winAmount: number;
-          payoutAmount: number;
-          tiers: Array<{
-            tier: string;
-            hitCount: number;
-            unitAmount: number;
-            amount: number;
-            isSplitBonus?: boolean;
-          }>;
-          settledAt: Date;
-          payoutStatus?: string;
-        };
-        outcome: string;
-        result: {
-          winningMain: typeof result.winningMain;
-          winningSpecial: typeof result.winningSpecial;
-          publishedAt: Date;
-        };
+        payout: EntryPayout;
+        outcome: EntryOutcome;
+        result: EntryResult;
       }> = [];
 
       // ── Duyệt từng entry trong batch ──
@@ -194,20 +184,22 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             tiers: payoutTiers,
             settledAt: now,
             payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
-          },
+          } satisfies EntryPayout,
           outcome: hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
           result: {
             winningMain: result.winningMain,
             winningSpecial: result.winningSpecial,
             publishedAt: now,
-          },
+          } satisfies EntryResult,
         });
       }
 
       // ── Step 7: Bulk settle cả batch (atomic per entry) ──
       // bulkWrite chỉ update entry nếu status vẫn = "scheduled"
       // → nếu entry đã settle (do retry) thì tự skip, không ghi đè
-      await this.entryRepo.bulkSettleEntries(settleOps as any);
+      if (settleOps.length > 0) {
+        await this.entryRepo.bulkSettleEntries(settleOps);
+      }
     }
 
     // Lambda sắp timeout → trả done=false, Step Function sẽ gọi lại
@@ -246,20 +238,8 @@ function toBoardsForExpand(snapshots: EntryBoardSnapshot[]): Board[] {
 function buildPayoutTiers(
   tierCounts: Map<string, number>,
   prizeAmounts: Record<string, number>,
-): Array<{
-  tier: string;
-  hitCount: number;
-  unitAmount: number;
-  amount: number;
-  isSplitBonus?: boolean;
-}> {
-  const tiers: Array<{
-    tier: string;
-    hitCount: number;
-    unitAmount: number;
-    amount: number;
-    isSplitBonus?: boolean;
-  }> = [];
+): EntryPayoutTier[] {
+  const tiers: EntryPayoutTier[] = [];
 
   for (const [tier, hitCount] of tierCounts) {
     if (hitCount === 0) continue;
@@ -267,7 +247,7 @@ function buildPayoutTiers(
     // Jackpot: ghi nhận hitCount, amount = 0 (patch ở PatchJackpotPrize — step 4a)
     if (tier === PrizeTier.Jackpot) {
       tiers.push({
-        tier,
+        tier: tier as PrizeTier,
         hitCount,
         unitAmount: 0,
         amount: 0,
@@ -278,7 +258,7 @@ function buildPayoutTiers(
 
     // Giải cố định: lấy unitAmount từ prizeAmounts config
     const unitAmount = prizeAmounts[tier] ?? 0;
-    tiers.push({ tier, hitCount, unitAmount, amount: unitAmount * hitCount });
+    tiers.push({ tier: tier as PrizeTier, hitCount, unitAmount, amount: unitAmount * hitCount });
   }
 
   return tiers;

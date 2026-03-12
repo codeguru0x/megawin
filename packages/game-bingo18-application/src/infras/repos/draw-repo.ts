@@ -18,6 +18,9 @@ import type {
   DrawFinancial,
   DrawStats,
   DrawSettleSummary,
+  DrawVoidSummary,
+  DrawVoidInfo,
+  DrawResult,
 } from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
 import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
@@ -44,12 +47,6 @@ const VALID_TRANSITIONS: Record<string, Set<string>> = {
 // ─────────────────────────────────────────────
 // Typed extra-set payloads cho transition
 // ─────────────────────────────────────────────
-
-export interface VoidInfo {
-  reason: string;
-  voidedBy?: string;
-  voidedAt: Date;
-}
 
 export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   constructor() {
@@ -221,12 +218,12 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
-   * Void draw: transition → void + ghi voidInfo embedded doc.
+   * Void draw: transition → voiding + ghi voidInfo embedded doc.
    */
   async voidDraw(
     drawId: string,
     fromStatus: string,
-    voidInfo: VoidInfo,
+    voidInfo: DrawVoidInfo,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.Voiding)) return null;
@@ -245,10 +242,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /** Hoàn tất void: voiding → void + stamp voidedAt + ghi voidSummary. Atomic, idempotent. */
-  async voidComplete(
-    drawId: string,
-    voidSummary: NonNullable<DrawDoc["voidSummary"]>,
-  ): Promise<DrawEntity | null> {
+  async voidComplete(drawId: string, voidSummary: DrawVoidSummary): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Voiding];
     if (!allowed?.has(DrawStatus.Void)) return null;
 
@@ -272,16 +266,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async publishResult(
     drawId: string,
-    result: {
-      numbers: number[];
-      sum: number;
-    },
+    result: Omit<DrawResult, "publishedAt">,
     vietlottRef?: DrawDoc["vietlottRef"],
   ): Promise<DrawEntity | null> {
     const now = new Date();
     const $set: Record<string, unknown> = {
       status: DrawStatus.Published,
-      result: { ...result, publishedAt: now },
+      result: { ...result, publishedAt: now } satisfies DrawResult,
       updatedAt: now,
     };
     if (vietlottRef) $set.vietlottRef = vietlottRef;
@@ -302,11 +293,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async updateResult(
     drawId: string,
-    result: {
-      numbers: number[];
-      sum: number;
-      publishedAt: Date;
-    },
+    result: DrawResult,
     vietlottRef?: DrawDoc["vietlottRef"],
   ): Promise<boolean> {
     const $set: Record<string, unknown> = {
@@ -388,15 +375,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findMany(query, { sort: { drawDate: -1, drawId: -1 }, limit: size });
   }
 
-  async updateVoidSummary(
-    drawId: string,
-    summary: {
-      totalVoidedEntries: number;
-      totalOriginalAmount: number;
-      totalRefundAmount: number;
-      completedAt: Date;
-    },
-  ): Promise<boolean> {
+  async updateVoidSummary(drawId: string, summary: DrawVoidSummary): Promise<boolean> {
     return await this.updateOne(
       { drawId },
       {

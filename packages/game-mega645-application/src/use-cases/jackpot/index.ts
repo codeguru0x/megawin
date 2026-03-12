@@ -1,4 +1,4 @@
-export { GetJackpotCurrentUseCase } from "./get-jackpot-current";
+export { GetJackpotCurrentUseCase, calcMilestoneThreshold } from "./get-jackpot-current";
 export { ListJackpotHistoryUseCase } from "./list-jackpot-history";
 export { ListJackpotCyclesUseCase } from "./list-jackpot-cycles";
 

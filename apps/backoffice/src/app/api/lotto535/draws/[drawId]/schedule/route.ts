@@ -5,18 +5,9 @@ import { CompanyRole } from "@megawin/identity/entities/account";
 import { UpdateScheduleUseCase } from "@megawin/game-lotto535-application/use-cases/draws";
 
 const scheduleSchema = z.object({
-  salesOpenAt: z.string().datetime({
-    offset: true,
-    message: "Thời gian mở bán phải là ISO datetime.",
-  }),
-  salesCloseAt: z.string().datetime({
-    offset: true,
-    message: "Thời gian đóng bán phải là ISO datetime.",
-  }),
-  drawTime: z
-    .string()
-    .datetime({ offset: true, message: "Giờ quay số phải là ISO datetime." })
-    .optional(),
+  salesOpenAt: z.iso.datetime({ offset: true }),
+  salesCloseAt: z.iso.datetime({ offset: true }),
+  drawTime: z.iso.datetime({ offset: true }).optional(),
 });
 
 const updateScheduleUseCase = new UpdateScheduleUseCase();

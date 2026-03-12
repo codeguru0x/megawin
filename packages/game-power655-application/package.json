@@ -69,6 +69,10 @@
     "./use-cases/player": {
       "types": "./src/use-cases/player/index.ts",
       "default": "./dist/use-cases/player/index.js"
+    },
+    "./use-cases/operations": {
+      "types": "./src/use-cases/operations/index.ts",
+      "default": "./dist/use-cases/operations/index.js"
     }
   },
   "dependencies": {

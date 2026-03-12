@@ -4,8 +4,9 @@
  * Step Function flow cho huỷ cược 1 kỳ:
  *   1. PrepareVoid        → validate draw, load context → VoidContext
  *   2. VoidEntries        → batch loop: void entries + tính refund
- *   3. DispatchRefunds    → batch loop: gửi refund cho tenant
- *   4. FinalizeVoid       → update draw summary, đóng flow
+ *   3. SyncTicketSummaries → recompute ticket (dùng use case từ settle/)
+ *   4. DispatchRefunds    → batch loop: gửi refund cho tenant
+ *   5. FinalizeVoid       → update draw summary, đóng flow
  */
 
 export type { VoidContext } from "./types";

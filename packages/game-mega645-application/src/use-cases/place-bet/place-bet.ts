@@ -40,7 +40,15 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
 
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
-    const { tenantId, accountId, username, channel, ipAddress, drawIds, boards: boardInputs } = input;
+    const {
+      tenantId,
+      accountId,
+      username,
+      channel,
+      ipAddress,
+      drawIds,
+      boards: boardInputs,
+    } = input;
 
     const globalConfig = await this.getGlobalConfig.run();
     const { play } = globalConfig;
@@ -137,6 +145,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
     const ticketNo = buildTicketNo(GameProduct.Mega645, date, seq);
 
+    // Gọi api để tính tiền xong mới cập nhập status
+    const ticketStatus = TicketStatus.Paid;
+
     const ticketDoc: Omit<TicketDoc, "_id"> = {
       tenantId,
       accountId,
@@ -161,13 +172,13 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         settledDraws: 0,
       },
       financialDate: getFinancialDate(now),
-      status: TicketStatus.Paid as any,
+      status: ticketStatus,
       version: 0,
       createdAt: now,
       updatedAt: now,
     };
 
-    const ticketId = await this.ticketRepo.insertOne(ticketDoc as any);
+    const ticketId = await this.ticketRepo.insertOne(ticketDoc);
 
     const boardSnapshots: EntryBoardSnapshot[] = builtBoards.map((b) => ({
       boardNo: b.boardNo,
@@ -187,8 +198,6 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         ipAddress,
         ticketId,
         drawId: draw.drawId,
-        drawTime: draw.drawTime,
-        drawDate: draw.drawDate,
         financialDate: draw.financialDate,
         tenant: { commissionRate, commissionAmount },
         status: EntryStatus.Scheduled,
@@ -205,7 +214,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     }
 
     try {
-      await this.entryRepo.insertEntries(entryDocs as any[]);
+      await this.entryRepo.insertEntries(entryDocs);
     } catch (err) {
       throw AppException.internal(
         "Không thể tạo entries cho các kỳ quay đã chọn. Vui lòng thử lại.",
@@ -215,7 +224,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     return {
       ticketId,
       ticketNo,
-      status: TicketStatus.Paid,
+      status: ticketStatus,
       drawPlan: {
         drawIds,
         drawCount,

@@ -1,13 +1,24 @@
 "use client";
 
+/**
+ * Power 6/55 — Trang Kỳ quay
+ *
+ * Tổng quan kỳ quay đang active và lịch sử kỳ quay.
+ * Link đến trang vận hành để quản lý chi tiết từng kỳ.
+ *
+ * Power 6/55: 3 kỳ/tuần (T3, T5, T7 lúc 18h00), có số kỳ trong năm.
+ * Theme: violet/purple.
+ */
+
+import Link from "next/link";
 import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { useCurrentDraw } from "./_lib/use-draws";
-import { CreateDrawDialog } from "./_lib/create-draw-dialog";
 import {
   Power655PrimaryDrawCard,
   Power655QueueDrawCard,
-} from "./_lib/active-draw-card";
+} from "@/components/games/power655/active-draw-card";
 import { DrawHistorySection } from "./_lib/draw-history-section";
 
 export default function Power655DrawsPage() {
@@ -19,23 +30,25 @@ export default function Power655DrawsPage() {
 
   return (
     <div className="@container/main flex flex-col gap-6">
+      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-red-600 shadow-sm">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-purple-600 shadow-sm">
             <CalendarClock className="size-4.5 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Power 6/55 — Quản lý kỳ quay
+              Power 6/55 — Kỳ quay
             </h1>
-            <p className="text-xs text-muted-foreground">
-              T3, T5, T7 lúc 18h00. Mở/đóng bán, công bố kết quả, kết sổ.
-            </p>
+            <p className="text-xs text-muted-foreground">Tổng quan kỳ quay hiện tại và lịch sử</p>
           </div>
         </div>
-        <CreateDrawDialog />
+        <Button size="sm" variant="outline" asChild>
+          <Link href="/games/power655/operations">Trang vận hành</Link>
+        </Button>
       </div>
 
+      {/* Active Draws */}
       {isLoading ? (
         <div className="flex items-center justify-center rounded-xl border border-dashed p-16">
           <Loader2 className="size-8 animate-spin text-muted-foreground" />
@@ -48,9 +61,7 @@ export default function Power655DrawsPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <ListOrdered className="size-4 text-muted-foreground" />
-                <h2 className="text-sm font-semibold text-foreground">
-                  Hàng chờ
-                </h2>
+                <h2 className="text-sm font-semibold text-foreground">Hàng chờ</h2>
                 <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
                   {queueDraws.length} kỳ
                 </span>
@@ -69,16 +80,22 @@ export default function Power655DrawsPage() {
             <CalendarClock className="size-5 text-muted-foreground/50" />
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">
-              Không có kỳ đang vận hành
-            </p>
+            <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Nhấn &ldquo;Tạo kỳ quay&rdquo; để bắt đầu kỳ mới.
+              Vào trang{" "}
+              <Link
+                href="/games/power655/operations"
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                Vận hành
+              </Link>{" "}
+              để tạo kỳ mới.
             </p>
           </div>
         </div>
       )}
 
+      {/* History */}
       <DrawHistorySection />
     </div>
   );

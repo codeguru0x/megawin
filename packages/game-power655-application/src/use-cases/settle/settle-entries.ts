@@ -40,7 +40,6 @@ import { EntryOutcome } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { SettleContext, PowerDrawResult } from "./types";
-import type { MainTuple } from "@megawin/game-power655/entities";
 
 /** Số entries xử lý mỗi batch. */
 const BATCH_SIZE = 500;
@@ -70,7 +69,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
     // ── Bước 1: Chuẩn bị draw result cho match engine ────────────────
     // Power 6/55: cần cả winningMain (6 số) + bonusNumber (1 số từ 49 còn lại)
     const drawResult: DrawResultForMatch = {
-      winningMain: result.winningMain as unknown as MainTuple,
+      winningMain: result.winningMain,
       bonusNumber: result.bonusNumber,
     };
 
@@ -112,14 +111,17 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         const matchResult = matchLines(lines, drawResult);
 
         // ── Bước 5a: Tạo line documents để persist ─────────────────────
-        // Mỗi line 1 doc: main numbers, matchCount, bonusMatched, tier, prizeAmount.
-        // Jackpot lines: prizeAmount = 0 (FinalizeSettle tính sau khi biết pool + winners).
+        // Mỗi line 1 doc: main numbers + matchResult (count, bonus, tier, winAmount).
+        // Jackpot lines: winAmount = 0 (FinalizeSettle tính sau khi biết pool + winners).
         const lineDocs: Array<Omit<TicketLineDoc, "_id">> = lines.map((line, i) => {
           const perLine = matchResult.perLineResults[i]!;
           const highestTier = perLine.tiers.length > 0 ? perLine.tiers[0]! : null;
-          // Giải cố định: lấy từ fixedPrizeAmounts config. JP1/JP2: prizePerLine = 0.
-          const unitAmount =
-            highestTier != null ? (fixedPrizeAmounts[highestTier as keyof PrizeAmounts] ?? 0) : 0;
+          // Giải cố định: lấy từ fixedPrizeAmounts config.
+          // JP1/JP2 → 0 (FinalizeSettle tính sau); tier1/2/3 → từ config.
+          const winAmount =
+            highestTier === PrizeTier.Jackpot1 || highestTier === PrizeTier.Jackpot2
+              ? 0
+              : getFixedPrizeAmount(highestTier, fixedPrizeAmounts);
 
           return {
             tenantId: entry.tenantId,
@@ -128,19 +130,17 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             ticketId: entry.ticketId,
             entryId: entry.id,
             drawId: entry.drawId,
-            drawDate: entry.drawDate,
             financialDate: entry.financialDate,
             boardNo: line.boardNo,
             lineIndex: line.lineIndex,
             main: line.main,
-            mainMatchCount: perLine.mainMatchCount,
-            bonusMatched: perLine.bonusMatched,
-            tier: highestTier,
-            // JP1 / JP2: prizeAmount = 0 tại đây. FinalizeSettle chia pool cho winners.
-            prizeAmount:
-              highestTier === PrizeTier.Jackpot1 || highestTier === PrizeTier.Jackpot2
-                ? 0
-                : unitAmount,
+            matchResult: {
+              mainMatchCount: perLine.mainMatchCount,
+              bonusMatched: perLine.bonusMatched,
+              tier: highestTier,
+              // JP1/JP2: winAmount = 0 tại đây. FinalizeSettle chia pool cho winners.
+              winAmount,
+            },
             createdAt: now,
           };
         });
@@ -195,6 +195,19 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 /**
+ * Trả về giá trị giải cố định cho tier. JP1/JP2 → 0 (xử lý bởi FinalizeSettle).
+ *
+ * Tách hàm riêng để tránh dùng `as keyof` cast không an toàn tại call-site.
+ */
+function getFixedPrizeAmount(tier: PrizeTier | null, prizeAmounts: PrizeAmounts): number {
+  if (tier === PrizeTier.Tier1) return prizeAmounts.tier1;
+  if (tier === PrizeTier.Tier2) return prizeAmounts.tier2;
+  if (tier === PrizeTier.Tier3) return prizeAmounts.tier3;
+  // JP1/JP2: giải tích luỹ — FinalizeSettle tính sau khi biết pool + số winners.
+  return 0;
+}
+
+/**
  * Tạo danh sách payout tiers từ kết quả match.
  *
  * Giải cố định: amount = unitAmount × hitCount
@@ -205,11 +218,11 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
  * JP1 (6/6) và JP2 (5/6 + bonus): unitAmount = 0, amount = 0.
  * FinalizeSettle sẽ tính số tiền Jackpot sau khi biết pool và số winners.
  *
- * @param tierCounts - Map<tier, hitCount> từ matchLines()
+ * @param tierCounts - Map<PrizeTier, hitCount> từ matchLines()
  * @param fixedPrizeAmounts - Bảng giải cố định từ config: { tier1: 40000000, tier2: 500000, tier3: 50000 }
  */
 function buildPayoutTiers(
-  tierCounts: Map<string, number>,
+  tierCounts: Map<PrizeTier, number>,
   fixedPrizeAmounts: PrizeAmounts,
 ): EntryPayoutTier[] {
   const tiers: EntryPayoutTier[] = [];
@@ -221,7 +234,7 @@ function buildPayoutTiers(
     // FinalizeSettle sẽ tính chính xác sau.
     if (tier === PrizeTier.Jackpot1 || tier === PrizeTier.Jackpot2) {
       tiers.push({
-        tier: tier as PrizeTier,
+        tier,
         hitCount: matchCount,
         unitAmount: 0,
         amount: 0,
@@ -230,9 +243,10 @@ function buildPayoutTiers(
     }
 
     // Giải cố định: amount = unitAmount × hitCount
-    const unitAmount = fixedPrizeAmounts[tier as keyof PrizeAmounts] ?? 0;
+    // Tại đây tier chắc chắn là tier1/tier2/tier3 (jackpot1/2 đã continue ở trên).
+    const unitAmount = getFixedPrizeAmount(tier, fixedPrizeAmounts);
     tiers.push({
-      tier: tier as PrizeTier,
+      tier,
       hitCount: matchCount,
       unitAmount,
       amount: unitAmount * matchCount,

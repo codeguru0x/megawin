@@ -8,7 +8,7 @@
  *      ↘ void      ↘ void      ↘ void       ↘ void
  *
  * Khác biệt so với Lotto 5/35:
- *   - Kết quả: 6 số chính (winningMain: MainTuple) + bonusNumber (thay vì winningSpecial)
+ *   - Kết quả: 6 số chính (winningMain: string[]) + bonusNumber (thay vì winningSpecial)
  *   - Jackpot kép: openingJackpot1/closingJackpot1 + openingJackpot2/closingJackpot2
  *   - Financial: jackpot1Contribution + jackpot2Contribution + jp1Overflow
  */
@@ -21,9 +21,8 @@ import type {
   DrawFinancial,
   DrawStats,
   DrawSettleSummary,
+  DrawVoidInfo,
   DrawVoidSummary,
-  MainTuple,
-  BonusNumber,
   ISODateString,
   DrawEntity,
 } from "@megawin/game-power655/entities";
@@ -211,13 +210,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
-   * Void draw: transition → voiding + ghi thông tin void ban đầu vào voidSummary.
-   * Stats (totalEntriesVoided, ...) được điền sau bởi voidComplete().
+   * Void draw: transition → voiding + ghi DrawVoidInfo vào draw.voidInfo.
+   * DrawVoidSummary (stats entries) được điền sau bởi voidComplete().
    */
   async voidDraw(
     drawId: string,
     fromStatus: string,
-    voidInfo: Pick<DrawVoidSummary, "reason" | "voidedBy" | "voidedAt">,
+    voidInfo: DrawVoidInfo,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[fromStatus];
     if (!allowed?.has(DrawStatus.Voiding)) return null;
@@ -227,7 +226,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       {
         $set: {
           status: DrawStatus.Voiding,
-          voidSummary: voidInfo,
+          voidInfo,
           updatedAt: new Date(),
         },
       },
@@ -258,14 +257,14 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Publish kết quả: salesClosed → published.
    * Ghi result gồm winningMain (6 số chính) + bonusNumber (số đặc biệt).
    *
-   * @param result.winningMain - 6 số chính trúng thưởng (sorted ascending)
+   * @param result.winningMain - 6 số chính trúng thưởng (thứ tự quay gốc)
    * @param result.bonusNumber - Số bonus quay từ 49 quả bóng còn lại
    */
   async publishResult(
     drawId: string,
     result: {
-      winningMain: MainTuple;
-      bonusNumber: BonusNumber;
+      winningMain: string[];
+      bonusNumber: string;
     },
     vietlottRef?: DrawDoc["vietlottRef"],
   ): Promise<DrawEntity | null> {
@@ -432,16 +431,18 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   /**
    * Cập nhật kết quả (khi cần sửa sau publish).
+  /**
+   * Cập nhật kết quả đã publish (cho phép sửa trước khi settle).
    * Chỉ cho phép khi draw đang ở status Published.
    *
-   * @param result.winningMain - 6 số chính trúng thưởng
+   * @param result.winningMain - 6 số chính trúng thưởng (thứ tự quay gốc)
    * @param result.bonusNumber - Số bonus đặc biệt
    */
   async updateResult(
     drawId: string,
     result: {
-      winningMain: MainTuple;
-      bonusNumber: BonusNumber;
+      winningMain: string[];
+      bonusNumber: string;
       publishedAt: Date;
     },
     vietlottRef?: DrawDoc["vietlottRef"],
@@ -459,6 +460,10 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * Patch prizeAmount cho JP1 và/hoặc JP2 trong settleSummary.
    * Dùng dot notation với $set trên array element theo filter.
    * Idempotent: ghi đè giá trị (set, không cộng dồn).
+   *
+   * arrayFilters alias = tên tier chính xác từ input (e.g. "jackpot1", "jackpot2")
+   * → query log dễ đọc, không cần ánh xạ tier0/tier1 sang tier tương ứng.
+   * MongoDB arrayFilter alias: chỉ cần lowercase + alphanumeric — "jackpot1" hợp lệ.
    */
   async patchSettleSummaryJackpot(
     drawId: string,
@@ -470,10 +475,12 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     const $set: Record<string, unknown> = { updatedAt: new Date() };
     const arrayFilters: Record<string, unknown>[] = [];
 
-    for (let i = 0; i < patches.length; i++) {
-      const alias = `tier${i}`;
-      $set[`settleSummary.tiers.$[${alias}].prizeAmount`] = patches[i]!.prizeAmount;
-      arrayFilters.push({ [`${alias}.tier`]: patches[i]!.tier });
+    for (const patch of patches) {
+      // alias = tên tier chính xác ("jackpot1", "jackpot2") — dễ đọc trong query log.
+      // MongoDB yêu cầu alias: lowercase, alphanumeric, không dấu cách — đáp ứng đủ.
+      const alias = patch.tier;
+      $set[`settleSummary.tiers.$[${alias}].prizeAmount`] = patch.prizeAmount;
+      arrayFilters.push({ [`${alias}.tier`]: patch.tier });
     }
 
     await this.updateOne({ drawId }, { $set }, { arrayFilters } as any);

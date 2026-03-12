@@ -16,7 +16,6 @@ import {
   MEGA645_MAIN_COUNT,
   type BoardSelection,
   type LineValue,
-  type MainTuple,
 } from "../entities/types";
 import type { Board } from "../entities/ticket";
 
@@ -44,22 +43,9 @@ function* combinations<T>(arr: T[], k: number): Generator<T[]> {
   }
 }
 
-/**
- * Chuyển mảng số string thành MainTuple (tuple 6 phần tử, sorted tăng dần).
- * Sort đảm bảo canonical form: cùng bộ số → cùng tuple, bất kể thứ tự input.
- */
-function toMainTuple(nums: string[]): MainTuple {
-  const sorted = [...nums].sort();
-  return sorted as unknown as MainTuple;
-}
-
-// ─────────────────────────────────────────────
-// Expand functions per play type
-// ─────────────────────────────────────────────
-
 /** Standard / QuickPick: 6 số = 1 line. */
 function expandStandard(sel: BoardSelection): LineValue[] {
-  return [{ main: toMainTuple(sel.mainNumbers) }];
+  return [{ main: [...sel.mainNumbers].sort() }];
 }
 
 /**
@@ -75,7 +61,7 @@ function expandBao5(sel: BoardSelection): LineValue[] {
     if (chosen.has(n)) continue;
     // Ghép số bổ sung n vào 5 số đã chọn → 1 line 6 số.
     const mainNums = [...sel.mainNumbers, n];
-    lines.push({ main: toMainTuple(mainNums) });
+    lines.push({ main: mainNums.sort() });
   }
 
   return lines;
@@ -93,7 +79,7 @@ function expandBaoN(sel: BoardSelection): LineValue[] {
   const lines: LineValue[] = [];
 
   for (const combo of combinations(sorted, MEGA645_MAIN_COUNT)) {
-    lines.push({ main: combo as unknown as MainTuple });
+    lines.push({ main: combo });
   }
 
   return lines;

@@ -212,7 +212,6 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         ipAddress,
         ticketId,
         drawId: draw.drawId,
-        drawDate: draw.drawDate,
         financialDate: draw.financialDate,
         tenant: { commissionRate, commissionAmount },
         status: EntryStatus.Scheduled,

@@ -150,10 +150,15 @@ export const operatorSidebarItems: NavGroup[] = [
         icon: ChessQueen,
         subItems: [
           {
+            title: "Vận hành",
+            url: "/games/power655/operations",
+            icon: Activity,
+            sectionLabel: "Vận hành",
+          },
+          {
             title: "Kỳ quay",
             url: "/games/power655/draws",
             icon: CalendarClock,
-            sectionLabel: "Vận hành",
           },
           {
             title: "Jackpot",
@@ -179,10 +184,15 @@ export const operatorSidebarItems: NavGroup[] = [
         icon: ChessRook,
         subItems: [
           {
+            title: "Vận hành",
+            url: "/games/mega645/operations",
+            icon: Activity,
+            sectionLabel: "Vận hành",
+          },
+          {
             title: "Kỳ quay",
             url: "/games/mega645/draws",
             icon: CalendarClock,
-            sectionLabel: "Vận hành",
           },
           {
             title: "Jackpot",
@@ -208,10 +218,15 @@ export const operatorSidebarItems: NavGroup[] = [
         icon: ChessBishop,
         subItems: [
           {
+            title: "Vận hành",
+            url: "/games/keno/operations",
+            icon: Activity,
+            sectionLabel: "Vận hành",
+          },
+          {
             title: "Kỳ quay",
             url: "/games/keno/draws",
             icon: CalendarClock,
-            sectionLabel: "Vận hành",
           },
           {
             title: "Cấu hình game",

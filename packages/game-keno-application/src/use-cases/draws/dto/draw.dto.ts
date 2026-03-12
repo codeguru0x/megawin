@@ -119,6 +119,8 @@ export interface DrawSummary {
   drawTime: string;
   status: string;
   hasResult: boolean;
+  /** 20 số trúng thưởng (01-80), chỉ có sau khi published. */
+  result?: { winningNumbers: string[] };
   ticketEntryCount?: number;
   totalRevenue?: number;
 }

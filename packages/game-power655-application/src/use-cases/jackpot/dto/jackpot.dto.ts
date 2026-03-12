@@ -17,13 +17,13 @@ export interface GetJackpotCurrentOutput {
     /** Trạng thái cycle ("active" hoặc "closed"). */
     status: string;
     /** Số dư Jackpot 1 hiện tại (VND). */
-    jackpot1Current: number;
+    jackpot1CurrentAmount: number;
     /** Số dư Jackpot 2 hiện tại (VND). */
-    jackpot2Current: number;
-    /** Số dư Jackpot 1 khi bắt đầu cycle (VND). */
-    jackpot1Opening: number;
-    /** Số dư Jackpot 2 khi bắt đầu cycle (VND). */
-    jackpot2Opening: number;
+    jackpot2CurrentAmount: number;
+    /** Giá trị seed JP1 khi bắt đầu cycle (VND). */
+    jackpot1SeedAmount: number;
+    /** Giá trị seed JP2 khi bắt đầu cycle (VND). */
+    jackpot2SeedAmount: number;
     /** Số kỳ quay đã settle trong cycle này. */
     drawCount: number;
     /** ID kỳ quay đầu tiên của cycle. */
@@ -62,17 +62,6 @@ export interface GetJackpotCurrentOutput {
     remaining: number;
     /** Phần trăm tiến trình (0–100+). */
     percentage: number;
-  };
-  /** Kỳ quay tiếp theo (nếu có). */
-  nextDraw?: {
-    /** ID kỳ quay tiếp theo. */
-    drawId: string;
-    /** Số thứ tự kỳ quay. */
-    drawNo: number;
-    /** Giờ quay, định dạng HH:mm. */
-    drawTime: string;
-    /** Có ý định split jackpot trong kỳ này không. */
-    splitCycleIntent?: boolean;
   };
 }
 
@@ -145,12 +134,10 @@ export interface ListJackpotCyclesInput {
 export interface JackpotWinnerSummary {
   /** ID tài khoản người chơi trúng jackpot. */
   accountId: string;
-  /** Tên đăng nhập (có thể ẩn danh). */
-  username?: string;
+  /** Tên đăng nhập người chơi. */
+  username: string;
   /** ID tenant (đại lý) của người chơi. */
   tenantId: string;
-  /** Tên tenant (đại lý). */
-  tenantName?: string;
   /** Số tiền jackpot nhận được (VND). */
   prizeAmount: number;
   /** ID entry trúng jackpot. */
@@ -178,14 +165,14 @@ export interface JackpotCycleSummary {
   closedAt?: string;
   /** Lý do đóng cycle: jackpot1_winner / jackpot2_winner / both_winner / manual_reset. */
   closedReason?: JackpotCycleClosedReason;
-  /** Số dư Jackpot 1 khi bắt đầu cycle (VND). */
-  jackpot1Opening: number;
+  /** Giá trị seed Jackpot 1 khi bắt đầu cycle (VND). */
+  jackpot1SeedAmount: number;
   /** Số dư Jackpot 1 hiện tại hoặc cuối cycle (VND). */
-  jackpot1Current: number;
-  /** Số dư Jackpot 2 khi bắt đầu cycle (VND). */
-  jackpot2Opening: number;
+  jackpot1CurrentAmount: number;
+  /** Giá trị seed Jackpot 2 khi bắt đầu cycle (VND). */
+  jackpot2SeedAmount: number;
   /** Số dư Jackpot 2 hiện tại hoặc cuối cycle (VND). */
-  jackpot2Current: number;
+  jackpot2CurrentAmount: number;
   /** Số kỳ quay đã settle trong cycle. */
   drawCount: number;
   /** Chi tiết chia giải khi split cycle (nếu có). */

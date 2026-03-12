@@ -8,7 +8,7 @@
  */
 
 import type { DrawStatus } from "@megawin/game-core/entities";
-import type { ISODateString, DrawNo, MainTuple } from "./types";
+import type { ISODateString, DrawNo } from "./types";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces
@@ -35,8 +35,13 @@ export interface DrawVietlottRef {
  * Mega 6/45: chỉ có 6 số chính, KHÔNG có bonus/special number.
  */
 export interface DrawResult {
-  /** 6 số trúng thưởng, sorted tăng dần. */
-  winningMain: MainTuple;
+  /**
+   * 6 số trúng thưởng theo thứ tự quay gốc (không sort).
+   *
+   * Thứ tự quay gốc phải được bảo toàn để hiển thị đúng với kết quả Vietlott công bố.
+   * Lưu dạng string[] (zero-padded "01"-"45") — dùng trực tiếp từ MongoDB, tránh cast.
+   */
+  winningMain: string[];
   /** Thời điểm công bố kết quả. */
   publishedAt: Date;
 }
@@ -75,16 +80,16 @@ export interface DrawFinancial {
   totalAgentCommission: number;
   /**
    * Phần thu nhập công ty trên lý thuyết (VND).
-   * Công thức: totalRevenue × companyTakeRate.
+   * Công thức: round(totalRevenue × companyTakeRate).
    */
   companyTake: number;
   /** Tỷ lệ thu nhập công ty (ví dụ: 0.15 = 15%). */
   companyTakeRate: number;
   /**
-   * Mức trần thu nhập công ty (VND).
+   * Mức công ty thực thu (VND) — sau khi cap bởi số dư.
    * Công thức: min(companyTake, max(totalRevenue - totalFixedPrizes - totalAgentCommission, 0)).
    */
-  companyTakeMax: number;
+  actualCompanyTake: number;
   /**
    * Phần đóng góp vào quỹ Jackpot (VND).
    * Công thức: max(totalRevenue - totalFixedPrizes - totalAgentCommission - actualCompanyTake, 0).

@@ -65,21 +65,38 @@ export interface PlayerDrawInfo {
 // ─── Get Jackpot (Player) ───
 
 export interface PlayerGetJackpotOutput {
+  /** Số thứ tự cycle (tăng dần khi cycle mới). Hiển thị "Chu kỳ #N". */
+  cycleNo: number;
+
   /** Số tiền Jackpot 1 hiện tại (VND) — giải trùng 6/6 số chính. */
-  jackpot1Amount: number;
+  jackpot1CurrentAmount: number;
+
   /** Số tiền Jackpot 2 hiện tại (VND) — giải trùng 5/6 + bonus. */
-  jackpot2Amount: number;
-  /** Giá trị khởi tạo JP1 khi bắt đầu cycle mới (VND). */
-  jp1SeedAmount: number;
-  /** Giá trị khởi tạo JP2 khi bắt đầu cycle mới (VND). */
-  jp2SeedAmount: number;
-  /** Kỳ quay tiếp theo (nếu có). */
-  nextDraw?: {
-    /** ID kỳ quay tiếp theo. */
-    drawId: string;
-    /** Giờ quay, định dạng HH:mm. */
-    drawTime: string;
-  };
+  jackpot2CurrentAmount: number;
+
+  /** Giá trị khởi tạo Jackpot 1 khi bắt đầu cycle mới (VND). */
+  jackpot1SeedAmount: number;
+
+  /** Giá trị khởi tạo Jackpot 2 khi bắt đầu cycle mới (VND). */
+  jackpot2SeedAmount: number;
+  /**
+   * Ngưỡng tràn Jackpot 1 (VND).
+   * Khi Jackpot 1 vượt ngưỡng và có Jackpot 2 winner, phần vượt chuyển sang Jackpot 2.
+   * Giúp player hiểu cơ chế overflow — "Jackpot 1 gần ngưỡng 300 tỷ!".
+   */
+  jackpot1OverflowThreshold: number;
+
+  /** Số kỳ quay đã settle trong cycle này — player biết JP tích lũy bao lâu. */
+  drawCount: number;
+
+  /**
+   * Số lần JP2 đã trúng và reset trong cycle hiện tại.
+   * 0 = JP2 chưa ai trúng từ đầu cycle. Thú vị cho player theo dõi.
+   */
+  jackpot2ResetCount: number;
+
+  /** Thời điểm bắt đầu cycle (ISO 8601). */
+  startedAt: string;
 }
 
 // ─── List Tickets (Player) ───
@@ -234,10 +251,6 @@ export interface PlayerEntryInfo {
   id: string;
   /** ID kỳ quay mà entry thuộc về. */
   drawId: string;
-  /** Ngày quay, định dạng YYYY-MM-DD. */
-  drawDate: string;
-  /** Giờ quay, định dạng HH:mm. */
-  drawTime: string;
   /** Trạng thái entry (drawn / settled / voided). */
   status: string;
   /** Số tiền cược cho entry này (VND). */

@@ -89,6 +89,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     endDrawId: string;
     closeReason: JackpotCycleCloseReason;
     finalAmount: number;
+    drawCount: number;
     splitDetail?: JackpotSplitDetail;
     winners?: JackpotWinnerInfo[];
   }): Promise<void> {
@@ -100,6 +101,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       closedAt: Date;
       closeReason: JackpotCycleCloseReason;
       currentAmount: number;
+      drawCount: number;
       updatedAt: Date;
       splitDetail?: JackpotSplitDetail;
       winners?: JackpotWinnerInfo[];
@@ -111,6 +113,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       closedAt: now,
       closeReason: input.closeReason,
       currentAmount: input.finalAmount,
+      drawCount: input.drawCount,
       updatedAt: now,
     };
 
@@ -125,9 +128,6 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       {
         $set: $set as unknown as Record<string, unknown>,
         $max: { peakAmount: input.finalAmount },
-        // Tính kỳ quay đóng cycle vào drawCount
-        // (nhánh tích luỹ đã tăng qua updateCycleStats, nhánh đóng cycle không qua đó)
-        $inc: { drawCount: 1 },
       },
     );
   }

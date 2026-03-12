@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Save, Info, HelpCircle } from "lucide-react";
+import { formatNumber } from "@megawin/shared/utils/number";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
 
@@ -20,11 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -44,10 +41,7 @@ interface JackpotSectionProps {
   isPending: boolean;
 }
 
-const TIER_LABELS: Record<
-  string,
-  { label: string; badge: string; color: string }
-> = {
+const TIER_LABELS: Record<string, { label: string; badge: string; color: string }> = {
   tier1: {
     label: "Giải Nhất",
     badge: "1st",
@@ -57,11 +51,7 @@ const TIER_LABELS: Record<
   tier3: { label: "Giải Ba", badge: "3rd", color: "bg-amber-700 text-white" },
 };
 
-export function JackpotSection({
-  config,
-  onSave,
-  isPending,
-}: JackpotSectionProps) {
+export function JackpotSection({ config, onSave, isPending }: JackpotSectionProps) {
   const form = useForm<JackpotFormValues>({
     resolver: zodResolver(jackpotFormSchema) as any,
     values: {
@@ -87,7 +77,7 @@ export function JackpotSection({
     });
   }
 
-  const fmt = (n: number) => n.toLocaleString("en-US");
+  const fmt = formatNumber;
 
   function LabelWithTooltip({ label, tip }: { label: string; tip: string }) {
     return (
@@ -106,9 +96,7 @@ export function JackpotSection({
   }
 
   const total =
-    (form.watch("tier1") || 0) +
-    (form.watch("tier2") || 0) +
-    (form.watch("tier3") || 0);
+    (form.watch("tier1") || 0) + (form.watch("tier2") || 0) + (form.watch("tier3") || 0);
 
   return (
     <Card className="overflow-hidden py-0 gap-0">
@@ -119,12 +107,9 @@ export function JackpotSection({
               {/* Left: Seed & Threshold */}
               <div className="space-y-5 p-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Cấu hình Jackpot
-                  </h3>
+                  <h3 className="text-sm font-semibold text-foreground">Cấu hình Jackpot</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Giá trị khởi điểm khi bắt đầu chu kỳ mới và ngưỡng kích hoạt
-                    chia
+                    Giá trị khởi điểm khi bắt đầu chu kỳ mới và ngưỡng kích hoạt chia
                   </p>
                 </div>
 
@@ -204,8 +189,7 @@ export function JackpotSection({
                     Tỷ lệ phân bổ khi chia (Split)
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Phần vượt ngưỡng sẽ chia cho các giải cố định theo tỷ lệ
-                    phần dưới đây
+                    Phần vượt ngưỡng sẽ chia cho các giải cố định theo tỷ lệ phần dưới đây
                   </p>
                 </div>
 
@@ -213,8 +197,7 @@ export function JackpotSection({
                   {(["tier1", "tier2", "tier3"] as const).map((t) => {
                     const tier = TIER_LABELS[t]!;
                     const val = form.watch(t) || 0;
-                    const pct =
-                      total > 0 ? ((val / total) * 100).toFixed(1) : "0.0";
+                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : "0.0";
                     return (
                       <FormField
                         key={t}
@@ -228,9 +211,7 @@ export function JackpotSection({
                               >
                                 {tier.badge}
                               </Badge>
-                              <span className="flex-1 text-sm font-medium">
-                                {tier.label}
-                              </span>
+                              <span className="flex-1 text-sm font-medium">{tier.label}</span>
                               <FormControl>
                                 <MoneyInput
                                   className="h-8 w-16 text-center font-semibold"
@@ -267,24 +248,16 @@ export function JackpotSection({
               <div className="flex items-start gap-2">
                 <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
                 <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
-                  Đơn vị làm tròn cố định <strong>5,000đ</strong>. Phần dư do
-                  làm tròn sẽ cộng vào hạng cao nhất có người trúng. Giải Nhất
-                  luôn nhận phần dư nếu có.
+                  Đơn vị làm tròn cố định <strong>5,000đ</strong>. Phần dư do làm tròn sẽ cộng vào
+                  hạng cao nhất có người trúng. Giải Nhất luôn nhận phần dư nếu có.
                 </p>
               </div>
             </div>
           </CardContent>
 
           <CardFooter className="justify-end border-t px-6 py-3">
-            <Button
-              type="submit"
-              disabled={isPending || !form.formState.isDirty}
-            >
-              {isPending ? (
-                <Spinner className="mr-2" />
-              ) : (
-                <Save className="mr-2 size-4" />
-              )}
+            <Button type="submit" disabled={isPending || !form.formState.isDirty}>
+              {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
               Lưu cấu hình Jackpot
             </Button>
           </CardFooter>

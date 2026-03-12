@@ -28,6 +28,11 @@ export class ListDrawsUseCase extends NextApiUseCase<ListDrawsInput, ListDrawsOu
       jackpotAmount: d.jackpot?.openingAmount,
       jackpotClosingAmount: d.jackpot?.closingAmount,
       hasResult: !!d.result,
+      result: d.result
+        ? {
+            winningMain: [...d.result.winningMain],
+          }
+        : undefined,
       ticketEntryCount: d.stats?.ticketEntryCount,
       totalRevenue: d.stats?.totalSalesAmount,
       financial: d.financial

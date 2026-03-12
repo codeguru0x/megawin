@@ -1,13 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ArrowUpRight,
-  ChevronLeft,
-  ChevronRight,
-  History,
-  Loader2,
-} from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight, History, Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,15 +15,15 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { formatVND, formatNumber } from "@megawin/shared/utils/number";
+import { Pagination } from "@megawin/shared/constants/pagination";
 import { useJackpotHistory, type JackpotHistoryItem } from "./use-jackpot";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = Pagination.Default.Size;
 
 export function JackpotHistorySection() {
   const [page, setPage] = useState(1);
   const { data, isLoading, isFetching } = useJackpotHistory({
     page,
-    size: PAGE_SIZE,
   });
 
   const draws = data?.draws ?? [];
@@ -43,9 +37,7 @@ export function JackpotHistorySection() {
           <History className="size-4 text-blue-600 dark:text-blue-400" />
         </div>
         <div>
-          <h2 className="text-sm font-semibold text-foreground">
-            Lịch sử Jackpot
-          </h2>
+          <h2 className="text-sm font-semibold text-foreground">Lịch sử Jackpot</h2>
           <p className="text-[11px] text-muted-foreground">
             Biến động Jackpot qua từng kỳ quay đã kết sổ
           </p>
@@ -58,30 +50,14 @@ export function JackpotHistorySection() {
             <TableHeader>
               <TableRow className="bg-muted/40 hover:bg-muted/40">
                 <TableHead className="w-40 font-semibold">Draw ID</TableHead>
-                <TableHead className="w-16 text-center font-semibold">
-                  Kỳ
-                </TableHead>
-                <TableHead className="w-32 text-right font-semibold">
-                  Đầu kỳ
-                </TableHead>
-                <TableHead className="w-28 text-right font-semibold">
-                  Tích luỹ
-                </TableHead>
-                <TableHead className="w-32 text-right font-semibold">
-                  Cuối kỳ
-                </TableHead>
-                <TableHead className="w-24 text-right font-semibold">
-                  Entries
-                </TableHead>
-                <TableHead className="w-28 text-right font-semibold">
-                  Doanh thu
-                </TableHead>
-                <TableHead className="w-24 text-center font-semibold">
-                  Trúng JP
-                </TableHead>
-                <TableHead className="w-24 text-center font-semibold">
-                  Chia giải
-                </TableHead>
+                <TableHead className="w-16 text-center font-semibold">Kỳ</TableHead>
+                <TableHead className="w-32 text-right font-semibold">Đầu kỳ</TableHead>
+                <TableHead className="w-28 text-right font-semibold">Tích luỹ</TableHead>
+                <TableHead className="w-32 text-right font-semibold">Cuối kỳ</TableHead>
+                <TableHead className="w-24 text-right font-semibold">Entries</TableHead>
+                <TableHead className="w-28 text-right font-semibold">Doanh thu</TableHead>
+                <TableHead className="w-24 text-center font-semibold">Trúng JP</TableHead>
+                <TableHead className="w-24 text-center font-semibold">Chia giải</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -93,17 +69,12 @@ export function JackpotHistorySection() {
                 </TableRow>
               ) : draws.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="h-32 text-center text-muted-foreground"
-                  >
+                  <TableCell colSpan={9} className="h-32 text-center text-muted-foreground">
                     Chưa có dữ liệu Jackpot.
                   </TableCell>
                 </TableRow>
               ) : (
-                draws.map((item) => (
-                  <HistoryRow key={item.drawId} item={item} />
-                ))
+                draws.map((item) => <HistoryRow key={item.drawId} item={item} />)
               )}
             </TableBody>
           </Table>
@@ -112,9 +83,7 @@ export function JackpotHistorySection() {
         {/* Pagination */}
         {draws.length > 0 && (
           <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-3">
-            <p className="text-xs text-muted-foreground tabular-nums">
-              Trang {page}
-            </p>
+            <p className="text-xs text-muted-foreground tabular-nums">Trang {page}</p>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -151,7 +120,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
       className={cn(
         "transition-colors",
         isSplit && "bg-amber-50/50 dark:bg-amber-950/20",
-        isWinner && "bg-green-50/50 dark:bg-green-950/20"
+        isWinner && "bg-green-50/50 dark:bg-green-950/20",
       )}
     >
       <TableCell className="font-mono text-xs">{item.drawId}</TableCell>

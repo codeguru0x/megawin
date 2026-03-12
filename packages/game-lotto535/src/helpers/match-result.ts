@@ -10,7 +10,7 @@
  */
 
 import type { PrizeTier } from "../entities/enums";
-import type { LineValue, MainTuple, Special } from "../entities/types";
+import type { LineValue } from "../entities/types";
 import { determineTier, type LineMatchResult } from "../rules/prize-tiers";
 
 // ─────────────────────────────────────────────
@@ -19,8 +19,13 @@ import { determineTier, type LineMatchResult } from "../rules/prize-tiers";
 
 /** Kết quả kỳ quay – input cho matching. */
 export interface DrawResultForMatch {
-  winningMain: MainTuple;
-  winningSpecial: Special;
+  /**
+   * 5 số chính theo thứ tự quay gốc.
+   * readonly string[] — tương thích cả string[] (từ DB) và test data.
+   */
+  winningMain: readonly string[];
+  /** Số đặc biệt theo thứ tự quay gốc. */
+  winningSpecial: string;
 }
 
 // ─────────────────────────────────────────────
@@ -31,7 +36,7 @@ export interface DrawResultForMatch {
  * Đếm số lượng số chính trùng giữa line và kết quả.
  * Dùng Set lookup — không phụ thuộc thứ tự phần tử.
  */
-function countMainMatches(lineMain: MainTuple, winMain: MainTuple): number {
+function countMainMatches(lineMain: readonly string[], winMain: readonly string[]): number {
   const winSet = new Set(winMain);
   let count = 0;
   for (const n of lineMain) {

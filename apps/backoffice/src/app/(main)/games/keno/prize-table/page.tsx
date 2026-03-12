@@ -1,22 +1,8 @@
 "use client";
 
-import {
-  Trophy,
-  RefreshCcw,
-  AlertTriangle,
-  ArrowUpDown,
-  Dices,
-  Shield,
-  Info,
-} from "lucide-react";
+import { Trophy, RefreshCcw, AlertTriangle, ArrowUpDown, Dices, Shield, Info } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -25,21 +11,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { formatVND, formatCurrency } from "@megawin/shared/utils/number";
 
-import {
-  useKenoGameConfig,
-  type KenoGameConfig,
-} from "../config/_lib/use-game-config";
+import { useKenoGameConfig, type KenoGameConfig } from "../config/_lib/use-game-config";
 
 // ─────────────────────────────────────────────
 // Constants
@@ -52,24 +31,12 @@ const MATCH_COUNTS = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
 // Helpers
 // ─────────────────────────────────────────────
 
+// formatPrize: dùng formatCurrency từ shared — compact: tỷ/triệu/k
 function formatPrize(amount: number): string {
-  if (amount >= 1_000_000_000)
-    return `${(amount / 1_000_000_000).toFixed(0)} Tỷ`;
-  if (amount >= 1_000_000)
-    return `${(amount / 1_000_000).toLocaleString("vi-VN")} tr`;
-  if (amount >= 1_000) return amount.toLocaleString("vi-VN");
-  return String(amount);
+  return formatCurrency(amount, { billion: "tỷ", million: "tr", thousand: "k", decimals: 1 });
 }
 
-function formatVND(amount: number): string {
-  return (amount ?? 0).toLocaleString("vi-VN") + "đ";
-}
-
-function getBasicPrize(
-  config: KenoGameConfig,
-  pick: number,
-  match: number
-): number | undefined {
+function getBasicPrize(config: KenoGameConfig, pick: number, match: number): number | undefined {
   return config.basicPrizes[`pick${pick}`]?.[match];
 }
 
@@ -79,11 +46,7 @@ interface PayoutCapInfo {
   maxSetsForFixed: number;
 }
 
-function getPayoutCap(
-  config: KenoGameConfig,
-  pick: number,
-  match: number
-): PayoutCapInfo | null {
+function getPayoutCap(config: KenoGameConfig, pick: number, match: number): PayoutCapInfo | null {
   const prize = config.basicPrizes[`pick${pick}`]?.[match];
   if (!prize) return null;
 
@@ -116,13 +79,7 @@ function getPayoutCap(
 // ─────────────────────────────────────────────
 
 export default function KenoPrizeTablePage() {
-  const {
-    data: config,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useKenoGameConfig();
+  const { data: config, isLoading, isError, error, refetch } = useKenoGameConfig();
 
   if (isLoading) return <PageSkeleton />;
 
@@ -133,9 +90,7 @@ export default function KenoPrizeTablePage() {
           <AlertTriangle className="size-6 text-destructive" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-foreground">
-            Không thể tải cấu hình game
-          </p>
+          <p className="text-sm font-medium text-foreground">Không thể tải cấu hình game</p>
           <p className="mt-1 text-xs text-muted-foreground">
             {error instanceof Error ? error.message : "Lỗi không xác định"}
           </p>
@@ -167,8 +122,7 @@ export default function KenoPrizeTablePage() {
               Keno — Bảng giải thưởng
             </h1>
             <p className="text-xs text-muted-foreground">
-              Dữ liệu trực tiếp từ cấu hình hệ thống · Mệnh giá{" "}
-              {formatVND(config.play.unitPrice)}
+              Dữ liệu trực tiếp từ cấu hình hệ thống · Mệnh giá {formatVND(config.play.unitPrice)}
             </p>
           </div>
         </div>
@@ -188,12 +142,9 @@ export default function KenoPrizeTablePage() {
               <ArrowUpDown className="size-4 text-muted-foreground" />
             </div>
             <div>
-              <CardTitle className="text-sm font-semibold">
-                Cách chơi cơ bản — Chọn số
-              </CardTitle>
+              <CardTitle className="text-sm font-semibold">Cách chơi cơ bản — Chọn số</CardTitle>
               <CardDescription className="mt-0.5 text-xs">
-                Chọn 1–10 số từ 01–80. Quay 20 số mỗi kỳ. Giải thưởng theo số
-                trùng.
+                Chọn 1–10 số từ 01–80. Quay 20 số mỗi kỳ. Giải thưởng theo số trùng.
               </CardDescription>
             </div>
           </div>
@@ -211,10 +162,7 @@ export default function KenoPrizeTablePage() {
                   </TableHead>
                   {PICK_COUNTS.map((pick) => (
                     <TableHead key={pick} className="w-24 text-center">
-                      <Badge
-                        variant="outline"
-                        className="font-bold tabular-nums"
-                      >
+                      <Badge variant="outline" className="font-bold tabular-nums">
                         {pick}
                       </Badge>
                     </TableHead>
@@ -246,7 +194,7 @@ export default function KenoPrizeTablePage() {
                               prize >= 1_000_000 &&
                               prize < 100_000_000 &&
                               "font-semibold text-amber-600 dark:text-amber-400",
-                            !prize && "text-muted-foreground/30"
+                            !prize && "text-muted-foreground/30",
                           )}
                         >
                           {prize ? (
@@ -256,26 +204,17 @@ export default function KenoPrizeTablePage() {
                                   <TooltipTrigger asChild>
                                     <span className="cursor-help underline decoration-dashed underline-offset-2">
                                       {formatPrize(prize)}
-                                      <span className="ml-0.5 text-red-500">
-                                        *
-                                      </span>
+                                      <span className="ml-0.5 text-red-500">*</span>
                                     </span>
                                   </TooltipTrigger>
-                                  <TooltipContent
-                                    side="top"
-                                    className="max-w-xs space-y-1 text-xs"
-                                  >
-                                    <p className="font-semibold">
-                                      Giới hạn trả thưởng mỗi kỳ
+                                  <TooltipContent side="top" className="max-w-xs space-y-1 text-xs">
+                                    <p className="font-semibold">Giới hạn trả thưởng mỗi kỳ</p>
+                                    <p>
+                                      ≤{cap.maxSetsForFixed} bộ: {formatPrize(cap.fixedPrize)}/bộ
                                     </p>
                                     <p>
-                                      ≤{cap.maxSetsForFixed} bộ:{" "}
-                                      {formatPrize(cap.fixedPrize)}/bộ
-                                    </p>
-                                    <p>
-                                      &gt;{cap.maxSetsForFixed} bộ:{" "}
-                                      {formatPrize(cap.maxPerDraw)} ÷ số bộ
-                                      trúng
+                                      &gt;{cap.maxSetsForFixed} bộ: {formatPrize(cap.maxPerDraw)} ÷
+                                      số bộ trúng
                                     </p>
                                   </TooltipContent>
                                 </Tooltip>
@@ -313,8 +252,7 @@ export default function KenoPrizeTablePage() {
                       Bậc {c.pick} trùng {c.match}:
                     </strong>{" "}
                     ≤{c.maxSetsForFixed} bộ → {formatPrize(c.fixedPrize)}/bộ
-                    {" · "}&gt;{c.maxSetsForFixed} bộ →{" "}
-                    {formatPrize(c.maxPerDraw)} ÷ số bộ trúng
+                    {" · "}&gt;{c.maxSetsForFixed} bộ → {formatPrize(c.maxPerDraw)} ÷ số bộ trúng
                   </p>
                 ))}
               </div>
@@ -333,9 +271,7 @@ export default function KenoPrizeTablePage() {
                 <Dices className="size-4 text-muted-foreground" />
               </div>
               <div>
-                <CardTitle className="text-sm font-semibold">
-                  Lớn / Nhỏ
-                </CardTitle>
+                <CardTitle className="text-sm font-semibold">Lớn / Nhỏ</CardTitle>
                 <CardDescription className="mt-0.5 text-xs">
                   Đếm số lớn (41–80) và nhỏ (1–40) trong 20 số quay
                 </CardDescription>
@@ -346,9 +282,7 @@ export default function KenoPrizeTablePage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40">
-                  <TableHead className="w-32 text-[10px] uppercase tracking-wider">
-                    Cược
-                  </TableHead>
+                  <TableHead className="w-32 text-[10px] uppercase tracking-wider">Cược</TableHead>
                   <TableHead className="text-[10px] uppercase tracking-wider">
                     Xác định kết quả
                   </TableHead>
@@ -398,14 +332,12 @@ export default function KenoPrizeTablePage() {
                         {row.bet}
                       </TableCell>
                     )}
-                    <TableCell className="text-sm text-muted-foreground">
-                      {row.condition}
-                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{row.condition}</TableCell>
                     <TableCell
                       className={cn(
                         "text-right tabular-nums",
                         row.amount > config.play.unitPrice &&
-                          "font-semibold text-emerald-600 dark:text-emerald-400"
+                          "font-semibold text-emerald-600 dark:text-emerald-400",
                       )}
                     >
                       {formatVND(row.amount)}
@@ -425,9 +357,7 @@ export default function KenoPrizeTablePage() {
                 <Shield className="size-4 text-muted-foreground" />
               </div>
               <div>
-                <CardTitle className="text-sm font-semibold">
-                  Chẵn / Lẻ
-                </CardTitle>
+                <CardTitle className="text-sm font-semibold">Chẵn / Lẻ</CardTitle>
                 <CardDescription className="mt-0.5 text-xs">
                   Đếm số chẵn và lẻ trong 20 số quay
                 </CardDescription>
@@ -438,9 +368,7 @@ export default function KenoPrizeTablePage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/40">
-                  <TableHead className="w-28 text-[10px] uppercase tracking-wider">
-                    Cược
-                  </TableHead>
+                  <TableHead className="w-28 text-[10px] uppercase tracking-wider">Cược</TableHead>
                   <TableHead className="text-[10px] uppercase tracking-wider">
                     Xác định kết quả
                   </TableHead>
@@ -500,17 +428,12 @@ export default function KenoPrizeTablePage() {
                         {row.bet}
                       </TableCell>
                     )}
-                    <TableCell className="text-sm text-muted-foreground">
-                      {row.condition}
-                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{row.condition}</TableCell>
                     <TableCell
                       className={cn(
                         "text-right tabular-nums",
-                        row.amount >= 200_000 &&
-                          "font-bold text-amber-600 dark:text-amber-400",
-                        row.amount >= 40_000 &&
-                          row.amount < 200_000 &&
-                          "font-semibold"
+                        row.amount >= 200_000 && "font-bold text-amber-600 dark:text-amber-400",
+                        row.amount >= 40_000 && row.amount < 200_000 && "font-semibold",
                       )}
                     >
                       {formatVND(row.amount)}
@@ -553,10 +476,7 @@ function PageSkeleton() {
         </div>
         <div className="p-0">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex gap-2 border-b px-4 py-2.5 last:border-0"
-            >
+            <div key={i} className="flex gap-2 border-b px-4 py-2.5 last:border-0">
               <Skeleton className="h-5 w-10 shrink-0" />
               {Array.from({ length: 10 }).map((_, j) => (
                 <Skeleton key={j} className="h-5 flex-1" />

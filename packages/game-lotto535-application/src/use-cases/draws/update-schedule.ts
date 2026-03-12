@@ -33,6 +33,7 @@ export interface UpdateScheduleOutput {
 const EDITABLE_STATUSES = new Set<string>([
   DrawStatus.Scheduled,
   DrawStatus.SalesOpen,
+  DrawStatus.SalesClosed,
 ]);
 
 export class UpdateScheduleUseCase extends NextApiUseCase<
@@ -41,9 +42,7 @@ export class UpdateScheduleUseCase extends NextApiUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(
-    input: UpdateScheduleInput
-  ): Promise<UpdateScheduleOutput> {
+  protected async execute(input: UpdateScheduleInput): Promise<UpdateScheduleOutput> {
     const draw = await this.drawRepo.getDrawById(input.drawId);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
@@ -52,7 +51,7 @@ export class UpdateScheduleUseCase extends NextApiUseCase<
     if (!EDITABLE_STATUSES.has(draw.status)) {
       throw new AppException(
         "DRAW_INVALID_TRANSITION",
-        `Không thể sửa lịch – draw ở trạng thái "${draw.status}". Chỉ sửa khi "scheduled" hoặc "salesOpen".`
+        `Không thể sửa lịch – draw ở trạng thái "${draw.status}". Chỉ sửa khi "scheduled", "salesOpen" hoặc "salesClosed".`,
       );
     }
 
@@ -75,7 +74,7 @@ export class UpdateScheduleUseCase extends NextApiUseCase<
 
     if (closeAt >= drawTime) {
       throw AppException.badRequest(
-        `Giờ đóng bán phải nhỏ hơn giờ quay số (${drawTime.toISOString()}).`
+        `Giờ đóng bán phải nhỏ hơn giờ quay số (${drawTime.toISOString()}).`,
       );
     }
 

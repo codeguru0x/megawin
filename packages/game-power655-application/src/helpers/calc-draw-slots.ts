@@ -4,123 +4,95 @@
  * Power 6/55 quay thứ 3, thứ 5, thứ 7 (drawDaysOfWeek = [2,4,6]),
  * mỗi ngày 1 kỳ lúc 18:00.
  *
- * Quy tắc:
- *   - Chỉ tạo slot cho các ngày nằm trong drawDaysOfWeek
- *   - Kỳ có drawTime > now + salesCloseBeforeMinutes: salesOpen
- *   - Kỳ có drawTime <= now + salesCloseBeforeMinutes: scheduled (không tự mở)
- *   - Skip kỳ đã tồn tại (dựa trên existingDrawIds)
+ * Convention: 0 = Chủ nhật, 1 = Thứ 2, ..., 6 = Thứ 7 (JS/date-fns getDay()).
+ * Server chạy UTC — mọi phép tính ngày/thứ PHẢI dùng TZDate để tránh lệch ngày.
  */
 
-import { toVNDate, subtractMinutes, formatVN } from "@megawin/shared/utils/date";
+import {
+  VN_TIMEZONE,
+  TZDate,
+  toVNDate,
+  subtractMinutes,
+  formatVNDate,
+  addDays,
+  getDay,
+  isBefore,
+} from "@megawin/shared/utils/date";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { PlayRules } from "@megawin/game-power655/entities";
 
 export interface Power655DrawSlot {
+  /** "YYYY-MM-DD" theo giờ VN. */
   drawDate: string;
+  /** Luôn = 1 (Power 6/55 chỉ 1 kỳ/ngày). */
   drawNo: number;
+  /** HH:mm từ config (ví dụ "18:00"). */
   drawTimeStr: string;
+  /** UTC Date tương ứng với drawTime ở VN timezone. */
   drawTime: Date;
+  /** UTC Date đóng bán = drawTime − salesCloseBeforeMinutes. */
   closeAt: Date;
   status: typeof DrawStatus.SalesOpen | typeof DrawStatus.Scheduled;
 }
 
 /**
- * Tính draw slots cho Power 6/55.
+ * Tính danh sách `count` draw slots tiếp theo từ thời điểm `now`.
  *
- * @param now - Thời gian hiện tại
- * @param count - Số kỳ muốn tạo (1-12)
- * @param config - Play rules từ global config
- * @param existingDrawIds - Set drawIds đã tồn tại, để skip
- * @returns Danh sách draw slots khả dụng
+ * Logic duyệt từng ngày (VN timezone) bắt đầu từ hôm nay:
+ * - Bỏ qua nếu ngày không nằm trong drawDaysOfWeek.
+ * - Bỏ qua nếu drawId đã tồn tại trong DB.
+ * - Bỏ qua nếu là hôm nay và đã qua thời điểm đóng bán (closeAt ≤ now).
+ * - status = "salesOpen" nếu drawTime > now; ngược lại "scheduled".
+ *
+ * @param now             Thời điểm hiện tại (UTC).
+ * @param count           Số slots cần tính (1–12).
+ * @param config          PlayRules từ GlobalConfig.
+ * @param existingDrawIds Set drawId đã có trong DB để bỏ qua kỳ trùng.
  */
 export function calcPower655DrawSlots(
   now: Date,
   count: number,
   config: PlayRules,
-  existingDrawIds: Set<string> = new Set()
+  existingDrawIds: Set<string> = new Set(),
 ): Power655DrawSlot[] {
   const { drawTimes, salesCloseBeforeMinutes, drawDaysOfWeek } = config;
 
-  const vnTimeStr = formatVN(now, "HH:mm:ss");
-  const [hStr, mStr, sStr] = vnTimeStr.split(":");
-  const nowMinutes = parseInt(hStr!) * 60 + parseInt(mStr!);
-  const nowSeconds = parseInt(sStr!);
-  const nowTotalSeconds = nowMinutes * 60 + nowSeconds;
-
-  const vnDateStr = formatVN(now, "yyyy-MM-dd");
+  // Power 6/55 có 1 drawTime/ngày, lấy phần tử đầu từ mảng drawTimes.
+  const drawTimeStr = drawTimes[0]!;
 
   const slots: Power655DrawSlot[] = [];
-  let currentDate = vnDateStr;
-  let dayOffset = 0;
 
-  while (slots.length < count) {
-    const currentDateObj = dayOffset === 0
-      ? now
-      : new Date(now.getTime() + dayOffset * 86_400_000);
+  // Dùng TZDate để getDay() trả đúng thứ trong tuần theo giờ VN,
+  // tránh bị lệch ngày do server chạy UTC.
+  // getDay() convention: 0=Sun, 1=Mon, ..., 6=Sat — khớp drawDaysOfWeek.
+  const todayVN = new TZDate(now, VN_TIMEZONE);
 
-    const dayOfWeek = parseInt(formatVN(currentDateObj, "c"));
+  for (let offset = 0; offset <= 60 && slots.length < count; offset++) {
+    // addDays hoạt động đúng với TZDate, không bị lệch khi cộng ngày.
+    const dayVN = offset === 0 ? todayVN : addDays(todayVN, offset);
 
-    if (!drawDaysOfWeek.includes(dayOfWeek)) {
-      dayOffset++;
-      currentDate = formatVN(
-        new Date(now.getTime() + dayOffset * 86_400_000),
-        "yyyy-MM-dd"
-      );
-      if (dayOffset > 60) break;
-      continue;
-    }
+    if (!drawDaysOfWeek.includes(getDay(dayVN))) continue;
 
-    const drawTimeStr = drawTimes[0]!;
-    const drawTime = toVNDate(currentDate, drawTimeStr);
+    const dateStr = formatVNDate(dayVN);
+
+    // Power 6/55: 1 kỳ/ngày, drawId = "YYYY-MM-DD.001".
+    if (existingDrawIds.has(`${dateStr}.001`)) continue;
+
+    const drawTime = toVNDate(dateStr, drawTimeStr);
     const closeAt = subtractMinutes(drawTime, salesCloseBeforeMinutes);
 
-    const drawId = `${currentDate}.001`;
-    if (existingDrawIds.has(drawId)) {
-      dayOffset++;
-      currentDate = formatVN(
-        new Date(now.getTime() + dayOffset * 86_400_000),
-        "yyyy-MM-dd"
-      );
-      if (dayOffset > 60) break;
-      continue;
-    }
-
-    if (dayOffset === 0) {
-      const [dh, dm] = drawTimeStr.split(":").map(Number);
-      const drawMinutes = dh! * 60 + dm!;
-      const closeSeconds = drawMinutes * 60 - salesCloseBeforeMinutes * 60;
-      if (closeSeconds <= nowTotalSeconds) {
-        dayOffset++;
-        currentDate = formatVN(
-          new Date(now.getTime() + dayOffset * 86_400_000),
-          "yyyy-MM-dd"
-        );
-        if (dayOffset > 60) break;
-        continue;
-      }
-    }
-
-    const status =
-      drawTime.getTime() > now.getTime()
-        ? DrawStatus.SalesOpen
-        : DrawStatus.Scheduled;
+    // Bỏ qua nếu thời điểm đóng bán đã qua — kỳ hôm nay không còn mua được.
+    if (!isBefore(now, closeAt)) continue;
 
     slots.push({
-      drawDate: currentDate,
+      drawDate: dateStr,
       drawNo: 1,
       drawTimeStr,
       drawTime,
       closeAt,
-      status,
+      // salesOpen khi drawTime chưa đến (staff vẫn có thể mở bán ngay).
+      status: isBefore(now, drawTime) ? DrawStatus.SalesOpen : DrawStatus.Scheduled,
     });
-
-    dayOffset++;
-    currentDate = formatVN(
-      new Date(now.getTime() + dayOffset * 86_400_000),
-      "yyyy-MM-dd"
-    );
-
-    if (dayOffset > 60) break;
   }
 
   return slots;

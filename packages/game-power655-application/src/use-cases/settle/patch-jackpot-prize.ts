@@ -42,7 +42,7 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { JackpotWinnerInfo } from "@megawin/game-power655/entities";
-import { JackpotType } from "@megawin/game-power655/entities";
+import { JackpotType, PrizeTier } from "@megawin/game-power655/entities";
 import type { SettleContextWithFinancials } from "./types";
 
 export interface PatchJackpotPrizeResult {
@@ -66,7 +66,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: SettleContextWithFinancials): Promise<PatchJackpotPrizeResult> {
-    const { drawId, jp1OpeningAmount, jp2OpeningAmount, financials } = input;
+    const { drawId, jp1CurrentAmount, jp2CurrentAmount, financials } = input;
     const { hasJackpot1Winner, hasJackpot2Winner, jackpot1Contribution, jackpot2Contribution } =
       financials;
 
@@ -80,27 +80,32 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
       const jp1Entries = await this.entryRepo.findJackpot1Winners(drawId);
 
       if (jp1Entries.length > 0) {
-        const totalJp1Prize = jp1OpeningAmount + jackpot1Contribution;
+        const totalJp1Prize = jp1CurrentAmount + jackpot1Contribution;
         const jp1PerWinner = Math.floor(totalJp1Prize / jp1Entries.length);
 
         if (jp1PerWinner > 0) {
           const [patched] = await Promise.all([
-            this.entryRepo.patchJackpotPrize(drawId, "jackpot1", jp1PerWinner),
-            this.lineRepo.patchJackpotLineWinAmount(drawId, "jackpot1", jp1PerWinner),
+            this.entryRepo.patchJackpotPrize(drawId, PrizeTier.Jackpot1, jp1PerWinner),
+            this.lineRepo.patchJackpotLineWinAmount(drawId, PrizeTier.Jackpot1, jp1PerWinner),
           ]);
+
           jp1EntriesPatched = patched;
-          if (patched > 0) totalIncrementAmount += jp1PerWinner * jp1Entries.length;
+
+          if (patched > 0) {
+            totalIncrementAmount += jp1PerWinner * jp1Entries.length;
+          }
         }
 
         // Build winners list để truyền sang FinalizeSettle
         for (const e of jp1Entries) {
           winners.push({
             accountId: e.accountId,
+            username: e.username,
             tenantId: e.tenantId,
             prizeAmount: jp1PerWinner,
             entryId: e.id,
             drawId,
-            jackpotType: JackpotType.Jp1,
+            jackpotType: JackpotType.Jackpot1,
           });
         }
       }
@@ -111,14 +116,15 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
       const jp2Entries = await this.entryRepo.findJackpot2Winners(drawId);
 
       if (jp2Entries.length > 0) {
-        const totalJp2Prize = jp2OpeningAmount + jackpot2Contribution;
+        const totalJp2Prize = jp2CurrentAmount + jackpot2Contribution;
         const jp2PerWinner = Math.floor(totalJp2Prize / jp2Entries.length);
 
         if (jp2PerWinner > 0) {
           const [patched] = await Promise.all([
-            this.entryRepo.patchJackpotPrize(drawId, "jackpot2", jp2PerWinner),
-            this.lineRepo.patchJackpotLineWinAmount(drawId, "jackpot2", jp2PerWinner),
+            this.entryRepo.patchJackpotPrize(drawId, PrizeTier.Jackpot2, jp2PerWinner),
+            this.lineRepo.patchJackpotLineWinAmount(drawId, PrizeTier.Jackpot2, jp2PerWinner),
           ]);
+
           jp2EntriesPatched = patched;
           if (patched > 0) totalIncrementAmount += jp2PerWinner * jp2Entries.length;
         }
@@ -127,11 +133,12 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
         for (const e of jp2Entries) {
           winners.push({
             accountId: e.accountId,
+            username: e.username,
             tenantId: e.tenantId,
             prizeAmount: jp2PerWinner,
             entryId: e.id,
             drawId,
-            jackpotType: JackpotType.Jp2,
+            jackpotType: JackpotType.Jackpot2,
           });
         }
       }
@@ -140,24 +147,27 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     // ── Cập nhật draw.stats.totalPayout + settleSummary Jackpot prizeAmount ───
     // incrementTotalPayout: $inc KHÔNG idempotent → guard bởi totalIncrementAmount > 0.
     // patchSettleSummaryJackpot: $set → idempotent (set giá trị, không cộng).
-    const jackpotPatches: Array<{ tier: string; prizeAmount: number }> = [];
+    const jackpotPatches: Array<{ tier: PrizeTier; prizeAmount: number }> = [];
 
     if (jp1EntriesPatched > 0 && hasJackpot1Winner) {
-      const totalJp1 = jp1OpeningAmount + jackpot1Contribution;
+      const totalJp1 = jp1CurrentAmount + jackpot1Contribution;
       jackpotPatches.push({
-        tier: "jackpot1",
+        tier: PrizeTier.Jackpot1,
         prizeAmount:
-          Math.floor(totalJp1 / (winners.filter((w) => w.jackpotType === "jp1").length || 1)) *
-          winners.filter((w) => w.jackpotType === "jp1").length,
+          Math.floor(
+            totalJp1 / (winners.filter((w) => w.jackpotType === JackpotType.Jackpot1).length || 1),
+          ) * winners.filter((w) => w.jackpotType === JackpotType.Jackpot1).length,
       });
     }
+
     if (jp2EntriesPatched > 0 && hasJackpot2Winner) {
-      const totalJp2 = jp2OpeningAmount + jackpot2Contribution;
+      const totalJp2 = jp2CurrentAmount + jackpot2Contribution;
       jackpotPatches.push({
-        tier: "jackpot2",
+        tier: PrizeTier.Jackpot2,
         prizeAmount:
-          Math.floor(totalJp2 / (winners.filter((w) => w.jackpotType === "jp2").length || 1)) *
-          winners.filter((w) => w.jackpotType === "jp2").length,
+          Math.floor(
+            totalJp2 / (winners.filter((w) => w.jackpotType === JackpotType.Jackpot2).length || 1),
+          ) * winners.filter((w) => w.jackpotType === JackpotType.Jackpot2).length,
       });
     }
 

@@ -136,39 +136,39 @@ export abstract class AbstractEntryRepository<
 
   // ─── Aggregation ───
 
-  async aggregateRevenueByTenant(drawId: string): Promise<
-    Array<{
-      tenantId: string;
-      revenue: number;
-      commission: number;
-      entryCount: number;
-    }>
-  > {
+  /**
+   * Aggregate tổng doanh thu và hoa hồng cho 1 draw (exclude voided entries).
+   * Group by null — 1 document kết quả, hiệu quả hơn group by tenant
+   * khi caller chỉ cần 2 scalar tổng.
+   */
+  async aggregateTotalRevenue(drawId: string): Promise<{
+    totalRevenue: number;
+    totalAgentCommission: number;
+  }> {
     const result = await this.aggregate([
       { $match: { drawId, status: { $ne: EntryStatus.Void } } },
       {
         $group: {
-          _id: "$tenantId",
-          revenue: { $sum: "$amount" },
-          commission: { $sum: "$tenantSnapshot.commissionAmount" },
-          entryCount: { $sum: 1 },
+          _id: null,
+          totalRevenue: { $sum: "$amount" },
+          totalAgentCommission: { $sum: "$tenant.commissionAmount" },
         },
       },
     ]);
-    return result.map((r: any) => ({
-      tenantId: r._id,
-      revenue: r.revenue,
-      commission: r.commission ?? 0,
-      entryCount: r.entryCount,
-    }));
+    const row = result[0] as any;
+    return {
+      totalRevenue: row?.totalRevenue ?? 0,
+      totalAgentCommission: row?.totalAgentCommission ?? 0,
+    };
   }
 
   async aggregateSettledPayoutSummary(drawId: string): Promise<{
     totalSettled: number;
     totalPayoutAmount: number;
     totalFixedPrizes: number;
+    /** Số lượt trúng per tier. Key = tier string (Max 3D: "special"|"first"|"second"|"third"; Max 3D Pro: xem PrizeTier). */
     tierWinnerCounts: Record<string, number>;
-    /** Tổng tiền thưởng từng hạng giải (VND). Key = tier string. */
+    /** Tổng tiền thưởng từng hạng giải (VND). Key = tier string (giống tierWinnerCounts). */
     tierPrizeAmounts: Record<string, number>;
   }> {
     const result = await this.aggregate([
@@ -239,8 +239,8 @@ export abstract class AbstractEntryRepository<
           totalWin: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
           totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
           entryCount: { $sum: 1 },
-          commissionRate: { $first: "$tenantSnapshot.commissionRate" },
-          totalCommission: { $sum: "$tenantSnapshot.commissionAmount" },
+          commissionRate: { $first: "$tenant.commissionRate" },
+          totalCommission: { $sum: "$tenant.commissionAmount" },
         },
       },
     ]);

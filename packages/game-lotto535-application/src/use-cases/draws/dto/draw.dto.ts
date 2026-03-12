@@ -6,15 +6,28 @@ import type { DrawEntity } from "../../../infras/mappers/draw-mapper";
 // CreateDraws (batch – tạo nhiều kỳ liên tiếp)
 // ─────────────────────────────────────────────
 
-export interface CreateDrawsInput {
-  /** Số kỳ cần tạo (1-12). */
-  count: number;
+/** Thông tin 1 kỳ quay do client gửi lên khi tạo mới. */
+export interface CreateDrawSlotInput {
+  /** Ngày quay, format YYYY-MM-DD (theo giờ VN). */
+  drawDate: string;
+  /** Số thứ tự kỳ trong ngày (1 = sáng 13h, 2 = tối 21h). */
+  drawNo: DrawNo;
   /**
-   * Danh sách drawId (slot index 0-based) sẽ được mở bán ngay.
-   * Các kỳ không có trong danh sách sẽ được tạo với trạng thái "scheduled".
-   * Mặc định rỗng → tất cả kỳ ở trạng thái "scheduled".
+   * Giờ quay, ISO 8601 (timezone VN).
+   * Server tự tính closeAt = drawTime − play.salesCloseBeforeMinutes từ game config.
    */
-  openSlotIndexes?: number[];
+  drawTime: string;
+  /** Mở bán ngay sau khi tạo (true) hoặc để trạng thái scheduled (false). */
+  openNow: boolean;
+}
+
+export interface CreateDrawsInput {
+  /**
+   * Danh sách kỳ cần tạo (1-12 kỳ).
+   * Client tự tính từ preview + chỉnh sửa của staff rồi gửi lên.
+   * Server kiểm tra kỳ nào đã tồn tại (theo drawId) → báo lỗi toàn bộ, không tạo partial.
+   */
+  draws: CreateDrawSlotInput[];
 }
 
 export interface CreateDrawsOutputItem {

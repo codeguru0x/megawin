@@ -37,7 +37,7 @@ export function apiSuccess<T>(
     status?: number;
     headers?: Record<string, string>;
     meta?: ApiResponseMeta;
-  }
+  },
 ): NextResponse<ApiSuccessResponse<T>> {
   const body: ApiSuccessResponse<T> = { success: true, data };
   if (options?.meta) body.meta = options.meta;
@@ -60,7 +60,7 @@ export function apiSuccess<T>(
 export function apiError(
   status: number,
   error: ApiErrorDetail,
-  headers?: Record<string, string>
+  headers?: Record<string, string>,
 ): NextResponse<ApiErrorResponse> {
   const body: ApiErrorResponse = {
     success: false,
@@ -79,9 +79,7 @@ export function apiError(
 /**
  * Chuyển AppError từ shared error system sang NextResponse chuẩn.
  */
-export function appErrorToApiResponse(
-  error: AppError
-): NextResponse<ApiErrorResponse> {
+export function appErrorToApiResponse(error: AppError): NextResponse<ApiErrorResponse> {
   const status = appErrorToStatusCode(error);
   return apiError(status, {
     code: error.code,
@@ -105,7 +103,7 @@ export function appResultToApiResponse<T>(
     successStatus?: number;
     headers?: Record<string, string>;
     meta?: ApiResponseMeta;
-  }
+  },
 ): NextResponse<ApiSuccessResponse<T> | ApiErrorResponse> {
   if (result.success) {
     return apiSuccess(result.data, {
@@ -123,9 +121,7 @@ export function appResultToApiResponse<T>(
  * Bắt mọi loại error và trả NextResponse chuẩn.
  * Dùng trong catch block của route handler.
  */
-export function catchToApiResponse(
-  err: unknown
-): NextResponse<ApiErrorResponse> {
+export function catchToApiResponse(err: unknown): NextResponse<ApiErrorResponse> {
   if (err instanceof AppException) {
     return appErrorToApiResponse(err.toError());
   }
@@ -141,13 +137,33 @@ export function catchToApiResponse(
 
 // ============ Validation Error Shortcut ============
 
+/**
+ * Format ZodError issues thành mảng { field, message }.
+ * path: (string | number)[] → "draws[0].drawTime"
+ * path: []                  → field: "" (top-level error)
+ */
+function formatZodIssues(error: import("zod").ZodError): Array<{ field: string; message: string }> {
+  return error.issues.map((issue) => ({
+    field: issue.path.reduce<string>((acc, segment, i) => {
+      if (typeof segment === "number") return `${acc}[${segment}]`;
+      return i === 0 ? String(segment) : `${acc}.${String(segment)}`;
+    }, ""),
+    message: issue.message,
+  }));
+}
+
 export function validationError(
   message: string,
-  details?: unknown
+  details?: unknown,
 ): NextResponse<ApiErrorResponse> {
+  let formattedDetails = details;
+  // Nếu details là ZodError → format thành mảng { field, message } có full path
+  if (details && typeof details === "object" && "issues" in details) {
+    formattedDetails = { errors: formatZodIssues(details as import("zod").ZodError) };
+  }
   return apiError(400, {
     code: APP_ERROR_CODES.VALIDATION,
     message,
-    details,
+    details: formattedDetails,
   });
 }

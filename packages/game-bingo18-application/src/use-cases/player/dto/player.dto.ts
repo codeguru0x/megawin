@@ -5,6 +5,8 @@
  * Chỉ chứa thông tin player cần — loại bỏ dữ liệu vận hành/công ty.
  */
 
+import type { Bingo18BigSmallBet, Bingo18TripleKind } from "@megawin/game-bingo18/entities";
+
 // ─── Get Current Draw (Player) ───
 
 export interface PlayerGetCurrentDrawOutput {
@@ -218,8 +220,6 @@ export interface PlayerEntryInfo {
   id: string;
   /** ID kỳ quay mà entry tham gia. */
   drawId: string;
-  /** Ngày quay (YYYY-MM-DD). */
-  drawDate: string;
   /** Trạng thái entry (scheduled, settled, void). */
   status: string;
   /** Số tiền đặt cược của entry (VND). */
@@ -318,10 +318,15 @@ export interface PlayerBasicPrize {
   playType: string;
   /**
    * Số lần số đã chọn xuất hiện trong kết quả (1-3).
-   * singleNum: giải thưởng khác nhau theo matchCount.
+   * singleNum: giải thưởng khác nhau theo matchCount (12k/20k/30k).
    * doubleMatch / tripleMatch: luôn = 1.
    */
   matchCount: number;
+  /**
+   * Phân loại triple: "specific" (1.200.000đ) hoặc "any" (200.000đ).
+   * Chỉ có với tripleMatch — undefined với singleNum và doubleMatch.
+   */
+  tripleKind?: Bingo18TripleKind;
   /** Số lượt cược trúng tổ hợp này. */
   winnerCount: number;
   /** Tiền thưởng mỗi lần cược (VND). */
@@ -331,7 +336,7 @@ export interface PlayerBasicPrize {
 /**
  * Giải thưởng 1 loại side bet trong kỳ quay — dùng cho GetDrawResult API.
  *
- * Chỉ trả những (playType, bet) có winnerCount > 0 trong kỳ.
+ * Chỉ trả những (playType, sum/bet) có winnerCount > 0 trong kỳ.
  */
 export interface PlayerSideBetPrize {
   /**
@@ -339,12 +344,16 @@ export interface PlayerSideBetPrize {
    */
   playType: string;
   /**
-   * Giá trị đặt cược đã trúng.
-   * sumTotal: tổng cụ thể (3-18) dạng string.
-   * bigSmallDraw: "big" | "draw" | "small".
+   * Tổng cụ thể đã trúng (3-18). Chỉ có với sumTotal.
+   * undefined với bigSmallDraw.
    */
-  bet: string;
-  /** Số lượt cược trúng (playType, bet) này. */
+  sum?: number;
+  /**
+   * Cược Lớn/Hòa/Nhỏ đã trúng. Chỉ có với bigSmallDraw.
+   * undefined với sumTotal.
+   */
+  bet?: Bingo18BigSmallBet;
+  /** Số lượt cược trúng (playType, sum/bet) này. */
   winnerCount: number;
   /** Tiền thưởng mỗi lần cược (VND). */
   prizePerUnit: number;

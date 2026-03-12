@@ -17,10 +17,10 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
       drawCount: ticket.drawPlan.drawCount,
     },
     pricing: {
-      unitPrice: 10_000,
+      unitPrice: ticket.pricing.unitPrice,
       linesPerDraw: ticket.pricing.linesPerDraw,
-      amountPerDraw: ticket.pricing.amountPerDraw,
-      totalAmount: ticket.pricing.totalAmount,
+      stakePerDraw: ticket.pricing.amountPerDraw,
+      totalStake: ticket.pricing.totalAmount,
     },
     boards: ticket.boards.map((b) => ({
       boardNo: b.boardNo,
@@ -31,8 +31,8 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
       lineCount: b.derived.expandedLines,
     })),
     progress: {
-      totalDraws: ticket.progress.totalDraws,
-      settledDraws: ticket.progress.settledDraws,
+      settledDrawCount: ticket.progress.settledDraws,
+      voidDrawCount: ticket.voidSummary?.voidedDrawCount ?? 0,
     },
     settlement: ticket.settlement
       ? {
@@ -42,8 +42,8 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
       : undefined,
     voidSummary: ticket.voidSummary
       ? {
-          totalRefundAmount: ticket.voidSummary.totalRefundAmount,
-          voidDrawCount: ticket.voidSummary.voidDrawCount,
+          totalRefundAmount: ticket.voidSummary.totalRefundedAmount,
+          voidDrawCount: ticket.voidSummary.voidedDrawCount,
         }
       : undefined,
     createdAt: ticket.createdAt.toISOString(),

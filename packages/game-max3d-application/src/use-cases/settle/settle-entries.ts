@@ -29,6 +29,9 @@ import { PayoutStatus } from "@megawin/game-max3d/entities";
 import type {
   TicketLineDoc,
   EntryBoardSnapshot,
+  EntryPayout,
+  EntryPayoutTier,
+  EntryResult,
   Max3dPrizeConfig,
   Triplet,
   BasicPrizeTier,
@@ -87,26 +90,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       const now = new Date();
       const settleOps: Array<{
         entryId: string;
-        payout: {
-          winAmount: number;
-          payoutAmount: number;
-          tiers: Array<{
-            tier: BasicPrizeTier | PlusPrizeTier;
-            hitCount: number;
-            unitAmount: number;
-            amount: number;
-          }>;
-          settledAt: Date;
-          payoutStatus?: PayoutStatus;
-        };
+        payout: EntryPayout;
         outcome: string;
-        result: {
-          special: [string, string];
-          first: [string, string, string, string];
-          second: [string, string, string, string, string, string];
-          third: [string, string, string, string, string, string, string, string];
-          publishedAt: Date;
-        };
+        result: EntryResult;
       }> = [];
 
       for (const entry of entries) {
@@ -153,7 +139,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               ticketId: entry.ticketId,
               entryId: entry.id,
               drawId: entry.drawId,
-              drawDate: entry.drawDate,
               financialDate: entry.financialDate,
               boardNo: board.boardNo,
               lineIndex: globalLineIndex,
@@ -185,15 +170,15 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             tiers: payoutTiers,
             settledAt: now,
             payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
-          },
+          } satisfies EntryPayout,
           outcome: hasWin ? "win" : "loss",
           result: {
-            special: result.special as [string, string],
-            first: result.first as [string, string, string, string],
-            second: result.second as [string, string, string, string, string, string],
-            third: result.third as [string, string, string, string, string, string, string, string],
+            special: result.special,
+            first: result.first,
+            second: result.second,
+            third: result.third,
             publishedAt: now,
-          },
+          } satisfies EntryResult,
         });
       }
 
@@ -210,12 +195,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 // Helpers
 // ─────────────────────────────────────────────
 
-function buildPayoutTiers(boardResults: BoardMatchResult[]): Array<{
-  tier: BasicPrizeTier | PlusPrizeTier;
-  hitCount: number;
-  unitAmount: number;
-  amount: number;
-}> {
+function buildPayoutTiers(boardResults: BoardMatchResult[]): EntryPayoutTier[] {
   const tierMap = new Map<string, { hitCount: number; totalAmount: number }>();
 
   for (const br of boardResults) {
@@ -232,12 +212,7 @@ function buildPayoutTiers(boardResults: BoardMatchResult[]): Array<{
     }
   }
 
-  const tiers: Array<{
-    tier: BasicPrizeTier | PlusPrizeTier;
-    hitCount: number;
-    unitAmount: number;
-    amount: number;
-  }> = [];
+  const tiers: EntryPayoutTier[] = [];
 
   for (const [tier, info] of tierMap) {
     tiers.push({

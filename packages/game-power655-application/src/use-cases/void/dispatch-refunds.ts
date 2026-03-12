@@ -33,6 +33,7 @@ import { GameProduct } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 import type { VoidContext } from "./types";
+import type { TicketEntryEntity } from "@megawin/game-power655/entities";
 
 /** Số entries tối đa query mỗi lần gọi Lambda. */
 const BATCH_QUERY_LIMIT = 200;
@@ -148,8 +149,8 @@ export class DispatchRefundBatchUseCase extends InternalUseCase<
  * Mỗi tenant có gateway endpoint riêng (callbackBaseUrl, apiKey) →
  * phải gửi request tách biệt. Group trước giúp chỉ load TenantConfig 1 lần/tenant.
  */
-function groupByTenant(entries: any[]): Map<string, any[]> {
-  const map = new Map<string, any[]>();
+function groupByTenant(entries: TicketEntryEntity[]): Map<string, TicketEntryEntity[]> {
+  const map = new Map<string, TicketEntryEntity[]>();
   for (const entry of entries) {
     const list = map.get(entry.tenantId) ?? [];
     list.push(entry);
@@ -171,11 +172,11 @@ function chunk<T>(arr: T[], size: number): T[][] {
 }
 
 /**
- * Trích xuất entry ID (string) từ entry document.
- * Hỗ trợ cả trường hợp entry.id (mapped) và entry._id (raw MongoDB ObjectId).
+ * Trích xuất entry ID string từ TicketEntryEntity.
+ * entity.id là ObjectId hex string từ application mapper.
  */
-function extractId(entry: any): string {
-  return entry.id ?? entry._id?.toHexString?.() ?? String(entry._id);
+function extractId(entry: TicketEntryEntity): string {
+  return entry.id;
 }
 
 /**
@@ -233,7 +234,7 @@ async function dispatchRefundToTenant(
   tenantConfigRepo: TenantConfigRepository,
   tenantId: string,
   drawId: string,
-  entries: any[]
+  entries: TicketEntryEntity[],
 ): Promise<{
   tenantId: string;
   dispatched: number;
@@ -241,8 +242,8 @@ async function dispatchRefundToTenant(
   totalRefundAmount: number;
 }> {
   const totalRefundAmount = entries.reduce(
-    (s: number, e: any) => s + (e.refund?.refundAmount ?? 0),
-    0
+    (s, e) => s + (e.voidInfo?.refundAmount ?? 0),
+    0,
   );
 
   const gateway = await loadGatewayClient(tenantConfigRepo, tenantId);
@@ -253,7 +254,7 @@ async function dispatchRefundToTenant(
   if (!gateway) {
     console.warn(
       `[dispatch-refund] Tenant ${tenantId}: no callbackBaseUrl. ` +
-        `${entries.length} entries, ${totalRefundAmount} VND (DRY-RUN → auto-dispatched)`
+        `${entries.length} entries, ${totalRefundAmount} VND (DRY-RUN → auto-dispatched)`,
     );
     for (const e of entries) {
       await entryRepo.markRefundDispatched(extractId(e));
@@ -274,7 +275,7 @@ async function dispatchRefundToTenant(
   for (const batch of batches) {
     // Map entries → RefundItem payload cho TenantGateway API.
     // transactionId = "refund-{drawId}-{entryId}" → idempotency key cho gateway.
-    const items: RefundItem[] = batch.map((e: any) => ({
+    const items: RefundItem[] = batch.map((e) => ({
       playerId: e.accountId,
       accountId: e.accountId,
       entryId: extractId(e),
@@ -283,7 +284,7 @@ async function dispatchRefundToTenant(
       transactionId: `refund-${drawId}-${extractId(e)}`,
       gameId: GameProduct.Power655,
       roundId: drawId,
-      ticketNo: e.ticketNo ?? "",
+      ticketNo: e.entrySummary?.ticketNo ?? "",
       description: `Hoàn tiền Power 6/55 kỳ ${drawId} – kỳ bị huỷ`,
     }));
 
@@ -299,20 +300,15 @@ async function dispatchRefundToTenant(
         } else {
           // markRefundFailed ghi error message vào DB → retry ở lần gọi sau
           // (getPendingRefundEntries query cả status = failed).
-          await entryRepo.markRefundFailed(
-            r.entryId,
-            r.error ?? "Tenant returned failed"
-          );
+          await entryRepo.markRefundFailed(r.entryId, r.error ?? "Tenant returned failed");
           failed++;
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Network error / timeout / unexpected exception → toàn bộ chunk failed.
       // Ghi error cho từng entry → retry ở lần gọi sau.
-      const errMsg = err?.message ?? String(err);
-      console.error(
-        `[dispatch-refund] Tenant ${tenantId} batch failed: ${errMsg}`
-      );
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error(`[dispatch-refund] Tenant ${tenantId} batch failed: ${errMsg}`);
       for (const e of batch) {
         await entryRepo.markRefundFailed(extractId(e), errMsg);
       }

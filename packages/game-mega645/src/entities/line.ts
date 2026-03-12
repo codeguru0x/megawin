@@ -8,7 +8,7 @@
  */
 
 import type { PrizeTier } from "./enums";
-import type { MainTuple } from "./types";
+import type { ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
 // Line Match Result
@@ -40,11 +40,14 @@ export interface TicketLineDoc {
   username: string;
 
   /** Tham chiếu đến vé gốc (mega645Tickets._id). */
-  ticketId: unknown;
+  ticketId: string;
   /** Tham chiếu đến entry (mega645TicketEntries._id). */
-  entryId: unknown;
+  entryId: string;
   /** ID kỳ quay. Format: "YYYY-MM-DD.001". */
   drawId: string;
+
+  /** Ngày tài chính "YYYY-MM-DD". */
+  financialDate: ISODateString;
 
   /** Ký hiệu board chứa line ("A".."F"). */
   boardNo: string;
@@ -52,7 +55,7 @@ export interface TicketLineDoc {
   lineIndex: number;
 
   /** 6 số chính, sorted tăng dần. */
-  main: MainTuple;
+  main: string[];
 
   /** Kết quả so khớp line với kết quả quay. */
   matchResult: LineMatchResult;

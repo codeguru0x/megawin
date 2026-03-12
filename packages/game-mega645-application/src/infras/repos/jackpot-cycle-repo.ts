@@ -92,6 +92,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
     endDrawId: string;
     closeReason: JackpotCycleCloseReason;
     finalAmount: number;
+    drawCount: number;
     winners?: JackpotWinnerInfo[];
   }): Promise<void> {
     const now = new Date();
@@ -102,6 +103,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       closedAt: Date;
       closeReason: JackpotCycleCloseReason;
       currentAmount: number;
+      drawCount: number;
       updatedAt: Date;
       winners?: JackpotWinnerInfo[];
     };
@@ -112,6 +114,7 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
       closedAt: now,
       closeReason: input.closeReason,
       currentAmount: input.finalAmount,
+      drawCount: input.drawCount,
       updatedAt: now,
     };
 

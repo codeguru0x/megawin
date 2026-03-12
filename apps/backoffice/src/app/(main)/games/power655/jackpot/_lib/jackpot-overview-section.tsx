@@ -1,16 +1,14 @@
 "use client";
 
 import {
-  ArrowRight,
   CircleDollarSign,
-  Clock,
   Flame,
   Hash,
   Layers,
-  Sparkles,
   Target,
   TrendingUp,
   Trophy,
+  Zap,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -19,8 +17,229 @@ import { cn } from "@/lib/utils";
 import { formatVND, formatVNDCompact } from "@megawin/shared/utils/number";
 import { useJackpotCurrent } from "./use-jackpot";
 
-export function JackpotOverviewSection() {
+// ─── JackpotHeroCard ──────────────────────────────────────────────────────────
+
+/**
+ * Hero card dual jackpot Power 6/55.
+ * Ưu tiên Jackpot 1 (6/6), hiển thị song song Jackpot 2 (5/6+bonus).
+ * Progress bar = tiến trình JP1 đến ngưỡng overflow.
+ * Dùng độc lập — không kèm KPI stats.
+ */
+export function JackpotHeroCard() {
   const { data, isLoading } = useJackpotCurrent();
+
+  if (isLoading) return <Skeleton className="h-[280px] rounded-2xl" />;
+  if (!data) return null;
+
+  const { cycle, config, jackpot1Progress, jackpot2Progress } = data;
+
+  const jp1 = cycle.jackpot1CurrentAmount;
+  const jp2 = cycle.jackpot2CurrentAmount;
+  const overflowThreshold = config.jp1OverflowThreshold;
+
+  // Tiến trình JP1 đến ngưỡng overflow
+  const jp1Pct = overflowThreshold > 0 ? Math.min((jp1 / overflowThreshold) * 100, 110) : 0;
+  const jp1Remaining = Math.max(overflowThreshold - jp1, 0);
+  const isHot = jp1Pct >= 80;
+  const isWarm = jp1Pct >= 50;
+  const isOverflow = jp1 >= overflowThreshold;
+
+  // Tỷ lệ đóng góp (mặc định 90/10)
+  const jp1ContribPct = 90;
+  const jp2ContribPct = 10;
+
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-2xl border-2 p-6",
+        "bg-linear-to-br from-red-50/90 via-orange-50/70 to-amber-50/50",
+        "dark:from-red-950/50 dark:via-orange-950/40 dark:to-amber-950/30",
+        isOverflow
+          ? "border-violet-300 dark:border-violet-700/60"
+          : isHot
+            ? "border-red-300 dark:border-red-800/60"
+            : "border-red-200 dark:border-red-800/50",
+      )}
+    >
+      {/* Decorative orbs */}
+      <div className="pointer-events-none absolute -right-10 -top-10 size-52 rounded-full bg-linear-to-br from-red-300/20 to-orange-300/10 blur-3xl dark:from-red-500/8 dark:to-orange-500/4" />
+      <div className="pointer-events-none absolute -left-8 bottom-0 size-36 rounded-full bg-linear-to-tr from-amber-200/15 to-yellow-200/8 blur-2xl" />
+
+      <div className="relative space-y-5">
+        {/* ── Top row ── */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="flex size-12 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/30">
+              <Trophy className="size-6 text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-red-700/70 dark:text-red-400/60">
+                Power 6/55 Dual Jackpot — Cycle #{cycle.cycleNo}
+              </p>
+              {/* JP1 primary — dòng lớn */}
+              <div className="mt-0.5 flex items-baseline gap-2">
+                <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                  Jackpot 1
+                </span>
+                <span className="text-3xl font-extrabold tabular-nums tracking-tight text-red-900 dark:text-red-100">
+                  {formatVND(jp1)}
+                </span>
+              </div>
+              {/* JP2 secondary — dòng nhỏ */}
+              <div className="mt-1 flex items-center gap-2">
+                <span className="rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                  Jackpot 2
+                </span>
+                <span className="text-sm font-semibold tabular-nums text-blue-700 dark:text-blue-300">
+                  {formatVND(jp2)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Badges */}
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            {isOverflow && (
+              <Badge className="gap-1 border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-300">
+                <Zap className="size-3" />
+                Overflow
+              </Badge>
+            )}
+            {!isOverflow && isHot && (
+              <Badge className="gap-1 border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/50 dark:text-red-300">
+                <Flame className="size-3" />
+                Nóng
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* ── JP1 overflow progress bar ── */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-medium text-red-800/70 dark:text-red-300/70">
+              Tiến trình đến overflow —{" "}
+              <span className="font-semibold">{formatVNDCompact(overflowThreshold)}</span>
+            </span>
+            <span className="font-bold tabular-nums text-red-900 dark:text-red-200">
+              {jp1Pct.toFixed(1)}%
+            </span>
+          </div>
+          <div className="h-3 w-full overflow-hidden rounded-full bg-red-200/50 dark:bg-red-900/40">
+            <div
+              className="h-full rounded-full transition-all duration-700 ease-out"
+              style={{
+                width: `${Math.min(jp1Pct, 100)}%`,
+                background: isOverflow
+                  ? "linear-gradient(90deg, #8b5cf6, #7c3aed, #6d28d9)"
+                  : isHot
+                    ? "linear-gradient(90deg, #ef4444, #dc2626, #b91c1c)"
+                    : isWarm
+                      ? "linear-gradient(90deg, #f87171, #ef4444, #dc2626)"
+                      : "linear-gradient(90deg, #fca5a5, #f87171, #ef4444)",
+              }}
+            />
+          </div>
+          <div className="flex items-center justify-between text-[11px] text-red-700/60 dark:text-red-400/50">
+            <span>
+              {isOverflow
+                ? `Đã vượt +${formatVNDCompact(jp1 - overflowThreshold)}`
+                : `Còn thiếu ${formatVNDCompact(jp1Remaining)}`}
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                JP1 {jp1ContribPct}%
+              </span>
+              <span className="text-muted-foreground/50">·</span>
+              <span className="rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                JP2 {jp2ContribPct}%
+              </span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── JackpotKpiCards ──────────────────────────────────────────────────────────
+
+/**
+ * 4 KPI cards: tích luỹ kỳ, tổng JP, ngưỡng overflow, seed.
+ * Dùng độc lập — dùng trong trang /operations và /jackpot.
+ */
+export function JackpotKpiCards() {
+  const { data, isLoading } = useJackpotCurrent();
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-[88px] rounded-xl" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const { cycle, config, jackpot1Progress, jackpot2Progress } = data;
+  const jp1 = cycle.jackpot1CurrentAmount;
+  const jp2 = cycle.jackpot2CurrentAmount;
+  const totalJp = jp1 + jp2;
+
+  const jp1Growth =
+    jackpot1Progress.seed > 0
+      ? Math.round(((jp1 - jackpot1Progress.seed) / jackpot1Progress.seed) * 100)
+      : 0;
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <KpiCard
+        icon={Layers}
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
+        label="Tích luỹ liên tiếp"
+        value={`${cycle.drawCount} kỳ`}
+        sub={`Từ ${cycle.startDrawId || "—"}`}
+      />
+      <KpiCard
+        icon={CircleDollarSign}
+        iconBg="bg-red-100 dark:bg-red-900/50"
+        iconColor="text-red-600 dark:text-red-400"
+        label="Tổng Jackpot (JP1 + JP2)"
+        value={formatVNDCompact(totalJp)}
+        sub={`JP1: ${formatVNDCompact(jp1)} · JP2: ${formatVNDCompact(jp2)}`}
+        trend={jp1Growth > 0 ? { value: jp1Growth, isPositive: true } : undefined}
+      />
+      <KpiCard
+        icon={Target}
+        iconBg="bg-violet-100 dark:bg-violet-900/50"
+        iconColor="text-violet-600 dark:text-violet-400"
+        label="Ngưỡng overflow JP1"
+        value={formatVNDCompact(config.jp1OverflowThreshold)}
+        sub={`Còn ${formatVNDCompact(Math.max(config.jp1OverflowThreshold - jp1, 0))}`}
+      />
+      <KpiCard
+        icon={Hash}
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
+        label="Seed JP1 / JP2"
+        value={formatVNDCompact(jackpot1Progress.seed)}
+        sub={`JP2 Seed: ${formatVNDCompact(jackpot2Progress.seed)}`}
+      />
+    </div>
+  );
+}
+
+// ─── JackpotOverviewSection ───────────────────────────────────────────────────
+
+/**
+ * Section đầy đủ = JackpotHeroCard + JackpotKpiCards.
+ * Dùng cho trang /games/power655/jackpot.
+ */
+export function JackpotOverviewSection() {
+  const { isLoading } = useJackpotCurrent();
 
   if (isLoading) {
     return (
@@ -35,263 +254,15 @@ export function JackpotOverviewSection() {
     );
   }
 
-  if (!data) return null;
-
-  const { cycle, config, totalJackpotProgress, jackpot1Progress, jackpot2Progress, nextDraw } =
-    data;
-  const jp1 = cycle.jackpot1Current;
-  const jp2 = cycle.jackpot2Current;
-  const totalJp = jp1 + jp2;
-  const pct = totalJackpotProgress?.percentage ?? 0;
-  const isHot = pct >= 80;
-  const isWarm = pct >= 50;
-
-  const jp1Ratio = config.splitRatios?.tier1 ?? 90;
-  const jp2Ratio = 100 - jp1Ratio;
-
   return (
     <div className="space-y-4">
-      {/* Hero Jackpot Card */}
-      <div
-        className={cn(
-          "relative overflow-hidden rounded-2xl border-2 p-6",
-          "bg-linear-to-br from-red-50/90 via-orange-50/70 to-amber-50/50",
-          "dark:from-red-950/50 dark:via-orange-950/40 dark:to-amber-950/30",
-          isHot ? "border-red-300 dark:border-red-800/60" : "border-red-200 dark:border-red-800/50",
-        )}
-      >
-        {/* Decorative orbs */}
-        <div className="pointer-events-none absolute -right-10 -top-10 size-48 rounded-full bg-linear-to-br from-red-300/25 to-orange-300/15 blur-3xl dark:from-red-500/10 dark:to-orange-500/5" />
-        <div className="pointer-events-none absolute -left-8 bottom-0 size-32 rounded-full bg-linear-to-tr from-amber-200/20 to-yellow-200/10 blur-2xl dark:from-amber-600/10 dark:to-yellow-600/5" />
-
-        <div className="relative space-y-5">
-          {/* Top row */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="flex size-12 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-lg shadow-red-500/30">
-                <Trophy className="size-6 text-white" />
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wider text-red-700/70 dark:text-red-400/60">
-                  Power 6/55 Jackpot — Cycle #{cycle.cycleNo}
-                </p>
-                <div className="mt-1 flex flex-wrap items-center gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <span className="rounded-md bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-900/50 dark:text-red-300">
-                      JP1
-                    </span>
-                    <span className="text-2xl font-extrabold tabular-nums tracking-tight text-red-900 dark:text-red-100">
-                      {formatVND(jp1)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-                      JP2
-                    </span>
-                    <span className="text-2xl font-extrabold tabular-nums tracking-tight text-blue-900 dark:text-blue-100">
-                      {formatVND(jp2)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex shrink-0 items-center gap-2">
-              {isHot && (
-                <Badge className="gap-1 border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950/50 dark:text-red-300">
-                  <Flame className="size-3" />
-                  Nóng
-                </Badge>
-              )}
-              {nextDraw?.splitCycleIntent && (
-                <Badge className="gap-1 border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-950/50 dark:text-violet-300">
-                  <Sparkles className="size-3" />
-                  Sắp chia
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          {/* Total progress bar */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-red-800/70 dark:text-red-300/70">
-                Tiến trình đến ngưỡng chia —{" "}
-                {formatVNDCompact(totalJackpotProgress?.threshold ?? 0)}
-              </span>
-              <span className="font-bold tabular-nums text-red-900 dark:text-red-200">
-                {pct.toFixed(1)}%
-              </span>
-            </div>
-            <div className="h-3 w-full overflow-hidden rounded-full bg-red-200/60 dark:bg-red-900/50">
-              <div
-                className="h-full rounded-full transition-all duration-700 ease-out"
-                style={{
-                  width: `${Math.min(pct, 100)}%`,
-                  background: isHot
-                    ? "linear-gradient(90deg, #ef4444, #dc2626, #b91c1c)"
-                    : isWarm
-                      ? "linear-gradient(90deg, #f87171, #ef4444, #dc2626)"
-                      : "linear-gradient(90deg, #fca5a5, #f87171, #ef4444)",
-                }}
-              />
-            </div>
-            <div className="flex items-center justify-between text-[11px] text-red-700/60 dark:text-red-400/50">
-              <span>
-                Còn {formatVNDCompact(totalJackpotProgress?.remaining ?? 0)} để đạt ngưỡng
-              </span>
-              {nextDraw && (
-                <span className="flex items-center gap-1">
-                  <Clock className="size-3" />
-                  Kỳ tiếp: #{nextDraw.drawNo} —{" "}
-                  {new Date(nextDraw.drawTime).toLocaleTimeString("vi-VN", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* JP1 / JP2 individual progress bars */}
-          <div className="grid gap-3 sm:grid-cols-2">
-            <JpProgressBar
-              label="JP1"
-              labelColor="text-red-700 dark:text-red-400"
-              barColor="bg-red-500"
-              current={jp1}
-              seed={jackpot1Progress.seed}
-            />
-            <JpProgressBar
-              label="JP2"
-              labelColor="text-blue-700 dark:text-blue-400"
-              barColor="bg-blue-500"
-              current={jp2}
-              seed={jackpot2Progress.seed}
-            />
-          </div>
-
-          {/* Split contribution ratios */}
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-medium uppercase tracking-wider text-red-700/50 dark:text-red-400/40">
-              Đóng góp mỗi kỳ
-            </span>
-            <div className="flex flex-1 items-center gap-1.5">
-              <div className="flex h-5 flex-1 overflow-hidden rounded-full bg-white/50 dark:bg-white/10">
-                <div
-                  className="flex h-full items-center justify-center rounded-l-full bg-red-400/80 text-[9px] font-bold text-white"
-                  style={{ width: `${jp1Ratio}%` }}
-                >
-                  JP1 {jp1Ratio}%
-                </div>
-                <div
-                  className="flex h-full items-center justify-center rounded-r-full bg-blue-400/80 text-[9px] font-bold text-white"
-                  style={{ width: `${jp2Ratio}%` }}
-                >
-                  JP2 {jp2Ratio}%
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {config.splitRatios &&
-                Object.entries(config.splitRatios).map(([tier, ratio]) => (
-                  <span
-                    key={tier}
-                    className="rounded-md bg-white/70 px-2 py-0.5 text-[10px] font-medium text-red-800/80 dark:bg-white/10 dark:text-red-300/80"
-                  >
-                    {tier.replace("tier", "T")}: {ratio as number}%
-                  </span>
-                ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* KPI Stats Grid */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          icon={Layers}
-          iconBg="bg-blue-100 dark:bg-blue-900/50"
-          iconColor="text-blue-600 dark:text-blue-400"
-          label="Tích luỹ liên tiếp"
-          value={`${cycle.drawCount} kỳ`}
-          sub={`Từ ${cycle.startDrawId}`}
-        />
-        <KpiCard
-          icon={CircleDollarSign}
-          iconBg="bg-emerald-100 dark:bg-emerald-900/50"
-          iconColor="text-emerald-600 dark:text-emerald-400"
-          label="Tổng JP"
-          value={formatVNDCompact(totalJp)}
-          sub={`JP1: ${formatVNDCompact(jp1)} · JP2: ${formatVNDCompact(jp2)}`}
-        />
-        <KpiCard
-          icon={TrendingUp}
-          iconBg="bg-purple-100 dark:bg-purple-900/50"
-          iconColor="text-purple-600 dark:text-purple-400"
-          label="Ngưỡng chia"
-          value={formatVNDCompact(totalJackpotProgress?.threshold ?? 0)}
-          sub={`Còn ${formatVNDCompact(totalJackpotProgress?.remaining ?? 0)}`}
-        />
-        <KpiCard
-          icon={Target}
-          iconBg="bg-amber-100 dark:bg-amber-900/50"
-          iconColor="text-amber-600 dark:text-amber-400"
-          label="Seed JP1 / JP2"
-          value={formatVNDCompact(jackpot1Progress.seed)}
-          sub={`JP2: ${formatVNDCompact(jackpot2Progress.seed)}`}
-        />
-      </div>
+      <JackpotHeroCard />
+      <JackpotKpiCards />
     </div>
   );
 }
 
-function JpProgressBar({
-  label,
-  labelColor,
-  barColor,
-  current,
-  seed,
-}: {
-  label: string;
-  labelColor: string;
-  barColor: string;
-  current: number;
-  seed: number;
-}) {
-  const growth = seed > 0 ? ((current - seed) / seed) * 100 : 0;
-
-  return (
-    <div className="rounded-lg bg-white/60 px-3 py-2.5 dark:bg-white/5">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className={cn("text-[11px] font-bold", labelColor)}>{label}</span>
-        <span className="text-[10px] tabular-nums text-muted-foreground">
-          {formatVNDCompact(current)}
-          {growth > 0 && (
-            <span className="ml-1 text-emerald-600 dark:text-emerald-400">
-              +{growth.toFixed(0)}%
-            </span>
-          )}
-        </span>
-      </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted/40">
-        <div
-          className={cn("h-full rounded-full transition-all duration-500", barColor)}
-          style={{
-            width: seed > 0 ? `${Math.min((current / (seed * 10)) * 100, 100)}%` : "0%",
-          }}
-        />
-      </div>
-      <div className="mt-1 flex items-center justify-between text-[10px] text-muted-foreground">
-        <span>Seed: {formatVNDCompact(seed)}</span>
-        <span className="flex items-center gap-0.5">
-          <ArrowRight className="size-2.5" />
-          {formatVNDCompact(current)}
-        </span>
-      </div>
-    </div>
-  );
-}
+// ─── KpiCard (internal) ───────────────────────────────────────────────────────
 
 function KpiCard({
   icon: Icon,

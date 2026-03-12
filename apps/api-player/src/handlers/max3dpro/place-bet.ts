@@ -6,7 +6,7 @@
  * - multiNumber: chọn 3-20 bộ ba số, hệ thống tạo C(n,2) cặp.
  * - multiDigit: chọn 3 chữ số đầu + 3 chữ số sau, hệ thống expand.
  *
- * Play type: straight | quickPick.
+ * Play type: straight (duy nhất). QuickPick không được chấp nhận từ client.
  */
 
 import { withPlayerAuth } from "@megawin/auth";
@@ -40,15 +40,13 @@ export const max3dproBoardSchema = z
   .object({
     boardNo: z.enum(VALID_BOARD_NOS),
     playMode: z.enum([PlayMode.MultiNumber, PlayMode.MultiDigit]),
-    playType: z.enum([PlayType.Straight, PlayType.QuickPick]),
+    playType: z.enum([PlayType.Straight]),
     triplets: z.array(max3dproTripletSchema).optional(),
     frontDigits: z.array(max3dproDigitSchema).optional(),
     backDigits: z.array(max3dproDigitSchema).optional(),
   })
   .superRefine((board, ctx) => {
-    const { playMode, playType } = board;
-
-    if (playType === PlayType.QuickPick) return;
+    const { playMode } = board;
 
     if (playMode === PlayMode.MultiNumber) {
       const result = multiNumberSelectionSchema.safeParse({

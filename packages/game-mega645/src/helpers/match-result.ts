@@ -11,11 +11,15 @@
  */
 
 import type { PrizeTier } from "../entities/enums";
-import type { LineValue, MainTuple } from "../entities/types";
+import type { LineValue } from "../entities/types";
 import { determineTier, type LineMatchResult } from "../rules/prize-tiers";
 
 export interface DrawResultForMatch {
-  winningMain: MainTuple;
+  /**
+   * 6 số trúng thưởng theo thứ tự quay gốc.
+   * readonly string[] — tương thích cả string[] (từ DB) và test data.
+   */
+  winningMain: readonly string[];
 }
 
 /**
@@ -24,7 +28,7 @@ export interface DrawResultForMatch {
  *
  * @returns Số lượng số trùng (0-6).
  */
-function countMainMatches(lineMain: MainTuple, winMain: MainTuple): number {
+function countMainMatches(lineMain: readonly string[], winMain: readonly string[]): number {
   const winSet = new Set(winMain);
   let count = 0;
   for (const n of lineMain) {

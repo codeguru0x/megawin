@@ -87,6 +87,12 @@ export interface EntryPayout {
   payoutError?: string;
 }
 
+/** Snapshot kết quả kỳ quay ghi vào entry khi settle. */
+export interface EntryResult extends Max3dDrawResult {
+  /** Thời điểm công bố kết quả. */
+  publishedAt: Date;
+}
+
 /** Thông tin huỷ entry. Set khi void. */
 export interface EntryVoidInfo {
   /** Số tiền gốc trước khi huỷ. */
@@ -128,15 +134,11 @@ export interface TicketEntryDoc {
 
   /** ID kỳ quay entry tham gia. Format: "YYYY-MM-DD.NNN". */
   drawId: string;
-  /** Thời điểm quay của kỳ mà entry tham gia. */
-  drawTime: Date;
-  /** Ngày quay "YYYY-MM-DD". */
-  drawDate: ISODateString;
   /** Ngày tài chính, dùng cho báo cáo. Thường = drawDate. */
   financialDate: ISODateString;
 
   /** Snapshot thông tin đại lý tại thời điểm tạo entry. */
-  tenantSnapshot: EntryTenantSnapshot;
+  tenant: EntryTenantSnapshot;
 
   /** Tổng lines = Σ(board.lineCount). Mỗi line = 1 lần dự thưởng × unitPrice. */
   lineCount: number;

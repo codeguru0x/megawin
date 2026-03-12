@@ -1,21 +1,9 @@
 "use client";
 
-import {
-  CalendarClock,
-  CircleDollarSign,
-  Filter,
-  Ticket,
-  TrendingUp,
-} from "lucide-react";
+import { CalendarClock, CircleDollarSign, Filter, Ticket, TrendingUp } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -33,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { KenoStatCard } from "@/components/games/keno/stat-card";
-import { formatVND } from "@/components/games/keno/side-bet-badge";
+import { formatVNDCompact as formatVND, formatNumber } from "@megawin/shared/utils/number";
 
 const DAILY_REPORTS = [
   {
@@ -132,9 +120,7 @@ export default function KenoFinancialReportsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Báo cáo theo ngày</CardTitle>
-          <CardDescription>
-            Thống kê doanh thu và trả thưởng Keno theo từng ngày.
-          </CardDescription>
+          <CardDescription>Thống kê doanh thu và trả thưởng Keno theo từng ngày.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -171,11 +157,9 @@ export default function KenoFinancialReportsPage() {
                 {DAILY_REPORTS.map((row) => (
                   <TableRow key={row.date}>
                     <TableCell className="font-mono">{row.date}</TableCell>
+                    <TableCell className="text-right tabular-nums">{row.drawCount}</TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {row.drawCount}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {row.totalTickets.toLocaleString("vi-VN")}
+                      {formatNumber(row.totalTickets)}
                     </TableCell>
                     <TableCell className="text-right tabular-nums font-medium">
                       {formatVND(row.totalRevenue)}

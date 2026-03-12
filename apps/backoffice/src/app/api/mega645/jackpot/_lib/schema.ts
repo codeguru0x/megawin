@@ -1,11 +1,22 @@
 import { z } from "zod";
+import { Pagination } from "@megawin/shared/constants/pagination";
 
 export const jackpotHistoryQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  size: z.coerce.number().int().min(1).max(100).default(20),
+  page: z.coerce.number().int().min(1).max(Pagination.Max.Page).default(Pagination.Default.Page),
+  size: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(Pagination.Max.Size)
+    .default(Pagination.Default.Size),
 });
 
 export const jackpotCyclesQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  size: z.coerce.number().int().min(1).max(50).default(10),
+  page: z.coerce.number().int().min(1).max(Pagination.Max.Page).default(Pagination.Default.Page),
+  size: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(Pagination.Max.Size)
+    .default(Pagination.Default.Size),
 });

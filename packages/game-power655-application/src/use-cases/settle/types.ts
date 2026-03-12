@@ -104,12 +104,6 @@ export interface PowerSettleConfig {
   companyRate: number;
 
   /**
-   * Tỷ lệ hoa hồng mặc định cho đại lý (0-1).
-   * Override per tenant qua TenantConfig.
-   */
-  defaultCommissionRate: number;
-
-  /**
    * Snapshot cycleNo tại thời điểm PrepareSettle.
    * Dùng bởi FinalizeSettle để updateCycleStats đúng cycle.
    */
@@ -169,19 +163,29 @@ export interface SettleFinancials {
 
   /**
    * Phần đóng góp vào quỹ Jackpot 1 kỳ này (VND).
-   * = totalJackpotContribution × jp1Ratio.
+   * Công thức: round(totalJackpotContribution × jp1Ratio).
+   *   → Nếu overflow kích hoạt (!JP1 winner, có JP2 winner, JP1 > threshold):
+   *      -= jp1Overflow → JP1 cap tại threshold.
+   *   → Nếu có JP1 winner: overflow KHÔNG kích hoạt; contribution đầy đủ.
+   *   → Nếu không ai trúng: contribution đầy đủ, JP1 tiếp tục vượt threshold bình thường.
    */
   jackpot1Contribution: number;
 
   /**
    * Phần đóng góp vào quỹ Jackpot 2 kỳ này (VND).
-   * = totalJackpotContribution × jp2Ratio + jp1Overflow.
+   * Công thức cơ bản: totalJackpotContribution - jackpot1Contribution.
+   *   → Nếu overflow kích hoạt (!JP1 winner, có JP2 winner, JP1 > threshold):
+   *      += jp1Overflow → JP2 winner nhận thêm phần vượt ngưỡng.
+   *   → Nếu không ai trúng hoặc có JP1 winner: = rawJp2 bình thường, không có overflow.
    */
   jackpot2Contribution: number;
 
   /**
-   * Phần tràn từ JP1 sang JP2 (VND) — khi JP1 vượt jp1OverflowThreshold.
-   * = max(0, jp1AfterContribution - jp1OverflowThreshold).
+   * Lượng tiền vượt ngưỡng JP1 (VND) kỳ này.
+   * = max(0, jp1CurrentAmount + rawJp1 - jp1OverflowThreshold).
+   * Chỉ > 0 khi overflow kích hoạt: !hasJackpot1Winner && hasJackpot2Winner && JP1 > threshold.
+   * Khi > 0: đã cộng vào jackpot2Contribution (trao cho JP2 winner kỳ này).
+   * = 0 nếu: có JP1 winner, hoặc không có JP2 winner, hoặc JP1 ≤ threshold.
    */
   jp1Overflow: number;
 
@@ -212,7 +216,7 @@ export interface SettleFinancials {
  * Step Function chỉ dùng 1 biến `$settleCtx` — không cần `$financials` riêng.
  *
  * Power 6/55 có DUAL JACKPOT (JP1 + JP2), nên context chứa
- * jp1OpeningAmount và jp2OpeningAmount thay vì single jackpotOpeningAmount.
+ * jp1CurrentAmount và jp2CurrentAmount thay vì single jackpotOpeningAmount.
  *
  * ┌──────────────────────────────────────────────────────────────────┐
  * │ PrepareSettle     → SettleContext (financials = undefined)      │
@@ -258,26 +262,26 @@ export interface SettleContext {
   result: PowerDrawResult;
 
   /**
-   * Số tiền Jackpot 1 đầu kỳ (VND) — đọc từ active JackpotCycle.jackpot1Current.
+   * Số tiền Jackpot 1 hiện tại đầu kỳ (VND) — đọc từ active JackpotCycle.jackpot1CurrentAmount.
    *
-   * Ý nghĩa: giá trị JP1 TRƯỚC khi tính contribution kỳ này.
+   * Ý nghĩa: giá trị JP1 pool ĐANG tích luỹ, TRƯỚC khi cộng contribution kỳ này.
    * Dùng bởi:
    *   - CalculateFinancials: tính contribution, overflow
    *   - BuildReport: ghi jackpotTracking.openingAmount
    *   - FinalizeSettle: tính totalJackpotPrize cho JP1 winner
    */
-  jp1OpeningAmount: number;
+  jp1CurrentAmount: number;
 
   /**
-   * Số tiền Jackpot 2 đầu kỳ (VND) — đọc từ active JackpotCycle.jackpot2Current.
+   * Số tiền Jackpot 2 hiện tại đầu kỳ (VND) — đọc từ active JackpotCycle.jackpot2CurrentAmount.
    *
-   * Ý nghĩa: giá trị JP2 TRƯỚC khi tính contribution kỳ này.
+   * Ý nghĩa: giá trị JP2 pool ĐANG tích luỹ, TRƯỚC khi cộng contribution kỳ này.
    * Dùng bởi:
    *   - CalculateFinancials: tính contribution
    *   - BuildReport: ghi jackpotTracking.openingAmount
    *   - FinalizeSettle: tính totalJackpotPrize cho JP2 winner
    */
-  jp2OpeningAmount: number;
+  jp2CurrentAmount: number;
 
   /**
    * Bảng giải thưởng cố định — snapshot từ GlobalConfig tại thời điểm PrepareSettle.
@@ -294,8 +298,7 @@ export interface SettleContext {
 
   /**
    * Cấu hình tài chính settle — snapshot tại thời điểm PrepareSettle.
-   * Gồm jp1/jp2 seed amounts, ratios, overflow threshold,
-   * companyRate, defaultCommissionRate.
+   * Gồm jp1/jp2 seed amounts, ratios, overflow threshold, companyRate.
    *
    * Dùng bởi CalculateFinancials để tính phân bổ doanh thu + dual jackpot.
    */

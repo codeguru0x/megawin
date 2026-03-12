@@ -5,70 +5,43 @@
  * - Active cycle (số kỳ tích lũy, currentAmount, peakAmount)
  * - Cấu hình ngưỡng chia (splitThreshold, splitRatios)
  * - Progress bar (current / threshold)
- * - Kỳ tiếp theo (có phải kỳ chia dự kiến không)
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
-import { JackpotCycleStatus } from "@megawin/game-lotto535/entities";
-import { DrawRepository } from "../../infras/repos/draw-repo";
-import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { GetJackpotCurrentOutput } from "./dto/jackpot.dto";
+import { AppException } from "@megawin/app-core/use-cases";
 
-export class GetJackpotCurrentUseCase extends NextApiUseCase<
-  void,
-  GetJackpotCurrentOutput
-> {
+export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCurrentOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();
-  private readonly drawRepo = new DrawRepository();
-  private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(): Promise<GetJackpotCurrentOutput> {
-    const [activeCycle, globalConfig] = await Promise.all([
-      this.cycleRepo.getActiveCycle(),
-      this.getGlobalConfig.run(),
-    ]);
+    const [activeCycle] = await Promise.all([this.cycleRepo.getActiveCycle()]);
 
-    const config = globalConfig.jackpot;
+    if (!activeCycle) {
+      throw AppException.notFound("Không tìm thấy jackpot hiện tại. Hãy tạo kỳ mới đầu tiên.");
+    }
 
-    const currentAmount = activeCycle?.currentAmount ?? config.seedAmount;
-    const threshold = config.splitThreshold;
+    const currentAmount = activeCycle.currentAmount;
+    const threshold = activeCycle.config.splitThreshold;
     const percentage = Math.min((currentAmount / threshold) * 100, 100);
 
-    const nextScheduled = await this.drawRepo.getNextScheduledDraw();
-
-    const splitCycleIntent = nextScheduled
-      ? currentAmount >= threshold && nextScheduled.drawNo === 2
-      : false;
-
     return {
-      cycle: activeCycle
-        ? {
-            cycleNo: activeCycle.cycleNo,
-            status: activeCycle.status,
-            seedAmount: activeCycle.seedAmount,
-            currentAmount: activeCycle.currentAmount,
-            peakAmount: activeCycle.peakAmount,
-            totalContribution: activeCycle.totalContribution,
-            drawCount: activeCycle.drawCount,
-            startDrawId: activeCycle.startDrawId,
-            startedAt: activeCycle.startedAt.toISOString(),
-            lastSettledDrawId: activeCycle.lastSettledDrawId,
-          }
-        : {
-            cycleNo: 0,
-            status: JackpotCycleStatus.Active,
-            seedAmount: config.seedAmount,
-            currentAmount: config.seedAmount,
-            peakAmount: config.seedAmount,
-            totalContribution: 0,
-            drawCount: 0,
-            startDrawId: "",
-            startedAt: new Date().toISOString(),
-          },
+      cycle: {
+        cycleNo: activeCycle.cycleNo,
+        status: activeCycle.status,
+        seedAmount: activeCycle.seedAmount,
+        currentAmount: currentAmount,
+        peakAmount: activeCycle.peakAmount,
+        totalContribution: activeCycle.totalContribution,
+        drawCount: activeCycle.drawCount,
+        startDrawId: activeCycle.startDrawId,
+        startedAt: activeCycle.startedAt.toISOString(),
+        lastSettledDrawId: activeCycle.lastSettledDrawId,
+      },
       config: {
-        splitThreshold: config.splitThreshold,
-        splitRatios: config.splitRatios,
+        splitThreshold: threshold,
+        splitRatios: activeCycle.config.splitRatios,
       },
       progress: {
         current: currentAmount,
@@ -76,14 +49,6 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<
         percentage: Math.round(percentage * 100) / 100,
         remaining: Math.max(threshold - currentAmount, 0),
       },
-      nextDraw: nextScheduled
-        ? {
-            drawId: nextScheduled.drawId,
-            drawNo: nextScheduled.drawNo,
-            drawTime: nextScheduled.drawTime.toISOString(),
-            splitCycleIntent,
-          }
-        : undefined,
     };
   }
 }

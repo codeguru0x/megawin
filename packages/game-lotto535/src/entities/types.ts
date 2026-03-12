@@ -85,18 +85,6 @@ export const VALID_SPECIAL_NUMBER_SET: ReadonlySet<string> = new Set(
 // Tuple & Value Types
 // ─────────────────────────────────────────────
 
-/**
- * Tuple 5 số chính dạng string zero-padded.
- * Khi lưu player selection: sorted tăng dần (canonical form).
- * Khi lưu draw result: giữ nguyên thứ tự quay (draw order).
- */
-export type MainTuple = readonly [string, string, string, string, string];
-
-/**
- * Số đặc biệt – 1 string zero-padded "01"-"12".
- */
-export type Special = string;
-
 // ─────────────────────────────────────────────
 // Board Selection (user input)
 // ─────────────────────────────────────────────
@@ -129,10 +117,10 @@ export interface BoardSelection {
  */
 export interface LineValue {
   /** 5 số chính string, sorted tăng dần (canonical form). */
-  main: MainTuple;
+  main: string[];
 
   /** 1 số đặc biệt string. */
-  special: Special;
+  special: string;
 }
 
 // ─────────────────────────────────────────────

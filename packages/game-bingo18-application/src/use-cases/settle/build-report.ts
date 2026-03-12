@@ -25,19 +25,13 @@ export interface BuildReportResult {
   gameCoreReportPublished: boolean;
 }
 
-export class BuildReportUseCase extends InternalUseCase<
-  SettleContext,
-  BuildReportResult
-> {
+export class BuildReportUseCase extends InternalUseCase<SettleContext, BuildReportResult> {
   private readonly entryRepo = new EntryRepository();
   private readonly reportRepo = new ReportRepository();
 
   protected async execute(input: SettleContext): Promise<BuildReportResult> {
     const { drawId, financialDate, financials } = input;
-    const tenantAggs = await this.entryRepo.aggregateTenantReport(
-      drawId,
-      financialDate
-    );
+    const tenantAggs = await this.entryRepo.aggregateTenantReport(drawId, financialDate);
 
     for (const t of tenantAggs) {
       await this.reportRepo.upsertTenantDailyReport({
@@ -57,10 +51,7 @@ export class BuildReportUseCase extends InternalUseCase<
       });
     }
 
-    const playerAggs = await this.entryRepo.aggregatePlayerReport(
-      drawId,
-      financialDate
-    );
+    const playerAggs = await this.entryRepo.aggregatePlayerReport(drawId, financialDate);
 
     for (const p of playerAggs) {
       await this.reportRepo.upsertPlayerDailyReport({
@@ -102,7 +93,7 @@ export class BuildReportUseCase extends InternalUseCase<
           totalPayout,
           totalWin,
           totalCommission: financials.totalAgentCommission,
-          companyTake: financials.profit,
+          companyTake: financials.companyTake,
           jackpotContribution: 0,
         },
       });

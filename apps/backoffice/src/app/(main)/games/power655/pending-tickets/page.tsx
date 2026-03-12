@@ -17,13 +17,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -233,20 +227,7 @@ const PLAY_TYPE_LABELS: Record<string, string> = {
   quickPick: "Tự chọn",
 };
 
-function fmtVND(n: number) {
-  if (n >= 1_000_000_000)
-    return (
-      (n / 1_000_000_000).toLocaleString("vi-VN", {
-        maximumFractionDigits: 2,
-      }) + " tỷ"
-    );
-  if (n >= 1_000_000)
-    return (
-      (n / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 }) +
-      " tr"
-    );
-  return n.toLocaleString("vi-VN") + " ₫";
-}
+import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils/number";
 
 type SelectedEntry = (typeof MOCK_TENANT_ENTRIES)[number];
 
@@ -254,26 +235,12 @@ export default function Power655PendingTicketsPage() {
   const [selectedTenant, setSelectedTenant] = useState<string | null>(null);
   const [entryDetail, setEntryDetail] = useState<SelectedEntry | null>(null);
 
-  const selectedTenantData = MOCK_TENANT_SUMMARY.find(
-    (t) => t.tenantId === selectedTenant
-  );
+  const selectedTenantData = MOCK_TENANT_SUMMARY.find((t) => t.tenantId === selectedTenant);
 
-  const totalEntries = MOCK_TENANT_SUMMARY.reduce(
-    (s, t) => s + t.entryCount,
-    0
-  );
-  const totalAmount = MOCK_TENANT_SUMMARY.reduce(
-    (s, t) => s + t.totalAmount,
-    0
-  );
-  const totalLines = MOCK_TENANT_SUMMARY.reduce(
-    (s, t) => s + t.totalLines,
-    0
-  );
-  const totalPlayers = MOCK_TENANT_SUMMARY.reduce(
-    (s, t) => s + t.playerCount,
-    0
-  );
+  const totalEntries = MOCK_TENANT_SUMMARY.reduce((s, t) => s + t.entryCount, 0);
+  const totalAmount = MOCK_TENANT_SUMMARY.reduce((s, t) => s + t.totalAmount, 0);
+  const totalLines = MOCK_TENANT_SUMMARY.reduce((s, t) => s + t.totalLines, 0);
+  const totalPlayers = MOCK_TENANT_SUMMARY.reduce((s, t) => s + t.playerCount, 0);
 
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
@@ -287,8 +254,7 @@ export default function Power655PendingTicketsPage() {
             Power 6/55 — Vé chờ quay
           </h1>
           <p className="text-xs text-muted-foreground">
-            Thống kê vé tham gia phiên đang chờ quay kết quả, phân bổ theo
-            agent/tenant.
+            Thống kê vé tham gia phiên đang chờ quay kết quả, phân bổ theo agent/tenant.
           </p>
         </div>
       </div>
@@ -301,12 +267,9 @@ export default function Power655PendingTicketsPage() {
               <CalendarClock className="size-6 text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Kỳ quay sắp tới
-              </p>
+              <p className="text-sm font-medium text-muted-foreground">Kỳ quay sắp tới</p>
               <p className="text-lg font-bold">
-                {PENDING_DRAW.drawDate} – {PENDING_DRAW.schedule} (
-                {PENDING_DRAW.drawTime})
+                {PENDING_DRAW.drawDate} – {PENDING_DRAW.schedule} ({PENDING_DRAW.drawTime})
               </p>
             </div>
           </div>
@@ -331,8 +294,8 @@ export default function Power655PendingTicketsPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Tổng vé tham gia"
-          value={totalEntries.toLocaleString("vi-VN")}
-          description={`${totalLines.toLocaleString("vi-VN")} lines`}
+          value={formatNumber(totalEntries)}
+          description={`${formatNumber(totalLines)} lines`}
           icon={Ticket}
         />
         <StatCard
@@ -349,7 +312,7 @@ export default function Power655PendingTicketsPage() {
         />
         <StatCard
           title="Người chơi"
-          value={totalPlayers.toLocaleString("vi-VN")}
+          value={formatNumber(totalPlayers)}
           description="Đang chờ kết quả"
           icon={Users}
         />
@@ -362,15 +325,9 @@ export default function Power655PendingTicketsPage() {
             <SelectValue placeholder="Chọn kỳ quay" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="2026-02-24-T3">
-              2026-02-24 T3 (18:00) – Đang bán
-            </SelectItem>
-            <SelectItem value="2026-02-26-T5">
-              2026-02-26 T5 (18:00) – Đã lên lịch
-            </SelectItem>
-            <SelectItem value="2026-02-28-T7">
-              2026-02-28 T7 (18:00) – Đã lên lịch
-            </SelectItem>
+            <SelectItem value="2026-02-24-T3">2026-02-24 T3 (18:00) – Đang bán</SelectItem>
+            <SelectItem value="2026-02-26-T5">2026-02-26 T5 (18:00) – Đã lên lịch</SelectItem>
+            <SelectItem value="2026-02-28-T7">2026-02-28 T7 (18:00) – Đã lên lịch</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -380,9 +337,7 @@ export default function Power655PendingTicketsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Phân bổ theo đại lý</CardTitle>
-            <CardDescription>
-              Chọn đại lý để xem chi tiết từng vé tham gia kỳ quay
-            </CardDescription>
+            <CardDescription>Chọn đại lý để xem chi tiết từng vé tham gia kỳ quay</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto rounded-md border">
@@ -413,24 +368,20 @@ export default function Power655PendingTicketsPage() {
                             <Building2 className="size-4 text-muted-foreground" />
                             <div>
                               <p className="font-medium">{t.tenantName}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {t.tenantId}
-                              </p>
+                              <p className="text-xs text-muted-foreground">{t.tenantId}</p>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="text-right tabular-nums font-medium">
-                          {t.entryCount.toLocaleString("vi-VN")}
+                          {formatNumber(t.entryCount)}
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
-                          {t.totalLines.toLocaleString("vi-VN")}
+                          {formatNumber(t.totalLines)}
                         </TableCell>
                         <TableCell className="text-right tabular-nums font-medium">
                           {fmtVND(t.totalAmount)}
                         </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {t.playerCount}
-                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{t.playerCount}</TableCell>
                         <TableCell className="text-right tabular-nums text-muted-foreground">
                           {fmtVND(t.avgAmountPerPlayer)}
                         </TableCell>
@@ -452,10 +403,10 @@ export default function Power655PendingTicketsPage() {
               <span className="text-sm font-medium">Tổng cộng</span>
               <div className="flex items-center gap-6 text-sm tabular-nums">
                 <span>
-                  <strong>{totalEntries.toLocaleString("vi-VN")}</strong> vé
+                  <strong>{formatNumber(totalEntries)}</strong> vé
                 </span>
                 <span>
-                  <strong>{totalLines.toLocaleString("vi-VN")}</strong> lines
+                  <strong>{formatNumber(totalLines)}</strong> lines
                 </span>
                 <span>
                   <strong>{fmtVND(totalAmount)}</strong>
@@ -473,26 +424,19 @@ export default function Power655PendingTicketsPage() {
       {selectedTenant && selectedTenantData && (
         <>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedTenant(null)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setSelectedTenant(null)}>
               <ArrowLeft className="mr-1 size-4" />
               Quay lại
             </Button>
             <span className="text-sm text-muted-foreground">
-              {selectedTenantData.tenantName} –{" "}
-              {selectedTenantData.entryCount.toLocaleString("vi-VN")} vé –{" "}
+              {selectedTenantData.tenantName} – {formatNumber(selectedTenantData.entryCount)} vé –{" "}
               {fmtVND(selectedTenantData.totalAmount)}
             </span>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>
-                Chi tiết vé – {selectedTenantData.tenantName}
-              </CardTitle>
+              <CardTitle>Chi tiết vé – {selectedTenantData.tenantName}</CardTitle>
               <CardDescription>
                 Danh sách entries chờ quay thưởng kỳ {PENDING_DRAW.drawId}
               </CardDescription>
@@ -501,10 +445,7 @@ export default function Power655PendingTicketsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <div className="relative w-56">
                   <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Mã vé hoặc người chơi..."
-                    className="pl-8"
-                  />
+                  <Input placeholder="Mã vé hoặc người chơi..." className="pl-8" />
                 </div>
                 <Select defaultValue="all">
                   <SelectTrigger className="w-36">
@@ -552,18 +493,14 @@ export default function Power655PendingTicketsPage() {
                   <TableBody>
                     {MOCK_TENANT_ENTRIES.map((entry) => (
                       <TableRow key={entry.entryId}>
-                        <TableCell className="font-mono text-sm">
-                          {entry.ticketNo}
-                        </TableCell>
+                        <TableCell className="font-mono text-sm">{entry.ticketNo}</TableCell>
                         <TableCell>{entry.playerName}</TableCell>
-                        <TableCell className="text-center">
-                          {entry.boards.length}
-                        </TableCell>
+                        <TableCell className="text-center">{entry.boards.length}</TableCell>
                         <TableCell className="text-center tabular-nums">
                           {entry.lineCount}
                         </TableCell>
                         <TableCell className="text-right tabular-nums font-medium">
-                          {entry.amount.toLocaleString("vi-VN")} ₫
+                          {formatNumber(entry.amount)} ₫
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge variant="outline">
@@ -594,16 +531,12 @@ export default function Power655PendingTicketsPage() {
       )}
 
       {/* ─── Entry Detail Dialog ─── */}
-      <Dialog
-        open={!!entryDetail}
-        onOpenChange={(open) => !open && setEntryDetail(null)}
-      >
+      <Dialog open={!!entryDetail} onOpenChange={(open) => !open && setEntryDetail(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Chi tiết vé – {entryDetail?.ticketNo}</DialogTitle>
             <DialogDescription>
-              Người chơi: {entryDetail?.playerName} · Entry:{" "}
-              {entryDetail?.entryId}
+              Người chơi: {entryDetail?.playerName} · Entry: {entryDetail?.entryId}
             </DialogDescription>
           </DialogHeader>
           {entryDetail && (
@@ -611,14 +544,12 @@ export default function Power655PendingTicketsPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-lg bg-muted/50 p-3 text-center">
                   <p className="text-xs text-muted-foreground">Lines</p>
-                  <p className="text-lg font-bold tabular-nums">
-                    {entryDetail.lineCount}
-                  </p>
+                  <p className="text-lg font-bold tabular-nums">{entryDetail.lineCount}</p>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3 text-center">
                   <p className="text-xs text-muted-foreground">Tiền cược</p>
                   <p className="text-lg font-bold tabular-nums">
-                    {entryDetail.amount.toLocaleString("vi-VN")} ₫
+                    {formatNumber(entryDetail.amount)} ₫
                   </p>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3 text-center">
@@ -632,10 +563,7 @@ export default function Power655PendingTicketsPage() {
               <div className="space-y-3">
                 <h4 className="text-sm font-medium">Boards</h4>
                 {entryDetail.boards.map((board) => (
-                  <div
-                    key={board.boardNo}
-                    className="rounded-lg border p-3 space-y-2"
-                  >
+                  <div key={board.boardNo} className="rounded-lg border p-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="font-mono">

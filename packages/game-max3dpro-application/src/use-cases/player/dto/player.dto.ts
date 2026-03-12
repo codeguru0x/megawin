@@ -202,10 +202,6 @@ export interface PlayerEntryInfo {
   id: string;
   /** ID kỳ quay. */
   drawId: string;
-  /** Ngày quay. */
-  drawDate: string;
-  /** Giờ quay. */
-  drawTime: string;
   /** Trạng thái entry. */
   status: string;
   /** Tiền cược entry (VND). */

@@ -27,21 +27,17 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
   protected async execute(input: SettleContext): Promise<SettleFinancials> {
     const { drawId, config } = input;
 
-    const [tenantAgg, payoutSummary, basicPrizeSummary, sideBetPrizeSummary] = await Promise.all([
-      this.entryRepo.aggregateRevenueByTenant(drawId),
+    const [{ totalRevenue, totalAgentCommission }, payoutSummary, basicPrizeSummary, sideBetPrizeSummary] = await Promise.all([
+      this.entryRepo.aggregateTotalRevenue(drawId),
       this.entryRepo.aggregateSettledPayoutSummary(drawId),
       this.entryRepo.aggregateBasicPrizeSummary(drawId),
       this.entryRepo.aggregateSideBetPrizeSummary(drawId),
     ]);
 
     const fin = calculateKenoDrawFinancials({
-      totalRevenue: tenantAgg.reduce((sum, t) => sum + t.revenue, 0),
+      totalRevenue,
       totalPrizes: payoutSummary.totalPrizes,
-      tenantRevenues: tenantAgg.map((t) => ({
-        tenantId: t.tenantId,
-        revenue: t.revenue,
-        commission: t.commission,
-      })),
+      totalAgentCommission,
     });
 
     // ── Build settleSummary cho player API ──

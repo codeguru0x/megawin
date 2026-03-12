@@ -73,13 +73,22 @@ function OperationsContent() {
     effectiveDrawId,
     onSelectDraw,
     drawNotFound,
+    noDrawAvailable,
     isHistorical,
     isActiveForRefresh,
     opsParams,
   } = useDrawContext();
   const [createOpen, setCreateOpen] = useState(false);
 
-  if (drawNotFound) return <DrawNotFound />;
+  if (drawNotFound || noDrawAvailable)
+    return (
+      <DrawNotFound
+        noData={noDrawAvailable}
+        onCreateOpen={() => setCreateOpen(true)}
+        createOpen={createOpen}
+        setCreateOpen={setCreateOpen}
+      />
+    );
 
   return (
     <div className="@container/main flex flex-col gap-6">
@@ -116,8 +125,8 @@ function OperationsContent() {
       {/* Create draw dialog */}
       <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
 
-      {/* Zone 1: Jackpot overview (hero card only) */}
-      <JackpotHeroCard />
+      {/* Zone 1: Jackpot overview (hero card only) — chỉ hiển thị khi có kỳ đang chọn */}
+      {draw && <JackpotHeroCard />}
 
       {/* Zone 2: Draw management — command center + dialogs */}
       <DrawManagementSection />
@@ -136,36 +145,71 @@ function OperationsContent() {
 
 // ─── Draw Not Found ──────────────────────────────────────────────────────────
 
-function DrawNotFound() {
+function DrawNotFound({
+  noData = false,
+  onCreateOpen,
+  createOpen,
+  setCreateOpen,
+}: {
+  noData?: boolean;
+  onCreateOpen?: () => void;
+  createOpen?: boolean;
+  setCreateOpen?: (open: boolean) => void;
+}) {
   return (
     <div className="@container/main flex flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-emerald-600 shadow-sm">
-          <Radio className="size-4.5 text-white" />
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-emerald-500 to-emerald-600 shadow-sm">
+            <Radio className="size-4.5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">
+              Lotto 5/35 — Vận hành
+            </h1>
+            <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">
-            Lotto 5/35 — Vận hành
-          </h1>
-          <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
-        </div>
+        {noData && onCreateOpen && (
+          <div className="flex items-center gap-3">
+            <Button size="sm" className="gap-2" onClick={onCreateOpen}>
+              <Plus className="size-4" />
+              Tạo kỳ quay
+            </Button>
+          </div>
+        )}
       </div>
+
+      {noData && createOpen !== undefined && setCreateOpen && (
+        <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
+      )}
 
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center">
         <div className="flex size-12 items-center justify-center rounded-full bg-muted">
           <SearchX className="size-6 text-muted-foreground" />
         </div>
-        <h2 className="mt-4 text-base font-semibold text-foreground">Không tìm thấy kỳ quay</h2>
+        <h2 className="mt-4 text-base font-semibold text-foreground">
+          {noData ? "Chưa có kỳ quay nào" : "Không tìm thấy kỳ quay"}
+        </h2>
         <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-          Kỳ quay được yêu cầu không tồn tại hoặc đã bị xóa khỏi hệ thống.
+          {noData
+            ? "Hệ thống chưa có kỳ quay nào được tạo. Hãy tạo kỳ quay đầu tiên để bắt đầu vận hành."
+            : "Kỳ quay được yêu cầu không tồn tại hoặc đã bị xóa khỏi hệ thống."}
         </p>
         <div className="mt-5 flex items-center gap-3">
           <Button variant="outline" size="sm" asChild>
             <Link href="/games/lotto535/draws">Lịch sử kỳ quay</Link>
           </Button>
-          <Button size="sm" asChild>
-            <Link href="/games/lotto535/operations">Về trang vận hành</Link>
-          </Button>
+          {noData ? (
+            <Button size="sm" className="gap-2" onClick={onCreateOpen}>
+              <Plus className="size-4" />
+              Tạo kỳ quay
+            </Button>
+          ) : (
+            <Button size="sm" asChild>
+              <Link href="/games/lotto535/operations">Về trang vận hành</Link>
+            </Button>
+          )}
         </div>
       </div>
     </div>

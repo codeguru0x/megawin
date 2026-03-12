@@ -22,15 +22,8 @@ export interface DrawFinancialInput {
   totalRevenue: number;
   /** Tổng tiền thưởng = Σ(entry.payout.winAmount) cho entries thắng (VND). */
   totalPrizes: number;
-  /** Doanh thu và hoa hồng phân theo từng đại lý. */
-  tenantRevenues: Array<{
-    /** ID đại lý. */
-    tenantId: string;
-    /** Doanh thu riêng đại lý = Σ(entry.amount) thuộc tenant (VND). */
-    revenue: number;
-    /** Tổng hoa hồng tính sẵn = Σ(entry.tenant.commissionAmount) (VND). */
-    commission: number;
-  }>;
+  /** Tổng hoa hồng đại lý (VND). Công thức: Σ(tenantAgg[].commission). */
+  totalAgentCommission: number;
 }
 
 /**
@@ -69,9 +62,7 @@ export interface DrawFinancialResult {
  * @returns Kết quả tài chính gồm profit
  */
 export function calculateKenoDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
-  const { totalRevenue, totalPrizes, tenantRevenues } = input;
-
-  const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
+  const { totalRevenue, totalPrizes, totalAgentCommission } = input;
 
   const profit = totalRevenue - totalPrizes - totalAgentCommission;
 

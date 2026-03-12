@@ -248,6 +248,7 @@ export interface TicketDoc {
 
   /** Thời điểm tạo vé (= thời điểm place-bet). */
   createdAt: Date;
+
   /** Thời điểm cập nhật gần nhất (settle summary, void summary...). */
   updatedAt: Date;
 }

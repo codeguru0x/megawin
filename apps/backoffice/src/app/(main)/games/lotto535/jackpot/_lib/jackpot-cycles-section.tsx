@@ -15,11 +15,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   Table,
   TableBody,
@@ -29,25 +25,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import {
-  formatVND,
-  formatVNDCompact,
-  formatNumber,
-} from "@megawin/shared/utils/number";
+import { formatVND, formatVNDCompact, formatNumber } from "@megawin/shared/utils/number";
+import { Pagination } from "@megawin/shared/constants/pagination";
 import {
   useJackpotCycles,
   type JackpotCycleSummary,
   type JackpotWinnerSummary,
 } from "./use-jackpot";
 import { JackpotCycleCloseReason } from "@megawin/game-lotto535/entities";
+import { parseUsername, toUsername } from "@megawin/identity-application/shared";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = Pagination.Default.Size;
 
 export function JackpotCyclesSection() {
   const [page, setPage] = useState(1);
   const { data, isLoading, isFetching } = useJackpotCycles({
     page,
-    size: PAGE_SIZE,
   });
 
   const cycles = data?.cycles ?? [];
@@ -134,7 +127,7 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
             "border-amber-200 bg-amber-50/30 dark:border-amber-800/50 dark:bg-amber-950/10",
           isWinner &&
             "border-green-200 bg-green-50/30 dark:border-green-800/50 dark:bg-green-950/10",
-          !isSplit && !isWinner && "bg-card"
+          !isSplit && !isWinner && "bg-card",
         )}
       >
         <CollapsibleTrigger asChild>
@@ -147,7 +140,7 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
                   ? "bg-linear-to-br from-green-400 to-emerald-500 shadow-md shadow-green-500/20"
                   : isSplit
                     ? "bg-linear-to-br from-amber-400 to-orange-500 shadow-md shadow-amber-500/20"
-                    : "bg-muted"
+                    : "bg-muted",
               )}
             >
               {isWinner ? (
@@ -168,12 +161,8 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
                 <CycleReasonBadge reason={cycle.closeReason} />
               </div>
               <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
-                <span className="tabular-nums">
-                  {cycle.drawCount} kỳ tích lũy
-                </span>
-                <span className="tabular-nums">
-                  Đỉnh: {formatVNDCompact(cycle.peakAmount)}
-                </span>
+                <span className="tabular-nums">{cycle.drawCount} kỳ tích lũy</span>
+                <span className="tabular-nums">Đỉnh: {formatVNDCompact(cycle.peakAmount)}</span>
                 {cycle.closedAt && (
                   <span>
                     {new Date(cycle.closedAt).toLocaleDateString("vi-VN", {
@@ -193,14 +182,12 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
                   "text-lg font-bold tabular-nums",
                   isWinner
                     ? "text-green-700 dark:text-green-400"
-                    : "text-amber-700 dark:text-amber-400"
+                    : "text-amber-700 dark:text-amber-400",
                 )}
               >
                 {formatVNDCompact(cycle.currentAmount)}
               </p>
-              <p className="text-[10px] text-muted-foreground">
-                {formatVND(cycle.currentAmount)}
-              </p>
+              <p className="text-[10px] text-muted-foreground">{formatVND(cycle.currentAmount)}</p>
             </div>
 
             <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
@@ -211,25 +198,14 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
           <div className="space-y-4 border-t px-4 pb-4 pt-4">
             {/* Summary stats */}
             <div className="grid gap-2 sm:grid-cols-4">
-              <StatMini
-                label="Seed khởi điểm"
-                value={formatVND(cycle.seedAmount)}
-              />
-              <StatMini
-                label="Tổng tích lũy"
-                value={formatVND(cycle.totalContribution)}
-              />
-              <StatMini
-                label="Đỉnh cao nhất"
-                value={formatVND(cycle.peakAmount)}
-              />
+              <StatMini label="Seed khởi điểm" value={formatVND(cycle.seedAmount)} />
+              <StatMini label="Tổng tích lũy" value={formatVND(cycle.totalContribution)} />
+              <StatMini label="Đỉnh cao nhất" value={formatVND(cycle.peakAmount)} />
               <StatMini label="Số kỳ" value={formatNumber(cycle.drawCount)} />
             </div>
 
             {/* Split tier detail */}
-            {isSplit && cycle.splitDetail && (
-              <SplitDetailTable detail={cycle.splitDetail} />
-            )}
+            {isSplit && cycle.splitDetail && <SplitDetailTable detail={cycle.splitDetail} />}
 
             {/* Winners */}
             {isWinner && cycle.winners && cycle.winners.length > 0 && (
@@ -248,9 +224,7 @@ function StatMini({ label, value }: { label: string; value: string }) {
       <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </p>
-      <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">
-        {value}
-      </p>
+      <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground">{value}</p>
     </div>
   );
 }
@@ -275,11 +249,7 @@ function CycleReasonBadge({ reason }: { reason?: string }) {
   return <Badge variant="outline">Manual</Badge>;
 }
 
-function SplitDetailTable({
-  detail,
-}: {
-  detail: NonNullable<JackpotCycleSummary["splitDetail"]>;
-}) {
+function SplitDetailTable({ detail }: { detail: NonNullable<JackpotCycleSummary["splitDetail"]> }) {
   const tiers = Object.entries(detail.tierAllocations);
 
   return (
@@ -292,15 +262,9 @@ function SplitDetailTable({
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
               <TableHead className="font-semibold">Tier</TableHead>
-              <TableHead className="text-right font-semibold">
-                Số người trúng
-              </TableHead>
-              <TableHead className="text-right font-semibold">
-                Tổng phân bổ
-              </TableHead>
-              <TableHead className="text-right font-semibold">
-                Bonus / người
-              </TableHead>
+              <TableHead className="text-right font-semibold">Số người trúng</TableHead>
+              <TableHead className="text-right font-semibold">Tổng phân bổ</TableHead>
+              <TableHead className="text-right font-semibold">Bonus / người</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -354,10 +318,10 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">
-                {w.username ?? w.accountId}
+                {parseUsername(w.username ?? "")?.playerExternalId ?? w.username}
               </p>
               <p className="text-xs text-muted-foreground">
-                Đại lý: {w.tenantName ?? w.tenantId} · Entry: {w.entryId}
+                Đại lý: {w.tenantId} · Entry: {w.entryId}
               </p>
             </div>
             <p className="text-lg font-bold tabular-nums text-green-700 dark:text-green-400">

@@ -13,10 +13,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { DrawEntity } from "@megawin/game-power655/entities";
-import type {
-  PlayerGetCurrentDrawOutput,
-  PlayerDrawInfo,
-} from "./dto/player.dto";
+import type { PlayerGetCurrentDrawOutput, PlayerDrawInfo } from "./dto/player.dto";
 
 const PLAYER_STATUSES = [DrawStatus.SalesOpen, DrawStatus.SalesClosed];
 
@@ -34,22 +31,19 @@ export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<
 
   /** @inheritdoc */
   protected async execute(): Promise<PlayerGetCurrentDrawOutput> {
-    const [activeDraws, lastSettled, activeCycle, globalConfig] =
-      await Promise.all([
-        this.drawRepo.getActiveDraws(PLAYER_STATUSES),
-        this.drawRepo.getLatestSettledDraw(),
-        this.cycleRepo.getActiveCycle(),
-        this.getGlobalConfig.run(),
-      ]);
+    const [activeDraws, lastSettled, activeCycle, globalConfig] = await Promise.all([
+      this.drawRepo.getActiveDraws(PLAYER_STATUSES),
+      this.drawRepo.getLatestSettledDraw(),
+      this.cycleRepo.getActiveCycle(),
+      this.getGlobalConfig.run(),
+    ]);
 
     const jp1Current =
-      activeCycle?.jackpot1Current ?? globalConfig.jackpot.jackpot1.seedAmount;
+      activeCycle?.jackpot1CurrentAmount ?? globalConfig.jackpot.jackpot1.seedAmount;
     const jp2Current =
-      activeCycle?.jackpot2Current ?? globalConfig.jackpot.jackpot2.seedAmount;
+      activeCycle?.jackpot2CurrentAmount ?? globalConfig.jackpot.jackpot2.seedAmount;
 
-    const mapped = activeDraws.map((d) =>
-      mapPlayerDraw(d, jp1Current, jp2Current)
-    );
+    const mapped = activeDraws.map((d) => mapPlayerDraw(d, jp1Current, jp2Current));
 
     return {
       currentDraw: mapped[0] ?? null,
@@ -70,11 +64,7 @@ export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<
   }
 }
 
-function mapPlayerDraw(
-  draw: DrawEntity,
-  jp1Current: number,
-  jp2Current: number
-): PlayerDrawInfo {
+function mapPlayerDraw(draw: DrawEntity, jp1Current: number, jp2Current: number): PlayerDrawInfo {
   return {
     drawId: draw.drawId,
     drawDate: draw.drawDate,

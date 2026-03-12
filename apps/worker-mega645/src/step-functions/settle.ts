@@ -131,7 +131,7 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Task",
       Resource: lambdaArn("settle-calculate-financials"),
       Arguments: "{% $settleCtx %}",
-      Assign: { settleCtx: "{% $merge($settleCtx, { 'financials': $states.result }) %}" },
+      Assign: { settleCtx: "{% $merge([$settleCtx, { 'financials': $states.result }]) %}" },
       Next: "CheckJackpotWinner",
       Retry: LAMBDA_RETRY,
     },

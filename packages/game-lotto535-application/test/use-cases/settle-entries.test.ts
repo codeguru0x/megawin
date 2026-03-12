@@ -10,7 +10,7 @@ import { matchLine, matchLines } from "@megawin/game-lotto535/helpers/match-resu
 import { expandBoardToLines } from "@megawin/game-lotto535/helpers/expand-lines";
 import { calculateLineCount, combination } from "@megawin/game-lotto535/rules/play-types";
 import { PrizeTier, PlayType } from "@megawin/game-lotto535/entities/enums";
-import type { LineValue, MainTuple } from "@megawin/game-lotto535/entities/types";
+import type { LineValue } from "@megawin/game-lotto535/entities/types";
 
 // ─────────────────────────────────────────────
 // determineTier
@@ -72,13 +72,13 @@ describe("Lotto 5/35 – buildPrizeAmountMap", () => {
 
 describe("Lotto 5/35 – matchLine", () => {
   const drawResult = {
-    winningMain: ["01", "05", "10", "20", "30"] as MainTuple,
+    winningMain: ["01", "05", "10", "20", "30"],
     winningSpecial: "07",
   };
 
   it("5 chính + đặc biệt → Jackpot", () => {
     const line: LineValue = {
-      main: ["01", "05", "10", "20", "30"] as MainTuple,
+      main: ["01", "05", "10", "20", "30"],
       special: "07",
     };
     const r = matchLine(line, drawResult);
@@ -89,7 +89,7 @@ describe("Lotto 5/35 – matchLine", () => {
 
   it("5 chính, không đặc biệt → Tier1", () => {
     const line: LineValue = {
-      main: ["01", "05", "10", "20", "30"] as MainTuple,
+      main: ["01", "05", "10", "20", "30"],
       special: "03",
     };
     const r = matchLine(line, drawResult);
@@ -100,7 +100,7 @@ describe("Lotto 5/35 – matchLine", () => {
 
   it("4 chính + đặc biệt → Tier2", () => {
     const line: LineValue = {
-      main: ["01", "05", "10", "20", "35"] as MainTuple,
+      main: ["01", "05", "10", "20", "35"],
       special: "07",
     };
     const r = matchLine(line, drawResult);
@@ -110,7 +110,7 @@ describe("Lotto 5/35 – matchLine", () => {
 
   it("4 chính → Tier3", () => {
     const line: LineValue = {
-      main: ["01", "05", "10", "20", "35"] as MainTuple,
+      main: ["01", "05", "10", "20", "35"],
       special: "03",
     };
     expect(matchLine(line, drawResult).tier).toBe(PrizeTier.Tier3);
@@ -118,7 +118,7 @@ describe("Lotto 5/35 – matchLine", () => {
 
   it("3 chính + đặc biệt → Tier4", () => {
     const line: LineValue = {
-      main: ["01", "05", "10", "33", "35"] as MainTuple,
+      main: ["01", "05", "10", "33", "35"],
       special: "07",
     };
     expect(matchLine(line, drawResult).tier).toBe(PrizeTier.Tier4);
@@ -126,7 +126,7 @@ describe("Lotto 5/35 – matchLine", () => {
 
   it("3 chính → Tier5", () => {
     const line: LineValue = {
-      main: ["01", "05", "10", "33", "35"] as MainTuple,
+      main: ["01", "05", "10", "33", "35"],
       special: "03",
     };
     expect(matchLine(line, drawResult).tier).toBe(PrizeTier.Tier5);
@@ -134,27 +134,27 @@ describe("Lotto 5/35 – matchLine", () => {
 
   it("2 chính + đặc biệt → Consolation", () => {
     const line: LineValue = {
-      main: ["01", "05", "33", "34", "35"] as MainTuple,
+      main: ["01", "05", "33", "34", "35"],
       special: "07",
     };
     expect(matchLine(line, drawResult).tier).toBe(PrizeTier.Consolation);
   });
 
   it("0 chính + đặc biệt → Consolation", () => {
-    const line: LineValue = { main: ["02", "03", "04", "06", "08"] as MainTuple, special: "07" };
+    const line: LineValue = { main: ["02", "03", "04", "06", "08"], special: "07" };
     expect(matchLine(line, drawResult).tier).toBe(PrizeTier.Consolation);
   });
 
   it("2 chính, không đặc biệt → null", () => {
     const line: LineValue = {
-      main: ["01", "05", "33", "34", "35"] as MainTuple,
+      main: ["01", "05", "33", "34", "35"],
       special: "03",
     };
     expect(matchLine(line, drawResult).tier).toBeNull();
   });
 
   it("0 chính, 0 đặc biệt → null", () => {
-    const line: LineValue = { main: ["02", "03", "04", "06", "08"] as MainTuple, special: "03" };
+    const line: LineValue = { main: ["02", "03", "04", "06", "08"], special: "03" };
     expect(matchLine(line, drawResult).tier).toBeNull();
   });
 });
@@ -165,16 +165,16 @@ describe("Lotto 5/35 – matchLine", () => {
 
 describe("Lotto 5/35 – matchLines (batch)", () => {
   const drawResult = {
-    winningMain: ["01", "05", "10", "20", "30"] as MainTuple,
+    winningMain: ["01", "05", "10", "20", "30"],
     winningSpecial: "07",
   };
 
   it("nhiều lines cho kết quả aggregate đúng", () => {
     const lines: LineValue[] = [
-      { main: ["01", "05", "10", "20", "30"] as MainTuple, special: "07" },
-      { main: ["01", "05", "10", "20", "30"] as MainTuple, special: "03" },
-      { main: ["01", "05", "10", "20", "35"] as MainTuple, special: "07" },
-      { main: ["02", "03", "04", "06", "08"] as MainTuple, special: "03" },
+      { main: ["01", "05", "10", "20", "30"], special: "07" },
+      { main: ["01", "05", "10", "20", "30"], special: "03" },
+      { main: ["01", "05", "10", "20", "35"], special: "07" },
+      { main: ["02", "03", "04", "06", "08"], special: "03" },
     ];
     const r = matchLines(lines, drawResult);
     expect(r.totalLines).toBe(4);
@@ -187,8 +187,8 @@ describe("Lotto 5/35 – matchLines (batch)", () => {
 
   it("tất cả lines không trúng → winningLines = 0", () => {
     const lines: LineValue[] = [
-      { main: ["02", "03", "04", "06", "08"] as MainTuple, special: "03" },
-      { main: ["02", "03", "04", "06", "09"] as MainTuple, special: "03" },
+      { main: ["02", "03", "04", "06", "08"], special: "03" },
+      { main: ["02", "03", "04", "06", "09"], special: "03" },
     ];
     const r = matchLines(lines, drawResult);
     expect(r.winningLines).toBe(0);
@@ -329,7 +329,7 @@ describe("Lotto 5/35 – calculateLineCount", () => {
 describe("Lotto 5/35 – Tích hợp Bao 6", () => {
   it("Bao 6: 5 số winning + 1 dư, trúng ĐB → 1 Jackpot + 5 Tier2", () => {
     const drawResult = {
-      winningMain: ["01", "02", "03", "04", "05"] as MainTuple,
+      winningMain: ["01", "02", "03", "04", "05"],
       winningSpecial: "07",
     };
     const lines = expandBoardToLines(PlayType.MainCover, {
@@ -346,7 +346,7 @@ describe("Lotto 5/35 – Tích hợp Bao 6", () => {
 
   it("Bao 6: 5 số winning + 1 dư, không trúng ĐB → 1 Tier1 + 5 Tier3", () => {
     const drawResult = {
-      winningMain: ["01", "02", "03", "04", "05"] as MainTuple,
+      winningMain: ["01", "02", "03", "04", "05"],
       winningSpecial: "07",
     };
     const lines = expandBoardToLines(PlayType.MainCover, {
@@ -368,18 +368,7 @@ describe("Lotto 5/35 – calculateDrawFinancials", () => {
     const result = calculateDrawFinancials({
       totalRevenue: 100_000_000,
       totalFixedPrizes: 5_000_000,
-      tenantRevenues: [
-        {
-          tenantId: "t1",
-          revenue: 60_000_000,
-          commission: 12_000_000,
-        },
-        {
-          tenantId: "t2",
-          revenue: 40_000_000,
-          commission: 8_000_000,
-        },
-      ],
+      totalAgentCommission: 20_000_000,
       companyRate: 0.15,
     });
 
@@ -395,13 +384,7 @@ describe("Lotto 5/35 – calculateDrawFinancials", () => {
     const result = calculateDrawFinancials({
       totalRevenue: 10_000_000,
       totalFixedPrizes: 8_000_000,
-      tenantRevenues: [
-        {
-          tenantId: "t1",
-          revenue: 10_000_000,
-          commission: 2_000_000,
-        },
-      ],
+      totalAgentCommission: 2_000_000,
       companyRate: 0.15,
     });
 
@@ -414,7 +397,7 @@ describe("Lotto 5/35 – calculateDrawFinancials", () => {
     const result = calculateDrawFinancials({
       totalRevenue: 0,
       totalFixedPrizes: 0,
-      tenantRevenues: [],
+      totalAgentCommission: 0,
       companyRate: 0.15,
     });
     expect(result.jackpotContribution).toBe(0);

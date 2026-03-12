@@ -29,23 +29,6 @@ export type {
   PlayerListDrawResultsOutput,
 } from "./dto/player.dto";
 
-export type {
-  PlayerGetCurrentDrawOutput,
-  PlayerDrawInfo,
-  PlayerListTicketsInput,
-  PlayerListPendingTicketsInput,
-  PlayerListCompletedTicketsInput,
-  PlayerListTicketsOutput,
-  PlayerTicketSummary,
-  PlayerGetTicketEntriesInput,
-  PlayerGetTicketEntriesOutput,
-  PlayerEntryInfo,
-  PlayerGetEntryLinesInput,
-  PlayerGetEntryLinesOutput,
-  PlayerLineInfo,
-  TicketSortBy,
-} from "./dto/player.dto";
-
 export type { GetGameConfigPlayerInput } from "./get-game-config-player";
 
 export type {

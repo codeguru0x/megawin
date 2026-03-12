@@ -3,7 +3,8 @@
  * Player đặt cược Max 3D — authed qua Cognito JWT Bearer token.
  *
  * Max 3D nhận bộ ba số (triplets) dạng string "000"-"999".
- * Mỗi board có playMode (basic/plus) và playType (straight/combo3/combo6/quickPick).
+ * Mỗi board có playMode (basic/plus) và playType (straight/combo3/combo6).
+ * QuickPick không được chấp nhận từ client — server không hỗ trợ tự sinh số.
  */
 
 import { withPlayerAuth } from "@megawin/auth";
@@ -25,16 +26,16 @@ export const max3dBoardSchema = z
   .object({
     boardNo: z.enum(VALID_BOARD_NOS),
     playMode: z.enum([PlayMode.Basic, PlayMode.Plus]),
-    playType: z.enum([PlayType.Straight, PlayType.Combo3, PlayType.Combo6, PlayType.QuickPick]),
+    playType: z.enum([PlayType.Straight, PlayType.Combo3, PlayType.Combo6]),
     triplets: z.array(max3dTripletSchema).min(1).max(2),
   })
   .superRefine((board, ctx) => {
     const { playMode, playType, triplets } = board;
 
     if (playMode === PlayMode.Basic) {
-      if (playType !== PlayType.QuickPick && triplets.length !== 1) {
+      if (triplets.length !== 1) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Max 3D Cơ Bản cần chọn đúng 1 bộ ba số.",
           path: ["triplets"],
         });
@@ -42,18 +43,18 @@ export const max3dBoardSchema = z
     }
 
     if (playMode === PlayMode.Plus) {
-      if (playType !== PlayType.QuickPick && triplets.length !== 2) {
+      if (triplets.length !== 2) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: "Max 3D+ cần chọn đúng 2 bộ ba số.",
           path: ["triplets"],
         });
       }
 
-      if (playType !== PlayType.Straight && playType !== PlayType.QuickPick) {
+      if (playType !== PlayType.Straight) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Max 3D+ chỉ hỗ trợ kiểu chơi Straight hoặc QuickPick.",
+          code: "custom",
+          message: "Max 3D+ chỉ hỗ trợ kiểu chơi Straight.",
           path: ["playType"],
         });
       }

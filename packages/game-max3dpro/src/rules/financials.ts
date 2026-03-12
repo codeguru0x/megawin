@@ -14,15 +14,8 @@ export interface DrawFinancialInput {
   totalRevenue: number;
   /** Tổng tiền thưởng cố định = Σ(entry.payout.winAmount). */
   totalFixedPrizes: number;
-  /** Doanh thu và hoa hồng theo từng tenant. */
-  tenantRevenues: Array<{
-    /** ID đại lý. */
-    tenantId: string;
-    /** Doanh thu từ tenant = Σ(entry.amount) cho tenant. */
-    revenue: number;
-    /** Hoa hồng = revenue × commissionRate. */
-    commission: number;
-  }>;
+  /** Tổng hoa hồng đại lý (VND). Công thức: Σ(tenantAgg[].commission). */
+  totalAgentCommission: number;
 }
 
 export interface DrawFinancialResult {
@@ -44,9 +37,7 @@ export interface DrawFinancialResult {
  * profit có thể âm khi tổng giải thưởng + hoa hồng > doanh thu.
  */
 export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
-  const { totalRevenue, totalFixedPrizes, tenantRevenues } = input;
-
-  const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
+  const { totalRevenue, totalFixedPrizes, totalAgentCommission } = input;
 
   const profit = totalRevenue - totalFixedPrizes - totalAgentCommission;
 

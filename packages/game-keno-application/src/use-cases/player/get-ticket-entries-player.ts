@@ -50,7 +50,6 @@ function mapPlayerEntry(entry: EntryEntity): PlayerEntryInfo {
   return {
     id: entry.id,
     drawId: entry.drawId,
-    drawDate: entry.drawDate,
     status: entry.status,
     amount: entry.amount,
     betCount: entry.betCount,

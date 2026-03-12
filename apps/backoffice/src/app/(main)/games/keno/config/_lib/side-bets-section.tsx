@@ -1,14 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  Save,
-  TrendingUp,
-  TrendingDown,
-  Info,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Save, TrendingUp, TrendingDown, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { formatNumber } from "@megawin/shared/utils/number";
 
 import {
   analyzeBigSmallProfitability,
@@ -22,26 +16,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 
-import type {
-  BigSmallPrizes,
-  EvenOddPrizes,
-} from "@megawin/game-keno/entities";
+import type { BigSmallPrizes, EvenOddPrizes } from "@megawin/game-keno/entities";
 
 import type { KenoGameConfig } from "./use-game-config";
 
-const fmt = (n: number) => n.toLocaleString("en-US");
+const fmt = formatNumber;
 
 function HeaderTooltip({
   label,
@@ -55,9 +38,7 @@ function HeaderTooltip({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span
-          className={`inline-flex items-center gap-1 cursor-help ${className ?? ""}`}
-        >
+        <span className={`inline-flex items-center gap-1 cursor-help ${className ?? ""}`}>
           {label}
           <Info className="size-3 text-muted-foreground/60" />
         </span>
@@ -106,20 +87,14 @@ function BigSmallGroup({
   const bsOdds = useMemo(() => getBigSmallOdds(), []);
   const analysis = useMemo(
     () => analyzeBigSmallProfitability(prizes, unitPrice),
-    [prizes, unitPrice]
+    [prizes, unitPrice],
   );
 
-  const worstMargin = Math.min(
-    ...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100)
-  );
+  const worstMargin = Math.min(...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100));
   const allSafe = analysis.tiers.every((t) => t.payoutRatio <= 1);
 
   const marginColor =
-    worstMargin >= 50
-      ? "text-emerald-600"
-      : worstMargin >= 0
-        ? "text-amber-600"
-        : "text-red-600";
+    worstMargin >= 50 ? "text-emerald-600" : worstMargin >= 0 ? "text-amber-600" : "text-red-600";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -128,28 +103,23 @@ function BigSmallGroup({
           type="button"
           className={cn(
             "flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-muted/50",
-            open && "bg-muted/30"
+            open && "bg-muted/30",
           )}
         >
           <div className="flex items-center gap-2">
             <Badge className="bg-amber-500 text-white text-xs">Lớn/Nhỏ</Badge>
-            <span className="text-sm text-muted-foreground">
-              {BS_FIELDS.length} mức thưởng
-            </span>
+            <span className="text-sm text-muted-foreground">{BS_FIELDS.length} mức thưởng</span>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Info className="size-3.5 text-muted-foreground cursor-help" />
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs text-xs">
-                Dựa vào 20 số quay: đếm số lượng số "lớn" (41-80) và "nhỏ"
-                (1-40).
+                Dựa vào 20 số quay: đếm số lượng số "lớn" (41-80) và "nhỏ" (1-40).
               </TooltipContent>
             </Tooltip>
           </div>
           <div className="flex items-center gap-3">
-            <span
-              className={cn("text-xs tabular-nums font-semibold", marginColor)}
-            >
+            <span className={cn("text-xs tabular-nums font-semibold", marginColor)}>
               {allSafe ? (
                 <TrendingUp className="mr-0.5 inline size-3" />
               ) : (
@@ -194,8 +164,7 @@ function BigSmallGroup({
           {BS_FIELDS.map((f, i) => {
             const odds = bsOdds[f.key];
             const tier = analysis.tiers[i];
-            const isOverBreakEven =
-              tier && tier.currentPrize > tier.breakEvenPrize;
+            const isOverBreakEven = tier && tier.currentPrize > tier.breakEvenPrize;
             return (
               <div
                 key={f.key}
@@ -227,7 +196,7 @@ function BigSmallGroup({
                       ? "text-red-600"
                       : tier && tier.payoutRatio > 0.5
                         ? "text-amber-600"
-                        : "text-emerald-600"
+                        : "text-emerald-600",
                   )}
                 >
                   {tier ? `${(tier.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -235,9 +204,7 @@ function BigSmallGroup({
                 <span
                   className={cn(
                     "text-right text-xs tabular-nums",
-                    isOverBreakEven
-                      ? "text-red-600 font-bold"
-                      : "text-muted-foreground"
+                    isOverBreakEven ? "text-red-600 font-bold" : "text-muted-foreground",
                   )}
                 >
                   {tier ? fmt(Math.round(tier.breakEvenPrize)) : "–"}
@@ -259,10 +226,7 @@ function BigSmallGroup({
                 <TrendingDown className="mr-1 inline size-3" />
               )}
               Biên: {worstMargin.toFixed(1)}%{" ~ "}
-              {Math.max(
-                ...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100)
-              ).toFixed(1)}
-              %
+              {Math.max(...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100)).toFixed(1)}%
             </span>
           </div>
         </div>
@@ -284,20 +248,14 @@ function EvenOddGroup({
   const eoOdds = useMemo(() => getEvenOddOdds(), []);
   const analysis = useMemo(
     () => analyzeEvenOddProfitability(prizes, unitPrice),
-    [prizes, unitPrice]
+    [prizes, unitPrice],
   );
 
-  const worstMargin = Math.min(
-    ...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100)
-  );
+  const worstMargin = Math.min(...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100));
   const allSafe = analysis.tiers.every((t) => t.payoutRatio <= 1);
 
   const marginColor =
-    worstMargin >= 50
-      ? "text-emerald-600"
-      : worstMargin >= 0
-        ? "text-amber-600"
-        : "text-red-600";
+    worstMargin >= 50 ? "text-emerald-600" : worstMargin >= 0 ? "text-amber-600" : "text-red-600";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -306,14 +264,12 @@ function EvenOddGroup({
           type="button"
           className={cn(
             "flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-muted/50",
-            open && "bg-muted/30"
+            open && "bg-muted/30",
           )}
         >
           <div className="flex items-center gap-2">
             <Badge className="bg-teal-500 text-white text-xs">Chẵn/Lẻ</Badge>
-            <span className="text-sm text-muted-foreground">
-              {EO_FIELDS.length} mức thưởng
-            </span>
+            <span className="text-sm text-muted-foreground">{EO_FIELDS.length} mức thưởng</span>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Info className="size-3.5 text-muted-foreground cursor-help" />
@@ -324,9 +280,7 @@ function EvenOddGroup({
             </Tooltip>
           </div>
           <div className="flex items-center gap-3">
-            <span
-              className={cn("text-xs tabular-nums font-semibold", marginColor)}
-            >
+            <span className={cn("text-xs tabular-nums font-semibold", marginColor)}>
               {allSafe ? (
                 <TrendingUp className="mr-0.5 inline size-3" />
               ) : (
@@ -371,8 +325,7 @@ function EvenOddGroup({
           {EO_FIELDS.map((f, i) => {
             const odds = eoOdds[f.key];
             const tier = analysis.tiers[i];
-            const isOverBreakEven =
-              tier && tier.currentPrize > tier.breakEvenPrize;
+            const isOverBreakEven = tier && tier.currentPrize > tier.breakEvenPrize;
             return (
               <div
                 key={f.key}
@@ -404,7 +357,7 @@ function EvenOddGroup({
                       ? "text-red-600"
                       : tier && tier.payoutRatio > 0.5
                         ? "text-amber-600"
-                        : "text-emerald-600"
+                        : "text-emerald-600",
                   )}
                 >
                   {tier ? `${(tier.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -412,9 +365,7 @@ function EvenOddGroup({
                 <span
                   className={cn(
                     "text-right text-xs tabular-nums",
-                    isOverBreakEven
-                      ? "text-red-600 font-bold"
-                      : "text-muted-foreground"
+                    isOverBreakEven ? "text-red-600 font-bold" : "text-muted-foreground",
                   )}
                 >
                   {tier ? fmt(Math.round(tier.breakEvenPrize)) : "–"}
@@ -436,10 +387,7 @@ function EvenOddGroup({
                 <TrendingDown className="mr-1 inline size-3" />
               )}
               Biên: {worstMargin.toFixed(1)}%{" ~ "}
-              {Math.max(
-                ...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100)
-              ).toFixed(1)}
-              %
+              {Math.max(...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100)).toFixed(1)}%
             </span>
           </div>
         </div>
@@ -448,11 +396,7 @@ function EvenOddGroup({
   );
 }
 
-export function SideBetsSection({
-  config,
-  onSave,
-  isPending,
-}: SideBetsSectionProps) {
+export function SideBetsSection({ config, onSave, isPending }: SideBetsSectionProps) {
   const [bsPrizes, setBsPrizes] = useState<BigSmallPrizes>({
     ...config.bigSmallPrizes,
   });
@@ -511,16 +455,8 @@ export function SideBetsSection({
       </CardContent>
 
       <CardFooter className="justify-end border-t px-5 py-2.5">
-        <Button
-          type="button"
-          disabled={isPending || !isDirty}
-          onClick={handleSubmit}
-        >
-          {isPending ? (
-            <Spinner className="mr-2" />
-          ) : (
-            <Save className="mr-2 size-4" />
-          )}
+        <Button type="button" disabled={isPending || !isDirty} onClick={handleSubmit}>
+          {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
           Lưu giải thưởng bổ sung
         </Button>
       </CardFooter>

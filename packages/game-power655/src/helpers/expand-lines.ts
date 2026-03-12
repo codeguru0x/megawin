@@ -24,9 +24,8 @@
  */
 
 import { PlayType } from "../entities/enums";
-import type { MainTuple, LineValue, BoardSelection } from "../entities/types";
+import type { LineValue, BoardSelection } from "../entities/types";
 import { POWER655_MAIN_COUNT } from "../entities/types";
-import type { Board } from "../entities/ticket";
 import type { EntryBoardSnapshot } from "../entities/entry";
 
 /**
@@ -76,23 +75,18 @@ function generateCombinations(numbers: string[], k: number): string[][] {
  *
  * @param playType  - Kiểu chơi (Standard, QuickPick, Bao7-18)
  * @param selection - Board selection chứa mainNumbers (mảng N số "01"-"55")
- * @returns Mảng LineValue, mỗi phần tử chứa main: MainTuple (6 số)
+ * @returns Mảng LineValue, mỗi phần tử chứa main: string[] (6 số, sorted tăng dần)
  */
-export function expandBoardToLines(
-  playType: PlayType,
-  selection: BoardSelection
-): LineValue[] {
+export function expandBoardToLines(playType: PlayType, selection: BoardSelection): LineValue[] {
   const sorted = [...selection.mainNumbers].sort();
 
   if (playType === PlayType.Standard || playType === PlayType.QuickPick) {
-    return [{ main: sorted.slice(0, POWER655_MAIN_COUNT) as unknown as MainTuple }];
+    return [{ main: sorted.slice(0, POWER655_MAIN_COUNT) }];
   }
 
   // Bao N: generate all C(N, 6) combinations từ N số player chọn
   const combos = generateCombinations(sorted, POWER655_MAIN_COUNT);
-  return combos.map((combo) => ({
-    main: combo as unknown as MainTuple,
-  }));
+  return combos.map((combo) => ({ main: combo }));
 }
 
 /**
@@ -103,24 +97,20 @@ export function expandBoardToLines(
  * - boardNo: ký hiệu board (A-E) — để map kết quả về đúng board trên UI.
  * - lineIndex: index toàn cục (0-based, liên tục qua các boards) — primary key cho TicketLineDoc.
  *
- * Boards đã void (bị huỷ một phần) được skip hoàn toàn.
+ * Power 6/55 KHÔNG void từng board riêng lẻ — void áp dụng toàn bộ entry.
+ * Input là EntryBoardSnapshot[] (từ entry đã settle), không có isVoid.
  *
- * @param boards - Mảng `Board[]` (từ TicketDoc, có `isVoid`) hoặc `EntryBoardSnapshot[]` (từ EntryDoc, không có `isVoid` → không bao giờ skip)
+ * @param boards - Mảng `EntryBoardSnapshot[]` từ TicketEntryDoc.
  * @returns Flat array of lines, mỗi phần tử gồm LineValue + boardNo + lineIndex
  */
 export function expandAllBoards(
-  boards: Board[] | EntryBoardSnapshot[]
+  boards: EntryBoardSnapshot[],
 ): Array<LineValue & { boardNo: string; lineIndex: number }> {
   const result: Array<LineValue & { boardNo: string; lineIndex: number }> = [];
   let globalIndex = 0;
 
   for (const board of boards) {
-    // Board[] có isVoid; EntryBoardSnapshot không có → không bao giờ skip
-    if ("isVoid" in board && board.isVoid) continue;
-    const selection: BoardSelection = { mainNumbers: board.playType === PlayType.Standard || board.playType === PlayType.QuickPick
-      ? (board as Board).selection?.mainNumbers ?? (board as EntryBoardSnapshot).mainNumbers
-      : (board as Board).selection?.mainNumbers ?? (board as EntryBoardSnapshot).mainNumbers
-    };
+    const selection: BoardSelection = { mainNumbers: board.mainNumbers };
     const lines = expandBoardToLines(board.playType, selection);
     for (const line of lines) {
       result.push({

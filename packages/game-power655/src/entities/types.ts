@@ -33,13 +33,6 @@ export const ALL_MAIN_NUMBERS: readonly string[] = Array.from(
 export const VALID_MAIN_NUMBER_SET: ReadonlySet<string> = new Set(ALL_MAIN_NUMBERS);
 
 /**
- * Bộ 6 số chính dạng string zero-padded.
- * Khi lưu player selection: sorted tăng dần (canonical form).
- * Khi lưu draw result: giữ nguyên thứ tự quay (draw order).
- */
-export type MainTuple = readonly [string, string, string, string, string, string];
-
-/**
  * Số đặc biệt (bonus number).
  * Quay từ 49 quả bóng còn lại sau khi đã rút 6 quả chính.
  * Giá trị: "01"-"55", nhưng luôn KHÁC 6 số winning chính.
@@ -53,8 +46,8 @@ export type BonusNumber = string;
  * Khi chơi Bao, 1 board expand ra nhiều lines (C(N,6) tổ hợp).
  */
 export interface LineValue {
-  /** 6 số chính đã sort tăng dần. */
-  main: MainTuple;
+  /** 6 số chính đã sort tăng dần ("01"-"55"). */
+  main: string[];
 }
 
 /**

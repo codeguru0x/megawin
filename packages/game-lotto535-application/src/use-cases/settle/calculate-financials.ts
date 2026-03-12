@@ -77,11 +77,10 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
     //     → Trả về: tierWinnerCounts, totalFixedPrizes, totalSettled, totalPayoutAmount, totalLines.
     //
     //   tenantAgg: tất cả entries KHÔNG VOID (bao gồm cả scheduled chưa settle nếu có).
-    //     → Tập khác settleSummary vì cần tính revenue + commission trước khi settle xong.
-    //     → Group theo tenantId → revenue (amount) + commission (commissionAmount).
-    const [settleSummary, tenantAgg] = await Promise.all([
+    //     → Group by null → totalRevenue + totalAgentCommission (2 scalars).
+    const [settleSummary, { totalRevenue, totalAgentCommission }] = await Promise.all([
       this.entryRepo.aggregateSettleSummary(drawId),
-      this.entryRepo.aggregateRevenueByTenant(drawId),
+      this.entryRepo.aggregateTotalRevenue(drawId),
     ]);
 
     // ── BƯỚC 2: Tính tài chính kỳ quay ──
@@ -98,13 +97,9 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
     //   → actualCompanyTake = 0, jackpotContribution = 0
     //   (công ty chịu lỗ, Jackpot không nhận đóng góp)
     const financialInput: DrawFinancialInput = {
-      totalRevenue: tenantAgg.reduce((sum, t) => sum + t.revenue, 0),
+      totalRevenue,
       totalFixedPrizes: settleSummary.totalFixedPrizes,
-      tenantRevenues: tenantAgg.map((t) => ({
-        tenantId: t.tenantId,
-        revenue: t.revenue,
-        commission: t.commission,
-      })),
+      totalAgentCommission,
       companyRate: config.companyRate,
     };
 
@@ -178,9 +173,9 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
         totalRevenue: fin.totalRevenue,
         totalFixedPrizes: fin.totalFixedPrizes,
         totalAgentCommission: fin.totalAgentCommission,
-        companyTake: fin.actualCompanyTake,
+        companyTake: fin.companyTake,
         companyTakeRate: config.companyRate,
-        companyTakeMax: fin.companyTake,
+        actualCompanyTake: fin.actualCompanyTake,
         jackpotContribution: fin.jackpotContribution,
       },
       {

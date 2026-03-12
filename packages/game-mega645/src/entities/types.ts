@@ -54,13 +54,6 @@ export const VALID_MAIN_NUMBER_SET: ReadonlySet<string> = new Set(ALL_MAIN_NUMBE
 // Tuple & Value Types
 // ─────────────────────────────────────────────
 
-/**
- * Tuple 6 số chính dạng string zero-padded.
- * Khi lưu player selection: sorted tăng dần (canonical form).
- * Khi lưu draw result: giữ nguyên thứ tự quay (draw order).
- */
-export type MainTuple = readonly [string, string, string, string, string, string];
-
 // ─────────────────────────────────────────────
 // Board Selection (user input)
 // ─────────────────────────────────────────────
@@ -94,8 +87,8 @@ export interface BoardSelection {
  * Đây là đơn vị nhỏ nhất để so sánh với kết quả quay.
  */
 export interface LineValue {
-  /** 6 số chính (tuple cố định 6 phần tử), sorted tăng dần. */
-  main: MainTuple;
+  /** 6 số chính sorted tăng dần ("01"-"45"). */
+  main: string[];
 }
 
 // ─────────────────────────────────────────────

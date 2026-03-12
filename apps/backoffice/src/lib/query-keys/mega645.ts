@@ -17,9 +17,7 @@ export const mega645Keys = {
 
   /** Danh sách kỳ quay (có phân trang / filter) */
   draws: (params?: Record<string, unknown>) =>
-    params
-      ? ([MODULE, "draws", params] as const)
-      : ([MODULE, "draws"] as const),
+    params ? ([MODULE, "draws", params] as const) : ([MODULE, "draws"] as const),
 
   /** Jackpot hiện tại */
   jackpotCurrent: [MODULE, "jackpot-current"] as const,
@@ -32,7 +30,45 @@ export const mega645Keys = {
 
   /** Danh sách chu kỳ jackpot (có phân trang / filter) */
   jackpotCycles: (params?: Record<string, unknown>) =>
+    params ? ([MODULE, "jackpot-cycles", params] as const) : ([MODULE, "jackpot-cycles"] as const),
+
+  // ─── Operations Dashboard ──────────────────────────────────────────────────
+
+  /** Operations dashboard – summary KPI */
+  opsSummary: (params?: Record<string, unknown>) =>
+    params ? ([MODULE, "ops-summary", params] as const) : ([MODULE, "ops-summary"] as const),
+
+  /** Operations dashboard – tenant breakdown */
+  opsTenantBreakdown: (params?: Record<string, unknown>) =>
     params
-      ? ([MODULE, "jackpot-cycles", params] as const)
-      : ([MODULE, "jackpot-cycles"] as const),
+      ? ([MODULE, "ops-tenant-breakdown", params] as const)
+      : ([MODULE, "ops-tenant-breakdown"] as const),
+
+  /** Operations dashboard – number frequency (heatmap 45 số) */
+  opsNumberFrequency: (params?: Record<string, unknown>) =>
+    params
+      ? ([MODULE, "ops-number-frequency", params] as const)
+      : ([MODULE, "ops-number-frequency"] as const),
+
+  /** Operations dashboard – play type distribution */
+  opsPlayTypeDistribution: (params?: Record<string, unknown>) =>
+    params
+      ? ([MODULE, "ops-playtype-dist", params] as const)
+      : ([MODULE, "ops-playtype-dist"] as const),
+
+  /** Operations dashboard – live feed entries cho 1 kỳ quay */
+  opsLiveEntries: (drawId: string) => [MODULE, "ops-live-entries", drawId] as const,
+
+  /** Draw selector – danh sách các kỳ active + scheduled + recent (48h) */
+  opsDrawSelector: [MODULE, "ops-draw-selector"] as const,
+
+  /** Chi tiết 1 kỳ quay (full entity gồm result, financial, jackpot, stats) */
+  drawDetail: (drawId: string) => [MODULE, "draw-detail", drawId] as const,
+
+  /** Operations dashboard – top combos cho 1 kỳ quay */
+  opsTopCombos: (drawId: string) => [MODULE, "ops-top-combos", drawId] as const,
+
+  /** Operations dashboard – winning entries của 1 kỳ quay (cursor-based) */
+  opsWinningEntries: (drawId: string, cursor: string) =>
+    [MODULE, "ops-winning-entries", drawId, cursor] as const,
 };

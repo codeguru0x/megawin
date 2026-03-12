@@ -51,7 +51,7 @@ export class ListDrawsUseCase extends NextApiUseCase<ListDrawsInput, ListDrawsOu
         ? {
             totalFixedPrizes: d.financial.totalFixedPrizes,
             totalAgentCommission: d.financial.totalAgentCommission,
-            companyTake: d.financial.companyTake,
+            companyTake: d.financial.actualCompanyTake,
             jackpotContribution: d.financial.jackpotContribution,
           }
         : undefined,

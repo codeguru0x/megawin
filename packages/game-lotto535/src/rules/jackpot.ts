@@ -42,18 +42,8 @@ export interface DrawFinancialInput {
   /** Tổng tiền trả giải cố định (tier1 → consolation). */
   totalFixedPrizes: number;
 
-  /**
-   * Doanh thu + hoa hồng đã tính sẵn theo từng tenant.
-   * commission.amount đã snapshot lúc place-bet, SUM từ DB.
-   */
-  tenantRevenues: Array<{
-    /** ID tenant/đại lý. */
-    tenantId: string;
-    /** Doanh thu tiền cược từ tenant này trong kỳ (VND). */
-    revenue: number;
-    /** Hoa hồng đã tính sẵn = Σ(entry.tenant.commissionAmount) (VND). */
-    commission: number;
-  }>;
+  /** Tổng hoa hồng đại lý (VND). Công thức: Σ(tenantAgg[].commission). */
+  totalAgentCommission: number;
 
   /** Tỷ lệ công ty thu về (từ gameConfig.rates.companyRate). */
   companyRate: number;
@@ -103,9 +93,7 @@ export interface DrawFinancialResult {
  * - Tích luỹ Jackpot = 0 (không để giá trị âm)
  */
 export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
-  const { totalRevenue, totalFixedPrizes, tenantRevenues, companyRate } = input;
-
-  const totalAgentCommission = tenantRevenues.reduce((sum, t) => sum + t.commission, 0);
+  const { totalRevenue, totalFixedPrizes, totalAgentCommission, companyRate } = input;
 
   const companyTake = Math.round(totalRevenue * companyRate);
 

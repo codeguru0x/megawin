@@ -20,7 +20,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { MainTuple, Special } from "@megawin/game-lotto535/entities";
 import {
   LOTTO535_MAIN_COUNT,
   VALID_MAIN_NUMBER_SET,
@@ -51,8 +50,8 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
     }
 
     // Giữ nguyên thứ tự quay (draw order) — KHÔNG sort
-    const winningMain = input.winningMain as unknown as MainTuple;
-    const winningSpecial = input.winningSpecial as Special;
+    const winningMain = [...input.winningMain];
+    const winningSpecial = input.winningSpecial;
     const publishedAt = nowVN();
 
     if (draw.status === DrawStatus.SalesClosed) {
