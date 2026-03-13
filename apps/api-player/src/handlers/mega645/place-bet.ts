@@ -16,6 +16,7 @@ import { TicketChannel } from "@megawin/game-core/entities";
 import z from "zod";
 import { mega645MainNumberSchema, mega645DrawIdSchema } from "@megawin/game-mega645/schemas";
 import { PlayType, VALID_BOARD_NOS } from "@megawin/game-mega645/entities";
+import { isUnique, isUniqueBy } from "@megawin/shared/utils/array";
 
 // ─── Composite schemas ───
 
@@ -46,7 +47,8 @@ export const mega645BoardSchema = z
     const { playType, selection } = board;
     const mainLen = selection.mainNumbers.length;
 
-    if (new Set(selection.mainNumbers).size !== mainLen) {
+    // Validate uniqueness of main numbers
+    if (!isUnique(selection.mainNumbers)) {
       ctx.addIssue({
         code: "custom",
         message: "Số chính không được trùng nhau.",
@@ -161,15 +163,15 @@ export const mega645PlaceBetBodySchema = z.object({
     .array(mega645DrawIdSchema)
     .min(1)
     .max(6)
-    .refine((ids) => new Set(ids).size === ids.length, {
-      message: "Các drawId không được trùng lặp.",
+    .refine((ids) => isUnique(ids), {
+      message: "Các kỳ quay không được trùng lặp.",
     }),
   boards: z
     .array(mega645BoardSchema)
     .min(1)
     .max(6)
-    .refine((boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length, {
-      message: "Các board không được trùng boardNo.",
+    .refine((boards) => isUniqueBy(boards, (b) => b.boardNo), {
+      message: "Các boardNo không được trùng nhau.",
     }),
 });
 

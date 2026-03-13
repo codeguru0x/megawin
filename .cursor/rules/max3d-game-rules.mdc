@@ -241,6 +241,9 @@ Settle entries: mỗi entry expand boards thành lines → match từng line v�
 prepare-void → void-entries → dispatch-refunds → finalize-void
 ```
 
+Void theo **entry (draw-level)**: khi 1 kỳ bị void → TẤT CẢ entries thuộc kỳ đó bị void.
+Vé multi-draw: chỉ entry của kỳ bị void bị ảnh hưởng, các kỳ khác vẫn tiếp tục bình thường.
+
 ---
 
 ## 9. Codebase Map

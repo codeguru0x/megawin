@@ -12,25 +12,6 @@ export interface PlayerGetCurrentDrawOutput {
   currentDraw: PlayerDrawInfo | null;
   /** Tất cả kỳ quay đang active, sorted drawDate+drawNo asc. */
   activeDraws: PlayerDrawInfo[];
-  /** Kết quả kỳ quay gần nhất đã có kết quả, null nếu chưa có. */
-  lastResult: {
-    /** ID kỳ quay. */
-    drawId: string;
-    /** Ngày quay (YYYY-MM-DD). */
-    drawDate: string;
-    /** Số thứ tự kỳ quay trong ngày. */
-    drawNo: number;
-    /** Giải đặc biệt (2 bộ ba số). */
-    special: [string, string];
-    /** Giải nhất (4 bộ ba số). */
-    first: [string, string, string, string];
-    /** Giải nhì (6 bộ ba số). */
-    second: [string, string, string, string, string, string];
-    /** Giải ba (8 bộ ba số). */
-    third: [string, string, string, string, string, string, string, string];
-    /** Thời điểm công bố kết quả (ISO 8601). */
-    publishedAt: string;
-  } | null;
 }
 
 export interface PlayerDrawInfo {
@@ -54,10 +35,6 @@ export interface PlayerDrawInfo {
 
 // ─── List Tickets (Player) ───
 
-export type TicketSortBy = "betDate" | "drawDate";
-
-export const TICKET_SORT_BY_VALUES: readonly TicketSortBy[] = ["betDate", "drawDate"];
-
 export interface PlayerListTicketsInput {
   /** ID đại lý / tenant. */
   tenantId: string;
@@ -73,6 +50,13 @@ export interface PlayerListTicketsInput {
   cursor?: string;
 }
 
+/**
+ * Input để lấy danh sách vé đang pending của player.
+ *
+ * Không có from/to — pending tickets trả về TẤT CẢ vé chưa settle/void,
+ * sắp xếp mới nhất trước. Player không cần nhớ ngày mua; hệ thống tự trả đủ
+ * qua cursor-based pagination.
+ */
 export interface PlayerListPendingTicketsInput {
   /** ID đại lý / tenant. */
   tenantId: string;
@@ -80,97 +64,84 @@ export interface PlayerListPendingTicketsInput {
   accountId: string;
   /** Số lượng vé trả về mỗi trang. */
   size: number;
-  /** Lọc từ ngày (YYYY-MM-DD), bao gồm. */
-  from?: string;
-  /** Lọc đến ngày (YYYY-MM-DD), bao gồm. */
-  to?: string;
-  /** Con trỏ phân trang (cursor-based pagination). */
-  cursor?: string;
-}
-
-export interface PlayerListCompletedTicketsInput {
-  /** ID đại lý / tenant. */
-  tenantId: string;
-  /** ID tài khoản player. */
-  accountId: string;
-  /** Số lượng vé trả về mỗi trang. */
-  size: number;
-  /** Sắp xếp theo ngày đặt cược hoặc ngày quay. */
-  sortBy: TicketSortBy;
-  /** Lọc từ ngày (YYYY-MM-DD), bao gồm. */
-  from?: string;
-  /** Lọc đến ngày (YYYY-MM-DD), bao gồm. */
-  to?: string;
   /** Con trỏ phân trang (cursor-based pagination). */
   cursor?: string;
 }
 
 export interface PlayerTicketSummary {
-  /** ID vé (internal). */
+  /** MongoDB document ID. */
   id: string;
-  /** Mã vé hiển thị cho player. */
+  /** Mã vé hiển thị (human-readable). */
   ticketNo: string;
-  /** Trạng thái vé (pending / won / lost / …). */
+  /** Trạng thái vé: paid → completed / refunded. */
   status: string;
+  /** Kế hoạch tham gia các kỳ quay. */
   drawPlan: {
-    /** Danh sách drawId đã chọn. */
+    /** Danh sách mã kỳ quay đã đăng ký. */
     drawIds: string[];
-    /** Số kỳ quay. */
+    /** Số kỳ quay tham gia = drawIds.length. */
     drawCount: number;
   };
+  /**
+   * Chi tiết giá vé.
+   *
+   * Công thức:
+   * - linesPerDraw = Σ(board.lineCount)
+   * - amountPerDraw = linesPerDraw × unitPrice
+   * - totalAmount = amountPerDraw × drawCount
+   */
   pricing: {
-    /** Đơn giá mỗi line (VND). */
+    /** Đơn giá 1 line cho 1 kỳ (VND). */
     unitPrice: number;
     /** Tổng lines mỗi kỳ = Σ(board.lineCount). */
     linesPerDraw: number;
-    /** Tiền cược mỗi kỳ = linesPerDraw × unitPrice. */
+    /** Giá mỗi kỳ (VND) = linesPerDraw × unitPrice. */
     amountPerDraw: number;
-    /** Tổng tiền cược = amountPerDraw × drawCount. */
+    /** Tổng tiền toàn vé (VND) = amountPerDraw × drawCount. */
     totalAmount: number;
   };
-  /** Danh sách boards trong vé. */
+  /** Danh sách boards trên vé. */
   boards: Array<{
-    /** Số thứ tự board (vd: "A", "B"). */
+    /** Ký hiệu board: A, B, C, D. */
     boardNo: string;
-    /** Kiểu chơi: basic | combo | plus. */
+    /** Cách chơi: basic / plus. */
     playMode: string;
-    /** Loại cược: direct | rumble. */
+    /** Kiểu chơi: straight / combo3 / combo6 / quickPick. */
     playType: string;
     /** Bộ ba số đã chọn. */
     triplets: string[];
     /** Số lines phát sinh từ board này. */
     lineCount: number;
   }>;
-  /** Tiến trình settle của vé. settledDraws = số kỳ đã xử lý xong (settled + voided). */
+  /** Tiến trình settle qua các kỳ. settledDraws = số kỳ đã xử lý xong (settled + voided). */
   progress: {
-    /** Tổng số kỳ quay của vé. */
+    /** Tổng số kỳ đã đăng ký. */
     totalDraws: number;
     /** Số kỳ đã xử lý xong (settled + voided). */
     settledDraws: number;
   };
-  /** Thông tin thanh toán (chỉ có khi đã settle ít nhất 1 kỳ). */
+  /** Tổng kết trúng thưởng — chỉ có khi đã settle ít nhất 1 kỳ. */
   settlement?: {
-    /** Tổng tiền thắng cộng dồn (VND). */
+    /** Tổng tiền thắng (VND) = Σ(entry.winAmount) qua tất cả kỳ. */
     totalWinAmount: number;
     /** Thời điểm kỳ gần nhất được settle (ISO 8601). */
     lastSettledAt?: string;
   };
   /**
-   * Tóm tắt huỷ cược. Max3D void theo board, không phải theo draw.
-   * isFullVoid = true: toàn bộ vé bị huỷ → status = "refunded".
-   * isFullVoid = false: một phần board bị huỷ, các kỳ còn lại vẫn chạy bình thường.
+   * Tóm tắt huỷ cược. Có khi ít nhất 1 kỳ của vé bị void.
+   * Multi-draw: hoàn tiền một phần (kỳ bị void). Single-draw: hoàn toàn bộ → status = "refunded".
    */
   voidSummary?: {
-    /** True nếu toàn bộ vé bị void. */
-    isFullVoid: boolean;
-    /** Danh sách boardNo bị void. */
-    voidedBoards: string[];
-    /** Tiền cược gốc trước khi void (VND). */
-    originalAmount: number;
-    /** Tiền đã hoàn trả cho player (VND). */
-    refundAmount: number;
-    /** Thời điểm void (ISO 8601). */
-    voidedAt: string;
+    /** Tổng tiền cược gốc của các kỳ bị huỷ (VND). */
+    totalVoidedAmount: number;
+    /** Tổng tiền đã hoàn trả cho player (VND). */
+    totalRefundedAmount: number;
+    /** Số kỳ đã bị huỷ. */
+    voidedDrawCount: number;
+    /** Danh sách drawId của các kỳ đã bị huỷ. */
+    voidedDrawIds: string[];
+    /** Thời điểm kỳ gần nhất bị huỷ (ISO 8601). */
+    lastVoidedAt?: string;
   };
   /** Thời điểm tạo vé (ISO 8601). */
   createdAt: string;
@@ -228,13 +199,13 @@ export interface PlayerEntryInfo {
   /** Kết quả kỳ quay (chỉ có sau khi công bố). */
   result?: {
     /** Giải đặc biệt (2 bộ ba số). */
-    special: [string, string];
+    special: string[];
     /** Giải nhất (4 bộ ba số). */
-    first: [string, string, string, string];
+    first: string[];
     /** Giải nhì (6 bộ ba số). */
-    second: [string, string, string, string, string, string];
+    second: string[];
     /** Giải ba (8 bộ ba số). */
-    third: [string, string, string, string, string, string, string, string];
+    third: string[];
     /** Thời điểm công bố kết quả (ISO 8601). */
     publishedAt: string;
   };

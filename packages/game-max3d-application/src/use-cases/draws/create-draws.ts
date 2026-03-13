@@ -8,7 +8,7 @@
  *   1. Load global config → lấy play rules (drawTimes, drawDaysOfWeek, salesCloseBeforeMinutes)
  *   2. Lấy danh sách draws đã tồn tại → skip draws đã có
  *   3. Tính draw slots khả dụng (calcMax3dDrawSlots)
- *   4. Tạo từng draw: status salesOpen (auto mở bán)
+ *   4. Tạo từng draw: status Scheduled (chờ staff mở bán)
  *
  * Max 3D không có Jackpot tích lũy → không tạo jackpot cycle.
  */
@@ -22,16 +22,9 @@ import type { DrawNo } from "@megawin/game-max3d/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { calcMax3dDrawSlots } from "../../helpers/calc-draw-slots";
-import type {
-  CreateDrawsInput,
-  CreateDrawsOutput,
-  CreateDrawsOutputItem,
-} from "./dto/draw.dto";
+import type { CreateDrawsInput, CreateDrawsOutput, CreateDrawsOutputItem } from "./dto/draw.dto";
 
-export class CreateDrawsUseCase extends NextApiUseCase<
-  CreateDrawsInput,
-  CreateDrawsOutput
-> {
+export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
@@ -68,7 +61,7 @@ export class CreateDrawsUseCase extends NextApiUseCase<
       const existing = await this.drawRepo.getDrawById(drawId);
       if (existing) continue;
 
-      const status = DrawStatus.SalesOpen;
+      const status = DrawStatus.Scheduled;
 
       await this.drawRepo.createDraw({
         drawId,
@@ -79,7 +72,6 @@ export class CreateDrawsUseCase extends NextApiUseCase<
         status,
         sales: {
           closeAt: slot.closeAt,
-          openAt: now,
         },
         createdAt: now,
         updatedAt: now,

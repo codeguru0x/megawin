@@ -24,6 +24,8 @@
  * jackpotOpeningAmount, closingJackpot, hasJackpotWinner.
  */
 
+import type { Max3dPrizeConfig } from "@megawin/game-max3d/entities";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Primitive shared types
 // ─────────────────────────────────────────────────────────────────────────────
@@ -161,28 +163,18 @@ export interface SettleContext {
 
   /**
    * Cấu hình giải thưởng áp dụng cho kỳ này.
+   *
    * Gồm giải thưởng cho 3 chế độ chơi: Basic, Combo, Plus.
    * Snapshot tại thời điểm PrepareSettle — KHÔNG thay đổi giữa các step.
+   *
+   * - `basic`: Giải thưởng chế độ Basic (4 hạng: special/first/second/third).
+   * - `combo`: Giải thưởng chế độ Combo (combo3, combo6) — mỗi loại 4 hạng.
+   *   Combo = expand bộ ba thành hoán vị → match từng hoán vị với kết quả.
+   *   unitAmount combo thấp hơn basic vì xác suất trùng cao hơn (nhiều lines).
+   * - `plus`: Giải thưởng chế độ Plus (7 hạng: special/first/second/third/fourth/fifth/sixth).
+   *   Plus = 2 bộ ba số, phân loại theo logic matchPlus().
    */
-  prizeConfig: {
-    /** Giải thưởng chế độ Basic (basic direct/rumble). */
-    basic: { special: number; first: number; second: number; third: number };
-    /** Giải thưởng chế độ Combo (combo3, combo6). */
-    combo: {
-      combo3: { special: number; first: number; second: number; third: number };
-      combo6: { special: number; first: number; second: number; third: number };
-    };
-    /** Giải thưởng chế độ Plus (7 giải). */
-    plus: {
-      special: number;
-      first: number;
-      second: number;
-      third: number;
-      fourth: number;
-      fifth: number;
-      sixth: number;
-    };
-  };
+  prizeConfig: Max3dPrizeConfig;
 
   /**
    * Cấu hình tài chính settle — snapshot tại thời điểm PrepareSettle.

@@ -532,21 +532,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
   }
 
-  async updateVoidSummary(
-    drawId: string,
-    summary: NonNullable<DrawDoc["voidSummary"]>,
-  ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      {
-        $set: {
-          voidSummary: summary,
-          updatedAt: new Date(),
-        },
-      },
-    );
-  }
-
   async updateSchedule(
     drawId: string,
     sales: { openAt: Date; closeAt: Date; drawTime?: Date },

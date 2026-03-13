@@ -19,3 +19,4 @@ export * from "./entry";
 export * from "./line";
 export * from "./draw";
 export * from "./jackpot-cycle";
+export * from "./report";

@@ -22,7 +22,6 @@ import type { PlayerGetJackpotOutput } from "./dto/player.dto";
 export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetJackpotOutput> {
   private readonly cycleRepo = new JackpotCycleRepository();
 
-  /** @inheritdoc */
   protected async execute(): Promise<PlayerGetJackpotOutput> {
     const activeCycle = await this.cycleRepo.getActiveCycle();
 
@@ -40,6 +39,7 @@ export class GetJackpotPlayerUseCase extends ApiGatewayUseCase<void, PlayerGetJa
       drawCount: activeCycle.drawCount,
       jackpot2ResetCount: activeCycle.jackpot2ResetCount,
       startedAt: activeCycle.createdAt.toISOString(),
+      startDrawId: activeCycle.startDrawId,
     };
   }
 }

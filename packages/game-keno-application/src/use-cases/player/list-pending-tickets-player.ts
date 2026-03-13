@@ -2,38 +2,33 @@
  * Use Case: List Pending Tickets (Keno) – Player
  *
  * Lấy danh sách vé đang chờ xử lý (còn draws chưa settle/void).
+ * Trả về TẤT CẢ pending tickets của account, sắp xếp mới nhất trước.
  * Cursor-based pagination dùng _id cho collection lớn.
  */
 
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import { toVNStartOfDay, toVNEndOfDay } from "@megawin/shared/utils/date";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
-import { mapPlayerTicket } from "./list-tickets-player";
-import type {
-  PlayerListPendingTicketsInput,
-  PlayerListTicketsOutput,
-} from "./dto/player.dto";
+import { mapPlayerTicket } from "./mappers/ticket";
+import type { PlayerListPendingTicketsInput, PlayerListTicketsOutput } from "./dto/player.dto";
 
+/**
+ * Lấy danh sách vé pending của player Keno.
+ *
+ * Không lọc theo ngày — pending tickets là trạng thái hiện tại, player cần xem
+ * tất cả vé chưa settle/void bất kể ngày mua. Cursor-based pagination.
+ */
 export class ListPendingTicketsPlayerUseCase extends ApiGatewayUseCase<
   PlayerListPendingTicketsInput,
   PlayerListTicketsOutput
 > {
   private readonly ticketRepo = new TicketRepository();
 
-  protected async execute(
-    input: PlayerListPendingTicketsInput
-  ): Promise<PlayerListTicketsOutput> {
-    const { tenantId, accountId, size, from, to, cursor } = input;
+  protected async execute(input: PlayerListPendingTicketsInput): Promise<PlayerListTicketsOutput> {
+    const { tenantId, accountId, size, cursor } = input;
 
-    const fromUtc = from ? toVNStartOfDay(from) : undefined;
-    const toUtc = to ? toVNEndOfDay(to) : undefined;
-
-    const tickets = await this.ticketRepo.getPendingTickets(
-      tenantId,
-      accountId,
-      size + 1,
-      { from: fromUtc, to: toUtc, cursor }
-    );
+    const tickets = await this.ticketRepo.getPendingTickets(tenantId, accountId, size + 1, {
+      cursor,
+    });
 
     const hasMore = tickets.length > size;
     const slice = hasMore ? tickets.slice(0, size) : tickets;

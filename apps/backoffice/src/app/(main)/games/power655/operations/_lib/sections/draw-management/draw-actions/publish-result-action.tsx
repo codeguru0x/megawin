@@ -23,32 +23,12 @@ import {
   POWER655_MAIN_MAX,
   POWER655_MAIN_COUNT,
 } from "@megawin/game-power655/entities";
+import { publishResultSchema } from "@megawin/game-power655/schemas";
 import { todayVN } from "@megawin/shared/utils/date";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
-
-function validateMainNumbers(nums: string[]): string | null {
-  const parsed = nums.map(Number);
-  for (let i = 0; i < POWER655_MAIN_COUNT; i++) {
-    const n = parsed[i];
-    if (!n || !Number.isInteger(n) || n < POWER655_MAIN_MIN || n > POWER655_MAIN_MAX) {
-      return `Số #${i + 1} phải là số nguyên từ ${pad2(POWER655_MAIN_MIN)} đến ${pad2(POWER655_MAIN_MAX)}.`;
-    }
-  }
-  if (new Set(parsed).size !== POWER655_MAIN_COUNT) return "Các số phải khác nhau.";
-  return null;
-}
-
-function validateBonusNumber(val: string, mainNums: string[]): string | null {
-  const n = Number(val);
-  if (!val || !Number.isInteger(n) || n < POWER655_MAIN_MIN || n > POWER655_MAIN_MAX) {
-    return `Số thưởng phải là số nguyên từ ${pad2(POWER655_MAIN_MIN)} đến ${pad2(POWER655_MAIN_MAX)}.`;
-  }
-  if (mainNums.map(Number).includes(n)) return "Số thưởng phải khác tất cả 6 số chính.";
-  return null;
-}
 
 /**
  * Dialog công bố kết quả kỳ quay Power 6/55.
@@ -82,21 +62,21 @@ export function PublishResultAction({
 
   function handleSubmit() {
     setError(null);
-    const mainErr = validateMainNumbers(mainNumbers);
-    if (mainErr) {
-      setError(mainErr);
-      return;
-    }
-    const bonusErr = validateBonusNumber(bonusNumber, mainNumbers);
-    if (bonusErr) {
-      setError(bonusErr);
+    // Dùng publishResultSchema (shared với API route) thay vì validate thủ công.
+    // Schema xử lý cả cross-field: bonusNumber phải khác 6 số chính.
+    const result = publishResultSchema.safeParse({
+      winningMain: mainNumbers,
+      bonusNumber,
+    });
+    if (!result.success) {
+      setError(result.error.issues[0]?.message ?? "Dữ liệu không hợp lệ.");
       return;
     }
 
     const body: {
       winningMain: string[];
       bonusNumber: string;
-      vietlottRef?: { drawPeriod: string; drawDate: string; drawSession: number };
+      vietlottRef?: { drawPeriod: string; drawDate: string };
     } = {
       winningMain: mainNumbers.map((n) => n.padStart(2, "0")),
       bonusNumber: bonusNumber.padStart(2, "0"),
@@ -106,7 +86,6 @@ export function PublishResultAction({
       body.vietlottRef = {
         drawPeriod: vietlotPeriod.trim(),
         drawDate: vietlotDate,
-        drawSession: 1,
       };
     }
 

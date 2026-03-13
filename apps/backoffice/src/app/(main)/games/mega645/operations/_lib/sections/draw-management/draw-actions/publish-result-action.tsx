@@ -23,23 +23,12 @@ import {
   MEGA645_MAIN_MAX,
   MEGA645_MAIN_COUNT,
 } from "@megawin/game-mega645/entities";
+import { publishResultSchema } from "@megawin/game-mega645/schemas";
 import { todayVN } from "@megawin/shared/utils/date";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
-
-function validateMainNumbers(nums: string[]): string | null {
-  const parsed = nums.map(Number);
-  for (let i = 0; i < MEGA645_MAIN_COUNT; i++) {
-    const n = parsed[i];
-    if (!n || !Number.isInteger(n) || n < MEGA645_MAIN_MIN || n > MEGA645_MAIN_MAX) {
-      return `Số #${i + 1} phải là số nguyên từ ${pad2(MEGA645_MAIN_MIN)} đến ${pad2(MEGA645_MAIN_MAX)}.`;
-    }
-  }
-  if (new Set(parsed).size !== MEGA645_MAIN_COUNT) return "Các số phải khác nhau.";
-  return null;
-}
 
 /**
  * Dialog công bố kết quả kỳ quay Mega 6/45.
@@ -71,15 +60,16 @@ export function PublishResultAction({
 
   function handleSubmit() {
     setError(null);
-    const mainErr = validateMainNumbers(mainNumbers);
-    if (mainErr) {
-      setError(mainErr);
+    // Dùng publishResultSchema (shared với API route) thay vì validate thủ công
+    const result = publishResultSchema.safeParse({ winningMain: mainNumbers });
+    if (!result.success) {
+      setError(result.error.issues[0]?.message ?? "Dữ liệu không hợp lệ.");
       return;
     }
 
     const body: {
       winningMain: string[];
-      vietlottRef?: { drawPeriod: string; drawDate: string; drawSession: number };
+      vietlottRef?: { drawPeriod: string; drawDate: string };
     } = {
       winningMain: mainNumbers.map((n) => n.padStart(2, "0")),
     };
@@ -88,8 +78,6 @@ export function PublishResultAction({
       body.vietlottRef = {
         drawPeriod: vietlotPeriod.trim(),
         drawDate: vietlotDate,
-        // Mega 6/45: 1 kỳ/ngày nên drawSession = 1
-        drawSession: 1,
       };
     }
 

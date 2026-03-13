@@ -397,22 +397,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
   }
 
-  /** Cập nhật tổng kết void cho kỳ quay bị huỷ. */
-  async updateVoidSummary(
-    drawId: string,
-    summary: NonNullable<DrawDoc["voidSummary"]>,
-  ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      {
-        $set: {
-          voidSummary: summary,
-          updatedAt: new Date(),
-        },
-      },
-    );
-  }
-
   /** Cập nhật lịch mở/đóng bán vé và drawTime. */
   async updateSchedule(
     drawId: string,

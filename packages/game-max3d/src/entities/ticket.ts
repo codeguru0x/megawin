@@ -23,6 +23,7 @@ export interface BoardDerived {
    * - straight/quickPick plus: 1
    * - combo3: 3 (hoặc 1 nếu 3 chữ số giống nhau)
    * - combo6: 6 (hoặc 3 nếu 2 chữ số giống)
+   * Công thức: tính bởi calculateLineCount() trong play-types.ts.
    */
   lineCount: number;
 }
@@ -64,23 +65,23 @@ export interface TicketSettlement {
 }
 
 /**
- * Tổng hợp void của Max3D – void theo BOARD (không phải theo draw).
+ * Tổng hợp void của vé Max3D – void theo draw (entry), giống tất cả các game khác.
  *
- * Max3D cho phép void 1 phần board trong vé (board-level void),
- * khác với các game khác (draw-level void).
- * Khi void board, hệ thống hoàn tiền tương ứng với các boards bị void.
+ * Khi 1 kỳ (draw) bị void → TẤT CẢ entries của vé thuộc kỳ đó bị void.
+ * Vé multi-draw: chỉ entry của kỳ bị void bị ảnh hưởng, các kỳ khác vẫn tiếp tục.
+ * Single-draw: void toàn bộ vé → ticket.status = refunded.
  */
 export interface TicketVoidSummary {
-  /** true nếu void toàn bộ vé, false nếu chỉ void 1 số boards. */
-  isFullVoid: boolean;
-  /** Danh sách boardNo đã bị void (vd: ["A", "C"]). */
-  voidedBoards: string[];
-  /** Tổng tiền gốc của phần bị void. */
-  originalAmount: number;
-  /** Tổng tiền hoàn trả cho người chơi. */
-  refundAmount: number;
-  /** Thời điểm void. */
-  voidedAt: Date;
+  /** Tổng tiền cược gốc của các kỳ bị void (VND) = Σ(entry.amount) kỳ đã void. */
+  totalVoidedAmount: number;
+  /** Tổng tiền đã hoàn trả cho player (VND). */
+  totalRefundedAmount: number;
+  /** Số kỳ quay đã bị void. */
+  voidedDrawCount: number;
+  /** Danh sách drawId của các kỳ đã bị void. */
+  voidedDrawIds: string[];
+  /** Thời điểm kỳ gần nhất bị void. */
+  lastVoidedAt?: Date;
 }
 
 // ─────────────────────────────────────────────
@@ -90,8 +91,6 @@ export interface TicketVoidSummary {
 export interface Board {
   /** Ký hiệu board: A, B, C, D. */
   boardNo: string;
-  /** Board bị huỷ (khi void 1 phần). */
-  isVoid?: boolean;
   /** Cách chơi: basic / plus. */
   playMode: PlayMode;
   /** Kiểu chơi: straight / combo3 / combo6 / quickPick. */
@@ -141,7 +140,7 @@ export interface TicketDoc {
   /** Tổng hợp thanh toán. Cập nhật mỗi khi settle 1 kỳ. */
   settlement?: TicketSettlement;
 
-  /** Tổng hợp void. Set khi void vé (toàn phần hoặc 1 phần board). */
+  /** Tổng hợp void. Set khi ít nhất 1 kỳ của vé bị void. */
   voidSummary?: TicketVoidSummary;
 
   /**
@@ -158,7 +157,7 @@ export interface TicketDoc {
    */
   financialDate: ISODateString;
 
-  /** Trạng thái vé: pending → active → completed / voided. */
+  /** Trạng thái vé: paid → completed / refunded / void. */
   status: TicketStatus;
   /** Optimistic locking version. */
   version: number;

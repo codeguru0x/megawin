@@ -61,10 +61,10 @@ function mapDrawSummary(draw: DrawEntity): PlayerDrawResultSummary {
     drawNo: draw.drawNo,
     drawTime: draw.drawTime.toISOString(),
     result: {
-      special: [...result.special],
-      first: [...result.first],
-      second: [...result.second],
-      third: [...result.third],
+      special: result.special,
+      first: result.first,
+      second: result.second,
+      third: result.third,
       publishedAt: result.publishedAt.toISOString(),
     },
     vietlottRef: draw.vietlottRef

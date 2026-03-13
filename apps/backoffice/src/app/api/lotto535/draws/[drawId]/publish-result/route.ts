@@ -18,7 +18,6 @@ const publishResultSchema = z.object({
     .object({
       drawPeriod: z.string(),
       drawDate: z.string(),
-      drawSession: z.number(),
     })
     .optional(),
 });

@@ -5,6 +5,9 @@
  * Mega 6/45 không có số đặc biệt — chỉ mainNumbers.
  */
 
+import { EntryOutcome } from "@megawin/game-core/entities";
+
+import { PrizeTier } from "@megawin/game-mega645/entities/enums";
 // ─── Get Current Draw (Player) ───
 
 export interface PlayerGetCurrentDrawOutput {
@@ -12,21 +15,6 @@ export interface PlayerGetCurrentDrawOutput {
   currentDraw: PlayerDrawInfo | null;
   /** Tất cả các kỳ đang active, sắp xếp theo drawDate tăng dần. */
   activeDraws: PlayerDrawInfo[];
-  /** Giá trị jackpot hiện tại từ active cycle (VND). */
-  jackpotCurrentAmount: number;
-  /** Kết quả quay gần nhất (null nếu chưa có kỳ nào settle). */
-  lastResult: {
-    /** ID kỳ quay đã settle gần nhất. */
-    drawId: string;
-    /** Ngày quay thưởng (ISO date). */
-    drawDate: string;
-    /** Số thứ tự kỳ quay. */
-    drawNo: number;
-    /** 6 số chính trúng thưởng ("01"-"45"). */
-    winningMain: string[];
-    /** Thời điểm công bố kết quả (ISO datetime). */
-    publishedAt: string;
-  } | null;
 }
 
 export interface PlayerDrawInfo {
@@ -47,8 +35,6 @@ export interface PlayerDrawInfo {
     /** Thời điểm đóng bán (ISO datetime). */
     closeAt: string;
   };
-  /** Giá trị jackpot hiện tại (VND) tại thời điểm truy vấn. */
-  jackpotCurrentAmount: number;
 }
 
 // ─── Get Jackpot (Player) ───
@@ -78,10 +64,6 @@ export interface PlayerGetJackpotOutput {
 
 // ─── List Tickets (Player) ───
 
-export type TicketSortBy = "betDate" | "drawDate";
-
-export const TICKET_SORT_BY_VALUES: readonly TicketSortBy[] = ["betDate", "drawDate"];
-
 export interface PlayerListTicketsInput {
   /** ID tenant của người chơi. */
   tenantId: string;
@@ -97,6 +79,13 @@ export interface PlayerListTicketsInput {
   cursor?: string;
 }
 
+/**
+ * Input để lấy danh sách vé đang pending của player.
+ *
+ * Không có from/to — pending tickets trả về TẤT CẢ vé chưa settle/void,
+ * sắp xếp mới nhất trước. Player không cần nhớ ngày mua; hệ thống tự trả đủ
+ * qua cursor-based pagination.
+ */
 export interface PlayerListPendingTicketsInput {
   /** ID tenant của người chơi. */
   tenantId: string;
@@ -104,27 +93,6 @@ export interface PlayerListPendingTicketsInput {
   accountId: string;
   /** Số lượng vé tối đa mỗi trang. */
   size: number;
-  /** Ngày bắt đầu lọc (ISO date, inclusive). */
-  from?: string;
-  /** Ngày kết thúc lọc (ISO date, inclusive). */
-  to?: string;
-  /** Cursor cho phân trang (opaque string từ response trước). */
-  cursor?: string;
-}
-
-export interface PlayerListCompletedTicketsInput {
-  /** ID tenant của người chơi. */
-  tenantId: string;
-  /** ID tài khoản người chơi. */
-  accountId: string;
-  /** Số lượng vé tối đa mỗi trang. */
-  size: number;
-  /** Sắp xếp theo ngày đặt vé hoặc ngày quay. */
-  sortBy: TicketSortBy;
-  /** Ngày bắt đầu lọc (ISO date, inclusive). */
-  from?: string;
-  /** Ngày kết thúc lọc (ISO date, inclusive). */
-  to?: string;
   /** Cursor cho phân trang (opaque string từ response trước). */
   cursor?: string;
 }
@@ -261,7 +229,7 @@ export interface PlayerEntryInfo {
     publishedAt: string;
   };
   /** Kết quả tổng hợp của entry: "win" | "loss" (chỉ có sau settle). */
-  outcome?: string;
+  outcome?: EntryOutcome;
   /** Chi tiết trả thưởng (chỉ có nếu outcome = "win"). */
   payout?: {
     /** Tổng tiền thắng (VND) — chưa trừ thuế. */
@@ -270,8 +238,8 @@ export interface PlayerEntryInfo {
     payoutAmount: number;
     /** Chi tiết từng hạng giải đã trúng. */
     tiers: Array<{
-      /** Hạng giải: "jackpot" (6/6), "tier2" (5/6), "tier3" (4/6), "tier4" (3/6). */
-      tier: string;
+      /** Hạng giải: "jackpot" (6/6), "tier1" (5/6), "tier2" (4/6), "tier3" (3/6). */
+      tier: PrizeTier;
       /** Số dòng trúng hạng này. */
       hitCount: number;
       /** Tiền thưởng mỗi dòng (VND). */

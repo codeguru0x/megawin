@@ -93,8 +93,6 @@ export interface PublishResultInput {
     drawPeriod: string;
     /** Ngày quay của Vietlott (ISO date). */
     drawDate: string;
-    /** Phiên quay trong ngày (1, 2, …). */
-    drawSession: number;
   };
 }
 

@@ -33,7 +33,6 @@ import { cn } from "@/lib/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { formatNumber } from "@megawin/shared/utils/number";
 import { KenoDrawStatusBadge } from "@/components/games/keno/draw-status-badge";
-import { KenoNumberBall } from "@/components/games/keno/keno-number-ball";
 import { Button } from "@/components/ui/button";
 import type { DrawSelectorItem } from "../../use-operations";
 import type { KenoDrawResult, VoidInfo } from "../../types";
@@ -487,32 +486,7 @@ export function DrawCommandCenter({
             <div className="w-full max-w-[45%] min-w-64">
               <LifecycleStepper steps={steps} />
             </div>
-            {/* Kết quả hiển thị khi Published — Keno: 20 số (01-80) */}
-            {status === DrawStatus.Published && result && (
-              <div className="flex items-start gap-2 rounded-xl border border-border/60 bg-muted/20 px-4 py-3 flex-wrap justify-center max-w-2xl">
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mr-1 mt-1">
-                  KQ
-                </span>
-                {result.winningNumbers.slice(0, 20).map((n, i) => (
-                  <KenoNumberBall key={i} number={Number(n)} size="sm" />
-                ))}
-                {/* Side bet stats */}
-                <div className="w-full flex items-center gap-3 mt-1 justify-center text-[10px] text-muted-foreground">
-                  <span>
-                    Lớn: <strong className="text-foreground">{result.bigCount}</strong>
-                  </span>
-                  <span>
-                    Nhỏ: <strong className="text-foreground">{result.smallCount}</strong>
-                  </span>
-                  <span>
-                    Chẵn: <strong className="text-foreground">{result.evenCount}</strong>
-                  </span>
-                  <span>
-                    Lẻ: <strong className="text-foreground">{result.oddCount}</strong>
-                  </span>
-                </div>
-              </div>
-            )}
+            {/* Kết quả đã chuyển sang section "Kết quả & Phân bổ giải thưởng" bên dưới */}
           </div>
         )}
 

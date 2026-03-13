@@ -17,26 +17,16 @@ import {
   DevRandomFillButton,
   generateUniqueRandomNumbers,
 } from "@/components/dev-random-fill-button";
-import { KENO_NUMBER_MIN, KENO_NUMBER_MAX, KENO_DRAW_COUNT } from "@megawin/game-keno/entities";
+import {
+  KENO_NUMBER_MIN,
+  KENO_NUMBER_MAX,
+  KENO_DRAW_COUNT,
+} from "../../../../../../../../../../../../packages/game-keno-application/game-keno/src/entities";
+import { publishResultSchema } from "../../../../../../../../../../../../packages/game-keno-application/game-keno/src/schemas";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
-
-function validateWinningNumbers(nums: string[]): string | null {
-  if (nums.length !== KENO_DRAW_COUNT) {
-    return `Cần nhập đúng ${KENO_DRAW_COUNT} số.`;
-  }
-  const parsed = nums.map(Number);
-  for (let i = 0; i < KENO_DRAW_COUNT; i++) {
-    const n = parsed[i];
-    if (!n || !Number.isInteger(n) || n < KENO_NUMBER_MIN || n > KENO_NUMBER_MAX) {
-      return `Số #${i + 1} phải là số nguyên từ ${pad2(KENO_NUMBER_MIN)} đến ${pad2(KENO_NUMBER_MAX)}.`;
-    }
-  }
-  if (new Set(parsed).size !== KENO_DRAW_COUNT) return "Các số phải khác nhau.";
-  return null;
-}
 
 /**
  * Dialog công bố kết quả kỳ quay Keno.
@@ -66,9 +56,10 @@ export function PublishResultAction({
 
   function handleSubmit() {
     setError(null);
-    const err = validateWinningNumbers(numbers);
-    if (err) {
-      setError(err);
+    // Dùng publishResultSchema (shared với API route) thay vì validate thủ công
+    const result = publishResultSchema.safeParse({ winningNumbers: numbers });
+    if (!result.success) {
+      setError(result.error.issues[0]?.message ?? "Dữ liệu không hợp lệ.");
       return;
     }
 

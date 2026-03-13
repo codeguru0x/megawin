@@ -38,7 +38,6 @@ export interface DrawDocBase {
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;
-    drawSession: number | string;
   };
 }
 
@@ -416,18 +415,6 @@ export abstract class AbstractDrawRepository<
     return await this.findMany(
       { status: { $in: allowStatuses } },
       { sort: { drawDate: 1, drawNo: 1 } },
-    );
-  }
-
-  async updateVoidSummary(drawId: string, summary: DrawDocBaseVoidSummary): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      {
-        $set: {
-          voidSummary: summary,
-          updatedAt: new Date(),
-        },
-      },
     );
   }
 

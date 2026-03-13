@@ -2,15 +2,9 @@ import { KenoCollections } from "@megawin/game-keno/entities";
 import { GameConfigScope } from "@megawin/game-core/entities";
 import type { TenantConfigDoc } from "@megawin/game-keno/entities";
 import { BaseRepo } from "./base-repo";
-import {
-  TenantConfigMapper,
-  type TenantConfigEntity,
-} from "../mappers/game-config-mapper";
+import { TenantConfigMapper, type TenantConfigEntity } from "../mappers/game-config-mapper";
 
-export class TenantConfigRepository extends BaseRepo<
-  TenantConfigEntity,
-  TenantConfigMapper
-> {
+export class TenantConfigRepository extends BaseRepo<TenantConfigEntity, TenantConfigMapper> {
   constructor() {
     super({
       collName: KenoCollections.GameConfigs,
@@ -32,8 +26,7 @@ export class TenantConfigRepository extends BaseRepo<
     const now = new Date();
     const $set: Record<string, unknown> = { updatedAt: now };
 
-    if (fields.commissionRate !== undefined)
-      $set.commissionRate = fields.commissionRate;
+    if (fields.commissionRate !== undefined) $set.commissionRate = fields.commissionRate;
     if (fields.isEnabled !== undefined) $set.isEnabled = fields.isEnabled;
 
     const $setOnInsert: Record<string, unknown> = {
@@ -57,9 +50,6 @@ export class TenantConfigRepository extends BaseRepo<
   }
 
   async listTenantConfigs(): Promise<TenantConfigEntity[]> {
-    return await this.findMany(
-      { scope: GameConfigScope.Tenant },
-      { sort: { tenantId: 1 } },
-    );
+    return await this.findMany({ scope: GameConfigScope.Tenant }, { sort: { tenantId: 1 } });
   }
 }

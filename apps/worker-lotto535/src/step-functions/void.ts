@@ -147,7 +147,7 @@ export const VOID_STATE_MACHINE = {
       Choices: [
         {
           Condition: "{% $refundResult.done %}",
-          Next: "FinalizeVoid",
+          Next: "BuildVoidReport",
         },
       ],
       Default: "RefundWait",
@@ -159,6 +159,30 @@ export const VOID_STATE_MACHINE = {
       Next: "DispatchRefunds",
     },
 
+    // ── STEP 5: Build void report (MỚI) ──
+    // Cleanup settle reports (nếu void-after-settle) + build void report.
+    // Phase 0: snapshot + delete settle reports (idempotent).
+    // Phase 1: aggregate voided entries + upsert lotto535_void_draw_reports.
+    BuildVoidReport: {
+      Type: "Task",
+      Resource: lambdaArn("void-build-void-report"),
+      Arguments: "{% $voidCtx %}",
+      Next: "PublishSettleDaily",
+      Retry: LAMBDA_RETRY,
+    },
+
+    // ── STEP 6: Publish settle daily (MỚI) ──
+    // Re-aggregate lotto535_settle_draw/tenant_reports → upsert system daily.
+    // Settle reports đã xoá → aggregate giảm → system daily tự giảm.
+    PublishSettleDaily: {
+      Type: "Task",
+      Resource: lambdaArn("void-publish-settle-daily"),
+      Arguments: "{% { 'financialDate': $voidCtx.financialDate } %}",
+      Next: "FinalizeVoid",
+      Retry: LAMBDA_RETRY,
+    },
+
+    // ── STEP 7: Finalize void ──
     FinalizeVoid: {
       Type: "Task",
       Resource: lambdaArn("void-finalize"),

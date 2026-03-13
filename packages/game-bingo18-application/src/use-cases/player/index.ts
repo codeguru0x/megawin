@@ -11,13 +11,11 @@ export type {
   PlayerDrawInfo,
   PlayerListTicketsInput,
   PlayerListPendingTicketsInput,
-  PlayerListCompletedTicketsInput,
   PlayerListTicketsOutput,
   PlayerTicketSummary,
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
   PlayerEntryInfo,
-  TicketSortBy,
   PlayerBasicPrize,
   PlayerSideBetPrize,
   PlayerDrawResultInfo,
@@ -39,5 +37,3 @@ export type {
   PlayerBigSmallDrawPrizes,
   PlayerTenantGameConfig,
 } from "./dto/player-game-config.dto";
-
-export { TicketSortBy as TicketSortByValues, TICKET_SORT_BY_VALUES } from "./dto/player.dto";

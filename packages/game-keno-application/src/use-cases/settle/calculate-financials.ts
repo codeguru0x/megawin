@@ -14,7 +14,10 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { roundTo } from "@megawin/shared/utils/number";
 import { calculateKenoDrawFinancials } from "@megawin/game-keno/rules";
-import type { DrawBasicPrizeSummary, DrawSideBetPrizeSummary } from "@megawin/game-keno/entities";
+import type {
+  DrawBasicPrizeSummary,
+  DrawSideBetPrizeSummary,
+} from "@megawin/game-keno/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext, SettleFinancials } from "./types";
@@ -27,7 +30,12 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
   protected async execute(input: SettleContext): Promise<SettleFinancials> {
     const { drawId, config } = input;
 
-    const [{ totalRevenue, totalAgentCommission }, payoutSummary, basicPrizeSummary, sideBetPrizeSummary] = await Promise.all([
+    const [
+      { totalRevenue, totalAgentCommission },
+      payoutSummary,
+      basicPrizeSummary,
+      sideBetPrizeSummary,
+    ] = await Promise.all([
       this.entryRepo.aggregateTotalRevenue(drawId),
       this.entryRepo.aggregateSettledPayoutSummary(drawId),
       this.entryRepo.aggregateBasicPrizeSummary(drawId),

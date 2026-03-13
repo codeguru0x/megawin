@@ -66,7 +66,7 @@ Khi viết JSDoc, README, hoặc comment trong sdk:
 | Mega 6/45 | `mega645` | `M645` | `"M645-20260307-00003"` |
 | Power 6/55 | `power655` | `P655` | `"P655-20260307-00002"` |
 | Max 3D | `max3d` | `M3D` | `"M3D-20260307-00005"` |
-| Max 3D Pro | `max3dpro` | `M3P` | `"M3P-20260307-00004"` |
+| Max 3D Pro | `max3dpro` | `M3DP` | `"M3DP-20260307-00004"` |
 | Bingo 18 | `bingo18` | `B18` | `"B18-20260307-00007"` |
 
 Khi viết JSDoc `ticketNo` property cho từng game, PHẢI dùng đúng prefix và format trên. Ví dụ:
@@ -272,5 +272,5 @@ src/{game}/
 | `mega645` | Game Mega 6/45 | `M645` | `apis/mega645.ts` | `src/mega645/` | ✅ | ✅ | — |
 | `power655` | Game Power 6/55 | `P655` | `apis/power655.ts` | `src/power655/` | ✅ | ✅ | — |
 | `max3d` | Game Max 3D | `M3D` | `apis/max3d.ts` | `src/max3d/` | — | ✅ | — |
-| `max3dpro` | Game Max 3D Pro | `M3P` | `apis/max3dpro.ts` | `src/max3dpro/` | — | ✅ | — |
+| `max3dpro` | Game Max 3D Pro | `M3DP` | `apis/max3dpro.ts` | `src/max3dpro/` | — | ✅ | — |
 | `bingo18` | Game Bingo 18 | `B18` | `apis/bingo18.ts` | `src/bingo18/` | — | — | — |

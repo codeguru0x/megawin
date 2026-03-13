@@ -2,7 +2,7 @@
  * Use Case: Get Game Config for Player (Bingo 18)
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import type { PlayerGetGameConfigOutput } from "./dto/player-game-config.dto";
@@ -23,6 +23,10 @@ export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
       this.getGlobalConfig.run(),
       this.getTenantConfig.run({ tenantId: input.tenantId }),
     ]);
+
+    if (!globalConfig || !tenantConfig) {
+      throw AppException.notFound("Không tìm thấy cấu hình game.");
+    }
 
     return {
       game: {
@@ -55,7 +59,7 @@ export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
         },
       },
       tenant: {
-        isEnabled: tenantConfig?.isEnabled ?? true,
+        isEnabled: tenantConfig.isEnabled,
       },
     };
   }

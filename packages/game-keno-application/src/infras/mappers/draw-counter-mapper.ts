@@ -4,10 +4,7 @@ import { Document } from "mongodb";
 
 type DrawCounterEntity = DrawCounterDoc & { id: string };
 
-export class DrawCounterMapper extends MongoMapper<
-  Document,
-  DrawCounterEntity
-> {
+export class DrawCounterMapper extends MongoMapper<Document, DrawCounterEntity> {
   constructor() {
     super();
   }

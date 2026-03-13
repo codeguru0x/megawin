@@ -9,7 +9,7 @@ import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { EntryEntity } from "../../infras/mappers/entry-mapper";
-import { mapPlayerTicket } from "./list-tickets-player";
+import { mapPlayerTicket } from "./mappers/ticket";
 import type {
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
@@ -30,15 +30,11 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
 
     const ticket = await this.ticketRepo.getTicketById(ticketId);
 
-    if (!ticket) {
-      throw AppException.notFound("Ticket not found");
+    if (!ticket || ticket.tenantId !== tenantId || ticket.accountId !== accountId) {
+      throw AppException.notFound("Không tìm thấy vé.");
     }
 
-    if (ticket.tenantId !== tenantId || ticket.accountId !== accountId) {
-      throw AppException.notFound("Ticket not found");
-    }
-
-    const entries = await this.entryRepo.findMany({ ticketId: ticket.id }, { sort: { drawId: 1 } });
+    const entries = await this.entryRepo.getEntriesByTicketId(ticket.id);
 
     return {
       ticket: mapPlayerTicket(ticket),
@@ -70,7 +66,7 @@ function mapPlayerEntry(entry: EntryEntity): PlayerEntryInfo {
     },
     result: entry.result
       ? {
-          numbers: [...entry.result.numbers],
+          numbers: entry.result.numbers,
           sum: entry.result.sum,
           publishedAt: entry.result.publishedAt.toISOString(),
         }

@@ -5,11 +5,11 @@ export { TenantConfigRepository } from "./tenant-config-repo";
 export { TicketRepository } from "./ticket-repo";
 export { EntryRepository } from "./entry-repo";
 export { LineRepository } from "./line-repo";
-export { ReportRepository } from "./report-repo";
 export { JackpotCycleRepository } from "./jackpot-cycle-repo";
-export type {
-  TenantDailyReportData,
-  PlayerDailyReportData,
-} from "./report-repo";
+export { SettleDrawReportRepository } from "./settle-draw-report-repo";
+export { SettleTenantReportRepository } from "./settle-tenant-report-repo";
+export { VoidReportRepository } from "./void-report-repo";
+export { OutstandingReportRepository } from "./outstanding-report-repo";
+export type { OutstandingGameSummary } from "./outstanding-report-repo";
 export type { JackpotCycleEntity } from "../mappers/jackpot-cycle-mapper";
 export type { DrawEntity } from "../mappers/draw-mapper";

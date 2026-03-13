@@ -9,7 +9,7 @@ import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { EntryEntity } from "../../infras/mappers/entry-mapper";
-import { mapPlayerTicket } from "./list-tickets-player";
+import { mapPlayerTicket } from "./mappers/ticket";
 import type {
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
@@ -66,19 +66,10 @@ function mapPlayerEntry(entry: EntryEntity): PlayerEntryInfo {
     },
     result: entry.result
       ? {
-          special: entry.result.special as [string, string],
-          first: entry.result.first as [string, string, string, string],
-          second: entry.result.second as [string, string, string, string, string, string],
-          third: entry.result.third as [
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-          ],
+          special: entry.result.special,
+          first: entry.result.first,
+          second: entry.result.second,
+          third: entry.result.third,
           publishedAt: entry.result.publishedAt.toISOString(),
         }
       : undefined,

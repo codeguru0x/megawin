@@ -11,6 +11,13 @@
  */
 
 import { z } from "zod";
+import {
+  LOTTO535_MAIN_MIN,
+  LOTTO535_MAIN_MAX,
+  LOTTO535_MAIN_COUNT,
+  LOTTO535_SPECIAL_MIN,
+  LOTTO535_SPECIAL_MAX,
+} from "../entities/types";
 
 // ─── Atomic schemas ───
 
@@ -27,3 +34,97 @@ export const lotto535SpecialNumberSchema = z
 export const lotto535DrawIdSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}\.\d{3}$/, "Format: YYYY-MM-DD.NNN");
+
+// ─── Publish Result ────────────────────────────────────────────────────────────
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * Schema validate kết quả kỳ quay Lotto 5/35.
+ *
+ * Dùng chung bởi: PublishResultAction (client form) và API route handler.
+ * - winningMain: LOTTO535_MAIN_COUNT số chính, mỗi số trong [MAIN_MIN, MAIN_MAX], không trùng
+ * - winningSpecial: 1 số đặc biệt trong [SPECIAL_MIN, SPECIAL_MAX]
+ */
+export const publishResultSchema = z.object({
+  winningMain: z
+    .array(
+      z
+        .string()
+        .min(1, "Chưa nhập số")
+        .refine(
+          (v) => {
+            const n = Number(v);
+            return Number.isInteger(n) && n >= LOTTO535_MAIN_MIN && n <= LOTTO535_MAIN_MAX;
+          },
+          `Số chính phải từ ${pad2(LOTTO535_MAIN_MIN)} đến ${pad2(LOTTO535_MAIN_MAX)}`,
+        ),
+    )
+    .length(LOTTO535_MAIN_COUNT, `Cần đúng ${LOTTO535_MAIN_COUNT} số chính`)
+    .refine(
+      (nums) => new Set(nums.map(Number)).size === LOTTO535_MAIN_COUNT,
+      "Các số chính phải khác nhau",
+    ),
+  winningSpecial: z
+    .string()
+    .min(1, "Chưa nhập số đặc biệt")
+    .refine(
+      (v) => {
+        const n = Number(v);
+        return Number.isInteger(n) && n >= LOTTO535_SPECIAL_MIN && n <= LOTTO535_SPECIAL_MAX;
+      },
+      `Số đặc biệt phải từ ${pad2(LOTTO535_SPECIAL_MIN)} đến ${pad2(LOTTO535_SPECIAL_MAX)}`,
+    ),
+});
+
+/** Inferred type từ publishResultSchema. */
+export type PublishResultInput = z.infer<typeof publishResultSchema>;
+
+// ─── Edit Schedule ─────────────────────────────────────────────────────────────
+
+/**
+ * Schema validate form sửa lịch kỳ quay Lotto 5/35.
+ *
+ * Cross-field rules (superRefine):
+ * - salesCloseAt > salesOpenAt
+ * - drawAt > salesCloseAt (lịch quay phải sau khi đóng bán)
+ *
+ * Mỗi datetime tách thành date + time để map với 2 input riêng trên UI.
+ */
+export const editScheduleSchema = z
+  .object({
+    salesOpenDate: z.string().min(1, "Chưa chọn ngày"),
+    salesOpenTime: z.string().min(1, "Chưa nhập giờ"),
+    salesCloseDate: z.string().min(1, "Chưa chọn ngày"),
+    salesCloseTime: z.string().min(1, "Chưa nhập giờ"),
+    drawDate: z.string().min(1, "Chưa chọn ngày"),
+    drawTime: z.string().min(1, "Chưa nhập giờ"),
+  })
+  .superRefine((data, ctx) => {
+    const openISO = `${data.salesOpenDate}T${data.salesOpenTime}:00+07:00`;
+    const closeISO = `${data.salesCloseDate}T${data.salesCloseTime}:00+07:00`;
+    const drawISO = `${data.drawDate}T${data.drawTime}:00+07:00`;
+
+    const openMs = new Date(openISO).getTime();
+    const closeMs = new Date(closeISO).getTime();
+    const drawMs = new Date(drawISO).getTime();
+
+    if (!isNaN(openMs) && !isNaN(closeMs) && closeMs <= openMs) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["salesCloseTime"],
+        message: "Giờ đóng bán phải sau giờ mở bán",
+      });
+    }
+
+    if (!isNaN(closeMs) && !isNaN(drawMs) && drawMs <= closeMs) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["drawTime"],
+        message: "Giờ quay số phải sau giờ đóng bán",
+      });
+    }
+  });
+
+/** Inferred type từ editScheduleSchema. */
+export type EditScheduleInput = z.infer<typeof editScheduleSchema>;

@@ -1,6 +1,7 @@
 export {
   kenoNumberSchema,
-  kenoDrawIdSchema, 
+  kenoDrawIdSchema,
+  publishResultSchema,
+  editScheduleSchema,
 } from "./common";
-
- 
+export type { PublishResultInput, EditScheduleInput } from "./common";

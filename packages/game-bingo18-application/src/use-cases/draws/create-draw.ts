@@ -8,28 +8,19 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { DrawCounterRepository } from "../../infras/repos/draw-counter-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { calcDrawSlots } from "../../helpers/calc-draw-slots";
-import type {
-  CreateDrawInput,
-  CreateDrawOutput,
-  CreateDrawOutputItem,
-} from "./dto/draw.dto";
+import type { CreateDrawInput, CreateDrawOutput, CreateDrawOutputItem } from "./dto/draw.dto";
 
-export class CreateDrawUseCase extends NextApiUseCase<
-  CreateDrawInput,
-  CreateDrawOutput
-> {
+export class CreateDrawUseCase extends NextApiUseCase<CreateDrawInput, CreateDrawOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly counterRepo = new DrawCounterRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(input: CreateDrawInput): Promise<CreateDrawOutput> {
-    const { drawDate, count } = input;
+    const { drawDate, count, openNow } = input;
     const today = todayVN();
 
     if (drawDate !== today) {
-      throw AppException.badRequest(
-        `Chỉ cho phép tạo kỳ quay cho ngày hôm nay (${today}).`
-      );
+      throw AppException.badRequest(`Chỉ cho phép tạo kỳ quay cho ngày hôm nay (${today}).`);
     }
 
     const globalConfig = await this.getGlobalConfig.run();
@@ -38,15 +29,10 @@ export class CreateDrawUseCase extends NextApiUseCase<
 
     const slots = calcDrawSlots(new Date(), drawDate, count, play);
     if (slots.length === 0) {
-      throw AppException.badRequest(
-        `Không còn slot quay nào khả dụng trong ngày (trước 23:59).`
-      );
+      throw AppException.badRequest(`Không còn slot quay nào khả dụng trong ngày (trước 23:59).`);
     }
 
-    const firstDrawNo = await this.counterRepo.getNextDrawNoBatch(
-      drawDate,
-      slots.length
-    );
+    const firstDrawNo = await this.counterRepo.getNextDrawNoBatch(drawDate, slots.length);
 
     const now = new Date();
     const draws: CreateDrawOutputItem[] = [];
@@ -55,10 +41,7 @@ export class CreateDrawUseCase extends NextApiUseCase<
       const slot = slots[i]!;
       const drawNo = firstDrawNo + i;
       const drawId = generateBingo18DrawId(drawDate, drawNo);
-      const status =
-        slot.status === DrawStatus.SalesOpen
-          ? DrawStatus.SalesOpen
-          : DrawStatus.Scheduled;
+      const status = openNow ? DrawStatus.SalesOpen : DrawStatus.Scheduled;
 
       await this.drawRepo.createDraw({
         drawId,
@@ -67,10 +50,7 @@ export class CreateDrawUseCase extends NextApiUseCase<
         drawNo,
         drawTime: slot.drawTime,
         status,
-        sales: {
-          closeAt: slot.closeAt,
-          ...(status === DrawStatus.SalesOpen ? { openAt: now } : {}),
-        },
+        sales: openNow ? { closeAt: slot.closeAt, openAt: now } : { closeAt: slot.closeAt },
         createdAt: now,
         updatedAt: now,
       });

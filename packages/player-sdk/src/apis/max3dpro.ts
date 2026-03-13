@@ -48,7 +48,7 @@ export interface Max3dproListTicketsParams {
 export interface Max3dproPlaceBetResponse {
   /** ID vé duy nhất trong hệ thống. */
   ticketId: string;
-  /** Mã vé hiển thị cho người chơi. VD: `"M3P-20260307-00004"`. */
+  /** Mã vé hiển thị cho người chơi. VD: `"M3DP-20260307-00004"`. */
   ticketNo: string;
   /** Tổng tiền cược (VND). */
   totalAmount: number;
@@ -212,7 +212,7 @@ export interface Max3dproApi {
    *   drawCount: 1,
    *   boards: [{ boardNo: "A", playMode: "plus", playType: "straight", triplets: ["123", "456"] }],
    * });
-   * console.log(result.ticketNo);    // "M3P-20260307-00004"
+   * console.log(result.ticketNo);    // "M3DP-20260307-00004"
    * console.log(result.totalAmount); // 20000
    * ```
    */
@@ -273,7 +273,7 @@ export interface Max3dproApi {
    * @example
    * ```ts
    * const data = await client.max3dpro.getTicketEntries("65abc123def456...");
-   * console.log(data.ticket.ticketNo); // "M3P-20260307-00004"
+   * console.log(data.ticket.ticketNo); // "M3DP-20260307-00004"
    * console.log(data.entries.length);  // 1
    * ```
    */

@@ -1,0 +1,679 @@
+---
+globs: packages/game-*-application/src/use-cases/settle/**,packages/game-*-application/src/use-cases/void/**,packages/game-*-application/src/infras/repos/*report*,packages/game-core-application/src/use-cases/publish-settle-daily*,packages/game-core-application/src/use-cases/sync-outstanding*,packages/game-core-application/src/infras/repos/system-*report*,packages/game-*/src/entities/report*,packages/game-core/src/entities/financial-report*,apps/worker-*/src/handlers/settle/build-settle-report*,apps/worker-*/src/handlers/void/build-void-report*,apps/worker-*/src/handlers/outstanding/**,apps/backoffice/src/app/(main)/games/*/reports/**,apps/backoffice/src/app/(main)/reports/**,apps/backoffice/src/app/api/*/reports/**,apps/backoffice/src/app/api/reports/**
+alwaysApply: false
+---
+
+# Financial Reporting System — Design & Coding Rules
+
+Quy tắc CHẶT CHẼ cho hệ thống báo cáo tài chính. ĐỌC TOÀN BỘ trước khi code.
+
+---
+
+## 1. Nguyên tắc bất biến (KHÔNG được vi phạm)
+
+### P1 — Tách biệt theo concern
+- Settle, Void, Outstanding là 3 concerns RIÊNG BIỆT.
+- KHÔNG trộn chung document, collection, hay code path.
+- Mỗi concern có collection, entity interface, repo, use case RIÊNG.
+
+### P2 — Draw-level là source of truth
+- Daily/system levels LUÔN re-aggregate từ draw-level reports.
+- KHÔNG BAO GIỜ dùng `$inc` cho report. Dùng UPSERT overwrite.
+- Re-settle: upsert overwrite draw-level -> re-aggregate daily.
+- Void-after-settle: delete settle reports -> upsert void report -> re-aggregate daily.
+
+### P3 — Mỗi collection 1 document shape
+- KHÔNG dùng `reportType` discriminator.
+- Mỗi collection chỉ chứa 1 loại document duy nhất.
+
+### P4 — Crash-safe & Idempotent
+- Mọi step đều idempotent (chạy lại cho cùng kết quả).
+- Upsert pattern cho write. Re-aggregate pattern cho daily.
+- Step function retry an toàn ở mọi điểm crash.
+
+### P5 — Tuân thủ code-quality-standards và entity-typesafe-mongodb
+- JSDoc cho mọi class, method, interface, field theo code-quality-standards.
+- Named interfaces cho embedded docs theo entity-typesafe-mongodb.
+- MongoDB query format: mỗi field một dòng.
+
+---
+
+## 2. Game List & Collection Mapping
+
+7 games, mỗi game 4 collections report:
+
+| Game       | Entity package   | Application package          | Worker app       | Prefix    |
+|------------|------------------|------------------------------|------------------|-----------|
+| Lotto 5/35 | game-lotto535    | game-lotto535-application    | worker-lotto535  | lotto535  |
+| Mega 6/45  | game-mega645     | game-mega645-application     | worker-mega645   | mega645   |
+| Power 6/55 | game-power655    | game-power655-application    | worker-power655  | power655  |
+| Keno       | game-keno        | game-keno-application        | worker-keno      | keno      |
+| Bingo 18   | game-bingo18     | game-bingo18-application     | worker-bingo18   | bingo18   |
+| Max 3D     | game-max3d       | game-max3d-application       | worker-max3d     | max3d     |
+| Max 3D Pro | game-max3dpro    | game-max3dpro-application    | worker-max3dpro  | max3dpro  |
+
+### Per-game collections (4 x 7 = 28):
+
+```
+{prefix}_settle_draw_reports        -- 1 doc/draw đã settle
+{prefix}_settle_tenant_reports      -- 1 doc/tenant/draw đã settle
+{prefix}_void_draw_reports          -- 1 doc/draw đã void
+{prefix}_outstanding_draw_reports   -- 1 doc/draw active (TTL 15 min)
+```
+
+### System collections (3):
+
+```
+system_settle_game_daily            -- 1 doc/game/financialDate (aggregate by financialDate cho daily total)
+system_settle_tenant_daily          -- 1 doc/tenant/game/financialDate (aggregate by {financialDate,tenantId} cho tenant total)
+system_outstanding_game_daily       -- 1 doc/game (TTL 15 min)
+```
+
+**LƯU Ý**: Không có `system_settle_daily` riêng. Daily total = aggregate `system_settle_game_daily` by financialDate.
+
+---
+
+## 3. Entity Interfaces — Quy tắc viết
+
+### 3.1 File locations
+
+```
+packages/game-{game}/src/entities/report.ts
+  -> SettleDrawReport, SettleTenantReport, VoidDrawReport, OutstandingDrawReport
+  -> Collection name constants: SETTLE_DRAW_REPORTS, SETTLE_TENANT_REPORTS, ...
+  -> Export qua index.ts
+
+packages/game-core/src/entities/financial-report.ts
+  -> SystemSettleGameDaily, SystemSettleTenantDaily, SystemOutstandingGameDaily
+  -> Collection name constants
+  -> Export qua index.ts
+```
+
+### 3.2 SettleDrawReport
+
+```typescript
+/** Báo cáo tài chính kỳ quay đã settle. 1 doc = 1 draw.
+ * IDEMPOTENT: upsert by drawId, chạy lại overwrite toàn bộ.
+ * Thông tin draw (drawNo, drawDate, drawTime) tra từ DrawDoc khi cần hiển thị. */
+export interface SettleDrawReport {
+  /** ID kỳ quay. Unique index. */
+  drawId: string;
+  /** Ngày tài chính (YYYY-MM-DD). Query index. */
+  financialDate: string;
+
+  /** Số entry đã settle. */
+  entryCount: number;
+  /** Số player (unique accountId). */
+  playerCount: number;
+  /** Số tenant tham gia. */
+  tenantCount: number;
+  /** Số dòng (lines). Optional, chỉ game có lines (lotto535, mega645, power655). */
+  lineCount?: number;
+
+  /** Tổng tiền cược (VND). Công thức: SUM(entry.amount). */
+  totalStake: number;
+  /** Tổng tiền thắng (VND). Công thức: SUM(entry.payout.winAmount). */
+  totalWin: number;
+  /** Tổng tiền trả thưởng (VND), bao gồm jackpot payout. Công thức: SUM(entry.payout.payoutAmount). */
+  totalPayout: number;
+
+  /** Gross Gaming Revenue (VND). Công thức: totalStake - totalPayout. Có thể âm khi trúng jackpot. */
+  ggr: number;
+  /** Tổng hoa hồng đại lý (VND). Công thức: SUM(entry.tenant.commissionAmount). */
+  totalCommission: number;
+  /** Lợi nhuận ròng (VND). Công thức: ggr - totalCommission. Có thể ÂM. Đây là bottom-line P&L. */
+  netProfit: number;
+
+  /** Phần công ty thu về theo cấu hình (VND). Từ DrawFinancial.actualCompanyTake hoặc profit. */
+  companyTake: number;
+  /**
+   * Phần đóng góp vào quỹ Jackpot (VND).
+   * CHỈ có ở game CÓ Jackpot (lotto535, mega645, power655).
+   * Game KHÔNG có Jackpot (keno, bingo18, max3d, max3dpro): KHÔNG có field này.
+   */
+  jackpotContribution?: number;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export const SETTLE_DRAW_REPORTS = "{prefix}_settle_draw_reports";
+// Indexes:
+//   Unique: { drawId: 1 }
+//   Query:  { financialDate: 1 }
+```
+
+### 3.3 SettleTenantReport
+
+```typescript
+/** Báo cáo tài chính theo tenant cho 1 draw đã settle. 1 doc = 1 tenant x 1 draw.
+ * IDEMPOTENT: upsert by { drawId, tenantId }. */
+export interface SettleTenantReport {
+  /** ID kỳ quay. */
+  drawId: string;
+  /** ID đại lý. */
+  tenantId: string;
+  /** Ngày tài chính (YYYY-MM-DD). */
+  financialDate: string;
+
+  /** Số entry của tenant trong draw. */
+  entryCount: number;
+  /** Số player của tenant (unique accountId). */
+  playerCount: number;
+  /** Số dòng (lines). Optional. */
+  lineCount?: number;
+
+  /** Tổng tiền cược (VND). */
+  totalStake: number;
+  /** Tổng tiền thắng (VND). */
+  totalWin: number;
+  /** Tổng tiền trả thưởng (VND). */
+  totalPayout: number;
+  /** GGR = totalStake - totalPayout. */
+  ggr: number;
+  /** Hoa hồng đại lý (VND). SUM(entry.tenant.commissionAmount). */
+  commission: number;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Unique index: { drawId: 1, tenantId: 1 }
+// Query index:  { financialDate: 1, tenantId: 1 }
+```
+
+### 3.4 VoidDrawReport
+
+```typescript
+/** Báo cáo kỳ quay đã void. 1 doc = 1 draw.
+ * Nếu draw đã settle trước khi void, snapshot settle data vào previousSettleSnapshot.
+ * IDEMPOTENT: upsert by drawId.
+ * Thông tin draw (drawNo, drawDate) tra từ DrawDoc khi cần hiển thị. */
+export interface VoidDrawReport {
+  drawId: string;
+  financialDate: string;
+
+  entryCount: number;
+  playerCount: number;
+  tenantCount: number;
+
+  /** Tổng tiền cược gốc trước khi hoàn (VND). */
+  totalOriginalStake: number;
+  /** Tổng tiền hoàn trả (VND). */
+  totalRefundAmount: number;
+
+  /** True nếu draw đã settle trước khi bị void. */
+  wasPreviouslySettled: boolean;
+  /** Snapshot settle data trước khi xoá. Chỉ có khi wasPreviouslySettled = true. */
+  previousSettleSnapshot?: VoidPreviousSettleSnapshot;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/** Snapshot dữ liệu settle trước khi void, dùng cho audit trail. */
+export interface VoidPreviousSettleSnapshot {
+  totalStake: number;
+  totalPayout: number;
+  ggr: number;
+  totalCommission: number;
+  netProfit: number;
+}
+
+// Unique index: { drawId: 1 }
+// Query index:  { financialDate: 1 }
+```
+
+### 3.5 OutstandingDrawReport
+
+```typescript
+/** Snapshot số liệu entries chưa settle/void cho 1 draw active. TTL auto-expire.
+ * Scheduled job upsert mỗi 5 phút, refresh snapshotAt.
+ * Khi draw settle/void, job ngừng refresh -> doc tự expire sau 15 phút.
+ * Thông tin draw (drawNo, drawDate, drawTime) tra từ DrawDoc khi cần hiển thị. */
+export interface OutstandingDrawReport {
+  drawId: string;
+  financialDate: string;
+
+  entryCount: number;
+  playerCount: number;
+  tenantCount: number;
+  lineCount?: number;
+  /** Tổng tiền cược pending (VND). */
+  totalStake: number;
+  /** Ước tính hoa hồng (VND). */
+  estimatedCommission: number;
+
+  /** TTL field. MongoDB tự xoá doc khi snapshotAt + 900s < now. */
+  snapshotAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Unique index: { drawId: 1 }
+// TTL index:    { snapshotAt: 1 }, expireAfterSeconds: 900
+```
+
+### 3.6 System Report Interfaces
+
+Đặt tại `packages/game-core/src/entities/financial-report.ts`.
+
+```typescript
+/** Tổng hợp settle của 1 game trong 1 ngày tài chính. Re-aggregate từ settle_draw_reports.
+ * KHÔNG có system_settle_daily riêng. Daily total = aggregate collection này by financialDate. */
+export interface SystemSettleGameDaily {
+  /** Game product identifier. */
+  gameProduct: GameProduct;
+  /** Ngày tài chính (YYYY-MM-DD). */
+  financialDate: string;
+
+  drawCount: number;
+  entryCount: number;
+  playerCount: number;
+  tenantCount: number;
+
+  /** Tổng tiền cược (VND). */
+  totalStake: number;
+  /** Tổng tiền trả thưởng (VND). */
+  totalPayout: number;
+  /** GGR = totalStake - totalPayout. */
+  ggr: number;
+  /** Tổng hoa hồng đại lý (VND). */
+  totalCommission: number;
+  /** Lợi nhuận ròng (VND). ggr - totalCommission. Có thể ÂM. */
+  netProfit: number;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+// Unique: { financialDate: 1, gameProduct: 1 }
+// Query daily total: aggregate WHERE { financialDate } -> SUM all games
+
+/** Tổng hợp settle cross-game của 1 tenant cho 1 game trong 1 ngày tài chính.
+ * Flatten design: 1 doc = 1 financialDate x 1 tenantId x 1 gameProduct.
+ * Tenant daily total = aggregate WHERE { financialDate, tenantId } -> SUM all games.
+ * All tenants for 1 date = aggregate WHERE { financialDate } group by tenantId. */
+export interface SystemSettleTenantDaily {
+  /** Ngày tài chính (YYYY-MM-DD). */
+  financialDate: string;
+  /** ID đại lý. */
+  tenantId: string;
+  /** Game product identifier. */
+  gameProduct: GameProduct;
+
+  /** Tổng tiền cược (VND). */
+  totalStake: number;
+  /** Tổng tiền trả thưởng (VND). */
+  totalPayout: number;
+  /** GGR = totalStake - totalPayout. */
+  ggr: number;
+  /** Hoa hồng đại lý (VND). */
+  commission: number;
+  /** Lợi nhuận ròng (VND). ggr - commission. */
+  netProfit: number;
+  entryCount: number;
+  /** Số player (unique accountId) của tenant trong ngày. */
+  playerCount: number;
+  drawCount: number;
+
+  createdAt: Date;
+  updatedAt: Date;
+}
+// Unique: { financialDate: 1, tenantId: 1, gameProduct: 1 }
+
+/** Snapshot outstanding cross-draw cho 1 game. TTL auto-expire. */
+export interface SystemOutstandingGameDaily {
+  gameProduct: GameProduct;
+
+  activeDrawCount: number;
+  totalEntryCount: number;
+  /** Tổng số player (unique accountId) pending. */
+  totalPlayerCount: number;
+  /** Tổng số tenant tham gia pending. */
+  totalTenantCount: number;
+  totalOutstandingStake: number;
+  totalEstimatedCommission: number;
+
+  /** TTL field. */
+  snapshotAt: Date;
+  updatedAt: Date;
+}
+// Unique: { gameProduct: 1 }
+// TTL:    { snapshotAt: 1 }, expireAfterSeconds: 900
+```
+
+**LƯU Ý QUAN TRỌNG**:
+- **KHÔNG có `SystemSettleDaily`** riêng. Khi cần daily total, aggregate `system_settle_game_daily` WHERE {financialDate}.
+- **KHÔNG có `SystemTenantGameBreakdown`** hay `SystemDailyGameBreakdown`** nested array. Tất cả đã flatten.
+- **KHÔNG có `system_settle_daily`** collection. Chỉ còn 3 system collections.
+
+---
+
+## 4. Metric Definitions (BẮT BUỘC tuân thủ)
+
+| Metric            | Công thức                          | Scope              | Ghi chú                           |
+|-------------------|------------------------------------|--------------------|-----------------------------------|
+| totalStake        | SUM(entry.amount)                  | Settle, Outstanding| Tổng tiền cược                    |
+| totalWin          | SUM(entry.payout.winAmount)        | Settle             | Tổng tiền thắng                   |
+| totalPayout       | SUM(entry.payout.payoutAmount)     | Settle             | Tổng tiền trả thưởng (incl JP)   |
+| ggr               | totalStake - totalPayout           | Settle             | Có thể ÂM khi trúng jackpot      |
+| totalCommission   | SUM(entry.tenant.commissionAmount) | Settle             | Hoa hồng đại lý                   |
+| netProfit         | ggr - totalCommission              | Settle             | P&L thực, có thể ÂM. BOTTOM LINE |
+| companyTake       | DrawFinancial.actualCompanyTake hoặc profit | Settle per-game    | Revenue allocation                |
+| jackpotContrib    | DrawFinancial.jackpotContribution  | Settle per-game    | CHỈ game CÓ jackpot. Game không có jackpot: bỏ field |
+| totalOriginalStake| SUM(void entry original amount)    | Void               | Tiền cược gốc                     |
+| totalRefundAmount | SUM(void entry refund amount)      | Void               | Tiền hoàn trả                     |
+| estimatedCommission| SUM(entry.tenant.commissionAmount)| Outstanding        | Ước tính hoa hồng pending         |
+
+**CẢNH BÁO**: `netProfit` CÓ THỂ ÂM. Đây là lãi/lỗ thực tế. KHÔNG validate >= 0.
+
+---
+
+## 5. Build Flows — Quy tắc tích hợp worker
+
+### 5.1 Settle Report Flow
+
+Thêm 2 steps vào cuối settle step function, TRƯỚC FinalizeSettle:
+
+```
+... existing steps ...
+-> BuildReport (existing)
+-> BuildSettleReport (NEW)     ← per-game reports
+-> PublishSettleDaily (NEW)    ← system reports
+-> FinalizeSettle
+```
+
+**BuildSettleReport** (per-game, idempotent):
+1. Aggregate entries WHERE {drawId, status: "settled"}, group by {tenantId, accountId} -> volumes, group by {tenantId} -> financial metrics.
+2. UPSERT `{prefix}_settle_tenant_reports` — M docs, filter: {drawId, tenantId}.
+3. SUM tenant reports + draw.financial -> UPSERT `{prefix}_settle_draw_reports` — 1 doc, filter: {drawId}.
+
+**PublishSettleDaily** (system, idempotent):
+4. Aggregate ALL `{prefix}_settle_draw_reports` WHERE {financialDate} cho game hiện tại -> UPSERT `system_settle_game_daily` filter: {financialDate, gameProduct}.
+5. Aggregate ALL `{prefix}_settle_tenant_reports` WHERE {financialDate} cho game hiện tại -> group by tenantId -> UPSERT `system_settle_tenant_daily` filter: {financialDate, tenantId, gameProduct}.
+6. (KHÔNG CÓ step 6 — daily total được aggregate on read từ system_settle_game_daily).
+
+### 5.2 Void Report Flow
+
+Thêm 2 steps vào cuối void step function, TRƯỚC FinalizeVoid:
+
+```
+... existing steps ...
+-> DispatchRefunds
+-> BuildVoidReport (NEW)       ← cleanup + per-game void report
+-> PublishSettleDaily (REUSE)   ← re-aggregate system (settle totals giảm)
+-> FinalizeVoid
+```
+
+**BuildVoidReport** (per-game, idempotent):
+
+Phase 0 — Cleanup (chỉ khi void-after-settle):
+0a. Read `{prefix}_settle_draw_reports` WHERE drawId -> snapshot data vào VoidPreviousSettleSnapshot.
+0b. DELETE `{prefix}_settle_tenant_reports` WHERE {drawId}.
+0c. DELETE `{prefix}_settle_draw_reports` WHERE {drawId}.
+
+Phase 1 — Build:
+1. Aggregate voided entries + draw.voidInfo -> UPSERT `{prefix}_void_draw_reports` — 1 doc, filter: {drawId}.
+
+Phase 2 — PublishSettleDaily (reuse):
+2. Gọi cùng use case PublishSettleDaily. Settle totals tự giảm vì draw-level reports đã bị xoá.
+
+### 5.3 Outstanding Sync Flow (Scheduled Job)
+
+EventBridge rule mỗi 5 phút -> Lambda per-game + Lambda system.
+
+**SyncOutstandingReport** (per-game):
+1. Aggregate entries WHERE {status: "scheduled"} group by drawId -> volumes + stake.
+2. UPSERT `{prefix}_outstanding_draw_reports` — set snapshotAt = now.
+3. Draws đã settle/void -> job không tạo doc mới -> TTL tự xoá sau 15 phút.
+
+**SyncSystemOutstanding** (system):
+4. Aggregate ALL `{prefix}_outstanding_draw_reports` per game.
+5. UPSERT `system_outstanding_game_daily` — set snapshotAt = now.
+
+---
+
+## 6. Crash-Safety — Phân tích từng điểm crash
+
+### Settle Report crash:
+- Crash sau tenant upsert (partial): Retry upsert overwrite -> idempotent, không duplicate.
+- Crash sau draw upsert: Draw report OK, daily stale. Retry Phase 2 re-aggregate -> correct.
+- Crash sau game_daily: Continue Phase 2. tenant_daily + daily re-aggregate.
+
+### Void Report crash:
+- Crash sau snapshot (0a): Void report created, settle vẫn còn. Retry: upsert void (idempotent), rồi delete settle.
+- Crash sau delete tenant (0b): Tenant deleted, draw report còn. Retry: delete draw (idempotent), re-aggregate.
+- Crash sau delete draw (0c): Settle đã xoá, daily stale. Retry: Phase 2 re-aggregate -> correct.
+
+### Outstanding crash:
+- Crash ở bất kỳ đâu: Stale docs tự expire qua TTL. Job run tiếp theo tạo lại.
+
+---
+
+## 7. Code Locations — BẮT BUỘC đặt file đúng chỗ
+
+### Entity Layer
+```
+packages/game-{game}/src/entities/report.ts
+  -> SettleDrawReport, SettleTenantReport, VoidDrawReport, OutstandingDrawReport
+  -> Collection constants
+  -> Export qua entities/index.ts
+
+packages/game-core/src/entities/financial-report.ts
+  -> SystemSettleGameDaily, SystemSettleTenantDaily
+  -> SystemOutstandingGameDaily
+  -> Collection constants
+  -> Export qua entities/index.ts
+```
+
+### Repository Layer
+```
+packages/game-{game}-application/src/infras/repos/
+  settle-draw-report-repo.ts
+    -> upsertDrawReport(report: SettleDrawReport)
+    -> deleteByDrawId(drawId: string)
+    -> findByDrawId(drawId: string): SettleDrawReport | null
+
+  settle-tenant-report-repo.ts
+    -> upsertTenantReports(reports: SettleTenantReport[])
+    -> deleteByDrawId(drawId: string)
+
+  void-report-repo.ts
+    -> upsertVoidReport(report: VoidDrawReport)
+
+  outstanding-report-repo.ts
+    -> upsertDrawReport(report: OutstandingDrawReport)
+    -> aggregateForGame(): summary for system
+
+packages/game-core-application/src/infras/repos/
+  system-settle-report-repo.ts
+    -> upsertGameDaily(report: SystemSettleGameDaily)
+    -> upsertTenantDaily(report: SystemSettleTenantDaily)
+    -> aggregateDrawsFromPerGameCollection(collName, financialDate)
+    -> aggregateTenantsFromPerGameCollection(collName, financialDate)
+
+  system-outstanding-report-repo.ts
+    -> upsertGameOutstanding(report: SystemOutstandingGameDaily)
+    -> aggregateFromPerGameCollection(collName)
+```
+
+**LƯU Ý QUAN TRỌNG**:
+- Settle draw report và settle tenant report PHẢI tách riêng repo (không mix).
+- Aggregation queries cho system reports PHẢI nằm trong repo layer, KHÔNG inline trong use case.
+- Use case chỉ orchestrate flow — gọi repo aggregate rồi gọi repo upsert.
+
+### Use Case Layer
+```
+packages/game-{game}-application/src/use-cases/settle/
+  build-settle-report.ts    <- Phase 1: entries -> per-game reports
+
+packages/game-{game}-application/src/use-cases/void/
+  build-void-report.ts      <- Phase 0+1: cleanup + void report
+
+packages/game-core-application/src/use-cases/
+  publish-settle-daily.ts   <- Phase 2: re-aggregate system (dùng chung settle + void)
+  sync-outstanding.ts       <- Outstanding sync per-game
+  sync-system-outstanding.ts <- Outstanding sync system
+```
+
+### Worker Layer
+```
+apps/worker-{game}/src/
+  handlers/settle/build-settle-report.ts   <- Lambda handler
+  handlers/settle/publish-settle-daily.ts  <- Lambda handler (reuse PublishSettleDailyUseCase)
+  handlers/void/build-void-report.ts       <- Lambda handler
+  handlers/void/publish-settle-daily.ts    <- Lambda handler (reuse PublishSettleDailyUseCase)
+  handlers/outstanding/sync-outstanding.ts <- Scheduled lambda
+
+  step-functions/
+    settle.ts        <- Thêm BuildSettleReport + PublishSettleDaily TRƯỚC FinalizeSettle
+    void.ts          <- Thêm BuildVoidReport + PublishSettleDaily TRƯỚC FinalizeVoid
+```
+
+**LƯU Ý**: KHÔNG cần tạo/regenerate file `.asl.json` trong quá trình code.
+Chỉ sửa file `.ts` — file `.asl.json` sẽ được tạo thủ công sau.
+
+---
+
+## 8. Player-Level: On-Demand Query (KHÔNG pre-compute)
+
+Player drill-down (xem từng player trong 1 draw/tenant) KHÔNG tạo report riêng.
+Query trực tiếp từ `{prefix}_ticket_entries`:
+
+```typescript
+db.collection.aggregate([
+  { $match: { drawId, tenantId, status: "settled" } },
+  { $group: {
+    _id: "$accountId",
+    username: { $first: "$username" },
+    entryCount: { $sum: 1 },
+    totalStake: { $sum: "$amount" },
+    totalWin: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
+    totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+  }},
+  { $sort: { totalStake: -1 } },
+]);
+```
+
+Index cần: `{ drawId: 1, tenantId: 1, accountId: 1 }`.
+
+---
+
+## 9. Repo Write Pattern — BẮT BUỘC
+
+Tất cả repo write PHẢI dùng upsert pattern:
+
+```typescript
+async upsertDrawReport(report: SettleDrawReport): Promise<void> {
+  const now = new Date();
+  await this.findOneAndUpdate(
+    {
+      drawId: report.drawId,
+    },
+    {
+      $set: {
+        ...report,
+        updatedAt: now,
+      },
+      $setOnInsert: {
+        createdAt: now,
+      },
+    },
+    {
+      upsert: true,
+    },
+  );
+}
+```
+
+Delete PHẢI dùng deleteMany (idempotent — xoá 0 docs cũng OK):
+
+```typescript
+async deleteByDrawId(drawId: string): Promise<void> {
+  await this.deleteMany({
+    drawId,
+  });
+}
+```
+
+---
+
+## 10. KHÔNG ĐƯỢC làm
+
+- KHÔNG dùng `$inc` cho bất kỳ report nào.
+- KHÔNG tạo player-level report collection.
+- KHÔNG trộn settle + void vào cùng collection.
+- KHÔNG thêm `jackpotOpening`, `jackpotClosing`, `drawStatus`, `prizeSummary`, `voidReason`, `voidedBy`, `voidedAt` vào report (đã có trên DrawDoc gốc).
+- KHÔNG validate `netProfit >= 0` (có thể âm khi trúng jackpot).
+- KHÔNG dùng `reportType` discriminator.
+- KHÔNG hardcode collection names — luôn dùng constants từ entity.
+- KHÔNG tạo `system_settle_daily` collection riêng — aggregate on read từ `system_settle_game_daily`.
+- KHÔNG dùng nested array `gameBreakdown[]` trong system reports — đã flatten.
+- KHÔNG lưu `drawNo`, `drawDate`, `drawTime` vào report — tra từ DrawDoc.
+- KHÔNG lưu `commissionRate` vào SettleTenantReport — tính từ commission/totalStake nếu cần.
+- KHÔNG thêm `jackpotContribution` vào game không có Jackpot (keno, bingo18, max3d, max3dpro) — bỏ field hoàn toàn, KHÔNG set = 0.
+
+---
+
+## 11. Game-Specific Notes — Khác biệt giữa các game
+
+### 11.1 Games CÓ Jackpot (3 game)
+
+| Game       | Jackpot Type  | SettleFinancials fields liên quan                                    |
+|------------|---------------|----------------------------------------------------------------------|
+| Lotto 5/35 | Single + Split| `jackpotContribution`, `actualCompanyTake`                           |
+| Mega 6/45  | Single        | `jackpotContribution`, `actualCompanyTake`                           |
+| Power 6/55 | Dual (JP1+JP2)| `jackpot1Contribution`, `jackpot2Contribution`, `actualCompanyTake`  |
+
+- `SettleDrawReport.jackpotContribution` = tổng đóng góp vào quỹ jackpot.
+  - Lotto535/Mega645: `= financials.jackpotContribution`
+  - Power655: `= financials.jackpot1Contribution + financials.jackpot2Contribution`
+- `SettleDrawReport.companyTake` = `financials.actualCompanyTake` cho cả 3 game.
+
+### 11.2 Games KHÔNG CÓ Jackpot (4 game)
+
+| Game       | SettleFinancials fields liên quan                 |
+|------------|---------------------------------------------------|
+| Keno       | `totalRevenue`, `totalPrizes`, `totalAgentCommission`, `profit` |
+| Bingo 18   | `totalRevenue`, `totalPrizes`, `totalAgentCommission`, `companyTake` |
+| Max 3D     | `totalRevenue`, `totalFixedPrizes`, `totalAgentCommission`, `profit` |
+| Max 3D Pro | `totalRevenue`, `totalFixedPrizes`, `totalAgentCommission`, `profit` |
+
+- **`SettleDrawReport.jackpotContribution` — BỎ HOÀN TOÀN** (không khai báo trong interface, không set = 0).
+  Game không có Jackpot thì DB document cũng không có field này.
+- `SettleDrawReport.companyTake`:
+  - Keno/Max3D/Max3DPro: `= financials.profit`
+  - Bingo18: `= financials.companyTake`
+
+### 11.3 lineCount — Optional field
+
+| Game       | Có lineCount? | Ghi chú                                           |
+|------------|---------------|----------------------------------------------------|
+| Lotto 5/35 | CÓ            | lineCount = expandedLines per board                |
+| Mega 6/45  | CÓ            | lineCount = expandedLines per board                |
+| Power 6/55 | CÓ            | lineCount = expandedLines per board                |
+| Max 3D     | CÓ            | lineCount = lines/pairs per board                  |
+| Max 3D Pro | CÓ            | lineCount = pairs per board                        |
+| Keno       | KHÔNG          | Dùng betCount (boards + sideBets). lineCount = undefined |
+| Bingo 18   | KHÔNG          | Dùng betCount (boards + sideBets). lineCount = undefined |
+
+### 11.4 VoidContext — BẮT BUỘC có financialDate
+
+Tất cả game PHẢI có `financialDate` trong `VoidContext`.
+Nếu chưa có → thêm vào `void/types.ts` + cập nhật `prepare-void.ts` để đọc từ DrawDoc.
+
+### 11.5 Settle Flow — Khác biệt về step ordering
+
+Mỗi game có settle flow khác nhau. Khi thêm BuildSettleReport + PublishSettleDaily:
+- Thêm SAU step cuối cùng trước FinalizeSettle (thường là BuildReport cũ).
+- Giữ nguyên thứ tự các steps hiện tại, chỉ chèn 2 steps mới.
+- Keno: có thêm ApplyPayoutCaps step.
+- Power655: có CheckJackpotWinner → PatchJackpotPrize (conditional).
+
+### 11.6 Xoá report cũ
+
+Mỗi game có report cũ dùng discriminator pattern:
+- Xoá `report-repo.ts` (collection `{game}DailyReports`)
+- Xoá `build-report.ts` use case + handler
+- Xoá step `BuildReport` khỏi step function `.ts`
+- Cập nhật barrel exports (index.ts)

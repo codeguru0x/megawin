@@ -1,6 +1,6 @@
 export { GetCurrentDrawPlayerUseCase } from "./get-current-draw-player";
 export { ListPendingTicketsPlayerUseCase } from "./list-pending-tickets-player";
-export { ListTicketsPlayerUseCase } from "./list-tickets-player";
+export { ListTicketsPlayerUseCase } from "./list-all-tickets-player";
 export { GetTicketEntriesPlayerUseCase } from "./get-ticket-entries-player";
 export { GetGameConfigPlayerUseCase } from "./get-game-config-player";
 export { ListDrawResultsPlayerUseCase } from "./list-draw-results-player";
@@ -11,13 +11,11 @@ export type {
   PlayerDrawInfo,
   PlayerListTicketsInput,
   PlayerListPendingTicketsInput,
-  PlayerListCompletedTicketsInput,
   PlayerListTicketsOutput,
   PlayerTicketSummary,
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
   PlayerEntryInfo,
-  TicketSortBy,
   PlayerListDrawResultsInput,
   PlayerListDrawResultsOutput,
   PlayerDrawResultSummary,
@@ -40,5 +38,3 @@ export type {
   PlayerPayoutCaps,
   PlayerTenantGameConfig,
 } from "./dto/player-game-config.dto";
-
-export { TicketSortBy as TicketSortByValues, TICKET_SORT_BY_VALUES } from "./dto/player.dto";

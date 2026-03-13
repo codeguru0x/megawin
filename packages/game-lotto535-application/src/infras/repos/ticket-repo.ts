@@ -15,7 +15,6 @@ import type { AnyBulkWriteOperation, Document, Filter } from "mongodb";
 import { ObjectId } from "mongodb";
 import { BaseRepo } from "./base-repo";
 import { TicketMapper, type TicketEntity } from "../mappers/ticket-mapper";
-import type { TicketSortBy } from "../../use-cases/player/dto/player.dto";
 
 /** Aggregate summary từ entries, dùng để sync lại ticket document. */
 export interface TicketSummary {
@@ -82,38 +81,23 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   /**
    * Vé đang chờ xử lý (status = paid, còn draws chưa settle/void).
    * Cursor = _id (monotonic với createdAt), sort desc.
+   * Trả về TẤT CẢ pending tickets — không lọc theo ngày.
    */
   async getPendingTickets(
     tenantId: string,
     accountId: string,
     size: number,
     opts?: {
-      from?: Date;
-      to?: Date;
       cursor?: string;
     },
   ): Promise<TicketEntity[]> {
-    const { from, to, cursor } = opts ?? {};
+    const { cursor } = opts ?? {};
 
     const filter: Filter<Document> = {
       tenantId,
       accountId,
       status: { $in: PENDING_STATUSES },
     };
-
-    if (from || to) {
-      const dateRange: Record<string, Date> = {};
-
-      if (from) {
-        dateRange.$gte = from;
-      }
-
-      if (to) {
-        dateRange.$lte = to;
-      }
-
-      filter.createdAt = dateRange;
-    }
 
     if (cursor && ObjectId.isValid(cursor)) {
       filter._id = { $lt: new ObjectId(cursor) };

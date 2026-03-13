@@ -21,8 +21,8 @@ export type { ApplyPayoutCapsResult } from "./apply-payout-caps";
 
 export { CalculateFinancialsUseCase } from "./calculate-financials";
 
-export { BuildReportUseCase } from "./build-report";
-export type { BuildReportResult } from "./build-report";
+export { BuildSettleReportUseCase } from "./build-settle-report";
+export type { BuildSettleReportResult } from "./build-settle-report";
 
 export { FinalizeSettleUseCase } from "./finalize-settle";
 export type { FinalizeSettleResult } from "./finalize-settle";

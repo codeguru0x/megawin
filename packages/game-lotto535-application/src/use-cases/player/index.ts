@@ -13,7 +13,6 @@ export type {
   PlayerDrawInfo,
   PlayerGetJackpotOutput,
   PlayerListPendingTicketsInput,
-  PlayerListCompletedTicketsInput,
   PlayerListTicketsInput,
   PlayerListTicketsOutput,
   PlayerTicketSummary,
@@ -23,7 +22,6 @@ export type {
   PlayerGetEntryLinesInput,
   PlayerGetEntryLinesOutput,
   PlayerLineInfo,
-  TicketSortBy,
 } from "./dto/player.dto";
 
 export type { GetGameConfigPlayerInput } from "./get-game-config-player";
@@ -35,8 +33,6 @@ export type {
   PlayerJackpotConfig,
   PlayerTenantGameConfig,
 } from "./dto/player-game-config.dto";
-
-export { TICKET_SORT_BY_VALUES } from "./dto/player.dto";
 
 export type {
   PlayerListDrawResultsInput,

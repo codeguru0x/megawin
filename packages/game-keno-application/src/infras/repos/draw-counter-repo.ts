@@ -9,15 +9,9 @@
 
 import { KenoCollections } from "@megawin/game-keno/entities";
 import { BaseRepo } from "./base-repo";
-import {
-  DrawCounterMapper,
-  type DrawCounterEntity,
-} from "../mappers/draw-counter-mapper";
+import { DrawCounterMapper, type DrawCounterEntity } from "../mappers/draw-counter-mapper";
 
-export class DrawCounterRepository extends BaseRepo<
-  DrawCounterEntity,
-  DrawCounterMapper
-> {
+export class DrawCounterRepository extends BaseRepo<DrawCounterEntity, DrawCounterMapper> {
   constructor() {
     super({
       collName: KenoCollections.DrawCounters,
@@ -36,7 +30,7 @@ export class DrawCounterRepository extends BaseRepo<
     const result = await this._collection.findOneAndUpdate(
       { drawDate },
       { $inc: { lastDrawNo: 1 } },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     );
 
     return result!.lastDrawNo as number;
@@ -56,7 +50,7 @@ export class DrawCounterRepository extends BaseRepo<
     const result = await this._collection.findOneAndUpdate(
       { drawDate },
       { $inc: { lastDrawNo: count } },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     );
 
     const lastDrawNo = result!.lastDrawNo as number;

@@ -64,10 +64,6 @@ export interface PlayerGetJackpotOutput {
 
 // ─── List Tickets (Player) ───
 
-export type TicketSortBy = "betDate" | "drawDate";
-
-export const TICKET_SORT_BY_VALUES: readonly TicketSortBy[] = ["betDate", "drawDate"];
-
 export interface PlayerListTicketsInput {
   /** Mã tenant của player. */
   tenantId: string;
@@ -83,6 +79,13 @@ export interface PlayerListTicketsInput {
   cursor?: string;
 }
 
+/**
+ * Input để lấy danh sách vé đang pending của player.
+ *
+ * Không có from/to — pending tickets trả về TẤT CẢ vé chưa settle/void,
+ * sắp xếp mới nhất trước. Player không cần nhớ ngày mua; hệ thống tự trả đủ
+ * qua cursor-based pagination.
+ */
 export interface PlayerListPendingTicketsInput {
   /** Mã tenant của player. */
   tenantId: string;
@@ -90,27 +93,6 @@ export interface PlayerListPendingTicketsInput {
   accountId: string;
   /** Số lượng vé mỗi trang. */
   size: number;
-  /** Lọc từ ngày (YYYY-MM-DD, inclusive). */
-  from?: string;
-  /** Lọc đến ngày (YYYY-MM-DD, inclusive). */
-  to?: string;
-  /** Cursor phân trang (ticketId cuối trang trước). */
-  cursor?: string;
-}
-
-export interface PlayerListCompletedTicketsInput {
-  /** Mã tenant của player. */
-  tenantId: string;
-  /** Mã tài khoản player. */
-  accountId: string;
-  /** Số lượng vé mỗi trang. */
-  size: number;
-  /** Sắp xếp theo ngày đặt cược hoặc ngày quay. */
-  sortBy: TicketSortBy;
-  /** Lọc từ ngày (YYYY-MM-DD, inclusive). */
-  from?: string;
-  /** Lọc đến ngày (YYYY-MM-DD, inclusive). */
-  to?: string;
   /** Cursor phân trang (ticketId cuối trang trước). */
   cursor?: string;
 }
@@ -383,7 +365,6 @@ export interface PlayerDrawResultInfo {
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;
-    drawSession: number;
   };
 }
 
@@ -432,7 +413,6 @@ export interface PlayerDrawResultSummary {
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;
-    drawSession: number;
   };
 }
 

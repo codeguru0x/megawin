@@ -163,16 +163,19 @@ export interface JackpotCycleDoc {
    * Snapshot seedAmount từ GlobalConfig tại thời điểm tạo cycle.
    */
   jackpot1SeedAmount: number;
+
   /**
    * Giá trị JP1 hiện tại (cộng dồn mỗi kỳ settle).
    * Sau mỗi kỳ: = opening + contribution (= closing kỳ vừa rồi = opening kỳ tiếp).
    */
   jackpot1CurrentAmount: number;
+
   /**
    * Giá trị khởi điểm JP2 khi bắt đầu cycle (VND).
    * Snapshot seedAmount từ GlobalConfig tại thời điểm tạo cycle.
    */
   jackpot2SeedAmount: number;
+
   /**
    * Giá trị JP2 hiện tại (cộng dồn mỗi kỳ settle, reset về seed khi JP2 winner).
    * Khi JP2 winner: reset về jp2SeedAmount, giá trị closing trước reset lưu trong

@@ -63,22 +63,23 @@ export interface TicketSettlement {
 }
 
 /**
- * Tổng kết khi vé bị void của Max3D Pro – void theo BOARD (không phải theo draw).
+ * Tổng kết khi vé bị void của Max3D Pro – void theo draw (entry), giống tất cả các game khác.
  *
- * Max3D Pro cho phép void 1 phần board trong vé (board-level void),
- * khác với các game khác (draw-level void).
+ * Khi 1 kỳ (draw) bị void → TẤT CẢ entries của vé thuộc kỳ đó bị void.
+ * Vé multi-draw: chỉ entry của kỳ bị void bị ảnh hưởng, các kỳ khác vẫn tiếp tục.
+ * Single-draw: void toàn bộ vé → ticket.status = refunded.
  */
 export interface TicketVoidSummary {
-  /** True nếu toàn bộ vé bị void (không partial). */
-  isFullVoid: boolean;
-  /** Danh sách boardNo bị void. */
-  voidedBoards: string[];
-  /** Tiền cược gốc trước void. */
-  originalAmount: number;
-  /** Tiền hoàn trả. */
-  refundAmount: number;
-  /** Thời điểm void. */
-  voidedAt: Date;
+  /** Tổng tiền cược gốc của các kỳ bị void (VND) = Σ(entry.amount) kỳ đã void. */
+  totalVoidedAmount: number;
+  /** Tổng tiền đã hoàn trả cho player (VND). */
+  totalRefundedAmount: number;
+  /** Số kỳ quay đã bị void. */
+  voidedDrawCount: number;
+  /** Danh sách drawId của các kỳ đã bị void. */
+  voidedDrawIds: string[];
+  /** Thời điểm kỳ gần nhất bị void. */
+  lastVoidedAt?: Date;
 }
 
 // ─────────────────────────────────────────────
@@ -88,8 +89,6 @@ export interface TicketVoidSummary {
 export interface Board {
   /** Ký hiệu board: A, B, C, D. */
   boardNo: string;
-  /** Board bị huỷ (khi void 1 phần). */
-  isVoid?: boolean;
   /** Cách chơi: multiNumber / multiDigit. */
   playMode: PlayMode;
   /** Kiểu chơi: straight / quickPick. */
@@ -139,7 +138,7 @@ export interface TicketDoc {
   /** Tổng kết thắng thua sau đối soát. */
   settlement?: TicketSettlement;
 
-  /** Tổng kết khi vé bị void (toàn bộ hoặc một phần board). */
+  /** Tổng kết khi ít nhất 1 kỳ của vé bị void. */
   voidSummary?: TicketVoidSummary;
 
   /**
@@ -156,7 +155,7 @@ export interface TicketDoc {
    */
   financialDate: ISODateString;
 
-  /** Trạng thái vé: pending → active → completed / voided. */
+  /** Trạng thái vé: paid → completed / refunded / void. */
   status: TicketStatus;
   /** Phiên bản optimistic locking. */
   version: number;

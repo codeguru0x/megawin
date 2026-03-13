@@ -5,8 +5,9 @@ export { TenantConfigRepository } from "./tenant-config-repo";
 export { TicketRepository } from "./ticket-repo";
 export { EntryRepository } from "./entry-repo";
 export { LineRepository } from "./line-repo";
-export { ReportRepository } from "./report-repo";
-export type {
-  TenantDailyReportData,
-  PlayerDailyReportData,
-} from "@megawin/game-max3d-core/repos";
+export { SettleDrawReportRepository } from "./settle-draw-report-repo";
+export { SettleTenantReportRepository } from "./settle-tenant-report-repo";
+export { VoidReportRepository } from "./void-report-repo";
+export { OutstandingReportRepository } from "./outstanding-report-repo";
+export type { OutstandingGameSummary } from "./outstanding-report-repo";
+export type { TenantDailyReportData, PlayerDailyReportData } from "@megawin/game-max3d-core/repos";

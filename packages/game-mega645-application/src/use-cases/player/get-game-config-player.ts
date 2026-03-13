@@ -2,7 +2,7 @@
  * Use Case: Get Game Config for Player (Mega 6/45)
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import type { PlayerGetGameConfigOutput } from "./dto/player-game-config.dto";
@@ -24,13 +24,17 @@ export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
       this.getTenantConfig.run({ tenantId: input.tenantId }),
     ]);
 
+    if (!globalConfig || !tenantConfig) {
+      throw AppException.notFound("Không tìm thấy cấu hình game.");
+    }
+
     return {
       game: {
         unitPrice: globalConfig.play.unitPrice,
         maxBoardsPerTicket: globalConfig.play.maxBoardsPerTicket,
         maxDrawCount: globalConfig.play.maxDrawCount,
         drawsPerWeek: globalConfig.play.drawsPerWeek,
-        drawDaysOfWeek: [...globalConfig.play.drawDaysOfWeek],
+        drawDaysOfWeek: globalConfig.play.drawDaysOfWeek,
         drawTime: globalConfig.play.drawTime,
       },
       prizes: {
@@ -42,7 +46,7 @@ export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
         seedAmount: globalConfig.jackpot.seedAmount,
       },
       tenant: {
-        isEnabled: tenantConfig?.isEnabled ?? true,
+        isEnabled: tenantConfig.isEnabled,
       },
     };
   }

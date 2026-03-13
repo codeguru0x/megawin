@@ -9,7 +9,7 @@
 
 import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
 import type { Long } from "@megawin/game-core/types";
-import type { PlayMode, PlayType, PrizeTier, PayoutStatus } from "./enums";
+import type { PlayMode, PlayType, PrizeTier, PayoutStatus, RefundStatus } from "./enums";
 import type { Triplet, ISODateString } from "./types";
 import type { Max3dproDrawResult } from "./draw-result";
 
@@ -20,7 +20,14 @@ import type { Max3dproDrawResult } from "./draw-result";
 export interface EntryBoardSnapshot {
   /** Ký hiệu board: A, B, C, D. */
   boardNo: string;
-  /** Board bị huỷ (khi void 1 phần vé). */
+  /**
+   * Board bị huỷ trên ticket (void board-level).
+   *
+   * Max 3D Pro hỗ trợ void 1 phần board trên ticket — board bị void sẽ không
+   * được settle (skip trong SettleEntries). Entry bị void TOÀN BỘ thông qua
+   * VoidEntries flow (void toàn bộ draw), không qua flag này.
+   * isVoid = true khi admin void 1 board cụ thể trên ticket.
+   */
   isVoid?: boolean;
   /** Cách chơi: multiNumber / multiDigit. */
   playMode: PlayMode;
@@ -99,15 +106,15 @@ export interface EntryResult extends Max3dproDrawResult {
 
 /** Thông tin huỷ entry (khi void). */
 export interface EntryVoidInfo {
-  /** Tiền cược gốc trước khi void. */
+  /** Tiền cược gốc trước khi void (VND). */
   originalAmount: number;
-  /** Tiền hoàn trả cho người chơi. */
+  /** Tiền hoàn trả cho người chơi (VND). */
   refundAmount: number;
-  /** Trạng thái hoàn tiền: pending / dispatched / confirmed / failed. */
-  refundStatus: string;
+  /** Trạng thái hoàn tiền: pending → dispatched → confirmed. */
+  refundStatus: RefundStatus;
   /** Thời điểm huỷ entry. */
   voidedAt: Date;
-  /** Thời điểm gửi lệnh hoàn tiền. */
+  /** Thời điểm gửi lệnh hoàn tiền cho ví người chơi. */
   refundDispatchedAt?: Date;
   /** Thời điểm xác nhận hoàn tiền thành công. */
   refundConfirmedAt?: Date;
@@ -154,15 +161,12 @@ export interface TicketEntryDoc {
   /** Tóm tắt nội dung entry (số vé + danh sách boards). */
   entrySummary: EntrySummary;
 
-  /** Kết quả quay thưởng, gắn khi publish result. */
-  result?: Max3dproDrawResult & {
-    /** Thời điểm công bố kết quả. */
-    publishedAt: Date;
-  };
+  /** Kết quả quay thưởng, gắn khi publish result. Set khi settle. */
+  result?: EntryResult;
 
   /** Kết quả đối soát: win / lose / void. */
   outcome?: EntryOutcome;
-  /** Trạng thái entry: pending → active → settled / voided. */
+  /** Trạng thái entry: scheduled → settled / void. */
   status: EntryStatus;
 
   /** Thông tin thanh toán thưởng. */

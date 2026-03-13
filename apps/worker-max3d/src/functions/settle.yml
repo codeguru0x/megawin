@@ -10,8 +10,12 @@ settle-calculate-financials:
   handler: src/handlers/settle/calculate-financials.handler
   timeout: 900
 
-settle-build-report:
-  handler: src/handlers/settle/build-report.handler
+settle-build-settle-report:
+  handler: src/handlers/settle/build-settle-report.handler
+  timeout: 900
+
+settle-publish-settle-daily:
+  handler: src/handlers/settle/publish-settle-daily.handler
   timeout: 900
 
 settle-sync-ticket-summaries:

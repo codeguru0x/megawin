@@ -9,7 +9,7 @@ import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { EntryEntity } from "../../infras/mappers/entry-mapper";
-import { mapPlayerTicket } from "./list-tickets-player";
+import { mapPlayerTicket } from "./mappers/ticket";
 import type {
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
@@ -30,12 +30,8 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
 
     const ticket = await this.ticketRepo.getTicketById(ticketId);
 
-    if (!ticket) {
-      throw AppException.notFound("Ticket not found");
-    }
-
-    if (ticket.tenantId !== tenantId || ticket.accountId !== accountId) {
-      throw AppException.notFound("Ticket not found");
+    if (!ticket || ticket.tenantId !== tenantId || ticket.accountId !== accountId) {
+      throw AppException.notFound("Không tìm thấy vé.");
     }
 
     const entries = await this.entryRepo.findByTicketId(ticket.id);
@@ -60,27 +56,18 @@ function mapPlayerEntry(entry: EntryEntity): PlayerEntryInfo {
         boardNo: b.boardNo,
         playMode: b.playMode,
         playType: b.playType,
-        triplets: [...b.triplets],
-        frontDigits: b.frontDigits ? [...b.frontDigits] : undefined,
-        backDigits: b.backDigits ? [...b.backDigits] : undefined,
+        triplets: b.triplets,
+        frontDigits: b.frontDigits ? b.frontDigits : undefined,
+        backDigits: b.backDigits ? b.backDigits : undefined,
         lineCount: b.lineCount,
       })),
     },
     result: entry.result
       ? {
-          special: entry.result.special as [string, string],
-          first: entry.result.first as [string, string, string, string],
-          second: entry.result.second as [string, string, string, string, string, string],
-          third: entry.result.third as [
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-            string,
-          ],
+          special: entry.result.special,
+          first: entry.result.first,
+          second: entry.result.second,
+          third: entry.result.third,
           publishedAt: entry.result.publishedAt.toISOString(),
         }
       : undefined,

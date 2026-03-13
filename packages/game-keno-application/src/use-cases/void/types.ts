@@ -45,6 +45,12 @@ export interface VoidContext {
   drawId: string;
 
   /**
+   * Ngày tài chính (YYYY-MM-DD) của kỳ quay bị huỷ.
+   * Dùng cho BuildVoidReport để ghi report đúng financialDate.
+   */
+  financialDate: string;
+
+  /**
    * Ngày quay (YYYY-MM-DD) — ngày diễn ra kỳ quay bị huỷ.
    * Dùng cho logging, audit trail, và nhận diện kỳ quay.
    */

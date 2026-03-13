@@ -55,6 +55,16 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
 
   // ─── Query ───
 
+  /** Lấy tất cả entries của 1 ticket, sắp xếp theo drawId tăng dần. */
+  async getEntriesByTicketId(ticketId: string): Promise<EntryEntity[]> {
+    return await this.findMany(
+      { ticketId },
+      {
+        sort: { drawId: 1 },
+      },
+    );
+  }
+
   async getEntriesByDrawId(drawId: string, page: number, size: number): Promise<EntryEntity[]> {
     return await this.paging({ drawId }, page, size, {
       sort: { createdAt: 1 },
@@ -594,6 +604,190 @@ export class EntryRepository extends BaseRepo<EntryEntity, EntryMapper> {
   async getDistinctTicketIdsByDrawId(drawId: string): Promise<ObjectId[]> {
     const col = await this.getCollection();
     return col.distinct("ticketId", { drawId }) as Promise<ObjectId[]>;
+  }
+
+  // ─── Report Aggregations ─────────────────────────────────────────────────────
+
+  /**
+   * Đếm playerCount per tenant cho 1 draw đã settle.
+   *
+   * Group by {tenantId, accountId} để distinct player per tenant,
+   * sau đó group by tenantId → đếm unique players.
+   * Dùng song song với aggregateTenantSettleMetrics trong BuildSettleReport.
+   */
+  async aggregatePlayerCountByTenant(
+    drawId: string,
+  ): Promise<Array<{ tenantId: string; playerCount: number }>> {
+    const result = await this.aggregate([
+      {
+        $match: {
+          drawId,
+          status: EntryStatus.Settled,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            tenantId: "$tenantId",
+            accountId: "$accountId",
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id.tenantId",
+          playerCount: { $sum: 1 },
+        },
+      },
+    ]);
+    return (result as any[]).map((r) => ({
+      tenantId: r._id,
+      playerCount: r.playerCount,
+    }));
+  }
+
+  /**
+   * Aggregate metrics tài chính per tenant cho 1 draw đã settle.
+   *
+   * Dùng bởi BuildSettleReportUseCase để build SettleTenantReport[].
+   * Bingo 18 KHÔNG có lineCount — không aggregate lineCount.
+   */
+  async aggregateTenantSettleMetrics(drawId: string): Promise<
+    Array<{
+      tenantId: string;
+      entryCount: number;
+      totalStake: number;
+      totalWin: number;
+      totalPayout: number;
+      totalCommission: number;
+    }>
+  > {
+    const result = await this.aggregate([
+      {
+        $match: {
+          drawId,
+          status: EntryStatus.Settled,
+        },
+      },
+      {
+        $group: {
+          _id: "$tenantId",
+          entryCount: { $sum: 1 },
+          totalStake: { $sum: "$amount" },
+          totalWin: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
+          totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+          totalCommission: { $sum: "$tenant.commissionAmount" },
+        },
+      },
+    ]);
+    return (result as any[]).map((r) => ({
+      tenantId: r._id,
+      entryCount: r.entryCount,
+      totalStake: r.totalStake,
+      totalWin: r.totalWin,
+      totalPayout: r.totalPayout,
+      totalCommission: r.totalCommission ?? 0,
+    }));
+  }
+
+  /**
+   * Aggregate metrics tổng hợp cho void report của 1 draw.
+   *
+   * Đếm entry, player, tenant đã void; tổng tiền cược gốc và tiền hoàn.
+   * Dùng bởi BuildVoidReport.
+   */
+  async aggregateVoidMetrics(drawId: string): Promise<{
+    entryCount: number;
+    playerCount: number;
+    tenantCount: number;
+    totalOriginalStake: number;
+    totalRefundAmount: number;
+  }> {
+    const result = await this.aggregate([
+      {
+        $match: {
+          drawId,
+          status: EntryStatus.Void,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          entryCount: { $sum: 1 },
+          players: { $addToSet: "$accountId" },
+          tenants: { $addToSet: "$tenantId" },
+          totalOriginalStake: { $sum: "$amount" },
+          totalRefundAmount: { $sum: { $ifNull: ["$voidInfo.refundAmount", "$amount"] } },
+        },
+      },
+    ]);
+
+    if (result.length === 0) {
+      return {
+        entryCount: 0,
+        playerCount: 0,
+        tenantCount: 0,
+        totalOriginalStake: 0,
+        totalRefundAmount: 0,
+      };
+    }
+
+    const r = result[0] as any;
+    return {
+      entryCount: r.entryCount,
+      playerCount: r.players?.length ?? 0,
+      tenantCount: r.tenants?.length ?? 0,
+      totalOriginalStake: r.totalOriginalStake,
+      totalRefundAmount: r.totalRefundAmount,
+    };
+  }
+
+  /**
+   * Aggregate outstanding snapshot cho tất cả draws đang active (status: scheduled).
+   *
+   * Group by drawId → volumes + stake + estimatedCommission.
+   * Bingo 18 KHÔNG có lineCount — không aggregate lineCount.
+   * Dùng bởi SyncOutstandingReport để upsert per-draw outstanding docs.
+   */
+  async aggregateOutstandingByDraw(): Promise<
+    Array<{
+      drawId: string;
+      financialDate: string;
+      entryCount: number;
+      playerCount: number;
+      tenantCount: number;
+      totalStake: number;
+      estimatedCommission: number;
+    }>
+  > {
+    const result = await this.aggregate([
+      {
+        $match: {
+          status: EntryStatus.Scheduled,
+        },
+      },
+      {
+        $group: {
+          _id: "$drawId",
+          financialDate: { $first: "$financialDate" },
+          entryCount: { $sum: 1 },
+          players: { $addToSet: "$accountId" },
+          tenants: { $addToSet: "$tenantId" },
+          totalStake: { $sum: "$amount" },
+          estimatedCommission: { $sum: "$tenant.commissionAmount" },
+        },
+      },
+    ]);
+
+    return (result as any[]).map((r) => ({
+      drawId: r._id,
+      financialDate: r.financialDate,
+      entryCount: r.entryCount,
+      playerCount: r.players?.length ?? 0,
+      tenantCount: r.tenants?.length ?? 0,
+      totalStake: r.totalStake,
+      estimatedCommission: r.estimatedCommission ?? 0,
+    }));
   }
 
   // ─── Feed Sync ───

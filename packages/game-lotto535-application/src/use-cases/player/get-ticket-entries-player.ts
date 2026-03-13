@@ -9,7 +9,7 @@ import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { EntryEntity } from "../../infras/mappers/entry-mapper";
-import { mapPlayerTicket } from "./list-tickets-player";
+import { mapPlayerTicket } from "./mappers/ticket";
 import type {
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
@@ -65,7 +65,7 @@ function mapPlayerEntry(entry: EntryEntity): PlayerEntryInfo {
     },
     result: entry.result
       ? {
-          winningMain: [...entry.result.winningMain],
+          winningMain: entry.result.winningMain,
           winningSpecial: entry.result.winningSpecial,
           publishedAt: entry.result.publishedAt.toISOString(),
         }

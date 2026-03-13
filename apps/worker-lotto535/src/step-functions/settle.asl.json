@@ -104,6 +104,9 @@
       "Type": "Task",
       "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-settle-patch-jackpot-prize",
       "Arguments": "{% $settleCtx %}",
+      "Assign": {
+        "settleCtx": "{% $merge([$settleCtx, { 'jackpotWinners': $states.result.winners }]) %}"
+      },
       "Next": "SyncTicketSummaries",
       "Retry": [
         {
@@ -171,15 +174,36 @@
       "Choices": [
         {
           "Condition": "{% $syncResult.done %}",
-          "Next": "BuildReport"
+          "Next": "BuildSettleReport"
         }
       ],
       "Default": "SyncTicketSummaries"
     },
-    "BuildReport": {
+    "BuildSettleReport": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-settle-build-report",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-settle-build-settle-report",
       "Arguments": "{% $settleCtx %}",
+      "Next": "PublishSettleDaily",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "PublishSettleDaily": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-settle-publish-settle-daily",
+      "Arguments": "{% { 'financialDate': $settleCtx.financialDate } %}",
       "Next": "FinalizeSettle",
       "Retry": [
         {

@@ -52,8 +52,8 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
     drawNo: draw.drawNo,
     drawTime: draw.drawTime.toISOString(),
     result: {
-      winningMain: [...result.winningMain] as string[],
-      winningSpecial: result.winningSpecial as string,
+      winningMain: result.winningMain,
+      winningSpecial: result.winningSpecial,
       publishedAt: result.publishedAt.toISOString(),
     },
     jackpot: {
@@ -66,7 +66,6 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
       ? {
           drawPeriod: draw.vietlottRef.drawPeriod,
           drawDate: draw.vietlottRef.drawDate,
-          drawSession: draw.vietlottRef.drawSession,
         }
       : undefined,
   };

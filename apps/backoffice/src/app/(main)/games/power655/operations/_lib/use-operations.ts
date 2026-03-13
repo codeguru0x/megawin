@@ -253,7 +253,7 @@ export function usePublishResult() {
   return useDrawAction<{
     winningMain: string[];
     bonusNumber: string;
-    vietlottRef?: { drawPeriod: string; drawDate: string; drawSession: number };
+    vietlottRef?: { drawPeriod: string; drawDate: string };
   }>((id) => `/power655/draws/${id}/publish-result`, "post", "Đã công bố kết quả.");
 }
 

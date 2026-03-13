@@ -39,7 +39,7 @@ export const GameTicketPrefix: Record<GameProduct, string> = {
   mega645: "M645",
   keno: "KENO",
   max3d: "M3D",
-  max3dpro: "M3P",
+  max3dpro: "M3DP",
   bingo18: "B18",
 } as const;
 

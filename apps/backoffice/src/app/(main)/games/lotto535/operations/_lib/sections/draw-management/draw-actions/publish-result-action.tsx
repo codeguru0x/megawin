@@ -20,44 +20,18 @@ import {
   generateRandomNumber,
 } from "@/components/dev-random-fill-button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   LOTTO535_MAIN_MIN,
   LOTTO535_MAIN_MAX,
   LOTTO535_MAIN_COUNT,
   LOTTO535_SPECIAL_MIN,
   LOTTO535_SPECIAL_MAX,
 } from "@megawin/game-lotto535/entities";
+import { publishResultSchema } from "@megawin/game-lotto535/schemas";
 import { todayVN } from "@megawin/shared/utils/date";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
-
-function validateMainNumbers(nums: string[]): string | null {
-  const parsed = nums.map(Number);
-  for (let i = 0; i < LOTTO535_MAIN_COUNT; i++) {
-    const n = parsed[i];
-    if (!n || !Number.isInteger(n) || n < LOTTO535_MAIN_MIN || n > LOTTO535_MAIN_MAX) {
-      return `Số chính #${i + 1} phải là số nguyên từ ${pad2(LOTTO535_MAIN_MIN)} đến ${pad2(LOTTO535_MAIN_MAX)}.`;
-    }
-  }
-  if (new Set(parsed).size !== LOTTO535_MAIN_COUNT) return "Các số chính phải khác nhau.";
-  return null;
-}
-
-function validateSpecialNumber(val: string): string | null {
-  const n = Number(val);
-  if (!n || !Number.isInteger(n) || n < LOTTO535_SPECIAL_MIN || n > LOTTO535_SPECIAL_MAX) {
-    return `Số đặc biệt phải là số nguyên từ ${pad2(LOTTO535_SPECIAL_MIN)} đến ${pad2(LOTTO535_SPECIAL_MAX)}.`;
-  }
-  return null;
-}
 
 export function PublishResultAction({
   draw,
@@ -77,7 +51,6 @@ export function PublishResultAction({
   const [specialNumber, setSpecialNumber] = useState("");
   const [vietlotDate, setVietlotDate] = useState(todayVN());
   const [vietlotPeriod, setVietlotPeriod] = useState("");
-  const [vietlotSession, setVietlotSession] = useState(String(draw.drawNo ?? 1));
   const [error, setError] = useState<string | null>(null);
   const publishResult = usePublishResult();
 
@@ -85,14 +58,13 @@ export function PublishResultAction({
 
   function handleSubmit() {
     setError(null);
-    const mainErr = validateMainNumbers(mainNumbers);
-    if (mainErr) {
-      setError(mainErr);
-      return;
-    }
-    const specialErr = validateSpecialNumber(specialNumber);
-    if (specialErr) {
-      setError(specialErr);
+    // Dùng publishResultSchema (shared với API route) thay vì validate thủ công
+    const result = publishResultSchema.safeParse({
+      winningMain: mainNumbers,
+      winningSpecial: specialNumber,
+    });
+    if (!result.success) {
+      setError(result.error.issues[0]?.message ?? "Dữ liệu không hợp lệ.");
       return;
     }
 
@@ -102,7 +74,6 @@ export function PublishResultAction({
       vietlottRef?: {
         drawPeriod: string;
         drawDate: string;
-        drawSession: number;
       };
     } = {
       winningMain: mainNumbers.map((n) => n.padStart(2, "0")),
@@ -113,7 +84,6 @@ export function PublishResultAction({
       body.vietlottRef = {
         drawPeriod: vietlotPeriod.trim(),
         drawDate: vietlotDate,
-        drawSession: Number(vietlotSession),
       };
     }
 
@@ -126,7 +96,6 @@ export function PublishResultAction({
           setSpecialNumber("");
           setVietlotPeriod("");
           setVietlotDate(todayVN());
-          setVietlotSession(String(draw.drawNo ?? 1));
           setError(null);
         },
       },
@@ -240,7 +209,7 @@ export function PublishResultAction({
               <p className="mb-3 text-xs text-muted-foreground">
                 Liên kết kỳ quay với dữ liệu Vietlott chính thức để đối soát
               </p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
                     <CalendarDays className="size-3" />
@@ -265,18 +234,6 @@ export function PublishResultAction({
                     placeholder="VD: 00123"
                     className="font-mono text-sm"
                   />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Phiên quay</Label>
-                  <Select value={vietlotSession} onValueChange={setVietlotSession}>
-                    <SelectTrigger className="font-mono text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">Phiên 1 (13h)</SelectItem>
-                      <SelectItem value="2">Phiên 2 (21h)</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
             </div>

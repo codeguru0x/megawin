@@ -8,7 +8,7 @@
  *   1. Load global config → lấy play rules (drawTimes, drawDaysOfWeek, salesCloseBeforeMinutes)
  *   2. Lấy danh sách draws đã tồn tại → calcPower655DrawSlots skip draws đã có
  *   3. Tính draw slots khả dụng
- *   4. Tạo từng draw: status salesOpen (auto mở bán)
+ *   4. Tạo từng draw: status Scheduled (chờ staff mở bán)
  *   5. Đảm bảo có active JackpotCycle:
  *      - Bootstrap (lần đầu, chưa có cycle nào): tạo mới với seed từ config.
  *      - Recovery (cycle closed nhưng chưa có cycle mới — crash giữa settle):
@@ -80,7 +80,7 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
       const existing = await this.drawRepo.getDrawById(drawId);
       if (existing) continue;
 
-      const status = DrawStatus.SalesOpen;
+      const status = DrawStatus.Scheduled;
 
       await this.drawRepo.createDraw({
         drawId,
@@ -91,7 +91,6 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
         status,
         sales: {
           closeAt: slot.closeAt,
-          openAt: now,
         },
         createdAt: now,
         updatedAt: now,

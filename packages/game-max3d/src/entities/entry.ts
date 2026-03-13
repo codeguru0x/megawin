@@ -9,7 +9,14 @@
 
 import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
 import type { Long } from "@megawin/game-core/types";
-import type { PlayMode, PlayType, BasicPrizeTier, PlusPrizeTier, PayoutStatus } from "./enums";
+import type {
+  PlayMode,
+  PlayType,
+  BasicPrizeTier,
+  PlusPrizeTier,
+  PayoutStatus,
+  RefundStatus,
+} from "./enums";
 import type { Triplet, ISODateString } from "./types";
 import type { Max3dDrawResult } from "./draw-result";
 
@@ -20,7 +27,14 @@ import type { Max3dDrawResult } from "./draw-result";
 export interface EntryBoardSnapshot {
   /** Ký hiệu board: A, B, C, D. */
   boardNo: string;
-  /** Board bị huỷ (khi void 1 phần). */
+  /**
+   * Board bị huỷ trên ticket (void board-level).
+   *
+   * Max 3D hỗ trợ void 1 phần board trên ticket — board bị void sẽ không
+   * được settle (skip trong SettleEntries). Entry bị void TOÀN BỘ thông qua
+   * VoidEntries flow (void toàn bộ draw), không qua flag này.
+   * isVoid = true khi admin void 1 board cụ thể trên ticket.
+   */
   isVoid?: boolean;
   /** Cách chơi: basic / plus. */
   playMode: PlayMode;
@@ -95,15 +109,15 @@ export interface EntryResult extends Max3dDrawResult {
 
 /** Thông tin huỷ entry. Set khi void. */
 export interface EntryVoidInfo {
-  /** Số tiền gốc trước khi huỷ. */
+  /** Số tiền gốc trước khi huỷ (VND). */
   originalAmount: number;
-  /** Số tiền hoàn trả cho người chơi. */
+  /** Số tiền hoàn trả cho người chơi (VND). */
   refundAmount: number;
   /** Trạng thái hoàn tiền: pending → dispatched → confirmed. */
-  refundStatus: string;
+  refundStatus: RefundStatus;
   /** Thời điểm huỷ entry. */
   voidedAt: Date;
-  /** Thời điểm dispatch hoàn tiền. */
+  /** Thời điểm dispatch hoàn tiền cho ví người chơi. */
   refundDispatchedAt?: Date;
   /** Thời điểm xác nhận hoàn tiền thành công. */
   refundConfirmedAt?: Date;
@@ -150,15 +164,12 @@ export interface TicketEntryDoc {
   /** Tóm tắt nội dung vé (boards, ticketNo). */
   entrySummary: EntrySummary;
 
-  /** Snapshot kết quả quay. Set khi settle. */
-  result?: Max3dDrawResult & {
-    /** Thời điểm publish kết quả. */
-    publishedAt: Date;
-  };
+  /** Snapshot kết quả kỳ quay ghi vào entry khi settle. Set khi settle. */
+  result?: EntryResult;
 
   /** Kết quả: "win" | "lose" | "void". Set khi settle/void. */
   outcome?: EntryOutcome;
-  /** Trạng thái vận hành entry: pending → settled / voided. */
+  /** Trạng thái vận hành entry: scheduled → settled / void. */
   status: EntryStatus;
 
   /** Chi tiết thanh toán. Set khi settle. */

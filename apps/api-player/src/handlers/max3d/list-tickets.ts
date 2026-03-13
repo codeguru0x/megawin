@@ -1,6 +1,6 @@
 /**
  * Lambda handler: GET /games/max3d/tickets
- * Danh sách tất cả vé Max 3D (pending + completed).
+ * Lịch sử vé Max 3D — tất cả trạng thái (chờ xử lý, đã kết sổ, đã hoàn tiền, đã huỷ).
  */
 
 import { z } from "zod";
@@ -25,5 +25,5 @@ export const handler = withPlayerAuth(
 
     return useCase.run({ tenantId, accountId, size, cursor, from, to });
   },
-  { schemas: { query: querySchema } }
+  { schemas: { query: querySchema } },
 );

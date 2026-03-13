@@ -11,7 +11,7 @@ import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { TicketEntryEntity } from "@megawin/game-power655/entities";
-import { mapPlayerTicket } from "./list-tickets-player";
+import { mapPlayerTicket } from "./mappers/ticket";
 import type {
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
@@ -37,12 +37,8 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
 
     const ticket = await this.ticketRepo.getTicketById(ticketId);
 
-    if (!ticket) {
-      throw AppException.notFound("Ticket not found");
-    }
-
-    if (ticket.tenantId !== tenantId || ticket.accountId !== accountId) {
-      throw AppException.notFound("Ticket not found");
+    if (!ticket || ticket.tenantId !== tenantId || ticket.accountId !== accountId) {
+      throw AppException.notFound("Không tìm thấy vé.");
     }
 
     const entries = await this.entryRepo.getEntriesByTicketId(ticket.id);
@@ -59,16 +55,22 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     id: entry.id,
     drawId: entry.drawId,
     status: entry.status,
-    stakeAmount: entry.amount,
+    amount: entry.amount,
     lineCount: entry.lineCount,
     entrySummary: {
-      totalLines: entry.lineCount,
+      ticketNo: entry.entrySummary.ticketNo,
+      boards: entry.entrySummary.boards.map((b) => ({
+        boardNo: b.boardNo,
+        playType: b.playType,
+        mainNumbers: b.mainNumbers,
+        expandedLines: b.expandedLines,
+      })),
     },
-    result: (entry as any).result
+    result: entry.result
       ? {
-          winningMain: [...(entry as any).result.winningMain],
-          bonusNumber: (entry as any).result.bonusNumber,
-          publishedAt: (entry as any).result.publishedAt.toISOString(),
+          winningMain: entry.result.winningMain,
+          bonusNumber: entry.result.bonusNumber,
+          publishedAt: entry.result.publishedAt.toISOString(),
         }
       : undefined,
     outcome: entry.outcome,
@@ -78,9 +80,9 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
           payoutAmount: entry.payout.payoutAmount,
           tiers: entry.payout.tiers.map((t) => ({
             tier: t.tier,
-            matchCount: t.hitCount,
-            prizePerLine: t.unitAmount,
-            totalPrize: t.amount,
+            hitCount: t.hitCount,
+            unitAmount: t.unitAmount,
+            amount: t.amount,
           })),
         }
       : undefined,

@@ -6,7 +6,9 @@
  *   2. VoidEntries        → batch loop: void entries + tính refund
  *   3. SyncTicketSummaries → recompute ticket progress
  *   4. DispatchRefunds    → batch loop: gửi refund cho tenant
- *   5. FinalizeVoid       → update draw summary, đóng flow
+ *   5. BuildVoidReport    → cleanup settle reports + build void report (NEW)
+ *   6. PublishSettleDaily → re-aggregate system daily (NEW)
+ *   7. FinalizeVoid       → update draw summary, đóng flow
  */
 
 export type { VoidContext } from "./types";
@@ -19,6 +21,9 @@ export type { VoidEntriesBatchResult } from "./void-entries";
 
 export { DispatchRefundBatchUseCase } from "./dispatch-refunds";
 export type { DispatchRefundBatchResult } from "./dispatch-refunds";
+
+export { BuildVoidReportUseCase } from "./build-void-report";
+export type { BuildVoidReportResult } from "./build-void-report";
 
 export { FinalizeVoidUseCase } from "./finalize-void";
 export type { FinalizeVoidResult } from "./finalize-void";

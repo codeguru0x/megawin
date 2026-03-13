@@ -56,4 +56,11 @@ export interface VoidContext {
    * Dùng cho logging và nhận diện kỳ quay.
    */
   drawNo: number;
+
+  /**
+   * Ngày tài chính (YYYY-MM-DD) — dùng làm key phân nhóm báo cáo.
+   * Có thể khác drawDate khi kỳ quay đêm khuya thuộc ngày tài chính hôm sau.
+   * BuildVoidReport và PublishSettleDaily dùng field này.
+   */
+  financialDate: string;
 }

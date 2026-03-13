@@ -18,8 +18,8 @@
  * ────────────────────────────────────────────────
  * OUTPUT (truyền cho tất cả steps sau qua $voidCtx):
  * ────────────────────────────────────────────────
- *   { drawId, drawDate, drawNo }
- *   → VoidEntries, SyncTicketSummaries, DispatchRefunds, FinalizeVoid
+ *   { drawId, drawDate, drawNo, financialDate }
+ *   → VoidEntries, SyncTicketSummaries, DispatchRefunds, BuildVoidReport, FinalizeVoid
  *     đều nhận drawId từ context này.
  *
  * IDEMPOTENT: chỉ đọc draw, không ghi.
@@ -62,6 +62,7 @@ export class PrepareVoidUseCase extends InternalUseCase<PrepareVoidInput, VoidCo
       drawId,
       drawDate: draw.drawDate,
       drawNo: draw.drawNo,
+      financialDate: draw.financialDate,
     };
   }
 }

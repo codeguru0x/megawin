@@ -3,7 +3,7 @@ import { z } from "zod";
 import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities/account";
 import { PublishResultUseCase } from "@megawin/game-keno-application/use-cases/draws";
-import { KENO_DRAW_COUNT } from "@megawin/game-keno/entities";
+import { KENO_DRAW_COUNT } from "../../../../../../../../../packages/game-keno-application/game-keno/src/entities";
 
 const kenoNumberSchema = z.string().regex(/^(0[1-9]|[1-7][0-9]|80)$/);
 

@@ -53,20 +53,15 @@ function mapDrawSummary(draw: DrawEntity): PlayerDrawResultSummary {
     drawNo: draw.drawNo,
     drawTime: draw.drawTime.toISOString(),
     result: {
-      winningMain: [...result.winningMain] as string[],
-      winningSpecial: result.winningSpecial as string,
+      winningMain: result.winningMain,
+      winningSpecial: result.winningSpecial,
       publishedAt: result.publishedAt.toISOString(),
     },
-    jackpot: {
-      openingAmount: jackpot.openingAmount,
-      closingAmount: jackpot.closingAmount,
-      isSplitCycle: jackpot.isSplitCycle || undefined,
-    },
+    jackpot: jackpot,
     vietlottRef: draw.vietlottRef
       ? {
           drawPeriod: draw.vietlottRef.drawPeriod,
           drawDate: draw.vietlottRef.drawDate,
-          drawSession: draw.vietlottRef.drawSession,
         }
       : undefined,
   };

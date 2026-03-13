@@ -16,8 +16,6 @@ import { useMemo, useState } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { KenoNumberBall } from "@/components/games/keno/keno-number-ball";
-import { Badge } from "@/components/ui/badge";
 import { formatNumber } from "@megawin/shared/utils/number";
 import {
   Trophy,
@@ -90,10 +88,115 @@ function sideBetLabel(playType: string, bet: string): string {
   return `${typeLabel} — ${betLabels[bet] ?? bet}`;
 }
 
+// ─── Highlight filter type ───────────────────────────────────────────────────
+
+type HighlightFilter = "big" | "small" | "even" | "odd" | null;
+
+// Lớn: 41-80, Nhỏ: 1-40, Chẵn: số chẵn, Lẻ: số lẻ
+function getNumberHighlight(n: number, filter: HighlightFilter): "match" | "dim" | "none" {
+  if (!filter) return "none";
+  const isBig = n >= 41;
+  const isEven = n % 2 === 0;
+  if (filter === "big") return isBig ? "match" : "dim";
+  if (filter === "small") return !isBig ? "match" : "dim";
+  if (filter === "even") return isEven ? "match" : "dim";
+  if (filter === "odd") return !isEven ? "match" : "dim";
+  return "none";
+}
+
+// ─── Highlighted Keno Number Ball ────────────────────────────────────────────
+
+function HighlightedBall({
+  number,
+  highlight,
+}: {
+  number: number;
+  highlight: "match" | "dim" | "none";
+  filter: HighlightFilter;
+}) {
+  const baseClass =
+    "inline-flex items-center justify-center rounded-full font-bold tabular-nums select-none size-7 text-xs transition-all duration-150";
+
+  if (highlight === "dim") {
+    // Số không thuộc nhóm chọn → mờ đi
+    return (
+      <span className={cn(baseClass, "bg-orange-500 text-white opacity-20")}>
+        {String(number).padStart(2, "0")}
+      </span>
+    );
+  }
+
+  if (highlight === "match") {
+    // Số thuộc nhóm chọn → giữ màu cam + thêm ring để nổi bật
+    return (
+      <span
+        className={cn(baseClass, "bg-orange-500 text-white ring-2 ring-orange-400 ring-offset-1")}
+      >
+        {String(number).padStart(2, "0")}
+      </span>
+    );
+  }
+
+  // none — mặc định không filter
+  return (
+    <span className={cn(baseClass, "bg-orange-500 text-white")}>
+      {String(number).padStart(2, "0")}
+    </span>
+  );
+}
+
+// ─── Filter Badge Button ──────────────────────────────────────────────────────
+
+function FilterBadge({
+  label,
+  count,
+  active,
+  colorClass,
+  activeClass,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  active: boolean;
+  /** Màu hiển thị khi không active — luôn có màu. */
+  colorClass: string;
+  /** Màu override khi đang active (highlight). */
+  activeClass: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tabular-nums transition-all duration-150",
+        "hover:scale-105 active:scale-95",
+        active ? cn("shadow-sm ring-1 ring-offset-1", activeClass) : colorClass,
+      )}
+    >
+      {label}
+      <span
+        className={cn(
+          "rounded-full px-1 py-0 text-[10px] font-bold tabular-nums min-w-[1.2rem] text-center",
+          active ? "bg-white/30" : "bg-current/10 opacity-80",
+        )}
+      >
+        {count}
+      </span>
+    </button>
+  );
+}
+
 // ─── Result + Prize Breakdown ─────────────────────────────────────────────────
 
 function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: string }) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [highlight, setHighlight] = useState<HighlightFilter>(null);
+
+  function toggleFilter(f: HighlightFilter) {
+    setHighlight((prev) => (prev === f ? null : f));
+  }
+
   const totalWinners =
     result.basicPrizes.reduce((a, r) => a + r.winnerCount, 0) +
     result.sideBetPrizes.reduce((a, r) => a + r.winnerCount, 0);
@@ -123,67 +226,94 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
         </CardHeader>
 
         <CardContent className="space-y-4 pt-0">
-          {/* Kết quả 20 số — có side bet stats */}
-          <button
-            type="button"
-            onClick={() => setDialogOpen(true)}
-            className={cn(
-              "group w-full flex flex-col items-center gap-3 rounded-xl border px-4 py-4",
-              "transition-all duration-150 cursor-pointer bg-muted/20",
-              "hover:shadow-sm hover:border-primary/30 hover:bg-muted/30",
+          {/* Kết quả 20 số với interactive highlight */}
+          <div className="rounded-xl border bg-muted/20 px-4 py-4 space-y-3">
+            {/* Header: "KẾT QUẢ" căn giữa + link xem entries */}
+            <div className="flex items-center justify-between">
+              <div className="flex-1" />
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+                Kết quả
+              </span>
+              <div className="flex-1 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setDialogOpen(true)}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-primary/70 transition-colors"
+                >
+                  <ExternalLink className="size-3" />
+                  Xem entries trúng
+                </button>
+              </div>
+            </div>
+
+            {/* Grid 10 cột — 20 số căn giữa, gap nhỏ */}
+            <div className="flex justify-center">
+              <div className="grid grid-cols-10 gap-1">
+                {result.winningNumbers.slice(0, 20).map((n) => {
+                  const num = Number(n);
+                  const hl = getNumberHighlight(num, highlight);
+                  return <HighlightedBall key={n} number={num} highlight={hl} filter={highlight} />;
+                })}
+              </div>
+            </div>
+
+            {/* Filter badges bên dưới grid — màu nhạt mặc định, active → cam */}
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <FilterBadge
+                label="Lớn (41-80)"
+                count={result.bigCount}
+                active={highlight === "big"}
+                colorClass="bg-red-50/70 text-red-400 border-red-200/70 dark:bg-red-950/10 dark:text-red-500/70 dark:border-red-900/50"
+                activeClass="bg-orange-500 text-white border-orange-500 dark:bg-orange-500"
+                onClick={() => toggleFilter("big")}
+              />
+              <FilterBadge
+                label="Nhỏ (1-40)"
+                count={result.smallCount}
+                active={highlight === "small"}
+                colorClass="bg-blue-50/70 text-blue-400 border-blue-200/70 dark:bg-blue-950/10 dark:text-blue-500/70 dark:border-blue-900/50"
+                activeClass="bg-orange-500 text-white border-orange-500 dark:bg-orange-500"
+                onClick={() => toggleFilter("small")}
+              />
+              <FilterBadge
+                label="Chẵn"
+                count={result.evenCount}
+                active={highlight === "even"}
+                colorClass="bg-amber-50/70 text-amber-400 border-amber-200/70 dark:bg-amber-950/10 dark:text-amber-500/70 dark:border-amber-900/50"
+                activeClass="bg-orange-500 text-white border-orange-500 dark:bg-orange-500"
+                onClick={() => toggleFilter("even")}
+              />
+              <FilterBadge
+                label="Lẻ"
+                count={result.oddCount}
+                active={highlight === "odd"}
+                colorClass="bg-purple-50/70 text-purple-400 border-purple-200/70 dark:bg-purple-950/10 dark:text-purple-500/70 dark:border-purple-900/50"
+                activeClass="bg-orange-500 text-white border-orange-500 dark:bg-orange-500"
+                onClick={() => toggleFilter("odd")}
+              />
+              {highlight && (
+                <button
+                  type="button"
+                  onClick={() => setHighlight(null)}
+                  className="text-[10px] text-muted-foreground/50 hover:text-muted-foreground underline underline-offset-2"
+                >
+                  Xoá lọc
+                </button>
+              )}
+            </div>
+
+            {/* Chú thích khi đang filter */}
+            {highlight && (
+              <p className="text-[10px] text-muted-foreground/60 text-center">
+                {highlight === "big" &&
+                  `${result.bigCount} số Lớn (≥41) · ${result.smallCount} số Nhỏ`}
+                {highlight === "small" &&
+                  `${result.smallCount} số Nhỏ (≤40) · ${result.bigCount} số Lớn`}
+                {highlight === "even" && `${result.evenCount} số Chẵn · ${result.oddCount} số Lẻ`}
+                {highlight === "odd" && `${result.oddCount} số Lẻ · ${result.evenCount} số Chẵn`}
+              </p>
             )}
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                20 Số trúng
-              </span>
-              <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60 group-hover:text-primary/60 transition-colors">
-                <ExternalLink className="size-3" />
-                Xem entries trúng
-              </span>
-            </div>
-            {/* Grid 4×5 = 20 số */}
-            <div className="grid grid-cols-10 gap-1.5 w-full max-w-sm">
-              {result.winningNumbers.slice(0, 20).map((n, i) => (
-                <KenoNumberBall key={i} number={Number(n)} size="sm" />
-              ))}
-            </div>
-            {/* Side bet stats */}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Badge
-                  variant="outline"
-                  className="h-4.5 px-1.5 text-[10px] bg-red-50 text-red-600 border-red-200 dark:bg-red-950/20 dark:text-red-400"
-                >
-                  Lớn {result.bigCount}
-                </Badge>
-              </span>
-              <span className="flex items-center gap-1">
-                <Badge
-                  variant="outline"
-                  className="h-4.5 px-1.5 text-[10px] bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400"
-                >
-                  Nhỏ {result.smallCount}
-                </Badge>
-              </span>
-              <span className="flex items-center gap-1">
-                <Badge
-                  variant="outline"
-                  className="h-4.5 px-1.5 text-[10px] bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400"
-                >
-                  Chẵn {result.evenCount}
-                </Badge>
-              </span>
-              <span className="flex items-center gap-1">
-                <Badge
-                  variant="outline"
-                  className="h-4.5 px-1.5 text-[10px] bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-950/20 dark:text-purple-400"
-                >
-                  Lẻ {result.oddCount}
-                </Badge>
-              </span>
-            </div>
-          </button>
+          </div>
 
           {/* Basic prizes table */}
           {result.basicPrizes.length > 0 && (

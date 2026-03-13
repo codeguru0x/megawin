@@ -19,5 +19,8 @@ export type { VoidEntriesBatchResult } from "./void-entries";
 export { DispatchRefundBatchUseCase } from "./dispatch-refunds";
 export type { DispatchRefundBatchResult } from "./dispatch-refunds";
 
+export { BuildVoidReportUseCase } from "./build-void-report";
+export type { BuildVoidReportResult } from "./build-void-report";
+
 export { FinalizeVoidUseCase } from "./finalize-void";
 export type { FinalizeVoidResult } from "./finalize-void";

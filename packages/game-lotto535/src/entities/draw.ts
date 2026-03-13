@@ -209,9 +209,6 @@ export interface DrawVietlottRef {
 
   /** Ngày quay Vietlott. */
   drawDate: ISODateString;
-
-  /** Phiên quay: 1 = 13h, 2 = 21h. */
-  drawSession: number;
 }
 
 // ─────────────────────────────────────────────

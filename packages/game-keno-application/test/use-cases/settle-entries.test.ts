@@ -2,17 +2,14 @@ import { describe, it, expect } from "vitest";
 import {
   lookupBasicPrize,
   DEFAULT_BASIC_PRIZE_TABLE,
-} from "@megawin/game-keno/rules/prize-tables";
+} from "@megawin/game-keno/rules";
 import {
   matchBasicBoard,
   matchBigSmallBet,
   matchEvenOddBet,
   computeDrawStats,
-} from "@megawin/game-keno/helpers/match-result";
-import {
-  KenoBigSmallBet,
-  KenoEvenOddBet,
-} from "@megawin/game-keno/entities/enums";
+} from "@megawin/game-keno/helpers";
+import { KenoBigSmallBet, KenoEvenOddBet } from "@megawin/game-keno/entities";
 
 // ─── Helpers ────────────────────────────────────────
 
@@ -29,10 +26,7 @@ function makeDrawResult(winningNumbers: string[]) {
  * Tạo 20 số quay với số chẵn/lẻ/lớn/nhỏ tuỳ ý.
  * Dùng cho test side-bet mà không cần random.
  */
-function numbersWithCounts(opts: {
-  bigCount: number;
-  evenCount: number;
-}): string[] {
+function numbersWithCounts(opts: { bigCount: number; evenCount: number }): string[] {
   const { bigCount, evenCount } = opts;
   const smallCount = 20 - bigCount;
 
@@ -71,12 +65,9 @@ describe("lookupBasicPrize – Tra cứu giải thưởng cơ bản", () => {
         expected: prize,
       })),
     ),
-  )(
-    "pick$pickCount / match$matchCount → $expected VND",
-    ({ pickCount, matchCount, expected }) => {
-      expect(lookupBasicPrize(pickCount, matchCount)).toBe(expected);
-    },
-  );
+  )("pick$pickCount / match$matchCount → $expected VND", ({ pickCount, matchCount, expected }) => {
+    expect(lookupBasicPrize(pickCount, matchCount)).toBe(expected);
+  });
 
   it("trả 0 khi matchCount không có giải", () => {
     expect(lookupBasicPrize(1, 0)).toBe(0);
@@ -94,7 +85,28 @@ describe("lookupBasicPrize – Tra cứu giải thưởng cơ bản", () => {
 // ─── 2. matchBasicBoard ─────────────────────────────
 
 describe("matchBasicBoard – Đối soát cách chơi cơ bản", () => {
-  const baseWinning = ["01", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "03", "07", "12"];
+  const baseWinning = [
+    "01",
+    "05",
+    "10",
+    "15",
+    "20",
+    "25",
+    "30",
+    "35",
+    "40",
+    "45",
+    "50",
+    "55",
+    "60",
+    "65",
+    "70",
+    "75",
+    "80",
+    "03",
+    "07",
+    "12",
+  ];
 
   it("pick1 trúng 1 số → 20,000 VND", () => {
     const result = makeDrawResult(baseWinning);
@@ -159,20 +171,14 @@ describe("matchBasicBoard – Đối soát cách chơi cơ bản", () => {
   describe("pick8/pick9/pick10 – giải an ủi match0", () => {
     it("pick8 match0 → 10,000 VND", () => {
       const result = makeDrawResult(baseWinning);
-      const r = matchBasicBoard(
-        ["02", "04", "06", "08", "09", "11", "13", "14"],
-        result,
-      );
+      const r = matchBasicBoard(["02", "04", "06", "08", "09", "11", "13", "14"], result);
       expect(r.matchCount).toBe(0);
       expect(r.winAmount).toBe(10_000);
     });
 
     it("pick9 match0 → 10,000 VND", () => {
       const result = makeDrawResult(baseWinning);
-      const r = matchBasicBoard(
-        ["02", "04", "06", "08", "09", "11", "13", "14", "16"],
-        result,
-      );
+      const r = matchBasicBoard(["02", "04", "06", "08", "09", "11", "13", "14", "16"], result);
       expect(r.matchCount).toBe(0);
       expect(r.winAmount).toBe(10_000);
     });
@@ -189,12 +195,30 @@ describe("matchBasicBoard – Đối soát cách chơi cơ bản", () => {
   });
 
   it("pick10 match10 → 2,000,000,000 VND", () => {
-    const winning = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "50", "51", "52", "53", "54", "55", "56", "57", "58", "59"];
+    const winning = [
+      "01",
+      "02",
+      "03",
+      "04",
+      "05",
+      "06",
+      "07",
+      "08",
+      "09",
+      "10",
+      "50",
+      "51",
+      "52",
+      "53",
+      "54",
+      "55",
+      "56",
+      "57",
+      "58",
+      "59",
+    ];
     const result = makeDrawResult(winning);
-    const r = matchBasicBoard(
-      ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"],
-      result,
-    );
+    const r = matchBasicBoard(["01", "02", "03", "04", "05", "06", "07", "08", "09", "10"], result);
     expect(r.matchCount).toBe(10);
     expect(r.winAmount).toBe(2_000_000_000);
   });

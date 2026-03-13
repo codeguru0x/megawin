@@ -374,18 +374,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     }
     return await this.findMany(query, { sort: { drawDate: -1, drawId: -1 }, limit: size });
   }
-
-  async updateVoidSummary(drawId: string, summary: DrawVoidSummary): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      {
-        $set: {
-          voidSummary: summary,
-          updatedAt: new Date(),
-        },
-      },
-    );
-  }
 }
 
 export { VALID_TRANSITIONS };

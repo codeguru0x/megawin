@@ -49,7 +49,7 @@ const claims = {
   ),
   aud: get("COGNITO_PLAYER_POOL_CLIENT_ID", "local-test-client"),
   exp: Math.floor(Date.now() / 1000) + 30 * 86400,
-  "cognito:username": get("MOCK_USERNAME", "player001"),
+  "cognito:username": get("MOCK_USERNAME", "player001@local"),
   "custom:account_type": get("MOCK_ACCOUNT_TYPE", "player"),
   "custom:account_status": get("MOCK_ACCOUNT_STATUS", "active"),
   "custom:account_id": get("MOCK_ACCOUNT_ID", "00000000000000DEVP1AYER01"),

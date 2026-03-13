@@ -76,31 +76,23 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   /**
    * Vé đang chờ xử lý (status = paid, còn draws chưa settle/void).
    * Cursor = _id (monotonic với createdAt), sort desc.
+   * Trả về TẤT CẢ pending tickets — không lọc theo ngày.
    */
   async getPendingTickets(
     tenantId: string,
     accountId: string,
     limit: number,
     opts?: {
-      from?: Date;
-      to?: Date;
       cursor?: string;
     },
   ): Promise<TicketEntity[]> {
-    const { from, to, cursor } = opts ?? {};
+    const { cursor } = opts ?? {};
 
     const filter: Record<string, unknown> = {
       tenantId,
       accountId,
       status: { $in: PENDING_STATUSES },
     };
-
-    if (from || to) {
-      const dateRange: Record<string, unknown> = {};
-      if (from) dateRange.$gte = from;
-      if (to) dateRange.$lte = to;
-      filter.createdAt = dateRange;
-    }
 
     if (cursor) {
       filter._id = { $lt: new ObjectId(cursor) };
@@ -187,10 +179,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
             _id: new ObjectId(ticketId),
             // Race-safe: chỉ ghi nếu processedCount mới >= giá trị hiện tại.
             $expr: {
-              $lte: [
-                { $ifNull: ["$progress.settledDraws", 0] },
-                processedCount,
-              ],
+              $lte: [{ $ifNull: ["$progress.settledDraws", 0] }, processedCount],
             },
           },
           update: { $set },
@@ -237,10 +226,7 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
         _id: new ObjectId(ticketId),
         // Race-safe: chỉ ghi nếu processedCount mới >= giá trị hiện tại.
         $expr: {
-          $lte: [
-            { $ifNull: ["$progress.settledDraws", 0] },
-            processedCount,
-          ],
+          $lte: [{ $ifNull: ["$progress.settledDraws", 0] }, processedCount],
         },
       },
       { $set },

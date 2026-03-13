@@ -49,18 +49,16 @@ export class LineRepository extends BaseRepo<any> {
     options: { size?: number; cursor?: number } = {},
   ): Promise<{ lines: TicketLineDoc[]; hasMore: boolean }> {
     const { size = 50, cursor } = options;
-    const col = await this.getCollection();
     const filter: Record<string, unknown> = { entryId: new ObjectId(entryId) };
 
     if (cursor != null) {
       filter.lineIndex = { $gt: cursor };
     }
 
-    const lines = await col
-      .find(filter)
-      .sort({ lineIndex: 1 })
-      .limit(size + 1)
-      .toArray();
+    const lines = await this.findManyAsDocuments(filter, {
+      sort: { lineIndex: 1 },
+      limit: size + 1,
+    });
 
     const hasMore = lines.length > size;
     const slice = hasMore ? lines.slice(0, size) : lines;

@@ -114,8 +114,6 @@ export interface PublishResultInput {
     drawPeriod: string;
     /** Ngày quay bên Vietlott, format YYYY-MM-DD. */
     drawDate: string;
-    /** Phiên quay trong ngày (1 = sáng, 2 = tối). */
-    drawSession: number;
   };
 }
 

@@ -29,8 +29,20 @@ export interface DrawVietlottRef {
   drawPeriod: string;
   /** Ngày quay Vietlott "YYYY-MM-DD". */
   drawDate: ISODateString;
-  /** Phiên quay trong ngày (thường = 1). */
-  drawSession: number;
+}
+
+/**
+ * Kết quả kỳ quay đã công bố. Set khi publish result.
+ *
+ * Extends Max3dproDrawResult với publishedAt timestamp.
+ * Thứ tự 2 bộ ĐB (special[0]/special[1]) có ý nghĩa:
+ * phân biệt Giải ĐB (đúng thứ tự) và Giải phụ ĐB (ngược thứ tự).
+ * Ghi vào DrawDoc.result khi staff publish kết quả trên backoffice.
+ * Copy sang entry.result khi settle.
+ */
+export interface DrawResult extends Max3dproDrawResult {
+  /** Thời điểm công bố kết quả trên backoffice. */
+  publishedAt: Date;
 }
 
 /** Dữ liệu tài chính kỳ quay, tính sau khi settle. */
@@ -39,9 +51,14 @@ export interface DrawFinancial {
   totalRevenue: number;
   /** Tổng tiền thưởng cố định = Σ(entry.payout.winAmount). */
   totalFixedPrizes: number;
-  /** Hoa hồng đại lý = Σ(tenant.revenue × tenant.commissionRate). */
+  /** Hoa hồng đại lý = Σ(entry.tenant.commissionAmount). */
   totalAgentCommission: number;
-  /** = profit cho games không có Jackpot. */
+  /**
+   * Lợi nhuận công ty thu về (VND).
+   * Công thức: totalRevenue - totalFixedPrizes - totalAgentCommission.
+   * Max 3D Pro KHÔNG có Jackpot → công ty thu toàn bộ phần còn lại.
+   * Có thể ÂM nếu giải thưởng vượt doanh thu kỳ đó.
+   */
   companyTake: number;
 }
 
@@ -134,10 +151,7 @@ export interface DrawDoc {
   vietlottRef?: DrawVietlottRef;
 
   /** Kết quả quay thưởng, có sau khi publish. */
-  result?: Max3dproDrawResult & {
-    /** Thời điểm công bố kết quả. */
-    publishedAt: Date;
-  };
+  result?: DrawResult;
 
   financial?: DrawFinancial;
 

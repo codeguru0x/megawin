@@ -42,7 +42,7 @@ export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
         maxBoardsPerTicket: globalConfig.play.maxBoardsPerTicket,
         maxDrawCount: globalConfig.play.maxDrawCount,
         drawsPerDay: globalConfig.play.drawsPerDay,
-        drawTimes: [...globalConfig.play.drawTimes],
+        drawTimes: globalConfig.play.drawTimes,
       },
       prizes: {
         tier1: globalConfig.defaultPrizes.tier1,
@@ -57,7 +57,7 @@ export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
         splitThreshold: globalConfig.jackpot.splitThreshold,
       },
       tenant: {
-        isEnabled: tenantConfig?.isEnabled ?? true,
+        isEnabled: tenantConfig.isEnabled,
       },
     };
   }

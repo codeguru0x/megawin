@@ -9,15 +9,9 @@ import type {
   PlayRules,
 } from "@megawin/game-keno/entities";
 import { BaseRepo } from "./base-repo";
-import {
-  GameConfigMapper,
-  type GlobalConfigEntity,
-} from "../mappers/game-config-mapper";
+import { GameConfigMapper, type GlobalConfigEntity } from "../mappers/game-config-mapper";
 
-export class GameConfigRepository extends BaseRepo<
-  GlobalConfigEntity,
-  GameConfigMapper
-> {
+export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfigMapper> {
   constructor() {
     super({
       collName: KenoCollections.GameConfigs,
@@ -43,7 +37,7 @@ export class GameConfigRepository extends BaseRepo<
       evenOddPrizes: EvenOddPrizes;
       payoutCaps: PayoutCaps;
       play: PlayRules;
-    }>
+    }>,
   ): Promise<GlobalConfigEntity | null> {
     const now = new Date();
     const $set: Record<string, unknown> = { updatedAt: now };
@@ -66,7 +60,7 @@ export class GameConfigRepository extends BaseRepo<
           createdAt: now,
         },
       },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     );
   }
 }

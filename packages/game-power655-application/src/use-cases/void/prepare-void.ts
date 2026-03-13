@@ -33,7 +33,7 @@ export interface PrepareVoidInput {
  * Validate draw status và load context cho void pipeline.
  *
  * @param input.drawId - ID kỳ quay cần void
- * @returns VoidContext chứa drawId, drawDate, drawNo → truyền qua Step Function state
+ * @returns VoidContext chứa drawId, drawDate, drawNo, financialDate → truyền qua Step Function state
  * @throws Error nếu draw không tồn tại hoặc status ≠ voiding
  */
 export class PrepareVoidUseCase extends InternalUseCase<PrepareVoidInput, VoidContext> {
@@ -56,6 +56,7 @@ export class PrepareVoidUseCase extends InternalUseCase<PrepareVoidInput, VoidCo
       drawId,
       drawDate: draw.drawDate,
       drawNo: draw.drawNo,
+      financialDate: draw.financialDate,
     };
   }
 }

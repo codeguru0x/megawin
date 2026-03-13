@@ -12,3 +12,4 @@ export * from "./ticket";
 export * from "./entry";
 export * from "./line";
 export * from "./draw";
+export * from "./report";

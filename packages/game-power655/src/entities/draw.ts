@@ -44,8 +44,8 @@ export interface DrawResult {
  * closeAt thường = drawTime - salesCloseBeforeMinutes (15 phút).
  */
 export interface DrawSales {
-  /** Thời điểm bắt đầu mở bán. Staff nhấn "Mở bán" để chuyển sang salesOpen. */
-  openAt: Date;
+  /** Thời điểm bắt đầu mở bán. Chỉ có sau khi staff nhấn "Mở bán" (chuyển sang salesOpen). */
+  openAt?: Date;
   /** Thời điểm đóng bán. Tự động hoặc staff nhấn "Đóng bán". */
   closeAt: Date;
 }

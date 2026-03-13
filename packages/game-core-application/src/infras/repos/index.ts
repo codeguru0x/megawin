@@ -6,7 +6,11 @@ export { GameDailyReportRepository } from "./game-daily-report-repo";
 export { GameDailyReportQueryRepository } from "./game-daily-report-query-repo";
 export { TicketCounterRepository } from "./ticket-counter-repo";
 export type { TicketSeqResult } from "./ticket-counter-repo";
+export type { DashboardSummary, TenantDailySummary } from "./game-daily-report-query-repo";
+export { SystemSettleReportRepository } from "./system-settle-report-repo";
 export type {
-  DashboardSummary,
-  TenantDailySummary,
-} from "./game-daily-report-query-repo";
+  SettleGameDailyAggregateResult,
+  SettleTenantDailyAggregateResult,
+} from "./system-settle-report-repo";
+export { SystemOutstandingReportRepository } from "./system-outstanding-report-repo";
+export type { OutstandingPerGameAggregateResult } from "./system-outstanding-report-repo";

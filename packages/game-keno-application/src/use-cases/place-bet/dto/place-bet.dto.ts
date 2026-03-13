@@ -1,4 +1,8 @@
-import type { KenoPlayType, KenoBigSmallBet, KenoEvenOddBet } from "@megawin/game-keno/entities";
+import type {
+  KenoPlayType,
+  KenoBigSmallBet,
+  KenoEvenOddBet,
+} from "@megawin/game-keno/entities";
 import type { TicketChannel } from "@megawin/game-core/entities";
 
 // ─────────────────────────────────────────────

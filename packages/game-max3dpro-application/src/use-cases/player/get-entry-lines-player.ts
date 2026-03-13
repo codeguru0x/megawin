@@ -24,25 +24,17 @@ export class GetEntryLinesPlayerUseCase extends ApiGatewayUseCase<
   private readonly entryRepo = new EntryRepository();
   private readonly lineRepo = new LineRepository();
 
-  protected async execute(
-    input: PlayerGetEntryLinesInput
-  ): Promise<PlayerGetEntryLinesOutput> {
+  protected async execute(input: PlayerGetEntryLinesInput): Promise<PlayerGetEntryLinesOutput> {
     const { tenantId, accountId, entryId, size, cursor } = input;
 
     const entry = await this.entryRepo.findByEntryId(entryId);
 
-    if (!entry) {
-      throw AppException.notFound("Entry not found");
-    }
-
-    if (entry.tenantId !== tenantId || entry.accountId !== accountId) {
-      throw AppException.notFound("Entry not found");
+    if (!entry || entry.tenantId !== tenantId || entry.accountId !== accountId) {
+      throw AppException.notFound("Không tìm thấy entry.");
     }
 
     if (entry.status !== EntryStatus.Settled) {
-      throw AppException.badRequest(
-        "Lines chỉ khả dụng khi kỳ đã được xử lý kết quả."
-      );
+      throw AppException.badRequest("Lines chỉ khả dụng khi kỳ đã được xử lý kết quả.");
     }
 
     const { lines, hasMore } = await this.lineRepo.getLinesByEntryId(entryId, {
@@ -66,7 +58,7 @@ function mapPlayerLine(line: TicketLineDoc): PlayerLineInfo {
     lineIndex: line.lineIndex,
     playMode: line.playMode,
     playType: line.playType,
-    triplets: [...line.triplets],
+    triplets: line.triplets,
     matchResult: {
       tier: line.matchResult.tier,
       winAmount: line.matchResult.winAmount,

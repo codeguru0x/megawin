@@ -26,6 +26,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { PayoutStatus } from "@megawin/game-max3d/entities";
+import { EntryOutcome } from "@megawin/game-core/entities";
 import type {
   TicketLineDoc,
   EntryBoardSnapshot,
@@ -171,7 +172,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             settledAt: now,
             payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
           } satisfies EntryPayout,
-          outcome: hasWin ? "win" : "loss",
+          outcome: hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
           result: {
             special: result.special,
             first: result.first,

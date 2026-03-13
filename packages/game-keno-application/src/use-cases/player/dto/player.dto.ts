@@ -42,15 +42,6 @@ export interface PlayerDrawInfo {
  * - Cursor dùng range query trên indexed field (_id hoặc createdAt) → O(limit) luôn.
  */
 
-export const TicketSortBy = {
-  BetDate: "betDate",
-  DrawDate: "drawDate",
-} as const;
-
-export type TicketSortBy = (typeof TicketSortBy)[keyof typeof TicketSortBy];
-
-export const TICKET_SORT_BY_VALUES = Object.values(TicketSortBy);
-
 export interface PlayerListTicketsInput {
   tenantId: string;
   accountId: string;
@@ -60,24 +51,17 @@ export interface PlayerListTicketsInput {
   cursor?: string;
 }
 
+/**
+ * Input để lấy danh sách vé đang pending của player.
+ *
+ * Không có from/to — pending tickets trả về TẤT CẢ vé chưa settle/void,
+ * sắp xếp mới nhất trước. Player không cần nhớ ngày mua; hệ thống tự trả đủ
+ * qua cursor-based pagination.
+ */
 export interface PlayerListPendingTicketsInput {
   tenantId: string;
   accountId: string;
   size: number;
-  from?: string;
-  to?: string;
-  cursor?: string;
-}
-
-export interface PlayerListCompletedTicketsInput {
-  tenantId: string;
-  accountId: string;
-  size: number;
-  sortBy: TicketSortBy;
-  /** ISO date string, lọc tickets hoàn thành từ ngày này. */
-  from?: string;
-  /** ISO date string, lọc tickets hoàn thành đến ngày này. */
-  to?: string;
   cursor?: string;
 }
 

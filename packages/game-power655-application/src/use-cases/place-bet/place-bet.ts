@@ -35,10 +35,8 @@ import {
   POWER655_MAIN_MIN,
   POWER655_MAIN_MAX,
   POWER655_MAIN_COUNT,
-  VALID_BOARD_NOS,
-  VALID_MAIN_NUMBER_SET,
 } from "@megawin/game-power655/entities";
-import { getLineCount, validateMainNumbers } from "@megawin/game-power655/rules/play-types";
+import { getLineCount } from "@megawin/game-power655/rules/play-types";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -82,44 +80,21 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     if (drawIds.length === 0 || drawIds.length > play.maxDrawCount) {
       throw AppException.badRequest(`Số kỳ phải từ 1 đến ${play.maxDrawCount}.`);
     }
-    if (new Set(drawIds).size !== drawIds.length) {
-      throw AppException.badRequest("Danh sách kỳ quay chứa drawId trùng lặp.");
-    }
 
     // ── 3. Validate boards ──
     if (boardInputs.length === 0 || boardInputs.length > play.maxBoardsPerTicket) {
       throw AppException.badRequest(`Số board phải từ 1 đến ${play.maxBoardsPerTicket}.`);
     }
 
-    const seenBoardNos = new Set<string>();
     const builtBoards: Board[] = [];
     let totalLinesPerDraw = 0;
 
     for (const bi of boardInputs) {
-      if (!VALID_BOARD_NOS.includes(bi.boardNo as any)) {
-        throw AppException.badRequest(
-          `Board "${bi.boardNo}" không hợp lệ. Chỉ chấp nhận: ${VALID_BOARD_NOS.join(", ")}.`,
-        );
-      }
-
-      if (seenBoardNos.has(bi.boardNo)) {
-        throw AppException.badRequest(`Board "${bi.boardNo}" bị trùng lặp.`);
-      }
-
-      seenBoardNos.add(bi.boardNo);
-
       const playType = bi.playType as PlayType;
 
       if (playType === PlayType.QuickPick) {
         bi.selection = generateQuickPick();
       }
-
-      const valResult = validateMainNumbers(bi.selection.mainNumbers, playType);
-      if (!valResult.valid) {
-        throw AppException.badRequest(`Board ${bi.boardNo}: ${valResult.error}`);
-      }
-
-      validateNumberRanges(bi.boardNo, bi.selection.mainNumbers);
 
       const lineCount = getLineCount(playType);
       totalLinesPerDraw += lineCount;
@@ -286,20 +261,4 @@ function generateQuickPick(): BoardSelection {
   return {
     mainNumbers: [...mainSet].sort(),
   };
-}
-
-/**
- * Validate range cho từng số trong board.
- */
-function validateNumberRanges(boardNo: string, mainNumbers: string[]): void {
-  for (const n of mainNumbers) {
-    if (!VALID_MAIN_NUMBER_SET.has(n)) {
-      throw AppException.badRequest(
-        `Board ${boardNo}: số "${n}" không hợp lệ (phải từ "01" đến "55").`,
-      );
-    }
-  }
-  if (new Set(mainNumbers).size !== mainNumbers.length) {
-    throw AppException.badRequest(`Board ${boardNo}: các số không được trùng nhau.`);
-  }
 }

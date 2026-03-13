@@ -1,6 +1,6 @@
 /**
  * Lambda handler: GET /games/lotto535/tickets
- * Danh sách tất cả vé Lotto 5/35 (pending + completed).
+ * Lịch sử vé Lotto 5/35 — tất cả trạng thái (chờ xử lý, đã kết sổ, đã hoàn tiền, đã huỷ).
  */
 
 import { z } from "zod";
@@ -25,5 +25,5 @@ export const handler = withPlayerAuth(
 
     return useCase.run({ tenantId, accountId, size, cursor, from, to });
   },
-  { schemas: { query: querySchema } }
+  { schemas: { query: querySchema } },
 );

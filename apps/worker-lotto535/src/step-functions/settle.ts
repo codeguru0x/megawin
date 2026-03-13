@@ -223,22 +223,35 @@ export const SETTLE_STATE_MACHINE = {
       Choices: [
         {
           Condition: "{% $syncResult.done %}",
-          Next: "BuildReport",
+          Next: "BuildSettleReport",
         },
       ],
       Default: "SyncTicketSummaries",
     },
 
-    // ── STEP 6: Build report ──
-    BuildReport: {
+    // ── STEP 6: Build settle report (MỚI — per-game financial reports) ──
+    // Aggregate entries → upsert lotto535_settle_draw_reports + lotto535_settle_tenant_reports.
+    // IDEMPOTENT: upsert overwrite — crash-safe, retry an toàn.
+    BuildSettleReport: {
       Type: "Task",
-      Resource: lambdaArn("settle-build-report"),
+      Resource: lambdaArn("settle-build-settle-report"),
       Arguments: "{% $settleCtx %}",
+      Next: "PublishSettleDaily",
+      Retry: LAMBDA_RETRY,
+    },
+
+    // ── STEP 8: Publish settle daily (MỚI — system-level reports) ──
+    // Re-aggregate lotto535_settle_draw/tenant_reports → upsert system_settle_game/tenant_daily.
+    // IDEMPOTENT: overwrite toàn bộ — chạy lại cho kết quả giống nhau.
+    PublishSettleDaily: {
+      Type: "Task",
+      Resource: lambdaArn("settle-publish-settle-daily"),
+      Arguments: "{% { 'financialDate': $settleCtx.financialDate } %}",
       Next: "FinalizeSettle",
       Retry: LAMBDA_RETRY,
     },
 
-    // ── STEP 7: Finalize settle ──
+    // ── STEP 9: Finalize settle ──
     FinalizeSettle: {
       Type: "Task",
       Resource: lambdaArn("settle-finalize"),

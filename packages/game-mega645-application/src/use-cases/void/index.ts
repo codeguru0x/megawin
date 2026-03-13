@@ -22,3 +22,6 @@ export type { DispatchRefundBatchResult } from "./dispatch-refunds";
 
 export { FinalizeVoidUseCase } from "./finalize-void";
 export type { FinalizeVoidResult } from "./finalize-void";
+
+export { BuildVoidReportUseCase } from "./build-void-report";
+export type { BuildVoidReportResult } from "./build-void-report";

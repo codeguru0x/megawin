@@ -18,8 +18,8 @@ export type { SettleEntriesBatchResult } from "./settle-entries";
 
 export { CalculateFinancialsUseCase } from "./calculate-financials";
 
-export { BuildReportUseCase } from "./build-report";
-export type { BuildReportResult } from "./build-report";
+export { BuildSettleReportUseCase } from "./build-settle-report";
+export type { BuildSettleReportResult } from "./build-settle-report";
 
 export { SyncTicketSummariesUseCase } from "./sync-ticket-summaries";
 export type { SyncTicketSummariesResult, DrawSyncInput } from "./sync-ticket-summaries";

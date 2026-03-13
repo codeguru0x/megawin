@@ -28,7 +28,7 @@ import { KenoPlayType, KENO_SIDE_BET_PLAY_TYPES } from "@megawin/game-keno/entit
 import {
   validateBasicSelection,
   getPlayTypeFromPickCount,
-} from "@megawin/game-keno/rules/play-types";
+} from "@megawin/game-keno/rules";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";

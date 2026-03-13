@@ -34,6 +34,7 @@ export class PrepareVoidUseCase extends InternalUseCase<PrepareVoidInput, VoidCo
 
     return {
       drawId,
+      financialDate: draw.financialDate,
       drawDate: draw.drawDate,
       drawNo: draw.drawNo,
     };

@@ -71,16 +71,11 @@ function mapDrawSummary(draw: DrawEntity): PlayerDrawResultSummary {
     drawNo: draw.drawNo,
     drawTime: draw.drawTime.toISOString(),
     result: {
-      winningMain: [...result.winningMain] as string[],
+      winningMain: result.winningMain,
       bonusNumber: result.bonusNumber,
       publishedAt: result.publishedAt.toISOString(),
     },
-    jackpot: {
-      openingJackpot1: jackpot.openingJackpot1,
-      closingJackpot1: jackpot.closingJackpot1,
-      openingJackpot2: jackpot.openingJackpot2,
-      closingJackpot2: jackpot.closingJackpot2,
-    },
+    jackpot: jackpot,
     vietlottRef: draw.vietlottRef
       ? {
           drawPeriod: draw.vietlottRef.drawPeriod,

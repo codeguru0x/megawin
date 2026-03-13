@@ -30,8 +30,20 @@
  *  │     done = true khi hết pending refunds  │
  *  └────────┬─────────────────────────────────┘
  *           ▼
+ *  ┌──────────────────────────────────────────────────────────┐
+ *  │  5. BuildVoidReport                                      │
+ *  │     Cleanup settle reports (nếu void-after-settle)       │
+ *  │     + build mega645_void_draw_reports                    │
+ *  └────────┬─────────────────────────────────────────────────┘
+ *           ▼
+ *  ┌──────────────────────────────────────────────────────────┐
+ *  │  6. PublishSettleDaily                                   │
+ *  │     Re-aggregate system daily reports                    │
+ *  │     Settle totals tự giảm khi settle reports đã xoá     │
+ *  └────────┬─────────────────────────────────────────────────┘
+ *           ▼
  *  ┌─────────────────────────┐
- *  │  5. FinalizeVoid        │  Transition voiding → void + ghi voidSummary
+ *  │  7. FinalizeVoid        │  Transition voiding → void + ghi voidSummary
  *  └─────────────────────────┘
  *
  * DATA FLOW (Assign-based):
@@ -143,7 +155,7 @@ export const VOID_STATE_MACHINE = {
       Choices: [
         {
           Condition: "{% $refundResult.done %}",
-          Next: "FinalizeVoid",
+          Next: "BuildVoidReport",
         },
       ],
       Default: "RefundWait",
@@ -153,6 +165,22 @@ export const VOID_STATE_MACHINE = {
       Type: "Wait",
       Seconds: 5,
       Next: "DispatchRefunds",
+    },
+
+    BuildVoidReport: {
+      Type: "Task",
+      Resource: lambdaArn("void-build-void-report"),
+      Arguments: "{% $voidCtx %}",
+      Next: "PublishSettleDaily",
+      Retry: LAMBDA_RETRY,
+    },
+
+    PublishSettleDaily: {
+      Type: "Task",
+      Resource: lambdaArn("void-publish-settle-daily"),
+      Arguments: "{% { 'financialDate': $voidCtx.financialDate } %}",
+      Next: "FinalizeVoid",
+      Retry: LAMBDA_RETRY,
     },
 
     FinalizeVoid: {

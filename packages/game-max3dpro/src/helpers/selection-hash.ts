@@ -21,7 +21,7 @@ function canonicalizeBoard(board: {
 
 export function canonicalizeSelection(boards: Board[]): string {
   const active = boards
-    .filter((b) => !b.isVoid)
+    .slice()
     .sort((a, b) => a.boardNo.localeCompare(b.boardNo));
 
   return active

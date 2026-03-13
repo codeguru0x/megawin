@@ -178,7 +178,6 @@ export interface Lotto535DrawInfo {
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;
-    drawSession: number;
   };
 }
 
@@ -412,7 +411,6 @@ export interface Lotto535DrawResultDetail {
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;
-    drawSession: number;
   };
 }
 
@@ -462,7 +460,6 @@ export interface Lotto535DrawResultSummary {
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;
-    drawSession: number;
   };
 }
 

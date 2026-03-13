@@ -9,7 +9,7 @@
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { toVNStartOfDay, toVNEndOfDay } from "@megawin/shared/utils/date";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
-import { mapPlayerTicket } from "./list-tickets-player";
+import { mapPlayerTicket } from "./mappers/ticket";
 import type {
   PlayerListTicketsInput,
   PlayerListTicketsOutput,

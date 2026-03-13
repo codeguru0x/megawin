@@ -8,17 +8,8 @@ import type {
   EntryBoardSnapshot,
 } from "@megawin/game-mega645/entities";
 import { PlayType } from "@megawin/game-mega645/entities";
-import {
-  MEGA645_MAIN_COUNT,
-  VALID_BOARD_NOS,
-  ALL_MAIN_NUMBERS,
-  VALID_MAIN_NUMBER_SET,
-} from "@megawin/game-mega645/entities";
-import {
-  calculateLineCount,
-  validateSelection,
-  getRequiredMainCount,
-} from "@megawin/game-mega645/rules/play-types";
+import { MEGA645_MAIN_COUNT, ALL_MAIN_NUMBERS } from "@megawin/game-mega645/entities";
+import { calculateLineCount, getRequiredMainCount } from "@megawin/game-mega645/rules/play-types";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
@@ -56,41 +47,20 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     if (drawIds.length === 0 || drawIds.length > play.maxDrawCount) {
       throw AppException.badRequest(`Số kỳ phải từ 1 đến ${play.maxDrawCount}.`);
     }
-    if (new Set(drawIds).size !== drawIds.length) {
-      throw AppException.badRequest("Danh sách kỳ quay chứa drawId trùng lặp.");
-    }
 
     if (boardInputs.length === 0 || boardInputs.length > play.maxBoardsPerTicket) {
       throw AppException.badRequest(`Số board phải từ 1 đến ${play.maxBoardsPerTicket}.`);
     }
 
-    const seenBoardNos = new Set<string>();
     const builtBoards: Board[] = [];
     let totalLinesPerDraw = 0;
 
     for (const bi of boardInputs) {
-      if (!VALID_BOARD_NOS.includes(bi.boardNo as any)) {
-        throw AppException.badRequest(
-          `Board "${bi.boardNo}" không hợp lệ. Chỉ chấp nhận: ${VALID_BOARD_NOS.join(", ")}.`,
-        );
-      }
-      if (seenBoardNos.has(bi.boardNo)) {
-        throw AppException.badRequest(`Board "${bi.boardNo}" bị trùng lặp.`);
-      }
-      seenBoardNos.add(bi.boardNo);
-
       const playType = bi.playType as PlayType;
 
       if (playType === PlayType.QuickPick) {
         bi.selection = generateQuickPick();
       }
-
-      const valResult = validateSelection(playType, bi.selection);
-      if (!valResult.valid) {
-        throw AppException.badRequest(`Board ${bi.boardNo}: ${valResult.errors.join("; ")}`);
-      }
-
-      validateNumberRanges(bi.boardNo, bi.selection.mainNumbers);
 
       const lineCount = calculateLineCount(playType);
       totalLinesPerDraw += lineCount;
@@ -117,14 +87,15 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
 
     for (const drawId of drawIds) {
       const draw = drawMap.get(drawId);
+
       if (!draw) {
         throw AppException.badRequest(`Kỳ quay ${drawId} không tồn tại.`);
       }
+
       if (draw.status !== DrawStatus.SalesOpen) {
-        throw AppException.badRequest(
-          `Kỳ quay ${drawId} không đang mở bán (status: ${draw.status}).`,
-        );
+        throw AppException.badRequest(`Kỳ quay ${drawId} không đang mở bán.`);
       }
+
       if (now >= draw.sales.closeAt) {
         throw AppException.badRequest(`Kỳ quay ${drawId} đã hết thời gian nhận cược.`);
       }
@@ -136,9 +107,11 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const totalAmount = amountPerDraw * drawCount;
 
     const tenantConfig = await this.getTenantConfig.run({ tenantId });
+
     if (!tenantConfig || tenantConfig.isEnabled !== true) {
       throw AppException.unauthorized("Không được phép chơi game. Vui lòng liên hệ admin.");
     }
+
     const commissionRate = tenantConfig.commissionRate;
     const commissionAmount = Math.round(amountPerDraw * commissionRate);
 
@@ -253,17 +226,4 @@ function generateQuickPick(): { mainNumbers: string[] } {
   return {
     mainNumbers: picked.sort(),
   };
-}
-
-function validateNumberRanges(boardNo: string, mainNumbers: string[]): void {
-  for (const n of mainNumbers) {
-    if (!VALID_MAIN_NUMBER_SET.has(n)) {
-      throw AppException.badRequest(
-        `Board ${boardNo}: số chính "${n}" không hợp lệ (phải từ "01" đến "45").`,
-      );
-    }
-  }
-  if (new Set(mainNumbers).size !== mainNumbers.length) {
-    throw AppException.badRequest(`Board ${boardNo}: số chính không được trùng nhau.`);
-  }
 }

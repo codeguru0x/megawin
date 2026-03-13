@@ -358,26 +358,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.updateOne({ drawId }, { $set });
   }
 
-  async updateVoidSummary(
-    drawId: string,
-    summary: {
-      totalVoidedEntries: number;
-      totalOriginalAmount: number;
-      totalRefundAmount: number;
-      completedAt: Date;
-    },
-  ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      {
-        $set: {
-          voidSummary: summary,
-          updatedAt: new Date(),
-        },
-      },
-    );
-  }
-
   // ─── Settle Summary (denormalize cho player API) ───
 
   /**

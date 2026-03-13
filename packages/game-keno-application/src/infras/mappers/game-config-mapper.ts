@@ -6,10 +6,7 @@ import { Document } from "mongodb";
 export type GlobalConfigEntity = GlobalConfigDoc & { id: string };
 export type TenantConfigEntity = TenantConfigDoc & { id: string };
 
-export class GameConfigMapper extends MongoMapper<
-  Document,
-  GlobalConfigEntity
-> {
+export class GameConfigMapper extends MongoMapper<Document, GlobalConfigEntity> {
   constructor() {
     super();
   }
@@ -20,10 +17,7 @@ export class GameConfigMapper extends MongoMapper<
   }
 }
 
-export class TenantConfigMapper extends MongoMapper<
-  Document,
-  TenantConfigEntity
-> {
+export class TenantConfigMapper extends MongoMapper<Document, TenantConfigEntity> {
   constructor() {
     super();
   }

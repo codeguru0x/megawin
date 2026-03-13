@@ -10,6 +10,8 @@ export interface CreateDrawInput {
   drawDate: string;
   /** Số kỳ tạo 1 lúc. Default 10, max 30. */
   count: number;
+  /** Mở bán ngay sau khi tạo (true) hoặc để trạng thái scheduled (false). */
+  openNow: boolean;
 }
 
 export interface CreateDrawOutputItem {

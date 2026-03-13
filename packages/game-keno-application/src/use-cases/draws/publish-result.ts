@@ -1,29 +1,18 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
-import {
-  KENO_DRAW_COUNT,
-  KENO_VALID_NUMBERS,
-} from "@megawin/game-keno/entities";
+import { KENO_DRAW_COUNT, KENO_VALID_NUMBERS } from "@megawin/game-keno/entities";
 import { computeDrawStats } from "@megawin/game-keno/helpers";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { nowVN } from "@megawin/shared/utils/date";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 
-const PUBLISHABLE_STATUSES = new Set<string>([
-  DrawStatus.SalesClosed,
-  DrawStatus.Published,
-]);
+const PUBLISHABLE_STATUSES = new Set<string>([DrawStatus.SalesClosed, DrawStatus.Published]);
 
-export class PublishResultUseCase extends NextApiUseCase<
-  PublishResultInput,
-  PublishResultOutput
-> {
+export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, PublishResultOutput> {
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(
-    input: PublishResultInput,
-  ): Promise<PublishResultOutput> {
+  protected async execute(input: PublishResultInput): Promise<PublishResultOutput> {
     this.validateResult(input);
 
     const draw = await this.drawRepo.getDrawById(input.drawId);
@@ -66,9 +55,7 @@ export class PublishResultUseCase extends NextApiUseCase<
       );
 
       if (!success) {
-        throw AppException.internal(
-          `Cập nhật kết quả kỳ ${input.drawId} thất bại.`,
-        );
+        throw AppException.internal(`Cập nhật kết quả kỳ ${input.drawId} thất bại.`);
       }
     }
 
@@ -86,10 +73,7 @@ export class PublishResultUseCase extends NextApiUseCase<
     const { winningNumbers } = input;
 
     if (!Array.isArray(winningNumbers) || winningNumbers.length !== KENO_DRAW_COUNT) {
-      throw new AppException(
-        "DRAW_RESULT_INVALID",
-        `Phải có đúng ${KENO_DRAW_COUNT} số.`,
-      );
+      throw new AppException("DRAW_RESULT_INVALID", `Phải có đúng ${KENO_DRAW_COUNT} số.`);
     }
 
     const unique = new Set(winningNumbers);

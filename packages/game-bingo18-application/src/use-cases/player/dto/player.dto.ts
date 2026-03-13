@@ -14,21 +14,6 @@ export interface PlayerGetCurrentDrawOutput {
   currentDraw: PlayerDrawInfo | null;
   /** Danh sách kỳ quay đang hoạt động. */
   activeDraws: PlayerDrawInfo[];
-  /** Kết quả kỳ quay gần nhất (null nếu chưa có kỳ nào kết thúc). */
-  lastResult: {
-    /** ID kỳ quay. */
-    drawId: string;
-    /** Ngày quay (YYYY-MM-DD). */
-    drawDate: string;
-    /** Số thứ tự kỳ trong ngày. */
-    drawNo: number;
-    /** 3 số kết quả (1-6). */
-    numbers: number[];
-    /** Tổng 3 số = numbers[0] + numbers[1] + numbers[2]. */
-    sum: number;
-    /** Thời điểm công bố (ISO 8601). */
-    publishedAt: string;
-  } | null;
 }
 
 export interface PlayerDrawInfo {
@@ -53,19 +38,6 @@ export interface PlayerDrawInfo {
 
 // ─── List Tickets (Player) ───
 
-/**
- * Cursor-based pagination cho danh sách vé.
- */
-
-export const TicketSortBy = {
-  BetDate: "betDate",
-  DrawDate: "drawDate",
-} as const;
-
-export type TicketSortBy = (typeof TicketSortBy)[keyof typeof TicketSortBy];
-
-export const TICKET_SORT_BY_VALUES = Object.values(TicketSortBy);
-
 export interface PlayerListTicketsInput {
   /** ID tenant của player. */
   tenantId: string;
@@ -81,6 +53,13 @@ export interface PlayerListTicketsInput {
   cursor?: string;
 }
 
+/**
+ * Input để lấy danh sách vé đang pending của player.
+ *
+ * Không có from/to — pending tickets trả về TẤT CẢ vé chưa settle/void,
+ * sắp xếp mới nhất trước. Player không cần nhớ ngày mua; hệ thống tự trả đủ
+ * qua cursor-based pagination.
+ */
 export interface PlayerListPendingTicketsInput {
   /** ID tenant của player. */
   tenantId: string;
@@ -88,27 +67,6 @@ export interface PlayerListPendingTicketsInput {
   accountId: string;
   /** Số lượng vé mỗi trang. */
   size: number;
-  /** Lọc từ ngày (YYYY-MM-DD, inclusive). */
-  from?: string;
-  /** Lọc đến ngày (YYYY-MM-DD, inclusive). */
-  to?: string;
-  /** Cursor để phân trang (opaque string từ response trước). */
-  cursor?: string;
-}
-
-export interface PlayerListCompletedTicketsInput {
-  /** ID tenant của player. */
-  tenantId: string;
-  /** ID tài khoản player. */
-  accountId: string;
-  /** Số lượng vé mỗi trang. */
-  size: number;
-  /** Tiêu chí sắp xếp (betDate | drawDate). */
-  sortBy: TicketSortBy;
-  /** Lọc từ ngày (YYYY-MM-DD, inclusive). */
-  from?: string;
-  /** Lọc đến ngày (YYYY-MM-DD, inclusive). */
-  to?: string;
   /** Cursor để phân trang (opaque string từ response trước). */
   cursor?: string;
 }

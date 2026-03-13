@@ -43,15 +43,19 @@
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  6. BuildReport         │  Daily reports (idempotent upsert)
+ *  │  6. BuildSettleReport   │  Per-game financial reports
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  7. FinalizeSettle      │  settling → settled + dual jackpot cycle
+ *  │  7. PublishSettleDaily  │  System daily reports (re-aggregate)
+ *  └────────┬────────────────┘
+ *           ▼
+ *  ┌─────────────────────────┐
+ *  │  8. FinalizeSettle      │  settling → settled + dual jackpot cycle
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  8. DispatchPayouts (loop, async)        │
+ *  │  9. DispatchPayouts (loop, async)        │
  *  │     done = true khi hết pending payouts  │
  *  └──────────────────────────────────────────┘
  *
@@ -181,16 +185,24 @@ export const SETTLE_STATE_MACHINE = {
       Choices: [
         {
           Condition: "{% $syncResult.done %}",
-          Next: "BuildReport",
+          Next: "BuildSettleReport",
         },
       ],
       Default: "SyncTicketSummaries",
     },
 
-    BuildReport: {
+    BuildSettleReport: {
       Type: "Task",
-      Resource: lambdaArn("settle-build-report"),
+      Resource: lambdaArn("settle-build-settle-report"),
       Arguments: "{% $settleCtx %}",
+      Next: "PublishSettleDaily",
+      Retry: LAMBDA_RETRY,
+    },
+
+    PublishSettleDaily: {
+      Type: "Task",
+      Resource: lambdaArn("settle-publish-settle-daily"),
+      Arguments: "{% { 'financialDate': $settleCtx.financialDate } %}",
       Next: "FinalizeSettle",
       Retry: LAMBDA_RETRY,
     },

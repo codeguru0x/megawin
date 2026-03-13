@@ -21,7 +21,7 @@ import type {
   DrawFinancial,
   DrawStats,
   DrawSettleSummary,
-  ISODateString,  
+  ISODateString,
   DrawVoidSummary,
 } from "@megawin/game-mega645/entities";
 import { BaseRepo } from "./base-repo";
@@ -224,10 +224,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /** Hoàn tất void: voiding → void + stamp voidedAt + ghi voidSummary. Atomic, idempotent. */
-  async voidComplete(
-    drawId: string,
-    voidSummary: DrawVoidSummary,
-  ): Promise<DrawEntity | null> {
+  async voidComplete(drawId: string, voidSummary: DrawVoidSummary): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Voiding];
     if (!allowed?.has(DrawStatus.Void)) return null;
 
@@ -445,21 +442,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findMany(
       { status: { $in: allowStatuses } },
       { sort: { drawDate: 1, drawNo: 1 } },
-    );
-  }
-
-  async updateVoidSummary(
-    drawId: string,
-    summary: NonNullable<DrawDoc["voidSummary"]>,
-  ): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      {
-        $set: {
-          voidSummary: summary,
-          updatedAt: new Date(),
-        },
-      },
     );
   }
 

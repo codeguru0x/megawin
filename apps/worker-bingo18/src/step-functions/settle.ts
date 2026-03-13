@@ -29,11 +29,15 @@
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  5. BuildReport         │  Daily reports
+ *  │  5. BuildSettleReport   │  Per-game financial reports (NEW)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  6. FinalizeSettle      │  settling → settled
+ *  │  6. PublishSettleDaily  │  System daily reports (NEW)
+ *  └────────┬────────────────┘
+ *           ▼
+ *  ┌─────────────────────────┐
+ *  │  7. FinalizeSettle      │  settling → settled
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
@@ -133,16 +137,24 @@ export const SETTLE_STATE_MACHINE = {
       Choices: [
         {
           Condition: "{% $syncResult.done %}",
-          Next: "BuildReport",
+          Next: "BuildSettleReport",
         },
       ],
       Default: "SyncTicketSummaries",
     },
 
-    BuildReport: {
+    BuildSettleReport: {
       Type: "Task",
-      Resource: lambdaArn("settle-build-report"),
+      Resource: lambdaArn("settle-build-settle-report"),
       Arguments: "{% $settleCtx %}",
+      Next: "PublishSettleDaily",
+      Retry: LAMBDA_RETRY,
+    },
+
+    PublishSettleDaily: {
+      Type: "Task",
+      Resource: lambdaArn("settle-publish-settle-daily"),
+      Arguments: "{% { 'financialDate': $settleCtx.financialDate } %}",
       Next: "FinalizeSettle",
       Retry: LAMBDA_RETRY,
     },
