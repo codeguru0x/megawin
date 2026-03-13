@@ -16,7 +16,7 @@
 
 import { useMemo } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { KenoPlayType } from "../../../../../../../../../../../packages/game-keno-application/game-keno/src/entities";
+import { KenoPlayType } from "@megawin/game-keno/entities";
 
 import { useDrawContext } from "../../use-draw-context";
 import {

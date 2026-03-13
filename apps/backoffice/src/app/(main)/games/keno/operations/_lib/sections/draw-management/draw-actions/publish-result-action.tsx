@@ -17,12 +17,8 @@ import {
   DevRandomFillButton,
   generateUniqueRandomNumbers,
 } from "@/components/dev-random-fill-button";
-import {
-  KENO_NUMBER_MIN,
-  KENO_NUMBER_MAX,
-  KENO_DRAW_COUNT,
-} from "../../../../../../../../../../../../packages/game-keno-application/game-keno/src/entities";
-import { publishResultSchema } from "../../../../../../../../../../../../packages/game-keno-application/game-keno/src/schemas";
+import { KENO_NUMBER_MIN, KENO_NUMBER_MAX, KENO_DRAW_COUNT } from "@megawin/game-keno/entities";
+import { publishResultSchema } from "@megawin/game-keno/schemas";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
 

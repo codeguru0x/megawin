@@ -9,7 +9,7 @@ import {
   analyzeEvenOddProfitability,
   getBigSmallOdds,
   getEvenOddOdds,
-} from "../../../../../../../../../packages/game-keno-application/game-keno/src/rules";
+} from "@megawin/game-keno/rules";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 
 import { Button } from "@/components/ui/button";
@@ -20,10 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 
-import type {
-  BigSmallPrizes,
-  EvenOddPrizes,
-} from "../../../../../../../../../packages/game-keno-application/game-keno/src/entities";
+import type { BigSmallPrizes, EvenOddPrizes } from "@megawin/game-keno/entities";
 
 import type { KenoGameConfig } from "./use-game-config";
 

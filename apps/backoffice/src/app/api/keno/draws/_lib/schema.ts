@@ -4,6 +4,8 @@ import { DRAW_STATUS_VALUES } from "@megawin/game-core/entities";
 export const createDrawSchema = z.object({
   drawDate: z.iso.date("drawDate phải là ngày hợp lệ format YYYY-MM-DD."),
   count: z.coerce.number().int().min(1).max(30).default(10),
+  /** Mở bán ngay sau khi tạo (true) hoặc để trạng thái scheduled (false). */
+  openNow: z.boolean().default(false),
 });
 
 export const previewDrawsSchema = z.object({

@@ -19,11 +19,7 @@ import {
   DevRandomFillButton,
   generateUniqueRandomNumbers,
 } from "@/components/dev-random-fill-button";
-import {
-  KENO_DRAW_COUNT,
-  KENO_NUMBER_MIN,
-  KENO_NUMBER_MAX,
-} from "../../../../../../../../../../packages/game-keno-application/game-keno/src/entities";
+import { KENO_DRAW_COUNT, KENO_NUMBER_MIN, KENO_NUMBER_MAX } from "@megawin/game-keno/entities";
 import { todayVN, formatVNTime } from "@megawin/shared/utils/date";
 import type { KenoCurrentDrawInfo } from "../use-draws";
 import { useKenoPublishResult } from "../use-draws";

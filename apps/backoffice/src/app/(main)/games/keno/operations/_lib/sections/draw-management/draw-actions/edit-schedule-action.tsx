@@ -15,10 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  editScheduleSchema,
-  type EditScheduleInput,
-} from "../../../../../../../../../../../../packages/game-keno-application/game-keno/src/schemas";
+import { editScheduleSchema, type EditScheduleInput } from "@megawin/game-keno/schemas";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { useUpdateSchedule } from "../../../use-operations";
 import { formatVNDate, formatVNTime } from "@megawin/shared/utils/date";

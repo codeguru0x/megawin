@@ -8,7 +8,7 @@ import {
   analyzeProfitabilityForPick,
   getBasicOddsTable,
   TOTAL_OUTCOMES,
-} from "../../../../../../../../../packages/game-keno-application/game-keno/src/rules";
+} from "@megawin/game-keno/rules";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -19,7 +19,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { cn } from "@/lib/utils";
 
-import type { BasicPrizes } from "../../../../../../../../../packages/game-keno-application/game-keno/src/entities";
+import type { BasicPrizes } from "@megawin/game-keno/entities";
 import type { KenoGameConfig } from "./use-game-config";
 
 const PICK_MATCH_COUNTS: Record<number, number[]> = {
