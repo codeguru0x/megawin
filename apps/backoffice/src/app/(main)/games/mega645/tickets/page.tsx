@@ -34,23 +34,8 @@ import { TicketStatusBadge } from "@/components/games/mega645/ticket-status-badg
 import { EntryStatusBadge } from "@/components/games/mega645/entry-status-badge";
 import { MegaNumberBall } from "@/components/games/mega645/mega-number-ball";
 import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils/number";
-
-const PLAY_TYPE_LABELS: Record<string, string> = {
-  standard: "Thường",
-  bao7: "Bao 7",
-  bao8: "Bao 8",
-  bao9: "Bao 9",
-  bao10: "Bao 10",
-  bao11: "Bao 11",
-  bao12: "Bao 12",
-  bao13: "Bao 13",
-  bao14: "Bao 14",
-  bao15: "Bao 15",
-  bao18: "Bao 18",
-  quickPick: "Tự chọn",
-};
-
-// ─── Mock Data ───
+import { PlayType } from "@megawin/game-mega645/entities";
+import { MEGA645_PLAY_TYPE_LABELS } from "@megawin/game-mega645/labels";
 
 const MOCK_TICKETS = [
   {
@@ -581,7 +566,7 @@ export default function Mega645TicketsPage() {
                     <Badge variant="outline" className="font-mono">
                       {b.boardNo}
                     </Badge>
-                    <Badge variant="secondary">{PLAY_TYPE_LABELS[b.playType] ?? b.playType}</Badge>
+                    <Badge variant="secondary">{MEGA645_PLAY_TYPE_LABELS[b.playType as PlayType] ?? b.playType}</Badge>
                     <div className="flex flex-wrap items-center gap-1">
                       {b.numbers.map((n, idx) => (
                         <MegaNumberBall key={`${n}-${idx}`} number={n} size="sm" />

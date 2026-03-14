@@ -15,7 +15,7 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
-import type { GlobalConfigEntity } from "../../infras/mappers/global-config-mapper";
+import type { GlobalConfigEntity } from "@megawin/game-lotto535/entities";;
 
 export class GetGlobalConfigInternalUseCase extends InternalUseCase<
   void,

@@ -1,6 +1,6 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { Max3dDrawResult } from "@megawin/game-max3d/entities";
-import type { DrawEntity } from "../../../infras/mappers/draw-mapper";
+import type { DrawEntity } from "@megawin/game-max3d/entities";;
 
 // ─────────────────────────────────────────────
 // CreateDraws (batch – tạo nhiều kỳ liên tiếp)

@@ -1,8 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
-import type { TicketDoc } from "@megawin/game-lotto535/entities";
+import type { TicketDoc, TicketEntity } from "@megawin/game-lotto535/entities";
 import { Document } from "mongodb";
-
-type TicketEntity = TicketDoc & { id: string };
 
 export class TicketMapper extends MongoMapper<Document, TicketEntity> {
   constructor() {
@@ -14,5 +12,3 @@ export class TicketMapper extends MongoMapper<Document, TicketEntity> {
     return { id: _id.toHexString(), ...rest } as TicketEntity;
   }
 }
-
-export type { TicketEntity };

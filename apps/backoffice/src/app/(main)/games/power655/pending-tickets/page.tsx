@@ -46,8 +46,8 @@ import { Power655DrawStatusBadge } from "@/components/games/power655/draw-status
 import { Power655EntryStatusBadge } from "@/components/games/power655/entry-status-badge";
 import { PowerNumberBall } from "@/components/games/power655/power-number-ball";
 import { DualJackpotDisplay } from "@/components/games/power655/jackpot-display";
-
-// ─── Mock Data ───
+import { POWER655_PLAY_TYPE_LABELS } from "@megawin/game-power655/labels";
+import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils/number";
 
 const PENDING_DRAW = {
   drawId: "2026-02-24-T3",
@@ -209,25 +209,6 @@ const MOCK_TENANT_ENTRIES = [
     currentDraw: 1,
   },
 ];
-
-const PLAY_TYPE_LABELS: Record<string, string> = {
-  standard: "Thường",
-  bao7: "Bao 7",
-  bao8: "Bao 8",
-  bao9: "Bao 9",
-  bao10: "Bao 10",
-  bao11: "Bao 11",
-  bao12: "Bao 12",
-  bao13: "Bao 13",
-  bao14: "Bao 14",
-  bao15: "Bao 15",
-  bao16: "Bao 16",
-  bao17: "Bao 17",
-  bao18: "Bao 18",
-  quickPick: "Tự chọn",
-};
-
-import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils/number";
 
 type SelectedEntry = (typeof MOCK_TENANT_ENTRIES)[number];
 
@@ -570,7 +551,7 @@ export default function Power655PendingTicketsPage() {
                           {board.boardNo}
                         </Badge>
                         <Badge variant="secondary">
-                          {PLAY_TYPE_LABELS[board.playType] ?? board.playType}
+                          {POWER655_PLAY_TYPE_LABELS[board.playType as keyof typeof POWER655_PLAY_TYPE_LABELS] ?? board.playType}
                         </Badge>
                       </div>
                       <span className="text-xs text-muted-foreground">

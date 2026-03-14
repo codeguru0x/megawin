@@ -14,6 +14,7 @@ import { formatNumber } from "@megawin/shared/utils/number";
 import { Activity, Radio } from "lucide-react";
 import { displayVNTimeWithSeconds } from "@megawin/shared/utils/date";
 import { parseUsername } from "@megawin/identity-application/shared";
+import { BINGO18_PLAY_TYPE_LABELS, BINGO18_TRIPLE_KIND_LABELS } from "@megawin/game-bingo18/labels";
 import type { LiveFeedEntry } from "../../types";
 
 const PLAY_TYPE_COLORS: Record<string, { dot: string; text: string }> = {
@@ -25,13 +26,11 @@ const PLAY_TYPE_COLORS: Record<string, { dot: string; text: string }> = {
   bigSmallDraw: { dot: "bg-teal-500", text: "text-teal-600 dark:text-teal-400" },
 };
 
-const PLAY_TYPE_LABELS: Record<string, string> = {
-  singleNum: "Số đơn",
-  doubleMatch: "Đôi",
-  "tripleMatch-specific": "Ba cụ thể",
-  "tripleMatch-any": "Ba bất kỳ",
-  sumTotal: "Tổng điểm",
-  bigSmallDraw: "Lớn/Nhỏ",
+/** Compound key labels for tripleMatch subtypes in live feed */
+const BINGO18_ANALYTICS_LABELS: Record<string, string> = {
+  ...BINGO18_PLAY_TYPE_LABELS,
+  "tripleMatch-specific": BINGO18_TRIPLE_KIND_LABELS["specific"],
+  "tripleMatch-any": BINGO18_TRIPLE_KIND_LABELS["any"],
 };
 
 export function LiveFeed({
@@ -67,7 +66,7 @@ export function LiveFeed({
           <div className="space-y-0.5">
             {entries.map((e, i) => {
               const color = PLAY_TYPE_COLORS[e.playType];
-              const label = PLAY_TYPE_LABELS[e.playType] ?? e.playType;
+              const label = BINGO18_ANALYTICS_LABELS[e.playType] ?? e.playType;
               const isSide = e.playType === "sumTotal" || e.playType === "bigSmallDraw";
 
               return (

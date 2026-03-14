@@ -9,10 +9,8 @@
 
 import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
-import {
-  DrawCounterMapper,
-  type DrawCounterEntity,
-} from "../mappers/draw-counter-mapper";
+import { DrawCounterMapper } from "../mappers/draw-counter-mapper";
+import type { DrawCounterEntity } from "@megawin/game-bingo18/entities";
 
 export class DrawCounterRepository extends BaseRepo<
   DrawCounterEntity,

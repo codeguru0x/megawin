@@ -6,7 +6,7 @@ import type {
   PayoutCaps,
   PlayRules,
 } from "@megawin/game-keno/entities";
-import type { GlobalConfigEntity } from "../../../infras/mappers/game-config-mapper";
+import type { GlobalConfigEntity } from "@megawin/game-keno/entities";;
 
 // ─────────────────────────────────────────────
 // GetGameConfig

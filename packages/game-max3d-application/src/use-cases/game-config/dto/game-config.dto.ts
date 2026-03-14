@@ -3,7 +3,7 @@ import type {
   Max3dPrizeConfig,
   PlayRules,
 } from "@megawin/game-max3d/entities";
-import type { GlobalConfigEntity } from "../../../infras/mappers/global-config-mapper";
+import type { GlobalConfigEntity } from "@megawin/game-max3d/entities";;
 
 type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];

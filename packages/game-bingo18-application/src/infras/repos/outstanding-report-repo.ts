@@ -12,16 +12,7 @@
 import type { OutstandingDrawReport } from "@megawin/game-bingo18/entities";
 import { BINGO18_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
-
-/** Summary aggregate outstanding cho toàn game — dùng cho SyncSystemOutstanding. */
-export interface OutstandingGameSummary {
-  activeDrawCount: number;
-  totalEntryCount: number;
-  totalPlayerCount: number;
-  totalTenantCount: number;
-  totalOutstandingStake: number;
-  totalEstimatedCommission: number;
-}
+import type { OutstandingGameSummary } from "./types";
 
 /**
  * Repository ghi outstanding report cho Bingo 18.
@@ -104,5 +95,10 @@ export class OutstandingReportRepository extends BaseRepo<any> {
       totalOutstandingStake: r.totalOutstandingStake,
       totalEstimatedCommission: r.totalEstimatedCommission,
     };
+  }
+
+  /** Lấy tất cả outstanding draw reports hiện tại — dùng cho UI dashboard. */
+  async findAll(): Promise<OutstandingDrawReport[]> {
+    return (await this.findMany({}, { sort: { financialDate: 1 } })) as OutstandingDrawReport[];
   }
 }

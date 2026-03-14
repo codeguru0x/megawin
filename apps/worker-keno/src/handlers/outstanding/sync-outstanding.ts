@@ -3,30 +3,28 @@
  *
  * EventBridge rule chạy mỗi 5 phút.
  * Aggregate entries WHERE { status: "scheduled" } group by drawId
- * → Upsert keno_outstanding_draw_reports với snapshotAt = now (reset TTL).
- *
- * Khi draw settle/void, job không tạo doc mới → TTL tự xoá sau 15 phút.
- * Keno KHÔNG có lineCount — không aggregate lineCount.
+ * → Upsert per-game outstanding_draw_reports với snapshotAt = now (reset TTL).
+ * → Sync lên system outstanding aggregate.
  *
  * IDEMPOTENT: upsert overwrite — crash-safe.
  */
 
 import { GameProduct } from "@megawin/game-core/entities";
-import { KENO_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-keno/entities";
-import { OutstandingReportRepository, EntryRepository } from "@megawin/game-keno-application/repos";
+import {
+  OutstandingReportRepository,
+  EntryRepository,
+  SystemOutstandingRepo,
+} from "@megawin/game-keno-application/repos";
 import { SyncSystemOutstandingUseCase } from "@megawin/game-core-application/use-cases";
 
 const outstandingRepo = new OutstandingReportRepository();
 const entryRepo = new EntryRepository();
+const systemOutstandingRepo = new SystemOutstandingRepo();
 const syncSystemUseCase = new SyncSystemOutstandingUseCase();
 
 export async function handler() {
-  // ── Bước 1: Aggregate entries scheduled theo drawId ──────────────────────
-  // Group by drawId → entryCount, playerCount, tenantCount, totalStake, estimatedCommission
-  // Keno KHÔNG có lineCount — aggregateOutstandingByDraw không trả lineCount
   const drawSnapshots = await entryRepo.aggregateOutstandingByDraw();
 
-  // ── Bước 2: Upsert keno_outstanding_draw_reports cho từng draw active ─────
   for (const snap of drawSnapshots) {
     await outstandingRepo.upsertDrawReport({
       drawId: snap.drawId,
@@ -39,10 +37,9 @@ export async function handler() {
     });
   }
 
-  // ── Bước 3: Sync system outstanding aggregate ────────────────────────────
   const systemResult = await syncSystemUseCase.execute({
     gameProduct: GameProduct.Keno,
-    outstandingDrawReportCollection: KENO_OUTSTANDING_DRAW_REPORTS,
+    outstandingRepo: systemOutstandingRepo,
   });
 
   return {

@@ -9,7 +9,8 @@
 
 import { KenoCollections } from "@megawin/game-keno/entities";
 import { BaseRepo } from "./base-repo";
-import { DrawCounterMapper, type DrawCounterEntity } from "../mappers/draw-counter-mapper";
+import { DrawCounterMapper } from "../mappers/draw-counter-mapper";
+import type { DrawCounterEntity } from "@megawin/game-keno/entities";
 
 export class DrawCounterRepository extends BaseRepo<DrawCounterEntity, DrawCounterMapper> {
   constructor() {

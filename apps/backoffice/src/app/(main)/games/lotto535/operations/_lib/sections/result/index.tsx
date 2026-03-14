@@ -12,6 +12,7 @@
 import { useMemo } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-lotto535/entities";
+import { LOTTO535_PRIZE_TIER_LABELS } from "@megawin/game-lotto535/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import { useDrawDetail } from "../../use-operations";
@@ -30,16 +31,6 @@ const TIER_ORDER: PrizeTier[] = [
   PrizeTier.Tier5,
   PrizeTier.Consolation,
 ];
-
-const TIER_LABELS: Record<string, string> = {
-  [PrizeTier.Jackpot]: "Độc đắc",
-  [PrizeTier.Tier1]: "Giải Nhất",
-  [PrizeTier.Tier2]: "Giải Nhì",
-  [PrizeTier.Tier3]: "Giải Ba",
-  [PrizeTier.Tier4]: "Giải Tư",
-  [PrizeTier.Tier5]: "Giải Năm",
-  [PrizeTier.Consolation]: "Khuyến khích",
-};
 
 export function ResultSection() {
   const { draw, effectiveDrawId } = useDrawContext();
@@ -65,7 +56,7 @@ export function ResultSection() {
           : (configPricePerLine[tier] ?? 0);
       return {
         tier,
-        label: TIER_LABELS[tier] ?? String(tier),
+        label: LOTTO535_PRIZE_TIER_LABELS[tier] ?? String(tier),
         winnerCount,
         prizeAmount,
         totalPrize: t?.prizeAmount ?? 0,

@@ -51,6 +51,7 @@ import { StatCard } from "@/components/games/max3dpro/stat-card";
 import { DrawStatusBadge } from "@/components/games/max3dpro/draw-status-badge";
 import { EntryStatusBadge } from "@/components/games/max3dpro/entry-status-badge";
 import { TripletDisplay } from "@/components/games/max3dpro/triplet-display";
+import { MAX3DPRO_PLAY_MODE_LABELS } from "@megawin/game-max3dpro/labels";
 
 const PENDING_DRAW = {
   drawId: "2026-02-22-001",
@@ -77,8 +78,7 @@ const MOCK_TENANT_ENTRIES = [
 ];
 
 const PLAY_TYPE_LABELS: Record<string, string> = {
-  multiNumber: "Bao số",
-  multiDigit: "Bao chữ số",
+  ...MAX3DPRO_PLAY_MODE_LABELS,
   pair: "Cặp số",
 };
 

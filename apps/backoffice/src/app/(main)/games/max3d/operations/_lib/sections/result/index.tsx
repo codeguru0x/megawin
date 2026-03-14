@@ -12,6 +12,7 @@
 import { useMemo, useState } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { BasicPrizeTier, PlusPrizeTier } from "@megawin/game-max3d/entities";
+import { MAX3D_BASIC_PRIZE_TIER_LABELS, MAX3D_PLUS_PRIZE_TIER_LABELS } from "@megawin/game-max3d/labels";
 import { formatNumber } from "@megawin/shared/utils/number";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,23 +26,6 @@ import { useDrawDetail, useWinningEntries, type WinningEntryItem } from "../../u
 import type { DrawResult, DrawFinancialDisplay } from "../../types";
 
 // ─── Tier config ──────────────────────────────────────────────────────────────
-
-const BASIC_TIER_LABELS: Record<string, string> = {
-  [BasicPrizeTier.Special]: "Giải ĐB",
-  [BasicPrizeTier.First]: "Giải Nhất",
-  [BasicPrizeTier.Second]: "Giải Nhì",
-  [BasicPrizeTier.Third]: "Giải Ba",
-};
-
-const PLUS_TIER_LABELS: Record<string, string> = {
-  [PlusPrizeTier.Special]: "Plus ĐB",
-  [PlusPrizeTier.First]: "Plus Nhất",
-  [PlusPrizeTier.Second]: "Plus Nhì",
-  [PlusPrizeTier.Third]: "Plus Ba",
-  [PlusPrizeTier.Fourth]: "Plus Tư",
-  [PlusPrizeTier.Fifth]: "Plus Năm",
-  [PlusPrizeTier.Sixth]: "Plus Sáu",
-};
 
 type TierConfig = { badge: string; row: string; icon?: React.ElementType };
 
@@ -144,7 +128,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
                   row: "",
                 };
                 const label =
-                  BASIC_TIER_LABELS[tier.tier] ?? PLUS_TIER_LABELS[tier.tier] ?? tier.tier;
+                  MAX3D_BASIC_PRIZE_TIER_LABELS[tier.tier as BasicPrizeTier] ?? MAX3D_PLUS_PRIZE_TIER_LABELS[tier.tier as PlusPrizeTier] ?? tier.tier;
                 return (
                   <div
                     key={tier.tier}
@@ -309,9 +293,9 @@ export function ResultSection() {
     const d = drawDetailData?.draw;
     if (!d?.result) return undefined;
 
-    const tierLabels = { ...BASIC_TIER_LABELS, ...PLUS_TIER_LABELS };
+    const tierLabels: Record<string, string> = { ...MAX3D_BASIC_PRIZE_TIER_LABELS, ...MAX3D_PLUS_PRIZE_TIER_LABELS };
     const tierMap = new Map((d.settleSummary?.tiers ?? []).map((t) => [t.tier, t]));
-    const allTierKeys = [...Object.keys(BASIC_TIER_LABELS), ...Object.keys(PLUS_TIER_LABELS)];
+    const allTierKeys = [...Object.keys(MAX3D_BASIC_PRIZE_TIER_LABELS), ...Object.keys(MAX3D_PLUS_PRIZE_TIER_LABELS)];
     const tiers = allTierKeys.map((tier) => {
       const t = tierMap.get(tier);
       const winnerCount = t?.winnerCount ?? 0;

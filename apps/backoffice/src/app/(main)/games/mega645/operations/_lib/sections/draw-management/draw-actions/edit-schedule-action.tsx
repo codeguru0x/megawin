@@ -28,17 +28,23 @@ function parseISOToVN(iso: string | undefined): { date: string; time: string } {
   return { date: formatVNDate(d), time: formatVNTime(d) };
 }
 
+/** Chuyển "DD/MM/YYYY" → "YYYY-MM-DD" cho HTML input[type=date] */
+function vnDateToISO(vnDate: string): string {
+  const [dd, mm, yyyy] = vnDate.split("/");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 function buildDefaultValues(draw: DrawSelectorItem): EditScheduleInput {
   const op = parseISOToVN(draw.salesOpenAt);
   const cl = parseISOToVN(draw.salesCloseAt);
-  const dr = parseISOToVN(draw.drawResultAt);
+  // drawDate/drawTime luôn lấy từ draw.drawDate + draw.drawTime — nguồn lịch quay chính thức
   return {
     salesOpenDate: op.date,
     salesOpenTime: op.time,
     salesCloseDate: cl.date,
     salesCloseTime: cl.time,
-    drawDate: dr.date,
-    drawTime: dr.time,
+    drawDate: vnDateToISO(draw.drawDate),
+    drawTime: draw.drawTime,
   };
 }
 
@@ -48,6 +54,8 @@ function buildDefaultValues(draw: DrawSelectorItem): EditScheduleInput {
  * Validation (editScheduleSchema):
  * - salesCloseAt > salesOpenAt
  * - drawAt > salesCloseAt
+ *
+ * drawDate/drawTime là cặp độc lập — user tự điều chỉnh riêng biệt với salesClose.
  */
 export function EditScheduleAction({
   draw,
@@ -79,7 +87,8 @@ export function EditScheduleAction({
     const closeISO = toVNDate(data.salesCloseDate, data.salesCloseTime).toISOString();
     const drawISO = toVNDate(data.drawDate, data.drawTime).toISOString();
 
-    const originalDrawISO = draw.drawResultAt ?? "";
+    // So sánh với lịch quay gốc (draw.drawDate + draw.drawTime) để phát hiện thay đổi
+    const originalDrawISO = toVNDate(vnDateToISO(draw.drawDate), draw.drawTime).toISOString();
     const body: { salesOpenAt: string; salesCloseAt: string; drawTime?: string } = {
       salesOpenAt: openISO,
       salesCloseAt: closeISO,

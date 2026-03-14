@@ -14,6 +14,7 @@ import { formatNumber } from "@megawin/shared/utils/number";
 import { Activity, Radio } from "lucide-react";
 import { displayVNTimeWithSeconds } from "@megawin/shared/utils/date";
 import { parseUsername } from "@megawin/identity-application/shared";
+import { KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
 import { NumberBadge } from "./number-heatmap";
 import type { LiveFeedEntry } from "../../types";
 
@@ -32,21 +33,6 @@ const PLAY_TYPE_COLORS: Record<string, { dot: string; text: string }> = {
   pick10: { dot: "bg-red-600", text: "text-red-600 dark:text-red-400" },
   bigSmall: { dot: "bg-cyan-500", text: "text-cyan-600 dark:text-cyan-400" },
   evenOdd: { dot: "bg-teal-500", text: "text-teal-600 dark:text-teal-400" },
-};
-
-const PLAY_TYPE_LABELS: Record<string, string> = {
-  pick1: "Pick 1",
-  pick2: "Pick 2",
-  pick3: "Pick 3",
-  pick4: "Pick 4",
-  pick5: "Pick 5",
-  pick6: "Pick 6",
-  pick7: "Pick 7",
-  pick8: "Pick 8",
-  pick9: "Pick 9",
-  pick10: "Pick 10",
-  bigSmall: "Lớn/Nhỏ",
-  evenOdd: "Chẵn/Lẻ",
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -84,7 +70,7 @@ export function LiveFeed({
           <div className="space-y-0.5">
             {entries.map((e, i) => {
               const color = PLAY_TYPE_COLORS[e.playType];
-              const label = PLAY_TYPE_LABELS[e.playType] ?? e.playType;
+              const label = KENO_PLAY_TYPE_LABELS[e.playType as keyof typeof KENO_PLAY_TYPE_LABELS] ?? e.playType;
               const isSideBet = e.playType === "bigSmall" || e.playType === "evenOdd";
 
               return (
@@ -122,9 +108,7 @@ export function LiveFeed({
                           (không có số cụ thể)
                         </span>
                       ) : (
-                        e.numbers.map((n, idx) => (
-                          <NumberBadge key={`n-${idx}`} num={n} size="sm" />
-                        ))
+                        e.numbers.map((n, idx) => <NumberBadge key={`n-${idx}`} num={n} />)
                       )}
                     </div>
                     <div className="flex items-start justify-end">

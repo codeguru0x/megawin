@@ -46,6 +46,7 @@ import {
 import { StatCard } from "@/components/games/max3dpro/stat-card";
 import { TicketStatusBadge } from "@/components/games/max3dpro/ticket-status-badge";
 import { TripletDisplay } from "@/components/games/max3dpro/triplet-display";
+import { MAX3DPRO_PLAY_MODE_LABELS } from "@megawin/game-max3dpro/labels";
 
 function fmtVND(n: number) {
   if (n >= 1_000_000_000)
@@ -56,8 +57,7 @@ function fmtVND(n: number) {
 }
 
 const PLAY_TYPE_LABELS: Record<string, string> = {
-  multiNumber: "Bao số",
-  multiDigit: "Bao chữ số",
+  ...MAX3DPRO_PLAY_MODE_LABELS,
   pair: "Cặp số",
 };
 

@@ -1,18 +1,13 @@
 /**
  * Use Case: Create Draws (Power 6/55) – Batch
  *
- * Tạo nhiều kỳ quay liên tiếp cho ngày hiện tại và các ngày tiếp theo.
- * Power 6/55 chỉ quay thứ 3, 5, 7, mỗi ngày 1 kỳ lúc 18:00.
- *
- * Flow:
- *   1. Load global config → lấy play rules (drawTimes, drawDaysOfWeek, salesCloseBeforeMinutes)
- *   2. Lấy danh sách draws đã tồn tại → calcPower655DrawSlots skip draws đã có
- *   3. Tính draw slots khả dụng
- *   4. Tạo từng draw: status Scheduled (chờ staff mở bán)
- *   5. Đảm bảo có active JackpotCycle:
- *      - Bootstrap (lần đầu, chưa có cycle nào): tạo mới với seed từ config.
- *      - Recovery (cycle closed nhưng chưa có cycle mới — crash giữa settle):
- *        đọc cycle closed gần nhất để xác định JP2 carry-over chính xác.
+ * Client gửi lên mảng các kỳ cần tạo (drawDate, drawNo, drawTime, openNow).
+ * Server chỉ cần:
+ *   1. Validate input (1-12 kỳ, không có drawDate trùng nhau trong batch)
+ *   2. Tính closeAt = drawTime − play.salesCloseBeforeMinutes (từ game config)
+ *   3. Kiểm tra drawId nào đã tồn tại → báo lỗi, không tạo partial
+ *   4. Batch insert tất cả kỳ mới với status tương ứng openNow
+ *   5. Đảm bảo có active JackpotCycle
  *
  * JACKPOT: Không ghi jackpot lên draw khi tạo.
  * Active draws đọc jackpot từ JackpotCycle.jackpot1CurrentAmount / jackpot2CurrentAmount.
@@ -24,12 +19,12 @@ import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { generateDrawId } from "@megawin/game-power655/helpers";
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
-import type { DrawNo } from "@megawin/game-power655/entities";
+import { subtractMinutes } from "@megawin/shared/utils/date";
+import type { DrawNo, DrawDoc } from "@megawin/game-power655/entities";
 import { JackpotCycleClosedReasons } from "@megawin/game-power655/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import { calcPower655DrawSlots } from "../../helpers/calc-draw-slots";
 import type { CreateDrawsInput, CreateDrawsOutput, CreateDrawsOutputItem } from "./dto/draw.dto";
 
 /**
@@ -47,64 +42,79 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
 
   /** @inheritdoc */
   protected async execute(input: CreateDrawsInput): Promise<CreateDrawsOutput> {
-    const { count } = input;
+    const { draws: slots } = input;
 
-    const globalConfig = await this.getGlobalConfig.run();
-
-    const { play, jackpot: jackpotConfig } = globalConfig;
-
-    if (count < 1 || count > 12) {
+    if (slots.length < 1 || slots.length > 12) {
       throw AppException.badRequest("Số kỳ tạo phải từ 1 đến 12.");
     }
 
-    const existingActiveDraws = await this.drawRepo.getActiveDraws([
-      DrawStatus.Scheduled,
-      DrawStatus.SalesOpen,
-      DrawStatus.SalesClosed,
-      DrawStatus.Published,
-      DrawStatus.Settling,
-    ]);
-    const existingDrawIds = new Set(existingActiveDraws.map((d) => d.drawId));
+    const globalConfig = await this.getGlobalConfig.run();
+    const { play, jackpot: jackpotConfig } = globalConfig;
 
-    const slots = calcPower655DrawSlots(new Date(), count, play, existingDrawIds);
-    if (slots.length === 0) {
-      throw AppException.badRequest("Không còn slot quay nào khả dụng.");
+    // Tính drawId và closeAt cho từng slot, kiểm tra tất cả trước khi insert.
+    const slotsWithIds = slots.map((slot) => {
+      const drawTimeDate = new Date(slot.drawTime);
+      // closeAt tính theo game config: drawTime − salesCloseBeforeMinutes.
+      const closeAtDate = subtractMinutes(drawTimeDate, play.salesCloseBeforeMinutes);
+      return {
+        ...slot,
+        drawId: generateDrawId(slot.drawDate, slot.drawNo as any),
+        drawTimeDate,
+        closeAtDate,
+      };
+    });
+
+    const inputDrawIds = slotsWithIds.map((s) => s.drawId);
+
+    // Guard: bắt duplicate trong chính batch input.
+    const uniqueInputIds = new Set(inputDrawIds);
+    if (uniqueInputIds.size !== inputDrawIds.length) {
+      const seen = new Set<string>();
+      const dupes = inputDrawIds.filter((id) => seen.size === seen.add(id).size);
+      throw AppException.badRequest(
+        `Kỳ quay bị trùng trong danh sách: ${[...new Set(dupes)].join(", ")}`,
+      );
     }
 
+    const existing = await this.drawRepo.getDrawsByIds(inputDrawIds);
+    if (existing.length > 0) {
+      const ids = existing.map((d) => d.drawId).join(", ");
+      throw AppException.conflict(`Kỳ quay đã tồn tại: ${ids}`);
+    }
+
+    // ── Build draw docs ──
     const now = new Date();
+    const drawDocs: Omit<DrawDoc, "_id">[] = [];
     const draws: CreateDrawsOutputItem[] = [];
 
-    for (const slot of slots) {
-      const drawId = generateDrawId(slot.drawDate, slot.drawNo as any);
+    for (const slot of slotsWithIds) {
+      const status = slot.openNow ? DrawStatus.SalesOpen : DrawStatus.Scheduled;
 
-      const existing = await this.drawRepo.getDrawById(drawId);
-      if (existing) continue;
-
-      const status = DrawStatus.Scheduled;
-
-      await this.drawRepo.createDraw({
-        drawId,
+      drawDocs.push({
+        drawId: slot.drawId,
         drawDate: slot.drawDate,
-        financialDate: getFinancialDate(slot.drawTime),
+        financialDate: getFinancialDate(slot.drawTimeDate),
         drawNo: slot.drawNo as DrawNo,
-        drawTime: slot.drawTime,
+        drawTime: slot.drawTimeDate,
         status,
-        sales: {
-          closeAt: slot.closeAt,
-        },
+        sales: slot.openNow
+          ? { closeAt: slot.closeAtDate, openAt: now }
+          : { closeAt: slot.closeAtDate },
         createdAt: now,
         updatedAt: now,
       });
 
       draws.push({
-        drawId,
+        drawId: slot.drawId,
         drawDate: slot.drawDate,
         drawNo: slot.drawNo,
-        drawTime: slot.drawTime.toISOString(),
-        closeAt: slot.closeAt.toISOString(),
+        drawTime: slot.drawTimeDate.toISOString(),
+        closeAt: slot.closeAtDate.toISOString(),
         status,
       });
     }
+
+    await this.drawRepo.createDraws(drawDocs);
 
     // ── Đảm bảo luôn có active JackpotCycle ──────────────────────────────────
     // createCycle guard: skip nếu đã có active cycle → idempotent.

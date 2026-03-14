@@ -1,27 +1,28 @@
 /**
- * Lambda: publish-settle-daily (void flow – Keno)
+ * Lambda: publish-settle-daily (Keno)
  *
- * Reuse PublishSettleDailyUseCase trong void flow để re-aggregate system reports.
- * Gọi sau BuildVoidReport: settle draw reports đã bị xoá (nếu void-after-settle)
- * → re-aggregate system_settle_game_daily và system_settle_tenant_daily giảm theo.
+ * Re-aggregate per-game draw-level reports → upsert system daily reports.
+ * Dùng per-game system repos kế thừa từ game-core base.
  *
  * IDEMPOTENT: re-aggregate toàn bộ → overwrite system reports.
  *
- * @input  { financialDate: string } (từ voidCtx)
+ * @input  { financialDate: string }
  * @output PublishSettleDailyResult
  */
 
 import { GameProduct } from "@megawin/game-core/entities";
-import { KENO_SETTLE_DRAW_REPORTS, KENO_SETTLE_TENANT_REPORTS } from "@megawin/game-keno/entities";
+import { SystemSettleGameDailyRepo, SystemSettleTenantDailyRepo } from "@megawin/game-keno-application/repos";
 import { PublishSettleDailyUseCase } from "@megawin/game-core-application/use-cases";
 
+const gameDailyRepo = new SystemSettleGameDailyRepo();
+const tenantDailyRepo = new SystemSettleTenantDailyRepo();
 const useCase = new PublishSettleDailyUseCase();
 
 export async function handler(event: { financialDate: string }) {
   return useCase.execute({
     gameProduct: GameProduct.Keno,
     financialDate: event.financialDate,
-    settleDrawReportCollection: KENO_SETTLE_DRAW_REPORTS,
-    settleTenantReportCollection: KENO_SETTLE_TENANT_REPORTS,
+    gameDailyRepo,
+    tenantDailyRepo,
   });
 }

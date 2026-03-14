@@ -67,6 +67,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.insertOne(doc as any);
   }
 
+  /** Batch insert nhiều kỳ quay (1 round trip). Trả về số document đã insert. */
+  async createDraws(docs: Omit<DrawDoc, "_id">[]): Promise<number> {
+    if (docs.length === 0) return 0;
+    const result = await this.insertMany(docs as any[]);
+    return result.insertedCount;
+  }
+
   /** Lấy 1 kỳ quay theo drawId. */
   async getDrawById(drawId: string): Promise<DrawEntity | null> {
     return await this.findOne({ drawId });

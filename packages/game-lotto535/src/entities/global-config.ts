@@ -76,3 +76,9 @@ export interface GlobalConfigDoc {
   /** Thời điểm chỉnh sửa config gần nhất. */
   updatedAt: Date;
 }
+
+/** Application-layer entity sau khi qua mapper. ObjectId → id string. */
+export interface GlobalConfigEntity extends Omit<GlobalConfigDoc, "_id"> {
+  /** MongoDB ObjectId đã chuyển sang hex string. */
+  id: string;
+}

@@ -1,9 +1,7 @@
 import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import { AbstractTenantConfigRepository } from "@megawin/game-max3d-core/repos";
-import {
-  TenantConfigMapper,
-  type TenantConfigEntity,
-} from "../mappers/tenant-config-mapper";
+import { TenantConfigMapper } from "../mappers/tenant-config-mapper";
+import type { TenantConfigEntity } from "@megawin/game-max3dpro/entities";
 
 export class TenantConfigRepository extends AbstractTenantConfigRepository<
   TenantConfigEntity,

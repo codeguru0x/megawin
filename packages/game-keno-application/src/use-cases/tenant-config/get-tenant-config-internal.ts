@@ -15,7 +15,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
-import type { TenantConfigEntity } from "../../infras/mappers/game-config-mapper";
+import type { TenantConfigEntity } from "@megawin/game-keno/entities";;
 
 export interface GetTenantConfigInternalInput {
   tenantId: string;

@@ -10,6 +10,7 @@
 import { useMemo } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-mega645/entities";
+import { MEGA645_PRIZE_TIER_LABELS } from "@megawin/game-mega645/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import { useDrawDetail } from "../../use-operations";
@@ -25,13 +26,6 @@ const TIER_ORDER: PrizeTier[] = [
   PrizeTier.Tier2,
   PrizeTier.Tier3,
 ];
-
-const TIER_LABELS: Record<string, string> = {
-  [PrizeTier.Jackpot]: "Độc đắc",
-  [PrizeTier.Tier1]: "Giải Nhất",
-  [PrizeTier.Tier2]: "Giải Nhì",
-  [PrizeTier.Tier3]: "Giải Ba",
-};
 
 export function ResultSection() {
   const { draw, effectiveDrawId } = useDrawContext();
@@ -51,7 +45,7 @@ export function ResultSection() {
         winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         tier,
-        label: TIER_LABELS[tier] ?? String(tier),
+        label: MEGA645_PRIZE_TIER_LABELS[tier] ?? String(tier),
         winnerCount,
         prizeAmount,
         totalPrize: t?.prizeAmount ?? 0,

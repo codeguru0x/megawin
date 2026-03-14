@@ -43,6 +43,7 @@ function buildDefaultValues(draw: DrawSelectorItem): EditScheduleInput {
  * - salesCloseAt > salesOpenAt
  * - drawAt ≥ salesCloseAt + 2 phút (Keno chu kỳ ngắn 8 phút)
  *
+ * drawDate/drawTime là cặp độc lập — user tự điều chỉnh riêng biệt với salesClose.
  * Form reset tự động khi dialog mở bằng useEffect + form.reset().
  */
 export function EditScheduleAction({

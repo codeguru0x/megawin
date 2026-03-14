@@ -1,22 +1,27 @@
 /**
- * System Settle Tenant Daily Repository
+ * System Settle Tenant Daily Repository (Base)
  *
- * Ghi và aggregate system-level tenant daily settle reports vào MongoDB.
- * 1 doc = 1 tenant × 1 game × 1 financialDate (aggregate từ per-game tenant reports).
+ * Ghi và query system-level tenant daily settle reports trong MongoDB.
+ * 1 doc = 1 tenant × 1 game × 1 financialDate.
  *
- * Constructor nhận tên collection per-game để tạo perGameColl 1 lần duy nhất.
+ * Collection: system_settle_tenant_daily
  *
- * Methods:
- *   upsertTenantDaily             — upsert vào system_settle_tenant_daily
- *   aggregateTenantsFromPerGame   — aggregate per-game tenant reports
+ * Chỉ làm việc với SYSTEM collection:
+ *   - upsertTenantDaily          — ghi per-game tenant aggregate vào system
+ *   - aggregateByTenantId        — query tổng hợp theo tenant
+ *   - findTenantGameBreakdown    — query game breakdown cho 1 tenant
+ *
+ * Per-game aggregate (từ per-game tenant reports → system) nằm ở mỗi game package.
+ * Game package thừa kế class này, thêm perGameColl + aggregateAndPublish().
  *
  * IDEMPOTENT: write dùng upsert overwrite — chạy lại an toàn.
- * KHÔNG dùng $inc — mọi field đều $set overwrite.
  */
 
 import type { SystemSettleTenantDaily } from "@megawin/game-core/entities";
 import { SYSTEM_SETTLE_TENANT_DAILY } from "@megawin/game-core/entities";
+import type { GameProduct } from "@megawin/game-core/entities";
 import { GameCoreBaseRepo } from "./game-core-base-repo";
+import type { TenantSummaryRow } from "./types";
 
 /** Kết quả aggregate từ per-game settle tenant reports theo financialDate, group by tenantId. */
 export interface SettleTenantDailyAggregateResult {
@@ -32,20 +37,14 @@ export interface SettleTenantDailyAggregateResult {
 }
 
 /**
- * Repository ghi và aggregate system tenant daily settle reports.
+ * Base repository ghi và query system tenant daily settle reports.
  *
- * Nhận `settleTenantReportCollection` (VD: lotto535_settle_tenant_reports) để
- * tạo perGameColl 1 lần trong constructor — không tạo lại mỗi lần aggregate.
- * Được gọi bởi PublishSettleDaily use case sau mỗi settle hoặc void.
- * Tất cả write dùng upsert pattern — idempotent, crash-safe.
+ * Chỉ làm việc với system_settle_tenant_daily collection.
+ * Per-game aggregate logic nằm ở subclass trong mỗi game package.
  */
 export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<any> {
-  /** Per-game tenant report collection — dùng để aggregate, tạo 1 lần trong constructor. */
-  private readonly perGameColl: GameCoreBaseRepo<any>;
-
-  constructor(settleTenantReportCollection: string) {
+  constructor() {
     super({ collName: SYSTEM_SETTLE_TENANT_DAILY });
-    this.perGameColl = new GameCoreBaseRepo({ collName: settleTenantReportCollection });
   }
 
   /**
@@ -80,46 +79,93 @@ export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<any> {
   }
 
   /**
-   * Aggregate per-game settle tenant reports → group by tenantId cho 1 ngày.
+   * Aggregate by tenantId — SUM cross-game cho mỗi tenant trong date range.
    *
-   * Dùng perGameColl đã khởi tạo trong constructor (VD: lotto535_settle_tenant_reports).
-   * Group by tenantId → SUM tất cả draws trong financialDate.
-   * Trả về mảng per-tenant summaries.
+   * Query vào system_settle_tenant_daily, group by tenantId.
+   * Optional filter theo gameProduct để chỉ lấy data của 1 game.
+   * Sort theo totalStake descending. Dùng tab "Theo đại lý".
    */
-  async aggregateTenantsFromPerGame(
-    financialDate: string,
-  ): Promise<SettleTenantDailyAggregateResult[]> {
-    const result = await this.perGameColl.aggregate([
-      {
-        $match: {
-          financialDate,
-        },
+  async aggregateByTenantId(
+    from: string,
+    to: string,
+    gameProduct?: GameProduct,
+  ): Promise<TenantSummaryRow[]> {
+    const matchStage: Record<string, unknown> = {
+      financialDate: {
+        $gte: from,
+        $lte: to,
       },
+    };
+
+    // Filter theo game nếu được chỉ định
+    if (gameProduct) {
+      matchStage["gameProduct"] = gameProduct;
+    }
+
+    const result = await this.aggregate([
+      // Lọc theo date range (và game nếu có)
+      {
+        $match: matchStage,
+      },
+      // Nhóm theo tenantId → SUM cross-game
       {
         $group: {
           _id: "$tenantId",
+          gameCount: { $addToSet: "$gameProduct" },
+          drawCount: { $sum: "$drawCount" },
+          entryCount: { $sum: "$entryCount" },
+          playerCount: { $sum: "$playerCount" },
           totalStake: { $sum: "$totalStake" },
           totalPayout: { $sum: "$totalPayout" },
           ggr: { $sum: "$ggr" },
           commission: { $sum: "$commission" },
-          netProfit: { $sum: { $subtract: ["$ggr", "$commission"] } },
-          entryCount: { $sum: "$entryCount" },
-          playerCount: { $sum: "$playerCount" },
-          drawCount: { $sum: 1 },
+          netProfit: { $sum: "$netProfit" },
+        },
+      },
+      // Sắp xếp theo doanh thu giảm dần
+      {
+        $sort: {
+          totalStake: -1,
         },
       },
     ]);
 
     return (result as any[]).map((r) => ({
-      tenantId: r._id,
-      totalStake: r.totalStake,
-      totalPayout: r.totalPayout,
-      ggr: r.ggr,
-      commission: r.commission,
-      netProfit: r.netProfit,
-      entryCount: r.entryCount,
-      playerCount: r.playerCount,
-      drawCount: r.drawCount,
+      tenantId: r._id as string,
+      gameCount: (r.gameCount as string[]).length,
+      drawCount: r.drawCount as number,
+      entryCount: r.entryCount as number,
+      playerCount: r.playerCount as number,
+      totalStake: r.totalStake as number,
+      totalPayout: r.totalPayout as number,
+      ggr: r.ggr as number,
+      commission: r.commission as number,
+      netProfit: r.netProfit as number,
     }));
+  }
+
+  /**
+   * Game breakdown cho 1 tenant trong date range — dùng inline expand.
+   *
+   * Query system_settle_tenant_daily WHERE tenantId + financialDate in range.
+   * Sort theo gameProduct ascending.
+   */
+  async findTenantGameBreakdown(
+    tenantId: string,
+    from: string,
+    to: string,
+  ): Promise<SystemSettleTenantDaily[]> {
+    return (await this.findMany(
+      {
+        tenantId,
+        financialDate: {
+          $gte: from,
+          $lte: to,
+        },
+      },
+      {
+        sort: { gameProduct: 1 },
+      },
+    )) as SystemSettleTenantDaily[];
   }
 }

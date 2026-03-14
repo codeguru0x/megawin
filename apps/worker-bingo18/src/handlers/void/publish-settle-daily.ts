@@ -1,30 +1,28 @@
 /**
- * Lambda: publish-settle-daily (Bingo 18 – Void flow)
+ * Lambda: publish-settle-daily (Bingo 18)
  *
- * Reuse cùng PublishSettleDailyUseCase từ settle flow.
- * Gọi sau BuildVoidReport để re-aggregate system daily reports:
- * settle totals tự giảm vì draw-level settle reports đã bị xoá.
+ * Re-aggregate per-game draw-level reports → upsert system daily reports.
+ * Dùng per-game system repos kế thừa từ game-core base.
  *
  * IDEMPOTENT: re-aggregate toàn bộ → overwrite system reports.
  *
- * @input  { financialDate: string } (từ voidCtx)
+ * @input  { financialDate: string }
  * @output PublishSettleDailyResult
  */
 
 import { GameProduct } from "@megawin/game-core/entities";
-import {
-  BINGO18_SETTLE_DRAW_REPORTS,
-  BINGO18_SETTLE_TENANT_REPORTS,
-} from "@megawin/game-bingo18/entities";
+import { SystemSettleGameDailyRepo, SystemSettleTenantDailyRepo } from "@megawin/game-bingo18-application/repos";
 import { PublishSettleDailyUseCase } from "@megawin/game-core-application/use-cases";
 
+const gameDailyRepo = new SystemSettleGameDailyRepo();
+const tenantDailyRepo = new SystemSettleTenantDailyRepo();
 const useCase = new PublishSettleDailyUseCase();
 
 export async function handler(event: { financialDate: string }) {
   return useCase.execute({
     gameProduct: GameProduct.Bingo18,
     financialDate: event.financialDate,
-    settleDrawReportCollection: BINGO18_SETTLE_DRAW_REPORTS,
-    settleTenantReportCollection: BINGO18_SETTLE_TENANT_REPORTS,
+    gameDailyRepo,
+    tenantDailyRepo,
   });
 }

@@ -21,6 +21,10 @@
     "./use-cases": {
       "types": "./src/use-cases/index.ts",
       "default": "./dist/use-cases/index.js"
+    },
+    "./use-cases/reports": {
+      "types": "./src/use-cases/reports/index.ts",
+      "default": "./dist/use-cases/reports/index.js"
     }
   },
   "dependencies": {
@@ -28,11 +32,12 @@
     "@megawin/data": "workspace:*",
     "@megawin/game-core": "workspace:*",
     "@megawin/shared": "workspace:*",
+    "@megawin/next": "workspace:*",
     "mongodb": "^7.1.0"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
-    "@types/node": "^25.2.1",
+    "@types/node": "^25.5.0",
     "typescript": "5.9.3"
   }
 }

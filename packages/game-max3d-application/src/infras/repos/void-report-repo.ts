@@ -4,6 +4,10 @@
  * Ghi per-game void reports cho Max 3D.
  * Collection: max3d_void_draw_reports.
  *
+ * Methods:
+ *   upsertVoidReport   — upsert 1 doc
+ *   findByDateRange    — list void reports trong date range
+ *
  * IDEMPOTENT: upsert overwrite — chạy lại an toàn.
  */
 
@@ -46,5 +50,17 @@ export class VoidReportRepository extends BaseRepo<any> {
         upsert: true,
       },
     );
+  }
+
+  /**
+   * List void reports trong khoảng ngày tài chính.
+   *
+   * Sort: financialDate desc.
+   */
+  async findByDateRange(opts: { from: string; to: string }): Promise<VoidDrawReport[]> {
+    return (await this.findMany(
+      { financialDate: { $gte: opts.from, $lte: opts.to } },
+      { sort: { financialDate: -1, drawId: -1 } },
+    )) as VoidDrawReport[];
   }
 }

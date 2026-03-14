@@ -17,8 +17,8 @@
  * Mega 6/45: 1 kỳ/ngày (drawNo = 1 cố định).
  */
 
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import { useSearchParams } from "next/navigation";
+import { createContext, useContext, useCallback, type ReactNode } from "react";
+import { useQueryState } from "nuqs";
 import { DrawStatus } from "@megawin/game-core/entities";
 import {
   useDrawSelectorList,
@@ -59,17 +59,11 @@ const DrawContext = createContext<DrawContextValue | null>(null);
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 export function DrawContextProvider({ children }: { children: ReactNode }) {
-  const searchParams = useSearchParams();
-  const urlDrawId = searchParams.get("draw") ?? "";
-  const [selectedDrawId, setSelectedDrawId] = useState<string>(urlDrawId);
+  // nuqs đồng bộ 2 chiều: chọn draw → cập nhật URL, refresh → đọc lại URL
+  const [selectedDrawId, setSelectedDrawId] = useQueryState("draw", { defaultValue: "" });
 
   const { data: selectorData, isLoading: selectorLoading } = useDrawSelectorList();
   const draws = selectorData?.draws ?? [];
-
-  // Khi URL param thay đổi (navigate từ trang khác), sync vào state
-  useEffect(() => {
-    if (urlDrawId) setSelectedDrawId(urlDrawId);
-  }, [urlDrawId]);
 
   const selectedInList = selectedDrawId ? draws.some((d) => d.drawId === selectedDrawId) : false;
 
@@ -132,9 +126,14 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
     financialDate: draw?.financialDate ?? remoteDraw?.financialDate ?? remoteDraw?.drawDate,
   };
 
-  const onSelectDraw = useCallback((drawId: string) => {
-    setSelectedDrawId(drawId);
-  }, []);
+  const onSelectDraw = useCallback(
+    (drawId: string) => {
+      // Khi chọn active draw → xoá param khỏi URL để giữ URL gọn
+      const activeDrawId = draws.find((d) => d.group === "active")?.drawId || draws[0]?.drawId;
+      setSelectedDrawId(drawId === activeDrawId ? null : drawId);
+    },
+    [draws, setSelectedDrawId],
+  );
 
   const value: DrawContextValue = {
     draws,

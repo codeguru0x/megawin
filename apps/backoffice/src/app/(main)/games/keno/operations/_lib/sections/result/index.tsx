@@ -31,8 +31,16 @@ import {
 import { useDrawContext } from "../../use-draw-context";
 import { useDrawDetail } from "../../use-operations";
 import { WinningEntriesDialog } from "./winning-entries-dialog";
+import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS } from "@megawin/game-keno/labels";
 
 const RESULT_SHOW = new Set([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
+
+// ─── Merged bet labels (bigSmall + evenOdd) ───────────────────────────────────
+
+const KENO_BET_LABELS: Record<string, string> = {
+  ...KENO_BIG_SMALL_BET_LABELS,
+  ...KENO_EVEN_ODD_BET_LABELS,
+};
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -76,16 +84,8 @@ function basicPrizeLabel(pickCount: number, matchCount: number): string {
 }
 
 function sideBetLabel(playType: string, bet: string): string {
-  const betLabels: Record<string, string> = {
-    big: "Lớn (13+)",
-    small: "Nhỏ (0-7)",
-    bigSmallDraw: "Hoà (8-12)",
-    even: "Chẵn",
-    odd: "Lẻ",
-    evenDraw: "Hoà chẵn/lẻ",
-  };
   const typeLabel = playType === "bigSmall" ? "Lớn/Nhỏ" : "Chẵn/Lẻ";
-  return `${typeLabel} — ${betLabels[bet] ?? bet}`;
+  return `${typeLabel} — ${KENO_BET_LABELS[bet] ?? bet}`;
 }
 
 // ─── Highlight filter type ───────────────────────────────────────────────────

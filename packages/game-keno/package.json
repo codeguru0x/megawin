@@ -45,6 +45,10 @@
     "./schemas/*": {
       "types": "./src/schemas/*.ts",
       "default": "./dist/schemas/*.js"
+    },
+    "./labels": {
+      "types": "./src/labels/index.ts",
+      "default": "./dist/labels/index.js"
     }
   },
   "keywords": [

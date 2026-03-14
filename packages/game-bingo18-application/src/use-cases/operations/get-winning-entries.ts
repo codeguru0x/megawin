@@ -40,7 +40,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
     ]);
 
     const lastEntry = entries[entries.length - 1];
-    const nextCursor = entries.length === limit && lastEntry ? String(lastEntry._id) : null;
+    const nextCursor = entries.length === limit && lastEntry ? lastEntry.id : null;
 
     return {
       drawId,
@@ -75,7 +75,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
           }));
 
         return {
-          entryId: String(e._id),
+          entryId: e.id,
           username: e.username,
           tenantId: e.tenantId,
           amount: e.amount,

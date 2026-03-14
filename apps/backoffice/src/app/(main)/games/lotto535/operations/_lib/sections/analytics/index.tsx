@@ -15,6 +15,7 @@
 import { useMemo } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PlayType } from "@megawin/game-lotto535/entities";
+import { LOTTO535_PLAY_TYPE_LABELS } from "@megawin/game-lotto535/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import {
@@ -29,16 +30,6 @@ import { NumberHeatmap } from "./number-heatmap";
 import { LiveFeed } from "./live-feed";
 
 import type { PlayTypeRow, TenantRow, NumberFreq, LiveFeedEntry } from "../../types";
-
-// ─── Label maps ───────────────────────────────────────────────────────────────
-
-const PLAY_TYPE_LABELS: Record<string, string> = {
-  [PlayType.Standard]: "Chuẩn",
-  [PlayType.MainCover4]: "Bao 4",
-  [PlayType.MainCover]: "Bao số chính",
-  [PlayType.SpecialCover]: "Bao số ĐB",
-  [PlayType.QuickPick]: "Chọn nhanh",
-};
 
 const ANALYTICS_SHOW = new Set([
   DrawStatus.SalesOpen,
@@ -66,7 +57,7 @@ export function AnalyticsSection() {
     const totalLines = playtypeData.distribution.reduce((a, d) => a + d.lineCount, 0);
     return playtypeData.distribution.map((d) => ({
       playType: d.playType as PlayType,
-      label: PLAY_TYPE_LABELS[d.playType] ?? d.playType,
+      label: LOTTO535_PLAY_TYPE_LABELS[d.playType] ?? d.playType,
       entries: d.entryCount,
       lines: d.lineCount,
       revenue: d.revenue,
@@ -114,7 +105,7 @@ export function AnalyticsSection() {
         entryId: e.entryId.slice(-6).toUpperCase(),
         time: e.createdAt,
         playType,
-        playTypeLabel: PLAY_TYPE_LABELS[playType] ?? playType,
+        playTypeLabel: LOTTO535_PLAY_TYPE_LABELS[playType as PlayType] ?? playType,
         mainNumbers: firstBoard?.mainNumbers ?? [],
         specialNumbers: firstBoard?.specialNumbers ?? [],
         amount: e.amount,

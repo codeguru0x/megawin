@@ -13,6 +13,7 @@
 import { useMemo } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PlayType } from "@megawin/game-mega645/entities";
+import { MEGA645_PLAY_TYPE_LABELS } from "@megawin/game-mega645/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import {
@@ -27,24 +28,6 @@ import { NumberHeatmap } from "./number-heatmap";
 import { LiveFeed } from "./live-feed";
 
 import type { PlayTypeRow, TenantRow, NumberFreq, LiveFeedEntry } from "../../types";
-
-// ─── Label maps — Mega 6/45 ───────────────────────────────────────────────────
-
-const PLAY_TYPE_LABELS: Record<string, string> = {
-  [PlayType.Standard]: "Chuẩn",
-  [PlayType.Bao5]: "Bao 5",
-  [PlayType.Bao7]: "Bao 7",
-  [PlayType.Bao8]: "Bao 8",
-  [PlayType.Bao9]: "Bao 9",
-  [PlayType.Bao10]: "Bao 10",
-  [PlayType.Bao11]: "Bao 11",
-  [PlayType.Bao12]: "Bao 12",
-  [PlayType.Bao13]: "Bao 13",
-  [PlayType.Bao14]: "Bao 14",
-  [PlayType.Bao15]: "Bao 15",
-  [PlayType.Bao18]: "Bao 18",
-  [PlayType.QuickPick]: "Chọn nhanh",
-};
 
 const ANALYTICS_SHOW = new Set([
   DrawStatus.SalesOpen,
@@ -72,7 +55,7 @@ export function AnalyticsSection() {
     const totalLines = playtypeData.distribution.reduce((a, d) => a + d.lineCount, 0);
     return playtypeData.distribution.map((d) => ({
       playType: d.playType as PlayType,
-      label: PLAY_TYPE_LABELS[d.playType] ?? d.playType,
+      label: MEGA645_PLAY_TYPE_LABELS[d.playType] ?? d.playType,
       entries: d.entryCount,
       lines: d.lineCount,
       revenue: d.revenue,
@@ -114,7 +97,7 @@ export function AnalyticsSection() {
         entryId: e.entryId.slice(-6).toUpperCase(),
         time: e.createdAt,
         playType,
-        playTypeLabel: PLAY_TYPE_LABELS[playType] ?? playType,
+        playTypeLabel: MEGA645_PLAY_TYPE_LABELS[playType as PlayType] ?? playType,
         mainNumbers: firstBoard?.mainNumbers ?? [],
         amount: e.amount,
         username: e.username ?? "",

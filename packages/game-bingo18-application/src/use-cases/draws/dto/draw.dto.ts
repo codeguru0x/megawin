@@ -1,5 +1,5 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
-import type { DrawEntity } from "../../../infras/mappers/draw-mapper";
+import type { DrawEntity } from "@megawin/game-bingo18/entities";;
 
 // ─────────────────────────────────────────────
 // CreateDraw (batch)

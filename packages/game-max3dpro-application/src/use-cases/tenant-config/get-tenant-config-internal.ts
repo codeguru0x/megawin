@@ -8,7 +8,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
-import type { TenantConfigEntity } from "../../infras/mappers/tenant-config-mapper";
+import type { TenantConfigEntity } from "@megawin/game-max3dpro/entities";;
 
 export interface GetTenantConfigInternalInput {
   tenantId: string;

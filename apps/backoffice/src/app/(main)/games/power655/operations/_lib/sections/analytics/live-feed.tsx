@@ -80,7 +80,7 @@ export function LiveFeed({
                     {/* Row 2: numbers (left) | amount (right) */}
                     <div className="flex items-center gap-1 flex-wrap">
                       {mainNumbers.map((n, idx) => (
-                        <NumberBadge key={`m-${idx}`} num={n} size="sm" />
+                        <NumberBadge key={`m-${idx}`} num={n} />
                       ))}
                       {suffix && (
                         <span className="text-[9px] text-muted-foreground ml-0.5">{suffix}</span>

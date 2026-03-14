@@ -93,6 +93,18 @@ export function formatVNDCompact(amount: number | undefined | null): string {
   return n.toLocaleString("vi-VN") + " ₫";
 }
 
+/**
+ * Định dạng phần trăm, 1 decimal mặc định. Null-safe.
+ *
+ * formatPercent(72.5)          → "72.5%"
+ * formatPercent(72.5, 0)       → "73%"
+ * formatPercent(-3.14, 2)      → "-3.14%"
+ * formatPercent(undefined)     → "0.0%"
+ */
+export function formatPercent(value: number | undefined | null, decimals: number = 1): string {
+  return `${(value ?? 0).toFixed(decimals)}%`;
+}
+
 type FormatNumberOptions = {
   decimals?: number;
   trimTrailingZeros?: boolean;

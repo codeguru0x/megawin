@@ -43,23 +43,7 @@ import { Power655TicketStatusBadge } from "@/components/games/power655/ticket-st
 import { Power655EntryStatusBadge } from "@/components/games/power655/entry-status-badge";
 import { PowerNumberBall } from "@/components/games/power655/power-number-ball";
 import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils/number";
-
-const PLAY_TYPE_LABELS: Record<string, string> = {
-  standard: "Thường",
-  bao7: "Bao 7",
-  bao8: "Bao 8",
-  bao9: "Bao 9",
-  bao10: "Bao 10",
-  bao11: "Bao 11",
-  bao12: "Bao 12",
-  bao13: "Bao 13",
-  bao14: "Bao 14",
-  bao15: "Bao 15",
-  bao16: "Bao 16",
-  bao17: "Bao 17",
-  bao18: "Bao 18",
-  quickPick: "Tự chọn",
-};
+import { POWER655_PLAY_TYPE_LABELS } from "@megawin/game-power655/labels";
 
 // ─── Mock Data ───
 
@@ -592,7 +576,7 @@ export default function Power655TicketsPage() {
                     <Badge variant="outline" className="font-mono">
                       {b.boardNo}
                     </Badge>
-                    <Badge variant="secondary">{PLAY_TYPE_LABELS[b.playType] ?? b.playType}</Badge>
+                    <Badge variant="secondary">{POWER655_PLAY_TYPE_LABELS[b.playType as keyof typeof POWER655_PLAY_TYPE_LABELS] ?? b.playType}</Badge>
                     <div className="flex flex-wrap items-center gap-1">
                       {b.mainNumbers.map((n, idx) => (
                         <PowerNumberBall key={`${n}-${idx}`} number={n} variant="main" size="sm" />

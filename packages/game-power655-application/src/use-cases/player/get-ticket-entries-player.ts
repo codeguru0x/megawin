@@ -10,7 +10,7 @@
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { TicketEntryEntity } from "@megawin/game-power655/entities";
+import type { EntryBoardSnapshot, EntryPayoutTier, TicketEntryEntity } from "@megawin/game-power655/entities";
 import { mapPlayerTicket } from "./mappers/ticket";
 import type {
   PlayerGetTicketEntriesInput,
@@ -59,7 +59,7 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     lineCount: entry.lineCount,
     entrySummary: {
       ticketNo: entry.entrySummary.ticketNo,
-      boards: entry.entrySummary.boards.map((b) => ({
+      boards: entry.entrySummary.boards.map((b: EntryBoardSnapshot) => ({
         boardNo: b.boardNo,
         playType: b.playType,
         mainNumbers: b.mainNumbers,
@@ -78,7 +78,7 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
       ? {
           winAmount: entry.payout.winAmount,
           payoutAmount: entry.payout.payoutAmount,
-          tiers: entry.payout.tiers.map((t) => ({
+          tiers: entry.payout.tiers.map((t: EntryPayoutTier) => ({
             tier: t.tier,
             hitCount: t.hitCount,
             unitAmount: t.unitAmount,

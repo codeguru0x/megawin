@@ -10,10 +10,8 @@ import type {
   PlayRules,
 } from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
-import {
-  GameConfigMapper,
-  type GlobalConfigEntity,
-} from "../mappers/game-config-mapper";
+import { GameConfigMapper } from "../mappers/game-config-mapper";
+import type { GlobalConfigEntity } from "@megawin/game-bingo18/entities";
 
 export class GameConfigRepository extends BaseRepo<
   GlobalConfigEntity,

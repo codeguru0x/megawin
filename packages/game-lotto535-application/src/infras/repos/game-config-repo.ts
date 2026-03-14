@@ -9,10 +9,8 @@ import type {
   PlayRules,
 } from "@megawin/game-lotto535/entities";
 import { BaseRepo } from "./base-repo";
-import {
-  GameConfigMapper,
-  type GlobalConfigEntity,
-} from "../mappers/global-config-mapper";
+import { GameConfigMapper } from "../mappers/global-config-mapper";
+import type { GlobalConfigEntity } from "@megawin/game-lotto535/entities";
 
 export class GameConfigRepository extends BaseRepo<
   GlobalConfigEntity,

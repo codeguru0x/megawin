@@ -12,7 +12,7 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "../../infras/mappers/draw-mapper";
+import type { DrawEntity } from "@megawin/game-max3d/entities";;
 import type {
   GetCurrentDrawInput,
   GetCurrentDrawOutput,

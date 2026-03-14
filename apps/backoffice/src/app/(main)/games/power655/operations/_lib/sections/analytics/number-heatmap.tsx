@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatNumber, formatCurrency } from "@megawin/shared/utils/number";
 import { BarChart2, Star, Trophy } from "lucide-react";
+import { POWER655_PLAY_TYPE_LABELS } from "@megawin/game-power655/labels";
 import {
   HEATMAP_BADGE_SIZE,
   HEATMAP_BADGE_TEXT,
@@ -207,22 +208,6 @@ function MainGrid({ numbers }: { numbers: NumberFreq[] }) {
 
 // ─── Top Combos ───────────────────────────────────────────────────────────────
 
-const PLAY_TYPE_LABELS_SHORT: Record<string, string> = {
-  standard: "Chuẩn",
-  bao5: "Bao 5",
-  bao7: "Bao 7",
-  bao8: "Bao 8",
-  bao9: "Bao 9",
-  bao10: "Bao 10",
-  bao11: "Bao 11",
-  bao12: "Bao 12",
-  bao13: "Bao 13",
-  bao14: "Bao 14",
-  bao15: "Bao 15",
-  bao18: "Bao 18",
-  quickPick: "Chọn nhanh",
-};
-
 function TopCombos({ combos }: { combos: TopComboItem[] }) {
   if (!combos?.length) return null;
   const medals = ["🥇", "🥈", "🥉"];
@@ -249,7 +234,7 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
                 ))}
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">
-                {PLAY_TYPE_LABELS_SHORT[c.playType] ?? c.playType}
+                {POWER655_PLAY_TYPE_LABELS[c.playType as keyof typeof POWER655_PLAY_TYPE_LABELS] ?? c.playType}
               </p>
             </div>
             <div className="text-right shrink-0">

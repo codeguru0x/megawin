@@ -16,7 +16,7 @@
 
 import { useMemo } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { KenoPlayType } from "@megawin/game-keno/entities";
+import { KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import {
@@ -31,23 +31,6 @@ import { NumberHeatmap } from "./number-heatmap";
 import { LiveFeed } from "./live-feed";
 
 import type { TenantRow, LiveFeedEntry } from "../../types";
-
-// ─── PlayType Labels — Keno ───────────────────────────────────────────────────
-
-const PLAY_TYPE_LABELS: Record<string, string> = {
-  [KenoPlayType.Pick1]: "Pick 1",
-  [KenoPlayType.Pick2]: "Pick 2",
-  [KenoPlayType.Pick3]: "Pick 3",
-  [KenoPlayType.Pick4]: "Pick 4",
-  [KenoPlayType.Pick5]: "Pick 5",
-  [KenoPlayType.Pick6]: "Pick 6",
-  [KenoPlayType.Pick7]: "Pick 7",
-  [KenoPlayType.Pick8]: "Pick 8",
-  [KenoPlayType.Pick9]: "Pick 9",
-  [KenoPlayType.Pick10]: "Pick 10",
-  [KenoPlayType.BigSmall]: "Lớn/Nhỏ",
-  [KenoPlayType.EvenOdd]: "Chẵn/Lẻ",
-};
 
 const ANALYTICS_SHOW = new Set([
   DrawStatus.SalesOpen,
@@ -75,7 +58,7 @@ export function AnalyticsSection() {
     const totalSelections = playtypeData.distribution.reduce((a, d) => a + d.selectionCount, 0);
     return playtypeData.distribution.map((d) => ({
       playType: d.playType,
-      label: PLAY_TYPE_LABELS[d.playType] ?? d.playType,
+      label: KENO_PLAY_TYPE_LABELS[d.playType] ?? d.playType,
       entries: d.entryCount,
       selections: d.selectionCount,
       revenue: d.revenue,

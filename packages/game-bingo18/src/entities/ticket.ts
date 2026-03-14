@@ -215,3 +215,9 @@ export interface TicketDoc {
   /** Thời điểm cập nhật cuối cùng. Tự động cập nhật mỗi khi document thay đổi. */
   updatedAt: Date;
 }
+
+/** Application-layer entity sau khi qua mapper. ObjectId → id string. */
+export interface TicketEntity extends Omit<TicketDoc, "_id"> {
+  /** MongoDB ObjectId đã chuyển sang hex string. */
+  id: string;
+}

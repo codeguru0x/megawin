@@ -4,7 +4,7 @@ import type {
   PrizeAmounts,
   PlayRules,
 } from "@megawin/game-mega645/entities";
-import type { GlobalConfigEntity } from "../../../infras/mappers/global-config-mapper";
+import type { GlobalConfigEntity } from "@megawin/game-mega645/entities";;
 
 // ─────────────────────────────────────────────
 // GetGameConfig

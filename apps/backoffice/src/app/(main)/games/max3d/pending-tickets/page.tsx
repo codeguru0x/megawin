@@ -51,6 +51,7 @@ import { StatCard } from "@/components/games/max3d/stat-card";
 import { DrawStatusBadge } from "@/components/games/max3d/draw-status-badge";
 import { EntryStatusBadge } from "@/components/games/max3d/entry-status-badge";
 import { TripletDisplay } from "@/components/games/max3d/triplet-display";
+import { MAX3D_PLAY_TYPE_LABELS, MAX3D_PLAY_MODE_LABELS } from "@megawin/game-max3d/labels";
 
 // ─── Mock Data ───
 
@@ -219,11 +220,8 @@ const MOCK_TENANT_ENTRIES = [
 ];
 
 const PLAY_TYPE_LABELS: Record<string, string> = {
-  straight: "Cơ Bản",
-  combo3: "Tổ Hợp 3",
-  combo6: "Tổ Hợp 6",
-  plus: "Max 3D+",
-  quickPick: "Tự chọn",
+  ...MAX3D_PLAY_TYPE_LABELS,
+  plus: MAX3D_PLAY_MODE_LABELS["plus"],
 };
 
 function fmtVND(n: number) {

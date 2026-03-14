@@ -1,8 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
-import type { DrawCounterDoc } from "@megawin/game-bingo18/entities";
+import type { DrawCounterDoc, DrawCounterEntity } from "@megawin/game-bingo18/entities";
 import { Document } from "mongodb";
-
-type DrawCounterEntity = DrawCounterDoc & { id: string };
 
 export class DrawCounterMapper extends MongoMapper<
   Document,
@@ -17,5 +15,3 @@ export class DrawCounterMapper extends MongoMapper<
     return { id: _id.toHexString(), ...rest } as DrawCounterEntity;
   }
 }
-
-export type { DrawCounterEntity };

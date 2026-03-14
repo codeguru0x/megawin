@@ -45,6 +45,8 @@ import { StatCard } from "@/components/games/lotto535/stat-card";
 import { DrawStatusBadge } from "@/components/games/lotto535/draw-status-badge";
 import { EntryStatusBadge } from "@/components/games/lotto535/entry-status-badge";
 import { LottoNumberBall } from "@/components/games/lotto535/lotto-number-ball";
+import { PlayType } from "@megawin/game-lotto535/entities";
+import { LOTTO535_PLAY_TYPE_LABELS } from "@megawin/game-lotto535/labels";
 
 // ─── Mock Data ───
 
@@ -220,14 +222,6 @@ const MOCK_TENANT_ENTRIES = [
     currentDraw: 1,
   },
 ];
-
-const PLAY_TYPE_LABELS: Record<string, string> = {
-  standard: "Thường",
-  mainCover4: "Bao 4",
-  mainCover: "Bao chính",
-  specialCover: "Bao ĐB",
-  quickPick: "Tự chọn",
-};
 
 function fmtVND(n: number) {
   if (n >= 1_000_000_000)
@@ -575,7 +569,7 @@ export default function PendingTicketsPage() {
                           {board.boardNo}
                         </Badge>
                         <Badge variant="secondary">
-                          {PLAY_TYPE_LABELS[board.playType] ?? board.playType}
+                          {LOTTO535_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType}
                         </Badge>
                       </div>
                       <span className="text-xs text-muted-foreground">

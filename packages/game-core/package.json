@@ -29,6 +29,10 @@
     "./utils": {
       "types": "./src/utils/index.ts",
       "default": "./dist/utils/index.js"
+    },
+    "./labels": {
+      "types": "./src/labels/index.ts",
+      "default": "./dist/labels/index.js"
     }
   },
   "keywords": [

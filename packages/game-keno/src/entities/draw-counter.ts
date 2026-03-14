@@ -18,3 +18,9 @@ export interface DrawCounterDoc {
   /** DrawNo lớn nhất đã cấp trong ngày. */
   lastDrawNo: number;
 }
+
+/** Application-layer entity sau khi qua mapper. ObjectId → id string. */
+export interface DrawCounterEntity extends Omit<DrawCounterDoc, "_id"> {
+  /** MongoDB ObjectId đã chuyển sang hex string. */
+  id: string;
+}

@@ -20,7 +20,8 @@ import type {
   DrawSettleSummary,
 } from "@megawin/game-keno/entities";
 import { BaseRepo } from "./base-repo";
-import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
+import { DrawMapper } from "../mappers/draw-mapper";
+import type { DrawEntity } from "@megawin/game-keno/entities";
 
 /**
  * Valid status transitions cho Keno Draw.

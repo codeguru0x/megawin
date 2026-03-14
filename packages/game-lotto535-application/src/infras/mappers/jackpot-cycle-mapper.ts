@@ -1,8 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
-import type { JackpotCycleDoc } from "@megawin/game-lotto535/entities";
+import type { JackpotCycleDoc, JackpotCycleEntity } from "@megawin/game-lotto535/entities";
 import { Document } from "mongodb";
-
-type JackpotCycleEntity = JackpotCycleDoc & { id: string };
 
 export class JackpotCycleMapper extends MongoMapper<
   Document,
@@ -17,5 +15,3 @@ export class JackpotCycleMapper extends MongoMapper<
     return { id: _id.toHexString(), ...rest } as JackpotCycleEntity;
   }
 }
-
-export type { JackpotCycleEntity };

@@ -16,6 +16,7 @@
 import type { SettleDrawReport } from "@megawin/game-mega645/entities";
 import { MEGA645_SETTLE_DRAW_REPORTS } from "@megawin/game-mega645/entities";
 import { BaseRepo } from "./base-repo";
+import type { DrawSummaryResult } from "./types";
 
 /**
  * Repository ghi/đọc settle draw reports cho Mega 6/45.
@@ -71,5 +72,59 @@ export class SettleDrawReportRepository extends BaseRepo<any> {
    */
   async findByDrawId(drawId: string): Promise<SettleDrawReport | null> {
     return (await this.findOne({ drawId })) as SettleDrawReport | null;
+  }
+
+  async findByDateRange(
+    from: string,
+    to: string,
+    options?: { skip?: number; limit?: number },
+  ): Promise<{ data: SettleDrawReport[]; total: number }> {
+    const filter = { financialDate: { $gte: from, $lte: to } };
+    const [data, total] = await Promise.all([
+      this.findMany(filter, {
+        sort: { financialDate: -1 },
+        skip: options?.skip ?? 0,
+        limit: options?.limit ?? 20,
+      }) as Promise<SettleDrawReport[]>,
+      this.count(filter),
+    ]);
+    return { data, total };
+  }
+
+  async aggregateSummary(from: string, to: string): Promise<DrawSummaryResult | null> {
+    const result = await this.aggregate([
+      { $match: { financialDate: { $gte: from, $lte: to } } },
+      {
+        $group: {
+          _id: null,
+          drawCount: { $sum: 1 },
+          entryCount: { $sum: "$entryCount" },
+          playerCount: { $sum: "$playerCount" },
+          tenantCount: { $max: "$tenantCount" },
+          lineCount: { $sum: "$lineCount" },
+          totalStake: { $sum: "$totalStake" },
+          totalWin: { $sum: "$totalWin" },
+          totalPayout: { $sum: "$totalPayout" },
+          ggr: { $sum: "$ggr" },
+          totalCommission: { $sum: "$totalCommission" },
+          netProfit: { $sum: "$netProfit" },
+        },
+      },
+    ]);
+    if (result.length === 0) return null;
+    const r = result[0] as any;
+    return {
+      drawCount: r.drawCount as number,
+      entryCount: r.entryCount as number,
+      playerCount: r.playerCount as number,
+      tenantCount: r.tenantCount as number,
+      lineCount: r.lineCount as number,
+      totalStake: r.totalStake as number,
+      totalWin: r.totalWin as number,
+      totalPayout: r.totalPayout as number,
+      ggr: r.ggr as number,
+      totalCommission: r.totalCommission as number,
+      netProfit: r.netProfit as number,
+    };
   }
 }

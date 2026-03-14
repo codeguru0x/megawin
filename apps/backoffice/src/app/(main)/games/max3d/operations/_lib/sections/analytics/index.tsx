@@ -14,6 +14,7 @@
 import { useMemo } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
+import { MAX3D_MODE_TYPE_LABELS } from "@megawin/game-max3d/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import {
@@ -28,17 +29,6 @@ import { TripletHeatmap } from "./triplet-heatmap";
 import { LiveFeed } from "./live-feed";
 
 import type { PlayTypeRow, TenantRow, TripletFreq, LiveFeedEntry } from "../../types";
-
-// ─── Label maps ───────────────────────────────────────────────────────────────
-
-const PLAY_TYPE_LABELS: Record<string, string> = {
-  [`${PlayMode.Basic}.${PlayType.Straight}`]: "Basic Thẳng",
-  [`${PlayMode.Basic}.${PlayType.Combo3}`]: "Basic Combo 3",
-  [`${PlayMode.Basic}.${PlayType.Combo6}`]: "Basic Combo 6",
-  [`${PlayMode.Basic}.${PlayType.QuickPick}`]: "Basic Chọn nhanh",
-  [`${PlayMode.Plus}.${PlayType.Straight}`]: "Plus Thẳng",
-  [`${PlayMode.Plus}.${PlayType.QuickPick}`]: "Plus Chọn nhanh",
-};
 
 const ANALYTICS_SHOW = new Set<string>([
   DrawStatus.SalesOpen,
@@ -69,7 +59,7 @@ export function AnalyticsSection() {
       return {
         playMode: d.playMode as PlayMode,
         playType: d.playType as PlayType,
-        label: PLAY_TYPE_LABELS[key] ?? key,
+        label: MAX3D_MODE_TYPE_LABELS[key] ?? key,
         entries: d.entryCount,
         lines: d.lineCount,
         revenue: d.revenue,
@@ -113,7 +103,7 @@ export function AnalyticsSection() {
         time: e.createdAt,
         playMode,
         playType,
-        playTypeLabel: PLAY_TYPE_LABELS[key] ?? key,
+        playTypeLabel: MAX3D_MODE_TYPE_LABELS[key] ?? key,
         triplets: firstBoard?.triplets ?? [],
         lineCount: firstBoard?.lineCount ?? 1,
         amount: e.amount,

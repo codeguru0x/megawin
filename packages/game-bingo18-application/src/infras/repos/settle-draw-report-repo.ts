@@ -16,6 +16,7 @@
 import type { SettleDrawReport } from "@megawin/game-bingo18/entities";
 import { BINGO18_SETTLE_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
+import type { DrawSummaryResult } from "./types";
 
 /**
  * Repository ghi/đọc settle draw reports cho Bingo 18.
@@ -71,5 +72,67 @@ export class SettleDrawReportRepository extends BaseRepo<any> {
    */
   async findByDrawId(drawId: string): Promise<SettleDrawReport | null> {
     return (await this.findOne({ drawId })) as SettleDrawReport | null;
+  }
+
+  /**
+   * Lấy danh sách draws trong khoảng ngày tài chính — có pagination.
+   *
+   * Bingo 18 ~160 kỳ/ngày — pagination BẮT BUỘC.
+   */
+  async findByDateRange(
+    from: string,
+    to: string,
+    options?: { skip?: number; limit?: number },
+  ): Promise<{ data: SettleDrawReport[]; total: number }> {
+    const filter = { financialDate: { $gte: from, $lte: to } };
+    const [data, total] = await Promise.all([
+      this.findMany(filter, {
+        sort: { financialDate: -1, drawId: -1 },
+        skip: options?.skip ?? 0,
+        limit: options?.limit ?? 20,
+      }),
+      this.count(filter),
+    ]);
+    return { data: data as SettleDrawReport[], total };
+  }
+
+  /**
+   * Aggregate summary tổng hợp tất cả draws trong date range.
+   *
+   * Bingo 18 KHÔNG có lineCount, jackpotContribution.
+   */
+  async aggregateSummary(from: string, to: string): Promise<DrawSummaryResult | null> {
+    const result = await this.aggregate([
+      { $match: { financialDate: { $gte: from, $lte: to } } },
+      {
+        $group: {
+          _id: null,
+          drawCount: { $sum: 1 },
+          entryCount: { $sum: "$entryCount" },
+          playerCount: { $sum: "$playerCount" },
+          tenantCount: { $sum: "$tenantCount" },
+          totalStake: { $sum: "$financial.totalStake" },
+          totalWin: { $sum: "$financial.totalWin" },
+          totalPayout: { $sum: "$financial.totalPayout" },
+          ggr: { $sum: "$financial.ggr" },
+          totalCommission: { $sum: "$financial.totalCommission" },
+          netProfit: { $sum: "$financial.netProfit" },
+        },
+      },
+    ]);
+    if (!result.length) return null;
+    const r = result[0] as any;
+    return {
+      drawCount: r.drawCount,
+      entryCount: r.entryCount,
+      playerCount: r.playerCount,
+      tenantCount: r.tenantCount,
+      totalStake: r.totalStake,
+      totalWin: r.totalWin,
+      totalPayout: r.totalPayout,
+      ggr: r.ggr,
+      totalCommission: r.totalCommission,
+      netProfit: r.netProfit,
+    };
   }
 }

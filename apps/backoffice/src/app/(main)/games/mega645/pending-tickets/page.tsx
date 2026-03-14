@@ -45,8 +45,9 @@ import { StatCard } from "@/components/games/mega645/stat-card";
 import { DrawStatusBadge } from "@/components/games/mega645/draw-status-badge";
 import { EntryStatusBadge } from "@/components/games/mega645/entry-status-badge";
 import { MegaNumberBall } from "@/components/games/mega645/mega-number-ball";
-
-// ─── Mock Data ───
+import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils/number";
+import { PlayType } from "@megawin/game-mega645/entities";
+import { MEGA645_PLAY_TYPE_LABELS } from "@megawin/game-mega645/labels";
 
 const PENDING_DRAW = {
   drawId: "2026-03-01-T7",
@@ -202,21 +203,6 @@ const MOCK_TENANT_ENTRIES = [
   },
 ];
 
-const PLAY_TYPE_LABELS: Record<string, string> = {
-  standard: "Thường",
-  bao7: "Bao 7",
-  bao8: "Bao 8",
-  bao9: "Bao 9",
-  bao10: "Bao 10",
-  bao11: "Bao 11",
-  bao12: "Bao 12",
-  bao13: "Bao 13",
-  bao14: "Bao 14",
-  bao15: "Bao 15",
-  bao18: "Bao 18",
-  quickPick: "Tự chọn",
-};
-import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils/number";
 
 type SelectedEntry = (typeof MOCK_TENANT_ENTRIES)[number];
 
@@ -560,7 +546,7 @@ export default function Mega645PendingTicketsPage() {
                           {board.boardNo}
                         </Badge>
                         <Badge variant="secondary">
-                          {PLAY_TYPE_LABELS[board.playType] ?? board.playType}
+                          {MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType}
                         </Badge>
                       </div>
                       <span className="text-xs text-muted-foreground">

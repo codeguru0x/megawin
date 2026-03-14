@@ -8,6 +8,8 @@
  *   upsertDrawReport     — upsert 1 doc
  *   deleteByDrawId       — xoá doc khi void-after-settle
  *   findByDrawId         — đọc để snapshot trước void
+ *   findByDateRange      — list draws trong khoảng ngày (paginated)
+ *   aggregateSummary     — SUM tất cả draws trong date range
  *
  * IDEMPOTENT: tất cả write dùng upsert overwrite — chạy lại an toàn.
  * KHÔNG dùng $inc.
@@ -16,6 +18,7 @@
 import type { SettleDrawReport } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_SETTLE_DRAW_REPORTS } from "@megawin/game-max3dpro/entities";
 import { BaseRepo } from "./base-repo";
+import type { DrawSummaryResult } from "./types/settle-draw-report.types";
 
 /**
  * Repository ghi/đọc settle draw reports cho Max 3D Pro.
@@ -71,5 +74,78 @@ export class SettleDrawReportRepository extends BaseRepo<any> {
    */
   async findByDrawId(drawId: string): Promise<SettleDrawReport | null> {
     return (await this.findOne({ drawId })) as SettleDrawReport | null;
+  }
+
+  /**
+   * List settle draw reports trong khoảng ngày tài chính — paginated.
+   *
+   * `from` và `to` là ngày dạng "YYYY-MM-DD" (financialDate field).
+   * Sort: financialDate desc. Trả về data + total để render pagination.
+   */
+  async findByDateRange(opts: {
+    from: string;
+    to: string;
+    page: number;
+    limit: number;
+  }): Promise<{ data: SettleDrawReport[]; total: number }> {
+    const filter = {
+      financialDate: { $gte: opts.from, $lte: opts.to },
+    };
+    const [data, total] = await Promise.all([
+      this.findMany(filter, {
+        sort: { financialDate: -1, drawId: -1 },
+        skip: (opts.page - 1) * opts.limit,
+        limit: opts.limit,
+      }),
+      this.count(filter),
+    ]);
+    return { data: data as SettleDrawReport[], total };
+  }
+
+  /**
+   * Aggregate SUM tất cả draws trong date range.
+   *
+   * Trả về DrawSummaryResult để hiển thị KPI strip.
+   * Max 3D Pro KHÔNG CÓ jackpotContribution.
+   */
+  async aggregateSummary(opts: { from: string; to: string }): Promise<DrawSummaryResult | null> {
+    const result = await this.aggregate([
+      {
+        $match: { financialDate: { $gte: opts.from, $lte: opts.to } },
+      },
+      {
+        $group: {
+          _id: null,
+          drawCount: { $sum: 1 },
+          entryCount: { $sum: "$entryCount" },
+          playerCount: { $sum: "$playerCount" },
+          tenantCount: { $sum: "$tenantCount" },
+          lineCount: { $sum: { $ifNull: ["$lineCount", 0] } },
+          totalStake: { $sum: "$financial.totalRevenue" },
+          totalWin: { $sum: "$financial.totalWin" },
+          totalPayout: { $sum: "$financial.totalPayout" },
+          ggr: { $sum: "$financial.ggr" },
+          totalCommission: { $sum: "$financial.totalCommission" },
+          netProfit: { $sum: "$financial.netProfit" },
+        },
+      },
+    ]);
+
+    if (result.length === 0) return null;
+
+    const r = result[0] as any;
+    return {
+      drawCount: r.drawCount,
+      entryCount: r.entryCount,
+      playerCount: r.playerCount,
+      tenantCount: r.tenantCount,
+      lineCount: r.lineCount ?? 0,
+      totalStake: r.totalStake,
+      totalWin: r.totalWin,
+      totalPayout: r.totalPayout,
+      ggr: r.ggr,
+      totalCommission: r.totalCommission,
+      netProfit: r.netProfit,
+    };
   }
 }

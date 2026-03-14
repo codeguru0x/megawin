@@ -14,6 +14,11 @@
 
 import { useMemo, useState } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
+import { Bingo18PlayType } from "@megawin/game-bingo18/entities";
+import {
+  BINGO18_PLAY_TYPE_LABELS,
+  BINGO18_TRIPLE_KIND_LABELS,
+} from "@megawin/game-bingo18/labels";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatNumber } from "@megawin/shared/utils/number";
 import {
@@ -68,10 +73,10 @@ interface Bingo18ResultData {
 // ─── Label helpers ──────────────────────────────────────────────────────────────
 
 const BOARD_PRIZE_LABELS: Record<string, string> = {
-  singleNum: "Số đơn — Trúng",
-  doubleMatch: "Đôi — Trúng",
-  "tripleMatch-specific": "Ba cụ thể — Trúng",
-  "tripleMatch-any": "Ba bất kỳ — Trúng",
+  [Bingo18PlayType.SingleNum]: `${BINGO18_PLAY_TYPE_LABELS[Bingo18PlayType.SingleNum]} — Trúng`,
+  [Bingo18PlayType.DoubleMatch]: `${BINGO18_PLAY_TYPE_LABELS[Bingo18PlayType.DoubleMatch]} — Trúng`,
+  "tripleMatch-specific": `${BINGO18_TRIPLE_KIND_LABELS["specific"]} — Trúng`,
+  "tripleMatch-any": `${BINGO18_TRIPLE_KIND_LABELS["any"]} — Trúng`,
 };
 
 const SIDE_BET_RESULT_LABELS: Record<string, string> = {

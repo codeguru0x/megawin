@@ -6,7 +6,8 @@ import {
 } from "@megawin/game-keno/entities";
 import { TicketStatus, ALL_LISTABLE_STATUSES } from "@megawin/game-core/entities";
 import { BaseRepo } from "./base-repo";
-import { TicketMapper, type TicketEntity } from "../mappers/ticket-mapper";
+import { TicketMapper } from "../mappers/ticket-mapper";
+import type { TicketEntity } from "@megawin/game-keno/entities";
 import type { AnyBulkWriteOperation, Document, Filter } from "mongodb";
 import { ObjectId } from "mongodb";
 

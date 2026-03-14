@@ -28,6 +28,7 @@ import { parseUsername } from "@megawin/identity-application/shared";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Loader2, FileSearch, Users, Banknote, AlertCircle } from "lucide-react";
 import { useWinningEntries } from "../../use-operations";
+import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS } from "@megawin/game-keno/labels";
 import type {
   WinningEntryItem,
   WinningEntryBoardDetail,
@@ -35,6 +36,11 @@ import type {
 } from "../../use-operations";
 
 // ─── Board chip ───────────────────────────────────────────────────────────────
+
+const KENO_BET_LABELS: Record<string, string> = {
+  ...KENO_BIG_SMALL_BET_LABELS,
+  ...KENO_EVEN_ODD_BET_LABELS,
+};
 
 function BoardChip({ board }: { board: WinningEntryBoardDetail }) {
   return (
@@ -58,20 +64,13 @@ function BoardChip({ board }: { board: WinningEntryBoardDetail }) {
 }
 
 function SideBetChip({ bet }: { bet: WinningEntrySideBetDetail }) {
-  const betLabels: Record<string, string> = {
-    big: "Lớn",
-    small: "Nhỏ",
-    bigSmallDraw: "Hoà",
-    even: "Chẵn",
-    odd: "Lẻ",
-  };
   const typeLabel = bet.playType === "bigSmall" ? "L/N" : "C/L";
   return (
     <Badge
       variant="outline"
       className="h-5 px-1.5 text-[10px] bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/20 dark:text-cyan-400"
     >
-      {typeLabel} {betLabels[bet.bet] ?? bet.bet}
+      {typeLabel} {KENO_BET_LABELS[bet.bet] ?? bet.bet}
     </Badge>
   );
 }

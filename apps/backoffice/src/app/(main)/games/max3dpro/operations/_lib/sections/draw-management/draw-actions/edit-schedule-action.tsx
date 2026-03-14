@@ -15,12 +15,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { useUpdateSchedule } from "../../../use-operations";
-import { formatVNTime, toVNDate } from "@megawin/shared/utils/date";
+import { formatVNDate, formatVNTime, toVNDate } from "@megawin/shared/utils/date";
+
+/** Chuyển "DD/MM/YYYY" → "YYYY-MM-DD" cho HTML input[type=date] */
+function vnDateToISO(vnDate: string): string {
+  const [dd, mm, yyyy] = vnDate.split("/");
+  return `${yyyy}-${mm}-${dd}`;
+}
 
 /**
  * Dialog sửa lịch kỳ quay Max 3D Pro trên trang operations.
  *
  * Max 3D Pro: 1 kỳ/ngày lúc 18:00, T3/T5/T7 → drawDate cố định theo ngày.
+ * drawDate/drawTime là cặp độc lập — user tự điều chỉnh riêng biệt với salesClose.
  * Validation: salesCloseAt > salesOpenAt > now; drawTime >= salesCloseAt.
  */
 export function EditScheduleAction({
@@ -35,17 +42,35 @@ export function EditScheduleAction({
   onOpenChange?: (open: boolean) => void;
 }) {
   const updateSchedule = useUpdateSchedule();
-  const [salesOpen, setSalesOpen] = useState("");
-  const [salesClose, setSalesClose] = useState("");
-  const [drawTimeVal, setDrawTimeVal] = useState("");
+
+  const isoDrawDate = vnDateToISO(draw.drawDate);
+
+  const [salesOpenDate, setSalesOpenDate] = useState(
+    draw.salesOpenAt ? formatVNDate(new Date(draw.salesOpenAt)) : isoDrawDate,
+  );
+  const [salesOpen, setSalesOpen] = useState(
+    draw.salesOpenAt ? formatVNTime(new Date(draw.salesOpenAt)) : "",
+  );
+  const [salesCloseDate, setSalesCloseDate] = useState(
+    draw.salesCloseAt ? formatVNDate(new Date(draw.salesCloseAt)) : isoDrawDate,
+  );
+  const [salesClose, setSalesClose] = useState(
+    draw.salesCloseAt ? formatVNTime(new Date(draw.salesCloseAt)) : "",
+  );
+  const [drawDate, setDrawDate] = useState(isoDrawDate);
+  const [drawTimeVal, setDrawTimeVal] = useState(draw.drawTime);
   const [error, setError] = useState<string | null>(null);
 
   // Reset form về giá trị draw hiện tại mỗi khi dialog mở
   useEffect(() => {
     if (open) {
+      const isoDate = vnDateToISO(draw.drawDate);
+      setSalesOpenDate(draw.salesOpenAt ? formatVNDate(new Date(draw.salesOpenAt)) : isoDate);
       setSalesOpen(draw.salesOpenAt ? formatVNTime(new Date(draw.salesOpenAt)) : "");
-      setSalesClose(formatVNTime(new Date(draw.salesCloseAt)));
-      setDrawTimeVal(draw.drawResultAt ? formatVNTime(new Date(draw.drawResultAt)) : draw.drawTime);
+      setSalesCloseDate(draw.salesCloseAt ? formatVNDate(new Date(draw.salesCloseAt)) : isoDate);
+      setSalesClose(draw.salesCloseAt ? formatVNTime(new Date(draw.salesCloseAt)) : "");
+      setDrawDate(isoDate);
+      setDrawTimeVal(draw.drawTime);
       setError(null);
     }
   }, [open, draw]);
@@ -65,20 +90,16 @@ export function EditScheduleAction({
       return;
     }
 
-    // drawDate từ selector có format DD/MM/YYYY → cần chuyển sang YYYY-MM-DD cho toVNDate
-    const [dd, mm, yyyy] = draw.drawDate.split("/");
-    const isoDate = `${yyyy}-${mm}-${dd}`;
-
     const body: { salesOpenAt: string; salesCloseAt: string; drawTime?: string } = {
-      salesOpenAt: toVNDate(isoDate, salesOpen).toISOString(),
-      salesCloseAt: toVNDate(isoDate, salesClose).toISOString(),
+      salesOpenAt: toVNDate(salesOpenDate, salesOpen).toISOString(),
+      salesCloseAt: toVNDate(salesCloseDate, salesClose).toISOString(),
     };
 
-    const originalDrawTime = draw.drawResultAt
-      ? formatVNTime(new Date(draw.drawResultAt))
-      : draw.drawTime;
-    if (drawTimeVal !== originalDrawTime) {
-      body.drawTime = toVNDate(isoDate, drawTimeVal).toISOString();
+    // So sánh với lịch quay gốc (draw.drawDate + draw.drawTime) để phát hiện thay đổi
+    const originalIsoDate = vnDateToISO(draw.drawDate);
+    // Chỉ gửi drawTime khi thực sự thay đổi
+    if (drawTimeVal !== draw.drawTime || drawDate !== originalIsoDate) {
+      body.drawTime = toVNDate(drawDate, drawTimeVal).toISOString();
     }
 
     updateSchedule.mutate(
@@ -89,7 +110,7 @@ export function EditScheduleAction({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Sửa lịch kỳ {draw.drawId}</DialogTitle>
           <DialogDescription>
@@ -97,48 +118,90 @@ export function EditScheduleAction({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
+          {/* Mở bán */}
           <div className="space-y-2">
             <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Giờ mở bán
             </Label>
-            <Input
-              type="time"
-              value={salesOpen}
-              onChange={(e) => {
-                setSalesOpen(e.target.value);
-                setError(null);
-              }}
-            />
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                className="flex-1"
+                value={salesOpenDate}
+                onChange={(e) => {
+                  setSalesOpenDate(e.target.value);
+                  setError(null);
+                }}
+              />
+              <Input
+                type="time"
+                className="w-28"
+                value={salesOpen}
+                onChange={(e) => {
+                  setSalesOpen(e.target.value);
+                  setError(null);
+                }}
+              />
+            </div>
           </div>
+
+          {/* Đóng bán */}
           <div className="space-y-2">
             <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Giờ đóng bán
             </Label>
-            <Input
-              type="time"
-              value={salesClose}
-              onChange={(e) => {
-                setSalesClose(e.target.value);
-                setError(null);
-              }}
-            />
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                className="flex-1"
+                value={salesCloseDate}
+                onChange={(e) => {
+                  setSalesCloseDate(e.target.value);
+                  setError(null);
+                }}
+              />
+              <Input
+                type="time"
+                className="w-28"
+                value={salesClose}
+                onChange={(e) => {
+                  setSalesClose(e.target.value);
+                  setError(null);
+                }}
+              />
+            </div>
           </div>
+
+          {/* Quay số */}
           <div className="space-y-2">
             <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Giờ quay số
             </Label>
-            <Input
-              type="time"
-              value={drawTimeVal}
-              onChange={(e) => {
-                setDrawTimeVal(e.target.value);
-                setError(null);
-              }}
-            />
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                className="flex-1"
+                value={drawDate}
+                onChange={(e) => {
+                  setDrawDate(e.target.value);
+                  setError(null);
+                }}
+              />
+              <Input
+                type="time"
+                className="w-28"
+                value={drawTimeVal}
+                onChange={(e) => {
+                  setDrawTimeVal(e.target.value);
+                  setError(null);
+                }}
+              />
+            </div>
             <p className="text-[11px] text-muted-foreground/70">
               Mặc định 18:00, T3/T5/T7. Chỉ sửa nếu cần thiết.
             </p>
           </div>
+
           {error && <p className="text-sm font-medium text-destructive">{error}</p>}
         </div>
         <DialogFooter>

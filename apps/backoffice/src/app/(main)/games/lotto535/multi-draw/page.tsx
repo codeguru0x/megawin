@@ -43,14 +43,8 @@ import { StatCard } from "@/components/games/lotto535/stat-card";
 import { TicketStatusBadge } from "@/components/games/lotto535/ticket-status-badge";
 import { EntryStatusBadge } from "@/components/games/lotto535/entry-status-badge";
 import { LottoNumberBall } from "@/components/games/lotto535/lotto-number-ball";
-
-const PLAY_TYPE_LABELS: Record<string, string> = {
-  standard: "Thường",
-  mainCover4: "Bao 4",
-  mainCover: "Bao chính",
-  specialCover: "Bao ĐB",
-  quickPick: "Tự chọn",
-};
+import { PlayType } from "@megawin/game-lotto535/entities";
+import { LOTTO535_PLAY_TYPE_LABELS } from "@megawin/game-lotto535/labels";
 
 function fmtVND(n: number) {
   if (n >= 1_000_000_000)
@@ -532,7 +526,7 @@ export default function MultiDrawTicketsPage() {
                     <Badge variant="outline" className="font-mono">
                       {b.boardNo}
                     </Badge>
-                    <Badge variant="secondary">{PLAY_TYPE_LABELS[b.playType] ?? b.playType}</Badge>
+                    <Badge variant="secondary">{LOTTO535_PLAY_TYPE_LABELS[b.playType as PlayType] ?? b.playType}</Badge>
                     <div className="flex flex-wrap items-center gap-1">
                       {b.mainNumbers.map((n) => (
                         <LottoNumberBall key={n} number={n} size="sm" />

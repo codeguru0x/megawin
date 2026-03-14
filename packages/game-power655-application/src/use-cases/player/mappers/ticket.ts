@@ -5,7 +5,7 @@
  * Dùng chung bởi các use cases: ListPending, ListAll, GetTicketEntries.
  */
 
-import type { TicketEntity } from "@megawin/game-power655/entities";
+import type { Board, TicketEntity } from "@megawin/game-power655/entities";
 import type { PlayerTicketSummary } from "../dto/player.dto";
 
 export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
@@ -23,7 +23,7 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
       amountPerDraw: ticket.pricing.amountPerDraw,
       totalAmount: ticket.pricing.totalAmount,
     },
-    boards: ticket.boards.map((b) => ({
+    boards: ticket.boards.map((b: Board) => ({
       boardNo: b.boardNo,
       playType: b.playType,
       selection: {

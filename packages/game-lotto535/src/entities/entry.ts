@@ -275,3 +275,13 @@ export interface EntryPayoutTier {
    */
   isSplitBonus?: boolean;
 }
+
+/**
+ * Application-layer entity sau khi qua mapper.
+ *
+ * Thay thế `_id` (ObjectId) bằng `id` (string). Giữ `version: Long` để feed sync detect thay đổi.
+ */
+export interface TicketEntryEntity extends Omit<TicketEntryDoc, "_id"> {
+  /** MongoDB ObjectId đã chuyển sang hex string. */
+  id: string;
+}

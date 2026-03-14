@@ -1,6 +1,6 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawNo } from "@megawin/game-lotto535/entities";
-import type { DrawEntity } from "../../../infras/mappers/draw-mapper";
+import type { DrawEntity } from "@megawin/game-lotto535/entities";;
 
 // ─────────────────────────────────────────────
 // CreateDraws (batch – tạo nhiều kỳ liên tiếp)

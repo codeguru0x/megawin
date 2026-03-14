@@ -47,4 +47,22 @@ export class VoidReportRepository extends BaseRepo<any> {
       },
     );
   }
+
+  /**
+   * Danh sách void reports trong date range.
+   *
+   * Kết quả rất ít (void rất hiếm). Sort DESC.
+   * Index: { financialDate: 1 }
+   */
+  async findByDateRange(from: string, to: string): Promise<VoidDrawReport[]> {
+    return (await this.findMany(
+      {
+        financialDate: {
+          $gte: from,
+          $lte: to,
+        },
+      },
+      { sort: { financialDate: -1 } },
+    )) as VoidDrawReport[];
+  }
 }

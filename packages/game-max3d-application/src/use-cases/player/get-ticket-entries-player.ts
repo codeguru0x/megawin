@@ -8,7 +8,7 @@
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { EntryEntity } from "../../infras/mappers/entry-mapper";
+import type { EntryBoardSnapshot, TicketEntryEntity, EntryPayoutTier } from "@megawin/game-max3d/entities";
 import { mapPlayerTicket } from "./mappers/ticket";
 import type {
   PlayerGetTicketEntriesInput,
@@ -47,7 +47,7 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
   }
 }
 
-function mapPlayerEntry(entry: EntryEntity): PlayerEntryInfo {
+function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
   return {
     id: entry.id,
     drawId: entry.drawId,
@@ -56,7 +56,7 @@ function mapPlayerEntry(entry: EntryEntity): PlayerEntryInfo {
     lineCount: entry.lineCount,
     entrySummary: {
       ticketNo: entry.entrySummary.ticketNo,
-      boards: entry.entrySummary.boards.map((b) => ({
+      boards: entry.entrySummary.boards.map((b: EntryBoardSnapshot) => ({
         boardNo: b.boardNo,
         playMode: b.playMode,
         playType: b.playType,
@@ -78,7 +78,7 @@ function mapPlayerEntry(entry: EntryEntity): PlayerEntryInfo {
       ? {
           winAmount: entry.payout.winAmount,
           payoutAmount: entry.payout.payoutAmount,
-          tiers: entry.payout.tiers.map((t) => ({
+          tiers: entry.payout.tiers.map((t: EntryPayoutTier) => ({
             tier: t.tier,
             hitCount: t.hitCount,
             unitAmount: t.unitAmount,

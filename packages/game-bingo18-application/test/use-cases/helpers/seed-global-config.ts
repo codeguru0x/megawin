@@ -1,6 +1,6 @@
 import { GameConfigRepository } from "../../../src/infras/repos/game-config-repo";
 import { DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
-import type { GlobalConfigEntity } from "../../../src/infras/mappers/game-config-mapper";
+import type { GlobalConfigEntity } from "@megawin/game-bingo18/entities";
 
 /**
  * Insert default Bingo18 global config vào database.

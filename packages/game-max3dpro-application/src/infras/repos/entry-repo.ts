@@ -3,15 +3,19 @@ import {
   PayoutStatus,
   type EntryPayout,
   type EntryVoidInfo,
+  type TicketEntryDoc,
+  type TicketEntryEntity,
 } from "@megawin/game-max3dpro/entities";
 import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { ObjectId } from "mongodb";
 import { AbstractEntryRepository } from "@megawin/game-max3d-core/repos";
-import { EntryMapper, type EntryEntity } from "../mappers/entry-mapper";
+import { EntryMapper } from "../mappers/entry-mapper";
+
+import type { PlayerBreakdownRow } from "./types/entry.types";
 
 export class EntryRepository extends AbstractEntryRepository<
-  EntryEntity,
+  TicketEntryEntity,
   EntryMapper,
   Max3dproDrawResult,
   string,
@@ -229,7 +233,7 @@ export class EntryRepository extends AbstractEntryRepository<
    * Lấy N entries mới nhất của 1 kỳ quay, sort theo createdAt desc.
    * Dùng cho live feed panel trên dashboard vận hành.
    */
-  async getLatestEntriesByDrawId(drawId: string, limit: number): Promise<EntryEntity[]> {
+  async getLatestEntriesByDrawId(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
     return await this.findMany(
       { drawId },
       {
@@ -255,7 +259,7 @@ export class EntryRepository extends AbstractEntryRepository<
     drawId: string,
     limit: number,
     afterEntryId?: string,
-  ): Promise<EntryEntity[]> {
+  ): Promise<TicketEntryEntity[]> {
     const filter: Record<string, unknown> = {
       drawId,
       status: EntryStatus.Settled,
@@ -627,6 +631,71 @@ export class EntryRepository extends AbstractEntryRepository<
     ]);
     return result as any[];
   }
+
+  // ─── Financial Report READ Methods ───
+
+  /**
+   * Aggregate player breakdown cho 1 draw × tenant — dùng cho drill-down level 3.
+   *
+   * Group by accountId, SUM entries, lines, stake, win, payout.
+   * Max 3D Pro: lineCount = số cặp (pairs).
+   */
+  async aggregatePlayersByDrawAndTenant(opts: {
+    drawId: string;
+    tenantId: string;
+  }): Promise<PlayerBreakdownRow[]> {
+    const result = await this.aggregate([
+      {
+        $match: {
+          drawId: opts.drawId,
+          tenantId: opts.tenantId,
+          status: EntryStatus.Settled,
+        },
+      },
+      {
+        $group: {
+          _id: "$accountId",
+          username: { $first: { $ifNull: ["$player.username", "$accountId"] } },
+          entryCount: { $sum: 1 },
+          lineCount: { $sum: { $ifNull: ["$lineCount", 0] } },
+          totalStake: { $sum: "$amount" },
+          totalWin: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
+          totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+        },
+      },
+      { $sort: { totalStake: -1 } },
+    ]);
+
+    return (result as any[]).map((r) => ({
+      accountId: r._id,
+      username: r.username,
+      entryCount: r.entryCount,
+      lineCount: r.lineCount ?? 0,
+      totalStake: r.totalStake,
+      totalWin: r.totalWin,
+      totalPayout: r.totalPayout,
+    }));
+  }
+
+  /**
+   * List entries của 1 player trong 1 draw × tenant — dùng cho drill-down level 4.
+   *
+   * Trả TicketEntryDoc thô để UI hiển thị chi tiết cặp bộ ba, giải trúng.
+   */
+  async findByDrawTenantPlayer(opts: {
+    drawId: string;
+    tenantId: string;
+    accountId: string;
+  }): Promise<TicketEntryEntity[]> {
+    return this.findMany(
+      {
+        drawId: opts.drawId,
+        tenantId: opts.tenantId,
+        accountId: opts.accountId,
+      },
+      { sort: { createdAt: -1 } },
+    );
+  }
 }
 
-export type { EntryEntity };
+export type { TicketEntryEntity };

@@ -18,10 +18,16 @@ export { GetEntryFeedUseCase } from "./get-entry-feed";
 export type { GetEntryFeedInput } from "./get-entry-feed";
 
 export { PublishSettleDailyUseCase } from "./publish-settle-daily";
-export type { PublishSettleDailyInput, PublishSettleDailyResult } from "./publish-settle-daily";
+export type {
+  PublishSettleDailyInput,
+  PublishSettleDailyResult,
+  SystemGameDailyPublisher,
+  SystemTenantDailyPublisher,
+} from "./publish-settle-daily";
 
 export { SyncSystemOutstandingUseCase } from "./sync-system-outstanding";
 export type {
   SyncSystemOutstandingInput,
   SyncSystemOutstandingResult,
+  SystemOutstandingPublisher,
 } from "./sync-system-outstanding";

@@ -10,7 +10,7 @@ import type {
 } from "@megawin/game-lotto535/entities";
 import type { ISODateString } from "@megawin/game-lotto535/entities";
 import { BaseRepo } from "./base-repo";
-import type { DrawEntity } from "../mappers/draw-mapper";
+import type { DrawEntity } from "@megawin/game-lotto535/entities";;
 import { DrawMapper } from "../mappers/draw-mapper";
 
 /**

@@ -1,0 +1,536 @@
+---
+description: Kiến trúc MongoDB Repository — tách types, query isolation, use case boundaries
+globs:
+  - packages/game-*-application/src/infras/repos/*.ts
+  - packages/game-core-application/src/infras/repos/*.ts
+  - packages/game-*-application/src/use-cases/**/*.ts
+alwaysApply: false
+---
+
+# MongoDB Repository Architecture
+
+Quy tắc kiến trúc cho lớp Repository và ranh giới với Use Case.
+ĐỌC TOÀN BỘ trước khi viết repo hoặc use case. Tuân thủ song song `entity-typesafe-mongodb.mdc` và `code-quality-standards.mdc`.
+
+---
+
+## 1. File `*-repo.ts` CHỈ chứa Class + Query Logic
+
+File repository (`*-repo.ts`) **TUYỆT ĐỐI CHỈ** chứa:
+- Class kế thừa `BaseRepo<T>`
+- Constructor
+- Các method thực hiện MongoDB operations (`find`, `aggregate`, `findOneAndUpdate`, `updateOne`, `deleteMany`...)
+
+**KHÔNG ĐƯỢC** khai báo `interface`, `type`, hoặc bất kỳ type definition nào bên trong file `*-repo.ts`.
+
+---
+
+## 2. Tách Interfaces/Types ra thư mục `repos/types/`
+
+Tất cả aggregate result types, query-specific types, helper types dùng làm input/output cho repo methods **PHẢI** nằm trong thư mục `types/` riêng bên trong `repos/`, mỗi file theo concern.
+
+### 2.1 Cấu trúc thư mục bắt buộc
+
+```
+packages/game-{game}-application/src/infras/repos/
+├── types/
+│   ├── index.ts                        ← Barrel re-export tất cả types
+│   ├── settle-draw-report.types.ts     ← Types cho SettleDrawReportRepo
+│   ├── settle-tenant-report.types.ts   ← Types cho SettleTenantReportRepo
+│   ├── entry.types.ts                  ← Types cho EntryRepo (aggregate results)
+│   └── outstanding.types.ts            ← Types cho OutstandingReportRepo
+├── base-repo.ts
+├── draw-repo.ts                        ← CHỈ class + query, import từ ./types
+├── entry-repo.ts
+├── settle-draw-report-repo.ts
+├── settle-tenant-report-repo.ts
+├── outstanding-report-repo.ts
+├── void-report-repo.ts
+└── index.ts                            ← Re-export classes + re-export từ ./types
+
+packages/game-core-application/src/infras/repos/
+├── types/
+│   ├── index.ts
+│   ├── system-settle-game-daily.types.ts
+│   ├── system-settle-tenant-daily.types.ts
+│   └── system-outstanding.types.ts
+├── system-settle-game-daily-repo.ts
+├── system-settle-tenant-daily-repo.ts
+├── system-outstanding-report-repo.ts
+└── index.ts
+```
+
+### 2.2 Quy tắc tách file types
+
+| Nguyên tắc | Mô tả |
+|-------------|--------|
+| **1 file per repo concern** | Types dùng cho `settle-draw-report-repo.ts` → `settle-draw-report.types.ts` |
+| **Đặt tên**: `{concern}.types.ts` | Suffix `.types.ts` phân biệt rõ với repo files |
+| **Barrel `types/index.ts`** | Re-export tất cả, consumer chỉ cần `import from "./types"` |
+| **Ít types** (1-2 interface) | Vẫn tạo file riêng — giữ convention nhất quán, dễ mở rộng sau |
+
+### 2.3 Phân loại types — đặt ở đâu?
+
+| Loại type | Nơi khai báo | Ví dụ |
+|-----------|-------------|-------|
+| Entity document types | `packages/game-*/src/entities/` | `DrawDoc`, `TicketEntryDoc`, `SettleDrawReport` |
+| Embedded document types | `packages/game-*/src/entities/` | `DrawFinancial`, `DrawStats`, `EntryPayout` |
+| Aggregate/query result types | `repos/types/{concern}.types.ts` | `DrawSummaryResult`, `PlayerBreakdownRow` |
+| Use case pipeline types | `use-cases/*/types.ts` | `SettleContext`, `VoidContext` |
+
+**Quy tắc vàng:** Nếu type là output riêng của 1 repo method (không phải entity document), nó thuộc về `repos/types/`.
+
+### 2.4 Ví dụ ĐÚNG
+
+```typescript
+// ── repos/types/settle-draw-report.types.ts ─────────────────────────
+/**
+ * Aggregate summary draws trong date range.
+ * Dùng cho KPI strip tab "Theo kỳ quay".
+ */
+export interface DrawSummaryResult {
+  drawCount: number;
+  entryCount: number;
+  /** Tổng doanh thu bán vé (VND). */
+  totalStake: number;
+  /** Gross Gaming Revenue = totalStake - totalPayout (VND). */
+  ggr: number;
+}
+```
+
+```typescript
+// ── repos/types/entry.types.ts ──────────────────────────────────────
+/**
+ * Aggregate players cho 1 draw × 1 tenant.
+ * Kết quả $group by accountId. Dùng drill cấp 3 financial reports.
+ */
+export interface PlayerBreakdownRow {
+  accountId: string;
+  username: string;
+  entryCount: number;
+  totalStake: number;
+  totalPayout: number;
+}
+```
+
+```typescript
+// ── repos/types/index.ts ────────────────────────────────────────────
+export type { DrawSummaryResult } from "./settle-draw-report.types";
+export type { TenantAggregateSummary } from "./settle-tenant-report.types";
+export type { PlayerBreakdownRow } from "./entry.types";
+export type { OutstandingGameSummary } from "./outstanding.types";
+```
+
+```typescript
+// ── settle-draw-report-repo.ts ──────────────────────────────────────
+import type { SettleDrawReport } from "@megawin/game-lotto535/entities";
+import type { DrawSummaryResult } from "./types";
+import { BaseRepo } from "./base-repo";
+
+export class SettleDrawReportRepository extends BaseRepo<any> {
+  /** Aggregate summary cho KPI strip. */
+  async aggregateSummary(from: string, to: string): Promise<DrawSummaryResult | null> {
+    const result = await this.aggregate([
+      // ... MongoDB pipeline ...
+    ]);
+    return result[0] ?? null;
+  }
+}
+```
+
+```typescript
+// ── repos/index.ts ──────────────────────────────────────────────────
+// Re-export all types từ types/ barrel
+export type * from "./types";
+
+// Re-export repos
+export { SettleDrawReportRepository } from "./settle-draw-report-repo";
+export { EntryRepository } from "./entry-repo";
+```
+
+### 2.5 Ví dụ SAI
+
+```typescript
+// ❌ SAI: interface khai báo trong file repo
+// ── settle-draw-report-repo.ts ──────────────────────────────────────
+export interface DrawSummaryResult {    // ← KHÔNG ĐƯỢC ở đây
+  drawCount: number;
+  totalStake: number;
+}
+
+export class SettleDrawReportRepository extends BaseRepo<any> { ... }
+```
+
+```typescript
+// ❌ SAI: nhồi tất cả types vào 1 file types.ts duy nhất khi số lượng nhiều
+// ── repos/types.ts ──────────────────────────────────────────────────
+// 200+ dòng, trộn lẫn settle, outstanding, entry, tenant → khó navigate
+export interface DrawSummaryResult { ... }
+export interface TenantAggregateSummary { ... }
+export interface PlayerBreakdownRow { ... }
+export interface OutstandingGameSummary { ... }
+// → Tách ra thư mục types/ với file riêng theo concern
+```
+
+```typescript
+// ❌ SAI: return type inline không tái sử dụng được
+async aggregateSummary(): Promise<{ drawCount: number; totalStake: number }> { ... }
+// → Khai báo named interface trong types/{concern}.types.ts
+```
+
+---
+
+## 3. KHÔNG MongoDB Query trong Use Case
+
+Use case **TUYỆT ĐỐI KHÔNG** chứa trực tiếp bất kỳ MongoDB operation nào:
+- `this.collection.aggregate([...])`
+- `this.collection.find({...})`
+- `this.collection.updateOne({...})`
+- `$match`, `$group`, `$sort`, `$project`, `$lookup`...
+
+Mọi truy vấn/cập nhật DB **PHẢI** được đóng gói thành method trong Repository class. Use case chỉ gọi repo method.
+
+### 3.1 Ví dụ ĐÚNG
+
+```typescript
+// ── build-settle-report.ts (USE CASE) ───────────────────────────────
+export class BuildSettleReportUseCase extends InternalUseCase<SettleContext, BuildSettleReportResult> {
+  private readonly entryRepo = new EntryRepository();
+  private readonly drawReportRepo = new SettleDrawReportRepository();
+  private readonly tenantReportRepo = new SettleTenantReportRepository();
+
+  protected async execute(input: SettleContext): Promise<BuildSettleReportResult> {
+    // Gọi repo method — use case KHÔNG biết MongoDB pipeline bên trong
+    const tenantMetrics = await this.entryRepo.aggregateTenantSettleMetrics(input.drawId);
+
+    // Business logic xử lý kết quả
+    const tenantReports = tenantMetrics.map(m => this.buildTenantReport(m, input));
+
+    // Gọi repo method để ghi
+    await this.tenantReportRepo.upsertTenantReports(tenantReports);
+    await this.drawReportRepo.upsertDrawReport(drawReport);
+
+    return { drawId, financialDate, tenantCount };
+  }
+}
+```
+
+### 3.2 Ví dụ SAI
+
+```typescript
+// ❌ SAI: Use case query MongoDB trực tiếp
+export class BuildSettleReportUseCase extends InternalUseCase<...> {
+  protected async execute(input: SettleContext) {
+    // MongoDB query lẫn vào business logic → không test được, không reuse
+    const tenantMetrics = await this.entryRepo.aggregate([
+      { $match: { drawId: input.drawId, status: "settled" } },
+      { $group: { _id: "$tenant.tenantId", totalStake: { $sum: "$amount" } } },
+    ]);
+  }
+}
+```
+
+### 3.3 Lý do
+
+| Concern | Trách nhiệm |
+|---------|-------------|
+| **Repository** | Query DB, biến đổi raw result → typed interface. Thay đổi query schema chỉ ảnh hưởng 1 file. |
+| **Use case** | Business logic, orchestrate workflow, gọi repo methods. Không phụ thuộc implementation DB. |
+| **API Route** | Parse request, **gọi use case**, format response. KHÔNG gọi repo trực tiếp. |
+
+- **Testability**: Mock repo method dễ hơn mock MongoDB driver.
+- **Reusability**: Nhiều use case / API route gọi cùng repo method.
+- **Maintainability**: Thay đổi query optimization chỉ sửa 1 chỗ trong repo.
+
+---
+
+## 3b. KHÔNG Gọi Repo Trực Tiếp từ API Route
+
+API Route Handler **TUYỆT ĐỐI KHÔNG** khởi tạo hoặc gọi Repository class trực tiếp.
+Mọi data access từ API route **PHẢI** đi qua Use Case.
+
+### Lý do
+
+| Layer | Trách nhiệm | Được phép gọi |
+|-------|-------------|---------------|
+| **API Route** | Parse HTTP request, auth, trả HTTP response | Use Case |
+| **Use Case** | Business logic, orchestrate | Repository |
+| **Repository** | MongoDB I/O | MongoDB driver |
+
+**Bỏ qua Use Case** → business logic bị phân tán, không test được, khó audit.
+
+### 3b.1 Ví dụ ĐÚNG — API route gọi Use Case
+
+```typescript
+// ── apps/backoffice/src/app/api/lotto535/reports/draws/route.ts ──────
+import { withApi } from "@/lib/api";
+import { CompanyRole } from "@megawin/identity/entities/account";
+import { ListSettleDrawReportsUseCase } from "@megawin/game-lotto535-application/use-cases/reports";
+import { z } from "zod";
+
+const querySchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+const useCase = new ListSettleDrawReportsUseCase();
+
+export const GET = withApi()
+  .auth({ roles: [CompanyRole.Staff] })
+  .query(querySchema)
+  .handler(async ({ query }) => {
+    // Gọi use case — KHÔNG gọi repo
+    return useCase.run(query);
+  });
+```
+
+```typescript
+// ── packages/game-lotto535-application/src/use-cases/reports/list-settle-draw-reports.ts
+import { NextApiUseCase } from "@megawin/next/server";
+import { SettleDrawReportRepository } from "../../infras/repos";
+
+export class ListSettleDrawReportsUseCase
+  extends NextApiUseCase<ListSettleDrawInput, ListSettleDrawOutput>
+{
+  private readonly repo = new SettleDrawReportRepository();
+
+  protected async execute(input: ListSettleDrawInput): Promise<ListSettleDrawOutput> {
+    const skip = (input.page - 1) * input.limit;
+    const { data, total } = await this.repo.findByDateRange(input.from, input.to, {
+      skip,
+      limit: input.limit,
+    });
+    return { data, total, page: input.page, limit: input.limit };
+  }
+}
+```
+
+### 3b.2 Ví dụ SAI — API route gọi repo trực tiếp
+
+```typescript
+// ❌ SAI: API route khởi tạo repo và gọi trực tiếp
+import { SettleDrawReportRepository } from "@megawin/game-lotto535-application/repos";
+
+const repo = new SettleDrawReportRepository(); // ← KHÔNG ĐƯỢC
+
+export const GET = withApi()
+  .handler(async ({ query }) => {
+    const data = await repo.findByDateRange(query.from, query.to); // ← KHÔNG ĐƯỢC
+    return apiSuccess({ data });
+  });
+```
+
+### 3b.3 Tổ chức Use Cases cho Reports
+
+Tạo thư mục `use-cases/reports/` riêng trong mỗi application package:
+
+```
+packages/game-lotto535-application/src/use-cases/
+├── draws/          ← Operations (schedule, settle, void...)
+├── reports/        ← READ use cases cho backoffice UI
+│   ├── index.ts
+│   ├── list-settle-draw-reports.ts
+│   ├── get-draw-summary.ts
+│   ├── list-draw-tenants.ts
+│   ├── list-tenant-reports.ts
+│   ├── list-tenant-draws.ts
+│   ├── list-player-breakdown.ts
+│   ├── list-entry-breakdown.ts
+│   ├── list-void-reports.ts
+│   └── list-outstanding-reports.ts
+└── ...
+
+packages/game-core-application/src/use-cases/
+└── reports/
+    ├── index.ts
+    ├── get-daily-overview.ts
+    ├── get-game-summary.ts
+    ├── get-tenant-summary.ts
+    └── get-outstanding.ts
+```
+
+### 3b.4 Pattern Use Case cho Report (READ-only)
+
+Report use cases thường đơn giản — chủ yếu delegate sang repo method. Vẫn phải tạo use case class để:
+- Centralize business validation (date range không quá 90 ngày, v.v.)
+- Audit logging nếu cần
+- Dễ mock trong unit test
+
+```typescript
+export class GetDrawSummaryUseCase
+  extends NextApiUseCase<GetDrawSummaryInput, GetDrawSummaryOutput>
+{
+  private readonly repo = new SettleDrawReportRepository();
+
+  protected async execute(input: GetDrawSummaryInput): Promise<GetDrawSummaryOutput> {
+    // Business validation
+    validateDateRange(input.from, input.to, { maxDays: 90 });
+
+    const summary = await this.repo.aggregateSummary(input.from, input.to);
+    return { data: summary };
+  }
+}
+```
+
+---
+
+## 4. Repo Method — JSDoc bắt buộc
+
+Mỗi repo method (public) **PHẢI** có JSDoc mô tả:
+- **Mục đích** (dùng cho feature/tab/step nào)
+- **Filter chính** (query theo field nào)
+- **Idempotent?** (WRITE methods)
+- **Index hint** nếu query phụ thuộc index cụ thể
+
+```typescript
+/**
+ * Aggregate players cho 1 draw × 1 tenant. Drill cấp 3 trong financial reports.
+ *
+ * BẮT BUỘC drawId + tenantId — KHÔNG query cross-draw.
+ * Index: { drawId: 1, "tenant.tenantId": 1, accountId: 1 }
+ */
+async aggregatePlayersByDrawAndTenant(
+  drawId: string,
+  tenantId: string,
+): Promise<PlayerBreakdownRow[]>
+```
+
+---
+
+## 5. Barrel Export — `repos/index.ts`
+
+File `repos/index.ts` phải export:
+1. **Tất cả Repository classes** (named export)
+2. **Tất cả types** từ `types/` barrel (re-export)
+
+```typescript
+// ── Types (re-export từ types/ barrel) ──────────────────────────────
+export type * from "./types";
+
+// ── Repos ───────────────────────────────────────────────────────────
+export { BaseRepo } from "./base-repo";
+export { DrawRepository } from "./draw-repo";
+export { EntryRepository } from "./entry-repo";
+export { SettleDrawReportRepository } from "./settle-draw-report-repo";
+export { SettleTenantReportRepository } from "./settle-tenant-report-repo";
+export { VoidReportRepository } from "./void-report-repo";
+export { OutstandingReportRepository } from "./outstanding-report-repo";
+```
+
+Consumer import gọn:
+
+```typescript
+import type { DrawSummaryResult } from "@megawin/game-lotto535-application/infras/repos";
+import { SettleDrawReportRepository } from "@megawin/game-lotto535-application/infras/repos";
+```
+
+---
+
+## 6. Aggregate Pipeline — Format Standards
+
+Tuân thủ `entity-typesafe-mongodb.mdc` §5 (mỗi field 1 dòng). Thêm:
+
+### 6.1 Stage comment bắt buộc
+
+Mỗi stage trong aggregate pipeline **NÊN** có comment giải thích mục đích:
+
+```typescript
+const result = await this.aggregate([
+  // Lọc entries đã settle trong 1 draw + 1 tenant
+  {
+    $match: {
+      drawId,
+      "tenant.tenantId": tenantId,
+      status: "settled",
+    },
+  },
+  // Nhóm theo player → tính metrics per player
+  {
+    $group: {
+      _id: "$accountId",
+      username: { $first: "$player.username" },
+      entryCount: { $sum: 1 },
+      totalStake: { $sum: "$amount" },
+      totalPayout: { $sum: "$payout.payoutAmount" },
+    },
+  },
+  // Sắp xếp player theo doanh thu giảm dần
+  {
+    $sort: {
+      totalStake: -1,
+    },
+  },
+]);
+```
+
+### 6.2 Trả về typed result
+
+Kết quả aggregate **PHẢI** được map sang typed interface, **KHÔNG** trả raw `any`:
+
+```typescript
+// ĐÚNG: map rõ ràng sang typed interface
+return result.map((r: any) => ({
+  accountId: r._id as string,
+  username: r.username as string,
+  entryCount: r.entryCount as number,
+  totalStake: r.totalStake as number,
+  totalPayout: r.totalPayout as number,
+}));
+```
+
+```typescript
+// SAI: return raw result
+return result as PlayerBreakdownRow[];  // ← _id vẫn còn, field name có thể khác
+```
+
+---
+
+## 7. Checklist khi viết Repo / Use Case / API Route mới
+
+### Repo method mới:
+
+- [ ] Return type là named interface? → Khai báo trong `repos/types/{concern}.types.ts`
+- [ ] Đã re-export từ `repos/types/index.ts`?
+- [ ] JSDoc mô tả mục đích, filter, index?
+- [ ] Aggregate pipeline: mỗi stage có comment?
+- [ ] Result mapped sang typed interface (không return raw `any`)?
+- [ ] Export method từ class + export type từ `repos/index.ts`?
+- [ ] Format: mỗi field 1 dòng theo `entity-typesafe-mongodb.mdc` §5?
+
+### Use case mới:
+
+- [ ] KHÔNG có MongoDB query trực tiếp? (không `$match`, `$group`, `collection.find`...)
+- [ ] Tất cả DB operations đi qua repo method?
+- [ ] Pipeline-specific types khai báo trong `use-cases/*/types.ts`?
+- [ ] Import entity types từ entity package, KHÔNG duplicate?
+- [ ] Đã export từ `use-cases/reports/index.ts`?
+
+### API Route mới:
+
+- [ ] **KHÔNG** khởi tạo repo trực tiếp — dùng Use Case?
+- [ ] Use case được khai báo ở module level (singleton, không tạo lại mỗi request)?
+- [ ] Query/params validate bằng Zod schema?
+- [ ] Import use case từ đúng package path?
+
+### Types mới:
+
+- [ ] Entity document type → `packages/game-*/src/entities/`
+- [ ] Aggregate result type → `repos/types/{concern}.types.ts`
+- [ ] Use case context type → `use-cases/*/types.ts`
+- [ ] Đã re-export từ `types/index.ts`?
+- [ ] KHÔNG trộn loại type sai chỗ?
+
+---
+
+## 8. KHÔNG ĐƯỢC làm
+
+- **KHÔNG** khai báo `interface`/`type` trong file `*-repo.ts`
+- **KHÔNG** nhồi tất cả types vào 1 file `types.ts` duy nhất — tách theo concern vào `types/{concern}.types.ts`
+- **KHÔNG** viết MongoDB query (`$match`, `$group`, `aggregate([...])`) trong use case
+- **KHÔNG** return raw `any` từ aggregate — phải map sang typed interface
+- **KHÔNG** dùng inline return type cho aggregate methods — tạo named interface
+- **KHÔNG** duplicate entity types (DrawDoc, SettleDrawReport...) — import từ entity package
+- **KHÔNG** quên re-export types mới từ `types/index.ts` và `repos/index.ts`
+- **KHÔNG** khởi tạo hoặc gọi Repository class trực tiếp từ API Route — phải đi qua Use Case (xem §3b)

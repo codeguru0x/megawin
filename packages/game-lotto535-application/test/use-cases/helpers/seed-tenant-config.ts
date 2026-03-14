@@ -1,6 +1,6 @@
 import { TenantConfigRepository } from "../../../src/infras/repos/tenant-config-repo";
 import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
-import type { TenantConfigDoc } from "@megawin/game-lotto535/entities";
+import type { TenantConfigEntity } from "@megawin/game-lotto535/entities";
 
 /**
  * Insert/update tenant config cho testing.
@@ -12,7 +12,7 @@ export async function seedTenantConfig(
     commissionRate?: number;
     isEnabled?: boolean;
   },
-): Promise<TenantConfigDoc> {
+): Promise<TenantConfigEntity> {
   const repo = new TenantConfigRepository();
 
   const result = await repo.upsertTenantConfig(tenantId, {

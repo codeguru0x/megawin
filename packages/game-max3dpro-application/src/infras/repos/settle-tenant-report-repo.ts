@@ -5,8 +5,11 @@
  * Collection: max3dpro_settle_tenant_reports — 1 doc/tenant/draw.
  *
  * Methods:
- *   upsertTenantReports  — bulkWrite upsert nhiều docs
- *   deleteByDrawId       — xoá khi void-after-settle
+ *   upsertTenantReports       — bulkWrite upsert nhiều docs
+ *   deleteByDrawId            — xoá khi void-after-settle
+ *   findByDrawId              — list tenant reports của 1 draw
+ *   aggregateByTenant         — SUM theo tenant trong date range
+ *   findByTenantAndDateRange  — list draws của 1 tenant (paginated)
  *
  * IDEMPOTENT: tất cả write dùng upsert overwrite — chạy lại an toàn.
  * KHÔNG dùng $inc.
@@ -15,6 +18,7 @@
 import type { SettleTenantReport } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_SETTLE_TENANT_REPORTS } from "@megawin/game-max3dpro/entities";
 import { BaseRepo } from "./base-repo";
+import type { TenantAggregateSummary } from "./types/settle-tenant-report.types";
 
 /**
  * Repository ghi/đọc settle tenant reports cho Max 3D Pro.
@@ -67,5 +71,83 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
     await this.deleteMany({
       drawId,
     });
+  }
+
+  /**
+   * List tất cả tenant reports cho 1 draw đã settle.
+   *
+   * Sort: commission desc (tenant doanh thu lớn lên trên).
+   */
+  async findByDrawId(drawId: string): Promise<SettleTenantReport[]> {
+    return (await this.findMany({ drawId }, { sort: { commission: -1 } })) as SettleTenantReport[];
+  }
+
+  /**
+   * Aggregate SUM theo tenant trong date range — dùng cho tab "Theo Đại Lý".
+   *
+   * Group by tenantId, SUM các trường tài chính.
+   * Sort: totalStake desc.
+   */
+  async aggregateByTenant(opts: { from: string; to: string }): Promise<TenantAggregateSummary[]> {
+    const result = await this.aggregate([
+      {
+        $match: { financialDate: { $gte: opts.from, $lte: opts.to } },
+      },
+      {
+        $group: {
+          _id: "$tenantId",
+          drawCount: { $sum: 1 },
+          entryCount: { $sum: "$entryCount" },
+          playerCount: { $sum: "$playerCount" },
+          lineCount: { $sum: { $ifNull: ["$lineCount", 0] } },
+          totalStake: { $sum: "$financial.totalRevenue" },
+          totalWin: { $sum: "$financial.totalWin" },
+          totalPayout: { $sum: "$financial.totalPayout" },
+          ggr: { $sum: "$financial.ggr" },
+          commission: { $sum: "$financial.commission" },
+        },
+      },
+      { $sort: { totalStake: -1 } },
+    ]);
+
+    return (result as any[]).map((r) => ({
+      tenantId: r._id,
+      drawCount: r.drawCount,
+      entryCount: r.entryCount,
+      playerCount: r.playerCount,
+      lineCount: r.lineCount ?? 0,
+      totalStake: r.totalStake,
+      totalWin: r.totalWin,
+      totalPayout: r.totalPayout,
+      ggr: r.ggr,
+      commission: r.commission,
+    }));
+  }
+
+  /**
+   * List draws của 1 tenant trong date range — paginated.
+   *
+   * Sort: financialDate desc. Trả data + total để render pagination.
+   */
+  async findByTenantAndDateRange(opts: {
+    tenantId: string;
+    from: string;
+    to: string;
+    page: number;
+    limit: number;
+  }): Promise<{ data: SettleTenantReport[]; total: number }> {
+    const filter = {
+      tenantId: opts.tenantId,
+      financialDate: { $gte: opts.from, $lte: opts.to },
+    };
+    const [data, total] = await Promise.all([
+      this.findMany(filter, {
+        sort: { financialDate: -1, drawId: -1 },
+        skip: (opts.page - 1) * opts.limit,
+        limit: opts.limit,
+      }),
+      this.count(filter),
+    ]);
+    return { data: data as SettleTenantReport[], total };
   }
 }

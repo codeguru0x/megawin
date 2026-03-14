@@ -15,6 +15,7 @@
 import { useMemo } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PlayMode } from "@megawin/game-max3dpro/entities";
+import { MAX3DPRO_PLAY_MODE_LABELS } from "@megawin/game-max3dpro/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import {
@@ -31,11 +32,6 @@ import { LiveFeed } from "./live-feed";
 import type { PlayTypeRow, TenantRow, TripletFreq, LiveFeedEntry } from "../../types";
 
 // ─── Label maps ───────────────────────────────────────────────────────────────
-
-const PLAY_MODE_LABELS: Record<string, string> = {
-  [PlayMode.MultiNumber]: "Bao nhiều bộ số",
-  [PlayMode.MultiDigit]: "Bao bộ ba số",
-};
 
 const ANALYTICS_SHOW = new Set<string>([
   DrawStatus.SalesOpen,
@@ -73,7 +69,7 @@ export function AnalyticsSection() {
         avgPairsPerEntry?: number;
       }) => ({
         playMode: d.playMode as PlayMode,
-        label: PLAY_MODE_LABELS[d.playMode] ?? d.playMode,
+        label: MAX3DPRO_PLAY_MODE_LABELS[d.playMode as PlayMode] ?? d.playMode,
         entries: d.entryCount,
         lines: d.lineCount,
         revenue: d.revenue,
@@ -134,7 +130,7 @@ export function AnalyticsSection() {
           entryId: e.entryId.slice(-6).toUpperCase(),
           time: e.createdAt,
           playMode,
-          playModeLabel: PLAY_MODE_LABELS[playMode] ?? playMode,
+          playModeLabel: MAX3DPRO_PLAY_MODE_LABELS[playMode] ?? playMode,
           triplets: firstBoard?.triplets ?? [],
           lineCount: firstBoard?.lineCount ?? 1,
           amount: e.amount,

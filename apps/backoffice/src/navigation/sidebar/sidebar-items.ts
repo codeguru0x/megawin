@@ -14,6 +14,10 @@ import {
   Settings2,
   CalendarClock,
   Activity,
+  BarChart3,
+  Clock,
+  CircleDollarSign,
+  Ban,
 } from "lucide-react";
 
 export interface NavSubItem {
@@ -55,46 +59,23 @@ export const operatorSidebarItems: NavGroup[] = [
       },
     ],
   },
-  /*
   {
     id: 2,
-    label: "Thống kê",
+    label: "Báo cáo",
     items: [
       {
-        title: "Thắng thua",
-        url: "/default",
-        icon: LayoutDashboard,
+        title: "Tài chính",
+        url: "/reports/financial",
+        icon: BarChart3,
       },
       {
-        title: "Doanh thu",
-        url: "/crm",
-        icon: ChartBar,
-      },
-      { title: "Chi tiêu", url: "/finance", icon: Banknote },
-    ],
-  },
-  */
-  {
-    id: 3,
-    label: "Tài khoản",
-    items: [
-      {
-        title: "Công ty",
-        url: "/accounts/company",
-        icon: Building2,
-      },
-      {
-        title: "Đại lý",
-        url: "/accounts/agents",
-        icon: Users,
-      },
-      {
-        title: "Người chơi",
-        url: "/accounts/players",
-        icon: User,
+        title: "Tồn đọng",
+        url: "/reports/outstanding",
+        icon: Clock,
       },
     ],
   },
+
   {
     id: 4,
     label: "Trò chơi",
@@ -120,17 +101,22 @@ export const operatorSidebarItems: NavGroup[] = [
             url: "/games/lotto535/jackpot",
             icon: Trophy,
           },
-          /* {
-            title: "Tài chính",
+          {
+            title: "Báo cáo tài chính",
             url: "/games/lotto535/financial-reports",
             icon: CircleDollarSign,
             sectionLabel: "Báo cáo",
           },
           {
-            title: "Thống kê",
-            url: "/games/lotto535/stats",
-            icon: ChartBar,
-          }, */
+            title: "Tồn đọng",
+            url: "/games/lotto535/outstanding",
+            icon: Clock,
+          },
+          {
+            title: "Kỳ huỷ",
+            url: "/games/lotto535/void-reports",
+            icon: Ban,
+          },
           {
             title: "Cấu hình game",
             url: "/games/lotto535/config",
@@ -164,6 +150,22 @@ export const operatorSidebarItems: NavGroup[] = [
             title: "Jackpot",
             url: "/games/power655/jackpot",
             icon: Trophy,
+          },
+          {
+            title: "Báo cáo tài chính",
+            url: "/games/power655/financial-reports",
+            icon: CircleDollarSign,
+            sectionLabel: "Báo cáo",
+          },
+          {
+            title: "Tồn đọng",
+            url: "/games/power655/outstanding",
+            icon: Clock,
+          },
+          {
+            title: "Kỳ huỷ",
+            url: "/games/power655/void-reports",
+            icon: Ban,
           },
           {
             title: "Cấu hình game",
@@ -200,6 +202,22 @@ export const operatorSidebarItems: NavGroup[] = [
             icon: Trophy,
           },
           {
+            title: "Báo cáo tài chính",
+            url: "/games/mega645/financial-reports",
+            icon: CircleDollarSign,
+            sectionLabel: "Báo cáo",
+          },
+          {
+            title: "Tồn đọng",
+            url: "/games/mega645/outstanding",
+            icon: Clock,
+          },
+          {
+            title: "Kỳ huỷ",
+            url: "/games/mega645/void-reports",
+            icon: Ban,
+          },
+          {
             title: "Cấu hình game",
             url: "/games/mega645/config",
             icon: Settings2,
@@ -227,6 +245,22 @@ export const operatorSidebarItems: NavGroup[] = [
             title: "Kỳ quay",
             url: "/games/keno/draws",
             icon: CalendarClock,
+          },
+          {
+            title: "Báo cáo tài chính",
+            url: "/games/keno/financial-reports",
+            icon: CircleDollarSign,
+            sectionLabel: "Báo cáo",
+          },
+          {
+            title: "Tồn đọng",
+            url: "/games/keno/outstanding",
+            icon: Clock,
+          },
+          {
+            title: "Kỳ huỷ",
+            url: "/games/keno/void-reports",
+            icon: Ban,
           },
           {
             title: "Cấu hình game",
@@ -258,6 +292,22 @@ export const operatorSidebarItems: NavGroup[] = [
             icon: CalendarClock,
           },
           {
+            title: "Báo cáo tài chính",
+            url: "/games/bingo18/financial-reports",
+            icon: CircleDollarSign,
+            sectionLabel: "Báo cáo",
+          },
+          {
+            title: "Tồn đọng",
+            url: "/games/bingo18/outstanding",
+            icon: Clock,
+          },
+          {
+            title: "Kỳ huỷ",
+            url: "/games/bingo18/void-reports",
+            icon: Ban,
+          },
+          {
             title: "Cấu hình game",
             url: "/games/bingo18/config",
             icon: Settings2,
@@ -285,6 +335,22 @@ export const operatorSidebarItems: NavGroup[] = [
             title: "Kỳ quay",
             url: "/games/max3d/draws",
             icon: CalendarClock,
+          },
+          {
+            title: "Báo cáo tài chính",
+            url: "/games/max3d/financial-reports",
+            icon: CircleDollarSign,
+            sectionLabel: "Báo cáo",
+          },
+          {
+            title: "Tồn đọng",
+            url: "/games/max3d/outstanding",
+            icon: Clock,
+          },
+          {
+            title: "Kỳ huỷ",
+            url: "/games/max3d/void-reports",
+            icon: Ban,
           },
           {
             title: "Cấu hình game",
@@ -316,6 +382,22 @@ export const operatorSidebarItems: NavGroup[] = [
             icon: CalendarClock,
           },
           {
+            title: "Báo cáo tài chính",
+            url: "/games/max3dpro/financial-reports",
+            icon: CircleDollarSign,
+            sectionLabel: "Báo cáo",
+          },
+          {
+            title: "Tồn đọng",
+            url: "/games/max3dpro/outstanding",
+            icon: Clock,
+          },
+          {
+            title: "Kỳ huỷ",
+            url: "/games/max3dpro/void-reports",
+            icon: Ban,
+          },
+          {
             title: "Cấu hình game",
             url: "/games/max3dpro/config",
             icon: Settings2,
@@ -327,6 +409,27 @@ export const operatorSidebarItems: NavGroup[] = [
             icon: Building2,
           },
         ],
+      },
+    ],
+  },
+  {
+    id: 3,
+    label: "Tài khoản",
+    items: [
+      {
+        title: "Công ty",
+        url: "/accounts/company",
+        icon: Building2,
+      },
+      {
+        title: "Đại lý",
+        url: "/accounts/agents",
+        icon: Users,
+      },
+      {
+        title: "Người chơi",
+        url: "/accounts/players",
+        icon: User,
       },
     ],
   },

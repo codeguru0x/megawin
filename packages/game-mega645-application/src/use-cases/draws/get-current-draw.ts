@@ -15,7 +15,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import type { DrawEntity } from "../../infras/mappers/draw-mapper";
+import type { DrawEntity } from "@megawin/game-mega645/entities";;
 import type {
   GetCurrentDrawInput,
   GetCurrentDrawOutput,

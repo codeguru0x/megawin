@@ -13,6 +13,7 @@
 import { useMemo, useState } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-max3dpro/entities";
+import { MAX3DPRO_PRIZE_TIER_LABELS } from "@megawin/game-max3dpro/labels";
 import { formatNumber } from "@megawin/shared/utils/number";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,17 +27,6 @@ import { useDrawDetail, useWinningEntries, type WinningEntryItem } from "../../u
 import type { DrawResult, DrawFinancialDisplay } from "../../types";
 
 // ─── Tier config ──────────────────────────────────────────────────────────────
-
-const TIER_LABELS: Record<string, string> = {
-  [PrizeTier.Special]: "Giải ĐB",
-  [PrizeTier.SpecialSub]: "Giải phụ ĐB",
-  [PrizeTier.First]: "Giải Nhất",
-  [PrizeTier.Second]: "Giải Nhì",
-  [PrizeTier.Third]: "Giải Ba",
-  [PrizeTier.Fourth]: "Giải Tư",
-  [PrizeTier.Fifth]: "Giải Năm",
-  [PrizeTier.Sixth]: "Giải Sáu",
-};
 
 type TierCfg = { badge: string; row: string; icon?: React.ElementType };
 
@@ -138,7 +128,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
                   badge: "border-border bg-muted/40 text-muted-foreground",
                   row: "",
                 };
-                const label = TIER_LABELS[tier.tier] ?? tier.tier;
+                const label = MAX3DPRO_PRIZE_TIER_LABELS[tier.tier as PrizeTier] ?? tier.tier;
                 return (
                   <div
                     key={tier.tier}
@@ -311,7 +301,7 @@ export function ResultSection() {
         winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         tier,
-        label: TIER_LABELS[tier] ?? String(tier),
+        label: MAX3DPRO_PRIZE_TIER_LABELS[tier] ?? String(tier),
         winnerCount,
         prizeAmount,
         totalPrize: t?.prizeAmount ?? 0,

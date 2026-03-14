@@ -47,4 +47,11 @@ export class VoidReportRepository extends BaseRepo<any> {
       },
     );
   }
+
+  async findByDateRange(from: string, to: string): Promise<VoidDrawReport[]> {
+    return (await this.findMany(
+      { financialDate: { $gte: from, $lte: to } },
+      { sort: { financialDate: -1 } },
+    )) as VoidDrawReport[];
+  }
 }

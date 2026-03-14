@@ -1,6 +1,6 @@
 import { GameConfigRepository } from "../../../src/infras/repos/game-config-repo";
 import { DEFAULT_MAX3D_CONFIG } from "@megawin/game-max3d/rules";
-import type { GlobalConfigEntity } from "../../../src/infras/mappers/global-config-mapper";
+import type { GlobalConfigEntity } from "@megawin/game-max3d/entities";
 
 /**
  * Insert default global config cho Max 3D vào database.

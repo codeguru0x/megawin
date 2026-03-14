@@ -12,4 +12,4 @@ export type {
 } from "./dto/tenant-config.dto";
 
 export type { GetTenantConfigInternalInput } from "./get-tenant-config-internal";
-export type { TenantConfigEntity } from "../../infras/mappers/game-config-mapper";
+export type { TenantConfigEntity } from "@megawin/game-bingo18/entities";

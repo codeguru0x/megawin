@@ -171,3 +171,9 @@ export interface JackpotCycleDoc {
   /** Thời điểm cập nhật gần nhất (tích luỹ, đóng cycle...). */
   updatedAt: Date;
 }
+
+/** Application-layer entity sau khi qua mapper. ObjectId → id string. */
+export interface JackpotCycleEntity extends Omit<JackpotCycleDoc, "_id"> {
+  /** MongoDB ObjectId đã chuyển sang hex string. */
+  id: string;
+}

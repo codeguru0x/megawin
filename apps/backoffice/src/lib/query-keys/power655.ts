@@ -63,4 +63,44 @@ export const power655Keys = {
 
   /** Danh sách entries trúng thưởng. */
   opsWinningEntries: (drawId: string) => [MODULE, "ops-winning-entries", drawId] as const,
+
+  // ─── Financial Reports ─────────────────────────────────────────────────────
+
+  /** Summary KPI draw list (date range) */
+  reportDrawsSummary: (params: { from: string; to: string }) =>
+    [MODULE, "report-draws-summary", params] as const,
+
+  /** Danh sách kỳ quay đã settle (phân trang) */
+  reportDraws: (params: { from: string; to: string; page: number }) =>
+    [MODULE, "report-draws", params] as const,
+
+  /** Danh sách tenant của 1 kỳ quay đã settle */
+  reportDrawTenants: (drawId: string) => [MODULE, "report-draw-tenants", drawId] as const,
+
+  /** Danh sách tenant tổng hợp (date range) */
+  reportTenants: (params: { from: string; to: string }) =>
+    [MODULE, "report-tenants", params] as const,
+
+  /** Danh sách kỳ quay của 1 tenant (date range) */
+  reportTenantDraws: (params: { tenantId: string; from: string; to: string }) =>
+    [MODULE, "report-tenant-draws", params] as const,
+
+  /** Player breakdown của 1 tenant trong 1 kỳ quay */
+  reportPlayers: (params: { drawId: string; tenantId: string }) =>
+    [MODULE, "report-players", params] as const,
+
+  /** Entry list của 1 player trong 1 kỳ quay */
+  reportEntries: (params: { drawId: string; tenantId: string; accountId: string }) =>
+    [MODULE, "report-entries", params] as const,
+
+  // ─── Outstanding ───────────────────────────────────────────────────────────
+
+  /** Outstanding entries đang chờ settle (live, refetch 60s) */
+  outstanding: [MODULE, "outstanding"] as const,
+
+  // ─── Void Reports ──────────────────────────────────────────────────────────
+
+  /** Kỳ quay đã void (date range) */
+  voidReports: (params: { from: string; to: string }) =>
+    [MODULE, "void-reports", params] as const,
 };

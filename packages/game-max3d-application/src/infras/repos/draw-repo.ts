@@ -2,7 +2,8 @@ import { Max3dCollections } from "@megawin/game-max3d/entities";
 import type { Max3dDrawResult } from "@megawin/game-max3d/entities";
 import type { DrawDoc } from "@megawin/game-max3d/entities";
 import { AbstractDrawRepository } from "@megawin/game-max3d-core/repos";
-import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
+import { DrawMapper } from "../mappers/draw-mapper";
+import type { DrawEntity } from "@megawin/game-max3d/entities";
 
 export class DrawRepository extends AbstractDrawRepository<
   DrawEntity,

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-power655/entities";
+import { POWER655_PRIZE_TIER_LABELS } from "@megawin/game-power655/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import { DrawCommandCenter } from "./draw-command-center";
@@ -31,16 +32,6 @@ import { PublishResultAction, EditScheduleAction, VoidDrawAction } from "./draw-
 import { useOpenSales, useCloseSales, useTriggerSettle, useDrawDetail } from "../../use-operations";
 
 import type { DrawResult, VoidInfo } from "../../types";
-
-// ─── Tier label map — Power 6/55 ────────────────────────────────────────────
-
-const TIER_LABELS: Record<string, string> = {
-  [PrizeTier.Jackpot1]: "Jackpot 1",
-  [PrizeTier.Jackpot2]: "Jackpot 2",
-  [PrizeTier.Tier1]: "Giải Nhất",
-  [PrizeTier.Tier2]: "Giải Nhì",
-  [PrizeTier.Tier3]: "Giải Ba",
-};
 
 const RESULT_SHOW = new Set([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
 
@@ -85,7 +76,7 @@ export function DrawManagementSection() {
         winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         tier,
-        label: TIER_LABELS[tier] ?? String(tier),
+        label: POWER655_PRIZE_TIER_LABELS[tier] ?? String(tier),
         winnerCount,
         prizeAmount,
         totalPrize: t?.prizeAmount ?? 0,

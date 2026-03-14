@@ -1,14 +1,28 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawNo } from "@megawin/game-mega645/entities";
-import type { DrawEntity } from "../../../infras/mappers/draw-mapper";
+import type { DrawEntity } from "@megawin/game-mega645/entities";;
 
 // ─────────────────────────────────────────────
 // CreateDraws (batch – tạo nhiều kỳ liên tiếp)
 // ─────────────────────────────────────────────
 
+export interface CreateDrawSlotInput {
+  /** Ngày quay, format YYYY-MM-DD. */
+  drawDate: string;
+  /** Số thứ tự kỳ trong ngày/năm (do client cung cấp theo preview). */
+  drawNo: number;
+  /**
+   * Giờ quay, ISO 8601 có timezone offset (ví dụ: "2026-04-02T18:00:00+07:00").
+   * closeAt tính tự động phía server: drawTime − play.salesCloseBeforeMinutes.
+   */
+  drawTime: string;
+  /** Mở bán ngay sau khi tạo. */
+  openNow: boolean;
+}
+
 export interface CreateDrawsInput {
-  /** Số kỳ cần tạo (1-12). */
-  count: number;
+  /** Danh sách kỳ cần tạo (1-12). */
+  draws: CreateDrawSlotInput[];
 }
 
 export interface CreateDrawsOutputItem {

@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { BasicPrizeTier, PlusPrizeTier } from "@megawin/game-max3d/entities";
+import { MAX3D_BASIC_PRIZE_TIER_LABELS, MAX3D_PLUS_PRIZE_TIER_LABELS } from "@megawin/game-max3d/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import { DrawCommandCenter } from "./draw-command-center";
@@ -34,25 +35,6 @@ import { PublishResultAction, EditScheduleAction, VoidDrawAction } from "./draw-
 import { useOpenSales, useCloseSales, useTriggerSettle, useDrawDetail } from "../../use-operations";
 
 import type { DrawResult, VoidInfo } from "../../types";
-
-// ─── Tier label maps ──────────────────────────────────────────────────────────
-
-const BASIC_TIER_LABELS: Record<string, string> = {
-  [BasicPrizeTier.Special]: "Giải ĐB",
-  [BasicPrizeTier.First]: "Giải Nhất",
-  [BasicPrizeTier.Second]: "Giải Nhì",
-  [BasicPrizeTier.Third]: "Giải Ba",
-};
-
-const PLUS_TIER_LABELS: Record<string, string> = {
-  [PlusPrizeTier.Special]: "Plus ĐB",
-  [PlusPrizeTier.First]: "Plus Nhất",
-  [PlusPrizeTier.Second]: "Plus Nhì",
-  [PlusPrizeTier.Third]: "Plus Ba",
-  [PlusPrizeTier.Fourth]: "Plus Tư",
-  [PlusPrizeTier.Fifth]: "Plus Năm",
-  [PlusPrizeTier.Sixth]: "Plus Sáu",
-};
 
 const RESULT_SHOW = new Set<string>([
   DrawStatus.Published,
@@ -85,10 +67,10 @@ export function DrawManagementSection() {
     if (!d?.result) return undefined;
 
     // Merge basic + plus tier labels
-    const tierLabels = { ...BASIC_TIER_LABELS, ...PLUS_TIER_LABELS };
+    const tierLabels = { ...MAX3D_BASIC_PRIZE_TIER_LABELS, ...MAX3D_PLUS_PRIZE_TIER_LABELS };
 
     const tierMap = new Map((d.settleSummary?.tiers ?? []).map((t) => [t.tier, t]));
-    const allTierKeys = [...Object.keys(BASIC_TIER_LABELS), ...Object.keys(PLUS_TIER_LABELS)];
+    const allTierKeys = [...Object.keys(MAX3D_BASIC_PRIZE_TIER_LABELS), ...Object.keys(MAX3D_PLUS_PRIZE_TIER_LABELS)];
     const tiers = allTierKeys.map((tier) => {
       const t = tierMap.get(tier);
       const winnerCount = t?.winnerCount ?? 0;
@@ -96,7 +78,7 @@ export function DrawManagementSection() {
         winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         tier: tier as BasicPrizeTier,
-        label: tierLabels[tier] ?? String(tier),
+        label: tierLabels[tier as keyof typeof tierLabels] ?? String(tier),
         winnerCount,
         prizeAmount,
         totalPrize: t?.prizeAmount ?? 0,

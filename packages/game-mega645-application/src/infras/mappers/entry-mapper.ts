@@ -1,18 +1,14 @@
 import { MongoMapper } from "@megawin/data/mongo";
-import type { TicketEntryDoc } from "@megawin/game-mega645/entities";
+import type { TicketEntryDoc, TicketEntryEntity } from "@megawin/game-mega645/entities";
 import { Document } from "mongodb";
 
-type EntryEntity = TicketEntryDoc & { id: string };
-
-export class EntryMapper extends MongoMapper<Document, EntryEntity> {
+export class EntryMapper extends MongoMapper<Document, TicketEntryEntity> {
   constructor() {
     super();
   }
 
-  protected mapProps(doc: Document): EntryEntity {
+  protected mapProps(doc: Document): TicketEntryEntity {
     const { _id, ...rest } = doc as any;
-    return { id: _id.toHexString(), ...rest } as EntryEntity;
+    return { id: _id.toHexString(), ...rest } as TicketEntryEntity;
   }
 }
-
-export type { EntryEntity };

@@ -1,3 +1,14 @@
+/**
+ * Use Case: Create Draw (Keno) – Batch
+ *
+ * Client gửi lên mảng các kỳ cần tạo (drawDate, drawTime, openNow).
+ * Server:
+ *   1. Validate: 1-30 kỳ, drawDate là hôm nay
+ *   2. Tính closeAt = drawTime − play.salesCloseBeforeSeconds
+ *   3. Tự gán drawNo từ atomic counter (không trust drawNo từ client)
+ *   4. Tạo draw với status SalesOpen (openNow=true) hoặc Scheduled (openNow=false)
+ */
+
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
@@ -7,7 +18,6 @@ import { todayVN } from "@megawin/shared/utils/date";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { DrawCounterRepository } from "../../infras/repos/draw-counter-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import { calcDrawSlots } from "../../helpers/calc-draw-slots";
 import type { CreateDrawInput, CreateDrawOutput, CreateDrawOutputItem } from "./dto/draw.dto";
 
 export class CreateDrawUseCase extends NextApiUseCase<CreateDrawInput, CreateDrawOutput> {
@@ -16,22 +26,25 @@ export class CreateDrawUseCase extends NextApiUseCase<CreateDrawInput, CreateDra
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(input: CreateDrawInput): Promise<CreateDrawOutput> {
-    const { drawDate, count, openNow } = input;
-    const today = todayVN();
+    const { draws: slots } = input;
 
-    if (drawDate !== today) {
+    if (slots.length < 1 || slots.length > 30) {
+      throw AppException.badRequest("Số kỳ tạo phải từ 1 đến 30.");
+    }
+
+    const today = todayVN();
+    // Keno chỉ tạo kỳ cho hôm nay — tất cả slot phải có cùng drawDate = today.
+    const uniqueDates = new Set(slots.map((s) => s.drawDate));
+    if (uniqueDates.size !== 1 || !uniqueDates.has(today)) {
       throw AppException.badRequest(`Chỉ cho phép tạo kỳ quay cho ngày hôm nay (${today}).`);
     }
 
-    const globalConfig = await this.getGlobalConfig.run();
+    const drawDate = today;
 
+    const globalConfig = await this.getGlobalConfig.run();
     const { play } = globalConfig;
 
-    const slots = calcDrawSlots(new Date(), drawDate, count, play);
-    if (slots.length === 0) {
-      throw AppException.badRequest(`Không còn slot quay nào khả dụng trong ngày (trước 23:59).`);
-    }
-
+    // Gán drawNo từ atomic counter — không dùng drawNo từ client.
     const firstDrawNo = await this.counterRepo.getNextDrawNoBatch(drawDate, slots.length);
 
     const now = new Date();
@@ -41,16 +54,21 @@ export class CreateDrawUseCase extends NextApiUseCase<CreateDrawInput, CreateDra
       const slot = slots[i]!;
       const drawNo = firstDrawNo + i;
       const drawId = generateKenoDrawId(drawDate, drawNo);
-      const status = openNow ? DrawStatus.SalesOpen : DrawStatus.Scheduled;
+      const drawTimeDate = new Date(slot.drawTime);
+
+      // closeAt tính server-side: drawTime − salesCloseBeforeSeconds (theo config).
+      const closeAt = new Date(drawTimeDate.getTime() - play.salesCloseBeforeSeconds * 1000);
+
+      const status = slot.openNow ? DrawStatus.SalesOpen : DrawStatus.Scheduled;
 
       await this.drawRepo.createDraw({
         drawId,
         drawDate,
-        financialDate: getFinancialDate(slot.drawTime),
+        financialDate: getFinancialDate(drawTimeDate),
         drawNo,
-        drawTime: slot.drawTime,
+        drawTime: drawTimeDate,
         status,
-        sales: openNow ? { closeAt: slot.closeAt, openAt: now } : { closeAt: slot.closeAt },
+        sales: slot.openNow ? { closeAt, openAt: now } : { closeAt },
         createdAt: now,
         updatedAt: now,
       });
@@ -59,9 +77,9 @@ export class CreateDrawUseCase extends NextApiUseCase<CreateDrawInput, CreateDra
         drawId,
         drawDate,
         drawNo,
-        drawTime: slot.drawTime.toISOString(),
-        closeAt: slot.closeAt.toISOString(),
-        financialDate: getFinancialDate(slot.drawTime),
+        drawTime: drawTimeDate.toISOString(),
+        closeAt: closeAt.toISOString(),
+        financialDate: getFinancialDate(drawTimeDate),
         status,
       });
     }

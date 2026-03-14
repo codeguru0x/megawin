@@ -26,8 +26,9 @@ import type { EntryPayout, EntryResult, EntryVoidInfo } from "@megawin/game-powe
 import { ObjectId, Long } from "mongodb";
 import { BaseRepo } from "./base-repo";
 import { EntryMapper } from "../mappers/entry-mapper";
-import type { TicketEntryEntity } from "@megawin/game-power655/entities";
+import type { TicketEntryEntity, TicketEntryDoc } from "@megawin/game-power655/entities";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
+import type { PlayerBreakdownRow } from "./types";
 
 export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   private readonly seqRepo = new EntryChangeSeqRepository();
@@ -1365,5 +1366,63 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       totalStake: r.totalStake,
       estimatedCommission: r.estimatedCommission ?? 0,
     }));
+  }
+
+  /**
+   * Aggregate players cho 1 draw × 1 tenant. Drill cấp 3.
+   *
+   * BẮT BUỘC cả drawId lẫn tenantId — KHÔNG query cross-draw.
+   * Sắp xếp theo totalStake DESC.
+   * Index: { drawId: 1, "tenant.tenantId": 1, accountId: 1 }
+   */
+  async aggregatePlayersByDrawAndTenant(
+    drawId: string,
+    tenantId: string,
+  ): Promise<PlayerBreakdownRow[]> {
+    const result = await this.aggregate([
+      {
+        $match: {
+          drawId,
+          tenantId,
+          status: EntryStatus.Settled,
+        },
+      },
+      {
+        $group: {
+          _id: "$accountId",
+          username: { $first: "$username" },
+          entryCount: { $sum: 1 },
+          lineCount: { $sum: "$lineCount" },
+          totalStake: { $sum: "$amount" },
+          totalWin: { $sum: "$winAmount" },
+          totalPayout: { $sum: "$payoutAmount" },
+        },
+      },
+      { $sort: { totalStake: -1 } },
+    ]);
+
+    return (result as any[]).map((r) => ({
+      accountId: r._id as string,
+      username: r.username as string,
+      entryCount: r.entryCount as number,
+      lineCount: r.lineCount as number,
+      totalStake: r.totalStake as number,
+      totalWin: r.totalWin as number,
+      totalPayout: r.totalPayout as number,
+    }));
+  }
+
+  /**
+   * Entries cho 1 draw × 1 tenant × 1 player. Drill cấp 4.
+   *
+   * Dùng cho Entry Breakdown list.
+   * Index: { drawId: 1, tenantId: 1, accountId: 1 }
+   */
+  async findByDrawTenantPlayer(
+    drawId: string,
+    tenantId: string,
+    accountId: string,
+  ): Promise<TicketEntryEntity[]> {
+    return this.findMany({ drawId, tenantId, accountId });
   }
 }

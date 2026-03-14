@@ -15,12 +15,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { useUpdateSchedule } from "../../../use-operations";
-import { formatVNTime, toVNDate } from "@megawin/shared/utils/date";
+import { formatVNDate, formatVNTime, toVNDate } from "@megawin/shared/utils/date";
+
+/** Chuyển ISO string → "yyyy-MM-dd" theo giờ VN */
+function toVNDateStr(iso: string): string {
+  return formatVNDate(new Date(iso));
+}
 
 /**
  * Dialog sửa lịch kỳ quay Bingo 18.
  *
  * Bingo 18: chu kỳ 6 phút — giờ đóng bán thường cách quay ~30 giây.
+ * drawDate/drawTime là cặp độc lập — user tự điều chỉnh riêng biệt với salesClose.
  * Form reset tự động khi dialog mở.
  */
 export function EditScheduleAction({
@@ -36,25 +42,31 @@ export function EditScheduleAction({
 }) {
   const updateSchedule = useUpdateSchedule();
 
+  const [salesOpenDate, setSalesOpenDate] = useState(
+    draw.salesOpenAt ? toVNDateStr(draw.salesOpenAt) : toVNDateStr(draw.salesCloseAt),
+  );
   const [salesOpen, setSalesOpen] = useState(
     draw.salesOpenAt ? formatVNTime(new Date(draw.salesOpenAt)) : "",
   );
+  const [salesCloseDate, setSalesCloseDate] = useState(toVNDateStr(draw.salesCloseAt));
   const [salesClose, setSalesClose] = useState(formatVNTime(new Date(draw.salesCloseAt)));
+  const [drawDate, setDrawDate] = useState(toVNDateStr(draw.scheduledDrawAt));
   const [drawTimeVal, setDrawTimeVal] = useState(formatVNTime(new Date(draw.scheduledDrawAt)));
   const [error, setError] = useState<string | null>(null);
 
   // Reset về giá trị draw hiện tại mỗi khi dialog mở
   useEffect(() => {
     if (open) {
+      const closeDate = toVNDateStr(draw.salesCloseAt);
+      setSalesOpenDate(draw.salesOpenAt ? toVNDateStr(draw.salesOpenAt) : closeDate);
       setSalesOpen(draw.salesOpenAt ? formatVNTime(new Date(draw.salesOpenAt)) : "");
+      setSalesCloseDate(closeDate);
       setSalesClose(formatVNTime(new Date(draw.salesCloseAt)));
+      setDrawDate(toVNDateStr(draw.scheduledDrawAt));
       setDrawTimeVal(formatVNTime(new Date(draw.scheduledDrawAt)));
       setError(null);
     }
   }, [open, draw]);
-
-  // Lấy drawDate từ salesCloseAt để build ISO
-  const drawDate = new Date(draw.salesCloseAt).toISOString().split("T")[0]!;
 
   function handleSubmit() {
     setError(null);
@@ -68,13 +80,15 @@ export function EditScheduleAction({
     }
 
     const body: { salesOpenAt: string; salesCloseAt: string; drawTime?: string } = {
-      salesOpenAt: toVNDate(drawDate, salesOpen).toISOString(),
-      salesCloseAt: toVNDate(drawDate, salesClose).toISOString(),
+      salesOpenAt: toVNDate(salesOpenDate, salesOpen).toISOString(),
+      salesCloseAt: toVNDate(salesCloseDate, salesClose).toISOString(),
     };
 
-    const originalDrawTime = formatVNTime(new Date(draw.scheduledDrawAt));
-    if (drawTimeVal !== originalDrawTime) {
-      body.drawTime = toVNDate(drawDate, drawTimeVal).toISOString();
+    const originalDrawISO = draw.scheduledDrawAt;
+    const newDrawISO = toVNDate(drawDate, drawTimeVal).toISOString();
+    // Chỉ gửi drawTime khi thực sự thay đổi
+    if (newDrawISO !== originalDrawISO) {
+      body.drawTime = newDrawISO;
     }
 
     updateSchedule.mutate(
@@ -85,7 +99,7 @@ export function EditScheduleAction({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
             Sửa lịch — Kỳ {String(draw.drawNo).padStart(3, "0")} · {draw.drawDate} {draw.drawTime}
@@ -96,44 +110,85 @@ export function EditScheduleAction({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          {/* Mở bán */}
           <div className="space-y-2">
             <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Giờ mở bán
             </Label>
-            <Input
-              type="time"
-              value={salesOpen}
-              onChange={(e) => {
-                setSalesOpen(e.target.value);
-                setError(null);
-              }}
-            />
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                className="flex-1"
+                value={salesOpenDate}
+                onChange={(e) => {
+                  setSalesOpenDate(e.target.value);
+                  setError(null);
+                }}
+              />
+              <Input
+                type="time"
+                className="w-28"
+                value={salesOpen}
+                onChange={(e) => {
+                  setSalesOpen(e.target.value);
+                  setError(null);
+                }}
+              />
+            </div>
           </div>
+
+          {/* Đóng bán */}
           <div className="space-y-2">
             <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Giờ đóng bán
             </Label>
-            <Input
-              type="time"
-              value={salesClose}
-              onChange={(e) => {
-                setSalesClose(e.target.value);
-                setError(null);
-              }}
-            />
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                className="flex-1"
+                value={salesCloseDate}
+                onChange={(e) => {
+                  setSalesCloseDate(e.target.value);
+                  setError(null);
+                }}
+              />
+              <Input
+                type="time"
+                className="w-28"
+                value={salesClose}
+                onChange={(e) => {
+                  setSalesClose(e.target.value);
+                  setError(null);
+                }}
+              />
+            </div>
           </div>
+
+          {/* Quay số */}
           <div className="space-y-2">
             <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Giờ quay số
             </Label>
-            <Input
-              type="time"
-              value={drawTimeVal}
-              onChange={(e) => {
-                setDrawTimeVal(e.target.value);
-                setError(null);
-              }}
-            />
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                className="flex-1"
+                value={drawDate}
+                onChange={(e) => {
+                  setDrawDate(e.target.value);
+                  setError(null);
+                }}
+              />
+              <Input
+                type="time"
+                className="w-28"
+                value={drawTimeVal}
+                onChange={(e) => {
+                  setDrawTimeVal(e.target.value);
+                  setError(null);
+                }}
+              />
+            </div>
             <p className="text-[11px] text-muted-foreground/70">
               Bingo 18 quay cố định mỗi 6 phút. Chỉ sửa khi có lý do đặc biệt.
             </p>

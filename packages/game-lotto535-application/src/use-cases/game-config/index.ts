@@ -8,4 +8,4 @@ export type {
   UpdateGameConfigOutput,
 } from "./dto/game-config.dto";
 
-export type { GlobalConfigEntity } from "../../infras/mappers/global-config-mapper";
+export type { GlobalConfigEntity } from "@megawin/game-lotto535/entities";

@@ -1,8 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
-import type { DrawCounterDoc } from "@megawin/game-keno/entities";
+import type { DrawCounterDoc, DrawCounterEntity } from "@megawin/game-keno/entities";
 import { Document } from "mongodb";
-
-type DrawCounterEntity = DrawCounterDoc & { id: string };
 
 export class DrawCounterMapper extends MongoMapper<Document, DrawCounterEntity> {
   constructor() {
@@ -14,5 +12,3 @@ export class DrawCounterMapper extends MongoMapper<Document, DrawCounterEntity> 
     return { id: _id.toHexString(), ...rest } as DrawCounterEntity;
   }
 }
-
-export type { DrawCounterEntity };

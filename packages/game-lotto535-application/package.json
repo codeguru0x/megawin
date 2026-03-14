@@ -64,6 +64,10 @@
     "./repos": {
       "types": "./src/infras/repos/index.ts",
       "default": "./dist/infras/repos/index.js"
+    },
+    "./use-cases/reports": {
+      "types": "./src/use-cases/reports/index.ts",
+      "default": "./dist/use-cases/reports/index.js"
     }
   },
   "dependencies": {

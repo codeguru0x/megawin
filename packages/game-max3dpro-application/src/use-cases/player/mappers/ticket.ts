@@ -5,7 +5,7 @@
  * Dùng chung bởi các use cases: ListPending, ListAll, GetTicketEntries.
  */
 
-import type { TicketEntity } from "../../../infras/mappers/ticket-mapper";
+import type { Board, TicketEntity } from "@megawin/game-max3dpro/entities";
 import type { PlayerTicketSummary } from "../dto/player.dto";
 
 export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
@@ -23,7 +23,7 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
       amountPerDraw: ticket.pricing.amountPerDraw,
       totalAmount: ticket.pricing.totalAmount,
     },
-    boards: ticket.boards.map((b) => ({
+    boards: ticket.boards.map((b: Board) => ({
       boardNo: b.boardNo,
       playMode: b.playMode,
       playType: b.playType,

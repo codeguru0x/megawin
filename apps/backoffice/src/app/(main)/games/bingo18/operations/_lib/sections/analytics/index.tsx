@@ -16,6 +16,7 @@
 
 import { useMemo } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
+import { BINGO18_PLAY_TYPE_LABELS, BINGO18_TRIPLE_KIND_LABELS } from "@megawin/game-bingo18/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import {
@@ -37,13 +38,11 @@ import type {
   LiveEntryItem,
 } from "@megawin/game-bingo18-application/use-cases/operations";
 
-const PLAY_TYPE_LABELS: Record<string, string> = {
-  singleNum: "Số đơn",
-  doubleMatch: "Đôi",
-  "tripleMatch-specific": "Ba cụ thể",
-  "tripleMatch-any": "Ba bất kỳ",
-  sumTotal: "Tổng điểm",
-  bigSmallDraw: "Lớn/Nhỏ",
+/** Compound key labels for tripleMatch subtypes in analytics */
+const BINGO18_ANALYTICS_LABELS: Record<string, string> = {
+  ...BINGO18_PLAY_TYPE_LABELS,
+  "tripleMatch-specific": BINGO18_TRIPLE_KIND_LABELS["specific"],
+  "tripleMatch-any": BINGO18_TRIPLE_KIND_LABELS["any"],
 };
 
 const ANALYTICS_SHOW = new Set([
@@ -77,7 +76,7 @@ export function AnalyticsSection() {
         d.playType === "tripleMatch" && d.tripleKind ? `tripleMatch-${d.tripleKind}` : d.playType;
       return {
         playType: key,
-        label: PLAY_TYPE_LABELS[key] ?? d.playType,
+        label: BINGO18_ANALYTICS_LABELS[key] ?? d.playType,
         entries: d.entryCount,
         selections: d.selectionCount,
         pct: totalSelections > 0 ? (d.selectionCount / totalSelections) * 100 : 0,

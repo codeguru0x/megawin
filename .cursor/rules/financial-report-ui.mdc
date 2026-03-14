@@ -1,0 +1,488 @@
+---
+description: Thiết kế UI trang báo cáo tài chính cho hệ thống và từng game trong backoffice
+globs: apps/backoffice/src/app/(main)/reports/**,apps/backoffice/src/app/(main)/games/*/financial-reports/**,apps/backoffice/src/app/(main)/games/*/outstanding/**,apps/backoffice/src/app/(main)/games/*/void-reports/**,apps/backoffice/src/app/api/reports/**,apps/backoffice/src/app/api/*/reports/**
+alwaysApply: false
+---
+
+# Financial Report UI — Design & Implementation Rules
+
+Quy tắc thiết kế UI trang báo cáo tài chính. ĐỌC TOÀN BỘ trước khi code.
+Tuân thủ: `Dashboard-UI-Design.mdc`, `frontend-url-state.mdc`, `code-quality-standards.mdc`, `mongodb-repository-architecture.mdc`.
+
+---
+
+## 1. Kiến trúc tổng thể — Tách theo concern
+
+3 concern riêng biệt, mỗi concern = 1 page riêng + 1 menu riêng:
+
+| Concern | Dữ liệu | Tính chất |
+|---------|---------|-----------|
+| **Financial** (Settle) | Doanh thu, trả thưởng, GGR, hoa hồng, lợi nhuận | Historical, date range filter |
+| **Outstanding** (Pending) | Entries đang chờ settle | Real-time, auto-refresh, no date filter |
+| **Void** (Huỷ) | Kỳ quay đã huỷ, hoàn trả | Historical, date range filter |
+
+**KHÔNG trộn** các concern vào cùng 1 page hoặc cùng 1 tab.
+
+---
+
+## 2. Cấu trúc thư mục & Route
+
+### 2.1 System Reports — 2 pages
+
+```
+apps/backoffice/src/app/(main)/reports/
+├── financial/
+│   ├── page.tsx                     ← 3 tabs: Tổng quan ngày / Theo game / Theo đại lý
+│   └── _lib/
+│       ├── use-report-filters.ts    ← nuqs: tab, from, to, expandedDate, expandedTenant
+│       ├── types.ts
+│       └── tabs/
+│           ├── daily-overview.tsx
+│           ├── by-game.tsx
+│           └── by-tenant.tsx
+└── outstanding/
+    ├── page.tsx                     ← Single view, auto-refresh
+    └── _lib/
+        └── outstanding-table.tsx
+
+apps/backoffice/src/app/api/reports/
+├── financial/
+│   ├── daily/route.ts
+│   ├── by-game/route.ts
+│   └── by-tenant/route.ts
+└── outstanding/route.ts
+```
+
+### 2.2 Per-Game Reports (ví dụ Lotto 5/35) — 3 pages
+
+```
+apps/backoffice/src/app/(main)/games/lotto535/
+├── financial-reports/
+│   ├── page.tsx                     ← 2 tabs: Theo kỳ quay / Theo đại lý
+│   └── _lib/
+│       ├── use-report-filters.ts    ← nuqs: tab, from, to, draw, tenant, player
+│       ├── types.ts
+│       ├── tabs/
+│       │   ├── by-draw.tsx
+│       │   └── by-tenant.tsx
+│       └── sections/
+│           ├── draw-tenant-breakdown.tsx
+│           ├── player-breakdown.tsx
+│           ├── entry-list.tsx
+│           └── entry-detail-dialog.tsx
+├── outstanding/
+│   ├── page.tsx                     ← Single view, auto-refresh
+│   └── _lib/
+│       └── outstanding-table.tsx
+└── void-reports/
+    ├── page.tsx                     ← Single view, date range filter
+    └── _lib/
+        ├── void-table.tsx
+        └── void-snapshot-dialog.tsx
+
+apps/backoffice/src/app/api/lotto535/reports/
+├── draws/
+│   ├── route.ts
+│   ├── summary/route.ts
+│   └── [drawId]/tenants/route.ts
+├── tenants/
+│   ├── route.ts
+│   └── [tenantId]/draws/route.ts
+├── players/route.ts
+├── entries/route.ts
+├── void/route.ts
+└── outstanding/route.ts
+```
+
+### 2.3 Tất cả 7 game — Cùng cấu trúc, khác route prefix
+
+| Game       | Financial Reports                          | Outstanding                         | Void Reports                          |
+|------------|-------------------------------------------|-------------------------------------|---------------------------------------|
+| Lotto 5/35 | `/games/lotto535/financial-reports`        | `/games/lotto535/outstanding`       | `/games/lotto535/void-reports`        |
+| Mega 6/45  | `/games/mega645/financial-reports`        | `/games/mega645/outstanding`        | `/games/mega645/void-reports`         |
+| Power 6/55 | `/games/power655/financial-reports`       | `/games/power655/outstanding`       | `/games/power655/void-reports`        |
+| Keno       | `/games/keno/financial-reports`           | `/games/keno/outstanding`           | `/games/keno/void-reports`            |
+| Bingo 18   | `/games/bingo18/financial-reports`        | `/games/bingo18/outstanding`        | `/games/bingo18/void-reports`         |
+| Max 3D     | `/games/max3d/financial-reports`          | `/games/max3d/outstanding`          | `/games/max3d/void-reports`           |
+| Max 3D Pro | `/games/max3dpro/financial-reports`       | `/games/max3dpro/outstanding`       | `/games/max3dpro/void-reports`        |
+
+---
+
+## 3. Sidebar Navigation
+
+### 3.1 System Reports — Nhóm "Báo cáo"
+
+Thêm NavGroup mới (id: 2) trong `sidebar-items.ts`:
+
+```typescript
+{
+  id: 2,
+  label: "Báo cáo",
+  items: [
+    {
+      title: "Báo cáo tài chính",
+      url: "/reports/financial",
+      icon: BarChart3,
+    },
+    {
+      title: "Outstanding",
+      url: "/reports/outstanding",
+      icon: Clock,
+    },
+  ],
+},
+```
+
+### 3.2 Per-Game — 3 sub-items trong section "Báo cáo"
+
+```typescript
+{
+  title: "Báo cáo tài chính",
+  url: "/games/{game}/financial-reports",
+  icon: CircleDollarSign,
+  sectionLabel: "Báo cáo",
+},
+{
+  title: "Outstanding",
+  url: "/games/{game}/outstanding",
+  icon: Clock,
+},
+{
+  title: "Kỳ huỷ",
+  url: "/games/{game}/void-reports",
+  icon: Ban,
+},
+```
+
+---
+
+## 4. URL State Management — nuqs
+
+### 4.1 System Financial Reports
+
+```
+/reports/financial?tab=daily&from=2026-03-01&to=2026-03-14
+/reports/financial?tab=by-game&from=2026-03-01&to=2026-03-14
+/reports/financial?tab=by-tenant&from=2026-03-01&to=2026-03-14&tenant=T001
+```
+
+### 4.2 System Outstanding
+
+```
+/reports/outstanding          ← Không có params (live data)
+```
+
+### 4.3 Per-Game Financial Reports
+
+```
+/games/lotto535/financial-reports?tab=draws&from=2026-03-01&to=2026-03-14
+/games/lotto535/financial-reports?tab=draws&draw=DRW123
+/games/lotto535/financial-reports?tab=draws&draw=DRW123&tenant=T001
+/games/lotto535/financial-reports?tab=draws&draw=DRW123&tenant=T001&player=ACC456
+/games/lotto535/financial-reports?tab=tenants&from=...&to=...
+/games/lotto535/financial-reports?tab=tenants&tenant=T001
+```
+
+### 4.4 Per-Game Outstanding & Void
+
+```
+/games/lotto535/outstanding         ← Không có params (live data)
+/games/lotto535/void-reports?from=2026-03-01&to=2026-03-14
+```
+
+### 4.5 Breadcrumb từ URL state (chỉ financial-reports page)
+
+```
+Tab "Theo kỳ quay":
+  level=list         → [Kỳ quay]
+  level=draw-tenants → [Kỳ quay] > [Draw #00284]
+  level=players      → [Kỳ quay] > [Draw #00284] > [VL-HCM]
+  level=entries      → [Kỳ quay] > [Draw #00284] > [VL-HCM] > [user_A]
+
+Tab "Theo đại lý":
+  level=list         → [Đại lý]
+  level=tenant-draws → [Đại lý] > [VL-HCM]
+```
+
+---
+
+## 5. Drill-Down Flow
+
+### 5.1 System Financial Reports
+
+```
+Tab "Tổng quan ngày": click ngày → inline expand game breakdown
+Tab "Theo game": click game → navigate /games/{game}/financial-reports
+Tab "Theo đại lý": click tenant → inline expand game breakdown per tenant
+```
+
+### 5.2 Per-Game Financial Reports (4 cấp)
+
+```
+Tab "Theo kỳ quay":
+  Cấp 1: settle_draw_reports WHERE financialDate in range
+  → Click draw
+  Cấp 2: settle_tenant_reports WHERE drawId
+  → Click tenant
+  Cấp 3: ticket_entries aggregate WHERE {drawId, tenantId} group by accountId
+  → Click player
+  Cấp 4: ticket_entries WHERE {drawId, tenantId, accountId}
+  → Click entry → Dialog chi tiết
+
+Tab "Theo đại lý":
+  Cấp 1: settle_tenant_reports aggregate by tenantId
+  → Click tenant
+  Cấp 2: settle_tenant_reports WHERE {tenantId, financialDate in range} (draw list)
+  → Click draw → chuyển sang tab "draws" drill cấp 2+
+```
+
+### 5.3 Player/Entry — BẮT BUỘC scope 1 drawId
+
+```
+ĐÚNG:  { drawId: "X", tenantId: "Y", status: "settled" } → group by accountId
+SAI:   { tenantId: "Y", financialDate: { $gte, $lte } } → group by accountId
+```
+
+---
+
+## 6. Format Số Liệu
+
+### 6.1 Hai tầng
+
+| Vị trí | Format | Ví dụ |
+|--------|--------|-------|
+| KPI Cards | Compact + tooltip full | `2.5 tỷ` (hover: `2,534,500,000`) |
+| Bảng báo cáo | Full VND separator | `2,534,500,000` |
+| Summary row | Full VND separator, **bold** | **`4,713,400,000`** |
+| Export | Integer nguyên | `2534500000` |
+
+### 6.2 Shared formatters — `@megawin/shared/utils/number`
+
+Tất cả formatters đã có sẵn trong `packages/shared/src/utils/number.ts`. **KHÔNG tạo file mới.**
+
+```typescript
+import {
+  formatVND,          // Full VND separator: 2,534,500,000 ₫ (bảng kế toán)
+  formatVNDCompact,   // Compact tiếng Việt: 2.53 tỷ, 450 triệu (KPI cards)
+  formatPercent,      // Phần trăm: 72.5% (1 decimal mặc định)
+  formatNumber,       // Số với separator: 1,234,567 (entry count, draw count...)
+  formatCurrency,     // Compact K/M/B/T (dùng khi cần suffix tiếng Anh)
+} from "@megawin/shared/utils/number";
+```
+
+**Quy tắc import:**
+- KPI Cards: `formatVNDCompact` (compact) + tooltip `formatVND` (full)
+- Bảng kế toán, Summary Row: `formatVND`
+- Cột phần trăm (Payout %, Margin %): `formatPercent`
+- Cột count (entries, draws, players...): `formatNumber`
+- **KHÔNG** tạo `apps/backoffice/src/lib/format/vnd.ts` — dùng shared package
+
+Date formatters tại `@megawin/shared/utils/date`:
+
+```typescript
+import {
+  formatVNDate,        // YYYY-MM-DD theo giờ VN
+  displayVNDateTime,   // DD/MM/YYYY HH:mm theo giờ VN
+  displayVNTime,       // HH:mm theo giờ VN
+  todayVN,             // Ngày hiện tại YYYY-MM-DD
+} from "@megawin/shared/utils/date";
+```
+
+Financial date tại `@megawin/shared/utils/financial-date`:
+
+```typescript
+import { getFinancialDate } from "@megawin/shared/utils/financial-date";
+```
+
+### 6.3 Số âm: `-XXX,XXX,XXX` với `text-danger`
+
+### 6.4 Color coding
+
+| Metric | Điều kiện | Token |
+|--------|-----------|-------|
+| netProfit > 0 | Lãi | `text-success` |
+| netProfit < 0 | Lỗ | `text-danger` |
+| Payout % < 80% | Tốt | `text-success` |
+| Payout % 80-95% | Cảnh giác | `text-warning` |
+| Payout % > 95% | Nguy hiểm | `text-danger` |
+
+---
+
+## 7. KPI Cards
+
+### System Financial: 4 cards
+
+Doanh Thu (totalStake) · Trả Thưởng (totalPayout) · GGR (ggr + margin%) · Lợi Nhuận Ròng (netProfit + net margin%)
+
+### Per-Game Financial: 6 cards
+
+Kỳ Quay (drawCount) · Doanh Thu · Trả Thưởng (+ payout%) · GGR (+ margin%) · Hoa Hồng ĐL · Lợi Nhuận Ròng
+
+### Outstanding: 3 cards
+
+Active Draws · Pending Entries · Pending Stake
+
+### Void: 2 cards
+
+Tổng kỳ huỷ · Tổng hoàn trả
+
+KHÔNG hiển thị WoW% hay period comparison. Chỉ tổng tuyệt đối + metric phụ.
+
+---
+
+## 8. Bảng — Quy tắc
+
+- Tất cả cột tiền: `formatVND()`, right-aligned, `tabular-nums`
+- Summary Footer Row **TỔNG CỘNG** (bold) bắt buộc
+- Payout % = totalPayout / totalStake × 100 (tính từ tổng, KHÔNG average)
+- Sticky header, sortable columns, pagination 20 rows/page
+- Export CSV + Excel button ở page header
+
+### Game-specific columns
+
+| Game | lineCount | jackpotContribution | companyTake |
+|------|-----------|--------------------:|------------:|
+| Lotto 5/35 | CÓ | CÓ | CÓ |
+| Mega 6/45 | CÓ | CÓ | CÓ |
+| Power 6/55 | CÓ | CÓ | CÓ |
+| Max 3D | CÓ | KHÔNG | CÓ |
+| Max 3D Pro | CÓ | KHÔNG | CÓ |
+| Keno | KHÔNG | KHÔNG | CÓ |
+| Bingo 18 | KHÔNG | KHÔNG | CÓ |
+
+---
+
+## 9. Repository Architecture — Tách Types & Query
+
+**Xem chi tiết đầy đủ tại `mongodb-repository-architecture.mdc`.**
+
+Tóm tắt 3 quy tắc bắt buộc:
+
+1. **Tách types ra `repos/types/`**: File `*-repo.ts` CHỈ chứa class + query logic. Tất cả aggregate result interfaces khai báo trong `repos/types/{concern}.types.ts` riêng. Re-export qua `types/index.ts` → `repos/index.ts`.
+
+2. **KHÔNG MongoDB query trong Use Case**: Use case TUYỆT ĐỐI KHÔNG chứa `$match`, `$group`, `collection.aggregate()`... Mọi DB operations phải đi qua repo method.
+
+3. **KHÔNG gọi Repo trực tiếp từ API Route**: Luồng bắt buộc là **API Route → Use Case → Repository**. API Route chỉ được phép gọi Use Case. Xem `mongodb-repository-architecture.mdc` §3b.
+
+---
+
+## 10. API Route Handlers
+
+**Nguyên tắc bắt buộc: API Route → Use Case → Repository. KHÔNG được bỏ qua Use Case.**
+
+Pattern chuẩn: Next.js Route Handler (GET) → parse params (Zod) → gọi Use Case → return `apiSuccess(result)`.
+
+### Tổ chức Use Cases cho Reports
+
+Tất cả READ use cases cho reports nằm trong `use-cases/reports/` của mỗi application package:
+
+```
+packages/game-lotto535-application/src/use-cases/reports/
+├── index.ts
+├── list-settle-draw-reports.ts      ← GET /api/lotto535/reports/draws
+├── get-draw-summary.ts              ← GET /api/lotto535/reports/draws/summary
+├── list-draw-tenants.ts             ← GET /api/lotto535/reports/draws/[drawId]/tenants
+├── list-tenant-reports.ts           ← GET /api/lotto535/reports/tenants
+├── list-tenant-draws.ts             ← GET /api/lotto535/reports/tenants/[tenantId]/draws
+├── list-player-breakdown.ts         ← GET /api/lotto535/reports/players
+├── list-entry-breakdown.ts          ← GET /api/lotto535/reports/entries
+├── list-void-reports.ts             ← GET /api/lotto535/reports/void
+└── get-outstanding-reports.ts       ← GET /api/lotto535/reports/outstanding
+
+packages/game-core-application/src/use-cases/reports/
+├── index.ts
+├── get-daily-overview.ts            ← GET /api/reports/financial/daily
+├── get-game-summary.ts              ← GET /api/reports/financial/by-game
+├── get-tenant-summary.ts            ← GET /api/reports/financial/by-tenant
+└── get-outstanding.ts               ← GET /api/reports/outstanding
+```
+
+### System APIs
+
+```
+GET /api/reports/financial/daily?from=...&to=...
+GET /api/reports/financial/by-game?from=...&to=...
+GET /api/reports/financial/by-tenant?from=...&to=...&game=all|{game}
+GET /api/reports/outstanding
+```
+
+### Per-Game APIs (ví dụ lotto535)
+
+```
+GET /api/lotto535/reports/draws?from=...&to=...&page=1&limit=20
+GET /api/lotto535/reports/draws/summary?from=...&to=...
+GET /api/lotto535/reports/draws/[drawId]/tenants
+GET /api/lotto535/reports/tenants?from=...&to=...
+GET /api/lotto535/reports/tenants/[tenantId]/draws?from=...&to=...
+GET /api/lotto535/reports/players?drawId=...&tenantId=...     ← BẮT BUỘC cả 2 params
+GET /api/lotto535/reports/entries?drawId=...&tenantId=...&accountId=...
+GET /api/lotto535/reports/void?from=...&to=...
+GET /api/lotto535/reports/outstanding
+```
+
+### Ví dụ Pattern Route Handler
+
+```typescript
+// apps/backoffice/src/app/api/lotto535/reports/draws/route.ts
+import { withApi } from "@/lib/api";
+import { CompanyRole } from "@megawin/identity/entities/account";
+import { ListSettleDrawReportsUseCase } from "@megawin/game-lotto535-application/use-cases/reports";
+import { z } from "zod";
+
+const querySchema = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+const useCase = new ListSettleDrawReportsUseCase(); // singleton ở module level
+
+export const GET = withApi()
+  .auth({ roles: [CompanyRole.Staff] })
+  .query(querySchema)
+  .handler(async ({ query }) => useCase.run(query)); // gọi use case, không gọi repo
+```
+
+---
+
+## 11. Repo READ Methods cần thêm
+
+### System repos (game-core-application)
+
+- `SystemSettleGameDailyRepo`: `findByDateRange`, `aggregateByFinancialDate`, `aggregateByGameProduct`
+- `SystemSettleTenantDailyRepo`: `aggregateByTenantId`, `findTenantGameBreakdown`
+- `SystemOutstandingReportRepo`: `findAll`
+
+### Per-game repos (game-{game}-application)
+
+- `SettleDrawReportRepo`: `findByDateRange`, `aggregateSummary`
+- `SettleTenantReportRepo`: `findByDrawId`, `aggregateByTenant`, `findByTenantAndDateRange`
+- `VoidReportRepo`: `findByDateRange`
+- `OutstandingReportRepo`: `findAll`
+- `EntryRepo`: `aggregatePlayersByDrawAndTenant`, `findByDrawTenantPlayer`
+
+Tất cả return types của các method trên → khai báo trong `repos/types/{concern}.types.ts`, **KHÔNG** inline trong repo file (xem `mongodb-repository-architecture.mdc` §2).
+
+---
+
+## 12. Loading / Empty / Error States
+
+Theo `Dashboard-UI-Design.mdc` §9. Skeleton matching layout, actionable empty state, retry on error.
+
+---
+
+## 13. KHÔNG ĐƯỢC làm
+
+- KHÔNG trộn settle + outstanding + void vào cùng 1 page
+- KHÔNG query player/entry cross-draw
+- KHÔNG hiển thị WoW% trên KPI cards
+- KHÔNG dùng compact format trong bảng kế toán
+- KHÔNG dùng `useState` cho state cần persist URL — dùng `nuqs`
+- KHÔNG hardcode mock data
+- KHÔNG thêm cột `jackpotContribution` cho game không có Jackpot
+- KHÔNG thêm cột `lineCount` cho game không có lines
+- KHÔNG skip Summary Footer Row
+- KHÔNG khai báo interface/type trong file `*-repo.ts` — tách ra `repos/types/` (xem `mongodb-repository-architecture.mdc` §2)
+- KHÔNG viết MongoDB query trực tiếp trong use case — phải đi qua repo method (xem §9.2)
+- **KHÔNG** khởi tạo hoặc gọi Repository class trực tiếp từ API Route — phải đi qua Use Case (xem §10 và `mongodb-repository-architecture.mdc` §3b)

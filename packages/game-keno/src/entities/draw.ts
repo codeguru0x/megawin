@@ -215,3 +215,9 @@ export interface DrawDoc {
   createdAt: Date;
   updatedAt: Date;
 }
+
+/** Application-layer entity sau khi qua mapper. ObjectId → id string. */
+export interface DrawEntity extends Omit<DrawDoc, "_id"> {
+  /** MongoDB ObjectId đã chuyển sang hex string. */
+  id: string;
+}

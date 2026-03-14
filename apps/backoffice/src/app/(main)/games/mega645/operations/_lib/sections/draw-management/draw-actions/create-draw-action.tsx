@@ -113,8 +113,8 @@ function DatePickerCell({
           }}
           captionLayout="dropdown"
           locale={vi}
-          fromYear={2025}
-          toYear={2030}
+          startMonth={new Date(2025, 0)}
+          endMonth={new Date(2030, 11)}
           initialFocus
         />
       </PopoverContent>

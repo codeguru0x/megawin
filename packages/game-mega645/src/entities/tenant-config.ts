@@ -29,3 +29,9 @@ export interface TenantConfigDoc {
   /** Thời điểm cập nhật cuối cùng. */
   updatedAt: Date;
 }
+
+/** Application-layer entity sau khi qua mapper. ObjectId → id string. */
+export interface TenantConfigEntity extends Omit<TenantConfigDoc, "_id"> {
+  /** MongoDB ObjectId đã chuyển sang hex string. */
+  id: string;
+}

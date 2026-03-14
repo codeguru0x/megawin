@@ -15,6 +15,8 @@ import {
   type LottoNumberSize,
 } from "@/components/games/lotto535/lotto-number-tokens";
 import { TenantBreakdown } from "./analytics-panels";
+import { LOTTO535_PLAY_TYPE_LABELS_SHORT } from "@megawin/game-lotto535/labels";
+import type { PlayType } from "@megawin/game-lotto535/entities";
 import type { NumberFreq, TenantRow } from "../../types";
 import type { TopComboItem } from "../../use-operations";
 
@@ -247,14 +249,6 @@ function SpecialGrid({ numbers }: { numbers: NumberFreq[] }) {
 
 // ─── Top Combos ───────────────────────────────────────────────────────────────
 
-const PLAY_TYPE_LABELS_SHORT: Record<string, string> = {
-  standard: "Chuẩn",
-  mainCover4: "Bao 4",
-  mainCover: "Bao số chính",
-  specialCover: "Bao số ĐB",
-  quickPick: "Chọn nhanh",
-};
-
 function TopCombos({ combos }: { combos: TopComboItem[] }) {
   if (!combos?.length) return null;
   const medals = ["🥇", "🥈", "🥉"];
@@ -289,7 +283,7 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
                 )}
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">
-                {PLAY_TYPE_LABELS_SHORT[c.playType] ?? c.playType}
+                {LOTTO535_PLAY_TYPE_LABELS_SHORT[c.playType as PlayType] ?? c.playType}
               </p>
             </div>
             <div className="text-right shrink-0">

@@ -4,6 +4,11 @@
  * Ghi per-game outstanding draw snapshot cho Max 3D.
  * Collection: max3d_outstanding_draw_reports.
  *
+ * Methods:
+ *   upsertDrawReport   — upsert snapshot
+ *   aggregateForGame   — aggregate summary cho SyncSystemOutstanding
+ *   findAll            — list tất cả outstanding draws hiện tại
+ *
  * IDEMPOTENT: upsert overwrite với snapshotAt = now — chạy lại reset TTL.
  * TTL: snapshotAt + 900s → MongoDB tự xoá khi draw settle/void.
  * Max 3D CÓ lineCount (lines/pairs per board).
@@ -12,16 +17,7 @@
 import type { OutstandingDrawReport } from "@megawin/game-max3d/entities";
 import { MAX3D_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-max3d/entities";
 import { BaseRepo } from "./base-repo";
-
-/** Summary aggregate outstanding cho toàn game — dùng cho SyncSystemOutstanding. */
-export interface OutstandingGameSummary {
-  activeDrawCount: number;
-  totalEntryCount: number;
-  totalPlayerCount: number;
-  totalTenantCount: number;
-  totalOutstandingStake: number;
-  totalEstimatedCommission: number;
-}
+import type { OutstandingGameSummary } from "./types/outstanding.types";
 
 /**
  * Repository ghi outstanding report cho Max 3D.
@@ -104,5 +100,14 @@ export class OutstandingReportRepository extends BaseRepo<any> {
       totalOutstandingStake: r.totalOutstandingStake,
       totalEstimatedCommission: r.totalEstimatedCommission,
     };
+  }
+
+  /**
+   * List tất cả outstanding draw reports hiện tại.
+   *
+   * Sort: drawId asc. Max ~4 docs (2 kỳ/ngày, ~2 ngày active tối đa).
+   */
+  async findAll(): Promise<OutstandingDrawReport[]> {
+    return (await this.findMany({}, { sort: { drawId: 1 } })) as OutstandingDrawReport[];
   }
 }

@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-max3dpro/entities";
+import { MAX3DPRO_PRIZE_TIER_LABELS } from "@megawin/game-max3dpro/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import { DrawCommandCenter } from "./draw-command-center";
@@ -37,17 +38,6 @@ import { useOpenSales, useCloseSales, useTriggerSettle, useDrawDetail } from "..
 import type { DrawResult, VoidInfo } from "../../types";
 
 // ─── Tier label map — 8 tiers Max 3D Pro ────────────────────────────────────
-
-const TIER_LABELS: Record<string, string> = {
-  [PrizeTier.Special]: "Giải ĐB",
-  [PrizeTier.SpecialSub]: "Giải phụ ĐB",
-  [PrizeTier.First]: "Giải Nhất",
-  [PrizeTier.Second]: "Giải Nhì",
-  [PrizeTier.Third]: "Giải Ba",
-  [PrizeTier.Fourth]: "Giải Tư",
-  [PrizeTier.Fifth]: "Giải Năm",
-  [PrizeTier.Sixth]: "Giải Sáu",
-};
 
 const RESULT_SHOW = new Set<string>([
   DrawStatus.Published,
@@ -87,7 +77,7 @@ export function DrawManagementSection() {
         winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         tier,
-        label: TIER_LABELS[tier] ?? String(tier),
+        label: MAX3DPRO_PRIZE_TIER_LABELS[tier] ?? String(tier),
         winnerCount,
         prizeAmount,
         totalPrize: t?.prizeAmount ?? 0,

@@ -1,6 +1,6 @@
 import { GameConfigRepository } from "../../../src/infras/repos/game-config-repo";
 import { DEFAULT_MEGA645_CONFIG } from "@megawin/game-mega645/rules";
-import type { GlobalConfigEntity } from "../../../src/infras/mappers/global-config-mapper";
+import type { GlobalConfigEntity } from "@megawin/game-mega645/entities";
 
 /**
  * Insert default global config vào database.

@@ -54,6 +54,10 @@
     "./use-cases/feed": {
       "types": "./src/use-cases/feed/index.ts",
       "default": "./dist/use-cases/feed/index.js"
+    },
+    "./use-cases/reports": {
+      "types": "./src/use-cases/reports/index.ts",
+      "default": "./dist/use-cases/reports/index.js"
     }
   },
   "dependencies": {

@@ -23,7 +23,8 @@ import type {
   DrawResult,
 } from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
-import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
+import { DrawMapper } from "../mappers/draw-mapper";
+import type { DrawEntity } from "@megawin/game-bingo18/entities";
 
 /**
  * Valid status transitions cho Bingo 18 Draw.

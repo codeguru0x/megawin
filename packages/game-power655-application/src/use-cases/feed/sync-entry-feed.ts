@@ -16,7 +16,7 @@ import {
 import { Long } from "mongodb";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "../../infras/mappers/draw-mapper";
+import type { DrawEntity } from "@megawin/game-power655/entities";
 
 /**
  * Sync Power 6/55 entries vào unified entry feed.

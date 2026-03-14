@@ -1,11 +1,23 @@
 import { z } from "zod";
 import { DRAW_STATUS_VALUES } from "@megawin/game-core/entities";
 
-export const createDrawSchema = z.object({
-  drawDate: z.iso.date("drawDate phải là ngày hợp lệ format YYYY-MM-DD."),
-  count: z.coerce.number().int().min(1).max(30).default(10),
-  /** Mở bán ngay sau khi tạo (true) hoặc để trạng thái scheduled (false). */
+const createDrawSlotSchema = z.object({
+  /** Ngày quay, format YYYY-MM-DD. */
+  drawDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "drawDate phải là YYYY-MM-DD."),
+  /**
+   * Giờ quay, ISO 8601 có timezone offset (ví dụ: "2026-03-20T06:08:00+07:00").
+   * closeAt tính tự động phía server.
+   */
+  drawTime: z.iso.datetime({ offset: true }),
+  /** Mở bán ngay sau khi tạo. */
   openNow: z.boolean().default(false),
+});
+
+export const createDrawSchema = z.object({
+  draws: z
+    .array(createDrawSlotSchema)
+    .min(1, "Cần ít nhất 1 kỳ.")
+    .max(30, "Tối đa 30 kỳ mỗi lần tạo."),
 });
 
 export const previewDrawsSchema = z.object({

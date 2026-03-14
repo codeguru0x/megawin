@@ -14,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatNumber, formatCurrency } from "@megawin/shared/utils/number";
 import { BarChart2, Trophy } from "lucide-react";
+import { KenoPlayType } from "@megawin/game-keno/entities";
+import { KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
 import {
   HEATMAP_BADGE_SIZE,
   HEATMAP_BADGE_TEXT,
@@ -217,19 +219,6 @@ function KenoGrid({ numbers }: { numbers: NumberFreqItem[] }) {
 
 // ─── Top Combos ───────────────────────────────────────────────────────────────
 
-const PICK_LABELS: Record<string, string> = {
-  pick1: "Pick 1",
-  pick2: "Pick 2",
-  pick3: "Pick 3",
-  pick4: "Pick 4",
-  pick5: "Pick 5",
-  pick6: "Pick 6",
-  pick7: "Pick 7",
-  pick8: "Pick 8",
-  pick9: "Pick 9",
-  pick10: "Pick 10",
-};
-
 function TopCombos({ combos }: { combos: TopComboItem[] }) {
   if (!combos?.length) return null;
   const medals = ["🥇", "🥈", "🥉"];
@@ -256,7 +245,7 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
                 ))}
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">
-                {PICK_LABELS[c.playType] ?? c.playType}
+                {KENO_PLAY_TYPE_LABELS[c.playType as KenoPlayType] ?? c.playType}
               </p>
             </div>
             <div className="text-right shrink-0">

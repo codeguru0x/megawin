@@ -10,7 +10,8 @@
 
 import { Max3dCollections } from "@megawin/game-max3d/entities";
 import { AbstractTicketRepository } from "@megawin/game-max3d-core/repos";
-import { TicketMapper, type TicketEntity } from "../mappers/ticket-mapper";
+import { TicketMapper } from "../mappers/ticket-mapper";
+import type { TicketEntity } from "@megawin/game-max3d/entities";
 import type { TicketSummary } from "@megawin/game-max3d-core/repos";
 
 export class TicketRepository extends AbstractTicketRepository<TicketEntity, TicketMapper> {

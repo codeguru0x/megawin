@@ -9,7 +9,8 @@ import type {
   PlayRules,
 } from "@megawin/game-keno/entities";
 import { BaseRepo } from "./base-repo";
-import { GameConfigMapper, type GlobalConfigEntity } from "../mappers/game-config-mapper";
+import { GameConfigMapper } from "../mappers/game-config-mapper";
+import type { GlobalConfigEntity } from "@megawin/game-keno/entities";
 
 export class GameConfigRepository extends BaseRepo<GlobalConfigEntity, GameConfigMapper> {
   constructor() {

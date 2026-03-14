@@ -8,4 +8,4 @@ export type {
   UpdateGameConfigOutput,
 } from "./dto/game-config.dto";
 
-export type { GlobalConfigEntity } from "../../infras/mappers/game-config-mapper";
+export type { GlobalConfigEntity } from "@megawin/game-bingo18/entities";

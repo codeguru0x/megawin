@@ -15,6 +15,7 @@
 import type { SettleTenantReport } from "@megawin/game-bingo18/entities";
 import { BINGO18_SETTLE_TENANT_REPORTS } from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
+import type { TenantAggregateSummary } from "./types";
 
 /**
  * Repository ghi/đọc settle tenant reports cho Bingo 18.
@@ -67,5 +68,56 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
     await this.deleteMany({
       drawId,
     });
+  }
+
+  /** Lấy tất cả tenant reports của 1 draw — drill-down level 2. */
+  async findByDrawId(drawId: string): Promise<SettleTenantReport[]> {
+    return (await this.findMany({ drawId }, { sort: { totalStake: -1 } })) as SettleTenantReport[];
+  }
+
+  /** Aggregate tổng hợp theo tenant trong date range. Bingo 18 KHÔNG có lineCount. */
+  async aggregateByTenant(from: string, to: string): Promise<TenantAggregateSummary[]> {
+    const result = await this.aggregate([
+      { $match: { financialDate: { $gte: from, $lte: to } } },
+      {
+        $group: {
+          _id: "$tenantId",
+          drawCount: { $sum: 1 },
+          entryCount: { $sum: "$entryCount" },
+          playerCount: { $sum: "$playerCount" },
+          totalStake: { $sum: "$totalStake" },
+          totalWin: { $sum: "$totalWin" },
+          totalPayout: { $sum: "$totalPayout" },
+          ggr: { $sum: "$ggr" },
+          commission: { $sum: "$commission" },
+        },
+      },
+      { $sort: { totalStake: -1 } },
+    ]);
+    return (result as any[]).map((r) => ({
+      tenantId: r._id,
+      drawCount: r.drawCount,
+      entryCount: r.entryCount,
+      playerCount: r.playerCount,
+      totalStake: r.totalStake,
+      totalWin: r.totalWin,
+      totalPayout: r.totalPayout,
+      ggr: r.ggr,
+      commission: r.commission,
+    }));
+  }
+
+  /** Lấy danh sách draws của 1 tenant trong date range — drill-down level 3. */
+  async findByTenantAndDateRange(
+    tenantId: string,
+    from: string,
+    to: string,
+  ): Promise<{ data: SettleTenantReport[]; total: number }> {
+    const filter = { tenantId, financialDate: { $gte: from, $lte: to } };
+    const [data, total] = await Promise.all([
+      this.findMany(filter, { sort: { financialDate: -1 } }),
+      this.count(filter),
+    ]);
+    return { data: data as SettleTenantReport[], total };
   }
 }

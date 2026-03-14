@@ -25,7 +25,8 @@ import type {
   DrawVoidSummary,
 } from "@megawin/game-mega645/entities";
 import { BaseRepo } from "./base-repo";
-import { DrawMapper, type DrawEntity } from "../mappers/draw-mapper";
+import { DrawMapper } from "../mappers/draw-mapper";
+import type { DrawEntity } from "@megawin/game-mega645/entities";
 
 /**
  * Valid status transitions.
@@ -63,6 +64,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   async createDraw(doc: Omit<DrawDoc, "_id">): Promise<string> {
     return await this.insertOne(doc as any);
+  }
+
+  /** Batch insert nhiều kỳ quay (1 round trip). Trả về số document đã insert. */
+  async createDraws(docs: Omit<DrawDoc, "_id">[]): Promise<number> {
+    if (docs.length === 0) return 0;
+    const result = await this.insertMany(docs as any[]);
+    return result.insertedCount;
   }
 
   async getDrawById(drawId: string): Promise<DrawEntity | null> {

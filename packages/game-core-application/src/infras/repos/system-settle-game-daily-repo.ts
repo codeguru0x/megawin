@@ -1,22 +1,27 @@
 /**
- * System Settle Game Daily Repository
+ * System Settle Game Daily Repository (Base)
  *
- * Ghi và aggregate system-level game daily settle reports vào MongoDB.
- * 1 doc = 1 game × 1 financialDate (aggregate từ per-game draw reports).
+ * Ghi và query system-level game daily settle reports trong MongoDB.
+ * 1 doc = 1 game × 1 financialDate.
  *
- * Constructor nhận tên collection per-game để tạo perGameColl 1 lần duy nhất.
+ * Collection: system_settle_game_daily
  *
- * Methods:
- *   upsertGameDaily             — upsert vào system_settle_game_daily
- *   aggregateDrawsFromPerGame   — aggregate per-game draw reports
+ * Chỉ làm việc với SYSTEM collection:
+ *   - upsertGameDaily            — ghi per-game aggregate vào system
+ *   - aggregateByFinancialDate   — query tổng hợp theo ngày
+ *   - aggregateByGameProduct     — query tổng hợp theo game
+ *   - findByFinancialDate        — raw docs cho 1 ngày
+ *
+ * Per-game aggregate (từ per-game draw reports → system) nằm ở mỗi game package.
+ * Game package thừa kế class này, thêm perGameColl + aggregateAndPublish().
  *
  * IDEMPOTENT: write dùng upsert overwrite — chạy lại an toàn.
- * KHÔNG dùng $inc — mọi field đều $set overwrite.
  */
 
 import type { SystemSettleGameDaily } from "@megawin/game-core/entities";
 import { SYSTEM_SETTLE_GAME_DAILY } from "@megawin/game-core/entities";
 import { GameCoreBaseRepo } from "./game-core-base-repo";
+import type { DailyOverviewRow, GameSummaryRow } from "./types";
 
 /** Kết quả aggregate từ per-game settle draw reports theo financialDate. */
 export interface SettleGameDailyAggregateResult {
@@ -32,20 +37,14 @@ export interface SettleGameDailyAggregateResult {
 }
 
 /**
- * Repository ghi và aggregate system game daily settle reports.
+ * Base repository ghi và query system game daily settle reports.
  *
- * Nhận `settleDrawReportCollection` (VD: lotto535_settle_draw_reports) để
- * tạo perGameColl 1 lần trong constructor — không tạo lại mỗi lần aggregate.
- * Được gọi bởi PublishSettleDaily use case sau mỗi settle hoặc void.
- * Tất cả write dùng upsert pattern — idempotent, crash-safe.
+ * Chỉ làm việc với system_settle_game_daily collection.
+ * Per-game aggregate logic nằm ở subclass trong mỗi game package.
  */
 export class SystemSettleGameDailyRepository extends GameCoreBaseRepo<any> {
-  /** Per-game draw report collection — dùng để aggregate, tạo 1 lần trong constructor. */
-  private readonly perGameColl: GameCoreBaseRepo<any>;
-
-  constructor(settleDrawReportCollection: string) {
+  constructor() {
     super({ collName: SYSTEM_SETTLE_GAME_DAILY });
-    this.perGameColl = new GameCoreBaseRepo({ collName: settleDrawReportCollection });
   }
 
   /**
@@ -79,23 +78,28 @@ export class SystemSettleGameDailyRepository extends GameCoreBaseRepo<any> {
   }
 
   /**
-   * Aggregate per-game settle draw reports → tổng hợp cho 1 game × 1 ngày.
+   * Aggregate by financialDate — SUM tất cả game cho mỗi ngày trong date range.
    *
-   * Dùng perGameColl đã khởi tạo trong constructor (VD: lotto535_settle_draw_reports).
-   * SUM tất cả draws trong financialDate → 1 summary row.
-   * Trả về zeros nếu không có draw nào settle trong ngày.
+   * Query vào system_settle_game_daily, group by financialDate.
+   * Sort theo financialDate descending.
+   * Dùng cho tab "Tổng quan ngày" trong System Financial Reports.
    */
-  async aggregateDrawsFromPerGame(financialDate: string): Promise<SettleGameDailyAggregateResult> {
-    const result = await this.perGameColl.aggregate([
+  async aggregateByFinancialDate(from: string, to: string): Promise<DailyOverviewRow[]> {
+    const result = await this.aggregate([
+      // Lọc docs trong date range
       {
         $match: {
-          financialDate,
+          financialDate: {
+            $gte: from,
+            $lte: to,
+          },
         },
       },
+      // Nhóm theo ngày tài chính → SUM tất cả game
       {
         $group: {
-          _id: null,
-          drawCount: { $sum: 1 },
+          _id: "$financialDate",
+          drawCount: { $sum: "$drawCount" },
           entryCount: { $sum: "$entryCount" },
           playerCount: { $sum: "$playerCount" },
           tenantCount: { $max: "$tenantCount" },
@@ -106,33 +110,89 @@ export class SystemSettleGameDailyRepository extends GameCoreBaseRepo<any> {
           netProfit: { $sum: "$netProfit" },
         },
       },
+      // Sắp xếp mới nhất trước
+      {
+        $sort: {
+          _id: -1,
+        },
+      },
     ]);
 
-    if (result.length === 0) {
-      return {
-        drawCount: 0,
-        entryCount: 0,
-        playerCount: 0,
-        tenantCount: 0,
-        totalStake: 0,
-        totalPayout: 0,
-        ggr: 0,
-        totalCommission: 0,
-        netProfit: 0,
-      };
-    }
+    return (result as any[]).map((r) => ({
+      financialDate: r._id as string,
+      drawCount: r.drawCount as number,
+      entryCount: r.entryCount as number,
+      playerCount: r.playerCount as number,
+      tenantCount: r.tenantCount as number,
+      totalStake: r.totalStake as number,
+      totalPayout: r.totalPayout as number,
+      ggr: r.ggr as number,
+      totalCommission: r.totalCommission as number,
+      netProfit: r.netProfit as number,
+    }));
+  }
 
-    const r = result[0] as any;
-    return {
-      drawCount: r.drawCount,
-      entryCount: r.entryCount,
-      playerCount: r.playerCount,
-      tenantCount: r.tenantCount,
-      totalStake: r.totalStake,
-      totalPayout: r.totalPayout,
-      ggr: r.ggr,
-      totalCommission: r.totalCommission,
-      netProfit: r.netProfit,
-    };
+  /**
+   * Aggregate by gameProduct — SUM tất cả ngày cho mỗi game trong date range.
+   *
+   * Query vào system_settle_game_daily, group by gameProduct.
+   * Dùng cho tab "Theo game" trong System Financial Reports.
+   */
+  async aggregateByGameProduct(from: string, to: string): Promise<GameSummaryRow[]> {
+    const result = await this.aggregate([
+      // Lọc docs trong date range
+      {
+        $match: {
+          financialDate: {
+            $gte: from,
+            $lte: to,
+          },
+        },
+      },
+      // Nhóm theo game product → SUM tất cả ngày
+      {
+        $group: {
+          _id: "$gameProduct",
+          drawCount: { $sum: "$drawCount" },
+          entryCount: { $sum: "$entryCount" },
+          playerCount: { $sum: "$playerCount" },
+          tenantCount: { $max: "$tenantCount" },
+          totalStake: { $sum: "$totalStake" },
+          totalPayout: { $sum: "$totalPayout" },
+          ggr: { $sum: "$ggr" },
+          totalCommission: { $sum: "$totalCommission" },
+          netProfit: { $sum: "$netProfit" },
+        },
+      },
+      // Sắp xếp theo doanh thu giảm dần
+      {
+        $sort: {
+          totalStake: -1,
+        },
+      },
+    ]);
+
+    return (result as any[]).map((r) => ({
+      gameProduct: r._id as string,
+      drawCount: r.drawCount as number,
+      entryCount: r.entryCount as number,
+      playerCount: r.playerCount as number,
+      tenantCount: r.tenantCount as number,
+      totalStake: r.totalStake as number,
+      totalPayout: r.totalPayout as number,
+      ggr: r.ggr as number,
+      totalCommission: r.totalCommission as number,
+      netProfit: r.netProfit as number,
+    }));
+  }
+
+  /**
+   * Raw query cho 1 ngày — dùng cho inline expand game breakdown.
+   *
+   * Query system_settle_game_daily WHERE financialDate = ngày chỉ định.
+   * Trả về tất cả docs của ngày đó (1 doc/game).
+   */
+  async findByFinancialDate(financialDate: string): Promise<SystemSettleGameDaily[]> {
+    return (await this.findMany({ financialDate })) as SystemSettleGameDaily[];
   }
 }

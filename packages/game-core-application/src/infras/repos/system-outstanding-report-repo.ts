@@ -1,12 +1,17 @@
 /**
- * System Outstanding Report Repository
+ * System Outstanding Report Repository (Base)
  *
- * Ghi system-level outstanding snapshot vào MongoDB.
- * Dùng chung cho tất cả game — gọi từ SyncSystemOutstanding scheduled job.
+ * Ghi và query system-level outstanding snapshot trong MongoDB.
+ * Dùng chung cho tất cả game.
  *
- * Methods:
- *   upsertGameOutstanding           — upsert system_outstanding_game_daily
- *   aggregateFromPerGameCollection  — aggregate per-game outstanding draw reports
+ * Collection: system_outstanding_game_daily
+ *
+ * Chỉ làm việc với SYSTEM collection:
+ *   - upsertGameOutstanding — ghi per-game outstanding aggregate vào system
+ *   - findAll               — query tất cả outstanding hiện tại
+ *
+ * Per-game aggregate (từ per-game outstanding draw reports → system) nằm ở mỗi game package.
+ * Game package thừa kế class này, thêm perGameColl + aggregateAndPublish().
  *
  * IDEMPOTENT: upsert overwrite — chạy lại an toàn.
  * TTL: snapshotAt + 900s → MongoDB tự xoá doc cũ.
@@ -27,10 +32,10 @@ export interface OutstandingPerGameAggregateResult {
 }
 
 /**
- * Repository ghi system-level outstanding report.
+ * Base repository ghi và query system outstanding report.
  *
- * Được gọi bởi SyncSystemOutstanding use case mỗi 5 phút.
- * TTL index tự xoá doc khi draw settle/void (job ngừng refresh).
+ * Chỉ làm việc với system_outstanding_game_daily collection.
+ * Per-game aggregate logic nằm ở subclass trong mỗi game package.
  */
 export class SystemOutstandingReportRepository extends GameCoreBaseRepo<any> {
   constructor() {
@@ -64,50 +69,12 @@ export class SystemOutstandingReportRepository extends GameCoreBaseRepo<any> {
   }
 
   /**
-   * Aggregate tổng hợp toàn bộ per-game outstanding draw reports.
+   * Query tất cả outstanding hiện tại (TTL active). Dùng outstanding page.
    *
-   * Query vào collection per-game (VD: lotto535_outstanding_draw_reports)
-   * rồi SUM tất cả draws → 1 summary row.
-   * Trả về zeros nếu không có draw active nào.
+   * Trả về tất cả docs trong system_outstanding_game_daily (chưa TTL expire).
+   * Sort theo gameProduct ascending.
    */
-  async aggregateFromPerGameCollection(
-    outstandingDrawReportCollection: string,
-  ): Promise<OutstandingPerGameAggregateResult> {
-    const perGameColl = new GameCoreBaseRepo({ collName: outstandingDrawReportCollection });
-
-    const result = await perGameColl.aggregate([
-      {
-        $group: {
-          _id: null,
-          activeDrawCount: { $sum: 1 },
-          totalEntryCount: { $sum: "$entryCount" },
-          totalPlayerCount: { $sum: "$playerCount" },
-          totalTenantCount: { $sum: "$tenantCount" },
-          totalOutstandingStake: { $sum: "$totalStake" },
-          totalEstimatedCommission: { $sum: "$estimatedCommission" },
-        },
-      },
-    ]);
-
-    if (result.length === 0) {
-      return {
-        activeDrawCount: 0,
-        totalEntryCount: 0,
-        totalPlayerCount: 0,
-        totalTenantCount: 0,
-        totalOutstandingStake: 0,
-        totalEstimatedCommission: 0,
-      };
-    }
-
-    const r = result[0] as any;
-    return {
-      activeDrawCount: r.activeDrawCount,
-      totalEntryCount: r.totalEntryCount,
-      totalPlayerCount: r.totalPlayerCount,
-      totalTenantCount: r.totalTenantCount,
-      totalOutstandingStake: r.totalOutstandingStake,
-      totalEstimatedCommission: r.totalEstimatedCommission,
-    };
+  async findAll(): Promise<SystemOutstandingGameDaily[]> {
+    return (await this.findMany({}, { sort: { gameProduct: 1 } })) as SystemOutstandingGameDaily[];
   }
 }

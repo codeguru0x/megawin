@@ -8,4 +8,3 @@ export class DrawMapper extends MongoMapper<DrawDoc, DrawEntity> {
   }
 }
 
-export type { DrawEntity };

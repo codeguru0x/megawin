@@ -1,7 +1,7 @@
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "../../infras/mappers/draw-mapper";
+import type { DrawEntity } from "@megawin/game-mega645/entities";;
 import type { PlayerGetCurrentDrawOutput, PlayerDrawInfo } from "./dto/player.dto";
 
 const PLAYER_STATUSES = [DrawStatus.SalesOpen, DrawStatus.SalesClosed];

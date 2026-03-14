@@ -6,41 +6,41 @@
  * BuildVoidReport (void-after-settle).
  * ═══════════════════════════════════════════════════════════════════════
  *
- * Re-aggregate per-game draw-level reports → UPSERT system reports.
- * Draw-level là source of truth — daily luôn re-aggregate từ draw-level.
+ * Nhận per-game system repos (đã kế thừa base) để:
+ *   1. Aggregate per-game draw reports → UPSERT system_settle_game_daily
+ *   2. Aggregate per-game tenant reports → UPSERT system_settle_tenant_daily
  *
- * FLOW (2 bước):
- *   1. Aggregate ALL {prefix}_settle_draw_reports WHERE { financialDate }
- *      → UPSERT system_settle_game_daily { financialDate, gameProduct }
- *   2. Aggregate ALL {prefix}_settle_tenant_reports WHERE { financialDate }
- *      → group by tenantId
- *      → UPSERT system_settle_tenant_daily { financialDate, tenantId, gameProduct }
+ * Mỗi game tạo SystemSettleGameDailyRepo + SystemSettleTenantDailyRepo
+ * kế thừa base repos từ core, truyền vào đây.
  *
  * CRASH-SAFE:
  *   - Crash sau game_daily upsert: tenant_daily stale. Retry re-aggregate cả 2.
  *   - Crash giữa tenant upserts: partial update. Retry re-aggregate → idempotent.
- *
- * LƯU Ý:
- *   - Nhận collection names làm input để reuse cho mọi game.
- *   - KHÔNG có step 3 — daily total = aggregate system_settle_game_daily on read.
- *   - Khi void-after-settle: settle reports đã bị xoá trước khi gọi use case này
- *     → aggregate trả về totals đã giảm → system daily tự giảm (correct).
- *   - Aggregation queries nằm trong repo layer — use case chỉ orchestrate.
  */
 
 import type { GameProduct } from "@megawin/game-core/entities";
-import { SystemSettleGameDailyRepository } from "../infras/repos/system-settle-game-daily-repo";
-import { SystemSettleTenantDailyRepository } from "../infras/repos/system-settle-tenant-daily-repo";
+import type { SettleGameDailyAggregateResult, SystemSettleGameDailyRepository } from "../infras/repos/system-settle-game-daily-repo";
+import type { SettleTenantDailyAggregateResult, SystemSettleTenantDailyRepository } from "../infras/repos/system-settle-tenant-daily-repo";
+
+/** Interface per-game repo phải implement để aggregate per-game draw reports. */
+export interface SystemGameDailyPublisher extends SystemSettleGameDailyRepository {
+  aggregateDrawsFromPerGame(financialDate: string): Promise<SettleGameDailyAggregateResult>;
+}
+
+/** Interface per-game repo phải implement để aggregate per-game tenant reports. */
+export interface SystemTenantDailyPublisher extends SystemSettleTenantDailyRepository {
+  aggregateTenantsFromPerGame(financialDate: string): Promise<SettleTenantDailyAggregateResult[]>;
+}
 
 export interface PublishSettleDailyInput {
   /** Game product để gắn vào system reports. */
   gameProduct: GameProduct;
   /** Ngày tài chính (YYYY-MM-DD). */
   financialDate: string;
-  /** Tên collection per-game settle draw reports (VD: lotto535_settle_draw_reports). */
-  settleDrawReportCollection: string;
-  /** Tên collection per-game settle tenant reports (VD: lotto535_settle_tenant_reports). */
-  settleTenantReportCollection: string;
+  /** Per-game system game daily repo (kế thừa base, có aggregateDrawsFromPerGame). */
+  gameDailyRepo: SystemGameDailyPublisher;
+  /** Per-game system tenant daily repo (kế thừa base, có aggregateTenantsFromPerGame). */
+  tenantDailyRepo: SystemTenantDailyPublisher;
 }
 
 export interface PublishSettleDailyResult {
@@ -64,16 +64,11 @@ export class PublishSettleDailyUseCase {
   /**
    * Re-aggregate và publish daily reports lên system level.
    *
-   * Nhận collection names để reuse cross-game — không hardcode prefix.
+   * Nhận per-game system repos đã kế thừa base từ core.
    * Game void-after-settle: draw-level đã xoá → aggregate giảm → system giảm.
-   * Repo được khởi tạo với collection name → perGameColl tạo 1 lần trong constructor.
    */
   async execute(input: PublishSettleDailyInput): Promise<PublishSettleDailyResult> {
-    const { gameProduct, financialDate, settleDrawReportCollection, settleTenantReportCollection } =
-      input;
-
-    const gameDailyRepo = new SystemSettleGameDailyRepository(settleDrawReportCollection);
-    const tenantDailyRepo = new SystemSettleTenantDailyRepository(settleTenantReportCollection);
+    const { gameProduct, financialDate, gameDailyRepo, tenantDailyRepo } = input;
 
     // ── Bước 1: Aggregate draw-level → upsert system_settle_game_daily ────────
     const drawAgg = await gameDailyRepo.aggregateDrawsFromPerGame(financialDate);

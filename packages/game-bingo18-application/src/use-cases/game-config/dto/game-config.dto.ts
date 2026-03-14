@@ -7,7 +7,7 @@ import type {
   BigSmallDrawPrizes,
   PlayRules,
 } from "@megawin/game-bingo18/entities";
-import type { GlobalConfigEntity } from "../../../infras/mappers/game-config-mapper";
+import type { GlobalConfigEntity } from "@megawin/game-bingo18/entities";;
 
 // ─────────────────────────────────────────────
 // GetGameConfig

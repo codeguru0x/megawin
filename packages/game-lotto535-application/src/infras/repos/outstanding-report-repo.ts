@@ -104,4 +104,13 @@ export class OutstandingReportRepository extends BaseRepo<any> {
       totalEstimatedCommission: r.totalEstimatedCommission,
     };
   }
+
+  /**
+   * Query tất cả outstanding draw reports (TTL active).
+   *
+   * Dùng cho Outstanding page của game. Sort theo drawId ascending.
+   */
+  async findAll(): Promise<OutstandingDrawReport[]> {
+    return (await this.findMany({}, { sort: { drawId: 1 } })) as OutstandingDrawReport[];
+  }
 }

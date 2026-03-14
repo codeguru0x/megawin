@@ -20,6 +20,8 @@ import {
   HEATMAP_CELL_DATA_SIZE,
   HEATMAP_CELL_SUB_SIZE,
 } from "@/components/games/shared/game-number-tokens";
+import { PlayType } from "@megawin/game-mega645/entities";
+import { MEGA645_PLAY_TYPE_LABELS } from "@megawin/game-mega645/labels";
 import { TenantBreakdown } from "./analytics-panels";
 import type { NumberFreq, TenantRow } from "../../types";
 import type { TopComboItem } from "../../use-operations";
@@ -206,22 +208,6 @@ function MainGrid({ numbers }: { numbers: NumberFreq[] }) {
 
 // ─── Top Combos ───────────────────────────────────────────────────────────────
 
-const PLAY_TYPE_LABELS_SHORT: Record<string, string> = {
-  standard: "Chuẩn",
-  bao5: "Bao 5",
-  bao7: "Bao 7",
-  bao8: "Bao 8",
-  bao9: "Bao 9",
-  bao10: "Bao 10",
-  bao11: "Bao 11",
-  bao12: "Bao 12",
-  bao13: "Bao 13",
-  bao14: "Bao 14",
-  bao15: "Bao 15",
-  bao18: "Bao 18",
-  quickPick: "Chọn nhanh",
-};
-
 function TopCombos({ combos }: { combos: TopComboItem[] }) {
   if (!combos?.length) return null;
   const medals = ["🥇", "🥈", "🥉"];
@@ -248,7 +234,7 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
                 ))}
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">
-                {PLAY_TYPE_LABELS_SHORT[c.playType] ?? c.playType}
+                {MEGA645_PLAY_TYPE_LABELS[c.playType as PlayType] ?? c.playType}
               </p>
             </div>
             <div className="text-right shrink-0">

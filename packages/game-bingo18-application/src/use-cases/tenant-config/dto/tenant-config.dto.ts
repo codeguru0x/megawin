@@ -1,4 +1,4 @@
-import type { TenantConfigEntity } from "../../../infras/mappers/game-config-mapper";
+import type { TenantConfigEntity } from "@megawin/game-bingo18/entities";;
 
 // ─────────────────────────────────────────────
 // ListTenantConfigs

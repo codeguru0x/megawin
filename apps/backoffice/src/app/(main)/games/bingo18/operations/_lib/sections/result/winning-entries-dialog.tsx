@@ -26,6 +26,7 @@ import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { parseUsername } from "@megawin/identity-application/shared";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Loader2, FileSearch, Users, Banknote } from "lucide-react";
+import { BINGO18_PLAY_TYPE_LABELS, BINGO18_TRIPLE_KIND_LABELS } from "@megawin/game-bingo18/labels";
 import { useWinningEntries } from "../../use-operations";
 import type {
   WinningEntryItem,
@@ -36,10 +37,9 @@ import type {
 // ─── Board chip ───────────────────────────────────────────────────────────────
 
 const BOARD_LABELS: Record<string, string> = {
-  singleNum: "Số đơn",
-  doubleMatch: "Đôi",
-  "tripleMatch-specific": "Ba cụ thể",
-  "tripleMatch-any": "Ba bất kỳ",
+  ...BINGO18_PLAY_TYPE_LABELS,
+  "tripleMatch-specific": BINGO18_TRIPLE_KIND_LABELS["specific"],
+  "tripleMatch-any": BINGO18_TRIPLE_KIND_LABELS["any"],
 };
 
 function BoardChip({ board }: { board: WinningBoardDetail }) {
