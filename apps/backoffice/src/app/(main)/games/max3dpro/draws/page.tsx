@@ -5,10 +5,7 @@ import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
 import { useCurrentDraw } from "./_lib/use-draws";
 import { useGameConfig } from "../config/_lib/use-game-config";
 import { CreateDrawDialog } from "./_lib/create-draw-dialog";
-import {
-  Max3dproPrimaryDrawCard,
-  Max3dproQueueDrawCard,
-} from "./_lib/active-draw-card";
+import { Max3dproPrimaryDrawCard, Max3dproQueueDrawCard } from "./_lib/active-draw-card";
 import { DrawHistorySection } from "./_lib/draw-history-section";
 
 export default function Max3dproDrawsPage() {
@@ -34,8 +31,8 @@ export default function Max3dproDrawsPage() {
               Max 3D Pro — Quản lý kỳ quay
             </h1>
             <p className="text-xs text-muted-foreground">
-              {drawsPerDay} kỳ/ngày ({drawTimes.join(" & ")}). T2/T4/T6 hàng
-              tuần. Mở/đóng bán, công bố kết quả, kết sổ.
+              {drawsPerDay} kỳ/ngày ({drawTimes.join(" & ")}). T3/T5/T7 hàng tuần. Xem lịch sử và
+              tạo kỳ mới.
             </p>
           </div>
         </div>
@@ -54,9 +51,7 @@ export default function Max3dproDrawsPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <ListOrdered className="size-4 text-muted-foreground" />
-                <h2 className="text-sm font-semibold text-foreground">
-                  Hàng chờ
-                </h2>
+                <h2 className="text-sm font-semibold text-foreground">Hàng chờ</h2>
                 <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
                   {queueDraws.length} kỳ
                 </span>
@@ -75,9 +70,7 @@ export default function Max3dproDrawsPage() {
             <CalendarClock className="size-5 text-muted-foreground/50" />
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">
-              Không có kỳ đang vận hành
-            </p>
+            <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Nhấn &ldquo;Tạo kỳ quay&rdquo; để bắt đầu kỳ mới.
             </p>

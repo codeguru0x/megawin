@@ -20,8 +20,6 @@ export interface PlayerGameRules {
   firstDrawTime: string;
   /** Giờ kết thúc quay trong ngày. VD: "21:52". */
   lastDrawTime: string;
-  /** Timezone vận hành. VD: "Asia/Ho_Chi_Minh". */
-  timezone: string;
 }
 
 // ─── Prize Tables ───

@@ -19,6 +19,10 @@
       "types": "./src/use-cases/draws/index.ts",
       "default": "./dist/use-cases/draws/index.js"
     },
+    "./use-cases/operations": {
+      "types": "./src/use-cases/operations/index.ts",
+      "default": "./dist/use-cases/operations/index.js"
+    },
     "./use-cases/game-config": {
       "types": "./src/use-cases/game-config/index.ts",
       "default": "./dist/use-cases/game-config/index.js"

@@ -61,6 +61,8 @@ export const ENDPOINTS = {
     listTickets: "/games/power655/tickets",
     getTicketEntries: (ticketId: string) => `/games/power655/tickets/${ticketId}/entries` as const,
     getEntryLines: (entryId: string) => `/games/power655/entries/${entryId}/lines` as const,
+    listDrawResults: "/games/power655/draw-results",
+    getDrawResult: (drawId: string) => `/games/power655/draw-results/${drawId}` as const,
   },
 
   max3d: {
@@ -71,6 +73,8 @@ export const ENDPOINTS = {
     listTickets: "/games/max3d/tickets",
     getTicketEntries: (ticketId: string) => `/games/max3d/tickets/${ticketId}/entries` as const,
     getEntryLines: (entryId: string) => `/games/max3d/entries/${entryId}/lines` as const,
+    listDrawResults: "/games/max3d/draw-results",
+    getDrawResult: (drawId: string) => `/games/max3d/draw-results/${drawId}` as const,
   },
 
   max3dpro: {
@@ -81,6 +85,8 @@ export const ENDPOINTS = {
     listTickets: "/games/max3dpro/tickets",
     getTicketEntries: (ticketId: string) => `/games/max3dpro/tickets/${ticketId}/entries` as const,
     getEntryLines: (entryId: string) => `/games/max3dpro/entries/${entryId}/lines` as const,
+    listDrawResults: "/games/max3dpro/draw-results",
+    getDrawResult: (drawId: string) => `/games/max3dpro/draw-results/${drawId}` as const,
   },
 
   bingo18: {
@@ -90,5 +96,7 @@ export const ENDPOINTS = {
     listPendingTickets: "/games/bingo18/tickets/pending",
     listTickets: "/games/bingo18/tickets",
     getTicketEntries: (ticketId: string) => `/games/bingo18/tickets/${ticketId}/entries` as const,
+    listDrawResults: "/games/bingo18/draw-results",
+    getDrawResult: (drawId: string) => `/games/bingo18/draw-results/${drawId}` as const,
   },
 } as const;

@@ -41,7 +41,6 @@ export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
         drawIntervalMinutes: globalConfig.play.drawIntervalMinutes,
         firstDrawTime: globalConfig.play.firstDrawTime,
         lastDrawTime: globalConfig.play.lastDrawTime,
-        timezone: globalConfig.play.timezone,
       },
       prizes: {
         basic: mapBasicPrizes(globalConfig.basicPrizes),

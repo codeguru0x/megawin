@@ -16,9 +16,9 @@ import type {
 import { ENDPOINTS } from "../endpoints";
 
 /**
- * Tham số phân trang cho danh sách vé Mega 6/45 đang chờ.
+ * Tham số phân trang cho danh sách vé Mega 6/45 đang chờ xử lý.
  *
- * Cursor-based pagination.
+ * Cursor-based pagination. Không hỗ trợ lọc ngày — chỉ trả vé đang active.
  *
  * @example
  * ```ts
@@ -32,14 +32,41 @@ import { ENDPOINTS } from "../endpoints";
  * }
  * ```
  */
-export interface Mega645ListTicketsParams {
+export interface Mega645ListPendingTicketsParams {
   /** Số lượng vé mỗi trang (mặc định 20). */
   size?: number;
   /** Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước). */
   cursor?: string;
-  /** Lọc từ ngày (YYYY-MM-DD). */
+}
+
+/**
+ * Tham số lọc và phân trang cho lịch sử vé Mega 6/45 (tất cả trạng thái).
+ *
+ * Hỗ trợ lọc theo khoảng ngày đặt cược (giờ Việt Nam).
+ *
+ * @example
+ * ```ts
+ * const march = await client.mega645.listTickets({
+ *   from: "2026-03-01",
+ *   to: "2026-03-31",
+ * });
+ *
+ * if (march.nextCursor) {
+ *   const page2 = await client.mega645.listTickets({
+ *     size: 20,
+ *     cursor: march.nextCursor,
+ *   });
+ * }
+ * ```
+ */
+export interface Mega645ListAllTicketsParams {
+  /** Số lượng vé mỗi trang (mặc định 20). */
+  size?: number;
+  /** Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước). */
+  cursor?: string;
+  /** Lọc từ ngày đặt cược (YYYY-MM-DD). */
   from?: string;
-  /** Lọc đến ngày (YYYY-MM-DD). */
+  /** Lọc đến ngày đặt cược (YYYY-MM-DD). */
   to?: string;
 }
 
@@ -281,7 +308,7 @@ export interface Mega645Api {
    * }
    * ```
    */
-  listPendingTickets(params?: Mega645ListTicketsParams): Promise<Mega645ListTicketsResponse>;
+  listPendingTickets(params?: Mega645ListPendingTicketsParams): Promise<Mega645ListTicketsResponse>;
 
   /**
    * Lấy lịch sử vé Mega 6/45 đã kết thúc.
@@ -304,7 +331,7 @@ export interface Mega645Api {
    * }
    * ```
    */
-  listTickets(params?: Mega645ListTicketsParams): Promise<Mega645ListTicketsResponse>;
+  listTickets(params?: Mega645ListAllTicketsParams): Promise<Mega645ListTicketsResponse>;
 
   /**
    * Lấy chi tiết các lần tham gia kỳ quay của một vé Mega 6/45.

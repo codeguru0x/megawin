@@ -94,6 +94,173 @@ export interface Max3dDrawInfo {
   };
 }
 
+// ─────────────────────────────────────────────
+// Response Types — Entry Lines
+// ─────────────────────────────────────────────
+
+/**
+ * Thông tin chi tiết 1 line trong entry Max 3D.
+ *
+ * Mỗi line là 1 cặp bộ ba số (Basic) hoặc 2 bộ ba (Plus).
+ * `matchResult` chỉ có sau khi kỳ quay đã settle.
+ */
+export interface Max3dLineInfo {
+  /** Ký hiệu board chứa line này. VD: `"A"`, `"B"`. */
+  boardNo: string;
+  /** Vị trí line trong entry (0-based). Dùng làm cursor khi phân trang. */
+  lineIndex: number;
+  /**
+   * Chế độ chơi.
+   * - `"basic"` — 1 bộ ba số so với từng bộ trong kết quả quay
+   * - `"plus"` — 2 bộ ba số kết hợp thành cặp
+   */
+  playMode: string;
+  /**
+   * Kiểu chơi.
+   * - `"straight"` — so khớp đúng thứ tự
+   * - `"combo3"` — hoán vị 3 số khác nhau (6 cách)
+   * - `"combo6"` — hoán vị có 1 cặp trùng (3 cách)
+   */
+  playType: string;
+  /**
+   * Danh sách bộ ba số của line này.
+   * Basic: 1 phần tử. Plus: 2 phần tử. Mỗi bộ ba là string 3 chữ số `"000"`-`"999"`.
+   * VD: `["123"]` (basic) hoặc `["123", "456"]` (plus).
+   */
+  triplets: string[];
+  /** Kết quả đối chiếu. `undefined` nếu kỳ quay chưa kết thúc. */
+  matchResult?: {
+    /**
+     * Hạng giải trúng.
+     * Basic: `"special"` | `"first"` | `"second"` | `"third"` | `null`.
+     * Plus: `"special"` | `"first"` | ... | `"sixth"` | `null`.
+     */
+    tier: string | null;
+    /** Tiền thưởng của line này (VND). `0` nếu không trúng. */
+    winAmount: number;
+  };
+}
+
+// ─────────────────────────────────────────────
+// Response Types — Draw Results
+// ─────────────────────────────────────────────
+
+/**
+ * Thông tin giải thưởng 1 hạng trong kỳ quay Max 3D.
+ *
+ * Bao gồm cả giải Basic (4 hạng) và Plus (7 hạng) gộp chung.
+ */
+export interface Max3dDrawTierPrize {
+  /**
+   * Hạng giải.
+   * Basic: `"special"` | `"first"` | `"second"` | `"third"`.
+   * Plus: `"special"` | `"first"` | `"second"` | `"third"` | `"fourth"` | `"fifth"` | `"sixth"`.
+   */
+  tier: string;
+  /** Tổng số người trúng hạng này. */
+  winnerCount: number;
+  /** Tổng tiền thưởng đã trao cho hạng này (VND). */
+  prizeAmount: number;
+}
+
+/**
+ * Tóm tắt kết quả 1 kỳ quay Max 3D (dùng trong danh sách).
+ *
+ * Trả về bởi `client.max3d.listDrawResults()`.
+ *
+ * @example
+ * ```ts
+ * const { draws } = await client.max3d.listDrawResults({ size: 10 });
+ * for (const draw of draws) {
+ *   console.log(`[${draw.drawId}]`);
+ *   console.log(`  Đặc biệt: ${draw.result.special.join(", ")}`);
+ *   console.log(`  Nhất:     ${draw.result.first.join(", ")}`);
+ * }
+ * ```
+ */
+export interface Max3dDrawResultSummary {
+  /** ID kỳ quay. Format `YYYY-MM-DD.NNN`. VD: `"2026-03-07.001"`. */
+  drawId: string;
+  /** Ngày quay (YYYY-MM-DD). */
+  drawDate: string;
+  /** Số thứ tự kỳ quay trong ngày (1-based). */
+  drawNo: number;
+  /** Giờ quay. VD: `"18:00"`. */
+  drawTime: string;
+  /** Kết quả quay số. */
+  result: {
+    /**
+     * Các bộ ba giải Đặc Biệt (string `"000"`-`"999"`).
+     * VD: `["123"]`.
+     */
+    special: string[];
+    /** Các bộ ba giải Nhất. */
+    first: string[];
+    /** Các bộ ba giải Nhì. */
+    second: string[];
+    /** Các bộ ba giải Ba. */
+    third: string[];
+    /** Thời điểm công bố kết quả (ISO 8601). */
+    publishedAt: string;
+  };
+  /** Tham chiếu kỳ quay Vietlott. `undefined` nếu không liên kết. */
+  vietlottRef?: {
+    drawPeriod: number;
+    drawDate: string;
+  };
+}
+
+/**
+ * Chi tiết đầy đủ kết quả 1 kỳ quay Max 3D bao gồm bảng giải.
+ *
+ * Trả về bởi `client.max3d.getDrawResult(drawId)`.
+ *
+ * @example
+ * ```ts
+ * const draw = await client.max3d.getDrawResult("2026-03-07.001");
+ * console.log(`Đặc biệt: ${draw.result.special.join(", ")}`);
+ * for (const prize of draw.prizes) {
+ *   console.log(`  ${prize.tier}: ${prize.winnerCount} người, ${prize.prizeAmount.toLocaleString()} VND`);
+ * }
+ * ```
+ */
+export interface Max3dDrawResultInfo {
+  /** ID kỳ quay. Format `YYYY-MM-DD.NNN`. VD: `"2026-03-07.001"`. */
+  drawId: string;
+  /** Ngày quay (YYYY-MM-DD). */
+  drawDate: string;
+  /** Số thứ tự kỳ quay trong ngày (1-based). */
+  drawNo: number;
+  /** Giờ quay. VD: `"18:00"`. */
+  drawTime: string;
+  /** Kết quả quay số (20 bộ ba chia 4 hạng). */
+  result: {
+    /**
+     * Các bộ ba giải Đặc Biệt (string `"000"`-`"999"`).
+     * VD: `["123"]`.
+     */
+    special: string[];
+    /** Các bộ ba giải Nhất. */
+    first: string[];
+    /** Các bộ ba giải Nhì. */
+    second: string[];
+    /** Các bộ ba giải Ba. */
+    third: string[];
+    /** Thời điểm công bố kết quả (ISO 8601). */
+    publishedAt: string;
+  };
+  /**
+   * Bảng trao giải theo hạng.
+   * Gộp cả Basic và Plus: `special`, `first`, `second`, `third`, `fourth`, `fifth`, `sixth`.
+   */
+  prizes: Max3dDrawTierPrize[];
+  /** Tham chiếu kỳ quay Vietlott. `undefined` nếu không liên kết. */
+  vietlottRef?: {
+    drawPeriod: number;
+    drawDate: string;
+  };
+}
+
 /**
  * Tóm tắt vé Max 3D cho UI.
  *

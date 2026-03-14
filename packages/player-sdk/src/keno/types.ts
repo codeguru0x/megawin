@@ -7,12 +7,7 @@
  * @module
  */
 
-import type {
-  KenoBigSmallBet,
-  KenoEvenOddBet,
-  KenoPlayType,
-  KenoTicketDisplayStatus,
-} from "./enums";
+import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "./enums";
 
 // ─────────────────────────────────────────────
 // Input Types (mua vé)
@@ -639,8 +634,6 @@ export interface KenoGameRules {
   firstDrawTime: string;
   /** Giờ kết thúc quay (kỳ cuối). VD: "21:52". */
   lastDrawTime: string;
-  /** Timezone vận hành. VD: "Asia/Ho_Chi_Minh". */
-  timezone: string;
 }
 
 /**

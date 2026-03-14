@@ -93,6 +93,8 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
           drawTime: remoteDraw.drawTime as unknown as string,
           salesOpenAt: remoteDraw.sales?.openAt as unknown as string | undefined,
           salesCloseAt: (remoteDraw.sales?.closeAt as unknown as string) ?? "",
+          // drawTime là Date trong DrawDoc → convert sang ISO string cho scheduledDrawAt
+          scheduledDrawAt: new Date(remoteDraw.drawTime as unknown as string).toISOString(),
           drawResultAt: remoteDraw.result?.publishedAt as unknown as string | undefined,
           status: remoteDraw.status,
           financialDate: remoteDraw.financialDate ?? remoteDraw.drawDate,

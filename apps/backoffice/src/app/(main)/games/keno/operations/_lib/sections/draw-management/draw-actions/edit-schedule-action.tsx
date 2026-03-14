@@ -18,28 +18,21 @@ import { Label } from "@/components/ui/label";
 import { editScheduleSchema, type EditScheduleInput } from "@megawin/game-keno/schemas";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { useUpdateSchedule } from "../../../use-operations";
-import { formatVNDate, formatVNTime } from "@megawin/shared/utils/date";
-import { toVNDate } from "@megawin/shared/utils/date";
-
-/** Parse ISO string → { date: "yyyy-MM-dd", time: "HH:mm" } theo giờ VN */
-function parseISOToVN(iso: string | undefined): { date: string; time: string } {
-  if (!iso) return { date: "", time: "" };
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return { date: "", time: "" };
-  return { date: formatVNDate(d), time: formatVNTime(d) };
-}
+import { formatVNDate, formatVNTime, toVNDate } from "@megawin/shared/utils/date";
 
 function buildDefaultValues(draw: DrawSelectorItem): EditScheduleInput {
-  const op = parseISOToVN(draw.salesOpenAt);
-  const cl = parseISOToVN(draw.salesCloseAt);
-  const dr = parseISOToVN(draw.drawResultAt);
+  // salesOpenAt optional → fallback "" nếu chưa có
+  const openDate = draw.salesOpenAt ? formatVNDate(new Date(draw.salesOpenAt)) : "";
+  const openTime = draw.salesOpenAt ? formatVNTime(new Date(draw.salesOpenAt)) : "";
+
   return {
-    salesOpenDate: op.date,
-    salesOpenTime: op.time,
-    salesCloseDate: cl.date,
-    salesCloseTime: cl.time,
-    drawDate: dr.date,
-    drawTime: dr.time,
+    salesOpenDate: openDate,
+    salesOpenTime: openTime,
+    salesCloseDate: formatVNDate(new Date(draw.salesCloseAt)),
+    salesCloseTime: formatVNTime(new Date(draw.salesCloseAt)),
+    // scheduledDrawAt luôn có (DrawDoc.drawTime) — giờ quay theo lịch
+    drawDate: formatVNDate(new Date(draw.scheduledDrawAt)),
+    drawTime: formatVNTime(new Date(draw.scheduledDrawAt)),
   };
 }
 
@@ -82,7 +75,8 @@ export function EditScheduleAction({
     const closeISO = toVNDate(data.salesCloseDate, data.salesCloseTime).toISOString();
     const drawISO = toVNDate(data.drawDate, data.drawTime).toISOString();
 
-    const originalDrawISO = draw.drawResultAt ?? "";
+    // So sánh với scheduledDrawAt để biết user có thực sự thay đổi giờ quay không
+    const originalDrawISO = draw.scheduledDrawAt;
     const body: { salesOpenAt: string; salesCloseAt: string; drawTime?: string } = {
       salesOpenAt: openISO,
       salesCloseAt: closeISO,

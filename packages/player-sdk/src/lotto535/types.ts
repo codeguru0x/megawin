@@ -38,7 +38,7 @@ export interface Lotto535SelectionInput {
    *
    * String zero-padded: `"01"` đến `"35"`.
    * Số lượng tùy kiểu chơi:
-   * - Standard / QuickPick: 5 số (hoặc 4 với MainCover4)
+   * - Standard: 5 số (hoặc 4 với MainCover4)
    * - MainCover: 6-15 số
    * - SpecialCover: 5 số
    */
@@ -49,7 +49,7 @@ export interface Lotto535SelectionInput {
    *
    * String zero-padded: `"01"` đến `"12"`.
    * Số lượng tùy kiểu chơi:
-   * - Standard / MainCover / MainCover4 / QuickPick: 1 số
+   * - Standard / MainCover / MainCover4: 1 số
    * - SpecialCover: 2-12 số
    */
   specialNumbers: string[];
@@ -87,7 +87,6 @@ export interface Lotto535BoardInput {
    * | `"mainCover4"`   | 4 chính + 1 đặc biệt     | 31       |
    * | `"mainCover"`    | 6-15 chính + 1 đặc biệt  | C(N,5)   |
    * | `"specialCover"` | 5 chính + 2-12 đặc biệt  | K        |
-   * | `"quickPick"`    | Máy chọn ngẫu nhiên      | 1        |
    */
   playType: Lotto535PlayType;
 

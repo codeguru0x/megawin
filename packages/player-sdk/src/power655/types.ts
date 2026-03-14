@@ -171,7 +171,7 @@ export interface Power655EntryResult {
   drawDate: string;
   status: string;
   amount: number;
-  result?: { winningMain: number[]; bonusNumber: number; publishedAt: string };
+  result?: { winningMain: string[]; bonusNumber: string; publishedAt: string };
   payout?: {
     winAmount: number;
     tiers: Array<{
@@ -181,5 +181,175 @@ export interface Power655EntryResult {
       amount: number;
       splitBonus?: number;
     }>;
+  };
+}
+
+// ─────────────────────────────────────────────
+// Response Types — Entry Lines
+// ─────────────────────────────────────────────
+
+/**
+ * Thông tin chi tiết 1 line trong entry Power 6/55.
+ *
+ * Mỗi line là 6 số chính được expand từ board (Standard = 1 line, BaoN = C(N,6) lines).
+ * `matchResult` chỉ có sau khi kỳ quay đã settle.
+ */
+export interface Power655LineInfo {
+  /** Ký hiệu board chứa line này. VD: `"A"`, `"B"`. */
+  boardNo: string;
+  /** Vị trí line trong entry (0-based). Dùng làm cursor khi phân trang. */
+  lineIndex: number;
+  /**
+   * 6 số chính đã chọn (zero-padded `"01"`-`"55"`).
+   * VD: `["03", "11", "25", "38", "49", "55"]`.
+   */
+  main: string[];
+  /** Kết quả đối chiếu số. `undefined` nếu kỳ quay chưa kết thúc. */
+  matchResult?: {
+    /** Số lượng số chính trùng với kết quả quay (0-6). */
+    mainMatchCount: number;
+    /** Có trùng số bonus không. */
+    bonusMatched: boolean;
+    /** Hạng giải trúng. `null` nếu không trúng giải nào. */
+    tier: Power655PrizeTier | null;
+    /** Tiền thưởng của line này (VND). `0` nếu không trúng. */
+    prizeAmount: number;
+  };
+}
+
+// ─────────────────────────────────────────────
+// Response Types — Draw Results
+// ─────────────────────────────────────────────
+
+/**
+ * Thông tin giải thưởng 1 hạng trong kỳ quay Power 6/55.
+ */
+export interface Power655DrawTierPrize {
+  /**
+   * Hạng giải.
+   * - `"jackpot1"` — 6/6 số chính (Jackpot 1)
+   * - `"jackpot2"` — 5/6 + bonus (Jackpot 2)
+   * - `"tier1"` — 5/6 không bonus
+   * - `"tier2"` — 4/6
+   * - `"tier3"` — 3/6
+   */
+  tier: Power655PrizeTier;
+  /** Tổng số người trúng hạng này. */
+  winnerCount: number;
+  /** Tổng tiền thưởng đã trao cho hạng này (VND). */
+  prizeAmount: number;
+}
+
+/**
+ * Tóm tắt kết quả 1 kỳ quay Power 6/55 (dùng trong danh sách).
+ *
+ * Trả về bởi `client.power655.listDrawResults()`.
+ *
+ * @example
+ * ```ts
+ * const { draws } = await client.power655.listDrawResults({ size: 10 });
+ * for (const draw of draws) {
+ *   const main = draw.result.winningMain.join(", ");
+ *   const bonus = draw.result.bonusNumber;
+ *   console.log(`[${draw.drawId}] ${main} | Bonus: ${bonus}`);
+ *   console.log(`  JP1: ${draw.jackpot.closingJackpot1.toLocaleString()} VND`);
+ * }
+ * ```
+ */
+export interface Power655DrawResultSummary {
+  /** ID kỳ quay. Format `YYYY-MM-DD.NNN`. VD: `"2026-03-07.001"`. */
+  drawId: string;
+  /** Ngày quay (YYYY-MM-DD). */
+  drawDate: string;
+  /** Số thứ tự kỳ quay trong ngày (1-based). */
+  drawNo: number;
+  /** Giờ quay. VD: `"18:00"`. */
+  drawTime: string;
+  /** Kết quả quay số. */
+  result: {
+    /**
+     * 6 số chính kết quả (zero-padded `"01"`-`"55"`).
+     * VD: `["03", "11", "25", "38", "49", "55"]`.
+     */
+    winningMain: string[];
+    /** Số bonus (zero-padded `"01"`-`"55"`). VD: `"07"`. */
+    bonusNumber: string;
+    /** Thời điểm công bố kết quả (ISO 8601). */
+    publishedAt: string;
+  };
+  /** Snapshot giá trị Jackpot của kỳ quay này. */
+  jackpot: {
+    /** Jackpot 1 mở đầu kỳ (VND). */
+    openingJackpot1: number;
+    /** Jackpot 1 kết thúc kỳ — 0 nếu có người trúng (cycle mới bắt đầu) (VND). */
+    closingJackpot1: number;
+    /** Jackpot 2 mở đầu kỳ (VND). */
+    openingJackpot2: number;
+    /** Jackpot 2 kết thúc kỳ — 0 nếu có người trúng (cycle mới bắt đầu) (VND). */
+    closingJackpot2: number;
+  };
+  /** Tham chiếu kỳ quay Vietlott tương ứng. `undefined` nếu không liên kết. */
+  vietlottRef?: {
+    drawPeriod: number;
+    drawDate: string;
+  };
+}
+
+/**
+ * Chi tiết đầy đủ kết quả 1 kỳ quay Power 6/55 bao gồm bảng giải.
+ *
+ * Trả về bởi `client.power655.getDrawResult(drawId)`.
+ *
+ * @example
+ * ```ts
+ * const draw = await client.power655.getDrawResult("2026-03-07.001");
+ * const main = draw.result.winningMain.join(", ");
+ * console.log(`Kết quả: ${main} | Bonus: ${draw.result.bonusNumber}`);
+ * for (const prize of draw.prizes) {
+ *   console.log(`  ${prize.tier}: ${prize.winnerCount} người, ${prize.prizeAmount.toLocaleString()} VND`);
+ * }
+ * ```
+ */
+export interface Power655DrawResultInfo {
+  /** ID kỳ quay. Format `YYYY-MM-DD.NNN`. VD: `"2026-03-07.001"`. */
+  drawId: string;
+  /** Ngày quay (YYYY-MM-DD). */
+  drawDate: string;
+  /** Số thứ tự kỳ quay trong ngày (1-based). */
+  drawNo: number;
+  /** Giờ quay. VD: `"18:00"`. */
+  drawTime: string;
+  /** Kết quả quay số. */
+  result: {
+    /**
+     * 6 số chính kết quả (zero-padded `"01"`-`"55"`).
+     * VD: `["03", "11", "25", "38", "49", "55"]`.
+     */
+    winningMain: string[];
+    /** Số bonus (zero-padded `"01"`-`"55"`). VD: `"07"`. */
+    bonusNumber: string;
+    /** Thời điểm công bố kết quả (ISO 8601). */
+    publishedAt: string;
+  };
+  /** Snapshot giá trị Jackpot của kỳ quay này. */
+  jackpot: {
+    /** Jackpot 1 mở đầu kỳ (VND). */
+    openingJackpot1: number;
+    /** Jackpot 1 kết thúc kỳ (VND). */
+    closingJackpot1: number;
+    /** Jackpot 2 mở đầu kỳ (VND). */
+    openingJackpot2: number;
+    /** Jackpot 2 kết thúc kỳ (VND). */
+    closingJackpot2: number;
+  };
+  /**
+   * Bảng trao giải theo hạng.
+   * Gồm 5 hạng: `jackpot1`, `jackpot2`, `tier1`, `tier2`, `tier3`.
+   */
+  prizes: Power655DrawTierPrize[];
+  /** Tham chiếu kỳ quay Vietlott. `undefined` nếu không liên kết. */
+  vietlottRef?: {
+    drawPeriod: number;
+    drawDate: string;
   };
 }

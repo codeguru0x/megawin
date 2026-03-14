@@ -247,10 +247,15 @@ export const operatorSidebarItems: NavGroup[] = [
         icon: ChessKnight,
         subItems: [
           {
+            title: "Vận hành",
+            url: "/games/bingo18/operations",
+            icon: Activity,
+            sectionLabel: "Vận hành",
+          },
+          {
             title: "Kỳ quay",
             url: "/games/bingo18/draws",
             icon: CalendarClock,
-            sectionLabel: "Vận hành",
           },
           {
             title: "Cấu hình game",
@@ -271,10 +276,15 @@ export const operatorSidebarItems: NavGroup[] = [
         icon: ChessRook,
         subItems: [
           {
+            title: "Vận hành",
+            url: "/games/max3d/operations",
+            icon: Activity,
+            sectionLabel: "Vận hành",
+          },
+          {
             title: "Kỳ quay",
             url: "/games/max3d/draws",
             icon: CalendarClock,
-            sectionLabel: "Vận hành",
           },
           {
             title: "Cấu hình game",
@@ -295,10 +305,15 @@ export const operatorSidebarItems: NavGroup[] = [
         icon: ChessPawn,
         subItems: [
           {
+            title: "Vận hành",
+            url: "/games/max3dpro/operations",
+            icon: Activity,
+            sectionLabel: "Vận hành",
+          },
+          {
             title: "Kỳ quay",
             url: "/games/max3dpro/draws",
             icon: CalendarClock,
-            sectionLabel: "Vận hành",
           },
           {
             title: "Cấu hình game",

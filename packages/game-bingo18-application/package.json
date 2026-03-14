@@ -50,6 +50,10 @@
       "types": "./src/use-cases/player/index.ts",
       "default": "./dist/use-cases/player/index.js"
     },
+    "./use-cases/operations": {
+      "types": "./src/use-cases/operations/index.ts",
+      "default": "./dist/use-cases/operations/index.js"
+    },
     "./repos": {
       "types": "./src/infras/repos/index.ts",
       "default": "./dist/infras/repos/index.js"

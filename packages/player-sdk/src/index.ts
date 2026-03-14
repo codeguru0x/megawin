@@ -51,7 +51,8 @@ export type {
   Mega645PlaceBetResponse,
   Mega645CurrentDrawResponse,
   Mega645JackpotResponse,
-  Mega645ListTicketsParams,
+  Mega645ListPendingTicketsParams,
+  Mega645ListAllTicketsParams,
   Mega645ListTicketsResponse,
   Mega645TicketEntriesResponse,
   Mega645EntryLinesResponse,
@@ -63,36 +64,51 @@ export type {
   Power655PlaceBetResponse,
   Power655CurrentDrawResponse,
   Power655JackpotResponse,
-  Power655ListTicketsParams,
+  Power655ListPendingTicketsParams,
+  Power655ListAllTicketsParams,
   Power655ListTicketsResponse,
   Power655TicketEntriesResponse,
   Power655EntryLinesResponse,
+  Power655EntryLinesParams,
+  Power655ListDrawResultsParams,
+  Power655ListDrawResultsResponse,
 } from "./apis/power655";
 export type {
   Max3dApi,
   Max3dPlaceBetResponse,
   Max3dCurrentDrawResponse,
-  Max3dListTicketsParams,
+  Max3dListPendingTicketsParams,
+  Max3dListAllTicketsParams,
   Max3dListTicketsResponse,
   Max3dTicketEntriesResponse,
   Max3dEntryLinesResponse,
+  Max3dEntryLinesParams,
+  Max3dListDrawResultsParams,
+  Max3dListDrawResultsResponse,
 } from "./apis/max3d";
 export type {
   Max3dproApi,
   Max3dproPlaceBetResponse,
   Max3dproCurrentDrawResponse,
-  Max3dproListTicketsParams,
+  Max3dproListPendingTicketsParams,
+  Max3dproListAllTicketsParams,
   Max3dproListTicketsResponse,
   Max3dproTicketEntriesResponse,
   Max3dproEntryLinesResponse,
+  Max3dproEntryLinesParams,
+  Max3dproListDrawResultsParams,
+  Max3dproListDrawResultsResponse,
 } from "./apis/max3dpro";
 export type {
   Bingo18Api,
   Bingo18PlaceBetResponse,
   Bingo18CurrentDrawResponse,
-  Bingo18ListTicketsParams,
+  Bingo18ListPendingTicketsParams,
+  Bingo18ListAllTicketsParams,
   Bingo18ListTicketsResponse,
   Bingo18TicketEntriesResponse,
+  Bingo18ListDrawResultsParams,
+  Bingo18ListDrawResultsResponse,
 } from "./apis/bingo18";
 
 // ---- Game sub-types (referenced by API responses, needed for docs) ----
@@ -111,6 +127,10 @@ export type {
   Bingo18TenantConfig,
   Bingo18DrawInfo,
   Bingo18TicketSummary,
+  Bingo18DrawBasicPrize,
+  Bingo18DrawSideBetPrize,
+  Bingo18DrawResultSummary,
+  Bingo18DrawResultInfo,
 } from "./bingo18";
 export { Bingo18TripleKind, Bingo18BigSmallBet } from "./bingo18";
 export type {
@@ -142,6 +162,10 @@ export type {
   Power655DrawInfo,
   Power655TicketSummary,
   Power655EntryResult,
+  Power655LineInfo,
+  Power655DrawTierPrize,
+  Power655DrawResultSummary,
+  Power655DrawResultInfo,
 } from "./power655";
 export { Power655PlayType, Power655PrizeTier } from "./power655";
 export type {
@@ -156,6 +180,10 @@ export type {
   Max3dTenantConfig,
   Max3dDrawInfo,
   Max3dTicketSummary,
+  Max3dLineInfo,
+  Max3dDrawTierPrize,
+  Max3dDrawResultSummary,
+  Max3dDrawResultInfo,
 } from "./max3d";
 export { Max3dPlayMode, Max3dPlayType } from "./max3d";
 export type {
@@ -167,6 +195,10 @@ export type {
   Max3dproTenantConfig,
   Max3dproDrawInfo,
   Max3dproTicketSummary,
+  Max3dproLineInfo,
+  Max3dproDrawTierPrize,
+  Max3dproDrawResultSummary,
+  Max3dproDrawResultInfo,
 } from "./max3dpro";
 export { Max3dproPlayMode } from "./max3dpro";
 export type { PlayerApi, PlayerBalance } from "./apis/player";

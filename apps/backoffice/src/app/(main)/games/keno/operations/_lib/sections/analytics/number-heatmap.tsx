@@ -14,6 +14,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatNumber, formatCurrency } from "@megawin/shared/utils/number";
 import { BarChart2, Trophy } from "lucide-react";
+import {
+  HEATMAP_BADGE_SIZE,
+  HEATMAP_BADGE_TEXT,
+  HEATMAP_CELL_PT,
+  HEATMAP_CELL_DATA_SIZE,
+  HEATMAP_CELL_SUB_SIZE,
+} from "@/components/games/shared/game-number-tokens";
+import type { TenantRow } from "../../types";
 import type { TopComboItem } from "../../use-operations";
 
 // ─── Keno Number Colors — orange theme ───────────────────────────────────────
@@ -24,23 +32,18 @@ const KENO_MUTED_BG = "bg-muted/40 text-muted-foreground";
 
 // ─── NumberBadge — Keno ───────────────────────────────────────────────────────
 
-export function NumberBadge({
-  num,
-  size = "sm",
-  muted = false,
-}: {
-  num: string;
-  size?: "xs" | "sm" | "md";
-  muted?: boolean;
-}) {
-  const sizeClass =
-    size === "xs" ? "size-4 text-[9px]" : size === "sm" ? "size-5 text-[10px]" : "size-6 text-xs";
-
+/**
+ * Badge tròn hiển thị số Keno.
+ * Size đồng nhất: size-6 (24px) — dùng shared token HEATMAP_BADGE_SIZE.
+ * Grid 10×8 = 80 ô, mỗi ô sẽ cao hơn nhưng badge rõ hơn.
+ */
+export function NumberBadge({ num, muted = false }: { num: string; muted?: boolean }) {
   return (
     <span
       className={cn(
         "inline-flex items-center justify-center rounded-full font-bold tabular-nums leading-none shrink-0 text-white",
-        sizeClass,
+        HEATMAP_BADGE_SIZE,
+        HEATMAP_BADGE_TEXT,
         muted ? KENO_MUTED_BG : KENO_BG,
       )}
     >
@@ -85,21 +88,33 @@ function NumberCell({
               "border-r border-b border-border/50",
               isLastCol && "border-r-0",
               isLastRow && "border-b-0",
-              "pt-6 pb-1.5 px-0.5",
+              // HEATMAP_CELL_PT (pt-8): badge size-6 (24px) absolute top-1 + khoảng cách
+              HEATMAP_CELL_PT,
+              "pb-1.5 px-1",
             )}
           >
             <span className="absolute top-1 left-1">
-              <NumberBadge num={n.number} size="xs" muted={isEmpty} />
+              <NumberBadge num={n.number} muted={isEmpty} />
             </span>
             <div className="flex flex-col items-center gap-0.5">
               {isEmpty ? (
                 <span className="text-[9px] text-muted-foreground/20 tabular-nums">–</span>
               ) : (
                 <>
-                  <span className="text-[9px] font-bold tabular-nums leading-tight text-foreground">
+                  <span
+                    className={cn(
+                      HEATMAP_CELL_DATA_SIZE,
+                      "font-bold tabular-nums leading-tight text-foreground",
+                    )}
+                  >
                     {formatCurrency(n.amount, { million: "tr", thousand: "k", decimals: 0 })}
                   </span>
-                  <span className="text-[7px] tabular-nums leading-none text-muted-foreground">
+                  <span
+                    className={cn(
+                      HEATMAP_CELL_SUB_SIZE,
+                      "tabular-nums leading-none text-muted-foreground",
+                    )}
+                  >
                     {formatNumber(n.count)}x
                   </span>
                 </>
@@ -115,7 +130,7 @@ function NumberCell({
           className="bg-popover text-popover-foreground border border-border shadow-lg rounded-xl px-3 py-2.5"
         >
           <div className="flex items-center gap-2 mb-2">
-            <NumberBadge num={n.number} size="sm" muted={isEmpty} />
+            <NumberBadge num={n.number} muted={isEmpty} />
             <span className="text-xs font-semibold">Số {n.number}</span>
           </div>
           {isEmpty ? (
@@ -237,7 +252,7 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 flex-wrap">
                 {c.numbers.map((n: string) => (
-                  <NumberBadge key={n} num={n} size="sm" />
+                  <NumberBadge key={n} num={n} />
                 ))}
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">
@@ -257,19 +272,68 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
   );
 }
 
+// ─── Tenant Breakdown (inline, giống Power/Mega pattern) ─────────────────────
+
+function TenantBreakdown({ tenants }: { tenants: TenantRow[] }) {
+  if (tenants.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+        <span className="size-2 rounded-full bg-orange-400/60 shrink-0" />
+        Đại lý
+      </p>
+      <div className="space-y-1">
+        {tenants.map((t) => (
+          <div
+            key={t.tenantId}
+            className="grid items-center gap-x-3 rounded-lg border border-border/40 bg-muted/10 px-3 py-2"
+            style={{ gridTemplateColumns: "6rem 5rem 5rem 5.5rem 1fr" }}
+          >
+            <span className="text-xs font-medium truncate">{t.tenantId}</span>
+            <span className="text-[11px] tabular-nums text-muted-foreground text-right">
+              {formatNumber(t.entries)} ent
+            </span>
+            <span className="text-[11px] tabular-nums text-muted-foreground text-right">
+              {formatNumber(t.players)} ng
+            </span>
+            <span className="text-xs tabular-nums font-semibold text-foreground text-right">
+              {formatNumber(t.revenue)}
+            </span>
+            <div className="flex items-center gap-2">
+              <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-orange-500/60 transition-all"
+                  style={{ width: `${t.pct}%` }}
+                />
+              </div>
+              <span className="text-[11px] font-medium text-muted-foreground tabular-nums w-8 text-right shrink-0">
+                {t.pct.toFixed(0)}%
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Public Export ────────────────────────────────────────────────────────────
 
 /**
  * NumberHeatmap — Keno.
  * Grid 10×8 = 80 số. Chỉ pick1-10 có số cụ thể.
+ * TenantBreakdown được nhúng bên trong (giống Power/Mega pattern).
  */
 export function NumberHeatmap({
   numbers,
   combos,
+  tenants,
   drawId,
 }: {
   numbers: NumberFreqItem[];
   combos?: TopComboItem[];
+  tenants?: TenantRow[];
   drawId?: string;
 }) {
   const totalBets = numbers.reduce((a, n) => a + n.count, 0);
@@ -290,6 +354,11 @@ export function NumberHeatmap({
       <CardContent className="space-y-4 pt-0">
         <KenoGrid numbers={numbers} />
         {combos && <TopCombos combos={combos} />}
+        {tenants && tenants.length > 0 && (
+          <div className="border-t pt-3">
+            <TenantBreakdown tenants={tenants} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

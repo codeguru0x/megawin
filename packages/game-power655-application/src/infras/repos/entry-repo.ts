@@ -1071,7 +1071,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   /**
    * Phân bổ cược theo kiểu chơi (PlayType).
-   * Power 6/55 có nhiều kiểu chơi bao (bao7-bao18) + standard, quickPick.
+   * Power 6/55 có nhiều kiểu chơi bao (bao5, bao7-bao18) + standard, quickPick.
    */
   async aggregatePlayTypeDistribution(opts: { financialDate: string; drawId?: string }): Promise<
     Array<{

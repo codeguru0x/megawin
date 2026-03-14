@@ -2,15 +2,13 @@
  * Power 6/55 – Play Types & Line Counting
  *
  * Standard: chọn đúng 6 số → 1 line
- * Bao N: chọn N số (7-18) → C(N,6) lines
+ * Bao 5: chọn 5 số, HT ghép 50 số còn lại (55-5=50) → 50 lines
+ * Bao N (7-18): chọn N số → C(N,6) lines
  * QuickPick: random 6 số → 1 line
  */
 
 import { PlayType } from "../entities/enums";
-import {
-  POWER655_MAIN_COUNT,
-  VALID_MAIN_NUMBER_SET,
-} from "../entities/types";
+import { POWER655_MAIN_COUNT, VALID_MAIN_NUMBER_SET } from "../entities/types";
 
 // ─── Combinatorics ───
 
@@ -34,11 +32,7 @@ export interface PlayTypeConfig {
   multiplier: number;
 }
 
-function baoConfig(
-  playType: PlayType,
-  label: string,
-  mainCount: number
-): PlayTypeConfig {
+function baoConfig(playType: PlayType, label: string, mainCount: number): PlayTypeConfig {
   const lineCount = combination(mainCount, POWER655_MAIN_COUNT);
   return { playType, label, mainCount, lineCount, multiplier: lineCount };
 }
@@ -50,6 +44,17 @@ export const PLAY_TYPE_CONFIGS: Record<PlayType, PlayTypeConfig> = {
     mainCount: 6,
     lineCount: 1,
     multiplier: 1,
+  },
+  /**
+   * Bao 5 đặc biệt: chọn 5 số, HT ghép lần lượt 50 số còn lại (55-5=50) → 50 lines.
+   * KHÔNG dùng C(N,6) như Bao 7-18. lineCount = POWER655_MAIN_MAX - mainCount = 55 - 5 = 50.
+   */
+  [PlayType.Bao5]: {
+    playType: PlayType.Bao5,
+    label: "Bao 5",
+    mainCount: 5,
+    lineCount: 50,
+    multiplier: 50,
   },
   [PlayType.Bao7]: baoConfig(PlayType.Bao7, "Bao 7", 7),
   [PlayType.Bao8]: baoConfig(PlayType.Bao8, "Bao 8", 8),
@@ -82,11 +87,10 @@ export function getRequiredMainCount(playType: PlayType): number {
 
 export function validateMainNumbers(
   mainNumbers: string[],
-  playType: PlayType
+  playType: PlayType,
 ): { valid: boolean; error?: string } {
   const config = PLAY_TYPE_CONFIGS[playType];
-  if (!config)
-    return { valid: false, error: `PlayType không hợp lệ: ${playType}` };
+  if (!config) return { valid: false, error: `PlayType không hợp lệ: ${playType}` };
 
   const expectedCount = config.mainCount;
   if (mainNumbers.length !== expectedCount) {

@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import {
   CircleDollarSign,
   Clock,
+  ExternalLink,
   Lock,
   Radio,
   Ticket,
@@ -11,48 +13,18 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 import { DrawStatusBadge } from "@/components/games/max3dpro/draw-status-badge";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { formatVNTime } from "@megawin/shared/utils/date";
 import type { CurrentDrawInfo } from "./use-draws";
 
-import { OpenSalesAction } from "./actions/open-sales-action";
-import { CloseSalesAction } from "./actions/close-sales-action";
-import { PublishResultAction } from "./actions/publish-result-action";
-import { TriggerSettleAction } from "./actions/trigger-settle-action";
-import { EditScheduleAction } from "./actions/edit-schedule-action";
-import { VoidDrawAction } from "./actions/void-draw-action";
-
 function formatVND(n: number) {
   if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + " tỷ";
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + " tr";
   return n.toLocaleString("vi-VN") + " ₫";
-}
-
-function canOpenSales(s: string) {
-  return s === DrawStatus.Scheduled || s === DrawStatus.SalesClosed;
-}
-function canCloseSales(s: string) {
-  return s === DrawStatus.SalesOpen;
-}
-function canPublishResult(s: string) {
-  return s === DrawStatus.SalesClosed || s === DrawStatus.Published;
-}
-function canTriggerSettle(s: string) {
-  return s === DrawStatus.Published;
-}
-function canEditSchedule(s: string) {
-  return s === DrawStatus.Scheduled || s === DrawStatus.SalesOpen;
-}
-function canVoidDraw(s: string) {
-  return (
-    s === DrawStatus.Scheduled ||
-    s === DrawStatus.SalesClosed ||
-    s === DrawStatus.Published
-  );
 }
 
 const STATUS_VISUALS: Record<
@@ -104,6 +76,13 @@ const DEFAULT_VISUAL = {
   iconColor: "text-muted-foreground",
 };
 
+/**
+ * Card hiển thị kỳ quay chính (primary/active).
+ *
+ * Các thao tác quản lý (mở/đóng bán, công bố kết quả, kết sổ, hủy kỳ...)
+ * đã được chuyển sang trang Vận hành (/games/max3dpro/operations).
+ * Card này chỉ hiển thị thông tin tổng quan + link sang trang vận hành.
+ */
 export function Max3dproPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
   const status = draw.status;
   const vis = STATUS_VISUALS[status] ?? DEFAULT_VISUAL;
@@ -123,34 +102,9 @@ export function Max3dproPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
       status === DrawStatus.Voiding ||
       status === DrawStatus.Settled);
 
-  const isTerminal =
-    status === DrawStatus.Settled ||
-    status === DrawStatus.Void ||
-    status === DrawStatus.Settling ||
-    status === DrawStatus.Voiding;
-
   return (
-    <Card
-      className={cn(
-        "relative overflow-hidden border-2 shadow-lg",
-        vis.border,
-        status === DrawStatus.SalesOpen &&
-          "bg-linear-to-br from-green-50/80 via-white to-emerald-50/40 dark:from-green-950/30 dark:via-background dark:to-emerald-950/20 shadow-green-200/30 dark:shadow-green-900/20",
-        status === DrawStatus.SalesClosed &&
-          "bg-linear-to-br from-amber-50/80 via-white to-orange-50/40 dark:from-amber-950/30 dark:via-background dark:to-orange-950/20 shadow-amber-200/30 dark:shadow-amber-900/20",
-        status === DrawStatus.Published &&
-          "bg-linear-to-br from-violet-50/80 via-white to-purple-50/40 dark:from-violet-950/30 dark:via-background dark:to-purple-950/20 shadow-violet-200/30 dark:shadow-violet-900/20",
-        status === DrawStatus.Scheduled &&
-          "bg-linear-to-br from-slate-50/80 via-white to-slate-50/40 dark:from-slate-950/30 dark:via-background dark:to-slate-950/20 shadow-slate-200/30 dark:shadow-slate-900/20",
-        status === DrawStatus.Settling &&
-          "bg-linear-to-br from-orange-50/80 via-white to-red-50/40 dark:from-orange-950/30 dark:via-background dark:to-red-950/20 shadow-orange-200/30 dark:shadow-orange-900/20",
-        status === DrawStatus.Voiding &&
-          "bg-linear-to-br from-red-50/80 via-white to-rose-50/40 dark:from-red-950/30 dark:via-background dark:to-rose-950/20 shadow-red-200/30 dark:shadow-red-900/20"
-      )}
-    >
-      <div
-        className={`absolute inset-x-0 top-0 h-1.5 bg-linear-to-r ${vis.accent}`}
-      />
+    <Card className={`relative overflow-hidden border-2 shadow-lg ${vis.border}`}>
+      <div className={`absolute inset-x-0 top-0 h-1.5 bg-linear-to-r ${vis.accent}`} />
 
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-4">
@@ -161,26 +115,30 @@ export function Max3dproPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
               <Radio className={`size-5 ${vis.iconColor}`} />
               <span className="absolute -right-1 -top-1 flex size-3">
                 <span
-                  className={cn(
-                    "absolute inline-flex size-full animate-ping rounded-full opacity-75",
-                    status === DrawStatus.SalesOpen && "bg-green-400",
-                    status === DrawStatus.SalesClosed && "bg-amber-400",
-                    status === DrawStatus.Published && "bg-violet-400",
-                    status === DrawStatus.Settling && "bg-orange-400",
-                    status === DrawStatus.Voiding && "bg-red-400",
-                    status === DrawStatus.Scheduled && "bg-slate-400"
-                  )}
+                  className={`absolute inline-flex size-full animate-ping rounded-full opacity-75 ${
+                    status === DrawStatus.SalesOpen
+                      ? "bg-green-400"
+                      : status === DrawStatus.SalesClosed
+                        ? "bg-amber-400"
+                        : status === DrawStatus.Published
+                          ? "bg-violet-400"
+                          : status === DrawStatus.Settling
+                            ? "bg-orange-400"
+                            : "bg-slate-400"
+                  }`}
                 />
                 <span
-                  className={cn(
-                    "relative inline-flex size-3 rounded-full",
-                    status === DrawStatus.SalesOpen && "bg-green-500",
-                    status === DrawStatus.SalesClosed && "bg-amber-500",
-                    status === DrawStatus.Published && "bg-violet-500",
-                    status === DrawStatus.Settling && "bg-orange-500",
-                    status === DrawStatus.Voiding && "bg-red-500",
-                    status === DrawStatus.Scheduled && "bg-slate-500"
-                  )}
+                  className={`relative inline-flex size-3 rounded-full ${
+                    status === DrawStatus.SalesOpen
+                      ? "bg-green-500"
+                      : status === DrawStatus.SalesClosed
+                        ? "bg-amber-500"
+                        : status === DrawStatus.Published
+                          ? "bg-violet-500"
+                          : status === DrawStatus.Settling
+                            ? "bg-orange-500"
+                            : "bg-slate-500"
+                  }`}
                 />
               </span>
             </div>
@@ -193,9 +151,7 @@ export function Max3dproPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
               </div>
               <p className="mt-0.5 font-mono text-xs text-muted-foreground">
                 {draw.drawId} · {draw.drawDate} · Quay lúc{" "}
-                <span className="font-semibold text-foreground">
-                  {drawTime}
-                </span>
+                <span className="font-semibold text-foreground">{drawTime}</span>
               </p>
             </div>
           </div>
@@ -212,7 +168,7 @@ export function Max3dproPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-4">
         {showStats && (
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex items-center gap-3 rounded-xl border bg-white/80 dark:bg-card p-3.5">
@@ -243,21 +199,15 @@ export function Max3dproPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border bg-white/60 dark:bg-muted/40 px-4 py-3">
           <div className="flex items-center gap-2">
             <Unlock className="size-4 text-green-500" />
-            <span className="text-xs font-medium text-muted-foreground">
-              Mở bán
-            </span>
+            <span className="text-xs font-medium text-muted-foreground">Mở bán</span>
             <span className="rounded-md bg-background px-2 py-0.5 font-mono text-sm font-semibold tabular-nums shadow-sm">
-              {draw.sales.openAt
-                ? formatVNTime(new Date(draw.sales.openAt))
-                : "—"}
+              {draw.sales.openAt ? formatVNTime(new Date(draw.sales.openAt)) : "—"}
             </span>
           </div>
           <Separator orientation="vertical" className="hidden h-5 sm:block" />
           <div className="flex items-center gap-2">
             <Lock className="size-4 text-red-500" />
-            <span className="text-xs font-medium text-muted-foreground">
-              Đóng bán
-            </span>
+            <span className="text-xs font-medium text-muted-foreground">Đóng bán</span>
             <span className="rounded-md bg-background px-2 py-0.5 font-mono text-sm font-semibold tabular-nums shadow-sm">
               {formatVNTime(new Date(draw.sales.closeAt))}
             </span>
@@ -265,79 +215,53 @@ export function Max3dproPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
           <Separator orientation="vertical" className="hidden h-5 sm:block" />
           <div className="flex items-center gap-2">
             <Clock className="size-4 text-blue-500" />
-            <span className="text-xs font-medium text-muted-foreground">
-              Quay số
-            </span>
+            <span className="text-xs font-medium text-muted-foreground">Quay số</span>
             <span className="rounded-md bg-background px-2 py-0.5 font-mono text-sm font-semibold tabular-nums shadow-sm">
               {drawTime}
             </span>
           </div>
         </div>
 
-        {!isTerminal && (
-          <div className="flex items-center justify-between border-t pt-4">
-            <div className="flex flex-wrap items-center gap-2">
-              {canOpenSales(status) && (
-                <OpenSalesAction draw={draw} disabled={false} />
-              )}
-              {canCloseSales(status) && (
-                <CloseSalesAction draw={draw} disabled={false} />
-              )}
-              {canPublishResult(status) && (
-                <PublishResultAction draw={draw} disabled={false} />
-              )}
-              {canTriggerSettle(status) && (
-                <TriggerSettleAction draw={draw} disabled={false} />
-              )}
-              {canEditSchedule(status) && (
-                <EditScheduleAction draw={draw} disabled={false} />
-              )}
-            </div>
-            {canVoidDraw(status) && (
-              <VoidDrawAction draw={draw} disabled={false} />
-            )}
-          </div>
-        )}
+        {/* Link sang trang vận hành để thực hiện các thao tác */}
+        <div className="flex items-center justify-end border-t pt-3">
+          <Button variant="outline" size="sm" asChild className="gap-1.5">
+            <Link href={`/games/max3dpro/operations?draw=${draw.drawId}`}>
+              <ExternalLink className="size-3.5" />
+              Quản lý trên trang Vận hành
+            </Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
 }
 
+/**
+ * Card hiển thị kỳ quay trong hàng chờ (queue).
+ *
+ * Các thao tác quản lý đã chuyển sang trang Vận hành.
+ */
 export function Max3dproQueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
   const status = draw.status;
   const vis = STATUS_VISUALS[status] ?? DEFAULT_VISUAL;
   const drawTime = formatVNTime(new Date(draw.drawTime));
 
-  const isTerminal =
-    status === DrawStatus.Settled ||
-    status === DrawStatus.Void ||
-    status === DrawStatus.Settling ||
-    status === DrawStatus.Voiding;
-
   return (
     <Card className={`relative overflow-hidden ${vis.border}`}>
-      <div
-        className={`absolute inset-x-0 top-0 h-0.5 bg-linear-to-r ${vis.accent}`}
-      />
+      <div className={`absolute inset-x-0 top-0 h-0.5 bg-linear-to-r ${vis.accent}`} />
 
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div
-              className={`flex size-8 items-center justify-center rounded-lg ${vis.iconBg}`}
-            >
+            <div className={`flex size-8 items-center justify-center rounded-lg ${vis.iconBg}`}>
               <Radio className={`size-3.5 ${vis.iconColor}`} />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-semibold text-foreground">
-                  Kỳ {draw.drawNo}
-                </span>
+                <span className="text-sm font-semibold text-foreground">Kỳ {draw.drawNo}</span>
                 <DrawStatusBadge status={status} />
               </div>
-              <p className="font-mono text-[11px] text-muted-foreground">
-                {draw.drawId}
-              </p>
+              <p className="font-mono text-[11px] text-muted-foreground">{draw.drawId}</p>
             </div>
           </div>
         </div>
@@ -351,35 +275,17 @@ export function Max3dproQueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
             <Clock className="size-3 text-blue-400" />
             <span className="font-semibold text-foreground">{drawTime}</span>
           </span>
-          <span className="ml-auto text-[10px] text-muted-foreground/60">
-            {draw.drawDate}
-          </span>
+          <span className="ml-auto text-[10px] text-muted-foreground/60">{draw.drawDate}</span>
         </div>
 
-        {!isTerminal && (
-          <div className="flex items-center justify-between border-t pt-3">
-            <div className="flex flex-wrap items-center gap-1.5">
-              {canOpenSales(status) && (
-                <OpenSalesAction draw={draw} disabled={false} />
-              )}
-              {canCloseSales(status) && (
-                <CloseSalesAction draw={draw} disabled={false} />
-              )}
-              {canPublishResult(status) && (
-                <PublishResultAction draw={draw} disabled={false} />
-              )}
-              {canTriggerSettle(status) && (
-                <TriggerSettleAction draw={draw} disabled={false} />
-              )}
-              {canEditSchedule(status) && (
-                <EditScheduleAction draw={draw} disabled={false} />
-              )}
-            </div>
-            {canVoidDraw(status) && (
-              <VoidDrawAction draw={draw} disabled={false} />
-            )}
-          </div>
-        )}
+        <div className="flex justify-end border-t pt-2">
+          <Button variant="ghost" size="sm" asChild className="gap-1.5 h-7 text-xs">
+            <Link href={`/games/max3dpro/operations?draw=${draw.drawId}`}>
+              <ExternalLink className="size-3" />
+              Vận hành →
+            </Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

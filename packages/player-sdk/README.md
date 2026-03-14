@@ -257,7 +257,6 @@ for (const prize of detail.prizes) {
 | `"mainCover4"`   | 4 chính + 1 đặc biệt    | 31       |
 | `"mainCover"`    | 6–15 chính + 1 đặc biệt | C(N,5)   |
 | `"specialCover"` | 5 chính + 2–12 đặc biệt | K        |
-| `"quickPick"`    | Máy chọn ngẫu nhiên     | 1        |
 
 ### `client.mega645` — Game Mega 6/45
 

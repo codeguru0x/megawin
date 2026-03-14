@@ -58,15 +58,22 @@ export type PrizeTier = (typeof PrizeTier)[keyof typeof PrizeTier];
  * Loại hình chơi Power 6/55.
  *
  * - Standard: chọn đúng 6 số → 1 bộ số dự thưởng
- * - Bao N: chọn N số (7-18), hệ thống tạo tất cả tổ hợp C(N,6) bộ số
+ * - Bao 5: chọn 5 số, hệ thống ghép lần lượt 50 số còn lại (55-5) → 50 bộ số
+ * - Bao N (7-18): chọn N số, hệ thống tạo tất cả tổ hợp C(N,6) bộ số
  * - QuickPick: hệ thống random 6 số → 1 bộ số dự thưởng
  *
  * Giá vé = unitPrice × số bộ số × số kỳ quay.
+ * Ví dụ: Bao 5 = 50 bộ × 10.000đ = 500.000đ/kỳ.
  * Ví dụ: Bao 7 = C(7,6) = 7 bộ × 10.000đ = 70.000đ/kỳ.
  */
 export const PlayType = {
   /** Cơ bản: chọn đúng 6 số → 1 bộ số dự thưởng. */
   Standard: "standard",
+  /**
+   * Bao 5: chọn 5 số, hệ thống ghép lần lượt 50 số còn lại (55-5=50) → 50 bộ số.
+   * Khác Bao 7-18: không dùng tổ hợp C(N,6) mà ghép từng số trong 50 số còn lại.
+   */
+  Bao5: "bao5",
   /** Bao 7: chọn 7 số → C(7,6) = 7 bộ số. */
   Bao7: "bao7",
   /** Bao 8: chọn 8 số → C(8,6) = 28 bộ số. */

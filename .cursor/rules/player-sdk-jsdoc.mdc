@@ -35,8 +35,8 @@ All public exports MUST have complete JSDoc. Internal code marked `@internal` is
 
 ### Enum constants MUST have
 
-- JSDoc on the const object (group description)
-- Inline comment or JSDoc on each value explaining its meaning
+- JSDoc on the const object (group description) with a table of values + meanings
+- Comment or JSDoc on each value explaining its meaning
 
 ## DrawId Format Convention
 
@@ -73,6 +73,118 @@ Khi viết JSDoc `ticketNo` property cho từng game, PHẢI dùng đúng prefix
 - Keno: `/** Mã vé hiển thị cho người chơi. VD: \`"KENO-20260307-00001"\`. */`
 - Lotto 5/35: `/** Mã vé hiển thị cho người chơi. VD: \`"L535-20260307-00008"\`. */`
 
+## Changelog Requirement
+
+**Mỗi lần release SDK mới, PHẢI cập nhật `packages/player-sdk/CHANGELOG.md` TRƯỚC KHI build.**
+
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Versioning: [Semantic Versioning](https://semver.org/).
+
+### Quy tắc ghi changelog
+
+- **Added** — API endpoint mới, type mới, enum value mới
+- **Changed** — Thay đổi type hiện có (breaking nếu ảnh hưởng consumer), thay đổi behavior
+- **Deprecated** — Tính năng sắp bị xóa (phải kèm hướng dẫn alternative)
+- **Removed** — Xóa hẳn API, type, enum value (BREAKING)
+- **Fixed** — Sửa lỗi type mismatch giữa SDK và handler
+
+Mọi breaking change PHẢI có **Migration Guide** section trong changelog entry.
+
+### BREAKING change là khi nào?
+
+1. Đổi tên/xóa field trong response interface đang được export
+2. Thêm required field vào request input interface
+3. Đổi kiểu dữ liệu của field (VD: `number[]` → `string[]`)
+4. Xóa enum value
+5. Đổi tên method trong `*Api` interface
+
+### Cập nhật phiên bản
+
+- Bump `version` trong `packages/player-sdk/package.json`
+- PATCH: chỉ sửa lỗi type, docs, không thay đổi interface
+- MINOR: thêm API/type mới, không breaking change
+- MAJOR: có breaking change
+
+---
+
+## API Location Map — Vị trí chính xác các API
+
+Dùng bảng này để tra cứu nhanh khi cần kiểm tra hoặc đồng bộ SDK với handler.
+
+### Handler Location (api-player)
+
+```
+apps/api-player/src/handlers/{game}/{action}.ts
+```
+
+| Game | Handler dir |
+|---|---|
+| Keno | `apps/api-player/src/handlers/keno/` |
+| Lotto 5/35 | `apps/api-player/src/handlers/lotto535/` |
+| Mega 6/45 | `apps/api-player/src/handlers/mega645/` |
+| Power 6/55 | `apps/api-player/src/handlers/power655/` |
+| Max 3D | `apps/api-player/src/handlers/max3d/` |
+| Max 3D Pro | `apps/api-player/src/handlers/max3dpro/` |
+| Bingo 18 | `apps/api-player/src/handlers/bingo18/` |
+
+**Action files (đặt tên chuẩn):**
+- `place-bet.ts` — POST bets
+- `get-game-config.ts` — GET config
+- `get-current-draw.ts` — GET draws/current
+- `get-jackpot.ts` — GET jackpot (nếu có)
+- `list-pending-tickets.ts` — GET tickets/pending
+- `list-tickets.ts` — GET tickets
+- `get-ticket-entries.ts` — GET tickets/{id}/entries
+- `get-entry-lines.ts` — GET entries/{id}/lines (nếu có)
+- `list-draw-results.ts` — GET draw-results
+- `get-draw-result.ts` — GET draw-results/{drawId}
+
+### DTO Location (use-case layer)
+
+Input/output DTO của từng game:
+```
+packages/game-{game}-application/src/use-cases/player/dto/player.dto.ts
+```
+
+| Game | DTO file |
+|---|---|
+| Keno | `packages/game-keno-application/src/use-cases/player/dto/player.dto.ts` |
+| Lotto 5/35 | `packages/game-lotto535-application/src/use-cases/player/dto/player.dto.ts` |
+| Mega 6/45 | `packages/game-mega645-application/src/use-cases/player/dto/player.dto.ts` |
+| Power 6/55 | `packages/game-power655-application/src/use-cases/player/dto/player.dto.ts` |
+| Max 3D | `packages/game-max3d-application/src/use-cases/player/dto/player.dto.ts` |
+| Max 3D Pro | `packages/game-max3dpro-application/src/use-cases/player/dto/player.dto.ts` |
+| Bingo 18 | `packages/game-bingo18-application/src/use-cases/player/dto/player.dto.ts` |
+
+### SDK Source Location
+
+```
+packages/player-sdk/src/
+├── endpoints.ts              ← URL paths registry cho toàn bộ API
+├── index.ts                  ← Main exports cho @megawin/player-sdk
+├── client.ts                 ← createPlayerClient factory
+├── apis/{game}.ts            ← {Game}Api interface + create{Game}Api factory
+└── {game}/
+    ├── enums.ts              ← PlayType, PrizeTier enums
+    ├── types.ts              ← Domain interfaces (input/response)
+    └── index.ts              ← export * from "./enums"; export * from "./types"
+```
+
+### Quy trình đồng bộ SDK ↔ Handler
+
+Khi có thay đổi ở handler:
+
+1. **Đọc handler** `apps/api-player/src/handlers/{game}/{action}.ts` — xem Zod schema input/output
+2. **Đọc DTO** `packages/game-{game}-application/src/use-cases/player/dto/player.dto.ts` — xem output type chính xác
+3. **Cập nhật** `packages/player-sdk/src/{game}/types.ts` và `packages/player-sdk/src/apis/{game}.ts`
+4. **Cập nhật** `packages/player-sdk/src/endpoints.ts` nếu có path mới
+5. **Cập nhật** `packages/player-sdk/src/index.ts` nếu có type mới cần export
+6. **Ghi changelog** `packages/player-sdk/CHANGELOG.md`
+7. **Bump version** `packages/player-sdk/package.json`
+8. **Verify**: `pnpm --filter @megawin/player-sdk check-types`
+
+---
+
 ## README.md Structure & Conventions
 
 `README.md` là trang chủ của TypeDoc — mục đích duy nhất là giúp tenant cài đặt và bắt đầu ngay.
@@ -90,6 +202,7 @@ Khi viết JSDoc `ticketNo` property cho từng game, PHẢI dùng đúng prefix
 9. **Token Storage** — bảng storage options + code examples
 10. **Tương thích** — browser/RN/Node versions
 11. **Downloads** — bảng links
+12. **Changelog** — link `[Changelog](./CHANGELOG.md)` để tenant track breaking changes
 
 ### Download links (luôn dùng đúng links này)
 
@@ -191,6 +304,8 @@ export interface KenoTicketSummary {
 - Mention `client.auth` or `client.api` in README — too advanced, refer to TypeDoc
 - Hardcode a specific game in the Error Handling section of README
 - Include `getBetHistory` or `getGameResult` in README until those endpoints exist
+- Use `number[]` for lottery numbers that are zero-padded strings — always use `string[]`
+- Forget to update CHANGELOG.md when adding/modifying/removing APIs
 
 ---
 
@@ -208,20 +323,21 @@ src/{game}/
 ```
 
 - [ ] `enums.ts` — định nghĩa tất cả enum cần thiết (PlayType, PrizeTier, ...)
-- [ ] `types.ts` — định nghĩa TicketPurchaseInput, GameConfigResponse, DrawInfo, TicketSummary, EntryResult, ...
+- [ ] `types.ts` — định nghĩa TicketPurchaseInput, GameConfigResponse, DrawInfo, TicketSummary, EntryResult, LineInfo (nếu có), DrawResultSummary, DrawResultInfo, DrawTierPrize, ...
 - [ ] `index.ts` — `export * from "./enums"` và `export * from "./types"` (KHÔNG re-export thêm ở `types.ts`)
 - [ ] Mọi interface/property đều có JSDoc đầy đủ theo rules ở trên
 
 ### 2. API module — `src/apis/{game}.ts`
 
-- [ ] Tạo `{Game}Api` interface với đầy đủ methods: `getGameConfig`, `getCurrentDraw`, `placeBet`, `listPendingTickets`, `listTickets`, `getTicketEntries`, (`getEntryLines` nếu có), (`getJackpot` nếu có)
+- [ ] Tạo `{Game}Api` interface với đầy đủ methods: `getGameConfig`, `getCurrentDraw`, `placeBet`, `listPendingTickets`, `listTickets`, `getTicketEntries`, `getEntryLines` (nếu có), `getJackpot` (nếu có), `listDrawResults`, `getDrawResult`
 - [ ] Tạo `create{Game}Api(http)` factory function (`@internal`)
 - [ ] Mọi method có đầy đủ JSDoc: summary, `**Endpoint:**`, `@param`, `@returns`, `@throws`, `@example`
-- [ ] Export tất cả response interfaces: `{Game}PlaceBetResponse`, `{Game}CurrentDrawResponse`, `{Game}ListTicketsParams`, `{Game}ListTicketsResponse`, `{Game}TicketEntriesResponse`, ...
+- [ ] Export tất cả response interfaces: `{Game}PlaceBetResponse`, `{Game}CurrentDrawResponse`, `{Game}ListTicketsParams`, `{Game}ListTicketsResponse`, `{Game}TicketEntriesResponse`, `{Game}EntryLinesResponse` (nếu có), `{Game}EntryLinesParams` (nếu có), `{Game}ListDrawResultsParams`, `{Game}ListDrawResultsResponse`
 
 ### 3. Endpoints registry — `src/endpoints.ts`
 
 - [ ] Thêm key `{game}` vào `ENDPOINTS` object với đầy đủ paths tương ứng server
+- [ ] Bao gồm `listDrawResults` và `getDrawResult` paths nếu game hỗ trợ
 
 ### 4. Client — `src/client.ts`
 
@@ -232,8 +348,8 @@ src/{game}/
 
 ### 5. Main entry point — `src/index.ts`
 
-- [ ] `export type { {Game}Api, {Game}PlaceBetResponse, ... }` từ `./apis/{game}`
-- [ ] `export type { {Game}TicketPurchaseInput, {Game}GameConfigResponse, ... }` từ `./{game}`
+- [ ] `export type { {Game}Api, {Game}PlaceBetResponse, ..., {Game}ListDrawResultsParams, {Game}ListDrawResultsResponse }` từ `./apis/{game}`
+- [ ] `export type { {Game}TicketPurchaseInput, {Game}GameConfigResponse, ..., {Game}DrawResultSummary, {Game}DrawResultInfo, {Game}DrawTierPrize }` từ `./{game}`
 - [ ] `export { {Game}PlayType, {Game}PrizeTier, ... }` (enums không phải type, export giá trị thật)
 
 ### 6. Build config — `tsup.config.ts`
@@ -248,16 +364,24 @@ src/{game}/
 
 - [ ] Thêm `"src/{game}/index.ts"` vào mảng `entryPoints`
 
-### 8. README — `README.md`
+### 9. CHANGELOG.md
+
+- [ ] Ghi `### Added` với tất cả methods và types mới
+- [ ] Ghi `### Changed` với breaking changes (nếu có)
+- [ ] Bump version trong `package.json`
+
+### 10. README — `README.md`
 
 - [ ] Thêm row vào bảng imports: `@megawin/player-sdk/{game}` | `{Game}TicketPurchaseInput`
-- [ ] Thêm section `### client.{game} — Game {Tên Game}` với ví dụ `placeBet` và `listPendingTickets`
+- [ ] Thêm section `### client.{game} — Game {Tên Game}` với ví dụ `placeBet`, `listPendingTickets`, và `listDrawResults` / `getDrawResult` nếu có
 - [ ] Thêm prefix vào bảng TicketNo format
+- [ ] Cập nhật link Changelog nếu cần
 
-### 9. Rule này — `.cursor/rules/player-sdk-jsdoc.mdc`
+### 11. Rule này — `.cursor/rules/player-sdk-jsdoc.mdc`
 
 - [ ] Thêm game vào bảng **TicketNo Format Convention**
 - [ ] Thêm `client.{game}` vào danh sách **Per-game API sections**
+- [ ] Cập nhật **Game Registry** bảng dưới
 
 ---
 
@@ -269,8 +393,8 @@ src/{game}/
 |---|---|---|---|---|:---:|:---:|:---:|
 | `keno` | Game Keno | `KENO` | `apis/keno.ts` | `src/keno/` | — | ✅ | ✅ |
 | `lotto535` | Game Lotto 5/35 | `L535` | `apis/lotto535.ts` | `src/lotto535/` | ✅ | ✅ | ✅ |
-| `mega645` | Game Mega 6/45 | `M645` | `apis/mega645.ts` | `src/mega645/` | ✅ | ✅ | — |
-| `power655` | Game Power 6/55 | `P655` | `apis/power655.ts` | `src/power655/` | ✅ | ✅ | — |
-| `max3d` | Game Max 3D | `M3D` | `apis/max3d.ts` | `src/max3d/` | — | ✅ | — |
-| `max3dpro` | Game Max 3D Pro | `M3DP` | `apis/max3dpro.ts` | `src/max3dpro/` | — | ✅ | — |
-| `bingo18` | Game Bingo 18 | `B18` | `apis/bingo18.ts` | `src/bingo18/` | — | — | — |
+| `mega645` | Game Mega 6/45 | `M645` | `apis/mega645.ts` | `src/mega645/` | ✅ | ✅ | ✅ |
+| `power655` | Game Power 6/55 | `P655` | `apis/power655.ts` | `src/power655/` | ✅ | ✅ | ✅ |
+| `max3d` | Game Max 3D | `M3D` | `apis/max3d.ts` | `src/max3d/` | — | ✅ | ✅ |
+| `max3dpro` | Game Max 3D Pro | `M3DP` | `apis/max3dpro.ts` | `src/max3dpro/` | — | ✅ | ✅ |
+| `bingo18` | Game Bingo 18 | `B18` | `apis/bingo18.ts` | `src/bingo18/` | — | — | ✅ |

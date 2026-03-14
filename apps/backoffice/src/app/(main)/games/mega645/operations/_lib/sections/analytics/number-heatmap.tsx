@@ -13,6 +13,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatNumber, formatCurrency } from "@megawin/shared/utils/number";
 import { BarChart2, Star, Trophy } from "lucide-react";
+import {
+  HEATMAP_BADGE_SIZE,
+  HEATMAP_BADGE_TEXT,
+  HEATMAP_CELL_PT,
+  HEATMAP_CELL_DATA_SIZE,
+  HEATMAP_CELL_SUB_SIZE,
+} from "@/components/games/shared/game-number-tokens";
 import { TenantBreakdown } from "./analytics-panels";
 import type { NumberFreq, TenantRow } from "../../types";
 import type { TopComboItem } from "../../use-operations";
@@ -25,23 +32,17 @@ const MEGA_MUTED_BG = "bg-muted/40 text-muted-foreground";
 
 // ─── Number Badge ─────────────────────────────────────────────────────────────
 
-export function NumberBadge({
-  num,
-  size = "sm",
-  muted = false,
-}: {
-  num: string;
-  size?: "xs" | "sm" | "md";
-  muted?: boolean;
-}) {
-  const sizeClass =
-    size === "xs" ? "size-4 text-[9px]" : size === "sm" ? "size-5 text-[10px]" : "size-6 text-xs";
-
+/**
+ * Badge tròn hiển thị số Mega 6/45.
+ * Size đồng nhất: size-6 (24px) — dùng shared token HEATMAP_BADGE_SIZE.
+ */
+export function NumberBadge({ num, muted = false }: { num: string; muted?: boolean }) {
   return (
     <span
       className={cn(
         "inline-flex items-center justify-center rounded-full font-bold tabular-nums leading-none shrink-0 text-white",
-        sizeClass,
+        HEATMAP_BADGE_SIZE,
+        HEATMAP_BADGE_TEXT,
         muted ? MEGA_MUTED_BG : MEGA_MAIN_BG,
       )}
     >
@@ -79,21 +80,33 @@ function NumberCell({
               "border-r border-b border-border/50",
               isLastCol && "border-r-0",
               isLastRow && "border-b-0",
-              "pt-7 pb-1.5 px-1",
+              // HEATMAP_CELL_PT (pt-8): badge size-6 (24px) absolute top-1 + khoảng cách
+              HEATMAP_CELL_PT,
+              "pb-1.5 px-1",
             )}
           >
             <span className="absolute top-1 left-1">
-              <NumberBadge num={n.number} size="sm" muted={isEmpty} />
+              <NumberBadge num={n.number} muted={isEmpty} />
             </span>
             <div className="flex flex-col items-center gap-0.5">
               {isEmpty ? (
                 <span className="text-[11px] text-muted-foreground/20 tabular-nums">–</span>
               ) : (
                 <>
-                  <span className="text-[10px] font-bold tabular-nums leading-tight text-foreground">
+                  <span
+                    className={cn(
+                      HEATMAP_CELL_DATA_SIZE,
+                      "font-bold tabular-nums leading-tight text-foreground",
+                    )}
+                  >
                     {formatCurrency(n.amount, { million: "tr", thousand: "k", decimals: 1 })}
                   </span>
-                  <span className="text-[8px] tabular-nums leading-none text-muted-foreground">
+                  <span
+                    className={cn(
+                      HEATMAP_CELL_SUB_SIZE,
+                      "tabular-nums leading-none text-muted-foreground",
+                    )}
+                  >
                     {formatNumber(n.count)} lần
                   </span>
                 </>
@@ -109,7 +122,7 @@ function NumberCell({
           className="bg-popover text-popover-foreground border border-border shadow-lg rounded-xl px-3 py-2.5"
         >
           <div className="flex items-center gap-2 mb-2">
-            <NumberBadge num={n.number} size="sm" muted={isEmpty} />
+            <NumberBadge num={n.number} muted={isEmpty} />
           </div>
           {isEmpty ? (
             <p className="text-[11px] text-muted-foreground">Chưa có cược</p>
@@ -231,7 +244,7 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 flex-wrap">
                 {c.mainNumbers.map((n) => (
-                  <NumberBadge key={n} num={n} size="sm" />
+                  <NumberBadge key={n} num={n} />
                 ))}
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">

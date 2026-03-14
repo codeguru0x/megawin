@@ -20,6 +20,11 @@ export interface DrawSelectorItem {
   salesCloseAt: string;
   /** Thời điểm mở bán (ISO 8601), optional nếu chưa mở. */
   salesOpenAt?: string;
+  /**
+   * Thời điểm quay theo lịch (ISO 8601) — luôn có, dùng để pre-fill form sửa lịch.
+   * Lấy từ DrawDoc.drawTime (không phụ thuộc trạng thái kỳ).
+   */
+  scheduledDrawAt: string;
   /** Thời điểm công bố kết quả (ISO 8601), chỉ có sau khi published. */
   drawResultAt?: string;
   status: DrawStatus;

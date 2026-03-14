@@ -5,7 +5,7 @@
  *
  * Power 6/55 differences from Lotto 5/35:
  *   - Chỉ có mainNumbers (không có specialNumbers/bonus)
- *   - PlayTypes: Standard (6 số), Bao7-Bao18, QuickPick (6 số)
+ *   - PlayTypes: Standard (6 số), Bao5 (5 số → 50 lines), Bao7-Bao18 (C(N,6) lines), QuickPick (6 số)
  *   - Numbers range: 1-55
  *   - Ticket prefix: "P655"
  *   - 1 kỳ/ngày, quay thứ 3/5/7

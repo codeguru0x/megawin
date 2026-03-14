@@ -13,25 +13,22 @@
 /**
  * Kiểu chơi Lotto 5/35.
  *
- * | Value            | Mô tả                       | Số lines |
- * |------------------|-----------------------------|----------|
- * | `"standard"`     | 5 chính + 1 đặc biệt       | 1        |
- * | `"mainCover4"`   | 4 chính + 1 đặc biệt       | 31       |
- * | `"mainCover"`    | 6-15 chính + 1 đặc biệt    | C(N,5)   |
- * | `"specialCover"` | 5 chính + 2-12 đặc biệt    | K        |
- * | `"quickPick"`    | Máy chọn ngẫu nhiên         | 1        |
+ * | Value            | Mô tả                            | Số main | Số special | Số lines |
+ * |------------------|----------------------------------|---------|------------|----------|
+ * | `"standard"`     | 5 chính + 1 đặc biệt            | 5       | 1          | 1        |
+ * | `"mainCover4"`   | 4 chính + 1 đặc biệt, bỏ 1 chính | 4      | 1          | 31       |
+ * | `"mainCover"`    | 6-15 chính + 1 đặc biệt         | 6-15    | 1          | C(N,5)   |
+ * | `"specialCover"` | 5 chính + 2-12 đặc biệt         | 5       | 2-12       | K        |
  */
 export const Lotto535PlayType = {
   Standard: "standard",
   MainCover4: "mainCover4",
   MainCover: "mainCover",
   SpecialCover: "specialCover",
-  QuickPick: "quickPick",
 } as const;
 
 /** Kiểu chơi Lotto 5/35 (union type). */
-export type Lotto535PlayType =
-  (typeof Lotto535PlayType)[keyof typeof Lotto535PlayType];
+export type Lotto535PlayType = (typeof Lotto535PlayType)[keyof typeof Lotto535PlayType];
 
 // ─────────────────────────────────────────────
 // Ticket Display Status
@@ -82,5 +79,4 @@ export const Lotto535PrizeTier = {
 } as const;
 
 /** Hạng giải thưởng Lotto 5/35 (union type). */
-export type Lotto535PrizeTier =
-  (typeof Lotto535PrizeTier)[keyof typeof Lotto535PrizeTier];
+export type Lotto535PrizeTier = (typeof Lotto535PrizeTier)[keyof typeof Lotto535PrizeTier];

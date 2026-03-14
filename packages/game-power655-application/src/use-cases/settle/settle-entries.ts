@@ -4,7 +4,7 @@
  * Xử lý entries theo vòng lặp thời gian: expand → match → persist lines → bulk settle.
  *
  * Pipeline cho mỗi entry:
- *   1. Expand boards → lines (C(N,6) nếu Bao, 1 nếu Standard/QuickPick)
+ *   1. Expand boards → lines (Bao 5 = 50 lines, C(N,6) nếu Bao 7-18, 1 nếu Standard/QuickPick)
  *   2. Match lines vs draw result (6 số chính + bonus number)
  *   3. Persist lines vào DB (upsertLines — idempotent)
  *   4. Tính payout: giải cố định (tier1/tier2/tier3), Jackpot = 0 ở bước này
@@ -39,7 +39,7 @@ import { matchLines, type DrawResultForMatch } from "@megawin/game-power655/help
 import { EntryOutcome } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
-import type { SettleContext, PowerDrawResult } from "./types";
+import type { SettleContext } from "./types";
 
 /** Số entries xử lý mỗi batch. */
 const BATCH_SIZE = 500;
@@ -102,7 +102,8 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         // Entry đã có snapshot boards trong entrySummary (denormalized lúc place-bet).
         // KHÔNG cần fetch ticket — entry.entrySummary.boards đủ để expand.
         // Standard/QuickPick: 1 board → 1 line
-        // Bao N: 1 board → C(N,6) lines (VD: Bao 7 → 7 lines)
+        // Bao 5: 1 board → 50 lines (55 - 5 = 50, ghép từng số còn lại)
+        // Bao N (7-18): 1 board → C(N,6) lines (VD: Bao 7 → 7 lines)
         const lines = expandAllBoards(entry.entrySummary.boards);
 
         // ── Bước 5: Match lines vs kết quả quay ───────────────────────

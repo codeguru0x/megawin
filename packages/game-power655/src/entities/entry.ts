@@ -249,13 +249,14 @@ export interface TicketEntryEntity extends Omit<TicketEntryDoc, "_id" | "version
 export interface EntryBoardSnapshot {
   /** Ký hiệu board ("A".."E"). */
   boardNo: string;
-  /** Kiểu chơi (standard / bao7-18 / quickPick). */
+  /** Kiểu chơi (standard / bao5 / bao7-18 / quickPick). */
   playType: PlayType;
   /** Danh sách số chính người chơi đã chọn ("01"-"55"). */
   mainNumbers: string[];
   /**
    * Số line sau khi expand từ board.
    * - Standard / QuickPick: 1
+   * - Bao5: 55 - 5 = 50
    * - Bao7: C(7,6) = 7, Bao18: C(18,6) = 18.564
    */
   expandedLines: number;

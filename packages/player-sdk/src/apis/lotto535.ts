@@ -565,7 +565,7 @@ export interface Lotto535Api {
   /**
    * Lấy chi tiết các lines mở rộng của entry (dùng cho vé bao).
    *
-   * Với play type `standard` / `quickPick`, chỉ có 1 line.
+   * Với play type `standard`, chỉ có 1 line.
    * Với `mainCover`, số lines = C(N, 5) — ví dụ chọn 8 số → 56 lines.
    * Với `specialCover`, số lines = số đặc biệt đã chọn.
    *

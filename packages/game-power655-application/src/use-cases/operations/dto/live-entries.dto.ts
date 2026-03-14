@@ -17,7 +17,7 @@ export interface GetLiveEntriesInput {
 
 /** Một board (selection) trong entry. */
 export interface LiveEntryBoard {
-  /** Kiểu chơi (standard, bao7, quickPick, ...). */
+  /** Kiểu chơi (standard, bao5, bao7, ...). */
   playType: string;
   /** Danh sách số chính đã chọn (zero-padded string, "01"-"55"). */
   mainNumbers: string[];

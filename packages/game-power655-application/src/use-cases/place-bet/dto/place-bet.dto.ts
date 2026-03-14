@@ -9,7 +9,7 @@ import type { TicketChannel } from "@megawin/game-core/entities";
 export interface PlaceBetBoardInput {
   /** Mã board (A, B, C, ...). Dùng để phân biệt các board trong vé. */
   boardNo: string;
-  /** Loại chơi: Standard (6 số), Bao7-18 (7-18 số), QuickPick (auto 6 số). */
+  /** Loại chơi: Standard (6 số), Bao5 (5 số → 50 lines), Bao7-18 (C(N,6) lines), QuickPick (auto 6 số). */
   playType: PlayType;
   /** Danh sách số đã chọn. Chỉ có mainNumbers (Power 6/55 không có specialNumbers). */
   selection: BoardSelection;
@@ -36,7 +36,7 @@ export interface PlaceBetInput {
 
   /**
    * Danh sách boards (1-5).
-   * Mỗi board có playType riêng: Standard (6 số), Bao7-18 (7-18 số), QuickPick (auto 6 số).
+   * Mỗi board có playType riêng: Standard (6 số), Bao5 (5 số → 50 lines), Bao7-18 (C(N,6) lines), QuickPick (auto 6 số).
    * Tất cả số trong range [1, 55].
    */
   boards: PlaceBetBoardInput[];

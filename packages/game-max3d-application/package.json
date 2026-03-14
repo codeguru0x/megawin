@@ -15,6 +15,10 @@
       "types": "./src/use-cases/draws/index.ts",
       "default": "./dist/use-cases/draws/index.js"
     },
+    "./use-cases/operations": {
+      "types": "./src/use-cases/operations/index.ts",
+      "default": "./dist/use-cases/operations/index.js"
+    },
     "./use-cases/place-bet": {
       "types": "./src/use-cases/place-bet/index.ts",
       "default": "./dist/use-cases/place-bet/index.js"

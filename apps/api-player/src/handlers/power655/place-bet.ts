@@ -5,7 +5,7 @@
  *
  * Power 6/55 chỉ có mainNumbers (không có specialNumbers).
  * Số nhận dạng string "01"-"55". Parse sang number trước khi truyền vào use case.
- * PlayTypes: Standard (6 số), Bao7-Bao18.
+ * PlayTypes: Standard (6 số), Bao5 (5 số → 50 lines), Bao7-Bao18 (C(N,6) lines).
  */
 
 import { withPlayerAuth } from "@megawin/auth";
@@ -25,7 +25,7 @@ import { isUnique, isUniqueBy } from "@megawin/shared/utils/array";
 // ─── Composite schemas ───
 
 export const power655SelectionSchema = z.object({
-  mainNumbers: z.array(power655MainNumberSchema).max(18),
+  mainNumbers: z.array(power655MainNumberSchema).min(5).max(18),
 });
 
 export const power655BoardSchema = z
@@ -33,6 +33,7 @@ export const power655BoardSchema = z
     boardNo: z.enum(VALID_BOARD_NOS),
     playType: z.enum([
       PlayType.Standard,
+      PlayType.Bao5,
       PlayType.Bao7,
       PlayType.Bao8,
       PlayType.Bao9,
@@ -64,6 +65,14 @@ export const power655BoardSchema = z
           ctx.addIssue({
             code: "custom",
             message: "Chơi thường: cần chọn đúng 6 số.",
+            path: ["selection", "mainNumbers"],
+          });
+        break;
+      case PlayType.Bao5:
+        if (mainLen !== 5)
+          ctx.addIssue({
+            code: "custom",
+            message: "Bao 5: cần chọn đúng 5 số.",
             path: ["selection", "mainNumbers"],
           });
         break;

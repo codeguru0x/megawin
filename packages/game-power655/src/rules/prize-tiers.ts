@@ -69,6 +69,9 @@ export function determineTier(mainMatchCount: number, bonusMatched: boolean): Pr
  *   - 1 line 6/6 → JP1
  *   - 6 lines 5/6 + bonus → JP2
  *
+ * Ví dụ Bao 5: chọn 5 số, HT ghép 50 số còn lại → 50 lines:
+ *   - Nếu 5 số đã chọn chứa 5/6 winning và số ghép vào = số winning thứ 6 → 6/6 JP1
+ *
  * → Function này trả về mảng 1 phần tử (hoặc rỗng) cho MỖI LINE.
  *   Caller (settle-entries) tổng hợp tier counts qua nhiều lines để xác định
  *   entry có trúng JP1 + JP2 đồng thời hay không.

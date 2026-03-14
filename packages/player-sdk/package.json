@@ -1,6 +1,6 @@
 {
   "name": "@megawin/player-sdk",
-  "version": "1.0.7",
+  "version": "1.0.9",
   "description": "MegaWin Player SDK – HTTP client + game types cho đối tác tích hợp",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -94,8 +94,6 @@
     "README.md"
   ],
   "scripts": {
-    "prepack": "node scripts/prepack.mjs",
-    "postpack": "node scripts/postpack.mjs",
     "build": "tsup",
     "dev": "tsup --watch",
     "check-types": "tsc --noEmit",

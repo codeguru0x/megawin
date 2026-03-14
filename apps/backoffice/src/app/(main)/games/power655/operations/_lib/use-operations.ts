@@ -142,7 +142,7 @@ export function useOpsNumberFrequency(params: OpsQueryParams, isSettled = false)
 
 /**
  * Phân bổ theo kiểu chơi (PlayType): lines, entries, revenue.
- * Power 6/55 có nhiều kiểu chơi: standard, bao7-bao18, quickPick.
+ * Power 6/55 có nhiều kiểu chơi: standard, bao5, bao7-bao18, quickPick.
  * Refetch mỗi 60s khi đang active; dừng khi đã settle.
  */
 export function useOpsPlayTypeDistribution(params: OpsQueryParams, isSettled = false) {

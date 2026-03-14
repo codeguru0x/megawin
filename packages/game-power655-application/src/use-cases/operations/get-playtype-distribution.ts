@@ -10,7 +10,7 @@ import type {
 /**
  * Phân bổ cược theo kiểu chơi (PlayType) cho Power 6/55.
  *
- * Power 6/55 có nhiều kiểu chơi: standard, bao7-bao18, quickPick.
+ * Power 6/55 có nhiều kiểu chơi: standard, bao5, bao7-bao18, quickPick.
  * Dùng để render biểu đồ kiểu chơi trên dashboard vận hành.
  *
  * CRASH-SAFE: idempotent, aggregate từ DB.

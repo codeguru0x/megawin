@@ -26,7 +26,7 @@ import {
   useOpsTopCombos,
   useOpsLiveEntries,
 } from "../../use-operations";
-import { PlayTypeCard, TenantBreakdownCard } from "./analytics-panels";
+import { PlayTypeCard } from "./analytics-panels";
 import { NumberHeatmap } from "./number-heatmap";
 import { LiveFeed } from "./live-feed";
 
@@ -134,18 +134,24 @@ export function AnalyticsSection() {
   return (
     <section className="space-y-4">
       <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Phân tích
+        Phân tích cược
       </h2>
-      <div className="grid gap-4 xl:grid-cols-2">
-        <PlayTypeCard playTypes={playTypes} />
-        <TenantBreakdownCard tenants={tenants} />
+
+      <PlayTypeCard playTypes={playTypes} />
+
+      <div className="grid gap-4 lg:grid-cols-[7fr_3fr] items-stretch">
+        <NumberHeatmap
+          numbers={numberFreq}
+          combos={topCombos}
+          tenants={tenants}
+          drawId={effectiveDrawId}
+        />
+        <LiveFeed
+          entries={liveEntries}
+          totalCount={liveData?.totalCount ?? 0}
+          isSettled={isSettled}
+        />
       </div>
-      <NumberHeatmap numbers={numberFreq} combos={topCombos} drawId={effectiveDrawId} />
-      <LiveFeed
-        entries={liveEntries}
-        totalCount={liveData?.totalCount ?? 0}
-        isSettled={isSettled}
-      />
     </section>
   );
 }

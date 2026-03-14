@@ -9,13 +9,16 @@ import type {
   Max3dGameConfigResponse,
   Max3dDrawInfo,
   Max3dTicketSummary,
+  Max3dLineInfo,
+  Max3dDrawResultSummary,
+  Max3dDrawResultInfo,
 } from "../max3d";
 import { ENDPOINTS } from "../endpoints";
 
 /**
- * Tham số phân trang cho danh sách vé Max 3D.
+ * Tham số phân trang cho danh sách vé Max 3D đang chờ xử lý.
  *
- * Cursor-based pagination.
+ * Cursor-based pagination. Không hỗ trợ lọc ngày — chỉ trả vé đang active.
  *
  * @example
  * ```ts
@@ -29,15 +32,85 @@ import { ENDPOINTS } from "../endpoints";
  * }
  * ```
  */
-export interface Max3dListTicketsParams {
+export interface Max3dListPendingTicketsParams {
   /** Số lượng vé mỗi trang (mặc định 20). */
   size?: number;
   /** Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước). */
   cursor?: string;
-  /** Lọc từ ngày (YYYY-MM-DD). */
+}
+
+/**
+ * Tham số lọc và phân trang cho lịch sử vé Max 3D (tất cả trạng thái).
+ *
+ * Hỗ trợ lọc theo khoảng ngày đặt cược (giờ Việt Nam).
+ *
+ * @example
+ * ```ts
+ * const march = await client.max3d.listTickets({
+ *   from: "2026-03-01",
+ *   to: "2026-03-31",
+ * });
+ *
+ * if (march.nextCursor) {
+ *   const page2 = await client.max3d.listTickets({
+ *     size: 20,
+ *     cursor: march.nextCursor,
+ *   });
+ * }
+ * ```
+ */
+export interface Max3dListAllTicketsParams {
+  /** Số lượng vé mỗi trang (mặc định 20). */
+  size?: number;
+  /** Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước). */
+  cursor?: string;
+  /** Lọc từ ngày đặt cược (YYYY-MM-DD). */
   from?: string;
-  /** Lọc đến ngày (YYYY-MM-DD). */
+  /** Lọc đến ngày đặt cược (YYYY-MM-DD). */
   to?: string;
+}
+
+/**
+ * Tham số phân trang cho danh sách kết quả kỳ quay Max 3D.
+ *
+ * @example
+ * ```ts
+ * const page1 = await client.max3d.listDrawResults({ size: 10 });
+ *
+ * if (page1.nextCursor) {
+ *   const page2 = await client.max3d.listDrawResults({
+ *     size: 10,
+ *     cursor: page1.nextCursor,
+ *   });
+ * }
+ * ```
+ */
+export interface Max3dListDrawResultsParams {
+  /** Số lượng kỳ mỗi trang (mặc định 20). */
+  size?: number;
+  /**
+   * Lọc kết quả từ ngày này trở về quá khứ (YYYY-MM-DD).
+   * Mặc định: ngày hôm nay (giờ Việt Nam).
+   */
+  from?: string;
+  /**
+   * Cursor cho trang tiếp theo.
+   * Là drawId của kỳ cuối cùng trong trang trước. Format `YYYY-MM-DD.NNN`.
+   */
+  cursor?: string;
+}
+
+/**
+ * Tham số phân trang cho lines của một entry Max 3D.
+ */
+export interface Max3dEntryLinesParams {
+  /** Số lượng lines mỗi trang (mặc định 50). */
+  size?: number;
+  /**
+   * Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước).
+   * Là `lineIndex` (integer) của line cuối trang trước.
+   */
+  cursor?: number;
 }
 
 /**
@@ -92,7 +165,7 @@ export interface Max3dTicketEntriesResponse {
   entries: Array<{
     /** ID entry. */
     id: string;
-    /** ID kỳ quay. Format `YYYY-MM-DD.NNN`. */
+    /** ID kỳ quay. Format `YYYY-MM-DD.NNN`. VD: `"2026-03-07.001"`. */
     drawId: string;
     /** Ngày kỳ quay (YYYY-MM-DD). */
     drawDate: string;
@@ -100,12 +173,27 @@ export interface Max3dTicketEntriesResponse {
     status: string;
     /** Tiền cược cho entry này (VND). */
     amount: number;
-    /** Kết quả quay số (chỉ có sau khi published). */
+    /**
+     * Kết quả quay số (chỉ có sau khi kỳ quay đã công bố).
+     *
+     * Max 3D quay ra 20 bộ ba chia thành 4 hạng:
+     * - `special` — Đặc Biệt
+     * - `first`   — Giải Nhất
+     * - `second`  — Giải Nhì
+     * - `third`   — Giải Ba
+     *
+     * Mỗi hạng là mảng bộ ba số string `"000"`-`"999"`.
+     * VD: `special: ["123"]`, `first: ["456", "789"]`.
+     */
     result?: {
-      /** Bộ số giải nhất. */
-      firstPrize: string;
-      /** Bộ số giải nhì. */
-      secondPrize: string;
+      /** Các bộ ba Giải Đặc Biệt. */
+      special: string[];
+      /** Các bộ ba Giải Nhất. */
+      first: string[];
+      /** Các bộ ba Giải Nhì. */
+      second: string[];
+      /** Các bộ ba Giải Ba. */
+      third: string[];
       /** Thời điểm công bố kết quả (ISO 8601). */
       publishedAt: string;
     };
@@ -121,9 +209,9 @@ export interface Max3dTicketEntriesResponse {
       boardPayouts: Array<{
         /** Ký hiệu board. VD: `"A"`. */
         boardNo: string;
-        /** Chế độ chơi. */
+        /** Chế độ chơi. `"basic"` hoặc `"plus"`. */
         playMode: string;
-        /** Kiểu chơi. */
+        /** Kiểu chơi. `"straight"`, `"combo3"`, hoặc `"combo6"`. */
         playType: string;
         /** Mức giải trúng. */
         prizeLevel: string;
@@ -137,15 +225,58 @@ export interface Max3dTicketEntriesResponse {
 }
 
 /**
- * Danh sách lines chi tiết của một entry Max 3D.
+ * Danh sách lines chi tiết của một entry Max 3D (cursor-based).
  *
  * Trả về bởi {@link Max3dApi.getEntryLines}.
+ *
+ * Mỗi line là 1 bộ ba (Basic) hoặc 1 cặp bộ ba (Plus).
+ * Pagination dùng integer line index làm cursor.
+ *
+ * @example
+ * ```ts
+ * const { lines, nextCursor } = await client.max3d.getEntryLines("entry-abc...", { size: 50 });
+ * for (const line of lines) {
+ *   console.log(`Board ${line.boardNo} [${line.playMode}/${line.playType}]: ${line.triplets.join(" + ")}`);
+ *   if (line.matchResult) {
+ *     console.log(`  Giải: ${line.matchResult.tier ?? "không trúng"}, thưởng: ${line.matchResult.winAmount} VND`);
+ *   }
+ * }
+ * ```
  */
 export interface Max3dEntryLinesResponse {
   /** ID entry. */
   entryId: string;
-  /** Danh sách lines — mỗi line là 1 bộ số 3 chữ số. */
-  lines: Array<{ triplet: string }>;
+  /**
+   * ID kỳ quay mà entry này tham gia.
+   * Format `YYYY-MM-DD.NNN`. VD: `"2026-03-07.001"`.
+   */
+  drawId: string;
+  /** Danh sách lines trong trang hiện tại. */
+  lines: Max3dLineInfo[];
+  /**
+   * Cursor để lấy trang tiếp theo, `null` nếu đã hết.
+   * Là `lineIndex` của line cuối trong trang này (integer).
+   */
+  nextCursor: number | null;
+  /** Số lines thực tế trả về trong trang này. */
+  size: number;
+}
+
+/**
+ * Danh sách kết quả kỳ quay Max 3D (cursor-based).
+ *
+ * Trả về bởi {@link Max3dApi.listDrawResults}.
+ */
+export interface Max3dListDrawResultsResponse {
+  /** Danh sách kết quả kỳ quay trong trang hiện tại. */
+  draws: Max3dDrawResultSummary[];
+  /**
+   * Cursor để lấy trang tiếp theo, `null` nếu đã hết.
+   * Là `drawId` của kỳ cuối cùng trong trang này. Format `YYYY-MM-DD.NNN`.
+   */
+  nextCursor: string | null;
+  /** Số kỳ quay thực tế trả về. */
+  size: number;
 }
 
 /**
@@ -193,14 +324,18 @@ export interface Max3dApi {
   /**
    * Đặt cược Max 3D.
    *
+   * Mỗi board chọn 1 bộ ba (Basic) hoặc 2 bộ ba (Plus, chỉ `straight`).
+   * Basic play types: `straight` | `combo3` | `combo6`.
+   * Plus chỉ dùng `straight` với 2 bộ ba.
+   *
    * **Endpoint:** `POST /games/max3d/bets`
    *
-   * @param input - Thông tin vé: drawId, drawCount, boards
+   * @param input - Thông tin vé: drawId, drawCount, boards (tối đa 4 boards)
    * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount
    *
    * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
    * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
-   * @throws {@link ApiClientError} code `VALIDATION_ERROR` — input không hợp lệ (số sai range, thiếu field...)
+   * @throws {@link ApiClientError} code `VALIDATION_ERROR` — input không hợp lệ
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example
@@ -212,7 +347,7 @@ export interface Max3dApi {
    *   drawCount: 2,
    *   boards: [
    *     { boardNo: "A", playMode: "basic", playType: "straight", triplets: ["123"] },
-   *     { boardNo: "B", playMode: "basic", playType: "permutation", triplets: ["456"] },
+   *     { boardNo: "B", playMode: "plus",  playType: "straight", triplets: ["456", "789"] },
    *   ],
    * });
    * console.log(result.ticketNo);    // "M3D-20260307-00005"
@@ -239,7 +374,7 @@ export interface Max3dApi {
    * }
    * ```
    */
-  listPendingTickets(params?: Max3dListTicketsParams): Promise<Max3dListTicketsResponse>;
+  listPendingTickets(params?: Max3dListPendingTicketsParams): Promise<Max3dListTicketsResponse>;
 
   /**
    * Lấy lịch sử vé Max 3D đã kết thúc.
@@ -260,7 +395,7 @@ export interface Max3dApi {
    * }
    * ```
    */
-  listTickets(params?: Max3dListTicketsParams): Promise<Max3dListTicketsResponse>;
+  listTickets(params?: Max3dListAllTicketsParams): Promise<Max3dListTicketsResponse>;
 
   /**
    * Lấy chi tiết các lần tham gia kỳ quay của một vé Max 3D.
@@ -277,7 +412,12 @@ export interface Max3dApi {
    * ```ts
    * const data = await client.max3d.getTicketEntries("65abc123def456...");
    * console.log(data.ticket.ticketNo); // "M3D-20260307-00005"
-   * console.log(data.entries.length);  // 2 (mua 2 kỳ)
+   * for (const entry of data.entries) {
+   *   if (entry.result) {
+   *     // result.special, result.first, result.second, result.third đều là string[]
+   *     console.log(`Đặc biệt: ${entry.result.special.join(", ")}`);
+   *   }
+   * }
    * ```
    */
   getTicketEntries(ticketId: string): Promise<Max3dTicketEntriesResponse>;
@@ -288,20 +428,66 @@ export interface Max3dApi {
    * **Endpoint:** `GET /games/max3d/entries/{entryId}/lines`
    *
    * @param entryId - ID entry (lấy từ `entries[].id` trong `getTicketEntries`)
-   * @returns Danh sách lines đã expand
+   * @param params - Tham số phân trang (tùy chọn)
+   * @returns Danh sách lines kèm cursor và kết quả đối chiếu
    *
    * @throws {@link ApiClientError} code `NOT_FOUND` — entryId không tồn tại
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example
    * ```ts
-   * const { lines } = await client.max3d.getEntryLines("entry-abc...");
+   * const { lines } = await client.max3d.getEntryLines("entry-abc...", { size: 50 });
    * for (const line of lines) {
-   *   console.log(line.triplet); // "123"
+   *   console.log(`[${line.boardNo}] ${line.triplets.join(" + ")} → giải: ${line.matchResult?.tier ?? "không"}`);
    * }
    * ```
    */
-  getEntryLines(entryId: string): Promise<Max3dEntryLinesResponse>;
+  getEntryLines(entryId: string, params?: Max3dEntryLinesParams): Promise<Max3dEntryLinesResponse>;
+
+  /**
+   * Lấy danh sách kết quả kỳ quay Max 3D đã công bố.
+   *
+   * **Endpoint:** `GET /games/max3d/draw-results`
+   *
+   * @param params - Tham số phân trang và lọc ngày (tùy chọn)
+   * @returns Danh sách kết quả kỳ quay kèm cursor cho trang tiếp theo
+   *
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * const { draws } = await client.max3d.listDrawResults({ size: 10 });
+   * for (const draw of draws) {
+   *   console.log(`[${draw.drawId}] Đặc biệt: ${draw.result.special.join(", ")}`);
+   * }
+   * ```
+   */
+  listDrawResults(params?: Max3dListDrawResultsParams): Promise<Max3dListDrawResultsResponse>;
+
+  /**
+   * Lấy chi tiết kết quả 1 kỳ quay Max 3D.
+   *
+   * **Endpoint:** `GET /games/max3d/draw-results/{drawId}`
+   *
+   * @param drawId - ID kỳ quay. Format `YYYY-MM-DD.NNN`. VD: `"2026-03-07.001"`.
+   * @returns Chi tiết kỳ quay gồm 20 bộ ba chia 4 hạng, và bảng giải (Basic + Plus gộp chung)
+   *
+   * @throws {@link ApiClientError} code `NOT_FOUND` — kỳ quay chưa settle hoặc drawId không tồn tại
+   * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+   *
+   * @example
+   * ```ts
+   * const draw = await client.max3d.getDrawResult("2026-03-07.001");
+   * console.log(`Đặc biệt: ${draw.result.special.join(", ")}`);
+   * console.log(`Nhất:     ${draw.result.first.join(", ")}`);
+   * for (const prize of draw.prizes) {
+   *   if (prize.winnerCount > 0) {
+   *     console.log(`  ${prize.tier}: ${prize.winnerCount} người, ${prize.prizeAmount.toLocaleString()} VND`);
+   *   }
+   * }
+   * ```
+   */
+  getDrawResult(drawId: string): Promise<Max3dDrawResultInfo>;
 }
 
 /** @internal */
@@ -329,8 +515,18 @@ export function createMax3dApi(http: HttpClient): Max3dApi {
     async getTicketEntries(ticketId) {
       return http.get<Max3dTicketEntriesResponse>(ENDPOINTS.max3d.getTicketEntries(ticketId));
     },
-    async getEntryLines(entryId) {
-      return http.get<Max3dEntryLinesResponse>(ENDPOINTS.max3d.getEntryLines(entryId));
+    async getEntryLines(entryId, params) {
+      return http.get<Max3dEntryLinesResponse>(ENDPOINTS.max3d.getEntryLines(entryId), {
+        params: params as Record<string, string | number | undefined>,
+      });
+    },
+    async listDrawResults(params) {
+      return http.get<Max3dListDrawResultsResponse>(ENDPOINTS.max3d.listDrawResults, {
+        params: params as Record<string, string | number | undefined>,
+      });
+    },
+    async getDrawResult(drawId) {
+      return http.get<Max3dDrawResultInfo>(ENDPOINTS.max3d.getDrawResult(drawId));
     },
   };
 }

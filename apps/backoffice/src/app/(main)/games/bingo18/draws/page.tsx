@@ -1,14 +1,12 @@
 "use client";
 
-import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
+import Link from "next/link";
+import { CalendarClock, Loader2, ListOrdered, Dice5 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { useBingo18CurrentDraw } from "./_lib/use-draws";
 import { useBingo18GameConfig } from "../config/_lib/use-game-config";
-import { Bingo18CreateDrawDialog } from "./_lib/create-draw-dialog";
-import {
-  Bingo18PrimaryDrawCard,
-  Bingo18QueueDrawCard,
-} from "./_lib/active-draw-card";
+import { Bingo18PrimaryDrawCard, Bingo18QueueDrawCard } from "./_lib/active-draw-card";
 import { Bingo18DrawHistorySection } from "./_lib/draw-history-section";
 
 export default function Bingo18DrawsPage() {
@@ -31,15 +29,20 @@ export default function Bingo18DrawsPage() {
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Bingo 18 — Quản lý kỳ quay
+              Bingo 18 — Kỳ quay
             </h1>
             <p className="text-xs text-muted-foreground">
-              Quay mỗi {interval} phút ({firstDraw}–{lastDraw}). Mở/đóng bán,
-              công bố kết quả, kết sổ.
+              Quay mỗi {interval} phút ({firstDraw}–{lastDraw}).
             </p>
           </div>
         </div>
-        <Bingo18CreateDrawDialog />
+        {/* Link nổi bật sang trang vận hành */}
+        <Button size="sm" className="gap-2" asChild>
+          <Link href="/games/bingo18/operations">
+            <Dice5 className="size-4" />
+            Trang vận hành
+          </Link>
+        </Button>
       </div>
 
       {isLoading ? (
@@ -54,9 +57,7 @@ export default function Bingo18DrawsPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <ListOrdered className="size-4 text-muted-foreground" />
-                <h2 className="text-sm font-semibold text-foreground">
-                  Hàng chờ
-                </h2>
+                <h2 className="text-sm font-semibold text-foreground">Hàng chờ</h2>
                 <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
                   {queueDraws.length} kỳ
                 </span>
@@ -75,13 +76,17 @@ export default function Bingo18DrawsPage() {
             <CalendarClock className="size-5 text-muted-foreground/50" />
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">
-              Không có kỳ đang vận hành
-            </p>
+            <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Nhấn &ldquo;Tạo kỳ quay&rdquo; để bắt đầu kỳ mới.
+              Hãy truy cập trang vận hành để tạo kỳ quay mới.
             </p>
           </div>
+          <Button size="sm" className="gap-2" asChild>
+            <Link href="/games/bingo18/operations">
+              <Dice5 className="size-4" />
+              Đến trang vận hành
+            </Link>
+          </Button>
         </div>
       )}
 

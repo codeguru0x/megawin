@@ -152,7 +152,7 @@ export interface PlayerTicketSummary {
   boards: Array<{
     /** Mã board (A, B, C, ...). */
     boardNo: string;
-    /** Loại chơi (Standard / Bao7-18 / QuickPick). */
+    /** Loại chơi (Standard / Bao5 / Bao7-18 / QuickPick). */
     playType: string;
     /** Các số đã chọn trên board. */
     selection: {
@@ -235,11 +235,11 @@ export interface PlayerEntryInfo {
     boards: Array<{
       /** Ký hiệu board ("A".."E"). */
       boardNo: string;
-      /** Kiểu chơi (standard / bao7-18 / quickPick). */
+      /** Kiểu chơi (standard / bao5 / bao7-18 / quickPick). */
       playType: string;
       /** Danh sách số chính người chơi đã chọn ("01"-"55"). */
       mainNumbers: string[];
-      /** Số line sau khi expand từ board (1 với standard/quickPick, C(N,6) với bao). */
+      /** Số line sau khi expand từ board (1 với standard/quickPick, 50 với bao5, C(N,6) với bao7-18). */
       expandedLines: number;
     }>;
   };

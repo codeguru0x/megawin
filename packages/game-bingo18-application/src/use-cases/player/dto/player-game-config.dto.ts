@@ -9,7 +9,6 @@ export interface PlayerGameRules {
   drawIntervalMinutes: number;
   firstDrawTime: string;
   lastDrawTime: string;
-  timezone: string;
 }
 
 export interface PlayerSingleNumPrizes {

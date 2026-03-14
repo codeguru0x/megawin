@@ -63,7 +63,8 @@ export type ISODateString = string;
 /**
  * Lựa chọn số cho 1 bảng (board).
  * - Standard/QuickPick: 6 số
- * - Bao N: N số (7-18)
+ * - Bao 5: 5 số (HT ghép 50 số còn lại = 50 lines)
+ * - Bao N (7-18): N số → C(N,6) lines
  */
 export interface BoardSelection {
   /** Danh sách số đã chọn dạng string zero-padded ("01"-"55"). Số lượng phụ thuộc PlayType. */
@@ -169,10 +170,12 @@ export interface PlayRules {
 
 /**
  * Số lượng bộ số (lines) tham gia dự thưởng theo loại Bao.
- * Tính bằng C(n, 6) – tổ hợp chập 6 từ n số đã chọn.
+ * - Bao 5: 55 - 5 = 50 lines (ghép từng số trong 50 số còn lại — KHÔNG dùng C(N,6))
+ * - Bao N (7-18): C(N, 6) lines — tổ hợp chập 6 từ N số đã chọn
  *
  * | Bao | Số chọn | Bộ số | Giá (VNĐ)     |
  * |-----|---------|-------|---------------|
+ * |  5  |    5    |   50  |   500.000     |
  * |  7  |    7    |    7  |    70.000     |
  * |  8  |    8    |   28  |   280.000     |
  * |  9  |    9    |   84  |   840.000     |
@@ -185,6 +188,8 @@ export interface PlayRules {
  * | 18  |   18    |18564  | 185.640.000   |
  */
 export const BAO_COMBINATIONS: Record<string, number> = {
+  // Bao 5 đặc biệt: lines = POWER655_MAIN_MAX - 5 = 50 (ghép bổ sung, không phải C(5,6))
+  bao5: 50,
   bao7: 7,
   bao8: 28,
   bao9: 84,

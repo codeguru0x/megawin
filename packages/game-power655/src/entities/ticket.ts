@@ -24,6 +24,7 @@ export interface BoardDerived {
   /**
    * Số bộ số (lines) expand từ board này.
    * - Standard / QuickPick: 1
+   * - Bao5: 55 - 5 = 50
    * - Bao7: C(7,6) = 7, Bao8: C(8,6) = 28, ..., Bao18: C(18,6) = 18.564
    */
   expandedLines: number;
@@ -112,7 +113,7 @@ export interface Board {
    * Dùng để tham chiếu khi hiển thị kết quả.
    */
   boardNo: BoardNo;
-  /** Loại chơi: standard, bao7-bao18, quickPick. */
+  /** Loại chơi: standard, bao5, bao7-bao18, quickPick. */
   playType: PlayType;
   /** Các số đã chọn. Số lượng phụ thuộc playType. */
   selection: BoardSelection;

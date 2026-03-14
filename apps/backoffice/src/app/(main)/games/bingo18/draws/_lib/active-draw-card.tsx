@@ -1,17 +1,20 @@
 "use client";
 
 import {
+  ArrowRight,
   CircleDollarSign,
   Clock,
+  Dice5,
   Lock,
   Radio,
   Ticket,
   Timer,
   Unlock,
-  Dice5,
 } from "lucide-react";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -21,36 +24,6 @@ import { formatVNDCompact as formatVND } from "@megawin/shared/utils/number";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { formatVNTime } from "@megawin/shared/utils/date";
 import type { Bingo18CurrentDrawInfo } from "./use-draws";
-
-import { OpenSalesAction } from "./actions/open-sales-action";
-import { CloseSalesAction } from "./actions/close-sales-action";
-import { PublishResultAction } from "./actions/publish-result-action";
-import { TriggerSettleAction } from "./actions/trigger-settle-action";
-import { EditScheduleAction } from "./actions/edit-schedule-action";
-import { VoidDrawAction } from "./actions/void-draw-action";
-
-function canOpenSales(s: string) {
-  return s === DrawStatus.Scheduled || s === DrawStatus.SalesClosed;
-}
-function canCloseSales(s: string) {
-  return s === DrawStatus.SalesOpen;
-}
-function canPublishResult(s: string) {
-  return s === DrawStatus.SalesClosed || s === DrawStatus.Published;
-}
-function canTriggerSettle(s: string) {
-  return s === DrawStatus.Published;
-}
-function canEditSchedule(s: string) {
-  return s === DrawStatus.Scheduled || s === DrawStatus.SalesOpen;
-}
-function canVoidDraw(s: string) {
-  return (
-    s === DrawStatus.Scheduled ||
-    s === DrawStatus.SalesClosed ||
-    s === DrawStatus.Published
-  );
-}
 
 const STATUS_VISUALS: Record<
   string,
@@ -124,12 +97,6 @@ export function Bingo18PrimaryDrawCard({ draw }: { draw: Bingo18CurrentDrawInfo 
       status === DrawStatus.Voiding ||
       status === DrawStatus.Settled);
 
-  const isTerminal =
-    status === DrawStatus.Settled ||
-    status === DrawStatus.Void ||
-    status === DrawStatus.Settling ||
-    status === DrawStatus.Voiding;
-
   return (
     <Card
       className={cn(
@@ -146,12 +113,10 @@ export function Bingo18PrimaryDrawCard({ draw }: { draw: Bingo18CurrentDrawInfo 
         status === DrawStatus.Settling &&
           "bg-linear-to-br from-orange-50/80 via-white to-red-50/40 dark:from-orange-950/30 dark:via-background dark:to-red-950/20 shadow-orange-200/30 dark:shadow-orange-900/20",
         status === DrawStatus.Voiding &&
-          "bg-linear-to-br from-red-50/80 via-white to-rose-50/40 dark:from-red-950/30 dark:via-background dark:to-rose-950/20 shadow-red-200/30 dark:shadow-red-900/20"
+          "bg-linear-to-br from-red-50/80 via-white to-rose-50/40 dark:from-red-950/30 dark:via-background dark:to-rose-950/20 shadow-red-200/30 dark:shadow-red-900/20",
       )}
     >
-      <div
-        className={`absolute inset-x-0 top-0 h-1.5 bg-linear-to-r ${vis.accent}`}
-      />
+      <div className={`absolute inset-x-0 top-0 h-1.5 bg-linear-to-r ${vis.accent}`} />
 
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-4">
@@ -169,7 +134,7 @@ export function Bingo18PrimaryDrawCard({ draw }: { draw: Bingo18CurrentDrawInfo 
                     status === DrawStatus.Published && "bg-violet-400",
                     status === DrawStatus.Settling && "bg-orange-400",
                     status === DrawStatus.Voiding && "bg-red-400",
-                    status === DrawStatus.Scheduled && "bg-slate-400"
+                    status === DrawStatus.Scheduled && "bg-slate-400",
                   )}
                 />
                 <span
@@ -180,7 +145,7 @@ export function Bingo18PrimaryDrawCard({ draw }: { draw: Bingo18CurrentDrawInfo 
                     status === DrawStatus.Published && "bg-violet-500",
                     status === DrawStatus.Settling && "bg-orange-500",
                     status === DrawStatus.Voiding && "bg-red-500",
-                    status === DrawStatus.Scheduled && "bg-slate-500"
+                    status === DrawStatus.Scheduled && "bg-slate-500",
                   )}
                 />
               </span>
@@ -194,9 +159,7 @@ export function Bingo18PrimaryDrawCard({ draw }: { draw: Bingo18CurrentDrawInfo 
               </div>
               <p className="mt-0.5 font-mono text-xs text-muted-foreground">
                 {draw.drawId} · {draw.drawDate} · Quay lúc{" "}
-                <span className="font-semibold text-foreground">
-                  {drawTime}
-                </span>
+                <span className="font-semibold text-foreground">{drawTime}</span>
               </p>
             </div>
           </div>
@@ -253,21 +216,15 @@ export function Bingo18PrimaryDrawCard({ draw }: { draw: Bingo18CurrentDrawInfo 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border bg-white/60 dark:bg-muted/40 px-4 py-3">
           <div className="flex items-center gap-2">
             <Unlock className="size-4 text-green-500" />
-            <span className="text-xs font-medium text-muted-foreground">
-              Mở bán
-            </span>
+            <span className="text-xs font-medium text-muted-foreground">Mở bán</span>
             <span className="rounded-md bg-background px-2 py-0.5 font-mono text-sm font-semibold tabular-nums shadow-sm">
-              {draw.sales.openAt
-                ? formatVNTime(new Date(draw.sales.openAt))
-                : "—"}
+              {draw.sales.openAt ? formatVNTime(new Date(draw.sales.openAt)) : "—"}
             </span>
           </div>
           <Separator orientation="vertical" className="hidden h-5 sm:block" />
           <div className="flex items-center gap-2">
             <Lock className="size-4 text-red-500" />
-            <span className="text-xs font-medium text-muted-foreground">
-              Đóng bán
-            </span>
+            <span className="text-xs font-medium text-muted-foreground">Đóng bán</span>
             <span className="rounded-md bg-background px-2 py-0.5 font-mono text-sm font-semibold tabular-nums shadow-sm">
               {formatVNTime(new Date(draw.sales.closeAt))}
             </span>
@@ -275,40 +232,22 @@ export function Bingo18PrimaryDrawCard({ draw }: { draw: Bingo18CurrentDrawInfo 
           <Separator orientation="vertical" className="hidden h-5 sm:block" />
           <div className="flex items-center gap-2">
             <Clock className="size-4 text-blue-500" />
-            <span className="text-xs font-medium text-muted-foreground">
-              Quay số
-            </span>
+            <span className="text-xs font-medium text-muted-foreground">Quay số</span>
             <span className="rounded-md bg-background px-2 py-0.5 font-mono text-sm font-semibold tabular-nums shadow-sm">
               {drawTime}
             </span>
           </div>
         </div>
 
-        {/* Action bar */}
-        {!isTerminal && (
-          <div className="flex items-center justify-between border-t pt-4">
-            <div className="flex flex-wrap items-center gap-2">
-              {canOpenSales(status) && (
-                <OpenSalesAction draw={draw} disabled={false} />
-              )}
-              {canCloseSales(status) && (
-                <CloseSalesAction draw={draw} disabled={false} />
-              )}
-              {canPublishResult(status) && (
-                <PublishResultAction draw={draw} disabled={false} />
-              )}
-              {canTriggerSettle(status) && (
-                <TriggerSettleAction draw={draw} disabled={false} />
-              )}
-              {canEditSchedule(status) && (
-                <EditScheduleAction draw={draw} disabled={false} />
-              )}
-            </div>
-            {canVoidDraw(status) && (
-              <VoidDrawAction draw={draw} disabled={false} />
-            )}
-          </div>
-        )}
+        {/* Link sang operations */}
+        <div className="flex items-center justify-end border-t pt-4">
+          <Button size="sm" variant="outline" className="gap-1.5" asChild>
+            <Link href={`/games/bingo18/operations?draw=${draw.drawId}`}>
+              Quản lý kỳ này
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
@@ -323,36 +262,22 @@ export function Bingo18QueueDrawCard({ draw }: { draw: Bingo18CurrentDrawInfo })
   const vis = STATUS_VISUALS[status] ?? DEFAULT_VISUAL;
   const drawTime = formatVNTime(new Date(draw.drawTime));
 
-  const isTerminal =
-    status === DrawStatus.Settled ||
-    status === DrawStatus.Void ||
-    status === DrawStatus.Settling ||
-    status === DrawStatus.Voiding;
-
   return (
     <Card className={`relative overflow-hidden ${vis.border}`}>
-      <div
-        className={`absolute inset-x-0 top-0 h-0.5 bg-linear-to-r ${vis.accent}`}
-      />
+      <div className={`absolute inset-x-0 top-0 h-0.5 bg-linear-to-r ${vis.accent}`} />
 
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div
-              className={`flex size-8 items-center justify-center rounded-lg ${vis.iconBg}`}
-            >
+            <div className={`flex size-8 items-center justify-center rounded-lg ${vis.iconBg}`}>
               <Radio className={`size-3.5 ${vis.iconColor}`} />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-semibold text-foreground">
-                  Kỳ {draw.drawNo}
-                </span>
+                <span className="text-sm font-semibold text-foreground">Kỳ {draw.drawNo}</span>
                 <Bingo18DrawStatusBadge status={status} />
               </div>
-              <p className="font-mono text-[11px] text-muted-foreground">
-                {draw.drawId}
-              </p>
+              <p className="font-mono text-[11px] text-muted-foreground">{draw.drawId}</p>
             </div>
           </div>
         </div>
@@ -368,30 +293,15 @@ export function Bingo18QueueDrawCard({ draw }: { draw: Bingo18CurrentDrawInfo })
           </span>
         </div>
 
-        {!isTerminal && (
-          <div className="flex items-center justify-between border-t pt-3">
-            <div className="flex flex-wrap items-center gap-1.5">
-              {canOpenSales(status) && (
-                <OpenSalesAction draw={draw} disabled={false} />
-              )}
-              {canCloseSales(status) && (
-                <CloseSalesAction draw={draw} disabled={false} />
-              )}
-              {canPublishResult(status) && (
-                <PublishResultAction draw={draw} disabled={false} />
-              )}
-              {canTriggerSettle(status) && (
-                <TriggerSettleAction draw={draw} disabled={false} />
-              )}
-              {canEditSchedule(status) && (
-                <EditScheduleAction draw={draw} disabled={false} />
-              )}
-            </div>
-            {canVoidDraw(status) && (
-              <VoidDrawAction draw={draw} disabled={false} />
-            )}
-          </div>
-        )}
+        {/* Link sang operations */}
+        <div className="flex items-center justify-end border-t pt-3">
+          <Button size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs" asChild>
+            <Link href={`/games/bingo18/operations?draw=${draw.drawId}`}>
+              Vận hành
+              <ArrowRight className="size-3" />
+            </Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

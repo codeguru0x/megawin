@@ -3,11 +3,11 @@
 /**
  * Power 6/55 Operations — Analytics Section
  *
- * PlayTypeCard: phân bổ 12 kiểu chơi Power 6/55.
+ * PlayTypeCard: phân bổ 13 kiểu chơi Power 6/55.
  * NumberHeatmap: tần suất 55 số chính (11×5) + top combos + tenant breakdown.
  * LiveFeed: cược gần nhất real-time (mainNumbers + suffix).
  *
- * Power 6/55: standard, bao7-bao18, quickPick.
+ * Power 6/55: standard, bao5, bao7-bao18, quickPick.
  */
 
 import { useMemo } from "react";
@@ -32,6 +32,8 @@ import type { PlayTypeRow, TenantRow, NumberFreq, LiveFeedEntry } from "../../ty
 
 const PLAY_TYPE_LABELS: Record<string, string> = {
   [PlayType.Standard]: "Chuẩn",
+  /** Bao 5: 5 số → 50 lines (55-5=50, ghép từng số còn lại). */
+  [PlayType.Bao5]: "Bao 5",
   [PlayType.Bao7]: "Bao 7",
   [PlayType.Bao8]: "Bao 8",
   [PlayType.Bao9]: "Bao 9",

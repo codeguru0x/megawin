@@ -1,0 +1,232 @@
+"use client";
+
+/**
+ * Bingo 18 — Trang Vận hành
+ *
+ * Trang tổng hợp quản lý và giám sát kỳ quay Bingo 18.
+ * Bingo 18: ~160 kỳ/ngày, 6 phút/kỳ, không có Jackpot, 3 xúc xắc (1-6).
+ *
+ * Zones:
+ *   1. Draw Management (command center + dialogs)
+ *   2. KPI Strip
+ *   3. Result & Financial (khi published/settling/settled)
+ *   4. Analytics (play type, dice histogram, live feed)
+ */
+
+import { Suspense, useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { Plus, Dice5, SearchX } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { bingo18Keys } from "@/lib/query-keys";
+import { displayVNTimeWithSeconds } from "@megawin/shared/utils/date";
+
+import { DrawContextProvider, useDrawContext } from "./_lib/use-draw-context";
+import { DrawSelector } from "./_lib/draw-selector";
+import { CreateDrawAction } from "./_lib/sections/draw-management/draw-actions";
+import { DrawManagementSection } from "./_lib/sections/draw-management";
+import { KpiSection } from "./_lib/sections/kpi";
+import { AnalyticsSection } from "./_lib/sections/analytics";
+import { ResultSection } from "./_lib/sections/result";
+
+// ─── Last Updated Badge ────────────────────────────────────────────────────────
+
+/**
+ * Hiển thị thời điểm cập nhật dữ liệu live cuối cùng.
+ * Bingo 18: refetch mỗi 15s do chu kỳ ngắn (~6 phút).
+ */
+function LastUpdatedBadge({
+  opsParams,
+}: {
+  opsParams: { drawId?: string; financialDate?: string };
+}) {
+  const qc = useQueryClient();
+  const spanRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    function tick() {
+      const queryKey = bingo18Keys.opsSummary(opsParams as Record<string, unknown>);
+      const state = qc.getQueryState(queryKey);
+      const ts = state?.dataUpdatedAt;
+      if (spanRef.current && ts) {
+        spanRef.current.textContent = displayVNTimeWithSeconds(new Date(ts));
+      }
+    }
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [qc, opsParams]);
+
+  return (
+    <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70 tabular-nums">
+      <span className="relative flex size-1.5">
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-400 opacity-60" />
+        <span className="relative inline-flex size-1.5 rounded-full bg-green-500" />
+      </span>
+      Live · <span ref={spanRef} />
+    </span>
+  );
+}
+
+// ─── Inner page ────────────────────────────────────────────────────────────────
+
+function OperationsContent() {
+  const {
+    draws,
+    draw,
+    effectiveDrawId,
+    onSelectDraw,
+    drawNotFound,
+    noDrawAvailable,
+    isHistorical,
+    isActiveForRefresh,
+    opsParams,
+  } = useDrawContext();
+  const [createOpen, setCreateOpen] = useState(false);
+
+  if (drawNotFound || noDrawAvailable)
+    return (
+      <DrawNotFound
+        noData={noDrawAvailable}
+        onCreateOpen={() => setCreateOpen(true)}
+        createOpen={createOpen}
+        setCreateOpen={setCreateOpen}
+      />
+    );
+
+  return (
+    <div className="@container/main flex flex-col gap-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-amber-500 to-orange-600 shadow-sm">
+            <Dice5 className="size-4.5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">
+              Bingo 18 — Vận hành
+            </h1>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">
+                Quản lý và giám sát kỳ quay (~160 kỳ/ngày)
+              </p>
+              {isActiveForRefresh ? <LastUpdatedBadge opsParams={opsParams} /> : null}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <DrawSelector
+            draws={draws}
+            selectedDrawId={effectiveDrawId}
+            onSelect={onSelectDraw}
+            historicalDraw={isHistorical ? draw : undefined}
+          />
+          <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4" />
+            Tạo kỳ quay
+          </Button>
+        </div>
+      </div>
+
+      {/* Create draw dialog */}
+      <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
+
+      {/* Zone 1: Draw management — command center + dialogs */}
+      <DrawManagementSection />
+
+      {/* Zone 2: KPI strip */}
+      <KpiSection />
+
+      {/* Zone 3: Result + Financial — khi published/settling/settled */}
+      <ResultSection />
+
+      {/* Zone 4: Analytics — kiểu chơi, dice histogram, live feed */}
+      <AnalyticsSection />
+    </div>
+  );
+}
+
+// ─── Draw Not Found ────────────────────────────────────────────────────────────
+
+function DrawNotFound({
+  noData = false,
+  onCreateOpen,
+  createOpen,
+  setCreateOpen,
+}: {
+  noData?: boolean;
+  onCreateOpen?: () => void;
+  createOpen?: boolean;
+  setCreateOpen?: (open: boolean) => void;
+}) {
+  return (
+    <div className="@container/main flex flex-col gap-6">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-amber-500 to-orange-600 shadow-sm">
+            <Dice5 className="size-4.5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">
+              Bingo 18 — Vận hành
+            </h1>
+            <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
+          </div>
+        </div>
+        {noData && onCreateOpen && (
+          <div className="flex items-center gap-3">
+            <Button size="sm" className="gap-2" onClick={onCreateOpen}>
+              <Plus className="size-4" />
+              Tạo kỳ quay
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {noData && createOpen !== undefined && setCreateOpen && (
+        <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
+      )}
+
+      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+          <SearchX className="size-6 text-muted-foreground" />
+        </div>
+        <h2 className="mt-4 text-base font-semibold text-foreground">
+          {noData ? "Chưa có kỳ quay nào" : "Không tìm thấy kỳ quay"}
+        </h2>
+        <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+          {noData
+            ? "Hệ thống chưa có kỳ quay Bingo 18 nào được tạo. Hãy tạo kỳ quay đầu tiên để bắt đầu vận hành."
+            : "Kỳ quay được yêu cầu không tồn tại hoặc đã bị xóa khỏi hệ thống."}
+        </p>
+        <div className="mt-5 flex items-center gap-3">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/games/bingo18/draws">Lịch sử kỳ quay</Link>
+          </Button>
+          {noData ? (
+            <Button size="sm" className="gap-2" onClick={onCreateOpen}>
+              <Plus className="size-4" />
+              Tạo kỳ quay
+            </Button>
+          ) : (
+            <Button size="sm" asChild>
+              <Link href="/games/bingo18/operations">Về trang vận hành</Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page root ─────────────────────────────────────────────────────────────────
+
+export default function Bingo18OperationsPage() {
+  return (
+    <Suspense>
+      <DrawContextProvider>
+        <OperationsContent />
+      </DrawContextProvider>
+    </Suspense>
+  );
+}

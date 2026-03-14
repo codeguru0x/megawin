@@ -20,5 +20,7 @@
   "categorizeByGroup": true,
   "sort": ["source-order"],
 
+  "projectDocuments": ["CHANGELOG.md"],
+
   "tsconfig": "tsconfig.json"
 }

@@ -54,7 +54,7 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
         }));
 
         return {
-          entryId: String(e._id),
+          entryId: e.id,
           username: e.username,
           tenantId: e.tenantId,
           amount: e.amount,
