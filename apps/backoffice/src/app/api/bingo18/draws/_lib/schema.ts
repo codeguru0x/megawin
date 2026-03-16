@@ -9,7 +9,6 @@ export const createDrawSchema = z.object({
 });
 
 export const previewDrawsSchema = z.object({
-  drawDate: z.iso.date("drawDate phải là ngày hợp lệ format YYYY-MM-DD."),
   count: z.coerce.number().int().min(1).max(30).default(10),
 });
 

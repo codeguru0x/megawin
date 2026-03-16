@@ -1,5 +1,6 @@
 import { Building2 } from "lucide-react";
 
+import { SYSTEM_ICON_GRADIENT } from "@/lib/game-colors";
 import { CreateTenantDialog } from "./_components/create-tenant-dialog";
 import { TenantsList } from "./_components/tenants-list";
 
@@ -9,7 +10,9 @@ export default function TenantsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-blue-600 shadow-sm">
+          <div
+            className={`flex size-9 items-center justify-center rounded-xl bg-linear-to-br ${SYSTEM_ICON_GRADIENT} shadow-sm`}
+          >
             <Building2 className="size-4.5 text-white" />
           </div>
           <div>

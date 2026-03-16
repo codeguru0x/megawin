@@ -11,7 +11,6 @@ export const GET = withApi()
   .query(previewDrawsSchema)
   .handler(async ({ query }) => {
     return previewDrawsUseCase.run({
-      drawDate: query.drawDate,
       count: query.count,
     });
   });

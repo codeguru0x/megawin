@@ -66,10 +66,13 @@ export interface SettleDrawReport {
 
   /** Số entry đã settle. */
   entryCount: number;
+
   /** Số player (unique accountId). */
   playerCount: number;
+
   /** Số tenant tham gia. */
   tenantCount: number;
+
   /** Số dòng (lines) — Mega 6/45 có lines. */
   lineCount: number;
 
@@ -126,8 +129,10 @@ export interface SettleTenantReport {
   totalPayout: number;
   /** GGR = totalStake - totalPayout. Có thể ÂM. */
   ggr: number;
-  /** Hoa hồng đại lý (VND). Công thức: SUM(entry.tenant.commissionAmount). */
-  commission: number;
+  /** Tổng hoa hồng đại lý (VND). Công thức: SUM(entry.tenant.commissionAmount). */
+  totalCommission: number;
+  /** Lợi nhuận ròng (VND). Công thức: ggr - totalCommission. Có thể ÂM. Đây là bottom-line P&L của tenant. */
+  netProfit: number;
 
   createdAt: Date;
   updatedAt: Date;

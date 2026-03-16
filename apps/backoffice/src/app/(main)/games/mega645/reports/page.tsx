@@ -4,7 +4,7 @@ export default function Mega645ReportsPage() {
   return (
     <div className="@container/main flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-orange-600 shadow-sm">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-teal-500 to-teal-600 shadow-sm">
           <ChartBar className="size-4.5 text-white" />
         </div>
         <div>

@@ -7,9 +7,6 @@
  * Keno: ~120 kỳ/ngày → filter theo ngày quan trọng hơn.
  * Offset pagination (page/size).
  * Mỗi row có link đến trang vận hành.
- *
- * Keno khác: hiển thị drawNo + drawTime thay vì chỉ drawDate.
- * 20 số kết quả — hiển thị dạng badge nhỏ.
  */
 
 import { useState, useCallback } from "react";
@@ -18,7 +15,6 @@ import { ExternalLink, Filter, Loader2, CalendarIcon } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -128,14 +124,9 @@ function DateRangePicker({
 // ─── Winning Numbers — 20 số mini badges ─────────────────────────────────────
 
 function WinningNumbers({ numbers }: { numbers: string[] }) {
-  // Hiển thị tối đa 10 số đầu (do giới hạn màn hình), còn lại show +N
-  const SHOW = 10;
-  const shown = numbers.slice(0, SHOW);
-  const rest = numbers.length - SHOW;
-
   return (
     <div className="flex items-center gap-0.5 flex-wrap">
-      {shown.map((n) => (
+      {numbers.map((n) => (
         <span
           key={n}
           className="inline-flex items-center justify-center size-5 rounded-full bg-orange-500 text-white text-[9px] font-bold tabular-nums"
@@ -143,7 +134,6 @@ function WinningNumbers({ numbers }: { numbers: string[] }) {
           {n}
         </span>
       ))}
-      {rest > 0 && <span className="text-[10px] text-muted-foreground ml-0.5">+{rest}</span>}
     </div>
   );
 }
@@ -230,14 +220,13 @@ export function DrawHistorySection() {
 
         {/* Table */}
         <div className="overflow-x-auto rounded-md border">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-44">Kỳ quay</TableHead>
-                <TableHead className="w-24">Giờ quay</TableHead>
+                <TableHead className="w-36">Kỳ quay</TableHead>
+                <TableHead className="w-16">Giờ</TableHead>
                 <TableHead className="w-28">Trạng thái</TableHead>
-                {/* 20 số kết quả — cột rộng */}
-                <TableHead className="min-w-64">Kết quả (20 số)</TableHead>
+                <TableHead className="w-64">Kết quả (20 số)</TableHead>
                 <TableHead className="w-24 text-right">Entries</TableHead>
                 <TableHead className="w-32 text-right">Doanh thu</TableHead>
                 <TableHead className="w-10" />
@@ -298,24 +287,14 @@ function DrawRow({ draw }: { draw: DrawSummary }) {
   return (
     <TableRow>
       <TableCell>
-        {/* Keno: hiển thị drawNo + drawDate */}
-        <div className="space-y-0.5">
-          <Link
-            href={`${OPS_BASE}?draw=${draw.drawId}`}
-            className="font-mono text-sm font-semibold hover:underline underline-offset-2"
-          >
-            <Badge
-              variant="outline"
-              className="mr-2 text-orange-600 border-orange-200 dark:border-orange-800 dark:text-orange-400"
-            >
-              Kỳ {draw.drawNo}
-            </Badge>
-            <span className="text-muted-foreground">{draw.drawDate}</span>
-          </Link>
-          <p className="font-mono text-[10px] text-muted-foreground/60">{draw.drawId}</p>
-        </div>
+        <Link
+          href={`${OPS_BASE}?draw=${draw.drawId}`}
+          className="font-mono text-sm font-semibold hover:underline underline-offset-2"
+        >
+          {draw.drawId}
+        </Link>
       </TableCell>
-      <TableCell className="tabular-nums text-sm">
+      <TableCell className="tabular-nums text-sm text-muted-foreground">
         {formatVNTime(new Date(draw.drawTime))}
       </TableCell>
       <TableCell>

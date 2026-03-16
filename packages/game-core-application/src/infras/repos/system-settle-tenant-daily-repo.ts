@@ -77,6 +77,43 @@ export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<
   }
 
   /**
+   * Bulk upsert nhiều tenant daily reports trong 1 DB call.
+   *
+   * Dùng bulkWrite với N updateOne+upsert thay vì N lần findOneAndUpdate tuần tự.
+   * Giảm latency từ N×RTT xuống 1 RTT bất kể số lượng tenant.
+   * IDEMPOTENT: chạy lại an toàn — mỗi operation vẫn là upsert overwrite.
+   * Noop-safe: nếu reports rỗng thì không gọi DB.
+   */
+  async bulkUpsertTenantDaily(
+    reports: Omit<SystemSettleTenantDaily, "createdAt" | "updatedAt">[],
+  ): Promise<void> {
+    if (reports.length === 0) return;
+
+    const now = new Date();
+    await this.bulkWrite(
+      reports.map((report) => ({
+        updateOne: {
+          filter: {
+            financialDate: report.financialDate,
+            tenantId: report.tenantId,
+            gameProduct: report.gameProduct,
+          },
+          update: {
+            $set: {
+              ...report,
+              updatedAt: now,
+            },
+            $setOnInsert: {
+              createdAt: now,
+            },
+          },
+          upsert: true,
+        },
+      })),
+    );
+  }
+
+  /**
    * Aggregate by tenantId — SUM cross-game cho mỗi tenant trong date range.
    *
    * Query vào system_settle_tenant_daily, group by tenantId.
@@ -115,9 +152,10 @@ export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<
           entryCount: { $sum: "$entryCount" },
           playerCount: { $sum: "$playerCount" },
           totalStake: { $sum: "$totalStake" },
+          totalWin: { $sum: "$totalWin" },
           totalPayout: { $sum: "$totalPayout" },
           ggr: { $sum: "$ggr" },
-          commission: { $sum: "$commission" },
+          totalCommission: { $sum: "$totalCommission" },
           netProfit: { $sum: "$netProfit" },
         },
       },
@@ -136,9 +174,10 @@ export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<
       entryCount: r["entryCount"] as number,
       playerCount: r["playerCount"] as number,
       totalStake: r["totalStake"] as number,
+      totalWin: r["totalWin"] as number,
       totalPayout: r["totalPayout"] as number,
       ggr: r["ggr"] as number,
-      commission: r["commission"] as number,
+      totalCommission: r["totalCommission"] as number,
       netProfit: r["netProfit"] as number,
     }));
   }

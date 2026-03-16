@@ -238,7 +238,7 @@ export default function TicketsPage() {
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-600 shadow-sm">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-pink-500 to-pink-600 shadow-sm">
           <Ticket className="size-4.5 text-white" />
         </div>
         <div>

@@ -18,8 +18,12 @@ settle-sync-ticket-summaries:
   handler: src/handlers/settle/sync-ticket-summaries.handler
   timeout: 900
 
-settle-build-report:
-  handler: src/handlers/settle/build-report.handler
+settle-build-settle-report:
+  handler: src/handlers/settle/build-settle-report.handler
+  timeout: 900
+
+settle-publish-settle-daily:
+  handler: src/handlers/settle/publish-settle-daily.handler
   timeout: 900
 
 settle-finalize:

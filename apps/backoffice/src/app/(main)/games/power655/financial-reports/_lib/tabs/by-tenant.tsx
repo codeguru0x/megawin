@@ -55,12 +55,16 @@ function TenantSummaryTable() {
           {error ? (
             <>
               <h3 className="mt-4 text-sm font-semibold">Lỗi tải dữ liệu</h3>
-              <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Vui lòng tải lại trang và thử lại.
+              </p>
             </>
           ) : (
             <>
               <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
-              <p className="mt-1 text-xs text-muted-foreground">Không có dữ liệu trong khoảng thời gian đã chọn.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Không có dữ liệu trong khoảng thời gian đã chọn.
+              </p>
             </>
           )}
         </CardContent>
@@ -74,7 +78,7 @@ function TenantSummaryTable() {
     stake: data.reduce((s, r) => s + r.totalStake, 0),
     payout: data.reduce((s, r) => s + r.totalPayout, 0),
     ggr: data.reduce((s, r) => s + r.ggr, 0),
-    commission: data.reduce((s, r) => s + r.commission, 0),
+    commission: data.reduce((s, r) => s + r.totalCommission, 0),
   };
 
   return (
@@ -142,7 +146,7 @@ function TenantSummaryTable() {
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{formatVND(row.ggr)}</TableCell>
                     <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVND(row.commission)}
+                      {formatVND(row.totalCommission)}
                     </TableCell>
                     <TableCell className="text-right">
                       <Badge variant={payoutPct > 0.95 ? "destructive" : "secondary"}>
@@ -222,12 +226,16 @@ function TenantDrawList({ tenantId }: { tenantId: string }) {
           {error ? (
             <>
               <h3 className="mt-4 text-sm font-semibold">Lỗi tải dữ liệu</h3>
-              <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Vui lòng tải lại trang và thử lại.
+              </p>
             </>
           ) : (
             <>
               <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
-              <p className="mt-1 text-xs text-muted-foreground">Không có kỳ quay nào cho đại lý này.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Không có kỳ quay nào cho đại lý này.
+              </p>
             </>
           )}
         </CardContent>
@@ -295,7 +303,7 @@ function TenantDrawList({ tenantId }: { tenantId: string }) {
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{formatVND(row.ggr)}</TableCell>
                   <TableCell className="text-right tabular-nums text-muted-foreground">
-                    {formatVND(row.commission)}
+                    {formatVND(row.totalCommission)}
                   </TableCell>
                   <TableCell>
                     <ChevronRight className="size-4 text-muted-foreground" />

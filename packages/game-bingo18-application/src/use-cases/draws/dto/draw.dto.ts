@@ -1,5 +1,5 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
-import type { DrawEntity } from "@megawin/game-bingo18/entities";;
+import type { DrawEntity } from "@megawin/game-bingo18/entities";
 
 // ─────────────────────────────────────────────
 // CreateDraw (batch)
@@ -41,8 +41,6 @@ export interface CreateDrawOutput {
 // ─────────────────────────────────────────────
 
 export interface PreviewDrawsInput {
-  /** Ngày quay muốn xem trước (YYYY-MM-DD). */
-  drawDate: string;
   /** Số kỳ muốn preview. */
   count: number;
 }
@@ -50,6 +48,8 @@ export interface PreviewDrawsInput {
 export interface PreviewDrawItem {
   /** Số thứ tự kỳ trong ngày. */
   drawNo: number;
+  /** Ngày quay (YYYY-MM-DD) — có thể khác nhau khi cross-day rollover. */
+  drawDate: string;
   /** Thời điểm quay dự kiến (ISO 8601). */
   drawTime: string;
   /** Thời điểm đóng bán dự kiến (ISO 8601). */

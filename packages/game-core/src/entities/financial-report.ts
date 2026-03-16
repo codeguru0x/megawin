@@ -67,6 +67,8 @@ export interface SystemSettleGameDaily {
 
   /** Tổng tiền cược (VND). Công thức: SUM(draw.totalStake). */
   totalStake: number;
+  /** Tổng tiền thắng (VND). Công thức: SUM(draw.totalWin). */
+  totalWin: number;
   /** Tổng tiền trả thưởng (VND). Công thức: SUM(draw.totalPayout). */
   totalPayout: number;
   /** Gross Gaming Revenue (VND). Công thức: totalStake - totalPayout. Có thể ÂM. */
@@ -100,13 +102,15 @@ export interface SystemSettleTenantDaily {
 
   /** Tổng tiền cược của tenant (VND). */
   totalStake: number;
+  /** Tổng tiền thắng của tenant (VND). Công thức: SUM(tenantReport.totalWin). */
+  totalWin: number;
   /** Tổng tiền trả thưởng của tenant (VND). */
   totalPayout: number;
   /** GGR = totalStake - totalPayout. Có thể ÂM. */
   ggr: number;
-  /** Hoa hồng đại lý (VND). */
-  commission: number;
-  /** Lợi nhuận ròng (VND). Công thức: ggr - commission. Có thể ÂM. */
+  /** Tổng hoa hồng đại lý (VND). Công thức: SUM(tenantReport.totalCommission). */
+  totalCommission: number;
+  /** Lợi nhuận ròng (VND). Công thức: ggr - totalCommission. Có thể ÂM. */
   netProfit: number;
   /** Số entry của tenant trong ngày. */
   entryCount: number;

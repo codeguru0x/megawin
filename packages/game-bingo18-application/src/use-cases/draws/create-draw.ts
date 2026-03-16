@@ -7,7 +7,7 @@ import { todayVN } from "@megawin/shared/utils/date";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { DrawCounterRepository } from "../../infras/repos/draw-counter-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import { calcDrawSlots } from "../../helpers/calc-draw-slots";
+import { calcDrawSlotsForDate } from "../../helpers/calc-draw-slots";
 import type { CreateDrawInput, CreateDrawOutput, CreateDrawOutputItem } from "./dto/draw.dto";
 
 export class CreateDrawUseCase extends NextApiUseCase<CreateDrawInput, CreateDrawOutput> {
@@ -27,9 +27,9 @@ export class CreateDrawUseCase extends NextApiUseCase<CreateDrawInput, CreateDra
 
     const { play } = globalConfig;
 
-    const slots = calcDrawSlots(new Date(), drawDate, count, play);
+    const slots = calcDrawSlotsForDate(new Date(), drawDate, count, play);
     if (slots.length === 0) {
-      throw AppException.badRequest(`Không còn slot quay nào khả dụng trong ngày (trước 23:59).`);
+      throw AppException.badRequest(`Không còn slot quay nào khả dụng trong ngày ${drawDate}.`);
     }
 
     const firstDrawNo = await this.counterRepo.getNextDrawNoBatch(drawDate, slots.length);

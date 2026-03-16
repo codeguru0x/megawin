@@ -129,7 +129,7 @@ export default function Lotto535TenantConfigPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-violet-600 shadow-sm">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-amber-400 to-orange-500 shadow-sm">
             <Building2 className="size-4.5 text-white" />
           </div>
           <div>

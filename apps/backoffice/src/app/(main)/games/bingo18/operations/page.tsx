@@ -99,7 +99,7 @@ function OperationsContent() {
       {/* Page Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-amber-500 to-orange-600 shadow-sm">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-green-500 to-green-600 shadow-sm">
             <Dice5 className="size-4.5 text-white" />
           </div>
           <div>
@@ -163,7 +163,7 @@ function DrawNotFound({
     <div className="@container/main flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-amber-500 to-orange-600 shadow-sm">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-green-500 to-green-600 shadow-sm">
             <Dice5 className="size-4.5 text-white" />
           </div>
           <div>

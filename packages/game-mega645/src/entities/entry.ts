@@ -30,6 +30,7 @@ export interface EntryTenantSnapshot {
 export interface EntrySummary {
   /** Số vé (mã hiển thị cho người chơi). */
   ticketNo: string;
+
   /** Snapshot các board từ vé gốc. */
   boards: EntryBoardSnapshot[];
 }

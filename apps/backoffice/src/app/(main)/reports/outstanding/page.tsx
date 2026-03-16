@@ -19,6 +19,7 @@ import { formatVND, formatVNDCompact, formatNumber } from "@megawin/shared/utils
 import { displayVNTimeWithSeconds } from "@megawin/shared/utils/date";
 import type { SystemOutstandingGameDaily } from "@megawin/game-core/entities";
 import { GAME_LABELS } from "@megawin/game-core/labels";
+import { SYSTEM_ICON_GRADIENT } from "@/lib/game-colors";
 import { useSystemOutstanding } from "../financial/_lib/use-report-queries";
 
 // ─── Content ──────────────────────────────────────────────────────────────────
@@ -40,7 +41,9 @@ function SystemOutstandingContent() {
       {/* Page Header */}
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-amber-500 to-amber-600 shadow-sm">
+          <div
+            className={`flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br ${SYSTEM_ICON_GRADIENT} shadow-sm`}
+          >
             <Clock className="size-4.5 text-white" />
           </div>
           <div>

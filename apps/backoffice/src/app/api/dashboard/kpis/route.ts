@@ -29,6 +29,7 @@ function buildMockKpis(fd: string, compare?: string): DashboardGameDailyData[] {
       draws: 7,
       entries: 68,
       players: 42,
+      win: 372_500_000,
     },
     {
       product: "power655",
@@ -38,6 +39,7 @@ function buildMockKpis(fd: string, compare?: string): DashboardGameDailyData[] {
       draws: 3,
       entries: 45,
       players: 31,
+      win: 460_000_000,
     },
     {
       product: "mega645",
@@ -47,6 +49,7 @@ function buildMockKpis(fd: string, compare?: string): DashboardGameDailyData[] {
       draws: 3,
       entries: 38,
       players: 27,
+      win: 350_000_000,
     },
     {
       product: "keno",
@@ -56,6 +59,7 @@ function buildMockKpis(fd: string, compare?: string): DashboardGameDailyData[] {
       draws: 96,
       entries: 1840,
       players: 854,
+      win: 550_000_000,
     },
     {
       product: "bingo18",
@@ -65,6 +69,7 @@ function buildMockKpis(fd: string, compare?: string): DashboardGameDailyData[] {
       draws: 48,
       entries: 320,
       players: 178,
+      win: 140_000_000,
     },
     {
       product: "max3d",
@@ -74,6 +79,7 @@ function buildMockKpis(fd: string, compare?: string): DashboardGameDailyData[] {
       draws: 3,
       entries: 92,
       players: 65,
+      win: 95_000_000,
     },
     {
       product: "max3dpro",
@@ -83,6 +89,7 @@ function buildMockKpis(fd: string, compare?: string): DashboardGameDailyData[] {
       draws: 3,
       entries: 67,
       players: 48,
+      win: 62_000_000,
     },
   ];
 
@@ -98,6 +105,7 @@ function buildMockKpis(fd: string, compare?: string): DashboardGameDailyData[] {
       entryCount: g.entries,
       playerCount: g.players,
       totalStake: g.stake,
+      totalWin: g.win,
       totalPayout: g.payout,
       ggr,
       totalCommission: g.commission,
@@ -112,6 +120,7 @@ function buildMockKpis(fd: string, compare?: string): DashboardGameDailyData[] {
       const stake = Math.round(g.stake * factor);
       const payout = Math.round(g.payout * factor);
       const commission = Math.round(g.commission * factor);
+      const win = Math.round(g.win * factor);
       const ggr = stake - payout;
       rows.push({
         gameProduct: g.product,
@@ -120,6 +129,7 @@ function buildMockKpis(fd: string, compare?: string): DashboardGameDailyData[] {
         entryCount: Math.round(g.entries * factor),
         playerCount: Math.round(g.players * factor),
         totalStake: stake,
+        totalWin: win,
         totalPayout: payout,
         ggr,
         totalCommission: commission,

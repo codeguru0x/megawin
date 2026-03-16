@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FinancialDateRangePicker } from "@/components/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SYSTEM_ICON_GRADIENT } from "@/lib/game-colors";
 import { useSystemReportFilters } from "./_lib/use-report-filters";
 import { DailyOverviewTab } from "./_lib/tabs/daily-overview";
 import { ByGameTab } from "./_lib/tabs/by-game";
@@ -19,7 +20,9 @@ function SystemFinancialReportsContent() {
       {/* Page Header */}
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-violet-500 to-violet-600 shadow-sm">
+          <div
+            className={`flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br ${SYSTEM_ICON_GRADIENT} shadow-sm`}
+          >
             <BarChart3 className="size-4.5 text-white" />
           </div>
           <div>
@@ -51,7 +54,7 @@ function SystemFinancialReportsContent() {
       <Tabs value={tab} onValueChange={(v) => void setTab(v as "daily" | "by-game" | "by-tenant")}>
         <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
           <TabsTrigger value="daily" className="gap-1.5">
-            <CalendarDays className="size-4 text-violet-500" />
+            <CalendarDays className="size-4 text-indigo-500" />
             Tổng quan ngày
           </TabsTrigger>
           <TabsTrigger value="by-game" className="gap-1.5">

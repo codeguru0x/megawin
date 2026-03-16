@@ -1,6 +1,3 @@
-export { publishGameReport } from "./publish-game-report";
-export type { PublishGameReportInput, PublishGameReportResult } from "./publish-game-report";
-
 export { BaseSyncEntryFeedUseCase } from "./sync-entry-feed";
 export type {
   SyncEntryFeedInput,

@@ -67,20 +67,26 @@ export class BuildSettleReportUseCase extends InternalUseCase<
     );
 
     // ── Bước 2: Upsert SettleTenantReport[] ─────────────────────────────────
-    const tenantReports = tenantAggs.map((t) => ({
-      drawId,
-      tenantId: t.tenantId,
-      financialDate,
-      entryCount: t.entryCount,
-      playerCount: playerCountMap.get(t.tenantId) ?? 0,
-      lineCount: t.lineCount,
-      totalStake: t.totalStake,
-      totalWin: t.totalWin,
-      totalPayout: t.totalPayout,
+    const tenantReports = tenantAggs.map((t) => {
       // ggr per tenant = tiền cược - tiền trả thưởng (có thể âm khi jackpot winner ở tenant này)
-      ggr: t.totalStake - t.totalPayout,
-      commission: t.totalCommission,
-    }));
+      const ggr = t.totalStake - t.totalPayout;
+      // netProfit per tenant = ggr - totalCommission (có thể âm)
+      const netProfit = ggr - t.totalCommission;
+      return {
+        drawId,
+        tenantId: t.tenantId,
+        financialDate,
+        entryCount: t.entryCount,
+        playerCount: playerCountMap.get(t.tenantId) ?? 0,
+        lineCount: t.lineCount,
+        totalStake: t.totalStake,
+        totalWin: t.totalWin,
+        totalPayout: t.totalPayout,
+        ggr,
+        totalCommission: t.totalCommission,
+        netProfit,
+      };
+    });
 
     await this.tenantReportRepo.upsertTenantReports(tenantReports);
 

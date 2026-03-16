@@ -83,7 +83,7 @@ function TenantBreakdownRows({
           </TableCell>
           <TableCell className="text-right tabular-nums text-xs">{formatVND(row.ggr)}</TableCell>
           <TableCell className="text-right tabular-nums text-xs">
-            {formatVND(row.commission)}
+            {formatVND(row.totalCommission)}
           </TableCell>
           <TableCell
             className={`text-right tabular-nums text-xs font-medium ${row.netProfit >= 0 ? "text-success" : "text-danger"}`}
@@ -141,7 +141,7 @@ export function ByTenantTab() {
   const totalStake = data.reduce((s, r) => s + r.totalStake, 0);
   const totalPayout = data.reduce((s, r) => s + r.totalPayout, 0);
   const totalGgr = data.reduce((s, r) => s + r.ggr, 0);
-  const totalCommission = data.reduce((s, r) => s + r.commission, 0);
+  const totalCommission = data.reduce((s, r) => s + r.totalCommission, 0);
   const totalNetProfit = data.reduce((s, r) => s + r.netProfit, 0);
   const totalEntries = data.reduce((s, r) => s + r.entryCount, 0);
 
@@ -229,7 +229,7 @@ export function ByTenantTab() {
                         {formatVND(row.ggr)}
                       </TableCell>
                       <TableCell className="text-right tabular-nums text-muted-foreground">
-                        {formatVND(row.commission)}
+                        {formatVND(row.totalCommission)}
                       </TableCell>
                       <TableCell
                         className={`text-right tabular-nums font-medium ${row.netProfit >= 0 ? "text-success" : "text-danger"}`}

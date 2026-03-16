@@ -3,15 +3,16 @@
  *
  * Lịch game: firstDrawTime + N * interval (VD: 06:00, 06:06, 06:12, ...)
  *
- * Quy tắc:
- *   - Kỳ trong [firstDrawTime, lastDrawTime]: status = salesOpen
- *   - Kỳ > lastDrawTime và <= 23:59: status = scheduled (không cược)
- *   - Kỳ > 23:59: không tạo
+ * Quy tắc cross-day rollover:
+ *   - Bắt đầu từ thời điểm hiện tại (giờ VN), tìm slot tiếp theo khả dụng
+ *   - Nếu slot vượt quá lastDrawTime trong ngày → chuyển sang ngày tiếp theo
+ *     ở firstDrawTime
+ *   - Tiếp tục cho đến khi đủ count slots
  *
  * Dùng chung cho PreviewDraws và CreateDraw.
  */
 
-import { formatVN, toVNDate } from "@megawin/shared/utils/date";
+import { formatVN, toVNDate, todayVN, formatVNDate, addDays } from "@megawin/shared/utils/date";
 import { DrawStatus } from "@megawin/game-core/entities";
 
 export interface DrawSlotConfig {
@@ -22,6 +23,8 @@ export interface DrawSlotConfig {
 }
 
 export interface DrawSlot {
+  /** Ngày quay (YYYY-MM-DD). */
+  drawDate: string;
   minutes: number;
   drawTimeStr: string;
   drawTime: Date;
@@ -29,28 +32,9 @@ export interface DrawSlot {
   status: typeof DrawStatus.SalesOpen | typeof DrawStatus.Scheduled;
 }
 
-function findNextSlotMinutes(
-  nowMinutes: number,
-  nowSeconds: number,
-  config: DrawSlotConfig
-): number {
-  const [fh, fm] = config.firstDrawTime.split(":").map(Number);
-  const firstMinutes = fh! * 60 + fm!;
-
-  const sinceFirst = nowMinutes - firstMinutes;
-  const slotsElapsed =
-    sinceFirst >= 0
-      ? Math.floor(sinceFirst / config.drawIntervalMinutes) + 1
-      : 0;
-
-  let candidate = firstMinutes + slotsElapsed * config.drawIntervalMinutes;
-
-  const nowTotalSeconds = nowMinutes * 60 + nowSeconds;
-  while (candidate * 60 - config.salesCloseBeforeSeconds <= nowTotalSeconds) {
-    candidate += config.drawIntervalMinutes;
-  }
-
-  return candidate;
+function parseHHmm(timeStr: string): number {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h! * 60 + m!;
 }
 
 function minutesToHHmm(minutes: number): string {
@@ -59,38 +43,127 @@ function minutesToHHmm(minutes: number): string {
   return `${hh}:${mm}`;
 }
 
-export function calcDrawSlots(
+/**
+ * Tìm slot tiếp theo trong ngày dựa trên thời điểm hiện tại.
+ * Trả về phút trong ngày của slot, hoặc -1 nếu không còn slot hợp lệ trong ngày.
+ */
+function findNextSlotInDay(
+  nowMinutes: number,
+  nowSeconds: number,
+  config: DrawSlotConfig,
+  isToday: boolean,
+): number {
+  const firstMinutes = parseHHmm(config.firstDrawTime);
+  const lastMinutes = parseHHmm(config.lastDrawTime);
+
+  if (!isToday) return firstMinutes;
+
+  const sinceFirst = nowMinutes - firstMinutes;
+  const slotsElapsed =
+    sinceFirst >= 0 ? Math.floor(sinceFirst / config.drawIntervalMinutes) + 1 : 0;
+
+  let candidate = firstMinutes + slotsElapsed * config.drawIntervalMinutes;
+
+  // Đảm bảo slot chưa quá hạn đóng bán
+  const nowTotalSeconds = nowMinutes * 60 + nowSeconds;
+  while (candidate * 60 - config.salesCloseBeforeSeconds <= nowTotalSeconds) {
+    candidate += config.drawIntervalMinutes;
+  }
+
+  // Nếu vượt quá lastDrawTime → không còn slot trong ngày
+  if (candidate > lastMinutes) return -1;
+
+  return candidate;
+}
+
+/**
+ * Tính danh sách draw slots cho 1 ngày cụ thể (KHÔNG cross-day rollover).
+ *
+ * Dùng cho CreateDraw — chỉ tạo kỳ trong ngày drawDate, nếu hết slot thì trả empty.
+ */
+export function calcDrawSlotsForDate(
   nowDate: Date,
   drawDate: string,
   count: number,
-  config: DrawSlotConfig
+  config: DrawSlotConfig,
 ): DrawSlot[] {
+  const isToday = drawDate === todayVN();
+
   const vnTimeStr = formatVN(nowDate, "HH:mm:ss");
   const [hStr, mStr, sStr] = vnTimeStr.split(":");
   const nowMinutes = parseInt(hStr!) * 60 + parseInt(mStr!);
   const nowSeconds = parseInt(sStr!);
 
-  const [lh, lm] = config.lastDrawTime.split(":").map(Number);
-  const lastDrawMinutes = lh! * 60 + lm!;
+  const lastMinutes = parseHHmm(config.lastDrawTime);
 
-  const MAX_MINUTES = 23 * 60 + 59;
-
-  let candidateMinutes = findNextSlotMinutes(nowMinutes, nowSeconds, config);
+  let candidateMinutes = findNextSlotInDay(nowMinutes, nowSeconds, config, isToday);
+  if (candidateMinutes === -1) return [];
 
   const slots: DrawSlot[] = [];
   for (let i = 0; i < count; i++) {
-    if (candidateMinutes > MAX_MINUTES) break;
+    if (candidateMinutes > lastMinutes) break;
 
     const drawTimeStr = minutesToHHmm(candidateMinutes);
     const drawTime = toVNDate(drawDate, drawTimeStr);
-    const closeAt = new Date(
-      drawTime.getTime() - config.salesCloseBeforeSeconds * 1000
-    );
-
-    const status =
-      candidateMinutes <= lastDrawMinutes ? DrawStatus.SalesOpen : DrawStatus.Scheduled;
+    const closeAt = new Date(drawTime.getTime() - config.salesCloseBeforeSeconds * 1000);
 
     slots.push({
+      drawDate,
+      minutes: candidateMinutes,
+      drawTimeStr,
+      drawTime,
+      closeAt,
+      status: DrawStatus.SalesOpen,
+    });
+
+    candidateMinutes += config.drawIntervalMinutes;
+  }
+
+  return slots;
+}
+
+/**
+ * Tính danh sách draw slots, hỗ trợ cross-day rollover.
+ *
+ * Bắt đầu từ now (giờ VN), nếu hết slot trong ngày (vượt lastDrawTime)
+ * thì chuyển sang ngày tiếp theo ở firstDrawTime.
+ * Dùng cho PreviewDraws.
+ */
+export function calcDrawSlots(nowDate: Date, count: number, config: DrawSlotConfig): DrawSlot[] {
+  const vnTimeStr = formatVN(nowDate, "HH:mm:ss");
+  const [hStr, mStr, sStr] = vnTimeStr.split(":");
+  const nowMinutes = parseInt(hStr!) * 60 + parseInt(mStr!);
+  const nowSeconds = parseInt(sStr!);
+
+  const firstMinutes = parseHHmm(config.firstDrawTime);
+  const lastMinutes = parseHHmm(config.lastDrawTime);
+
+  let currentDate = todayVN();
+  let candidateMinutes = findNextSlotInDay(nowMinutes, nowSeconds, config, true);
+
+  // Nếu hôm nay hết slot → bắt đầu từ ngày mai
+  if (candidateMinutes === -1) {
+    currentDate = formatVNDate(addDays(nowDate, 1));
+    candidateMinutes = firstMinutes;
+  }
+
+  const slots: DrawSlot[] = [];
+  while (slots.length < count) {
+    // Nếu vượt lastDrawTime → rollover sang ngày tiếp theo
+    if (candidateMinutes > lastMinutes) {
+      const nextDay = addDays(toVNDate(currentDate, "00:00"), 1);
+      currentDate = formatVNDate(nextDay);
+      candidateMinutes = firstMinutes;
+    }
+
+    const drawTimeStr = minutesToHHmm(candidateMinutes);
+    const drawTime = toVNDate(currentDate, drawTimeStr);
+    const closeAt = new Date(drawTime.getTime() - config.salesCloseBeforeSeconds * 1000);
+
+    const status = candidateMinutes <= lastMinutes ? DrawStatus.SalesOpen : DrawStatus.Scheduled;
+
+    slots.push({
+      drawDate: currentDate,
       minutes: candidateMinutes,
       drawTimeStr,
       drawTime,

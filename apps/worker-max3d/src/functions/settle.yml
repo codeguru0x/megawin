@@ -6,6 +6,10 @@ settle-entries:
   handler: src/handlers/settle/settle-entries.handler
   timeout: 900
 
+settle-sync-ticket-summaries:
+  handler: src/handlers/settle/sync-ticket-summaries.handler
+  timeout: 900
+
 settle-calculate-financials:
   handler: src/handlers/settle/calculate-financials.handler
   timeout: 900
@@ -16,10 +20,6 @@ settle-build-settle-report:
 
 settle-publish-settle-daily:
   handler: src/handlers/settle/publish-settle-daily.handler
-  timeout: 900
-
-settle-sync-ticket-summaries:
-  handler: src/handlers/settle/sync-ticket-summaries.handler
   timeout: 900
 
 settle-finalize:

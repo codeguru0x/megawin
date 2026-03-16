@@ -5,6 +5,22 @@
  */
 
 /**
+ * Tính tổng các giá trị số được rút ra bởi `fn` từ mỗi phần tử trong mảng.
+ *
+ * Thay thế pattern `arr.reduce((s, t) => s + t.field, 0)` lặp đi lặp lại.
+ * Null-safe: trả về `0` khi `arr` là `null`, `undefined`, hoặc mảng rỗng.
+ *
+ * @example
+ * sumBy([{ amount: 100 }, { amount: 200 }], t => t.amount)  // 300
+ * sumBy([], t => t.amount)                                   // 0
+ * sumBy(null, t => t.amount)                                 // 0
+ * sumBy(undefined, t => t.amount)                            // 0
+ */
+export function sumBy<T>(arr: readonly T[] | null | undefined, fn: (item: T) => number): number {
+  return arr?.reduce((sum, item) => sum + fn(item), 0) ?? 0;
+}
+
+/**
  * Kiểm tra tất cả phần tử trong mảng có duy nhất không.
  *
  * Dùng thay cho pattern `new Set(arr).size === arr.length` lặp đi lặp lại

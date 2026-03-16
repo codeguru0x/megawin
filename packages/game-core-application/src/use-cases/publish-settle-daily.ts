@@ -87,6 +87,7 @@ export class PublishSettleDailyUseCase {
       playerCount: drawAgg.playerCount,
       tenantCount: drawAgg.tenantCount,
       totalStake: drawAgg.totalStake,
+      totalWin: drawAgg.totalWin,
       totalPayout: drawAgg.totalPayout,
       ggr: drawAgg.ggr,
       totalCommission: drawAgg.totalCommission,
@@ -96,22 +97,23 @@ export class PublishSettleDailyUseCase {
     // ── Bước 2: Aggregate tenant-level → upsert system_settle_tenant_daily ───
     const tenantAggs = await tenantDailyRepo.aggregateTenantsFromPerGame(financialDate);
 
-    // Upsert từng tenant — số tenant nhỏ (thường < 100) nên loop acceptable
-    for (const r of tenantAggs) {
-      await tenantDailyRepo.upsertTenantDaily({
+    // Bulk upsert tất cả tenants trong 1 DB call — giảm từ N×RTT xuống 1 RTT.
+    await tenantDailyRepo.bulkUpsertTenantDaily(
+      tenantAggs.map((r) => ({
         financialDate,
         tenantId: r.tenantId,
         gameProduct,
         totalStake: r.totalStake,
+        totalWin: r.totalWin,
         totalPayout: r.totalPayout,
         ggr: r.ggr,
-        commission: r.commission,
+        totalCommission: r.totalCommission,
         netProfit: r.netProfit,
         entryCount: r.entryCount,
         playerCount: r.playerCount,
         drawCount: r.drawCount,
-      });
-    }
+      })),
+    );
 
     return {
       gameProduct,

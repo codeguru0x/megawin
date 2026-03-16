@@ -13,5 +13,6 @@ export interface TenantAggregateSummary {
   totalWin: number;
   totalPayout: number;
   ggr: number;
-  commission: number;
+  /** Tổng hoa hồng đại lý (VND). */
+  totalCommission: number;
 }

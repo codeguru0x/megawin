@@ -354,7 +354,7 @@ function DrawTenants({ drawId }: { drawId: string }) {
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{formatVND(row.ggr)}</TableCell>
                     <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVND(row.commission)}
+                      {formatVND(row.totalCommission)}
                     </TableCell>
                     <TableCell>
                       <ChevronRight className="size-4 text-muted-foreground" />

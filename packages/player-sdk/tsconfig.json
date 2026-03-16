@@ -1,6 +1,7 @@
 {
   "extends": "@megawin/typescript-config/base.json",
   "compilerOptions": {
+    "composite": false,
     "rootDir": "src",
     "outDir": "dist",
     "lib": ["es2022", "DOM"],

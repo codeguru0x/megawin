@@ -14,7 +14,8 @@ import { cn } from "@/lib/utils";
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils/number";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { BarChart2, PieChart as PieChartIcon } from "lucide-react";
-import { getGameLabel, getGameColor, type DashboardDayKpis } from "../_lib/compute";
+import { getGameLabel, type DashboardDayKpis } from "../_lib/compute";
+import { getGameHex } from "@/lib/game-colors";
 import { GameTableSkeleton, ChartSkeleton } from "./skeletons";
 
 // ─── Formatter VND không có ký tự ₫ ──────────────────────────────────────────
@@ -148,7 +149,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                     labelLine={false}
                   >
                     {chartData.map((entry) => (
-                      <Cell key={entry.gameProduct} fill={getGameColor(entry.gameProduct)} />
+                      <Cell key={entry.gameProduct} fill={getGameHex(entry.gameProduct)} />
                     ))}
                   </Pie>
                   <Tooltip content={<PieTooltip />} />
@@ -170,7 +171,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                 <div key={item.gameProduct} className="flex items-center gap-1">
                   <span
                     className="size-1.5 shrink-0 rounded-full"
-                    style={{ background: getGameColor(item.gameProduct) }}
+                    style={{ background: getGameHex(item.gameProduct) }}
                   />
                   <span className="text-[10px] text-muted-foreground">{item.name}</span>
                 </div>
@@ -201,7 +202,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                       <div className="flex items-center gap-2">
                         <span
                           className="size-2 shrink-0 rounded-full"
-                          style={{ background: getGameColor(row.gameProduct) }}
+                          style={{ background: getGameHex(row.gameProduct) }}
                         />
                         <span className="text-xs font-medium">{getGameLabel(row.gameProduct)}</span>
                       </div>
@@ -284,13 +285,8 @@ function PayoutRatioBar({
   const isDanger = payoutRatio >= 0.95;
   const isWarn = payoutRatio >= 0.85;
 
-  const barColor = isOver
-    ? "#ef4444"
-    : isDanger
-      ? "#f97316"
-      : isWarn
-        ? "#eab308"
-        : getGameColor(gameProduct);
+  // Bar luôn dùng màu brand của game — không thay đổi theo mức cảnh báo
+  const barColor = getGameHex(gameProduct);
 
   return (
     <div className="flex items-center gap-3">
@@ -303,6 +299,7 @@ function PayoutRatioBar({
           style={{ width: `${displayPct}%`, background: barColor }}
         />
       </div>
+      {/* Chỉ text % bên phải đổi màu theo mức cảnh báo */}
       <span
         className={cn(
           "w-12 shrink-0 text-right text-xs tabular-nums font-medium",
@@ -310,7 +307,9 @@ function PayoutRatioBar({
             ? "text-red-600 dark:text-red-400"
             : isDanger
               ? "text-orange-600 dark:text-orange-400"
-              : "text-foreground",
+              : isWarn
+                ? "text-yellow-600 dark:text-yellow-400"
+                : "text-foreground",
         )}
       >
         {(payoutRatio * 100).toFixed(1)}%
@@ -372,20 +371,21 @@ export function PayoutRatioChart({ kpis, isLoading }: PayoutRatioChartProps) {
             />
           ))}
         </div>
-        {/* Chú thích màu sắc */}
+        {/* Chú thích: bar = màu game cố định; text % thay đổi theo mức cảnh báo */}
         <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3">
           <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Rủi ro:
+            Số %:
           </p>
           {[
-            { color: "#10b981", label: "< 85%" },
-            { color: "#eab308", label: "85–95%" },
-            { color: "#f97316", label: "95–100%" },
-            { color: "#ef4444", label: "> 100%" },
+            { textClass: "text-foreground", label: "< 85%" },
+            { textClass: "text-yellow-600 dark:text-yellow-400", label: "85–95%" },
+            { textClass: "text-orange-600 dark:text-orange-400", label: "95–100%" },
+            { textClass: "text-red-600 dark:text-red-400", label: "> 100%" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1">
-              <span className="size-2 shrink-0 rounded-full" style={{ background: item.color }} />
-              <span className="text-[10px] text-muted-foreground">{item.label}</span>
+              <span className={cn("text-[10px] tabular-nums font-medium", item.textClass)}>
+                {item.label}
+              </span>
             </div>
           ))}
         </div>

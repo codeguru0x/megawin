@@ -16,6 +16,6 @@ export interface TenantAggregateSummary {
   totalPayout: number;
   /** Gross Gaming Revenue = totalStake - totalPayout (VND). */
   ggr: number;
-  /** Hoa hồng đại lý (VND). */
-  commission: number;
+  /** Tổng hoa hồng đại lý (VND). */
+  totalCommission: number;
 }

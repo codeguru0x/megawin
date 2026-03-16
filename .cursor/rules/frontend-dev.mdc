@@ -1,10 +1,304 @@
 ---
-description: Frontend conventions — URL state (nuqs) và display labels (game-core/labels, game-*/labels)
+description: Frontend conventions — URL state (nuqs), display labels (game-core/labels, game-*/labels), và game brand colors (game-colors.ts)
 globs: apps/backoffice/src/**/*.{tsx,ts}
 alwaysApply: false
 ---
 
 # Display Labels — Dùng label package, không hardcode
+
+**BẮT BUỘC** import label từ package. **KHÔNG** định nghĩa `Record<string, string>` hardcode trong component/page.
+
+## Nguồn label theo loại
+
+### Labels dùng chung mọi game → `@megawin/game-core/labels`
+
+```tsx
+import {
+  GAME_LABELS,           // Record<GameProduct, string>  — tên game hiển thị
+  DRAW_STATUS_LABELS,    // Record<DrawStatus, string>   — trạng thái kỳ quay
+  ENTRY_STATUS_LABELS,   // Record<EntryStatus, string>  — trạng thái đơn cược
+  TICKET_STATUS_LABELS,  // Record<TicketStatus, string> — trạng thái vé
+  ENTRY_OUTCOME_LABELS,  // Record<EntryOutcome, string> — kết quả đơn cược
+  TICKET_CHANNEL_LABELS, // Record<TicketChannel, string>— kênh bán
+} from "@megawin/game-core/labels";
+```
+
+### Labels đặc thù từng game → `@megawin/game-<slug>/labels`
+
+| Package | Exports chính |
+|---------|--------------|
+| `@megawin/game-lotto535/labels` | `LOTTO535_PLAY_TYPE_LABELS`, `LOTTO535_PLAY_TYPE_LABELS_SHORT`, `LOTTO535_PRIZE_TIER_LABELS` |
+| `@megawin/game-mega645/labels` | `MEGA645_PLAY_TYPE_LABELS`, `MEGA645_PRIZE_TIER_LABELS` |
+| `@megawin/game-power655/labels` | `POWER655_PLAY_TYPE_LABELS`, `POWER655_PRIZE_TIER_LABELS` |
+| `@megawin/game-keno/labels` | `KENO_PLAY_TYPE_LABELS`, `KENO_BIG_SMALL_BET_LABELS`, `KENO_EVEN_ODD_BET_LABELS` |
+| `@megawin/game-bingo18/labels` | `BINGO18_PLAY_TYPE_LABELS`, `BINGO18_TRIPLE_KIND_LABELS`, `BINGO18_BIG_SMALL_BET_LABELS` |
+| `@megawin/game-max3d/labels` | `MAX3D_MODE_TYPE_LABELS`, `MAX3D_PLAY_TYPE_LABELS`, `MAX3D_PLAY_MODE_LABELS`, `MAX3D_BASIC_PRIZE_TIER_LABELS`, `MAX3D_PLUS_PRIZE_TIER_LABELS` |
+| `@megawin/game-max3dpro/labels` | `MAX3DPRO_PLAY_MODE_LABELS`, `MAX3DPRO_PLAY_TYPE_LABELS`, `MAX3DPRO_PRIZE_TIER_LABELS` |
+
+## Cách dùng — Indexing an toàn
+
+Khi data từ API trả về `string` (không phải enum), **BẮT BUỘC** cast trước khi index:
+
+```tsx
+// ❌ SAI — TS7053: string không thể index Record<PlayType, string>
+{MEGA645_PLAY_TYPE_LABELS[b.playType] ?? b.playType}
+
+// ✅ ĐÚNG — cast về enum type
+import { PlayType } from "@megawin/game-mega645/entities";
+import { MEGA645_PLAY_TYPE_LABELS } from "@megawin/game-mega645/labels";
+
+{MEGA645_PLAY_TYPE_LABELS[b.playType as PlayType] ?? b.playType}
+```
+
+## Khi cần label mới chưa có trong package
+
+**Trường hợp 1 — Label cho enum đã có nhưng chưa được export:**  
+→ Thêm vào file `packages/game-<slug>/src/labels/index.ts` và export ra.
+
+**Trường hợp 2 — Label cho loại entity mới hoàn toàn (enum mới):**  
+1. Đảm bảo enum đã có trong `packages/game-<slug>/src/entities/enums.ts`
+2. Thêm export vào `packages/game-<slug>/src/labels/index.ts`:
+
+```typescript
+// packages/game-keno/src/labels/index.ts
+export const KENO_NEW_TYPE_LABELS: Record<KenoNewType, string> = {
+  [KenoNewType.ValueA]: "Tên hiển thị A",
+  [KenoNewType.ValueB]: "Tên hiển thị B",
+} as const;
+
+export function getKenoNewTypeLabel(v: KenoNewType): string {
+  return KENO_NEW_TYPE_LABELS[v] ?? v;
+}
+```
+
+3. Import và dùng trong frontend như bình thường.
+
+**Trường hợp 3 — Label dùng chung mọi game (status, channel...):**  
+→ Thêm vào `packages/game-core/src/labels/game-labels.ts` và export ra `packages/game-core/src/labels/index.ts`.
+
+## ❌ SAI — hardcode trong component
+
+```tsx
+// Không được làm thế này
+const PLAY_TYPE_LABELS: Record<string, string> = {
+  standard: "Chuẩn",
+  bao5: "Bao 5",
+  quickPick: "Chọn nhanh",
+};
+```
+
+## ✅ ĐÚNG — import từ package
+
+```tsx
+import { MEGA645_PLAY_TYPE_LABELS } from "@megawin/game-mega645/labels";
+import { DRAW_STATUS_LABELS, GAME_LABELS } from "@megawin/game-core/labels";
+```
+
+---
+
+# Game Brand Colors — Dùng `game-colors.ts`, không hardcode
+
+**BẮT BUỘC** lấy màu game từ `@/lib/game-colors`. **KHÔNG** hardcode Tailwind color class hay hex code cho từng game trong component.
+
+## Source of truth
+
+```
+apps/backoffice/src/lib/game-colors.ts  — GAME_COLORS, getGameColors(), getGameHex()
+apps/backoffice/src/app/globals.css     — CSS variables --game-* (light + dark mode)
+```
+
+## Bảng màu 7 game (đã cố định)
+
+| Game | Token | `iconGradient` | Hex |
+|------|-------|----------------|-----|
+| Mega 6/45 | `GameProduct.Mega645` | `from-teal-500 to-teal-600` | `#0d9488` |
+| Power 6/55 | `GameProduct.Power655` | `from-red-500 to-orange-500` | `#ef4444` |
+| Lotto 5/35 | `GameProduct.Lotto535` | `from-amber-400 to-orange-500` | `#d97706` |
+| Keno | `GameProduct.Keno` | `from-orange-500 to-orange-600` | `#ea580c` |
+| Max 3D | `GameProduct.Max3d` | `from-violet-500 to-violet-600` | `#7c3aed` |
+| Max 3D Pro | `GameProduct.Max3dpro` | `from-pink-500 to-pink-600` | `#db2777` |
+| Bingo 18 | `GameProduct.Bingo18` | `from-green-500 to-green-600` | `#16a34a` |
+
+## Icon header tại page title — BẮT BUỘC đồng nhất
+
+Mỗi trang của một game **phải dùng cùng 1 gradient** từ `GAME_COLORS[GameProduct.X].iconGradient`.
+
+```tsx
+// ✅ ĐÚNG — lấy từ GAME_COLORS
+import { GAME_COLORS } from "@/lib/game-colors";
+import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+
+const c = GAME_COLORS[GameProduct.Lotto535];
+
+<div className={`flex size-9 items-center justify-center rounded-xl bg-linear-to-br ${c.iconGradient} shadow-sm`}>
+  <SomeIcon className="size-4.5 text-white" />
+</div>
+```
+
+```tsx
+// ❌ SAI — hardcode khác nhau giữa các trang của cùng 1 game
+// operations/page.tsx
+<div className="... bg-linear-to-br from-emerald-500 to-emerald-600 ...">
+
+// financial-reports/page.tsx  
+<div className="... bg-linear-to-br from-pink-500 to-pink-600 ...">  // ← SAI, khác game!
+```
+
+## Trang hệ thống (non-game) — dùng `SYSTEM_ICON_GRADIENT`
+
+Các trang chung (Tenants, Accounts, Reports, Me/Profile, Settings...) **KHÔNG thuộc game nào** nên dùng `SYSTEM_ICON_GRADIENT` — màu Indigo đồng bộ với `--primary` theme của backoffice.
+
+```tsx
+// ✅ ĐÚNG — trang hệ thống
+import { SYSTEM_ICON_GRADIENT } from "@/lib/game-colors";
+
+<div className={`flex size-9 items-center justify-center rounded-xl bg-linear-to-br ${SYSTEM_ICON_GRADIENT} shadow-sm`}>
+  <Building2 className="size-4.5 text-white" />
+</div>
+```
+
+```tsx
+// ❌ SAI — hardcode color khác nhau cho từng trang hệ thống
+// tenants/page.tsx
+<div className="... bg-linear-to-br from-blue-500 to-blue-600 ...">
+
+// reports/financial/page.tsx
+<div className="... bg-linear-to-br from-violet-500 to-violet-600 ...">  // ← violet bị trùng Max 3D!
+```
+
+> **Lưu ý**: `SYSTEM_ICON_GRADIENT = "from-indigo-500 to-indigo-600"` — không trùng với bất kỳ game brand color nào.
+
+## Màu cho Recharts / inline style — dùng `getGameHex()`
+
+```tsx
+import { getGameHex } from "@/lib/game-colors";
+
+// Trong Recharts Cell
+<Cell key={gameProduct} fill={getGameHex(gameProduct)} />
+
+// Inline style
+<span style={{ background: getGameHex(gameProduct) }} />
+```
+
+## Tailwind class cho bg/text/border — dùng token `twBg`, `twText`, `twBorder`
+
+```tsx
+import { getGameColors } from "@/lib/game-colors";
+
+const c = getGameColors(gameProduct); // string → GameColorTokens (safe, fallback gray)
+
+<span className={c.twBg} />          // bg-game-mega645
+<span className={c.twText} />        // text-game-mega645
+<span className={c.twBorder} />      // border-game-mega645
+```
+
+## ❌ KHÔNG làm
+
+```tsx
+// Hardcode hex
+style={{ background: "#14b8a6" }}
+
+// Hardcode Tailwind class theo game
+className="bg-teal-500"     // dùng cho mega645
+className="bg-red-500"      // dùng cho power655
+
+// Dùng getGameColor() từ compute.ts (deprecated wrapper)
+import { getGameColor } from "../_lib/compute"; // ← deprecated, dùng getGameHex() thay thế
+```
+
+---
+
+# URL State Management — Dùng nuqs
+
+`nuqs` đã được cài trong `apps/backoffice`. **BẮT BUỘC dùng `nuqs`** cho mọi state cần persist vào URL (query params). **KHÔNG** dùng `useSearchParams` + `useState` + `useEffect` thủ công.
+
+## Quy tắc
+
+1. Bất kỳ state nào cần giữ khi refresh → phải ở URL, dùng `nuqs`.
+2. Các trang có selector (draw, filter, tab, page...) → param phải vào URL.
+3. Nếu giá trị bằng default → xóa param khỏi URL (pass `null` để xoá).
+4. Component dùng `useQueryState` phải được bọc trong `<Suspense>` (Next.js App Router).
+
+## API cơ bản
+
+```tsx
+import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
+
+// String, mặc định ""
+const [drawId, setDrawId] = useQueryState("draw", { defaultValue: "" });
+
+// Integer với default
+const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
+
+// Xoá param khỏi URL (khi = default)
+setDrawId(null);   // → URL không có ?draw=
+setPage(null);     // → URL không có ?page=
+```
+
+## ❌ SAI — state chỉ trong React, không persist URL
+
+```tsx
+const searchParams = useSearchParams();
+const urlDrawId = searchParams.get("draw") ?? "";
+const [selectedDrawId, setSelectedDrawId] = useState(urlDrawId);
+
+useEffect(() => {
+  if (urlDrawId) setSelectedDrawId(urlDrawId);  // sync 1 chiều, vẫn mất khi refresh
+}, [urlDrawId]);
+
+const onSelect = (id: string) => setSelectedDrawId(id);  // URL không đổi!
+```
+
+## ✅ ĐÚNG — nuqs đồng bộ 2 chiều tự động
+
+```tsx
+import { useQueryState } from "nuqs";
+
+const [selectedDrawId, setSelectedDrawId] = useQueryState("draw", { defaultValue: "" });
+
+const onSelectDraw = useCallback((drawId: string) => {
+  // Xoá param khi chọn lại default → URL gọn hơn
+  setSelectedDrawId(drawId === defaultDrawId ? null : drawId);
+}, [defaultDrawId, setSelectedDrawId]);
+```
+
+## Setup bắt buộc (đã cấu hình sẵn, KHÔNG làm lại)
+
+**`NuqsAdapter`** đã được thêm vào `apps/backoffice/src/app/layout.tsx` — không cần thêm ở bất kỳ nơi nào khác.
+
+```tsx
+// layout.tsx — ĐÃ CÓ SẴN, không cần sửa
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+
+<NuqsAdapter>
+  {children}
+</NuqsAdapter>
+```
+
+**`<Suspense>`** phải bọc mọi component dùng `useQueryState` (Next.js App Router yêu cầu):
+
+```tsx
+// page.tsx
+export default function OperationsPage() {
+  return (
+    <Suspense>
+      <DrawContextProvider>
+        <OperationsContent />
+      </DrawContextProvider>
+    </Suspense>
+  );
+}
+```
+
+## Khi nào nên dùng URL state
+
+| Nên dùng URL state | Không cần URL state |
+|---|---|
+| Draw selector đang xem | Dialog open/close |
+| Tab đang active | Hover/focus |
+| Page / cursor phân trang | Loading state |
+| Filter/sort đang áp dụng | Temporary form input |
+| Search keyword | Tooltip visibility |
 
 **BẮT BUỘC** import label từ package. **KHÔNG** định nghĩa `Record<string, string>` hardcode trong component/page.
 

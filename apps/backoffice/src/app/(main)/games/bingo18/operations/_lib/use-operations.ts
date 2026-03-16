@@ -264,14 +264,20 @@ export function useUpdateSchedule() {
   );
 }
 
-export function usePreviewDraws(drawDate: string, count: number) {
+export function usePreviewDraws(count: number) {
   return useQuery({
-    queryKey: [...bingo18Keys.all, "preview", drawDate, count] as const,
+    queryKey: [...bingo18Keys.all, "preview", count] as const,
     queryFn: () =>
       apiClient.get<{
-        draws: Array<{ drawNo: number; drawTime: string; closeAt: string; status: string }>;
-      }>("/bingo18/draws/preview", { params: { drawDate, count } }),
-    enabled: !!drawDate && count > 0,
+        draws: Array<{
+          drawNo: number;
+          drawDate: string;
+          drawTime: string;
+          closeAt: string;
+          status: string;
+        }>;
+      }>("/bingo18/draws/preview", { params: { count } }),
+    enabled: count > 0,
   });
 }
 

@@ -222,7 +222,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
         const isEmpty = row.date === "" && row.drawTime === "";
         if (!isEmpty) return row;
         return {
-          date: fmtStoreDate(p.drawTime),
+          date: p.drawDate ?? fmtStoreDate(p.drawTime),
           drawNo: p.drawNo,
           drawTime: fmtDisplayTime(p.drawTime),
           isOpen: row.isOpen,
@@ -261,7 +261,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
         const p = preview.data!.draws[i];
         if (!p) return emptyRow();
         return {
-          date: fmtStoreDate(p.drawTime),
+          date: p.drawDate ?? fmtStoreDate(p.drawTime),
           drawNo: p.drawNo,
           drawTime: fmtDisplayTime(p.drawTime),
           isOpen: row.isOpen,

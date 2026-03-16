@@ -13,6 +13,8 @@ export interface SettleGameDailyAggregateResult {
   tenantCount: number;
   /** Tổng tiền cược (VND). */
   totalStake: number;
+  /** Tổng tiền thắng (VND). */
+  totalWin: number;
   /** Tổng tiền trả thưởng (VND). */
   totalPayout: number;
   /** Gross Gaming Revenue = totalStake - totalPayout (VND). */
@@ -35,6 +37,8 @@ export interface DailyOverviewRow {
   tenantCount: number;
   /** Tổng doanh thu bán vé (VND). */
   totalStake: number;
+  /** Tổng tiền thắng (VND). */
+  totalWin: number;
   /** Tổng trả thưởng (VND). */
   totalPayout: number;
   /** Gross Gaming Revenue = totalStake - totalPayout (VND). */
@@ -57,6 +61,8 @@ export interface GameSummaryRow {
   tenantCount: number;
   /** Tổng doanh thu bán vé (VND). */
   totalStake: number;
+  /** Tổng tiền thắng (VND). */
+  totalWin: number;
   /** Tổng trả thưởng (VND). */
   totalPayout: number;
   /** Gross Gaming Revenue = totalStake - totalPayout (VND). */
@@ -87,6 +93,8 @@ export interface DashboardGameDailyData {
   playerCount: number;
   /** Tổng tiền cược (VND). */
   totalStake: number;
+  /** Tổng tiền thắng (VND). */
+  totalWin: number;
   /** Tổng tiền trả thưởng (VND). */
   totalPayout: number;
   /** Gross Gaming Revenue = totalStake - totalPayout (VND). Có thể ÂM. */

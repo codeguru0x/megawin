@@ -1,5 +1,5 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
-import type { DrawEntity } from "@megawin/game-keno/entities";;
+import type { DrawEntity } from "@megawin/game-keno/entities";
 
 // ─────────────────────────────────────────────
 // CreateDraw (batch)
@@ -41,12 +41,14 @@ export interface CreateDrawOutput {
 // ─────────────────────────────────────────────
 
 export interface PreviewDrawsInput {
-  drawDate: string;
+  /** Số kỳ muốn preview. */
   count: number;
 }
 
 export interface PreviewDrawItem {
   drawNo: number;
+  /** Ngày quay (YYYY-MM-DD) — có thể khác nhau khi cross-day rollover. */
+  drawDate: string;
   drawTime: string;
   closeAt: string;
   /** salesOpen nếu trong [firstDrawTime, lastDrawTime], scheduled nếu ngoài. */

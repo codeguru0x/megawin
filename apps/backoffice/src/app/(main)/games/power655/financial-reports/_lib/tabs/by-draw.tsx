@@ -260,7 +260,9 @@ function DrawTenantBreakdown({ drawId }: { drawId: string }) {
       <CardHeader className="px-5 pb-2 pt-4">
         <div className="flex items-center gap-2">
           <Building2 className="size-4 text-muted-foreground" />
-          <CardTitle className="text-sm font-semibold">Breakdown theo đại lý — Kỳ {drawId}</CardTitle>
+          <CardTitle className="text-sm font-semibold">
+            Breakdown theo đại lý — Kỳ {drawId}
+          </CardTitle>
         </div>
         <CardDescription className="text-xs">Click đại lý để xem players</CardDescription>
       </CardHeader>
@@ -312,7 +314,7 @@ function DrawTenantBreakdown({ drawId }: { drawId: string }) {
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{formatVND(row.ggr)}</TableCell>
                     <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVND(row.commission)}
+                      {formatVND(row.totalCommission)}
                     </TableCell>
                     <TableCell className="text-right">
                       <Badge variant={payoutPct > 0.95 ? "destructive" : "secondary"}>

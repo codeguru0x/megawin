@@ -35,6 +35,10 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+  "prettier.resolveGlobalModules": false,
+  "prettier.documentSelectors": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"],
+  "prettier.requireConfig": true,
   "eslint.validate": [
     "javascript",
     "javascriptreact",

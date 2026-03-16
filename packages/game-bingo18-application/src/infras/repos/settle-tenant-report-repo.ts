@@ -90,7 +90,7 @@ export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEnt
           totalWin: { $sum: "$totalWin" },
           totalPayout: { $sum: "$totalPayout" },
           ggr: { $sum: "$ggr" },
-          commission: { $sum: "$commission" },
+          totalCommission: { $sum: "$totalCommission" },
         },
       },
       { $sort: { totalStake: -1 } },
@@ -104,7 +104,7 @@ export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEnt
       totalWin: r.totalWin,
       totalPayout: r.totalPayout,
       ggr: r.ggr,
-      commission: r.commission,
+      totalCommission: r.totalCommission,
     }));
   }
 

@@ -77,10 +77,10 @@ export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEnt
   /**
    * List tất cả tenant reports cho 1 draw đã settle.
    *
-   * Sort: commission desc (tenant doanh thu lớn lên trên).
+   * Sort: totalCommission desc (tenant doanh thu lớn lên trên).
    */
   async findByDrawId(drawId: string): Promise<SettleTenantReport[]> {
-    return await this.findMany({ drawId }, { sort: { commission: -1 } });
+    return await this.findMany({ drawId }, { sort: { totalCommission: -1 } });
   }
 
   /**
@@ -105,7 +105,7 @@ export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEnt
           totalWin: { $sum: "$financial.totalWin" },
           totalPayout: { $sum: "$financial.totalPayout" },
           ggr: { $sum: "$financial.ggr" },
-          commission: { $sum: "$financial.commission" },
+          totalCommission: { $sum: "$totalCommission" },
         },
       },
       { $sort: { totalStake: -1 } },
@@ -121,7 +121,7 @@ export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEnt
       totalWin: r.totalWin,
       totalPayout: r.totalPayout,
       ggr: r.ggr,
-      commission: r.commission,
+      totalCommission: r.totalCommission,
     }));
   }
 

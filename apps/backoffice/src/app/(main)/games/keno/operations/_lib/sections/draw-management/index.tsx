@@ -27,12 +27,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 
 import { useDrawContext } from "../../use-draw-context";
 import { DrawCommandCenter } from "./draw-command-center";
-import {
-  PublishResultAction,
-  EditScheduleAction,
-  VoidDrawAction,
-  CreateDrawAction,
-} from "./draw-actions";
+import { PublishResultAction, EditScheduleAction, VoidDrawAction } from "./draw-actions";
 import { useOpenSales, useCloseSales, useTriggerSettle, useDrawDetail } from "../../use-operations";
 
 import type { KenoDrawResult, VoidInfo } from "../../types";
@@ -42,7 +37,6 @@ const RESULT_SHOW = new Set([DrawStatus.Published, DrawStatus.Settling, DrawStat
 export function DrawManagementSection() {
   const { draw, effectiveDrawId } = useDrawContext();
 
-  const [createOpen, setCreateOpen] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
   const [editScheduleOpen, setEditScheduleOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
@@ -90,20 +84,7 @@ export function DrawManagementSection() {
     };
   })();
 
-  if (!draw) {
-    return (
-      <div className="rounded-xl border border-dashed bg-muted/20 px-5 py-8 text-center">
-        <p className="text-sm text-muted-foreground">Chưa có kỳ nào. Tạo kỳ đầu tiên để bắt đầu.</p>
-        <button
-          onClick={() => setCreateOpen(true)}
-          className="mt-3 text-sm font-medium text-orange-600 hover:underline"
-        >
-          + Tạo kỳ quay mới
-        </button>
-        <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
-      </div>
-    );
-  }
+  if (!draw) return null;
 
   return (
     <>
@@ -133,7 +114,6 @@ export function DrawManagementSection() {
         onOpenChange={setEditScheduleOpen}
       />
       <VoidDrawAction draw={draw} disabled={false} open={voidOpen} onOpenChange={setVoidOpen} />
-      <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
 
       {/* Confirm: Mở bán */}
       <AlertDialog open={openSalesConfirm} onOpenChange={setOpenSalesConfirm}>

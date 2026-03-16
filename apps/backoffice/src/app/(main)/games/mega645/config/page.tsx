@@ -36,7 +36,7 @@ export default function Mega645ConfigPage() {
     <div className="@container/main flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-orange-500 to-amber-600 shadow-sm">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-teal-500 to-teal-600 shadow-sm">
             <Settings2 className="size-4 text-white" />
           </div>
           <h1 className="text-base font-semibold tracking-tight text-foreground">

@@ -7,13 +7,15 @@ export interface SettleTenantDailyAggregateResult {
   tenantId: string;
   /** Tổng tiền cược của tenant (VND). */
   totalStake: number;
+  /** Tổng tiền thắng của tenant (VND). */
+  totalWin: number;
   /** Tổng tiền trả thưởng của tenant (VND). */
   totalPayout: number;
   /** GGR = totalStake - totalPayout. */
   ggr: number;
-  /** Hoa hồng đại lý (VND). */
-  commission: number;
-  /** Lợi nhuận ròng = ggr - commission (VND). */
+  /** Tổng hoa hồng đại lý (VND). */
+  totalCommission: number;
+  /** Lợi nhuận ròng = ggr - totalCommission (VND). */
   netProfit: number;
   /** Số entry của tenant trong ngày. */
   entryCount: number;
@@ -35,12 +37,14 @@ export interface TenantSummaryRow {
   playerCount: number;
   /** Tổng doanh thu bán vé (VND). */
   totalStake: number;
+  /** Tổng tiền thắng (VND). */
+  totalWin: number;
   /** Tổng trả thưởng (VND). */
   totalPayout: number;
   /** Gross Gaming Revenue = totalStake - totalPayout (VND). */
   ggr: number;
-  /** Hoa hồng đại lý (VND). */
-  commission: number;
-  /** Lợi nhuận ròng = ggr - commission (VND). */
+  /** Tổng hoa hồng đại lý (VND). */
+  totalCommission: number;
+  /** Lợi nhuận ròng = ggr - totalCommission (VND). */
   netProfit: number;
 }

@@ -251,7 +251,7 @@ function Mega645VoidReportsContent() {
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-red-600 shadow-sm">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-teal-500 to-teal-600 shadow-sm">
             <Ban className="size-4.5 text-white" />
           </div>
           <div>
