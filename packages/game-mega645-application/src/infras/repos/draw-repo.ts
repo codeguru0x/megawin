@@ -15,6 +15,8 @@
 
 import { Mega645Collections, PrizeTier } from "@megawin/game-mega645/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
+import { subDays, formatVNDate } from "@megawin/shared/utils/date";
+import type { FindOptions } from "mongodb";
 import type {
   DrawDoc,
   DrawJackpotSnapshot,
@@ -446,10 +448,18 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return draw;
   }
 
-  async getActiveDraws(allowStatuses: string[]): Promise<DrawEntity[]> {
+  async getActiveDraws(
+    allowStatuses: string[],
+    lookbackDays = 2,
+    options?: FindOptions,
+  ): Promise<DrawEntity[]> {
+    const fromDateStr = formatVNDate(subDays(new Date(), lookbackDays));
     return await this.findMany(
-      { status: { $in: allowStatuses } },
-      { sort: { drawDate: 1, drawNo: 1 } },
+      {
+        status: { $in: allowStatuses },
+        drawDate: { $gte: fromDateStr },
+      },
+      { sort: { drawDate: 1, drawNo: 1 }, ...options },
     );
   }
 

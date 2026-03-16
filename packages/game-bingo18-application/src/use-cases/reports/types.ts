@@ -7,12 +7,12 @@ import type {
   SettleTenantReport,
   VoidDrawReport,
   OutstandingDrawReport,
+  TicketEntryEntity,
 } from "@megawin/game-bingo18/entities";
 import type {
   DrawSummaryResult,
   TenantAggregateSummary,
   PlayerBreakdownRow,
-  EntryEntity,
 } from "../../infras/repos/types";
 
 export interface ListSettleDrawReportsInput {
@@ -69,7 +69,7 @@ export interface ListEntryBreakdownInput {
   accountId: string;
 }
 export interface ListEntryBreakdownOutput {
-  data: EntryEntity[];
+  data: TicketEntryEntity[];
 }
 export interface ListVoidReportsInput {
   from: string;
@@ -80,4 +80,15 @@ export interface ListVoidReportsOutput {
 }
 export interface GetOutstandingReportsOutput {
   data: OutstandingDrawReport[];
+}
+
+// ─── Sync Outstanding ─────────────────────────────────────────────────────────
+
+export interface SyncOutstandingResult {
+  /** Số draw đã upsert outstanding report. */
+  drawsSynced: number;
+  /** Số draw active theo system outstanding report. */
+  systemActiveDrawCount: number;
+  /** Tổng stake outstanding theo system outstanding report (VND). */
+  systemTotalStake: number;
 }

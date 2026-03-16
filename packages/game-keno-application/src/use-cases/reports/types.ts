@@ -7,12 +7,12 @@ import type {
   SettleTenantReport,
   VoidDrawReport,
   OutstandingDrawReport,
+  TicketEntryEntity,
 } from "@megawin/game-keno/entities";
 import type {
   DrawSummaryResult,
   TenantAggregateSummary,
   PlayerBreakdownRow,
-  EntryEntity,
 } from "../../infras/repos";
 
 // ─── Draw Reports ─────────────────────────────────────────────────────────────
@@ -96,7 +96,7 @@ export interface ListEntryBreakdownInput {
 }
 
 export interface ListEntryBreakdownOutput {
-  data: EntryEntity[];
+  data: TicketEntryEntity[];
 }
 
 // ─── Void Reports ─────────────────────────────────────────────────────────────
@@ -114,4 +114,15 @@ export interface ListVoidReportsOutput {
 
 export interface GetOutstandingReportsOutput {
   data: OutstandingDrawReport[];
+}
+
+// ─── Sync Outstanding ─────────────────────────────────────────────────────────
+
+export interface SyncOutstandingResult {
+  /** Số draw đã upsert outstanding report. */
+  drawsSynced: number;
+  /** Số draw active theo system outstanding report. */
+  systemActiveDrawCount: number;
+  /** Tổng stake outstanding theo system outstanding report (VND). */
+  systemTotalStake: number;
 }

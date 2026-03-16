@@ -1,5 +1,3 @@
-import type { TicketEntryEntity } from "@megawin/game-keno/entities";
-
 /** Keno: KHÔNG CÓ lineCount. */
 export interface PlayerBreakdownRow {
   accountId: string;
@@ -11,7 +9,28 @@ export interface PlayerBreakdownRow {
 }
 
 /**
- * Alias cho TicketEntryEntity — dùng làm output cho ListEntryBreakdownOutput.
- * Được định nghĩa tại entity package để đảm bảo portable type name.
+ * Kết quả aggregate metrics outstanding cho 1 draw (Query A).
+ *
+ * Không dùng $addToSet — chỉ tính số học nên memory footprint nhỏ.
+ * Keno không có lineCount.
  */
-export type EntryEntity = TicketEntryEntity;
+export interface OutstandingDrawMetrics {
+  drawId: string;
+  financialDate: string;
+  entryCount: number;
+  /** Tổng tiền cược pending (VND). */
+  totalStake: number;
+  /** Ước tính hoa hồng pending (VND). */
+  estimatedCommission: number;
+}
+
+/**
+ * Kết quả đếm unique players và tenants cho 1 draw (Query B).
+ *
+ * Dùng double-$group pattern thay vì $addToSet để tránh tích lũy array trong RAM.
+ */
+export interface OutstandingDrawCounts {
+  drawId: string;
+  playerCount: number;
+  tenantCount: number;
+}

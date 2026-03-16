@@ -5,7 +5,7 @@
  * Collection: lotto535_outstanding_draw_reports.
  *
  * IDEMPOTENT: upsert overwrite với snapshotAt = now — chạy lại reset TTL.
- * TTL: snapshotAt + 300s → MongoDB tự xoá khi draw settle/void.
+ * TTL: snapshotAt + 900s → MongoDB tự xoá khi draw settle/void.
  */
 
 import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-lotto535/entities";
@@ -17,7 +17,7 @@ import type { OutstandingGameSummary } from "./types";
 /**
  * Repository ghi outstanding report cho Lotto 5/35.
  *
- * Scheduled job (mỗi 5 phút) gọi upsertDrawReport cho từng draw active.
+ * Scheduled job (mỗi 5 phút) gọi bulkUpsertDrawReports để refresh tất cả draws active trong 1 DB call.
  * Sau khi draw settle/void, job ngừng tạo doc mới → TTL tự xoá.
  */
 export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportEntity, OutstandingDrawReportMapper> {
@@ -55,6 +55,42 @@ export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportE
       {
         upsert: true,
       },
+    );
+  }
+
+  /**
+   * Bulk upsert snapshot outstanding cho nhiều draws — 1 DB call duy nhất.
+   *
+   * Mỗi operation là updateOne { upsert: true } filter by { drawId }.
+   * snapshotAt = now reset TTL cho tất cả draws cùng lúc.
+   * Idempotent: chạy lại overwrite, không duplicate.
+   * Index: { drawId: 1 } unique.
+   */
+  async bulkUpsertDrawReports(
+    reports: Array<Omit<OutstandingDrawReport, "snapshotAt" | "createdAt" | "updatedAt">>,
+  ): Promise<void> {
+    if (reports.length === 0) return;
+
+    const now = new Date();
+    await this.bulkWrite(
+      reports.map((report) => ({
+        updateOne: {
+          filter: {
+            drawId: report.drawId,
+          },
+          update: {
+            $set: {
+              ...report,
+              snapshotAt: now,
+              updatedAt: now,
+            },
+            $setOnInsert: {
+              createdAt: now,
+            },
+          },
+          upsert: true,
+        },
+      })),
     );
   }
 

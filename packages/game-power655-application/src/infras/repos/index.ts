@@ -15,7 +15,6 @@ export type {
   DrawSummaryResult,
   TenantAggregateSummary,
   PlayerBreakdownRow,
-  EntryEntity,
 } from "./types";
 export type { TicketSummary } from "./ticket-repo";
 export type { DrawEntity } from "@megawin/game-power655/entities";

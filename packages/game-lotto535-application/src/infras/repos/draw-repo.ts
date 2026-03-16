@@ -1,6 +1,7 @@
 import { Lotto535Collections, PrizeTier } from "@megawin/game-lotto535/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { subDays, formatVNDate } from "@megawin/shared/utils/date";
+import type { FindOptions } from "mongodb";
 import type {
   DrawDoc,
   DrawJackpotSnapshot,
@@ -10,7 +11,7 @@ import type {
 } from "@megawin/game-lotto535/entities";
 import type { ISODateString } from "@megawin/game-lotto535/entities";
 import { BaseRepo } from "./base-repo";
-import type { DrawEntity } from "@megawin/game-lotto535/entities";;
+import type { DrawEntity } from "@megawin/game-lotto535/entities";
 import { DrawMapper } from "../mappers/draw-mapper";
 
 /**
@@ -494,7 +495,11 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    *
    * Recommended index: { status: 1, drawDate: 1 }
    */
-  async getActiveDraws(allowStatuses: string[], lookbackDays = 7): Promise<DrawEntity[]> {
+  async getActiveDraws(
+    allowStatuses: string[],
+    lookbackDays = 7,
+    options?: FindOptions,
+  ): Promise<DrawEntity[]> {
     const fromDateStr = formatVNDate(subDays(new Date(), lookbackDays));
 
     return await this.findMany(
@@ -502,7 +507,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
         status: { $in: allowStatuses },
         drawDate: { $gte: fromDateStr },
       },
-      { sort: { drawDate: 1, drawNo: 1 } },
+      { sort: { drawDate: 1, drawNo: 1 }, ...options },
     );
   }
 

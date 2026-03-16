@@ -13,6 +13,8 @@
 
 import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
+import { subDays, formatVNDate } from "@megawin/shared/utils/date";
+import type { FindOptions } from "mongodb";
 import type {
   DrawDoc,
   DrawFinancial,
@@ -106,10 +108,18 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOne({ status: { $in: statuses } }, { sort: { drawDate: 1, drawNo: 1 } });
   }
 
-  async getActiveDraws(allowStatuses: string[]): Promise<DrawEntity[]> {
+  async getActiveDraws(
+    allowStatuses: string[],
+    lookbackDays = 1,
+    options?: FindOptions,
+  ): Promise<DrawEntity[]> {
+    const fromDateStr = formatVNDate(subDays(new Date(), lookbackDays));
     return await this.findMany(
-      { status: { $in: allowStatuses } },
-      { sort: { drawDate: 1, drawNo: 1 } },
+      {
+        status: { $in: allowStatuses },
+        drawDate: { $gte: fromDateStr },
+      },
+      { sort: { drawDate: 1, drawNo: 1 }, ...options },
     );
   }
 

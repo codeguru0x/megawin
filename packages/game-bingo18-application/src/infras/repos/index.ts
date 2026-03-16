@@ -13,7 +13,6 @@ export type {
   DrawSummaryResult,
   TenantAggregateSummary,
   PlayerBreakdownRow,
-  EntryEntity,
 } from "./types";
 export type { DrawEntity } from "@megawin/game-bingo18/entities";
 export { SystemSettleGameDailyRepo } from "./system-settle-game-daily-repo";

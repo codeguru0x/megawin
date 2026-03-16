@@ -7,6 +7,7 @@ export { ListPlayerBreakdownUseCase } from "./list-player-breakdown";
 export { ListEntryBreakdownUseCase } from "./list-entry-breakdown";
 export { ListVoidReportsUseCase } from "./list-void-reports";
 export { GetOutstandingReportsUseCase } from "./get-outstanding-reports";
+export { SyncOutstandingUseCase } from "./sync-outstanding";
 
 export type {
   ListSettleDrawReportsInput,
@@ -26,4 +27,5 @@ export type {
   ListVoidReportsInput,
   ListVoidReportsOutput,
   GetOutstandingReportsOutput,
+  SyncOutstandingResult,
 } from "./types";

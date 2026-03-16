@@ -15,7 +15,6 @@ export type {
   DrawSummaryResult,
   TenantAggregateSummary,
   PlayerBreakdownRow,
-  EntryEntity,
 } from "./types";
 export type { JackpotCycleEntity } from "@megawin/game-mega645/entities";
 export type { DrawEntity } from "@megawin/game-mega645/entities";

@@ -52,12 +52,12 @@ export class SyncSystemOutstandingUseCase extends InternalUseCase<
    * Nếu không có draw active → upsert với tất cả zeros (TTL vẫn reset).
    */
   protected async execute(input: SyncSystemOutstandingInput): Promise<SyncSystemOutstandingResult> {
-    const { gameProduct, gameOutstandingRepo: outstandingRepo } = input;
+    const { gameProduct, gameOutstandingRepo } = input;
 
     // Aggregate từ per-game collection — logic nằm trong per-game repo subclass
-    const agg = await outstandingRepo.aggregateFromPerGame();
+    const agg = await gameOutstandingRepo.aggregateFromPerGame();
 
-    await outstandingRepo.upsertGameOutstanding({
+    await gameOutstandingRepo.upsertGameOutstanding({
       gameProduct,
       activeDrawCount: agg.activeDrawCount,
       totalEntryCount: agg.totalEntryCount,

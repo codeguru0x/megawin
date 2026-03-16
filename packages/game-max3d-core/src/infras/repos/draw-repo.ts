@@ -1,7 +1,8 @@
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { BaseEntity } from "@megawin/data/mongo";
 import type { MongoMapper } from "@megawin/data/mongo";
-import type { Document } from "mongodb";
+import type { Document, FindOptions } from "mongodb";
+import { subDays, formatVNDate } from "@megawin/shared/utils/date";
 import { BaseRepo } from "./base-repo";
 
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
@@ -411,10 +412,18 @@ export abstract class AbstractDrawRepository<
     return await this.findOne({ status: { $in: statuses } }, { sort: { drawDate: 1, drawNo: 1 } });
   }
 
-  async getActiveDraws(allowStatuses: string[]): Promise<TEntity[]> {
+  async getActiveDraws(
+    allowStatuses: string[],
+    lookbackDays = 2,
+    options?: FindOptions,
+  ): Promise<TEntity[]> {
+    const fromDateStr = formatVNDate(subDays(new Date(), lookbackDays));
     return await this.findMany(
-      { status: { $in: allowStatuses } },
-      { sort: { drawDate: 1, drawNo: 1 } },
+      {
+        status: { $in: allowStatuses },
+        drawDate: { $gte: fromDateStr },
+      },
+      { sort: { drawDate: 1, drawNo: 1 }, ...options },
     );
   }
 

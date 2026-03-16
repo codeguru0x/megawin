@@ -28,7 +28,7 @@ import { BaseRepo } from "./base-repo";
 import { EntryMapper } from "../mappers/entry-mapper";
 import type { TicketEntryEntity, TicketEntryDoc } from "@megawin/game-power655/entities";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
-import type { PlayerBreakdownRow } from "./types";
+import type { PlayerBreakdownRow, OutstandingDrawMetrics, OutstandingDrawCounts } from "./types";
 
 export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   private readonly seqRepo = new EntryChangeSeqRepository();
@@ -1319,26 +1319,16 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   }
 
   /**
-   * Aggregate outstanding snapshots per drawId — dùng bởi SyncOutstanding scheduled job.
+   * Aggregate numerical metrics cho các draws active (status: scheduled, drawId in activeDrawIds).
    *
-   * Lấy tất cả entries WHERE { status: "scheduled" }, group by drawId.
-   * Trả về mảng snapshot per draw active để upsert vào outstanding_draw_reports.
+   * Tách riêng khỏi aggregateOutstandingCountsByDraw để tránh $addToSet lớn trong 1 group.
+   * Power655 có lineCount (expanded lines từ bao).
    */
-  async aggregateOutstandingByDraw(): Promise<
-    Array<{
-      drawId: string;
-      financialDate: string;
-      entryCount: number;
-      playerCount: number;
-      tenantCount: number;
-      lineCount: number;
-      totalStake: number;
-      estimatedCommission: number;
-    }>
-  > {
+  async aggregateOutstandingMetricsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawMetrics[]> {
     const result = await this.aggregate([
       {
         $match: {
+          drawId: { $in: activeDrawIds },
           status: EntryStatus.Scheduled,
         },
       },
@@ -1347,8 +1337,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           _id: "$drawId",
           financialDate: { $first: "$financialDate" },
           entryCount: { $sum: 1 },
-          players: { $addToSet: "$accountId" },
-          tenants: { $addToSet: "$tenantId" },
           lineCount: { $sum: "$lineCount" },
           totalStake: { $sum: "$amount" },
           estimatedCommission: { $sum: "$tenant.commissionAmount" },
@@ -1360,11 +1348,46 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       drawId: r._id,
       financialDate: r.financialDate,
       entryCount: r.entryCount,
-      playerCount: r.players?.length ?? 0,
-      tenantCount: r.tenants?.length ?? 0,
       lineCount: r.lineCount ?? 0,
       totalStake: r.totalStake,
       estimatedCommission: r.estimatedCommission ?? 0,
+    }));
+  }
+
+  /**
+   * Đếm unique players và tenants per draw, dùng double-$group để tránh tích luỹ mảng lớn.
+   *
+   * Bước 1: group by (drawId, accountId, tenantId) → unique combinations.
+   * Bước 2: group by drawId → đếm số combination (playerCount) và $addToSet tenantId (an toàn vì ít tenants).
+   */
+  async aggregateOutstandingCountsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawCounts[]> {
+    const result = await this.aggregate([
+      {
+        $match: {
+          drawId: { $in: activeDrawIds },
+          status: EntryStatus.Scheduled,
+        },
+      },
+      {
+        // Bước 1: dedup (drawId, accountId, tenantId) — 1 document = 1 unique player trong 1 draw
+        $group: {
+          _id: { drawId: "$drawId", accountId: "$accountId", tenantId: "$tenantId" },
+        },
+      },
+      {
+        // Bước 2: count players và collect tenantIds (ít tenants → $addToSet an toàn)
+        $group: {
+          _id: "$_id.drawId",
+          playerCount: { $sum: 1 },
+          tenants: { $addToSet: "$_id.tenantId" },
+        },
+      },
+    ]);
+
+    return (result as any[]).map((r) => ({
+      drawId: r._id,
+      playerCount: r.playerCount ?? 0,
+      tenantCount: r.tenants?.length ?? 0,
     }));
   }
 
