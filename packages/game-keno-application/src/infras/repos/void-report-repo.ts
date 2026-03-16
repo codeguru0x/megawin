@@ -7,8 +7,9 @@
  * IDEMPOTENT: upsert overwrite — chạy lại an toàn.
  */
 
-import type { VoidDrawReport } from "@megawin/game-keno/entities";
+import type { VoidDrawReport, VoidDrawReportEntity } from "@megawin/game-keno/entities";
 import { KENO_VOID_DRAW_REPORTS } from "@megawin/game-keno/entities";
+import { VoidDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 
 /**
@@ -17,9 +18,12 @@ import { BaseRepo } from "./base-repo";
  * BuildVoidReport use case gọi sau khi đã xoá settle reports
  * (nếu void-after-settle) và aggregate voided entries.
  */
-export class VoidReportRepository extends BaseRepo<any> {
+export class VoidReportRepository extends BaseRepo<VoidDrawReportEntity, VoidDrawReportMapper> {
   constructor() {
-    super({ collName: KENO_VOID_DRAW_REPORTS });
+    super({
+      collName: KENO_VOID_DRAW_REPORTS,
+      dataMapper: new VoidDrawReportMapper(),
+    });
   }
 
   /**
@@ -53,10 +57,17 @@ export class VoidReportRepository extends BaseRepo<any> {
    *
    * Sort: financialDate DESC để mới nhất lên đầu.
    */
-  async findByDateRange(from: string, to: string): Promise<VoidDrawReport[]> {
-    return (await this.findMany(
-      { financialDate: { $gte: from, $lte: to } },
-      { sort: { financialDate: -1 } },
-    )) as VoidDrawReport[];
+  async findByDateRange(from: string, to: string): Promise<VoidDrawReportEntity[]> {
+    return this.findMany(
+      {
+        financialDate: {
+          $gte: from,
+          $lte: to,
+        },
+      },
+      {
+        sort: { financialDate: -1 },
+      },
+    );
   }
 }

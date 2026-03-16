@@ -56,6 +56,7 @@ export { max3dproKeys } from "./max3dpro";
 export { bingo18Keys } from "./bingo18";
 export { tenantsKeys } from "./tenants";
 export { reportsKeys } from "./reports";
+export { dashboardKeys } from "./dashboard";
 
 import { lotto535Keys } from "./lotto535";
 import { kenoKeys } from "./keno";
@@ -66,6 +67,7 @@ import { max3dproKeys } from "./max3dpro";
 import { bingo18Keys } from "./bingo18";
 import { tenantsKeys } from "./tenants";
 import { reportsKeys } from "./reports";
+import { dashboardKeys } from "./dashboard";
 
 export const queryKeys = {
   tenants: tenantsKeys,
@@ -77,4 +79,5 @@ export const queryKeys = {
   max3dpro: max3dproKeys,
   bingo18: bingo18Keys,
   reports: reportsKeys,
+  dashboard: dashboardKeys,
 } as const;

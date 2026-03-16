@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import { useQueryState, parseAsString } from "nuqs";
 import { Ban } from "lucide-react";
-import { FinancialDateRangePicker } from "@/components/financial-date-range-picker";
+import { FinancialDateRangePicker } from "@/components/date-picker";
 import {
   Table,
   TableBody,

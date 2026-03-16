@@ -15,19 +15,20 @@
  * KHÔNG dùng $inc.
  */
 
-import type { SettleDrawReport } from "@megawin/game-max3d/entities";
+import type { SettleDrawReport, SettleDrawReportEntity } from "@megawin/game-max3d/entities";
 import { MAX3D_SETTLE_DRAW_REPORTS } from "@megawin/game-max3d/entities";
 import { BaseRepo } from "./base-repo";
-import type { DrawSummaryResult } from "./types/settle-draw-report.types";
+import { SettleDrawReportMapper } from "../mappers";
+import type { DrawSummaryResult } from "./types";
 
 /**
  * Repository ghi/đọc settle draw reports cho Max 3D.
  *
  * 1 doc = 1 draw. Unique index: { drawId: 1 }.
  */
-export class SettleDrawReportRepository extends BaseRepo<any> {
+export class SettleDrawReportRepository extends BaseRepo<SettleDrawReportEntity, SettleDrawReportMapper> {
   constructor() {
-    super({ collName: MAX3D_SETTLE_DRAW_REPORTS });
+    super({ collName: MAX3D_SETTLE_DRAW_REPORTS, dataMapper: new SettleDrawReportMapper() });
   }
 
   /**
@@ -73,7 +74,7 @@ export class SettleDrawReportRepository extends BaseRepo<any> {
    * Dùng bởi BuildVoidReport để snapshot settle data trước khi xoá.
    */
   async findByDrawId(drawId: string): Promise<SettleDrawReport | null> {
-    return (await this.findOne({ drawId })) as SettleDrawReport | null;
+    return await this.findOne({ drawId });
   }
 
   /**
@@ -99,7 +100,7 @@ export class SettleDrawReportRepository extends BaseRepo<any> {
       }),
       this.count(filter),
     ]);
-    return { data: data as SettleDrawReport[], total };
+    return { data, total };
   }
 
   /**

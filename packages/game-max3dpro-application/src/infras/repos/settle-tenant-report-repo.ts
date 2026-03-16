@@ -15,19 +15,20 @@
  * KHÔNG dùng $inc.
  */
 
-import type { SettleTenantReport } from "@megawin/game-max3dpro/entities";
+import type { SettleTenantReport, SettleTenantReportEntity } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_SETTLE_TENANT_REPORTS } from "@megawin/game-max3dpro/entities";
 import { BaseRepo } from "./base-repo";
-import type { TenantAggregateSummary } from "./types/settle-tenant-report.types";
+import { SettleTenantReportMapper } from "../mappers";
+import type { TenantAggregateSummary } from "./types";
 
 /**
  * Repository ghi/đọc settle tenant reports cho Max 3D Pro.
  *
  * 1 doc = 1 tenant × 1 draw. Unique index: { drawId: 1, tenantId: 1 }.
  */
-export class SettleTenantReportRepository extends BaseRepo<any> {
+export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEntity, SettleTenantReportMapper> {
   constructor() {
-    super({ collName: MAX3DPRO_SETTLE_TENANT_REPORTS });
+    super({ collName: MAX3DPRO_SETTLE_TENANT_REPORTS, dataMapper: new SettleTenantReportMapper() });
   }
 
   /**
@@ -79,7 +80,7 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
    * Sort: commission desc (tenant doanh thu lớn lên trên).
    */
   async findByDrawId(drawId: string): Promise<SettleTenantReport[]> {
-    return (await this.findMany({ drawId }, { sort: { commission: -1 } })) as SettleTenantReport[];
+    return await this.findMany({ drawId }, { sort: { commission: -1 } });
   }
 
   /**
@@ -148,6 +149,6 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
       }),
       this.count(filter),
     ]);
-    return { data: data as SettleTenantReport[], total };
+    return { data, total };
   }
 }

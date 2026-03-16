@@ -18,6 +18,7 @@ export const MODULES = {
   max3dpro: "max3dpro",
   bingo18: "bingo18",
   reports: "reports",
+  dashboard: "dashboard",
 } as const;
 
 /** Union type tất cả module ID hợp lệ */

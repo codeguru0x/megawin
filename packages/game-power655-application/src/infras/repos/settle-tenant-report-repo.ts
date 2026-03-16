@@ -12,9 +12,10 @@
  * KHÔNG dùng $inc.
  */
 
-import type { SettleTenantReport } from "@megawin/game-power655/entities";
+import type { SettleTenantReport, SettleTenantReportEntity } from "@megawin/game-power655/entities";
 import { POWER655_SETTLE_TENANT_REPORTS } from "@megawin/game-power655/entities";
 import { BaseRepo } from "./base-repo";
+import { SettleTenantReportMapper } from "../mappers";
 import type { TenantAggregateSummary } from "./types";
 
 /**
@@ -22,9 +23,9 @@ import type { TenantAggregateSummary } from "./types";
  *
  * 1 doc = 1 tenant × 1 draw. Unique index: { drawId: 1, tenantId: 1 }.
  */
-export class SettleTenantReportRepository extends BaseRepo<any> {
+export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEntity, SettleTenantReportMapper> {
   constructor() {
-    super({ collName: POWER655_SETTLE_TENANT_REPORTS });
+    super({ collName: POWER655_SETTLE_TENANT_REPORTS, dataMapper: new SettleTenantReportMapper() });
   }
 
   /**
@@ -76,7 +77,7 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
    * Index: { drawId: 1, tenantId: 1 }
    */
   async findByDrawId(drawId: string): Promise<SettleTenantReport[]> {
-    return (await this.findMany({ drawId })) as SettleTenantReport[];
+    return await this.findMany({ drawId });
   }
 
   /**
@@ -156,7 +157,7 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
         sort: { financialDate: -1 },
         skip: options?.skip ?? 0,
         limit: options?.limit ?? 20,
-      }) as Promise<SettleTenantReport[]>,
+      }),
       this.count(filter),
     ]);
     return { data, total };

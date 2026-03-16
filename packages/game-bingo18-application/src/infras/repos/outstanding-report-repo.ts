@@ -5,13 +5,14 @@
  * Collection: bingo18_outstanding_draw_reports.
  *
  * IDEMPOTENT: upsert overwrite với snapshotAt = now — chạy lại reset TTL.
- * TTL: snapshotAt + 900s → MongoDB tự xoá khi draw settle/void.
+ * TTL: snapshotAt + 300s → MongoDB tự xoá khi draw settle/void.
  * Bingo 18 KHÔNG có lineCount — không aggregate lineCount.
  */
 
-import type { OutstandingDrawReport } from "@megawin/game-bingo18/entities";
+import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-bingo18/entities";
 import { BINGO18_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
+import { OutstandingDrawReportMapper } from "../mappers";
 import type { OutstandingGameSummary } from "./types";
 
 /**
@@ -20,9 +21,9 @@ import type { OutstandingGameSummary } from "./types";
  * Scheduled job (mỗi 5 phút) gọi upsertDrawReport cho từng draw active.
  * Sau khi draw settle/void, job ngừng tạo doc mới → TTL tự xoá.
  */
-export class OutstandingReportRepository extends BaseRepo<any> {
+export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportEntity, OutstandingDrawReportMapper> {
   constructor() {
-    super({ collName: BINGO18_OUTSTANDING_DRAW_REPORTS });
+    super({ collName: BINGO18_OUTSTANDING_DRAW_REPORTS, dataMapper: new OutstandingDrawReportMapper() });
   }
 
   /**
@@ -98,7 +99,7 @@ export class OutstandingReportRepository extends BaseRepo<any> {
   }
 
   /** Lấy tất cả outstanding draw reports hiện tại — dùng cho UI dashboard. */
-  async findAll(): Promise<OutstandingDrawReport[]> {
-    return (await this.findMany({}, { sort: { financialDate: 1 } })) as OutstandingDrawReport[];
+  async findAll(): Promise<OutstandingDrawReportEntity[]> {
+    return await this.findMany({}, { sort: { financialDate: 1 } });
   }
 }

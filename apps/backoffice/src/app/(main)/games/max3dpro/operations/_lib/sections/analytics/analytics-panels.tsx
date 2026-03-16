@@ -133,11 +133,11 @@ export function PlayModeCard({ distribution }: { distribution: PlayTypeRow[] }) 
   const sorted = [...distribution].filter((d) => d.lines > 0).sort((a, b) => b.lines - a.lines);
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-2">
+    <Card className="gap-0 py-0 shadow-sm">
+      <CardHeader className="px-5 pb-2 pt-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Layers className="size-3.5 text-muted-foreground shrink-0" />
+            <Layers className="size-4 text-muted-foreground shrink-0" />
             <CardTitle className="text-sm font-semibold">Kiểu chơi</CardTitle>
           </div>
           <div className="flex items-center gap-2 text-xs tabular-nums">
@@ -148,7 +148,7 @@ export function PlayModeCard({ distribution }: { distribution: PlayTypeRow[] }) 
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="px-5 pb-4 pt-0">
         {sorted.length === 0 ? (
           <p className="text-xs text-muted-foreground/50 py-4 text-center">Chưa có cược</p>
         ) : (

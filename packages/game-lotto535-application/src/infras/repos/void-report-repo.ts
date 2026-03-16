@@ -7,8 +7,9 @@
  * IDEMPOTENT: upsert overwrite — chạy lại an toàn.
  */
 
-import type { VoidDrawReport } from "@megawin/game-lotto535/entities";
+import type { VoidDrawReport, VoidDrawReportEntity } from "@megawin/game-lotto535/entities";
 import { LOTTO535_VOID_DRAW_REPORTS } from "@megawin/game-lotto535/entities";
+import { VoidDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 
 /**
@@ -17,9 +18,12 @@ import { BaseRepo } from "./base-repo";
  * BuildVoidReport use case gọi sau khi đã xoá settle reports
  * (nếu void-after-settle) và aggregate voided entries.
  */
-export class VoidReportRepository extends BaseRepo<any> {
+export class VoidReportRepository extends BaseRepo<VoidDrawReportEntity, VoidDrawReportMapper> {
   constructor() {
-    super({ collName: LOTTO535_VOID_DRAW_REPORTS });
+    super({
+      collName: LOTTO535_VOID_DRAW_REPORTS,
+      dataMapper: new VoidDrawReportMapper(),
+    });
   }
 
   /**
@@ -54,8 +58,8 @@ export class VoidReportRepository extends BaseRepo<any> {
    * Dùng cho Void Reports page. Sort theo financialDate DESC.
    * Index: { financialDate: 1 }
    */
-  async findByDateRange(from: string, to: string): Promise<VoidDrawReport[]> {
-    return (await this.findMany(
+  async findByDateRange(from: string, to: string): Promise<VoidDrawReportEntity[]> {
+    return await this.findMany(
       {
         financialDate: {
           $gte: from,
@@ -65,6 +69,6 @@ export class VoidReportRepository extends BaseRepo<any> {
       {
         sort: { financialDate: -1 },
       },
-    )) as VoidDrawReport[];
+    );
   }
 }

@@ -12,7 +12,11 @@
  */
 
 import type { GameProduct } from "@megawin/game-core/entities";
-import type { OutstandingPerGameAggregateResult, SystemOutstandingReportRepository } from "../infras/repos/system-outstanding-report-repo";
+import type {
+  OutstandingPerGameAggregateResult,
+  SystemOutstandingReportRepository,
+} from "../infras/repos";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 
 /** Interface per-game repo phải implement để aggregate per-game outstanding reports. */
 export interface SystemOutstandingPublisher extends SystemOutstandingReportRepository {
@@ -23,7 +27,7 @@ export interface SyncSystemOutstandingInput {
   /** Game product để gắn vào system report. */
   gameProduct: GameProduct;
   /** Per-game system outstanding repo (kế thừa base, có aggregateFromPerGame). */
-  outstandingRepo: SystemOutstandingPublisher;
+  gameOutstandingRepo: SystemOutstandingPublisher;
 }
 
 export interface SyncSystemOutstandingResult {
@@ -38,14 +42,17 @@ export interface SyncSystemOutstandingResult {
  *
  * IDEMPOTENT: upsert overwrite với snapshotAt = now — reset TTL timer.
  */
-export class SyncSystemOutstandingUseCase {
+export class SyncSystemOutstandingUseCase extends InternalUseCase<
+  SyncSystemOutstandingInput,
+  SyncSystemOutstandingResult
+> {
   /**
    * Aggregate toàn bộ outstanding draw reports của 1 game → upsert system snapshot.
    *
    * Nếu không có draw active → upsert với tất cả zeros (TTL vẫn reset).
    */
-  async execute(input: SyncSystemOutstandingInput): Promise<SyncSystemOutstandingResult> {
-    const { gameProduct, outstandingRepo } = input;
+  protected async execute(input: SyncSystemOutstandingInput): Promise<SyncSystemOutstandingResult> {
+    const { gameProduct, gameOutstandingRepo: outstandingRepo } = input;
 
     // Aggregate từ per-game collection — logic nằm trong per-game repo subclass
     const agg = await outstandingRepo.aggregateFromPerGame();

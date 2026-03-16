@@ -20,13 +20,7 @@ import { toast } from "sonner";
 import { apiClient, ApiClientError } from "@megawin/next/client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -79,9 +73,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
     },
     onError: (error) => {
       toast.error(
-        error instanceof ApiClientError
-          ? error.message
-          : "Xác thực thất bại. Vui lòng thử lại."
+        error instanceof ApiClientError ? error.message : "Xác thực thất bại. Vui lòng thử lại.",
       );
     },
   });
@@ -100,7 +92,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
       toast.error(
         error instanceof ApiClientError
           ? error.message
-          : "Mã xác thực không đúng. Vui lòng thử lại."
+          : "Mã xác thực không đúng. Vui lòng thử lại.",
       );
     },
   });
@@ -115,10 +107,10 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
 
   if (step === "done") {
     return (
-      <Card className="border-emerald-500/30">
-        <CardContent className="flex flex-col items-center gap-4 py-10">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
-            <ShieldCheck className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+      <Card className="gap-0 border-emerald-200/60 py-0 shadow-sm dark:border-emerald-800/40">
+        <CardContent className="flex flex-col items-center gap-4 px-5 py-10">
+          <div className="flex size-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+            <ShieldCheck className="size-8 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div className="text-center">
             <h3 className="text-lg font-semibold">MFA đã được kích hoạt</h3>
@@ -137,46 +129,42 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-            <ShieldCheck className="h-4 w-4 text-primary" />
+    <Card className="gap-0 py-0 shadow-sm">
+      <CardHeader className="px-5 pb-3 pt-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex size-7 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/50">
+            <ShieldCheck className="size-3.5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <CardTitle className="text-base">Thiết lập MFA</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-sm font-semibold">Thiết lập MFA</CardTitle>
+            <CardDescription className="mt-0.5 text-xs">
               {step === "password" && "Bước 1/3 — Xác nhận mật khẩu"}
               {step === "qrcode" && "Bước 2/3 — Quét mã QR"}
               {step === "verify" && "Bước 3/3 — Xác thực mã TOTP"}
             </CardDescription>
           </div>
         </div>
-        <div className="mt-4 flex gap-1">
+        {/* Progress bar */}
+        <div className="mt-3 flex gap-1">
           {["password", "qrcode", "verify"].map((s, i) => (
             <div
               key={s}
               className={`h-1 flex-1 rounded-full transition-colors ${
-                i <= ["password", "qrcode", "verify"].indexOf(step)
-                  ? "bg-primary"
-                  : "bg-muted"
+                i <= ["password", "qrcode", "verify"].indexOf(step) ? "bg-primary" : "bg-muted"
               }`}
             />
           ))}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-5 pb-5 pt-0">
         {step === "password" && (
           <Form {...passwordForm}>
             <form
-              onSubmit={passwordForm.handleSubmit((v) =>
-                setupMutation.mutate(v)
-              )}
-              className="space-y-4"
+              onSubmit={passwordForm.handleSubmit((v) => setupMutation.mutate(v))}
+              className="mx-auto max-w-md space-y-4"
             >
               <p className="text-sm text-muted-foreground">
-                Để thiết lập MFA, trước tiên hãy xác nhận mật khẩu tài khoản của
-                bạn.
+                Để thiết lập MFA, trước tiên hãy xác nhận mật khẩu tài khoản của bạn.
               </p>
               <FormField
                 control={passwordForm.control}
@@ -202,9 +190,9 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                           tabIndex={-1}
                         >
                           {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                            <EyeOff className="size-4 text-muted-foreground" />
                           ) : (
-                            <Eye className="h-4 w-4 text-muted-foreground" />
+                            <Eye className="size-4 text-muted-foreground" />
                           )}
                         </Button>
                       </div>
@@ -213,7 +201,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                   </FormItem>
                 )}
               />
-              <div className="flex gap-3 pt-2">
+              <div className="flex justify-end gap-3 pt-1">
                 <Button
                   type="button"
                   variant="outline"
@@ -225,13 +213,13 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                 <Button type="submit" disabled={setupMutation.isPending}>
                   {setupMutation.isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 size-4 animate-spin" />
                       Đang xác thực...
                     </>
                   ) : (
                     <>
                       Tiếp tục
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                      <ArrowRight className="ml-2 size-4" />
                     </>
                   )}
                 </Button>
@@ -241,10 +229,10 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
         )}
 
         {step === "qrcode" && setupData && (
-          <div className="space-y-6">
+          <div className="mx-auto max-w-md space-y-6">
             <div className="flex flex-col items-center gap-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Smartphone className="h-4 w-4" />
+                <Smartphone className="size-4" />
                 Quét mã QR bằng app Authenticator
               </div>
               <div className="rounded-xl border bg-white p-4">
@@ -252,7 +240,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
               </div>
             </div>
 
-            <div className="rounded-lg border bg-muted/30 p-4">
+            <div className="rounded-lg border p-4">
               <p className="mb-2 text-xs font-medium text-muted-foreground">
                 Không quét được? Nhập mã thủ công:
               </p>
@@ -260,22 +248,13 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                 <code className="flex-1 break-all rounded bg-muted px-3 py-2 font-mono text-sm">
                   {setupData.secretCode}
                 </code>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleCopySecret}
-                >
-                  {copied ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
+                <Button type="button" variant="outline" size="icon" onClick={handleCopySecret}>
+                  {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
                 </Button>
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex justify-end gap-3">
               <Button
                 type="button"
                 variant="outline"
@@ -284,12 +263,12 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                   setSetupData(null);
                 }}
               >
-                <ArrowLeft className="mr-2 h-4 w-4" />
+                <ArrowLeft className="mr-2 size-4" />
                 Quay lại
               </Button>
               <Button onClick={() => setStep("verify")}>
                 Đã quét xong
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 size-4" />
               </Button>
             </div>
           </div>
@@ -298,14 +277,11 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
         {step === "verify" && (
           <Form {...verifyForm}>
             <form
-              onSubmit={verifyForm.handleSubmit((v) =>
-                verifyMutation.mutate(v)
-              )}
-              className="space-y-4"
+              onSubmit={verifyForm.handleSubmit((v) => verifyMutation.mutate(v))}
+              className="mx-auto max-w-md space-y-4"
             >
               <p className="text-sm text-muted-foreground">
-                Nhập mã 6 số hiển thị trên app Authenticator để hoàn tất thiết
-                lập.
+                Nhập mã 6 số hiển thị trên app Authenticator để hoàn tất thiết lập.
               </p>
               <FormField
                 control={verifyForm.control}
@@ -328,25 +304,25 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                   </FormItem>
                 )}
               />
-              <div className="flex gap-3 pt-2">
+              <div className="flex justify-end gap-3 pt-1">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setStep("qrcode")}
                   disabled={verifyMutation.isPending}
                 >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  <ArrowLeft className="mr-2 size-4" />
                   Quay lại
                 </Button>
                 <Button type="submit" disabled={verifyMutation.isPending}>
                   {verifyMutation.isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 size-4 animate-spin" />
                       Đang xác thực...
                     </>
                   ) : (
                     <>
-                      <ShieldCheck className="mr-2 h-4 w-4" />
+                      <ShieldCheck className="mr-2 size-4" />
                       Kích hoạt MFA
                     </>
                   )}

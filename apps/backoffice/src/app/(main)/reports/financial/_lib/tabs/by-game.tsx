@@ -12,7 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Gamepad2 } from "lucide-react";
 import {
   formatVND,
   formatVNDCompact,
@@ -34,18 +34,28 @@ export function ByGameTab() {
   if (isLoading) return <ByGameSkeleton />;
   if (error) {
     return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Lỗi tải dữ liệu. Vui lòng thử lại.
+      <Card className="gap-0 py-0">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+            <Gamepad2 className="size-6 text-muted-foreground" />
+          </div>
+          <h3 className="mt-4 text-sm font-semibold">Lỗi tải dữ liệu</h3>
+          <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
         </CardContent>
       </Card>
     );
   }
   if (!data || data.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Không có dữ liệu trong khoảng thời gian đã chọn.
+      <Card className="gap-0 py-0">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+            <Gamepad2 className="size-6 text-muted-foreground" />
+          </div>
+          <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Không tìm thấy dữ liệu game trong khoảng thời gian đã chọn. Thử mở rộng khoảng ngày.
+          </p>
         </CardContent>
       </Card>
     );
@@ -61,9 +71,12 @@ export function ByGameTab() {
   const totalEntries = data.reduce((s, r) => s + r.entryCount, 0);
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">So sánh theo game</CardTitle>
+    <Card className="gap-0 py-0">
+      <CardHeader className="px-5 pb-2 pt-4">
+        <div className="flex items-center gap-2">
+          <Gamepad2 className="size-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold">So sánh theo game</CardTitle>
+        </div>
         <CardDescription className="text-xs">
           Click vào game để xem báo cáo chi tiết
         </CardDescription>
@@ -202,11 +215,13 @@ export function ByGameTab() {
 
 function ByGameSkeleton() {
   return (
-    <Card>
-      <CardContent className="pt-4">
-        <div className="space-y-2">
+    <Card className="gap-0 py-0">
+      <CardContent className="p-0 pt-0">
+        <div className="space-y-0">
           {[...Array(7)].map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+            <div key={i} className="border-b px-5 py-3">
+              <Skeleton className="h-4 w-full" />
+            </div>
           ))}
         </div>
       </CardContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, CalendarRange, Building2, Users } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -91,11 +91,13 @@ function DrawList() {
             <Skeleton key={i} className="h-20 w-full" />
           ))}
         </div>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="space-y-2">
+        <Card className="gap-0 py-0">
+          <CardContent className="p-0">
+            <div className="space-y-0">
               {[...Array(8)].map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
+                <div key={i} className="border-b px-5 py-3">
+                  <Skeleton className="h-4 w-full" />
+                </div>
               ))}
             </div>
           </CardContent>
@@ -104,23 +106,44 @@ function DrawList() {
     );
   if (error)
     return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Lỗi tải dữ liệu.
+      <Card className="gap-0 py-0">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+            <CalendarRange className="size-6 text-muted-foreground" />
+          </div>
+          <h3 className="mt-4 text-sm font-semibold">Lỗi tải dữ liệu</h3>
+          <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
+        </CardContent>
+      </Card>
+    );
+  if (!data?.data.length)
+    return (
+      <Card className="gap-0 py-0">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+            <CalendarRange className="size-6 text-muted-foreground" />
+          </div>
+          <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Không tìm thấy kỳ quay nào trong khoảng thời gian đã chọn. Thử mở rộng khoảng ngày.
+          </p>
         </CardContent>
       </Card>
     );
   return (
     <div className="space-y-4">
       {summary && <KpiStrip data={summary} />}
-      <Card>
-        <CardHeader className="pb-2">
+      <Card className="gap-0 py-0">
+        <CardHeader className="px-5 pb-2 pt-4">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-sm">Danh sách kỳ quay</CardTitle>
-              <CardDescription className="text-xs">
-                {data?.total ?? 0} kỳ · ~160 kỳ/ngày · Trang {page}/{totalPages}
-              </CardDescription>
+            <div className="flex items-center gap-2">
+              <CalendarRange className="size-4 text-muted-foreground" />
+              <div>
+                <CardTitle className="text-sm font-semibold">Danh sách kỳ quay</CardTitle>
+                <CardDescription className="text-xs">
+                  {data?.total ?? 0} kỳ · ~160 kỳ/ngày · Trang {page}/{totalPages}
+                </CardDescription>
+              </div>
             </div>
             {totalPages > 1 && (
               <div className="flex items-center gap-2">
@@ -254,21 +277,40 @@ function DrawTenants({ drawId }: { drawId: string }) {
   const { data: players, isLoading: playersLoading } = useBingo18Players(drawId, tenantId ?? null);
   if (isLoading)
     return (
-      <Card>
-        <CardContent className="pt-4">
-          <div className="space-y-2">
+      <Card className="gap-0 py-0">
+        <CardContent className="p-0">
+          <div className="space-y-0">
             {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
+              <div key={i} className="border-b px-5 py-3">
+                <Skeleton className="h-4 w-full" />
+              </div>
             ))}
           </div>
         </CardContent>
       </Card>
     );
   if (!tenantId) {
+    if (!data?.length)
+      return (
+        <Card className="gap-0 py-0">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+              <Building2 className="size-6 text-muted-foreground" />
+            </div>
+            <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Không có đại lý nào tham gia kỳ quay này.
+            </p>
+          </CardContent>
+        </Card>
+      );
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Đại lý — {drawId}</CardTitle>
+      <Card className="gap-0 py-0">
+        <CardHeader className="px-5 pb-2 pt-4">
+          <div className="flex items-center gap-2">
+            <Building2 className="size-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold">Đại lý — {drawId}</CardTitle>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -323,22 +365,27 @@ function DrawTenants({ drawId }: { drawId: string }) {
   }
   if (playersLoading)
     return (
-      <Card>
-        <CardContent className="pt-4">
-          <div className="space-y-2">
+      <Card className="gap-0 py-0">
+        <CardContent className="p-0">
+          <div className="space-y-0">
             {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
+              <div key={i} className="border-b px-5 py-3">
+                <Skeleton className="h-4 w-full" />
+              </div>
             ))}
           </div>
         </CardContent>
       </Card>
     );
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">
-          Players — {tenantId} · {drawId}
-        </CardTitle>
+    <Card className="gap-0 py-0">
+      <CardHeader className="px-5 pb-2 pt-4">
+        <div className="flex items-center gap-2">
+          <Users className="size-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold">
+            Players — {tenantId} · {drawId}
+          </CardTitle>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
@@ -432,7 +479,7 @@ export function ByDrawTab() {
   const { level, drawId, tenantId, accountId } = useBingo18ReportFilters();
   return (
     <div className="flex flex-col gap-4">
-      <Breadcrumb />
+      {level !== "list" && <Breadcrumb />}
       {level === "list" && <DrawList />}
       {(level === "draw-tenants" || level === "players") && drawId && (
         <DrawTenants drawId={drawId} />

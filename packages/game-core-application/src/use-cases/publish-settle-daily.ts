@@ -19,8 +19,14 @@
  */
 
 import type { GameProduct } from "@megawin/game-core/entities";
-import type { SettleGameDailyAggregateResult, SystemSettleGameDailyRepository } from "../infras/repos/system-settle-game-daily-repo";
-import type { SettleTenantDailyAggregateResult, SystemSettleTenantDailyRepository } from "../infras/repos/system-settle-tenant-daily-repo";
+import type {
+  SettleGameDailyAggregateResult,
+  SystemSettleGameDailyRepository,
+} from "../infras/repos";
+import type {
+  SettleTenantDailyAggregateResult,
+  SystemSettleTenantDailyRepository,
+} from "../infras/repos";
 
 /** Interface per-game repo phải implement để aggregate per-game draw reports. */
 export interface SystemGameDailyPublisher extends SystemSettleGameDailyRepository {

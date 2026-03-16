@@ -35,7 +35,7 @@ export const SYSTEM_SETTLE_TENANT_DAILY = "system_settle_tenant_daily";
 /**
  * Snapshot outstanding cross-draw cho 1 game. TTL auto-expire.
  * Unique index: { gameProduct: 1 }
- * TTL index:    { snapshotAt: 1 }, expireAfterSeconds: 900
+ * TTL index:    { snapshotAt: 1 }, expireAfterSeconds: 300
  */
 export const SYSTEM_OUTSTANDING_GAME_DAILY = "system_outstanding_game_daily";
 
@@ -128,7 +128,7 @@ export interface SystemSettleTenantDaily {
  *
  * Scheduled job aggregate từ per-game outstanding_draw_reports và upsert mỗi 5 phút.
  * Unique index: { gameProduct: 1 }
- * TTL index:    { snapshotAt: 1 }, expireAfterSeconds: 900
+ * TTL index:    { snapshotAt: 1 }, expireAfterSeconds: 300
  */
 export interface SystemOutstandingGameDaily {
   /** Game product identifier. */
@@ -147,7 +147,29 @@ export interface SystemOutstandingGameDaily {
   /** Ước tính tổng hoa hồng pending (VND). */
   totalEstimatedCommission: number;
 
-  /** TTL field. MongoDB tự xoá doc khi snapshotAt + 900s < now. */
+  /** TTL field. MongoDB tự xoá doc khi snapshotAt + 300s < now. */
   snapshotAt: Date;
   updatedAt: Date;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Entity Types (MongoDB document + id field)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * MongoDB document type cho system_settle_game_daily.
+ * Thêm `id` (hex string từ _id ObjectId) theo yêu cầu của BaseEntity.
+ */
+export type SystemSettleGameDailyEntity = SystemSettleGameDaily & { id: string };
+
+/**
+ * MongoDB document type cho system_settle_tenant_daily.
+ * Thêm `id` (hex string từ _id ObjectId) theo yêu cầu của BaseEntity.
+ */
+export type SystemSettleTenantDailyEntity = SystemSettleTenantDaily & { id: string };
+
+/**
+ * MongoDB document type cho system_outstanding_game_daily.
+ * Thêm `id` (hex string từ _id ObjectId) theo yêu cầu của BaseEntity.
+ */
+export type SystemOutstandingGameDailyEntity = SystemOutstandingGameDaily & { id: string };

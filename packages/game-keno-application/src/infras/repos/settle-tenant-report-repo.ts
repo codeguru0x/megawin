@@ -12,8 +12,9 @@
  * KHÔNG dùng $inc.
  */
 
-import type { SettleTenantReport } from "@megawin/game-keno/entities";
+import type { SettleTenantReport, SettleTenantReportEntity } from "@megawin/game-keno/entities";
 import { KENO_SETTLE_TENANT_REPORTS } from "@megawin/game-keno/entities";
+import { SettleTenantReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 import type { TenantAggregateSummary } from "./types";
 
@@ -22,9 +23,15 @@ import type { TenantAggregateSummary } from "./types";
  *
  * 1 doc = 1 tenant × 1 draw. Unique index: { drawId: 1, tenantId: 1 }.
  */
-export class SettleTenantReportRepository extends BaseRepo<any> {
+export class SettleTenantReportRepository extends BaseRepo<
+  SettleTenantReportEntity,
+  SettleTenantReportMapper
+> {
   constructor() {
-    super({ collName: KENO_SETTLE_TENANT_REPORTS });
+    super({
+      collName: KENO_SETTLE_TENANT_REPORTS,
+      dataMapper: new SettleTenantReportMapper(),
+    });
   }
 
   /**
@@ -75,8 +82,13 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
    *
    * Dùng bởi ListTenantsByDraw use case — drill-down level 2.
    */
-  async findByDrawId(drawId: string): Promise<SettleTenantReport[]> {
-    return (await this.findMany({ drawId }, { sort: { totalStake: -1 } })) as SettleTenantReport[];
+  async findByDrawId(drawId: string): Promise<SettleTenantReportEntity[]> {
+    return this.findMany(
+      { drawId },
+      {
+        sort: { totalStake: -1 },
+      },
+    );
   }
 
   /**
@@ -87,7 +99,14 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
    */
   async aggregateByTenant(from: string, to: string): Promise<TenantAggregateSummary[]> {
     const result = await this.aggregate([
-      { $match: { financialDate: { $gte: from, $lte: to } } },
+      {
+        $match: {
+          financialDate: {
+            $gte: from,
+            $lte: to,
+          },
+        },
+      },
       {
         $group: {
           _id: "$tenantId",
@@ -101,18 +120,20 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
           commission: { $sum: "$commission" },
         },
       },
-      { $sort: { totalStake: -1 } },
+      {
+        $sort: { totalStake: -1 },
+      },
     ]);
-    return (result as any[]).map((r) => ({
-      tenantId: r._id,
-      drawCount: r.drawCount,
-      entryCount: r.entryCount,
-      playerCount: r.playerCount,
-      totalStake: r.totalStake,
-      totalWin: r.totalWin,
-      totalPayout: r.totalPayout,
-      ggr: r.ggr,
-      commission: r.commission,
+    return result.map((r) => ({
+      tenantId: r["_id"] as string,
+      drawCount: r["drawCount"] as number,
+      entryCount: r["entryCount"] as number,
+      playerCount: r["playerCount"] as number,
+      totalStake: r["totalStake"] as number,
+      totalWin: r["totalWin"] as number,
+      totalPayout: r["totalPayout"] as number,
+      ggr: r["ggr"] as number,
+      commission: r["commission"] as number,
     }));
   }
 
@@ -125,12 +146,18 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
     tenantId: string,
     from: string,
     to: string,
-  ): Promise<{ data: SettleTenantReport[]; total: number }> {
-    const filter = { tenantId, financialDate: { $gte: from, $lte: to } };
+  ): Promise<{ data: SettleTenantReportEntity[]; total: number }> {
+    const filter = {
+      tenantId,
+      financialDate: {
+        $gte: from,
+        $lte: to,
+      },
+    };
     const [data, total] = await Promise.all([
       this.findMany(filter, { sort: { financialDate: -1 } }),
       this.count(filter),
     ]);
-    return { data: data as SettleTenantReport[], total };
+    return { data, total };
   }
 }

@@ -28,7 +28,7 @@ export function AccountNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex shrink-0 flex-row gap-1 lg:w-56 lg:flex-col">
+    <nav className="flex flex-row gap-1 lg:flex-col">
       {accountNavItems.map((item) => {
         const isActive = pathname === item.href;
         return (
@@ -36,13 +36,13 @@ export function AccountNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               isActive
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                ? "bg-primary/10 text-primary"
+                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
             )}
           >
-            <item.icon className="h-4 w-4 shrink-0" />
+            <item.icon className="size-4 shrink-0" />
             <span className="hidden lg:inline">{item.title}</span>
           </Link>
         );

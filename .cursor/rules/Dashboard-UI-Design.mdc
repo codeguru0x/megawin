@@ -232,17 +232,80 @@ Deliverables per page:
 
 ---
 
-## 13) Quick “Do / Don’t”
+## 13) Card Spacing Standard (MUST follow for ALL shadcn Card components)
+
+shadcn `Card` mặc định có `py-6 gap-6` — khi không override sẽ tạo khoảng trống lớn giữa border và title, và giữa title và content.
+
+### 13.1 Chuẩn bắt buộc
+
+```tsx
+// ✅ ĐÚNG — Card compact, kiểm soát hoàn toàn spacing
+<Card className="gap-0 py-0">
+  <CardHeader className="px-5 pb-2 pt-4">
+    <div className="flex items-center gap-2">
+      <SomeIcon className="size-4 text-muted-foreground" />
+      <CardTitle className="text-sm font-semibold">Tiêu đề card</CardTitle>
+    </div>
+  </CardHeader>
+  <CardContent className="px-5 pb-4 pt-0">
+    {/* content */}
+  </CardContent>
+</Card>
+
+// ❌ SAI — không override gap/py của shadcn Card
+<Card>
+  <CardHeader className="pb-2">...</CardHeader>
+  <CardContent>...</CardContent>
+</Card>
+```
+
+### 13.2 Spacing values cụ thể
+- `Card`: LUÔN thêm `gap-0 py-0` để tắt default `py-6 gap-6`
+- `CardHeader`: `px-5 pt-4 pb-2` (16px top · 20px sides · 8px bottom)
+- `CardContent`: `px-5 pt-0 pb-4` (0px top · 20px sides · 16px bottom)
+- Nếu CardContent có `p-0` (tự quản lý padding), phần tử con cuối cùng tự thêm `pb-4`
+
+### 13.3 Icon trong CardHeader
+- **BẮT BUỘC** mỗi card phải có icon bên trái title — `size-4 text-muted-foreground`
+- Dùng icon phù hợp nội dung: `BarChart2`, `PieChart`, `CalendarClock`, `Activity`, `Layers`, v.v.
+- Không dùng icon decorative không mang ý nghĩa
+
+```tsx
+// ✅ Pattern chuẩn cho header có action bên phải
+<CardHeader className="px-5 pb-2 pt-4">
+  <div className="flex items-center justify-between gap-2">
+    <div className="flex items-center gap-2">
+      <Icon className="size-4 text-muted-foreground" />
+      <CardTitle className="text-sm font-semibold">Tiêu đề</CardTitle>
+    </div>
+    <Badge variant="outline" className="text-xs">...</Badge>
+  </div>
+</CardHeader>
+```
+
+### 13.4 Kết quả spacing khi áp dụng đúng
+- Top (border → title): **16px** (`pt-4`)
+- Header → Content: **8px** (`pb-2` + `pt-0`)
+- Bottom (content → border): **16px** (`pb-4`)
+- Horizontal: **20px** (`px-5`)
+
+---
+
+## 14) Quick "Do / Don't"
 ✅ Do:
 - `tabular-nums`, right-align numeric columns
 - sticky header tables
 - filter bars, segments, export/refresh
-- consistent `gap-6`, `p-6`, `rounded-2xl`
+- consistent `gap-4`, `rounded-xl`
 - semantic badges and deltas
+- `gap-0 py-0` trên Card + `px-5 pt-4 pb-2` trên CardHeader
+- icon `size-4 text-muted-foreground` bên trái mọi CardTitle
 
-❌ Don’t:
+❌ Don't:
 - random bright colors
 - inconsistent paddings
 - big gradients/shadows
 - same font size everywhere
 - one-off components duplicated across pages
+- dùng `<Card>` mà không override `gap-0 py-0`
+- CardTitle không có icon kèm theo

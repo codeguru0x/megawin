@@ -13,8 +13,9 @@
  * KHÔNG dùng $inc.
  */
 
-import type { SettleDrawReport } from "@megawin/game-lotto535/entities";
+import type { SettleDrawReport, SettleDrawReportEntity } from "@megawin/game-lotto535/entities";
 import { LOTTO535_SETTLE_DRAW_REPORTS } from "@megawin/game-lotto535/entities";
+import { SettleDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 import type { DrawSummaryResult } from "./types";
 
@@ -23,9 +24,12 @@ import type { DrawSummaryResult } from "./types";
  *
  * 1 doc = 1 draw. Unique index: { drawId: 1 }.
  */
-export class SettleDrawReportRepository extends BaseRepo<any> {
+export class SettleDrawReportRepository extends BaseRepo<SettleDrawReportEntity, SettleDrawReportMapper> {
   constructor() {
-    super({ collName: LOTTO535_SETTLE_DRAW_REPORTS });
+    super({
+      collName: LOTTO535_SETTLE_DRAW_REPORTS,
+      dataMapper: new SettleDrawReportMapper(),
+    });
   }
 
   /**
@@ -70,8 +74,8 @@ export class SettleDrawReportRepository extends BaseRepo<any> {
    *
    * Dùng bởi BuildVoidReport để snapshot settle data trước khi xoá.
    */
-  async findByDrawId(drawId: string): Promise<SettleDrawReport | null> {
-    return (await this.findOne({ drawId })) as SettleDrawReport | null;
+  async findByDrawId(drawId: string): Promise<SettleDrawReportEntity | null> {
+    return await this.findOne({ drawId });
   }
 
   /**
@@ -84,7 +88,7 @@ export class SettleDrawReportRepository extends BaseRepo<any> {
     from: string,
     to: string,
     options?: { skip?: number; limit?: number },
-  ): Promise<{ data: SettleDrawReport[]; total: number }> {
+  ): Promise<{ data: SettleDrawReportEntity[]; total: number }> {
     const filter = {
       financialDate: {
         $gte: from,
@@ -96,7 +100,7 @@ export class SettleDrawReportRepository extends BaseRepo<any> {
         sort: { financialDate: -1 },
         skip: options?.skip ?? 0,
         limit: options?.limit ?? 20,
-      }) as Promise<SettleDrawReport[]>,
+      }),
       this.count(filter),
     ]);
     return { data, total };

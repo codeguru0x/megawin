@@ -1,4 +1,29 @@
 /**
+ * Kết quả aggregate từ per-game settle tenant reports theo financialDate, group by tenantId.
+ * Dùng làm input cho upsertTenantDaily trong SystemSettleTenantDailyRepository.
+ */
+export interface SettleTenantDailyAggregateResult {
+  /** ID đại lý. */
+  tenantId: string;
+  /** Tổng tiền cược của tenant (VND). */
+  totalStake: number;
+  /** Tổng tiền trả thưởng của tenant (VND). */
+  totalPayout: number;
+  /** GGR = totalStake - totalPayout. */
+  ggr: number;
+  /** Hoa hồng đại lý (VND). */
+  commission: number;
+  /** Lợi nhuận ròng = ggr - commission (VND). */
+  netProfit: number;
+  /** Số entry của tenant trong ngày. */
+  entryCount: number;
+  /** Số player (unique accountId) của tenant trong ngày. */
+  playerCount: number;
+  /** Số kỳ quay tenant có entry trong ngày. */
+  drawCount: number;
+}
+
+/**
  * Aggregate result khi nhóm theo tenantId — SUM cross-game cho mỗi tenant.
  * Dùng cho tab "Theo đại lý".
  */

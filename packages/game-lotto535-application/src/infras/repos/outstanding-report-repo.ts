@@ -5,22 +5,14 @@
  * Collection: lotto535_outstanding_draw_reports.
  *
  * IDEMPOTENT: upsert overwrite với snapshotAt = now — chạy lại reset TTL.
- * TTL: snapshotAt + 900s → MongoDB tự xoá khi draw settle/void.
+ * TTL: snapshotAt + 300s → MongoDB tự xoá khi draw settle/void.
  */
 
-import type { OutstandingDrawReport } from "@megawin/game-lotto535/entities";
+import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-lotto535/entities";
 import { LOTTO535_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-lotto535/entities";
+import { OutstandingDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
-
-/** Summary aggregate outstanding cho toàn game — dùng cho SyncSystemOutstanding. */
-export interface OutstandingGameSummary {
-  activeDrawCount: number;
-  totalEntryCount: number;
-  totalPlayerCount: number;
-  totalTenantCount: number;
-  totalOutstandingStake: number;
-  totalEstimatedCommission: number;
-}
+import type { OutstandingGameSummary } from "./types";
 
 /**
  * Repository ghi outstanding report cho Lotto 5/35.
@@ -28,9 +20,12 @@ export interface OutstandingGameSummary {
  * Scheduled job (mỗi 5 phút) gọi upsertDrawReport cho từng draw active.
  * Sau khi draw settle/void, job ngừng tạo doc mới → TTL tự xoá.
  */
-export class OutstandingReportRepository extends BaseRepo<any> {
+export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportEntity, OutstandingDrawReportMapper> {
   constructor() {
-    super({ collName: LOTTO535_OUTSTANDING_DRAW_REPORTS });
+    super({
+      collName: LOTTO535_OUTSTANDING_DRAW_REPORTS,
+      dataMapper: new OutstandingDrawReportMapper(),
+    });
   }
 
   /**
@@ -110,7 +105,7 @@ export class OutstandingReportRepository extends BaseRepo<any> {
    *
    * Dùng cho Outstanding page của game. Sort theo drawId ascending.
    */
-  async findAll(): Promise<OutstandingDrawReport[]> {
-    return (await this.findMany({}, { sort: { drawId: 1 } })) as OutstandingDrawReport[];
+  async findAll(): Promise<OutstandingDrawReportEntity[]> {
+    return await this.findMany({}, { sort: { drawId: 1 } });
   }
 }

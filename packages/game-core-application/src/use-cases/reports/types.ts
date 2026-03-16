@@ -4,8 +4,17 @@
  * Tách riêng để use case file gọn, consumer import trực tiếp từ types file.
  */
 
-import type { DailyOverviewRow, GameSummaryRow, TenantSummaryRow } from "../../infras/repos/types";
-import type { SystemSettleGameDaily, SystemOutstandingGameDaily, SystemSettleTenantDaily } from "@megawin/game-core/entities";
+import type {
+  DailyOverviewRow,
+  GameSummaryRow,
+  TenantSummaryRow,
+  DashboardGameDailyData,
+} from "../../infras/repos/types";
+import type {
+  SystemSettleGameDaily,
+  SystemOutstandingGameDaily,
+  SystemSettleTenantDaily,
+} from "@megawin/game-core/entities";
 
 // ─── Daily Overview ───────────────────────────────────────────────────────────
 
@@ -50,4 +59,21 @@ export interface GetTenantSummaryOutput {
 
 export interface GetSystemOutstandingOutput {
   data: SystemOutstandingGameDaily[];
+}
+
+// ─── Dashboard KPIs ───────────────────────────────────────────────────────────
+
+export interface GetDashboardKpisInput {
+  /** Ngày tài chính đang xem (YYYY-MM-DD). */
+  fd: string;
+  /** Ngày so sánh, cùng thứ tuần trước (YYYY-MM-DD). Chỉ truyền khi fd < today. */
+  compare?: string;
+}
+
+export interface GetDashboardKpisOutput {
+  /**
+   * Raw per-game data cho 1-2 ngày tài chính.
+   * Client tách theo financialDate để compute KPI totals, trend %, payout ratio.
+   */
+  data: DashboardGameDailyData[];
 }

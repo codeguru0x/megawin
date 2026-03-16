@@ -317,10 +317,10 @@ export function NumberHeatmap({
   const totalBets = mainNumbers.reduce((a, n) => a + n.count, 0);
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-2">
+    <Card className="gap-0 py-0 shadow-sm">
+      <CardHeader className="px-5 pb-2 pt-4">
         <div className="flex items-center gap-2">
-          <BarChart2 className="size-3.5 text-muted-foreground shrink-0" />
+          <BarChart2 className="size-4 text-muted-foreground shrink-0" />
           <div>
             <CardTitle className="text-sm font-semibold">Phân tích số cược</CardTitle>
             <CardDescription className="text-xs mt-0.5">
@@ -329,7 +329,7 @@ export function NumberHeatmap({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 pt-0">
+      <CardContent className="px-5 pb-4 pt-0 space-y-4">
         <div className="flex gap-4 items-start">
           <div className="flex-[7_7_0%] min-w-0">
             <MainGrid numbers={mainNumbers} />

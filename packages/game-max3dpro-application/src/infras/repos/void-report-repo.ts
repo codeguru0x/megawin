@@ -11,9 +11,10 @@
  * IDEMPOTENT: upsert overwrite — chạy lại an toàn.
  */
 
-import type { VoidDrawReport } from "@megawin/game-max3dpro/entities";
+import type { VoidDrawReport, VoidDrawReportEntity } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_VOID_DRAW_REPORTS } from "@megawin/game-max3dpro/entities";
 import { BaseRepo } from "./base-repo";
+import { VoidDrawReportMapper } from "../mappers";
 
 /**
  * Repository ghi void report cho Max 3D Pro.
@@ -21,9 +22,9 @@ import { BaseRepo } from "./base-repo";
  * BuildVoidReport use case gọi sau khi đã xoá settle reports
  * (nếu void-after-settle) và aggregate voided entries.
  */
-export class VoidReportRepository extends BaseRepo<any> {
+export class VoidReportRepository extends BaseRepo<VoidDrawReportEntity, VoidDrawReportMapper> {
   constructor() {
-    super({ collName: MAX3DPRO_VOID_DRAW_REPORTS });
+    super({ collName: MAX3DPRO_VOID_DRAW_REPORTS, dataMapper: new VoidDrawReportMapper() });
   }
 
   /**
@@ -58,9 +59,9 @@ export class VoidReportRepository extends BaseRepo<any> {
    * Sort: financialDate desc.
    */
   async findByDateRange(opts: { from: string; to: string }): Promise<VoidDrawReport[]> {
-    return (await this.findMany(
+    return await this.findMany(
       { financialDate: { $gte: opts.from, $lte: opts.to } },
       { sort: { financialDate: -1, drawId: -1 } },
-    )) as VoidDrawReport[];
+    );
   }
 }

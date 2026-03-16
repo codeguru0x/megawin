@@ -18,23 +18,14 @@
  * IDEMPOTENT: write dùng upsert overwrite — chạy lại an toàn.
  */
 
-import type { SystemSettleGameDaily } from "@megawin/game-core/entities";
+import type {
+  SystemSettleGameDaily,
+  SystemSettleGameDailyEntity,
+} from "@megawin/game-core/entities";
 import { SYSTEM_SETTLE_GAME_DAILY } from "@megawin/game-core/entities";
+import { SystemSettleGameDailyMapper } from "../mappers";
 import { GameCoreBaseRepo } from "./game-core-base-repo";
-import type { DailyOverviewRow, GameSummaryRow } from "./types";
-
-/** Kết quả aggregate từ per-game settle draw reports theo financialDate. */
-export interface SettleGameDailyAggregateResult {
-  drawCount: number;
-  entryCount: number;
-  playerCount: number;
-  tenantCount: number;
-  totalStake: number;
-  totalPayout: number;
-  ggr: number;
-  totalCommission: number;
-  netProfit: number;
-}
+import type { DailyOverviewRow, DashboardGameDailyData, GameSummaryRow } from "./types";
 
 /**
  * Base repository ghi và query system game daily settle reports.
@@ -42,9 +33,15 @@ export interface SettleGameDailyAggregateResult {
  * Chỉ làm việc với system_settle_game_daily collection.
  * Per-game aggregate logic nằm ở subclass trong mỗi game package.
  */
-export class SystemSettleGameDailyRepository extends GameCoreBaseRepo<any> {
+export class SystemSettleGameDailyRepository extends GameCoreBaseRepo<
+  SystemSettleGameDailyEntity,
+  SystemSettleGameDailyMapper
+> {
   constructor() {
-    super({ collName: SYSTEM_SETTLE_GAME_DAILY });
+    super({
+      collName: SYSTEM_SETTLE_GAME_DAILY,
+      dataMapper: new SystemSettleGameDailyMapper(),
+    });
   }
 
   /**
@@ -52,6 +49,7 @@ export class SystemSettleGameDailyRepository extends GameCoreBaseRepo<any> {
    *
    * Re-aggregate từ per-game draw-level reports → overwrite toàn bộ.
    * Filter: { financialDate, gameProduct }.
+   * IDEMPOTENT: chạy lại an toàn.
    */
   async upsertGameDaily(
     report: Omit<SystemSettleGameDaily, "createdAt" | "updatedAt">,
@@ -83,6 +81,7 @@ export class SystemSettleGameDailyRepository extends GameCoreBaseRepo<any> {
    * Query vào system_settle_game_daily, group by financialDate.
    * Sort theo financialDate descending.
    * Dùng cho tab "Tổng quan ngày" trong System Financial Reports.
+   * Index: { financialDate: 1 }
    */
   async aggregateByFinancialDate(from: string, to: string): Promise<DailyOverviewRow[]> {
     const result = await this.aggregate([
@@ -118,17 +117,17 @@ export class SystemSettleGameDailyRepository extends GameCoreBaseRepo<any> {
       },
     ]);
 
-    return (result as any[]).map((r) => ({
-      financialDate: r._id as string,
-      drawCount: r.drawCount as number,
-      entryCount: r.entryCount as number,
-      playerCount: r.playerCount as number,
-      tenantCount: r.tenantCount as number,
-      totalStake: r.totalStake as number,
-      totalPayout: r.totalPayout as number,
-      ggr: r.ggr as number,
-      totalCommission: r.totalCommission as number,
-      netProfit: r.netProfit as number,
+    return result.map((r) => ({
+      financialDate: r["_id"] as string,
+      drawCount: r["drawCount"] as number,
+      entryCount: r["entryCount"] as number,
+      playerCount: r["playerCount"] as number,
+      tenantCount: r["tenantCount"] as number,
+      totalStake: r["totalStake"] as number,
+      totalPayout: r["totalPayout"] as number,
+      ggr: r["ggr"] as number,
+      totalCommission: r["totalCommission"] as number,
+      netProfit: r["netProfit"] as number,
     }));
   }
 
@@ -137,6 +136,7 @@ export class SystemSettleGameDailyRepository extends GameCoreBaseRepo<any> {
    *
    * Query vào system_settle_game_daily, group by gameProduct.
    * Dùng cho tab "Theo game" trong System Financial Reports.
+   * Index: { financialDate: 1, gameProduct: 1 }
    */
   async aggregateByGameProduct(from: string, to: string): Promise<GameSummaryRow[]> {
     const result = await this.aggregate([
@@ -172,17 +172,17 @@ export class SystemSettleGameDailyRepository extends GameCoreBaseRepo<any> {
       },
     ]);
 
-    return (result as any[]).map((r) => ({
-      gameProduct: r._id as string,
-      drawCount: r.drawCount as number,
-      entryCount: r.entryCount as number,
-      playerCount: r.playerCount as number,
-      tenantCount: r.tenantCount as number,
-      totalStake: r.totalStake as number,
-      totalPayout: r.totalPayout as number,
-      ggr: r.ggr as number,
-      totalCommission: r.totalCommission as number,
-      netProfit: r.netProfit as number,
+    return result.map((r) => ({
+      gameProduct: r["_id"] as string,
+      drawCount: r["drawCount"] as number,
+      entryCount: r["entryCount"] as number,
+      playerCount: r["playerCount"] as number,
+      tenantCount: r["tenantCount"] as number,
+      totalStake: r["totalStake"] as number,
+      totalPayout: r["totalPayout"] as number,
+      ggr: r["ggr"] as number,
+      totalCommission: r["totalCommission"] as number,
+      netProfit: r["netProfit"] as number,
     }));
   }
 
@@ -191,8 +191,37 @@ export class SystemSettleGameDailyRepository extends GameCoreBaseRepo<any> {
    *
    * Query system_settle_game_daily WHERE financialDate = ngày chỉ định.
    * Trả về tất cả docs của ngày đó (1 doc/game).
+   * Index: { financialDate: 1 }
    */
-  async findByFinancialDate(financialDate: string): Promise<SystemSettleGameDaily[]> {
-    return (await this.findMany({ financialDate })) as SystemSettleGameDaily[];
+  async findByFinancialDate(financialDate: string): Promise<SystemSettleGameDailyEntity[]> {
+    return this.findMany({
+      financialDate,
+    });
+  }
+
+  /**
+   * Raw query cho nhiều ngày tài chính cụ thể — dùng cho dashboard KPIs.
+   *
+   * Query system_settle_game_daily WHERE financialDate IN [...dates].
+   * Trả về raw docs, client tách theo financialDate để compute KPI totals, trend %.
+   * 1 query phục vụ zone KPI + Game Table + Game Mix + Payout Ratio + Trend %.
+   * Index: { financialDate: 1, gameProduct: 1 }
+   */
+  async findByFinancialDates(financialDates: string[]): Promise<DashboardGameDailyData[]> {
+    const result = await this.findMany({
+      financialDate: { $in: financialDates } as unknown as string,
+    });
+    return result.map((r) => ({
+      gameProduct: r.gameProduct as string,
+      financialDate: r.financialDate as string,
+      drawCount: r.drawCount as number,
+      entryCount: r.entryCount as number,
+      playerCount: r.playerCount as number,
+      totalStake: r.totalStake as number,
+      totalPayout: r.totalPayout as number,
+      ggr: r.ggr as number,
+      totalCommission: r.totalCommission as number,
+      netProfit: r.netProfit as number,
+    }));
   }
 }

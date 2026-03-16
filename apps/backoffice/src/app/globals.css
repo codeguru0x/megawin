@@ -48,6 +48,26 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ── Game Brand Colors ───────────────────────────────────────────────────── */
+  /* Primary brand token per game — dùng cho charts, badges, borders, icons.   */
+  /* Thêm vào @theme để Tailwind sinh ra bg-game-*, text-game-*, border-game-* */
+  --color-game-mega645: var(--game-mega645);
+  --color-game-power655: var(--game-power655);
+  --color-game-lotto535: var(--game-lotto535);
+  --color-game-keno: var(--game-keno);
+  --color-game-max3d: var(--game-max3d);
+  --color-game-max3dpro: var(--game-max3dpro);
+  --color-game-bingo18: var(--game-bingo18);
+
+  /* Muted / surface variants — dùng cho card backgrounds, subtle accents */
+  --color-game-mega645-muted: var(--game-mega645-muted);
+  --color-game-power655-muted: var(--game-power655-muted);
+  --color-game-lotto535-muted: var(--game-lotto535-muted);
+  --color-game-keno-muted: var(--game-keno-muted);
+  --color-game-max3d-muted: var(--game-max3d-muted);
+  --color-game-max3dpro-muted: var(--game-max3dpro-muted);
+  --color-game-bingo18-muted: var(--game-bingo18-muted);
 }
 
 /* Default theme styles (used when no data-theme-preset is set or when 'default' is selected).
@@ -89,6 +109,35 @@ These serve as the fallback; there is no separate default.css file. */
   /* fonts */
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
+
+  /* ── Game Brand Colors (light mode) ────────────────────────────────────── */
+  /* Mega 6/45 — Teal/Emerald (jackpot: teal-400→emerald-500) */
+  --game-mega645: oklch(0.6 0.118 183.6); /* teal-500  #14b8a6 */
+  --game-mega645-muted: oklch(0.953 0.026 183.6); /* teal-50   #f0fdfa */
+
+  /* Power 6/55 — Red/Orange (jackpot: red-500→orange-500) */
+  --game-power655: oklch(0.628 0.258 29.2); /* red-500   #ef4444 */
+  --game-power655-muted: oklch(0.969 0.033 29.2); /* red-50    #fef2f2 */
+
+  /* Lotto 5/35 — Amber/Orange (jackpot: amber-400→orange-500) */
+  --game-lotto535: oklch(0.769 0.155 70.1); /* amber-500 #f59e0b */
+  --game-lotto535-muted: oklch(0.986 0.028 70.1); /* amber-50  #fffbeb */
+
+  /* Keno — Blue */
+  --game-keno: oklch(0.623 0.214 259.8); /* blue-500  #3b82f6 */
+  --game-keno-muted: oklch(0.969 0.018 259.8); /* blue-50   #eff6ff */
+
+  /* Max3D — Violet */
+  --game-max3d: oklch(0.606 0.238 292.7); /* violet-500 #8b5cf6 */
+  --game-max3d-muted: oklch(0.969 0.017 292.7); /* violet-50  #f5f3ff */
+
+  /* Max3D Pro — Pink */
+  --game-max3dpro: oklch(0.656 0.241 350); /* pink-500  #ec4899 */
+  --game-max3dpro-muted: oklch(0.971 0.018 350); /* pink-50   #fdf2f8 */
+
+  /* Bingo 18 — Emerald */
+  --game-bingo18: oklch(0.696 0.17 162.5); /* emerald-500 #10b981 */
+  --game-bingo18-muted: oklch(0.957 0.03 162.5); /* emerald-50  #ecfdf5 */
 }
 
 .dark {
@@ -123,6 +172,29 @@ These serve as the fallback; there is no separate default.css file. */
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.439 0 0);
+
+  /* ── Game Brand Colors (dark mode) ─────────────────────────────────────── */
+  /* Sáng hơn so với light mode để dễ đọc trên nền tối */
+  --game-mega645: oklch(0.72 0.118 183.6); /* teal-400  #2dd4bf */
+  --game-mega645-muted: oklch(0.2 0.05 183.6); /* teal-950  #042f2e */
+
+  --game-power655: oklch(0.704 0.191 22.2); /* red-400   #f87171 */
+  --game-power655-muted: oklch(0.2 0.06 22.2); /* red-950   #450a0a */
+
+  --game-lotto535: oklch(0.85 0.13 70.1); /* amber-400 #fbbf24 */
+  --game-lotto535-muted: oklch(0.21 0.055 70.1); /* amber-950 #451a03 */
+
+  --game-keno: oklch(0.707 0.165 259.8); /* blue-400  #60a5fa */
+  --game-keno-muted: oklch(0.2 0.045 259.8); /* blue-950  #172554 */
+
+  --game-max3d: oklch(0.722 0.185 292.7); /* violet-400 #a78bfa */
+  --game-max3d-muted: oklch(0.2 0.05 292.7); /* violet-950 #2e1065 */
+
+  --game-max3dpro: oklch(0.718 0.193 350); /* pink-400  #f472b6 */
+  --game-max3dpro-muted: oklch(0.2 0.045 350); /* pink-950  #500724 */
+
+  --game-bingo18: oklch(0.765 0.155 162.5); /* emerald-400 #34d399 */
+  --game-bingo18-muted: oklch(0.195 0.048 162.5); /* emerald-950 #022c22 */
 }
 
 @layer base {

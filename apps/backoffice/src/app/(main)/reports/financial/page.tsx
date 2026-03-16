@@ -1,10 +1,10 @@
 "use client";
 
 import { Suspense } from "react";
-import { BarChart3, Download } from "lucide-react";
+import { BarChart3, CalendarDays, Download, Gamepad2, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FinancialDateRangePicker } from "@/components/financial-date-range-picker";
+import { FinancialDateRangePicker } from "@/components/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSystemReportFilters } from "./_lib/use-report-filters";
 import { DailyOverviewTab } from "./_lib/tabs/daily-overview";
@@ -31,33 +31,37 @@ function SystemFinancialReportsContent() {
             </p>
           </div>
         </div>
-        <Button variant="outline" size="sm">
-          <Download className="mr-2 size-4" />
-          Xuất Excel
-        </Button>
-      </div>
-
-      {/* Date Range Picker */}
-      <div className="rounded-lg border bg-card px-4 py-3">
-        <FinancialDateRangePicker
-          from={from}
-          to={to}
-          onChange={(f, t) => {
-            void setFrom(f);
-            void setTo(t);
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <FinancialDateRangePicker
+            from={from}
+            to={to}
+            onChange={(f, t) => {
+              void setFrom(f);
+              void setTo(t);
+            }}
+          />
+          <Button variant="outline" size="sm">
+            <Download className="mr-2 size-4" />
+            Xuất Excel
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
-      <Tabs
-        value={tab}
-        onValueChange={(v) => void setTab(v as "daily" | "by-game" | "by-tenant")}
-      >
-        <TabsList>
-          <TabsTrigger value="daily">Tổng quan ngày</TabsTrigger>
-          <TabsTrigger value="by-game">Theo game</TabsTrigger>
-          <TabsTrigger value="by-tenant">Theo đại lý</TabsTrigger>
+      <Tabs value={tab} onValueChange={(v) => void setTab(v as "daily" | "by-game" | "by-tenant")}>
+        <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
+          <TabsTrigger value="daily" className="gap-1.5">
+            <CalendarDays className="size-4 text-violet-500" />
+            Tổng quan ngày
+          </TabsTrigger>
+          <TabsTrigger value="by-game" className="gap-1.5">
+            <Gamepad2 className="size-4 text-emerald-500" />
+            Theo game
+          </TabsTrigger>
+          <TabsTrigger value="by-tenant" className="gap-1.5">
+            <Building2 className="size-4 text-blue-500" />
+            Theo đại lý
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="daily" className="mt-4">

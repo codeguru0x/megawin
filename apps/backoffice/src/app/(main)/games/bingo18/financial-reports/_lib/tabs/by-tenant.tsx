@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Building2, CalendarRange } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -27,11 +27,13 @@ function TenantSummaryTable() {
   const { data, isLoading, error } = useBingo18TenantList(from, to);
   if (isLoading)
     return (
-      <Card>
-        <CardContent className="pt-4">
-          <div className="space-y-2">
+      <Card className="gap-0 py-0">
+        <CardContent className="p-0">
+          <div className="space-y-0">
             {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
+              <div key={i} className="border-b px-5 py-3">
+                <Skeleton className="h-4 w-full" />
+              </div>
             ))}
           </div>
         </CardContent>
@@ -39,9 +41,22 @@ function TenantSummaryTable() {
     );
   if (error || !data?.length)
     return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          {error ? "Lỗi." : "Không có dữ liệu."}
+      <Card className="gap-0 py-0">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+            <Building2 className="size-6 text-muted-foreground" />
+          </div>
+          {error ? (
+            <>
+              <h3 className="mt-4 text-sm font-semibold">Lỗi tải dữ liệu</h3>
+              <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
+            </>
+          ) : (
+            <>
+              <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
+              <p className="mt-1 text-xs text-muted-foreground">Không có dữ liệu trong khoảng thời gian đã chọn.</p>
+            </>
+          )}
         </CardContent>
       </Card>
     );
@@ -51,9 +66,12 @@ function TenantSummaryTable() {
     commission: data.reduce((s, r) => s + r.commission, 0),
   };
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Tổng hợp theo đại lý</CardTitle>
+    <Card className="gap-0 py-0">
+      <CardHeader className="px-5 pb-2 pt-4">
+        <div className="flex items-center gap-2">
+          <Building2 className="size-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold">Tổng hợp theo đại lý</CardTitle>
+        </div>
         <CardDescription className="text-xs">{data.length} đại lý</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -142,11 +160,13 @@ function TenantDrawList({ tenantId }: { tenantId: string }) {
   const { data, isLoading } = useBingo18TenantDraws(tenantId, from, to);
   if (isLoading)
     return (
-      <Card>
-        <CardContent className="pt-4">
-          <div className="space-y-2">
+      <Card className="gap-0 py-0">
+        <CardContent className="p-0">
+          <div className="space-y-0">
             {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
+              <div key={i} className="border-b px-5 py-3">
+                <Skeleton className="h-4 w-full" />
+              </div>
             ))}
           </div>
         </CardContent>
@@ -154,16 +174,23 @@ function TenantDrawList({ tenantId }: { tenantId: string }) {
     );
   if (!data?.data.length)
     return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Không có dữ liệu.
+      <Card className="gap-0 py-0">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+            <CalendarRange className="size-6 text-muted-foreground" />
+          </div>
+          <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
+          <p className="mt-1 text-xs text-muted-foreground">Không có dữ liệu.</p>
         </CardContent>
       </Card>
     );
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Kỳ quay — {tenantId}</CardTitle>
+    <Card className="gap-0 py-0">
+      <CardHeader className="px-5 pb-2 pt-4">
+        <div className="flex items-center gap-2">
+          <CalendarRange className="size-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold">Kỳ quay — {tenantId}</CardTitle>
+        </div>
         <CardDescription className="text-xs">{data.total} kỳ</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -224,24 +251,26 @@ export function ByTenantTab() {
   const { level, tenantId, navigateToList } = useBingo18ReportFilters();
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-auto px-2 py-1 text-xs"
-          onClick={navigateToList}
-        >
-          Đại lý
-        </Button>
-        {tenantId && (
-          <>
-            <ChevronRight className="size-3 text-muted-foreground" />
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-              {tenantId}
-            </span>
-          </>
-        )}
-      </div>
+      {level !== "list" && (
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-auto px-2 py-1 text-xs"
+            onClick={navigateToList}
+          >
+            Đại lý
+          </Button>
+          {tenantId && (
+            <>
+              <ChevronRight className="size-3 text-muted-foreground" />
+              <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">
+                {tenantId}
+              </span>
+            </>
+          )}
+        </div>
+      )}
       {level === "list" && <TenantSummaryTable />}
       {level === "tenant-draws" && tenantId && <TenantDrawList tenantId={tenantId} />}
     </div>

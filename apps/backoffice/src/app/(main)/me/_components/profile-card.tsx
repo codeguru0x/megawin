@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { useQuery } from "@tanstack/react-query";
 import {
   CircleUser,
@@ -22,13 +24,7 @@ import {
 } from "@megawin/identity/entities/labels";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ProfileResponse {
   accountId: string;
@@ -78,9 +74,9 @@ export function ProfileCard() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <Card className="gap-0 py-0 shadow-sm">
+        <CardContent className="flex items-center justify-center px-5 py-16">
+          <Loader2 className="size-6 animate-spin text-muted-foreground" />
         </CardContent>
       </Card>
     );
@@ -88,62 +84,58 @@ export function ProfileCard() {
 
   if (!data) {
     return (
-      <Card>
-        <CardContent className="py-16 text-center text-sm text-muted-foreground">
+      <Card className="gap-0 py-0 shadow-sm">
+        <CardContent className="px-5 py-16 text-center text-sm text-muted-foreground">
           Không thể tải thông tin tài khoản.
         </CardContent>
       </Card>
     );
   }
 
-  const mfaConfig = mfaStatusConfig[data.mfaStatus as keyof typeof mfaStatusConfig] ?? mfaStatusConfig.none;
+  const mfaConfig =
+    mfaStatusConfig[data.mfaStatus as keyof typeof mfaStatusConfig] ?? mfaStatusConfig.none;
   const MfaIcon = mfaConfig.icon;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-            <CircleUser className="h-4 w-4 text-primary" />
+    <Card className="gap-0 py-0 shadow-sm">
+      <CardHeader className="px-5 pb-3 pt-4">
+        <div className="flex items-center gap-2.5">
+          <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
+            <CircleUser className="size-3.5 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <CardTitle className="text-base">Thông tin cá nhân</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-sm font-semibold">Thông tin cá nhân</CardTitle>
+            <CardDescription className="mt-0.5 text-xs">
               Thông tin tài khoản đang đăng nhập
             </CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="divide-y">
+      <CardContent className="px-5 pb-5 pt-0">
+        <div className="mx-auto max-w-md divide-y divide-border/50">
           <InfoRow
-            icon={<CircleUser className="h-4 w-4" />}
+            icon={<CircleUser className="size-4" />}
             label="Tên tài khoản"
-            value={
-              <span className="font-mono text-sm">{data.username}</span>
-            }
+            value={<span className="font-mono text-sm">{data.username}</span>}
           />
           <InfoRow
-            icon={<UserCog className="h-4 w-4" />}
+            icon={<UserCog className="size-4" />}
             label="Tên hiển thị"
             value={data.displayName}
           />
+          <InfoRow icon={<Mail className="size-4" />} label="Email" value={data.username} />
           <InfoRow
-            icon={<Mail className="h-4 w-4" />}
-            label="Email"
-            value={data.username}
-          />
-          <InfoRow
-            icon={<Briefcase className="h-4 w-4" />}
+            icon={<Briefcase className="size-4" />}
             label="Loại tài khoản"
             value={
               <Badge variant="outline">
-                {AccountTypeLabel[data.accountType as keyof typeof AccountTypeLabel] ?? data.accountType}
+                {AccountTypeLabel[data.accountType as keyof typeof AccountTypeLabel] ??
+                  data.accountType}
               </Badge>
             }
           />
           <InfoRow
-            icon={<Shield className="h-4 w-4" />}
+            icon={<Shield className="size-4" />}
             label="Quyền hạn"
             value={
               <div className="flex flex-wrap gap-1.5">
@@ -156,7 +148,7 @@ export function ProfileCard() {
             }
           />
           <InfoRow
-            icon={<Shield className="h-4 w-4" />}
+            icon={<Shield className="size-4" />}
             label="Trạng thái"
             value={
               <Badge variant={statusBadgeVariant[data.status] ?? "outline"}>
@@ -165,7 +157,7 @@ export function ProfileCard() {
             }
           />
           <InfoRow
-            icon={<MfaIcon className={`h-4 w-4 ${mfaConfig.color}`} />}
+            icon={<MfaIcon className={`size-4 ${mfaConfig.color}`} />}
             label="Xác thực 2 lớp (MFA)"
             value={
               <Badge variant={mfaConfig.variant}>
@@ -174,7 +166,7 @@ export function ProfileCard() {
             }
           />
           <InfoRow
-            icon={<Clock className="h-4 w-4" />}
+            icon={<Clock className="size-4" />}
             label="Ngày tạo tài khoản"
             value={
               <span className="tabular-nums text-sm">
@@ -194,15 +186,7 @@ export function ProfileCard() {
   );
 }
 
-function InfoRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: React.ReactNode;
-}) {
+function InfoRow({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3">
       <div className="flex items-center gap-2.5 text-muted-foreground">

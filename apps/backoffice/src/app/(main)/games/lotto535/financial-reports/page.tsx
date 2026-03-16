@@ -1,10 +1,9 @@
 "use client";
 
 import { Suspense } from "react";
-import { CircleDollarSign, Download } from "lucide-react";
+import { Building2, CalendarRange, CircleDollarSign, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FinancialDateRangePicker } from "@/components/financial-date-range-picker";
-
+import { FinancialDateRangePicker } from "@/components/date-picker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLotto535ReportFilters } from "./_lib/use-report-filters";
@@ -31,22 +30,20 @@ function Lotto535FinancialContent() {
             </p>
           </div>
         </div>
-        <Button variant="outline" size="sm">
-          <Download className="mr-2 size-4" />
-          Xuất Excel
-        </Button>
-      </div>
-
-      {/* Date Range Picker */}
-      <div className="rounded-lg border bg-card px-4 py-3">
-        <FinancialDateRangePicker
-          from={from}
-          to={to}
-          onChange={(f, t) => {
-            void setFrom(f);
-            void setTo(t);
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <FinancialDateRangePicker
+            from={from}
+            to={to}
+            onChange={(f, t) => {
+              void setFrom(f);
+              void setTo(t);
+            }}
+          />
+          <Button variant="outline" size="sm">
+            <Download className="mr-2 size-4" />
+            Xuất Excel
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -54,9 +51,15 @@ function Lotto535FinancialContent() {
         value={tab}
         onValueChange={(v) => void setTab(v as "draws" | "tenants")}
       >
-        <TabsList>
-          <TabsTrigger value="draws">Theo kỳ quay</TabsTrigger>
-          <TabsTrigger value="tenants">Theo đại lý</TabsTrigger>
+        <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
+          <TabsTrigger value="draws" className="gap-1.5">
+            <CalendarRange className="size-4 text-emerald-500" />
+            Theo kỳ quay
+          </TabsTrigger>
+          <TabsTrigger value="tenants" className="gap-1.5">
+            <Building2 className="size-4 text-blue-500" />
+            Theo đại lý
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="draws" className="mt-4">

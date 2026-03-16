@@ -44,7 +44,7 @@ export const KENO_VOID_DRAW_REPORTS = "keno_void_draw_reports";
 /**
  * Snapshot outstanding draw cho Keno. TTL auto-expire.
  * Unique index: { drawId: 1 }
- * TTL index:    { snapshotAt: 1 }, expireAfterSeconds: 900
+ * TTL index:    { snapshotAt: 1 }, expireAfterSeconds: 300
  */
 export const KENO_OUTSTANDING_DRAW_REPORTS = "keno_outstanding_draw_reports";
 
@@ -204,7 +204,7 @@ export interface VoidDrawReport {
  * Thông tin draw (drawNo, drawDate, drawTime) tra từ DrawDoc khi cần hiển thị.
  * Keno KHÔNG có lineCount — bỏ qua field này.
  * Unique index: { drawId: 1 }
- * TTL index:    { snapshotAt: 1 }, expireAfterSeconds: 900
+ * TTL index:    { snapshotAt: 1 }, expireAfterSeconds: 300
  */
 export interface OutstandingDrawReport {
   /** ID kỳ quay. */
@@ -223,8 +223,36 @@ export interface OutstandingDrawReport {
   /** Ước tính hoa hồng (VND). Công thức: SUM(entry.tenant.commissionAmount). */
   estimatedCommission: number;
 
-  /** TTL field. MongoDB tự xoá doc khi snapshotAt + 900s < now. */
+  /** TTL field. MongoDB tự xoá doc khi snapshotAt + 300s < now. */
   snapshotAt: Date;
   createdAt: Date;
   updatedAt: Date;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Entity Types (MongoDB document + id field)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * MongoDB document type cho keno_settle_draw_reports.
+ * Thêm `id` (hex string từ _id ObjectId) theo yêu cầu của BaseEntity.
+ */
+export type SettleDrawReportEntity = SettleDrawReport & { id: string };
+
+/**
+ * MongoDB document type cho keno_settle_tenant_reports.
+ * Thêm `id` (hex string từ _id ObjectId) theo yêu cầu của BaseEntity.
+ */
+export type SettleTenantReportEntity = SettleTenantReport & { id: string };
+
+/**
+ * MongoDB document type cho keno_void_draw_reports.
+ * Thêm `id` (hex string từ _id ObjectId) theo yêu cầu của BaseEntity.
+ */
+export type VoidDrawReportEntity = VoidDrawReport & { id: string };
+
+/**
+ * MongoDB document type cho keno_outstanding_draw_reports.
+ * Thêm `id` (hex string từ _id ObjectId) theo yêu cầu của BaseEntity.
+ */
+export type OutstandingDrawReportEntity = OutstandingDrawReport & { id: string };

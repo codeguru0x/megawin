@@ -279,8 +279,8 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
   const totalRevenue = playTypes.reduce((a, r) => a + r.revenue, 0);
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-2">
+    <Card className="gap-0 py-0 shadow-sm">
+      <CardHeader className="px-5 pb-2 pt-4">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-orange-100 dark:bg-orange-900/50 shrink-0">
@@ -303,7 +303,7 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0">
+      <CardContent className="px-5 pb-4 pt-0">
         {playTypes.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">Chưa có dữ liệu</p>
         ) : (
@@ -358,8 +358,8 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
   const maxRevenue = Math.max(...tenants.map((t) => t.revenue), 1);
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-2">
+    <Card className="gap-0 py-0 shadow-sm">
+      <CardHeader className="px-5 pb-2 pt-4">
         <div className="flex items-center gap-2">
           <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50 shrink-0">
             <Store className="size-3.5 text-blue-600 dark:text-blue-400" />
@@ -372,7 +372,7 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="px-5 pb-4 pt-0">
         {tenants.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">Chưa có dữ liệu</p>
         ) : (

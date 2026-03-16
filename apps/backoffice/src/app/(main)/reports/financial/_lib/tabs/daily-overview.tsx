@@ -10,9 +10,8 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronDown, ChevronRight, TrendingDown, TrendingUp } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronRight, TrendingDown, TrendingUp } from "lucide-react";
 import {
   formatVND,
   formatVNDCompact,
@@ -101,8 +100,8 @@ function KpiCard({
           : undefined;
 
   return (
-    <Card>
-      <CardContent className="pt-4">
+    <Card className="gap-0 py-0">
+      <CardContent className="px-5 pb-4 pt-4">
         <p className="text-xs font-medium text-muted-foreground">{title}</p>
         <p
           className={`mt-1 truncate text-xl font-bold tabular-nums ${valueClass ?? ""}`}
@@ -189,18 +188,28 @@ export function DailyOverviewTab() {
   if (isLoading) return <DailyOverviewSkeleton />;
   if (error) {
     return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Lỗi tải dữ liệu. Vui lòng thử lại.
+      <Card className="gap-0 py-0">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+            <CalendarDays className="size-6 text-muted-foreground" />
+          </div>
+          <h3 className="mt-4 text-sm font-semibold">Lỗi tải dữ liệu</h3>
+          <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
         </CardContent>
       </Card>
     );
   }
   if (!data || data.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Không có dữ liệu trong khoảng thời gian đã chọn.
+      <Card className="gap-0 py-0">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+            <CalendarDays className="size-6 text-muted-foreground" />
+          </div>
+          <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Không tìm thấy dữ liệu trong khoảng thời gian đã chọn. Thử mở rộng khoảng ngày.
+          </p>
         </CardContent>
       </Card>
     );
@@ -220,9 +229,12 @@ export function DailyOverviewTab() {
     <div className="space-y-4">
       <KpiStrip rows={data} />
 
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Tổng quan ngày</CardTitle>
+      <Card className="gap-0 py-0">
+        <CardHeader className="px-5 pb-2 pt-4">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="size-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold">Tổng quan ngày</CardTitle>
+          </div>
           <CardDescription className="text-xs">
             Click vào ngày để xem chi tiết từng game
           </CardDescription>
@@ -366,8 +378,8 @@ function DailyOverviewSkeleton() {
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardContent className="pt-4">
+          <Card key={i} className="gap-0 py-0">
+            <CardContent className="px-5 pb-4 pt-4">
               <Skeleton className="h-3 w-24" />
               <Skeleton className="mt-2 h-6 w-32" />
               <Skeleton className="mt-1 h-3 w-20" />
@@ -375,11 +387,13 @@ function DailyOverviewSkeleton() {
           </Card>
         ))}
       </div>
-      <Card>
-        <CardContent className="pt-4">
-          <div className="space-y-2">
+      <Card className="gap-0 py-0">
+        <CardContent className="p-0 pt-0">
+          <div className="space-y-0">
             {[...Array(7)].map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
+              <div key={i} className="border-b px-5 py-3">
+                <Skeleton className="h-4 w-full" />
+              </div>
             ))}
           </div>
         </CardContent>
@@ -387,6 +401,3 @@ function DailyOverviewSkeleton() {
     </div>
   );
 }
-
-// Để dùng Button mà không có lỗi unused
-void Button;

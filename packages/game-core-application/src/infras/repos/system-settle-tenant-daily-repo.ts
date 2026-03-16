@@ -17,24 +17,15 @@
  * IDEMPOTENT: write dùng upsert overwrite — chạy lại an toàn.
  */
 
-import type { SystemSettleTenantDaily } from "@megawin/game-core/entities";
+import type {
+  SystemSettleTenantDaily,
+  SystemSettleTenantDailyEntity,
+} from "@megawin/game-core/entities";
 import { SYSTEM_SETTLE_TENANT_DAILY } from "@megawin/game-core/entities";
 import type { GameProduct } from "@megawin/game-core/entities";
+import { SystemSettleTenantDailyMapper } from "../mappers";
 import { GameCoreBaseRepo } from "./game-core-base-repo";
 import type { TenantSummaryRow } from "./types";
-
-/** Kết quả aggregate từ per-game settle tenant reports theo financialDate, group by tenantId. */
-export interface SettleTenantDailyAggregateResult {
-  tenantId: string;
-  totalStake: number;
-  totalPayout: number;
-  ggr: number;
-  commission: number;
-  netProfit: number;
-  entryCount: number;
-  playerCount: number;
-  drawCount: number;
-}
 
 /**
  * Base repository ghi và query system tenant daily settle reports.
@@ -42,9 +33,15 @@ export interface SettleTenantDailyAggregateResult {
  * Chỉ làm việc với system_settle_tenant_daily collection.
  * Per-game aggregate logic nằm ở subclass trong mỗi game package.
  */
-export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<any> {
+export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<
+  SystemSettleTenantDailyEntity,
+  SystemSettleTenantDailyMapper
+> {
   constructor() {
-    super({ collName: SYSTEM_SETTLE_TENANT_DAILY });
+    super({
+      collName: SYSTEM_SETTLE_TENANT_DAILY,
+      dataMapper: new SystemSettleTenantDailyMapper(),
+    });
   }
 
   /**
@@ -52,6 +49,7 @@ export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<any> {
    *
    * Flatten design: 1 doc = 1 financialDate × 1 tenantId × 1 gameProduct.
    * Filter: { financialDate, tenantId, gameProduct }.
+   * IDEMPOTENT: chạy lại an toàn.
    */
   async upsertTenantDaily(
     report: Omit<SystemSettleTenantDaily, "createdAt" | "updatedAt">,
@@ -84,6 +82,7 @@ export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<any> {
    * Query vào system_settle_tenant_daily, group by tenantId.
    * Optional filter theo gameProduct để chỉ lấy data của 1 game.
    * Sort theo totalStake descending. Dùng tab "Theo đại lý".
+   * Index: { financialDate: 1, tenantId: 1, gameProduct: 1 }
    */
   async aggregateByTenantId(
     from: string,
@@ -130,17 +129,17 @@ export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<any> {
       },
     ]);
 
-    return (result as any[]).map((r) => ({
-      tenantId: r._id as string,
-      gameCount: (r.gameCount as string[]).length,
-      drawCount: r.drawCount as number,
-      entryCount: r.entryCount as number,
-      playerCount: r.playerCount as number,
-      totalStake: r.totalStake as number,
-      totalPayout: r.totalPayout as number,
-      ggr: r.ggr as number,
-      commission: r.commission as number,
-      netProfit: r.netProfit as number,
+    return result.map((r) => ({
+      tenantId: r["_id"] as string,
+      gameCount: (r["gameCount"] as string[]).length,
+      drawCount: r["drawCount"] as number,
+      entryCount: r["entryCount"] as number,
+      playerCount: r["playerCount"] as number,
+      totalStake: r["totalStake"] as number,
+      totalPayout: r["totalPayout"] as number,
+      ggr: r["ggr"] as number,
+      commission: r["commission"] as number,
+      netProfit: r["netProfit"] as number,
     }));
   }
 
@@ -149,13 +148,14 @@ export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<any> {
    *
    * Query system_settle_tenant_daily WHERE tenantId + financialDate in range.
    * Sort theo gameProduct ascending.
+   * Index: { financialDate: 1, tenantId: 1 }
    */
   async findTenantGameBreakdown(
     tenantId: string,
     from: string,
     to: string,
-  ): Promise<SystemSettleTenantDaily[]> {
-    return (await this.findMany(
+  ): Promise<SystemSettleTenantDailyEntity[]> {
+    return this.findMany(
       {
         tenantId,
         financialDate: {
@@ -166,6 +166,6 @@ export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<any> {
       {
         sort: { gameProduct: 1 },
       },
-    )) as SystemSettleTenantDaily[];
+    );
   }
 }

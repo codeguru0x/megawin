@@ -5,12 +5,16 @@
  * Collection: keno_outstanding_draw_reports.
  *
  * IDEMPOTENT: upsert overwrite với snapshotAt = now — chạy lại reset TTL.
- * TTL: snapshotAt + 900s → MongoDB tự xoá khi draw settle/void.
+ * TTL: snapshotAt + 300s → MongoDB tự xoá khi draw settle/void.
  * Keno KHÔNG có lineCount — không aggregate lineCount.
  */
 
-import type { OutstandingDrawReport } from "@megawin/game-keno/entities";
+import type {
+  OutstandingDrawReport,
+  OutstandingDrawReportEntity,
+} from "@megawin/game-keno/entities";
 import { KENO_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-keno/entities";
+import { OutstandingDrawReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 import type { OutstandingGameSummary } from "./types";
 
@@ -20,9 +24,15 @@ import type { OutstandingGameSummary } from "./types";
  * Scheduled job (mỗi 5 phút) gọi upsertDrawReport cho từng draw active.
  * Sau khi draw settle/void, job ngừng tạo doc mới → TTL tự xoá.
  */
-export class OutstandingReportRepository extends BaseRepo<any> {
+export class OutstandingReportRepository extends BaseRepo<
+  OutstandingDrawReportEntity,
+  OutstandingDrawReportMapper
+> {
   constructor() {
-    super({ collName: KENO_OUTSTANDING_DRAW_REPORTS });
+    super({
+      collName: KENO_OUTSTANDING_DRAW_REPORTS,
+      dataMapper: new OutstandingDrawReportMapper(),
+    });
   }
 
   /**
@@ -102,7 +112,12 @@ export class OutstandingReportRepository extends BaseRepo<any> {
    *
    * Sort: financialDate ASC để kỳ cũ nhất (sắp đến hạn) lên đầu.
    */
-  async findAll(): Promise<OutstandingDrawReport[]> {
-    return (await this.findMany({}, { sort: { financialDate: 1 } })) as OutstandingDrawReport[];
+  async findAll(): Promise<OutstandingDrawReportEntity[]> {
+    return this.findMany(
+      {},
+      {
+        sort: { financialDate: 1 },
+      },
+    );
   }
 }

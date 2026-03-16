@@ -4,28 +4,30 @@ import { UserCog } from "lucide-react";
 
 import { AccountNav } from "./_components/account-nav";
 
-export default function AccountLayout({
-  children,
-}: Readonly<{ children: ReactNode }>) {
+export default function AccountLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <div className="@container/main flex flex-col gap-6">
+      {/* Page header — đồng nhất với Dashboard, Financial Reports */}
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-          <UserCog className="h-5 w-5 text-primary" />
+        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-slate-500 to-slate-700 shadow-sm">
+          <UserCog className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight md:text-2xl">
-            Tài khoản
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Quản lý tài khoản và bảo mật
-          </p>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">Tài khoản</h1>
+          <p className="text-xs text-muted-foreground">Quản lý tài khoản và bảo mật</p>
         </div>
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row">
-        <AccountNav />
-        <div className="flex-1">{children}</div>
+        {/* Sidebar nav — card riêng */}
+        <div className="shrink-0 lg:w-52">
+          <div className="rounded-xl border bg-card p-3 shadow-sm lg:sticky lg:top-20">
+            <AccountNav />
+          </div>
+        </div>
+
+        {/* Content area */}
+        <div className="min-w-0 flex-1">{children}</div>
       </div>
     </div>
   );

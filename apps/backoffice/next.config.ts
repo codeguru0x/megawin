@@ -37,15 +37,6 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts", "date-fns", "@radix-ui/react-icons"],
   },
-  async redirects() {
-    return [
-      {
-        source: "/dashboard",
-        destination: "/dashboard/default",
-        permanent: false,
-      },
-    ];
-  },
 };
 
 export default nextConfig;

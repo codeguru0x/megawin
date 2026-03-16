@@ -1,0 +1,7 @@
+outstanding-sync:
+  handler: src/handlers/outstanding/sync-outstanding.handler
+  timeout: 60
+  events:
+    - schedule:
+        rate: cron(* * * * ? *)
+        enabled: true

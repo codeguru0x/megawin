@@ -13,9 +13,10 @@
  * KHÔNG dùng $inc.
  */
 
-import type { SettleDrawReport } from "@megawin/game-power655/entities";
+import type { SettleDrawReport, SettleDrawReportEntity } from "@megawin/game-power655/entities";
 import { POWER655_SETTLE_DRAW_REPORTS } from "@megawin/game-power655/entities";
 import { BaseRepo } from "./base-repo";
+import { SettleDrawReportMapper } from "../mappers";
 import type { DrawSummaryResult } from "./types";
 
 /**
@@ -23,9 +24,9 @@ import type { DrawSummaryResult } from "./types";
  *
  * 1 doc = 1 draw. Unique index: { drawId: 1 }.
  */
-export class SettleDrawReportRepository extends BaseRepo<any> {
+export class SettleDrawReportRepository extends BaseRepo<SettleDrawReportEntity, SettleDrawReportMapper> {
   constructor() {
-    super({ collName: POWER655_SETTLE_DRAW_REPORTS });
+    super({ collName: POWER655_SETTLE_DRAW_REPORTS, dataMapper: new SettleDrawReportMapper() });
   }
 
   /**
@@ -71,7 +72,7 @@ export class SettleDrawReportRepository extends BaseRepo<any> {
    * Dùng bởi BuildVoidReport để snapshot settle data trước khi xoá.
    */
   async findByDrawId(drawId: string): Promise<SettleDrawReport | null> {
-    return (await this.findOne({ drawId })) as SettleDrawReport | null;
+    return await this.findOne({ drawId });
   }
 
   /**
@@ -96,7 +97,7 @@ export class SettleDrawReportRepository extends BaseRepo<any> {
         sort: { financialDate: -1 },
         skip: options?.skip ?? 0,
         limit: options?.limit ?? 20,
-      }) as Promise<SettleDrawReport[]>,
+      }),
       this.count(filter),
     ]);
     return { data, total };

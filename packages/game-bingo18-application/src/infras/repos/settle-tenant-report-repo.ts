@@ -12,9 +12,10 @@
  * KHÔNG dùng $inc.
  */
 
-import type { SettleTenantReport } from "@megawin/game-bingo18/entities";
+import type { SettleTenantReport, SettleTenantReportEntity } from "@megawin/game-bingo18/entities";
 import { BINGO18_SETTLE_TENANT_REPORTS } from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
+import { SettleTenantReportMapper } from "../mappers";
 import type { TenantAggregateSummary } from "./types";
 
 /**
@@ -22,9 +23,9 @@ import type { TenantAggregateSummary } from "./types";
  *
  * 1 doc = 1 tenant × 1 draw. Unique index: { drawId: 1, tenantId: 1 }.
  */
-export class SettleTenantReportRepository extends BaseRepo<any> {
+export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEntity, SettleTenantReportMapper> {
   constructor() {
-    super({ collName: BINGO18_SETTLE_TENANT_REPORTS });
+    super({ collName: BINGO18_SETTLE_TENANT_REPORTS, dataMapper: new SettleTenantReportMapper() });
   }
 
   /**
@@ -72,7 +73,7 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
 
   /** Lấy tất cả tenant reports của 1 draw — drill-down level 2. */
   async findByDrawId(drawId: string): Promise<SettleTenantReport[]> {
-    return (await this.findMany({ drawId }, { sort: { totalStake: -1 } })) as SettleTenantReport[];
+    return await this.findMany({ drawId }, { sort: { totalStake: -1 } });
   }
 
   /** Aggregate tổng hợp theo tenant trong date range. Bingo 18 KHÔNG có lineCount. */
@@ -118,6 +119,6 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
       this.findMany(filter, { sort: { financialDate: -1 } }),
       this.count(filter),
     ]);
-    return { data: data as SettleTenantReport[], total };
+    return { data, total };
   }
 }

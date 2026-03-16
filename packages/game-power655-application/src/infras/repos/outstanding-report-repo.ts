@@ -5,12 +5,13 @@
  * Collection: power655_outstanding_draw_reports.
  *
  * IDEMPOTENT: upsert overwrite với snapshotAt = now — chạy lại reset TTL.
- * TTL: snapshotAt + 900s → MongoDB tự xoá khi draw settle/void.
+ * TTL: snapshotAt + 300s → MongoDB tự xoá khi draw settle/void.
  */
 
-import type { OutstandingDrawReport } from "@megawin/game-power655/entities";
+import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-power655/entities";
 import { POWER655_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-power655/entities";
 import { BaseRepo } from "./base-repo";
+import { OutstandingDrawReportMapper } from "../mappers";
 import type { OutstandingGameSummary } from "./types";
 
 /**
@@ -19,9 +20,9 @@ import type { OutstandingGameSummary } from "./types";
  * Scheduled job (mỗi 5 phút) gọi upsertDrawReport cho từng draw active.
  * Sau khi draw settle/void, job ngừng tạo doc mới → TTL tự xoá.
  */
-export class OutstandingReportRepository extends BaseRepo<any> {
+export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportEntity, OutstandingDrawReportMapper> {
   constructor() {
-    super({ collName: POWER655_OUTSTANDING_DRAW_REPORTS });
+    super({ collName: POWER655_OUTSTANDING_DRAW_REPORTS, dataMapper: new OutstandingDrawReportMapper() });
   }
 
   /**
@@ -101,7 +102,7 @@ export class OutstandingReportRepository extends BaseRepo<any> {
    *
    * Dùng cho Outstanding Reports UI page. Sort theo drawId.
    */
-  async findAll(): Promise<OutstandingDrawReport[]> {
-    return (await this.findMany({}, { sort: { drawId: 1 } })) as OutstandingDrawReport[];
+  async findAll(): Promise<OutstandingDrawReportEntity[]> {
+    return await this.findMany({}, { sort: { drawId: 1 } });
   }
 }

@@ -27,10 +27,10 @@ export function LiveFeed({
   isSettled?: boolean;
 }) {
   return (
-    <Card className="shadow-sm flex flex-col">
-      <CardHeader className="pb-2 shrink-0">
+    <Card className="gap-0 py-0 shadow-sm flex flex-col">
+      <CardHeader className="px-5 pb-2 pt-4 shrink-0">
         <div className="flex items-center gap-2">
-          <Activity className="size-3.5 text-muted-foreground shrink-0" />
+          <Activity className="size-4 text-muted-foreground shrink-0" />
           <CardTitle className="text-sm font-semibold">Cược gần nhất</CardTitle>
           {!isSettled && (
             <span className="ml-auto flex items-center gap-1 text-[10px] text-teal-500 font-medium">
@@ -40,7 +40,7 @@ export function LiveFeed({
           )}
         </div>
       </CardHeader>
-      <div className="overflow-y-auto px-6 pb-4" style={{ maxHeight: 950 }}>
+      <div className="overflow-y-auto px-5 pb-4" style={{ maxHeight: 950 }}>
         {entries.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-muted-foreground/50">
             <Radio className="size-5 mb-1.5" />

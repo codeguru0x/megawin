@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, ChevronDown, ChevronRight } from "lucide-react";
 import {
@@ -111,18 +110,28 @@ export function ByTenantTab() {
   if (isLoading) return <ByTenantSkeleton />;
   if (error) {
     return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Lỗi tải dữ liệu. Vui lòng thử lại.
+      <Card className="gap-0 py-0">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+            <Building2 className="size-6 text-muted-foreground" />
+          </div>
+          <h3 className="mt-4 text-sm font-semibold">Lỗi tải dữ liệu</h3>
+          <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
         </CardContent>
       </Card>
     );
   }
   if (!data || data.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          Không có dữ liệu trong khoảng thời gian đã chọn.
+      <Card className="gap-0 py-0">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+            <Building2 className="size-6 text-muted-foreground" />
+          </div>
+          <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Không tìm thấy dữ liệu đại lý trong khoảng thời gian đã chọn. Thử mở rộng khoảng ngày.
+          </p>
         </CardContent>
       </Card>
     );
@@ -137,9 +146,12 @@ export function ByTenantTab() {
   const totalEntries = data.reduce((s, r) => s + r.entryCount, 0);
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Xếp hạng đại lý</CardTitle>
+    <Card className="gap-0 py-0">
+      <CardHeader className="px-5 pb-2 pt-4">
+        <div className="flex items-center gap-2">
+          <Building2 className="size-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold">Xếp hạng đại lý</CardTitle>
+        </div>
         <CardDescription className="text-xs">
           Sắp xếp theo doanh thu giảm dần · Click để xem game breakdown
         </CardDescription>
@@ -284,17 +296,16 @@ export function ByTenantTab() {
 
 function ByTenantSkeleton() {
   return (
-    <Card>
-      <CardContent className="pt-4">
-        <div className="space-y-2">
+    <Card className="gap-0 py-0">
+      <CardContent className="p-0 pt-0">
+        <div className="space-y-0">
           {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
+            <div key={i} className="border-b px-5 py-3">
+              <Skeleton className="h-4 w-full" />
+            </div>
           ))}
         </div>
       </CardContent>
     </Card>
   );
 }
-
-// Suppress unused import
-void Button;

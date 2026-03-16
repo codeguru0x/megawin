@@ -13,24 +13,17 @@ export function MfaPage() {
   const [disableOpen, setDisableOpen] = useState(false);
 
   if (view === "setup") {
-    return (
-      <div className="mx-auto max-w-2xl">
-        <MfaSetupWizard onClose={() => setView("status")} />
-      </div>
-    );
+    return <MfaSetupWizard onClose={() => setView("status")} />;
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <MfaStatusCard
-        onSetup={() => setView("setup")}
-        onDisable={() => setDisableOpen(true)}
-      />
+    <>
+      <MfaStatusCard onSetup={() => setView("setup")} onDisable={() => setDisableOpen(true)} />
       <MfaDisableDialog
         open={disableOpen}
         onOpenChange={setDisableOpen}
         onSuccess={() => setView("status")}
       />
-    </div>
+    </>
   );
 }

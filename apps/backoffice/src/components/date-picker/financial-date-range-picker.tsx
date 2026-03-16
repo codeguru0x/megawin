@@ -135,29 +135,6 @@ function parseInputDate(input: string): string | undefined {
   return `${y}-${mm}-${dd}`;
 }
 
-/**
- * Auto-format input thành dd/MM/yyyy khi gõ.
- * Chỉ cho phép số và "/", tự chèn "/" sau vị trí 2 và 5.
- */
-function formatDateInput(raw: string, prev: string): string {
-  // Chỉ giữ số
-  let digits = raw.replace(/\D/g, "");
-  if (digits.length > 8) digits = digits.slice(0, 8);
-
-  // Tự chèn "/" sau dd và MM
-  if (digits.length >= 5) {
-    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-  }
-  if (digits.length >= 3) {
-    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  }
-
-  // Cho phép user đã gõ "/" thủ công (nếu đang xóa ngược)
-  if (raw.length < prev.length) return raw;
-
-  return digits;
-}
-
 // ─── Component ───────────────────────────────────────────────────────────────
 
 /**
@@ -166,8 +143,8 @@ function formatDateInput(raw: string, prev: string): string {
  * - Calendar 2 tháng + footer (inputs + badge + Áp dụng).
  * - 8 preset chia 2 nhóm đều 4 (Phổ biến / Chu kỳ), không scroll.
  * - Preset click chỉ cập nhật pending, KHÔNG commit — chỉ "Áp dụng" mới commit.
- * - 2 ô input dd/MM/yyyy để gõ ngày trực tiếp.
- * - Step-based selection: click 1 = start mới, click 2 = end.
+ * - 2 ô input dd/MM/yyyy có label "Từ" / "Đến", highlight theo step đang chọn.
+ * - Step-based selection: click 1 = start mới (focus ô "Đến"), click 2 = end.
  */
 export function FinancialDateRangePicker({
   from,
@@ -181,6 +158,9 @@ export function FinancialDateRangePicker({
   const [selectStep, setSelectStep] = React.useState<"start" | "end">("start");
   const [fromInput, setFromInput] = React.useState("");
   const [toInput, setToInput] = React.useState("");
+
+  const toInputRef = React.useRef<HTMLInputElement>(null);
+  const fromInputRef = React.useRef<HTMLInputElement>(null);
 
   const presets = React.useMemo(() => getPresets(), []);
 
@@ -205,7 +185,7 @@ export function FinancialDateRangePicker({
     setOpen(v);
   }
 
-  /** Step-based: click 1 = new start, click 2 = end (auto-swap). */
+  /** Step-based: click 1 = new start → focus ô "Đến", click 2 = end (auto-swap). */
   function handleCalendarSelect(range: DateRange | undefined) {
     if (!range?.from) return;
 
@@ -215,6 +195,8 @@ export function FinancialDateRangePicker({
       setFromInput(formatVN(range.from, "dd/MM/yyyy"));
       setToInput("");
       setSelectStep("end");
+      // Auto-focus ô "Đến" để hướng dẫn user bước tiếp theo
+      setTimeout(() => toInputRef.current?.focus(), 0);
     } else {
       const clickedDate = range.to ?? range.from;
       let start = pendingRange?.from ?? range.from;
@@ -250,11 +232,11 @@ export function FinancialDateRangePicker({
   }
 
   function handleFromInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setFromInput(formatDateInput(e.target.value, fromInput));
+    setFromInput(e.target.value);
   }
 
   function handleToInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setToInput(formatDateInput(e.target.value, toInput));
+    setToInput(e.target.value);
   }
 
   function handleFromInputBlur() {
@@ -348,44 +330,74 @@ export function FinancialDateRangePicker({
                 disabled={{ after: new Date() }}
               />
 
-              <div className="flex items-center gap-3 border-t border-border px-4 py-3">
-                <div className="flex items-center gap-1.5">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="dd/MM/yyyy"
-                    maxLength={10}
-                    value={fromInput}
-                    onChange={handleFromInputChange}
-                    onBlur={handleFromInputBlur}
-                    className="h-7 w-22 rounded-md border border-input bg-transparent px-2 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
-                  />
-                  <span className="text-xs text-muted-foreground">—</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="dd/MM/yyyy"
-                    maxLength={10}
-                    value={toInput}
-                    onChange={handleToInputChange}
-                    onBlur={handleToInputBlur}
-                    className="h-7 w-22 rounded-md border border-input bg-transparent px-2 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30"
-                  />
+              <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
+                {/* ── Inputs + badge ── */}
+                <div className="flex items-center gap-2">
+                  {/* Ô "Từ" — highlight khi đang ở step start */}
+                  <div className="flex flex-col gap-0.5">
+                    <span className="px-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Từ
+                    </span>
+                    <input
+                      ref={fromInputRef}
+                      type="text"
+                      inputMode="numeric"
+                      aria-label="Ngày bắt đầu"
+                      placeholder="dd/MM/yyyy"
+                      maxLength={10}
+                      value={fromInput}
+                      onChange={handleFromInputChange}
+                      onBlur={handleFromInputBlur}
+                      onFocus={() => setSelectStep("start")}
+                      className={cn(
+                        "h-7 w-24 rounded-md border bg-transparent px-2 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 transition-colors",
+                        selectStep === "start"
+                          ? "border-primary ring-1 ring-primary/30"
+                          : "border-input focus:border-primary focus:ring-primary/30",
+                      )}
+                    />
+                  </div>
+
+                  <span className="mt-4 text-xs text-muted-foreground">—</span>
+
+                  {/* Ô "Đến" — highlight khi đang ở step end */}
+                  <div className="flex flex-col gap-0.5">
+                    <span className="px-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Đến
+                    </span>
+                    <input
+                      ref={toInputRef}
+                      type="text"
+                      inputMode="numeric"
+                      aria-label="Ngày kết thúc"
+                      placeholder="dd/MM/yyyy"
+                      maxLength={10}
+                      value={toInput}
+                      onChange={handleToInputChange}
+                      onBlur={handleToInputBlur}
+                      onFocus={() => setSelectStep("end")}
+                      className={cn(
+                        "h-7 w-24 rounded-md border bg-transparent px-2 text-xs tabular-nums text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 transition-colors",
+                        selectStep === "end"
+                          ? "border-primary ring-1 ring-primary/30"
+                          : "border-input focus:border-primary focus:ring-primary/30",
+                      )}
+                    />
+                  </div>
+
+                  {/* Badge số ngày — hiện cả khi = 1 ngày */}
+                  {pendingDays > 0 && (
+                    <span className="mt-4 shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
+                      {dayCountLabel(pendingDays)}
+                    </span>
+                  )}
                 </div>
-
-                {pendingDays > 1 && (
-                  <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
-                    {dayCountLabel(pendingDays)}
-                  </span>
-                )}
-
-                <div className="flex-1" />
 
                 <Button
                   size="sm"
                   onClick={handleConfirm}
                   disabled={!canConfirm}
-                  className="shrink-0 gap-1.5"
+                  className="mt-4 shrink-0 gap-1.5 self-end"
                 >
                   <Check className="size-3.5" />
                   Áp dụng
@@ -447,8 +459,9 @@ function PresetButton({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
-        "flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm transition-colors",
+        "flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm transition-all duration-150",
         active ? "bg-primary/10 font-medium text-primary" : "text-foreground hover:bg-accent",
       )}
     >

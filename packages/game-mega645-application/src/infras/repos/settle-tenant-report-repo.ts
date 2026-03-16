@@ -12,8 +12,9 @@
  * KHÔNG dùng $inc.
  */
 
-import type { SettleTenantReport } from "@megawin/game-mega645/entities";
+import type { SettleTenantReport, SettleTenantReportEntity } from "@megawin/game-mega645/entities";
 import { MEGA645_SETTLE_TENANT_REPORTS } from "@megawin/game-mega645/entities";
+import { SettleTenantReportMapper } from "../mappers";
 import { BaseRepo } from "./base-repo";
 import type { TenantAggregateSummary } from "./types";
 
@@ -22,9 +23,12 @@ import type { TenantAggregateSummary } from "./types";
  *
  * 1 doc = 1 tenant × 1 draw. Unique index: { drawId: 1, tenantId: 1 }.
  */
-export class SettleTenantReportRepository extends BaseRepo<any> {
+export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEntity, SettleTenantReportMapper> {
   constructor() {
-    super({ collName: MEGA645_SETTLE_TENANT_REPORTS });
+    super({
+      collName: MEGA645_SETTLE_TENANT_REPORTS,
+      dataMapper: new SettleTenantReportMapper(),
+    });
   }
 
   /**
@@ -68,8 +72,8 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
     await this.deleteMany({ drawId });
   }
 
-  async findByDrawId(drawId: string): Promise<SettleTenantReport[]> {
-    return (await this.findMany({ drawId })) as SettleTenantReport[];
+  async findByDrawId(drawId: string): Promise<SettleTenantReportEntity[]> {
+    return await this.findMany({ drawId });
   }
 
   async aggregateByTenant(from: string, to: string): Promise<TenantAggregateSummary[]> {
@@ -110,14 +114,14 @@ export class SettleTenantReportRepository extends BaseRepo<any> {
     from: string,
     to: string,
     options?: { skip?: number; limit?: number },
-  ): Promise<{ data: SettleTenantReport[]; total: number }> {
+  ): Promise<{ data: SettleTenantReportEntity[]; total: number }> {
     const filter = { tenantId, financialDate: { $gte: from, $lte: to } };
     const [data, total] = await Promise.all([
       this.findMany(filter, {
         sort: { financialDate: -1 },
         skip: options?.skip ?? 0,
         limit: options?.limit ?? 20,
-      }) as Promise<SettleTenantReport[]>,
+      }),
       this.count(filter),
     ]);
     return { data, total };

@@ -10,14 +10,15 @@
  *   findAll            — list tất cả outstanding draws hiện tại
  *
  * IDEMPOTENT: upsert overwrite với snapshotAt = now — chạy lại reset TTL.
- * TTL: snapshotAt + 900s → MongoDB tự xoá khi draw settle/void.
+ * TTL: snapshotAt + 300s → MongoDB tự xoá khi draw settle/void.
  * Max 3D CÓ lineCount (lines/pairs per board).
  */
 
-import type { OutstandingDrawReport } from "@megawin/game-max3d/entities";
+import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-max3d/entities";
 import { MAX3D_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-max3d/entities";
 import { BaseRepo } from "./base-repo";
-import type { OutstandingGameSummary } from "./types/outstanding.types";
+import { OutstandingDrawReportMapper } from "../mappers";
+import type { OutstandingGameSummary } from "./types";
 
 /**
  * Repository ghi outstanding report cho Max 3D.
@@ -25,9 +26,9 @@ import type { OutstandingGameSummary } from "./types/outstanding.types";
  * Scheduled job (mỗi 5 phút) gọi upsertDrawReport cho từng draw active.
  * Sau khi draw settle/void, job ngừng tạo doc mới → TTL tự xoá.
  */
-export class OutstandingReportRepository extends BaseRepo<any> {
+export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportEntity, OutstandingDrawReportMapper> {
   constructor() {
-    super({ collName: MAX3D_OUTSTANDING_DRAW_REPORTS });
+    super({ collName: MAX3D_OUTSTANDING_DRAW_REPORTS, dataMapper: new OutstandingDrawReportMapper() });
   }
 
   /**
@@ -107,7 +108,7 @@ export class OutstandingReportRepository extends BaseRepo<any> {
    *
    * Sort: drawId asc. Max ~4 docs (2 kỳ/ngày, ~2 ngày active tối đa).
    */
-  async findAll(): Promise<OutstandingDrawReport[]> {
-    return (await this.findMany({}, { sort: { drawId: 1 } })) as OutstandingDrawReport[];
+  async findAll(): Promise<OutstandingDrawReportEntity[]> {
+    return await this.findMany({}, { sort: { drawId: 1 } });
   }
 }

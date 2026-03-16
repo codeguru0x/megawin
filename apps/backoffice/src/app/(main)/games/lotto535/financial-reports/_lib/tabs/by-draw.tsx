@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { Building2, CalendarRange, ChevronRight, Users } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -121,9 +121,12 @@ function DrawList() {
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Danh sách kỳ quay</CardTitle>
+    <Card className="gap-0 py-0">
+      <CardHeader className="px-5 pb-2 pt-4">
+        <div className="flex items-center gap-2">
+          <CalendarRange className="size-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold">Danh sách kỳ quay</CardTitle>
+        </div>
         <CardDescription className="text-xs">
           {data.total} kỳ quay · Click để xem breakdown theo đại lý
         </CardDescription>
@@ -259,9 +262,14 @@ function DrawTenantBreakdown({ drawId }: { drawId: string }) {
   if (!data?.length) return <EmptyCard msg="Không có dữ liệu tenant cho kỳ quay này." />;
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">Breakdown theo đại lý — Kỳ {drawId}</CardTitle>
+    <Card className="gap-0 py-0">
+      <CardHeader className="px-5 pb-2 pt-4">
+        <div className="flex items-center gap-2">
+          <Building2 className="size-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold">
+            Breakdown theo đại lý — Kỳ {drawId}
+          </CardTitle>
+        </div>
         <CardDescription className="text-xs">Click đại lý để xem players</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -345,11 +353,14 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
   if (!data?.length) return <EmptyCard msg="Không có player nào trong phạm vi này." />;
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm">
-          Players — Kỳ {drawId} / {tenantId}
-        </CardTitle>
+    <Card className="gap-0 py-0">
+      <CardHeader className="px-5 pb-2 pt-4">
+        <div className="flex items-center gap-2">
+          <Users className="size-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold">
+            Players — Kỳ {drawId} / {tenantId}
+          </CardTitle>
+        </div>
         <CardDescription className="text-xs">Click player để xem entries</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
@@ -482,7 +493,7 @@ export function ByDrawTab() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Breadcrumb />
+      {level !== "list" && <Breadcrumb />}
 
       {/* KPI strip — chỉ hiện ở level list */}
       {level === "list" && <KpiStrip from={from} to={to} />}
@@ -504,11 +515,13 @@ export function ByDrawTab() {
 
 function TableSkeleton({ rows }: { rows: number }) {
   return (
-    <Card>
-      <CardContent className="pt-4">
-        <div className="space-y-2">
+    <Card className="gap-0 py-0">
+      <CardContent className="p-0 pt-0">
+        <div className="space-y-0">
           {[...Array(rows)].map((_, i) => (
-            <Skeleton key={i} className="h-10 w-full" />
+            <div key={i} className="border-b px-5 py-3">
+              <Skeleton className="h-4 w-full" />
+            </div>
           ))}
         </div>
       </CardContent>
@@ -518,9 +531,13 @@ function TableSkeleton({ rows }: { rows: number }) {
 
 function ErrorCard() {
   return (
-    <Card>
-      <CardContent className="py-10 text-center text-sm text-muted-foreground">
-        Lỗi tải dữ liệu. Vui lòng thử lại.
+    <Card className="gap-0 py-0">
+      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+          <CalendarRange className="size-6 text-muted-foreground" />
+        </div>
+        <h3 className="mt-4 text-sm font-semibold">Lỗi tải dữ liệu</h3>
+        <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
       </CardContent>
     </Card>
   );
@@ -528,8 +545,14 @@ function ErrorCard() {
 
 function EmptyCard({ msg }: { msg: string }) {
   return (
-    <Card>
-      <CardContent className="py-10 text-center text-sm text-muted-foreground">{msg}</CardContent>
+    <Card className="gap-0 py-0">
+      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+          <CalendarRange className="size-6 text-muted-foreground" />
+        </div>
+        <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
+        <p className="mt-1 text-xs text-muted-foreground">{msg}</p>
+      </CardContent>
     </Card>
   );
 }

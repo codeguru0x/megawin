@@ -7,11 +7,12 @@ import type { GetOutstandingReportsOutput } from "./types";
  *
  * Không có input filter — luôn trả tất cả docs chưa expire.
  * Lotto 5/35 có tối đa ~4 kỳ outstanding cùng lúc.
- * TTL index: { snapshotAt: 1 }, expireAfterSeconds: 900
+ * TTL index: { snapshotAt: 1 }, expireAfterSeconds: 300
  */
-export class GetOutstandingReportsUseCase
-  extends NextApiUseCase<void, GetOutstandingReportsOutput>
-{
+export class GetOutstandingReportsUseCase extends NextApiUseCase<
+  void,
+  GetOutstandingReportsOutput
+> {
   private readonly repo = new OutstandingReportRepository();
 
   protected async execute(_input: void): Promise<GetOutstandingReportsOutput> {

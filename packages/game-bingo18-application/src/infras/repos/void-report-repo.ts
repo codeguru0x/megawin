@@ -7,9 +7,10 @@
  * IDEMPOTENT: upsert overwrite — chạy lại an toàn.
  */
 
-import type { VoidDrawReport } from "@megawin/game-bingo18/entities";
+import type { VoidDrawReport, VoidDrawReportEntity } from "@megawin/game-bingo18/entities";
 import { BINGO18_VOID_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
+import { VoidDrawReportMapper } from "../mappers";
 
 /**
  * Repository ghi void report cho Bingo 18.
@@ -17,9 +18,9 @@ import { BaseRepo } from "./base-repo";
  * BuildVoidReport use case gọi sau khi đã xoá settle reports
  * (nếu void-after-settle) và aggregate voided entries.
  */
-export class VoidReportRepository extends BaseRepo<any> {
+export class VoidReportRepository extends BaseRepo<VoidDrawReportEntity, VoidDrawReportMapper> {
   constructor() {
-    super({ collName: BINGO18_VOID_DRAW_REPORTS });
+    super({ collName: BINGO18_VOID_DRAW_REPORTS, dataMapper: new VoidDrawReportMapper() });
   }
 
   /**
@@ -50,9 +51,9 @@ export class VoidReportRepository extends BaseRepo<any> {
 
   /** Lấy danh sách void reports trong khoảng ngày tài chính. */
   async findByDateRange(from: string, to: string): Promise<VoidDrawReport[]> {
-    return (await this.findMany(
+    return await this.findMany(
       { financialDate: { $gte: from, $lte: to } },
       { sort: { financialDate: -1 } },
-    )) as VoidDrawReport[];
+    );
   }
 }

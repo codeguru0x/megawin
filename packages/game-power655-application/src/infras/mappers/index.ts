@@ -4,3 +4,7 @@ export { GlobalConfigMapper } from "./global-config-mapper";
 export { JackpotCycleMapper } from "./jackpot-cycle-mapper";
 export { TenantConfigMapper } from "./tenant-config-mapper";
 export { TicketMapper } from "./ticket-mapper";
+export { SettleDrawReportMapper } from "./settle-draw-report-mapper";
+export { SettleTenantReportMapper } from "./settle-tenant-report-mapper";
+export { VoidDrawReportMapper } from "./void-draw-report-mapper";
+export { OutstandingDrawReportMapper } from "./outstanding-draw-report-mapper";
