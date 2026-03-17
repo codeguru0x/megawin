@@ -8,21 +8,22 @@ import {
 
 import { createAccountSchema } from "./_lib/schema";
 
+const createCompanyAccountUseCase = new CreateCompanyAccountUseCase();
+const listCompanyAccountsUseCase = new ListCompanyAccountsUseCase();
+
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(createAccountSchema)
   .handler(async ({ body }) => {
-    const useCase = new CreateCompanyAccountUseCase();
     const input: CreateCompanyAccountInput = {
       ...body,
       roles: body.roles as CompanyRole[],
     };
-    return useCase.run(input, { successStatus: 201 });
+    return createCompanyAccountUseCase.run(input, { successStatus: 201 });
   });
 
 export const GET = withApi()
   .auth()
   .handler(async () => {
-    const useCase = new ListCompanyAccountsUseCase();
-    return useCase.run();
+    return listCompanyAccountsUseCase.run();
   });

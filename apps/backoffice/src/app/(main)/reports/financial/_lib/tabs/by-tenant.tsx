@@ -4,308 +4,467 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, ChevronDown, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Building2,
+  ChevronRight,
+  DollarSign,
+  Gamepad2,
+  Percent,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   formatVND,
   formatVNDCompact,
   formatPercent,
   formatNumber,
 } from "@megawin/shared/utils/number";
-import type { TenantSummaryRow } from "@megawin/game-core-application/repos";
-import type { SystemSettleTenantDaily } from "@megawin/game-core/entities";
-import { GAME_LABELS } from "@megawin/game-core/labels";
+import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { useSystemReportFilters } from "../use-report-filters";
 import { useSystemByTenant, useSystemTenantBreakdown } from "../use-report-queries";
+import { TableSkeleton, ErrorCard, EmptyCard } from "../sections/shared-states";
+import type { TenantSummaryRow } from "@megawin/game-core-application/repos";
 
-// ─── Tenant Breakdown (inline expand) ────────────────────────────────────────
+// ─── KPI Strip ────────────────────────────────────────────────────────────────
 
-function TenantBreakdownRows({
-  tenantId,
-  from,
-  to,
-}: {
-  tenantId: string;
-  from: string;
-  to: string;
-}) {
-  const { data, isLoading } = useSystemTenantBreakdown(tenantId, from, to);
+function KpiStrip({ data }: { data: TenantSummaryRow[] }) {
+  const totalStake = data.reduce((s, r) => s + r.totalStake, 0);
+  const totalPayout = data.reduce((s, r) => s + r.totalPayout, 0);
+  const ggr = data.reduce((s, r) => s + r.ggr, 0);
+  const netProfit = data.reduce((s, r) => s + r.netProfit, 0);
+  const totalCommission = data.reduce((s, r) => s + r.totalCommission, 0);
+  const playerCount = data.reduce((s, r) => s + r.playerCount, 0);
+  const payoutPct = totalStake > 0 ? totalPayout / totalStake : 0;
 
-  if (isLoading) {
-    return (
-      <TableRow>
-        <TableCell colSpan={11} className="py-2 pl-12">
-          <Skeleton className="h-4 w-48" />
-        </TableCell>
-      </TableRow>
-    );
-  }
-
-  if (!data || data.length === 0) {
-    return (
-      <TableRow>
-        <TableCell colSpan={11} className="py-3 pl-12 text-sm text-muted-foreground">
-          Không có dữ liệu.
-        </TableCell>
-      </TableRow>
-    );
-  }
+  const cards = [
+    {
+      icon: Building2,
+      iconBg: "bg-indigo-100 dark:bg-indigo-900/50",
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      label: "Số đại lý",
+      value: String(data.length),
+      sub: `${formatNumber(data.reduce((s, r) => s + r.drawCount, 0))} kỳ quay`,
+    },
+    {
+      icon: Users,
+      iconBg: "bg-sky-100 dark:bg-sky-900/50",
+      iconColor: "text-sky-600 dark:text-sky-400",
+      label: REPORT_COLUMN_LABELS.playerCount,
+      value: formatNumber(playerCount),
+      sub: "Người chơi duy nhất",
+    },
+    {
+      icon: DollarSign,
+      iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      label: "Doanh thu",
+      value: formatVNDCompact(totalStake),
+      sub: formatVND(totalStake),
+    },
+    {
+      icon: TrendingUp,
+      iconBg:
+        netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50",
+      iconColor:
+        netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400",
+      label: REPORT_COLUMN_LABELS.netProfit,
+      value: formatVNDCompact(netProfit),
+      sub: `GGR: ${formatVNDCompact(ggr)} · HH: ${formatVNDCompact(totalCommission)}`,
+      valueClass: netProfit < 0 ? "text-loss" : netProfit > 0 ? "text-profit" : "",
+    },
+    {
+      icon: Percent,
+      iconBg:
+        payoutPct > 0.95 ? "bg-red-100 dark:bg-red-900/50" : "bg-amber-100 dark:bg-amber-900/50",
+      iconColor:
+        payoutPct > 0.95 ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400",
+      label: REPORT_COLUMN_LABELS.payoutPercent,
+      value: formatPercent(payoutPct),
+      sub: `Doanh thu: ${formatVNDCompact(totalStake)}`,
+      valueClass: payoutPct > 0.95 ? "text-loss" : payoutPct > 0.8 ? "text-warning" : "",
+    },
+  ];
 
   return (
-    <>
-      {data.map((row) => (
-        <TableRow key={`${row.tenantId}-${row.gameProduct}`} className="bg-muted/30">
-          <TableCell colSpan={2} className="pl-12 text-xs">
-            <span className="font-medium text-muted-foreground">
-              {GAME_LABELS[row.gameProduct as keyof typeof GAME_LABELS] ?? row.gameProduct}
-            </span>
-          </TableCell>
-          <TableCell className="text-right tabular-nums text-xs">
-            {formatNumber(row.drawCount)}
-          </TableCell>
-          <TableCell className="text-right tabular-nums text-xs">
-            {formatNumber(row.entryCount)}
-          </TableCell>
-          <TableCell className="text-right tabular-nums text-xs">
-            {formatNumber(row.playerCount)}
-          </TableCell>
-          <TableCell className="text-right tabular-nums text-xs">
-            {formatVND(row.totalStake)}
-          </TableCell>
-          <TableCell className="text-right tabular-nums text-xs text-danger">
-            {formatVND(row.totalPayout)}
-          </TableCell>
-          <TableCell className="text-right tabular-nums text-xs">{formatVND(row.ggr)}</TableCell>
-          <TableCell className="text-right tabular-nums text-xs">
-            {formatVND(row.totalCommission)}
-          </TableCell>
-          <TableCell
-            className={`text-right tabular-nums text-xs font-medium ${row.netProfit >= 0 ? "text-success" : "text-danger"}`}
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {cards.map((c, i) => (
+        <div key={i} className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+          <div
+            className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", c.iconBg)}
           >
-            {formatVND(row.netProfit)}
-          </TableCell>
-          <TableCell className="text-right tabular-nums text-xs">
-            {row.totalStake > 0 ? formatPercent(row.totalPayout / row.totalStake) : "—"}
-          </TableCell>
-        </TableRow>
+            <c.icon className={cn("size-5", c.iconColor)} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-medium text-muted-foreground">{c.label}</p>
+            <p className={cn("text-lg font-bold tabular-nums text-foreground", c.valueClass ?? "")}>
+              {c.value}
+            </p>
+            <p className="truncate text-[11px] text-muted-foreground">{c.sub}</p>
+          </div>
+        </div>
       ))}
-    </>
+    </div>
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Tenant List View ─────────────────────────────────────────────────────────
 
-/** Tab "Theo đại lý" — aggregate by tenantId. */
-export function ByTenantTab() {
-  const { from, to, expandedTenant, setExpandedTenant } = useSystemReportFilters();
-
+function TenantListView() {
+  const { from, to, navigateToTenant } = useSystemReportFilters();
   const { data, isLoading, error } = useSystemByTenant(from, to);
 
-  if (isLoading) return <ByTenantSkeleton />;
-  if (error) {
+  if (isLoading) {
     return (
-      <Card className="gap-0 py-0">
-        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <Building2 className="size-6 text-muted-foreground" />
-          </div>
-          <h3 className="mt-4 text-sm font-semibold">Lỗi tải dữ liệu</h3>
-          <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-[76px] animate-pulse rounded-xl border bg-muted" />
+          ))}
+        </div>
+        <TableSkeleton />
+      </div>
     );
   }
-  if (!data || data.length === 0) {
+  if (error) return <ErrorCard />;
+  if (!data || data.length === 0)
     return (
-      <Card className="gap-0 py-0">
-        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <Building2 className="size-6 text-muted-foreground" />
-          </div>
-          <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Không tìm thấy dữ liệu đại lý trong khoảng thời gian đã chọn. Thử mở rộng khoảng ngày.
-          </p>
-        </CardContent>
-      </Card>
+      <EmptyCard
+        icon="building"
+        message="Không có dữ liệu"
+        description="Không tìm thấy dữ liệu đại lý trong khoảng thời gian đã chọn. Thử mở rộng khoảng ngày."
+      />
     );
-  }
 
-  // Summary
-  const totalStake = data.reduce((s, r) => s + r.totalStake, 0);
-  const totalPayout = data.reduce((s, r) => s + r.totalPayout, 0);
-  const totalGgr = data.reduce((s, r) => s + r.ggr, 0);
-  const totalCommission = data.reduce((s, r) => s + r.totalCommission, 0);
-  const totalNetProfit = data.reduce((s, r) => s + r.netProfit, 0);
-  const totalEntries = data.reduce((s, r) => s + r.entryCount, 0);
+  const totals = {
+    drawCount: data.reduce((s, r) => s + r.drawCount, 0),
+    entryCount: data.reduce((s, r) => s + r.entryCount, 0),
+    playerCount: data.reduce((s, r) => s + r.playerCount, 0),
+    totalStake: data.reduce((s, r) => s + r.totalStake, 0),
+    totalPayout: data.reduce((s, r) => s + r.totalPayout, 0),
+    ggr: data.reduce((s, r) => s + r.ggr, 0),
+    totalCommission: data.reduce((s, r) => s + r.totalCommission, 0),
+    netProfit: data.reduce((s, r) => s + r.netProfit, 0),
+  };
+  const totalPayoutPct = totals.totalStake > 0 ? totals.totalPayout / totals.totalStake : 0;
+
+  return (
+    <div className="space-y-4">
+      <KpiStrip data={data} />
+      <Card className="gap-0 py-0">
+        <CardHeader className="px-5 pb-2 pt-4">
+          <div className="flex items-center gap-2">
+            <Building2 className="size-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold">Xếp hạng đại lý</CardTitle>
+          </div>
+          <CardDescription className="text-xs">
+            {data.length} đại lý · Sắp xếp theo doanh thu giảm dần · Click để xem chi tiết
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Đại lý</TableHead>
+                  <TableHead className="text-right">Games</TableHead>
+                  <TableHead className="text-right">Kỳ quay</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.playerCount}</TableHead>
+                  <TableHead className="text-right">Doanh thu</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.ggr}</TableHead>
+                  <TableHead className="text-right">
+                    {REPORT_COLUMN_LABELS.totalCommission}
+                  </TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.netProfit}</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.payoutPercent}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map((row) => {
+                  const payoutPct = row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
+                  return (
+                    <TableRow
+                      key={row.tenantId}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigateToTenant(row.tenantId)}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Building2 className="size-3.5 shrink-0 text-muted-foreground" />
+                          <span className="text-sm font-medium">{row.tenantId}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {row.gameCount}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.drawCount)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.entryCount)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.playerCount)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums font-medium">
+                        {formatNumber(row.totalStake)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.totalPayout)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.ggr)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.totalCommission)}
+                      </TableCell>
+                      <TableCell
+                        className={`text-right text-sm tabular-nums font-medium ${row.netProfit < 0 ? "text-loss" : ""}`}
+                      >
+                        {formatNumber(row.netProfit)}
+                      </TableCell>
+                      <TableCell
+                        className={`text-right text-sm tabular-nums ${payoutPct > 0.95 ? "text-loss" : payoutPct > 0.8 ? "text-warning" : ""}`}
+                      >
+                        {formatPercent(payoutPct)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell className="text-xs font-semibold">
+                    {REPORT_COLUMN_LABELS.summary}
+                  </TableCell>
+                  <TableCell />
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.drawCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.entryCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.playerCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatVNDCompact(totals.totalStake)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatVNDCompact(totals.totalPayout)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatVNDCompact(totals.ggr)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatVNDCompact(totals.totalCommission)}
+                  </TableCell>
+                  <TableCell
+                    className={`text-right text-sm tabular-nums font-semibold ${totals.netProfit < 0 ? "text-loss" : ""}`}
+                  >
+                    {formatVNDCompact(totals.netProfit)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatPercent(totalPayoutPct)}
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ─── Tenant Detail View ───────────────────────────────────────────────────────
+
+function TenantDetailView({ tenantId }: { tenantId: string }) {
+  const { from, to } = useSystemReportFilters();
+  const { data, isLoading, error } = useSystemTenantBreakdown(tenantId, from, to);
+
+  if (isLoading) return <TableSkeleton rows={8} />;
+  if (error) return <ErrorCard />;
+  if (!data || data.length === 0)
+    return (
+      <EmptyCard
+        icon="building"
+        message="Không có dữ liệu"
+        description="Đại lý này chưa có dữ liệu trong khoảng thời gian đã chọn."
+      />
+    );
+
+  const totals = {
+    drawCount: data.reduce((s, r) => s + r.drawCount, 0),
+    entryCount: data.reduce((s, r) => s + r.entryCount, 0),
+    playerCount: data.reduce((s, r) => s + r.playerCount, 0),
+    totalStake: data.reduce((s, r) => s + r.totalStake, 0),
+    totalPayout: data.reduce((s, r) => s + r.totalPayout, 0),
+    ggr: data.reduce((s, r) => s + r.ggr, 0),
+    totalCommission: data.reduce((s, r) => s + r.totalCommission, 0),
+    netProfit: data.reduce((s, r) => s + r.netProfit, 0),
+  };
+  const totalPayoutPct = totals.totalStake > 0 ? totals.totalPayout / totals.totalStake : 0;
 
   return (
     <Card className="gap-0 py-0">
       <CardHeader className="px-5 pb-2 pt-4">
         <div className="flex items-center gap-2">
-          <Building2 className="size-4 text-muted-foreground" />
-          <CardTitle className="text-sm font-semibold">Xếp hạng đại lý</CardTitle>
+          <Gamepad2 className="size-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold">Chi tiết theo game — {tenantId}</CardTitle>
         </div>
-        <CardDescription className="text-xs">
-          Sắp xếp theo doanh thu giảm dần · Click để xem game breakdown
-        </CardDescription>
+        <CardDescription className="text-xs">{data.length} game có dữ liệu</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-10 text-center">#</TableHead>
-                <TableHead className="w-8" />
-                <TableHead>Đại lý</TableHead>
-                <TableHead className="text-right">Games</TableHead>
+                <TableHead>Game</TableHead>
                 <TableHead className="text-right">Kỳ quay</TableHead>
-                <TableHead className="text-right">Entries</TableHead>
-                <TableHead className="text-right">Players</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.playerCount}</TableHead>
                 <TableHead className="text-right">Doanh thu</TableHead>
-                <TableHead className="text-right">Trả thưởng</TableHead>
-                <TableHead className="text-right">GGR</TableHead>
-                <TableHead className="text-right">Hoa hồng</TableHead>
-                <TableHead className="text-right">Lợi nhuận</TableHead>
-                <TableHead className="text-right">Payout %</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.ggr}</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalCommission}</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.netProfit}</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.payoutPercent}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((row, idx) => {
-                const isExpanded = expandedTenant === row.tenantId;
+              {data.map((row) => {
                 const payoutPct = row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
                 return (
-                  <>
-                    <TableRow
-                      key={row.tenantId}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => void setExpandedTenant(isExpanded ? null : row.tenantId)}
+                  <TableRow key={row.gameProduct}>
+                    <TableCell>
+                      <p className="text-sm font-medium">
+                        {GAME_LABELS[row.gameProduct as keyof typeof GAME_LABELS] ??
+                          row.gameProduct}
+                      </p>
+                      <p className="font-mono text-xs text-muted-foreground">{row.gameProduct}</p>
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.drawCount)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.entryCount)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.playerCount)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums font-medium">
+                      {formatNumber(row.totalStake)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.totalPayout)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.ggr)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.totalCommission)}
+                    </TableCell>
+                    <TableCell
+                      className={`text-right text-sm tabular-nums font-medium ${row.netProfit < 0 ? "text-loss" : ""}`}
                     >
-                      <TableCell className="text-center text-sm text-muted-foreground">
-                        {idx + 1}
-                      </TableCell>
-                      <TableCell className="w-8 text-center">
-                        {isExpanded ? (
-                          <ChevronDown className="size-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronRight className="size-4 text-muted-foreground" />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="size-4 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">{row.tenantId}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        <Badge variant="outline">{row.gameCount}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatNumber(row.drawCount)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatNumber(row.entryCount)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatNumber(row.playerCount)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums font-medium">
-                        {formatVND(row.totalStake)}
-                      </TableCell>
-                      <TableCell
-                        className={`text-right tabular-nums ${payoutPct > 0.95 ? "text-danger" : payoutPct > 0.8 ? "text-warning" : ""}`}
-                      >
-                        {formatVND(row.totalPayout)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatVND(row.ggr)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">
-                        {formatVND(row.totalCommission)}
-                      </TableCell>
-                      <TableCell
-                        className={`text-right tabular-nums font-medium ${row.netProfit >= 0 ? "text-success" : "text-danger"}`}
-                      >
-                        {formatVND(row.netProfit)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        <Badge
-                          variant={
-                            payoutPct > 0.95
-                              ? "destructive"
-                              : payoutPct > 0.8
-                                ? "outline"
-                                : "secondary"
-                          }
-                        >
-                          {formatPercent(payoutPct)}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                    {isExpanded && (
-                      <TenantBreakdownRows tenantId={row.tenantId} from={from} to={to} />
-                    )}
-                  </>
+                      {formatNumber(row.netProfit)}
+                    </TableCell>
+                    <TableCell
+                      className={`text-right text-sm tabular-nums ${payoutPct > 0.95 ? "text-loss" : payoutPct > 0.8 ? "text-warning" : ""}`}
+                    >
+                      {formatPercent(payoutPct)}
+                    </TableCell>
+                  </TableRow>
                 );
               })}
             </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell className="text-xs font-semibold">
+                  {REPORT_COLUMN_LABELS.summary}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.drawCount)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.entryCount)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.playerCount)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatVNDCompact(totals.totalStake)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatVNDCompact(totals.totalPayout)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatVNDCompact(totals.ggr)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatVNDCompact(totals.totalCommission)}
+                </TableCell>
+                <TableCell
+                  className={`text-right text-sm tabular-nums font-semibold ${totals.netProfit < 0 ? "text-loss" : ""}`}
+                >
+                  {formatVNDCompact(totals.netProfit)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatPercent(totalPayoutPct)}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
           </Table>
-        </div>
-
-        {/* Summary Footer */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/30 px-4 py-3 text-sm font-medium">
-          <div className="flex items-center gap-3">
-            <span className="text-muted-foreground">TỔNG CỘNG</span>
-            <Badge variant="secondary">{data.length} đại lý</Badge>
-            <Badge variant="secondary">{formatNumber(totalEntries)} entries</Badge>
-          </div>
-          <div className="flex flex-wrap items-center gap-4 tabular-nums text-xs">
-            <span>
-              DT: <strong title={formatVND(totalStake)}>{formatVNDCompact(totalStake)}</strong>
-            </span>
-            <span>
-              PO: <strong title={formatVND(totalPayout)}>{formatVNDCompact(totalPayout)}</strong>
-            </span>
-            <span>
-              GGR: <strong title={formatVND(totalGgr)}>{formatVNDCompact(totalGgr)}</strong>
-            </span>
-            <span>
-              HH:{" "}
-              <strong title={formatVND(totalCommission)}>
-                {formatVNDCompact(totalCommission)}
-              </strong>
-            </span>
-            <span className={totalNetProfit >= 0 ? "text-success" : "text-danger"}>
-              LN:{" "}
-              <strong title={formatVND(totalNetProfit)}>{formatVNDCompact(totalNetProfit)}</strong>
-            </span>
-          </div>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function ByTenantSkeleton() {
+// ─── Breadcrumb ───────────────────────────────────────────────────────────────
+
+function Breadcrumb({ tenantId }: { tenantId: string }) {
+  const { navigateBackToList } = useSystemReportFilters();
   return (
-    <Card className="gap-0 py-0">
-      <CardContent className="p-0 pt-0">
-        <div className="space-y-0">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="border-b px-5 py-3">
-              <Skeleton className="h-4 w-full" />
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex flex-wrap items-center gap-1">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-auto px-2 py-1 text-xs"
+        onClick={navigateBackToList}
+      >
+        Theo đại lý
+      </Button>
+      <ChevronRight className="size-3 text-muted-foreground" />
+      <span className="flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-xs font-medium">
+        <Building2 className="size-3" />
+        {tenantId}
+      </span>
+    </div>
+  );
+}
+
+// ─── ByTenantTab ─────────────────────────────────────────────────────────────
+
+/** Tab "Theo đại lý" — danh sách tenant → drill-down chi tiết từng game. */
+export function ByTenantTab() {
+  const { selectedTenant } = useSystemReportFilters();
+
+  return (
+    <div className="flex flex-col gap-4">
+      {selectedTenant && <Breadcrumb tenantId={selectedTenant} />}
+      {!selectedTenant && <TenantListView />}
+      {selectedTenant && <TenantDetailView tenantId={selectedTenant} />}
+    </div>
   );
 }

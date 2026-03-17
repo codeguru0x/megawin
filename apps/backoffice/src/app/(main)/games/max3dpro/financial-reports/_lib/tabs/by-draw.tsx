@@ -1,24 +1,20 @@
 "use client";
 
-import { ChevronRight, CalendarRange, Building2, Users } from "lucide-react";
+import { Building2, CalendarRange, ChevronRight, Users } from "lucide-react";
 import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  formatVND,
-  formatVNDCompact,
-  formatPercent,
-  formatNumber,
-} from "@megawin/shared/utils/number";
+import { formatVNDCompact, formatNumber } from "@megawin/shared/utils/number";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { parseUsername } from "@megawin/identity-application/shared";
 import { useMax3DProReportFilters } from "../use-report-filters";
 import { EntryList } from "../sections/entry-list";
 import {
@@ -27,68 +23,52 @@ import {
   useMax3DProDrawTenants,
   useMax3DProPlayers,
 } from "../use-report-queries";
+import { TableSkeleton, ErrorCard, EmptyCard } from "../sections/shared-states";
 
 // ─── KPI Strip ────────────────────────────────────────────────────────────────
 
 function KpiStrip({ from, to }: { from: string; to: string }) {
-  const { data, isLoading } = useMax3DProDrawSummary(from, to);
-
-  if (isLoading) {
-    return (
-      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-20 w-full" />
-        ))}
-      </div>
-    );
-  }
+  const { data } = useMax3DProDrawSummary(from, to);
   if (!data) return null;
 
   const payoutPct = data.totalStake > 0 ? data.totalPayout / data.totalStake : 0;
-
-  // Max 3D Pro: bỏ JP Contribution, có Lines (cặp bộ ba), 5 KPI cards
   const cards = [
     {
-      label: "Kỳ Quay",
+      label: REPORT_COLUMN_LABELS.drawId,
       value: formatNumber(data.drawCount),
       sub: `${formatNumber(data.entryCount)} entries · ${formatNumber(data.lineCount)} cặp`,
     },
     {
-      label: "Doanh Thu",
+      label: "Doanh thu",
       value: formatVNDCompact(data.totalStake),
-      sub: formatVND(data.totalStake),
-      highlight: "blue" as const,
+      sub: formatNumber(data.totalStake) + " ₫",
+      className: "text-blue-600 dark:text-blue-400",
     },
     {
-      label: "Trả Thưởng",
+      label: REPORT_COLUMN_LABELS.totalPayout,
       value: formatVNDCompact(data.totalPayout),
-      sub: `Payout: ${formatPercent(payoutPct)}`,
-      highlight: payoutPct > 0.95 ? ("red" as const) : ("neutral" as const),
+      sub: `${REPORT_COLUMN_LABELS.payoutPercent}: ${(payoutPct * 100).toFixed(1)}%`,
+      className: payoutPct > 0.95 ? "text-loss" : undefined,
     },
     {
-      label: "GGR",
+      label: REPORT_COLUMN_LABELS.ggr,
       value: formatVNDCompact(data.ggr),
-      sub: `Margin: ${formatPercent(data.totalStake > 0 ? data.ggr / data.totalStake : 0)}`,
-      highlight: data.ggr >= 0 ? ("green" as const) : ("red" as const),
+      sub: formatNumber(data.ggr) + " ₫",
+      className: data.ggr < 0 ? "text-loss" : undefined,
     },
     {
-      label: "Lợi Nhuận Ròng",
+      label: REPORT_COLUMN_LABELS.netProfit,
       value: formatVNDCompact(data.netProfit),
       sub: `HH: ${formatVNDCompact(data.totalCommission)}`,
-      highlight: data.netProfit >= 0 ? ("green" as const) : ("red" as const),
+      className: data.netProfit < 0 ? "text-loss" : undefined,
     },
   ];
-
   return (
-    <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <div className="grid gap-3 sm:grid-cols-5">
       {cards.map((c) => (
-        <div key={c.label} className="rounded-lg border bg-card p-3">
+        <div key={c.label} className="rounded-lg border bg-card p-4">
           <p className="text-xs text-muted-foreground">{c.label}</p>
-          <p
-            className={`mt-1 text-lg font-bold tabular-nums ${c.highlight === "blue" ? "text-blue-600 dark:text-blue-400" : c.highlight === "green" ? "text-success" : c.highlight === "red" ? "text-danger" : ""}`}
-          >
-            {c.value}
-          </p>
+          <p className={`mt-1 text-xl font-bold tabular-nums ${c.className ?? ""}`}>{c.value}</p>
           <p className="truncate text-xs text-muted-foreground">{c.sub}</p>
         </div>
       ))}
@@ -96,172 +76,185 @@ function KpiStrip({ from, to }: { from: string; to: string }) {
   );
 }
 
-// ─── Level 1: Draw List ───────────────────────────────────────────────────────
+// ─── Draw List ────────────────────────────────────────────────────────────────
 
 function DrawList() {
   const { from, to, navigateToDraw } = useMax3DProReportFilters();
-  const page = 1;
+  const { data, isLoading, error } = useMax3DProDrawList(from, to, 1);
 
-  const { data, isLoading, error } = useMax3DProDrawList(from, to, page);
-
-  if (isLoading) return <TableSkeleton rows={10} />;
+  if (isLoading)
+    return (
+      <div className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-20 w-full animate-pulse rounded-lg border bg-muted" />
+          ))}
+        </div>
+        <TableSkeleton />
+      </div>
+    );
   if (error) return <ErrorCard />;
   if (!data?.data.length)
-    return <EmptyCard msg="Không có kỳ quay nào trong khoảng thời gian đã chọn." />;
+    return (
+      <EmptyCard
+        icon="calendar"
+        message="Không có dữ liệu"
+        description="Không có kỳ quay nào trong khoảng thời gian đã chọn."
+      />
+    );
 
   const rows = data.data;
   const totals = {
-    entries: rows.reduce((s, r) => s + r.entryCount, 0),
-    lines: rows.reduce((s, r) => s + (r.lineCount ?? 0), 0),
-    stake: rows.reduce((s, r) => s + r.totalStake, 0),
-    payout: rows.reduce((s, r) => s + r.totalPayout, 0),
+    entryCount: rows.reduce((s, r) => s + r.entryCount, 0),
+    lineCount: rows.reduce((s, r) => s + (r.lineCount ?? 0), 0),
+    playerCount: rows.reduce((s, r) => s + r.playerCount, 0),
+    totalStake: rows.reduce((s, r) => s + r.totalStake, 0),
+    totalPayout: rows.reduce((s, r) => s + r.totalPayout, 0),
     ggr: rows.reduce((s, r) => s + r.ggr, 0),
-    commission: rows.reduce((s, r) => s + r.totalCommission, 0),
+    totalCommission: rows.reduce((s, r) => s + r.totalCommission, 0),
     netProfit: rows.reduce((s, r) => s + r.netProfit, 0),
   };
 
   return (
-    <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center gap-2">
-          <CalendarRange className="size-4 text-muted-foreground" />
-          <CardTitle className="text-sm font-semibold">Danh sách kỳ quay</CardTitle>
-        </div>
-        <CardDescription className="text-xs">
-          {data.total} kỳ quay · Click để xem breakdown theo đại lý
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Kỳ quay</TableHead>
-                <TableHead>Ngày TC</TableHead>
-                <TableHead className="text-right">Entries</TableHead>
-                <TableHead className="text-right">Players</TableHead>
-                <TableHead className="text-right">Tenants</TableHead>
-                <TableHead className="text-right">Cặp</TableHead>
-                <TableHead className="text-right">Doanh thu</TableHead>
-                <TableHead className="text-right">Trả thưởng</TableHead>
-                <TableHead className="text-right">GGR</TableHead>
-                <TableHead className="text-right">Hoa hồng</TableHead>
-                <TableHead className="text-right">Lợi nhuận</TableHead>
-                <TableHead className="text-right">Payout %</TableHead>
-                <TableHead className="w-8" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row) => {
-                const payoutPct = row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
-                return (
-                  <TableRow
-                    key={row.drawId}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => navigateToDraw(row.drawId)}
-                  >
-                    <TableCell className="font-mono text-xs">{row.drawId}</TableCell>
-                    <TableCell className="text-sm">{row.financialDate}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.playerCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.tenantCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.lineCount ?? 0)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums font-medium">
-                      {formatVND(row.totalStake)}
-                    </TableCell>
-                    <TableCell
-                      className={`text-right tabular-nums ${payoutPct > 0.95 ? "text-danger" : ""}`}
+    <div className="space-y-4">
+      <KpiStrip from={from} to={to} />
+      <Card className="gap-0 py-0">
+        <CardHeader className="px-5 pb-2 pt-4">
+          <div className="flex items-center gap-2">
+            <CalendarRange className="size-4 text-muted-foreground" />
+            <div>
+              <CardTitle className="text-sm font-semibold">Danh sách kỳ quay</CardTitle>
+              <CardDescription className="text-xs">{data.total} kỳ quay</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{REPORT_COLUMN_LABELS.financialDate}</TableHead>
+                  <TableHead>{REPORT_COLUMN_LABELS.drawId}</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.playerCount}</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
+                  <TableHead className="text-right">Cặp bộ ba</TableHead>
+                  <TableHead className="text-right">Doanh thu</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.ggr}</TableHead>
+                  <TableHead className="text-right">
+                    {REPORT_COLUMN_LABELS.totalCommission}
+                  </TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.netProfit}</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.payoutPercent}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((row) => {
+                  const payoutPct = row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
+                  return (
+                    <TableRow
+                      key={row.drawId}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigateToDraw(row.drawId)}
                     >
-                      {formatVND(row.totalPayout)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{formatVND(row.ggr)}</TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVND(row.totalCommission)}
-                    </TableCell>
-                    <TableCell
-                      className={`text-right tabular-nums font-medium ${row.netProfit >= 0 ? "text-success" : "text-danger"}`}
-                    >
-                      {formatVND(row.netProfit)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge
-                        variant={
-                          payoutPct > 0.95
-                            ? "destructive"
-                            : payoutPct > 0.8
-                              ? "outline"
-                              : "secondary"
-                        }
+                      <TableCell className="text-sm">{row.financialDate}</TableCell>
+                      <TableCell className="font-mono text-xs">{row.drawId}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.playerCount)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.entryCount)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.lineCount ?? 0)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums font-medium">
+                        {formatNumber(row.totalStake)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.totalPayout)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.ggr)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.totalCommission)}
+                      </TableCell>
+                      <TableCell
+                        className={`text-right text-sm tabular-nums font-medium ${row.netProfit < 0 ? "text-loss" : ""}`}
                       >
-                        {formatPercent(payoutPct)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <ChevronRight className="size-4 text-muted-foreground" />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-
-        {/* Summary footer */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/30 px-4 py-3 text-xs font-medium">
-          <div className="flex items-center gap-3">
-            <span className="text-muted-foreground">TỔNG CỘNG</span>
-            <Badge variant="secondary">
-              {formatNumber(totals.entries)} entries · {formatNumber(totals.lines)} cặp
-            </Badge>
+                        {formatNumber(row.netProfit)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm">
+                        {(payoutPct * 100).toFixed(1)}%
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={2} className="text-xs font-semibold">
+                    {REPORT_COLUMN_LABELS.summary}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.playerCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.entryCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.lineCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.totalStake)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.totalPayout)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.ggr)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.totalCommission)}
+                  </TableCell>
+                  <TableCell
+                    className={`text-right text-sm tabular-nums font-semibold ${totals.netProfit < 0 ? "text-loss" : ""}`}
+                  >
+                    {formatNumber(totals.netProfit)}
+                  </TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableFooter>
+            </Table>
           </div>
-          <div className="flex flex-wrap items-center gap-4 tabular-nums">
-            <span>
-              DT: <strong title={formatVND(totals.stake)}>{formatVNDCompact(totals.stake)}</strong>
-            </span>
-            <span>
-              PO:{" "}
-              <strong title={formatVND(totals.payout)}>{formatVNDCompact(totals.payout)}</strong>
-            </span>
-            <span>
-              GGR: <strong title={formatVND(totals.ggr)}>{formatVNDCompact(totals.ggr)}</strong>
-            </span>
-            <span>
-              HH:{" "}
-              <strong title={formatVND(totals.commission)}>
-                {formatVNDCompact(totals.commission)}
-              </strong>
-            </span>
-            <span className={totals.netProfit >= 0 ? "text-success" : "text-danger"}>
-              LN:{" "}
-              <strong title={formatVND(totals.netProfit)}>
-                {formatVNDCompact(totals.netProfit)}
-              </strong>
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
-// ─── Level 2: Draw → Tenants ──────────────────────────────────────────────────
+// ─── Draw Tenant Breakdown ────────────────────────────────────────────────────
 
 function DrawTenantBreakdown({ drawId }: { drawId: string }) {
   const { navigateToTenantInDraw } = useMax3DProReportFilters();
-
   const { data, isLoading, error } = useMax3DProDrawTenants(drawId);
 
   if (isLoading) return <TableSkeleton rows={6} />;
   if (error) return <ErrorCard />;
-  if (!data?.length) return <EmptyCard msg="Không có dữ liệu tenant cho kỳ quay này." />;
+  if (!data?.length)
+    return <EmptyCard icon="building" message="Không có dữ liệu tenant cho kỳ quay này." />;
+
+  const totals = {
+    entryCount: data.reduce((s, r) => s + r.entryCount, 0),
+    lineCount: data.reduce((s, r) => s + (r.lineCount ?? 0), 0),
+    playerCount: data.reduce((s, r) => s + r.playerCount, 0),
+    totalStake: data.reduce((s, r) => s + r.totalStake, 0),
+    totalPayout: data.reduce((s, r) => s + r.totalPayout, 0),
+    ggr: data.reduce((s, r) => s + r.ggr, 0),
+    totalCommission: data.reduce((s, r) => s + r.totalCommission, 0),
+  };
+  const totalNet = totals.totalStake - totals.totalPayout - totals.totalCommission;
 
   return (
     <Card className="gap-0 py-0">
@@ -272,7 +265,7 @@ function DrawTenantBreakdown({ drawId }: { drawId: string }) {
             Breakdown theo đại lý — Kỳ {drawId}
           </CardTitle>
         </div>
-        <CardDescription className="text-xs">Click đại lý để xem players</CardDescription>
+        <CardDescription className="text-xs">{data.length} đại lý</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
@@ -280,62 +273,89 @@ function DrawTenantBreakdown({ drawId }: { drawId: string }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Đại lý</TableHead>
-                <TableHead className="text-right">Entries</TableHead>
-                <TableHead className="text-right">Players</TableHead>
-                <TableHead className="text-right">Cặp</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.playerCount}</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
+                <TableHead className="text-right">Cặp bộ ba</TableHead>
                 <TableHead className="text-right">Doanh thu</TableHead>
-                <TableHead className="text-right">Trả thưởng</TableHead>
-                <TableHead className="text-right">GGR</TableHead>
-                <TableHead className="text-right">Hoa hồng</TableHead>
-                <TableHead className="text-right">Payout %</TableHead>
-                <TableHead className="w-8" />
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.ggr}</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalCommission}</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.netProfit}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.map((row) => {
-                const payoutPct = row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
+                const net = row.totalStake - row.totalPayout - row.totalCommission;
                 return (
                   <TableRow
                     key={row.tenantId}
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => navigateToTenantInDraw(row.tenantId)}
                   >
-                    <TableCell>
-                      <p className="font-medium">{row.tenantId}</p>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="text-sm font-medium">{row.tenantId}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(row.playerCount)}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.entryCount)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(row.lineCount ?? 0)}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums font-medium">
-                      {formatVND(row.totalStake)}
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.totalStake)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.totalPayout)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.ggr)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.totalCommission)}
                     </TableCell>
                     <TableCell
-                      className={`text-right tabular-nums ${payoutPct > 0.95 ? "text-danger" : ""}`}
+                      className={`text-right text-sm tabular-nums font-medium ${net < 0 ? "text-loss" : ""}`}
                     >
-                      {formatVND(row.totalPayout)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{formatVND(row.ggr)}</TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVND(row.totalCommission)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge variant={payoutPct > 0.95 ? "destructive" : "secondary"}>
-                        {formatPercent(payoutPct)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <ChevronRight className="size-4 text-muted-foreground" />
+                      {formatNumber(net)}
                     </TableCell>
                   </TableRow>
                 );
               })}
             </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell className="text-xs font-semibold">
+                  {REPORT_COLUMN_LABELS.summary}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.playerCount)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.entryCount)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.lineCount)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.totalStake)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.totalPayout)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.ggr)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.totalCommission)}
+                </TableCell>
+                <TableCell
+                  className={`text-right text-sm tabular-nums font-semibold ${totalNet < 0 ? "text-loss" : ""}`}
+                >
+                  {formatNumber(totalNet)}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
           </Table>
         </div>
       </CardContent>
@@ -343,16 +363,15 @@ function DrawTenantBreakdown({ drawId }: { drawId: string }) {
   );
 }
 
-// ─── Level 3: Players ─────────────────────────────────────────────────────────
+// ─── Player Breakdown ─────────────────────────────────────────────────────────
 
 function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: string }) {
   const { navigateToPlayer } = useMax3DProReportFilters();
-
   const { data, isLoading, error } = useMax3DProPlayers(drawId, tenantId);
 
   if (isLoading) return <TableSkeleton rows={8} />;
   if (error) return <ErrorCard />;
-  if (!data?.length) return <EmptyCard msg="Không có player nào trong phạm vi này." />;
+  if (!data?.length) return <EmptyCard icon="ticket" message="Không có player nào." />;
 
   return (
     <Card className="gap-0 py-0">
@@ -360,62 +379,58 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
         <div className="flex items-center gap-2">
           <Users className="size-4 text-muted-foreground" />
           <CardTitle className="text-sm font-semibold">
-            Players — Kỳ {drawId} / {tenantId}
+            Người chơi — Kỳ {drawId} / {tenantId}
           </CardTitle>
         </div>
-        <CardDescription className="text-xs">Click player để xem entries</CardDescription>
+        <CardDescription className="text-xs">{data.length} người chơi</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Player</TableHead>
-                <TableHead className="text-right">Entries</TableHead>
-                <TableHead className="text-right">Cặp</TableHead>
-                <TableHead className="text-right">Cược</TableHead>
-                <TableHead className="text-right">Thắng</TableHead>
-                <TableHead className="text-right">Trả thưởng</TableHead>
-                <TableHead className="text-right">Kết quả ròng</TableHead>
-                <TableHead className="w-8" />
+                <TableHead>Tài khoản</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
+                <TableHead className="text-right">Cặp bộ ba</TableHead>
+                <TableHead className="text-right">Doanh thu</TableHead>
+                <TableHead className="text-right">Tiền thắng</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
+                <TableHead className="text-right">Lãi / Lỗ (KH)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.map((row) => {
                 const net = row.totalPayout - row.totalStake;
+                const displayName = parseUsername(row.accountId) || row.username || row.accountId;
                 return (
                   <TableRow
                     key={row.accountId}
                     className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => navigateToPlayer(row.accountId)}
+                    onClick={() => navigateToPlayer(row.accountId, displayName)}
                   >
-                    <TableCell>
-                      <p className="font-medium">{row.username || row.accountId}</p>
-                      <p className="font-mono text-xs text-muted-foreground">{row.accountId}</p>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="text-sm font-medium">{displayName}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(row.entryCount)}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(row.lineCount)}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatVND(row.totalStake)}
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.totalStake)}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatVND(row.totalWin)}
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.totalWin)}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatVND(row.totalPayout)}
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.totalPayout)}
                     </TableCell>
                     <TableCell
-                      className={`text-right tabular-nums font-medium ${net >= 0 ? "text-success" : "text-danger"}`}
+                      className={`text-right text-sm tabular-nums font-medium ${
+                        net > 0 ? "text-profit" : net < 0 ? "text-loss" : "text-muted-foreground"
+                      }`}
                     >
-                      {net >= 0 ? "+" : ""}
-                      {formatVND(net)}
-                    </TableCell>
-                    <TableCell>
-                      <ChevronRight className="size-4 text-muted-foreground" />
+                      {net > 0 ? "+" : ""}
+                      {formatNumber(net)}
                     </TableCell>
                   </TableRow>
                 );
@@ -436,11 +451,11 @@ function Breadcrumb() {
     drawId,
     tenantId,
     playerId,
+    playerName,
     navigateToList,
     navigateToDraw,
     navigateToTenantInDraw,
   } = useMax3DProReportFilters();
-
   return (
     <div className="flex flex-wrap items-center gap-1 text-sm">
       <Button
@@ -480,81 +495,36 @@ function Breadcrumb() {
       {playerId && (
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
-          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{playerId}</span>
+          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">
+            {playerName || parseUsername(playerId) || playerId}
+          </span>
         </>
       )}
     </div>
   );
 }
 
-// ─── Main Tab ─────────────────────────────────────────────────────────────────
+// ─── ByDrawTab ────────────────────────────────────────────────────────────────
 
-/** Tab "Theo Kỳ Quay" — 4 cấp drill-down. Max 3D Pro: bỏ JP Contribution, có Cặp (lineCount). */
 export function ByDrawTab() {
-  const { from, to, level, drawId, tenantId, playerId } = useMax3DProReportFilters();
-
+  const { from, to, level, drawId, tenantId, playerId, playerName } = useMax3DProReportFilters();
+  const playerDisplayName = playerName ?? undefined;
   return (
     <div className="flex flex-col gap-4">
       {level !== "list" && <Breadcrumb />}
-
-      {/* KPI strip — chỉ hiện ở level list */}
-      {level === "list" && <KpiStrip from={from} to={to} />}
-
-      {/* Render theo level */}
       {level === "list" && <DrawList />}
       {level === "draw-tenants" && drawId && <DrawTenantBreakdown drawId={drawId} />}
       {level === "players" && drawId && tenantId && (
         <PlayerBreakdown drawId={drawId} tenantId={tenantId} />
       )}
       {level === "entries" && drawId && tenantId && playerId && (
-        <EntryList drawId={drawId} tenantId={tenantId} accountId={playerId} />
+        <EntryList
+          drawId={drawId}
+          tenantId={tenantId}
+          accountId={playerId}
+          playerDisplayName={playerDisplayName}
+        />
       )}
     </div>
-  );
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function TableSkeleton({ rows }: { rows: number }) {
-  return (
-    <Card className="gap-0 py-0">
-      <CardContent className="p-0">
-        <div className="space-y-0">
-          {[...Array(rows)].map((_, i) => (
-            <div key={i} className="border-b px-5 py-3">
-              <Skeleton className="h-4 w-full" />
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ErrorCard() {
-  return (
-    <Card className="gap-0 py-0">
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-          <CalendarRange className="size-6 text-muted-foreground" />
-        </div>
-        <h3 className="mt-4 text-sm font-semibold">Lỗi tải dữ liệu</h3>
-        <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-function EmptyCard({ msg }: { msg: string }) {
-  return (
-    <Card className="gap-0 py-0">
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-          <CalendarRange className="size-6 text-muted-foreground" />
-        </div>
-        <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
-        <p className="mt-1 text-xs text-muted-foreground">{msg}</p>
-      </CardContent>
-    </Card>
   );
 }

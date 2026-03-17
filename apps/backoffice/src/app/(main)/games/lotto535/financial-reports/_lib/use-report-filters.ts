@@ -13,10 +13,7 @@ export type DrillLevel = "list" | "draw-tenants" | "players" | "entries" | "tena
 export function useLotto535ReportFilters() {
   const today = todayVN();
 
-  const [tab, setTab] = useQueryState(
-    "tab",
-    parseAsStringLiteral(TABS).withDefault("draws"),
-  );
+  const [tab, setTab] = useQueryState("tab", parseAsStringLiteral(TABS).withDefault("draws"));
   const [from, setFrom] = useQueryState("from", parseAsString.withDefault(today));
   const [to, setTo] = useQueryState("to", parseAsString.withDefault(today));
   const [drawId, setDrawId] = useQueryState("draw", parseAsString);
@@ -42,7 +39,7 @@ export function useLotto535ReportFilters() {
 
   const navigateToDraw = useCallback(
     (id: string) => {
-      void setDrawId(id);
+      void setDrawId(id, { history: "push" });
       void setTenantId(null);
       void setPlayerId(null);
     },
@@ -51,7 +48,7 @@ export function useLotto535ReportFilters() {
 
   const navigateToTenantInDraw = useCallback(
     (id: string) => {
-      void setTenantId(id);
+      void setTenantId(id, { history: "push" });
       void setPlayerId(null);
     },
     [setTenantId, setPlayerId],
@@ -59,18 +56,27 @@ export function useLotto535ReportFilters() {
 
   const navigateToPlayer = useCallback(
     (id: string) => {
-      void setPlayerId(id);
+      void setPlayerId(id, { history: "push" });
     },
     [setPlayerId],
   );
 
   const navigateToTenantDrills = useCallback(
     (id: string) => {
-      void setTenantId(id);
+      void setTenantId(id, { history: "push" });
       void setDrawId(null);
       void setPlayerId(null);
     },
     [setTenantId, setDrawId, setPlayerId],
+  );
+
+  /** Tab "Theo đại lý" → click 1 kỳ → drill vào draw × tenant (players level). */
+  const navigateToDrawInTenant = useCallback(
+    (dId: string, tId: string) => {
+      void setDrawId(dId, { history: "push" });
+      void setTenantId(tId);
+    },
+    [setDrawId, setTenantId],
   );
 
   return {
@@ -89,5 +95,6 @@ export function useLotto535ReportFilters() {
     navigateToTenantInDraw,
     navigateToPlayer,
     navigateToTenantDrills,
+    navigateToDrawInTenant,
   };
 }

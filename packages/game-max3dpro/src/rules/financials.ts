@@ -5,8 +5,8 @@
  * Công ty thu TOÀN BỘ phần còn lại sau giải thưởng và hoa hồng.
  *
  * Công thức:
- *   profit = totalRevenue - totalFixedPrizes - totalAgentCommission
- *   (profit có thể âm — công ty chịu lỗ)
+ *   companyTake = totalRevenue - totalFixedPrizes - totalAgentCommission
+ *   (companyTake có thể âm — công ty chịu lỗ)
  */
 
 export interface DrawFinancialInput {
@@ -25,26 +25,26 @@ export interface DrawFinancialResult {
   totalFixedPrizes: number;
   /** Tổng hoa hồng đại lý = Σ(tenant.commission). */
   totalAgentCommission: number;
-  /** Lợi nhuận = revenue - prizes - commission. Có thể âm (công ty chịu lỗ). */
-  profit: number;
+  /** Phần công ty thu = revenue - prizes - commission. Có thể âm (công ty chịu lỗ). */
+  companyTake: number;
 }
 
 /**
  * Tính tài chính tổng hợp cho 1 kỳ quay Max 3D Pro.
  *
  * Max 3D Pro không có Jackpot. Công ty thu toàn bộ phần còn lại.
- * profit = totalRevenue - totalFixedPrizes - totalAgentCommission
- * profit có thể âm khi tổng giải thưởng + hoa hồng > doanh thu.
+ * companyTake = totalRevenue - totalFixedPrizes - totalAgentCommission
+ * companyTake có thể âm khi tổng giải thưởng + hoa hồng > doanh thu.
  */
 export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const { totalRevenue, totalFixedPrizes, totalAgentCommission } = input;
 
-  const profit = totalRevenue - totalFixedPrizes - totalAgentCommission;
+  const companyTake = totalRevenue - totalFixedPrizes - totalAgentCommission;
 
   return {
     totalRevenue,
     totalFixedPrizes,
     totalAgentCommission,
-    profit,
+    companyTake,
   };
 }

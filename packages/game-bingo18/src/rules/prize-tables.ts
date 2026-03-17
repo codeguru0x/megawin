@@ -96,22 +96,22 @@ export const DEFAULT_TRIPLE_MATCH_PRIZES: TripleMatchPrizes = {
 };
 
 export const DEFAULT_SUM_TOTAL_PRIZES: SumTotalPrizes = {
-  3: 1_200_000,
-  4: 400_000,
-  5: 200_000,
-  6: 120_000,
-  7: 80_000,
-  8: 55_000,
-  9: 47_000,
-  10: 44_000,
-  11: 44_000,
-  12: 47_000,
-  13: 55_000,
-  14: 80_000,
-  15: 120_000,
-  16: 200_000,
-  17: 400_000,
-  18: 1_200_000,
+  "3": 1_200_000,
+  "4": 400_000,
+  "5": 200_000,
+  "6": 120_000,
+  "7": 80_000,
+  "8": 55_000,
+  "9": 47_000,
+  "10": 44_000,
+  "11": 44_000,
+  "12": 47_000,
+  "13": 55_000,
+  "14": 80_000,
+  "15": 120_000,
+  "16": 200_000,
+  "17": 400_000,
+  "18": 1_200_000,
 };
 
 export const DEFAULT_BIG_SMALL_DRAW_PRIZES: BigSmallDrawPrizes = {
@@ -145,21 +145,18 @@ export function lookupSingleNumPrize(
 
 /**
  * Tra cứu giải thưởng "Cộng tổng" theo tổng.
+ * Chuyển sum (number) sang string key vì SumTotalPrizes dùng string key (MongoDB convention).
  */
 export function lookupSumTotalPrize(
   sum: number,
   prizes: SumTotalPrizes = DEFAULT_SUM_TOTAL_PRIZES,
 ): number {
-  return prizes[sum] ?? 0;
+  return prizes[String(sum)] ?? 0;
 }
 
 /**
  * Xác định loại cách chơi từ PlayType có phải basic hay side bet.
  */
 export function isBasicPlayType(playType: Bingo18PlayType): boolean {
-  return (
-    playType === "singleNum" ||
-    playType === "doubleMatch" ||
-    playType === "tripleMatch"
-  );
+  return playType === "singleNum" || playType === "doubleMatch" || playType === "tripleMatch";
 }

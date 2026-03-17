@@ -30,6 +30,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { meKeys } from "@/lib/query-keys";
 
 import {
   setupMfaSchema,
@@ -85,7 +86,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
         accessToken,
       }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["me", "mfa", "status"] });
+      qc.invalidateQueries({ queryKey: meKeys.mfaStatus });
       setStep("done");
     },
     onError: (error) => {

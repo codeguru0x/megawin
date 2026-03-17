@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye } from "lucide-react";
+import { Ticket } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -12,8 +12,6 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -21,9 +19,34 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { formatVND, formatNumber } from "@megawin/shared/utils/number";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatNumber } from "@megawin/shared/utils/number";
+import { REPORT_COLUMN_LABELS, ENTRY_STATUS_LABELS } from "@megawin/game-core/labels";
+import { parseUsername } from "@megawin/identity-application/shared";
 import type { TicketEntryEntity } from "@megawin/game-bingo18/entities";
 import { useBingo18Entries } from "../use-report-queries";
+import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
+
+// ─── Bingo 18 Play Type Labels ─────────────────────────────────────────────────
+
+const BINGO18_PLAY_TYPE_LABELS: Record<string, string> = {
+  singleNum: "Một số",
+  doubleMatch: "Hai số trùng",
+  tripleMatch: "Ba số trùng",
+  sumTotal: "Cộng tổng",
+  bigSmallDraw: "Lớn/Hòa/Nhỏ",
+};
+
+const BINGO18_BET_LABELS: Record<string, string> = {
+  big: "Lớn",
+  small: "Nhỏ",
+  draw: "Hòa",
+  specific: "Cụ thể",
+  any: "Bất kỳ",
+};
+
+// ─── Entry Detail Dialog ──────────────────────────────────────────────────────
 
 function EntryDetailDialog({
   entry,
@@ -35,121 +58,274 @@ function EntryDetailDialog({
   onClose: () => void;
 }) {
   if (!entry) return null;
+
   const p = entry.payout as any;
-  const boards = p?.boardPayouts ?? [];
-  const sideBets = p?.sideBetPayouts ?? [];
+  const boards: any[] = p?.boardPayouts ?? [];
+  const sideBets: any[] = p?.sideBetPayouts ?? [];
+  const winAmount: number = p?.winAmount ?? 0;
+  const payoutAmount: number = p?.payoutAmount ?? 0;
+  const playerNet = payoutAmount - entry.amount;
+
+  const drawResult: number[] = (entry as any).result?.numbers ?? [];
+  const drawSum: number = (entry as any).result?.sum ?? 0;
+
+  const displayName =
+    parseUsername((entry as any).accountId ?? "") || ((entry as any).accountId ?? "");
+  const isLongName = displayName.length > 20;
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Chi tiết Entry — Bingo 18</DialogTitle>
           <DialogDescription>
             {entry.id} · {entry.drawId}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Kỳ quay", value: entry.drawId },
-              { label: "Tiền cược", value: formatVND(entry.amount) },
-              { label: "Thắng", value: formatVND(p?.winAmount ?? 0) },
-              { label: "Trả thưởng", value: formatVND(p?.payoutAmount ?? 0) },
-            ].map((item) => (
-              <div key={item.label} className="rounded-lg bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-                <p className="text-sm font-bold">{item.value}</p>
+        <ScrollArea className="max-h-[72vh]">
+          <div className="space-y-5 pr-2">
+            {/* Thông tin cơ bản */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-lg bg-muted/50 p-3">
+                <p className="text-xs text-muted-foreground">Tài khoản</p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p
+                        className={`text-sm font-bold ${isLongName ? "max-w-[10rem] truncate" : ""}`}
+                      >
+                        {displayName}
+                      </p>
+                    </TooltipTrigger>
+                    {isLongName && (
+                      <TooltipContent>
+                        <p>{(entry as any).accountId}</p>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
               </div>
-            ))}
-          </div>
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <span className="text-sm text-muted-foreground">Trạng thái</span>
-            <Badge
-              variant={
-                entry.status === "settled"
-                  ? "default"
-                  : entry.status === "void"
-                    ? "destructive"
-                    : "secondary"
-              }
-            >
-              {entry.status}
-            </Badge>
-          </div>
-          {boards.filter((b: any) => b.winAmount > 0).length > 0 && (
-            <div className="rounded-lg border p-3">
-              <p className="mb-2 text-xs text-muted-foreground">Boards trúng</p>
-              <div className="space-y-1">
-                {boards
-                  .filter((b: any) => b.winAmount > 0)
-                  .map((b: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                      <Badge variant="secondary">{b.playType}</Badge>
-                      <span className="text-success tabular-nums">{formatVND(b.winAmount)}</span>
-                    </div>
-                  ))}
+              <div className="rounded-lg bg-muted/50 p-3">
+                <p className="text-xs text-muted-foreground">{REPORT_COLUMN_LABELS.drawId}</p>
+                <p className="font-mono text-sm font-bold">{entry.drawId}</p>
+              </div>
+              <div className="rounded-lg bg-muted/50 p-3">
+                <p className="text-xs text-muted-foreground">Đại lý</p>
+                <p className="text-sm font-bold">{entry.tenantId}</p>
+              </div>
+              <div className="rounded-lg bg-muted/50 p-3">
+                <p className="text-xs text-muted-foreground">Trạng thái</p>
+                <p className="text-sm font-bold">
+                  {ENTRY_STATUS_LABELS[entry.status as keyof typeof ENTRY_STATUS_LABELS] ??
+                    entry.status}
+                </p>
               </div>
             </div>
-          )}
-          {sideBets.filter((s: any) => s.winAmount > 0).length > 0 && (
-            <div className="rounded-lg border p-3">
-              <p className="mb-2 text-xs text-muted-foreground">Side bets trúng</p>
-              <div className="space-y-1">
-                {sideBets
-                  .filter((s: any) => s.winAmount > 0)
-                  .map((s: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                      <Badge variant="secondary">
-                        {s.playType}: {s.bet ?? s.sum}
-                      </Badge>
-                      <span className="text-success tabular-nums">{formatVND(s.winAmount)}</span>
-                    </div>
-                  ))}
+
+            {/* Tài chính */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-lg bg-muted/50 p-3">
+                <p className="text-xs text-muted-foreground">Tiền cược</p>
+                <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
+              </div>
+              <div className="rounded-lg bg-muted/50 p-3">
+                <p className="text-xs text-muted-foreground">Tiền thắng</p>
+                <p className="text-sm font-bold tabular-nums">{formatNumber(winAmount)}</p>
+              </div>
+              <div className="rounded-lg bg-muted/50 p-3">
+                <p className="text-xs text-muted-foreground">{REPORT_COLUMN_LABELS.totalPayout}</p>
+                <p className="text-sm font-bold tabular-nums">{formatNumber(payoutAmount)}</p>
+              </div>
+              <div className="rounded-lg bg-muted/50 p-3">
+                <p className="text-xs text-muted-foreground">Hoa hồng đại lý</p>
+                <p className="text-sm font-bold tabular-nums">
+                  {formatNumber(entry.tenant.commissionAmount)}
+                </p>
               </div>
             </div>
-          )}
-        </div>
+
+            {/* Lãi/Lỗ khách hàng */}
+            <div className="rounded-lg border p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Lãi / Lỗ (khách hàng)</span>
+                <span
+                  className={`text-sm font-bold tabular-nums ${
+                    playerNet > 0
+                      ? "text-profit"
+                      : playerNet < 0
+                        ? "text-loss"
+                        : "text-muted-foreground"
+                  }`}
+                >
+                  {playerNet > 0 ? "+" : ""}
+                  {formatNumber(playerNet)}
+                </span>
+              </div>
+            </div>
+
+            {/* Kết quả — 3 xúc xắc */}
+            {drawResult.length > 0 && (
+              <div className="rounded-lg border p-3">
+                <p className="mb-3 text-xs font-semibold text-muted-foreground">
+                  Kết quả — {entry.drawId}
+                </p>
+                <div className="flex items-center justify-center gap-3">
+                  {drawResult.map((num, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex size-10 items-center justify-center rounded-lg bg-primary text-lg font-bold text-primary-foreground shadow"
+                    >
+                      {num}
+                    </span>
+                  ))}
+                  {drawSum > 0 && (
+                    <span className="ml-2 text-sm text-muted-foreground">Tổng: {drawSum}</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Boards cơ bản */}
+            {boards.length > 0 && (
+              <div className="rounded-lg border p-3">
+                <p className="mb-2 text-xs font-semibold text-muted-foreground">Cách chơi cơ bản</p>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Loại</TableHead>
+                      <TableHead>Chọn số</TableHead>
+                      <TableHead className="text-right">Kết quả</TableHead>
+                      <TableHead className="text-right">Tiền thắng</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {boards.map((board: any, i: number) => (
+                      <TableRow key={i}>
+                        <TableCell className="text-xs">
+                          {BINGO18_PLAY_TYPE_LABELS[board.playType] ?? board.playType}
+                        </TableCell>
+                        <TableCell>
+                          <span className="inline-flex size-7 items-center justify-center rounded-lg bg-muted font-bold">
+                            {board.selectedNumber ?? board.kind ?? "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right text-xs">
+                          {board.winAmount > 0 ? (
+                            <Badge className="bg-profit text-profit-foreground text-xs">
+                              Trúng ×{board.matchCount ?? 1}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right text-sm tabular-nums">
+                          {board.winAmount > 0 ? (
+                            <span className="font-bold text-profit">
+                              +{formatNumber(board.winAmount)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">0</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {/* Side bets */}
+            {sideBets.length > 0 && (
+              <div className="rounded-lg border p-3">
+                <p className="mb-2 text-xs font-semibold text-muted-foreground">
+                  Cách chơi bổ sung
+                </p>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Loại</TableHead>
+                      <TableHead>Cược</TableHead>
+                      <TableHead className="text-right">Kết quả</TableHead>
+                      <TableHead className="text-right">Tiền thắng</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sideBets.map((bet: any, i: number) => (
+                      <TableRow key={i}>
+                        <TableCell className="text-xs">
+                          {BINGO18_PLAY_TYPE_LABELS[bet.playType] ?? bet.playType}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {bet.playType === "sumTotal"
+                            ? `Tổng ${bet.sum ?? bet.bet}`
+                            : (BINGO18_BET_LABELS[bet.bet] ?? bet.bet)}
+                        </TableCell>
+                        <TableCell className="text-right text-xs">
+                          {bet.winAmount > 0 ? (
+                            <Badge className="bg-profit text-profit-foreground text-xs">
+                              Trúng
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right text-sm tabular-nums">
+                          {bet.winAmount > 0 ? (
+                            <span className="font-bold text-profit">
+                              +{formatNumber(bet.winAmount)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">0</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
 }
 
+// ─── Entry List ───────────────────────────────────────────────────────────────
+
 export function EntryList({
   drawId,
   tenantId,
   accountId,
+  playerDisplayName,
 }: {
   drawId: string;
   tenantId: string;
   accountId: string;
+  playerDisplayName?: string;
 }) {
   const [selectedEntry, setSelectedEntry] = useState<TicketEntryEntity | null>(null);
   const { data, isLoading, error } = useBingo18Entries(drawId, tenantId, accountId);
-  if (isLoading)
-    return (
-      <Card>
-        <CardContent className="pt-4">
-          <div className="space-y-2">
-            {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  if (error || !data)
-    return (
-      <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">Lỗi.</CardContent>
-      </Card>
-    );
+
+  const parsed = parseUsername(playerDisplayName ?? accountId);
+  const playerLabel = parsed ? parsed.playerExternalId : accountId;
+
+  if (isLoading) return <TableSkeleton rows={5} />;
+  if (error) return <ErrorCard message="Lỗi tải entries." />;
+  if (!data?.length) return <EmptyCard icon="ticket" message="Không có entry nào." />;
+
   const payout = (e: TicketEntryEntity) => e.payout as any;
+
   return (
     <>
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Entries — {accountId}</CardTitle>
+      <Card className="gap-0 py-0">
+        <CardHeader className="px-5 pb-2 pt-4">
+          <div className="flex items-center gap-2">
+            <Ticket className="size-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold">Entries — {playerLabel}</CardTitle>
+          </div>
           <CardDescription className="text-xs">
-            {data.length} entries · {drawId}
+            {data.length} entries · Kỳ {drawId} · {tenantId}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -157,38 +333,51 @@ export function EntryList({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead className="text-right">Cược</TableHead>
-                  <TableHead className="text-right">Thắng</TableHead>
-                  <TableHead className="text-right">Trả</TableHead>
+                  <TableHead>Mã vé</TableHead>
+                  <TableHead className="text-right">Tiền cược</TableHead>
+                  <TableHead className="text-right">Tiền thắng</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
                   <TableHead>Trạng thái</TableHead>
-                  <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.map((entry) => {
                   const p = payout(entry);
+                  const winAmount = p?.winAmount ?? 0;
+                  const payoutAmount = p?.payoutAmount ?? 0;
                   return (
-                    <TableRow key={entry.id}>
-                      <TableCell className="font-mono text-xs">
-                        {entry.id.slice(-8)}
+                    <TableRow
+                      key={entry.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => setSelectedEntry(entry)}
+                    >
+                      <TableCell>
+                        <button className="font-mono text-xs text-primary underline-offset-2 hover:underline">
+                          {entry.id.slice(-8)}
+                        </button>
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatVND(entry.amount)}
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(entry.amount)}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-right text-sm tabular-nums">
                         {entry.status === "settled" ? (
-                          p?.winAmount > 0 ? (
-                            <span className="text-success">{formatVND(p.winAmount)}</span>
+                          winAmount > 0 ? (
+                            <span className="font-medium text-profit">
+                              {formatNumber(winAmount)}
+                            </span>
                           ) : (
-                            <span className="text-muted-foreground">0 ₫</span>
+                            <span className="text-muted-foreground">0</span>
                           )
                         ) : (
-                          "—"
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {entry.status === "settled" ? formatVND(p?.payoutAmount ?? 0) : "—"}
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {entry.status === "settled" ? (
+                          formatNumber(payoutAmount)
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -200,18 +389,9 @@ export function EntryList({
                                 : "secondary"
                           }
                         >
-                          {entry.status}
+                          {ENTRY_STATUS_LABELS[entry.status as keyof typeof ENTRY_STATUS_LABELS] ??
+                            entry.status}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8"
-                          onClick={() => setSelectedEntry(entry)}
-                        >
-                          <Eye className="size-4" />
-                        </Button>
                       </TableCell>
                     </TableRow>
                   );

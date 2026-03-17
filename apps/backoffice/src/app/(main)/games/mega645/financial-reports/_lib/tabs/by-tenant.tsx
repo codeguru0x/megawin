@@ -1,274 +1,25 @@
 "use client";
 
-import { Building2, CalendarRange, ChevronRight } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  formatVND,
-  formatVNDCompact,
-  formatPercent,
-  formatNumber,
-} from "@megawin/shared/utils/number";
 import { useMega645ReportFilters } from "../use-report-filters";
-import { useMega645TenantList, useMega645TenantDraws } from "../use-report-queries";
-
-function TenantSummaryTable() {
-  const { from, to, navigateToTenantDrills } = useMega645ReportFilters();
-  const { data, isLoading, error } = useMega645TenantList(from, to);
-  if (isLoading)
-    return (
-      <Card className="gap-0 py-0">
-        <CardContent className="p-0">
-          <div className="space-y-0">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="border-b px-5 py-3">
-                <Skeleton className="h-4 w-full" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  if (error || !data?.length)
-    return (
-      <Card className="gap-0 py-0">
-        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <Building2 className="size-6 text-muted-foreground" />
-          </div>
-          <h3 className="mt-4 text-sm font-semibold">
-            {error ? "Lỗi tải dữ liệu" : "Không có dữ liệu"}
-          </h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {error
-              ? "Vui lòng tải lại trang và thử lại."
-              : "Không tìm thấy dữ liệu đại lý trong khoảng thời gian đã chọn."}
-          </p>
-        </CardContent>
-      </Card>
-    );
-  const totals = {
-    stake: data.reduce((s, r) => s + r.totalStake, 0),
-    payout: data.reduce((s, r) => s + r.totalPayout, 0),
-    ggr: data.reduce((s, r) => s + r.ggr, 0),
-    commission: data.reduce((s, r) => s + r.totalCommission, 0),
-  };
-  return (
-    <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center gap-2">
-          <Building2 className="size-4 text-muted-foreground" />
-          <CardTitle className="text-sm font-semibold">Tổng hợp theo đại lý</CardTitle>
-        </div>
-        <CardDescription className="text-xs">
-          {data.length} đại lý · Click để xem kỳ quay
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-8">#</TableHead>
-                <TableHead>Đại lý</TableHead>
-                <TableHead className="text-right">Kỳ quay</TableHead>
-                <TableHead className="text-right">Entries</TableHead>
-                <TableHead className="text-right">Players</TableHead>
-                <TableHead className="text-right">Lines</TableHead>
-                <TableHead className="text-right">Doanh thu</TableHead>
-                <TableHead className="text-right">Trả thưởng</TableHead>
-                <TableHead className="text-right">GGR</TableHead>
-                <TableHead className="text-right">Hoa hồng</TableHead>
-                <TableHead className="text-right">Payout %</TableHead>
-                <TableHead className="w-8" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((row, idx) => {
-                const payoutPct = row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
-                return (
-                  <TableRow
-                    key={row.tenantId}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => navigateToTenantDrills(row.tenantId)}
-                  >
-                    <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
-                    <TableCell>
-                      <p className="font-medium">{row.tenantId}</p>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.drawCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.playerCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.lineCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums font-medium">
-                      {formatVND(row.totalStake)}
-                    </TableCell>
-                    <TableCell
-                      className={`text-right tabular-nums ${payoutPct > 0.95 ? "text-danger" : ""}`}
-                    >
-                      {formatVND(row.totalPayout)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{formatVND(row.ggr)}</TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVND(row.totalCommission)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge variant={payoutPct > 0.95 ? "destructive" : "secondary"}>
-                        {formatPercent(payoutPct)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <ChevronRight className="size-4 text-muted-foreground" />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/30 px-4 py-3 text-xs font-medium">
-          <span className="text-muted-foreground">{data.length} đại lý</span>
-          <div className="flex flex-wrap gap-4 tabular-nums">
-            <span>
-              DT: <strong>{formatVNDCompact(totals.stake)}</strong>
-            </span>
-            <span>
-              GGR: <strong>{formatVNDCompact(totals.ggr)}</strong>
-            </span>
-            <span>
-              HH: <strong>{formatVNDCompact(totals.commission)}</strong>
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function TenantDrawList({ tenantId }: { tenantId: string }) {
-  const { from, to, setTab, navigateToDraw, navigateToTenantInDraw } = useMega645ReportFilters();
-  const { data, isLoading, error } = useMega645TenantDraws(tenantId, from, to);
-  if (isLoading)
-    return (
-      <Card className="gap-0 py-0">
-        <CardContent className="p-0">
-          <div className="space-y-0">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="border-b px-5 py-3">
-                <Skeleton className="h-4 w-full" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  if (error || !data?.data.length)
-    return (
-      <Card className="gap-0 py-0">
-        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <CalendarRange className="size-6 text-muted-foreground" />
-          </div>
-          <h3 className="mt-4 text-sm font-semibold">
-            {error ? "Lỗi tải dữ liệu" : "Không có dữ liệu"}
-          </h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {error ? "Vui lòng tải lại trang và thử lại." : "Không có kỳ quay nào."}
-          </p>
-        </CardContent>
-      </Card>
-    );
-  return (
-    <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center gap-2">
-          <CalendarRange className="size-4 text-muted-foreground" />
-          <CardTitle className="text-sm font-semibold">Kỳ quay — {tenantId}</CardTitle>
-        </div>
-        <CardDescription className="text-xs">{data.total} kỳ quay</CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Kỳ quay</TableHead>
-                <TableHead>Ngày TC</TableHead>
-                <TableHead className="text-right">Entries</TableHead>
-                <TableHead className="text-right">Players</TableHead>
-                <TableHead className="text-right">Lines</TableHead>
-                <TableHead className="text-right">Doanh thu</TableHead>
-                <TableHead className="text-right">Trả thưởng</TableHead>
-                <TableHead className="text-right">GGR</TableHead>
-                <TableHead className="text-right">Hoa hồng</TableHead>
-                <TableHead className="w-8" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.data.map((row) => (
-                <TableRow
-                  key={row.drawId}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => {
-                    void setTab("draws");
-                    navigateToDraw(row.drawId);
-                    navigateToTenantInDraw(row.tenantId);
-                  }}
-                >
-                  <TableCell className="font-mono text-xs">{row.drawId}</TableCell>
-                  <TableCell className="text-sm">{row.financialDate}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatNumber(row.entryCount)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatNumber(row.playerCount)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatNumber(row.lineCount)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums font-medium">
-                    {formatVND(row.totalStake)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatVND(row.totalPayout)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">{formatVND(row.ggr)}</TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
-                    {formatVND(row.totalCommission)}
-                  </TableCell>
-                  <TableCell>
-                    <ChevronRight className="size-4 text-muted-foreground" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+import { TenantSummaryTable } from "../sections/tenant-summary-table";
+import { TenantDrawList } from "../sections/tenant-draw-list";
+import { PlayerBreakdown } from "../sections/player-breakdown";
+import { EntryList } from "../sections/entry-list";
 
 function Breadcrumb() {
-  const { tenantId, navigateToList } = useMega645ReportFilters();
+  const {
+    level,
+    tenantId,
+    drawId,
+    playerId,
+    playerName,
+    navigateToList,
+    navigateToTenantDrills,
+    navigateToDrawInTenant,
+  } = useMega645ReportFilters();
+
   return (
     <div className="flex flex-wrap items-center gap-1 text-sm">
       <Button
@@ -282,20 +33,66 @@ function Breadcrumb() {
       {tenantId && (
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
-          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{tenantId}</span>
+          <Button
+            variant={level === "tenant-draws" ? "secondary" : "ghost"}
+            size="sm"
+            className="h-auto px-2 py-1 text-xs"
+            onClick={() => navigateToTenantDrills(tenantId)}
+          >
+            {tenantId}
+          </Button>
+        </>
+      )}
+      {drawId && tenantId && (
+        <>
+          <ChevronRight className="size-3 text-muted-foreground" />
+          <Button
+            variant={level === "players" ? "secondary" : "ghost"}
+            size="sm"
+            className="h-auto px-2 py-1 text-xs"
+            onClick={() => navigateToDrawInTenant(drawId, tenantId)}
+          >
+            {drawId}
+          </Button>
+        </>
+      )}
+      {playerId && (
+        <>
+          <ChevronRight className="size-3 text-muted-foreground" />
+          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">
+            {playerName || playerId}
+          </span>
         </>
       )}
     </div>
   );
 }
 
+/**
+ * Tab "Theo đại lý" — drill-down:
+ * list → tenant-draws → players → entries
+ *
+ * Giữ nguyên tab "tenants" xuyên suốt, KHÔNG chuyển sang tab "draws".
+ */
 export function ByTenantTab() {
-  const { level, tenantId } = useMega645ReportFilters();
+  const { level, tenantId, drawId, playerId, playerName } = useMega645ReportFilters();
+
   return (
     <div className="flex flex-col gap-4">
       {level !== "list" && <Breadcrumb />}
       {level === "list" && <TenantSummaryTable />}
       {level === "tenant-draws" && tenantId && <TenantDrawList tenantId={tenantId} />}
+      {level === "players" && drawId && tenantId && (
+        <PlayerBreakdown drawId={drawId} tenantId={tenantId} />
+      )}
+      {level === "entries" && drawId && tenantId && playerId && (
+        <EntryList
+          drawId={drawId}
+          tenantId={tenantId}
+          accountId={playerId}
+          playerDisplayName={playerName ?? undefined}
+        />
+      )}
     </div>
   );
 }

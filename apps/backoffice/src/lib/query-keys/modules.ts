@@ -10,6 +10,8 @@
  */
 export const MODULES = {
   tenants: "tenants",
+  accounts: "accounts",
+  me: "me",
   lotto535: "lotto535",
   keno: "keno",
   power655: "power655",

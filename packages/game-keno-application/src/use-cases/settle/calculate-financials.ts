@@ -4,7 +4,7 @@
  * Tính toán tài chính tổng hợp sau khi TẤT CẢ entries đã settled.
  *
  * Keno KHÔNG có Jackpot – công ty thu toàn bộ phần dư sau trả thưởng và hoa hồng:
- *   profit = totalRevenue - totalPrizes - totalAgentCommission
+ *   companyTake = totalRevenue - totalPrizes - totalAgentCommission
  *
  * Đồng thời denormalize settleSummary lên draw cho player API.
  *
@@ -14,10 +14,7 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { roundTo } from "@megawin/shared/utils/number";
 import { calculateKenoDrawFinancials } from "@megawin/game-keno/rules";
-import type {
-  DrawBasicPrizeSummary,
-  DrawSideBetPrizeSummary,
-} from "@megawin/game-keno/entities";
+import type { DrawBasicPrizeSummary, DrawSideBetPrizeSummary } from "@megawin/game-keno/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext, SettleFinancials } from "./types";
@@ -70,7 +67,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
         totalRevenue: fin.totalRevenue,
         totalPrizes: fin.totalPrizes,
         totalAgentCommission: fin.totalAgentCommission,
-        companyTake: fin.profit,
+        companyTake: fin.companyTake,
       },
       {
         ticketEntryCount: payoutSummary.totalSettled,
@@ -84,7 +81,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
       totalRevenue: fin.totalRevenue,
       totalPrizes: fin.totalPrizes,
       totalAgentCommission: fin.totalAgentCommission,
-      profit: fin.profit,
+      companyTake: fin.companyTake,
     };
   }
 }

@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { meKeys } from "@/lib/query-keys";
 
 import { disableMfaSchema, type DisableMfaFormValues } from "../_lib/schema";
 
@@ -36,11 +37,7 @@ interface MfaDisableDialogProps {
   onSuccess: () => void;
 }
 
-export function MfaDisableDialog({
-  open,
-  onOpenChange,
-  onSuccess,
-}: MfaDisableDialogProps) {
+export function MfaDisableDialog({ open, onOpenChange, onSuccess }: MfaDisableDialogProps) {
   const [showPassword, setShowPassword] = useState(false);
   const qc = useQueryClient();
 
@@ -50,10 +47,9 @@ export function MfaDisableDialog({
   });
 
   const mutation = useMutation({
-    mutationFn: (values: DisableMfaFormValues) =>
-      apiClient.post("/me/mfa/disable", values),
+    mutationFn: (values: DisableMfaFormValues) => apiClient.post("/me/mfa/disable", values),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["me", "mfa", "status"] });
+      qc.invalidateQueries({ queryKey: meKeys.mfaStatus });
       toast.success("MFA đã được tắt");
       form.reset();
       onOpenChange(false);
@@ -61,9 +57,7 @@ export function MfaDisableDialog({
     },
     onError: (error) => {
       toast.error(
-        error instanceof ApiClientError
-          ? error.message
-          : "Tắt MFA thất bại. Vui lòng thử lại."
+        error instanceof ApiClientError ? error.message : "Tắt MFA thất bại. Vui lòng thử lại.",
       );
     },
   });
@@ -82,27 +76,24 @@ export function MfaDisableDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ShieldOff className="h-5 w-5 text-destructive" />
+            <ShieldOff className="size-5 text-destructive" />
             Tắt xác thực 2 lớp
           </DialogTitle>
           <DialogDescription>
-            Thao tác này sẽ giảm bảo mật tài khoản. Bạn cần xác nhận danh tính
-            bằng mật khẩu và mã TOTP hiện tại.
+            Thao tác này sẽ giảm bảo mật tài khoản. Bạn cần xác nhận danh tính bằng mật khẩu và mã
+            TOTP hiện tại.
           </DialogDescription>
         </DialogHeader>
 
         <Alert variant="destructive" className="border-destructive/30">
           <AlertDescription className="text-sm">
-            Sau khi tắt MFA, tài khoản chỉ được bảo vệ bằng mật khẩu. Bạn có thể
-            bật lại bất cứ lúc nào.
+            Sau khi tắt MFA, tài khoản chỉ được bảo vệ bằng mật khẩu. Bạn có thể bật lại bất cứ lúc
+            nào.
           </AlertDescription>
         </Alert>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-4">
             <FormField
               control={form.control}
               name="password"
@@ -127,9 +118,9 @@ export function MfaDisableDialog({
                         tabIndex={-1}
                       >
                         {showPassword ? (
-                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          <EyeOff className="size-4 text-muted-foreground" />
                         ) : (
-                          <Eye className="h-4 w-4 text-muted-foreground" />
+                          <Eye className="size-4 text-muted-foreground" />
                         )}
                       </Button>
                     </div>
@@ -170,11 +161,7 @@ export function MfaDisableDialog({
               >
                 Huỷ
               </Button>
-              <Button
-                type="submit"
-                variant="destructive"
-                disabled={mutation.isPending}
-              >
+              <Button type="submit" variant="destructive" disabled={mutation.isPending}>
                 {mutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

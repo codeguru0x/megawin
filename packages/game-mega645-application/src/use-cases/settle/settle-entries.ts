@@ -99,7 +99,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         // ── Bước 2: Expand boards → danh sách lines đầy đủ ──────────────────
         // Boards đã được snapshot vào entry lúc place-bet — không cần fetch ticket.
         // expandAllBoards xử lý bao5 / bao7-18 → sinh ra nhiều combinations.
-        const lines = expandAllBoards(entry.entrySummary.boards as any);
+        const lines = expandAllBoards(entry.entrySummary.boards);
 
         // ── Bước 3: Match lines vs kết quả quay ──────────────────────────────
         // matchLines trả về { perLineResults, tierCounts }:

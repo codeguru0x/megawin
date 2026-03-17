@@ -6,7 +6,7 @@ import type { GetOpsSummaryInput, OpsSummaryOutput } from "./dto/operations.dto"
 /**
  * KPI tổng hợp cho dashboard vận hành Keno.
  *
- * Keno: profit = revenue - prizes - commission (không có Jackpot).
+ * Keno: companyTake = revenue - prizes - commission (không có Jackpot).
  * Aggregate theo financialDate (ngày tài chính) hoặc drawId cụ thể.
  * CRASH-SAFE: idempotent, gọi lại nhiều lần trả kết quả giống nhau.
  */

@@ -7,6 +7,7 @@ import { apiClient } from "@megawin/next/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { meKeys } from "@/lib/query-keys";
 
 import type { MfaStatusResponse } from "../_lib/schema";
 
@@ -47,7 +48,7 @@ const statusConfig = {
 
 export function MfaStatusCard({ onSetup, onDisable }: MfaStatusCardProps) {
   const { data, isLoading } = useQuery({
-    queryKey: ["me", "mfa", "status"],
+    queryKey: meKeys.mfaStatus,
     queryFn: () => apiClient.get<MfaStatusResponse>("/me/mfa/status"),
   });
 

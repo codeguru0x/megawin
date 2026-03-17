@@ -58,7 +58,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   // ─── Query ───
 
-  async getEntriesByDrawId(drawId: string, page: number, size: number): Promise<TicketEntryEntity[]> {
+  async getEntriesByDrawId(
+    drawId: string,
+    page: number,
+    size: number,
+  ): Promise<TicketEntryEntity[]> {
     return await this.paging({ drawId }, page, size, {
       sort: { createdAt: 1 },
     });
@@ -922,9 +926,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         },
       },
     ]);
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       tenantId: r._id,
-      playerCount: r.playerCount,
+      playerCount: r.playerCount ?? 0,
     }));
   }
 
@@ -962,12 +966,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         },
       },
     ]);
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       tenantId: r._id,
-      entryCount: r.entryCount,
-      totalStake: r.totalStake,
-      totalWin: r.totalWin,
-      totalPayout: r.totalPayout,
+      entryCount: r.entryCount ?? 0,
+      totalStake: r.totalStake ?? 0,
+      totalWin: r.totalWin ?? 0,
+      totalPayout: r.totalPayout ?? 0,
       totalCommission: r.totalCommission ?? 0,
     }));
   }
@@ -1030,7 +1034,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Tách riêng khỏi aggregateOutstandingCountsByDraw để tránh $addToSet lớn trong 1 group.
    * Keno không có lineCount.
    */
-  async aggregateOutstandingMetricsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawMetrics[]> {
+  async aggregateOutstandingMetricsByDraw(
+    activeDrawIds: string[],
+  ): Promise<OutstandingDrawMetrics[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -1049,8 +1055,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       },
     ]);
 
-    return (result as any[]).map((r) => ({
-      drawId: r._id,
+    return result.map((r) => ({
+      drawId: r._id as string,
       financialDate: r.financialDate,
       entryCount: r.entryCount,
       totalStake: r.totalStake,
@@ -1064,7 +1070,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Bước 1: group by (drawId, accountId, tenantId) → unique combinations.
    * Bước 2: group by drawId → đếm số combination (playerCount) và $addToSet tenantId (an toàn vì ít tenants).
    */
-  async aggregateOutstandingCountsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawCounts[]> {
+  async aggregateOutstandingCountsByDraw(
+    activeDrawIds: string[],
+  ): Promise<OutstandingDrawCounts[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -1088,8 +1096,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       },
     ]);
 
-    return (result as any[]).map((r) => ({
-      drawId: r._id,
+    return result.map((r) => ({
+      drawId: r._id as string,
       playerCount: r.playerCount ?? 0,
       tenantCount: r.tenants?.length ?? 0,
     }));
@@ -1110,7 +1118,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Aggregate KPI tổng hợp cho Operations Dashboard.
    *
-   * Keno: profit = revenue - prizes - commission (không có Jackpot contribution).
+   * Keno: companyTake = revenue - prizes - commission (không có Jackpot contribution).
    * Filter theo financialDate hoặc drawId cụ thể.
    */
   async aggregateOpsSummary(filter: { financialDate?: string; drawId?: string }): Promise<{
@@ -1458,7 +1466,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Filter: payout.winAmount > 0 (entries thực sự trúng).
    * Sort: payout.winAmount desc để entries trúng lớn hiện trước.
    */
-  async getWinningEntries(drawId: string, cursor?: string, limit?: number): Promise<TicketEntryEntity[]> {
+  async getWinningEntries(
+    drawId: string,
+    cursor?: string,
+    limit?: number,
+  ): Promise<TicketEntryEntity[]> {
     const pageSize = Math.min(limit ?? 50, 200);
     const filter: Record<string, unknown> = {
       drawId,

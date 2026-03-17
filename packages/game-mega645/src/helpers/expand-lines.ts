@@ -17,7 +17,7 @@ import {
   type BoardSelection,
   type LineValue,
 } from "../entities/types";
-import type { Board } from "../entities/ticket";
+import type { EntryBoardSnapshot } from "../entities/entry";
 
 // ─────────────────────────────────────────────
 // Core: generate combinations
@@ -123,20 +123,21 @@ export function expandBoardToLines(playType: PlayType, selection: BoardSelection
 
 /**
  * Expand tất cả boards của 1 vé thành danh sách lines đầy đủ.
- * Boards bị void (isVoid = true) bị bỏ qua.
  * lineIndex là chỉ số toàn cục (xuyên suốt tất cả boards, bắt đầu từ 0).
+ *
+ * Nhận structural type tối giản — tương thích cả `Board` (ticket) lẫn
+ * `EntryBoardSnapshot` (entry snapshot) mà không cần convert.
  *
  * @returns Mảng lines kèm boardNo và lineIndex — dùng để lưu TicketLineDoc.
  */
 export function expandAllBoards(
-  boards: Board[],
+  boards: EntryBoardSnapshot[],
 ): Array<LineValue & { boardNo: string; lineIndex: number }> {
   const result: Array<LineValue & { boardNo: string; lineIndex: number }> = [];
   let globalIndex = 0;
 
   for (const board of boards) {
-    if (board.isVoid) continue;
-    const lines = expandBoardToLines(board.playType, board.selection);
+    const lines = expandBoardToLines(board.playType, { mainNumbers: board.mainNumbers });
     for (const line of lines) {
       result.push({
         ...line,

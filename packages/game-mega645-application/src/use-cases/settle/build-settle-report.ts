@@ -73,6 +73,7 @@ export class BuildSettleReportUseCase extends InternalUseCase<
       const ggr = t.totalStake - t.totalPayout;
       // netProfit per tenant = ggr - totalCommission (có thể âm)
       const netProfit = ggr - t.totalCommission;
+
       return {
         drawId,
         tenantId: t.tenantId,

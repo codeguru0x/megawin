@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Lotto 5/35 application layer – repos, mappers, use cases for backoffice",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -b tsconfig.build.json",
     "dev": "tsc -p tsconfig.build.json --watch",
     "check-types": "tsc --noEmit",
     "build:deps": "turbo build --filter=@megawin/game-lotto535-application^...",
@@ -14,7 +14,8 @@
     "test:watch": "vitest --watch",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,yml,yaml,css}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,md,yml,yaml,css}\""
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,md,yml,yaml,css}\"",
+    "clean": "rm -rf dist"
   },
   "exports": {
     "./use-cases/draws": {

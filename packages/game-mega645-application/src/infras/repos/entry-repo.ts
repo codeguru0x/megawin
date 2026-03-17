@@ -80,7 +80,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return await this.findMany({ ticketId }, { sort: { drawId: 1 } });
   }
 
-  async getEntriesByDrawId(drawId: string, page: number, size: number): Promise<TicketEntryEntity[]> {
+  async getEntriesByDrawId(
+    drawId: string,
+    page: number,
+    size: number,
+  ): Promise<TicketEntryEntity[]> {
     return await this.paging({ drawId }, page, size, {
       sort: { createdAt: 1 },
     });
@@ -781,7 +785,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         },
       },
     ]);
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       tenantId: r._id,
       playerCount: r.playerCount,
     }));
@@ -823,13 +827,13 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         },
       },
     ]);
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       tenantId: r._id,
-      entryCount: r.entryCount,
+      entryCount: r.entryCount ?? 0,
       lineCount: r.lineCount ?? 0,
-      totalStake: r.totalStake,
-      totalWin: r.totalWin,
-      totalPayout: r.totalPayout,
+      totalStake: r.totalStake ?? 0,
+      totalWin: r.totalWin ?? 0,
+      totalPayout: r.totalPayout ?? 0,
       totalCommission: r.totalCommission ?? 0,
     }));
   }
@@ -891,7 +895,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Tách riêng khỏi aggregateOutstandingCountsByDraw để tránh $addToSet lớn trong 1 group.
    * Mega645 có lineCount (expanded lines từ bao).
    */
-  async aggregateOutstandingMetricsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawMetrics[]> {
+  async aggregateOutstandingMetricsByDraw(
+    activeDrawIds: string[],
+  ): Promise<OutstandingDrawMetrics[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -927,7 +933,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Bước 1: group by (drawId, accountId, tenantId) → unique combinations.
    * Bước 2: group by drawId → đếm số combination (playerCount) và $addToSet tenantId (an toàn vì ít tenants).
    */
-  async aggregateOutstandingCountsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawCounts[]> {
+  async aggregateOutstandingCountsByDraw(
+    activeDrawIds: string[],
+  ): Promise<OutstandingDrawCounts[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -951,8 +959,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       },
     ]);
 
-    return (result as any[]).map((r) => ({
-      drawId: r._id,
+    return result.map((r) => ({
+      drawId: r._id as string,
       playerCount: r.playerCount ?? 0,
       tenantCount: r.tenants?.length ?? 0,
     }));

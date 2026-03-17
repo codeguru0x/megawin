@@ -1,60 +1,43 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { AccountStatus } from "@megawin/identity/entities/account";
+import { AccountStatusLabel } from "@megawin/identity/entities/labels";
 
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 
 import type { PlayerAccount } from "../_lib/schema";
 
+const STATUS_VARIANT: Record<string, "default" | "outline" | "secondary" | "destructive"> = {
+  active: "default",
+  read_only: "secondary",
+  suspended: "destructive",
+};
+
 export const playerAccountsColumns: ColumnDef<PlayerAccount>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Chọn tất cả"
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Chọn dòng"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
   {
     accessorKey: "username",
     header: "Tên tài khoản",
     cell: ({ row }) => (
-      <span className="font-medium">{row.original.username}</span>
+      <span className="font-medium font-mono text-xs">{row.original.username}</span>
     ),
+    enableSorting: false,
   },
   {
-    accessorKey: "email",
-    header: "Email",
-    cell: ({ row }) => (
-      <span className="text-muted-foreground text-sm">
-        {row.original.email ?? "—"}
-      </span>
-    ),
+    accessorKey: "displayName",
+    header: "Tên hiển thị",
+    cell: ({ row }) => <span className="text-sm">{row.original.displayName}</span>,
+    enableSorting: false,
   },
   {
     accessorKey: "status",
     header: "Trạng thái",
     cell: ({ row }) => {
-      const status = row.original.status;
-      const isActive = status === "CONFIRMED" || status === "active";
+      const status = row.original.status as AccountStatus;
       return (
-        <Badge variant={isActive ? "default" : "outline"}>{status}</Badge>
+        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>
+          {AccountStatusLabel[status] ?? status}
+        </Badge>
       );
     },
     enableSorting: false,
@@ -63,9 +46,21 @@ export const playerAccountsColumns: ColumnDef<PlayerAccount>[] = [
     accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => (
-      <span className="text-muted-foreground text-xs tabular-nums">
+      <span className="text-xs tabular-nums text-muted-foreground">
         {row.original.createdAt
           ? new Date(row.original.createdAt).toLocaleDateString("vi-VN")
+          : "—"}
+      </span>
+    ),
+    enableSorting: false,
+  },
+  {
+    accessorKey: "updatedAt",
+    header: "Cập nhật",
+    cell: ({ row }) => (
+      <span className="text-xs tabular-nums text-muted-foreground">
+        {row.original.updatedAt
+          ? new Date(row.original.updatedAt).toLocaleDateString("vi-VN")
           : "—"}
       </span>
     ),

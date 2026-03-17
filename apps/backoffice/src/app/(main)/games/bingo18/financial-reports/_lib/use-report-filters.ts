@@ -8,7 +8,7 @@ type LevelType = "list" | "draw-tenants" | "tenant-draws" | "players" | "entries
 
 export function useBingo18ReportFilters() {
   const today = todayVN();
-  const [tab, setTab] = useQueryState(
+  const [tab, rawSetTab] = useQueryState(
     "tab",
     parseAsStringEnum<TabType>(["draws", "tenants"]).withDefault("draws"),
   );
@@ -27,33 +27,57 @@ export function useBingo18ReportFilters() {
   const [drawId, setDrawId] = useQueryState("drawId", parseAsString);
   const [tenantId, setTenantId] = useQueryState("tenantId", parseAsString);
   const [accountId, setAccountId] = useQueryState("accountId", parseAsString);
+  const [playerName, setPlayerName] = useQueryState("playerName", parseAsString);
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
-  function navigateToDraw(id: string) {
-    void setDrawId(id);
-    void setLevel("draw-tenants");
-    void setPage(1);
-  }
-  function navigateToPlayer(aId: string) {
-    void setAccountId(aId);
-    void setLevel("players");
-  }
-  function navigateToEntries(aId: string) {
-    void setAccountId(aId);
-    void setLevel("entries");
-  }
-  function navigateToTenantDrills(tId: string) {
-    void setTenantId(tId);
-    void setLevel("tenant-draws");
-  }
-  function navigateToTenantInDraw(tId: string) {
-    void setTenantId(tId);
-  }
-  function navigateToList() {
+  function setTab(t: TabType) {
+    void rawSetTab(t, { history: "push" });
     void setDrawId(null);
     void setTenantId(null);
     void setAccountId(null);
+    void setPlayerName(null);
     void setLevel("list");
+  }
+
+  function navigateToDraw(id: string) {
+    void setDrawId(id, { history: "push" });
+    void setLevel("draw-tenants", { history: "push" });
+    void setPage(1);
+  }
+
+  function navigateToPlayer(aId: string, name?: string) {
+    void setAccountId(aId, { history: "push" });
+    void setPlayerName(name ?? null, { history: "push" });
+    void setLevel("players", { history: "push" });
+  }
+
+  function navigateToEntries(aId: string, name?: string) {
+    void setAccountId(aId, { history: "push" });
+    void setPlayerName(name ?? null, { history: "push" });
+    void setLevel("entries", { history: "push" });
+  }
+
+  function navigateToTenantDrills(tId: string) {
+    void setTenantId(tId, { history: "push" });
+    void setLevel("tenant-draws", { history: "push" });
+  }
+
+  function navigateToTenantInDraw(tId: string) {
+    void setTenantId(tId, { history: "push" });
+  }
+
+  function navigateToDrawInTenant(dId: string, tId: string) {
+    void setDrawId(dId, { history: "push" });
+    void setTenantId(tId, { history: "push" });
+    void setLevel("draw-tenants", { history: "push" });
+  }
+
+  function navigateToList() {
+    void setDrawId(null, { history: "push" });
+    void setTenantId(null, { history: "push" });
+    void setAccountId(null, { history: "push" });
+    void setPlayerName(null, { history: "push" });
+    void setLevel("list", { history: "push" });
     void setPage(1);
   }
 
@@ -69,6 +93,7 @@ export function useBingo18ReportFilters() {
     drawId,
     tenantId,
     accountId,
+    playerName,
     page,
     setPage,
     navigateToDraw,
@@ -76,6 +101,7 @@ export function useBingo18ReportFilters() {
     navigateToEntries,
     navigateToTenantDrills,
     navigateToTenantInDraw,
+    navigateToDrawInTenant,
     navigateToList,
   };
 }

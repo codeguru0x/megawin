@@ -5,7 +5,7 @@
  * Mỗi endpoint trả về 1 phần nhỏ, lazy-load trên UI.
  *
  * Max 3D Pro KHÔNG CÓ Jackpot, KHÔNG CÓ companyRate.
- * Financial model: profit = revenue - fixedPrizes - agentCommission.
+ * Financial model: companyTake = revenue - fixedPrizes - agentCommission.
  * Đơn vị cơ bản: TripletPair (ordered pair {first, second}).
  */
 

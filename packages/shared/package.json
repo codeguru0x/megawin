@@ -5,11 +5,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsc --watch",
+    "dev": "tsc -p tsconfig.build.json --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc",
+    "build": "tsc -b tsconfig.build.json",
     "test": "vitest run",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "clean": "rm -rf dist"
   },
   "keywords": [],
   "author": "",

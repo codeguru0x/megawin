@@ -4,24 +4,35 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays, ChevronDown, ChevronRight, TrendingDown, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  CalendarDays,
+  CalendarRange,
+  ChevronRight,
+  DollarSign,
+  Gamepad2,
+  Percent,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   formatVND,
   formatVNDCompact,
   formatPercent,
   formatNumber,
 } from "@megawin/shared/utils/number";
-import type { DailyOverviewRow } from "@megawin/game-core-application/repos";
-import type { SystemSettleGameDaily } from "@megawin/game-core/entities";
+import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { useSystemReportFilters } from "../use-report-filters";
 import { useSystemDailyOverview, useSystemDayBreakdown } from "../use-report-queries";
+import type { DailyOverviewRow } from "@megawin/game-core-application/repos";
+import { TableSkeleton, ErrorCard, EmptyCard } from "../sections/shared-states";
 
 // ─── KPI Strip ────────────────────────────────────────────────────────────────
 
@@ -30,213 +41,132 @@ function KpiStrip({ rows }: { rows: DailyOverviewRow[] }) {
   const totalPayout = rows.reduce((s, r) => s + r.totalPayout, 0);
   const ggr = rows.reduce((s, r) => s + r.ggr, 0);
   const netProfit = rows.reduce((s, r) => s + r.netProfit, 0);
+  const totalCommission = rows.reduce((s, r) => s + r.totalCommission, 0);
+  const drawCount = rows.reduce((s, r) => s + r.drawCount, 0);
+  const entryCount = rows.reduce((s, r) => s + r.entryCount, 0);
+  const playerCount = rows.reduce((s, r) => s + r.playerCount, 0);
   const payoutPct = totalStake > 0 ? totalPayout / totalStake : 0;
-  const margin = totalStake > 0 ? ggr / totalStake : 0;
-  const netMargin = totalStake > 0 ? netProfit / totalStake : 0;
+
+  const cards = [
+    {
+      icon: CalendarRange,
+      iconBg: "bg-indigo-100 dark:bg-indigo-900/50",
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      label: "Tổng kỳ quay",
+      value: formatNumber(drawCount),
+      sub: `${formatNumber(entryCount)} lượt cược · ${formatNumber(rows.length)} ngày`,
+    },
+    {
+      icon: Users,
+      iconBg: "bg-sky-100 dark:bg-sky-900/50",
+      iconColor: "text-sky-600 dark:text-sky-400",
+      label: REPORT_COLUMN_LABELS.playerCount,
+      value: formatNumber(playerCount),
+      sub: "Người chơi duy nhất",
+    },
+    {
+      icon: DollarSign,
+      iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      label: "Doanh thu",
+      value: formatVNDCompact(totalStake),
+      sub: formatVND(totalStake),
+    },
+    {
+      icon: TrendingUp,
+      iconBg:
+        netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50",
+      iconColor:
+        netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400",
+      label: REPORT_COLUMN_LABELS.netProfit,
+      value: formatVNDCompact(netProfit),
+      sub: `GGR: ${formatVNDCompact(ggr)} · HH: ${formatVNDCompact(totalCommission)}`,
+      valueClass: netProfit < 0 ? "text-loss" : netProfit > 0 ? "text-profit" : "",
+    },
+    {
+      icon: Percent,
+      iconBg:
+        payoutPct > 0.95 ? "bg-red-100 dark:bg-red-900/50" : "bg-amber-100 dark:bg-amber-900/50",
+      iconColor:
+        payoutPct > 0.95 ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400",
+      label: REPORT_COLUMN_LABELS.payoutPercent,
+      value: formatPercent(payoutPct),
+      sub: `Doanh thu: ${formatVNDCompact(totalStake)}`,
+      valueClass: payoutPct > 0.95 ? "text-loss" : payoutPct > 0.8 ? "text-warning" : "",
+    },
+  ];
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      <KpiCard
-        title="Doanh thu"
-        value={formatVNDCompact(totalStake)}
-        full={formatVND(totalStake)}
-        sub={`${formatNumber(rows.reduce((s, r) => s + r.drawCount, 0))} kỳ quay`}
-      />
-      <KpiCard
-        title="Trả thưởng"
-        value={formatVNDCompact(totalPayout)}
-        full={formatVND(totalPayout)}
-        sub={`Payout: ${formatPercent(payoutPct)}`}
-        danger={payoutPct > 0.95}
-        warn={payoutPct > 0.8}
-      />
-      <KpiCard
-        title="GGR"
-        value={formatVNDCompact(ggr)}
-        full={formatVND(ggr)}
-        sub={`Margin: ${formatPercent(margin)}`}
-        positive={ggr > 0}
-        negative={ggr < 0}
-      />
-      <KpiCard
-        title="Lợi nhuận ròng"
-        value={formatVNDCompact(netProfit)}
-        full={formatVND(netProfit)}
-        sub={`Net margin: ${formatPercent(netMargin)}`}
-        positive={netProfit > 0}
-        negative={netProfit < 0}
-      />
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {cards.map((c, i) => (
+        <div key={i} className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+          <div
+            className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", c.iconBg)}
+          >
+            <c.icon className={cn("size-5", c.iconColor)} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-medium text-muted-foreground">{c.label}</p>
+            <p className={cn("text-lg font-bold tabular-nums text-foreground", c.valueClass ?? "")}>
+              {c.value}
+            </p>
+            <p className="truncate text-[11px] text-muted-foreground">{c.sub}</p>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
-function KpiCard({
-  title,
-  value,
-  full,
-  sub,
-  positive,
-  negative,
-  danger,
-  warn,
-}: {
-  title: string;
-  value: string;
-  full: string;
-  sub: string;
-  positive?: boolean;
-  negative?: boolean;
-  danger?: boolean;
-  warn?: boolean;
-}) {
-  const valueClass = positive
-    ? "text-success"
-    : negative
-      ? "text-danger"
-      : danger
-        ? "text-danger"
-        : warn
-          ? "text-warning"
-          : undefined;
+// ─── Daily List View ──────────────────────────────────────────────────────────
 
-  return (
-    <Card className="gap-0 py-0">
-      <CardContent className="px-5 pb-4 pt-4">
-        <p className="text-xs font-medium text-muted-foreground">{title}</p>
-        <p
-          className={`mt-1 truncate text-xl font-bold tabular-nums ${valueClass ?? ""}`}
-          title={full}
-        >
-          {value}
-        </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
-// ─── Inline Expand Row ────────────────────────────────────────────────────────
-
-function DayBreakdownRow({ date }: { date: string }) {
-  const { data, isLoading } = useSystemDayBreakdown(date);
-
-  if (isLoading) {
-    return (
-      <TableRow>
-        <TableCell colSpan={10} className="py-2 pl-10">
-          <Skeleton className="h-4 w-48" />
-        </TableCell>
-      </TableRow>
-    );
-  }
-
-  if (!data || data.length === 0) {
-    return (
-      <TableRow>
-        <TableCell colSpan={10} className="py-3 pl-10 text-sm text-muted-foreground">
-          Không có dữ liệu game trong ngày này.
-        </TableCell>
-      </TableRow>
-    );
-  }
-
-  return (
-    <>
-      {data.map((game) => (
-        <TableRow key={game.gameProduct} className="bg-muted/30">
-          <TableCell className="pl-10 text-xs text-muted-foreground" colSpan={2}>
-            <span className="font-mono font-medium uppercase">{game.gameProduct}</span>
-          </TableCell>
-          <TableCell className="text-right tabular-nums text-xs">
-            {formatNumber(game.drawCount)}
-          </TableCell>
-          <TableCell className="text-right tabular-nums text-xs">
-            {formatNumber(game.entryCount)}
-          </TableCell>
-          <TableCell className="text-right tabular-nums text-xs">
-            {formatNumber(game.playerCount)}
-          </TableCell>
-          <TableCell className="text-right tabular-nums text-xs">
-            {formatVND(game.totalStake)}
-          </TableCell>
-          <TableCell className="text-right tabular-nums text-xs text-danger">
-            {formatVND(game.totalPayout)}
-          </TableCell>
-          <TableCell className="text-right tabular-nums text-xs">{formatVND(game.ggr)}</TableCell>
-          <TableCell className="text-right tabular-nums text-xs">
-            {formatVND(game.totalCommission)}
-          </TableCell>
-          <TableCell
-            className={`text-right tabular-nums text-xs font-medium ${game.netProfit >= 0 ? "text-success" : "text-danger"}`}
-          >
-            {formatVND(game.netProfit)}
-          </TableCell>
-        </TableRow>
-      ))}
-    </>
-  );
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
-
-/** Tab "Tổng quan ngày" — aggregate by financialDate. */
-export function DailyOverviewTab() {
-  const { from, to, expandedDate, setExpandedDate } = useSystemReportFilters();
-
+function DailyListView() {
+  const { from, to, navigateToDate } = useSystemReportFilters();
   const { data, isLoading, error } = useSystemDailyOverview(from, to);
 
-  if (isLoading) return <DailyOverviewSkeleton />;
-  if (error) {
+  if (isLoading)
     return (
-      <Card className="gap-0 py-0">
-        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <CalendarDays className="size-6 text-muted-foreground" />
-          </div>
-          <h3 className="mt-4 text-sm font-semibold">Lỗi tải dữ liệu</h3>
-          <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-[76px] animate-pulse rounded-xl border bg-muted" />
+          ))}
+        </div>
+        <TableSkeleton />
+      </div>
     );
-  }
-  if (!data || data.length === 0) {
+  if (error) return <ErrorCard />;
+  if (!data || data.length === 0)
     return (
-      <Card className="gap-0 py-0">
-        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <CalendarDays className="size-6 text-muted-foreground" />
-          </div>
-          <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Không tìm thấy dữ liệu trong khoảng thời gian đã chọn. Thử mở rộng khoảng ngày.
-          </p>
-        </CardContent>
-      </Card>
+      <EmptyCard
+        icon="calendar"
+        message="Không có dữ liệu"
+        description="Không tìm thấy dữ liệu trong khoảng thời gian đã chọn."
+      />
     );
-  }
 
-  // Tính summary footer
-  const totalStake = data.reduce((s, r) => s + r.totalStake, 0);
-  const totalPayout = data.reduce((s, r) => s + r.totalPayout, 0);
-  const totalGgr = data.reduce((s, r) => s + r.ggr, 0);
-  const totalCommission = data.reduce((s, r) => s + r.totalCommission, 0);
-  const totalNetProfit = data.reduce((s, r) => s + r.netProfit, 0);
-  const totalDraws = data.reduce((s, r) => s + r.drawCount, 0);
-  const totalEntries = data.reduce((s, r) => s + r.entryCount, 0);
-  const totalPlayers = data.reduce((s, r) => s + r.playerCount, 0);
+  const totals = {
+    drawCount: data.reduce((s, r) => s + r.drawCount, 0),
+    entryCount: data.reduce((s, r) => s + r.entryCount, 0),
+    playerCount: data.reduce((s, r) => s + r.playerCount, 0),
+    totalStake: data.reduce((s, r) => s + r.totalStake, 0),
+    totalPayout: data.reduce((s, r) => s + r.totalPayout, 0),
+    ggr: data.reduce((s, r) => s + r.ggr, 0),
+    totalCommission: data.reduce((s, r) => s + r.totalCommission, 0),
+    netProfit: data.reduce((s, r) => s + r.netProfit, 0),
+  };
 
   return (
     <div className="space-y-4">
       <KpiStrip rows={data} />
-
       <Card className="gap-0 py-0">
         <CardHeader className="px-5 pb-2 pt-4">
           <div className="flex items-center gap-2">
             <CalendarDays className="size-4 text-muted-foreground" />
-            <CardTitle className="text-sm font-semibold">Tổng quan ngày</CardTitle>
+            <CardTitle className="text-sm font-semibold">Tổng quan theo ngày</CardTitle>
           </div>
           <CardDescription className="text-xs">
-            Click vào ngày để xem chi tiết từng game
+            {data.length} ngày · Click vào ngày để xem chi tiết từng game
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -244,120 +174,92 @@ export function DailyOverviewTab() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-8" />
-                  <TableHead>Ngày TC</TableHead>
+                  <TableHead>{REPORT_COLUMN_LABELS.financialDate}</TableHead>
                   <TableHead className="text-right">Kỳ quay</TableHead>
-                  <TableHead className="text-right">Entries</TableHead>
-                  <TableHead className="text-right">Players</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.playerCount}</TableHead>
                   <TableHead className="text-right">Doanh thu</TableHead>
-                  <TableHead className="text-right">Trả thưởng</TableHead>
-                  <TableHead className="text-right">GGR</TableHead>
-                  <TableHead className="text-right">Hoa hồng</TableHead>
-                  <TableHead className="text-right">Lợi nhuận</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.ggr}</TableHead>
+                  <TableHead className="text-right">
+                    {REPORT_COLUMN_LABELS.totalCommission}
+                  </TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.netProfit}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data.map((row) => {
-                  const isExpanded = expandedDate === row.financialDate;
-                  const payoutPct = row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
-                  return (
-                    <>
-                      <TableRow
-                        key={row.financialDate}
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => void setExpandedDate(isExpanded ? null : row.financialDate)}
-                      >
-                        <TableCell className="w-8 text-center">
-                          {isExpanded ? (
-                            <ChevronDown className="size-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="size-4 text-muted-foreground" />
-                          )}
-                        </TableCell>
-                        <TableCell className="font-mono font-medium">{row.financialDate}</TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {formatNumber(row.drawCount)}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {formatNumber(row.entryCount)}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {formatNumber(row.playerCount)}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums font-medium">
-                          {formatVND(row.totalStake)}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          <span
-                            className={
-                              payoutPct > 0.95
-                                ? "text-danger"
-                                : payoutPct > 0.8
-                                  ? "text-warning"
-                                  : ""
-                            }
-                          >
-                            {formatVND(row.totalPayout)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {formatVND(row.ggr)}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums text-muted-foreground">
-                          {formatVND(row.totalCommission)}
-                        </TableCell>
-                        <TableCell
-                          className={`text-right tabular-nums font-medium ${row.netProfit >= 0 ? "text-success" : "text-danger"}`}
-                        >
-                          <span className="flex items-center justify-end gap-1">
-                            {row.netProfit >= 0 ? (
-                              <TrendingUp className="size-3.5" />
-                            ) : (
-                              <TrendingDown className="size-3.5" />
-                            )}
-                            {formatVND(row.netProfit)}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                      {isExpanded && <DayBreakdownRow date={row.financialDate} />}
-                    </>
-                  );
-                })}
+                {data.map((row) => (
+                  <TableRow
+                    key={row.financialDate}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => navigateToDate(row.financialDate)}
+                  >
+                    <TableCell className="font-mono text-sm font-medium">
+                      {row.financialDate}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.drawCount)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.entryCount)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.playerCount)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums font-medium">
+                      {formatNumber(row.totalStake)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.totalPayout)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.ggr)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">
+                      {formatNumber(row.totalCommission)}
+                    </TableCell>
+                    <TableCell
+                      className={`text-right text-sm tabular-nums font-medium ${row.netProfit < 0 ? "text-loss" : ""}`}
+                    >
+                      {formatNumber(row.netProfit)}
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell className="text-xs font-semibold">
+                    {REPORT_COLUMN_LABELS.summary}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.drawCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.entryCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.playerCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.totalStake)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.totalPayout)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.ggr)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.totalCommission)}
+                  </TableCell>
+                  <TableCell
+                    className={`text-right text-sm tabular-nums font-semibold ${totals.netProfit < 0 ? "text-loss" : ""}`}
+                  >
+                    {formatNumber(totals.netProfit)}
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
             </Table>
-          </div>
-
-          {/* Summary Footer */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/30 px-4 py-3 text-sm font-medium">
-            <div className="flex items-center gap-4 tabular-nums">
-              <span className="text-muted-foreground">TỔNG CỘNG</span>
-              <Badge variant="secondary">{formatNumber(totalDraws)} kỳ</Badge>
-              <Badge variant="secondary">{formatNumber(totalEntries)} entries</Badge>
-              <Badge variant="secondary">{formatNumber(totalPlayers)} players</Badge>
-            </div>
-            <div className="flex flex-wrap items-center gap-4 tabular-nums text-xs">
-              <span>
-                DT: <strong title={formatVND(totalStake)}>{formatVNDCompact(totalStake)}</strong>
-              </span>
-              <span className={payoutColorClass(totalStake, totalPayout)}>
-                PO: <strong title={formatVND(totalPayout)}>{formatVNDCompact(totalPayout)}</strong>
-              </span>
-              <span>
-                GGR: <strong title={formatVND(totalGgr)}>{formatVNDCompact(totalGgr)}</strong>
-              </span>
-              <span>
-                HH:{" "}
-                <strong title={formatVND(totalCommission)}>
-                  {formatVNDCompact(totalCommission)}
-                </strong>
-              </span>
-              <span className={totalNetProfit >= 0 ? "text-success" : "text-danger"}>
-                LN:{" "}
-                <strong title={formatVND(totalNetProfit)}>
-                  {formatVNDCompact(totalNetProfit)}
-                </strong>
-              </span>
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -365,39 +267,171 @@ export function DailyOverviewTab() {
   );
 }
 
-function payoutColorClass(stake: number, payout: number): string {
-  if (stake === 0) return "";
-  const pct = payout / stake;
-  if (pct > 0.95) return "text-danger";
-  if (pct > 0.8) return "text-warning";
-  return "";
+// ─── Day Detail View ──────────────────────────────────────────────────────────
+
+function DayDetailView({ date }: { date: string }) {
+  const { data, isLoading, error } = useSystemDayBreakdown(date);
+
+  if (isLoading) return <TableSkeleton rows={8} />;
+  if (error) return <ErrorCard />;
+  if (!data || data.length === 0)
+    return (
+      <EmptyCard
+        icon="calendar"
+        message="Không có dữ liệu"
+        description="Không có dữ liệu game trong ngày này."
+      />
+    );
+
+  const totals = {
+    drawCount: data.reduce((s, r) => s + r.drawCount, 0),
+    entryCount: data.reduce((s, r) => s + r.entryCount, 0),
+    playerCount: data.reduce((s, r) => s + r.playerCount, 0),
+    totalStake: data.reduce((s, r) => s + r.totalStake, 0),
+    totalPayout: data.reduce((s, r) => s + r.totalPayout, 0),
+    ggr: data.reduce((s, r) => s + r.ggr, 0),
+    totalCommission: data.reduce((s, r) => s + r.totalCommission, 0),
+    netProfit: data.reduce((s, r) => s + r.netProfit, 0),
+  };
+
+  return (
+    <Card className="gap-0 py-0">
+      <CardHeader className="px-5 pb-2 pt-4">
+        <div className="flex items-center gap-2">
+          <Gamepad2 className="size-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold">Chi tiết theo game — {date}</CardTitle>
+        </div>
+        <CardDescription className="text-xs">{data.length} game có dữ liệu</CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Game</TableHead>
+                <TableHead className="text-right">Kỳ quay</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.playerCount}</TableHead>
+                <TableHead className="text-right">Doanh thu</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.ggr}</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalCommission}</TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.netProfit}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((game) => (
+                <TableRow key={game.gameProduct}>
+                  <TableCell>
+                    <p className="text-sm font-medium">
+                      {GAME_LABELS[game.gameProduct as keyof typeof GAME_LABELS] ??
+                        game.gameProduct}
+                    </p>
+                    <p className="font-mono text-xs text-muted-foreground">{game.gameProduct}</p>
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">
+                    {formatNumber(game.drawCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">
+                    {formatNumber(game.entryCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">
+                    {formatNumber(game.playerCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-medium">
+                    {formatNumber(game.totalStake)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">
+                    {formatNumber(game.totalPayout)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">
+                    {formatNumber(game.ggr)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">
+                    {formatNumber(game.totalCommission)}
+                  </TableCell>
+                  <TableCell
+                    className={`text-right text-sm tabular-nums font-medium ${game.netProfit < 0 ? "text-loss" : ""}`}
+                  >
+                    {formatNumber(game.netProfit)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell className="text-xs font-semibold">
+                  {REPORT_COLUMN_LABELS.summary}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.drawCount)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.entryCount)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.playerCount)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.totalStake)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.totalPayout)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.ggr)}
+                </TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold">
+                  {formatNumber(totals.totalCommission)}
+                </TableCell>
+                <TableCell
+                  className={`text-right text-sm tabular-nums font-semibold ${totals.netProfit < 0 ? "text-loss" : ""}`}
+                >
+                  {formatNumber(totals.netProfit)}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
-function DailyOverviewSkeleton() {
+// ─── Breadcrumb ───────────────────────────────────────────────────────────────
+
+function Breadcrumb({ date }: { date: string }) {
+  const { navigateBackToList } = useSystemReportFilters();
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="gap-0 py-0">
-            <CardContent className="px-5 pb-4 pt-4">
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="mt-2 h-6 w-32" />
-              <Skeleton className="mt-1 h-3 w-20" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      <Card className="gap-0 py-0">
-        <CardContent className="p-0 pt-0">
-          <div className="space-y-0">
-            {[...Array(7)].map((_, i) => (
-              <div key={i} className="border-b px-5 py-3">
-                <Skeleton className="h-4 w-full" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+    <div className="flex flex-wrap items-center gap-1">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-auto px-2 py-1 text-xs"
+        onClick={navigateBackToList}
+      >
+        Tổng quan ngày
+      </Button>
+      <ChevronRight className="size-3 text-muted-foreground" />
+      <span className="flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 font-mono text-xs font-medium">
+        <CalendarDays className="size-3" />
+        {date}
+      </span>
+    </div>
+  );
+}
+
+// ─── DailyOverviewTab ─────────────────────────────────────────────────────────
+
+/** Tab "Tổng quan ngày" — danh sách ngày → drill-down vào từng game trong ngày. */
+export function DailyOverviewTab() {
+  const { selectedDate } = useSystemReportFilters();
+
+  return (
+    <div className="flex flex-col gap-4">
+      {selectedDate && <Breadcrumb date={selectedDate} />}
+      {!selectedDate && <DailyListView />}
+      {selectedDate && <DayDetailView date={selectedDate} />}
     </div>
   );
 }

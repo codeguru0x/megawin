@@ -25,6 +25,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { meKeys } from "@/lib/query-keys";
 
 interface ProfileResponse {
   accountId: string;
@@ -68,7 +69,7 @@ const statusBadgeVariant: Record<string, "default" | "secondary" | "destructive"
 
 export function ProfileCard() {
   const { data, isLoading } = useQuery({
-    queryKey: ["me", "profile"],
+    queryKey: meKeys.profile,
     queryFn: () => apiClient.get<ProfileResponse>("/me/profile"),
   });
 

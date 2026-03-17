@@ -51,7 +51,12 @@ function SystemFinancialReportsContent() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={tab} onValueChange={(v) => void setTab(v as "daily" | "by-game" | "by-tenant")}>
+      <Tabs
+        value={tab}
+        onValueChange={(v) => {
+          setTab(v as "daily" | "by-game" | "by-tenant");
+        }}
+      >
         <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
           <TabsTrigger value="daily" className="gap-1.5">
             <CalendarDays className="size-4 text-indigo-500" />

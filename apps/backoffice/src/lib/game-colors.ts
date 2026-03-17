@@ -204,7 +204,7 @@ const DEFAULT_COLORS: GameColorTokens = {
 /**
  * Gradient cho icon header của các trang hệ thống (non-game).
  *
- * Đồng bộ với màu `--primary` (indigo) trong globals.css.
+ * Dùng `--color-primary` từ theme → tự động đổi theo theme preset.
  * Dùng cho: Tenants, Accounts, Reports, Me/Profile, Settings...
  *
  * @example
@@ -212,7 +212,7 @@ const DEFAULT_COLORS: GameColorTokens = {
  * <div className={`bg-linear-to-br ${SYSTEM_ICON_GRADIENT}`}>
  * ```
  */
-export const SYSTEM_ICON_GRADIENT = "from-indigo-500 to-indigo-600";
+export const SYSTEM_ICON_GRADIENT = "from-primary/70 to-primary";
 
 /**
  * Lấy brand color tokens cho game.

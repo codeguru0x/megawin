@@ -23,6 +23,22 @@ import {
 } from "@megawin/game-bingo18/entities";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { ObjectId, Long } from "mongodb";
+import type {
+  DrawRevenueResult,
+  SettledPayoutSummary,
+  SettledFinancialSummary,
+  TenantSettleMetrics,
+  TenantReportRow,
+  PlayerReportRow,
+  TenantPlayerCount,
+  VoidMetrics,
+  VoidRefundSummary,
+  TicketAggregateResult,
+  OpsSummary,
+  WinningEntriesSummary,
+  BasicPrizeSummaryRow,
+  SideBetPrizeSummaryRow,
+} from "./types";
 import { BaseRepo } from "./base-repo";
 import { EntryMapper } from "../mappers/entry-mapper";
 import type { TicketEntryEntity } from "@megawin/game-bingo18/entities";
@@ -68,7 +84,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     );
   }
 
-  async getEntriesByDrawId(drawId: string, page: number, size: number): Promise<TicketEntryEntity[]> {
+  async getEntriesByDrawId(
+    drawId: string,
+    page: number,
+    size: number,
+  ): Promise<TicketEntryEntity[]> {
     return await this.paging({ drawId }, page, size, {
       sort: { createdAt: 1 },
     });
@@ -155,10 +175,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Group by null — 1 document kết quả, hiệu quả hơn group by tenant
    * khi caller chỉ cần 2 scalar tổng.
    */
-  async aggregateTotalRevenue(drawId: string): Promise<{
-    totalRevenue: number;
-    totalAgentCommission: number;
-  }> {
+  async aggregateTotalRevenue(drawId: string): Promise<DrawRevenueResult> {
     const result = await this.aggregate([
       { $match: { drawId, status: { $ne: EntryStatus.Void } } },
       {
@@ -176,11 +193,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     };
   }
 
-  async aggregateSettledPayoutSummary(drawId: string): Promise<{
-    totalSettled: number;
-    totalPayoutAmount: number;
-    totalPrizes: number;
-  }> {
+  async aggregateSettledPayoutSummary(drawId: string): Promise<SettledPayoutSummary> {
     const summaryResult = await this.aggregate([
       { $match: { drawId, status: EntryStatus.Settled } },
       {
@@ -200,20 +213,44 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     };
   }
 
-  async aggregateTenantReport(
-    drawId: string,
-    financialDate: string,
-  ): Promise<
-    Array<{
-      tenantId: string;
-      totalStake: number;
-      totalWin: number;
-      totalPayout: number;
-      entryCount: number;
-      commissionRate: number;
-      totalCommission: number;
-    }>
-  > {
+  /**
+   * Aggregate tổng hợp tài chính entries đã settle cho 1 draw — gộp revenue + payout.
+   *
+   * Tại thời điểm CalculateFinancials, TẤT CẢ entries đã là Settled
+   * (SettleEntries hoàn tất trước đó, chưa có Void) → 1 pipeline với filter
+   * { status: Settled } đủ lấy cả revenue, commission lẫn payout metrics.
+   * Tiết kiệm 1 DB round-trip so với gọi riêng aggregateTotalRevenue + aggregateSettledPayoutSummary.
+   */
+  async aggregateSettledFinancialSummary(drawId: string): Promise<SettledFinancialSummary> {
+    const result = await this.aggregate([
+      {
+        $match: {
+          drawId,
+          status: EntryStatus.Settled,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalSettled: { $sum: 1 },
+          totalRevenue: { $sum: "$amount" },
+          totalAgentCommission: { $sum: "$tenant.commissionAmount" },
+          totalPrizes: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
+          totalPayoutAmount: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+        },
+      },
+    ]);
+    const row = result[0] ?? {};
+    return {
+      totalSettled: row.totalSettled ?? 0,
+      totalRevenue: row.totalRevenue ?? 0,
+      totalAgentCommission: row.totalAgentCommission ?? 0,
+      totalPrizes: row.totalPrizes ?? 0,
+      totalPayoutAmount: row.totalPayoutAmount ?? 0,
+    };
+  }
+
+  async aggregateTenantReport(drawId: string, financialDate: string): Promise<TenantReportRow[]> {
     const result = await this.aggregate([
       { $match: { drawId, financialDate } },
       {
@@ -239,19 +276,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     }));
   }
 
-  async aggregatePlayerReport(
-    drawId: string,
-    financialDate: string,
-  ): Promise<
-    Array<{
-      tenantId: string;
-      accountId: string;
-      totalStake: number;
-      totalWin: number;
-      totalPayout: number;
-      entryCount: number;
-    }>
-  > {
+  async aggregatePlayerReport(drawId: string, financialDate: string): Promise<PlayerReportRow[]> {
     const result = await this.aggregate([
       { $match: { drawId, financialDate } },
       {
@@ -422,11 +447,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   }
 
   /** Aggregate tổng kết void cho 1 draw. */
-  async aggregateVoidRefundSummary(drawId: string): Promise<{
-    totalVoidedEntries: number;
-    totalOriginalAmount: number;
-    totalRefundAmount: number;
-  }> {
+  async aggregateVoidRefundSummary(drawId: string): Promise<VoidRefundSummary> {
     const result = await this.aggregate([
       { $match: { drawId, status: EntryStatus.Void } },
       {
@@ -452,15 +473,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Aggregate tóm tắt ticket từ TẤT CẢ entries của 1 ticket.
    * Dùng cho SyncTicketSummaries — tính lại toàn bộ từ source of truth (entries).
    */
-  async aggregateTicketSummary(ticketId: ObjectId): Promise<{
-    totalEntries: number;
-    settledCount: number;
-    voidedCount: number;
-    totalWinAmount: number;
-    totalVoidedAmount: number;
-    totalRefundedAmount: number;
-    voidedDrawIds: string[];
-  }> {
+  async aggregateTicketSummary(ticketId: ObjectId): Promise<TicketAggregateResult> {
     const result = await this.aggregate([
       { $match: { ticketId } },
       {
@@ -519,19 +532,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Batch aggregate summaries cho nhiều tickets cùng lúc.
    * $match ticketId ∈ batch → $group by ticketId → Map<ticketId, summary>.
    */
-  async aggregateTicketSummariesBatch(ticketIds: ObjectId[]): Promise<
-    Map<
-      string,
-      {
-        settledCount: number;
-        voidedCount: number;
-        totalWinAmount: number;
-        totalVoidedAmount: number;
-        totalRefundedAmount: number;
-        voidedDrawIds: string[];
-      }
-    >
-  > {
+  async aggregateTicketSummariesBatch(
+    ticketIds: ObjectId[],
+  ): Promise<Map<string, Omit<TicketAggregateResult, "totalEntries">>> {
     const result = await this.aggregate([
       { $match: { ticketId: { $in: ticketIds } } },
       {
@@ -573,17 +576,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       },
     ]);
 
-    const map = new Map<
-      string,
-      {
-        settledCount: number;
-        voidedCount: number;
-        totalWinAmount: number;
-        totalVoidedAmount: number;
-        totalRefundedAmount: number;
-        voidedDrawIds: string[];
-      }
-    >();
+    const map = new Map<string, Omit<TicketAggregateResult, "totalEntries">>();
 
     for (const row of result) {
       const r = row as any;
@@ -618,9 +611,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * sau đó group by tenantId → đếm unique players.
    * Dùng song song với aggregateTenantSettleMetrics trong BuildSettleReport.
    */
-  async aggregatePlayerCountByTenant(
-    drawId: string,
-  ): Promise<Array<{ tenantId: string; playerCount: number }>> {
+  async aggregatePlayerCountByTenant(drawId: string): Promise<TenantPlayerCount[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -655,16 +646,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Dùng bởi BuildSettleReportUseCase để build SettleTenantReport[].
    * Bingo 18 KHÔNG có lineCount — không aggregate lineCount.
    */
-  async aggregateTenantSettleMetrics(drawId: string): Promise<
-    Array<{
-      tenantId: string;
-      entryCount: number;
-      totalStake: number;
-      totalWin: number;
-      totalPayout: number;
-      totalCommission: number;
-    }>
-  > {
+  async aggregateTenantSettleMetrics(drawId: string): Promise<TenantSettleMetrics[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -699,13 +681,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Đếm entry, player, tenant đã void; tổng tiền cược gốc và tiền hoàn.
    * Dùng bởi BuildVoidReport.
    */
-  async aggregateVoidMetrics(drawId: string): Promise<{
-    entryCount: number;
-    playerCount: number;
-    tenantCount: number;
-    totalOriginalStake: number;
-    totalRefundAmount: number;
-  }> {
+  async aggregateVoidMetrics(drawId: string): Promise<VoidMetrics> {
     const result = await this.aggregate([
       {
         $match: {
@@ -751,7 +727,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Tách riêng khỏi aggregateOutstandingCountsByDraw để tránh $addToSet lớn trong 1 group.
    * Bingo 18 không có lineCount.
    */
-  async aggregateOutstandingMetricsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawMetrics[]> {
+  async aggregateOutstandingMetricsByDraw(
+    activeDrawIds: string[],
+  ): Promise<OutstandingDrawMetrics[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -770,7 +748,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       },
     ]);
 
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       drawId: r._id,
       financialDate: r.financialDate,
       entryCount: r.entryCount,
@@ -785,7 +763,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Bước 1: group by (drawId, accountId, tenantId) → unique combinations.
    * Bước 2: group by drawId → đếm số combination (playerCount) và $addToSet tenantId (an toàn vì ít tenants).
    */
-  async aggregateOutstandingCountsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawCounts[]> {
+  async aggregateOutstandingCountsByDraw(
+    activeDrawIds: string[],
+  ): Promise<OutstandingDrawCounts[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -809,7 +789,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       },
     ]);
 
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       drawId: r._id,
       playerCount: r.playerCount ?? 0,
       tenantCount: r.tenants?.length ?? 0,
@@ -835,14 +815,10 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Tách biệt totalBoards (singleNum/doubleMatch/tripleMatch) và totalSideBets (sumTotal/bigSmallDraw).
    * Filter theo financialDate hoặc drawId cụ thể.
    */
-  async aggregateOpsSummary(filter: { financialDate?: string; drawId?: string }): Promise<{
-    totalRevenue: number;
-    totalEntries: number;
-    totalBoards: number;
-    totalSideBets: number;
-    uniquePlayers: number;
-    totalCommission: number;
-  }> {
+  async aggregateOpsSummary(filter: {
+    financialDate?: string;
+    drawId?: string;
+  }): Promise<OpsSummary> {
     const $match: Record<string, unknown> = {};
     if (filter.drawId) {
       $match.drawId = filter.drawId;
@@ -1177,7 +1153,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Sort: payout.winAmount desc để entries trúng lớn hiện trước.
    * Bingo 18: KHÔNG có payout cap → không cần flag hasCappablePrize.
    */
-  async getWinningEntries(drawId: string, cursor?: string, limit?: number): Promise<TicketEntryEntity[]> {
+  async getWinningEntries(
+    drawId: string,
+    cursor?: string,
+    limit?: number,
+  ): Promise<TicketEntryEntity[]> {
     const pageSize = Math.min(limit ?? 50, 200);
     const filter: Record<string, unknown> = {
       drawId,
@@ -1199,10 +1179,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Đếm winning entries, tổng win amount.
    * Bingo 18: không có cappedEntries (không có payout cap).
    */
-  async getWinningEntriesSummary(drawId: string): Promise<{
-    totalWinningEntries: number;
-    totalWinAmount: number;
-  }> {
+  async getWinningEntriesSummary(drawId: string): Promise<WinningEntriesSummary> {
     const result = await this.aggregate([
       {
         $match: {
@@ -1233,15 +1210,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * tripleKind bắt buộc để phân biệt specific (1.2tr) vs any (200k) của tripleMatch.
    * Dùng bởi CalculateFinancials để build settleSummary.basicPrizes.
    */
-  async aggregateBasicPrizeSummary(drawId: string): Promise<
-    Array<{
-      playType: string;
-      matchCount: number;
-      tripleKind: string | null;
-      winnerCount: number;
-      prizePerUnit: number;
-    }>
-  > {
+  async aggregateBasicPrizeSummary(drawId: string): Promise<BasicPrizeSummaryRow[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -1288,15 +1257,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Tách `sum` (number) và `bet` (string) theo playType — mirror EntrySideBetSnapshot,
    * không gộp chung thành 1 string để tránh nhầm lẫn kiểu dữ liệu.
    */
-  async aggregateSideBetPrizeSummary(drawId: string): Promise<
-    Array<{
-      playType: string;
-      sum: number | null;
-      bet: string | null;
-      winnerCount: number;
-      prizePerUnit: number;
-    }>
-  > {
+  async aggregateSideBetPrizeSummary(drawId: string): Promise<SideBetPrizeSummaryRow[]> {
     const result = await this.aggregate([
       {
         $match: {

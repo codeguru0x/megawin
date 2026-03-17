@@ -89,8 +89,8 @@ export interface SettleFinancials {
   totalPrizes: number;
   /** Tổng hoa hồng đại lý = Σ(tenant commission) (VND). */
   totalAgentCommission: number;
-  /** Lợi nhuận công ty = totalRevenue - totalPrizes - totalAgentCommission (VND). Có thể âm. */
-  profit: number;
+  /** Phần công ty thu = totalRevenue - totalPrizes - totalAgentCommission (VND). Có thể âm. */
+  companyTake: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -156,12 +156,6 @@ export interface SettleContext {
    * Config snapshot KHÔNG thay đổi giữa các step.
    */
   config: KenoSettleConfig;
-
-  /**
-   * Tổng số entries thuộc kỳ quay — đếm từ DB tại PrepareSettle.
-   * Dùng cho logging/monitoring (biết khối lượng xử lý).
-   */
-  totalEntries: number;
 
   /**
    * Dữ liệu tài chính tổng hợp — output của CalculateFinancials.

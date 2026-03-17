@@ -5,10 +5,11 @@
   "type": "module",
   "description": "Max 3D application layer – repos, mappers, use cases",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -b tsconfig.build.json",
     "dev": "tsc -p tsconfig.build.json --watch",
     "check-types": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "clean": "rm -rf dist"
   },
   "exports": {
     "./use-cases/draws": {

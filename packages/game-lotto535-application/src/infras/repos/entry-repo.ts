@@ -70,7 +70,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return await this.findMany({ ticketId }, { sort: { drawId: 1 } });
   }
 
-  async getEntriesByDrawId(drawId: string, page: number, size: number): Promise<TicketEntryEntity[]> {
+  async getEntriesByDrawId(
+    drawId: string,
+    page: number,
+    size: number,
+  ): Promise<TicketEntryEntity[]> {
     return await this.paging({ drawId }, page, size, {
       sort: { createdAt: 1 },
     });
@@ -417,13 +421,13 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       },
     ]);
 
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       drawId: r._id as string,
       financialDate: r.financialDate as string,
-      entryCount: r.entryCount as number,
-      lineCount: r.lineCount as number,
-      totalStake: r.totalStake as number,
-      estimatedCommission: r.estimatedCommission as number,
+      entryCount: r.entryCount,
+      lineCount: r.lineCount,
+      totalStake: r.totalStake,
+      estimatedCommission: r.estimatedCommission ?? 0,
     }));
   }
 
@@ -471,10 +475,10 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       },
     ]);
 
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       drawId: r._id as string,
-      playerCount: r.playerCount as number,
-      tenantCount: (r.tenants as string[]).length,
+      playerCount: r.playerCount,
+      tenantCount: r.tenants?.length ?? 0,
     }));
   }
 
@@ -506,9 +510,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         },
       },
     ]);
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       tenantId: r._id,
-      playerCount: r.playerCount,
+      playerCount: r.playerCount ?? 0,
     }));
   }
 
@@ -548,13 +552,13 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         },
       },
     ]);
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       tenantId: r._id,
-      entryCount: r.entryCount,
+      entryCount: r.entryCount ?? 0,
       lineCount: r.lineCount ?? 0,
-      totalStake: r.totalStake,
-      totalWin: r.totalWin,
-      totalPayout: r.totalPayout,
+      totalStake: r.totalStake ?? 0,
+      totalWin: r.totalWin ?? 0,
+      totalPayout: r.totalPayout ?? 0,
       totalCommission: r.totalCommission ?? 0,
     }));
   }

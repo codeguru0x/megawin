@@ -42,9 +42,7 @@ export const BINGO18_BIG_MIN = 12;
 // ─────────────────────────────────────────────
 
 /** Tất cả số Bingo 18 hợp lệ: 1, 2, 3, 4, 5, 6. */
-export const BINGO18_VALID_NUMBERS: ReadonlySet<number> = new Set([
-  1, 2, 3, 4, 5, 6,
-]);
+export const BINGO18_VALID_NUMBERS: ReadonlySet<number> = new Set([1, 2, 3, 4, 5, 6]);
 
 /** Tất cả tổng hợp lệ: 3-18. */
 export const BINGO18_VALID_SUMS: ReadonlySet<number> = new Set(
@@ -52,9 +50,7 @@ export const BINGO18_VALID_SUMS: ReadonlySet<number> = new Set(
 );
 
 /** Tất cả cặp trùng nhau hợp lệ: 1-6. */
-export const BINGO18_VALID_DOUBLES: ReadonlySet<number> = new Set([
-  1, 2, 3, 4, 5, 6,
-]);
+export const BINGO18_VALID_DOUBLES: ReadonlySet<number> = new Set([1, 2, 3, 4, 5, 6]);
 
 // ─────────────────────────────────────────────
 // Board Selection (user input)
@@ -134,9 +130,10 @@ export interface TripleMatchPrizes {
 
 /**
  * Bảng giải thưởng cách chơi "Cộng tổng".
- * Key: tổng (3-18) → giá trị thưởng.
+ * Key: tổng dưới dạng string (e.g. "3", "18") → giá trị thưởng (VND).
+ * Dùng string vì MongoDB luôn serialize object key thành string.
  */
-export type SumTotalPrizes = Record<number, number>;
+export type SumTotalPrizes = Record<string, number>;
 
 /**
  * Bảng giải thưởng cách chơi "Lớn/Hòa/Nhỏ".

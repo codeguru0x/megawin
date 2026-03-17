@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsc --watch",
     "build": "tsc",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "clean": "rm -rf dist"
   },
   "keywords": [],
   "author": "",

@@ -1,388 +1,13 @@
 "use client";
 
-import { Building2, CalendarRange, ChevronRight, Users } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  formatVND,
-  formatVNDCompact,
-  formatPercent,
-  formatNumber,
-} from "@megawin/shared/utils/number";
 import { useMega645ReportFilters } from "../use-report-filters";
+import { KpiStrip } from "../sections/kpi-strip";
+import { DrawList } from "../sections/draw-list";
+import { DrawTenantBreakdown } from "../sections/draw-tenant-breakdown";
+import { PlayerBreakdown } from "../sections/player-breakdown";
 import { EntryList } from "../sections/entry-list";
-import {
-  useMega645DrawSummary,
-  useMega645DrawList,
-  useMega645DrawTenants,
-  useMega645Players,
-} from "../use-report-queries";
-
-function KpiStrip({ from, to }: { from: string; to: string }) {
-  const { data, isLoading } = useMega645DrawSummary(from, to);
-  if (isLoading)
-    return (
-      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {[...Array(6)].map((_, i) => (
-          <Skeleton key={i} className="h-20 w-full" />
-        ))}
-      </div>
-    );
-  if (!data) return null;
-  const payoutPct = data.totalStake > 0 ? data.totalPayout / data.totalStake : 0;
-  const cards = [
-    {
-      label: "Kỳ quay",
-      value: formatNumber(data.drawCount),
-      sub: `${formatNumber(data.entryCount)} entries`,
-    },
-    {
-      label: "Players",
-      value: formatNumber(data.playerCount),
-      sub: `${formatNumber(data.tenantCount)} đại lý`,
-    },
-    { label: "Lines", value: formatNumber(data.lineCount), sub: "tổng lines" },
-    {
-      label: "Doanh thu",
-      value: formatVNDCompact(data.totalStake),
-      sub: formatVND(data.totalStake),
-      highlight: "blue" as const,
-    },
-    {
-      label: "GGR",
-      value: formatVNDCompact(data.ggr),
-      sub: `Margin: ${formatPercent(data.totalStake > 0 ? data.ggr / data.totalStake : 0)}`,
-      highlight: data.ggr >= 0 ? ("green" as const) : ("red" as const),
-    },
-    {
-      label: "Payout %",
-      value: formatPercent(payoutPct),
-      sub: formatVNDCompact(data.totalPayout),
-      highlight: payoutPct > 0.95 ? ("red" as const) : ("neutral" as const),
-    },
-  ];
-  return (
-    <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      {cards.map((c) => (
-        <div key={c.label} className="rounded-lg border bg-card p-3">
-          <p className="text-xs text-muted-foreground">{c.label}</p>
-          <p
-            className={`mt-1 text-lg font-bold tabular-nums ${c.highlight === "blue" ? "text-blue-600 dark:text-blue-400" : c.highlight === "green" ? "text-success" : c.highlight === "red" ? "text-danger" : ""}`}
-          >
-            {c.value}
-          </p>
-          <p className="truncate text-xs text-muted-foreground">{c.sub}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function DrawList() {
-  const { from, to, navigateToDraw } = useMega645ReportFilters();
-  const { data, isLoading, error } = useMega645DrawList(from, to, 1);
-  if (isLoading) return <TableSkeleton rows={10} />;
-  if (error) return <ErrorCard />;
-  if (!data?.data.length)
-    return <EmptyCard msg="Không có kỳ quay nào trong khoảng thời gian đã chọn." />;
-  const rows = data.data;
-  const totals = {
-    entries: rows.reduce((s, r) => s + r.entryCount, 0),
-    lines: rows.reduce((s, r) => s + r.lineCount, 0),
-    stake: rows.reduce((s, r) => s + r.totalStake, 0),
-    payout: rows.reduce((s, r) => s + r.totalPayout, 0),
-    ggr: rows.reduce((s, r) => s + r.ggr, 0),
-    netProfit: rows.reduce((s, r) => s + r.netProfit, 0),
-  };
-  return (
-    <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center gap-2">
-          <CalendarRange className="size-4 text-muted-foreground" />
-          <CardTitle className="text-sm font-semibold">Danh sách kỳ quay</CardTitle>
-        </div>
-        <CardDescription className="text-xs">
-          {data.total} kỳ quay · Click để xem breakdown
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Kỳ quay</TableHead>
-                <TableHead>Ngày TC</TableHead>
-                <TableHead className="text-right">Entries</TableHead>
-                <TableHead className="text-right">Players</TableHead>
-                <TableHead className="text-right">Lines</TableHead>
-                <TableHead className="text-right">Doanh thu</TableHead>
-                <TableHead className="text-right">Trả thưởng</TableHead>
-                <TableHead className="text-right">JP Contribution</TableHead>
-                <TableHead className="text-right">GGR</TableHead>
-                <TableHead className="text-right">Hoa hồng</TableHead>
-                <TableHead className="text-right">Lợi nhuận</TableHead>
-                <TableHead className="text-right">Payout %</TableHead>
-                <TableHead className="w-8" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row) => {
-                const payoutPct = row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
-                return (
-                  <TableRow
-                    key={row.drawId}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => navigateToDraw(row.drawId)}
-                  >
-                    <TableCell className="font-mono text-xs">{row.drawId}</TableCell>
-                    <TableCell className="text-sm">{row.financialDate}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.playerCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.lineCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums font-medium">
-                      {formatVND(row.totalStake)}
-                    </TableCell>
-                    <TableCell
-                      className={`text-right tabular-nums ${payoutPct > 0.95 ? "text-danger" : ""}`}
-                    >
-                      {formatVND(row.totalPayout)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVND(row.jackpotContribution ?? 0)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{formatVND(row.ggr)}</TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVND(row.totalCommission)}
-                    </TableCell>
-                    <TableCell
-                      className={`text-right tabular-nums font-medium ${row.netProfit >= 0 ? "text-success" : "text-danger"}`}
-                    >
-                      {formatVND(row.netProfit)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge
-                        variant={
-                          payoutPct > 0.95
-                            ? "destructive"
-                            : payoutPct > 0.8
-                              ? "outline"
-                              : "secondary"
-                        }
-                      >
-                        {formatPercent(payoutPct)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <ChevronRight className="size-4 text-muted-foreground" />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/30 px-4 py-3 text-xs font-medium">
-          <Badge variant="secondary">
-            {formatNumber(totals.entries)} entries · {formatNumber(totals.lines)} lines
-          </Badge>
-          <div className="flex flex-wrap gap-4 tabular-nums">
-            <span>
-              DT: <strong>{formatVNDCompact(totals.stake)}</strong>
-            </span>
-            <span>
-              GGR: <strong>{formatVNDCompact(totals.ggr)}</strong>
-            </span>
-            <span className={totals.netProfit >= 0 ? "text-success" : "text-danger"}>
-              LN: <strong>{formatVNDCompact(totals.netProfit)}</strong>
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function DrawTenantBreakdown({ drawId }: { drawId: string }) {
-  const { navigateToTenantInDraw } = useMega645ReportFilters();
-  const { data, isLoading, error } = useMega645DrawTenants(drawId);
-  if (isLoading) return <TableSkeleton rows={6} />;
-  if (error) return <ErrorCard />;
-  if (!data?.length) return <EmptyCard msg="Không có dữ liệu tenant cho kỳ quay này." />;
-  return (
-    <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center gap-2">
-          <Building2 className="size-4 text-muted-foreground" />
-          <CardTitle className="text-sm font-semibold">
-            Breakdown theo đại lý — Kỳ {drawId}
-          </CardTitle>
-        </div>
-        <CardDescription className="text-xs">Click đại lý để xem players</CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Đại lý</TableHead>
-                <TableHead className="text-right">Entries</TableHead>
-                <TableHead className="text-right">Players</TableHead>
-                <TableHead className="text-right">Lines</TableHead>
-                <TableHead className="text-right">Doanh thu</TableHead>
-                <TableHead className="text-right">Trả thưởng</TableHead>
-                <TableHead className="text-right">GGR</TableHead>
-                <TableHead className="text-right">Hoa hồng</TableHead>
-                <TableHead className="text-right">Payout %</TableHead>
-                <TableHead className="w-8" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((row) => {
-                const payoutPct = row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
-                return (
-                  <TableRow
-                    key={row.tenantId}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => navigateToTenantInDraw(row.tenantId)}
-                  >
-                    <TableCell>
-                      <p className="font-medium">{row.tenantId}</p>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.playerCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.lineCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums font-medium">
-                      {formatVND(row.totalStake)}
-                    </TableCell>
-                    <TableCell
-                      className={`text-right tabular-nums ${payoutPct > 0.95 ? "text-danger" : ""}`}
-                    >
-                      {formatVND(row.totalPayout)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{formatVND(row.ggr)}</TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVND(row.totalCommission)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge variant={payoutPct > 0.95 ? "destructive" : "secondary"}>
-                        {formatPercent(payoutPct)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <ChevronRight className="size-4 text-muted-foreground" />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: string }) {
-  const { navigateToPlayer } = useMega645ReportFilters();
-  const { data, isLoading, error } = useMega645Players(drawId, tenantId);
-  if (isLoading) return <TableSkeleton rows={8} />;
-  if (error) return <ErrorCard />;
-  if (!data?.length) return <EmptyCard msg="Không có player nào." />;
-  return (
-    <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center gap-2">
-          <Users className="size-4 text-muted-foreground" />
-          <CardTitle className="text-sm font-semibold">
-            Players — Kỳ {drawId} / {tenantId}
-          </CardTitle>
-        </div>
-        <CardDescription className="text-xs">Click player để xem entries</CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Player</TableHead>
-                <TableHead className="text-right">Entries</TableHead>
-                <TableHead className="text-right">Lines</TableHead>
-                <TableHead className="text-right">Cược</TableHead>
-                <TableHead className="text-right">Thắng</TableHead>
-                <TableHead className="text-right">Trả thưởng</TableHead>
-                <TableHead className="text-right">Kết quả ròng</TableHead>
-                <TableHead className="w-8" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((row) => {
-                const net = row.totalPayout - row.totalStake;
-                return (
-                  <TableRow
-                    key={row.accountId}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => navigateToPlayer(row.accountId)}
-                  >
-                    <TableCell>
-                      <p className="font-medium">{row.username || row.accountId}</p>
-                      <p className="font-mono text-xs text-muted-foreground">{row.accountId}</p>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.lineCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatVND(row.totalStake)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatVND(row.totalWin)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatVND(row.totalPayout)}
-                    </TableCell>
-                    <TableCell
-                      className={`text-right tabular-nums font-medium ${net >= 0 ? "text-success" : "text-danger"}`}
-                    >
-                      {net >= 0 ? "+" : ""}
-                      {formatVND(net)}
-                    </TableCell>
-                    <TableCell>
-                      <ChevronRight className="size-4 text-muted-foreground" />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 function Breadcrumb() {
   const {
@@ -390,10 +15,12 @@ function Breadcrumb() {
     drawId,
     tenantId,
     playerId,
+    playerName,
     navigateToList,
     navigateToDraw,
     navigateToTenantInDraw,
   } = useMega645ReportFilters();
+
   return (
     <div className="flex flex-wrap items-center gap-1 text-sm">
       <Button
@@ -433,15 +60,19 @@ function Breadcrumb() {
       {playerId && (
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
-          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{playerId}</span>
+          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">
+            {playerName || playerId}
+          </span>
         </>
       )}
     </div>
   );
 }
 
+/** Tab "Theo kỳ quay" — 4 cấp drill-down. */
 export function ByDrawTab() {
-  const { from, to, level, drawId, tenantId, playerId } = useMega645ReportFilters();
+  const { from, to, level, drawId, tenantId, playerId, playerName } = useMega645ReportFilters();
+
   return (
     <div className="flex flex-col gap-4">
       {level !== "list" && <Breadcrumb />}
@@ -452,50 +83,13 @@ export function ByDrawTab() {
         <PlayerBreakdown drawId={drawId} tenantId={tenantId} />
       )}
       {level === "entries" && drawId && tenantId && playerId && (
-        <EntryList drawId={drawId} tenantId={tenantId} accountId={playerId} />
+        <EntryList
+          drawId={drawId}
+          tenantId={tenantId}
+          accountId={playerId}
+          playerDisplayName={playerName ?? undefined}
+        />
       )}
     </div>
-  );
-}
-
-function TableSkeleton({ rows }: { rows: number }) {
-  return (
-    <Card className="gap-0 py-0">
-      <CardContent className="p-0">
-        <div className="space-y-0">
-          {[...Array(rows)].map((_, i) => (
-            <div key={i} className="border-b px-5 py-3">
-              <Skeleton className="h-4 w-full" />
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-function ErrorCard() {
-  return (
-    <Card className="gap-0 py-0">
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-          <CalendarRange className="size-6 text-muted-foreground" />
-        </div>
-        <h3 className="mt-4 text-sm font-semibold">Lỗi tải dữ liệu</h3>
-        <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
-      </CardContent>
-    </Card>
-  );
-}
-function EmptyCard({ msg }: { msg: string }) {
-  return (
-    <Card className="gap-0 py-0">
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-          <CalendarRange className="size-6 text-muted-foreground" />
-        </div>
-        <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
-        <p className="mt-1 text-xs text-muted-foreground">{msg}</p>
-      </CardContent>
-    </Card>
   );
 }

@@ -5,9 +5,10 @@
   "type": "module",
   "description": "Bingo 18 game domain – entities, rules, helpers (internal only)",
   "scripts": {
-    "dev": "tsc --watch",
+    "dev": "tsc -p --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc"
+    "build": "tsc -b",
+    "clean": "rm -rf dist"
   },
   "exports": {
     "./entities": {

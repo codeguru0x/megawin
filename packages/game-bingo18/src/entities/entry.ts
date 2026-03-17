@@ -224,8 +224,10 @@ export interface EntryBoardPayout {
    * Lưu vào payout để aggregation settleSummary có thể phân biệt 2 mức giải.
    */
   tripleKind?: Bingo18TripleKind;
+
   /** Số lần số đã chọn xuất hiện trong kết quả (0-3). Chỉ relevant cho singleNum. */
   matchCount: number;
+
   /** Tiền thắng board này. = 0 nếu thua, tra bảng prize theo playType + matchCount nếu thắng. */
   winAmount: number;
 }
@@ -238,11 +240,34 @@ export interface EntrySideBetPayout {
   sum?: number;
   /** Cược lớn/hoà/nhỏ. Chỉ set cho bigSmallDraw. */
   bet?: Bingo18BigSmallBet;
-  /** Kết quả thực tế của kỳ quay (ví dụ: "big", "small", "draw", hoặc giá trị tổng). */
+  /**
+   * Kết quả thực tế của kỳ quay — encode theo playType:
+   * - sumTotal: giá trị tổng 3 số dưới dạng string, ví dụ "9", "14".
+   * - bigSmallDraw: "big" | "small" | "draw" tương ứng với tổng >= 12, <= 9, 10-11.
+   *
+   * Lưu để player xem lại kết quả mà không cần join draw.
+   * KHÔNG dùng field này để xác định thắng/thua — dùng `isWin`.
+   */
   outcome: string;
-  /** Side bet này có thắng hay không. */
+  /**
+   * Kết quả matching: player chọn đúng hay không.
+   *
+   * `true`  = player thắng (lựa chọn khớp với kết quả quay).
+   * `false` = player thua.
+   *
+   * Tại sao cần field riêng thay vì kiểm tra `winAmount > 0`?
+   * Side bet KHÔNG có field nào encode kết quả matching một cách tường minh:
+   * - `outcome` ghi kết quả quay thực tế, nhưng KHÔNG cho biết player thắng hay thua
+   *   (phải so sánh `outcome` với `bet`/`sum` player đã chọn — logic nằm trong rules layer).
+   * - `winAmount` là hệ quả tài chính, không phải kết quả matching.
+   *
+   * So sánh với BoardPayout: board dùng `matchCount > 0` làm proxy "thắng" —
+   * side bet không có field tương đương nên cần `isWin` lấp chỗ trống.
+   *
+   * Dùng bởi `aggregateSideBetPrizeSummary` để filter `{ isWin: true }`.
+   */
   isWin: boolean;
-  /** Tiền thắng side bet này. = 0 nếu thua, tra bảng prize theo playType nếu thắng. */
+  /** Tiền thắng side bet này (VND). = 0 nếu thua, tra bảng prize theo playType nếu thắng. */
   winAmount: number;
 }
 

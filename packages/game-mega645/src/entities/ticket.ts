@@ -42,7 +42,7 @@ export interface TicketPricing {
   unitPrice: number;
   /**
    * Tổng số line trên 1 kỳ quay.
-   * Công thức: Σ(boards[].derived.expandedLines) cho tất cả board không bị void.
+   * Công thức: Σ(boards[].derived.expandedLines).
    */
   linesPerDraw: number;
   /**
@@ -95,8 +95,6 @@ export interface TicketVoidSummary {
 export interface Board {
   /** Ký hiệu board ("A".."F"). */
   boardNo: string;
-  /** True nếu board này đã bị huỷ. */
-  isVoid?: boolean;
   /** Kiểu chơi (standard / bao5 / bao7-18 / quickPick). */
   playType: PlayType;
   /** Lựa chọn số gốc của người chơi. */

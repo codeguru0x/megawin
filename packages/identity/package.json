@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "tsc --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "rm -rf dist"
   },
   "exports": {
     "./entities": {
@@ -19,7 +20,11 @@
       "default": "./dist/entities/*.js"
     }
   },
-  "keywords": ["megawin", "identity", "domain"],
+  "keywords": [
+    "megawin",
+    "identity",
+    "domain"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {

@@ -229,7 +229,7 @@ export interface SumTotalMatchResult {
 /**
  * Match cách chơi "Cộng tổng": thắng khi tổng 3 số quay = tổng đã chọn chính xác.
  *
- * Giải thưởng tra theo key = selectedSum (mảng Record<number, number> trong GlobalConfig).
+ * Giải thưởng tra theo key = String(selectedSum) vì SumTotalPrizes dùng string key (MongoDB convention).
  * Giải đối xứng: 3=18, 4=17, 5=16, ... → cùng 1 giải khi khoảng cách đến 10.5 bằng nhau.
  *
  * @param selectedSum - Tổng người chơi đã chọn (3-18)
@@ -247,8 +247,9 @@ export function matchSumTotal(
     // outcome ghi lại tổng thực tế kỳ quay để player biết kết quả là gì.
     outcome: `sum${result.sum}`,
     isWin,
+    // Tra string key vì SumTotalPrizes dùng string key; ?? 0 phòng key thiếu trong bảng.
     // Chỉ tra bảng giải khi thắng; ?? 0 phòng trường hợp selectedSum không có trong bảng.
-    winAmount: isWin ? (prizes[selectedSum] ?? 0) : 0,
+    winAmount: isWin ? (prizes[String(selectedSum)] ?? 0) : 0,
   };
 }
 
@@ -301,16 +302,19 @@ export function matchBigSmallDraw(
       const isWin = sum <= BINGO18_SMALL_MAX;
       return { outcome: `small_sum${sum}`, isWin, winAmount: isWin ? prizes.small : 0 };
     }
+
     case Bingo18BigSmallBet.Draw: {
       // Hòa: tổng 10 hoặc 11. BINGO18_DRAW_VALUES = [10, 11].
       const isWin = (BINGO18_DRAW_VALUES as ReadonlyArray<number>).includes(sum);
       return { outcome: `draw_sum${sum}`, isWin, winAmount: isWin ? prizes.draw : 0 };
     }
+
     case Bingo18BigSmallBet.Big: {
       // Lớn: tổng 12-18. BINGO18_BIG_MIN = 12.
       const isWin = sum >= BINGO18_BIG_MIN;
       return { outcome: `big_sum${sum}`, isWin, winAmount: isWin ? prizes.big : 0 };
     }
+
     default: {
       const _: never = bet;
       throw new Error(`Unknown bet: ${_}`);

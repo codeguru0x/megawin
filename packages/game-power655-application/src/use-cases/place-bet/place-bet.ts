@@ -106,7 +106,6 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
           mainNumbers: [...bi.selection.mainNumbers].sort(),
         },
         derived: { expandedLines: lineCount },
-        isVoid: false,
       });
     }
 

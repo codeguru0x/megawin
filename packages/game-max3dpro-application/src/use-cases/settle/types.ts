@@ -85,8 +85,8 @@ export interface SettleFinancials {
   totalFixedPrizes: number;
   /** Tổng hoa hồng đại lý (VND). */
   totalAgentCommission: number;
-  /** Lợi nhuận = revenue - prizes - commission. Có thể âm (công ty chịu lỗ). */
-  profit: number;
+  /** Phần công ty thu = revenue - prizes - commission. Có thể âm (công ty chịu lỗ). */
+  companyTake: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

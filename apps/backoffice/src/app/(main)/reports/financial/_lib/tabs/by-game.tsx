@@ -5,24 +5,109 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ExternalLink, Gamepad2 } from "lucide-react";
+import { Gamepad2, DollarSign, TrendingUp, Percent, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   formatVND,
   formatVNDCompact,
   formatPercent,
   formatNumber,
 } from "@megawin/shared/utils/number";
-import type { GameSummaryRow } from "@megawin/game-core-application/repos";
-import { GAME_LABELS } from "@megawin/game-core/labels";
+import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { useSystemReportFilters } from "../use-report-filters";
 import { useSystemByGame } from "../use-report-queries";
+import { ErrorCard, EmptyCard } from "../sections/shared-states";
+import type { GameSummaryRow } from "@megawin/game-core-application/repos";
+
+// ─── KPI Strip ────────────────────────────────────────────────────────────────
+
+function KpiStrip({ data }: { data: GameSummaryRow[] }) {
+  const totalStake = data.reduce((s, r) => s + r.totalStake, 0);
+  const totalPayout = data.reduce((s, r) => s + r.totalPayout, 0);
+  const ggr = data.reduce((s, r) => s + r.ggr, 0);
+  const netProfit = data.reduce((s, r) => s + r.netProfit, 0);
+  const totalCommission = data.reduce((s, r) => s + r.totalCommission, 0);
+  const playerCount = data.reduce((s, r) => s + r.playerCount, 0);
+  const payoutPct = totalStake > 0 ? totalPayout / totalStake : 0;
+
+  const cards = [
+    {
+      icon: Gamepad2,
+      iconBg: "bg-indigo-100 dark:bg-indigo-900/50",
+      iconColor: "text-indigo-600 dark:text-indigo-400",
+      label: "Số game",
+      value: String(data.length),
+      sub: `${formatNumber(data.reduce((s, r) => s + r.drawCount, 0))} kỳ quay`,
+    },
+    {
+      icon: Users,
+      iconBg: "bg-sky-100 dark:bg-sky-900/50",
+      iconColor: "text-sky-600 dark:text-sky-400",
+      label: REPORT_COLUMN_LABELS.playerCount,
+      value: formatNumber(playerCount),
+      sub: "Người chơi duy nhất",
+    },
+    {
+      icon: DollarSign,
+      iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+      label: "Doanh thu",
+      value: formatVNDCompact(totalStake),
+      sub: formatVND(totalStake),
+    },
+    {
+      icon: TrendingUp,
+      iconBg:
+        netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50",
+      iconColor:
+        netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400",
+      label: REPORT_COLUMN_LABELS.netProfit,
+      value: formatVNDCompact(netProfit),
+      sub: `GGR: ${formatVNDCompact(ggr)} · HH: ${formatVNDCompact(totalCommission)}`,
+      valueClass: netProfit < 0 ? "text-loss" : netProfit > 0 ? "text-profit" : "",
+    },
+    {
+      icon: Percent,
+      iconBg:
+        payoutPct > 0.95 ? "bg-red-100 dark:bg-red-900/50" : "bg-amber-100 dark:bg-amber-900/50",
+      iconColor:
+        payoutPct > 0.95 ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400",
+      label: REPORT_COLUMN_LABELS.payoutPercent,
+      value: formatPercent(payoutPct),
+      sub: `Doanh thu: ${formatVNDCompact(totalStake)}`,
+      valueClass: payoutPct > 0.95 ? "text-loss" : payoutPct > 0.8 ? "text-warning" : "",
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+      {cards.map((c, i) => (
+        <div key={i} className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+          <div
+            className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", c.iconBg)}
+          >
+            <c.icon className={cn("size-5", c.iconColor)} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-medium text-muted-foreground">{c.label}</p>
+            <p className={cn("text-lg font-bold tabular-nums text-foreground", c.valueClass ?? "")}>
+              {c.value}
+            </p>
+            <p className="truncate text-[11px] text-muted-foreground">{c.sub}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── ByGameTab ────────────────────────────────────────────────────────────────
 
 /** Tab "Theo game" — aggregate by gameProduct. */
 export function ByGameTab() {
@@ -31,200 +116,177 @@ export function ByGameTab() {
 
   const { data, isLoading, error } = useSystemByGame(from, to);
 
-  if (isLoading) return <ByGameSkeleton />;
-  if (error) {
+  if (isLoading) {
     return (
-      <Card className="gap-0 py-0">
-        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <Gamepad2 className="size-6 text-muted-foreground" />
-          </div>
-          <h3 className="mt-4 text-sm font-semibold">Lỗi tải dữ liệu</h3>
-          <p className="mt-1 text-xs text-muted-foreground">Vui lòng tải lại trang và thử lại.</p>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-[76px] animate-pulse rounded-xl border bg-muted" />
+          ))}
+        </div>
+        <Card className="gap-0 py-0">
+          <CardContent className="p-0">
+            {[...Array(7)].map((_, i) => (
+              <div key={i} className="h-12 animate-pulse border-b last:border-0" />
+            ))}
+          </CardContent>
+        </Card>
+      </div>
     );
   }
-  if (!data || data.length === 0) {
+  if (error) return <ErrorCard />;
+  if (!data || data.length === 0)
     return (
-      <Card className="gap-0 py-0">
-        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <Gamepad2 className="size-6 text-muted-foreground" />
-          </div>
-          <h3 className="mt-4 text-sm font-semibold">Không có dữ liệu</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Không tìm thấy dữ liệu game trong khoảng thời gian đã chọn. Thử mở rộng khoảng ngày.
-          </p>
-        </CardContent>
-      </Card>
+      <EmptyCard
+        icon="calendar"
+        message="Không có dữ liệu"
+        description="Không tìm thấy dữ liệu game trong khoảng thời gian đã chọn. Thử mở rộng khoảng ngày."
+      />
     );
-  }
 
-  // Summary
-  const totalStake = data.reduce((s, r) => s + r.totalStake, 0);
-  const totalPayout = data.reduce((s, r) => s + r.totalPayout, 0);
-  const totalGgr = data.reduce((s, r) => s + r.ggr, 0);
-  const totalCommission = data.reduce((s, r) => s + r.totalCommission, 0);
-  const totalNetProfit = data.reduce((s, r) => s + r.netProfit, 0);
-  const totalDraws = data.reduce((s, r) => s + r.drawCount, 0);
-  const totalEntries = data.reduce((s, r) => s + r.entryCount, 0);
+  const totals = {
+    drawCount: data.reduce((s, r) => s + r.drawCount, 0),
+    entryCount: data.reduce((s, r) => s + r.entryCount, 0),
+    playerCount: data.reduce((s, r) => s + r.playerCount, 0),
+    totalStake: data.reduce((s, r) => s + r.totalStake, 0),
+    totalPayout: data.reduce((s, r) => s + r.totalPayout, 0),
+    ggr: data.reduce((s, r) => s + r.ggr, 0),
+    totalCommission: data.reduce((s, r) => s + r.totalCommission, 0),
+    netProfit: data.reduce((s, r) => s + r.netProfit, 0),
+  };
+  const totalPayoutPct = totals.totalStake > 0 ? totals.totalPayout / totals.totalStake : 0;
 
   return (
-    <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center gap-2">
-          <Gamepad2 className="size-4 text-muted-foreground" />
-          <CardTitle className="text-sm font-semibold">So sánh theo game</CardTitle>
-        </div>
-        <CardDescription className="text-xs">
-          Click vào game để xem báo cáo chi tiết
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Game</TableHead>
-                <TableHead className="text-right">Kỳ quay</TableHead>
-                <TableHead className="text-right">Entries</TableHead>
-                <TableHead className="text-right">Players</TableHead>
-                <TableHead className="text-right">Tenants</TableHead>
-                <TableHead className="text-right">Doanh thu</TableHead>
-                <TableHead className="text-right">Trả thưởng</TableHead>
-                <TableHead className="text-right">GGR</TableHead>
-                <TableHead className="text-right">Hoa hồng</TableHead>
-                <TableHead className="text-right">Lợi nhuận</TableHead>
-                <TableHead className="text-right">Payout %</TableHead>
-                <TableHead className="text-right">Margin %</TableHead>
-                <TableHead className="w-8" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((row) => {
-                const payoutPct = row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
-                const margin = row.totalStake > 0 ? row.ggr / row.totalStake : 0;
-                const slug = row.gameProduct;
-                return (
-                  <TableRow
-                    key={row.gameProduct}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() =>
-                      router.push(`/games/${slug}/financial-reports?from=${from}&to=${to}`)
-                    }
-                  >
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">
+    <div className="space-y-4">
+      <KpiStrip data={data} />
+      <Card className="gap-0 py-0">
+        <CardHeader className="px-5 pb-2 pt-4">
+          <div className="flex items-center gap-2">
+            <Gamepad2 className="size-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold">So sánh theo game</CardTitle>
+          </div>
+          <CardDescription className="text-xs">
+            {data.length} game · Click vào game để xem báo cáo chi tiết
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Game</TableHead>
+                  <TableHead className="text-right">Kỳ quay</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.playerCount}</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.tenantCount}</TableHead>
+                  <TableHead className="text-right">Doanh thu</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.ggr}</TableHead>
+                  <TableHead className="text-right">
+                    {REPORT_COLUMN_LABELS.totalCommission}
+                  </TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.netProfit}</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.payoutPercent}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map((row) => {
+                  const payoutPct = row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
+                  const slug = row.gameProduct;
+                  return (
+                    <TableRow
+                      key={row.gameProduct}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() =>
+                        router.push(`/games/${slug}/financial-reports?from=${from}&to=${to}`)
+                      }
+                    >
+                      <TableCell>
+                        <p className="text-sm font-medium">
                           {GAME_LABELS[row.gameProduct as keyof typeof GAME_LABELS] ??
                             row.gameProduct}
                         </p>
                         <p className="font-mono text-xs text-muted-foreground">{row.gameProduct}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.drawCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.playerCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatNumber(row.tenantCount)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums font-medium">
-                      {formatVND(row.totalStake)}
-                    </TableCell>
-                    <TableCell
-                      className={`text-right tabular-nums ${payoutPct > 0.95 ? "text-danger" : payoutPct > 0.8 ? "text-warning" : ""}`}
-                    >
-                      {formatVND(row.totalPayout)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{formatVND(row.ggr)}</TableCell>
-                    <TableCell className="text-right tabular-nums text-muted-foreground">
-                      {formatVND(row.totalCommission)}
-                    </TableCell>
-                    <TableCell
-                      className={`text-right tabular-nums font-medium ${row.netProfit >= 0 ? "text-success" : "text-danger"}`}
-                    >
-                      {formatVND(row.netProfit)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      <Badge
-                        variant={
-                          payoutPct > 0.95
-                            ? "destructive"
-                            : payoutPct > 0.8
-                              ? "outline"
-                              : "secondary"
-                        }
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.drawCount)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.entryCount)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.playerCount)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.tenantCount)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums font-medium">
+                        {formatNumber(row.totalStake)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.totalPayout)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.ggr)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">
+                        {formatNumber(row.totalCommission)}
+                      </TableCell>
+                      <TableCell
+                        className={`text-right text-sm tabular-nums font-medium ${row.netProfit < 0 ? "text-loss" : ""}`}
+                      >
+                        {formatNumber(row.netProfit)}
+                      </TableCell>
+                      <TableCell
+                        className={`text-right text-sm tabular-nums ${payoutPct > 0.95 ? "text-loss" : payoutPct > 0.8 ? "text-warning" : ""}`}
                       >
                         {formatPercent(payoutPct)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatPercent(margin)}
-                    </TableCell>
-                    <TableCell>
-                      <ExternalLink className="size-3.5 text-muted-foreground" />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-
-        {/* Summary Footer */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/30 px-4 py-3 text-sm font-medium">
-          <div className="flex items-center gap-3">
-            <span className="text-muted-foreground">TỔNG CỘNG</span>
-            <Badge variant="secondary">{data.length} game</Badge>
-            <Badge variant="secondary">{formatNumber(totalDraws)} kỳ</Badge>
-            <Badge variant="secondary">{formatNumber(totalEntries)} entries</Badge>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+              <TableFooter>
+                <TableRow>
+                  <TableCell className="text-xs font-semibold">
+                    {REPORT_COLUMN_LABELS.summary}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.drawCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.entryCount)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totals.playerCount)}
+                  </TableCell>
+                  <TableCell />
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatVNDCompact(totals.totalStake)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatVNDCompact(totals.totalPayout)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatVNDCompact(totals.ggr)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatVNDCompact(totals.totalCommission)}
+                  </TableCell>
+                  <TableCell
+                    className={`text-right text-sm tabular-nums font-semibold ${totals.netProfit < 0 ? "text-loss" : ""}`}
+                  >
+                    {formatVNDCompact(totals.netProfit)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums font-semibold">
+                    {formatPercent(totalPayoutPct)}
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
           </div>
-          <div className="flex flex-wrap items-center gap-4 tabular-nums text-xs">
-            <span>
-              DT: <strong title={formatVND(totalStake)}>{formatVNDCompact(totalStake)}</strong>
-            </span>
-            <span>
-              PO: <strong title={formatVND(totalPayout)}>{formatVNDCompact(totalPayout)}</strong>
-            </span>
-            <span>
-              GGR: <strong title={formatVND(totalGgr)}>{formatVNDCompact(totalGgr)}</strong>
-            </span>
-            <span>
-              HH:{" "}
-              <strong title={formatVND(totalCommission)}>
-                {formatVNDCompact(totalCommission)}
-              </strong>
-            </span>
-            <span className={totalNetProfit >= 0 ? "text-success" : "text-danger"}>
-              LN:{" "}
-              <strong title={formatVND(totalNetProfit)}>{formatVNDCompact(totalNetProfit)}</strong>
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function ByGameSkeleton() {
-  return (
-    <Card className="gap-0 py-0">
-      <CardContent className="p-0 pt-0">
-        <div className="space-y-0">
-          {[...Array(7)].map((_, i) => (
-            <div key={i} className="border-b px-5 py-3">
-              <Skeleton className="h-4 w-full" />
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

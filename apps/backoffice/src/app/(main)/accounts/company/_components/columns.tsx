@@ -1,40 +1,28 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import { AccountStatus, CompanyRole, MfaStatus } from "@megawin/identity/entities/account";
+import {
+  AccountStatusLabel,
+  CompanyRoleLabel,
+  MfaStatusLabel,
+} from "@megawin/identity/entities/labels";
 
 import { Badge } from "@/components/ui/badge";
-import { DataTableColumnHeader } from "@/components/data-table/data-table-column-header";
 
 import type { CompanyAccount } from "../_lib/schema";
 import { AccountRowActions } from "./row-actions";
 
-const statusMap: Record<
-  string,
-  {
-    label: string;
-    variant: "default" | "outline" | "secondary" | "destructive";
-  }
-> = {
-  active: { label: "Hoạt động", variant: "default" },
-  read_only: { label: "Chỉ đọc", variant: "secondary" },
-  suspended: { label: "Bị khoá", variant: "destructive" },
+const STATUS_VARIANT: Record<AccountStatus, "default" | "outline" | "secondary" | "destructive"> = {
+  active: "default",
+  read_only: "secondary",
+  suspended: "destructive",
 };
 
-const mfaStatusMap: Record<
-  string,
-  {
-    label: string;
-    variant: "default" | "outline" | "secondary" | "destructive";
-  }
-> = {
-  none: { label: "Chưa thiết lập", variant: "outline" },
-  enabled: { label: "Đang bật", variant: "default" },
-  disabled: { label: "Đã tắt", variant: "secondary" },
-};
-
-const roleMap: Record<string, string> = {
-  admin: "Quản trị viên",
-  staff: "Nhân viên",
+const MFA_VARIANT: Record<MfaStatus, "default" | "outline" | "secondary" | "destructive"> = {
+  none: "outline",
+  enabled: "default",
+  disabled: "secondary",
 };
 
 export const companyAccountsColumns: ColumnDef<CompanyAccount>[] = [
@@ -42,7 +30,7 @@ export const companyAccountsColumns: ColumnDef<CompanyAccount>[] = [
     id: "rowNumber",
     header: "STT",
     cell: ({ row }) => (
-      <span className="text-xs font-mono tabular-nums">{row.index + 1}</span>
+      <span className="font-mono text-xs tabular-nums text-muted-foreground">{row.index + 1}</span>
     ),
     enableSorting: false,
     enableHiding: false,
@@ -50,19 +38,15 @@ export const companyAccountsColumns: ColumnDef<CompanyAccount>[] = [
   },
   {
     accessorKey: "username",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Tên tài khoản" />
-    ),
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.username}</span>
-    ),
+    header: "Tên tài khoản",
+    cell: ({ row }) => <span className="font-medium">{row.original.username}</span>,
+    enableSorting: false,
   },
   {
     accessorKey: "displayName",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Tên hiển thị" />
-    ),
+    header: "Tên hiển thị",
     cell: ({ row }) => row.original.displayName,
+    enableSorting: false,
   },
   {
     accessorKey: "roles",
@@ -71,7 +55,7 @@ export const companyAccountsColumns: ColumnDef<CompanyAccount>[] = [
       <div className="flex gap-1">
         {row.original.roles.map((role) => (
           <Badge key={role} variant="secondary" className="text-xs">
-            {roleMap[role] ?? role}
+            {CompanyRoleLabel[role as CompanyRole] ?? role}
           </Badge>
         ))}
       </div>
@@ -82,11 +66,10 @@ export const companyAccountsColumns: ColumnDef<CompanyAccount>[] = [
     accessorKey: "status",
     header: "Trạng thái",
     cell: ({ row }) => {
-      const status = row.original.status;
-      const mapped = statusMap[status];
+      const status = row.original.status as AccountStatus;
       return (
-        <Badge variant={mapped?.variant ?? "outline"}>
-          {mapped?.label ?? status}
+        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>
+          {AccountStatusLabel[status] ?? status}
         </Badge>
       );
     },
@@ -96,28 +79,22 @@ export const companyAccountsColumns: ColumnDef<CompanyAccount>[] = [
     accessorKey: "mfaStatus",
     header: "MFA",
     cell: ({ row }) => {
-      const mfa = row.original.mfaStatus ?? "none";
-      const mapped = mfaStatusMap[mfa];
-      return (
-        <Badge variant={mapped?.variant ?? "outline"}>
-          {mapped?.label ?? mfa}
-        </Badge>
-      );
+      const mfa = (row.original.mfaStatus ?? MfaStatus.None) as MfaStatus;
+      return <Badge variant={MFA_VARIANT[mfa] ?? "outline"}>{MfaStatusLabel[mfa] ?? mfa}</Badge>;
     },
     enableSorting: false,
   },
   {
     accessorKey: "createdAt",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Ngày tạo" />
-    ),
+    header: "Ngày tạo",
     cell: ({ row }) => (
-      <span className="text-muted-foreground text-xs tabular-nums">
+      <span className="text-xs tabular-nums text-muted-foreground">
         {row.original.createdAt
           ? new Date(row.original.createdAt).toLocaleDateString("vi-VN")
           : "—"}
       </span>
     ),
+    enableSorting: false,
   },
   {
     id: "actions",

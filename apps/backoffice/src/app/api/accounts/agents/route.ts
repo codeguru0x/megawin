@@ -7,17 +7,18 @@ import {
 
 import { createAgentSchema } from "./_lib/schema";
 
+const createAgentAccountUseCase = new CreateAgentAccountUseCase();
+const listAgentAccountsUseCase = new ListAgentAccountsUseCase();
+
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(createAgentSchema)
   .handler(async ({ body }) => {
-    const useCase = new CreateAgentAccountUseCase();
-    return useCase.run(body, { successStatus: 201 });
+    return createAgentAccountUseCase.run(body, { successStatus: 201 });
   });
 
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .handler(async () => {
-    const useCase = new ListAgentAccountsUseCase();
-    return useCase.run();
+    return listAgentAccountsUseCase.run();
   });

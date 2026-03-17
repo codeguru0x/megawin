@@ -7,8 +7,9 @@
   "scripts": {
     "dev": "tsc -p tsconfig.build.json --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc -p tsconfig.build.json",
-    "test": "vitest"
+    "build": "tsc -b tsconfig.build.json",
+    "test": "vitest",
+    "clean": "rm -rf dist"
   },
   "exports": {
     "./repos": {

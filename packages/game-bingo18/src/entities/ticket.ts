@@ -44,12 +44,6 @@ export interface TicketDrawPlan {
   drawCount: number;
 }
 
-/** Thông tin đại lý, snapshot tại thời điểm mua vé. */
-export interface TicketTenant {
-  /** Tỷ lệ hoa hồng đại lý. Lấy từ tenant config tại thời điểm mua. */
-  commissionRate: number;
-}
-
 /** Tiến trình xử lý entries qua các kỳ quay. */
 export interface TicketProgress {
   /** Tổng kỳ đã đăng ký = drawPlan.drawCount. */
@@ -153,11 +147,6 @@ export interface TicketDoc {
 
   /** Thông tin giá vé, tính tại thời điểm mua. */
   pricing: TicketPricing;
-
-  // ───── Tenant ─────
-
-  /** Thông tin đại lý, snapshot tại thời điểm mua vé. */
-  tenant: TicketTenant;
 
   // ───── Boards cơ bản ─────
 

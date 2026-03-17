@@ -8,45 +8,18 @@ import { cn } from "@/lib/utils";
 import { formatVND, formatVNDCompact } from "@megawin/shared/utils/number";
 import { useJackpotCurrent } from "./use-jackpot";
 
-// ─────────────────────────────────────────────
-// Public exports (dùng lại ở trang Operations)
-// ─────────────────────────────────────────────
+// ─── JackpotHeroCard ──────────────────────────────────────────────────────────
 
-export function JackpotOverviewSection() {
+/**
+ * Hero card hiển thị jackpot Mega 6/45 hiện tại: số tiền, tiến trình, badge trạng thái.
+ * Tự fetch data qua useJackpotCurrent — dùng độc lập, không kèm KPI stats.
+ */
+export function JackpotHeroCard() {
   const { data, isLoading } = useJackpotCurrent();
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-[220px] rounded-2xl" />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[88px] rounded-xl" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
+  if (isLoading) return <Skeleton className="h-[220px] rounded-2xl" />;
   if (!data) return null;
 
-  return (
-    <div className="space-y-4">
-      <JackpotHeroCard data={data} />
-      <JackpotKpiCards data={data} />
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────
-// Hero Card
-// ─────────────────────────────────────────────
-
-export function JackpotHeroCard({
-  data,
-}: {
-  data: import("./use-jackpot").GetJackpotCurrentOutput;
-}) {
   const { cycle, progress } = data;
 
   // Guard: progress có thể undefined nếu response từ cache cũ chưa có field này.
@@ -157,15 +130,27 @@ export function JackpotHeroCard({
   );
 }
 
-// ─────────────────────────────────────────────
-// KPI Cards
-// ─────────────────────────────────────────────
+// ─── JackpotKpiCards ──────────────────────────────────────────────────────────
 
-export function JackpotKpiCards({
-  data,
-}: {
-  data: import("./use-jackpot").GetJackpotCurrentOutput;
-}) {
+/**
+ * Grid 4 KPI cards: tích luỹ, đóng góp, đỉnh cao, mốc tiếp theo.
+ * Tự fetch data qua useJackpotCurrent — dùng độc lập, không kèm hero card.
+ */
+export function JackpotKpiCards() {
+  const { data, isLoading } = useJackpotCurrent();
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-[88px] rounded-xl" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
   const { cycle, progress } = data;
 
   const growthPct =
@@ -216,9 +201,37 @@ export function JackpotKpiCards({
   );
 }
 
-// ─────────────────────────────────────────────
-// Internal: KPI Card
-// ─────────────────────────────────────────────
+// ─── JackpotOverviewSection ───────────────────────────────────────────────────
+
+/**
+ * Section đầy đủ = JackpotHeroCard + JackpotKpiCards.
+ * Dùng cho trang /games/mega645/jackpot.
+ */
+export function JackpotOverviewSection() {
+  const { isLoading } = useJackpotCurrent();
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-[220px] rounded-2xl" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-[88px] rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <JackpotHeroCard />
+      <JackpotKpiCards />
+    </div>
+  );
+}
+
+// ─── KpiCard (internal) ───────────────────────────────────────────────────────
 
 function KpiCard({
   icon: Icon,

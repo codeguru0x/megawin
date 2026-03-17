@@ -17,7 +17,7 @@
  *
  * KHÁC BIỆT SO VỚI LOTTO535/MEGA645/POWER655:
  *   - KHÔNG có jackpotContribution (Max 3D không có Jackpot — field không tồn tại)
- *   - companyTake = financials.profit (công ty thu toàn bộ phần dư)
+ *   - companyTake = financials.companyTake (công ty thu toàn bộ phần dư)
  *   - CÓ lineCount (lines/pairs per board)
  *
  * CRASH-SAFE:
@@ -45,7 +45,7 @@ export interface BuildSettleReportResult {
  *
  * CRASH-SAFE: aggregate từ DB → idempotent, chạy lại nhiều lần an toàn.
  * Ghi tenant reports trước, draw report sau — đảm bảo draw = SUM(tenants).
- * Max 3D KHÔNG có Jackpot: KHÔNG có field jackpotContribution. companyTake = financials.profit.
+ * Max 3D KHÔNG có Jackpot: KHÔNG có field jackpotContribution. companyTake = financials.companyTake.
  * Max 3D CÓ lineCount: aggregate lineCount từ entries.
  */
 export class BuildSettleReportUseCase extends InternalUseCase<
@@ -116,9 +116,9 @@ export class BuildSettleReportUseCase extends InternalUseCase<
     // netProfit CÓ THỂ ÂM khi kỳ trả thưởng lớn → KHÔNG validate >= 0
     const netProfit = ggr - totalCommission;
 
-    // companyTake = profit (công ty thu toàn bộ phần dư sau prizes + commission)
+    // companyTake = phần công ty thu (toàn bộ phần dư sau prizes + commission)
     // Max 3D không có Jackpot quỹ tích luỹ → không cần chia phần dư
-    const companyTake = financials?.profit ?? 0;
+    const companyTake = financials?.companyTake ?? 0;
 
     await this.drawReportRepo.upsertDrawReport({
       drawId,

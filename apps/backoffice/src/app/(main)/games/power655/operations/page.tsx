@@ -29,7 +29,7 @@ import { DrawManagementSection } from "./_lib/sections/draw-management";
 import { KpiSection } from "./_lib/sections/kpi";
 import { AnalyticsSection } from "./_lib/sections/analytics";
 import { ResultSection } from "./_lib/sections/result";
-import { JackpotOverviewSection } from "../jackpot/_lib/jackpot-overview-section";
+import { JackpotHeroCard } from "../jackpot/_lib/jackpot-overview-section";
 
 // ─── Last Updated Badge ───────────────────────────────────────────────────────
 
@@ -132,8 +132,8 @@ function OperationsContent() {
       {/* Create draw dialog */}
       <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
 
-      {/* Zone 1: Jackpot hero card — purple/indigo Power 6/55 theme */}
-      {draw && <JackpotOverviewSection />}
+      {/* Zone 1: Jackpot hero card — red/orange Power 6/55 theme */}
+      {draw && <JackpotHeroCard />}
 
       {/* Zone 2: Draw management — command center + dialogs */}
       <DrawManagementSection />

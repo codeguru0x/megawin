@@ -7,13 +7,12 @@
  * Keno khác Lotto 5/35: KHÔNG có Jackpot.
  * Giải thưởng cố định theo bảng prize table.
  *
- * IDEMPOTENT: chỉ đọc draw, config, đếm entries.
+ * IDEMPOTENT: chỉ đọc draw, config.
  */
 
 import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { SettleContext } from "./types";
 
@@ -23,7 +22,6 @@ export interface PrepareSettleInput {
 
 export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, SettleContext> {
   private readonly drawRepo = new DrawRepository();
-  private readonly entryRepo = new EntryRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** Load context cho Keno settle flow. Throw nếu draw không hợp lệ. */
@@ -47,8 +45,6 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
 
     const globalConfig = await this.getGlobalConfig.run();
 
-    const totalEntries = await this.entryRepo.countEntriesByDrawId(drawId);
-
     return {
       drawId,
       drawDate: draw.drawDate,
@@ -67,7 +63,6 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
         evenOddPrizes: globalConfig.evenOddPrizes,
         payoutCaps: globalConfig.payoutCaps,
       },
-      totalEntries,
     };
   }
 }

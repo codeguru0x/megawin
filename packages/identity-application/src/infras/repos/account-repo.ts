@@ -15,10 +15,7 @@ import {
 } from "@megawin/identity/entities/account";
 import { generateULID } from "@megawin/shared/utils/unique";
 
-export class AccountRepository extends IdentityBaseRepo<
-  AccountEntity,
-  AccountMapper
-> {
+export class AccountRepository extends IdentityBaseRepo<AccountEntity, AccountMapper> {
   constructor() {
     super({
       collName: "accounts",
@@ -38,7 +35,7 @@ export class AccountRepository extends IdentityBaseRepo<
     status: AccountStatus,
     cognitoPoolId: string,
     cognitoSub: string,
-    cognitoUsername: string
+    cognitoUsername: string,
   ): Promise<PlayerAccountEntity | null> {
     const now = nowVN();
     return (await this.findOneAndUpdate(
@@ -58,7 +55,7 @@ export class AccountRepository extends IdentityBaseRepo<
           updatedAt: now,
         },
       },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     )) as PlayerAccountEntity | null;
   }
 
@@ -71,7 +68,7 @@ export class AccountRepository extends IdentityBaseRepo<
     accountId: string,
     cognitoPoolId: string,
     cognitoSub: string,
-    cognitoUsername: string
+    cognitoUsername: string,
   ): Promise<CompanyAccountEntity | null> {
     return (await this.findOneAndUpdate(
       { username },
@@ -89,7 +86,7 @@ export class AccountRepository extends IdentityBaseRepo<
           updatedAt: new Date(),
         },
       },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     )) as CompanyAccountEntity | null;
   }
 
@@ -103,9 +100,35 @@ export class AccountRepository extends IdentityBaseRepo<
     return docs as AgentAccountEntity[];
   }
 
-  public async findAgentByTenantId(
-    tenantId: string
-  ): Promise<AgentAccountEntity | null> {
+  /**
+   * Liệt kê tài khoản người chơi thuộc một tenantId với phân trang.
+   *
+   * Sắp xếp theo createdAt giảm dần (mới nhất trước).
+   * Dùng skip/limit — đủ hiệu quả khi total < vài chục ngàn.
+   * Index: { type: 1, tenantId: 1, createdAt: -1 }
+   *
+   * @returns Danh sách players + total count để tính hasMore phía caller.
+   */
+  public async listPlayerAccounts(
+    tenantId: string,
+    options?: { skip?: number; limit?: number },
+  ): Promise<{ accounts: PlayerAccountEntity[]; total: number }> {
+    const filter = { type: AccountType.Player, tenantId };
+    const skip = options?.skip ?? 0;
+    const limit = options?.limit ?? 50;
+
+    const [docs, total] = await Promise.all([
+      this.findMany(filter, { sort: { createdAt: -1 }, skip, limit }),
+      this.count(filter),
+    ]);
+
+    return {
+      accounts: docs as PlayerAccountEntity[],
+      total,
+    };
+  }
+
+  public async findAgentByTenantId(tenantId: string): Promise<AgentAccountEntity | null> {
     return (await this.findOne({
       type: AccountType.Agent,
       tenantId,
@@ -130,7 +153,7 @@ export class AccountRepository extends IdentityBaseRepo<
     tenantId: string,
     cognitoPoolId: string,
     cognitoSub: string,
-    cognitoUsername: string
+    cognitoUsername: string,
   ): Promise<AgentAccountEntity | null> {
     return (await this.findOneAndUpdate(
       { username },
@@ -149,17 +172,11 @@ export class AccountRepository extends IdentityBaseRepo<
           updatedAt: new Date(),
         },
       },
-      { upsert: true, returnDocument: "after" }
+      { upsert: true, returnDocument: "after" },
     )) as AgentAccountEntity | null;
   }
 
-  public async updateMfaStatus(
-    username: string,
-    mfaStatus: MfaStatus
-  ): Promise<boolean> {
-    return this.updateOne(
-      { username },
-      { $set: { mfaStatus, updatedAt: new Date() } }
-    );
+  public async updateMfaStatus(username: string, mfaStatus: MfaStatus): Promise<boolean> {
+    return this.updateOne({ username }, { $set: { mfaStatus, updatedAt: new Date() } });
   }
 }

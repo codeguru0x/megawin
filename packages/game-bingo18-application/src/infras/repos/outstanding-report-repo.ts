@@ -9,7 +9,10 @@
  * Bingo 18 KHÔNG có lineCount — không aggregate lineCount.
  */
 
-import type { OutstandingDrawReport, OutstandingDrawReportEntity } from "@megawin/game-bingo18/entities";
+import type {
+  OutstandingDrawReport,
+  OutstandingDrawReportEntity,
+} from "@megawin/game-bingo18/entities";
 import { BINGO18_OUTSTANDING_DRAW_REPORTS } from "@megawin/game-bingo18/entities";
 import { BaseRepo } from "./base-repo";
 import { OutstandingDrawReportMapper } from "../mappers";
@@ -21,9 +24,15 @@ import type { OutstandingGameSummary } from "./types";
  * Scheduled job (mỗi 5 phút) gọi bulkUpsertDrawReports để refresh tất cả draws active trong 1 DB call.
  * Sau khi draw settle/void, job ngừng tạo doc mới → TTL tự xoá.
  */
-export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportEntity, OutstandingDrawReportMapper> {
+export class OutstandingReportRepository extends BaseRepo<
+  OutstandingDrawReportEntity,
+  OutstandingDrawReportMapper
+> {
   constructor() {
-    super({ collName: BINGO18_OUTSTANDING_DRAW_REPORTS, dataMapper: new OutstandingDrawReportMapper() });
+    super({
+      collName: BINGO18_OUTSTANDING_DRAW_REPORTS,
+      dataMapper: new OutstandingDrawReportMapper(),
+    });
   }
 
   /**
@@ -67,7 +76,9 @@ export class OutstandingReportRepository extends BaseRepo<OutstandingDrawReportE
   async bulkUpsertDrawReports(
     reports: Array<Omit<OutstandingDrawReport, "snapshotAt" | "createdAt" | "updatedAt">>,
   ): Promise<void> {
-    if (reports.length === 0) return;
+    if (reports.length === 0) {
+      return;
+    }
 
     const now = new Date();
     await this.bulkWrite(

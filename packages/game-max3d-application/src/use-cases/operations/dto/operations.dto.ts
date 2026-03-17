@@ -5,7 +5,7 @@
  * Mỗi endpoint trả về 1 phần nhỏ, lazy-load trên UI.
  *
  * Max 3D KHÔNG CÓ Jackpot, KHÔNG CÓ companyRate.
- * Financial model: profit = revenue - fixedPrizes - agentCommission.
+ * Financial model: companyTake = revenue - fixedPrizes - agentCommission.
  */
 
 import type { PlayMode, PlayType } from "@megawin/game-max3d/entities";

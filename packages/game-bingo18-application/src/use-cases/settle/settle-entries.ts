@@ -44,6 +44,7 @@ import {
   type DrawResultForMatch,
 } from "@megawin/game-bingo18/helpers";
 import { EntryOutcome } from "@megawin/game-core/entities";
+import { sumBy } from "@megawin/shared/utils/array";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext } from "./types";
 
@@ -111,18 +112,20 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         // Bingo 18 có 3 loại board, mỗi loại dùng hàm match và bảng giải riêng.
         const boardPayouts: EntryBoardPayout[] = [];
 
-        for (const board of entry.entrySummary?.boards ?? []) {
+        for (const board of entry.entrySummary.boards ?? []) {
           switch (board.playType) {
             case Bingo18PlayType.SingleNum: {
               // Đếm số lần xuất hiện → tra bảng match1/match2/match3.
               // board.number! an toàn: validate khi place-bet, singleNum luôn có number.
               const matchResult = matchSingleNum(board.number!, drawResult, config.singleNumPrizes);
+
               boardPayouts.push({
                 boardNo: board.boardNo,
                 playType: board.playType,
                 matchCount: matchResult.matchCount,
                 winAmount: matchResult.winAmount,
               });
+
               break;
             }
             case Bingo18PlayType.DoubleMatch: {
@@ -133,12 +136,14 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
                 drawResult,
                 config.doubleMatchPrizes,
               );
+
               boardPayouts.push({
                 boardNo: board.boardNo,
                 playType: board.playType,
                 matchCount: matchResult.matchCount,
                 winAmount: matchResult.winAmount,
               });
+
               break;
             }
             case Bingo18PlayType.TripleMatch: {
@@ -150,6 +155,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
                 drawResult,
                 config.tripleMatchPrizes,
               );
+
               boardPayouts.push({
                 boardNo: board.boardNo,
                 playType: board.playType,
@@ -158,6 +164,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
                 matchCount: matchResult.isWin ? 3 : 0,
                 winAmount: matchResult.winAmount,
               });
+
               break;
             }
           }
@@ -167,7 +174,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         // Bingo 18 có 2 loại side bet: sumTotal và bigSmallDraw.
         const sideBetPayouts: EntrySideBetPayout[] = [];
 
-        for (const sb of entry.entrySummary?.sideBets ?? []) {
+        for (const sb of entry.entrySummary.sideBets ?? []) {
           switch (sb.playType) {
             case Bingo18PlayType.SumTotal: {
               // Khớp chính xác tổng 3 số. Giải đối xứng quanh 10.5 (3=18, 4=17, ...).
@@ -182,6 +189,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               });
               break;
             }
+
             case Bingo18PlayType.BigSmallDraw: {
               // Phân loại tổng: small(3-9) / draw(10-11) / big(12-18).
               // sb.bet! an toàn: bigSmallDraw luôn có bet (validate khi place-bet).
@@ -190,6 +198,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
                 drawResult,
                 config.bigSmallDrawPrizes,
               );
+
               sideBetPayouts.push({
                 playType: sb.playType,
                 bet: sb.bet,
@@ -206,8 +215,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         // winAmount = Σ(boardPayouts) + Σ(sideBetPayouts).
         // Bingo 18 KHÔNG có payout caps → payoutAmount = winAmount trực tiếp.
         const winAmount =
-          boardPayouts.reduce((sum, b) => sum + b.winAmount, 0) +
-          sideBetPayouts.reduce((sum, s) => sum + s.winAmount, 0);
+          sumBy(boardPayouts, (b) => b.winAmount) + sumBy(sideBetPayouts, (s) => s.winAmount);
 
         const hasWin = winAmount > 0;
 

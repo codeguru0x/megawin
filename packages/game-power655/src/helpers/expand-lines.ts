@@ -140,9 +140,6 @@ export function expandBoardToLines(playType: PlayType, selection: BoardSelection
  * - Bao 5: 50 lines/board (55 - 5 = 50)
  * - Bao N (7-18): C(N,6) lines/board
  *
- * Power 6/55 KHÔNG void từng board riêng lẻ — void áp dụng toàn bộ entry.
- * Input là EntryBoardSnapshot[] (từ entry đã settle), không có isVoid.
- *
  * @param boards - Mảng `EntryBoardSnapshot[]` từ TicketEntryDoc.
  * @returns Flat array of lines, mỗi phần tử gồm LineValue + boardNo + lineIndex
  */

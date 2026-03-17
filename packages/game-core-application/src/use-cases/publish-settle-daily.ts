@@ -27,6 +27,7 @@ import type {
   SettleTenantDailyAggregateResult,
   SystemSettleTenantDailyRepository,
 } from "../infras/repos";
+import { InternalUseCase } from "@megawin/app-core/use-cases";
 
 /** Interface per-game repo phải implement để aggregate per-game draw reports. */
 export interface SystemGameDailyPublisher extends SystemSettleGameDailyRepository {
@@ -66,7 +67,10 @@ export interface PublishSettleDailyResult {
  * IDEMPOTENT: chạy lại nhiều lần cho cùng kết quả.
  * KHÔNG dùng $inc — luôn overwrite toàn bộ.
  */
-export class PublishSettleDailyUseCase {
+export class PublishSettleDailyUseCase extends InternalUseCase<
+  PublishSettleDailyInput,
+  PublishSettleDailyResult
+> {
   /**
    * Re-aggregate và publish daily reports lên system level.
    *

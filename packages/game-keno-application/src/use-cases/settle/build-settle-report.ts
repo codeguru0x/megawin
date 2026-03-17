@@ -17,7 +17,7 @@
  *
  * KHÁC BIỆT SO VỚI LOTTO535/MEGA645/POWER655:
  *   - KHÔNG có jackpotContribution (Keno không có Jackpot — field không tồn tại)
- *   - companyTake = financials.profit (công ty thu toàn bộ phần dư)
+ *   - companyTake = financials.companyTake (công ty thu toàn bộ phần dư)
  *   - KHÔNG có lineCount (Keno dùng betCount, không lineCount)
  *
  * CRASH-SAFE:
@@ -30,6 +30,7 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import { SettleDrawReportRepository } from "../../infras/repos/settle-draw-report-repo";
 import { SettleTenantReportRepository } from "../../infras/repos/settle-tenant-report-repo";
 import type { SettleContext } from "./types";
+import { sumBy } from "@megawin/shared/utils/array";
 
 export interface BuildSettleReportResult {
   /** Mã kỳ quay. */
@@ -45,7 +46,7 @@ export interface BuildSettleReportResult {
  *
  * CRASH-SAFE: aggregate từ DB → idempotent, chạy lại nhiều lần an toàn.
  * Ghi tenant reports trước, draw report sau — đảm bảo draw = SUM(tenants).
- * Keno KHÔNG có Jackpot: KHÔNG có field jackpotContribution. companyTake = financials.profit.
+ * Keno KHÔNG có Jackpot: KHÔNG có field jackpotContribution. companyTake = financials.companyTake.
  */
 export class BuildSettleReportUseCase extends InternalUseCase<
   SettleContext,
@@ -98,25 +99,25 @@ export class BuildSettleReportUseCase extends InternalUseCase<
 
     // ── Bước 3: Upsert SettleDrawReport ────────────────────────────────────
     // SUM từ tenant reports + financials từ SettleContext (từ CalculateFinancials)
-    const totalStake = tenantAggs.reduce((s, t) => s + t.totalStake, 0);
-    const totalWin = tenantAggs.reduce((s, t) => s + t.totalWin, 0);
-    const totalPayout = tenantAggs.reduce((s, t) => s + t.totalPayout, 0);
-    const totalCommission = tenantAggs.reduce((s, t) => s + t.totalCommission, 0);
-    const entryCount = tenantAggs.reduce((s, t) => s + t.entryCount, 0);
+    const totalStake = sumBy(tenantAggs, (t) => t.totalStake);
+    const totalWin = sumBy(tenantAggs, (t) => t.totalWin);
+    const totalPayout = sumBy(tenantAggs, (t) => t.totalPayout);
+    const totalCommission = sumBy(tenantAggs, (t) => t.totalCommission);
+    const entryCount = sumBy(tenantAggs, (t) => t.entryCount);
     const tenantCount = tenantAggs.length;
 
     // Đếm unique players: SUM playerCount per tenant (mỗi tenant có playerSet riêng)
     // Không thể deduplicate cross-tenant ở đây vì 1 player có thể mua nhiều tenant.
     // playerCount = số unique player trong toàn draw (aggregate cross-tenant).
-    const playerCount = playerAggs.reduce((s, p) => s + p.playerCount, 0);
+    const playerCount = sumBy(playerAggs, (p) => p.playerCount);
 
     const ggr = totalStake - totalPayout;
     // netProfit CÓ THỂ ÂM khi kỳ trả thưởng lớn → KHÔNG validate >= 0
     const netProfit = ggr - totalCommission;
 
-    // companyTake = profit (công ty thu toàn bộ phần dư sau prizes + commission)
+    // companyTake = phần công ty thu (toàn bộ phần dư sau prizes + commission)
     // Keno không có Jackpot quỹ tích luỹ → không cần chia phần dư
-    const companyTake = financials?.profit ?? 0;
+    const companyTake = financials?.companyTake ?? 0;
 
     await this.drawReportRepo.upsertDrawReport({
       drawId,

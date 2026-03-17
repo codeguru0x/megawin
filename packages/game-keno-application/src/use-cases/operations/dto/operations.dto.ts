@@ -4,7 +4,7 @@
  * Mỗi endpoint trả về 1 phần nhỏ, lazy-load trên UI.
  *
  * Keno khác biệt so với các game khác:
- *   - Không có Jackpot tích luỹ — financial chỉ có profit
+ *   - Không có Jackpot tích luỹ — financial chỉ có companyTake
  *   - Cách chơi cơ bản: pick1-pick10 (10 loại)
  *   - Side bets: bigSmall, evenOdd (2 loại)
  *   - 80 số (01-80), tần suất cao ~120 kỳ/ngày

@@ -5,8 +5,8 @@
  * Công ty thu TOÀN BỘ phần còn lại sau giải thưởng và hoa hồng.
  *
  * Công thức:
- *   profit = totalRevenue - totalFixedPrizes - totalAgentCommission
- *   (profit có thể âm — công ty chịu lỗ)
+ *   companyTake = totalRevenue - totalFixedPrizes - totalAgentCommission
+ *   (companyTake có thể âm — công ty chịu lỗ)
  */
 
 export interface DrawFinancialInput {
@@ -26,10 +26,10 @@ export interface DrawFinancialResult {
   /** Hoa hồng đại lý = Σ(tenant.commission). */
   totalAgentCommission: number;
   /**
-   * Lợi nhuận = totalRevenue - totalFixedPrizes - totalAgentCommission.
+   * Phần công ty thu = totalRevenue - totalFixedPrizes - totalAgentCommission.
    * Có thể âm nếu giải thưởng vượt doanh thu (công ty chịu lỗ).
    */
-  profit: number;
+  companyTake: number;
 }
 
 /**
@@ -41,12 +41,12 @@ export interface DrawFinancialResult {
 export function calculateDrawFinancials(input: DrawFinancialInput): DrawFinancialResult {
   const { totalRevenue, totalFixedPrizes, totalAgentCommission } = input;
 
-  const profit = totalRevenue - totalFixedPrizes - totalAgentCommission;
+  const companyTake = totalRevenue - totalFixedPrizes - totalAgentCommission;
 
   return {
     totalRevenue,
     totalFixedPrizes,
     totalAgentCommission,
-    profit,
+    companyTake,
   };
 }

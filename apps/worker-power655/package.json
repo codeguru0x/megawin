@@ -9,7 +9,7 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
-    "build:deps": "turbo run build --filter=@megawin/worker-power655^...",
+    "build:deps": "turbo run build --filter=@megawin/worker-power655^... --force",
     "deploy:dev": "pnpm build:deps && set -a && . ./.env.dev && set +a && serverless deploy --stage dev",
     "deploy:prod": "pnpm build:deps && set -a && . ./.env.prod && set +a && serverless deploy --stage prod"
   },
@@ -25,7 +25,7 @@
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
-    "@types/node": "^24.0.0",
+    "@types/node": "^24.12.0",
     "serverless-offline": "^14.5.0",
     "typescript": "5.9.3"
   }

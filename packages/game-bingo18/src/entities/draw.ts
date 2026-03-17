@@ -119,20 +119,24 @@ export interface DrawBasicPrizeSummary {
    * Cùng với matchCount + tripleKind xác định duy nhất 1 bậc giải.
    */
   playType: Bingo18PlayType;
+
   /**
    * Số lần xuất hiện trong kết quả (1, 2, 3).
    * singleNum: 1/2/3 tương ứng giải khác nhau (12k/20k/30k).
    * doubleMatch + tripleMatch: luôn = 1 (trúng hoặc không).
    */
   matchCount: number;
+
   /**
    * Phân loại triple: "specific" (chọn số cụ thể, 1.200.000đ) hoặc "any" (bất kỳ bộ ba, 200.000đ).
    * Chỉ set cho tripleMatch — undefined với singleNum và doubleMatch.
    * Bắt buộc để phân biệt 2 mức giải của tripleMatch.
    */
   tripleKind?: Bingo18TripleKind;
+
   /** Số lượt cược trúng tổ hợp này trong kỳ quay. */
   winnerCount: number;
+
   /** Tiền thưởng mỗi lần cược (VND). */
   prizePerUnit: number;
 }
@@ -148,18 +152,22 @@ export interface DrawBasicPrizeSummary {
 export interface DrawSideBetPrizeSummary {
   /** Loại side bet: "sumTotal" | "bigSmallDraw". */
   playType: Bingo18PlayType;
+
   /**
    * Tổng cụ thể đã trúng (3-18). Chỉ set cho sumTotal.
    * undefined với bigSmallDraw.
    */
   sum?: number;
+
   /**
    * Cược Lớn/Hòa/Nhỏ đã trúng. Chỉ set cho bigSmallDraw.
    * undefined với sumTotal.
    */
   bet?: Bingo18BigSmallBet;
+
   /** Số lượt cược trúng với (playType, sum/bet) này trong kỳ quay. */
   winnerCount: number;
+
   /** Tiền thưởng mỗi lần cược (VND). */
   prizePerUnit: number;
 }
@@ -178,6 +186,7 @@ export interface DrawSettleSummary {
    * Mỗi entry = 1 (playType, matchCount, tripleKind?) unique có winnerCount > 0.
    */
   basicPrizes: DrawBasicPrizeSummary[];
+
   /**
    * Giải thưởng side bet có người trúng.
    * Mỗi entry = 1 (playType, sum/bet) unique có winnerCount > 0.

@@ -75,7 +75,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
         totalRevenue: fin.totalRevenue,
         totalFixedPrizes: fin.totalFixedPrizes,
         totalAgentCommission: fin.totalAgentCommission,
-        companyTake: fin.profit,
+        companyTake: fin.companyTake,
       },
       {
         ticketEntryCount: payoutSummary.totalSettled,
@@ -90,7 +90,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
       totalRevenue: fin.totalRevenue,
       totalFixedPrizes: fin.totalFixedPrizes,
       totalAgentCommission: fin.totalAgentCommission,
-      profit: fin.profit,
+      companyTake: fin.companyTake,
     };
   }
 }

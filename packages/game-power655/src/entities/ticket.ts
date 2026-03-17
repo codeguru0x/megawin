@@ -119,8 +119,6 @@ export interface Board {
   selection: BoardSelection;
   /** Thông tin tính toán từ selection. */
   derived: BoardDerived;
-  /** Bảng bị void (chỉ khi có lỗi nghiêm trọng – hiếm khi dùng). */
-  isVoid: boolean;
 }
 
 // ─────────────────────────────────────────────

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Info } from "lucide-react";
+import { useQueryState } from "nuqs";
+import { Filter } from "lucide-react";
 
 import { Label } from "@/components/ui/label";
 import {
@@ -16,7 +16,10 @@ import { useTenantOptions } from "@/hooks/use-tenant-options";
 import { PlayersTable } from "./players-table";
 
 export function PlayersContent() {
-  const [activeTenantId, setActiveTenantId] = useState("");
+  // tenant selector persist vào URL — user không mất lựa chọn khi refresh
+  const [activeTenantId, setActiveTenantId] = useQueryState("tenant", {
+    defaultValue: "",
+  });
   const { data, isLoading: isLoadingOptions } = useTenantOptions();
 
   const tenants = data?.tenants ?? [];
@@ -25,14 +28,13 @@ export function PlayersContent() {
     <div className="space-y-4">
       <div className="flex items-end gap-3">
         <div className="w-full max-w-xs space-y-1.5">
-          <Label htmlFor="tenant-select">Tenant</Label>
-          <Select value={activeTenantId} onValueChange={setActiveTenantId}>
+          <Label htmlFor="tenant-select" className="flex items-center gap-1.5 text-xs font-medium">
+            <Filter className="size-3 text-muted-foreground" />
+            Tenant
+          </Label>
+          <Select value={activeTenantId} onValueChange={(v) => setActiveTenantId(v || null)}>
             <SelectTrigger id="tenant-select">
-              <SelectValue
-                placeholder={
-                  isLoadingOptions ? "Đang tải..." : "Chọn đối tác"
-                }
-              />
+              <SelectValue placeholder={isLoadingOptions ? "Đang tải..." : "Chọn đối tác"} />
             </SelectTrigger>
             <SelectContent>
               {tenants.map((t) => (

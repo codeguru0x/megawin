@@ -5,13 +5,14 @@
   "type": "module",
   "description": "Keno application layer – repos, mappers, use cases",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -b tsconfig.build.json",
     "dev": "tsc -p tsconfig.build.json --watch",
     "check-types": "tsc --noEmit",
     "build:deps": "turbo build --filter=@megawin/game-keno-application^...",
     "pretest": "pnpm build:deps",
     "test": "vitest run",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "clean": "rm -rf dist"
   },
   "exports": {
     "./use-cases/place-bet": {

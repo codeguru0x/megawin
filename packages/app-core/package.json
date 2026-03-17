@@ -9,7 +9,8 @@
     "check-types": "tsc --noEmit",
     "build": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "clean": "rm -rf dist"
   },
   "keywords": [],
   "author": "",
@@ -48,7 +49,6 @@
       "default": "./dist/lambda/middleware/index.js"
     }
   },
-  
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",

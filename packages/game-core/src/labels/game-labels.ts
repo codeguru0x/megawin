@@ -169,3 +169,54 @@ export const TICKET_CHANNEL_LABELS: Record<TicketChannel, string> = {
 export function getTicketChannelLabel(channel: TicketChannel): string {
   return TICKET_CHANNEL_LABELS[channel] ?? channel;
 }
+
+// ─────────────────────────────────────────────
+// Report Column Labels (dùng chung mọi game)
+// ─────────────────────────────────────────────
+
+/**
+ * Tên cột tiếng Việt cho bảng báo cáo.
+ *
+ * Dùng chung cho outstanding, financial, void reports của tất cả 7 game.
+ * Import: `import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels"`
+ */
+export const REPORT_COLUMN_LABELS = {
+  /** Ngày tài chính (YYYY-MM-DD). */
+  financialDate: "Ngày tài chính",
+  /** ID kỳ quay. */
+  drawId: "Kỳ quay",
+  /** Số người chơi (unique accountId). */
+  playerCount: "Người chơi",
+  /** Số đại lý tham gia. */
+  tenantCount: "Đại lý",
+  /** Số lượt cược (entries). */
+  entryCount: "Lượt cược",
+  /** Số dòng cược (lines — game có lines: lotto535, mega645, power655, max3d, max3dpro). */
+  lineCount: "Dòng cược",
+  /** Tổng tiền cược pending (VND). Outstanding reports. */
+  totalStake: "Tổng tiền cược",
+  /** Ước tính hoa hồng đại lý (VND). Outstanding reports. */
+  estimatedCommission: "Ước tính hoa hồng",
+  /** Tổng tiền thắng (VND). Settle reports. */
+  totalWin: "Tổng tiền thắng",
+  /** Tổng tiền trả thưởng (VND). Settle reports. */
+  totalPayout: "Trả thưởng",
+  /** Gross Gaming Revenue = totalStake - totalPayout (VND). */
+  ggr: "Doanh thu thuần (GGR)",
+  /** Tỷ lệ trả thưởng = totalPayout / totalStake (%). */
+  payoutPercent: "Tỷ lệ trả thưởng",
+  /** Tổng hoa hồng đại lý (VND). Settle reports. */
+  totalCommission: "Hoa hồng đại lý",
+  /** Lợi nhuận ròng (VND). Có thể âm khi trúng jackpot. */
+  netProfit: "Lợi nhuận ròng",
+  /** Phần công ty thu về (VND). */
+  companyTake: "Công ty thu",
+  /** Đóng góp vào quỹ Jackpot (VND). Chỉ game có Jackpot. */
+  jackpotContribution: "Đóng góp Jackpot",
+  /** Tiền cược gốc trước khi hoàn (VND). Void reports. */
+  totalOriginalStake: "Tiền cược gốc",
+  /** Tổng tiền hoàn trả (VND). Void reports. */
+  totalRefundAmount: "Tiền hoàn trả",
+  /** Nhãn dòng tổng cộng ở footer bảng. */
+  summary: "TỔNG CỘNG",
+} as const;

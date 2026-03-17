@@ -49,6 +49,12 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  /* ── Profit / Loss semantic colors ─────────────────────────────────────── */
+  --color-profit: var(--profit);
+  --color-profit-foreground: var(--profit-foreground);
+  --color-loss: var(--loss);
+  --color-loss-foreground: var(--loss-foreground);
+
   /* ── Game Brand Colors ───────────────────────────────────────────────────── */
   /* Primary brand token per game — dùng cho charts, badges, borders, icons.   */
   /* Thêm vào @theme để Tailwind sinh ra bg-game-*, text-game-*, border-game-* */
@@ -110,11 +116,18 @@ These serve as the fallback; there is no separate default.css file. */
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 
+  /* ── Profit / Loss semantic colors ─────────────────────────────────────── */
+  /* Dùng cho tất cả UI thể hiện thắng (dương) hoặc thua (âm).               */
+  /* Tailwind utility: text-profit, bg-profit, text-loss, bg-loss             */
+  --profit: oklch(0.527 0.154 150.069); /* emerald-600 #059669 */
+  --profit-foreground: oklch(1 0 0);    /* white */
+  --loss: oklch(0.577 0.245 27.325);    /* red-500 #ef4444 — đồng bộ với --destructive */
+  --loss-foreground: oklch(1 0 0);      /* white */
+
   /* ── Game Brand Colors (light mode) ────────────────────────────────────── */
   /* Mega 6/45 — Teal (jackpot: teal-400→emerald-500) */
   --game-mega645: oklch(0.5765 0.149 194.77); /* teal-600  #0d9488 */
   --game-mega645-muted: oklch(0.953 0.026 183.6); /* teal-50   #f0fdfa */
-
   /* Power 6/55 — Red/Orange (jackpot: red-500→orange-500) */
   --game-power655: oklch(0.628 0.258 29.2); /* red-500   #ef4444 */
   --game-power655-muted: oklch(0.969 0.033 29.2); /* red-50    #fef2f2 */
@@ -173,9 +186,14 @@ These serve as the fallback; there is no separate default.css file. */
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.439 0 0);
 
+  /* ── Profit / Loss semantic colors (dark mode) ─────────────────────────── */
+  --profit: oklch(0.696 0.17 162.48);    /* emerald-400 #34d399 — sáng hơn cho nền tối */
+  --profit-foreground: oklch(0.1 0.05 150);
+  --loss: oklch(0.704 0.191 22.216);     /* red-400 #f87171 — đồng bộ với --destructive dark */
+  --loss-foreground: oklch(0.1 0.05 27);
+
   /* ── Game Brand Colors (dark mode) ─────────────────────────────────────── */
-  /* Sáng hơn so với light mode để dễ đọc trên nền tối */
-  --game-mega645: oklch(0.72 0.118 183.6); /* teal-400  #2dd4bf */
+  /* Sáng hơn so với light mode để dễ đọc trên nền tối */  --game-mega645: oklch(0.72 0.118 183.6); /* teal-400  #2dd4bf */
   --game-mega645-muted: oklch(0.2 0.05 183.6); /* teal-950  #042f2e */
 
   --game-power655: oklch(0.704 0.191 22.2); /* red-400   #f87171 */

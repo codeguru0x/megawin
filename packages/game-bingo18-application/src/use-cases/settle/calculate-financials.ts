@@ -21,6 +21,8 @@ import type {
   DrawBasicPrizeSummary,
   DrawSideBetPrizeSummary,
   DrawSettleSummary,
+  DrawFinancial,
+  DrawStats,
 } from "@megawin/game-bingo18/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -43,23 +45,19 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
   protected async execute(input: SettleContext): Promise<SettleFinancials> {
     const { drawId } = input;
 
-    // Chạy song song 4 queries để giảm latency.
-    const [
-      { totalRevenue, totalAgentCommission },
-      payoutSummary,
-      basicPrizeSummary,
-      sideBetPrizeSummary,
-    ] = await Promise.all([
-      this.entryRepo.aggregateTotalRevenue(drawId),
-      this.entryRepo.aggregateSettledPayoutSummary(drawId),
+    // Chạy song song 3 queries để giảm latency.
+    // Query 1: gộp revenue + commission + payout trong 1 pipeline (tất cả entries đã Settled).
+    // Query 2+3: prize summary tách riêng vì $unwind boardPayouts/sideBetPayouts khác nhau.
+    const [summary, basicPrizeSummary, sideBetPrizeSummary] = await Promise.all([
+      this.entryRepo.aggregateSettledFinancialSummary(drawId),
       this.entryRepo.aggregateBasicPrizeSummary(drawId),
       this.entryRepo.aggregateSideBetPrizeSummary(drawId),
     ]);
 
     const fin = calculateBingo18DrawFinancials({
-      totalRevenue,
-      totalPrizes: payoutSummary.totalPrizes,
-      totalAgentCommission,
+      totalRevenue: summary.totalRevenue,
+      totalPrizes: summary.totalPrizes,
+      totalAgentCommission: summary.totalAgentCommission,
     });
 
     // ── Build settleSummary cho player API ─────────────────────────────────
@@ -97,12 +95,12 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
         totalPrizes: fin.totalPrizes,
         totalAgentCommission: fin.totalAgentCommission,
         companyTake: fin.companyTake,
-      },
+      } satisfies DrawFinancial,
       {
-        ticketEntryCount: payoutSummary.totalSettled,
+        ticketEntryCount: summary.totalSettled,
         totalSalesAmount: fin.totalRevenue,
-        totalPayoutAmount: payoutSummary.totalPayoutAmount,
-      },
+        totalPayoutAmount: summary.totalPayoutAmount,
+      } satisfies DrawStats,
       settleSummary,
     );
 
@@ -111,6 +109,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
       totalPrizes: fin.totalPrizes,
       totalAgentCommission: fin.totalAgentCommission,
       companyTake: fin.companyTake,
-    };
+    } satisfies SettleFinancials;
   }
 }

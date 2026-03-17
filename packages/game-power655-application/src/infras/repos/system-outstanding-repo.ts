@@ -17,6 +17,13 @@ export class SystemOutstandingRepo extends SystemOutstandingReportRepository {
     collName: POWER655_OUTSTANDING_DRAW_REPORTS,
   });
 
+  /**
+   * Aggregate tổng hợp toàn bộ per-game outstanding draw reports.
+   *
+   * SUM tất cả draws → 1 summary row.
+   * Trả về zeros nếu không có draw active nào.
+   * @returns OutstandingPerGameAggregateResult
+   */
   async aggregateFromPerGame(): Promise<OutstandingPerGameAggregateResult> {
     const result = await this.perGameColl.aggregate([
       {
@@ -34,16 +41,23 @@ export class SystemOutstandingRepo extends SystemOutstandingReportRepository {
 
     if (result.length === 0) {
       return {
-        activeDrawCount: 0, totalEntryCount: 0, totalPlayerCount: 0,
-        totalTenantCount: 0, totalOutstandingStake: 0, totalEstimatedCommission: 0,
+        activeDrawCount: 0,
+        totalEntryCount: 0,
+        totalPlayerCount: 0,
+        totalTenantCount: 0,
+        totalOutstandingStake: 0,
+        totalEstimatedCommission: 0,
       };
     }
 
     const r = result[0] as any;
     return {
-      activeDrawCount: r.activeDrawCount, totalEntryCount: r.totalEntryCount,
-      totalPlayerCount: r.totalPlayerCount, totalTenantCount: r.totalTenantCount,
-      totalOutstandingStake: r.totalOutstandingStake, totalEstimatedCommission: r.totalEstimatedCommission,
+      activeDrawCount: r.activeDrawCount,
+      totalEntryCount: r.totalEntryCount,
+      totalPlayerCount: r.totalPlayerCount,
+      totalTenantCount: r.totalTenantCount,
+      totalOutstandingStake: r.totalOutstandingStake,
+      totalEstimatedCommission: r.totalEstimatedCommission,
     };
   }
 }

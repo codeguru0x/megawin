@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { UserCog } from "lucide-react";
 
+import { SYSTEM_ICON_GRADIENT } from "@/lib/game-colors";
 import { AccountNav } from "./_components/account-nav";
 
 export default function AccountLayout({ children }: Readonly<{ children: ReactNode }>) {
@@ -9,7 +10,9 @@ export default function AccountLayout({ children }: Readonly<{ children: ReactNo
     <div className="@container/main flex flex-col gap-6">
       {/* Page header — đồng nhất với Dashboard, Financial Reports */}
       <div className="flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-slate-500 to-slate-700 shadow-sm">
+        <div
+          className={`flex size-9 items-center justify-center rounded-xl bg-linear-to-br ${SYSTEM_ICON_GRADIENT} shadow-sm`}
+        >
           <UserCog className="size-4.5 text-white" />
         </div>
         <div>

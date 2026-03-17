@@ -160,12 +160,11 @@ export interface TicketEntryDoc {
 export interface EntryBoardSnapshot {
   /** Ký hiệu board ("A".."F"). */
   boardNo: string;
-  /** True nếu board này đã bị void (ví dụ: đại lý huỷ 1 board). */
-  isVoid?: boolean;
   /** Kiểu chơi (standard / bao5 / bao7-18 / quickPick). */
   playType: PlayType;
   /** Danh sách số chính người chơi đã chọn ("01"-"45"). */
   mainNumbers: string[];
+
   /**
    * Số line sau khi expand từ board.
    * - standard / quickPick: 1

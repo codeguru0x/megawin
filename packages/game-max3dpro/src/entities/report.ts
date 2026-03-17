@@ -92,7 +92,7 @@ export interface SettleDrawReport {
   netProfit: number;
 
   /**
-   * Phần công ty thu về (VND). = DrawFinancial.profit.
+   * Phần công ty thu về (VND). = DrawFinancial.companyTake.
    * Max 3D Pro không có Jackpot quỹ → công ty thu toàn bộ phần dư sau prizes + commission.
    */
   companyTake: number;

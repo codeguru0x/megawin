@@ -52,7 +52,7 @@ export class SyncOutstandingUseCase extends InternalUseCase<void, SyncOutstandin
     // thay vì scan toàn bộ collection theo status.
     const activeDraws = await this.drawRepo.getActiveDraws(
       [DrawStatus.SalesOpen, DrawStatus.SalesClosed, DrawStatus.Published, DrawStatus.Settling],
-      2,
+      7,
     );
     const activeDrawIds = activeDraws.map((d) => d.drawId);
 

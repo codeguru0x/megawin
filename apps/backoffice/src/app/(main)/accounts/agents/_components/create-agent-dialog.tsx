@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Dices, Eye, EyeOff } from "lucide-react";
 import { apiClient, ApiClientError } from "@megawin/next/client";
+import { accountsKeys } from "@/lib/query-keys/accounts";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -70,7 +71,7 @@ export function CreateAgentAccountDialog() {
     mutationFn: (values: CreateAgentValues) =>
       apiClient.post<CreateAgentAccountResponse>("/accounts/agents", values),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["agent", "accounts"] });
+      queryClient.invalidateQueries({ queryKey: accountsKeys.agents });
       setOpen(false);
       form.reset();
       toast.success("Tạo tài khoản đại lý thành công.", {
@@ -104,34 +105,24 @@ export function CreateAgentAccountDialog() {
             <Badge variant="secondary" className="text-xs">
               Agent
             </Badge>
-            . Mật khẩu tạm thời, người dùng sẽ phải đổi khi đăng nhập lần
-            đầu. Mỗi Tenant chỉ được gán 1 đại lý duy nhất.
+            . Mật khẩu tạm thời, người dùng sẽ phải đổi khi đăng nhập lần đầu. Mỗi Tenant chỉ được
+            gán 1 đại lý duy nhất.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-4">
             <FormField
               control={form.control}
               name="tenantId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tenant</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue
-                          placeholder={
-                            isLoadingTenants
-                              ? "Đang tải..."
-                              : "Chọn Tenant"
-                          }
+                          placeholder={isLoadingTenants ? "Đang tải..." : "Chọn Tenant"}
                         />
                       </SelectTrigger>
                     </FormControl>
@@ -160,11 +151,7 @@ export function CreateAgentAccountDialog() {
                 <FormItem>
                   <FormLabel>Tên tài khoản</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="vd: agent.partner1"
-                      autoComplete="off"
-                      {...field}
-                    />
+                    <Input placeholder="vd: agent.partner1" autoComplete="off" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

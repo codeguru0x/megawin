@@ -55,6 +55,8 @@ export { max3dKeys } from "./max3d";
 export { max3dproKeys } from "./max3dpro";
 export { bingo18Keys } from "./bingo18";
 export { tenantsKeys } from "./tenants";
+export { accountsKeys } from "./accounts";
+export { meKeys } from "./me";
 export { reportsKeys } from "./reports";
 export { dashboardKeys } from "./dashboard";
 
@@ -66,11 +68,15 @@ import { max3dKeys } from "./max3d";
 import { max3dproKeys } from "./max3dpro";
 import { bingo18Keys } from "./bingo18";
 import { tenantsKeys } from "./tenants";
+import { accountsKeys } from "./accounts";
+import { meKeys } from "./me";
 import { reportsKeys } from "./reports";
 import { dashboardKeys } from "./dashboard";
 
 export const queryKeys = {
   tenants: tenantsKeys,
+  accounts: accountsKeys,
+  me: meKeys,
   lotto535: lotto535Keys,
   keno: kenoKeys,
   power655: power655Keys,

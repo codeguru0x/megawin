@@ -46,7 +46,7 @@ function Mega645FinancialContent() {
         </div>
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => void setTab(v as "draws" | "tenants")}>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "draws" | "tenants")}>
         <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
           <TabsTrigger value="draws" className="gap-1.5">
             <CalendarRange className="size-4 text-emerald-500" />

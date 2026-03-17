@@ -70,6 +70,15 @@ export function usePower655ReportFilters() {
     [setTenantId, setDrawId, setPlayerId],
   );
 
+  /** Tab "Theo đại lý" → click 1 kỳ → drill vào draw × tenant (players level). */
+  const navigateToDrawInTenant = useCallback(
+    (dId: string, tId: string) => {
+      void setDrawId(dId, { history: "push" });
+      void setTenantId(tId);
+    },
+    [setDrawId, setTenantId],
+  );
+
   return {
     tab,
     setTab,
@@ -86,5 +95,6 @@ export function usePower655ReportFilters() {
     navigateToTenantInDraw,
     navigateToPlayer,
     navigateToTenantDrills,
+    navigateToDrawInTenant,
   };
 }

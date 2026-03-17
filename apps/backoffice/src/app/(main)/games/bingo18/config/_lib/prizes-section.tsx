@@ -38,16 +38,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 import { cn } from "@/lib/utils";
 
@@ -108,9 +100,7 @@ const PRIZE_GROUPS: PrizeGroupDef[] = [
     icon: <Dice2 className="size-3.5 text-white" />,
     badgeColor: "bg-purple-500",
     isSingleBet: true,
-    entries: [
-      { key: "win", label: "Trùng ≥2/3", desc: "Ít nhất 2 số trùng số chọn" },
-    ],
+    entries: [{ key: "win", label: "Trùng ≥2/3", desc: "Ít nhất 2 số trùng số chọn" }],
   },
   {
     id: "tripleMatch",
@@ -175,10 +165,7 @@ const CONFIG_KEY_MAP: Record<string, keyof PrizesState> = {
   bigSmallDraw: "bigSmallDrawPrizes",
 };
 
-function getPrizesRecord(
-  state: PrizesState,
-  groupId: string
-): Record<string, number> {
+function getPrizesRecord(state: PrizesState, groupId: string): Record<string, number> {
   const configKey = CONFIG_KEY_MAP[groupId];
   if (!configKey) return {};
   const data = state[configKey];
@@ -197,7 +184,7 @@ function getPrizesRecord(
 function analyzeGroup(
   groupId: string,
   prizes: Record<string, number>,
-  unitPrice: number
+  unitPrice: number,
 ): PlayTypeProfitSummary | undefined {
   switch (groupId) {
     case "singleNum":
@@ -207,25 +194,18 @@ function analyzeGroup(
           match2: prizes.match2 ?? 0,
           match3: prizes.match3 ?? 0,
         },
-        unitPrice
+        unitPrice,
       );
     case "doubleMatch":
-      return analyzeDoubleMatchProfitability(
-        { win: prizes.win ?? 0 },
-        unitPrice
-      );
+      return analyzeDoubleMatchProfitability({ win: prizes.win ?? 0 }, unitPrice);
     case "tripleMatch": {
       const result = analyzeTripleMatchProfitability(
         { specific: prizes.specific ?? 0, any: prizes.any ?? 0 },
-        unitPrice
+        unitPrice,
       );
       const allTiers = [...result.specific.tiers, ...result.any.tiers];
-      const totalExpectedPayout = allTiers.reduce(
-        (s, t) => s + t.expectedPayout,
-        0
-      );
-      const totalPayoutRatio =
-        unitPrice > 0 ? totalExpectedPayout / unitPrice : 0;
+      const totalExpectedPayout = allTiers.reduce((s, t) => s + t.expectedPayout, 0);
+      const totalPayoutRatio = unitPrice > 0 ? totalExpectedPayout / unitPrice : 0;
       return {
         playType: "tripleMatch",
         unitPrice,
@@ -234,15 +214,11 @@ function analyzeGroup(
         totalPayoutRatio,
         grossMarginPerTicket: unitPrice - totalExpectedPayout,
         grossMarginPercent:
-          unitPrice > 0
-            ? ((unitPrice - totalExpectedPayout) / unitPrice) * 100
-            : 0,
+          unitPrice > 0 ? ((unitPrice - totalExpectedPayout) / unitPrice) * 100 : 0,
       };
     }
     case "sumTotal": {
-      const numPrizes: Record<number, number> = {};
-      for (const [k, v] of Object.entries(prizes)) numPrizes[Number(k)] = v;
-      return analyzeSumTotalProfitability(numPrizes, unitPrice);
+      return analyzeSumTotalProfitability(prizes, unitPrice);
     }
     case "bigSmallDraw":
       return analyzeBigSmallDrawProfitability(
@@ -251,7 +227,7 @@ function analyzeGroup(
           small: prizes.small ?? 0,
           draw: prizes.draw ?? 0,
         },
-        unitPrice
+        unitPrice,
       );
     default:
       return undefined;
@@ -261,12 +237,11 @@ function analyzeGroup(
 function findTierForEntry(
   groupId: string,
   entryKey: string,
-  tiers: TierProfitAnalysis[]
+  tiers: TierProfitAnalysis[],
 ): TierProfitAnalysis | undefined {
   switch (groupId) {
     case "singleNum": {
-      const match =
-        entryKey === "match1" ? "1/3" : entryKey === "match2" ? "2/3" : "3/3";
+      const match = entryKey === "match1" ? "1/3" : entryKey === "match2" ? "2/3" : "3/3";
       return tiers.find((t) => t.label.includes(match));
     }
     case "doubleMatch":
@@ -306,9 +281,7 @@ function HeaderTooltip({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span
-          className={`inline-flex items-center gap-1 cursor-help ${className ?? ""}`}
-        >
+        <span className={`inline-flex items-center gap-1 cursor-help ${className ?? ""}`}>
           {label}
           <Info className="size-3 text-muted-foreground/60" />
         </span>
@@ -337,7 +310,7 @@ function PrizeGroup({
 
   const profitAnalysis = useMemo(
     () => analyzeGroup(group.id, prizes, unitPrice),
-    [group.id, prizes, unitPrice]
+    [group.id, prizes, unitPrice],
   );
 
   const tierMargins = useMemo(() => {
@@ -348,15 +321,14 @@ function PrizeGroup({
   const worstMargin = tierMargins.length > 0 ? Math.min(...tierMargins) : 0;
   const bestMargin = tierMargins.length > 0 ? Math.max(...tierMargins) : 0;
 
-  const displayMargin = group.isSingleBet
-    ? profitAnalysis?.grossMarginPercent ?? 0
-    : worstMargin;
+  const displayMargin = group.isSingleBet ? (profitAnalysis?.grossMarginPercent ?? 0) : worstMargin;
 
-  const marginColor = displayMargin >= 50
-    ? "text-emerald-600"
-    : displayMargin >= 0
-      ? "text-amber-600"
-      : "text-red-600";
+  const marginColor =
+    displayMargin >= 50
+      ? "text-emerald-600"
+      : displayMargin >= 0
+        ? "text-amber-600"
+        : "text-red-600";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -365,7 +337,7 @@ function PrizeGroup({
           type="button"
           className={cn(
             "flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-left transition-colors hover:bg-muted/50",
-            open && "bg-muted/30"
+            open && "bg-muted/30",
           )}
         >
           <div className="flex items-center gap-2">
@@ -373,9 +345,7 @@ function PrizeGroup({
               {group.icon}
               <span className="ml-1">{group.label}</span>
             </Badge>
-            <span className="text-sm text-muted-foreground">
-              {group.description}
-            </span>
+            <span className="text-sm text-muted-foreground">{group.description}</span>
           </div>
           <div className="flex items-center gap-3">
             {profitAnalysis && (
@@ -428,22 +398,19 @@ function PrizeGroup({
             const tier = profitAnalysis
               ? findTierForEntry(group.id, entry.key, profitAnalysis.tiers)
               : undefined;
-            const isOverBreakEven =
-              tier && tier.currentPrize > tier.breakEvenPrize;
+            const isOverBreakEven = tier && tier.currentPrize > tier.breakEvenPrize;
 
             return (
               <div
                 key={entry.key}
                 className={cn(
                   "grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 rounded-md px-2 py-1.5",
-                  isOverBreakEven && "bg-red-50 dark:bg-red-950/20"
+                  isOverBreakEven && "bg-red-50 dark:bg-red-950/20",
                 )}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium">{entry.label}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {entry.desc}
-                  </span>
+                  <span className="text-xs text-muted-foreground">{entry.desc}</span>
                 </div>
                 <MoneyInput
                   className="h-8 w-40 text-right tabular-nums text-sm font-semibold"
@@ -457,8 +424,7 @@ function PrizeGroup({
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="top" className="text-xs">
-                    {tier &&
-                      `Xác suất: ${(tier.probability * 100).toFixed(4)}%`}
+                    {tier && `Xác suất: ${(tier.probability * 100).toFixed(4)}%`}
                   </TooltipContent>
                 </Tooltip>
                 <span className="text-right text-xs tabular-nums font-medium">
@@ -471,7 +437,7 @@ function PrizeGroup({
                       ? "text-red-600"
                       : tier && tier.payoutRatio > 0.5
                         ? "text-amber-600"
-                        : "text-emerald-600"
+                        : "text-emerald-600",
                   )}
                 >
                   {tier ? `${(tier.payoutRatio * 100).toFixed(2)}%` : "–"}
@@ -479,9 +445,7 @@ function PrizeGroup({
                 <span
                   className={cn(
                     "text-right text-xs tabular-nums",
-                    isOverBreakEven
-                      ? "text-red-600 font-bold"
-                      : "text-muted-foreground"
+                    isOverBreakEven ? "text-red-600 font-bold" : "text-muted-foreground",
                   )}
                 >
                   {tier ? `${fmt(Math.round(tier.breakEvenPrize))}` : "–"}
@@ -493,15 +457,17 @@ function PrizeGroup({
             <div className="flex items-center justify-between px-2 py-2 border-t mt-1">
               <span className="text-xs font-medium text-muted-foreground">
                 Tổng {group.label}
-                {!group.isSingleBet && profitAnalysis.tiers.filter((t) => t.payoutRatio > 1).length > 0
+                {!group.isSingleBet &&
+                profitAnalysis.tiers.filter((t) => t.payoutRatio > 1).length > 0
                   ? ` · ${profitAnalysis.tiers.filter((t) => t.payoutRatio > 1).length} mức vượt hoà vốn`
-                  : !group.isSingleBet ? " · Tất cả an toàn" : ""}
+                  : !group.isSingleBet
+                    ? " · Tất cả an toàn"
+                    : ""}
               </span>
               <div className="flex items-center gap-4 text-xs">
                 {group.isSingleBet && (
                   <span className="tabular-nums">
-                    CP kỳ vọng:{" "}
-                    {fmt(Math.round(profitAnalysis.totalExpectedPayout))} VND
+                    CP kỳ vọng: {fmt(Math.round(profitAnalysis.totalExpectedPayout))} VND
                   </span>
                 )}
                 <span className={cn("font-bold tabular-nums", marginColor)}>
@@ -527,11 +493,7 @@ function PrizeGroup({
 // Main Section
 // ─────────────────────────────────────────────
 
-export function PrizesSection({
-  config,
-  onSave,
-  isPending,
-}: PrizesSectionProps) {
+export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps) {
   const [localPrizes, setLocalPrizes] = useState<PrizesState>(() => ({
     singleNumPrizes: { ...config.singleNumPrizes },
     doubleMatchPrizes: { ...config.doubleMatchPrizes },
@@ -592,12 +554,10 @@ export function PrizesSection({
         <div className="px-5 py-3">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">
-                Giải thưởng Bingo 18
-              </h3>
+              <h3 className="text-sm font-semibold text-foreground">Giải thưởng Bingo 18</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Cấu hình giá trị thưởng cho 5 loại cược: Một số, Hai số trùng,
-                Ba số trùng, Cộng tổng, Lớn/Hoà/Nhỏ
+                Cấu hình giá trị thưởng cho 5 loại cược: Một số, Hai số trùng, Ba số trùng, Cộng
+                tổng, Lớn/Hoà/Nhỏ
                 {" · "}Mệnh giá: <strong>{fmt(unitPrice)} VND</strong>
                 {" · "}Không gian mẫu: <strong>{TOTAL_OUTCOMES}</strong> (6³)
               </p>
@@ -617,7 +577,7 @@ export function PrizesSection({
                           ? "text-emerald-600"
                           : worstMarginOverall >= 0
                             ? "text-amber-600"
-                            : "text-red-600"
+                            : "text-red-600",
                       )}
                     >
                       {worstMarginOverall >= 0 ? (
@@ -630,7 +590,8 @@ export function PrizesSection({
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-72 text-xs">
-                  Biên lợi nhuận thấp nhất trong tất cả mức cược. Mỗi loại cược là độc lập — khách chỉ đặt 1 mức mỗi lần, nên con số này phản ánh trường hợp xấu nhất.
+                  Biên lợi nhuận thấp nhất trong tất cả mức cược. Mỗi loại cược là độc lập — khách
+                  chỉ đặt 1 mức mỗi lần, nên con số này phản ánh trường hợp xấu nhất.
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -652,16 +613,8 @@ export function PrizesSection({
       </CardContent>
 
       <CardFooter className="justify-end border-t px-5 py-2.5">
-        <Button
-          type="button"
-          disabled={isPending || !isDirty}
-          onClick={handleSubmit}
-        >
-          {isPending ? (
-            <Spinner className="mr-2" />
-          ) : (
-            <Save className="mr-2 size-4" />
-          )}
+        <Button type="button" disabled={isPending || !isDirty} onClick={handleSubmit}>
+          {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
           Lưu giải thưởng Bingo 18
         </Button>
       </CardFooter>

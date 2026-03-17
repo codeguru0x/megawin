@@ -17,7 +17,8 @@
     "generate:component": "turbo gen react-component",
     "check-types": "tsc --noEmit",
     "dev": "tsc --watch",
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "rm -rf dist"
   },
   "devDependencies": {
     "@megawin/eslint-config": "workspace:*",

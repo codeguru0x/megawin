@@ -11,7 +11,10 @@
  */
 
 import { GameProduct } from "@megawin/game-core/entities";
-import { SystemSettleGameDailyRepo, SystemSettleTenantDailyRepo } from "@megawin/game-lotto535-application/repos";
+import {
+  SystemSettleGameDailyRepo,
+  SystemSettleTenantDailyRepo,
+} from "@megawin/game-lotto535-application/repos";
 import { PublishSettleDailyUseCase } from "@megawin/game-core-application/use-cases";
 
 const gameDailyRepo = new SystemSettleGameDailyRepo();
@@ -19,7 +22,7 @@ const tenantDailyRepo = new SystemSettleTenantDailyRepo();
 const useCase = new PublishSettleDailyUseCase();
 
 export async function handler(event: { financialDate: string }) {
-  return useCase.execute({
+  return useCase.run({
     gameProduct: GameProduct.Lotto535,
     financialDate: event.financialDate,
     gameDailyRepo,

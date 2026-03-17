@@ -105,7 +105,8 @@
     "upload": "bash scripts/upload-s3.sh patch",
     "upload:patch": "bash scripts/upload-s3.sh patch",
     "upload:minor": "bash scripts/upload-s3.sh minor",
-    "upload:major": "bash scripts/upload-s3.sh major"
+    "upload:major": "bash scripts/upload-s3.sh major",
+    "clean": "rm -rf dist"
   },
   "keywords": [
     "megawin",

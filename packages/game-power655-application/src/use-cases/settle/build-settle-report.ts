@@ -29,7 +29,7 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import { SettleDrawReportRepository } from "../../infras/repos/settle-draw-report-repo";
 import { SettleTenantReportRepository } from "../../infras/repos/settle-tenant-report-repo";
 import type { SettleContext } from "./types";
-
+import { sumBy } from "@megawin/shared/utils/array";
 export interface BuildSettleReportResult {
   /** Mã kỳ quay. */
   drawId: string;
@@ -98,18 +98,18 @@ export class BuildSettleReportUseCase extends InternalUseCase<
 
     // ── Bước 3: Upsert SettleDrawReport ────────────────────────────────────
     // SUM từ tenant reports + financials từ SettleContext (từ CalculateFinancials)
-    const totalStake = tenantAggs.reduce((s, t) => s + t.totalStake, 0);
-    const totalWin = tenantAggs.reduce((s, t) => s + t.totalWin, 0);
-    const totalPayout = tenantAggs.reduce((s, t) => s + t.totalPayout, 0);
-    const totalCommission = tenantAggs.reduce((s, t) => s + t.totalCommission, 0);
-    const lineCount = tenantAggs.reduce((s, t) => s + t.lineCount, 0);
-    const entryCount = tenantAggs.reduce((s, t) => s + t.entryCount, 0);
+    const totalStake = sumBy(tenantAggs, (t) => t.totalStake);
+    const totalWin = sumBy(tenantAggs, (t) => t.totalWin);
+    const totalPayout = sumBy(tenantAggs, (t) => t.totalPayout);
+    const totalCommission = sumBy(tenantAggs, (t) => t.totalCommission);
+    const lineCount = sumBy(tenantAggs, (t) => t.lineCount);
+    const entryCount = sumBy(tenantAggs, (t) => t.entryCount);
     const tenantCount = tenantAggs.length;
 
     // Đếm unique players: SUM playerCount per tenant (mỗi tenant có playerSet riêng)
     // Không thể deduplicate cross-tenant ở đây vì 1 player có thể mua nhiều tenant.
     // playerCount = số unique player trong toàn draw (aggregate cross-tenant).
-    const playerCount = playerAggs.reduce((s, p) => s + p.playerCount, 0);
+    const playerCount = sumBy(playerAggs, (p) => p.playerCount);
 
     const ggr = totalStake - totalPayout;
     // netProfit CÓ THỂ ÂM khi trúng jackpot lớn → KHÔNG validate >= 0

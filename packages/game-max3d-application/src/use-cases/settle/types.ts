@@ -98,11 +98,11 @@ export interface SettleFinancials {
   totalAgentCommission: number;
 
   /**
-   * Lợi nhuận ròng kỳ quay (VND).
+   * Phần công ty thu kỳ quay (VND).
    * = totalRevenue - totalFixedPrizes - totalAgentCommission.
    * Có thể âm nếu giải thưởng vượt doanh thu (công ty chịu lỗ).
    */
-  profit: number;
+  companyTake: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

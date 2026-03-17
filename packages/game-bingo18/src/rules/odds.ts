@@ -291,7 +291,8 @@ export function analyzeSingleNumProfitability(
 ): PlayTypeProfitSummary {
   const odds = getSingleNumOdds();
   const tiers = odds.map((o) => {
-    const prize = o.matchCount === 1 ? prizes.match1 : o.matchCount === 2 ? prizes.match2 : prizes.match3;
+    const prize =
+      o.matchCount === 1 ? prizes.match1 : o.matchCount === 2 ? prizes.match2 : prizes.match3;
     return tier(`Trùng ${o.matchCount}/3`, o.probability, prize, unitPrice);
   });
   return buildSummary("singleNum", unitPrice, tiers);
@@ -326,12 +327,13 @@ export function analyzeTripleMatchProfitability(
 }
 
 export function analyzeSumTotalProfitability(
-  prizes: Record<number, number>,
+  prizes: Record<string, number>,
   unitPrice: number,
 ): PlayTypeProfitSummary {
   const odds = getSumTotalOdds();
+  // Tra string key vì SumTotalPrizes dùng string key (MongoDB convention).
   const tiers = odds.map((o) =>
-    tier(`Tổng ${o.sum}`, o.probability, prizes[o.sum] ?? 0, unitPrice),
+    tier(`Tổng ${o.sum}`, o.probability, prizes[String(o.sum)] ?? 0, unitPrice),
   );
   return buildSummary("sumTotal", unitPrice, tiers);
 }

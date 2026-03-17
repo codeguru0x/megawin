@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:with-deps": "turbo run build --filter=@megawin/backoffice...",
-    "build:deps-only": "turbo run build --filter=@megawin/backoffice^...",
+    "build:with-deps": "turbo run build --filter=@megawin/backoffice... --force",
+    "build:deps-only": "turbo run build --filter=@megawin/backoffice^... --force",
     "start": "next start",
     "lint": "biome lint",
     "format": "biome format --write",

@@ -7,9 +7,15 @@
   "scripts": {
     "dev": "tsc --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "rm -rf dist"
   },
-  "keywords": ["megawin", "tenant", "gateway", "outbound"],
+  "keywords": [
+    "megawin",
+    "tenant",
+    "gateway",
+    "outbound"
+  ],
   "author": "",
   "license": "ISC",
   "exports": {

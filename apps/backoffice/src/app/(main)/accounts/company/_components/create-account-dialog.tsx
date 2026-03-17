@@ -8,10 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Dices, Eye, EyeOff } from "lucide-react";
 import { apiClient, ApiClientError } from "@megawin/next/client";
-import {
-  CompanyRole,
-  COMPANY_ROLE_VALUES,
-} from "@megawin/identity/entities/account";
+import { CompanyRole, COMPANY_ROLE_VALUES } from "@megawin/identity/entities/account";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -33,10 +30,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useSession } from "@/lib/auth-client";
 
 import { COMPANY_ROLES_OPTIONS } from "../_lib/constants";
 import type { CreateCompanyAccountResponse } from "../_lib/types";
 import { generatePassword } from "../../_shared/generate-password";
+import { accountsKeys } from "@/lib/query-keys/accounts";
 
 const createAccountSchema = z.object({
   username: z.string().min(3, "Tên tài khoản tối thiểu 3 ký tự."),
@@ -53,11 +52,22 @@ export function CreateCompanyAccountDialog() {
   const [open, setOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const { data: session } = useSession();
+  // Lấy roles của tài khoản đang đăng nhập từ session
+  const currentRoles = (session?.user as { roles?: string[] })?.roles ?? [];
+  const isCurrentAdmin = currentRoles.includes(CompanyRole.Admin);
+
+  // Nếu không phải admin thì chỉ được tạo tài khoản staff — lọc options hiển thị
+  const availableRoleOptions = isCurrentAdmin
+    ? COMPANY_ROLES_OPTIONS
+    : COMPANY_ROLES_OPTIONS.filter((o) => o.value === CompanyRole.Staff);
+
   const form = useForm<CreateAccountValues>({
     resolver: zodResolver(createAccountSchema),
     defaultValues: {
       username: "",
       password: "",
+      // Staff mặc định checked; admin chỉ được pre-select staff
       roles: [CompanyRole.Staff],
     },
   });
@@ -67,12 +77,9 @@ export function CreateCompanyAccountDialog() {
 
   const mutation = useMutation({
     mutationFn: (values: CreateAccountValues) =>
-      apiClient.post<CreateCompanyAccountResponse>(
-        "/accounts/company",
-        values
-      ),
+      apiClient.post<CreateCompanyAccountResponse>("/accounts/company", values),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["company", "accounts"] });
+      queryClient.invalidateQueries({ queryKey: accountsKeys.company });
       setOpen(false);
       form.reset();
       toast.success("Tạo tài khoản thành công.", {
@@ -96,14 +103,13 @@ export function CreateCompanyAccountDialog() {
   function handleRoleChange(role: string, checked: boolean) {
     const current = form.getValues("roles") ?? [];
 
+    // Khi chọn Admin → gán duy nhất Admin (Admin bao gồm toàn quyền)
     if (role === CompanyRole.Admin && checked) {
       form.setValue("roles", [CompanyRole.Admin], { shouldValidate: true });
       return;
     }
 
-    const next = checked
-      ? [...current, role]
-      : current.filter((r) => r !== role);
+    const next = checked ? [...current, role] : current.filter((r) => r !== role);
     form.setValue("roles", next, { shouldValidate: true });
   }
 
@@ -116,16 +122,14 @@ export function CreateCompanyAccountDialog() {
         <DialogHeader>
           <DialogTitle>Tạo tài khoản công ty</DialogTitle>
           <DialogDescription>
-            Tạo tài khoản mới với quyền Admin hoặc Staff. Mật khẩu tạm thời,
-            người dùng sẽ phải đổi khi đăng nhập lần đầu.
+            {isCurrentAdmin
+              ? "Tạo tài khoản với quyền Admin hoặc Staff."
+              : "Tạo tài khoản với quyền Staff. Chỉ Admin mới có thể tạo tài khoản Admin."}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit((v) => mutation.mutate(v))}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-4">
             <FormField
               control={form.control}
               name="username"
@@ -133,11 +137,7 @@ export function CreateCompanyAccountDialog() {
                 <FormItem>
                   <FormLabel>Tên tài khoản</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="vd: admin.company"
-                      autoComplete="off"
-                      {...field}
-                    />
+                    <Input placeholder="vd: admin.company" autoComplete="off" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -197,10 +197,10 @@ export function CreateCompanyAccountDialog() {
                 <FormItem>
                   <FormLabel>Quyền</FormLabel>
                   <div className="space-y-2">
-                    {COMPANY_ROLES_OPTIONS.map((opt) => {
+                    {availableRoleOptions.map((opt) => {
                       const checked = selectedRoles?.includes(opt.value);
-                      const disabled =
-                        isAdminSelected && opt.value !== CompanyRole.Admin;
+                      // Khi Admin được chọn, disable các option khác; Staff không thể thấy/chọn Admin
+                      const disabled = isAdminSelected && opt.value !== CompanyRole.Admin;
                       return (
                         <label
                           key={opt.value}
@@ -209,9 +209,7 @@ export function CreateCompanyAccountDialog() {
                           <Checkbox
                             checked={checked}
                             disabled={disabled}
-                            onCheckedChange={(v) =>
-                              handleRoleChange(opt.value, Boolean(v))
-                            }
+                            onCheckedChange={(v) => handleRoleChange(opt.value, Boolean(v))}
                           />
                           <span>{opt.label}</span>
                         </label>
@@ -219,9 +217,8 @@ export function CreateCompanyAccountDialog() {
                     })}
                   </div>
                   {isAdminSelected && (
-                    <p className="text-muted-foreground text-xs">
-                      Quản trị viên có toàn quyền, không cần chọn thêm quyền
-                      khác.
+                    <p className="text-xs text-muted-foreground">
+                      Quản trị viên có toàn quyền, không cần chọn thêm quyền khác.
                     </p>
                   )}
                   <FormMessage />
