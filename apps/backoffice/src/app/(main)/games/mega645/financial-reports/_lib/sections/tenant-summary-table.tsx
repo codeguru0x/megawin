@@ -112,7 +112,7 @@ export function TenantSummaryTable() {
                       {formatNumber(row.totalCommission)}
                     </TableCell>
                     <TableCell
-                      className={`text-right tabular-nums font-medium ${row.netProfit < 0 ? "text-loss" : ""}`}
+                      className={`text-right tabular-nums font-medium ${netProfit < 0 ? "text-loss" : ""}`}
                     >
                       {formatNumber(netProfit)}
                     </TableCell>

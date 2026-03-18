@@ -59,7 +59,7 @@ function EntryDetailDialog({
   const boards = entry.entrySummary.boards ?? [];
   const isWin = (entry.payout?.payoutAmount ?? 0) > 0;
   const playerNet = (entry.payout?.payoutAmount ?? 0) - entry.amount;
-  const outcome = entry.result?.outcome as string | undefined;
+  const outcome = entry.outcome as string | undefined;
 
   const winningMain = new Set<string>(entry.result?.winningMain ?? []);
   const winningSpecial = entry.result?.winningSpecial as string | undefined;
@@ -67,7 +67,7 @@ function EntryDetailDialog({
   const infoItems = [
     { label: "Mã vé", value: entry.entrySummary.ticketNo },
     { label: REPORT_COLUMN_LABELS.drawId, value: entry.drawId },
-    { label: "Đại lý", value: entry.tenant.tenantId },
+    { label: "Đại lý", value: (entry as any).tenantId ?? "" },
     { label: REPORT_COLUMN_LABELS.lineCount, value: formatNumber(entry.lineCount) },
   ];
 
@@ -199,40 +199,38 @@ function EntryDetailDialog({
                   Bộ số đã chọn
                 </p>
                 <div className="space-y-2">
-                  {boards.map(
-                    (board: { main: string[]; special?: string; playType?: string }, i: number) => (
-                      <div key={i} className="flex flex-wrap items-center gap-1.5">
-                        <span className="w-5 text-[10px] font-semibold text-muted-foreground">
-                          {String.fromCharCode(65 + i)}
+                  {boards.map((board, i: number) => (
+                    <div key={i} className="flex flex-wrap items-center gap-1.5">
+                      <span className="w-5 text-[10px] font-semibold text-muted-foreground">
+                        {String.fromCharCode(65 + i)}
+                      </span>
+                      {board.mainNumbers.map((n: string) => (
+                        <span
+                          key={n}
+                          className={`inline-flex size-7 items-center justify-center rounded-full text-[11px] font-bold ${
+                            winningMain.has(n)
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {n}
                         </span>
-                        {board.main.map((n: string) => (
-                          <span
-                            key={n}
-                            className={`inline-flex size-7 items-center justify-center rounded-full text-[11px] font-bold ${
-                              winningMain.has(n)
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted text-muted-foreground"
-                            }`}
-                          >
-                            {n}
-                          </span>
-                        ))}
-                        {/* Số đặc biệt của board */}
-                        {board.special && (
-                          <span
-                            className={`inline-flex size-7 items-center justify-center rounded-full text-[11px] font-bold ${
-                              board.special === winningSpecial
-                                ? "bg-amber-500 text-white"
-                                : "bg-muted text-muted-foreground ring-1 ring-amber-400"
-                            }`}
-                            title="Số đặc biệt"
-                          >
-                            {board.special}
-                          </span>
-                        )}
-                      </div>
-                    ),
-                  )}
+                      ))}
+                      {/* Số đặc biệt của board */}
+                      {board.specialNumbers[0] && (
+                        <span
+                          className={`inline-flex size-7 items-center justify-center rounded-full text-[11px] font-bold ${
+                            board.specialNumbers[0] === winningSpecial
+                              ? "bg-amber-500 text-white"
+                              : "bg-muted text-muted-foreground ring-1 ring-amber-400"
+                          }`}
+                          title="Số đặc biệt"
+                        >
+                          {board.specialNumbers[0]}
+                        </span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

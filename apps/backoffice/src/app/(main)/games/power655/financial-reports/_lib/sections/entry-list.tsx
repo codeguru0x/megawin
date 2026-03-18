@@ -54,12 +54,12 @@ function EntryDetailDialog({
   const boards = entry.entrySummary.boards ?? [];
   const isWin = (entry.payout?.payoutAmount ?? 0) > 0;
   const playerNet = (entry.payout?.payoutAmount ?? 0) - entry.amount;
-  const outcome = entry.result?.outcome as string | undefined;
+  const outcome = entry.outcome as string | undefined;
 
   const infoItems = [
     { label: "Mã vé", value: entry.entrySummary.ticketNo },
     { label: REPORT_COLUMN_LABELS.drawId, value: entry.drawId },
-    { label: "Đại lý", value: entry.tenant.tenantId },
+    { label: "Đại lý", value: (entry as any).tenantId ?? "" },
     { label: REPORT_COLUMN_LABELS.lineCount, value: formatNumber(entry.lineCount) },
   ];
 
@@ -199,7 +199,7 @@ function EntryDetailDialog({
                         <span className="text-[10px] font-semibold text-muted-foreground w-5">
                           {String.fromCharCode(65 + i)}
                         </span>
-                        {board.main.map((n: string) => (
+                        {board.mainNumbers.map((n: string) => (
                           <span
                             key={n}
                             className={`inline-flex size-7 items-center justify-center rounded-full text-[11px] font-bold ${

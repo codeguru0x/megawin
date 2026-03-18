@@ -60,7 +60,8 @@ function EntryDetailDialog({
   const playerNet = payoutAmount - entry.amount;
 
   const displayName =
-    parseUsername((entry as any).accountId ?? "") || ((entry as any).accountId ?? "");
+    parseUsername((entry as any).accountId ?? "")?.playerExternalId ||
+    ((entry as any).accountId ?? "");
   const isLongName = displayName.length > 20;
 
   return (
@@ -101,7 +102,7 @@ function EntryDetailDialog({
               </div>
               <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground">Đại lý</p>
-                <p className="text-sm font-bold">{entry.tenant.tenantId}</p>
+                <p className="text-sm font-bold">{(entry as any).tenantId ?? ""}</p>
               </div>
               <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground">Trạng thái</p>
@@ -210,7 +211,7 @@ export function EntryList({
   const [selectedEntry, setSelectedEntry] = useState<TicketEntryEntity | null>(null);
   const { data, isLoading, error } = useMax3DProEntries(drawId, tenantId, accountId);
 
-  const playerLabel = playerDisplayName || parseUsername(accountId) || accountId;
+  const playerLabel = playerDisplayName || parseUsername(accountId)?.playerExternalId || accountId;
 
   if (isLoading) return <TableSkeleton rows={5} />;
   if (error) return <ErrorCard message="Lỗi tải entries." />;

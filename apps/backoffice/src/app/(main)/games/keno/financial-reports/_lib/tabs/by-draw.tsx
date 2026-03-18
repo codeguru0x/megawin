@@ -432,7 +432,7 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
             <TableBody>
               {players?.map((row) => {
                 const playerNet = (row.totalPayout ?? 0) - (row.totalStake ?? 0);
-                const displayName = parseUsername(row.accountId) || row.accountId;
+                const displayName = parseUsername(row.username)?.playerExternalId || row.accountId;
                 return (
                   <TableRow
                     key={row.accountId}
@@ -520,7 +520,7 @@ function Breadcrumb() {
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
           <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-            {playerName || parseUsername(accountId) || accountId}
+            {playerName || parseUsername(accountId)?.playerExternalId || accountId}
           </span>
         </>
       )}
