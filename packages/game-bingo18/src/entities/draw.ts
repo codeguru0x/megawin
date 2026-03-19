@@ -137,7 +137,10 @@ export interface DrawBasicPrizeSummary {
   /** Số lượt cược trúng tổ hợp này trong kỳ quay. */
   winnerCount: number;
 
-  /** Tiền thưởng mỗi lần cược (VND). */
+  /**
+   * Tiền thưởng mỗi lần cược (VND). Cập nhật bởi CalculateFinancials.
+   * Lưu lại để hiển thị giải thưởng trong API.
+   */
   prizePerUnit: number;
 }
 
@@ -168,7 +171,10 @@ export interface DrawSideBetPrizeSummary {
   /** Số lượt cược trúng với (playType, sum/bet) này trong kỳ quay. */
   winnerCount: number;
 
-  /** Tiền thưởng mỗi lần cược (VND). */
+  /**
+   * Tiền thưởng mỗi lần cược (VND). Cập nhật bởi CalculateFinancials.
+   * Lưu lại để hiển thị giải thưởng trong API.
+   */
   prizePerUnit: number;
 }
 

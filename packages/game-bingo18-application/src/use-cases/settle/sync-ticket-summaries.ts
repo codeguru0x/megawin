@@ -20,9 +20,8 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
-import { ObjectId } from "mongodb";
 
-const CHUNK_SIZE = 500;
+const BATCH_SIZE = 500;
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
 
 export interface SyncTicketSummariesResult {
@@ -50,20 +49,18 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
     const startTime = Date.now();
 
     while (Date.now() - startTime < MAX_EXECUTION_MS) {
-      const chunk = await this.ticketRepo.getTicketsByDrawIdCursor(drawId, cursor, CHUNK_SIZE);
+      const tickets = await this.ticketRepo.getTicketsByDrawId(drawId, cursor, BATCH_SIZE);
 
-      if (chunk.length === 0) {
+      if (tickets.length === 0) {
         return { drawId, done: true };
       }
 
-      const ticketIds = chunk.map((t) => t.ticketId);
-      const totalDrawsMap = new Map(chunk.map((t) => [t.ticketId, t.totalDraws]));
+      const ticketIds = tickets.map((t) => t.ticketId);
+      const totalDrawsMap = new Map(tickets.map((t) => [t.ticketId, t.totalDraws]));
 
-      const summaryMap = await this.entryRepo.aggregateTicketSummariesBatch(
-        ticketIds.map((t) => new ObjectId(t)),
-      );
+      const summaryMap = await this.entryRepo.aggregateTicketSummariesBatch(ticketIds);
 
-      const items = chunk
+      const items = tickets
         .map((t) => {
           const summary = summaryMap.get(t.ticketId);
 
@@ -84,7 +81,7 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
 
       cursor = ticketIds[ticketIds.length - 1];
 
-      if (chunk.length < CHUNK_SIZE) {
+      if (tickets.length < BATCH_SIZE) {
         return { drawId, done: true };
       }
     }

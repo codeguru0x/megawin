@@ -2,7 +2,6 @@
  * Lambda: publish-settle-daily (Mega 6/45)
  *
  * Re-aggregate per-game draw-level reports → upsert system daily reports.
- * Dùng per-game system repos kế thừa từ game-core base.
  *
  * IDEMPOTENT: re-aggregate toàn bộ → overwrite system reports.
  *
@@ -10,22 +9,11 @@
  * @output PublishSettleDailyResult
  */
 
-import { GameProduct } from "@megawin/game-core/entities";
-import {
-  SystemSettleGameDailyRepo,
-  SystemSettleTenantDailyRepo,
-} from "@megawin/game-mega645-application/repos";
-import { PublishSettleDailyUseCase } from "@megawin/game-core-application/use-cases";
+import { PublishSettleDailyUseCase } from "@megawin/game-mega645-application/use-cases/settle";
+import { SettleContextWithFinancials } from "@megawin/game-mega645-application/use-cases/settle";
 
-const gameDailyRepo = new SystemSettleGameDailyRepo();
-const tenantDailyRepo = new SystemSettleTenantDailyRepo();
 const useCase = new PublishSettleDailyUseCase();
 
-export async function handler(event: { financialDate: string }) {
-  return useCase.run({
-    gameProduct: GameProduct.Mega645,
-    financialDate: event.financialDate,
-    gameDailyRepo,
-    tenantDailyRepo,
-  });
+export async function handler(event: SettleContextWithFinancials) {
+  return useCase.run({ financialDate: event.financialDate });
 }

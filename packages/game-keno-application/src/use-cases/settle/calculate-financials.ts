@@ -12,37 +12,47 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { roundTo } from "@megawin/shared/utils/number";
 import { calculateKenoDrawFinancials } from "@megawin/game-keno/rules";
-import type { DrawBasicPrizeSummary, DrawSideBetPrizeSummary } from "@megawin/game-keno/entities";
+import type {
+  DrawBasicPrizeSummary,
+  DrawSideBetPrizeSummary,
+  DrawFinancial,
+  DrawStats,
+} from "@megawin/game-keno/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext, SettleFinancials } from "./types";
 
+/**
+ * Tính tài chính tổng hợp Keno sau khi tất cả entries đã settled.
+ *
+ * CRASH-SAFE + IDEMPOTENT: aggregate từ DB → có thể chạy lại nhiều lần an toàn.
+ * Ghi financial + stats + settleSummary vào DrawDoc trong 1 DB call duy nhất.
+ */
 export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, SettleFinancials> {
   private readonly entryRepo = new EntryRepository();
   private readonly drawRepo = new DrawRepository();
 
-  /** Tính tài chính tổng hợp Keno + denormalize settleSummary. Idempotent – tính từ DB. */
+  /**
+   * Tính tài chính tổng hợp Keno + denormalize settleSummary.
+   * Idempotent — tính từ DB, ghi đè nếu chạy lại.
+   */
   protected async execute(input: SettleContext): Promise<SettleFinancials> {
     const { drawId, config } = input;
 
-    const [
-      { totalRevenue, totalAgentCommission },
-      payoutSummary,
-      basicPrizeSummary,
-      sideBetPrizeSummary,
-    ] = await Promise.all([
-      this.entryRepo.aggregateTotalRevenue(drawId),
-      this.entryRepo.aggregateSettledPayoutSummary(drawId),
+    // Chạy song song 3 queries để giảm latency.
+    // Query 1: gộp revenue + commission + payout trong 1 pipeline (tất cả entries đã Settled).
+    // Query 2+3: prize summary tách riêng vì $unwind boardPayouts/sideBetPayouts khác nhau.
+    const [summary, basicPrizeSummary, sideBetPrizeSummary] = await Promise.all([
+      this.entryRepo.aggregateSettledFinancialSummary(drawId),
       this.entryRepo.aggregateBasicPrizeSummary(drawId),
       this.entryRepo.aggregateSideBetPrizeSummary(drawId),
     ]);
 
     const fin = calculateKenoDrawFinancials({
-      totalRevenue,
-      totalPrizes: payoutSummary.totalPrizes,
-      totalAgentCommission,
+      totalRevenue: summary.totalRevenue,
+      totalPrizes: summary.totalPrizes,
+      totalAgentCommission: summary.totalAgentCommission,
     });
 
     // ── Build settleSummary cho player API ──
@@ -68,12 +78,12 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
         totalPrizes: fin.totalPrizes,
         totalAgentCommission: fin.totalAgentCommission,
         companyTake: fin.companyTake,
-      },
+      } satisfies DrawFinancial,
       {
-        ticketEntryCount: payoutSummary.totalSettled,
+        ticketEntryCount: summary.totalSettled,
         totalSalesAmount: fin.totalRevenue,
-        totalPayoutAmount: payoutSummary.totalPayoutAmount,
-      },
+        totalPayoutAmount: summary.totalPayoutAmount,
+      } satisfies DrawStats,
       { basicPrizes, sideBetPrizes },
     );
 
@@ -82,6 +92,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
       totalPrizes: fin.totalPrizes,
       totalAgentCommission: fin.totalAgentCommission,
       companyTake: fin.companyTake,
-    };
+    } satisfies SettleFinancials;
   }
 }

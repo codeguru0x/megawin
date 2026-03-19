@@ -113,8 +113,9 @@ export interface TicketEntryDoc {
    * Snapshot từ ticket, lưu để audit trail.
    */
   ipAddress?: string;
-  /** Reference đến ticket gốc (ObjectId). 1 ticket sinh N entries (N = drawCount). */
-  ticketId: unknown;
+
+  /** Reference đến ticket gốc. Lưu dạng hex string (ObjectId.toHexString()). */
+  ticketId: string;
 
   // ───── Draw Snapshot ─────
 

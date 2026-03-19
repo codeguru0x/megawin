@@ -34,3 +34,6 @@ export type { ApplySplitBonusesResult } from "./apply-split-bonuses";
 
 export { PatchJackpotPrizeUseCase } from "./patch-jackpot-prize";
 export type { PatchJackpotPrizeResult } from "./patch-jackpot-prize";
+
+export { PublishSettleDailyUseCase } from "./publish-settle-daily";
+export type { PublishSettleDailyInput } from "./publish-settle-daily";

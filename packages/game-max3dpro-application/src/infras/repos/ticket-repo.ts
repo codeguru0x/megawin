@@ -2,17 +2,12 @@
  * Max 3D Pro – Ticket Repository
  *
  * Collection: max3dproTickets
- *
- * Max3DPro void theo board (không theo draw). voidSummary của ticket
- * dùng board-level schema (isFullVoid, voidedBoards, originalAmount...).
- * Vì vậy override buildVoidSyncSet() để không ghi draw-level void fields.
  */
 
 import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import { AbstractTicketRepository } from "@megawin/game-max3d-core/repos";
 import { TicketMapper } from "../mappers/ticket-mapper";
 import type { TicketEntity } from "@megawin/game-max3dpro/entities";
-import type { TicketSummary } from "@megawin/game-max3d-core/repos";
 
 export class TicketRepository extends AbstractTicketRepository<TicketEntity, TicketMapper> {
   constructor() {
@@ -20,20 +15,6 @@ export class TicketRepository extends AbstractTicketRepository<TicketEntity, Tic
       collName: Max3dproCollections.Tickets,
       dataMapper: new TicketMapper(),
     });
-  }
-
-  /**
-   * Max3DPro void theo board, không theo draw.
-   * TicketVoidSummary entity là board-level (isFullVoid, voidedBoards...) –
-   * không dùng draw-level fields (voidedDrawCount, voidedDrawIds...).
-   * Void summary được cập nhật riêng qua void flow, không qua sync này.
-   */
-  protected override buildVoidSyncSet(
-    _summary: TicketSummary,
-    _voidedCount: number,
-    _now: Date,
-  ): Record<string, unknown> {
-    return {};
   }
 }
 

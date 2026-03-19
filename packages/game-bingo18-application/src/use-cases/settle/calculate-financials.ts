@@ -23,6 +23,9 @@ import type {
   DrawSettleSummary,
   DrawFinancial,
   DrawStats,
+  Bingo18TripleKind,
+  Bingo18PlayType,
+  Bingo18BigSmallBet,
 } from "@megawin/game-bingo18/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -65,21 +68,21 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
     // basicPrizes: (playType, matchCount) → đủ để UI hiển thị bảng giải theo cách chơi.
     // sideBetPrizes: (playType, bet) → hiển thị cộng tổng + lớn/hòa/nhỏ.
     const basicPrizes: DrawBasicPrizeSummary[] = basicPrizeSummary.map((bp) => ({
-      playType: bp.playType as DrawBasicPrizeSummary["playType"],
+      playType: bp.playType as Bingo18PlayType,
       matchCount: bp.matchCount,
       // tripleKind chỉ có ý nghĩa với tripleMatch; null từ aggregation → bỏ qua (undefined).
       ...(bp.tripleKind != null && {
-        tripleKind: bp.tripleKind as DrawBasicPrizeSummary["tripleKind"],
+        tripleKind: bp.tripleKind,
       }),
       winnerCount: bp.winnerCount,
       prizePerUnit: bp.prizePerUnit,
     }));
 
     const sideBetPrizes: DrawSideBetPrizeSummary[] = sideBetPrizeSummary.map((sb) => ({
-      playType: sb.playType as DrawSideBetPrizeSummary["playType"],
+      playType: sb.playType as Bingo18PlayType,
       // sum (number) cho sumTotal, bet (string) cho bigSmallDraw — không trộn lẫn.
       ...(sb.sum != null && { sum: sb.sum }),
-      ...(sb.bet != null && { bet: sb.bet as DrawSideBetPrizeSummary["bet"] }),
+      ...(sb.bet != null && { bet: sb.bet }),
       winnerCount: sb.winnerCount,
       prizePerUnit: sb.prizePerUnit,
     }));

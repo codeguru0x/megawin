@@ -27,7 +27,11 @@ import { BaseRepo } from "./base-repo";
 import { EntryMapper } from "../mappers/entry-mapper";
 import type { TicketEntryEntity } from "@megawin/game-keno/entities";
 import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
-import type { OutstandingDrawMetrics, OutstandingDrawCounts } from "./types";
+import type {
+  OutstandingDrawMetrics,
+  OutstandingDrawCounts,
+  SettledFinancialSummary,
+} from "./types";
 
 export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   private readonly seqRepo = new EntryChangeSeqRepository();
@@ -211,6 +215,43 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       totalSettled: summary.totalSettled ?? 0,
       totalPayoutAmount: summary.totalPayoutAmount ?? 0,
       totalPrizes: summary.totalPrizes ?? 0,
+    };
+  }
+
+  /**
+   * Aggregate tổng hợp tài chính entries đã settle cho 1 draw — gộp revenue + payout.
+   *
+   * Tại thời điểm CalculateFinancials, TẤT CẢ entries đã là Settled
+   * (SettleEntries hoàn tất trước đó, chưa có Void) → 1 pipeline với filter
+   * { status: Settled } đủ lấy cả revenue, commission lẫn payout metrics.
+   * Tiết kiệm 1 DB round-trip so với gọi riêng aggregateTotalRevenue + aggregateSettledPayoutSummary.
+   */
+  async aggregateSettledFinancialSummary(drawId: string): Promise<SettledFinancialSummary> {
+    const result = await this.aggregate([
+      {
+        $match: {
+          drawId,
+          status: EntryStatus.Settled,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalSettled: { $sum: 1 },
+          totalRevenue: { $sum: "$amount" },
+          totalAgentCommission: { $sum: "$tenant.commissionAmount" },
+          totalPrizes: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
+          totalPayoutAmount: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+        },
+      },
+    ]);
+    const row = result[0] ?? {};
+    return {
+      totalSettled: row.totalSettled ?? 0,
+      totalRevenue: row.totalRevenue ?? 0,
+      totalAgentCommission: row.totalAgentCommission ?? 0,
+      totalPrizes: row.totalPrizes ?? 0,
+      totalPayoutAmount: row.totalPayoutAmount ?? 0,
     };
   }
 
@@ -627,73 +668,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   // ─── Ticket Summary Aggregation ───
 
   /**
-   * Aggregate tóm tắt ticket từ TẤT CẢ entries của 1 ticket.
-   * Dùng cho SyncTicketSummaries — tính lại toàn bộ từ source of truth (entries).
-   */
-  async aggregateTicketSummary(ticketId: ObjectId): Promise<{
-    totalEntries: number;
-    settledCount: number;
-    voidedCount: number;
-    totalWinAmount: number;
-    totalVoidedAmount: number;
-    totalRefundedAmount: number;
-    voidedDrawIds: string[];
-  }> {
-    const result = await this.aggregate([
-      { $match: { ticketId } },
-      {
-        $group: {
-          _id: null,
-          totalEntries: { $sum: 1 },
-          settledCount: {
-            $sum: { $cond: [{ $eq: ["$status", EntryStatus.Settled] }, 1, 0] },
-          },
-          voidedCount: {
-            $sum: { $cond: [{ $eq: ["$status", EntryStatus.Void] }, 1, 0] },
-          },
-          totalWinAmount: {
-            $sum: { $ifNull: ["$payout.winAmount", 0] },
-          },
-          totalVoidedAmount: {
-            $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.originalAmount", 0] },
-                0,
-              ],
-            },
-          },
-          totalRefundedAmount: {
-            $sum: {
-              $cond: [
-                { $eq: ["$status", EntryStatus.Void] },
-                { $ifNull: ["$voidInfo.refundAmount", 0] },
-                0,
-              ],
-            },
-          },
-          voidedDrawIds: {
-            $addToSet: {
-              $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$drawId", "$$REMOVE"],
-            },
-          },
-        },
-      },
-    ]);
-
-    const row = (result[0] as any) ?? {};
-    return {
-      totalEntries: row.totalEntries ?? 0,
-      settledCount: row.settledCount ?? 0,
-      voidedCount: row.voidedCount ?? 0,
-      totalWinAmount: row.totalWinAmount ?? 0,
-      totalVoidedAmount: row.totalVoidedAmount ?? 0,
-      totalRefundedAmount: row.totalRefundedAmount ?? 0,
-      voidedDrawIds: row.voidedDrawIds ?? [],
-    };
-  }
-
-  /**
    * Batch aggregate summaries cho nhiều tickets cùng lúc.
    * $match ticketId ∈ batch → $group by ticketId → Map<ticketId, summary>.
    * Dùng index idx_ticketId trên entries collection.
@@ -824,7 +798,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             matchCount: "$payout.boardPayouts.matchCount",
           },
           winnerCount: { $sum: 1 },
-          prizePerUnit: { $first: "$payout.boardPayouts.winAmount" },
+          // $max thay vì $first: giải cố định nên mọi doc trong nhóm đều bằng nhau,
+          // nhưng $max không phụ thuộc thứ tự document → deterministic hơn $first.
+          prizePerUnit: { $max: "$payout.boardPayouts.winAmount" },
         },
       },
       { $sort: { "_id.pickCount": -1, "_id.matchCount": -1 } },
@@ -875,7 +851,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             bet: "$payout.sideBetPayouts.bet",
           },
           winnerCount: { $sum: 1 },
-          prizePerUnit: { $first: "$payout.sideBetPayouts.winAmount" },
+          // $max thay vì $first: giải cố định nên mọi doc trong nhóm đều bằng nhau,
+          // nhưng $max không phụ thuộc thứ tự document → deterministic hơn $first.
+          prizePerUnit: { $max: "$payout.sideBetPayouts.winAmount" },
         },
       },
       { $sort: { "_id.playType": 1, "_id.bet": 1 } },

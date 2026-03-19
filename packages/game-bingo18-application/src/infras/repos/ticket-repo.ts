@@ -5,10 +5,9 @@ import { TicketMapper } from "../mappers/ticket-mapper";
 import type { TicketEntity } from "@megawin/game-bingo18/entities";
 import type { AnyBulkWriteOperation, Document, Filter } from "mongodb";
 import { ObjectId } from "mongodb";
-import type { TicketSummary, TicketSyncSet } from "./types";
+import type { TicketSummary } from "./types";
 
 const PENDING_STATUSES = [TicketStatus.Paid];
-const COMPLETED_STATUSES = [TicketStatus.Completed, TicketStatus.Refunded, TicketStatus.Void];
 
 export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   constructor() {
@@ -18,20 +17,30 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     });
   }
 
-  async getTicketsByDrawIdCursor(
+  /**
+   * Lấy tickets thuộc 1 draw qua drawPlan.drawIds.
+   * @param drawId - ID kỳ quay.
+   * @param cursor - Cursor để phân trang.
+   * @param limit - Số lượng tickets tối đa trả về.
+   * @returns Danh sách tickets thuộc kỳ quay.
+   */
+  async getTicketsByDrawId(
     drawId: string,
     cursor?: string,
     limit = 500,
   ): Promise<Array<{ ticketId: string; totalDraws: number }>> {
     const filter: Filter<Document> = { "drawPlan.drawIds": drawId };
+
     if (cursor) {
       filter._id = { $gt: new ObjectId(cursor) };
     }
+
     const docs = await this.findManyAsDocuments(filter, {
       projection: { _id: 1, "progress.totalDraws": 1, "drawPlan.drawCount": 1 },
       sort: { _id: 1 },
       limit,
     });
+
     return docs.map((d: Document) => ({
       ticketId: d._id.toHexString(),
       totalDraws: d.progress?.totalDraws ?? d.drawPlan?.drawCount ?? 1,
@@ -120,7 +129,9 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   async bulkSyncSummaries(
     items: Array<{ ticketId: string; summary: TicketSummary }>,
   ): Promise<number> {
-    if (items.length === 0) return 0;
+    if (items.length === 0) {
+      return 0;
+    }
 
     const now = new Date();
     const ops: AnyBulkWriteOperation<Document>[] = [];
@@ -128,37 +139,32 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     for (const { ticketId, summary } of items) {
       const { settledCount, voidedCount, totalDraws } = summary;
       const processedCount = settledCount + voidedCount;
+      // isAllVoided: tất cả kỳ đều bị void (không có kỳ nào settled) → Refunded.
+      // isCompleted: tất cả kỳ đã xử lý xong (settled + voided >= totalDraws) → Completed.
+      const isAllVoided = voidedCount === totalDraws && settledCount === 0;
       const isCompleted = processedCount >= totalDraws;
-      const isSingleDrawVoid = totalDraws === 1 && voidedCount === 1;
+      const status = isAllVoided
+        ? TicketStatus.Refunded
+        : isCompleted
+          ? TicketStatus.Completed
+          : undefined;
 
-      let status: string | undefined;
-      if (isSingleDrawVoid) {
-        status = TicketStatus.Refunded;
-      } else if (isCompleted) {
-        status = TicketStatus.Completed;
-      }
-
-      const $set: TicketSyncSet = {
+      const $set = {
         "progress.settledDraws": processedCount,
         updatedAt: now,
+        ...(settledCount > 0 && {
+          "settlement.totalWinAmount": summary.totalWinAmount,
+          "settlement.lastSettledAt": now,
+        }),
+        ...(voidedCount > 0 && {
+          "voidSummary.voidedDrawCount": voidedCount,
+          "voidSummary.totalVoidedAmount": summary.totalVoidedAmount,
+          "voidSummary.totalRefundedAmount": summary.totalRefundedAmount,
+          "voidSummary.voidedDrawIds": summary.voidedDrawIds,
+          "voidSummary.lastVoidedAt": now,
+        }),
+        ...(status && { status }),
       };
-
-      if (settledCount > 0) {
-        $set["settlement.totalWinAmount"] = summary.totalWinAmount;
-        $set["settlement.lastSettledAt"] = now;
-      }
-
-      if (voidedCount > 0) {
-        $set["voidSummary.voidedDrawCount"] = voidedCount;
-        $set["voidSummary.totalVoidedAmount"] = summary.totalVoidedAmount;
-        $set["voidSummary.totalRefundedAmount"] = summary.totalRefundedAmount;
-        $set["voidSummary.voidedDrawIds"] = summary.voidedDrawIds;
-        $set["voidSummary.lastVoidedAt"] = now;
-      }
-
-      if (status) {
-        $set.status = status;
-      }
 
       ops.push({
         updateOne: {
@@ -168,63 +174,12 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
               $lte: [{ $ifNull: ["$progress.settledDraws", 0] }, processedCount],
             },
           },
-          update: { $set: $set as Record<string, unknown>, $inc: { version: 1 } },
+          update: { $set, $inc: { version: 1 } },
         },
       });
     }
 
     const result = await this.bulkWrite(ops, { ordered: false });
     return result.modifiedCount;
-  }
-
-  /**
-   * Idempotent: $set toàn bộ summary từ aggregate result.
-   * Tính status mới từ settledCount + voidedCount vs totalDraws.
-   */
-  async syncSummary(ticketId: ObjectId, summary: TicketSummary): Promise<boolean> {
-    const now = new Date();
-    const { settledCount, voidedCount, totalDraws } = summary;
-    const processedCount = settledCount + voidedCount;
-    const isCompleted = processedCount >= totalDraws;
-    const isSingleDrawVoid = totalDraws === 1 && voidedCount === 1;
-
-    let status: string | undefined;
-    if (isSingleDrawVoid) {
-      status = TicketStatus.Refunded;
-    } else if (isCompleted) {
-      status = TicketStatus.Completed;
-    }
-
-    const $set: TicketSyncSet = {
-      "progress.settledDraws": processedCount,
-      updatedAt: now,
-    };
-
-    if (settledCount > 0) {
-      $set["settlement.totalWinAmount"] = summary.totalWinAmount;
-      $set["settlement.lastSettledAt"] = now;
-    }
-
-    if (voidedCount > 0) {
-      $set["voidSummary.voidedDrawCount"] = voidedCount;
-      $set["voidSummary.totalVoidedAmount"] = summary.totalVoidedAmount;
-      $set["voidSummary.totalRefundedAmount"] = summary.totalRefundedAmount;
-      $set["voidSummary.voidedDrawIds"] = summary.voidedDrawIds;
-      $set["voidSummary.lastVoidedAt"] = now;
-    }
-
-    if (status) {
-      $set.status = status;
-    }
-
-    return await this.updateOne(
-      {
-        _id: ticketId,
-        $expr: {
-          $lte: [{ $ifNull: ["$progress.settledDraws", 0] }, processedCount],
-        },
-      },
-      { $set: $set as Record<string, unknown>, $inc: { version: 1 } },
-    );
   }
 }

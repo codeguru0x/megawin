@@ -1,3 +1,24 @@
+/**
+ * Tổng hợp tài chính entries đã settle cho 1 draw — gộp revenue + payout trong 1 query.
+ *
+ * Tại thời điểm CalculateFinancials, TẤT CẢ entries đã là Settled
+ * (SettleEntries hoàn tất, chưa có Void) → 1 pipeline với filter { status: Settled }
+ * đủ lấy cả revenue, commission lẫn payout metrics.
+ * Tiết kiệm 1 DB round-trip so với 2 queries riêng (aggregateTotalRevenue + aggregateSettledPayoutSummary).
+ */
+export interface SettledFinancialSummary {
+  /** Số entry đã settle. */
+  totalSettled: number;
+  /** Tổng doanh thu bán vé (VND). Công thức: SUM(entry.amount). */
+  totalRevenue: number;
+  /** Tổng hoa hồng đại lý (VND). Công thức: SUM(entry.tenant.commissionAmount). */
+  totalAgentCommission: number;
+  /** Tổng tiền thắng (VND). Công thức: SUM(entry.payout.winAmount). */
+  totalPrizes: number;
+  /** Tổng tiền trả thưởng (VND). Công thức: SUM(entry.payout.payoutAmount). */
+  totalPayoutAmount: number;
+}
+
 /** Keno: KHÔNG CÓ lineCount. */
 export interface PlayerBreakdownRow {
   accountId: string;

@@ -1,3 +1,5 @@
+import type { Bingo18BigSmallBet, Bingo18TripleKind } from "@megawin/game-bingo18/entities";
+
 /**
  * Breakdown player trong 1 draw × 1 tenant. Drill cấp 3 financial reports.
  * Bingo 18: KHÔNG CÓ lineCount.
@@ -165,7 +167,6 @@ export interface VoidRefundSummary {
  * Dùng cho SyncTicketSummaries — tính lại toàn bộ từ source of truth (entries).
  */
 export interface TicketAggregateResult {
-  totalEntries: number;
   /** Số kỳ đã settle. */
   settledCount: number;
   /** Số kỳ đã void. */
@@ -218,7 +219,8 @@ export interface BasicPrizeSummaryRow {
   playType: string;
   matchCount: number;
   /** null với singleNum + doubleMatch. "specific" | "any" với tripleMatch. */
-  tripleKind: string | null;
+  tripleKind: Bingo18TripleKind | null;
+  /** Số lượt cược trúng tổ hợp này trong kỳ quay. */
   winnerCount: number;
   /** Tiền thưởng mỗi lần cược (VND). */
   prizePerUnit: number;
@@ -233,7 +235,8 @@ export interface SideBetPrizeSummaryRow {
   /** Giá trị tổng trúng — chỉ có với sumTotal. */
   sum: number | null;
   /** Loại cược trúng — chỉ có với bigSmallDraw. */
-  bet: string | null;
+  bet: Bingo18BigSmallBet | null;
+  /** Số lượt cược trúng với (playType, sum/bet) này trong kỳ quay. */
   winnerCount: number;
   /** Tiền thưởng mỗi lần cược (VND). */
   prizePerUnit: number;

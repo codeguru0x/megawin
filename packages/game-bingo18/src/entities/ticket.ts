@@ -129,8 +129,10 @@ export interface TicketDoc {
 
   /** Mã vé hiển thị, format do hệ thống sinh. Unique toàn hệ thống. */
   ticketNo: string;
+
   /** Kênh mua vé: "web" | "mobile" | "api" | "pos". */
   channel: TicketChannel;
+
   /**
    * IP address của player lúc đặt cược (IPv4 hoặc IPv6).
    * Lấy từ CF-Connecting-IP (qua Cloudflare) → X-Forwarded-For → sourceIp.

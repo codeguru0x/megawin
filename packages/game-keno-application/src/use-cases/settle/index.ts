@@ -29,3 +29,6 @@ export type { FinalizeSettleResult } from "./finalize-settle";
 
 export { SyncTicketSummariesUseCase } from "./sync-ticket-summaries";
 export type { SyncTicketSummariesResult } from "./sync-ticket-summaries";
+
+export { PublishSettleDailyUseCase } from "./publish-settle-daily";
+export type { PublishSettleDailyInput } from "./publish-settle-daily";

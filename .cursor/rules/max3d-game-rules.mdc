@@ -243,6 +243,7 @@ prepare-void → void-entries → dispatch-refunds → finalize-void
 
 Void theo **entry (draw-level)**: khi 1 kỳ bị void → TẤT CẢ entries thuộc kỳ đó bị void.
 Vé multi-draw: chỉ entry của kỳ bị void bị ảnh hưởng, các kỳ khác vẫn tiếp tục bình thường.
+**KHÔNG hỗ trợ void 1 phần board**: Max 3D không có void board-level — void là void cả entry, không có `isVoid` flag trên `EntryBoardSnapshot`.
 
 ---
 

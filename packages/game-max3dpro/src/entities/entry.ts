@@ -20,15 +20,6 @@ import type { Max3dproDrawResult } from "./draw-result";
 export interface EntryBoardSnapshot {
   /** Ký hiệu board: A, B, C, D. */
   boardNo: string;
-  /**
-   * Board bị huỷ trên ticket (void board-level).
-   *
-   * Max 3D Pro hỗ trợ void 1 phần board trên ticket — board bị void sẽ không
-   * được settle (skip trong SettleEntries). Entry bị void TOÀN BỘ thông qua
-   * VoidEntries flow (void toàn bộ draw), không qua flag này.
-   * isVoid = true khi admin void 1 board cụ thể trên ticket.
-   */
-  isVoid?: boolean;
   /** Cách chơi: multiNumber / multiDigit. */
   playMode: PlayMode;
   /** Kiểu chơi: straight / quickPick. */

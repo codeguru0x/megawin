@@ -16,7 +16,7 @@ import {
 import { Long } from "mongodb";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-bingo18/entities";;
+import type { DrawEntity } from "@megawin/game-bingo18/entities";
 
 export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
   private readonly drawRepo = new DrawRepository();
@@ -51,10 +51,7 @@ export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
       version: e.version ?? Long.fromNumber(0),
       gameProduct: GameProduct.Bingo18,
       sourceEntryId: e.id,
-      ticketId:
-        typeof e.ticketId === "string"
-          ? e.ticketId
-          : (e.ticketId?.toHexString?.() ?? String(e.ticketId)),
+      ticketId: e.ticketId,
       ticketNo: e.entrySummary?.ticketNo ?? "",
       tenantId: e.tenantId,
       playerId: e.accountId,

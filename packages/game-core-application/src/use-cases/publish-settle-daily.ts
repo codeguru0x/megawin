@@ -67,7 +67,7 @@ export interface PublishSettleDailyResult {
  * IDEMPOTENT: chạy lại nhiều lần cho cùng kết quả.
  * KHÔNG dùng $inc — luôn overwrite toàn bộ.
  */
-export class PublishSettleDailyUseCase extends InternalUseCase<
+export class SystemPublishSettleDailyUseCase extends InternalUseCase<
   PublishSettleDailyInput,
   PublishSettleDailyResult
 > {

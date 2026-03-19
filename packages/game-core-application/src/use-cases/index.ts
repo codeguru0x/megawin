@@ -14,7 +14,7 @@ export type { SaveFeedCursorInput, SaveFeedCursorResult } from "./save-feed-curs
 export { GetEntryFeedUseCase } from "./get-entry-feed";
 export type { GetEntryFeedInput } from "./get-entry-feed";
 
-export { PublishSettleDailyUseCase } from "./publish-settle-daily";
+export { SystemPublishSettleDailyUseCase } from "./publish-settle-daily";
 export type {
   PublishSettleDailyInput,
   PublishSettleDailyResult,

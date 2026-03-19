@@ -1,6 +1,7 @@
 export type { DrawSummaryResult } from "./settle-draw-report.types";
 export type { TenantAggregateSummary } from "./settle-tenant-report.types";
 export type {
+  SettledFinancialSummary,
   PlayerBreakdownRow,
   OutstandingDrawMetrics,
   OutstandingDrawCounts,

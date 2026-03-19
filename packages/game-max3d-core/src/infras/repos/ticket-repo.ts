@@ -2,9 +2,6 @@
  * Max3D Core – Abstract Ticket Repository
  *
  * Shared base cho game-max3d và game-max3dpro.
- *
- * Mỗi subclass có thể override `buildVoidSyncSet` để xử lý
- * void summary theo đặc thù riêng (vd: Max3D void theo board, không theo draw).
  */
 
 import { TicketStatus, ALL_LISTABLE_STATUSES } from "@megawin/game-core/entities";
@@ -16,12 +13,7 @@ import { BaseRepo } from "./base-repo";
 
 /**
  * Kết quả aggregate từ entries cho 1 ticket.
- * Dùng để sync lại ticket document qua bulkSyncSummaries / syncSummary.
- *
- * NOTE: Max3D void theo board (không phải theo draw), nên các void fields
- * (totalVoidedAmount, voidedDrawIds...) không được map vào TicketVoidSummary
- * của Max3D entity. Abstract class giữ đầy đủ fields để subclass có thể dùng
- * tuỳ ý thông qua override buildVoidSyncSet().
+ * Dùng để sync lại ticket document qua bulkSyncSummaries.
  */
 export interface TicketSummary {
   settledCount: number;
@@ -152,27 +144,6 @@ export abstract class AbstractTicketRepository<
     });
   }
 
-  /**
-   * Trả về các $set fields liên quan đến voidSummary.
-   *
-   * Default: dùng draw-level void fields (voidedDrawCount, totalVoidedAmount...).
-   * Max3D/Max3DPro override để return {} vì void theo board, không theo draw.
-   */
-  protected buildVoidSyncSet(
-    summary: TicketSummary,
-    voidedCount: number,
-    now: Date,
-  ): Record<string, unknown> {
-    if (voidedCount === 0) return {};
-    return {
-      "voidSummary.voidedDrawCount": voidedCount,
-      "voidSummary.totalVoidedAmount": summary.totalVoidedAmount,
-      "voidSummary.totalRefundedAmount": summary.totalRefundedAmount,
-      "voidSummary.voidedDrawIds": summary.voidedDrawIds,
-      "voidSummary.lastVoidedAt": now,
-    };
-  }
-
   async bulkSyncSummaries(
     items: Array<{ ticketId: string; summary: TicketSummary }>,
   ): Promise<number> {
@@ -183,32 +154,32 @@ export abstract class AbstractTicketRepository<
     for (const { ticketId, summary } of items) {
       const { settledCount, voidedCount, totalDraws } = summary;
       const processedCount = settledCount + voidedCount;
+      // isAllVoided: tất cả kỳ đều bị void (không có kỳ nào settled) → Refunded.
+      // isCompleted: tất cả kỳ đã xử lý xong (settled + voided >= totalDraws) → Completed.
+      const isAllVoided = voidedCount === totalDraws && settledCount === 0;
       const isCompleted = processedCount >= totalDraws;
-      const isSingleDrawVoid = totalDraws === 1 && voidedCount === 1;
-
-      let status: string | undefined;
-      if (isSingleDrawVoid) {
-        status = TicketStatus.Refunded;
-      } else if (isCompleted) {
-        status = TicketStatus.Completed;
-      }
+      const status = isAllVoided
+        ? TicketStatus.Refunded
+        : isCompleted
+          ? TicketStatus.Completed
+          : undefined;
 
       const $set: Record<string, unknown> = {
         "progress.settledDraws": processedCount,
         updatedAt: now,
+        ...(settledCount > 0 && {
+          "settlement.totalWinAmount": summary.totalWinAmount,
+          "settlement.lastSettledAt": now,
+        }),
+        ...(voidedCount > 0 && {
+          "voidSummary.voidedDrawCount": voidedCount,
+          "voidSummary.totalVoidedAmount": summary.totalVoidedAmount,
+          "voidSummary.totalRefundedAmount": summary.totalRefundedAmount,
+          "voidSummary.voidedDrawIds": summary.voidedDrawIds,
+          "voidSummary.lastVoidedAt": now,
+        }),
+        ...(status && { status }),
       };
-
-      if (settledCount > 0) {
-        $set["settlement.totalWinAmount"] = summary.totalWinAmount;
-        $set["settlement.lastSettledAt"] = now;
-      }
-
-      const voidFields = this.buildVoidSyncSet(summary, voidedCount, now);
-      Object.assign($set, voidFields);
-
-      if (status) {
-        $set.status = status;
-      }
 
       ops.push({
         updateOne: {
@@ -224,47 +195,5 @@ export abstract class AbstractTicketRepository<
     }
     const result = await this.bulkWrite(ops, { ordered: false });
     return result.modifiedCount;
-  }
-
-  async syncSummary(ticketId: ObjectId, summary: TicketSummary): Promise<boolean> {
-    const now = new Date();
-    const { settledCount, voidedCount, totalDraws } = summary;
-    const processedCount = settledCount + voidedCount;
-    const isCompleted = processedCount >= totalDraws;
-    const isSingleDrawVoid = totalDraws === 1 && voidedCount === 1;
-
-    let status: string | undefined;
-    if (isSingleDrawVoid) {
-      status = TicketStatus.Refunded;
-    } else if (isCompleted) {
-      status = TicketStatus.Completed;
-    }
-
-    const $set: Record<string, unknown> = {
-      "progress.settledDraws": processedCount,
-      updatedAt: now,
-    };
-
-    if (settledCount > 0) {
-      $set["settlement.totalWinAmount"] = summary.totalWinAmount;
-      $set["settlement.lastSettledAt"] = now;
-    }
-
-    const voidFields = this.buildVoidSyncSet(summary, voidedCount, now);
-    Object.assign($set, voidFields);
-
-    if (status) {
-      $set.status = status;
-    }
-
-    return await this.updateOne(
-      {
-        _id: ticketId,
-        $expr: {
-          $lte: [{ $ifNull: ["$progress.settledDraws", 0] }, processedCount],
-        },
-      },
-      { $set, $inc: { version: 1 } },
-    );
   }
 }
