@@ -13,42 +13,52 @@
   "exports": {
     "./entities": {
       "types": "./src/entities/index.ts",
+      "import": "./src/entities/index.ts",
       "default": "./dist/entities/index.js"
     },
     "./entities/*": {
       "types": "./src/entities/*.ts",
+      "import": "./src/entities/*.ts",
       "default": "./dist/entities/*.js"
     },
     "./rules": {
       "types": "./src/rules/index.ts",
+      "import": "./src/rules/index.ts",
       "default": "./dist/rules/index.js"
     },
     "./rules/*": {
       "types": "./src/rules/*.ts",
+      "import": "./src/rules/*.ts",
       "default": "./dist/rules/*.js"
     },
     "./helpers": {
       "types": "./src/helpers/index.ts",
+      "import": "./src/helpers/index.ts",
       "default": "./dist/helpers/index.js"
     },
     "./helpers/*": {
       "types": "./src/helpers/*.ts",
+      "import": "./src/helpers/*.ts",
       "default": "./dist/helpers/*.js"
     },
     "./indexes": {
       "types": "./src/indexes/index.ts",
+      "import": "./src/indexes/index.ts",
       "default": "./dist/indexes/index.js"
     },
     "./schemas": {
       "types": "./src/schemas/index.ts",
+      "import": "./src/schemas/index.ts",
       "default": "./dist/schemas/index.js"
     },
     "./schemas/*": {
       "types": "./src/schemas/*.ts",
+      "import": "./src/schemas/*.ts",
       "default": "./dist/schemas/*.js"
     },
     "./labels": {
       "types": "./src/labels/index.ts",
+      "import": "./src/labels/index.ts",
       "default": "./dist/labels/index.js"
     }
   },

@@ -27,6 +27,7 @@
     "@megawin/typescript-config": "workspace:*",
     "@types/node": "^24.0.0",
     "serverless-offline": "^14.5.0",
+    "tsx": "^4.21.0",
     "typescript": "5.9.3"
   }
 }

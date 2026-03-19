@@ -18,34 +18,42 @@
   "exports": {
     "./use-cases": {
       "types": "./src/use-cases/index.ts",
+      "import": "./src/use-cases/index.ts",
       "default": "./dist/use-cases/index.js"
     },
     "./aws": {
       "types": "./src/aws/index.ts",
+      "import": "./src/aws/index.ts",
       "default": "./dist/aws/index.js"
     },
     "./aws/cognito": {
       "types": "./src/aws/cognito/index.ts",
+      "import": "./src/aws/cognito/index.ts",
       "default": "./dist/aws/cognito/index.js"
     },
     "./aws/kinesis": {
       "types": "./src/aws/kinesis/index.ts",
+      "import": "./src/aws/kinesis/index.ts",
       "default": "./dist/aws/kinesis/index.js"
     },
     "./aws/sqs": {
       "types": "./src/aws/sqs/index.ts",
+      "import": "./src/aws/sqs/index.ts",
       "default": "./dist/aws/sqs/index.js"
     },
     "./aws/sf": {
       "types": "./src/aws/sf/index.ts",
+      "import": "./src/aws/sf/index.ts",
       "default": "./dist/aws/sf/index.js"
     },
     "./lambda": {
       "types": "./src/lambda/index.ts",
+      "import": "./src/lambda/index.ts",
       "default": "./dist/lambda/index.js"
     },
     "./lambda/middleware": {
       "types": "./src/lambda/middleware/index.ts",
+      "import": "./src/lambda/middleware/index.ts",
       "default": "./dist/lambda/middleware/index.js"
     }
   },

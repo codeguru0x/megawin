@@ -14,50 +14,62 @@
   "exports": {
     "./use-cases/draws": {
       "types": "./src/use-cases/draws/index.ts",
+      "import": "./src/use-cases/draws/index.ts",
       "default": "./dist/use-cases/draws/index.js"
     },
     "./use-cases/operations": {
       "types": "./src/use-cases/operations/index.ts",
+      "import": "./src/use-cases/operations/index.ts",
       "default": "./dist/use-cases/operations/index.js"
     },
     "./use-cases/place-bet": {
       "types": "./src/use-cases/place-bet/index.ts",
+      "import": "./src/use-cases/place-bet/index.ts",
       "default": "./dist/use-cases/place-bet/index.js"
     },
     "./use-cases/game-config": {
       "types": "./src/use-cases/game-config/index.ts",
+      "import": "./src/use-cases/game-config/index.ts",
       "default": "./dist/use-cases/game-config/index.js"
     },
     "./use-cases/tenant-config": {
       "types": "./src/use-cases/tenant-config/index.ts",
+      "import": "./src/use-cases/tenant-config/index.ts",
       "default": "./dist/use-cases/tenant-config/index.js"
     },
     "./use-cases/settle": {
       "types": "./src/use-cases/settle/index.ts",
+      "import": "./src/use-cases/settle/index.ts",
       "default": "./dist/use-cases/settle/index.js"
     },
     "./use-cases/payout": {
       "types": "./src/use-cases/payout/index.ts",
+      "import": "./src/use-cases/payout/index.ts",
       "default": "./dist/use-cases/payout/index.js"
     },
     "./use-cases/void": {
       "types": "./src/use-cases/void/index.ts",
+      "import": "./src/use-cases/void/index.ts",
       "default": "./dist/use-cases/void/index.js"
     },
     "./use-cases/feed": {
       "types": "./src/use-cases/feed/index.ts",
+      "import": "./src/use-cases/feed/index.ts",
       "default": "./dist/use-cases/feed/index.js"
     },
     "./use-cases/player": {
       "types": "./src/use-cases/player/index.ts",
+      "import": "./src/use-cases/player/index.ts",
       "default": "./dist/use-cases/player/index.js"
     },
     "./use-cases/reports": {
       "types": "./src/use-cases/reports/index.ts",
+      "import": "./src/use-cases/reports/index.ts",
       "default": "./dist/use-cases/reports/index.js"
     },
     "./repos": {
       "types": "./src/infras/repos/index.ts",
+      "import": "./src/infras/repos/index.ts",
       "default": "./dist/infras/repos/index.js"
     }
   },

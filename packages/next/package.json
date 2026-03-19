@@ -17,14 +17,17 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
+      "import": "./src/index.ts",
       "default": "./dist/index.js"
     },
     "./server": {
       "types": "./src/server/index.ts",
+      "import": "./src/server/index.ts",
       "default": "./dist/server/index.js"
     },
     "./client": {
       "types": "./src/client/index.ts",
+      "import": "./src/client/index.ts",
       "default": "./dist/client/index.js"
     }
   },

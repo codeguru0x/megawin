@@ -18,26 +18,32 @@
   "exports": {
     "./utils/*": {
       "types": "./src/utils/*.ts",
+      "import": "./src/utils/*.ts",
       "default": "./dist/utils/*.js"
     },
     "./types/*": {
       "types": "./src/types/*.ts",
+      "import": "./src/types/*.ts",
       "default": "./dist/types/*.js"
     },
     "./mappers/*": {
       "types": "./src/mappers/*.ts",
+      "import": "./src/mappers/*.ts",
       "default": "./dist/mappers/*.js"
     },
     "./errors": {
       "types": "./src/errors/index.ts",
+      "import": "./src/errors/index.ts",
       "default": "./dist/errors/index.js"
     },
     "./api-types": {
       "types": "./src/api-types/index.ts",
+      "import": "./src/api-types/index.ts",
       "default": "./dist/api-types/index.js"
     },
     "./constants/*": {
       "types": "./src/constants/*.ts",
+      "import": "./src/constants/*.ts",
       "default": "./dist/constants/*.js"
     }
   },

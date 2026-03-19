@@ -581,6 +581,9 @@ importers:
       serverless-offline:
         specifier: ^14.5.0
         version: 14.5.0(serverless@4.31.2)
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -621,6 +624,9 @@ importers:
       serverless-offline:
         specifier: ^14.5.0
         version: 14.5.0(serverless@4.31.2)
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -661,6 +667,9 @@ importers:
       serverless-offline:
         specifier: ^14.5.0
         version: 14.5.0(serverless@4.31.2)
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -701,6 +710,9 @@ importers:
       serverless-offline:
         specifier: ^14.5.0
         version: 14.5.0(serverless@4.31.2)
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -741,6 +753,9 @@ importers:
       serverless-offline:
         specifier: ^14.5.0
         version: 14.5.0(serverless@4.31.2)
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -781,6 +796,9 @@ importers:
       serverless-offline:
         specifier: ^14.5.0
         version: 14.5.0(serverless@4.31.2)
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -821,6 +839,9 @@ importers:
       serverless-offline:
         specifier: ^14.5.0
         version: 14.5.0(serverless@4.31.2)
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
       typescript:
         specifier: 5.9.3
         version: 5.9.3

@@ -13,26 +13,32 @@
   "exports": {
     "./entities": {
       "types": "./src/entities/index.ts",
+      "import": "./src/entities/index.ts",
       "default": "./dist/entities/index.js"
     },
     "./entities/*": {
       "types": "./src/entities/*.ts",
+      "import": "./src/entities/*.ts",
       "default": "./dist/entities/*.js"
     },
     "./indexes": {
       "types": "./src/indexes/index.ts",
+      "import": "./src/indexes/index.ts",
       "default": "./dist/indexes/index.js"
     },
     "./types": {
       "types": "./src/types/index.ts",
+      "import": "./src/types/index.ts",
       "default": "./dist/types/index.js"
     },
     "./utils": {
       "types": "./src/utils/index.ts",
+      "import": "./src/utils/index.ts",
       "default": "./dist/utils/index.js"
     },
     "./labels": {
       "types": "./src/labels/index.ts",
+      "import": "./src/labels/index.ts",
       "default": "./dist/labels/index.js"
     }
   },

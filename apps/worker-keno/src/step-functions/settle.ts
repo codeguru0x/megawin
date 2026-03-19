@@ -26,23 +26,23 @@
  *  │     chia đều tổng 10 tỷ.                 │
  *  └────────┬─────────────────────────────────┘
  *           ▼
+ *  ┌────────────────────────────┐
+ *  │  4. CalculateFinancials    │  Tính từ DB (no jackpot)
+ *  └────────┬───────────────────┘
+ *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  4. SyncTicketSummaries (loop)           │
+ *  │  5. SyncTicketSummaries (loop)           │
  *  │     Recompute ticket progress.           │
  *  │     Time-bounded (13 min).               │
  *  │     done=true khi hết tickets.           │
  *  └────────┬─────────────────────────────────┘
  *           ▼
- *  ┌────────────────────────────┐
- *  │  5. CalculateFinancials    │  Tính từ DB (no jackpot)
- *  └────────┬───────────────────┘
- *           ▼
  *  ┌─────────────────────────┐
- *  │  6. BuildSettleReport   │  Per-game financial reports (NEW)
+ *  │  6. BuildSettleReport   │  Per-game financial reports
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  7. PublishSettleDaily  │  System daily reports (NEW)
+ *  │  7. PublishSettleDaily  │  System daily reports
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
@@ -126,6 +126,15 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Task",
       Resource: lambdaArn("settle-apply-payout-caps"),
       Arguments: "{% $settleCtx %}",
+      Next: "CalculateFinancials",
+      Retry: LAMBDA_RETRY,
+    },
+
+    CalculateFinancials: {
+      Type: "Task",
+      Resource: lambdaArn("settle-calculate-financials"),
+      Arguments: "{% $settleCtx %}",
+      Assign: { settleCtx: "{% $merge([$settleCtx, { 'financials': $states.result }]) %}" },
       Next: "SyncTicketSummaries",
       Retry: LAMBDA_RETRY,
     },
@@ -144,19 +153,10 @@ export const SETTLE_STATE_MACHINE = {
       Choices: [
         {
           Condition: "{% $syncResult.done %}",
-          Next: "CalculateFinancials",
+          Next: "BuildSettleReport",
         },
       ],
       Default: "SyncTicketSummaries",
-    },
-
-    CalculateFinancials: {
-      Type: "Task",
-      Resource: lambdaArn("settle-calculate-financials"),
-      Arguments: "{% $settleCtx %}",
-      Assign: { settleCtx: "{% $merge([$settleCtx, { 'financials': $states.result }]) %}" },
-      Next: "BuildSettleReport",
-      Retry: LAMBDA_RETRY,
     },
 
     BuildSettleReport: {

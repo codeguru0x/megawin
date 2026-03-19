@@ -203,7 +203,7 @@
     "PublishSettleDaily": {
       "Type": "Task",
       "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-settle-publish-settle-daily",
-      "Arguments": "{% { 'financialDate': $settleCtx.financialDate } %}",
+      "Arguments": "{% $settleCtx %}",
       "Next": "FinalizeSettle",
       "Retry": [
         {

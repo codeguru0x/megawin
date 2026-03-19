@@ -20,22 +20,27 @@
   "exports": {
     "./use-cases/accounts": {
       "types": "./src/use-cases/accounts/index.ts",
+      "import": "./src/use-cases/accounts/index.ts",
       "default": "./dist/use-cases/accounts/index.js"
     },
     "./use-cases/players": {
       "types": "./src/use-cases/players/index.ts",
+      "import": "./src/use-cases/players/index.ts",
       "default": "./dist/use-cases/players/index.js"
     },
     "./use-cases/tenants": {
       "types": "./src/use-cases/tenants/index.ts",
+      "import": "./src/use-cases/tenants/index.ts",
       "default": "./dist/use-cases/tenants/index.js"
     },
     "./repos": {
       "types": "./src/infras/repos/index.ts",
+      "import": "./src/infras/repos/index.ts",
       "default": "./dist/infras/repos/index.js"
     },
     "./shared": {
       "types": "./src/shared/index.ts",
+      "import": "./src/shared/index.ts",
       "default": "./dist/shared/index.js"
     }
   },

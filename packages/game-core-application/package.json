@@ -13,18 +13,22 @@
   "exports": {
     "./repos": {
       "types": "./src/infras/repos/index.ts",
+      "import": "./src/infras/repos/index.ts",
       "default": "./dist/infras/repos/index.js"
     },
     "./mappers": {
       "types": "./src/infras/mappers/index.ts",
+      "import": "./src/infras/mappers/index.ts",
       "default": "./dist/infras/mappers/index.js"
     },
     "./use-cases": {
       "types": "./src/use-cases/index.ts",
+      "import": "./src/use-cases/index.ts",
       "default": "./dist/use-cases/index.js"
     },
     "./use-cases/reports": {
       "types": "./src/use-cases/reports/index.ts",
+      "import": "./src/use-cases/reports/index.ts",
       "default": "./dist/use-cases/reports/index.js"
     }
   },

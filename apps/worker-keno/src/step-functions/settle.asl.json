@@ -64,6 +64,30 @@
       "Type": "Task",
       "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-keno-dev-settle-apply-payout-caps",
       "Arguments": "{% $settleCtx %}",
+      "Next": "CalculateFinancials",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "CalculateFinancials": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-keno-dev-settle-calculate-financials",
+      "Arguments": "{% $settleCtx %}",
+      "Assign": {
+        "settleCtx": "{% $merge([$settleCtx, { 'financials': $states.result }]) %}"
+      },
       "Next": "SyncTicketSummaries",
       "Retry": [
         {
@@ -110,19 +134,16 @@
       "Choices": [
         {
           "Condition": "{% $syncResult.done %}",
-          "Next": "CalculateFinancials"
+          "Next": "BuildSettleReport"
         }
       ],
       "Default": "SyncTicketSummaries"
     },
-    "CalculateFinancials": {
+    "BuildSettleReport": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-keno-dev-settle-calculate-financials",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-keno-dev-settle-build-settle-report",
       "Arguments": "{% $settleCtx %}",
-      "Assign": {
-        "financials": "{% $states.result %}"
-      },
-      "Next": "BuildReport",
+      "Next": "PublishSettleDaily",
       "Retry": [
         {
           "ErrorEquals": [
@@ -139,10 +160,10 @@
         }
       ]
     },
-    "BuildReport": {
+    "PublishSettleDaily": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-keno-dev-settle-build-report",
-      "Arguments": "{% $merge($settleCtx, { 'financials': $financials }) %}",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-keno-dev-settle-publish-settle-daily",
+      "Arguments": "{% $settleCtx %}",
       "Next": "FinalizeSettle",
       "Retry": [
         {

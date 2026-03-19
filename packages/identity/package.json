@@ -13,10 +13,12 @@
   "exports": {
     "./entities": {
       "types": "./src/entities/index.ts",
+      "import": "./src/entities/index.ts",
       "default": "./dist/entities/index.js"
     },
     "./entities/*": {
       "types": "./src/entities/*.ts",
+      "import": "./src/entities/*.ts",
       "default": "./dist/entities/*.js"
     }
   },

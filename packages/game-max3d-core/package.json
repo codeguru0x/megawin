@@ -13,10 +13,12 @@
   "exports": {
     "./repos": {
       "types": "./src/infras/repos/index.ts",
+      "import": "./src/infras/repos/index.ts",
       "default": "./dist/repos/index.js"
     },
     "./mappers": {
       "types": "./src/infras/mappers/index.ts",
+      "import": "./src/infras/mappers/index.ts",
       "default": "./dist/mappers/index.js"
     }
   },
