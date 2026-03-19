@@ -10,13 +10,11 @@
  * @output PublishSettleDailyResult
  */
 
-import {
-  PublishSettleDailyUseCase,
-  type VoidContext,
-} from "@megawin/game-keno-application/use-cases/void";
+import { PublishSettleDailyUseCase } from "@megawin/game-keno-application/use-cases/settle";
+import type { VoidContext } from "@megawin/game-keno-application/use-cases/void";
 
 const useCase = new PublishSettleDailyUseCase();
 
 export async function handler(event: VoidContext) {
-  return useCase.run(event);
+  return useCase.run({ financialDate: event.financialDate });
 }

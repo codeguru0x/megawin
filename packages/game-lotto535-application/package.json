@@ -77,16 +77,16 @@
     "@megawin/game-core": "workspace:*",
     "@megawin/game-core-application": "workspace:*",
     "@megawin/game-lotto535": "workspace:*",
-    "@megawin/tenant-gateway": "workspace:*",
     "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
+    "@megawin/tenant-gateway": "workspace:*",
     "mongodb": "^7.1.0"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.2.1",
-    "next": "^16.1.6",
+    "next": "^16.2.0",
     "typescript": "5.9.3",
     "vite": "latest",
     "vitest": "latest"

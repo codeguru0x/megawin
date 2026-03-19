@@ -3,6 +3,8 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "incremental": true,
+    "declaration": false,
+    "declarationMap": false,
     "paths": {
       "@/*": ["./src/*"]
     }

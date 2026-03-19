@@ -111,8 +111,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         const allPairResults: PairMatchResult[] = [];
 
         for (const board of boards) {
-          if (board.isVoid) continue;
-
           const pairs = expandSelectionToPairs(board.playMode as PlayMode, {
             triplets: board.triplets,
             frontDigits: board.frontDigits,

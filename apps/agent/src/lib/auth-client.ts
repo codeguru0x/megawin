@@ -9,13 +9,11 @@
 
 import { createAuthClient } from "better-auth/react";
 
-export const authClient = createAuthClient();
+// Type annotation tường minh để tránh lỗi "inferred type cannot be named"
+// khi TypeScript cố gắng tham chiếu đến file .mjs nội bộ của better-auth.
+export const authClient: ReturnType<typeof createAuthClient> = createAuthClient();
 
 /**
  * Convenience exports – destructure các methods thường dùng.
  */
-export const {
-  signIn,
-  signOut,
-  useSession,
-} = authClient;
+export const { signIn, signOut, useSession } = authClient;

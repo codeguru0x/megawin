@@ -116,8 +116,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         let globalLineIndex = 0;
 
         for (const board of boards) {
-          if (board.isVoid) continue;
-
           const boardMatch = matchBoard(
             {
               boardNo: board.boardNo,
