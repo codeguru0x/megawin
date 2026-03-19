@@ -19,7 +19,6 @@ export interface TicketSummary {
 }
 
 const PENDING_STATUSES = [TicketStatus.Paid];
-const COMPLETED_STATUSES = [TicketStatus.Completed, TicketStatus.Refunded, TicketStatus.Void];
 
 export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
   constructor() {

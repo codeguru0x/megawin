@@ -33,6 +33,7 @@ import { SettleDrawReportRepository } from "../../infras/repos/settle-draw-repor
 import { SettleTenantReportRepository } from "../../infras/repos/settle-tenant-report-repo";
 import { VoidReportRepository } from "../../infras/repos/void-report-repo";
 import type { VoidContext } from "./types";
+import type { VoidPreviousSettleSnapshot } from "@megawin/game-power655/entities";
 
 export interface BuildVoidReportResult {
   /** Mã kỳ quay. */
@@ -62,7 +63,7 @@ export class BuildVoidReportUseCase extends InternalUseCase<VoidContext, BuildVo
     const existingSettleReport = await this.drawReportRepo.findByDrawId(drawId);
     const wasPreviouslySettled = existingSettleReport !== null;
 
-    let previousSettleSnapshot = undefined;
+    let previousSettleSnapshot: VoidPreviousSettleSnapshot | undefined = undefined;
 
     if (wasPreviouslySettled && existingSettleReport) {
       // 0a. Snapshot settle data trước khi xoá — dùng cho audit trail trong void report
@@ -72,7 +73,7 @@ export class BuildVoidReportUseCase extends InternalUseCase<VoidContext, BuildVo
         ggr: existingSettleReport.ggr,
         totalCommission: existingSettleReport.totalCommission,
         netProfit: existingSettleReport.netProfit,
-      };
+      } satisfies VoidPreviousSettleSnapshot;
 
       // 0b. Xoá settle tenant reports trước
       // deleteMany idempotent — crash sau bước này → retry xoá draw report tiếp

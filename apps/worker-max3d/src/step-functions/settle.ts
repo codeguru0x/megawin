@@ -144,7 +144,7 @@ export const SETTLE_STATE_MACHINE = {
       Resource: lambdaArn("settle-calculate-financials"),
       Arguments: "{% $settleCtx %}",
       Assign: {
-        settleCtx: "{% $merge($settleCtx, { 'financials': $states.result }) %}",
+        settleCtx: "{% $merge([$settleCtx, { 'financials': $states.result }]) %}",
       },
       Next: "BuildSettleReport",
       Retry: LAMBDA_RETRY,
@@ -161,7 +161,7 @@ export const SETTLE_STATE_MACHINE = {
     PublishSettleDaily: {
       Type: "Task",
       Resource: lambdaArn("settle-publish-settle-daily"),
-      Arguments: "{% { 'financialDate': $settleCtx.financialDate } %}",
+      Arguments: "{% $settleCtx %}",
       Next: "FinalizeSettle",
       Retry: LAMBDA_RETRY,
     },

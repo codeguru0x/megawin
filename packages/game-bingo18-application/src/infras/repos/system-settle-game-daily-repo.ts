@@ -34,10 +34,13 @@ export class SystemSettleGameDailyRepo extends SystemSettleGameDailyRepository {
       {
         $group: {
           _id: null,
+
           drawCount: { $sum: 1 },
+
           entryCount: { $sum: "$entryCount" },
           playerCount: { $sum: "$playerCount" },
           tenantCount: { $max: "$tenantCount" },
+
           totalStake: { $sum: "$totalStake" },
           totalWin: { $sum: "$totalWin" },
           totalPayout: { $sum: "$totalPayout" },
@@ -50,16 +53,32 @@ export class SystemSettleGameDailyRepo extends SystemSettleGameDailyRepository {
 
     if (result.length === 0) {
       return {
-        drawCount: 0, entryCount: 0, playerCount: 0, tenantCount: 0,
-        totalStake: 0, totalWin: 0, totalPayout: 0, ggr: 0, totalCommission: 0, netProfit: 0,
+        drawCount: 0,
+        entryCount: 0,
+        playerCount: 0,
+        tenantCount: 0,
+        totalStake: 0,
+        totalWin: 0,
+        totalPayout: 0,
+        ggr: 0,
+        totalCommission: 0,
+        netProfit: 0,
       };
     }
 
     const r = result[0] as any;
     return {
-      drawCount: r.drawCount, entryCount: r.entryCount, playerCount: r.playerCount,
-      tenantCount: r.tenantCount, totalStake: r.totalStake, totalWin: r.totalWin, totalPayout: r.totalPayout,
-      ggr: r.ggr, totalCommission: r.totalCommission, netProfit: r.netProfit,
+      drawCount: r.drawCount,
+      entryCount: r.entryCount,
+      playerCount: r.playerCount,
+      tenantCount: r.tenantCount,
+
+      totalStake: r.totalStake,
+      totalWin: r.totalWin,
+      totalPayout: r.totalPayout,
+      ggr: r.ggr,
+      totalCommission: r.totalCommission,
+      netProfit: r.netProfit,
     };
   }
 }

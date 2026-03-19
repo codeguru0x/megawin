@@ -10,10 +10,10 @@
  */
 
 import { PublishSettleDailyUseCase } from "@megawin/game-lotto535-application/use-cases/settle";
-import { SettleContextWithFinancials } from "@megawin/game-lotto535-application/use-cases/settle";
+import type { SettleContextWithFinancials } from "@megawin/game-lotto535-application/use-cases/settle";
 
 const useCase = new PublishSettleDailyUseCase();
 
 export async function handler(event: SettleContextWithFinancials) {
-  return useCase.run({ financialDate: event.financialDate });
+  return useCase.run(event);
 }

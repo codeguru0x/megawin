@@ -187,6 +187,7 @@ export interface VoidDrawReport {
 
   /** True nếu draw đã settle trước khi bị void. */
   wasPreviouslySettled: boolean;
+
   /** Snapshot settle data trước khi xoá. Chỉ có khi wasPreviouslySettled = true. */
   previousSettleSnapshot?: VoidPreviousSettleSnapshot;
 

@@ -384,7 +384,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   async bulkVoidEntries(
     items: Array<{ entryId: string; voidInfo: EntryVoidInfo }>,
   ): Promise<{ modifiedCount: number }> {
-    if (items.length === 0) return { modifiedCount: 0 };
+    if (items.length === 0) {
+      return { modifiedCount: 0 };
+    }
 
     const version = await this.nextVersion();
     const now = new Date();
@@ -463,12 +465,12 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         },
       },
     ]);
-    const summary = (result[0] as any) ?? {};
+    const summary = result[0] ?? {};
     return {
       totalVoidedEntries: summary.totalVoidedEntries ?? 0,
       totalOriginalAmount: summary.totalOriginalAmount ?? 0,
       totalRefundAmount: summary.totalRefundAmount ?? 0,
-    };
+    } satisfies VoidRefundSummary;
   }
 
   // ─── Ticket Summary Aggregation ───

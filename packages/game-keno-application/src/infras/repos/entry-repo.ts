@@ -657,7 +657,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         },
       },
     ]);
-    const summary = (result[0] as any) ?? {};
+    const summary = result[0] ?? {};
     return {
       totalVoidedEntries: summary.totalVoidedEntries ?? 0,
       totalOriginalAmount: summary.totalOriginalAmount ?? 0,

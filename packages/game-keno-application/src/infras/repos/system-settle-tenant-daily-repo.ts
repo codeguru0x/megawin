@@ -36,12 +36,14 @@ export class SystemSettleTenantDailyRepo extends SystemSettleTenantDailyReposito
       {
         $group: {
           _id: "$tenantId",
+
           totalStake: { $sum: "$totalStake" },
           totalWin: { $sum: "$totalWin" },
           totalPayout: { $sum: "$totalPayout" },
           ggr: { $sum: "$ggr" },
           totalCommission: { $sum: "$totalCommission" },
           netProfit: { $sum: "$netProfit" },
+
           entryCount: { $sum: "$entryCount" },
           playerCount: { $sum: "$playerCount" },
           drawCount: { $sum: 1 },
@@ -49,7 +51,7 @@ export class SystemSettleTenantDailyRepo extends SystemSettleTenantDailyReposito
       },
     ]);
 
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       tenantId: r._id,
       totalStake: r.totalStake,
       totalWin: r.totalWin,

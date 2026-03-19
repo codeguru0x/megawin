@@ -162,9 +162,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   /** Chuyển draw settling → settled + stamp settledAt. Atomic, idempotent. */
   async settleComplete(drawId: string): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Settling];
-    if (!allowed?.has(DrawStatus.Settled)) return null;
+
+    if (!allowed?.has(DrawStatus.Settled)) {
+      return null;
+    }
 
     const now = new Date();
+
     return await this.findOneAndUpdate(
       { drawId, status: DrawStatus.Settling },
       {
@@ -255,7 +259,10 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   /** Hoàn tất void: voiding → void + stamp voidedAt + ghi voidSummary. Atomic, idempotent. */
   async voidComplete(drawId: string, voidSummary: DrawVoidSummary): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Voiding];
-    if (!allowed?.has(DrawStatus.Void)) return null;
+
+    if (!allowed?.has(DrawStatus.Void)) {
+      return null;
+    }
 
     const now = new Date();
     return await this.findOneAndUpdate(

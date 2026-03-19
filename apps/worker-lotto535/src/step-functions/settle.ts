@@ -246,7 +246,7 @@ export const SETTLE_STATE_MACHINE = {
     PublishSettleDaily: {
       Type: "Task",
       Resource: lambdaArn("settle-publish-settle-daily"),
-      Arguments: "{% { 'financialDate': $settleCtx.financialDate } %}",
+      Arguments: "{% $settleCtx %}",
       Next: "FinalizeSettle",
       Retry: LAMBDA_RETRY,
     },

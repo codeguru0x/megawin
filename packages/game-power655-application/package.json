@@ -15,10 +15,6 @@
     "clean": "rm -rf dist"
   },
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./dist/index.js"
-    },
     "./repos": {
       "types": "./src/infras/repos/index.ts",
       "default": "./dist/infras/repos/index.js"
