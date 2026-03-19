@@ -23,17 +23,17 @@
  *  └────────┬───────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  4. SyncTicketSummaries (loop)          │
- *  │     Recompute ticket progress           │
- *  │     done = true khi hết tickets         │
+ *  │  4. SyncTicketSummaries (loop)           │
+ *  │     Recompute ticket progress            │
+ *  │     done = true khi hết tickets          │
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  5. BuildSettleReport   │  Per-game financial reports (NEW)
+ *  │  5. BuildSettleReport   │  Per-game financial reports
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  6. PublishSettleDaily  │  System daily reports (NEW)
+ *  │  6. PublishSettleDaily  │  System daily reports (re-aggregate)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
@@ -41,7 +41,7 @@
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  7. DispatchPayouts (loop)               │
+ *  │  8. DispatchPayouts (loop)               │
  *  │     done = true khi hết pending payouts  │
  *  └──────────────────────────────────────────┘
  *
@@ -49,6 +49,11 @@
  *   $settleCtx = PrepareSettle result, enriched progressively.
  *   After CalculateFinancials: settleCtx.financials = result.
  *   All steps receive $settleCtx — destructure what they need.
+ *
+ * CRASH RECOVERY:
+ *   Mỗi step idempotent. Step Function retry-safe.
+ *
+ * Bingo 18 KHÔNG có Jackpot → không cần PatchJackpotPrize hay ApplySplitBonuses.
  *
  * USAGE (chạy từ thư mục step-functions):
  *   npx tsx -e "import { SETTLE_STATE_MACHINE } from './settle'; console.log(JSON.stringify(SETTLE_STATE_MACHINE, null, 2))" > settle.asl.json

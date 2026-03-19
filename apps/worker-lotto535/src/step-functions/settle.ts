@@ -46,11 +46,15 @@
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  6. BuildReport         │  Daily reports (idempotent upsert)
+ *  │  6. BuildSettleReport   │  Per-game financial reports (idempotent upsert)
+ *  └────────┬────────────────┘
+ *           ▼
+ *  ┌─────────────────────────┐
+ *  │  7. PublishSettleDaily  │  System daily reports (re-aggregate)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────────────────────────────────────────┐
- *  │  7. FinalizeSettle                                          │
+ *  │  8. FinalizeSettle                                          │
  *  │     ├─ Transition draw: settling → settled + JP snapshot    │
  *  │     ├─ hasJackpotWinner || splitExecuted → close cycle +    │
  *  │     │    ghi winners/splitDetail + create new cycle         │
@@ -58,7 +62,7 @@
  *  └────────┬────────────────────────────────────────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  8. DispatchPayouts (loop, async)        │
+ *  │  9. DispatchPayouts (loop, async)        │
  *  │     Batch 200, chunk 50/API call         │
  *  └──────────────────────────────────────────┘
  *
@@ -78,7 +82,7 @@
  *   SettleEntries ghi jackpot tier amount = 0 (chưa biết tiền JP chính xác).
  *   PatchJackpotPrize (step 4a) tính jackpotPerWinner và patch ngược vào
  *   entry.payout + line.matchResult.winAmount TRƯỚC SyncTicketSummaries.
- *   FinalizeSettle (step 7) ghi cycle close record + winners info.
+ *   FinalizeSettle (step 8) ghi cycle close record + winners info.
  *
  * USAGE (chạy từ thư mục step-functions):
  *   npx tsx -e "import { SETTLE_STATE_MACHINE } from './settle'; console.log(JSON.stringify(SETTLE_STATE_MACHINE, null, 2))" > settle.asl.json
@@ -229,7 +233,7 @@ export const SETTLE_STATE_MACHINE = {
       Default: "SyncTicketSummaries",
     },
 
-    // ── STEP 6: Build settle report (MỚI — per-game financial reports) ──
+    // ── STEP 6: Build settle report (per-game financial reports) ──
     // Aggregate entries → upsert lotto535_settle_draw_reports + lotto535_settle_tenant_reports.
     // IDEMPOTENT: upsert overwrite — crash-safe, retry an toàn.
     BuildSettleReport: {
@@ -240,7 +244,7 @@ export const SETTLE_STATE_MACHINE = {
       Retry: LAMBDA_RETRY,
     },
 
-    // ── STEP 8: Publish settle daily (MỚI — system-level reports) ──
+    // ── STEP 7: Publish settle daily (system-level reports) ──
     // Re-aggregate lotto535_settle_draw/tenant_reports → upsert system_settle_game/tenant_daily.
     // IDEMPOTENT: overwrite toàn bộ — chạy lại cho kết quả giống nhau.
     PublishSettleDaily: {
@@ -251,7 +255,7 @@ export const SETTLE_STATE_MACHINE = {
       Retry: LAMBDA_RETRY,
     },
 
-    // ── STEP 9: Finalize settle ──
+    // ── STEP 8: Finalize settle ──
     FinalizeSettle: {
       Type: "Task",
       Resource: lambdaArn("settle-finalize"),
@@ -260,7 +264,7 @@ export const SETTLE_STATE_MACHINE = {
       Retry: LAMBDA_RETRY,
     },
 
-    // ── STEP 8: Dispatch payouts (loop) ──
+    // ── STEP 9: Dispatch payouts (loop) ──
     DispatchPayouts: {
       Type: "Task",
       Resource: lambdaArn("settle-dispatch-payouts"),

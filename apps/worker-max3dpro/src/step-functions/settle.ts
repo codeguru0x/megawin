@@ -18,9 +18,11 @@
  *  │     → persist lines + payout             │
  *  └────────┬─────────────────────────────────┘
  *           ▼
- *  ┌────────────────────────────┐
- *  │  3. SyncTicketSummaries    │  Recompute ticket summaries
- *  └────────┬───────────────────┘
+ *  ┌──────────────────────────────────────────┐
+ *  │  3. SyncTicketSummaries (loop)           │
+ *  │     Recompute ticket summaries           │
+ *  │     done = true khi hết tickets          │
+ *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌────────────────────────────┐
  *  │  4. CalculateFinancials    │  Tính từ DB (no jackpot)
@@ -28,11 +30,11 @@
  *  └────────┬───────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  5. BuildSettleReport   │  Per-game financial reports (NEW)
+ *  │  5. BuildSettleReport   │  Per-game financial reports
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  6. PublishSettleDaily  │  System daily reports (NEW)
+ *  │  6. PublishSettleDaily  │  System daily reports (re-aggregate)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
@@ -50,6 +52,9 @@
  *   Tất cả step sau dùng $settleCtx (bao gồm financials).
  *   Lambda nhận data qua Arguments, tự destructure fields cần thiết.
  *   batchSize cố định 500 trong use-case, không truyền từ step function.
+ *
+ * CRASH RECOVERY:
+ *   Mỗi step idempotent. Step Function retry-safe.
  *
  * Max 3D Pro KHÔNG có Jackpot tích lũy.
  *

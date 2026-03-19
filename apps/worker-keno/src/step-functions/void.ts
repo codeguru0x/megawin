@@ -30,13 +30,17 @@
  *  │     done = true khi hết pending refunds  │
  *  └────────┬─────────────────────────────────┘
  *           ▼
- *  ┌─────────────────────────┐
- *  │  5. BuildVoidReport     │  Cleanup settle reports (nếu void-after-settle) + void report (NEW)
- *  └────────┬────────────────┘
+ *  ┌──────────────────────────────────────────────────────────┐
+ *  │  5. BuildVoidReport                                      │
+ *  │     Cleanup settle reports (nếu void-after-settle)       │
+ *  │     + build keno_void_draw_reports                       │
+ *  └────────┬─────────────────────────────────────────────────┘
  *           ▼
- *  ┌─────────────────────────┐
- *  │  6. PublishSettleDaily  │  Re-aggregate system reports (NEW)
- *  └────────┬────────────────┘
+ *  ┌──────────────────────────────────────────────────────────┐
+ *  │  6. PublishSettleDaily                                   │
+ *  │     Re-aggregate system daily reports                    │
+ *  │     Settle totals tự giảm khi settle reports đã xoá     │
+ *  └────────┬─────────────────────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
  *  │  7. FinalizeVoid        │  Transition voiding → void + ghi voidSummary
@@ -174,7 +178,7 @@ export const VOID_STATE_MACHINE = {
     PublishSettleDaily: {
       Type: "Task",
       Resource: lambdaArn("void-publish-settle-daily"),
-      Arguments: "{% { 'financialDate': $voidCtx.financialDate } %}",
+      Arguments: "{% $voidCtx %}",
       Next: "FinalizeVoid",
       Retry: LAMBDA_RETRY,
     },

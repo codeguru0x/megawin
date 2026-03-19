@@ -131,7 +131,7 @@
       "Choices": [
         {
           "Condition": "{% $refundResult.done %}",
-          "Next": "FinalizeVoid"
+          "Next": "BuildVoidReport"
         }
       ],
       "Default": "RefundWait"
@@ -140,6 +140,48 @@
       "Type": "Wait",
       "Seconds": 5,
       "Next": "DispatchRefunds"
+    },
+    "BuildVoidReport": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-keno-dev-void-build-void-report",
+      "Arguments": "{% $voidCtx %}",
+      "Next": "PublishSettleDaily",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "PublishSettleDaily": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-keno-dev-void-publish-settle-daily",
+      "Arguments": "{% $voidCtx %}",
+      "Next": "FinalizeVoid",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
     },
     "FinalizeVoid": {
       "Type": "Task",

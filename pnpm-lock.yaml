@@ -339,6 +339,9 @@ importers:
       '@megawin/app-core':
         specifier: workspace:*
         version: link:../../packages/app-core
+      '@megawin/data':
+        specifier: workspace:*
+        version: link:../../packages/data
       '@megawin/game-bingo18':
         specifier: workspace:*
         version: link:../../packages/game-bingo18
@@ -369,6 +372,9 @@ importers:
       '@megawin/game-max3d-application':
         specifier: workspace:*
         version: link:../../packages/game-max3d-application
+      '@megawin/game-max3d-core':
+        specifier: workspace:*
+        version: link:../../packages/game-max3d-core
       '@megawin/game-max3dpro':
         specifier: workspace:*
         version: link:../../packages/game-max3dpro
@@ -387,6 +393,9 @@ importers:
       '@megawin/game-power655-application':
         specifier: workspace:*
         version: link:../../packages/game-power655-application
+      '@megawin/http-client':
+        specifier: workspace:*
+        version: link:../../packages/http-client
       '@megawin/identity':
         specifier: workspace:*
         version: link:../../packages/identity
@@ -399,6 +408,9 @@ importers:
       '@megawin/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@megawin/tenant-gateway':
+        specifier: workspace:*
+        version: link:../../packages/tenant-gateway
       '@megawin/ui':
         specifier: workspace:*
         version: link:../../packages/ui

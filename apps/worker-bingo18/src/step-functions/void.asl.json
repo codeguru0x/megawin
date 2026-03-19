@@ -1,11 +1,11 @@
 {
-  "Comment": "Lotto 5/35 Void Draw Step Function – Huỷ kỳ quay (crash-safe)",
+  "Comment": "Bingo 18 Void Draw Step Function – Huỷ kỳ quay (crash-safe, no jackpot)",
   "QueryLanguage": "JSONata",
   "StartAt": "PrepareVoid",
   "States": {
     "PrepareVoid": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-void-prepare",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-prepare",
       "Assign": {
         "voidCtx": "{% $states.result %}"
       },
@@ -28,7 +28,7 @@
     },
     "VoidEntries": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-void-entries",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-entries",
       "Arguments": "{% $voidCtx %}",
       "Assign": {
         "voidResult": "{% $states.result %}"
@@ -62,7 +62,7 @@
     },
     "SyncTicketSummaries": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-void-sync-ticket-summaries",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-sync-ticket-summaries",
       "Arguments": "{% $voidCtx %}",
       "Assign": {
         "syncResult": "{% $states.result %}"
@@ -96,7 +96,7 @@
     },
     "DispatchRefunds": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-void-dispatch-refunds",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-dispatch-refunds",
       "Arguments": "{% $voidCtx %}",
       "Assign": {
         "refundResult": "{% $states.result %}"
@@ -143,7 +143,7 @@
     },
     "BuildVoidReport": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-void-build-void-report",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-build-void-report",
       "Arguments": "{% $voidCtx %}",
       "Next": "PublishSettleDaily",
       "Retry": [
@@ -164,7 +164,7 @@
     },
     "PublishSettleDaily": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-void-publish-settle-daily",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-publish-settle-daily",
       "Arguments": "{% $voidCtx %}",
       "Next": "FinalizeVoid",
       "Retry": [
@@ -185,7 +185,7 @@
     },
     "FinalizeVoid": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-void-finalize",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-finalize",
       "Arguments": "{% $voidCtx %}",
       "End": true,
       "Retry": [

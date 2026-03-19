@@ -19,9 +19,9 @@
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  3. SyncTicketSummaries (loop)          │
- *  │     Recompute ticket summaries          │
- *  │     → CheckSyncDone loop until done     │
+ *  │  3. SyncTicketSummaries (loop)           │
+ *  │     Recompute ticket summaries           │
+ *  │     done = true khi hết tickets          │
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌────────────────────────────┐
@@ -30,11 +30,11 @@
  *  └────────┬───────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  5. BuildSettleReport   │  Per-game financial reports (NEW)
+ *  │  5. BuildSettleReport   │  Per-game financial reports
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  6. PublishSettleDaily  │  System daily reports (NEW)
+ *  │  6. PublishSettleDaily  │  System daily reports (re-aggregate)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌─────────────────────────┐

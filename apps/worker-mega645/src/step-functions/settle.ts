@@ -51,7 +51,7 @@
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  7. DispatchPayouts (loop, async)        │
+ *  │  9. DispatchPayouts (loop, async)        │
  *  │     done = true khi hết pending payouts  │
  *  └──────────────────────────────────────────┘
  *

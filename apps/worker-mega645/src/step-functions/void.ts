@@ -21,7 +21,7 @@
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  3. SyncTicketSummaries │  Recompute ticket progress
+ *  │  3. SyncTicketSummaries │  Recompute ticket progress (loop)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
@@ -178,7 +178,7 @@ export const VOID_STATE_MACHINE = {
     PublishSettleDaily: {
       Type: "Task",
       Resource: lambdaArn("void-publish-settle-daily"),
-      Arguments: "{% { 'financialDate': $voidCtx.financialDate } %}",
+      Arguments: "{% $voidCtx %}",
       Next: "FinalizeVoid",
       Retry: LAMBDA_RETRY,
     },

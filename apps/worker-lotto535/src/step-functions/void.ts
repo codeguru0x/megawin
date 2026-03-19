@@ -21,7 +21,7 @@
  *  └────────┬─────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  3. SyncTicketSummaries │  Recompute ticket progress
+ *  │  3. SyncTicketSummaries │  Recompute ticket progress (loop)
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
@@ -30,8 +30,20 @@
  *  │     done = true khi hết pending refunds  │
  *  └────────┬─────────────────────────────────┘
  *           ▼
+ *  ┌──────────────────────────────────────────────────────────┐
+ *  │  5. BuildVoidReport                                      │
+ *  │     Cleanup settle reports (nếu void-after-settle)       │
+ *  │     + build lotto535_void_draw_reports                   │
+ *  └────────┬─────────────────────────────────────────────────┘
+ *           ▼
+ *  ┌──────────────────────────────────────────────────────────┐
+ *  │  6. PublishSettleDaily                                   │
+ *  │     Re-aggregate system daily reports                    │
+ *  │     Settle totals tự giảm khi settle reports đã xoá     │
+ *  └────────┬─────────────────────────────────────────────────┘
+ *           ▼
  *  ┌─────────────────────────┐
- *  │  5. FinalizeVoid        │  Transition voiding → void + ghi voidSummary
+ *  │  7. FinalizeVoid        │  Transition voiding → void + ghi voidSummary
  *  └─────────────────────────┘
  *
  * DATA FLOW (Assign-based):
@@ -159,7 +171,7 @@ export const VOID_STATE_MACHINE = {
       Next: "DispatchRefunds",
     },
 
-    // ── STEP 5: Build void report (MỚI) ──
+    // ── STEP 5: Build void report ──
     // Cleanup settle reports (nếu void-after-settle) + build void report.
     // Phase 0: snapshot + delete settle reports (idempotent).
     // Phase 1: aggregate voided entries + upsert lotto535_void_draw_reports.
@@ -171,13 +183,13 @@ export const VOID_STATE_MACHINE = {
       Retry: LAMBDA_RETRY,
     },
 
-    // ── STEP 6: Publish settle daily (MỚI) ──
+    // ── STEP 6: Publish settle daily ──
     // Re-aggregate lotto535_settle_draw/tenant_reports → upsert system daily.
     // Settle reports đã xoá → aggregate giảm → system daily tự giảm.
     PublishSettleDaily: {
       Type: "Task",
       Resource: lambdaArn("void-publish-settle-daily"),
-      Arguments: "{% { 'financialDate': $voidCtx.financialDate } %}",
+      Arguments: "{% $voidCtx %}",
       Next: "FinalizeVoid",
       Retry: LAMBDA_RETRY,
     },
