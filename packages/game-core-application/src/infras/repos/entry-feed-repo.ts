@@ -1,11 +1,7 @@
 import { Long } from "mongodb";
 import type { Document } from "mongodb";
 import { GameCoreCollections } from "@megawin/game-core/entities";
-import type {
-  GameProduct,
-  EntryFeedDoc,
-  EntryFeedEntity,
-} from "@megawin/game-core/entities";
+import type { GameProduct, EntryFeedDoc, EntryFeedEntity } from "@megawin/game-core/entities";
 import { GameCoreBaseRepo } from "./game-core-base-repo";
 import { EntryFeedMapper } from "../mappers/entry-feed-mapper";
 
@@ -17,10 +13,7 @@ import { EntryFeedMapper } from "../mappers/entry-feed-mapper";
  * - pollFeed: tenant polling (Long → string conversion).
  * - upsertFeedEntry: worker sync ghi/cập nhật snapshot.
  */
-export class EntryFeedRepository extends GameCoreBaseRepo<
-  EntryFeedEntity,
-  EntryFeedMapper
-> {
+export class EntryFeedRepository extends GameCoreBaseRepo<EntryFeedEntity, EntryFeedMapper> {
   constructor() {
     super({
       collName: GameCoreCollections.EntryFeed,
@@ -63,9 +56,7 @@ export class EntryFeedRepository extends GameCoreBaseRepo<
    *
    * @returns true nếu đã upsert (insert hoặc update), false nếu skip (version cũ hơn).
    */
-  async upsertFeedEntry(
-    doc: Omit<EntryFeedDoc, "_id">,
-  ): Promise<boolean> {
+  async upsertFeedEntry(doc: Omit<EntryFeedDoc, "_id">): Promise<boolean> {
     const result = await this.findOneAndUpdate(
       {
         sourceEntryId: doc.sourceEntryId,
@@ -79,14 +70,23 @@ export class EntryFeedRepository extends GameCoreBaseRepo<
           ticketNo: doc.ticketNo,
           tenantId: doc.tenantId,
           playerId: doc.playerId,
+          username: doc.username,
           drawId: doc.drawId,
           drawTime: doc.drawTime,
           drawDate: doc.drawDate,
+          financialDate: doc.financialDate,
           status: doc.status,
+          outcome: doc.outcome,
           stakeAmount: doc.stakeAmount,
           winAmount: doc.winAmount,
           payoutAmount: doc.payoutAmount,
           netAmount: doc.netAmount,
+          commissionRate: doc.commissionRate,
+          commissionAmount: doc.commissionAmount,
+          voidInfo: doc.voidInfo,
+          betContent: doc.betContent,
+          drawResult: doc.drawResult,
+          payoutDetail: doc.payoutDetail,
           sourceUpdatedAt: doc.sourceUpdatedAt,
           feedCreatedAt: doc.feedCreatedAt,
         },

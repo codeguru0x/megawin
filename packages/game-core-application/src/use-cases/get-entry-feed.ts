@@ -1,7 +1,7 @@
 /**
- * Use Case: Get Entry Feed (Tenant API)
+ * Use Case: Get Bets Feed (Tenant API)
  *
- * Tenant poll entry feed để nhận thay đổi trạng thái đơn cược.
+ * Tenant poll bets feed để nhận thay đổi trạng thái đơn cược.
  * Extends ApiGatewayUseCase – handler chỉ cần gọi run(input).
  *
  * Business logic:
@@ -11,9 +11,9 @@
  */
 
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
-import type { GameProduct, EntryFeedResponse } from "@megawin/game-core/entities";
+import type { GameProduct, BetsFeedResponse } from "@megawin/game-core/entities";
 import { EntryFeedRepository } from "../infras/repos/entry-feed-repo";
-import { toEntryFeedItem } from "../infras/mappers/entry-feed-mapper";
+import { toBetsFeedItem } from "../infras/mappers/entry-feed-mapper";
 
 const MAX_LIMIT = 500;
 const DEFAULT_LIMIT = 100;
@@ -25,17 +25,11 @@ export interface GetEntryFeedInput {
   gameProduct?: GameProduct;
 }
 
-export class GetEntryFeedUseCase extends ApiGatewayUseCase<
-  GetEntryFeedInput,
-  EntryFeedResponse
-> {
+export class GetEntryFeedUseCase extends ApiGatewayUseCase<GetEntryFeedInput, BetsFeedResponse> {
   private readonly feedRepo = new EntryFeedRepository();
 
-  protected async execute(input: GetEntryFeedInput): Promise<EntryFeedResponse> {
-    const limit = Math.min(
-      Math.max(input.limit ?? DEFAULT_LIMIT, 1),
-      MAX_LIMIT,
-    );
+  protected async execute(input: GetEntryFeedInput): Promise<BetsFeedResponse> {
+    const limit = Math.min(Math.max(input.limit ?? DEFAULT_LIMIT, 1), MAX_LIMIT);
 
     const entities = await this.feedRepo.pollFeed({
       tenantId: input.tenantId,
@@ -47,12 +41,10 @@ export class GetEntryFeedUseCase extends ApiGatewayUseCase<
     const hasMore = entities.length > limit;
     const items = entities.slice(0, limit);
 
-    const lastVersion = items.length > 0
-      ? items[items.length - 1]!.version
-      : input.afterVersion;
+    const lastVersion = items.length > 0 ? items[items.length - 1]!.version : input.afterVersion;
 
     return {
-      items: items.map(toEntryFeedItem),
+      items: items.map(toBetsFeedItem),
       lastVersion,
       hasMore,
     };

@@ -1,3 +1,8 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export default (serverless) => {
   const stage = serverless?.service?.provider?.stage;
   return {
@@ -9,6 +14,9 @@ export default (serverless) => {
     format: "esm",
     treeShaking: true,
 
+    alias: {
+      "#lib": path.resolve(__dirname, "src/lib"),
+    },
     banner: {
       js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
     },

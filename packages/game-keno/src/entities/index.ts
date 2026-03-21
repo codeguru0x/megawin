@@ -14,3 +14,4 @@ export * from "./entry";
 export * from "./draw";
 export * from "./draw-counter";
 export * from "./report";
+export * from "./feed-types";

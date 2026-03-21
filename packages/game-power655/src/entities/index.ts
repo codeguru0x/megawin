@@ -20,3 +20,4 @@ export * from "./line";
 export * from "./draw";
 export * from "./jackpot-cycle";
 export * from "./report";
+export * from "./feed-types";

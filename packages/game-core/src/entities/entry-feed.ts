@@ -8,11 +8,11 @@
  * sẽ upsert snapshot mới nhất vào collection này (key = sourceEntryId).
  * Mỗi entry gốc chỉ có DUY NHẤT 1 document, version cập nhật mỗi lần thay đổi.
  *
- * Tenant poll qua API: GET /tenant/entries/feed?afterVersion={n}&limit={m}
+ * Tenant poll qua API: GET /tenant/bets/feed?afterVersion={n}&limit={m}
  * để nhận các thay đổi mới, build báo cáo:
- *   - Tiền đang chờ quay (status = active)
- *   - Tiền thắng thua (status = settled + payout)
- *   - Doanh thu realtime
+ *   - Đơn đang chờ quay (status = scheduled)
+ *   - Đơn đã settle (status = settled + payout)
+ *   - Đơn bị huỷ (status = void + voidInfo)
  *
  * THIẾT KẾ:
  * - version (Long/Int64): lấy từ entry gốc, gốc gán từ global entryChangeSeq.
@@ -21,10 +21,17 @@
  * - Worker chạy theo scheduler (Lambda), mỗi game 1 worker riêng.
  *
  * FINANCIAL FIELDS (đồng nhất cho tất cả game):
- * - stakeAmount:  tiền cược kỳ này
- * - winAmount:    tiền thắng (0 nếu chưa settle hoặc không trúng)
- * - payoutAmount: tiền trả thưởng thực tế cho khách (sau thuế/phí nếu có)
- * - netAmount:    stakeAmount - payoutAmount (dương = house win, âm = house loss)
+ * - stakeAmount:      tiền cược kỳ này
+ * - winAmount:        tiền thắng (0 nếu chưa settle hoặc không trúng)
+ * - payoutAmount:     tiền trả thưởng thực tế cho khách (sau thuế/phí nếu có)
+ * - netAmount:        stakeAmount - payoutAmount (dương = house win, âm = house loss)
+ * - commissionRate:   tỷ lệ hoa hồng snapshot lúc place-bet
+ * - commissionAmount: tiền hoa hồng = stakeAmount × commissionRate
+ *
+ * GAME-SPECIFIC FIELDS (unknown – game tự định nghĩa type trong feed-types.ts):
+ * - betContent:    nội dung cược (boards, numbers...) tuỳ game
+ * - drawResult:    kết quả kỳ quay (có sau khi publish result)
+ * - payoutDetail:  chi tiết từng hạng giải (có sau khi settle)
  *
  * LONG / BIGINT SERIALIZATION:
  * - Trong MongoDB: field `version` lưu dạng BSON Long (Int64).
@@ -34,7 +41,29 @@
  */
 
 import type { Long } from "mongodb";
-import type { EntryStatus, GameProduct } from "./game-core.enums";
+import type { EntryOutcome, EntryStatus, GameProduct } from "./game-core.enums";
+
+// ─────────────────────────────────────────────
+// Embedded Types
+// ─────────────────────────────────────────────
+
+/**
+ * Thông tin huỷ cược trong feed.
+ * Snapshot từ entry.voidInfo khi entry bị void.
+ */
+export interface FeedVoidInfo {
+  /** Tiền cược gốc trước khi huỷ (VND). */
+  originalAmount: number;
+  /** Tiền hoàn trả cho player (VND). */
+  refundAmount: number;
+  /**
+   * Trạng thái hoàn tiền.
+   * Ví dụ: "pending" | "completed" | "failed" (tuỳ game RefundStatus).
+   */
+  refundStatus: string;
+  /** Thời điểm entry bị huỷ. */
+  voidedAt: Date;
+}
 
 // ─────────────────────────────────────────────
 // MongoDB Document (lưu trong DB)
@@ -177,6 +206,78 @@ export interface EntryFeedDoc {
    */
   netAmount: number;
 
+  // ───── Commission (snapshot lúc place-bet) ─────
+
+  /**
+   * Tỷ lệ hoa hồng đại lý áp dụng cho đơn cược này.
+   * Snapshot từ TenantConfig lúc place-bet, không thay đổi sau đó.
+   * Ví dụ: 0.20 = 20%.
+   */
+  commissionRate: number;
+
+  /**
+   * Tiền hoa hồng đại lý (VND).
+   * Công thức: Math.round(stakeAmount × commissionRate). Tính sẵn lúc place-bet.
+   */
+  commissionAmount: number;
+
+  // ───── Player Info ─────
+
+  /**
+   * Tên đăng nhập player.
+   * Tenant dùng để hiển thị lịch sử cược, báo cáo theo player.
+   */
+  username: string;
+
+  /**
+   * Ngày tài chính mà đơn cược này thuộc về, format "YYYY-MM-DD".
+   * Có thể khác drawDate: theo business rule ngày tài chính tính từ 11h sáng.
+   * Tenant dùng để group báo cáo tài chính hàng ngày.
+   */
+  financialDate: string;
+
+  /**
+   * Kết quả đơn cược sau khi settle.
+   * "win" | "lose" — chỉ có sau khi settle.
+   * undefined khi status = "scheduled" hoặc "void".
+   */
+  outcome?: EntryOutcome;
+
+  // ───── Void Info ─────
+
+  /**
+   * Thông tin huỷ cược + hoàn tiền.
+   * Chỉ có khi status = "void".
+   */
+  voidInfo?: FeedVoidInfo;
+
+  // ───── Game-Specific Content (unknown – type-safe tại mapper layer) ─────
+
+  /**
+   * Nội dung cược tuỳ game: boards, numbers, playType...
+   * Kiểu thực tế được định nghĩa trong packages/game-{game}/src/entities/feed-types.ts.
+   * Luôn có giá trị (set lúc place-bet).
+   *
+   * Ví dụ: Lotto535FeedBetContent, KenoBetContent, Max3dBetContent...
+   */
+  betContent: unknown;
+
+  /**
+   * Kết quả kỳ quay tuỳ game: winning numbers, triplets...
+   * Chỉ có sau khi draw result được publish.
+   *
+   * Ví dụ: Lotto535FeedDrawResult, KenoFeedDrawResult...
+   */
+  drawResult?: unknown;
+
+  /**
+   * Chi tiết trả thưởng tuỳ game: danh sách tiers, board payouts...
+   * Chỉ có sau khi settle và outcome = "win".
+   *
+   * Ví dụ: Lotto535FeedPayoutDetail, KenoFeedPayoutDetail...
+   */
+  payoutDetail?: unknown;
+
   // ───── Timestamps ─────
 
   /**
@@ -232,6 +333,8 @@ export interface EntryFeedEntity {
   tenantId: string;
   /** ID người chơi. */
   playerId: string;
+  /** Tên đăng nhập người chơi. */
+  username: string;
 
   /** ID kỳ quay. */
   drawId: string;
@@ -239,9 +342,13 @@ export interface EntryFeedEntity {
   drawTime: Date;
   /** Ngày quay "YYYY-MM-DD". */
   drawDate: string;
+  /** Ngày tài chính "YYYY-MM-DD". */
+  financialDate: string;
 
   /** Trạng thái đồng nhất. */
   status: EntryStatus;
+  /** Kết quả sau settle: "win" | "lose". Undefined nếu chưa settle / void. */
+  outcome?: EntryOutcome;
 
   /** Tiền cược (VND). */
   stakeAmount: number;
@@ -251,6 +358,20 @@ export interface EntryFeedEntity {
   payoutAmount: number;
   /** Lợi nhuận ròng = stake - payout (VND). */
   netAmount: number;
+  /** Tỷ lệ hoa hồng snapshot (ví dụ: 0.20). */
+  commissionRate: number;
+  /** Tiền hoa hồng (VND). */
+  commissionAmount: number;
+
+  /** Thông tin huỷ. Chỉ có khi status = "void". */
+  voidInfo?: FeedVoidInfo;
+
+  /** Nội dung cược tuỳ game (boards, numbers...). */
+  betContent: unknown;
+  /** Kết quả kỳ quay tuỳ game. Có sau khi publish result. */
+  drawResult?: unknown;
+  /** Chi tiết trả thưởng tuỳ game. Có sau khi settle + win. */
+  payoutDetail?: unknown;
 
   /** Thời điểm entry gốc thay đổi. */
   sourceUpdatedAt: Date;
@@ -263,9 +384,9 @@ export interface EntryFeedEntity {
 // ─────────────────────────────────────────────
 
 /**
- * Query params tenant gửi lên khi poll entry feed.
+ * Query params tenant gửi lên khi poll bets feed.
  */
-export interface EntryFeedQuery {
+export interface BetsFeedQuery {
   /**
    * Tenant ID – inject tự động từ auth middleware (API Key).
    * Tenant không cần gửi, hệ thống tự lấy từ token.
@@ -295,11 +416,11 @@ export interface EntryFeedQuery {
 }
 
 /**
- * API response trả về cho tenant khi poll entry feed.
+ * API response trả về cho tenant khi poll bets feed.
  */
-export interface EntryFeedResponse {
-  /** Danh sách entries thay đổi, sorted by version ASC. */
-  items: EntryFeedItem[];
+export interface BetsFeedResponse {
+  /** Danh sách đơn cược thay đổi, sorted by version ASC. */
+  items: BetsFeedItem[];
 
   /**
    * Version lớn nhất trong batch.
@@ -317,21 +438,36 @@ export interface EntryFeedResponse {
 }
 
 /**
- * 1 item trong API response – serialized từ EntryFeedEntity.
+ * Thông tin void đã serialize cho JSON.
+ * Date → ISO 8601 string.
+ */
+export interface FeedVoidInfoItem {
+  /** Tiền cược gốc trước khi huỷ (VND). */
+  originalAmount: number;
+  /** Tiền hoàn trả cho player (VND). */
+  refundAmount: number;
+  /** Trạng thái hoàn tiền. */
+  refundStatus: string;
+  /** Thời điểm huỷ (ISO 8601 string, UTC). */
+  voidedAt: string;
+}
+
+/**
+ * 1 item trong bets feed API response – serialized từ EntryFeedEntity.
  *
  * Tất cả Date chuyển thành ISO 8601 string, Long chuyển thành string,
  * để JSON serialize an toàn qua HTTP.
  * tenantId không trả về vì tenant đã biết ID của mình.
  */
-export interface EntryFeedItem {
+export interface BetsFeedItem {
   /** Version (string từ Long). Cursor chính. */
   version: string;
 
-  /** Mã game: "lotto535" | "keno" | "max3d". */
+  /** Mã game: "lotto535" | "keno" | "max3d"... */
   gameProduct: GameProduct;
 
   /**
-   * ID entry gốc – tenant dùng làm business key để dedup.
+   * ID đơn cược gốc – tenant dùng làm business key để dedup.
    * Khi cùng 1 sourceEntryId xuất hiện nhiều lần, giữ version cao nhất.
    */
   sourceEntryId: string;
@@ -345,6 +481,9 @@ export interface EntryFeedItem {
   /** ID người chơi. */
   playerId: string;
 
+  /** Tên đăng nhập người chơi. */
+  username: string;
+
   /** ID kỳ quay. */
   drawId: string;
 
@@ -354,11 +493,20 @@ export interface EntryFeedItem {
   /** Ngày quay "YYYY-MM-DD" (theo timezone vận hành). */
   drawDate: string;
 
+  /** Ngày tài chính "YYYY-MM-DD". */
+  financialDate: string;
+
   /**
    * Trạng thái đơn cược:
    * "scheduled" | "settled" | "void".
    */
   status: EntryStatus;
+
+  /**
+   * Kết quả sau khi settle: "win" | "lose".
+   * Undefined khi status = "scheduled" hoặc "void".
+   */
+  outcome?: EntryOutcome;
 
   /** Tiền cược kỳ này (VND). */
   stakeAmount: number;
@@ -372,9 +520,51 @@ export interface EntryFeedItem {
   /** Lợi nhuận ròng = stake - payout (VND). Dương = house win. */
   netAmount: number;
 
-  /** Thời điểm entry gốc thay đổi (ISO 8601 string, UTC). */
+  /** Tỷ lệ hoa hồng snapshot (ví dụ: 0.20 = 20%). */
+  commissionRate: number;
+
+  /** Tiền hoa hồng (VND). */
+  commissionAmount: number;
+
+  /**
+   * Thông tin huỷ cược.
+   * Chỉ có khi status = "void".
+   */
+  voidInfo?: FeedVoidInfoItem;
+
+  /**
+   * Nội dung cược tuỳ game (boards, numbers, playType...).
+   * Structure phụ thuộc vào gameProduct.
+   * Luôn có giá trị.
+   */
+  betContent: unknown;
+
+  /**
+   * Kết quả kỳ quay tuỳ game (winning numbers, triplets...).
+   * Chỉ có sau khi draw result được publish.
+   */
+  drawResult?: unknown;
+
+  /**
+   * Chi tiết trả thưởng tuỳ game (tier breakdown, board payouts...).
+   * Chỉ có sau khi settle và outcome = "win".
+   */
+  payoutDetail?: unknown;
+
+  /** Thời điểm đơn cược gốc thay đổi (ISO 8601 string, UTC). */
   sourceUpdatedAt: string;
 
   /** Thời điểm worker ghi vào feed (ISO 8601 string, UTC). */
   feedCreatedAt: string;
 }
+
+// ─────────────────────────────────────────────
+// Backward-compat aliases (deprecated – dùng BetsFeed* thay thế)
+// ─────────────────────────────────────────────
+
+/** @deprecated Dùng BetsFeedQuery thay thế. */
+export type EntryFeedQuery = BetsFeedQuery;
+/** @deprecated Dùng BetsFeedResponse thay thế. */
+export type EntryFeedResponse = BetsFeedResponse;
+/** @deprecated Dùng BetsFeedItem thay thế. */
+export type EntryFeedItem = BetsFeedItem;

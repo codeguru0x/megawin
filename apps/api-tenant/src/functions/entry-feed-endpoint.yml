@@ -2,5 +2,5 @@ get-entry-feed:
   handler: src/handlers/get-entry-feed.handler
   events:
     - httpApi:
-        path: /tenant/entries/feed
+        path: /tenant/bets/feed
         method: get
