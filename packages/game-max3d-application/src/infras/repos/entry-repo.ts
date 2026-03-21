@@ -8,20 +8,25 @@ import {
 } from "@megawin/game-max3d/entities";
 import type { Max3dDrawResult } from "@megawin/game-max3d/entities";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
-import { ObjectId } from "mongodb";
-import { AbstractEntryRepository } from "@megawin/game-max3d-core/repos";
+import { ObjectId, Long } from "mongodb";
+import { EntryChangeSeqRepository } from "@megawin/game-core-application/repos";
 import { EntryMapper } from "../mappers/entry-mapper";
+import { BaseRepo } from "./base-repo";
+import type {
+  PlayerBreakdownRow,
+  OutstandingDrawMetrics,
+  OutstandingDrawCounts,
+} from "./types/entry.types";
 
-import type { PlayerBreakdownRow, OutstandingDrawMetrics, OutstandingDrawCounts } from "./types/entry.types";
+/**
+ * Repository quản lý TicketEntry lifecycle — Max 3D.
+ *
+ * Bao gồm insert, settle, void, payout dispatch, aggregation cho reports và operations dashboard.
+ * Version được stamp từ EntryChangeSeqRepository để sync feed hoạt động chính xác.
+ */
+export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
+  private readonly seqRepo = new EntryChangeSeqRepository();
 
-export class EntryRepository extends AbstractEntryRepository<
-  TicketEntryEntity,
-  EntryMapper,
-  Max3dDrawResult,
-  string,
-  EntryPayout,
-  EntryVoidInfo
-> {
   constructor() {
     super({
       collName: Max3dCollections.TicketEntries,
@@ -29,22 +34,748 @@ export class EntryRepository extends AbstractEntryRepository<
     });
   }
 
-  protected get payoutStatusPending() {
+  private get payoutStatusPending() {
     return PayoutStatus.Pending;
   }
-  protected get payoutStatusFailed() {
+  private get payoutStatusFailed() {
     return PayoutStatus.Failed;
   }
-  protected get payoutStatusDispatched() {
+  private get payoutStatusDispatched() {
     return PayoutStatus.Dispatched;
   }
 
+  // ─── Version ───
+
+  /** Lấy version tiếp theo từ global sequence cho feed sync. */
+  async nextVersion(): Promise<Long> {
+    return this.seqRepo.nextSeq();
+  }
+
+  // ─── Insert ───
+
+  /** Insert 1 entry mới, stamp version trước khi lưu. */
+  async insertEntry(doc: Record<string, unknown>): Promise<string> {
+    const version = await this.nextVersion();
+    return await this.insertOne({ ...doc, version } as any);
+  }
+
+  /** Insert nhiều entries cùng 1 batch, dùng cùng version. Trả về insertedCount. */
+  async insertEntries(docs: Record<string, unknown>[]): Promise<number> {
+    if (docs.length === 0) return 0;
+    const version = await this.nextVersion();
+    const stamped = docs.map((doc) => ({ ...doc, version }));
+    const result = await this.insertMany(stamped as any[]);
+    return result.insertedCount;
+  }
+
+  // ─── Query ───
+
+  /** Lấy entries của 1 draw, sort by createdAt asc, offset pagination. */
+  async getEntriesByDrawId(
+    drawId: string,
+    page: number,
+    size: number,
+  ): Promise<TicketEntryEntity[]> {
+    return await this.paging({ drawId }, page, size, {
+      sort: { createdAt: 1 },
+    });
+  }
+
+  /** Lấy scheduled entries theo batch (offset pagination), sort by createdAt asc. */
+  async getScheduledEntriesBatch(
+    drawId: string,
+    page: number,
+    size: number,
+  ): Promise<TicketEntryEntity[]> {
+    return await this.paging({ drawId, status: EntryStatus.Scheduled }, page, size, {
+      sort: { createdAt: 1 },
+    });
+  }
+
+  /** Lấy N scheduled entries đầu tiên của 1 draw, sort by createdAt asc. */
   async getScheduledEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
     return await this.findMany(
       { drawId, status: EntryStatus.Scheduled },
       { sort: { createdAt: 1 }, limit },
     );
   }
+
+  /** Đếm tổng entries của 1 draw. */
+  async countEntriesByDrawId(drawId: string): Promise<number> {
+    return await this.count({ drawId });
+  }
+
+  /** Đếm tổng lineCount của tất cả entries trong 1 draw qua aggregate. */
+  async countLinesByDrawId(drawId: string): Promise<number> {
+    const result = await this.aggregate([
+      { $match: { drawId } },
+      { $group: { _id: null, total: { $sum: "$lineCount" } } },
+    ]);
+    return (result[0] as any)?.total ?? 0;
+  }
+
+  /** Lấy tất cả entries của 1 ticket, sort by drawDate asc. */
+  async findByTicketId(ticketId: string): Promise<TicketEntryEntity[]> {
+    return await this.findMany({ ticketId }, { sort: { drawDate: 1 } });
+  }
+
+  /** Lấy entry theo entryId (_id). */
+  async findByEntryId(entryId: string): Promise<TicketEntryEntity | null> {
+    return await this.findOneById(entryId);
+  }
+
+  /** Đếm entries theo draw + status. */
+  async countByDrawAndStatus(drawId: string, status: string): Promise<number> {
+    return await this.count({ drawId, status });
+  }
+
+  // ─── Status Transitions ───
+
+  /**
+   * Batch chuyển status entries của 1 draw, stamp version mới.
+   * Trả về số entries được update.
+   */
+  async batchTransitionByDrawId(
+    drawId: string,
+    fromStatus: string,
+    toStatus: string,
+    extraSet?: Record<string, unknown>,
+  ): Promise<number> {
+    const version = await this.nextVersion();
+    const $set: Record<string, unknown> = {
+      status: toStatus,
+      version,
+      updatedAt: new Date(),
+      ...extraSet,
+    };
+    const result = await this.updateMany({ drawId, status: fromStatus }, { $set });
+    return result.modifiedCount;
+  }
+
+  /**
+   * Bulk settle nhiều entries trong 1 draw.
+   *
+   * Filter: status = Scheduled + _id in list → đảm bảo idempotent.
+   * Tất cả entries dùng cùng version để feed sync theo batch.
+   */
+  async bulkSettleEntries(
+    items: Array<{
+      entryId: string;
+      payout: EntryPayout;
+      outcome: string;
+      result: Max3dDrawResult & { publishedAt: Date };
+    }>,
+  ): Promise<{ modifiedCount: number }> {
+    if (items.length === 0) return { modifiedCount: 0 };
+
+    const version = await this.nextVersion();
+    const now = new Date();
+
+    const ops = items.map((item) => ({
+      updateOne: {
+        filter: { _id: new ObjectId(item.entryId), status: EntryStatus.Scheduled },
+        update: {
+          $set: {
+            status: EntryStatus.Settled,
+            result: item.result,
+            payout: item.payout,
+            outcome: item.outcome,
+            version,
+            updatedAt: now,
+          },
+        },
+      },
+    }));
+
+    const result = await this.bulkWrite(ops);
+    return { modifiedCount: result.modifiedCount };
+  }
+
+  // ─── Aggregation (Settle Financials) ───
+
+  /**
+   * Aggregate tổng doanh thu và hoa hồng cho 1 draw (exclude voided entries).
+   *
+   * Group by null — 1 document kết quả, hiệu quả hơn group by tenant
+   * khi caller chỉ cần 2 scalar tổng.
+   */
+  async aggregateTotalRevenue(drawId: string): Promise<{
+    totalRevenue: number;
+    totalAgentCommission: number;
+  }> {
+    const result = await this.aggregate([
+      { $match: { drawId, status: { $ne: EntryStatus.Void } } },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$amount" },
+          totalAgentCommission: { $sum: "$tenant.commissionAmount" },
+        },
+      },
+    ]);
+    const row = result[0] as any;
+    return {
+      totalRevenue: row?.totalRevenue ?? 0,
+      totalAgentCommission: row?.totalAgentCommission ?? 0,
+    };
+  }
+
+  /**
+   * Aggregate payout summary của draw đã settle — per-tier hitCount và prizeAmount.
+   *
+   * 2 aggregate queries: (1) unwind tiers → group by tier, (2) group tổng settled.
+   * Cần 2 queries vì MongoDB không support unwind + group tổng trong cùng 1 pipeline hiệu quả.
+   */
+  async aggregateSettledPayoutSummary(drawId: string): Promise<{
+    totalSettled: number;
+    totalLines: number;
+    totalPayoutAmount: number;
+    totalFixedPrizes: number;
+    tierWinnerCounts: Record<string, number>;
+    tierPrizeAmounts: Record<string, number>;
+  }> {
+    // 1 pipeline $facet — scan collection 1 lần, 2 nhánh chạy song song.
+    // Nhánh tierSummary: $unwind tiers → group by tier (hitCount + tiền mỗi tier).
+    // Nhánh totals: group toàn draw (entries + lines + payoutAmount).
+    const [facetResult] = await this.aggregate([
+      {
+        $match: {
+          drawId,
+          status: EntryStatus.Settled,
+        },
+      },
+      {
+        $facet: {
+          // Nhánh 1: $unwind tiers → group by tier → đếm hitCount và tiền mỗi tier
+          tierSummary: [
+            { $unwind: "$payout.tiers" },
+            {
+              $group: {
+                _id: "$payout.tiers.tier",
+                totalHitCount: { $sum: "$payout.tiers.hitCount" },
+                totalAmount: { $sum: "$payout.tiers.amount" },
+              },
+            },
+          ],
+          // Nhánh 2: đếm entries + sum lines + sum payoutAmount toàn draw
+          totals: [
+            {
+              $group: {
+                _id: null,
+                totalSettled: { $sum: 1 },
+                totalLines: { $sum: "$lineCount" },
+                totalPayoutAmount: {
+                  $sum: { $ifNull: ["$payout.payoutAmount", 0] },
+                },
+              },
+            },
+          ],
+        },
+      },
+    ]);
+
+    const totals = (facetResult as any)?.totals?.[0] ?? {};
+    const tierRows = (facetResult as any)?.tierSummary ?? [];
+
+    let totalFixedPrizes = 0;
+    const tierWinnerCounts: Record<string, number> = {};
+    const tierPrizeAmounts: Record<string, number> = {};
+
+    for (const row of tierRows) {
+      tierWinnerCounts[row._id] = row.totalHitCount;
+      tierPrizeAmounts[row._id] = row.totalAmount;
+      totalFixedPrizes += row.totalAmount;
+    }
+
+    return {
+      totalSettled: totals.totalSettled ?? 0,
+      totalLines: totals.totalLines ?? 0,
+      totalPayoutAmount: totals.totalPayoutAmount ?? 0,
+      totalFixedPrizes,
+      tierWinnerCounts,
+      tierPrizeAmounts,
+    };
+  }
+
+  /**
+   * Aggregate tổng hợp per-tenant cho 1 draw — dùng bởi settle tenant report.
+   * Trả về totalStake, totalWin, totalPayout, entryCount, commissionRate, totalCommission.
+   */
+  async aggregateTenantReport(
+    drawId: string,
+    financialDate: string,
+  ): Promise<
+    Array<{
+      tenantId: string;
+      totalStake: number;
+      totalWin: number;
+      totalPayout: number;
+      entryCount: number;
+      commissionRate: number;
+      totalCommission: number;
+    }>
+  > {
+    const result = await this.aggregate([
+      { $match: { drawId, financialDate } },
+      {
+        $group: {
+          _id: "$tenantId",
+          totalStake: { $sum: "$amount" },
+          totalWin: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
+          totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+          entryCount: { $sum: 1 },
+          commissionRate: { $first: "$tenant.commissionRate" },
+          totalCommission: { $sum: "$tenant.commissionAmount" },
+        },
+      },
+    ]);
+    return (result as any[]).map((r) => ({
+      tenantId: r._id,
+      totalStake: r.totalStake,
+      totalWin: r.totalWin,
+      totalPayout: r.totalPayout,
+      entryCount: r.entryCount,
+      commissionRate: r.commissionRate ?? 0,
+      totalCommission: r.totalCommission ?? 0,
+    }));
+  }
+
+  /**
+   * Aggregate tổng hợp per-player trong 1 draw — dùng bởi player daily report.
+   * Group by (tenantId, accountId).
+   */
+  async aggregatePlayerReport(
+    drawId: string,
+    financialDate: string,
+  ): Promise<
+    Array<{
+      tenantId: string;
+      accountId: string;
+      totalStake: number;
+      totalWin: number;
+      totalPayout: number;
+      entryCount: number;
+    }>
+  > {
+    const result = await this.aggregate([
+      { $match: { drawId, financialDate } },
+      {
+        $group: {
+          _id: { tenantId: "$tenantId", accountId: "$accountId" },
+          totalStake: { $sum: "$amount" },
+          totalWin: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
+          totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+          entryCount: { $sum: 1 },
+        },
+      },
+    ]);
+    return (result as any[]).map((r) => ({
+      tenantId: r._id.tenantId,
+      accountId: r._id.accountId,
+      totalStake: r.totalStake,
+      totalWin: r.totalWin,
+      totalPayout: r.totalPayout,
+      entryCount: r.entryCount,
+    }));
+  }
+
+  // ─── Payout Dispatch ───
+
+  /**
+   * Lấy N entries pending payout (winAmount > 0, status pending/failed/missing).
+   * Sort: tenantId asc, createdAt asc — đảm bảo consistent batching per tenant.
+   */
+  async getPendingPayoutEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
+    return await this.findMany(
+      {
+        drawId,
+        status: EntryStatus.Settled,
+        "payout.winAmount": { $gt: 0 },
+        $or: [
+          { "payout.payoutStatus": this.payoutStatusPending },
+          { "payout.payoutStatus": this.payoutStatusFailed },
+          { "payout.payoutStatus": { $exists: false } },
+        ],
+      },
+      { sort: { tenantId: 1, createdAt: 1 }, limit },
+    );
+  }
+
+  /** Đếm entries pending payout của 1 draw. */
+  async countPendingPayoutEntries(drawId: string): Promise<number> {
+    return await this.count({
+      drawId,
+      status: EntryStatus.Settled,
+      "payout.winAmount": { $gt: 0 },
+      $or: [
+        { "payout.payoutStatus": this.payoutStatusPending },
+        { "payout.payoutStatus": this.payoutStatusFailed },
+        { "payout.payoutStatus": { $exists: false } },
+      ],
+    });
+  }
+
+  /**
+   * Mark 1 entry payout = dispatched.
+   * Idempotent — ghi đè nếu chạy lại.
+   */
+  async markPayoutDispatched(entryId: string): Promise<boolean> {
+    return await this.updateOne(
+      { _id: new ObjectId(entryId) },
+      {
+        $set: {
+          "payout.payoutStatus": this.payoutStatusDispatched,
+          "payout.payoutDispatchedAt": new Date(),
+          updatedAt: new Date(),
+        },
+      },
+    );
+  }
+
+  /**
+   * Mark 1 entry payout = failed + ghi error message + tăng retryCount.
+   */
+  async markPayoutFailed(entryId: string, error: string): Promise<boolean> {
+    return await this.updateOne(
+      { _id: new ObjectId(entryId) },
+      {
+        $set: {
+          "payout.payoutStatus": this.payoutStatusFailed,
+          "payout.payoutLastError": error,
+          updatedAt: new Date(),
+        },
+        $inc: { "payout.payoutRetryCount": 1 },
+      },
+    );
+  }
+
+  /**
+   * Batch mark nhiều entries payout = dispatched trong 1 updateMany.
+   * Trả về modifiedCount.
+   */
+  async batchMarkPayoutDispatched(entryIds: string[]): Promise<number> {
+    const objectIds = entryIds.map((id) => new ObjectId(id));
+    const result = await this.updateMany(
+      { _id: { $in: objectIds } as any },
+      {
+        $set: {
+          "payout.payoutStatus": this.payoutStatusDispatched,
+          "payout.payoutDispatchedAt": new Date(),
+          updatedAt: new Date(),
+        },
+      },
+    );
+    return result.modifiedCount;
+  }
+
+  /**
+   * Batch mark nhiều entries payout = failed + ghi error + tăng retryCount.
+   * Trả về modifiedCount.
+   */
+  async batchMarkPayoutFailed(entryIds: string[], error: string): Promise<number> {
+    const objectIds = entryIds.map((id) => new ObjectId(id));
+    const result = await this.updateMany(
+      { _id: { $in: objectIds } as any },
+      {
+        $set: {
+          "payout.payoutStatus": this.payoutStatusFailed,
+          "payout.payoutLastError": error,
+          updatedAt: new Date(),
+        },
+        $inc: { "payout.payoutRetryCount": 1 },
+      },
+    );
+    return result.modifiedCount;
+  }
+
+  // ─── Void Draw ───
+
+  /**
+   * Lấy N entries scheduled (voidable) của 1 draw theo batch.
+   * Sort: createdAt asc — FIFO.
+   */
+  async getVoidableEntriesBatch(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
+    return await this.findMany(
+      {
+        drawId,
+        status: EntryStatus.Scheduled,
+      },
+      { sort: { createdAt: 1 }, limit },
+    );
+  }
+
+  /**
+   * Bulk void nhiều entries.
+   *
+   * Filter: status = Scheduled + _id in list → đảm bảo idempotent.
+   * Stamp version mới cho feed sync.
+   */
+  async bulkVoidEntries(
+    items: Array<{ entryId: string; voidInfo: EntryVoidInfo }>,
+  ): Promise<{ modifiedCount: number }> {
+    if (items.length === 0) return { modifiedCount: 0 };
+
+    const version = await this.nextVersion();
+    const now = new Date();
+
+    const ops = items.map((item) => ({
+      updateOne: {
+        filter: { _id: new ObjectId(item.entryId), status: EntryStatus.Scheduled },
+        update: {
+          $set: {
+            status: EntryStatus.Void,
+            outcome: EntryOutcome.Void,
+            voidInfo: item.voidInfo,
+            version,
+            updatedAt: now,
+          },
+        },
+      },
+    }));
+
+    const result = await this.bulkWrite(ops);
+    return { modifiedCount: result.modifiedCount };
+  }
+
+  /**
+   * Lấy N entries pending refund (status=Void, refundStatus pending/failed).
+   * Sort: createdAt asc — FIFO.
+   */
+  async getPendingRefundEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
+    return await this.findMany(
+      {
+        drawId,
+        status: EntryStatus.Void,
+        "voidInfo.refundStatus": { $in: ["pending", "failed"] },
+      },
+      { sort: { createdAt: 1 }, limit },
+    );
+  }
+
+  /**
+   * Mark 1 entry refund = dispatched.
+   * Idempotent.
+   */
+  async markRefundDispatched(entryId: string): Promise<boolean> {
+    return await this.updateOne(
+      { _id: new ObjectId(entryId) },
+      {
+        $set: {
+          "voidInfo.refundStatus": "dispatched",
+          "voidInfo.refundedAt": new Date(),
+          updatedAt: new Date(),
+        },
+      },
+    );
+  }
+
+  /**
+   * Mark 1 entry refund = failed + ghi error message.
+   */
+  async markRefundFailed(entryId: string, error: string): Promise<boolean> {
+    return await this.updateOne(
+      { _id: new ObjectId(entryId) },
+      {
+        $set: {
+          "voidInfo.refundStatus": "failed",
+          "voidInfo.refundLastError": error,
+          updatedAt: new Date(),
+        },
+      },
+    );
+  }
+
+  /**
+   * Aggregate tổng kết void-refund cho 1 draw.
+   * Dùng bởi voidComplete để tính DrawDocBaseVoidSummary.
+   */
+  async aggregateVoidRefundSummary(drawId: string): Promise<{
+    totalVoidedEntries: number;
+    totalOriginalAmount: number;
+    totalRefundAmount: number;
+  }> {
+    const result = await this.aggregate([
+      { $match: { drawId, status: EntryStatus.Void } },
+      {
+        $group: {
+          _id: null,
+          totalVoidedEntries: { $sum: 1 },
+          totalOriginalAmount: { $sum: "$voidInfo.originalAmount" },
+          totalRefundAmount: { $sum: "$voidInfo.refundAmount" },
+        },
+      },
+    ]);
+    const summary = (result[0] as any) ?? {};
+    return {
+      totalVoidedEntries: summary.totalVoidedEntries ?? 0,
+      totalOriginalAmount: summary.totalOriginalAmount ?? 0,
+      totalRefundAmount: summary.totalRefundAmount ?? 0,
+    };
+  }
+
+  // ─── Ticket Summary Aggregation ───
+
+  /**
+   * Aggregate summary tổng hợp của 1 ticket từ tất cả entries.
+   * Dùng bởi TicketRepository.syncSummary() sau khi settle/void.
+   */
+  async aggregateTicketSummary(ticketId: ObjectId): Promise<{
+    totalEntries: number;
+    settledCount: number;
+    voidedCount: number;
+    totalWinAmount: number;
+    totalVoidedAmount: number;
+    totalRefundedAmount: number;
+    voidedDrawIds: string[];
+  }> {
+    const result = await this.aggregate([
+      { $match: { ticketId } },
+      {
+        $group: {
+          _id: null,
+          totalEntries: { $sum: 1 },
+          settledCount: {
+            $sum: { $cond: [{ $eq: ["$status", EntryStatus.Settled] }, 1, 0] },
+          },
+          voidedCount: {
+            $sum: { $cond: [{ $eq: ["$status", EntryStatus.Void] }, 1, 0] },
+          },
+          totalWinAmount: {
+            $sum: { $ifNull: ["$payout.winAmount", 0] },
+          },
+          totalVoidedAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                { $ifNull: ["$voidInfo.originalAmount", 0] },
+                0,
+              ],
+            },
+          },
+          totalRefundedAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                { $ifNull: ["$voidInfo.refundAmount", 0] },
+                0,
+              ],
+            },
+          },
+          voidedDrawIds: {
+            $addToSet: {
+              $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$drawId", "$$REMOVE"],
+            },
+          },
+        },
+      },
+    ]);
+
+    const row = (result[0] as any) ?? {};
+    return {
+      totalEntries: row.totalEntries ?? 0,
+      settledCount: row.settledCount ?? 0,
+      voidedCount: row.voidedCount ?? 0,
+      totalWinAmount: row.totalWinAmount ?? 0,
+      totalVoidedAmount: row.totalVoidedAmount ?? 0,
+      totalRefundedAmount: row.totalRefundedAmount ?? 0,
+      voidedDrawIds: row.voidedDrawIds ?? [],
+    };
+  }
+
+  /**
+   * Aggregate ticket summaries cho nhiều tickets trong 1 query.
+   * Trả về Map<ticketId (string), summary>.
+   */
+  async aggregateTicketSummariesBatch(ticketIds: ObjectId[]): Promise<
+    Map<
+      string,
+      {
+        settledCount: number;
+        voidedCount: number;
+        totalWinAmount: number;
+        totalVoidedAmount: number;
+        totalRefundedAmount: number;
+        voidedDrawIds: string[];
+      }
+    >
+  > {
+    const result = await this.aggregate([
+      { $match: { ticketId: { $in: ticketIds } } },
+      {
+        $group: {
+          _id: "$ticketId",
+          settledCount: { $sum: { $cond: [{ $eq: ["$status", EntryStatus.Settled] }, 1, 0] } },
+          voidedCount: { $sum: { $cond: [{ $eq: ["$status", EntryStatus.Void] }, 1, 0] } },
+          totalWinAmount: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
+          totalVoidedAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                { $ifNull: ["$voidInfo.originalAmount", 0] },
+                0,
+              ],
+            },
+          },
+          totalRefundedAmount: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", EntryStatus.Void] },
+                { $ifNull: ["$voidInfo.refundAmount", 0] },
+                0,
+              ],
+            },
+          },
+          voidedDrawIds: {
+            $addToSet: { $cond: [{ $eq: ["$status", EntryStatus.Void] }, "$drawId", "$$REMOVE"] },
+          },
+        },
+      },
+    ]);
+
+    const map = new Map<
+      string,
+      {
+        settledCount: number;
+        voidedCount: number;
+        totalWinAmount: number;
+        totalVoidedAmount: number;
+        totalRefundedAmount: number;
+        voidedDrawIds: string[];
+      }
+    >();
+
+    for (const row of result) {
+      const r = row as any;
+      map.set(r._id.toString(), {
+        settledCount: r.settledCount ?? 0,
+        voidedCount: r.voidedCount ?? 0,
+        totalWinAmount: r.totalWinAmount ?? 0,
+        totalVoidedAmount: r.totalVoidedAmount ?? 0,
+        totalRefundedAmount: r.totalRefundedAmount ?? 0,
+        voidedDrawIds: r.voidedDrawIds ?? [],
+      });
+    }
+    return map;
+  }
+
+  /** Lấy danh sách unique ticketIds của 1 draw — dùng để sync ticket summaries sau settle. */
+  async getDistinctTicketIdsByDrawId(drawId: string): Promise<ObjectId[]> {
+    const col = await this.getCollection();
+    return col.distinct("ticketId", { drawId }) as Promise<ObjectId[]>;
+  }
+
+  // ─── Feed Sync ───
+
+  /**
+   * Lấy entries có version > afterVersion, dùng cho feed sync consumer.
+   *
+   * Sort: version asc — đảm bảo consumer xử lý theo đúng thứ tự tăng dần.
+   */
+  async getChangedEntries(afterVersion: Long, limit: number): Promise<TicketEntryEntity[]> {
+    return await this.findMany({ version: { $gt: afterVersion } }, { sort: { version: 1 }, limit });
+  }
+
+  // ─── Latest Entries Feed ───
 
   /**
    * Lấy N entries mới nhất của 1 kỳ quay, sort theo createdAt desc.
@@ -210,13 +941,14 @@ export class EntryRepository extends AbstractEntryRepository<
         },
       },
     ]);
-    return (result as any[]).map((r) => ({
+
+    return result.map((r) => ({
       tenantId: r._id,
       entryCount: r.entryCount,
       lineCount: r.lineCount ?? 0,
-      totalStake: r.totalStake,
-      totalWin: r.totalWin,
-      totalPayout: r.totalPayout,
+      totalStake: r.totalStake ?? 0,
+      totalWin: r.totalWin ?? 0,
+      totalPayout: r.totalPayout ?? 0,
       totalCommission: r.totalCommission ?? 0,
     }));
   }
@@ -279,7 +1011,9 @@ export class EntryRepository extends AbstractEntryRepository<
    * Tách riêng khỏi aggregateOutstandingCountsByDraw để tránh $addToSet lớn trong 1 group.
    * Max 3D có lineCount (1 cho straight, 3/6 cho combo).
    */
-  async aggregateOutstandingMetricsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawMetrics[]> {
+  async aggregateOutstandingMetricsByDraw(
+    activeDrawIds: string[],
+  ): Promise<OutstandingDrawMetrics[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -292,19 +1026,20 @@ export class EntryRepository extends AbstractEntryRepository<
           _id: "$drawId",
           financialDate: { $first: "$financialDate" },
           entryCount: { $sum: 1 },
-          lineCount: { $sum: { $ifNull: ["$lineCount", 0] } },
+          // betUnitCount phản ánh đơn vị cược thực — fallback lineCount cho data cũ
+          lineCount: { $sum: { $ifNull: ["$betUnitCount", "$lineCount"] } },
           totalStake: { $sum: "$amount" },
           estimatedCommission: { $sum: "$tenant.commissionAmount" },
         },
       },
     ]);
 
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       drawId: r._id,
       financialDate: r.financialDate,
-      entryCount: r.entryCount,
+      entryCount: r.entryCount ?? 0,
       lineCount: r.lineCount ?? 0,
-      totalStake: r.totalStake,
+      totalStake: r.totalStake ?? 0,
       estimatedCommission: r.estimatedCommission ?? 0,
     }));
   }
@@ -315,7 +1050,9 @@ export class EntryRepository extends AbstractEntryRepository<
    * Bước 1: group by (drawId, accountId, tenantId) → unique combinations.
    * Bước 2: group by drawId → đếm số combination (playerCount) và $addToSet tenantId (an toàn vì ít tenants).
    */
-  async aggregateOutstandingCountsByDraw(activeDrawIds: string[]): Promise<OutstandingDrawCounts[]> {
+  async aggregateOutstandingCountsByDraw(
+    activeDrawIds: string[],
+  ): Promise<OutstandingDrawCounts[]> {
     const result = await this.aggregate([
       {
         $match: {
@@ -339,7 +1076,7 @@ export class EntryRepository extends AbstractEntryRepository<
       },
     ]);
 
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       drawId: r._id,
       playerCount: r.playerCount ?? 0,
       tenantCount: r.tenants?.length ?? 0,
@@ -364,13 +1101,14 @@ export class EntryRepository extends AbstractEntryRepository<
   /**
    * Aggregate KPI tổng hợp cho dashboard vận hành Max 3D.
    *
-   * Trả về: totalRevenue, totalEntries, totalLines, totalPlayers, totalCommission.
+   * Trả về: totalRevenue, totalEntries, totalBetUnits, totalPlayers, totalCommission.
+   * totalBetUnits = Σ(betUnitCount) — phản ánh đơn vị cược thực tế (= tiền / unitPrice).
    * Max 3D KHÔNG CÓ Jackpot → không cần totalPayout riêng lẻ trong KPI.
    */
   async aggregateOpsSummary(opts: { financialDate: string; drawId?: string }): Promise<{
     totalRevenue: number;
     totalEntries: number;
-    totalLines: number;
+    totalBetUnits: number;
     totalPlayers: number;
     totalCommission: number;
   }> {
@@ -381,7 +1119,8 @@ export class EntryRepository extends AbstractEntryRepository<
           _id: null,
           totalRevenue: { $sum: "$amount" },
           totalEntries: { $sum: 1 },
-          totalLines: { $sum: "$lineCount" },
+          // betUnitCount phản ánh tiền thực trả (khác lineCount khi betCount > 1)
+          totalBetUnits: { $sum: { $ifNull: ["$betUnitCount", "$lineCount"] } },
           uniquePlayers: { $addToSet: "$accountId" },
           totalCommission: { $sum: "$tenant.commissionAmount" },
         },
@@ -391,7 +1130,7 @@ export class EntryRepository extends AbstractEntryRepository<
           _id: 0,
           totalRevenue: 1,
           totalEntries: 1,
-          totalLines: 1,
+          totalBetUnits: 1,
           totalPlayers: { $size: "$uniquePlayers" },
           totalCommission: 1,
         },
@@ -401,7 +1140,7 @@ export class EntryRepository extends AbstractEntryRepository<
     return {
       totalRevenue: row.totalRevenue ?? 0,
       totalEntries: row.totalEntries ?? 0,
-      totalLines: row.totalLines ?? 0,
+      totalBetUnits: row.totalBetUnits ?? 0,
       totalPlayers: row.totalPlayers ?? 0,
       totalCommission: row.totalCommission ?? 0,
     };
@@ -416,7 +1155,7 @@ export class EntryRepository extends AbstractEntryRepository<
     Array<{
       tenantId: string;
       entries: number;
-      lines: number;
+      betUnits: number;
       players: number;
       revenue: number;
       commission: number;
@@ -428,7 +1167,8 @@ export class EntryRepository extends AbstractEntryRepository<
         $group: {
           _id: "$tenantId",
           entries: { $sum: 1 },
-          lines: { $sum: "$lineCount" },
+          // betUnitCount phản ánh revenue per tenant — fallback lineCount cho data cũ
+          betUnits: { $sum: { $ifNull: ["$betUnitCount", "$lineCount"] } },
           players: { $addToSet: "$accountId" },
           revenue: { $sum: "$amount" },
           commission: { $sum: "$tenant.commissionAmount" },
@@ -439,7 +1179,7 @@ export class EntryRepository extends AbstractEntryRepository<
           _id: 0,
           tenantId: "$_id",
           entries: 1,
-          lines: 1,
+          betUnits: 1,
           players: { $size: "$players" },
           revenue: 1,
           commission: 1,
@@ -454,7 +1194,7 @@ export class EntryRepository extends AbstractEntryRepository<
    * Tần suất xuất hiện của từng bộ ba số trong các boards cược.
    *
    * Pipeline: match → unwind boards → unwind triplets → group by triplet → sort desc → limit.
-   * Revenue xấp xỉ: phân bổ entry.amount theo tỷ lệ lineCount board / lineCount entry.
+   * Revenue xấp xỉ: phân bổ entry.amount theo tỷ lệ betUnitCount board / betUnitCount entry.
    */
   async aggregateTripletFrequency(opts: {
     financialDate: string;
@@ -481,12 +1221,18 @@ export class EntryRepository extends AbstractEntryRepository<
                 "$amount",
                 {
                   $cond: [
-                    { $gt: ["$lineCount", 0] },
+                    // Dùng betUnitCount (= lineCount × betCount) làm mẫu số để phân bổ revenue
+                    { $gt: [{ $ifNull: ["$betUnitCount", "$lineCount"] }, 0] },
                     {
                       $divide: [
-                        // Phân bổ theo lineCount của board / tổng lineCount entry
-                        { $ifNull: ["$entrySummary.boards.lineCount", 1] },
-                        "$lineCount",
+                        // boardBetUnits = board.lineCount × board.betCount — xấp xỉ bằng lineCount khi chưa có betCount
+                        {
+                          $multiply: [
+                            { $ifNull: ["$entrySummary.boards.lineCount", 1] },
+                            { $ifNull: ["$entrySummary.boards.betCount", 1] },
+                          ],
+                        },
+                        { $ifNull: ["$betUnitCount", "$lineCount"] },
                       ],
                     },
                     0,
@@ -514,8 +1260,9 @@ export class EntryRepository extends AbstractEntryRepository<
   /**
    * Phân bổ cược theo (playMode, playType) cho dashboard vận hành Max 3D.
    *
-   * Max 3D có basic × {straight, combo3, combo6, quickPick} và plus × {straight, quickPick}.
+   * Max 3D có basic × {straight, combo3, combo6} và plus × {straight}.
    * Group by (playMode, playType) → boardCount, lineCount, entryCount, revenue.
+   * Revenue xấp xỉ: entry.amount × (board.lineCount × board.betCount) / entry.betUnitCount.
    */
   async aggregatePlayTypeDistribution(opts: { financialDate: string; drawId?: string }): Promise<
     Array<{
@@ -539,16 +1286,25 @@ export class EntryRepository extends AbstractEntryRepository<
           boardCount: { $sum: 1 },
           lineCount: { $sum: "$entrySummary.boards.lineCount" },
           entryIds: { $addToSet: "$_id" },
-          // Revenue xấp xỉ: entry.amount × board.lineCount / entry.lineCount
+          // Revenue xấp xỉ: entry.amount × boardBetUnits / entry.betUnitCount
+          // boardBetUnits = board.lineCount × board.betCount
           revenue: {
             $sum: {
               $multiply: [
                 "$amount",
                 {
                   $cond: [
-                    { $gt: ["$lineCount", 0] },
+                    { $gt: [{ $ifNull: ["$betUnitCount", "$lineCount"] }, 0] },
                     {
-                      $divide: [{ $ifNull: ["$entrySummary.boards.lineCount", 1] }, "$lineCount"],
+                      $divide: [
+                        {
+                          $multiply: [
+                            { $ifNull: ["$entrySummary.boards.lineCount", 1] },
+                            { $ifNull: ["$entrySummary.boards.betCount", 1] },
+                          ],
+                        },
+                        { $ifNull: ["$betUnitCount", "$lineCount"] },
+                      ],
                     },
                     0,
                   ],
@@ -579,6 +1335,8 @@ export class EntryRepository extends AbstractEntryRepository<
    *
    * Pipeline: unwind boards → unwind triplets → group by triplet → sort desc → limit.
    * Chỉ lấy basic mode (bao gồm combo — combo expand từ 1 triplet).
+   * Revenue xấp xỉ: entry.amount × boardBetUnits / entry.betUnitCount.
+   * boardBetUnits = board.lineCount × board.betCount (fallback betCount = 1).
    */
   async aggregateTopSingleCombos(opts: { drawId: string; limit: number }): Promise<
     Array<{
@@ -606,9 +1364,19 @@ export class EntryRepository extends AbstractEntryRepository<
                 "$amount",
                 {
                   $cond: [
-                    { $gt: ["$lineCount", 0] },
+                    // Mẫu số: betUnitCount entry — fallback lineCount cho data cũ
+                    { $gt: [{ $ifNull: ["$betUnitCount", "$lineCount"] }, 0] },
                     {
-                      $divide: [{ $ifNull: ["$entrySummary.boards.lineCount", 1] }, "$lineCount"],
+                      $divide: [
+                        // Tử số: boardBetUnits = board.lineCount × board.betCount
+                        {
+                          $multiply: [
+                            { $ifNull: ["$entrySummary.boards.lineCount", 1] },
+                            { $ifNull: ["$entrySummary.boards.betCount", 1] },
+                          ],
+                        },
+                        { $ifNull: ["$betUnitCount", "$lineCount"] },
+                      ],
                     },
                     0,
                   ],
@@ -637,6 +1405,8 @@ export class EntryRepository extends AbstractEntryRepository<
    *
    * Key = sorted pair "{min},{max}" để normalize thứ tự.
    * Pipeline: unwind boards plus → project comboKey → group → sort → limit.
+   * Revenue xấp xỉ: entry.amount × boardBetUnits / entry.betUnitCount.
+   * boardBetUnits = board.lineCount × board.betCount (Plus: lineCount = 1, nên = betCount).
    */
   async aggregateTopPlusCombos(opts: { drawId: string; limit: number }): Promise<
     Array<{
@@ -662,9 +1432,16 @@ export class EntryRepository extends AbstractEntryRepository<
           sortedPair: {
             $sortArray: { input: "$entrySummary.boards.triplets", sortBy: 1 },
           },
-          entryLineCount: "$lineCount",
+          // betUnitCount entry — fallback lineCount cho data cũ
+          entryBetUnitCount: { $ifNull: ["$betUnitCount", "$lineCount"] },
           entryAmount: "$amount",
-          boardLineCount: "$entrySummary.boards.lineCount",
+          // boardBetUnits = board.lineCount × board.betCount
+          boardBetUnits: {
+            $multiply: [
+              { $ifNull: ["$entrySummary.boards.lineCount", 1] },
+              { $ifNull: ["$entrySummary.boards.betCount", 1] },
+            ],
+          },
         },
       },
       {
@@ -685,8 +1462,9 @@ export class EntryRepository extends AbstractEntryRepository<
                 "$entryAmount",
                 {
                   $cond: [
-                    { $gt: ["$entryLineCount", 0] },
-                    { $divide: [{ $ifNull: ["$boardLineCount", 1] }, "$entryLineCount"] },
+                    // Mẫu số: betUnitCount entry — fallback lineCount cho data cũ
+                    { $gt: ["$entryBetUnitCount", 0] },
+                    { $divide: ["$boardBetUnits", "$entryBetUnitCount"] },
                     0,
                   ],
                 },
@@ -757,7 +1535,7 @@ export class EntryRepository extends AbstractEntryRepository<
   /**
    * List entries của 1 player trong 1 draw × tenant — dùng cho drill-down level 4.
    *
-   * Trả TicketEntryDoc thô để UI hiển thị chi tiết.
+   * Trả TicketEntryEntity để UI hiển thị chi tiết.
    */
   async findByDrawTenantPlayer(opts: {
     drawId: string;

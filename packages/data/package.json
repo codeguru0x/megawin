@@ -2,7 +2,6 @@
   "name": "@megawin/data",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "private": true,
   "type": "module",
   "scripts": {
@@ -19,16 +18,6 @@
       "types": "./src/mongo/index.ts",
       "import": "./src/mongo/index.ts",
       "default": "./dist/mongo/index.js"
-    },
-    "./mongo/*": {
-      "types": "./src/mongo/*.ts",
-      "import": "./src/mongo/*.ts",
-      "default": "./dist/mongo/*.js"
-    },
-    "./types/*": {
-      "types": "./src/types/*.ts",
-      "import": "./src/types/*.ts",
-      "default": "./dist/types/*.js"
     }
   },
   "dependencies": {

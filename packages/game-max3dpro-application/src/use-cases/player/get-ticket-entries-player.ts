@@ -8,7 +8,11 @@
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { EntryBoardSnapshot, TicketEntryEntity, EntryPayoutTier } from "@megawin/game-max3dpro/entities";
+import type {
+  EntryBoardSnapshot,
+  TicketEntryEntity,
+  EntryPayoutTier,
+} from "@megawin/game-max3dpro/entities";
 import { mapPlayerTicket } from "./mappers/ticket";
 import type {
   PlayerGetTicketEntriesInput,
@@ -50,6 +54,8 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     status: entry.status,
     amount: entry.amount,
     lineCount: entry.lineCount,
+    // betUnitCount fallback sang lineCount cho entries cũ (betCount = 1).
+    betUnitCount: entry.betUnitCount ?? entry.lineCount,
     entrySummary: {
       ticketNo: entry.entrySummary.ticketNo,
       boards: entry.entrySummary.boards.map((b: EntryBoardSnapshot) => ({
@@ -60,6 +66,8 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
         frontDigits: b.frontDigits ? b.frontDigits : undefined,
         backDigits: b.backDigits ? b.backDigits : undefined,
         lineCount: b.lineCount,
+        // betCount fallback sang 1 cho entries cũ.
+        betCount: b.betCount ?? 1,
       })),
     },
     result: entry.result

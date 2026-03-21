@@ -19,7 +19,8 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
     },
     pricing: {
       unitPrice: ticket.pricing.unitPrice,
-      betsPerDraw: ticket.pricing.betsPerDraw,
+      selectionsPerDraw: ticket.pricing.selectionsPerDraw,
+      betUnitsPerDraw: ticket.pricing.betUnitsPerDraw,
       amountPerDraw: ticket.pricing.amountPerDraw,
       totalAmount: ticket.pricing.totalAmount,
     },

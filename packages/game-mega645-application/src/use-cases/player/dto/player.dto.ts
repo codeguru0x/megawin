@@ -121,7 +121,9 @@ export interface PlayerTicketSummary {
     unitPrice: number;
     /** Tổng số dòng mỗi kỳ = ΣC(n,6) cho tất cả board. */
     linesPerDraw: number;
-    /** Số tiền mỗi kỳ = unitPrice × linesPerDraw (VND). */
+    /** Tổng đơn vị cược mỗi kỳ = Σ(expandedLines × betCount). */
+    betUnitsPerDraw?: number;
+    /** Số tiền mỗi kỳ = unitPrice × betUnitsPerDraw (VND). */
     amountPerDraw: number;
     /** Tổng tiền vé = amountPerDraw × drawCount (VND). */
     totalAmount: number;
@@ -139,6 +141,8 @@ export interface PlayerTicketSummary {
     };
     /** Số dòng expand ra từ board này = C(n,6) với n = số lượng mainNumbers. */
     expandedLines: number;
+    /** Số lần cược nhân bội cho board (≥ 1). */
+    betCount?: number;
   }>;
   /** Tiến trình xử lý vé qua các kỳ quay. settledDraws = số kỳ đã xử lý xong (settled + voided). */
   progress: {
@@ -219,6 +223,8 @@ export interface PlayerEntryInfo {
       mainNumbers: string[];
       /** Số dòng expand ra = C(n,6). */
       expandedLines: number;
+      /** Số lần cược nhân bội cho board (≥ 1). */
+      betCount?: number;
     }>;
   };
   /** Kết quả quay thưởng (chỉ có khi kỳ đã công bố). */

@@ -85,23 +85,15 @@ export function AnalyticsSection() {
       (a: number, t: { revenue: number }) => a + t.revenue,
       0,
     );
-    return tenantData.tenants.map(
-      (t: {
-        tenantId: string;
-        entries: number;
-        lines: number;
-        revenue: number;
-        commission: number;
-      }) => ({
-        tenantId: t.tenantId,
-        tenantName: t.tenantId,
-        entries: t.entries,
-        lines: t.lines,
-        revenue: t.revenue,
-        commission: t.commission,
-        pct: totalRevenue > 0 ? (t.revenue / totalRevenue) * 100 : 0,
-      }),
-    );
+    return tenantData.tenants.map((t) => ({
+      tenantId: t.tenantId,
+      tenantName: t.tenantId,
+      entries: t.entries,
+      lines: t.betUnits,
+      revenue: t.revenue,
+      commission: t.commission,
+      pct: totalRevenue > 0 ? (t.revenue / totalRevenue) * 100 : 0,
+    }));
   }, [tenantData]);
 
   const triplets: TripletFreq[] = useMemo(() => {

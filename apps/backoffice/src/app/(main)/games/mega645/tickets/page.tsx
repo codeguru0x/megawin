@@ -197,7 +197,7 @@ const MOCK_TICKETS = [
     boards: [
       {
         boardNo: "A",
-        playType: "quickPick",
+        playType: "standard",
         numbers: [1, 9, 18, 26, 34, 42],
         expandedLines: 1,
       },
@@ -566,7 +566,9 @@ export default function Mega645TicketsPage() {
                     <Badge variant="outline" className="font-mono">
                       {b.boardNo}
                     </Badge>
-                    <Badge variant="secondary">{MEGA645_PLAY_TYPE_LABELS[b.playType as PlayType] ?? b.playType}</Badge>
+                    <Badge variant="secondary">
+                      {MEGA645_PLAY_TYPE_LABELS[b.playType as PlayType] ?? b.playType}
+                    </Badge>
                     <div className="flex flex-wrap items-center gap-1">
                       {b.numbers.map((n, idx) => (
                         <MegaNumberBall key={`${n}-${idx}`} number={n} size="sm" />

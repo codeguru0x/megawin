@@ -3,10 +3,10 @@
 /**
  * Power 6/55 Operations — Analytics Panels
  *
- * PlayTypeCard: phân bổ 13 kiểu chơi Power 6/55 (standard, bao5, bao7-bao18, quickPick).
+ * PlayTypeCard: phân bổ 12 kiểu chơi Power 6/55 (standard, bao5, bao7-bao18).
  * TenantBreakdown: phân tích doanh thu theo đại lý.
  *
- * Power 6/55 play types: standard, bao5, bao7, bao8, ..., bao15, bao18, quickPick.
+ * Power 6/55 play types: standard, bao5, bao7, bao8, ..., bao15, bao18.
  */
 
 import { cn } from "@/lib/utils";
@@ -105,13 +105,6 @@ export const PLAY_TYPE_COLORS: Record<
     fill: "#f43f5e",
     bg: "bg-rose-50/60 dark:bg-rose-950/20",
     border: "border-rose-200/60 dark:border-rose-800/40",
-  },
-  quickPick: {
-    dot: "bg-amber-500",
-    text: "text-amber-600 dark:text-amber-400",
-    fill: "#f59e0b",
-    bg: "bg-amber-50/60 dark:bg-amber-950/20",
-    border: "border-amber-200/60 dark:border-amber-800/40",
   },
 };
 

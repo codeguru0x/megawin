@@ -15,6 +15,8 @@ export interface PlaceBetBoardInput {
   playType: PlayType;
   /** Lựa chọn số của player cho board này (bộ ba số 3 chữ số). */
   selection: BoardSelection;
+  /** Số lần cược nhân bội cho board này (≥ 1). Default 1. */
+  betCount: number;
 }
 
 export interface PlaceBetInput {
@@ -60,9 +62,11 @@ export interface PlaceBetOutput {
   pricing: {
     /** Đơn giá mỗi line (VND). */
     unitPrice: number;
-    /** Tổng lines mỗi kỳ = Σ(board.lineCount). */
+    /** Tổng lines matching mỗi kỳ = Σ(board.lineCount). Dùng cho settle. */
     linesPerDraw: number;
-    /** Tiền cược mỗi kỳ = linesPerDraw × unitPrice. */
+    /** Tổng đơn vị cược mỗi kỳ = Σ(lineCount × betCount). Dùng tính tiền. */
+    betUnitsPerDraw: number;
+    /** Tiền cược mỗi kỳ = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
     /** Tổng tiền cược = amountPerDraw × drawCount. */
     totalAmount: number;

@@ -66,7 +66,12 @@ export interface TicketPricing {
    * = sum(boards[].derived.expandedLines).
    */
   linesPerDraw: number;
-  /** Tiền cược mỗi kỳ = unitPrice × linesPerDraw. */
+  /**
+   * Tổng đơn vị cược mỗi kỳ = Σ(expandedLines × betCount).
+   * Khi tất cả boards betCount=1 → betUnitsPerDraw = linesPerDraw.
+   */
+  betUnitsPerDraw: number;
+  /** Tiền cược mỗi kỳ = unitPrice × betUnitsPerDraw. */
   amountPerDraw: number;
   /** Tổng tiền vé = amountPerDraw × drawCount. */
   totalAmount: number;
@@ -136,6 +141,9 @@ export interface Board {
 
   /** Thông tin suy ra từ selection – dùng để tính tiền và hiển thị. */
   derived: BoardDerived;
+
+  /** Số lần cược nhân bội cho board (≥ minBetCount). Player chọn khi đặt cược. */
+  betCount: number;
 }
 
 // ─────────────────────────────────────────────

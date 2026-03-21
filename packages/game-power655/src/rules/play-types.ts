@@ -4,7 +4,6 @@
  * Standard: chọn đúng 6 số → 1 line
  * Bao 5: chọn 5 số, HT ghép 50 số còn lại (55-5=50) → 50 lines
  * Bao N (7-18): chọn N số → C(N,6) lines
- * QuickPick: random 6 số → 1 line
  */
 
 import { PlayType } from "../entities/enums";
@@ -66,13 +65,6 @@ export const PLAY_TYPE_CONFIGS: Record<PlayType, PlayTypeConfig> = {
   [PlayType.Bao14]: baoConfig(PlayType.Bao14, "Bao 14", 14),
   [PlayType.Bao15]: baoConfig(PlayType.Bao15, "Bao 15", 15),
   [PlayType.Bao18]: baoConfig(PlayType.Bao18, "Bao 18", 18),
-  [PlayType.QuickPick]: {
-    playType: PlayType.QuickPick,
-    label: "Chọn nhanh",
-    mainCount: 6,
-    lineCount: 1,
-    multiplier: 1,
-  },
 };
 
 // ─── Validation ───

@@ -372,9 +372,6 @@ importers:
       '@megawin/game-max3d-application':
         specifier: workspace:*
         version: link:../../packages/game-max3d-application
-      '@megawin/game-max3d-core':
-        specifier: workspace:*
-        version: link:../../packages/game-max3d-core
       '@megawin/game-max3dpro':
         specifier: workspace:*
         version: link:../../packages/game-max3dpro
@@ -1223,6 +1220,9 @@ importers:
       '@megawin/game-core':
         specifier: workspace:*
         version: link:../game-core
+      '@megawin/shared':
+        specifier: workspace:*
+        version: link:../shared
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -1254,9 +1254,6 @@ importers:
       '@megawin/game-max3d':
         specifier: workspace:*
         version: link:../game-max3d
-      '@megawin/game-max3d-core':
-        specifier: workspace:*
-        version: link:../game-max3d-core
       '@megawin/next':
         specifier: workspace:*
         version: link:../next
@@ -1292,34 +1289,6 @@ importers:
         specifier: latest
         version: 4.0.18(@types/node@25.2.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2)
 
-  packages/game-max3d-core:
-    dependencies:
-      '@megawin/data':
-        specifier: workspace:*
-        version: link:../data
-      '@megawin/game-core':
-        specifier: workspace:*
-        version: link:../game-core
-      '@megawin/game-core-application':
-        specifier: workspace:*
-        version: link:../game-core-application
-      '@megawin/shared':
-        specifier: workspace:*
-        version: link:../shared
-      mongodb:
-        specifier: ^7.1.0
-        version: 7.1.0
-    devDependencies:
-      '@megawin/typescript-config':
-        specifier: workspace:*
-        version: link:../../tooling/typescript-config
-      '@types/node':
-        specifier: ^25.2.1
-        version: 25.2.3
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
-
   packages/game-max3dpro:
     dependencies:
       '@megawin/game-core':
@@ -1353,9 +1322,6 @@ importers:
       '@megawin/game-core-application':
         specifier: workspace:*
         version: link:../game-core-application
-      '@megawin/game-max3d-core':
-        specifier: workspace:*
-        version: link:../game-max3d-core
       '@megawin/game-max3dpro':
         specifier: workspace:*
         version: link:../game-max3dpro
@@ -11321,14 +11287,6 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.18(vite@7.3.1(@types/node@25.2.1)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))':
-    dependencies:
-      '@vitest/spy': 4.0.18
-      estree-walker: 3.0.3
-      magic-string: 0.30.21
-    optionalDependencies:
-      vite: 7.3.1(@types/node@25.2.1)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2)
-
   '@vitest/mocker@4.0.18(vite@7.3.1(@types/node@25.3.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
       '@vitest/spy': 4.0.18
@@ -14378,7 +14336,7 @@ snapshots:
   vitest@4.0.18(@types/node@25.2.1)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
       '@vitest/expect': 4.0.18
-      '@vitest/mocker': 4.0.18(vite@7.3.1(@types/node@25.2.1)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))
+      '@vitest/mocker': 4.0.18(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))
       '@vitest/pretty-format': 4.0.18
       '@vitest/runner': 4.0.18
       '@vitest/snapshot': 4.0.18

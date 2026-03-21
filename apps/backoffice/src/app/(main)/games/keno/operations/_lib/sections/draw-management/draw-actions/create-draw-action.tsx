@@ -354,6 +354,11 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   Gợi ý chỉ có {previewCount}/{count} kỳ — tự điền các ô trống
                 </Badge>
               )}
+              {preview.isError && (
+                <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
+                  Lỗi tải gợi ý — tự điền các ô bên dưới
+                </Badge>
+              )}
             </div>
           </div>
 

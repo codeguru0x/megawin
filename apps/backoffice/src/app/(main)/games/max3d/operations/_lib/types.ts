@@ -25,7 +25,8 @@ export interface OpsKpi {
   /** Tổng doanh thu (VND). */
   totalRevenue: number;
   totalEntries: number;
-  totalLines: number;
+  /** Tổng đơn vị cược = Σ(betUnitCount). Phản ánh tiền thực trả. */
+  totalBetUnits: number;
   uniquePlayers: number;
   /** Tổng hoa hồng đại lý (VND). */
   totalCommission: number;
@@ -37,7 +38,8 @@ export interface TenantRow {
   tenantId: string;
   tenantName: string;
   entries: number;
-  lines: number;
+  /** Tổng đơn vị cược = Σ(betUnitCount). Dùng hiển thị thay cho lines khi betCount > 1. */
+  betUnits: number;
   /** Doanh thu (VND). */
   revenue: number;
   /** Hoa hồng (VND). */
@@ -130,6 +132,8 @@ export interface LiveFeedEntry {
   triplets: string[];
   /** Số lines cược. */
   lineCount: number;
+  /** Số lần cược nhân bội (≥ 1). Hiển thị badge ×N khi > 1. */
+  betCount: number;
   /** Tiền cược (VND). */
   amount: number;
   username: string;

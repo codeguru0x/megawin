@@ -12,7 +12,7 @@
  * IDEMPOTENT: upsert overwrite — crash-safe, retry an toàn ở mọi điểm crash.
  * TTL: snapshotAt reset mỗi lần sync → doc tự expire 15 phút sau khi draw settle/void.
  *
- * Max 3D Pro có lineCount — mỗi board expand thành C(n,2) cặp (multiNumber)
+ * Max 3D Pro có lineCount — mỗi board expand thành P(n,2) cặp (multiNumber)
  * hoặc perms(front) × perms(back) cặp (multiDigit).
  */
 
@@ -69,7 +69,7 @@ export class SyncOutstandingUseCase extends InternalUseCase<void, SyncOutstandin
     // ── Bước 2: Chạy song song 2 queries aggregate entry ────────────────────
     // Query A: metrics số học (không $addToSet → memory nhỏ, constant)
     // Query B: unique player + tenant count (double-$group → tránh array lớn trong RAM)
-    // Max 3D Pro có lineCount (multiNumber: C(n,2) cặp, multiDigit: perms×perms cặp).
+    // Max 3D Pro có lineCount (multiNumber: P(n,2) cặp, multiDigit: perms×perms cặp).
     const [metricsResults, countsResults] = await Promise.all([
       this.entryRepo.aggregateOutstandingMetricsByDraw(activeDrawIds),
       this.entryRepo.aggregateOutstandingCountsByDraw(activeDrawIds),
@@ -92,6 +92,8 @@ export class SyncOutstandingUseCase extends InternalUseCase<void, SyncOutstandin
         playerCount: counts?.playerCount ?? 0,
         tenantCount: counts?.tenantCount ?? 0,
         lineCount: metrics.lineCount,
+        // betUnitCount fallback sang lineCount cho entries cũ (betCount = 1).
+        betUnitCount: metrics.betUnitCount ?? metrics.lineCount,
         totalStake: metrics.totalStake,
         estimatedCommission: metrics.estimatedCommission,
       };

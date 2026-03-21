@@ -22,7 +22,7 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { ObjectId } from "mongodb";
 
-const CHUNK_SIZE = 500;
+const BATCH_SIZE = 500;
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
 
 export interface SyncTicketSummariesResult {
@@ -48,14 +48,17 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
     const startTime = Date.now();
 
     while (Date.now() - startTime < MAX_EXECUTION_MS) {
-      const chunk = await this.ticketRepo.getTicketsByDrawIdCursor(drawId, cursor, CHUNK_SIZE);
-      if (chunk.length === 0) return { drawId, done: true };
+      const tickets = await this.ticketRepo.getTicketsByDrawIdCursor(drawId, cursor, BATCH_SIZE);
 
-      const ticketIds = chunk.map((t) => new ObjectId(t.ticketId));
-      const totalDrawsMap = new Map(chunk.map((t) => [t.ticketId, t.totalDraws]));
+      if (tickets.length === 0) {
+        return { drawId, done: true };
+      }
+
+      const ticketIds = tickets.map((t) => new ObjectId(t.ticketId));
+      const totalDrawsMap = new Map(tickets.map((t) => [t.ticketId, t.totalDraws]));
       const summaryMap = await this.entryRepo.aggregateTicketSummariesBatch(ticketIds);
 
-      const items = chunk
+      const items = tickets
         .map((t) => {
           const summary = summaryMap.get(t.ticketId);
           if (!summary) return null;
@@ -70,8 +73,11 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
         await this.ticketRepo.bulkSyncSummaries(items);
       }
 
-      cursor = chunk[chunk.length - 1]!.ticketId;
-      if (chunk.length < CHUNK_SIZE) return { drawId, done: true };
+      cursor = tickets[tickets.length - 1]!.ticketId;
+
+      if (tickets.length < BATCH_SIZE) {
+        return { drawId, done: true };
+      }
     }
 
     return { drawId, done: false };

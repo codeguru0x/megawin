@@ -84,6 +84,7 @@ export class SyncOutstandingUseCase extends InternalUseCase<void, SyncOutstandin
     // Draw đã settle/void sẽ không còn trong activeDrawIds → không upsert mới → doc tự expire.
     const snapshots = metricsResults.map((metrics) => {
       const counts = countsMap.get(metrics.drawId);
+
       return {
         drawId: metrics.drawId,
         financialDate: metrics.financialDate,

@@ -39,6 +39,7 @@ export const bingo18BoardSchema = z
     playType: z.enum(BasicPlayType),
     number: bingo18NumberSchema.optional(),
     tripleKind: z.enum(Bingo18TripleKind).optional(),
+    betCount: z.number().int().positive(), // ← MỚI, default 1 khi player không chọn
   })
   .refine(
     (b) => {
@@ -92,6 +93,7 @@ export const bingo18SideBetSchema = z
     playType: z.enum(SideBetPlayType),
     sum: bingo18SumSchema.optional(),
     bet: z.enum(Bingo18BigSmallBet).optional(),
+    betCount: z.number().int().positive(), // ← MỚI, default 1 khi player không chọn
   })
   .refine(
     (sb) => {

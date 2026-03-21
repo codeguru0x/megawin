@@ -207,7 +207,7 @@ const MOCK_TICKETS = [
     boards: [
       {
         boardNo: "A",
-        playType: "quickPick",
+        playType: "standard",
         mainNumbers: [1, 9, 18, 26, 34, 49],
         expandedLines: 1,
       },
@@ -576,7 +576,11 @@ export default function Power655TicketsPage() {
                     <Badge variant="outline" className="font-mono">
                       {b.boardNo}
                     </Badge>
-                    <Badge variant="secondary">{POWER655_PLAY_TYPE_LABELS[b.playType as keyof typeof POWER655_PLAY_TYPE_LABELS] ?? b.playType}</Badge>
+                    <Badge variant="secondary">
+                      {POWER655_PLAY_TYPE_LABELS[
+                        b.playType as keyof typeof POWER655_PLAY_TYPE_LABELS
+                      ] ?? b.playType}
+                    </Badge>
                     <div className="flex flex-wrap items-center gap-1">
                       {b.mainNumbers.map((n, idx) => (
                         <PowerNumberBall key={`${n}-${idx}`} number={n} variant="main" size="sm" />

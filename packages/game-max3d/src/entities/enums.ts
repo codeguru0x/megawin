@@ -51,12 +51,11 @@ export const PLAY_MODE_VALUES = Object.values(PlayMode);
 /**
  * Kiểu chơi trên mỗi board.
  *
- * | Type        | Mô tả                                        |
- * |-------------|----------------------------------------------|
- * | straight    | So khớp chính xác thứ tự (Cơ bản)            |
- * | combo3      | Tổ hợp 3: so khớp BẤT KỲ thứ tự, 3 chữ số giống nhau hoặc 2 giống → 3 hoán vị |
- * | combo6      | Tổ hợp 6: 3 chữ số khác nhau → 6 hoán vị     |
- * | quickPick   | Máy chọn ngẫu nhiên                           |
+ * | Type     | Mô tả                                        |
+ * |----------|----------------------------------------------|
+ * | straight | So khớp chính xác thứ tự (Cơ bản)            |
+ * | combo3   | Tổ hợp 3: so khớp BẤT KỲ thứ tự, 3 chữ số giống nhau hoặc 2 giống → 3 hoán vị |
+ * | combo6   | Tổ hợp 6: 3 chữ số khác nhau → 6 hoán vị     |
  */
 export const PlayType = {
   /** So khớp chính xác thứ tự. */
@@ -65,8 +64,6 @@ export const PlayType = {
   Combo3: "combo3",
   /** Tổ hợp 6: 3 chữ số khác nhau → 6 hoán vị. Giải thưởng = straight / 6 (x2 nếu trùng 2 hoán vị). */
   Combo6: "combo6",
-  /** Máy chọn ngẫu nhiên (map → straight). */
-  QuickPick: "quickPick",
 } as const;
 
 export type PlayType = (typeof PlayType)[keyof typeof PlayType];
@@ -94,8 +91,7 @@ export const BasicPrizeTier = {
   Third: "third",
 } as const;
 
-export type BasicPrizeTier =
-  (typeof BasicPrizeTier)[keyof typeof BasicPrizeTier];
+export type BasicPrizeTier = (typeof BasicPrizeTier)[keyof typeof BasicPrizeTier];
 
 export const BASIC_PRIZE_TIER_VALUES = Object.values(BasicPrizeTier);
 

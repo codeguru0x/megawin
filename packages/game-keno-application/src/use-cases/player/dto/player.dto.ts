@@ -75,7 +75,8 @@ export interface PlayerTicketSummary {
   };
   pricing: {
     unitPrice: number;
-    betsPerDraw: number;
+    selectionsPerDraw: number;
+    betUnitsPerDraw: number;
     amountPerDraw: number;
     totalAmount: number;
   };
@@ -83,10 +84,12 @@ export interface PlayerTicketSummary {
     boardNo: string;
     playType: string;
     numbers: string[];
+    betCount: number;
   }>;
   sideBets: Array<{
     playType: string;
     bet: string;
+    betCount: number;
   }>;
   /**
    * Tiến trình xử lý — settledDraws = số kỳ đã hoàn tất (settled + voided).
@@ -135,17 +138,20 @@ export interface PlayerEntryInfo {
   drawId: string;
   status: string;
   amount: number;
-  betCount: number;
+  selectionCount: number;
+  betUnitCount: number;
   entrySummary: {
     ticketNo: string;
     boards: Array<{
       boardNo: string;
       playType: string;
       numbers: string[];
+      betCount: number;
     }>;
     sideBets: Array<{
       playType: string;
       bet: string;
+      betCount: number;
     }>;
   };
   result?: {

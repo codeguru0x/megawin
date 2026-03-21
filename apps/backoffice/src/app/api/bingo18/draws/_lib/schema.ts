@@ -2,10 +2,17 @@ import { z } from "zod";
 import { DRAW_STATUS_VALUES } from "@megawin/game-core/entities";
 
 export const createDrawSchema = z.object({
-  drawDate: z.iso.date("drawDate phải là ngày hợp lệ format YYYY-MM-DD."),
-  count: z.coerce.number().int().min(1).max(30).default(10),
-  /** Mở bán ngay sau khi tạo (true) hoặc để trạng thái scheduled (false). */
-  openNow: z.boolean().default(false),
+  draws: z
+    .array(
+      z.object({
+        drawDate: z.iso.date("drawDate phải là ngày hợp lệ format YYYY-MM-DD."),
+        drawNo: z.coerce.number().int().min(1).max(999),
+        drawTime: z.string().min(1, "drawTime không được rỗng."),
+        openNow: z.boolean().default(false),
+      }),
+    )
+    .min(1)
+    .max(30),
 });
 
 export const previewDrawsSchema = z.object({

@@ -79,55 +79,84 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     const { jackpotContribution } = financials;
 
     // ── Bước 1: Tìm entries trúng Jackpot ──
-    // Filter: payout.tiers chứa tier = "jackpot" với hitCount > 0
     const jackpotEntries = await this.entryRepo.findJackpotWinners(drawId);
 
     if (jackpotEntries.length === 0) {
       return { drawId, entriesPatched: 0, winners: [] };
     }
 
-    // ── Bước 2: Tính tiền thưởng Jackpot mỗi người ──
-    // totalJackpotPrize = số tiền JP tích luỹ đầu kỳ + đóng góp kỳ này
-    // jackpotPerWinner = chia đều cho tất cả winner, làm tròn xuống
-    const totalJackpotPrize = jackpotOpeningAmount + jackpotContribution;
-    const jackpotPerWinner = Math.floor(totalJackpotPrize / jackpotEntries.length);
+    // ── Bước 2: Tính jackpot per unit (theo tỷ lệ tham gia dự thưởng) ──
+    // Quy tắc Vietlott: "Giải Độc Đắc được chia đều theo tỷ lệ giá trị tham gia dự thưởng"
+    // → chia theo betCount, không chia đều per line/entry.
+    //
+    // Vì 1 entry chỉ có 1 JP line (determineTier trả tier cao nhất per line),
+    // betCount của JP line = betCount của board chứa nó.
+    // Entry snapshot có boards[] nhưng không biết JP line thuộc board nào nếu multi-board.
+    //
+    // Approach đơn giản và chính xác: dùng payout tier betCount nếu có.
+    // Mỗi entry có 1 jp tier với hitCount = số JP lines. Đối với multi-board entries
+    // có betCount khác nhau, chúng ta lấy betCount từ entrySummary.boards
+    // (sum của tất cả bet units trong entry / hitCount — xấp xỉ đúng khi hitCount = 1).
+    //
+    // Với hitCount = 1 (phổ biến nhất): betCount chính xác là betCount của board có JP line.
+    // Để lấy betCount chính xác, entry-repo.patchJackpotPrize sẽ tính từ tiers.betCount.
+    // Ở đây tính totalBetUnits = Σ(hitCount × avg_betCount_per_entry).
+    //
+    // Trường hợp đơn giản nhất (99%+ cases): 1 JP line per entry, tất cả boards betCount đồng nhất.
+    // Trường hợp phức tạp: lấy JP lines từ DB để tính chính xác.
+    const jpLinesData = await this.lineRepo.getJackpotLinesForDraw(drawId);
+    const totalBetUnits = jpLinesData.reduce((sum, line) => sum + (line.betCount ?? 1), 0);
 
-    if (jackpotPerWinner <= 0) {
+    const totalJackpotPrize = jackpotOpeningAmount + jackpotContribution;
+    const jackpotPerUnit = Math.floor(totalJackpotPrize / Math.max(totalBetUnits, 1));
+
+    if (jackpotPerUnit <= 0) {
       return { drawId, entriesPatched: 0, winners: [] };
     }
 
     // ── Bước 3: Patch entries + lines + settleSummary song song ──
-    // Tất cả đều idempotent: entries/lines chỉ update docs có amount/winAmount = 0,
-    // settleSummary dùng $set → ghi cùng giá trị nhiều lần không sai.
+    // Build betUnitsByEntry map để repo tính prizeAmount chính xác per entry
+    const betUnitsByEntry = new Map<string, number>();
+    for (const line of jpLinesData) {
+      const entryIdStr = line.entryId?.toString() ?? "";
+      if (!entryIdStr) continue;
+      betUnitsByEntry.set(
+        entryIdStr,
+        (betUnitsByEntry.get(entryIdStr) ?? 0) + (line.betCount ?? 1),
+      );
+    }
+
     const [patchedEntries] = await Promise.all([
-      // 3a. Patch entry.payout: tiers[jackpot].amount + winAmount + payoutAmount
-      this.entryRepo.patchJackpotPrize(drawId, jackpotPerWinner),
-      // 3b. Patch line.matchResult.winAmount cho các line trúng jackpot
-      this.lineRepo.patchJackpotLineWinAmount(drawId, jackpotPerWinner),
-      // 3c. Patch draw.settleSummary.tiers[jackpot].prizeAmount → player API đọc đúng giá trị
+      // jackpotPerUnit × betUnits (per entry, từ betUnitsByEntry map)
+      this.entryRepo.patchJackpotPrize(drawId, jackpotPerUnit, betUnitsByEntry),
+      this.lineRepo.patchJackpotLineWinAmount(drawId, jackpotPerUnit),
       this.drawRepo.patchSettleSummaryJackpotPrize(drawId, totalJackpotPrize),
     ]);
 
     // ── Bước 4: Cập nhật draw.stats.totalPayoutAmount ──
     // $inc KHÔNG idempotent → chỉ gọi khi entries thực sự được patch lần đầu.
-    // Retry: entries đã patch (amount > 0) → modifiedCount = 0 → skip → an toàn.
-    // totalJackpotPayout = tiền JP thực chi (floor * số winner, không phải totalJackpotPrize
-    // vì làm tròn xuống có thể dư vài đồng).
-    const totalJackpotPayout = jackpotPerWinner * jackpotEntries.length;
+    const totalJackpotPayout = jackpotPerUnit * totalBetUnits;
     if (patchedEntries > 0) {
       await this.drawRepo.incrementTotalPayout(drawId, totalJackpotPayout);
     }
 
     // ── Build winners list để truyền sang FinalizeSettle ──
-    // FinalizeSettle sẽ ghi vào cycle close record — tránh re-query DB lần 2.
-    const winners: JackpotWinnerInfo[] = jackpotEntries.map((e) => ({
-      accountId: e.accountId,
-      username: e.username,
-      tenantId: e.tenantId,
-      prizeAmount: jackpotPerWinner,
-      entryId: e.id,
-      drawId,
-    }));
+    const winners: JackpotWinnerInfo[] = jackpotEntries.map((e) => {
+      const jpTier = e.payout?.tiers.find((t) => t.tier === "jackpot");
+      const hitCount = jpTier?.hitCount ?? 0;
+      // betCount: lấy từ lines data thay vì estimate từ boards
+      const entryBetUnits = jpLinesData
+        .filter((l) => l.entryId?.toString() === e.id)
+        .reduce((sum, l) => sum + (l.betCount ?? 1), 0);
+      return {
+        accountId: e.accountId,
+        username: e.username,
+        tenantId: e.tenantId,
+        prizeAmount: jackpotPerUnit * (entryBetUnits || hitCount),
+        entryId: e.id,
+        drawId,
+      };
+    });
 
     return { drawId, entriesPatched: patchedEntries, winners };
   }

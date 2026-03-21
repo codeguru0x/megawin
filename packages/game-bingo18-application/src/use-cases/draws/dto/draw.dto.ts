@@ -5,13 +5,20 @@ import type { DrawEntity } from "@megawin/game-bingo18/entities";
 // CreateDraw (batch)
 // ─────────────────────────────────────────────
 
-export interface CreateDrawInput {
-  /** Ngày quay (format YYYY-MM-DD). Dùng để tính drawTime, closeAt. */
+export interface CreateDrawInputItem {
+  /** Ngày quay (YYYY-MM-DD). */
   drawDate: string;
-  /** Số kỳ tạo 1 lúc. Default 10, max 30. */
-  count: number;
-  /** Mở bán ngay sau khi tạo (true) hoặc để trạng thái scheduled (false). */
+  /** Số thứ tự kỳ trong ngày (1-~160). */
+  drawNo: number;
+  /** Thời điểm quay (ISO 8601, timezone +07:00). */
+  drawTime: string;
+  /** Mở bán ngay sau khi tạo. */
   openNow: boolean;
+}
+
+export interface CreateDrawInput {
+  /** Danh sách kỳ quay cần tạo. */
+  draws: CreateDrawInputItem[];
 }
 
 export interface CreateDrawOutputItem {

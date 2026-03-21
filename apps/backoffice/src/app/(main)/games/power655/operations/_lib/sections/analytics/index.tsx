@@ -3,11 +3,11 @@
 /**
  * Power 6/55 Operations — Analytics Section
  *
- * PlayTypeCard: phân bổ 13 kiểu chơi Power 6/55.
+ * PlayTypeCard: phân bổ 12 kiểu chơi Power 6/55.
  * NumberHeatmap: tần suất 55 số chính (11×5) + top combos + tenant breakdown.
  * LiveFeed: cược gần nhất real-time (mainNumbers + suffix).
  *
- * Power 6/55: standard, bao5, bao7-bao18, quickPick.
+ * Power 6/55: standard, bao5, bao7-bao18.
  */
 
 import { useMemo } from "react";
@@ -96,7 +96,7 @@ export function AnalyticsSection() {
 
       // Tạo suffix mô tả kiểu bao cho Live Feed
       const suffix =
-        playType !== "standard" && playType !== "quickPick"
+        playType !== "standard"
           ? `(${POWER655_PLAY_TYPE_LABELS[playType as PlayType] ?? playType})`
           : undefined;
 

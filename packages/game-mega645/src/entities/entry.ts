@@ -122,8 +122,13 @@ export interface TicketEntryDoc {
    */
   lineCount: number;
   /**
+   * Tổng đơn vị cược = Σ(expandedLines × betCount). Dùng tính tiền.
+   * Khi betCount = 1 cho mọi board thì betUnitCount = lineCount.
+   */
+  betUnitCount: number;
+  /**
    * Tổng số tiền đặt cược (VND).
-   * Công thức: lineCount × unitPrice.
+   * Công thức: betUnitCount × unitPrice.
    */
   amount: number;
   /** Đơn giá 1 line (VND). Snapshot từ config tại thời điểm đặt vé. */
@@ -160,18 +165,20 @@ export interface TicketEntryDoc {
 export interface EntryBoardSnapshot {
   /** Ký hiệu board ("A".."F"). */
   boardNo: string;
-  /** Kiểu chơi (standard / bao5 / bao7-18 / quickPick). */
+  /** Kiểu chơi (standard / bao5 / bao7-18). */
   playType: PlayType;
   /** Danh sách số chính người chơi đã chọn ("01"-"45"). */
   mainNumbers: string[];
 
   /**
    * Số line sau khi expand từ board.
-   * - standard / quickPick: 1
+   * - standard: 1
    * - bao5: 40
    * - bao7-18: C(N, 6)
    */
   expandedLines: number;
+  /** Số lần cược nhân bội (≥ minBetCount). Snapshot từ ticket board. */
+  betCount: number;
 }
 
 /** Chi tiết trúng thưởng 1 hạng giải trong entry. */

@@ -335,6 +335,8 @@ export const DEFAULT_LOTTO535_CONFIG: {
   },
   play: {
     unitPrice: 10_000,
+    minBetCount: 1,
+    maxBetCount: 10,
     maxBoardsPerTicket: 5,
     maxDrawCount: 6,
     salesCloseBeforeMinutes: 5,

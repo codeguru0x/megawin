@@ -49,7 +49,8 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     drawId: entry.drawId,
     status: entry.status,
     amount: entry.amount,
-    betCount: entry.betCount,
+    selectionCount: entry.selectionCount,
+    betUnitCount: entry.betUnitCount,
     entrySummary: {
       ticketNo: entry.entrySummary.ticketNo,
       boards: entry.entrySummary.boards.map((b: EntryBoardSnapshot) => ({

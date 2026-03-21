@@ -46,6 +46,7 @@ export const power655BoardSchema = z
       PlayType.Bao18,
     ]),
     selection: power655SelectionSchema,
+    betCount: z.number().int().min(1).default(1),
   })
   .superRefine((board, ctx) => {
     const { playType, selection } = board;
@@ -196,6 +197,7 @@ export const handler = withPlayerAuth(
       selection: {
         mainNumbers: b.selection.mainNumbers,
       },
+      betCount: b.betCount ?? 1,
     }));
 
     return useCase.run({

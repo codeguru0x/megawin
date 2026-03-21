@@ -16,6 +16,13 @@
  *   - bulkSettleEntries() atomic: chỉ update nếu status = "scheduled" → no duplicate
  *   - upsertLines() dùng bulkWrite + $setOnInsert → idempotent khi retry
  *   - done = true khi không còn entries nào status = "scheduled"
+ *
+ * betCount DESIGN:
+ *   - matchPair() giữ nguyên: trả PairMatchResult per-unit (1 lần cược).
+ *   - betCount snapshot từ entry.entrySummary.boards[].betCount.
+ *   - Settle layer nhân betCount vào TỪNG wonTier.winAmount (vì 1 pair có thể trúng nhiều giải).
+ *   - lineDoc.winAmount = wonTier.winAmount × betCount (đã nhân betCount).
+ *   - buildPayoutTiers() nhận adjusted pairResults (winAmount đã nhân betCount).
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
@@ -35,7 +42,6 @@ import { matchPair, type PairMatchResult } from "@megawin/game-max3dpro/rules/pr
 import { expandSelectionToPairs } from "@megawin/game-max3dpro/rules/play-types";
 import type { PlayMode } from "@megawin/game-max3dpro/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { SettleContext } from "./types";
 
@@ -51,28 +57,11 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   SettleEntriesBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
-  private readonly ticketRepo = new TicketRepository();
   private readonly lineRepo = new LineRepository();
 
   protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
-    const { drawId, result, prizeConfig } = input;
-    const drawResult: Max3dproDrawResult = {
-      special: result.special as [Triplet, Triplet],
-      first: result.first as [Triplet, Triplet, Triplet, Triplet],
-      second: result.second as [Triplet, Triplet, Triplet, Triplet, Triplet, Triplet],
-      third: result.third as [
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-      ],
-    };
+    const { drawId, result: drawResult, prizeConfig } = input;
 
-    const ticketCache = new Map<string, any>();
     const startTime = Date.now();
 
     while (Date.now() - startTime < MAX_EXECUTION_MS) {
@@ -83,6 +72,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       }
 
       const now = new Date();
+
       const settleOps: Array<{
         entryId: string;
         payout: EntryPayout;
@@ -91,26 +81,19 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       }> = [];
 
       for (const entry of entries) {
-        const ticketId = entry.ticketId;
-
-        let ticket = ticketCache.get(ticketId);
-        if (!ticket) {
-          ticket = await this.ticketRepo.getTicketById(ticketId);
-          if (ticket) ticketCache.set(ticketId, ticket);
-        }
-        if (!ticket) {
-          console.error(`Ticket ${ticketId} not found for entry ${entry.id}, skipping.`);
-          continue;
-        }
-
         const boards: EntryBoardSnapshot[] = entry.entrySummary.boards;
         const allLineDocs: Array<Omit<TicketLineDoc, "_id">> = [];
         let entryWinAmount = 0;
-        let globalLineIndex = 0;
+        let lineIndex = 0;
 
-        const allPairResults: PairMatchResult[] = [];
+        // Adjusted pairResults để buildPayoutTiers gom đúng amount (đã nhân betCount).
+        const adjustedPairResults: PairMatchResult[] = [];
 
         for (const board of boards) {
+          // betCount = số lần cược nhân bội của board này (≥ 1).
+          // matchPair() trả kết quả per-unit — nhân betCount ở settle layer để tách biệt concerns.
+          const betCount = board.betCount ?? 1;
+
           const pairs = expandSelectionToPairs(board.playMode as PlayMode, {
             triplets: board.triplets,
             frontDigits: board.frontDigits,
@@ -120,29 +103,70 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           for (const pair of pairs) {
             const pairResult = matchPair(pair.first, pair.second, drawResult, prizeConfig.standard);
 
-            allPairResults.push(pairResult);
-            entryWinAmount += pairResult.winAmount;
+            // entryWinAmount tích luỹ đã nhân betCount.
+            entryWinAmount += pairResult.winAmount * betCount;
 
-            allLineDocs.push({
-              tenantId: entry.tenantId,
-              accountId: entry.accountId,
-              username: entry.username,
-              ticketId: entry.ticketId,
-              entryId: entry.id,
-              drawId: entry.drawId,
-              financialDate: entry.financialDate,
-              boardNo: board.boardNo,
-              lineIndex: globalLineIndex,
-              playMode: board.playMode,
-              playType: board.playType,
-              triplets: [pair.first, pair.second],
-              matchResult: {
-                tier: pairResult.tier,
-                winAmount: pairResult.winAmount,
-              },
-              createdAt: now,
+            // Adjusted pairResult: winAmount per wonTier đã nhân betCount.
+            // buildPayoutTiers sẽ gom adjusted results → EntryPayoutTier[].amount đúng.
+            adjustedPairResults.push({
+              wonTiers: pairResult.wonTiers.map((wt) => ({
+                tier: wt.tier,
+                winAmount: wt.winAmount * betCount,
+              })),
+              winAmount: pairResult.winAmount * betCount,
+              matchedTriplets: pairResult.matchedTriplets,
             });
-            globalLineIndex++;
+
+            // Mỗi giải trúng tạo 1 lineDoc riêng → buildPayoutTiers đếm đúng hitCount.
+            // lineDoc.winAmount đã nhân betCount — audit trail: winAmount = prizeConfig[tier] × betCount.
+            if (pairResult.wonTiers.length === 0) {
+              allLineDocs.push({
+                tenantId: entry.tenantId,
+                accountId: entry.accountId,
+                username: entry.username,
+                ticketId: entry.ticketId,
+                entryId: entry.id,
+                drawId: entry.drawId,
+                financialDate: entry.financialDate,
+                boardNo: board.boardNo,
+                lineIndex: lineIndex,
+                playMode: board.playMode,
+                playType: board.playType,
+                triplets: [pair.first, pair.second],
+                betCount,
+                matchResult: {
+                  tier: null,
+                  winAmount: 0,
+                },
+                createdAt: now,
+              });
+              lineIndex++;
+            } else {
+              for (const wt of pairResult.wonTiers) {
+                allLineDocs.push({
+                  tenantId: entry.tenantId,
+                  accountId: entry.accountId,
+                  username: entry.username,
+                  ticketId: entry.ticketId,
+                  entryId: entry.id,
+                  drawId: entry.drawId,
+                  financialDate: entry.financialDate,
+                  boardNo: board.boardNo,
+                  lineIndex: lineIndex,
+                  playMode: board.playMode,
+                  playType: board.playType,
+                  triplets: [pair.first, pair.second],
+                  betCount,
+                  matchResult: {
+                    tier: wt.tier,
+                    // winAmount đã nhân betCount → lineDoc tự documenting: giải × betCount lần cược.
+                    winAmount: wt.winAmount * betCount,
+                  },
+                  createdAt: now,
+                });
+                lineIndex++;
+              }
+            }
           }
         }
 
@@ -150,7 +174,8 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           await this.lineRepo.upsertLines(allLineDocs);
         }
 
-        const payoutTiers = buildPayoutTiers(allPairResults);
+        // buildPayoutTiers nhận adjustedPairResults (winAmount đã nhân betCount).
+        const payoutTiers = buildPayoutTiers(adjustedPairResults);
         const hasWin = entryWinAmount > 0;
 
         settleOps.push({
@@ -164,10 +189,10 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           } satisfies EntryPayout,
           outcome: hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
           result: {
-            special: result.special,
-            first: result.first,
-            second: result.second,
-            third: result.third,
+            special: drawResult.special,
+            first: drawResult.first,
+            second: drawResult.second,
+            third: drawResult.third,
             publishedAt: now,
           } satisfies EntryResult,
         });
@@ -175,6 +200,11 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 
       if (settleOps.length > 0) {
         await this.entryRepo.bulkSettleEntries(settleOps);
+      }
+
+      // If the number of entries is less than BATCH_SIZE, return done: true
+      if (entries.length < BATCH_SIZE) {
+        return { done: true };
       }
     }
 
@@ -190,13 +220,14 @@ function buildPayoutTiers(pairResults: PairMatchResult[]): EntryPayoutTier[] {
   const tierMap = new Map<string, { hitCount: number; totalAmount: number }>();
 
   for (const pr of pairResults) {
-    if (pr.tier && pr.winAmount > 0) {
-      const existing = tierMap.get(pr.tier);
+    // Mỗi pairResult có thể trúng nhiều giải (wonTiers) — gộp giải.
+    for (const wt of pr.wonTiers) {
+      const existing = tierMap.get(wt.tier);
       if (existing) {
         existing.hitCount += 1;
-        existing.totalAmount += pr.winAmount;
+        existing.totalAmount += wt.winAmount;
       } else {
-        tierMap.set(pr.tier, { hitCount: 1, totalAmount: pr.winAmount });
+        tierMap.set(wt.tier, { hitCount: 1, totalAmount: wt.winAmount });
       }
     }
   }
@@ -204,6 +235,12 @@ function buildPayoutTiers(pairResults: PairMatchResult[]): EntryPayoutTier[] {
   const tiers: EntryPayoutTier[] = [];
 
   for (const [tier, info] of tierMap) {
+    // unitAmount = totalAmount / hitCount — chỉ mang tính "trung bình hiển thị".
+    // Khi các boards có betCount khác nhau (VD: boardA betCount=2, boardB betCount=3),
+    // 2 pairs cùng trúng 1 hạng giải sẽ có winAmount khác nhau →
+    // unitAmount = Math.round(trung bình) có thể lệch 1 VND so với tổng.
+    // KHÔNG ảnh hưởng payout.winAmount (tính riêng từ entryWinAmount).
+    // amount = info.totalAmount (chính xác tuyệt đối) — dùng để thanh toán.
     tiers.push({
       tier: tier as PrizeTier,
       hitCount: info.hitCount,

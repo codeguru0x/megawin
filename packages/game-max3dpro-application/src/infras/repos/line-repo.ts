@@ -1,9 +1,82 @@
 import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import type { TicketLineDoc } from "@megawin/game-max3dpro/entities";
-import { AbstractLineRepository } from "@megawin/game-max3d-core/repos";
+import { ObjectId } from "mongodb";
+import { BaseRepo } from "./base-repo";
 
-export class LineRepository extends AbstractLineRepository<TicketLineDoc> {
+/** Số lượng ops mỗi chunk khi bulk upsert lines. */
+const BULK_CHUNK_SIZE = 500;
+
+/**
+ * Repository quản lý TicketLine — Max 3D Pro.
+ *
+ * Mỗi line là 1 cặp TripletPair. Upsert idempotent theo (entryId, lineIndex).
+ */
+export class LineRepository extends BaseRepo<any> {
   constructor() {
     super({ collName: Max3dproCollections.TicketLines });
+  }
+
+  /**
+   * Upsert nhiều lines, chunk theo BULK_CHUNK_SIZE để tránh quá tải MongoDB.
+   *
+   * Filter: (entryId, lineIndex) — đảm bảo idempotent.
+   * $setOnInsert: chỉ ghi khi insert mới, không overwrite nếu đã tồn tại.
+   */
+  async upsertLines(lines: Array<Omit<TicketLineDoc, "_id">>): Promise<void> {
+    if (lines.length === 0) return;
+
+    const ops = lines.map((doc) => ({
+      updateOne: {
+        filter: {
+          entryId: (doc as any).entryId,
+          lineIndex: (doc as any).lineIndex,
+        },
+        update: { $setOnInsert: doc },
+        upsert: true,
+      },
+    }));
+
+    // Chunk để tránh quá tải batch size limit của MongoDB
+    for (let i = 0; i < ops.length; i += BULK_CHUNK_SIZE) {
+      const chunk = ops.slice(i, i + BULK_CHUNK_SIZE);
+      await this.bulkWrite(chunk, { ordered: false });
+    }
+  }
+
+  /**
+   * Lấy lines của 1 entry, cursor-based pagination theo lineIndex.
+   *
+   * @param options.size - Số lines mỗi trang (default: 50).
+   * @param options.cursor - lineIndex của dòng cuối trang trước (exclusive).
+   * @returns lines + hasMore flag.
+   */
+  async getLinesByEntryId(
+    entryId: string,
+    options: { size?: number; cursor?: number } = {},
+  ): Promise<{ lines: TicketLineDoc[]; hasMore: boolean }> {
+    const { size = 50, cursor } = options;
+    const col = await this.getCollection();
+    const filter: Record<string, unknown> = { entryId: new ObjectId(entryId) };
+
+    if (cursor != null) {
+      filter.lineIndex = { $gt: cursor };
+    }
+
+    const lines = await col
+      .find(filter)
+      .sort({ lineIndex: 1 })
+      .limit(size + 1)
+      .toArray();
+
+    // Lấy thêm 1 để detect hasMore mà không cần count query riêng
+    const hasMore = lines.length > size;
+    const slice = hasMore ? lines.slice(0, size) : lines;
+
+    return { lines: slice as unknown as TicketLineDoc[], hasMore };
+  }
+
+  /** Đếm số lines của 1 entry. */
+  async countByEntryId(entryId: string): Promise<number> {
+    return await this.count({ entryId: new ObjectId(entryId) });
   }
 }

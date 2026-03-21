@@ -131,7 +131,14 @@ export interface TicketEntryDoc {
 
   // ───── Stake ─────
 
-  betCount: number;
+  /** Số selections = boards.length + sideBets.length. */
+  selectionCount: number;
+  /**
+   * Tổng đơn vị cược = Σ(board.betCount) + Σ(sideBet.betCount).
+   * Dùng để tính tiền: amount = betUnitCount × unitPrice.
+   */
+  betUnitCount: number;
+  /** Tổng tiền cược = betUnitCount × unitPrice (VND). */
   amount: number;
   unitPrice: number;
 
@@ -197,6 +204,8 @@ export interface EntryBoardSnapshot {
   playType: KenoPlayType;
   /** Số dạng string "01"-"80". */
   numbers: string[];
+  /** Số lần cược nhân bội (≥ minBetCount). Snapshot từ ticket board. */
+  betCount: number;
 }
 
 export interface EntrySideBetSnapshot {
@@ -204,6 +213,8 @@ export interface EntrySideBetSnapshot {
   playType: KenoPlayType;
   /** Lựa chọn cụ thể: "big"/"small"/"bigSmallDraw"/... */
   bet: KenoBigSmallBet | KenoEvenOddBet;
+  /** Số lần cược nhân bội (≥ minBetCount). Snapshot từ ticket side bet. */
+  betCount: number;
 }
 
 export interface EntryBoardPayout {
@@ -215,7 +226,9 @@ export interface EntryBoardPayout {
   matchCount: number;
   /** Số lượng số người chơi đã chọn (= numbers.length). */
   pickCount: number;
-  /** Tiền thắng cho board này (VND). 0 nếu không trúng. */
+  /** Số lần cược nhân bội. Giải thích tại sao winAmount > giá trị 1 unit. */
+  betCount: number;
+  /** Tiền thắng thực tế = unitWinAmount × betCount (VND). 0 nếu không trúng. */
   winAmount: number;
 }
 
@@ -242,7 +255,9 @@ export interface EntrySideBetPayout {
    *   - Asymmetry có chủ đích: boardPayout dùng winAmount > 0, sideBetPayout dùng isWin
    */
   isWin: boolean;
-  /** Tiền thắng (VND). 0 nếu không trúng. Ground truth của win/lose. */
+  /** Số lần cược nhân bội. Giải thích tại sao winAmount > giá trị 1 unit. */
+  betCount: number;
+  /** Tiền thắng thực tế = unitWinAmount × betCount (VND). 0 nếu không trúng. Ground truth của win/lose. */
   winAmount: number;
 }
 

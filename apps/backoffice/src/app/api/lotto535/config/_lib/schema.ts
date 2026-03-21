@@ -12,36 +12,46 @@ const splitRatiosSchema = z.object({
   tier5: positiveInt,
 });
 
-const jackpotSchema = z.object({
-  seedAmount: nonNegativeInt,
-  splitThreshold: nonNegativeInt,
-  splitRatios: splitRatiosSchema,
-}).partial();
+const jackpotSchema = z
+  .object({
+    seedAmount: nonNegativeInt,
+    splitThreshold: nonNegativeInt,
+    splitRatios: splitRatiosSchema,
+  })
+  .partial();
 
-const ratesSchema = z.object({
-  defaultCommissionRate: rate,
-  companyRate: rate,
-}).partial();
+const ratesSchema = z
+  .object({
+    defaultCommissionRate: rate,
+    companyRate: rate,
+  })
+  .partial();
 
-const prizesSchema = z.object({
-  tier1: positiveInt,
-  tier2: positiveInt,
-  tier3: positiveInt,
-  tier4: positiveInt,
-  tier5: positiveInt,
-  consolation: positiveInt,
-}).partial();
+const prizesSchema = z
+  .object({
+    tier1: positiveInt,
+    tier2: positiveInt,
+    tier3: positiveInt,
+    tier4: positiveInt,
+    tier5: positiveInt,
+    consolation: positiveInt,
+  })
+  .partial();
 
 const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-const playSchema = z.object({
-  unitPrice: positiveInt,
-  maxBoardsPerTicket: positiveInt,
-  maxDrawCount: positiveInt,
-  salesCloseBeforeMinutes: positiveInt,
-  drawsPerDay: positiveInt,
-  drawTimes: z.array(z.string().regex(timePattern, "Giờ phải có format HH:mm")).min(1),
-}).partial();
+const playSchema = z
+  .object({
+    unitPrice: positiveInt,
+    minBetCount: positiveInt,
+    maxBetCount: positiveInt,
+    maxBoardsPerTicket: positiveInt,
+    maxDrawCount: positiveInt,
+    salesCloseBeforeMinutes: positiveInt,
+    drawsPerDay: positiveInt,
+    drawTimes: z.array(z.string().regex(timePattern, "Giờ phải có format HH:mm")).min(1),
+  })
+  .partial();
 
 export const updateGameConfigSchema = z
   .object({
@@ -50,7 +60,6 @@ export const updateGameConfigSchema = z
     defaultPrizes: prizesSchema.optional(),
     play: playSchema.optional(),
   })
-  .refine(
-    (data) => data.jackpot || data.rates || data.defaultPrizes || data.play,
-    { message: "Phải cung cấp ít nhất một section để cập nhật." },
-  );
+  .refine((data) => data.jackpot || data.rates || data.defaultPrizes || data.play, {
+    message: "Phải cung cấp ít nhất một section để cập nhật.",
+  });

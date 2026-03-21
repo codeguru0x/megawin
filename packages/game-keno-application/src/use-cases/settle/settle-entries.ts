@@ -118,12 +118,16 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           const prizeTable = playTypePrizes ? { [String(pickCount)]: playTypePrizes } : undefined;
 
           const matchResult = matchBasicBoard(board.numbers, result, prizeTable);
+          // betCount per board (snapshot từ lúc đặt cược). Fallback 1 cho entries cũ.
+          const betCount = board.betCount ?? 1;
           boardPayouts.push({
             boardNo: board.boardNo,
             playType: board.playType,
             matchCount: matchResult.matchCount,
             pickCount: matchResult.pickCount,
-            winAmount: matchResult.winAmount,
+            betCount,
+            // winAmount = per-unit prize × betCount (multiplier).
+            winAmount: matchResult.winAmount * betCount,
           });
 
           if (
@@ -140,6 +144,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         const sideBets = entry.entrySummary?.sideBets ?? [];
 
         for (const sb of sideBets) {
+          // betCount per side bet (snapshot từ lúc đặt cược). Fallback 1 cho entries cũ.
+          const betCount = sb.betCount ?? 1;
+
           if (sb.playType === KenoPlayType.BigSmall) {
             const matchResult = matchBigSmallBet(
               sb.bet as KenoBigSmallBet,
@@ -151,7 +158,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               bet: sb.bet,
               outcome: matchResult.outcome,
               isWin: matchResult.isWin,
-              winAmount: matchResult.winAmount,
+              betCount,
+              // winAmount = per-unit prize × betCount.
+              winAmount: matchResult.winAmount * betCount,
             });
           } else if (sb.playType === KenoPlayType.EvenOdd) {
             const matchResult = matchEvenOddBet(
@@ -164,7 +173,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               bet: sb.bet,
               outcome: matchResult.outcome,
               isWin: matchResult.isWin,
-              winAmount: matchResult.winAmount,
+              betCount,
+              // winAmount = per-unit prize × betCount.
+              winAmount: matchResult.winAmount * betCount,
             });
           }
         }
@@ -200,6 +211,11 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 
       if (settleOps.length > 0) {
         await this.entryRepo.bulkSettleEntries(settleOps);
+      }
+
+      // If the number of entries is less than BATCH_SIZE, return done: true
+      if (entries.length < BATCH_SIZE) {
+        return { done: true };
       }
     }
 

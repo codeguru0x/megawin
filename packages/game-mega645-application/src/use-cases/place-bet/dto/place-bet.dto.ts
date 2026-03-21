@@ -20,6 +20,8 @@ export interface PlaceBetBoardInput {
    * Mega 6/45: mainNumbers gồm 6-15 số trong khoảng 1-45 (tuỳ playType).
    */
   selection: BoardSelection;
+  /** Số lần cược nhân bội (≥ 1). Default 1 (backward compat). */
+  betCount?: number;
 }
 
 export interface PlaceBetInput {
@@ -73,7 +75,9 @@ export interface PlaceBetOutput {
     unitPrice: number;
     /** Tổng số dòng mỗi kỳ = ΣC(n,6) cho tất cả board. */
     linesPerDraw: number;
-    /** Số tiền mỗi kỳ = unitPrice × linesPerDraw (VND). */
+    /** Tổng đơn vị cược mỗi kỳ = Σ(expandedLines × betCount). */
+    betUnitsPerDraw: number;
+    /** Số tiền mỗi kỳ = unitPrice × betUnitsPerDraw (VND). */
     amountPerDraw: number;
     /** Tổng tiền vé = amountPerDraw × drawCount (VND). */
     totalAmount: number;

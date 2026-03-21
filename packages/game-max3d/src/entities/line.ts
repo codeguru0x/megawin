@@ -17,8 +17,10 @@ import type { Triplet, ISODateString } from "./types";
 export interface LineMatchResult {
   /** Hạng giải trúng (null = không trúng). */
   tier: BasicPrizeTier | PlusPrizeTier | null;
-  /** Tiền thưởng cho line này. */
+
+  /** Tiền thưởng thực tế = unitWinAmount × betCount (VND). */
   winAmount: number;
+
   /** Chi tiết matching (tier nào, hit count). */
   matchDetails?: string;
 }
@@ -75,11 +77,14 @@ export interface TicketLineDoc {
   /** Chế độ chơi: "basic" (1 bộ ba) hoặc "plus" (2 bộ ba). */
   playMode: PlayMode;
 
-  /** Kiểu chơi: "straight", "combo3", "combo6", "quickPick". */
+  /** Kiểu chơi: "straight", "combo3", "combo6". */
   playType: PlayType;
 
   /** Bộ ba số (1 cho basic, 2 cho plus). */
   triplets: Triplet[];
+
+  /** Số lần cược nhân bội của board chứa line này. Giải thích tại sao winAmount > giá trị 1 unit. */
+  betCount: number;
 
   // ───── Match Result ─────
 

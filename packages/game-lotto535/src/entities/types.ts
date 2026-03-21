@@ -96,7 +96,6 @@ export const VALID_SPECIAL_NUMBER_SET: ReadonlySet<string> = new Set(
  * - mainCover4:   mainNumbers.length = 4, specialNumbers.length = 1
  * - mainCover:    mainNumbers.length = 6..15, specialNumbers.length = 1
  * - specialCover: mainNumbers.length = 5, specialNumbers.length = 2..12
- * - quickPick:    empty (hệ thống tự sinh)
  */
 export interface BoardSelection {
   /** Danh sách số chính ("01"-"35"), unique, sorted tăng dần. */
@@ -172,6 +171,13 @@ export interface FinancialRates {
 export interface PlayRules {
   /** Giá 1 line (bộ số con) cho 1 kỳ (VND). */
   unitPrice: number;
+  /**
+   * Số lần cược tối thiểu per board (≥ 1).
+   * Mặc định 1 — player luôn phải cược ít nhất 1 lần.
+   */
+  minBetCount: number;
+  /** Số lần cược tối đa per board. Mặc định 10. */
+  maxBetCount: number;
   /** Số board tối đa trên 1 vé (A-E). */
   maxBoardsPerTicket: number;
   /** Số kỳ liên tiếp tối đa (KY). */

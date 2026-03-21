@@ -43,8 +43,8 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
       const boards: LiveEntryBoard[] = (e.entrySummary?.boards ?? []).map((b) => ({
         playType: b.playType,
         mainNumbers: b.mainNumbers,
-        // Mega 6/45 không có specialNumbers
         expandedLines: b.expandedLines,
+        betCount: b.betCount ?? 1,
       }));
 
       return {
@@ -53,6 +53,7 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
         tenantId: e.tenantId,
         amount: e.amount,
         lineCount: e.lineCount,
+        betUnitCount: e.betUnitCount ?? e.lineCount,
         boards,
         createdAt: e.createdAt.toISOString(),
       };

@@ -176,7 +176,7 @@ const MOCK_TENANT_ENTRIES = [
     boards: [
       {
         boardNo: "A",
-        playType: "quickPick",
+        playType: "standard",
         mainNumbers: [1, 9, 18, 26, 34, 49],
         bonusNumber: null,
         expandedLines: 1,
@@ -448,7 +448,6 @@ export default function Power655PendingTicketsPage() {
                     <SelectItem value="bao7">Bao 7</SelectItem>
                     <SelectItem value="bao8">Bao 8</SelectItem>
                     <SelectItem value="bao12">Bao 12-18</SelectItem>
-                    <SelectItem value="quickPick">Tự chọn</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="outline" size="sm">
@@ -551,7 +550,9 @@ export default function Power655PendingTicketsPage() {
                           {board.boardNo}
                         </Badge>
                         <Badge variant="secondary">
-                          {POWER655_PLAY_TYPE_LABELS[board.playType as keyof typeof POWER655_PLAY_TYPE_LABELS] ?? board.playType}
+                          {POWER655_PLAY_TYPE_LABELS[
+                            board.playType as keyof typeof POWER655_PLAY_TYPE_LABELS
+                          ] ?? board.playType}
                         </Badge>
                       </div>
                       <span className="text-xs text-muted-foreground">

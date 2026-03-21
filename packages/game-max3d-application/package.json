@@ -79,7 +79,6 @@
     "@megawin/game-core": "workspace:*",
     "@megawin/game-core-application": "workspace:*",
     "@megawin/game-max3d": "workspace:*",
-    "@megawin/game-max3d-core": "workspace:*",
     "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*",

@@ -1,3 +1,6 @@
+// ── Transaction Coordinators ─────────────────────────────────────────
+export { PlaceBetStore } from "./place-bet-store";
+
 export { BaseRepo } from "./base-repo";
 export { DrawRepository } from "./draw-repo";
 export { GameConfigRepository } from "./game-config-repo";

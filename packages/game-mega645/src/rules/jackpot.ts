@@ -135,6 +135,10 @@ export const DEFAULT_MEGA645_CONFIG: {
   play: {
     /** Đơn giá 1 line: 10.000 VND (theo quy định Vietlott). */
     unitPrice: 10_000,
+    /** Số lần cược tối thiểu per board. */
+    minBetCount: 1,
+    /** Số lần cược tối đa per board. */
+    maxBetCount: 10,
     /** Tối đa 6 boards/vé (A-F). */
     maxBoardsPerTicket: 6,
     /** Tối đa tham gia 6 kỳ quay liên tiếp với 1 vé. */

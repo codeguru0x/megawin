@@ -55,6 +55,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { EntryRepository } from "../../infras/repos/entry-repo";
+import { LineRepository } from "../../infras/repos/line-repo";
 import type { SettleContext } from "./types";
 
 export interface ApplySplitBonusesResult {
@@ -67,6 +68,7 @@ export class ApplySplitBonusesUseCase extends InternalUseCase<
   ApplySplitBonusesResult
 > {
   private readonly entryRepo = new EntryRepository();
+  private readonly lineRepo = new LineRepository();
 
   protected async execute(input: SettleContext): Promise<ApplySplitBonusesResult> {
     const { drawId } = input;
@@ -81,17 +83,33 @@ export class ApplySplitBonusesUseCase extends InternalUseCase<
     let entriesPatched = 0;
 
     // ── Duyệt từng tier, patch split bonus vào entries trúng tier đó ──
-    // splitDetails key = tier name (tier1-tier5), value = { bonusPerWinner, winnerCount, ... }
+    // splitDetails key = tier name (tier1-tier5), value = { bonusPerWinner (= bonusPerUnit), winnerCount, ... }
     for (const [tier, detail] of Object.entries(splitDetails)) {
       // Skip tier không có winner hoặc bonus = 0 (có thể do làm tròn)
       if (detail.bonusPerWinner <= 0 || detail.winnerCount <= 0) continue;
 
+      // Lấy winning lines cho tier này để build betUnitsByEntry map.
+      // betUnits per entry = Σ betCount của các lines thuộc entry trúng tier đó.
+      // Cần thiết vì split bonus chia theo tỷ lệ tham gia dự thưởng (betCount).
+      const tierLines = await this.lineRepo.getWinningLinesForTier(drawId, tier);
+      const betUnitsByEntry = new Map<string, number>();
+      for (const line of tierLines) {
+        const entryIdStr = line.entryId?.toString() ?? "";
+        if (!entryIdStr) continue;
+        betUnitsByEntry.set(
+          entryIdStr,
+          (betUnitsByEntry.get(entryIdStr) ?? 0) + (line.betCount ?? 1),
+        );
+      }
+
       // applySplitBonusForTier: thêm tier { isSplitBonus: true } vào payout.tiers
       // và $inc winAmount + payoutAmount. Idempotent: chỉ patch entry chưa có tier này.
+      // bonusPerWinner = bonusPerUnit (vì calculateSplitDistribution nhận tierBetUnitCounts)
       const patched = await this.entryRepo.applySplitBonusForTier(
         drawId,
         tier,
         detail.bonusPerWinner,
+        betUnitsByEntry,
       );
       entriesPatched += patched;
     }

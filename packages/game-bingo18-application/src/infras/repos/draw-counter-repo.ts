@@ -60,4 +60,20 @@ export class DrawCounterRepository extends BaseRepo<
     const lastDrawNo = result!.lastDrawNo as number;
     return lastDrawNo - count + 1;
   }
+
+  /**
+   * Upsert lastDrawNo nếu drawNo truyền vào lớn hơn giá trị hiện tại.
+   *
+   * Dùng khi staff tạo kỳ với drawNo cụ thể (không tự động tăng).
+   * $max đảm bảo idempotent — chạy lại nhiều lần an toàn.
+   */
+  async upsertLastDrawNo(drawDate: string, drawNo: number): Promise<void> {
+    await this.initBeforeUse();
+
+    await this._collection.updateOne(
+      { drawDate },
+      { $max: { lastDrawNo: drawNo } },
+      { upsert: true },
+    );
+  }
 }

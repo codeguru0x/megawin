@@ -20,6 +20,8 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
     pricing: {
       unitPrice: ticket.pricing.unitPrice,
       linesPerDraw: ticket.pricing.linesPerDraw,
+      // betUnitsPerDraw: backward compat — ticket cũ không có field này
+      betUnitsPerDraw: ticket.pricing.betUnitsPerDraw ?? ticket.pricing.linesPerDraw,
       amountPerDraw: ticket.pricing.amountPerDraw,
       totalAmount: ticket.pricing.totalAmount,
     },
@@ -31,6 +33,7 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
         specialNumbers: b.selection.specialNumbers,
       },
       expandedLines: b.derived.expandedLines,
+      betCount: b.betCount ?? 1,
     })),
     progress: {
       totalDraws: ticket.progress.totalDraws,

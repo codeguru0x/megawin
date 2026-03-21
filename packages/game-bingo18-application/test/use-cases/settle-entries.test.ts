@@ -7,10 +7,7 @@ import {
   matchBigSmallDraw,
   computeDrawStats,
 } from "@megawin/game-bingo18/helpers/match-result";
-import {
-  Bingo18BigSmallBet,
-  Bingo18TripleKind,
-} from "@megawin/game-bingo18/entities/enums";
+import { Bingo18BigSmallBet, Bingo18TripleKind } from "@megawin/game-bingo18/entities/enums";
 
 // ─── Helpers ────────────────────────────────────────
 
@@ -343,5 +340,61 @@ describe("Tích hợp – Kết quả quay [3,3,3]", () => {
     const r = matchBigSmallDraw(Bingo18BigSmallBet.Big, result);
     expect(r.isWin).toBe(false);
     expect(r.winAmount).toBe(0);
+  });
+});
+
+// ─── 9. betCount multiplier logic ──────────────────
+// Matching functions trả per-unit winAmount.
+// Settle nhân winAmount × betCount tại payout.
+
+describe("betCount multiplier – winAmount nhân theo số lần cược", () => {
+  it("singleNum match 1 lần, betCount=3 → winAmount = 12,000 × 3 = 36,000", () => {
+    const r = matchSingleNum(3, drawResult([1, 3, 5]));
+    // per-unit winAmount từ matching function
+    expect(r.winAmount).toBe(12_000);
+    // settle nhân betCount
+    const betCount = 3;
+    expect(r.winAmount * betCount).toBe(36_000);
+  });
+
+  it("doubleMatch thắng, betCount=5 → winAmount = 75,000 × 5 = 375,000", () => {
+    const r = matchDoubleMatch(5, drawResult([5, 5, 2]));
+    expect(r.winAmount).toBe(75_000);
+    const betCount = 5;
+    expect(r.winAmount * betCount).toBe(375_000);
+  });
+
+  it("tripleMatch specific thắng, betCount=2 → winAmount = 1,200,000 × 2 = 2,400,000", () => {
+    const r = matchTripleMatch(Bingo18TripleKind.Specific, 4, drawResult([4, 4, 4]));
+    expect(r.winAmount).toBe(1_200_000);
+    const betCount = 2;
+    expect(r.winAmount * betCount).toBe(2_400_000);
+  });
+
+  it("sumTotal tổng 9, betCount=10 → winAmount = 47,000 × 10 = 470,000", () => {
+    const r = matchSumTotal(9, drawResult([3, 3, 3]));
+    expect(r.winAmount).toBe(47_000);
+    const betCount = 10;
+    expect(r.winAmount * betCount).toBe(470_000);
+  });
+
+  it("bigSmallDraw small thắng, betCount=4 → winAmount = 15,000 × 4 = 60,000", () => {
+    const r = matchBigSmallDraw(Bingo18BigSmallBet.Small, drawResult([1, 2, 2]));
+    expect(r.winAmount).toBe(15_000);
+    const betCount = 4;
+    expect(r.winAmount * betCount).toBe(60_000);
+  });
+
+  it("thua mọi loại, betCount bất kỳ → winAmount vẫn = 0", () => {
+    const betCount = 10;
+    expect(matchSingleNum(6, drawResult([1, 2, 3])).winAmount * betCount).toBe(0);
+    expect(matchDoubleMatch(1, drawResult([2, 3, 4])).winAmount * betCount).toBe(0);
+    expect(
+      matchTripleMatch(Bingo18TripleKind.Specific, 1, drawResult([2, 2, 2])).winAmount * betCount,
+    ).toBe(0);
+    expect(matchSumTotal(5, drawResult([3, 3, 3])).winAmount * betCount).toBe(0);
+    expect(
+      matchBigSmallDraw(Bingo18BigSmallBet.Big, drawResult([1, 1, 1])).winAmount * betCount,
+    ).toBe(0);
   });
 });

@@ -20,7 +20,8 @@ Max 3D Pro là game xổ số tự chọn dạng bộ ba số (triplet) của Vi
 - **Không gian mẫu**: 1.000 × 1.000 = 1.000.000 (ordered pairs)
 - **Kết quả quay**: 20 bộ ba số mỗi kỳ (2 ĐB + 4 Nhất + 6 Nhì + 8 Ba)
 - **Lịch quay**: 3 lần/tuần (Thứ 3, Thứ 5, Thứ 7) lúc 18h00
-- **Giá vé**: 10.000 VND / cặp (line)
+- **Giá vé**: 10.000 VND / (cặp × betCount)
+- **betCount**: Số lần cược nhân bội per board (≥ 1, mặc định 1). Tiền cược board = lineCount × betCount × unitPrice
 - **Kỳ liên tiếp**: Tối đa 6 kỳ liên tiếp
 - **Board**: 1 vé có tối đa 4 board (A-D)
 - **Jackpot**: **KHÔNG CÓ** — tất cả giải thưởng CỐ ĐỊNH
@@ -61,7 +62,34 @@ Giá trị trong bảng dưới là **mặc định tham khảo**. Thực tế �
 | Giải Năm | `fifth` | Trùng 1 bộ ba quay thưởng giải ĐB bất kỳ | 100.000 |
 | Giải Sáu | `sixth` | Trùng 1 bộ ba quay thưởng Nhất, Nhì hoặc Ba bất kỳ | 40.000 |
 
-**Quy tắc duplicate x2**: Nếu 2 bộ ba số **GIỐNG NHAU** → giải thưởng **× 2** (`multiplier = isDuplicate ? 2 : 1`).
+**Quy tắc duplicate x2 — ĐẶC BIỆT cho ĐB/phụ ĐB**:
+
+Nếu 2 bộ ba số **GIỐNG NHAU**:
+- Giải Nhất → Sáu: giải thưởng **× 2** (`prize × 2`)
+- Giải ĐB hoặc phụ ĐB: giải thưởng = **special + specialSub** (KHÔNG phải `prize × 2`)
+
+**Quy tắc trả thưởng — GỘP GIẢI (theo luật Vietlott)**
+
+> "Trường hợp người tham gia dự thưởng có kết hợp hai bộ ba số tham gia dự thưởng trúng nhiều giải thưởng, người tham gia dự thưởng được lĩnh thưởng bằng tổng số giải thưởng."
+
+8 hạng giải **KHÔNG loại trừ lẫn nhau**. Nếu đạt điều kiện nhiều giải → lĩnh tổng tất cả.
+
+**Chia 3 nhóm giải kiểm tra ĐỘC LẬP:**
+
+```
+┌─── GIẢI ĐẶC BIỆT (ordered pair — thứ tự first/second quan trọng) ──────────┐
+│  Giải ĐB:      first===special[0] && second===special[1]  → 2,000,000,000  │
+│  Giải phụ ĐB:  first===special[1] && second===special[0]  → 400,000,000    │
+├─── NHÓM CẶP (bipartite matching — mỗi draw entry chỉ dùng 1 lần) ─────────┤
+│  Giải Nhất:  2 bộ khớp 2 entry Nhất riêng biệt        →     30,000,000    │
+│  Giải Nhì:   2 bộ khớp 2 entry Nhì riêng biệt         →     10,000,000    │
+│  Giải Ba:    2 bộ khớp 2 entry Ba riêng biệt           →      4,000,000    │
+│  Giải Tư:    2 bộ khớp 2 entry BẤT KỲ riêng biệt      →      1,000,000    │
+├─── NHÓM ĐƠN (kiểm tra từng bộ ba riêng lẻ) ───────────────────────────────┤
+│  Giải Năm:   1 bộ khớp entry ĐB bất kỳ                →        100,000    │
+│  Giải Sáu:   1 bộ khớp entry Nhất/Nhì/Ba bất kỳ       →         40,000    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -79,12 +107,24 @@ So sánh với Max 3D Plus:
 - Max 3D Pro: phân biệt **thứ tự ordered pair** → ĐB (1 way, 2 tỷ) hoặc phụ ĐB (1 way, 400 triệu)
 
 **Logic matching** (`matchPair()`):
-1. Kiểm tra ĐB trước (đúng thứ tự) → `PrizeTier.Special`
+
+Kiểm tra TẤT CẢ điều kiện ĐỘC LẬP, gộp tất cả giải đạt điều kiện:
+1. Kiểm tra ĐB (đúng thứ tự) → `PrizeTier.Special`
 2. Kiểm tra phụ ĐB (ngược thứ tự) → `PrizeTier.SpecialSub`
-3. Cả 2 trùng cùng nhóm → Nhất/Nhì/Ba
-4. Cả 2 trùng khác nhóm → Tư (cross-tier)
-5. Chỉ 1 trùng ĐB → Năm
-6. Chỉ 1 trùng Nhất/Nhì/Ba → Sáu
+3. Bipartite matching: Nhất/Nhì/Ba/Tư (mỗi entry chỉ dùng 1 lần)
+4. Nhóm đơn: Năm (khớp ĐB) / Sáu (khớp Nhất/Nhì/Ba)
+5. Tổng thưởng = Σ tất cả giải trúng
+
+**Duplicate ĐB/phụ ĐB**: `winAmount = special + specialSub = 2,400,000,000` (KHÔNG phải `prize × 2`)
+**Duplicate Nhất→Sáu**: `winAmount = prize × 2`
+
+**Bipartite matching** (`countDistinctMatches()`): mỗi triplet player phải khớp 1 entry RIÊNG BIỆT.
+
+| Player | Special pool | Bipartite | Kết quả |
+|--------|-------------|-----------|---------|
+| `096 + 389` | `[096, 389]` | 096→096 ✓, 389→389 ✓ | Giải ĐB |
+| `096 + 096` | `[096, 389]` | 096→096 ✓, 096→? ✗ | Chỉ Giải Năm ×2 |
+| `096 + 096` | `[096, 096]` | 096→096 ✓, 096→096 ✓ | Giải ĐB (special+specialSub) |
 
 ---
 
@@ -94,32 +134,38 @@ Max 3D Pro **KHÔNG có** basic/straight/combo mode như Max 3D. Thay vào đó 
 
 ### 5.1 MultiNumber — Bao nhiều bộ số
 
-PlayMode: `multiNumber` | Chọn 3-20 bộ ba số | Hệ thống tạo **C(n,2)** cặp
+PlayMode: `multiNumber` | Chọn 3-20 bộ ba số | Hệ thống tạo **P(n,2) = n×(n-1)** ordered pairs
 
-Người chơi chọn n bộ ba số (3 ≤ n ≤ 20), hệ thống tạo tất cả C(n,2) cặp ordered pair.
+Người chơi chọn n bộ ba số (3 ≤ n ≤ 20), hệ thống tạo tất cả P(n,2) ordered pairs (hoán vị chập 2).
+Thứ tự quan trọng: (A,B) và (B,A) là 2 cặp KHÁC NHAU vì Giải ĐB yêu cầu đúng thứ tự, Giải phụ ĐB yêu cầu ngược thứ tự.
 
-| Số bộ ba | Số cặp C(n,2) | Giá/kỳ (VND) |
+| Số bộ ba | Số cặp P(n,2) | Giá/kỳ (VND) |
 |----------|--------------|---------------|
-| 3 | 3 | 30.000 |
-| 4 | 6 | 60.000 |
-| 5 | 10 | 100.000 |
-| 6 | 15 | 150.000 |
-| 7 | 21 | 210.000 |
-| 8 | 28 | 280.000 |
-| 9 | 36 | 360.000 |
-| 10 | 45 | 450.000 |
-| 11 | 55 | 550.000 |
-| 12 | 66 | 660.000 |
-| 13 | 78 | 780.000 |
-| 14 | 91 | 910.000 |
-| 15 | 105 | 1.050.000 |
-| 16 | 120 | 1.200.000 |
-| 17 | 136 | 1.360.000 |
-| 18 | 153 | 1.530.000 |
-| 19 | 171 | 1.710.000 |
-| 20 | 190 | 1.900.000 |
+| 3 | 6 | 60.000 |
+| 4 | 12 | 120.000 |
+| 5 | 20 | 200.000 |
+| 6 | 30 | 300.000 |
+| 7 | 42 | 420.000 |
+| 8 | 56 | 560.000 |
+| 9 | 72 | 720.000 |
+| 10 | 90 | 900.000 |
+| 11 | 110 | 1.100.000 |
+| 12 | 132 | 1.320.000 |
+| 13 | 156 | 1.560.000 |
+| 14 | 182 | 1.820.000 |
+| 15 | 210 | 2.100.000 |
+| 16 | 240 | 2.400.000 |
+| 17 | 272 | 2.720.000 |
+| 18 | 306 | 3.060.000 |
+| 19 | 342 | 3.420.000 |
+| 20 | 380 | 3.800.000 |
 
-**Expansion logic**: Vòng lặp 2 lớp: `for i=0..n-1, for j=i+1..n-1 → pair(triplets[i], triplets[j])`
+**Expansion logic**: Vòng lặp 2 lớp: `for i=0..n-1, for j=0..n-1, j≠i → pair(triplets[i], triplets[j])` — tạo ordered pairs
+
+Ví dụ: `["096","389","683"]` → 6 ordered pairs:
+- (096,389), (096,683), (389,096), (389,683), (683,096), (683,389)
+
+Nếu Special=`["096","389"]` → pair (096,389) trúng Giải ĐB 2 tỷ, pair (389,096) trúng Giải phụ ĐB 400 triệu.
 
 ### 5.2 MultiDigit — Bao bộ ba số (hoán vị chữ số)
 
@@ -145,7 +191,7 @@ Người chơi chọn **3 chữ số** cho bộ ba đầu và **3 chữ số** c
 - 2 chữ số giống (1,1,2) → 3 hoán vị
 - 3 chữ số giống (1,1,1) → 1 hoán vị (= straight)
 
-**Play Types**: Chỉ `straight` hoặc `quickPick` — **KHÔNG** có combo3/combo6.
+**Play Types**: Chỉ `straight` — **KHÔNG** có combo3/combo6, không có quickPick.
 
 ---
 
@@ -241,7 +287,7 @@ Vé multi-draw: chỉ entry của kỳ bị void bị ảnh hưởng, các kỳ 
 ```
 src/
 ├── entities/
-│   ├── enums.ts           # PlayMode (multiNumber, multiDigit), PlayType (straight, quickPick),
+│   ├── enums.ts           # PlayMode (multiNumber, multiDigit), PlayType (straight),
 │   │                      # PrizeTier (8 hạng: special, specialSub, first-sixth),
 │   │                      # PayoutStatus, RefundStatus, Max3dproCollections
 │   ├── types.ts           # Triplet, TripletPair, BoardSelection (triplets + frontDigits/backDigits),
@@ -255,8 +301,11 @@ src/
 │   ├── tenant-config.ts   # TenantConfigDoc
 │   └── game-config.ts     # GameConfigDoc (union type)
 ├── rules/
-│   ├── prize-tiers.ts     # matchPair() (ordered: ĐB/phụ ĐB), matchBoard(), flattenDrawResult()
-│   ├── play-types.ts      # calculateLineCount(), expandSelectionToPairs() (multiNumber: C(n,2),
+│   ├── prize-tiers.ts     # BASIC_TIER_PRIORITY, findTierInResult(), countDistinctMatches(),
+│   │                      # matchPair() (ordered: ĐB/phụ ĐB, gộp giải, bipartite matching),
+│   │                      # matchBoard(), flattenDrawResult(),
+│   │                      # PairMatchResult, PairWonTier, BoardMatchResult
+│   ├── play-types.ts      # calculateLineCount(), expandSelectionToPairs() (multiNumber: P(n,2) ordered pairs,
 │   │                      # multiDigit: perms(front) × perms(back)), validateSelection(),
 │   │                      # getUniquePermutations(), getPermutationCount()
 │   ├── odds.ts            # getProOddsTable(), analyzeProProfitability()
@@ -329,14 +378,20 @@ Routes: draws, config, tenant-config, operations.
 4. **8 hạng giải duy nhất**: 1 PrizeTier enum (khác Max 3D có 2 enums BasicPrizeTier + PlusPrizeTier)
 5. **Giải phụ ĐB chỉ có ở Max 3D Pro**: `PrizeTier.SpecialSub` — 400 triệu
 6. **KHÔNG có combo3/combo6**: Thay bằng multiDigit (hoán vị chữ số)
-7. **MultiNumber**: Chọn 3-20 bộ ba → C(n,2) cặp. Expansion: vòng lặp 2 lớp i < j
+7. **MultiNumber**: Chọn 3-20 bộ ba → **P(n,2) = n×(n-1)** ordered pairs. Expansion: vòng lặp 2 lớp i ≠ j (ordered pairs, KHÔNG phải combinations)
 8. **MultiDigit**: Chọn 3 chữ số đầu + 3 chữ số sau → perms(front) × perms(back) cặp (Cartesian product)
 9. **BoardSelection khác Max 3D**: Có thêm `frontDigits?` và `backDigits?` cho multiDigit mode
 10. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc`, có thể thay đổi bởi staff
 11. **Tiền lưu integer VND**: Không dùng float
 12. **Triplet = string "000"-"999"**: Validate bằng `/^\d{3}$/`
-13. **Duplicate x2**: 2 bộ ba giống nhau → giải thưởng nhân đôi (giống Max 3D Plus)
-14. **Lịch quay T3, T5, T7**: Khác Max 3D (T2, T4, T6) — KHÔNG TRÙNG ngày
-15. **Commission snapshot**: commissionRate snapshot lúc place-bet
-16. **4 boards A-D**: Giống Max 3D
-17. **Settle expand pairs**: `expandSelectionToPairs()` → danh sách TripletPair → match từng pair
+13. **Duplicate ĐB/phụ ĐB = special + specialSub**: KHÔNG phải prize × 2. Chỉ Nhất→Sáu mới dùng × 2
+14. **GỘP GIẢI**: 8 hạng giải KHÔNG loại trừ lẫn nhau — kiểm tra từng giải độc lập, player lĩnh tổng TẤT CẢ giải đạt điều kiện. Dùng bipartite matching (`countDistinctMatches()`) đảm bảo mỗi draw entry chỉ khớp 1 lần
+15. **PairMatchResult có wonTiers[]**: `matchPair()` trả về `PairMatchResult { wonTiers: PairWonTier[], winAmount, matchedTriplets }` — KHÔNG phải 1 giải duy nhất. `settle-entries.ts` tạo 1 lineDoc riêng cho mỗi tier trong wonTiers
+16. **Lịch quay T3, T5, T7**: Khác Max 3D (T2, T4, T6) — KHÔNG TRÙNG ngày
+17. **Commission snapshot**: commissionRate snapshot lúc place-bet
+18. **4 boards A-D**: Giống Max 3D
+19. **Settle expand pairs**: `expandSelectionToPairs()` → danh sách TripletPair → match từng pair
+20. **betCount**: Số lần cược nhân bội per board (≥ `play.minBetCount`, ≤ `play.maxBetCount`). Mặc định 1. Tiền cược board = `lineCount × betCount × unitPrice`. PHÂN BIỆT: `lineCount` = số pairs (cho settle/matching), `betUnitCount` = `Σ(lineCount × betCount)` (cho tài chính)
+21. **betCount trong settle**: `matchPair()` trả per-unit winAmount → settle layer nhân `betCount` vào TỪNG `wonTier.winAmount`. lineDoc.winAmount = `prizeConfig[tier] × betCount`. `buildPayoutTiers()` nhận adjusted results (đã nhân betCount)
+22. **betUnitCount = Σ(board.lineCount × board.betCount)**: Lưu tại `TicketEntryDoc.betUnitCount`. `amount = betUnitCount × unitPrice`. Dùng thay `lineCount` trong aggregate revenue queries
+23. **Backward compat**: `betCount` và `betUnitCount` là trường mới — dùng `?? 1` / `?? lineCount` fallback cho entries cũ

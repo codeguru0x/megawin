@@ -42,7 +42,6 @@ export const MAX3D_PLAY_TYPE_LABELS: Record<PlayType, string> = {
   [PlayType.Straight]: "Thẳng",
   [PlayType.Combo3]: "Tổ Hợp 3",
   [PlayType.Combo6]: "Tổ Hợp 6",
-  [PlayType.QuickPick]: "Chọn nhanh",
 } as const;
 
 /**
@@ -63,9 +62,7 @@ export const MAX3D_MODE_TYPE_LABELS: Record<string, string> = {
   "basic.straight": "Basic Thẳng",
   "basic.combo3": "Basic Tổ Hợp 3",
   "basic.combo6": "Basic Tổ Hợp 6",
-  "basic.quickPick": "Basic Chọn nhanh",
   "plus.straight": "Plus Thẳng",
-  "plus.quickPick": "Plus Chọn nhanh",
 } as const;
 
 /**

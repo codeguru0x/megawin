@@ -5,9 +5,9 @@
  * Đây là bước tiền xử lý trước khi match với kết quả quay.
  *
  * Công thức số lines theo từng loại bao:
- *   - standard / quickPick : 1 line (6 số đã chọn)
- *   - bao5                 : 45 - 5 = 40 lines (hệ thống ghép 40 số còn lại)
- *   - bao N (7-18)         : C(N, 6) lines (mọi tổ hợp 6 số từ N số đã chọn)
+ *   - standard  : 1 line (6 số đã chọn)
+ *   - bao5      : 45 - 5 = 40 lines (hệ thống ghép 40 số còn lại)
+ *   - bao N (7-18): C(N, 6) lines (mọi tổ hợp 6 số từ N số đã chọn)
  */
 
 import { PlayType } from "../entities/enums";
@@ -43,7 +43,7 @@ function* combinations<T>(arr: T[], k: number): Generator<T[]> {
   }
 }
 
-/** Standard / QuickPick: 6 số = 1 line. */
+/** Standard: 6 số = 1 line. */
 function expandStandard(sel: BoardSelection): LineValue[] {
   return [{ main: [...sel.mainNumbers].sort() }];
 }
@@ -96,7 +96,6 @@ function expandBaoN(sel: BoardSelection): LineValue[] {
 export function expandBoardToLines(playType: PlayType, selection: BoardSelection): LineValue[] {
   switch (playType) {
     case PlayType.Standard:
-    case PlayType.QuickPick:
       return expandStandard(selection);
 
     case PlayType.Bao5:

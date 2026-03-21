@@ -3,10 +3,11 @@
  *
  * Max 3D Pro có 4 boards (A-D), mỗi board tạo nhiều cặp 2 bộ ba số.
  *
- * - multiNumber: chọn 3-20 bộ ba số, hệ thống tạo C(n,2) cặp
+ * - multiNumber: chọn 3-20 bộ ba số, hệ thống tạo P(n,2) = n×(n-1) ordered pairs
+ *   (thứ tự quan trọng — Giải ĐB yêu cầu đúng thứ tự, phụ ĐB ngược thứ tự)
  * - multiDigit: chọn 3 chữ số đầu + 3 chữ số sau, hệ thống expand
  *
- * Bảng số cặp cho multiNumber (n bộ ba → C(n,2) cặp):
+ * Bảng số cặp cho multiNumber (n bộ ba → P(n,2) = n×(n-1) ordered pairs):
  *   3→6, 4→12, 5→20, 6→30, 7→42, 8→56, 9→72, 10→90,
  *   11→110, 12→132, 13→156, 14→182, 15→210, 16→240,
  *   17→272, 18→306, 19→342, 20→380
@@ -32,10 +33,16 @@ import type { BoardSelection, Triplet, TripletPair } from "../entities/types";
 export const VALID_BOARD_NOS = ["A", "B", "C", "D"] as const;
 
 /**
- * Tính C(n, 2) = n * (n-1) / 2.
+ * Tính P(n, 2) = n × (n-1) — số hoán vị chập 2 (ordered pairs).
+ *
+ * Max 3D Pro yêu cầu ordered pairs vì Giải ĐB = (first, second) khớp đúng thứ tự,
+ * Giải phụ ĐB = (second, first) khớp ngược thứ tự → (A,B) và (B,A) là 2 cặp khác nhau.
+ *
+ * Ví dụ: 3 bộ ba ["096","389","683"] → P(3,2) = 6 ordered pairs:
+ *   (096,389), (096,683), (389,096), (389,683), (683,096), (683,389)
  */
-function combinations2(n: number): number {
-  return (n * (n - 1)) / 2;
+function permutations2(n: number): number {
+  return n * (n - 1);
 }
 
 /**
@@ -60,27 +67,36 @@ export function getUniquePermutations(digits: number[]): Triplet[] {
  * - 3 khác nhau → 6
  * - 2 giống nhau → 3
  * - 3 giống nhau → 1
+ * Công thức: Số hoán vị của n phần tử có lặp = n! / (n₁! × n₂! × ... × nₖ!)
+ * Ví dụ: 3 chữ số [1,2,3] → 3! / (1! × 1! × 1!) = 6 hoán vị duy nhất.
  */
 export function getPermutationCount(digits: number[]): number {
   const unique = new Set(digits).size;
-  if (unique === 3) return 6;
-  if (unique === 2) return 3;
+  if (unique === 3) {
+    return 6;
+  }
+
+  if (unique === 2) {
+    return 3;
+  }
+
   return 1;
 }
 
 /**
  * Tính số line (cặp hai bộ ba số) cho 1 board.
  *
- * - multiNumber: C(n, 2) cặp
+ * - multiNumber: P(n, 2) = n×(n-1) ordered pairs
+ *   (thứ tự quan trọng — Giải ĐB khớp đúng thứ tự, phụ ĐB ngược thứ tự)
  * - multiDigit: perms(front) × perms(back) cặp
  */
 export function calculateLineCount(
   playMode: PlayMode,
   _playType: PlayType,
-  selection: BoardSelection
+  selection: BoardSelection,
 ): number {
   if (playMode === PlayMode.MultiNumber) {
-    return combinations2(selection.triplets.length);
+    return permutations2(selection.triplets.length);
   }
 
   if (playMode === PlayMode.MultiDigit) {
@@ -98,18 +114,24 @@ export function calculateLineCount(
 /**
  * Expand board selection thành danh sách cặp (pairs).
  *
- * - multiNumber: C(n,2) cặp từ n bộ ba số
- * - multiDigit: tất cả hoán vị front × tất cả hoán vị back
+ * - multiNumber: P(n,2) = n×(n-1) ordered pairs từ n bộ ba số
+ *   Tạo tất cả cặp (i, j) với i ≠ j → mỗi cặp (A,B) và (B,A) là 2 entries khác nhau.
+ *   Ví dụ: ["096","389","683"] → 6 ordered pairs:
+ *     (096,389), (096,683), (389,096), (389,683), (683,096), (683,389)
+ *
+ * - multiDigit: tất cả hoán vị front × tất cả hoán vị back (Cartesian product, tự nhiên ordered)
  */
 export function expandSelectionToPairs(
   playMode: PlayMode,
-  selection: BoardSelection
+  selection: BoardSelection,
 ): TripletPair[] {
   if (playMode === PlayMode.MultiNumber) {
     const triplets = selection.triplets;
     const pairs: TripletPair[] = [];
+    // i ≠ j → ordered pairs: (A,B) và (B,A) đều được tạo
     for (let i = 0; i < triplets.length; i++) {
-      for (let j = i + 1; j < triplets.length; j++) {
+      for (let j = 0; j < triplets.length; j++) {
+        if (j === i) continue;
         pairs.push({ first: triplets[i]!, second: triplets[j]! });
       }
     }
@@ -140,73 +162,40 @@ function isValidTriplet(t: Triplet): boolean {
   return /^\d{3}$/.test(t);
 }
 
-export interface ValidationResult {
-  valid: boolean;
-  errors: string[];
-}
-
 /**
- * Validate selection cho 1 board.
+ * Validate selection cho 1 board. Throw `Error` ngay khi gặp vi phạm.
+ *
+ * Các rule về triplet count / digit count đã được Zod validate ở handler.
+ * Hàm này chỉ kiểm tra các constraint không thể express bằng Zod đơn giản
+ * (ví dụ: triplet format, digit range).
  */
-export function validateSelection(
-  playMode: PlayMode,
-  playType: PlayType,
-  selection: BoardSelection
-): ValidationResult {
-  const errors: string[] = [];
-
+export function validateSelection(playMode: PlayMode, selection: BoardSelection): void {
   if (playMode === PlayMode.MultiNumber) {
-    if (!selection.triplets || !Array.isArray(selection.triplets)) {
-      errors.push("Thiếu danh sách bộ ba số");
-      return { valid: false, errors };
-    }
-
-    if (selection.triplets.length < 3) {
-      errors.push("Cần chọn ít nhất 3 bộ ba số");
-    }
-
-    if (selection.triplets.length > 20) {
-      errors.push("Tối đa 20 bộ ba số");
-    }
-
     for (let i = 0; i < selection.triplets.length; i++) {
       const t = selection.triplets[i]!;
       if (!isValidTriplet(t)) {
-        errors.push(
-          `Bộ ba số ${i + 1} không hợp lệ: ${t} (cần 3 chữ số 000-999)`
-        );
+        throw new Error(`Bộ ba số ${i + 1} không hợp lệ: ${t} (cần 3 chữ số 000-999)`);
       }
     }
   }
 
   if (playMode === PlayMode.MultiDigit) {
-    const frontDigits = selection.frontDigits;
-    const backDigits = selection.backDigits;
+    const { frontDigits, backDigits } = selection;
 
-    if (
-      !frontDigits ||
-      !Array.isArray(frontDigits) ||
-      frontDigits.length !== 3
-    ) {
-      errors.push("Cần chọn đúng 3 chữ số đầu");
-    } else {
+    if (frontDigits) {
       for (const d of frontDigits) {
         if (!Number.isInteger(d) || d < 0 || d > 9) {
-          errors.push(`Chữ số đầu không hợp lệ: ${d} (cần 0-9)`);
+          throw new Error(`Chữ số đầu không hợp lệ: ${d} (cần 0-9)`);
         }
       }
     }
 
-    if (!backDigits || !Array.isArray(backDigits) || backDigits.length !== 3) {
-      errors.push("Cần chọn đúng 3 chữ số sau");
-    } else {
+    if (backDigits) {
       for (const d of backDigits) {
         if (!Number.isInteger(d) || d < 0 || d > 9) {
-          errors.push(`Chữ số sau không hợp lệ: ${d} (cần 0-9)`);
+          throw new Error(`Chữ số sau không hợp lệ: ${d} (cần 0-9)`);
         }
       }
     }
   }
-
-  return { valid: errors.length === 0, errors };
 }

@@ -19,7 +19,7 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { ObjectId } from "mongodb";
 
-const CHUNK_SIZE = 500;
+const BATCH_SIZE = 500;
 const MAX_EXECUTION_MS = 10 * 60 * 1000;
 
 export interface SyncTicketSummariesResult {
@@ -45,7 +45,7 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
     const startTime = Date.now();
 
     while (Date.now() - startTime < MAX_EXECUTION_MS) {
-      const chunk = await this.ticketRepo.getTicketsByDrawIdCursor(drawId, cursor, CHUNK_SIZE);
+      const chunk = await this.ticketRepo.getTicketsByDrawIdCursor(drawId, cursor, BATCH_SIZE);
       if (chunk.length === 0) return { drawId, done: true };
 
       const ticketIds = chunk.map((t) => new ObjectId(t.ticketId));
@@ -68,7 +68,7 @@ export class SyncTicketSummariesUseCase extends InternalUseCase<
       }
 
       cursor = chunk[chunk.length - 1]!.ticketId;
-      if (chunk.length < CHUNK_SIZE) return { drawId, done: true };
+      if (chunk.length < BATCH_SIZE) return { drawId, done: true };
     }
 
     return { drawId, done: false };

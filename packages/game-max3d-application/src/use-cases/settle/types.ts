@@ -24,44 +24,9 @@
  * jackpotOpeningAmount, closingJackpot, hasJackpotWinner.
  */
 
-import type { Max3dPrizeConfig } from "@megawin/game-max3d/entities";
+import type { Max3dDrawResult, Max3dPrizeConfig } from "@megawin/game-max3d/entities";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Primitive shared types
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Kết quả quay Max 3D đã công bố — 20 bộ ba số theo 4 giải.
- *
- * Dùng bởi SettleEntries để match boards vs kết quả, xác định tier thắng.
- * Giữ nguyên thứ tự quay gốc (không sort).
- */
-export interface Max3dDrawResult {
-  /** Giải Đặc biệt: 2 bộ ba số. */
-  special: [string, string];
-  /** Giải Nhất: 4 bộ ba số. */
-  first: [string, string, string, string];
-  /** Giải Nhì: 6 bộ ba số. */
-  second: [string, string, string, string, string, string];
-  /** Giải Ba: 8 bộ ba số. */
-  third: [string, string, string, string, string, string, string, string];
-}
-
-/**
- * Config tài chính cho settle — snapshot từ GlobalConfig (rates).
- *
- * Được tạo bởi PrepareSettle, sử dụng bởi CalculateFinancials.
- * Config snapshot tại thời điểm settle — KHÔNG thay đổi giữa các step.
- *
- * Max 3D không có Jackpot — công ty thu toàn bộ phần còn lại.
- */
-export interface Max3dSettleConfig {
-  /**
-   * Tỷ lệ hoa hồng mặc định cho đại lý (0-1).
-   * Override per tenant qua TenantConfig.
-   */
-  defaultCommissionRate: number;
-}
+export type { Max3dDrawResult };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SettleFinancials – output CalculateFinancials, nested vào SettleContext
@@ -175,26 +140,6 @@ export interface SettleContext {
    *   Plus = 2 bộ ba số, phân loại theo logic matchPlus().
    */
   prizeConfig: Max3dPrizeConfig;
-
-  /**
-   * Cấu hình tài chính settle — snapshot tại thời điểm PrepareSettle.
-   * Gồm defaultCommissionRate (từ GlobalConfig.rates).
-   *
-   * Dùng bởi CalculateFinancials để tính phân bổ doanh thu.
-   */
-  config: Max3dSettleConfig;
-
-  /**
-   * Tổng entries cần settle trong kỳ.
-   * Dùng cho thống kê / logging.
-   */
-  totalEntries: number;
-
-  /**
-   * Tổng lines cần settle trong kỳ.
-   * Dùng bởi CalculateFinancials để ghi stats lên draw.
-   */
-  totalLines: number;
 
   /**
    * Dữ liệu tài chính tổng hợp — output của CalculateFinancials.

@@ -91,7 +91,6 @@ export const MEGA645_SPLIT_ELIGIBLE_TIERS: readonly PrizeTier[] = [
  * | bao14     | 14 số            | C(14,6) = 3,003                     |
  * | bao15     | 15 số            | C(15,6) = 5,005                     |
  * | bao18     | 18 số            | C(18,6) = 18,564                    |
- * | quickPick | máy chọn ngẫu nhiên | 1                                |
  */
 export const PlayType = {
   Standard: "standard",
@@ -106,7 +105,6 @@ export const PlayType = {
   Bao14: "bao14",
   Bao15: "bao15",
   Bao18: "bao18",
-  QuickPick: "quickPick",
 } as const;
 
 export type PlayType = (typeof PlayType)[keyof typeof PlayType];

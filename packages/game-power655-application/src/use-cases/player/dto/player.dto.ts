@@ -138,8 +138,13 @@ export interface PlayerTicketSummary {
     /** Số dòng cược mỗi kỳ quay. */
     linesPerDraw: number;
     /**
+     * Tổng đơn vị cược mỗi kỳ = Σ(expandedLines × betCount).
+     * Backward compat: undefined cho vé cũ → fallback = linesPerDraw.
+     */
+    betUnitsPerDraw?: number;
+    /**
      * Số tiền cược mỗi kỳ quay (VND).
-     * Công thức: unitPrice × linesPerDraw.
+     * Công thức: unitPrice × betUnitsPerDraw (hoặc × linesPerDraw nếu cũ).
      */
     amountPerDraw: number;
     /**
@@ -152,7 +157,7 @@ export interface PlayerTicketSummary {
   boards: Array<{
     /** Mã board (A, B, C, ...). */
     boardNo: string;
-    /** Loại chơi (Standard / Bao5 / Bao7-18 / QuickPick). */
+    /** Loại chơi (Standard / Bao5 / Bao7-18). */
     playType: string;
     /** Các số đã chọn trên board. */
     selection: {
@@ -161,6 +166,11 @@ export interface PlayerTicketSummary {
     };
     /** Số dòng cược sinh ra từ board này. Standard=1, BaoN=C(N,6). */
     lineCount: number;
+    /**
+     * Số lần cược nhân bội (≥ 1).
+     * Backward compat: undefined cho vé cũ (betCount = 1 ngầm định).
+     */
+    betCount?: number;
   }>;
   /** Tiến trình xử lý vé qua các kỳ quay. settledDraws = số kỳ đã xử lý xong (settled + voided). */
   progress: {
@@ -235,12 +245,17 @@ export interface PlayerEntryInfo {
     boards: Array<{
       /** Ký hiệu board ("A".."E"). */
       boardNo: string;
-      /** Kiểu chơi (standard / bao5 / bao7-18 / quickPick). */
+      /** Kiểu chơi (standard / bao5 / bao7-18). */
       playType: string;
       /** Danh sách số chính người chơi đã chọn ("01"-"55"). */
       mainNumbers: string[];
-      /** Số line sau khi expand từ board (1 với standard/quickPick, 50 với bao5, C(N,6) với bao7-18). */
+      /** Số line sau khi expand từ board (1 với standard, 50 với bao5, C(N,6) với bao7-18). */
       expandedLines: number;
+      /**
+       * Số lần cược nhân bội (≥ 1).
+       * Backward compat: undefined cho entries cũ (betCount = 1 ngầm định).
+       */
+      betCount?: number;
     }>;
   };
   /** Kết quả quay (chỉ có khi kỳ đã công bố kết quả). */

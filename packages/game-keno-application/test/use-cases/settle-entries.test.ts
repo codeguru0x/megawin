@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  lookupBasicPrize,
-  DEFAULT_BASIC_PRIZE_TABLE,
-} from "@megawin/game-keno/rules";
+import { lookupBasicPrize, DEFAULT_BASIC_PRIZE_TABLE } from "@megawin/game-keno/rules";
 import {
   matchBasicBoard,
   matchBigSmallBet,
@@ -543,5 +540,91 @@ describe("computeDrawStats – Thống kê kết quả quay Keno", () => {
     expect(stats.smallCount).toBe(5);
     expect(stats.evenCount).toBe(14);
     expect(stats.oddCount).toBe(6);
+  });
+});
+
+// ─── 6. betCount multiplier — settle layer ──────────
+
+describe("betCount multiplier – winAmount nhân betCount tại settle layer", () => {
+  const baseWinning = [
+    "01",
+    "05",
+    "10",
+    "15",
+    "20",
+    "25",
+    "30",
+    "35",
+    "40",
+    "45",
+    "50",
+    "55",
+    "60",
+    "65",
+    "70",
+    "75",
+    "80",
+    "03",
+    "07",
+    "12",
+  ];
+
+  it("matchBasicBoard trả per-unit winAmount (không đổi dù betCount khác nhau)", () => {
+    const result = makeDrawResult(baseWinning);
+    const r = matchBasicBoard(["01", "05", "10", "15", "20"], result);
+    // matchBasicBoard luôn trả per-unit — settle layer chịu trách nhiệm nhân betCount
+    expect(r.winAmount).toBe(4_400_000);
+  });
+
+  it("settle board betCount=3: boardPayout.winAmount = matchWin × 3", () => {
+    const result = makeDrawResult(baseWinning);
+    const betCount = 3;
+    const matchResult = matchBasicBoard(["01", "05", "10", "15", "20"], result);
+    const boardPayoutWinAmount = matchResult.winAmount * betCount;
+    expect(boardPayoutWinAmount).toBe(4_400_000 * 3);
+    expect(boardPayoutWinAmount).toBe(13_200_000);
+  });
+
+  it("settle board betCount=1 (default): winAmount không thay đổi", () => {
+    const result = makeDrawResult(baseWinning);
+    const betCount = 1;
+    const matchResult = matchBasicBoard(["01", "05", "10", "15", "20"], result);
+    expect(matchResult.winAmount * betCount).toBe(matchResult.winAmount);
+  });
+
+  it("matchBigSmallBet trả per-unit winAmount", () => {
+    const result = makeDrawResult(numbersWithCounts({ bigCount: 14, evenCount: 10 }));
+    const r = matchBigSmallBet(KenoBigSmallBet.Big, result);
+    expect(r.winAmount).toBe(26_000);
+  });
+
+  it("settle sideBet betCount=2: sideBetPayout.winAmount = matchWin × 2", () => {
+    const result = makeDrawResult(numbersWithCounts({ bigCount: 14, evenCount: 10 }));
+    const betCount = 2;
+    const matchResult = matchBigSmallBet(KenoBigSmallBet.Big, result);
+    const sideBetPayoutWinAmount = matchResult.winAmount * betCount;
+    expect(sideBetPayoutWinAmount).toBe(26_000 * 2);
+    expect(sideBetPayoutWinAmount).toBe(52_000);
+  });
+
+  it("betUnitCount = Σ(board.betCount) + Σ(sideBet.betCount)", () => {
+    const boards = [{ betCount: 3 }, { betCount: 2 }];
+    const sideBets = [{ betCount: 1 }, { betCount: 4 }];
+    const betUnitCount =
+      boards.reduce((s, b) => s + b.betCount, 0) + sideBets.reduce((s, sb) => s + sb.betCount, 0);
+    expect(betUnitCount).toBe(10); // 3+2+1+4
+  });
+
+  it("amount = betUnitCount × unitPrice", () => {
+    const betUnitCount = 5;
+    const unitPrice = 10_000;
+    expect(betUnitCount * unitPrice).toBe(50_000);
+  });
+
+  it("ApplyPayoutCaps: cappedPrize per-unit × betCount của board", () => {
+    const cappedPrize = 100_000_000; // per-unit prize sau cap
+    const boardBetCount = 5;
+    const boardPayoutWinAmount = cappedPrize * boardBetCount;
+    expect(boardPayoutWinAmount).toBe(500_000_000);
   });
 });

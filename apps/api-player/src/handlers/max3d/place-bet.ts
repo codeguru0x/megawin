@@ -3,13 +3,16 @@
  * Player đặt cược Max 3D — authed qua Cognito JWT Bearer token.
  *
  * Max 3D nhận bộ ba số (triplets) dạng string "000"-"999".
- * Mỗi board có playMode (basic/plus) và playType (straight/combo3/combo6).
- * QuickPick không được chấp nhận từ client — server không hỗ trợ tự sinh số.
+ * Basic mode: straight/combo3/combo6 — client chọn đúng 1 bộ ba số.
+ * Plus mode: straight only — client chọn đúng 2 bộ ba số.
+ *
+ * Zod validate đầy đủ tại đây → Use Case không cần validate lại các rule đã qua.
  */
 
 import { withPlayerAuth } from "@megawin/auth";
 
 import { PlaceBetUseCase } from "@megawin/game-max3d-application/use-cases/place-bet";
+import type { PlaceBetBoardInput } from "@megawin/game-max3d-application/use-cases/place-bet";
 
 import { TicketChannel } from "@megawin/game-core/entities";
 import z from "zod";
@@ -19,47 +22,37 @@ import {
   VALID_BOARD_NOS,
 } from "@megawin/game-max3d/schemas";
 import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
+import { isUnique, isUniqueBy } from "@megawin/shared/utils/array";
 
-// ─── Composite schemas ───
+// ─── Board schemas (discriminated by playMode) ───
 
-export const max3dBoardSchema = z
-  .object({
-    boardNo: z.enum(VALID_BOARD_NOS),
-    playMode: z.enum([PlayMode.Basic, PlayMode.Plus]),
-    playType: z.enum([PlayType.Straight, PlayType.Combo3, PlayType.Combo6]),
-    triplets: z.array(max3dTripletSchema).min(1).max(2),
-  })
-  .superRefine((board, ctx) => {
-    const { playMode, playType, triplets } = board;
+/**
+ * Basic mode: straight/combo3/combo6 — client chọn đúng 1 bộ ba số.
+ */
+const max3dBasicBoardSchema = z.object({
+  boardNo: z.enum(VALID_BOARD_NOS),
+  playMode: z.literal(PlayMode.Basic),
+  playType: z.enum([PlayType.Straight, PlayType.Combo3, PlayType.Combo6]),
+  triplets: z.array(max3dTripletSchema).length(1),
+  betCount: z.number().int().min(1).default(1),
+});
 
-    if (playMode === PlayMode.Basic) {
-      if (triplets.length !== 1) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Max 3D Cơ Bản cần chọn đúng 1 bộ ba số.",
-          path: ["triplets"],
-        });
-      }
-    }
+/**
+ * Plus mode: straight only — client chọn đúng 2 bộ ba số.
+ * combo3/combo6 không hỗ trợ cho Plus mode.
+ */
+const max3dPlusBoardSchema = z.object({
+  boardNo: z.enum(VALID_BOARD_NOS),
+  playMode: z.literal(PlayMode.Plus),
+  playType: z.literal(PlayType.Straight),
+  triplets: z.array(max3dTripletSchema).length(2),
+  betCount: z.number().int().min(1).default(1),
+});
 
-    if (playMode === PlayMode.Plus) {
-      if (triplets.length !== 2) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Max 3D+ cần chọn đúng 2 bộ ba số.",
-          path: ["triplets"],
-        });
-      }
-
-      if (playType !== PlayType.Straight) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Max 3D+ chỉ hỗ trợ kiểu chơi Straight.",
-          path: ["playType"],
-        });
-      }
-    }
-  });
+export const max3dBoardSchema = z.discriminatedUnion("playMode", [
+  max3dBasicBoardSchema,
+  max3dPlusBoardSchema,
+]);
 
 // ─── Place bet body schema ───
 
@@ -68,14 +61,12 @@ export const max3dPlaceBetBodySchema = z.object({
     .array(max3dDrawIdSchema)
     .min(1)
     .max(6)
-    .refine((ids) => new Set(ids).size === ids.length, {
-      message: "Các drawId không được trùng lặp.",
-    }),
+    .refine(isUnique, { message: "Các drawId không được trùng lặp." }),
   boards: z
     .array(max3dBoardSchema)
     .min(1)
     .max(4)
-    .refine((boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length, {
+    .refine((boards) => isUniqueBy(boards, (b) => b.boardNo), {
       message: "Các board không được trùng boardNo.",
     }),
 });
@@ -92,13 +83,12 @@ export const handler = withPlayerAuth(
     const { drawIds, boards: rawBoards } = event.schema.body;
     const ipAddress = event.requestContext.http.sourceIp;
 
-    const boards = rawBoards.map((b: Max3dBoard) => ({
+    const boards: PlaceBetBoardInput[] = rawBoards.map((b: Max3dBoard) => ({
       boardNo: b.boardNo,
       playMode: b.playMode,
       playType: b.playType,
-      selection: {
-        triplets: [...b.triplets],
-      },
+      selection: { triplets: b.triplets },
+      betCount: b.betCount,
     }));
 
     return useCase.run({

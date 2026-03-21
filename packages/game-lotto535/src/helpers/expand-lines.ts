@@ -33,7 +33,7 @@ function* combinations<T>(arr: T[], k: number): Generator<T[]> {
   }
 }
 
-/** Standard / QuickPick: 5 chính + 1 đặc biệt = 1 line. */
+/** Standard: 5 chính + 1 đặc biệt = 1 line. */
 function expandStandard(sel: BoardSelection): LineValue[] {
   return [
     {
@@ -101,7 +101,6 @@ function expandSpecialCover(sel: BoardSelection): LineValue[] {
 export function expandBoardToLines(playType: PlayType, selection: BoardSelection): LineValue[] {
   switch (playType) {
     case PlayType.Standard:
-    case PlayType.QuickPick:
       return expandStandard(selection);
 
     case PlayType.MainCover4:

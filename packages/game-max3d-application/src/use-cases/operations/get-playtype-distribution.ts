@@ -10,9 +10,9 @@ import type {
 /**
  * Lấy phân bổ cược theo (playMode, playType) cho dashboard vận hành Max 3D.
  *
- * Max 3D có 2 playMode × 4 playType:
- *   - basic: straight, combo3, combo6, quickPick
- *   - plus: straight, quickPick (không có combo)
+ * Max 3D có 2 playMode × 3 playType:
+ *   - basic: straight, combo3, combo6
+ *   - plus: straight (không có combo)
  *
  * Group by (playMode, playType) → boardCount, lineCount, entryCount, revenue.
  */

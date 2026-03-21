@@ -37,21 +37,19 @@ export interface TicketPricing {
   /** Mệnh giá mỗi lần tham gia dự thưởng (VND). Keno = 10.000. */
   unitPrice: number;
   /**
-   * Số lần tham gia dự thưởng mỗi kỳ.
-   * = boards.length + sideBets.length.
-   * Ví dụ: 2 boards + 1 side bet → betsPerDraw = 3.
+   * Số selections mỗi kỳ = boards.length + sideBets.length.
+   * Đếm số bets logic (không nhân betCount).
    */
-  betsPerDraw: number;
-  /** Tiền cược mỗi kỳ = unitPrice × betsPerDraw (VND). */
+  selectionsPerDraw: number;
+  /**
+   * Tổng đơn vị cược mỗi kỳ = Σ(board.betCount) + Σ(sideBet.betCount).
+   * Dùng để tính tiền: amountPerDraw = betUnitsPerDraw × unitPrice.
+   */
+  betUnitsPerDraw: number;
+  /** Tiền cược mỗi kỳ = betUnitsPerDraw × unitPrice (VND). */
   amountPerDraw: number;
   /** Tổng tiền cược toàn bộ kỳ = amountPerDraw × drawPlan.drawCount (VND). */
   totalAmount: number;
-}
-
-/** Thông tin đại lý snapshot tại thời điểm mua vé. */
-export interface TicketTenant {
-  /** Tỷ lệ hoa hồng đại lý áp dụng cho vé này. Ví dụ: 0.20 = 20%. Snapshot lúc place-bet, không đổi khi config thay đổi sau. */
-  commissionRate: number;
 }
 
 /** Tiến trình xử lý kỳ quay. Cập nhật bởi SyncTicketSummaries sau mỗi settle/void. */
@@ -107,6 +105,8 @@ export interface BasicBoard {
   playType: KenoPlayType;
   /** Danh sách số đã chọn ("01"-"80"), unique, sorted tăng dần. */
   numbers: string[];
+  /** Số lần cược nhân bội cho board (≥ minBetCount). Player chọn khi đặt cược. */
+  betCount: number;
 }
 
 // ─────────────────────────────────────────────
@@ -119,6 +119,8 @@ export interface SideBet {
   playType: KenoSideBetPlayType;
   /** Lựa chọn cụ thể: "big"/"small"/"bigSmallDraw" hoặc "even"/"odd"/"evenOddDraw"/... */
   bet: KenoBigSmallBet | KenoEvenOddBet;
+  /** Số lần cược nhân bội cho side bet (≥ minBetCount). Player chọn khi đặt cược. */
+  betCount: number;
 }
 
 // ─────────────────────────────────────────────
@@ -161,10 +163,6 @@ export interface TicketDoc {
   // ───── Pricing ─────
 
   pricing: TicketPricing;
-
-  // ───── Tenant ─────
-
-  tenant: TicketTenant;
 
   // ───── Boards cơ bản (Panel A/B) ─────
 

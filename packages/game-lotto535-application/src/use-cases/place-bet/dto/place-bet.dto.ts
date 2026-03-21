@@ -17,6 +17,11 @@ export interface PlaceBetBoardInput {
    * - specialNumbers: 1+ số đặc biệt (1-12), unique.
    */
   selection: BoardSelection;
+  /**
+   * Số lần cược nhân bội (≥ minBetCount). Optional — default 1 khi không truyền.
+   * Mỗi lần tham gia = 1 × unitPrice. betCount=3 → tiền cược × 3, thưởng × 3.
+   */
+  betCount?: number;
 }
 
 export interface PlaceBetInput {
@@ -67,16 +72,19 @@ export interface PlaceBetOutput {
    * Chi tiết giá vé.
    *
    * Công thức tính:
-   * - linesPerDraw = Σ(board.lineCount) — tổng lines từ tất cả boards
-   * - amountPerDraw = linesPerDraw × unitPrice — giá cho 1 kỳ
+   * - linesPerDraw = Σ(board.expandedLines) — tổng lines từ tất cả boards
+   * - betUnitsPerDraw = Σ(board.expandedLines × board.betCount) — tổng đơn vị cược
+   * - amountPerDraw = betUnitsPerDraw × unitPrice — giá cho 1 kỳ
    * - totalAmount = amountPerDraw × drawCount — tổng tiền toàn vé
    */
   pricing: {
     /** Đơn giá 1 line cho 1 kỳ (VND) — từ PlayRules.unitPrice. */
     unitPrice: number;
-    /** Tổng số lines mỗi kỳ = Σ(board.lineCount). */
+    /** Tổng số lines mỗi kỳ = Σ(board.expandedLines). */
     linesPerDraw: number;
-    /** Giá mỗi kỳ (VND) = linesPerDraw × unitPrice. */
+    /** Tổng đơn vị cược mỗi kỳ = Σ(board.expandedLines × betCount). */
+    betUnitsPerDraw: number;
+    /** Giá mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
     /** Tổng tiền toàn vé (VND) = amountPerDraw × drawCount. */
     totalAmount: number;

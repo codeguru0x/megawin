@@ -17,7 +17,8 @@ Lotto 5/35 là game xổ số tự chọn của Vietlott.
 
 - **Lịch quay**: 2 kỳ/ngày (13h00 kỳ 1, 21h00 kỳ 2), mỗi ngày Thứ Hai - Chủ Nhật
 - **Phát hành**: 06h00 - 22h00, vé đóng bán trước giờ quay 30 phút (cấu hình)
-- **Giá vé**: 10.000 VND / bộ số (line) cho 1 kỳ
+- **Giá vé**: 10.000 VND / 1 lần tham gia dự thưởng (1 line × 1 betCount)
+- **betCount**: Số lần tham gia dự thưởng per board (player chọn, mặc định 1, tối đa 10)
 - **Chọn số**: 5 số chính từ tập {01-35} + 1 số đặc biệt từ tập {01-12}
 - **Kỳ liên tiếp**: Mua 1 vé cho tối đa 6 kỳ liên tiếp
 - **Board**: 1 vé có tối đa 5 board (A-E), mỗi board là 1 lựa chọn độc lập
@@ -52,10 +53,12 @@ Mỗi line chỉ trúng hạng **CAO NHẤT** phù hợp. Duyệt từ Jackpot x
 
 ## 3. Các kiểu chơi (Play Types)
 
+**Giá cơ bản**: 10.000 VND × expandedLines × betCount (mỗi kỳ)
+
 ### 3.1 Standard (Chơi cơ bản)
 - Chọn: 5 số chính + 1 số đặc biệt
 - Lines: 1
-- Giá: 10.000 VND/kỳ
+- Giá: 10.000 × betCount VND/kỳ (default betCount=1 → 10.000 VND/kỳ)
 
 ### 3.2 MainCover4 (Bao 4 số chính)
 - Chọn: 4 số chính + 1 số đặc biệt
@@ -104,12 +107,6 @@ Mỗi line chỉ trúng hạng **CAO NHẤT** phù hợp. Duyệt từ Jackpot x
 | 10 | 10 | 100.000 |
 | 11 | 11 | 110.000 |
 | 12 | 12 | 120.000 |
-
-### 3.5 QuickPick (Máy tự chọn)
-- Hệ thống chọn ngẫu nhiên 5 chính + 1 ĐB
-- Lines: 1
-- Giá: 10.000 VND/kỳ
-- Map sang `standard` sau khi sinh số
 
 ---
 
@@ -418,8 +415,15 @@ src/
 4. **Lines tạo khi settle**: Không materialize lines trước, chỉ expand khi settle
 5. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc.defaultPrizes`, có thể thay đổi bởi staff
 6. **Entry = đơn vị settle**: 1 entry = 1 ticket × 1 draw, settle batch theo drawId
-6. **Commission snapshot**: commissionRate snapshot lúc place-bet, không thay đổi khi config update sau
-7. **Financial date ≠ draw date**: Ngày tài chính tính từ 11h sáng → 11h sáng hôm sau
-8. **Split cycle chỉ kỳ 21h**: Chia giải Jackpot CHỈ xảy ra ở kỳ Evening (drawNo = 2)
-9. **Consolation không tham gia split**: Giải Khuyến Khích KHÔNG nhận bonus từ chia Jackpot
-10. **Mỗi line trúng hạng cao nhất**: Duyệt rules từ Jackpot xuống Consolation, lấy tier đầu tiên thỏa mãn
+7. **Commission snapshot**: commissionRate snapshot lúc place-bet, không thay đổi khi config update sau
+8. **Financial date ≠ draw date**: Ngày tài chính tính từ 11h sáng → 11h sáng hôm sau
+9. **Split cycle chỉ kỳ 21h**: Chia giải Jackpot CHỈ xảy ra ở kỳ Evening (drawNo = 2)
+10. **Consolation không tham gia split**: Giải Khuyến Khích KHÔNG nhận bonus từ chia Jackpot
+11. **Mỗi line trúng hạng cao nhất**: Duyệt rules từ Jackpot xuống Consolation, lấy tier đầu tiên thỏa mãn
+12. **Validation tại Zod handler**: boardNo, uniqueness, số lượng số theo play type, range "01"-"35"/"01"-"12" đã validate đầy đủ ở API handler. Use case chỉ cần check tenant + draw trạng thái (DB-dependent).
+13. **betCount per board**: Player chọn betCount (minBetCount ≤ betCount ≤ maxBetCount). Giá vé = expandedLines × betCount × unitPrice.
+14. **Tiền thưởng nhân betCount**: Theo luật Vietlott "giá trị lĩnh thưởng = số lần tham gia dự thưởng × giá trị giải". `winAmount = unitWinAmount × betCount` tại settle.
+15. **Jackpot chia theo tỷ lệ betCount**: "Giải Độc Đắc chia đều theo tỷ lệ giá trị tham gia dự thưởng" → `jackpotPerUnit = floor(totalPool / totalBetUnits)`, mỗi winner nhận `jackpotPerUnit × betCount`.
+16. **Split bonus cũng theo betCount**: `bonusPerUnit = pool / totalBetUnits` per tier, mỗi winner nhận `bonusPerUnit × hitCount × betCount`.
+17. **betUnitCount = Σ(expandedLines × betCount)**: Field này trên entry dùng để tính amount, KHÔNG phải lineCount (số lines).
+18. **Backward compat**: Data cũ không có `betCount` → fallback = 1. `betUnitCount` chưa có → fallback = `lineCount`. `betUnitsPerDraw` chưa có → fallback = `linesPerDraw`.

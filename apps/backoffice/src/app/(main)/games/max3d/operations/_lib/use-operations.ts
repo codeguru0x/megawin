@@ -14,7 +14,11 @@ import type {
   GetTopCombosOutput,
   GetWinningEntriesOutput,
 } from "@megawin/game-max3d-application/use-cases/operations";
-import type { GetDrawDetailOutput } from "@megawin/game-max3d-application/use-cases/draws";
+import type {
+  GetDrawDetailOutput,
+  PreviewDrawsOutput,
+  CreateDrawsOutput,
+} from "@megawin/game-max3d-application/use-cases/draws";
 
 export type {
   OpsSummaryOutput,
@@ -47,6 +51,47 @@ export interface OpsQueryParams {
 }
 
 const BASE = "/max3d/operations";
+
+// ─────────────────────────────────────────────
+// Preview & Create Draws — quản lý kỳ quay
+// ─────────────────────────────────────────────
+
+/**
+ * Preview danh sách kỳ sẽ tạo (gợi ý theo lịch T2/T4/T6 lúc 18:00).
+ * count=0 → disabled (không gọi API).
+ */
+export function usePreviewDraws(count: number) {
+  return useQuery({
+    queryKey: max3dKeys.previewDraws(count),
+    queryFn: () =>
+      apiClient.get<PreviewDrawsOutput>("/max3d/draws/preview", {
+        params: { count },
+      }),
+    enabled: count > 0,
+    staleTime: 30_000,
+  });
+}
+
+/**
+ * Tạo nhiều kỳ quay Max 3D liên tiếp.
+ * Backend tự tính slot theo lịch T2/T4/T6, mỗi ngày 1 kỳ.
+ * Invalidate toàn bộ cache max3d sau khi tạo thành công.
+ */
+export function useCreateDraw() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { count: number }) =>
+      apiClient.post<CreateDrawsOutput>("/max3d/draws", data),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: max3dKeys.all });
+      toast.success(`Đã tạo ${result.draws.length} kỳ quay Max 3D.`);
+    },
+    onError: (err) => {
+      const { title, description } = formatErrorToast(err, "Tạo kỳ thất bại.");
+      toast.error(title, { description });
+    },
+  });
+}
 
 // ─────────────────────────────────────────────
 // Draw Selector — danh sách kỳ quay cho dropdown

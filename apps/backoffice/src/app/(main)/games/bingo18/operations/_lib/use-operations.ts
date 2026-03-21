@@ -284,11 +284,17 @@ export function usePreviewDraws(count: number) {
 export function useCreateDraw() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { drawDate: string; count: number }) =>
-      apiClient.post<{ draws: Array<{ drawNo: number; drawTime: string; status: string }> }>(
-        "/bingo18/draws",
-        data,
-      ),
+    mutationFn: (data: {
+      draws: Array<{
+        drawDate: string;
+        drawNo: number;
+        drawTime: string;
+        openNow: boolean;
+      }>;
+    }) =>
+      apiClient.post<{
+        draws: Array<{ drawId: string; drawNo: number; drawTime: string; status: string }>;
+      }>("/bingo18/draws", data),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: bingo18Keys.all });
       toast.success(`Đã tạo ${res.draws.length} kỳ quay mới.`);

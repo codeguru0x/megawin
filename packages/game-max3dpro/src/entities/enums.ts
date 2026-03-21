@@ -36,7 +36,7 @@ export const Max3dproCollections = {
  * Cả 2 mode đều tạo ra các cặp (pair) hai bộ ba số để so khớp.
  */
 export const PlayMode = {
-  /** Chơi bao nhiều bộ số: chọn 3-20 bộ ba số, hệ thống tạo C(n,2) cặp. */
+  /** Chơi bao nhiều bộ số: chọn 3-20 bộ ba số, hệ thống tạo P(n,2) = n×(n-1) ordered pairs. */
   MultiNumber: "multiNumber",
   /** Chơi bao bộ ba số: chọn 3 chữ số đầu + 3 chữ số sau, hệ thống expand. */
   MultiDigit: "multiDigit",
@@ -56,11 +56,9 @@ export const PLAY_MODE_VALUES = Object.values(PlayMode);
  * | Type        | Mô tả                                        |
  * |-------------|----------------------------------------------|
  * | straight    | So khớp chính xác thứ tự                     |
- * | quickPick   | Máy chọn ngẫu nhiên                          |
  */
 export const PlayType = {
   Straight: "straight",
-  QuickPick: "quickPick",
 } as const;
 
 export type PlayType = (typeof PlayType)[keyof typeof PlayType];
@@ -125,3 +123,41 @@ export const RefundStatus = {
 } as const;
 
 export type RefundStatus = (typeof RefundStatus)[keyof typeof RefundStatus];
+
+// ─────────────────────────────────────────────
+// Basic Tier – Nhóm kết quả quay (ĐB / Nhất / Nhì / Ba)
+// ─────────────────────────────────────────────
+
+/**
+ * Các nhóm kết quả quay thưởng cơ bản (4 nhóm tương ứng 4 lần quay).
+ *
+ * Dùng để phân loại 20 bộ ba số kết quả quay vào 4 nhóm:
+ * - `special`: 2 bộ ba Giải Đặc Biệt
+ * - `first`: 4 bộ ba Giải Nhất
+ * - `second`: 6 bộ ba Giải Nhì
+ * - `third`: 8 bộ ba Giải Ba
+ *
+ * Khác với `PrizeTier` (8 hạng giải thưởng), `BasicTier` chỉ đại diện cho
+ * 4 nhóm kết quả quay — dùng trong `flattenDrawResult()`, `findTierInResult()`.
+ */
+export const BasicTier = {
+  Special: "special",
+  First: "first",
+  Second: "second",
+  Third: "third",
+} as const;
+
+export type BasicTier = (typeof BasicTier)[keyof typeof BasicTier];
+
+/**
+ * Thứ tự ưu tiên hạng giải cơ bản (ĐB > Nhất > Nhì > Ba).
+ *
+ * Khai báo module-level để tránh khởi tạo lại mỗi lần gọi match functions.
+ * Settle loop gọi hàng trăm nghìn lần — tiết kiệm allocation.
+ */
+export const BASIC_TIER_PRIORITY: readonly BasicTier[] = [
+  BasicTier.Special,
+  BasicTier.First,
+  BasicTier.Second,
+  BasicTier.Third,
+] as const;

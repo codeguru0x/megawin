@@ -13,7 +13,7 @@
  * SETTLE FLOW CHI TIẾT (bottom-up, per entry):
  * ────────────────────────────────────────────────
  *   1. expandAllBoards(entry.entrySummary.boards) → lines[]
- *      - Standard/QuickPick: 1 line = [5 main, 1 special]
+ *      - Standard: 1 line = [5 main, 1 special]
  *      - MainCover4: chọn 4 số + 31 số còn lại → 31 lines
  *      - MainCover(6-15): C(N,5) tổ hợp chập 5 → nhiều lines
  *      - SpecialCover: 5 main × K special → K lines
@@ -130,14 +130,23 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         // Entry đã chứa đầy đủ boards snapshot → không cần load ticket
         const boards = toBoardsForExpand(entry.entrySummary.boards);
 
+        // Build betCountByBoard map: boardNo → betCount (từ snapshot)
+        // Dùng để nhân vào winAmount của từng line doc khi settle.
+        const betCountByBoard = new Map<string, number>();
+        for (const b of entry.entrySummary.boards) {
+          betCountByBoard.set(b.boardNo, b.betCount ?? 1);
+        }
+
         // ── Step 1-2: Expand boards → lines, match với kết quả quay ──
         const lines = expandAllBoards(boards);
         const matchResult = matchLines(lines, drawResult);
 
         // ── Step 3: Build line docs với matchResult + ownership info từ entry ──
+        // winAmount nhân betCount: 1 lần tham gia dự thưởng = unitAmount, betCount lần = unitAmount × betCount.
         const lineDocs: Array<Omit<TicketLineDoc, "_id">> = lines.map((line, i) => {
           const perLine = matchResult.perLineResults[i]!;
           const unitAmount = perLine.tier != null ? (prizeAmounts[perLine.tier] ?? 0) : 0;
+          const betCount = betCountByBoard.get(line.boardNo) ?? 1;
 
           return {
             tenantId: entry.tenantId,
@@ -151,12 +160,14 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             lineIndex: line.lineIndex,
             main: line.main,
             special: line.special,
+            betCount,
             matchResult: {
               mainMatchCount: perLine.mainMatchCount,
               specialMatched: perLine.specialMatched,
               tier: perLine.tier,
               // Jackpot: winAmount = 0 tạm thời, sẽ được patch ở PatchJackpotPrize (step 4a)
-              winAmount: perLine.tier === PrizeTier.Jackpot ? 0 : unitAmount,
+              // Giải cố định: winAmount = unitAmount × betCount (luật Vietlott: nhân số lần tham gia dự thưởng)
+              winAmount: perLine.tier === PrizeTier.Jackpot ? 0 : unitAmount * betCount,
             },
             createdAt: now,
           };
@@ -167,9 +178,10 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         // lines đã có trong DB, entries vẫn ở "scheduled" → retry safe.
         await this.lineRepo.upsertLines(lineDocs);
 
-        // ── Step 5: Build payout tiers, tính tổng tiền thắng ──
-        // Jackpot: amount = 0, chỉ ghi nhận hitCount (patch tiền ở PatchJackpotPrize — step 4a)
-        const payoutTiers = buildPayoutTiers(matchResult.tierCounts, prizeAmounts);
+        // ── Step 5: Build payout tiers từ lineDocs đã nhân betCount ──
+        // Multi-board ticket có boards betCount khác nhau → không thể dùng flat tierCounts.
+        // Aggregate từ lineDocs để có tổng amount đúng (đã nhân betCount per line).
+        const payoutTiers = buildPayoutTiersFromLines(lineDocs, prizeAmounts);
         const winAmount = payoutTiers.reduce((sum, t) => sum + t.amount, 0);
         const hasJackpotHit = matchResult.tierCounts.has(PrizeTier.Jackpot);
         const hasWin = winAmount > 0 || hasJackpotHit;
@@ -224,41 +236,63 @@ function toBoardsForExpand(snapshots: EntryBoardSnapshot[]): Board[] {
       specialNumbers: s.specialNumbers,
     },
     derived: { expandedLines: s.expandedLines },
+    betCount: s.betCount ?? 1,
   }));
 }
 
 /**
- * Chuyển tierCounts (Map<PrizeTier, hitCount>) → mảng payout tier objects.
+ * Build payout tiers từ line docs đã có winAmount (đã nhân betCount).
  *
- * - Skip tier có hitCount = 0
- * - Jackpot: ghi nhận hitCount nhưng amount = 0
- *   (tiền JP patch ở PatchJackpotPrize — step 4a)
- * - Giải cố định: amount = unitAmount × hitCount
+ * Multi-board ticket: board A betCount=1, board B betCount=3 → mỗi line có betCount khác nhau,
+ * không thể dùng flat tierCounts × betCount.
+ * Aggregate: group by tier → sum winAmount → derive hitCount + unitAmount.
+ *
+ * LƯU Ý: hitCount = số LINES trúng (không nhân betCount).
+ *         amount = tổng thưởng đã nhân betCount (từ lineDocs).
  */
-function buildPayoutTiers(
-  tierCounts: Map<string, number>,
+function buildPayoutTiersFromLines(
+  lineDocs: Array<Omit<TicketLineDoc, "_id">>,
   prizeAmounts: Record<string, number>,
 ): EntryPayoutTier[] {
+  const tierMap = new Map<
+    string,
+    { hitCount: number; betUnitCount: number; totalAmount: number }
+  >();
+
+  for (const line of lineDocs) {
+    const { tier, winAmount } = line.matchResult;
+    if (tier == null) continue;
+
+    const existing = tierMap.get(tier) ?? { hitCount: 0, betUnitCount: 0, totalAmount: 0 };
+    existing.hitCount += 1;
+    existing.betUnitCount += line.betCount ?? 1;
+    existing.totalAmount += winAmount;
+    tierMap.set(tier, existing);
+  }
+
   const tiers: EntryPayoutTier[] = [];
-
-  for (const [tier, hitCount] of tierCounts) {
-    if (hitCount === 0) continue;
-
-    // Jackpot: ghi nhận hitCount, amount = 0 (patch ở PatchJackpotPrize — step 4a)
+  for (const [tier, data] of tierMap) {
     if (tier === PrizeTier.Jackpot) {
+      // Jackpot: amount = 0, patch sau ở PatchJackpotPrize (step 4a)
       tiers.push({
         tier: tier as PrizeTier,
-        hitCount,
+        hitCount: data.hitCount,
+        betUnitCount: data.betUnitCount,
         unitAmount: 0,
         amount: 0,
         isSplitBonus: false,
       });
-      continue;
+    } else {
+      const unitAmount = prizeAmounts[tier] ?? 0;
+      tiers.push({
+        tier: tier as PrizeTier,
+        hitCount: data.hitCount,
+        betUnitCount: data.betUnitCount,
+        unitAmount,
+        // amount đã nhân betCount từ lineDocs (tổng winAmount của tier này)
+        amount: data.totalAmount,
+      });
     }
-
-    // Giải cố định: lấy unitAmount từ prizeAmounts config
-    const unitAmount = prizeAmounts[tier] ?? 0;
-    tiers.push({ tier: tier as PrizeTier, hitCount, unitAmount, amount: unitAmount * hitCount });
   }
 
   return tiers;

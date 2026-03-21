@@ -33,7 +33,7 @@ export interface TopComboItem {
   /**
    * Số đặc biệt của combo.
    * - Standard/SpecialCover: có 1 số đặc biệt
-   * - MainCover/MainCover4/QuickPick: không có (mảng rỗng)
+   * - MainCover/MainCover4: không có (mảng rỗng)
    */
   specialNumbers: string[];
   /** Số entries chứa combo này (= số lần được chọn). */

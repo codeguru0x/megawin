@@ -19,7 +19,8 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
     },
     pricing: {
       unitPrice: ticket.pricing.unitPrice,
-      betsPerDraw: ticket.pricing.betsPerDraw,
+      selectionsPerDraw: ticket.pricing.selectionsPerDraw,
+      betUnitsPerDraw: ticket.pricing.betUnitsPerDraw,
       amountPerDraw: ticket.pricing.amountPerDraw,
       totalAmount: ticket.pricing.totalAmount,
     },
@@ -27,10 +28,12 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
       boardNo: b.boardNo,
       playType: b.playType,
       numbers: b.numbers,
+      betCount: b.betCount,
     })),
     sideBets: ticket.sideBets.map((s) => ({
       playType: s.playType,
       bet: s.bet,
+      betCount: s.betCount,
     })),
     progress: {
       totalDraws: ticket.progress.totalDraws,

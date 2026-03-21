@@ -3,6 +3,7 @@ import {
   AnyBulkWriteOperation,
   BulkWriteOptions,
   BulkWriteResult,
+  ClientSession,
   Collection,
   CountOptions,
   Db,
@@ -19,6 +20,7 @@ import {
   ObjectId,
   OptionalId,
   Sort,
+  TransactionOptions,
   UpdateFilter,
   UpdateOptions,
   UpdateResult,
@@ -80,8 +82,7 @@ export abstract class MongoRepository<
     this._clientOptions = clientOptions;
 
     // Nếu không có mapper thì mặc định dùng mapper hết từ mongodb collection sang entity
-    this._dataMapper =
-      dataMapper ?? new DefaultMongoMapper<Document, TEntity>();
+    this._dataMapper = dataMapper ?? new DefaultMongoMapper<Document, TEntity>();
   }
 
   /**
@@ -151,10 +152,7 @@ export abstract class MongoRepository<
    * @param options
    * @returns
    */
-  public async findOneById(
-    id: string,
-    options?: FindOptions
-  ): Promise<TEntity | null> {
+  public async findOneById(id: string, options?: FindOptions): Promise<TEntity | null> {
     if (!ObjectId.isValid(id)) {
       throw new Error("Invalid id");
     }
@@ -163,7 +161,7 @@ export abstract class MongoRepository<
       {
         _id: new ObjectId(id),
       },
-      options
+      options,
     );
   }
 
@@ -173,10 +171,7 @@ export abstract class MongoRepository<
    * @param options - Options query
    * @returns - One document found as document or null
    */
-  public async findOneByIdAsDocument(
-    id: string,
-    options?: FindOptions
-  ): Promise<Document | null> {
+  public async findOneByIdAsDocument(id: string, options?: FindOptions): Promise<Document | null> {
     if (!ObjectId.isValid(id)) {
       throw new Error("Invalid id");
     }
@@ -190,10 +185,7 @@ export abstract class MongoRepository<
    * @param options - Options query
    * @returns - One document found or null
    */
-  public async findOne(
-    filter: Filter<Document>,
-    options?: FindOptions
-  ): Promise<TEntity | null> {
+  public async findOne(filter: Filter<Document>, options?: FindOptions): Promise<TEntity | null> {
     const doc = await this.findOneAsDocument(filter, options);
     return doc != null ? this._dataMapper.mapOne(doc) : null;
   }
@@ -206,14 +198,11 @@ export abstract class MongoRepository<
    */
   public async findOneAsDocument(
     filter: Filter<Document>,
-    options?: FindOptions
+    options?: FindOptions,
   ): Promise<Document | null> {
     await this.initBeforeUse();
 
-    const [doc] = await this._collection
-      .find(filter, options)
-      .limit(1)
-      .toArray();
+    const [doc] = await this._collection.find(filter, options).limit(1).toArray();
 
     return doc ?? null;
   }
@@ -223,10 +212,7 @@ export abstract class MongoRepository<
    * @param options
    * @returns
    */
-  public async findMany(
-    filter: Filter<Document>,
-    options?: FindOptions
-  ): Promise<TEntity[]> {
+  public async findMany(filter: Filter<Document>, options?: FindOptions): Promise<TEntity[]> {
     const docs = await this.findManyAsDocuments(filter, options);
 
     return this._dataMapper.map(docs) ?? [];
@@ -240,16 +226,14 @@ export abstract class MongoRepository<
    */
   public async findManyAsDocuments(
     filter: Filter<Document>,
-    options?: FindOptions
+    options?: FindOptions,
   ): Promise<Document[]> {
     await this.initBeforeUse();
 
     // Nếu không có limit thì mặc định lấy tối đa 500 bản ghi
     const limit = options?.limit ?? Constants.HardLimit.MongoDBLimit;
 
-    return await this._collection
-      .find(filter, { ...(options ?? {}), limit })
-      .toArray();
+    return await this._collection.find(filter, { ...(options ?? {}), limit }).toArray();
   }
 
   /**
@@ -268,11 +252,7 @@ export abstract class MongoRepository<
    * @param options
    * @returns
    */
-  public async pagingAll(
-    page: number,
-    size: number,
-    options?: FindOptions
-  ): Promise<TEntity[]> {
+  public async pagingAll(page: number, size: number, options?: FindOptions): Promise<TEntity[]> {
     return await this.paging({}, page, size, options);
   }
 
@@ -288,15 +268,13 @@ export abstract class MongoRepository<
     filter: Filter<Document>,
     page: number,
     size: number,
-    options?: FindOptions
+    options?: FindOptions,
   ): Promise<TEntity[]> {
     page = page <= 0 ? Constants.Default.Paging.Page : page;
 
     // Lấy tối đa số page size đã fix cứng
     size =
-      size <= 0
-        ? Constants.Default.Paging.Size
-        : Math.min(size, Constants.HardLimit.Paging.Size);
+      size <= 0 ? Constants.Default.Paging.Size : Math.min(size, Constants.HardLimit.Paging.Size);
 
     const skip = size * (page - 1);
 
@@ -312,10 +290,7 @@ export abstract class MongoRepository<
    * @param options
    * @returns
    */
-  public async insertOne(
-    doc: OptionalId<Document>,
-    options?: InsertOneOptions
-  ): Promise<string> {
+  public async insertOne(doc: OptionalId<Document>, options?: InsertOneOptions): Promise<string> {
     await this.initBeforeUse();
 
     const result = await this._collection.insertOne(doc, options);
@@ -330,7 +305,7 @@ export abstract class MongoRepository<
    */
   public async insertMany(
     docs: OptionalId<Document>[],
-    options?: BulkWriteOptions
+    options?: BulkWriteOptions,
   ): Promise<InsertManyResult<Document>> {
     await this.initBeforeUse();
 
@@ -349,7 +324,7 @@ export abstract class MongoRepository<
     update: UpdateFilter<Document>,
     options?: UpdateOptions & {
       sort?: Sort;
-    }
+    },
   ): Promise<boolean> {
     if (!ObjectId.isValid(id)) {
       throw new Error("Invalid id");
@@ -360,7 +335,7 @@ export abstract class MongoRepository<
         _id: new ObjectId(id),
       },
       update,
-      options
+      options,
     );
   }
 
@@ -376,7 +351,7 @@ export abstract class MongoRepository<
     update: UpdateFilter<Document> | Document[],
     options?: UpdateOptions & {
       sort?: Sort;
-    }
+    },
   ): Promise<boolean> {
     await this.initBeforeUse();
 
@@ -394,7 +369,7 @@ export abstract class MongoRepository<
   public async updateMany(
     filter: Filter<Document>,
     update: Document[] | UpdateFilter<Document>,
-    options?: UpdateOptions
+    options?: UpdateOptions,
   ): Promise<UpdateResult<Document>> {
     await this.initBeforeUse();
 
@@ -407,10 +382,7 @@ export abstract class MongoRepository<
    * @param options
    * @returns
    */
-  public async deleteOne(
-    filter?: Filter<Document>,
-    options?: DeleteOptions
-  ): Promise<boolean> {
+  public async deleteOne(filter?: Filter<Document>, options?: DeleteOptions): Promise<boolean> {
     await this.initBeforeUse();
 
     const result = await this._collection.deleteOne(filter, options);
@@ -423,10 +395,7 @@ export abstract class MongoRepository<
    * @param options
    * @returns
    */
-  public async deleteOneById(
-    id: string,
-    options?: DeleteOptions
-  ): Promise<boolean> {
+  public async deleteOneById(id: string, options?: DeleteOptions): Promise<boolean> {
     if (!ObjectId.isValid(id)) {
       throw new Error("Invalid id");
     }
@@ -435,7 +404,7 @@ export abstract class MongoRepository<
       {
         _id: new ObjectId(id),
       },
-      options
+      options,
     );
   }
 
@@ -445,10 +414,7 @@ export abstract class MongoRepository<
    * @param options
    * @returns
    */
-  public async deleteMany(
-    filter?: Filter<Document>,
-    options?: DeleteOptions
-  ): Promise<number> {
+  public async deleteMany(filter?: Filter<Document>, options?: DeleteOptions): Promise<number> {
     await this.initBeforeUse();
 
     const result = await this._collection.deleteMany(filter, options);
@@ -465,7 +431,7 @@ export abstract class MongoRepository<
   public async findOneByIdAndUpdate(
     id: string,
     update: UpdateFilter<Document>,
-    options: FindOneAndUpdateOptions
+    options: FindOneAndUpdateOptions,
   ): Promise<TEntity | null> {
     if (!ObjectId.isValid(id)) {
       throw new Error("Invalid id");
@@ -476,7 +442,7 @@ export abstract class MongoRepository<
         _id: new ObjectId(id),
       },
       update,
-      options
+      options,
     );
   }
 
@@ -492,15 +458,11 @@ export abstract class MongoRepository<
   public async findOneAndUpdate(
     filter: Filter<Document>,
     update: UpdateFilter<Document> | Document[],
-    options: FindOneAndUpdateOptions
+    options: FindOneAndUpdateOptions,
   ): Promise<TEntity | null> {
     await this.initBeforeUse();
 
-    const modifyResult = await this._collection.findOneAndUpdate(
-      filter,
-      update,
-      options
-    );
+    const modifyResult = await this._collection.findOneAndUpdate(filter, update, options);
 
     return modifyResult != null ? this._dataMapper.mapOne(modifyResult) : null;
   }
@@ -513,7 +475,7 @@ export abstract class MongoRepository<
    */
   public async bulkWrite(
     operations: AnyBulkWriteOperation<Document>[],
-    options?: BulkWriteOptions
+    options?: BulkWriteOptions,
   ): Promise<BulkWriteResult> {
     await this.initBeforeUse();
 
@@ -526,10 +488,7 @@ export abstract class MongoRepository<
    * @param options
    * @returns
    */
-  public async count(
-    filter?: Filter<Document>,
-    options?: CountOptions
-  ): Promise<number> {
+  public async count(filter?: Filter<Document>, options?: CountOptions): Promise<number> {
     await this.initBeforeUse();
 
     return await this._collection.countDocuments(filter, options);
@@ -550,10 +509,7 @@ export abstract class MongoRepository<
    * @param options
    * @returns
    */
-  public async aggregate(
-    pipeline: Document[],
-    options?: AggregateOptions
-  ): Promise<Document[]> {
+  public async aggregate(pipeline: Document[], options?: AggregateOptions): Promise<Document[]> {
     await this.initBeforeUse();
 
     return await this._collection.aggregate(pipeline, options).toArray();
@@ -569,10 +525,52 @@ export abstract class MongoRepository<
   public async distinct(
     key: string,
     filter: Filter<Document> = {},
-    options: DistinctOptions = {}
+    options: DistinctOptions = {},
   ): Promise<any[]> {
     await this.initBeforeUse();
 
     return await this._collection.distinct(key, filter, options);
+  }
+
+  // ── Transaction Support ──────────────────────────────────────────────────
+
+  /**
+   * Thực thi callback trong 1 MongoDB transaction (Atlas / Replica Set).
+   *
+   * Atlas M0 (free tier) KHÔNG hỗ trợ transaction — cần M10+ hoặc Dedicated cluster.
+   * Callback nhận `session`; truyền session vào `insertOne`/`insertMany` qua options: `{ session }`.
+   * Nếu callback throw → transaction tự động abort. Không throw → commit.
+   *
+   * @example
+   * await ticketRepo.withTransaction(async (session) => {
+   *   await ticketRepo.insertOne(ticketDoc, { session });
+   *   await entryRepo.insertMany(entryDocs, { session });
+   * });
+   */
+  public async withTransaction<T>(
+    callback: (session: ClientSession) => Promise<T>,
+    options?: TransactionOptions,
+  ): Promise<T> {
+    const client = await this.getClient();
+    const session = client.startSession();
+    try {
+      // session.withTransaction trả về undefined khi abort mà không throw.
+      // Capture result qua closure; throw nếu transaction không complete.
+      let result: T | undefined;
+      let committed = false;
+
+      await session.withTransaction(async () => {
+        result = await callback(session);
+        committed = true;
+      }, options);
+
+      if (!committed) {
+        throw new Error("Transaction aborted: max retry exceeded or transient error.");
+      }
+
+      return result as T;
+    } finally {
+      await session.endSession();
+    }
   }
 }

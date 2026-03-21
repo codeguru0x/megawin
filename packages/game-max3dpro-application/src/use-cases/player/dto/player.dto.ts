@@ -90,7 +90,8 @@ export interface PlayerTicketSummary {
    *
    * Công thức:
    * - linesPerDraw = Σ(board.lineCount)
-   * - amountPerDraw = linesPerDraw × unitPrice
+   * - betUnitsPerDraw = Σ(board.lineCount × board.betCount)
+   * - amountPerDraw = betUnitsPerDraw × unitPrice
    * - totalAmount = amountPerDraw × drawCount
    */
   pricing: {
@@ -98,7 +99,12 @@ export interface PlayerTicketSummary {
     unitPrice: number;
     /** Tổng pairs mỗi kỳ = Σ(board.lineCount). */
     linesPerDraw: number;
-    /** Giá mỗi kỳ (VND) = linesPerDraw × unitPrice. */
+    /**
+     * Tổng đơn vị cược mỗi kỳ = Σ(board.lineCount × board.betCount).
+     * amountPerDraw = betUnitsPerDraw × unitPrice.
+     */
+    betUnitsPerDraw: number;
+    /** Giá mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
     /** Tổng tiền toàn vé (VND) = amountPerDraw × drawCount. */
     totalAmount: number;
@@ -117,8 +123,10 @@ export interface PlayerTicketSummary {
     frontDigits?: number[];
     /** Các chữ số cuối (dùng cho multiNumber / multiDigit). */
     backDigits?: number[];
-    /** Số pairs phát sinh từ board này. Với multiNumber: C(n,2). */
+    /** Số pairs phát sinh từ board này. Với multiNumber: P(n,2). */
     lineCount: number;
+    /** Số lần cược nhân bội (≥ 1). Tiền cược board = lineCount × betCount × unitPrice. */
+    betCount: number;
   }>;
   /** Tiến trình settle qua các kỳ. settledDraws = số kỳ đã xử lý xong (settled + voided). */
   progress: {
@@ -183,8 +191,14 @@ export interface PlayerEntryInfo {
   status: string;
   /** Tiền cược entry (VND). */
   amount: number;
-  /** Số pairs = Σ(board.lineCount) trong entry. */
+  /** Số pairs = Σ(board.lineCount) trong entry (không tính betCount). */
   lineCount: number;
+  /**
+   * Tổng đơn vị cược = Σ(board.lineCount × board.betCount).
+   * amount = betUnitCount × unitPrice.
+   * Fallback = lineCount cho entries cũ.
+   */
+  betUnitCount: number;
   entrySummary: {
     /** Mã vé hiển thị. */
     ticketNo: string;
@@ -203,6 +217,8 @@ export interface PlayerEntryInfo {
       backDigits?: number[];
       /** Số pairs trong board. */
       lineCount: number;
+      /** Số lần cược nhân bội (≥ 1). Fallback = 1 cho entries cũ. */
+      betCount: number;
     }>;
   };
   result?: {

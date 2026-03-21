@@ -44,6 +44,7 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
         mainNumbers: b.mainNumbers,
         specialNumbers: b.specialNumbers,
         expandedLines: b.expandedLines,
+        betCount: b.betCount ?? 1,
       }));
 
       return {
@@ -52,6 +53,7 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
         tenantId: e.tenantId,
         amount: e.amount,
         lineCount: e.lineCount,
+        betUnitCount: e.betUnitCount ?? e.lineCount,
         boards,
         createdAt: e.createdAt.toISOString(),
       };

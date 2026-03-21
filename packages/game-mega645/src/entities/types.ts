@@ -65,7 +65,6 @@ export const VALID_MAIN_NUMBER_SET: ReadonlySet<string> = new Set(ALL_MAIN_NUMBE
  * - standard:  mainNumbers.length = 6
  * - bao5:      mainNumbers.length = 5
  * - bao7-18:   mainNumbers.length = 7..18
- * - quickPick: empty (hệ thống tự sinh)
  */
 export interface BoardSelection {
   /**
@@ -73,7 +72,6 @@ export interface BoardSelection {
    * - standard: 6 số (1 line)
    * - bao5: 5 số (hệ thống bổ sung số thứ 6 từ 40 số còn lại → 40 lines)
    * - bao7-18: 7..18 số (expand thành C(N,6) lines)
-   * - quickPick: mảng rỗng (hệ thống tự sinh ngẫu nhiên 6 số)
    */
   mainNumbers: string[];
 }
@@ -137,6 +135,10 @@ export interface FinancialRates {
 export interface PlayRules {
   /** Đơn giá 1 line (VND). Mặc định: 10,000 VND. */
   unitPrice: number;
+  /** Số lần cược tối thiểu per board (≥ 1). Mặc định 1. */
+  minBetCount: number;
+  /** Số lần cược tối đa per board. Mặc định 10. */
+  maxBetCount: number;
   /** Số board tối đa trên 1 vé (tối đa 6 boards: A-F). */
   maxBoardsPerTicket: number;
   /** Số kỳ quay tối đa mà 1 vé có thể tham gia liên tiếp. */

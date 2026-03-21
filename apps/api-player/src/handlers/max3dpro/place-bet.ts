@@ -3,15 +3,20 @@
  * Player đặt cược Max 3D Pro — authed qua Cognito JWT Bearer token.
  *
  * Max 3D Pro có 2 play mode:
- * - multiNumber: chọn 3-20 bộ ba số, hệ thống tạo C(n,2) cặp.
- * - multiDigit: chọn 3 chữ số đầu + 3 chữ số sau, hệ thống expand.
+ * - multiNumber: chọn 3-20 bộ ba số, hệ thống tạo P(n,2) ordered pairs.
+ * - multiDigit: chọn 3 chữ số đầu + 3 chữ số sau, hệ thống expand hoán vị.
  *
- * Play type: straight (duy nhất). QuickPick không được chấp nhận từ client.
+ * Play type: straight (duy nhất).
+ *
+ * Zod validate đầy đủ tại đây → Use Case không cần validate lại các rule đã qua.
  */
 
 import { withPlayerAuth } from "@megawin/auth";
 
-import { PlaceBetUseCase } from "@megawin/game-max3dpro-application/use-cases/place-bet";
+import {
+  PlaceBetUseCase,
+  type PlaceBetBoardInput,
+} from "@megawin/game-max3dpro-application/use-cases/place-bet";
 
 import { TicketChannel } from "@megawin/game-core/entities";
 import z from "zod";
@@ -22,55 +27,39 @@ import {
   VALID_BOARD_NOS,
 } from "@megawin/game-max3dpro/schemas";
 import { PlayMode, PlayType } from "@megawin/game-max3dpro/entities";
+import { isUnique, isUniqueBy } from "@megawin/shared/utils/array";
 
-// ─── Selection schemas per play mode ───
+// ─── Board schemas (discriminated by playMode) ───
 
-const multiNumberSelectionSchema = z.object({
+/**
+ * multiNumber: chọn 3-20 bộ ba số, hệ thống tạo P(n,2) ordered pairs.
+ */
+const max3dproMultiNumberBoardSchema = z.object({
+  boardNo: z.enum(VALID_BOARD_NOS),
+  playMode: z.literal(PlayMode.MultiNumber),
+  playType: z.literal(PlayType.Straight),
   triplets: z.array(max3dproTripletSchema).min(3).max(20),
+  /** Số lần cược nhân bội (≥ 1). Mặc định 1 cho backward compat. */
+  betCount: z.number().int().min(1).default(1),
 });
 
-const multiDigitSelectionSchema = z.object({
+/**
+ * multiDigit: chọn đúng 3 chữ số đầu + 3 chữ số sau, hệ thống expand hoán vị.
+ */
+const max3dproMultiDigitBoardSchema = z.object({
+  boardNo: z.enum(VALID_BOARD_NOS),
+  playMode: z.literal(PlayMode.MultiDigit),
+  playType: z.literal(PlayType.Straight),
   frontDigits: z.array(max3dproDigitSchema).length(3),
   backDigits: z.array(max3dproDigitSchema).length(3),
+  /** Số lần cược nhân bội (≥ 1). Mặc định 1 cho backward compat. */
+  betCount: z.number().int().min(1).default(1),
 });
 
-// ─── Board schema ───
-
-export const max3dproBoardSchema = z
-  .object({
-    boardNo: z.enum(VALID_BOARD_NOS),
-    playMode: z.enum([PlayMode.MultiNumber, PlayMode.MultiDigit]),
-    playType: z.enum([PlayType.Straight]),
-    triplets: z.array(max3dproTripletSchema).optional(),
-    frontDigits: z.array(max3dproDigitSchema).optional(),
-    backDigits: z.array(max3dproDigitSchema).optional(),
-  })
-  .superRefine((board, ctx) => {
-    const { playMode } = board;
-
-    if (playMode === PlayMode.MultiNumber) {
-      const result = multiNumberSelectionSchema.safeParse({
-        triplets: board.triplets,
-      });
-      if (!result.success) {
-        for (const issue of result.error.issues) {
-          ctx.addIssue(issue.message);
-        }
-      }
-    }
-
-    if (playMode === PlayMode.MultiDigit) {
-      const result = multiDigitSelectionSchema.safeParse({
-        frontDigits: board.frontDigits,
-        backDigits: board.backDigits,
-      });
-      if (!result.success) {
-        for (const issue of result.error.issues) {
-          ctx.addIssue(issue.message);
-        }
-      }
-    }
-  });
+export const max3dproBoardSchema = z.discriminatedUnion("playMode", [
+  max3dproMultiNumberBoardSchema,
+  max3dproMultiDigitBoardSchema,
+]);
 
 // ─── Place bet body schema ───
 
@@ -79,14 +68,12 @@ export const max3dproPlaceBetBodySchema = z.object({
     .array(max3dproDrawIdSchema)
     .min(1)
     .max(6)
-    .refine((ids) => new Set(ids).size === ids.length, {
-      message: "Các drawId không được trùng lặp.",
-    }),
+    .refine(isUnique, { message: "Các drawId không được trùng lặp." }),
   boards: z
     .array(max3dproBoardSchema)
     .min(1)
     .max(4)
-    .refine((boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length, {
+    .refine((boards) => isUniqueBy(boards, (b) => b.boardNo), {
       message: "Các board không được trùng boardNo.",
     }),
 });
@@ -103,15 +90,15 @@ export const handler = withPlayerAuth(
     const { drawIds, boards: rawBoards } = event.schema.body;
     const ipAddress = event.requestContext.http.sourceIp;
 
-    const boards = rawBoards.map((b: Max3dproBoard) => ({
+    const boards: PlaceBetBoardInput[] = rawBoards.map((b: Max3dproBoard) => ({
       boardNo: b.boardNo,
       playMode: b.playMode,
       playType: b.playType,
-      selection: {
-        triplets: b.triplets ?? [],
-        frontDigits: b.frontDigits,
-        backDigits: b.backDigits,
-      },
+      selection:
+        b.playMode === PlayMode.MultiNumber
+          ? { triplets: b.triplets }
+          : { triplets: [], frontDigits: b.frontDigits, backDigits: b.backDigits },
+      betCount: b.betCount,
     }));
 
     return useCase.run({

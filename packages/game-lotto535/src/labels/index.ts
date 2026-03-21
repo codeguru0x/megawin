@@ -22,7 +22,6 @@ export const LOTTO535_PLAY_TYPE_LABELS: Record<PlayType, string> = {
   [PlayType.MainCover4]: "Bao 4",
   [PlayType.MainCover]: "Bao số chính",
   [PlayType.SpecialCover]: "Bao số ĐB",
-  [PlayType.QuickPick]: "Chọn nhanh",
 } as const;
 
 /**
@@ -34,7 +33,6 @@ export const LOTTO535_PLAY_TYPE_LABELS_SHORT: Record<PlayType, string> = {
   [PlayType.MainCover4]: "Bao 4",
   [PlayType.MainCover]: "Bao chính",
   [PlayType.SpecialCover]: "Bao ĐB",
-  [PlayType.QuickPick]: "Chọn nhanh",
 } as const;
 
 /**

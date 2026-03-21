@@ -24,27 +24,29 @@
  *  │  3. SyncTicketSummaries │  Recompute ticket progress (loop)
  *  └────────┬────────────────┘
  *           ▼
- *  ┌──────────────────────────────────────────┐
- *  │  4. DispatchRefunds (loop)               │
- *  │     Gửi refund qua TenantGateway API    │
- *  │     done = true khi hết pending refunds  │
- *  └────────┬─────────────────────────────────┘
- *           ▼
  *  ┌──────────────────────────────────────────────────────────┐
- *  │  5. BuildVoidReport                                      │
+ *  │  4. BuildVoidReport                                      │
  *  │     Cleanup settle reports (nếu void-after-settle)       │
  *  │     + build max3d_pro_void_draw_reports                  │
  *  └────────┬─────────────────────────────────────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────────────────────┐
- *  │  6. PublishSettleDaily                                   │
+ *  │  5. PublishSettleDaily                                   │
  *  │     Re-aggregate system daily reports                    │
  *  │     Settle totals tự giảm khi settle reports đã xoá     │
  *  └────────┬─────────────────────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  7. FinalizeVoid        │  Transition voiding → void + ghi voidSummary
- *  └─────────────────────────┘
+ *  │  6. FinalizeVoid        │  Transition voiding → void + ghi voidSummary
+ *  └────────┬────────────────┘
+ *           ▼
+ *  ┌──────────────────────────────────────────┐
+ *  │  7. DispatchRefunds (loop)               │
+ *  │     Gửi refund qua TenantGateway API    │
+ *  │     done = true khi hết pending refunds  │
+ *  │     Chạy SAU FinalizeVoid — void nội bộ  │
+ *  │     hoàn tất độc lập với tenant API      │
+ *  └──────────────────────────────────────────┘
  *
  * DATA FLOW (Assign-based):
  *   $voidCtx = PrepareVoid result, persisted via Assign across all states.
@@ -52,6 +54,10 @@
  *
  * CRASH RECOVERY:
  *   Mỗi step idempotent. Entries đã void/refund tự filter ra.
+ *
+ * REFUND SAU FINALIZE:
+ *   DispatchRefunds chạy sau FinalizeVoid — nhất quán với settle (DispatchPayouts sau FinalizeSettle).
+ *   Nếu tenant API down → draw vẫn = void (không treo ở voiding). Admin retry thủ công.
  *
  * Max 3D Pro KHÔNG có Jackpot → không cần rollback jackpot chain.
  *
@@ -131,42 +137,10 @@ export const VOID_STATE_MACHINE = {
       Choices: [
         {
           Condition: "{% $syncResult.done %}",
-          Next: "DispatchRefunds",
-        },
-      ],
-      Default: "SyncTicketSummaries",
-    },
-
-    DispatchRefunds: {
-      Type: "Task",
-      Resource: lambdaArn("void-dispatch-refunds"),
-      Arguments: "{% $voidCtx %}",
-      Assign: { refundResult: "{% $states.result %}" },
-      Next: "CheckRefundDone",
-      Retry: LAMBDA_RETRY,
-      Catch: [
-        {
-          ErrorEquals: ["States.ALL"],
-          Next: "RefundFailed",
-        },
-      ],
-    },
-
-    CheckRefundDone: {
-      Type: "Choice",
-      Choices: [
-        {
-          Condition: "{% $refundResult.done %}",
           Next: "BuildVoidReport",
         },
       ],
-      Default: "RefundWait",
-    },
-
-    RefundWait: {
-      Type: "Wait",
-      Seconds: 5,
-      Next: "DispatchRefunds",
+      Default: "SyncTicketSummaries",
     },
 
     BuildVoidReport: {
@@ -189,13 +163,50 @@ export const VOID_STATE_MACHINE = {
       Type: "Task",
       Resource: lambdaArn("void-finalize"),
       Arguments: "{% $voidCtx %}",
-      End: true,
+      Next: "DispatchRefunds",
       Retry: LAMBDA_RETRY,
+    },
+
+    DispatchRefunds: {
+      Type: "Task",
+      Resource: lambdaArn("void-dispatch-refunds"),
+      Arguments: "{% $voidCtx %}",
+      Assign: { refundResult: "{% $states.result %}" },
+      Next: "CheckRefundDone",
+      Retry: LAMBDA_RETRY,
+      Catch: [
+        {
+          ErrorEquals: ["States.ALL"],
+          Next: "RefundFailed",
+        },
+      ],
+    },
+
+    CheckRefundDone: {
+      Type: "Choice",
+      Choices: [
+        {
+          Condition: "{% $refundResult.done %}",
+          Next: "RefundComplete",
+        },
+      ],
+      Default: "RefundWait",
+    },
+
+    RefundWait: {
+      Type: "Wait",
+      Seconds: 5,
+      Next: "DispatchRefunds",
+    },
+
+    RefundComplete: {
+      Type: "Pass",
+      End: true,
     },
 
     RefundFailed: {
       Type: "Pass",
-      Comment: "Refund error – void hoàn tất, entries đã void. Admin retry thủ công.",
+      Comment: "Refund error – void đã hoàn tất (status = void). Admin retry thủ công.",
       End: true,
     },
   },

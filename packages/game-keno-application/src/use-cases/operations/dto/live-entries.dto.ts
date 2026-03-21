@@ -26,6 +26,8 @@ export interface LiveEntryBoard {
   boardNo: number;
   /** Danh sách số đã chọn (1-10 số, zero-padded string "01"-"80"). */
   numbers: string[];
+  /** Số lần cược nhân bội. Hiển thị ×N badge khi > 1. */
+  betCount: number;
 }
 
 /** Một side bet trong entry. */
@@ -36,6 +38,8 @@ export interface LiveEntrySideBet {
   playType: string;
   /** Lựa chọn: "big" | "bigSmallDraw" | "small" | "even" | ... */
   bet: string;
+  /** Số lần cược nhân bội. Hiển thị ×N badge khi > 1. */
+  betCount: number;
 }
 
 /** Một entry rút gọn cho live feed. */

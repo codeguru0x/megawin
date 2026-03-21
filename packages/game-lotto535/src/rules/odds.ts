@@ -135,7 +135,6 @@
  * │               │ +1 bất kỳ  │            │ (31 tổ hợp 5)   │                   │
  * │ MainCover     │ 5+ số      │ 1 số       │ C(N,5)          │ C(N,5) × 10,000   │
  * │ SpecialCover  │ 5 số       │ all 12     │ 12              │ 120,000           │
- * │ QuickPick     │ 5 (random) │ 1 (random) │ 1               │ 10,000            │
  * └───────────────┴────────────┴────────────┴─────────────────┴───────────────────┘
  */
 
@@ -163,10 +162,7 @@ export const TOTAL_OUTCOMES = combination(MAIN_POOL, MAIN_PICK) * SPECIAL_POOL;
  * = C(5,k) × C(30, 5-k)
  */
 function mainMatchWays(k: number): number {
-  return (
-    combination(MAIN_PICK, k) *
-    combination(MAIN_POOL - MAIN_PICK, MAIN_PICK - k)
-  );
+  return combination(MAIN_PICK, k) * combination(MAIN_POOL - MAIN_PICK, MAIN_PICK - k);
 }
 
 /** Thông tin xác suất cho 1 tier. */
@@ -335,10 +331,7 @@ const FIXED_TIERS: PrizeTier[] = [
  * console.log(analysis.grossMarginPercent); // ~82.66%
  * ```
  */
-export function analyzeProfitability(
-  prizes: PrizeAmounts,
-  unitPrice: number
-): ProfitSummary {
+export function analyzeProfitability(prizes: PrizeAmounts, unitPrice: number): ProfitSummary {
   const amounts = prizes as unknown as Record<string, number>;
 
   const tiers: TierProfitAnalysis[] = FIXED_TIERS.map((tier) => {
@@ -363,8 +356,7 @@ export function analyzeProfitability(
   const totalExpectedPayout = tiers.reduce((s, t) => s + t.expectedPayout, 0);
   const totalPayoutRatio = unitPrice > 0 ? totalExpectedPayout / unitPrice : 0;
   const grossMarginPerLine = unitPrice - totalExpectedPayout;
-  const grossMarginPercent =
-    unitPrice > 0 ? (grossMarginPerLine / unitPrice) * 100 : 0;
+  const grossMarginPercent = unitPrice > 0 ? (grossMarginPerLine / unitPrice) * 100 : 0;
 
   return {
     unitPrice,

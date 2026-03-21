@@ -235,6 +235,19 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
      * Value = tổng hitCount của tất cả entries có tier đó.
      */
     tierWinnerCounts: Partial<Record<PrizeTier, number>>;
+    /**
+     * Tổng đơn vị cược (betCount × hitCount) theo từng tier.
+     * Dùng cho calculateSplitDistribution: phân bổ bonus theo tỷ lệ betCount.
+     * Backward compat: data cũ betCount = 1 → tierBetUnitCounts = tierWinnerCounts.
+     */
+    tierBetUnitCounts: Partial<Record<PrizeTier, number>>;
+    /**
+     * Tổng tiền thưởng thực tế theo từng tier (VND).
+     * Key = PrizeTier. Value = Σ amount của tất cả entries trúng tier đó.
+     * Jackpot = 0 lúc settle (chờ PatchJackpotPrize patch sau).
+     * Dùng để build settleSummary.tiers trong draw doc.
+     */
+    tierTotalAmounts: Partial<Record<PrizeTier, number>>;
   }> {
     const [facetResult] = await this.aggregate([
       {
@@ -253,6 +266,14 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
                 _id: "$payout.tiers.tier",
                 totalHitCount: { $sum: "$payout.tiers.hitCount" },
                 totalAmount: { $sum: "$payout.tiers.amount" },
+                // betUnitCount = Σ(betUnitCount per tier) — tổng đơn vị tham gia dự thưởng per tier.
+                // betUnitCount được lưu trong tier doc (từ buildPayoutTiersFromLines khi settle).
+                // Backward compat: data cũ không có betUnitCount → fallback = hitCount (betCount=1).
+                totalBetUnitCount: {
+                  $sum: {
+                    $ifNull: ["$payout.tiers.betUnitCount", "$payout.tiers.hitCount"],
+                  },
+                },
               },
             },
           ],
@@ -278,9 +299,15 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
     let totalFixedPrizes = 0;
     const tierWinnerCounts: Partial<Record<PrizeTier, number>> = {};
+    const tierBetUnitCounts: Partial<Record<PrizeTier, number>> = {};
+    const tierTotalAmounts: Partial<Record<PrizeTier, number>> = {};
 
     for (const row of tierRows) {
       tierWinnerCounts[row._id as PrizeTier] = row.totalHitCount;
+      // tierBetUnitCounts: tổng đơn vị tham gia dự thưởng per tier (hitCount × betCount)
+      // Backward compat: data cũ không có betCount → totalBetUnitCount = totalHitCount
+      tierBetUnitCounts[row._id as PrizeTier] = row.totalBetUnitCount ?? row.totalHitCount;
+      tierTotalAmounts[row._id as PrizeTier] = row.totalAmount;
       // Jackpot tier không tính vào totalFixedPrizes:
       // amount = 0 khi settle, tiền Jackpot được patch ở PatchJackpotPrize (step 4a).
       if (row._id !== PrizeTier.Jackpot) {
@@ -294,6 +321,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       totalFixedPrizes,
       totalLines: totals.totalLines ?? 0,
       tierWinnerCounts,
+      tierBetUnitCounts,
+      tierTotalAmounts,
     };
   }
 
@@ -1085,49 +1114,54 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   // ─────────────────────────────────────────────
 
   /**
-   * Patch bonusPerWinner cho 1 tier lên tất cả entries trúng tier đó.
-  /**
    * Patch split bonus Jackpot vào tất cả entries trúng tier trong 1 draw.
    *
    * Được gọi bởi ApplySplitBonuses (step 4b) sau khi CalculateFinancials đã tính xong
-   * bonusPerWinner cho từng tier (tier1-tier5).
+   * bonusPerUnit cho từng tier (tier1-tier5).
    *
    * ── FILTER STRATEGY ──
    *   1. outcome: "win" — chỉ scan entries THẮNG, loại bỏ ~90%+ entries thua ngay từ index.
-   *      Entries thua không bao giờ có payout.tiers nên filter array là vô nghĩa với chúng.
    *   2. $elemMatch: { tier, hitCount > 0 } — chỉ lấy entries thực sự trúng tier này.
    *   3. $nor (document-level idempotent guard): đảm bảo entry CHƯA được patch tier này.
-   *      $nor cần thiết vì $elemMatch là element-level check (1 phần tử thỏa mãn điều kiện),
-   *      còn ta cần document-level check: "không tồn tại bất kỳ phần tử nào có
-   *      { tier, isSplitBonus: true }". Hai điều kiện này hoạt động ở scope khác nhau.
    *
    * ── IDEMPOTENT ──
    *   $nor đảm bảo: nếu entry đã được patch (isSplitBonus = true cho tier này) thì bỏ qua.
-   *   Chạy lại bao nhiêu lần cũng cho kết quả đúng.
    *
-   * Recommended index: { drawId: 1, status: 1, outcome: 1 }
+   * ── TÍNH BONUS THEO betCount ──
+   *   Quy tắc Vietlott: bonusAmount = bonusPerUnit × hitCount × betCount
+   *   betCount snapshot từ tier entry (nếu có), fallback = 1 (backward compat).
    *
-   * Returns số entries đã patch.
+   * @param bonusPerUnit - Tiền bonus cho 1 đơn vị tham gia (1 line × 1 betCount)
+   */
+  /**
+   * Thêm split bonus tier vào payout của entries trúng tier đó trong kỳ Split Cycle.
+   *
+   * Được gọi bởi ApplySplitBonuses (step 4b) với bonusPerUnit và betUnitsByEntry map.
+   * Idempotent: chỉ patch entry chưa có tier với isSplitBonus = true.
+   *
+   * Quy tắc Vietlott: Split bonus chia theo tỷ lệ tham gia dự thưởng (betCount).
+   *   - bonusPerUnit = totalTierAmount / totalTierBetUnits
+   *   - bonusAmount cho entry = bonusPerUnit × entry_bet_units (từ betUnitsByEntry map)
+   *
+   * @param bonusPerUnit - Bonus cho 1 đơn vị tham gia (= 1 line × 1 betCount)
+   * @param betUnitsByEntry - Map: entryId → số bet units trúng tier đó (Σ betCount per winning line)
    */
   async applySplitBonusForTier(
     drawId: string,
     tier: string,
-    bonusPerWinner: number,
+    bonusPerUnit: number,
+    betUnitsByEntry?: Map<string, number>,
   ): Promise<number> {
     const filter = {
       drawId,
       status: EntryStatus.Settled,
       // Chỉ scan entries thắng — loại ~90%+ entries thua ngay từ index.
-      // Entries thua không có tier nào trong payout.tiers nên không bao giờ match.
       outcome: EntryOutcome.Win,
       // Element-level: entry này có ít nhất 1 tier element trúng
       "payout.tiers": {
         $elemMatch: { tier, hitCount: { $gt: 0 } },
       },
       // Document-level idempotent guard: entry chưa được patch split bonus cho tier này.
-      // Cần $nor riêng (không gộp vào $elemMatch) vì:
-      //   $elemMatch chỉ check "có element nào đồng thời thỏa cả điều kiện" (AND trong 1 element),
-      //   còn $nor check "không có element nào có tier + isSplitBonus: true" — phạm vi document.
       $nor: [{ "payout.tiers": { $elemMatch: { tier, isSplitBonus: true } } }],
     };
 
@@ -1142,7 +1176,13 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         (t: any) => t.tier === tier && t.hitCount > 0 && !t.isSplitBonus,
       );
       const hitCount = tierEntry?.hitCount ?? 0;
-      const bonusAmount = bonusPerWinner * hitCount;
+      const entryId = entry._id.toString();
+
+      // Ưu tiên dùng betUnits chính xác từ winning lines (passed in từ use case).
+      // Fallback 1: betUnitCount từ tier doc (lưu bởi buildPayoutTiersFromLines).
+      // Fallback 2: hitCount (backward compat betCount=1 data cũ).
+      const betUnits = betUnitsByEntry?.get(entryId) ?? tierEntry?.betUnitCount ?? hitCount;
+      const bonusAmount = bonusPerUnit * betUnits;
 
       return {
         updateOne: {
@@ -1155,7 +1195,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
               "payout.tiers": {
                 tier,
                 hitCount,
-                unitAmount: bonusPerWinner,
+                unitAmount: bonusPerUnit,
                 amount: bonusAmount,
                 isSplitBonus: true,
               },
@@ -1193,13 +1233,23 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Patch jackpot prize vào payout của entries trúng Jackpot.
    *
-   * Được gọi bởi PatchJackpotPrize (step 4a) sau khi tính jackpotPerWinner.
+   * Được gọi bởi PatchJackpotPrize (step 4a) sau khi tính jackpotPerUnit.
    * Cập nhật: payout.tiers[jackpot].unitAmount, amount + payout.winAmount, payoutAmount.
    *
-   * Idempotent: chỉ update entries có payout.tiers[jackpot].amount = 0
-   * (chưa được patch). Entries đã patch (amount > 0) sẽ bị skip.
+   * Idempotent: chỉ update entries có payout.tiers[jackpot].amount = 0 (chưa được patch).
+   *
+   * Quy tắc Vietlott: Jackpot chia theo tỷ lệ giá trị tham gia dự thưởng (betCount).
+   *   - jackpotPerUnit = floor(totalPool / totalBetUnits)
+   *   - prizeAmount của entry = jackpotPerUnit × betUnits (từ betUnitsByEntry map)
+   *
+   * @param jackpotPerUnit - Tiền JP cho 1 đơn vị tham gia (1 line × 1 betCount)
+   * @param betUnitsByEntry - Map: entryId → số bet units trúng JP (Σ betCount per JP line)
    */
-  async patchJackpotPrize(drawId: string, jackpotPerWinner: number): Promise<number> {
+  async patchJackpotPrize(
+    drawId: string,
+    jackpotPerUnit: number,
+    betUnitsByEntry?: Map<string, number>,
+  ): Promise<number> {
     const filter = {
       drawId,
       status: EntryStatus.Settled,
@@ -1228,13 +1278,19 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         (t: any) => t.tier === PrizeTier.Jackpot && t.hitCount > 0 && t.amount === 0,
       );
       const hitCount = jpTier?.hitCount ?? 0;
-      const prizeAmount = jackpotPerWinner * hitCount;
+      const entryId = entry._id.toString();
+
+      // Ưu tiên dùng betUnits chính xác từ JP lines (passed in từ use case).
+      // Fallback 1: betUnitCount từ tier doc (lưu bởi buildPayoutTiersFromLines).
+      // Fallback 2: hitCount (backward compat betCount=1 data cũ).
+      const betUnits = betUnitsByEntry?.get(entryId) ?? jpTier?.betUnitCount ?? hitCount;
+      const prizeAmount = jackpotPerUnit * betUnits;
 
       const updatedTiers = tiers.map((t: any) => {
         if (t.tier === PrizeTier.Jackpot && t.hitCount > 0 && t.amount === 0) {
           return {
             ...t,
-            unitAmount: jackpotPerWinner,
+            unitAmount: jackpotPerUnit,
             amount: prizeAmount,
           };
         }

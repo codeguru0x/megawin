@@ -10,7 +10,7 @@ import type {
 /**
  * Phân bổ cược theo kiểu chơi (PlayType) cho Mega 6/45.
  *
- * Mega 6/45 có 13 kiểu chơi: standard, bao5, bao7-bao15, bao18, quickPick.
+ * Mega 6/45 có 12 kiểu chơi: standard, bao5, bao7-bao15, bao18.
  * Dùng để render biểu đồ kiểu chơi trên dashboard vận hành.
  *
  * CRASH-SAFE: idempotent, aggregate từ DB.

@@ -27,6 +27,8 @@ const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 const playFormSchema = z.object({
   unitPrice: z.coerce.number().int().positive("Phải > 0"),
+  minBetCount: z.coerce.number().int().min(1, "Phải ≥ 1"),
+  maxBetCount: z.coerce.number().int().positive("Phải > 0"),
   maxBasicBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
   maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
   salesCloseBeforeSeconds: z.coerce.number().int().positive("Phải > 0"),
@@ -45,15 +47,13 @@ interface PlayRulesSectionProps {
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
-export function PlayRulesSection({
-  config,
-  onSave,
-  isPending,
-}: PlayRulesSectionProps) {
+export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSectionProps) {
   const form = useForm<PlayFormValues>({
     resolver: zodResolver(playFormSchema) as any,
     values: {
       unitPrice: config.play.unitPrice,
+      minBetCount: config.play.minBetCount,
+      maxBetCount: config.play.maxBetCount,
       maxBasicBoardsPerTicket: config.play.maxBasicBoardsPerTicket,
       maxDrawCount: config.play.maxDrawCount,
       salesCloseBeforeSeconds: config.play.salesCloseBeforeSeconds,
@@ -67,6 +67,8 @@ export function PlayRulesSection({
     onSave({
       play: {
         unitPrice: values.unitPrice,
+        minBetCount: values.minBetCount,
+        maxBetCount: values.maxBetCount,
         maxBasicBoardsPerTicket: values.maxBasicBoardsPerTicket,
         maxDrawCount: values.maxDrawCount,
         salesCloseBeforeSeconds: values.salesCloseBeforeSeconds,
@@ -86,9 +88,7 @@ export function PlayRulesSection({
             <div className="grid gap-0 lg:grid-cols-2">
               <div className="space-y-5 p-5">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Mệnh giá & Giới hạn
-                  </h3>
+                  <h3 className="text-sm font-semibold text-foreground">Mệnh giá & Giới hạn</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Cấu hình mệnh giá và các giới hạn chơi Bingo 18
                   </p>
@@ -124,6 +124,55 @@ export function PlayRulesSection({
                     </FormItem>
                   )}
                 />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="minBetCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Min lần cược
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 1)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maxBetCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Max lần cược
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 0)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <FormField
@@ -204,9 +253,7 @@ export function PlayRulesSection({
 
               <div className="border-t p-5 lg:border-l lg:border-t-0">
                 <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Lịch quay số
-                  </h3>
+                  <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Bingo 18 quay liên tục trong ngày, mặc định mỗi 6 phút
                   </p>
@@ -295,10 +342,7 @@ export function PlayRulesSection({
                   <Globe className="size-3.5 text-muted-foreground" />
                   <p className="text-xs text-muted-foreground">
                     Múi giờ:{" "}
-                    <Badge
-                      variant="secondary"
-                      className="ml-1 font-mono text-[10px]"
-                    >
+                    <Badge variant="secondary" className="ml-1 font-mono text-[10px]">
                       {config.play.timezone}
                     </Badge>
                   </p>
@@ -308,15 +352,8 @@ export function PlayRulesSection({
           </CardContent>
 
           <CardFooter className="justify-end border-t px-5 py-2.5">
-            <Button
-              type="submit"
-              disabled={isPending || !form.formState.isDirty}
-            >
-              {isPending ? (
-                <Spinner className="mr-2" />
-              ) : (
-                <Save className="mr-2 size-4" />
-              )}
+            <Button type="submit" disabled={isPending || !form.formState.isDirty}>
+              {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
               Lưu luật chơi
             </Button>
           </CardFooter>

@@ -101,6 +101,7 @@ export function calculateCappedPrize(
   if (winnerCount <= maxSetsForFixed) {
     return fixedPrize;
   }
+
   return Math.floor(maxPerDraw / winnerCount);
 }
 
@@ -197,6 +198,8 @@ export const DEFAULT_KENO_CONFIG: Pick<
   /** Cấu hình gameplay: giá cược, giới hạn, lịch quay. */
   play: {
     unitPrice: 10_000,
+    minBetCount: 1,
+    maxBetCount: 10,
     maxBasicBoardsPerTicket: 2,
     maxDrawCount: 20,
     salesCloseBeforeSeconds: 60,

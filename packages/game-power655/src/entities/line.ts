@@ -88,6 +88,13 @@ export interface TicketLineDoc {
   /** 6 số chính đã sort ascending. Đây là bộ số player chọn (hoặc expand từ Bao). */
   main: string[];
 
+  /**
+   * Số lần cược nhân bội cho board chứa line này.
+   * Snapshot từ EntryBoardSnapshot.betCount lúc settle.
+   * Dùng để tính winAmount = unitWinAmount × betCount và chia Jackpot theo tỷ lệ.
+   */
+  betCount: number;
+
   /** Kết quả so khớp line với kết quả quay. */
   matchResult: LineMatchResult;
 

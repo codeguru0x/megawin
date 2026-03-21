@@ -17,7 +17,7 @@
  *   - Nếu draw đã settled → skip (không throw)
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { SettleContextWithFinancials } from "./types";
@@ -44,10 +44,13 @@ export class FinalizeSettleUseCase extends InternalUseCase<
 
     if (!updated) {
       const draw = await this.drawRepo.getDrawById(drawId);
+
       if (draw?.status === DrawStatus.Settled) {
         console.log(`Draw ${drawId} already settled, skipping transition.`);
       } else {
-        throw new Error(`Cannot finalize draw ${drawId}. Current status: ${draw?.status}`);
+        throw AppException.internal(
+          `Cannot finalize draw ${drawId}. Current status: ${draw?.status}`,
+        );
       }
     }
 

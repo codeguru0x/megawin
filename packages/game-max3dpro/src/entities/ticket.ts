@@ -19,11 +19,16 @@ import type { BoardSelection, ISODateString } from "./types";
 /** Dữ liệu dẫn xuất từ selection của board. */
 export interface BoardDerived {
   /**
-   * Số cặp (pairs) hai bộ ba số = số lần tham gia dự thưởng.
-   * - multiNumber: C(n,2) cặp, n = số bộ ba số chọn (3-20)
+   * Số cặp (pairs) hai bộ ba số = số lần tham gia dự thưởng per unit cược.
+   * - multiNumber: P(n,2) = n×(n-1) ordered pairs, n = số bộ ba số chọn (3-20)
    * - multiDigit: tuỳ vào loại chữ số đầu × sau
    */
   lineCount: number;
+  /**
+   * Số lần cược nhân bội cho board (≥ 1).
+   * Player chọn khi đặt cược. Tiền cược board = lineCount × betCount × unitPrice.
+   */
+  betCount: number;
 }
 
 /** Kế hoạch tham gia các kỳ quay. */
@@ -38,9 +43,14 @@ export interface TicketDrawPlan {
 export interface TicketPricing {
   /** Mệnh giá 1 pair (VND). Snapshot từ global config. */
   unitPrice: number;
-  /** Tổng cặp (pairs) mỗi kỳ = Σ(boards[].derived.lineCount). */
+  /** Tổng cặp (pairs) mỗi kỳ = Σ(boards[].derived.lineCount). Dùng cho settle. */
   linesPerDraw: number;
-  /** Tiền cược mỗi kỳ = linesPerDraw × unitPrice. */
+  /**
+   * Tổng đơn vị cược mỗi kỳ = Σ(board.lineCount × board.betCount).
+   * Dùng để tính tiền: amountPerDraw = betUnitsPerDraw × unitPrice.
+   */
+  betUnitsPerDraw: number;
+  /** Tiền cược mỗi kỳ = betUnitsPerDraw × unitPrice (VND). */
   amountPerDraw: number;
   /** Tổng tiền vé = amountPerDraw × drawCount. */
   totalAmount: number;
@@ -91,7 +101,7 @@ export interface Board {
   boardNo: string;
   /** Cách chơi: multiNumber / multiDigit. */
   playMode: PlayMode;
-  /** Kiểu chơi: straight / quickPick. */
+  /** Kiểu chơi: straight. */
   playType: PlayType;
   /** Lựa chọn số của người chơi. */
   selection: BoardSelection;

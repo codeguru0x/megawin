@@ -224,8 +224,13 @@ export interface OutstandingDrawReport {
   playerCount: number;
   /** Số tenant tham gia. */
   tenantCount: number;
-  /** Số pairs pending. */
+  /** Số pairs pending (không tính betCount). */
   lineCount: number;
+  /**
+   * Tổng đơn vị cược pending = Σ(betUnitCount) = Σ(lineCount × betCount).
+   * Fallback sang lineCount cho entries cũ. Dùng để cross-check với totalStake.
+   */
+  betUnitCount: number;
   /** Tổng tiền cược pending (VND). Công thức: SUM(entry.amount). */
   totalStake: number;
   /** Ước tính hoa hồng (VND). Công thức: SUM(entry.tenant.commissionAmount). */

@@ -106,7 +106,7 @@ export interface PlayerTicketSummary {
     boardNo: string;
     /** Cách chơi: basic / plus. */
     playMode: string;
-    /** Kiểu chơi: straight / combo3 / combo6 / quickPick. */
+    /** Kiểu chơi: straight / combo3 / combo6. */
     playType: string;
     /** Bộ ba số đã chọn. */
     triplets: string[];

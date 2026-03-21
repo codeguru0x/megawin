@@ -23,12 +23,10 @@ import {
   type DrawFinancialInput,
 } from "@megawin/game-max3d/rules/financials";
 import {
-  BasicPrizeTier,
   BASIC_PRIZE_TIER_VALUES,
-  PlusPrizeTier,
   PLUS_PRIZE_TIER_VALUES,
+  type DrawSettleSummary,
 } from "@megawin/game-max3d/entities";
-import type { DrawSettleSummary } from "@megawin/game-max3d-core/repos";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext, SettleFinancials } from "./types";
@@ -42,7 +40,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
    * Idempotent — ghi đè nếu chạy lại.
    */
   protected async execute(input: SettleContext): Promise<SettleFinancials> {
-    const { drawId, totalLines } = input;
+    const { drawId } = input;
 
     const [{ totalRevenue, totalAgentCommission }, payoutSummary] = await Promise.all([
       this.entryRepo.aggregateTotalRevenue(drawId),
@@ -79,7 +77,7 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
       },
       {
         ticketEntryCount: payoutSummary.totalSettled,
-        totalLineCount: totalLines,
+        totalLineCount: payoutSummary.totalLines,
         totalSalesAmount: fin.totalRevenue,
         totalPayoutAmount: payoutSummary.totalPayoutAmount,
       },

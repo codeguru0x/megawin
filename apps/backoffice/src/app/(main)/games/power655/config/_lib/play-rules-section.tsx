@@ -36,14 +36,21 @@ const DAY_LABELS: Record<number, string> = {
   6: "T7",
 };
 
-const playFormSchema = z.object({
-  unitPrice: z.coerce.number().int().positive("Phải > 0"),
-  maxBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
-  maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
-  salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
-  drawTime1: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "HH:mm"),
-  drawDaysOfWeek: z.array(z.number()).min(1, "Cần ít nhất 1 ngày quay"),
-});
+const playFormSchema = z
+  .object({
+    unitPrice: z.coerce.number().int().positive("Phải > 0"),
+    minBetCount: z.coerce.number().int().positive("Phải ≥ 1"),
+    maxBetCount: z.coerce.number().int().positive("Phải ≥ 1"),
+    maxBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
+    maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
+    salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
+    drawTime1: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "HH:mm"),
+    drawDaysOfWeek: z.array(z.number()).min(1, "Cần ít nhất 1 ngày quay"),
+  })
+  .refine((v) => v.maxBetCount >= v.minBetCount, {
+    message: "Max cược phải ≥ Min cược",
+    path: ["maxBetCount"],
+  });
 
 type PlayFormValues = z.infer<typeof playFormSchema>;
 
@@ -58,6 +65,8 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
     resolver: zodResolver(playFormSchema) as any,
     values: {
       unitPrice: config.play.unitPrice,
+      minBetCount: config.play.minBetCount ?? 1,
+      maxBetCount: config.play.maxBetCount ?? 10,
       maxBoardsPerTicket: config.play.maxBoardsPerTicket,
       maxDrawCount: config.play.maxDrawCount,
       salesCloseBeforeMinutes: config.play.salesCloseBeforeMinutes,
@@ -80,6 +89,8 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
     onSave({
       play: {
         unitPrice: values.unitPrice,
+        minBetCount: values.minBetCount,
+        maxBetCount: values.maxBetCount,
         maxBoardsPerTicket: values.maxBoardsPerTicket,
         maxDrawCount: values.maxDrawCount,
         salesCloseBeforeMinutes: values.salesCloseBeforeMinutes,
@@ -197,6 +208,55 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                             className="text-center font-semibold"
                             value={field.value}
                             onValueChange={(v) => field.onChange(v ?? 0)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="minBetCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Min lần cược/board
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 1)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maxBetCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Max lần cược/board
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 10)}
                             onBlur={field.onBlur}
                             name={field.name}
                             ref={field.ref}

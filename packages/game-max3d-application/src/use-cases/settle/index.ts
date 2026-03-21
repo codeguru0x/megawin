@@ -2,13 +2,9 @@
  * Max 3D – Settle Use Cases barrel export.
  */
 
-export type {
-  Max3dDrawResult,
-  Max3dSettleConfig,
-  SettleFinancials,
-  SettleContext,
-  SettleContextWithFinancials,
-} from "./types";
+export type { SettleFinancials, SettleContext, SettleContextWithFinancials } from "./types";
+
+export type { Max3dDrawResult } from "@megawin/game-max3d/entities";
 
 export { PrepareSettleUseCase } from "./prepare-settle";
 export type { PrepareSettleInput } from "./prepare-settle";

@@ -87,11 +87,13 @@ export interface PlayerTicketSummary {
   };
   /** Thông tin giá vé. */
   pricing: {
-    /** Đơn giá 1 lượt chơi (VND). */
+    /** Đơn giá 1 lần tham gia dự thưởng (VND). */
     unitPrice: number;
-    /** Số lượt đặt mỗi kỳ = boards.length + sideBets.length. */
-    betsPerDraw: number;
-    /** Tiền mỗi kỳ = unitPrice × betsPerDraw. */
+    /** Số selections mỗi kỳ = boards.length + sideBets.length. */
+    selectionsPerDraw: number;
+    /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount) + Σ(sideBet.betCount). */
+    betUnitsPerDraw: number;
+    /** Tiền mỗi kỳ = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
     /** Tổng tiền vé = amountPerDraw × drawCount. */
     totalAmount: number;
@@ -182,8 +184,10 @@ export interface PlayerEntryInfo {
   status: string;
   /** Số tiền đặt cược của entry (VND). */
   amount: number;
-  /** Số lượt cược trong entry = boards + sideBets. */
-  betCount: number;
+  /** Số lượng cược (selections) = boards.length + sideBets.length. Không tính multiplier. */
+  selectionCount: number;
+  /** Tổng đơn vị cược = Σ(board.betCount) + Σ(sideBet.betCount). */
+  betUnitCount: number;
   /** Tóm tắt nội dung đặt cược. */
   entrySummary: {
     /** Mã vé hiển thị. */

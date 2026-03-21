@@ -84,6 +84,11 @@ export function LiveFeed({
                           ({e.lineCount} lines)
                         </span>
                       )}
+                      {e.betCount > 1 && (
+                        <span className="text-[9px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1 rounded ml-0.5">
+                          ×{e.betCount}
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-start justify-end">
                       <span className="text-xs font-semibold tabular-nums text-foreground">

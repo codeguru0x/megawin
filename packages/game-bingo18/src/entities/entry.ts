@@ -139,11 +139,13 @@ export interface TicketEntryDoc {
 
   // ───── Stake ─────
 
-  /** Số lượng cược = boards.length + sideBets.length. */
-  betCount: number;
-  /** Tổng tiền cược = betCount × unitPrice. Trừ từ ví player khi tạo entry. */
+  /** Số lượng cược (selections) = boards.length + sideBets.length. Đếm số bets logic, KHÔNG tính multiplier. */
+  selectionCount: number;
+  /** Tổng đơn vị cược thực tế = Σ(board.betCount) + Σ(sideBet.betCount). Dùng tính tiền: amount = betUnitCount × unitPrice. */
+  betUnitCount: number;
+  /** Tổng tiền cược (VND) = betUnitCount × unitPrice. Trừ từ ví player khi tạo entry. */
   amount: number;
-  /** Mệnh giá 1 lần cược (VND). Snapshot từ global config (mặc định 10.000đ). */
+  /** Mệnh giá 1 lần tham gia dự thưởng (VND). Snapshot từ global config (mặc định 10.000đ). */
   unitPrice: number;
 
   // ───── Entry Summary ─────
@@ -201,6 +203,8 @@ export interface EntryBoardSnapshot {
   number?: number;
   /** Phân loại triple: "specific" (chọn số cụ thể) hoặc "any" (bất kỳ bộ ba). Chỉ dùng cho tripleMatch. */
   tripleKind?: Bingo18TripleKind;
+  /** Số lần tham gia dự thưởng. Snapshot từ ticket board lúc place-bet. */
+  betCount: number;
 }
 
 /** Snapshot 1 side bet từ ticket. Lưu cùng entry để settle. */
@@ -211,6 +215,8 @@ export interface EntrySideBetSnapshot {
   sum?: number;
   /** Cược lớn/hoà/nhỏ: "big" | "draw" | "small". Chỉ dùng cho bigSmallDraw. */
   bet?: Bingo18BigSmallBet;
+  /** Số lần tham gia dự thưởng. Snapshot từ ticket side bet lúc place-bet. */
+  betCount: number;
 }
 
 /** Kết quả payout 1 board cơ bản sau settle. */
@@ -229,7 +235,13 @@ export interface EntryBoardPayout {
   /** Số lần số đã chọn xuất hiện trong kết quả (0-3). Chỉ relevant cho singleNum. */
   matchCount: number;
 
-  /** Tiền thắng board này. = 0 nếu thua, tra bảng prize theo playType + matchCount nếu thắng. */
+  /** Số lần tham gia dự thưởng. Snapshot từ board. winAmount = unitWinAmount × betCount. */
+  betCount: number;
+
+  /** Giá trị giải per-unit (VND) trước khi nhân betCount. = 0 nếu thua. */
+  unitWinAmount: number;
+
+  /** Tiền thắng thực tế (VND) = giá trị giải per-unit × betCount. Đã nhân multiplier. */
   winAmount: number;
 }
 
@@ -268,7 +280,11 @@ export interface EntrySideBetPayout {
    * Dùng bởi `aggregateSideBetPrizeSummary` để filter `{ isWin: true }`.
    */
   isWin: boolean;
-  /** Tiền thắng side bet này (VND). = 0 nếu thua, tra bảng prize theo playType nếu thắng. */
+  /** Số lần tham gia dự thưởng. Snapshot từ sideBet. winAmount = unitWinAmount × betCount. */
+  betCount: number;
+  /** Giá trị giải per-unit (VND) trước khi nhân betCount. = 0 nếu thua. */
+  unitWinAmount: number;
+  /** Tiền thắng thực tế (VND) = giá trị giải per-unit × betCount. Đã nhân multiplier. */
   winAmount: number;
 }
 

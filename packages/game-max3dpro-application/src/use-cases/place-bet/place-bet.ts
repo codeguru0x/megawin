@@ -4,12 +4,12 @@
  * Đặt cược Max 3D Pro: validate boards → validate draws → tính giá → tạo ticket + entries.
  *
  * Max 3D Pro khác Max 3D:
- * - Mỗi board có playMode (multiNumber/multiDigit) và playType (straight/quickPick)
+ * - Mỗi board có playMode (multiNumber/multiDigit) và playType (straight)
  * - Selection tạo ra các cặp (pairs) hai bộ ba số thay vì single triplets
- * - multiNumber: chọn 3-20 bộ ba số, hệ thống tạo C(n,2) cặp
- * - multiDigit: chọn 3 chữ số đầu + 3 chữ số sau, hệ thống expand
+ * - multiNumber: chọn 3-20 bộ ba số, hệ thống tạo P(n,2) = n×(n-1) ordered pairs
+ * - multiDigit: chọn 3 chữ số đầu + 3 chữ số sau, hệ thống expand hoán vị (Cartesian product)
  * - Tối đa 4 boards (A-D), tối đa 6 kỳ
- * - QuickPick: máy chọn ngẫu nhiên bộ ba số (3 bộ cho multiNumber)
+ * - betCount: số lần cược nhân bội per board (≥ 1). Tiền cược = lineCount × betCount × unitPrice.
  */
 
 import { AppException } from "@megawin/shared/errors";
@@ -20,24 +20,15 @@ import type {
   TicketDoc,
   TicketEntryDoc,
   EntryBoardSnapshot,
-  Triplet,
-} from "@megawin/game-max3dpro/entities";
-import {
-  PlayMode,
-  PlayType,
-  PLAY_MODE_VALUES,
-  PLAY_TYPE_VALUES,
 } from "@megawin/game-max3dpro/entities";
 import {
   calculateLineCount,
   validateSelection,
   expandSelectionToPairs,
-  VALID_BOARD_NOS,
 } from "@megawin/game-max3dpro/rules/play-types";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { TicketRepository } from "../../infras/repos/ticket-repo";
-import { EntryRepository } from "../../infras/repos/entry-repo";
+import { PlaceBetStore } from "../../infras/repos/place-bet-store";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
@@ -45,11 +36,11 @@ import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
+import { newObjectId } from "@megawin/data/mongo";
 
 export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();
-  private readonly ticketRepo = new TicketRepository();
-  private readonly entryRepo = new EntryRepository();
+  private readonly placeBetStore = new PlaceBetStore();
   private readonly ticketCounter = new TicketCounterRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
@@ -69,68 +60,64 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const globalConfig = await this.getGlobalConfig.run();
     const { play } = globalConfig;
 
-    // ── 2. Validate drawIds ──
-    if (drawIds.length === 0 || drawIds.length > play.maxDrawCount) {
+    // ── 2. Validate draws count vs config (config có thể thay đổi sau khi Zod validate) ──
+    if (drawIds.length > play.maxDrawCount) {
       throw AppException.badRequest(`Số kỳ phải từ 1 đến ${play.maxDrawCount}.`);
     }
-    if (new Set(drawIds).size !== drawIds.length) {
-      throw AppException.badRequest("Danh sách kỳ quay chứa drawId trùng lặp.");
-    }
 
-    // ── 3. Validate boards ──
-    if (boardInputs.length === 0 || boardInputs.length > play.maxBoardsPerTicket) {
+    // ── 3. Build boards — validate business logic (multiNumber/multiDigit constraints) ──
+    if (boardInputs.length > play.maxBoardsPerTicket) {
       throw AppException.badRequest(`Số board phải từ 1 đến ${play.maxBoardsPerTicket}.`);
     }
 
-    const seenBoardNos = new Set<string>();
     const builtBoards: Board[] = [];
     let totalLinesPerDraw = 0;
+    let totalBetUnitsPerDraw = 0;
 
     for (const bi of boardInputs) {
-      if (!(VALID_BOARD_NOS as readonly string[]).includes(bi.boardNo)) {
-        throw AppException.badRequest(
-          `Board "${bi.boardNo}" không hợp lệ. Chỉ chấp nhận: ${VALID_BOARD_NOS.join(", ")}.`,
-        );
-      }
-      if (seenBoardNos.has(bi.boardNo)) {
-        throw AppException.badRequest(`Board "${bi.boardNo}" bị trùng lặp.`);
-      }
-      seenBoardNos.add(bi.boardNo);
+      // Fallback sang 1 cho safety — Zod .default(1) đã xử lý, nhưng phòng thủ extra cho direct calls.
+      const betCount = bi.betCount ?? 1;
 
-      if (!PLAY_MODE_VALUES.includes(bi.playMode)) {
+      // Validate betCount trong khoảng [minBetCount, maxBetCount] từ game config.
+      const minBetCount = play.minBetCount;
+
+      if (betCount < minBetCount) {
         throw AppException.badRequest(
-          `Board ${bi.boardNo}: playMode "${bi.playMode}" không hợp lệ.`,
-        );
-      }
-      if (!PLAY_TYPE_VALUES.includes(bi.playType)) {
-        throw AppException.badRequest(
-          `Board ${bi.boardNo}: playType "${bi.playType}" không hợp lệ.`,
+          `Board ${bi.boardNo}: betCount ${betCount} nhỏ hơn tối thiểu ${minBetCount}.`,
         );
       }
 
-      if (bi.playType === PlayType.QuickPick) {
-        bi.selection = generateQuickPick(bi.playMode);
+      if (betCount > play.maxBetCount) {
+        throw AppException.badRequest(
+          `Board ${bi.boardNo}: betCount ${betCount} vượt quá giới hạn ${play.maxBetCount}.`,
+        );
       }
 
-      const valResult = validateSelection(bi.playMode, bi.playType, bi.selection);
-      if (!valResult.valid) {
-        throw AppException.badRequest(`Board ${bi.boardNo}: ${valResult.errors.join("; ")}`);
+      // validateSelection kiểm tra constraints cụ thể của từng mode
+      // — các rule về playMode/playType/boardNo/count đã qua Zod ở handler
+      try {
+        validateSelection(bi.playMode, bi.selection);
+      } catch (err) {
+        throw AppException.badRequest(`Board ${bi.boardNo}: ${(err as Error).message}`);
       }
 
       const lineCount = calculateLineCount(bi.playMode, bi.playType, bi.selection);
       totalLinesPerDraw += lineCount;
+      // betUnitCount per board = lineCount × betCount — tổng cộng tiền tham gia dự thưởng.
+      totalBetUnitsPerDraw += lineCount * betCount;
 
       builtBoards.push({
         boardNo: bi.boardNo,
         playMode: bi.playMode,
         playType: bi.playType,
         selection: {
-          triplets: [...bi.selection.triplets],
-          frontDigits: bi.selection.frontDigits ? [...bi.selection.frontDigits] : undefined,
-          backDigits: bi.selection.backDigits ? [...bi.selection.backDigits] : undefined,
+          triplets: bi.selection.triplets,
+          frontDigits: bi.selection.frontDigits,
+          backDigits: bi.selection.backDigits,
         },
         derived: {
           lineCount,
+          betCount,
         },
       });
     }
@@ -142,14 +129,17 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
 
     for (const drawId of drawIds) {
       const draw = drawMap.get(drawId);
+
       if (!draw) {
         throw AppException.badRequest(`Kỳ quay ${drawId} không tồn tại.`);
       }
+
       if (draw.status !== DrawStatus.SalesOpen) {
         throw AppException.badRequest(
           `Kỳ quay ${drawId} không đang mở bán (status: ${draw.status}).`,
         );
       }
+
       if (now >= draw.sales.closeAt) {
         throw AppException.badRequest(`Kỳ quay ${drawId} đã hết thời gian nhận cược.`);
       }
@@ -158,7 +148,8 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     // ── 5. Calculate pricing ──
     const drawCount = drawIds.length;
     const unitPrice = play.unitPrice;
-    const amountPerDraw = unitPrice * totalLinesPerDraw;
+    // amountPerDraw = betUnitsPerDraw × unitPrice (mỗi "bet unit" = 1 pair × 1 lần cược).
+    const amountPerDraw = unitPrice * totalBetUnitsPerDraw;
     const totalAmount = amountPerDraw * drawCount;
 
     // ── 6. Load tenant commission rate ──
@@ -173,7 +164,11 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
     const ticketNo = buildTicketNo(GameProduct.Max3dpro, date, seq);
 
-    const ticketDoc: Omit<TicketDoc, "_id"> = {
+    // ticketId sinh client-side → entries có thể nhúng ticketId trước khi insert.
+    const ticketId = newObjectId();
+
+    const ticketDoc: TicketDoc = {
+      _id: ticketId,
       tenantId,
       accountId,
       username,
@@ -187,6 +182,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       pricing: {
         unitPrice,
         linesPerDraw: totalLinesPerDraw,
+        betUnitsPerDraw: totalBetUnitsPerDraw,
         amountPerDraw,
         totalAmount,
       },
@@ -202,10 +198,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       updatedAt: now,
     };
 
-    // ── 8. Insert ticket ──
-    const ticketId = await this.ticketRepo.createTicket(ticketDoc as any);
-
-    // ── 9. Create entries cho TẤT CẢ draws (all-or-nothing) ──
+    // ── 8. Build entry documents — ticketId đã biết trước, không cần đợi insert ticket ──
     const boardSnapshots: EntryBoardSnapshot[] = builtBoards.map((b) => ({
       boardNo: b.boardNo,
       playMode: b.playMode,
@@ -214,13 +207,12 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       frontDigits: b.selection.frontDigits,
       backDigits: b.selection.backDigits,
       lineCount: b.derived.lineCount,
+      betCount: b.derived.betCount,
     }));
 
-    const entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">> = [];
-
-    for (let i = 0; i < drawIds.length; i++) {
-      const draw = drawMap.get(drawIds[i]!)!;
-      entryDocs.push({
+    const entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">> = drawIds.map((drawId) => {
+      const draw = drawMap.get(drawId)!;
+      return {
         tenantId,
         accountId,
         username,
@@ -231,6 +223,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         tenant: { commissionRate, commissionAmount },
         status: EntryStatus.Scheduled as any,
         lineCount: totalLinesPerDraw,
+        betUnitCount: totalBetUnitsPerDraw,
         amount: amountPerDraw,
         unitPrice,
         entrySummary: {
@@ -239,16 +232,13 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         },
         createdAt: now,
         updatedAt: now,
-      });
-    }
+      };
+    });
 
-    try {
-      await this.entryRepo.insertEntries(entryDocs as any[]);
-    } catch (err) {
-      throw AppException.internal(
-        "Không thể tạo entries cho các kỳ quay đã chọn. Vui lòng thử lại.",
-      );
-    }
+    // ── 9. Insert ticket + entries trong 1 transaction (atomic) ──
+    // ticketId sinh client-side → entries đã có sẵn ticketId trước khi insert.
+    // Nếu bất kỳ insert nào fail → cả 2 collections đều rollback.
+    await this.placeBetStore.saveAtomically(ticketDoc, entryDocs);
 
     return {
       ticketId,
@@ -261,6 +251,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       pricing: {
         unitPrice,
         linesPerDraw: totalLinesPerDraw,
+        betUnitsPerDraw: totalBetUnitsPerDraw,
         amountPerDraw,
         totalAmount,
       },
@@ -268,42 +259,4 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       entryCount: drawCount,
     };
   }
-}
-
-// ── Helpers ──
-
-function generateQuickPick(playMode: PlayMode): {
-  triplets: Triplet[];
-  frontDigits?: number[];
-  backDigits?: number[];
-} {
-  if (playMode === PlayMode.MultiDigit) {
-    const frontDigits = [
-      Math.floor(Math.random() * 10),
-      Math.floor(Math.random() * 10),
-      Math.floor(Math.random() * 10),
-    ];
-    const backDigits = [
-      Math.floor(Math.random() * 10),
-      Math.floor(Math.random() * 10),
-      Math.floor(Math.random() * 10),
-    ];
-    return { triplets: [], frontDigits, backDigits };
-  }
-
-  // multiNumber: generate 3 random triplets (minimum)
-  const triplets: Triplet[] = [];
-  const used = new Set<string>();
-  while (triplets.length < 3) {
-    const d1 = Math.floor(Math.random() * 10);
-    const d2 = Math.floor(Math.random() * 10);
-    const d3 = Math.floor(Math.random() * 10);
-    const t = `${d1}${d2}${d3}`.padStart(3, "0");
-    if (!used.has(t)) {
-      used.add(t);
-      triplets.push(t);
-    }
-  }
-
-  return { triplets };
 }

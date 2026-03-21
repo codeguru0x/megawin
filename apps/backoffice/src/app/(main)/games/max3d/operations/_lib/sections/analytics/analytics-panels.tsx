@@ -34,13 +34,6 @@ export const PLAY_MODE_COLORS: Record<
     bg: "bg-violet-50/60 dark:bg-violet-950/20",
     border: "border-violet-200/60 dark:border-violet-800/40",
   },
-  "basic.quickPick": {
-    dot: "bg-teal-400",
-    text: "text-teal-500 dark:text-teal-400",
-    fill: "#2dd4bf",
-    bg: "bg-teal-50/60 dark:bg-teal-950/20",
-    border: "border-teal-200/60 dark:border-teal-800/40",
-  },
   // Plus mode variants
   "plus.straight": {
     dot: "bg-rose-500",
@@ -48,13 +41,6 @@ export const PLAY_MODE_COLORS: Record<
     fill: "#f43f5e",
     bg: "bg-rose-50/60 dark:bg-rose-950/20",
     border: "border-rose-200/60 dark:border-rose-800/40",
-  },
-  "plus.quickPick": {
-    dot: "bg-orange-400",
-    text: "text-orange-500 dark:text-orange-400",
-    fill: "#fb923c",
-    bg: "bg-orange-50/60 dark:bg-orange-950/20",
-    border: "border-orange-200/60 dark:border-orange-800/40",
   },
 };
 
@@ -208,7 +194,7 @@ export function TenantBreakdown({ tenants }: { tenants: TenantRow[] }) {
               {formatNumber(t.entries)} ent
             </span>
             <span className="text-[11px] tabular-nums text-muted-foreground text-right">
-              {formatNumber(t.lines)} ln
+              {formatNumber(t.betUnits)} bu
             </span>
             <span className="text-xs tabular-nums font-semibold text-foreground text-right">
               {formatNumber(t.revenue)}

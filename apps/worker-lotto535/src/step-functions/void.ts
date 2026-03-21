@@ -24,27 +24,29 @@
  *  │  3. SyncTicketSummaries │  Recompute ticket progress (loop)
  *  └────────┬────────────────┘
  *           ▼
- *  ┌──────────────────────────────────────────┐
- *  │  4. DispatchRefunds (loop)               │
- *  │     Gửi refund qua TenantGateway API    │
- *  │     done = true khi hết pending refunds  │
- *  └────────┬─────────────────────────────────┘
- *           ▼
  *  ┌──────────────────────────────────────────────────────────┐
- *  │  5. BuildVoidReport                                      │
+ *  │  4. BuildVoidReport                                      │
  *  │     Cleanup settle reports (nếu void-after-settle)       │
  *  │     + build lotto535_void_draw_reports                   │
  *  └────────┬─────────────────────────────────────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────────────────────┐
- *  │  6. PublishSettleDaily                                   │
+ *  │  5. PublishSettleDaily                                   │
  *  │     Re-aggregate system daily reports                    │
  *  │     Settle totals tự giảm khi settle reports đã xoá     │
  *  └────────┬─────────────────────────────────────────────────┘
  *           ▼
  *  ┌─────────────────────────┐
- *  │  7. FinalizeVoid        │  Transition voiding → void + ghi voidSummary
- *  └─────────────────────────┘
+ *  │  6. FinalizeVoid        │  Transition voiding → void + ghi voidSummary
+ *  └────────┬────────────────┘
+ *           ▼
+ *  ┌──────────────────────────────────────────┐
+ *  │  7. DispatchRefunds (loop)               │
+ *  │     Gửi refund qua TenantGateway API    │
+ *  │     done = true khi hết pending refunds  │
+ *  │     Chạy SAU FinalizeVoid — void nội bộ  │
+ *  │     hoàn tất độc lập với tenant API      │
+ *  └──────────────────────────────────────────┘
  *
  * DATA FLOW (Assign-based):
  *   $voidCtx = PrepareVoid result, persisted via Assign across all states.
@@ -52,6 +54,10 @@
  *
  * CRASH RECOVERY:
  *   Mỗi step idempotent. Entries đã void/refund tự filter ra.
+ *
+ * REFUND SAU FINALIZE:
+ *   DispatchRefunds chạy sau FinalizeVoid — nhất quán với settle (DispatchPayouts sau FinalizeSettle).
+ *   Nếu tenant API down → draw vẫn = void (không treo ở voiding). Admin retry thủ công.
  *
  * REFUND LOGIC:
  *   - Multi-draw ticket: 1 kỳ void → partial refund (entry amount)
@@ -133,10 +139,43 @@ export const VOID_STATE_MACHINE = {
       Choices: [
         {
           Condition: "{% $syncResult.done %}",
-          Next: "DispatchRefunds",
+          Next: "BuildVoidReport",
         },
       ],
       Default: "SyncTicketSummaries",
+    },
+
+    // ── STEP 4: Build void report ──
+    // Cleanup settle reports (nếu void-after-settle) + build void report.
+    // Phase 0: snapshot + delete settle reports (idempotent).
+    // Phase 1: aggregate voided entries + upsert lotto535_void_draw_reports.
+    BuildVoidReport: {
+      Type: "Task",
+      Resource: lambdaArn("void-build-void-report"),
+      Arguments: "{% $voidCtx %}",
+      Next: "PublishSettleDaily",
+      Retry: LAMBDA_RETRY,
+    },
+
+    // ── STEP 5: Publish settle daily ──
+    // Re-aggregate lotto535_settle_draw/tenant_reports → upsert system daily.
+    // Settle reports đã xoá → aggregate giảm → system daily tự giảm.
+    PublishSettleDaily: {
+      Type: "Task",
+      Resource: lambdaArn("void-publish-settle-daily"),
+      Arguments: "{% $voidCtx %}",
+      Next: "FinalizeVoid",
+      Retry: LAMBDA_RETRY,
+    },
+
+    // ── STEP 6: Finalize void ──
+    // Transition voiding → void. Sau bước này draw status = void (hoàn tất nội bộ).
+    FinalizeVoid: {
+      Type: "Task",
+      Resource: lambdaArn("void-finalize"),
+      Arguments: "{% $voidCtx %}",
+      Next: "DispatchRefunds",
+      Retry: LAMBDA_RETRY,
     },
 
     DispatchRefunds: {
@@ -159,7 +198,7 @@ export const VOID_STATE_MACHINE = {
       Choices: [
         {
           Condition: "{% $refundResult.done %}",
-          Next: "BuildVoidReport",
+          Next: "RefundComplete",
         },
       ],
       Default: "RefundWait",
@@ -171,41 +210,14 @@ export const VOID_STATE_MACHINE = {
       Next: "DispatchRefunds",
     },
 
-    // ── STEP 5: Build void report ──
-    // Cleanup settle reports (nếu void-after-settle) + build void report.
-    // Phase 0: snapshot + delete settle reports (idempotent).
-    // Phase 1: aggregate voided entries + upsert lotto535_void_draw_reports.
-    BuildVoidReport: {
-      Type: "Task",
-      Resource: lambdaArn("void-build-void-report"),
-      Arguments: "{% $voidCtx %}",
-      Next: "PublishSettleDaily",
-      Retry: LAMBDA_RETRY,
-    },
-
-    // ── STEP 6: Publish settle daily ──
-    // Re-aggregate lotto535_settle_draw/tenant_reports → upsert system daily.
-    // Settle reports đã xoá → aggregate giảm → system daily tự giảm.
-    PublishSettleDaily: {
-      Type: "Task",
-      Resource: lambdaArn("void-publish-settle-daily"),
-      Arguments: "{% $voidCtx %}",
-      Next: "FinalizeVoid",
-      Retry: LAMBDA_RETRY,
-    },
-
-    // ── STEP 7: Finalize void ──
-    FinalizeVoid: {
-      Type: "Task",
-      Resource: lambdaArn("void-finalize"),
-      Arguments: "{% $voidCtx %}",
+    RefundComplete: {
+      Type: "Pass",
       End: true,
-      Retry: LAMBDA_RETRY,
     },
 
     RefundFailed: {
       Type: "Pass",
-      Comment: "Refund error – void hoàn tất, entries đã void. Admin retry thủ công.",
+      Comment: "Refund error – void đã hoàn tất (status = void). Admin retry thủ công.",
       End: true,
     },
   },

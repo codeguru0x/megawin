@@ -266,6 +266,8 @@ export const DEFAULT_POWER655_CONFIG: {
   },
   play: {
     unitPrice: 10_000,
+    minBetCount: 1, // Tối thiểu 1 lần tham gia dự thưởng per board
+    maxBetCount: 10, // Tối đa 10 lần tham gia dự thưởng per board
     maxBoardsPerTicket: 5,
     maxDrawCount: 6,
     salesCloseBeforeMinutes: 15, // 15 phút trước giờ quay (theo thể lệ)

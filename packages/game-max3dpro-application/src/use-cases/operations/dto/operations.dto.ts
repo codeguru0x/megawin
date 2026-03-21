@@ -30,10 +30,11 @@ export interface OpsSummaryOutput {
   /** Tổng entries. */
   totalEntries: number;
   /**
-   * Tổng TripletPair lines = Σ(entry.lineCount).
-   * multiNumber: C(n,2) cặp/board. multiDigit: perms(front) × perms(back) cặp/board.
+   * Tổng đơn vị cược = Σ(entry.betUnitCount) = Σ(board.lineCount × board.betCount).
+   * Dùng để đối chiếu revenue: totalRevenue = totalBetUnits × unitPrice.
+   * Fallback sang lineCount cho entries cũ (betCount = 1).
    */
-  totalLines: number;
+  totalBetUnits: number;
   /** Số người chơi unique. */
   totalPlayers: number;
   /** Tổng hoa hồng đại lý (VND). */
@@ -54,8 +55,11 @@ export interface TenantBreakdownItem {
   tenantId: string;
   /** Số entries. */
   entries: number;
-  /** Tổng TripletPair lines. */
-  lines: number;
+  /**
+   * Tổng đơn vị cược = Σ(board.lineCount × board.betCount) cho tenant này.
+   * Fallback sang lineCount cho entries cũ.
+   */
+  betUnits: number;
   /** Số người chơi unique. */
   players: number;
   /** Doanh thu (VND). */
@@ -106,14 +110,19 @@ export interface GetPlayTypeDistributionInput {
 export interface PlayTypeDistributionItem {
   /**
    * Cách chơi: multiNumber / multiDigit.
-   * multiNumber: chọn 3-20 bộ ba → C(n,2) cặp.
+   * multiNumber: chọn 3-20 bộ ba → P(n,2) cặp.
    * multiDigit: 3 chữ số đầu × 3 chữ số sau → perms(front) × perms(back) cặp.
    */
   playMode: PlayMode;
   /** Số boards thuộc playMode này. */
   boardCount: number;
-  /** Tổng TripletPair lines của các boards đó. */
+  /** Tổng TripletPair lines của các boards đó (không tính betCount). */
   lineCount: number;
+  /**
+   * Tổng đơn vị cược = Σ(board.lineCount × board.betCount) cho playMode này.
+   * Phản ánh tiền thực của từng playMode.
+   */
+  betUnitCount: number;
   /** Số entries distinct chứa ít nhất 1 board playMode này. */
   entryCount: number;
   /** Tổng doanh thu xấp xỉ (VND). */

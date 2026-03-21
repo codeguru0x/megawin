@@ -20,10 +20,9 @@
  *   - Accept draw ở status "settling" (đang settle dở)
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { SettleContext } from "./types";
 
@@ -34,7 +33,6 @@ export interface PrepareSettleInput {
 
 export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, SettleContext> {
   private readonly drawRepo = new DrawRepository();
-  private readonly entryRepo = new EntryRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   /** Load context cho settle flow. Throw nếu draw không hợp lệ. */
@@ -42,51 +40,30 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
     const { drawId } = input;
 
     const draw = await this.drawRepo.getDrawById(drawId);
+
     if (!draw) {
-      throw new Error(`Draw ${drawId} không tồn tại.`);
+      throw AppException.notFound(`Draw ${drawId} không tồn tại.`);
     }
 
     if (draw.status !== DrawStatus.Settling) {
-      throw new Error(
-        `Draw ${drawId} status = "${draw.status}", expected "settling".`
+      throw AppException.businessRuleViolation(
+        `Draw ${drawId} status = "${draw.status}", expected "settling".`,
       );
     }
 
     if (!draw.result) {
-      throw new Error(`Draw ${drawId} chưa có kết quả quay.`);
+      throw AppException.businessRuleViolation(`Draw ${drawId} chưa có kết quả quay.`);
     }
 
     const globalConfig = await this.getGlobalConfig.run();
-
-    const [totalEntries, totalLines] = await Promise.all([
-      this.entryRepo.countEntriesByDrawId(drawId),
-      this.entryRepo.countLinesByDrawId(drawId),
-    ]);
 
     return {
       drawId,
       drawDate: draw.drawDate,
       drawNo: draw.drawNo,
       financialDate: draw.financialDate,
-      result: {
-        special: draw.result.special as [string, string],
-        first: draw.result.first as [string, string, string, string],
-        second: draw.result.second as [string, string, string, string, string, string],
-        third: draw.result.third as [string, string, string, string, string, string, string, string],
-      },
-      prizeConfig: {
-        basic: { ...globalConfig.defaultPrizes.basic },
-        combo: {
-          combo3: { ...globalConfig.defaultPrizes.combo.combo3 },
-          combo6: { ...globalConfig.defaultPrizes.combo.combo6 },
-        },
-        plus: { ...globalConfig.defaultPrizes.plus },
-      },
-      config: {
-        defaultCommissionRate: globalConfig.rates.defaultCommissionRate,
-      },
-      totalEntries,
-      totalLines,
+      result: draw.result,
+      prizeConfig: globalConfig.defaultPrizes,
     };
   }
 }

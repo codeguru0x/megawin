@@ -17,7 +17,11 @@ import type { Triplet, ISODateString } from "./types";
 export interface LineMatchResult {
   /** Hạng giải trúng (null = không trúng). */
   tier: PrizeTier | null;
-  /** Tiền thưởng cho line này. */
+  /**
+   * Tiền thưởng thực tế cho line này (VND).
+   * = unitWinAmount × betCount (đã nhân betCount tại settle layer).
+   * Audit: so sánh với unitWinAmount từ prizeConfig × betCount.
+   */
   winAmount: number;
   /** Chi tiết matching. */
   matchDetails?: string;
@@ -75,11 +79,18 @@ export interface TicketLineDoc {
   /** Chế độ chơi: "multiNumber" (bao nhiều bộ) hoặc "multiDigit" (bao hoán vị chữ số). */
   playMode: PlayMode;
 
-  /** Kiểu chơi: "straight" hoặc "quickPick". */
+  /** Kiểu chơi: "straight". */
   playType: PlayType;
 
   /** Cặp hai bộ ba số (first, second) — đơn vị tính thưởng của Max 3D Pro. */
   triplets: Triplet[];
+
+  /**
+   * Số lần cược nhân bội của board chứa line này (≥ 1).
+   * Audit trail: giải thích tại sao matchResult.winAmount > giá trị 1 unit.
+   * winAmount = prizeConfig[tier] × betCount.
+   */
+  betCount: number;
 
   // ───── Match Result ─────
 

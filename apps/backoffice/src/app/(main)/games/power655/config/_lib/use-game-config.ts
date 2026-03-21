@@ -26,6 +26,8 @@ interface GameConfig {
   };
   play: {
     unitPrice: number;
+    minBetCount: number;
+    maxBetCount: number;
     maxBoardsPerTicket: number;
     maxDrawCount: number;
     salesCloseBeforeMinutes: number;
@@ -45,8 +47,7 @@ const QUERY_KEY = ["power655", "game-config"] as const;
 export function useGameConfig() {
   return useQuery({
     queryKey: QUERY_KEY,
-    queryFn: () =>
-      apiClient.get<{ config: GameConfig }>("/power655/config").then((r) => r.config),
+    queryFn: () => apiClient.get<{ config: GameConfig }>("/power655/config").then((r) => r.config),
   });
 }
 
@@ -61,9 +62,7 @@ export function useUpdateGameConfig() {
       toast.success(`Đã lưu cấu hình (v${res.version}).`);
     },
     onError: (err) => {
-      toast.error(
-        err instanceof ApiClientError ? err.message : "Lỗi khi cập nhật cấu hình.",
-      );
+      toast.error(err instanceof ApiClientError ? err.message : "Lỗi khi cập nhật cấu hình.");
     },
   });
 }

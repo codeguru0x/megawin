@@ -1460,6 +1460,87 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   }
 
   /**
+   * Patch jackpot prize theo betCount riêng từng entry.
+   *
+   * Mỗi entry nhận jackpotAmount khác nhau tuỳ betCount của board chứa line JP.
+   * Idempotent: chỉ update entries có tiers[jackpot].amount = 0.
+   *
+   * @param drawId ID kỳ quay.
+   * @param entryOps Danh sách { entryId, jackpotAmount } cho từng entry trúng JP.
+   * @returns Số entries đã patch.
+   */
+  async patchJackpotPrizePerEntry(
+    drawId: string,
+    entryOps: Array<{ entryId: string; jackpotAmount: number }>,
+  ): Promise<number> {
+    if (entryOps.length === 0) return 0;
+
+    const entryIds = entryOps.map((op) => new ObjectId(op.entryId));
+
+    const matchingEntries = await this.findManyAsDocuments(
+      {
+        _id: { $in: entryIds },
+        drawId,
+        status: EntryStatus.Settled,
+        outcome: EntryOutcome.Win,
+        "payout.tiers": {
+          $elemMatch: {
+            tier: PrizeTier.Jackpot,
+            hitCount: { $gt: 0 },
+            amount: 0,
+          },
+        },
+      },
+      {
+        projection: { _id: 1, "payout.tiers": 1 },
+      },
+    );
+
+    if (matchingEntries.length === 0) return 0;
+
+    // Map entryId → jackpotAmount từ entryOps
+    const amountMap = new Map(entryOps.map((op) => [op.entryId, op.jackpotAmount]));
+
+    const ops = matchingEntries.map((entry) => {
+      const entryId = (entry._id as any).toHexString();
+      const jackpotAmount = amountMap.get(entryId) ?? 0;
+
+      const tiers = (entry.payout as any)?.tiers ?? [];
+      const updatedTiers = tiers.map((t: any) => {
+        if (t.tier === PrizeTier.Jackpot && t.hitCount > 0 && t.amount === 0) {
+          return { ...t, unitAmount: jackpotAmount, amount: jackpotAmount };
+        }
+        return t;
+      });
+
+      // Tổng winAmount = giải cố định đã nhân betCount + jackpotAmount
+      const totalWin = updatedTiers.reduce((sum: number, t: any) => sum + (t.amount ?? 0), 0);
+
+      return {
+        updateOne: {
+          filter: {
+            _id: entry._id,
+            "payout.tiers": {
+              $elemMatch: { tier: PrizeTier.Jackpot, hitCount: { $gt: 0 }, amount: 0 },
+            },
+          },
+          update: {
+            $set: {
+              "payout.tiers": updatedTiers,
+              "payout.winAmount": totalWin,
+              "payout.payoutAmount": totalWin,
+              updatedAt: new Date(),
+            },
+          } as any,
+        },
+      };
+    });
+
+    const result2 = await this.bulkWrite(ops, { ordered: false });
+    return result2.modifiedCount;
+  }
+
+  /**
    * Aggregate players cho 1 draw × 1 tenant. Drill cấp 3.
    *
    * BẮT BUỘC cả drawId lẫn tenantId — KHÔNG query cross-draw.

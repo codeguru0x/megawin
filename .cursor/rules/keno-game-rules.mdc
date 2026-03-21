@@ -19,10 +19,11 @@ Keno là game xổ số tự chọn quay số nhanh của Vietlott, ra mắt 23/
 - **Kết quả quay**: Hệ thống quay ngẫu nhiên **20 số** từ tập 01-80 mỗi kỳ
 - **Tần suất quay**: **8 phút/kỳ**, ~120 kỳ/ngày
 - **Phát hành**: 06h00 - 21h55, Thứ Hai - Chủ Nhật
-- **Mệnh giá**: 10.000 VND / lần tham gia dự thưởng
-- **Kỳ liên tiếp**: Tối đa 20 kỳ liên tiếp
+- **Mệnh giá**: 10.000 VND / lần tham gia dự thưởng (`unitPrice`)
+- **betCount** (per board/sideBet): Số lần tham gia dự thưởng nhân bội (≥ `minBetCount`, ≤ `maxBetCount`). Mặc định 1. Tiền cược board = `1 × betCount × unitPrice`. Tiền thắng = `matchWinAmount × betCount`
+- **Kỳ liên tiếp**: Tối đa 20 kỳ liên tiếp (`maxDrawCount`)
 - **Vé**: Tối đa 2 panel cơ bản (A, B) + side bets (Panel C)
-- **Đóng bán**: 60 giây trước giờ quay (cấu hình)
+- **Đóng bán**: 60 giây trước giờ quay (cấu hình `salesCloseBeforeSeconds`)
 - **KHÔNG có Jackpot tích lũy** - Tất cả giải thưởng cố định theo bảng
 
 ---
@@ -354,3 +355,8 @@ Keno sử dụng chung:
 11. **Commission snapshot**: commissionRate snapshot lúc place-bet, không thay đổi khi config update sau
 12. **Side bet result**: Người chơi chỉ lĩnh 1 hạng giải duy nhất tương ứng với mỗi cách chơi bổ sung
 13. **Draw stats**: Kết quả quay cần tính sẵn bigCount, smallCount, evenCount, oddCount cho side bet matching
+14. **betCount (multiplier)**: `board.betCount` và `sideBet.betCount` = số lần tham gia dự thưởng nhân bội (player chọn). Phân biệt với `selectionCount` (= boards.length + sideBets.length, đếm số bets logic). `betUnitCount = Σ(board.betCount) + Σ(sideBet.betCount)` — dùng tính tiền: `amount = betUnitCount × unitPrice`
+15. **betCount trong settle**: `matchBasicBoard/matchBigSmallBet/matchEvenOddBet` trả per-unit winAmount → settle layer nhân `betCount` vào `boardPayout.winAmount` / `sideBetPayout.winAmount`
+16. **betCount trong ApplyPayoutCaps**: `cappedPrize` là per-unit → khi ghi lại `boardPayout.winAmount = cappedPrize × boardPayout.betCount`
+17. **Config betCount**: `PlayRules.minBetCount` (≥ 1) và `PlayRules.maxBetCount` — validate tại use case place-bet. Fallback `?? 1` cho entries cũ chưa có betCount
+18. **selectionsPerDraw** (ticket.pricing): = boards.length + sideBets.length. PHÂN BIỆT với `betUnitsPerDraw` = Σ(betCount)

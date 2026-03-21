@@ -89,57 +89,10 @@
       "Choices": [
         {
           "Condition": "{% $syncResult.done %}",
-          "Next": "DispatchRefunds"
-        }
-      ],
-      "Default": "SyncTicketSummaries"
-    },
-    "DispatchRefunds": {
-      "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-power655-dev-void-dispatch-refunds",
-      "Arguments": "{% $voidCtx %}",
-      "Assign": {
-        "refundResult": "{% $states.result %}"
-      },
-      "Next": "CheckRefundDone",
-      "Retry": [
-        {
-          "ErrorEquals": [
-            "Lambda.ServiceException",
-            "Lambda.AWSLambdaException",
-            "Lambda.SdkClientException",
-            "Lambda.TooManyRequestsException",
-            "States.TaskFailed",
-            "States.Timeout"
-          ],
-          "IntervalSeconds": 10,
-          "MaxAttempts": 3,
-          "BackoffRate": 2
-        }
-      ],
-      "Catch": [
-        {
-          "ErrorEquals": [
-            "States.ALL"
-          ],
-          "Next": "RefundFailed"
-        }
-      ]
-    },
-    "CheckRefundDone": {
-      "Type": "Choice",
-      "Choices": [
-        {
-          "Condition": "{% $refundResult.done %}",
           "Next": "BuildVoidReport"
         }
       ],
-      "Default": "RefundWait"
-    },
-    "RefundWait": {
-      "Type": "Wait",
-      "Seconds": 5,
-      "Next": "DispatchRefunds"
+      "Default": "SyncTicketSummaries"
     },
     "BuildVoidReport": {
       "Type": "Task",
@@ -187,7 +140,7 @@
       "Type": "Task",
       "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-power655-dev-void-finalize",
       "Arguments": "{% $voidCtx %}",
-      "End": true,
+      "Next": "DispatchRefunds",
       "Retry": [
         {
           "ErrorEquals": [
@@ -204,9 +157,60 @@
         }
       ]
     },
+    "DispatchRefunds": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-power655-dev-void-dispatch-refunds",
+      "Arguments": "{% $voidCtx %}",
+      "Assign": {
+        "refundResult": "{% $states.result %}"
+      },
+      "Next": "CheckRefundDone",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "RefundFailed"
+        }
+      ]
+    },
+    "CheckRefundDone": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $refundResult.done %}",
+          "Next": "RefundComplete"
+        }
+      ],
+      "Default": "RefundWait"
+    },
+    "RefundWait": {
+      "Type": "Wait",
+      "Seconds": 5,
+      "Next": "DispatchRefunds"
+    },
+    "RefundComplete": {
+      "Type": "Pass",
+      "End": true
+    },
     "RefundFailed": {
       "Type": "Pass",
-      "Comment": "Refund error – void hoàn tất, entries đã void. Admin retry thủ công.",
+      "Comment": "Refund error – void đã hoàn tất (status = void). Admin retry thủ công.",
       "End": true
     }
   }

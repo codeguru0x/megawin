@@ -30,7 +30,6 @@ export const POWER655_PLAY_TYPE_LABELS: Record<PlayType, string> = {
   [PlayType.Bao14]: "Bao 14",
   [PlayType.Bao15]: "Bao 15",
   [PlayType.Bao18]: "Bao 18",
-  [PlayType.QuickPick]: "Chọn nhanh",
 } as const;
 
 /**

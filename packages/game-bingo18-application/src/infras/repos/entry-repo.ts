@@ -1179,9 +1179,10 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             tripleKind: { $ifNull: ["$payout.boardPayouts.tripleKind", null] },
           },
           winnerCount: { $sum: 1 },
-          // $max thay vì $first: giải cố định nên mọi doc trong nhóm đều bằng nhau,
-          // nhưng $max không phụ thuộc thứ tự document → deterministic hơn $first.
-          prizePerUnit: { $max: "$payout.boardPayouts.winAmount" },
+          // unitWinAmount là giá trị giải per-unit trước khi nhân betCount.
+          // Dùng unitWinAmount (không phải winAmount) vì winAmount đã nhân betCount multiplier.
+          // $max: giải cố định → mọi doc trong nhóm (playType+matchCount) đều có unitWinAmount bằng nhau.
+          prizePerUnit: { $max: "$payout.boardPayouts.unitWinAmount" },
         },
       },
       { $sort: { "_id.playType": 1, "_id.matchCount": -1 } },
@@ -1228,9 +1229,10 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             bet: { $ifNull: ["$payout.sideBetPayouts.bet", null] },
           },
           winnerCount: { $sum: 1 },
-          // $max thay vì $first: giải cố định nên mọi doc trong nhóm đều bằng nhau,
-          // nhưng $max không phụ thuộc thứ tự document → deterministic hơn $first.
-          prizePerUnit: { $max: "$payout.sideBetPayouts.winAmount" },
+          // unitWinAmount là giá trị giải per-unit trước khi nhân betCount.
+          // Dùng unitWinAmount (không phải winAmount) vì winAmount đã nhân betCount multiplier.
+          // $max: giải cố định → mọi doc trong nhóm (playType+sum/bet) đều có unitWinAmount bằng nhau.
+          prizePerUnit: { $max: "$payout.sideBetPayouts.unitWinAmount" },
         },
       },
       { $sort: { "_id.playType": 1, "_id.sum": 1, "_id.bet": 1 } },

@@ -26,13 +26,15 @@ import type { ISODateString } from "./types";
 
 /** Thông tin giá vé, tính tại thời điểm mua. */
 export interface TicketPricing {
-  /** Mệnh giá 1 lần cược (VND). Snapshot từ global config. */
+  /** Mệnh giá 1 lần tham gia dự thưởng (VND). Snapshot từ global config. */
   unitPrice: number;
-  /** Số lượng cược mỗi kỳ = boards.length + sideBets.length. */
-  betsPerDraw: number;
-  /** Tiền cược mỗi kỳ = betsPerDraw × unitPrice. */
+  /** Số selections mỗi kỳ = boards.length + sideBets.length. Đếm bets logic, KHÔNG tính multiplier. */
+  selectionsPerDraw: number;
+  /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount) + Σ(sideBet.betCount). Dùng tính tiền: amountPerDraw = betUnitsPerDraw × unitPrice. */
+  betUnitsPerDraw: number;
+  /** Tiền cược mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
   amountPerDraw: number;
-  /** Tổng tiền vé = amountPerDraw × drawCount. Trừ từ ví player khi mua. */
+  /** Tổng tiền vé (VND) = amountPerDraw × drawPlan.drawCount. */
   totalAmount: number;
 }
 
@@ -91,6 +93,8 @@ export interface BasicBoard {
   number?: number;
   /** Chỉ dùng cho tripleMatch: "specific" (chọn số) hoặc "any" (bất kỳ bộ ba). */
   tripleKind?: Bingo18TripleKind;
+  /** Số lần tham gia dự thưởng cho board này (≥ minBetCount, ≤ maxBetCount). Player chọn khi đặt cược. */
+  betCount: number;
 }
 
 // ─────────────────────────────────────────────
@@ -105,6 +109,8 @@ export interface SideBet {
   sum?: number;
   /** Cược lớn/hoà/nhỏ. Chỉ dùng cho bigSmallDraw. */
   bet?: Bingo18BigSmallBet;
+  /** Số lần tham gia dự thưởng cho side bet này (≥ minBetCount, ≤ maxBetCount). Player chọn khi đặt cược. */
+  betCount: number;
 }
 
 // ─────────────────────────────────────────────

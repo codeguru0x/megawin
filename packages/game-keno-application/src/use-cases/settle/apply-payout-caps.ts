@@ -169,6 +169,7 @@ export class ApplyPayoutCapsUseCase extends InternalUseCase<SettleContext, Apply
             playType: string;
             matchCount: number;
             pickCount: number;
+            betCount: number;
             winAmount: number;
           }>;
         }> = [];
@@ -176,7 +177,9 @@ export class ApplyPayoutCapsUseCase extends InternalUseCase<SettleContext, Apply
         for (const entry of entries) {
           const boardPayouts = (entry.payout?.boardPayouts ?? []).map((bp) => {
             if (bp.pickCount === tier.pickCount && bp.matchCount === tier.pickCount) {
-              return { ...bp, winAmount: cappedPrize };
+              // cappedPrize là per-unit → nhân lại betCount của board này.
+              const betCount = bp.betCount ?? 1;
+              return { ...bp, winAmount: cappedPrize * betCount };
             }
             return { ...bp };
           });
@@ -197,6 +200,7 @@ export class ApplyPayoutCapsUseCase extends InternalUseCase<SettleContext, Apply
               playType: bp.playType as string,
               matchCount: bp.matchCount,
               pickCount: bp.pickCount,
+              betCount: bp.betCount ?? 1,
               winAmount: bp.winAmount,
             })),
           });

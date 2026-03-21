@@ -36,6 +36,7 @@ export const lotto535BoardSchema = z
       PlayType.SpecialCover,
     ]),
     selection: lotto535SelectionSchema,
+    betCount: z.number().int().min(1).default(1),
   })
   .superRefine((board, ctx) => {
     const { playType, selection } = board;
@@ -49,6 +50,7 @@ export const lotto535BoardSchema = z
         path: ["selection", "mainNumbers"],
       });
     }
+
     if (new Set(selection.specialNumbers).size !== specialLen) {
       ctx.addIssue({
         code: "custom",
@@ -159,6 +161,7 @@ export const handler = withPlayerAuth(
         mainNumbers: b.selection.mainNumbers,
         specialNumbers: b.selection.specialNumbers,
       },
+      betCount: b.betCount ?? 1,
     }));
 
     return useCase.run({

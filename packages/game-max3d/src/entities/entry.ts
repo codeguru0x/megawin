@@ -29,12 +29,14 @@ export interface EntryBoardSnapshot {
   boardNo: string;
   /** Cách chơi: basic / plus. */
   playMode: PlayMode;
-  /** Kiểu chơi: straight / combo3 / combo6 / quickPick. */
+  /** Kiểu chơi: straight / combo3 / combo6. */
   playType: PlayType;
   /** Danh sách bộ ba số đã chọn (hoặc đã expand từ combo). */
   triplets: Triplet[];
   /** Số lines của board = số lần dự thưởng. Phụ thuộc playType và chữ số trùng. */
   lineCount: number;
+  /** Số lần cược nhân bội (≥ 1). Snapshot từ ticket board. */
+  betCount: number;
 }
 
 // ─────────────────────────────────────────────
@@ -145,9 +147,11 @@ export interface TicketEntryDoc {
   /** Snapshot thông tin đại lý tại thời điểm tạo entry. */
   tenant: EntryTenantSnapshot;
 
-  /** Tổng lines = Σ(board.lineCount). Mỗi line = 1 lần dự thưởng × unitPrice. */
+  /** Tổng lines matching = Σ(board.lineCount). Dùng cho settle. */
   lineCount: number;
-  /** Tổng tiền cược = lineCount × unitPrice (VND). */
+  /** Tổng đơn vị cược = Σ(board.lineCount × board.betCount). Dùng tính tiền. */
+  betUnitCount: number;
+  /** Tổng tiền cược = betUnitCount × unitPrice (VND). */
   amount: number;
   /** Mệnh giá 1 line (VND). Snapshot từ global config. */
   unitPrice: number;
@@ -171,6 +175,7 @@ export interface TicketEntryDoc {
 
   /** Optimistic locking version. */
   version: Long;
+
   /** Thời điểm tạo document. */
   createdAt: Date;
   /** Thời điểm cập nhật gần nhất. */

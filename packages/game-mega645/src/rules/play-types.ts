@@ -18,16 +18,11 @@
  * │ bao14        │ 14 số              │ C(14,6) = 3,003      │
  * │ bao15        │ 15 số              │ C(15,6) = 5,005      │
  * │ bao18        │ 18 số              │ C(18,6) = 18,564     │
- * │ quickPick    │ 6 (random)         │ 1                    │
  * └──────────────┴────────────────────┴──────────────────────┘
  */
 
 import { PlayType } from "../entities/enums";
-import {
-  MEGA645_MAIN_COUNT,
-  VALID_MAIN_NUMBER_SET,
-  type BoardSelection,
-} from "../entities/types";
+import { MEGA645_MAIN_COUNT, VALID_MAIN_NUMBER_SET, type BoardSelection } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Combination helper
@@ -73,11 +68,6 @@ export const PLAY_TYPE_CONFIGS: Record<PlayType, PlayTypeConfig> = {
   [PlayType.Bao14]: { label: "Bao 14", mainCount: 14, fixedLineCount: 3003 },
   [PlayType.Bao15]: { label: "Bao 15", mainCount: 15, fixedLineCount: 5005 },
   [PlayType.Bao18]: { label: "Bao 18", mainCount: 18, fixedLineCount: 18564 },
-  [PlayType.QuickPick]: {
-    label: "Chọn nhanh",
-    mainCount: 6,
-    fixedLineCount: 1,
-  },
 };
 
 // ─────────────────────────────────────────────
@@ -104,16 +94,9 @@ export interface ValidationResult {
   errors: string[];
 }
 
-export function validateSelection(
-  playType: PlayType,
-  selection: BoardSelection
-): ValidationResult {
+export function validateSelection(playType: PlayType, selection: BoardSelection): ValidationResult {
   const errors: string[] = [];
   const { mainNumbers } = selection;
-
-  if (playType === PlayType.QuickPick) {
-    return { valid: true, errors };
-  }
 
   for (const n of mainNumbers) {
     if (!VALID_MAIN_NUMBER_SET.has(n)) {
@@ -128,7 +111,7 @@ export function validateSelection(
   const config = PLAY_TYPE_CONFIGS[playType];
   if (mainNumbers.length !== config.mainCount) {
     errors.push(
-      `${config.label}: cần chọn đúng ${config.mainCount} số, nhận được ${mainNumbers.length}`
+      `${config.label}: cần chọn đúng ${config.mainCount} số, nhận được ${mainNumbers.length}`,
     );
   }
 

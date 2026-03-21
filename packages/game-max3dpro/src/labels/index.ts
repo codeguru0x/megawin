@@ -16,7 +16,7 @@ import { PlayMode, PlayType, PrizeTier } from "../entities/enums";
 /**
  * Tên hiển thị cách chơi bao của Max 3D Pro.
  *
- * - `multiNumber`: Bao nhiều bộ số (chọn 3-20 bộ ba số, tạo C(n,2) cặp)
+ * - `multiNumber`: Bao nhiều bộ số (chọn 3-20 bộ ba số, tạo P(n,2) = n×(n-1) ordered pairs)
  * - `multiDigit`: Bao bộ ba số (chọn 3 chữ số đầu + 3 chữ số sau, expand hoán vị)
  */
 export const MAX3DPRO_PLAY_MODE_LABELS: Record<PlayMode, string> = {
@@ -39,11 +39,10 @@ export function getMax3dproPlayModeLabel(mode: PlayMode): string {
 
 /**
  * Tên hiển thị kiểu chơi Max 3D Pro.
- * Chỉ hỗ trợ `straight` và `quickPick` (không có combo3/combo6).
+ * Chỉ hỗ trợ `straight` (không có combo3/combo6).
  */
 export const MAX3DPRO_PLAY_TYPE_LABELS: Record<PlayType, string> = {
   [PlayType.Straight]: "Thẳng",
-  [PlayType.QuickPick]: "Chọn nhanh",
 } as const;
 
 /**

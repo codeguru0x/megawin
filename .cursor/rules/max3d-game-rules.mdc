@@ -19,7 +19,8 @@ Max 3D là game xổ số tự chọn dạng bộ ba số (triplet) của Vietlo
 - **Không gian mẫu**: 10 × 10 × 10 = 1.000 bộ ba số
 - **Kết quả quay**: 20 bộ ba số mỗi kỳ (2 ĐB + 4 Nhất + 6 Nhì + 8 Ba)
 - **Lịch quay**: 3 lần/tuần (Thứ 2, Thứ 4, Thứ 6) lúc 18h00
-- **Giá vé**: 10.000 VND / lần tham gia dự thưởng (line)
+- **Giá vé**: 10.000 VND / lần tham gia dự thưởng (unit)
+- **betCount**: Số lần tham gia dự thưởng per board (player tự chọn, tối thiểu 1, tối đa `maxBetCount` từ config)
 - **Kỳ liên tiếp**: Tối đa 6 kỳ liên tiếp
 - **Board**: 1 vé có tối đa 4 board (A-D)
 - **Jackpot**: **KHÔNG CÓ** — tất cả giải thưởng CỐ ĐỊNH
@@ -46,6 +47,13 @@ Interface: `Max3dDrawResult { special, first, second, third }`
 ## 3. Cách chơi & Cơ cấu giải thưởng
 
 Giá trị trong các bảng dưới là **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.defaultPrizes`.
+
+**betCount — Số lần tham gia dự thưởng:**
+> Theo luật Vietlott: "Giá trị lĩnh thưởng được tính theo số lần tham gia dự thưởng của bộ số trúng thưởng (01 lần tham gia dự thưởng mệnh giá 10.000 đồng) nhân với giá trị thưởng tương ứng với 01 lần tham gia dự thưởng."
+
+- `betCount` = số lần tham gia dự thưởng per board (≥ 1, tối đa `PlayRules.maxBetCount`)
+- Tiền cược board = `lineCount × betCount × unitPrice`
+- Tiền thưởng board = `matchWinAmount (per-unit) × betCount`
 
 ### 3.1 Max 3D Cơ Bản — PlayMode `basic`
 
@@ -95,15 +103,15 @@ Yêu cầu: 3 chữ số khác nhau (VD: 123, 456, 789).
 
 **Matching combo**: Expand bộ ba thành tất cả hoán vị → so khớp từng hoán vị straight → tổng thưởng = Σ(giải combo tương ứng cho mỗi hoán vị trúng).
 
-#### D) QuickPick (Máy tự chọn)
+#### D) QuickPick — **ĐÃ BỊ XOÁ**
 
-PlayType: `quickPick` | Lines: 1 | Map thành straight
+PlayType `quickPick` đã bị loại khỏi Max 3D. Chỉ hỗ trợ: `straight`, `combo3`, `combo6`.
 
 ---
 
 ### 3.2 Max 3D+ — PlayMode `plus`
 
-Người chơi chọn **2 bộ ba số** (có thể giống nhau). **Chỉ hỗ trợ** `straight` hoặc `quickPick`.
+Người chơi chọn **2 bộ ba số** (có thể giống nhau). **Chỉ hỗ trợ** `straight`.
 
 #### 7 hạng giải:
 
@@ -117,27 +125,84 @@ Người chơi chọn **2 bộ ba số** (có thể giống nhau). **Chỉ hỗ 
 | Giải Năm | `fifth` | Trùng 1 bộ ba số quay thưởng giải ĐB bất kỳ | 150.000 |
 | Giải Sáu | `sixth` | Trùng 1 bộ ba số quay thưởng Nhất, Nhì hoặc Ba bất kỳ | 40.000 |
 
-**Quy tắc đặc biệt**: Nếu 2 bộ ba số **GIỐNG NHAU** → giải thưởng **× 2** (`multiplier = isDuplicate ? 2 : 1`).
+#### Quy tắc trả thưởng Plus — GỘP GIẢI (theo luật Vietlott)
 
-**Logic xác định giải Plus** (`matchPlus()`):
-1. Tìm tier trúng cho mỗi bộ ba (ĐB/Nhất/Nhì/Ba/null)
-2. Cả 2 trúng **CÙNG** hạng → giải Plus tương ứng (ĐB, Nhất, Nhì, Ba)
-3. Cả 2 trúng **KHÁC** hạng → Giải Tư (cross-tier)
-4. Chỉ 1 trúng ĐB → Giải Năm
-5. Chỉ 1 trúng Nhất/Nhì/Ba → Giải Sáu
-6. Không trúng → null
+> **"Trường hợp hai bộ số của người chơi trùng nhiều hạng giải thưởng, người chơi được lãnh TẤT CẢ các giải thưởng đó."**
+
+7 hạng giải **KHÔNG loại trừ lẫn nhau**. Nếu đạt điều kiện nhiều giải → lĩnh tổng tất cả.
+
+**Chia 2 nhóm giải kiểm tra ĐỘC LẬP:**
+
+```
+┌─── NHÓM CẶP (cần cả 2 bộ khớp 2 entry RIÊNG BIỆT – bipartite matching) ───┐
+│  Giải ĐB:    2 bộ khớp 2 entry ĐB riêng biệt                                │
+│  Giải Nhất:  2 bộ khớp 2 entry Nhất riêng biệt                               │
+│  Giải Nhì:   2 bộ khớp 2 entry Nhì riêng biệt                                │
+│  Giải Ba:    2 bộ khớp 2 entry Ba riêng biệt                                  │
+│  Giải Tư:    2 bộ khớp 2 entry BẤT KỲ riêng biệt trong 20 kết quả            │
+├─── NHÓM ĐƠN (kiểm tra từng bộ ba riêng lẻ) ────────────────────────────────┤
+│  Giải Năm:   1 bộ khớp entry ĐB bất kỳ                                       │
+│  Giải Sáu:   1 bộ khớp entry Nhất/Nhì/Ba bất kỳ                              │
+└───────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Ví dụ gộp giải:** Player `"096"+"683"`, Special=["096","389"], First=["683",...]
+- Giải Tư: ✅ (cả 2 khớp 2 entry trong 20) → 1.000.000
+- Giải Năm: ✅ (096 khớp ĐB) → 150.000
+- Giải Sáu: ✅ (683 khớp Nhất) → 40.000
+- **TỔNG: 1.190.000đ**
+
+#### Bipartite Matching — mỗi draw entry chỉ dùng 1 lần
+
+Dùng `countDistinctMatches()`: mỗi triplet player phải khớp 1 entry **RIÊNG BIỆT** trong pool kết quả.
+
+| Player | Special pool | Bipartite | Kết quả |
+|--------|-------------|-----------|---------|
+| `096 + 389` | `[096, 389]` | 096→096 ✓, 389→389 ✓ | 2 match → Giải ĐB |
+| `096 + 096` | `[096, 389]` | 096→096 ✓, 096→? ✗ (pool hết) | 1 match → Chỉ Giải Năm |
+| `096 + 096` | `[096, 096]` | 096→096 ✓, 096→096 ✓ | 2 match → Giải ĐB |
+
+#### Duplicate — 2 bộ ba số giống nhau (×2)
+
+"Hai bộ ba số giống nhau" = **2 lựa chọn trùng nhau** (VD: `096+096`), KHÔNG phải 3 chữ số trong 1 bộ giống nhau (VD: `111`).
+
+Quy tắc: Giải thưởng **×2 chỉ áp dụng từ giải Nhất đến giải Sáu**. Giải ĐB **KHÔNG nhân ×2**. Matching dùng 1 unique triplet, giải đơn (Năm/Sáu) tính 1 lần.
+
+VD: Player `"096"+"096"`, Special=["096","389"]:
+- Bipartite: chỉ match 1 entry → không trúng giải cặp nào
+- Giải Năm: 150.000 × 2 = **300.000đ**
+
+VD: Player `"096"+"096"`, Special=["096","096"]:
+- Bipartite: match 2 entry → Giải ĐB + Giải Tư + Giải Năm
+- Giải ĐB: 1.000.000.000 (KHÔNG ×2)
+- Giải Tư: 1.000.000 × 2 = 2.000.000
+- Giải Năm: 150.000 × 2 = 300.000
+- **TỔNG: 1.002.300.000đ**
 
 ---
 
 ## 4. Matching Rules — Tổng hợp
 
-| Cách chơi | So khớp | Ưu tiên | Nhiều giải |
-|-----------|---------|---------|-----------|
-| Basic Straight | Chính xác thứ tự | Hạng cao nhất (ĐB > Nhất > Nhì > Ba) | Chỉ lĩnh hạng cao nhất |
-| Basic Combo | Tất cả hoán vị, mỗi hoán vị khớp straight | Mỗi hoán vị so riêng | Tổng thưởng = Σ(giải × hoán vị trúng) |
-| Plus | Cả 2 bộ ba, chính xác thứ tự | 7 hạng theo logic phân loại | 1 giải duy nhất |
+| Cách chơi | So khớp | Nhiều giải |
+|-----------|---------|-----------|
+| Basic Straight | Chính xác thứ tự — so với cả 4 hạng | **Lĩnh tổng tất cả hạng trúng** (ĐB + Nhất + ... nếu triplet xuất hiện ở nhiều pool) |
+| Basic Combo | Expand hoán vị → mỗi hoán vị khớp cả 4 hạng | **Tổng thưởng = Σ(combo_prize[tier] × số lần trúng)** — mỗi hoán vị × mỗi tier |
+| Plus | Bipartite matching + gộp giải | **Lĩnh TẤT CẢ giải đạt điều kiện** |
 
-**Lưu ý quan trọng cho Basic**: Trùng nhiều hạng giải → người chơi nhận **tổng số giải thưởng** (khác với Lotto/Mega/Power chỉ lĩnh hạng cao nhất). Với combo, mỗi hoán vị trúng đều được trả thưởng riêng.
+**Lưu ý quan trọng cho Basic (Straight & Combo)**:
+> Theo luật Vietlott Max 3D: *"Trường hợp người tham gia dự thưởng có bộ ba số tham gia dự thưởng trúng nhiều giải thưởng, người tham gia dự thưởng được lĩnh thưởng bằng tổng số giải thưởng."*
+
+Do 20 bộ ba số được quay **độc lập**, 1 triplet có thể xuất hiện đồng thời ở nhiều hạng giải (VD: "096" vừa ở pool ĐB vừa ở pool Nhất). Trong trường hợp đó:
+- **Straight**: lĩnh tổng cả 2 giải = 1.000.000 + 350.000 = 1.350.000đ
+- **Combo**: mỗi hoán vị cũng áp dụng tương tự — cộng tổng combo_prize của tất cả tier mà hoán vị đó khớp
+
+**Cách implement trong code**:
+- `findAllTiersInResult()`: trả về **tất cả** tier mà triplet khớp (không dừng ở hạng đầu tiên như `findTierInResult`)
+- `matchBasicStraight()`: gọi `findAllTiersInResult`, tính `winAmount = Σ(prizes[tier])`
+- `matchBasicCombo()`: mỗi hoán vị gọi `findAllTiersInResult`, **không** `break` sau khi khớp 1 tier
+- `matchBoard()` Straight: mỗi tier trúng tạo 1 `lineResult` riêng (pattern giống Plus mode)
+
+**Lưu ý quan trọng cho Plus**: 7 hạng giải KHÔNG loại trừ lẫn nhau. Giải cặp (ĐB→Tư) dùng bipartite matching — mỗi draw entry chỉ được khớp 1 lần. Giải đơn (Năm/Sáu) kiểm tra từng triplet riêng lẻ. Duplicate (2 bộ giống nhau): giải thưởng ×2 chỉ áp dụng từ Nhất đến Sáu, giải ĐB KHÔNG ×2. Giải đơn tính 1 lần.
 
 ---
 
@@ -254,7 +319,7 @@ Vé multi-draw: chỉ entry của kỳ bị void bị ảnh hưởng, các kỳ 
 ```
 src/
 ├── entities/
-│   ├── enums.ts           # PlayMode (basic, plus), PlayType (straight, combo3, combo6, quickPick),
+│   ├── enums.ts           # PlayMode (basic, plus), PlayType (straight, combo3, combo6),
 │   │                      # BasicPrizeTier (4 hạng), PlusPrizeTier (7 hạng),
 │   │                      # PayoutStatus, RefundStatus, Max3dCollections
 │   ├── types.ts           # Triplet, BoardSelection, BasicPrizeAmounts, ComboPrizeAmounts,
@@ -268,13 +333,15 @@ src/
 │   ├── tenant-config.ts   # TenantConfigDoc
 │   └── game-config.ts     # GameConfigDoc (union type)
 ├── rules/
-│   ├── prize-tiers.ts     # matchBasicStraight(), matchBasicCombo(), matchPlus(), matchBoard(),
-│   │                      # getUniquePermutations(), getPermutationCount(), flattenDrawResult()
+│   ├── prize-tiers.ts     # BASIC_TIER_PRIORITY, findTierInResult(), countDistinctMatches(),
+│   │                      # matchBasicStraight(), matchBasicCombo(), matchPlus(), matchBoard(),
+│   │                      # getUniquePermutations(), getPermutationCount(), flattenDrawResult(),
+│   │                      # PlusMatchResult, PlusWonTier, BoardMatchResult
 │   ├── play-types.ts      # calculateLineCount(), validateSelection(), VALID_BOARD_NOS
 │   ├── odds.ts            # getBasicOddsTable(), getPlusOddsTable(), analyzeBasicStraightProfitability(),
 │   │                      # analyzePlusProfitability()
 │   ├── financials.ts      # calculateDrawFinancials() — đơn giản, không jackpot
-│   └── defaults.ts        # DEFAULT_MAX3D_CONFIG (prizes, rates, play rules)
+│   └── defaults.ts        # DEFAULT_MAX3D_CONFIG (prizes, rates, play rules, maxBetCount: 10)
 ├── helpers/
 │   ├── draw-id.ts         # generateDrawId(), parseDrawId()
 │   └── selection-hash.ts  # SHA-256 dedup hash
@@ -339,14 +406,23 @@ Routes: draws, config, tenant-config, operations.
 1. **KHÔNG CÓ Jackpot, KHÔNG CÓ companyRate**: Max 3D hoàn toàn cố định — không cần JackpotCycleDoc, split cycle, overflow, jackpot contribution, companyRate/companyTake. Financial model: `profit = totalRevenue - totalFixedPrizes - totalAgentCommission`. Công ty thu toàn bộ profit còn lại
 2. **Triplet = string "000"-"999"**: 3 chữ số zero-padded, validate bằng `/^\d{3}$/`. KHÁC HOÀN TOÀN với Lotto/Mega/Power
 3. **2 Play Modes tách biệt**: `basic` (1 bộ ba, 4 hạng giải) vs `plus` (2 bộ ba, 7 hạng giải) — prize enums khác nhau (`BasicPrizeTier` vs `PlusPrizeTier`)
-4. **Combo CHỈ cho basic**: Plus mode chỉ hỗ trợ `straight` hoặc `quickPick`
+4. **Combo CHỈ cho basic**: Plus mode chỉ hỗ trợ `straight`
 5. **20 bộ kết quả/kỳ**: DrawResult có 4 mảng (special[2], first[4], second[6], third[8]) — khác Lotto/Mega/Power chỉ có 1 bộ kết quả
-6. **Duplicate x2 trong Plus**: Nếu 2 bộ ba giống nhau → giải thưởng × 2 (`isDuplicate ? 2 : 1`)
-7. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc`, có thể thay đổi bởi staff
-8. **Tiền lưu integer VND**: Không dùng float
-9. **4 boards A-D**: Ít hơn Lotto 5/35 (5 boards) và Mega 6/45 (6 boards)
-10. **Combo match tổng thưởng**: Mỗi hoán vị trúng đều được trả thưởng riêng (khác Lotto/Mega chỉ lĩnh hạng cao nhất)
-11. **Settle KHÔNG CÓ apply-split-bonuses**: Pipeline ngắn hơn các game có Jackpot
-12. **Commission snapshot**: commissionRate snapshot lúc place-bet, không thay đổi khi config update sau
-13. **DrawId format**: `"YYYY-MM-DD.001"` (1 kỳ/ngày)
-14. **Lịch quay T2, T4, T6**: Không trùng với Power 6/55 (T3, T5, T7) hay Mega 6/45 (T4, T6, CN)
+6. **Duplicate x2 trong Plus — KHÔNG áp dụng cho giải ĐB**: Nếu 2 bộ ba giống nhau → giải thưởng **× 2 chỉ từ Nhất đến Sáu**. Giải ĐB giữ nguyên giá trị (KHÔNG ×2). Bipartite matching vẫn dùng 1 unique triplet, giải đơn (Năm/Sáu) tính 1 lần
+7. **Plus GỘP GIẢI**: 7 hạng giải Plus KHÔNG loại trừ lẫn nhau — kiểm tra từng giải độc lập, player lĩnh tổng TẤT CẢ giải đạt điều kiện. Dùng bipartite matching (`countDistinctMatches()`) đảm bảo mỗi draw entry chỉ khớp 1 lần
+8. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc`, có thể thay đổi bởi staff
+9. **Tiền lưu integer VND**: Không dùng float
+10. **4 boards A-D**: Ít hơn Lotto 5/35 (5 boards) và Mega 6/45 (6 boards)
+11. **Basic GỘP GIẢI — lĩnh tổng tất cả hạng trúng**: Khác với Lotto/Mega/Power chỉ lĩnh hạng cao nhất. Cả Straight lẫn Combo đều dùng `findAllTiersInResult()` để tìm tất cả tier, tính `winAmount = Σ(prizes[tier])`. Trong `matchBoard()`, mỗi tier tạo 1 lineResult riêng (pattern giống Plus mode)
+12. **Settle KHÔNG CÓ apply-split-bonuses**: Pipeline ngắn hơn các game có Jackpot
+13. **Commission snapshot**: commissionRate snapshot lúc place-bet, không thay đổi khi config update sau
+14. **DrawId format**: `"YYYY-MM-DD.001"` (1 kỳ/ngày)
+15. **Lịch quay T2, T4, T6**: Không trùng với Power 6/55 (T3, T5, T7) hay Mega 6/45 (T4, T6, CN)
+16. **PlusMatchResult có wonTiers[]**: `matchPlus()` trả về `PlusMatchResult { wonTiers: PlusWonTier[], winAmount, matchedTriplets }` — KHÔNG phải 1 giải duy nhất. `matchBoard()` tạo 1 lineResult riêng cho mỗi tier trong wonTiers
+17. **betCount — số lần tham gia dự thưởng**:
+    - `betCount` per board — player chọn khi đặt cược, tối thiểu 1, tối đa `PlayRules.maxBetCount`
+    - Tiền cược = `lineCount × betCount × unitPrice`; `entry.betUnitCount = Σ(lineCount × betCount)`, `entry.amount = betUnitCount × unitPrice`
+    - `matchBoard()` trả kết quả **per-unit** (không biết betCount). Nhân betCount tại settle layer
+    - `lineDoc.betCount` lưu kèm để audit trail; `lineDoc.matchResult.winAmount = unitWin × betCount`
+    - Đọc `board.betCount ?? 1` (backward compat); đọc `entry.betUnitCount ?? entry.lineCount` (fallback data cũ)
+    - `adjustedResults` trong settle-entries: nhân betCount vào lineResults.winAmount trước khi `buildPayoutTiers()`

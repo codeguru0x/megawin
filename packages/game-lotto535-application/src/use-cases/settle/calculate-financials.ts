@@ -116,20 +116,20 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
     let splitDetails: SettleFinancials["splitDetails"];
 
     if (isSplitCycle && !hasJackpotWinner) {
-      // Đếm winner theo tier (bỏ qua Jackpot và Consolation)
+      // Đếm bet units theo tier (bỏ qua Jackpot và Consolation)
+      // Quy tắc Vietlott: split bonus chia theo tỷ lệ đơn vị tham gia dự thưởng (betCount)
+      // tierBetUnitCounts = Σ(hitCount × betCount) per tier — tổng đơn vị tham gia thực tế.
+      // Backward compat: data cũ betCount = 1 → tierBetUnitCounts = tierWinnerCounts.
       const winnerCountPerTier = new Map<PrizeTier, number>();
-      for (const [tierStr, count] of Object.entries(settleSummary.tierWinnerCounts)) {
+      for (const [tierStr, betUnitCount] of Object.entries(settleSummary.tierBetUnitCounts)) {
         if (tierStr === PrizeTier.Jackpot || tierStr === PrizeTier.Consolation) continue;
-        if (count > 0) winnerCountPerTier.set(tierStr as PrizeTier, count);
+        if ((betUnitCount ?? 0) > 0) winnerCountPerTier.set(tierStr as PrizeTier, betUnitCount!);
       }
 
       // calculateSplitDistribution:
-      //   Input: jackpotAmount, splitRatios {tier1:2, tier2:1, tier3:1, tier4:1, tier5:1}
-      //   1. Tính tổng ratios = 6
-      //   2. Mỗi tier được phần: jackpotAmount × (ratio / totalRatios)
-      //   3. Tier không có winner → gom lại thành "unallocated pool"
-      //   4. Tái phân bổ pool cho các tier có winner (theo tỷ lệ)
-      //   5. bonusPerWinner = totalAmount / winnerCount (làm tròn xuống 5.000 VND)
+      //   winnerCountPerTier ở đây = tierBetUnitCounts (tổng đơn vị tham gia)
+      //   → bonusPerWinner = bonusPerUnit = totalAmount / totalBetUnits
+      //   → khi patch entry: bonus = bonusPerUnit × hitCount × betCount (trong applySplitBonusForTier)
       const splitResult = calculateSplitDistribution({
         jackpotAmount: jackpotOpeningAmount,
         splitRatios: config.splitRatios,
@@ -153,17 +153,19 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
     // ── BƯỚC 5+6: Ghi financial + stats + settleSummary vào draw (1 DB call) ──
     // settleSummary denormalize bảng giải thưởng cho player API.
     // Jackpot tier prizeAmount = 0 ở đây — PatchJackpotPrize (step 4a) sẽ patch sau.
+    // Dùng tierTotalAmounts (tổng tiền thực từ DB) thay vì công thức unitAmount × winnerCount
+    // vì khi betCount > 1: winAmount = unitAmount × betCount (không phải × 1).
     const tiers: DrawTierPrizeSummary[] = [];
 
     for (const tier of Object.values(PrizeTier)) {
       const winnerCount = settleSummary.tierWinnerCounts[tier] ?? 0;
       if (winnerCount === 0) continue;
 
-      const unitAmount = input.prizeAmounts[tier] ?? 0;
+      const totalAmount = settleSummary.tierTotalAmounts[tier] ?? 0;
       tiers.push({
         tier,
         winnerCount,
-        prizeAmount: unitAmount * winnerCount,
+        prizeAmount: totalAmount,
       });
     }
 

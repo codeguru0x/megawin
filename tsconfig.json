@@ -16,7 +16,6 @@
     { "path": "packages/identity-application" },
     { "path": "packages/game-core" },
     { "path": "packages/game-core-application" },
-    { "path": "packages/game-max3d-core" },
     { "path": "packages/game-mega645" },
     { "path": "packages/game-mega645-application" },
     { "path": "packages/game-keno" },

@@ -33,15 +33,14 @@ import type {
   EntryPayout,
   EntryPayoutTier,
   EntryResult,
-  Max3dPrizeConfig,
-  Triplet,
-  BasicPrizeTier,
-  PlusPrizeTier,
 } from "@megawin/game-max3d/entities";
-import type { Max3dDrawResult as EntityDrawResult } from "@megawin/game-max3d/entities";
-import { matchBoard, type BoardMatchResult } from "@megawin/game-max3d/rules/prize-tiers";
+import {
+  matchBoard,
+  flattenDrawResult,
+  buildPayoutTiers,
+  type BoardMatchResult,
+} from "@megawin/game-max3d/rules/prize-tiers";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
 import type { SettleContext } from "./types";
 
@@ -57,28 +56,13 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   SettleEntriesBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
-  private readonly ticketRepo = new TicketRepository();
   private readonly lineRepo = new LineRepository();
 
   protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
-    const { drawId, result, prizeConfig } = input;
-    const drawResult: EntityDrawResult = {
-      special: result.special as [Triplet, Triplet],
-      first: result.first as [Triplet, Triplet, Triplet, Triplet],
-      second: result.second as [Triplet, Triplet, Triplet, Triplet, Triplet, Triplet],
-      third: result.third as [
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-        Triplet,
-      ],
-    };
+    const { drawId, result: drawResult, prizeConfig } = input;
+    // Tính 1 lần — dùng chung cho tất cả entries/boards trong toàn bộ settle run.
+    const flattenedResult = flattenDrawResult(drawResult);
 
-    const ticketCache = new Map<string, any>();
     const startTime = Date.now();
 
     while (Date.now() - startTime < MAX_EXECUTION_MS) {
@@ -89,6 +73,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       }
 
       const now = new Date();
+
       const settleOps: Array<{
         entryId: string;
         payout: EntryPayout;
@@ -97,24 +82,14 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       }> = [];
 
       for (const entry of entries) {
-        const ticketId = entry.ticketId;
-
-        let ticket = ticketCache.get(ticketId);
-        if (!ticket) {
-          ticket = await this.ticketRepo.getTicketById(ticketId);
-          if (ticket) ticketCache.set(ticketId, ticket);
-        }
-        if (!ticket) {
-          console.error(`Ticket ${ticketId} not found for entry ${entry.id}, skipping.`);
-          continue;
-        }
-
         const boards: EntryBoardSnapshot[] = entry.entrySummary.boards;
         const boardResults: BoardMatchResult[] = [];
-        const allLineDocs: Array<Omit<TicketLineDoc, "_id">> = [];
-        let entryWinAmount = 0;
-        let globalLineIndex = 0;
+        const lineDocs: Array<Omit<TicketLineDoc, "_id">> = [];
 
+        let entryWinAmount = 0;
+        let lineIndex = 0;
+
+        // Loop through each board and match the board with the draw result
         for (const board of boards) {
           const boardMatch = matchBoard(
             {
@@ -123,15 +98,25 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               playType: board.playType,
               triplets: board.triplets,
             },
-            drawResult,
+            flattenedResult,
             prizeConfig,
           );
 
+          // betCount = số lần cược nhân bội — nhân vào winAmount.
+          // matchBoard() trả kết quả per-unit (1 lần cược), nhân betCount ở đây.
+          // Dùng ?? 1 để backward compat với entries cũ chưa có betCount field.
+          const betCount = board.betCount ?? 1;
+
           boardResults.push(boardMatch);
-          entryWinAmount += boardMatch.winAmount;
+
+          entryWinAmount += boardMatch.winAmount * betCount;
 
           for (const lineResult of boardMatch.lineResults) {
-            allLineDocs.push({
+            // winAmount đã nhân betCount → lineDoc.matchResult.winAmount = tổng thực tế.
+            // betCount lưu kèm để audit trail — giải thích tại sao winAmount > giá trị 1 unit.
+            const effectiveWin = lineResult.winAmount * betCount;
+
+            lineDocs.push({
               tenantId: entry.tenantId,
               accountId: entry.accountId,
               username: entry.username,
@@ -140,25 +125,42 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               drawId: entry.drawId,
               financialDate: entry.financialDate,
               boardNo: board.boardNo,
-              lineIndex: globalLineIndex,
+              lineIndex: lineIndex,
               playMode: board.playMode,
               playType: board.playType,
               triplets: lineResult.triplets,
+              betCount,
               matchResult: {
                 tier: lineResult.tier,
-                winAmount: lineResult.winAmount,
+                winAmount: effectiveWin,
               },
               createdAt: now,
             });
-            globalLineIndex++;
+            lineIndex++;
           }
         }
 
-        if (allLineDocs.length > 0) {
-          await this.lineRepo.upsertLines(allLineDocs);
+        if (lineDocs.length > 0) {
+          await this.lineRepo.upsertLines(lineDocs);
         }
 
-        const payoutTiers = buildPayoutTiers(boardResults);
+        // Tạo adjusted boardResults với winAmount đã nhân betCount trước khi truyền vào buildPayoutTiers.
+        // buildPayoutTiers gom tiers dựa trên lineResults.winAmount — cần đã nhân betCount.
+        // Dùng ?? 1 để backward compat với entries cũ chưa có betCount field.
+        const adjustedResults: BoardMatchResult[] = boardResults.map((br, idx) => {
+          const betCount = boards[idx]!.betCount ?? 1;
+          return {
+            ...br,
+            winAmount: br.winAmount * betCount,
+            lineResults: br.lineResults.map((lr) => ({
+              ...lr,
+              winAmount: lr.winAmount * betCount,
+            })),
+          };
+        });
+
+        const payoutTiers = buildPayoutTiers(adjustedResults);
+
         const hasWin = entryWinAmount > 0;
 
         settleOps.push({
@@ -172,10 +174,10 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           } satisfies EntryPayout,
           outcome: hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
           result: {
-            special: result.special,
-            first: result.first,
-            second: result.second,
-            third: result.third,
+            special: drawResult.special,
+            first: drawResult.first,
+            second: drawResult.second,
+            third: drawResult.third,
             publishedAt: now,
           } satisfies EntryResult,
         });
@@ -184,43 +186,13 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       if (settleOps.length > 0) {
         await this.entryRepo.bulkSettleEntries(settleOps);
       }
+
+      // If the number of entries is less than BATCH_SIZE, return done: true
+      if (entries.length < BATCH_SIZE) {
+        return { done: true };
+      }
     }
 
     return { done: false };
   }
-}
-
-// ─────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────
-
-function buildPayoutTiers(boardResults: BoardMatchResult[]): EntryPayoutTier[] {
-  const tierMap = new Map<string, { hitCount: number; totalAmount: number }>();
-
-  for (const br of boardResults) {
-    for (const line of br.lineResults) {
-      if (line.tier && line.winAmount > 0) {
-        const existing = tierMap.get(line.tier);
-        if (existing) {
-          existing.hitCount += 1;
-          existing.totalAmount += line.winAmount;
-        } else {
-          tierMap.set(line.tier, { hitCount: 1, totalAmount: line.winAmount });
-        }
-      }
-    }
-  }
-
-  const tiers: EntryPayoutTier[] = [];
-
-  for (const [tier, info] of tierMap) {
-    tiers.push({
-      tier: tier as BasicPrizeTier | PlusPrizeTier,
-      hitCount: info.hitCount,
-      unitAmount: info.hitCount > 0 ? Math.round(info.totalAmount / info.hitCount) : 0,
-      amount: info.totalAmount,
-    });
-  }
-
-  return tiers;
 }

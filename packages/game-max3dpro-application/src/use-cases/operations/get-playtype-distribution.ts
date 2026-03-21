@@ -11,7 +11,7 @@ import type {
  * Lấy phân bổ cược theo playMode cho dashboard vận hành Max 3D Pro.
  *
  * Max 3D Pro có 2 playMode (KHÔNG có playType combo):
- *   - multiNumber: chọn 3-20 bộ ba → C(n,2) cặp TripletPair
+ *   - multiNumber: chọn 3-20 bộ ba → P(n,2) ordered pairs
  *   - multiDigit: 3 chữ số đầu + 3 chữ số sau → perms(front) × perms(back) cặp
  *
  * Group by playMode → boardCount, lineCount, entryCount, revenue, avgPairsPerEntry.
@@ -36,6 +36,7 @@ export class GetPlayTypeDistributionUseCase extends NextApiUseCase<
       playMode: row.playMode as PlayTypeDistributionItem["playMode"],
       boardCount: row.boardCount,
       lineCount: row.lineCount,
+      betUnitCount: row.betUnitCount,
       entryCount: row.entryCount,
       revenue: row.revenue,
       avgPairsPerEntry: row.entryCount > 0 ? Math.round(row.lineCount / row.entryCount) : 0,

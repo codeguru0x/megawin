@@ -46,11 +46,13 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
           playType: b.playType as string,
           boardNo: b.boardNo as number,
           numbers: b.numbers as string[],
+          betCount: (b.betCount as number) ?? 1,
         }));
 
         const sideBets: LiveEntrySideBet[] = (e.entrySummary?.sideBets ?? []).map((s: any) => ({
           playType: s.playType as string,
           bet: s.bet as string,
+          betCount: (s.betCount as number) ?? 1,
         }));
 
         return {

@@ -44,7 +44,7 @@ export function KpiSection() {
     return {
       totalRevenue: data.totalRevenue,
       totalEntries: data.totalEntries,
-      totalLines: data.totalLines,
+      totalBetUnits: data.totalBetUnits,
       uniquePlayers: data.totalPlayers,
       totalCommission: data.totalCommission,
       netRevenue: data.totalRevenue - data.totalCommission,
@@ -81,8 +81,8 @@ export function KpiSection() {
           icon={Hash}
           iconBg="bg-indigo-100 dark:bg-indigo-900/50"
           iconColor="text-indigo-600 dark:text-indigo-400"
-          label="Lines"
-          value={kpi ? formatNumber(kpi.totalLines) : "—"}
+          label="Bet Units"
+          value={kpi ? formatNumber(kpi.totalBetUnits) : "—"}
           loading={loading}
         />
         <KpiCard

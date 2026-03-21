@@ -85,20 +85,18 @@ export const LOTTO535_SPLIT_ELIGIBLE_TIERS: readonly PrizeTier[] = [
 /**
  * Kiểu chơi trên mỗi board.
  *
- * | Type         | Chọn                        | Số lines            |
- * |--------------|-----------------------------|---------------------|
- * | standard     | 5 chính + 1 đặc biệt       | 1                   |
- * | mainCover4   | 4 chính + 1 đặc biệt       | 31 (hệ thống bổ sung) |
- * | mainCover    | 6-15 chính + 1 đặc biệt    | C(N,5)              |
- * | specialCover | 5 chính + 2-12 đặc biệt    | K                   |
- * | quickPick    | máy chọn ngẫu nhiên         | 1 (map → standard)  |
+ * | Type         | Chọn                        | Số lines              |
+ * |--------------|-----------------------------|------------------------|
+ * | standard     | 5 chính + 1 đặc biệt       | 1                      |
+ * | mainCover4   | 4 chính + 1 đặc biệt       | 31 (hệ thống bổ sung)  |
+ * | mainCover    | 6-15 chính + 1 đặc biệt    | C(N,5)                 |
+ * | specialCover | 5 chính + 2-12 đặc biệt    | K                      |
  */
 export const PlayType = {
   Standard: "standard",
   MainCover4: "mainCover4",
   MainCover: "mainCover",
   SpecialCover: "specialCover",
-  QuickPick: "quickPick",
 } as const;
 
 export type PlayType = (typeof PlayType)[keyof typeof PlayType];

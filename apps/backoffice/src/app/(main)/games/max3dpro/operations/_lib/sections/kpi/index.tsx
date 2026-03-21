@@ -45,7 +45,7 @@ export function KpiSection() {
       totalRevenue: data.totalRevenue,
       totalEntries: data.totalEntries,
       /** totalLines = tổng TripletPair (đơn vị cược cơ bản của Max 3D Pro) */
-      totalLines: data.totalLines,
+      totalLines: data.totalBetUnits,
       uniquePlayers: data.totalPlayers,
       totalCommission: data.totalCommission,
     };

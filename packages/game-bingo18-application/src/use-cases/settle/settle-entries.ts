@@ -118,12 +118,16 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               // Đếm số lần xuất hiện → tra bảng match1/match2/match3.
               // board.number! an toàn: validate khi place-bet, singleNum luôn có number.
               const matchResult = matchSingleNum(board.number!, drawResult, config.singleNumPrizes);
+              // winAmount = unitWinAmount × betCount — nhân multiplier sau khi có kết quả per-unit.
+              const unitWinAmount = matchResult.winAmount;
 
               boardPayouts.push({
                 boardNo: board.boardNo,
                 playType: board.playType,
                 matchCount: matchResult.matchCount,
-                winAmount: matchResult.winAmount,
+                betCount: board.betCount,
+                unitWinAmount,
+                winAmount: unitWinAmount * board.betCount,
               });
 
               break;
@@ -136,12 +140,16 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
                 drawResult,
                 config.doubleMatchPrizes,
               );
+              // winAmount = unitWinAmount × betCount — nhân multiplier sau khi có kết quả per-unit.
+              const unitWinAmount = matchResult.winAmount;
 
               boardPayouts.push({
                 boardNo: board.boardNo,
                 playType: board.playType,
                 matchCount: matchResult.matchCount,
-                winAmount: matchResult.winAmount,
+                betCount: board.betCount,
+                unitWinAmount,
+                winAmount: unitWinAmount * board.betCount,
               });
 
               break;
@@ -155,6 +163,8 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
                 drawResult,
                 config.tripleMatchPrizes,
               );
+              // winAmount = unitWinAmount × betCount — nhân multiplier sau khi có kết quả per-unit.
+              const unitWinAmount = matchResult.winAmount;
 
               boardPayouts.push({
                 boardNo: board.boardNo,
@@ -162,7 +172,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
                 tripleKind: board.tripleKind as Bingo18TripleKind,
                 // matchCount: 3 khi thắng (cả 3 số trùng), 0 khi thua.
                 matchCount: matchResult.isWin ? 3 : 0,
-                winAmount: matchResult.winAmount,
+                betCount: board.betCount,
+                unitWinAmount,
+                winAmount: unitWinAmount * board.betCount,
               });
 
               break;
@@ -180,12 +192,16 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               // Khớp chính xác tổng 3 số. Giải đối xứng quanh 10.5 (3=18, 4=17, ...).
               // sb.sum! an toàn: sumTotal luôn có sum (validate khi place-bet).
               const matchResult = matchSumTotal(sb.sum!, drawResult, config.sumTotalPrizes);
+              // winAmount = unitWinAmount × betCount — nhân multiplier sau khi có kết quả per-unit.
+              const unitWinAmount = matchResult.winAmount;
               sideBetPayouts.push({
                 playType: sb.playType,
                 sum: sb.sum,
                 outcome: matchResult.outcome,
                 isWin: matchResult.isWin,
-                winAmount: matchResult.winAmount,
+                betCount: sb.betCount,
+                unitWinAmount,
+                winAmount: unitWinAmount * sb.betCount,
               });
               break;
             }
@@ -198,13 +214,17 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
                 drawResult,
                 config.bigSmallDrawPrizes,
               );
+              // winAmount = unitWinAmount × betCount — nhân multiplier sau khi có kết quả per-unit.
+              const unitWinAmount = matchResult.winAmount;
 
               sideBetPayouts.push({
                 playType: sb.playType,
                 bet: sb.bet,
                 outcome: matchResult.outcome,
                 isWin: matchResult.isWin,
-                winAmount: matchResult.winAmount,
+                betCount: sb.betCount,
+                unitWinAmount,
+                winAmount: unitWinAmount * sb.betCount,
               });
               break;
             }

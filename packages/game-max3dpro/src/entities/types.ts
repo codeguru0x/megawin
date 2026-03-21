@@ -71,7 +71,7 @@ export interface TripletPair {
 /**
  * Lựa chọn của người chơi trên 1 board.
  *
- * - multiNumber: triplets chứa 3-20 bộ ba số, hệ thống tạo C(n,2) cặp
+ * - multiNumber: triplets chứa 3-20 bộ ba số, hệ thống tạo P(n,2) = n×(n-1) ordered pairs
  * - multiDigit: digits chứa 3 chữ số đầu + 3 chữ số sau, hệ thống expand
  */
 export interface BoardSelection {
@@ -124,6 +124,16 @@ export interface FinancialRates {
 /** Quy tắc chơi. */
 export interface PlayRules {
   unitPrice: number;
+  /**
+   * Số lần cược tối thiểu per board (≥ 1).
+   * Mặc định 1 — player luôn phải cược ít nhất 1 lần.
+   */
+  minBetCount: number;
+  /**
+   * Số lần cược tối đa per board.
+   * Mặc định 10 — player có thể nhân bội tối đa 10 lần/board.
+   */
+  maxBetCount: number;
   maxBoardsPerTicket: number;
   maxDrawCount: number;
   salesCloseBeforeMinutes: number;

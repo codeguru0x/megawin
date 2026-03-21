@@ -116,7 +116,8 @@ export interface PlayerTicketSummary {
    *
    * Công thức:
    * - linesPerDraw = Σ(board.expandedLines)
-   * - amountPerDraw = linesPerDraw × unitPrice
+   * - betUnitsPerDraw = Σ(board.expandedLines × board.betCount)
+   * - amountPerDraw = betUnitsPerDraw × unitPrice
    * - totalAmount = amountPerDraw × drawCount
    */
   pricing: {
@@ -124,7 +125,9 @@ export interface PlayerTicketSummary {
     unitPrice: number;
     /** Tổng lines mỗi kỳ = Σ(board.expandedLines). */
     linesPerDraw: number;
-    /** Giá mỗi kỳ (VND) = linesPerDraw × unitPrice. */
+    /** Tổng đơn vị cược mỗi kỳ = Σ(board.expandedLines × betCount). */
+    betUnitsPerDraw?: number;
+    /** Giá mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
     /** Tổng tiền toàn vé (VND) = amountPerDraw × drawCount. */
     totalAmount: number;
@@ -144,6 +147,11 @@ export interface PlayerTicketSummary {
     };
     /** Số lines được expand từ selection (tùy playType). */
     expandedLines: number;
+    /**
+     * Số lần cược nhân bội cho board này.
+     * UI hiển thị "×N" khi betCount > 1.
+     */
+    betCount?: number;
   }>;
   /** Tiến trình settle qua các kỳ. settledDraws = số kỳ đã xử lý xong (settled + voided). */
   progress: {
@@ -226,6 +234,11 @@ export interface PlayerEntryInfo {
       specialNumbers: string[];
       /** Số lines expand từ selection. */
       expandedLines: number;
+      /**
+       * Số lần cược nhân bội cho board.
+       * UI hiển thị "×N" khi betCount > 1.
+       */
+      betCount?: number;
     }>;
   };
   /** Kết quả quay — chỉ có khi kỳ đã công bố. */

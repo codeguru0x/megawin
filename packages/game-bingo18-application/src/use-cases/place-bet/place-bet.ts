@@ -29,8 +29,7 @@ import type {
   Bingo18SideBetPlayType,
 } from "@megawin/game-bingo18/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { TicketRepository } from "../../infras/repos/ticket-repo";
-import { EntryRepository } from "../../infras/repos/entry-repo";
+import { PlaceBetStore } from "../../infras/repos/place-bet-store";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
@@ -38,11 +37,11 @@ import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
+import { newObjectId } from "@megawin/data/mongo";
 
 export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();
-  private readonly ticketRepo = new TicketRepository();
-  private readonly entryRepo = new EntryRepository();
+  private readonly placeBetStore = new PlaceBetStore();
   private readonly ticketCounter = new TicketCounterRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
@@ -78,12 +77,29 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       throw AppException.badRequest(`Số board cơ bản tối đa là ${play.maxBasicBoardsPerTicket}.`);
     }
 
+    // Validate betCount range cho boards và side bets.
+    for (const bi of boardInputs) {
+      if (bi.betCount < play.minBetCount || bi.betCount > play.maxBetCount) {
+        throw AppException.badRequest(
+          `betCount phải từ ${play.minBetCount} đến ${play.maxBetCount}.`,
+        );
+      }
+    }
+    for (const si of sideBetInputs) {
+      if (si.betCount < play.minBetCount || si.betCount > play.maxBetCount) {
+        throw AppException.badRequest(
+          `betCount phải từ ${play.minBetCount} đến ${play.maxBetCount}.`,
+        );
+      }
+    }
+
     const builtBoards: BasicBoard[] =
       boardInputs.map((bi) => ({
         boardNo: bi.boardNo,
         playType: bi.playType,
         number: bi.number,
         tripleKind: bi.tripleKind,
+        betCount: bi.betCount,
       })) ?? [];
 
     const builtSideBets: SideBet[] =
@@ -91,6 +107,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         playType: si.playType,
         sum: si.sum,
         bet: si.bet,
+        betCount: si.betCount,
       })) ?? [];
 
     // ── 4. Validate tất cả draws – all-or-nothing ──
@@ -123,8 +140,13 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
 
     // ── 6. Calculate pricing ──
     const unitPrice = play.unitPrice;
-    const betsPerDraw = builtBoards.length + builtSideBets.length;
-    const amountPerDraw = unitPrice * betsPerDraw;
+    // selectionsPerDraw = đếm số bets logic (boards + sideBets), KHÔNG tính multiplier.
+    const selectionsPerDraw = builtBoards.length + builtSideBets.length;
+    // betUnitsPerDraw = tổng đơn vị cược thực tế = Σ(board.betCount) + Σ(sideBet.betCount).
+    const betUnitsPerDraw =
+      builtBoards.reduce((acc, b) => acc + b.betCount, 0) +
+      builtSideBets.reduce((acc, s) => acc + s.betCount, 0);
+    const amountPerDraw = unitPrice * betUnitsPerDraw;
     const totalAmount = amountPerDraw * drawIds.length;
     const commissionAmount = Math.round(amountPerDraw * commissionRate);
 
@@ -133,7 +155,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const ticketNo = buildTicketNo(GameProduct.Bingo18, date, seq);
     const drawCount = drawIds.length;
 
-    const ticketDoc: Omit<TicketDoc, "_id"> = {
+    const ticketId = newObjectId();
+    const ticketDoc: TicketDoc = {
+      _id: ticketId,
       tenantId,
       accountId,
       username,
@@ -146,7 +170,8 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       },
       pricing: {
         unitPrice,
-        betsPerDraw,
+        selectionsPerDraw,
+        betUnitsPerDraw,
         amountPerDraw,
         totalAmount,
       },
@@ -163,8 +188,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       updatedAt: now,
     };
 
-    // ── 8. Insert ticket ──
-    const ticketId = await this.ticketRepo.insertOne(ticketDoc);
+    // ── 8. Insert ticket + entries ──
 
     // ── 9. Create entries cho TẤT CẢ draws (all-or-nothing) ──
     const boardSnapshots: EntryBoardSnapshot[] = builtBoards.map((b) => ({
@@ -172,12 +196,14 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       playType: b.playType,
       number: b.number,
       tripleKind: b.tripleKind,
+      betCount: b.betCount,
     }));
 
     const sideBetSnapshots: EntrySideBetSnapshot[] = builtSideBets.map((s) => ({
       playType: s.playType,
       sum: s.sum,
       bet: s.bet,
+      betCount: s.betCount,
     }));
 
     const entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">> = [];
@@ -194,7 +220,8 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         financialDate: draw.financialDate,
         tenant: { commissionRate, commissionAmount },
         status: EntryStatus.Scheduled,
-        betCount: betsPerDraw,
+        selectionCount: selectionsPerDraw,
+        betUnitCount: betUnitsPerDraw,
         amount: amountPerDraw,
         unitPrice,
         entrySummary: {
@@ -207,13 +234,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       });
     }
 
-    try {
-      await this.entryRepo.insertEntries(entryDocs);
-    } catch (err) {
-      throw AppException.internal(
-        "Không thể tạo entries cho các kỳ quay đã chọn. Vui lòng thử lại.",
-      );
-    }
+    await this.placeBetStore.saveAtomically(ticketDoc, entryDocs);
 
     return {
       ticketId,
@@ -225,7 +246,8 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       },
       pricing: {
         unitPrice,
-        betsPerDraw,
+        selectionsPerDraw,
+        betUnitsPerDraw,
         amountPerDraw,
         totalAmount,
       },

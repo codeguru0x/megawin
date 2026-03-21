@@ -5,7 +5,7 @@
  *
  * Power 6/55 differences from Lotto 5/35:
  *   - Chỉ có mainNumbers (không có specialNumbers/bonus)
- *   - PlayTypes: Standard (6 số), Bao5 (5 số → 50 lines), Bao7-Bao18 (C(N,6) lines), QuickPick (6 số)
+ *   - PlayTypes: Standard (6 số), Bao5 (5 số → 50 lines), Bao7-Bao18 (C(N,6) lines)
  *   - Numbers range: 1-55
  *   - Ticket prefix: "P655"
  *   - 1 kỳ/ngày, quay thứ 3/5/7
@@ -28,18 +28,11 @@ import type {
   TicketDoc,
   TicketEntryDoc,
   EntrySummary,
-  BoardSelection,
 } from "@megawin/game-power655/entities";
 import { PlayType } from "@megawin/game-power655/entities";
-import {
-  POWER655_MAIN_MIN,
-  POWER655_MAIN_MAX,
-  POWER655_MAIN_COUNT,
-} from "@megawin/game-power655/entities";
 import { getLineCount } from "@megawin/game-power655/rules/play-types";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { TicketRepository } from "../../infras/repos/ticket-repo";
-import { EntryRepository } from "../../infras/repos/entry-repo";
+import { PlaceBetStore } from "../../infras/repos/place-bet-store";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
@@ -47,6 +40,7 @@ import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
+import { newObjectId } from "@megawin/data/mongo";
 
 /**
  * Tạo vé cược Power 6/55.
@@ -54,8 +48,7 @@ import { nowVN } from "@megawin/shared/utils/date";
  */
 export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();
-  private readonly ticketRepo = new TicketRepository();
-  private readonly entryRepo = new EntryRepository();
+  private readonly placeBetStore = new PlaceBetStore();
   private readonly ticketCounter = new TicketCounterRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
@@ -86,18 +79,30 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       throw AppException.badRequest(`Số board phải từ 1 đến ${play.maxBoardsPerTicket}.`);
     }
 
+    // Validate betCount nằm trong khoảng [minBetCount, maxBetCount]
+    const minBetCount = play.minBetCount ?? 1;
+    const maxBetCount = play.maxBetCount ?? 10;
+    for (const bi of boardInputs) {
+      const bc = bi.betCount ?? 1;
+      if (bc < minBetCount || bc > maxBetCount) {
+        throw AppException.badRequest(
+          `betCount ${bc} của board ${bi.boardNo} phải nằm trong khoảng [${minBetCount}, ${maxBetCount}].`,
+        );
+      }
+    }
+
     const builtBoards: Board[] = [];
     let totalLinesPerDraw = 0;
+    let betUnitsPerDraw = 0;
 
     for (const bi of boardInputs) {
       const playType = bi.playType as PlayType;
 
-      if (playType === PlayType.QuickPick) {
-        bi.selection = generateQuickPick();
-      }
-
       const lineCount = getLineCount(playType);
+      const betCount = bi.betCount ?? 1;
       totalLinesPerDraw += lineCount;
+      // betUnitsPerDraw = Σ(expandedLines × betCount) — đơn vị cược thực tế tính tiền
+      betUnitsPerDraw += lineCount * betCount;
 
       builtBoards.push({
         boardNo: bi.boardNo as any,
@@ -106,6 +111,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
           mainNumbers: [...bi.selection.mainNumbers].sort(),
         },
         derived: { expandedLines: lineCount },
+        betCount,
       });
     }
 
@@ -133,7 +139,8 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     // ── 5. Calculate pricing ──
     const drawCount = drawIds.length;
     const unitPrice = play.unitPrice;
-    const amountPerDraw = unitPrice * totalLinesPerDraw;
+    // Tiền cược = betUnitsPerDraw × unitPrice (không phải linesPerDraw × unitPrice)
+    const amountPerDraw = unitPrice * betUnitsPerDraw;
     const totalAmount = amountPerDraw * drawCount;
 
     // ── 6. Load tenant commission rate ──
@@ -141,13 +148,18 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     if (!tenantConfig || tenantConfig.isEnabled !== true) {
       throw AppException.unauthorized("Không được phép chơi game. Vui lòng liên hệ admin.");
     }
+
     const commissionRate = tenantConfig.commissionRate;
+    // commissionAmount tính sẵn lúc place-bet: snapshot cứng, không thay đổi dù rate update sau.
+    const commissionAmount = Math.round(amountPerDraw * commissionRate);
 
     // ── 7. Build ticket document ──
     const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
     const ticketNo = buildTicketNo(GameProduct.Power655, date, seq);
 
-    const ticketDoc: Omit<TicketDoc, "_id"> = {
+    const ticketId = newObjectId();
+    const ticketDoc: TicketDoc = {
+      _id: ticketId,
       ticketNo,
       tenantId,
       accountId,
@@ -158,6 +170,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       pricing: {
         unitPrice,
         linesPerDraw: totalLinesPerDraw,
+        betUnitsPerDraw,
         amountPerDraw,
         totalAmount,
       },
@@ -177,8 +190,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       updatedAt: now,
     };
 
-    // ── 8. Insert ticket ──
-    const ticketId = await this.ticketRepo.insertOne(ticketDoc as any);
+    // ── 8. Insert ticket + entries ──
 
     // ── 9. Create entries cho TẤT CẢ draws (all-or-nothing) ──
     const entrySummary: EntrySummary = {
@@ -188,6 +200,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         playType: b.playType,
         mainNumbers: b.selection.mainNumbers,
         expandedLines: b.derived.expandedLines,
+        betCount: b.betCount ?? 1,
       })),
     };
 
@@ -195,8 +208,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
 
     for (let i = 0; i < drawIds.length; i++) {
       const draw = drawMap.get(drawIds[i]!)!;
-      // commissionAmount tính sẵn lúc place-bet: snapshot cứng, không thay đổi dù rate update sau.
-      const commissionAmount = Math.round(amountPerDraw * commissionRate);
+
       entryDocs.push({
         ticketId,
         tenantId,
@@ -208,6 +220,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         tenant: { commissionRate, commissionAmount },
         status: EntryStatus.Scheduled as any,
         lineCount: totalLinesPerDraw,
+        betUnitCount: betUnitsPerDraw,
         amount: amountPerDraw,
         unitPrice,
         entrySummary,
@@ -216,13 +229,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       });
     }
 
-    try {
-      await this.entryRepo.insertEntries(entryDocs as any[]);
-    } catch {
-      throw AppException.internal(
-        "Không thể tạo entries cho các kỳ quay đã chọn. Vui lòng thử lại.",
-      );
-    }
+    await this.placeBetStore.saveAtomically(ticketDoc, entryDocs as any[]);
 
     return {
       ticketId,
@@ -235,6 +242,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       pricing: {
         unitPrice,
         linesPerDraw: totalLinesPerDraw,
+        betUnitsPerDraw,
         amountPerDraw,
         totalAmount,
       },
@@ -242,22 +250,4 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       entryCount: drawCount,
     };
   }
-}
-
-// ── Helpers ──
-
-/**
- * Sinh ngẫu nhiên 6 số trong range [1, 55] cho QuickPick.
- */
-function generateQuickPick(): BoardSelection {
-  const mainSet = new Set<string>();
-  while (mainSet.size < POWER655_MAIN_COUNT) {
-    const num =
-      Math.floor(Math.random() * (POWER655_MAIN_MAX - POWER655_MAIN_MIN + 1)) + POWER655_MAIN_MIN;
-    mainSet.add(String(num).padStart(2, "0"));
-  }
-
-  return {
-    mainNumbers: [...mainSet].sort(),
-  };
 }

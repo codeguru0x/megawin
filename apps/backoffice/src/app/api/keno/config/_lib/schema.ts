@@ -68,6 +68,8 @@ const payoutCapsSchema = z
 const playSchema = z
   .object({
     unitPrice: positiveInt,
+    minBetCount: z.number().int().min(1, "Tối thiểu 1"),
+    maxBetCount: z.number().int().min(1, "Tối thiểu 1").max(50, "Tối đa 50"),
     maxBasicBoardsPerTicket: positiveInt,
     maxDrawCount: positiveInt,
     salesCloseBeforeSeconds: positiveInt,
@@ -76,7 +78,16 @@ const playSchema = z
     lastDrawTime: z.string().regex(timePattern, "Giờ phải có format HH:mm"),
     timezone: z.string().min(1),
   })
-  .partial();
+  .partial()
+  .refine(
+    (data) => {
+      if (data.minBetCount !== undefined && data.maxBetCount !== undefined) {
+        return data.maxBetCount >= data.minBetCount;
+      }
+      return true;
+    },
+    { message: "maxBetCount phải ≥ minBetCount", path: ["maxBetCount"] },
+  );
 
 // ─────── Root schema ───────
 

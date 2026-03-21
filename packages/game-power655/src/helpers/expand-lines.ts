@@ -2,7 +2,7 @@
  * Power 6/55 – Board Expansion (expand boards → lines)
  *
  * Chuyển đổi mỗi board (selection player chọn) thành các line (bộ 6 số) để match với kết quả quay.
- * - Standard/QuickPick: 1 board → 1 line (chọn đúng 6 số)
+ * - Standard: 1 board → 1 line (chọn đúng 6 số)
  * - Bao 5: 1 board (5 số) → 50 lines (5 số đã chọn + từng số trong 50 số còn lại)
  * - Bao N (N = 7..18): 1 board (N số) → C(N,6) lines (mọi tổ hợp chập 6 từ N số)
  *
@@ -95,7 +95,7 @@ function expandBao5(selection: BoardSelection): LineValue[] {
 /**
  * Expand 1 board thành danh sách lines theo play type.
  *
- * - Standard/QuickPick: lấy 6 số đầu tiên (đã sort) → 1 line duy nhất.
+ * - Standard: lấy 6 số đầu tiên (đã sort) → 1 line duy nhất.
  *
  * - Bao 5: ghép từng số trong 50 số còn lại vào 5 số đã chọn → 50 lines.
  *   Ví dụ: player chọn [01,05,12,23,34] → 50 lines, mỗi line = 5 số đó + 1 trong 50 số còn lại.
@@ -106,14 +106,14 @@ function expandBao5(selection: BoardSelection): LineValue[] {
  *
  * Sort trước khi expand để đảm bảo deterministic (dedup + hash nhất quán).
  *
- * @param playType  - Kiểu chơi (Standard, QuickPick, Bao5, Bao7-18)
+ * @param playType  - Kiểu chơi (Standard, Bao5, Bao7-18)
  * @param selection - Board selection chứa mainNumbers
  * @returns Mảng LineValue, mỗi phần tử chứa main: string[] (6 số, sorted tăng dần)
  */
 export function expandBoardToLines(playType: PlayType, selection: BoardSelection): LineValue[] {
   const sorted = [...selection.mainNumbers].sort();
 
-  if (playType === PlayType.Standard || playType === PlayType.QuickPick) {
+  if (playType === PlayType.Standard) {
     return [{ main: sorted.slice(0, POWER655_MAIN_COUNT) }];
   }
 
@@ -136,7 +136,7 @@ export function expandBoardToLines(playType: PlayType, selection: BoardSelection
  * - lineIndex: index toàn cục (0-based, liên tục qua các boards) — primary key cho TicketLineDoc.
  *
  * Số lines theo loại:
- * - Standard/QuickPick: 1 line/board
+ * - Standard: 1 line/board
  * - Bao 5: 50 lines/board (55 - 5 = 50)
  * - Bao N (7-18): C(N,6) lines/board
  *

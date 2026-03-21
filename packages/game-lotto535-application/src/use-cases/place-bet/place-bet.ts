@@ -8,18 +8,10 @@ import type {
   EntryBoardSnapshot,
 } from "@megawin/game-lotto535/entities";
 import { PlayType } from "@megawin/game-lotto535/entities";
-import {
-  LOTTO535_MAIN_COUNT,
-  ALL_MAIN_NUMBERS,
-  VALID_MAIN_NUMBER_SET,
-  VALID_SPECIAL_NUMBER_SET,
-} from "@megawin/game-lotto535/entities";
-import { VALID_BOARD_NOS } from "@megawin/game-lotto535/schemas";
-import { calculateLineCount, validateSelection } from "@megawin/game-lotto535/rules/play-types";
+import { calculateLineCount } from "@megawin/game-lotto535/rules/play-types";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { TicketRepository } from "../../infras/repos/ticket-repo";
-import { EntryRepository } from "../../infras/repos/entry-repo";
+import { PlaceBetStore } from "../../infras/repos/place-bet-store";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
@@ -27,11 +19,11 @@ import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
+import { newObjectId } from "@megawin/data/mongo";
 
 export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();
-  private readonly ticketRepo = new TicketRepository();
-  private readonly entryRepo = new EntryRepository();
+  private readonly placeBetStore = new PlaceBetStore();
   private readonly ticketCounter = new TicketCounterRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
@@ -51,51 +43,41 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const globalConfig = await this.getGlobalConfig.run();
     const { play } = globalConfig;
 
-    // ── 2. Validate drawIds ──
-    if (drawIds.length === 0 || drawIds.length > play.maxDrawCount) {
-      throw AppException.badRequest(`Số kỳ phải từ 1 đến ${play.maxDrawCount}.`);
-    }
-    if (new Set(drawIds).size !== drawIds.length) {
-      throw AppException.badRequest("Danh sách kỳ quay chứa drawId trùng lặp.");
+    // ── 2. Validate tenant ──
+
+    const tenantConfig = await this.getTenantConfig.run({ tenantId });
+    if (!tenantConfig || tenantConfig.isEnabled !== true) {
+      throw AppException.unauthorized("Không được phép chơi game. Vui lòng liên hệ admin.");
     }
 
-    // ── 3. Validate boards ──
+    // ── 3. Build boards + tính line count ──
     if (boardInputs.length === 0 || boardInputs.length > play.maxBoardsPerTicket) {
       throw AppException.badRequest(`Số board phải từ 1 đến ${play.maxBoardsPerTicket}.`);
     }
 
-    const seenBoardNos = new Set<string>();
-    const builtBoards: Board[] = [];
-    let totalLinesPerDraw = 0;
-
-    const VALID_BOARD_NOS_ARRAY = VALID_BOARD_NOS as readonly string[];
-
+    // Validate betCount range trước khi build boards
+    const minBetCount = play.minBetCount ?? 1;
+    const maxBetCount = play.maxBetCount ?? 10;
     for (const bi of boardInputs) {
-      if (!VALID_BOARD_NOS_ARRAY.includes(bi.boardNo)) {
+      const bc = bi.betCount ?? 1;
+      if (bc < minBetCount || bc > maxBetCount) {
         throw AppException.badRequest(
-          `Board "${bi.boardNo}" không hợp lệ. Chỉ chấp nhận: ${VALID_BOARD_NOS.join(", ")}.`,
+          `betCount ${bc} của board ${bi.boardNo} phải nằm trong khoảng [${minBetCount}, ${maxBetCount}].`,
         );
       }
-      if (seenBoardNos.has(bi.boardNo)) {
-        throw AppException.badRequest(`Board "${bi.boardNo}" bị trùng lặp.`);
-      }
-      seenBoardNos.add(bi.boardNo);
+    }
 
+    const builtBoards: Board[] = [];
+    let totalLinesPerDraw = 0;
+    let betUnitsPerDraw = 0;
+
+    for (const bi of boardInputs) {
       const playType = bi.playType as PlayType;
-
-      if (playType === PlayType.QuickPick) {
-        bi.selection = generateQuickPick();
-      }
-
-      const valResult = validateSelection(playType, bi.selection);
-      if (!valResult.valid) {
-        throw AppException.badRequest(`Board ${bi.boardNo}: ${valResult.errors.join("; ")}`);
-      }
-
-      validateNumberRanges(bi.boardNo, bi.selection.mainNumbers, bi.selection.specialNumbers);
-
       const lineCount = calculateLineCount(playType, bi.selection);
+      const betCount = bi.betCount ?? 1;
       totalLinesPerDraw += lineCount;
+      // betUnitsPerDraw = Σ(expandedLines × betCount) — đơn vị cược thực tế tính tiền
+      betUnitsPerDraw += lineCount * betCount;
 
       builtBoards.push({
         boardNo: bi.boardNo,
@@ -113,13 +95,13 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
           specialCoverSize:
             playType === PlayType.SpecialCover ? bi.selection.specialNumbers.length : undefined,
         },
+        betCount,
       });
     }
 
     // ── 4. Validate tất cả draws – all-or-nothing ──
     const now = nowVN();
     const draws = await this.drawRepo.getDrawsByIds(drawIds);
-
     const drawMap = new Map(draws.map((d) => [d.drawId, d]));
 
     for (const drawId of drawIds) {
@@ -127,25 +109,28 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       if (!draw) {
         throw AppException.badRequest(`Kỳ quay ${drawId} không tồn tại.`);
       }
+
       if (draw.status !== DrawStatus.SalesOpen) {
         throw AppException.badRequest(`Kỳ quay ${drawId} không đang mở bán.`);
       }
+
       if (now >= draw.sales.closeAt) {
         throw AppException.badRequest(`Kỳ quay ${drawId} đã hết thời gian nhận cược.`);
       }
     }
 
-    // ── 5. Calculate pricing ──
+    // ── 5. Kiểm tra drawCount không vượt giới hạn config (dynamic từ DB) ──
+    if (drawIds.length > play.maxDrawCount) {
+      throw AppException.badRequest(`Số kỳ tối đa là ${play.maxDrawCount}.`);
+    }
+
+    // ── 6. Calculate pricing ──
     const drawCount = drawIds.length;
     const unitPrice = play.unitPrice;
-    const amountPerDraw = unitPrice * totalLinesPerDraw;
+    // Tiền cược = betUnitsPerDraw × unitPrice (không phải linesPerDraw × unitPrice)
+    const amountPerDraw = unitPrice * betUnitsPerDraw;
     const totalAmount = amountPerDraw * drawCount;
 
-    // ── 6. Load tenant commission rate + tính commission amount ──
-    const tenantConfig = await this.getTenantConfig.run({ tenantId });
-    if (!tenantConfig || tenantConfig.isEnabled !== true) {
-      throw AppException.unauthorized("Không được phép chơi game. Vui lòng liên hệ admin.");
-    }
     const commissionRate = tenantConfig.commissionRate;
     const commissionAmount = Math.round(amountPerDraw * commissionRate);
 
@@ -153,7 +138,10 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
     const ticketNo = buildTicketNo(GameProduct.Lotto535, date, seq);
 
-    const ticketDoc: Omit<TicketDoc, "_id"> = {
+    const ticketId = newObjectId();
+
+    const ticketDoc: TicketDoc = {
+      _id: ticketId,
       tenantId,
       accountId,
       username,
@@ -167,6 +155,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       pricing: {
         unitPrice,
         linesPerDraw: totalLinesPerDraw,
+        betUnitsPerDraw,
         amountPerDraw,
         totalAmount,
       },
@@ -177,14 +166,13 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         settledDraws: 0,
       },
       financialDate: getFinancialDate(now),
-      status: TicketStatus.Paid as any,
+      status: TicketStatus.Paid,
       version: 0,
       createdAt: now,
       updatedAt: now,
     };
 
-    // ── 8. Insert ticket ──
-    const ticketId = await this.ticketRepo.insertOne(ticketDoc as any);
+    // ── 8. Insert ticket + entries ──
 
     // ── 9. Create entries cho TẤT CẢ draws (all-or-nothing) ──
     const boardSnapshots: EntryBoardSnapshot[] = builtBoards.map((b) => ({
@@ -193,6 +181,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       mainNumbers: b.selection.mainNumbers,
       specialNumbers: b.selection.specialNumbers,
       expandedLines: b.derived.expandedLines,
+      betCount: b.betCount ?? 1,
     }));
 
     const entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">> = [];
@@ -208,8 +197,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         drawId: draw.drawId,
         financialDate: draw.financialDate,
         tenant: { commissionRate, commissionAmount },
-        status: EntryStatus.Scheduled as any,
+        status: EntryStatus.Scheduled,
         lineCount: totalLinesPerDraw,
+        betUnitCount: betUnitsPerDraw,
         amount: amountPerDraw,
         unitPrice,
         entrySummary: {
@@ -221,13 +211,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       });
     }
 
-    try {
-      await this.entryRepo.insertEntries(entryDocs as any[]);
-    } catch (err) {
-      throw AppException.internal(
-        "Không thể tạo entries cho các kỳ quay đã chọn. Vui lòng thử lại.",
-      );
-    }
+    await this.placeBetStore.saveAtomically(ticketDoc, entryDocs);
 
     return {
       ticketId,
@@ -240,60 +224,12 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       pricing: {
         unitPrice,
         linesPerDraw: totalLinesPerDraw,
+        betUnitsPerDraw,
         amountPerDraw,
         totalAmount,
       },
       boardCount: builtBoards.length,
       entryCount: drawCount,
     };
-  }
-}
-
-// ── Helpers ──
-
-function generateQuickPick(): {
-  mainNumbers: string[];
-  specialNumbers: string[];
-} {
-  const mainSet = new Set<string>();
-  while (mainSet.size < LOTTO535_MAIN_COUNT) {
-    const idx = Math.floor(Math.random() * ALL_MAIN_NUMBERS.length);
-    mainSet.add(ALL_MAIN_NUMBERS[idx]!);
-  }
-
-  const specialIdx = Math.floor(Math.random() * 12);
-  const special = String(specialIdx + 1).padStart(2, "0");
-
-  return {
-    mainNumbers: [...mainSet].sort(),
-    specialNumbers: [special],
-  };
-}
-
-function validateNumberRanges(
-  boardNo: string,
-  mainNumbers: string[],
-  specialNumbers: string[],
-): void {
-  for (const n of mainNumbers) {
-    if (!VALID_MAIN_NUMBER_SET.has(n)) {
-      throw AppException.badRequest(
-        `Board ${boardNo}: số chính "${n}" không hợp lệ (phải từ "01" đến "35").`,
-      );
-    }
-  }
-  if (new Set(mainNumbers).size !== mainNumbers.length) {
-    throw AppException.badRequest(`Board ${boardNo}: số chính không được trùng nhau.`);
-  }
-
-  for (const n of specialNumbers) {
-    if (!VALID_SPECIAL_NUMBER_SET.has(n)) {
-      throw AppException.badRequest(
-        `Board ${boardNo}: số đặc biệt "${n}" không hợp lệ (phải từ "01" đến "12").`,
-      );
-    }
-  }
-  if (new Set(specialNumbers).size !== specialNumbers.length) {
-    throw AppException.badRequest(`Board ${boardNo}: số đặc biệt không được trùng nhau.`);
   }
 }

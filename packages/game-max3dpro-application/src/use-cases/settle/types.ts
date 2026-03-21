@@ -21,49 +21,13 @@
  * (trừ PrepareSettleInput vì step đầu chỉ nhận drawId).
  */
 
-import type { PrizeAmounts } from "@megawin/game-max3dpro/entities";
+import type { Max3dproDrawResult, Max3dproPrizeConfig } from "@megawin/game-max3dpro/entities";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Primitive shared types
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Kết quả quay Max 3D Pro — 20 bộ ba số theo 4 giải.
- *
- * Mỗi giải gồm các bộ ba số (triplet) 3 chữ số ("000"-"999").
- * SettleEntries dùng để match pairs vs kết quả, xác định tier thắng.
- */
-export interface Max3dProDrawResult {
-  /** Giải Đặc biệt: 2 bộ ba số. */
-  special: [string, string];
-  /** Giải Nhất: 4 bộ ba số. */
-  first: [string, string, string, string];
-  /** Giải Nhì: 6 bộ ba số. */
-  second: [string, string, string, string, string, string];
-  /** Giải Ba: 8 bộ ba số. */
-  third: [string, string, string, string, string, string, string, string];
-}
-
-/**
- * Config tài chính cho settle — snapshot từ GlobalConfig.
- *
- * Được tạo bởi PrepareSettle, sử dụng bởi CalculateFinancials.
- * Config snapshot tại thời điểm settle — KHÔNG thay đổi giữa các step.
- */
-export interface Max3dProSettleConfig {
-  /** Tỷ lệ hoa hồng đại lý mặc định (0-1). */
-  defaultCommissionRate: number;
-}
-
-/**
- * Cấu hình giải thưởng Max 3D Pro — snapshot tại thời điểm settle.
- *
- * Dùng bởi SettleEntries để tính winAmount cho mỗi pair.
- */
-export interface Max3dProPrizeConfig {
-  /** Giải thưởng chế độ Standard (8 giải: special → sixth). */
-  standard: PrizeAmounts;
-}
+/** Re-export với tên chuẩn hoá PascalCase cho settle layer. */
+export type {
+  Max3dproDrawResult as Max3dProDrawResult,
+  Max3dproPrizeConfig as Max3dProPrizeConfig,
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SettleFinancials – output CalculateFinancials, nested vào SettleContext
@@ -143,32 +107,13 @@ export interface SettleContext {
    * Kết quả quay đã công bố — 20 bộ ba số theo 4 giải.
    * SettleEntries dùng để match pairs vs kết quả, xác định tier thắng.
    */
-  result: Max3dProDrawResult;
+  result: Max3dproDrawResult;
 
   /**
    * Cấu hình giải thưởng áp dụng cho kỳ này — snapshot tại thời điểm settle.
    * Dùng bởi SettleEntries để tính winAmount cho mỗi pair.
    */
-  prizeConfig: Max3dProPrizeConfig;
-
-  /**
-   * Cấu hình tài chính settle — snapshot tại thời điểm PrepareSettle.
-   * Gồm defaultCommissionRate.
-   * Dùng bởi CalculateFinancials để tính phân bổ doanh thu.
-   */
-  config: Max3dProSettleConfig;
-
-  /**
-   * Tổng entries cần settle trong kỳ — đếm từ DB lúc PrepareSettle.
-   * Dùng cho logging, progress tracking.
-   */
-  totalEntries: number;
-
-  /**
-   * Tổng pairs (lines) cần settle — đếm từ DB lúc PrepareSettle.
-   * Dùng bởi CalculateFinancials để cập nhật stats trên draw document.
-   */
-  totalLines: number;
+  prizeConfig: Max3dproPrizeConfig;
 
   /**
    * Dữ liệu tài chính tổng hợp — output của CalculateFinancials.

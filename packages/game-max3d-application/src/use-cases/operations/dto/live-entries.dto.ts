@@ -32,7 +32,7 @@ export interface LiveEntryBoard {
   boardNo: string;
   /** Cách chơi: basic / plus. */
   playMode: PlayMode;
-  /** Kiểu chơi: straight / combo3 / combo6 / quickPick. */
+  /** Kiểu chơi: straight / combo3 / combo6. */
   playType: PlayType;
   /**
    * Danh sách bộ ba số (zero-padded "000"-"999").
@@ -42,6 +42,8 @@ export interface LiveEntryBoard {
   triplets: string[];
   /** Số lines expanded của board (1, 3, hoặc 6 với combo). */
   lineCount: number;
+  /** Số lần cược nhân bội của board (≥ 1). Hiển thị badge ×N khi > 1. */
+  betCount: number;
 }
 
 /** Một entry rút gọn cho live feed. */
@@ -54,8 +56,10 @@ export interface LiveEntryItem {
   tenantId: string;
   /** Tổng tiền cược (VND). */
   amount: number;
-  /** Tổng số lines. */
+  /** Tổng số lines matching. */
   lineCount: number;
+  /** Tổng đơn vị cược = Σ(lineCount × betCount). Dùng cho KPI. */
+  betUnitCount: number;
   /** Danh sách boards (bộ ba số và cách chơi). */
   boards: LiveEntryBoard[];
   /** Thời điểm đặt cược (ISO 8601). */

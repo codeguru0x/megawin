@@ -23,6 +23,8 @@ export interface LiveEntryBoard {
   mainNumbers: string[];
   /** Số lines expanded của board này. */
   expandedLines: number;
+  /** Số lần cược nhân bội (≥ 1). Hiển thị badge ×N khi > 1. */
+  betCount?: number;
 }
 
 /** Một entry rút gọn cho live feed. */
@@ -34,6 +36,11 @@ export interface LiveEntryItem {
   amount: number;
   /** Tổng số lines. */
   lineCount: number;
+  /**
+   * Tổng đơn vị cược = Σ(expandedLines × betCount).
+   * Bằng lineCount khi tất cả betCount = 1.
+   */
+  betUnitCount?: number;
   boards: LiveEntryBoard[];
   /** Thời điểm đặt cược (ISO 8601). */
   createdAt: string;

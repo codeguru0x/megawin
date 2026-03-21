@@ -142,7 +142,7 @@ export function useOpsNumberFrequency(params: OpsQueryParams, isSettled = false)
 
 /**
  * Phân bổ theo kiểu chơi (PlayType): lines, entries, revenue.
- * Mega 6/45 có 13 kiểu chơi: standard, bao5, bao7-bao15, bao18, quickPick.
+ * Mega 6/45 có 12 kiểu chơi: standard, bao5, bao7-bao15, bao18.
  * Refetch mỗi 60s khi đang active; dừng khi đã settle.
  */
 export function useOpsPlayTypeDistribution(params: OpsQueryParams, isSettled = false) {

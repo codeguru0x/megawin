@@ -16,6 +16,7 @@ import {
   Ban,
   Loader2,
   CalendarCheck,
+  CalendarPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
@@ -37,6 +38,7 @@ interface DrawCommandProps {
   onTriggerSettle?: () => void;
   onEditSchedule?: () => void;
   onVoidDraw?: () => void;
+  onCreateDraw?: () => void;
 }
 
 // ─── Lifecycle Stepper ───────────────────────────────────────────────────────
@@ -281,6 +283,7 @@ export function DrawCommandCenter({
   onTriggerSettle,
   onEditSchedule,
   onVoidDraw,
+  onCreateDraw,
 }: DrawCommandProps) {
   const status = draw.status;
   const steps = getSteps(draw, result);
@@ -575,6 +578,14 @@ export function DrawCommandCenter({
                   <Trash2 className="size-3.5" /> Hủy kỳ
                 </Button>
               )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onCreateDraw}
+                className="gap-1.5 text-muted-foreground"
+              >
+                <CalendarPlus className="size-3.5" /> Tạo kỳ
+              </Button>
             </div>
           </div>
         )}

@@ -172,6 +172,13 @@ export interface FinancialRates {
 export interface PlayRules {
   /** Mệnh giá 1 lần tham gia (VND). Default: 10.000 */
   unitPrice: number;
+  /**
+   * Số lần cược tối thiểu per board/sideBet (≥ 1).
+   * Mặc định 1 — player luôn phải cược ít nhất 1 lần.
+   */
+  minBetCount: number;
+  /** Số lần cược tối đa per board/sideBet (≥ 1). Mặc định 10. */
+  maxBetCount: number;
   /** Số panel cơ bản tối đa trên 1 vé. Default: 2 (A, B) */
   maxBasicBoardsPerTicket: number;
   /** Số kỳ liên tiếp tối đa. Default: 20 */

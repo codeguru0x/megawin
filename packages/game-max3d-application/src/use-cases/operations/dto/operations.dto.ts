@@ -29,10 +29,11 @@ export interface OpsSummaryOutput {
   /** Tổng entries. */
   totalEntries: number;
   /**
-   * Tổng lines = Σ(entry.lineCount).
-   * Với Max 3D: basic straight/quickPick = 1 line/board, combo3 = 3, combo6 = 6, plus = 1.
+   * Tổng đơn vị cược = Σ(entry.betUnitCount).
+   * Phản ánh số lần tham gia dự thưởng thực tế (= tiền / unitPrice).
+   * Khi betCount = 1 cho tất cả: bằng totalLines.
    */
-  totalLines: number;
+  totalBetUnits: number;
   /** Số người chơi unique. */
   totalPlayers: number;
   /** Tổng hoa hồng đại lý (VND). */
@@ -53,8 +54,8 @@ export interface TenantBreakdownItem {
   tenantId: string;
   /** Số entries. */
   entries: number;
-  /** Tổng lines. */
-  lines: number;
+  /** Tổng đơn vị cược = Σ(betUnitCount). Phản ánh tiền thực trả của tenant. */
+  betUnits: number;
   /** Số người chơi unique. */
   players: number;
   /** Doanh thu (VND). */
@@ -105,7 +106,7 @@ export interface GetPlayTypeDistributionInput {
 export interface PlayTypeDistributionItem {
   /** Cách chơi: basic / plus. */
   playMode: PlayMode;
-  /** Kiểu chơi: straight / combo3 / combo6 / quickPick. */
+  /** Kiểu chơi: straight / combo3 / combo6. */
   playType: PlayType;
   /** Số boards thuộc cặp (playMode, playType) này. */
   boardCount: number;

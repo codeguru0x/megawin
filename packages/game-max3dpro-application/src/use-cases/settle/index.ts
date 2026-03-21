@@ -2,14 +2,12 @@
  * Max 3D Pro – Settle Use Cases barrel export.
  */
 
+export type { SettleFinancials, SettleContext, SettleContextWithFinancials } from "./types";
+
 export type {
-  Max3dProDrawResult,
-  Max3dProSettleConfig,
-  Max3dProPrizeConfig,
-  SettleFinancials,
-  SettleContext,
-  SettleContextWithFinancials,
-} from "./types";
+  Max3dproDrawResult as Max3dProDrawResult,
+  Max3dproPrizeConfig as Max3dProPrizeConfig,
+} from "@megawin/game-max3dpro/entities";
 
 export { PrepareSettleUseCase } from "./prepare-settle";
 export type { PrepareSettleInput } from "./prepare-settle";

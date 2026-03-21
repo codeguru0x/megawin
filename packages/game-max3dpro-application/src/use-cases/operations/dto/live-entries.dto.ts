@@ -34,7 +34,7 @@ export interface LiveEntryBoard {
   boardNo: string;
   /** Cách chơi: multiNumber / multiDigit. */
   playMode: PlayMode;
-  /** Kiểu chơi: straight / quickPick. */
+  /** Kiểu chơi: straight. */
   playType: PlayType;
   /**
    * Danh sách bộ ba số đã chọn (multiNumber: 3-20 bộ ba; multiDigit: expand từ digits).
@@ -50,8 +50,13 @@ export interface LiveEntryBoard {
    * Chỉ multiDigit: 3 chữ số sau người chơi chọn.
    */
   backDigits?: number[];
-  /** Số cặp TripletPair expand ra. multiNumber: C(n,2). multiDigit: perms × perms. */
+  /** Số cặp TripletPair expand ra. multiNumber: P(n,2). multiDigit: perms × perms. */
   lineCount: number;
+  /**
+   * Số lần cược nhân bội (≥ 1).
+   * Tiền cược board = lineCount × betCount × unitPrice.
+   */
+  betCount: number;
 }
 
 /** Một entry rút gọn cho live feed. */
@@ -64,8 +69,13 @@ export interface LiveEntryItem {
   tenantId: string;
   /** Tổng tiền cược (VND). */
   amount: number;
-  /** Tổng số TripletPair lines. */
+  /** Tổng số TripletPair lines (không tính betCount). */
   lineCount: number;
+  /**
+   * Tổng đơn vị cược = Σ(board.lineCount × board.betCount).
+   * amount = betUnitCount × unitPrice.
+   */
+  betUnitCount: number;
   /** Danh sách boards (bộ ba số và cách chơi). */
   boards: LiveEntryBoard[];
   /** Thời điểm đặt cược (ISO 8601). */

@@ -37,7 +37,6 @@
     "@megawin/game-lotto535-application": "workspace:*",
     "@megawin/game-max3d": "workspace:*",
     "@megawin/game-max3d-application": "workspace:*",
-    "@megawin/game-max3d-core": "workspace:*",
     "@megawin/game-max3dpro": "workspace:*",
     "@megawin/game-max3dpro-application": "workspace:*",
     "@megawin/game-mega645": "workspace:*",

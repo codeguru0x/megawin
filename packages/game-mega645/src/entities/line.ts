@@ -51,11 +51,14 @@ export interface TicketLineDoc {
 
   /** Ký hiệu board chứa line ("A".."F"). */
   boardNo: string;
-  /** Chỉ số line trong board (0-based). Với standard/quickPick luôn = 0. */
+  /** Chỉ số line trong board (0-based). Với standard luôn = 0. */
   lineIndex: number;
 
   /** 6 số chính, sorted tăng dần. */
   main: string[];
+
+  /** Số lần cược nhân bội cho board chứa line này. */
+  betCount: number;
 
   /** Kết quả so khớp line với kết quả quay. */
   matchResult: LineMatchResult;

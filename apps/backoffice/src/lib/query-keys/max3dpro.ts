@@ -19,6 +19,9 @@ export const max3dproKeys = {
   draws: (params?: Record<string, unknown>) =>
     params ? ([MODULE, "draws", params] as const) : ([MODULE, "draws"] as const),
 
+  /** Preview kỳ quay sẽ được tạo (gợi ý từ backend theo lịch T3/T5/T7) */
+  previewDraws: (count: number) => [MODULE, "preview-draws", count] as const,
+
   /** Chi tiết 1 kỳ quay (full entity gồm result, financial, stats) */
   drawDetail: (drawId: string) => [MODULE, "draw-detail", drawId] as const,
 
@@ -94,6 +97,5 @@ export const max3dproKeys = {
   // ─── Void Reports ──────────────────────────────────────────────────────────
 
   /** Kỳ quay đã void (date range) */
-  voidReports: (params: { from: string; to: string }) =>
-    [MODULE, "void-reports", params] as const,
+  voidReports: (params: { from: string; to: string }) => [MODULE, "void-reports", params] as const,
 };

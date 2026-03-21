@@ -88,4 +88,75 @@ export class LineRepository extends BaseRepo<any> {
     );
     return result.modifiedCount;
   }
+
+  /**
+   * Tìm tất cả lines trúng Jackpot trong draw.
+   * Dùng để lấy betCount của từng line JP cho PatchJackpotPrize.
+   */
+  async findJackpotLinesByDrawId(
+    drawId: string,
+  ): Promise<Array<{ entryId: string; betCount: number }>> {
+    const docs = await this.findManyAsDocuments(
+      {
+        drawId,
+        "matchResult.tier": PrizeTier.Jackpot,
+      },
+      {
+        projection: {
+          entryId: 1,
+          betCount: 1,
+        },
+      },
+    );
+    return docs.map((d: any) => ({
+      entryId: typeof d.entryId === "string" ? d.entryId : (d.entryId as ObjectId).toHexString(),
+      betCount: (d.betCount as number) ?? 1,
+    }));
+  }
+
+  /**
+   * Patch winAmount cho lines trúng JP theo betCount riêng từng line.
+   *
+   * jackpotPerUnit × betCount (từ line doc) = winAmount thực tế.
+   * Idempotent: chỉ update lines có winAmount = 0.
+   */
+  async patchJackpotLineWinAmountPerLine(
+    drawId: string,
+    jackpotPerUnit: number,
+    betCountByEntry: Map<string, number>,
+  ): Promise<number> {
+    // Load lines JP chưa patch
+    const jpLines = await this.findManyAsDocuments(
+      {
+        drawId,
+        "matchResult.tier": PrizeTier.Jackpot,
+        "matchResult.winAmount": 0,
+      },
+      {
+        projection: { _id: 1, entryId: 1, betCount: 1 },
+      },
+    );
+
+    if (jpLines.length === 0) return 0;
+
+    const ops = jpLines.map((line: any) => {
+      const entryId =
+        typeof line.entryId === "string" ? line.entryId : (line.entryId as ObjectId).toHexString();
+      const betCount = betCountByEntry.get(entryId) ?? (line.betCount as number) ?? 1;
+      return {
+        updateOne: {
+          filter: {
+            _id: line._id,
+            "matchResult.winAmount": 0,
+          },
+          update: {
+            $set: { "matchResult.winAmount": jackpotPerUnit * betCount },
+          },
+        },
+      };
+    });
+
+    const result = await this.bulkWrite(ops, { ordered: false });
+    return result.modifiedCount;
+  }
 }

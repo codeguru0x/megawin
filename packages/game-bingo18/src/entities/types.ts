@@ -151,8 +151,12 @@ export interface FinancialRates {
 
 /** Quy tắc chơi – dùng trong GlobalConfigDoc.play. */
 export interface PlayRules {
-  /** Mệnh giá 1 lần tham gia (VND). Default: 10.000 */
+  /** Mệnh giá 1 lần tham gia dự thưởng (VND). Default: 10.000 */
   unitPrice: number;
+  /** Số lần cược tối thiểu per board/sideBet (≥ 1). Mặc định 1. */
+  minBetCount: number;
+  /** Số lần cược tối đa per board/sideBet. Mặc định 10. */
+  maxBetCount: number;
   /** Số board cơ bản tối đa trên 1 vé. */
   maxBasicBoardsPerTicket: number;
   /** Số kỳ liên tiếp tối đa. */

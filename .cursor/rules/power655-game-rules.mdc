@@ -19,7 +19,8 @@ Power 6/55 là game xổ số tự chọn lớn nhất của Vietlott, có 2 gi�
 - **Chọn số**: 6 số từ tập 01-55
 - **Bonus number**: 1 số đặc biệt quay từ 49 quả bóng còn lại sau khi rút 6 quả chính
 - **Lịch quay**: 3 lần/tuần (Thứ 3, Thứ 5, Thứ 7) lúc 18h00
-- **Giá vé**: 10.000 VND / bộ số (line)
+- **Giá vé**: 10.000 VND / lần tham gia dự thưởng (1 lần = 1 line × 1 betCount)
+- **betCount**: Số lần tham gia dự thưởng per board (≥ 1, ≤ maxBetCount). Mặc định = 1.
 - **Kỳ liên tiếp**: Tối đa 6 kỳ liên tiếp
 - **Board**: 1 vé có tối đa 5 board (A-E)
 - **Jackpot 1**: Tích lũy, tối thiểu 30 tỷ VND (trùng 6/6)
@@ -76,8 +77,12 @@ determineTier(mainMatchCount, bonusMatched):
 
 **Ghi chú**:
 - Trúng nhiều hạng giải → chỉ lĩnh hạng CAO NHẤT
-- Nhiều người trúng Jackpot → chia đều theo tỷ lệ giá trị tham gia
-- Giải Nhất đến Ba: giá trị = prizeAmount × số lần tham gia (mỗi 10.000đ) × số lines trúng
+- Nhiều người trúng Jackpot → chia **theo tỷ lệ giá trị tham gia** (= betCount mỗi line trúng)
+  - `jackpotPerUnit = floor(totalPool / ΣbetCount_winners)`
+  - Mỗi winner nhận: `jackpotPerUnit × betCount` (không chia đều per entry/line)
+- Giải Nhất đến Ba: `prizeAmount = unitPrize × betCount × số lines trúng`
+  - Luật Vietlott: "Giá trị lĩnh thưởng = số lần tham gia dự thưởng × giá trị giải 1 lần"
+  - 1 lần tham gia = 1 betCount = 10.000 VND
 
 ---
 
@@ -116,10 +121,9 @@ determineTier(mainMatchCount, bonusMatched):
 | Bao 15 | 15 | 5.005 | 50.050.000 |
 | Bao 18 | 18 | 18.564 | 185.640.000 |
 
-### 4.4 QuickPick (Máy tự chọn)
-- Hệ thống chọn ngẫu nhiên 6 số
-- Lines: 1
-- Giá: 10.000 VND/kỳ
+### 4.4 QuickPick — **ĐÃ BỊ XOÁ**
+
+PlayType `quickPick` đã bị loại khỏi Power 6/55. Chỉ hỗ trợ: `standard`, `bao5`, `bao7`-`bao18`.
 
 **Lưu ý**: Power 6/55 CÓ Bao 5. Cả Bao 5 và Bao 7-18 đều được hỗ trợ đầy đủ.
 
@@ -244,7 +248,7 @@ Tất cả tỷ lệ dưới đây là giá trị **mặc định tham khảo**.
 | → JP1 nhận | 90% tích luỹ | ≈ 46.47% revenue |
 | → JP2 nhận | 10% tích luỹ | ≈ 5.16% revenue |
 
-**Phân bổ doanh thu mỗi line (10.000đ):**
+**Phân bổ doanh thu mỗi đơn vị tham gia (10.000đ = 1 betCount × 1 line):**
 ```
 100% Revenue = 10.000 VND
 ├── 20% Hoa hồng đại lý    = 2.000 VND
@@ -253,6 +257,13 @@ Tất cả tỷ lệ dưới đây là giá trị **mặc định tham khảo**.
 └── ~51.63% Tích luỹ JP     ≈ 5.163 VND
     ├── 90% → Jackpot 1     ≈ 4.647 VND
     └── 10% → Jackpot 2     ≈ 516 VND
+```
+
+**betCount — Công thức tính tiền:**
+```
+betUnitsPerDraw = Σ(board.expandedLines × board.betCount)
+amountPerDraw   = betUnitsPerDraw × unitPrice
+totalAmount     = amountPerDraw × drawCount
 ```
 
 ---
@@ -324,13 +335,13 @@ prepare-void → void-entries → dispatch-refunds → finalize-void
 ```
 src/
 ├── entities/
-│   ├── enums.ts           # PrizeTier (jackpot1, jackpot2, tier1-3), PlayType (standard, bao7-18, quickPick)
+│   ├── enums.ts           # PrizeTier (jackpot1, jackpot2, tier1-3), PlayType (standard, bao5, bao7-18)
 │   ├── types.ts           # MainTuple (6 số), BonusNumber, BoardSelection, LineValue,
 │   │                      # PrizeAmounts, JackpotConfig (dual JP + overflow), FinancialRates, PlayRules
 │   ├── draw.ts            # DrawDoc (result: winningMain + bonusNumber)
-│   ├── ticket.ts          # TicketDoc, Board (max 5 boards A-E)
-│   ├── entry.ts           # TicketEntryDoc
-│   ├── line.ts            # TicketLineDoc, LineMatchResult (mainMatchCount + bonusMatched)
+│   ├── ticket.ts          # TicketDoc, Board (max 5 boards A-E, Board.betCount), TicketPricing (betUnitsPerDraw)
+│   ├── entry.ts           # TicketEntryDoc (betUnitCount), EntryBoardSnapshot (betCount)
+│   ├── line.ts            # TicketLineDoc (betCount), LineMatchResult (mainMatchCount + bonusMatched)
 │   ├── jackpot-cycle.ts   # JackpotCycleDoc (dual: jp1Opening, jp1Current, jp2Opening, jp2Current)
 │   ├── global-config.ts   # GlobalConfigDoc
 │   ├── tenant-config.ts   # TenantConfigDoc

@@ -26,15 +26,22 @@ import type { KenoGameConfig } from "./use-game-config";
 
 const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-const playFormSchema = z.object({
-  unitPrice: z.coerce.number().int().positive("Phải > 0"),
-  maxBasicBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
-  maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
-  salesCloseBeforeSeconds: z.coerce.number().int().positive("Phải > 0"),
-  drawIntervalMinutes: z.coerce.number().int().positive("Phải > 0"),
-  firstDrawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
-  lastDrawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
-});
+const playFormSchema = z
+  .object({
+    unitPrice: z.coerce.number().int().positive("Phải > 0"),
+    minBetCount: z.coerce.number().int().min(1, "Tối thiểu 1"),
+    maxBetCount: z.coerce.number().int().min(1, "Tối thiểu 1").max(50, "Tối đa 50"),
+    maxBasicBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
+    maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
+    salesCloseBeforeSeconds: z.coerce.number().int().positive("Phải > 0"),
+    drawIntervalMinutes: z.coerce.number().int().positive("Phải > 0"),
+    firstDrawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
+    lastDrawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
+  })
+  .refine((data) => data.maxBetCount >= data.minBetCount, {
+    message: "Max lần cược phải ≥ min lần cược",
+    path: ["maxBetCount"],
+  });
 
 type PlayFormValues = z.infer<typeof playFormSchema>;
 
@@ -51,6 +58,8 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
     resolver: zodResolver(playFormSchema) as any,
     values: {
       unitPrice: config.play.unitPrice,
+      minBetCount: config.play.minBetCount ?? 1,
+      maxBetCount: config.play.maxBetCount ?? 10,
       maxBasicBoardsPerTicket: config.play.maxBasicBoardsPerTicket,
       maxDrawCount: config.play.maxDrawCount,
       salesCloseBeforeSeconds: config.play.salesCloseBeforeSeconds,
@@ -64,6 +73,8 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
     onSave({
       play: {
         unitPrice: values.unitPrice,
+        minBetCount: values.minBetCount,
+        maxBetCount: values.maxBetCount,
         maxBasicBoardsPerTicket: values.maxBasicBoardsPerTicket,
         maxDrawCount: values.maxDrawCount,
         salesCloseBeforeSeconds: values.salesCloseBeforeSeconds,
@@ -119,6 +130,55 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     </FormItem>
                   )}
                 />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="minBetCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Min lần cược / bet
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 1)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maxBetCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Max lần cược / bet
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 10)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <FormField

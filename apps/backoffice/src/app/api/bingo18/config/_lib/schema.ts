@@ -59,6 +59,8 @@ const bigSmallDrawPrizesSchema = z
 const playSchema = z
   .object({
     unitPrice: positiveInt,
+    minBetCount: positiveInt,
+    maxBetCount: positiveInt,
     maxBasicBoardsPerTicket: positiveInt,
     maxDrawCount: positiveInt,
     salesCloseBeforeSeconds: positiveInt,

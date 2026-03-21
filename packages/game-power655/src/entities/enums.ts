@@ -60,7 +60,6 @@ export type PrizeTier = (typeof PrizeTier)[keyof typeof PrizeTier];
  * - Standard: chọn đúng 6 số → 1 bộ số dự thưởng
  * - Bao 5: chọn 5 số, hệ thống ghép lần lượt 50 số còn lại (55-5) → 50 bộ số
  * - Bao N (7-18): chọn N số, hệ thống tạo tất cả tổ hợp C(N,6) bộ số
- * - QuickPick: hệ thống random 6 số → 1 bộ số dự thưởng
  *
  * Giá vé = unitPrice × số bộ số × số kỳ quay.
  * Ví dụ: Bao 5 = 50 bộ × 10.000đ = 500.000đ/kỳ.
@@ -94,8 +93,6 @@ export const PlayType = {
   Bao15: "bao15",
   /** Bao 18: chọn 18 số → C(18,6) = 18.564 bộ số. */
   Bao18: "bao18",
-  /** Chọn nhanh: hệ thống random 6 số → 1 bộ số dự thưởng. */
-  QuickPick: "quickPick",
 } as const;
 export type PlayType = (typeof PlayType)[keyof typeof PlayType];
 

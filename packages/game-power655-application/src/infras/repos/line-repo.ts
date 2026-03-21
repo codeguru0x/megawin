@@ -90,4 +90,67 @@ export class LineRepository extends BaseRepo<any> {
     );
     return result.modifiedCount;
   }
+
+  /**
+   * Lấy tất cả lines trúng jackpotTier trong draw.
+   * Dùng để tính tổng betCount và patch winAmount theo tỷ lệ (không chia đều).
+   *
+   * Trả về ObjectId entryId + betCount của mỗi line trúng.
+   */
+  async getJackpotWinningLines(
+    drawId: string,
+    jackpotTier: string,
+  ): Promise<Array<{ lineId: string; entryId: string; betCount: number }>> {
+    const col = await this.getCollection();
+    const docs = await col
+      .find(
+        {
+          drawId,
+          "matchResult.tier": jackpotTier,
+          "matchResult.winAmount": 0,
+        },
+        { projection: { _id: 1, entryId: 1, betCount: 1 } },
+      )
+      .toArray();
+
+    return docs.map((d) => ({
+      lineId: d._id.toHexString(),
+      entryId: d.entryId instanceof ObjectId ? d.entryId.toHexString() : String(d.entryId),
+      betCount: (d.betCount as number | undefined) ?? 1,
+    }));
+  }
+
+  /**
+   * Patch winAmount cho từng line trúng JP theo tỷ lệ betCount.
+   *
+   * Thay vì set cùng 1 amount uniform, mỗi line có winAmount riêng = jackpotPerUnit × betCount.
+   * Idempotent: chỉ update lines có winAmount = 0.
+   */
+  async patchJackpotLinesPerUnit(
+    drawId: string,
+    jackpotTier: string,
+    jackpotPerUnit: number,
+  ): Promise<number> {
+    // Lấy danh sách lines trúng JP + betCount của từng line
+    const winningLines = await this.getJackpotWinningLines(drawId, jackpotTier);
+    if (winningLines.length === 0) return 0;
+
+    const col = await this.getCollection();
+
+    const ops = winningLines.map((line) => {
+      const winAmount = jackpotPerUnit * line.betCount;
+      return {
+        updateOne: {
+          filter: {
+            _id: new ObjectId(line.lineId),
+            "matchResult.winAmount": 0,
+          },
+          update: { $set: { "matchResult.winAmount": winAmount } },
+        },
+      };
+    });
+
+    const result = await this.bulkWrite(ops as any, { ordered: false });
+    return result.modifiedCount;
+  }
 }

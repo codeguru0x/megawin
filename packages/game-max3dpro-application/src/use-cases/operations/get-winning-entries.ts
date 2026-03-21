@@ -67,7 +67,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
       }));
 
       const boards: WinningEntryBoard[] = (e.entrySummary?.boards ?? []).map((b) => {
-        // Max 3D Pro: isDuplicate khi tất cả C(n,2) cặp từ 1 bộ ba giống nhau
+        // Max 3D Pro: isDuplicate khi tất cả P(n,2) ordered pairs từ 1 bộ ba giống nhau
         // Với multiNumber: chỉ có thể duplicate khi đúng 2 bộ ba trong board và giống nhau
         const isDuplicate =
           b.playMode === "multiNumber" && b.triplets.length === 2
@@ -82,6 +82,8 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
           frontDigits: b.frontDigits,
           backDigits: b.backDigits,
           lineCount: b.lineCount,
+          // betCount fallback sang 1 cho entries cũ.
+          betCount: b.betCount ?? 1,
           isDuplicate,
         };
       });
@@ -91,6 +93,8 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
         username: e.username,
         tenantId: e.tenantId,
         lineCount: e.lineCount,
+        // betUnitCount fallback sang lineCount cho entries cũ.
+        betUnitCount: e.betUnitCount ?? e.lineCount,
         amount: e.amount,
         winAmount: e.payout?.winAmount ?? 0,
         boards,

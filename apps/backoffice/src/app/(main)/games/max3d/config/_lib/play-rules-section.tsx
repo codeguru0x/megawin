@@ -36,16 +36,21 @@ const DAY_OPTIONS = [
   { value: 6, label: "T7" },
 ] as const;
 
-const playFormSchema = z.object({
-  unitPrice: z.coerce.number().int().positive("Phải > 0"),
-  maxBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
-  maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
-  salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
-  drawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
-  drawDaysOfWeek: z
-    .array(z.number())
-    .min(1, "Chọn ít nhất 1 ngày quay"),
-});
+const playFormSchema = z
+  .object({
+    unitPrice: z.coerce.number().int().positive("Phải > 0"),
+    minBetCount: z.coerce.number().int().min(1, "Tối thiểu 1").max(50, "Tối đa 50"),
+    maxBetCount: z.coerce.number().int().min(1, "Tối thiểu 1").max(50, "Tối đa 50"),
+    maxBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
+    maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
+    salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
+    drawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
+    drawDaysOfWeek: z.array(z.number()).min(1, "Chọn ít nhất 1 ngày quay"),
+  })
+  .refine((data) => data.minBetCount <= data.maxBetCount, {
+    message: "Min không được lớn hơn Max",
+    path: ["minBetCount"],
+  });
 
 type PlayFormValues = z.infer<typeof playFormSchema>;
 
@@ -57,15 +62,13 @@ interface PlayRulesSectionProps {
 
 const DRAWS_PER_DAY = 1;
 
-export function PlayRulesSection({
-  config,
-  onSave,
-  isPending,
-}: PlayRulesSectionProps) {
+export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSectionProps) {
   const form = useForm<PlayFormValues>({
     resolver: zodResolver(playFormSchema) as any,
     values: {
       unitPrice: config.play.unitPrice,
+      minBetCount: config.play.minBetCount ?? 1,
+      maxBetCount: config.play.maxBetCount ?? 10,
       maxBoardsPerTicket: config.play.maxBoardsPerTicket,
       maxDrawCount: config.play.maxDrawCount,
       salesCloseBeforeMinutes: config.play.salesCloseBeforeMinutes,
@@ -78,6 +81,8 @@ export function PlayRulesSection({
     onSave({
       play: {
         unitPrice: values.unitPrice,
+        minBetCount: values.minBetCount,
+        maxBetCount: values.maxBetCount,
         maxBoardsPerTicket: values.maxBoardsPerTicket,
         maxDrawCount: values.maxDrawCount,
         salesCloseBeforeMinutes: values.salesCloseBeforeMinutes,
@@ -99,9 +104,7 @@ export function PlayRulesSection({
               {/* Left: Pricing & Limits */}
               <div className="space-y-5 p-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Giá vé & Giới hạn
-                  </h3>
+                  <h3 className="text-sm font-semibold text-foreground">Giá vé & Giới hạn</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Cấu hình giá và các giới hạn chơi
                   </p>
@@ -138,7 +141,7 @@ export function PlayRulesSection({
                   )}
                 />
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-5 gap-3">
                   <FormField
                     control={form.control}
                     name="maxBoardsPerTicket"
@@ -208,15 +211,59 @@ export function PlayRulesSection({
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="minBetCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Min lần cược/board
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 1)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maxBetCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          Max lần cược/board
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 1)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={false}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
 
               {/* Right: Schedule */}
               <div className="border-t p-6 lg:border-l lg:border-t-0">
                 <div className="mb-5">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Lịch quay số
-                  </h3>
+                  <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Cố định {DRAWS_PER_DAY} kỳ quay mỗi ngày quay
                   </p>
@@ -240,9 +287,7 @@ export function PlayRulesSection({
                     name="drawTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">
-                          Kỳ duy nhất
-                        </FormLabel>
+                        <FormLabel className="text-xs text-muted-foreground">Kỳ duy nhất</FormLabel>
                         <div className="relative">
                           <Clock className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
                           <FormControl>
@@ -288,16 +333,12 @@ export function PlayRulesSection({
                                   onCheckedChange={(isChecked) => {
                                     const next = isChecked
                                       ? [...(field.value ?? []), day.value]
-                                      : (field.value ?? []).filter(
-                                          (v: number) => v !== day.value,
-                                        );
+                                      : (field.value ?? []).filter((v: number) => v !== day.value);
                                     field.onChange(next);
                                   }}
                                   className="size-3.5"
                                 />
-                                <span className="font-medium">
-                                  {day.label}
-                                </span>
+                                <span className="font-medium">{day.label}</span>
                               </label>
                             );
                           })}
@@ -312,10 +353,7 @@ export function PlayRulesSection({
                   <Globe className="size-3.5 text-muted-foreground" />
                   <p className="text-xs text-muted-foreground">
                     Múi giờ:{" "}
-                    <Badge
-                      variant="secondary"
-                      className="ml-1 font-mono text-[10px]"
-                    >
+                    <Badge variant="secondary" className="ml-1 font-mono text-[10px]">
                       Asia/Ho_Chi_Minh
                     </Badge>
                   </p>
@@ -325,15 +363,8 @@ export function PlayRulesSection({
           </CardContent>
 
           <CardFooter className="justify-end border-t px-6 py-3">
-            <Button
-              type="submit"
-              disabled={isPending || !form.formState.isDirty}
-            >
-              {isPending ? (
-                <Spinner className="mr-2" />
-              ) : (
-                <Save className="mr-2 size-4" />
-              )}
+            <Button type="submit" disabled={isPending || !form.formState.isDirty}>
+              {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
               Lưu luật chơi
             </Button>
           </CardFooter>

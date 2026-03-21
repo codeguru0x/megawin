@@ -51,6 +51,8 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
         frontDigits: b.frontDigits,
         backDigits: b.backDigits,
         lineCount: b.lineCount,
+        // betCount fallback sang 1 cho entries cũ.
+        betCount: b.betCount ?? 1,
       }));
 
       return {
@@ -59,6 +61,9 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
         tenantId: e.tenantId,
         amount: e.amount,
         lineCount: e.lineCount,
+        // betUnitCount = Σ(board.lineCount × board.betCount) — phản ánh tiền thực.
+        // Fallback sang lineCount cho entries cũ (betCount = 1).
+        betUnitCount: e.betUnitCount ?? e.lineCount,
         boards,
         createdAt: e.createdAt.toISOString(),
       };

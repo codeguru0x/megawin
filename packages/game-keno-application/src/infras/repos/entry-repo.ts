@@ -461,6 +461,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         playType: string;
         matchCount: number;
         pickCount: number;
+        betCount: number;
         winAmount: number;
       }>;
     }>,

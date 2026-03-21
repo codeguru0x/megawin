@@ -8,7 +8,11 @@
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { EntryBoardSnapshot, TicketEntryEntity, EntryPayoutTier } from "@megawin/game-lotto535/entities";
+import type {
+  EntryBoardSnapshot,
+  TicketEntryEntity,
+  EntryPayoutTier,
+} from "@megawin/game-lotto535/entities";
 import { mapPlayerTicket } from "./mappers/ticket";
 import type {
   PlayerGetTicketEntriesInput,
@@ -61,6 +65,7 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
         mainNumbers: b.mainNumbers,
         specialNumbers: b.specialNumbers,
         expandedLines: b.expandedLines,
+        betCount: b.betCount ?? 1,
       })),
     },
     result: entry.result

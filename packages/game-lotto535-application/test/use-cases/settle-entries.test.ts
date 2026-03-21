@@ -211,15 +211,6 @@ describe("Lotto 5/35 – expandBoardToLines", () => {
     expect(lines[0]!.special).toBe("07");
   });
 
-  it("QuickPick → 1 line", () => {
-    const lines = expandBoardToLines(PlayType.QuickPick, {
-      mainNumbers: ["10", "20", "30", "01", "05"],
-      specialNumbers: ["03"],
-    });
-    expect(lines).toHaveLength(1);
-    expect(lines[0]!.main).toEqual(["01", "05", "10", "20", "30"]);
-  });
-
   it("MainCover4 → 31 lines", () => {
     const lines = expandBoardToLines(PlayType.MainCover4, {
       mainNumbers: ["01", "02", "03", "04"],

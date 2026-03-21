@@ -1,8 +1,4 @@
-import type {
-  KenoPlayType,
-  KenoBigSmallBet,
-  KenoEvenOddBet,
-} from "@megawin/game-keno/entities";
+import type { KenoPlayType, KenoBigSmallBet, KenoEvenOddBet } from "@megawin/game-keno/entities";
 import type { TicketChannel } from "@megawin/game-core/entities";
 
 // ─────────────────────────────────────────────
@@ -13,11 +9,15 @@ export interface PlaceBetBasicBoardInput {
   boardNo: string;
   /** Số dạng string "01"-"80". */
   numbers: string[];
+  /** Số lần cược nhân bội cho board (≥ minBetCount). Default 1. */
+  betCount?: number;
 }
 
 export interface PlaceBetSideBetInput {
   playType: typeof KenoPlayType.BigSmall | typeof KenoPlayType.EvenOdd;
   bet: KenoBigSmallBet | KenoEvenOddBet;
+  /** Số lần cược nhân bội cho side bet (≥ minBetCount). Default 1. */
+  betCount?: number;
 }
 
 export interface PlaceBetInput {
@@ -52,7 +52,8 @@ export interface PlaceBetOutput {
   };
   pricing: {
     unitPrice: number;
-    betsPerDraw: number;
+    selectionsPerDraw: number;
+    betUnitsPerDraw: number;
     amountPerDraw: number;
     totalAmount: number;
   };

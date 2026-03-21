@@ -174,7 +174,13 @@ export interface TicketEntryDoc {
   lineCount: number;
 
   /**
-   * Tiền cược kỳ này (VND) = lineCount × unitPrice.
+   * Tổng đơn vị cược = Σ(expandedLines × betCount).
+   * Backward compat: data cũ không có field này → fallback = lineCount.
+   */
+  betUnitCount: number;
+
+  /**
+   * Tiền cược kỳ này (VND) = betUnitCount × unitPrice.
    * Lưu sẵn (denormalized) để report nhanh, tránh join ticket.
    */
   amount: number;
@@ -250,6 +256,9 @@ export interface EntryBoardSnapshot {
 
   /** Số line con sinh ra từ board. */
   expandedLines: number;
+
+  /** Số lần cược nhân bội (≥ minBetCount). Snapshot từ ticket board. */
+  betCount: number;
 }
 
 /** Chi tiết trả thưởng cho 1 hạng giải trong entry. */
@@ -261,12 +270,19 @@ export interface EntryPayoutTier {
   hitCount: number;
 
   /**
+   * Tổng đơn vị cược trúng hạng này = Σ betCount của các lines trúng tier đó.
+   * Khi tất cả betCount = 1 → betUnitCount = hitCount.
+   * Dùng cho aggregateSettleSummary (tierBetUnitCounts) và applySplitBonusForTier.
+   */
+  betUnitCount?: number;
+
+  /**
    * Tiền thưởng mỗi hit (VND).
    * Bao gồm cả split bonus nếu đang trong kỳ chia Jackpot.
    */
   unitAmount: number;
 
-  /** Tổng tiền hạng này = hitCount × unitAmount. */
+  /** Tổng tiền hạng này = unitAmount × betUnitCount (hoặc hitCount nếu betUnitCount không có). */
   amount: number;
 
   /**

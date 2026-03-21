@@ -15,13 +15,16 @@ import type { TicketChannel } from "@megawin/game-core/entities";
  */
 export interface PlaceBetBasicBoardInput {
   boardNo: string;
-  playType: typeof Bingo18PlayType.SingleNum
+  playType:
+    | typeof Bingo18PlayType.SingleNum
     | typeof Bingo18PlayType.DoubleMatch
     | typeof Bingo18PlayType.TripleMatch;
   /** Số đã chọn (1-6). Bắt buộc cho singleNum/doubleMatch, optional cho tripleMatch "any". */
   number?: number;
   /** Chỉ dùng cho tripleMatch: "specific" hoặc "any". */
   tripleKind?: Bingo18TripleKind;
+  /** Số lần tham gia dự thưởng cho board này (≥ minBetCount, ≤ maxBetCount). */
+  betCount: number;
 }
 
 /**
@@ -33,6 +36,8 @@ export interface PlaceBetSideBetInput {
   sum?: number;
   /** big/draw/small cho bigSmallDraw. */
   bet?: Bingo18BigSmallBet;
+  /** Số lần tham gia dự thưởng cho side bet này (≥ minBetCount, ≤ maxBetCount). */
+  betCount: number;
 }
 
 export interface PlaceBetInput {
@@ -67,7 +72,8 @@ export interface PlaceBetOutput {
   };
   pricing: {
     unitPrice: number;
-    betsPerDraw: number;
+    selectionsPerDraw: number;
+    betUnitsPerDraw: number;
     amountPerDraw: number;
     totalAmount: number;
   };

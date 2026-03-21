@@ -43,7 +43,7 @@ export interface WinningEntryBoard {
   boardNo: string;
   /** Cách chơi: multiNumber / multiDigit. */
   playMode: string;
-  /** Kiểu chơi: straight / quickPick. */
+  /** Kiểu chơi: straight. */
   playType: string;
   /**
    * Danh sách bộ ba số.
@@ -58,6 +58,11 @@ export interface WinningEntryBoard {
   /** Số cặp TripletPair expand ra từ board. */
   lineCount: number;
   /**
+   * Số lần cược nhân bội (≥ 1).
+   * Tiền thưởng board = prizeConfig[tier] × lineCount × betCount.
+   */
+  betCount: number;
+  /**
    * Max 3D Pro: 2 bộ ba giống nhau (chỉ áp dụng khi lineCount cặp có triplet đầu = triplet sau).
    * Khi true → giải thưởng × 2.
    */
@@ -68,11 +73,16 @@ export interface WinningEntryItem {
   entryId: string;
   username: string;
   tenantId: string;
-  /** Tổng TripletPair lines cược. */
+  /** Tổng TripletPair lines cược (không tính betCount). */
   lineCount: number;
+  /**
+   * Tổng đơn vị cược = Σ(board.lineCount × board.betCount).
+   * amount = betUnitCount × unitPrice.
+   */
+  betUnitCount: number;
   /** Tiền cược (VND). */
   amount: number;
-  /** Tổng tiền trúng thưởng (VND). */
+  /** Tổng tiền trúng thưởng (VND). Đã nhân betCount. */
   winAmount: number;
   /** Boards (bộ ba số và cách chơi). */
   boards: WinningEntryBoard[];

@@ -1,3 +1,6 @@
+// ── Transaction Coordinators ─────────────────────────────────────────
+export { PlaceBetStore } from "./place-bet-store";
+
 // ── Types (re-export từ types/ barrel) ──────────────────────────────
 export type * from "./types";
 

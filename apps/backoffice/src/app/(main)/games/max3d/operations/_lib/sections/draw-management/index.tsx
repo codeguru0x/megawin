@@ -27,11 +27,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { BasicPrizeTier, PlusPrizeTier } from "@megawin/game-max3d/entities";
-import { MAX3D_BASIC_PRIZE_TIER_LABELS, MAX3D_PLUS_PRIZE_TIER_LABELS } from "@megawin/game-max3d/labels";
+import {
+  MAX3D_BASIC_PRIZE_TIER_LABELS,
+  MAX3D_PLUS_PRIZE_TIER_LABELS,
+} from "@megawin/game-max3d/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import { DrawCommandCenter } from "./draw-command-center";
-import { PublishResultAction, EditScheduleAction, VoidDrawAction } from "./draw-actions";
+import {
+  PublishResultAction,
+  EditScheduleAction,
+  VoidDrawAction,
+  CreateDrawAction,
+} from "./draw-actions";
 import { useOpenSales, useCloseSales, useTriggerSettle, useDrawDetail } from "../../use-operations";
 
 import type { DrawResult, VoidInfo } from "../../types";
@@ -50,6 +58,7 @@ export function DrawManagementSection() {
   const [publishOpen, setPublishOpen] = useState(false);
   const [editScheduleOpen, setEditScheduleOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [openSalesConfirm, setOpenSalesConfirm] = useState(false);
   const [closeSalesConfirm, setCloseSalesConfirm] = useState(false);
   const [settleConfirm, setSettleConfirm] = useState(false);
@@ -70,7 +79,10 @@ export function DrawManagementSection() {
     const tierLabels = { ...MAX3D_BASIC_PRIZE_TIER_LABELS, ...MAX3D_PLUS_PRIZE_TIER_LABELS };
 
     const tierMap = new Map((d.settleSummary?.tiers ?? []).map((t) => [t.tier, t]));
-    const allTierKeys = [...Object.keys(MAX3D_BASIC_PRIZE_TIER_LABELS), ...Object.keys(MAX3D_PLUS_PRIZE_TIER_LABELS)];
+    const allTierKeys = [
+      ...Object.keys(MAX3D_BASIC_PRIZE_TIER_LABELS),
+      ...Object.keys(MAX3D_PLUS_PRIZE_TIER_LABELS),
+    ];
     const tiers = allTierKeys.map((tier) => {
       const t = tierMap.get(tier);
       const winnerCount = t?.winnerCount ?? 0;
@@ -132,6 +144,7 @@ export function DrawManagementSection() {
         onTriggerSettle={() => setSettleConfirm(true)}
         onEditSchedule={() => setEditScheduleOpen(true)}
         onVoidDraw={() => setVoidOpen(true)}
+        onCreateDraw={() => setCreateOpen(true)}
       />
 
       {/* Action dialogs */}
@@ -148,6 +161,7 @@ export function DrawManagementSection() {
         onOpenChange={setEditScheduleOpen}
       />
       <VoidDrawAction draw={draw} disabled={false} open={voidOpen} onOpenChange={setVoidOpen} />
+      <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
 
       {/* Confirm: Mở bán */}
       <AlertDialog open={openSalesConfirm} onOpenChange={setOpenSalesConfirm}>

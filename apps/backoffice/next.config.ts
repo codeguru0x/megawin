@@ -17,7 +17,6 @@ const nextConfig: NextConfig = {
     "@megawin/game-lotto535-application",
     "@megawin/game-max3d",
     "@megawin/game-max3d-application",
-    "@megawin/game-max3d-core",
     "@megawin/game-max3dpro",
     "@megawin/game-max3dpro-application",
     "@megawin/game-mega645",

@@ -97,6 +97,13 @@ export interface TicketLineDoc {
   /** 1 số đặc biệt của line. */
   special: string;
 
+  /**
+   * Số lần cược nhân bội cho board chứa line này.
+   * Snapshot từ EntryBoardSnapshot.betCount lúc settle.
+   * Dùng để tính winAmount = unitWinAmount × betCount.
+   */
+  betCount: number;
+
   // ───── Match Result ─────
 
   /** Kết quả match với draw result — gắn ngay khi tạo (settle time). */

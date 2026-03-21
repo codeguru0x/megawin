@@ -62,7 +62,7 @@ export type ISODateString = string;
 
 /**
  * Lựa chọn số cho 1 bảng (board).
- * - Standard/QuickPick: 6 số
+ * - Standard: 6 số
  * - Bao 5: 5 số (HT ghép 50 số còn lại = 50 lines)
  * - Bao N (7-18): N số → C(N,6) lines
  */
@@ -152,6 +152,13 @@ export interface FinancialRates {
 export interface PlayRules {
   /** Giá 1 lần tham gia dự thưởng (1 bộ 6 số). Mặc định 10.000đ. */
   unitPrice: number;
+  /**
+   * Số lần cược tối thiểu per board (≥ 1).
+   * Mặc định 1 — player luôn phải cược ít nhất 1 lần.
+   */
+  minBetCount: number;
+  /** Số lần cược tối đa per board. Mặc định 10. */
+  maxBetCount: number;
   /** Số bảng tối đa trên 1 vé (A-E). Mặc định 5. */
   maxBoardsPerTicket: number;
   /** Số kỳ quay tối đa cho multi-draw. Mặc định 6. */

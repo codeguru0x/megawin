@@ -23,7 +23,7 @@ import type { BoardSelection, BoardNo, ISODateString } from "./types";
 export interface BoardDerived {
   /**
    * Số bộ số (lines) expand từ board này.
-   * - Standard / QuickPick: 1
+   * - Standard: 1
    * - Bao5: 55 - 5 = 50
    * - Bao7: C(7,6) = 7, Bao8: C(8,6) = 28, ..., Bao18: C(18,6) = 18.564
    */
@@ -48,8 +48,14 @@ export interface TicketPricing {
    */
   linesPerDraw: number;
   /**
+   * Tổng đơn vị cược mỗi kỳ = Σ(expandedLines × betCount).
+   * Khi tất cả boards betCount=1 → betUnitsPerDraw = linesPerDraw.
+   * Dùng để tính tiền cược chính xác.
+   */
+  betUnitsPerDraw: number;
+  /**
    * Tiền cược mỗi kỳ (VND).
-   * Công thức: unitPrice × linesPerDraw.
+   * Công thức: unitPrice × betUnitsPerDraw.
    */
   amountPerDraw: number;
   /**
@@ -113,12 +119,14 @@ export interface Board {
    * Dùng để tham chiếu khi hiển thị kết quả.
    */
   boardNo: BoardNo;
-  /** Loại chơi: standard, bao5, bao7-bao18, quickPick. */
+  /** Loại chơi: standard, bao5, bao7-bao18. */
   playType: PlayType;
   /** Các số đã chọn. Số lượng phụ thuộc playType. */
   selection: BoardSelection;
   /** Thông tin tính toán từ selection. */
   derived: BoardDerived;
+  /** Số lần cược nhân bội cho board (≥ minBetCount). Player chọn khi đặt cược. */
+  betCount: number;
 }
 
 // ─────────────────────────────────────────────

@@ -19,13 +19,15 @@ import type { BoardSelection, ISODateString } from "./types";
 export interface BoardDerived {
   /**
    * Số lần tham gia dự thưởng (line count) cho board này.
-   * - straight/quickPick basic: 1
-   * - straight/quickPick plus: 1
+   * - straight basic: 1
+   * - straight plus: 1
    * - combo3: 3 (hoặc 1 nếu 3 chữ số giống nhau)
    * - combo6: 6 (hoặc 3 nếu 2 chữ số giống)
    * Công thức: tính bởi calculateLineCount() trong play-types.ts.
    */
   lineCount: number;
+  /** Số lần cược nhân bội cho board (≥ 1). Player chọn khi đặt cược. */
+  betCount: number;
 }
 
 /** Kế hoạch kỳ quay mà vé tham gia. */
@@ -40,9 +42,11 @@ export interface TicketDrawPlan {
 export interface TicketPricing {
   /** Mệnh giá 1 line (VND). */
   unitPrice: number;
-  /** Tổng lines mỗi kỳ = Σ(boards[].derived.lineCount). */
+  /** Tổng lines matching mỗi kỳ = Σ(boards[].derived.lineCount). Dùng cho settle. */
   linesPerDraw: number;
-  /** Tiền cược mỗi kỳ = linesPerDraw × unitPrice. */
+  /** Tổng đơn vị cược mỗi kỳ = Σ(lineCount × betCount). Dùng tính tiền. */
+  betUnitsPerDraw: number;
+  /** Tiền cược mỗi kỳ = betUnitsPerDraw × unitPrice (VND). */
   amountPerDraw: number;
   /** Tổng tiền vé = amountPerDraw × drawCount. */
   totalAmount: number;
@@ -93,7 +97,7 @@ export interface Board {
   boardNo: string;
   /** Cách chơi: basic / plus. */
   playMode: PlayMode;
-  /** Kiểu chơi: straight / combo3 / combo6 / quickPick. */
+  /** Kiểu chơi: straight / combo3 / combo6. */
   playType: PlayType;
   /** Lựa chọn số của người chơi. */
   selection: BoardSelection;

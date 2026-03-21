@@ -32,7 +32,12 @@ import { MAX3DPRO_PRIZE_TIER_LABELS } from "@megawin/game-max3dpro/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import { DrawCommandCenter } from "./draw-command-center";
-import { PublishResultAction, EditScheduleAction, VoidDrawAction } from "./draw-actions";
+import {
+  PublishResultAction,
+  EditScheduleAction,
+  VoidDrawAction,
+  CreateDrawAction,
+} from "./draw-actions";
 import { useOpenSales, useCloseSales, useTriggerSettle, useDrawDetail } from "../../use-operations";
 
 import type { DrawResult, VoidInfo } from "../../types";
@@ -53,6 +58,7 @@ export function DrawManagementSection() {
   const [publishOpen, setPublishOpen] = useState(false);
   const [editScheduleOpen, setEditScheduleOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const [openSalesConfirm, setOpenSalesConfirm] = useState(false);
   const [closeSalesConfirm, setCloseSalesConfirm] = useState(false);
   const [settleConfirm, setSettleConfirm] = useState(false);
@@ -131,6 +137,7 @@ export function DrawManagementSection() {
         onTriggerSettle={() => setSettleConfirm(true)}
         onEditSchedule={() => setEditScheduleOpen(true)}
         onVoidDraw={() => setVoidOpen(true)}
+        onCreateDraw={() => setCreateOpen(true)}
       />
 
       {/* Action dialogs */}
@@ -147,6 +154,7 @@ export function DrawManagementSection() {
         onOpenChange={setEditScheduleOpen}
       />
       <VoidDrawAction draw={draw} disabled={false} open={voidOpen} onOpenChange={setVoidOpen} />
+      <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
 
       {/* Confirm: Mở bán */}
       <AlertDialog open={openSalesConfirm} onOpenChange={setOpenSalesConfirm}>

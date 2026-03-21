@@ -103,6 +103,8 @@ export const DEFAULT_BINGO18_CONFIG: Pick<
   bigSmallDrawPrizes: { ...DEFAULT_BIG_SMALL_DRAW_PRIZES },
   play: {
     unitPrice: 10_000,
+    minBetCount: 1,
+    maxBetCount: 10,
     maxBasicBoardsPerTicket: 6,
     maxDrawCount: 20,
     salesCloseBeforeSeconds: 30,

@@ -30,6 +30,7 @@ export const kenoBoardSchema = z
   .object({
     boardNo: z.enum(KENO_BOARD_NO),
     numbers: z.array(kenoNumberSchema).min(1).max(10),
+    betCount: z.number().int().min(1).default(1),
   })
   .refine((b) => new Set(b.numbers).size === b.numbers.length, {
     message: "Các số trong board không được trùng nhau.",
@@ -39,6 +40,7 @@ export const kenoBoardSchema = z
 export const kenoSideBetSchema = z.object({
   playType: z.enum(SideBetPlayType),
   bet: z.enum(AllSideBetValues),
+  betCount: z.number().int().min(1).default(1),
 });
 
 // ─── Place bet body schema ───

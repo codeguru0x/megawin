@@ -52,17 +52,20 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     drawId: entry.drawId,
     status: entry.status,
     amount: entry.amount,
-    betCount: entry.betCount,
+    selectionCount: entry.selectionCount,
+    betUnitCount: entry.betUnitCount,
     entrySummary: {
       ticketNo: entry.entrySummary.ticketNo,
       boards: entry.entrySummary.boards.map((b: EntryBoardSnapshot) => ({
         boardNo: b.boardNo,
         playType: b.playType,
         numbers: b.numbers,
+        betCount: b.betCount,
       })),
       sideBets: entry.entrySummary.sideBets.map((s) => ({
         playType: s.playType,
         bet: s.bet,
+        betCount: s.betCount,
       })),
     },
     result: entry.result

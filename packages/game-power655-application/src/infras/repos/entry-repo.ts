@@ -298,6 +298,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Idempotent: chỉ update entries có tiers[jackpotTier].amount = 0
    * (chưa được patch). Entries đã patch (amount > 0) sẽ bị skip.
    *
+   * @deprecated Dùng patchJackpotPrizePerEntry thay thế để hỗ trợ betCount multiplier.
    * @param jackpotTier - "jackpot1" hoặc "jackpot2"
    * Returns số entries đã patch.
    */
@@ -340,6 +341,89 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       });
 
       // Tổng winAmount mới = tổng tất cả tiers sau khi patch
+      const newWinAmount = updatedTiers.reduce((s: number, t: any) => s + (t.amount ?? 0), 0);
+
+      return {
+        updateOne: {
+          filter: {
+            _id: entry._id,
+            "payout.tiers": {
+              $elemMatch: { tier: jackpotTier, hitCount: { $gt: 0 }, amount: 0 },
+            },
+          },
+          update: {
+            $set: {
+              "payout.tiers": updatedTiers,
+              "payout.winAmount": newWinAmount,
+              "payout.payoutAmount": newWinAmount,
+              updatedAt: new Date(),
+            },
+          } as any,
+        },
+      };
+    });
+
+    const result = await this.bulkWrite(ops, { ordered: false });
+    return result.modifiedCount;
+  }
+
+  /**
+   * Patch jackpot prize cho từng entry theo tỷ lệ betCount.
+   *
+   * Thay vì dùng jackpotPerWinner × hitCount (uniform), mỗi entry nhận:
+   *   prizeAmount = jackpotPerUnit × (tổng betCount của các JP lines thuộc entry đó).
+   *
+   * Đúng luật Vietlott: "Giải Jackpot chia đều theo tỷ lệ giá trị tham gia dự thưởng"
+   * → giá trị tham gia = betCount (số lần tham gia dự thưởng).
+   *
+   * Idempotent: chỉ patch entries có tiers[jackpotTier].amount = 0.
+   *
+   * @param jackpotTier - "jackpot1" hoặc "jackpot2"
+   * @param perEntryAmounts - Map entryId → amount đã tính trước (jackpotPerUnit × betCount per entry)
+   */
+  async patchJackpotPrizePerEntry(
+    drawId: string,
+    jackpotTier: string,
+    perEntryAmounts: Map<string, { prizeAmount: number; jackpotPerUnit: number }>,
+  ): Promise<number> {
+    if (perEntryAmounts.size === 0) return 0;
+
+    const filter = {
+      drawId,
+      status: EntryStatus.Settled,
+      outcome: EntryOutcome.Win,
+      "payout.tiers": {
+        $elemMatch: {
+          tier: jackpotTier,
+          hitCount: { $gt: 0 },
+          amount: 0,
+        },
+      },
+    };
+
+    const matchingEntries = await this.findManyAsDocuments(filter, {
+      projection: { _id: 1, "payout.tiers": 1 },
+    });
+
+    if (matchingEntries.length === 0) return 0;
+
+    const ops = matchingEntries.map((entry) => {
+      const entryId = (entry._id as ObjectId).toHexString();
+      const prizeInfo = perEntryAmounts.get(entryId);
+      const jackpotPerUnit = prizeInfo?.jackpotPerUnit ?? 0;
+      const prizeAmount = prizeInfo?.prizeAmount ?? 0;
+
+      const tiers = (entry.payout as any)?.tiers ?? [];
+      const updatedTiers = tiers.map((t: any) => {
+        if (t.tier === jackpotTier && t.hitCount > 0 && t.amount === 0) {
+          // unitAmount = jackpotPerUnit (giá trị 1 đơn vị tham gia dự thưởng)
+          // amount = prizeAmount = jackpotPerUnit × tổng betCount của entry này
+          return { ...t, unitAmount: jackpotPerUnit, amount: prizeAmount };
+        }
+        return t;
+      });
+
+      // Tổng winAmount = tổng tất cả tiers sau khi patch
       const newWinAmount = updatedTiers.reduce((s: number, t: any) => s + (t.amount ?? 0), 0);
 
       return {
@@ -1072,7 +1156,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   /**
    * Phân bổ cược theo kiểu chơi (PlayType).
-   * Power 6/55 có nhiều kiểu chơi bao (bao5, bao7-bao18) + standard, quickPick.
+   * Power 6/55 có nhiều kiểu chơi bao (bao5, bao7-bao18) + standard.
    */
   async aggregatePlayTypeDistribution(opts: { financialDate: string; drawId?: string }): Promise<
     Array<{

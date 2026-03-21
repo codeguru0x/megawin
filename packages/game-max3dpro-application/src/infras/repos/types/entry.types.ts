@@ -25,13 +25,20 @@ export interface PlayerBreakdownRow {
  *
  * Không dùng $addToSet — chỉ tính số học nên memory footprint nhỏ.
  * Max 3D Pro có lineCount (pairs per board, từ multiNumber/multiDigit expansion).
+ * betUnitCount = Σ(lineCount × betCount) — phản ánh đơn vị cược thực tế.
  * Index: { drawId: 1, status: 1 }
  */
 export interface OutstandingDrawMetrics {
   drawId: string;
   financialDate: string;
   entryCount: number;
+  /** Tổng pairs (không tính betCount). Dùng cho thống kê số học. */
   lineCount: number;
+  /**
+   * Tổng đơn vị cược = Σ(betUnitCount) = Σ(lineCount × betCount).
+   * Fallback sang lineCount cho entries cũ.
+   */
+  betUnitCount: number;
   /** Tổng tiền cược pending (VND). */
   totalStake: number;
   /** Ước tính hoa hồng pending (VND). */

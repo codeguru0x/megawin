@@ -23,7 +23,6 @@
  * │ mainCover 14 │ 14 chính + 1 ĐB   │ C(14,5) = 2002                       │
  * │ mainCover 15 │ 15 chính + 1 ĐB   │ C(15,5) = 3003                       │
  * │ specialCover │ 5 chính + K ĐB    │ K (2 ≤ K ≤ 12)                       │
- * │ quickPick    │ (máy chọn)        │ 1                                    │
  * └──────────────┴────────────────────┴──────────────────────────────────────┘
  */
 
@@ -73,7 +72,6 @@ const MAIN_COVER_4_LINES = 31;
 export function calculateLineCount(playType: PlayType, selection: BoardSelection): number {
   switch (playType) {
     case PlayType.Standard:
-    case PlayType.QuickPick:
       return 1;
 
     case PlayType.MainCover4:
@@ -112,11 +110,6 @@ export interface ValidationResult {
 export function validateSelection(playType: PlayType, selection: BoardSelection): ValidationResult {
   const errors: string[] = [];
   const { mainNumbers, specialNumbers } = selection;
-
-  // QuickPick không cần validate selection (hệ thống tự sinh)
-  if (playType === PlayType.QuickPick) {
-    return { valid: true, errors };
-  }
 
   // Validate main numbers — phải là string zero-padded thuộc tập hợp lệ
   for (const n of mainNumbers) {

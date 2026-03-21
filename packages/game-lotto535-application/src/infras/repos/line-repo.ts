@@ -70,25 +70,87 @@ export class LineRepository extends BaseRepo<any> {
   }
 
   /**
+   * Lấy tất cả winning lines của 1 draw theo tier — dùng để tính betUnitsByEntry cho Split bonus.
+   *
+   * Chỉ lấy entryId, betCount để build map betUnits per entry per tier.
+   * Được gọi bởi ApplySplitBonuses (step 4b).
+   */
+  async getWinningLinesForTier(
+    drawId: string,
+    tier: string,
+  ): Promise<Array<{ entryId: unknown; betCount?: number }>> {
+    return this.findManyAsDocuments(
+      {
+        drawId,
+        "matchResult.tier": tier,
+      },
+      { projection: { _id: 0, entryId: 1, betCount: 1 } },
+    ) as Promise<Array<{ entryId: unknown; betCount?: number }>>;
+  }
+
+  /**
+   * Lấy tất cả JP lines của 1 draw — dùng để tính totalBetUnits cho Jackpot split.
+   *
+   * Chỉ lấy _id, entryId, betCount để tính tổng bet units.
+   * Được gọi bởi PatchJackpotPrize (step 4a).
+   */
+  async getJackpotLinesForDraw(
+    drawId: string,
+  ): Promise<Array<{ _id: unknown; entryId: unknown; betCount?: number }>> {
+    return this.findManyAsDocuments(
+      {
+        drawId,
+        "matchResult.tier": PrizeTier.Jackpot,
+      },
+      { projection: { _id: 1, entryId: 1, betCount: 1 } },
+    ) as Promise<Array<{ _id: unknown; entryId: unknown; betCount?: number }>>;
+  }
+
+  /**
    * Patch winAmount vào lines trúng Jackpot cho 1 draw.
    *
-   * Được gọi bởi PatchJackpotPrize (step 4a) sau khi tính jackpotPerWinner.
+   * Được gọi bởi PatchJackpotPrize (step 4a) sau khi tính jackpotPerUnit.
    * Idempotent: chỉ update lines có matchResult.tier = "jackpot" và winAmount = 0.
+   *
+   * Quy tắc Vietlott: winAmount = jackpotPerUnit × line.betCount
+   * Mỗi line trúng JP nhận tiền tỷ lệ betCount — không chia đều flat per line.
+   *
+   * @param jackpotPerUnit - Tiền JP cho 1 đơn vị tham gia (1 line × 1 betCount)
    */
-  async patchJackpotLineWinAmount(drawId: string, jackpotPerWinner: number): Promise<number> {
-    const result = await this.updateMany(
+  async patchJackpotLineWinAmount(drawId: string, jackpotPerUnit: number): Promise<number> {
+    // Lấy các lines trúng JP chưa patch để tính winAmount riêng theo betCount
+    const jpLines = await this.findManyAsDocuments(
       {
         drawId,
         "matchResult.tier": PrizeTier.Jackpot,
         "matchResult.winAmount": 0,
       },
-      {
-        $set: {
-          "matchResult.winAmount": jackpotPerWinner,
-        },
-      },
+      { projection: { _id: 1, betCount: 1 } },
     );
 
+    if (jpLines.length === 0) return 0;
+
+    const ops = jpLines.map((line) => {
+      // betCount per line — backward compat: data cũ không có betCount → fallback = 1
+      const betCount = (line as any).betCount ?? 1;
+      const winAmount = jackpotPerUnit * betCount;
+
+      return {
+        updateOne: {
+          filter: {
+            _id: line._id,
+            "matchResult.winAmount": 0,
+          },
+          update: {
+            $set: {
+              "matchResult.winAmount": winAmount,
+            },
+          },
+        },
+      };
+    });
+
+    const result = await this.bulkWrite(ops, { ordered: false });
     return result.modifiedCount;
   }
 }

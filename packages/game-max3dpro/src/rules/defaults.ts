@@ -11,11 +11,7 @@
  * lúc 18h00.
  */
 
-import type {
-  FinancialRates,
-  Max3dproPrizeConfig,
-  PlayRules,
-} from "../entities/types";
+import type { FinancialRates, Max3dproPrizeConfig, PlayRules } from "../entities/types";
 
 export const DEFAULT_MAX3D_PRO_CONFIG: {
   rates: FinancialRates;
@@ -39,6 +35,8 @@ export const DEFAULT_MAX3D_PRO_CONFIG: {
   },
   play: {
     unitPrice: 10_000,
+    minBetCount: 1,
+    maxBetCount: 10,
     maxBoardsPerTicket: 4,
     maxDrawCount: 6,
     salesCloseBeforeMinutes: 5,

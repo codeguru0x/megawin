@@ -22,7 +22,7 @@ export interface EntryBoardSnapshot {
   boardNo: string;
   /** Cách chơi: multiNumber / multiDigit. */
   playMode: PlayMode;
-  /** Kiểu chơi: straight / quickPick. */
+  /** Kiểu chơi: straight. */
   playType: PlayType;
   /** Danh sách các bộ ba số (triplets) đã chọn hoặc sinh ra. */
   triplets: Triplet[];
@@ -30,8 +30,13 @@ export interface EntryBoardSnapshot {
   frontDigits?: number[];
   /** Chỉ cho multiDigit: 3 chữ số sau chọn. */
   backDigits?: number[];
-  /** Số cặp (pairs) sinh ra từ board. multiNumber: C(n,2). */
+  /** Số cặp (pairs) sinh ra từ board. multiNumber: P(n,2). */
   lineCount: number;
+  /**
+   * Số lần cược nhân bội (≥ 1). Snapshot từ ticket board lúc place-bet.
+   * Tiền thưởng pair = matchWinAmount × betCount.
+   */
+  betCount: number;
 }
 
 // ─────────────────────────────────────────────
@@ -43,9 +48,13 @@ export interface EntryPayoutTier {
   tier: PrizeTier;
   /** Số pairs trúng hạng giải này. */
   hitCount: number;
-  /** Giá trị 1 lần trúng (VND). x2 nếu 2 bộ ba số giống nhau. */
+  /**
+   * Giá trị trung bình 1 lần trúng (VND) = totalAmount / hitCount.
+   * Bao gồm duplicate multiplier (×2) và betCount.
+   * Công thức thực tế: prizeConfig[tier] × duplicateMultiplier × betCount.
+   */
   unitAmount: number;
-  /** Tổng tiền = hitCount × unitAmount. */
+  /** Tổng tiền = Σ(unitAmount) qua hitCount lần trúng = hitCount × unitAmount. */
   amount: number;
 }
 
@@ -142,10 +151,18 @@ export interface TicketEntryDoc {
   /** Snapshot thông tin tenant tại thời điểm tạo entry. */
   tenant: EntryTenantSnapshot;
 
-  /** Tổng cặp (pairs) = Σ(board.lineCount). Mỗi pair = 1 lần dự thưởng × unitPrice. */
+  /** Tổng cặp (pairs) = Σ(board.lineCount). Dùng cho settle (matching). */
   lineCount: number;
-  /** Tổng tiền cược = lineCount × unitPrice (VND). */
+
+  /**
+   * Tổng đơn vị cược = Σ(board.lineCount × board.betCount).
+   * Dùng để tính tiền: amount = betUnitCount × unitPrice.
+   */
+  betUnitCount: number;
+
+  /** Tổng tiền cược = betUnitCount × unitPrice (VND). */
   amount: number;
+
   /** Mệnh giá 1 pair (VND). Snapshot từ global config. */
   unitPrice: number;
 

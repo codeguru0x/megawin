@@ -9,12 +9,17 @@ import type { TicketChannel } from "@megawin/game-core/entities";
 export interface PlaceBetBoardInput {
   /** Số thứ tự bảng (board) trong vé, vd: "A", "B". */
   boardNo: string;
-  /** Kiểu chơi: standard. */
+  /** Cách chơi: multiNumber / multiDigit. */
   playMode: PlayMode;
-  /** Loại cược: direct / multiNumber / rumble. */
+  /** Kiểu chơi: straight (duy nhất). */
   playType: PlayType;
   /** Lựa chọn số của player cho board này. */
   selection: BoardSelection;
+  /**
+   * Số lần cược nhân bội cho board (≥ 1).
+   * Mặc định 1. Tiền cược board = lineCount × betCount × unitPrice.
+   */
+  betCount: number;
 }
 
 export interface PlaceBetInput {
@@ -60,9 +65,11 @@ export interface PlaceBetOutput {
   pricing: {
     /** Đơn giá mỗi pair (VND). */
     unitPrice: number;
-    /** Tổng pairs mỗi kỳ = Σ(board.lineCount). */
+    /** Tổng pairs mỗi kỳ = Σ(board.lineCount). Dùng cho settle. */
     linesPerDraw: number;
-    /** Tiền cược mỗi kỳ = linesPerDraw × unitPrice. */
+    /** Tổng đơn vị cược mỗi kỳ = Σ(board.lineCount × board.betCount). */
+    betUnitsPerDraw: number;
+    /** Tiền cược mỗi kỳ = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
     /** Tổng tiền cược = amountPerDraw × drawCount. */
     totalAmount: number;

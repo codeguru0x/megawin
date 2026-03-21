@@ -38,7 +38,7 @@ export class SystemSettleTenantDailyRepo extends SystemSettleTenantDailyReposito
       },
     ]);
 
-    return (result as any[]).map((r) => ({
+    return result.map((r) => ({
       tenantId: r._id,
       totalStake: r.totalStake,
       totalWin: r.totalWin,

@@ -171,7 +171,7 @@ const MOCK_TENANT_ENTRIES = [
     boards: [
       {
         boardNo: "A",
-        playType: "quickPick",
+        playType: "standard",
         numbers: [1, 9, 18, 26, 34, 42],
         expandedLines: 1,
       },
@@ -202,7 +202,6 @@ const MOCK_TENANT_ENTRIES = [
     currentDraw: 1,
   },
 ];
-
 
 type SelectedEntry = (typeof MOCK_TENANT_ENTRIES)[number];
 
@@ -443,7 +442,6 @@ export default function Mega645PendingTicketsPage() {
                     <SelectItem value="bao7">Bao 7</SelectItem>
                     <SelectItem value="bao8">Bao 8</SelectItem>
                     <SelectItem value="bao12">Bao 12-18</SelectItem>
-                    <SelectItem value="quickPick">Tự chọn</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="outline" size="sm">

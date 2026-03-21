@@ -8,12 +8,10 @@ import type {
   EntryBoardSnapshot,
 } from "@megawin/game-mega645/entities";
 import { PlayType } from "@megawin/game-mega645/entities";
-import { MEGA645_MAIN_COUNT, ALL_MAIN_NUMBERS } from "@megawin/game-mega645/entities";
 import { calculateLineCount, getRequiredMainCount } from "@megawin/game-mega645/rules/play-types";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { TicketRepository } from "../../infras/repos/ticket-repo";
-import { EntryRepository } from "../../infras/repos/entry-repo";
+import { PlaceBetStore } from "../../infras/repos/place-bet-store";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
@@ -21,11 +19,11 @@ import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
+import { newObjectId } from "@megawin/data/mongo";
 
 export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();
-  private readonly ticketRepo = new TicketRepository();
-  private readonly entryRepo = new EntryRepository();
+  private readonly placeBetStore = new PlaceBetStore();
   private readonly ticketCounter = new TicketCounterRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
@@ -55,11 +53,18 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const builtBoards: Board[] = [];
     let totalLinesPerDraw = 0;
 
+    // Validate betCount per board theo config
+    const minBetCount = play.minBetCount ?? 1;
+    const maxBetCount = play.maxBetCount ?? 10;
+
     for (const bi of boardInputs) {
       const playType = bi.playType as PlayType;
+      const betCount = bi.betCount ?? 1;
 
-      if (playType === PlayType.QuickPick) {
-        bi.selection = generateQuickPick();
+      if (betCount < minBetCount || betCount > maxBetCount) {
+        throw AppException.badRequest(
+          `betCount ${betCount} phải nằm trong khoảng [${minBetCount}, ${maxBetCount}].`,
+        );
       }
 
       const lineCount = calculateLineCount(playType);
@@ -73,11 +78,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         },
         derived: {
           expandedLines: lineCount,
-          baoSize:
-            playType !== PlayType.Standard && playType !== PlayType.QuickPick
-              ? getRequiredMainCount(playType)
-              : undefined,
+          baoSize: playType !== PlayType.Standard ? getRequiredMainCount(playType) : undefined,
         },
+        betCount,
       });
     }
 
@@ -103,7 +106,12 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
 
     const drawCount = drawIds.length;
     const unitPrice = play.unitPrice;
-    const amountPerDraw = unitPrice * totalLinesPerDraw;
+    // betUnitsPerDraw = tổng đơn vị cược thực tế (lines × betCount per board).
+    const betUnitsPerDraw = builtBoards.reduce(
+      (sum, b) => sum + b.derived.expandedLines * (b.betCount ?? 1),
+      0,
+    );
+    const amountPerDraw = unitPrice * betUnitsPerDraw;
     const totalAmount = amountPerDraw * drawCount;
 
     const tenantConfig = await this.getTenantConfig.run({ tenantId });
@@ -121,7 +129,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     // Gọi api để tính tiền xong mới cập nhập status
     const ticketStatus = TicketStatus.Paid;
 
-    const ticketDoc: Omit<TicketDoc, "_id"> = {
+    const ticketId = newObjectId();
+    const ticketDoc: TicketDoc = {
+      _id: ticketId,
       tenantId,
       accountId,
       username,
@@ -135,6 +145,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       pricing: {
         unitPrice,
         linesPerDraw: totalLinesPerDraw,
+        betUnitsPerDraw,
         amountPerDraw,
         totalAmount,
       },
@@ -151,13 +162,12 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       updatedAt: now,
     };
 
-    const ticketId = await this.ticketRepo.insertOne(ticketDoc);
-
     const boardSnapshots: EntryBoardSnapshot[] = builtBoards.map((b) => ({
       boardNo: b.boardNo,
       playType: b.playType,
       mainNumbers: b.selection.mainNumbers,
       expandedLines: b.derived.expandedLines,
+      betCount: b.betCount ?? 1,
     }));
 
     const entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">> = [];
@@ -175,6 +185,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         tenant: { commissionRate, commissionAmount },
         status: EntryStatus.Scheduled,
         lineCount: totalLinesPerDraw,
+        betUnitCount: betUnitsPerDraw,
         amount: amountPerDraw,
         unitPrice,
         entrySummary: {
@@ -186,13 +197,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       });
     }
 
-    try {
-      await this.entryRepo.insertEntries(entryDocs);
-    } catch (err) {
-      throw AppException.internal(
-        "Không thể tạo entries cho các kỳ quay đã chọn. Vui lòng thử lại.",
-      );
-    }
+    await this.placeBetStore.saveAtomically(ticketDoc, entryDocs);
 
     return {
       ticketId,
@@ -205,6 +210,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       pricing: {
         unitPrice,
         linesPerDraw: totalLinesPerDraw,
+        betUnitsPerDraw,
         amountPerDraw,
         totalAmount,
       },
@@ -212,18 +218,4 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       entryCount: drawCount,
     };
   }
-}
-
-function generateQuickPick(): { mainNumbers: string[] } {
-  const pool = [...ALL_MAIN_NUMBERS];
-  const picked: string[] = [];
-  for (let i = 0; i < MEGA645_MAIN_COUNT; i++) {
-    const idx = Math.floor(Math.random() * pool.length);
-    picked.push(pool[idx]!);
-    pool.splice(idx, 1);
-  }
-
-  return {
-    mainNumbers: picked.sort(),
-  };
 }
