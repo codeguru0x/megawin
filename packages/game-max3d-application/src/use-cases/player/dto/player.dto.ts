@@ -264,11 +264,16 @@ export interface PlayerLineInfo {
   playType: string;
   /** Bộ ba số của line. */
   triplets: string[];
-  /** Kết quả so khớp. tier = null nếu không trúng. */
+  /**
+   * Kết quả so khớp.
+   * tiers rỗng nếu không trúng giải nào.
+   * Basic: 1 triplet có thể trúng nhiều hạng (gộp giải theo luật Vietlott).
+   * Plus: gộp tất cả giải đạt điều kiện.
+   * Combo: mỗi hoán vị có thể trúng nhiều hạng.
+   */
   matchResult: {
-    /** Tên giải trúng, null nếu không trúng. */
-    tier: string | null;
-    /** Tiền thắng của line (VND). */
+    tiers: Array<{ tier: string; winAmount: number }>;
+    /** Tổng tiền thưởng = Σ(tiers[].winAmount). 0 nếu không trúng. */
     winAmount: number;
   };
 }

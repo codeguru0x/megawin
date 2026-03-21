@@ -196,7 +196,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         },
       },
     ]);
+
     const row = result[0] as any;
+
     return {
       totalRevenue: row?.totalRevenue ?? 0,
       totalAgentCommission: row?.totalAgentCommission ?? 0,
@@ -257,8 +259,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       },
     ]);
 
-    const totals = (facetResult as any)?.totals?.[0] ?? {};
-    const tierRows = (facetResult as any)?.tierSummary ?? [];
+    const totals = facetResult?.totals?.[0] ?? {};
+    const tierRows = facetResult?.tierSummary ?? [];
 
     let totalFixedPrizes = 0;
     const tierWinnerCounts: Record<string, number> = {};
@@ -1009,8 +1011,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           financialDate: { $first: "$financialDate" },
           entryCount: { $sum: 1 },
           lineCount: { $sum: { $ifNull: ["$lineCount", 0] } },
-          // betUnitCount phản ánh đơn vị cược thực tế — fallback sang lineCount cho entries cũ.
-          betUnitCount: { $sum: { $ifNull: ["$betUnitCount", "$lineCount"] } },
           totalStake: { $sum: "$amount" },
           estimatedCommission: { $sum: "$tenant.commissionAmount" },
         },
@@ -1022,7 +1022,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       financialDate: r.financialDate,
       entryCount: r.entryCount ?? 0,
       lineCount: r.lineCount ?? 0,
-      betUnitCount: r.betUnitCount ?? r.lineCount ?? 0,
       totalStake: r.totalStake ?? 0,
       estimatedCommission: r.estimatedCommission ?? 0,
     }));

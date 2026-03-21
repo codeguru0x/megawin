@@ -462,17 +462,22 @@ export function matchPlus(
 // ─────────────────────────────────────────────
 
 /**
- * Kết quả match của 1 line (1 bộ ba hoặc 1 cặp bộ ba trong Plus mode).
+ * Kết quả match của 1 bet selection.
  *
- * Basic Straight: 1 BoardLineResult per tier trúng (có thể nhiều hơn 1 nếu triplet xuất hiện ở nhiều pool).
+ * Basic Straight: 1 BoardLineResult per triplet (luôn 1 vì board chỉ có 1 triplet).
  * Basic Combo: 1 BoardLineResult per hoán vị.
- * Plus: 1 BoardLineResult per giải đạt điều kiện (wonTiers).
+ * Plus: 1 BoardLineResult per cặp (t1, t2).
+ * tiers[] chứa tất cả giải trúng (gộp giải theo luật Vietlott — 1 bet selection trúng nhiều giải).
  */
 export interface BoardLineResult {
   lineIndex: number;
   triplets: Triplet[];
-  /** Hạng giải trúng. null nếu không trúng. */
-  tier: BasicPrizeTier | PlusPrizeTier | null;
+  /**
+   * Danh sách các giải trúng (gộp giải theo luật Vietlott Max 3D).
+   * Mảng rỗng nếu không trúng giải nào.
+   */
+  tiers: Array<{ tier: BasicPrizeTier | PlusPrizeTier; winAmount: number }>;
+  /** Tổng tiền thưởng = Σ(tiers[].winAmount). Per-unit (chưa nhân betCount). */
   winAmount: number;
 }
 
@@ -480,15 +485,29 @@ export interface BoardMatchResult {
   boardNo: string;
   playMode: PlayMode;
   playType: PlayType;
+  /** Per-unit win amount (1 lần cược). Chưa nhân betCount. */
   winAmount: number;
   lineResults: BoardLineResult[];
 }
 
 /**
+ * `BoardMatchResult` đã được enriched với `betCount` từ entry context.
+ *
+ * `matchBoard()` trả `BoardMatchResult` — per-unit, không biết betCount.
+ * Settle layer gán betCount sau: `{ ...boardMatch, betCount }`.
+ * `buildPayoutTiers` nhận type này để đảm bảo betCount luôn có mặt —
+ * compiler bắt lỗi nếu caller quên gán betCount.
+ */
+export interface BoardMatchResultWithBetCount extends BoardMatchResult {
+  /** Số lần tham gia dự thưởng per board. Mandatory khi truyền vào `buildPayoutTiers`. */
+  betCount: number;
+}
+
+/**
  * So khớp toàn bộ 1 board với kết quả quay.
  *
- * Plus mode: gộp tất cả giải đạt điều kiện, mỗi giải tạo 1 lineResult riêng
- * để settle-entries có thể buildPayoutTiers chính xác.
+ * Trả 1 BoardLineResult per bet selection (1 triplet cho Straight, 1 hoán vị cho Combo, 1 cặp cho Plus).
+ * Gộp giải: 1 bet selection có thể trúng nhiều hạng đồng thời → tiers[] chứa tất cả.
  *
  * `flattenedResult` nên được tính 1 lần bên ngoài vòng lặp entries bằng
  * `flattenDrawResult(drawResult)`, tránh tính lại cho mỗi board.
@@ -512,20 +531,17 @@ export function matchBoard(
 
     const plusResult = matchPlus(t1, t2, drawResultByTier, allTriplets, prizeConfig.plus);
 
-    // Mỗi giải trúng tạo 1 lineResult riêng → buildPayoutTiers đếm đúng hitCount per tier.
-    // Nếu không trúng giải nào, vẫn push 1 lineResult tier=null để có record trong line docs
-    if (plusResult.wonTiers.length === 0) {
-      lineResults.push({ lineIndex: 0, triplets: [t1, t2], tier: null, winAmount: 0 });
-    } else {
-      plusResult.wonTiers.forEach((wt, i) =>
-        lineResults.push({
-          lineIndex: i,
-          triplets: [t1, t2],
-          tier: wt.tier,
-          winAmount: wt.winAmount,
-        }),
-      );
-    }
+    // 1 lineResult per cặp (1 bet selection = 1 lineResult).
+    // Gộp giải: tất cả giải đạt điều kiện đều nằm trong tiers[].
+    lineResults.push({
+      lineIndex: 0,
+      triplets: [t1, t2],
+      tiers: plusResult.wonTiers.map((wt) => ({
+        tier: wt.tier,
+        winAmount: wt.winAmount,
+      })),
+      winAmount: plusResult.winAmount,
+    });
 
     return {
       boardNo: board.boardNo,
@@ -542,21 +558,17 @@ export function matchBoard(
   if (board.playType === PlayType.Straight) {
     const tiers = findAllTiersInResult(triplet, drawResultByTier);
 
-    // Theo luật Vietlott: trúng nhiều hạng → lĩnh tổng tất cả.
-    // Mỗi hạng trúng tạo 1 lineResult riêng để buildPayoutTiers đếm hitCount per tier chính xác.
-    if (tiers.length === 0) {
-      // Nếu không trúng giải nào, vẫn push 1 lineResult với tier=null để có record trong line docs
-      lineResults.push({ lineIndex: 0, triplets: [triplet], tier: null, winAmount: 0 });
-    } else {
-      tiers.forEach((t, i) =>
-        lineResults.push({
-          lineIndex: i,
-          triplets: [triplet],
-          tier: t,
-          winAmount: prizeConfig.basic[t],
-        }),
-      );
-    }
+    // 1 lineResult per triplet (Basic Straight chỉ có 1 triplet per board).
+    // Gộp giải: tất cả hạng trúng đều nằm trong tiers[].
+    lineResults.push({
+      lineIndex: 0,
+      triplets: [triplet],
+      tiers: tiers.map((t) => ({
+        tier: t,
+        winAmount: prizeConfig.basic[t],
+      })),
+      winAmount: tiers.reduce((sum, t) => sum + prizeConfig.basic[t], 0),
+    });
 
     return {
       boardNo: board.boardNo,
@@ -573,26 +585,21 @@ export function matchBoard(
     const permPrizeSet: BasicPrizeAmounts =
       board.playType === PlayType.Combo3 ? prizeConfig.combo.combo3 : prizeConfig.combo.combo6;
 
-    // Mỗi hoán vị có thể trúng nhiều hạng → tách thành lineResult riêng per tier
-    // để buildPayoutTiers đếm hitCount chính xác per tier.
+    // Mỗi hoán vị là 1 bet selection riêng → 1 lineResult per hoán vị.
+    // Gộp giải: hoán vị có thể trúng nhiều hạng → tất cả nằm trong tiers[].
     let lineIdx = 0;
     for (const perm of getUniquePermutations(triplet)) {
-      // Tìm tất cả hạng giải mà hoán vị này khớp (có thể trúng nhiều hạng)
-      const tiers = findAllTiersInResult(perm, drawResultByTier);
+      const tiersForPerm = findAllTiersInResult(perm, drawResultByTier);
 
-      if (tiers.length === 0) {
-        // Nếu không trúng giải nào, vẫn push 1 lineResult với tier=null để có record trong line docs
-        lineResults.push({ lineIndex: lineIdx++, triplets: [perm], tier: null, winAmount: 0 });
-      } else {
-        for (const t of tiers) {
-          lineResults.push({
-            lineIndex: lineIdx++,
-            triplets: [perm],
-            tier: t,
-            winAmount: permPrizeSet[t],
-          });
-        }
-      }
+      lineResults.push({
+        lineIndex: lineIdx++,
+        triplets: [perm],
+        tiers: tiersForPerm.map((t) => ({
+          tier: t,
+          winAmount: permPrizeSet[t],
+        })),
+        winAmount: tiersForPerm.reduce((sum, t) => sum + permPrizeSet[t], 0),
+      });
     }
 
     return {
@@ -620,30 +627,39 @@ export function matchBoard(
 /**
  * Tổng hợp `EntryPayoutTier[]` từ tất cả boards của 1 entry.
  *
- * Gom tất cả lineResults có tier != null và winAmount > 0,
- * group theo tier, đếm hitCount và sum totalAmount.
+ * Gom tất cả tiers trúng từ lineResults, group theo tier, đếm hitCount và sum totalAmount.
  * `unitAmount` = totalAmount / hitCount (làm tròn) — phản ánh giá trị 1 lần trúng.
+ *
+ * `boardResults` phải là `BoardMatchResultWithBetCount[]` — settle layer gán betCount
+ * trước khi gọi hàm này. `matchBoard()` trả per-unit (1 lần cược), betCount nhân bội
+ * tại đây để ra tổng thực tế player nhận.
  */
-export function buildPayoutTiers(boardResults: BoardMatchResult[]): EntryPayoutTier[] {
-  const tierMap = new Map<string, { hitCount: number; totalAmount: number }>();
+export function buildPayoutTiers(boardResults: BoardMatchResultWithBetCount[]): EntryPayoutTier[] {
+  const tiers: EntryPayoutTier[] = [];
 
-  for (const br of boardResults) {
-    for (const line of br.lineResults) {
-      if (!line.tier || line.winAmount <= 0) continue;
-      const acc = tierMap.get(line.tier);
-      if (acc) {
-        acc.hitCount++;
-        acc.totalAmount += line.winAmount;
-      } else {
-        tierMap.set(line.tier, { hitCount: 1, totalAmount: line.winAmount });
+  for (const { betCount, lineResults } of boardResults) {
+    for (const lineResult of lineResults) {
+      for (const { tier, winAmount } of lineResult.tiers) {
+        if (winAmount <= 0) continue;
+
+        // betCount nhân bội winAmount per-unit → tổng thực tế player nhận.
+        const scaled = winAmount * betCount;
+        const existing = tiers.find((t) => t.tier === tier);
+
+        if (existing) {
+          existing.hitCount++;
+          existing.amount += scaled;
+        } else {
+          tiers.push({ tier, hitCount: 1, unitAmount: 0, amount: scaled });
+        }
       }
     }
   }
 
-  return Array.from(tierMap, ([tier, { hitCount, totalAmount }]) => ({
-    tier: tier as BasicPrizeTier | PlusPrizeTier,
-    hitCount,
-    unitAmount: Math.round(totalAmount / hitCount),
-    amount: totalAmount,
-  }));
+  // unitAmount = trung bình tiền thưởng 1 lần trúng (VND), tính sau khi aggregate xong.
+  for (const t of tiers) {
+    t.unitAmount = Math.round(t.amount / t.hitCount);
+  }
+
+  return tiers;
 }

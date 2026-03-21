@@ -286,9 +286,14 @@ export interface PlayerLineInfo {
   playType: string;
   /** Cặp hai bộ ba số của line. */
   triplets: string[];
-  /** Kết quả so khớp. tier = null nếu không trúng. */
+  /**
+   * Kết quả so khớp.
+   * tiers rỗng nếu không trúng giải nào.
+   * 1 pair có thể trúng nhiều giải cùng lúc (gộp giải theo luật Vietlott).
+   */
   matchResult: {
-    tier: PrizeTier | null;
+    tiers: Array<{ tier: PrizeTier; winAmount: number }>;
+    /** Tổng tiền thưởng = Σ(tiers[].winAmount). 0 nếu không trúng. */
     winAmount: number;
   };
 }

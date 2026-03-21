@@ -23,13 +23,15 @@ export class LineRepository extends BaseRepo<any> {
    * $setOnInsert: chỉ ghi khi insert mới, không overwrite nếu đã tồn tại.
    */
   async upsertLines(lines: Array<Omit<TicketLineDoc, "_id">>): Promise<void> {
-    if (lines.length === 0) return;
+    if (lines.length === 0) {
+      return;
+    }
 
     const ops = lines.map((doc) => ({
       updateOne: {
         filter: {
-          entryId: (doc as any).entryId,
-          lineIndex: (doc as any).lineIndex,
+          entryId: doc.entryId,
+          lineIndex: doc.lineIndex,
         },
         update: { $setOnInsert: doc },
         upsert: true,

@@ -38,7 +38,7 @@ import {
   matchBoard,
   flattenDrawResult,
   buildPayoutTiers,
-  type BoardMatchResult,
+  type BoardMatchResultWithBetCount,
 } from "@megawin/game-max3d/rules/prize-tiers";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { LineRepository } from "../../infras/repos/line-repo";
@@ -83,7 +83,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 
       for (const entry of entries) {
         const boards: EntryBoardSnapshot[] = entry.entrySummary.boards;
-        const boardResults: BoardMatchResult[] = [];
+        const boardResults: BoardMatchResultWithBetCount[] = [];
         const lineDocs: Array<Omit<TicketLineDoc, "_id">> = [];
 
         let entryWinAmount = 0;
@@ -102,20 +102,20 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             prizeConfig,
           );
 
-          // betCount = số lần cược nhân bội — nhân vào winAmount.
-          // matchBoard() trả kết quả per-unit (1 lần cược), nhân betCount ở đây.
+          // betCount = số lần tham gia dự thưởng per board — player tự chọn.
+          // matchBoard() trả kết quả per-unit (1 lần cược).
+          // Gán betCount vào BoardMatchResultWithBetCount để buildPayoutTiers tự nhân khi tổng hợp tiers.
           // Dùng ?? 1 để backward compat với entries cũ chưa có betCount field.
           const betCount = board.betCount ?? 1;
 
-          boardResults.push(boardMatch);
+          boardResults.push({ ...boardMatch, betCount });
 
+          // entryWinAmount cộng dồn đã nhân betCount — tổng thực tế player nhận.
           entryWinAmount += boardMatch.winAmount * betCount;
 
+          // 1 lineDoc per lineResult (1 bet selection = 1 lineDoc).
+          // Gộp giải: lineResult.tiers[] chứa tất cả giải trúng của bet selection đó.
           for (const lineResult of boardMatch.lineResults) {
-            // winAmount đã nhân betCount → lineDoc.matchResult.winAmount = tổng thực tế.
-            // betCount lưu kèm để audit trail — giải thích tại sao winAmount > giá trị 1 unit.
-            const effectiveWin = lineResult.winAmount * betCount;
-
             lineDocs.push({
               tenantId: entry.tenantId,
               accountId: entry.accountId,
@@ -129,10 +129,16 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
               playMode: board.playMode,
               playType: board.playType,
               triplets: lineResult.triplets,
+              // betCount lưu kèm để audit trail — giải thích tại sao winAmount > giá trị 1 unit.
               betCount,
               matchResult: {
-                tier: lineResult.tier,
-                winAmount: effectiveWin,
+                // Mỗi tier nhân betCount → winAmount thực tế per tier.
+                tiers: lineResult.tiers.map((t) => ({
+                  tier: t.tier,
+                  winAmount: t.winAmount * betCount,
+                })),
+                // winAmount root = tổng thực tế = lineResult.winAmount × betCount.
+                winAmount: lineResult.winAmount * betCount,
               },
               createdAt: now,
             });
@@ -144,22 +150,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           await this.lineRepo.upsertLines(lineDocs);
         }
 
-        // Tạo adjusted boardResults với winAmount đã nhân betCount trước khi truyền vào buildPayoutTiers.
-        // buildPayoutTiers gom tiers dựa trên lineResults.winAmount — cần đã nhân betCount.
-        // Dùng ?? 1 để backward compat với entries cũ chưa có betCount field.
-        const adjustedResults: BoardMatchResult[] = boardResults.map((br, idx) => {
-          const betCount = boards[idx]!.betCount ?? 1;
-          return {
-            ...br,
-            winAmount: br.winAmount * betCount,
-            lineResults: br.lineResults.map((lr) => ({
-              ...lr,
-              winAmount: lr.winAmount * betCount,
-            })),
-          };
-        });
-
-        const payoutTiers = buildPayoutTiers(adjustedResults);
+        // boardResults đã mang betCount per board (gán ở trên).
+        // buildPayoutTiers tự nhân betCount → không cần tạo adjustedResults trung gian.
+        const payoutTiers = buildPayoutTiers(boardResults);
 
         const hasWin = entryWinAmount > 0;
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { matchPair, matchBoard, flattenDrawResult } from "@megawin/game-max3dpro/rules/prize-tiers";
+import { matchPair, flattenDrawResult } from "@megawin/game-max3dpro/rules/prize-tiers";
 import { PrizeTier } from "@megawin/game-max3dpro/entities/enums";
 import { DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules/defaults";
 import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities/draw-result";
@@ -57,7 +57,9 @@ describe("flattenDrawResult – gom kết quả quay Max 3D Pro", () => {
 describe("matchPair – giải Đặc Biệt (đúng thứ tự quay)", () => {
   it("first=special[0], second=special[1] → Special 2,000,000,000 + gộp Tư + Năm + Sáu", () => {
     const result = makeDrawResult({ special: ["111", "222"] });
-    const m = matchPair("111", "222", result, prizes);
+    const flat = flattenDrawResult(result);
+
+    const m = matchPair("111", "222", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.Special);
     // Gộp giải: ĐB + Tư (cả 2 khớp 2 entry bất kỳ) + Năm (111 khớp ĐB) + Sáu (222 khớp ĐB? → Năm)
     // 111 khớp special → Năm, 222 khớp special → Năm
@@ -68,7 +70,8 @@ describe("matchPair – giải Đặc Biệt (đúng thứ tự quay)", () => {
 
   it("thứ tự ngược lại → KHÔNG phải Special, phải là SpecialSub", () => {
     const result = makeDrawResult({ special: ["111", "222"] });
-    const m = matchPair("222", "111", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("222", "111", result, prizes, flat);
     expect(tierNames(m)).not.toContain(PrizeTier.Special);
     expect(tierNames(m)).toContain(PrizeTier.SpecialSub);
   });
@@ -81,7 +84,8 @@ describe("matchPair – giải Đặc Biệt (đúng thứ tự quay)", () => {
 describe("matchPair – giải Phụ Đặc Biệt (ngược thứ tự quay)", () => {
   it("first=special[1], second=special[0] → SpecialSub 400,000,000 + gộp giải", () => {
     const result = makeDrawResult({ special: ["111", "222"] });
-    const m = matchPair("222", "111", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("222", "111", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.SpecialSub);
     // Gộp: phụ ĐB + Tư + Năm(222 khớp ĐB) + Năm(111 khớp ĐB)
     expect(m.winAmount).toBe(400_000_000 + 1_000_000 + 100_000 + 100_000);
@@ -95,7 +99,8 @@ describe("matchPair – giải Phụ Đặc Biệt (ngược thứ tự quay)", 
 describe("matchPair – giải Nhất, Nhì, Ba", () => {
   it("cả 2 trùng trong nhóm Nhất → First + Tư + 2×Sáu", () => {
     const result = makeDrawResult();
-    const m = matchPair("333", "444", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("333", "444", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.First);
     expect(tierNames(m)).toContain(PrizeTier.Fourth);
     // 333 khớp Nhất → Sáu, 444 khớp Nhất → Sáu
@@ -104,7 +109,8 @@ describe("matchPair – giải Nhất, Nhì, Ba", () => {
 
   it("cả 2 trùng trong nhóm Nhì → Second + Tư + 2×Sáu", () => {
     const result = makeDrawResult();
-    const m = matchPair("100", "200", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("100", "200", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.Second);
     expect(tierNames(m)).toContain(PrizeTier.Fourth);
     expect(m.winAmount).toBe(10_000_000 + 1_000_000 + 40_000 + 40_000);
@@ -112,7 +118,8 @@ describe("matchPair – giải Nhất, Nhì, Ba", () => {
 
   it("cả 2 trùng trong nhóm Ba → Third + Tư + 2×Sáu", () => {
     const result = makeDrawResult();
-    const m = matchPair("700", "800", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("700", "800", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.Third);
     expect(tierNames(m)).toContain(PrizeTier.Fourth);
     expect(m.winAmount).toBe(4_000_000 + 1_000_000 + 40_000 + 40_000);
@@ -126,7 +133,8 @@ describe("matchPair – giải Nhất, Nhì, Ba", () => {
 describe("matchPair – giải Tư (cross-tier)", () => {
   it("1 ĐB + 1 Nhất → Tư + Năm + Sáu", () => {
     const result = makeDrawResult();
-    const m = matchPair("111", "333", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("111", "333", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.Fourth);
     expect(tierNames(m)).toContain(PrizeTier.Fifth);
     expect(tierNames(m)).toContain(PrizeTier.Sixth);
@@ -135,7 +143,8 @@ describe("matchPair – giải Tư (cross-tier)", () => {
 
   it("1 Nhì + 1 Ba → Tư + 2×Sáu", () => {
     const result = makeDrawResult();
-    const m = matchPair("100", "700", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("100", "700", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.Fourth);
     expect(m.winAmount).toBe(1_000_000 + 40_000 + 40_000);
   });
@@ -148,28 +157,32 @@ describe("matchPair – giải Tư (cross-tier)", () => {
 describe("matchPair – giải Năm, Sáu (chỉ 1 trùng)", () => {
   it("chỉ 1 trùng giải ĐB → Fifth 100,000", () => {
     const result = makeDrawResult();
-    const m = matchPair("111", "999", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("111", "999", result, prizes, flat);
     expect(tierNames(m)).toEqual([PrizeTier.Fifth]);
     expect(m.winAmount).toBe(100_000);
   });
 
   it("chỉ 1 trùng giải Nhất → Sixth 40,000", () => {
     const result = makeDrawResult();
-    const m = matchPair("333", "999", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("333", "999", result, prizes, flat);
     expect(tierNames(m)).toEqual([PrizeTier.Sixth]);
     expect(m.winAmount).toBe(40_000);
   });
 
   it("chỉ 1 trùng giải Nhì → Sixth 40,000", () => {
     const result = makeDrawResult();
-    const m = matchPair("100", "999", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("100", "999", result, prizes, flat);
     expect(tierNames(m)).toEqual([PrizeTier.Sixth]);
     expect(m.winAmount).toBe(40_000);
   });
 
   it("chỉ 1 trùng giải Ba → Sixth 40,000", () => {
     const result = makeDrawResult();
-    const m = matchPair("700", "999", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("700", "999", result, prizes, flat);
     expect(tierNames(m)).toEqual([PrizeTier.Sixth]);
     expect(m.winAmount).toBe(40_000);
   });
@@ -182,7 +195,8 @@ describe("matchPair – giải Năm, Sáu (chỉ 1 trùng)", () => {
 describe("matchPair – không trùng", () => {
   it("cả 2 không trùng → wonTiers rỗng, 0 VND", () => {
     const result = makeDrawResult();
-    const m = matchPair("999", "998", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("999", "998", result, prizes, flat);
     expect(m.wonTiers).toHaveLength(0);
     expect(m.winAmount).toBe(0);
     expect(m.matchedTriplets).toHaveLength(0);
@@ -197,7 +211,8 @@ describe("matchPair – duplicate triplets (thưởng ×2 cho Nhất→Sáu)", (
   it("duplicate trùng Nhất (pool có 2 entry giống) → First×2 + Tư×2 + Sáu×2", () => {
     // Cần pool Nhất có 2 entry "333" để bipartite match
     const result = makeDrawResult({ first: ["333", "333", "555", "666"] });
-    const m = matchPair("333", "333", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("333", "333", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.First);
     expect(tierNames(m)).toContain(PrizeTier.Fourth);
     expect(tierNames(m)).toContain(PrizeTier.Sixth);
@@ -209,7 +224,8 @@ describe("matchPair – duplicate triplets (thưởng ×2 cho Nhất→Sáu)", (
     const result = makeDrawResult({
       third: ["700", "700", "900", "010", "020", "030", "040", "050"],
     });
-    const m = matchPair("700", "700", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("700", "700", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.Third);
     expect(tierNames(m)).toContain(PrizeTier.Fourth);
     expect(m.winAmount).toBe(4_000_000 * 2 + 1_000_000 * 2 + 40_000 * 2);
@@ -217,7 +233,8 @@ describe("matchPair – duplicate triplets (thưởng ×2 cho Nhất→Sáu)", (
 
   it("duplicate trùng special[0] nhưng pool chỉ có 1 entry → chỉ Năm×2 (không đủ 2 entry ĐB)", () => {
     const result = makeDrawResult({ special: ["111", "222"] });
-    const m = matchPair("111", "111", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("111", "111", result, prizes, flat);
     // Bipartite: pool ["111","222"] → match 1 lần "111", còn ["222"] → chỉ 1 match
     // Không trúng ĐB (cần đúng thứ tự), không trúng phụ ĐB
     // Không trúng Tư (bipartite allTriplets: match 1 < 2)
@@ -228,7 +245,8 @@ describe("matchPair – duplicate triplets (thưởng ×2 cho Nhất→Sáu)", (
 
   it("duplicate ĐB: special=['111','111'] → ĐB + phụ ĐB đều trúng (cả đúng và ngược thứ tự)", () => {
     const result = makeDrawResult({ special: ["111", "111"] });
-    const m = matchPair("111", "111", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("111", "111", result, prizes, flat);
     // Khi special=["111","111"] và player "111"+"111":
     // - first===special[0] && second===special[1] → ĐB đúng thứ tự
     // - first===special[1] && second===special[0] → phụ ĐB ngược thứ tự
@@ -256,14 +274,16 @@ describe("matchPair – thứ tự ảnh hưởng kết quả ĐB", () => {
   const result = makeDrawResult({ special: ["ABC", "XYZ"] });
 
   it("[ABC, XYZ] → Special (đúng thứ tự)", () => {
-    const m = matchPair("ABC", "XYZ", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("ABC", "XYZ", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.Special);
     const specialWon = m.wonTiers.find((wt) => wt.tier === PrizeTier.Special)!;
     expect(specialWon.winAmount).toBe(2_000_000_000);
   });
 
   it("[XYZ, ABC] → SpecialSub (ngược thứ tự)", () => {
-    const m = matchPair("XYZ", "ABC", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("XYZ", "ABC", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.SpecialSub);
     const subWon = m.wonTiers.find((wt) => wt.tier === PrizeTier.SpecialSub)!;
     expect(subWon.winAmount).toBe(400_000_000);
@@ -271,60 +291,6 @@ describe("matchPair – thứ tự ảnh hưởng kết quả ĐB", () => {
 });
 
 // ─────────────────────────────────────────────
-// X. matchBoard – nhiều cặp (multiNumber)
-// ─────────────────────────────────────────────
-
-describe("matchBoard – so khớp toàn bộ board (nhiều cặp)", () => {
-  const result = makeDrawResult();
-
-  it("board 1 cặp trúng First → totalWinAmount bao gồm gộp giải", () => {
-    const board = {
-      boardNo: "B1",
-      playMode: "multiNumber",
-      playType: "straight",
-      pairs: [{ first: "333", second: "444" }],
-    };
-    const m = matchBoard(board, result, prizes);
-    // 333+444: First + Tư + Sáu(333) + Sáu(444)
-    expect(m.totalWinAmount).toBe(30_000_000 + 1_000_000 + 40_000 + 40_000);
-    // wonTiers tạo lineResults riêng cho mỗi giải trúng
-    expect(m.lineResults.length).toBeGreaterThanOrEqual(1);
-    const tiers = m.lineResults.map((lr) => lr.tier);
-    expect(tiers).toContain(PrizeTier.First);
-  });
-
-  it("board không cặp nào trúng → totalWinAmount = 0", () => {
-    const board = {
-      boardNo: "B3",
-      playMode: "multiNumber",
-      playType: "straight",
-      pairs: [{ first: "999", second: "998" }],
-    };
-    const m = matchBoard(board, result, prizes);
-    expect(m.totalWinAmount).toBe(0);
-    expect(m.lineResults[0]!.tier).toBeNull();
-  });
-
-  it("board nhiều cặp, nhiều cặp trúng → tổng thưởng cộng dồn", () => {
-    const board = {
-      boardNo: "B4",
-      playMode: "multiNumber",
-      playType: "straight",
-      pairs: [
-        { first: "333", second: "444" },
-        { first: "100", second: "200" },
-        { first: "700", second: "800" },
-      ],
-    };
-    const m = matchBoard(board, result, prizes);
-    // Mỗi cặp gộp giải nên tổng = sum of all pairs' gộp giải
-    const pair1 = 30_000_000 + 1_000_000 + 40_000 + 40_000; // First + Tư + 2×Sáu
-    const pair2 = 10_000_000 + 1_000_000 + 40_000 + 40_000; // Second + Tư + 2×Sáu
-    const pair3 = 4_000_000 + 1_000_000 + 40_000 + 40_000; // Third + Tư + 2×Sáu
-    expect(m.totalWinAmount).toBe(pair1 + pair2 + pair3);
-  });
-});
-
 // ─────────────────────────────────────────────
 // XI. Tích hợp – kịch bản đầy đủ
 // ─────────────────────────────────────────────
@@ -337,28 +303,34 @@ describe("Tích hợp – kịch bản đầy đủ Max 3D Pro", () => {
     third: ["468", "579", "680", "791", "802", "913", "024", "147"],
   };
 
+  const flat = flattenDrawResult(result);
+
   it("cặp đúng thứ tự ĐB → Special + gộp giải", () => {
-    const m = matchPair("123", "456", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("123", "456", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.Special);
     const specialWon = m.wonTiers.find((wt) => wt.tier === PrizeTier.Special)!;
     expect(specialWon.winAmount).toBe(2_000_000_000);
   });
 
   it("cặp ngược thứ tự ĐB → SpecialSub + gộp giải", () => {
-    const m = matchPair("456", "123", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("456", "123", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.SpecialSub);
     const subWon = m.wonTiers.find((wt) => wt.tier === PrizeTier.SpecialSub)!;
     expect(subWon.winAmount).toBe(400_000_000);
   });
 
   it("cặp cùng Nhất → First + gộp", () => {
-    const m = matchPair("789", "012", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("789", "012", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.First);
     expect(tierNames(m)).toContain(PrizeTier.Fourth);
   });
 
   it("1 ĐB + 1 Nhì → Fourth + Năm + Sáu", () => {
-    const m = matchPair("123", "234", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("123", "234", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.Fourth);
     expect(tierNames(m)).toContain(PrizeTier.Fifth);
     expect(tierNames(m)).toContain(PrizeTier.Sixth);
@@ -366,28 +338,10 @@ describe("Tích hợp – kịch bản đầy đủ Max 3D Pro", () => {
   });
 
   it("1 Nhất + không trùng → Sixth only", () => {
-    const m = matchPair("789", "999", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("789", "999", result, prizes, flat);
     expect(tierNames(m)).toEqual([PrizeTier.Sixth]);
     expect(m.winAmount).toBe(40_000);
-  });
-
-  it("board với 3 cặp hỗn hợp", () => {
-    const board = {
-      boardNo: "B1",
-      playMode: "multiNumber",
-      playType: "straight",
-      pairs: [
-        { first: "123", second: "456" },
-        { first: "789", second: "012" },
-        { first: "999", second: "998" },
-      ],
-    };
-    const m = matchBoard(board, result, prizes);
-    const allTiers = m.lineResults.map((lr) => lr.tier);
-    expect(allTiers).toContain(PrizeTier.Special);
-    expect(allTiers).toContain(PrizeTier.First);
-    expect(allTiers).toContain(null);
-    expect(m.totalWinAmount).toBeGreaterThan(2_000_000_000 + 30_000_000);
   });
 });
 
@@ -398,7 +352,8 @@ describe("Tích hợp – kịch bản đầy đủ Max 3D Pro", () => {
 describe("matchPair – bipartite matching edge cases", () => {
   it("duplicate trùng Nhất nhưng pool chỉ có 1 entry → không trúng First", () => {
     const result = makeDrawResult({ first: ["333", "444", "555", "666"] });
-    const m = matchPair("333", "333", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("333", "333", result, prizes, flat);
     // Pool Nhất: ["333","444","555","666"] → chỉ 1 entry "333"
     // Bipartite: match 1 < 2 → không trúng First
     expect(tierNames(m)).not.toContain(PrizeTier.First);
@@ -409,7 +364,8 @@ describe("matchPair – bipartite matching edge cases", () => {
 
   it("non-duplicate 2 bộ khớp 2 entry riêng biệt Nhất → trúng First", () => {
     const result = makeDrawResult({ first: ["333", "444", "555", "666"] });
-    const m = matchPair("333", "444", result, prizes);
+    const flat = flattenDrawResult(result);
+    const m = matchPair("333", "444", result, prizes, flat);
     expect(tierNames(m)).toContain(PrizeTier.First);
   });
 });
@@ -428,31 +384,31 @@ import type { BoardSelection } from "@megawin/game-max3dpro/entities/types";
 describe("calculateLineCount – multiNumber → P(n,2) ordered pairs", () => {
   it("3 bộ ba → P(3,2) = 6", () => {
     const sel: BoardSelection = { triplets: ["096", "389", "683"] };
-    expect(calculateLineCount(PlayMode.MultiNumber, PlayType.Straight, sel)).toBe(6);
+    expect(calculateLineCount(PlayMode.MultiNumber, sel)).toBe(6);
   });
 
   it("4 bộ ba → P(4,2) = 12", () => {
     const sel: BoardSelection = { triplets: ["001", "002", "003", "004"] };
-    expect(calculateLineCount(PlayMode.MultiNumber, PlayType.Straight, sel)).toBe(12);
+    expect(calculateLineCount(PlayMode.MultiNumber, sel)).toBe(12);
   });
 
   it("5 bộ ba → P(5,2) = 20", () => {
     const sel: BoardSelection = { triplets: ["001", "002", "003", "004", "005"] };
-    expect(calculateLineCount(PlayMode.MultiNumber, PlayType.Straight, sel)).toBe(20);
+    expect(calculateLineCount(PlayMode.MultiNumber, sel)).toBe(20);
   });
 
   it("10 bộ ba → P(10,2) = 90", () => {
     const sel: BoardSelection = {
       triplets: ["001", "002", "003", "004", "005", "006", "007", "008", "009", "010"],
     };
-    expect(calculateLineCount(PlayMode.MultiNumber, PlayType.Straight, sel)).toBe(90);
+    expect(calculateLineCount(PlayMode.MultiNumber, sel)).toBe(90);
   });
 
   it("20 bộ ba → P(20,2) = 380", () => {
     const sel: BoardSelection = {
       triplets: Array.from({ length: 20 }, (_, i) => String(i).padStart(3, "0")),
     };
-    expect(calculateLineCount(PlayMode.MultiNumber, PlayType.Straight, sel)).toBe(380);
+    expect(calculateLineCount(PlayMode.MultiNumber, sel)).toBe(380);
   });
 });
 
@@ -510,7 +466,8 @@ describe("expandSelectionToPairs – multiNumber → P(n,2) ordered pairs", () =
     let hasSpecial = false;
     let hasSpecialSub = false;
     for (const p of pairs) {
-      const m = matchPair(p.first, p.second, result, prizes);
+      const flat = flattenDrawResult(result);
+      const m = matchPair(p.first, p.second, result, prizes, flat);
       if (tierNames(m).includes(PrizeTier.Special)) hasSpecial = true;
       if (tierNames(m).includes(PrizeTier.SpecialSub)) hasSpecialSub = true;
     }

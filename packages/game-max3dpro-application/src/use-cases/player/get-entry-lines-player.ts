@@ -60,7 +60,10 @@ function mapPlayerLine(line: TicketLineDoc): PlayerLineInfo {
     playType: line.playType,
     triplets: line.triplets,
     matchResult: {
-      tier: line.matchResult.tier,
+      tiers: line.matchResult.tiers.map((t) => ({
+        tier: t.tier,
+        winAmount: t.winAmount,
+      })),
       winAmount: line.matchResult.winAmount,
     },
   };

@@ -31,32 +31,52 @@
  */
 
 import { PrizeTier, BasicTier, BASIC_TIER_PRIORITY } from "../entities/enums";
+import { sumBy } from "@megawin/shared/utils/array";
 import type { Triplet, PrizeAmounts } from "../entities/types";
 import type { Max3dproDrawResult } from "../entities/draw-result";
+import type { EntryPayoutTier } from "../entities/entry";
+
+// ─────────────────────────────────────────────
+// Flattened Draw Result
+// ─────────────────────────────────────────────
+
+/**
+ * Kết quả flatten của draw result — dùng làm tham số cho `matchPair()`.
+ *
+ * Tính 1 lần bên ngoài vòng lặp entries bằng `flattenDrawResult(drawResult)`,
+ * truyền vào `matchPair()` để tránh tạo lại Map + arrays cho mỗi pair.
+ * Settle loop gọi hàng trăm nghìn lần — tiết kiệm allocation đáng kể.
+ */
+export interface FlattenedDrawResult {
+  /** Tất cả 20 bộ ba số (special + first + second + third). */
+  allTriplets: Triplet[];
+  /** 20 bộ ba số gom theo hạng giải — dùng cho bipartite matching. */
+  byTier: Map<BasicTier, Triplet[]>;
+  /** 18 bộ ba số không thuộc ĐB (first + second + third) — dùng cho Giải Sáu. */
+  nonSpecialTriplets: Triplet[];
+}
+
+/**
+ * Flatten kết quả quay thành `FlattenedDrawResult` để dùng cho matching.
+ *
+ * GỌI 1 LẦN ngoài vòng lặp settle, truyền kết quả vào `matchPair()`.
+ */
+export function flattenDrawResult(result: Max3dproDrawResult): FlattenedDrawResult {
+  const byTier = new Map<BasicTier, Triplet[]>();
+  byTier.set(BasicTier.Special, result.special);
+  byTier.set(BasicTier.First, result.first);
+  byTier.set(BasicTier.Second, result.second);
+  byTier.set(BasicTier.Third, result.third);
+
+  const allTriplets = [...result.special, ...result.first, ...result.second, ...result.third];
+  const nonSpecialTriplets = [...result.first, ...result.second, ...result.third];
+
+  return { allTriplets, byTier, nonSpecialTriplets };
+}
 
 // ─────────────────────────────────────────────
 // Matching Utilities
 // ─────────────────────────────────────────────
-
-export function flattenDrawResult(result: Max3dproDrawResult): {
-  allTriplets: Triplet[];
-  byTier: Map<BasicTier, Triplet[]>;
-} {
-  const byTier = new Map<BasicTier, Triplet[]>();
-  byTier.set(BasicTier.Special, [...result.special]);
-  byTier.set(BasicTier.First, [...result.first]);
-  byTier.set(BasicTier.Second, [...result.second]);
-  byTier.set(BasicTier.Third, [...result.third]);
-
-  const allTriplets = [
-    ...result.special,
-    ...result.first,
-    ...result.second,
-    ...result.third,
-  ];
-
-  return { allTriplets, byTier };
-}
 
 /**
  * Tìm hạng giải cao nhất mà triplet khớp trong kết quả quay.
@@ -69,7 +89,9 @@ export function findTierInResult(
   byTier: Map<BasicTier, Triplet[]>,
 ): BasicTier | null {
   for (const tier of BASIC_TIER_PRIORITY) {
-    if (byTier.get(tier)!.includes(triplet)) return tier;
+    if (byTier.get(tier)!.includes(triplet)) {
+      return tier;
+    }
   }
   return null;
 }
@@ -132,6 +154,19 @@ export interface PairMatchResult {
 }
 
 /**
+ * `PairMatchResult` đã được enriched với `betCount` từ entry context.
+ *
+ * `matchPair()` trả `PairMatchResult` — per-unit, không biết betCount.
+ * Settle layer gán betCount sau: `{ ...pairResult, betCount }`.
+ * `buildPayoutTiers` nhận type này để đảm bảo betCount luôn có mặt —
+ * compiler bắt lỗi nếu caller quên gán betCount.
+ */
+export interface PairMatchResultWithBetCount extends PairMatchResult {
+  /** Số lần tham gia dự thưởng per board. Mandatory khi truyền vào `buildPayoutTiers`. */
+  betCount: number;
+}
+
+/**
  * So khớp 1 cặp hai bộ ba số với kết quả quay (Max 3D Pro) — GỘP TẤT CẢ giải đạt điều kiện.
  *
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -173,6 +208,8 @@ export interface PairMatchResult {
  *     → Giải Năm:      100,000 × 2 =       200,000
  *     → TỔNG:                         2,402,200,000
  *
+ * @param flatDrawResult — kết quả flatten từ `flattenDrawResult()`. PHẢI tính 1 lần ngoài loop.
+ *
  * @example Non-duplicate "096"+"683", Special=["096","389"], First=["683",...]
  *   → Giải Tư: 1,000,000 (cả 2 khớp 2 entry bất kỳ trong 20)
  *   → Giải Năm: 100,000 (096 khớp ĐB)
@@ -183,9 +220,13 @@ export function matchPair(
   first: Triplet,
   second: Triplet,
   result: Max3dproDrawResult,
-  prizes: PrizeAmounts
+  prizes: PrizeAmounts,
+  flatDrawResult: FlattenedDrawResult,
 ): PairMatchResult {
-  const { byTier, allTriplets } = flattenDrawResult(result);
+  const { byTier, allTriplets, nonSpecialTriplets } = flatDrawResult;
+
+  const specialPool = byTier.get(BasicTier.Special)!;
+
   const isDuplicate = first === second;
   const multiplier = isDuplicate ? 2 : 1;
   const playerTriplets: [Triplet, Triplet] = [first, second];
@@ -195,8 +236,13 @@ export function matchPair(
   const tier1 = findTierInResult(first, byTier);
   const tier2 = findTierInResult(second, byTier);
 
-  if (tier1) matchedTriplets.push({ triplet: first, matchedInTier: tier1 });
-  if (tier2 && !isDuplicate) matchedTriplets.push({ triplet: second, matchedInTier: tier2 });
+  if (tier1) {
+    matchedTriplets.push({ triplet: first, matchedInTier: tier1 });
+  }
+
+  if (tier2 && !isDuplicate) {
+    matchedTriplets.push({ triplet: second, matchedInTier: tier2 });
+  }
 
   const wonTiers: PairWonTier[] = [];
 
@@ -205,9 +251,7 @@ export function matchPair(
   if (first === result.special[0] && second === result.special[1]) {
     // Duplicate ĐB: winAmount = special + specialSub (theo luật Vietlott)
     // Non-duplicate ĐB: winAmount = special
-    const winAmount = isDuplicate
-      ? prizes.special + prizes.specialSub
-      : prizes.special;
+    const winAmount = isDuplicate ? prizes.special + prizes.specialSub : prizes.special;
     wonTiers.push({ tier: PrizeTier.Special, winAmount });
   }
 
@@ -215,56 +259,53 @@ export function matchPair(
   if (first === result.special[1] && second === result.special[0]) {
     // Duplicate phụ ĐB: winAmount = special + specialSub (theo luật Vietlott)
     // Non-duplicate phụ ĐB: winAmount = specialSub
-    const winAmount = isDuplicate
-      ? prizes.special + prizes.specialSub
-      : prizes.specialSub;
+    const winAmount = isDuplicate ? prizes.special + prizes.specialSub : prizes.specialSub;
     wonTiers.push({ tier: PrizeTier.SpecialSub, winAmount });
   }
 
   // ── NHÓM CẶP: Giải Nhất → Tư (bipartite matching) ──
 
   // Giải Nhất: cả 2 khớp 2 entry Nhất riêng biệt
-  const firstMatches = countDistinctMatches(playerTriplets, byTier.get(BasicTier.First)!);
-  if (firstMatches >= 2) {
+  if (countDistinctMatches(playerTriplets, byTier.get(BasicTier.First)!) >= 2) {
     wonTiers.push({ tier: PrizeTier.First, winAmount: prizes.first * multiplier });
   }
 
   // Giải Nhì: cả 2 khớp 2 entry Nhì riêng biệt
-  const secondMatches = countDistinctMatches(playerTriplets, byTier.get(BasicTier.Second)!);
-  if (secondMatches >= 2) {
+  if (countDistinctMatches(playerTriplets, byTier.get(BasicTier.Second)!) >= 2) {
     wonTiers.push({ tier: PrizeTier.Second, winAmount: prizes.second * multiplier });
   }
 
   // Giải Ba: cả 2 khớp 2 entry Ba riêng biệt
-  const thirdMatches = countDistinctMatches(playerTriplets, byTier.get(BasicTier.Third)!);
-  if (thirdMatches >= 2) {
+  if (countDistinctMatches(playerTriplets, byTier.get(BasicTier.Third)!) >= 2) {
     wonTiers.push({ tier: PrizeTier.Third, winAmount: prizes.third * multiplier });
   }
 
   // Giải Tư: cả 2 khớp 2 entry BẤT KỲ riêng biệt trong toàn bộ 20 kết quả
-  const allMatches = countDistinctMatches(playerTriplets, allTriplets);
-  if (allMatches >= 2) {
+  if (countDistinctMatches(playerTriplets, allTriplets) >= 2) {
     wonTiers.push({ tier: PrizeTier.Fourth, winAmount: prizes.fourth * multiplier });
   }
 
   // ── NHÓM ĐƠN: Giải Năm, Sáu (kiểm tra từng triplet riêng lẻ) ────
-  // Duplicate: chỉ có 1 unique triplet → kiểm tra 1 lần, ×2 đã tính vào multiplier.
-  // Non-duplicate: kiểm tra 2 triplet độc lập.
+  // Giải Năm: triplet khớp pool ĐB (special). Giải Sáu: triplet khớp pool Nhất/Nhì/Ba.
+  // Do 20 bộ ba được quay độc lập, 1 triplet có thể nằm ở nhiều pool (VD: cả ĐB lẫn Nhất)
+  // → theo luật gộp giải, player nhận CẢ Năm lẫn Sáu nếu triplet xuất hiện ở cả 2 nhóm.
+  // Lưu ý: Duplicate → chỉ có 1 unique triplet → kiểm tra 1 lần, ×2 đã tính vào multiplier.
   const tripletsToCheck = isDuplicate ? [first] : [first, second];
 
   for (const t of tripletsToCheck) {
-    const tier = findTierInResult(t, byTier);
-    if (!tier) continue;
-
-    if (tier === BasicTier.Special) {
+    // Giải Năm: triplet khớp pool ĐB
+    if (specialPool.includes(t)) {
       wonTiers.push({ tier: PrizeTier.Fifth, winAmount: prizes.fifth * multiplier });
-    } else {
+    }
+
+    // Giải Sáu: triplet khớp pool Nhất/Nhì/Ba
+    if (nonSpecialTriplets.includes(t)) {
       wonTiers.push({ tier: PrizeTier.Sixth, winAmount: prizes.sixth * multiplier });
     }
   }
 
   // ── Tổng thưởng = Σ tất cả giải đạt điều kiện ────────────────────
-  const winAmount = wonTiers.reduce((sum, wt) => sum + wt.winAmount, 0);
+  const winAmount = sumBy(wonTiers, (wt) => wt.winAmount);
 
   return { wonTiers, winAmount, matchedTriplets };
 }
@@ -286,55 +327,41 @@ export interface BoardMatchResult {
   }>;
 }
 
+// ─────────────────────────────────────────────
+// Payout Tier Aggregation
+// ─────────────────────────────────────────────
+
 /**
- * So khớp toàn bộ 1 board với kết quả quay.
- * Board tạo ra nhiều cặp (pairs), mỗi cặp match độc lập.
- * Mỗi cặp có thể trúng nhiều giải → tạo 1 lineResult riêng cho mỗi giải trúng.
+ * Tổng hợp `EntryPayoutTier[]` từ tất cả pairs của 1 entry.
+ *
+ * Gom tất cả wonTiers có winAmount > 0, group theo tier, đếm hitCount và sum totalAmount.
+ * `unitAmount` = totalAmount / hitCount (làm tròn) — phản ánh giá trị 1 lần trúng.
+ *
+ * `pr.betCount` được nhân vào `wt.winAmount` ở đây — `matchPair()` trả kết quả
+ * per-unit (1 lần cược), betCount là số lần tham gia dự thưởng do player chọn.
  */
-export function matchBoard(
-  board: {
-    boardNo: string;
-    playMode: string;
-    playType: string;
-    pairs: Array<{ first: Triplet; second: Triplet }>;
-  },
-  result: Max3dproDrawResult,
-  prizes: PrizeAmounts
-): BoardMatchResult {
-  const lineResults: BoardMatchResult["lineResults"] = [];
-  let totalWinAmount = 0;
+export function buildPayoutTiers(pairResults: PairMatchResultWithBetCount[]): EntryPayoutTier[] {
+  const tiers: EntryPayoutTier[] = [];
 
-  for (let i = 0; i < board.pairs.length; i++) {
-    const pair = board.pairs[i]!;
-    const pairResult = matchPair(pair.first, pair.second, result, prizes);
+  for (const { betCount, wonTiers } of pairResults) {
+    for (const { tier, winAmount } of wonTiers) {
+      // betCount nhân bội winAmount per-unit → tổng thực tế player nhận.
+      const scaled = winAmount * betCount;
+      const existing = tiers.find((t) => t.tier === tier);
 
-    // Mỗi giải trúng tạo 1 lineResult riêng → buildPayoutTiers đếm đúng hitCount per tier.
-    if (pairResult.wonTiers.length === 0) {
-      lineResults.push({
-        lineIndex: i,
-        triplets: [pair.first, pair.second],
-        tier: null,
-        winAmount: 0,
-      });
-    } else {
-      for (const wt of pairResult.wonTiers) {
-        lineResults.push({
-          lineIndex: i,
-          triplets: [pair.first, pair.second],
-          tier: wt.tier,
-          winAmount: wt.winAmount,
-        });
+      if (existing) {
+        existing.hitCount++;
+        existing.amount += scaled;
+      } else {
+        tiers.push({ tier, hitCount: 1, unitAmount: 0, amount: scaled });
       }
     }
-
-    totalWinAmount += pairResult.winAmount;
   }
 
-  return {
-    boardNo: board.boardNo,
-    playMode: board.playMode,
-    playType: board.playType,
-    totalWinAmount,
-    lineResults,
-  };
+  // unitAmount = trung bình tiền thưởng 1 lần trúng (VND), tính sau khi aggregate xong.
+  for (const t of tiers) {
+    t.unitAmount = Math.round(t.amount / t.hitCount);
+  }
+
+  return tiers;
 }

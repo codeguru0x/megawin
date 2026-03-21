@@ -236,8 +236,11 @@ export interface Max3dproTicketEntriesResponse {
  * const { lines, nextCursor } = await client.max3dpro.getEntryLines("entry-abc...", { size: 50 });
  * for (const line of lines) {
  *   console.log(`[${line.boardNo}][${line.playMode}]: ${line.triplets.join(" + ")}`);
- *   if (line.matchResult) {
- *     console.log(`  Giải: ${line.matchResult.tier ?? "không"}, thưởng: ${line.matchResult.winAmount} VND`);
+ *   if (line.matchResult && line.matchResult.tiers.length > 0) {
+ *     const tierNames = line.matchResult.tiers.map(t => t.tier).join(" + ");
+ *     console.log(`  Giải: ${tierNames}, tổng thưởng: ${line.matchResult.winAmount} VND`);
+ *   } else {
+ *     console.log("  Không trúng");
  *   }
  * }
  * ```
@@ -441,7 +444,8 @@ export interface Max3dproApi {
    * ```ts
    * const { lines } = await client.max3dpro.getEntryLines("entry-abc...", { size: 50 });
    * for (const line of lines) {
-   *   console.log(`[${line.boardNo}][${line.playMode}]: ${line.triplets.join(" + ")} → giải: ${line.matchResult?.tier ?? "không"}`);
+   *   const tiers = line.matchResult?.tiers.map(t => t.tier).join(" + ") ?? "không trúng";
+   *   console.log(`[${line.boardNo}][${line.playMode}]: ${line.triplets.join(" + ")} → giải: ${tiers}`);
    * }
    * ```
    */

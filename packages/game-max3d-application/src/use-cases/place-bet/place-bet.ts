@@ -84,9 +84,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       }
 
       // validateSelection kiểm tra combo constraint (combo3/combo6 yêu cầu cấu trúc chữ số cụ thể)
-      // — các rule về playMode/playType/triplet count đã qua Zod ở handler
+      // — các rule về playMode/playType/triplet format đã qua Zod ở handler
       try {
-        validateSelection(bi.playMode, bi.playType, bi.selection);
+        validateSelection(bi.playType, bi.selection);
       } catch (err) {
         throw AppException.badRequest(`Board ${bi.boardNo}: ${(err as Error).message}`);
       }

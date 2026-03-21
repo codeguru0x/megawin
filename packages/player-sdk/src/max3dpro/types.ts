@@ -125,12 +125,21 @@ export interface Max3dproLineInfo {
   /** Kết quả đối chiếu. `undefined` nếu kỳ quay chưa kết thúc. */
   matchResult?: {
     /**
-     * Hạng giải trúng.
-     * `"special"` | `"specialSub"` | `"first"` | ... | `"sixth"` | `null`.
-     * `null` nếu không trúng giải nào.
+     * Danh sách các giải trúng (gộp giải theo luật Vietlott Max 3D Pro).
+     * Mảng rỗng nếu không trúng giải nào.
+     * 1 cặp số có thể trúng nhiều giải đồng thời (ví dụ: Tư + Năm + Sáu).
      */
-    tier: string | null;
-    /** Tiền thưởng của line này (VND). `0` nếu không trúng. */
+    tiers: Array<{
+      /**
+       * Hạng giải trúng.
+       * `"special"` | `"specialSub"` | `"first"` | `"second"` | `"third"` |
+       * `"fourth"` | `"fifth"` | `"sixth"`.
+       */
+      tier: string;
+      /** Tiền thưởng hạng giải này (VND). */
+      winAmount: number;
+    }>;
+    /** Tổng tiền thưởng = Σ(tiers[].winAmount). `0` nếu không trúng. */
     winAmount: number;
   };
 }

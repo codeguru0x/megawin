@@ -6,8 +6,9 @@
  * - Plus mode: 2 bộ ba số (straight only)
  */
 
+import { AppException } from "@megawin/shared/errors";
 import { PlayMode, PlayType } from "../entities/enums";
-import type { BoardSelection, Triplet } from "../entities/types";
+import type { BoardSelection } from "../entities/types";
 import { getPermutationCount } from "./prize-tiers";
 
 export const VALID_BOARD_NOS = ["A", "B", "C", "D"] as const;
@@ -43,14 +44,7 @@ export function calculateLineCount(
     return getPermutationCount(triplet);
   }
 
-  return 1;
-}
-
-/**
- * Validate bộ ba số.
- */
-function isValidTriplet(t: Triplet): boolean {
-  return /^\d{3}$/.test(t);
+  throw AppException.badRequest(`Không hỗ trợ playMode=${playMode}, playType=${playType}.`);
 }
 
 /**
@@ -59,37 +53,26 @@ function isValidTriplet(t: Triplet): boolean {
  * Chỉ kiểm tra combo constraint (combo3/combo6 yêu cầu cấu trúc chữ số cụ thể).
  * Các rule về playMode/playType/triplet count đã được Zod validate ở handler trước khi vào đây.
  */
-export function validateSelection(
-  playMode: PlayMode,
-  playType: PlayType,
-  selection: BoardSelection,
-): void {
-  if (playMode === PlayMode.Basic) {
-    const triplet = selection.triplets[0];
+/**
+ * Validate combo constraint cho Basic mode.
+ *
+ * Zod đã kiểm tra triplet format, playMode/playType, và số lượng triplets.
+ * Hàm này chỉ kiểm tra thêm cấu trúc chữ số bắt buộc theo từng combo type:
+ * - combo3: bộ ba phải có ít nhất 2 chữ số giống (≤ 3 hoán vị)
+ * - combo6: bộ ba phải có 3 chữ số khác nhau (= 6 hoán vị)
+ */
+export function validateSelection(playType: PlayType, selection: BoardSelection): void {
+  const triplet = selection.triplets[0];
 
-    if (triplet && !isValidTriplet(triplet)) {
-      throw new Error(`Bộ ba số không hợp lệ: ${triplet} (cần 3 chữ số 000-999)`);
-    }
-
-    if (playType === PlayType.Combo3) {
-      if (triplet && getPermutationCount(triplet) > 3) {
-        throw new Error("Tổ hợp 3 yêu cầu có ít nhất 2 chữ số giống nhau (ví dụ: 112, 333)");
-      }
-    }
-
-    if (playType === PlayType.Combo6) {
-      if (triplet && getPermutationCount(triplet) !== 6) {
-        throw new Error("Tổ hợp 6 yêu cầu 3 chữ số khác nhau (ví dụ: 123, 456)");
-      }
-    }
+  if (!triplet) {
+    return;
   }
 
-  if (playMode === PlayMode.Plus) {
-    for (let i = 0; i < selection.triplets.length; i++) {
-      const t = selection.triplets[i]!;
-      if (!isValidTriplet(t)) {
-        throw new Error(`Bộ ba số ${i + 1} không hợp lệ: ${t} (cần 3 chữ số 000-999)`);
-      }
-    }
+  if (playType === PlayType.Combo3 && getPermutationCount(triplet) > 3) {
+    throw new Error("Tổ hợp 3 yêu cầu có ít nhất 2 chữ số giống nhau (ví dụ: 112, 333)");
+  }
+
+  if (playType === PlayType.Combo6 && getPermutationCount(triplet) !== 6) {
+    throw new Error("Tổ hợp 6 yêu cầu 3 chữ số khác nhau (ví dụ: 123, 456)");
   }
 }

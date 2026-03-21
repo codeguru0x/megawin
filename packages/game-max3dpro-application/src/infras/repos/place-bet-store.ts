@@ -42,7 +42,7 @@ export class PlaceBetStore {
 
     await this.ticketRepo.withTransaction(async (session) => {
       await this.ticketRepo.insertOne(ticketDoc as any, { session });
-      await this.entryRepo.insertMany(stampedEntries as any[], { session });
+      await this.entryRepo.insertMany(stampedEntries, { session });
     });
   }
 }

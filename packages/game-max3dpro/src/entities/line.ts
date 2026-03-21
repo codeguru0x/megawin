@@ -14,17 +14,33 @@ import type { Triplet, ISODateString } from "./types";
 // Line Match Result
 // ─────────────────────────────────────────────
 
-export interface LineMatchResult {
-  /** Hạng giải trúng (null = không trúng). */
-  tier: PrizeTier | null;
+/**
+ * 1 giải trúng trong kết quả gộp giải của 1 line.
+ * Theo luật Vietlott Max 3D Pro: 1 cặp số có thể trúng nhiều giải đồng thời.
+ */
+export interface LineWonTier {
+  /** Hạng giải trúng (special → sixth). */
+  tier: PrizeTier;
   /**
-   * Tiền thưởng thực tế cho line này (VND).
-   * = unitWinAmount × betCount (đã nhân betCount tại settle layer).
-   * Audit: so sánh với unitWinAmount từ prizeConfig × betCount.
+   * Tiền thưởng hạng giải này (VND).
+   * Đã nhân betCount tại settle layer.
    */
   winAmount: number;
-  /** Chi tiết matching. */
-  matchDetails?: string;
+}
+
+export interface LineMatchResult {
+  /**
+   * Danh sách các giải trúng (gộp giải theo luật Vietlott Max 3D Pro).
+   * Mảng rỗng nếu không trúng giải nào.
+   * 1 cặp số có thể trúng nhiều giải đồng thời (ví dụ: Tư + Năm + Sáu).
+   */
+  tiers: LineWonTier[];
+  /**
+   * Tổng tiền thưởng thực tế = Σ(tiers[].winAmount) (VND).
+   * 0 nếu không trúng. Đã nhân betCount tại settle layer.
+   * Giữ ở root level để MongoDB aggregate $sum hoạt động trực tiếp.
+   */
+  winAmount: number;
 }
 
 // ─────────────────────────────────────────────
@@ -88,7 +104,7 @@ export interface TicketLineDoc {
   /**
    * Số lần cược nhân bội của board chứa line này (≥ 1).
    * Audit trail: giải thích tại sao matchResult.winAmount > giá trị 1 unit.
-   * winAmount = prizeConfig[tier] × betCount.
+   * winAmount = Σ(prizeConfig[tier] × betCount) qua tất cả tiers trúng.
    */
   betCount: number;
 

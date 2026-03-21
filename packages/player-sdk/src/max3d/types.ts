@@ -131,12 +131,23 @@ export interface Max3dLineInfo {
   /** Kết quả đối chiếu. `undefined` nếu kỳ quay chưa kết thúc. */
   matchResult?: {
     /**
-     * Hạng giải trúng.
-     * Basic: `"special"` | `"first"` | `"second"` | `"third"` | `null`.
-     * Plus: `"special"` | `"first"` | ... | `"sixth"` | `null`.
+     * Danh sách các giải trúng (gộp giải theo luật Vietlott Max 3D).
+     * Mảng rỗng nếu không trúng giải nào.
+     * Basic: 1 triplet có thể trúng nhiều hạng đồng thời.
+     * Plus: gộp tất cả giải đạt điều kiện.
+     * Combo: mỗi hoán vị cũng có thể trúng nhiều hạng.
      */
-    tier: string | null;
-    /** Tiền thưởng của line này (VND). `0` nếu không trúng. */
+    tiers: Array<{
+      /**
+       * Hạng giải trúng.
+       * Basic: `"special"` | `"first"` | `"second"` | `"third"`.
+       * Plus: `"special"` | `"first"` | ... | `"sixth"`.
+       */
+      tier: string;
+      /** Tiền thưởng hạng giải này (VND). */
+      winAmount: number;
+    }>;
+    /** Tổng tiền thưởng = Σ(tiers[].winAmount). `0` nếu không trúng. */
     winAmount: number;
   };
 }

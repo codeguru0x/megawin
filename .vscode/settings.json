@@ -66,5 +66,6 @@
     "!Base64 scalar",
     "!Cidr sequence",
     "!GetAZs scalar"
-  ]
+  ],
+  "editor.hover.enabled": true
 }

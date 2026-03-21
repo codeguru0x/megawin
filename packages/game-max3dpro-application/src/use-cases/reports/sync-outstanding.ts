@@ -55,6 +55,7 @@ export class SyncOutstandingUseCase extends InternalUseCase<void, SyncOutstandin
       [DrawStatus.SalesOpen, DrawStatus.SalesClosed, DrawStatus.Published, DrawStatus.Settling],
       7,
     );
+
     const activeDrawIds = activeDraws.map((d) => d.drawId);
 
     if (activeDrawIds.length === 0) {
@@ -85,6 +86,7 @@ export class SyncOutstandingUseCase extends InternalUseCase<void, SyncOutstandin
     // Draw đã settle/void sẽ không còn trong activeDrawIds → không upsert mới → doc tự expire.
     const snapshots = metricsResults.map((metrics) => {
       const counts = countsMap.get(metrics.drawId);
+
       return {
         drawId: metrics.drawId,
         financialDate: metrics.financialDate,
@@ -92,8 +94,6 @@ export class SyncOutstandingUseCase extends InternalUseCase<void, SyncOutstandin
         playerCount: counts?.playerCount ?? 0,
         tenantCount: counts?.tenantCount ?? 0,
         lineCount: metrics.lineCount,
-        // betUnitCount fallback sang lineCount cho entries cũ (betCount = 1).
-        betUnitCount: metrics.betUnitCount ?? metrics.lineCount,
         totalStake: metrics.totalStake,
         estimatedCommission: metrics.estimatedCommission,
       };

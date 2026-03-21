@@ -21,11 +21,7 @@ import type {
   TicketEntryDoc,
   EntryBoardSnapshot,
 } from "@megawin/game-max3dpro/entities";
-import {
-  calculateLineCount,
-  validateSelection,
-  expandSelectionToPairs,
-} from "@megawin/game-max3dpro/rules/play-types";
+import { calculateLineCount } from "@megawin/game-max3dpro/rules/play-types";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { PlaceBetStore } from "../../infras/repos/place-bet-store";
@@ -78,12 +74,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       // Fallback sang 1 cho safety — Zod .default(1) đã xử lý, nhưng phòng thủ extra cho direct calls.
       const betCount = bi.betCount ?? 1;
 
-      // Validate betCount trong khoảng [minBetCount, maxBetCount] từ game config.
-      const minBetCount = play.minBetCount;
-
-      if (betCount < minBetCount) {
+      if (betCount < play.minBetCount) {
         throw AppException.badRequest(
-          `Board ${bi.boardNo}: betCount ${betCount} nhỏ hơn tối thiểu ${minBetCount}.`,
+          `Board ${bi.boardNo}: betCount ${betCount} nhỏ hơn tối thiểu ${play.minBetCount}.`,
         );
       }
 
@@ -93,17 +86,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         );
       }
 
-      // validateSelection kiểm tra constraints cụ thể của từng mode
-      // — các rule về playMode/playType/boardNo/count đã qua Zod ở handler
-      try {
-        validateSelection(bi.playMode, bi.selection);
-      } catch (err) {
-        throw AppException.badRequest(`Board ${bi.boardNo}: ${(err as Error).message}`);
-      }
-
-      const lineCount = calculateLineCount(bi.playMode, bi.playType, bi.selection);
+      const lineCount = calculateLineCount(bi.playMode, bi.selection);
       totalLinesPerDraw += lineCount;
-      // betUnitCount per board = lineCount × betCount — tổng cộng tiền tham gia dự thưởng.
+      // betUnitCount per board = lineCount × betCount — tổng lần cược thực tế tham gia dự thưởng.
       totalBetUnitsPerDraw += lineCount * betCount;
 
       builtBoards.push({
@@ -125,6 +110,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     // ── 4. Validate tất cả draws – all-or-nothing ──
     const now = nowVN();
     const draws = await this.drawRepo.getDrawsByIds(drawIds);
+
     const drawMap = new Map(draws.map((d) => [d.drawId, d]));
 
     for (const drawId of drawIds) {
@@ -154,9 +140,11 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
 
     // ── 6. Load tenant commission rate ──
     const tenantConfig = await this.getTenantConfig.run({ tenantId });
+
     if (!tenantConfig || tenantConfig.isEnabled !== true) {
       throw AppException.unauthorized("Không được phép chơi game. Vui lòng liên hệ admin.");
     }
+
     const commissionRate = tenantConfig.commissionRate;
     const commissionAmount = Math.round(amountPerDraw * commissionRate);
 
@@ -192,7 +180,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         settledDraws: 0,
       },
       financialDate: getFinancialDate(now),
-      status: TicketStatus.Paid as any,
+      status: TicketStatus.Paid,
       version: 0,
       createdAt: now,
       updatedAt: now,
@@ -221,7 +209,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         drawId: draw.drawId,
         financialDate: draw.financialDate,
         tenant: { commissionRate, commissionAmount },
-        status: EntryStatus.Scheduled as any,
+        status: EntryStatus.Scheduled,
         lineCount: totalLinesPerDraw,
         betUnitCount: totalBetUnitsPerDraw,
         amount: amountPerDraw,

@@ -36,10 +36,22 @@ export const Max3dproCollections = {
  * Cả 2 mode đều tạo ra các cặp (pair) hai bộ ba số để so khớp.
  */
 export const PlayMode = {
-  /** Chơi bao nhiều bộ số: chọn 3-20 bộ ba số, hệ thống tạo P(n,2) = n×(n-1) ordered pairs. */
-  MultiNumber: "multiNumber",
-  /** Chơi bao bộ ba số: chọn 3 chữ số đầu + 3 chữ số sau, hệ thống expand. */
+  /**
+   * Chơi bao bộ ba số: chọn 3 chữ số đầu + 3 chữ số sau, hệ thống expand.
+   * Lưu ý: tất cả hoán vị front × tất cả hoán vị back (Cartesian product, tự nhiên ordered)
+   * Ví dụ: ["123","456"] → 36 ordered pairs:
+   *     (123,456), (123,645), (123,564), (123,465), (123,546), (123,654),
+   *     (456,123), (456,321), (456,213), (456,132), (456,312), (456,231) .....
+   */
   MultiDigit: "multiDigit",
+
+  /**
+   * Chơi bao nhiều bộ số: chọn 3-20 bộ ba số, hệ thống tạo P(n,2) = n×(n-1) ordered pairs.
+   * Lưu ý: P(n,2) = n×(n-1) ordered pairs — thứ tự quan trọng — Giải ĐB khớp đúng thứ tự, phụ ĐB ngược thứ tự.
+   * Ví dụ: ["096","389","683"] → 6 ordered pairs:
+   *     (096,389), (096,683), (389,096), (389,683), (683,096), (683,389)
+   */
+  MultiNumber: "multiNumber",
 } as const;
 
 export type PlayMode = (typeof PlayMode)[keyof typeof PlayMode];

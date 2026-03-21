@@ -27,10 +27,9 @@
  * └──────────────────────┴──────────────────────┴────────┴───────────┘
  */
 
-import { PlayMode, PlayType } from "../entities/enums";
+import { AppException } from "@megawin/shared/errors";
+import { PlayMode } from "../entities/enums";
 import type { BoardSelection, Triplet, TripletPair } from "../entities/types";
-
-export const VALID_BOARD_NOS = ["A", "B", "C", "D"] as const;
 
 /**
  * Tính P(n, 2) = n × (n-1) — số hoán vị chập 2 (ordered pairs).
@@ -47,19 +46,35 @@ function permutations2(n: number): number {
 
 /**
  * Tạo tất cả hoán vị duy nhất của 3 chữ số → bộ ba số.
+ *
+ * Input luôn đúng 3 chữ số (0-9) → tối đa 6 hoán vị.
+ * Dùng mảng Triplet[] trực tiếp + includes() để dedup — nhanh hơn Set
+ * với ≤6 phần tử (tránh overhead hash + convert Set→Array).
  */
 export function getUniquePermutations(digits: number[]): Triplet[] {
-  const perms = new Set<string>();
+  const perms: Triplet[] = [];
+
   for (let i = 0; i < digits.length; i++) {
     for (let j = 0; j < digits.length; j++) {
-      if (j === i) continue;
+      if (j === i) {
+        continue;
+      }
+
       for (let k = 0; k < digits.length; k++) {
-        if (k === i || k === j) continue;
-        perms.add(`${digits[i]}${digits[j]}${digits[k]}`);
+        if (k === i || k === j) {
+          continue;
+        }
+
+        const triplet: Triplet = `${digits[i]}${digits[j]}${digits[k]}`;
+
+        if (!perms.includes(triplet)) {
+          perms.push(triplet);
+        }
       }
     }
   }
-  return Array.from(perms);
+
+  return perms;
 }
 
 /**
@@ -90,25 +105,33 @@ export function getPermutationCount(digits: number[]): number {
  *   (thứ tự quan trọng — Giải ĐB khớp đúng thứ tự, phụ ĐB ngược thứ tự)
  * - multiDigit: perms(front) × perms(back) cặp
  */
-export function calculateLineCount(
-  playMode: PlayMode,
-  _playType: PlayType,
-  selection: BoardSelection,
-): number {
-  if (playMode === PlayMode.MultiNumber) {
-    return permutations2(selection.triplets.length);
-  }
+export function calculateLineCount(playMode: PlayMode, selection: BoardSelection): number {
+  switch (playMode) {
+    // Chơi bao bộ ba số: chọn 3 chữ số đầu + 3 chữ số sau, hệ thống expand
+    case PlayMode.MultiDigit: {
+      const frontDigits = selection.frontDigits ?? [];
+      const backDigits = selection.backDigits ?? [];
 
-  if (playMode === PlayMode.MultiDigit) {
-    const frontDigits = selection.frontDigits ?? [];
-    const backDigits = selection.backDigits ?? [];
-    if (frontDigits.length !== 3 || backDigits.length !== 3) return 0;
-    const frontPerms = getPermutationCount(frontDigits);
-    const backPerms = getPermutationCount(backDigits);
-    return frontPerms * backPerms;
-  }
+      if (frontDigits.length !== 3 || backDigits.length !== 3) {
+        throw AppException.badRequest("Chọn 3 chữ số đầu + 3 chữ số sau phải là 3 chữ số");
+      }
 
-  return 1;
+      const frontPerms = getPermutationCount(frontDigits);
+      const backPerms = getPermutationCount(backDigits);
+
+      // Số cặp = perms(front) × perms(back)
+      return frontPerms * backPerms;
+    }
+
+    // Chơi bao nhiều bộ số: chọn 3-20 bộ ba số, hệ thống tạo P(n,2) = n×(n-1) ordered pairs
+    case PlayMode.MultiNumber: {
+      return permutations2(selection.triplets.length);
+    }
+
+    default: {
+      throw AppException.badRequest("Play mode không hợp lệ");
+    }
+  }
 }
 
 /**
@@ -125,77 +148,39 @@ export function expandSelectionToPairs(
   playMode: PlayMode,
   selection: BoardSelection,
 ): TripletPair[] {
+  // Chọn nhiều bộ ba số: tạo P(n,2) = n×(n-1) ordered pairs.
   if (playMode === PlayMode.MultiNumber) {
     const triplets = selection.triplets;
     const pairs: TripletPair[] = [];
+
     // i ≠ j → ordered pairs: (A,B) và (B,A) đều được tạo
     for (let i = 0; i < triplets.length; i++) {
       for (let j = 0; j < triplets.length; j++) {
-        if (j === i) continue;
+        if (j === i) {
+          continue;
+        }
+
         pairs.push({ first: triplets[i]!, second: triplets[j]! });
       }
     }
+
     return pairs;
   }
 
+  // Chọn bộ ba số: tất cả hoán vị front × tất cả hoán vị back (Cartesian product, tự nhiên ordered).
   if (playMode === PlayMode.MultiDigit) {
-    const frontDigits = selection.frontDigits ?? [];
-    const backDigits = selection.backDigits ?? [];
-    const frontPerms = getUniquePermutations(frontDigits);
-    const backPerms = getUniquePermutations(backDigits);
+    const frontPerms = getUniquePermutations(selection.frontDigits ?? []);
+    const backPerms = getUniquePermutations(selection.backDigits ?? []);
     const pairs: TripletPair[] = [];
+
     for (const front of frontPerms) {
       for (const back of backPerms) {
         pairs.push({ first: front, second: back });
       }
     }
+
     return pairs;
   }
 
   return [];
-}
-
-/**
- * Validate bộ ba số.
- */
-function isValidTriplet(t: Triplet): boolean {
-  return /^\d{3}$/.test(t);
-}
-
-/**
- * Validate selection cho 1 board. Throw `Error` ngay khi gặp vi phạm.
- *
- * Các rule về triplet count / digit count đã được Zod validate ở handler.
- * Hàm này chỉ kiểm tra các constraint không thể express bằng Zod đơn giản
- * (ví dụ: triplet format, digit range).
- */
-export function validateSelection(playMode: PlayMode, selection: BoardSelection): void {
-  if (playMode === PlayMode.MultiNumber) {
-    for (let i = 0; i < selection.triplets.length; i++) {
-      const t = selection.triplets[i]!;
-      if (!isValidTriplet(t)) {
-        throw new Error(`Bộ ba số ${i + 1} không hợp lệ: ${t} (cần 3 chữ số 000-999)`);
-      }
-    }
-  }
-
-  if (playMode === PlayMode.MultiDigit) {
-    const { frontDigits, backDigits } = selection;
-
-    if (frontDigits) {
-      for (const d of frontDigits) {
-        if (!Number.isInteger(d) || d < 0 || d > 9) {
-          throw new Error(`Chữ số đầu không hợp lệ: ${d} (cần 0-9)`);
-        }
-      }
-    }
-
-    if (backDigits) {
-      for (const d of backDigits) {
-        if (!Number.isInteger(d) || d < 0 || d > 9) {
-          throw new Error(`Chữ số sau không hợp lệ: ${d} (cần 0-9)`);
-        }
-      }
-    }
-  }
 }

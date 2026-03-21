@@ -24,9 +24,11 @@ export interface BoardDerived {
    * - multiDigit: tuỳ vào loại chữ số đầu × sau
    */
   lineCount: number;
+
   /**
    * Số lần cược nhân bội cho board (≥ 1).
-   * Player chọn khi đặt cược. Tiền cược board = lineCount × betCount × unitPrice.
+   * Player chọn khi đặt cược.
+   * Lưu ý: Tiền cược board = lineCount × betCount × unitPrice.
    */
   betCount: number;
 }

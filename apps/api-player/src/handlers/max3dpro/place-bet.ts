@@ -68,13 +68,13 @@ export const max3dproPlaceBetBodySchema = z.object({
     .array(max3dproDrawIdSchema)
     .min(1)
     .max(6)
-    .refine(isUnique, { message: "Các drawId không được trùng lặp." }),
+    .refine(isUnique, { message: "Các kỳ quay không được trùng lặp." }),
   boards: z
     .array(max3dproBoardSchema)
     .min(1)
     .max(4)
     .refine((boards) => isUniqueBy(boards, (b) => b.boardNo), {
-      message: "Các board không được trùng boardNo.",
+      message: "Các boardNo không được trùng nhau.",
     }),
 });
 

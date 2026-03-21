@@ -413,7 +413,7 @@ describe("matchBoard – so khớp toàn bộ 1 board", () => {
     const m = matchBoard(board, flattenedResult, prizes);
     expect(m.winAmount).toBe(1_000_000);
     expect(m.lineResults).toHaveLength(1);
-    expect(m.lineResults[0]!.tier).toBe(BasicPrizeTier.Special);
+    expect(m.lineResults[0]!.tiers[0]!.tier).toBe(BasicPrizeTier.Special);
   });
 
   it("basic straight trúng giải Nhất (board B2)", () => {
@@ -425,7 +425,7 @@ describe("matchBoard – so khớp toàn bộ 1 board", () => {
     };
     const m = matchBoard(board, flattenedResult, prizes);
     expect(m.winAmount).toBe(350_000);
-    expect(m.lineResults[0]!.tier).toBe(BasicPrizeTier.First);
+    expect(m.lineResults[0]!.tiers[0]!.tier).toBe(BasicPrizeTier.First);
   });
 
   it("combo6 trúng → lineResults chứa từng hoán vị", () => {
@@ -469,7 +469,12 @@ describe("matchBoard – so khớp toàn bộ 1 board", () => {
     const m = matchBoard(board, flattenedResult, prizes);
     // 111→ĐB, 333→Nhất → cross-tier → Tư + Năm(111→ĐB) + Sáu(333→Nhất)
     expect(m.winAmount).toBe(prizes.plus.fourth + prizes.plus.fifth + prizes.plus.sixth);
-    expect(m.lineResults.length).toBeGreaterThanOrEqual(3);
+    // Giờ 1 lineResult per bet selection, tiers[] chứa tất cả giải gộp
+    expect(m.lineResults).toHaveLength(1);
+    const tierNames1 = m.lineResults[0]!.tiers.map((t) => t.tier);
+    expect(tierNames1).toContain(PlusPrizeTier.Fourth);
+    expect(tierNames1).toContain(PlusPrizeTier.Fifth);
+    expect(tierNames1).toContain(PlusPrizeTier.Sixth);
   });
 
   it("basic straight không trúng → 0", () => {
@@ -481,7 +486,8 @@ describe("matchBoard – so khớp toàn bộ 1 board", () => {
     };
     const m = matchBoard(board, flattenedResult, prizes);
     expect(m.winAmount).toBe(0);
-    expect(m.lineResults[0]!.tier).toBeNull();
+    // Không trúng → tiers[] rỗng
+    expect(m.lineResults[0]!.tiers).toHaveLength(0);
   });
 });
 
@@ -506,7 +512,7 @@ describe("Tích hợp – nhiều boards trong 1 kỳ quay", () => {
       triplets: ["123"],
     };
     const straightResult = matchBoard(straightBoard, flattenedResult, prizes);
-    expect(straightResult.lineResults[0]!.tier).toBe(BasicPrizeTier.Special);
+    expect(straightResult.lineResults[0]!.tiers[0]!.tier).toBe(BasicPrizeTier.Special);
     expect(straightResult.winAmount).toBe(1_000_000);
 
     const plusBoard = {
@@ -517,7 +523,9 @@ describe("Tích hợp – nhiều boards trong 1 kỳ quay", () => {
     };
     const plusResult = matchBoard(plusBoard, flattenedResult, prizes);
     // 123→ĐB, 789→Nhất → cross-tier → Tư + Năm(123→ĐB) + Sáu(789→Nhất)
-    const plusTierNames = plusResult.lineResults.map((l) => l.tier);
+    // Giờ 1 lineResult per bet selection, tiers[] chứa tất cả giải gộp
+    expect(plusResult.lineResults).toHaveLength(1);
+    const plusTierNames = plusResult.lineResults[0]!.tiers.map((t) => t.tier);
     expect(plusTierNames).toContain(PlusPrizeTier.Fourth);
     expect(plusTierNames).toContain(PlusPrizeTier.Fifth);
     expect(plusTierNames).toContain(PlusPrizeTier.Sixth);
@@ -543,7 +551,8 @@ describe("Tích hợp – nhiều boards trong 1 kỳ quay", () => {
     };
     const m = matchBoard(board, flattenedResult, prizes);
     expect(m.winAmount).toBe(0);
-    expect(m.lineResults[0]!.tier).toBeNull();
+    // Không trúng → tiers[] rỗng
+    expect(m.lineResults[0]!.tiers).toHaveLength(0);
   });
 
   it("plus board duplicate → bipartite matching chỉ khớp 1 entry → Sáu ×2", () => {
@@ -556,9 +565,11 @@ describe("Tích hợp – nhiều boards trong 1 kỳ quay", () => {
       triplets: ["789", "789"] as [string, string],
     };
     const m = matchBoard(board, flattenedResult, prizes);
-    const tierNames = m.lineResults.map((l) => l.tier);
-    expect(tierNames).not.toContain(PlusPrizeTier.First);
-    expect(tierNames).toContain(PlusPrizeTier.Sixth);
+    // Giờ 1 lineResult per bet selection, tiers[] chứa giải gộp
+    expect(m.lineResults).toHaveLength(1);
+    const tierNames2 = m.lineResults[0]!.tiers.map((t) => t.tier);
+    expect(tierNames2).not.toContain(PlusPrizeTier.First);
+    expect(tierNames2).toContain(PlusPrizeTier.Sixth);
     expect(m.winAmount).toBe(prizes.plus.sixth * 2);
   });
 });
@@ -624,7 +635,7 @@ describe("betCount — nhân bội lần cược (settle layer)", () => {
     // Với mỗi lineResult: effectiveWin = lineResult.winAmount × betCount
     for (const lineResult of m.lineResults) {
       const effectiveWin = lineResult.winAmount * betCount;
-      if (lineResult.tier !== null) {
+      if (lineResult.tiers.length > 0) {
         // lineDoc.matchResult.winAmount sẽ là effectiveWin (= unitWin × betCount)
         expect(effectiveWin).toBe(lineResult.winAmount * betCount);
         expect(effectiveWin).toBe(350_000 * 5);
@@ -664,7 +675,7 @@ describe("betCount — nhân bội lần cược (settle layer)", () => {
     expect(adjustedResult.winAmount).toBe(4_000_000);
     // Mỗi lineResult cũng đã nhân betCount
     for (const lr of adjustedResult.lineResults) {
-      if (lr.tier !== null) {
+      if (lr.tiers.length > 0) {
         expect(lr.winAmount).toBe(1_000_000 * betCount);
       }
     }

@@ -14,15 +14,35 @@ import type { Triplet, ISODateString } from "./types";
 // Line Match Result
 // ─────────────────────────────────────────────
 
-export interface LineMatchResult {
-  /** Hạng giải trúng (null = không trúng). */
-  tier: BasicPrizeTier | PlusPrizeTier | null;
-
-  /** Tiền thưởng thực tế = unitWinAmount × betCount (VND). */
+/**
+ * 1 giải trúng trong kết quả gộp giải của 1 line.
+ * Theo luật Vietlott Max 3D: 1 bộ ba / 1 cặp / 1 hoán vị có thể trúng nhiều giải đồng thời.
+ */
+export interface LineWonTier {
+  /** Hạng giải trúng. Basic: special/first/second/third. Plus: special–sixth. */
+  tier: BasicPrizeTier | PlusPrizeTier;
+  /**
+   * Tiền thưởng hạng giải này (VND).
+   * Đã nhân betCount tại settle layer.
+   */
   winAmount: number;
+}
 
-  /** Chi tiết matching (tier nào, hit count). */
-  matchDetails?: string;
+export interface LineMatchResult {
+  /**
+   * Danh sách các giải trúng (gộp giải theo luật Vietlott Max 3D).
+   * Mảng rỗng nếu không trúng giải nào.
+   * Basic: 1 triplet có thể trùng nhiều pool ĐB/Nhất/Nhì/Ba → trúng nhiều giải.
+   * Plus: gộp giải Nhất→Sáu + giải đơn Năm/Sáu.
+   * Combo: mỗi hoán vị cũng có thể trúng nhiều hạng.
+   */
+  tiers: LineWonTier[];
+  /**
+   * Tổng tiền thưởng thực tế = Σ(tiers[].winAmount) (VND).
+   * 0 nếu không trúng. Đã nhân betCount tại settle layer.
+   * Giữ ở root level để MongoDB aggregate $sum hoạt động trực tiếp.
+   */
+  winAmount: number;
 }
 
 // ─────────────────────────────────────────────
@@ -85,8 +105,6 @@ export interface TicketLineDoc {
 
   /** Số lần cược nhân bội của board chứa line này. Giải thích tại sao winAmount > giá trị 1 unit. */
   betCount: number;
-
-  // ───── Match Result ─────
 
   /** Kết quả match với draw result — gắn ngay khi tạo (settle time). */
   matchResult: LineMatchResult;
