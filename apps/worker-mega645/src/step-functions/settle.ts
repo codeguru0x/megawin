@@ -46,6 +46,10 @@
  *  │  7. PublishSettleDaily                  │  System daily reports (re-aggregate)
  *  └────────┬────────────────────────────────┘
  *           ▼
+ *  ┌─────────────────────────────────────────┐
+ *  │  7b. PublishPlayerDaily                 │  Player daily reports (re-aggregate per player)
+ *  └────────┬────────────────────────────────┘
+ *           ▼
  *  ┌─────────────────────────┐
  *  │  8. FinalizeSettle      │  settling → settled + jackpot chain
  *  └────────┬────────────────┘
@@ -197,6 +201,18 @@ export const SETTLE_STATE_MACHINE = {
     PublishSettleDaily: {
       Type: "Task",
       Resource: lambdaArn("settle-publish-settle-daily"),
+      Arguments: "{% $settleCtx %}",
+      Next: "PublishPlayerDaily",
+      Retry: LAMBDA_RETRY,
+    },
+
+    // ── STEP 7b: Publish player daily (player-level reports) ──
+    // Aggregate mega645_ticket_entries WHERE { financialDate, status ∈ [settled, void] }
+    // → group by { tenantId, accountId } → delete cũ + bulk upsert player_settle_game_daily.
+    // IDEMPOTENT: delete + overwrite toàn bộ — chạy lại cho kết quả giống nhau.
+    PublishPlayerDaily: {
+      Type: "Task",
+      Resource: lambdaArn("settle-publish-player-daily"),
       Arguments: "{% $settleCtx %}",
       Next: "FinalizeSettle",
       Retry: LAMBDA_RETRY,

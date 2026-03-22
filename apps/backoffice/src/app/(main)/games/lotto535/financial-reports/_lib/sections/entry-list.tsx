@@ -44,7 +44,8 @@ const LOTTO535_PRIZE_TIER_LABELS: Record<string, string> = {
 
 // ─── Entry Detail Dialog ──────────────────────────────────────────────────────
 
-function EntryDetailDialog({
+/** Chi tiết 1 entry Lotto 5/35 — bộ số, số đặc biệt, kết quả quay, giải trúng. */
+export function Lotto535EntryDetailDialog({
   entry,
   open,
   onClose,
@@ -58,8 +59,10 @@ function EntryDetailDialog({
   const tiers = entry.payout?.tiers ?? [];
   const boards = entry.entrySummary.boards ?? [];
   const isWin = (entry.payout?.payoutAmount ?? 0) > 0;
-  const playerNet = (entry.payout?.payoutAmount ?? 0) - entry.amount;
   const outcome = entry.outcome as string | undefined;
+  // scheduled = đang chờ kết quả — KHÔNG hiển thị lãi/lỗ (payout chưa có)
+  const isScheduled = entry.status === "scheduled";
+  const playerNet = isScheduled ? null : (entry.payout?.payoutAmount ?? 0) - entry.amount;
 
   const winningMain = new Set<string>(entry.result?.winningMain ?? []);
   const winningSpecial = entry.result?.winningSpecial as string | undefined;
@@ -95,6 +98,16 @@ function EntryDetailDialog({
               ))}
             </div>
 
+            {/* Trạng thái đang chờ — hiển thị thay thế tài chính khi scheduled */}
+            {isScheduled && (
+              <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/30">
+                <Badge variant="secondary">Đang chờ quay số</Badge>
+                <p className="text-xs text-muted-foreground">
+                  Kết quả sẽ có sau kỳ quay · {entry.drawId}
+                </p>
+              </div>
+            )}
+
             {/* Trạng thái & kết quả */}
             <div className="flex flex-wrap items-center gap-2 rounded-lg border p-3">
               <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -127,19 +140,21 @@ function EntryDetailDialog({
             </div>
 
             {/* Tài chính */}
-            <div className="grid grid-cols-4 gap-x-4 gap-y-2">
+            <div className={`grid gap-x-4 gap-y-2 ${isScheduled ? "grid-cols-2" : "grid-cols-4"}`}>
               <div>
-                <p className="text-[11px] text-muted-foreground">Cược</p>
+                <p className="text-[11px] text-muted-foreground">Tiền cược</p>
                 <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
               </div>
-              <div>
-                <p className="text-[11px] text-muted-foreground">
-                  {REPORT_COLUMN_LABELS.totalPayout}
-                </p>
-                <p className={`text-sm font-bold tabular-nums ${isWin ? "text-profit" : ""}`}>
-                  {formatNumber(entry.payout?.payoutAmount ?? 0)}
-                </p>
-              </div>
+              {!isScheduled && (
+                <div>
+                  <p className="text-[11px] text-muted-foreground">
+                    {REPORT_COLUMN_LABELS.totalPayout}
+                  </p>
+                  <p className={`text-sm font-bold tabular-nums ${isWin ? "text-profit" : ""}`}>
+                    {formatNumber(entry.payout?.payoutAmount ?? 0)}
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-[11px] text-muted-foreground">
                   {REPORT_COLUMN_LABELS.totalCommission}
@@ -148,21 +163,23 @@ function EntryDetailDialog({
                   {formatNumber(entry.tenant.commissionAmount)}
                 </p>
               </div>
-              <div>
-                <p className="text-[11px] text-muted-foreground">Lãi/lỗ (khách)</p>
-                <p
-                  className={`text-sm font-bold tabular-nums ${
-                    playerNet > 0
-                      ? "text-profit"
-                      : playerNet < 0
-                        ? "text-loss"
-                        : "text-muted-foreground"
-                  }`}
-                >
-                  {playerNet > 0 ? "+" : ""}
-                  {formatNumber(playerNet)}
-                </p>
-              </div>
+              {playerNet !== null && (
+                <div>
+                  <p className="text-[11px] text-muted-foreground">Lãi/lỗ (khách)</p>
+                  <p
+                    className={`text-sm font-bold tabular-nums ${
+                      playerNet > 0
+                        ? "text-profit"
+                        : playerNet < 0
+                          ? "text-loss"
+                          : "text-muted-foreground"
+                    }`}
+                  >
+                    {playerNet > 0 ? "+" : ""}
+                    {formatNumber(playerNet)}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Kết quả quay — 5 số chính + 1 số đặc biệt */}
@@ -381,3 +398,5 @@ export function EntryList({
     </>
   );
 }
+
+const EntryDetailDialog = Lotto535EntryDetailDialog;

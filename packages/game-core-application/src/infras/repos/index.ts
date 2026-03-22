@@ -12,3 +12,6 @@ export type { TicketSeqResult } from "./ticket-counter-repo";
 export { SystemSettleGameDailyRepository } from "./system-settle-game-daily-repo";
 export { SystemSettleTenantDailyRepository } from "./system-settle-tenant-daily-repo";
 export { SystemOutstandingReportRepository } from "./system-outstanding-report-repo";
+export { PlayerSettleGameDailyRepository } from "./player-settle-game-daily-repo";
+export { PlayerOutstandingRepository } from "./player-outstanding-repo";
+export { PlayerEntryRepository } from "./player-entry-repo";

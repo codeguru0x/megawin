@@ -6,6 +6,9 @@ export const accountsKeys = {
   all: [MODULE] as const,
   company: [MODULE, "company"] as const,
   agents: [MODULE, "agents"] as const,
-  /** Players theo tenantId — dùng cho useInfiniteQuery (page-based). */
-  players: (tenantId: string) => [MODULE, "players", { tenantId }] as const,
+  /** Players theo tenantId — cursor-based (dùng useQuery, không infinite). */
+  players: (tenantId: string, cursor?: { after?: string; before?: string }) =>
+    [MODULE, "players", { tenantId, ...cursor }] as const,
+  /** Search cross-tenant theo accountId (ULID) hoặc username exact/prefix. */
+  search: (keyword: string) => [MODULE, "search", { keyword }] as const,
 };

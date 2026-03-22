@@ -1,18 +1,19 @@
 import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities/account";
-import { ListPlayerAccountsUseCase } from "@megawin/identity-application/use-cases/accounts";
+import { ListPlayerAccountsCursorUseCase } from "@megawin/identity-application/use-cases/accounts";
 
 import { listPlayersQuerySchema } from "./_lib/schema";
 
-const listPlayerAccountsUseCase = new ListPlayerAccountsUseCase();
+const listPlayerAccountsCursorUseCase = new ListPlayerAccountsCursorUseCase();
 
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .query(listPlayersQuerySchema)
   .handler(async ({ query }) => {
-    return listPlayerAccountsUseCase.run({
+    return listPlayerAccountsCursorUseCase.run({
       tenantId: query.tenantId,
-      page: query.page,
+      afterId: query.after ?? undefined,
+      beforeId: query.before ?? undefined,
       limit: query.limit,
     });
   });

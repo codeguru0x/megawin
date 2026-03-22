@@ -1,4 +1,5 @@
 import { nowVN } from "@megawin/shared/utils/date";
+import { ObjectId } from "mongodb";
 import { AccountMapper } from "../mappers/account-mapper";
 import { IdentityBaseRepo } from "./identity-base-repo";
 import {
@@ -126,6 +127,117 @@ export class AccountRepository extends IdentityBaseRepo<AccountEntity, AccountMa
       accounts: docs as PlayerAccountEntity[],
       total,
     };
+  }
+
+  /**
+   * Tìm tài khoản người chơi theo keyword cross-tenant.
+   *
+   * Logic detect input:
+   * - Dạng ULID (26 ký tự Crockford Base32): exact match `accountId` (uppercase) → 0 hoặc 1 kết quả
+   * - Chứa `@` (dạng user@tenant): exact match `username` (lowercase) → 0 hoặc 1 kết quả
+   * - Còn lại: prefix regex `^keyword` trên `username` (lowercase) → 0-N kết quả
+   *
+   * Username đã được lưu lowercase trong DB → lowercase input rồi dùng regex KHÔNG có flag `i`.
+   * Prefix regex (`^abc`) sử dụng được index `{ type: 1, username: 1 }` hiệu quả.
+   * Limit mặc định 20 — search là để tìm nhanh, không phải để duyệt.
+   */
+  public async searchPlayerAccounts(
+    rawKeyword: string,
+    options?: { limit?: number },
+  ): Promise<PlayerAccountEntity[]> {
+    const keyword = rawKeyword.trim();
+    const limit = options?.limit ?? 20;
+    const ULID_PATTERN = /^[0-9A-HJKMNP-TV-Z]{26}$/i;
+
+    if (ULID_PATTERN.test(keyword)) {
+      // Input là ULID → exact match trên accountId (uppercase)
+      const doc = await this.findOne({
+        type: AccountType.Player,
+        accountId: keyword.toUpperCase(),
+      });
+      return doc ? [doc as PlayerAccountEntity] : [];
+    }
+
+    if (keyword.includes("@")) {
+      // Input chứa @ → exact match trên username (lowercase)
+      const doc = await this.findOne({
+        type: AccountType.Player,
+        username: keyword.toLowerCase(),
+      });
+      return doc ? [doc as PlayerAccountEntity] : [];
+    }
+
+    // Prefix search trên username — không dùng flag `i` vì data đã lowercase.
+    // Regex `^keyword` sử dụng index { type: 1, username: 1 } hiệu quả.
+    const escaped = keyword.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return (await this.findMany(
+      { type: AccountType.Player, username: { $regex: `^${escaped}` } },
+      { limit, sort: { username: 1 } },
+    )) as PlayerAccountEntity[];
+  }
+
+  /**
+   * Liệt kê tài khoản người chơi theo tenantId với cursor-based pagination.
+   *
+   * Dùng `_id` (MongoDB ObjectId) làm cursor thay vì `accountId` (ULID).
+   * ObjectId là primary key — index luôn có sẵn, không cần tạo thêm.
+   * ObjectId monotonically increasing theo thời gian → sort mới nhất trước khi dùng `_id DESC`.
+   *
+   * Index dùng: { type: 1, tenantId: 1, _id: -1 } — hoặc primary key scan.
+   *
+   * @param afterId  - entity.id (hex ObjectId) của record cuối trang hiện tại → lấy trang tiếp
+   * @param beforeId - entity.id (hex ObjectId) của record đầu trang hiện tại → lấy trang trước
+   */
+  public async listPlayerAccountsCursor(
+    tenantId: string,
+    options?: { afterId?: string; beforeId?: string; limit?: number },
+  ): Promise<{ accounts: PlayerAccountEntity[]; hasNext: boolean; hasPrev: boolean }> {
+    const limit = options?.limit ?? 50;
+    const baseFilter = { type: AccountType.Player, tenantId };
+
+    if (options?.beforeId) {
+      // Trang trước: _id > beforeId (ObjectId comparison), sort ASC → reverse về DESC
+      const docs = (await this.findMany(
+        { ...baseFilter, _id: { $gt: new ObjectId(options.beforeId) } },
+        { sort: { _id: 1 }, limit: limit + 1 },
+      )) as PlayerAccountEntity[];
+
+      // hasPrev = còn trang trước trang này nữa
+      const hasPrev = docs.length > limit;
+      const accounts = docs.slice(0, limit).reverse();
+
+      // hasNext: luôn có vì beforeId tồn tại → trang hiện tại phía sau
+      const hasNext = true;
+
+      return { accounts, hasNext, hasPrev };
+    }
+
+    if (options?.afterId) {
+      // Trang tiếp: _id < afterId (ObjectId comparison), sort DESC
+      const docs = (await this.findMany(
+        { ...baseFilter, _id: { $lt: new ObjectId(options.afterId) } },
+        { sort: { _id: -1 }, limit: limit + 1 },
+      )) as PlayerAccountEntity[];
+
+      const hasNext = docs.length > limit;
+      const accounts = docs.slice(0, limit);
+
+      // hasPrev: luôn có vì afterId tồn tại → có trang trước đó
+      const hasPrev = true;
+
+      return { accounts, hasNext, hasPrev };
+    }
+
+    // Trang đầu tiên — không có cursor
+    const docs = (await this.findMany(baseFilter, {
+      sort: { _id: -1 },
+      limit: limit + 1,
+    })) as PlayerAccountEntity[];
+
+    const hasNext = docs.length > limit;
+    const accounts = docs.slice(0, limit);
+
+    return { accounts, hasNext, hasPrev: false };
   }
 
   public async findAgentByTenantId(tenantId: string): Promise<AgentAccountEntity | null> {

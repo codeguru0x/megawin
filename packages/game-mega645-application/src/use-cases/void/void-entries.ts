@@ -59,8 +59,8 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEn
         voidInfo: {
           // originalAmount = số tiền cược gốc để audit. Dùng 0 nếu entry thiếu amount (dữ liệu lỗi).
           originalAmount: entry.amount ?? 0,
-          // refundAmount = 100% tiền cược theo quy định Mega 6/45.
-          // Void draw → hoàn toàn bộ, không trừ phí.
+          // refundAmount = 100% tiền cược
+          // Void draw → hoàn toàn bộ
           refundAmount: entry.amount ?? 0,
           refundStatus: RefundStatus.Pending,
           voidedAt: now,

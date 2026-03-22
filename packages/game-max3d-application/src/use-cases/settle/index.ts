@@ -25,3 +25,6 @@ export type { FinalizeSettleResult } from "./finalize-settle";
 
 export { PublishSettleDailyUseCase } from "./publish-settle-daily";
 export type { PublishSettleDailyInput } from "./publish-settle-daily";
+
+export { PublishPlayerDailyUseCase } from "./publish-player-daily";
+export type { PublishPlayerDailyInput } from "./publish-player-daily";

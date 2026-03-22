@@ -20,6 +20,8 @@ export interface ListPlayerAccountsOutput {
 }
 
 export interface PlayerAccountItem {
+  /** ID tài khoản player (ULID) — dùng để navigate tới player detail page. */
+  accountId: string;
   username: string;
   displayName: string;
   status: AccountStatus;
@@ -27,4 +29,39 @@ export interface PlayerAccountItem {
   roles: PlayerRole[];
   createdAt: string;
   updatedAt: string;
+}
+
+// ─── Cursor-based pagination ───────────────────────────────────────────────
+
+export interface ListPlayerAccountsCursorInput {
+  /** Lọc theo tenantId — bắt buộc. */
+  tenantId: string;
+  /**
+   * entity.id (MongoDB ObjectId hex, 24 chars) của record cuối trang hiện tại → lấy trang tiếp.
+   * Mutually exclusive với beforeId.
+   */
+  afterId?: string;
+  /**
+   * entity.id (MongoDB ObjectId hex, 24 chars) của record đầu trang hiện tại → lấy trang trước.
+   * Mutually exclusive với afterId.
+   */
+  beforeId?: string;
+  /** Số dòng mỗi trang. Mặc định = 50. */
+  limit?: number;
+}
+
+export interface ListPlayerAccountsCursorOutput {
+  accounts: PlayerAccountItem[];
+  /**
+   * entity.id (ObjectId hex) của record cuối trang — truyền vào afterId để lấy trang tiếp.
+   * null khi không còn trang tiếp.
+   */
+  nextCursor: string | null;
+  /**
+   * entity.id (ObjectId hex) của record đầu trang — truyền vào beforeId để lấy trang trước.
+   * null khi đang ở trang đầu.
+   */
+  prevCursor: string | null;
+  hasNext: boolean;
+  hasPrev: boolean;
 }

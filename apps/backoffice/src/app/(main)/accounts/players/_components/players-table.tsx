@@ -1,41 +1,40 @@
 "use client";
 
-import { useMemo } from "react";
-import { Info, List, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info, List } from "lucide-react";
 
 import { DataTable } from "@/components/data-table/data-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 
-import { usePlayerAccounts } from "../../_shared/queries";
+import { usePlayerAccountsCursor } from "../../_shared/queries";
 import { ACCOUNTS_PAGE_SIZE } from "../../_shared/constants";
 import { playerAccountsColumns } from "./columns";
 import type { PlayerAccount } from "../_lib/schema";
 
 interface PlayersTableProps {
   tenantId: string;
+  /** accountId của record cuối trang hiện tại → lấy trang tiếp. */
+  after?: string;
+  /** accountId của record đầu trang hiện tại → lấy trang trước. */
+  before?: string;
+  onNext: (nextCursor: string) => void;
+  onPrev: (prevCursor: string) => void;
 }
 
-export function PlayersTable({ tenantId }: PlayersTableProps) {
-  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    usePlayerAccounts(tenantId);
+export function PlayersTable({ tenantId, after, before, onNext, onPrev }: PlayersTableProps) {
+  const cursor = after ? { after } : before ? { before } : undefined;
 
-  // Flatten tất cả pages thành 1 mảng accounts
-  const accounts = useMemo<PlayerAccount[]>(() => {
-    if (!data?.pages) return [];
-    return data.pages.flatMap((page) => page.accounts);
-  }, [data]);
+  const { data, isLoading, error } = usePlayerAccountsCursor(tenantId, cursor);
 
-  // Total từ page đầu tiên (hoặc mới nhất) — luôn nhất quán vì cùng tenantId
-  const total = data?.pages[0]?.total ?? 0;
+  const accounts = data?.accounts ?? [];
 
   const table = useDataTableInstance<PlayerAccount, unknown>({
     data: accounts,
     columns: playerAccountsColumns,
     enableRowSelection: false,
     defaultPageSize: ACCOUNTS_PAGE_SIZE,
-    getRowId: (row) => row.username,
+    getRowId: (row) => row.accountId,
   });
 
   if (!tenantId) {
@@ -59,14 +58,14 @@ export function PlayersTable({ tenantId }: PlayersTableProps) {
               Người chơi – <span className="font-mono text-xs font-normal">{tenantId}</span>
             </CardTitle>
           </div>
-          {total > 0 && (
+          {accounts.length > 0 && (
             <span className="text-xs tabular-nums text-muted-foreground">
-              Hiển thị {accounts.length} / {total}
+              {accounts.length} tài khoản
             </span>
           )}
         </div>
       </CardHeader>
-      <CardContent className="flex size-full flex-col gap-4 px-5 pb-4 pt-0">
+      <CardContent className="flex size-full flex-col gap-3 px-5 pb-4 pt-0">
         {error && <p className="text-sm text-destructive">{error.message}</p>}
         <div className="overflow-hidden rounded-md border">
           {isLoading ? (
@@ -83,23 +82,32 @@ export function PlayersTable({ tenantId }: PlayersTableProps) {
           )}
         </div>
 
-        {/* Nút tải thêm — hiển thị khi còn trang tiếp theo */}
-        {hasNextPage && (
-          <div className="flex justify-center">
+        {/* Prev / Next navigation — chỉ hiện khi có data */}
+        {!isLoading && accounts.length > 0 && (
+          <div className="flex items-center justify-between">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
+              onClick={() => {
+                const cursor = data?.prevCursor;
+                if (cursor) onPrev(cursor);
+              }}
+              disabled={!data?.hasPrev}
             >
-              {isFetchingNextPage ? (
-                <>
-                  <Loader2 className="mr-2 size-3.5 animate-spin" />
-                  Đang tải...
-                </>
-              ) : (
-                "Tải thêm"
-              )}
+              <ChevronLeft className="size-3.5" />
+              Trang trước
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const cursor = data?.nextCursor;
+                if (cursor) onNext(cursor);
+              }}
+              disabled={!data?.hasNext}
+            >
+              Trang tiếp
+              <ChevronRight className="size-3.5" />
             </Button>
           </div>
         )}

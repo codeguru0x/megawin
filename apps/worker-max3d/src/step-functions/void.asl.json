@@ -1,0 +1,238 @@
+{
+  "Comment": "Max 3D Void Draw Step Function – Huỷ kỳ quay (crash-safe, no jackpot)",
+  "QueryLanguage": "JSONata",
+  "StartAt": "PrepareVoid",
+  "States": {
+    "PrepareVoid": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-void-prepare",
+      "Assign": {
+        "voidCtx": "{% $states.result %}"
+      },
+      "Next": "VoidEntries",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "VoidEntries": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-void-entries",
+      "Arguments": "{% $voidCtx %}",
+      "Assign": {
+        "voidResult": "{% $states.result %}"
+      },
+      "Next": "CheckVoidDone",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "CheckVoidDone": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $voidResult.done %}",
+          "Next": "SyncTicketSummaries"
+        }
+      ],
+      "Default": "VoidEntries"
+    },
+    "SyncTicketSummaries": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-void-sync-ticket-summaries",
+      "Arguments": "{% $voidCtx %}",
+      "Assign": {
+        "syncResult": "{% $states.result %}"
+      },
+      "Next": "CheckSyncDone",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "CheckSyncDone": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $syncResult.done %}",
+          "Next": "BuildVoidReport"
+        }
+      ],
+      "Default": "SyncTicketSummaries"
+    },
+    "BuildVoidReport": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-void-build-void-report",
+      "Arguments": "{% $voidCtx %}",
+      "Next": "PublishSettleDaily",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "PublishSettleDaily": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-void-publish-settle-daily",
+      "Arguments": "{% $voidCtx %}",
+      "Next": "PublishPlayerDaily",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "PublishPlayerDaily": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-void-publish-player-daily",
+      "Arguments": "{% $voidCtx %}",
+      "Next": "FinalizeVoid",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "FinalizeVoid": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-void-finalize",
+      "Arguments": "{% $voidCtx %}",
+      "Next": "DispatchRefunds",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "DispatchRefunds": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-void-dispatch-refunds",
+      "Arguments": "{% $voidCtx %}",
+      "Assign": {
+        "refundResult": "{% $states.result %}"
+      },
+      "Next": "CheckRefundDone",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "RefundFailed"
+        }
+      ]
+    },
+    "CheckRefundDone": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $refundResult.done %}",
+          "Next": "RefundComplete"
+        }
+      ],
+      "Default": "RefundWait"
+    },
+    "RefundWait": {
+      "Type": "Wait",
+      "Seconds": 5,
+      "Next": "DispatchRefunds"
+    },
+    "RefundComplete": {
+      "Type": "Pass",
+      "End": true
+    },
+    "RefundFailed": {
+      "Type": "Pass",
+      "Comment": "Refund error – void đã hoàn tất (status = void). Admin retry thủ công.",
+      "End": true
+    }
+  }
+}

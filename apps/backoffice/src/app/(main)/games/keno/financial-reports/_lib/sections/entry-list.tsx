@@ -58,7 +58,8 @@ const KENO_BET_LABELS: Record<string, string> = {
 
 // ─── Entry Detail Dialog ──────────────────────────────────────────────────────
 
-function EntryDetailDialog({
+/** Chi tiết 1 entry Keno — boards chọn số, side bets, kết quả 20 số. */
+export function KenoEntryDetailDialog({
   entry,
   open,
   onClose,
@@ -74,7 +75,9 @@ function EntryDetailDialog({
   const sideBetPayouts: any[] = payout?.sideBetPayouts ?? [];
   const winAmount: number = payout?.winAmount ?? 0;
   const payoutAmount: number = payout?.payoutAmount ?? 0;
-  const playerNet = payoutAmount - entry.amount;
+  // scheduled = đang chờ kết quả — KHÔNG hiển thị lãi/lỗ
+  const isScheduled = entry.status === "scheduled";
+  const playerNet = isScheduled ? null : payoutAmount - entry.amount;
 
   const winningNumbers = new Set<string>((entry as any).result?.winningNumbers ?? []);
 
@@ -87,7 +90,7 @@ function EntryDetailDialog({
         <DialogHeader>
           <DialogTitle>Chi tiết Entry — Keno</DialogTitle>
           <DialogDescription>
-            {entry.id} · {entry.drawId}
+            {entry.entrySummary?.ticketNo || entry.id} · {entry.drawId}
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[72vh]">
@@ -100,7 +103,7 @@ function EntryDetailDialog({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <p
-                        className={`text-sm font-bold ${isLongName ? "max-w-[10rem] truncate" : ""}`}
+                        className={`text-sm font-bold ${isLongName ? "max-w-40 truncate" : ""}`}
                       >
                         {displayName}
                       </p>
@@ -123,27 +126,50 @@ function EntryDetailDialog({
               </div>
               <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground">Trạng thái</p>
-                <p className="text-sm font-bold">
+                <Badge
+                  variant={
+                    entry.status === "settled"
+                      ? "default"
+                      : entry.status === "void"
+                        ? "destructive"
+                        : "secondary"
+                  }
+                  className="mt-0.5"
+                >
                   {ENTRY_STATUS_LABELS[entry.status as keyof typeof ENTRY_STATUS_LABELS] ??
                     entry.status}
-                </p>
+                </Badge>
               </div>
             </div>
 
+            {/* Trạng thái đang chờ */}
+            {isScheduled && (
+              <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/30">
+                <Badge variant="secondary">Đang chờ quay số</Badge>
+                <p className="text-xs text-muted-foreground">
+                  Kết quả sẽ có sau kỳ quay · {entry.drawId}
+                </p>
+              </div>
+            )}
+
             {/* Tài chính */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className={`grid gap-3 ${isScheduled ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"}`}>
               <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground">Tiền cược</p>
                 <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
               </div>
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground">Tiền thắng</p>
-                <p className="text-sm font-bold tabular-nums">{formatNumber(winAmount)}</p>
-              </div>
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground">{REPORT_COLUMN_LABELS.totalPayout}</p>
-                <p className="text-sm font-bold tabular-nums">{formatNumber(payoutAmount)}</p>
-              </div>
+              {!isScheduled && (
+                <>
+                  <div className="rounded-lg bg-muted/50 p-3">
+                    <p className="text-xs text-muted-foreground">Tiền thắng</p>
+                    <p className="text-sm font-bold tabular-nums">{formatNumber(winAmount)}</p>
+                  </div>
+                  <div className="rounded-lg bg-muted/50 p-3">
+                    <p className="text-xs text-muted-foreground">{REPORT_COLUMN_LABELS.totalPayout}</p>
+                    <p className="text-sm font-bold tabular-nums">{formatNumber(payoutAmount)}</p>
+                  </div>
+                </>
+              )}
               <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground">Hoa hồng đại lý</p>
                 <p className="text-sm font-bold tabular-nums">
@@ -152,24 +178,26 @@ function EntryDetailDialog({
               </div>
             </div>
 
-            {/* Lãi/Lỗ khách hàng */}
-            <div className="rounded-lg border p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Lãi / Lỗ (khách hàng)</span>
-                <span
-                  className={`text-sm font-bold tabular-nums ${
-                    playerNet > 0
-                      ? "text-profit"
-                      : playerNet < 0
-                        ? "text-loss"
-                        : "text-muted-foreground"
-                  }`}
-                >
-                  {playerNet > 0 ? "+" : ""}
-                  {formatNumber(playerNet)}
-                </span>
+            {/* Lãi/Lỗ khách hàng — chỉ hiển thị sau khi settle/void */}
+            {playerNet !== null && (
+              <div className="rounded-lg border p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Lãi / Lỗ (khách hàng)</span>
+                  <span
+                    className={`text-sm font-bold tabular-nums ${
+                      playerNet > 0
+                        ? "text-profit"
+                        : playerNet < 0
+                          ? "text-loss"
+                          : "text-muted-foreground"
+                    }`}
+                  >
+                    {playerNet > 0 ? "+" : ""}
+                    {formatNumber(playerNet)}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Kết quả — 20 số quay */}
             {winningNumbers.size > 0 && (
@@ -426,3 +454,5 @@ export function EntryList({
     </>
   );
 }
+
+const EntryDetailDialog = KenoEntryDetailDialog;

@@ -268,7 +268,10 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async voidComplete(drawId: string, voidSummary: DrawVoidSummary): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Voiding];
-    if (!allowed?.has(DrawStatus.Void)) return null;
+
+    if (!allowed?.has(DrawStatus.Void)) {
+      return null;
+    }
 
     const now = new Date();
     return await this.findOneAndUpdate(

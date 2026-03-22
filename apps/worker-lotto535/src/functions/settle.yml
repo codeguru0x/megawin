@@ -30,6 +30,10 @@ settle-publish-settle-daily:
   handler: src/handlers/settle/publish-settle-daily.handler
   timeout: 900
 
+settle-publish-player-daily:
+  handler: src/handlers/settle/publish-player-daily.handler
+  timeout: 900
+
 settle-finalize:
   handler: src/handlers/settle/finalize-settle.handler
   timeout: 900

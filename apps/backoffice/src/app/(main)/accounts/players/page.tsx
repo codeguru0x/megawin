@@ -20,8 +20,7 @@ export default function PlayerAccountsPage() {
               Tài khoản người chơi
             </h1>
             <p className="text-xs text-muted-foreground">
-              Xem danh sách người chơi (Player) theo Tenant ID. Tài khoản người chơi được tạo thông
-              qua API riêng.
+              Xem danh sách người chơi (Player) theo đại lý.
             </p>
           </div>
         </div>

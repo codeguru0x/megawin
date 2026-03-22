@@ -513,7 +513,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   async bulkVoidEntries(
     items: Array<{ entryId: string; voidInfo: EntryVoidInfo }>,
   ): Promise<{ modifiedCount: number }> {
-    if (items.length === 0) return { modifiedCount: 0 };
+    if (items.length === 0) {
+      return { modifiedCount: 0 };
+    }
 
     const version = await this.nextVersion();
     const now = new Date();
@@ -966,6 +968,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     totalOriginalStake: number;
     totalRefundAmount: number;
   }> {
+    // Dùng $facet để chia 1 $match → 3 nhánh tính song song trong server.
+    // Tránh $addToSet "$accountId" vào 1 document duy nhất — khi player rất nhiều,
+    // array này có thể vượt giới hạn 16MB BSON document và tốn nhiều RAM.
     const result = await this.aggregate([
       {
         $match: {
@@ -974,18 +979,46 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         },
       },
       {
-        $group: {
-          _id: null,
-          entryCount: { $sum: 1 },
-          players: { $addToSet: "$accountId" },
-          tenants: { $addToSet: "$tenantId" },
-          totalOriginalStake: { $sum: "$amount" },
-          totalRefundAmount: { $sum: { $ifNull: ["$voidInfo.refundAmount", "$amount"] } },
+        $facet: {
+          // Nhánh tài chính: tổng tiền + entryCount (không dùng $addToSet)
+          financials: [
+            {
+              $group: {
+                _id: null,
+                entryCount: { $sum: 1 },
+                totalOriginalStake: { $sum: "$amount" },
+                totalRefundAmount: { $sum: { $ifNull: ["$voidInfo.refundAmount", "$amount"] } },
+              },
+            },
+          ],
+          // Nhánh đếm distinct players: double-group by accountId → $count
+          players: [
+            {
+              $group: {
+                _id: "$accountId",
+              },
+            },
+            {
+              $count: "playerCount",
+            },
+          ],
+          // Nhánh đếm distinct tenants: double-group by tenantId → $count
+          tenants: [
+            {
+              $group: {
+                _id: "$tenantId",
+              },
+            },
+            {
+              $count: "tenantCount",
+            },
+          ],
         },
       },
     ]);
 
-    if (result.length === 0) {
+    const facet = result[0] as any;
+    if (!facet || facet.financials?.length === 0) {
       return {
         entryCount: 0,
         playerCount: 0,
@@ -995,13 +1028,13 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       };
     }
 
-    const r = result[0] as any;
+    const fin = facet.financials[0];
     return {
-      entryCount: r.entryCount,
-      playerCount: r.players?.length ?? 0,
-      tenantCount: r.tenants?.length ?? 0,
-      totalOriginalStake: r.totalOriginalStake,
-      totalRefundAmount: r.totalRefundAmount,
+      entryCount: fin.entryCount ?? 0,
+      playerCount: facet.players[0]?.playerCount ?? 0,
+      tenantCount: facet.tenants[0]?.tenantCount ?? 0,
+      totalOriginalStake: fin.totalOriginalStake ?? 0,
+      totalRefundAmount: fin.totalRefundAmount ?? 0,
     };
   }
 

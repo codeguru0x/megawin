@@ -28,3 +28,10 @@ export type {
   SyncSystemOutstandingResult,
   SystemOutstandingPublisher,
 } from "./sync-system-outstanding";
+
+export { SystemPublishPlayerDailyUseCase } from "./publish-player-daily";
+export type {
+  PublishPlayerDailyInput,
+  PublishPlayerDailyResult,
+  PlayerDailyPublisher,
+} from "./publish-player-daily";

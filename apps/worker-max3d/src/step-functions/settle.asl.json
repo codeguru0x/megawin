@@ -1,0 +1,262 @@
+{
+  "Comment": "Max 3D Settle Step Function – Kết sổ kỳ quay (crash-safe, no jackpot)",
+  "QueryLanguage": "JSONata",
+  "StartAt": "PrepareSettle",
+  "States": {
+    "PrepareSettle": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-prepare",
+      "Assign": {
+        "settleCtx": "{% $states.result %}"
+      },
+      "Next": "SettleEntries",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "SettleEntries": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-entries",
+      "Arguments": "{% $settleCtx %}",
+      "Assign": {
+        "settleResult": "{% $states.result %}"
+      },
+      "Next": "CheckSettleDone",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "CheckSettleDone": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $settleResult.done %}",
+          "Next": "SyncTicketSummaries"
+        }
+      ],
+      "Default": "SettleEntries"
+    },
+    "SyncTicketSummaries": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-sync-ticket-summaries",
+      "Arguments": "{% $settleCtx %}",
+      "Assign": {
+        "syncResult": "{% $states.result %}"
+      },
+      "Next": "CheckSyncDone",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "CheckSyncDone": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $syncResult.done %}",
+          "Next": "CalculateFinancials"
+        }
+      ],
+      "Default": "SyncTicketSummaries"
+    },
+    "CalculateFinancials": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-calculate-financials",
+      "Arguments": "{% $settleCtx %}",
+      "Assign": {
+        "settleCtx": "{% $merge([$settleCtx, { 'financials': $states.result }]) %}"
+      },
+      "Next": "BuildSettleReport",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "BuildSettleReport": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-build-settle-report",
+      "Arguments": "{% $settleCtx %}",
+      "Next": "PublishSettleDaily",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "PublishSettleDaily": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-publish-settle-daily",
+      "Arguments": "{% $settleCtx %}",
+      "Next": "PublishPlayerDaily",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "PublishPlayerDaily": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-publish-player-daily",
+      "Arguments": "{% $settleCtx %}",
+      "Next": "FinalizeSettle",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "FinalizeSettle": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-finalize",
+      "Arguments": "{% $settleCtx %}",
+      "Next": "DispatchPayouts",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "DispatchPayouts": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-dispatch-payouts",
+      "Arguments": "{% $settleCtx %}",
+      "Assign": {
+        "payoutResult": "{% $states.result %}"
+      },
+      "Next": "CheckPayoutDone",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "PayoutFailed"
+        }
+      ]
+    },
+    "CheckPayoutDone": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $payoutResult.done %}",
+          "Next": "PayoutComplete"
+        }
+      ],
+      "Default": "PayoutWait"
+    },
+    "PayoutWait": {
+      "Type": "Wait",
+      "Seconds": 5,
+      "Next": "DispatchPayouts"
+    },
+    "PayoutComplete": {
+      "Type": "Pass",
+      "End": true
+    },
+    "PayoutFailed": {
+      "Type": "Pass",
+      "Comment": "Payout error – settle vẫn hoàn tất, admin retry thủ công",
+      "End": true
+    }
+  }
+}

@@ -92,10 +92,8 @@ export class BuildVoidReportUseCase extends InternalUseCase<VoidContext, BuildVo
       entryCount: voidMetrics.entryCount,
       playerCount: voidMetrics.playerCount,
       tenantCount: voidMetrics.tenantCount,
-
       totalOriginalStake: voidMetrics.totalOriginalStake,
       totalRefundAmount: voidMetrics.totalRefundAmount,
-
       wasPreviouslySettled,
       previousSettleSnapshot,
     });

@@ -10,11 +10,12 @@
  * IDEMPOTENT: aggregate + voidComplete atomic.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
+import { DrawVoidSummary } from "@megawin/game-max3d/entities";
 
 export interface FinalizeVoidResult {
   drawId: string;
@@ -39,14 +40,14 @@ export class FinalizeVoidUseCase extends InternalUseCase<VoidContext, FinalizeVo
       totalOriginalAmount: summary.totalOriginalAmount,
       totalRefundAmount: summary.totalRefundAmount,
       completedAt,
-    });
+    } satisfies DrawVoidSummary);
 
     if (!updated) {
       const draw = await this.drawRepo.getDrawById(drawId);
       if (draw?.status === DrawStatus.Void) {
         console.log(`Draw ${drawId} already void, skipping transition.`);
       } else {
-        throw new Error(
+        throw AppException.businessRuleViolation(
           `Cannot finalize void draw ${drawId}. Current status: ${draw?.status}`,
         );
       }

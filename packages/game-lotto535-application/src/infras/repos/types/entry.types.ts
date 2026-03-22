@@ -27,10 +27,6 @@ export interface OutstandingDrawCounts {
   tenantCount: number;
 }
 
-/**
- * Aggregate players cho 1 draw × 1 tenant. Drill cấp 3.
- * Kết quả của $group by accountId.
- */
 export interface PlayerBreakdownRow {
   accountId: string;
   username: string;

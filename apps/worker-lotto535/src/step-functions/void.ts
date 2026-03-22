@@ -36,6 +36,12 @@
  *  │     Settle totals tự giảm khi settle reports đã xoá     │
  *  └────────┬─────────────────────────────────────────────────┘
  *           ▼
+ *  ┌──────────────────────────────────────────────────────────┐
+ *  │  5b. PublishPlayerDaily                                  │
+ *  │     Re-aggregate player daily reports                    │
+ *  │     Players hết entry → doc bị xoá                      │
+ *  └────────┬─────────────────────────────────────────────────┘
+ *           ▼
  *  ┌─────────────────────────┐
  *  │  6. FinalizeVoid        │  Transition voiding → void + ghi voidSummary
  *  └────────┬────────────────┘
@@ -163,6 +169,17 @@ export const VOID_STATE_MACHINE = {
     PublishSettleDaily: {
       Type: "Task",
       Resource: lambdaArn("void-publish-settle-daily"),
+      Arguments: "{% $voidCtx %}",
+      Next: "PublishPlayerDaily",
+      Retry: LAMBDA_RETRY,
+    },
+
+    // ── STEP 5b: Publish player daily ──
+    // Re-aggregate ticket_entries cho financialDate → player_settle_game_daily.
+    // Entries void → player metrics tự giảm. Players hết entry → doc bị xoá.
+    PublishPlayerDaily: {
+      Type: "Task",
+      Resource: lambdaArn("void-publish-player-daily"),
       Arguments: "{% $voidCtx %}",
       Next: "FinalizeVoid",
       Retry: LAMBDA_RETRY,

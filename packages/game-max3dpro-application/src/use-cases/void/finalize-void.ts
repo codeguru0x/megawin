@@ -7,7 +7,7 @@
  * IDEMPOTENT: aggregate + voidComplete atomic.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -22,10 +22,7 @@ export interface FinalizeVoidResult {
   completedAt: string;
 }
 
-export class FinalizeVoidUseCase extends InternalUseCase<
-  VoidContext,
-  FinalizeVoidResult
-> {
+export class FinalizeVoidUseCase extends InternalUseCase<VoidContext, FinalizeVoidResult> {
   private readonly drawRepo = new DrawRepository();
   private readonly entryRepo = new EntryRepository();
 
@@ -46,7 +43,7 @@ export class FinalizeVoidUseCase extends InternalUseCase<
       if (draw?.status === DrawStatus.Void) {
         console.log(`Draw ${drawId} already void, skipping transition.`);
       } else {
-        throw new Error(
+        throw AppException.businessRuleViolation(
           `Cannot finalize void draw ${drawId}. Current status: ${draw?.status}`,
         );
       }

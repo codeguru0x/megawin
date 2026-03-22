@@ -22,6 +22,10 @@ void-publish-settle-daily:
   handler: src/handlers/void/publish-settle-daily.handler
   timeout: 900
 
+void-publish-player-daily:
+  handler: src/handlers/void/publish-player-daily.handler
+  timeout: 900
+
 void-finalize:
   handler: src/handlers/void/finalize-void.handler
   timeout: 900

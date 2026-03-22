@@ -15,7 +15,7 @@
  * CRASH-SAFE: retry safe — chỉ validate + return context.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { AppException, InternalUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { VoidContext } from "./types";
@@ -29,13 +29,17 @@ export class PrepareVoidUseCase extends InternalUseCase<PrepareVoidInput, VoidCo
 
   protected async execute(input: PrepareVoidInput): Promise<VoidContext> {
     const { drawId } = input;
+
     const draw = await this.drawRepo.getDrawById(drawId);
+
     if (!draw) {
-      throw new Error(`Draw ${drawId} không tồn tại.`);
+      throw AppException.notFound(`Draw ${drawId} không tồn tại.`);
     }
 
     if (draw.status !== DrawStatus.Voiding) {
-      throw new Error(`Draw ${drawId} status = "${draw.status}" – expected "voiding".`);
+      throw AppException.businessRuleViolation(
+        `Draw ${drawId} status = "${draw.status}" – expected "voiding".`,
+      );
     }
 
     return {

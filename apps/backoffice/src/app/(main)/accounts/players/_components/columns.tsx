@@ -1,6 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
 import { AccountStatus } from "@megawin/identity/entities/account";
 import { AccountStatusLabel } from "@megawin/identity/entities/labels";
 
@@ -14,12 +15,18 @@ const STATUS_VARIANT: Record<string, "default" | "outline" | "secondary" | "dest
   suspended: "destructive",
 };
 
+/** Columns chuẩn — dùng cho chế độ xem danh sách theo tenant. */
 export const playerAccountsColumns: ColumnDef<PlayerAccount>[] = [
   {
     accessorKey: "username",
     header: "Tên tài khoản",
     cell: ({ row }) => (
-      <span className="font-medium font-mono text-xs">{row.original.username}</span>
+      <Link
+        href={`/accounts/players/${row.original.accountId}/overview`}
+        className="font-mono text-xs font-medium text-primary underline-offset-4 hover:underline"
+      >
+        {row.original.username}
+      </Link>
     ),
     enableSorting: false,
   },
@@ -46,7 +53,7 @@ export const playerAccountsColumns: ColumnDef<PlayerAccount>[] = [
     accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => (
-      <span className="text-xs tabular-nums text-muted-foreground">
+      <span className="tabular-nums text-xs text-muted-foreground">
         {row.original.createdAt
           ? new Date(row.original.createdAt).toLocaleDateString("vi-VN")
           : "—"}
@@ -58,9 +65,68 @@ export const playerAccountsColumns: ColumnDef<PlayerAccount>[] = [
     accessorKey: "updatedAt",
     header: "Cập nhật",
     cell: ({ row }) => (
-      <span className="text-xs tabular-nums text-muted-foreground">
+      <span className="tabular-nums text-xs text-muted-foreground">
         {row.original.updatedAt
           ? new Date(row.original.updatedAt).toLocaleDateString("vi-VN")
+          : "—"}
+      </span>
+    ),
+    enableSorting: false,
+  },
+];
+
+/**
+ * Columns cho chế độ search cross-tenant — có thêm cột Tenant để phân biệt.
+ * Đặt cột Tenant ngay sau cột username vì đây là thông tin quan trọng nhất khi search.
+ */
+export const searchResultColumns: ColumnDef<PlayerAccount>[] = [
+  {
+    accessorKey: "username",
+    header: "Tên tài khoản",
+    cell: ({ row }) => (
+      <Link
+        href={`/accounts/players/${row.original.accountId}/overview`}
+        className="font-mono text-xs font-medium text-primary underline-offset-4 hover:underline"
+      >
+        {row.original.username}
+      </Link>
+    ),
+    enableSorting: false,
+  },
+  {
+    accessorKey: "tenantId",
+    header: "Tenant",
+    cell: ({ row }) => (
+      <span className="font-mono text-xs text-muted-foreground">{row.original.tenantId}</span>
+    ),
+    enableSorting: false,
+  },
+  {
+    accessorKey: "displayName",
+    header: "Tên hiển thị",
+    cell: ({ row }) => <span className="text-sm">{row.original.displayName}</span>,
+    enableSorting: false,
+  },
+  {
+    accessorKey: "status",
+    header: "Trạng thái",
+    cell: ({ row }) => {
+      const status = row.original.status as AccountStatus;
+      return (
+        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>
+          {AccountStatusLabel[status] ?? status}
+        </Badge>
+      );
+    },
+    enableSorting: false,
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Ngày tạo",
+    cell: ({ row }) => (
+      <span className="tabular-nums text-xs text-muted-foreground">
+        {row.original.createdAt
+          ? new Date(row.original.createdAt).toLocaleDateString("vi-VN")
           : "—"}
       </span>
     ),

@@ -111,6 +111,45 @@ export const GAME_DAILY_REPORT_INDEXES: IndexDescription[] = [
 ];
 
 // ─────────────────────────────────────────────
+// playerSettleGameDaily indexes
+// ─────────────────────────────────────────────
+
+/**
+ * Chiến lược:
+ * 1. Upsert key (unique) — idempotent write, 1 doc duy nhất per player × game × date.
+ *    Settle/void pipeline dùng filter này để overwrite ($set).
+ * 2. accountId + financialDate — Player detail page: lấy tất cả game stats
+ *    của 1 player trong date range. Sort descending để hiển thị ngày gần nhất trước.
+ * 3. tenantId + financialDate — Admin xem tất cả players của 1 tenant trong date range.
+ *    Dùng cho trang quản lý players theo đại lý.
+ */
+export const PLAYER_SETTLE_GAME_DAILY_INDEXES: IndexDescription[] = [
+  {
+    key: {
+      accountId: 1,
+      gameProduct: 1,
+      financialDate: 1,
+    },
+    unique: true,
+    name: "idx_account_game_date_unique",
+  },
+  {
+    key: {
+      accountId: 1,
+      financialDate: -1,
+    },
+    name: "idx_account_date",
+  },
+  {
+    key: {
+      tenantId: 1,
+      financialDate: -1,
+    },
+    name: "idx_tenant_date",
+  },
+];
+
+// ─────────────────────────────────────────────
 // ticketCounters indexes
 // ─────────────────────────────────────────────
 

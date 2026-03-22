@@ -44,8 +44,8 @@ function shortDisplayName(username: string | undefined | null, accountId: string
   return parsed ? parsed.playerExternalId : raw;
 }
 
-/** Chi tiết 1 entry với highlight số trùng XSKT. */
-function EntryDetailDialog({
+/** Chi tiết 1 entry Mega 6/45 — bộ số, kết quả quay, giải trúng. */
+export function Mega645EntryDetailDialog({
   entry,
   open,
   onClose,
@@ -61,8 +61,9 @@ function EntryDetailDialog({
   const status = entry.status as EntryStatus;
   const outcome = entry.outcome as EntryOutcome | undefined;
   const isWin = outcome === "win";
+  // scheduled = đang chờ kết quả, chưa có payout/result → KHÔNG hiển thị lãi/lỗ
+  const isScheduled = status === "scheduled";
 
-  // Tập hợp số trúng để highlight trong bộ số đã chọn
   const winningSet = new Set(entry.result?.winningMain ?? []);
 
   const playType =
@@ -70,11 +71,10 @@ function EntryDetailDialog({
       ? (MEGA645_PLAY_TYPE_LABELS[boards[0].playType as PlayType] ?? boards[0].playType)
       : "—";
 
-  // Hiển thị tên ngắn (bỏ phần @tenantId)
   const displayName = shortDisplayName(entry.username, entry.accountId);
 
-  // Lãi/lỗ từ góc người chơi: dương = thắng, âm = thua
-  const playerNet = (entry.payout?.payoutAmount ?? 0) - entry.amount;
+  // Lãi/lỗ chỉ có ý nghĩa sau khi settle — không tính cho scheduled entry
+  const playerNet = isScheduled ? null : (entry.payout?.payoutAmount ?? 0) - entry.amount;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -82,7 +82,7 @@ function EntryDetailDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Ticket className="size-4" />
-            Chi tiết Entry
+            Chi tiết Entry — Mega 6/45
           </DialogTitle>
           <DialogDescription className="font-mono text-xs">
             {entry.entrySummary.ticketNo}
@@ -112,6 +112,16 @@ function EntryDetailDialog({
             ))}
           </div>
 
+          {/* ── Trạng thái đang chờ — hiển thị thay thế tài chính khi scheduled ── */}
+          {isScheduled && (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/30">
+              <Badge variant="secondary">Đang chờ quay số</Badge>
+              <p className="text-xs text-muted-foreground">
+                Kết quả sẽ có sau kỳ quay · {entry.drawId}
+              </p>
+            </div>
+          )}
+
           {/* ── Tài chính + Trạng thái ── */}
           <div className="rounded-lg border p-3">
             <div className="mb-2.5 flex items-center justify-between">
@@ -131,7 +141,6 @@ function EntryDetailDialog({
                   {ENTRY_STATUS_LABELS[status] ?? status}
                 </Badge>
                 {outcome && (
-                  // Badge "Trúng" dùng bg-profit để nổi bật; "Không trúng" dùng secondary
                   <Badge
                     className={
                       isWin
@@ -145,19 +154,21 @@ function EntryDetailDialog({
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-x-4 gap-y-2">
+            <div className={`grid gap-x-4 gap-y-2 ${isScheduled ? "grid-cols-2" : "grid-cols-4"}`}>
               <div>
-                <p className="text-[11px] text-muted-foreground">Cược</p>
+                <p className="text-[11px] text-muted-foreground">Tiền cược</p>
                 <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
               </div>
-              <div>
-                <p className="text-[11px] text-muted-foreground">
-                  {REPORT_COLUMN_LABELS.totalPayout}
-                </p>
-                <p className={`text-sm font-bold tabular-nums ${isWin ? "text-profit" : ""}`}>
-                  {formatNumber(entry.payout?.payoutAmount ?? 0)}
-                </p>
-              </div>
+              {!isScheduled && (
+                <div>
+                  <p className="text-[11px] text-muted-foreground">
+                    {REPORT_COLUMN_LABELS.totalPayout}
+                  </p>
+                  <p className={`text-sm font-bold tabular-nums ${isWin ? "text-profit" : ""}`}>
+                    {formatNumber(entry.payout?.payoutAmount ?? 0)}
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-[11px] text-muted-foreground">
                   {REPORT_COLUMN_LABELS.totalCommission}
@@ -166,21 +177,23 @@ function EntryDetailDialog({
                   {formatNumber(entry.tenant.commissionAmount)}
                 </p>
               </div>
-              <div>
-                <p className="text-[11px] text-muted-foreground">Lãi/lỗ (khách)</p>
-                <p
-                  className={`text-sm font-bold tabular-nums ${
-                    playerNet > 0
-                      ? "text-profit"
-                      : playerNet < 0
-                        ? "text-loss"
-                        : "text-muted-foreground"
-                  }`}
-                >
-                  {playerNet > 0 ? "+" : ""}
-                  {formatNumber(playerNet)}
-                </p>
-              </div>
+              {playerNet !== null && (
+                <div>
+                  <p className="text-[11px] text-muted-foreground">Lãi/lỗ (khách)</p>
+                  <p
+                    className={`text-sm font-bold tabular-nums ${
+                      playerNet > 0
+                        ? "text-profit"
+                        : playerNet < 0
+                          ? "text-loss"
+                          : "text-muted-foreground"
+                    }`}
+                  >
+                    {playerNet > 0 ? "+" : ""}
+                    {formatNumber(playerNet)}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -220,7 +233,7 @@ function EntryDetailDialog({
             </div>
           )}
 
-          {/* ── Kết quả quay ── */}
+          {/* ── Kết quả quay — chỉ hiển thị sau khi có kết quả ── */}
           {entry.result && (
             <div className="rounded-lg border p-3">
               <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -239,7 +252,7 @@ function EntryDetailDialog({
             </div>
           )}
 
-          {/* ── Giải trúng — nổi bật hơn các section khác ── */}
+          {/* ── Giải trúng — chỉ hiển thị khi có giải ── */}
           {tiers.length > 0 && (
             <div className="rounded-lg border border-profit/30 bg-profit/5 p-3">
               <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-profit">
@@ -404,3 +417,6 @@ export function EntryList({
     </>
   );
 }
+
+// Alias internal — giữ backward compat với EntryList
+const EntryDetailDialog = Mega645EntryDetailDialog;
