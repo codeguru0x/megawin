@@ -1,7 +1,7 @@
 /**
  * Use Case: Get Ticket Entries for Player (Keno)
  *
- * Lấy ticket + tất cả entries của ticket đó.
+ * Lấy tất cả entries của ticket — chỉ trả entries, không kèm ticket.
  * Chỉ cho phép player xem ticket của chính mình.
  */
 
@@ -9,7 +9,6 @@ import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { EntryBoardSnapshot, TicketEntryEntity } from "@megawin/game-keno/entities";
-import { mapPlayerTicket } from "./mappers/ticket";
 import type {
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
@@ -30,9 +29,6 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
 
     const ticket = await this.ticketRepo.getTicketById(ticketId);
 
-    // Kiểm tra vé có tồn tại không
-    // Kiểm tra vé có thuộc tenant của player không
-    // Kiểm tra vé có thuộc account của player không
     if (!ticket || ticket.tenantId !== tenantId || ticket.accountId !== accountId) {
       throw AppException.notFound("Không tìm thấy vé.");
     }
@@ -40,7 +36,6 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
     const entries = await this.entryRepo.getEntriesByTicketId(ticket.id);
 
     return {
-      ticket: mapPlayerTicket(ticket),
       entries: entries.map(mapPlayerEntry),
     };
   }
@@ -52,6 +47,7 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     drawId: entry.drawId,
     status: entry.status,
     amount: entry.amount,
+    unitPrice: entry.unitPrice,
     selectionCount: entry.selectionCount,
     betUnitCount: entry.betUnitCount,
     entrySummary: {

@@ -119,6 +119,27 @@
       "Type": "Task",
       "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-mega645-dev-void-publish-settle-daily",
       "Arguments": "{% $voidCtx %}",
+      "Next": "PublishPlayerDaily",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "PublishPlayerDaily": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-mega645-dev-void-publish-player-daily",
+      "Arguments": "{% $voidCtx %}",
       "Next": "FinalizeVoid",
       "Retry": [
         {

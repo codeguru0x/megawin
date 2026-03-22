@@ -10,7 +10,8 @@
  * Max 3D có 2 mode chơi:
  *   - basic (4 hạng: special, first, second, third)
  *   - plus (7 hạng: special, first, second, third, fourth, fifth, sixth)
- * settleSummary.tiers gộp cả 2 mode, tiers không có winner = 0.
+ * settleSummary.basicTiers và plusTiers tách riêng — tương ứng 2 tab trên UI Vietlott.
+ * 4 tier đầu trùng tên giữa 2 mode nhưng giá trị giải thưởng khác nhau hoàn toàn.
  *
  * Endpoint: GET /games/max3d/draw-results/:drawId
  */
@@ -20,8 +21,7 @@ import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawEntity } from "../../infras/repos/draw-repo";
-import type { DrawSettleSummaryTier } from "@megawin/game-max3d/entities";
-import type { PlayerDrawResultInfo, PlayerDrawTierPrize } from "./dto/player.dto";
+import type { PlayerDrawResultInfo } from "./dto/player.dto";
 
 export interface GetDrawResultPlayerInput {
   drawId: string;
@@ -30,7 +30,7 @@ export interface GetDrawResultPlayerInput {
 /**
  * Lấy chi tiết kết quả kỳ quay Max 3D cho player.
  *
- * settleSummary.tiers ghi đủ cả tiers basic + plus mode.
+ * settleSummary.basicTiers + plusTiers ghi đủ cả tiers basic + plus mode.
  * Winnercount và prizeAmount aggregate từ tất cả entries kỳ đó.
  */
 export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<
@@ -53,16 +53,8 @@ export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<
 function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
   const result = draw.result!;
 
-  // settleSummary.tiers chứa winnerCount + prizeAmount per tier đã tính sẵn.
-  // Tất cả tiers (basic + plus) luôn có mặt kể cả winnerCount = 0.
-  const prizes: PlayerDrawTierPrize[] = (draw.settleSummary?.tiers ?? []).map(
-    (t: DrawSettleSummaryTier) => ({
-      tier: t.tier,
-      winnerCount: t.winnerCount,
-      prizeAmount: t.prizeAmount,
-    }),
-  );
-
+  // settleSummary.basicTiers + plusTiers chứa winnerCount + prizeAmount per tier đã tính sẵn.
+  // 2 bảng tách riêng — tương ứng 2 tab Max 3D / Max 3D+ trên UI Vietlott.
   return {
     drawId: draw.drawId,
     drawDate: draw.drawDate,
@@ -75,7 +67,8 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
       third: result.third,
       publishedAt: result.publishedAt.toISOString(),
     },
-    prizes,
+    basicPrizes: draw.settleSummary?.basicTiers ?? [],
+    plusPrizes: draw.settleSummary?.plusTiers ?? [],
     vietlottRef: draw.vietlottRef
       ? {
           drawPeriod: draw.vietlottRef.drawPeriod,

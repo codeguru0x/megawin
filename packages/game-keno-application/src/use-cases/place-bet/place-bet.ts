@@ -32,7 +32,7 @@ import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
-import { newObjectId } from "@megawin/data/mongo";
+import { ObjectId } from "mongodb";
 
 export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();
@@ -154,10 +154,12 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const ticketNo = buildTicketNo(GameProduct.Keno, date, seq);
     const drawCount = drawIds.length;
 
-    const ticketId = newObjectId();
+    // _id phải là ObjectId instance để MongoDB lưu đúng kiểu và mapper có thể gọi toHexString().
+    const ticketObjectId = new ObjectId();
+    const ticketId = ticketObjectId.toHexString();
 
     const ticketDoc: TicketDoc = {
-      _id: ticketId,
+      _id: ticketObjectId,
       tenantId,
       accountId,
       username,

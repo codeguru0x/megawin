@@ -1,7 +1,7 @@
 /**
  * Use Case: Get Ticket Entries for Player (Max 3D Pro)
  *
- * Lấy ticket + tất cả entries của ticket đó.
+ * Lấy tất cả entries của ticket — chỉ trả entries, không kèm ticket.
  * Chỉ cho phép player xem ticket của chính mình.
  */
 
@@ -13,7 +13,6 @@ import type {
   TicketEntryEntity,
   EntryPayoutTier,
 } from "@megawin/game-max3dpro/entities";
-import { mapPlayerTicket } from "./mappers/ticket";
 import type {
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
@@ -41,7 +40,6 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
     const entries = await this.entryRepo.findByTicketId(ticket.id);
 
     return {
-      ticket: mapPlayerTicket(ticket),
       entries: entries.map(mapPlayerEntry),
     };
   }
@@ -53,6 +51,7 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     drawId: entry.drawId,
     status: entry.status,
     amount: entry.amount,
+    unitPrice: entry.unitPrice,
     lineCount: entry.lineCount,
     // betUnitCount fallback sang lineCount cho entries cũ (betCount = 1).
     betUnitCount: entry.betUnitCount ?? entry.lineCount,

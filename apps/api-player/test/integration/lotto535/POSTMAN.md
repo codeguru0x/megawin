@@ -71,12 +71,12 @@ console.log(h+'.'+p+'.integ');
 GET http://localhost:4010/player/lotto535/draws/current
 ```
 
-| Mục | Giá trị |
-|-----|---------|
-| Method | `GET` |
-| Path params | Không |
-| Query params | Không |
-| Body | Không |
+| Mục          | Giá trị |
+| ------------ | ------- |
+| Method       | `GET`   |
+| Path params  | Không   |
+| Query params | Không   |
+| Body         | Không   |
 
 ---
 
@@ -86,12 +86,12 @@ GET http://localhost:4010/player/lotto535/draws/current
 GET http://localhost:4010/player/lotto535/jackpot
 ```
 
-| Mục | Giá trị |
-|-----|---------|
-| Method | `GET` |
-| Path params | Không |
-| Query params | Không |
-| Body | Không |
+| Mục          | Giá trị |
+| ------------ | ------- |
+| Method       | `GET`   |
+| Path params  | Không   |
+| Query params | Không   |
+| Body         | Không   |
 
 ---
 
@@ -101,18 +101,18 @@ GET http://localhost:4010/player/lotto535/jackpot
 GET http://localhost:4010/player/lotto535/tickets
 ```
 
-| Mục | Giá trị |
-|-----|---------|
-| Method | `GET` |
-| Path params | Không |
-| Body | Không |
+| Mục         | Giá trị |
+| ----------- | ------- |
+| Method      | `GET`   |
+| Path params | Không   |
+| Body        | Không   |
 
 ### Query params
 
-| Param | Bắt buộc | Default | Mô tả |
-|-------|----------|---------|-------|
-| `page` | Không | `1` | Trang |
-| `size` | Không | `20` | Số lượng / trang (max 100) |
+| Param  | Bắt buộc | Default | Mô tả                      |
+| ------ | -------- | ------- | -------------------------- |
+| `page` | Không    | `1`     | Trang                      |
+| `size` | Không    | `20`    | Số lượng / trang (max 100) |
 
 **Ví dụ với pagination:**
 
@@ -128,16 +128,16 @@ GET http://localhost:4010/player/lotto535/tickets?page=1&size=5
 GET http://localhost:4010/player/lotto535/tickets/{ticketId}/entries
 ```
 
-| Mục | Giá trị |
-|-----|---------|
-| Method | `GET` |
-| Query params | Không |
-| Body | Không |
+| Mục          | Giá trị |
+| ------------ | ------- |
+| Method       | `GET`   |
+| Query params | Không   |
+| Body         | Không   |
 
 ### Path params
 
-| Param | Format | Ví dụ |
-|-------|--------|-------|
+| Param      | Format                         | Ví dụ                      |
+| ---------- | ------------------------------ | -------------------------- |
 | `ticketId` | 24-char hex (MongoDB ObjectId) | `000000000000000000000001` |
 
 **Ví dụ:**
@@ -154,23 +154,23 @@ GET http://localhost:4010/player/lotto535/tickets/000000000000000000000001/entri
 GET http://localhost:4010/player/lotto535/entries/{entryId}/lines
 ```
 
-| Mục | Giá trị |
-|-----|---------|
-| Method | `GET` |
-| Body | Không |
+| Mục    | Giá trị |
+| ------ | ------- |
+| Method | `GET`   |
+| Body   | Không   |
 
 ### Path params
 
-| Param | Format | Ví dụ |
-|-------|--------|-------|
+| Param     | Format                         | Ví dụ                      |
+| --------- | ------------------------------ | -------------------------- |
 | `entryId` | 24-char hex (MongoDB ObjectId) | `000000000000000000000001` |
 
 ### Query params
 
-| Param | Bắt buộc | Default | Mô tả |
-|-------|----------|---------|-------|
-| `page` | Không | `1` | Trang |
-| `size` | Không | `20` | Số lượng / trang (max 100) |
+| Param  | Bắt buộc | Default | Mô tả                      |
+| ------ | -------- | ------- | -------------------------- |
+| `page` | Không    | `1`     | Trang                      |
+| `size` | Không    | `20`    | Số lượng / trang (max 100) |
 
 **Ví dụ:**
 
@@ -186,11 +186,11 @@ GET http://localhost:4010/player/lotto535/entries/000000000000000000000001/lines
 POST http://localhost:4010/player/lotto535/bets
 ```
 
-| Mục | Giá trị |
-|-----|---------|
-| Method | `POST` |
-| Path params | Không |
-| Query params | Không |
+| Mục          | Giá trị |
+| ------------ | ------- |
+| Method       | `POST`  |
+| Path params  | Không   |
+| Query params | Không   |
 
 ### Quy tắc body
 
@@ -199,20 +199,21 @@ POST http://localhost:4010/player/lotto535/bets
 - Mỗi board gồm: `boardNo`, `playType`, `selection` (`mainNumbers` + `specialNumbers`)
 - Số chính (`mainNumbers`): `"01"` đến `"35"`, tối đa 15 số, không trùng
 - Số đặc biệt (`specialNumbers`): `"01"` đến `"12"`, tối đa 12 số, không trùng
+- `betCount`: **optional** (integer ≥ 1, mặc định `1`) — số lần cược nhân bội; tổng tiền = `unitPrice × betCount`
 
 ### Quy tắc theo playType
 
-| playType | mainNumbers | specialNumbers |
-|----------|-------------|----------------|
-| `standard` | Đúng 5 | Đúng 1 |
-| `mainCover4` | Đúng 4 | Đúng 1 |
-| `mainCover` | 6 đến 15 | Đúng 1 |
-| `specialCover` | Đúng 5 | 2 đến 12 |
-| `quickPick` | Không cần (hệ thống random) | Không cần |
+| playType       | mainNumbers                 | specialNumbers |
+| -------------- | --------------------------- | -------------- |
+| `standard`     | Đúng 5                      | Đúng 1         |
+| `mainCover4`   | Đúng 4                      | Đúng 1         |
+| `mainCover`    | 6 đến 15                    | Đúng 1         |
+| `specialCover` | Đúng 5                      | 2 đến 12       |
+| `quickPick`    | Không cần (hệ thống random) | Không cần      |
 
 ---
 
-### 6a. Standard (5 số chính + 1 số đặc biệt)
+### 6a. Standard (5 số chính + 1 số đặc biệt, betCount mặc định)
 
 ```json
 {
@@ -230,7 +231,26 @@ POST http://localhost:4010/player/lotto535/bets
 }
 ```
 
-### 6b. MainCover4 (4 số chính + 1 số đặc biệt)
+### 6b. Standard (betCount = 5)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "standard",
+      "selection": {
+        "mainNumbers": ["01", "07", "14", "22", "35"],
+        "specialNumbers": ["05"]
+      },
+      "betCount": 5
+    }
+  ]
+}
+```
+
+### 6c. MainCover4 (4 số chính + 1 số đặc biệt, betCount = 1)
 
 ```json
 {
@@ -242,13 +262,14 @@ POST http://localhost:4010/player/lotto535/bets
       "selection": {
         "mainNumbers": ["03", "12", "25", "30"],
         "specialNumbers": ["08"]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 6c. MainCover (6 số chính + 1 số đặc biệt)
+### 6d. MainCover (6 số chính + 1 số đặc biệt, betCount = 3)
 
 ```json
 {
@@ -260,13 +281,14 @@ POST http://localhost:4010/player/lotto535/bets
       "selection": {
         "mainNumbers": ["02", "09", "15", "21", "28", "34"],
         "specialNumbers": ["11"]
-      }
+      },
+      "betCount": 3
     }
   ]
 }
 ```
 
-### 6d. MainCover (15 số chính -- tối đa)
+### 6e. MainCover (15 số chính -- tối đa, betCount = 1)
 
 ```json
 {
@@ -276,15 +298,32 @@ POST http://localhost:4010/player/lotto535/bets
       "boardNo": "A",
       "playType": "mainCover",
       "selection": {
-        "mainNumbers": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"],
+        "mainNumbers": [
+          "01",
+          "02",
+          "03",
+          "04",
+          "05",
+          "06",
+          "07",
+          "08",
+          "09",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15"
+        ],
         "specialNumbers": ["01"]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 6e. SpecialCover (5 số chính + 2 số đặc biệt)
+### 6f. SpecialCover (5 số chính + 2 số đặc biệt, betCount = 1)
 
 ```json
 {
@@ -296,13 +335,14 @@ POST http://localhost:4010/player/lotto535/bets
       "selection": {
         "mainNumbers": ["05", "10", "18", "27", "33"],
         "specialNumbers": ["03", "09"]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 6f. SpecialCover (5 số chính + 12 số đặc biệt -- tối đa)
+### 6g. SpecialCover (5 số chính + 12 số đặc biệt -- tối đa, betCount = 2)
 
 ```json
 {
@@ -314,13 +354,14 @@ POST http://localhost:4010/player/lotto535/bets
       "selection": {
         "mainNumbers": ["05", "10", "18", "27", "33"],
         "specialNumbers": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-      }
+      },
+      "betCount": 2
     }
   ]
 }
 ```
 
-### 6g. QuickPick
+### 6h. QuickPick (betCount = 1)
 
 ```json
 {
@@ -332,13 +373,14 @@ POST http://localhost:4010/player/lotto535/bets
       "selection": {
         "mainNumbers": [],
         "specialNumbers": []
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 6h. Multi-board (3 boards, các playType khác nhau)
+### 6i. Multi-board (3 boards, các playType khác nhau, betCount đa dạng)
 
 ```json
 {
@@ -350,7 +392,8 @@ POST http://localhost:4010/player/lotto535/bets
       "selection": {
         "mainNumbers": ["01", "07", "14", "22", "35"],
         "specialNumbers": ["05"]
-      }
+      },
+      "betCount": 1
     },
     {
       "boardNo": "B",
@@ -358,7 +401,8 @@ POST http://localhost:4010/player/lotto535/bets
       "selection": {
         "mainNumbers": ["03", "12", "25", "30"],
         "specialNumbers": ["08"]
-      }
+      },
+      "betCount": 3
     },
     {
       "boardNo": "C",
@@ -366,13 +410,14 @@ POST http://localhost:4010/player/lotto535/bets
       "selection": {
         "mainNumbers": [],
         "specialNumbers": []
-      }
+      },
+      "betCount": 5
     }
   ]
 }
 ```
 
-### 6i. Multi-draw + multi-board (5 boards, 3 draws)
+### 6j. Multi-draw + multi-board (5 boards, 3 draws, betCount đa dạng)
 
 ```json
 {
@@ -384,7 +429,8 @@ POST http://localhost:4010/player/lotto535/bets
       "selection": {
         "mainNumbers": ["01", "07", "14", "22", "35"],
         "specialNumbers": ["05"]
-      }
+      },
+      "betCount": 1
     },
     {
       "boardNo": "B",
@@ -392,7 +438,8 @@ POST http://localhost:4010/player/lotto535/bets
       "selection": {
         "mainNumbers": ["02", "09", "15", "21", "28", "34"],
         "specialNumbers": ["11"]
-      }
+      },
+      "betCount": 2
     },
     {
       "boardNo": "C",
@@ -400,7 +447,8 @@ POST http://localhost:4010/player/lotto535/bets
       "selection": {
         "mainNumbers": ["05", "10", "18", "27", "33"],
         "specialNumbers": ["03", "09", "12"]
-      }
+      },
+      "betCount": 1
     },
     {
       "boardNo": "D",
@@ -408,7 +456,8 @@ POST http://localhost:4010/player/lotto535/bets
       "selection": {
         "mainNumbers": ["08", "16", "24", "31"],
         "specialNumbers": ["07"]
-      }
+      },
+      "betCount": 10
     },
     {
       "boardNo": "E",
@@ -416,7 +465,8 @@ POST http://localhost:4010/player/lotto535/bets
       "selection": {
         "mainNumbers": [],
         "specialNumbers": []
-      }
+      },
+      "betCount": 1
     }
   ]
 }
@@ -426,13 +476,13 @@ POST http://localhost:4010/player/lotto535/bets
 
 ### Invalid cases (expect 400)
 
-### 6j. Body rỗng
+### 6k. Body rỗng
 
 ```json
 {}
 ```
 
-### 6k. drawIds rỗng
+### 6l. drawIds rỗng
 
 ```json
 {
@@ -450,7 +500,7 @@ POST http://localhost:4010/player/lotto535/bets
 }
 ```
 
-### 6l. boards rỗng
+### 6m. boards rỗng
 
 ```json
 {
@@ -459,7 +509,7 @@ POST http://localhost:4010/player/lotto535/bets
 }
 ```
 
-### 6m. drawId trùng lặp
+### 6n. drawId trùng lặp
 
 ```json
 {
@@ -477,7 +527,7 @@ POST http://localhost:4010/player/lotto535/bets
 }
 ```
 
-### 6n. drawId sai format
+### 6o. drawId sai format
 
 ```json
 {
@@ -495,7 +545,7 @@ POST http://localhost:4010/player/lotto535/bets
 }
 ```
 
-### 6o. mainNumber ngoài phạm vi (36 > 35)
+### 6p. mainNumber ngoài phạm vi (36 > 35)
 
 ```json
 {
@@ -513,7 +563,7 @@ POST http://localhost:4010/player/lotto535/bets
 }
 ```
 
-### 6p. specialNumber ngoài phạm vi (13 > 12)
+### 6q. specialNumber ngoài phạm vi (13 > 12)
 
 ```json
 {
@@ -531,7 +581,7 @@ POST http://localhost:4010/player/lotto535/bets
 }
 ```
 
-### 6q. Số không zero-pad
+### 6r. Số không zero-pad
 
 ```json
 {
@@ -549,7 +599,7 @@ POST http://localhost:4010/player/lotto535/bets
 }
 ```
 
-### 6r. Standard sai số lượng mainNumbers (4 thay vì 5)
+### 6s. Standard sai số lượng mainNumbers (4 thay vì 5)
 
 ```json
 {
@@ -567,7 +617,7 @@ POST http://localhost:4010/player/lotto535/bets
 }
 ```
 
-### 6s. Standard sai số lượng specialNumbers (2 thay vì 1)
+### 6t. Standard sai số lượng specialNumbers (2 thay vì 1)
 
 ```json
 {
@@ -585,7 +635,7 @@ POST http://localhost:4010/player/lotto535/bets
 }
 ```
 
-### 6t. playType không hợp lệ
+### 6u. playType không hợp lệ
 
 ```json
 {
@@ -603,7 +653,7 @@ POST http://localhost:4010/player/lotto535/bets
 }
 ```
 
-### 6u. boardNo trùng lặp
+### 6v. boardNo trùng lặp
 
 ```json
 {
@@ -629,7 +679,7 @@ POST http://localhost:4010/player/lotto535/bets
 }
 ```
 
-### 6v. Quá 6 drawIds
+### 6w. Quá 6 drawIds
 
 ```json
 {
@@ -650,6 +700,63 @@ POST http://localhost:4010/player/lotto535/bets
         "mainNumbers": ["01", "07", "14", "22", "35"],
         "specialNumbers": ["05"]
       }
+    }
+  ]
+}
+```
+
+### 6x. betCount = 0 (dưới phạm vi)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "standard",
+      "selection": {
+        "mainNumbers": ["01", "07", "14", "22", "35"],
+        "specialNumbers": ["05"]
+      },
+      "betCount": 0
+    }
+  ]
+}
+```
+
+### 6y. betCount âm
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "standard",
+      "selection": {
+        "mainNumbers": ["01", "07", "14", "22", "35"],
+        "specialNumbers": ["05"]
+      },
+      "betCount": -1
+    }
+  ]
+}
+```
+
+### 6z. betCount là float
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "standard",
+      "selection": {
+        "mainNumbers": ["01", "07", "14", "22", "35"],
+        "specialNumbers": ["05"]
+      },
+      "betCount": 2.5
     }
   ]
 }

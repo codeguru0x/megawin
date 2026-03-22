@@ -5,18 +5,19 @@
  * Chỉ chứa thông tin player cần — loại bỏ dữ liệu vận hành/công ty.
  */
 
+import type { DrawBasicPrizeSummary, DrawSideBetPrizeSummary } from "@megawin/game-keno/entities";
+import { EntryOutcome } from "@megawin/game-core/entities";
+
+export type {
+  DrawBasicPrizeSummary as PlayerBasicPrize,
+  DrawSideBetPrizeSummary as PlayerSideBetPrize,
+};
+
 // ─── Get Current Draw (Player) ───
 
 export interface PlayerGetCurrentDrawOutput {
   currentDraw: PlayerDrawInfo | null;
   activeDraws: PlayerDrawInfo[];
-  lastResult: {
-    drawId: string;
-    drawDate: string;
-    drawNo: number;
-    winningNumbers: string[];
-    publishedAt: string;
-  } | null;
 }
 
 export interface PlayerDrawInfo {
@@ -137,7 +138,10 @@ export interface PlayerEntryInfo {
   id: string;
   drawId: string;
   status: string;
+  /** Tổng tiền đặt cược của entry (VND) = betUnitCount × unitPrice. */
   amount: number;
+  /** Mệnh giá 1 lần tham gia dự thưởng (VND). Thường là 10.000đ. */
+  unitPrice: number;
   selectionCount: number;
   betUnitCount: number;
   entrySummary: {
@@ -162,7 +166,7 @@ export interface PlayerEntryInfo {
     evenCount: number;
     oddCount: number;
   };
-  outcome?: string;
+  outcome?: EntryOutcome;
   payout?: {
     winAmount: number;
     payoutAmount: number;
@@ -184,7 +188,7 @@ export interface PlayerEntryInfo {
 }
 
 export interface PlayerGetTicketEntriesOutput {
-  ticket: PlayerTicketSummary;
+  /** Danh sách entries của vé. */
   entries: PlayerEntryInfo[];
 }
 
@@ -201,24 +205,6 @@ export interface PlayerListDrawResultsOutput {
   draws: PlayerDrawResultSummary[];
   nextCursor: string | null;
   size: number;
-}
-
-/** Chi tiết giải thưởng 1 bậc chơi cơ bản trong kỳ quay. */
-export interface PlayerBasicPrize {
-  pickCount: number;
-  matchCount: number;
-  winnerCount: number;
-  prizePerUnit: number;
-}
-
-/** Chi tiết giải thưởng side bet trong kỳ quay. */
-export interface PlayerSideBetPrize {
-  /** Loại side bet: "bigSmall" | "evenOdd". */
-  playType: string;
-  /** Lựa chọn người chơi đặt và trúng: "big", "small", "bigSmallDraw", "even", "odd", ... */
-  bet: string;
-  winnerCount: number;
-  prizePerUnit: number;
 }
 
 /**
@@ -262,8 +248,8 @@ export interface PlayerDrawResultInfo {
     evenCount: number;
     oddCount: number;
   };
-  basicPrizes: PlayerBasicPrize[];
-  sideBetPrizes: PlayerSideBetPrize[];
+  basicPrizes: DrawBasicPrizeSummary[];
+  sideBetPrizes: DrawSideBetPrizeSummary[];
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;

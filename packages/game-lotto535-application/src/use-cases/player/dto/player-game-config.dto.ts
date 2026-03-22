@@ -10,6 +10,10 @@
 export interface PlayerGameRules {
   /** Giá 1 line (bộ số con) cho 1 kỳ (VND). */
   unitPrice: number;
+  /** Số lần cược tối thiểu per board (≥ 1). */
+  minBetCount: number;
+  /** Số lần cược tối đa per board. */
+  maxBetCount: number;
   /** Số board tối đa trên 1 vé (A-E). */
   maxBoardsPerTicket: number;
   /** Số kỳ liên tiếp tối đa. */

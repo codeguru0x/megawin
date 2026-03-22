@@ -627,8 +627,11 @@ export function matchBoard(
 /**
  * Tổng hợp `EntryPayoutTier[]` từ tất cả boards của 1 entry.
  *
- * Gom tất cả tiers trúng từ lineResults, group theo tier, đếm hitCount và sum totalAmount.
+ * Gom tất cả tiers trúng từ lineResults, group theo `(tier, playMode)`, đếm hitCount và sum amount.
  * `unitAmount` = totalAmount / hitCount (làm tròn) — phản ánh giá trị 1 lần trúng.
+ *
+ * Group key phải gồm cả `playMode` vì BasicPrizeTier và PlusPrizeTier có 4 tier trùng tên nhau
+ * (special, first, second, third) nhưng giá trị giải thưởng khác nhau hoàn toàn.
  *
  * `boardResults` phải là `BoardMatchResultWithBetCount[]` — settle layer gán betCount
  * trước khi gọi hàm này. `matchBoard()` trả per-unit (1 lần cược), betCount nhân bội
@@ -637,20 +640,21 @@ export function matchBoard(
 export function buildPayoutTiers(boardResults: BoardMatchResultWithBetCount[]): EntryPayoutTier[] {
   const tiers: EntryPayoutTier[] = [];
 
-  for (const { betCount, lineResults } of boardResults) {
+  for (const { playMode, betCount, lineResults } of boardResults) {
     for (const lineResult of lineResults) {
       for (const { tier, winAmount } of lineResult.tiers) {
         if (winAmount <= 0) continue;
 
         // betCount nhân bội winAmount per-unit → tổng thực tế player nhận.
         const scaled = winAmount * betCount;
-        const existing = tiers.find((t) => t.tier === tier);
+        // Group theo (tier, playMode) — tránh nhập nhằng 4 tier trùng tên giữa basic và plus.
+        const existing = tiers.find((t) => t.tier === tier && t.playMode === playMode);
 
         if (existing) {
           existing.hitCount++;
           existing.amount += scaled;
         } else {
-          tiers.push({ tier, hitCount: 1, unitAmount: 0, amount: scaled });
+          tiers.push({ tier, playMode, hitCount: 1, unitAmount: 0, amount: scaled });
         }
       }
     }

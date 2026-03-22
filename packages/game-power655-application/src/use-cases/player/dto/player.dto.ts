@@ -1,3 +1,11 @@
+import type {
+  DrawSettleSummaryTier,
+  EntrySummary,
+  EntryPayoutTier,
+} from "@megawin/game-power655/entities";
+
+export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
+
 /**
  * Power 6/55 – Player DTOs
  *
@@ -11,7 +19,6 @@
  */
 
 import { EntryOutcome } from "@megawin/game-core/entities";
-import { PrizeTier } from "@megawin/game-power655/entities/enums";
 
 // ─── Get Current Draw (Player) ───
 
@@ -233,31 +240,20 @@ export interface PlayerEntryInfo {
   drawId: string;
   /** Trạng thái entry (drawn / settled / voided). */
   status: string;
-  /** Số tiền cược cho entry này (VND). */
+  /** Số tiền cược cho entry này (VND) = betUnitCount × unitPrice. */
   amount: number;
+  /** Mệnh giá 1 lần tham gia dự thưởng (VND). Thường là 10.000đ. */
+  unitPrice: number;
   /** Số dòng cược trong entry. */
   lineCount: number;
+  /**
+   * Tổng đơn vị cược = Σ(board.expandedLines × board.betCount).
+   * Công thức: amount = betUnitCount × unitPrice.
+   * Backward compat: data cũ không có field này → fallback = lineCount.
+   */
+  betUnitCount: number;
   /** Tóm tắt entry – snapshot từ ticket gốc, dùng cho UI mà không cần lookup ticket. */
-  entrySummary: {
-    /** Mã vé hiển thị cho khách. */
-    ticketNo: string;
-    /** Snapshot các board từ vé gốc. */
-    boards: Array<{
-      /** Ký hiệu board ("A".."E"). */
-      boardNo: string;
-      /** Kiểu chơi (standard / bao5 / bao7-18). */
-      playType: string;
-      /** Danh sách số chính người chơi đã chọn ("01"-"55"). */
-      mainNumbers: string[];
-      /** Số line sau khi expand từ board (1 với standard, 50 với bao5, C(N,6) với bao7-18). */
-      expandedLines: number;
-      /**
-       * Số lần cược nhân bội (≥ 1).
-       * Backward compat: undefined cho entries cũ (betCount = 1 ngầm định).
-       */
-      betCount?: number;
-    }>;
-  };
+  entrySummary: EntrySummary;
   /** Kết quả quay (chỉ có khi kỳ đã công bố kết quả). */
   result?: {
     /** 6 số chính trúng thưởng (zero-padded "01"-"55"). */
@@ -276,22 +272,11 @@ export interface PlayerEntryInfo {
     /** Số tiền trả thưởng thực tế (VND). */
     payoutAmount: number;
     /** Chi tiết thắng theo từng tier giải. */
-    tiers: Array<{
-      /** Tier giải thưởng (jackpot1 / jackpot2 / tier1 / tier2 / tier3). */
-      tier: PrizeTier;
-      /** Số dòng trúng tier này. */
-      hitCount: number;
-      /** Giá trị giải mỗi dòng (VND). */
-      unitAmount: number;
-      /** Tổng giải cho tier = unitAmount × hitCount (VND). */
-      amount: number;
-    }>;
+    tiers: EntryPayoutTier[];
   };
 }
 
 export interface PlayerGetTicketEntriesOutput {
-  /** Thông tin tóm tắt của vé. */
-  ticket: PlayerTicketSummary;
   /** Danh sách entries theo từng kỳ quay. */
   entries: PlayerEntryInfo[];
 }
@@ -318,6 +303,12 @@ export interface PlayerLineInfo {
   lineIndex: number;
   /** 6 số chính của dòng cược (zero-padded "01"-"55"). */
   main: string[];
+  /**
+   * Số lần tham gia dự thưởng của dòng này (≥ 1).
+   * winAmount = unitPrize × betCount. UI hiển thị "×N" khi betCount > 1.
+   * Jackpot chia theo tỷ lệ betCount khi nhiều người trúng.
+   */
+  betCount: number;
   /** Kết quả so khớp của dòng với kết quả quay. */
   matchResult: {
     /** Số lượng số chính trùng khớp (0-6). */
@@ -328,13 +319,13 @@ export interface PlayerLineInfo {
      * Tier giải thưởng cao nhất (null nếu không trúng).
      * - jackpot1: trùng 6/6 số chính
      * - jackpot2: trùng 5/6 + bonus
-     * - tier3: trùng 5/6 (không bonus)
-     * - tier4: trùng 4/6
-     * - tier5: trùng 3/6
+     * - tier1: trùng 5/6 (không bonus)
+     * - tier2: trùng 4/6
+     * - tier3: trùng 3/6
      */
     tier: string | null;
     /** Giá trị giải thưởng cho dòng này (VND). 0 nếu không trúng hoặc là jackpot (trả riêng). */
-    prizeAmount: number;
+    winAmount: number;
   };
 }
 
@@ -375,26 +366,6 @@ export interface PlayerListDrawResultsInput {
  *   - tier2:    trùng 4/6 (cố định 500.000đ)
  *   - tier3:    trùng 3/6 (cố định 50.000đ)
  */
-export interface PlayerDrawTierPrize {
-  /**
-   * Hạng giải — giá trị từ PrizeTier enum.
-   * "jackpot1" | "jackpot2" | "tier1" | "tier2" | "tier3"
-   */
-  tier: string;
-  /**
-   * Số lượt trúng hạng này (tổng hit count từ tất cả entries).
-   * Không phải số người chơi — 1 người chơi bao có thể trúng nhiều lần.
-   */
-  winnerCount: number;
-  /**
-   * Tổng tiền thưởng hạng này (VND).
-   * jackpot1/jackpot2: = pool đầu kỳ + contribution (sau FinalizeSettle).
-   * tier1/tier2/tier3: tổng tiền cố định aggregate từ entries.
-   * 0 nếu winnerCount = 0.
-   */
-  prizeAmount: number;
-}
-
 /**
  * Chi tiết kết quả 1 kỳ quay Power 6/55 — dùng cho trang xem kết quả.
  *
@@ -443,7 +414,7 @@ export interface PlayerDrawResultInfo {
    * Bảng giải thưởng chi tiết — 5 hạng, luôn có mặt đủ (kể cả winnerCount = 0).
    * Thứ tự: jackpot1, jackpot2, tier1, tier2, tier3.
    */
-  prizes: PlayerDrawTierPrize[];
+  prizes: DrawSettleSummaryTier[];
   /** Tham chiếu Vietlott (nếu có). */
   vietlottRef?: {
     /** Mã kỳ Vietlott chính thức. */

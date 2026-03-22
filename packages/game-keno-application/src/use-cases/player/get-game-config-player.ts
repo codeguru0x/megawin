@@ -10,7 +10,7 @@
  * Không expose thông tin tài chính nội bộ (commissionRate, companyRate...).
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import type { PlayerGetGameConfigOutput, PlayerBasicPrizes } from "./dto/player-game-config.dto";
@@ -33,9 +33,15 @@ export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
       this.getTenantConfig.run({ tenantId: input.tenantId }),
     ]);
 
+    if (!globalConfig || !tenantConfig) {
+      throw AppException.notFound("Không tìm thấy cấu hình game.");
+    }
+
     return {
       game: {
         unitPrice: globalConfig.play.unitPrice,
+        minBetCount: globalConfig.play.minBetCount,
+        maxBetCount: globalConfig.play.maxBetCount,
         maxBasicBoardsPerTicket: globalConfig.play.maxBasicBoardsPerTicket,
         maxDrawCount: globalConfig.play.maxDrawCount,
         drawIntervalMinutes: globalConfig.play.drawIntervalMinutes,

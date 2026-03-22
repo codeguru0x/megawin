@@ -214,6 +214,7 @@ POST http://localhost:4010/games/max3dpro/bets
 - Mỗi board gồm: `boardNo`, `playMode`, `playType`, và fields tùy playMode
 - `playMode`: `"multiNumber"` hoặc `"multiDigit"`
 - `playType`: `"straight"` hoặc `"quickPick"`
+- `betCount`: **optional** (integer ≥ 1, mặc định `1`) — số lần cược nhân bội; tổng tiền = `unitPrice × betCount`
 
 ### Quy tắc theo playMode
 
@@ -229,7 +230,7 @@ POST http://localhost:4010/games/max3dpro/bets
 
 ---
 
-### 6a. MultiNumber Straight (3 bộ ba số -- tối thiểu)
+### 6a. MultiNumber Straight (3 bộ ba số -- tối thiểu, betCount mặc định)
 
 ```json
 {
@@ -245,7 +246,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6b. MultiNumber Straight (5 bộ ba số)
+### 6b. MultiNumber Straight (3 bộ ba, betCount = 5)
 
 ```json
 {
@@ -255,13 +256,31 @@ POST http://localhost:4010/games/max3dpro/bets
       "boardNo": "A",
       "playMode": "multiNumber",
       "playType": "straight",
-      "triplets": ["000", "111", "222", "333", "444"]
+      "triplets": ["123", "456", "789"],
+      "betCount": 5
     }
   ]
 }
 ```
 
-### 6c. MultiNumber Straight (20 bộ ba số -- tối đa)
+### 6c. MultiNumber Straight (5 bộ ba số, betCount = 1)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playMode": "multiNumber",
+      "playType": "straight",
+      "triplets": ["000", "111", "222", "333", "444"],
+      "betCount": 1
+    }
+  ]
+}
+```
+
+### 6d. MultiNumber Straight (20 bộ ba số -- tối đa, betCount = 3)
 
 ```json
 {
@@ -292,13 +311,14 @@ POST http://localhost:4010/games/max3dpro/bets
         "850",
         "900",
         "950"
-      ]
+      ],
+      "betCount": 3
     }
   ]
 }
 ```
 
-### 6d. MultiNumber QuickPick
+### 6e. MultiNumber QuickPick (betCount = 1)
 
 ```json
 {
@@ -307,13 +327,30 @@ POST http://localhost:4010/games/max3dpro/bets
     {
       "boardNo": "A",
       "playMode": "multiNumber",
-      "playType": "quickPick"
+      "playType": "quickPick",
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 6e. MultiDigit Straight (3 front + 3 back)
+### 6f. MultiNumber QuickPick (betCount = 10)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playMode": "multiNumber",
+      "playType": "quickPick",
+      "betCount": 10
+    }
+  ]
+}
+```
+
+### 6g. MultiDigit Straight (3 front + 3 back, betCount = 1)
 
 ```json
 {
@@ -324,13 +361,14 @@ POST http://localhost:4010/games/max3dpro/bets
       "playMode": "multiDigit",
       "playType": "straight",
       "frontDigits": [1, 2, 3],
-      "backDigits": [4, 5, 6]
+      "backDigits": [4, 5, 6],
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 6f. MultiDigit QuickPick
+### 6h. MultiDigit Straight (betCount = 5)
 
 ```json
 {
@@ -339,13 +377,32 @@ POST http://localhost:4010/games/max3dpro/bets
     {
       "boardNo": "A",
       "playMode": "multiDigit",
-      "playType": "quickPick"
+      "playType": "straight",
+      "frontDigits": [0, 3, 7],
+      "backDigits": [1, 5, 9],
+      "betCount": 5
     }
   ]
 }
 ```
 
-### 6g. Multi-board (3 boards, các playMode khác nhau)
+### 6i. MultiDigit QuickPick (betCount = 1)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playMode": "multiDigit",
+      "playType": "quickPick",
+      "betCount": 1
+    }
+  ]
+}
+```
+
+### 6j. Multi-board (3 boards, các playMode khác nhau, betCount đa dạng)
 
 ```json
 {
@@ -355,25 +412,28 @@ POST http://localhost:4010/games/max3dpro/bets
       "boardNo": "A",
       "playMode": "multiNumber",
       "playType": "straight",
-      "triplets": ["123", "456", "789"]
+      "triplets": ["123", "456", "789"],
+      "betCount": 2
     },
     {
       "boardNo": "B",
       "playMode": "multiDigit",
       "playType": "straight",
       "frontDigits": [0, 5, 9],
-      "backDigits": [1, 3, 7]
+      "backDigits": [1, 3, 7],
+      "betCount": 1
     },
     {
       "boardNo": "C",
       "playMode": "multiNumber",
-      "playType": "quickPick"
+      "playType": "quickPick",
+      "betCount": 5
     }
   ]
 }
 ```
 
-### 6h. Multi-draw + multi-board (4 boards, 3 draws)
+### 6k. Multi-draw + multi-board (4 boards, 3 draws, betCount đa dạng)
 
 ```json
 {
@@ -383,25 +443,29 @@ POST http://localhost:4010/games/max3dpro/bets
       "boardNo": "A",
       "playMode": "multiNumber",
       "playType": "straight",
-      "triplets": ["100", "200", "300"]
+      "triplets": ["100", "200", "300"],
+      "betCount": 1
     },
     {
       "boardNo": "B",
       "playMode": "multiDigit",
       "playType": "straight",
       "frontDigits": [2, 4, 6],
-      "backDigits": [1, 3, 5]
+      "backDigits": [1, 3, 5],
+      "betCount": 3
     },
     {
       "boardNo": "C",
       "playMode": "multiNumber",
       "playType": "straight",
-      "triplets": ["111", "222", "333", "444"]
+      "triplets": ["111", "222", "333", "444"],
+      "betCount": 1
     },
     {
       "boardNo": "D",
       "playMode": "multiDigit",
-      "playType": "quickPick"
+      "playType": "quickPick",
+      "betCount": 10
     }
   ]
 }
@@ -411,13 +475,13 @@ POST http://localhost:4010/games/max3dpro/bets
 
 ### Invalid cases (expect 400)
 
-### 6i. Body rỗng
+### 6l. Body rỗng
 
 ```json
 {}
 ```
 
-### 6j. drawIds rỗng
+### 6m. drawIds rỗng
 
 ```json
 {
@@ -433,7 +497,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6k. boards rỗng
+### 6n. boards rỗng
 
 ```json
 {
@@ -442,7 +506,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6l. drawId trùng lặp
+### 6o. drawId trùng lặp
 
 ```json
 {
@@ -458,7 +522,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6m. drawId sai format
+### 6p. drawId sai format
 
 ```json
 {
@@ -474,7 +538,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6n. MultiNumber với 2 triplets (dưới tối thiểu 3)
+### 6q. MultiNumber với 2 triplets (dưới tối thiểu 3)
 
 ```json
 {
@@ -490,7 +554,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6o. MultiNumber với 21 triplets (vượt tối đa 20)
+### 6r. MultiNumber với 21 triplets (vượt tối đa 20)
 
 ```json
 {
@@ -528,7 +592,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6p. Triplet sai format (2 chữ số)
+### 6s. Triplet sai format (2 chữ số)
 
 ```json
 {
@@ -544,7 +608,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6q. MultiDigit frontDigits không đủ 3
+### 6t. MultiDigit frontDigits không đủ 3
 
 ```json
 {
@@ -561,7 +625,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6r. MultiDigit digit ngoài phạm vi (10 > 9)
+### 6u. MultiDigit digit ngoài phạm vi (10 > 9)
 
 ```json
 {
@@ -578,7 +642,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6s. MultiDigit thiếu backDigits
+### 6v. MultiDigit thiếu backDigits
 
 ```json
 {
@@ -594,7 +658,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6t. playMode không hợp lệ
+### 6w. playMode không hợp lệ
 
 ```json
 {
@@ -610,7 +674,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6u. playType không hợp lệ
+### 6x. playType không hợp lệ
 
 ```json
 {
@@ -626,7 +690,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6v. boardNo trùng lặp
+### 6y. boardNo trùng lặp
 
 ```json
 {
@@ -647,7 +711,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6w. Quá 6 drawIds
+### 6z. Quá 6 drawIds
 
 ```json
 {
@@ -671,7 +735,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6x. Quá 4 boards (5 boards)
+### 6aa. Quá 4 boards (5 boards)
 
 ```json
 {
@@ -711,7 +775,7 @@ POST http://localhost:4010/games/max3dpro/bets
 }
 ```
 
-### 6y. MultiDigit digit là string thay vì number
+### 6ab. MultiDigit digit là string thay vì number
 
 ```json
 {
@@ -723,6 +787,57 @@ POST http://localhost:4010/games/max3dpro/bets
       "playType": "straight",
       "frontDigits": ["1", "2", "3"],
       "backDigits": ["4", "5", "6"]
+    }
+  ]
+}
+```
+
+### 6ac. betCount = 0 (dưới phạm vi)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playMode": "multiNumber",
+      "playType": "straight",
+      "triplets": ["123", "456", "789"],
+      "betCount": 0
+    }
+  ]
+}
+```
+
+### 6ad. betCount âm
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playMode": "multiNumber",
+      "playType": "straight",
+      "triplets": ["123", "456", "789"],
+      "betCount": -1
+    }
+  ]
+}
+```
+
+### 6ae. betCount là float
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playMode": "multiNumber",
+      "playType": "straight",
+      "triplets": ["123", "456", "789"],
+      "betCount": 1.5
     }
   ]
 }

@@ -182,14 +182,15 @@ POST http://localhost:4010/games/bingo18/bets
 - `sideBets`: mảng side bets
 - Phải có ít nhất 1 board hoặc 1 side bet
 - Bingo 18 quay 3 viên xúc xắc (1-6), mỗi 6 phút
+- `betCount`: **bắt buộc** (integer ≥ 1) — số lần cược nhân bội; tổng tiền = `unitPrice × betCount`
 
 ### Cách chơi cơ bản (boards)
 
-| playType      | Mô tả                                       | Fields cần thiết                       |
-| ------------- | ------------------------------------------- | -------------------------------------- |
-| `singleNum`   | Một số (1-6), thắng theo số lần xuất hiện   | `number` (1-6)                         |
-| `doubleMatch` | Hai số trùng (1-6), 2 trong 3 xúc xắc giống | `number` (1-6)                         |
-| `tripleMatch` | Ba số trùng                                 | `tripleKind` + `number` (nếu specific) |
+| playType      | Mô tả                                       | Fields cần thiết                                    |
+| ------------- | ------------------------------------------- | --------------------------------------------------- |
+| `singleNum`   | Một số (1-6), thắng theo số lần xuất hiện   | `number` (1-6), `betCount`                          |
+| `doubleMatch` | Hai số trùng (1-6), 2 trong 3 xúc xắc giống | `number` (1-6), `betCount`                          |
+| `tripleMatch` | Ba số trùng                                 | `tripleKind` + `number` (nếu specific) + `betCount` |
 
 ### TripleMatch tripleKind
 
@@ -200,16 +201,16 @@ POST http://localhost:4010/games/bingo18/bets
 
 ### Cách chơi bổ sung (sideBets)
 
-| playType       | Mô tả               | Fields cần thiết                       |
-| -------------- | ------------------- | -------------------------------------- |
-| `sumTotal`     | Đoán tổng 3 xúc xắc | `sum` (3-18)                           |
-| `bigSmallDraw` | Lớn/Hòa/Nhỏ         | `bet` (`"big"` / `"draw"` / `"small"`) |
+| playType       | Mô tả               | Fields cần thiết                                   |
+| -------------- | ------------------- | -------------------------------------------------- |
+| `sumTotal`     | Đoán tổng 3 xúc xắc | `sum` (3-18), `betCount`                           |
+| `bigSmallDraw` | Lớn/Hòa/Nhỏ         | `bet` (`"big"` / `"draw"` / `"small"`), `betCount` |
 
 > **Big:** tổng 12-18, **Draw:** tổng 10-11, **Small:** tổng 3-9
 
 ---
 
-### 5a. SingleNum (chọn số 3)
+### 5a. SingleNum (betCount = 1)
 
 ```json
 {
@@ -218,13 +219,30 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "singleNum",
-      "number": 3
+      "number": 3,
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 5b. DoubleMatch (chọn số 5)
+### 5b. SingleNum (betCount = 5 -- nhân 5 lần)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "singleNum",
+      "number": 3,
+      "betCount": 5
+    }
+  ]
+}
+```
+
+### 5c. DoubleMatch (betCount = 1)
 
 ```json
 {
@@ -233,13 +251,14 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "doubleMatch",
-      "number": 5
+      "number": 5,
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 5c. TripleMatch Specific (chọn số 6)
+### 5d. TripleMatch Specific (betCount = 1)
 
 ```json
 {
@@ -249,13 +268,14 @@ POST http://localhost:4010/games/bingo18/bets
       "boardNo": "A",
       "playType": "tripleMatch",
       "tripleKind": "specific",
-      "number": 6
+      "number": 6,
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 5d. TripleMatch Any (bất kỳ bộ ba)
+### 5e. TripleMatch Any (betCount = 3)
 
 ```json
 {
@@ -264,49 +284,59 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "tripleMatch",
-      "tripleKind": "any"
+      "tripleKind": "any",
+      "betCount": 3
     }
   ]
 }
 ```
 
-### 5e. Side bet -- SumTotal (tổng = 10)
+### 5f. Side bet -- SumTotal (tổng = 10, betCount = 1)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "sumTotal", "sum": 10 }]
+  "sideBets": [{ "playType": "sumTotal", "sum": 10, "betCount": 1 }]
 }
 ```
 
-### 5f. Side bet -- BigSmallDraw (big)
+### 5g. Side bet -- SumTotal (betCount = 10)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "bigSmallDraw", "bet": "big" }]
+  "sideBets": [{ "playType": "sumTotal", "sum": 10, "betCount": 10 }]
 }
 ```
 
-### 5g. Side bet -- BigSmallDraw (small)
+### 5h. Side bet -- BigSmallDraw (big, betCount = 1)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "bigSmallDraw", "bet": "small" }]
+  "sideBets": [{ "playType": "bigSmallDraw", "bet": "big", "betCount": 1 }]
 }
 ```
 
-### 5h. Side bet -- BigSmallDraw (draw)
+### 5i. Side bet -- BigSmallDraw (small, betCount = 2)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "bigSmallDraw", "bet": "draw" }]
+  "sideBets": [{ "playType": "bigSmallDraw", "bet": "small", "betCount": 2 }]
 }
 ```
 
-### 5i. Combo: 3 boards + 2 side bets
+### 5j. Side bet -- BigSmallDraw (draw, betCount = 1)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "sideBets": [{ "playType": "bigSmallDraw", "bet": "draw", "betCount": 1 }]
+}
+```
+
+### 5k. Combo: 3 boards + 2 side bets (mỗi bet có betCount khác nhau)
 
 ```json
 {
@@ -315,27 +345,30 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "singleNum",
-      "number": 1
+      "number": 1,
+      "betCount": 1
     },
     {
       "boardNo": "B",
       "playType": "doubleMatch",
-      "number": 4
+      "number": 4,
+      "betCount": 2
     },
     {
       "boardNo": "C",
       "playType": "tripleMatch",
-      "tripleKind": "any"
+      "tripleKind": "any",
+      "betCount": 1
     }
   ],
   "sideBets": [
-    { "playType": "sumTotal", "sum": 12 },
-    { "playType": "bigSmallDraw", "bet": "big" }
+    { "playType": "sumTotal", "sum": 12, "betCount": 3 },
+    { "playType": "bigSmallDraw", "bet": "big", "betCount": 1 }
   ]
 }
 ```
 
-### 5j. Multi-draw + combo (6 boards + 2 side bets, 3 draws)
+### 5l. Multi-draw + combo đầy đủ (6 boards + 2 side bets, 3 draws, betCount đa dạng)
 
 ```json
 {
@@ -344,50 +377,56 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "singleNum",
-      "number": 1
+      "number": 1,
+      "betCount": 1
     },
     {
       "boardNo": "B",
       "playType": "singleNum",
-      "number": 6
+      "number": 6,
+      "betCount": 5
     },
     {
       "boardNo": "C",
       "playType": "doubleMatch",
-      "number": 3
+      "number": 3,
+      "betCount": 1
     },
     {
       "boardNo": "D",
       "playType": "doubleMatch",
-      "number": 5
+      "number": 5,
+      "betCount": 2
     },
     {
       "boardNo": "E",
       "playType": "tripleMatch",
       "tripleKind": "specific",
-      "number": 2
+      "number": 2,
+      "betCount": 1
     },
     {
       "boardNo": "F",
       "playType": "tripleMatch",
-      "tripleKind": "any"
+      "tripleKind": "any",
+      "betCount": 10
     }
   ],
   "sideBets": [
-    { "playType": "sumTotal", "sum": 7 },
-    { "playType": "bigSmallDraw", "bet": "small" }
+    { "playType": "sumTotal", "sum": 7, "betCount": 3 },
+    { "playType": "bigSmallDraw", "bet": "small", "betCount": 1 }
   ]
 }
 ```
 
-### 5k. Chỉ side bets (không board)
+### 5m. Chỉ side bets (không board, betCount khác nhau)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
   "sideBets": [
-    { "playType": "sumTotal", "sum": 18 },
-    { "playType": "bigSmallDraw", "bet": "draw" }
+    { "playType": "sumTotal", "sum": 18, "betCount": 5 },
+    { "playType": "bigSmallDraw", "bet": "draw", "betCount": 1 }
   ]
 }
 ```
@@ -396,13 +435,13 @@ POST http://localhost:4010/games/bingo18/bets
 
 ### Invalid cases (expect 400)
 
-### 5l. Body rỗng
+### 5n. Body rỗng
 
 ```json
 {}
 ```
 
-### 5m. drawIds rỗng
+### 5o. drawIds rỗng
 
 ```json
 {
@@ -411,13 +450,14 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "singleNum",
-      "number": 3
+      "number": 3,
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 5n. Không có board lẫn sideBet
+### 5p. Không có board lẫn sideBet
 
 ```json
 {
@@ -427,7 +467,7 @@ POST http://localhost:4010/games/bingo18/bets
 }
 ```
 
-### 5o. drawId trùng lặp
+### 5q. drawId trùng lặp
 
 ```json
 {
@@ -436,13 +476,14 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "singleNum",
-      "number": 3
+      "number": 3,
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 5p. drawId sai format
+### 5r. drawId sai format
 
 ```json
 {
@@ -451,27 +492,14 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "singleNum",
-      "number": 3
+      "number": 3,
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 5q. SingleNum thiếu number
-
-```json
-{
-  "drawIds": ["2026-02-28.001"],
-  "boards": [
-    {
-      "boardNo": "A",
-      "playType": "singleNum"
-    }
-  ]
-}
-```
-
-### 5r. Number ngoài phạm vi (7 > 6)
+### 5s. SingleNum thiếu number
 
 ```json
 {
@@ -480,13 +508,13 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "singleNum",
-      "number": 7
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 5s. Number = 0 (dưới phạm vi)
+### 5t. Number ngoài phạm vi (7 > 6)
 
 ```json
 {
@@ -495,13 +523,14 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "singleNum",
-      "number": 0
+      "number": 7,
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 5t. TripleMatch thiếu tripleKind
+### 5u. Number = 0 (dưới phạm vi)
 
 ```json
 {
@@ -509,28 +538,15 @@ POST http://localhost:4010/games/bingo18/bets
   "boards": [
     {
       "boardNo": "A",
-      "playType": "tripleMatch"
+      "playType": "singleNum",
+      "number": 0,
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 5u. TripleMatch specific thiếu number
-
-```json
-{
-  "drawIds": ["2026-02-28.001"],
-  "boards": [
-    {
-      "boardNo": "A",
-      "playType": "tripleMatch",
-      "tripleKind": "specific"
-    }
-  ]
-}
-```
-
-### 5v. TripleKind không hợp lệ
+### 5v. TripleMatch thiếu tripleKind
 
 ```json
 {
@@ -539,67 +555,99 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "tripleMatch",
-      "tripleKind": "invalid"
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 5w. SumTotal thiếu sum
+### 5w. TripleMatch specific thiếu number
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "sumTotal" }]
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "tripleMatch",
+      "tripleKind": "specific",
+      "betCount": 1
+    }
+  ]
 }
 ```
 
-### 5x. SumTotal sum ngoài phạm vi (19 > 18)
+### 5x. TripleKind không hợp lệ
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "sumTotal", "sum": 19 }]
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "tripleMatch",
+      "tripleKind": "invalid",
+      "betCount": 1
+    }
+  ]
 }
 ```
 
-### 5y. SumTotal sum dưới phạm vi (2 < 3)
+### 5y. SumTotal thiếu sum
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "sumTotal", "sum": 2 }]
+  "sideBets": [{ "playType": "sumTotal", "betCount": 1 }]
 }
 ```
 
-### 5z. BigSmallDraw thiếu bet
+### 5z. SumTotal sum ngoài phạm vi (19 > 18)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "bigSmallDraw" }]
+  "sideBets": [{ "playType": "sumTotal", "sum": 19, "betCount": 1 }]
 }
 ```
 
-### 5aa. BigSmallDraw bet không hợp lệ
+### 5aa. SumTotal sum dưới phạm vi (2 < 3)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "bigSmallDraw", "bet": "invalidBet" }]
+  "sideBets": [{ "playType": "sumTotal", "sum": 2, "betCount": 1 }]
 }
 ```
 
-### 5ab. Side bet playType không hợp lệ
+### 5ab. BigSmallDraw thiếu bet
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "invalidType", "sum": 10 }]
+  "sideBets": [{ "playType": "bigSmallDraw", "betCount": 1 }]
 }
 ```
 
-### 5ac. playType board không hợp lệ
+### 5ac. BigSmallDraw bet không hợp lệ
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "sideBets": [{ "playType": "bigSmallDraw", "bet": "invalidBet", "betCount": 1 }]
+}
+```
+
+### 5ad. Side bet playType không hợp lệ
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "sideBets": [{ "playType": "invalidType", "sum": 10, "betCount": 1 }]
+}
+```
+
+### 5ae. playType board không hợp lệ
 
 ```json
 {
@@ -608,13 +656,14 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "invalidType",
-      "number": 3
+      "number": 3,
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 5ad. boardNo trùng lặp
+### 5af. boardNo trùng lặp
 
 ```json
 {
@@ -623,18 +672,83 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "singleNum",
-      "number": 1
+      "number": 1,
+      "betCount": 1
     },
     {
       "boardNo": "A",
       "playType": "singleNum",
-      "number": 2
+      "number": 2,
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 5ae. Quá 20 drawIds
+### 5ag. betCount = 0 (dưới phạm vi)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "singleNum",
+      "number": 3,
+      "betCount": 0
+    }
+  ]
+}
+```
+
+### 5ah. betCount âm
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "singleNum",
+      "number": 3,
+      "betCount": -1
+    }
+  ]
+}
+```
+
+### 5ai. betCount là float (không phải integer)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "singleNum",
+      "number": 3,
+      "betCount": 1.5
+    }
+  ]
+}
+```
+
+### 5aj. Thiếu betCount (bắt buộc)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "singleNum",
+      "number": 3
+    }
+  ]
+}
+```
+
+### 5ak. Quá 20 drawIds
 
 ```json
 {
@@ -665,30 +779,31 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "singleNum",
-      "number": 3
+      "number": 3,
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 5af. Quá 6 boards (7 boards)
+### 5al. Quá 6 boards (7 boards)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
   "boards": [
-    { "boardNo": "A", "playType": "singleNum", "number": 1 },
-    { "boardNo": "B", "playType": "singleNum", "number": 2 },
-    { "boardNo": "C", "playType": "singleNum", "number": 3 },
-    { "boardNo": "D", "playType": "singleNum", "number": 4 },
-    { "boardNo": "E", "playType": "singleNum", "number": 5 },
-    { "boardNo": "F", "playType": "singleNum", "number": 6 },
-    { "boardNo": "G", "playType": "singleNum", "number": 1 }
+    { "boardNo": "A", "playType": "singleNum", "number": 1, "betCount": 1 },
+    { "boardNo": "B", "playType": "singleNum", "number": 2, "betCount": 1 },
+    { "boardNo": "C", "playType": "singleNum", "number": 3, "betCount": 1 },
+    { "boardNo": "D", "playType": "singleNum", "number": 4, "betCount": 1 },
+    { "boardNo": "E", "playType": "singleNum", "number": 5, "betCount": 1 },
+    { "boardNo": "F", "playType": "singleNum", "number": 6, "betCount": 1 },
+    { "boardNo": "G", "playType": "singleNum", "number": 1, "betCount": 1 }
   ]
 }
 ```
 
-### 5ag. Number là string thay vì integer
+### 5am. Number là string thay vì integer
 
 ```json
 {
@@ -697,7 +812,8 @@ POST http://localhost:4010/games/bingo18/bets
     {
       "boardNo": "A",
       "playType": "singleNum",
-      "number": "3"
+      "number": "3",
+      "betCount": 1
     }
   ]
 }

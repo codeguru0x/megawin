@@ -5,6 +5,15 @@
  * Chỉ chứa thông tin player cần — loại bỏ dữ liệu vận hành/công ty.
  */
 
+import type {
+  DrawTierPrizeSummary,
+  EntrySummary,
+  EntryPayoutTier,
+} from "@megawin/game-lotto535/entities";
+import { EntryOutcome } from "@megawin/game-core/entities";
+
+export type { DrawTierPrizeSummary as PlayerDrawTierPrize };
+
 // ─── Get Current Draw (Player) ───
 
 export interface PlayerGetCurrentDrawOutput {
@@ -214,33 +223,20 @@ export interface PlayerEntryInfo {
   drawId: string;
   /** Trạng thái entry (scheduled, settled, voided, ...). */
   status: string;
-  /** Số tiền đặt cược cho entry này (VND) = linesPerDraw × unitPrice. */
+  /** Số tiền đặt cược cho entry này (VND) = betUnitCount × unitPrice. */
   amount: number;
+  /** Mệnh giá 1 lần tham gia dự thưởng (VND). Thường là 10.000đ. */
+  unitPrice: number;
   /** Tổng số lines trong entry = Σ(board.expandedLines). */
   lineCount: number;
+  /**
+   * Tổng đơn vị cược = Σ(board.expandedLines × board.betCount).
+   * Công thức: amount = betUnitCount × unitPrice.
+   * Backward compat: data cũ không có field này → fallback = lineCount.
+   */
+  betUnitCount: number;
   /** Tóm tắt nội dung vé gốc. */
-  entrySummary: {
-    /** Số vé hiển thị. */
-    ticketNo: string;
-    /** Danh sách boards và bộ số đã chọn. */
-    boards: Array<{
-      /** Ký hiệu bảng (A-E). */
-      boardNo: string;
-      /** Kiểu chơi. */
-      playType: string;
-      /** Danh sách số chính ("01"-"35"). */
-      mainNumbers: string[];
-      /** Danh sách số đặc biệt ("01"-"12"). */
-      specialNumbers: string[];
-      /** Số lines expand từ selection. */
-      expandedLines: number;
-      /**
-       * Số lần cược nhân bội cho board.
-       * UI hiển thị "×N" khi betCount > 1.
-       */
-      betCount?: number;
-    }>;
-  };
+  entrySummary: EntrySummary;
   /** Kết quả quay — chỉ có khi kỳ đã công bố. */
   result?: {
     /** 5 số chính trúng thưởng (sorted, zero-padded "01"-"35"). */
@@ -251,7 +247,7 @@ export interface PlayerEntryInfo {
     publishedAt: string;
   };
   /** Kết quả win/loss tổng thể của entry ("win" | "loss"). */
-  outcome?: string;
+  outcome?: EntryOutcome;
   /**
    * Chi tiết trả thưởng — chỉ có khi entry đã settled và có giải.
    *
@@ -264,22 +260,11 @@ export interface PlayerEntryInfo {
     /** Tổng tiền trả thưởng (VND) = winAmount + splitBonus (nếu có). */
     payoutAmount: number;
     /** Chi tiết giải thưởng theo từng tier. */
-    tiers: Array<{
-      /** Hạng giải (jackpot, tier1, tier2, ..., consolation). */
-      tier: string;
-      /** Số lần trúng tier này trong entry. */
-      hitCount: number;
-      /** Giá trị 1 lần trúng (VND). Jackpot = 0 (trả riêng qua split). */
-      unitAmount: number;
-      /** Tổng tiền tier này (VND) = hitCount × unitAmount. */
-      amount: number;
-    }>;
+    tiers: EntryPayoutTier[];
   };
 }
 
 export interface PlayerGetTicketEntriesOutput {
-  /** Thông tin tóm tắt vé. */
-  ticket: PlayerTicketSummary;
   /** Danh sách entries theo từng kỳ quay. */
   entries: PlayerEntryInfo[];
 }
@@ -308,6 +293,11 @@ export interface PlayerLineInfo {
   main: string[];
   /** Số đặc biệt của line ("01"-"12"). */
   special: string;
+  /**
+   * Số lần tham gia dự thưởng của line này (≥ 1).
+   * winAmount = unitPrize × betCount. UI hiển thị "×N" khi betCount > 1.
+   */
+  betCount: number;
   /** Kết quả so khớp với kết quả quay. */
   matchResult: {
     /** Số lượng số chính trùng khớp (0-5). */
@@ -373,21 +363,12 @@ export interface PlayerDrawResultInfo {
     isSplitCycle?: boolean;
   };
   /** Chi tiết giải thưởng từng tier. */
-  prizes: PlayerDrawTierPrize[];
+  prizes: DrawTierPrizeSummary[];
   /** Tham chiếu Vietlott (nếu có). */
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;
   };
-}
-
-export interface PlayerDrawTierPrize {
-  /** Hạng giải (jackpot, tier1, ..., consolation). */
-  tier: string;
-  /** Số lượt trúng tier này. */
-  winnerCount: number;
-  /** Tổng tiền thưởng tier này (VND). */
-  prizeAmount: number;
 }
 
 /**

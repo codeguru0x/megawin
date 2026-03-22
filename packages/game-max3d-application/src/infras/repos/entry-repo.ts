@@ -1,5 +1,6 @@
 import {
   Max3dCollections,
+  PlayMode,
   PayoutStatus,
   type EntryPayout,
   type EntryVoidInfo,
@@ -52,12 +53,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   }
 
   // ─── Insert ───
-
-  /** Insert 1 entry mới, stamp version trước khi lưu. */
-  async insertEntry(doc: Record<string, unknown>): Promise<string> {
-    const version = await this.nextVersion();
-    return await this.insertOne({ ...doc, version } as any);
-  }
 
   /** Insert nhiều entries cùng 1 batch, dùng cùng version. Trả về insertedCount. */
   async insertEntries(docs: Record<string, unknown>[]): Promise<number> {
@@ -221,22 +216,27 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   }
 
   /**
-   * Aggregate payout summary của draw đã settle — per-tier hitCount và prizeAmount.
+   * Aggregate payout summary của draw đã settle — per-tier hitCount và prizeAmount, tách theo playMode.
    *
-   * 2 aggregate queries: (1) unwind tiers → group by tier, (2) group tổng settled.
-   * Cần 2 queries vì MongoDB không support unwind + group tổng trong cùng 1 pipeline hiệu quả.
+   * 1 pipeline $facet — scan collection 1 lần, 2 nhánh song song:
+   * - tierSummary: $unwind tiers → group by {tier, playMode} (hitCount + tiền mỗi tier).
+   * - totals: group tổng draw (entries + lines + payoutAmount).
+   *
+   * Group by (tier, playMode) thay vì chỉ tier vì BasicPrizeTier và PlusPrizeTier có 4 tier
+   * trùng tên (special, first, second, third) nhưng giá trị giải thưởng khác nhau hoàn toàn.
+   * Tách thành basicWinnerCounts/basicPrizeAmounts và plusWinnerCounts/plusPrizeAmounts riêng.
    */
   async aggregateSettledPayoutSummary(drawId: string): Promise<{
     totalSettled: number;
     totalLines: number;
     totalPayoutAmount: number;
     totalFixedPrizes: number;
-    tierWinnerCounts: Record<string, number>;
-    tierPrizeAmounts: Record<string, number>;
+    basicWinnerCounts: Record<string, number>;
+    basicPrizeAmounts: Record<string, number>;
+    plusWinnerCounts: Record<string, number>;
+    plusPrizeAmounts: Record<string, number>;
   }> {
     // 1 pipeline $facet — scan collection 1 lần, 2 nhánh chạy song song.
-    // Nhánh tierSummary: $unwind tiers → group by tier (hitCount + tiền mỗi tier).
-    // Nhánh totals: group toàn draw (entries + lines + payoutAmount).
     const [facetResult] = await this.aggregate([
       {
         $match: {
@@ -246,12 +246,15 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       },
       {
         $facet: {
-          // Nhánh 1: $unwind tiers → group by tier → đếm hitCount và tiền mỗi tier
+          // Nhánh 1: $unwind tiers → group by {tier, playMode} → đếm hitCount và tiền mỗi tier/mode
           tierSummary: [
             { $unwind: "$payout.tiers" },
             {
               $group: {
-                _id: "$payout.tiers.tier",
+                _id: {
+                  tier: "$payout.tiers.tier",
+                  playMode: "$payout.tiers.playMode",
+                },
                 totalHitCount: { $sum: "$payout.tiers.hitCount" },
                 totalAmount: { $sum: "$payout.tiers.amount" },
               },
@@ -278,13 +281,24 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     const tierRows = (facetResult as any)?.tierSummary ?? [];
 
     let totalFixedPrizes = 0;
-    const tierWinnerCounts: Record<string, number> = {};
-    const tierPrizeAmounts: Record<string, number> = {};
+    const basicWinnerCounts: Record<string, number> = {};
+    const basicPrizeAmounts: Record<string, number> = {};
+    const plusWinnerCounts: Record<string, number> = {};
+    const plusPrizeAmounts: Record<string, number> = {};
 
     for (const row of tierRows) {
-      tierWinnerCounts[row._id] = row.totalHitCount;
-      tierPrizeAmounts[row._id] = row.totalAmount;
+      const tier: string = row._id.tier;
+      const playMode: string = row._id.playMode;
       totalFixedPrizes += row.totalAmount;
+
+      if (playMode === PlayMode.Basic) {
+        basicWinnerCounts[tier] = row.totalHitCount;
+        basicPrizeAmounts[tier] = row.totalAmount;
+      } else {
+        // plus mode
+        plusWinnerCounts[tier] = row.totalHitCount;
+        plusPrizeAmounts[tier] = row.totalAmount;
+      }
     }
 
     return {
@@ -292,8 +306,10 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       totalLines: totals.totalLines ?? 0,
       totalPayoutAmount: totals.totalPayoutAmount ?? 0,
       totalFixedPrizes,
-      tierWinnerCounts,
-      tierPrizeAmounts,
+      basicWinnerCounts,
+      basicPrizeAmounts,
+      plusWinnerCounts,
+      plusPrizeAmounts,
     };
   }
 

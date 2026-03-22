@@ -1,6 +1,6 @@
 import { MongoMapper } from "@megawin/data/mongo";
 import type { TicketEntity } from "@megawin/game-bingo18/entities";
-import { Document } from "mongodb";
+import { Document, ObjectId } from "mongodb";
 
 export class TicketMapper extends MongoMapper<Document, TicketEntity> {
   constructor() {
@@ -9,6 +9,8 @@ export class TicketMapper extends MongoMapper<Document, TicketEntity> {
 
   protected mapProps(doc: Document): TicketEntity {
     const { _id, ...rest } = doc as any;
-    return { id: _id.toHexString(), ...rest } as TicketEntity;
+    // _id có thể là ObjectId hoặc string tuỳ cách document được insert
+    const id = _id instanceof ObjectId ? _id.toHexString() : String(_id);
+    return { id, ...rest } as TicketEntity;
   }
 }

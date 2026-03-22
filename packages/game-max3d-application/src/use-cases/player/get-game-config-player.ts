@@ -2,7 +2,7 @@
  * Use Case: Get Game Config for Player (Max 3D)
  */
 
-import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import type { PlayerGetGameConfigOutput } from "./dto/player-game-config.dto";
@@ -24,9 +24,15 @@ export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
       this.getTenantConfig.run({ tenantId: input.tenantId }),
     ]);
 
+    if (!globalConfig || !tenantConfig) {
+      throw AppException.notFound("Không tìm thấy cấu hình game.");
+    }
+
     return {
       game: {
         unitPrice: globalConfig.play.unitPrice,
+        minBetCount: globalConfig.play.minBetCount,
+        maxBetCount: globalConfig.play.maxBetCount,
         maxBoardsPerTicket: globalConfig.play.maxBoardsPerTicket,
         maxDrawCount: globalConfig.play.maxDrawCount,
         drawsPerDay: globalConfig.play.drawsPerDay,

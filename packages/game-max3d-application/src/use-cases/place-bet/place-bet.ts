@@ -29,7 +29,7 @@ import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN } from "@megawin/shared/utils/date";
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
-import { newObjectId } from "@megawin/data/mongo";
+import { ObjectId } from "mongodb";
 
 export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {
   private readonly drawRepo = new DrawRepository();
@@ -71,13 +71,13 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       // Validate betCount không vượt maxBetCount từ game config.
       const betCount = bi.betCount;
 
-      if (betCount > (play.maxBetCount ?? 10)) {
+      if (betCount > play.maxBetCount) {
         throw AppException.badRequest(
           `Board ${bi.boardNo}: betCount ${betCount} vượt quá giới hạn ${play.maxBetCount ?? 10}.`,
         );
       }
 
-      if (betCount < (play.minBetCount ?? 1)) {
+      if (betCount < play.minBetCount) {
         throw AppException.badRequest(
           `Board ${bi.boardNo}: betCount ${betCount} thấp hơn tối thiểu ${play.minBetCount ?? 1}.`,
         );
@@ -152,11 +152,12 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
     const ticketNo = buildTicketNo(GameProduct.Max3d, date, seq);
 
-    // Tạo ticketId mới
-    const ticketId = newObjectId();
+    // Tạo ticketId mới — _id phải là ObjectId instance để MongoDB lưu đúng kiểu và mapper có thể gọi toHexString().
+    const ticketObjectId = new ObjectId();
+    const ticketId = ticketObjectId.toHexString();
 
     const ticketDoc: TicketDoc = {
-      _id: ticketId,
+      _id: ticketObjectId,
       tenantId,
       accountId,
       username,

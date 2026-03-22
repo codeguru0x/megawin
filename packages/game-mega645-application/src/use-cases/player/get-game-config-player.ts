@@ -31,6 +31,8 @@ export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
     return {
       game: {
         unitPrice: globalConfig.play.unitPrice,
+        minBetCount: globalConfig.play.minBetCount,
+        maxBetCount: globalConfig.play.maxBetCount,
         maxBoardsPerTicket: globalConfig.play.maxBoardsPerTicket,
         maxDrawCount: globalConfig.play.maxDrawCount,
         drawsPerWeek: globalConfig.play.drawsPerWeek,

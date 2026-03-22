@@ -11,8 +11,8 @@ import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-lotto535/entities";;
-import type { PlayerDrawResultInfo, PlayerDrawTierPrize } from "./dto/player.dto";
+import type { DrawEntity } from "@megawin/game-lotto535/entities";
+import type { PlayerDrawResultInfo } from "./dto/player.dto";
 
 export interface GetDrawResultPlayerInput {
   drawId: string;
@@ -40,12 +40,6 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
   const jackpot = draw.jackpot ?? { openingAmount: 0, closingAmount: 0 };
   const summary = draw.settleSummary;
 
-  const prizes: PlayerDrawTierPrize[] = (summary?.tiers ?? []).map((t) => ({
-    tier: t.tier,
-    winnerCount: t.winnerCount,
-    prizeAmount: t.prizeAmount,
-  }));
-
   return {
     drawId: draw.drawId,
     drawDate: draw.drawDate,
@@ -61,7 +55,7 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
       closingAmount: jackpot.closingAmount,
       isSplitCycle: jackpot.isSplitCycle || undefined,
     },
-    prizes,
+    prizes: summary?.tiers ?? [],
     vietlottRef: draw.vietlottRef
       ? {
           drawPeriod: draw.vietlottRef.drawPeriod,

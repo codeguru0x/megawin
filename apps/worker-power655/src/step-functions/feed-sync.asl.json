@@ -1,0 +1,70 @@
+{
+  "Comment": "Power 6/55 Feed Sync – Copy entries → entryFeed cho tenant polling",
+  "QueryLanguage": "JSONata",
+  "StartAt": "SyncEntries",
+  "States": {
+    "SyncEntries": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-power655-dev-power655-feed-sync-entries",
+      "Arguments": {
+        "afterVersion": "{% $states.input.afterVersion %}",
+        "batchSize": "{% $states.input.batchSize %}"
+      },
+      "Output": "{% { 'batchSize': $states.input.batchSize, 'syncResult': $states.result } %}",
+      "Next": "CheckDone",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "CheckDone": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Condition": "{% $states.input.syncResult.done %}",
+          "Next": "SaveCursor"
+        }
+      ],
+      "Default": "UpdateAfterVersion"
+    },
+    "UpdateAfterVersion": {
+      "Type": "Pass",
+      "Output": "{% { 'afterVersion': $states.input.syncResult.lastVersion, 'batchSize': $states.input.batchSize } %}",
+      "Next": "SyncEntries"
+    },
+    "SaveCursor": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-power655-dev-power655-feed-save-cursor",
+      "Arguments": {
+        "lastVersion": "{% $states.input.syncResult.lastVersion %}"
+      },
+      "End": true,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    }
+  }
+}

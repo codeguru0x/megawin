@@ -21,8 +21,8 @@ import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-bingo18/entities";;
-import type { PlayerDrawResultInfo, PlayerBasicPrize, PlayerSideBetPrize } from "./dto/player.dto";
+import type { DrawEntity } from "@megawin/game-bingo18/entities";
+import type { PlayerDrawResultInfo } from "./dto/player.dto";
 
 export interface GetDrawResultPlayerInput {
   drawId: string;
@@ -53,25 +53,6 @@ export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<
 
 function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
   const result = draw.result!;
-  const summary = draw.settleSummary;
-
-  // settleSummary.basicPrizes + sideBetPrizes chỉ chứa entries có winnerCount > 0.
-  // Nếu kỳ không có ai trúng → trả mảng rỗng (không lỗi).
-  const basicPrizes: PlayerBasicPrize[] = (summary?.basicPrizes ?? []).map((bp) => ({
-    playType: bp.playType,
-    matchCount: bp.matchCount,
-    tripleKind: bp.tripleKind,
-    winnerCount: bp.winnerCount,
-    prizePerUnit: bp.prizePerUnit,
-  }));
-
-  const sideBetPrizes: PlayerSideBetPrize[] = (summary?.sideBetPrizes ?? []).map((sb) => ({
-    playType: sb.playType,
-    sum: sb.sum,
-    bet: sb.bet,
-    winnerCount: sb.winnerCount,
-    prizePerUnit: sb.prizePerUnit,
-  }));
 
   return {
     drawId: draw.drawId,
@@ -83,8 +64,10 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
       sum: result.sum,
       publishedAt: result.publishedAt.toISOString(),
     },
-    basicPrizes,
-    sideBetPrizes,
+    // settleSummary.basicPrizes + sideBetPrizes chỉ chứa entries có winnerCount > 0.
+    // Nếu kỳ không có ai trúng → trả mảng rỗng (không lỗi).
+    basicPrizes: draw.settleSummary?.basicPrizes ?? [],
+    sideBetPrizes: draw.settleSummary?.sideBetPrizes ?? [],
     vietlottRef: draw.vietlottRef
       ? {
           drawPeriod: draw.vietlottRef.drawPeriod,

@@ -46,6 +46,13 @@ export interface EntryBoardSnapshot {
 export interface EntryPayoutTier {
   /** Hạng giải: special/first/second/third (basic) hoặc special–sixth (plus). */
   tier: BasicPrizeTier | PlusPrizeTier;
+  /**
+   * Cách chơi sinh ra hạng giải này.
+   * Cần thiết vì BasicPrizeTier và PlusPrizeTier có 4 tier trùng tên nhau
+   * (special, first, second, third) nhưng giá trị giải thưởng khác nhau.
+   * Dùng khi aggregate settleSummary để tách bảng basic vs plus.
+   */
+  playMode: PlayMode;
   /** Số lines trúng hạng giải này. */
   hitCount: number;
   /** Giá trị 1 lần trúng (VND). Từ bảng giải thưởng config. */

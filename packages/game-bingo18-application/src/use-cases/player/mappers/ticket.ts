@@ -29,11 +29,13 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
       playType: b.playType,
       number: b.number,
       tripleKind: b.tripleKind,
+      betCount: b.betCount,
     })),
     sideBets: ticket.sideBets.map((s) => ({
       playType: s.playType,
       sum: s.sum,
       bet: s.bet,
+      betCount: s.betCount,
     })),
     progress: {
       totalDraws: ticket.progress.totalDraws,

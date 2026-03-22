@@ -5,6 +5,15 @@
  * Chỉ chứa thông tin player cần — loại bỏ dữ liệu vận hành/công ty.
  */
 
+import type {
+  DrawSettleSummaryTier,
+  EntrySummary,
+  EntryPayoutTier,
+} from "@megawin/game-max3d/entities";
+import { EntryOutcome } from "@megawin/game-core/entities";
+
+export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
+
 // ─── Get Current Draw (Player) ───
 
 export interface PlayerGetCurrentDrawOutput {
@@ -87,15 +96,21 @@ export interface PlayerTicketSummary {
    *
    * Công thức:
    * - linesPerDraw = Σ(board.lineCount)
-   * - amountPerDraw = linesPerDraw × unitPrice
+   * - betUnitsPerDraw = Σ(board.lineCount × board.betCount)
+   * - amountPerDraw = betUnitsPerDraw × unitPrice
    * - totalAmount = amountPerDraw × drawCount
    */
   pricing: {
     /** Đơn giá 1 line cho 1 kỳ (VND). */
     unitPrice: number;
-    /** Tổng lines mỗi kỳ = Σ(board.lineCount). */
+    /** Tổng lines mỗi kỳ = Σ(board.lineCount). Dùng cho settle/matching. */
     linesPerDraw: number;
-    /** Giá mỗi kỳ (VND) = linesPerDraw × unitPrice. */
+    /**
+     * Tổng đơn vị cược mỗi kỳ = Σ(board.lineCount × board.betCount). Dùng tính tiền.
+     * Backward compat: undefined cho vé cũ → fallback = linesPerDraw.
+     */
+    betUnitsPerDraw?: number;
+    /** Giá mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
     /** Tổng tiền toàn vé (VND) = amountPerDraw × drawCount. */
     totalAmount: number;
@@ -110,8 +125,13 @@ export interface PlayerTicketSummary {
     playType: string;
     /** Bộ ba số đã chọn. */
     triplets: string[];
-    /** Số lines phát sinh từ board này. */
+    /** Số lines phát sinh từ board này. straight=1, combo3=3, combo6=6. */
     lineCount: number;
+    /**
+     * Số lần cược nhân bội (≥ 1). Tiền cược board = lineCount × betCount × unitPrice.
+     * Backward compat: undefined cho vé cũ (betCount = 1 ngầm định).
+     */
+    betCount?: number;
   }>;
   /** Tiến trình settle qua các kỳ. settledDraws = số kỳ đã xử lý xong (settled + voided). */
   progress: {
@@ -167,6 +187,8 @@ export interface PlayerGetTicketEntriesInput {
   ticketId: string;
 }
 
+// ─── Get Ticket Entries (Player) ───
+
 export interface PlayerEntryInfo {
   /** ID entry. */
   id: string;
@@ -174,28 +196,19 @@ export interface PlayerEntryInfo {
   drawId: string;
   /** Trạng thái entry (pending / won / lost / …). */
   status: string;
-  /** Tiền cược của entry (VND). */
+  /** Tiền cược của entry (VND) = betUnitCount × unitPrice. */
   amount: number;
+  /** Mệnh giá 1 lần tham gia dự thưởng (VND). Thường là 10.000đ. */
+  unitPrice: number;
   /** Số lines = Σ(board.lineCount) trong entry. */
   lineCount: number;
+  /**
+   * Tổng đơn vị cược = Σ(board.lineCount × board.betCount).
+   * amount = betUnitCount × unitPrice.
+   */
+  betUnitCount: number;
   /** Tóm tắt entry (thông tin vé + boards). */
-  entrySummary: {
-    /** Mã vé hiển thị. */
-    ticketNo: string;
-    /** Danh sách boards trong entry. */
-    boards: Array<{
-      /** Số thứ tự board. */
-      boardNo: string;
-      /** Kiểu chơi. */
-      playMode: string;
-      /** Loại cược. */
-      playType: string;
-      /** Bộ ba số đã chọn. */
-      triplets: string[];
-      /** Số lines phát sinh từ board này. */
-      lineCount: number;
-    }>;
-  };
+  entrySummary: EntrySummary;
   /** Kết quả kỳ quay (chỉ có sau khi công bố). */
   result?: {
     /** Giải đặc biệt (2 bộ ba số). */
@@ -210,7 +223,7 @@ export interface PlayerEntryInfo {
     publishedAt: string;
   };
   /** Kết quả tổng thể của entry (won / lost / pending). */
-  outcome?: string;
+  outcome?: EntryOutcome;
   /** Chi tiết thanh toán (chỉ có khi đã settle). */
   payout?: {
     /** Tổng tiền thắng (VND). */
@@ -218,22 +231,11 @@ export interface PlayerEntryInfo {
     /** Số tiền thực nhận (VND). */
     payoutAmount: number;
     /** Chi tiết thắng theo từng giải. */
-    tiers: Array<{
-      /** Tên giải (special / first / second / third). */
-      tier: string;
-      /** Số lần trúng giải này. */
-      hitCount: number;
-      /** Tiền thưởng mỗi lần trúng (VND). */
-      unitAmount: number;
-      /** Tổng tiền thưởng giải này = hitCount × unitAmount. */
-      amount: number;
-    }>;
+    tiers: EntryPayoutTier[];
   };
 }
 
 export interface PlayerGetTicketEntriesOutput {
-  /** Thông tin tóm tắt của vé. */
-  ticket: PlayerTicketSummary;
   /** Danh sách entries của vé. */
   entries: PlayerEntryInfo[];
 }
@@ -265,6 +267,11 @@ export interface PlayerLineInfo {
   /** Bộ ba số của line. */
   triplets: string[];
   /**
+   * Số lần tham gia dự thưởng của line này (≥ 1).
+   * winAmount = unitPrize × betCount. UI hiển thị "×N" khi betCount > 1.
+   */
+  betCount: number;
+  /**
    * Kết quả so khớp.
    * tiers rỗng nếu không trúng giải nào.
    * Basic: 1 triplet có thể trúng nhiều hạng (gộp giải theo luật Vietlott).
@@ -293,16 +300,6 @@ export interface PlayerGetEntryLinesOutput {
 
 // ─── Draw Results (Player) ───
 
-/** Thông tin giải thưởng 1 hạng trong kỳ quay — dùng cho GetDrawResult API. */
-export interface PlayerDrawTierPrize {
-  /** Tên hạng giải: "special", "first", "second", "third", "fourth", "fifth", "sixth". */
-  tier: string;
-  /** Số lượt trúng hạng này trong kỳ quay (tổng hit count). */
-  winnerCount: number;
-  /** Tổng tiền thưởng hạng này (VND). */
-  prizeAmount: number;
-}
-
 /** Kết quả chi tiết 1 kỳ quay đã settle — dùng cho GetDrawResult API. */
 export interface PlayerDrawResultInfo {
   drawId: string;
@@ -322,8 +319,10 @@ export interface PlayerDrawResultInfo {
     /** Thời điểm công bố kết quả (ISO 8601). */
     publishedAt: string;
   };
-  /** Bảng giải thưởng theo từng hạng. */
-  prizes: PlayerDrawTierPrize[];
+  /** Bảng giải thưởng Max 3D Cơ Bản (4 hạng: special, first, second, third). */
+  basicPrizes: DrawSettleSummaryTier[];
+  /** Bảng giải thưởng Max 3D+ (7 hạng: special, first, second, third, fourth, fifth, sixth). */
+  plusPrizes: DrawSettleSummaryTier[];
   /** Tham chiếu kỳ quay Vietlott. */
   vietlottRef?: {
     drawPeriod: string;

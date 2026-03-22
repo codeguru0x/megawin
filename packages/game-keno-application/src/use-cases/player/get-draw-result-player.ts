@@ -11,8 +11,8 @@ import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-keno/entities";;
-import type { PlayerDrawResultInfo, PlayerBasicPrize, PlayerSideBetPrize } from "./dto/player.dto";
+import type { DrawEntity } from "@megawin/game-keno/entities";
+import type { PlayerDrawResultInfo } from "./dto/player.dto";
 
 export interface GetDrawResultPlayerInput {
   drawId: string;
@@ -37,21 +37,6 @@ export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<
 
 function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
   const result = draw.result!;
-  const summary = draw.settleSummary;
-
-  const basicPrizes: PlayerBasicPrize[] = (summary?.basicPrizes ?? []).map((bp) => ({
-    pickCount: bp.pickCount,
-    matchCount: bp.matchCount,
-    winnerCount: bp.winnerCount,
-    prizePerUnit: bp.prizePerUnit,
-  }));
-
-  const sideBetPrizes: PlayerSideBetPrize[] = (summary?.sideBetPrizes ?? []).map((sb) => ({
-    playType: sb.playType,
-    bet: sb.bet,
-    winnerCount: sb.winnerCount,
-    prizePerUnit: sb.prizePerUnit,
-  }));
 
   return {
     drawId: draw.drawId,
@@ -66,8 +51,8 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
       evenCount: result.evenCount,
       oddCount: result.oddCount,
     },
-    basicPrizes,
-    sideBetPrizes,
+    basicPrizes: draw.settleSummary?.basicPrizes ?? [],
+    sideBetPrizes: draw.settleSummary?.sideBetPrizes ?? [],
     vietlottRef: draw.vietlottRef
       ? {
           drawPeriod: draw.vietlottRef.drawPeriod,

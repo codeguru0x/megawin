@@ -1,7 +1,7 @@
 /**
  * Use Case: Get Ticket Entries for Player (Bingo 18)
  *
- * Lấy ticket + tất cả entries của ticket đó.
+ * Lấy tất cả entries của ticket — chỉ trả entries, không kèm ticket.
  * Chỉ cho phép player xem ticket của chính mình.
  */
 
@@ -9,7 +9,6 @@ import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { EntryBoardSnapshot, TicketEntryEntity } from "@megawin/game-bingo18/entities";
-import { mapPlayerTicket } from "./mappers/ticket";
 import type {
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
@@ -37,7 +36,6 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
     const entries = await this.entryRepo.getEntriesByTicketId(ticket.id);
 
     return {
-      ticket: mapPlayerTicket(ticket),
       entries: entries.map(mapPlayerEntry),
     };
   }
@@ -49,6 +47,7 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     drawId: entry.drawId,
     status: entry.status,
     amount: entry.amount,
+    unitPrice: entry.unitPrice,
     selectionCount: entry.selectionCount,
     betUnitCount: entry.betUnitCount,
     entrySummary: {
@@ -58,11 +57,13 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
         playType: b.playType,
         number: b.number,
         tripleKind: b.tripleKind,
+        betCount: b.betCount,
       })),
       sideBets: entry.entrySummary.sideBets.map((s) => ({
         playType: s.playType,
         sum: s.sum,
         bet: s.bet,
+        betCount: s.betCount,
       })),
     },
     result: entry.result

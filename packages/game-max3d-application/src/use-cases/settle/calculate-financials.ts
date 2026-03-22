@@ -56,14 +56,20 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
     const fin = calculateDrawFinancials(financialInput);
 
     // ── Build settleSummary cho player API ─────────────────────────────────
-    // Gộp tất cả tiers từ cả basic (4) lẫn plus (7) mode vào 1 bảng.
+    // Tách riêng 2 bảng: basicTiers (4 hạng) và plusTiers (7 hạng).
+    // KHÔNG gộp chung vì 4 tier đầu (special, first, second, third) trùng tên giữa basic và plus
+    // nhưng giá trị giải thưởng khác nhau hoàn toàn (e.g. basic special = 1tr, plus special = 1tỷ).
     // Tiers có winnerCount = 0 vẫn được ghi để API luôn trả đủ bảng giải.
-    const allTiers = Array.from(new Set([...BASIC_PRIZE_TIER_VALUES, ...PLUS_PRIZE_TIER_VALUES]));
     const settleSummary: DrawSettleSummary = {
-      tiers: allTiers.map((tier) => ({
+      basicTiers: BASIC_PRIZE_TIER_VALUES.map((tier) => ({
         tier,
-        winnerCount: payoutSummary.tierWinnerCounts[tier] ?? 0,
-        prizeAmount: payoutSummary.tierPrizeAmounts[tier] ?? 0,
+        winnerCount: payoutSummary.basicWinnerCounts[tier] ?? 0,
+        prizeAmount: payoutSummary.basicPrizeAmounts[tier] ?? 0,
+      })),
+      plusTiers: PLUS_PRIZE_TIER_VALUES.map((tier) => ({
+        tier,
+        winnerCount: payoutSummary.plusWinnerCounts[tier] ?? 0,
+        prizeAmount: payoutSummary.plusPrizeAmounts[tier] ?? 0,
       })),
     };
 

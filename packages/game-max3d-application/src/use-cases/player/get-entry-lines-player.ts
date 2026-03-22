@@ -62,7 +62,8 @@ function mapPlayerLine(line: TicketLineDoc): PlayerLineInfo {
     lineIndex: line.lineIndex,
     playMode: line.playMode,
     playType: line.playType,
-    triplets: [...line.triplets],
+    triplets: line.triplets,
+    betCount: line.betCount ?? 1,
     matchResult: {
       tiers: line.matchResult.tiers.map((t) => ({
         tier: t.tier,

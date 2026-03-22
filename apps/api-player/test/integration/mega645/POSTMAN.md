@@ -229,6 +229,7 @@ POST http://localhost:4010/games/mega645/bets
 - Mỗi board gồm: `boardNo`, `playType`, `selection` (`mainNumbers`)
 - Số chính (`mainNumbers`): `"01"` đến `"45"`, không trùng
 - Mega 6/45 **không có** `specialNumbers` (khác Lotto 5/35)
+- `betCount`: **optional** (integer ≥ 1, mặc định `1`) — số lần cược nhân bội; tổng tiền = `unitPrice × betCount`
 
 ### Quy tắc theo playType
 
@@ -250,7 +251,7 @@ POST http://localhost:4010/games/mega645/bets
 
 ---
 
-### 7a. Standard (6 số chính)
+### 7a. Standard (6 số chính, betCount mặc định)
 
 ```json
 {
@@ -267,7 +268,25 @@ POST http://localhost:4010/games/mega645/bets
 }
 ```
 
-### 7b. Bao 5 (5 số → C(5,6) -- hệ thống xử lý)
+### 7b. Standard (betCount = 5)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "standard",
+      "selection": {
+        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+      },
+      "betCount": 5
+    }
+  ]
+}
+```
+
+### 7c. Bao 5 (5 số, betCount = 1)
 
 ```json
 {
@@ -278,13 +297,14 @@ POST http://localhost:4010/games/mega645/bets
       "playType": "bao5",
       "selection": {
         "mainNumbers": ["03", "12", "25", "30", "42"]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7c. Bao 7 (7 số → C(7,6) = 7 bộ số)
+### 7d. Bao 7 (7 số → C(7,6) = 7 bộ số, betCount = 3)
 
 ```json
 {
@@ -295,13 +315,14 @@ POST http://localhost:4010/games/mega645/bets
       "playType": "bao7",
       "selection": {
         "mainNumbers": ["03", "12", "25", "30", "42", "44", "45"]
-      }
+      },
+      "betCount": 3
     }
   ]
 }
 ```
 
-### 7d. Bao 8 (8 số → C(8,6) = 28 bộ số)
+### 7e. Bao 8 (8 số → C(8,6) = 28 bộ số, betCount = 1)
 
 ```json
 {
@@ -312,13 +333,14 @@ POST http://localhost:4010/games/mega645/bets
       "playType": "bao8",
       "selection": {
         "mainNumbers": ["02", "09", "15", "21", "28", "34", "41", "45"]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7e. Bao 9 (9 số → C(9,6) = 84 bộ số)
+### 7f. Bao 9 (9 số → C(9,6) = 84 bộ số, betCount = 1)
 
 ```json
 {
@@ -329,13 +351,14 @@ POST http://localhost:4010/games/mega645/bets
       "playType": "bao9",
       "selection": {
         "mainNumbers": ["01", "05", "10", "18", "27", "33", "38", "42", "45"]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7f. Bao 10 (10 số → C(10,6) = 210 bộ số)
+### 7g. Bao 10 (10 số → C(10,6) = 210 bộ số, betCount = 2)
 
 ```json
 {
@@ -345,25 +368,15 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao10",
       "selection": {
-        "mainNumbers": [
-          "01",
-          "06",
-          "11",
-          "16",
-          "21",
-          "26",
-          "31",
-          "36",
-          "41",
-          "45"
-        ]
-      }
+        "mainNumbers": ["01", "06", "11", "16", "21", "26", "31", "36", "41", "45"]
+      },
+      "betCount": 2
     }
   ]
 }
 ```
 
-### 7g. Bao 11 (11 số → C(11,6) = 462 bộ số)
+### 7h. Bao 11 (11 số → C(11,6) = 462 bộ số, betCount = 1)
 
 ```json
 {
@@ -373,26 +386,15 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao11",
       "selection": {
-        "mainNumbers": [
-          "01",
-          "05",
-          "10",
-          "15",
-          "20",
-          "25",
-          "30",
-          "33",
-          "37",
-          "41",
-          "45"
-        ]
-      }
+        "mainNumbers": ["01", "05", "10", "15", "20", "25", "30", "33", "37", "41", "45"]
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7h. Bao 12 (12 số → C(12,6) = 924 bộ số)
+### 7i. Bao 12 (12 số → C(12,6) = 924 bộ số, betCount = 1)
 
 ```json
 {
@@ -402,27 +404,15 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao12",
       "selection": {
-        "mainNumbers": [
-          "01",
-          "05",
-          "10",
-          "15",
-          "20",
-          "25",
-          "30",
-          "33",
-          "37",
-          "41",
-          "44",
-          "45"
-        ]
-      }
+        "mainNumbers": ["01", "05", "10", "15", "20", "25", "30", "33", "37", "41", "44", "45"]
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7i. Bao 13 (13 số → C(13,6) = 1.716 bộ số)
+### 7j. Bao 13 (13 số → C(13,6) = 1.716 bộ số, betCount = 1)
 
 ```json
 {
@@ -447,13 +437,14 @@ POST http://localhost:4010/games/mega645/bets
           "43",
           "45"
         ]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7j. Bao 14 (14 số → C(14,6) = 3.003 bộ số)
+### 7k. Bao 14 (14 số → C(14,6) = 3.003 bộ số, betCount = 1)
 
 ```json
 {
@@ -479,13 +470,14 @@ POST http://localhost:4010/games/mega645/bets
           "42",
           "45"
         ]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7k. Bao 15 (15 số → C(15,6) = 5.005 bộ số)
+### 7l. Bao 15 (15 số → C(15,6) = 5.005 bộ số, betCount = 1)
 
 ```json
 {
@@ -512,13 +504,14 @@ POST http://localhost:4010/games/mega645/bets
           "42",
           "45"
         ]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7l. Bao 18 (18 số → C(18,6) = 18.564 bộ số, lưu ý: không có Bao16/Bao17)
+### 7m. Bao 18 (18 số → C(18,6) = 18.564 bộ số, lưu ý: không có Bao16/Bao17, betCount = 1)
 
 ```json
 {
@@ -548,13 +541,14 @@ POST http://localhost:4010/games/mega645/bets
           "44",
           "45"
         ]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7m. QuickPick (hệ thống random 6 số)
+### 7n. QuickPick (hệ thống random 6 số, betCount = 10)
 
 ```json
 {
@@ -565,13 +559,14 @@ POST http://localhost:4010/games/mega645/bets
       "playType": "quickPick",
       "selection": {
         "mainNumbers": []
-      }
+      },
+      "betCount": 10
     }
   ]
 }
 ```
 
-### 7n. Multi-board (3 boards, các playType khác nhau)
+### 7o. Multi-board (3 boards, các playType khác nhau, betCount đa dạng)
 
 ```json
 {
@@ -582,27 +577,30 @@ POST http://localhost:4010/games/mega645/bets
       "playType": "standard",
       "selection": {
         "mainNumbers": ["01", "07", "14", "22", "35", "45"]
-      }
+      },
+      "betCount": 1
     },
     {
       "boardNo": "B",
       "playType": "bao7",
       "selection": {
         "mainNumbers": ["03", "12", "25", "30", "38", "42", "45"]
-      }
+      },
+      "betCount": 3
     },
     {
       "boardNo": "C",
       "playType": "quickPick",
       "selection": {
         "mainNumbers": []
-      }
+      },
+      "betCount": 5
     }
   ]
 }
 ```
 
-### 7o. Multi-draw + multi-board (6 boards, 3 draws)
+### 7p. Multi-draw + multi-board (6 boards, 3 draws, betCount đa dạng)
 
 ```json
 {
@@ -613,55 +611,48 @@ POST http://localhost:4010/games/mega645/bets
       "playType": "standard",
       "selection": {
         "mainNumbers": ["01", "07", "14", "22", "35", "45"]
-      }
+      },
+      "betCount": 1
     },
     {
       "boardNo": "B",
       "playType": "bao8",
       "selection": {
         "mainNumbers": ["02", "09", "15", "21", "28", "34", "41", "45"]
-      }
+      },
+      "betCount": 2
     },
     {
       "boardNo": "C",
       "playType": "bao12",
       "selection": {
-        "mainNumbers": [
-          "01",
-          "05",
-          "10",
-          "15",
-          "20",
-          "25",
-          "30",
-          "33",
-          "37",
-          "41",
-          "44",
-          "45"
-        ]
-      }
+        "mainNumbers": ["01", "05", "10", "15", "20", "25", "30", "33", "37", "41", "44", "45"]
+      },
+      "betCount": 1
     },
     {
       "boardNo": "D",
       "playType": "bao5",
       "selection": {
         "mainNumbers": ["08", "16", "24", "31", "39"]
-      }
+      },
+      "betCount": 10
     },
     {
       "boardNo": "E",
       "playType": "quickPick",
       "selection": {
         "mainNumbers": []
-      }
+      },
+      "betCount": 1
     },
     {
       "boardNo": "F",
       "playType": "bao7",
       "selection": {
         "mainNumbers": ["03", "11", "19", "27", "33", "40", "45"]
-      }
+      },
+      "betCount": 5
     }
   ]
 }
@@ -671,13 +662,13 @@ POST http://localhost:4010/games/mega645/bets
 
 ### Invalid cases (expect 400)
 
-### 7p. Body rỗng
+### 7q. Body rỗng
 
 ```json
 {}
 ```
 
-### 7q. drawIds rỗng
+### 7r. drawIds rỗng
 
 ```json
 {
@@ -694,7 +685,7 @@ POST http://localhost:4010/games/mega645/bets
 }
 ```
 
-### 7r. boards rỗng
+### 7s. boards rỗng
 
 ```json
 {
@@ -703,7 +694,7 @@ POST http://localhost:4010/games/mega645/bets
 }
 ```
 
-### 7s. drawId trùng lặp
+### 7t. drawId trùng lặp
 
 ```json
 {
@@ -720,7 +711,7 @@ POST http://localhost:4010/games/mega645/bets
 }
 ```
 
-### 7t. drawId sai format
+### 7u. drawId sai format
 
 ```json
 {
@@ -737,7 +728,7 @@ POST http://localhost:4010/games/mega645/bets
 }
 ```
 
-### 7u. mainNumber ngoài phạm vi (46 > 45)
+### 7v. mainNumber ngoài phạm vi (46 > 45)
 
 ```json
 {
@@ -754,7 +745,7 @@ POST http://localhost:4010/games/mega645/bets
 }
 ```
 
-### 7v. mainNumber = "00" (dưới phạm vi)
+### 7w. mainNumber = "00" (dưới phạm vi)
 
 ```json
 {
@@ -771,7 +762,7 @@ POST http://localhost:4010/games/mega645/bets
 }
 ```
 
-### 7w. Số không zero-pad
+### 7x. Số không zero-pad
 
 ```json
 {
@@ -788,7 +779,7 @@ POST http://localhost:4010/games/mega645/bets
 }
 ```
 
-### 7x. Standard sai số lượng mainNumbers (5 thay vì 6)
+### 7y. Standard sai số lượng mainNumbers (5 thay vì 6)
 
 ```json
 {
@@ -799,23 +790,6 @@ POST http://localhost:4010/games/mega645/bets
       "playType": "standard",
       "selection": {
         "mainNumbers": ["01", "07", "14", "22", "35"]
-      }
-    }
-  ]
-}
-```
-
-### 7y. Standard sai số lượng mainNumbers (7 thay vì 6)
-
-```json
-{
-  "drawIds": ["2026-02-28.001"],
-  "boards": [
-    {
-      "boardNo": "A",
-      "playType": "standard",
-      "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "40", "45"]
       }
     }
   ]
@@ -974,38 +948,7 @@ POST http://localhost:4010/games/mega645/bets
 }
 ```
 
-### 7ag. Thiếu mainNumbers trong selection
-
-```json
-{
-  "drawIds": ["2026-02-28.001"],
-  "boards": [
-    {
-      "boardNo": "A",
-      "playType": "standard",
-      "selection": {}
-    }
-  ]
-}
-```
-
-### 7ah. Board thiếu playType
-
-```json
-{
-  "drawIds": ["2026-02-28.001"],
-  "boards": [
-    {
-      "boardNo": "A",
-      "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
-      }
-    }
-  ]
-}
-```
-
-### 7ai. Quá 6 boards (7 boards)
+### 7ag. Quá 6 boards (7 boards)
 
 ```json
 {
@@ -1045,6 +988,60 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "G",
       "playType": "standard",
       "selection": { "mainNumbers": ["01", "13", "20", "28", "34", "44"] }
+    }
+  ]
+}
+```
+
+### 7ah. betCount = 0 (dưới phạm vi)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "standard",
+      "selection": {
+        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+      },
+      "betCount": 0
+    }
+  ]
+}
+```
+
+### 7ai. betCount âm
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "standard",
+      "selection": {
+        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+      },
+      "betCount": -1
+    }
+  ]
+}
+```
+
+### 7aj. betCount là float
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "standard",
+      "selection": {
+        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+      },
+      "betCount": 1.5
     }
   ]
 }

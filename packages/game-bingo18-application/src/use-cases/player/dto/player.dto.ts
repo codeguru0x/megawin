@@ -5,7 +5,19 @@
  * Chỉ chứa thông tin player cần — loại bỏ dữ liệu vận hành/công ty.
  */
 
-import type { Bingo18BigSmallBet, Bingo18TripleKind } from "@megawin/game-bingo18/entities";
+import type {
+  DrawBasicPrizeSummary,
+  DrawSideBetPrizeSummary,
+  EntryResult,
+  EntryBoardPayout,
+  EntrySideBetPayout,
+} from "@megawin/game-bingo18/entities";
+import { EntryOutcome } from "@megawin/game-core/entities";
+
+export type {
+  DrawBasicPrizeSummary as PlayerBasicPrize,
+  DrawSideBetPrizeSummary as PlayerSideBetPrize,
+};
 
 // ─── Get Current Draw (Player) ───
 
@@ -108,6 +120,8 @@ export interface PlayerTicketSummary {
     number?: number;
     /** Loại bộ ba (specific | any). Áp dụng cho tripleMatch. */
     tripleKind?: string;
+    /** Số lần tham gia dự thưởng cho board này. Tiền = betCount × unitPrice. */
+    betCount: number;
   }>;
   /** Danh sách cược phụ (SumTotal, BigSmallDraw). */
   sideBets: Array<{
@@ -117,6 +131,8 @@ export interface PlayerTicketSummary {
     sum?: number;
     /** Lựa chọn Tài/Xỉu/Hoà (big | small | draw). Áp dụng cho bigSmallDraw. */
     bet?: string;
+    /** Số lần tham gia dự thưởng cho side bet này. Tiền = betCount × unitPrice. */
+    betCount: number;
   }>;
   /**
    * Tiến độ settle. settledDraws = số kỳ đã xử lý xong (settled + voided).
@@ -182,11 +198,13 @@ export interface PlayerEntryInfo {
   drawId: string;
   /** Trạng thái entry (scheduled, settled, void). */
   status: string;
-  /** Số tiền đặt cược của entry (VND). */
+  /** Tổng tiền đặt cược của entry (VND) = betUnitCount × unitPrice. */
   amount: number;
+  /** Mệnh giá 1 lần tham gia dự thưởng (VND). Thường là 10.000đ. */
+  unitPrice: number;
   /** Số lượng cược (selections) = boards.length + sideBets.length. Không tính multiplier. */
   selectionCount: number;
-  /** Tổng đơn vị cược = Σ(board.betCount) + Σ(sideBet.betCount). */
+  /** Tổng đơn vị cược = Σ(board.betCount) + Σ(sideBet.betCount). amount = betUnitCount × unitPrice. */
   betUnitCount: number;
   /** Tóm tắt nội dung đặt cược. */
   entrySummary: {
@@ -202,6 +220,8 @@ export interface PlayerEntryInfo {
       number?: number;
       /** Loại bộ ba (specific | any). */
       tripleKind?: string;
+      /** Số lần tham gia dự thưởng của board này. Tiền = betCount × unitPrice. */
+      betCount: number;
     }>;
     /** Danh sách cược phụ. */
     sideBets: Array<{
@@ -211,115 +231,46 @@ export interface PlayerEntryInfo {
       sum?: number;
       /** Lựa chọn Tài/Xỉu/Hoà (big | small | draw). */
       bet?: string;
+      /** Số lần tham gia dự thưởng của side bet này. Tiền = betCount × unitPrice. */
+      betCount: number;
     }>;
   };
-  /** Kết quả quay (chỉ có sau khi publish). */
-  result?: {
-    /** 3 số kết quả (1-6). */
-    numbers: number[];
-    /** Tổng 3 số = numbers[0] + numbers[1] + numbers[2]. */
-    sum: number;
-    /** Thời điểm công bố (ISO 8601). */
-    publishedAt: string;
-  };
+  /**
+   * Kết quả quay (chỉ có sau khi publish).
+   * publishedAt là ISO 8601 string (khác EntryResult.publishedAt kiểu Date).
+   */
+  result?: Omit<EntryResult, "publishedAt"> & { publishedAt: string };
   /** Kết quả thắng/thua (win | loss). Chỉ có sau settle. */
-  outcome?: string;
+  outcome?: EntryOutcome;
   /** Chi tiết trả thưởng (chỉ có sau settle). */
   payout?: {
     /** Tổng tiền thắng (VND) = Σ(boardPayouts.winAmount) + Σ(sideBetPayouts.winAmount). */
     winAmount: number;
     /** Số tiền thực trả = winAmount (Bingo18 không có cap). */
     payoutAmount: number;
-    /** Chi tiết trả thưởng từng bảng chơi chính. */
-    boardPayouts: Array<{
-      /** Số thứ tự bảng. */
-      boardNo: string;
-      /** Loại chơi. */
-      playType: string;
-      /** Số lượng số trùng khớp (0-3). */
-      matchCount: number;
-      /** Tiền thắng bảng này (VND). */
-      winAmount: number;
-    }>;
-    /** Chi tiết trả thưởng từng cược phụ. */
-    sideBetPayouts: Array<{
-      /** Loại cược phụ. */
-      playType: string;
-      /** Tổng dự đoán (áp dụng cho sumTotal). */
-      sum?: number;
-      /** Lựa chọn Tài/Xỉu/Hoà (áp dụng cho bigSmallDraw). */
-      bet?: string;
-      /** Kết quả thực tế (exact, big, small, draw, …). */
-      outcome: string;
-      /** true nếu cược phụ thắng. */
-      isWin: boolean;
-      /** Tiền thắng cược phụ này (VND). */
-      winAmount: number;
-    }>;
+    /**
+     * Chi tiết trả thưởng từng bảng chơi chính.
+     * Subset của EntryBoardPayout — bỏ betCount, unitWinAmount, tripleKind (dữ liệu vận hành).
+     */
+    boardPayouts: Array<
+      Pick<EntryBoardPayout, "boardNo" | "playType" | "matchCount" | "winAmount">
+    >;
+    /**
+     * Chi tiết trả thưởng từng cược phụ.
+     * Subset của EntrySideBetPayout — bỏ betCount, unitWinAmount (dữ liệu vận hành).
+     */
+    sideBetPayouts: Array<
+      Pick<EntrySideBetPayout, "playType" | "sum" | "bet" | "outcome" | "isWin" | "winAmount">
+    >;
   };
 }
 
 export interface PlayerGetTicketEntriesOutput {
-  /** Thông tin tóm tắt vé. */
-  ticket: PlayerTicketSummary;
   /** Danh sách entries thuộc vé, mỗi entry ứng với 1 kỳ quay. */
   entries: PlayerEntryInfo[];
 }
 
 // ─── Draw Results (Player) ───
-
-/**
- * Giải thưởng 1 loại cược cơ bản trong kỳ quay — dùng cho GetDrawResult API.
- *
- * Chỉ trả những loại chơi có winnerCount > 0 trong kỳ.
- */
-export interface PlayerBasicPrize {
-  /**
-   * Loại cược: "singleNum" | "doubleMatch" | "tripleMatch".
-   */
-  playType: string;
-  /**
-   * Số lần số đã chọn xuất hiện trong kết quả (1-3).
-   * singleNum: giải thưởng khác nhau theo matchCount (12k/20k/30k).
-   * doubleMatch / tripleMatch: luôn = 1.
-   */
-  matchCount: number;
-  /**
-   * Phân loại triple: "specific" (1.200.000đ) hoặc "any" (200.000đ).
-   * Chỉ có với tripleMatch — undefined với singleNum và doubleMatch.
-   */
-  tripleKind?: Bingo18TripleKind;
-  /** Số lượt cược trúng tổ hợp này. */
-  winnerCount: number;
-  /** Tiền thưởng mỗi lần cược (VND). */
-  prizePerUnit: number;
-}
-
-/**
- * Giải thưởng 1 loại side bet trong kỳ quay — dùng cho GetDrawResult API.
- *
- * Chỉ trả những (playType, sum/bet) có winnerCount > 0 trong kỳ.
- */
-export interface PlayerSideBetPrize {
-  /**
-   * Loại side bet: "sumTotal" | "bigSmallDraw".
-   */
-  playType: string;
-  /**
-   * Tổng cụ thể đã trúng (3-18). Chỉ có với sumTotal.
-   * undefined với bigSmallDraw.
-   */
-  sum?: number;
-  /**
-   * Cược Lớn/Hòa/Nhỏ đã trúng. Chỉ có với bigSmallDraw.
-   * undefined với sumTotal.
-   */
-  bet?: Bingo18BigSmallBet;
-  /** Số lượt cược trúng (playType, sum/bet) này. */
-  winnerCount: number;
-  /** Tiền thưởng mỗi lần cược (VND). */
-  prizePerUnit: number;
-}
 
 /** Kết quả chi tiết 1 kỳ quay đã settle — dùng cho GetDrawResult API. */
 export interface PlayerDrawResultInfo {
@@ -340,11 +291,11 @@ export interface PlayerDrawResultInfo {
    * Bảng giải thưởng cơ bản — chỉ chứa loại chơi có người trúng.
    * Grouped theo (playType, matchCount).
    */
-  basicPrizes: PlayerBasicPrize[];
+  basicPrizes: DrawBasicPrizeSummary[];
   /**
    * Bảng giải thưởng side bet — chỉ chứa (playType, bet) có người trúng.
    */
-  sideBetPrizes: PlayerSideBetPrize[];
+  sideBetPrizes: DrawSideBetPrizeSummary[];
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;

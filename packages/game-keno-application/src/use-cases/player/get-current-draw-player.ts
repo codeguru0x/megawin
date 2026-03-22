@@ -9,11 +9,8 @@
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-keno/entities";;
-import type {
-  PlayerGetCurrentDrawOutput,
-  PlayerDrawInfo,
-} from "./dto/player.dto";
+import type { DrawEntity } from "@megawin/game-keno/entities";
+import type { PlayerGetCurrentDrawOutput, PlayerDrawInfo } from "./dto/player.dto";
 
 const PLAYER_STATUSES = [DrawStatus.SalesOpen, DrawStatus.SalesClosed];
 
@@ -24,25 +21,13 @@ export class GetCurrentDrawPlayerUseCase extends ApiGatewayUseCase<
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(): Promise<PlayerGetCurrentDrawOutput> {
-    const [activeDraws, lastSettled] = await Promise.all([
-      this.drawRepo.getActiveDraws(PLAYER_STATUSES),
-      this.drawRepo.getLastSettledDrawWithResult(),
-    ]);
+    const activeDraws = await this.drawRepo.getActiveDraws(PLAYER_STATUSES);
 
     const mapped = activeDraws.map(mapPlayerDraw);
 
     return {
       currentDraw: mapped[0] ?? null,
       activeDraws: mapped,
-      lastResult: lastSettled?.result
-        ? {
-            drawId: lastSettled.drawId,
-            drawDate: lastSettled.drawDate,
-            drawNo: lastSettled.drawNo,
-            winningNumbers: [...lastSettled.result.winningNumbers],
-            publishedAt: lastSettled.result.publishedAt.toISOString(),
-          }
-        : null,
     };
   }
 }

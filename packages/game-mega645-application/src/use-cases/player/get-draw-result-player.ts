@@ -14,8 +14,8 @@ import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-mega645/entities";;
-import type { PlayerDrawResultInfo, PlayerDrawTierPrize } from "./dto/player.dto";
+import type { DrawEntity } from "@megawin/game-mega645/entities";
+import type { PlayerDrawResultInfo } from "./dto/player.dto";
 
 export interface GetDrawResultPlayerInput {
   drawId: string;
@@ -46,12 +46,6 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
   // settleSummary.tiers chứa winnerCount + prizeAmount per tier đã tính sẵn.
   // Tất cả 4 tiers luôn có mặt (kể cả winnerCount = 0).
   // Jackpot prizeAmount = totalJackpotPrize sau khi FinalizeSettle patch.
-  const prizes: PlayerDrawTierPrize[] = (draw.settleSummary?.tiers ?? []).map((t) => ({
-    tier: t.tier,
-    winnerCount: t.winnerCount,
-    prizeAmount: t.prizeAmount,
-  }));
-
   return {
     drawId: draw.drawId,
     drawDate: draw.drawDate,
@@ -65,7 +59,7 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
       openingAmount: jackpot.openingAmount,
       closingAmount: jackpot.closingAmount,
     },
-    prizes,
+    prizes: draw.settleSummary?.tiers ?? [],
     vietlottRef: draw.vietlottRef
       ? {
           drawPeriod: draw.vietlottRef.drawPeriod,

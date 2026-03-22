@@ -6,6 +6,13 @@
  */
 
 import { EntryOutcome } from "@megawin/game-core/entities";
+import type {
+  DrawSettleSummaryTier,
+  EntrySummary,
+  EntryPayoutTier,
+} from "@megawin/game-mega645/entities";
+
+export type { DrawSettleSummaryTier as PlayerDrawTierPrize };
 
 import { PrizeTier } from "@megawin/game-mega645/entities/enums";
 // ─── Get Current Draw (Player) ───
@@ -205,28 +212,19 @@ export interface PlayerEntryInfo {
   drawId: string;
   /** Trạng thái entry (drawn, settled, voided...). */
   status: string;
-  /** Số tiền entry = unitPrice × tổng dòng (VND). */
+  /** Số tiền entry (VND) = betUnitCount × unitPrice. */
   amount: number;
+  /** Mệnh giá 1 lần tham gia dự thưởng (VND). Thường là 10.000đ. */
+  unitPrice: number;
   /** Tổng số dòng trong entry. */
   lineCount: number;
+  /**
+   * Tổng đơn vị cược = Σ(board.expandedLines × board.betCount).
+   * Công thức: amount = betUnitCount × unitPrice.
+   */
+  betUnitCount: number;
   /** Tóm tắt entry (dùng cho hiển thị). */
-  entrySummary: {
-    /** Mã vé chứa entry này. */
-    ticketNo: string;
-    /** Danh sách board trong entry. */
-    boards: Array<{
-      /** Mã board (A, B, C...). */
-      boardNo: string;
-      /** Loại cách chơi (normal / system). */
-      playType: string;
-      /** Danh sách số chính đã chọn ("01"-"45"). */
-      mainNumbers: string[];
-      /** Số dòng expand ra = C(n,6). */
-      expandedLines: number;
-      /** Số lần cược nhân bội cho board (≥ 1). */
-      betCount?: number;
-    }>;
-  };
+  entrySummary: EntrySummary;
   /** Kết quả quay thưởng (chỉ có khi kỳ đã công bố). */
   result?: {
     /** 6 số chính trúng thưởng ("01"-"45"). */
@@ -243,22 +241,11 @@ export interface PlayerEntryInfo {
     /** Số tiền thực trả cho người chơi (VND). */
     payoutAmount: number;
     /** Chi tiết từng hạng giải đã trúng. */
-    tiers: Array<{
-      /** Hạng giải: "jackpot" (6/6), "tier1" (5/6), "tier2" (4/6), "tier3" (3/6). */
-      tier: PrizeTier;
-      /** Số dòng trúng hạng này. */
-      hitCount: number;
-      /** Tiền thưởng mỗi dòng (VND). */
-      unitAmount: number;
-      /** Tổng tiền thưởng hạng này = unitAmount × hitCount (VND). */
-      amount: number;
-    }>;
+    tiers: EntryPayoutTier[];
   };
 }
 
 export interface PlayerGetTicketEntriesOutput {
-  /** Thông tin tóm tắt vé. */
-  ticket: PlayerTicketSummary;
   /** Danh sách entries (mỗi kỳ quay = 1 entry). */
   entries: PlayerEntryInfo[];
 }
@@ -285,6 +272,11 @@ export interface PlayerLineInfo {
   lineIndex: number;
   /** 6 số chính của dòng ("01"-"45"), đã sort ascending. */
   main: string[];
+  /**
+   * Số lần tham gia dự thưởng của dòng này (≥ 1).
+   * winAmount = unitPrize × betCount. UI hiển thị "×N" khi betCount > 1.
+   */
+  betCount: number;
   /** Kết quả so khớp dòng với kết quả quay. */
   matchResult: {
     /** Số lượng số chính khớp (0-6). */
@@ -321,29 +313,6 @@ export interface PlayerListDrawResultsInput {
   size: number;
   /** Cursor phân trang (drawId cuối trang trước). */
   cursor?: string;
-}
-
-/**
- * Chi tiết giải thưởng 1 tier trong kết quả kỳ quay Mega 6/45.
- * Dùng bởi GetDrawResultPlayerUseCase (detail endpoint).
- */
-export interface PlayerDrawTierPrize {
-  /**
-   * Hạng giải: "jackpot" (6/6), "tier1" (5/6), "tier2" (4/6), "tier3" (3/6).
-   * Giá trị từ PrizeTier enum.
-   */
-  tier: string;
-  /**
-   * Số lượt trúng tier này (tổng hit count từ tất cả entries).
-   * Không phải số người chơi — 1 người chơi bao có thể trúng nhiều lần.
-   */
-  winnerCount: number;
-  /**
-   * Tổng tiền thưởng tier này (VND).
-   * Jackpot: = openingAmount + jackpotContribution kỳ này (FinalizeSettle patch).
-   * Non-jackpot: tổng tiền cố định aggregate từ entries.
-   */
-  prizeAmount: number;
 }
 
 /**
@@ -387,7 +356,7 @@ export interface PlayerDrawResultInfo {
    * Bảng giải thưởng chi tiết từng hạng.
    * Tất cả 4 tiers luôn có mặt (kể cả winnerCount = 0).
    */
-  prizes: PlayerDrawTierPrize[];
+  prizes: DrawSettleSummaryTier[];
   /** Tham chiếu Vietlott (nếu có). */
   vietlottRef?: {
     /** Mã kỳ Vietlott chính thức. */

@@ -1,19 +1,14 @@
 /**
  * Use Case: Get Ticket Entries for Player (Lotto 5/35)
  *
- * Lấy ticket + tất cả entries của ticket đó.
+ * Lấy tất cả entries của ticket — chỉ trả entries, không kèm ticket.
  * Chỉ cho phép player xem ticket của chính mình.
  */
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type {
-  EntryBoardSnapshot,
-  TicketEntryEntity,
-  EntryPayoutTier,
-} from "@megawin/game-lotto535/entities";
-import { mapPlayerTicket } from "./mappers/ticket";
+import type { TicketEntryEntity } from "@megawin/game-lotto535/entities";
 import type {
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
@@ -34,9 +29,6 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
 
     const ticket = await this.ticketRepo.getTicketById(ticketId);
 
-    // Kiểm tra vé có tồn tại không
-    // Kiểm tra vé có thuộc tenant của player không
-    // Kiểm tra vé có thuộc account của player không
     if (!ticket || ticket.tenantId !== tenantId || ticket.accountId !== accountId) {
       throw AppException.notFound("Không tìm thấy vé.");
     }
@@ -44,7 +36,6 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
     const entries = await this.entryRepo.getEntriesByTicketId(ticket.id);
 
     return {
-      ticket: mapPlayerTicket(ticket),
       entries: entries.map(mapPlayerEntry),
     };
   }
@@ -56,18 +47,10 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     drawId: entry.drawId,
     status: entry.status,
     amount: entry.amount,
+    unitPrice: entry.unitPrice,
     lineCount: entry.lineCount,
-    entrySummary: {
-      ticketNo: entry.entrySummary.ticketNo,
-      boards: entry.entrySummary.boards.map((b: EntryBoardSnapshot) => ({
-        boardNo: b.boardNo,
-        playType: b.playType,
-        mainNumbers: b.mainNumbers,
-        specialNumbers: b.specialNumbers,
-        expandedLines: b.expandedLines,
-        betCount: b.betCount ?? 1,
-      })),
-    },
+    betUnitCount: entry.betUnitCount,
+    entrySummary: entry.entrySummary,
     result: entry.result
       ? {
           winningMain: entry.result.winningMain,
@@ -80,12 +63,7 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
       ? {
           winAmount: entry.payout.winAmount,
           payoutAmount: entry.payout.payoutAmount,
-          tiers: entry.payout.tiers.map((t: EntryPayoutTier) => ({
-            tier: t.tier,
-            hitCount: t.hitCount,
-            unitAmount: t.unitAmount,
-            amount: t.amount,
-          })),
+          tiers: entry.payout.tiers,
         }
       : undefined,
   };

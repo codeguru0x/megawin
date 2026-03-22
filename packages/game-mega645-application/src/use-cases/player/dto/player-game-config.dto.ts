@@ -4,6 +4,10 @@
 
 export interface PlayerGameRules {
   unitPrice: number;
+  /** Số lần cược tối thiểu per board (≥ 1). */
+  minBetCount: number;
+  /** Số lần cược tối đa per board. */
+  maxBetCount: number;
   maxBoardsPerTicket: number;
   maxDrawCount: number;
   drawsPerWeek: number;

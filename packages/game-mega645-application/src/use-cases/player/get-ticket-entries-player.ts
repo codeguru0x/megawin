@@ -1,19 +1,14 @@
 /**
  * Use Case: Get Ticket Entries for Player (Mega 6/45)
  *
+ * Lấy tất cả entries của ticket — chỉ trả entries, không kèm ticket.
  * Mega 6/45: entry result chỉ có winningMain (không có winningSpecial).
- * Entry boards chỉ có mainNumbers.
  */
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type {
-  EntryBoardSnapshot,
-  TicketEntryEntity,
-  EntryPayoutTier,
-} from "@megawin/game-mega645/entities";
-import { mapPlayerTicket } from "./mappers/ticket";
+import type { TicketEntryEntity } from "@megawin/game-mega645/entities";
 import type {
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
@@ -41,7 +36,6 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
     const entries = await this.entryRepo.getEntriesByTicketId(ticket.id);
 
     return {
-      ticket: mapPlayerTicket(ticket),
       entries: entries.map(mapPlayerEntry),
     };
   }
@@ -53,17 +47,10 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     drawId: entry.drawId,
     status: entry.status,
     amount: entry.amount,
+    unitPrice: entry.unitPrice,
     lineCount: entry.lineCount,
-    entrySummary: {
-      ticketNo: entry.entrySummary.ticketNo,
-      boards: entry.entrySummary.boards.map((b: EntryBoardSnapshot) => ({
-        boardNo: b.boardNo,
-        playType: b.playType,
-        mainNumbers: b.mainNumbers,
-        expandedLines: b.expandedLines,
-        betCount: b.betCount ?? 1,
-      })),
-    },
+    betUnitCount: entry.betUnitCount,
+    entrySummary: entry.entrySummary,
     result: entry.result
       ? {
           winningMain: [...entry.result.winningMain],
@@ -75,12 +62,7 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
       ? {
           winAmount: entry.payout.winAmount,
           payoutAmount: entry.payout.payoutAmount,
-          tiers: entry.payout.tiers.map((t: EntryPayoutTier) => ({
-            tier: t.tier,
-            hitCount: t.hitCount,
-            unitAmount: t.unitAmount,
-            amount: t.amount,
-          })),
+          tiers: entry.payout.tiers,
         }
       : undefined,
   };

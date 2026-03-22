@@ -116,11 +116,16 @@ export interface DrawSettleSummaryTier {
  * Tổng kết bảng giải thưởng kỳ quay — denormalized cho API player.
  *
  * Ghi vào DrawDoc.settleSummary bởi CalculateFinancials (step 4 settle pipeline).
- * Tất cả tiers (basic + plus) luôn có mặt kể cả winnerCount = 0.
+ * Tách riêng 2 bảng: basic (4 hạng) và plus (7 hạng) — tương ứng 2 tab hiển thị Vietlott.
+ * BasicPrizeTier và PlusPrizeTier có 4 tier trùng tên nhưng giá trị giải thưởng khác nhau,
+ * nên KHÔNG được gộp chung vào 1 mảng.
+ * Mọi tier luôn có mặt kể cả winnerCount = 0 để API player luôn trả đủ bảng giải.
  */
 export interface DrawSettleSummary {
-  /** Bảng giải thưởng theo từng hạng. */
-  tiers: DrawSettleSummaryTier[];
+  /** Bảng giải thưởng Max 3D Cơ Bản (4 hạng: special, first, second, third). */
+  basicTiers: DrawSettleSummaryTier[];
+  /** Bảng giải thưởng Max 3D+ (7 hạng: special, first, second, third, fourth, fifth, sixth). */
+  plusTiers: DrawSettleSummaryTier[];
 }
 
 export interface DrawDoc {

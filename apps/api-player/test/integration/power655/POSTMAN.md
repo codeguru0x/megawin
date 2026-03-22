@@ -71,12 +71,12 @@ console.log(h+'.'+p+'.integ');
 GET http://localhost:4010/player/power655/draws/current
 ```
 
-| Mục | Giá trị |
-|-----|---------|
-| Method | `GET` |
-| Path params | Không |
-| Query params | Không |
-| Body | Không |
+| Mục          | Giá trị |
+| ------------ | ------- |
+| Method       | `GET`   |
+| Path params  | Không   |
+| Query params | Không   |
+| Body         | Không   |
 
 ---
 
@@ -86,12 +86,12 @@ GET http://localhost:4010/player/power655/draws/current
 GET http://localhost:4010/player/power655/jackpot
 ```
 
-| Mục | Giá trị |
-|-----|---------|
-| Method | `GET` |
-| Path params | Không |
-| Query params | Không |
-| Body | Không |
+| Mục          | Giá trị |
+| ------------ | ------- |
+| Method       | `GET`   |
+| Path params  | Không   |
+| Query params | Không   |
+| Body         | Không   |
 
 ---
 
@@ -101,18 +101,18 @@ GET http://localhost:4010/player/power655/jackpot
 GET http://localhost:4010/player/power655/tickets/pending
 ```
 
-| Mục | Giá trị |
-|-----|---------|
-| Method | `GET` |
-| Path params | Không |
-| Body | Không |
+| Mục         | Giá trị |
+| ----------- | ------- |
+| Method      | `GET`   |
+| Path params | Không   |
+| Body        | Không   |
 
 ### Query params
 
-| Param | Bắt buộc | Default | Mô tả |
-|-------|----------|---------|-------|
-| `size` | Không | `20` | Số lượng / trang (max 100) |
-| `cursor` | Không | — | ObjectId cursor cho trang tiếp |
+| Param    | Bắt buộc | Default | Mô tả                          |
+| -------- | -------- | ------- | ------------------------------ |
+| `size`   | Không    | `20`    | Số lượng / trang (max 100)     |
+| `cursor` | Không    | —       | ObjectId cursor cho trang tiếp |
 
 **Ví dụ với cursor pagination:**
 
@@ -128,21 +128,21 @@ GET http://localhost:4010/player/power655/tickets/pending?size=5
 GET http://localhost:4010/player/power655/tickets/completed
 ```
 
-| Mục | Giá trị |
-|-----|---------|
-| Method | `GET` |
-| Path params | Không |
-| Body | Không |
+| Mục         | Giá trị |
+| ----------- | ------- |
+| Method      | `GET`   |
+| Path params | Không   |
+| Body        | Không   |
 
 ### Query params
 
-| Param | Bắt buộc | Default | Mô tả |
-|-------|----------|---------|-------|
-| `size` | Không | `20` | Số lượng / trang (max 100) |
-| `cursor` | Không | — | ObjectId cursor cho trang tiếp |
-| `sortBy` | Không | `betDate` | Field sort |
-| `from` | Không | — | Ngày bắt đầu (YYYY-MM-DD) |
-| `to` | Không | — | Ngày kết thúc (YYYY-MM-DD) |
+| Param    | Bắt buộc | Default   | Mô tả                          |
+| -------- | -------- | --------- | ------------------------------ |
+| `size`   | Không    | `20`      | Số lượng / trang (max 100)     |
+| `cursor` | Không    | —         | ObjectId cursor cho trang tiếp |
+| `sortBy` | Không    | `betDate` | Field sort                     |
+| `from`   | Không    | —         | Ngày bắt đầu (YYYY-MM-DD)      |
+| `to`     | Không    | —         | Ngày kết thúc (YYYY-MM-DD)     |
 
 **Ví dụ:**
 
@@ -158,16 +158,16 @@ GET http://localhost:4010/player/power655/tickets/completed?size=5&sortBy=betDat
 GET http://localhost:4010/player/power655/tickets/{ticketId}/entries
 ```
 
-| Mục | Giá trị |
-|-----|---------|
-| Method | `GET` |
-| Query params | Không |
-| Body | Không |
+| Mục          | Giá trị |
+| ------------ | ------- |
+| Method       | `GET`   |
+| Query params | Không   |
+| Body         | Không   |
 
 ### Path params
 
-| Param | Format | Ví dụ |
-|-------|--------|-------|
+| Param      | Format                         | Ví dụ                      |
+| ---------- | ------------------------------ | -------------------------- |
 | `ticketId` | 24-char hex (MongoDB ObjectId) | `000000000000000000000001` |
 
 **Ví dụ:**
@@ -184,23 +184,23 @@ GET http://localhost:4010/player/power655/tickets/000000000000000000000001/entri
 GET http://localhost:4010/player/power655/entries/{entryId}/lines
 ```
 
-| Mục | Giá trị |
-|-----|---------|
-| Method | `GET` |
-| Body | Không |
+| Mục    | Giá trị |
+| ------ | ------- |
+| Method | `GET`   |
+| Body   | Không   |
 
 ### Path params
 
-| Param | Format | Ví dụ |
-|-------|--------|-------|
+| Param     | Format                         | Ví dụ                      |
+| --------- | ------------------------------ | -------------------------- |
 | `entryId` | 24-char hex (MongoDB ObjectId) | `000000000000000000000001` |
 
 ### Query params
 
-| Param | Bắt buộc | Default | Mô tả |
-|-------|----------|---------|-------|
-| `page` | Không | `1` | Trang |
-| `size` | Không | `20` | Số lượng / trang (max 100) |
+| Param  | Bắt buộc | Default | Mô tả                      |
+| ------ | -------- | ------- | -------------------------- |
+| `page` | Không    | `1`     | Trang                      |
+| `size` | Không    | `20`    | Số lượng / trang (max 100) |
 
 **Ví dụ:**
 
@@ -216,11 +216,11 @@ GET http://localhost:4010/player/power655/entries/000000000000000000000001/lines
 POST http://localhost:4010/player/power655/bets
 ```
 
-| Mục | Giá trị |
-|-----|---------|
-| Method | `POST` |
-| Path params | Không |
-| Query params | Không |
+| Mục          | Giá trị |
+| ------------ | ------- |
+| Method       | `POST`  |
+| Path params  | Không   |
+| Query params | Không   |
 
 ### Quy tắc body
 
@@ -229,27 +229,29 @@ POST http://localhost:4010/player/power655/bets
 - Mỗi board gồm: `boardNo`, `playType`, `selection` (`mainNumbers`)
 - Số chính (`mainNumbers`): `"01"` đến `"55"`, không trùng
 - Power 6/55 **không có** `specialNumbers` (khác Lotto 5/35)
+- `betCount`: **optional** (integer ≥ 1, mặc định `1`) — số lần cược nhân bội; tổng tiền = `unitPrice × betCount`
 
 ### Quy tắc theo playType
 
-| playType | mainNumbers |
-|----------|-------------|
-| `standard` | Đúng 6 số |
-| `bao7` | Đúng 7 số |
-| `bao8` | Đúng 8 số |
-| `bao9` | Đúng 9 số |
-| `bao10` | Đúng 10 số |
-| `bao11` | Đúng 11 số |
-| `bao12` | Đúng 12 số |
-| `bao13` | Đúng 13 số |
-| `bao14` | Đúng 14 số |
-| `bao15` | Đúng 15 số |
-| `bao18` | Đúng 18 số (lưu ý: không có Bao16/Bao17) |
-| `quickPick` | Không cần (hệ thống random 6 số) |
+| playType    | mainNumbers                              |
+| ----------- | ---------------------------------------- |
+| `standard`  | Đúng 6 số                                |
+| `bao5`      | Đúng 5 số                                |
+| `bao7`      | Đúng 7 số                                |
+| `bao8`      | Đúng 8 số                                |
+| `bao9`      | Đúng 9 số                                |
+| `bao10`     | Đúng 10 số                               |
+| `bao11`     | Đúng 11 số                               |
+| `bao12`     | Đúng 12 số                               |
+| `bao13`     | Đúng 13 số                               |
+| `bao14`     | Đúng 14 số                               |
+| `bao15`     | Đúng 15 số                               |
+| `bao18`     | Đúng 18 số (lưu ý: không có Bao16/Bao17) |
+| `quickPick` | Không cần (hệ thống random 6 số)         |
 
 ---
 
-### 7a. Standard (6 số chính)
+### 7a. Standard (6 số chính, betCount mặc định)
 
 ```json
 {
@@ -266,7 +268,43 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7b. Bao 7 (7 số → C(7,6) = 7 bộ số)
+### 7b. Standard (betCount = 5)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "standard",
+      "selection": {
+        "mainNumbers": ["01", "07", "14", "22", "35", "55"]
+      },
+      "betCount": 5
+    }
+  ]
+}
+```
+
+### 7c. Bao 5 (5 số → 50 lines, betCount = 1)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "bao5",
+      "selection": {
+        "mainNumbers": ["03", "12", "25", "30", "42"]
+      },
+      "betCount": 1
+    }
+  ]
+}
+```
+
+### 7d. Bao 7 (7 số → C(7,6) = 7 bộ số, betCount = 3)
 
 ```json
 {
@@ -277,13 +315,14 @@ POST http://localhost:4010/player/power655/bets
       "playType": "bao7",
       "selection": {
         "mainNumbers": ["03", "12", "25", "30", "42", "48", "55"]
-      }
+      },
+      "betCount": 3
     }
   ]
 }
 ```
 
-### 7c. Bao 8 (8 số → C(8,6) = 28 bộ số)
+### 7e. Bao 8 (8 số → C(8,6) = 28 bộ số, betCount = 1)
 
 ```json
 {
@@ -294,13 +333,14 @@ POST http://localhost:4010/player/power655/bets
       "playType": "bao8",
       "selection": {
         "mainNumbers": ["02", "09", "15", "21", "28", "34", "41", "50"]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7d. Bao 9 (9 số → C(9,6) = 84 bộ số)
+### 7f. Bao 9 (9 số → C(9,6) = 84 bộ số, betCount = 1)
 
 ```json
 {
@@ -311,13 +351,14 @@ POST http://localhost:4010/player/power655/bets
       "playType": "bao9",
       "selection": {
         "mainNumbers": ["01", "05", "10", "18", "27", "33", "40", "47", "55"]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7e. Bao 10 (10 số → C(10,6) = 210 bộ số)
+### 7g. Bao 10 (10 số → C(10,6) = 210 bộ số, betCount = 2)
 
 ```json
 {
@@ -328,13 +369,14 @@ POST http://localhost:4010/player/power655/bets
       "playType": "bao10",
       "selection": {
         "mainNumbers": ["01", "06", "11", "16", "21", "26", "31", "36", "41", "50"]
-      }
+      },
+      "betCount": 2
     }
   ]
 }
 ```
 
-### 7f. Bao 11 (11 số → C(11,6) = 462 bộ số)
+### 7h. Bao 11 (11 số → C(11,6) = 462 bộ số, betCount = 1)
 
 ```json
 {
@@ -345,13 +387,14 @@ POST http://localhost:4010/player/power655/bets
       "playType": "bao11",
       "selection": {
         "mainNumbers": ["01", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50"]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7g. Bao 12 (12 số → C(12,6) = 924 bộ số)
+### 7i. Bao 12 (12 số → C(12,6) = 924 bộ số, betCount = 1)
 
 ```json
 {
@@ -362,13 +405,14 @@ POST http://localhost:4010/player/power655/bets
       "playType": "bao12",
       "selection": {
         "mainNumbers": ["01", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"]
-      }
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7h. Bao 13 (13 số → C(13,6) = 1.716 bộ số)
+### 7j. Bao 13 (13 số → C(13,6) = 1.716 bộ số, betCount = 1)
 
 ```json
 {
@@ -378,14 +422,29 @@ POST http://localhost:4010/player/power655/bets
       "boardNo": "A",
       "playType": "bao13",
       "selection": {
-        "mainNumbers": ["01", "05", "09", "13", "17", "21", "25", "29", "33", "37", "41", "48", "55"]
-      }
+        "mainNumbers": [
+          "01",
+          "05",
+          "09",
+          "13",
+          "17",
+          "21",
+          "25",
+          "29",
+          "33",
+          "37",
+          "41",
+          "48",
+          "55"
+        ]
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7i. Bao 14 (14 số → C(14,6) = 3.003 bộ số)
+### 7k. Bao 14 (14 số → C(14,6) = 3.003 bộ số, betCount = 1)
 
 ```json
 {
@@ -395,14 +454,30 @@ POST http://localhost:4010/player/power655/bets
       "boardNo": "A",
       "playType": "bao14",
       "selection": {
-        "mainNumbers": ["01", "04", "08", "12", "16", "20", "24", "28", "32", "36", "40", "44", "50", "55"]
-      }
+        "mainNumbers": [
+          "01",
+          "04",
+          "08",
+          "12",
+          "16",
+          "20",
+          "24",
+          "28",
+          "32",
+          "36",
+          "40",
+          "44",
+          "50",
+          "55"
+        ]
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7j. Bao 15 (15 số → C(15,6) = 5.005 bộ số)
+### 7l. Bao 15 (15 số → C(15,6) = 5.005 bộ số, betCount = 1)
 
 ```json
 {
@@ -412,14 +487,31 @@ POST http://localhost:4010/player/power655/bets
       "boardNo": "A",
       "playType": "bao15",
       "selection": {
-        "mainNumbers": ["01", "04", "08", "12", "16", "20", "24", "28", "32", "36", "40", "44", "48", "52", "55"]
-      }
+        "mainNumbers": [
+          "01",
+          "04",
+          "08",
+          "12",
+          "16",
+          "20",
+          "24",
+          "28",
+          "32",
+          "36",
+          "40",
+          "44",
+          "48",
+          "52",
+          "55"
+        ]
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7k. Bao 18 (18 số → C(18,6) = 18.564 bộ số, lưu ý: không có Bao16/Bao17)
+### 7m. Bao 18 (18 số → C(18,6) = 18.564 bộ số, lưu ý: không có Bao16/Bao17, betCount = 1)
 
 ```json
 {
@@ -429,14 +521,34 @@ POST http://localhost:4010/player/power655/bets
       "boardNo": "A",
       "playType": "bao18",
       "selection": {
-        "mainNumbers": ["01", "04", "07", "10", "13", "16", "19", "22", "25", "28", "31", "34", "37", "40", "43", "47", "51", "55"]
-      }
+        "mainNumbers": [
+          "01",
+          "04",
+          "07",
+          "10",
+          "13",
+          "16",
+          "19",
+          "22",
+          "25",
+          "28",
+          "31",
+          "34",
+          "37",
+          "40",
+          "43",
+          "47",
+          "51",
+          "55"
+        ]
+      },
+      "betCount": 1
     }
   ]
 }
 ```
 
-### 7l. QuickPick (hệ thống random 6 số)
+### 7n. QuickPick (hệ thống random 6 số, betCount = 10)
 
 ```json
 {
@@ -447,13 +559,14 @@ POST http://localhost:4010/player/power655/bets
       "playType": "quickPick",
       "selection": {
         "mainNumbers": []
-      }
+      },
+      "betCount": 10
     }
   ]
 }
 ```
 
-### 7m. Multi-board (3 boards, các playType khác nhau)
+### 7o. Multi-board (3 boards, các playType khác nhau, betCount đa dạng)
 
 ```json
 {
@@ -464,27 +577,30 @@ POST http://localhost:4010/player/power655/bets
       "playType": "standard",
       "selection": {
         "mainNumbers": ["01", "07", "14", "22", "35", "55"]
-      }
+      },
+      "betCount": 1
     },
     {
       "boardNo": "B",
       "playType": "bao7",
       "selection": {
         "mainNumbers": ["03", "12", "25", "30", "42", "48", "55"]
-      }
+      },
+      "betCount": 3
     },
     {
       "boardNo": "C",
       "playType": "quickPick",
       "selection": {
         "mainNumbers": []
-      }
+      },
+      "betCount": 5
     }
   ]
 }
 ```
 
-### 7n. Multi-draw + multi-board (5 boards, 3 draws)
+### 7p. Multi-draw + multi-board (5 boards, 3 draws, betCount đa dạng)
 
 ```json
 {
@@ -495,35 +611,40 @@ POST http://localhost:4010/player/power655/bets
       "playType": "standard",
       "selection": {
         "mainNumbers": ["01", "07", "14", "22", "35", "55"]
-      }
+      },
+      "betCount": 1
     },
     {
       "boardNo": "B",
       "playType": "bao8",
       "selection": {
         "mainNumbers": ["02", "09", "15", "21", "28", "34", "41", "50"]
-      }
+      },
+      "betCount": 2
     },
     {
       "boardNo": "C",
       "playType": "bao12",
       "selection": {
         "mainNumbers": ["01", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"]
-      }
+      },
+      "betCount": 1
     },
     {
       "boardNo": "D",
       "playType": "bao7",
       "selection": {
         "mainNumbers": ["08", "16", "24", "31", "39", "47", "55"]
-      }
+      },
+      "betCount": 10
     },
     {
       "boardNo": "E",
       "playType": "quickPick",
       "selection": {
         "mainNumbers": []
-      }
+      },
+      "betCount": 1
     }
   ]
 }
@@ -533,13 +654,13 @@ POST http://localhost:4010/player/power655/bets
 
 ### Invalid cases (expect 400)
 
-### 7o. Body rỗng
+### 7q. Body rỗng
 
 ```json
 {}
 ```
 
-### 7p. drawIds rỗng
+### 7r. drawIds rỗng
 
 ```json
 {
@@ -556,7 +677,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7q. boards rỗng
+### 7s. boards rỗng
 
 ```json
 {
@@ -565,7 +686,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7r. drawId trùng lặp
+### 7t. drawId trùng lặp
 
 ```json
 {
@@ -582,7 +703,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7s. drawId sai format
+### 7u. drawId sai format
 
 ```json
 {
@@ -599,7 +720,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7t. mainNumber ngoài phạm vi (56 > 55)
+### 7v. mainNumber ngoài phạm vi (56 > 55)
 
 ```json
 {
@@ -616,7 +737,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7u. mainNumber = "00" (dưới phạm vi)
+### 7w. mainNumber = "00" (dưới phạm vi)
 
 ```json
 {
@@ -633,7 +754,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7v. Số không zero-pad (integer thay vì string)
+### 7x. Số không zero-pad (integer thay vì string)
 
 ```json
 {
@@ -650,7 +771,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7w. Standard sai số lượng mainNumbers (5 thay vì 6)
+### 7y. Standard sai số lượng mainNumbers (5 thay vì 6)
 
 ```json
 {
@@ -667,7 +788,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7x. Standard sai số lượng mainNumbers (7 thay vì 6)
+### 7z. Standard sai số lượng mainNumbers (7 thay vì 6)
 
 ```json
 {
@@ -684,7 +805,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7y. Số trùng lặp trong mainNumbers
+### 7aa. Số trùng lặp trong mainNumbers
 
 ```json
 {
@@ -701,7 +822,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7z. playType không hợp lệ
+### 7ab. playType không hợp lệ
 
 ```json
 {
@@ -718,7 +839,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7aa. boardNo trùng lặp
+### 7ac. boardNo trùng lặp
 
 ```json
 {
@@ -742,7 +863,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7ab. Quá 6 drawIds
+### 7ad. Quá 6 drawIds
 
 ```json
 {
@@ -767,7 +888,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7ac. Bao7 với chỉ 6 số (thiếu 1 số)
+### 7ae. Bao7 với chỉ 6 số (thiếu 1 số)
 
 ```json
 {
@@ -784,7 +905,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7ad. Bao18 với chỉ 17 số (thiếu 1 số)
+### 7af. Bao18 với chỉ 17 số (thiếu 1 số)
 
 ```json
 {
@@ -794,14 +915,32 @@ POST http://localhost:4010/player/power655/bets
       "boardNo": "A",
       "playType": "bao18",
       "selection": {
-        "mainNumbers": ["01", "04", "07", "10", "13", "16", "19", "22", "25", "28", "31", "34", "37", "40", "43", "47", "51"]
+        "mainNumbers": [
+          "01",
+          "04",
+          "07",
+          "10",
+          "13",
+          "16",
+          "19",
+          "22",
+          "25",
+          "28",
+          "31",
+          "34",
+          "37",
+          "40",
+          "43",
+          "47",
+          "51"
+        ]
       }
     }
   ]
 }
 ```
 
-### 7ae. mainNumbers chứa số integer thay vì string
+### 7ag. mainNumbers chứa số integer thay vì string
 
 ```json
 {
@@ -818,22 +957,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7af. Thiếu mainNumbers trong selection
-
-```json
-{
-  "drawIds": ["2026-02-28.001"],
-  "boards": [
-    {
-      "boardNo": "A",
-      "playType": "standard",
-      "selection": {}
-    }
-  ]
-}
-```
-
-### 7ag. Board thiếu playType
+### 7ah. Board thiếu playType
 
 ```json
 {
@@ -849,7 +973,7 @@ POST http://localhost:4010/player/power655/bets
 }
 ```
 
-### 7ah. Quá 5 boards (6 boards)
+### 7ai. Quá 5 boards (6 boards)
 
 ```json
 {
@@ -884,6 +1008,60 @@ POST http://localhost:4010/player/power655/bets
       "boardNo": "F",
       "playType": "standard",
       "selection": { "mainNumbers": ["06", "12", "19", "27", "40", "54"] }
+    }
+  ]
+}
+```
+
+### 7aj. betCount = 0 (dưới phạm vi)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "standard",
+      "selection": {
+        "mainNumbers": ["01", "07", "14", "22", "35", "55"]
+      },
+      "betCount": 0
+    }
+  ]
+}
+```
+
+### 7ak. betCount âm
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "standard",
+      "selection": {
+        "mainNumbers": ["01", "07", "14", "22", "35", "55"]
+      },
+      "betCount": -1
+    }
+  ]
+}
+```
+
+### 7al. betCount là float
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "standard",
+      "selection": {
+        "mainNumbers": ["01", "07", "14", "22", "35", "55"]
+      },
+      "betCount": 1.5
     }
   ]
 }

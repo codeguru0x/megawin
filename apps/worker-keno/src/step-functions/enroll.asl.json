@@ -1,0 +1,35 @@
+{
+  "Comment": "Keno Auto-Enroll – Tự động tạo entries cho kỳ mới mở bán",
+  "QueryLanguage": "JSONata",
+  "StartAt": "AutoEnrollEntries",
+  "States": {
+    "AutoEnrollEntries": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-keno-dev-enroll-auto-entries",
+      "Arguments": {
+        "drawId": "{% $states.input.drawId %}"
+      },
+      "Output": "{% $states.result %}",
+      "Next": "EnrollComplete",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "EnrollComplete": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}

@@ -128,17 +128,10 @@ export interface FinancialRates {
 /** Quy tắc chơi. */
 export interface PlayRules {
   unitPrice: number;
-  /**
-   * Số lần cược tối thiểu per board (≥ 1).
-   * Mặc định 1 — player luôn phải cược ít nhất 1 lần.
-   * Optional cho backward compat với config cũ chưa có field này.
-   */
-  minBetCount?: number;
-  /**
-   * Số lần cược tối đa per board (≥ 1). Mặc định 10.
-   * Optional cho backward compat với config cũ chưa có field này.
-   */
-  maxBetCount?: number;
+  /** Số lần cược tối thiểu per board (≥ 1). Mặc định 1. */
+  minBetCount: number;
+  /** Số lần cược tối đa per board. Mặc định 10. */
+  maxBetCount: number;
   maxBoardsPerTicket: number;
   maxDrawCount: number;
   salesCloseBeforeMinutes: number;

@@ -1,15 +1,14 @@
 /**
  * Use Case: Get Ticket Entries for Player (Max 3D)
  *
- * Lấy ticket + tất cả entries của ticket đó.
+ * Lấy tất cả entries của ticket — chỉ trả entries, không kèm ticket.
  * Chỉ cho phép player xem ticket của chính mình.
  */
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { EntryBoardSnapshot, TicketEntryEntity, EntryPayoutTier } from "@megawin/game-max3d/entities";
-import { mapPlayerTicket } from "./mappers/ticket";
+import type { TicketEntryEntity } from "@megawin/game-max3d/entities";
 import type {
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
@@ -41,7 +40,6 @@ export class GetTicketEntriesPlayerUseCase extends ApiGatewayUseCase<
     const entries = await this.entryRepo.findByTicketId(ticket.id);
 
     return {
-      ticket: mapPlayerTicket(ticket),
       entries: entries.map(mapPlayerEntry),
     };
   }
@@ -53,17 +51,10 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     drawId: entry.drawId,
     status: entry.status,
     amount: entry.amount,
+    unitPrice: entry.unitPrice,
     lineCount: entry.lineCount,
-    entrySummary: {
-      ticketNo: entry.entrySummary.ticketNo,
-      boards: entry.entrySummary.boards.map((b: EntryBoardSnapshot) => ({
-        boardNo: b.boardNo,
-        playMode: b.playMode,
-        playType: b.playType,
-        triplets: [...b.triplets],
-        lineCount: b.lineCount,
-      })),
-    },
+    betUnitCount: entry.betUnitCount,
+    entrySummary: entry.entrySummary,
     result: entry.result
       ? {
           special: entry.result.special,
@@ -78,12 +69,7 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
       ? {
           winAmount: entry.payout.winAmount,
           payoutAmount: entry.payout.payoutAmount,
-          tiers: entry.payout.tiers.map((t: EntryPayoutTier) => ({
-            tier: t.tier,
-            hitCount: t.hitCount,
-            unitAmount: t.unitAmount,
-            amount: t.amount,
-          })),
+          tiers: entry.payout.tiers,
         }
       : undefined,
   };
