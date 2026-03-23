@@ -120,37 +120,37 @@ These serve as the fallback; there is no separate default.css file. */
   /* Dùng cho tất cả UI thể hiện thắng (dương) hoặc thua (âm).               */
   /* Tailwind utility: text-profit, bg-profit, text-loss, bg-loss             */
   --profit: oklch(0.527 0.154 150.069); /* emerald-600 #059669 */
-  --profit-foreground: oklch(1 0 0);    /* white */
-  --loss: oklch(0.577 0.245 27.325);    /* red-500 #ef4444 — đồng bộ với --destructive */
-  --loss-foreground: oklch(1 0 0);      /* white */
+  --profit-foreground: oklch(1 0 0); /* white */
+  --loss: oklch(0.577 0.245 27.325); /* red-500 #ef4444 — đồng bộ với --destructive */
+  --loss-foreground: oklch(1 0 0); /* white */
 
   /* ── Game Brand Colors (light mode) ────────────────────────────────────── */
   /* Mega 6/45 — Teal (jackpot: teal-400→emerald-500) */
   --game-mega645: oklch(0.5765 0.149 194.77); /* teal-600  #0d9488 */
   --game-mega645-muted: oklch(0.953 0.026 183.6); /* teal-50   #f0fdfa */
-  /* Power 6/55 — Red/Orange (jackpot: red-500→orange-500) */
-  --game-power655: oklch(0.628 0.258 29.2); /* red-500   #ef4444 */
+  /* Power 6/55 — Red (red-600, đậm hơn để tách khỏi fuchsia Max3DPro) */
+  --game-power655: oklch(0.577 0.245 27.3); /* red-600   #dc2626 */
   --game-power655-muted: oklch(0.969 0.033 29.2); /* red-50    #fef2f2 */
 
   /* Lotto 5/35 — Amber/Orange (jackpot: amber-400→orange-500) */
   --game-lotto535: oklch(0.7 0.175 62.5); /* amber-600 #d97706 */
   --game-lotto535-muted: oklch(0.986 0.028 70.1); /* amber-50  #fffbeb */
 
-  /* Keno — Orange */
-  --game-keno: oklch(0.646 0.222 41.1); /* orange-600 #ea580c */
-  --game-keno-muted: oklch(0.98 0.025 41.1); /* orange-50  #fff7ed */
+  /* Keno — Sky/Cyan (sky-700 — tách xa khỏi amber/orange Lotto535) */
+  --game-keno: oklch(0.52 0.166 230); /* sky-700   #0284c7 */
+  --game-keno-muted: oklch(0.977 0.015 236); /* sky-50    #f0f9ff */
 
   /* Max3D — Violet */
   --game-max3d: oklch(0.541 0.281 293); /* violet-600 #7c3aed */
   --game-max3d-muted: oklch(0.969 0.017 292.7); /* violet-50  #f5f3ff */
 
-  /* Max3D Pro — Pink */
-  --game-max3dpro: oklch(0.592 0.249 354.5); /* pink-600  #db2777 */
-  --game-max3dpro-muted: oklch(0.971 0.018 350); /* pink-50   #fdf2f8 */
+  /* Max3D Pro — Fuchsia (fuchsia-600 — tách rõ khỏi red Power655) */
+  --game-max3dpro: oklch(0.542 0.267 322); /* fuchsia-600 #c026d3 */
+  --game-max3dpro-muted: oklch(0.974 0.015 320); /* fuchsia-50  #fdf4ff */
 
-  /* Bingo 18 — Green */
-  --game-bingo18: oklch(0.576 0.19 148); /* green-600 #16a34a */
-  --game-bingo18-muted: oklch(0.972 0.026 148); /* green-50  #f0fdf4 */
+  /* Bingo 18 — Lime (lime-600 — tách rõ khỏi teal Mega645) */
+  --game-bingo18: oklch(0.59 0.163 126); /* lime-600  #65a30d */
+  --game-bingo18-muted: oklch(0.978 0.026 120); /* lime-50   #f7fee7 */
 }
 
 .dark {
@@ -187,32 +187,33 @@ These serve as the fallback; there is no separate default.css file. */
   --sidebar-ring: oklch(0.439 0 0);
 
   /* ── Profit / Loss semantic colors (dark mode) ─────────────────────────── */
-  --profit: oklch(0.696 0.17 162.48);    /* emerald-400 #34d399 — sáng hơn cho nền tối */
+  --profit: oklch(0.696 0.17 162.48); /* emerald-400 #34d399 — sáng hơn cho nền tối */
   --profit-foreground: oklch(0.1 0.05 150);
-  --loss: oklch(0.704 0.191 22.216);     /* red-400 #f87171 — đồng bộ với --destructive dark */
+  --loss: oklch(0.704 0.191 22.216); /* red-400 #f87171 — đồng bộ với --destructive dark */
   --loss-foreground: oklch(0.1 0.05 27);
 
   /* ── Game Brand Colors (dark mode) ─────────────────────────────────────── */
-  /* Sáng hơn so với light mode để dễ đọc trên nền tối */  --game-mega645: oklch(0.72 0.118 183.6); /* teal-400  #2dd4bf */
+  /* Sáng hơn so với light mode để dễ đọc trên nền tối */
+  --game-mega645: oklch(0.72 0.118 183.6); /* teal-400  #2dd4bf */
   --game-mega645-muted: oklch(0.2 0.05 183.6); /* teal-950  #042f2e */
 
-  --game-power655: oklch(0.704 0.191 22.2); /* red-400   #f87171 */
+  --game-power655: oklch(0.65 0.22 27.3); /* red-500 dark   #ef4444 */
   --game-power655-muted: oklch(0.2 0.06 22.2); /* red-950   #450a0a */
 
   --game-lotto535: oklch(0.85 0.13 70.1); /* amber-400 #fbbf24 */
   --game-lotto535-muted: oklch(0.21 0.055 70.1); /* amber-950 #451a03 */
 
-  --game-keno: oklch(0.75 0.16 41.1); /* orange-400 #fb923c */
-  --game-keno-muted: oklch(0.2 0.05 41.1); /* orange-950 #431407 */
+  --game-keno: oklch(0.72 0.14 230); /* sky-400 #38bdf8 */
+  --game-keno-muted: oklch(0.2 0.04 230); /* sky-950 #082f49 */
 
   --game-max3d: oklch(0.722 0.185 292.7); /* violet-400 #a78bfa */
   --game-max3d-muted: oklch(0.2 0.05 292.7); /* violet-950 #2e1065 */
 
-  --game-max3dpro: oklch(0.718 0.193 350); /* pink-400  #f472b6 */
-  --game-max3dpro-muted: oklch(0.2 0.045 350); /* pink-950  #500724 */
+  --game-max3dpro: oklch(0.7 0.2 322); /* fuchsia-400 #e879f9 */
+  --game-max3dpro-muted: oklch(0.2 0.04 322); /* fuchsia-950 #4a044e */
 
-  --game-bingo18: oklch(0.723 0.185 148); /* green-400 #4ade80 */
-  --game-bingo18-muted: oklch(0.195 0.055 148); /* green-950 #052e16 */
+  --game-bingo18: oklch(0.72 0.155 126); /* lime-400 #a3e635 */
+  --game-bingo18-muted: oklch(0.2 0.045 126); /* lime-950 #1a2e05 */
 }
 
 @layer base {

@@ -1,8 +1,8 @@
 import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities/account";
-import { GetDashboardJackpotsUseCase } from "@/app/api/dashboard/jackpots/_lib/get-dashboard-jackpots";
+import { GetSystemOutstandingUseCase } from "@megawin/game-core-application/use-cases/reports";
 
-const useCase = new GetDashboardJackpotsUseCase();
+const useCase = new GetSystemOutstandingUseCase();
 
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })

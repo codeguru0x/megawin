@@ -17,21 +17,7 @@ import { BarChart2, PieChart as PieChartIcon } from "lucide-react";
 import { getGameLabel, type DashboardDayKpis } from "../_lib/compute";
 import { getGameHex } from "@/lib/game-colors";
 import { GameTableSkeleton, ChartSkeleton } from "./skeletons";
-
-// ─── Formatter VND không có ký tự ₫ ──────────────────────────────────────────
-
-/** Format VND compact tiếng Việt, không có ký tự ₫. */
-function fVNDCompact(amount: number): string {
-  if (amount >= 1_000_000_000) {
-    const v = amount / 1_000_000_000;
-    return `${v.toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tỷ`;
-  }
-  if (amount >= 1_000_000) {
-    const v = amount / 1_000_000;
-    return `${v.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} triệu`;
-  }
-  return amount.toLocaleString("vi-VN");
-}
+import Link from "next/link";
 
 // ─── Pie Chart Tooltip ──────────────────────────────────────────────────────
 
@@ -52,7 +38,7 @@ function PieTooltip({ active, payload }: PieTooltipProps) {
     <div className="rounded-lg border border-border bg-background px-3 py-2 text-xs shadow-md">
       <p className="font-semibold text-foreground">{getGameLabel(item.payload.gameProduct)}</p>
       <p className="mt-0.5 tabular-nums text-muted-foreground">
-        {fVNDCompact(item.value)} · {item.payload.pct.toFixed(1)}%
+        {formatVNDCompact(item.value)} · {item.payload.pct.toFixed(1)}%
       </p>
     </div>
   );
@@ -121,6 +107,9 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
       pct: kpis.totalStake > 0 ? (r.totalStake / kpis.totalStake) * 100 : 0,
     }));
 
+  // Tổng hoa hồng cho hàng tổng
+  const totalCommission = kpis.byGame.reduce((s, r) => s + r.totalCommission, 0);
+
   return (
     <Card className="gap-0 py-0">
       <CardHeader className="px-5 pb-2 pt-4">
@@ -187,6 +176,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                   <TableHead className="h-9 pl-4 text-xs">Game</TableHead>
                   <TableHead className="h-9 text-right text-xs">Doanh thu</TableHead>
                   <TableHead className="h-9 text-right text-xs">GGR</TableHead>
+                  <TableHead className="h-9 text-right text-xs">Hoa hồng</TableHead>
                   <TableHead className="h-9 text-right text-xs">Lợi nhuận</TableHead>
                   <TableHead className="h-9 text-right text-xs">Số vé</TableHead>
                   <TableHead className="h-9 pr-4 text-right text-xs">Kỳ</TableHead>
@@ -199,16 +189,19 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                     className={cn("h-9", row.netProfit < 0 && "bg-red-50/40 dark:bg-red-950/20")}
                   >
                     <TableCell className="py-0 pl-4">
-                      <div className="flex items-center gap-2">
+                      <Link
+                        href={`/games/${row.gameProduct}/financial-reports`}
+                        className="flex items-center gap-2 hover:underline"
+                      >
                         <span
                           className="size-2 shrink-0 rounded-full"
                           style={{ background: getGameHex(row.gameProduct) }}
                         />
                         <span className="text-xs font-medium">{getGameLabel(row.gameProduct)}</span>
-                      </div>
+                      </Link>
                     </TableCell>
                     <TableCell className="py-0 text-right text-xs tabular-nums">
-                      {fVNDCompact(row.totalStake)}
+                      {formatVNDCompact(row.totalStake)}
                     </TableCell>
                     <TableCell className="py-0 text-right">
                       <span
@@ -217,8 +210,11 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                           row.ggr < 0 ? "text-red-600 dark:text-red-400" : "text-foreground",
                         )}
                       >
-                        {fVNDCompact(row.ggr)}
+                        {formatVNDCompact(row.ggr)}
                       </span>
+                    </TableCell>
+                    <TableCell className="py-0 text-right text-xs tabular-nums text-muted-foreground">
+                      {formatVNDCompact(row.totalCommission)}
                     </TableCell>
                     <TableCell className="py-0 text-right">
                       <span
@@ -227,7 +223,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                           row.netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-foreground",
                         )}
                       >
-                        {fVNDCompact(row.netProfit)}
+                        {formatVNDCompact(row.netProfit)}
                       </span>
                     </TableCell>
                     <TableCell className="py-0 text-right text-xs tabular-nums text-muted-foreground">
@@ -242,13 +238,16 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                 <TableRow className="h-9 border-t-2 bg-muted/30 font-semibold hover:bg-muted/40">
                   <TableCell className="py-0 pl-4 text-xs">Tổng cộng</TableCell>
                   <TableCell className="py-0 text-right text-xs tabular-nums">
-                    {fVNDCompact(kpis.totalStake)}
+                    {formatVNDCompact(kpis.totalStake)}
                   </TableCell>
                   <TableCell className="py-0 text-right text-xs tabular-nums">
-                    {fVNDCompact(kpis.totalGgr)}
+                    {formatVNDCompact(kpis.totalGgr)}
+                  </TableCell>
+                  <TableCell className="py-0 text-right text-xs tabular-nums text-muted-foreground">
+                    {formatVNDCompact(totalCommission)}
                   </TableCell>
                   <TableCell className="py-0 text-right text-xs tabular-nums">
-                    {fVNDCompact(kpis.totalProfit)}
+                    {formatVNDCompact(kpis.totalProfit)}
                   </TableCell>
                   <TableCell className="py-0 text-right text-xs tabular-nums text-muted-foreground">
                     {formatNumber(kpis.totalEntries)}

@@ -11,7 +11,12 @@ import {
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatVND, formatNumber, formatPercent } from "@megawin/shared/utils/number";
+import {
+  formatVND,
+  formatVNDCompact,
+  formatNumber,
+  formatPercent,
+} from "@megawin/shared/utils/number";
 import { calcTrendPercent, type DashboardDayKpis } from "../_lib/compute";
 import { HeroKpisSkeleton } from "./skeletons";
 
@@ -118,32 +123,32 @@ export function HeroKpis({ currentKpis, compareKpis, showTrend, isLoading }: Her
         iconBg="bg-blue-100 dark:bg-blue-900/50"
         iconColor="text-blue-600 dark:text-blue-400"
         label="Doanh thu"
-        value={formatVND(currentKpis.totalStake)}
+        value={formatVNDCompact(currentKpis.totalStake)}
         trend={stakeTrend}
         showTrend={showTrend}
-        subText="Hôm nay"
+        subText={showTrend ? undefined : formatVND(currentKpis.totalStake)}
       />
       <KpiCard
         icon={BarChart3}
         iconBg="bg-violet-100 dark:bg-violet-900/50"
         iconColor="text-violet-600 dark:text-violet-400"
         label="GGR"
-        value={formatVND(currentKpis.totalGgr)}
+        value={formatVNDCompact(currentKpis.totalGgr)}
         trend={ggrTrend}
         showTrend={showTrend}
         valueClassName={currentKpis.totalGgr < 0 ? "text-red-600 dark:text-red-400" : undefined}
-        subText="Hôm nay"
+        subText={showTrend ? undefined : formatVND(currentKpis.totalGgr)}
       />
       <KpiCard
         icon={Wallet}
         iconBg="bg-emerald-100 dark:bg-emerald-900/50"
         iconColor="text-emerald-600 dark:text-emerald-400"
         label="Lợi nhuận"
-        value={formatVND(currentKpis.totalProfit)}
+        value={formatVNDCompact(currentKpis.totalProfit)}
         trend={profitTrend}
         showTrend={showTrend}
         valueClassName={currentKpis.totalProfit < 0 ? "text-red-600 dark:text-red-400" : undefined}
-        subText="Hôm nay"
+        subText={showTrend ? undefined : formatVND(currentKpis.totalProfit)}
       />
       <KpiCard
         icon={Ticket}
@@ -153,7 +158,7 @@ export function HeroKpis({ currentKpis, compareKpis, showTrend, isLoading }: Her
         value={formatNumber(currentKpis.totalEntries)}
         trend={entriesTrend}
         showTrend={showTrend}
-        subText="Hôm nay"
+        subText={showTrend ? undefined : `${formatNumber(currentKpis.totalDraws)} kỳ quay`}
       />
       <KpiCard
         icon={Users}
@@ -163,7 +168,7 @@ export function HeroKpis({ currentKpis, compareKpis, showTrend, isLoading }: Her
         value={formatNumber(currentKpis.totalPlayers)}
         trend={playersTrend}
         showTrend={showTrend}
-        subText="Hôm nay"
+        subText={showTrend ? undefined : "Hôm nay"}
       />
     </div>
   );

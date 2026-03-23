@@ -4,8 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@megawin/next/client";
 import { dashboardKeys } from "@/lib/query-keys/dashboard";
 import type { GetDashboardKpisOutput } from "@megawin/game-core-application/use-cases/reports";
+import type { GetSystemOutstandingOutput } from "@megawin/game-core-application/use-cases/reports";
 import type { GetDashboardJackpotsOutput } from "@/app/api/dashboard/jackpots/_lib/types";
-import type { GetDashboardDrawsOutput } from "@/app/api/dashboard/draws/route";
+import type { GetDashboardDrawsOutput } from "@/app/api/dashboard/draws/_lib/types";
 
 /**
  * Fetch per-game settle data cho dashboard KPIs + Game Performance table.
@@ -32,10 +33,10 @@ export function useDashboardKpis(fd: string, compareDate?: string) {
 }
 
 /**
- * Fetch draw timeline — settling / settled / upcoming (live, refetch mỗi 30s).
+ * Fetch draw timeline — active / settled / scheduled (live, refetch mỗi 30s).
  *
- * Kết hợp system outstanding (đang settle) + upcoming draw schedule.
- * Dùng cho DrawTimeline card ở Zone 6.
+ * Orchestrate 7 game draw repos. Keno + Bingo18 → summary gộp.
+ * 5 game còn lại → events chi tiết với drawId thật từ DB.
  */
 export function useDashboardDraws() {
   return useQuery({
@@ -45,10 +46,28 @@ export function useDashboardDraws() {
     staleTime: 0,
   });
 }
+
+/** Fetch jackpot pool hiện tại cho 3 game có jackpot (live, refetch mỗi 30s). */
 export function useDashboardJackpots() {
   return useQuery({
     queryKey: dashboardKeys.jackpots,
     queryFn: () => apiClient.get<GetDashboardJackpotsOutput>("/dashboard/jackpots"),
+    refetchInterval: 30_000,
+    staleTime: 0,
+  });
+}
+
+/**
+ * Fetch outstanding system — tiền cược pending cross-game (live, refetch mỗi 30s).
+ *
+ * Trả SystemOutstandingGameDaily[] — 1 doc/game.
+ * Client-side compute tổng + per-game % breakdown.
+ */
+export function useDashboardOutstanding() {
+  return useQuery({
+    queryKey: dashboardKeys.outstanding,
+    queryFn: () =>
+      apiClient.get<GetSystemOutstandingOutput>("/dashboard/outstanding").then((r) => r.data),
     refetchInterval: 30_000,
     staleTime: 0,
   });

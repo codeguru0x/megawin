@@ -54,14 +54,15 @@ export interface GameColorTokens {
  * Keys là GameProduct enum values để có type-safety khi lookup.
  * Fallback: dùng `getGameColors(gameProduct)` để lấy với graceful default.
  *
- * Màu được đồng nhất từ trang jackpot (nguồn đáng tin cậy nhất — được thiết kế có chủ đích):
- * - Mega645:  teal      (#0d9488) — teal-600, khớp jackpot teal-400→emerald-500
- * - Power655: red       (#ef4444) — red-500, khớp jackpot red-500→orange-500
- * - Lotto535: amber     (#d97706) — amber-600, khớp jackpot amber-400→orange-500
- * - Keno:     orange    (#ea580c) — orange-600, khớp operations orange-500→orange-600
- * - Max3D:    violet    (#7c3aed) — violet-600, phân biệt rõ với Max3DPro
- * - Max3DPro: pink      (#db2777) — pink-600, phân biệt rõ với Max3D
- * - Bingo18:  lime/green (#16a34a) — green-600, phân biệt rõ với Mega645 (teal)
+ * Màu được chọn để tối đa hoá sự phân biệt trên chart/bar — đặc biệt khi
+ * hiển thị stacked bar nhỏ, các màu lân cận phải tách rõ ràng:
+ * - Mega645:  teal      (#0d9488) — teal-600
+ * - Power655: red       (#dc2626) — red-600 (đậm hơn red-500 để tách khỏi pink)
+ * - Lotto535: amber     (#d97706) — amber-600
+ * - Keno:     sky/cyan  (#0284c7) — sky-700 (tách xa khỏi amber/orange của Lotto535)
+ * - Max3D:    violet    (#7c3aed) — violet-600
+ * - Max3DPro: fuchsia   (#c026d3) — fuchsia-600 (tách rõ khỏi red Power655)
+ * - Bingo18:  lime      (#65a30d) — lime-600 (tách rõ khỏi teal Mega645)
  */
 export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
   // ── Mega 6/45 — Teal ─────────────────────────────────────────────────────
@@ -83,8 +84,9 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
 
   // ── Power 6/55 — Red/Orange ───────────────────────────────────────────────
   // Jackpot page: from-red-500 to-orange-500, overview: red-500→orange-500
+  // Hex: red-600 (#dc2626) đậm hơn red-500 để tách rõ khỏi pink Max3DPro trên bar
   [GameProduct.Power655]: {
-    hex: "#ef4444",
+    hex: "#dc2626",
     twBg: "bg-game-power655",
     twText: "text-game-power655",
     twBorder: "border-game-power655",
@@ -115,21 +117,22 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     iconGradient: "from-amber-400 to-orange-500",
   },
 
-  // ── Keno — Orange ────────────────────────────────────────────────────────
-  // Operations: from-orange-500 to-orange-600 (nhất quán qua tất cả pages)
+  // ── Keno — Sky/Cyan ─────────────────────────────────────────────────────
+  // Chuyển từ orange → sky-700 (#0284c7) để tách xa khỏi amber của Lotto535.
+  // Trên stacked bar, orange Keno và amber Lotto535 gần như không phân biệt được.
   [GameProduct.Keno]: {
-    hex: "#ea580c",
+    hex: "#0284c7",
     twBg: "bg-game-keno",
     twText: "text-game-keno",
     twBorder: "border-game-keno",
     twBgMuted: "bg-game-keno-muted",
-    gradientFrom: "from-orange-50/90",
-    gradientVia: "via-amber-50/70",
-    gradientTo: "to-yellow-50/50",
-    gradientFromDark: "dark:from-orange-950/50",
-    gradientViaDark: "dark:via-amber-950/40",
-    gradientToDark: "dark:to-yellow-950/30",
-    iconGradient: "from-orange-500 to-orange-600",
+    gradientFrom: "from-sky-50/90",
+    gradientVia: "via-cyan-50/70",
+    gradientTo: "to-blue-50/50",
+    gradientFromDark: "dark:from-sky-950/50",
+    gradientViaDark: "dark:via-cyan-950/40",
+    gradientToDark: "dark:to-blue-950/30",
+    iconGradient: "from-sky-500 to-sky-600",
   },
 
   // ── Max3D — Violet ────────────────────────────────────────────────────────
@@ -149,40 +152,39 @@ export const GAME_COLORS: Record<GameProduct, GameColorTokens> = {
     iconGradient: "from-violet-500 to-violet-600",
   },
 
-  // ── Max3D Pro — Pink ──────────────────────────────────────────────────────
-  // Màu pink để phân biệt rõ với Max3D (violet)
+  // ── Max3D Pro — Fuchsia ──────────────────────────────────────────────────
+  // Chuyển từ pink-600 (#db2777) → fuchsia-600 (#c026d3) để tách rõ khỏi red Power655.
+  // Pink gần red quá trên stacked bar nhỏ → fuchsia (tím hồng) tách xa hơn.
   [GameProduct.Max3dpro]: {
-    hex: "#db2777",
+    hex: "#c026d3",
     twBg: "bg-game-max3dpro",
     twText: "text-game-max3dpro",
     twBorder: "border-game-max3dpro",
     twBgMuted: "bg-game-max3dpro-muted",
-    gradientFrom: "from-pink-50/90",
-    gradientVia: "via-rose-50/70",
-    gradientTo: "to-fuchsia-50/50",
-    gradientFromDark: "dark:from-pink-950/50",
-    gradientViaDark: "dark:via-rose-950/40",
-    gradientToDark: "dark:to-fuchsia-950/30",
-    iconGradient: "from-pink-500 to-pink-600",
+    gradientFrom: "from-fuchsia-50/90",
+    gradientVia: "via-purple-50/70",
+    gradientTo: "to-pink-50/50",
+    gradientFromDark: "dark:from-fuchsia-950/50",
+    gradientViaDark: "dark:via-purple-950/40",
+    gradientToDark: "dark:to-pink-950/30",
+    iconGradient: "from-fuchsia-500 to-fuchsia-600",
   },
 
-  // ── Bingo 18 — Green ─────────────────────────────────────────────────────
-  // Green-600 (#16a34a) để phân biệt rõ với Mega645 (teal #0d9488)
-  // Operations & config đều dùng amber-orange — nhưng trùng Lotto535/Keno.
-  // Dùng green tươi để có bảng màu 7 game riêng biệt hoàn toàn.
+  // ── Bingo 18 — Lime ──────────────────────────────────────────────────────
+  // Lime-600 (#65a30d) tách rõ khỏi Mega645 (teal) — green-600 quá gần teal.
   [GameProduct.Bingo18]: {
-    hex: "#16a34a",
+    hex: "#65a30d",
     twBg: "bg-game-bingo18",
     twText: "text-game-bingo18",
     twBorder: "border-game-bingo18",
     twBgMuted: "bg-game-bingo18-muted",
-    gradientFrom: "from-green-50/90",
-    gradientVia: "via-emerald-50/70",
-    gradientTo: "to-teal-50/50",
-    gradientFromDark: "dark:from-green-950/50",
-    gradientViaDark: "dark:via-emerald-950/40",
-    gradientToDark: "dark:to-teal-950/30",
-    iconGradient: "from-green-500 to-green-600",
+    gradientFrom: "from-lime-50/90",
+    gradientVia: "via-green-50/70",
+    gradientTo: "to-emerald-50/50",
+    gradientFromDark: "dark:from-lime-950/50",
+    gradientViaDark: "dark:via-green-950/40",
+    gradientToDark: "dark:to-emerald-950/30",
+    iconGradient: "from-lime-500 to-lime-600",
   },
 };
 

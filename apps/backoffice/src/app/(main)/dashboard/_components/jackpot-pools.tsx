@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Zap, Flame } from "lucide-react";
+import { Trophy, Zap, Flame, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ import type {
   DashboardPower655JackpotInfo,
   GetDashboardJackpotsOutput,
 } from "@/app/api/dashboard/jackpots/_lib/types";
+import Link from "next/link";
 
 interface JackpotPoolsProps {
   data: GetDashboardJackpotsOutput | undefined;
@@ -68,14 +69,17 @@ function Mega645Card({ data }: { data: DashboardJackpotInfo }) {
 
       <div className="relative space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
+          <Link
+            href="/games/mega645/jackpot"
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
+          >
             <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-teal-400 to-emerald-500 shadow-md shadow-teal-500/25">
               <Trophy className="size-4.5 text-white" />
             </div>
             <p className="text-xs font-semibold uppercase tracking-wider text-teal-700/70 dark:text-teal-400/60">
               Mega 6/45 — Jackpot
             </p>
-          </div>
+          </Link>
           <Badge
             variant="outline"
             className="border-teal-300/60 bg-teal-50/80 text-[10px] text-teal-700 dark:border-teal-700/60 dark:bg-teal-950/50 dark:text-teal-300"
@@ -114,9 +118,20 @@ function Mega645Card({ data }: { data: DashboardJackpotInfo }) {
           </div>
         )}
 
-        <p className="text-[11px] text-teal-700/50 dark:text-teal-400/40">
-          {data.drawCount} kỳ đã tích lũy
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] text-teal-700/50 dark:text-teal-400/40">
+            {data.drawCount} kỳ đã tích lũy
+          </p>
+          {data.drawCount > 0 && (
+            <p className="flex items-center gap-1 text-[11px] text-teal-700/50 dark:text-teal-400/40">
+              <TrendingUp className="size-3" />~
+              {formatVNDCompact(
+                Math.round((data.currentAmount - data.seedAmount) / data.drawCount),
+              )}
+              /kỳ
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -156,14 +171,17 @@ function Power655Card({ data }: { data: DashboardPower655JackpotInfo }) {
 
       <div className="relative space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
+          <Link
+            href="/games/power655/jackpot"
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
+          >
             <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-md shadow-red-500/25">
               <Trophy className="size-4.5 text-white" />
             </div>
             <p className="text-xs font-semibold uppercase tracking-wider text-red-700/70 dark:text-red-400/60">
               Power 6/55 — Jackpot
             </p>
-          </div>
+          </Link>
           <Badge
             variant="outline"
             className="border-red-300/60 bg-red-50/80 text-[10px] text-red-700 dark:border-red-700/60 dark:bg-red-950/50 dark:text-red-300"
@@ -221,9 +239,17 @@ function Power655Card({ data }: { data: DashboardPower655JackpotInfo }) {
           </div>
         </div>
 
-        <p className="text-[11px] text-red-700/50 dark:text-red-400/40">
-          {data.drawCount} kỳ đã tích lũy
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] text-red-700/50 dark:text-red-400/40">
+            {data.drawCount} kỳ đã tích lũy
+          </p>
+          {data.drawCount > 0 && (
+            <p className="flex items-center gap-1 text-[11px] text-red-700/50 dark:text-red-400/40">
+              <TrendingUp className="size-3" />~
+              {formatVNDCompact(Math.round((data.jp1Current - data.jp1Seed) / data.drawCount))}/kỳ
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -257,14 +283,17 @@ function Lotto535Card({ data }: { data: DashboardJackpotInfo }) {
 
       <div className="relative space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5">
+          <Link
+            href="/games/lotto535/jackpot"
+            className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
+          >
             <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-amber-400 to-orange-500 shadow-md shadow-amber-500/25">
               <Trophy className="size-4.5 text-white" />
             </div>
             <p className="text-xs font-semibold uppercase tracking-wider text-amber-700/70 dark:text-amber-400/60">
               Lotto 5/35 — Jackpot
             </p>
-          </div>
+          </Link>
           <Badge
             variant="outline"
             className="border-amber-300/60 bg-amber-50/80 text-[10px] text-amber-700 dark:border-amber-700/60 dark:bg-amber-950/50 dark:text-amber-300"
@@ -303,9 +332,20 @@ function Lotto535Card({ data }: { data: DashboardJackpotInfo }) {
           </div>
         )}
 
-        <p className="text-[11px] text-amber-700/50 dark:text-amber-400/40">
-          {data.drawCount} kỳ đã tích lũy
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] text-amber-700/50 dark:text-amber-400/40">
+            {data.drawCount} kỳ đã tích lũy
+          </p>
+          {data.drawCount > 0 && (
+            <p className="flex items-center gap-1 text-[11px] text-amber-700/50 dark:text-amber-400/40">
+              <TrendingUp className="size-3" />~
+              {formatVNDCompact(
+                Math.round((data.currentAmount - data.seedAmount) / data.drawCount),
+              )}
+              /kỳ
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

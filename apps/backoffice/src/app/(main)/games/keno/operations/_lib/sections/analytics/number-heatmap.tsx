@@ -28,7 +28,7 @@ import type { TopComboItem } from "../../use-operations";
 
 // ─── Keno Number Colors — orange theme ───────────────────────────────────────
 
-const KENO_HEX = "#ea580c"; // orange-600
+const KENO_HEX = "#0284c7"; // sky-700 (game brand color)
 const KENO_BG = "bg-orange-500";
 const KENO_MUTED_BG = "bg-muted/40 text-muted-foreground";
 

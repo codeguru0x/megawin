@@ -12,10 +12,12 @@ import {
   useDashboardKpis,
   useDashboardJackpots,
   useDashboardDraws,
+  useDashboardOutstanding,
 } from "./_lib/use-dashboard-queries";
 import { computeDayKpis } from "./_lib/compute";
 import { HeroKpis } from "./_components/hero-kpis";
 import { JackpotPools } from "./_components/jackpot-pools";
+import { OutstandingStrip } from "./_components/outstanding-strip";
 import { GameOverview, PayoutRatioChart } from "./_components/game-performance";
 import { DrawTimeline } from "./_components/draw-timeline";
 import { HeroKpisSkeleton } from "./_components/skeletons";
@@ -34,6 +36,7 @@ export function DashboardContent() {
   const kpisQuery = useDashboardKpis(fd, compareDate);
   const jackpotsQuery = useDashboardJackpots();
   const drawsQuery = useDashboardDraws();
+  const outstandingQuery = useDashboardOutstanding();
 
   const currentKpis = kpisQuery.data ? computeDayKpis(kpisQuery.data, fd) : undefined;
 
@@ -83,11 +86,16 @@ export function DashboardContent() {
             variant="outline"
             size="icon"
             onClick={handleRefresh}
-            disabled={kpisQuery.isFetching || jackpotsQuery.isFetching || drawsQuery.isFetching}
+            disabled={
+              kpisQuery.isFetching ||
+              jackpotsQuery.isFetching ||
+              drawsQuery.isFetching ||
+              outstandingQuery.isFetching
+            }
             title="Làm mới dữ liệu"
           >
             <RefreshCw
-              className={`size-4 ${kpisQuery.isFetching || jackpotsQuery.isFetching || drawsQuery.isFetching ? "animate-spin" : ""}`}
+              className={`size-4 ${kpisQuery.isFetching || jackpotsQuery.isFetching || drawsQuery.isFetching || outstandingQuery.isFetching ? "animate-spin" : ""}`}
             />
           </Button>
         </div>
@@ -107,10 +115,13 @@ export function DashboardContent() {
         )
       )}
 
-      {/* ── Zone 2: Jackpot Pools ───────────────────────────────────── */}
+      {/* ── Zone 2: Outstanding Strip (LIVE) ─────────────────────── */}
+      <OutstandingStrip data={outstandingQuery.data} isLoading={outstandingQuery.isLoading} />
+
+      {/* ── Zone 3: Jackpot Pools ───────────────────────────────────── */}
       <JackpotPools data={jackpotsQuery.data} isLoading={jackpotsQuery.isLoading} />
 
-      {/* ── Zone 3: Tỷ lệ trả thưởng (1/3) + Hiệu suất game (2/3) ── */}
+      {/* ── Zone 4: Tỷ lệ trả thưởng (1/3) + Hiệu suất game (2/3) ── */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="xl:col-span-1">
           <PayoutRatioChart kpis={currentKpis} isLoading={kpisQuery.isLoading} />

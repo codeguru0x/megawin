@@ -4,14 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber, formatVNDCompact } from "@megawin/shared/utils/number";
 import { getGameLabel } from "../_lib/compute";
 import { getGameColors } from "@/lib/game-colors";
 import type {
   DrawTimelineEvent,
   HighFreqGameSummary,
   GetDashboardDrawsOutput,
-} from "@/app/api/dashboard/draws/route";
+} from "@/app/api/dashboard/draws/_lib/types";
 import {
   CheckCircle2,
   Loader2,
@@ -64,6 +64,18 @@ function opsUrl(gameProduct: string, drawId: string) {
   return `/games/${gameProduct}/operations?draw=${encodeURIComponent(drawId)}`;
 }
 
+/**
+ * Format drawDate (YYYY-MM-DD) thành DD/MM ngắn gọn.
+ * Nếu drawDate cùng ngày hôm nay → bỏ qua ngày, chỉ hiện #drawNo.
+ */
+function formatDrawLabel(drawDate: string, drawNo: number): string {
+  const today = new Date().toISOString().slice(0, 10);
+  const dd = drawDate.slice(8, 10);
+  const mm = drawDate.slice(5, 7);
+  const prefix = drawDate === today ? "" : `${dd}/${mm} `;
+  return `${prefix}#${String(drawNo).padStart(3, "0")}`;
+}
+
 // ─── Draw event row — clickable link ────────────────────────────────────────
 
 function DrawEventRow({ event }: { event: DrawTimelineEvent }) {
@@ -86,11 +98,16 @@ function DrawEventRow({ event }: { event: DrawTimelineEvent }) {
       <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">
         {getGameLabel(event.gameProduct)}
       </span>
-      <span className="shrink-0 font-mono text-[11px] text-muted-foreground">#{event.drawNo}</span>
+      <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
+        {formatDrawLabel(event.drawDate, event.drawNo)}
+      </span>
       <div className="flex shrink-0 items-center gap-1.5">
         {isActive && event.pendingEntries != null && (
           <span className="text-[10px] tabular-nums text-blue-600 dark:text-blue-400">
             {formatNumber(event.pendingEntries)} vé
+            {event.pendingStake != null && event.pendingStake > 0 && (
+              <> · {formatVNDCompact(event.pendingStake)}</>
+            )}
           </span>
         )}
         <span className="w-16 text-right text-[11px] tabular-nums text-muted-foreground">

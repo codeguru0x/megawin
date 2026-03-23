@@ -21,4 +21,7 @@ export const dashboardKeys = {
 
   /** Draw timeline — settling / settled / upcoming (live, refetch 30s). */
   draws: [MODULE, "draws"] as const,
+
+  /** Outstanding system — tiền cược pending cross-game (live, refetch 30s). */
+  outstanding: [MODULE, "outstanding"] as const,
 } as const;
