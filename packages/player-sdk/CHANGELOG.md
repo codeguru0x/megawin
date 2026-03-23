@@ -4,6 +4,278 @@ Tất cả thay đổi đáng chú ý của `@megawin/player-sdk` được ghi t
 
 ---
 
+## [1.0.12] - 2026-03-23
+
+### Breaking Changes
+
+#### `Bingo18BasicBoard` — Thêm `boardNo` (required) và đổi `kind` → `tripleKind`.
+
+```ts
+// TRƯỚC (SAI — handler bắt buộc boardNo, không có kind):
+const board: Bingo18BasicBoard = {
+  playType: "tripleMatch",
+  kind: "specific", // ← sai tên
+  number: 5,
+};
+
+// SAU:
+const board: Bingo18BasicBoard = {
+  boardNo: "A", // ← bắt buộc, mỗi vé tối đa 6 boards
+  playType: "tripleMatch",
+  tripleKind: "specific", // ← đúng tên theo handler
+  number: 5,
+};
+```
+
+#### `Max3dproBoardInput` — Tách thành discriminated union, thêm `playType: "straight"` (required)
+
+```ts
+// TRƯỚC (SAI — thiếu playType, triplets/frontDigits/backDigits optional sai):
+const board: Max3dproBoardInput = {
+  boardNo: "A",
+  playMode: "multiNumber",
+  triplets: ["123", "456"],
+};
+
+// SAU — multiNumber:
+const board: Max3dproMultiNumberBoardInput = {
+  boardNo: "A",
+  playMode: "multiNumber",
+  playType: "straight", // ← bắt buộc
+  triplets: ["123", "456", "789"],
+};
+
+// SAU — multiDigit:
+const board: Max3dproMultiDigitBoardInput = {
+  boardNo: "B",
+  playMode: "multiDigit",
+  playType: "straight", // ← bắt buộc
+  frontDigits: [1, 2, 3],
+  backDigits: [4, 5, 6],
+};
+```
+
+**Migration Guide:** Cập nhật tất cả nơi tạo `Max3dproBoardInput` để thêm `playType: "straight"` và dùng đúng interface theo `playMode`.
+
+**Types mới được export:**
+
+- `Max3dproMultiNumberBoardInput`
+- `Max3dproMultiDigitBoardInput`
+
+`Max3dproBoardInput` vẫn tồn tại là union type của hai interface trên.
+
+---
+
+## [1.0.11] - 2026-03-23
+
+### Breaking Changes
+
+#### `{Game}TicketPurchaseInput` — Đổi `drawId` + `drawCount` thành `drawIds: string[]` (5 games)
+
+Các game Mega 6/45, Lotto 5/35, Power 6/55, Max 3D, Max 3D Pro đã dùng `drawIds: string[]` tại handler từ trước. SDK type bị khai báo sai là `drawId + drawCount`. Từ v1.0.11 SDK đã đồng bộ đúng với handler.
+
+| Game       | Type bị thay đổi              |
+| ---------- | ----------------------------- |
+| Mega 6/45  | `Mega645TicketPurchaseInput`  |
+| Lotto 5/35 | `Lotto535TicketPurchaseInput` |
+| Power 6/55 | `Power655TicketPurchaseInput` |
+| Max 3D     | `Max3dTicketPurchaseInput`    |
+| Max 3D Pro | `Max3dproTicketPurchaseInput` |
+
+**Migration Guide:**
+
+```ts
+// TRƯỚC (v1.0.10 trở về trước — SAI, handler trả 400):
+client.mega645.placeBet({
+  drawId: "2026-03-07.001",
+  drawCount: 3,
+  boards: [...],
+});
+
+// SAU (v1.0.11+):
+client.mega645.placeBet({
+  drawIds: ["2026-03-07.001", "2026-03-14.001", "2026-03-21.001"],
+  boards: [...],
+});
+```
+
+Tương tự cho `client.lotto535`, `client.power655`, `client.max3d`, `client.max3dpro`.
+
+> Lưu ý: `drawIds` là mảng các drawId cụ thể muốn tham gia, **không phải** drawId bắt đầu + số kỳ liên tiếp. Tối đa 6 kỳ mỗi vé.
+
+---
+
+## [1.0.10] - 2026-03-22
+
+### Breaking Changes
+
+#### `PlaceBetResponse` — Bổ sung đầy đủ fields (tất cả games)
+
+Trước đây `{Game}PlaceBetResponse` chỉ trả về 3 fields tối thiểu. Từ v1.0.10, response trả về đầy đủ thông tin vé vừa tạo để hiển thị ngay mà không cần gọi thêm API:
+
+| Game       | Type                       |
+| ---------- | -------------------------- |
+| Keno       | `KenoPlaceBetResponse`     |
+| Lotto 5/35 | `Lotto535PlaceBetResponse` |
+| Mega 6/45  | `Mega645PlaceBetResponse`  |
+| Power 6/55 | `Power655PlaceBetResponse` |
+| Max 3D     | `Max3dPlaceBetResponse`    |
+| Max 3D Pro | `Max3dproPlaceBetResponse` |
+| Bingo 18   | `Bingo18PlaceBetResponse`  |
+
+**Fields mới được thêm vào tất cả `PlaceBetResponse`:**
+
+```ts
+// TRƯỚC (v1.0.9 trở về trước):
+interface XxxPlaceBetResponse {
+  ticketId: string;
+  ticketNo: string;
+  totalAmount: number; // chỉ 3 fields
+}
+
+// SAU (v1.0.10+):
+interface XxxPlaceBetResponse {
+  ticketId: string;
+  ticketNo: string;
+  status: string; // thêm
+  drawPlan: {
+    drawIds: string[]; // thêm — danh sách kỳ đã đăng ký
+    drawCount: number; // thêm
+  };
+  pricing: {
+    unitPrice: number;
+    // ...              // xem chi tiết theo từng game
+    totalAmount: number;
+  };
+  boardCount: number; // thêm
+  entryCount: number; // thêm
+}
+```
+
+> `totalAmount` vẫn tồn tại trong `pricing.totalAmount`. Nếu code cũ dùng `result.totalAmount`, phải cập nhật sang `result.pricing.totalAmount`.
+
+---
+
+#### `KenoPlaceBetResponse.pricing` — Đổi tên field
+
+| Field cũ      | Field mới           | Ghi chú                        |
+| ------------- | ------------------- | ------------------------------ |
+| `betsPerDraw` | `selectionsPerDraw` | Số boards + side bets mỗi kỳ   |
+| _(không có)_  | `betUnitsPerDraw`   | Tổng đơn vị cược = Σ(betCount) |
+
+```ts
+// TRƯỚC:
+result.pricing.betsPerDraw; // SAI — không còn tồn tại
+
+// SAU:
+result.pricing.selectionsPerDraw; // số selections (boards + sideBets) mỗi kỳ
+result.pricing.betUnitsPerDraw; // tổng đơn vị cược = Σ(board.betCount) + Σ(sideBet.betCount)
+```
+
+Tương tự, `KenoTicketSummary.pricing` (trong `listPendingTickets`, `listTickets`) cũng đổi tên theo:
+
+- `betsPerDraw` → `selectionsPerDraw`
+- Thêm mới `betUnitsPerDraw`
+
+---
+
+#### `betCount` trong board/sideBet summary — Bắt buộc (required)
+
+`betCount` trong các summary type (trả về từ `getTicketEntries`, `listTickets`...) đã đổi từ optional sang **required**:
+
+| Game       | Type                                | Field bị ảnh hưởng |
+| ---------- | ----------------------------------- | ------------------ |
+| Keno       | `KenoBasicBoardSummary`             | `betCount: number` |
+| Keno       | `KenoSideBetSummary`                | `betCount: number` |
+| Keno       | `KenoEntryInfo.boards[].betCount`   | `betCount: number` |
+| Keno       | `KenoEntryInfo.sideBets[].betCount` | `betCount: number` |
+| Lotto 5/35 | `Lotto535BoardSummary`              | `betCount: number` |
+| Mega 6/45  | `Mega645BoardSummary`               | `betCount: number` |
+| Power 6/55 | `Power655BoardSummary`              | `betCount: number` |
+| Max 3D     | `Max3dBoardSummary`                 | `betCount: number` |
+| Max 3D Pro | `Max3dproBoardSummary`              | `betCount: number` |
+| Bingo 18   | `Bingo18BoardSummary`               | `betCount: number` |
+| Bingo 18   | `Bingo18SideBetSummary`             | `betCount: number` |
+
+**Lưu ý**: `betCount` trong **input** (khi place bet) vẫn là optional, mặc định = 1.
+
+---
+
+#### `GameRules` — Thêm `minBetCount` và `maxBetCount`
+
+Tất cả `{Game}GameRules` (trong `getGameConfig` response) đã thêm 2 fields mới:
+
+```ts
+interface XxxGameRules {
+  // ...fields cũ...
+  minBetCount: number; // thêm — số lần cược tối thiểu (thường = 1)
+  maxBetCount: number; // thêm — số lần cược tối đa cho 1 board/side bet
+}
+```
+
+Áp dụng cho tất cả games: Keno, Lotto 5/35, Mega 6/45, Power 6/55, Max 3D, Max 3D Pro, Bingo 18.
+
+---
+
+### Added
+
+- **Bingo 18**: `Bingo18ListPendingTicketsParams` — tham số phân trang cho `listPendingTickets` (chỉ `size` + `cursor`, không hỗ trợ lọc ngày)
+- **Bingo 18**: `Bingo18ListAllTicketsParams` — tham số lọc và phân trang cho `listTickets` (thêm `from` + `to`)
+
+### Migration Guide
+
+#### 1. `PlaceBetResponse.totalAmount` đã chuyển vào `pricing`
+
+```ts
+// TRƯỚC:
+const result = await client.lotto535.placeBet({ ... });
+console.log(result.totalAmount); // number — SAI, không còn ở root
+
+// SAU:
+console.log(result.pricing.totalAmount); // ✓
+```
+
+#### 2. `KenoTicketSummary` và `KenoPlaceBetResponse`: đổi tên field pricing
+
+```ts
+// TRƯỚC:
+ticket.pricing.betsPerDraw; // SAI — không còn tồn tại
+
+// SAU:
+ticket.pricing.selectionsPerDraw; // số boards + sideBets mỗi kỳ
+ticket.pricing.betUnitsPerDraw; // tổng đơn vị cược mỗi kỳ
+```
+
+#### 3. `betCount` trong summary giờ không thể undefined
+
+```ts
+// TRƯỚC — cần check optional:
+const count = board.betCount ?? 1;
+
+// SAU — luôn có giá trị:
+const count = board.betCount; // number, không cần fallback
+```
+
+---
+
+#### `KenoCurrentDrawResponse` — Xóa field `lastResult`
+
+Field `lastResult` đã bị **xóa** khỏi response của `getCurrentDraw()` (Keno).
+API không trả về field này — nếu code cũ truy cập `data.lastResult`, giá trị thực tế luôn là `undefined`.
+Để lấy kết quả kỳ gần nhất, dùng `listDrawResults()`.
+
+```ts
+// TRƯỚC — field tồn tại trong type nhưng API không bao giờ trả về:
+const data = await client.keno.getCurrentDraw();
+data.lastResult; // luôn undefined, TypeScript nay báo lỗi
+
+// SAU — dùng listDrawResults để lấy kết quả gần nhất:
+const results = await client.keno.listDrawResults({ size: 1 });
+const lastResult = results.items[0]; // ✓
+```
+
+---
+
 ## [1.0.9] - 2026-03-13
 
 ### Added

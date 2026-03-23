@@ -100,7 +100,7 @@ export interface KenoApi {
    *
    * **Endpoint:** `GET /games/keno/draws/current`
    *
-   * @returns Thông tin kỳ quay hiện tại và kết quả gần nhất
+   * @returns Thông tin kỳ quay hiện tại và danh sách kỳ đang active
    *
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
@@ -114,10 +114,6 @@ export interface KenoApi {
    * }
    *
    * console.log("Số kỳ đang active:", data.activeDraws.length);
-   *
-   * if (data.lastResult) {
-   *   console.log("Kết quả gần nhất:", data.lastResult.winningNumbers);
-   * }
    * ```
    */
   getCurrentDraw(): Promise<KenoCurrentDrawResponse>;

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,21 +15,39 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { editScheduleSchema, type EditScheduleInput } from "@megawin/game-bingo18/schemas";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { useUpdateSchedule } from "../../../use-operations";
-import { formatVNDate, formatVNTime, toVNDate } from "@megawin/shared/utils/date";
+import {
+  formatVNDate,
+  formatVNTimeWithSeconds,
+  toVNDateWithSeconds,
+} from "@megawin/shared/utils/date";
 
-/** Chuyển ISO string → "yyyy-MM-dd" theo giờ VN */
-function toVNDateStr(iso: string): string {
-  return formatVNDate(new Date(iso));
+function buildDefaultValues(draw: DrawSelectorItem): EditScheduleInput {
+  // salesOpenAt optional → fallback "" nếu chưa có
+  const openDate = draw.salesOpenAt ? formatVNDate(new Date(draw.salesOpenAt)) : "";
+  const openTime = draw.salesOpenAt ? formatVNTimeWithSeconds(new Date(draw.salesOpenAt)) : "";
+
+  return {
+    salesOpenDate: openDate,
+    salesOpenTime: openTime,
+    salesCloseDate: formatVNDate(new Date(draw.salesCloseAt)),
+    salesCloseTime: formatVNTimeWithSeconds(new Date(draw.salesCloseAt)),
+    // scheduledDrawAt luôn có (DrawDoc.drawTime) — giờ quay theo lịch
+    drawDate: formatVNDate(new Date(draw.scheduledDrawAt)),
+    drawTime: formatVNTimeWithSeconds(new Date(draw.scheduledDrawAt)),
+  };
 }
 
 /**
  * Dialog sửa lịch kỳ quay Bingo 18.
  *
- * Bingo 18: chu kỳ 6 phút — giờ đóng bán thường cách quay ~30 giây.
- * drawDate/drawTime là cặp độc lập — user tự điều chỉnh riêng biệt với salesClose.
- * Form reset tự động khi dialog mở.
+ * Client validate: salesCloseAt < drawAt (thứ tự cơ bản).
+ * Server validate buffer chính xác dựa trên salesCloseBeforeSeconds trong game config.
+ *
+ * Time input dùng step="1" (HH:mm:ss) — Bingo 18 chu kỳ 6 phút, cần độ chính xác đến giây.
+ * Form reset tự động khi dialog mở bằng useEffect + form.reset().
  */
 export function EditScheduleAction({
   draw,
@@ -42,53 +62,32 @@ export function EditScheduleAction({
 }) {
   const updateSchedule = useUpdateSchedule();
 
-  const [salesOpenDate, setSalesOpenDate] = useState(
-    draw.salesOpenAt ? toVNDateStr(draw.salesOpenAt) : toVNDateStr(draw.salesCloseAt),
-  );
-  const [salesOpen, setSalesOpen] = useState(
-    draw.salesOpenAt ? formatVNTime(new Date(draw.salesOpenAt)) : "",
-  );
-  const [salesCloseDate, setSalesCloseDate] = useState(toVNDateStr(draw.salesCloseAt));
-  const [salesClose, setSalesClose] = useState(formatVNTime(new Date(draw.salesCloseAt)));
-  const [drawDate, setDrawDate] = useState(toVNDateStr(draw.scheduledDrawAt));
-  const [drawTimeVal, setDrawTimeVal] = useState(formatVNTime(new Date(draw.scheduledDrawAt)));
-  const [error, setError] = useState<string | null>(null);
+  const form = useForm<EditScheduleInput>({
+    resolver: zodResolver(editScheduleSchema),
+    defaultValues: buildDefaultValues(draw),
+  });
 
-  // Reset về giá trị draw hiện tại mỗi khi dialog mở
+  // Reset form về giá trị draw hiện tại mỗi khi dialog mở
   useEffect(() => {
     if (open) {
-      const closeDate = toVNDateStr(draw.salesCloseAt);
-      setSalesOpenDate(draw.salesOpenAt ? toVNDateStr(draw.salesOpenAt) : closeDate);
-      setSalesOpen(draw.salesOpenAt ? formatVNTime(new Date(draw.salesOpenAt)) : "");
-      setSalesCloseDate(closeDate);
-      setSalesClose(formatVNTime(new Date(draw.salesCloseAt)));
-      setDrawDate(toVNDateStr(draw.scheduledDrawAt));
-      setDrawTimeVal(formatVNTime(new Date(draw.scheduledDrawAt)));
-      setError(null);
+      form.reset(buildDefaultValues(draw));
     }
-  }, [open, draw]);
+  }, [open, draw, form]);
 
-  function handleSubmit() {
-    setError(null);
-    if (!salesOpen || !salesClose) {
-      setError("Vui lòng nhập đầy đủ giờ mở và đóng bán.");
-      return;
-    }
-    if (!drawTimeVal) {
-      setError("Vui lòng nhập giờ quay số.");
-      return;
-    }
+  function handleSubmit(data: EditScheduleInput) {
+    const openISO = toVNDateWithSeconds(data.salesOpenDate, data.salesOpenTime).toISOString();
+    const closeISO = toVNDateWithSeconds(data.salesCloseDate, data.salesCloseTime).toISOString();
+    const drawISO = toVNDateWithSeconds(data.drawDate, data.drawTime).toISOString();
 
-    const body: { salesOpenAt: string; salesCloseAt: string; drawTime?: string } = {
-      salesOpenAt: toVNDate(salesOpenDate, salesOpen).toISOString(),
-      salesCloseAt: toVNDate(salesCloseDate, salesClose).toISOString(),
-    };
-
+    // So sánh với scheduledDrawAt để biết user có thực sự thay đổi giờ quay không
     const originalDrawISO = draw.scheduledDrawAt;
-    const newDrawISO = toVNDate(drawDate, drawTimeVal).toISOString();
+    const body: { salesOpenAt: string; salesCloseAt: string; drawTime?: string } = {
+      salesOpenAt: openISO,
+      salesCloseAt: closeISO,
+    };
     // Chỉ gửi drawTime khi thực sự thay đổi
-    if (newDrawISO !== originalDrawISO) {
-      body.drawTime = newDrawISO;
+    if (drawISO !== originalDrawISO) {
+      body.drawTime = drawISO;
     }
 
     updateSchedule.mutate(
@@ -97,6 +96,12 @@ export function EditScheduleAction({
     );
   }
 
+  const {
+    register,
+    handleSubmit: rhfSubmit,
+    formState: { errors },
+  } = form;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -104,37 +109,24 @@ export function EditScheduleAction({
           <DialogTitle>
             Sửa lịch — Kỳ {String(draw.drawNo).padStart(3, "0")} · {draw.drawDate} {draw.drawTime}
           </DialogTitle>
-          <DialogDescription>
-            Bingo 18 quay cố định mỗi 6 phút. Giờ đóng bán thường trước quay ~30 giây.
-          </DialogDescription>
+          <DialogDescription>Giờ quay số phải sau giờ đóng bán.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
+        <form onSubmit={rhfSubmit(handleSubmit)} className="space-y-4 py-2">
           {/* Mở bán */}
           <div className="space-y-2">
             <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Giờ mở bán
             </Label>
             <div className="flex gap-2">
-              <Input
-                type="date"
-                className="flex-1"
-                value={salesOpenDate}
-                onChange={(e) => {
-                  setSalesOpenDate(e.target.value);
-                  setError(null);
-                }}
-              />
-              <Input
-                type="time"
-                className="w-28"
-                value={salesOpen}
-                onChange={(e) => {
-                  setSalesOpen(e.target.value);
-                  setError(null);
-                }}
-              />
+              <Input type="date" className="flex-1" {...register("salesOpenDate")} />
+              <Input type="time" step="1" className="w-32" {...register("salesOpenTime")} />
             </div>
+            {(errors.salesOpenDate ?? errors.salesOpenTime) && (
+              <p className="text-sm font-medium text-destructive">
+                {errors.salesOpenDate?.message ?? errors.salesOpenTime?.message}
+              </p>
+            )}
           </div>
 
           {/* Đóng bán */}
@@ -143,25 +135,14 @@ export function EditScheduleAction({
               Giờ đóng bán
             </Label>
             <div className="flex gap-2">
-              <Input
-                type="date"
-                className="flex-1"
-                value={salesCloseDate}
-                onChange={(e) => {
-                  setSalesCloseDate(e.target.value);
-                  setError(null);
-                }}
-              />
-              <Input
-                type="time"
-                className="w-28"
-                value={salesClose}
-                onChange={(e) => {
-                  setSalesClose(e.target.value);
-                  setError(null);
-                }}
-              />
+              <Input type="date" className="flex-1" {...register("salesCloseDate")} />
+              <Input type="time" step="1" className="w-32" {...register("salesCloseTime")} />
             </div>
+            {(errors.salesCloseDate ?? errors.salesCloseTime) && (
+              <p className="text-sm font-medium text-destructive">
+                {errors.salesCloseDate?.message ?? errors.salesCloseTime?.message}
+              </p>
+            )}
           </div>
 
           {/* Quay số */}
@@ -170,46 +151,38 @@ export function EditScheduleAction({
               Giờ quay số
             </Label>
             <div className="flex gap-2">
-              <Input
-                type="date"
-                className="flex-1"
-                value={drawDate}
-                onChange={(e) => {
-                  setDrawDate(e.target.value);
-                  setError(null);
-                }}
-              />
-              <Input
-                type="time"
-                className="w-28"
-                value={drawTimeVal}
-                onChange={(e) => {
-                  setDrawTimeVal(e.target.value);
-                  setError(null);
-                }}
-              />
+              <Input type="date" className="flex-1" {...register("drawDate")} />
+              <Input type="time" step="1" className="w-32" {...register("drawTime")} />
             </div>
+            {(errors.drawDate ?? errors.drawTime) && (
+              <p className="text-sm font-medium text-destructive">
+                {errors.drawDate?.message ?? errors.drawTime?.message}
+              </p>
+            )}
             <p className="text-[11px] text-muted-foreground/70">
               Bingo 18 quay cố định mỗi 6 phút. Chỉ sửa khi có lý do đặc biệt.
             </p>
           </div>
 
-          {error && <p className="text-sm font-medium text-destructive">{error}</p>}
-        </div>
+          {/* Root-level error (cross-field từ superRefine) */}
+          {errors.root && (
+            <p className="text-sm font-medium text-destructive">{errors.root.message}</p>
+          )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange?.(false)}>
-            Huỷ bỏ
-          </Button>
-          <Button onClick={handleSubmit} disabled={updateSchedule.isPending || disabled}>
-            {updateSchedule.isPending ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <Check className="mr-2 size-4" />
-            )}
-            Lưu thay đổi
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange?.(false)}>
+              Huỷ bỏ
+            </Button>
+            <Button type="submit" disabled={updateSchedule.isPending || disabled}>
+              {updateSchedule.isPending ? (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              ) : (
+                <Check className="mr-2 size-4" />
+              )}
+              Lưu thay đổi
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

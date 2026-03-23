@@ -6,6 +6,7 @@ import {
   AdminEnableUserCommand,
   AdminGetUserCommand,
   AdminInitiateAuthCommand,
+  AdminRespondToAuthChallengeCommand,
   AdminSetUserMFAPreferenceCommand,
   AdminSetUserMFAPreferenceCommandInput,
   AdminSetUserPasswordCommand,
@@ -464,6 +465,90 @@ export async function adminInitiateAuth(
     expiresIn: auth.ExpiresIn ?? 3600,
     tokenType: auth.TokenType ?? "Bearer",
   };
+}
+
+export interface AdminInitiateAuthWithMfaParams {
+  userPoolId: string;
+  clientId: string;
+  username: string;
+  password: string;
+  /** Mã TOTP 6 số — cung cấp khi user đã bật MFA để xử lý challenge SOFTWARE_TOKEN_MFA tự động. */
+  totpCode?: string;
+}
+
+/**
+ * Khởi tạo auth flow ADMIN_NO_SRP_AUTH và tự động xử lý challenge SOFTWARE_TOKEN_MFA.
+ *
+ * Khi user đã bật MFA, Cognito trả về challenge thay vì token.
+ * Hàm này respond challenge với totpCode nếu được cung cấp, trả về accessToken bình thường.
+ */
+export async function adminInitiateAuthWithMfa(
+  params: AdminInitiateAuthWithMfaParams,
+): Promise<AdminInitiateAuthResult> {
+  const { userPoolId, clientId, username, password, totpCode } = params;
+
+  const result = await cognitoClient.send(
+    new AdminInitiateAuthCommand({
+      UserPoolId: userPoolId,
+      ClientId: clientId,
+      AuthFlow: "ADMIN_NO_SRP_AUTH",
+      AuthParameters: {
+        USERNAME: username,
+        PASSWORD: password,
+      },
+    }),
+  );
+
+  // Không có challenge → trả về token trực tiếp (user chưa bật MFA)
+  if (result.AuthenticationResult) {
+    const auth = result.AuthenticationResult;
+    return {
+      accessToken: auth.AccessToken!,
+      idToken: auth.IdToken!,
+      refreshToken: auth.RefreshToken!,
+      expiresIn: auth.ExpiresIn ?? 3600,
+      tokenType: auth.TokenType ?? "Bearer",
+    };
+  }
+
+  // Cognito yêu cầu TOTP challenge (user đã bật MFA)
+  if (result.ChallengeName === "SOFTWARE_TOKEN_MFA") {
+    if (!totpCode) {
+      throw new Error("MFA_REQUIRED: Tài khoản đã bật MFA, cần cung cấp mã TOTP");
+    }
+
+    const challengeResult = await cognitoClient.send(
+      new AdminRespondToAuthChallengeCommand({
+        UserPoolId: userPoolId,
+        ClientId: clientId,
+        ChallengeName: "SOFTWARE_TOKEN_MFA",
+        Session: result.Session,
+        ChallengeResponses: {
+          USERNAME: username,
+          SOFTWARE_TOKEN_MFA_CODE: totpCode,
+        },
+      }),
+    );
+
+    if (!challengeResult.AuthenticationResult) {
+      throw new Error("Authentication failed after MFA challenge");
+    }
+
+    const auth = challengeResult.AuthenticationResult;
+    return {
+      accessToken: auth.AccessToken!,
+      idToken: auth.IdToken!,
+      refreshToken: auth.RefreshToken!,
+      expiresIn: auth.ExpiresIn ?? 3600,
+      tokenType: auth.TokenType ?? "Bearer",
+    };
+  }
+
+  throw new Error(
+    result.ChallengeName
+      ? `Auth challenge required: ${result.ChallengeName}`
+      : "Authentication failed: no result returned",
+  );
 }
 
 // ============ Change user password (verify old + set new) ============

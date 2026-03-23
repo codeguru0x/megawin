@@ -33,6 +33,11 @@
       "import": "./src/use-cases/tenants/index.ts",
       "default": "./dist/use-cases/tenants/index.js"
     },
+    "./use-cases/security": {
+      "types": "./src/use-cases/security/index.ts",
+      "import": "./src/use-cases/security/index.ts",
+      "default": "./dist/use-cases/security/index.js"
+    },
     "./repos": {
       "types": "./src/infras/repos/index.ts",
       "import": "./src/infras/repos/index.ts",

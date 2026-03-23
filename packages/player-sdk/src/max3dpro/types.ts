@@ -3,34 +3,137 @@
  * @module
  */
 
-import type { Max3dproPlayMode } from "./enums";
-
 // ─────────────────────────────────────────────
 // Input Types
 // ─────────────────────────────────────────────
 
-export interface Max3dproMultiNumberInput {
-  playMode: "multiNumber";
-  triplets: string[];
-}
-
-export interface Max3dproMultiDigitInput {
-  playMode: "multiDigit";
-  frontDigits: number[];
-  backDigits: number[];
-}
-
-export interface Max3dproBoardInput {
+/**
+ * Board Max 3D Pro chế độ multiNumber.
+ *
+ * Chọn 3-20 bộ ba số, hệ thống tạo P(n,2) ordered pairs.
+ *
+ * @example
+ * ```ts
+ * const board: Max3dproMultiNumberBoardInput = {
+ *   boardNo: "A",
+ *   playMode: "multiNumber",
+ *   playType: "straight",
+ *   triplets: ["123", "456", "789"],
+ * };
+ * ```
+ */
+export interface Max3dproMultiNumberBoardInput {
+  /** Ký hiệu board trong vé. Tối đa 4 boards, không được trùng. */
   boardNo: string;
-  playMode: Max3dproPlayMode;
-  triplets?: string[];
-  frontDigits?: number[];
-  backDigits?: number[];
+  /** Chế độ chơi, luôn là `"multiNumber"` cho interface này. */
+  playMode: "multiNumber";
+  /** Loại chơi. Luôn là `"straight"` cho Max 3D Pro. */
+  playType: "straight";
+  /**
+   * Danh sách bộ ba số chọn (3-20 bộ).
+   *
+   * Mỗi bộ là chuỗi 3 chữ số VD: `"123"`, `"007"`.
+   * Hệ thống tạo P(n,2) ordered pairs từ danh sách này.
+   */
+  triplets: string[];
+  /**
+   * Số lần cược nhân bội cho board này (≥ minBetCount, ≤ maxBetCount).
+   *
+   * Tiền cược board = lineCount × betCount × unitPrice. Mặc định = 1.
+   */
+  betCount?: number;
 }
 
+/**
+ * Board Max 3D Pro chế độ multiDigit.
+ *
+ * Chọn đúng 3 chữ số đầu + 3 chữ số sau, hệ thống expand hoán vị.
+ *
+ * @example
+ * ```ts
+ * const board: Max3dproMultiDigitBoardInput = {
+ *   boardNo: "B",
+ *   playMode: "multiDigit",
+ *   playType: "straight",
+ *   frontDigits: [1, 2, 3],
+ *   backDigits: [4, 5, 6],
+ * };
+ * ```
+ */
+export interface Max3dproMultiDigitBoardInput {
+  /** Ký hiệu board trong vé. Tối đa 4 boards, không được trùng. */
+  boardNo: string;
+  /** Chế độ chơi, luôn là `"multiDigit"` cho interface này. */
+  playMode: "multiDigit";
+  /** Loại chơi. Luôn là `"straight"` cho Max 3D Pro. */
+  playType: "straight";
+  /**
+   * 3 chữ số phần đầu của bộ số (mỗi chữ số 0-9).
+   *
+   * Hệ thống tạo hoán vị từ 3 chữ số này cho phần đầu.
+   */
+  frontDigits: number[];
+  /**
+   * 3 chữ số phần sau của bộ số (mỗi chữ số 0-9).
+   *
+   * Hệ thống tạo hoán vị từ 3 chữ số này cho phần sau.
+   */
+  backDigits: number[];
+  /**
+   * Số lần cược nhân bội cho board này (≥ minBetCount, ≤ maxBetCount).
+   *
+   * Tiền cược board = lineCount × betCount × unitPrice. Mặc định = 1.
+   */
+  betCount?: number;
+}
+
+/**
+ * Input cho 1 board khi mua vé Max 3D Pro.
+ *
+ * Là union của `Max3dproMultiNumberBoardInput` và `Max3dproMultiDigitBoardInput`,
+ * phân biệt qua field `playMode`.
+ */
+export type Max3dproBoardInput = Max3dproMultiNumberBoardInput | Max3dproMultiDigitBoardInput;
+
+/**
+ * Input mua vé Max 3D Pro.
+ *
+ * Gửi lên `POST /games/max3dpro/bets` qua `client.max3dpro.placeBet()`.
+ *
+ * @example
+ * ```ts
+ * import type { Max3dproTicketPurchaseInput } from "@megawin/player-sdk/max3dpro";
+ *
+ * const input: Max3dproTicketPurchaseInput = {
+ *   drawIds: ["2026-03-07.001", "2026-03-10.001"],
+ *   boards: [
+ *     {
+ *       boardNo: "A",
+ *       playMode: "multiNumber",
+ *       playType: "straight",
+ *       triplets: ["123", "456", "789"],
+ *     },
+ *     {
+ *       boardNo: "B",
+ *       playMode: "multiDigit",
+ *       playType: "straight",
+ *       frontDigits: [1, 2, 3],
+ *       backDigits: [4, 5, 6],
+ *     },
+ *   ],
+ * };
+ * ```
+ */
 export interface Max3dproTicketPurchaseInput {
-  drawId: string;
-  drawCount: number;
+  /**
+   * Danh sách drawId các kỳ quay tham gia.
+   *
+   * - Format mỗi ID: `YYYY-MM-DD.NNN` (VD: `"2026-03-07.001"`)
+   * - Tối thiểu 1, tối đa 6 kỳ
+   * - Không được trùng lặp
+   */
+  drawIds: string[];
+  /** Danh sách boards trong vé. Tối đa 4 boards, không được trùng boardNo. */
   boards: Max3dproBoardInput[];
 }
 
@@ -50,6 +153,10 @@ export interface Max3dproGameRules {
   multiNumberMin: number;
   /** Số bộ ba số tối đa cho multiNumber mode. */
   multiNumberMax: number;
+  /** Số lần cược tối thiểu cho 1 board. */
+  minBetCount: number;
+  /** Số lần cược tối đa cho 1 board. */
+  maxBetCount: number;
 }
 
 export interface Max3dproPrizeAmounts {
@@ -291,7 +398,10 @@ export interface Max3dproTicketSummary {
   /** Thông tin giá cược. */
   pricing: {
     unitPrice: number;
+    /** Tổng pairs mỗi kỳ = Σ(board.lineCount). */
     linesPerDraw: number;
+    /** Tổng đơn vị cược mỗi kỳ = Σ(board.lineCount × board.betCount). */
+    betUnitsPerDraw: number;
     amountPerDraw: number;
     totalAmount: number;
   };
@@ -307,6 +417,12 @@ export interface Max3dproTicketSummary {
     /** Các chữ số cuối (dùng cho multiDigit). */
     backDigits?: number[];
     lineCount: number;
+    /**
+     * Số lần cược nhân bội (≥ 1).
+     *
+     * Tiền cược board = lineCount × betCount × unitPrice.
+     */
+    betCount: number;
   }>;
   /**
    * Tiến độ settle.
@@ -339,4 +455,357 @@ export interface Max3dproTicketSummary {
   };
   /** Thời điểm mua vé (ISO 8601). */
   createdAt: string;
+}
+
+// ─────────────────────────────────────────────
+// Response Types — Entry (chi tiết vé theo kỳ)
+// ─────────────────────────────────────────────
+
+/**
+ * Chi tiết entry (vé 1 kỳ quay) cho UI — Max 3D Pro.
+ */
+export interface Max3dproEntryResult {
+  /** ID entry trong hệ thống. */
+  id: string;
+  /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
+  drawId: string;
+  /** Ngày quay. Format: `YYYY-MM-DD`. */
+  drawDate: string;
+  /** Trạng thái entry. */
+  status: string;
+  /** Tiền cược kỳ này (VND) = betUnitCount × unitPrice. */
+  amount: number;
+  /** Đơn giá 1 lần tham gia dự thưởng (VND). */
+  unitPrice: number;
+  /** Số pairs = Σ(board.lineCount) trong entry. */
+  lineCount: number;
+  /** Tổng đơn vị cược = Σ(board.lineCount × board.betCount). amount = betUnitCount × unitPrice. */
+  betUnitCount: number;
+
+  /** Kết quả quay. `undefined` nếu chưa quay. */
+  result?: {
+    special: string[];
+    first: string[];
+    second: string[];
+    third: string[];
+    publishedAt: string;
+  };
+
+  /** Chi tiết trả thưởng. `undefined` nếu chưa settle. */
+  payout?: {
+    /** Tổng tiền thắng kỳ này (VND). */
+    winAmount: number;
+    /** Chi tiết theo từng tier trúng. */
+    tiers: Array<{
+      /**
+       * Hạng giải trúng.
+       * `"special"` | `"specialSub"` | `"first"` | `"second"` | `"third"` |
+       * `"fourth"` | `"fifth"` | `"sixth"`.
+       */
+      tier: string;
+      /** Tiền thưởng hạng này (VND). */
+      amount: number;
+    }>;
+  };
+}
+
+// ─────────────────────────────────────────────
+// Response Types — Place Bet
+// ─────────────────────────────────────────────
+
+/**
+ * Response khi đặt cược Max 3D Pro thành công.
+ *
+ * Trả về từ `POST /games/max3dpro/bets` qua `client.max3dpro.placeBet()`.
+ */
+export interface Max3dproPlaceBetResponse {
+  /** ID vé duy nhất trong hệ thống. */
+  ticketId: string;
+  /** Mã vé hiển thị cho người chơi. VD: `"M3DP-20260307-00004"`. */
+  ticketNo: string;
+  /** Trạng thái vé sau khi tạo. */
+  status: string;
+
+  /** Kế hoạch kỳ quay. */
+  drawPlan: {
+    /** Danh sách drawId đã đăng ký. */
+    drawIds: string[];
+    /** Tổng số kỳ tham gia. */
+    drawCount: number;
+  };
+
+  /** Thông tin giá cược. */
+  pricing: {
+    /** Đơn giá 1 lần tham gia dự thưởng (VND). */
+    unitPrice: number;
+    /** Tổng pairs mỗi kỳ = Σ(board.lineCount). */
+    linesPerDraw: number;
+    /** Tổng đơn vị cược mỗi kỳ = Σ(board.lineCount × board.betCount). */
+    betUnitsPerDraw: number;
+    /** Giá mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
+    amountPerDraw: number;
+    /** Tổng tiền toàn vé (VND). */
+    totalAmount: number;
+  };
+
+  /** Số lượng boards trên vé. */
+  boardCount: number;
+  /** Số lượng entries đã tạo (= số kỳ quay). */
+  entryCount: number;
+}
+
+// ─────────────────────────────────────────────
+// Params & Pagination Response Types
+// ─────────────────────────────────────────────
+
+/**
+ * Tham số phân trang cho danh sách vé Max 3D Pro đang chờ xử lý.
+ *
+ * Cursor-based pagination. Không hỗ trợ lọc ngày — chỉ trả vé đang active.
+ *
+ * @example
+ * ```ts
+ * const page1 = await client.max3dpro.listPendingTickets({ size: 10 });
+ *
+ * if (page1.nextCursor) {
+ *   const page2 = await client.max3dpro.listPendingTickets({
+ *     size: 10,
+ *     cursor: page1.nextCursor,
+ *   });
+ * }
+ * ```
+ */
+export interface Max3dproListPendingTicketsParams {
+  /** Số lượng vé mỗi trang (mặc định 20). */
+  size?: number;
+  /** Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước). */
+  cursor?: string;
+}
+
+/**
+ * Tham số lọc và phân trang cho lịch sử vé Max 3D Pro (tất cả trạng thái).
+ *
+ * Hỗ trợ lọc theo khoảng ngày đặt cược (giờ Việt Nam).
+ *
+ * @example
+ * ```ts
+ * const march = await client.max3dpro.listTickets({
+ *   from: "2026-03-01",
+ *   to: "2026-03-31",
+ * });
+ *
+ * if (march.nextCursor) {
+ *   const page2 = await client.max3dpro.listTickets({
+ *     size: 20,
+ *     cursor: march.nextCursor,
+ *   });
+ * }
+ * ```
+ */
+export interface Max3dproListAllTicketsParams {
+  /** Số lượng vé mỗi trang (mặc định 20). */
+  size?: number;
+  /** Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước). */
+  cursor?: string;
+  /** Lọc từ ngày đặt cược (YYYY-MM-DD). */
+  from?: string;
+  /** Lọc đến ngày đặt cược (YYYY-MM-DD). */
+  to?: string;
+}
+
+/**
+ * Tham số phân trang cho danh sách kết quả kỳ quay Max 3D Pro.
+ *
+ * @example
+ * ```ts
+ * const page1 = await client.max3dpro.listDrawResults({ size: 10 });
+ *
+ * if (page1.nextCursor) {
+ *   const page2 = await client.max3dpro.listDrawResults({
+ *     size: 10,
+ *     cursor: page1.nextCursor,
+ *   });
+ * }
+ * ```
+ */
+export interface Max3dproListDrawResultsParams {
+  /** Số lượng kỳ mỗi trang (mặc định 20). */
+  size?: number;
+  /**
+   * Lọc kết quả từ ngày này trở về quá khứ (YYYY-MM-DD).
+   * Mặc định: ngày hôm nay (giờ Việt Nam).
+   */
+  from?: string;
+  /**
+   * Cursor cho trang tiếp theo.
+   * Là drawId của kỳ cuối cùng trong trang trước. Format `YYYY-MM-DD.NNN`.
+   */
+  cursor?: string;
+}
+
+/**
+ * Tham số phân trang cho lines của một entry Max 3D Pro.
+ */
+export interface Max3dproEntryLinesParams {
+  /** Số lượng lines mỗi trang (mặc định 50). */
+  size?: number;
+  /**
+   * Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước).
+   * Là `lineIndex` (integer) của line cuối trang trước.
+   */
+  cursor?: number;
+}
+
+/**
+ * Thông tin kỳ quay Max 3D Pro hiện tại.
+ *
+ * Trả về bởi `client.max3dpro.getCurrentDraw()`.
+ */
+export interface Max3dproCurrentDrawResponse {
+  /** Kỳ quay đang mở bán, hoặc `null` nếu chưa có. */
+  currentDraw: Max3dproDrawInfo | null;
+  /** Tất cả kỳ quay đang active. */
+  activeDraws: Max3dproDrawInfo[];
+}
+
+/**
+ * Danh sách vé Max 3D Pro (cursor-based).
+ *
+ * Trả về bởi `client.max3dpro.listPendingTickets()` và `client.max3dpro.listTickets()`.
+ */
+export interface Max3dproListTicketsResponse {
+  /** Danh sách vé trong trang hiện tại. */
+  tickets: Max3dproTicketSummary[];
+  /** Cursor để lấy trang tiếp theo, `null` nếu đã hết. */
+  nextCursor: string | null;
+  /** Số vé thực tế trả về. */
+  size: number;
+}
+
+/**
+ * Chi tiết vé và các lần tham gia kỳ quay của vé Max 3D Pro.
+ *
+ * Trả về bởi `client.max3dpro.getTicketEntries()`.
+ */
+export interface Max3dproTicketEntriesResponse {
+  /** Thông tin tóm tắt vé. */
+  ticket: Max3dproTicketSummary;
+  /** Danh sách entries (1 entry = 1 kỳ quay). */
+  entries: Array<{
+    /** ID entry. */
+    id: string;
+    /** ID kỳ quay. Format `YYYY-MM-DD.NNN`. VD: `"2026-03-07.001"`. */
+    drawId: string;
+    /** Ngày kỳ quay (YYYY-MM-DD). */
+    drawDate: string;
+    /** Trạng thái entry. */
+    status: string;
+    /** Tiền cược cho entry này (VND). */
+    amount: number;
+    /**
+     * Kết quả quay số (chỉ có sau khi kỳ quay đã công bố).
+     *
+     * Max 3D Pro quay ra 20 bộ ba chia thành 4 hạng:
+     * - `special` — Giải Đặc Biệt
+     * - `first`   — Giải Nhất
+     * - `second`  — Giải Nhì
+     * - `third`   — Giải Ba
+     *
+     * Mỗi hạng là mảng bộ ba số string `"000"`-`"999"`.
+     */
+    result?: {
+      /** Các bộ ba Giải Đặc Biệt. */
+      special: string[];
+      /** Các bộ ba Giải Nhất. */
+      first: string[];
+      /** Các bộ ba Giải Nhì. */
+      second: string[];
+      /** Các bộ ba Giải Ba. */
+      third: string[];
+      /** Thời điểm công bố kết quả (ISO 8601). */
+      publishedAt: string;
+    };
+    /** Kết quả trúng thưởng của entry. */
+    outcome?: string;
+    /** Thông tin trả thưởng (chỉ có nếu trúng). */
+    payout?: {
+      /** Tổng tiền thắng (VND). */
+      winAmount: number;
+      /** Tổng tiền thực nhận sau các khoản khấu trừ (VND). */
+      payoutAmount: number;
+      /** Chi tiết thưởng theo từng board. */
+      boardPayouts: Array<{
+        /** Ký hiệu board. VD: `"A"`. */
+        boardNo: string;
+        /** Chế độ chơi. `"multiNumber"` hoặc `"multiDigit"`. */
+        playMode: string;
+        /** Kiểu chơi. Luôn là `"straight"` cho Max 3D Pro. */
+        playType: string;
+        /** Mức giải trúng. */
+        prizeLevel: string;
+        /** Kết quả đối chiếu số. */
+        matchResult: string;
+        /** Tiền thắng của board này (VND). */
+        winAmount: number;
+      }>;
+    };
+  }>;
+}
+
+/**
+ * Danh sách lines chi tiết của một entry Max 3D Pro (cursor-based).
+ *
+ * Trả về bởi `client.max3dpro.getEntryLines()`.
+ *
+ * Mỗi line là 1 cặp bộ ba số, được expand từ multiNumber hoặc multiDigit input.
+ * Pagination dùng integer line index làm cursor.
+ *
+ * @example
+ * ```ts
+ * const { lines, nextCursor } = await client.max3dpro.getEntryLines("entry-abc...", { size: 50 });
+ * for (const line of lines) {
+ *   console.log(`[${line.boardNo}][${line.playMode}]: ${line.triplets.join(" + ")}`);
+ *   if (line.matchResult && line.matchResult.tiers.length > 0) {
+ *     const tierNames = line.matchResult.tiers.map(t => t.tier).join(" + ");
+ *     console.log(`  Giải: ${tierNames}, tổng thưởng: ${line.matchResult.winAmount} VND`);
+ *   } else {
+ *     console.log("  Không trúng");
+ *   }
+ * }
+ * ```
+ */
+export interface Max3dproEntryLinesResponse {
+  /** ID entry. */
+  entryId: string;
+  /**
+   * ID kỳ quay mà entry này tham gia.
+   * Format `YYYY-MM-DD.NNN`. VD: `"2026-03-07.001"`.
+   */
+  drawId: string;
+  /** Danh sách lines trong trang hiện tại. */
+  lines: Max3dproLineInfo[];
+  /**
+   * Cursor để lấy trang tiếp theo, `null` nếu đã hết.
+   * Là `lineIndex` của line cuối trong trang này (integer).
+   */
+  nextCursor: number | null;
+  /** Số lines thực tế trả về trong trang này. */
+  size: number;
+}
+
+/**
+ * Danh sách kết quả kỳ quay Max 3D Pro (cursor-based).
+ *
+ * Trả về bởi `client.max3dpro.listDrawResults()`.
+ */
+export interface Max3dproListDrawResultsResponse {
+  /** Danh sách kết quả kỳ quay trong trang hiện tại. */
+  draws: Max3dproDrawResultSummary[];
+  /**
+   * Cursor để lấy trang tiếp theo, `null` nếu đã hết.
+   * Là `drawId` của kỳ cuối cùng trong trang này. Format `YYYY-MM-DD.NNN`.
+   */
+  nextCursor: string | null;
+  /** Số kỳ quay thực tế trả về. */
+  size: number;
 }

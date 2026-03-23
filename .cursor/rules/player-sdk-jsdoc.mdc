@@ -100,7 +100,7 @@ Mọi breaking change PHẢI có **Migration Guide** section trong changelog ent
 
 ### Cập nhật phiên bản
 
-- Bump `version` trong `packages/player-sdk/package.json`
+- **KHÔNG tự động bump `version`** trong `packages/player-sdk/package.json` — developer tự bump thủ công sau khi review CHANGELOG
 - PATCH: chỉ sửa lỗi type, docs, không thay đổi interface
 - MINOR: thêm API/type mới, không breaking change
 - MAJOR: có breaking change
@@ -163,10 +163,10 @@ packages/player-sdk/src/
 ├── endpoints.ts              ← URL paths registry cho toàn bộ API
 ├── index.ts                  ← Main exports cho @megawin/player-sdk
 ├── client.ts                 ← createPlayerClient factory
-├── apis/{game}.ts            ← {Game}Api interface + create{Game}Api factory
+├── apis/{game}.ts            ← CHỈ chứa {Game}Api interface + create{Game}Api factory (KHÔNG định nghĩa type)
 └── {game}/
     ├── enums.ts              ← PlayType, PrizeTier enums
-    ├── types.ts              ← Domain interfaces (input/response)
+    ├── types.ts              ← TẤT CẢ type definitions: Input, Params, Response, Config, DrawInfo, TicketSummary...
     └── index.ts              ← export * from "./enums"; export * from "./types"
 ```
 
@@ -176,12 +176,36 @@ Khi có thay đổi ở handler:
 
 1. **Đọc handler** `apps/api-player/src/handlers/{game}/{action}.ts` — xem Zod schema input/output
 2. **Đọc DTO** `packages/game-{game}-application/src/use-cases/player/dto/player.dto.ts` — xem output type chính xác
-3. **Cập nhật** `packages/player-sdk/src/{game}/types.ts` và `packages/player-sdk/src/apis/{game}.ts`
-4. **Cập nhật** `packages/player-sdk/src/endpoints.ts` nếu có path mới
-5. **Cập nhật** `packages/player-sdk/src/index.ts` nếu có type mới cần export
-6. **Ghi changelog** `packages/player-sdk/CHANGELOG.md`
-7. **Bump version** `packages/player-sdk/package.json`
+3. **Cập nhật** `packages/player-sdk/src/{game}/types.ts` — thêm/sửa type definitions (Input, Params, Response...)
+4. **Cập nhật** `packages/player-sdk/src/apis/{game}.ts` — chỉ import types từ `../{game}`, KHÔNG định nghĩa type mới ở đây
+5. **Cập nhật** `packages/player-sdk/src/endpoints.ts` nếu có path mới
+6. **Cập nhật** `packages/player-sdk/src/index.ts` nếu có type mới cần export (export từ `./{game}`, không phải `./apis/{game}`)
+7. **Ghi changelog** `packages/player-sdk/CHANGELOG.md`
 8. **Verify**: `pnpm --filter @megawin/player-sdk check-types`
+
+### Quy tắc bắt buộc — SDK Input PHẢI mirror Zod handler schema
+
+**TRƯỚC KHI** khai báo hoặc sửa bất kỳ `{Game}TicketPurchaseInput` hay `{Game}*BoardInput`, **PHẢI đọc** Zod schema tại `apps/api-player/src/handlers/{game}/place-bet.ts`.
+
+SDK Input type phải phản ánh **chính xác** những gì handler chấp nhận:
+
+| Zod schema | SDK type tương ứng |
+|---|---|
+| `z.string()` (required) | `field: string` |
+| `z.string().optional()` | `field?: string` |
+| `z.array(...)` | `field: T[]` |
+| `z.number().default(1)` | `field?: number` (optional, mặc định 1 ở server) |
+| `z.number().positive()` (không default) | `field: number` (required) |
+
+**Nguyên tắc `betCount`:** Mọi handler đều phải khai báo `betCount: z.number().int().positive().default(1)`. SDK khai báo `betCount?: number`. Nếu handler thiếu `.default(1)`, **sửa handler** (không sửa SDK thành required).
+
+**Nguyên tắc place-bet input model theo game:**
+
+| Model | Games | Field chọn kỳ quay |
+|---|---|---|
+| `drawIds: string[]` | Tất cả 7 games | Mảng drawId cụ thể (min 1, max theo game) |
+
+> **Lưu ý lịch sử:** Trước v1.0.11, SDK các game Mega645/Lotto535/Power655/Max3D/Max3DPro khai báo sai `drawId + drawCount`. Từ v1.0.11 tất cả game đều dùng `drawIds: string[]`.
 
 ---
 
@@ -318,21 +342,23 @@ Khi thêm game mới vào SDK, **PHẢI** cập nhật đầy đủ tất cả c
 ```
 src/{game}/
 ├── enums.ts   ← const enum objects + type aliases (export * from index.ts)
-├── types.ts   ← input/response interfaces (export * from index.ts)
+├── types.ts   ← TẤT CẢ type definitions (export * from index.ts)
 └── index.ts   ← export * from "./enums"; export * from "./types";
 ```
 
 - [ ] `enums.ts` — định nghĩa tất cả enum cần thiết (PlayType, PrizeTier, ...)
-- [ ] `types.ts` — định nghĩa TicketPurchaseInput, GameConfigResponse, DrawInfo, TicketSummary, EntryResult, LineInfo (nếu có), DrawResultSummary, DrawResultInfo, DrawTierPrize, ...
+- [ ] `types.ts` — định nghĩa **tất cả** types: TicketPurchaseInput, GameConfigResponse, DrawInfo, TicketSummary, EntryResult, LineInfo, DrawResultSummary, DrawResultInfo, DrawTierPrize, **PlaceBetResponse, CurrentDrawResponse, JackpotResponse, ListTicketsParams, ListAllTicketsParams, ListTicketsResponse, TicketEntriesResponse, EntryLinesParams, EntryLinesResponse, ListDrawResultsParams, ListDrawResultsResponse**
 - [ ] `index.ts` — `export * from "./enums"` và `export * from "./types"` (KHÔNG re-export thêm ở `types.ts`)
 - [ ] Mọi interface/property đều có JSDoc đầy đủ theo rules ở trên
 
 ### 2. API module — `src/apis/{game}.ts`
 
+**LƯU Ý: `apis/{game}.ts` CHỈ được chứa `{Game}Api` interface và `create{Game}Api` factory. KHÔNG định nghĩa bất kỳ type/interface nào ở đây — tất cả types import từ `../{game}`.**
+
 - [ ] Tạo `{Game}Api` interface với đầy đủ methods: `getGameConfig`, `getCurrentDraw`, `placeBet`, `listPendingTickets`, `listTickets`, `getTicketEntries`, `getEntryLines` (nếu có), `getJackpot` (nếu có), `listDrawResults`, `getDrawResult`
 - [ ] Tạo `create{Game}Api(http)` factory function (`@internal`)
 - [ ] Mọi method có đầy đủ JSDoc: summary, `**Endpoint:**`, `@param`, `@returns`, `@throws`, `@example`
-- [ ] Export tất cả response interfaces: `{Game}PlaceBetResponse`, `{Game}CurrentDrawResponse`, `{Game}ListTicketsParams`, `{Game}ListTicketsResponse`, `{Game}TicketEntriesResponse`, `{Game}EntryLinesResponse` (nếu có), `{Game}EntryLinesParams` (nếu có), `{Game}ListDrawResultsParams`, `{Game}ListDrawResultsResponse`
+- [ ] Import tất cả types cần thiết từ `../{game}` (KHÔNG export type từ file này)
 
 ### 3. Endpoints registry — `src/endpoints.ts`
 
@@ -348,8 +374,8 @@ src/{game}/
 
 ### 5. Main entry point — `src/index.ts`
 
-- [ ] `export type { {Game}Api, {Game}PlaceBetResponse, ..., {Game}ListDrawResultsParams, {Game}ListDrawResultsResponse }` từ `./apis/{game}`
-- [ ] `export type { {Game}TicketPurchaseInput, {Game}GameConfigResponse, ..., {Game}DrawResultSummary, {Game}DrawResultInfo, {Game}DrawTierPrize }` từ `./{game}`
+- [ ] `export type { {Game}Api }` từ `./apis/{game}` (CHỈ export Api interface từ apis/)
+- [ ] `export type { {Game}TicketPurchaseInput, {Game}PlaceBetResponse, {Game}CurrentDrawResponse, {Game}JackpotResponse, {Game}ListTicketsParams, {Game}ListAllTicketsParams, {Game}ListTicketsResponse, {Game}TicketEntriesResponse, {Game}EntryLinesParams, {Game}EntryLinesResponse, {Game}ListDrawResultsParams, {Game}ListDrawResultsResponse, {Game}GameConfigResponse, ..., {Game}DrawResultSummary, {Game}DrawResultInfo, {Game}DrawTierPrize }` từ `./{game}` (tất cả types từ game module)
 - [ ] `export { {Game}PlayType, {Game}PrizeTier, ... }` (enums không phải type, export giá trị thật)
 
 ### 6. Build config — `tsup.config.ts`
@@ -368,7 +394,7 @@ src/{game}/
 
 - [ ] Ghi `### Added` với tất cả methods và types mới
 - [ ] Ghi `### Changed` với breaking changes (nếu có)
-- [ ] Bump version trong `package.json`
+- [ ] **KHÔNG tự bump** version trong `package.json` — developer tự bump thủ công
 
 ### 10. README — `README.md`
 

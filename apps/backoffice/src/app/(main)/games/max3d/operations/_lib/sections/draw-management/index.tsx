@@ -34,12 +34,7 @@ import {
 
 import { useDrawContext } from "../../use-draw-context";
 import { DrawCommandCenter } from "./draw-command-center";
-import {
-  PublishResultAction,
-  EditScheduleAction,
-  VoidDrawAction,
-  CreateDrawAction,
-} from "./draw-actions";
+import { PublishResultAction, EditScheduleAction, VoidDrawAction } from "./draw-actions";
 import { useOpenSales, useCloseSales, useTriggerSettle, useDrawDetail } from "../../use-operations";
 
 import type { DrawResult, VoidInfo } from "../../types";
@@ -58,7 +53,6 @@ export function DrawManagementSection() {
   const [publishOpen, setPublishOpen] = useState(false);
   const [editScheduleOpen, setEditScheduleOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
   const [openSalesConfirm, setOpenSalesConfirm] = useState(false);
   const [closeSalesConfirm, setCloseSalesConfirm] = useState(false);
   const [settleConfirm, setSettleConfirm] = useState(false);
@@ -78,13 +72,17 @@ export function DrawManagementSection() {
     // Merge basic + plus tier labels
     const tierLabels = { ...MAX3D_BASIC_PRIZE_TIER_LABELS, ...MAX3D_PLUS_PRIZE_TIER_LABELS };
 
-    const tierMap = new Map((d.settleSummary?.tiers ?? []).map((t) => [t.tier, t]));
+    // settleSummary của Max 3D tách thành basicTiers và plusTiers (không có tiers chung)
+    const basicTierMap = new Map((d.settleSummary?.basicTiers ?? []).map((t) => [t.tier, t]));
+    const plusTierMap = new Map((d.settleSummary?.plusTiers ?? []).map((t) => [t.tier, t]));
     const allTierKeys = [
       ...Object.keys(MAX3D_BASIC_PRIZE_TIER_LABELS),
       ...Object.keys(MAX3D_PLUS_PRIZE_TIER_LABELS),
     ];
+    const basicTierKeys = Object.keys(MAX3D_BASIC_PRIZE_TIER_LABELS);
     const tiers = allTierKeys.map((tier) => {
-      const t = tierMap.get(tier);
+      // basicTiers cho các tier thuộc Max 3D Cơ Bản, plusTiers cho Max 3D+
+      const t = basicTierKeys.includes(tier) ? basicTierMap.get(tier) : plusTierMap.get(tier);
       const winnerCount = t?.winnerCount ?? 0;
       const prizeAmount =
         winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
@@ -144,7 +142,6 @@ export function DrawManagementSection() {
         onTriggerSettle={() => setSettleConfirm(true)}
         onEditSchedule={() => setEditScheduleOpen(true)}
         onVoidDraw={() => setVoidOpen(true)}
-        onCreateDraw={() => setCreateOpen(true)}
       />
 
       {/* Action dialogs */}
@@ -161,7 +158,6 @@ export function DrawManagementSection() {
         onOpenChange={setEditScheduleOpen}
       />
       <VoidDrawAction draw={draw} disabled={false} open={voidOpen} onOpenChange={setVoidOpen} />
-      <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
 
       {/* Confirm: Mở bán */}
       <AlertDialog open={openSalesConfirm} onOpenChange={setOpenSalesConfirm}>

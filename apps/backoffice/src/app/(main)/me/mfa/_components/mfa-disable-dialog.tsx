@@ -26,6 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { meKeys } from "@/lib/query-keys";
 
@@ -137,15 +138,16 @@ export function MfaDisableDialog({ open, onOpenChange, onSuccess }: MfaDisableDi
                 <FormItem>
                   <FormLabel>Mã xác thực (6 số)</FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      placeholder="000000"
-                      autoComplete="one-time-code"
-                      className="text-center font-mono text-lg tracking-[0.5em]"
-                    />
+                    <InputOTP maxLength={6} value={field.value} onChange={field.onChange}>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

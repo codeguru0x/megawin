@@ -32,9 +32,9 @@ export interface DrawSelectorItem {
   financialDate: string;
   /**
    * Nhóm hiển thị trong dropdown.
-   * active: đang xử lý (salesOpen/salesClosed/published/settling).
-   * upcoming: kỳ scheduled trong 2h tới.
-   * recent: kỳ settled trong 2h qua.
+   * active: đang xử lý (salesOpen/salesClosed/published/settling/voiding).
+   * upcoming: kỳ scheduled sắp tới.
+   * recent: kỳ settled hoặc void gần đây.
    */
   group: "active" | "upcoming" | "recent";
 }

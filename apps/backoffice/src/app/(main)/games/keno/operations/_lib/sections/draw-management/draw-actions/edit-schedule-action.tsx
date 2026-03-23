@@ -18,32 +18,35 @@ import { Label } from "@/components/ui/label";
 import { editScheduleSchema, type EditScheduleInput } from "@megawin/game-keno/schemas";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { useUpdateSchedule } from "../../../use-operations";
-import { formatVNDate, formatVNTime, toVNDate } from "@megawin/shared/utils/date";
+import {
+  formatVNDate,
+  formatVNTimeWithSeconds,
+  toVNDateWithSeconds,
+} from "@megawin/shared/utils/date";
 
 function buildDefaultValues(draw: DrawSelectorItem): EditScheduleInput {
   // salesOpenAt optional → fallback "" nếu chưa có
   const openDate = draw.salesOpenAt ? formatVNDate(new Date(draw.salesOpenAt)) : "";
-  const openTime = draw.salesOpenAt ? formatVNTime(new Date(draw.salesOpenAt)) : "";
+  const openTime = draw.salesOpenAt ? formatVNTimeWithSeconds(new Date(draw.salesOpenAt)) : "";
 
   return {
     salesOpenDate: openDate,
     salesOpenTime: openTime,
     salesCloseDate: formatVNDate(new Date(draw.salesCloseAt)),
-    salesCloseTime: formatVNTime(new Date(draw.salesCloseAt)),
+    salesCloseTime: formatVNTimeWithSeconds(new Date(draw.salesCloseAt)),
     // scheduledDrawAt luôn có (DrawDoc.drawTime) — giờ quay theo lịch
     drawDate: formatVNDate(new Date(draw.scheduledDrawAt)),
-    drawTime: formatVNTime(new Date(draw.scheduledDrawAt)),
+    drawTime: formatVNTimeWithSeconds(new Date(draw.scheduledDrawAt)),
   };
 }
 
 /**
  * Dialog sửa lịch kỳ quay Keno.
  *
- * Validation (editScheduleSchema):
- * - salesCloseAt > salesOpenAt
- * - drawAt ≥ salesCloseAt + 2 phút (Keno chu kỳ ngắn 8 phút)
+ * Client validate: salesCloseAt < drawAt (thứ tự cơ bản).
+ * Server validate buffer chính xác dựa trên salesCloseBeforeSeconds trong game config.
  *
- * drawDate/drawTime là cặp độc lập — user tự điều chỉnh riêng biệt với salesClose.
+ * Time input dùng step="1" (HH:mm:ss) — Keno chu kỳ 8 phút, cần độ chính xác đến giây.
  * Form reset tự động khi dialog mở bằng useEffect + form.reset().
  */
 export function EditScheduleAction({
@@ -72,9 +75,9 @@ export function EditScheduleAction({
   }, [open, draw, form]);
 
   function handleSubmit(data: EditScheduleInput) {
-    const openISO = toVNDate(data.salesOpenDate, data.salesOpenTime).toISOString();
-    const closeISO = toVNDate(data.salesCloseDate, data.salesCloseTime).toISOString();
-    const drawISO = toVNDate(data.drawDate, data.drawTime).toISOString();
+    const openISO = toVNDateWithSeconds(data.salesOpenDate, data.salesOpenTime).toISOString();
+    const closeISO = toVNDateWithSeconds(data.salesCloseDate, data.salesCloseTime).toISOString();
+    const drawISO = toVNDateWithSeconds(data.drawDate, data.drawTime).toISOString();
 
     // So sánh với scheduledDrawAt để biết user có thực sự thay đổi giờ quay không
     const originalDrawISO = draw.scheduledDrawAt;
@@ -106,9 +109,7 @@ export function EditScheduleAction({
           <DialogTitle>
             Sửa lịch — Kỳ {String(draw.drawNo).padStart(3, "0")} · {draw.drawDate} {draw.drawTime}
           </DialogTitle>
-          <DialogDescription>
-            Giờ đóng bán phải trước giờ quay số ít nhất 2 phút (Keno chu kỳ ngắn ~8 phút).
-          </DialogDescription>
+          <DialogDescription>Giờ quay số phải sau giờ đóng bán.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={rhfSubmit(handleSubmit)} className="space-y-4 py-2">
@@ -119,7 +120,7 @@ export function EditScheduleAction({
             </Label>
             <div className="flex gap-2">
               <Input type="date" className="flex-1" {...register("salesOpenDate")} />
-              <Input type="time" className="w-28" {...register("salesOpenTime")} />
+              <Input type="time" step="1" className="w-32" {...register("salesOpenTime")} />
             </div>
             {(errors.salesOpenDate ?? errors.salesOpenTime) && (
               <p className="text-sm font-medium text-destructive">
@@ -135,7 +136,7 @@ export function EditScheduleAction({
             </Label>
             <div className="flex gap-2">
               <Input type="date" className="flex-1" {...register("salesCloseDate")} />
-              <Input type="time" className="w-28" {...register("salesCloseTime")} />
+              <Input type="time" step="1" className="w-32" {...register("salesCloseTime")} />
             </div>
             {(errors.salesCloseDate ?? errors.salesCloseTime) && (
               <p className="text-sm font-medium text-destructive">
@@ -151,7 +152,7 @@ export function EditScheduleAction({
             </Label>
             <div className="flex gap-2">
               <Input type="date" className="flex-1" {...register("drawDate")} />
-              <Input type="time" className="w-28" {...register("drawTime")} />
+              <Input type="time" step="1" className="w-32" {...register("drawTime")} />
             </div>
             {(errors.drawDate ?? errors.drawTime) && (
               <p className="text-sm font-medium text-destructive">

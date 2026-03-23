@@ -160,7 +160,7 @@ export interface PlayerTicketSummary {
      * Số lần cược nhân bội cho board này.
      * UI hiển thị "×N" khi betCount > 1.
      */
-    betCount?: number;
+    betCount: number;
   }>;
   /** Tiến trình settle qua các kỳ. settledDraws = số kỳ đã xử lý xong (settled + voided). */
   progress: {

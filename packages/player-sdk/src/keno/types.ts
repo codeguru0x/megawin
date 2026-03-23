@@ -40,6 +40,14 @@ export interface KenoBasicBoardInput {
    * - Không trùng nhau
    */
   numbers: string[];
+
+  /**
+   * Số lần cược nhân bội cho board này (≥ 1, ≤ maxBetCount).
+   *
+   * Mặc định = 1 nếu không truyền. UI hiển thị "×N" khi betCount > 1.
+   * Tiền cược board = betCount × unitPrice.
+   */
+  betCount?: number;
 }
 
 /**
@@ -66,6 +74,13 @@ export interface KenoSideBetInput {
    * - Even/Odd: `"even"` | `"even1112"` | `"evenOddDraw"` | `"odd1112"` | `"odd"`
    */
   bet: KenoBigSmallBet | KenoEvenOddBet;
+
+  /**
+   * Số lần cược nhân bội cho side bet này (≥ 1, ≤ maxBetCount).
+   *
+   * Mặc định = 1 nếu không truyền. Tiền cược side bet = betCount × unitPrice.
+   */
+  betCount?: number;
 }
 
 /**
@@ -225,25 +240,10 @@ export interface KenoDrawInfo {
 }
 
 /**
- * Kết quả kỳ quay gần nhất.
- */
-export interface KenoLastResult {
-  /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
-  drawId: string;
-  /** Ngày quay. Format: `YYYY-MM-DD`. */
-  drawDate: string;
-  /** Số thứ tự kỳ quay trong ngày. */
-  drawNo: number;
-  /** 20 số trúng thưởng (1-80). */
-  winningNumbers: number[];
-  /** Thời điểm công bố kết quả (ISO 8601). */
-  publishedAt: string;
-}
-
-/**
  * Response từ `GET /games/keno/draws/current`.
  *
- * Chứa thông tin kỳ quay hiện tại, danh sách kỳ đang mở bán, và kết quả gần nhất.
+ * Chứa thông tin kỳ quay hiện tại và danh sách kỳ đang mở bán.
+ * Để lấy kết quả kỳ gần nhất, dùng `listDrawResults({ size: 1 })`.
  *
  * @example
  * ```ts
@@ -253,10 +253,6 @@ export interface KenoLastResult {
  *   console.log(data.currentDraw.drawId);           // "2026-02-25.100"
  *   console.log(data.currentDraw.sales.closeAt);     // "2026-02-25T13:05:00Z"
  * }
- *
- * if (data.lastResult) {
- *   console.log(data.lastResult.winningNumbers);     // [3, 7, 12, ...]
- * }
  * ```
  */
 export interface KenoCurrentDrawResponse {
@@ -264,8 +260,6 @@ export interface KenoCurrentDrawResponse {
   currentDraw: KenoDrawInfo | null;
   /** Tất cả kỳ quay đang trong trạng thái active (mở bán hoặc đóng bán). */
   activeDraws: KenoDrawInfo[];
-  /** Kết quả kỳ quay gần nhất đã settle. `null` nếu chưa có kết quả nào. */
-  lastResult: KenoLastResult | null;
 }
 
 // ─────────────────────────────────────────────
@@ -309,9 +303,11 @@ export interface KenoTicketSummary {
   pricing: {
     /** Đơn giá 1 bet (VND). */
     unitPrice: number;
-    /** Số bets mỗi kỳ. */
-    betsPerDraw: number;
-    /** Tiền cược mỗi kỳ (VND). */
+    /** Số selections mỗi kỳ = boards.length + sideBets.length. */
+    selectionsPerDraw: number;
+    /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount) + Σ(sideBet.betCount). */
+    betUnitsPerDraw: number;
+    /** Tiền cược mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
     /** Tổng tiền cược toàn vé (VND). */
     totalAmount: number;
@@ -383,6 +379,8 @@ export interface KenoBasicBoardSummary {
   playType: string;
   /** Danh sách số đã chọn (zero-padded string `"01"`-`"80"`). */
   numbers: string[];
+  /** Số lần cược nhân bội (≥ 1). Tiền = betCount × unitPrice. */
+  betCount: number;
 }
 
 /**
@@ -393,6 +391,8 @@ export interface KenoSideBetSummary {
   playType: string;
   /** Lựa chọn cược. VD: `"big"`, `"even"`, `"odd1112"`. */
   bet: string;
+  /** Số lần cược nhân bội (≥ 1). Tiền = betCount × unitPrice. */
+  betCount: number;
 }
 
 /**
@@ -598,9 +598,11 @@ export interface KenoPlaceBetResponse {
   pricing: {
     /** Đơn giá 1 bet (VND). */
     unitPrice: number;
-    /** Số bets mỗi kỳ. */
-    betsPerDraw: number;
-    /** Tiền cược mỗi kỳ (VND). */
+    /** Số selections mỗi kỳ = boards.length + sideBets.length. */
+    selectionsPerDraw: number;
+    /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount) + Σ(sideBet.betCount). */
+    betUnitsPerDraw: number;
+    /** Tiền cược mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
     /** Tổng tiền cược toàn vé (VND). */
     totalAmount: number;
@@ -634,6 +636,10 @@ export interface KenoGameRules {
   firstDrawTime: string;
   /** Giờ kết thúc quay (kỳ cuối). VD: "21:52". */
   lastDrawTime: string;
+  /** Số lần cược tối thiểu cho 1 board/side bet. */
+  minBetCount: number;
+  /** Số lần cược tối đa cho 1 board/side bet. */
+  maxBetCount: number;
 }
 
 /**

@@ -46,6 +46,17 @@ export function toVNDate(dateStr: string, timeStr: string): Date {
 }
 
 /**
+ * Tạo Date từ "YYYY-MM-DD" + "HH:mm:ss" theo giờ VN.
+ *
+ * Dùng cho game có chu kỳ ngắn (Keno, Bingo18) — cần độ chính xác đến giây.
+ * Ví dụ: toVNDateWithSeconds("2026-02-15", "13:00:45") → Date tương ứng 13:00:45 VN.
+ */
+export function toVNDateWithSeconds(dateStr: string, timeStr: string): Date {
+  const tzDate = new TZDate(`${dateStr}T${timeStr}`, VN_TIMEZONE);
+  return new Date(tzDate.getTime());
+}
+
+/**
  * Tạo Date từ "YYYY-MM-DD" lúc 00:00:00 giờ VN.
  */
 export function toVNStartOfDay(dateStr: string): Date {

@@ -28,6 +28,8 @@ import { useCreateDraw, usePreviewDraws } from "../../../use-operations";
 interface DrawRow {
   /** Ngày quay, format "YYYY-MM-DD". */
   date: string;
+  /** Số thứ tự kỳ trong năm (do preview API cung cấp). 0 = chưa xác định. */
+  drawNo: number;
   /** Giờ quay, format "HH:mm". */
   drawTime: string;
   /** Mở bán ngay khi tạo. */
@@ -35,7 +37,7 @@ interface DrawRow {
 }
 
 function emptyRow(): DrawRow {
-  return { date: "", drawTime: "", isOpen: false };
+  return { date: "", drawNo: 0, drawTime: "", isOpen: false };
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -53,7 +55,9 @@ function buildIso(date: string, time: string): string {
 }
 
 function isRowComplete(row: DrawRow): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(row.date) && /^\d{2}:\d{2}$/.test(row.drawTime);
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(row.date) && /^\d{2}:\d{2}$/.test(row.drawTime) && row.drawNo > 0
+  );
 }
 
 function parseDateStr(dateStr: string): Date | undefined {
@@ -193,6 +197,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
         if (!isEmpty) return row;
         return {
           date: fmtStoreDate(p.drawTime),
+          drawNo: p.drawNo,
           drawTime: fmtDisplayTime(p.drawTime),
           isOpen: row.isOpen,
         };
@@ -231,6 +236,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
         if (!p) return emptyRow();
         return {
           date: fmtStoreDate(p.drawTime),
+          drawNo: p.drawNo,
           drawTime: fmtDisplayTime(p.drawTime),
           isOpen: row.isOpen,
         };
@@ -262,6 +268,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
       {
         draws: rows.map((row) => ({
           drawDate: row.date,
+          drawNo: row.drawNo,
           drawTime: buildIso(row.date, row.drawTime),
           openNow: row.isOpen,
         })),

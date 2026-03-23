@@ -60,11 +60,11 @@ export type PublishResultInput = z.infer<typeof publishResultSchema>;
 /**
  * Schema validate form sửa lịch kỳ quay Keno.
  *
- * Cross-field rules (superRefine):
- * - salesCloseAt > salesOpenAt
- * - drawAt ≥ salesCloseAt + 2 phút (Keno chu kỳ ngắn 8 phút)
+ * Client chỉ validate rule cơ bản: salesCloseAt < drawAt.
+ * Buffer chính xác (salesCloseBeforeSeconds) do server validate dựa trên game config
+ * tại thời điểm request — tránh out-of-sync khi staff thay đổi config.
  *
- * Mỗi datetime tách thành date + time để map với 2 input riêng trên UI.
+ * Time format: "HH:mm:ss" — Keno có chu kỳ ngắn, cần độ chính xác đến giây.
  */
 export const editScheduleSchema = z
   .object({
@@ -76,28 +76,18 @@ export const editScheduleSchema = z
     drawTime: z.string().min(1, "Chưa nhập giờ"),
   })
   .superRefine((data, ctx) => {
-    const openISO = `${data.salesOpenDate}T${data.salesOpenTime}:00+07:00`;
-    const closeISO = `${data.salesCloseDate}T${data.salesCloseTime}:00+07:00`;
-    const drawISO = `${data.drawDate}T${data.drawTime}:00+07:00`;
+    const closeISO = `${data.salesCloseDate}T${data.salesCloseTime}+07:00`;
+    const drawISO = `${data.drawDate}T${data.drawTime}+07:00`;
 
-    const openMs = new Date(openISO).getTime();
     const closeMs = new Date(closeISO).getTime();
     const drawMs = new Date(drawISO).getTime();
 
-    if (!isNaN(openMs) && !isNaN(closeMs) && closeMs <= openMs) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["salesCloseTime"],
-        message: "Giờ đóng bán phải sau giờ mở bán",
-      });
-    }
-
-    // Keno: buffer tối thiểu 2 phút giữa đóng bán và quay số (chu kỳ ngắn 8 phút)
-    if (!isNaN(closeMs) && !isNaN(drawMs) && drawMs - closeMs < 2 * 60_000) {
+    // Client chỉ đảm bảo thứ tự cơ bản — server validate buffer chính xác
+    if (!isNaN(closeMs) && !isNaN(drawMs) && drawMs <= closeMs) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["drawTime"],
-        message: "Giờ quay số phải sau giờ đóng bán ít nhất 2 phút",
+        message: "Giờ quay số phải sau giờ đóng bán",
       });
     }
   });

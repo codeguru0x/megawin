@@ -1,0 +1,37 @@
+---
+description: Nghiêm cấm agent tạo hoặc ghi đè file .env
+alwaysApply: true
+---
+
+# Nghiêm Cấm Tạo hoặc Ghi Đè File .env
+
+## QUY TẮC TUYỆT ĐỐI
+
+Agent **KHÔNG BAO GIỜ** được:
+- Tạo mới bất kỳ file `.env*` nào (`.env`, `.env.local`, `.env.dev`, `.env.production`, v.v.)
+- Ghi đè (`cp`, `Write`, redirect `>`) lên file `.env*` đã tồn tại
+- Dùng `cp .env.example .env.local` hay bất kỳ lệnh copy nào vào `.env*`
+
+File `.env*` chứa **credentials thật** (DB URI, API keys, secrets) — ghi đè sẽ mất dữ liệu không thể khôi phục vì bị gitignore.
+
+## Khi Cần Build Mà Bị Lỗi Env Validation
+
+**KHÔNG** tạo `.env.local`. Thay vào đó dùng:
+
+```bash
+# TypeScript type-check (không cần env)
+npx tsc --noEmit
+
+# Hoặc nếu Next.js có SKIP_ENV_VALIDATION support
+SKIP_ENV_VALIDATION=true pnpm build
+```
+
+## Khi Cần Biết Env Vars Cần Thiết
+
+Đọc file `.env.example` — đây là file được commit và an toàn để đọc:
+
+```bash
+cat apps/backoffice/.env.example
+```
+
+Hướng dẫn user tự tạo `.env.local` từ nguồn credentials của họ (1Password, Vault, Notion...). Agent chỉ được **đọc** `.env.example`, không bao giờ tạo/ghi `.env*`.

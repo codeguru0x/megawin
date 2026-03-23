@@ -1,9 +1,8 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import {
-  adminInitiateAuth,
+  adminInitiateAuthWithMfa,
   adminUpdateMfa,
-  adminVerifySoftwareToken,
   COGNITO_WORKFORCE_POOL_ID,
   COGNITO_WORKFORCE_CLIENT_ID,
 } from "@megawin/app-core/aws/cognito";
@@ -26,53 +25,33 @@ export class DisableMfaUseCase extends NextApiUseCase<DisableMfaInput, DisableMf
       throw AppException.internal("Cognito pool configuration is missing");
     }
 
-    let accessToken: string;
+    // Xác thực password + TOTP cùng lúc.
+    // adminInitiateAuthWithMfa tự xử lý challenge SOFTWARE_TOKEN_MFA nếu user đã bật MFA.
     try {
-      const authResult = await adminInitiateAuth({
+      await adminInitiateAuthWithMfa({
         userPoolId: COGNITO_WORKFORCE_POOL_ID,
         clientId: COGNITO_WORKFORCE_CLIENT_ID,
         username: input.username,
         password: input.password,
+        totpCode: input.totpCode,
       });
-      accessToken = authResult.accessToken;
-    } catch (error: unknown) {
-      const errName = error instanceof Error ? error.constructor.name : "UnknownError";
-
-      if (
-        errName === "NotAuthorizedException" ||
-        (error instanceof Error && error.message.includes("Incorrect username or password"))
-      ) {
-        throw AppException.badRequest("Mật khẩu không đúng");
-      }
-
-      throw AppException.internal(
-        `Xác thực thất bại: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
-
-    try {
-      const verifyResult = await adminVerifySoftwareToken({
-        userCode: input.totpCode,
-        accessToken,
-      });
-
-      if (verifyResult.status !== "SUCCESS") {
-        throw AppException.badRequest("Mã TOTP không hợp lệ");
-      }
     } catch (error: unknown) {
       if (error instanceof AppException) throw error;
 
+      const msg = error instanceof Error ? error.message : "Unknown error";
       const errName = error instanceof Error ? error.constructor.name : "UnknownError";
 
-      if (errName === "CodeMismatchException" || errName === "EnableSoftwareTokenMFAException") {
+      if (errName === "NotAuthorizedException" || msg.includes("Incorrect username or password")) {
+        throw AppException.badRequest("Mật khẩu không đúng");
+      }
+
+      if (errName === "CodeMismatchException" || msg.includes("Code mismatch")) {
         throw AppException.badRequest(
           "Mã xác thực không đúng. Vui lòng kiểm tra lại app Authenticator.",
         );
       }
 
-      throw AppException.internal(
-        `Xác thực TOTP thất bại: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      throw AppException.internal(`Xác thực thất bại: ${msg}`);
     }
 
     await adminUpdateMfa({

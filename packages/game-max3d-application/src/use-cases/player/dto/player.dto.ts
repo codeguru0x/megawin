@@ -131,7 +131,7 @@ export interface PlayerTicketSummary {
      * Số lần cược nhân bội (≥ 1). Tiền cược board = lineCount × betCount × unitPrice.
      * Backward compat: undefined cho vé cũ (betCount = 1 ngầm định).
      */
-    betCount?: number;
+    betCount: number;
   }>;
   /** Tiến trình settle qua các kỳ. settledDraws = số kỳ đã xử lý xong (settled + voided). */
   progress: {

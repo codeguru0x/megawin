@@ -293,6 +293,7 @@ export function useCreateDraw() {
     mutationFn: (data: {
       draws: Array<{
         drawDate: string;
+        drawNo: number;
         drawTime: string;
         openNow: boolean;
       }>;

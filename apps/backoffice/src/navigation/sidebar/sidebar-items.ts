@@ -20,6 +20,9 @@ import {
   Ban,
 } from "lucide-react";
 
+import type { AccountRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities/account";
+
 export interface NavSubItem {
   title: string;
   url: string;
@@ -29,6 +32,12 @@ export interface NavSubItem {
   isNew?: boolean;
   /** Nhãn phân nhóm hiển thị phía trên item (separator + label). */
   sectionLabel?: string;
+  /**
+   * Danh sách roles được phép thấy sub-item này.
+   * Nếu không khai báo → không giới hạn, mọi user đã đăng nhập đều thấy.
+   * User có 1 trong các role liệt kê sẽ được hiển thị.
+   */
+  roles?: AccountRole[];
 }
 
 export interface NavMainItem {
@@ -39,12 +48,24 @@ export interface NavMainItem {
   comingSoon?: boolean;
   newTab?: boolean;
   isNew?: boolean;
+  /**
+   * Danh sách roles được phép thấy item này.
+   * Nếu không khai báo → không giới hạn, mọi user đã đăng nhập đều thấy.
+   * User có 1 trong các role liệt kê sẽ được hiển thị.
+   */
+  roles?: AccountRole[];
 }
 
 export interface NavGroup {
   id: number;
   label?: string;
   items: NavMainItem[];
+  /**
+   * Danh sách roles được phép thấy cả group này.
+   * Nếu không khai báo → không giới hạn.
+   * Nếu khai báo → chỉ hiện group khi user có ít nhất 1 role phù hợp.
+   */
+  roles?: AccountRole[];
 }
 
 export const operatorSidebarItems: NavGroup[] = [
@@ -56,6 +77,8 @@ export const operatorSidebarItems: NavGroup[] = [
         title: "Ứng dụng",
         url: "/tenants",
         icon: Briefcase,
+        /** Chỉ admin mới có quyền quản lý ứng dụng (tenants). */
+        roles: [CompanyRole.Admin],
       },
     ],
   },
@@ -122,6 +145,7 @@ export const operatorSidebarItems: NavGroup[] = [
             url: "/games/lotto535/config",
             icon: Settings2,
             sectionLabel: "Cài đặt",
+            /** Chỉ admin mới được chỉnh cấu hình game. */
           },
           {
             title: "Cấu hình đại lý",

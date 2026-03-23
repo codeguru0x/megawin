@@ -11,255 +11,16 @@ import type {
   Bingo18TicketSummary,
   Bingo18DrawResultSummary,
   Bingo18DrawResultInfo,
+  Bingo18PlaceBetResponse,
+  Bingo18CurrentDrawResponse,
+  Bingo18ListPendingTicketsParams,
+  Bingo18ListAllTicketsParams,
+  Bingo18ListDrawResultsParams,
+  Bingo18ListTicketsResponse,
+  Bingo18TicketEntriesResponse,
+  Bingo18ListDrawResultsResponse,
 } from "../bingo18";
 import { ENDPOINTS } from "../endpoints";
-
-/**
- * Tham số phân trang cho danh sách vé Bingo 18 đang chờ xử lý.
- *
- * Cursor-based pagination. Không hỗ trợ lọc ngày — chỉ trả vé đang active.
- *
- * @example
- * ```ts
- * const page1 = await client.bingo18.listPendingTickets({ size: 10 });
- *
- * if (page1.nextCursor) {
- *   const page2 = await client.bingo18.listPendingTickets({
- *     size: 10,
- *     cursor: page1.nextCursor,
- *   });
- * }
- * ```
- */
-export interface Bingo18ListPendingTicketsParams {
-  /** Số lượng vé mỗi trang (mặc định 20). */
-  size?: number;
-  /** Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước). */
-  cursor?: string;
-}
-
-/**
- * Tham số lọc và phân trang cho lịch sử vé Bingo 18 (tất cả trạng thái).
- *
- * Hỗ trợ lọc theo khoảng ngày đặt cược (giờ Việt Nam).
- *
- * @example
- * ```ts
- * const march = await client.bingo18.listTickets({
- *   from: "2026-03-01",
- *   to: "2026-03-31",
- * });
- *
- * if (march.nextCursor) {
- *   const page2 = await client.bingo18.listTickets({
- *     size: 20,
- *     cursor: march.nextCursor,
- *   });
- * }
- * ```
- */
-export interface Bingo18ListAllTicketsParams {
-  /** Số lượng vé mỗi trang (mặc định 20). */
-  size?: number;
-  /** Cursor cho trang tiếp theo (lấy từ `nextCursor` của response trước). */
-  cursor?: string;
-  /** Lọc từ ngày đặt cược (YYYY-MM-DD). */
-  from?: string;
-  /** Lọc đến ngày đặt cược (YYYY-MM-DD). */
-  to?: string;
-}
-
-/**
- * Tham số phân trang cho danh sách kết quả kỳ quay Bingo 18.
- *
- * Bingo 18 có ~240 kỳ quay/ngày (mỗi 6 phút), nên cần phân trang cẩn thận.
- *
- * @example
- * ```ts
- * // Lấy 20 kết quả gần nhất hôm nay
- * const page1 = await client.bingo18.listDrawResults({ size: 20 });
- *
- * if (page1.nextCursor) {
- *   const page2 = await client.bingo18.listDrawResults({
- *     size: 20,
- *     cursor: page1.nextCursor,
- *   });
- * }
- * ```
- */
-export interface Bingo18ListDrawResultsParams {
-  /** Số lượng kỳ mỗi trang (mặc định 20). */
-  size?: number;
-  /**
-   * Lọc kết quả từ ngày này trở về quá khứ (YYYY-MM-DD).
-   * Mặc định: ngày hôm nay (giờ Việt Nam).
-   */
-  from?: string;
-  /**
-   * Cursor cho trang tiếp theo.
-   * Là drawId của kỳ cuối cùng trong trang trước. Format `YYYY-MM-DD.NNN`.
-   */
-  cursor?: string;
-}
-
-/**
- * Response khi đặt cược Bingo 18 thành công.
- *
- * Trả về bởi {@link Bingo18Api.placeBet}.
- */
-export interface Bingo18PlaceBetResponse {
-  /** ID vé duy nhất trong hệ thống. */
-  ticketId: string;
-  /** Mã vé hiển thị cho người chơi. VD: `"B18-20260307-00007"`. */
-  ticketNo: string;
-  /** Tổng tiền cược (VND). */
-  totalAmount: number;
-}
-
-/**
- * Thông tin kỳ quay Bingo 18 hiện tại và kết quả gần nhất.
- *
- * Trả về bởi {@link Bingo18Api.getCurrentDraw}.
- */
-export interface Bingo18CurrentDrawResponse {
-  /** Kỳ quay đang mở bán, hoặc `null` nếu chưa có. */
-  currentDraw: Bingo18DrawInfo | null;
-  /** Tất cả kỳ quay đang active. */
-  activeDraws: Bingo18DrawInfo[];
-  /** Kết quả kỳ quay gần nhất đã công bố, hoặc `null`. */
-  lastResult: {
-    /** ID kỳ quay. Format `YYYY-MM-DD.NNN`. */
-    drawId: string;
-    /** Ngày kỳ quay (YYYY-MM-DD). */
-    drawDate: string;
-    /** Số thứ tự trong ngày. */
-    drawNo: number;
-    /**
-     * 3 giá trị xúc xắc (mỗi giá trị 1-6).
-     * VD: `[3, 5, 6]`.
-     */
-    numbers: number[];
-    /**
-     * Tổng 3 xúc xắc (3-18).
-     * VD: `14`.
-     */
-    sum: number;
-    /** Thời điểm công bố kết quả (ISO 8601). */
-    publishedAt: string;
-  } | null;
-}
-
-/**
- * Danh sách vé Bingo 18 (cursor-based).
- *
- * Trả về bởi {@link Bingo18Api.listPendingTickets} và {@link Bingo18Api.listTickets}.
- */
-export interface Bingo18ListTicketsResponse {
-  /** Danh sách vé trong trang hiện tại. */
-  tickets: Bingo18TicketSummary[];
-  /** Cursor để lấy trang tiếp theo, `null` nếu đã hết. */
-  nextCursor: string | null;
-  /** Số vé thực tế trả về. */
-  size: number;
-}
-
-/**
- * Chi tiết vé và các lần tham gia kỳ quay của vé Bingo 18.
- *
- * Trả về bởi {@link Bingo18Api.getTicketEntries}.
- */
-export interface Bingo18TicketEntriesResponse {
-  /** Thông tin tóm tắt vé. */
-  ticket: Bingo18TicketSummary;
-  /** Danh sách entries (1 entry = 1 kỳ quay). */
-  entries: Array<{
-    /** ID entry. */
-    id: string;
-    /** ID kỳ quay. Format `YYYY-MM-DD.NNN`. VD: `"2026-03-07.095"`. */
-    drawId: string;
-    /** Ngày kỳ quay (YYYY-MM-DD). */
-    drawDate: string;
-    /** Trạng thái entry. */
-    status: string;
-    /** Tiền cược cho entry này (VND). */
-    amount: number;
-    /** Số lượng board + side bet trong entry. */
-    betCount: number;
-    /** Kết quả quay số (chỉ có sau khi kỳ quay đã công bố). */
-    result?: {
-      /**
-       * 3 giá trị xúc xắc (mỗi giá trị 1-6).
-       * VD: `[3, 5, 6]`.
-       */
-      numbers: number[];
-      /**
-       * Tổng 3 xúc xắc (3-18).
-       * VD: `14`.
-       */
-      sum: number;
-      /** Thời điểm công bố kết quả (ISO 8601). */
-      publishedAt: string;
-    };
-    /** Kết quả trúng thưởng của entry. */
-    outcome?: string;
-    /** Thông tin trả thưởng (chỉ có nếu trúng). */
-    payout?: {
-      /** Tổng tiền thắng (VND). */
-      winAmount: number;
-      /** Tổng tiền thực nhận sau các khoản khấu trừ (VND). */
-      payoutAmount: number;
-      /** Chi tiết thưởng theo từng board chính. */
-      boardPayouts: Array<{
-        /** Ký hiệu board. VD: `"A"`. */
-        boardNo: string;
-        /**
-         * Kiểu chơi.
-         * `"singleNum"` | `"doubleMatch"` | `"tripleMatch"`.
-         */
-        playType: string;
-        /** Số lần trùng (1-3). */
-        matchCount: number;
-        /** Tiền thắng của board này (VND). */
-        winAmount: number;
-      }>;
-      /** Chi tiết thưởng theo từng side bet. */
-      sideBetPayouts: Array<{
-        /**
-         * Kiểu side bet.
-         * `"sumTotal"` | `"bigSmallDraw"`.
-         */
-        playType: string;
-        /** Tổng các số kết quả (cho loại `sumTotal`). */
-        sum?: number;
-        /** Lựa chọn Tài/Xỉu/Hoà (cho loại `bigSmallDraw`). */
-        bet?: string;
-        /** Kết quả thực tế. */
-        outcome: string;
-        /** Có trúng hay không. */
-        isWin: boolean;
-        /** Tiền thắng (VND). */
-        winAmount: number;
-      }>;
-    };
-  }>;
-}
-
-/**
- * Danh sách kết quả kỳ quay Bingo 18 (cursor-based).
- *
- * Trả về bởi {@link Bingo18Api.listDrawResults}.
- */
-export interface Bingo18ListDrawResultsResponse {
-  /** Danh sách kết quả kỳ quay trong trang hiện tại. */
-  draws: Bingo18DrawResultSummary[];
-  /**
-   * Cursor để lấy trang tiếp theo, `null` nếu đã hết.
-   * Là `drawId` của kỳ cuối cùng trong trang này. Format `YYYY-MM-DD.NNN`.
-   */
-  nextCursor: string | null;
-  /** Số kỳ quay thực tế trả về. */
-  size: number;
-}
 
 /**
  * API module cho game Bingo 18.
@@ -290,18 +51,15 @@ export interface Bingo18Api {
    *
    * **Endpoint:** `GET /games/bingo18/draws/current`
    *
-   * @returns Kỳ quay hiện tại, danh sách kỳ active, và kết quả kỳ gần nhất
+   * @returns Kỳ quay hiện tại và danh sách kỳ active
    *
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
    *
    * @example
    * ```ts
-   * const { currentDraw, lastResult } = await client.bingo18.getCurrentDraw();
+   * const { currentDraw, activeDraws } = await client.bingo18.getCurrentDraw();
    * if (currentDraw) {
    *   console.log(currentDraw.drawId); // "2026-03-07.095"
-   * }
-   * if (lastResult) {
-   *   console.log(`Số: ${lastResult.numbers.join(", ")} — Tổng: ${lastResult.sum}`);
    * }
    * ```
    */

@@ -177,7 +177,7 @@ export interface PlayerTicketSummary {
      * Số lần cược nhân bội (≥ 1).
      * Backward compat: undefined cho vé cũ (betCount = 1 ngầm định).
      */
-    betCount?: number;
+    betCount: number;
   }>;
   /** Tiến trình xử lý vé qua các kỳ quay. settledDraws = số kỳ đã xử lý xong (settled + voided). */
   progress: {

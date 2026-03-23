@@ -149,7 +149,7 @@ export interface PlayerTicketSummary {
     /** Số dòng expand ra từ board này = C(n,6) với n = số lượng mainNumbers. */
     expandedLines: number;
     /** Số lần cược nhân bội cho board (≥ 1). */
-    betCount?: number;
+    betCount: number;
   }>;
   /** Tiến trình xử lý vé qua các kỳ quay. settledDraws = số kỳ đã xử lý xong (settled + voided). */
   progress: {

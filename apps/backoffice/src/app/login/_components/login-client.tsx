@@ -8,23 +8,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, LogIn, Crown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { signIn } from "@/lib/auth-client";
 import { APP_CONFIG } from "@/config/app-config";
 
-const AUTO_REDIRECT_SECONDS = 10;
+const AUTO_REDIRECT_SECONDS = 3;
 
-export function LoginClient({
-  callbackUrl,
-}: {
-  readonly callbackUrl?: string;
-}) {
+export function LoginClient({ callbackUrl }: { readonly callbackUrl?: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(AUTO_REDIRECT_SECONDS);
@@ -84,12 +74,8 @@ export function LoginClient({
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
             <Crown className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">
-            {APP_CONFIG.name}
-          </CardTitle>
-          <CardDescription>
-            Đăng nhập vào hệ thống quản trị để tiếp tục sử dụng.
-          </CardDescription>
+          <CardTitle className="text-2xl font-bold">{APP_CONFIG.name}</CardTitle>
+          <CardDescription>Đăng nhập vào hệ thống quản trị để tiếp tục sử dụng.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {error && (
@@ -97,12 +83,7 @@ export function LoginClient({
               {error}
             </div>
           )}
-          <Button
-            onClick={handleSignIn}
-            disabled={isLoading}
-            className="w-full"
-            size="lg"
-          >
+          <Button onClick={handleSignIn} disabled={isLoading} className="w-full" size="lg">
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -118,13 +99,10 @@ export function LoginClient({
           {!isLoading && (
             <p className="text-center text-muted-foreground text-sm">
               Tự động chuyển hướng sau{" "}
-              <span className="font-semibold text-primary">{countdown}</span>{" "}
-              giây
+              <span className="font-semibold text-primary">{countdown}</span> giây
             </p>
           )}
-          <p className="text-center text-muted-foreground text-xs">
-            {APP_CONFIG.copyright}
-          </p>
+          <p className="text-center text-muted-foreground text-xs">{APP_CONFIG.copyright}</p>
         </CardContent>
       </Card>
     </div>

@@ -85,7 +85,7 @@ export function MfaStatusCard({ onSetup, onDisable }: MfaStatusCardProps) {
         </div>
       </CardHeader>
       <CardContent className="px-5 pb-5 pt-0">
-        <div className="mx-auto flex max-w-md flex-col gap-4">
+        <div className="mx-auto flex max-w-lg flex-col gap-4">
           <div className="rounded-lg border p-4">
             <h4 className="mb-2 text-sm font-medium">Xác thực 2 lớp (TOTP) là gì?</h4>
             <p className="text-sm text-muted-foreground">

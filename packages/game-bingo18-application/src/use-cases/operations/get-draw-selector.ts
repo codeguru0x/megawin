@@ -8,9 +8,9 @@ import type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selecto
  * Dropdown chọn kỳ quay cho Bingo 18 Operations Dashboard.
  *
  * Bingo 18 có ~160 kỳ/ngày (6 phút/kỳ) — group theo trạng thái để tránh quá tải:
- *   - active: đang xử lý (salesOpen/salesClosed/published/settling)
+ *   - active: đang xử lý (salesOpen/salesClosed/published/settling/voiding)
  *   - upcoming: scheduled, chỉ lấy 10 kỳ tiếp theo
- *   - recent: settled trong 2h qua, tối đa 15 kỳ
+ *   - recent: settled/void gần đây, tối đa 15 kỳ
  *
  * DrawId format: "YYYY-MM-DD.NNN".
  */
@@ -18,21 +18,22 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(): Promise<GetDrawSelectorOutput> {
-    // Lấy tất cả kỳ đang active (không phải settled/void)
     const [activeDraws, upcomingDraws, recentDraws] = await Promise.all([
+      // Active draws: KHÔNG filter ngày — tránh bỏ sót kỳ đang vận hành bị trễ qua ngày.
+      // Bao gồm voiding vì kỳ đang trong quy trình hủy vẫn cần hiển thị để giám sát.
       this.drawRepo.getActiveDraws([
         DrawStatus.SalesOpen,
         DrawStatus.SalesClosed,
         DrawStatus.Published,
         DrawStatus.Settling,
+        DrawStatus.Voiding,
       ]),
       // Kỳ scheduled sắp tới — lấy 10 kỳ đầu
       this.drawRepo.getActiveDraws([DrawStatus.Scheduled]).then((draws) => draws.slice(0, 10)),
-      // Settled gần đây — lấy 15 kỳ cuối (sort drawTime desc)
-      this.drawRepo.getActiveDraws([DrawStatus.Settled]).then((draws) =>
-        // getActiveDraws sort drawDate/drawNo asc → reverse để lấy mới nhất
-        draws.reverse().slice(0, 15),
-      ),
+      // Settled/void gần đây — giới hạn 1 ngày lookback, lấy 15 kỳ cuối (sort drawTime desc)
+      this.drawRepo
+        .getActiveDraws([DrawStatus.Settled, DrawStatus.Void], 1)
+        .then((draws) => draws.reverse().slice(0, 15)),
     ]);
 
     const toItem = (

@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/providers/auth-provider";
-import { signOut } from "@/lib/auth-client";
+import { signOutAndRedirect } from "@/lib/auth/sign-out";
 import { getInitials } from "@/lib/utils";
 
 export function AccountSwitcher() {
@@ -29,13 +29,7 @@ export function AccountSwitcher() {
   };
 
   async function handleSignOut() {
-    await signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          window.location.href = "/login";
-        },
-      },
-    });
+    await signOutAndRedirect();
   }
 
   if (isPending) {
@@ -47,9 +41,7 @@ export function AccountSwitcher() {
       <DropdownMenuTrigger asChild>
         <Avatar className="size-9 cursor-pointer rounded-lg">
           <AvatarImage src={user.avatar || undefined} alt={user.name} />
-          <AvatarFallback className="rounded-lg">
-            {getInitials(user.name)}
-          </AvatarFallback>
+          <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -61,15 +53,11 @@ export function AccountSwitcher() {
         <div className="flex w-full items-center gap-2 px-2 py-1.5">
           <Avatar className="size-9 rounded-lg">
             <AvatarImage src={user.avatar || undefined} alt={user.name} />
-            <AvatarFallback className="rounded-lg">
-              {getInitials(user.name)}
-            </AvatarFallback>
+            <AvatarFallback className="rounded-lg">{getInitials(user.name)}</AvatarFallback>
           </Avatar>
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-semibold">{user.name}</span>
-            <span className="truncate text-xs text-muted-foreground">
-              {user.email}
-            </span>
+            <span className="truncate text-xs text-muted-foreground">{user.email}</span>
           </div>
         </div>
         <DropdownMenuSeparator />

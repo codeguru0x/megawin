@@ -110,17 +110,20 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
 
   async getActiveDraws(
     allowStatuses: string[],
-    lookbackDays = 1,
+    lookbackDays?: number,
     options?: FindOptions,
   ): Promise<DrawEntity[]> {
-    const fromDateStr = formatVNDate(subDays(new Date(), lookbackDays));
-    return await this.findMany(
-      {
-        status: { $in: allowStatuses },
-        drawDate: { $gte: fromDateStr },
-      },
-      { sort: { drawDate: 1, drawNo: 1 }, ...options },
-    );
+    const query: Record<string, unknown> = {
+      status: { $in: allowStatuses },
+    };
+    // Khi lookbackDays được cung cấp, filter theo ngày để giới hạn số lượng kết quả
+    // (dùng cho settled/void draws có thể rất nhiều). Active draws không filter ngày
+    // để không bỏ sót kỳ đang vận hành bị trễ qua ngày.
+    if (lookbackDays !== undefined) {
+      const fromDateStr = formatVNDate(subDays(new Date(), lookbackDays));
+      query.drawDate = { $gte: fromDateStr };
+    }
+    return await this.findMany(query, { sort: { drawDate: 1, drawNo: 1 }, ...options });
   }
 
   async getLastSettledDrawWithResult(): Promise<DrawEntity | null> {
