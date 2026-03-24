@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { PublishResultUseCase } from "@megawin/game-keno-application/use-cases/draws";
 import { KENO_DRAW_COUNT } from "@megawin/game-keno/entities";
 

@@ -1,9 +1,17 @@
 "use client";
 
-import { Activity, Layers, Ticket, Users, DollarSign } from "lucide-react";
+import {
+  Activity,
+  Layers,
+  Ticket,
+  Users,
+  DollarSign,
+  Building2,
+  ArrowUpRight,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatNumber, formatVNDCompact } from "@megawin/shared/utils/number";
+import { formatNumber, formatVNDCompact, formatVND } from "@megawin/shared/utils";
 import { getGameHex } from "@/lib/game-colors";
 import { getGameLabel } from "../_lib/compute";
 import type { SystemOutstandingGameDaily } from "@megawin/game-core/entities/financial-report";
@@ -18,20 +26,71 @@ interface OutstandingStripProps {
 
 export function OutstandingStripSkeleton() {
   return (
-    <div className="rounded-xl border border-blue-200/50 bg-blue-50/30 p-4 dark:border-blue-800/30 dark:bg-blue-950/20">
+    <div className="rounded-xl border border-blue-200/50 bg-blue-50/30 p-5 dark:border-blue-800/30 dark:bg-blue-950/20">
       <div className="flex items-center gap-2">
         <Skeleton className="h-4 w-32" />
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 rounded-lg" />
+        ))}
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         {Array.from({ length: 7 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-lg" />
+          <Skeleton key={i} className="h-24 rounded-lg" />
         ))}
       </div>
     </div>
   );
 }
 
-// ─── Mini card cho mỗi game ──────────────────────────────────────────────────
+// ─── Metric Card cho tổng KPIs ────────────────────────────────────────────────
+
+interface MetricCardProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  /** Màu semantic — mỗi metric có 1 màu riêng, đồng nhất toàn strip. */
+  color: "blue" | "amber" | "indigo" | "violet" | "rose" | "emerald";
+}
+
+/**
+ * Metric card — nền nhẹ theo màu, border tương ứng.
+ * Mỗi card cùng style, chỉ khác color → đồng nhất visual.
+ */
+function MetricCard({ icon: Icon, label, value, color }: MetricCardProps) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2.5 rounded-lg border px-3 py-2.5",
+        color === "blue" && "border-blue-200/70 bg-blue-50/60 dark:border-blue-800/40 dark:bg-blue-950/30",
+        color === "amber" && "border-amber-200/70 bg-amber-50/60 dark:border-amber-800/40 dark:bg-amber-950/30",
+        color === "indigo" && "border-indigo-200/70 bg-indigo-50/60 dark:border-indigo-800/40 dark:bg-indigo-950/30",
+        color === "violet" && "border-violet-200/70 bg-violet-50/60 dark:border-violet-800/40 dark:bg-violet-950/30",
+        color === "rose" && "border-rose-200/70 bg-rose-50/60 dark:border-rose-800/40 dark:bg-rose-950/30",
+        color === "emerald" && "border-emerald-200/70 bg-emerald-50/60 dark:border-emerald-800/40 dark:bg-emerald-950/30",
+      )}
+    >
+      <Icon
+        className={cn(
+          "size-4 shrink-0",
+          color === "blue" && "text-blue-600 dark:text-blue-400",
+          color === "amber" && "text-amber-600 dark:text-amber-400",
+          color === "indigo" && "text-indigo-600 dark:text-indigo-400",
+          color === "violet" && "text-violet-600 dark:text-violet-400",
+          color === "rose" && "text-rose-600 dark:text-rose-400",
+          color === "emerald" && "text-emerald-600 dark:text-emerald-400",
+        )}
+      />
+      <div className="min-w-0">
+        <p className="text-[10px] font-medium text-muted-foreground">{label}</p>
+        <p className="text-sm font-bold tabular-nums text-foreground">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Game Row — chi tiết hơn GameCard cũ ──────────────────────────────────────
 
 interface GameCardProps {
   gameProduct: string;
@@ -40,14 +99,16 @@ interface GameCardProps {
   entryCount: number;
   activeDrawCount: number;
   playerCount: number;
+  tenantCount: number;
+  estimatedCommission: number;
 }
 
 /**
- * Mini card hiển thị outstanding 1 game — clickable → trang outstanding chi tiết.
+ * Game card — 1 card / game trong grid outstanding.
  *
- * Layout: color bar trái + tên game + % + stake + chi tiết nhỏ.
- * Dễ scan hơn legend dạng inline text.
- * Game có stake < 1% tổng sẽ dimmed (opacity thấp) để ưu tiên focus vào game lớn.
+ * Layout compact: color bar trái + name/% + stake nổi bật + chi tiết (kỳ, vé, NC, đại lý).
+ * Click → trang outstanding chi tiết của game đó.
+ * Progress bar bên dưới thể hiện tỷ lệ stake so với tổng.
  */
 function GameCard({
   gameProduct,
@@ -56,18 +117,16 @@ function GameCard({
   entryCount,
   activeDrawCount,
   playerCount,
+  tenantCount,
+  estimatedCommission,
 }: GameCardProps) {
   const pct = totalStake > 0 ? (stake / totalStake) * 100 : 0;
   const hex = getGameHex(gameProduct);
-  // Game chiếm < 1% tổng stake → dimmed để focus vào game lớn
-  const isMinor = pct < 1;
 
   return (
     <Link
       href={`/games/${gameProduct}/outstanding`}
-      className={cn(
-        "group relative flex gap-2 overflow-hidden rounded-lg border border-border/50 bg-background/80 p-2.5 transition-all hover:border-border hover:shadow-sm hover:opacity-100",
-      )}
+      className="group relative flex gap-2 overflow-hidden rounded-lg border border-border/50 bg-background/80 p-2.5 transition-all hover:border-border hover:shadow-sm"
     >
       {/* Color indicator bar bên trái */}
       <div className="w-1 shrink-0 rounded-full" style={{ background: hex }} />
@@ -91,14 +150,22 @@ function GameCard({
           {formatVNDCompact(stake)}
         </span>
 
-        {/* Chi tiết nhỏ: kỳ · vé · người chơi */}
+        {/* Chi tiết: kỳ · vé · NC · đại lý */}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0 text-[10px] tabular-nums text-muted-foreground">
           <span>{activeDrawCount} kỳ</span>
           <span>{formatNumber(entryCount)} vé</span>
           <span>{formatNumber(playerCount)} NC</span>
+          {tenantCount > 0 && <span>{tenantCount} ĐL</span>}
         </div>
 
-        {/* Progress bar nhỏ bên dưới card — visual % */}
+        {/* Ước tính commission nếu có */}
+        {estimatedCommission > 0 && (
+          <span className="text-[10px] tabular-nums text-amber-600 dark:text-amber-400">
+            ~{formatVNDCompact(estimatedCommission)} HH
+          </span>
+        )}
+
+        {/* Progress bar — visual tỷ lệ % stake */}
         <div className="mt-0.5 h-1 w-full overflow-hidden rounded-full bg-muted/60">
           <div
             className="h-full rounded-full transition-all"
@@ -106,6 +173,9 @@ function GameCard({
           />
         </div>
       </div>
+
+      {/* Hover arrow indicator */}
+      <ArrowUpRight className="absolute right-1.5 top-1.5 size-3 text-muted-foreground/0 transition-colors group-hover:text-muted-foreground/60" />
     </Link>
   );
 }
@@ -113,83 +183,90 @@ function GameCard({
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 /**
- * Zone 2 — Outstanding Summary Strip.
+ * Zone 2 — Outstanding Monitor (Live Exposure Dashboard).
  *
- * Đặt ngay sau Hero KPIs vì đây là dữ liệu real-time quan trọng nhất khi monitor.
- * Hiển thị tổng tiền cược pending cross-game + per-game mini cards.
- * Live data — refetch mỗi 30s.
+ * Mục đích chính: trả lời câu hỏi "Hệ thống đang chịu bao nhiêu rủi ro/exposure ngay lúc này?"
+ * Đây là phần QUAN TRỌNG NHẤT của dashboard cho casino online vì:
+ * - Tiền outstanding = liability chưa settle → rủi ro tài chính thực
+ * - Cần biết ngay: tổng exposure, phân bổ theo game, số kỳ/vé/người chơi đang chờ
+ * - Commission ước tính cho biết chi phí đại lý đang tích lũy
  *
- * Layout:
- * - Row 1: Header OUTSTANDING Live + 4 tổng KPIs (kỳ, vé, tiền, người chơi)
- * - Row 2: Stacked bar overview — tỷ lệ % stake mỗi game
- * - Row 3: Grid game cards — mỗi card: tên + % badge + stake + chi tiết
- *          Game < 1% stake → dimmed (opacity thấp) để focus vào top contributors.
+ * Layout 4 tầng:
+ * 1. Header: OUTSTANDING + live pulse dot
+ * 2. KPI Row: 6 metric cards — mỗi card 1 màu riêng, đồng nhất visual
+ * 3. Stacked bar: phân bổ % theo game
+ * 4. Game Grid: chi tiết per-game (click → trang outstanding)
+ *
+ * Live data — refetch mỗi 30s. TTL 5 phút trên server.
+ * Live indicator = pulse dot animation, không dùng text timestamp.
  */
 export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
   if (isLoading) return <OutstandingStripSkeleton />;
   if (!data || data.length === 0) return null;
 
-  // Aggregate totals
+  // ── Aggregate totals ────────────────────────────────────────────────────────
   let totalDraws = 0;
   let totalEntries = 0;
   let totalStake = 0;
   let totalPlayers = 0;
+  let totalTenants = 0;
+  let totalCommission = 0;
+
   for (const g of data) {
     totalDraws += g.activeDrawCount;
     totalEntries += g.totalEntryCount;
     totalStake += g.totalOutstandingStake;
     totalPlayers += g.totalPlayerCount;
+    totalTenants += g.totalTenantCount;
+    totalCommission += g.totalEstimatedCommission;
   }
 
   // Không có outstanding → ẩn strip
   if (totalStake === 0 && totalEntries === 0) return null;
 
-  // Sort games by stake desc
+  // Sort games by stake descending — game lớn nhất hiện trước
   const sorted = [...data]
     .filter((g) => g.totalOutstandingStake > 0 || g.totalEntryCount > 0)
     .sort((a, b) => b.totalOutstandingStake - a.totalOutstandingStake);
 
   return (
-    <div className="rounded-xl border border-blue-200/50 bg-blue-50/30 p-4 dark:border-blue-800/30 dark:bg-blue-950/20">
-      {/* ── Row 1: Header + Tổng KPIs ─────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Activity className="size-4 text-blue-600 dark:text-blue-400" />
-          <span className="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-400">
-            Outstanding
-          </span>
-          <span className="animate-pulse rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold tabular-nums text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
-            Live
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-4">
-          <KpiBadge
-            icon={<Layers className="size-3.5" />}
-            value={formatNumber(totalDraws)}
-            label="kỳ"
-          />
-          <KpiBadge
-            icon={<Ticket className="size-3.5" />}
-            value={formatNumber(totalEntries)}
-            label="vé"
-          />
-          <KpiBadge
-            icon={<DollarSign className="size-3.5" />}
-            value={formatVNDCompact(totalStake)}
-            label="pending"
-            highlight
-          />
-          <KpiBadge
-            icon={<Users className="size-3.5" />}
-            value={formatNumber(totalPlayers)}
-            label="người chơi"
-          />
-        </div>
+    <div className="rounded-xl border border-blue-200/50 bg-blue-50/30 p-5 dark:border-blue-800/30 dark:bg-blue-950/20">
+      {/* ── Row 1: Header + live pulse dot ─────────────────────────── */}
+      <div className="flex items-center gap-2">
+        <Activity className="size-4 text-blue-600 dark:text-blue-400" />
+        <span className="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-400">
+          Outstanding
+        </span>
+        {/* Live pulse dot — animation nhẹ thay cho text timestamp */}
+        <span className="relative flex size-2">
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-blue-400 opacity-75" />
+          <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
+        </span>
       </div>
 
-      {/* ── Row 2: Stacked bar tổng quan — tỷ lệ % stake ─────────── */}
+      {/* ── Row 2: KPI Metrics — 6 cards, mỗi card 1 màu riêng ──── */}
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        <MetricCard
+          icon={DollarSign}
+          label="Tổng tiền pending"
+          value={formatVNDCompact(totalStake)}
+          color="blue"
+        />
+        <MetricCard
+          icon={DollarSign}
+          label="Ước tính HH"
+          value={formatVNDCompact(totalCommission)}
+          color="amber"
+        />
+        <MetricCard icon={Layers} label="Kỳ quay đang mở" value={formatNumber(totalDraws)} color="indigo" />
+        <MetricCard icon={Ticket} label="Vé chờ xử lý" value={formatNumber(totalEntries)} color="violet" />
+        <MetricCard icon={Users} label="Người chơi" value={formatNumber(totalPlayers)} color="rose" />
+        <MetricCard icon={Building2} label="Đại lý" value={formatNumber(totalTenants)} color="emerald" />
+      </div>
+
+      {/* ── Row 3: Stacked bar — phân bổ % stake theo game ──────── */}
       <div className="group/bar relative mt-3">
-        <div className="flex h-3.5 w-full overflow-hidden rounded-full bg-blue-100/60 dark:bg-blue-900/30">
+        <div className="flex h-4 w-full overflow-hidden rounded-full bg-blue-100/60 dark:bg-blue-900/30">
           {sorted.map((g) => {
             const pct = totalStake > 0 ? (g.totalOutstandingStake / totalStake) * 100 : 0;
             if (pct < 0.5) return null;
@@ -202,16 +279,15 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
                   width: `${Math.max(pct, 2)}%`,
                   background: getGameHex(g.gameProduct as string),
                 }}
-                title={`${getGameLabel(g.gameProduct as string)}: ${formatVNDCompact(g.totalOutstandingStake)} (${pct.toFixed(1)}%)`}
+                title={`${getGameLabel(g.gameProduct as string)}: ${formatVND(g.totalOutstandingStake)} (${pct.toFixed(1)}%)`}
               />
             );
           })}
         </div>
-        {/* Label hiển thị % trên bar khi segment đủ rộng */}
-        <div className="pointer-events-none absolute inset-0 flex h-3.5 items-center overflow-hidden rounded-full">
+        {/* Label % trên bar — chỉ show khi segment đủ rộng (>8%) */}
+        <div className="pointer-events-none absolute inset-0 flex h-4 items-center overflow-hidden rounded-full">
           {sorted.map((g) => {
             const pct = totalStake > 0 ? (g.totalOutstandingStake / totalStake) * 100 : 0;
-            // Chỉ show label khi segment đủ rộng (>8%) để text không bị cắt
             if (pct < 8)
               return <div key={g.gameProduct} style={{ width: `${Math.max(pct, 0)}%` }} />;
             return (
@@ -229,7 +305,7 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
         </div>
       </div>
 
-      {/* ── Row 3: Game cards grid ────────────────────────────────── */}
+      {/* ── Row 4: Game cards grid — chi tiết per-game ─────────── */}
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
         {sorted.map((g) => (
           <GameCard
@@ -240,37 +316,11 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
             entryCount={g.totalEntryCount}
             activeDrawCount={g.activeDrawCount}
             playerCount={g.totalPlayerCount}
+            tenantCount={g.totalTenantCount}
+            estimatedCommission={g.totalEstimatedCommission}
           />
         ))}
       </div>
-    </div>
-  );
-}
-
-// ─── Sub-components ──────────────────────────────────────────────────────────
-
-interface KpiBadgeProps {
-  icon: React.ReactNode;
-  value: string;
-  label: string;
-  /** Highlight lớn cho metric chính (tiền pending). */
-  highlight?: boolean;
-}
-
-function KpiBadge({ icon, value, label, highlight }: KpiBadgeProps) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <span className="text-blue-500/70">{icon}</span>
-      <span
-        className={
-          highlight
-            ? "text-sm tabular-nums font-bold text-blue-700 dark:text-blue-300"
-            : "text-xs tabular-nums font-semibold text-foreground"
-        }
-      >
-        {value}
-      </span>
-      <span className="text-[10px] text-muted-foreground">{label}</span>
     </div>
   );
 }

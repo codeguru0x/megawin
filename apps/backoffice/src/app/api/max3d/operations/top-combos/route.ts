@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { GetTopCombosUseCase } from "@megawin/game-max3d-application/use-cases/operations";
 import { topCombosQuerySchema } from "../_lib/schema";
 

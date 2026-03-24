@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Save, Clock, Globe, CalendarDays } from "lucide-react";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
 

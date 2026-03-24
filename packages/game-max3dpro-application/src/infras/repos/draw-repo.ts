@@ -1,5 +1,5 @@
 import { DrawStatus } from "@megawin/game-core/entities";
-import { subDays, formatVNDate } from "@megawin/shared/utils/date";
+import { subDays, formatVNDate } from "@megawin/shared/utils";
 import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
 import type { DrawEntity } from "@megawin/game-max3dpro/entities";

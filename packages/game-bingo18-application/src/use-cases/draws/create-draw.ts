@@ -2,7 +2,7 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { generateBingo18DrawId } from "@megawin/game-bingo18/helpers";
-import { getFinancialDate } from "@megawin/shared/utils/financial-date";
+import { getFinancialDate } from "@megawin/shared/utils";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { DrawCounterRepository } from "../../infras/repos/draw-counter-repo";
 import type { CreateDrawInput, CreateDrawOutput, CreateDrawOutputItem } from "./dto/draw.dto";

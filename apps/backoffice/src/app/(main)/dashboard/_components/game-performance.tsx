@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { formatNumber, formatVNDCompact } from "@megawin/shared/utils/number";
+import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { BarChart2, PieChart as PieChartIcon } from "lucide-react";
 import { getGameLabel, type DashboardDayKpis } from "../_lib/compute";

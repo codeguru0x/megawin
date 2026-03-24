@@ -20,8 +20,8 @@ import {
   Ban,
 } from "lucide-react";
 
-import type { AccountRole } from "@megawin/identity/entities/account";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
+import type { AccountRole } from "@megawin/identity/entities";
 
 export interface NavSubItem {
   title: string;

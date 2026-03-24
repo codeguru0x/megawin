@@ -8,12 +8,8 @@
 import type { NextRequest } from "next/server";
 
 import { createApiRouteBuilder, type RouteSession } from "@megawin/next/server";
-import {
-  ALL_ROLE_VALUES,
-  AccountStatus,
-  CompanyRole,
-  type AccountRole,
-} from "@megawin/identity/entities/account";
+import { ALL_ROLE_VALUES, AccountStatus, CompanyRole } from "@megawin/identity/entities";
+import type { AccountRole } from "@megawin/identity/entities";
 import { auth } from "@/lib/auth";
 
 function parseCognitoRoles(raw: unknown): AccountRole[] {

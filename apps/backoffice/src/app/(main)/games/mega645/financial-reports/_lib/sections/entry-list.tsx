@@ -19,7 +19,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import type { TicketEntryEntity } from "@megawin/game-mega645/entities";
 import { PlayType, PrizeTier } from "@megawin/game-mega645/entities/enums";
 import { MEGA645_PLAY_TYPE_LABELS, MEGA645_PRIZE_TIER_LABELS } from "@megawin/game-mega645/labels";
@@ -29,7 +29,7 @@ import {
   REPORT_COLUMN_LABELS,
 } from "@megawin/game-core/labels";
 import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
-import { parseUsername } from "@megawin/identity-application/shared";
+import { toTenantUsername } from "@megawin/shared/utils";
 import { useMega645Entries } from "../use-report-queries";
 import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
 
@@ -40,8 +40,7 @@ import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
  */
 function shortDisplayName(username: string | undefined | null, accountId: string): string {
   const raw = username || accountId;
-  const parsed = parseUsername(raw);
-  return parsed ? parsed.playerExternalId : raw;
+  return toTenantUsername(raw) ?? raw;
 }
 
 /** Chi tiết 1 entry Mega 6/45 — bộ số, kết quả quay, giải trúng. */

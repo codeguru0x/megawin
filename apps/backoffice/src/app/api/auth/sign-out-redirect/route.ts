@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { GetSignOutRedirectUrlUseCase } from "@megawin/identity-application/use-cases/security";
 import { env } from "@/env";
 

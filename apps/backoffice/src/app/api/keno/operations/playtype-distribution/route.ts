@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { GetPlayTypeDistributionUseCase } from "@megawin/game-keno-application/use-cases/operations";
 import { opsQuerySchema } from "../_lib/schema";
 

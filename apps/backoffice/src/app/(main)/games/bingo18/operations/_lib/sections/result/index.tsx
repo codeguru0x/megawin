@@ -20,7 +20,7 @@ import {
   BINGO18_TRIPLE_KIND_LABELS,
 } from "@megawin/game-bingo18/labels";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import {
   Trophy,
   TrendingDown,

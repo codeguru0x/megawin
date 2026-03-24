@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatNumber, formatVNDCompact } from "@megawin/shared/utils/number";
+import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import { GAME_COLORS } from "@/lib/game-colors";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";

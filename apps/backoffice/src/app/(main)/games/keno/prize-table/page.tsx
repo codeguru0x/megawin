@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatVND, formatCurrency } from "@megawin/shared/utils/number";
+import { formatVND, formatCurrency } from "@megawin/shared/utils";
 
 import { useKenoGameConfig, type KenoGameConfig } from "../config/_lib/use-game-config";
 

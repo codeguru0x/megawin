@@ -17,7 +17,7 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { generateDrawId } from "@megawin/game-max3dpro/helpers";
-import { getFinancialDate } from "@megawin/shared/utils/financial-date";
+import { getFinancialDate } from "@megawin/shared/utils";
 import type { DrawNo } from "@megawin/game-max3dpro/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";

@@ -1,4 +1,4 @@
-import type { AccountStatus, PlayerRole } from "@megawin/identity/entities/account";
+import type { AccountStatus, PlayerRole } from "@megawin/identity/entities";
 
 /**
  * Input cho SearchPlayerAccountUseCase.

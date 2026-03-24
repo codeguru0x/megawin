@@ -2,7 +2,7 @@
 
 import { useQueryState, parseAsString } from "nuqs";
 import { LayoutDashboard } from "lucide-react";
-import { todayVN } from "@megawin/shared/utils/date";
+import { todayVN } from "@megawin/shared/utils";
 
 import { FinancialDateRangePicker } from "@/components/date-picker";
 

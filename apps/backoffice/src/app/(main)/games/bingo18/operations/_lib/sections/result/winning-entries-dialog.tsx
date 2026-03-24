@@ -21,9 +21,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { formatNumber } from "@megawin/shared/utils/number";
-import { displayVNDateTime } from "@megawin/shared/utils/date";
-import { parseUsername } from "@megawin/identity-application/shared";
+import { formatNumber, displayVNDateTime } from "@megawin/shared/utils";
+import { toTenantUsername } from "@megawin/shared/utils";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Loader2, FileSearch, Users, Banknote } from "lucide-react";
 import { BINGO18_PLAY_TYPE_LABELS, BINGO18_TRIPLE_KIND_LABELS } from "@megawin/game-bingo18/labels";
@@ -131,8 +130,7 @@ function KpiBar({
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
 function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: number }) {
-  const parsed = parseUsername(entry.username);
-  const displayName = parsed?.playerExternalId ?? entry.username;
+  const displayName = toTenantUsername(entry.username) ?? entry.username;
 
   return (
     <TableRow className="align-top group transition-colors hover:bg-muted/30">

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Dices, Eye, EyeOff } from "lucide-react";
 import { apiClient, ApiClientError } from "@megawin/next/client";
-import { CompanyRole, COMPANY_ROLE_VALUES } from "@megawin/identity/entities/account";
+import { CompanyRole, COMPANY_ROLE_VALUES } from "@megawin/identity/entities";
 
 import { Button } from "@/components/ui/button";
 import {

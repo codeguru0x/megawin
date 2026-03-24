@@ -6,7 +6,7 @@
  */
 
 import type { TenantAuthContext } from "@megawin/auth";
-import { ClaimKey } from "@megawin/identity/entities/claim";
+import { ClaimKey } from "@megawin/identity/entities";
 
 export interface MockEventOptions {
   user?: Partial<TenantAuthContext>;

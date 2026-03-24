@@ -15,7 +15,7 @@
 
 import { Power655Collections } from "@megawin/game-power655/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { subDays, formatVNDate } from "@megawin/shared/utils/date";
+import { subDays, formatVNDate } from "@megawin/shared/utils";
 import type { FindOptions } from "mongodb";
 import type {
   DrawDoc,

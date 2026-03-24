@@ -12,8 +12,19 @@
  * @param tenantId - ID tenant sở hữu player.
  * @returns Megawin username dạng `${playerExternalId}@${tenantId}` (lowercase).
  */
-export function toUsername(playerExternalId: string, tenantId: string): string {
+export function toMegawinUsername(playerExternalId: string, tenantId: string): string {
   return `${playerExternalId}@${tenantId}`.toLowerCase();
+}
+
+/**
+ * Chuyển đổi Megawin username thành tenant username. (loại bỏ suffix @tenantId)
+ * @param megawinUsername - Megawin username cần chuyển đổi.
+ * @returns Tenant username dạng `${playerExternalId}` (lowercase).
+ */
+export function toTenantUsername(megawinUsername: string): string {
+  const parsed = parseUsername(megawinUsername);
+
+  return parsed !== null ? parsed.playerExternalId : megawinUsername;
 }
 
 /**
@@ -25,17 +36,17 @@ export function toUsername(playerExternalId: string, tenantId: string): string {
  * @param username - Megawin username cần parse.
  */
 export function parseUsername(
-  username: string,
+  megawinUsername: string,
 ): { playerExternalId: string; tenantId: string } | null {
-  const atIndex = username.indexOf("@");
+  const atIndex = megawinUsername.indexOf("@");
 
   // Không có '@', hoặc '@' ở đầu / cuối → không hợp lệ.
-  if (atIndex <= 0 || atIndex === username.length - 1) {
+  if (atIndex <= 0 || atIndex === megawinUsername.length - 1) {
     return null;
   }
 
   return {
-    playerExternalId: username.slice(0, atIndex),
-    tenantId: username.slice(atIndex + 1),
+    playerExternalId: megawinUsername.slice(0, atIndex),
+    tenantId: megawinUsername.slice(atIndex + 1),
   };
 }

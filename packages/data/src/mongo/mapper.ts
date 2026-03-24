@@ -1,4 +1,4 @@
-import { Mapper } from "@megawin/shared/mappers/mapper";
+import { Mapper } from "@megawin/shared/mappers";
 import { BaseEntity } from "./base-entity";
 import { Document } from "mongodb";
 /**

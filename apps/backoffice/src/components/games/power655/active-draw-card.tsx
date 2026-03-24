@@ -25,9 +25,8 @@ import {
 
 import { cn } from "@/lib/utils";
 import { Power655DrawStatusBadge } from "@/components/games/power655/draw-status-badge";
-import { formatVNDCompact as formatVND } from "@megawin/shared/utils/number";
+import { formatVNDCompact as formatVND, formatVNTime, displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatVNTime, displayVNTime, displayVNDateTime } from "@megawin/shared/utils/date";
 import type { CurrentDrawInfo } from "@megawin/game-power655-application/use-cases/draws";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 

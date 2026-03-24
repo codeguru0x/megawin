@@ -16,9 +16,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { DrawStatusBadge } from "@/components/games/lotto535/draw-status-badge";
-import { formatVND } from "@megawin/shared/utils/number";
+import { formatVND, formatVNTime, displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatVNTime, displayVNTime, displayVNDateTime } from "@megawin/shared/utils/date";
 import type { CurrentDrawInfo } from "@megawin/game-lotto535-application/use-cases/draws";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 

@@ -14,8 +14,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { formatVND, formatNumber } from "@megawin/shared/utils/number";
-import { Pagination } from "@megawin/shared/constants/pagination";
+import { formatVND, formatNumber } from "@megawin/shared/utils";
+import { Pagination } from "@megawin/shared/constants";
 import { useJackpotHistory, type JackpotHistoryItem } from "./use-jackpot";
 
 const PAGE_SIZE = Pagination.Default.Size;

@@ -22,9 +22,8 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { KenoNumberBall } from "@/components/games/keno/keno-number-ball";
-import { formatNumber } from "@megawin/shared/utils/number";
-import { displayVNDateTime } from "@megawin/shared/utils/date";
-import { parseUsername } from "@megawin/identity-application/shared";
+import { formatNumber, displayVNDateTime } from "@megawin/shared/utils";
+import { toTenantUsername } from "@megawin/shared/utils";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Loader2, FileSearch, Users, Banknote, AlertCircle } from "lucide-react";
 import { useWinningEntries } from "../../use-operations";
@@ -146,8 +145,7 @@ function KpiBar({
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
 function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: number }) {
-  const parsed = parseUsername(entry.username);
-  const displayName = parsed?.playerExternalId ?? entry.username;
+  const displayName = toTenantUsername(entry.username) ?? entry.username;
   const hasCapped = entry.boardDetails.some((b) => b.isCapped);
 
   return (

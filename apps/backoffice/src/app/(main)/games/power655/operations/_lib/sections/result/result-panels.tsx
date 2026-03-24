@@ -16,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { PowerNumberBall } from "@/components/games/power655/power-number-ball";
 import { Badge } from "@/components/ui/badge";
 import { PrizeTier } from "@megawin/game-power655/entities";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import {
   Trophy,
   TrendingDown,

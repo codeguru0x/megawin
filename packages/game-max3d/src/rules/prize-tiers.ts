@@ -39,7 +39,7 @@
  */
 
 import { BasicPrizeTier, PlusPrizeTier, PlayMode, PlayType } from "../entities/enums";
-import { sumBy } from "@megawin/shared/utils/array";
+import { sumBy } from "@megawin/shared/utils";
 import type {
   Triplet,
   BasicPrizeAmounts,

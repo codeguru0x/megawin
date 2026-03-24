@@ -1,5 +1,5 @@
 import { createClient } from "redis";
-import { isDevNextJs } from "@megawin/shared/utils/env";
+import { isDevNextJs } from "@megawin/shared/utils";
 
 const __redisClientCache__ = new Map<string, ReturnType<typeof createClient>>();
 

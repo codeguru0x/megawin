@@ -10,7 +10,10 @@ const MODULE = MODULES.dashboard;
 export const dashboardKeys = {
   all: [MODULE] as const,
 
-  /** KPI + per-game data cho 1 ngày tài chính (+ optional compare date). */
+  /**
+   * KPI + per-game data cho dashboard (today + yesterday + compare).
+   * Key chứa todayFd vì yesterdayFd/compareFd auto-derive từ todayFd.
+   */
   kpis: (fd: string) => [MODULE, "kpis", fd] as const,
 
   /** Revenue trend chart cho date range N ngày. */

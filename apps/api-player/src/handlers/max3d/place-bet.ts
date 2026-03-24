@@ -22,7 +22,7 @@ import {
   VALID_BOARD_NOS,
 } from "@megawin/game-max3d/schemas";
 import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
-import { isUnique, isUniqueBy } from "@megawin/shared/utils/array";
+import { isUnique, isUniqueBy } from "@megawin/shared/utils";
 
 // ─── Board schemas (discriminated by playMode) ───
 

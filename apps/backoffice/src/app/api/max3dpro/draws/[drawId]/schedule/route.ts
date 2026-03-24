@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { UpdateScheduleUseCase } from "@megawin/game-max3dpro-application/use-cases/draws";
 
 const scheduleSchema = z.object({

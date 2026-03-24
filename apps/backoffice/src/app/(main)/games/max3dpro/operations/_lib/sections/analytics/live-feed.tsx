@@ -2,13 +2,12 @@
 
 import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber, displayVNTimeWithSeconds } from "@megawin/shared/utils";
 import { Activity, Radio } from "lucide-react";
 import { PLAY_MODE_COLORS } from "./analytics-panels";
 import { TripletDisplay } from "@/components/games/max3d/triplet-display";
-import { displayVNTimeWithSeconds } from "@megawin/shared/utils/date";
 import type { LiveFeedEntry } from "../../types";
-import { parseUsername } from "@megawin/identity-application/shared";
+import { toTenantUsername } from "@megawin/shared/utils";
 
 export function LiveFeed({
   entries,
@@ -94,7 +93,7 @@ export function LiveFeed({
                       {e.username && (
                         <>
                           <span className="font-medium text-foreground/70">
-                            {parseUsername(e.username)?.playerExternalId ?? e.username}
+                            {toTenantUsername(e.username)}
                           </span>
                           <span className="mx-1">·</span>
                         </>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowUpRight, ChevronLeft, ChevronRight, History, Loader2 } from "lucide-react";
-import { Pagination } from "@megawin/shared/constants/pagination";
+import { Pagination } from "@megawin/shared/constants";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { formatVND, formatNumber } from "@megawin/shared/utils/number";
+import { formatVND, formatNumber } from "@megawin/shared/utils";
 import { useJackpotHistory, type JackpotHistoryItem } from "./use-jackpot";
 
 export function JackpotHistorySection() {

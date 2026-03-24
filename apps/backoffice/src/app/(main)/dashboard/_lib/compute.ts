@@ -1,10 +1,6 @@
 import type { DashboardGameDailyData } from "@megawin/game-core-application/repos";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import {
-  GAME_LABELS as CORE_GAME_LABELS,
-  getGameLabel as coreGetGameLabel,
-} from "@megawin/game-core/labels";
-import { getGameHex } from "@/lib/game-colors";
+import { getGameLabel as coreGetGameLabel } from "@megawin/game-core/labels";
 
 /**
  * Tổng hợp KPI toàn hệ thống từ raw per-game data của 1 ngày tài chính.
@@ -75,47 +71,7 @@ export function computeDayKpis(
   };
 }
 
-/**
- * Thống kê payout ratio per-game cho chart.
- * Sorted by payoutRatio descending (game cao nhất trước).
- */
-export interface GamePayoutRatioRow {
-  gameProduct: string;
-  totalStake: number;
-  totalPayout: number;
-  /** Payout ratio = totalPayout / totalStake (0-1). Có thể > 1. */
-  payoutRatio: number;
-}
-
-export function computePayoutRatios(data: DashboardGameDailyData[]): GamePayoutRatioRow[] {
-  return data
-    .map((r) => ({
-      gameProduct: r.gameProduct,
-      totalStake: r.totalStake,
-      totalPayout: r.totalPayout,
-      payoutRatio: r.totalStake > 0 ? r.totalPayout / r.totalStake : 0,
-    }))
-    .sort((a, b) => b.payoutRatio - a.payoutRatio);
-}
-
 /** Delegate sang game-core/labels — tên hiển thị chính thức. */
-export { CORE_GAME_LABELS as GAME_LABELS };
-
 export function getGameLabel(gameProduct: string): string {
   return coreGetGameLabel(gameProduct as GameProduct);
-}
-
-/**
- * Màu hex cho mỗi game — delegate sang `@/lib/game-colors`.
- * Keys khớp với GameProduct enum values.
- * Dùng cho Recharts fill/stroke và inline style.
- *
- * @deprecated Dùng `getGameHex(gameProduct)` hoặc `getGameColors(gameProduct)` trực tiếp.
- */
-export const GAME_CHART_COLORS: Record<string, string> = Object.fromEntries(
-  Object.values(GameProduct).map((gp) => [gp, getGameHex(gp)]),
-);
-
-export function getGameColor(gameProduct: string): string {
-  return getGameHex(gameProduct);
 }

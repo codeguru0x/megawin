@@ -16,7 +16,7 @@ import { useMemo, useState } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import {
   Trophy,
   TrendingDown,

@@ -17,7 +17,7 @@ import {
   addDays,
   getDay,
   isBefore,
-} from "@megawin/shared/utils/date";
+} from "@megawin/shared/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { PlayRules } from "@megawin/game-power655/entities";
 

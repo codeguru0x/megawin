@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryState, parseAsString, parseAsStringEnum, parseAsInteger } from "nuqs";
-import { todayVN } from "@megawin/shared/utils/date";
+import { todayVN } from "@megawin/shared/utils";
 
 type TabType = "draws" | "tenants";
 type LevelType = "list" | "draw-tenants" | "tenant-draws" | "players" | "entries";

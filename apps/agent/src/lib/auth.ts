@@ -11,8 +11,7 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 
-import { ClaimKey } from "@megawin/identity/entities/claim";
-import { AccountStatus } from "@megawin/identity/entities/account";
+import { ClaimKey, AccountStatus } from "@megawin/identity/entities";
 
 import { env } from "@/env";
 

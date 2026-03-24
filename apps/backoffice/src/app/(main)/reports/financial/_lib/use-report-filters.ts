@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryState, parseAsString, parseAsStringLiteral } from "nuqs";
-import { todayVN } from "@megawin/shared/utils/date";
+import { todayVN } from "@megawin/shared/utils";
 
 const SYSTEM_TABS = ["daily", "by-game", "by-tenant"] as const;
 

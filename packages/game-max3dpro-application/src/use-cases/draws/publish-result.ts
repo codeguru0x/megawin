@@ -25,7 +25,7 @@ import {
 import type { Max3dproDrawResult, Triplet } from "@megawin/game-max3dpro/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
-import { nowVN } from "@megawin/shared/utils/date";
+import { nowVN } from "@megawin/shared/utils";
 
 const PUBLISHABLE_STATUSES = new Set<string>([
   DrawStatus.SalesClosed,

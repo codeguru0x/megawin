@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { ListPlayerAccountsCursorUseCase } from "@megawin/identity-application/use-cases/accounts";
 
 import { listPlayersQuerySchema } from "./_lib/schema";

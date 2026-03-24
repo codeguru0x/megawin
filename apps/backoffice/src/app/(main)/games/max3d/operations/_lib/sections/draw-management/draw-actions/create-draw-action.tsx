@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
-import { displayVNTime } from "@megawin/shared/utils/date";
+import { displayVNTime } from "@megawin/shared/utils";
 import { useCreateDraw, usePreviewDraws } from "../../../use-operations";
 
 // ─── Component ────────────────────────────────────────────────────────────────

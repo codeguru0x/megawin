@@ -33,7 +33,7 @@ import { StatCard } from "@/components/games/mega645/stat-card";
 import { TicketStatusBadge } from "@/components/games/mega645/ticket-status-badge";
 import { EntryStatusBadge } from "@/components/games/mega645/entry-status-badge";
 import { MegaNumberBall } from "@/components/games/mega645/mega-number-ball";
-import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils/number";
+import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils";
 import { PlayType } from "@megawin/game-mega645/entities";
 import { MEGA645_PLAY_TYPE_LABELS } from "@megawin/game-mega645/labels";
 

@@ -8,14 +8,8 @@
  */
 
 import { APP_ERROR_CODES, type AppError } from "@megawin/shared/errors";
-import {
-  AccountType,
-  type AccountStatus,
-  AccountStatus as AccountStatusEnum,
-  type AccountRole,
-  SUPER_ROLES,
-} from "@megawin/identity/entities/account";
-import { ClaimKey } from "@megawin/identity/entities/claim";
+import { AccountType, AccountStatus as AccountStatusEnum, SUPER_ROLES, ClaimKey } from "@megawin/identity/entities";
+import type { AccountStatus, AccountRole } from "@megawin/identity/entities";
 
 // ============ Auth context (sau Authorizer) ============
 

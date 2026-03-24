@@ -1,8 +1,4 @@
-import type {
-  AccountStatus,
-  AgentRole,
-  MfaStatus,
-} from "@megawin/identity/entities/account";
+import type { AccountStatus, AgentRole, MfaStatus } from "@megawin/identity/entities";
 
 export interface ListAgentAccountsOutput {
   accounts: AgentAccountItem[];

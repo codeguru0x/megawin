@@ -29,10 +29,9 @@ import {
 import { DrawStatusBadge } from "@/components/games/lotto535/draw-status-badge";
 import { LottoNumberBall } from "@/components/games/lotto535/lotto-number-ball";
 import { cn } from "@/lib/utils";
-import { formatVND } from "@megawin/shared/utils/number";
-import { Pagination } from "@megawin/shared/constants/pagination";
+import { formatVND, formatVNDate, formatVNTime, subDays, todayVN } from "@megawin/shared/utils";
+import { Pagination } from "@megawin/shared/constants";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatVNDate, formatVNTime, subDays, todayVN } from "@megawin/shared/utils/date";
 
 import type { DrawSummary, ListDrawsParams } from "./use-draws";
 import { useDrawsList } from "./use-draws";

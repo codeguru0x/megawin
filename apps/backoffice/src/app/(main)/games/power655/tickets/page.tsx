@@ -42,7 +42,7 @@ import { StatCard } from "@/components/games/power655/stat-card";
 import { Power655TicketStatusBadge } from "@/components/games/power655/ticket-status-badge";
 import { Power655EntryStatusBadge } from "@/components/games/power655/entry-status-badge";
 import { PowerNumberBall } from "@/components/games/power655/power-number-ball";
-import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils/number";
+import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils";
 import { POWER655_PLAY_TYPE_LABELS } from "@megawin/game-power655/labels";
 
 // ─── Mock Data ───

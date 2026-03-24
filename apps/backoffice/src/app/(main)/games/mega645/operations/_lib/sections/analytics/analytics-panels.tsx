@@ -11,7 +11,7 @@
 
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import { Layers } from "lucide-react";
 import type { TenantRow, PlayTypeRow } from "../../types";
 

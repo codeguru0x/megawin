@@ -20,7 +20,7 @@ import {
   VALID_BOARD_NOS,
 } from "@megawin/game-power655/schemas";
 import { PlayType } from "@megawin/game-power655/entities";
-import { isUnique, isUniqueBy } from "@megawin/shared/utils/array";
+import { isUnique, isUniqueBy } from "@megawin/shared/utils";
 
 // ─── Composite schemas ───
 

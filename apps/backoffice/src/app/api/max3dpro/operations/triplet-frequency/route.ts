@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { GetTripletFrequencyUseCase } from "@megawin/game-max3dpro-application/use-cases/operations";
 import { tripletFrequencyQuerySchema } from "../_lib/schema";
 

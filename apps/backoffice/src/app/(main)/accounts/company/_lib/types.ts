@@ -1,5 +1,5 @@
 import type { CompanyAccount } from "./schema";
-import type { CompanyRole } from "@megawin/identity/entities/account";
+import type { CompanyRole } from "@megawin/identity/entities";
 
 export interface ListCompanyAccountsResponse {
   accounts: CompanyAccount[];

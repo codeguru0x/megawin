@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatPercent, formatNumber } from "@megawin/shared/utils/number";
+import { formatPercent, formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { useLotto535ReportFilters } from "../use-report-filters";
 import { useLotto535TenantList, useLotto535TenantDraws } from "../use-report-queries";

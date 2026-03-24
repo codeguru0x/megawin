@@ -10,10 +10,9 @@
 
 import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber, displayVNTimeWithSeconds } from "@megawin/shared/utils";
 import { Activity, Radio } from "lucide-react";
-import { displayVNTimeWithSeconds } from "@megawin/shared/utils/date";
-import { parseUsername } from "@megawin/identity-application/shared";
+import { toTenantUsername } from "@megawin/shared/utils";
 import { KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
 import { NumberBadge } from "./number-heatmap";
 import type { LiveFeedEntry } from "../../types";
@@ -70,7 +69,9 @@ export function LiveFeed({
           <div className="space-y-0.5">
             {entries.map((e, i) => {
               const color = PLAY_TYPE_COLORS[e.playType];
-              const label = KENO_PLAY_TYPE_LABELS[e.playType as keyof typeof KENO_PLAY_TYPE_LABELS] ?? e.playType;
+              const label =
+                KENO_PLAY_TYPE_LABELS[e.playType as keyof typeof KENO_PLAY_TYPE_LABELS] ??
+                e.playType;
               const isSideBet = e.playType === "bigSmall" || e.playType === "evenOdd";
 
               return (
@@ -121,7 +122,7 @@ export function LiveFeed({
                       {e.username && (
                         <>
                           <span className="font-medium text-foreground/70">
-                            {parseUsername(e.username)?.playerExternalId ?? e.username}
+                            {toTenantUsername(e.username) ?? e.username}
                           </span>
                           <span className="mx-1">·</span>
                         </>

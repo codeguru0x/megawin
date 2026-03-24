@@ -48,8 +48,8 @@ interface DrawSelectorProps {
 const STATUS_DOT: Record<string, React.ReactNode> = {
   [DrawStatus.SalesOpen]: (
     <span className="relative flex size-1.5 shrink-0">
-      <span className="absolute inline-flex size-full animate-ping rounded-full bg-orange-400 opacity-75" />
-      <span className="relative inline-flex size-1.5 rounded-full bg-orange-500" />
+      <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-400 opacity-75" />
+      <span className="relative inline-flex size-1.5 rounded-full bg-green-500" />
     </span>
   ),
   [DrawStatus.SalesClosed]: (
@@ -72,13 +72,13 @@ const STATUS_DOT: Record<string, React.ReactNode> = {
 const GROUP_CONFIG = {
   active: {
     label: "Cần xử lý",
-    color: "text-orange-600 dark:text-orange-400",
+    color: "text-green-600 dark:text-green-400",
     badgeClass:
-      "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400 border-orange-200",
+      "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-green-200",
     icon: (
       <span className="relative flex size-1.5">
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-orange-400 opacity-75" />
-        <span className="relative inline-flex size-1.5 rounded-full bg-orange-500" />
+        <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-400 opacity-75" />
+        <span className="relative inline-flex size-1.5 rounded-full bg-green-500" />
       </span>
     ),
   },
@@ -298,9 +298,9 @@ export function DrawSelector({
 
         {/* Thống kê nhanh */}
         {!search && allActive.length >= 5 && (
-          <div className="mb-2 flex items-center gap-1.5 rounded-md bg-orange-50 dark:bg-orange-950/40 px-2.5 py-1.5">
-            <Zap className="size-3 text-orange-500 shrink-0" />
-            <span className="text-[11px] text-orange-700 dark:text-orange-400">
+          <div className="mb-2 flex items-center gap-1.5 rounded-md bg-green-50 dark:bg-green-950/40 px-2.5 py-1.5">
+            <Zap className="size-3 text-green-500 shrink-0" />
+            <span className="text-[11px] text-green-700 dark:text-green-400">
               {allActive.length} kỳ cần xử lý
               {allUpcoming.length > 0 && ` · ${allUpcoming.length} sắp tới`}
             </span>

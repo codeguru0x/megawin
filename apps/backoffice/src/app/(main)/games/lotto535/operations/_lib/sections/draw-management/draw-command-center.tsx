@@ -20,13 +20,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber, displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
 import { DrawStatusBadge } from "@/components/games/lotto535/draw-status-badge";
 import { LottoNumberBall } from "@/components/games/lotto535/lotto-number-ball";
 import { Button } from "@/components/ui/button";
 import type { DrawSelectorItem } from "../../use-operations";
 import type { DrawResult, VoidInfo } from "../../types";
-import { displayVNTime, displayVNDateTime } from "@megawin/shared/utils/date";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DrawCommandProps {

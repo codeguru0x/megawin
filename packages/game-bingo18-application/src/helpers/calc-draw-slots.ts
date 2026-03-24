@@ -12,7 +12,7 @@
  * Dùng chung cho PreviewDraws và CreateDraw.
  */
 
-import { formatVN, toVNDate, todayVN, formatVNDate, addDays } from "@megawin/shared/utils/date";
+import { formatVN, toVNDate, todayVN, formatVNDate, addDays } from "@megawin/shared/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
 
 export interface DrawSlotConfig {

@@ -13,7 +13,7 @@
 
 import { KenoCollections } from "@megawin/game-keno/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { subDays, formatVNDate } from "@megawin/shared/utils/date";
+import { subDays, formatVNDate } from "@megawin/shared/utils";
 import type { FindOptions } from "mongodb";
 import type {
   DrawDoc,

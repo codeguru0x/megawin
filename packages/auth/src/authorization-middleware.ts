@@ -27,13 +27,8 @@ import {
   type TenantAuthContext,
   type CompanyAuthContext,
 } from "./authorization-api-gateway";
-import {
-  AccountType,
-  CompanyRole,
-  AgentRole,
-  PlayerRole,
-  type CompanyRole as CompanyRoleType,
-} from "@megawin/identity/entities/account";
+import { AccountType, CompanyRole, AgentRole, PlayerRole } from "@megawin/identity/entities";
+import type { CompanyRole as CompanyRoleType } from "@megawin/identity/entities";
 
 export type { AuthContext, TenantAuthContext, CompanyAuthContext };
 

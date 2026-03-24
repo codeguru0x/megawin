@@ -6,7 +6,7 @@ import { Clock, RefreshCw, Receipt, DollarSign, Gamepad2, ChevronRight } from "l
 import { useQueryClient } from "@tanstack/react-query";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS } from "@megawin/game-core/labels";
-import { formatNumber, formatVNDCompact } from "@megawin/shared/utils/number";
+import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {

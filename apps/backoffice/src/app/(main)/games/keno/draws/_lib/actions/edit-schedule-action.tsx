@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { KenoCurrentDrawInfo } from "../use-draws";
 import { useKenoUpdateSchedule } from "../use-draws";
-import { formatVNTime, toVNDate } from "@megawin/shared/utils/date";
+import { formatVNTime, toVNDate } from "@megawin/shared/utils";
 
 export function EditScheduleAction({
   draw,

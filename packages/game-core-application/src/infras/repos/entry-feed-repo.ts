@@ -1,5 +1,5 @@
 import { Long } from "mongodb";
-import type { Document } from "mongodb";
+import type { AnyBulkWriteOperation, Document } from "mongodb";
 import { GameCoreCollections } from "@megawin/game-core/entities";
 import type { GameProduct, EntryFeedDoc, EntryFeedEntity } from "@megawin/game-core/entities";
 import { GameCoreBaseRepo } from "./game-core-base-repo";
@@ -49,71 +49,46 @@ export class EntryFeedRepository extends GameCoreBaseRepo<EntryFeedEntity, Entry
   }
 
   /**
-   * Upsert 1 feed entry.
+   * Bulk upsert nhiều feed entries trong 1 MongoDB bulkWrite (unordered).
    *
-   * Key: sourceEntryId (mỗi entry gốc chỉ có 1 document mới nhất trong feed).
-   * Chỉ update nếu version mới > version cũ (idempotent, tránh ghi đè ngược).
+   * Dùng thay `batchUpsertFeedEntries` cho throughput cao hơn đáng kể:
+   * 1 network round-trip thay vì N round-trips tuần tự.
+   * Thích hợp cho batch 500 entries (~100ms) vs sequential (~1.5s).
    *
-   * @returns true nếu đã upsert (insert hoặc update), false nếu skip (version cũ hơn).
+   * Key: entryId. Chỉ ghi đè nếu version mới > version cũ (idempotent).
+   * ordered: false — tối đa hoá throughput, lỗi 1 entry không chặn các entry khác.
    */
-  async upsertFeedEntry(doc: Omit<EntryFeedDoc, "_id">): Promise<boolean> {
-    const result = await this.findOneAndUpdate(
-      {
-        sourceEntryId: doc.sourceEntryId,
-        version: { $lt: doc.version },
-      },
-      {
-        $set: {
-          version: doc.version,
-          gameProduct: doc.gameProduct,
-          ticketId: doc.ticketId,
-          ticketNo: doc.ticketNo,
-          tenantId: doc.tenantId,
-          playerId: doc.playerId,
-          username: doc.username,
-          drawId: doc.drawId,
-          drawTime: doc.drawTime,
-          drawDate: doc.drawDate,
-          financialDate: doc.financialDate,
-          status: doc.status,
-          outcome: doc.outcome,
-          stakeAmount: doc.stakeAmount,
-          winAmount: doc.winAmount,
-          payoutAmount: doc.payoutAmount,
-          netAmount: doc.netAmount,
-          commissionRate: doc.commissionRate,
-          commissionAmount: doc.commissionAmount,
-          voidInfo: doc.voidInfo,
-          betContent: doc.betContent,
-          drawResult: doc.drawResult,
-          payoutDetail: doc.payoutDetail,
-          sourceUpdatedAt: doc.sourceUpdatedAt,
-          feedCreatedAt: doc.feedCreatedAt,
-        },
-        $setOnInsert: {
-          sourceEntryId: doc.sourceEntryId,
-        },
-      },
-      { upsert: true, returnDocument: "after" },
-    );
-
-    return result !== null;
-  }
-
-  /**
-   * Batch upsert nhiều feed entries.
-   * Mỗi entry upsert riêng (ordered, idempotent).
-   */
-  async batchUpsertFeedEntries(
+  async bulkUpsertFeedEntries(
     docs: Omit<EntryFeedDoc, "_id">[],
   ): Promise<{ upserted: number; skipped: number }> {
-    let upserted = 0;
-    let skipped = 0;
-    for (const doc of docs) {
-      const success = await this.upsertFeedEntry(doc);
-      if (success) upserted++;
-      else skipped++;
-    }
-    return { upserted, skipped };
+    if (docs.length === 0) return { upserted: 0, skipped: 0 };
+
+    const operations: AnyBulkWriteOperation<Document>[] = docs.map((doc) => {
+      const { entryId, ...setFields } = doc;
+      return {
+        updateOne: {
+          filter: {
+            entryId,
+            version: { $lt: doc.version },
+          },
+          update: {
+            $set: setFields,
+            $setOnInsert: { entryId },
+          },
+          upsert: true,
+        },
+      };
+    });
+
+    const result = await this.bulkWrite(operations, { ordered: false });
+
+    // modifiedCount = entries đã tồn tại và được cập nhật (version mới hơn)
+    // upsertedCount = entries mới (insert lần đầu)
+    // docs.length - modifiedCount - upsertedCount = entries bị skip (version cũ hơn hoặc bằng)
+    const written = result.modifiedCount + result.upsertedCount;
+    return {
+      upserted: written,
+      skipped: docs.length - written,
+    };
   }
 }

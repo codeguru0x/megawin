@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { useUpdateSchedule } from "../../../use-operations";
-import { formatVNDate, formatVNTime, toVNDate } from "@megawin/shared/utils/date";
+import { formatVNDate, formatVNTime, toVNDate } from "@megawin/shared/utils";
 
 /** Chuyển "DD/MM/YYYY" → "YYYY-MM-DD" cho HTML input[type=date] */
 function vnDateToISO(vnDate: string): string {

@@ -6,7 +6,7 @@ import { Plus, Radio, SearchX } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { lotto535Keys } from "@/lib/query-keys";
-import { displayVNTimeWithSeconds } from "@megawin/shared/utils/date";
+import { displayVNTimeWithSeconds } from "@megawin/shared/utils";
 
 import { DrawContextProvider, useDrawContext } from "./_lib/use-draw-context";
 import { DrawSelector } from "./_lib/draw-selector";

@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { CircleDollarSign, FileText, Hash, Users, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDrawContext } from "../../use-draw-context";
 import { useOpsSummary } from "../../use-operations";

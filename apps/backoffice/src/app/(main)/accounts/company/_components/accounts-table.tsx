@@ -22,30 +22,37 @@ export function CompanyAccountsTable() {
     getRowId: (row) => row.accountId,
   });
 
+  const accounts = data?.accounts ?? [];
+
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center gap-2">
-          <List className="size-4 text-muted-foreground" />
-          <CardTitle className="text-sm font-semibold">Danh sách tài khoản</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent className="flex size-full flex-col gap-4 px-5 pb-4 pt-0">
-        {error && <p className="text-sm text-destructive">{error.message}</p>}
-        <div className="overflow-hidden rounded-md border">
-          {isLoading ? (
-            <div className="h-[320px] animate-pulse bg-muted" />
-          ) : table.getRowCount() === 0 ? (
-            <div className="flex h-[200px] flex-col items-center justify-center gap-1 text-center">
-              <p className="text-sm font-medium text-muted-foreground">Chưa có tài khoản nào</p>
-              <p className="text-xs text-muted-foreground">
-                Tạo tài khoản mới bằng nút &ldquo;Thêm tài khoản&rdquo; ở trên.
-              </p>
-            </div>
-          ) : (
-            <DataTable table={table} columns={companyAccountsColumns} />
+      <CardHeader className="px-5 pb-2 pt-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <List className="size-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold">Danh sách tài khoản</CardTitle>
+          </div>
+          {accounts.length > 0 && !isLoading && (
+            <span className="text-[11px] tabular-nums text-muted-foreground">
+              {accounts.length} tài khoản
+            </span>
           )}
         </div>
+      </CardHeader>
+      <CardContent className="px-0 pb-0 pt-0">
+        {error && <p className="px-5 pb-2 text-sm text-destructive">{error.message}</p>}
+        {isLoading ? (
+          <div className="h-[320px] animate-pulse bg-muted" />
+        ) : table.getRowCount() === 0 ? (
+          <div className="flex h-[200px] flex-col items-center justify-center gap-1 text-center">
+            <p className="text-sm font-medium text-muted-foreground">Chưa có tài khoản nào</p>
+            <p className="text-xs text-muted-foreground">
+              Tạo tài khoản mới bằng nút &ldquo;Thêm tài khoản&rdquo; ở trên.
+            </p>
+          </div>
+        ) : (
+          <DataTable table={table} columns={companyAccountsColumns} />
+        )}
       </CardContent>
     </Card>
   );

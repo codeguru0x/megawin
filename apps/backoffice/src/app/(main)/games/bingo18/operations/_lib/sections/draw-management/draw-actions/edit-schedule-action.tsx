@@ -18,11 +18,7 @@ import { Label } from "@/components/ui/label";
 import { editScheduleSchema, type EditScheduleInput } from "@megawin/game-bingo18/schemas";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { useUpdateSchedule } from "../../../use-operations";
-import {
-  formatVNDate,
-  formatVNTimeWithSeconds,
-  toVNDateWithSeconds,
-} from "@megawin/shared/utils/date";
+import { formatVNDate, formatVNTimeWithSeconds, toVNDateWithSeconds } from "@megawin/shared/utils";
 
 function buildDefaultValues(draw: DrawSelectorItem): EditScheduleInput {
   // salesOpenAt optional → fallback "" nếu chưa có

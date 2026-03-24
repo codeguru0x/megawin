@@ -12,7 +12,7 @@
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber, formatCurrency } from "@megawin/shared/utils/number";
+import { formatNumber, formatCurrency } from "@megawin/shared/utils";
 import { BarChart2, Trophy } from "lucide-react";
 import { KenoPlayType } from "@megawin/game-keno/entities";
 import { KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";

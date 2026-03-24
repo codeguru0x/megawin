@@ -21,9 +21,9 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS, ENTRY_STATUS_LABELS } from "@megawin/game-core/labels";
-import { parseUsername } from "@megawin/identity-application/shared";
+import { toTenantUsername } from "@megawin/shared/utils";
 import type { TicketEntryEntity } from "@megawin/game-keno/entities";
 import { useKenoEntries } from "../use-report-queries";
 import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
@@ -81,7 +81,7 @@ export function KenoEntryDetailDialog({
 
   const winningNumbers = new Set<string>((entry as any).result?.winningNumbers ?? []);
 
-  const displayName = parseUsername(entry.username)?.playerExternalId || entry.accountId;
+  const displayName = toTenantUsername(entry.username) ?? entry.accountId;
   const isLongName = displayName.length > 20;
 
   return (
@@ -102,9 +102,7 @@ export function KenoEntryDetailDialog({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <p
-                        className={`text-sm font-bold ${isLongName ? "max-w-40 truncate" : ""}`}
-                      >
+                      <p className={`text-sm font-bold ${isLongName ? "max-w-40 truncate" : ""}`}>
                         {displayName}
                       </p>
                     </TooltipTrigger>
@@ -153,7 +151,9 @@ export function KenoEntryDetailDialog({
             )}
 
             {/* Tài chính */}
-            <div className={`grid gap-3 ${isScheduled ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"}`}>
+            <div
+              className={`grid gap-3 ${isScheduled ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"}`}
+            >
               <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground">Tiền cược</p>
                 <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
@@ -165,7 +165,9 @@ export function KenoEntryDetailDialog({
                     <p className="text-sm font-bold tabular-nums">{formatNumber(winAmount)}</p>
                   </div>
                   <div className="rounded-lg bg-muted/50 p-3">
-                    <p className="text-xs text-muted-foreground">{REPORT_COLUMN_LABELS.totalPayout}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {REPORT_COLUMN_LABELS.totalPayout}
+                    </p>
                     <p className="text-sm font-bold tabular-nums">{formatNumber(payoutAmount)}</p>
                   </div>
                 </>
@@ -344,8 +346,7 @@ export function EntryList({
   const [selectedEntry, setSelectedEntry] = useState<TicketEntryEntity | null>(null);
   const { data, isLoading, error } = useKenoEntries(drawId, tenantId, accountId);
 
-  const parsed = parseUsername(playerDisplayName ?? accountId);
-  const playerLabel = parsed ? parsed.playerExternalId : accountId;
+  const playerLabel = toTenantUsername(playerDisplayName ?? accountId) ?? accountId;
 
   if (isLoading) return <TableSkeleton rows={5} />;
   if (error) return <ErrorCard message="Lỗi tải entries." />;

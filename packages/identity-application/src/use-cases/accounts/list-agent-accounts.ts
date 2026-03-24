@@ -1,5 +1,5 @@
 import { NextApiUseCase } from "@megawin/next/server";
-import { MfaStatus } from "@megawin/identity/entities/account";
+import { MfaStatus } from "@megawin/identity/entities";
 import { AccountRepository } from "../../infras/repos/account-repo";
 import type {
   ListAgentAccountsOutput,

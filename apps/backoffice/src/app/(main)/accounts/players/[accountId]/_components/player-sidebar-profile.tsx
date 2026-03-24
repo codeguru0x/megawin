@@ -2,8 +2,7 @@
 
 import { Building2, Clock, Copy, Check } from "lucide-react";
 import { useState } from "react";
-import { AccountStatusLabel } from "@megawin/identity/entities/labels";
-import { AccountStatus } from "@megawin/identity/entities/account";
+import { AccountStatusLabel, AccountStatus } from "@megawin/identity/entities";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";

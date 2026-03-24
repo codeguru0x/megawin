@@ -11,7 +11,7 @@
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber, formatCurrency } from "@megawin/shared/utils/number";
+import { formatNumber, formatCurrency } from "@megawin/shared/utils";
 import { BarChart2, Star, Trophy } from "lucide-react";
 import {
   HEATMAP_BADGE_SIZE,

@@ -17,8 +17,8 @@ import type {
   CreateCompanyAccountInput,
   CreateCompanyAccountOutput,
 } from "./dto/create-company-account.dto";
-import { ClaimKey } from "@megawin/identity/entities/claim";
-import { generateULID } from "@megawin/shared/utils/unique";
+import { ClaimKey } from "@megawin/identity/entities";
+import { generateULID } from "@megawin/shared/utils";
 import { AccountRepository } from "../../infras/repos/account-repo";
 
 export class CreateCompanyAccountUseCase extends NextApiUseCase<

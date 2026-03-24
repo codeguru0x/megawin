@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { GetDashboardDrawsUseCase } from "./_lib/get-dashboard-draws";
 
 const useCase = new GetDashboardDrawsUseCase();

@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { GetPlayerOutstandingUseCase } from "@megawin/game-core-application/use-cases/reports";
 
 const getPlayerOutstandingUseCase = new GetPlayerOutstandingUseCase();

@@ -1,4 +1,4 @@
-import { Pagination } from "@megawin/shared/constants/pagination";
+import { Pagination } from "@megawin/shared/constants";
 
 export const Constants = {
   HardLimit: {

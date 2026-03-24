@@ -6,7 +6,7 @@ import {
   COGNITO_WORKFORCE_POOL_ID,
   COGNITO_WORKFORCE_CLIENT_ID,
 } from "@megawin/app-core/aws/cognito";
-import { MfaStatus } from "@megawin/identity/entities/account";
+import { MfaStatus } from "@megawin/identity/entities";
 import { AccountRepository } from "../../infras/repos/account-repo";
 
 export interface DisableMfaInput {

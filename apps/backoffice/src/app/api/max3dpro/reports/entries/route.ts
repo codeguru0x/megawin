@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { ListEntryBreakdownUseCase } from "@megawin/game-max3dpro-application/use-cases/reports";
 import { z } from "zod";
 

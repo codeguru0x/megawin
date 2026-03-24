@@ -10,10 +10,9 @@
 
 import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber, displayVNTimeWithSeconds } from "@megawin/shared/utils";
 import { Activity, Radio } from "lucide-react";
-import { displayVNTimeWithSeconds } from "@megawin/shared/utils/date";
-import { parseUsername } from "@megawin/identity-application/shared";
+import { toTenantUsername } from "@megawin/shared/utils";
 import { BINGO18_PLAY_TYPE_LABELS, BINGO18_TRIPLE_KIND_LABELS } from "@megawin/game-bingo18/labels";
 import type { LiveFeedEntry } from "../../types";
 
@@ -118,7 +117,7 @@ export function LiveFeed({
                       {e.username && (
                         <>
                           <span className="font-medium text-foreground/70">
-                            {parseUsername(e.username)?.playerExternalId ?? e.username}
+                            {toTenantUsername(e.username)}
                           </span>
                           <span className="mx-1">·</span>
                         </>

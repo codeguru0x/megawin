@@ -27,7 +27,7 @@ import {
   LOTTO535_SPECIAL_MAX,
 } from "@megawin/game-lotto535/entities";
 import { publishResultSchema } from "@megawin/game-lotto535/schemas";
-import { todayVN } from "@megawin/shared/utils/date";
+import { todayVN } from "@megawin/shared/utils";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
 

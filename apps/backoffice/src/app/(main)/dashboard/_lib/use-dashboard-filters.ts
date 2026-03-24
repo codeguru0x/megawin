@@ -1,44 +1,36 @@
-"use client";
-
-import { useQueryState, parseAsString } from "nuqs";
-import { getFinancialDate } from "@megawin/shared/utils/financial-date";
+import { getFinancialDate } from "@megawin/shared/utils";
 import { subDays, format } from "date-fns";
 
 /**
  * Tính ngày tài chính hôm nay (YYYY-MM-DD) — 11:00 VN cutoff.
- * Dùng làm default value cho financialDate filter.
  */
 function todayFinancialDate(): string {
   return getFinancialDate(new Date());
 }
 
 /**
- * Quản lý financialDate filter cho dashboard qua URL query string.
+ * Dashboard filters — today-only mode (Phương án C).
  *
- * `fd` persist trên URL — hard refresh vẫn xem đúng ngày đã chọn.
- * Default = ngày tài chính hôm nay (partial data nhưng ưu tiên thông tin hiện tại).
+ * Dashboard luôn hiện dữ liệu ngày tài chính HÔM NAY (partial, live).
+ * Kèm theo dữ liệu HÔM QUA (đã đóng) + trend % so với cùng thứ tuần trước
+ * để operator có context so sánh mà không cần date picker.
  *
- * Trend % chỉ hiển thị khi fd < todayFd (ngày đã đóng, dữ liệu hoàn chỉnh).
- * compareDate = fd - 7 ngày (cùng thứ tuần trước).
+ * - `todayFd`: ngày tài chính hôm nay → dùng cho Hero KPIs, Game Performance
+ * - `yesterdayFd`: ngày tài chính hôm qua → dùng cho dòng "Hôm qua" trên KPI card
+ * - `compareFd`: cùng thứ tuần trước (yesterdayFd - 7) → dùng cho trend % của hôm qua
  */
 export function useDashboardFilters() {
   const todayFd = todayFinancialDate();
 
-  const [fd, setFd] = useQueryState("fd", parseAsString.withDefault(todayFd));
+  // Hôm qua = ngày tài chính đã đóng gần nhất → data hoàn chỉnh
+  const yesterdayFd = format(subDays(new Date(todayFd + "T12:00:00"), 1), "yyyy-MM-dd");
 
-  // Ngày đã đóng = trước hôm nay → hiển thị trend %
-  const isClosedDay = fd < todayFd;
-
-  // So sánh với cùng thứ tuần trước — chỉ khi ngày đã đóng
-  const compareDate = isClosedDay
-    ? format(subDays(new Date(fd + "T12:00:00"), 7), "yyyy-MM-dd")
-    : undefined;
+  // So sánh hôm qua với cùng thứ tuần trước (yesterdayFd - 7 ngày)
+  const compareFd = format(subDays(new Date(yesterdayFd + "T12:00:00"), 7), "yyyy-MM-dd");
 
   return {
-    fd,
-    setFd,
     todayFd,
-    isClosedDay,
-    compareDate,
+    yesterdayFd,
+    compareFd,
   };
 }

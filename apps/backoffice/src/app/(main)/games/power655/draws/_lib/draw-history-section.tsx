@@ -40,10 +40,9 @@ import {
 import { Power655DrawStatusBadge } from "@/components/games/power655/draw-status-badge";
 import { PowerNumberBall } from "@/components/games/power655/power-number-ball";
 import { cn } from "@/lib/utils";
-import { formatVND, formatNumber } from "@megawin/shared/utils/number";
-import { Pagination } from "@megawin/shared/constants/pagination";
+import { formatVND, formatNumber, formatVNDate, formatVNTime, subDays, todayVN } from "@megawin/shared/utils";
+import { Pagination } from "@megawin/shared/constants";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatVNDate, formatVNTime, subDays, todayVN } from "@megawin/shared/utils/date";
 
 import type { DrawSummary, ListDrawsParams } from "./use-draws";
 import { useDrawsList } from "./use-draws";

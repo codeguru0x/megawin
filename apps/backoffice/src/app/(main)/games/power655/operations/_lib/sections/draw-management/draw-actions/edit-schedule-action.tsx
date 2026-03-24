@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { editScheduleSchema, type EditScheduleInput } from "@megawin/game-power655/schemas";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { useUpdateSchedule } from "../../../use-operations";
-import { toVNDate, formatVNDate, formatVNTime } from "@megawin/shared/utils/date";
+import { toVNDate, formatVNDate, formatVNTime } from "@megawin/shared/utils";
 
 /** Parse ISO string → { date: "yyyy-MM-dd", time: "HH:mm" } theo giờ VN */
 function parseISOToVN(iso: string | undefined): { date: string; time: string } {

@@ -1,20 +1,9 @@
-import { nowVN } from "@megawin/shared/utils/date";
+import { nowVN, generateULID } from "@megawin/shared/utils";
 import { ObjectId } from "mongodb";
 import { AccountMapper } from "../mappers/account-mapper";
 import { IdentityBaseRepo } from "./identity-base-repo";
-import {
-  type AccountEntity,
-  type CompanyAccountEntity,
-  type AgentAccountEntity,
-  type PlayerAccountEntity,
-  type CompanyRole,
-  type MfaStatus,
-  AccountType,
-  AccountStatus,
-  AgentRole,
-  PlayerRole,
-} from "@megawin/identity/entities/account";
-import { generateULID } from "@megawin/shared/utils/unique";
+import { AccountType, AccountStatus, AgentRole, PlayerRole } from "@megawin/identity/entities";
+import type { AccountEntity, CompanyAccountEntity, AgentAccountEntity, PlayerAccountEntity, CompanyRole, MfaStatus } from "@megawin/identity/entities";
 
 export class AccountRepository extends IdentityBaseRepo<AccountEntity, AccountMapper> {
   constructor() {

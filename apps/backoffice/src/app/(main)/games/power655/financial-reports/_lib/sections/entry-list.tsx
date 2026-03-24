@@ -20,7 +20,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { ENTRY_STATUS_LABELS, ENTRY_OUTCOME_LABELS } from "@megawin/game-core/labels";
 import type { TicketEntryEntity, EntryPayoutTier } from "@megawin/game-power655/entities";

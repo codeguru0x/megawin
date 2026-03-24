@@ -31,13 +31,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber, displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
 import { Bingo18DrawStatusBadge } from "@/components/games/bingo18/draw-status-badge";
 import { DiceDisplay } from "@/components/games/bingo18/dice-display";
 import { Button } from "@/components/ui/button";
 import type { DrawSelectorItem } from "../../use-operations";
 import type { Bingo18DrawResult, VoidInfo } from "../../types";
-import { displayVNTime, displayVNDateTime } from "@megawin/shared/utils/date";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DrawCommandProps {

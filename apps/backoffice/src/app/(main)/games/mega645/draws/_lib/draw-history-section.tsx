@@ -39,10 +39,9 @@ import {
 import { DrawStatusBadge } from "@/components/games/mega645/draw-status-badge";
 import { MegaNumberBall } from "@/components/games/mega645/mega-number-ball";
 import { cn } from "@/lib/utils";
-import { formatVND, formatNumber } from "@megawin/shared/utils/number";
-import { Pagination } from "@megawin/shared/constants/pagination";
+import { formatVND, formatNumber, formatVNDate, formatVNTime, subDays, todayVN } from "@megawin/shared/utils";
+import { Pagination } from "@megawin/shared/constants";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatVNDate, formatVNTime, subDays, todayVN } from "@megawin/shared/utils/date";
 
 import type { DrawSummary, ListDrawsParams } from "./use-draws";
 import { useDrawsList } from "./use-draws";

@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { formatVNDCompact, formatNumber } from "@megawin/shared/utils/number";
+import { formatVNDCompact, formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import { parseUsername } from "@megawin/identity-application/shared";
+import { toTenantUsername } from "@megawin/shared/utils";
 import { useKenoReportFilters } from "../use-report-filters";
 import { EntryList } from "../sections/entry-list";
 import {
@@ -432,7 +432,7 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
             <TableBody>
               {players?.map((row) => {
                 const playerNet = (row.totalPayout ?? 0) - (row.totalStake ?? 0);
-                const displayName = parseUsername(row.username)?.playerExternalId || row.accountId;
+                const displayName = toTenantUsername(row.username) ?? row.accountId;
                 return (
                   <TableRow
                     key={row.accountId}
@@ -520,7 +520,7 @@ function Breadcrumb() {
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
           <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-            {playerName || parseUsername(accountId)?.playerExternalId || accountId}
+            {playerName || (toTenantUsername(accountId) ?? accountId)}
           </span>
         </>
       )}

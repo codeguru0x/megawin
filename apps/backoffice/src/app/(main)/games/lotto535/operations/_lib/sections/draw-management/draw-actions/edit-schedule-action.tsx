@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { editScheduleSchema, type EditScheduleInput } from "@megawin/game-lotto535/schemas";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { useUpdateSchedule } from "../../../use-operations";
-import { toVNDate, formatVNDate, formatVNTime } from "@megawin/shared/utils/date";
+import { toVNDate, formatVNDate, formatVNTime } from "@megawin/shared/utils";
 
 /** Chuyển "DD/MM/YYYY" → "YYYY-MM-DD" cho HTML input[type=date] */
 function vnDateToISO(vnDate: string): string {

@@ -44,7 +44,7 @@ import {
   type DrawResultForMatch,
 } from "@megawin/game-bingo18/helpers";
 import { EntryOutcome } from "@megawin/game-core/entities";
-import { sumBy } from "@megawin/shared/utils/array";
+import { sumBy } from "@megawin/shared/utils";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext } from "./types";
 

@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { GetPlayerEntriesUseCase } from "@megawin/game-core-application/use-cases/reports";
 
 import { playerEntriesQuerySchema } from "../_lib/schema";

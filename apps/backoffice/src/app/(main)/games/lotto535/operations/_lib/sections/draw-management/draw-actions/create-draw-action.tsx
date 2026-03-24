@@ -20,7 +20,7 @@ import { Switch } from "@/components/ui/switch";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { formatVNTime, formatVNDate } from "@megawin/shared/utils/date";
+import { formatVNTime, formatVNDate } from "@megawin/shared/utils";
 
 import { useCreateDraw, usePreviewDraws } from "../../../use-operations";
 

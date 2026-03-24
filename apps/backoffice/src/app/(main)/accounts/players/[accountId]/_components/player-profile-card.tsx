@@ -2,8 +2,7 @@
 
 import type { ReactNode } from "react";
 import { CircleUser, Building2, Shield, Clock, CalendarClock } from "lucide-react";
-import { AccountStatusLabel } from "@megawin/identity/entities/labels";
-import { AccountStatus } from "@megawin/identity/entities/account";
+import { AccountStatusLabel, AccountStatus } from "@megawin/identity/entities";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

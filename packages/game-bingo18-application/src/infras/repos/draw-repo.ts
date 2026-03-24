@@ -13,7 +13,7 @@
 
 import { Bingo18Collections } from "@megawin/game-bingo18/entities";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { subDays, formatVNDate } from "@megawin/shared/utils/date";
+import { subDays, formatVNDate } from "@megawin/shared/utils";
 import type { FindOptions } from "mongodb";
 import type {
   DrawDoc,

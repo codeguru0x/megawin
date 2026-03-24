@@ -16,7 +16,7 @@ import { TicketChannel } from "@megawin/game-core/entities";
 import z from "zod";
 import { mega645MainNumberSchema, mega645DrawIdSchema } from "@megawin/game-mega645/schemas";
 import { PlayType, VALID_BOARD_NOS } from "@megawin/game-mega645/entities";
-import { isUnique, isUniqueBy } from "@megawin/shared/utils/array";
+import { isUnique, isUniqueBy } from "@megawin/shared/utils";
 
 // ─── Composite schemas ───
 

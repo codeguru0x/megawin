@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { PublishResultUseCase } from "@megawin/game-bingo18-application/use-cases/draws";
 import {
   BINGO18_DRAW_COUNT,

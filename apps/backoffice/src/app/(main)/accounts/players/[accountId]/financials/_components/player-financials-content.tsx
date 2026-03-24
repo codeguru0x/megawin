@@ -2,10 +2,9 @@
 
 import { useQueryState, parseAsString } from "nuqs";
 import { BarChart3, ChevronRight, Layers } from "lucide-react";
-import { todayVN } from "@megawin/shared/utils/date";
+import { todayVN, formatNumber } from "@megawin/shared/utils";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS } from "@megawin/game-core/labels";
-import { formatNumber } from "@megawin/shared/utils/number";
 
 import { FinancialDateRangePicker } from "@/components/date-picker";
 import {

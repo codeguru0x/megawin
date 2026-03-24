@@ -21,14 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import {
-  todayVN,
-  formatVNDate,
-  formatVN,
-  toVNStartOfDay,
-  TZDate,
-  VN_TIMEZONE,
-} from "@megawin/shared/utils/date";
+import { todayVN, formatVNDate, formatVN, toVNStartOfDay, TZDate, VN_TIMEZONE } from "@megawin/shared/utils";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

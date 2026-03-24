@@ -21,7 +21,7 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { sumBy } from "@megawin/shared/utils/array";
+import { sumBy } from "@megawin/shared/utils";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { SettleDrawReportRepository } from "../../infras/repos/settle-draw-report-repo";
 import { SettleTenantReportRepository } from "../../infras/repos/settle-tenant-report-repo";

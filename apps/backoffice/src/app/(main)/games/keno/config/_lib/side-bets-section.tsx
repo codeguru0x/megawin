@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Save, TrendingUp, TrendingDown, Info, ChevronDown, ChevronUp } from "lucide-react";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 
 import {
   analyzeBigSmallProfitability,

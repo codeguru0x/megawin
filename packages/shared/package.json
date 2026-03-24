@@ -16,15 +16,30 @@
   "author": "",
   "license": "ISC",
   "exports": {
+    "./utils": {
+      "types": "./src/utils/index.ts",
+      "import": "./src/utils/index.ts",
+      "default": "./dist/utils/index.js"
+    },
     "./utils/*": {
       "types": "./src/utils/*.ts",
       "import": "./src/utils/*.ts",
       "default": "./dist/utils/*.js"
     },
-    "./types/*": {
-      "types": "./src/types/*.ts",
-      "import": "./src/types/*.ts",
-      "default": "./dist/types/*.js"
+    "./constants": {
+      "types": "./src/constants/index.ts",
+      "import": "./src/constants/index.ts",
+      "default": "./dist/constants/index.js"
+    },
+    "./constants/*": {
+      "types": "./src/constants/*.ts",
+      "import": "./src/constants/*.ts",
+      "default": "./dist/constants/*.js"
+    },
+    "./mappers": {
+      "types": "./src/mappers/index.ts",
+      "import": "./src/mappers/index.ts",
+      "default": "./dist/mappers/index.js"
     },
     "./mappers/*": {
       "types": "./src/mappers/*.ts",
@@ -40,11 +55,6 @@
       "types": "./src/api-types/index.ts",
       "import": "./src/api-types/index.ts",
       "default": "./dist/api-types/index.js"
-    },
-    "./constants/*": {
-      "types": "./src/constants/*.ts",
-      "import": "./src/constants/*.ts",
-      "default": "./dist/constants/*.js"
     }
   },
   "devDependencies": {

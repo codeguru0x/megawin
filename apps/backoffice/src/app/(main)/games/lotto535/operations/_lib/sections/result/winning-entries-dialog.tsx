@@ -19,9 +19,8 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { LottoNumberBall } from "@/components/games/lotto535/lotto-number-ball";
-import { formatNumber } from "@megawin/shared/utils/number";
-import { displayVNDateTime } from "@megawin/shared/utils/date";
-import { parseUsername } from "@megawin/identity-application/shared";
+import { formatNumber, displayVNDateTime } from "@megawin/shared/utils";
+import { toTenantUsername } from "@megawin/shared/utils";
 import { PrizeTier } from "@megawin/game-lotto535/entities";
 import { Trophy, Gem, Star, Loader2, FileSearch, Users, Hash, Banknote } from "lucide-react";
 import { useWinningEntries } from "../../use-operations";
@@ -305,8 +304,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
 function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: number }) {
-  const parsed = parseUsername(entry.username);
-  const displayName = parsed?.playerExternalId ?? entry.username;
+  const displayName = toTenantUsername(entry.username) ?? entry.username;
   const hasJackpot = entry.tiers.some((t) => t.tier === PrizeTier.Jackpot && t.hitCount > 0);
 
   return (

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { LottoNumberBall } from "@/components/games/lotto535/lotto-number-ball";
 import { Badge } from "@/components/ui/badge";
 import { PrizeTier } from "@megawin/game-lotto535/entities";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import {
   Trophy,
   TrendingDown,

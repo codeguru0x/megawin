@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { VoidDrawUseCase } from "@megawin/game-power655-application/use-cases/draws";
 
 const voidSchema = z.object({

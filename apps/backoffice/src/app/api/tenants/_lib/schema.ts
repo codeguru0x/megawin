@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  TenantStatus,
-  TENANT_STATUS_VALUES,
-} from "@megawin/identity/entities/tenant";
+import { TenantStatus, TENANT_STATUS_VALUES } from "@megawin/identity/entities";
 
 export const createTenantSchema = z.object({
   tenantId: z

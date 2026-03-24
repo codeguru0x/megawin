@@ -3,7 +3,7 @@
 import { Layers } from "lucide-react";
 import { GAME_LABELS } from "@megawin/game-core/labels";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {

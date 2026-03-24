@@ -295,9 +295,16 @@ export interface EntryPayoutTier {
 /**
  * Application-layer entity sau khi qua mapper.
  *
- * Thay thế `_id` (ObjectId) bằng `id` (string). Giữ `version: Long` để feed sync detect thay đổi.
+ * Chuyển đổi so với TicketEntryDoc:
+ * - `_id` (ObjectId) → `id` (hex string).
+ * - `version` (BSON Long) → `version` (string) – safe cho JSON serialize.
  */
-export interface TicketEntryEntity extends Omit<TicketEntryDoc, "_id"> {
+export interface TicketEntryEntity extends Omit<TicketEntryDoc, "_id" | "version"> {
   /** MongoDB ObjectId đã chuyển sang hex string. */
   id: string;
+  /**
+   * Global change sequence đã convert từ BSON Long → string.
+   * Dùng cho feed sync detect thay đổi.
+   */
+  version: string;
 }

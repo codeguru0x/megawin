@@ -4,7 +4,7 @@ import type { TenantConfigDoc } from "@megawin/game-mega645/entities";
 import { BaseRepo } from "./base-repo";
 import { TenantConfigMapper } from "../mappers/tenant-config-mapper";
 import type { TenantConfigEntity } from "@megawin/game-mega645/entities";
-import { nowVN } from "@megawin/shared/utils/date";
+import { nowVN } from "@megawin/shared/utils";
 
 export class TenantConfigRepository extends BaseRepo<
   TenantConfigEntity,

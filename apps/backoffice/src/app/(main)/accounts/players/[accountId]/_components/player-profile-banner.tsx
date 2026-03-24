@@ -1,8 +1,7 @@
 "use client";
 
 import { Building2, Shield, Clock } from "lucide-react";
-import { AccountStatusLabel } from "@megawin/identity/entities/labels";
-import { AccountStatus } from "@megawin/identity/entities/account";
+import { AccountStatusLabel, AccountStatus } from "@megawin/identity/entities";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";

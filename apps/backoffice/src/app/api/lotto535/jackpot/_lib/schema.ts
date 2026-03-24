@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Pagination } from "@megawin/shared/constants/pagination";
+import { Pagination } from "@megawin/shared/constants";
 
 export const jackpotHistoryQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(Pagination.Default.Page),

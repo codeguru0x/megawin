@@ -47,7 +47,7 @@ import { Power655EntryStatusBadge } from "@/components/games/power655/entry-stat
 import { PowerNumberBall } from "@/components/games/power655/power-number-ball";
 import { DualJackpotDisplay } from "@/components/games/power655/jackpot-display";
 import { POWER655_PLAY_TYPE_LABELS } from "@megawin/game-power655/labels";
-import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils/number";
+import { formatVNDCompact as fmtVND, formatVND, formatNumber } from "@megawin/shared/utils";
 
 const PENDING_DRAW = {
   drawId: "2026-02-24-T3",

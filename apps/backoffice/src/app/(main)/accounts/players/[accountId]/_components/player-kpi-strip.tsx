@@ -2,7 +2,7 @@
 
 import { Receipt, DollarSign, TrendingUp, Percent, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatVNDCompact, formatPercent, formatNumber } from "@megawin/shared/utils/number";
+import { formatVNDCompact, formatPercent, formatNumber } from "@megawin/shared/utils";
 
 import { Skeleton } from "@/components/ui/skeleton";
 

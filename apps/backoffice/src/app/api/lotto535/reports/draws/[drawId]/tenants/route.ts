@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { ListDrawTenantsUseCase } from "@megawin/game-lotto535-application/use-cases/reports";
 
 export const GET = withApi()

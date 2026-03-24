@@ -25,15 +25,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { formatVND, formatVNDCompact, formatNumber } from "@megawin/shared/utils/number";
-import { Pagination } from "@megawin/shared/constants/pagination";
+import { formatVND, formatVNDCompact, formatNumber } from "@megawin/shared/utils";
+import { Pagination } from "@megawin/shared/constants";
 import {
   useJackpotCycles,
   type JackpotCycleSummary,
   type JackpotWinnerSummary,
 } from "./use-jackpot";
 import { JackpotCycleCloseReason } from "@megawin/game-lotto535/entities";
-import { parseUsername, toUsername } from "@megawin/identity-application/shared";
+import { toTenantUsername } from "@megawin/shared/utils";
 
 const PAGE_SIZE = Pagination.Default.Size;
 
@@ -317,9 +317,7 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
               <User className="size-4.5 text-white" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">
-                {parseUsername(w.username ?? "")?.playerExternalId ?? w.username}
-              </p>
+              <p className="text-sm font-semibold">{toTenantUsername(w.username ?? "")}</p>
               <p className="text-xs text-muted-foreground">
                 Đại lý: {w.tenantId} · Entry: {w.entryId}
               </p>

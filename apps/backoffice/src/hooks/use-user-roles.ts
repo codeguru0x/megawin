@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import type { AccountRole } from "@megawin/identity/entities/account";
-import { ALL_ROLE_VALUES } from "@megawin/identity/entities/account";
+import { ALL_ROLE_VALUES } from "@megawin/identity/entities";
+import type { AccountRole } from "@megawin/identity/entities";
 import { useAuth } from "@/providers/auth-provider";
 
 /**

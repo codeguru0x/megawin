@@ -16,7 +16,7 @@ import {
   MAX3D_BASIC_PRIZE_TIER_LABELS,
   MAX3D_PLUS_PRIZE_TIER_LABELS,
 } from "@megawin/game-max3d/labels";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

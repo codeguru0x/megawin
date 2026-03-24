@@ -1,8 +1,4 @@
-import {
-  TenantEntity,
-  TenantStatus,
-  TenantOption,
-} from "@megawin/identity/entities/tenant";
+import { TenantEntity, TenantStatus, TenantOption } from "@megawin/identity/entities";
 import { IdentityBaseRepo } from "./identity-base-repo";
 import { TenantMapper } from "../mappers/tenant-mapper";
 

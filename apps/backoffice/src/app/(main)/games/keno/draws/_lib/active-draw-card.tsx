@@ -17,8 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { KenoDrawStatusBadge } from "@/components/games/keno/draw-status-badge";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatVNTime } from "@megawin/shared/utils/date";
-import { formatVNDCompact as formatVND, formatNumber } from "@megawin/shared/utils/number";
+import { formatVNTime, formatVNDCompact as formatVND, formatNumber } from "@megawin/shared/utils";
 import type { KenoCurrentDrawInfo } from "./use-draws";
 
 import { OpenSalesAction } from "./actions/open-sales-action";

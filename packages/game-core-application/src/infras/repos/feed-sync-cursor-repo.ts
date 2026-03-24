@@ -1,31 +1,34 @@
 import { Long } from "mongodb";
 import { GameCoreCollections } from "@megawin/game-core/entities";
 import type { GameProduct } from "@megawin/game-core/entities";
-import type { BaseEntity } from "@megawin/data/mongo";
+import type { FeedSyncCursorEntity } from "@megawin/game-core/entities";
+import { FeedSyncCursorMapper } from "../mappers/feed-sync-cursor-mapper";
 import { GameCoreBaseRepo } from "./game-core-base-repo";
+import type { AcquireLockResult } from "./types";
 
-/** Lock TTL mặc định: 5 phút. Đủ cho step function sync xong. */
-const DEFAULT_LOCK_TTL_MS = 5 * 60 * 1000;
-
-export interface AcquireLockResult {
-  acquired: boolean;
-  afterVersion: string;
-}
+/** Lock TTL mặc định: 3 phút. Đủ cho 1 batch cycle hoàn tất; extend sau mỗi batch. */
+const DEFAULT_LOCK_TTL_MS = 3 * 60 * 1000;
 
 /**
  * Repository cho collection feedSyncCursor.
  *
  * Kết hợp 2 chức năng:
  * 1. Cursor tracking: lưu lastVersion đã sync.
- * 2. Distributed lock: ngăn concurrent step function executions.
+ * 2. Distributed lock: ngăn concurrent Lambda executions.
  *
- * Lock pattern:
- *   acquireLock → (step function chạy) → saveAndRelease
- *   Nếu crash → lock auto-expire sau TTL → scheduler acquire lại.
+ * Lock pattern (Single Lambda, không còn Step Function):
+ *   acquireLock → loop batches → saveAndExtendLock (mỗi batch) → releaseLock
+ *   Nếu crash → lock auto-expire sau TTL (3 phút) → Lambda tiếp theo acquire lại.
  */
-export class FeedSyncCursorRepository extends GameCoreBaseRepo<BaseEntity> {
+export class FeedSyncCursorRepository extends GameCoreBaseRepo<
+  FeedSyncCursorEntity,
+  FeedSyncCursorMapper
+> {
   constructor() {
-    super({ collName: GameCoreCollections.FeedSyncCursor });
+    super({
+      collName: GameCoreCollections.FeedSyncCursor,
+      dataMapper: new FeedSyncCursorMapper(),
+    });
   }
 
   /**
@@ -65,23 +68,21 @@ export class FeedSyncCursorRepository extends GameCoreBaseRepo<BaseEntity> {
       return { acquired: false, afterVersion: "0" };
     }
 
-    const v = (result as any).lastVersion as Long | undefined;
     return {
       acquired: true,
-      afterVersion: v ? v.toString() : "0",
+      afterVersion: result.lastVersion,
     };
   }
 
   /**
    * Ghi lastVersion mới + release lock trong 1 atomic operation.
    *
-   * Chỉ ghi nếu lastVersion mới >= version hiện tại (tránh ghi đè lùi).
-   * Release lock bất kể executionId (crash recovery safe).
+   * Dùng khi step function kết thúc hoàn toàn (deprecated pattern).
+   * Ưu tiên dùng `saveAndExtendLock` + `releaseLock` thay thế.
+   *
+   * Release lock bất kể lockedBy (crash recovery safe).
    */
-  async saveAndRelease(
-    gameProduct: GameProduct,
-    lastVersion: string,
-  ): Promise<void> {
+  async saveAndRelease(gameProduct: GameProduct, lastVersion: string): Promise<void> {
     const newVersion = Long.fromString(lastVersion);
 
     await this.findOneAndUpdate(
@@ -99,13 +100,64 @@ export class FeedSyncCursorRepository extends GameCoreBaseRepo<BaseEntity> {
   }
 
   /**
+   * Ghi lastVersion mới + gia hạn lock (KHÔNG release).
+   *
+   * Gọi sau mỗi batch trong vòng sync loop. Đảm bảo:
+   * - Cursor được persist ngay → crash chỉ mất tối đa 1 batch (500 entries)
+   * - Lock được gia hạn thêm TTL → tránh lock expire giữa chừng khi đang chạy
+   *
+   * lockedBy giữ nguyên giá trị lúc acquireLock.
+   */
+  async saveAndExtendLock(
+    gameProduct: GameProduct,
+    lastVersion: string,
+    lockTtlMs: number = DEFAULT_LOCK_TTL_MS,
+  ): Promise<void> {
+    const now = new Date();
+    const newVersion = Long.fromString(lastVersion);
+    const lockedUntil = new Date(now.getTime() + lockTtlMs);
+
+    await this.findOneAndUpdate(
+      { gameProduct },
+      {
+        $set: {
+          lastVersion: newVersion,
+          lockedUntil,
+          updatedAt: now,
+        },
+      },
+      { upsert: true, returnDocument: "after" },
+    );
+  }
+
+  /**
+   * Release lock (không thay đổi lastVersion).
+   *
+   * Gọi khi sync loop kết thúc (done = true hoặc timeout).
+   * Cho phép Lambda tiếp theo acquire lock ngay lập tức
+   * thay vì chờ lock tự expire.
+   */
+  async releaseLock(gameProduct: GameProduct): Promise<void> {
+    await this.findOneAndUpdate(
+      { gameProduct },
+      {
+        $set: {
+          lockedUntil: null,
+          lockedBy: null,
+          updatedAt: new Date(),
+        },
+      },
+      { upsert: false, returnDocument: "after" },
+    );
+  }
+
+  /**
    * Đọc lastVersion (không acquire lock).
    * Dùng cho monitoring / debug.
    */
   async getLastVersion(gameProduct: GameProduct): Promise<string> {
-    const doc = await this.findOneAsDocument({ gameProduct });
-    if (!doc) return "0";
-    const v = doc.lastVersion as Long | undefined;
-    return v ? v.toString() : "0";
+    const entity = await this.findOne({ gameProduct });
+    if (!entity) return "0";
+    return entity.lastVersion;
   }
 }

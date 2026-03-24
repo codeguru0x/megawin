@@ -22,12 +22,7 @@ import {
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  formatVND,
-  formatVNDCompact,
-  formatPercent,
-  formatNumber,
-} from "@megawin/shared/utils/number";
+import { formatVND, formatVNDCompact, formatPercent, formatNumber } from "@megawin/shared/utils";
 import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { useSystemReportFilters } from "../use-report-filters";
 import { useSystemDailyOverview, useSystemDayBreakdown } from "../use-report-queries";

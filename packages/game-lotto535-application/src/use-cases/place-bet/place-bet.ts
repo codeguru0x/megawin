@@ -17,8 +17,7 @@ import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-conf
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
 import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
-import { nowVN } from "@megawin/shared/utils/date";
-import { getFinancialDate } from "@megawin/shared/utils/financial-date";
+import { nowVN, getFinancialDate } from "@megawin/shared/utils";
 import { ObjectId } from "mongodb";
 
 export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOutput> {

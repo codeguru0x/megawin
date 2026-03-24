@@ -6,7 +6,7 @@
  */
 
 import { z } from "zod";
-import { DRAW_ID_REGEX } from "@megawin/shared/constants/validation";
+import { DRAW_ID_REGEX } from "@megawin/shared/constants";
 import { MEGA645_MAIN_MIN, MEGA645_MAIN_MAX, MEGA645_MAIN_COUNT } from "../entities/types";
 
 /** Board nos hợp lệ cho Mega 6/45: tối đa 6 boards, ký hiệu A-F. */

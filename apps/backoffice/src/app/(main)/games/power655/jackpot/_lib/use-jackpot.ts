@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@megawin/next/client";
-import { Pagination } from "@megawin/shared/constants/pagination";
+import { Pagination } from "@megawin/shared/constants";
 import { power655Keys } from "@/lib/query-keys";
 import type {
   GetJackpotCurrentOutput,

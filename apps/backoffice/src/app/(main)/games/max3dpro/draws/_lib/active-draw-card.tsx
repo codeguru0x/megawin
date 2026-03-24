@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { DrawStatusBadge } from "@/components/games/max3dpro/draw-status-badge";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatVNTime } from "@megawin/shared/utils/date";
+import { formatVNTime } from "@megawin/shared/utils";
 import type { CurrentDrawInfo } from "./use-draws";
 
 function formatVND(n: number) {

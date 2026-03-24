@@ -31,12 +31,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber, displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
 import { KenoDrawStatusBadge } from "@/components/games/keno/draw-status-badge";
 import { Button } from "@/components/ui/button";
 import type { DrawSelectorItem } from "../../use-operations";
 import type { KenoDrawResult, VoidInfo } from "../../types";
-import { displayVNTime, displayVNDateTime } from "@megawin/shared/utils/date";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DrawCommandProps {

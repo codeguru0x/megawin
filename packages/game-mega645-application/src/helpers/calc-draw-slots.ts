@@ -6,16 +6,7 @@
  * Mỗi ngày chỉ 1 kỳ quay lúc drawTime (VN timezone).
  */
 
-import {
-  VN_TIMEZONE,
-  TZDate,
-  toVNDate,
-  subtractMinutes,
-  formatVNDate,
-  addDays,
-  getDay,
-  isBefore,
-} from "@megawin/shared/utils/date";
+import { VN_TIMEZONE, TZDate, toVNDate, subtractMinutes, formatVNDate, addDays, getDay, isBefore } from "@megawin/shared/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { PlayRules } from "@megawin/game-mega645/entities";
 

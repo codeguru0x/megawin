@@ -6,7 +6,7 @@
 import { z } from "zod";
 import { withPlayerAuth } from "@megawin/auth";
 import { ListTicketsPlayerUseCase } from "@megawin/game-max3dpro-application/use-cases/player";
-import { ISO_DATE_REGEX } from "@megawin/shared/constants/validation";
+import { ISO_DATE_REGEX } from "@megawin/shared/constants";
 import { objectIdSchema, sizeSchema } from "#lib/schemas";
 
 const querySchema = z.object({

@@ -15,8 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { formatNumber, formatVNDCompact } from "@megawin/shared/utils/number";
-import { displayVNTimeWithSeconds } from "@megawin/shared/utils/date";
+import { formatNumber, formatVNDCompact, displayVNTimeWithSeconds } from "@megawin/shared/utils";
 import type { SystemOutstandingGameDaily } from "@megawin/game-core/entities";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";

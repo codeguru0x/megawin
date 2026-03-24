@@ -12,13 +12,13 @@ import {
   Trophy,
   User,
 } from "lucide-react";
-import { Pagination } from "@megawin/shared/constants/pagination";
+import { Pagination } from "@megawin/shared/constants";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { formatVND, formatVNDCompact, formatNumber } from "@megawin/shared/utils/number";
+import { formatVND, formatVNDCompact, formatNumber } from "@megawin/shared/utils";
 import {
   useJackpotCycles,
   type JackpotCycleSummary,

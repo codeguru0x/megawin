@@ -1,4 +1,4 @@
-import type { CompanyRole } from "@megawin/identity/entities/account";
+import type { CompanyRole } from "@megawin/identity/entities";
 
 export interface CreateCompanyAccountInput {
   username: string;

@@ -4,7 +4,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { KENO_DRAW_COUNT, KENO_VALID_NUMBERS } from "@megawin/game-keno/entities";
 import { computeDrawStats } from "@megawin/game-keno/helpers";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { nowVN } from "@megawin/shared/utils/date";
+import { nowVN } from "@megawin/shared/utils";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 
 const PUBLISHABLE_STATUSES = new Set<string>([DrawStatus.SalesClosed, DrawStatus.Published]);

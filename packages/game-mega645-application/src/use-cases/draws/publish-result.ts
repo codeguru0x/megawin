@@ -17,7 +17,7 @@ import {
 } from "@megawin/game-mega645/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
-import { nowVN } from "@megawin/shared/utils/date";
+import { nowVN } from "@megawin/shared/utils";
 
 const PUBLISHABLE_STATUSES = new Set<string>([
   DrawStatus.SalesClosed,

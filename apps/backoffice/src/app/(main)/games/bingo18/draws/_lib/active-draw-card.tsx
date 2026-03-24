@@ -20,9 +20,8 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Bingo18DrawStatusBadge } from "@/components/games/bingo18/draw-status-badge";
 import { DiceDisplay } from "@/components/games/bingo18/dice-display";
-import { formatVNDCompact as formatVND } from "@megawin/shared/utils/number";
+import { formatVNDCompact as formatVND, formatVNTime } from "@megawin/shared/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatVNTime } from "@megawin/shared/utils/date";
 import type { Bingo18CurrentDrawInfo } from "./use-draws";
 
 const STATUS_VISUALS: Record<

@@ -1,17 +1,7 @@
-feed-sync-entries:
-  handler: src/handlers/feed/sync-entry-feed.handler
+feed-sync:
+  handler: src/handlers/feed/feed-sync.handler
   timeout: 900
-
-feed-save-cursor:
-  handler: src/handlers/feed/save-cursor.handler
-  timeout: 900
-
-feed-scheduler:
-  handler: src/handlers/feed/feed-scheduler.handler
-  timeout: 900
-  #environment:
-  #FEED_SYNC_SFN_ARN: !Ref KenoFeedSyncStateMachine
-  #events:
-  #  - schedule:
-  #      rate: rate(30 seconds)
-  #       enabled: true
+  events:
+    - schedule:
+        rate: cron(* * * * ? *)
+        enabled: true

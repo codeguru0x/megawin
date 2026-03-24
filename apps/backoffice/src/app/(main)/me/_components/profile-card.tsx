@@ -21,7 +21,7 @@ import {
   AgentRoleLabel,
   AccountStatusLabel,
   MfaStatusLabel,
-} from "@megawin/identity/entities/labels";
+} from "@megawin/identity/entities";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

@@ -13,12 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  formatVNDCompact,
-  formatVND,
-  formatPercent,
-  formatNumber,
-} from "@megawin/shared/utils/number";
+import { formatVNDCompact, formatVND, formatPercent, formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { useLotto535ReportFilters } from "../use-report-filters";
 import { EntryList } from "../sections/entry-list";

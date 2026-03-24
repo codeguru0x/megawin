@@ -1,7 +1,7 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { displayVNTime, formatVNDate } from "@megawin/shared/utils/date";
+import { displayVNTime, formatVNDate } from "@megawin/shared/utils";
 import type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selector.dto";
 
 /**

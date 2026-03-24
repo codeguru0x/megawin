@@ -19,18 +19,25 @@
 import type { Long } from "mongodb";
 import type { GameProduct } from "./game-core.enums";
 
-export interface FeedSyncCursorDoc {
-  _id: unknown;
+/**
+ * Application-layer entity cho feedSyncCursor document.
+ *
+ * Map từ FeedSyncCursorDoc:
+ * - `_id` → `id` (string, ObjectId hex).
+ * - `lastVersion` → `lastVersion` (string, Long.toString()) – safe cho JSON.
+ */
+export interface FeedSyncCursorEntity {
+  /** ObjectId hex string, map từ _id. */
+  id: string;
 
   /** GameProduct — unique key, mỗi game 1 document. */
   gameProduct: GameProduct;
 
   /**
-   * Version cuối cùng đã sync thành công (BSON Long).
-   * Worker dùng giá trị này làm afterVersion cho lần chạy tiếp.
-   * Mặc định Long(0) khi chưa có.
+   * Version cuối cùng đã sync thành công.
+   * Đã convert từ BSON Long → string để an toàn khi serialize.
    */
-  lastVersion: Long;
+  lastVersion: string;
 
   /** Thời điểm cập nhật cursor gần nhất (UTC). */
   updatedAt: Date;
@@ -38,7 +45,6 @@ export interface FeedSyncCursorDoc {
   /**
    * Lock expiry time (UTC). Null = không ai giữ lock.
    * Scheduler set = now + TTL khi acquire. SaveCursor set = null khi release.
-   * Nếu step function crash → lock tự expire sau TTL.
    */
   lockedUntil: Date | null;
 

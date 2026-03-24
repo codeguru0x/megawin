@@ -25,9 +25,8 @@ import {
 
 import { cn } from "@/lib/utils";
 import { DrawStatusBadge } from "@/components/games/mega645/draw-status-badge";
-import { formatVND } from "@megawin/shared/utils/number";
+import { formatVND, formatVNTime, displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatVNTime, displayVNTime, displayVNDateTime } from "@megawin/shared/utils/date";
 import type { CurrentDrawInfo } from "@megawin/game-mega645-application/use-cases/draws";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 

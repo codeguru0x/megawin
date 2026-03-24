@@ -12,7 +12,7 @@
 
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import { BarChart2, Store } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────

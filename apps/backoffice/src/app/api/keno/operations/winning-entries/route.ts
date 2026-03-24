@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { GetWinningEntriesUseCase } from "@megawin/game-keno-application/use-cases/operations";
 import { winningEntriesQuerySchema } from "../_lib/schema";
 

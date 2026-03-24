@@ -68,15 +68,18 @@ export interface GetSystemOutstandingOutput {
 // ─── Dashboard KPIs ───────────────────────────────────────────────────────────
 
 export interface GetDashboardKpisInput {
-  /** Ngày tài chính đang xem (YYYY-MM-DD). */
+  /** Ngày tài chính chính (YYYY-MM-DD). */
   fd: string;
-  /** Ngày so sánh, cùng thứ tuần trước (YYYY-MM-DD). Chỉ truyền khi fd < today. */
+  /**
+   * Danh sách ngày so sánh, comma-separated (YYYY-MM-DD,YYYY-MM-DD).
+   * Phương án C: truyền yesterdayFd + compareFd (cùng thứ tuần trước).
+   */
   compare?: string;
 }
 
 export interface GetDashboardKpisOutput {
   /**
-   * Raw per-game data cho 1-2 ngày tài chính.
+   * Raw per-game data cho 1-N ngày tài chính.
    * Client tách theo financialDate để compute KPI totals, trend %, payout ratio.
    */
   data: DashboardGameDailyData[];

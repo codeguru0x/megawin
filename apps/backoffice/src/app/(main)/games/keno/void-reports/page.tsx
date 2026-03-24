@@ -23,8 +23,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { formatVND, formatNumber } from "@megawin/shared/utils/number";
-import { todayVN } from "@megawin/shared/utils/date";
+import { formatVND, formatNumber, todayVN } from "@megawin/shared/utils";
 import type { VoidDrawReport } from "@megawin/game-keno/entities";
 import { useKenoVoidReports } from "../financial-reports/_lib/use-report-queries";
 

@@ -23,7 +23,7 @@ import { DrawStatusBadge } from "@/components/games/max3dpro/draw-status-badge";
 import { TripletDisplay } from "@/components/games/max3d/triplet-display";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { displayVNTime, displayVNDateTime } from "@megawin/shared/utils/date";
+import { displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
 import type { DrawSelectorItem } from "../../use-operations";
 import type { DrawResult, VoidInfo } from "../../types";
 

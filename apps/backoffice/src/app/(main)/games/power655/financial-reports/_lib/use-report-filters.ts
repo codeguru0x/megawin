@@ -2,7 +2,7 @@
 
 import { useQueryState, parseAsString, parseAsStringLiteral } from "nuqs";
 import { useCallback } from "react";
-import { todayVN } from "@megawin/shared/utils/date";
+import { todayVN } from "@megawin/shared/utils";
 
 const TABS = ["draws", "tenants"] as const;
 

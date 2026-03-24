@@ -2,12 +2,7 @@
 
 import { CalendarRange, Rows3, DollarSign, TrendingUp, Percent } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  formatVND,
-  formatVNDCompact,
-  formatPercent,
-  formatNumber,
-} from "@megawin/shared/utils/number";
+import { formatVND, formatVNDCompact, formatPercent, formatNumber } from "@megawin/shared/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMega645DrawSummary } from "../use-report-queries";
 

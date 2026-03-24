@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/table";
 import { DrawStatusBadge } from "@/components/games/max3d/draw-status-badge";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { formatVNTime, yesterdayVN } from "@megawin/shared/utils/date";
+import { formatVNTime, yesterdayVN } from "@megawin/shared/utils";
 
 import type { DrawSummary, ListDrawsParams } from "./use-draws";
 import { useDrawsList } from "./use-draws";

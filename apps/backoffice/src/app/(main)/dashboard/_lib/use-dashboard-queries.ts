@@ -11,24 +11,26 @@ import type { GetDashboardDrawsOutput } from "@/app/api/dashboard/draws/_lib/typ
 /**
  * Fetch per-game settle data cho dashboard KPIs + Game Performance table.
  *
- * 1 query phục vụ Hero KPIs, Game Table, Game Mix donut, Payout Ratio.
- * fd và compareDate (optional) gộp thành $in query ở backend để tối thiểu round-trip.
- * staleTime = 5 phút — data đã settle không thay đổi (trừ ngày hôm nay đang chạy).
+ * Gộp todayFd + yesterdayFd + compareFd vào 1 query — backend xử lý $in.
+ * refetchInterval = 2 phút cho dữ liệu hôm nay (partial, thay đổi liên tục khi settle).
+ * yesterdayFd + compareFd cache lâu hơn (data đã đóng) nhưng gộp chung 1 request.
  */
-export function useDashboardKpis(fd: string, compareDate?: string) {
+export function useDashboardKpis(todayFd: string, yesterdayFd: string, compareFd: string) {
   return useQuery({
-    queryKey: dashboardKeys.kpis(fd),
+    queryKey: dashboardKeys.kpis(todayFd),
     queryFn: () =>
       apiClient
         .get<GetDashboardKpisOutput>("/dashboard/kpis", {
           params: {
-            fd,
-            ...(compareDate ? { compare: compareDate } : {}),
+            fd: todayFd,
+            compare: [yesterdayFd, compareFd].join(","),
           },
         })
         .then((r) => r.data),
-    staleTime: 5 * 60 * 1000,
-    enabled: !!fd,
+    // Data hôm nay thay đổi liên tục khi settle → refresh mỗi 2 phút
+    refetchInterval: 2 * 60 * 1000,
+    staleTime: 60 * 1000,
+    enabled: !!todayFd,
   });
 }
 

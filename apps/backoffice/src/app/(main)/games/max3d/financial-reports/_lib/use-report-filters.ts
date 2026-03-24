@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryState, parseAsString, parseAsStringLiteral } from "nuqs";
-import { todayVN } from "@megawin/shared/utils/date";
+import { todayVN } from "@megawin/shared/utils";
 
 const TABS = ["draws", "tenants"] as const;
 export type DrillLevel = "list" | "draw-tenants" | "players" | "entries" | "tenant-draws";

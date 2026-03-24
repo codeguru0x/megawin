@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { GetLiveEntriesUseCase } from "@megawin/game-mega645-application/use-cases/operations";
 import { z } from "zod";
 

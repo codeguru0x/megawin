@@ -31,7 +31,7 @@
  */
 
 import { PrizeTier, BasicTier, BASIC_TIER_PRIORITY } from "../entities/enums";
-import { sumBy } from "@megawin/shared/utils/array";
+import { sumBy } from "@megawin/shared/utils";
 import type { Triplet, PrizeAmounts } from "../entities/types";
 import type { Max3dproDrawResult } from "../entities/draw-result";
 import type { EntryPayoutTier } from "../entities/entry";

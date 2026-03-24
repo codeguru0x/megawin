@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import { Hash } from "lucide-react";
 import { TripletDisplay } from "@/components/games/max3d/triplet-display";
 import { TenantBreakdown } from "./analytics-panels";

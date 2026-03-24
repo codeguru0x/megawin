@@ -1,99 +1,86 @@
 /**
  * Use Case: Sync Entry Feed (Power 6/55)
  *
- * Extends BaseSyncEntryFeedUseCase — chỉ cung cấp game-specific logic:
- * - GameProduct: Power655
- * - EntryRepo: Power655 EntryRepository
- * - Mapping: extract tất cả fields cho EntryFeedDoc từ Power655 entry
+ * Extends BaseSyncEntryFeedUseCase.
+ * Implement fetchNextBatch() — fetch typed TicketEntryEntity từ Power655 repo,
+ * map sang EntryFeedDoc[] (type-safe, không dùng unknown/Record).
  */
 
 import { GameProduct } from "@megawin/game-core/entities";
 import type { EntryFeedDoc, FeedVoidInfo } from "@megawin/game-core/entities";
-import {
-  BaseSyncEntryFeedUseCase,
-  type FeedSyncableEntryRepo,
-} from "@megawin/game-core-application/use-cases";
+import { BaseSyncEntryFeedUseCase } from "@megawin/game-core-application/use-cases";
 import { Long } from "mongodb";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-power655/entities";
+import type {
+  TicketEntryEntity,
+  EntryBoardSnapshot,
+  EntryPayout,
+  EntryVoidInfo,
+} from "@megawin/game-power655/entities";
 import type {
   Power655FeedBetContent,
   Power655FeedDrawResult,
   Power655FeedPayoutDetail,
 } from "@megawin/game-power655/entities";
+import { toTenantUsername } from "@megawin/shared/utils";
 
 /**
  * Sync Power 6/55 entries vào unified entry feed.
  * Tenant poll collection entryFeed để nhận cập nhật.
  */
 export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
-  private readonly drawRepo = new DrawRepository();
+  private readonly entryRepo = new EntryRepository();
 
-  protected getGameProduct(): GameProduct {
-    return GameProduct.Power655;
+  constructor() {
+    super(GameProduct.Power655);
   }
 
-  protected createEntryRepo(): FeedSyncableEntryRepo {
-    return new EntryRepository();
-  }
-
-  protected override async buildBatchContext(entries: unknown[]): Promise<Map<string, DrawEntity>> {
-    const drawIds = [...new Set((entries as any[]).map((e: any) => e.drawId as string))];
-    const draws = await this.drawRepo.getDrawsByIds(drawIds);
-    return new Map<string, DrawEntity>(draws.map((d) => [d.drawId, d]));
-  }
-
-  protected mapToFeedDoc(
-    entry: unknown,
-    feedCreatedAt: Date,
-    ctx?: unknown,
-  ): Omit<EntryFeedDoc, "_id"> {
-    const e = entry as Record<string, any>;
-    const drawMap = ctx as Map<string, DrawEntity> | undefined;
-    const draw = drawMap?.get(e.drawId);
-    const winAmount = e.payout?.winAmount ?? 0;
-    const payoutAmount = e.payout?.payoutAmount ?? 0;
-    // Tiền cược: entry dùng field `amount` (đồng bộ với mega645 / lotto535)
-    const stakeAmount = e.amount ?? 0;
-
-    return {
-      version: e.version ?? Long.fromNumber(0),
-      gameProduct: GameProduct.Power655,
-      sourceEntryId: e.id,
-      ticketId:
-        typeof e.ticketId === "string"
-          ? e.ticketId
-          : (e.ticketId?.toHexString?.() ?? String(e.ticketId)),
-      ticketNo: e.entrySummary?.ticketNo ?? e.ticketNo ?? "",
-      tenantId: e.tenantId,
-      playerId: e.accountId,
-      username: e.username ?? "",
-      financialDate: e.financialDate ?? e.drawId.slice(0, 10),
-      drawId: e.drawId,
-      // drawTime/drawDate lấy từ draw (source of truth) thay vì snapshot cũ trong entry.
-      drawTime: draw?.drawTime ?? new Date(e.drawId.slice(0, 10)),
-      drawDate: draw?.drawDate ?? e.drawId.slice(0, 10),
-      status: e.status,
-      outcome: e.outcome,
-      stakeAmount,
-      winAmount,
-      payoutAmount,
-      netAmount: stakeAmount - payoutAmount,
-      commissionRate: e.tenant?.commissionRate ?? 0,
-      commissionAmount: e.tenant?.commissionAmount ?? 0,
-      voidInfo: mapVoidInfo(e),
-      betContent: mapBetContent(e),
-      drawResult: mapDrawResult(e),
-      payoutDetail: mapPayoutDetail(e),
-      sourceUpdatedAt: e.updatedAt ?? feedCreatedAt,
-      feedCreatedAt,
-    };
+  protected async fetchNextBatch(
+    afterVersion: string,
+    batchSize: number,
+  ): Promise<Omit<EntryFeedDoc, "_id">[]> {
+    const entries = await this.entryRepo.getChangedEntries(
+      Long.fromString(afterVersion),
+      batchSize,
+    );
+    return entries.map((e) => mapToFeedDoc(e));
   }
 }
 
-function mapVoidInfo(e: Record<string, any>): FeedVoidInfo | undefined {
-  const v = e.voidInfo;
+function mapToFeedDoc(e: TicketEntryEntity): Omit<EntryFeedDoc, "_id"> {
+  const winAmount = e.payout?.winAmount ?? 0;
+  const payoutAmount = e.payout?.payoutAmount ?? 0;
+  const stakeAmount = e.amount;
+
+  return {
+    version: Long.fromString(e.version),
+    gameProduct: GameProduct.Power655,
+    entryId: e.id,
+    ticketId: e.ticketId,
+    ticketNo: e.entrySummary.ticketNo,
+    tenantId: e.tenantId,
+    accountId: e.accountId,
+    username: toTenantUsername(e.username),
+    financialDate: e.financialDate,
+    drawId: e.drawId,
+    status: e.status,
+    outcome: e.outcome,
+    stakeAmount,
+    winAmount,
+    payoutAmount,
+    ggr: stakeAmount - payoutAmount,
+    commissionRate: e.tenant.commissionRate,
+    commissionAmount: e.tenant.commissionAmount,
+    voidInfo: mapVoidInfo(e.voidInfo),
+    betContent: mapBetContent(e.entrySummary.boards),
+    drawResult: mapDrawResult(e.result),
+    payoutDetail: mapPayoutDetail(e.payout),
+    updatedAt: e.updatedAt ?? new Date(),
+    feedCreatedAt: new Date(),
+  };
+}
+
+function mapVoidInfo(v: EntryVoidInfo | undefined): FeedVoidInfo | undefined {
   if (!v) return undefined;
   return {
     originalAmount: v.originalAmount,
@@ -103,34 +90,36 @@ function mapVoidInfo(e: Record<string, any>): FeedVoidInfo | undefined {
   };
 }
 
-function mapBetContent(e: Record<string, any>): Power655FeedBetContent {
-  const boards = (e.entrySummary?.boards ?? []).map((b: any) => ({
-    boardNo: b.boardNo,
-    playType: String(b.playType),
-    mainNumbers: b.mainNumbers ?? [],
-    expandedLines: b.expandedLines ?? 1,
-    betCount: b.betCount ?? 1,
-  }));
-  return { boards };
-}
-
-function mapDrawResult(e: Record<string, any>): Power655FeedDrawResult | undefined {
-  const r = e.result;
-  if (!r) return undefined;
+function mapBetContent(boards: EntryBoardSnapshot[]): Power655FeedBetContent {
   return {
-    winningMain: r.winningMain ?? [],
-    bonusNumber: r.bonusNumber ?? "",
-    publishedAt:
-      r.publishedAt instanceof Date ? r.publishedAt.toISOString() : String(r.publishedAt),
+    boards: boards.map((b) => ({
+      boardNo: b.boardNo,
+      playType: String(b.playType),
+      mainNumbers: b.mainNumbers,
+      expandedLines: b.expandedLines,
+      betCount: b.betCount,
+    })),
   };
 }
 
-function mapPayoutDetail(e: Record<string, any>): Power655FeedPayoutDetail | undefined {
-  const p = e.payout;
-  if (!p || !p.tiers?.length) return undefined;
+function mapDrawResult(result: TicketEntryEntity["result"]): Power655FeedDrawResult | undefined {
+  if (!result) return undefined;
   return {
-    settledAt: p.settledAt instanceof Date ? p.settledAt.toISOString() : String(p.settledAt),
-    tiers: p.tiers.map((t: any) => ({
+    winningMain: result.winningMain,
+    bonusNumber: result.bonusNumber,
+    publishedAt:
+      result.publishedAt instanceof Date
+        ? result.publishedAt.toISOString()
+        : String(result.publishedAt),
+  };
+}
+
+function mapPayoutDetail(payout: EntryPayout | undefined): Power655FeedPayoutDetail | undefined {
+  if (!payout || !payout.tiers?.length) return undefined;
+  return {
+    settledAt:
+      payout.settledAt instanceof Date ? payout.settledAt.toISOString() : String(payout.settledAt),
+    tiers: payout.tiers.map((t) => ({
       tier: String(t.tier),
       hitCount: t.hitCount,
       unitAmount: t.unitAmount,

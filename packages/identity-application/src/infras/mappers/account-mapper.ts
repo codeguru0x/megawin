@@ -1,5 +1,5 @@
 import { MongoMapper } from "@megawin/data/mongo";
-import { AccountEntity } from "@megawin/identity/entities/account";
+import { AccountEntity } from "@megawin/identity/entities";
 import { Document } from "mongodb";
 
 export class AccountMapper extends MongoMapper<Document, AccountEntity> {

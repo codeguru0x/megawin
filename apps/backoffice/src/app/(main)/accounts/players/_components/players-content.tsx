@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useQueryStates, parseAsString } from "nuqs";
-import { Filter, Loader2, Search, SearchX, UserSearch, X } from "lucide-react";
+import { Loader2, Search, SearchX, UserSearch, X } from "lucide-react";
 
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -112,100 +112,98 @@ export function PlayersContent() {
     void setUrlState({ before: prevCursor, after: null });
   };
 
-  return (
-    <div className="space-y-4">
-      {/* ── Filter Bar: icon search + tenant dropdown, căn phải ─────────── */}
-      <div className="flex items-end justify-end gap-2">
-        {/* Search input — xuất hiện bên trái icon khi isSearchOpen */}
-        {isSearchOpen && (
-          <div className="flex items-center gap-1">
-            <Input
-              ref={inputRef}
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Mã TK (ULID) hoặc tên tài khoản (user@tenant / prefix)"
-              className="h-9 w-64 font-mono text-xs"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-9 shrink-0"
-              onClick={handleSubmitSearch}
-              disabled={!inputValue.trim()}
-              title="Tìm kiếm"
-            >
-              <Search className="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-9 shrink-0"
-              onClick={handleClearSearch}
-              title="Đóng tìm kiếm"
-            >
-              <X className="size-4" />
-            </Button>
+  // Controls dùng chung cho cả PlayersTable header lẫn SearchResultCard header
+  const toolbarControls = (
+    <div className="flex items-center gap-2">
+      {isSearchActive ? (
+        /* Đang có kết quả search — hiện keyword pill + nút xoá */
+        <>
+          <div className="flex items-center gap-1 rounded-md bg-muted px-2 py-1">
+            <Search className="size-3 text-muted-foreground" />
+            <span className="max-w-[140px] truncate font-mono text-xs text-foreground">
+              {activeSearch}
+            </span>
           </div>
-        )}
-
-        {/* Icon search toggle — chỉ hiện khi input chưa mở */}
-        {!isSearchOpen && (
           <Button
             variant="ghost"
             size="icon"
-            className="size-9 self-end"
-            onClick={handleOpenSearch}
-            title="Tìm kiếm theo mã tài khoản hoặc tên tài khoản"
+            className="size-7 text-muted-foreground hover:text-foreground"
+            onClick={handleClearSearch}
+            title="Xoá tìm kiếm"
           >
-            <Search className="size-4" />
+            <X className="size-3.5" />
           </Button>
-        )}
-
-        {/* Tenant dropdown — disabled khi search active */}
-        <div className="w-full max-w-xs space-y-1.5">
-          <Label htmlFor="tenant-select" className="flex items-center gap-1.5 text-xs font-medium">
-            <Filter className="size-3 text-muted-foreground" />
-            Tenant
-          </Label>
-          <Select
-            value={isSearchActive ? "" : activeTenantId}
-            onValueChange={(v) => {
-              if (isSearchActive) return;
-              handleTenantChange(v);
-            }}
-            disabled={isSearchActive}
+        </>
+      ) : isSearchOpen ? (
+        /* Input đang mở — chưa submit */
+        <>
+          <Input
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Mã TK hoặc tên tài khoản…"
+            className="h-7 w-48 font-mono text-xs"
+          />
+          <Button
+            variant="default"
+            size="sm"
+            className="h-7 px-2.5 text-xs"
+            onClick={handleSubmitSearch}
+            disabled={!inputValue.trim()}
           >
-            <SelectTrigger id="tenant-select">
-              <SelectValue
-                placeholder={
-                  isSearchActive
-                    ? "Đang tìm kiếm..."
-                    : isLoadingOptions
-                      ? "Đang tải..."
-                      : "Chọn đối tác"
-                }
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {tenants.map((t) => (
-                <SelectItem key={t.tenantId} value={t.tenantId}>
-                  {t.displayName} ({t.tenantId})
-                </SelectItem>
-              ))}
-              {tenants.length === 0 && !isLoadingOptions && (
-                <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                  Chưa có đối tác nào.
-                </div>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+            Tìm
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 text-muted-foreground"
+            onClick={() => setIsSearchOpen(false)}
+          >
+            <X className="size-3.5" />
+          </Button>
+        </>
+      ) : (
+        /* Trạng thái mặc định — icon search */
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7 text-muted-foreground hover:text-foreground"
+          onClick={handleOpenSearch}
+          title="Tìm kiếm theo mã tài khoản hoặc tên tài khoản"
+        >
+          <Search className="size-3.5" />
+        </Button>
+      )}
+    </div>
+  );
 
-      {/* ── Content Area ─────────────────────────────────────────────────── */}
+  // Tenant selector dùng chung — chỉ hiển thị khi không search
+  const tenantSelector = !isSearchActive && (
+    <Select value={activeTenantId} onValueChange={handleTenantChange} disabled={isLoadingOptions}>
+      <SelectTrigger className="h-7 w-auto max-w-[220px] border-0 bg-transparent px-1.5 text-xs font-medium shadow-none focus:ring-0">
+        <SelectValue placeholder={isLoadingOptions ? "Đang tải..." : "Chọn đối tác"} />
+      </SelectTrigger>
+      <SelectContent>
+        {tenants.map((t) => (
+          <SelectItem key={t.tenantId} value={t.tenantId}>
+            <span className="font-medium">{t.displayName}</span>
+            <span className="ml-1.5 font-mono text-[11px] text-muted-foreground">{t.tenantId}</span>
+          </SelectItem>
+        ))}
+        {tenants.length === 0 && !isLoadingOptions && (
+          <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+            Chưa có đối tác nào.
+          </div>
+        )}
+      </SelectContent>
+    </Select>
+  );
+
+  return (
+    <div>
       {isSearchActive ? (
-        <SearchResultCard keyword={activeSearch} />
+        <SearchResultCard keyword={activeSearch} toolbarControls={toolbarControls} />
       ) : (
         <PlayersTable
           tenantId={activeTenantId}
@@ -213,6 +211,8 @@ export function PlayersContent() {
           before={before || undefined}
           onNext={handleNext}
           onPrev={handlePrev}
+          tenantSelector={tenantSelector}
+          toolbarControls={toolbarControls}
         />
       )}
     </div>
@@ -223,7 +223,13 @@ export function PlayersContent() {
 // SearchResultCard — hiển thị kết quả tìm kiếm (0-N kết quả)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function SearchResultCard({ keyword }: { keyword: string }) {
+function SearchResultCard({
+  keyword,
+  toolbarControls,
+}: {
+  keyword: string;
+  toolbarControls: React.ReactNode;
+}) {
   const { data, isLoading, error } = useSearchPlayerAccounts(keyword);
 
   const accounts = data?.accounts ?? [];
@@ -238,42 +244,42 @@ function SearchResultCard({ keyword }: { keyword: string }) {
 
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="px-5 pb-2 pt-4">
+      <CardHeader className="px-5 pb-2 pt-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <UserSearch className="size-4 text-muted-foreground" />
-            <CardTitle className="text-sm font-semibold">
-              Kết quả tìm kiếm – <span className="font-mono text-xs font-normal">{keyword}</span>
-            </CardTitle>
+            <CardTitle className="text-sm font-semibold">Kết quả tìm kiếm</CardTitle>
+            <span className="font-mono text-xs text-muted-foreground">{keyword}</span>
             {accounts.length > 0 && (
-              <span className="text-xs tabular-nums text-muted-foreground">
+              <Badge variant="secondary" className="tabular-nums text-[11px]">
                 {accounts.length} kết quả
-              </span>
+              </Badge>
             )}
           </div>
-          <DataTableViewOptions table={table} />
+          <div className="flex items-center gap-1">
+            {toolbarControls}
+            <DataTableViewOptions table={table} />
+          </div>
         </div>
       </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0">
-        {error && <p className="text-sm text-destructive">{error.message}</p>}
-        <div className="overflow-hidden rounded-md border">
-          {isLoading ? (
-            <div className="flex h-[120px] items-center justify-center gap-2 text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" />
-              <span className="text-sm">Đang tìm kiếm...</span>
-            </div>
-          ) : accounts.length === 0 ? (
-            <div className="flex h-[120px] flex-col items-center justify-center gap-1 text-center">
-              <SearchX className="size-8 text-muted-foreground/40" />
-              <p className="text-sm font-medium text-muted-foreground">Không tìm thấy</p>
-              <p className="text-xs text-muted-foreground">
-                Không có tài khoản nào khớp với <span className="font-mono">{keyword}</span>
-              </p>
-            </div>
-          ) : (
-            <DataTable table={table} columns={searchResultColumns} />
-          )}
-        </div>
+      <CardContent className="px-0 pb-0 pt-0">
+        {error && <p className="px-5 text-sm text-destructive">{error.message}</p>}
+        {isLoading ? (
+          <div className="flex h-[120px] items-center justify-center gap-2 text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" />
+            <span className="text-sm">Đang tìm kiếm...</span>
+          </div>
+        ) : accounts.length === 0 ? (
+          <div className="flex h-[120px] flex-col items-center justify-center gap-1 text-center">
+            <SearchX className="size-8 text-muted-foreground/40" />
+            <p className="text-sm font-medium text-muted-foreground">Không tìm thấy</p>
+            <p className="text-xs text-muted-foreground">
+              Không có tài khoản nào khớp với <span className="font-mono">{keyword}</span>
+            </p>
+          </div>
+        ) : (
+          <DataTable table={table} columns={searchResultColumns} />
+        )}
       </CardContent>
     </Card>
   );

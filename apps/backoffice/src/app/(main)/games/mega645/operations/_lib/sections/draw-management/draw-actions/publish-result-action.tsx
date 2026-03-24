@@ -24,7 +24,7 @@ import {
   MEGA645_MAIN_COUNT,
 } from "@megawin/game-mega645/entities";
 import { publishResultSchema } from "@megawin/game-mega645/schemas";
-import { todayVN } from "@megawin/shared/utils/date";
+import { todayVN } from "@megawin/shared/utils";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
 

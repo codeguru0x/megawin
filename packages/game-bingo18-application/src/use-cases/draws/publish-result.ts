@@ -7,7 +7,7 @@ import {
   BINGO18_DICE_MAX,
 } from "@megawin/game-bingo18/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { nowVN } from "@megawin/shared/utils/date";
+import { nowVN } from "@megawin/shared/utils";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 
 const PUBLISHABLE_STATUSES = new Set<string>([

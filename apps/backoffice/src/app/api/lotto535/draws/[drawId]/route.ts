@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { GetDrawDetailUseCase } from "@megawin/game-lotto535-application/use-cases/draws";
 
 const useCase = new GetDrawDetailUseCase();

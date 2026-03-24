@@ -1,5 +1,5 @@
 import { DrawStatus } from "@megawin/game-core/entities";
-import { subDays, formatVNDate } from "@megawin/shared/utils/date";
+import { subDays, formatVNDate } from "@megawin/shared/utils";
 import { Max3dCollections } from "@megawin/game-max3d/entities";
 import type {
   DrawVietlottRef,

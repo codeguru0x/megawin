@@ -1,4 +1,4 @@
-import type { TenantStatus } from "@megawin/identity/entities/tenant";
+import type { TenantStatus } from "@megawin/identity/entities";
 
 export interface CreateTenantInput {
   tenantId: string;

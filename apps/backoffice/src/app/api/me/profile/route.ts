@@ -1,5 +1,5 @@
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { GetMyProfileUseCase } from "@megawin/identity-application/use-cases/accounts";
 
 const getMyProfileUseCase = new GetMyProfileUseCase();

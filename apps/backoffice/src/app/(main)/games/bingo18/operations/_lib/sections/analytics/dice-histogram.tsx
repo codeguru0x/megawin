@@ -10,7 +10,7 @@
 
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import { Dice5, TrendingUp } from "lucide-react";
 import type { TopComboItem } from "../../use-operations";
 import type { TenantRow } from "../../types";

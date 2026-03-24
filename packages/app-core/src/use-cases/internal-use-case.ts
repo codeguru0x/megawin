@@ -8,36 +8,40 @@
  *   - Caller không cần unwrap AppResult
  *   - Error propagate tự nhiên lên caller's error handler
  *
- * @example
- * class GetConfigUseCase extends InternalUseCase<void, Config> {
- *   protected async execute(): Promise<Config> {
- *     const config = await this.repo.get();
- *     if (!config) throw AppException.internal("Config not found");
- *     return config;
- *   }
- * }
+ * run() signature tự động suy ra từ I:
+ *   - I = void                → run()           (không arg)
+ *   - {} extends I (all-optional fields) → run() hoặc run(input) (optional arg)
+ *   - I = SomeType            → run(input)       (bắt buộc arg)
  *
- * // Caller:
- * private readonly getConfig = new GetConfigUseCase();
- * const config = await this.getConfig.run();
+ * @example
+ * // Không cần input
+ * class GetConfigUseCase extends InternalUseCase<void, Config> {
+ *   protected async execute(_input: void): Promise<Config> { ... }
+ * }
+ * getConfigUseCase.run();
+ *
+ * // Input optional (tất cả fields có dấu ?)
+ * class SyncFeedUseCase extends InternalUseCase<{ batchSize?: number }, Result> {
+ *   protected async execute(input: { batchSize?: number }): Promise<Result> { ... }
+ * }
+ * syncFeedUseCase.run();
+ * syncFeedUseCase.run({ batchSize: 100 });
+ *
+ * // Input bắt buộc
+ * class PrepareSettleUseCase extends InternalUseCase<SettleInput, SettleContext> {
+ *   protected async execute(input: SettleInput): Promise<SettleContext> { ... }
+ * }
+ * prepareSettleUseCase.run(input);
  */
 
 import { AppException } from "@megawin/shared/errors";
 import { isAppError } from "@megawin/shared/errors";
 
 export abstract class InternalUseCase<I = void, O = void> {
-  protected validate(_input: I): void | AppException {
-    return undefined;
-  }
-
   protected abstract execute(input: I): Promise<O>;
 
-  async run(...args: I extends void ? [] : [input: I]): Promise<O> {
+  async run(...args: I extends void ? [] : {} extends I ? [input?: I] : [input: I]): Promise<O> {
     const input = args[0] as I;
-    const validationError = this.validate(input);
-    if (validationError) {
-      throw validationError;
-    }
     try {
       return await this.execute(input);
     } catch (err) {
@@ -59,9 +63,6 @@ export abstract class InternalUseCase<I = void, O = void> {
         details: appErr.details,
       });
     }
-    return AppException.internal(
-      err instanceof Error ? err.message : "Unknown error",
-      err
-    );
+    return AppException.internal(err instanceof Error ? err.message : "Unknown error", err);
   }
 }

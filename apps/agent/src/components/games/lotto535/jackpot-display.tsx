@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { formatVNDCompact } from "@megawin/shared/utils/number";
+import { formatVNDCompact } from "@megawin/shared/utils";
 
 interface JackpotDisplayProps {
   amount: number;

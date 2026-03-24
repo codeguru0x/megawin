@@ -1,7 +1,7 @@
 import { GameConfigScope } from "@megawin/game-core/entities";
 import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import type { TenantConfigEntity } from "@megawin/game-max3dpro/entities";
-import { nowVN } from "@megawin/shared/utils/date";
+import { nowVN } from "@megawin/shared/utils";
 import { TenantConfigMapper } from "../mappers/tenant-config-mapper";
 import { BaseRepo } from "./base-repo";
 import type { TenantConfigFields } from "./types/config.types";

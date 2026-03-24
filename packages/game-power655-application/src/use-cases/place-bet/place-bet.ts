@@ -37,9 +37,8 @@ import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
 import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
-import { getFinancialDate } from "@megawin/shared/utils/financial-date";
+import { getFinancialDate, nowVN } from "@megawin/shared/utils";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
-import { nowVN } from "@megawin/shared/utils/date";
 import { ObjectId } from "mongodb";
 
 /**

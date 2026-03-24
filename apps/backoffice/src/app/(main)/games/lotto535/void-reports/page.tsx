@@ -23,8 +23,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { formatVND, formatNumber } from "@megawin/shared/utils/number";
-import { todayVN } from "@megawin/shared/utils/date";
+import { formatVND, formatNumber, todayVN } from "@megawin/shared/utils";
 import type { VoidDrawReport } from "@megawin/game-lotto535/entities";
 import { useLotto535VoidReports } from "../financial-reports/_lib/use-report-queries";
 

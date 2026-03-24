@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { SetupMfaUseCase } from "@megawin/identity-application/use-cases/accounts";
 
 const setupMfaSchema = z.object({

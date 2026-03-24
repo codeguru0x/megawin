@@ -23,7 +23,7 @@ import { DrawStatusBadge } from "@/components/games/max3d/draw-status-badge";
 import { TripletDisplay } from "@/components/games/max3d/triplet-display";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { displayVNTime, displayVNDateTime } from "@megawin/shared/utils/date";
+import { displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
 import type { DrawSelectorItem } from "../../use-operations";
 import type { DrawResult, VoidInfo } from "../../types";
 
@@ -256,7 +256,7 @@ function ResultDisplay({ result }: { result: DrawResult }) {
           { label: "Ba", triplets: result.third, variant: "third" as const },
         ].map((row) => (
           <div key={row.label} className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold text-muted-foreground min-w-[2rem] text-right">
+            <span className="text-[10px] font-bold text-muted-foreground min-w-8 text-right">
               {row.label}
             </span>
             {row.triplets.map((t, i) => (

@@ -26,7 +26,7 @@ export const ENTRY_CHANGE_SEQ_INDEXES: IndexDescription[] = [
 
 /**
  * Chiến lược:
- * 1. sourceEntryId (unique) – mỗi entry gốc chỉ có 1 document mới nhất.
+ * 1. entryId (unique) – mỗi entry gốc chỉ có 1 document mới nhất.
  *    Upsert key cho worker sync.
  * 2. version – cursor cho tenant poll (sorted scan, NOT unique vì batch events
  *    có thể share version).
@@ -35,9 +35,9 @@ export const ENTRY_CHANGE_SEQ_INDEXES: IndexDescription[] = [
  */
 export const ENTRY_FEED_INDEXES: IndexDescription[] = [
   {
-    key: { sourceEntryId: 1 },
+    key: { entryId: 1 },
     unique: true,
-    name: "idx_sourceEntryId_unique",
+    name: "idx_entryId_unique",
   },
   {
     key: { version: 1 },

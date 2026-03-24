@@ -7,7 +7,7 @@
 
 import { redirect } from "next/navigation";
 
-import { AccountType } from "@megawin/identity/entities/account";
+import { AccountType } from "@megawin/identity/entities";
 
 import { requireSession } from "@/lib/auth-server";
 import type { Session } from "@/lib/auth";

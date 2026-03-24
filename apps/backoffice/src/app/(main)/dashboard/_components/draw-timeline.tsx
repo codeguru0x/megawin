@@ -4,17 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatNumber, formatVNDCompact } from "@megawin/shared/utils/number";
+import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import { getGameLabel } from "../_lib/compute";
 import { getGameColors } from "@/lib/game-colors";
 import type {
   DrawTimelineEvent,
-  HighFreqGameSummary,
   GetDashboardDrawsOutput,
 } from "@/app/api/dashboard/draws/_lib/types";
 import {
   CheckCircle2,
-  Loader2,
   Clock3,
   CalendarClock,
   Zap,
@@ -228,20 +226,12 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
   const scheduled = data.events.filter((e) => e.status === "scheduled");
   const hasHighFreq = data.highFreqGames.length > 0;
 
-  const snapshotTime = new Date(data.snapshotAt).toLocaleTimeString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
   return (
     <Card className="gap-0 py-0">
       <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CalendarClock className="size-4 text-muted-foreground" />
-            <CardTitle className="text-sm font-semibold">Lịch quay số</CardTitle>
-          </div>
-          <span className="text-xs text-muted-foreground">Cập nhật {snapshotTime}</span>
+        <div className="flex items-center gap-2">
+          <CalendarClock className="size-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold">Lịch quay số</CardTitle>
         </div>
       </CardHeader>
       <CardContent className="space-y-3 px-5 pb-4 pt-0">
@@ -288,7 +278,16 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           <Column
             title="Đang diễn ra"
-            icon={<Play className="size-3.5 fill-blue-500 text-blue-500" />}
+            icon={
+              active.length > 0 ? (
+                <span className="relative flex size-2">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-blue-400 opacity-75" />
+                  <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
+                </span>
+              ) : (
+                <Play className="size-3.5 fill-blue-500 text-blue-500" />
+              )
+            }
             count={active.length}
             accent="blue"
             emptyText="Không có kỳ nào đang diễn ra"

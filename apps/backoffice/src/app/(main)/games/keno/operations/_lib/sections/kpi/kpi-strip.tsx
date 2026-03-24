@@ -2,7 +2,7 @@
 
 import { CircleDollarSign, FileText, Grid2x2, Users, Wallet, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import type { OpsKpi } from "../../types";
 
 interface KpiCardProps {

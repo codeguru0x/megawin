@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Ticket } from "lucide-react";
 import { GAME_LABELS } from "@megawin/game-core/labels";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import { ENTRY_STATUS_LABELS, ENTRY_OUTCOME_LABELS } from "@megawin/game-core/labels";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";

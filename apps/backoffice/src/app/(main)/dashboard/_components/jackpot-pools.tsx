@@ -4,7 +4,7 @@ import { Trophy, Zap, Flame, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatVND, formatVNDCompact } from "@megawin/shared/utils/number";
+import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_COLORS } from "@/lib/game-colors";
 import type {

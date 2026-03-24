@@ -1,8 +1,4 @@
-import type {
-  AccountStatus,
-  CompanyRole,
-  MfaStatus,
-} from "@megawin/identity/entities/account";
+import type { AccountStatus, CompanyRole, MfaStatus } from "@megawin/identity/entities";
 
 export interface CompanyAccountItem {
   accountId: string;

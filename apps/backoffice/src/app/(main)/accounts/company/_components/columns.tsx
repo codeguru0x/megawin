@@ -1,12 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { AccountStatus, CompanyRole, MfaStatus } from "@megawin/identity/entities/account";
-import {
-  AccountStatusLabel,
-  CompanyRoleLabel,
-  MfaStatusLabel,
-} from "@megawin/identity/entities/labels";
+import { AccountStatus, CompanyRole, MfaStatus, AccountStatusLabel, CompanyRoleLabel, MfaStatusLabel } from "@megawin/identity/entities";
 
 import { Badge } from "@/components/ui/badge";
 
@@ -39,13 +34,15 @@ export const companyAccountsColumns: ColumnDef<CompanyAccount>[] = [
   {
     accessorKey: "username",
     header: "Tên tài khoản",
-    cell: ({ row }) => <span className="font-medium">{row.original.username}</span>,
+    cell: ({ row }) => <span className="text-xs font-medium">{row.original.username}</span>,
     enableSorting: false,
   },
   {
     accessorKey: "displayName",
     header: "Tên hiển thị",
-    cell: ({ row }) => row.original.displayName,
+    cell: ({ row }) => (
+      <span className="text-xs text-muted-foreground">{row.original.displayName}</span>
+    ),
     enableSorting: false,
   },
   {

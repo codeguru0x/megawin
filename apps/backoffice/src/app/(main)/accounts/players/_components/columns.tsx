@@ -2,8 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { AccountStatus } from "@megawin/identity/entities/account";
-import { AccountStatusLabel } from "@megawin/identity/entities/labels";
+import { AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
 
 import { Badge } from "@/components/ui/badge";
 
@@ -33,7 +32,7 @@ export const playerAccountsColumns: ColumnDef<PlayerAccount>[] = [
   {
     accessorKey: "displayName",
     header: "Tên hiển thị",
-    cell: ({ row }) => <span className="text-sm">{row.original.displayName}</span>,
+    cell: ({ row }) => <span className="text-xs">{row.original.displayName}</span>,
     enableSorting: false,
   },
   {
@@ -56,18 +55,6 @@ export const playerAccountsColumns: ColumnDef<PlayerAccount>[] = [
       <span className="tabular-nums text-xs text-muted-foreground">
         {row.original.createdAt
           ? new Date(row.original.createdAt).toLocaleDateString("vi-VN")
-          : "—"}
-      </span>
-    ),
-    enableSorting: false,
-  },
-  {
-    accessorKey: "updatedAt",
-    header: "Cập nhật",
-    cell: ({ row }) => (
-      <span className="tabular-nums text-xs text-muted-foreground">
-        {row.original.updatedAt
-          ? new Date(row.original.updatedAt).toLocaleDateString("vi-VN")
           : "—"}
       </span>
     ),
@@ -104,7 +91,7 @@ export const searchResultColumns: ColumnDef<PlayerAccount>[] = [
   {
     accessorKey: "displayName",
     header: "Tên hiển thị",
-    cell: ({ row }) => <span className="text-sm">{row.original.displayName}</span>,
+    cell: ({ row }) => <span className="text-xs">{row.original.displayName}</span>,
     enableSorting: false,
   },
   {

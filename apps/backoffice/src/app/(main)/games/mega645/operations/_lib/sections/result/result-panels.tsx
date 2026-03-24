@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MegaNumberBall } from "@/components/games/mega645/mega-number-ball";
 import { Badge } from "@/components/ui/badge";
 import { PrizeTier } from "@megawin/game-mega645/entities";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import {
   Trophy,
   TrendingDown,

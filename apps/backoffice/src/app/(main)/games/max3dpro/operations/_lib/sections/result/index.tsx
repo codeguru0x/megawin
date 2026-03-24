@@ -14,7 +14,7 @@ import { useMemo, useState } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_PRIZE_TIER_LABELS } from "@megawin/game-max3dpro/labels";
-import { formatNumber } from "@megawin/shared/utils/number";
+import { formatNumber } from "@megawin/shared/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -1,4 +1,4 @@
-import type { AccountStatus, PlayerRole } from "@megawin/identity/entities/account";
+import type { AccountStatus, PlayerRole } from "@megawin/identity/entities";
 
 export interface ListPlayerAccountsInput {
   /** Lọc theo tenantId — bắt buộc. */

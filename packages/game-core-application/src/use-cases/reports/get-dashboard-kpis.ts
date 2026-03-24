@@ -19,9 +19,12 @@ export class GetDashboardKpisUseCase extends NextApiUseCase<
   private readonly repo = new SystemSettleGameDailyRepository();
 
   protected async execute(input: GetDashboardKpisInput): Promise<GetDashboardKpisOutput> {
-    // Gộp cả 2 ngày vào 1 query $in để tối thiểu DB round-trip
+    // Gộp fd + compare dates vào 1 query $in để tối thiểu DB round-trip.
+    // compare là comma-separated: "2026-03-22,2026-03-15" → split ra array.
     const dates = [input.fd];
-    if (input.compare) dates.push(input.compare);
+    if (input.compare) {
+      dates.push(...input.compare.split(",").filter(Boolean));
+    }
 
     const data = await this.repo.findByFinancialDates(dates);
     return { data };

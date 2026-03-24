@@ -7,8 +7,7 @@
 
 import { z } from "zod";
 
-import { Pagination } from "@megawin/shared/constants/pagination";
-import { OBJECT_ID_REGEX } from "@megawin/shared/constants/validation";
+import { Pagination, OBJECT_ID_REGEX } from "@megawin/shared/constants";
 
 // ─── Primitives ───
 

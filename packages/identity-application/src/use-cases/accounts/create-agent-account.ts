@@ -10,8 +10,8 @@ import {
   AgentRole,
 } from "@megawin/identity/entities";
 
-import { ClaimKey } from "@megawin/identity/entities/claim";
-import { generateULID } from "@megawin/shared/utils/unique";
+import { ClaimKey } from "@megawin/identity/entities";
+import { generateULID } from "@megawin/shared/utils";
 import { AccountRepository } from "../../infras/repos/account-repo";
 
 export interface CreateAgentAccountInput {

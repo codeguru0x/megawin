@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { formatVND } from "@megawin/shared/utils/number";
+import { formatVND } from "@megawin/shared/utils";
 
 interface DualJackpotDisplayProps {
   jp1Amount: number;

@@ -11,7 +11,7 @@
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber, formatCurrency } from "@megawin/shared/utils/number";
+import { formatNumber, formatCurrency } from "@megawin/shared/utils";
 import { BarChart2, Star, Trophy } from "lucide-react";
 import { POWER655_PLAY_TYPE_LABELS } from "@megawin/game-power655/labels";
 import {

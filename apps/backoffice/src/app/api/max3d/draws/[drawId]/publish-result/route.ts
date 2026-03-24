@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities/account";
+import { CompanyRole } from "@megawin/identity/entities";
 import { PublishResultUseCase } from "@megawin/game-max3d-application/use-cases/draws";
 import {
   MAX3D_DRAW_COUNT_SPECIAL,

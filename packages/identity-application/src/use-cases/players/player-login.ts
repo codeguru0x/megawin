@@ -33,7 +33,7 @@
 import { createHmac } from "crypto";
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { AppException } from "@megawin/shared/errors";
-import { generateULID } from "@megawin/shared/utils/unique";
+import { generateULID } from "@megawin/shared/utils";
 import {
   adminCreateAccount,
   adminGetUser,
@@ -43,11 +43,11 @@ import {
   COGNITO_PLAYER_POOL_CLIENT_ID,
 } from "@megawin/app-core/aws/cognito";
 import { AccountType, AccountStatus, PlayerRole } from "@megawin/identity/entities";
-import { ClaimKey } from "@megawin/identity/entities/claim";
+import { ClaimKey } from "@megawin/identity/entities";
 
 import { AccountRepository } from "../../infras/repos/account-repo";
 import type { PlayerLoginInput, PlayerLoginOutput } from "./dto/player-login.dto";
-import { toUsername } from "../../shared";
+import { toMegawinUsername } from "@megawin/shared/utils";
 
 const PLAYER_PASSWORD_SECRET = process.env.PLAYER_PASSWORD_SECRET;
 
@@ -60,7 +60,7 @@ export class PlayerLoginUseCase extends ApiGatewayUseCase<PlayerLoginInput, Play
 
   protected async execute(input: PlayerLoginInput): Promise<PlayerLoginOutput> {
     const { playerExternalId, tenantId } = input;
-    const cognitoUsername = toUsername(playerExternalId, tenantId);
+    const cognitoUsername = toMegawinUsername(playerExternalId, tenantId);
 
     this.assertConfig();
 

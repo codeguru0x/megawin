@@ -1,27 +1,49 @@
 /**
- * Base Use Case: Sync Entry Feed
+ * Base Use Case: Sync Entry Feed (Self-Contained Loop)
  *
- * Template Method pattern: logic scan + upsert chung cho tất cả game.
- * Mỗi game extends và implement `mapEntryToFeedDoc()` + `getEntryRepo()`.
+ * Mỗi game extends và implement `fetchNextBatch()` duy nhất.
+ * Base class chỉ orchestrate: acquireLock → loop → bulkUpsert → saveAndExtendLock → releaseLock.
  *
  * DESIGN:
  * - Global entryChangeSeq: tất cả game dùng chung 1 counter.
  *   → version trên entryFeed luôn tăng monotonically xuyên suốt mọi game.
  *   → tenant poll 1 cursor duy nhất, nhận data tất cả game xen kẽ đúng thứ tự.
  *
- * - sourceEntryId = ObjectId hex: unique toàn cục (mỗi game collection riêng).
- *   → entryFeed có unique index trên sourceEntryId.
+ * - entryId = ObjectId hex: unique toàn cục (mỗi game collection riêng).
+ *   → entryFeed có unique index trên entryId.
  *   → không thể trùng giữa Lotto535 và Keno.
  *
  * - Upsert idempotent: chỉ ghi nếu version mới > version cũ.
  *   → crash-safe: retry/re-run sẽ skip entries đã sync.
  *
+ * CONCURRENCY GUARD (Distributed Lock):
+ * - acquireLock() ngay khi khởi động — atomic với TTL 3 phút.
+ * - Nếu Lambda khác đang giữ lock → log rõ lý do → return { skipped: true }.
+ * - Mỗi batch xong → saveAndExtendLock(): save cursor + gia hạn lock 3 phút.
+ * - Kết thúc (done hoặc timeout) → releaseLock() để Lambda tiếp theo chạy ngay.
+ * - Nếu crash → lock tự expire sau 3 phút → Lambda kế tiếp acquire và tiếp tục.
+ *
+ * TIMEOUT:
+ * - MAX_EXECUTION_MS = 10 phút.
+ * - Vượt quá → log rõ lý do → releaseLock() → return { done: false }.
+ * - Lambda tiếp theo (1 phút sau) sẽ tiếp tục từ cursor đã save.
+ *
+ * CRASH RECOVERY:
+ * - Cursor được save sau MỖI batch (500 entries).
+ * - Crash → mất tối đa 500 entries (1 batch chưa save).
+ * - Idempotent upsert → không sai data khi re-process.
+ *
  * USAGE (mỗi game):
  * ```ts
  * export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
- *   protected getGameProduct() { return GameProduct.Lotto535; }
- *   protected createEntryRepo() { return new EntryRepository(); }
- *   protected mapToFeedDoc(entry, now) { return { ... }; }
+ *   private readonly entryRepo = new EntryRepository();
+ *
+ *   constructor() { super(GameProduct.Lotto535); }
+ *
+ *   protected async fetchNextBatch(afterVersion, batchSize) {
+ *     const entries = await this.entryRepo.getChangedEntries(Long.fromString(afterVersion), batchSize);
+ *     return entries.map((e) => mapToFeedDoc(e));
+ *   }
  * }
  * ```
  */
@@ -29,99 +51,215 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import type { EntryFeedDoc, GameProduct } from "@megawin/game-core/entities";
 import { EntryFeedRepository } from "../infras/repos/entry-feed-repo";
+import { FeedSyncCursorRepository } from "../infras/repos/feed-sync-cursor-repo";
 import { Long } from "mongodb";
 
-const DEFAULT_BATCH_SIZE = 200;
+/** Batch size mặc định nếu không truyền vào. */
+const DEFAULT_BATCH_SIZE = 500;
 
+/**
+ * Thời gian tối đa cho 1 Lambda invocation.
+ * Bình thường < 1 phút. Settle spike (1M entries) ~5-8 phút.
+ * 10 phút = buffer an toàn; Lambda sau sẽ tiếp tục từ cursor đã save.
+ */
+const MAX_EXECUTION_MS = 10 * 60 * 1000;
+
+/**
+ * Input cho SyncEntryFeedUseCase.
+ * Chỉ cần batchSize — afterVersion được đọc từ cursor trong lock.
+ */
 export interface SyncEntryFeedInput {
-  /** Version cuối cùng đã sync. Lần đầu gửi "0". */
-  afterVersion: string;
+  /** Số entries mỗi batch. Default: 500. */
   batchSize?: number;
 }
 
-export interface SyncEntryFeedResult {
-  /** true khi không còn entries mới cần sync. */
-  done: boolean;
-  /** Version cuối cùng đã sync trong batch này (string). */
-  lastVersion: string;
-  /** Số entries đã upsert vào feed. */
-  upserted: number;
-  /** Số entries skip (version cũ hơn). */
-  skipped: number;
-}
-
 /**
- * Interface tối thiểu cho entry repo mà base use case cần.
- * Mỗi game repo (Lotto535, Keno) đều có method này.
+ * Kết quả trả về sau khi sync loop kết thúc.
  */
-export interface FeedSyncableEntryRepo {
-  getChangedEntries(afterVersion: Long, limit: number): Promise<unknown[]>;
+export interface SyncEntryFeedResult {
+  /**
+   * true = đã xử lý hết tất cả entries mới (không còn gì để sync).
+   * false = timeout (vượt MAX_EXECUTION_MS) hoặc skipped.
+   */
+  done: boolean;
+
+  /**
+   * true = lock đang bị giữ bởi Lambda khác → bỏ qua lần này.
+   * Chỉ có ý nghĩa khi done = false.
+   */
+  skipped: boolean;
+
+  /** Version cuối cùng đã sync thành công (string từ BSON Long). */
+  lastVersion: string;
+
+  /** Số batches đã xử lý trong lần chạy này. */
+  batchesProcessed: number;
+
+  /** Tổng số entries đã upsert vào feed. */
+  totalUpserted: number;
+
+  /** Tổng số entries bị skip (version cũ hơn trong feed). */
+  totalSkipped: number;
+
+  /** Thời gian thực tế chạy (ms). */
+  elapsedMs: number;
 }
 
 /**
- * Base use case sync entry feed — Template Method pattern.
- * Subclass chỉ cần implement 3 abstract methods.
+ * Base use case sync entry feed.
+ *
+ * Tự quản lý toàn bộ lifecycle: acquireLock → loop → saveAndExtendLock → releaseLock.
+ * Subclass implement `fetchNextBatch()` — tự fetch entries từ game repo, map typed entity
+ * sang EntryFeedDoc[], trả về mảng rỗng khi hết data.
+ *
+ * CRASH-SAFE: cursor save sau mỗi batch. Mất tối đa 500 entries khi crash.
+ * IDEMPOTENT: upsert với version guard — re-run an toàn.
  */
 export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<
   SyncEntryFeedInput,
   SyncEntryFeedResult
 > {
   private readonly feedRepo = new EntryFeedRepository();
-  /** GameProduct enum value cho game này. */
-  protected abstract getGameProduct(): GameProduct;
-
-  /** Tạo instance entry repo của game. */
-  protected abstract createEntryRepo(): FeedSyncableEntryRepo;
+  private readonly cursorRepo = new FeedSyncCursorRepository();
 
   /**
-   * Map 1 entry entity (game-specific) → EntryFeedDoc.
-   * Subclass biết structure cụ thể của entry để extract financial fields.
-   * `ctx` là context tùy chọn do `buildBatchContext` cung cấp (ví dụ: drawMap).
+   * @param gameProduct GameProduct enum value cho game này.
    */
-  protected abstract mapToFeedDoc(
-    entry: unknown,
-    feedCreatedAt: Date,
-    ctx?: unknown,
-  ): Omit<EntryFeedDoc, "_id">;
-
-  /**
-   * Tùy chọn: build context cho cả batch (ví dụ: bulk load draws).
-   * Gọi 1 lần trước khi map từng entry. Default: trả về undefined.
-   */
-  protected buildBatchContext(_entries: unknown[]): Promise<unknown> {
-    return Promise.resolve(undefined);
+  constructor(private readonly gameProduct: GameProduct) {
+    super();
   }
 
-  /** Scan entries thay đổi, upsert vào entryFeed. */
-  protected async execute(input: SyncEntryFeedInput): Promise<SyncEntryFeedResult> {
-    const batchSize = input.batchSize ?? DEFAULT_BATCH_SIZE;
-    const afterVersion = Long.fromString(input.afterVersion);
+  /**
+   * Fetch batch entries từ game repo và map sang EntryFeedDoc[].
+   *
+   * Subclass tự gọi entryRepo.getChangedEntries() với typed TicketEntryEntity,
+   * map sang EntryFeedDoc[] (type-safe, không dùng unknown/Record).
+   * Trả về mảng rỗng khi không còn entries mới.
+   *
+   * @param afterVersion Version cursor hiện tại (string, convert sang Long khi query).
+   * @param batchSize    Số entries tối đa mỗi batch.
+   */
+  protected abstract fetchNextBatch(
+    afterVersion: string,
+    batchSize: number,
+  ): Promise<Omit<EntryFeedDoc, "_id">[]>;
 
-    const entryRepo = this.createEntryRepo();
-    const entries = await entryRepo.getChangedEntries(afterVersion, batchSize);
+  /**
+   * Sync loop tự chứa: acquireLock → loop batches → releaseLock.
+   *
+   * Bước 1: acquireLock() — nếu lock đang bị giữ → log + return skipped.
+   * Bước 2: Loop đến khi hết data hoặc vượt MAX_EXECUTION_MS:
+   *   - fetchNextBatch(afterVersion, batchSize) — subclass tự fetch + map
+   *   - bulkUpsertFeedEntries (1 MongoDB bulkWrite cho cả batch)
+   *   - saveAndExtendLock (save cursor + gia hạn lock)
+   *   - Timeout check ở cuối iteration — batch hiện tại luôn hoàn thành trước khi dừng
+   * Bước 3: releaseLock() khi done hoặc timeout.
+   */
+  protected async execute(input?: SyncEntryFeedInput): Promise<SyncEntryFeedResult> {
+    const batchSize = input?.batchSize ?? DEFAULT_BATCH_SIZE;
+    const startTime = Date.now();
 
-    if (entries.length === 0) {
+    // ── Bước 1: Acquire distributed lock ─────────────────────────────────────
+    // Lock TTL = 3 phút. Nếu Lambda khác đang giữ → skip lần này.
+    const lockResult = await this.cursorRepo.acquireLock(
+      this.gameProduct,
+      `${this.gameProduct}-feed-sync`,
+    );
+
+    if (!lockResult.acquired) {
+      console.log(
+        `[${this.gameProduct}] Feed sync lock đang bị giữ — skip lần này. ` +
+          `Lambda đang chạy sẽ tự release khi hoàn tất hoặc lock tự expire sau 3 phút.`,
+      );
       return {
-        done: true,
-        lastVersion: input.afterVersion,
-        upserted: 0,
-        skipped: 0,
+        done: false,
+        skipped: true,
+        lastVersion: lockResult.afterVersion,
+        batchesProcessed: 0,
+        totalUpserted: 0,
+        totalSkipped: 0,
+        elapsedMs: Date.now() - startTime,
       };
     }
 
-    const now = new Date();
-    const ctx = await this.buildBatchContext(entries);
-    const feedDocs = entries.map((entry) => this.mapToFeedDoc(entry, now, ctx));
-    const { upserted, skipped } = await this.feedRepo.batchUpsertFeedEntries(feedDocs);
+    // ── Bước 2: Sync loop ─────────────────────────────────────────────────────
+    let lastVersion = lockResult.afterVersion;
+    let batchesProcessed = 0;
+    let totalUpserted = 0;
+    let totalSkipped = 0;
+    let done = false;
 
-    const lastEntry = entries[entries.length - 1] as any;
-    const lastVersion = lastEntry?.version?.toString?.() ?? input.afterVersion;
+    try {
+      // Loop đến khi hết data hoặc vượt MAX_EXECUTION_MS.
+      // Timeout check ở cuối mỗi iteration — đảm bảo batch hiện tại luôn hoàn thành
+      // trước khi quyết định dừng, tránh fetch entries xong nhưng không process.
+      while (Date.now() - startTime < MAX_EXECUTION_MS) {
+        // Subclass tự fetch entries từ game repo + map sang EntryFeedDoc[]
+        const feedDocs = await this.fetchNextBatch(lastVersion, batchSize);
+
+        if (feedDocs.length === 0) {
+          // Không còn entries mới — sync hoàn tất
+          done = true;
+          break;
+        }
+
+        // Bulk upsert — 1 MongoDB bulkWrite cho cả batch
+        const { upserted, skipped } = await this.feedRepo.bulkUpsertFeedEntries(feedDocs);
+        totalUpserted += upserted;
+        totalSkipped += skipped;
+        batchesProcessed++;
+
+        // Lấy version của doc cuối trong batch làm cursor mới
+        // feedDocs đã sorted theo version ASC (từ getChangedEntries)
+        // feedDocs.length > 0 đã check ở trên → lastDoc luôn tồn tại
+        const lastDoc = feedDocs[feedDocs.length - 1]!;
+        lastVersion =
+          lastDoc.version instanceof Long ? lastDoc.version.toString() : String(lastDoc.version);
+
+        // Save cursor + gia hạn lock ngay sau mỗi batch
+        // → crash chỉ mất tối đa 1 batch (500 entries)
+        await this.cursorRepo.saveAndExtendLock(this.gameProduct, lastVersion);
+
+        // Nếu batch trả về ít hơn batchSize → đã hết data
+        if (feedDocs.length < batchSize) {
+          done = true;
+          break;
+        }
+      }
+
+      // Nếu thoát vòng lặp vì timeout (done vẫn = false) → log rõ lý do
+      if (!done) {
+        const elapsed = Date.now() - startTime;
+        console.log(
+          `[${this.gameProduct}] Feed sync vượt quá ${MAX_EXECUTION_MS / 60_000} phút ` +
+            `(${Math.round(elapsed / 1000)}s). ` +
+            `Đã xử lý ${batchesProcessed} batches, cursor tại version ${lastVersion}. ` +
+            `Lambda tiếp theo sẽ tiếp tục từ đây.`,
+        );
+      }
+    } finally {
+      // ── Bước 3: Release lock ────────────────────────────────────────────────
+      // Luôn release khi kết thúc (done hoặc timeout) để Lambda tiếp theo
+      // có thể acquire ngay thay vì chờ lock expire.
+      await this.cursorRepo.releaseLock(this.gameProduct);
+    }
+
+    const elapsedMs = Date.now() - startTime;
+    console.log(
+      `[${this.gameProduct}] Feed sync kết thúc: done=${done}, ` +
+        `batches=${batchesProcessed}, upserted=${totalUpserted}, ` +
+        `skipped=${totalSkipped}, elapsed=${Math.round(elapsedMs / 1000)}s, ` +
+        `lastVersion=${lastVersion}`,
+    );
 
     return {
-      done: entries.length < batchSize,
+      done,
+      skipped: false,
       lastVersion,
-      upserted,
-      skipped,
+      batchesProcessed,
+      totalUpserted,
+      totalSkipped,
+      elapsedMs,
     };
   }
 }

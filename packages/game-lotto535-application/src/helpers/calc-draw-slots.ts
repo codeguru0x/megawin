@@ -7,15 +7,7 @@
  * Server chạy UTC — mọi phép tính ngày PHẢI dùng TZDate để tránh lệch ngày.
  */
 
-import {
-  VN_TIMEZONE,
-  TZDate,
-  toVNDate,
-  subtractMinutes,
-  formatVNDate,
-  addDays,
-  isBefore,
-} from "@megawin/shared/utils/date";
+import { VN_TIMEZONE, TZDate, toVNDate, subtractMinutes, formatVNDate, addDays, isBefore } from "@megawin/shared/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { PlayRules } from "@megawin/game-lotto535/entities";
 
