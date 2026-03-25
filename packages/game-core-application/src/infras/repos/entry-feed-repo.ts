@@ -2,7 +2,7 @@ import { Long } from "mongodb";
 import type { AnyBulkWriteOperation, Document } from "mongodb";
 import { GameCoreCollections } from "@megawin/game-core/entities";
 import type { GameProduct, EntryFeedDoc, EntryFeedEntity } from "@megawin/game-core/entities";
-import { GameCoreBaseRepo } from "./game-core-base-repo";
+import { MegawinTenantCoreBaseRepo } from "./game-core-base-repo";
 import { EntryFeedMapper } from "../mappers/entry-feed-mapper";
 
 /**
@@ -13,7 +13,10 @@ import { EntryFeedMapper } from "../mappers/entry-feed-mapper";
  * - pollFeed: tenant polling (Long → string conversion).
  * - upsertFeedEntry: worker sync ghi/cập nhật snapshot.
  */
-export class EntryFeedRepository extends GameCoreBaseRepo<EntryFeedEntity, EntryFeedMapper> {
+export class EntryFeedRepository extends MegawinTenantCoreBaseRepo<
+  EntryFeedEntity,
+  EntryFeedMapper
+> {
   constructor() {
     super({
       collName: GameCoreCollections.EntryFeed,

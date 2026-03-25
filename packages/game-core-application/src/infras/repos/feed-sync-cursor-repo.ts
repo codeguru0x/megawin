@@ -3,7 +3,7 @@ import { GameCoreCollections } from "@megawin/game-core/entities";
 import type { GameProduct } from "@megawin/game-core/entities";
 import type { FeedSyncCursorEntity } from "@megawin/game-core/entities";
 import { FeedSyncCursorMapper } from "../mappers/feed-sync-cursor-mapper";
-import { GameCoreBaseRepo } from "./game-core-base-repo";
+import { MegawinTenantCoreBaseRepo } from "./game-core-base-repo";
 import type { AcquireLockResult } from "./types";
 
 /** Lock TTL mặc định: 3 phút. Đủ cho 1 batch cycle hoàn tất; extend sau mỗi batch. */
@@ -20,7 +20,7 @@ const DEFAULT_LOCK_TTL_MS = 3 * 60 * 1000;
  *   acquireLock → loop batches → saveAndExtendLock (mỗi batch) → releaseLock
  *   Nếu crash → lock auto-expire sau TTL (3 phút) → Lambda tiếp theo acquire lại.
  */
-export class FeedSyncCursorRepository extends GameCoreBaseRepo<
+export class FeedSyncCursorRepository extends MegawinTenantCoreBaseRepo<
   FeedSyncCursorEntity,
   FeedSyncCursorMapper
 > {

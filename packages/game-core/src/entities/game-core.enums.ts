@@ -69,9 +69,6 @@ export const GameProduct = {
 
 export type GameProduct = (typeof GameProduct)[keyof typeof GameProduct];
 
-/** Mảng tất cả giá trị GameProduct – dùng cho Zod enum validation. */
-export const GAME_PRODUCT_VALUES = Object.values(GameProduct);
-
 // ─────────────────────────────────────────────
 // Ticket Status (dùng chung cho tất cả game)
 // ─────────────────────────────────────────────

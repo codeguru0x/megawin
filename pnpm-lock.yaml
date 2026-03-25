@@ -245,8 +245,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tenant-gateway
       '@middy/core':
-        specifier: ^7.1.3
-        version: 7.1.3
+        specifier: ^7.2.1
+        version: 7.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -294,8 +294,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/shared
       '@middy/core':
-        specifier: ^7.1.3
-        version: 7.1.3
+        specifier: ^7.2.1
+        version: 7.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -861,8 +861,8 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@middy/core':
-        specifier: ^7.1.2
-        version: 7.1.2
+        specifier: ^7.2.1
+        version: 7.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -898,8 +898,8 @@ importers:
         specifier: workspace:*
         version: link:../shared
       '@middy/core':
-        specifier: ^7.1.2
-        version: 7.1.2
+        specifier: ^7.2.1
+        version: 7.2.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -2873,8 +2873,8 @@ packages:
     peerDependencies:
       jsep: ^0.4.0||^1.0.0
 
-  '@middy/core@7.1.2':
-    resolution: {integrity: sha512-gXB0Quhnu9x6a6EaknY2B3gRb82mbJD0ylgBbPTXLaD3Dd9E8pfPvIqTMUGshj0hm1OkIzvpJXJzfaVDGiW96Q==}
+  '@middy/core@7.2.1':
+    resolution: {integrity: sha512-KFtxLUhHQcBezrusBt5F2VKYY/p3Po2rM2OByyeZsqpzSY9D8iapsmJGaiHFgXbfuEUS5B0BxTXixFcxjChLUg==}
     engines: {node: '>=22'}
     peerDependencies:
       '@aws/durable-execution-sdk-js': ^1.0.0
@@ -2882,17 +2882,8 @@ packages:
       '@aws/durable-execution-sdk-js':
         optional: true
 
-  '@middy/core@7.1.3':
-    resolution: {integrity: sha512-3/9phW/TWstBSEeMRJqgtCFcyN9xt2DyIZujs4RRn41ucK99937XuC38aDxMtGouqFPlqUzULoLOmA+Qtwktfw==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      '@aws/durable-execution-sdk-js': ^1.0.0
-    peerDependenciesMeta:
-      '@aws/durable-execution-sdk-js':
-        optional: true
-
-  '@middy/util@7.1.3':
-    resolution: {integrity: sha512-NohE0mOz6JvoGTpOScH47uoowC25EkDGVH8sBpqmzHAWXUOf/2gtbFHL4LPa/CGy/Adz+A/K9NxAI3LyK+fynQ==}
+  '@middy/util@7.2.1':
+    resolution: {integrity: sha512-vwtRPxQ5stQFR8Ulfsuqt8GgPJX6iXrF/9SiOTsJzw2nliNu/aPcZ8DR6sPj+gFar/QdUJuym6iyjevfeMNiFA==}
     engines: {node: '>=22'}
 
   '@mongodb-js/saslprep@1.4.5':
@@ -9190,13 +9181,11 @@ snapshots:
     dependencies:
       jsep: 1.4.0
 
-  '@middy/core@7.1.2': {}
-
-  '@middy/core@7.1.3':
+  '@middy/core@7.2.1':
     dependencies:
-      '@middy/util': 7.1.3
+      '@middy/util': 7.2.1
 
-  '@middy/util@7.1.3': {}
+  '@middy/util@7.2.1': {}
 
   '@mongodb-js/saslprep@1.4.5':
     dependencies:

@@ -19,7 +19,7 @@ stages:
   dev:
     observability:
       provider: axiom
-      dataset: megawin-player-dev
+      dataset: megawin-internal-dev
     params:
       ### Mặc định dev sẽ là 0 không cấu hình ở prod mà chỉ định luôn khi cấu hình func
       provisionedConcurrency: 0
@@ -27,7 +27,7 @@ stages:
   prod:
     observability:
       provider: axiom
-      dataset: megawin-player-prod
+      dataset: megawin-internal-prod
 
   default:
     observability: false

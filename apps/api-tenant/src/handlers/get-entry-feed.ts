@@ -9,16 +9,15 @@
 import { z } from "zod";
 
 import { withTenantAuth } from "@megawin/auth/tenant";
-import { GAME_PRODUCT_VALUES } from "@megawin/game-core/entities";
-import type { GameProduct } from "@megawin/game-core/entities";
+import { GameProduct } from "@megawin/game-core/entities";
 import { GetEntryFeedUseCase } from "@megawin/game-core-application/use-cases";
 
 // ============ Zod schema ============
 
 const querySchema = z.object({
   afterVersion: z.string().min(1, "afterVersion is required"),
-  limit: z.number().min(1).max(300).optional(),
-  gameProduct: z.enum(GAME_PRODUCT_VALUES).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+  gameProduct: z.enum(GameProduct).optional(),
 });
 
 // ============ Use case ============
@@ -35,8 +34,8 @@ export const handler = withTenantAuth(
     return useCase.run({
       tenantId,
       afterVersion,
-      limit: limit ? Number(limit) : undefined,
-      gameProduct: gameProduct as GameProduct | undefined,
+      limit,
+      gameProduct,
     });
   },
   { schemas: { query: querySchema } },

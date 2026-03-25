@@ -52,7 +52,6 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import type { EntryFeedDoc, GameProduct } from "@megawin/game-core/entities";
 import { EntryFeedRepository } from "../infras/repos/entry-feed-repo";
 import { FeedSyncCursorRepository } from "../infras/repos/feed-sync-cursor-repo";
-import { Long } from "mongodb";
 import { longToString } from "@megawin/data/mongo";
 
 /** Batch size mặc định nếu không truyền vào. */
