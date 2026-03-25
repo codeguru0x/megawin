@@ -17,6 +17,7 @@
 import { useMemo } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { BINGO18_PLAY_TYPE_LABELS, BINGO18_TRIPLE_KIND_LABELS } from "@megawin/game-bingo18/labels";
+import { BINGO18_BASIC_PLAY_TYPE_SET } from "@megawin/game-bingo18/entities";
 
 import { useDrawContext } from "../../use-draw-context";
 import {
@@ -94,7 +95,6 @@ export function AnalyticsSection() {
       tenantId: t.tenantId,
       entries: t.entries,
       boards: t.boards,
-      sideBets: t.sideBets,
       players: t.players,
       revenue: t.revenue,
       commission: t.commission,
@@ -117,9 +117,9 @@ export function AnalyticsSection() {
   const liveEntries: LiveFeedEntry[] = useMemo(() => {
     if (!liveData) return [];
     return liveData.entries.map((e: LiveEntryItem) => {
+      // boards[] chứa cả cơ bản và bổ sung — lấy board đầu tiên làm preview.
       const firstBoard = e.boards[0];
-      const firstSide = e.sideBets[0];
-      const rawType = firstBoard?.playType ?? firstSide?.playType ?? "unknown";
+      const rawType = firstBoard?.playType ?? "unknown";
       // Key hoá tripleMatch theo tripleKind
       const playType =
         rawType === "tripleMatch" && firstBoard
@@ -131,7 +131,7 @@ export function AnalyticsSection() {
         playType,
         // singleNum/doubleMatch có number; tripleMatch-specific có number; else []
         numbers:
-          firstBoard && (firstBoard as any).number !== undefined
+          firstBoard && BINGO18_BASIC_PLAY_TYPE_SET.has(firstBoard.playType) && (firstBoard as any).number !== undefined
             ? [(firstBoard as any).number as number]
             : [],
         amount: e.amount,

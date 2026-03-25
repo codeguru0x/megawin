@@ -31,8 +31,8 @@ export interface GetDrawResultPlayerInput {
 /**
  * Lấy chi tiết kết quả kỳ quay Bingo 18 cho player.
  *
- * settleSummary.basicPrizes + sideBetPrizes chỉ chứa giải có winnerCount > 0.
- * Nếu kỳ không có ai trúng giải nào → basicPrizes = [] và sideBetPrizes = [].
+ * settleSummary.prizes chỉ chứa giải có winnerCount > 0.
+ * Nếu kỳ không có ai trúng giải nào → prizes = [].
  */
 export class GetDrawResultPlayerUseCase extends ApiGatewayUseCase<
   GetDrawResultPlayerInput,
@@ -64,10 +64,9 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
       sum: result.sum,
       publishedAt: result.publishedAt.toISOString(),
     },
-    // settleSummary.basicPrizes + sideBetPrizes chỉ chứa entries có winnerCount > 0.
+    // settleSummary.prizes chỉ chứa entries có winnerCount > 0.
     // Nếu kỳ không có ai trúng → trả mảng rỗng (không lỗi).
-    basicPrizes: draw.settleSummary?.basicPrizes ?? [],
-    sideBetPrizes: draw.settleSummary?.sideBetPrizes ?? [],
+    prizes: draw.settleSummary?.prizes ?? [],
     vietlottRef: draw.vietlottRef
       ? {
           drawPeriod: draw.vietlottRef.drawPeriod,

@@ -2,7 +2,7 @@
  * Keno – Live Entries DTO
  *
  * Dùng cho live feed panel trên dashboard vận hành.
- * Keno có cả basic boards (pick1-10) và side bets (bigSmall, evenOdd).
+ * Keno dùng unified boards[] cho cả basic (pick1-10) và side bets (bigSmall, evenOdd).
  * Không có expandedLines vì 1 board = 1 selection = 1 line.
  */
 
@@ -18,26 +18,21 @@ export interface GetLiveEntriesInput {
   limit?: number;
 }
 
-/** Một board cơ bản (pick1-pick10) trong entry. */
+/**
+ * Một board trong entry — cả cơ bản (pick1-pick10) và bổ sung (bigSmall/evenOdd).
+ *
+ * - Cơ bản: numbers bắt buộc, bet = undefined.
+ * - Bổ sung: bet bắt buộc, numbers = undefined.
+ */
 export interface LiveEntryBoard {
-  /** Kiểu chơi (pick1, pick2, ..., pick10). */
+  /** Kiểu chơi (pick1-pick10, bigSmall, evenOdd). */
   playType: string;
-  /** Panel index (0 = A, 1 = B). */
-  boardNo: number;
-  /** Danh sách số đã chọn (1-10 số, zero-padded string "01"-"80"). */
-  numbers: string[];
-  /** Số lần cược nhân bội. Hiển thị ×N badge khi > 1. */
-  betCount: number;
-}
-
-/** Một side bet trong entry. */
-export interface LiveEntrySideBet {
-  /**
-   * Loại side bet: "bigSmall" | "evenOdd".
-   */
-  playType: string;
-  /** Lựa chọn: "big" | "bigSmallDraw" | "small" | "even" | ... */
-  bet: string;
+  /** Panel identifier: "A", "B", "C". */
+  boardNo: string;
+  /** Danh sách số đã chọn (1-10 số, zero-padded string "01"-"80"). Chỉ cho cơ bản. */
+  numbers?: string[];
+  /** Lựa chọn side bet: "big" | "bigSmallDraw" | "small" | "even" | ... Chỉ cho bổ sung. */
+  bet?: string;
   /** Số lần cược nhân bội. Hiển thị ×N badge khi > 1. */
   betCount: number;
 }
@@ -52,14 +47,10 @@ export interface LiveEntryItem {
   tenantId: string;
   /** Tổng tiền cược (VND). */
   amount: number;
-  /** Số boards cơ bản. */
+  /** Số boards (cả cơ bản và bổ sung). */
   boardCount: number;
-  /** Số side bets. */
-  sideBetCount: number;
-  /** Danh sách boards cơ bản (tối đa 2). */
+  /** Danh sách boards (cả cơ bản và bổ sung). */
   boards: LiveEntryBoard[];
-  /** Danh sách side bets. */
-  sideBets: LiveEntrySideBet[];
   /** Thời điểm đặt cược (ISO 8601). */
   createdAt: string;
 }

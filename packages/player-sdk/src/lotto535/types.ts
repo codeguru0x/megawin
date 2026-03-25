@@ -157,47 +157,41 @@ export interface Lotto535TicketPurchaseInput {
 // ─────────────────────────────────────────────
 
 /**
- * Thông tin kỳ quay Lotto 5/35 cho UI.
+ * Thông tin kỳ quay Lotto 5/35 hiện tại hoặc sắp tới.
+ *
+ * Trả về bởi `client.lotto535.getCurrentDraw()`.
+ *
+ * @example
+ * ```ts
+ * const draw = await client.lotto535.getCurrentDraw();
+ * console.log(draw.currentDraw?.drawId);       // "2026-03-05.001"
+ * console.log(draw.currentDraw?.sales.closeAt); // "2026-03-05T12:50:00Z"
+ * ```
  */
 export interface Lotto535DrawInfo {
-  /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
+  /** Mã kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
   /** Ngày quay. Format: `YYYY-MM-DD`. */
   drawDate: string;
-  /** Số thứ tự: 1 = 13h, 2 = 21h. */
+  /** Số thứ tự kỳ trong ngày (1 = 13h, 2 = 21h). */
   drawNo: number;
-  /** Thời điểm quay (ISO 8601). */
+  /** Giờ quay. VD: `"13:00"`, `"21:00"`. */
   drawTime: string;
-  /** Trạng thái kỳ quay. */
-  status: "upcoming" | "open" | "closed" | "completed";
-  /** Thời điểm đóng bán (ISO 8601). */
-  salesCloseAt: string;
-  /** Giá trị Jackpot hiện tại (VND). */
-  jackpotAmount: number;
-  /** `true` nếu kỳ quay này là kỳ chia giải Jackpot. */
-  isSplitCycle?: boolean;
-
-  /** Tham chiếu kỳ quay Vietlott (nếu có). */
-  vietlottRef?: {
-    drawPeriod: string;
-    drawDate: string;
+  /** Trạng thái kỳ quay. VD: `"salesOpen"`, `"salesClosed"`. */
+  status: string;
+  /** Khung giờ bán vé. */
+  sales: {
+    /** Thời điểm mở bán (ISO 8601). `undefined` nếu đã mở sẵn. */
+    openAt?: string;
+    /** Thời điểm đóng bán (ISO 8601). */
+    closeAt: string;
   };
 }
 
 /**
- * Kết quả kỳ quay Lotto 5/35.
- */
-export interface Lotto535DrawResult {
-  /** 5 số chính trúng thưởng (1-35). */
-  winningMain: number[];
-  /** 1 số đặc biệt trúng thưởng (1-12). */
-  winningSpecial: number;
-  /** Thời điểm công bố (ISO 8601). */
-  publishedAt: string;
-}
-
-/**
- * Tóm tắt vé Lotto 5/35 cho UI.
+ * Tóm tắt vé Lotto 5/35 cho UI danh sách vé.
+ *
+ * Trả về bởi `client.lotto535.listPendingTickets()` và `client.lotto535.listTickets()`.
  *
  * @example
  * ```ts
@@ -217,50 +211,65 @@ export interface Lotto535DrawResult {
  * ```
  */
 export interface Lotto535TicketSummary {
-  /** ID vé. */
+  /** ID vé trong hệ thống. */
   id: string;
   /** Mã vé hiển thị. VD: `"L535-20260307-00008"`. */
   ticketNo: string;
-  /** Trạng thái vé. */
+  /** Trạng thái vé. VD: `"pending"`, `"partial"`, `"settled"`, `"voided"`. */
   status: string;
   /** Kế hoạch kỳ quay. */
   drawPlan: {
+    /** Danh sách drawId trong vé. Format mỗi ID: `YYYY-MM-DD.NNN`. */
     drawIds: string[];
+    /** Tổng số kỳ đã đặt. */
     drawCount: number;
   };
   /** Thông tin giá cược. */
   pricing: {
+    /** Giá mỗi lượt chơi (VND). */
     unitPrice: number;
     /** Tổng lines mỗi kỳ = Σ(board.expandedLines). */
     linesPerDraw: number;
     /** Tổng đơn vị cược mỗi kỳ = Σ(board.expandedLines × board.betCount). */
     betUnitsPerDraw: number;
+    /** Tổng tiền mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
+    /** Tổng tiền cả vé (VND). */
     totalAmount: number;
   };
-  /** Danh sách boards. */
+  /** Danh sách boards trong vé. */
   boards: Lotto535BoardSummary[];
   /**
    * Tiến độ settle.
-   * settledDraws = số kỳ đã xử lý xong (settled + voided).
+   *
+   * `settledDraws` = số kỳ đã xử lý xong (bao gồm cả settled và voided).
    */
   progress: {
+    /** Tổng số kỳ của vé. */
     totalDraws: number;
+    /** Số kỳ đã xử lý xong. */
     settledDraws: number;
   };
   /** Tổng kết trúng thưởng. `undefined` nếu chưa có kỳ nào settle. */
   settlement?: {
+    /** Tổng tiền thắng (VND). */
     totalWinAmount: number;
+    /** Thời điểm settle lần cuối (ISO 8601). */
     lastSettledAt?: string;
   };
   /**
-   * Tóm tắt huỷ cược. `undefined` nếu không có kỳ nào bị void.
+   * Tóm tắt huỷ cược (void). `undefined` nếu không có kỳ nào bị void.
    */
   voidSummary?: {
+    /** Tổng tiền cược gốc của các kỳ bị huỷ (VND). */
     totalVoidedAmount: number;
+    /** Tổng tiền đã hoàn trả cho player (VND). */
     totalRefundedAmount: number;
+    /** Số kỳ đã bị huỷ. */
     voidedDrawCount: number;
+    /** Danh sách drawId bị void. Format: `YYYY-MM-DD.NNN`. */
     voidedDrawIds: string[];
+    /** Thời điểm void lần cuối (ISO 8601). */
     lastVoidedAt?: string;
   };
   /** Thời điểm mua vé (ISO 8601). */
@@ -271,35 +280,37 @@ export interface Lotto535TicketSummary {
  * Tóm tắt board trong vé Lotto 5/35.
  */
 export interface Lotto535BoardSummary {
-  /** Mã board. */
+  /** Ký hiệu board. VD: `"A"`, `"B"`. */
   boardNo: string;
-  /** Kiểu chơi. */
+  /** Kiểu chơi của board này. */
   playType: Lotto535PlayType;
-  /** Danh sách số chính (number, 1-35). */
-  mainNumbers: number[];
-  /** Danh sách số đặc biệt (number, 1-12). */
-  specialNumbers: number[];
-  /** Số lines mở rộng (bao). */
+  /** Danh sách số chính đã chọn (zero-padded `"01"`–`"35"`). */
+  mainNumbers: string[];
+  /** Danh sách số đặc biệt đã chọn (zero-padded `"01"`–`"12"`). */
+  specialNumbers: string[];
+  /** Số lines được expand từ kiểu chơi này. */
   expandedLines: number;
   /**
    * Số lần cược nhân bội cho board này (≥ 1).
    *
    * Tiền cược board = expandedLines × betCount × unitPrice.
-   * UI hiển thị "×N" khi betCount > 1.
+   * UI hiển thị `"×N"` khi betCount > 1.
    */
   betCount: number;
 }
 
 /**
- * Kết quả entry (vé 1 kỳ) cho UI.
+ * Kết quả entry (vé 1 kỳ) Lotto 5/35.
+ *
+ * Trả về bởi `client.lotto535.getTicketEntries()`.
  */
 export interface Lotto535EntryResult {
-  /** ID kỳ quay. */
+  /** ID entry trong hệ thống. */
+  id: string;
+  /** Mã kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
-  /** Ngày quay. */
-  drawDate: string;
-  /** Trạng thái: chờ quay / đã có kết quả / đã tính thưởng. */
-  status: "pending" | "settled";
+  /** Trạng thái entry. VD: `"pending"`, `"settled"`, `"voided"`. */
+  status: string;
   /** Tiền cược kỳ này (VND). */
   amount: number;
   /** Đơn giá 1 line (VND). */
@@ -308,34 +319,40 @@ export interface Lotto535EntryResult {
   lineCount: number;
   /** Tổng đơn vị cược = Σ(board.expandedLines × board.betCount). */
   betUnitCount: number;
-  /** Kết quả quay (nếu đã có). */
-  result?: Lotto535DrawResult;
-  /** Chi tiết trúng thưởng (nếu đã settle). */
-  payout?: Lotto535EntryPayoutSummary;
-}
-
-/**
- * Chi tiết trả thưởng entry Lotto 5/35.
- */
-export interface Lotto535EntryPayoutSummary {
-  /** Tổng tiền thắng kỳ này (VND). */
-  winAmount: number;
-
-  /** Chi tiết theo hạng giải. */
-  tiers: Array<{
-    /** Hạng giải. */
-    tier: Lotto535PrizeTier;
-    /** Tên tiếng Việt (vd "Giải Nhất"). */
-    label: string;
-    /** Số lines trúng hạng này. */
-    hitCount: number;
-    /** Tiền thưởng cố định (VND). */
-    amount: number;
-    /** Bonus từ chia Jackpot (nếu kỳ split cycle). */
-    splitBonus?: number;
-    /** `true` nếu trúng Jackpot (5 chính + ĐB). */
-    isJackpot?: boolean;
-  }>;
+  /** Kết quả quay. `undefined` nếu chưa có kết quả. */
+  result?: {
+    /**
+     * 5 số chính trúng thưởng (sorted, zero-padded `"01"`–`"35"`).
+     * VD: `["03", "11", "18", "25", "35"]`.
+     */
+    winningMain: string[];
+    /** Số đặc biệt trúng thưởng (zero-padded `"01"`–`"12"`). VD: `"07"`. */
+    winningSpecial: string;
+    /** Thời điểm công bố (ISO 8601). */
+    publishedAt: string;
+  };
+  /** Kết quả tổng của entry sau settle. `"win"` hoặc `"loss"`. `undefined` nếu chưa settle. */
+  outcome?: string;
+  /** Thông tin trả thưởng. `undefined` nếu chưa settle hoặc không trúng. */
+  payout?: {
+    /** Tổng tiền thắng từ giải cố định (VND). */
+    winAmount: number;
+    /** Tổng tiền trả thưởng thực tế (VND) = winAmount + splitBonus nếu có kỳ chia Jackpot. */
+    payoutAmount: number;
+    /** Chi tiết từng giải thưởng trúng. */
+    tiers: Array<{
+      /** Hạng giải. */
+      tier: Lotto535PrizeTier;
+      /** Tên giải hiển thị. VD: `"Jackpot"`, `"Giải nhất"`. */
+      label: string;
+      /** Số lines trúng giải này. */
+      hitCount: number;
+      /** Tiền thưởng giải này (VND). */
+      amount: number;
+      /** Tiền bonus từ chia Jackpot (VND). `undefined` nếu không có. */
+      splitBonus?: number;
+    }>;
+  };
 }
 
 /**
@@ -739,9 +756,9 @@ export interface Lotto535ListDrawResultsParams {
  * const data = await client.lotto535.getCurrentDraw();
  *
  * if (data.currentDraw) {
- *   console.log(data.currentDraw.drawId);       // "2026-03-05.001"
- *   console.log(data.currentDraw.jackpotAmount); // 12_000_000_000
- *   console.log(data.currentDraw.salesCloseAt);  // "2026-03-05T12:50:00Z"
+ *   console.log(data.currentDraw.drawId);          // "2026-03-05.001"
+ *   console.log(data.currentDraw.sales.closeAt);    // "2026-03-05T12:50:00Z"
+ *   console.log(data.currentDraw.status);           // "salesOpen"
  * }
  * ```
  */
@@ -753,17 +770,40 @@ export interface Lotto535CurrentDrawResponse {
 }
 
 /**
- * Response từ `GET /games/lotto535/jackpot`.
+ * Thông tin Jackpot Lotto 5/35 hiện tại.
+ *
+ * Trả về bởi `client.lotto535.getJackpot()`.
+ * Lotto 5/35 có Split Cycle — Jackpot được chia khi đạt ngưỡng `splitThreshold`.
  *
  * @example
  * ```ts
- * const data = await client.lotto535.getJackpot();
- * console.log(`Jackpot: ${data.jackpotAmount.toLocaleString()} VND`);
+ * const jp = await client.lotto535.getJackpot();
+ * console.log(`Jackpot: ${jp.currentAmount.toLocaleString()} VND`);
+ * console.log(`Tiến trình: ${jp.progress.percentage.toFixed(1)}%`);
  * ```
  */
 export interface Lotto535JackpotResponse {
+  /** Số thứ tự cycle Jackpot (tăng dần mỗi khi chia). */
+  cycleNo: number;
   /** Giá trị Jackpot hiện tại (VND). */
-  jackpotAmount: number;
+  currentAmount: number;
+  /** Số tiền khởi điểm (seed) khi bắt đầu cycle mới (VND). */
+  seedAmount: number;
+  /** Số tiền Jackpot cao nhất đạt được trong cycle hiện tại (VND). */
+  peakAmount: number;
+  /** Tổng tiền đã tích luỹ vào Jackpot từ đầu cycle (VND). */
+  totalContribution: number;
+  /** Số kỳ quay đã settle trong cycle hiện tại. */
+  drawCount: number;
+  /** DrawId của kỳ đầu tiên trong cycle. Format: `YYYY-MM-DD.NNN`. */
+  startDrawId: string;
+  /** Tiến trình tích luỹ Jackpot hướng tới ngưỡng chia. */
+  progress: {
+    /** Ngưỡng kích hoạt chia Jackpot (VND). */
+    splitThreshold: number;
+    /** Phần trăm tiến trình (0–100) = currentAmount / splitThreshold × 100. */
+    percentage: number;
+  };
 }
 
 /**
@@ -811,32 +851,101 @@ export interface Lotto535TicketEntriesResponse {
 }
 
 /**
- * Response từ `GET /games/lotto535/entries/{entryId}/lines`.
+ * Chi tiết một dòng cược (line) Lotto 5/35 đã được expand.
  *
- * Chứa danh sách tất cả lines mở rộng (bao) của entry.
- * Với play type `standard`, chỉ có 1 line.
- * Với `mainCover`, số lines = C(N, 5) với N = số chính đã chọn.
+ * Lotto 5/35 mỗi line có `main` (5 số chính) và `special` (1 số đặc biệt).
+ * `matchResult.specialMatched` xác định điều kiện Jackpot (5/5 + đặc biệt).
+ *
+ * Dùng trong {@link Lotto535EntryLinesResponse}.
+ */
+export interface Lotto535LineInfo {
+  /** Ký hiệu board chứa line này. VD: `"A"`, `"B"`. */
+  boardNo: string;
+  /** Vị trí line trong entry (0-based). Dùng làm cursor khi phân trang. */
+  lineIndex: number;
+  /**
+   * 5 số chính của line (zero-padded `"01"`–`"35"`, sorted ascending).
+   * VD: `["03", "11", "18", "25", "35"]`.
+   */
+  main: string[];
+  /**
+   * Số đặc biệt của line (zero-padded `"01"`–`"12"`).
+   * VD: `"07"`.
+   */
+  special: string;
+  /**
+   * Số lần nhân cược cho dòng này (≥ 1).
+   *
+   * Tiền thưởng dòng = unitPrize × betCount. UI hiển thị `"×N"` khi betCount > 1.
+   */
+  betCount: number;
+  /**
+   * Kết quả so khớp với kết quả quay.
+   * Chỉ có khi entry đã ở trạng thái `"settled"`.
+   */
+  matchResult: {
+    /** Số lượng số chính trùng (0–5). */
+    mainMatchCount: number;
+    /** `true` nếu số đặc biệt trùng — điều kiện để trúng Jackpot (5/5 + ĐB). */
+    specialMatched: boolean;
+    /**
+     * Hạng giải trúng. `null` nếu không trúng.
+     *
+     * | tier           | Điều kiện                   |
+     * |----------------|-----------------------------|
+     * | `"jackpot"`    | 5/5 chính + đặc biệt        |
+     * | `"tier1"`      | 5/5 chính                   |
+     * | `"tier2"`      | 4/5 chính + đặc biệt        |
+     * | `"tier3"`      | 4/5 chính                   |
+     * | `"tier4"`      | 3/5 chính + đặc biệt        |
+     * | `"tier5"`      | 3/5 chính                   |
+     * | `"consolation"` | chỉ đặc biệt               |
+     */
+    tier: string | null;
+    /**
+     * Tiền thưởng dòng này (VND).
+     * Jackpot = 0 tại đây — giá trị chính xác tính sau khi biết số winners.
+     */
+    winAmount: number;
+  };
+}
+
+/**
+ * Danh sách lines chi tiết của một entry Lotto 5/35 (cursor-based pagination).
+ *
+ * Trả về bởi `client.lotto535.getEntryLines()`.
+ * Chỉ khả dụng khi entry đã ở trạng thái `"settled"`.
  *
  * @example
  * ```ts
- * const data = await client.lotto535.getEntryLines("ENT-001...");
- * console.log(`${data.lines.length} lines`);
+ * const page1 = await client.lotto535.getEntryLines(entryId, { size: 50 });
+ * for (const line of page1.lines) {
+ *   console.log(`[${line.boardNo}#${line.lineIndex}] ${line.main.join(",")} | ĐB:${line.special}`);
+ *   console.log(`  Khớp: ${line.matchResult.mainMatchCount}/5, ĐB:${line.matchResult.specialMatched}`);
+ * }
  *
- * for (const line of data.lines) {
- *   console.log(`Chính: ${line.mainNumbers}, ĐB: ${line.specialNumber}`);
+ * if (page1.nextCursor !== null) {
+ *   const page2 = await client.lotto535.getEntryLines(entryId, {
+ *     size: 50,
+ *     cursor: page1.nextCursor,
+ *   });
  * }
  * ```
  */
 export interface Lotto535EntryLinesResponse {
-  /** ID entry trong hệ thống. */
+  /** ID entry đang xem. */
   entryId: string;
-  /** Danh sách lines mở rộng. */
-  lines: Array<{
-    /** 5 số chính (1-35). */
-    mainNumbers: number[];
-    /** 1 số đặc biệt (1-12). */
-    specialNumber: number;
-  }>;
+  /** ID kỳ quay entry thuộc về. Format: `YYYY-MM-DD.NNN`. */
+  drawId: string;
+  /** Danh sách lines trong trang hiện tại. */
+  lines: Lotto535LineInfo[];
+  /**
+   * Cursor cho trang tiếp theo — giá trị `lineIndex` của dòng cuối cùng.
+   * `null` nếu đã hết dữ liệu.
+   */
+  nextCursor: number | null;
+  /** Số lines mỗi trang (echo lại `size` từ request). */
+  size: number;
 }
 
 /**

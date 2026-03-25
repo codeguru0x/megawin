@@ -123,14 +123,13 @@ export interface KenoApi {
    *
    * Gửi request mua vé Keno cho player đã xác thực.
    * Số Keno dạng string zero-padded `"01"` đến `"80"`.
-   * Phải có ít nhất 1 board hoặc 1 side bet.
+   * Phải có ít nhất 1 board (bao gồm cả board chọn số và cược bổ sung).
    *
    * **Endpoint:** `POST /games/keno/bets`
    *
    * @param input - Thông tin đặt cược
    * @param input.drawIds - Danh sách drawId kỳ quay tham gia (1-30, không trùng)
-   * @param input.boards - Boards chọn số (tối đa 2). Mỗi board chọn 1-10 số.
-   * @param input.sideBets - Side bets tùy chọn (Lớn/Nhỏ, Chẵn/Lẻ)
+   * @param input.boards - Boards cược — bao gồm board chọn số (tối đa 2) và cược bổ sung (Lớn/Nhỏ, Chẵn/Lẻ)
    * @returns Thông tin vé vừa tạo gồm ticketId, pricing, và counts
    *
    * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
@@ -150,14 +149,12 @@ export interface KenoApi {
    * console.log(result.ticketNo);            // "KENO-20260307-00001"
    * console.log(result.pricing.totalAmount);  // 10000
    *
-   * // Cược nhiều kỳ + side bet
+   * // Cược nhiều kỳ + cược bổ sung
    * const result2 = await client.keno.placeBet({
    *   drawIds: ["2026-02-25.001", "2026-02-25.002", "2026-02-25.003"],
    *   boards: [
    *     { boardNo: "A", numbers: ["01", "15", "33"] },
    *     { boardNo: "B", numbers: ["22", "44", "66", "77"] },
-   *   ],
-   *   sideBets: [
    *     { playType: "bigSmall", bet: "big" },
    *     { playType: "evenOdd", bet: "even" },
    *   ],
@@ -301,7 +298,7 @@ export interface KenoApi {
   /**
    * Lấy chi tiết kết quả 1 kỳ quay Keno.
    *
-   * Trả về 20 số trúng, stats, và bảng giải thưởng theo bậc với số lượng người trúng.
+   * Trả về 20 số trúng, stats, và bảng giải thưởng thống nhất với số lượng người trúng.
    *
    * **Endpoint:** `GET /games/keno/draw-results/{drawId}`
    *
@@ -315,8 +312,12 @@ export interface KenoApi {
    * ```ts
    * const draw = await client.keno.getDrawResult("2026-03-07.050");
    * console.log(draw.result.winningNumbers); // ["02", "10", ...]
-   * for (const prize of draw.basicPrizes) {
-   *   console.log(`Pick${prize.pickCount} trúng ${prize.matchCount}: ${prize.winnerCount} bộ`);
+   * for (const prize of draw.prizes) {
+   *   if (prize.pickCount !== undefined) {
+   *     console.log(`Pick${prize.pickCount} trúng ${prize.matchCount}: ${prize.winnerCount} bộ`);
+   *   } else {
+   *     console.log(`${prize.playType} ${prize.bet}: ${prize.winnerCount} bộ`);
+   *   }
    * }
    * ```
    */

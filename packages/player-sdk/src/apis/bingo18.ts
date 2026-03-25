@@ -68,14 +68,13 @@ export interface Bingo18Api {
   /**
    * Đặt cược Bingo 18.
    *
-   * Phải có ít nhất 1 board HOẶC 1 side bet.
-   * - `boards`: chọn số xúc xắc, đoán bộ đôi/bộ ba
-   * - `sideBets`: đoán tổng hoặc Tài/Xỉu/Hoà
+   * Phải có ít nhất 1 board. Boards bao gồm cả cược cơ bản (singleNum, doubleMatch, tripleMatch)
+   * lẫn cược bổ sung (sumTotal, bigSmallDraw).
    * Tối đa 20 kỳ quay mỗi vé.
    *
    * **Endpoint:** `POST /games/bingo18/bets`
    *
-   * @param input - Thông tin vé: drawIds, boards, sideBets
+   * @param input - Thông tin vé: drawIds, boards
    * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount
    *
    * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
@@ -91,12 +90,12 @@ export interface Bingo18Api {
    *   drawIds: ["2026-03-07.001", "2026-03-07.002"],
    *   boards: [
    *     { playType: "singleNum", number: 5 },
-   *     { playType: "tripleMatch", kind: "any" },
+   *     { playType: "tripleMatch", tripleKind: "any" },
+   *     { playType: "bigSmallDraw", bet: "big" },
    *   ],
-   *   sideBets: [{ playType: "bigSmallDraw", bet: "big" }],
    * });
    * console.log(result.ticketNo);    // "B18-20260307-00007"
-   * console.log(result.totalAmount); // 40000
+   * console.log(result.pricing.totalAmount); // 60000
    * ```
    */
   placeBet(input: Bingo18TicketPurchaseInput): Promise<Bingo18PlaceBetResponse>;
@@ -191,14 +190,13 @@ export interface Bingo18Api {
   /**
    * Lấy chi tiết kết quả 1 kỳ quay Bingo 18.
    *
-   * Trả về bảng giải 2 phần riêng biệt:
-   * - `basicPrizes` — giải cho các loại board (singleNum, doubleMatch, tripleMatch)
-   * - `sideBetPrizes` — giải cho side bets (sumTotal, bigSmallDraw)
+   * Trả về bảng giải thống nhất `prizes` chứa cả giải board cơ bản
+   * (singleNum, doubleMatch, tripleMatch) và cược bổ sung (sumTotal, bigSmallDraw).
    *
    * **Endpoint:** `GET /games/bingo18/draw-results/{drawId}`
    *
    * @param drawId - ID kỳ quay. Format `YYYY-MM-DD.NNN`. VD: `"2026-03-07.095"`.
-   * @returns Chi tiết kỳ quay gồm 3 số xúc xắc và bảng giải
+   * @returns Chi tiết kỳ quay gồm 3 số xúc xắc và bảng giải thống nhất
    *
    * @throws {@link ApiClientError} code `NOT_FOUND` — kỳ quay chưa settle hoặc drawId không tồn tại
    * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
@@ -208,12 +206,14 @@ export interface Bingo18Api {
    * const draw = await client.bingo18.getDrawResult("2026-03-07.095");
    * console.log(`Số: ${draw.result.numbers.join(", ")} — Tổng: ${draw.result.sum}`);
    *
-   * for (const prize of draw.basicPrizes) {
-   *   console.log(`  ${prize.playType} x${prize.matchCount}: ${prize.winnerCount} lượt, ${prize.prizePerUnit.toLocaleString()} VND/lượt`);
-   * }
-   * for (const prize of draw.sideBetPrizes) {
-   *   const label = prize.sum !== undefined ? `tổng ${prize.sum}` : prize.bet;
-   *   console.log(`  ${prize.playType} (${label}): ${prize.winnerCount} lượt`);
+   * for (const prize of draw.prizes) {
+   *   if (prize.sum !== undefined) {
+   *     console.log(`  sumTotal (tổng ${prize.sum}): ${prize.winnerCount} lượt`);
+   *   } else if (prize.bet) {
+   *     console.log(`  bigSmallDraw (${prize.bet}): ${prize.winnerCount} lượt`);
+   *   } else {
+   *     console.log(`  ${prize.playType} x${prize.matchCount}: ${prize.winnerCount} lượt, ${prize.prizePerUnit.toLocaleString()} VND/lượt`);
+   *   }
    * }
    * ```
    */

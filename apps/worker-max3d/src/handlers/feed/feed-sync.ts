@@ -38,5 +38,5 @@ import { SyncEntryFeedUseCase } from "@megawin/game-max3d-application/use-cases/
 const useCase = new SyncEntryFeedUseCase();
 
 export async function handler() {
-  return useCase.run({ batchSize: 500 });
+  return useCase.run();
 }

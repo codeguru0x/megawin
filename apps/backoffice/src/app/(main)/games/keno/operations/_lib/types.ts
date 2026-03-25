@@ -14,10 +14,8 @@ export interface OpsKpi {
   /** Tổng doanh thu (VND). */
   totalRevenue: number;
   totalEntries: number;
-  /** Số basic boards (pick1-10). */
+  /** Tổng boards (cả cơ bản pick1-10 và bổ sung bigSmall/evenOdd). */
   totalBoards: number;
-  /** Số side bets (bigSmall, evenOdd). */
-  totalSideBets: number;
   uniquePlayers: number;
   /** Tổng hoa hồng đại lý (VND). */
   totalCommission: number;

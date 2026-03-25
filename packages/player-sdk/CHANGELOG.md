@@ -1,6 +1,490 @@
 # Changelog
 
-Tất cả thay đổi đáng chú ý của `@megawin/player-sdk` được ghi tại đây.
+Mọi thay đổi đáng chú ý của `@megawin/player-sdk` được ghi tại đây.
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [Semantic Versioning](https://semver.org/).
+
+---
+
+## [1.0.15] - 2026-03-25
+
+### Fixed — Đồng bộ SDK types với API thực tế (tất cả games)
+
+#### `getTicketEntries()` — bỏ `ticket` wrapper khỏi response
+
+`KenoTicketEntriesResponse`, `Bingo18TicketEntriesResponse`, `Max3dproTicketEntriesResponse` khai báo sai — API chỉ trả `{ entries }`, không wrap thêm `ticket`. Đã align với `PlayerGetTicketEntriesOutput`.
+
+**Migration:**
+
+```ts
+// Trước (≤ v1.0.14):
+const { ticket, entries } = await client.keno.getTicketEntries(ticketId);
+
+// Sau (v1.0.15+) — tương tự bingo18, max3dpro:
+const { entries } = await client.keno.getTicketEntries(ticketId);
+```
+
+#### `EntryResult` / `EntryInfo` — xoá `drawDate`
+
+`drawDate` không tồn tại trong `TicketEntryDoc` — entry chỉ có `drawId`. Đã xoá khỏi `KenoEntryInfo`, `Mega645EntryResult`, `Lotto535EntryResult`, `Power655EntryResult`.
+
+#### `Max3dproTicketSummary.voidSummary` — sửa cấu trúc từ board-level sang draw-level
+
+Max 3D Pro void theo draw, không phải board. Shape cũ sai hoàn toàn.
+
+**Migration:**
+
+```ts
+// Trước (≤ v1.0.14):
+voidSummary?: { isFullVoid: boolean; voidedBoards: string[]; originalAmount: number; refundAmount: number; voidedAt: string }
+
+// Sau (v1.0.15+):
+voidSummary?: { totalVoidedAmount: number; totalRefundedAmount: number; voidedDrawCount: number; voidedDrawIds: string[]; lastVoidedAt?: string }
+```
+
+#### `Max3dproEntryResult` — thêm `outcome`, `payoutAmount`, mở rộng `payout.tiers`
+
+Các fields này đã có trong API response nhưng thiếu trong SDK:
+
+```ts
+outcome?: "win" | "loss"
+
+// payout.tiers — thêm hitCount + unitAmount cho khớp với EntryPayoutTier:
+tiers: Array<{ tier: string; hitCount: number; unitAmount: number; amount: number }>
+```
+
+#### `Max3dproLineInfo` — thêm `betCount`
+
+`PlayerLineInfo` trả `betCount` nhưng SDK thiếu field này.
+
+---
+
+### Fixed — Mega 6/45
+
+#### `Mega645EntryResult.result.winningNumbers`: `number[]` → `string[]`
+
+Đổi sang zero-padded string (`"01"`–`"45"`) cho nhất quán với toàn bộ hệ thống.
+
+**Migration:**
+
+```ts
+// Trước (≤ v1.0.13):
+result.winningNumbers.join(", "); // "6, 12, 25"
+
+// Sau (v1.0.14+):
+result.winningNumbers.join(", "); // "06, 12, 25"
+```
+
+#### `Mega645EntryLinesResponse`: viết lại + thêm `Mega645LineInfo`
+
+Interface cũ chỉ có `entryId` và `lines: Array<{ numbers: number[] }>` — thiếu pagination và match result.
+
+**Migration:**
+
+```ts
+// Trước (≤ v1.0.13):
+interface Mega645EntryLinesResponse {
+  entryId: string;
+  lines: Array<{ numbers: number[] }>;
+}
+
+// Sau (v1.0.14+):
+interface Mega645EntryLinesResponse {
+  entryId: string;
+  drawId: string;
+  lines: Mega645LineInfo[]; // numbers: string[] + boardNo, lineIndex, betCount, matchResult
+  nextCursor: number | null;
+  size: number;
+}
+```
+
+#### `Mega645JackpotResponse`: viết lại
+
+**Migration:**
+
+```ts
+// Trước (≤ v1.0.13):
+interface Mega645JackpotResponse {
+  jackpotAmount: number;
+  cycleId: string;
+  openedAt: string;
+}
+
+// Sau (v1.0.14+):
+interface Mega645JackpotResponse {
+  cycleNo: number;
+  currentAmount: number;
+  seedAmount: number;
+  peakAmount: number;
+  totalContribution: number;
+  drawCount: number;
+  startDrawId: string;
+}
+```
+
+### Fixed — Power 6/55
+
+#### `Power655TicketSummary`: sửa `pricing`, `progress`, `voidSummary`
+
+Đổi tên field trong `pricing` cho đồng nhất với các game khác:
+
+- `stakePerDraw` → `amountPerDraw`
+- `totalStake` → `totalAmount`
+
+Đổi cấu trúc `progress` cho khớp DTO:
+
+- `settledDrawCount + voidDrawCount` → `totalDraws + settledDraws`
+
+Sửa và bổ sung `voidSummary`:
+
+- `totalRefundAmount` → `totalRefundedAmount`
+- Thêm: `totalVoidedAmount`, `voidedDrawIds: string[]`, `lastVoidedAt?: string`
+
+**Migration:**
+
+```ts
+ticket.pricing.stakePerDraw; // → ticket.pricing.amountPerDraw
+ticket.pricing.totalStake; // → ticket.pricing.totalAmount
+ticket.progress.settledDrawCount; // → ticket.progress.settledDraws
+ticket.progress.voidDrawCount; // bỏ — dùng ticket.voidSummary?.voidedDrawCount
+ticket.voidSummary?.totalRefundAmount; // → ticket.voidSummary?.totalRefundedAmount
+```
+
+#### `Power655EntryResult`: thêm `id`, `outcome`, mở rộng `payout`
+
+- Thêm `id: string` — entry ID
+- Thêm `outcome?: "win" | "loss"` — có sau khi settle
+- `payout` thêm `payoutAmount: number` — tiền trả thực tế sau payout cap
+
+**Migration:**
+
+```ts
+// Trước (≤ v1.0.13) — không có id, outcome, payoutAmount
+// Sau (v1.0.14+):
+entry.id; // string
+entry.outcome; // "win" | "loss" | undefined
+entry.payout?.payoutAmount; // number
+```
+
+#### `Power655LineInfo.matchResult`: `optional` → `required`
+
+`getEntryLines` chỉ trả data khi entry đã settled — `matchResult` luôn có. Đã bỏ dấu `?`.
+
+**Migration:**
+
+```ts
+// Trước: if (line.matchResult) { ... }
+// Sau:
+console.log(line.matchResult.mainMatchCount); // luôn defined
+```
+
+### Fixed — Max 3D
+
+#### `Max3dTicketSummary.voidSummary`: shape sai hoàn toàn
+
+SDK cũ model void theo board trong khi Max 3D void theo draw.
+
+**Migration:**
+
+```ts
+// Trước (≤ v1.0.13):
+ticket.voidSummary?.isFullVoid; // boolean
+ticket.voidSummary?.voidedBoards; // string[]
+ticket.voidSummary?.originalAmount; // number
+ticket.voidSummary?.refundAmount; // number
+ticket.voidSummary?.voidedAt; // string
+
+// Sau (v1.0.14+):
+ticket.voidSummary?.totalVoidedAmount; // number
+ticket.voidSummary?.totalRefundedAmount; // number
+ticket.voidSummary?.voidedDrawCount; // number
+ticket.voidSummary?.voidedDrawIds; // string[]
+ticket.voidSummary?.lastVoidedAt; // string | undefined
+```
+
+#### `Max3dEntryResult`: xoá `drawDate`, thêm `outcome`, mở rộng `payout`
+
+- Xoá `drawDate` — field này không có trong DTO
+- Thêm `outcome?: "win" | "loss"`
+- `payout` thêm `payoutAmount`, mở rộng `tiers` với `playMode`, `hitCount`, `unitAmount`
+
+**Migration:**
+
+```ts
+// Trước (≤ v1.0.13):
+entry.drawDate; // bỏ
+entry.payout?.tiers[0].tier; // string
+entry.payout?.tiers[0].amount; // number
+
+// Sau (v1.0.14+):
+entry.outcome; // "win" | "loss" | undefined
+entry.payout?.payoutAmount; // number
+entry.payout?.tiers[0].playMode; // "basic" | "plus"
+entry.payout?.tiers[0].hitCount; // number
+entry.payout?.tiers[0].unitAmount; // number
+entry.payout?.tiers[0].amount; // number
+```
+
+#### `Max3dLineInfo.matchResult`: `optional` → `required`
+
+Tương tự Power655 — `getEntryLines` chỉ trả data sau khi settled.
+
+**Migration:**
+
+```ts
+// Trước: if (line.matchResult) { ... }
+// Sau:
+console.log(line.matchResult.winAmount); // luôn defined
+```
+
+### Fixed — Lotto 5/35
+
+#### `Lotto535DrawInfo`: viết lại
+
+Shape cũ (`salesCloseAt`, `jackpotAmount`, `isSplitCycle`, `vietlottRef`) không khớp DTO server.
+
+**Migration:**
+
+```ts
+// Trước (≤ v1.0.13):
+draw.salesCloseAt; // string
+draw.jackpotAmount; // number
+
+// Sau (v1.0.14+):
+draw.sales.closeAt; // string
+draw.sales.openAt; // string | undefined
+// jackpotAmount → gọi client.lotto535.getJackpot()
+```
+
+#### `Lotto535BoardSummary`: `mainNumbers`/`specialNumbers` — `number[]` → `string[]`
+
+Zero-padded string, đồng nhất với toàn bộ hệ thống.
+
+**Migration:**
+
+```ts
+board.mainNumbers[0]; // trước: 1 (number) → sau: "01" (string)
+```
+
+#### `Lotto535EntryResult`: bổ sung fields, sửa types, xoá `Lotto535EntryPayoutSummary`
+
+- Thêm `id: string`, `outcome?: "win" | "loss"`
+- `status`: `"pending" | "settled"` → `string` (bao gồm cả `"voided"`)
+- `result.winningMain` / `result.winningSpecial`: `number[]` / `number` → `string[]` / `string`
+- `payout`: thêm `payoutAmount`, xoá `isJackpot?` trong tiers
+- Xoá `Lotto535EntryPayoutSummary` — đã inline vào `payout`
+
+**Migration:**
+
+```ts
+// Trước (≤ v1.0.13):
+entry.status; // "pending" | "settled"
+entry.result?.winningMain; // number[]
+entry.payout?.winAmount; // number
+
+// Sau (v1.0.14+):
+entry.id; // string
+entry.outcome; // "win" | "loss" | undefined
+entry.status; // string — bao gồm "voided"
+entry.result?.winningMain; // string[] ("01"–"35")
+entry.result?.winningSpecial; // string ("01"–"12")
+entry.payout?.payoutAmount; // number
+```
+
+#### `Lotto535JackpotResponse`: viết lại
+
+Interface cũ chỉ có `jackpotAmount: number`.
+
+**Migration:**
+
+```ts
+// Trước: jp.jackpotAmount
+// Sau (v1.0.14+):
+jp.currentAmount; // VND
+jp.cycleNo;
+jp.seedAmount;
+jp.peakAmount;
+jp.totalContribution;
+jp.drawCount;
+jp.startDrawId;
+jp.progress.splitThreshold;
+jp.progress.percentage;
+```
+
+#### `Lotto535EntryLinesResponse`: viết lại + thêm `Lotto535LineInfo`
+
+Interface cũ thiếu pagination và match result.
+
+**Migration:**
+
+```ts
+// Trước (≤ v1.0.13):
+data.lines[0].mainNumbers; // number[]
+data.lines[0].specialNumber; // number
+
+// Sau (v1.0.14+):
+data.drawId;
+data.nextCursor; // number | null
+data.size;
+data.lines[0].boardNo; // "A" | "B" | ...
+data.lines[0].lineIndex; // 0-based
+data.lines[0].main; // string[] ("01"–"35")
+data.lines[0].special; // string ("01"–"12")
+data.lines[0].matchResult.mainMatchCount; // 0–5
+data.lines[0].matchResult.specialMatched; // boolean
+data.lines[0].matchResult.tier; // string | null
+data.lines[0].matchResult.winAmount; // VND
+```
+
+---
+
+## [1.0.13] - 2026-03-24
+
+### Breaking Changes — Unified Boards (Keno + Bingo 18)
+
+Keno và Bingo 18 refactor kiến trúc: tất cả loại chơi (cơ bản + side bet) gộp vào chung mảng `boards[]`. Mảng `sideBets[]` bị xoá.
+
+#### Keno — `boardNo` bắt buộc, xoá `sideBets`
+
+**Trước (≤ v1.0.12):**
+
+```ts
+const input: KenoTicketPurchaseInput = {
+  drawIds: ["2026-03-24.001"],
+  boards: [{ boardNo: "A", numbers: ["01", "15", "33", "44", "60"] }],
+  sideBets: [
+    { playType: "bigSmall", bet: "big" },
+    { playType: "evenOdd", bet: "even" },
+  ],
+};
+```
+
+**Sau (v1.0.13+):**
+
+```ts
+const input: KenoTicketPurchaseInput = {
+  drawIds: ["2026-03-24.001"],
+  boards: [
+    { boardNo: "A", numbers: ["01", "15", "33", "44", "60"] },
+    { boardNo: "B", playType: "bigSmall", bet: "big" },
+    { boardNo: "C", playType: "evenOdd", bet: "even" },
+  ],
+};
+```
+
+**Thay đổi chi tiết:**
+
+| Trước (≤ v1.0.12)                                | Sau (v1.0.13+)               | Ghi chú                                      |
+| ------------------------------------------------ | ---------------------------- | -------------------------------------------- |
+| `KenoBoardInput.boardNo?: string`                | `boardNo: string` (required) | `"A"` / `"B"` / `"C"`                        |
+| `KenoTicketPurchaseInput.sideBets`               | **Xoá**                      | Gộp vào `boards[]`                           |
+| `KenoSideBetInput`                               | **Xoá**                      | Dùng `KenoBoardInput` với `playType` + `bet` |
+| `KenoBoardSummary.boardNo?: string`              | `boardNo: string` (required) | Mọi board đều có `boardNo`                   |
+| `KenoEntryPayoutSummary.sideBetPayouts`          | **Xoá**                      | Gộp vào `boardPayouts[]`                     |
+| `KenoEntryPayoutSummary.boardPayouts[].boardNo?` | `boardNo: string` (required) |                                              |
+| `KenoDrawResultDetail.sideBetPrizes`             | **Xoá**                      | Gộp vào `prizes[]`                           |
+| `KenoSideBetPrizeDetail`                         | **Xoá**                      | Dùng `KenoDrawPrizeDetail`                   |
+| `KenoPlaceBetResponse.sideBetCount`              | **Xoá**                      | `boardCount` bao gồm tất cả                  |
+
+#### Bingo 18 — `boardNo` bắt buộc, xoá `sideBets`
+
+**Trước (≤ v1.0.12):**
+
+```ts
+const input: Bingo18TicketPurchaseInput = {
+  drawIds: ["2026-03-24.001"],
+  boards: [{ boardNo: "A", playType: "singleNum", number: 5 }],
+  sideBets: [
+    { playType: "sumTotal", sum: 14 },
+    { playType: "bigSmallDraw", bet: "big" },
+  ],
+};
+```
+
+**Sau (v1.0.13+):**
+
+```ts
+const input: Bingo18TicketPurchaseInput = {
+  drawIds: ["2026-03-24.001"],
+  boards: [
+    { boardNo: "A", playType: "singleNum", number: 5 },
+    { boardNo: "B", playType: "sumTotal", sum: 14 },
+    { boardNo: "C", playType: "bigSmallDraw", bet: "big" },
+  ],
+};
+```
+
+**Thay đổi chi tiết:**
+
+| Trước (≤ v1.0.12)                                 | Sau (v1.0.13+)               | Ghi chú                     |
+| ------------------------------------------------- | ---------------------------- | --------------------------- |
+| `Bingo18BoardInput.boardNo?: string`              | `boardNo: string` (required) | `"A"` – `"F"`               |
+| `Bingo18TicketPurchaseInput.sideBets`             | **Xoá**                      | Gộp vào `boards[]`          |
+| `Bingo18SideBet` (input)                          | **Xoá**                      | Dùng `Bingo18BoardInput`    |
+| `Bingo18TicketSummary.boards[].boardNo?`          | `boardNo: string` (required) | Mọi board đều có `boardNo`  |
+| `Bingo18EntryInfo.payout.sideBetPayouts`          | **Xoá**                      | Gộp vào `boardPayouts[]`    |
+| `Bingo18EntryInfo.payout.boardPayouts[].boardNo?` | `boardNo: string` (required) |                             |
+| `Bingo18DrawResultInfo.sideBetPrizes`             | **Xoá**                      | Gộp vào `prizes[]`          |
+| `Bingo18DrawSideBetPrize`                         | **Xoá**                      | Dùng `Bingo18DrawPrize`     |
+| `Bingo18PlaceBetResponse.sideBetCount`            | **Xoá**                      | `boardCount` bao gồm tất cả |
+
+### Removed
+
+**Keno:** `KenoSideBetInput`, `KenoSideBetSummary`, `KenoSideBetPrizeDetail`
+
+**Bingo 18:** `Bingo18SideBet`, `Bingo18SideBetSummary`, `Bingo18DrawSideBetPrize`
+
+### Fixed
+
+- **Bingo 18**: `Bingo18DrawResultSummary.vietlottRef.drawPeriod` và `Bingo18DrawResultInfo.vietlottRef.drawPeriod` — đổi từ `number` sang `string`, đồng nhất với Keno.
+- **Keno**: `KenoEntryInfo` — bổ sung các fields bị thiếu:
+  - `unitPrice: number` — mệnh giá 1 lần tham gia
+  - `selectionCount: number` — số boards (`boards.length`)
+  - Đổi tên `betCount` → `betUnitCount` (`Σ(board.betCount)`, dùng tính tiền: `amount = betUnitCount × unitPrice`)
+  - `entrySummary.boards[].betCount: number` — thêm field bị thiếu trong board snapshot
+- **Power 6/55**: `Power655DrawResultSummary.vietlottRef.drawPeriod` — `number` → `string`.
+- **Max 3D**: `Max3dDrawResultSummary.vietlottRef.drawPeriod` — `number` → `string`.
+- **Max 3D Pro**: `Max3dproDrawResultSummary.vietlottRef.drawPeriod` — `number` → `string`.
+- **Max 3D**: `Max3dTicketEntriesResponse.entries[]` — thay inline type thiếu fields bằng `Max3dEntryResult[]`, bổ sung `unitPrice`, `lineCount`, `betUnitCount`.
+- **Max 3D Pro**: `Max3dproTicketEntriesResponse.entries[]` — tương tự Max 3D.
+
+### Migration Guide
+
+1. Xoá `sideBets` khỏi input `placeBet()`. Gộp side bets vào `boards[]` với `boardNo` riêng.
+2. Thêm `boardNo` cho mọi board. Keno: `"A"`–`"C"`, Bingo 18: `"A"`–`"F"`.
+3. Xoá các type đã bị removed. Thay bằng `KenoBoardInput` / `Bingo18BoardInput`.
+4. Cập nhật xử lý response: `sideBetPayouts` → filter trong `boardPayouts[]`; `sideBetPrizes` → filter trong `prizes[]`.
+5. `KenoEntryInfo.betCount` → `betUnitCount`:
+
+```ts
+entry.betCount; // ≤ v1.0.12 — không còn tồn tại
+entry.betUnitCount; // v1.0.13+ — Σ(board.betCount)
+entry.unitPrice; // mệnh giá (VND)
+entry.selectionCount; // số boards
+```
+
+6. `KenoBoardInput.playType` bắt buộc cho pick boards:
+
+```ts
+// Trước — API từ chối nhưng TypeScript không báo lỗi:
+const board: KenoBoardInput = { boardNo: "A", numbers: ["01", "15", "33", "44", "60"] };
+
+// Sau:
+const board: KenoBoardInput = {
+  boardNo: "A",
+  playType: "pick5", // bắt buộc
+  numbers: ["01", "15", "33", "44", "60"],
+};
+```
+
+7. Max 3D / Max 3D Pro — `getTicketEntries()` nay trả `Max3dEntryResult[]` / `Max3dproEntryResult[]` thay vì inline type:
+
+```ts
+const { entries } = await client.max3d.getTicketEntries(ticketId);
+entries[0].unitPrice; // VND — field mới
+entries[0].lineCount; // Σ(board.lineCount) — field mới
+entries[0].betUnitCount; // field mới
+entries[0].payout?.tiers; // [{ tier, amount }]
+```
 
 ---
 
@@ -8,61 +492,56 @@ Tất cả thay đổi đáng chú ý của `@megawin/player-sdk` được ghi t
 
 ### Breaking Changes
 
-#### `Bingo18BasicBoard` — Thêm `boardNo` (required) và đổi `kind` → `tripleKind`.
+#### `Bingo18BasicBoard` — thêm `boardNo` (required), đổi `kind` → `tripleKind`
 
 ```ts
-// TRƯỚC (SAI — handler bắt buộc boardNo, không có kind):
+// Trước (handler bắt buộc boardNo, field kind không tồn tại):
 const board: Bingo18BasicBoard = {
   playType: "tripleMatch",
-  kind: "specific", // ← sai tên
+  kind: "specific", // sai tên
   number: 5,
 };
 
-// SAU:
+// Sau:
 const board: Bingo18BasicBoard = {
-  boardNo: "A", // ← bắt buộc, mỗi vé tối đa 6 boards
+  boardNo: "A", // required, tối đa 6 boards/vé
   playType: "tripleMatch",
-  tripleKind: "specific", // ← đúng tên theo handler
+  tripleKind: "specific", // đúng tên theo handler
   number: 5,
 };
 ```
 
-#### `Max3dproBoardInput` — Tách thành discriminated union, thêm `playType: "straight"` (required)
+#### `Max3dproBoardInput` — tách thành discriminated union, thêm `playType: "straight"` (required)
 
 ```ts
-// TRƯỚC (SAI — thiếu playType, triplets/frontDigits/backDigits optional sai):
+// Trước (thiếu playType, triplets/frontDigits/backDigits optional sai):
 const board: Max3dproBoardInput = {
   boardNo: "A",
   playMode: "multiNumber",
   triplets: ["123", "456"],
 };
 
-// SAU — multiNumber:
+// Sau — multiNumber:
 const board: Max3dproMultiNumberBoardInput = {
   boardNo: "A",
   playMode: "multiNumber",
-  playType: "straight", // ← bắt buộc
+  playType: "straight", // required
   triplets: ["123", "456", "789"],
 };
 
-// SAU — multiDigit:
+// Sau — multiDigit:
 const board: Max3dproMultiDigitBoardInput = {
   boardNo: "B",
   playMode: "multiDigit",
-  playType: "straight", // ← bắt buộc
+  playType: "straight", // required
   frontDigits: [1, 2, 3],
   backDigits: [4, 5, 6],
 };
 ```
 
-**Migration Guide:** Cập nhật tất cả nơi tạo `Max3dproBoardInput` để thêm `playType: "straight"` và dùng đúng interface theo `playMode`.
+**Migration:** Thêm `playType: "straight"` và dùng đúng interface theo `playMode`.
 
-**Types mới được export:**
-
-- `Max3dproMultiNumberBoardInput`
-- `Max3dproMultiDigitBoardInput`
-
-`Max3dproBoardInput` vẫn tồn tại là union type của hai interface trên.
+Types mới được export: `Max3dproMultiNumberBoardInput`, `Max3dproMultiDigitBoardInput`. `Max3dproBoardInput` vẫn là union của hai interface trên.
 
 ---
 
@@ -70,11 +549,11 @@ const board: Max3dproMultiDigitBoardInput = {
 
 ### Breaking Changes
 
-#### `{Game}TicketPurchaseInput` — Đổi `drawId` + `drawCount` thành `drawIds: string[]` (5 games)
+#### `{Game}TicketPurchaseInput` — đổi `drawId + drawCount` sang `drawIds: string[]` (5 games)
 
-Các game Mega 6/45, Lotto 5/35, Power 6/55, Max 3D, Max 3D Pro đã dùng `drawIds: string[]` tại handler từ trước. SDK type bị khai báo sai là `drawId + drawCount`. Từ v1.0.11 SDK đã đồng bộ đúng với handler.
+Handler các game Mega 6/45, Lotto 5/35, Power 6/55, Max 3D, Max 3D Pro đã dùng `drawIds: string[]` từ trước. SDK type khai báo sai là `drawId + drawCount`. Đã đồng bộ.
 
-| Game       | Type bị thay đổi              |
+| Game       | Type                          |
 | ---------- | ----------------------------- |
 | Mega 6/45  | `Mega645TicketPurchaseInput`  |
 | Lotto 5/35 | `Lotto535TicketPurchaseInput` |
@@ -82,17 +561,17 @@ Các game Mega 6/45, Lotto 5/35, Power 6/55, Max 3D, Max 3D Pro đã dùng `draw
 | Max 3D     | `Max3dTicketPurchaseInput`    |
 | Max 3D Pro | `Max3dproTicketPurchaseInput` |
 
-**Migration Guide:**
+**Migration:**
 
 ```ts
-// TRƯỚC (v1.0.10 trở về trước — SAI, handler trả 400):
+// Trước (v1.0.10 — handler trả 400):
 client.mega645.placeBet({
   drawId: "2026-03-07.001",
   drawCount: 3,
   boards: [...],
 });
 
-// SAU (v1.0.11+):
+// Sau (v1.0.11+):
 client.mega645.placeBet({
   drawIds: ["2026-03-07.001", "2026-03-14.001", "2026-03-21.001"],
   boards: [...],
@@ -101,7 +580,7 @@ client.mega645.placeBet({
 
 Tương tự cho `client.lotto535`, `client.power655`, `client.max3d`, `client.max3dpro`.
 
-> Lưu ý: `drawIds` là mảng các drawId cụ thể muốn tham gia, **không phải** drawId bắt đầu + số kỳ liên tiếp. Tối đa 6 kỳ mỗi vé.
+> `drawIds` là mảng các drawId cụ thể muốn tham gia, không phải drawId bắt đầu + số kỳ liên tiếp. Tối đa 6 kỳ/vé.
 
 ---
 
@@ -109,169 +588,120 @@ Tương tự cho `client.lotto535`, `client.power655`, `client.max3d`, `client.m
 
 ### Breaking Changes
 
-#### `PlaceBetResponse` — Bổ sung đầy đủ fields (tất cả games)
+#### `PlaceBetResponse` — bổ sung đầy đủ fields (tất cả games)
 
-Trước đây `{Game}PlaceBetResponse` chỉ trả về 3 fields tối thiểu. Từ v1.0.10, response trả về đầy đủ thông tin vé vừa tạo để hiển thị ngay mà không cần gọi thêm API:
-
-| Game       | Type                       |
-| ---------- | -------------------------- |
-| Keno       | `KenoPlaceBetResponse`     |
-| Lotto 5/35 | `Lotto535PlaceBetResponse` |
-| Mega 6/45  | `Mega645PlaceBetResponse`  |
-| Power 6/55 | `Power655PlaceBetResponse` |
-| Max 3D     | `Max3dPlaceBetResponse`    |
-| Max 3D Pro | `Max3dproPlaceBetResponse` |
-| Bingo 18   | `Bingo18PlaceBetResponse`  |
-
-**Fields mới được thêm vào tất cả `PlaceBetResponse`:**
+Response trả đủ thông tin vé vừa tạo để hiển thị ngay mà không cần gọi thêm API.
 
 ```ts
-// TRƯỚC (v1.0.9 trở về trước):
+// Trước (v1.0.9):
 interface XxxPlaceBetResponse {
   ticketId: string;
   ticketNo: string;
-  totalAmount: number; // chỉ 3 fields
+  totalAmount: number;
 }
 
-// SAU (v1.0.10+):
+// Sau (v1.0.10+):
 interface XxxPlaceBetResponse {
   ticketId: string;
   ticketNo: string;
-  status: string; // thêm
-  drawPlan: {
-    drawIds: string[]; // thêm — danh sách kỳ đã đăng ký
-    drawCount: number; // thêm
-  };
+  status: string;
+  drawPlan: { drawIds: string[]; drawCount: number };
   pricing: {
     unitPrice: number;
-    // ...              // xem chi tiết theo từng game
+    // ...chi tiết theo từng game
     totalAmount: number;
   };
-  boardCount: number; // thêm
-  entryCount: number; // thêm
+  boardCount: number;
+  entryCount: number;
 }
 ```
 
-> `totalAmount` vẫn tồn tại trong `pricing.totalAmount`. Nếu code cũ dùng `result.totalAmount`, phải cập nhật sang `result.pricing.totalAmount`.
+> `totalAmount` chuyển vào `pricing.totalAmount`. Cập nhật mọi nơi đọc `result.totalAmount`.
 
 ---
 
-#### `KenoPlaceBetResponse.pricing` — Đổi tên field
+#### `KenoPlaceBetResponse.pricing` — đổi tên field
 
-| Field cũ      | Field mới           | Ghi chú                        |
+| Cũ            | Mới                 | Ghi chú                        |
 | ------------- | ------------------- | ------------------------------ |
-| `betsPerDraw` | `selectionsPerDraw` | Số boards + side bets mỗi kỳ   |
+| `betsPerDraw` | `selectionsPerDraw` | Số boards mỗi kỳ               |
 | _(không có)_  | `betUnitsPerDraw`   | Tổng đơn vị cược = Σ(betCount) |
 
-```ts
-// TRƯỚC:
-result.pricing.betsPerDraw; // SAI — không còn tồn tại
+`KenoTicketSummary.pricing` đổi tương tự.
 
-// SAU:
-result.pricing.selectionsPerDraw; // số selections (boards + sideBets) mỗi kỳ
-result.pricing.betUnitsPerDraw; // tổng đơn vị cược = Σ(board.betCount) + Σ(sideBet.betCount)
+---
+
+#### `betCount` trong board/sideBet summary — `optional` → `required`
+
+`betCount` trong các summary type (từ `getTicketEntries`, `listTickets`…) đã bắt buộc.
+
+| Game       | Type                    | Field              |
+| ---------- | ----------------------- | ------------------ |
+| Keno       | `KenoBasicBoardSummary` | `betCount: number` |
+| Keno       | `KenoSideBetSummary`    | `betCount: number` |
+| Lotto 5/35 | `Lotto535BoardSummary`  | `betCount: number` |
+| Mega 6/45  | `Mega645BoardSummary`   | `betCount: number` |
+| Power 6/55 | `Power655BoardSummary`  | `betCount: number` |
+| Max 3D     | `Max3dBoardSummary`     | `betCount: number` |
+| Max 3D Pro | `Max3dproBoardSummary`  | `betCount: number` |
+| Bingo 18   | `Bingo18BoardSummary`   | `betCount: number` |
+
+> `betCount` trong **input** (place bet) vẫn optional, mặc định = 1.
+
+```ts
+// Trước: const count = board.betCount ?? 1;
+// Sau:
+const count = board.betCount; // luôn defined
 ```
 
-Tương tự, `KenoTicketSummary.pricing` (trong `listPendingTickets`, `listTickets`) cũng đổi tên theo:
-
-- `betsPerDraw` → `selectionsPerDraw`
-- Thêm mới `betUnitsPerDraw`
-
 ---
 
-#### `betCount` trong board/sideBet summary — Bắt buộc (required)
-
-`betCount` trong các summary type (trả về từ `getTicketEntries`, `listTickets`...) đã đổi từ optional sang **required**:
-
-| Game       | Type                                | Field bị ảnh hưởng |
-| ---------- | ----------------------------------- | ------------------ |
-| Keno       | `KenoBasicBoardSummary`             | `betCount: number` |
-| Keno       | `KenoSideBetSummary`                | `betCount: number` |
-| Keno       | `KenoEntryInfo.boards[].betCount`   | `betCount: number` |
-| Keno       | `KenoEntryInfo.sideBets[].betCount` | `betCount: number` |
-| Lotto 5/35 | `Lotto535BoardSummary`              | `betCount: number` |
-| Mega 6/45  | `Mega645BoardSummary`               | `betCount: number` |
-| Power 6/55 | `Power655BoardSummary`              | `betCount: number` |
-| Max 3D     | `Max3dBoardSummary`                 | `betCount: number` |
-| Max 3D Pro | `Max3dproBoardSummary`              | `betCount: number` |
-| Bingo 18   | `Bingo18BoardSummary`               | `betCount: number` |
-| Bingo 18   | `Bingo18SideBetSummary`             | `betCount: number` |
-
-**Lưu ý**: `betCount` trong **input** (khi place bet) vẫn là optional, mặc định = 1.
-
----
-
-#### `GameRules` — Thêm `minBetCount` và `maxBetCount`
-
-Tất cả `{Game}GameRules` (trong `getGameConfig` response) đã thêm 2 fields mới:
+#### `GameRules` — thêm `minBetCount` và `maxBetCount`
 
 ```ts
 interface XxxGameRules {
-  // ...fields cũ...
-  minBetCount: number; // thêm — số lần cược tối thiểu (thường = 1)
-  maxBetCount: number; // thêm — số lần cược tối đa cho 1 board/side bet
+  // ...
+  minBetCount: number; // thường = 1
+  maxBetCount: number; // giới hạn tối đa cho 1 board
 }
 ```
 
-Áp dụng cho tất cả games: Keno, Lotto 5/35, Mega 6/45, Power 6/55, Max 3D, Max 3D Pro, Bingo 18.
+Áp dụng cho tất cả 7 games.
 
 ---
 
 ### Added
 
-- **Bingo 18**: `Bingo18ListPendingTicketsParams` — tham số phân trang cho `listPendingTickets` (chỉ `size` + `cursor`, không hỗ trợ lọc ngày)
-- **Bingo 18**: `Bingo18ListAllTicketsParams` — tham số lọc và phân trang cho `listTickets` (thêm `from` + `to`)
+- **Bingo 18**: `Bingo18ListPendingTicketsParams` — pagination cho `listPendingTickets` (`size` + `cursor`)
+- **Bingo 18**: `Bingo18ListAllTicketsParams` — filter + pagination cho `listTickets` (thêm `from` + `to`)
 
 ### Migration Guide
 
-#### 1. `PlaceBetResponse.totalAmount` đã chuyển vào `pricing`
-
 ```ts
-// TRƯỚC:
-const result = await client.lotto535.placeBet({ ... });
-console.log(result.totalAmount); // number — SAI, không còn ở root
+// 1. totalAmount chuyển vào pricing:
+result.totalAmount; // ≤ v1.0.9 — không còn ở root
+result.pricing.totalAmount; // v1.0.10+
 
-// SAU:
-console.log(result.pricing.totalAmount); // ✓
-```
-
-#### 2. `KenoTicketSummary` và `KenoPlaceBetResponse`: đổi tên field pricing
-
-```ts
-// TRƯỚC:
-ticket.pricing.betsPerDraw; // SAI — không còn tồn tại
-
-// SAU:
-ticket.pricing.selectionsPerDraw; // số boards + sideBets mỗi kỳ
-ticket.pricing.betUnitsPerDraw; // tổng đơn vị cược mỗi kỳ
-```
-
-#### 3. `betCount` trong summary giờ không thể undefined
-
-```ts
-// TRƯỚC — cần check optional:
-const count = board.betCount ?? 1;
-
-// SAU — luôn có giá trị:
-const count = board.betCount; // number, không cần fallback
+// 2. Keno pricing fields:
+ticket.pricing.betsPerDraw; // bỏ
+ticket.pricing.selectionsPerDraw; // mới
+ticket.pricing.betUnitsPerDraw; // mới
 ```
 
 ---
 
-#### `KenoCurrentDrawResponse` — Xóa field `lastResult`
+#### `KenoCurrentDrawResponse` — xoá `lastResult`
 
-Field `lastResult` đã bị **xóa** khỏi response của `getCurrentDraw()` (Keno).
-API không trả về field này — nếu code cũ truy cập `data.lastResult`, giá trị thực tế luôn là `undefined`.
-Để lấy kết quả kỳ gần nhất, dùng `listDrawResults()`.
+`lastResult` không bao giờ được API trả về — luôn là `undefined`. Đã xoá khỏi type. Để lấy kết quả gần nhất, dùng `listDrawResults()`.
 
 ```ts
-// TRƯỚC — field tồn tại trong type nhưng API không bao giờ trả về:
+// Trước — luôn undefined, nay TypeScript báo lỗi:
 const data = await client.keno.getCurrentDraw();
-data.lastResult; // luôn undefined, TypeScript nay báo lỗi
+data.lastResult;
 
-// SAU — dùng listDrawResults để lấy kết quả gần nhất:
+// Sau:
 const results = await client.keno.listDrawResults({ size: 1 });
-const lastResult = results.items[0]; // ✓
+const lastResult = results.items[0];
 ```
 
 ---
@@ -280,11 +710,11 @@ const lastResult = results.items[0]; // ✓
 
 ### Added
 
-- **Power 6/55**: `Power655PlayType.Bao5` (`"bao5"`) — loại hình chơi mới: chọn 5 số, hệ thống ghép từng số trong 50 số còn lại (55-5=50) → 50 bộ số dự thưởng. Giá vé = 500.000đ / kỳ.
+- **Power 6/55**: `Power655PlayType.Bao5` (`"bao5"`) — chọn 5 số, hệ thống ghép với 50 số còn lại → 50 bộ số dự thưởng. Giá vé 500.000đ/kỳ.
 
 ### Fixed
 
-- **Power 6/55**: Đã bổ sung `Bao5` vào `Power655PlayType` enum (thiếu trong 1.0.8). Backend đã hỗ trợ Bao 5 từ trước, SDK nay đồng bộ lại.
+- **Power 6/55**: Bổ sung `Bao5` vào `Power655PlayType` enum — backend đã hỗ trợ từ trước, SDK nay đồng bộ.
 
 ---
 
@@ -292,110 +722,88 @@ const lastResult = results.items[0]; // ✓
 
 ### Added
 
-- **Power 6/55**: `client.power655.listDrawResults(params?)` — lấy danh sách kết quả kỳ quay đã công bố (`GET /games/power655/draw-results`)
-- **Power 6/55**: `client.power655.getDrawResult(drawId)` — lấy chi tiết kết quả 1 kỳ quay (`GET /games/power655/draw-results/{drawId}`)
-- **Max 3D**: `client.max3d.listDrawResults(params?)` — lấy danh sách kết quả kỳ quay đã công bố (`GET /games/max3d/draw-results`)
-- **Max 3D**: `client.max3d.getDrawResult(drawId)` — lấy chi tiết kết quả 1 kỳ quay (`GET /games/max3d/draw-results/{drawId}`)
-- **Max 3D Pro**: `client.max3dpro.listDrawResults(params?)` — lấy danh sách kết quả kỳ quay đã công bố (`GET /games/max3dpro/draw-results`)
-- **Max 3D Pro**: `client.max3dpro.getDrawResult(drawId)` — lấy chi tiết kết quả 1 kỳ quay (`GET /games/max3dpro/draw-results/{drawId}`)
-- **Bingo 18**: `client.bingo18.listDrawResults(params?)` — lấy danh sách kết quả kỳ quay đã công bố (`GET /games/bingo18/draw-results`)
-- **Bingo 18**: `client.bingo18.getDrawResult(drawId)` — lấy chi tiết kết quả 1 kỳ quay, bao gồm `basicPrizes` và `sideBetPrizes` (`GET /games/bingo18/draw-results/{drawId}`)
-- **Power 6/55**: New types `Power655DrawResultSummary`, `Power655DrawResultInfo`, `Power655DrawTierPrize`, `Power655LineInfo`, `Power655ListDrawResultsParams`, `Power655ListDrawResultsResponse`
-- **Max 3D**: New types `Max3dDrawResultSummary`, `Max3dDrawResultInfo`, `Max3dDrawTierPrize`, `Max3dLineInfo`, `Max3dListDrawResultsParams`, `Max3dListDrawResultsResponse`
-- **Max 3D Pro**: New types `Max3dproDrawResultSummary`, `Max3dproDrawResultInfo`, `Max3dproDrawTierPrize`, `Max3dproLineInfo`, `Max3dproListDrawResultsParams`, `Max3dproListDrawResultsResponse`
-- **Bingo 18**: New types `Bingo18DrawResultSummary`, `Bingo18DrawResultInfo`, `Bingo18DrawBasicPrize`, `Bingo18DrawSideBetPrize`, `Bingo18ListDrawResultsParams`, `Bingo18ListDrawResultsResponse`
+- **Power 6/55**: `listDrawResults(params?)` — `GET /games/power655/draw-results`
+- **Power 6/55**: `getDrawResult(drawId)` — `GET /games/power655/draw-results/{drawId}`
+- **Max 3D**: `listDrawResults(params?)` — `GET /games/max3d/draw-results`
+- **Max 3D**: `getDrawResult(drawId)` — `GET /games/max3d/draw-results/{drawId}`
+- **Max 3D Pro**: `listDrawResults(params?)` — `GET /games/max3dpro/draw-results`
+- **Max 3D Pro**: `getDrawResult(drawId)` — `GET /games/max3dpro/draw-results/{drawId}`
+- **Bingo 18**: `listDrawResults(params?)` — `GET /games/bingo18/draw-results`
+- **Bingo 18**: `getDrawResult(drawId)` — `GET /games/bingo18/draw-results/{drawId}` (bao gồm `basicPrizes` + `sideBetPrizes`)
+- **Power 6/55**: Types `Power655DrawResultSummary`, `Power655DrawResultInfo`, `Power655DrawTierPrize`, `Power655LineInfo`, `Power655ListDrawResultsParams`, `Power655ListDrawResultsResponse`
+- **Max 3D**: Types `Max3dDrawResultSummary`, `Max3dDrawResultInfo`, `Max3dDrawTierPrize`, `Max3dLineInfo`, `Max3dListDrawResultsParams`, `Max3dListDrawResultsResponse`
+- **Max 3D Pro**: Types `Max3dproDrawResultSummary`, `Max3dproDrawResultInfo`, `Max3dproDrawTierPrize`, `Max3dproLineInfo`, `Max3dproListDrawResultsParams`, `Max3dproListDrawResultsResponse`
+- **Bingo 18**: Types `Bingo18DrawResultSummary`, `Bingo18DrawResultInfo`, `Bingo18DrawBasicPrize`, `Bingo18DrawSideBetPrize`, `Bingo18ListDrawResultsParams`, `Bingo18ListDrawResultsResponse`
 
 ### Changed
 
-- **BREAKING — Power 6/55**: `Power655EntryLinesResponse` đã được cập nhật để khớp chính xác với API response:
-  - Thêm `drawId: string` — ID kỳ quay
-  - Thêm `nextCursor: number | null` — cursor phân trang (integer line index)
-  - Thêm `size: number` — số lines thực tế trả về trong trang
-  - `lines[]` đổi từ `Array<{ mainNumbers: number[] }>` sang `Array<Power655LineInfo>`:
-    - `main: string[]` thay vì `mainNumbers: number[]` — mảng string zero-padded (VD: `"01"-"55"`) thay vì number
-    - Thêm `boardNo: string` — board mà line này thuộc về
-    - Thêm `lineIndex: number` — vị trí line trong entry (0-based)
-    - Thêm `matchResult` — kết quả đối chiếu sau khi kỳ quay kết thúc (gồm `mainMatchCount`, `bonusMatched`, `tier`, `prizeAmount`)
-
-- **BREAKING — Max 3D**: `Max3dEntryLinesResponse` đã được cập nhật để khớp chính xác với API response:
+- **BREAKING — Power 6/55**: `Power655EntryLinesResponse` viết lại cho khớp API:
   - Thêm `drawId: string`, `nextCursor: number | null`, `size: number`
-  - `lines[]` đổi từ `Array<{ triplet: string }>` sang `Array<Max3dLineInfo>`:
-    - `triplets: string[]` thay vì `triplet: string` — mảng bộ ba số
-    - Thêm `boardNo`, `lineIndex`, `playMode`, `playType`, `matchResult`
+  - `lines[]`: `Array<{ mainNumbers: number[] }>` → `Array<Power655LineInfo>` — `main: string[]` (zero-padded), thêm `boardNo`, `lineIndex`, `matchResult`
 
-- **BREAKING — Max 3D Pro**: `Max3dproEntryLinesResponse` đã được cập nhật tương tự Max 3D:
-  - Thêm `drawId: string`, `nextCursor: number | null`, `size: number`
-  - `lines[]` đổi từ `Array<{ first: string; second: string }>` sang `Array<Max3dproLineInfo>`
+- **BREAKING — Max 3D**: `Max3dEntryLinesResponse` viết lại tương tự:
+  - Thêm `drawId`, `nextCursor`, `size`
+  - `lines[]`: `Array<{ triplet: string }>` → `Array<Max3dLineInfo>` — `triplets: string[]`, thêm `boardNo`, `lineIndex`, `playMode`, `playType`, `matchResult`
 
-- **BREAKING — Max 3D**: `Max3dTicketEntriesResponse.entries[].result` đã sửa để khớp với kết quả quay số thực tế:
+- **BREAKING — Max 3D Pro**: `Max3dproEntryLinesResponse` viết lại tương tự Max 3D:
+  - `lines[]`: `Array<{ first: string; second: string }>` → `Array<Max3dproLineInfo>`
+
+- **BREAKING — Max 3D**: `Max3dTicketEntriesResponse.entries[].result` — sửa shape:
   - Cũ: `{ firstPrize: string; secondPrize: string; publishedAt: string }`
-  - Mới: `{ special: string[]; first: string[]; second: string[]; third: string[]; publishedAt: string }` — khớp với 20 bộ ba chia 4 hạng giải (đặc biệt, nhất, nhì, ba)
+  - Mới: `{ special: string[]; first: string[]; second: string[]; third: string[]; publishedAt: string }` — 20 bộ ba chia 4 hạng giải
 
-- **BREAKING — Max 3D Pro**: `Max3dproTicketEntriesResponse.entries[].result` đã sửa tương tự Max 3D:
-  - Cũ: `{ firstPrize: string; secondPrize: string; publishedAt: string }`
-  - Mới: `{ special: string[]; first: string[]; second: string[]; third: string[]; publishedAt: string }`
+- **BREAKING — Max 3D Pro**: `Max3dproTicketEntriesResponse.entries[].result` — sửa shape tương tự Max 3D.
 
 ### Removed
 
-- **BREAKING — Mega 6/45**: `Mega645PlayType.QuickPick` (`"quickPick"`) đã bị xóa. API handler không còn chấp nhận giá trị này, mọi request với `playType: "quickPick"` sẽ bị từ chối (`VALIDATION_ERROR`). Thay bằng: chọn số thủ công với `Standard` hoặc `Bao*` play types.
-- **BREAKING — Power 6/55**: `Power655PlayType.QuickPick` (`"quickPick"`) đã bị xóa. Lý do giống Mega 6/45.
-- **BREAKING — Lotto 5/35**: `Lotto535PlayType.QuickPick` (`"quickPick"`) đã bị xóa. Lý do giống trên.
-- **BREAKING — Max 3D**: `Max3dPlayType.QuickPick` (`"quickPick"`) đã bị xóa. API handler chỉ chấp nhận `straight`, `combo3`, `combo6`.
+- **BREAKING — Mega 6/45**: `Mega645PlayType.QuickPick` (`"quickPick"`) — handler không còn chấp nhận, sẽ bị `VALIDATION_ERROR`.
+- **BREAKING — Power 6/55**: `Power655PlayType.QuickPick` — lý do như trên.
+- **BREAKING — Lotto 5/35**: `Lotto535PlayType.QuickPick` — lý do như trên.
+- **BREAKING — Max 3D**: `Max3dPlayType.QuickPick` — handler chỉ còn chấp nhận `straight`, `combo3`, `combo6`.
 
 ### Migration Guide
 
-#### QuickPick đã bị loại bỏ
+#### QuickPick bị xoá — dùng chọn số thủ công
 
 ```ts
-// TRƯỚC (sẽ bị VALIDATION_ERROR):
-await client.mega645.placeBet({
-  drawIds: ["2026-03-07.001"],
-  boards: [{ boardNo: "A", playType: "quickPick", selection: { mainNumbers: [] } }],
-});
+// Trước (VALIDATION_ERROR):
+boards: [{ boardNo: "A", playType: "quickPick", selection: { mainNumbers: [] } }];
 
-// SAU — chọn số thủ công:
-await client.mega645.placeBet({
-  drawIds: ["2026-03-07.001"],
-  boards: [
-    {
-      boardNo: "A",
-      playType: "standard",
-      selection: { mainNumbers: ["05", "12", "23", "34", "40", "45"] },
-    },
-  ],
-});
+// Sau:
+boards: [
+  {
+    boardNo: "A",
+    playType: "standard",
+    selection: { mainNumbers: ["05", "12", "23", "34", "40", "45"] },
+  },
+];
 ```
 
-#### Power 6/55 `getEntryLines` response đã đổi
+#### Power 6/55 `getEntryLines` response đổi
 
 ```ts
-// TRƯỚC:
-const { lines } = await client.power655.getEntryLines(entryId);
-for (const line of lines) {
-  console.log(line.mainNumbers); // number[] — SAI
-}
+// Trước:
+lines[0].mainNumbers; // number[]
 
-// SAU (v1.0.8):
+// Sau (v1.0.8+):
 const { lines, nextCursor } = await client.power655.getEntryLines(entryId, { size: 50 });
-for (const line of lines) {
-  console.log(line.main); // string[] — VD: ["03", "11", "25"]
-  console.log(line.boardNo); // "A"
-  console.log(line.matchResult?.tier); // "jackpot1" | "tier1" | null
-}
+lines[0].main; // string[] — VD: ["03", "11", "25"]
+lines[0].boardNo; // "A"
+lines[0].matchResult?.tier; // "jackpot1" | "tier1" | null
 ```
 
-#### Max 3D `getTicketEntries` entry result đã đổi
+#### Max 3D `getTicketEntries` entry result đổi
 
 ```ts
-// TRƯỚC:
-entry.result?.firstPrize; // string — SAI, không tồn tại
-entry.result?.secondPrize; // string — SAI, không tồn tại
+// Trước:
+entry.result?.firstPrize; // không tồn tại
+entry.result?.secondPrize; // không tồn tại
 
-// SAU (v1.0.8):
-entry.result?.special; // string[] — VD: ["123", "456", ...]  (bộ ba hạng Đặc Biệt)
-entry.result?.first; // string[] — VD: ["789", ...]         (bộ ba hạng Nhất)
-entry.result?.second; // string[] — ...                      (bộ ba hạng Nhì)
-entry.result?.third; // string[] — ...                      (bộ ba hạng Ba)
+// Sau (v1.0.8+):
+entry.result?.special; // string[] — hạng Đặc Biệt
+entry.result?.first; // string[] — hạng Nhất
+entry.result?.second; // string[] — hạng Nhì
+entry.result?.third; // string[] — hạng Ba
 ```
 
 ---

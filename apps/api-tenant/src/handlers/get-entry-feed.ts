@@ -17,8 +17,8 @@ import { GetEntryFeedUseCase } from "@megawin/game-core-application/use-cases";
 
 const querySchema = z.object({
   afterVersion: z.string().min(1, "afterVersion is required"),
-  limit: z.string().optional(),
-  gameProduct: z.enum(GAME_PRODUCT_VALUES as [string, ...string[]]).optional(),
+  limit: z.number().min(1).max(300).optional(),
+  gameProduct: z.enum(GAME_PRODUCT_VALUES).optional(),
 });
 
 // ============ Use case ============

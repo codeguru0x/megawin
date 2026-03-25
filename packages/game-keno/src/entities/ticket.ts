@@ -4,16 +4,18 @@
  * Collection: kenoTickets
  *
  * 1 document = 1 vé Keno (purchase intent).
- * Mỗi vé có thể chứa cả lựa chọn cơ bản (panels A, B) và bổ sung (panel C).
+ * Mỗi vé chứa 1-3 boards (panels A-C), mỗi board là 1 lựa chọn cược
+ * thuộc bất kỳ loại chơi nào (cơ bản pick1-pick10 hoặc bổ sung bigSmall/evenOdd).
  *
  * Keno cho phép:
- * - Panel A, B: chọn 1-10 số từ "01"-"80" (cách chơi cơ bản)
- * - Panel C: đặt cược Lớn/Nhỏ hoặc Chẵn/Lẻ (cách chơi bổ sung)
+ * - Cách chơi cơ bản: chọn 1-10 số từ "01"-"80"
+ * - Cách chơi bổ sung: Lớn/Nhỏ hoặc Chẵn/Lẻ
+ * - Mọi loại chơi đều nằm trong mảng boards[], phân biệt qua playType
  * - Mệnh giá: 10.000đ mỗi lần tham gia
  * - Chơi nhiều kỳ liên tiếp (multi-draw, lazy enrollment)
  */
 
-import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType, KenoSideBetPlayType } from "./enums";
+import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "./enums";
 import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
 import type { ISODateString } from "./types";
 
@@ -36,18 +38,22 @@ export interface TicketDrawPlan {
 export interface TicketPricing {
   /** Mệnh giá mỗi lần tham gia dự thưởng (VND). Keno = 10.000. */
   unitPrice: number;
+
   /**
-   * Số selections mỗi kỳ = boards.length + sideBets.length.
+   * Số selections mỗi kỳ = boards.length.
    * Đếm số bets logic (không nhân betCount).
    */
   selectionsPerDraw: number;
+
   /**
-   * Tổng đơn vị cược mỗi kỳ = Σ(board.betCount) + Σ(sideBet.betCount).
+   * Tổng đơn vị cược mỗi kỳ = Σ(board.betCount).
    * Dùng để tính tiền: amountPerDraw = betUnitsPerDraw × unitPrice.
    */
   betUnitsPerDraw: number;
+
   /** Tiền cược mỗi kỳ = betUnitsPerDraw × unitPrice (VND). */
   amountPerDraw: number;
+
   /** Tổng tiền cược toàn bộ kỳ = amountPerDraw × drawPlan.drawCount (VND). */
   totalAmount: number;
 }
@@ -56,6 +62,7 @@ export interface TicketPricing {
 export interface TicketProgress {
   /** Tổng số kỳ tham gia = drawPlan.drawCount. */
   totalDraws: number;
+
   /**
    * Số kỳ đã xử lý xong = settledCount + voidedCount.
    * Khi settledDraws === totalDraws: ticket → completed / refunded.
@@ -91,35 +98,43 @@ export interface TicketVoidSummary {
 }
 
 // ─────────────────────────────────────────────
-// Board – Cách chơi cơ bản (Panel A/B)
+// Board – Tất cả loại chơi (panels A-C)
 // ─────────────────────────────────────────────
 
 /**
- * 1 board cách chơi cơ bản trên vé Keno.
+ * 1 board trên vé Keno — đại diện cho 1 lựa chọn cược.
+ *
+ * Unified: cả cách chơi cơ bản (pick1-pick10) và bổ sung (bigSmall/evenOdd)
+ * đều nằm trong cùng 1 interface, phân biệt qua playType.
+ *
+ * - Cơ bản (pick1-pick10): bắt buộc `numbers`, `bet` = undefined.
+ * - Bổ sung (bigSmall/evenOdd): bắt buộc `bet`, `numbers` = undefined.
+ *
  * Số lưu dạng string "01"-"80" (zero-padded 2 chữ số).
  */
-export interface BasicBoard {
-  /** Mã nhận dạng board: "A" hoặc "B". */
+export interface Board {
+  /** Mã nhận dạng board: "A", "B", hoặc "C". */
   boardNo: string;
-  /** Loại chơi xác định theo số lượng chọn: "pick1" – "pick10". */
+  /** Loại chơi: "pick1"–"pick10" (cơ bản) hoặc "bigSmall"/"evenOdd" (bổ sung). */
   playType: KenoPlayType;
-  /** Danh sách số đã chọn ("01"-"80"), unique, sorted tăng dần. */
-  numbers: string[];
+
+  /**
+   * Danh sách số đã chọn ("01"-"80"), unique, sorted tăng dần.
+   * Bắt buộc cho cách chơi cơ bản (pick1-pick10).
+   * Undefined cho cách chơi bổ sung (bigSmall/evenOdd).
+   */
+  numbers?: string[];
+  /**
+   * Lựa chọn cụ thể cho cách chơi bổ sung:
+   * - bigSmall: "big" | "small" | "bigSmallDraw"
+   * - evenOdd: "even" | "odd" | "evenOddDraw" | "even1112" | "odd1112"
+   *
+   * Bắt buộc cho cách chơi bổ sung (bigSmall/evenOdd).
+   * Undefined cho cách chơi cơ bản (pick1-pick10).
+   */
+  bet?: KenoBigSmallBet | KenoEvenOddBet;
+
   /** Số lần cược nhân bội cho board (≥ minBetCount). Player chọn khi đặt cược. */
-  betCount: number;
-}
-
-// ─────────────────────────────────────────────
-// Side Bet – Cách chơi bổ sung (Panel C)
-// ─────────────────────────────────────────────
-
-/** Cách chơi bổ sung Panel C. Mỗi side bet là một lần tham gia dự thưởng độc lập. */
-export interface SideBet {
-  /** Loại side bet: "bigSmall" (Lớn/Nhỏ) hoặc "evenOdd" (Chẵn/Lẻ). */
-  playType: KenoSideBetPlayType;
-  /** Lựa chọn cụ thể: "big"/"small"/"bigSmallDraw" hoặc "even"/"odd"/"evenOddDraw"/... */
-  bet: KenoBigSmallBet | KenoEvenOddBet;
-  /** Số lần cược nhân bội cho side bet (≥ minBetCount). Player chọn khi đặt cược. */
   betCount: number;
 }
 
@@ -134,8 +149,10 @@ export interface TicketDoc {
 
   /** ID của đại lý sở hữu ticket. Dùng để phân vùng dữ liệu multi-tenant. */
   tenantId: string;
+
   /** ID tài khoản người chơi. */
   accountId: string;
+
   /** Tên đăng nhập, lưu để giảm join khi hiển thị. */
   username: string;
 
@@ -143,8 +160,10 @@ export interface TicketDoc {
 
   /** Mã vé duy nhất, hiển thị cho người chơi. Ví dụ: "KN-20240101-000001". */
   ticketNo: string;
+
   /** Kênh mua vé: "web" | "app" | "pos". */
   channel: TicketChannel;
+
   /**
    * IP address của player lúc đặt cược (IPv4 hoặc IPv6).
    * Lấy từ CF-Connecting-IP (qua Cloudflare) → X-Forwarded-For → sourceIp.
@@ -164,23 +183,16 @@ export interface TicketDoc {
 
   pricing: TicketPricing;
 
-  // ───── Boards cơ bản (Panel A/B) ─────
+  // ───── Boards (tất cả loại chơi, panels A-C) ─────
 
   /**
-   * Danh sách board cách chơi cơ bản.
-   * Tối đa 2 boards (Panel A và Panel B).
-   * Mỗi board chọn 1-10 số từ "01"-"80".
+   * Danh sách board — mỗi board là 1 lựa chọn cược.
+   * Tối đa 3 boards (Panel A, B, C).
+   *
+   * Mỗi board có thể là cách chơi cơ bản (pick1-pick10) hoặc bổ sung (bigSmall/evenOdd).
+   * Phân biệt qua field `playType`.
    */
-  boards: BasicBoard[];
-
-  // ───── Side Bets (Panel C) ─────
-
-  /**
-   * Danh sách cược bổ sung Panel C.
-   * Mỗi side bet là Lớn/Nhỏ hoặc Chẵn/Lẻ.
-   * Có thể rỗng nếu player không đặt cược bổ sung.
-   */
-  sideBets: SideBet[];
+  boards: Board[];
 
   // ───── Progress ─────
 

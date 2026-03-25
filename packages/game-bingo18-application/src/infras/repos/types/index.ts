@@ -4,20 +4,15 @@ export type {
   PlayerBreakdownRow,
   OutstandingDrawMetrics,
   OutstandingDrawCounts,
-  DrawRevenueResult,
-  SettledPayoutSummary,
   SettledFinancialSummary,
   TenantSettleMetrics,
   TenantPlayerCount,
-  TenantReportRow,
-  PlayerReportRow,
   VoidMetrics,
   VoidRefundSummary,
   TicketAggregateResult,
   OpsSummary,
   WinningEntriesSummary,
-  BasicPrizeSummaryRow,
-  SideBetPrizeSummaryRow,
+  PrizeSummaryRow,
 } from "./entry.types";
 export type { OutstandingGameSummary } from "./outstanding.types";
 export type { TicketSummary } from "./ticket.types";

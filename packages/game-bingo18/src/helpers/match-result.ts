@@ -58,6 +58,8 @@ export interface DrawResultForMatch {
 export interface SingleNumMatchResult {
   /** Số lần số đã chọn xuất hiện trong 3 số quay (0, 1, 2, 3). */
   matchCount: number;
+  /** true nếu matchCount >= 1. */
+  isWin: boolean;
   /** Tiền thắng (VND). 0 nếu matchCount = 0. */
   winAmount: number;
 }
@@ -100,7 +102,7 @@ export function matchSingleNum(
     // case 0: winAmount giữ nguyên 0 — không cần default
   }
 
-  return { matchCount, winAmount };
+  return { matchCount, isWin: matchCount > 0, winAmount };
 }
 
 // ─────────────────────────────────────────────

@@ -1,6 +1,5 @@
 import type {
   Bingo18PlayType,
-  Bingo18SideBetPlayType,
   Bingo18BigSmallBet,
   Bingo18TripleKind,
 } from "@megawin/game-bingo18/entities";
@@ -11,32 +10,28 @@ import type { TicketChannel } from "@megawin/game-core/entities";
 // ─────────────────────────────────────────────
 
 /**
- * Board cơ bản: Một số / Hai số trùng / Ba số trùng.
+ * Input cho 1 board — unified cho cả cơ bản và bổ sung.
+ *
+ * - singleNum: number bắt buộc.
+ * - doubleMatch: number bắt buộc.
+ * - tripleMatch: tripleKind bắt buộc, number nếu specific.
+ * - sumTotal: sum bắt buộc.
+ * - bigSmallDraw: bet bắt buộc.
+ *
+ * playType đã được validate ở Zod handler nên luôn consistent với fields.
  */
-export interface PlaceBetBasicBoardInput {
+export interface PlaceBetBoardInput {
   boardNo: string;
-  playType:
-    | typeof Bingo18PlayType.SingleNum
-    | typeof Bingo18PlayType.DoubleMatch
-    | typeof Bingo18PlayType.TripleMatch;
-  /** Số đã chọn (1-6). Bắt buộc cho singleNum/doubleMatch, optional cho tripleMatch "any". */
+  playType: Bingo18PlayType;
+  /** Số đã chọn (1-6). Cho singleNum, doubleMatch, tripleMatch specific. */
   number?: number;
-  /** Chỉ dùng cho tripleMatch: "specific" hoặc "any". */
+  /** Phân loại triple: "specific" | "any". Chỉ cho tripleMatch. */
   tripleKind?: Bingo18TripleKind;
-  /** Số lần tham gia dự thưởng cho board này (≥ minBetCount, ≤ maxBetCount). */
-  betCount: number;
-}
-
-/**
- * Side bet: Cộng tổng / Lớn Hòa Nhỏ.
- */
-export interface PlaceBetSideBetInput {
-  playType: Bingo18SideBetPlayType;
-  /** Tổng cụ thể (3-18) cho sumTotal. */
+  /** Tổng cụ thể (3-18). Chỉ cho sumTotal. */
   sum?: number;
-  /** big/draw/small cho bigSmallDraw. */
+  /** Cược lớn/hoà/nhỏ. Chỉ cho bigSmallDraw. */
   bet?: Bingo18BigSmallBet;
-  /** Số lần tham gia dự thưởng cho side bet này (≥ minBetCount, ≤ maxBetCount). */
+  /** Số lần tham gia dự thưởng (≥ minBetCount, ≤ maxBetCount). */
   betCount: number;
 }
 
@@ -54,8 +49,8 @@ export interface PlaceBetInput {
    */
   drawIds: string[];
 
-  boards: PlaceBetBasicBoardInput[];
-  sideBets: PlaceBetSideBetInput[];
+  /** Danh sách boards — cả cơ bản và bổ sung. */
+  boards: PlaceBetBoardInput[];
 }
 
 // ─────────────────────────────────────────────
@@ -78,6 +73,5 @@ export interface PlaceBetOutput {
     totalAmount: number;
   };
   boardCount: number;
-  sideBetCount: number;
   entryCount: number;
 }

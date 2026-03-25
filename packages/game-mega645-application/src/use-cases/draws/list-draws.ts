@@ -30,7 +30,7 @@ export class ListDrawsUseCase extends NextApiUseCase<ListDrawsInput, ListDrawsOu
       hasResult: !!d.result,
       result: d.result
         ? {
-            winningMain: [...d.result.winningMain],
+            winningNumbers: d.result?.winningNumbers ?? [],
           }
         : undefined,
       ticketEntryCount: d.stats?.ticketEntryCount,

@@ -24,6 +24,7 @@ export interface BoardDerived {
    * - bao7-18: C(N, 6) – tổ hợp chập 6 từ N số đã chọn
    */
   expandedLines: number;
+
   /** Kích thước bao (chỉ khi bao5, bao7-18). */
   baoSize?: number;
 }

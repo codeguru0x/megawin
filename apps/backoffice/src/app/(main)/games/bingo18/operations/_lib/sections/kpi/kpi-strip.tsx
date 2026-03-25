@@ -56,7 +56,7 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
         iconBg="bg-indigo-100 dark:bg-indigo-900/50"
         iconColor="text-indigo-600 dark:text-indigo-400"
         label="Boards cơ bản"
-        value={formatNumber(kpi.totalBoards)}
+        value={formatNumber(kpi.totalBasicBoards)}
         sub="singleNum · double · triple"
       />
       <KpiCard

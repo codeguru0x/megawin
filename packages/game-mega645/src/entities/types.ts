@@ -31,24 +31,24 @@ export const DRAW_NO_VALUES: readonly DrawNo[] = [DrawNo.Single];
 // Mega 6/45 Number Ranges
 // ─────────────────────────────────────────────
 
-/** Số chính: 1-45. */
-export const MEGA645_MAIN_MIN = 1;
-export const MEGA645_MAIN_MAX = 45;
+/** Số hợp lệ: 1-45. */
+export const MEGA645_NUMBER_MIN = 1;
+export const MEGA645_NUMBER_MAX = 45;
 /** Phải chọn đúng 6 số cho standard play. */
-export const MEGA645_MAIN_COUNT = 6;
+export const MEGA645_NUMBER_COUNT = 6;
 
 // ─────────────────────────────────────────────
 // String Number Helpers
 // ─────────────────────────────────────────────
 
-/** Tất cả số chính hợp lệ dạng string zero-padded: "01"-"45". */
-export const ALL_MAIN_NUMBERS: readonly string[] = Array.from(
-  { length: MEGA645_MAIN_MAX - MEGA645_MAIN_MIN + 1 },
-  (_, i) => String(i + MEGA645_MAIN_MIN).padStart(2, "0"),
+/** Tất cả số hợp lệ dạng string zero-padded: "01"-"45". */
+export const ALL_NUMBERS: readonly string[] = Array.from(
+  { length: MEGA645_NUMBER_MAX - MEGA645_NUMBER_MIN + 1 },
+  (_, i) => String(i + MEGA645_NUMBER_MIN).padStart(2, "0"),
 );
 
-/** Set tra nhanh O(1) cho số chính hợp lệ. */
-export const VALID_MAIN_NUMBER_SET: ReadonlySet<string> = new Set(ALL_MAIN_NUMBERS);
+/** Set tra nhanh O(1) cho số hợp lệ. */
+export const VALID_NUMBER_SET: ReadonlySet<string> = new Set(ALL_NUMBERS);
 
 // ─────────────────────────────────────────────
 // Tuple & Value Types
@@ -61,19 +61,19 @@ export const VALID_MAIN_NUMBER_SET: ReadonlySet<string> = new Set(ALL_MAIN_NUMBE
 /**
  * Lựa chọn số của người chơi trên 1 board.
  *
- * Mega 6/45 KHÔNG có số đặc biệt, chỉ có mainNumbers.
- * - standard:  mainNumbers.length = 6
- * - bao5:      mainNumbers.length = 5
- * - bao7-18:   mainNumbers.length = 7..18
+ * Mega 6/45 KHÔNG có số đặc biệt, chỉ có numbers.
+ * - standard:  numbers.length = 6
+ * - bao5:      numbers.length = 5
+ * - bao7-18:   numbers.length = 7..18
  */
 export interface BoardSelection {
   /**
-   * Danh sách các số chính người chơi đã chọn ("01"-"45"), unique, sorted tăng dần.
+   * Danh sách các số người chơi đã chọn ("01"-"45"), unique, sorted tăng dần.
    * - standard: 6 số (1 line)
    * - bao5: 5 số (hệ thống bổ sung số thứ 6 từ 40 số còn lại → 40 lines)
    * - bao7-18: 7..18 số (expand thành C(N,6) lines)
    */
-  mainNumbers: string[];
+  numbers: string[];
 }
 
 // ─────────────────────────────────────────────
@@ -85,8 +85,8 @@ export interface BoardSelection {
  * Đây là đơn vị nhỏ nhất để so sánh với kết quả quay.
  */
 export interface LineValue {
-  /** 6 số chính sorted tăng dần ("01"-"45"). */
-  main: string[];
+  /** 6 số sorted tăng dần ("01"-"45"). */
+  numbers: string[];
 }
 
 // ─────────────────────────────────────────────
@@ -157,12 +157,10 @@ export interface PlayRules {
 // Board No
 // ─────────────────────────────────────────────
 
-export type BoardNo = "A" | "B" | "C" | "D" | "E" | "F";
-
 /**
  * Mega 6/45 cho phép tối đa 6 boards (A-F) trên vé.
  */
-export const VALID_BOARD_NOS: readonly BoardNo[] = ["A", "B", "C", "D", "E", "F"];
+export const VALID_BOARD_NOS = ["A", "B", "C", "D", "E", "F"] as const;
 
 // ─────────────────────────────────────────────
 // Bao Combinations lookup

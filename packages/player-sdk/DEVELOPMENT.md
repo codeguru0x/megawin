@@ -19,7 +19,7 @@ pnpm test:watch     # Watch mode tests
 
 ## Release cho khách hàng
 
-### Một lệnh duy nhất
+### Một lệnh duy nhất chạy pnpm upload tự release /build doc / upload
 
 ```bash
 pnpm upload          # Bump patch (1.0.0 → 1.0.1) rồi upload

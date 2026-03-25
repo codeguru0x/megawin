@@ -16,33 +16,6 @@ export interface PlayerBreakdownRow {
   totalPayout: number;
 }
 
-/**
- * Kết quả aggregate per-tenant cho 1 draw — bao gồm commissionRate snapshot.
- * Dùng bởi CalculateFinancials (pipeline cũ). Xem TenantSettleMetrics cho BuildSettleReport.
- */
-export interface TenantReportRow {
-  tenantId: string;
-  totalStake: number;
-  totalWin: number;
-  totalPayout: number;
-  entryCount: number;
-  /** CommissionRate snapshot từ lúc place-bet (không phải TenantConfig hiện tại). */
-  commissionRate: number;
-  totalCommission: number;
-}
-
-/**
- * Kết quả aggregate player breakdown per draw — group by {tenantId, accountId}.
- * Dùng bởi CalculateFinancials (pipeline cũ).
- */
-export interface PlayerReportRow {
-  tenantId: string;
-  accountId: string;
-  totalStake: number;
-  totalWin: number;
-  totalPayout: number;
-  entryCount: number;
-}
 export interface OutstandingDrawMetrics {
   drawId: string;
   financialDate: string;
@@ -65,35 +38,10 @@ export interface OutstandingDrawCounts {
 }
 
 /**
- * Tổng doanh thu và hoa hồng cho 1 draw (exclude voided entries).
- * Dùng bởi CalculateFinancials.
- */
-export interface DrawRevenueResult {
-  /** Tổng doanh thu bán vé (VND). Công thức: SUM(entry.amount). */
-  totalRevenue: number;
-  /** Tổng hoa hồng đại lý (VND). Công thức: SUM(entry.tenant.commissionAmount). */
-  totalAgentCommission: number;
-}
-
-/**
- * Tổng kết payout entries đã settle của 1 draw.
- * Dùng bởi CalculateFinancials.
- */
-export interface SettledPayoutSummary {
-  /** Số entry đã settle. */
-  totalSettled: number;
-  /** Tổng tiền trả thưởng (VND). Công thức: SUM(entry.payout.payoutAmount). */
-  totalPayoutAmount: number;
-  /** Tổng tiền thắng (VND). Công thức: SUM(entry.payout.winAmount). */
-  totalPrizes: number;
-}
-
-/**
  * Tổng hợp tài chính entries đã settle cho 1 draw — gộp revenue + payout trong 1 query.
  *
  * Tại thời điểm CalculateFinancials, TẤT CẢ entries đã là Settled
  * (SettleEntries hoàn tất, chưa có Void) → 1 pipeline đủ lấy cả revenue lẫn payout.
- * Tiết kiệm 1 DB round-trip so với 2 queries riêng (DrawRevenueResult + SettledPayoutSummary).
  */
 export interface SettledFinancialSummary {
   /** Số entry đã settle. */
@@ -212,31 +160,25 @@ export interface WinningEntriesSummary {
 }
 
 /**
- * Tổng kết giải thưởng board cơ bản trúng trong 1 kỳ quay.
- * Group by (playType, matchCount, tripleKind?). Dùng bởi CalculateFinancials.
+ * Tổng kết giải thưởng (cả cơ bản và bổ sung) trúng trong 1 kỳ quay.
+ * Group by (playType, matchCount, tripleKind?, sum?, bet?). Dùng bởi CalculateFinancials.
+ *
+ * Unified: cơ bản dùng matchCount + tripleKind, bổ sung dùng sum/bet.
  */
-export interface BasicPrizeSummaryRow {
+export interface PrizeSummaryRow {
   playType: string;
-  matchCount: number;
+  /**
+   * Số lần xuất hiện trong kết quả. Meaningful cho cơ bản.
+   * Bổ sung (sumTotal/bigSmallDraw): null — field không áp dụng.
+   */
+  matchCount: number | null;
   /** null với singleNum + doubleMatch. "specific" | "any" với tripleMatch. */
   tripleKind: Bingo18TripleKind | null;
-  /** Số lượt cược trúng tổ hợp này trong kỳ quay. */
-  winnerCount: number;
-  /** Tiền thưởng mỗi lần cược (VND). */
-  prizePerUnit: number;
-}
-
-/**
- * Tổng kết giải thưởng side bet trúng trong 1 kỳ quay.
- * Group by (playType, sum?, bet?). Dùng bởi CalculateFinancials.
- */
-export interface SideBetPrizeSummaryRow {
-  playType: string;
-  /** Giá trị tổng trúng — chỉ có với sumTotal. */
+  /** Giá trị tổng trúng — chỉ có với sumTotal. null cho các loại khác. */
   sum: number | null;
-  /** Loại cược trúng — chỉ có với bigSmallDraw. */
+  /** Loại cược trúng — chỉ có với bigSmallDraw. null cho các loại khác. */
   bet: Bingo18BigSmallBet | null;
-  /** Số lượt cược trúng với (playType, sum/bet) này trong kỳ quay. */
+  /** Số lượt cược trúng tổ hợp này trong kỳ quay. */
   winnerCount: number;
   /** Tiền thưởng mỗi lần cược (VND). */
   prizePerUnit: number;

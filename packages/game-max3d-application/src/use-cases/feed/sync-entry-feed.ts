@@ -16,6 +16,7 @@ import type {
   EntryBoardSnapshot,
   EntryPayout,
   EntryVoidInfo,
+  EntryResult,
 } from "@megawin/game-max3d/entities";
 import type {
   Max3dFeedBetContent,
@@ -39,18 +40,18 @@ export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
       Long.fromString(afterVersion),
       batchSize,
     );
-    return entries.map((e) => mapToFeedDoc(e));
+    return entries.map((e) => mapToFeedDoc(e, this.gameProduct));
   }
 }
 
-function mapToFeedDoc(e: TicketEntryEntity): Omit<EntryFeedDoc, "_id"> {
+function mapToFeedDoc(e: TicketEntryEntity, gameProduct: GameProduct): Omit<EntryFeedDoc, "_id"> {
   const winAmount = e.payout?.winAmount ?? 0;
   const payoutAmount = e.payout?.payoutAmount ?? 0;
   const stakeAmount = e.amount;
 
   return {
     version: Long.fromString(e.version),
-    gameProduct: GameProduct.Max3d,
+    gameProduct: gameProduct,
     entryId: e.id,
     ticketId: e.ticketId,
     ticketNo: e.entrySummary.ticketNo,
@@ -60,6 +61,8 @@ function mapToFeedDoc(e: TicketEntryEntity): Omit<EntryFeedDoc, "_id"> {
     financialDate: e.financialDate,
     drawId: e.drawId,
     status: e.status,
+    betUnitCount: e.betUnitCount,
+    unitPrice: e.unitPrice,
     outcome: e.outcome,
     stakeAmount,
     winAmount,
@@ -71,7 +74,8 @@ function mapToFeedDoc(e: TicketEntryEntity): Omit<EntryFeedDoc, "_id"> {
     betContent: mapBetContent(e.entrySummary.boards),
     drawResult: mapDrawResult(e.result),
     payoutDetail: mapPayoutDetail(e.payout),
-    updatedAt: e.updatedAt ?? new Date(),
+    createdAt: e.createdAt,
+    updatedAt: e.updatedAt,
     feedCreatedAt: new Date(),
   };
 }
@@ -81,7 +85,6 @@ function mapVoidInfo(v: EntryVoidInfo | undefined): FeedVoidInfo | undefined {
   return {
     originalAmount: v.originalAmount,
     refundAmount: v.refundAmount,
-    refundStatus: String(v.refundStatus),
     voidedAt: v.voidedAt,
   };
 }
@@ -90,8 +93,8 @@ function mapBetContent(boards: EntryBoardSnapshot[]): Max3dFeedBetContent {
   return {
     boards: boards.map((b) => ({
       boardNo: b.boardNo,
-      playMode: String(b.playMode),
-      playType: String(b.playType),
+      playMode: b.playMode,
+      playType: b.playType,
       triplets: b.triplets,
       lineCount: b.lineCount,
       betCount: b.betCount,
@@ -99,30 +102,30 @@ function mapBetContent(boards: EntryBoardSnapshot[]): Max3dFeedBetContent {
   };
 }
 
-function mapDrawResult(result: TicketEntryEntity["result"]): Max3dFeedDrawResult | undefined {
-  if (!result) return undefined;
+function mapDrawResult(result: EntryResult | undefined): Max3dFeedDrawResult | undefined {
+  if (!result) {
+    return undefined;
+  }
+
   return {
     special: result.special,
     first: result.first,
     second: result.second,
     third: result.third,
-    publishedAt:
-      result.publishedAt instanceof Date
-        ? result.publishedAt.toISOString()
-        : String(result.publishedAt),
-  };
+  } satisfies Max3dFeedDrawResult;
 }
 
 function mapPayoutDetail(payout: EntryPayout | undefined): Max3dFeedPayoutDetail | undefined {
-  if (!payout || !payout.tiers?.length) return undefined;
+  if (!payout || !payout.tiers?.length) {
+    return undefined;
+  }
   return {
-    settledAt:
-      payout.settledAt instanceof Date ? payout.settledAt.toISOString() : String(payout.settledAt),
     tiers: payout.tiers.map((t) => ({
-      tier: String(t.tier),
+      tier: t.tier,
+      playMode: t.playMode,
       hitCount: t.hitCount,
       unitAmount: t.unitAmount,
       amount: t.amount,
     })),
-  };
+  } satisfies Max3dFeedPayoutDetail;
 }

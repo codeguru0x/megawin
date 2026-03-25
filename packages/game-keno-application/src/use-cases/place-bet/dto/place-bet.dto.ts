@@ -5,19 +5,23 @@ import type { TicketChannel } from "@megawin/game-core/entities";
 // PlaceBet Input
 // ─────────────────────────────────────────────
 
-export interface PlaceBetBasicBoardInput {
+/**
+ * Input cho 1 board — unified cho cả cơ bản và bổ sung.
+ *
+ * - Cơ bản (pick1-pick10): numbers bắt buộc, bet = undefined.
+ * - Bổ sung (bigSmall/evenOdd): bet bắt buộc, numbers = undefined.
+ *
+ * playType đã được validate ở Zod handler nên luôn consistent với fields.
+ */
+export interface PlaceBetBoardInput {
   boardNo: string;
-  /** Số dạng string "01"-"80". */
-  numbers: string[];
+  playType: KenoPlayType;
+  /** Số dạng string "01"-"80". Bắt buộc cho cơ bản (pick1-pick10). */
+  numbers?: string[];
+  /** Lựa chọn side bet. Bắt buộc cho bổ sung (bigSmall/evenOdd). */
+  bet?: KenoBigSmallBet | KenoEvenOddBet;
   /** Số lần cược nhân bội cho board (≥ minBetCount). Default 1. */
-  betCount?: number;
-}
-
-export interface PlaceBetSideBetInput {
-  playType: typeof KenoPlayType.BigSmall | typeof KenoPlayType.EvenOdd;
-  bet: KenoBigSmallBet | KenoEvenOddBet;
-  /** Số lần cược nhân bội cho side bet (≥ minBetCount). Default 1. */
-  betCount?: number;
+  betCount: number;
 }
 
 export interface PlaceBetInput {
@@ -34,8 +38,8 @@ export interface PlaceBetInput {
    */
   drawIds: string[];
 
-  boards: PlaceBetBasicBoardInput[];
-  sideBets: PlaceBetSideBetInput[];
+  /** Danh sách boards — cả cơ bản (pick) và bổ sung (bigSmall/evenOdd). */
+  boards: PlaceBetBoardInput[];
 }
 
 // ─────────────────────────────────────────────
@@ -58,6 +62,5 @@ export interface PlaceBetOutput {
     totalAmount: number;
   };
   boardCount: number;
-  sideBetCount: number;
   entryCount: number;
 }

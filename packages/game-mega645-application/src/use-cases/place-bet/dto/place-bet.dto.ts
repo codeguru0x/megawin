@@ -17,7 +17,7 @@ export interface PlaceBetBoardInput {
   playType: PlayType;
   /**
    * Các số đã chọn cho board.
-   * Mega 6/45: mainNumbers gồm 6-15 số trong khoảng 1-45 (tuỳ playType).
+   * Mega 6/45: numbers gồm 6-15 số trong khoảng 1-45 (tuỳ playType).
    */
   selection: BoardSelection;
   /** Số lần cược nhân bội (≥ 1). Default 1 (backward compat). */

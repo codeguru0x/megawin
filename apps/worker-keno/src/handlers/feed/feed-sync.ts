@@ -39,5 +39,5 @@ import { SyncEntryFeedUseCase } from "@megawin/game-keno-application/use-cases/f
 const useCase = new SyncEntryFeedUseCase();
 
 export async function handler() {
-  return useCase.run({ batchSize: 500 });
+  return useCase.run();
 }

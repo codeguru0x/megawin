@@ -22,18 +22,18 @@
     "@megawin/auth": "workspace:*",
     "@megawin/game-core": "workspace:*",
     "@megawin/game-core-application": "workspace:*",
-    "@megawin/identity-application": "workspace:*",
     "@megawin/identity": "workspace:*",
+    "@megawin/identity-application": "workspace:*",
     "@megawin/shared": "workspace:*",
     "@middy/core": "^7.1.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
-    "@types/node": "^25.3.3",
+    "@types/node": "^25.5.0",
     "serverless-offline": "^14.5.0",
-    "typescript": "5.9.3",
+    "typescript": "6.0.2",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "latest"
+    "vitest": "4.1.1"
   }
 }

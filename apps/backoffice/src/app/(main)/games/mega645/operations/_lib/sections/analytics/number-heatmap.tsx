@@ -229,7 +229,7 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 flex-wrap">
-                {c.mainNumbers.map((n) => (
+                {c.numbers.map((n) => (
                   <NumberBadge key={n} num={n} />
                 ))}
               </div>
@@ -256,18 +256,18 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
 
 /**
  * NumberHeatmap — Mega 6/45.
- * Chỉ có mainNumbers (01-45), không có specialNumbers.
+ * Chỉ có numbers (01-45), không có specialNumbers.
  */
 export function NumberHeatmap({
-  mainNumbers,
+  numbers,
   topCombos,
   tenants,
 }: {
-  mainNumbers: NumberFreq[];
+  numbers: NumberFreq[];
   topCombos?: TopComboItem[];
   tenants?: TenantRow[];
 }) {
-  const totalBets = mainNumbers.reduce((a, n) => a + n.count, 0);
+  const totalBets = numbers.reduce((a, n) => a + n.count, 0);
 
   return (
     <Card className="gap-0 py-0 shadow-sm">
@@ -283,7 +283,7 @@ export function NumberHeatmap({
         </div>
       </CardHeader>
       <CardContent className="px-5 pb-4 pt-0 space-y-4">
-        <MainGrid numbers={mainNumbers} />
+        <MainGrid numbers={numbers} />
         {topCombos && <TopCombos combos={topCombos} />}
         {tenants && tenants.length > 0 && (
           <div className="border-t pt-3">

@@ -50,32 +50,22 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
     }
 
     // Giữ nguyên thứ tự quay (draw order) — KHÔNG sort
-    const winningMain = [...input.winningMain];
-    const winningSpecial = input.winningSpecial;
-    const publishedAt = nowVN();
+    const resultData = {
+      winningMain: [...input.winningMain],
+      winningSpecial: input.winningSpecial,
+      publishedAt: nowVN(),
+    };
 
-    if (draw.status === DrawStatus.SalesClosed) {
-      const updated = await this.drawRepo.publishResult(
-        input.drawId,
-        { winningMain, winningSpecial },
-        input.vietlottRef,
+    const updated = await this.drawRepo.publishResult(
+      input.drawId,
+      resultData,
+      input.vietlottRef,
+    );
+
+    if (!updated) {
+      throw AppException.internal(
+        `Publish kết quả kỳ ${input.drawId} thất bại. Vui lòng thử lại.`,
       );
-
-      if (!updated) {
-        throw AppException.internal(
-          `Chuyển trạng thái kỳ ${input.drawId} thất bại. Vui lòng thử lại.`,
-        );
-      }
-    } else {
-      const success = await this.drawRepo.updateResult(
-        input.drawId,
-        { winningMain, winningSpecial, publishedAt },
-        input.vietlottRef,
-      );
-
-      if (!success) {
-        throw AppException.internal(`Cập nhật kết quả kỳ ${input.drawId} thất bại.`);
-      }
     }
 
     return {
@@ -84,7 +74,7 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
       result: {
         winningMain: input.winningMain,
         winningSpecial: input.winningSpecial,
-        publishedAt: publishedAt.toISOString(),
+        publishedAt: resultData.publishedAt.toISOString(),
       },
     };
   }

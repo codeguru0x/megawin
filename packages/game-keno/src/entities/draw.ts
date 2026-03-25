@@ -11,7 +11,7 @@
 
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { ISODateString } from "./types";
-import type { KenoBigSmallBet, KenoEvenOddBet, KenoSideBetPlayType } from "./enums";
+import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "./enums";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces
@@ -71,18 +71,31 @@ export interface DrawStats {
 }
 
 /**
- * Kết quả trúng thưởng 1 bậc chơi cơ bản trong kỳ quay (denormalize cho player API).
+ * Kết quả trúng thưởng 1 loại cược trong kỳ quay (denormalize cho player API).
  *
- * Ví dụ: "Trúng 7 trong 20 số" → pickCount=10, matchCount=7, winnerCount=3, prizeAmount=710000
- * (1 bộ = 1 board trên 1 entry có pickCount trùng matchCount).
+ * Unified cho cả cơ bản (pick1-pick10) và bổ sung (bigSmall/evenOdd):
+ * - Cơ bản: dùng pickCount + matchCount, bet = undefined.
+ * - Bổ sung: dùng bet, pickCount = null, matchCount = null.
  */
-export interface DrawBasicPrizeSummary {
-  /** Bậc chơi (pickCount): 1-10. */
-  pickCount: number;
-  /** Số trùng khớp (matchCount): 0-pickCount. */
-  matchCount: number;
+export interface DrawPrizeSummary {
+  /** Loại chơi: "pick1"–"pick10" | "bigSmall" | "evenOdd". */
+  playType: KenoPlayType;
+
+  /** Bậc chơi (pickCount): 1-10 cho cơ bản. null cho bổ sung. */
+  pickCount: number | null;
+
+  /** Số trùng khớp (matchCount): 0-pickCount cho cơ bản. null cho bổ sung. */
+  matchCount: number | null;
+
+  /**
+   * Lựa chọn cụ thể cho bổ sung: "big"/"small"/"bigSmallDraw"/"even"/"odd"/...
+   * Undefined cho cơ bản.
+   */
+  bet?: KenoBigSmallBet | KenoEvenOddBet;
+
   /** Tổng số bộ trúng (= tổng boards có kết quả này across tất cả entries). */
   winnerCount: number;
+
   /**
    * Tiền thưởng mỗi bộ (VND).
    * Bậc 8/9/10 có thể bị cap nếu vượt ngưỡng.
@@ -91,44 +104,18 @@ export interface DrawBasicPrizeSummary {
 }
 
 /**
- * Kết quả trúng thưởng side bet trong kỳ quay (denormalize cho player API).
- *
- * Mô hình đối xứng với DrawBasicPrizeSummary:
- *   BasicPrize: {pickCount, matchCount} → {winnerCount, prizePerUnit}
- *   SideBetPrize: {playType, bet}       → {winnerCount, prizePerUnit}
- *
- * Ví dụ: player đặt "big" trúng → playType="bigSmall", bet="big", winnerCount=5, prizePerUnit=26000.
- * Client derive outcome ("big13Plus" v.v.) từ bet + draw.result.bigCount/smallCount nếu cần.
- */
-export interface DrawSideBetPrizeSummary {
-  /** Loại side bet: "bigSmall" hoặc "evenOdd". */
-  playType: KenoSideBetPlayType;
-  /**
-   * Lựa chọn cụ thể người chơi đặt và trúng.
-   * bigSmall: "big" | "bigSmallDraw" | "small"
-   * evenOdd:  "even" | "even1112" | "evenOddDraw" | "odd1112" | "odd"
-   */
-  bet: KenoBigSmallBet | KenoEvenOddBet;
-  /** Số người đặt cược trúng với bet value này. */
-  winnerCount: number;
-  /** Tiền thưởng mỗi lần cược (VND). */
-  prizePerUnit: number;
-}
-
-/**
  * Tổng kết settle kỳ quay Keno — denormalize trên draw để player API đọc trực tiếp.
  *
  * Ghi 1 lần bởi CalculateFinancials step, idempotent (overwrite).
+ * prizes[] chứa cả giải cơ bản và bổ sung, phân biệt qua playType.
  *
- * totalWinners và totalPrizeAmount được tính ở use case layer bằng cách sum từ basicPrizes[]:
- *   totalWinners     = basicPrizes.reduce((s, b) => s + b.winnerCount, 0)
- *   totalPrizeAmount = basicPrizes.reduce((s, b) => s + b.winnerCount * b.prizePerUnit, 0)
+ * totalWinners và totalPrizeAmount được tính ở use case layer bằng cách sum từ prizes[]:
+ *   totalWinners     = prizes.reduce((s, p) => s + p.winnerCount, 0)
+ *   totalPrizeAmount = prizes.reduce((s, p) => s + p.winnerCount * p.prizePerUnit, 0)
  */
 export interface DrawSettleSummary {
-  /** Bảng giải thưởng cơ bản — chỉ chứa entries có winnerCount > 0. */
-  basicPrizes: DrawBasicPrizeSummary[];
-  /** Bảng giải thưởng side bet — chỉ chứa bet values có winnerCount > 0. */
-  sideBetPrizes: DrawSideBetPrizeSummary[];
+  /** Bảng giải thưởng — chỉ chứa entries có winnerCount > 0. Cả cơ bản và bổ sung. */
+  prizes: DrawPrizeSummary[];
 }
 
 /** Thông tin khi kỳ quay bị huỷ. Chỉ có khi status = void. */

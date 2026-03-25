@@ -508,7 +508,7 @@ export function DrawCommandCenter({
                 <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mr-1">
                   KQ
                 </span>
-                {result.winningMain.map((n) => (
+                {result.winningNumbers.map((n) => (
                   <MegaNumberBall key={n} number={Number(n)} size="md" />
                 ))}
               </div>

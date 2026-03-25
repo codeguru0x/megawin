@@ -1,24 +1,3 @@
-list-players:
-  handler: src/handlers/list-players.handler
-  events:
-    - httpApi:
-        path: /player
-        method: get
-
-get-player-detail:
-  handler: src/handlers/get-player-detail.handler
-  events:
-    - httpApi:
-        path: /player/{playerId}
-        method: get
-
-suspend-player:
-  handler: src/handlers/suspend-player.handler
-  events:
-    - httpApi:
-        path: /player/{playerId}/status
-        method: patch
-
 player-login:
   handler: src/handlers/player-login.handler
   environment:

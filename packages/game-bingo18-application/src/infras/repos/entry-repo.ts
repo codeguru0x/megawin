@@ -19,25 +19,19 @@ import {
   type EntryPayout,
   type EntryVoidInfo,
   type EntryResult,
-  type TicketEntryDoc,
 } from "@megawin/game-bingo18/entities";
 import { EntryOutcome, EntryStatus } from "@megawin/game-core/entities";
 import { ObjectId, Long } from "mongodb";
 import type {
-  DrawRevenueResult,
-  SettledPayoutSummary,
   SettledFinancialSummary,
   TenantSettleMetrics,
-  TenantReportRow,
-  PlayerReportRow,
   TenantPlayerCount,
   VoidMetrics,
   VoidRefundSummary,
   TicketAggregateResult,
   OpsSummary,
   WinningEntriesSummary,
-  BasicPrizeSummaryRow,
-  SideBetPrizeSummaryRow,
+  PrizeSummaryRow,
 } from "./types";
 import { BaseRepo } from "./base-repo";
 import { EntryMapper } from "../mappers/entry-mapper";
@@ -64,18 +58,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return this.seqRepo.nextSeq();
   }
 
-  /**
-   * Insert nhiều entries — tự allocate version từ global sequence.
-   * Tất cả entries trong batch nhận cùng 1 version (atomic batch).
-   */
-  async insertEntries(docs: Record<string, unknown>[]): Promise<number> {
-    if (docs.length === 0) return 0;
-    const version = await this.nextVersion();
-    const stamped = docs.map((doc) => ({ ...doc, version }));
-    const result = await this.insertMany(stamped as any[]);
-    return result.insertedCount;
-  }
-
   // ─── Query ───
 
   /** Lấy tất cả entries của 1 ticket, sắp xếp theo drawId tăng dần. */
@@ -86,26 +68,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         sort: { drawId: 1 },
       },
     );
-  }
-
-  async getEntriesByDrawId(
-    drawId: string,
-    page: number,
-    size: number,
-  ): Promise<TicketEntryEntity[]> {
-    return await this.paging({ drawId }, page, size, {
-      sort: { createdAt: 1 },
-    });
-  }
-
-  async getScheduledEntriesBatch(
-    drawId: string,
-    page: number,
-    size: number,
-  ): Promise<TicketEntryEntity[]> {
-    return await this.paging({ drawId, status: EntryStatus.Scheduled }, page, size, {
-      sort: { createdAt: 1 },
-    });
   }
 
   async getScheduledEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
@@ -120,24 +82,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   }
 
   // ─── Status Transitions ───
-
-  /** Batch update entry status cho 1 draw. Gán version mới cho toàn batch. */
-  async batchTransitionByDrawId(
-    drawId: string,
-    fromStatus: string,
-    toStatus: string,
-    extraSet?: Record<string, unknown>,
-  ): Promise<number> {
-    const version = await this.nextVersion();
-    const $set: Record<string, unknown> = {
-      status: toStatus,
-      version,
-      updatedAt: new Date(),
-      ...extraSet,
-    };
-    const result = await this.updateMany({ drawId, status: fromStatus }, { $set });
-    return result.modifiedCount;
-  }
 
   async bulkSettleEntries(
     items: Array<{
@@ -175,55 +119,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   // ─── Aggregation ───
 
   /**
-   * Aggregate tổng doanh thu và hoa hồng cho 1 draw (exclude voided entries).
-   * Group by null — 1 document kết quả, hiệu quả hơn group by tenant
-   * khi caller chỉ cần 2 scalar tổng.
-   */
-  async aggregateTotalRevenue(drawId: string): Promise<DrawRevenueResult> {
-    const result = await this.aggregate([
-      { $match: { drawId, status: { $ne: EntryStatus.Void } } },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: "$amount" },
-          totalAgentCommission: { $sum: "$tenant.commissionAmount" },
-        },
-      },
-    ]);
-    const row = result[0] as any;
-    return {
-      totalRevenue: row?.totalRevenue ?? 0,
-      totalAgentCommission: row?.totalAgentCommission ?? 0,
-    };
-  }
-
-  async aggregateSettledPayoutSummary(drawId: string): Promise<SettledPayoutSummary> {
-    const summaryResult = await this.aggregate([
-      { $match: { drawId, status: EntryStatus.Settled } },
-      {
-        $group: {
-          _id: null,
-          totalSettled: { $sum: 1 },
-          totalPrizes: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
-          totalPayoutAmount: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
-        },
-      },
-    ]);
-    const summary = (summaryResult[0] as any) ?? {};
-    return {
-      totalSettled: summary.totalSettled ?? 0,
-      totalPayoutAmount: summary.totalPayoutAmount ?? 0,
-      totalPrizes: summary.totalPrizes ?? 0,
-    };
-  }
-
-  /**
    * Aggregate tổng hợp tài chính entries đã settle cho 1 draw — gộp revenue + payout.
    *
    * Tại thời điểm CalculateFinancials, TẤT CẢ entries đã là Settled
    * (SettleEntries hoàn tất trước đó, chưa có Void) → 1 pipeline với filter
    * { status: Settled } đủ lấy cả revenue, commission lẫn payout metrics.
-   * Tiết kiệm 1 DB round-trip so với gọi riêng aggregateTotalRevenue + aggregateSettledPayoutSummary.
    */
   async aggregateSettledFinancialSummary(drawId: string): Promise<SettledFinancialSummary> {
     const result = await this.aggregate([
@@ -252,55 +152,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       totalPrizes: row.totalPrizes ?? 0,
       totalPayoutAmount: row.totalPayoutAmount ?? 0,
     };
-  }
-
-  async aggregateTenantReport(drawId: string, financialDate: string): Promise<TenantReportRow[]> {
-    const result = await this.aggregate([
-      { $match: { drawId, financialDate } },
-      {
-        $group: {
-          _id: "$tenantId",
-          totalStake: { $sum: "$amount" },
-          totalWin: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
-          totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
-          entryCount: { $sum: 1 },
-          commissionRate: { $first: "$tenant.commissionRate" },
-          totalCommission: { $sum: "$tenant.commissionAmount" },
-        },
-      },
-    ]);
-    return result.map((r: any) => ({
-      tenantId: r._id,
-      totalStake: r.totalStake,
-      totalWin: r.totalWin,
-      totalPayout: r.totalPayout,
-      entryCount: r.entryCount,
-      commissionRate: r.commissionRate ?? 0,
-      totalCommission: r.totalCommission ?? 0,
-    }));
-  }
-
-  async aggregatePlayerReport(drawId: string, financialDate: string): Promise<PlayerReportRow[]> {
-    const result = await this.aggregate([
-      { $match: { drawId, financialDate } },
-      {
-        $group: {
-          _id: { tenantId: "$tenantId", accountId: "$accountId" },
-          totalStake: { $sum: "$amount" },
-          totalWin: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
-          totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
-          entryCount: { $sum: 1 },
-        },
-      },
-    ]);
-    return result.map((r: any) => ({
-      tenantId: r._id.tenantId,
-      accountId: r._id.accountId,
-      totalStake: r.totalStake,
-      totalWin: r.totalWin,
-      totalPayout: r.totalPayout,
-      entryCount: r.entryCount,
-    }));
   }
 
   // ─── Payout Dispatch ───
@@ -538,14 +389,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     }
 
     return map;
-  }
-
-  /**
-   * Lấy danh sách distinct ticketIds từ entries của 1 draw.
-   * Dùng cho SyncTicketSummaries — biết cần sync ticket nào.
-   */
-  async getDistinctTicketIdsByDrawId(drawId: string): Promise<string[]> {
-    return this.distinct("ticketId", { drawId }) as Promise<string[]>;
   }
 
   // ─── Report Aggregations ─────────────────────────────────────────────────────
@@ -790,6 +633,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    *
    * Bingo 18: profit = revenue - prizes - commission (KHÔNG có Jackpot).
    * Tách biệt totalBoards (singleNum/doubleMatch/tripleMatch) và totalSideBets (sumTotal/bigSmallDraw).
+   * Cả hai loại đều nằm trong entrySummary.boards[] — phân biệt bằng playType.
    * Filter theo financialDate hoặc drawId cụ thể.
    */
   async aggregateOpsSummary(filter: {
@@ -805,15 +649,41 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
     const result = await this.aggregate([
       { $match },
+      // Tách boards[] thành 2 nhóm theo playType:
+      // - basicBoards: singleNum, doubleMatch, tripleMatch
+      // - sideBetBoards: sumTotal, bigSmallDraw
+      {
+        $addFields: {
+          _boards: { $ifNull: ["$entrySummary.boards", []] },
+        },
+      },
       {
         $group: {
           _id: null,
           totalRevenue: { $sum: "$amount" },
           totalEntries: { $sum: 1 },
-          // boards = tổng boards cơ bản trong entrySummary (singleNum/doubleMatch/tripleMatch)
-          totalBoards: { $sum: { $size: { $ifNull: ["$entrySummary.boards", []] } } },
-          // sideBets = tổng side bets trong entrySummary (sumTotal/bigSmallDraw)
-          totalSideBets: { $sum: { $size: { $ifNull: ["$entrySummary.sideBets", []] } } },
+          // Đếm basic boards: filter playType ∈ {singleNum, doubleMatch, tripleMatch}
+          totalBoards: {
+            $sum: {
+              $size: {
+                $filter: {
+                  input: "$_boards",
+                  cond: { $in: ["$$this.playType", ["singleNum", "doubleMatch", "tripleMatch"]] },
+                },
+              },
+            },
+          },
+          // Đếm side bet boards: filter playType ∈ {sumTotal, bigSmallDraw}
+          totalSideBets: {
+            $sum: {
+              $size: {
+                $filter: {
+                  input: "$_boards",
+                  cond: { $in: ["$$this.playType", ["sumTotal", "bigSmallDraw"]] },
+                },
+              },
+            },
+          },
           totalCommission: { $sum: "$tenant.commissionAmount" },
           accountIds: { $addToSet: "$accountId" },
         },
@@ -845,7 +715,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Aggregate doanh thu theo đại lý cho Operations Dashboard.
    *
    * Group by tenantId — sum revenue, commission; count entries, boards, sideBets, players.
-   * Bingo 18 tách biệt boards và sideBets (khác Keno chỉ có boards).
+   * Cả basic boards và side bets đều nằm trong entrySummary.boards[] — phân biệt bằng playType.
    */
   async aggregateTenantBreakdown(filter: { financialDate?: string; drawId?: string }): Promise<
     Array<{
@@ -867,12 +737,38 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
     const result = await this.aggregate([
       { $match },
+      // Tách boards[] thành 2 nhóm theo playType
+      {
+        $addFields: {
+          _boards: { $ifNull: ["$entrySummary.boards", []] },
+        },
+      },
       {
         $group: {
           _id: "$tenantId",
           entries: { $sum: 1 },
-          boards: { $sum: { $size: { $ifNull: ["$entrySummary.boards", []] } } },
-          sideBets: { $sum: { $size: { $ifNull: ["$entrySummary.sideBets", []] } } },
+          // Đếm basic boards: filter playType ∈ {singleNum, doubleMatch, tripleMatch}
+          boards: {
+            $sum: {
+              $size: {
+                $filter: {
+                  input: "$_boards",
+                  cond: { $in: ["$$this.playType", ["singleNum", "doubleMatch", "tripleMatch"]] },
+                },
+              },
+            },
+          },
+          // Đếm side bet boards: filter playType ∈ {sumTotal, bigSmallDraw}
+          sideBets: {
+            $sum: {
+              $size: {
+                $filter: {
+                  input: "$_boards",
+                  cond: { $in: ["$$this.playType", ["sumTotal", "bigSmallDraw"]] },
+                },
+              },
+            },
+          },
           revenue: { $sum: "$amount" },
           commission: { $sum: "$tenant.commissionAmount" },
           accountIds: { $addToSet: "$accountId" },
@@ -965,9 +861,9 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Aggregate phân bổ theo kiểu chơi Bingo 18.
    *
-   * Basic boards: unwind boards → group by (playType, tripleKind?).
+   * Tất cả play types (cơ bản + bổ sung) nằm trong entrySummary.boards[].
+   * Unwind boards → group by (playType, tripleKind?) → đếm selections và entries.
    * tripleMatch tách specific/any vì giải thưởng khác nhau (1.2tr vs 200k).
-   * Side bets: unwind sideBets → group by playType.
    */
   async aggregatePlayTypeDistribution(filter: { financialDate?: string; drawId?: string }): Promise<
     Array<{
@@ -984,65 +880,35 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       $match.financialDate = filter.financialDate;
     }
 
-    // Aggregate basic boards và side bets riêng biệt
-    const [boardResult, sideBetResult] = await Promise.all([
-      // Basic boards: unwind → group by (playType, tripleKind?)
-      // tripleMatch-specific và tripleMatch-any tách ra 2 rows riêng
-      this.aggregate([
-        { $match },
-        { $addFields: { boards: { $ifNull: ["$entrySummary.boards", []] } } },
-        { $unwind: "$boards" },
-        {
-          $group: {
-            _id: {
-              playType: "$boards.playType",
-              // tripleKind chỉ set cho tripleMatch — null với singleNum/doubleMatch
-              tripleKind: { $ifNull: ["$boards.tripleKind", null] },
-            },
-            selectionCount: { $sum: 1 },
-            entryIds: { $addToSet: "$_id" },
+    // Unified: tất cả play types nằm trong boards[]
+    const result = await this.aggregate([
+      { $match },
+      { $addFields: { boards: { $ifNull: ["$entrySummary.boards", []] } } },
+      { $unwind: "$boards" },
+      {
+        $group: {
+          _id: {
+            playType: "$boards.playType",
+            // tripleKind chỉ set cho tripleMatch — null với các loại khác
+            tripleKind: { $ifNull: ["$boards.tripleKind", null] },
           },
+          selectionCount: { $sum: 1 },
+          entryIds: { $addToSet: "$_id" },
         },
-        {
-          $project: {
-            _id: 0,
-            playType: "$_id.playType",
-            tripleKind: "$_id.tripleKind",
-            selectionCount: 1,
-            entryCount: { $size: "$entryIds" },
-          },
+      },
+      {
+        $project: {
+          _id: 0,
+          playType: "$_id.playType",
+          tripleKind: "$_id.tripleKind",
+          selectionCount: 1,
+          entryCount: { $size: "$entryIds" },
         },
-      ]),
-      // Side bets: unwind sideBets → group by playType (sumTotal/bigSmallDraw)
-      this.aggregate([
-        { $match },
-        { $addFields: { sideBets: { $ifNull: ["$entrySummary.sideBets", []] } } },
-        { $match: { sideBets: { $ne: [] } } },
-        { $unwind: "$sideBets" },
-        {
-          $group: {
-            _id: "$sideBets.playType",
-            selectionCount: { $sum: 1 },
-            entryIds: { $addToSet: "$_id" },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            playType: "$_id",
-            // Side bets không có tripleKind
-            tripleKind: { $literal: null },
-            selectionCount: 1,
-            entryCount: { $size: "$entryIds" },
-          },
-        },
-      ]),
+      },
+      { $sort: { selectionCount: -1 } },
     ]);
 
-    const merged = [...(boardResult as any[]), ...(sideBetResult as any[])];
-    merged.sort((a, b) => b.selectionCount - a.selectionCount);
-
-    return merged.map((r) => ({
+    return result.map((r: any) => ({
       playType: r.playType as string,
       tripleKind: r.tripleKind as string | null,
       selectionCount: r.selectionCount as number,
@@ -1069,7 +935,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Aggregate top N side bet combinations phổ biến nhất.
    *
    * Bingo 18: side bet combo key = (playType, sum) cho sumTotal hoặc (playType, bet) cho bigSmallDraw.
-   * Khác Keno: không thống kê "bộ số" basic boards mà thống kê side bets có ý nghĩa hơn.
+   * Side bets nằm trong entrySummary.boards[] — filter bằng playType ∈ {sumTotal, bigSmallDraw}.
    */
   async aggregateTopCombos(
     drawId: string,
@@ -1085,16 +951,27 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   > {
     const result = await this.aggregate([
       { $match: { drawId } },
-      { $addFields: { sideBets: { $ifNull: ["$entrySummary.sideBets", []] } } },
-      { $match: { sideBets: { $ne: [] } } },
-      { $unwind: "$sideBets" },
+      { $addFields: { boards: { $ifNull: ["$entrySummary.boards", []] } } },
+      // Filter chỉ side bet boards trước khi unwind
+      {
+        $addFields: {
+          boards: {
+            $filter: {
+              input: "$boards",
+              cond: { $in: ["$$this.playType", ["sumTotal", "bigSmallDraw"]] },
+            },
+          },
+        },
+      },
+      { $match: { boards: { $ne: [] } } },
+      { $unwind: "$boards" },
       {
         $group: {
           _id: {
             // sumTotal: group theo sum (number). bigSmallDraw: group theo bet (string).
-            playType: "$sideBets.playType",
-            sum: { $ifNull: ["$sideBets.sum", null] },
-            bet: { $ifNull: ["$sideBets.bet", null] },
+            playType: "$boards.playType",
+            sum: { $ifNull: ["$boards.sum", null] },
+            bet: { $ifNull: ["$boards.bet", null] },
           },
           count: { $sum: 1 },
           entryIds: { $addToSet: "$_id" },
@@ -1181,19 +1058,19 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   }
 
   /**
-   * Aggregate giải thưởng cơ bản có người trúng trong kỳ quay.
+   * Aggregate giải thưởng (cả cơ bản và bổ sung) có người trúng trong kỳ quay.
    *
-   * Chỉ trả các (playType, matchCount, tripleKind?) có winnerCount > 0.
-   * tripleKind bắt buộc để phân biệt specific (1.2tr) vs any (200k) của tripleMatch.
-   * Dùng bởi CalculateFinancials để build settleSummary.basicPrizes.
+   * Unified: boardPayouts[] chứa tất cả play types.
+   * Group by (playType, matchCount, tripleKind?, sum?, bet?) — chỉ trả winnerCount > 0.
+   * Dùng bởi CalculateFinancials để build settleSummary.prizes[].
    */
-  async aggregateBasicPrizeSummary(drawId: string): Promise<BasicPrizeSummaryRow[]> {
+  async aggregatePrizeSummary(drawId: string): Promise<PrizeSummaryRow[]> {
     const result = await this.aggregate([
       {
         $match: {
           drawId,
           status: EntryStatus.Settled,
-          // index-friendly: chỉ lấy entries có ít nhất 1 board thắng
+          // Chỉ lấy entries có ít nhất 1 board thắng (winAmount > 0)
           "payout.boardPayouts": { $elemMatch: { winAmount: { $gt: 0 } } },
         },
       },
@@ -1206,71 +1083,26 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             playType: "$payout.boardPayouts.playType",
             matchCount: "$payout.boardPayouts.matchCount",
             // tripleKind cần thiết để phân biệt specific vs any (giải thưởng khác nhau).
-            // null với singleNum + doubleMatch (không có tripleKind).
+            // null với singleNum, doubleMatch, sumTotal, bigSmallDraw.
             tripleKind: { $ifNull: ["$payout.boardPayouts.tripleKind", null] },
+            // sum (number) cho sumTotal — null cho các loại khác.
+            sum: { $ifNull: ["$payout.boardPayouts.sum", null] },
+            // bet (string) cho bigSmallDraw — null cho các loại khác.
+            bet: { $ifNull: ["$payout.boardPayouts.bet", null] },
           },
           winnerCount: { $sum: 1 },
           // unitWinAmount là giá trị giải per-unit trước khi nhân betCount.
-          // Dùng unitWinAmount (không phải winAmount) vì winAmount đã nhân betCount multiplier.
-          // $max: giải cố định → mọi doc trong nhóm (playType+matchCount) đều có unitWinAmount bằng nhau.
+          // $max: giải cố định → mọi doc trong nhóm đều có unitWinAmount bằng nhau.
           prizePerUnit: { $max: "$payout.boardPayouts.unitWinAmount" },
         },
       },
-      { $sort: { "_id.playType": 1, "_id.matchCount": -1 } },
+      { $sort: { "_id.playType": 1, "_id.matchCount": -1, "_id.sum": 1, "_id.bet": 1 } },
     ]);
 
     return result.map((r: any) => ({
       playType: r._id.playType,
       matchCount: r._id.matchCount,
       tripleKind: r._id.tripleKind as Bingo18TripleKind | null,
-      winnerCount: r.winnerCount,
-      prizePerUnit: r.prizePerUnit,
-    }));
-  }
-
-  /**
-   * Aggregate giải thưởng side bet có người trúng trong kỳ quay.
-   *
-   * Chỉ trả các (playType, sum/bet) có winnerCount > 0.
-   * Dùng bởi CalculateFinancials để build settleSummary.sideBetPrizes.
-   *
-   * Tách `sum` (number) và `bet` (string) theo playType — mirror EntrySideBetSnapshot,
-   * không gộp chung thành 1 string để tránh nhầm lẫn kiểu dữ liệu.
-   */
-  async aggregateSideBetPrizeSummary(drawId: string): Promise<SideBetPrizeSummaryRow[]> {
-    const result = await this.aggregate([
-      {
-        $match: {
-          drawId,
-          status: EntryStatus.Settled,
-          // index-friendly: chỉ lấy entries có ít nhất 1 side bet thắng
-          "payout.sideBetPayouts": { $elemMatch: { isWin: true } },
-        },
-      },
-      { $unwind: "$payout.sideBetPayouts" },
-      // Lọc từng side bet sau unwind — chỉ lấy bet đã thắng
-      { $match: { "payout.sideBetPayouts.isWin": true } },
-      {
-        $group: {
-          _id: {
-            playType: "$payout.sideBetPayouts.playType",
-            // sumTotal: group theo sum (number); bigSmallDraw: group theo bet (string).
-            // Giữ 2 field riêng — không ép sang string chung để giữ type an toàn.
-            sum: { $ifNull: ["$payout.sideBetPayouts.sum", null] },
-            bet: { $ifNull: ["$payout.sideBetPayouts.bet", null] },
-          },
-          winnerCount: { $sum: 1 },
-          // unitWinAmount là giá trị giải per-unit trước khi nhân betCount.
-          // Dùng unitWinAmount (không phải winAmount) vì winAmount đã nhân betCount multiplier.
-          // $max: giải cố định → mọi doc trong nhóm (playType+sum/bet) đều có unitWinAmount bằng nhau.
-          prizePerUnit: { $max: "$payout.sideBetPayouts.unitWinAmount" },
-        },
-      },
-      { $sort: { "_id.playType": 1, "_id.sum": 1, "_id.bet": 1 } },
-    ]);
-
-    return result.map((r: any) => ({
-      playType: r._id.playType,
       sum: r._id.sum,
       bet: r._id.bet as Bingo18BigSmallBet | null,
       winnerCount: r.winnerCount,

@@ -43,6 +43,24 @@ export interface EntryBoardSnapshot {
 // Entry Payout Tier
 // ─────────────────────────────────────────────
 
+/**
+ * Chi tiết trúng thưởng 1 hạng giải trong entry (Max 3D Pro).
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * VÌ SAO KHÔNG CÓ `playMode` — KHÔNG CÓ COLLISION TÊN TIER
+ * ─────────────────────────────────────────────────────────────────
+ *
+ * Max 3D Pro chỉ có **1 enum `PrizeTier` duy nhất** với 8 tên tier đều độc nhất:
+ *   special, specialSub, first, second, third, fourth, fifth, sixth
+ *
+ * Không có 2 cách chơi dùng chung tên tier → `$group by tier` khi aggregate
+ * `aggregateSettledPayoutSummary` đủ chính xác, không cần phân biệt thêm bằng playMode.
+ *
+ * Khác với Max 3D (basic + plus) có 4 tên tier trùng nhau (special/first/second/third)
+ * nhưng giá trị giải thưởng chênh lệch đến ×1000 → Max 3D bắt buộc lưu `playMode`
+ * trong tier để tách đúng khi aggregate. Xem JSDoc `EntryPayoutTier` trong
+ * `@megawin/game-max3d/entities` để hiểu đầy đủ vấn đề collision.
+ */
 export interface EntryPayoutTier {
   /** Hạng giải: special/specialSub/first/second/third/fourth/fifth/sixth. */
   tier: PrizeTier;

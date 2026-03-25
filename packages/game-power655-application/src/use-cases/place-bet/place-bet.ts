@@ -201,7 +201,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         playType: b.playType,
         mainNumbers: b.selection.mainNumbers,
         expandedLines: b.derived.expandedLines,
-        betCount: b.betCount ?? 1,
+        betCount: b.betCount,
       })),
     };
 

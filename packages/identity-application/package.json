@@ -55,17 +55,17 @@
     "@megawin/identity": "workspace:*",
     "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
-    "jose": "^6.1.3",
+    "jose": "^6.2.2",
     "lodash": "^4.17.23",
-    "mongodb": "^7.1.0"
+    "mongodb": "^7.1.1"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
-    "@types/node": "^25.2.1",
-    "next": "^16.2.0",
-    "typescript": "5.9.3",
+    "@types/node": "^25.5.0",
+    "next": "^16.2.1",
+    "typescript": "6.0.2",
     "vite": "latest",
-    "vitest": "latest"
+    "vitest": "4.1.1"
   }
 }

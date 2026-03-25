@@ -226,8 +226,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
 
     // ── Bước 2: Tính totalBetUnits ────────────────────────────────────
     // Tổng đơn vị tham gia dự thưởng = Σ(betCount per JP line).
-    // Backward compat: line.betCount ?? 1 (lines cũ chưa có betCount).
-    const totalBetUnits = winningLines.reduce((sum, l) => sum + (l.betCount ?? 1), 0);
+    const totalBetUnits = winningLines.reduce((sum, l) => sum + l.betCount, 0);
 
     // ── Bước 3: Tính jackpotPerUnit ───────────────────────────────────
     // jackpotPerUnit = floor(totalPool / totalBetUnits).
@@ -244,7 +243,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     const entryBetUnitsMap = new Map<string, number>();
     for (const line of winningLines) {
       const prev = entryBetUnitsMap.get(line.entryId) ?? 0;
-      entryBetUnitsMap.set(line.entryId, prev + (line.betCount ?? 1));
+      entryBetUnitsMap.set(line.entryId, prev + line.betCount);
     }
 
     // Tính prizeAmount per entry: jackpotPerUnit × entryBetUnits

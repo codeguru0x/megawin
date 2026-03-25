@@ -69,29 +69,29 @@
 
 import { PrizeTier } from "../entities/enums";
 import {
-  MEGA645_MAIN_MAX,
-  MEGA645_MAIN_COUNT,
+  MEGA645_NUMBER_MAX,
+  MEGA645_NUMBER_COUNT,
   type PrizeAmounts,
 } from "../entities/types";
 import { combination } from "./play-types";
 
-const MAIN_POOL = MEGA645_MAIN_MAX; // 45
-const MAIN_PICK = MEGA645_MAIN_COUNT; // 6
+const NUMBER_POOL = MEGA645_NUMBER_MAX; // 45
+const NUMBER_PICK = MEGA645_NUMBER_COUNT; // 6
 
 /**
  * Tổng không gian mẫu cho 1 line standard.
  * = C(45,6) = 8,145,060
  */
-export const TOTAL_OUTCOMES = combination(MAIN_POOL, MAIN_PICK);
+export const TOTAL_OUTCOMES = combination(NUMBER_POOL, NUMBER_PICK);
 
 /**
  * Số cách trùng đúng k số chính từ 6 số trúng trong pool 45.
  * = C(6,k) × C(39, 6-k)
  */
-function mainMatchWays(k: number): number {
+function matchWays(k: number): number {
   return (
-    combination(MAIN_PICK, k) *
-    combination(MAIN_POOL - MAIN_PICK, MAIN_PICK - k)
+    combination(NUMBER_PICK, k) *
+    combination(NUMBER_POOL - NUMBER_PICK, NUMBER_PICK - k)
   );
 }
 
@@ -116,10 +116,10 @@ export interface TierOdds {
 function computeTierWays(): Map<PrizeTier, number> {
   const ways = new Map<PrizeTier, number>();
 
-  ways.set(PrizeTier.Jackpot, mainMatchWays(6)); // 1
-  ways.set(PrizeTier.Tier1, mainMatchWays(5)); // 234
-  ways.set(PrizeTier.Tier2, mainMatchWays(4)); // 11,115
-  ways.set(PrizeTier.Tier3, mainMatchWays(3)); // 182,780
+  ways.set(PrizeTier.Jackpot, matchWays(6)); // 1
+  ways.set(PrizeTier.Tier1, matchWays(5)); // 234
+  ways.set(PrizeTier.Tier2, matchWays(4)); // 11,115
+  ways.set(PrizeTier.Tier3, matchWays(3)); // 182,780
 
   return ways;
 }

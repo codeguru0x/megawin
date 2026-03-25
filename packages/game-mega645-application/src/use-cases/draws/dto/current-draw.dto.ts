@@ -62,7 +62,7 @@ export interface GetCurrentDrawOutput {
     /** Kết quả quay thưởng (nếu có). */
     result?: {
       /** 6 số chính trúng thưởng ("01"-"45"). */
-      winningMain: string[];
+      winningNumbers: string[];
       /** Thời điểm công bố kết quả (ISO datetime). */
       publishedAt: string;
     };

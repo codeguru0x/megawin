@@ -43,21 +43,66 @@ export interface EntryBoardSnapshot {
 // Entry Payout Tier
 // ─────────────────────────────────────────────
 
+/**
+ * Chi tiết trúng thưởng 1 hạng giải trong entry (Max 3D).
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * VÌ SAO CẦN `playMode` — COLLISION TÊN TIER GIỮA BASIC VÀ PLUS
+ * ─────────────────────────────────────────────────────────────────
+ *
+ * Max 3D có 2 cách chơi dùng 2 enum tier riêng biệt:
+ *   BasicPrizeTier (1 bộ ba số): special, first, second, third
+ *   PlusPrizeTier  (2 bộ ba số): special, first, second, third, fourth, fifth, sixth
+ *
+ * 4 tên tier đầu **TRÙNG NHAU** nhưng giá trị giải thưởng **KHÁC NHAU HOÀN TOÀN**:
+ *
+ *   | Tier    | Basic (1 bộ ba)   | Plus (2 bộ ba)        |
+ *   |---------|-------------------|-----------------------|
+ *   | special | 1.000.000 VND     | 1.000.000.000 VND (×1000) |
+ *   | first   | 350.000 VND       | 40.000.000 VND  (×114)    |
+ *   | second  | 210.000 VND       | 10.000.000 VND  (×47)     |
+ *   | third   | 100.000 VND       | 5.000.000 VND   (×50)     |
+ *
+ * Khi `aggregateSettledPayoutSummary` đọc entries từ MongoDB và `$group by tier`,
+ * nếu không có `playMode`, bucket "special" sẽ gộp lẫn 1 triệu (basic) với 1 tỷ (plus)
+ * → tổng tiền giải thưởng tính sai nghiêm trọng.
+ *
+ * Giải pháp: lưu `playMode` vào tier → `$group by { tier, playMode }` phân tách đúng.
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * SO SÁNH VỚI MAX 3D PRO — KHÔNG CẦN `playMode`
+ * ─────────────────────────────────────────────────────────────────
+ *
+ * Max 3D Pro chỉ có 1 enum `PrizeTier` với 8 tên tier đều **duy nhất**:
+ *   special, specialSub, first, second, third, fourth, fifth, sixth
+ *
+ * Không có trùng tên → `$group by tier` đủ, không cần `playMode`.
+ * Đây là lý do `EntryPayoutTier` của Max 3D Pro không có field `playMode`.
+ */
 export interface EntryPayoutTier {
   /** Hạng giải: special/first/second/third (basic) hoặc special–sixth (plus). */
   tier: BasicPrizeTier | PlusPrizeTier;
+
   /**
-   * Cách chơi sinh ra hạng giải này.
-   * Cần thiết vì BasicPrizeTier và PlusPrizeTier có 4 tier trùng tên nhau
-   * (special, first, second, third) nhưng giá trị giải thưởng khác nhau.
-   * Dùng khi aggregate settleSummary để tách bảng basic vs plus.
+   * Cách chơi sinh ra hạng giải này: `"basic"` hoặc `"plus"`.
+   *
+   * Bắt buộc vì BasicPrizeTier và PlusPrizeTier có 4 tên tier trùng nhau
+   * (special, first, second, third) nhưng giá trị giải thưởng khác nhau đến × 1000.
+   * Dùng khi `aggregateSettledPayoutSummary` `$group by {tier, playMode}`
+   * để tách riêng bảng tài chính basic vs plus.
    */
   playMode: PlayMode;
+
   /** Số lines trúng hạng giải này. */
   hitCount: number;
+
   /** Giá trị 1 lần trúng (VND). Từ bảng giải thưởng config. */
   unitAmount: number;
-  /** Tổng tiền = hitCount × unitAmount. */
+
+  /**
+   * Tổng tiền = Σ(winAmount per line).
+   * Đã nhân betCount — player betCount=3 nhận gấp 3 player betCount=1.
+   */
   amount: number;
 }
 

@@ -16,7 +16,7 @@ import type {
  * - Kỳ đang bán: refetch mỗi 30s bằng React Query
  * - Kỳ đã kết sổ: gọi 1 lần, hiển thị static "50 đơn cuối kỳ"
  *
- * Mega 6/45: board chỉ có mainNumbers (01-45), không có specialNumbers.
+ * Mega 6/45: board chỉ có numbers (01-45), không có specialNumbers.
  * Không validate status kỳ (cho phép load entries của mọi trạng thái).
  */
 export class GetLiveEntriesUseCase extends NextApiUseCase<
@@ -42,9 +42,9 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
     const items: LiveEntryItem[] = entries.map((e) => {
       const boards: LiveEntryBoard[] = (e.entrySummary?.boards ?? []).map((b) => ({
         playType: b.playType,
-        mainNumbers: b.mainNumbers,
+        numbers: b.numbers,
         expandedLines: b.expandedLines,
-        betCount: b.betCount ?? 1,
+        betCount: b.betCount,
       }));
 
       return {
@@ -53,7 +53,7 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
         tenantId: e.tenantId,
         amount: e.amount,
         lineCount: e.lineCount,
-        betUnitCount: e.betUnitCount ?? e.lineCount,
+        betUnitCount: e.betUnitCount,
         boards,
         createdAt: e.createdAt.toISOString(),
       };

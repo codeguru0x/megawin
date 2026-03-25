@@ -23,6 +23,10 @@ export interface Max3dproFeedBoard {
   playType: string;
   /** Danh sách các bộ ba số (zero-padded "000"-"999"). */
   triplets: string[];
+  /** Chỉ cho multiDigit: 3 chữ số đầu chọn. */
+  frontDigits?: number[];
+  /** Chỉ cho multiDigit: 3 chữ số sau chọn. */
+  backDigits?: number[];
   /** Số cặp (pairs) sinh ra = P(n,2). */
   lineCount: number;
   /** Số lần cược nhân bội. */
@@ -54,8 +58,6 @@ export interface Max3dproFeedDrawResult {
   second: string[];
   /** 8 bộ ba số giải Ba. */
   third: string[];
-  /** Thời điểm công bố kết quả (ISO 8601 string). */
-  publishedAt: string;
 }
 
 // ─────────────────────────────────────────────
@@ -83,8 +85,6 @@ export interface Max3dproFeedPayoutTier {
  * Chi tiết trả thưởng Max 3D Pro — gán vào EntryFeedDoc.payoutDetail.
  */
 export interface Max3dproFeedPayoutDetail {
-  /** Thời điểm settle (ISO 8601 string). */
-  settledAt: string;
   /** Chi tiết theo từng hạng giải. */
   tiers: Max3dproFeedPayoutTier[];
 }

@@ -34,11 +34,7 @@ export class TriggerSettleUseCase extends NextApiUseCase<TriggerSettleInput, Tri
     }
 
     if (draw.status !== DrawStatus.Settling) {
-      const updated = await this.drawRepo.transitionStatus(
-        input.drawId,
-        DrawStatus.Published,
-        DrawStatus.Settling,
-      );
+      const updated = await this.drawRepo.triggerSettle(input.drawId);
 
       if (!updated) {
         throw new AppException(

@@ -55,8 +55,7 @@ export const Bingo18PlayType = {
   BigSmallDraw: "bigSmallDraw",
 } as const;
 
-export type Bingo18PlayType =
-  (typeof Bingo18PlayType)[keyof typeof Bingo18PlayType];
+export type Bingo18PlayType = (typeof Bingo18PlayType)[keyof typeof Bingo18PlayType];
 
 export const BINGO18_PLAY_TYPE_VALUES = Object.values(Bingo18PlayType);
 
@@ -78,6 +77,22 @@ export type Bingo18SideBetPlayType =
   | typeof Bingo18PlayType.SumTotal
   | typeof Bingo18PlayType.BigSmallDraw;
 
+/** Narrowed type cho basic play types. */
+export type Bingo18BasicPlayType =
+  | typeof Bingo18PlayType.SingleNum
+  | typeof Bingo18PlayType.DoubleMatch
+  | typeof Bingo18PlayType.TripleMatch;
+
+/** Set dùng cho runtime check: playType có thuộc basic hay không. */
+export const BINGO18_BASIC_PLAY_TYPE_SET: ReadonlySet<Bingo18PlayType> = new Set(
+  BINGO18_BASIC_PLAY_TYPES,
+);
+
+/** Set dùng cho runtime check: playType có thuộc side bet hay không. */
+export const BINGO18_SIDE_BET_PLAY_TYPE_SET: ReadonlySet<Bingo18PlayType> = new Set(
+  BINGO18_SIDE_BET_PLAY_TYPES,
+);
+
 // ─────────────────────────────────────────────
 // Side Bet Selection – Cách chơi bổ sung
 // ─────────────────────────────────────────────
@@ -96,8 +111,7 @@ export const Bingo18BigSmallBet = {
   Small: "small",
 } as const;
 
-export type Bingo18BigSmallBet =
-  (typeof Bingo18BigSmallBet)[keyof typeof Bingo18BigSmallBet];
+export type Bingo18BigSmallBet = (typeof Bingo18BigSmallBet)[keyof typeof Bingo18BigSmallBet];
 
 // ─────────────────────────────────────────────
 // Triple Match Selection
@@ -111,8 +125,7 @@ export const Bingo18TripleKind = {
   Any: "any",
 } as const;
 
-export type Bingo18TripleKind =
-  (typeof Bingo18TripleKind)[keyof typeof Bingo18TripleKind];
+export type Bingo18TripleKind = (typeof Bingo18TripleKind)[keyof typeof Bingo18TripleKind];
 
 // ─────────────────────────────────────────────
 // Payout Status

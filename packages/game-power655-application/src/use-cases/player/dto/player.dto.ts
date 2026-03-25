@@ -146,9 +146,8 @@ export interface PlayerTicketSummary {
     linesPerDraw: number;
     /**
      * Tổng đơn vị cược mỗi kỳ = Σ(expandedLines × betCount).
-     * Backward compat: undefined cho vé cũ → fallback = linesPerDraw.
      */
-    betUnitsPerDraw?: number;
+    betUnitsPerDraw: number;
     /**
      * Số tiền cược mỗi kỳ quay (VND).
      * Công thức: unitPrice × betUnitsPerDraw (hoặc × linesPerDraw nếu cũ).
@@ -175,7 +174,6 @@ export interface PlayerTicketSummary {
     lineCount: number;
     /**
      * Số lần cược nhân bội (≥ 1).
-     * Backward compat: undefined cho vé cũ (betCount = 1 ngầm định).
      */
     betCount: number;
   }>;
@@ -249,7 +247,6 @@ export interface PlayerEntryInfo {
   /**
    * Tổng đơn vị cược = Σ(board.expandedLines × board.betCount).
    * Công thức: amount = betUnitCount × unitPrice.
-   * Backward compat: data cũ không có field này → fallback = lineCount.
    */
   betUnitCount: number;
   /** Tóm tắt entry – snapshot từ ticket gốc, dùng cho UI mà không cần lookup ticket. */

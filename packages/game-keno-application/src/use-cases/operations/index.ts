@@ -30,7 +30,6 @@ export type {
   GetLiveEntriesOutput,
   LiveEntryItem,
   LiveEntryBoard,
-  LiveEntrySideBet,
 } from "./dto/live-entries.dto";
 
 export type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selector.dto";
@@ -42,6 +41,5 @@ export type {
   GetWinningEntriesOutput,
   WinningEntryItem,
   WinningEntryBoardDetail,
-  WinningEntrySideBetDetail,
   WinningEntriesSummary,
 } from "./dto/winning-entries.dto";

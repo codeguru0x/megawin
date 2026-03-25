@@ -2,13 +2,16 @@
  * Use Case: Settle Entries Batch (Keno)
  *
  * Step 2 trong Settle Step Function.
- * Xử lý nhiều batch entries trong 1 Lambda: match boards + side bets → bulk settle.
+ * Xử lý nhiều batch entries trong 1 Lambda: match boards → bulk settle.
  * Dừng sớm khi sắp hết thời gian Lambda (MAX_EXECUTION_MS).
+ *
+ * boards[] chứa cả cách chơi cơ bản (pick1-pick10) và bổ sung (bigSmall/evenOdd),
+ * phân biệt qua playType. Settle iterate 1 vòng duy nhất trên boards[].
  *
  * FLOW:
  *   1. Lấy batch entries status = "scheduled"
- *   2. Mỗi entry: match từng board cơ bản + từng side bet với kết quả quay
- *   3. Tính winAmount = Σ(boardPayouts) + Σ(sideBetPayouts)
+ *   2. Mỗi entry: iterate boards[] — nếu basic thì match số, nếu side bet thì match bet
+ *   3. Tính winAmount = Σ(boardPayouts[].winAmount)
  *   4. Gắn flag hasCappablePrize nếu có board trúng top prize bậc 8/9/10
  *      (phục vụ step ApplyPayoutCaps query nhanh — xem chi tiết bên dưới)
  *   5. Bulk write: scheduled → settled + ghi payout + result
@@ -38,17 +41,14 @@ import {
   KenoPlayType,
   PayoutStatus,
   CAPPABLE_PICK_COUNTS,
+  KENO_BASIC_PLAY_TYPE_SET,
 } from "@megawin/game-keno/entities";
-import type {
-  EntryPayout,
-  EntryResult,
-  EntryBoardPayout,
-  EntrySideBetPayout,
-} from "@megawin/game-keno/entities";
+import type { EntryPayout, EntryResult, EntryBoardPayout } from "@megawin/game-keno/entities";
 import { matchBasicBoard, matchBigSmallBet, matchEvenOddBet } from "@megawin/game-keno/helpers";
 import { EntryOutcome } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext } from "./types";
+import { sumBy } from "@megawin/shared/utils/array";
 
 /** Số entries xử lý mỗi lần query DB. */
 const BATCH_SIZE = 500;
@@ -93,7 +93,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       }> = [];
 
       for (const entry of entries) {
-        // ── Match từng board cách chơi cơ bản ──
+        // ── Match từng board (cả cơ bản và bổ sung) ──
         const boardPayouts: EntryBoardPayout[] = [];
 
         /**
@@ -107,70 +107,75 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
          *
          * Giải thưởng cố định (200tr/800tr/2tỷ) được ghi bình thường ở bước này.
          * ApplyPayoutCaps sẽ kiểm tra tổng bộ trúng: nếu vượt ngưỡng → chia đều.
+         *
+         * Chỉ áp dụng cho boards cơ bản (pick8/9/10), không áp dụng cho side bets.
          */
         let hasCappablePrize = false;
 
         const boards = entry.entrySummary?.boards ?? [];
 
         for (const board of boards) {
-          const playTypePrizes = config.basicPrizes[board.playType];
-          const pickCount = board.numbers.length;
-          const prizeTable = playTypePrizes ? { [String(pickCount)]: playTypePrizes } : undefined;
-
-          const matchResult = matchBasicBoard(board.numbers, result, prizeTable);
           // betCount per board (snapshot từ lúc đặt cược). Fallback 1 cho entries cũ.
           const betCount = board.betCount ?? 1;
-          boardPayouts.push({
-            boardNo: board.boardNo,
-            playType: board.playType,
-            matchCount: matchResult.matchCount,
-            pickCount: matchResult.pickCount,
-            betCount,
-            // winAmount = per-unit prize × betCount (multiplier).
-            winAmount: matchResult.winAmount * betCount,
-          });
 
-          if (
-            CAPPABLE_PICK_COUNTS.has(matchResult.pickCount) &&
-            matchResult.matchCount === matchResult.pickCount
-          ) {
-            hasCappablePrize = true;
-          }
-        }
+          if (KENO_BASIC_PLAY_TYPE_SET.has(board.playType)) {
+            // ── Cách chơi cơ bản (pick1-pick10): match số ──
+            const playTypePrizes = config.basicPrizes[board.playType];
+            const pickCount = board.numbers!.length;
+            const prizeTable = playTypePrizes ? { [String(pickCount)]: playTypePrizes } : undefined;
 
-        // ── Match từng side bet (Lớn/Nhỏ, Chẵn/Lẻ) ──
-        const sideBetPayouts: EntrySideBetPayout[] = [];
+            const matchResult = matchBasicBoard(board.numbers!, result, prizeTable);
+            boardPayouts.push({
+              boardNo: board.boardNo,
+              playType: board.playType,
+              matchCount: matchResult.matchCount,
+              pickCount: matchResult.pickCount,
+              isWin: matchResult.isWin,
+              betCount,
+              // winAmount = per-unit prize × betCount (multiplier).
+              winAmount: matchResult.winAmount * betCount,
+            });
 
-        const sideBets = entry.entrySummary?.sideBets ?? [];
-
-        for (const sb of sideBets) {
-          // betCount per side bet (snapshot từ lúc đặt cược). Fallback 1 cho entries cũ.
-          const betCount = sb.betCount ?? 1;
-
-          if (sb.playType === KenoPlayType.BigSmall) {
+            // Chỉ basic boards mới có cappable prize (pick8/9/10).
+            if (
+              CAPPABLE_PICK_COUNTS.has(matchResult.pickCount) &&
+              matchResult.matchCount === matchResult.pickCount
+            ) {
+              hasCappablePrize = true;
+            }
+          } else if (board.playType === KenoPlayType.BigSmall) {
+            // ── Side bet Lớn/Nhỏ ──
             const matchResult = matchBigSmallBet(
-              sb.bet as KenoBigSmallBet,
+              board.bet as KenoBigSmallBet,
               result,
               config.bigSmallPrizes,
             );
-            sideBetPayouts.push({
-              playType: sb.playType,
-              bet: sb.bet,
+
+            boardPayouts.push({
+              boardNo: board.boardNo,
+              playType: board.playType,
+              matchCount: null,
+              pickCount: null,
+              bet: board.bet,
               outcome: matchResult.outcome,
               isWin: matchResult.isWin,
               betCount,
               // winAmount = per-unit prize × betCount.
               winAmount: matchResult.winAmount * betCount,
             });
-          } else if (sb.playType === KenoPlayType.EvenOdd) {
+          } else if (board.playType === KenoPlayType.EvenOdd) {
+            // ── Side bet Chẵn/Lẻ ──
             const matchResult = matchEvenOddBet(
-              sb.bet as KenoEvenOddBet,
+              board.bet as KenoEvenOddBet,
               result,
               config.evenOddPrizes,
             );
-            sideBetPayouts.push({
-              playType: sb.playType,
-              bet: sb.bet,
+            boardPayouts.push({
+              boardNo: board.boardNo,
+              playType: board.playType,
+              matchCount: null,
+              pickCount: null,
+              bet: board.bet,
               outcome: matchResult.outcome,
               isWin: matchResult.isWin,
               betCount,
@@ -181,9 +186,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         }
 
         // ── Tổng hợp tiền thắng cho entry ──
-        const winAmount =
-          boardPayouts.reduce((sum, b) => sum + b.winAmount, 0) +
-          sideBetPayouts.reduce((sum, s) => sum + s.winAmount, 0);
+        const winAmount = sumBy(boardPayouts, (b) => b.winAmount);
         const hasWin = winAmount > 0;
 
         settleOps.push({
@@ -193,18 +196,17 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             winAmount,
             payoutAmount: winAmount,
             boardPayouts,
-            sideBetPayouts,
             settledAt: now,
             payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
           } satisfies EntryPayout,
           outcome: hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
           result: {
             winningNumbers: result.winningNumbers,
-            publishedAt: now,
             bigCount: result.bigCount,
             smallCount: result.smallCount,
             evenCount: result.evenCount,
             oddCount: result.oddCount,
+            publishedAt: now,
           } satisfies EntryResult,
         });
       }

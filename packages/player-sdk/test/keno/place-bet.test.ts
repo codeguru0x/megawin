@@ -19,7 +19,6 @@ describe("keno.placeBet", () => {
       drawPlan: { drawIds: ["2026-02-25.001"], drawCount: 1 },
       pricing: { unitPrice: 10000, betsPerDraw: 1, amountPerDraw: 10000, totalAmount: 10000 },
       boardCount: 1,
-      sideBetCount: 0,
       entryCount: 1,
     };
     const fetchMock = mockFetch(responseData);
@@ -49,7 +48,6 @@ describe("keno.placeBet", () => {
       drawPlan: { drawIds: ["2026-02-25.001"], drawCount: 1 },
       pricing: { unitPrice: 10000, betsPerDraw: 1, amountPerDraw: 10000, totalAmount: 10000 },
       boardCount: 1,
-      sideBetCount: 0,
       entryCount: 1,
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -74,7 +72,7 @@ describe("keno.placeBet", () => {
     ).rejects.toThrow("Không đủ số dư");
   });
 
-  it("should handle multiple drawIds and side bets", async () => {
+  it("should handle multiple drawIds and side bet boards", async () => {
     const responseData = {
       ticketId: "65abc456",
       ticketNo: "K-20260225-001-0002",
@@ -84,8 +82,7 @@ describe("keno.placeBet", () => {
         drawCount: 3,
       },
       pricing: { unitPrice: 10000, betsPerDraw: 3, amountPerDraw: 30000, totalAmount: 90000 },
-      boardCount: 1,
-      sideBetCount: 1,
+      boardCount: 2,
       entryCount: 3,
     };
     const fetchMock = mockFetch(responseData);
@@ -93,16 +90,21 @@ describe("keno.placeBet", () => {
 
     const input: KenoTicketPurchaseInput = {
       drawIds: ["2026-02-25.001", "2026-02-25.002", "2026-02-25.003"],
-      boards: [{ boardNo: "A", numbers: ["01", "15", "33"] }],
-      sideBets: [{ playType: "bigSmall", bet: "big" }],
+      boards: [
+        { boardNo: "A", numbers: ["01", "15", "33"] },
+        { playType: "bigSmall", bet: "big" },
+      ],
     };
 
     const result = await client.keno.placeBet(input);
     expect(result.entryCount).toBe(3);
-    expect(result.sideBetCount).toBe(1);
+    expect(result.boardCount).toBe(2);
 
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(body.drawIds).toHaveLength(3);
-    expect(body.sideBets).toEqual([{ playType: "bigSmall", bet: "big" }]);
+    expect(body.boards).toEqual([
+      { boardNo: "A", numbers: ["01", "15", "33"] },
+      { playType: "bigSmall", bet: "big" },
+    ]);
   });
 });

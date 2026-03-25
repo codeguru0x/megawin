@@ -78,14 +78,14 @@ export class LineRepository extends BaseRepo<any> {
   async getWinningLinesForTier(
     drawId: string,
     tier: string,
-  ): Promise<Array<{ entryId: unknown; betCount?: number }>> {
+  ): Promise<Array<{ entryId: unknown; betCount: number }>> {
     return this.findManyAsDocuments(
       {
         drawId,
         "matchResult.tier": tier,
       },
       { projection: { _id: 0, entryId: 1, betCount: 1 } },
-    ) as Promise<Array<{ entryId: unknown; betCount?: number }>>;
+    ) as Promise<Array<{ entryId: unknown; betCount: number }>>;
   }
 
   /**
@@ -96,14 +96,14 @@ export class LineRepository extends BaseRepo<any> {
    */
   async getJackpotLinesForDraw(
     drawId: string,
-  ): Promise<Array<{ _id: unknown; entryId: unknown; betCount?: number }>> {
+  ): Promise<Array<{ _id: unknown; entryId: unknown; betCount: number }>> {
     return this.findManyAsDocuments(
       {
         drawId,
         "matchResult.tier": PrizeTier.Jackpot,
       },
       { projection: { _id: 1, entryId: 1, betCount: 1 } },
-    ) as Promise<Array<{ _id: unknown; entryId: unknown; betCount?: number }>>;
+    ) as Promise<Array<{ _id: unknown; entryId: unknown; betCount: number }>>;
   }
 
   /**
@@ -131,8 +131,8 @@ export class LineRepository extends BaseRepo<any> {
     if (jpLines.length === 0) return 0;
 
     const ops = jpLines.map((line) => {
-      // betCount per line — backward compat: data cũ không có betCount → fallback = 1
-      const betCount = (line as any).betCount ?? 1;
+      // betCount per line — luôn có giá trị (required field).
+      const betCount = (line as any).betCount;
       const winAmount = jackpotPerUnit * betCount;
 
       return {

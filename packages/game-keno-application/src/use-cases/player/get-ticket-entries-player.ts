@@ -8,7 +8,7 @@
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
 import { TicketRepository } from "../../infras/repos/ticket-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import type { EntryBoardSnapshot, TicketEntryEntity } from "@megawin/game-keno/entities";
+import type { TicketEntryEntity } from "@megawin/game-keno/entities";
 import type {
   PlayerGetTicketEntriesInput,
   PlayerGetTicketEntriesOutput,
@@ -52,16 +52,14 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     betUnitCount: entry.betUnitCount,
     entrySummary: {
       ticketNo: entry.entrySummary.ticketNo,
-      boards: entry.entrySummary.boards.map((b: EntryBoardSnapshot) => ({
+      boards: entry.entrySummary.boards.map((b) => ({
         boardNo: b.boardNo,
         playType: b.playType,
-        numbers: b.numbers,
+        // Cơ bản (pick1-pick10): numbers bắt buộc. Bổ sung: undefined.
+        ...(b.numbers ? { numbers: b.numbers } : {}),
+        // Bổ sung (bigSmall/evenOdd): bet bắt buộc. Cơ bản: undefined.
+        ...(b.bet ? { bet: String(b.bet) } : {}),
         betCount: b.betCount,
-      })),
-      sideBets: entry.entrySummary.sideBets.map((s) => ({
-        playType: s.playType,
-        bet: s.bet,
-        betCount: s.betCount,
       })),
     },
     result: entry.result
@@ -84,14 +82,11 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
             playType: bp.playType,
             matchCount: bp.matchCount,
             pickCount: bp.pickCount,
+            // Bổ sung (bigSmall/evenOdd): bet + outcome + isWin meaningful.
+            ...(bp.bet ? { bet: String(bp.bet) } : {}),
+            ...(bp.outcome !== undefined ? { outcome: bp.outcome } : {}),
+            isWin: bp.isWin,
             winAmount: bp.winAmount,
-          })),
-          sideBetPayouts: entry.payout.sideBetPayouts.map((sp) => ({
-            playType: sp.playType,
-            bet: sp.bet,
-            outcome: sp.outcome,
-            isWin: sp.isWin,
-            winAmount: sp.winAmount,
           })),
         }
       : undefined,

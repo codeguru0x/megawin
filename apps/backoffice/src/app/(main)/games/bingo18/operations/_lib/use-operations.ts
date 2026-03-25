@@ -27,7 +27,6 @@ export type {
   GetLiveEntriesOutput,
   LiveEntryItem,
   LiveEntryBoard,
-  LiveEntrySideBet,
   GetDrawSelectorOutput,
   DrawSelectorItem,
   GetTopCombosOutput,
@@ -35,7 +34,6 @@ export type {
   GetWinningEntriesOutput,
   WinningEntryItem,
   WinningBoardDetail,
-  WinningSideBetDetail,
   WinningEntriesSummary,
 } from "@megawin/game-bingo18-application/use-cases/operations";
 

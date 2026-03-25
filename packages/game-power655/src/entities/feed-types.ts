@@ -1,3 +1,5 @@
+import type { PrizeTier } from "./enums";
+
 /**
  * Power 6/55 – Feed Types
  *
@@ -15,12 +17,16 @@
 export interface Power655FeedBoard {
   /** Ký hiệu board ("A".."E"). */
   boardNo: string;
+
   /** Kiểu chơi: standard / bao5 / bao7–bao18. */
   playType: string;
+
   /** 6 số chính đã chọn ("01"-"55"). */
   mainNumbers: string[];
+
   /** Số lines expand từ board. */
   expandedLines: number;
+
   /** Số lần cược nhân bội. */
   betCount: number;
 }
@@ -45,8 +51,6 @@ export interface Power655FeedDrawResult {
   winningMain: string[];
   /** Số bonus (quay từ 49 quả còn lại). */
   bonusNumber: string;
-  /** Thời điểm công bố kết quả (ISO 8601 string). */
-  publishedAt: string;
 }
 
 // ─────────────────────────────────────────────
@@ -58,14 +62,17 @@ export interface Power655FeedDrawResult {
  */
 export interface Power655FeedPayoutTier {
   /** Tên hạng giải (jackpot1 / jackpot2 / tier1 / tier2 / tier3). */
-  tier: string;
+  tier: PrizeTier;
+
   /** Số lines trúng hạng này. */
   hitCount: number;
+
   /**
    * Tiền thưởng mỗi hit (VND).
    * JP1/JP2 = 0 tại SettleEntries, patch ở FinalizeSettle khi biết pool chính xác.
    */
   unitAmount: number;
+
   /** Tổng tiền hạng này (VND). */
   amount: number;
 }
@@ -74,8 +81,6 @@ export interface Power655FeedPayoutTier {
  * Chi tiết trả thưởng Power 6/55 — gán vào EntryFeedDoc.payoutDetail.
  */
 export interface Power655FeedPayoutDetail {
-  /** Thời điểm settle (ISO 8601 string). */
-  settledAt: string;
   /** Chi tiết theo từng hạng giải. */
   tiers: Power655FeedPayoutTier[];
 }

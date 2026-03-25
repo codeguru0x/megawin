@@ -108,7 +108,7 @@ export interface Mega645Api {
    *   boards: [{
    *     boardNo: "A",
    *     playType: "standard",
-   *     selection: { mainNumbers: ["05", "12", "22", "31", "40", "45"] },
+   *     selection: { numbers: ["05", "12", "22", "31", "40", "45"] },
    *   }],
    * });
    * console.log(result.ticketNo);    // "M645-20260307-00003"
@@ -199,7 +199,7 @@ export interface Mega645Api {
    * ```ts
    * const { lines } = await client.mega645.getEntryLines("entry-abc...");
    * for (const line of lines) {
-   *   console.log(line.mainNumbers.join(", "));
+   *   console.log(line.numbers.join(", "));
    * }
    * ```
    */
@@ -226,7 +226,7 @@ export interface Mega645Api {
    * });
    *
    * for (const draw of results.draws) {
-   *   console.log(`Kỳ ${draw.drawId}: ${draw.result.winningMain.join(", ")}`);
+   *   console.log(`Kỳ ${draw.drawId}: ${draw.result.winningNumbers.join(", ")}`);
    *   console.log(`JP: ${draw.jackpot.closingAmount.toLocaleString()} VND`);
    * }
    * ```
@@ -250,7 +250,7 @@ export interface Mega645Api {
    * ```ts
    * const result = await client.mega645.getDrawResult("2026-03-08.001");
    *
-   * console.log(`Số: ${result.result.winningMain.join(", ")}`);
+   * console.log(`Số: ${result.result.winningNumbers.join(", ")}`);
    * // "Số: 06, 12, 13, 25, 31, 32"
    *
    * console.log(`JP: ${result.jackpot.closingAmount.toLocaleString()} VND`);

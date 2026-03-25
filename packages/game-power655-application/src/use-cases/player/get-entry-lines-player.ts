@@ -69,7 +69,7 @@ function mapPlayerLine(line: TicketLineDoc): PlayerLineInfo {
     boardNo: line.boardNo,
     lineIndex: line.lineIndex,
     main: line.main,
-    betCount: line.betCount ?? 1,
+    betCount: line.betCount,
     matchResult: {
       mainMatchCount: line.matchResult.mainMatchCount,
       bonusMatched: line.matchResult.bonusMatched,

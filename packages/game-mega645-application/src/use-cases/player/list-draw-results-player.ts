@@ -12,7 +12,7 @@
 
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-mega645/entities";;
+import type { DrawEntity } from "@megawin/game-mega645/entities";
 import type {
   PlayerListDrawResultsInput,
   PlayerListDrawResultsOutput,
@@ -58,8 +58,8 @@ function mapDrawSummary(draw: DrawEntity): PlayerDrawResultSummary {
     drawNo: draw.drawNo,
     drawTime: draw.drawTime.toISOString(),
     result: {
-      winningMain: result.winningMain,
-      publishedAt: result.publishedAt.toISOString(),
+      winningNumbers: result?.winningNumbers,
+      publishedAt: result?.publishedAt.toISOString(),
     },
     jackpot: jackpot,
     vietlottRef: draw.vietlottRef

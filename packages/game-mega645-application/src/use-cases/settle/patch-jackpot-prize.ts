@@ -86,7 +86,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     // Map entryId → betCount từ line doc
     const betCountByEntry = new Map<string, number>();
     for (const line of jackpotLines) {
-      betCountByEntry.set(line.entryId, line.betCount ?? 1);
+      betCountByEntry.set(line.entryId, line.betCount);
     }
 
     // ── Bước 2: Tính tiền thưởng Jackpot theo tỷ lệ betCount ────────────
@@ -94,7 +94,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     // "Giá trị tham gia" = betCount × unitPrice.
     // Vì C(6,6)=1, mỗi entry chỉ có 1 line JP → totalBetUnits = Σ(betCount per JP entry).
     const totalBetUnits = jackpotEntries.reduce(
-      (sum, e) => sum + (betCountByEntry.get(e.id) ?? 1),
+      (sum, e) => sum + (betCountByEntry.get(e.id) ?? 0),
       0,
     );
     const totalJackpotPrize = jackpotOpeningAmount + jackpotContribution;

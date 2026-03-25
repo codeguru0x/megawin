@@ -24,6 +24,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS, ENTRY_STATUS_LABELS } from "@megawin/game-core/labels";
 import { toTenantUsername } from "@megawin/shared/utils";
+import { BINGO18_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-bingo18/entities";
 import type { TicketEntryEntity } from "@megawin/game-bingo18/entities";
 import { useBingo18Entries } from "../use-report-queries";
 import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
@@ -61,8 +62,14 @@ export function Bingo18EntryDetailDialog({
   if (!entry) return null;
 
   const p = entry.payout as any;
-  const boards: any[] = p?.boardPayouts ?? [];
-  const sideBets: any[] = p?.sideBetPayouts ?? [];
+  const allBoardPayouts: any[] = p?.boardPayouts ?? [];
+  // boardPayouts chứa cả cơ bản và bổ sung — split theo playType
+  const boards: any[] = allBoardPayouts.filter(
+    (bp: any) => !BINGO18_SIDE_BET_PLAY_TYPE_SET.has(bp.playType),
+  );
+  const sideBets: any[] = allBoardPayouts.filter((bp: any) =>
+    BINGO18_SIDE_BET_PLAY_TYPE_SET.has(bp.playType),
+  );
   const winAmount: number = p?.winAmount ?? 0;
   const payoutAmount: number = p?.payoutAmount ?? 0;
   // scheduled = đang chờ kết quả — KHÔNG hiển thị lãi/lỗ
@@ -242,7 +249,7 @@ export function Bingo18EntryDetailDialog({
                         <TableCell className="text-right text-xs">
                           {board.winAmount > 0 ? (
                             <Badge className="bg-profit text-profit-foreground text-xs">
-                              Trúng ×{board.matchCount ?? 1}
+                              Trúng ×{board.matchCount ?? 0}
                             </Badge>
                           ) : (
                             <span className="text-muted-foreground">—</span>

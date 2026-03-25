@@ -9,7 +9,6 @@ const TICKET_SUMMARY = {
   drawPlan: { drawIds: ["2026-02-25.001"], drawCount: 1 },
   pricing: { unitPrice: 10000, betsPerDraw: 1, amountPerDraw: 10000, totalAmount: 10000 },
   boards: [{ boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] }],
-  sideBets: [],
   progress: { totalDraws: 1, settledDraws: 0 },
   createdAt: "2026-02-25T10:00:00Z",
 };

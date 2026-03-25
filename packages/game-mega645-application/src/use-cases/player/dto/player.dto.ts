@@ -2,7 +2,7 @@
  * Mega 6/45 – Player DTOs
  *
  * Dữ liệu trả cho player qua API Gateway.
- * Mega 6/45 không có số đặc biệt — chỉ mainNumbers.
+ * Mega 6/45 không có số đặc biệt — chỉ numbers.
  */
 
 import { EntryOutcome } from "@megawin/game-core/entities";
@@ -129,7 +129,7 @@ export interface PlayerTicketSummary {
     /** Tổng số dòng mỗi kỳ = ΣC(n,6) cho tất cả board. */
     linesPerDraw: number;
     /** Tổng đơn vị cược mỗi kỳ = Σ(expandedLines × betCount). */
-    betUnitsPerDraw?: number;
+    betUnitsPerDraw: number;
     /** Số tiền mỗi kỳ = unitPrice × betUnitsPerDraw (VND). */
     amountPerDraw: number;
     /** Tổng tiền vé = amountPerDraw × drawCount (VND). */
@@ -144,9 +144,9 @@ export interface PlayerTicketSummary {
     /** Các số đã chọn. */
     selection: {
       /** Danh sách số chính đã chọn ("01"-"45"). */
-      mainNumbers: string[];
+      numbers: string[];
     };
-    /** Số dòng expand ra từ board này = C(n,6) với n = số lượng mainNumbers. */
+    /** Số dòng expand ra từ board này = C(n,6) với n = số lượng numbers. */
     expandedLines: number;
     /** Số lần cược nhân bội cho board (≥ 1). */
     betCount: number;
@@ -228,7 +228,7 @@ export interface PlayerEntryInfo {
   /** Kết quả quay thưởng (chỉ có khi kỳ đã công bố). */
   result?: {
     /** 6 số chính trúng thưởng ("01"-"45"). */
-    winningMain: string[];
+    winningNumbers: string[];
     /** Thời điểm công bố kết quả (ISO datetime). */
     publishedAt: string;
   };
@@ -271,7 +271,7 @@ export interface PlayerLineInfo {
   /** Chỉ số dòng trong board (0-based). */
   lineIndex: number;
   /** 6 số chính của dòng ("01"-"45"), đã sort ascending. */
-  main: string[];
+  numbers: string[];
   /**
    * Số lần tham gia dự thưởng của dòng này (≥ 1).
    * winAmount = unitPrize × betCount. UI hiển thị "×N" khi betCount > 1.
@@ -280,7 +280,7 @@ export interface PlayerLineInfo {
   /** Kết quả so khớp dòng với kết quả quay. */
   matchResult: {
     /** Số lượng số chính khớp (0-6). */
-    mainMatchCount: number;
+    matchCount: number;
     /** Hạng giải: "jackpot" (6/6), "tier2" (5/6), "tier3" (4/6), "tier4" (3/6), null nếu không trúng. */
     tier: string | null;
     /** Tiền thưởng dòng này (VND). Jackpot = 0 tại đây, tính riêng qua split. */
@@ -338,7 +338,7 @@ export interface PlayerDrawResultInfo {
    */
   result: {
     /** 6 số chính trúng thưởng (sorted, zero-padded "01"-"45"). */
-    winningMain: string[];
+    winningNumbers: string[];
     /** Thời điểm công bố (ISO 8601). */
     publishedAt: string;
   };
@@ -389,7 +389,7 @@ export interface PlayerDrawResultSummary {
    */
   result: {
     /** 6 số chính trúng thưởng (sorted, zero-padded "01"-"45"). */
-    winningMain: string[];
+    winningNumbers: string[];
     /** Thời điểm công bố (ISO 8601). */
     publishedAt: string;
   };

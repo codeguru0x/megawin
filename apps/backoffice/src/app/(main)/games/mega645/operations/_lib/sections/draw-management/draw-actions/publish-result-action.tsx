@@ -19,9 +19,9 @@ import {
   generateUniqueRandomNumbers,
 } from "@/components/dev-random-fill-button";
 import {
-  MEGA645_MAIN_MIN,
-  MEGA645_MAIN_MAX,
-  MEGA645_MAIN_COUNT,
+  MEGA645_NUMBER_MIN,
+  MEGA645_NUMBER_MAX,
+  MEGA645_NUMBER_COUNT,
 } from "@megawin/game-mega645/entities";
 import { publishResultSchema } from "@megawin/game-mega645/schemas";
 import { todayVN } from "@megawin/shared/utils";
@@ -50,7 +50,7 @@ export function PublishResultAction({
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange ?? setInternalOpen;
-  const [mainNumbers, setMainNumbers] = useState(["", "", "", "", "", ""]);
+  const [numbers, setMainNumbers] = useState(["", "", "", "", "", ""]);
   const [vietlotDate, setVietlotDate] = useState(todayVN());
   const [vietlotPeriod, setVietlotPeriod] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -61,17 +61,17 @@ export function PublishResultAction({
   function handleSubmit() {
     setError(null);
     // Dùng publishResultSchema (shared với API route) thay vì validate thủ công
-    const result = publishResultSchema.safeParse({ winningMain: mainNumbers });
+    const result = publishResultSchema.safeParse({ winningNumbers: numbers });
     if (!result.success) {
       setError(result.error.issues[0]?.message ?? "Dữ liệu không hợp lệ.");
       return;
     }
 
     const body: {
-      winningMain: string[];
+      winningNumbers: string[];
       vietlottRef?: { drawPeriod: string; drawDate: string };
     } = {
-      winningMain: mainNumbers.map((n) => n.padStart(2, "0")),
+      winningNumbers: numbers.map((n) => n.padStart(2, "0")),
     };
 
     if (vietlotPeriod.trim()) {
@@ -103,7 +103,7 @@ export function PublishResultAction({
             {isRepublish ? "Sửa kết quả" : "Cập nhật kết quả"} kỳ {draw.drawDate}
           </DialogTitle>
           <DialogDescription>
-            Nhập {MEGA645_MAIN_COUNT} số chính ({pad2(MEGA645_MAIN_MIN)}–{pad2(MEGA645_MAIN_MAX)}).
+            Nhập {MEGA645_NUMBER_COUNT} số chính ({pad2(MEGA645_NUMBER_MIN)}–{pad2(MEGA645_NUMBER_MAX)}).
             {isRepublish && " Kết quả cũ sẽ bị ghi đè. Chỉ có hiệu lực trước khi kết sổ."}
           </DialogDescription>
         </DialogHeader>
@@ -119,9 +119,9 @@ export function PublishResultAction({
               <DevRandomFillButton
                 onFill={() => {
                   const mains = generateUniqueRandomNumbers(
-                    MEGA645_MAIN_COUNT,
-                    MEGA645_MAIN_MIN,
-                    MEGA645_MAIN_MAX,
+                    MEGA645_NUMBER_COUNT,
+                    MEGA645_NUMBER_MIN,
+                    MEGA645_NUMBER_MAX,
                   );
                   setMainNumbers(mains.map((n) => String(n).padStart(2, "0")));
                   setError(null);
@@ -131,11 +131,11 @@ export function PublishResultAction({
             <div className="rounded-lg border bg-muted/30 p-4">
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground">
-                  {MEGA645_MAIN_COUNT} số chính (không trùng, {pad2(MEGA645_MAIN_MIN)}–
-                  {pad2(MEGA645_MAIN_MAX)})
+                  {MEGA645_NUMBER_COUNT} số chính (không trùng, {pad2(MEGA645_NUMBER_MIN)}–
+                  {pad2(MEGA645_NUMBER_MAX)})
                 </p>
                 <div className="flex gap-2 flex-wrap">
-                  {mainNumbers.map((val, idx) => (
+                  {numbers.map((val, idx) => (
                     <Input
                       key={idx}
                       type="text"
@@ -144,7 +144,7 @@ export function PublishResultAction({
                       value={val}
                       onChange={(e) => {
                         const v = e.target.value.replace(/\D/g, "").slice(0, 2);
-                        const next = [...mainNumbers];
+                        const next = [...numbers];
                         next[idx] = v;
                         setMainNumbers(next);
                         setError(null);

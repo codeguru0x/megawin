@@ -238,7 +238,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     /**
      * Tổng đơn vị cược (betCount × hitCount) theo từng tier.
      * Dùng cho calculateSplitDistribution: phân bổ bonus theo tỷ lệ betCount.
-     * Backward compat: data cũ betCount = 1 → tierBetUnitCounts = tierWinnerCounts.
      */
     tierBetUnitCounts: Partial<Record<PrizeTier, number>>;
     /**
@@ -268,11 +267,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
                 totalAmount: { $sum: "$payout.tiers.amount" },
                 // betUnitCount = Σ(betUnitCount per tier) — tổng đơn vị tham gia dự thưởng per tier.
                 // betUnitCount được lưu trong tier doc (từ buildPayoutTiersFromLines khi settle).
-                // Backward compat: data cũ không có betUnitCount → fallback = hitCount (betCount=1).
                 totalBetUnitCount: {
-                  $sum: {
-                    $ifNull: ["$payout.tiers.betUnitCount", "$payout.tiers.hitCount"],
-                  },
+                  $sum: "$payout.tiers.betUnitCount",
                 },
               },
             },
@@ -305,8 +301,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     for (const row of tierRows) {
       tierWinnerCounts[row._id as PrizeTier] = row.totalHitCount;
       // tierBetUnitCounts: tổng đơn vị tham gia dự thưởng per tier (hitCount × betCount)
-      // Backward compat: data cũ không có betCount → totalBetUnitCount = totalHitCount
-      tierBetUnitCounts[row._id as PrizeTier] = row.totalBetUnitCount ?? row.totalHitCount;
+      tierBetUnitCounts[row._id as PrizeTier] = row.totalBetUnitCount;
       tierTotalAmounts[row._id as PrizeTier] = row.totalAmount;
       // Jackpot tier không tính vào totalFixedPrizes:
       // amount = 0 khi settle, tiền Jackpot được patch ở PatchJackpotPrize (step 4a).
@@ -1210,8 +1205,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       const entryId = entry._id.toString();
 
       // Ưu tiên dùng betUnits chính xác từ winning lines (passed in từ use case).
-      // Fallback 1: betUnitCount từ tier doc (lưu bởi buildPayoutTiersFromLines).
-      // Fallback 2: hitCount (backward compat betCount=1 data cũ).
+      // Fallback: betUnitCount từ tier doc (lưu bởi buildPayoutTiersFromLines).
       const betUnits = betUnitsByEntry?.get(entryId) ?? tierEntry?.betUnitCount ?? hitCount;
       const bonusAmount = bonusPerUnit * betUnits;
 
@@ -1312,8 +1306,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       const entryId = entry._id.toString();
 
       // Ưu tiên dùng betUnits chính xác từ JP lines (passed in từ use case).
-      // Fallback 1: betUnitCount từ tier doc (lưu bởi buildPayoutTiersFromLines).
-      // Fallback 2: hitCount (backward compat betCount=1 data cũ).
+      // Fallback: betUnitCount từ tier doc (lưu bởi buildPayoutTiersFromLines).
       const betUnits = betUnitsByEntry?.get(entryId) ?? jpTier?.betUnitCount ?? hitCount;
       const prizeAmount = jackpotPerUnit * betUnits;
 
@@ -1374,6 +1367,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     totalRevenue: number;
     totalEntries: number;
     totalLines: number;
+    totalBetUnits: number;
     uniquePlayers: number;
     totalCommission: number;
     totalPayout: number;
@@ -1386,6 +1380,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           totalRevenue: { $sum: "$amount" },
           totalEntries: { $sum: 1 },
           totalLines: { $sum: "$lineCount" },
+          totalBetUnits: { $sum: "$betUnitCount" },
           uniquePlayers: { $addToSet: "$accountId" },
           totalCommission: { $sum: "$tenant.commissionAmount" },
           totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
@@ -1407,6 +1402,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return {
       totalRevenue: row.totalRevenue ?? 0,
       totalEntries: row.totalEntries ?? 0,
+      totalBetUnits: row.totalBetUnits ?? 0,
       totalLines: row.totalLines ?? 0,
       uniquePlayers: row.uniquePlayers ?? 0,
       totalCommission: row.totalCommission ?? 0,

@@ -6,7 +6,6 @@ import type {
   GetLiveEntriesInput,
   GetLiveEntriesOutput,
   LiveEntryBoard,
-  LiveEntrySideBet,
 } from "./dto/live-entries.dto";
 
 /**
@@ -14,7 +13,7 @@ import type {
  *
  * Trả về N entries vừa đặt gần đây nhất (sort createdAt desc).
  * Dùng cho panel realtime trên Operations Dashboard.
- * Bingo 18 tách biệt boards cơ bản và side bets.
+ * boards[] chứa cả cơ bản và bổ sung, phân biệt qua playType.
  */
 export class GetLiveEntriesUseCase extends NextApiUseCase<
   GetLiveEntriesInput,
@@ -47,12 +46,8 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
           playType: b.playType as any,
           number: b.number as number | undefined,
           tripleKind: b.tripleKind as any,
-        }));
-
-        const sideBets: LiveEntrySideBet[] = (e.entrySummary?.sideBets ?? []).map((s: any) => ({
-          playType: s.playType as any,
-          sum: s.sum as number | undefined,
-          bet: s.bet as any,
+          sum: b.sum as number | undefined,
+          bet: b.bet as any,
         }));
 
         return {
@@ -61,9 +56,7 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
           tenantId: e.tenantId,
           amount: e.amount,
           boardCount: boards.length,
-          sideBetCount: sideBets.length,
           boards,
-          sideBets,
           createdAt: e.createdAt.toISOString(),
         };
       }),

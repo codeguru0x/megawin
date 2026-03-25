@@ -261,7 +261,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       }
     }
   ]
@@ -278,7 +278,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       },
       "betCount": 5
     }
@@ -296,7 +296,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao5",
       "selection": {
-        "mainNumbers": ["03", "12", "25", "30", "42"]
+        "numbers": ["03", "12", "25", "30", "42"]
       },
       "betCount": 1
     }
@@ -314,7 +314,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao7",
       "selection": {
-        "mainNumbers": ["03", "12", "25", "30", "42", "44", "45"]
+        "numbers": ["03", "12", "25", "30", "42", "44", "45"]
       },
       "betCount": 3
     }
@@ -332,7 +332,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao8",
       "selection": {
-        "mainNumbers": ["02", "09", "15", "21", "28", "34", "41", "45"]
+        "numbers": ["02", "09", "15", "21", "28", "34", "41", "45"]
       },
       "betCount": 1
     }
@@ -350,7 +350,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao9",
       "selection": {
-        "mainNumbers": ["01", "05", "10", "18", "27", "33", "38", "42", "45"]
+        "numbers": ["01", "05", "10", "18", "27", "33", "38", "42", "45"]
       },
       "betCount": 1
     }
@@ -368,7 +368,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao10",
       "selection": {
-        "mainNumbers": ["01", "06", "11", "16", "21", "26", "31", "36", "41", "45"]
+        "numbers": ["01", "06", "11", "16", "21", "26", "31", "36", "41", "45"]
       },
       "betCount": 2
     }
@@ -386,7 +386,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao11",
       "selection": {
-        "mainNumbers": ["01", "05", "10", "15", "20", "25", "30", "33", "37", "41", "45"]
+        "numbers": ["01", "05", "10", "15", "20", "25", "30", "33", "37", "41", "45"]
       },
       "betCount": 1
     }
@@ -404,7 +404,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao12",
       "selection": {
-        "mainNumbers": ["01", "05", "10", "15", "20", "25", "30", "33", "37", "41", "44", "45"]
+        "numbers": ["01", "05", "10", "15", "20", "25", "30", "33", "37", "41", "44", "45"]
       },
       "betCount": 1
     }
@@ -422,7 +422,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao13",
       "selection": {
-        "mainNumbers": [
+        "numbers": [
           "01",
           "04",
           "08",
@@ -454,7 +454,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao14",
       "selection": {
-        "mainNumbers": [
+        "numbers": [
           "01",
           "04",
           "07",
@@ -487,7 +487,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao15",
       "selection": {
-        "mainNumbers": [
+        "numbers": [
           "01",
           "04",
           "07",
@@ -521,7 +521,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao18",
       "selection": {
-        "mainNumbers": [
+        "numbers": [
           "01",
           "03",
           "06",
@@ -558,7 +558,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "quickPick",
       "selection": {
-        "mainNumbers": []
+        "numbers": []
       },
       "betCount": 10
     }
@@ -576,7 +576,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       },
       "betCount": 1
     },
@@ -584,7 +584,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "B",
       "playType": "bao7",
       "selection": {
-        "mainNumbers": ["03", "12", "25", "30", "38", "42", "45"]
+        "numbers": ["03", "12", "25", "30", "38", "42", "45"]
       },
       "betCount": 3
     },
@@ -592,7 +592,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "C",
       "playType": "quickPick",
       "selection": {
-        "mainNumbers": []
+        "numbers": []
       },
       "betCount": 5
     }
@@ -610,7 +610,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       },
       "betCount": 1
     },
@@ -618,7 +618,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "B",
       "playType": "bao8",
       "selection": {
-        "mainNumbers": ["02", "09", "15", "21", "28", "34", "41", "45"]
+        "numbers": ["02", "09", "15", "21", "28", "34", "41", "45"]
       },
       "betCount": 2
     },
@@ -626,7 +626,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "C",
       "playType": "bao12",
       "selection": {
-        "mainNumbers": ["01", "05", "10", "15", "20", "25", "30", "33", "37", "41", "44", "45"]
+        "numbers": ["01", "05", "10", "15", "20", "25", "30", "33", "37", "41", "44", "45"]
       },
       "betCount": 1
     },
@@ -634,7 +634,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "D",
       "playType": "bao5",
       "selection": {
-        "mainNumbers": ["08", "16", "24", "31", "39"]
+        "numbers": ["08", "16", "24", "31", "39"]
       },
       "betCount": 10
     },
@@ -642,7 +642,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "E",
       "playType": "quickPick",
       "selection": {
-        "mainNumbers": []
+        "numbers": []
       },
       "betCount": 1
     },
@@ -650,7 +650,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "F",
       "playType": "bao7",
       "selection": {
-        "mainNumbers": ["03", "11", "19", "27", "33", "40", "45"]
+        "numbers": ["03", "11", "19", "27", "33", "40", "45"]
       },
       "betCount": 5
     }
@@ -678,7 +678,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       }
     }
   ]
@@ -704,7 +704,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       }
     }
   ]
@@ -721,7 +721,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       }
     }
   ]
@@ -738,7 +738,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "46"]
+        "numbers": ["01", "07", "14", "22", "35", "46"]
       }
     }
   ]
@@ -755,7 +755,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["00", "07", "14", "22", "35", "45"]
+        "numbers": ["00", "07", "14", "22", "35", "45"]
       }
     }
   ]
@@ -772,7 +772,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["1", "7", "14", "22", "35", "45"]
+        "numbers": ["1", "7", "14", "22", "35", "45"]
       }
     }
   ]
@@ -789,7 +789,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35"]
+        "numbers": ["01", "07", "14", "22", "35"]
       }
     }
   ]
@@ -806,7 +806,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "35"]
+        "numbers": ["01", "07", "14", "22", "35", "35"]
       }
     }
   ]
@@ -823,7 +823,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "invalidType",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       }
     }
   ]
@@ -840,14 +840,14 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       }
     },
     {
       "boardNo": "A",
       "playType": "quickPick",
       "selection": {
-        "mainNumbers": []
+        "numbers": []
       }
     }
   ]
@@ -872,7 +872,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       }
     }
   ]
@@ -889,7 +889,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao7",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       }
     }
   ]
@@ -906,7 +906,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "bao18",
       "selection": {
-        "mainNumbers": [
+        "numbers": [
           "01",
           "03",
           "06",
@@ -941,7 +941,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": [1, 7, 14, 22, 35, 45]
+        "numbers": [1, 7, 14, 22, 35, 45]
       }
     }
   ]
@@ -957,37 +957,37 @@ POST http://localhost:4010/games/mega645/bets
     {
       "boardNo": "A",
       "playType": "standard",
-      "selection": { "mainNumbers": ["01", "07", "14", "22", "35", "45"] }
+      "selection": { "numbers": ["01", "07", "14", "22", "35", "45"] }
     },
     {
       "boardNo": "B",
       "playType": "standard",
-      "selection": { "mainNumbers": ["02", "08", "15", "23", "36", "44"] }
+      "selection": { "numbers": ["02", "08", "15", "23", "36", "44"] }
     },
     {
       "boardNo": "C",
       "playType": "standard",
-      "selection": { "mainNumbers": ["03", "09", "16", "24", "37", "43"] }
+      "selection": { "numbers": ["03", "09", "16", "24", "37", "43"] }
     },
     {
       "boardNo": "D",
       "playType": "standard",
-      "selection": { "mainNumbers": ["04", "10", "17", "25", "38", "42"] }
+      "selection": { "numbers": ["04", "10", "17", "25", "38", "42"] }
     },
     {
       "boardNo": "E",
       "playType": "standard",
-      "selection": { "mainNumbers": ["05", "11", "18", "26", "39", "41"] }
+      "selection": { "numbers": ["05", "11", "18", "26", "39", "41"] }
     },
     {
       "boardNo": "F",
       "playType": "standard",
-      "selection": { "mainNumbers": ["06", "12", "19", "27", "40", "45"] }
+      "selection": { "numbers": ["06", "12", "19", "27", "40", "45"] }
     },
     {
       "boardNo": "G",
       "playType": "standard",
-      "selection": { "mainNumbers": ["01", "13", "20", "28", "34", "44"] }
+      "selection": { "numbers": ["01", "13", "20", "28", "34", "44"] }
     }
   ]
 }
@@ -1003,7 +1003,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       },
       "betCount": 0
     }
@@ -1021,7 +1021,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       },
       "betCount": -1
     }
@@ -1039,7 +1039,7 @@ POST http://localhost:4010/games/mega645/bets
       "boardNo": "A",
       "playType": "standard",
       "selection": {
-        "mainNumbers": ["01", "07", "14", "22", "35", "45"]
+        "numbers": ["01", "07", "14", "22", "35", "45"]
       },
       "betCount": 1.5
     }

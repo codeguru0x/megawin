@@ -33,7 +33,7 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
         specialNumbers: b.selection.specialNumbers,
       },
       expandedLines: b.derived.expandedLines,
-      betCount: b.betCount ?? 1,
+      betCount: b.betCount,
     })),
     progress: {
       totalDraws: ticket.progress.totalDraws,

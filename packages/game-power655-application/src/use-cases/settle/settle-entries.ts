@@ -122,10 +122,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 
         // ── Bước 5a: Build betCount map từ entry snapshot ──────────────
         // Dùng để nhân betCount vào winAmount cho mỗi line.
-        // boardNo → betCount (fallback = 1 cho data cũ chưa có betCount).
         const betCountByBoard = new Map<string, number>();
         for (const b of entry.entrySummary.boards) {
-          betCountByBoard.set(b.boardNo, b.betCount ?? 1);
+          betCountByBoard.set(b.boardNo, b.betCount);
         }
 
         // ── Bước 5b: Tạo line documents để persist ─────────────────────
@@ -144,7 +143,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           // Giải cố định: lấy từ fixedPrizeAmounts config (unitWinAmount).
           // JP1/JP2 → 0 (PatchJackpotPrize tính sau); tier1/2/3 → từ config.
           const unitAmount = getFixedPrizeAmount(highestTier, fixedPrizeAmounts);
-          const betCount = betCountByBoard.get(line.boardNo) ?? 1;
+          const betCount = betCountByBoard.get(line.boardNo)!;
 
           return {
             tenantId: entry.tenantId,

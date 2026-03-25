@@ -1,20 +1,51 @@
 /**
  * Keno – Recommended MongoDB Indexes
+ *
+ * Danh sách indexes khuyến nghị cho tất cả collections Keno.
+ * Dùng bởi migration script / Atlas Index Management để tạo indexes.
+ *
+ * Cách dùng:
+ * ```ts
+ * import { KENO_INDEXES } from "@megawin/game-keno/indexes";
+ * for (const idx of KENO_INDEXES) {
+ *   await db.collection(idx.collection).createIndex(idx.key, idx.options);
+ * }
+ * ```
+ *
+ * LƯU Ý: Chạy trong môi trường maintenance hoặc background — tránh block production.
  */
 
 import { KenoCollections } from "../entities/enums";
 
+/** Mô tả 1 index MongoDB cần tạo cho Keno collections. */
 export interface IndexSpec {
+  /** Tên collection (từ `KenoCollections`). */
   collection: string;
+  /** Khai báo index key: field → 1 (ascending) hoặc -1 (descending). */
   key: Record<string, 1 | -1>;
+  /** Tùy chọn MongoDB createIndex. */
   options?: {
+    /** True nếu index phải unique. */
     unique?: boolean;
+    /** Tên index — dùng để identify khi drop/update. */
     name?: string;
+    /** True nếu chỉ index các document có field đó (tiết kiệm storage cho optional fields). */
     sparse?: boolean;
   };
+  /** Mô tả mục đích index này phục vụ query nào. Dùng để review và audit. */
   purpose: string;
 }
 
+/**
+ * Tất cả indexes khuyến nghị cho Keno.
+ *
+ * Bao gồm 5 collections:
+ * - keno_game_configs: unique scope+tenant
+ * - keno_tickets: player queries, drawPlan lookup
+ * - keno_ticket_entries: settle batch, feed sync, history
+ * - keno_draws: scheduler, player results, UI
+ * - keno_draw_counters: atomic daily counter
+ */
 export const KENO_INDEXES: readonly IndexSpec[] = [
   // ─────────────────────────────────────────
   // kenoGameConfigs

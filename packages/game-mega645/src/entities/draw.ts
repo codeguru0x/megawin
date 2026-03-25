@@ -41,7 +41,7 @@ export interface DrawResult {
    * Thứ tự quay gốc phải được bảo toàn để hiển thị đúng với kết quả Vietlott công bố.
    * Lưu dạng string[] (zero-padded "01"-"45") — dùng trực tiếp từ MongoDB, tránh cast.
    */
-  winningMain: string[];
+  winningNumbers: string[];
   /** Thời điểm công bố kết quả. */
   publishedAt: Date;
 }

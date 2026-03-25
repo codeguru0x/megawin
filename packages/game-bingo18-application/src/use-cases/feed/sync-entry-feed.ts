@@ -14,9 +14,9 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import type {
   TicketEntryEntity,
   EntryBoardSnapshot,
-  EntrySideBetSnapshot,
   EntryPayout,
   EntryVoidInfo,
+  EntryResult,
 } from "@megawin/game-bingo18/entities";
 import type {
   Bingo18FeedBetContent,
@@ -24,7 +24,6 @@ import type {
   Bingo18FeedPayoutDetail,
 } from "@megawin/game-bingo18/entities";
 import { toTenantUsername } from "@megawin/shared/utils";
-
 export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
   private readonly entryRepo = new EntryRepository();
 
@@ -46,20 +45,26 @@ export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
       Long.fromString(afterVersion),
       batchSize,
     );
-    return entries.map((e) => mapToFeedDoc(e));
+    return entries.map((e) => mapToFeedDoc(e, this.gameProduct));
   }
 }
 
 // ─── Type-safe mappers: TicketEntryEntity → EntryFeedDoc ─────────────────────
 
-function mapToFeedDoc(e: TicketEntryEntity): Omit<EntryFeedDoc, "_id"> {
+/**
+ *
+ * @param e - TicketEntryEntity
+ * @param gameProduct - GameProduct
+ * @returns Omit<EntryFeedDoc, "_id">
+ */
+function mapToFeedDoc(e: TicketEntryEntity, gameProduct: GameProduct): Omit<EntryFeedDoc, "_id"> {
   const winAmount = e.payout?.winAmount ?? 0;
   const payoutAmount = e.payout?.payoutAmount ?? 0;
   const stakeAmount = e.amount;
 
   return {
     version: Long.fromString(e.version),
-    gameProduct: GameProduct.Bingo18,
+    gameProduct: gameProduct,
     entryId: e.id,
     ticketId: e.ticketId,
     ticketNo: e.entrySummary.ticketNo,
@@ -70,6 +75,8 @@ function mapToFeedDoc(e: TicketEntryEntity): Omit<EntryFeedDoc, "_id"> {
     drawId: e.drawId,
     status: e.status,
     outcome: e.outcome,
+    betUnitCount: e.betUnitCount,
+    unitPrice: e.unitPrice,
     stakeAmount,
     winAmount,
     payoutAmount,
@@ -77,12 +84,27 @@ function mapToFeedDoc(e: TicketEntryEntity): Omit<EntryFeedDoc, "_id"> {
     commissionRate: e.tenant.commissionRate,
     commissionAmount: e.tenant.commissionAmount,
     voidInfo: mapVoidInfo(e.voidInfo),
-    betContent: mapBetContent(e.entrySummary.boards, e.entrySummary.sideBets),
+    betContent: mapBetContent(e.entrySummary.boards),
     drawResult: mapDrawResult(e.result),
     payoutDetail: mapPayoutDetail(e.payout),
-    updatedAt: e.updatedAt ?? new Date(),
+    createdAt: e.createdAt,
+    updatedAt: e.updatedAt,
     feedCreatedAt: new Date(),
   };
+}
+
+function mapBetContent(boards: EntryBoardSnapshot[]): Bingo18FeedBetContent {
+  return {
+    boards: boards.map((b) => ({
+      boardNo: b.boardNo,
+      playType: b.playType,
+      number: b.number,
+      tripleKind: b.tripleKind,
+      sum: b.sum,
+      bet: b.bet,
+      betCount: b.betCount,
+    })),
+  } satisfies Bingo18FeedBetContent;
 }
 
 function mapVoidInfo(v: EntryVoidInfo | undefined): FeedVoidInfo | undefined {
@@ -93,67 +115,38 @@ function mapVoidInfo(v: EntryVoidInfo | undefined): FeedVoidInfo | undefined {
   return {
     originalAmount: v.originalAmount,
     refundAmount: v.refundAmount,
-    refundStatus: v.refundStatus,
     voidedAt: v.voidedAt,
-  };
+  } satisfies FeedVoidInfo;
 }
 
-function mapBetContent(
-  boards: EntryBoardSnapshot[],
-  sideBets: EntrySideBetSnapshot[],
-): Bingo18FeedBetContent {
-  return {
-    boards: boards.map((b) => ({
-      boardNo: b.boardNo,
-      playType: String(b.playType),
-      number: b.number,
-      tripleKind: b.tripleKind != null ? String(b.tripleKind) : undefined,
-      betCount: b.betCount,
-    })),
-    sideBets: sideBets.map((s) => ({
-      playType: String(s.playType),
-      sum: s.sum,
-      bet: s.bet != null ? String(s.bet) : undefined,
-      betCount: s.betCount,
-    })),
-  };
-}
+function mapDrawResult(result: EntryResult | undefined): Bingo18FeedDrawResult | undefined {
+  if (!result) {
+    return undefined;
+  }
 
-function mapDrawResult(result: TicketEntryEntity["result"]): Bingo18FeedDrawResult | undefined {
-  if (!result) return undefined;
   return {
     numbers: result.numbers,
-    sum: result.sum,
-    publishedAt:
-      result.publishedAt instanceof Date
-        ? result.publishedAt.toISOString()
-        : String(result.publishedAt),
-  };
+  } satisfies Bingo18FeedDrawResult;
 }
 
 function mapPayoutDetail(payout: EntryPayout | undefined): Bingo18FeedPayoutDetail | undefined {
-  if (!payout) return undefined;
+  if (!payout) {
+    return undefined;
+  }
+
   return {
-    settledAt:
-      payout.settledAt instanceof Date ? payout.settledAt.toISOString() : String(payout.settledAt),
     boardPayouts: payout.boardPayouts.map((b) => ({
       boardNo: b.boardNo,
-      playType: String(b.playType),
-      tripleKind: b.tripleKind != null ? String(b.tripleKind) : undefined,
+      playType: b.playType,
+      tripleKind: b.tripleKind,
       matchCount: b.matchCount,
+      sum: b.sum,
+      bet: b.bet,
+      outcome: b.outcome,
+      isWin: b.isWin,
       betCount: b.betCount,
       unitWinAmount: b.unitWinAmount,
       winAmount: b.winAmount,
-    })),
-    sideBetPayouts: payout.sideBetPayouts.map((s) => ({
-      playType: String(s.playType),
-      sum: s.sum,
-      bet: s.bet != null ? String(s.bet) : undefined,
-      outcome: s.outcome,
-      isWin: s.isWin,
-      betCount: s.betCount,
-      unitWinAmount: s.unitWinAmount,
-      winAmount: s.winAmount,
     })),
   };
 }

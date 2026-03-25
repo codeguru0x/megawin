@@ -85,8 +85,29 @@ export const KENO_SIDE_BET_PLAY_TYPES: readonly KenoPlayType[] = [
   KenoPlayType.EvenOdd,
 ];
 
-/** Narrowed type cho side bet play types — dùng trong SideBet interface. */
+/** Narrowed type cho side bet play types — dùng trong board interface khi playType thuộc nhóm bổ sung. */
 export type KenoSideBetPlayType = typeof KenoPlayType.BigSmall | typeof KenoPlayType.EvenOdd;
+
+/** Narrowed type cho basic play types — dùng trong board interface khi playType thuộc nhóm cơ bản (chọn số). */
+export type KenoBasicPlayType =
+  | typeof KenoPlayType.Pick1
+  | typeof KenoPlayType.Pick2
+  | typeof KenoPlayType.Pick3
+  | typeof KenoPlayType.Pick4
+  | typeof KenoPlayType.Pick5
+  | typeof KenoPlayType.Pick6
+  | typeof KenoPlayType.Pick7
+  | typeof KenoPlayType.Pick8
+  | typeof KenoPlayType.Pick9
+  | typeof KenoPlayType.Pick10;
+
+/** Set dùng cho runtime check: playType có thuộc basic (chọn số) hay không. */
+export const KENO_BASIC_PLAY_TYPE_SET: ReadonlySet<KenoPlayType> = new Set(KENO_BASIC_PLAY_TYPES);
+
+/** Set dùng cho runtime check: playType có thuộc side bet hay không. */
+export const KENO_SIDE_BET_PLAY_TYPE_SET: ReadonlySet<KenoPlayType> = new Set(
+  KENO_SIDE_BET_PLAY_TYPES,
+);
 
 // ─────────────────────────────────────────────
 // Side Bet Selection – Cách chơi bổ sung
@@ -132,6 +153,18 @@ export type KenoEvenOddBet = (typeof KenoEvenOddBet)[keyof typeof KenoEvenOddBet
 // Payout Status
 // ─────────────────────────────────────────────
 
+/**
+ * Trạng thái quá trình trả thưởng cho player sau khi entry settled.
+ *
+ * Lifecycle:
+ *   pending → dispatched → confirmed
+ *                       → failed (retry)
+ *
+ * - pending: chờ dispatch (mặc định sau settle)
+ * - dispatched: đã gửi lệnh trả thưởng tới payment service, chờ confirm
+ * - confirmed: payment service xác nhận thành công
+ * - failed: dispatch thất bại sau N lần retry
+ */
 export const PayoutStatus = {
   Pending: "pending",
   Dispatched: "dispatched",
@@ -145,6 +178,18 @@ export type PayoutStatus = (typeof PayoutStatus)[keyof typeof PayoutStatus];
 // Refund Status
 // ─────────────────────────────────────────────
 
+/**
+ * Trạng thái quá trình hoàn tiền cho player khi draw bị void.
+ *
+ * Lifecycle giống PayoutStatus:
+ *   pending → dispatched → confirmed
+ *                       → failed (retry)
+ *
+ * - pending: chờ dispatch (mặc định sau void-entries step)
+ * - dispatched: đã gửi lệnh hoàn tiền tới payment service
+ * - confirmed: payment service xác nhận hoàn tiền thành công
+ * - failed: dispatch thất bại sau N lần retry — cần can thiệp thủ công
+ */
 export const RefundStatus = {
   Pending: "pending",
   Dispatched: "dispatched",

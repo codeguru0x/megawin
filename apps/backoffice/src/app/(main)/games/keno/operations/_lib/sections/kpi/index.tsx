@@ -4,7 +4,7 @@
  * Keno – KPI Section
  *
  * Lazy-load KPI strip từ opsSummary.
- * Keno: boards + sideBets thay vì lines.
+ * Keno: boards chứa cả cơ bản + bổ sung (unified).
  * Refetch mỗi 15s khi kỳ đang active (chu kỳ ngắn ~8 phút).
  */
 
@@ -22,8 +22,8 @@ export function KpiSection() {
 
   if (isLoading) {
     return (
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {Array.from({ length: 6 }).map((_, i) => (
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, i) => (
           <Skeleton key={i} className="h-[72px] rounded-xl" />
         ))}
       </div>
@@ -36,7 +36,6 @@ export function KpiSection() {
     totalRevenue: data.totalRevenue,
     totalEntries: data.totalEntries,
     totalBoards: data.totalBoards,
-    totalSideBets: data.totalSideBets,
     uniquePlayers: data.uniquePlayers,
     totalCommission: data.totalCommission,
   };

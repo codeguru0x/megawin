@@ -14,6 +14,7 @@
 
 import {
   KenoCollections,
+  KENO_SIDE_BET_PLAY_TYPES,
   PayoutStatus,
   RefundStatus,
   type EntryPayout,
@@ -459,8 +460,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       boardPayouts: Array<{
         boardNo: string;
         playType: string;
-        matchCount: number;
-        pickCount: number;
+        matchCount: number | null;
+        pickCount: number | null;
         betCount: number;
         winAmount: number;
       }>;
@@ -768,8 +769,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Aggregate số bộ trúng theo pickCount × matchCount cho tất cả entries settled.
    *
+   * boardPayouts[] giờ bao gồm cả basic + side bet — filter chỉ lấy basic boards
+   * (pickCount !== null). Side bet boards có pickCount = null.
+   *
    * Pre-filter: chỉ entries có ít nhất 1 board thắng ($elemMatch: winAmount > 0).
-   * Sau đó unwind → group theo {pickCount, matchCount} → đếm boards + lấy prizePerUnit.
+   * Sau đó unwind → filter basic boards → group theo {pickCount, matchCount} → đếm boards + lấy prizePerUnit.
    * Dùng bởi CalculateFinancials để denormalize vào draw.settleSummary.basicPrizes.
    */
   async aggregateBasicPrizeSummary(drawId: string): Promise<
@@ -790,8 +794,14 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         },
       },
       { $unwind: "$payout.boardPayouts" },
-      // Lọc từng board sau unwind (entry có nhiều board, không phải board nào cũng thắng)
-      { $match: { "payout.boardPayouts.winAmount": { $gt: 0 } } },
+      // Lọc basic boards thắng sau unwind — loại side bet boards (pickCount = null)
+      // và boards không thắng (winAmount === 0)
+      {
+        $match: {
+          "payout.boardPayouts.pickCount": { $ne: null },
+          "payout.boardPayouts.winAmount": { $gt: 0 },
+        },
+      },
       {
         $group: {
           _id: {
@@ -818,7 +828,10 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Aggregate số người trúng side bet (Lớn/Nhỏ, Chẵn/Lẻ) theo {playType, bet}.
    *
-   * Pre-filter: chỉ entries có ít nhất 1 side bet thắng ($elemMatch: winAmount > 0).
+   * Side bets nay nằm chung trong `payout.boardPayouts[]` — filter theo playType
+   * thuộc KENO_SIDE_BET_PLAY_TYPES ("bigSmall", "evenOdd").
+   *
+   * Pre-filter: chỉ entries có ít nhất 1 side bet board thắng ($elemMatch: winAmount > 0 + playType in sideBets).
    * Sau đó unwind → group theo {playType, bet} → đếm winners + lấy prizePerUnit.
    * Dùng bởi CalculateFinancials để denormalize vào draw.settleSummary.sideBetPrizes.
    *
@@ -833,28 +846,40 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       prizePerUnit: number;
     }>
   > {
+    const sideBetPlayTypes = [...KENO_SIDE_BET_PLAY_TYPES];
+
     const result = await this.aggregate([
       {
         $match: {
           drawId,
           status: EntryStatus.Settled,
-          // Pre-filter index-friendly: chỉ entries có ít nhất 1 side bet thắng
-          "payout.sideBetPayouts": { $elemMatch: { winAmount: { $gt: 0 } } },
+          // Pre-filter index-friendly: chỉ entries có ít nhất 1 side bet board thắng
+          "payout.boardPayouts": {
+            $elemMatch: {
+              playType: { $in: sideBetPlayTypes },
+              winAmount: { $gt: 0 },
+            },
+          },
         },
       },
-      { $unwind: "$payout.sideBetPayouts" },
-      // Lọc từng side bet sau unwind (nhất quán với aggregateBasicPrizeSummary)
-      { $match: { "payout.sideBetPayouts.winAmount": { $gt: 0 } } },
+      { $unwind: "$payout.boardPayouts" },
+      // Lọc board side bet thắng sau unwind (entry có thể mix basic + side bet boards)
+      {
+        $match: {
+          "payout.boardPayouts.playType": { $in: sideBetPlayTypes },
+          "payout.boardPayouts.winAmount": { $gt: 0 },
+        },
+      },
       {
         $group: {
           _id: {
-            playType: "$payout.sideBetPayouts.playType",
-            bet: "$payout.sideBetPayouts.bet",
+            playType: "$payout.boardPayouts.playType",
+            bet: "$payout.boardPayouts.bet",
           },
           winnerCount: { $sum: 1 },
           // $max thay vì $first: giải cố định nên mọi doc trong nhóm đều bằng nhau,
           // nhưng $max không phụ thuộc thứ tự document → deterministic hơn $first.
-          prizePerUnit: { $max: "$payout.sideBetPayouts.winAmount" },
+          prizePerUnit: { $max: "$payout.boardPayouts.winAmount" },
         },
       },
       { $sort: { "_id.playType": 1, "_id.bet": 1 } },
@@ -1130,12 +1155,14 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    *
    * Keno: companyTake = revenue - prizes - commission (không có Jackpot contribution).
    * Filter theo financialDate hoặc drawId cụ thể.
+   *
+   * boards = tổng số boards trong entrySummary (bao gồm cả basic pick1-10 và side bets).
+   * Side bets đã merge vào boards[] — không còn mảng riêng.
    */
   async aggregateOpsSummary(filter: { financialDate?: string; drawId?: string }): Promise<{
     totalRevenue: number;
     totalEntries: number;
     totalBoards: number;
-    totalSideBets: number;
     uniquePlayers: number;
     totalCommission: number;
     totalPayout: number;
@@ -1155,10 +1182,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           _id: null,
           totalRevenue: { $sum: "$amount" },
           totalEntries: { $sum: 1 },
-          // boards = tổng boards trong entrySummary (basic pick1-10)
+          // boards = tổng boards trong entrySummary (basic + side bets đã merge vào boards[])
           totalBoards: { $sum: { $size: { $ifNull: ["$entrySummary.boards", []] } } },
-          // sideBets = tổng side bets trong entrySummary
-          totalSideBets: { $sum: { $size: { $ifNull: ["$entrySummary.sideBets", []] } } },
           totalCommission: { $sum: "$tenant.commissionAmount" },
           totalPayout: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
           // Distinct players: collect all, đếm sau
@@ -1170,7 +1195,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
           totalRevenue: 1,
           totalEntries: 1,
           totalBoards: 1,
-          totalSideBets: 1,
           totalCommission: 1,
           totalPayout: 1,
           uniquePlayers: { $size: "$accountIds" },
@@ -1183,7 +1207,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       totalRevenue: row?.totalRevenue ?? 0,
       totalEntries: row?.totalEntries ?? 0,
       totalBoards: row?.totalBoards ?? 0,
-      totalSideBets: row?.totalSideBets ?? 0,
       uniquePlayers: row?.uniquePlayers ?? 0,
       totalCommission: row?.totalCommission ?? 0,
       totalPayout: row?.totalPayout ?? 0,
@@ -1255,7 +1278,10 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Aggregate tần suất 80 số (01-80) từ các basic boards.
    *
-   * Unwind boards → unwind numbers → group by number.
+   * boards[] giờ bao gồm cả basic + side bets → cần $filter chỉ lấy boards
+   * có `numbers` field (basic boards). Side bet boards có `bet` thay vì `numbers`.
+   *
+   * Unwind filtered boards → unwind numbers → group by number.
    * Đây là pipeline nặng — chỉ gọi khi cần (lazy-load trên UI).
    */
   async aggregateNumberFrequency(filter: { financialDate?: string; drawId?: string }): Promise<
@@ -1275,8 +1301,18 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
     const result = await this.aggregate([
       { $match },
-      // Chỉ lấy basic boards (không phải side bets)
-      { $addFields: { boards: { $ifNull: ["$entrySummary.boards", []] } } },
+      // Filter chỉ basic boards (có numbers field) — loại side bet boards (có bet thay vì numbers)
+      {
+        $addFields: {
+          boards: {
+            $filter: {
+              input: { $ifNull: ["$entrySummary.boards", []] },
+              as: "b",
+              cond: { $isArray: "$$b.numbers" },
+            },
+          },
+        },
+      },
       { $unwind: "$boards" },
       { $unwind: "$boards.numbers" },
       {
@@ -1325,9 +1361,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Aggregate phân bổ theo kiểu chơi (pick1-10, bigSmall, evenOdd).
    *
-   * Basic boards: unwind boards → group by playType.
-   * Side bets: unwind sideBets → group by playType.
-   * Merge kết quả, sorted by selectionCount desc.
+   * Tất cả play types (basic + side bets) đều nằm trong `entrySummary.boards[]`.
+   * Unwind boards → group by playType → đếm selectionCount, entryCount, revenue.
    */
   async aggregatePlayTypeDistribution(filter: { financialDate?: string; drawId?: string }): Promise<
     Array<{
@@ -1344,62 +1379,33 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       $match.financialDate = filter.financialDate;
     }
 
-    // Aggregate basic boards và side bets riêng biệt, sau đó union
-    const [boardResult, sideBetResult] = await Promise.all([
-      // Basic boards: unwind boards → group by playType
-      this.aggregate([
-        { $match },
-        { $addFields: { boards: { $ifNull: ["$entrySummary.boards", []] } } },
-        { $unwind: "$boards" },
-        {
-          $group: {
-            _id: "$boards.playType",
-            selectionCount: { $sum: 1 },
-            entryIds: { $addToSet: "$_id" },
-            revenue: { $sum: "$amount" },
-          },
+    const result = await this.aggregate([
+      { $match },
+      // Tất cả play types (basic + side bets) đã merge vào boards[]
+      { $addFields: { boards: { $ifNull: ["$entrySummary.boards", []] } } },
+      { $unwind: "$boards" },
+      {
+        $group: {
+          _id: "$boards.playType",
+          selectionCount: { $sum: 1 },
+          entryIds: { $addToSet: "$_id" },
+          revenue: { $sum: "$amount" },
         },
-        {
-          $project: {
-            _id: 0,
-            playType: "$_id",
-            selectionCount: 1,
-            entryCount: { $size: "$entryIds" },
-            // Revenue approximate per board type
-            revenue: { $toLong: "$revenue" },
-          },
+      },
+      {
+        $project: {
+          _id: 0,
+          playType: "$_id",
+          selectionCount: 1,
+          entryCount: { $size: "$entryIds" },
+          // Revenue approximate per board type
+          revenue: { $toLong: "$revenue" },
         },
-      ]),
-      // Side bets: unwind sideBets → group by playType
-      this.aggregate([
-        { $match },
-        { $addFields: { sideBets: { $ifNull: ["$entrySummary.sideBets", []] } } },
-        { $match: { sideBets: { $ne: [] } } },
-        { $unwind: "$sideBets" },
-        {
-          $group: {
-            _id: "$sideBets.playType",
-            selectionCount: { $sum: 1 },
-            entryIds: { $addToSet: "$_id" },
-            revenue: { $sum: "$amount" },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            playType: "$_id",
-            selectionCount: 1,
-            entryCount: { $size: "$entryIds" },
-            revenue: { $toLong: "$revenue" },
-          },
-        },
-      ]),
+      },
+      { $sort: { selectionCount: -1 } },
     ]);
 
-    const merged = [...(boardResult as any[]), ...(sideBetResult as any[])];
-    merged.sort((a, b) => b.selectionCount - a.selectionCount);
-
-    return merged.map((r) => ({
+    return result.map((r: any) => ({
       playType: r.playType as string,
       selectionCount: r.selectionCount as number,
       entryCount: r.entryCount as number,
@@ -1420,7 +1426,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Aggregate top N bộ số phổ biến nhất trong một kỳ quay.
    *
-   * Chỉ thống kê basic boards (pick1-10), không phải side bets.
+   * Chỉ thống kê basic boards (có `numbers` field), loại side bet boards (có `bet` thay vì `numbers`).
+   * boards[] giờ bao gồm cả basic + side bets → cần $filter trước khi unwind.
    * Key = sorted numbers array (vd: "01,03,07,22") để group đúng combo.
    */
   async aggregateTopCombos(
@@ -1436,7 +1443,18 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   > {
     const result = await this.aggregate([
       { $match: { drawId } },
-      { $addFields: { boards: { $ifNull: ["$entrySummary.boards", []] } } },
+      // Filter chỉ basic boards (có numbers field) — loại side bet boards
+      {
+        $addFields: {
+          boards: {
+            $filter: {
+              input: { $ifNull: ["$entrySummary.boards", []] },
+              as: "b",
+              cond: { $isArray: "$$b.numbers" },
+            },
+          },
+        },
+      },
       { $unwind: "$boards" },
       {
         $group: {

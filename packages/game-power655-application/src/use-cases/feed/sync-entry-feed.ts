@@ -16,6 +16,7 @@ import type {
   EntryBoardSnapshot,
   EntryPayout,
   EntryVoidInfo,
+  EntryResult,
 } from "@megawin/game-power655/entities";
 import type {
   Power655FeedBetContent,
@@ -43,18 +44,18 @@ export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
       Long.fromString(afterVersion),
       batchSize,
     );
-    return entries.map((e) => mapToFeedDoc(e));
+    return entries.map((e) => mapToFeedDoc(e, this.gameProduct));
   }
 }
 
-function mapToFeedDoc(e: TicketEntryEntity): Omit<EntryFeedDoc, "_id"> {
+function mapToFeedDoc(e: TicketEntryEntity, gameProduct: GameProduct): Omit<EntryFeedDoc, "_id"> {
   const winAmount = e.payout?.winAmount ?? 0;
   const payoutAmount = e.payout?.payoutAmount ?? 0;
   const stakeAmount = e.amount;
 
   return {
     version: Long.fromString(e.version),
-    gameProduct: GameProduct.Power655,
+    gameProduct: gameProduct,
     entryId: e.id,
     ticketId: e.ticketId,
     ticketNo: e.entrySummary.ticketNo,
@@ -65,6 +66,8 @@ function mapToFeedDoc(e: TicketEntryEntity): Omit<EntryFeedDoc, "_id"> {
     drawId: e.drawId,
     status: e.status,
     outcome: e.outcome,
+    betUnitCount: e.betUnitCount,
+    unitPrice: e.unitPrice,
     stakeAmount,
     winAmount,
     payoutAmount,
@@ -75,17 +78,20 @@ function mapToFeedDoc(e: TicketEntryEntity): Omit<EntryFeedDoc, "_id"> {
     betContent: mapBetContent(e.entrySummary.boards),
     drawResult: mapDrawResult(e.result),
     payoutDetail: mapPayoutDetail(e.payout),
-    updatedAt: e.updatedAt ?? new Date(),
+    createdAt: e.createdAt,
+    updatedAt: e.updatedAt,
     feedCreatedAt: new Date(),
   };
 }
 
 function mapVoidInfo(v: EntryVoidInfo | undefined): FeedVoidInfo | undefined {
-  if (!v) return undefined;
+  if (!v) {
+    return undefined;
+  }
+
   return {
     originalAmount: v.originalAmount,
     refundAmount: v.refundAmount,
-    refundStatus: String(v.refundStatus),
     voidedAt: v.voidedAt,
   };
 }
@@ -94,7 +100,7 @@ function mapBetContent(boards: EntryBoardSnapshot[]): Power655FeedBetContent {
   return {
     boards: boards.map((b) => ({
       boardNo: b.boardNo,
-      playType: String(b.playType),
+      playType: b.playType,
       mainNumbers: b.mainNumbers,
       expandedLines: b.expandedLines,
       betCount: b.betCount,
@@ -102,28 +108,28 @@ function mapBetContent(boards: EntryBoardSnapshot[]): Power655FeedBetContent {
   };
 }
 
-function mapDrawResult(result: TicketEntryEntity["result"]): Power655FeedDrawResult | undefined {
-  if (!result) return undefined;
+function mapDrawResult(result: EntryResult | undefined): Power655FeedDrawResult | undefined {
+  if (!result) {
+    return undefined;
+  }
+
   return {
     winningMain: result.winningMain,
     bonusNumber: result.bonusNumber,
-    publishedAt:
-      result.publishedAt instanceof Date
-        ? result.publishedAt.toISOString()
-        : String(result.publishedAt),
-  };
+  } satisfies Power655FeedDrawResult;
 }
 
 function mapPayoutDetail(payout: EntryPayout | undefined): Power655FeedPayoutDetail | undefined {
-  if (!payout || !payout.tiers?.length) return undefined;
+  if (!payout || !payout.tiers?.length) {
+    return undefined;
+  }
+
   return {
-    settledAt:
-      payout.settledAt instanceof Date ? payout.settledAt.toISOString() : String(payout.settledAt),
     tiers: payout.tiers.map((t) => ({
-      tier: String(t.tier),
+      tier: t.tier,
       hitCount: t.hitCount,
       unitAmount: t.unitAmount,
       amount: t.amount,
     })),
-  };
+  } satisfies Power655FeedPayoutDetail;
 }

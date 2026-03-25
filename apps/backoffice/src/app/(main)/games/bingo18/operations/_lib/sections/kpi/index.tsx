@@ -1,10 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
+import { BINGO18_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-bingo18/entities";
 import { useDrawContext } from "../../use-draw-context";
-import { useOpsSummary } from "../../use-operations";
+import { useOpsSummary, useOpsPlayTypeDistribution } from "../../use-operations";
 import { KpiStrip } from "./kpi-strip";
 import type { OpsKpi } from "../../types";
+import type { PlayTypeDistributionItem } from "../../use-operations";
 
 const KPI_SHOW = new Set([
   DrawStatus.SalesOpen,
@@ -17,14 +20,24 @@ const KPI_SHOW = new Set([
 export function KpiSection() {
   const { draw, opsParams, isSettled } = useDrawContext();
   const { data } = useOpsSummary(opsParams, isSettled);
+  const { data: playtypeData } = useOpsPlayTypeDistribution(opsParams, isSettled);
+
+  // Tính totalSideBets từ playtype distribution (chính xác, bao gồm toàn bộ entries).
+  // Backend trả totalBoards (gộp cả basic + side bet) — UI tách ra bằng filter playType.
+  const totalSideBets = useMemo(() => {
+    if (!playtypeData) return 0;
+    return playtypeData.distribution
+      .filter((d: PlayTypeDistributionItem) => BINGO18_SIDE_BET_PLAY_TYPE_SET.has(d.playType))
+      .reduce((sum: number, d: PlayTypeDistributionItem) => sum + d.selectionCount, 0);
+  }, [playtypeData]);
 
   if (!draw || !KPI_SHOW.has(draw.status as any) || !data) return null;
 
   const kpi: OpsKpi = {
     totalRevenue: data.totalRevenue,
     totalEntries: data.totalEntries,
-    totalBoards: data.totalBoards,
-    totalSideBets: data.totalSideBets,
+    totalBasicBoards: data.totalBoards - totalSideBets,
+    totalSideBets,
     uniquePlayers: data.totalPlayers,
     totalCommission: data.totalCommission,
   };

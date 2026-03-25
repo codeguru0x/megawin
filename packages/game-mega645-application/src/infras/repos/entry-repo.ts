@@ -1182,7 +1182,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Tần suất xuất hiện của từng số trong các bộ cược.
    *
-   * Mega 6/45: chỉ có mainNumbers (01-45), không có specialNumbers.
+   * Mega 6/45: chỉ có numbers (01-45), không có specialNumbers.
    * Với mỗi số:
    * - count   = số boards chứa số đó
    * - lines   = tổng expandedLines của những boards đó
@@ -1190,7 +1190,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * - revenue = xấp xỉ doanh thu từ boards chứa số đó
    */
   async aggregateNumberFrequency(opts: { financialDate: string; drawId?: string }): Promise<{
-    mainNumbers: Array<{
+    numbers: Array<{
       number: string;
       count: number;
       lines: number;
@@ -1217,10 +1217,10 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     const mainResult = await this.aggregate([
       { $match: filter },
       { $unwind: "$entrySummary.boards" },
-      { $unwind: "$entrySummary.boards.mainNumbers" },
+      { $unwind: "$entrySummary.boards.numbers" },
       {
         $group: {
-          _id: "$entrySummary.boards.mainNumbers",
+          _id: "$entrySummary.boards.numbers",
           count: { $sum: 1 },
           lines: { $sum: "$entrySummary.boards.expandedLines" },
           entryIds: { $addToSet: "$_id" },
@@ -1241,7 +1241,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     ]);
 
     return {
-      mainNumbers: (mainResult as any[]).map((r) => ({
+      numbers: (mainResult as any[]).map((r) => ({
         number: r.number,
         count: r.count,
         lines: r.lines,
@@ -1260,7 +1260,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   async aggregateTopCombos(opts: { drawId: string; limit?: number }): Promise<
     Array<{
       playType: string;
-      mainNumbers: string[];
+      numbers: string[];
       entryCount: number;
       totalAmount: number;
     }>
@@ -1272,14 +1272,14 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       { $unwind: "$entrySummary.boards" },
       {
         $project: {
-          // Key dùng để group: playType + sorted mainNumbers
+          // Key dùng để group: playType + sorted numbers
           comboKey: {
             $concat: [
               "$entrySummary.boards.playType",
               "|",
               {
                 $reduce: {
-                  input: { $sortArray: { input: "$entrySummary.boards.mainNumbers", sortBy: 1 } },
+                  input: { $sortArray: { input: "$entrySummary.boards.numbers", sortBy: 1 } },
                   initialValue: "",
                   in: {
                     $cond: [
@@ -1293,8 +1293,8 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
             ],
           },
           playType: "$entrySummary.boards.playType",
-          mainNumbers: {
-            $sortArray: { input: "$entrySummary.boards.mainNumbers", sortBy: 1 },
+          numbers: {
+            $sortArray: { input: "$entrySummary.boards.numbers", sortBy: 1 },
           },
           expandedLines: "$entrySummary.boards.expandedLines",
           entryAmount: "$amount",
@@ -1305,7 +1305,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         $group: {
           _id: "$comboKey",
           playType: { $first: "$playType" },
-          mainNumbers: { $first: "$mainNumbers" },
+          numbers: { $first: "$numbers" },
           entryIds: { $addToSet: "$_id" },
           totalAmount: {
             $sum: {
@@ -1327,7 +1327,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
         $project: {
           _id: 0,
           playType: 1,
-          mainNumbers: 1,
+          numbers: 1,
           entryCount: { $size: "$entryIds" },
           totalAmount: { $round: ["$totalAmount", 0] },
         },
@@ -1338,7 +1338,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
     return result as Array<{
       playType: string;
-      mainNumbers: string[];
+      numbers: string[];
       entryCount: number;
       totalAmount: number;
     }>;

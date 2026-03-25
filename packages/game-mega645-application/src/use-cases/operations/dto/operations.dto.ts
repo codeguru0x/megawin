@@ -2,7 +2,7 @@
  * Mega 6/45 – Operations Dashboard DTOs
  *
  * Mỗi endpoint trả về 1 phần nhỏ, lazy-load trên UI.
- * Mega 6/45 khác Lotto 5/35: không có specialNumbers, chỉ có mainNumbers (01-45).
+ * Mega 6/45 khác Lotto 5/35: không có specialNumbers, chỉ có numbers (01-45).
  */
 
 import type { PlayType } from "@megawin/game-mega645/entities";
@@ -61,7 +61,7 @@ export interface TenantBreakdownOutput {
 
 // ─────────────────────────────────────────────
 // GetNumberFrequency
-// Mega 6/45: chỉ có mainNumbers (01-45), không có specialNumbers.
+// Mega 6/45: chỉ có numbers (01-45), không có specialNumbers.
 // ─────────────────────────────────────────────
 
 export interface GetNumberFrequencyInput {
@@ -85,7 +85,7 @@ export interface NumberFrequencyItem {
 export interface NumberFrequencyOutput {
   financialDate: string;
   /** Tần suất 45 số chính (01-45). */
-  mainNumbers: NumberFrequencyItem[];
+  numbers: NumberFrequencyItem[];
 }
 
 // ─────────────────────────────────────────────

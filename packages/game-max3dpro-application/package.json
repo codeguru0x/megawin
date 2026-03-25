@@ -79,17 +79,17 @@
     "@megawin/game-core": "workspace:*",
     "@megawin/game-core-application": "workspace:*",
     "@megawin/game-max3dpro": "workspace:*",
-    "@megawin/tenant-gateway": "workspace:*",
     "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
-    "mongodb": "^7.1.0"
+    "@megawin/tenant-gateway": "workspace:*",
+    "mongodb": "^7.1.1"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
-    "@types/node": "^25.3.3",
-    "typescript": "5.9.3",
-    "vitest": "^4.0.18",
-    "vite": "latest"
+    "@types/node": "^25.5.0",
+    "typescript": "6.0.2",
+    "vite": "latest",
+    "vitest": "^4.1.1"
   }
 }

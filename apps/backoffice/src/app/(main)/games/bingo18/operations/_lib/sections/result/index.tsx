@@ -7,14 +7,18 @@
  * Bingo 18 khác Keno:
  * - Kết quả: 3 xúc xắc (1-6) + tổng 3-18
  * - Không có PrizeTier enum riêng → dùng playType + matchConfig
- * - settleSummary: boardPrizes (playType × matchCount) + sideBetPrizes (playType × result)
+ * - settleSummary.prizes[]: cả cơ bản và bổ sung, UI filter theo playType
  * - Không có jackpot, không có payout caps
  * - profit = totalRevenue - totalPrizes - totalAgentCommission
  */
 
 import { useMemo, useState } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
-import { Bingo18PlayType } from "@megawin/game-bingo18/entities";
+import {
+  Bingo18PlayType,
+  BINGO18_BASIC_PLAY_TYPE_SET,
+  BINGO18_SIDE_BET_PLAY_TYPE_SET,
+} from "@megawin/game-bingo18/entities";
 import {
   BINGO18_PLAY_TYPE_LABELS,
   BINGO18_TRIPLE_KIND_LABELS,
@@ -393,9 +397,13 @@ export function ResultSection() {
     if (!d?.result) return undefined;
     const r = d.result as any;
 
-    // Build boardPrizes từ settleSummary
-    const boardPrizes: BoardPrizeRow[] = ((d.settleSummary as any)?.boardPrizes ?? []).map(
-      (row: any) => {
+    // settleSummary.prizes[] chứa cả cơ bản và bổ sung, filter theo playType
+    const allPrizes: any[] = (d.settleSummary as any)?.prizes ?? [];
+
+    // Build boardPrizes từ prizes thuộc basic playType
+    const boardPrizes: BoardPrizeRow[] = allPrizes
+      .filter((row: any) => BINGO18_BASIC_PLAY_TYPE_SET.has(row.playType))
+      .map((row: any) => {
         const key =
           row.playType === "tripleMatch" ? `tripleMatch-${row.tripleKind ?? "any"}` : row.playType;
         return {
@@ -405,25 +413,25 @@ export function ResultSection() {
           prizePerUnit: row.prizePerUnit as number,
           totalPrize: (row.winnerCount as number) * (row.prizePerUnit as number),
         };
-      },
-    );
+      });
 
-    const sideBetPrizes: SideBetPrizeRow[] = ((d.settleSummary as any)?.sideBetPrizes ?? []).map(
-      (row: any) => {
+    // Build sideBetPrizes từ prizes thuộc side bet playType
+    const sideBetPrizes: SideBetPrizeRow[] = allPrizes
+      .filter((row: any) => BINGO18_SIDE_BET_PLAY_TYPE_SET.has(row.playType))
+      .map((row: any) => {
         const playTypeLabel =
           row.playType === "sumTotal"
             ? `Tổng điểm ${row.sum ?? ""}`
-            : `Lớn/Nhỏ — ${SIDE_BET_RESULT_LABELS[row.result] ?? row.result}`;
+            : `Lớn/Nhỏ — ${SIDE_BET_RESULT_LABELS[row.bet] ?? row.bet}`;
         return {
           playType: row.playType as string,
-          result: row.result as string,
+          result: (row.sum?.toString() ?? row.bet ?? "") as string,
           label: playTypeLabel,
           winnerCount: row.winnerCount as number,
           prizePerUnit: row.prizePerUnit as number,
           totalPrize: (row.winnerCount as number) * (row.prizePerUnit as number),
         };
-      },
-    );
+      });
 
     return {
       diceNumbers: r.diceNumbers ?? [],

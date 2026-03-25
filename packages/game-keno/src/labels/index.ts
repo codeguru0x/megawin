@@ -1,8 +1,12 @@
 /**
  * Keno – Display Labels
  *
- * Tên hiển thị cho các kiểu chơi, side bet của Keno.
- * Dùng trong tất cả UI components (analytics, live-feed, tickets, reports, ...).
+ * Tên hiển thị tiếng Việt cho các kiểu chơi và lựa chọn side bet của Keno.
+ * Dùng trong tất cả UI components: analytics, live-feed, tickets, reports...
+ *
+ * Tách riêng khỏi entity layer để:
+ * 1. Frontend bundle không cần import toàn bộ entity
+ * 2. Labels thay đổi (ví dụ i18n) không ảnh hưởng business logic
  *
  * Import: `import { KENO_PLAY_TYPE_LABELS, ... } from "@megawin/game-keno/labels"`
  */
@@ -14,8 +18,13 @@ import { KenoPlayType, KenoBigSmallBet, KenoEvenOddBet } from "../entities/enums
 // ─────────────────────────────────────────────
 
 /**
- * Tên hiển thị cho mỗi kiểu chơi Keno (cơ bản + side bet).
- * Dùng trong analytics, live-feed, dropdown filter.
+ * Tên hiển thị cho mỗi kiểu chơi Keno.
+ *
+ * Bao gồm cả cách chơi cơ bản (pick1-pick10) và side bet (bigSmall, evenOdd).
+ * Dùng trong analytics, live-feed, dropdown filter, báo cáo.
+ *
+ * @example KENO_PLAY_TYPE_LABELS["pick5"] // "Pick 5"
+ * @example KENO_PLAY_TYPE_LABELS["bigSmall"] // "Lớn/Nhỏ"
  */
 export const KENO_PLAY_TYPE_LABELS: Record<KenoPlayType, string> = {
   [KenoPlayType.Pick1]: "Pick 1",
@@ -33,7 +42,7 @@ export const KENO_PLAY_TYPE_LABELS: Record<KenoPlayType, string> = {
 } as const;
 
 /**
- * Lấy tên hiển thị kiểu chơi Keno.
+ * Lấy tên hiển thị kiểu chơi Keno. Fallback về giá trị raw nếu không tìm thấy.
  *
  * @param playType - KenoPlayType value
  */
@@ -46,7 +55,10 @@ export function getKenoPlayTypeLabel(playType: KenoPlayType): string {
 // ─────────────────────────────────────────────
 
 /**
- * Tên hiển thị lựa chọn cách chơi bổ sung Lớn/Nhỏ.
+ * Tên hiển thị cho lựa chọn Lớn/Nhỏ.
+ *
+ * @example KENO_BIG_SMALL_BET_LABELS["big"] // "Lớn"
+ * @example KENO_BIG_SMALL_BET_LABELS["bigSmallDraw"] // "Hoà Lớn Nhỏ"
  */
 export const KENO_BIG_SMALL_BET_LABELS: Record<KenoBigSmallBet, string> = {
   [KenoBigSmallBet.Big]: "Lớn",
@@ -55,7 +67,7 @@ export const KENO_BIG_SMALL_BET_LABELS: Record<KenoBigSmallBet, string> = {
 } as const;
 
 /**
- * Lấy tên hiển thị lựa chọn Lớn/Nhỏ.
+ * Lấy tên hiển thị lựa chọn Lớn/Nhỏ. Fallback về giá trị raw nếu không tìm thấy.
  *
  * @param bet - KenoBigSmallBet value
  */
@@ -68,7 +80,11 @@ export function getKenoBigSmallBetLabel(bet: KenoBigSmallBet): string {
 // ─────────────────────────────────────────────
 
 /**
- * Tên hiển thị lựa chọn cách chơi bổ sung Chẵn/Lẻ.
+ * Tên hiển thị cho lựa chọn Chẵn/Lẻ.
+ *
+ * @example KENO_EVEN_ODD_BET_LABELS["even"] // "Chẵn"
+ * @example KENO_EVEN_ODD_BET_LABELS["even1112"] // "Chẵn 11-12"
+ * @example KENO_EVEN_ODD_BET_LABELS["evenOddDraw"] // "Hoà Chẵn Lẻ"
  */
 export const KENO_EVEN_ODD_BET_LABELS: Record<KenoEvenOddBet, string> = {
   [KenoEvenOddBet.Even]: "Chẵn",
@@ -79,7 +95,7 @@ export const KENO_EVEN_ODD_BET_LABELS: Record<KenoEvenOddBet, string> = {
 } as const;
 
 /**
- * Lấy tên hiển thị lựa chọn Chẵn/Lẻ.
+ * Lấy tên hiển thị lựa chọn Chẵn/Lẻ. Fallback về giá trị raw nếu không tìm thấy.
  *
  * @param bet - KenoEvenOddBet value
  */

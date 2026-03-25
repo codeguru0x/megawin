@@ -4,7 +4,7 @@
  * Mega 6/45 — Winning Entries Dialog
  *
  * Báo cáo kế toán toàn màn hình danh sách entries trúng thưởng.
- * Mega 6/45: không có specialNumbers — chỉ hiển thị mainNumbers (01-45).
+ * Mega 6/45: không có specialNumbers — chỉ hiển thị numbers (01-45).
  */
 
 import { useCallback } from "react";
@@ -68,7 +68,7 @@ function TierChip({ tier }: { tier: WinningEntryTierDetail }) {
   );
 }
 
-// ─── Numbers — Mega 6/45: chỉ mainNumbers ────────────────────────────────────
+// ─── Numbers — Mega 6/45: chỉ numbers ────────────────────────────────────
 
 function EntryNumbers({ entry }: { entry: WinningEntryItem }) {
   if (entry.boards.length === 0) return <span className="text-muted-foreground/40 text-sm">—</span>;
@@ -80,7 +80,7 @@ function EntryNumbers({ entry }: { entry: WinningEntryItem }) {
             {b.boardNo}
           </span>
           <div className="flex items-center gap-0.5 flex-wrap max-w-[320px]">
-            {b.mainNumbers.map((n) => (
+            {b.numbers.map((n) => (
               <MegaNumberBall key={n} number={Number(n)} size="sm" />
             ))}
           </div>

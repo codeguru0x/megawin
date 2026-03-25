@@ -47,7 +47,7 @@
  *
  *   3. Khi cần update: lấy entries từng batch qua getCappableEntries,
  *      recalc boardPayout.winAmount cho board bị cap,
- *      recalc entry-level totals, bulk write.
+ *      recalc entry-level totals (winAmount = Σ boardPayouts), bulk write.
  *
  * ═══════════════════════════════════════════════════════════════════════
  * IDEMPOTENT
@@ -64,6 +64,7 @@ import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { calculateCappedPrize } from "@megawin/game-keno/rules";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { SettleContext } from "./types";
+import { sumBy } from "@megawin/shared/utils/array";
 
 /** Số entries xử lý mỗi batch khi update cappable entries. */
 const BATCH_SIZE = 500;
@@ -167,8 +168,8 @@ export class ApplyPayoutCapsUseCase extends InternalUseCase<SettleContext, Apply
           boardPayouts: Array<{
             boardNo: string;
             playType: string;
-            matchCount: number;
-            pickCount: number;
+            matchCount: number | null;
+            pickCount: number | null;
             betCount: number;
             winAmount: number;
           }>;
@@ -184,12 +185,8 @@ export class ApplyPayoutCapsUseCase extends InternalUseCase<SettleContext, Apply
             return { ...bp };
           });
 
-          const boardTotal = boardPayouts.reduce((sum, b) => sum + b.winAmount, 0);
-          const sideBetTotal = (entry.payout?.sideBetPayouts ?? []).reduce(
-            (sum, s) => sum + s.winAmount,
-            0,
-          );
-          const newWinAmount = boardTotal + sideBetTotal;
+          const newWinAmount = sumBy(boardPayouts, (b) => b.winAmount);
+          // winAmount = tổng tất cả boards (cả cơ bản và bổ sung, đều nằm trong boardPayouts).
 
           updateOps.push({
             entryId: entry.id,

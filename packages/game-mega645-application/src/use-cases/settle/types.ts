@@ -42,7 +42,7 @@ export interface MegaDrawResult {
    * Giữ nguyên thứ tự quay gốc (không sort).
    * Dùng để match với selection của player qua Set intersection.
    */
-  winningMain: string[];
+  winningNumbers: string[];
 }
 
 /**

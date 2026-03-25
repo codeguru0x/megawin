@@ -13,28 +13,47 @@ import type { Bingo18PlayType, Bingo18TripleKind, Bingo18BigSmallBet } from "./e
 // ─────────────────────────────────────────────
 
 /**
- * Input một board cơ bản Bingo 18 (dùng trong place-bet).
+ * Input một board Bingo 18 — bao gồm cả board cơ bản (singleNum, doubleMatch, tripleMatch)
+ * và board cược bổ sung (sumTotal, bigSmallDraw).
  *
- * Tuỳ `playType`, các field `number`, `tripleKind`, và `betCount` được dùng khác nhau.
+ * Tuỳ `playType`, các field `number`, `tripleKind`, `sum`, `bet`, và `betCount` được dùng khác nhau.
+ *
+ * @example
+ * ```ts
+ * // Board cơ bản: đoán số 5 xuất hiện
+ * const b1: Bingo18BoardInput = { boardNo: "A", playType: "singleNum", number: 5 };
+ *
+ * // Board cược bổ sung: đoán tổng bằng 14
+ * const b2: Bingo18BoardInput = { boardNo: "B", playType: "sumTotal", sum: 14 };
+ *
+ * // Board cược bổ sung: đoán Tài
+ * const b3: Bingo18BoardInput = { boardNo: "C", playType: "bigSmallDraw", bet: "big" };
+ * ```
  */
-export interface Bingo18BasicBoard {
+export interface Bingo18BoardInput {
   /**
    * Ký hiệu board trong vé. Mỗi vé tối đa 6 boards, không được trùng.
    * Giá trị hợp lệ: `"A"`, `"B"`, `"C"`, `"D"`, `"E"`, `"F"`.
    */
   boardNo: string;
   /**
-   * Loại cược board cơ bản.
+   * Loại cược.
+   *
+   * Board cơ bản:
    * - `"singleNum"` — đoán 1 số xuất hiện ×1/×2/×3 lần
    * - `"doubleMatch"` — đoán số được chỉ định xuất hiện ≥2 lần
    * - `"tripleMatch"` — đoán cả 3 xúc xắc có cùng giá trị
+   *
+   * Board cược bổ sung:
+   * - `"sumTotal"` — đoán tổng 3 xúc xắc bằng đúng 1 giá trị (3-18)
+   * - `"bigSmallDraw"` — đoán Tài (11-18) / Xỉu (3-8) / Hoà (9-10)
    */
-  playType: "singleNum" | "doubleMatch" | "tripleMatch";
+  playType: "singleNum" | "doubleMatch" | "tripleMatch" | "sumTotal" | "bigSmallDraw";
   /**
    * Số xúc xắc muốn đoán (1-6).
    * - Bắt buộc khi `playType = "singleNum"` hoặc `"doubleMatch"`
    * - Bắt buộc khi `playType = "tripleMatch"` và `tripleKind = "specific"`
-   * - Bỏ qua khi `playType = "tripleMatch"` và `tripleKind = "any"`
+   * - Bỏ qua cho các loại cược khác
    */
   number?: number;
   /**
@@ -44,57 +63,22 @@ export interface Bingo18BasicBoard {
    */
   tripleKind?: Bingo18TripleKind;
   /**
-   * Số lần cược nhân bội cho board này (≥ minBetCount, ≤ maxBetCount).
-   *
-   * Mặc định = 1. Tiền cược board = betCount × unitPrice.
-   */
-  betCount?: number;
-}
-
-/**
- * Một side bet (cược bổ sung) trong vé Bingo 18.
- *
- * Side bet dự đoán tổng hoặc kết quả Tài/Xỉu/Hoà của 3 xúc xắc.
- * Tuỳ `playType`, dùng `sum` hoặc `bet`:
- * - `sumTotal`: bắt buộc cung cấp `sum` (3-18)
- * - `bigSmallDraw`: bắt buộc cung cấp `bet`
- *
- * @example
- * ```ts
- * // Đoán tổng 3 xúc xắc đúng bằng 14
- * const s1: Bingo18SideBet = { playType: "sumTotal", sum: 14 };
- *
- * // Đoán Tài (tổng 11-18)
- * const s2: Bingo18SideBet = { playType: "bigSmallDraw", bet: "big" };
- *
- * // Đoán Xỉu (tổng 3-8)
- * const s3: Bingo18SideBet = { playType: "bigSmallDraw", bet: "small" };
- * ```
- */
-export interface Bingo18SideBet {
-  /**
-   * Loại side bet.
-   * - `"sumTotal"` — đoán tổng 3 xúc xắc bằng đúng 1 giá trị (3-18)
-   * - `"bigSmallDraw"` — đoán Tài (11-18) / Xỉu (3-8) / Hoà (9-10)
-   */
-  playType: "sumTotal" | "bigSmallDraw";
-  /**
    * Giá trị tổng cần đoán (3-18).
-   * Bắt buộc khi `playType = "sumTotal"`, bỏ qua với `"bigSmallDraw"`.
+   * Bắt buộc khi `playType = "sumTotal"`, bỏ qua với các loại khác.
    */
   sum?: number;
   /**
    * Lựa chọn Tài/Xỉu/Hoà.
-   * Bắt buộc khi `playType = "bigSmallDraw"`, bỏ qua với `"sumTotal"`.
+   * Bắt buộc khi `playType = "bigSmallDraw"`, bỏ qua với các loại khác.
    * - `"big"` — Tài (tổng 11-18)
    * - `"small"` — Xỉu (tổng 3-8)
    * - `"draw"` — Hoà (tổng 9-10)
    */
   bet?: Bingo18BigSmallBet;
   /**
-   * Số lần cược nhân bội cho side bet này (≥ minBetCount, ≤ maxBetCount).
+   * Số lần cược nhân bội cho board này (≥ minBetCount, ≤ maxBetCount).
    *
-   * Mặc định = 1. Tiền cược side bet = betCount × unitPrice.
+   * Mặc định = 1. Tiền cược board = betCount × unitPrice.
    */
   betCount?: number;
 }
@@ -104,30 +88,30 @@ export interface Bingo18SideBet {
  *
  * Gửi lên `POST /games/bingo18/bets` qua `client.bingo18.placeBet()`.
  *
- * Phải có ít nhất 1 board hoặc 1 side bet.
+ * Phải có ít nhất 1 board. Board bao gồm cả cược cơ bản lẫn cược bổ sung.
  * Mỗi vé áp dụng cho 1 hoặc nhiều kỳ quay liên tiếp (tối đa 20 kỳ).
  *
  * @example
  * ```ts
  * import type { Bingo18TicketPurchaseInput } from "@megawin/player-sdk/bingo18";
  *
- * // Cược cơ bản 1 kỳ: singleNum + bigSmallDraw
+ * // Cược cơ bản 1 kỳ + cược bổ sung
  * const input: Bingo18TicketPurchaseInput = {
  *   drawIds: ["2026-03-07.001"],
- *   boards: [{ playType: "singleNum", number: 5 }],
- *   sideBets: [{ playType: "bigSmallDraw", bet: "big" }],
+ *   boards: [
+ *     { boardNo: "A", playType: "singleNum", number: 5 },
+ *     { boardNo: "B", playType: "bigSmallDraw", bet: "big" },
+ *   ],
  * };
  *
  * // Cược nhiều kỳ + nhiều loại board
  * const input2: Bingo18TicketPurchaseInput = {
  *   drawIds: ["2026-03-07.001", "2026-03-07.002", "2026-03-07.003"],
  *   boards: [
- *     { playType: "singleNum", number: 3 },
- *     { playType: "tripleMatch", kind: "any" },
- *   ],
- *   sideBets: [
- *     { playType: "sumTotal", sum: 14 },
- *     { playType: "bigSmallDraw", bet: "small" },
+ *     { boardNo: "A", playType: "singleNum", number: 3 },
+ *     { boardNo: "B", playType: "tripleMatch", tripleKind: "any" },
+ *     { boardNo: "C", playType: "sumTotal", sum: 14 },
+ *     { boardNo: "D", playType: "bigSmallDraw", bet: "small" },
  *   ],
  * };
  * ```
@@ -142,20 +126,12 @@ export interface Bingo18TicketPurchaseInput {
    */
   drawIds: string[];
   /**
-   * Danh sách boards cược cơ bản.
+   * Danh sách boards cược — bao gồm cả cơ bản và cược bổ sung.
    *
-   * - Tối đa 6 boards mỗi vé
-   * - Không được trùng lặp cùng `playType` + `number` + `kind`
-   * - Có thể để mảng rỗng nếu chỉ cược side bet
+   * - Tối đa 6 boards mỗi vé (boardNo "A"-"F"), bất kỳ loại chơi nào
+   * - Không được trùng `boardNo`
    */
-  boards: Bingo18BasicBoard[];
-  /**
-   * Danh sách side bets (cược bổ sung).
-   *
-   * - Mỗi loại `playType` + giá trị (`sum` hoặc `bet`) chỉ đặt 1 lần
-   * - Có thể để mảng rỗng nếu chỉ cược board cơ bản
-   */
-  sideBets: Bingo18SideBet[];
+  boards: Bingo18BoardInput[];
 }
 
 // ─────────────────────────────────────────────
@@ -329,47 +305,37 @@ export interface Bingo18DrawInfo {
 // ─────────────────────────────────────────────
 
 /**
- * Thông tin giải thưởng 1 loại cược cơ bản trong kỳ quay Bingo 18.
+ * Thông tin giải thưởng 1 loại cược trong kỳ quay Bingo 18 (unified).
  *
- * Khác với các game xổ số, Bingo 18 không có "hạng giải" mà có "loại cược + số lần khớp".
+ * Bao gồm cả loại board cơ bản (singleNum, doubleMatch, tripleMatch)
+ * và cược bổ sung (sumTotal, bigSmallDraw).
+ *
+ * - Board cơ bản: `matchCount` + `tripleKind` xác định giải.
+ * - Cược bổ sung sumTotal: `sum` xác định giá trị tổng trúng.
+ * - Cược bổ sung bigSmallDraw: `bet` xác định lựa chọn trúng.
  */
-export interface Bingo18DrawBasicPrize {
+export interface Bingo18DrawPrize {
   /**
-   * Loại cược cơ bản.
-   * - `"singleNum"` — đoán 1 số xuất hiện bao nhiêu lần
-   * - `"doubleMatch"` — đoán 2 số giống nhau
-   * - `"tripleMatch"` — đoán 3 số giống nhau
+   * Loại cược.
+   * - `"singleNum"` | `"doubleMatch"` | `"tripleMatch"` (board cơ bản)
+   * - `"sumTotal"` | `"bigSmallDraw"` (cược bổ sung)
    */
   playType: string;
   /**
-   * Số lần trùng (1-3).
+   * Số lần trùng (0-3). Meaningful cho board cơ bản:
    * - `singleNum`: 1, 2, hoặc 3 lần số đó xuất hiện
-   * - `doubleMatch`: 1 (luôn 1 cặp trùng)
-   * - `tripleMatch`: 1 (luôn 1 bộ 3 trùng)
+   * - `doubleMatch`: 2 hoặc 3 khi trúng
+   * - `tripleMatch`: 3 khi trúng
+   *
+   * Board cược bổ sung (sumTotal/bigSmallDraw): `null` — field không áp dụng.
    */
-  matchCount: number;
+  matchCount: number | null;
   /**
    * Dạng bộ ba (chỉ có khi `playType = "tripleMatch"`).
    * - `"specific"` — chỉ định cụ thể bộ ba (VD: ba số 5)
    * - `"any"` — bất kỳ bộ ba nào
    */
   tripleKind?: Bingo18TripleKind;
-  /** Tổng số lượt cược trúng loại này trong kỳ. */
-  winnerCount: number;
-  /** Tiền thưởng cho 1 đơn vị cược trúng (VND). */
-  prizePerUnit: number;
-}
-
-/**
- * Thông tin giải thưởng 1 loại side bet trong kỳ quay Bingo 18.
- */
-export interface Bingo18DrawSideBetPrize {
-  /**
-   * Loại side bet.
-   * - `"sumTotal"` — đoán tổng 3 xúc xắc (3-18)
-   * - `"bigSmallDraw"` — đoán Tài (11-18) / Xỉu (3-8) / Hoà (9-10)
-   */
-  playType: string;
   /**
    * Giá trị tổng trúng (chỉ có khi `playType = "sumTotal"`).
    * Range 3-18.
@@ -427,7 +393,7 @@ export interface Bingo18DrawResultSummary {
   };
   /** Tham chiếu kỳ quay Vietlott. `undefined` nếu không liên kết. */
   vietlottRef?: {
-    drawPeriod: number;
+    drawPeriod: string;
     drawDate: string;
   };
 }
@@ -435,7 +401,7 @@ export interface Bingo18DrawResultSummary {
 /**
  * Chi tiết đầy đủ kết quả 1 kỳ quay Bingo 18.
  *
- * Bingo 18 có 2 loại bảng giải riêng biệt: `basicPrizes` (cho board) và `sideBetPrizes` (cho side bet).
+ * Bảng giải thưởng thống nhất `prizes` chứa cả giải board cơ bản và cược bổ sung.
  *
  * Trả về bởi `client.bingo18.getDrawResult(drawId)`.
  *
@@ -444,12 +410,14 @@ export interface Bingo18DrawResultSummary {
  * const draw = await client.bingo18.getDrawResult("2026-03-07.095");
  * console.log(`Số: ${draw.result.numbers.join(", ")} | Tổng: ${draw.result.sum}`);
  *
- * for (const prize of draw.basicPrizes) {
- *   console.log(`  ${prize.playType} x${prize.matchCount}: ${prize.winnerCount} lượt trúng, ${prize.prizePerUnit.toLocaleString()} VND/lượt`);
- * }
- * for (const prize of draw.sideBetPrizes) {
- *   const label = prize.sum !== undefined ? `tổng ${prize.sum}` : prize.bet;
- *   console.log(`  ${prize.playType} (${label}): ${prize.winnerCount} lượt trúng`);
+ * for (const prize of draw.prizes) {
+ *   if (prize.sum !== undefined) {
+ *     console.log(`  sumTotal (tổng ${prize.sum}): ${prize.winnerCount} lượt trúng`);
+ *   } else if (prize.bet) {
+ *     console.log(`  bigSmallDraw (${prize.bet}): ${prize.winnerCount} lượt trúng`);
+ *   } else {
+ *     console.log(`  ${prize.playType} x${prize.matchCount}: ${prize.winnerCount} lượt, ${prize.prizePerUnit.toLocaleString()} VND/lượt`);
+ *   }
  * }
  * ```
  */
@@ -478,18 +446,13 @@ export interface Bingo18DrawResultInfo {
     publishedAt: string;
   };
   /**
-   * Bảng trao giải cho các loại board cơ bản.
-   * Gồm: singleNum (×1/2/3), doubleMatch, tripleMatch (specific/any).
+   * Bảng giải thưởng thống nhất — chứa cả giải board cơ bản và cược bổ sung.
+   * Gồm: singleNum (×1/2/3), doubleMatch, tripleMatch, sumTotal, bigSmallDraw.
    */
-  basicPrizes: Bingo18DrawBasicPrize[];
-  /**
-   * Bảng trao giải cho các loại side bet.
-   * Gồm: sumTotal (×16 giá trị tổng) và bigSmallDraw (big/small/draw).
-   */
-  sideBetPrizes: Bingo18DrawSideBetPrize[];
+  prizes: Bingo18DrawPrize[];
   /** Tham chiếu kỳ quay Vietlott. `undefined` nếu không liên kết. */
   vietlottRef?: {
-    drawPeriod: number;
+    drawPeriod: string;
     drawDate: string;
   };
 }
@@ -534,22 +497,23 @@ export interface Bingo18TicketSummary {
   pricing: {
     /** Giá 1 đơn vị cược (VND). */
     unitPrice: number;
-    /** Số selections mỗi kỳ = boards.length + sideBets.length. */
+    /** Số selections mỗi kỳ = boards.length. */
     selectionsPerDraw: number;
-    /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount) + Σ(sideBet.betCount). */
+    /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount). */
     betUnitsPerDraw: number;
     /** Tiền cược mỗi kỳ quay (VND). Bằng `betUnitsPerDraw × unitPrice`. */
     amountPerDraw: number;
     /** Tổng tiền cược của cả vé (VND). Bằng `amountPerDraw × drawCount`. */
     totalAmount: number;
   };
-  /** Danh sách boards chơi cơ bản. */
+  /** Danh sách boards cược (bao gồm cả cơ bản và cược bổ sung). */
   boards: Array<{
-    /** Ký hiệu board. VD: `"A"`, `"B"`. */
+    /** Ký hiệu board: `"A"` - `"F"`. */
     boardNo: string;
     /**
      * Loại cược.
-     * - `"singleNum"` | `"doubleMatch"` | `"tripleMatch"`
+     * - Board cơ bản: `"singleNum"` | `"doubleMatch"` | `"tripleMatch"`
+     * - Cược bổ sung: `"sumTotal"` | `"bigSmallDraw"`
      */
     playType: string;
     /** Số xúc xắc được chọn (1-6). Có khi `playType` là `"singleNum"` hoặc `"doubleMatch"`, hoặc `"tripleMatch"` + `"specific"`. */
@@ -559,16 +523,6 @@ export interface Bingo18TicketSummary {
      * - `"specific"` | `"any"`
      */
     tripleKind?: string;
-    /** Số lần cược nhân bội (≥ 1). Tiền = betCount × unitPrice. */
-    betCount: number;
-  }>;
-  /** Danh sách side bets. */
-  sideBets: Array<{
-    /**
-     * Loại side bet.
-     * - `"sumTotal"` | `"bigSmallDraw"`
-     */
-    playType: string;
     /** Giá trị tổng đặt cược (3-18). Chỉ có khi `playType = "sumTotal"`. */
     sum?: number;
     /**
@@ -646,30 +600,30 @@ export interface Bingo18EntryInfo {
   amount: number;
   /** Mệnh giá 1 lần tham gia dự thưởng (VND). */
   unitPrice: number;
-  /** Số lượng cược (selections) = boards.length + sideBets.length. Không tính multiplier. */
+  /** Số lượng cược (selections) = boards.length. Không tính multiplier. */
   selectionCount: number;
-  /** Tổng đơn vị cược = Σ(board.betCount) + Σ(sideBet.betCount). amount = betUnitCount × unitPrice. */
+  /** Tổng đơn vị cược = Σ(board.betCount). amount = betUnitCount × unitPrice. */
   betUnitCount: number;
 
   /** Tóm tắt nội dung đặt cược. */
   entrySummary: {
     /** Mã vé. VD: `"B18-20260307-00001"`. */
     ticketNo: string;
-    /** Danh sách boards chơi cơ bản. */
+    /** Danh sách boards cược (bao gồm cả cơ bản và cược bổ sung). */
     boards: Array<{
+      /** Ký hiệu board: `"A"` - `"F"`. */
       boardNo: string;
+      /** Loại cược. */
       playType: string;
+      /** Số xúc xắc được chọn (1-6). Chỉ có cho board cơ bản. */
       number?: number;
+      /** Dạng bộ ba. Chỉ có khi `playType = "tripleMatch"`. */
       tripleKind?: string;
-      /** Số lần cược nhân bội cho board này. Tiền = betCount × unitPrice. */
-      betCount: number;
-    }>;
-    /** Danh sách side bets. */
-    sideBets: Array<{
-      playType: string;
+      /** Giá trị tổng đặt cược (3-18). Chỉ có khi `playType = "sumTotal"`. */
       sum?: number;
+      /** Lựa chọn Tài/Xỉu/Hoà. Chỉ có khi `playType = "bigSmallDraw"`. */
       bet?: string;
-      /** Số lần cược nhân bội cho side bet này. Tiền = betCount × unitPrice. */
+      /** Số lần cược nhân bội cho board này. Tiền = betCount × unitPrice. */
       betCount: number;
     }>;
   };
@@ -691,20 +645,26 @@ export interface Bingo18EntryInfo {
     winAmount: number;
     /** Tổng tiền trả thưởng (VND). */
     payoutAmount: number;
-    /** Kết quả từng board. */
+    /** Kết quả từng board (bao gồm cả cơ bản và cược bổ sung). */
     boardPayouts: Array<{
+      /** Ký hiệu board: `"A"` - `"F"`. */
       boardNo: string;
+      /** Loại cược. */
       playType: string;
-      matchCount: number;
-      winAmount: number;
-    }>;
-    /** Kết quả từng side bet. */
-    sideBetPayouts: Array<{
-      playType: string;
+      /**
+       * Số lần số đã chọn xuất hiện trong kết quả (0-3). Meaningful cho board cơ bản.
+       * Board cược bổ sung (sumTotal/bigSmallDraw): `null` — field không áp dụng.
+       */
+      matchCount: number | null;
+      /** Giá trị tổng. Chỉ có khi `playType = "sumTotal"`. */
       sum?: number;
+      /** Lựa chọn cược. Chỉ có khi `playType = "bigSmallDraw"`. */
       bet?: string;
-      outcome: string;
+      /** Kết quả thực tế. Chỉ có cho board cược bổ sung. */
+      outcome?: string;
+      /** Thắng hay thua. Set cho tất cả play types. */
       isWin: boolean;
+      /** Tiền thưởng board này (VND). `0` nếu thua. */
       winAmount: number;
     }>;
   };
@@ -714,8 +674,6 @@ export interface Bingo18EntryInfo {
  * Response từ `GET /games/bingo18/tickets/{ticketId}/entries`.
  */
 export interface Bingo18TicketEntriesResponse {
-  /** Thông tin tóm tắt vé. */
-  ticket: Bingo18TicketSummary;
   /** Danh sách entries theo kỳ quay. */
   entries: Bingo18EntryInfo[];
 }
@@ -733,8 +691,10 @@ export interface Bingo18TicketEntriesResponse {
  * ```ts
  * const result = await client.bingo18.placeBet({
  *   drawIds: ["2026-03-07.001"],
- *   boards: [{ playType: "singleNum", number: 5, betCount: 1 }],
- *   sideBets: [{ playType: "bigSmallDraw", bet: "big", betCount: 1 }],
+ *   boards: [
+ *     { boardNo: "A", playType: "singleNum", number: 5, betCount: 1 },
+ *     { boardNo: "B", playType: "bigSmallDraw", bet: "big", betCount: 1 },
+ *   ],
  * });
  * console.log(result.ticketId);            // "65abc..."
  * console.log(result.pricing.totalAmount); // 20000
@@ -760,9 +720,9 @@ export interface Bingo18PlaceBetResponse {
   pricing: {
     /** Đơn giá 1 bet (VND). */
     unitPrice: number;
-    /** Số selections mỗi kỳ = boards.length + sideBets.length. */
+    /** Số selections mỗi kỳ = boards.length. */
     selectionsPerDraw: number;
-    /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount) + Σ(sideBet.betCount). */
+    /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount). */
     betUnitsPerDraw: number;
     /** Tiền cược mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
@@ -770,10 +730,8 @@ export interface Bingo18PlaceBetResponse {
     totalAmount: number;
   };
 
-  /** Số lượng boards trong vé. */
+  /** Số lượng boards trong vé (bao gồm cả cơ bản và cược bổ sung). */
   boardCount: number;
-  /** Số lượng side bets trong vé. */
-  sideBetCount: number;
   /** Số lượng entries đã tạo (= số kỳ quay). */
   entryCount: number;
 }

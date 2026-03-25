@@ -9,6 +9,22 @@
  * Collection chỉ có ~365 docs/năm → luôn nhỏ gọn.
  */
 
+/**
+ * Document lưu trữ sequence drawNo cho 1 ngày.
+ *
+ * ATOMIC COUNTER: Dùng `$inc` với `upsert: true` để đảm bảo drawNo
+ * unique và không bị race condition khi nhiều requests chạy đồng thời.
+ *
+ * Pattern:
+ * ```ts
+ * const result = await drawCounters.findOneAndUpdate(
+ *   { drawDate },
+ *   { $inc: { lastDrawNo: 1 } },
+ *   { upsert: true, returnDocument: "after" },
+ * );
+ * const drawNo = result.lastDrawNo; // Guaranteed unique
+ * ```
+ */
 export interface DrawCounterDoc {
   _id: unknown;
 

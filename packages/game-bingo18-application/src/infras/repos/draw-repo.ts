@@ -69,16 +69,8 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findOne({ drawId });
   }
 
-  async getNextOpenDraw(): Promise<DrawEntity | null> {
-    return await this.findOne({ status: DrawStatus.SalesOpen }, { sort: { drawTime: 1 } });
-  }
-
   async getDrawsByIds(drawIds: string[]): Promise<DrawEntity[]> {
     return await this.findMany({ drawId: { $in: drawIds } }, { sort: { drawDate: 1, drawNo: 1 } });
-  }
-
-  async getDrawsByDate(drawDate: string): Promise<DrawEntity[]> {
-    return await this.findMany({ drawDate }, { sort: { drawNo: 1 } });
   }
 
   async listDraws(
@@ -99,15 +91,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     });
   }
 
-  async getLatestDraw(): Promise<DrawEntity | null> {
-    return await this.findOne({}, { sort: { drawDate: -1, drawNo: -1 } });
-  }
-
-  async getCurrentDraw(allowStatuses?: string[]): Promise<DrawEntity | null> {
-    const statuses = allowStatuses ?? [DrawStatus.SalesOpen];
-    return await this.findOne({ status: { $in: statuses } }, { sort: { drawDate: 1, drawNo: 1 } });
-  }
-
   async getActiveDraws(
     allowStatuses: string[],
     lookbackDays?: number,
@@ -126,39 +109,30 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findMany(query, { sort: { drawDate: 1, drawNo: 1 }, ...options });
   }
 
-  async getLastSettledDrawWithResult(): Promise<DrawEntity | null> {
-    return await this.findOne(
-      {
-        status: DrawStatus.Settled,
-        "result.numbers": { $exists: true },
-      },
-      { sort: { drawTime: -1 } },
-    );
-  }
-
   // ─── Status Transitions (atomic, type-safe) ───
 
   /**
-   * Atomic status transition cơ bản (không kèm extra data).
-   * Trả về entity sau update hoặc null nếu transition invalid.
+   * Trigger settle: published → settling (atomic, idempotent).
+   * Trả về entity sau update hoặc null nếu draw không ở trạng thái published.
    */
-  async transitionStatus(
-    drawId: string,
-    fromStatus: string,
-    toStatus: string,
-  ): Promise<DrawEntity | null> {
-    const allowed = VALID_TRANSITIONS[fromStatus];
-    if (!allowed?.has(toStatus)) return null;
+  async triggerSettle(drawId: string): Promise<DrawEntity | null> {
+    const allowed = VALID_TRANSITIONS[DrawStatus.Published];
+    if (!allowed?.has(DrawStatus.Settling)) return null;
 
     return await this.findOneAndUpdate(
-      { drawId, status: fromStatus },
+      {
+        drawId,
+        status: DrawStatus.Published,
+      },
       {
         $set: {
-          status: toStatus,
+          status: DrawStatus.Settling,
           updatedAt: new Date(),
         },
       },
-      { returnDocument: "after" },
+      {
+        returnDocument: "after",
+      },
     );
   }
 
@@ -283,47 +257,34 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
-   * Publish kết quả: salesClosed → published + ghi result + vietlottRef.
+   * Publish hoặc cập nhật kết quả quay.
+   *
+   * Chấp nhận draw ở salesClosed (lần đầu publish) hoặc published (sửa lại result).
+   * Cả hai trường hợp đều set `status: published` + ghi `result` + optional `vietlottRef`.
+   * Atomic — trả về null nếu draw không ở trạng thái hợp lệ.
    */
   async publishResult(
     drawId: string,
-    result: Omit<DrawResult, "publishedAt">,
-    vietlottRef?: DrawDoc["vietlottRef"],
-  ): Promise<DrawEntity | null> {
-    const now = new Date();
-    const $set: Record<string, unknown> = {
-      status: DrawStatus.Published,
-      result: { ...result, publishedAt: now } satisfies DrawResult,
-      updatedAt: now,
-    };
-    if (vietlottRef) $set.vietlottRef = vietlottRef;
-
-    const allowed = VALID_TRANSITIONS[DrawStatus.SalesClosed];
-    if (!allowed?.has(DrawStatus.Published)) return null;
-
-    return await this.findOneAndUpdate(
-      { drawId, status: DrawStatus.SalesClosed },
-      { $set },
-      { returnDocument: "after" },
-    );
-  }
-
-  /**
-   * Sửa kết quả khi draw đã published (chưa settle).
-   * Chỉ ghi đè result, không chuyển status.
-   */
-  async updateResult(
-    drawId: string,
     result: DrawResult,
     vietlottRef?: DrawDoc["vietlottRef"],
-  ): Promise<boolean> {
+  ): Promise<DrawEntity | null> {
     const $set: Record<string, unknown> = {
+      status: DrawStatus.Published,
       result,
       updatedAt: new Date(),
     };
     if (vietlottRef) $set.vietlottRef = vietlottRef;
 
-    return await this.updateOne({ drawId, status: DrawStatus.Published }, { $set });
+    return await this.findOneAndUpdate(
+      {
+        drawId,
+        status: { $in: [DrawStatus.SalesClosed, DrawStatus.Published] },
+      },
+      { $set },
+      {
+        returnDocument: "after",
+      },
+    );
   }
 
   // ─── Data Updates (type-safe) ───

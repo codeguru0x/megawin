@@ -14,9 +14,9 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import type {
   TicketEntryEntity,
   EntryBoardSnapshot,
-  EntrySideBetSnapshot,
   EntryPayout,
   EntryVoidInfo,
+  EntryResult,
 } from "@megawin/game-keno/entities";
 import type {
   KenoFeedBetContent,
@@ -40,18 +40,24 @@ export class SyncEntryFeedUseCase extends BaseSyncEntryFeedUseCase {
       Long.fromString(afterVersion),
       batchSize,
     );
-    return entries.map((e) => mapToFeedDoc(e));
+    return entries.map((e) => mapToFeedDoc(e, this.gameProduct));
   }
 }
 
-function mapToFeedDoc(e: TicketEntryEntity): Omit<EntryFeedDoc, "_id"> {
+/**
+ * Map TicketEntryEntity to EntryFeedDoc.
+ * @param e - TicketEntryEntity
+ * @param gameProduct - GameProduct
+ * @returns Omit<EntryFeedDoc, "_id">
+ */
+function mapToFeedDoc(e: TicketEntryEntity, gameProduct: GameProduct): Omit<EntryFeedDoc, "_id"> {
   const winAmount = e.payout?.winAmount ?? 0;
   const payoutAmount = e.payout?.payoutAmount ?? 0;
   const stakeAmount = e.amount;
 
   return {
     version: Long.fromString(e.version),
-    gameProduct: GameProduct.Keno,
+    gameProduct: gameProduct,
     entryId: e.id,
     ticketId: e.ticketId,
     ticketNo: e.entrySummary.ticketNo,
@@ -61,6 +67,8 @@ function mapToFeedDoc(e: TicketEntryEntity): Omit<EntryFeedDoc, "_id"> {
     financialDate: e.financialDate,
     drawId: e.drawId,
     status: e.status,
+    betUnitCount: e.betUnitCount,
+    unitPrice: e.unitPrice,
     outcome: e.outcome,
     stakeAmount,
     winAmount,
@@ -69,12 +77,27 @@ function mapToFeedDoc(e: TicketEntryEntity): Omit<EntryFeedDoc, "_id"> {
     commissionRate: e.tenant.commissionRate,
     commissionAmount: e.tenant.commissionAmount,
     voidInfo: mapVoidInfo(e.voidInfo),
-    betContent: mapBetContent(e.entrySummary.boards, e.entrySummary.sideBets),
+    betContent: mapBetContent(e.entrySummary.boards),
     drawResult: mapDrawResult(e.result),
     payoutDetail: mapPayoutDetail(e.payout),
-    updatedAt: e.updatedAt ?? new Date(),
+    createdAt: e.createdAt,
+    updatedAt: e.updatedAt,
     feedCreatedAt: new Date(),
-  };
+  } satisfies Omit<EntryFeedDoc, "_id">;
+}
+
+function mapBetContent(boards: EntryBoardSnapshot[]): KenoFeedBetContent {
+  return {
+    boards: boards.map((b) => ({
+      boardNo: b.boardNo,
+      playType: b.playType,
+      // Cơ bản (pick1-pick10): numbers bắt buộc, bet = undefined.
+      // Bổ sung (bigSmall/evenOdd): bet bắt buộc, numbers = undefined.
+      numbers: b.numbers,
+      bet: b.bet,
+      betCount: b.betCount,
+    })),
+  } satisfies KenoFeedBetContent;
 }
 
 function mapVoidInfo(v: EntryVoidInfo | undefined): FeedVoidInfo | undefined {
@@ -82,65 +105,36 @@ function mapVoidInfo(v: EntryVoidInfo | undefined): FeedVoidInfo | undefined {
   return {
     originalAmount: v.originalAmount,
     refundAmount: v.refundAmount,
-    refundStatus: String(v.refundStatus),
     voidedAt: v.voidedAt,
-  };
+  } satisfies FeedVoidInfo;
 }
 
-function mapBetContent(
-  boards: EntryBoardSnapshot[],
-  sideBets: EntrySideBetSnapshot[],
-): KenoFeedBetContent {
-  return {
-    boards: boards.map((b) => ({
-      boardNo: b.boardNo,
-      playType: String(b.playType),
-      numbers: b.numbers,
-      betCount: b.betCount,
-    })),
-    sideBets: sideBets.map((s) => ({
-      playType: String(s.playType),
-      bet: String(s.bet),
-      betCount: s.betCount,
-    })),
-  };
-}
+function mapDrawResult(result: EntryResult | undefined): KenoFeedDrawResult | undefined {
+  if (!result) {
+    return undefined;
+  }
 
-function mapDrawResult(result: TicketEntryEntity["result"]): KenoFeedDrawResult | undefined {
-  if (!result) return undefined;
   return {
-    winningNumbers: result.winningNumbers,
-    bigCount: result.bigCount,
-    smallCount: result.smallCount,
-    evenCount: result.evenCount,
-    oddCount: result.oddCount,
-    publishedAt:
-      result.publishedAt instanceof Date
-        ? result.publishedAt.toISOString()
-        : String(result.publishedAt),
-  };
+    numbers: result.winningNumbers,
+  } satisfies KenoFeedDrawResult;
 }
 
 function mapPayoutDetail(payout: EntryPayout | undefined): KenoFeedPayoutDetail | undefined {
-  if (!payout) return undefined;
+  if (!payout) {
+    return undefined;
+  }
+
   return {
-    settledAt:
-      payout.settledAt instanceof Date ? payout.settledAt.toISOString() : String(payout.settledAt),
     boardPayouts: payout.boardPayouts.map((b) => ({
       boardNo: b.boardNo,
-      playType: String(b.playType),
+      playType: b.playType,
       pickCount: b.pickCount,
       matchCount: b.matchCount,
+      bet: b.bet,
+      outcome: b.outcome,
+      isWin: b.isWin,
       betCount: b.betCount,
       winAmount: b.winAmount,
     })),
-    sideBetPayouts: payout.sideBetPayouts.map((s) => ({
-      playType: String(s.playType),
-      bet: String(s.bet),
-      outcome: s.outcome,
-      isWin: s.isWin,
-      betCount: s.betCount,
-      winAmount: s.winAmount,
-    })),
-  };
+  } satisfies KenoFeedPayoutDetail;
 }

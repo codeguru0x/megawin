@@ -232,7 +232,6 @@ export interface PlayerEntryInfo {
   /**
    * Tổng đơn vị cược = Σ(board.expandedLines × board.betCount).
    * Công thức: amount = betUnitCount × unitPrice.
-   * Backward compat: data cũ không có field này → fallback = lineCount.
    */
   betUnitCount: number;
   /** Tóm tắt nội dung vé gốc. */

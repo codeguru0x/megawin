@@ -49,8 +49,7 @@ import { ENDPOINTS } from "../endpoints";
  *
  * // Đặt cược
  * const bet = await client.lotto535.placeBet({
- *   drawId: draw.currentDraw!.drawId,
- *   drawCount: 1,
+ *   drawIds: [draw.currentDraw!.drawId],
  *   boards: [{
  *     boardNo: "A",
  *     playType: "standard",
@@ -154,8 +153,7 @@ export interface Lotto535Api {
    * **Endpoint:** `POST /games/lotto535/bets`
    *
    * @param input - Thông tin đặt cược
-   * @param input.drawId - DrawId kỳ đầu tiên. Format: `YYYY-MM-DD.NNN`
-   * @param input.drawCount - Số kỳ tham gia liên tiếp (1-6)
+   * @param input.drawIds - Danh sách drawId các kỳ tham gia. Format mỗi ID: `YYYY-MM-DD.NNN`
    * @param input.boards - Danh sách boards (tối đa 5, không trùng boardNo)
    * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount
    *
@@ -166,10 +164,9 @@ export interface Lotto535Api {
    *
    * @example
    * ```ts
-   * // Vé Standard: 5 số chính + 1 số đặc biệt
+   * // Vé Standard: 5 số chính + 1 số đặc biệt, 1 kỳ
    * const result = await client.lotto535.placeBet({
-   *   drawId: "2026-03-05.001",
-   *   drawCount: 1,
+   *   drawIds: ["2026-03-05.001"],
    *   boards: [{
    *     boardNo: "A",
    *     playType: "standard",
@@ -184,8 +181,7 @@ export interface Lotto535Api {
    *
    * // Vé Bao (MainCover): 8 số chính + 1 số đặc biệt, 3 kỳ
    * const result2 = await client.lotto535.placeBet({
-   *   drawId: "2026-03-05.001",
-   *   drawCount: 3,
+   *   drawIds: ["2026-03-05.001", "2026-03-12.001", "2026-03-19.001"],
    *   boards: [
    *     {
    *       boardNo: "A",

@@ -20,8 +20,7 @@ export type {
   PlayerListDrawResultsOutput,
   PlayerDrawResultSummary,
   PlayerDrawResultInfo,
-  PlayerBasicPrize,
-  PlayerSideBetPrize,
+  PlayerPrizeSummary,
 } from "./dto/player.dto";
 
 export type { GetDrawResultPlayerInput } from "./get-draw-result-player";

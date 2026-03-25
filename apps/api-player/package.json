@@ -20,9 +20,9 @@
   "dependencies": {
     "@megawin/app-core": "workspace:*",
     "@megawin/auth": "workspace:*",
-    "@megawin/game-core": "workspace:*",
     "@megawin/game-bingo18": "workspace:*",
     "@megawin/game-bingo18-application": "workspace:*",
+    "@megawin/game-core": "workspace:*",
     "@megawin/game-keno": "workspace:*",
     "@megawin/game-keno-application": "workspace:*",
     "@megawin/game-lotto535": "workspace:*",
@@ -44,10 +44,10 @@
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
-    "@types/node": "^25.3.5",
+    "@types/node": "^25.5.0",
     "serverless-offline": "^14.5.0",
-    "typescript": "5.9.3",
+    "typescript": "6.0.2",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "latest"
+    "vitest": "4.1.1"
   }
 }

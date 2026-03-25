@@ -6,17 +6,14 @@
  */
 
 import type {
-  DrawBasicPrizeSummary,
-  DrawSideBetPrizeSummary,
+  DrawPrizeSummary,
   EntryResult,
   EntryBoardPayout,
-  EntrySideBetPayout,
 } from "@megawin/game-bingo18/entities";
 import { EntryOutcome } from "@megawin/game-core/entities";
 
 export type {
-  DrawBasicPrizeSummary as PlayerBasicPrize,
-  DrawSideBetPrizeSummary as PlayerSideBetPrize,
+  DrawPrizeSummary as PlayerPrize,
 };
 
 // ─── Get Current Draw (Player) ───
@@ -101,37 +98,30 @@ export interface PlayerTicketSummary {
   pricing: {
     /** Đơn giá 1 lần tham gia dự thưởng (VND). */
     unitPrice: number;
-    /** Số selections mỗi kỳ = boards.length + sideBets.length. */
+    /** Số selections mỗi kỳ = boards.length. */
     selectionsPerDraw: number;
-    /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount) + Σ(sideBet.betCount). */
+    /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount). */
     betUnitsPerDraw: number;
     /** Tiền mỗi kỳ = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
     /** Tổng tiền vé = amountPerDraw × drawCount. */
     totalAmount: number;
   };
-  /** Danh sách bảng chơi chính (SingleNum, DoubleMatch, TripleMatch). */
+  /** Danh sách bảng chơi — cả cơ bản và bổ sung. */
   boards: Array<{
     /** Số thứ tự bảng (A, B, C, …). */
     boardNo: string;
-    /** Loại chơi (singleNum, doubleMatch, tripleMatch). */
+    /** Loại chơi (singleNum, doubleMatch, tripleMatch, sumTotal, bigSmallDraw). */
     playType: string;
-    /** Số đã chọn (1-6). Áp dụng cho singleNum, doubleMatch. */
+    /** Số đã chọn (1-6). Áp dụng cho singleNum, doubleMatch, tripleMatch specific. */
     number?: number;
     /** Loại bộ ba (specific | any). Áp dụng cho tripleMatch. */
     tripleKind?: string;
-    /** Số lần tham gia dự thưởng cho board này. Tiền = betCount × unitPrice. */
-    betCount: number;
-  }>;
-  /** Danh sách cược phụ (SumTotal, BigSmallDraw). */
-  sideBets: Array<{
-    /** Loại cược phụ (sumTotal, bigSmallDraw). */
-    playType: string;
     /** Tổng dự đoán (3-18). Áp dụng cho sumTotal. */
     sum?: number;
     /** Lựa chọn Tài/Xỉu/Hoà (big | small | draw). Áp dụng cho bigSmallDraw. */
     bet?: string;
-    /** Số lần tham gia dự thưởng cho side bet này. Tiền = betCount × unitPrice. */
+    /** Số lần tham gia dự thưởng cho board này. Tiền = betCount × unitPrice. */
     betCount: number;
   }>;
   /**
@@ -202,36 +192,29 @@ export interface PlayerEntryInfo {
   amount: number;
   /** Mệnh giá 1 lần tham gia dự thưởng (VND). Thường là 10.000đ. */
   unitPrice: number;
-  /** Số lượng cược (selections) = boards.length + sideBets.length. Không tính multiplier. */
+  /** Số lượng cược (selections) = boards.length. Không tính multiplier. */
   selectionCount: number;
-  /** Tổng đơn vị cược = Σ(board.betCount) + Σ(sideBet.betCount). amount = betUnitCount × unitPrice. */
+  /** Tổng đơn vị cược = Σ(board.betCount). amount = betUnitCount × unitPrice. */
   betUnitCount: number;
   /** Tóm tắt nội dung đặt cược. */
   entrySummary: {
     /** Mã vé hiển thị. */
     ticketNo: string;
-    /** Danh sách bảng chơi chính. */
+    /** Danh sách boards — cả cơ bản và bổ sung. */
     boards: Array<{
       /** Số thứ tự bảng (A, B, C, …). */
       boardNo: string;
-      /** Loại chơi (singleNum, doubleMatch, tripleMatch). */
+      /** Loại chơi (singleNum, doubleMatch, tripleMatch, sumTotal, bigSmallDraw). */
       playType: string;
       /** Số đã chọn (1-6). */
       number?: number;
       /** Loại bộ ba (specific | any). */
       tripleKind?: string;
-      /** Số lần tham gia dự thưởng của board này. Tiền = betCount × unitPrice. */
-      betCount: number;
-    }>;
-    /** Danh sách cược phụ. */
-    sideBets: Array<{
-      /** Loại cược phụ (sumTotal, bigSmallDraw). */
-      playType: string;
-      /** Tổng dự đoán (3-18). */
+      /** Tổng dự đoán (3-18). Chỉ cho sumTotal. */
       sum?: number;
-      /** Lựa chọn Tài/Xỉu/Hoà (big | small | draw). */
+      /** Lựa chọn Tài/Xỉu/Hoà. Chỉ cho bigSmallDraw. */
       bet?: string;
-      /** Số lần tham gia dự thưởng của side bet này. Tiền = betCount × unitPrice. */
+      /** Số lần tham gia dự thưởng của board này. Tiền = betCount × unitPrice. */
       betCount: number;
     }>;
   };
@@ -244,23 +227,16 @@ export interface PlayerEntryInfo {
   outcome?: EntryOutcome;
   /** Chi tiết trả thưởng (chỉ có sau settle). */
   payout?: {
-    /** Tổng tiền thắng (VND) = Σ(boardPayouts.winAmount) + Σ(sideBetPayouts.winAmount). */
+    /** Tổng tiền thắng (VND) = Σ(boardPayouts.winAmount). */
     winAmount: number;
     /** Số tiền thực trả = winAmount (Bingo18 không có cap). */
     payoutAmount: number;
     /**
-     * Chi tiết trả thưởng từng bảng chơi chính.
-     * Subset của EntryBoardPayout — bỏ betCount, unitWinAmount, tripleKind (dữ liệu vận hành).
+     * Chi tiết trả thưởng từng board — cả cơ bản và bổ sung.
+     * Subset của EntryBoardPayout — bỏ betCount, unitWinAmount (dữ liệu vận hành).
      */
     boardPayouts: Array<
-      Pick<EntryBoardPayout, "boardNo" | "playType" | "matchCount" | "winAmount">
-    >;
-    /**
-     * Chi tiết trả thưởng từng cược phụ.
-     * Subset của EntrySideBetPayout — bỏ betCount, unitWinAmount (dữ liệu vận hành).
-     */
-    sideBetPayouts: Array<
-      Pick<EntrySideBetPayout, "playType" | "sum" | "bet" | "outcome" | "isWin" | "winAmount">
+      Pick<EntryBoardPayout, "boardNo" | "playType" | "matchCount" | "sum" | "bet" | "outcome" | "isWin" | "winAmount">
     >;
   };
 }
@@ -288,14 +264,11 @@ export interface PlayerDrawResultInfo {
     publishedAt: string;
   };
   /**
-   * Bảng giải thưởng cơ bản — chỉ chứa loại chơi có người trúng.
-   * Grouped theo (playType, matchCount).
+   * Bảng giải thưởng — cả cơ bản và bổ sung.
+   * Chỉ chứa loại chơi có người trúng.
+   * Grouped theo (playType, matchCount?, tripleKind?, sum?, bet?).
    */
-  basicPrizes: DrawBasicPrizeSummary[];
-  /**
-   * Bảng giải thưởng side bet — chỉ chứa (playType, bet) có người trúng.
-   */
-  sideBetPrizes: DrawSideBetPrizeSummary[];
+  prizes: DrawPrizeSummary[];
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;

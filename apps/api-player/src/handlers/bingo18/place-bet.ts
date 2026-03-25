@@ -3,8 +3,32 @@
  * Player đặt cược Bingo 18 — authed qua Cognito JWT Bearer token.
  *
  * Bingo 18: quay 3 viên xúc xắc (1-6), mỗi 6 phút.
- * Cách chơi cơ bản: singleNum, doubleMatch, tripleMatch
- * Cách chơi bổ sung: sumTotal, bigSmallDraw
+ *
+ * ╔═══════════════════════════════════════════════════════════════════════════╗
+ * ║ BREAKING CHANGE — Unified boards[], xoá sideBets[]                      ║
+ * ╠═══════════════════════════════════════════════════════════════════════════╣
+ * ║                                                                         ║
+ * ║ TẤT CẢ loại chơi (cơ bản + bổ sung) giờ nằm trong `boards[]`.         ║
+ * ║ Field `sideBets[]` đã bị XOÁ hoàn toàn khỏi request body.             ║
+ * ║                                                                         ║
+ * ║ Mỗi board là 1 discriminated union theo `playType`:                     ║
+ * ║                                                                         ║
+ * ║ ┌───────────────┬──────────────────────────────────────────────────────┐ ║
+ * ║ │ playType      │ Fields bắt buộc                                     │ ║
+ * ║ ├───────────────┼──────────────────────────────────────────────────────┤ ║
+ * ║ │ singleNum     │ number: 1-6                                         │ ║
+ * ║ │ doubleMatch   │ number: 1-6                                         │ ║
+ * ║ │ tripleMatch   │ tripleKind: "specific"|"any", number nếu specific   │ ║
+ * ║ │ sumTotal      │ sum: 3-18                                           │ ║
+ * ║ │ bigSmallDraw  │ bet: "big"|"draw"|"small"                           │ ║
+ * ║ └───────────────┴──────────────────────────────────────────────────────┘ ║
+ * ║                                                                         ║
+ * ║ boardNo: "A"-"F" — tối đa 6 boards, không trùng boardNo.              ║
+ * ║ Bất kỳ panel nào cũng có thể chơi bất kỳ loại nào.                    ║
+ * ║                                                                         ║
+ * ║ SDK migration: thay sideBets[] bằng boards[] với playType tương ứng,   ║
+ * ║ thêm boardNo cho mỗi side bet.                                         ║
+ * ╚═══════════════════════════════════════════════════════════════════════════╝
  */
 
 import { withPlayerAuth } from "@megawin/auth";
@@ -22,134 +46,117 @@ import {
   Bingo18TripleKind,
 } from "@megawin/game-bingo18/entities";
 import z from "zod";
+import { boardsOrderRefine } from "../../lib/schemas";
 
-// ─── Board schemas ───
+// ============ Board Schemas — Tách riêng theo playType ============
 
+/** boardNo hợp lệ: A-F. Tối đa 6 panels. */
 const BINGO18_BOARD_NO = ["A", "B", "C", "D", "E", "F"] as const;
 
-const BasicPlayType = {
-  SingleNum: Bingo18PlayType.SingleNum,
-  DoubleMatch: Bingo18PlayType.DoubleMatch,
-  TripleMatch: Bingo18PlayType.TripleMatch,
+/** Schema dùng chung cho tất cả boards: boardNo + betCount. */
+const baseBoardFields = {
+  boardNo: z.enum(BINGO18_BOARD_NO),
+  betCount: z.number().int().positive().default(1),
 } as const;
 
-export const bingo18BoardSchema = z
-  .object({
-    boardNo: z.enum(BINGO18_BOARD_NO),
-    playType: z.enum(BasicPlayType),
-    number: bingo18NumberSchema.optional(),
-    tripleKind: z.enum(Bingo18TripleKind).optional(),
-    betCount: z.number().int().positive().default(1),
-  })
-  .refine(
-    (b) => {
-      if (b.playType === Bingo18PlayType.SingleNum || b.playType === Bingo18PlayType.DoubleMatch) {
-        return b.number != null && b.number >= 1 && b.number <= 6;
-      }
-      return true;
-    },
-    {
-      message: "number (1-6) bắt buộc cho singleNum và doubleMatch.",
-      path: ["number"],
-    },
-  )
-  .refine(
-    (b) => {
-      if (b.playType === Bingo18PlayType.TripleMatch) {
-        return b.tripleKind != null;
-      }
-      return true;
-    },
-    {
-      message: 'tripleKind ("specific" | "any") bắt buộc cho tripleMatch.',
-      path: ["tripleKind"],
-    },
-  )
-  .refine(
-    (b) => {
-      if (
-        b.playType === Bingo18PlayType.TripleMatch &&
-        b.tripleKind === Bingo18TripleKind.Specific
-      ) {
-        return b.number != null && b.number >= 1 && b.number <= 6;
-      }
-      return true;
-    },
-    {
-      message: "number (1-6) bắt buộc cho tripleMatch specific.",
-      path: ["number"],
-    },
-  );
+// ─── Cách chơi cơ bản: singleNum ───
 
-// ─── Side bet schemas ───
+/** Chọn 1 số (1-6). Trúng theo số lần xuất hiện (1/2/3). */
+const singleNumBoardSchema = z.object({
+  ...baseBoardFields,
+  playType: z.literal(Bingo18PlayType.SingleNum),
+  number: bingo18NumberSchema,
+});
 
-const SideBetPlayType = {
-  SumTotal: Bingo18PlayType.SumTotal,
-  BigSmallDraw: Bingo18PlayType.BigSmallDraw,
-} as const;
+// ─── Cách chơi cơ bản: doubleMatch ───
 
-export const bingo18SideBetSchema = z
-  .object({
-    playType: z.enum(SideBetPlayType),
-    sum: bingo18SumSchema.optional(),
-    bet: z.enum(Bingo18BigSmallBet).optional(),
-    betCount: z.number().int().positive().default(1),
-  })
-  .refine(
-    (sb) => {
-      if (sb.playType === Bingo18PlayType.SumTotal) {
-        return sb.sum != null;
-      }
-      return true;
-    },
-    {
-      message: "sum (3-18) bắt buộc cho sumTotal.",
-      path: ["sum"],
-    },
-  )
-  .refine(
-    (sb) => {
-      if (sb.playType === Bingo18PlayType.BigSmallDraw) {
-        return sb.bet != null;
-      }
-      return true;
-    },
-    {
-      message: 'bet ("big" | "draw" | "small") bắt buộc cho bigSmallDraw.',
-      path: ["bet"],
-    },
-  );
+/** Chọn cặp trùng (11,22,...,66). number = số trong cặp (1-6). */
+const doubleMatchBoardSchema = z.object({
+  ...baseBoardFields,
+  playType: z.literal(Bingo18PlayType.DoubleMatch),
+  number: bingo18NumberSchema,
+});
+
+// ─── Cách chơi cơ bản: tripleMatch ───
+
+/**
+ * Chọn bộ 3 trùng. 2 loại:
+ * - specific: chọn số cụ thể (111-666), bắt buộc number.
+ * - any: bất kỳ bộ ba, number không cần.
+ */
+const tripleMatchSpecificSchema = z.object({
+  ...baseBoardFields,
+  playType: z.literal(Bingo18PlayType.TripleMatch),
+  tripleKind: z.literal(Bingo18TripleKind.Specific),
+  number: bingo18NumberSchema,
+});
+
+const tripleMatchAnySchema = z.object({
+  ...baseBoardFields,
+  playType: z.literal(Bingo18PlayType.TripleMatch),
+  tripleKind: z.literal(Bingo18TripleKind.Any),
+});
+
+// ─── Cách chơi bổ sung: sumTotal ───
+
+/** Đoán tổng 3 số (3-18). */
+const sumTotalBoardSchema = z.object({
+  ...baseBoardFields,
+  playType: z.literal(Bingo18PlayType.SumTotal),
+  sum: bingo18SumSchema,
+});
+
+// ─── Cách chơi bổ sung: bigSmallDraw ───
+
+/** Đặt Lớn (12-18) / Hòa (10-11) / Nhỏ (3-9). */
+const bigSmallDrawBoardSchema = z.object({
+  ...baseBoardFields,
+  playType: z.literal(Bingo18PlayType.BigSmallDraw),
+  bet: z.enum([Bingo18BigSmallBet.Big, Bingo18BigSmallBet.Draw, Bingo18BigSmallBet.Small]),
+});
+
+// ─── Unified board schema ───
+
+/**
+ * Unified board schema: discriminated union trên `playType`.
+ *
+ * tripleMatch có 2 sub-schemas (specific/any) nên không dùng z.discriminatedUnion
+ * vì chúng share cùng playType discriminator. Dùng z.union thay thế.
+ */
+export const bingo18BoardSchema = z.union([
+  singleNumBoardSchema,
+  doubleMatchBoardSchema,
+  tripleMatchSpecificSchema,
+  tripleMatchAnySchema,
+  sumTotalBoardSchema,
+  bigSmallDrawBoardSchema,
+]);
 
 // ─── Place bet body schema ───
 
-export const bingo18PlaceBetBodySchema = z
-  .object({
-    drawIds: z
-      .array(bingo18DrawIdSchema)
-      .min(1)
-      .max(20)
-      .refine((ids) => new Set(ids).size === ids.length, {
-        message: "Các drawId không được trùng lặp.",
-      }),
-    boards: z
-      .array(bingo18BoardSchema)
-      .max(BINGO18_BOARD_NO.length)
-      .refine((boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length, {
-        message: "Các boardNo không được trùng lặp.",
-      })
-      .default([]),
-    sideBets: z.array(bingo18SideBetSchema).default([]),
-  })
-  .refine((data) => data.boards.length > 0 || data.sideBets.length > 0, {
-    message: "Phải có ít nhất 1 board cơ bản hoặc 1 side bet.",
-  });
+export const bingo18PlaceBetBodySchema = z.object({
+  drawIds: z
+    .array(bingo18DrawIdSchema)
+    .min(1)
+    .max(20)
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: "Các drawId không được trùng lặp.",
+    }),
+  boards: z
+    .array(bingo18BoardSchema)
+    .min(1, "Phải có ít nhất 1 board.")
+    .max(BINGO18_BOARD_NO.length)
+    .refine(boardsOrderRefine(BINGO18_BOARD_NO), {
+      message: "Boards phải theo thứ tự liên tục từ A (A → A,B → A,B,C...).",
+    }),
+});
 
 const useCase = new PlaceBetUseCase();
 
 export const handler = withPlayerAuth(
   async (event) => {
     const { tenantId, accountId, username } = event.user;
-    const { drawIds, boards, sideBets } = event.schema.body;
+    const { drawIds, boards } = event.schema.body;
     const ipAddress = event.requestContext.http.sourceIp;
 
     return useCase.run({
@@ -160,7 +167,6 @@ export const handler = withPlayerAuth(
       ipAddress,
       drawIds,
       boards,
-      sideBets,
     });
   },
   { schemas: { body: bingo18PlaceBetBodySchema } },

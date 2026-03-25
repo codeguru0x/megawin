@@ -27,7 +27,8 @@ import {
   VALID_BOARD_NOS,
 } from "@megawin/game-max3dpro/schemas";
 import { PlayMode, PlayType } from "@megawin/game-max3dpro/entities";
-import { isUnique, isUniqueBy } from "@megawin/shared/utils";
+import { isUnique } from "@megawin/shared/utils";
+import { boardsOrderRefine } from "../../lib/schemas";
 
 // ─── Board schemas (discriminated by playMode) ───
 
@@ -72,9 +73,9 @@ export const max3dproPlaceBetBodySchema = z.object({
   boards: z
     .array(max3dproBoardSchema)
     .min(1)
-    .max(4)
-    .refine((boards) => isUniqueBy(boards, (b) => b.boardNo), {
-      message: "Các boardNo không được trùng nhau.",
+    .max(VALID_BOARD_NOS.length)
+    .refine(boardsOrderRefine(VALID_BOARD_NOS), {
+      message: "Boards phải theo thứ tự liên tục từ A (A → A,B → A,B,C...).",
     }),
 });
 

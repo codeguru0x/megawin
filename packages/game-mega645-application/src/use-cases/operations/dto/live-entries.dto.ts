@@ -4,7 +4,7 @@
  * Dùng cho live feed panel trên dashboard vận hành.
  * Mỗi entry được rút gọn để render nhanh trên UI.
  *
- * Mega 6/45: board chỉ có mainNumbers (01-45), không có specialNumbers.
+ * Mega 6/45: board chỉ có numbers (01-45), không có specialNumbers.
  */
 
 // ─── Input ────────────────────────────────────────────────────────────────────
@@ -24,11 +24,11 @@ export interface LiveEntryBoard {
   /** Kiểu chơi (standard, bao5, ...). */
   playType: string;
   /** Danh sách số chính đã chọn (zero-padded string, "01"-"45"). */
-  mainNumbers: string[];
+  numbers: string[];
   /** Số lines expanded của board này. */
   expandedLines: number;
   /** Số lần cược nhân bội (≥ 1). Hiển thị badge ×N khi > 1. */
-  betCount?: number;
+  betCount: number;
 }
 
 /** Một entry rút gọn cho live feed. */
@@ -44,7 +44,7 @@ export interface LiveEntryItem {
   /** Tổng số lines. */
   lineCount: number;
   /** Tổng đơn vị cược = Σ(expandedLines × betCount). */
-  betUnitCount?: number;
+  betUnitCount: number;
   /** Danh sách boards (bộ số và kiểu chơi). */
   boards: LiveEntryBoard[];
   /** Thời điểm đặt cược (ISO 8601). */

@@ -4,7 +4,7 @@
  * "Bộ số phổ biến nhất" — nhóm entries theo combo (bộ số chính)
  * và rank theo số lần chọn giảm dần.
  *
- * Mega 6/45: combo key = playType + sorted mainNumbers (không có specialNumbers).
+ * Mega 6/45: combo key = playType + sorted numbers (không có specialNumbers).
  */
 
 // ─── Input ────────────────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ export interface TopComboItem {
    */
   playType: string;
   /** Số chính của combo — sorted tăng dần, zero-padded string (01-45). */
-  mainNumbers: string[];
+  numbers: string[];
   /** Số entries chứa combo này (= số lần được chọn). */
   entryCount: number;
   /** Tổng tiền cược xấp xỉ — entry.amount × tỷ lệ lines board / tổng lines entry. */

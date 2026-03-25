@@ -75,7 +75,7 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
       drawNo: draw.drawNo,
       financialDate: draw.financialDate,
       result: {
-        winningMain: draw.result.winningMain as unknown as string[],
+        winningNumbers: draw.result.winningNumbers as unknown as string[],
       },
       jackpotOpeningAmount,
       prizeAmounts,

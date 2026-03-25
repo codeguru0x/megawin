@@ -5,13 +5,10 @@
  * Chỉ chứa thông tin player cần — loại bỏ dữ liệu vận hành/công ty.
  */
 
-import type { DrawBasicPrizeSummary, DrawSideBetPrizeSummary } from "@megawin/game-keno/entities";
+import type { DrawPrizeSummary } from "@megawin/game-keno/entities";
 import { EntryOutcome } from "@megawin/game-core/entities";
 
-export type {
-  DrawBasicPrizeSummary as PlayerBasicPrize,
-  DrawSideBetPrizeSummary as PlayerSideBetPrize,
-};
+export type { DrawPrizeSummary as PlayerPrizeSummary };
 
 // ─── Get Current Draw (Player) ───
 
@@ -84,12 +81,10 @@ export interface PlayerTicketSummary {
   boards: Array<{
     boardNo: string;
     playType: string;
-    numbers: string[];
-    betCount: number;
-  }>;
-  sideBets: Array<{
-    playType: string;
-    bet: string;
+    /** Số đã chọn. Chỉ cho cơ bản (pick1-pick10). */
+    numbers?: string[];
+    /** Lựa chọn side bet. Chỉ cho bổ sung (bigSmall/evenOdd). */
+    bet?: string;
     betCount: number;
   }>;
   /**
@@ -149,12 +144,10 @@ export interface PlayerEntryInfo {
     boards: Array<{
       boardNo: string;
       playType: string;
-      numbers: string[];
-      betCount: number;
-    }>;
-    sideBets: Array<{
-      playType: string;
-      bet: string;
+      /** Số đã chọn. Chỉ cho cơ bản (pick1-pick10). */
+      numbers?: string[];
+      /** Lựa chọn side bet. Chỉ cho bổ sung (bigSmall/evenOdd). */
+      bet?: string;
       betCount: number;
     }>;
   };
@@ -173,14 +166,15 @@ export interface PlayerEntryInfo {
     boardPayouts: Array<{
       boardNo: string;
       playType: string;
-      matchCount: number;
-      pickCount: number;
-      winAmount: number;
-    }>;
-    sideBetPayouts: Array<{
-      playType: string;
-      bet: string;
-      outcome: string;
+      /** Số trùng với kết quả quay. null cho bổ sung (bigSmall/evenOdd) — field không áp dụng. */
+      matchCount: number | null;
+      /** Số lượng số đã chọn. null cho bổ sung — field không áp dụng. */
+      pickCount: number | null;
+      /** Lựa chọn side bet. Chỉ cho bổ sung (bigSmall/evenOdd). */
+      bet?: string;
+      /** Outcome thực tế. Chỉ cho bổ sung. */
+      outcome?: string;
+      /** Player thắng hay không. Set cho tất cả play types. */
       isWin: boolean;
       winAmount: number;
     }>;
@@ -248,8 +242,8 @@ export interface PlayerDrawResultInfo {
     evenCount: number;
     oddCount: number;
   };
-  basicPrizes: DrawBasicPrizeSummary[];
-  sideBetPrizes: DrawSideBetPrizeSummary[];
+  /** Bảng giải thưởng — cả cơ bản (pick1-pick10) và bổ sung (bigSmall/evenOdd). */
+  prizes: DrawPrizeSummary[];
   vietlottRef?: {
     drawPeriod: string;
     drawDate: string;

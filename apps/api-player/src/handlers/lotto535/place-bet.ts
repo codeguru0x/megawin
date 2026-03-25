@@ -18,6 +18,7 @@ import {
   VALID_BOARD_NOS,
 } from "@megawin/game-lotto535/schemas";
 import { PlayType } from "@megawin/game-lotto535/entities";
+import { boardsOrderRefine } from "../../lib/schemas";
 
 // ─── Composite schemas ───
 
@@ -135,9 +136,9 @@ export const lotto535PlaceBetBodySchema = z.object({
   boards: z
     .array(lotto535BoardSchema)
     .min(1)
-    .max(5)
-    .refine((boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length, {
-      message: "Các board không được trùng boardNo.",
+    .max(VALID_BOARD_NOS.length)
+    .refine(boardsOrderRefine(VALID_BOARD_NOS), {
+      message: "Boards phải theo thứ tự liên tục từ A (A → A,B → A,B,C...).",
     }),
 });
 

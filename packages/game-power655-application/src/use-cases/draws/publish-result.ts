@@ -73,30 +73,16 @@ export class PublishResultUseCase extends NextApiUseCase<
         }
       : undefined;
 
-    if (draw.status === DrawStatus.SalesClosed) {
-      const updated = await this.drawRepo.publishResult(
-        input.drawId,
-        { winningMain, bonusNumber },
-        vietlottRef
-      );
+    const updated = await this.drawRepo.publishResult(
+      input.drawId,
+      { winningMain, bonusNumber, publishedAt },
+      vietlottRef
+    );
 
-      if (!updated) {
-        throw AppException.internal(
-          `Chuyển trạng thái kỳ ${input.drawId} thất bại. Vui lòng thử lại.`
-        );
-      }
-    } else {
-      const success = await this.drawRepo.updateResult(
-        input.drawId,
-        { winningMain, bonusNumber, publishedAt },
-        vietlottRef
+    if (!updated) {
+      throw AppException.internal(
+        `Publish kết quả kỳ ${input.drawId} thất bại. Vui lòng thử lại.`
       );
-
-      if (!success) {
-        throw AppException.internal(
-          `Cập nhật kết quả kỳ ${input.drawId} thất bại.`
-        );
-      }
     }
 
     return {

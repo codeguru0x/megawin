@@ -17,6 +17,7 @@
 import { useMemo } from "react";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
+import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
 
 import { useDrawContext } from "../../use-draw-context";
 import {
@@ -96,15 +97,15 @@ export function AnalyticsSection() {
   const liveEntries: LiveFeedEntry[] = useMemo(() => {
     if (!liveData) return [];
     return liveData.entries.map((e) => {
-      // Lấy board đầu tiên để hiển thị preview
-      const firstBoard = e.boards[0];
-      const firstSideBet = e.sideBets[0];
-      const playType = firstBoard?.playType ?? firstSideBet?.playType ?? "unknown";
+      // Lấy board cơ bản đầu tiên để hiển thị preview, fallback side bet nếu không có
+      const firstBasicBoard = e.boards.find((b) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any));
+      const firstSideBetBoard = e.boards.find((b) => KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any));
+      const previewBoard = firstBasicBoard ?? firstSideBetBoard;
       return {
         entryId: e.entryId,
         time: e.createdAt,
-        playType,
-        numbers: firstBoard?.numbers ?? [],
+        playType: previewBoard?.playType ?? "unknown",
+        numbers: previewBoard?.numbers ?? [],
         amount: e.amount,
         username: e.username,
         tenant: e.tenantId,

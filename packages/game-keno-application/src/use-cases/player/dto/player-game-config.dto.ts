@@ -10,9 +10,9 @@
 export interface PlayerGameRules {
   /** Mệnh giá 1 lần tham gia (VND). */
   unitPrice: number;
-  /** Số lần cược tối thiểu per board/sideBet (≥ 1). */
+  /** Số lần cược tối thiểu per board (≥ 1). */
   minBetCount: number;
-  /** Số lần cược tối đa per board/sideBet. */
+  /** Số lần cược tối đa per board. */
   maxBetCount: number;
   /** Số panel cơ bản tối đa / vé. */
   maxBasicBoardsPerTicket: number;

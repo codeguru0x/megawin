@@ -28,7 +28,6 @@ export type {
   GetLiveEntriesOutput,
   LiveEntryItem,
   LiveEntryBoard,
-  LiveEntrySideBet,
   GetDrawSelectorOutput,
   DrawSelectorItem,
   GetTopCombosOutput,
@@ -36,7 +35,6 @@ export type {
   GetWinningEntriesOutput,
   WinningEntryItem,
   WinningEntryBoardDetail,
-  WinningEntrySideBetDetail,
   WinningEntriesSummary,
 } from "@megawin/game-keno-application/use-cases/operations";
 

@@ -52,7 +52,7 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
     drawNo: draw.drawNo,
     drawTime: draw.drawTime.toISOString(),
     result: {
-      winningMain: [...result.winningMain] as string[],
+      winningNumbers: result.winningNumbers,
       publishedAt: result.publishedAt.toISOString(),
     },
     jackpot: {

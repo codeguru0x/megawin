@@ -3,6 +3,31 @@
  * Player đặt cược Keno — authed qua Cognito JWT Bearer token.
  *
  * Số Keno nhận dạng string "01"-"80" (zero-padded).
+ *
+ * ╔═══════════════════════════════════════════════════════════════════════════╗
+ * ║ BREAKING CHANGE — Unified boards[], xoá sideBets[]                      ║
+ * ╠═══════════════════════════════════════════════════════════════════════════╣
+ * ║                                                                         ║
+ * ║ TẤT CẢ loại chơi (cơ bản + bổ sung) giờ nằm trong `boards[]`.         ║
+ * ║ Field `sideBets[]` đã bị XOÁ hoàn toàn khỏi request body.             ║
+ * ║                                                                         ║
+ * ║ Mỗi board là 1 discriminated union theo `playType`:                     ║
+ * ║                                                                         ║
+ * ║ ┌─────────────┬────────────────────────────────────────────────────────┐ ║
+ * ║ │ playType    │ Fields bắt buộc                                       │ ║
+ * ║ ├─────────────┼────────────────────────────────────────────────────────┤ ║
+ * ║ │ pick1-pick10│ numbers: string[] (1-10 số, unique, "01"-"80")        │ ║
+ * ║ │ bigSmall    │ bet: "big" | "small" | "bigSmallDraw"                 │ ║
+ * ║ │ evenOdd     │ bet: "even" | "odd" | "evenOddDraw" | "even1112"     │ ║
+ * ║ │             │      | "odd1112"                                      │ ║
+ * ║ └─────────────┴────────────────────────────────────────────────────────┘ ║
+ * ║                                                                         ║
+ * ║ boardNo: "A" | "B" | "C" — tối đa 3 boards, không trùng boardNo.      ║
+ * ║ Bất kỳ panel nào cũng có thể chơi bất kỳ loại nào.                    ║
+ * ║                                                                         ║
+ * ║ SDK migration: thay sideBets[] bằng boards[] với playType tương ứng,   ║
+ * ║ thêm boardNo cho mỗi side bet.                                         ║
+ * ╚═══════════════════════════════════════════════════════════════════════════╝
  */
 
 import { withPlayerAuth } from "@megawin/auth";
@@ -12,66 +37,121 @@ import { kenoNumberSchema, kenoDrawIdSchema } from "@megawin/game-keno/schemas";
 import { TicketChannel } from "@megawin/game-core/entities";
 import { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "@megawin/game-keno/entities";
 import z from "zod";
+import { boardsOrderRefine } from "../../lib/schemas";
 
-// ============ Handler ============
+// ============ Board Schemas — Tách riêng theo playType ============
 
-// ─── Composite schemas ───
+/** boardNo hợp lệ: A, B, C. Tối đa 3 panels. */
+const KENO_BOARD_NO = ["A", "B", "C"] as const;
 
-const SideBetPlayType = {
-  BigSmall: KenoPlayType.BigSmall,
-  EvenOdd: KenoPlayType.EvenOdd,
+/** Schema dùng chung cho tất cả boards: boardNo + betCount. */
+const baseBoardFields = {
+  boardNo: z.enum(KENO_BOARD_NO),
+  betCount: z.number().int().min(1).default(1),
 } as const;
 
-const AllSideBetValues = { ...KenoBigSmallBet, ...KenoEvenOddBet } as const;
+// ─── Cách chơi cơ bản: pick1-pick10 (chọn số) ───
 
-const KENO_BOARD_NO = ["A", "B"] as const;
+/**
+ * Helper tạo schema cho mỗi bậc pick.
+ * Validate: đúng số lượng numbers theo pickCount, unique, format "01"-"80".
+ */
+function createPickSchema<T extends string>(playType: T, pickCount: number) {
+  return z
+    .object({
+      ...baseBoardFields,
+      playType: z.literal(playType),
+      numbers: z.array(kenoNumberSchema).length(pickCount, {
+        message: `${playType} phải chọn đúng ${pickCount} số.`,
+      }),
+    })
+    .refine((b) => new Set(b.numbers).size === b.numbers.length, {
+      message: "Các số trong board không được trùng nhau.",
+      path: ["numbers"],
+    });
+}
 
-export const kenoBoardSchema = z
-  .object({
-    boardNo: z.enum(KENO_BOARD_NO),
-    numbers: z.array(kenoNumberSchema).min(1).max(10),
-    betCount: z.number().int().min(1).default(1),
-  })
-  .refine((b) => new Set(b.numbers).size === b.numbers.length, {
-    message: "Các số trong board không được trùng nhau.",
-    path: ["numbers"],
-  });
+const pick1Schema = createPickSchema(KenoPlayType.Pick1, 1);
+const pick2Schema = createPickSchema(KenoPlayType.Pick2, 2);
+const pick3Schema = createPickSchema(KenoPlayType.Pick3, 3);
+const pick4Schema = createPickSchema(KenoPlayType.Pick4, 4);
+const pick5Schema = createPickSchema(KenoPlayType.Pick5, 5);
+const pick6Schema = createPickSchema(KenoPlayType.Pick6, 6);
+const pick7Schema = createPickSchema(KenoPlayType.Pick7, 7);
+const pick8Schema = createPickSchema(KenoPlayType.Pick8, 8);
+const pick9Schema = createPickSchema(KenoPlayType.Pick9, 9);
+const pick10Schema = createPickSchema(KenoPlayType.Pick10, 10);
 
-export const kenoSideBetSchema = z.object({
-  playType: z.enum(SideBetPlayType),
-  bet: z.enum(AllSideBetValues),
-  betCount: z.number().int().min(1).default(1),
+// ─── Cách chơi bổ sung: bigSmall ───
+
+/** Schema cho cược Lớn/Nhỏ. */
+const bigSmallBoardSchema = z.object({
+  ...baseBoardFields,
+  playType: z.literal(KenoPlayType.BigSmall),
+  bet: z.enum([KenoBigSmallBet.Big, KenoBigSmallBet.Small, KenoBigSmallBet.BigSmallDraw]),
 });
 
+// ─── Cách chơi bổ sung: evenOdd ───
+
+/** Schema cho cược Chẵn/Lẻ. */
+const evenOddBoardSchema = z.object({
+  ...baseBoardFields,
+  playType: z.literal(KenoPlayType.EvenOdd),
+  bet: z.enum([
+    KenoEvenOddBet.Even,
+    KenoEvenOddBet.Even1112,
+    KenoEvenOddBet.EvenOddDraw,
+    KenoEvenOddBet.Odd1112,
+    KenoEvenOddBet.Odd,
+  ]),
+});
+
+// ─── Unified board schema qua discriminatedUnion ───
+
+/**
+ * Unified board schema: discriminated union trên `playType`.
+ * TypeScript compiler đảm bảo type-safe — mỗi playType chỉ cho phép fields hợp lệ.
+ */
+export const kenoBoardSchema = z.discriminatedUnion("playType", [
+  pick1Schema,
+  pick2Schema,
+  pick3Schema,
+  pick4Schema,
+  pick5Schema,
+  pick6Schema,
+  pick7Schema,
+  pick8Schema,
+  pick9Schema,
+  pick10Schema,
+  bigSmallBoardSchema,
+  evenOddBoardSchema,
+]);
+
 // ─── Place bet body schema ───
-export const kenoPlaceBetBodySchema = z
-  .object({
-    drawIds: z
-      .array(kenoDrawIdSchema)
-      .min(1)
-      .max(30)
-      .refine((ids) => new Set(ids).size === ids.length, {
-        message: "Các drawId không được trùng lặp.",
-      }),
-    boards: z
-      .array(kenoBoardSchema)
-      .max(KENO_BOARD_NO.length)
-      .refine((boards) => new Set(boards.map((b) => b.boardNo)).size === boards.length, {
-        message: "Các boardNo không được trùng lặp.",
-      })
-      .default([]),
-    sideBets: z.array(kenoSideBetSchema).default([]),
-  })
-  .refine((data) => data.boards.length > 0 || data.sideBets.length > 0, {
-    message: "Phải có ít nhất 1 board cơ bản hoặc 1 side bet.",
-  });
+
+export const kenoPlaceBetBodySchema = z.object({
+  drawIds: z
+    .array(kenoDrawIdSchema)
+    .min(1)
+    .max(30)
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: "Các drawId không được trùng lặp.",
+    }),
+  boards: z
+    .array(kenoBoardSchema)
+    .min(1, "Phải có ít nhất 1 board.")
+    .max(KENO_BOARD_NO.length)
+    .refine(boardsOrderRefine(KENO_BOARD_NO), {
+      message: "Boards phải theo thứ tự liên tục từ A (A → A,B → A,B,C...).",
+    }),
+});
 
 const useCase = new PlaceBetUseCase();
 
 export const handler = withPlayerAuth(
   async (event) => {
     const { tenantId, accountId, username } = event.user;
-    const { drawIds, boards, sideBets } = event.schema.body;
+    const { drawIds, boards } = event.schema.body;
     const ipAddress = event.requestContext.http.sourceIp;
 
     return useCase.run({
@@ -82,7 +162,6 @@ export const handler = withPlayerAuth(
       ipAddress,
       drawIds,
       boards,
-      sideBets,
     });
   },
   { schemas: { body: kenoPlaceBetBodySchema } },

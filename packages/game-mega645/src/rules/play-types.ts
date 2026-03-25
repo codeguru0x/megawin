@@ -22,7 +22,7 @@
  */
 
 import { PlayType } from "../entities/enums";
-import { MEGA645_MAIN_COUNT, VALID_MAIN_NUMBER_SET, type BoardSelection } from "../entities/types";
+import { MEGA645_NUMBER_COUNT, VALID_NUMBER_SET, type BoardSelection } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Combination helper
@@ -45,8 +45,8 @@ export function combination(n: number, k: number): number {
 
 export interface PlayTypeConfig {
   label: string;
-  /** Số lượng số chính cần chọn. */
-  mainCount: number;
+  /** Số lượng số cần chọn. */
+  numberCount: number;
   /** Số line sinh ra (0 = tính từ selection). */
   fixedLineCount: number;
 }
@@ -56,18 +56,18 @@ export interface PlayTypeConfig {
  * Bao 5 đặc biệt: chọn 5 số, HT ghép 40 số còn lại → 40 lines.
  */
 export const PLAY_TYPE_CONFIGS: Record<PlayType, PlayTypeConfig> = {
-  [PlayType.Standard]: { label: "Vé thường", mainCount: 6, fixedLineCount: 1 },
-  [PlayType.Bao5]: { label: "Bao 5", mainCount: 5, fixedLineCount: 40 },
-  [PlayType.Bao7]: { label: "Bao 7", mainCount: 7, fixedLineCount: 7 },
-  [PlayType.Bao8]: { label: "Bao 8", mainCount: 8, fixedLineCount: 28 },
-  [PlayType.Bao9]: { label: "Bao 9", mainCount: 9, fixedLineCount: 84 },
-  [PlayType.Bao10]: { label: "Bao 10", mainCount: 10, fixedLineCount: 210 },
-  [PlayType.Bao11]: { label: "Bao 11", mainCount: 11, fixedLineCount: 462 },
-  [PlayType.Bao12]: { label: "Bao 12", mainCount: 12, fixedLineCount: 924 },
-  [PlayType.Bao13]: { label: "Bao 13", mainCount: 13, fixedLineCount: 1716 },
-  [PlayType.Bao14]: { label: "Bao 14", mainCount: 14, fixedLineCount: 3003 },
-  [PlayType.Bao15]: { label: "Bao 15", mainCount: 15, fixedLineCount: 5005 },
-  [PlayType.Bao18]: { label: "Bao 18", mainCount: 18, fixedLineCount: 18564 },
+  [PlayType.Standard]: { label: "Vé thường", numberCount: 6, fixedLineCount: 1 },
+  [PlayType.Bao5]: { label: "Bao 5", numberCount: 5, fixedLineCount: 40 },
+  [PlayType.Bao7]: { label: "Bao 7", numberCount: 7, fixedLineCount: 7 },
+  [PlayType.Bao8]: { label: "Bao 8", numberCount: 8, fixedLineCount: 28 },
+  [PlayType.Bao9]: { label: "Bao 9", numberCount: 9, fixedLineCount: 84 },
+  [PlayType.Bao10]: { label: "Bao 10", numberCount: 10, fixedLineCount: 210 },
+  [PlayType.Bao11]: { label: "Bao 11", numberCount: 11, fixedLineCount: 462 },
+  [PlayType.Bao12]: { label: "Bao 12", numberCount: 12, fixedLineCount: 924 },
+  [PlayType.Bao13]: { label: "Bao 13", numberCount: 13, fixedLineCount: 1716 },
+  [PlayType.Bao14]: { label: "Bao 14", numberCount: 14, fixedLineCount: 3003 },
+  [PlayType.Bao15]: { label: "Bao 15", numberCount: 15, fixedLineCount: 5005 },
+  [PlayType.Bao18]: { label: "Bao 18", numberCount: 18, fixedLineCount: 18564 },
 };
 
 // ─────────────────────────────────────────────
@@ -81,8 +81,8 @@ export function calculateLineCount(playType: PlayType): number {
   return PLAY_TYPE_CONFIGS[playType].fixedLineCount;
 }
 
-export function getRequiredMainCount(playType: PlayType): number {
-  return PLAY_TYPE_CONFIGS[playType].mainCount;
+export function getRequiredNumberCount(playType: PlayType): number {
+  return PLAY_TYPE_CONFIGS[playType].numberCount;
 }
 
 // ─────────────────────────────────────────────
@@ -96,22 +96,22 @@ export interface ValidationResult {
 
 export function validateSelection(playType: PlayType, selection: BoardSelection): ValidationResult {
   const errors: string[] = [];
-  const { mainNumbers } = selection;
+  const { numbers } = selection;
 
-  for (const n of mainNumbers) {
-    if (!VALID_MAIN_NUMBER_SET.has(n)) {
+  for (const n of numbers) {
+    if (!VALID_NUMBER_SET.has(n)) {
       errors.push(`Số "${n}" không hợp lệ (phải từ "01" đến "45")`);
     }
   }
 
-  if (new Set(mainNumbers).size !== mainNumbers.length) {
+  if (new Set(numbers).size !== numbers.length) {
     errors.push("Số không được trùng nhau");
   }
 
   const config = PLAY_TYPE_CONFIGS[playType];
-  if (mainNumbers.length !== config.mainCount) {
+  if (numbers.length !== config.numberCount) {
     errors.push(
-      `${config.label}: cần chọn đúng ${config.mainCount} số, nhận được ${mainNumbers.length}`,
+      `${config.label}: cần chọn đúng ${config.numberCount} số, nhận được ${numbers.length}`,
     );
   }
 

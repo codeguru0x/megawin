@@ -11,10 +11,24 @@
 
 import type { ISODateString } from "../entities/types";
 
+/**
+ * Tạo drawId duy nhất cho 1 kỳ quay Keno.
+ *
+ * Format: "YYYY-MM-DD.NNN" (ví dụ: "2024-01-15.042")
+ *
+ * @param drawDate - Ngày quay "YYYY-MM-DD"
+ * @param drawNo - Số thứ tự kỳ trong ngày (1-based, ví dụ 42 → "042")
+ */
 export function generateKenoDrawId(drawDate: ISODateString, drawNo: number): string {
   return `${drawDate}.${String(drawNo).padStart(3, "0")}`;
 }
 
+/**
+ * Parse drawId thành drawDate và drawNo.
+ *
+ * @param drawId - DrawId format "YYYY-MM-DD.NNN"
+ * @returns `{ drawDate, drawNo }` nếu hợp lệ, `null` nếu format sai
+ */
 export function parseKenoDrawId(
   drawId: string,
 ): { drawDate: ISODateString; drawNo: number } | null {
@@ -28,11 +42,16 @@ export function parseKenoDrawId(
 }
 
 /**
- * Tạo danh sách drawIds liên tiếp cho multi-draw.
+ * Tạo danh sách drawIds liên tiếp cho multi-draw ticket.
  *
- * @param startDrawId - DrawId kỳ đầu tiên
- * @param drawCount - Số kỳ tham gia
- * @param drawsPerDay - Số kỳ quay mỗi ngày (mặc định 120)
+ * Dùng khi player chọn chơi nhiều kỳ liên tiếp.
+ * Khi drawNo vượt `drawsPerDay`, tự động chuyển sang ngày hôm sau + reset về 1.
+ *
+ * @param startDrawId - DrawId của kỳ đầu tiên (format "YYYY-MM-DD.NNN")
+ * @param drawCount - Số kỳ tham gia (1-20, cấu hình bởi `PlayRules.maxDrawCount`)
+ * @param drawsPerDay - Số kỳ quay mỗi ngày (mặc định 120 — phù hợp Keno 8 phút/kỳ)
+ * @returns Mảng drawIds có độ dài = drawCount
+ * @throws Nếu startDrawId không đúng format
  */
 export function generateKenoDrawIdSequence(
   startDrawId: string,
@@ -63,12 +82,20 @@ export function generateKenoDrawIdSequence(
 }
 
 /**
- * Tính drawNo từ thời gian trong ngày.
+ * Tính drawNo từ giờ quay trong ngày.
  *
- * @param time - Giờ:phút format "HH:mm"
+ * Dùng khi cần biết kỳ quay nào ứng với một thời điểm cụ thể.
+ * DrawNo bắt đầu từ 1 (kỳ đầu tiên trong ngày = `firstDrawTime`).
+ *
+ * Ví dụ: firstDrawTime = "06:00", intervalMinutes = 8
+ *   - "06:00" → drawNo 1
+ *   - "06:08" → drawNo 2
+ *   - "21:52" → drawNo 120
+ *
+ * @param time - Giờ:phút "HH:mm"
  * @param firstDrawTime - Giờ kỳ đầu tiên (default "06:00")
  * @param intervalMinutes - Khoảng cách giữa các kỳ (default 8)
- * @returns drawNo (1-based)
+ * @returns drawNo (1-based). Trả 0 nếu `time` trước `firstDrawTime`.
  */
 export function calculateDrawNo(
   time: string,

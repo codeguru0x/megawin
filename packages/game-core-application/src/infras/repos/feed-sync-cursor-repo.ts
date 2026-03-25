@@ -42,7 +42,6 @@ export class FeedSyncCursorRepository extends GameCoreBaseRepo<
    */
   async acquireLock(
     gameProduct: GameProduct,
-    executionId: string,
     lockTtlMs: number = DEFAULT_LOCK_TTL_MS,
   ): Promise<AcquireLockResult> {
     const now = new Date();
@@ -51,14 +50,10 @@ export class FeedSyncCursorRepository extends GameCoreBaseRepo<
     const result = await this.findOneAndUpdate(
       {
         gameProduct,
-        $or: [
-          { lockedUntil: null },
-          { lockedUntil: { $exists: false } },
-          { lockedUntil: { $lt: now } },
-        ],
+        $or: [{ lockedUntil: null }, { lockedUntil: { $lt: now } }],
       },
       {
-        $set: { lockedUntil, lockedBy: executionId, updatedAt: now },
+        $set: { lockedUntil, updatedAt: now },
         $setOnInsert: { gameProduct, lastVersion: Long.fromNumber(0) },
       },
       { upsert: true, returnDocument: "after" },
@@ -80,7 +75,6 @@ export class FeedSyncCursorRepository extends GameCoreBaseRepo<
    * Dùng khi step function kết thúc hoàn toàn (deprecated pattern).
    * Ưu tiên dùng `saveAndExtendLock` + `releaseLock` thay thế.
    *
-   * Release lock bất kể lockedBy (crash recovery safe).
    */
   async saveAndRelease(gameProduct: GameProduct, lastVersion: string): Promise<void> {
     const newVersion = Long.fromString(lastVersion);
@@ -91,7 +85,6 @@ export class FeedSyncCursorRepository extends GameCoreBaseRepo<
         $set: {
           lastVersion: newVersion,
           lockedUntil: null,
-          lockedBy: null,
           updatedAt: new Date(),
         },
       },
@@ -106,7 +99,6 @@ export class FeedSyncCursorRepository extends GameCoreBaseRepo<
    * - Cursor được persist ngay → crash chỉ mất tối đa 1 batch (500 entries)
    * - Lock được gia hạn thêm TTL → tránh lock expire giữa chừng khi đang chạy
    *
-   * lockedBy giữ nguyên giá trị lúc acquireLock.
    */
   async saveAndExtendLock(
     gameProduct: GameProduct,
@@ -143,21 +135,10 @@ export class FeedSyncCursorRepository extends GameCoreBaseRepo<
       {
         $set: {
           lockedUntil: null,
-          lockedBy: null,
           updatedAt: new Date(),
         },
       },
       { upsert: false, returnDocument: "after" },
     );
-  }
-
-  /**
-   * Đọc lastVersion (không acquire lock).
-   * Dùng cho monitoring / debug.
-   */
-  async getLastVersion(gameProduct: GameProduct): Promise<string> {
-    const entity = await this.findOne({ gameProduct });
-    if (!entity) return "0";
-    return entity.lastVersion;
   }
 }

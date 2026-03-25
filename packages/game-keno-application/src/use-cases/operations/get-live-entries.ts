@@ -6,7 +6,6 @@ import type {
   GetLiveEntriesInput,
   GetLiveEntriesOutput,
   LiveEntryBoard,
-  LiveEntrySideBet,
 } from "./dto/live-entries.dto";
 
 /**
@@ -14,7 +13,7 @@ import type {
  *
  * Trả về N entries vừa đặt gần đây nhất (sort createdAt desc).
  * Dùng cho panel realtime trên Operations Dashboard.
- * Keno có cả basic boards (pick1-10) và side bets (bigSmall, evenOdd).
+ * boards[] chứa cả basic (pick1-10) và side bets (bigSmall, evenOdd).
  */
 export class GetLiveEntriesUseCase extends NextApiUseCase<
   GetLiveEntriesInput,
@@ -42,17 +41,15 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
       drawId,
       totalCount,
       entries: entries.map((e) => {
+        // boards[] chứa cả cơ bản (pick1-pick10) và bổ sung (bigSmall/evenOdd).
+        // Cơ bản: numbers bắt buộc, bet = undefined.
+        // Bổ sung: bet bắt buộc, numbers = undefined.
         const boards: LiveEntryBoard[] = (e.entrySummary?.boards ?? []).map((b: any) => ({
           playType: b.playType as string,
-          boardNo: b.boardNo as number,
-          numbers: b.numbers as string[],
+          boardNo: b.boardNo as string,
+          ...(b.numbers ? { numbers: b.numbers as string[] } : {}),
+          ...(b.bet ? { bet: b.bet as string } : {}),
           betCount: (b.betCount as number) ?? 1,
-        }));
-
-        const sideBets: LiveEntrySideBet[] = (e.entrySummary?.sideBets ?? []).map((s: any) => ({
-          playType: s.playType as string,
-          bet: s.bet as string,
-          betCount: (s.betCount as number) ?? 1,
         }));
 
         return {
@@ -61,9 +58,7 @@ export class GetLiveEntriesUseCase extends NextApiUseCase<
           tenantId: e.tenantId,
           amount: e.amount,
           boardCount: boards.length,
-          sideBetCount: sideBets.length,
           boards,
-          sideBets,
           createdAt: e.createdAt.toISOString(),
         };
       }),

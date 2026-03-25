@@ -41,9 +41,9 @@
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
-    "next": "^16.2.0",
+    "next": "^16.2.1",
     "react": "^19.2.4",
-    "typescript": "^5.9.3",
-    "vitest": "latest"
+    "typescript": "^6.0.2",
+    "vitest": "4.1.1"
   }
 }

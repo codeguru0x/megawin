@@ -23,11 +23,44 @@ Bingo 18 là game xổ số nhanh dạng xúc xắc của Vietlott. **ĐƠN GI�
 - **Kỳ liên tiếp**: Tối đa 20 kỳ
 - **Jackpot**: **KHÔNG CÓ** — giải thưởng hoàn toàn CỐ ĐỊNH
 - **Giải cao nhất**: 1.200.000 VND
-- **5 cách chơi**: 3 cơ bản (chọn số) + 2 bổ sung (side bet)
+- **5 cách chơi**: 3 cơ bản + 2 bổ sung — TẤT CẢ nằm trong `boards[]`
 
 ---
 
-## 2. Kết quả quay thưởng (Draw Result)
+## 2. Cấu trúc Ticket — Unified Boards
+
+> **KIẾN TRÚC QUAN TRỌNG**: Bingo 18 sử dụng kiến trúc **unified boards** — TẤT CẢ loại chơi (cơ bản: singleNum, doubleMatch, tripleMatch VÀ bổ sung: sumTotal, bigSmallDraw) đều nằm trong **cùng 1 mảng `boards[]`**, phân biệt qua field `playType`.
+>
+> **KHÔNG CÒN** `sideBets[]` tách riêng. Mỗi board có `boardNo` duy nhất ("A"-"F").
+
+### Interface BasicBoard (unified)
+
+```typescript
+interface BasicBoard {
+  boardNo: string;           // "A"-"F"
+  playType: Bingo18PlayType; // "singleNum" | "doubleMatch" | "tripleMatch" | "sumTotal" | "bigSmallDraw"
+  number?: number;           // 1-6, cho singleNum/doubleMatch/tripleMatch specific
+  tripleKind?: Bingo18TripleKind; // "specific" | "any", chỉ cho tripleMatch
+  sum?: number;              // 3-18, chỉ cho sumTotal
+  bet?: Bingo18BigSmallBet;  // "big" | "draw" | "small", chỉ cho bigSmallDraw
+  betCount: number;
+}
+```
+
+### Tính tiền
+
+```
+selectionsPerDraw = boards.length
+betUnitsPerDraw   = Σ(board.betCount)
+amountPerDraw     = betUnitsPerDraw × unitPrice (10.000đ)
+totalAmount       = amountPerDraw × drawCount
+```
+
+**Giới hạn**: Tối đa 6 boards (panels A-F), bất kỳ loại chơi nào.
+
+---
+
+## 3. Kết quả quay thưởng (Draw Result)
 
 Mỗi kỳ quay **3 số** từ {1, 2, 3, 4, 5, 6}:
 
@@ -41,90 +74,65 @@ Các số **CÓ THỂ TRÙNG NHAU** (vì 3 viên xúc xắc độc lập).
 
 ---
 
-## 3. Cách chơi & Giải thưởng
+## 4. Cách chơi & Giải thưởng
 
-Giá trị trong các bảng dưới là **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc`.
-
-### 3.1 Cách chơi Một số — `singleNum` (Basic)
+### 4.1 Cách chơi Một số — `singleNum` (Basic)
 
 Chọn 1 số (1-6). Trúng theo số lần xuất hiện trong 3 số quay.
 
 | Kết quả | Giải thưởng mặc định | Multiplier | Xác suất |
 |---------|---------------------|------------|----------|
-| Quay có 1 lần số đã chọn | 12.000 | ×1.2 | 34,72% (75/216) |
-| Quay có 2 lần số đã chọn | 20.000 | ×2 | 6,94% (15/216) |
-| Quay có 3 lần số đã chọn | 30.000 | ×3 | 0,46% (1/216) |
+| Quay có 1 lần số đã chọn | 12.000 | ×1.2 | 34,72% |
+| Quay có 2 lần số đã chọn | 20.000 | ×2 | 6,94% |
+| Quay có 3 lần số đã chọn | 30.000 | ×3 | 0,46% |
 
-**Chỉ lĩnh 1 hạng giải duy nhất** tương ứng với số lần xuất hiện.
-
-### 3.2 Cách chơi Hai số trùng nhau — `doubleMatch` (Basic)
+### 4.2 Cách chơi Hai số trùng nhau — `doubleMatch` (Basic)
 
 Chọn 1 cặp trùng (1-6). Trúng nếu kết quả có **ít nhất 2 số** trùng với số đã chọn.
 
-| Kết quả | Giải thưởng mặc định | Multiplier | Xác suất |
-|---------|---------------------|------------|----------|
-| ≥ 2 số quay trùng số đã chọn | 75.000 | ×7.5 | 7,41% (16/216) |
+| Kết quả | Giải thưởng mặc định | Xác suất |
+|---------|---------------------|----------|
+| ≥ 2 số quay trùng số đã chọn | 75.000 | 7,41% |
 
-### 3.3 Cách chơi Ba số trùng nhau — `tripleMatch` (Basic)
+### 4.3 Cách chơi Ba số trùng nhau — `tripleMatch` (Basic)
 
 Hai loại: **cụ thể** (chọn đúng số) và **bất kỳ** (3 số giống nhau bất kỳ).
 
-| Loại | Kết quả | Giải thưởng mặc định | Multiplier | Xác suất |
-|------|---------|---------------------|------------|----------|
-| Cụ thể (`specific`) | Cả 3 số quay trùng số đã chọn | 1.200.000 | ×120 | 0,46% (1/216) |
-| Bất kỳ (`any`) | Cả 3 số quay giống nhau | 200.000 | ×20 | 2,78% (6/216) |
+| Loại | Kết quả | Giải thưởng | Xác suất |
+|------|---------|------------|----------|
+| Cụ thể (`specific`) | Cả 3 số quay trùng số đã chọn | 1.200.000 | 0,46% |
+| Bất kỳ (`any`) | Cả 3 số quay giống nhau | 200.000 | 2,78% |
 
 **TripleKind** enum: `specific` (chọn số cụ thể) vs `any` (bất kỳ 3 số giống) — concept riêng chỉ Bingo 18 có.
 
-### 3.4 Cách chơi Cộng tổng — `sumTotal` (Side Bet)
+### 4.4 Cách chơi Cộng tổng — `sumTotal` (Bổ sung)
 
 Đặt tổng cụ thể (3-18) của 3 số quay. Giải thưởng **đối xứng** quanh 10.5.
 
-| Tổng | Giải thưởng | Ways/216 | 1-in-N |
-|------|------------|----------|--------|
-| 3 / 18 | 1.200.000 | 1 | 216 |
-| 4 / 17 | 400.000 | 3 | 72 |
-| 5 / 16 | 200.000 | 6 | 36 |
-| 6 / 15 | 120.000 | 10 | 21,6 |
-| 7 / 14 | 80.000 | 15 | 14,4 |
-| 8 / 13 | 55.000 | 21 | 10,3 |
-| 9 / 12 | 47.000 | 25 | 8,64 |
-| 10 / 11 | 44.000 | 27 | 8 |
+| Tổng | Giải thưởng | 1-in-N |
+|------|------------|--------|
+| 3 / 18 | 1.200.000 | 216 |
+| 4 / 17 | 400.000 | 72 |
+| 5 / 16 | 200.000 | 36 |
+| 6 / 15 | 120.000 | 21,6 |
+| 7 / 14 | 80.000 | 14,4 |
+| 8 / 13 | 55.000 | 10,3 |
+| 9 / 12 | 47.000 | 8,64 |
+| 10 / 11 | 44.000 | 8 |
 
-### 3.5 Cách chơi Lớn/Hòa/Nhỏ — `bigSmallDraw` (Side Bet)
+### 4.5 Cách chơi Lớn/Hòa/Nhỏ — `bigSmallDraw` (Bổ sung)
 
 Đặt dựa vào tổng 3 số quay:
 
-| Cách chơi | Code | Phạm vi tổng | Giải thưởng | Multiplier | Xác suất |
-|-----------|------|-------------|------------|------------|----------|
-| Nhỏ | `small` | 3-9 | 15.000 | ×1.5 | 49,07% (106/216) |
-| Hòa | `draw` | 10-11 | 20.000 | ×2 | 25,00% (54/216) |
-| Lớn | `big` | 12-18 | 15.000 | ×1.5 | 25,93% (56/216) |
-
----
-
-## 4. Cấu trúc Ticket — Board + Side Bet
-
-Bingo 18 có cấu trúc ticket **ĐẶC THÙ**, khác tất cả game khác:
-
-- **boards**: mảng `BasicBoard[]` — cách chơi cơ bản (singleNum, doubleMatch, tripleMatch)
-- **sideBets**: mảng `SideBet[]` — cách chơi bổ sung (sumTotal, bigSmallDraw)
-- **Tách biệt** boards và sideBets (các game khác chỉ có boards/lines)
-
-**Pricing**:
-```
-betsPerDraw = boards.length + sideBets.length
-amountPerDraw = betsPerDraw × unitPrice (10.000đ)
-totalAmount = amountPerDraw × drawCount
-```
-
-**Giới hạn**: tối đa 6 boards cơ bản + không giới hạn side bets / vé.
+| Cách chơi | Code | Phạm vi tổng | Giải thưởng | Xác suất |
+|-----------|------|-------------|------------|----------|
+| Nhỏ | `small` | 3-9 | 15.000 | 49,07% |
+| Hòa | `draw` | 10-11 | 20.000 | 25,00% |
+| Lớn | `big` | 12-18 | 15.000 | 25,93% |
 
 ---
 
 ## 5. Tỷ lệ tài chính — KHÔNG CÓ JACKPOT, KHÔNG CÓ COMPANY RATE
-
-Tất cả tỷ lệ dưới đây là giá trị **mặc định tham khảo**. Thực tế đọc từ `GlobalConfigDoc.rates`.
 
 | Khoản mục | Tỷ lệ mặc định | Ghi chú |
 |-----------|----------------|---------|
@@ -132,15 +140,12 @@ Tất cả tỷ lệ dưới đây là giá trị **mặc định tham khảo**.
 | Giải cố định | Biến thiên | Phụ thuộc kết quả quay |
 | Profit | Phần còn lại | Revenue - Commission - FixedPrizes (công ty thu toàn bộ) |
 
-**Phân bổ doanh thu** (không có jackpot contribution, không có companyRate):
 ```
 Revenue = 100% doanh thu tiền cược
 ├── Agent Commission = Σ(commissionRate × revenue) per tenant
 ├── Fixed Prizes     = Tổng tiền trả thưởng
 └── Profit           = Revenue - Commission - FixedPrizes (có thể âm nếu trả thưởng lớn)
 ```
-
-> **Tại sao không có companyRate?** Các game KHÔNG CÓ Jackpot (Keno, Bingo18, Max3D, Max3D Pro) không cần tách riêng phần công ty thu (companyRate/companyTake). Vì không có Jackpot pool cần tích luỹ, công ty thu TOÀN BỘ profit còn lại sau khi trừ giải thưởng và hoa hồng đại lý. companyRate chỉ cần thiết cho các game CÓ Jackpot (Lotto, Mega, Power) nơi cần phân bổ revenue giữa công ty và Jackpot pool.
 
 **KHÔNG có**: Jackpot contribution, Jackpot cycle, Split cycle, Payout caps, Overflow, companyRate/companyTake.
 
@@ -158,57 +163,58 @@ Revenue = 100% doanh thu tiền cược
 
 ---
 
-## 7. Khác biệt so với các game khác
+## 7. Vòng đời vận hành
 
-| Đặc điểm | Bingo 18 | Keno | Max 3D | Lotto/Mega/Power |
-|-----------|----------|------|--------|------------------|
-| **Cơ chế** | 3 xúc xắc (1-6) | 20 từ 1-80 | Triplet 000-999 | Chọn N từ M |
-| **Không gian mẫu** | 216 | C(80,20) | 1.000 | Hàng triệu+ |
-| **Tần suất** | **6 phút** (~160/ngày) | 10 phút | 3 lần/tuần | 2-3 lần/tuần |
-| **Jackpot** | **KHÔNG** | Không | Không | Có |
-| **Payout caps** | **KHÔNG** | Có | Không | Không |
-| **Split cycle** | **KHÔNG** | Không | Không | Có |
-| **Giải max** | 1,2 triệu | Hàng tỷ | 2 tỷ (Pro) | Hàng chục tỷ |
-| **Ticket cấu trúc** | **Board + SideBet** | Board + SideBet | Board only | Board only |
-| **Giá vé** | 10.000đ/cách chơi | 10.000đ | 10.000đ | 10.000đ |
-| **TripleKind** | **CÓ** (specific/any) | Không | Không | Không |
-| **Max kỳ liên tiếp** | **20** | 1 | 6 | 6 |
-
-**Điểm đặc thù Bingo 18:**
-1. **Đơn giản nhất** — không có jackpot, payout caps, split, tính pool
-2. **Tần suất cao nhất** — 6 phút/kỳ, cần settle nhanh + tự động hóa cao
-3. **Board + SideBet tách biệt** — cấu trúc ticket khác tất cả game khác (trừ Keno cũng có side bet)
-4. **TripleKind** — concept riêng: `specific` (chọn đúng số) vs `any` (bất kỳ 3 giống)
-5. **salesCloseBeforeSeconds** — đóng bán tính bằng GIÂY (30s), không phải phút như game khác
-6. **DrawId auto-increment** — format `"YYYY-MM-DD.NNN"`, dùng DrawCounterDoc
-7. **Profit có thể âm** — vì giải cố định, không percentage-based
-
----
-
-## 8. Vòng đời vận hành
-
-### 8.1 Lịch quay
+### 7.1 Lịch quay
 
 - Kỳ đầu: 06:00, kỳ cuối: 21:53, mỗi 6 phút
 - ~160 kỳ/ngày, 7 ngày/tuần = ~1.120 kỳ/tuần
-- Timezone: `Asia/Ho_Chi_Minh`
-- Draw schedule tự động, dùng `calc-draw-slots.ts`
 
-### 8.2 Settle pipeline
+### 7.2 Settle pipeline
 
 ```
 prepare-settle → settle-entries → calculate-financials → build-report → sync-ticket-summaries → dispatch-payouts → finalize-settle
 ```
 
-**KHÔNG có** `apply-split-bonuses`.
+**KHÔNG có** `apply-payout-caps` hay `apply-split-bonuses`.
 
-Settle entries: match từng board (matchSingleNum/matchDoubleMatch/matchTripleMatch) + từng sideBet (matchSumTotal/matchBigSmallDraw) → tính winAmount cho entry.
+Settle entries: iterate `entry.entrySummary.boards[]`, switch theo `playType`:
+- Basic (singleNum/doubleMatch/tripleMatch): `matchSingleNum/matchDoubleMatch/matchTripleMatch` → `matchCount`
+- Side bet (sumTotal): `matchSumTotal` → `outcome`, `isWin`
+- Side bet (bigSmallDraw): `matchBigSmallDraw` → `outcome`, `isWin`
 
-### 8.3 Void pipeline
+Kết quả: 1 mảng `boardPayouts: EntryBoardPayout[]` cho TẤT CẢ boards.
+
+### 7.3 Void pipeline
 
 ```
 prepare-void → void-entries → dispatch-refunds → finalize-void
 ```
+
+---
+
+## 8. Khác biệt so với các game khác
+
+| Đặc điểm | Bingo 18 | Keno | Lotto/Mega/Power |
+|-----------|----------|------|------------------|
+| **Cơ chế** | 3 xúc xắc (1-6) | 20 từ 1-80 | Chọn N từ M |
+| **Tần suất** | **6 phút** (~160/ngày) | 8 phút | 2-3 lần/tuần |
+| **Jackpot** | **KHÔNG** | Không | Có |
+| **Payout caps** | **KHÔNG** | Có | Không |
+| **Giải max** | 1,2 triệu | Hàng tỷ | Hàng chục tỷ |
+| **Ticket cấu trúc** | **Unified boards[]** | Unified boards[] | Board only |
+| **Giá vé** | 10.000đ/cách chơi | 10.000đ | 10.000đ |
+| **TripleKind** | **CÓ** (specific/any) | Không | Không |
+| **Panels** | A-F (tối đa 6) | A-C (tối đa 3) | A-E (tối đa 5) |
+
+**Điểm đặc thù Bingo 18:**
+1. **Đơn giản nhất** — không có jackpot, payout caps, split, tính pool
+2. **Tần suất cao nhất** — 6 phút/kỳ, cần settle nhanh + tự động hóa cao
+3. **Unified boards** — tất cả 5 loại chơi nằm chung `boards[]`, phân biệt qua `playType`
+4. **TripleKind** — concept riêng: `specific` (chọn đúng số) vs `any` (bất kỳ 3 giống)
+5. **salesCloseBeforeSeconds** — đóng bán tính bằng GIÂY (30s), không phải phút
+6. **DrawId auto-increment** — format `"YYYY-MM-DD.NNN"`, dùng DrawCounterDoc
+7. **Profit có thể âm** — vì giải cố định, không percentage-based
 
 ---
 
@@ -220,27 +226,25 @@ prepare-void → void-entries → dispatch-refunds → finalize-void
 src/
 ├── entities/
 │   ├── enums.ts           # Bingo18PlayType (singleNum, doubleMatch, tripleMatch, sumTotal, bigSmallDraw),
-│   │                      # Bingo18BigSmallBet (big, draw, small), Bingo18TripleKind (specific, any),
-│   │                      # BINGO18_BASIC_PLAY_TYPES, BINGO18_SIDE_BET_PLAY_TYPES
-│   ├── types.ts           # SingleNumSelection, DoubleMatchSelection, TripleMatchSelection,
-│   │                      # SumTotalSelection, BigSmallDrawSelection,
-│   │                      # SingleNumPrizes, DoubleMatchPrizes, TripleMatchPrizes,
-│   │                      # SumTotalPrizes, BigSmallDrawPrizes, FinancialRates, PlayRules
-│   ├── draw.ts            # DrawDoc (result: { numbers, sum })
-│   ├── ticket.ts          # TicketDoc { boards: BasicBoard[], sideBets: SideBet[], drawPlan, pricing }
-│   ├── entry.ts           # TicketEntryDoc { boardPayouts[], sideBetPayouts[] }
+│   │                      # Bingo18BasicPlayType, Bingo18SideBetPlayType,
+│   │                      # BINGO18_BASIC_PLAY_TYPE_SET, BINGO18_SIDE_BET_PLAY_TYPE_SET,
+│   │                      # Bingo18BigSmallBet (big, draw, small), Bingo18TripleKind (specific, any)
+│   ├── types.ts           # Prize types, FinancialRates, PlayRules
+│   ├── draw.ts            # DrawDoc, DrawPrizeSummary (unified), DrawSettleSummary { prizes[] }
+│   ├── ticket.ts          # TicketDoc { boards: BasicBoard[] } — unified, NO sideBets
+│   ├── entry.ts           # TicketEntryDoc { entrySummary.boards[], payout.boardPayouts[] }
+│   │                      # EntryBoardSnapshot (unified: number?/tripleKind?/sum?/bet?),
+│   │                      # EntryBoardPayout (unified: matchCount + sum?/bet?/outcome?/isWin?)
+│   ├── feed-types.ts      # Bingo18FeedBetContent { boards[] }, Bingo18FeedPayoutDetail { boardPayouts[] }
 │   ├── global-config.ts   # GlobalConfigDoc
 │   ├── tenant-config.ts   # TenantConfigDoc
 │   ├── game-config.ts     # GameConfigDoc (union)
 │   └── draw-counter.ts    # DrawCounterDoc (auto-increment drawId)
 ├── rules/
-│   ├── prize-tables.ts    # DEFAULT_SINGLE_NUM_PRIZES, DEFAULT_DOUBLE_MATCH_PRIZES,
-│   │                      # DEFAULT_TRIPLE_MATCH_PRIZES, DEFAULT_SUM_TOTAL_PRIZES,
-│   │                      # DEFAULT_BIG_SMALL_DRAW_PRIZES, lookupSingleNumPrize(),
-│   │                      # lookupSumTotalPrize(), isBasicPlayType()
-│   ├── play-types.ts      # validateBasicBoard(), validateSideBet(), calculateBetsPerDraw()
-│   ├── odds.ts            # Xác suất & phân tích lợi nhuận cho từng cách chơi
-│   └── financials.ts      # calculateBingo18DrawFinancials() — đơn giản, không jackpot
+│   ├── prize-tables.ts    # lookupSingleNumPrize(), lookupSumTotalPrize()
+│   ├── play-types.ts      # validateBasicBoard(), isBasicPlayType()
+│   ├── odds.ts            # Xác suất & phân tích lợi nhuận
+│   └── financials.ts      # calculateBingo18DrawFinancials()
 ├── helpers/
 │   ├── match-result.ts    # matchSingleNum(), matchDoubleMatch(), matchTripleMatch(),
 │   │                      # matchSumTotal(), matchBigSmallDraw()
@@ -251,40 +255,35 @@ src/
     └── index.ts           # MongoDB indexes
 ```
 
-### 9.2 Application Layer — `packages/game-bingo18-application/` (`@megawin/game-bingo18-application`)
+### 9.2 Application Layer — `packages/game-bingo18-application/`
 
 ```
-src/
-├── infras/
-│   ├── repos/             # draw, entry, ticket, draw-counter, game-config, tenant-config, report repos
-│   └── mappers/           # draw, entry, ticket, draw-counter, game-config mappers
-├── helpers/
-│   └── calc-draw-slots.ts # Tính danh sách kỳ quay trong ngày (06:00 → 21:53, mỗi 6 phút)
-└── use-cases/
-    ├── draws/             # create, list, get-current, preview, open-sales, close-sales,
-    │                      # publish-result, trigger-settle, void-draw, update-schedule, auto-enroll
-    ├── settle/            # prepare → settle-entries → calculate-financials →
-    │                      # build-report → sync-ticket → finalize → dispatch-payouts
-    ├── place-bet/         # place-bet (validate boards + sideBets)
-    ├── void/              # prepare → void-entries → dispatch-refunds → finalize
-    ├── payout/            # dispatch-payout
-    ├── game-config/       # get/update global config
-    ├── tenant-config/     # get/list/update tenant config
-    ├── player/            # list-all, list-tickets, list-pending, get-entries, get-current-draw
-    └── feed/              # sync-entry-feed, save-cursor, acquire-lock
+src/use-cases/
+├── place-bet/       # PlaceBetBoardInput (unified), PlaceBetInput { boards[] }, NO sideBets
+├── settle/          # settle-entries (unified boardPayouts), calculate-financials
+├── player/          # DTOs: unified prizes[], boards[], boardPayouts[]
+├── operations/      # DTOs: boards only, filter by playType for display
+├── feed/            # sync-entry-feed (unified boards + boardPayouts)
+└── ...
 ```
 
-### 9.3 Worker — `apps/worker-bingo18/`
+### 9.3 API Handler — Zod union per playType
 
-Step functions: settle (7 bước), void (4 bước), feed-sync.
+```typescript
+// Mỗi playType có schema riêng, validated qua z.union()
+// (union vì tripleMatch có 2 sub-schemas: specific/any — share cùng playType discriminator)
+z.union([
+  singleNumBoardSchema,
+  doubleMatchBoardSchema,
+  tripleMatchSpecificSchema,
+  tripleMatchAnySchema,
+  sumTotalBoardSchema,
+  bigSmallDrawBoardSchema,
+]);
+```
 
-### 9.4 Backoffice UI — `apps/backoffice/src/app/(main)/games/bingo18/`
-
-Pages: draws, config, tenant-config, financial-reports.
-
-### 9.5 Backoffice API — `apps/backoffice/src/app/api/bingo18/`
-
-Routes: draws, config, tenant-config, draws/preview, draws/current.
+boardNo: "A"-"F" — tối đa 6 boards, không trùng boardNo.
+Request body: `{ drawIds, boards }` — KHÔNG CÒN `sideBets`.
 
 ---
 
@@ -292,30 +291,36 @@ Routes: draws, config, tenant-config, draws/preview, draws/current.
 
 | Collection | Entity | Mô tả |
 |-----------|--------|-------|
-| `bingo18_tickets` | TicketDoc | Vé mua, chứa boards + sideBets |
-| `bingo18_ticket_entries` | TicketEntryDoc | 1 ticket × 1 draw |
-| `bingo18_draws` | DrawDoc | Kỳ quay, result (3 số + tổng) |
+| `bingo18_tickets` | TicketDoc | Vé mua, `boards[]` chứa tất cả loại chơi |
+| `bingo18_ticket_entries` | TicketEntryDoc | 1 ticket × 1 draw, unified boards + boardPayouts |
+| `bingo18_draws` | DrawDoc | Kỳ quay, `settleSummary.prizes[]` unified |
 | `bingo18_draw_counters` | DrawCounterDoc | Auto-increment drawId trong ngày |
 | `bingo18_game_configs` | GlobalConfigDoc / TenantConfigDoc | Config game |
 
-**KHÔNG CÓ**: `bingo18_ticket_lines`, `bingo18_jackpot_cycles` (vì không cần expand lines, không có Jackpot).
+**KHÔNG CÓ**: `bingo18_ticket_lines`, `bingo18_jackpot_cycles`.
 
 ---
 
 ## 11. Quy tắc quan trọng cho AI Agent
 
-1. **KHÔNG CÓ Jackpot/Split/Overflow/companyRate**: Game đơn giản nhất — financial model: `profit = totalRevenue - totalFixedPrizes - totalAgentCommission`. Công ty thu toàn bộ profit còn lại
-2. **Board + SideBet tách biệt**: Ticket có 2 mảng riêng, entry cũng có `boardPayouts[]` + `sideBetPayouts[]`
-3. **5 cách chơi, 5 hàm match riêng**: Không dùng chung determineTier() như game khác
-4. **TripleKind**: `specific` (chọn đúng số, 1.200.000đ) vs `any` (bất kỳ 3 giống, 200.000đ) — concept riêng
-5. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc`
-6. **Tiền lưu integer VND**: Không dùng float
-7. **Tần suất cao nhất**: 6 phút/kỳ → settle PHẢI nhanh, tự động hóa cao
-8. **salesCloseBeforeSeconds**: Đóng bán tính bằng GIÂY (30s), KHÔNG phải phút
-9. **DrawId auto-increment**: `"YYYY-MM-DD.NNN"`, dùng `DrawCounterDoc`
-10. **KHÔNG CÓ TicketLines**: Bingo 18 không expand lines — match trực tiếp trên board/sideBet
-11. **Max 20 kỳ liên tiếp**: Cao hơn tất cả game khác (thường max 6)
-12. **Profit có thể âm**: Giải cố định, không percentage-based → cần monitor
-13. **7 ngày/tuần**: Hoạt động mỗi ngày, ~160 kỳ/ngày — volume cao nhất hệ thống
-14. **Số nguyên 1-6**: KHÔNG zero-padded (khác Lotto/Mega/Power dùng string "01"-"55")
-15. **Commission snapshot**: commissionRate snapshot lúc place-bet
+1. **KHÔNG CÓ Jackpot/Split/Overflow/companyRate**: Game đơn giản nhất — `profit = totalRevenue - totalFixedPrizes - totalAgentCommission`
+2. **Unified boards**: TẤT CẢ 5 loại chơi nằm trong `boards[]`, phân biệt qua `playType`. **KHÔNG CÒN** `sideBets[]` riêng
+3. **EntryBoardSnapshot / EntryBoardPayout unified**: Cơ bản dùng `number`/`tripleKind`/`matchCount`, bổ sung dùng `sum`/`bet`/`outcome`/`isWin`. Fields optional theo playType
+4. **DrawSettleSummary unified**: `prizes: DrawPrizeSummary[]` — cả cơ bản và bổ sung. **KHÔNG CÒN** `basicPrizes` + `sideBetPrizes` riêng
+5. **Phân biệt basic vs side bet runtime**: Dùng `BINGO18_BASIC_PLAY_TYPE_SET` / `BINGO18_SIDE_BET_PLAY_TYPE_SET` từ enums
+6. **5 cách chơi, 5 hàm match riêng**: Không dùng chung determineTier() như game khác
+7. **TripleKind**: `specific` (chọn đúng số, 1.200.000đ) vs `any` (bất kỳ 3 giống, 200.000đ) — concept riêng
+8. **Giá trị giải thưởng là THAM KHẢO**: Thực tế đọc từ `GlobalConfigDoc`
+9. **Tiền lưu integer VND**: Không dùng float
+10. **Tần suất cao nhất**: 6 phút/kỳ → settle PHẢI nhanh, tự động hóa cao
+11. **salesCloseBeforeSeconds**: Đóng bán tính bằng GIÂY (30s), KHÔNG phải phút
+12. **DrawId auto-increment**: `"YYYY-MM-DD.NNN"`, dùng `DrawCounterDoc`
+13. **KHÔNG CÓ TicketLines**: Bingo 18 không expand lines — match trực tiếp trên boards
+14. **Max 20 kỳ liên tiếp**: Cao hơn tất cả game khác (thường max 6)
+15. **Profit có thể âm**: Giải cố định, không percentage-based → cần monitor
+16. **7 ngày/tuần**: Hoạt động mỗi ngày, ~160 kỳ/ngày — volume cao nhất hệ thống
+17. **Số nguyên 1-6**: KHÔNG zero-padded (khác Lotto/Mega/Power dùng string "01"-"55")
+18. **Commission snapshot**: commissionRate snapshot lúc place-bet
+19. **Zod validation**: Place-bet handler dùng `z.union()` — mỗi playType có schema riêng, type-safe
+20. **6 panels**: boardNo "A"-"F", bất kỳ panel nào cũng chơi bất kỳ loại nào
+21. **Backoffice hiển thị**: Dùng `BINGO18_BASIC_PLAY_TYPE_SET` / `BINGO18_SIDE_BET_PLAY_TYPE_SET` để filter boards/boardPayouts/prizes khi hiển thị "Giải cơ bản" vs "Giải bổ sung"

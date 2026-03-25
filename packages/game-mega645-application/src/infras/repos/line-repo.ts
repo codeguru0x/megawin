@@ -110,7 +110,7 @@ export class LineRepository extends BaseRepo<any> {
     );
     return docs.map((d: any) => ({
       entryId: typeof d.entryId === "string" ? d.entryId : (d.entryId as ObjectId).toHexString(),
-      betCount: (d.betCount as number) ?? 1,
+      betCount: d.betCount as number,
     }));
   }
 
@@ -142,7 +142,7 @@ export class LineRepository extends BaseRepo<any> {
     const ops = jpLines.map((line: any) => {
       const entryId =
         typeof line.entryId === "string" ? line.entryId : (line.entryId as ObjectId).toHexString();
-      const betCount = betCountByEntry.get(entryId) ?? (line.betCount as number) ?? 1;
+      const betCount = betCountByEntry.get(entryId) ?? (line.betCount as number);
       return {
         updateOne: {
           filter: {

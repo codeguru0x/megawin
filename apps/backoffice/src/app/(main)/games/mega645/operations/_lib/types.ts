@@ -72,7 +72,7 @@ export interface NumberFreq {
 
 export interface DrawResult {
   /** 6 số chính (01-45). */
-  winningMain: [string, string, string, string, string, string];
+  winningNumbers: [string, string, string, string, string, string];
   settledAt: string;
   tiers: {
     tier: PrizeTier;
@@ -123,7 +123,7 @@ export interface LiveFeedEntry {
   playType: string;
   playTypeLabel: string;
   /** Các số chính của board đầu tiên (01-45). */
-  mainNumbers: string[];
+  numbers: string[];
   /** Suffix mô tả kiểu bao, VD: "(bao 5)", "(bao 7)". */
   suffix?: string;
   /** Tiền cược (VND). */

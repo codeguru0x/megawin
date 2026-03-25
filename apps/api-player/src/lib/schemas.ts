@@ -11,9 +11,7 @@ import { Pagination, OBJECT_ID_REGEX } from "@megawin/shared/constants";
 
 // ─── Primitives ───
 
-export const objectIdSchema = z
-  .string()
-  .regex(OBJECT_ID_REGEX, "Invalid ID format");
+export const objectIdSchema = z.string().regex(OBJECT_ID_REGEX, "Invalid ID format");
 
 // ─── Reusable field schemas (compose vào handler-specific schemas) ───
 
@@ -21,10 +19,7 @@ export const sizeSchema = z
   .string()
   .default(String(Pagination.Default.Size))
   .transform((v) =>
-    Math.min(
-      Pagination.Max.Size,
-      Math.max(1, parseInt(v, 10) || Pagination.Default.Size)
-    )
+    Math.min(Pagination.Max.Size, Math.max(1, parseInt(v, 10) || Pagination.Default.Size)),
   );
 
 // ─── Composed shared schemas ───
@@ -46,3 +41,24 @@ export const lineCursorQuerySchema = z.object({
   size: sizeSchema,
   cursor: lineIndexCursorSchema,
 });
+
+// ─── Board order validation ───
+
+/**
+ * Tạo predicate validate boards[] phải là prefix liên tục từ đầu mảng validBoardNos.
+ *
+ * Rule: boards[i].boardNo === validBoardNos[i] với mọi i.
+ * Điều này đảm bảo: bắt đầu từ phần tử đầu tiên, liên tục, đúng thứ tự, không skip.
+ * Ví dụ validBoardNos = ["A","B","C","D","E","F"]:
+ *   [A]       ✅  [A,B]     ✅  [A,B,C,D,E,F] ✅
+ *   [B]       ❌  [A,C]     ❌  [B,C]         ❌
+ *
+ * Thay thế refine no-dup riêng lẻ vì prefix liên tục đã imply no-dup.
+ *
+ * @param validBoardNos Mảng boardNo hợp lệ theo thứ tự chuẩn của từng game.
+ */
+export function boardsOrderRefine(
+  validBoardNos: readonly string[],
+): (boards: Array<{ boardNo: string }>) => boolean {
+  return (boards) => boards.every((board, i) => board.boardNo === validBoardNos[i]);
+}

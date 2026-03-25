@@ -12,8 +12,8 @@
 
 import { PlayType } from "../entities/enums";
 import {
-  ALL_MAIN_NUMBERS,
-  MEGA645_MAIN_COUNT,
+  ALL_NUMBERS,
+  MEGA645_NUMBER_COUNT,
   type BoardSelection,
   type LineValue,
 } from "../entities/types";
@@ -45,7 +45,7 @@ function* combinations<T>(arr: T[], k: number): Generator<T[]> {
 
 /** Standard: 6 số = 1 line. */
 function expandStandard(sel: BoardSelection): LineValue[] {
-  return [{ main: [...sel.mainNumbers].sort() }];
+  return [{ numbers: [...sel.numbers].sort() }];
 }
 
 /**
@@ -54,14 +54,14 @@ function expandStandard(sel: BoardSelection): LineValue[] {
  * Mỗi line = 5 số đã chọn + 1 số bổ sung (sorted canonical).
  */
 function expandBao5(sel: BoardSelection): LineValue[] {
-  const chosen = new Set(sel.mainNumbers);
+  const chosen = new Set(sel.numbers);
   const lines: LineValue[] = [];
 
-  for (const n of ALL_MAIN_NUMBERS) {
+  for (const n of ALL_NUMBERS) {
     if (chosen.has(n)) continue;
     // Ghép số bổ sung n vào 5 số đã chọn → 1 line 6 số.
-    const mainNums = [...sel.mainNumbers, n];
-    lines.push({ main: mainNums.sort() });
+    const nums = [...sel.numbers, n];
+    lines.push({ numbers: nums.sort() });
   }
 
   return lines;
@@ -75,11 +75,11 @@ function expandBao5(sel: BoardSelection): LineValue[] {
  * Mỗi line là 1 tổ hợp 6 số từ N số đã chọn (duyệt qua generator combinations).
  */
 function expandBaoN(sel: BoardSelection): LineValue[] {
-  const sorted = [...sel.mainNumbers].sort();
+  const sorted = [...sel.numbers].sort();
   const lines: LineValue[] = [];
 
-  for (const combo of combinations(sorted, MEGA645_MAIN_COUNT)) {
-    lines.push({ main: combo });
+  for (const combo of combinations(sorted, MEGA645_NUMBER_COUNT)) {
+    lines.push({ numbers: combo });
   }
 
   return lines;
@@ -136,7 +136,7 @@ export function expandAllBoards(
   let globalIndex = 0;
 
   for (const board of boards) {
-    const lines = expandBoardToLines(board.playType, { mainNumbers: board.mainNumbers });
+    const lines = expandBoardToLines(board.playType, { numbers: board.numbers });
     for (const line of lines) {
       result.push({
         ...line,

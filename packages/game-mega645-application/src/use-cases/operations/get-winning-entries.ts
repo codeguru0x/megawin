@@ -25,7 +25,7 @@ const TIER_LABELS: Record<string, string> = {
  * Kèm summary tổng hợp (totalWinningEntries, totalWinningLines, totalWinAmount).
  * Dùng cho dialog báo cáo trúng thưởng trên trang operations backoffice.
  *
- * Mega 6/45: board chỉ có mainNumbers (01-45), không có specialNumbers.
+ * Mega 6/45: board chỉ có numbers (01-45), không có specialNumbers.
  */
 export class GetWinningEntriesUseCase extends NextApiUseCase<
   GetWinningEntriesInput,
@@ -60,8 +60,8 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
         boards: (e.entrySummary?.boards ?? []).map((b) => ({
           boardNo: b.boardNo,
           playType: b.playType,
-          // Mega 6/45: chỉ có mainNumbers, không có specialNumbers
-          mainNumbers: b.mainNumbers,
+          // Mega 6/45: chỉ có numbers, không có specialNumbers
+          numbers: b.numbers,
           expandedLines: b.expandedLines,
         })),
         tiers: payoutTiers.map((t) => ({

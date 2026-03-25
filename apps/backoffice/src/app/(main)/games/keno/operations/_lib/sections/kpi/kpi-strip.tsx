@@ -1,6 +1,6 @@
 "use client";
 
-import { CircleDollarSign, FileText, Grid2x2, Users, Wallet, Layers } from "lucide-react";
+import { CircleDollarSign, FileText, Grid2x2, Users, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@megawin/shared/utils";
 import type { OpsKpi } from "../../types";
@@ -32,11 +32,11 @@ function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub }: KpiCardPr
 /**
  * KPI strip cho Keno Operations.
  *
- * Keno: boards (basic pick1-10) + sideBets (bigSmall/evenOdd) thay vì lines.
+ * Keno: boards bao gồm cả cơ bản (pick1-10) và bổ sung (bigSmall/evenOdd).
  */
 export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       <KpiCard
         icon={CircleDollarSign}
         iconBg="bg-orange-100 dark:bg-orange-900/50"
@@ -55,17 +55,9 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
         icon={Grid2x2}
         iconBg="bg-indigo-100 dark:bg-indigo-900/50"
         iconColor="text-indigo-600 dark:text-indigo-400"
-        label="Boards cơ bản"
+        label="Boards"
         value={formatNumber(kpi.totalBoards)}
-        sub="pick1–pick10"
-      />
-      <KpiCard
-        icon={Layers}
-        iconBg="bg-cyan-100 dark:bg-cyan-900/50"
-        iconColor="text-cyan-600 dark:text-cyan-400"
-        label="Side bets"
-        value={formatNumber(kpi.totalSideBets)}
-        sub="Lớn/Nhỏ · Chẵn/Lẻ"
+        sub="cơ bản + bổ sung"
       />
       <KpiCard
         icon={Users}

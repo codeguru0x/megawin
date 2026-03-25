@@ -7,6 +7,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "lib": ["es2024"],
+    "types": ["node"],
     "module": "ESNext",
     "moduleDetection": "force",
     "moduleResolution": "Bundler",
@@ -14,6 +15,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
+    "ignoreDeprecations": "6.0",
     "target": "ES2024"
   }
 }

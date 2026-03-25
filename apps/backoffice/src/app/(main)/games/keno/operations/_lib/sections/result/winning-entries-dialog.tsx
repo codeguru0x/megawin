@@ -28,11 +28,8 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Loader2, FileSearch, Users, Banknote, AlertCircle } from "lucide-react";
 import { useWinningEntries } from "../../use-operations";
 import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS } from "@megawin/game-keno/labels";
-import type {
-  WinningEntryItem,
-  WinningEntryBoardDetail,
-  WinningEntrySideBetDetail,
-} from "../../use-operations";
+import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
+import type { WinningEntryItem, WinningEntryBoardDetail } from "../../use-operations";
 
 // ─── Board chip ───────────────────────────────────────────────────────────────
 
@@ -49,12 +46,12 @@ function BoardChip({ board }: { board: WinningEntryBoardDetail }) {
       </span>
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-0.5 flex-wrap max-w-[200px]">
-          {board.numbers.slice(0, board.pickCount).map((n, i) => (
+          {board.numbers?.slice(0, board.pickCount ?? 0).map((n, i) => (
             <KenoNumberBall key={i} number={Number(n)} size="sm" />
           ))}
         </div>
         <span className="text-[10px] text-orange-600 dark:text-orange-400 font-medium">
-          Pick {board.pickCount} — Trúng {board.matchCount}
+          Pick {board.pickCount ?? 0} — Trúng {board.matchCount ?? 0}
           {board.isCapped && <span className="ml-1 text-amber-600">(cap)</span>}
         </span>
       </div>
@@ -62,14 +59,14 @@ function BoardChip({ board }: { board: WinningEntryBoardDetail }) {
   );
 }
 
-function SideBetChip({ bet }: { bet: WinningEntrySideBetDetail }) {
-  const typeLabel = bet.playType === "bigSmall" ? "L/N" : "C/L";
+function SideBetChip({ board }: { board: WinningEntryBoardDetail }) {
+  const typeLabel = board.playType === "bigSmall" ? "L/N" : "C/L";
   return (
     <Badge
       variant="outline"
       className="h-5 px-1.5 text-[10px] bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/20 dark:text-cyan-400"
     >
-      {typeLabel} {KENO_BET_LABELS[bet.bet] ?? bet.bet}
+      {typeLabel} {KENO_BET_LABELS[board.bet ?? ""] ?? board.bet}
     </Badge>
   );
 }
@@ -148,6 +145,14 @@ function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: num
   const displayName = toTenantUsername(entry.username) ?? entry.username;
   const hasCapped = entry.boardDetails.some((b) => b.isCapped);
 
+  // Phân tách boardDetails thành basic boards và side bet boards
+  const basicBoards = entry.boardDetails.filter(
+    (b) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any),
+  );
+  const sideBetBoards = entry.boardDetails.filter((b) =>
+    KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any),
+  );
+
   return (
     <TableRow
       className={cn(
@@ -173,33 +178,33 @@ function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: num
       </TableCell>
       <TableCell className="py-3">
         {/* Basic boards */}
-        {entry.boardDetails.length > 0 && (
+        {basicBoards.length > 0 && (
           <div className="flex flex-col gap-1.5">
-            {entry.boardDetails.map((b, i) => (
+            {basicBoards.map((b, i) => (
               <BoardChip key={i} board={b} />
             ))}
           </div>
         )}
-        {/* Side bets */}
-        {entry.sideBetDetails.length > 0 && (
+        {/* Side bets — hiển thị từ unified boardDetails, filter bởi playType */}
+        {sideBetBoards.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1">
-            {entry.sideBetDetails.map((s, i) => (
-              <SideBetChip key={i} bet={s} />
+            {sideBetBoards.map((b, i) => (
+              <SideBetChip key={i} board={b} />
             ))}
           </div>
         )}
       </TableCell>
       <TableCell className="py-3">
         <div className="flex flex-col gap-1">
-          {entry.boardDetails.map((b, i) => (
+          {basicBoards.map((b, i) => (
             <span key={i} className="text-xs tabular-nums text-orange-700 dark:text-orange-400">
               +{formatNumber(b.winAmount)}
               {b.isCapped && <span className="ml-1 text-amber-500">[cap]</span>}
             </span>
           ))}
-          {entry.sideBetDetails.map((s, i) => (
+          {sideBetBoards.map((b, i) => (
             <span key={i} className="text-xs tabular-nums text-cyan-700 dark:text-cyan-400">
-              +{formatNumber(s.winAmount)}
+              +{formatNumber(b.winAmount)}
             </span>
           ))}
         </div>

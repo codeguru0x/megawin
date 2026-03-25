@@ -54,8 +54,6 @@ export interface Max3dFeedDrawResult {
   second: string[];
   /** 8 bộ ba số giải Ba. */
   third: string[];
-  /** Thời điểm công bố kết quả (ISO 8601 string). */
-  publishedAt: string;
 }
 
 // ─────────────────────────────────────────────
@@ -68,10 +66,16 @@ export interface Max3dFeedDrawResult {
 export interface Max3dFeedPayoutTier {
   /** Tên hạng giải (special / first / second / third, basic hoặc plus). */
   tier: string;
+
+  /** Cách chơi sinh ra hạng giải này. */
+  playMode: string;
+
   /** Số lần trúng hạng này. */
   hitCount: number;
+
   /** Tiền thưởng mỗi hit (VND). */
   unitAmount: number;
+
   /** Tổng tiền hạng này (VND). */
   amount: number;
 }
@@ -80,8 +84,6 @@ export interface Max3dFeedPayoutTier {
  * Chi tiết trả thưởng Max 3D — gán vào EntryFeedDoc.payoutDetail.
  */
 export interface Max3dFeedPayoutDetail {
-  /** Thời điểm settle (ISO 8601 string). */
-  settledAt: string;
   /** Chi tiết theo từng hạng giải. */
   tiers: Max3dFeedPayoutTier[];
 }

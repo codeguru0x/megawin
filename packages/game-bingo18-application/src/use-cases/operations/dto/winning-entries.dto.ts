@@ -2,10 +2,10 @@
  * Bingo 18 – Winning Entries DTO
  *
  * Danh sách entries trúng thưởng của một kỳ quay, kèm chi tiết.
- * Bingo 18 khác biệt:
- *   - Basic board: matchCount (singleNum: 1/2/3) + tripleKind? + winAmount
- *   - Side bet: sum/bet + isWin + winAmount
- *   - KHÔNG có payout cap (giải cố định, không có bậc 8/9/10 như Keno)
+ * Bingo 18: boards[] chứa cả cơ bản và bổ sung.
+ *   - Cơ bản: matchCount (singleNum: 1/2/3) + tripleKind? + winAmount
+ *   - Bổ sung: sum/bet + outcome + isWin + winAmount, matchCount = null
+ *   - KHÔNG có payout cap (giải cố định)
  *   - Outcome tổng hợp: "win" | "partial_win"
  */
 
@@ -28,17 +28,23 @@ export interface GetWinningEntriesInput {
 // ─── Output ───────────────────────────────────────────────────────────────────
 
 /**
- * Chi tiết kết quả một board cơ bản trúng thưởng.
- * singleNum: matchCount = 1/2/3 (trúng 1/2/3 lần).
- * doubleMatch: matchCount = 1 (trúng hoặc không).
- * tripleMatch: matchCount = 1 + tripleKind phân biệt specific/any.
+ * Chi tiết kết quả một board trúng thưởng — cả cơ bản và bổ sung.
+ *
+ * Cơ bản:
+ *   singleNum: matchCount = 1/2/3 (trúng 1/2/3 lần).
+ *   doubleMatch: matchCount = 1 (trúng hoặc không).
+ *   tripleMatch: matchCount = 1 + tripleKind phân biệt specific/any.
+ *
+ * Bổ sung:
+ *   sumTotal: sum + outcome + isWin, matchCount = null.
+ *   bigSmallDraw: bet + outcome + isWin, matchCount = null.
  */
 export interface WinningBoardDetail {
   /** Mã board (format "B01", "B02",...). */
   boardNo: string;
-  /** Loại cược: singleNum | doubleMatch | tripleMatch. */
+  /** Loại cược: singleNum | doubleMatch | tripleMatch | sumTotal | bigSmallDraw. */
   playType: Bingo18PlayType;
-  /** Số đã chọn (1-6). undefined với tripleMatch-any. */
+  /** Số đã chọn (1-6). undefined với tripleMatch-any, sumTotal, bigSmallDraw. */
   number?: number;
   /**
    * Phân loại triple: "specific" hoặc "any".
@@ -48,26 +54,19 @@ export interface WinningBoardDetail {
   /**
    * Số lần xuất hiện trong kết quả quay.
    * singleNum: 1/2/3 → giải khác nhau (12k/20k/30k).
-   * doubleMatch + tripleMatch: 1 (trúng).
+   * doubleMatch + tripleMatch: 2-3 (trúng).
+   * Bổ sung (sumTotal/bigSmallDraw): null — field không áp dụng.
    */
-  matchCount: number;
-  /** Tiền thắng board này (VND). */
-  winAmount: number;
-}
-
-/** Chi tiết kết quả một side bet trúng thưởng. */
-export interface WinningSideBetDetail {
-  /** Loại side bet: sumTotal | bigSmallDraw. */
-  playType: Bingo18PlayType;
+  matchCount: number | null;
   /** Tổng đã chọn (3-18). Chỉ set cho sumTotal. */
   sum?: number;
   /** Cược lớn/hòa/nhỏ. Chỉ set cho bigSmallDraw. */
   bet?: Bingo18BigSmallBet;
-  /** Kết quả thực tế (giá trị tổng thực tế hoặc outcome "big"/"small"/"draw"). */
-  outcome: string;
-  /** true = trúng thưởng. */
+  /** Kết quả thực tế. Chỉ set cho bổ sung (sumTotal/bigSmallDraw). */
+  outcome?: string;
+  /** Player thắng hay không. Set cho tất cả play types. */
   isWin: boolean;
-  /** Tiền trúng (VND), 0 nếu thua. */
+  /** Tiền thắng board này (VND). */
   winAmount: number;
 }
 
@@ -79,10 +78,8 @@ export interface WinningEntryItem {
   amount: number;
   /** Tổng tiền trúng thưởng (VND). */
   winAmount: number;
-  /** Chi tiết từng board trúng. */
+  /** Chi tiết từng board trúng (cả cơ bản và bổ sung). */
   boardDetails: WinningBoardDetail[];
-  /** Chi tiết từng side bet. */
-  sideBetDetails: WinningSideBetDetail[];
   /** Thời điểm đặt cược. */
   createdAt: string;
   /** Thời điểm settle. */

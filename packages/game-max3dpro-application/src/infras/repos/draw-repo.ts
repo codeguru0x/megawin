@@ -11,7 +11,6 @@ import type {
   DrawDocBase,
   DrawDocBaseFinancial,
   DrawDocBaseStats,
-  DrawDocBaseVoidInfo,
   DrawDocBaseVoidSummary,
   DrawSettleSummary,
 } from "./types/draw.types";
@@ -60,11 +59,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findMany({ drawId: { $in: drawIds } }, { sort: { drawDate: 1, drawNo: 1 } });
   }
 
-  /** Lấy tất cả draws trong 1 ngày, sort by drawNo asc. */
-  async getDrawsByDate(drawDate: string): Promise<DrawEntity[]> {
-    return await this.findMany({ drawDate }, { sort: { drawNo: 1 } });
-  }
-
   /**
    * Liệt kê draws với filter status + date range, paging offset-based.
    * Sort: drawDate desc, drawNo desc.
@@ -85,35 +79,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.paging(query, page, size, {
       sort: { drawDate: -1, drawNo: -1 },
     });
-  }
-
-  /**
-   * Chuyển trạng thái draw theo state machine.
-   * Trả về draw sau update; null nếu transition không hợp lệ hoặc draw không tồn tại.
-   */
-  async transitionStatus(
-    drawId: string,
-    fromStatus: string,
-    toStatus: string,
-  ): Promise<DrawEntity | null> {
-    const allowed = VALID_TRANSITIONS[fromStatus];
-    if (!allowed?.has(toStatus)) return null;
-
-    return await this.findOneAndUpdate(
-      {
-        drawId,
-        status: fromStatus,
-      },
-      {
-        $set: {
-          status: toStatus,
-          updatedAt: new Date(),
-        },
-      },
-      {
-        returnDocument: "after",
-      },
-    );
   }
 
   /**
@@ -177,29 +142,32 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
-   * Công bố kết quả: salesClosed → published.
-   * Ghi result + vietlottRef (nếu có) + publishedAt.
+   * Publish hoặc cập nhật kết quả quay. Chấp nhận draw ở salesClosed hoặc published.
+   *
+   * - salesClosed → published (lần đầu publish)
+   * - published → published (sửa kết quả trước khi settle)
+   *
+   * Caller truyền publishedAt sẵn trong result.
+   * Ghi vietlottRef nếu được truyền vào.
    */
   async publishResult(
     drawId: string,
-    result: Max3dproDrawResult,
+    result: Max3dproDrawResult & { publishedAt: Date },
     vietlottRef?: DrawDocBase["vietlottRef"],
   ): Promise<DrawEntity | null> {
-    const allowed = VALID_TRANSITIONS[DrawStatus.SalesClosed];
-    if (!allowed?.has(DrawStatus.Published)) return null;
-
-    const now = new Date();
     const $set: Record<string, unknown> = {
       status: DrawStatus.Published,
-      result: { ...result, publishedAt: now },
-      updatedAt: now,
+      result,
+      updatedAt: new Date(),
     };
     if (vietlottRef) $set.vietlottRef = vietlottRef;
 
     return await this.findOneAndUpdate(
       {
         drawId,
-        status: DrawStatus.SalesClosed,
+        status: {
+          $in: [DrawStatus.SalesClosed, DrawStatus.Published],
+        },
       },
       { $set },
       {
@@ -343,66 +311,12 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.updateOne({ drawId }, { $set });
   }
 
-  /**
-   * Cập nhật prizeAmount cho các tiers trong settleSummary — dùng arrayFilters.
-   *
-   * Dùng sau khi biết chính xác số tiền thưởng (ví dụ sau dispatch hoặc sau finalize).
-   * Idempotent — ghi đè nếu chạy lại.
-   */
-  async patchSettleSummaryTiers(
-    drawId: string,
-    patches: Array<{ tier: string; prizeAmount: number; winnerCount?: number }>,
-  ): Promise<void> {
-    if (patches.length === 0) return;
-
-    const $set: Record<string, unknown> = {};
-    for (let i = 0; i < patches.length; i++) {
-      const patch = patches[i];
-      if (!patch) continue;
-      $set[`settleSummary.tiers.$[tier${i}].prizeAmount`] = patch.prizeAmount;
-      if (patch.winnerCount !== undefined) {
-        $set[`settleSummary.tiers.$[tier${i}].winnerCount`] = patch.winnerCount;
-      }
-    }
-
-    const arrayFilters = patches.map((p, i) => ({
-      [`tier${i}.tier`]: p.tier,
-    }));
-
-    await this.updateOne({ drawId }, { $set }, { arrayFilters });
-  }
-
-  /** Lấy draw mới nhất (theo drawDate desc, drawNo desc). */
-  async getLatestDraw(): Promise<DrawEntity | null> {
-    return await this.findOne({}, { sort: { drawDate: -1, drawNo: -1 } });
-  }
-
   /** Lấy draw đã settle mới nhất. */
   async getLatestSettledDraw(): Promise<DrawEntity | null> {
     return await this.findOne(
       { status: DrawStatus.Settled },
       { sort: { drawDate: -1, drawNo: -1 } },
     );
-  }
-
-  /** Lấy draw đã settle mới nhất trước hoặc bằng drawDate cho trước. */
-  async getLatestSettledDrawBefore(drawDate: string): Promise<DrawEntity | null> {
-    return await this.findOne(
-      {
-        status: DrawStatus.Settled,
-        drawDate: { $lte: drawDate },
-      },
-      { sort: { drawDate: -1, drawNo: -1 } },
-    );
-  }
-
-  /**
-   * Lấy draw hiện tại (đang mở bán hoặc theo status tuỳ chỉnh).
-   * Sort: drawDate asc, drawNo asc — ưu tiên kỳ gần nhất.
-   */
-  async getCurrentDraw(allowStatuses?: string[]): Promise<DrawEntity | null> {
-    const statuses = allowStatuses ?? [DrawStatus.SalesOpen];
-    return await this.findOne({ status: { $in: statuses } }, { sort: { drawDate: 1, drawNo: 1 } });
   }
 
   /**
@@ -442,51 +356,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       $set.drawTime = sales.drawTime;
     }
     return await this.updateOne({ drawId }, { $set });
-  }
-
-  /**
-   * Cập nhật result sau khi publish (dùng khi cần sửa lại result đã publish).
-   * Chỉ update nếu draw đang ở status published.
-   */
-  async updateResult(
-    drawId: string,
-    result: Max3dproDrawResult & { publishedAt: Date },
-    vietlottRef?: DrawDocBase["vietlottRef"],
-  ): Promise<boolean> {
-    const $set: Record<string, unknown> = {
-      result,
-      updatedAt: new Date(),
-    };
-    if (vietlottRef) $set.vietlottRef = vietlottRef;
-
-    return await this.updateOne(
-      {
-        drawId,
-        status: DrawStatus.Published,
-      },
-      { $set },
-    );
-  }
-
-  /** Đếm số draws theo status. */
-  async countByStatus(status: string): Promise<number> {
-    return await this.count({ status });
-  }
-
-  /**
-   * Cập nhật voidInfo trên draw (partial update — không đổi status).
-   * Idempotent.
-   */
-  async updateVoidInfo(drawId: string, voidInfo: DrawDocBaseVoidInfo): Promise<boolean> {
-    return await this.updateOne(
-      { drawId },
-      {
-        $set: {
-          voidInfo,
-          updatedAt: new Date(),
-        },
-      },
-    );
   }
 
   /**

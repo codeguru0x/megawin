@@ -21,14 +21,19 @@
 export interface Lotto535FeedBoard {
   /** Mã board: "A", "B", "C", "D", "E". */
   boardNo: string;
+
   /** Kiểu chơi: standard / mainCover / specialCover... */
   playType: string;
+
   /** Số chính đã chọn (zero-padded "01"-"35"). */
   mainNumbers: string[];
+
   /** Số đặc biệt đã chọn (zero-padded "01"-"12"). */
   specialNumbers: string[];
+
   /** Số lines expand từ board. */
   expandedLines: number;
+
   /** Số lần cược nhân bội. */
   betCount: number;
 }
@@ -54,8 +59,6 @@ export interface Lotto535FeedDrawResult {
   winningMain: string[];
   /** Số đặc biệt trúng thưởng (zero-padded "01"-"12"). */
   winningSpecial: string;
-  /** Thời điểm công bố kết quả (ISO 8601 string). */
-  publishedAt: string;
 }
 
 // ─────────────────────────────────────────────
@@ -81,8 +84,6 @@ export interface Lotto535FeedPayoutTier {
  * Chỉ có sau khi settle và outcome = "win".
  */
 export interface Lotto535FeedPayoutDetail {
-  /** Thời điểm settle (ISO 8601 string). */
-  settledAt: string;
   /** Chi tiết theo từng hạng giải. */
   tiers: Lotto535FeedPayoutTier[];
 }

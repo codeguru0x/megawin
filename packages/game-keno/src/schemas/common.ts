@@ -1,14 +1,18 @@
 /**
- * Keno – Zod Schemas
+ * Keno – Zod Validation Schemas
  *
- * Reusable validation schemas cho game Keno.
- * Dùng chung bởi: API Gateway handler, Next.js web app, agent app…
+ * Reusable validation schemas dùng chung cho toàn bộ Keno frontend/backend:
+ *   - API Gateway handler: validate request body trước khi xử lý
+ *   - Next.js Server Action: validate form data trước khi gọi API
+ *   - Client-side form: báo lỗi sớm cho user (UX)
  *
  * Quy ước:
- * - Số gửi lên API dạng string zero-padded ("01"-"80").
+ * - Số gửi lên API dạng string zero-padded ("01"-"80")
  * - drawId format: "YYYY-MM-DD.NNN"
  * - boards: cách chơi cơ bản (pick 1-10 số)
  * - sideBets: cách chơi bổ sung (Lớn/Nhỏ, Chẵn/Lẻ)
+ *
+ * Import: `import { publishResultSchema, ... } from "@megawin/game-keno/schemas"`
  */
 
 import { z } from "zod";
@@ -16,10 +20,12 @@ import { KENO_DRAW_COUNT, KENO_NUMBER_MIN, KENO_NUMBER_MAX } from "../entities/t
 
 // ─── Atomic schemas ───
 
+/** Schema validate 1 số Keno hợp lệ: string "01"-"80" (zero-padded). */
 export const kenoNumberSchema = z
   .string()
   .regex(/^(0[1-9]|[1-7][0-9]|80)$/, "Số Keno phải từ '01' đến '80'");
 
+/** Schema validate drawId Keno: "YYYY-MM-DD.NNN". */
 export const kenoDrawIdSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}\.\d{3}$/, "Format: YYYY-MM-DD.NNN");
@@ -27,12 +33,16 @@ export const kenoDrawIdSchema = z
 // ─── Publish Result ────────────────────────────────────────────────────────────
 
 /**
- * Schema validate 20 số trúng kỳ quay Keno.
+ * Schema validate 20 số trúng thưởng kỳ quay Keno.
  *
- * Dùng chung bởi: PublishResultAction (client form) và API route handler.
+ * Dùng chung bởi:
+ * - `PublishResultAction` (client form — staff nhập kết quả)
+ * - API route handler `POST /api/keno/draws/[drawId]/publish-result` (server-side)
+ *
+ * Validate:
  * - Mỗi số phải là integer trong [KENO_NUMBER_MIN, KENO_NUMBER_MAX]
- * - Đúng KENO_DRAW_COUNT phần tử
- * - Tất cả phải khác nhau (không trùng lặp)
+ * - Đúng KENO_DRAW_COUNT (20) phần tử
+ * - Tất cả số phải khác nhau (không trùng lặp)
  */
 export const publishResultSchema = z.object({
   winningNumbers: z
@@ -60,11 +70,17 @@ export type PublishResultInput = z.infer<typeof publishResultSchema>;
 /**
  * Schema validate form sửa lịch kỳ quay Keno.
  *
- * Client chỉ validate rule cơ bản: salesCloseAt < drawAt.
- * Buffer chính xác (salesCloseBeforeSeconds) do server validate dựa trên game config
- * tại thời điểm request — tránh out-of-sync khi staff thay đổi config.
+ * Dùng bởi `EditScheduleAction` (client form) và API route handler.
  *
- * Time format: "HH:mm:ss" — Keno có chu kỳ ngắn, cần độ chính xác đến giây.
+ * Chiến lược validate 2 tầng:
+ * - Client: chỉ kiểm tra rule cơ bản `salesCloseAt < drawAt`
+ * - Server: kiểm tra thêm buffer `salesCloseBeforeSeconds` từ game config
+ *
+ * Lý do tách: `salesCloseBeforeSeconds` là runtime config có thể thay đổi
+ * bởi staff. Validate trên client dùng giá trị đã load có thể out-of-sync
+ * khi config được sửa giữa chừng → server là source of truth.
+ *
+ * Time format: "HH:mm:ss" — Keno chu kỳ 8 phút, cần độ chính xác đến giây.
  */
 export const editScheduleSchema = z
   .object({

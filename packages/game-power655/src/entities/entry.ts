@@ -181,7 +181,7 @@ export interface TicketEntryDoc {
 
   /**
    * Tổng đơn vị cược = Σ(expandedLines × betCount).
-   * Backward compat: data cũ không có field này → fallback = lineCount.
+   * Dùng để tính tiền: amount = betUnitCount × unitPrice.
    */
   betUnitCount: number;
 
@@ -269,23 +269,43 @@ export interface EntryBoardSnapshot {
   betCount: number;
 }
 
-/** Chi tiết trúng thưởng 1 hạng giải trong entry. */
+/**
+ * Chi tiết trúng thưởng 1 hạng giải trong entry (Power 6/55).
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * VÌ SAO KHÔNG CÓ `betUnitCount`?
+ * ─────────────────────────────────────────────────────────────────
+ *
+ * Power 6/55 không có Split Cycle. Cơ chế Overflow (JP1 > 300 tỷ) chuyển
+ * phần vượt ngưỡng sang JP2 — không chia xuống tier1/tier2/tier3 theo
+ * tỷ lệ betCount. Vì vậy không cần aggregate `Σ(betCount × hitCount)` per
+ * tier từ entry collection sau settle.
+ *
+ * `betCount` đã được tính vào `winAmount` của từng line doc khi settle:
+ *   `winAmount = unitAmount × betCount`
+ * → `amount = Σ(winAmount từ lines)` — đã nhân betCount, không cần lưu thêm.
+ *
+ * Để biết lý do đầy đủ và ví dụ phân bổ split bonus theo betUnitCount,
+ * xem JSDoc của `EntryPayoutTier` trong `@megawin/game-lotto535/entities`.
+ * ─────────────────────────────────────────────────────────────────
+ */
 export interface EntryPayoutTier {
   /** Hạng giải: jackpot1, jackpot2, tier1, tier2, tier3. */
   tier: PrizeTier;
 
-  /** Số lines trúng hạng này. */
+  /** Số lines vật lý trúng hạng này (không nhân betCount). */
   hitCount: number;
 
   /**
-   * Tiền thưởng mỗi hit (VND).
+   * Tiền thưởng mỗi đơn vị tham gia dự thưởng (VND).
    * JP1/JP2: = 0 tại SettleEntries, patch ở FinalizeSettle khi biết pool chính xác.
    */
   unitAmount: number;
 
   /**
    * Tổng tiền hạng này (VND).
-   * Công thức: hitCount × unitAmount.
+   * Đã nhân betCount — player betCount=3 trúng tier1 nhận gấp 3 player betCount=1.
+   * Công thức: `Σ(winAmount per line)` = `hitCount × unitAmount × betCount` (khi 1 board).
    */
   amount: number;
 }

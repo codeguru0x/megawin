@@ -292,7 +292,7 @@ function DrawRow({ draw }: { draw: DrawSummary }) {
         {/* Mega 6/45: hiển thị 6 số chính, không có specialNumber */}
         {draw.result ? (
           <div className="flex items-center gap-1 flex-wrap">
-            {draw.result.winningMain.map((n) => (
+            {draw.result.winningNumbers.map((n) => (
               <MegaNumberBall key={n} number={Number(n)} size="sm" />
             ))}
           </div>

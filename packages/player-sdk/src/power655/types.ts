@@ -9,13 +9,25 @@ import type { Power655PlayType, Power655PrizeTier } from "./enums";
 // Input Types
 // ─────────────────────────────────────────────
 
+/**
+ * Lựa chọn số cho một board Power 6/55.
+ *
+ * Power 6/55 chỉ có `mainNumbers` (không có số đặc biệt — bonus do hệ thống quay riêng).
+ */
 export interface Power655SelectionInput {
+  /** Danh sách số chính chọn. Dạng string zero-padded `"01"`–`"55"`. */
   mainNumbers: string[];
 }
 
+/**
+ * Một board trong vé Power 6/55.
+ */
 export interface Power655BoardInput {
+  /** Ký hiệu board. VD: `"A"`, `"B"`, `"C"`. */
   boardNo: string;
+  /** Kiểu chơi của board này. */
   playType: Power655PlayType;
+  /** Số đã chọn. */
   selection: Power655SelectionInput;
   /**
    * Số lần cược nhân bội cho board này (≥ minBetCount, ≤ maxBetCount).
@@ -64,13 +76,21 @@ export interface Power655TicketPurchaseInput {
 // Response Types — Game Config
 // ─────────────────────────────────────────────
 
+/**
+ * Luật chơi game Power 6/55.
+ */
 export interface Power655GameRules {
+  /** Giá 1 lượt chơi (VND). */
   unitPrice: number;
+  /** Số board tối đa mỗi vé. */
   maxBoardsPerTicket: number;
+  /** Số kỳ tối đa đặt liên tiếp. */
   maxDrawCount: number;
+  /** Số kỳ quay mỗi ngày. */
   drawsPerDay: number;
+  /** Các giờ quay trong ngày. VD: `["18:00"]`. */
   drawTimes: string[];
-  /** Ngày quay trong tuần (0=CN, 2=T3, 4=T5, 6=T7). */
+  /** Ngày quay trong tuần (0 = Chủ nhật, 2 = Thứ 3, 4 = Thứ 5, 6 = Thứ 7). */
   drawDaysOfWeek: number[];
   /** Số lần cược tối thiểu cho 1 board. */
   minBetCount: number;
@@ -78,35 +98,62 @@ export interface Power655GameRules {
   maxBetCount: number;
 }
 
+/**
+ * Giá trị giải thưởng cố định Power 6/55 (không bao gồm Jackpot 1 và Jackpot 2).
+ */
 export interface Power655PrizeAmounts {
-  /** Giải Nhất: 5/6 số không trúng bonus (VND). */
+  /** Giải Nhất — 5/6 số chính không trùng bonus (VND). */
   tier1: number;
-  /** Giải Nhì: 4/6 số (VND). */
+  /** Giải Nhì — 4/6 số (VND). */
   tier2: number;
-  /** Giải Ba: 3/6 số (VND). */
+  /** Giải Ba — 3/6 số (VND). */
   tier3: number;
 }
 
+/**
+ * Cấu hình Jackpot dual (JP1 + JP2) Power 6/55.
+ */
 export interface Power655JackpotConfigInfo {
-  /** Jackpot 1 (trùng 6/6): số tiền khởi điểm (VND). */
+  /** Số tiền khởi điểm Jackpot 1 khi bắt đầu cycle mới (VND). */
   jackpot1SeedAmount: number;
-  /** Jackpot 2 (trùng 5/6 + bonus): số tiền khởi điểm (VND). */
+  /** Số tiền khởi điểm Jackpot 2 khi bắt đầu cycle mới (VND). */
   jackpot2SeedAmount: number;
-  /** Ngưỡng kích hoạt chia giải (JP1 + JP2 >= threshold) (VND). */
+  /**
+   * Ngưỡng tràn Jackpot 1 (VND).
+   * Khi Jackpot 1 vượt ngưỡng và có JP2 winner, phần vượt chuyển sang Jackpot 2.
+   */
   splitThreshold: number;
 }
 
+/**
+ * Trạng thái cấu hình tenant cho Power 6/55.
+ */
 export interface Power655TenantConfig {
+  /** `true` nếu game Power 6/55 đang được bật cho tenant này. */
   isEnabled: boolean;
 }
 
 /**
- * Response từ `GET /games/power655/config`.
+ * Cấu hình đầy đủ game Power 6/55 — luật chơi, giải thưởng, jackpot, trạng thái tenant.
+ *
+ * Trả về bởi `GET /games/power655/config`.
+ *
+ * @example
+ * ```ts
+ * const config = await client.power655.getGameConfig();
+ * console.log(config.game.unitPrice);              // 10000
+ * console.log(config.jackpot.jackpot1SeedAmount);  // 40000000000
+ * console.log(config.tenant.isEnabled);            // true
+ * ```
  */
 export interface Power655GameConfigResponse {
+  /** Luật chơi và lịch quay. */
   game: Power655GameRules;
+  /** Giá trị các giải thưởng cố định. */
   prizes: Power655PrizeAmounts;
+  /** Cấu hình jackpot dual (seed, overflow threshold). */
   jackpot: Power655JackpotConfigInfo;
+  /** Cấu hình tenant cho game này. */
   tenant: Power655TenantConfig;
 }
 
@@ -114,34 +161,55 @@ export interface Power655GameConfigResponse {
 // Response Types — Draw / Ticket / Entry
 // ─────────────────────────────────────────────
 
+/**
+ * Thông tin kỳ quay Power 6/55 hiện tại hoặc sắp tới.
+ *
+ * Trả về bởi `client.power655.getCurrentDraw()`.
+ *
+ * @example
+ * ```ts
+ * const draw = await client.power655.getCurrentDraw();
+ * console.log(draw.currentDraw?.drawId);              // "2026-03-07.001"
+ * console.log(draw.currentDraw?.jackpot1CurrentAmount); // 45000000000
+ * ```
+ */
 export interface Power655DrawInfo {
+  /** Mã kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
+  /** Ngày quay. Format: `YYYY-MM-DD`. */
   drawDate: string;
+  /** Số thứ tự kỳ trong ngày. */
   drawNo: number;
+  /** Giờ quay. VD: `"18:00"`. */
   drawTime: string;
+  /** Trạng thái kỳ quay. VD: `"open"`, `"closed"`, `"settled"`. */
   status: string;
+  /** Khung giờ bán vé. */
   sales: {
+    /** Thời điểm mở bán (ISO 8601). `undefined` nếu đã mở sẵn. */
     openAt?: string;
+    /** Thời điểm đóng bán (ISO 8601). */
     closeAt: string;
   };
+  /** Giá trị Jackpot 1 hiện tại (VND) — giải trùng 6/6 số chính. */
   jackpot1CurrentAmount: number;
+  /** Giá trị Jackpot 2 hiện tại (VND) — giải trùng 5/6 + bonus. */
   jackpot2CurrentAmount: number;
 }
 
 /**
- * Tóm tắt vé Power 6/55 cho UI.
+ * Tóm tắt vé Power 6/55 cho UI danh sách vé.
  *
- * Power 6/55 có cấu trúc progress khác (settledDrawCount + voidDrawCount thay vì settledDraws).
+ * Trả về bởi `client.power655.listPendingTickets()` và `client.power655.listTickets()`.
  *
  * @example
  * ```ts
  * const { tickets } = await client.power655.listPendingTickets();
  * for (const ticket of tickets) {
- *   const { settledDrawCount, voidDrawCount } = ticket.progress;
- *   const total = ticket.drawPlan.drawCount;
- *   console.log(`${ticket.ticketNo}: ${settledDrawCount}/${total} settle, ${voidDrawCount} void`);
+ *   const { settledDraws, totalDraws } = ticket.progress;
+ *   console.log(`${ticket.ticketNo}: ${settledDraws}/${totalDraws} kỳ`);
  *   if (ticket.voidSummary) {
- *     console.log(`Đã hoàn: ${ticket.voidSummary.totalRefundAmount} VND`);
+ *     console.log(`Đã hoàn: ${ticket.voidSummary.totalRefundedAmount} VND (${ticket.voidSummary.voidedDrawCount} kỳ)`);
  *   }
  * }
  * ```
@@ -151,34 +219,40 @@ export interface Power655TicketSummary {
   id: string;
   /** Mã vé hiển thị cho người chơi. VD: `"P655-20260307-00002"`. */
   ticketNo: string;
-  /** Trạng thái vé. */
+  /** Trạng thái vé. VD: `"pending"`, `"partial"`, `"settled"`, `"voided"`. */
   status: string;
-  /** Kế hoạch kỳ quay. */
+  /** Kế hoạch kỳ quay của vé. */
   drawPlan: {
+    /** Danh sách drawId trong vé. Format mỗi ID: `YYYY-MM-DD.NNN`. */
     drawIds: string[];
+    /** Tổng số kỳ đã đặt. */
     drawCount: number;
   };
   /** Thông tin giá cược. */
   pricing: {
+    /** Giá mỗi lượt chơi (VND). */
     unitPrice: number;
-    /** Tổng số lines mỗi kỳ = Σ(board.expandedLines). */
+    /** Số lines mỗi kỳ = Σ(board.expandedLines). */
     linesPerDraw: number;
     /** Tổng đơn vị cược mỗi kỳ = Σ(board.expandedLines × board.betCount). */
     betUnitsPerDraw: number;
-    /** Tiền cược mỗi kỳ (VND) = unitPrice × betUnitsPerDraw. */
-    stakePerDraw: number;
-    /** Tổng tiền cược toàn vé (VND) = stakePerDraw × drawCount. */
-    totalStake: number;
+    /** Tổng tiền mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
+    amountPerDraw: number;
+    /** Tổng tiền cả vé (VND). */
+    totalAmount: number;
   };
   /** Danh sách boards trong vé. */
   boards: Array<{
+    /** Ký hiệu board. VD: `"A"`, `"B"`. */
     boardNo: string;
+    /** Kiểu chơi của board này. */
     playType: Power655PlayType;
+    /** Số đã chọn. */
     selection: {
-      /** Danh sách số chính đã chọn (6-18 số, zero-padded "01"-"55"). */
+      /** Danh sách số chính đã chọn (zero-padded `"01"`–`"55"`). */
       mainNumbers: string[];
     };
-    /** Số dòng cược sinh ra từ board này. Standard=1, BaoN=C(N,6). */
+    /** Số lines được expand từ kiểu chơi này. Standard = 1, BaoN = C(N,6). */
     lineCount: number;
     /**
      * Số lần cược nhân bội (≥ 1).
@@ -189,36 +263,55 @@ export interface Power655TicketSummary {
   }>;
   /**
    * Tiến độ settle.
-   * settledDrawCount = số kỳ đã settle thành công.
-   * voidDrawCount = số kỳ đã bị huỷ.
+   *
+   * `settledDraws` = số kỳ đã xử lý xong (bao gồm cả settled và voided).
    */
   progress: {
-    settledDrawCount: number;
-    voidDrawCount: number;
+    /** Tổng số kỳ của vé. */
+    totalDraws: number;
+    /** Số kỳ đã xử lý xong. */
+    settledDraws: number;
   };
   /** Tổng kết trả thưởng. `undefined` nếu chưa có kỳ nào settle. */
   settlement?: {
+    /** Tổng tiền thắng (VND). */
     totalWinAmount: number;
+    /** Thời điểm settle lần cuối (ISO 8601). */
     lastSettledAt?: string;
   };
   /**
-   * Tóm tắt huỷ cược. `undefined` nếu không có kỳ nào bị void.
+   * Tóm tắt huỷ cược (void). `undefined` nếu không có kỳ nào bị void.
    */
   voidSummary?: {
     /** Tổng tiền đã hoàn trả cho player (VND). */
-    totalRefundAmount: number;
+    totalRefundedAmount: number;
+    /** Tổng tiền stake bị void (VND). */
+    totalVoidedAmount: number;
     /** Số kỳ đã bị huỷ. */
-    voidDrawCount: number;
+    voidedDrawCount: number;
+    /** Danh sách drawId bị void. Format: `YYYY-MM-DD.NNN`. */
+    voidedDrawIds: string[];
+    /** Thời điểm void lần cuối (ISO 8601). */
+    lastVoidedAt?: string;
   };
   /** Thời điểm mua vé (ISO 8601). */
   createdAt: string;
 }
 
+/**
+ * Kết quả một kỳ quay của vé Power 6/55 (entry).
+ *
+ * Trả về bởi `client.power655.getTicketEntries()`.
+ * Power 6/55 có `bonusNumber` trong kết quả, khác với Mega 6/45.
+ */
 export interface Power655EntryResult {
+  /** ID entry trong hệ thống. */
+  id: string;
+  /** Mã kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
-  drawDate: string;
+  /** Trạng thái entry. VD: `"pending"`, `"settled"`, `"voided"`. */
   status: string;
-  /** Tiền cược kỳ này (VND) = betUnitCount × unitPrice. */
+  /** Tiền cược kỳ này (VND). */
   amount: number;
   /** Đơn giá 1 line (VND). */
   unitPrice: number;
@@ -226,14 +319,37 @@ export interface Power655EntryResult {
   lineCount: number;
   /** Tổng đơn vị cược = Σ(board.expandedLines × board.betCount). */
   betUnitCount: number;
-  result?: { winningMain: string[]; bonusNumber: string; publishedAt: string };
+  /** Kết quả quay. `undefined` nếu chưa có kết quả. */
+  result?: {
+    /**
+     * 6 số chính trúng thưởng (sorted, zero-padded `"01"`–`"55"`).
+     * VD: `["03", "11", "25", "38", "49", "55"]`.
+     */
+    winningMain: string[];
+    /** Số bonus (zero-padded `"01"`–`"55"`). VD: `"07"`. */
+    bonusNumber: string;
+    /** Thời điểm công bố (ISO 8601). */
+    publishedAt: string;
+  };
+  /** Kết quả tổng của entry sau settle. `"win"` hoặc `"loss"`. `undefined` nếu chưa settle. */
+  outcome?: string;
+  /** Thông tin trả thưởng. `undefined` nếu chưa settle hoặc không trúng. */
   payout?: {
+    /** Tổng tiền thắng trước khi trả thưởng (VND). */
     winAmount: number;
+    /** Số tiền trả thưởng thực tế sau áp dụng payout cap (VND). */
+    payoutAmount: number;
+    /** Chi tiết từng giải thưởng trúng. */
     tiers: Array<{
+      /** Hạng giải. */
       tier: Power655PrizeTier;
+      /** Tên giải hiển thị. VD: `"Jackpot 1"`, `"Giải nhất"`. */
       label: string;
+      /** Số lần trúng giải này. */
       hitCount: number;
+      /** Tổng tiền thưởng giải này (VND). */
       amount: number;
+      /** Tiền bonus từ chia Jackpot (VND). `undefined` nếu không có. */
       splitBonus?: number;
     }>;
   };
@@ -244,10 +360,13 @@ export interface Power655EntryResult {
 // ─────────────────────────────────────────────
 
 /**
- * Thông tin chi tiết 1 line trong entry Power 6/55.
+ * Chi tiết một dòng cược (line) Power 6/55 đã được expand.
  *
- * Mỗi line là 6 số chính được expand từ board (Standard = 1 line, BaoN = C(N,6) lines).
- * `matchResult` chỉ có sau khi kỳ quay đã settle.
+ * Mỗi line là 6 số chính từ 1 board (Standard = 1 line, BaoN = C(N,6) lines).
+ * Power 6/55: lines chỉ có `main` (số chính), không có số đặc biệt.
+ * `matchResult.bonusMatched` xác định điều kiện Jackpot 2 (5/6 + bonus).
+ *
+ * Dùng trong {@link Power655EntryLinesResponse}.
  */
 export interface Power655LineInfo {
   /** Ký hiệu board chứa line này. VD: `"A"`, `"B"`. */
@@ -255,19 +374,41 @@ export interface Power655LineInfo {
   /** Vị trí line trong entry (0-based). Dùng làm cursor khi phân trang. */
   lineIndex: number;
   /**
-   * 6 số chính đã chọn (zero-padded `"01"`-`"55"`).
+   * 6 số chính đã chọn (zero-padded `"01"`–`"55"`, sorted ascending).
    * VD: `["03", "11", "25", "38", "49", "55"]`.
    */
   main: string[];
-  /** Kết quả đối chiếu số. `undefined` nếu kỳ quay chưa kết thúc. */
-  matchResult?: {
-    /** Số lượng số chính trùng với kết quả quay (0-6). */
+  /**
+   * Số lần nhân cược cho dòng này (≥ 1).
+   *
+   * Tiền thưởng dòng = unitPrize × betCount. UI hiển thị `"×N"` khi betCount > 1.
+   */
+  betCount: number;
+  /**
+   * Kết quả so khớp với kết quả quay.
+   * Chỉ có khi entry đã ở trạng thái `"settled"`.
+   */
+  matchResult: {
+    /** Số lượng số chính trùng với kết quả quay (0–6). */
     mainMatchCount: number;
-    /** Có trùng số bonus không. */
+    /** `true` nếu số bonus cũng trùng — điều kiện để trúng Jackpot 2 (5/6 + bonus). */
     bonusMatched: boolean;
-    /** Hạng giải trúng. `null` nếu không trúng giải nào. */
+    /**
+     * Hạng giải trúng. `null` nếu không trúng giải nào.
+     *
+     * | tier         | Điều kiện              |
+     * |--------------|------------------------|
+     * | `"jackpot1"` | 6/6 số chính           |
+     * | `"jackpot2"` | 5/6 + bonus            |
+     * | `"tier1"`    | 5/6 (không có bonus)   |
+     * | `"tier2"`    | 4/6                    |
+     * | `"tier3"`    | 3/6                    |
+     */
     tier: Power655PrizeTier | null;
-    /** Tiền thưởng của line này (VND). `0` nếu không trúng. */
+    /**
+     * Tiền thưởng dòng này (VND).
+     * Jackpot = 0 tại đây — giá trị chính xác tính sau khi biết số winners.
+     */
     winAmount: number;
   };
 }
@@ -345,7 +486,7 @@ export interface Power655DrawResultSummary {
   };
   /** Tham chiếu kỳ quay Vietlott tương ứng. `undefined` nếu không liên kết. */
   vietlottRef?: {
-    drawPeriod: number;
+    drawPeriod: string;
     drawDate: string;
   };
 }
@@ -404,7 +545,7 @@ export interface Power655DrawResultInfo {
   prizes: Power655DrawTierPrize[];
   /** Tham chiếu kỳ quay Vietlott. `undefined` nếu không liên kết. */
   vietlottRef?: {
-    drawPeriod: number;
+    drawPeriod: string;
     drawDate: string;
   };
 }

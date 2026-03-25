@@ -8,7 +8,7 @@
  * - 20 số trúng (01-80)
  * - Không có PrizeTier enum → dùng pickCount × matchCount (basic) + side bets
  * - Có bigCount/smallCount/evenCount/oddCount (kết quả side bets)
- * - settleSummary: basicPrizes (pickCount × matchCount) + sideBetPrizes (playType × bet)
+ * - settleSummary.prizes[]: unified cho cả cơ bản và bổ sung, phân biệt qua pickCount != null (basic) / bet defined (side bet)
  * - Không có jackpot
  */
 
@@ -582,24 +582,29 @@ export function ResultSection() {
     const d = drawDetailData?.draw;
     if (!d?.result) return undefined;
 
-    const basicPrizes: BasicPrizeRow[] = (d.settleSummary?.basicPrizes ?? []).map((r: any) => ({
-      pickCount: r.pickCount as number,
-      matchCount: r.matchCount as number,
-      winnerCount: r.winnerCount as number,
-      prizePerUnit: r.prizePerUnit as number,
-      totalPrize: (r.winnerCount as number) * (r.prizePerUnit as number),
-    }));
+    // Unified prizes[] — filter by pickCount != null cho cơ bản, bet defined cho bổ sung
+    const allPrizes: any[] = d.settleSummary?.prizes ?? [];
 
-    const sideBetPrizes: SideBetPrizeRow[] = (d.settleSummary?.sideBetPrizes ?? []).map(
-      (r: any) => ({
+    const basicPrizes: BasicPrizeRow[] = allPrizes
+      .filter((r: any) => r.pickCount != null)
+      .map((r: any) => ({
+        pickCount: r.pickCount as number,
+        matchCount: r.matchCount as number,
+        winnerCount: r.winnerCount as number,
+        prizePerUnit: r.prizePerUnit as number,
+        totalPrize: (r.winnerCount as number) * (r.prizePerUnit as number),
+      }));
+
+    const sideBetPrizes: SideBetPrizeRow[] = allPrizes
+      .filter((r: any) => r.bet !== undefined)
+      .map((r: any) => ({
         playType: r.playType as string,
         bet: r.bet as string,
         label: sideBetLabel(r.playType, r.bet),
         winnerCount: r.winnerCount as number,
         prizePerUnit: r.prizePerUnit as number,
         totalPrize: (r.winnerCount as number) * (r.prizePerUnit as number),
-      }),
-    );
+      }));
 
     return {
       winningNumbers: d.result.winningNumbers ?? [],

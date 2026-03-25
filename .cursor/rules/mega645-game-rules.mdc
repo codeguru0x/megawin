@@ -29,7 +29,7 @@ Mega 6/45 là game xổ số tự chọn của Vietlott. Đơn giản hơn Lotto
 
 ## 2. Cơ cấu giải thưởng (4 hạng)
 
-Mỗi line chỉ trúng hạng **CAO NHẤT** phù hợp. So khớp CHỈ dựa trên mainMatchCount (không có special).
+Mỗi line chỉ trúng hạng **CAO NHẤT** phù hợp. So khớp CHỈ dựa trên matchCount (không có special).
 
 | Hạng | Code | Điều kiện | Giá trị mặc định (VND) |
 |------|------|-----------|------------------------|
@@ -234,7 +234,7 @@ Gross margin (không tính Jackpot): ~86.3% (8.630 VND/line)
 | Tập số | 01-45, chọn 6 số | 01-35 chính + 01-12 ĐB |
 | Số đặc biệt | KHÔNG | CÓ (1 số special) |
 | Hạng giải | 4 (JP, Nhất, Nhì, Ba) | 7 (JP, 5 tier + Consolation) |
-| Matching | Chỉ mainMatchCount | mainMatchCount + specialMatched |
+| Matching | Chỉ matchCount | matchCount + specialMatched |
 | Jackpot min | 12 tỷ | 6 tỷ (tham khảo) |
 | Split Cycle | **KHÔNG CÓ** | Có (tùy game config) |
 | Jackpot rollover | Tích lũy vô hạn | Tích lũy vô hạn |
@@ -271,7 +271,7 @@ src/
 │   ├── enums.ts           # PrizeTier (jackpot, tier1-3), PlayType (standard, bao5, bao7-18)
 │   ├── types.ts           # MainTuple (6 số), BoardSelection, LineValue, PrizeAmounts,
 │   │                      # JackpotConfig (seedAmount only), FinancialRates, PlayRules
-│   ├── draw.ts            # DrawDoc (result: winningMain only, jackpot: openingAmount + closingAmount)
+│   ├── draw.ts            # DrawDoc (result: winningNumbers only, jackpot: openingAmount + closingAmount)
 │   ├── ticket.ts          # TicketDoc, Board (max 6 boards A-F)
 │   ├── entry.ts           # TicketEntryDoc
 │   ├── line.ts            # TicketLineDoc, LineMatchResult
@@ -279,13 +279,13 @@ src/
 │   ├── global-config.ts   # GlobalConfigDoc
 │   └── tenant-config.ts   # TenantConfigDoc
 ├── rules/
-│   ├── prize-tiers.ts     # determineTier(mainMatchCount), DEFAULT_PRIZE_TIER_RULES
+│   ├── prize-tiers.ts     # determineTier(matchCount), DEFAULT_PRIZE_TIER_RULES
 │   ├── play-types.ts      # combination(), calculateLineCount(), validateSelection()
 │   ├── odds.ts            # TOTAL_OUTCOMES = C(45,6), getOddsTable()
 │   └── jackpot.ts         # calculateDrawFinancials(), calculateClosingJackpot(),
 │                          # calculateNextJackpot() — KHÔNG có split logic
 ├── helpers/
-│   ├── match-result.ts    # matchLine(), matchLines() (chỉ mainMatchCount, no special)
+│   ├── match-result.ts    # matchLine(), matchLines() (chỉ matchCount, no special)
 │   ├── expand-lines.ts    # expandBoardToLines(), expandAllBoards()
 │   ├── draw-id.ts         # generateDrawId()
 │   └── selection-hash.ts  # Hash selection cho dedup
@@ -338,7 +338,7 @@ Routes: draws, config, tenant-config, jackpot, operations.
 | `mega645_tickets` | TicketDoc | Vé mua, chứa boards A-F |
 | `mega645_ticket_entries` | TicketEntryDoc | 1 ticket × 1 draw |
 | `mega645_ticket_lines` | TicketLineDoc | Line con (bộ 6 số), tạo khi settle |
-| `mega645_draws` | DrawDoc | Kỳ quay, result (chỉ winningMain) |
+| `mega645_draws` | DrawDoc | Kỳ quay, result (chỉ winningNumbers) |
 | `mega645_game_configs` | GlobalConfigDoc / TenantConfigDoc | Config game |
 | `mega645_jackpot_cycles` | JackpotCycleDoc | Vòng đời Jackpot |
 
@@ -346,7 +346,7 @@ Routes: draws, config, tenant-config, jackpot, operations.
 
 ## 12. Quy tắc quan trọng cho AI Agent
 
-1. **KHÔNG có số đặc biệt**: Mega 6/45 chỉ có mainNumbers, matching chỉ dựa trên mainMatchCount
+1. **KHÔNG có số đặc biệt**: Mega 6/45 chỉ có numbers, matching chỉ dựa trên matchCount
 2. **Số lưu string zero-padded**: "01"-"45" (2 ký tự)
 3. **Tiền lưu integer VND**: Không dùng float
 4. **MainTuple = 6 số**: Khác Lotto 5/35 (5 số + 1 ĐB)
@@ -356,7 +356,7 @@ Routes: draws, config, tenant-config, jackpot, operations.
 8. **Bao 5 đặc biệt**: Chọn 5 số, HT ghép 40 số còn lại (khác Lotto 5/35 Bao 4 ghép 31 số)
 9. **3 lần/tuần**: Ít hơn Lotto 5/35 (14 lần/tuần) và Keno (~672 lần/tuần)
 10. **6 boards A-F**: Nhiều hơn Lotto 5/35 (5 boards A-E)
-11. **determineTier chỉ cần mainMatchCount**: Không cần specialMatched parameter
+11. **determineTier chỉ cần matchCount**: Không cần specialMatched parameter
 12. **Lines tạo khi settle**: Expand boards → lines khi settle, giống Lotto 5/35
 13. **Cycle đóng chỉ khi có winner hoặc manual_reset**: Không có close reason "split"
 14. **Jackpot hitCount luôn = 1 per entry**: Vì C(6,6) = 1, nên mỗi entry (dù Bao mấy) chỉ có tối đa 1 line trúng Jackpot. Chia JP theo tỷ lệ betCount: `jackpotPerUnit = floor(pool / totalBetUnits)`, mỗi entry nhận `jackpotPerUnit × betCount`

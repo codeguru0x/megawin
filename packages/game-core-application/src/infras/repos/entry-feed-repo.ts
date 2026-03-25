@@ -51,34 +51,34 @@ export class EntryFeedRepository extends GameCoreBaseRepo<EntryFeedEntity, Entry
   /**
    * Bulk upsert nhiều feed entries trong 1 MongoDB bulkWrite (unordered).
    *
-   * Dùng thay `batchUpsertFeedEntries` cho throughput cao hơn đáng kể:
-   * 1 network round-trip thay vì N round-trips tuần tự.
-   * Thích hợp cho batch 500 entries (~100ms) vs sequential (~1.5s).
-   *
    * Key: entryId. Chỉ ghi đè nếu version mới > version cũ (idempotent).
    * ordered: false — tối đa hoá throughput, lỗi 1 entry không chặn các entry khác.
    */
   async bulkUpsertFeedEntries(
     docs: Omit<EntryFeedDoc, "_id">[],
   ): Promise<{ upserted: number; skipped: number }> {
-    if (docs.length === 0) return { upserted: 0, skipped: 0 };
+    if (docs.length === 0) {
+      return { upserted: 0, skipped: 0 };
+    }
 
-    const operations: AnyBulkWriteOperation<Document>[] = docs.map((doc) => {
-      const { entryId, ...setFields } = doc;
-      return {
-        updateOne: {
-          filter: {
-            entryId,
-            version: { $lt: doc.version },
+    const operations: AnyBulkWriteOperation<Document>[] = docs.map(
+      (doc: Omit<EntryFeedDoc, "_id">) => {
+        const { entryId, ...setFields } = doc;
+        return {
+          updateOne: {
+            filter: {
+              entryId,
+              version: { $lt: doc.version },
+            },
+            update: {
+              $set: setFields,
+              $setOnInsert: { entryId },
+            },
+            upsert: true,
           },
-          update: {
-            $set: setFields,
-            $setOnInsert: { entryId },
-          },
-          upsert: true,
-        },
-      };
-    });
+        };
+      },
+    );
 
     const result = await this.bulkWrite(operations, { ordered: false });
 

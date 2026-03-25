@@ -16,8 +16,8 @@ import type { ISODateString } from "./types";
 
 /** Kết quả so khớp 1 line với kết quả quay. */
 export interface LineMatchResult {
-  /** Số lượng số chính trùng (0-6). */
-  mainMatchCount: number;
+  /** Số lượng số trùng (0-6). */
+  matchCount: number;
   /** Hạng giải trúng (null nếu < 3 số trùng → không trúng). */
   tier: PrizeTier | null;
   /** Tiền thưởng cho line này (VND). 0 nếu không trúng. */
@@ -54,8 +54,8 @@ export interface TicketLineDoc {
   /** Chỉ số line trong board (0-based). Với standard luôn = 0. */
   lineIndex: number;
 
-  /** 6 số chính, sorted tăng dần. */
-  main: string[];
+  /** 6 số, sorted tăng dần. */
+  numbers: string[];
 
   /** Số lần cược nhân bội cho board chứa line này. */
   betCount: number;

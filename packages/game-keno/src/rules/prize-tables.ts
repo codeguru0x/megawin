@@ -193,7 +193,13 @@ export function lookupBasicPrize(
 }
 
 /**
- * Lấy pickCount từ play type.
+ * Lấy pickCount từ play type ("pick1"-"pick10").
+ *
+ * Dùng tại settle step khi cần tra cứu bảng giải thưởng nhưng chỉ có
+ * `playType` string từ `EntryBoardPayout`, chưa có pickCount number.
+ *
+ * @param playType - KenoPlayType value (ví dụ "pick7")
+ * @returns Số nguyên pickCount (1-10), hoặc `null` nếu là side bet (bigSmall/evenOdd)
  */
 export function getPickCountFromPlayType(playType: KenoPlayType): number | null {
   const match = /^pick(\d+)$/.exec(playType);

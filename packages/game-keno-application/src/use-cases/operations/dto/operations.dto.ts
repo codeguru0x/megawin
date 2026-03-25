@@ -5,8 +5,7 @@
  *
  * Keno khác biệt so với các game khác:
  *   - Không có Jackpot tích luỹ — financial chỉ có companyTake
- *   - Cách chơi cơ bản: pick1-pick10 (10 loại)
- *   - Side bets: bigSmall, evenOdd (2 loại)
+ *   - Cách chơi: pick1-pick10 (10 loại) + bigSmall, evenOdd (2 loại) — tất cả trong boards[]
  *   - 80 số (01-80), tần suất cao ~120 kỳ/ngày
  *   - Không có expandedLines (1 board = 1 selection = 1 line)
  */
@@ -32,12 +31,10 @@ export interface OpsSummaryOutput {
   /** Tổng entries (= số vé tham gia kỳ). */
   totalEntries: number;
   /**
-   * Tổng boards (basic pick1-10).
+   * Tổng boards (cả cơ bản pick1-10 và bổ sung bigSmall/evenOdd).
    * Keno 1 board = 1 line (không expand như Lotto 5/35).
    */
   totalBoards: number;
-  /** Tổng side bets (bigSmall + evenOdd). */
-  totalSideBets: number;
   /** Số người chơi unique (distinct accountId). */
   uniquePlayers: number;
   /** Tổng hoa hồng đại lý (VND). */

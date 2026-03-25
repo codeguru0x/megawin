@@ -19,7 +19,7 @@ export interface DrawResultForMatch {
    * 6 số trúng thưởng theo thứ tự quay gốc.
    * readonly string[] — tương thích cả string[] (từ DB) và test data.
    */
-  winningMain: readonly string[];
+  winningNumbers: readonly string[];
 }
 
 /**
@@ -28,7 +28,7 @@ export interface DrawResultForMatch {
  *
  * @returns Số lượng số trùng (0-6).
  */
-function countMainMatches(lineMain: readonly string[], winMain: readonly string[]): number {
+function countMatches(lineMain: readonly string[], winMain: readonly string[]): number {
   const winSet = new Set(winMain);
   let count = 0;
   for (const n of lineMain) {
@@ -40,14 +40,14 @@ function countMainMatches(lineMain: readonly string[], winMain: readonly string[
 /**
  * So khớp 1 line với kết quả quay → xác định hạng giải và số lượng trùng.
  *
- * @returns LineMatchResult: { tier, mainMatchCount }
+ * @returns LineMatchResult: { tier, matchCount }
  *   - tier = null  nếu < 3 số trùng (không trúng giải nào)
  *   - tier = "jackpot" nếu 6/6 số trùng
  */
 export function matchLine(line: LineValue, result: DrawResultForMatch): LineMatchResult {
-  const mainMatchCount = countMainMatches(line.main, result.winningMain);
-  const tier = determineTier(mainMatchCount);
-  return { tier, mainMatchCount };
+  const matchCount = countMatches(line.numbers, result.winningNumbers);
+  const tier = determineTier(matchCount);
+  return { tier, matchCount };
 }
 
 // ─────────────────────────────────────────────
@@ -56,7 +56,7 @@ export function matchLine(line: LineValue, result: DrawResultForMatch): LineMatc
 
 /** Kết quả match của 1 line cụ thể (dùng để tạo TicketLineDoc). */
 export interface PerLineMatchResult {
-  mainMatchCount: number;
+  matchCount: number;
   tier: PrizeTier | null;
 }
 
@@ -82,7 +82,7 @@ export interface DetailedMatchResult {
  * Dùng trong SettleEntries để tính winAmount và tạo TicketLineDocs.
  *
  * @param lines  - Output của expandAllBoards(ticket.boards).
- * @param result - Kết quả quay (winningMain từ DrawDoc).
+ * @param result - Kết quả quay (winningNumbers từ DrawDoc).
  */
 export function matchLines(lines: LineValue[], result: DrawResultForMatch): DetailedMatchResult {
   const tierCounts = new Map<PrizeTier, number>();
@@ -90,8 +90,8 @@ export function matchLines(lines: LineValue[], result: DrawResultForMatch): Deta
   let winningLines = 0;
 
   for (const line of lines) {
-    const { tier, mainMatchCount } = matchLine(line, result);
-    perLineResults.push({ mainMatchCount, tier });
+    const { tier, matchCount } = matchLine(line, result);
+    perLineResults.push({ matchCount, tier });
 
     if (tier != null) {
       winningLines++;

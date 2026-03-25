@@ -9,7 +9,6 @@ const TICKET = {
   drawPlan: { drawIds: ["2026-02-20.050"], drawCount: 1 },
   pricing: { unitPrice: 10000, betsPerDraw: 1, amountPerDraw: 10000, totalAmount: 10000 },
   boards: [{ boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] }],
-  sideBets: [],
   progress: { totalDraws: 1, settledDraws: 1 },
   settlement: { totalWinAmount: 50000 },
   createdAt: "2026-02-20T08:00:00Z",

@@ -4,7 +4,7 @@
  * Mega 6/45 Operations — Live Feed
  *
  * Hiển thị N entries cược gần nhất của kỳ quay đang chạy.
- * Mega 6/45: chỉ có mainNumbers (01-45), không có specialNumbers.
+ * Mega 6/45: chỉ có numbers (01-45), không có specialNumbers.
  */
 
 import { cn } from "@/lib/utils";
@@ -49,7 +49,7 @@ export function LiveFeed({
           <div className="space-y-0.5">
             {entries.map((e, i) => {
               const color = PLAY_TYPE_COLORS[e.playType];
-              const { mainNumbers, suffix } = e;
+              const { numbers, suffix } = e;
 
               return (
                 <div
@@ -80,7 +80,7 @@ export function LiveFeed({
                     <div /> {/* empty right cell */}
                     {/* Row 2: numbers (left) | amount (right) */}
                     <div className="flex items-center gap-1 flex-wrap">
-                      {mainNumbers.map((n, idx) => (
+                      {numbers.map((n, idx) => (
                         <NumberBadge key={`m-${idx}`} num={n} />
                       ))}
                       {suffix && (

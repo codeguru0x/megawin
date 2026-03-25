@@ -23,11 +23,11 @@
   "devDependencies": {
     "@megawin/eslint-config": "workspace:*",
     "@megawin/typescript-config": "workspace:*",
-    "@types/node": "^25.3.3",
+    "@types/node": "^25.5.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "eslint": "^10.0.2",
-    "typescript": "5.9.3"
+    "typescript": "6.0.2"
   },
   "dependencies": {
     "@megawin/shared": "workspace:*",

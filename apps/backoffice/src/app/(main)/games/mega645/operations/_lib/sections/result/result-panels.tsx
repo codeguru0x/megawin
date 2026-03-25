@@ -220,7 +220,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
               </span>
             </div>
             <div className="flex items-center gap-2 flex-wrap justify-center">
-              {result.winningMain.map((n) => (
+              {result.winningNumbers.map((n) => (
                 <MegaNumberBall key={n} number={Number(n)} size="md" />
               ))}
             </div>

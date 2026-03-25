@@ -5,8 +5,9 @@
  *
  * Báo cáo entries trúng thưởng Bingo 18.
  * Bingo 18 khác Keno:
- * - Boards: playType (singleNum/doubleMatch/tripleMatch) + matchCount + tripleKind
- * - Side bets: playType + sum/bet
+ * - boardDetails[] chứa cả cơ bản và bổ sung, UI filter theo playType
+ * - Cơ bản: playType (singleNum/doubleMatch/tripleMatch) + matchCount + tripleKind
+ * - Bổ sung: playType (sumTotal/bigSmallDraw) + sum/bet
  * - Không có payout caps (không có cappedEntries)
  */
 
@@ -20,18 +21,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
 import { formatNumber, displayVNDateTime } from "@megawin/shared/utils";
 import { toTenantUsername } from "@megawin/shared/utils";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Loader2, FileSearch, Users, Banknote } from "lucide-react";
 import { BINGO18_PLAY_TYPE_LABELS, BINGO18_TRIPLE_KIND_LABELS } from "@megawin/game-bingo18/labels";
+import { BINGO18_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-bingo18/entities";
 import { useWinningEntries } from "../../use-operations";
-import type {
-  WinningEntryItem,
-  WinningBoardDetail,
-  WinningSideBetDetail,
-} from "../../use-operations";
+import type { WinningEntryItem, WinningBoardDetail } from "../../use-operations";
 
 // ─── Board chip ───────────────────────────────────────────────────────────────
 
@@ -57,15 +54,16 @@ function BoardChip({ board }: { board: WinningBoardDetail }) {
           </span>
         )}
         <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-          {label} — Trúng {board.matchCount}
+          {label} — Trúng {board.matchCount ?? 0}
         </span>
       </div>
     </div>
   );
 }
 
-function SideBetChip({ bet }: { bet: WinningSideBetDetail }) {
-  const label = bet.playType === "sumTotal" ? `Tổng ${bet.sum ?? "?"}` : `L/N — ${bet.bet ?? "?"}`;
+function SideBetChip({ board }: { board: WinningBoardDetail }) {
+  const label =
+    board.playType === "sumTotal" ? `Tổng ${board.sum ?? "?"}` : `L/N — ${board.bet ?? "?"}`;
   return (
     <Badge
       variant="outline"
@@ -132,6 +130,14 @@ function KpiBar({
 function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: number }) {
   const displayName = toTenantUsername(entry.username) ?? entry.username;
 
+  // boardDetails chứa cả cơ bản và bổ sung — split theo playType
+  const basicBoards = entry.boardDetails.filter(
+    (b) => !BINGO18_SIDE_BET_PLAY_TYPE_SET.has(b.playType),
+  );
+  const sideBetBoards = entry.boardDetails.filter((b) =>
+    BINGO18_SIDE_BET_PLAY_TYPE_SET.has(b.playType),
+  );
+
   return (
     <TableRow className="align-top group transition-colors hover:bg-muted/30">
       <TableCell className="pl-6 py-3 text-center">
@@ -149,31 +155,31 @@ function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: num
         <span className="text-sm tabular-nums text-foreground">{formatNumber(entry.amount)}</span>
       </TableCell>
       <TableCell className="py-3">
-        {entry.boardDetails.length > 0 && (
+        {basicBoards.length > 0 && (
           <div className="flex flex-col gap-1.5">
-            {entry.boardDetails.map((b: WinningBoardDetail, i: number) => (
+            {basicBoards.map((b: WinningBoardDetail, i: number) => (
               <BoardChip key={i} board={b} />
             ))}
           </div>
         )}
-        {entry.sideBetDetails.length > 0 && (
+        {sideBetBoards.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1">
-            {entry.sideBetDetails.map((s: WinningSideBetDetail, i: number) => (
-              <SideBetChip key={i} bet={s} />
+            {sideBetBoards.map((b: WinningBoardDetail, i: number) => (
+              <SideBetChip key={i} board={b} />
             ))}
           </div>
         )}
       </TableCell>
       <TableCell className="py-3">
         <div className="flex flex-col gap-1">
-          {entry.boardDetails.map((b: WinningBoardDetail, i: number) => (
+          {basicBoards.map((b: WinningBoardDetail, i: number) => (
             <span key={i} className="text-xs tabular-nums text-amber-700 dark:text-amber-400">
               +{formatNumber(b.winAmount)}
             </span>
           ))}
-          {entry.sideBetDetails.map((s: WinningSideBetDetail, i: number) => (
+          {sideBetBoards.map((b: WinningBoardDetail, i: number) => (
             <span key={i} className="text-xs tabular-nums text-cyan-700 dark:text-cyan-400">
-              +{formatNumber(s.winAmount)}
+              +{formatNumber(b.winAmount)}
             </span>
           ))}
         </div>

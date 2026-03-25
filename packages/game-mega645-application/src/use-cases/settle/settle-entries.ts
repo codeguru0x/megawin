@@ -17,7 +17,7 @@
  * bulkSettle filter theo status = "scheduled" nên không thể double-settle.
  *
  * MEGA 6/45 — ĐẶC ĐIỂM:
- * - Chỉ có main numbers (6 số từ 1-45), không có số đặc biệt.
+ * - Chỉ có numbers (6 số từ 1-45), không có số đặc biệt.
  * - Jackpot ghi amount = 0 tại bước này; FinalizeSettle cập nhật sau khi biết
  *   chính xác số winners và pool Jackpot cuối kỳ.
  * - Không có Split Cycle (khác Power 6/55).
@@ -67,9 +67,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
   protected async execute(input: SettleContext): Promise<SettleEntriesBatchResult> {
     const { drawId, result, prizeAmounts } = input;
 
-    // DrawResultForMatch chỉ cần winningMain — string[] từ DB, tương thích trực tiếp.
+    // DrawResultForMatch chỉ cần winningNumbers — string[] từ DB, tương thích trực tiếp.
     const drawResult: DrawResultForMatch = {
-      winningMain: result.winningMain,
+      winningNumbers: result.winningNumbers,
     };
 
     const startTime = Date.now();
@@ -103,15 +103,14 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
 
         // ── Bước 2b: Build betCount map ──────────────────────────────────────
         // boardNo → betCount: mỗi board có betCount riêng (multiplier).
-        // Entries cũ chưa có betCount → fallback 1.
         const betCountByBoard = new Map<string, number>();
         for (const b of entry.entrySummary.boards) {
-          betCountByBoard.set(b.boardNo, b.betCount ?? 1);
+          betCountByBoard.set(b.boardNo, b.betCount);
         }
 
         // ── Bước 3: Match lines vs kết quả quay ──────────────────────────────
         // matchLines trả về { perLineResults, tierCounts }:
-        //   - perLineResults[i]: { mainMatchCount, tier } cho từng line.
+        //   - perLineResults[i]: { matchCount, tier } cho từng line.
         //   - tierCounts: Map<tier, số line trúng hạng đó>.
         const matchResult = matchLines(lines, drawResult);
 
@@ -122,7 +121,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         const lineDocs: Array<Omit<TicketLineDoc, "_id">> = lines.map((line, i) => {
           const perLine = matchResult.perLineResults[i]!;
           const unitAmount = getFixedPrizeAmount(perLine.tier, prizeAmounts);
-          const betCount = betCountByBoard.get(line.boardNo) ?? 1;
+          const betCount = betCountByBoard.get(line.boardNo)!;
 
           return {
             tenantId: entry.tenantId,
@@ -134,10 +133,10 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             financialDate: entry.financialDate,
             boardNo: line.boardNo,
             lineIndex: line.lineIndex,
-            main: line.main,
+            numbers: line.numbers,
             betCount,
             matchResult: {
-              mainMatchCount: perLine.mainMatchCount,
+              matchCount: perLine.matchCount,
               tier: perLine.tier,
               // Jackpot: ghi 0, PatchJackpotPrize sẽ điền sau khi biết pool cuối kỳ.
               // Giải cố định: winAmount = unitAmount × betCount.
@@ -175,7 +174,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
           } satisfies EntryPayout,
           outcome: hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
           result: {
-            winningMain: result.winningMain,
+            winningNumbers: result.winningNumbers,
             publishedAt: now,
           } satisfies EntryResult,
         });

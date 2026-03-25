@@ -29,7 +29,6 @@ export type {
   GetLiveEntriesOutput,
   LiveEntryItem,
   LiveEntryBoard,
-  LiveEntrySideBet,
 } from "./dto/live-entries.dto";
 
 export type { GetTopCombosInput, GetTopCombosOutput, TopComboItem } from "./dto/top-combos.dto";
@@ -39,6 +38,5 @@ export type {
   GetWinningEntriesOutput,
   WinningEntryItem,
   WinningBoardDetail,
-  WinningSideBetDetail,
   WinningEntriesSummary,
 } from "./dto/winning-entries.dto";

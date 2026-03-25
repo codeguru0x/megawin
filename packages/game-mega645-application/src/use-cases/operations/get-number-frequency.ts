@@ -6,7 +6,7 @@ import type { GetNumberFrequencyInput, NumberFrequencyOutput } from "./dto/opera
 /**
  * Tần suất xuất hiện của từng số trong các bộ cược Mega 6/45.
  *
- * Mega 6/45 chỉ có mainNumbers (01-45), không có specialNumbers.
+ * Mega 6/45 chỉ có numbers (01-45), không có specialNumbers.
  * Dùng để render heatmap 45 ô trên dashboard vận hành.
  *
  * CRASH-SAFE: idempotent, aggregate từ DB.

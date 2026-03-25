@@ -98,7 +98,7 @@ export class ApplySplitBonusesUseCase extends InternalUseCase<
         if (!entryIdStr) continue;
         betUnitsByEntry.set(
           entryIdStr,
-          (betUnitsByEntry.get(entryIdStr) ?? 0) + (line.betCount ?? 1),
+          (betUnitsByEntry.get(entryIdStr) ?? 0) + line.betCount,
         );
       }
 

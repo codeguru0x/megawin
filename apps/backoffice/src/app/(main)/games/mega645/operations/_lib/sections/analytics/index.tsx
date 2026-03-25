@@ -7,7 +7,7 @@
  * NumberHeatmap: tần suất 45 số chính + top combos + tenant breakdown.
  * LiveFeed: cược gần nhất real-time (không có specialNumbers).
  *
- * Mega 6/45: chỉ có mainNumbers, không có specialNumbers.
+ * Mega 6/45: chỉ có numbers, không có specialNumbers.
  */
 
 import { useMemo } from "react";
@@ -77,10 +77,10 @@ export function AnalyticsSection() {
     }));
   }, [tenantData]);
 
-  // Mega 6/45: chỉ có mainNumbers, không có specialNumbers
+  // Mega 6/45: chỉ có numbers, không có specialNumbers
   const numberFreq: NumberFreq[] = useMemo(() => {
     if (!freqData) return [];
-    return freqData.mainNumbers.map((f) => ({
+    return freqData.numbers.map((f) => ({
       number: String(f.number).padStart(2, "0"),
       count: f.count,
       lines: f.lines,
@@ -98,7 +98,7 @@ export function AnalyticsSection() {
         time: e.createdAt,
         playType,
         playTypeLabel: MEGA645_PLAY_TYPE_LABELS[playType as PlayType] ?? playType,
-        mainNumbers: firstBoard?.mainNumbers ?? [],
+        numbers: firstBoard?.numbers ?? [],
         amount: e.amount,
         username: e.username ?? "",
         tenant: e.tenantId,
@@ -118,7 +118,7 @@ export function AnalyticsSection() {
 
       <div className="grid gap-4 lg:grid-cols-[7fr_3fr] items-stretch">
         <NumberHeatmap
-          mainNumbers={numberFreq}
+          numbers={numberFreq}
           topCombos={topCombosData?.combos}
           tenants={tenants}
         />

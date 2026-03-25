@@ -2,7 +2,7 @@
  * Keno – Winning Entries DTO
  *
  * Danh sách entries trúng thưởng của một kỳ quay, kèm chi tiết.
- * Keno khác biệt:
+ * Keno dùng unified boardDetails[] cho cả cơ bản và bổ sung:
  *   - Basic board: matchCount + pickCount + winAmount (không dùng PrizeTier enum)
  *   - Side bet: bet + outcome + isWin + winAmount
  *   - Có thể có cappedPrize khi bậc 8/9/10 bị payout cap
@@ -20,18 +20,29 @@ export interface GetWinningEntriesInput {
 
 // ─── Output ───────────────────────────────────────────────────────────────────
 
-/** Chi tiết kết quả một board cơ bản trúng thưởng. */
+/**
+ * Chi tiết kết quả một board trúng thưởng — cả cơ bản và bổ sung.
+ *
+ * - Cơ bản (pick1-pick10): numbers + matchCount + pickCount meaningful, bet/outcome/isWin = undefined.
+ * - Bổ sung (bigSmall/evenOdd): bet + outcome + isWin meaningful, numbers = [], matchCount = null, pickCount = null.
+ */
 export interface WinningEntryBoardDetail {
-  /** Panel index (0 = A, 1 = B). */
-  boardNo: number;
-  /** Kiểu chơi (pick1-pick10). */
+  /** Panel identifier: "A", "B", "C". */
+  boardNo: string;
+  /** Kiểu chơi (pick1-pick10, bigSmall, evenOdd). */
   playType: string;
-  /** Số đã chọn (zero-padded, "01"-"80"). */
-  numbers: string[];
-  /** Số lượng số trúng với kết quả quay. */
-  matchCount: number;
-  /** Số lượng số đã chọn. */
-  pickCount: number;
+  /** Số đã chọn (zero-padded, "01"-"80"). Chỉ meaningful cho cơ bản. */
+  numbers?: string[];
+  /** Số lượng số trúng với kết quả quay. null cho bổ sung — field không áp dụng. */
+  matchCount: number | null;
+  /** Số lượng số đã chọn. null cho bổ sung — field không áp dụng. */
+  pickCount: number | null;
+  /** Lựa chọn side bet. Chỉ cho bổ sung. */
+  bet?: string;
+  /** Outcome thực tế (ví dụ "big13Plus", "even1112"...). Chỉ cho bổ sung. */
+  outcome?: string;
+  /** Player thắng hay không. Set cho tất cả play types. */
+  isWin: boolean;
   /**
    * Số tiền trúng thưởng của board này (VND).
    * Nếu bị payout cap → đây là giá trị sau khi áp cap.
@@ -44,20 +55,6 @@ export interface WinningEntryBoardDetail {
   isCapped: boolean;
 }
 
-/** Chi tiết kết quả một side bet trúng thưởng. */
-export interface WinningEntrySideBetDetail {
-  /** Loại side bet: "bigSmall" | "evenOdd". */
-  playType: string;
-  /** Lựa chọn của người chơi (big/small/bigSmallDraw/even/odd/...). */
-  bet: string;
-  /** Outcome thực tế (ví dụ "big13Plus", "even1112"...). */
-  outcome: string;
-  /** true = trúng thưởng. */
-  isWin: boolean;
-  /** Tiền trúng (VND), 0 nếu thua. */
-  winAmount: number;
-}
-
 export interface WinningEntryItem {
   entryId: string;
   username: string;
@@ -66,10 +63,8 @@ export interface WinningEntryItem {
   amount: number;
   /** Tổng tiền trúng thưởng (VND). */
   winAmount: number;
-  /** Chi tiết từng board trúng. */
+  /** Chi tiết từng board trúng (cả cơ bản và bổ sung). */
   boardDetails: WinningEntryBoardDetail[];
-  /** Chi tiết từng side bet trúng. */
-  sideBetDetails: WinningEntrySideBetDetail[];
   /** Thời điểm đặt cược. */
   createdAt: string;
   /** Thời điểm settle. */

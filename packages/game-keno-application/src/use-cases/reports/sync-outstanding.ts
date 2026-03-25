@@ -12,7 +12,7 @@
  * IDEMPOTENT: upsert overwrite — crash-safe, retry an toàn ở mọi điểm crash.
  * TTL: snapshotAt reset mỗi lần sync → doc tự expire 15 phút sau khi draw settle/void.
  *
- * Keno không có lineCount — Keno dùng betCount (boards + sideBets), không expand lines.
+ * Keno không có lineCount — Keno dùng betCount (boards chứa cả cơ bản và bổ sung), không expand lines.
  */
 
 import { GameProduct, DrawStatus } from "@megawin/game-core/entities";

@@ -33,30 +33,19 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
     const resultData = {
       winningNumbers: input.winningNumbers,
       ...stats,
+      publishedAt,
     };
 
-    if (draw.status === DrawStatus.SalesClosed) {
-      const updated = await this.drawRepo.publishResult(
-        input.drawId,
-        resultData,
-        input.vietlottRef,
-      );
+    const updated = await this.drawRepo.publishResult(
+      input.drawId,
+      resultData,
+      input.vietlottRef,
+    );
 
-      if (!updated) {
-        throw AppException.internal(
-          `Chuyển trạng thái kỳ ${input.drawId} thất bại. Vui lòng thử lại.`,
-        );
-      }
-    } else {
-      const success = await this.drawRepo.updateResult(
-        input.drawId,
-        { ...resultData, publishedAt },
-        input.vietlottRef,
+    if (!updated) {
+      throw AppException.internal(
+        `Publish kết quả kỳ ${input.drawId} thất bại. Vui lòng thử lại.`,
       );
-
-      if (!success) {
-        throw AppException.internal(`Cập nhật kết quả kỳ ${input.drawId} thất bại.`);
-      }
     }
 
     return {

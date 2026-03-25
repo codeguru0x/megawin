@@ -38,5 +38,5 @@ import { SyncEntryFeedUseCase } from "@megawin/game-mega645-application/use-case
 const useCase = new SyncEntryFeedUseCase();
 
 export async function handler() {
-  return useCase.run({ batchSize: 500 });
+  return useCase.run();
 }

@@ -20,7 +20,8 @@ import {
   VALID_BOARD_NOS,
 } from "@megawin/game-power655/schemas";
 import { PlayType } from "@megawin/game-power655/entities";
-import { isUnique, isUniqueBy } from "@megawin/shared/utils";
+import { isUnique } from "@megawin/shared/utils";
+import { boardsOrderRefine } from "../../lib/schemas";
 
 // ─── Composite schemas ───
 
@@ -173,9 +174,9 @@ export const power655PlaceBetBodySchema = z.object({
   boards: z
     .array(power655BoardSchema)
     .min(1)
-    .max(5)
-    .refine((boards) => isUniqueBy(boards, (b) => b.boardNo), {
-      message: "Các board không được trùng boardNo.",
+    .max(VALID_BOARD_NOS.length)
+    .refine(boardsOrderRefine(VALID_BOARD_NOS), {
+      message: "Boards phải theo thứ tự liên tục từ A (A → A,B → A,B,C...).",
     }),
 });
 
@@ -197,7 +198,7 @@ export const handler = withPlayerAuth(
       selection: {
         mainNumbers: b.selection.mainNumbers,
       },
-      betCount: b.betCount ?? 1,
+      betCount: b.betCount,
     }));
 
     return useCase.run({

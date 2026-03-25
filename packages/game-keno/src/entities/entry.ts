@@ -8,6 +8,9 @@
  *
  * Số lưu dạng string "01"-"80" trong entrySummary.boards.
  * Kết quả quay (result.winningNumbers) cũng dùng string[] "01"-"80".
+ *
+ * boards[] chứa cả cách chơi cơ bản (pick1-pick10) và bổ sung (bigSmall/evenOdd),
+ * phân biệt qua playType. Tương tự boardPayouts[] chứa payout cho tất cả boards.
  */
 
 import type {
@@ -45,11 +48,10 @@ export interface EntryTenantSnapshot {
   commissionAmount: number;
 }
 
-/** Tóm tắt nội dung entry, snapshot từ ticket. */
+/** Tóm tắt nội dung entry, snapshot từ ticket. boards[] chứa cả cơ bản và bổ sung. */
 export interface EntrySummary {
   ticketNo: string;
   boards: EntryBoardSnapshot[];
-  sideBets: EntrySideBetSnapshot[];
 }
 
 /** Snapshot kết quả kỳ quay. Copy từ draw khi settle. */
@@ -64,14 +66,12 @@ export interface EntryResult {
 
 /** Chi tiết thanh toán. Set sau khi settle. */
 export interface EntryPayout {
-  /** Tổng tiền thắng = Σ(boardPayouts[].winAmount) + Σ(sideBetPayouts[].winAmount). */
+  /** Tổng tiền thắng = Σ(boardPayouts[].winAmount). */
   winAmount: number;
   /** Tiền trả cho player. Thường = winAmount. Sau ApplyPayoutCaps có thể giảm. */
   payoutAmount: number;
-  /** Chi tiết thắng/thua từng board cách chơi cơ bản. */
+  /** Chi tiết thắng/thua từng board (cả cơ bản và bổ sung). */
   boardPayouts: EntryBoardPayout[];
-  /** Chi tiết thắng/thua từng side bet (Lớn/Nhỏ, Chẵn/Lẻ). */
-  sideBetPayouts: EntrySideBetPayout[];
   /** Thời điểm settle. */
   settledAt: Date;
   payoutStatus?: PayoutStatus;
@@ -106,20 +106,39 @@ export interface TicketEntryDoc {
 
   // ───── Partition / Ownership ─────
 
+  /**
+   * ID đại lý sở hữu entry.
+   */
   tenantId: string;
+
+  /**
+   * ID tài khoản player đặt cược.
+   */
   accountId: string;
+
+  /**
+   * Tên đăng nhập player đặt cược.
+   */
   username: string;
+
   /**
    * IP address của player lúc đặt cược (IPv4 hoặc IPv6).
    * Snapshot từ ticket, lưu để audit trail.
    */
   ipAddress?: string;
+
   /** Reference đến ticket gốc. Lưu dạng hex string (ObjectId.toHexString()). */
   ticketId: string;
 
   // ───── Draw Snapshot ─────
-
+  /**
+   * ID kỳ quay mà entry tham gia. Format: "YYYY-MM-DD.NNN".
+   */
   drawId: string;
+
+  /**
+   * Ngày tài chính của kỳ quay. Snapshot từ draw, dùng cho báo cáo.
+   */
   financialDate: ISODateString;
 
   // ───── Tenant (snapshot đại lý lúc đặt cược) ─────
@@ -132,15 +151,18 @@ export interface TicketEntryDoc {
 
   // ───── Stake ─────
 
-  /** Số selections = boards.length + sideBets.length. */
+  /** Số selections = boards.length (cả cơ bản và bổ sung). */
   selectionCount: number;
+
   /**
-   * Tổng đơn vị cược = Σ(board.betCount) + Σ(sideBet.betCount).
+   * Tổng đơn vị cược = Σ(board.betCount).
    * Dùng để tính tiền: amount = betUnitCount × unitPrice.
    */
   betUnitCount: number;
+
   /** Tổng tiền cược = betUnitCount × unitPrice (VND). */
   amount: number;
+
   unitPrice: number;
 
   // ───── Entry Summary ─────
@@ -190,7 +212,9 @@ export interface TicketEntryDoc {
   // ───── Timestamps ─────
 
   createdAt: Date;
+
   updatedAt: Date;
+
   version: Long;
 }
 
@@ -198,67 +222,95 @@ export interface TicketEntryDoc {
 // Sub-types
 // ─────────────────────────────────────────────
 
+/**
+ * Snapshot 1 board từ ticket — cả cơ bản (pick1-pick10) và bổ sung (bigSmall/evenOdd).
+ *
+ * - Cơ bản: boardNo + playType + numbers (bắt buộc), bet = undefined.
+ * - Bổ sung: boardNo + playType + bet (bắt buộc), numbers = undefined.
+ */
 export interface EntryBoardSnapshot {
-  /** Mã board: "A", "B". */
+  /** Mã board: "A", "B", "C". */
   boardNo: string;
-  /** Loại chơi: "pick1" – "pick10". */
+  /** Loại chơi: "pick1"–"pick10" (cơ bản) hoặc "bigSmall"/"evenOdd" (bổ sung). */
   playType: KenoPlayType;
-  /** Số dạng string "01"-"80". */
-  numbers: string[];
+  /**
+   * Số dạng string "01"-"80".
+   * Bắt buộc cho cơ bản (pick1-pick10), undefined cho bổ sung.
+   */
+  numbers?: string[];
+  /**
+   * Lựa chọn cụ thể cho side bet: "big"/"small"/"bigSmallDraw"/"even"/"odd"/...
+   * Bắt buộc cho bổ sung (bigSmall/evenOdd), undefined cho cơ bản.
+   */
+  bet?: KenoBigSmallBet | KenoEvenOddBet;
+
   /** Số lần cược nhân bội (≥ minBetCount). Snapshot từ ticket board. */
   betCount: number;
 }
 
-export interface EntrySideBetSnapshot {
-  /** Loại side bet: "bigSmall" hoặc "evenOdd". */
-  playType: KenoPlayType;
-  /** Lựa chọn cụ thể: "big"/"small"/"bigSmallDraw"/... */
-  bet: KenoBigSmallBet | KenoEvenOddBet;
-  /** Số lần cược nhân bội (≥ minBetCount). Snapshot từ ticket side bet. */
-  betCount: number;
-}
-
+/**
+ * Chi tiết payout 1 board — cả cơ bản và bổ sung.
+ *
+ * - Cơ bản (pick1-pick10): dùng matchCount + pickCount + isWin, outcome = undefined.
+ * - Bổ sung (bigSmall/evenOdd): dùng outcome + isWin, matchCount = null, pickCount = null.
+ */
 export interface EntryBoardPayout {
-  /** Mã board: "A", "B". */
+  /** Mã board: "A", "B", "C". */
   boardNo: string;
-  /** Loại chơi: "pick1" – "pick10". */
-  playType: KenoPlayType;
-  /** Số trùng với kết quả quay. */
-  matchCount: number;
-  /** Số lượng số người chơi đã chọn (= numbers.length). */
-  pickCount: number;
-  /** Số lần cược nhân bội. Giải thích tại sao winAmount > giá trị 1 unit. */
-  betCount: number;
-  /** Tiền thắng thực tế = unitWinAmount × betCount (VND). 0 nếu không trúng. */
-  winAmount: number;
-}
 
-export interface EntrySideBetPayout {
-  /** Loại side bet: "bigSmall" hoặc "evenOdd". */
+  /** Loại chơi: "pick1"–"pick10" hoặc "bigSmall"/"evenOdd". */
   playType: KenoPlayType;
-  /** Lựa chọn cụ thể: "big"/"small"/"bigSmallDraw"/... */
-  bet: KenoBigSmallBet | KenoEvenOddBet;
+
+  /**
+   * Số trùng với kết quả quay. Chỉ meaningful cho cơ bản (pick1-pick10).
+   * Bổ sung (bigSmall/evenOdd): null — field không áp dụng.
+   *
+   * LƯU Ý: pick8/9/10 trùng 0 số = giải an ủi 10.000đ → 0 là giá trị hợp lệ.
+   */
+  matchCount: number | null;
+
+  /**
+   * Số lượng số người chơi đã chọn (= numbers.length). Chỉ meaningful cho cơ bản.
+   * Bổ sung (bigSmall/evenOdd): null — field không áp dụng.
+   */
+  pickCount: number | null;
+
+  /**
+   * Lựa chọn cụ thể player đặt. Chỉ cho bổ sung (bigSmall/evenOdd).
+   * Cơ bản: undefined.
+   */
+  bet?: KenoBigSmallBet | KenoEvenOddBet;
+
   /**
    * Kết quả draw đối với bet này: "big13Plus", "draw", "even1314"...
-   * LƯU Ý: `outcome` mô tả trạng thái draw, KHÔNG phải player win/lose.
-   * Ví dụ: player đặt "big", draw ra 8 số lớn → outcome = "big8", isWin = false.
-   *         player đặt "small", draw ra 8 số lớn → cùng outcome = "big8", isWin = true.
-   */
-  outcome: string;
-  /**
-   * Convenience alias cho `winAmount > 0`. Invariant đảm bảo bởi matchBigSmallBet/matchEvenOddBet:
-   *   isWin = true  ↔  winAmount > 0  (luôn đúng, không có ngoại lệ)
-   *   isWin = false ↔  winAmount = 0
+   * Chỉ cho bổ sung (bigSmall/evenOdd). Cơ bản: undefined.
    *
-   * Tại sao giữ dù redundant với winAmount?
-   *   - Client đọc win/lose trực tiếp mà không cần parse winAmount
-   *   - EntryBoardPayout không có field này vì matchCount đã là semantic richer
-   *   - Asymmetry có chủ đích: boardPayout dùng winAmount > 0, sideBetPayout dùng isWin
+   * LƯU Ý: `outcome` mô tả trạng thái draw, KHÔNG phải player win/lose.
+   */
+  outcome?: string;
+
+  /**
+   * Kết quả matching: player thắng hay thua board này.
+   * Set cho TẤT CẢ play types — cơ bản lẫn bổ sung.
+   *
+   * **Lý do tồn tại (denormalized flag):**
+   * Keno/Bingo18 không có `TicketLineDoc` riêng như các lottery game — kết quả per-board
+   * chỉ được lưu tại đây. Mỗi play type có logic xác định thắng/thua khác nhau:
+   *  - pick1-pick10: `matchCount >= threshold[pickCount]` (tra prize table)
+   *  - bigSmall:     `bet === outcome`
+   *  - evenOdd:      `bet === outcome`
+   * `isWin` normalize tất cả thành 1 boolean duy nhất tại thời điểm settle, giúp
+   * downstream consumers (SDK, backoffice, feed, reports) không cần tự implement
+   * lại matching logic per play type.
+   *
+   * Invariant: isWin = true ↔ winAmount > 0.
    */
   isWin: boolean;
+
   /** Số lần cược nhân bội. Giải thích tại sao winAmount > giá trị 1 unit. */
   betCount: number;
-  /** Tiền thắng thực tế = unitWinAmount × betCount (VND). 0 nếu không trúng. Ground truth của win/lose. */
+
+  /** Tiền thắng thực tế = unitWinAmount × betCount (VND). 0 nếu không trúng. */
   winAmount: number;
 }
 
@@ -272,6 +324,7 @@ export interface EntrySideBetPayout {
 export interface TicketEntryEntity extends Omit<TicketEntryDoc, "_id" | "version"> {
   /** MongoDB ObjectId đã chuyển sang hex string. */
   id: string;
+
   /**
    * Global change sequence đã convert từ BSON Long → string.
    * Dùng cho feed sync detect thay đổi.

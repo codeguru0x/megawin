@@ -7,111 +7,175 @@
  * @module
  */
 
-import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "./enums";
+import type { KenoBigSmallBet, KenoEvenOddBet } from "./enums";
 
 // ─────────────────────────────────────────────
 // Input Types (mua vé)
 // ─────────────────────────────────────────────
 
 /**
- * Input board cơ bản — chọn 1-10 số.
- *
- * Số Keno dạng string zero-padded `"01"` đến `"80"`.
- *
- * @example
- * ```ts
- * const board: KenoBasicBoardInput = {
- *   boardNo: "A",
- *   numbers: ["01", "15", "33", "44", "60"],
- * };
- * ```
+ * Base fields có trong mọi loại board Keno.
  */
-export interface KenoBasicBoardInput {
+interface KenoBoardBase {
   /**
-   * Mã board: `"A"` hoặc `"B"`.
+   * Mã board: `"A"`, `"B"`, hoặc `"C"`.
+   *
+   * Bắt buộc cho mọi board. Mỗi vé tối đa 3 boards, không trùng boardNo.
    */
   boardNo: string;
-
-  /**
-   * Danh sách số Keno đã chọn.
-   *
-   * - String zero-padded: `"01"` đến `"80"`
-   * - Tối thiểu 1 số, tối đa 10 số
-   * - Không trùng nhau
-   */
-  numbers: string[];
-
   /**
    * Số lần cược nhân bội cho board này (≥ 1, ≤ maxBetCount).
    *
-   * Mặc định = 1 nếu không truyền. UI hiển thị "×N" khi betCount > 1.
-   * Tiền cược board = betCount × unitPrice.
+   * Mặc định = 1 nếu không truyền. Tiền cược board = betCount × unitPrice.
    */
   betCount?: number;
 }
 
 /**
- * Input side bet (cược bổ sung).
+ * Board chọn số (pick1–pick10).
+ *
+ * `playType` xác định số lượng số bắt buộc trong `numbers`:
+ * `"pick1"` = 1 số, `"pick2"` = 2 số, …, `"pick10"` = 10 số.
  *
  * @example
  * ```ts
- * const sideBet: KenoSideBetInput = {
+ * // Board chọn 5 số (pick5)
+ * const board: KenoPickBoardInput = {
+ *   boardNo: "A",
+ *   playType: "pick5",
+ *   numbers: ["01", "15", "33", "44", "60"],
+ * };
+ * ```
+ */
+export interface KenoPickBoardInput extends KenoBoardBase {
+  /** Kiểu chọn số. Số lượng phần tử trong `numbers` phải đúng với con số sau `"pick"`. */
+  playType:
+    | "pick1"
+    | "pick2"
+    | "pick3"
+    | "pick4"
+    | "pick5"
+    | "pick6"
+    | "pick7"
+    | "pick8"
+    | "pick9"
+    | "pick10";
+  /**
+   * Danh sách số Keno đã chọn (string zero-padded `"01"`–`"80"`).
+   *
+   * Số lượng phải khớp với `playType` (pick1=1, pick5=5, …). Không được trùng nhau.
+   */
+  numbers: string[];
+}
+
+/**
+ * Board cược Lớn/Nhỏ (bigSmall).
+ *
+ * @example
+ * ```ts
+ * const board: KenoBigSmallBoardInput = {
+ *   boardNo: "B",
  *   playType: "bigSmall",
  *   bet: "big",
  * };
  * ```
  */
-export interface KenoSideBetInput {
-  /**
-   * Loại side bet: `"bigSmall"` hoặc `"evenOdd"`.
-   */
-  playType: typeof KenoPlayType.BigSmall | typeof KenoPlayType.EvenOdd;
-
+export interface KenoBigSmallBoardInput extends KenoBoardBase {
+  /** Phân biệt discriminator. Luôn = `"bigSmall"`. */
+  playType: "bigSmall";
   /**
    * Lựa chọn cược:
-   *
-   * - Big/Small: `"big"` | `"bigSmallDraw"` | `"small"`
-   * - Even/Odd: `"even"` | `"even1112"` | `"evenOddDraw"` | `"odd1112"` | `"odd"`
+   * - `"big"` — Lớn (≥ 13 số từ 41–80)
+   * - `"small"` — Nhỏ (≥ 13 số từ 01–40)
+   * - `"bigSmallDraw"` — Hoà (10 lớn, 10 nhỏ)
    */
-  bet: KenoBigSmallBet | KenoEvenOddBet;
-
-  /**
-   * Số lần cược nhân bội cho side bet này (≥ 1, ≤ maxBetCount).
-   *
-   * Mặc định = 1 nếu không truyền. Tiền cược side bet = betCount × unitPrice.
-   */
-  betCount?: number;
+  bet: KenoBigSmallBet;
 }
+
+/**
+ * Board cược Chẵn/Lẻ (evenOdd).
+ *
+ * @example
+ * ```ts
+ * const board: KenoEvenOddBoardInput = {
+ *   boardNo: "C",
+ *   playType: "evenOdd",
+ *   bet: "even",
+ * };
+ * ```
+ */
+export interface KenoEvenOddBoardInput extends KenoBoardBase {
+  /** Phân biệt discriminator. Luôn = `"evenOdd"`. */
+  playType: "evenOdd";
+  /**
+   * Lựa chọn cược:
+   * - `"even"` — Chẵn (≥ 13 số chẵn)
+   * - `"even1112"` — 11 hoặc 12 số chẵn
+   * - `"evenOddDraw"` — Hoà (10 chẵn, 10 lẻ)
+   * - `"odd1112"` — 11 hoặc 12 số lẻ
+   * - `"odd"` — Lẻ (≥ 13 số lẻ)
+   */
+  bet: KenoEvenOddBet;
+}
+
+/**
+ * Input 1 board khi mua vé Keno — discriminated union trên `playType`.
+ *
+ * Tất cả loại chơi đều nằm trong cùng mảng `boards[]`.
+ * `playType` **bắt buộc** với mọi board; TypeScript sẽ enforce đúng fields theo từng variant.
+ *
+ * @example
+ * ```ts
+ * // Board chọn số
+ * const pickBoard: KenoBoardInput = {
+ *   boardNo: "A",
+ *   playType: "pick5",
+ *   numbers: ["01", "15", "33", "44", "60"],
+ * };
+ *
+ * // Board cược Lớn/Nhỏ
+ * const bigSmallBoard: KenoBoardInput = {
+ *   boardNo: "B",
+ *   playType: "bigSmall",
+ *   bet: "big",
+ * };
+ *
+ * // Board cược Chẵn/Lẻ
+ * const evenOddBoard: KenoBoardInput = {
+ *   boardNo: "C",
+ *   playType: "evenOdd",
+ *   bet: "even",
+ * };
+ * ```
+ */
+export type KenoBoardInput = KenoPickBoardInput | KenoBigSmallBoardInput | KenoEvenOddBoardInput;
 
 /**
  * Input mua vé Keno.
  *
  * Gửi lên `POST /games/keno/bets` qua `client.keno.placeBet()`.
  *
- * Phải có ít nhất 1 board hoặc 1 side bet.
+ * Phải có ít nhất 1 board. Board bao gồm cả chọn số lẫn cược bổ sung (Lớn/Nhỏ, Chẵn/Lẻ).
  *
  * @example
  * ```ts
  * import type { KenoTicketPurchaseInput } from "@megawin/player-sdk/keno";
  *
- * // Cược cơ bản 1 kỳ
+ * // Cược cơ bản 1 kỳ — playType bắt buộc
  * const input: KenoTicketPurchaseInput = {
  *   drawIds: ["2026-02-25.001"],
  *   boards: [
- *     { boardNo: "A", numbers: ["01", "15", "33", "44", "60"] },
+ *     { boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] },
  *   ],
  * };
  *
- * // Cược nhiều kỳ + side bet
+ * // Cược nhiều kỳ + board cược bổ sung
  * const input2: KenoTicketPurchaseInput = {
  *   drawIds: ["2026-02-25.001", "2026-02-25.002", "2026-02-25.003"],
  *   boards: [
- *     { boardNo: "A", numbers: ["01", "15", "33", "44", "60"] },
- *     { boardNo: "B", numbers: ["22", "44", "66"] },
- *   ],
- *   sideBets: [
- *     { playType: "bigSmall", bet: "big" },
- *     { playType: "evenOdd", bet: "even" },
+ *     { boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] },
+ *     { boardNo: "B", playType: "pick3", numbers: ["22", "44", "66"] },
+ *     { boardNo: "C", playType: "bigSmall", bet: "big" },
  *   ],
  * };
  * ```
@@ -127,20 +191,11 @@ export interface KenoTicketPurchaseInput {
   drawIds: string[];
 
   /**
-   * Boards chọn số cơ bản (Panel A/B).
+   * Boards cược — bao gồm cả board chọn số (pick1-pick10) lẫn cược bổ sung (bigSmall, evenOdd).
    *
-   * Tối đa 2 boards, boardNo không trùng nhau.
-   * Có thể để mảng rỗng nếu chỉ cược side bet.
+   * Tối đa 3 boards (boardNo "A"/"B"/"C"), bất kỳ loại nào.
    */
-  boards: KenoBasicBoardInput[];
-
-  /**
-   * Side bets tùy chọn (Panel C).
-   *
-   * Có thể cược Lớn/Nhỏ và/hoặc Chẵn/Lẻ.
-   * Có thể bỏ qua nếu chỉ cược board cơ bản.
-   */
-  sideBets?: KenoSideBetInput[];
+  boards: KenoBoardInput[];
 }
 
 // ─────────────────────────────────────────────
@@ -303,9 +358,9 @@ export interface KenoTicketSummary {
   pricing: {
     /** Đơn giá 1 bet (VND). */
     unitPrice: number;
-    /** Số selections mỗi kỳ = boards.length + sideBets.length. */
+    /** Số selections mỗi kỳ = boards.length. */
     selectionsPerDraw: number;
-    /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount) + Σ(sideBet.betCount). */
+    /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount). */
     betUnitsPerDraw: number;
     /** Tiền cược mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
@@ -313,10 +368,8 @@ export interface KenoTicketSummary {
     totalAmount: number;
   };
 
-  /** Danh sách boards đã chọn. */
-  boards: KenoBasicBoardSummary[];
-  /** Danh sách side bets. */
-  sideBets: KenoSideBetSummary[];
+  /** Danh sách boards đã chọn (bao gồm cả board chọn số và cược bổ sung). */
+  boards: KenoBoardSummary[];
 
   /**
    * Tiến độ settle.
@@ -370,27 +423,20 @@ export interface KenoTicketSummary {
 }
 
 /**
- * Tóm tắt board trong vé Keno.
+ * Tóm tắt board trong vé Keno — bao gồm cả board chọn số và board cược bổ sung.
+ *
+ * - Board chọn số: có `numbers`, `playType` = `"pick1"`-`"pick10"`.
+ * - Board cược bổ sung: có `bet`, `playType` = `"bigSmall"` hoặc `"evenOdd"`.
  */
-export interface KenoBasicBoardSummary {
-  /** Mã board: `"A"` hoặc `"B"`. */
+export interface KenoBoardSummary {
+  /** Mã board: `"A"`, `"B"`, hoặc `"C"`. */
   boardNo: string;
-  /** Kiểu chơi: `"pick1"` đến `"pick10"`. */
+  /** Kiểu chơi: `"pick1"`-`"pick10"` (chọn số) hoặc `"bigSmall"` / `"evenOdd"` (cược bổ sung). */
   playType: string;
-  /** Danh sách số đã chọn (zero-padded string `"01"`-`"80"`). */
-  numbers: string[];
-  /** Số lần cược nhân bội (≥ 1). Tiền = betCount × unitPrice. */
-  betCount: number;
-}
-
-/**
- * Tóm tắt side bet trong vé Keno.
- */
-export interface KenoSideBetSummary {
-  /** Loại side bet: `"bigSmall"` hoặc `"evenOdd"`. */
-  playType: string;
-  /** Lựa chọn cược. VD: `"big"`, `"even"`, `"odd1112"`. */
-  bet: string;
+  /** Danh sách số đã chọn (zero-padded string `"01"`-`"80"`). Chỉ có cho board chọn số. */
+  numbers?: string[];
+  /** Lựa chọn cược. VD: `"big"`, `"even"`, `"odd1112"`. Chỉ có cho board cược bổ sung. */
+  bet?: string;
   /** Số lần cược nhân bội (≥ 1). Tiền = betCount × unitPrice. */
   betCount: number;
 }
@@ -448,31 +494,31 @@ export interface KenoEntryPayoutSummary {
   /** Tổng tiền trả thưởng (VND). */
   payoutAmount: number;
 
-  /** Kết quả từng board. */
+  /** Kết quả từng board (bao gồm cả board chọn số và cược bổ sung). */
   boardPayouts: Array<{
-    /** Mã board. */
+    /** Mã board: `"A"`, `"B"`, hoặc `"C"`. */
     boardNo: string;
-    /** Kiểu chơi (pick1-pick10). */
+    /** Kiểu chơi: `"pick1"`-`"pick10"`, `"bigSmall"`, hoặc `"evenOdd"`. */
     playType: string;
-    /** Số trùng khớp với kết quả. */
-    matchCount: number;
-    /** Tổng số đã chọn. */
-    pickCount: number;
-    /** Tiền thưởng board này (VND). */
-    winAmount: number;
-  }>;
-
-  /** Kết quả từng side bet. */
-  sideBetPayouts: Array<{
-    /** Loại side bet. */
-    playType: string;
-    /** Lựa chọn cược. VD: `"big"`, `"even"`. */
-    bet: string;
-    /** Kết quả thực tế của kỳ quay. VD: `"big"`, `"even"`. */
-    outcome: string;
-    /** Thắng hay thua. */
+    /**
+     * Số trùng khớp với kết quả quay.
+     * Board chọn số (pick1-pick10): 0-pickCount. `0` hợp lệ (pick8/9/10 có giải an ủi).
+     * Board cược bổ sung (bigSmall/evenOdd): `null` — field không áp dụng.
+     */
+    matchCount: number | null;
+    /**
+     * Số lượng số đã chọn (= numbers.length).
+     * Board chọn số: 1-10.
+     * Board cược bổ sung: `null` — field không áp dụng.
+     */
+    pickCount: number | null;
+    /** Lựa chọn cược. VD: `"big"`, `"even"`. Chỉ có cho board cược bổ sung. */
+    bet?: string;
+    /** Kết quả thực tế của kỳ quay. VD: `"big"`, `"even"`. Chỉ có cho board cược bổ sung. */
+    outcome?: string;
+    /** Thắng hay thua. Set cho tất cả play types. */
     isWin: boolean;
-    /** Tiền thưởng side bet này (VND). */
+    /** Tiền thưởng board này (VND). */
     winAmount: number;
   }>;
 }
@@ -502,29 +548,33 @@ export interface KenoEntryInfo {
   id: string;
   /** ID kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
-  /** Ngày quay. Format: `YYYY-MM-DD`. */
-  drawDate: string;
   /** Trạng thái entry. */
   status: string;
-  /** Tiền cược kỳ này (VND). */
+  /** Tiền cược kỳ này (VND) = betUnitCount × unitPrice. */
   amount: number;
-  /** Số lượng bets trong entry. */
-  betCount: number;
+  /** Mệnh giá 1 lần tham gia dự thưởng (VND). */
+  unitPrice: number;
+  /** Số lượng selections = boards.length. Không tính multiplier. */
+  selectionCount: number;
+  /** Tổng đơn vị cược = Σ(board.betCount). amount = betUnitCount × unitPrice. */
+  betUnitCount: number;
 
   /** Bản sao thông tin cược tại thời điểm đặt. */
   entrySummary: {
     /** Mã vé. VD: `"KENO-20260307-00001"`. */
     ticketNo: string;
-    /** Boards đã cược. */
+    /** Boards đã cược (bao gồm cả board chọn số và cược bổ sung). */
     boards: Array<{
+      /** Mã board: `"A"`, `"B"`, hoặc `"C"`. */
       boardNo: string;
+      /** Kiểu chơi. */
       playType: string;
-      numbers: string[];
-    }>;
-    /** Side bets đã cược. */
-    sideBets: Array<{
-      playType: string;
-      bet: string;
+      /** Danh sách số đã chọn. Chỉ có cho board chọn số. */
+      numbers?: string[];
+      /** Lựa chọn cược. Chỉ có cho board cược bổ sung. */
+      bet?: string;
+      /** Số lần cược nhân bội cho board này. Tiền = betCount × unitPrice. */
+      betCount: number;
     }>;
   };
 
@@ -539,21 +589,19 @@ export interface KenoEntryInfo {
 /**
  * Response từ `GET /games/keno/tickets/{ticketId}/entries`.
  *
- * Chứa thông tin vé và tất cả entries (mỗi kỳ quay 1 entry).
+ * Chứa danh sách entries (mỗi kỳ quay 1 entry).
+ * Để lấy thông tin vé, dùng `listTickets()` hoặc `listPendingTickets()`.
  *
  * @example
  * ```ts
  * const data = await client.keno.getTicketEntries("65abc123def456...");
- * console.log(data.ticket.ticketNo);  // "KENO-20260307-00001"
- * console.log(data.entries.length);    // 5 (nếu mua 5 kỳ)
+ * console.log(data.entries.length); // 5 (nếu mua 5 kỳ)
  *
  * const settled = data.entries.filter(e => e.payout);
  * const totalWin = settled.reduce((sum, e) => sum + e.payout!.winAmount, 0);
  * ```
  */
 export interface KenoTicketEntriesResponse {
-  /** Thông tin tóm tắt vé. */
-  ticket: KenoTicketSummary;
   /** Danh sách entries theo kỳ quay (sắp xếp theo drawTime tăng dần). */
   entries: KenoEntryInfo[];
 }
@@ -598,9 +646,9 @@ export interface KenoPlaceBetResponse {
   pricing: {
     /** Đơn giá 1 bet (VND). */
     unitPrice: number;
-    /** Số selections mỗi kỳ = boards.length + sideBets.length. */
+    /** Số selections mỗi kỳ = boards.length. */
     selectionsPerDraw: number;
-    /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount) + Σ(sideBet.betCount). */
+    /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount). */
     betUnitsPerDraw: number;
     /** Tiền cược mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
     amountPerDraw: number;
@@ -608,10 +656,8 @@ export interface KenoPlaceBetResponse {
     totalAmount: number;
   };
 
-  /** Số lượng boards trong vé. */
+  /** Số lượng boards trong vé (bao gồm cả board chọn số và cược bổ sung). */
   boardCount: number;
-  /** Số lượng side bets trong vé. */
-  sideBetCount: number;
   /** Số lượng entries đã tạo (= số kỳ quay). */
   entryCount: number;
 }
@@ -626,7 +672,7 @@ export interface KenoPlaceBetResponse {
 export interface KenoGameRules {
   /** Mệnh giá 1 lần tham gia (VND). VD: 10000. */
   unitPrice: number;
-  /** Số panel cơ bản tối đa / vé. VD: 2 (A, B). */
+  /** Số panel tối đa / vé. VD: 3 (A, B, C). */
   maxBasicBoardsPerTicket: number;
   /** Số kỳ liên tiếp tối đa. VD: 20. */
   maxDrawCount: number;
@@ -829,44 +875,41 @@ export interface KenoPrizeTableInfo {
 // ─────────────────────────────────────────────
 
 /**
- * Chi tiết giải thưởng 1 bậc chơi cơ bản trong kỳ quay.
+ * Chi tiết giải thưởng 1 bậc chơi trong kỳ quay Keno (unified).
  *
- * Ví dụ: "Trúng 10 trong 20 số" → pickCount=10, matchCount=10, winnerCount=5, prizePerUnit=2000000000
+ * Bao gồm cả giải board chọn số (pick1-pick10) và cược bổ sung (bigSmall, evenOdd).
+ *
+ * - Board chọn số: `pickCount` + `matchCount` xác định bậc giải.
+ * - Board cược bổ sung: `bet` xác định lựa chọn trúng.
+ *
+ * @example
+ * ```ts
+ * // Board chọn số: pickCount=10, matchCount=10 → jackpot
+ * // Board cược bổ sung: playType="bigSmall", bet="big" → trúng Lớn
+ * ```
  */
-export interface KenoBasicPrizeDetail {
-  /** Bậc chơi (pickCount): 1-10. */
-  pickCount: number;
-  /** Số trùng khớp (matchCount): 0-pickCount. */
-  matchCount: number;
+export interface KenoDrawPrizeDetail {
+  /** Kiểu chơi: `"pick1"`-`"pick10"`, `"bigSmall"`, hoặc `"evenOdd"`. */
+  playType: string;
+  /**
+   * Bậc chơi (pickCount): 1-10 cho board chọn số.
+   * Board cược bổ sung (bigSmall/evenOdd): `null` — field không áp dụng.
+   */
+  pickCount: number | null;
+  /**
+   * Số trùng khớp (matchCount): 0-pickCount cho board chọn số.
+   * Board cược bổ sung: `null` — field không áp dụng.
+   */
+  matchCount: number | null;
+  /**
+   * Lựa chọn cược trúng. Chỉ có cho board cược bổ sung.
+   * - bigSmall: `"big"` | `"small"` | `"bigSmallDraw"`
+   * - evenOdd: `"even"` | `"odd"` | `"even1112"` | `"odd1112"` | `"evenOddDraw"`
+   */
+  bet?: string;
   /** Tổng số bộ trúng. */
   winnerCount: number;
   /** Tiền thưởng mỗi bộ (VND). Bậc 8/9/10 có thể bị cap. */
-  prizePerUnit: number;
-}
-
-/**
- * Chi tiết giải thưởng side bet (Lớn/Nhỏ, Chẵn/Lẻ) trong kỳ quay.
- *
- * Mô hình đối xứng với KenoBasicPrizeDetail:
- *   BasicPrize:  {pickCount, matchCount} → {winnerCount, prizePerUnit}
- *   SideBetPrize: {playType, bet}        → {winnerCount, prizePerUnit}
- *
- * Ví dụ: 5 người đặt "big" trúng → playType="bigSmall", bet="big", winnerCount=5, prizePerUnit=26000
- */
-export interface KenoSideBetPrizeDetail {
-  /**
-   * Loại side bet: `"bigSmall"` (Lớn/Nhỏ) hoặc `"evenOdd"` (Chẵn/Lẻ).
-   */
-  playType: string;
-  /**
-   * Lựa chọn người chơi đặt và trúng.
-   * - bigSmall: `"big"` | `"small"` | `"bigSmallDraw"`
-   * - evenOdd:  `"even"` | `"odd"` | `"even1112"` | `"odd1112"` | `"evenOddDraw"`
-   */
-  bet: string;
-  /** Số người đặt cược trúng với bet value này. */
-  winnerCount: number;
-  /** Tiền thưởng mỗi lần cược (VND). */
   prizePerUnit: number;
 }
 
@@ -908,8 +951,8 @@ export interface KenoListDrawResultsParams {
 /**
  * Kết quả 1 kỳ quay Keno cho player.
  *
- * Chứa 20 số trúng, stats Chẵn/Lẻ + Lớn/Nhỏ, và bảng giải thưởng
- * theo bậc chơi (có số lượng người trúng).
+ * Chứa 20 số trúng, stats Chẵn/Lẻ + Lớn/Nhỏ, và bảng giải thưởng thống nhất
+ * (bao gồm cả board chọn số và cược bổ sung).
  *
  * Dùng cho endpoint chi tiết: GET /games/keno/draw-results/:drawId
  */
@@ -939,11 +982,8 @@ export interface KenoDrawResultDetail {
     oddCount: number;
   };
 
-  /** Bảng giải thưởng cơ bản — chỉ chứa bậc có người trúng. */
-  basicPrizes: KenoBasicPrizeDetail[];
-
-  /** Bảng giải thưởng side bet (Lớn/Nhỏ, Chẵn/Lẻ) — chỉ chứa bet values có người trúng. */
-  sideBetPrizes: KenoSideBetPrizeDetail[];
+  /** Bảng giải thưởng thống nhất — chứa cả giải board chọn số và cược bổ sung có người trúng. */
+  prizes: KenoDrawPrizeDetail[];
 
   /** Tham chiếu Vietlott. */
   vietlottRef?: {

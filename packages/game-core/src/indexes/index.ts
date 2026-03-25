@@ -64,51 +64,7 @@ export const FEED_SYNC_CURSOR_INDEXES: IndexDescription[] = [
     name: "idx_gameProduct_unique",
   },
 ];
-
-// ─────────────────────────────────────────────
-// gameDailyReports indexes
-// ─────────────────────────────────────────────
-
-/**
- * Chiến lược:
- * 1. game_draw: unique per tenant + game + draw
- * 2. game_daily: unique per tenant + game + date
- * 3. company_daily: unique per game + date
- * 4. financialDate: query báo cáo theo ngày/range
- * 5. gameProduct + financialDate: dashboard filter theo game
- */
-export const GAME_DAILY_REPORT_INDEXES: IndexDescription[] = [
-  {
-    key: { reportType: 1, tenantId: 1, gameProduct: 1, drawId: 1 },
-    unique: true,
-    partialFilterExpression: { reportType: "game_draw" },
-    name: "idx_game_draw_unique",
-  },
-  {
-    key: { reportType: 1, tenantId: 1, gameProduct: 1, financialDate: 1 },
-    unique: true,
-    partialFilterExpression: { reportType: "game_daily" },
-    name: "idx_game_daily_unique",
-  },
-  {
-    key: { reportType: 1, gameProduct: 1, financialDate: 1 },
-    unique: true,
-    partialFilterExpression: { reportType: "company_daily" },
-    name: "idx_company_daily_unique",
-  },
-  {
-    key: { financialDate: 1, reportType: 1 },
-    name: "idx_financial_date",
-  },
-  {
-    key: { gameProduct: 1, financialDate: 1, reportType: 1 },
-    name: "idx_game_financial_date",
-  },
-  {
-    key: { tenantId: 1, financialDate: 1, reportType: 1 },
-    name: "idx_tenant_financial_date",
-  },
-];
+ 
 
 // ─────────────────────────────────────────────
 // playerSettleGameDaily indexes

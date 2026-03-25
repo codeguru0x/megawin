@@ -148,17 +148,27 @@ POST http://localhost:4010/player/keno/bets
 ### Quy tắc body
 
 - `drawIds`: mảng 1-30 draw ID, không trùng, format `YYYY-MM-DD.NNN`
-- `boards`: mảng 0-2 board (boardNo `"A"` hoặc `"B"`), mỗi board có 1-10 số từ `"01"` đến `"80"`, không trùng số
-- `sideBets`: mảng side bets
-- Phải có ít nhất 1 board hoặc 1 side bet
-- `betCount`: **optional** (integer ≥ 1, mặc định `1`) — số lần cược nhân bội; tổng tiền = `unitPrice × betCount`
+- `boards`: mảng 1-3 board (boardNo `"A"`, `"B"`, hoặc `"C"`), không trùng boardNo
+- **TẤT CẢ loại chơi** (cơ bản pick1-pick10 và bổ sung bigSmall/evenOdd) đều nằm trong `boards[]`
+- **Không còn** mảng `sideBets` riêng — bỏ hoàn toàn từ v1.0.13
+- `boardNo`: **bắt buộc** cho mọi board, kể cả cược bổ sung
+- `betCount`: **optional** (integer ≥ 1, mặc định `1`) — số lần cược nhân bội
 
-### Side bet values
+### Loại chơi cơ bản (playType bắt buộc)
 
-| playType   | Các giá trị bet hợp lệ                              |
-| ---------- | --------------------------------------------------- |
-| `bigSmall` | `big`, `small`, `bigSmallDraw`                      |
-| `evenOdd`  | `even`, `odd`, `even1112`, `odd1112`, `evenOddDraw` |
+| playType | Số lượng `numbers` bắt buộc |
+| -------- | --------------------------- |
+| `pick1`  | 1 số                        |
+| `pick2`  | 2 số                        |
+| ...      | ...                         |
+| `pick10` | 10 số                       |
+
+### Loại chơi bổ sung (playType bắt buộc)
+
+| playType   | Mô tả            | Fields cần thiết | Các giá trị `bet` hợp lệ                            |
+| ---------- | ---------------- | ---------------- | --------------------------------------------------- |
+| `bigSmall` | Cược Lớn/Nhỏ/Hòa | `bet`, `boardNo` | `big`, `small`, `bigSmallDraw`                      |
+| `evenOdd`  | Cược Chẵn/Lẻ/Hòa | `bet`, `boardNo` | `even`, `odd`, `even1112`, `odd1112`, `evenOddDraw` |
 
 ---
 
@@ -170,6 +180,7 @@ POST http://localhost:4010/player/keno/bets
   "boards": [
     {
       "boardNo": "A",
+      "playType": "pick1",
       "numbers": ["42"]
     }
   ]
@@ -184,6 +195,7 @@ POST http://localhost:4010/player/keno/bets
   "boards": [
     {
       "boardNo": "A",
+      "playType": "pick1",
       "numbers": ["42"],
       "betCount": 5
     }
@@ -199,6 +211,7 @@ POST http://localhost:4010/player/keno/bets
   "boards": [
     {
       "boardNo": "A",
+      "playType": "pick5",
       "numbers": ["03", "17", "25", "48", "72"],
       "betCount": 1
     }
@@ -214,6 +227,7 @@ POST http://localhost:4010/player/keno/bets
   "boards": [
     {
       "boardNo": "A",
+      "playType": "pick10",
       "numbers": ["01", "08", "15", "22", "33", "44", "55", "66", "77", "80"],
       "betCount": 3
     }
@@ -221,79 +235,133 @@ POST http://localhost:4010/player/keno/bets
 }
 ```
 
-### 4e. Side bet -- Big/Small (big, betCount mặc định)
+### 4e. Cược bổ sung -- Big/Small (big, betCount mặc định)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "bigSmall", "bet": "big" }]
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "bigSmall",
+      "bet": "big"
+    }
+  ]
 }
 ```
 
-### 4f. Side bet -- Big/Small (small, betCount = 1)
+### 4f. Cược bổ sung -- Big/Small (small, betCount = 1)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "bigSmall", "bet": "small", "betCount": 1 }]
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "bigSmall",
+      "bet": "small",
+      "betCount": 1
+    }
+  ]
 }
 ```
 
-### 4g. Side bet -- Big/Small Draw (betCount = 5)
+### 4g. Cược bổ sung -- Big/Small Draw (betCount = 5)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "bigSmall", "bet": "bigSmallDraw", "betCount": 5 }]
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "bigSmall",
+      "bet": "bigSmallDraw",
+      "betCount": 5
+    }
+  ]
 }
 ```
 
-### 4h. Side bet -- Even/Odd (odd, betCount mặc định)
+### 4h. Cược bổ sung -- Even/Odd (odd, betCount mặc định)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "evenOdd", "bet": "odd" }]
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "evenOdd",
+      "bet": "odd"
+    }
+  ]
 }
 ```
 
-### 4i. Side bet -- Even/Odd (even, betCount = 1)
+### 4i. Cược bổ sung -- Even/Odd (even, betCount = 1)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "evenOdd", "bet": "even", "betCount": 1 }]
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "evenOdd",
+      "bet": "even",
+      "betCount": 1
+    }
+  ]
 }
 ```
 
-### 4j. Side bet -- Even 11-12 (betCount = 2)
+### 4j. Cược bổ sung -- Even 11-12 (betCount = 2)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "evenOdd", "bet": "even1112", "betCount": 2 }]
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "evenOdd",
+      "bet": "even1112",
+      "betCount": 2
+    }
+  ]
 }
 ```
 
-### 4k. Side bet -- Odd 11-12 (betCount = 1)
+### 4k. Cược bổ sung -- Odd 11-12 (betCount = 1)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "evenOdd", "bet": "odd1112", "betCount": 1 }]
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "evenOdd",
+      "bet": "odd1112",
+      "betCount": 1
+    }
+  ]
 }
 ```
 
-### 4l. Side bet -- Even/Odd Draw (betCount = 1)
+### 4l. Cược bổ sung -- Even/Odd Draw (betCount = 1)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "evenOdd", "bet": "evenOddDraw", "betCount": 1 }]
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "evenOdd",
+      "bet": "evenOddDraw",
+      "betCount": 1
+    }
+  ]
 }
 ```
 
-### 4m. Combo: 2 boards + 2 side bets + multi-draw (betCount đa dạng)
+### 4m. Combo: 2 boards chọn số + 1 cược bổ sung + multi-draw
 
 ```json
 {
@@ -301,30 +369,72 @@ POST http://localhost:4010/player/keno/bets
   "boards": [
     {
       "boardNo": "A",
+      "playType": "pick5",
       "numbers": ["07", "14", "28", "35", "56"],
       "betCount": 2
     },
     {
       "boardNo": "B",
+      "playType": "pick2",
       "numbers": ["02", "19"],
       "betCount": 1
+    },
+    {
+      "boardNo": "C",
+      "playType": "bigSmall",
+      "bet": "small",
+      "betCount": 3
     }
-  ],
-  "sideBets": [
-    { "playType": "bigSmall", "bet": "small", "betCount": 3 },
-    { "playType": "evenOdd", "bet": "even", "betCount": 1 }
   ]
 }
 ```
 
-### 4n. Chỉ side bets (không board, betCount đa dạng)
+### 4n. Combo: 1 board chọn số + 2 cược bổ sung (tất cả boardNo "A"-"C")
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [
-    { "playType": "bigSmall", "bet": "bigSmallDraw", "betCount": 5 },
-    { "playType": "evenOdd", "bet": "evenOddDraw", "betCount": 1 }
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "pick3",
+      "numbers": ["10", "20", "30"],
+      "betCount": 1
+    },
+    {
+      "boardNo": "B",
+      "playType": "bigSmall",
+      "bet": "big",
+      "betCount": 1
+    },
+    {
+      "boardNo": "C",
+      "playType": "evenOdd",
+      "bet": "even",
+      "betCount": 1
+    }
+  ]
+}
+```
+
+### 4o. Chỉ cược bổ sung (2 boards, không chọn số)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [
+    {
+      "boardNo": "A",
+      "playType": "bigSmall",
+      "bet": "bigSmallDraw",
+      "betCount": 5
+    },
+    {
+      "boardNo": "B",
+      "playType": "evenOdd",
+      "bet": "evenOddDraw",
+      "betCount": 1
+    }
   ]
 }
 ```
@@ -333,50 +443,49 @@ POST http://localhost:4010/player/keno/bets
 
 ### Invalid cases (expect 400)
 
-### 4o. Body rỗng
+### 4p. Body rỗng
 
 ```json
 {}
 ```
 
-### 4p. drawIds rỗng
+### 4q. drawIds rỗng
 
 ```json
 {
   "drawIds": [],
-  "boards": [{ "boardNo": "A", "numbers": ["05"] }]
+  "boards": [{ "boardNo": "A", "playType": "pick1", "numbers": ["05"] }]
 }
 ```
 
-### 4q. Không có board lẫn sideBet
+### 4r. Không có board nào (boards rỗng)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [],
-  "sideBets": []
+  "boards": []
 }
 ```
 
-### 4r. Số ngoài phạm vi (81 > 80)
+### 4s. Số ngoài phạm vi (81 > 80)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [{ "boardNo": "A", "numbers": ["81"] }]
+  "boards": [{ "boardNo": "A", "playType": "pick1", "numbers": ["81"] }]
 }
 ```
 
-### 4s. Số không zero-pad (1 thay vì 01)
+### 4t. Số không zero-pad (1 thay vì 01)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [{ "boardNo": "A", "numbers": ["1"] }]
+  "boards": [{ "boardNo": "A", "playType": "pick1", "numbers": ["1"] }]
 }
 ```
 
-### 4t. Quá 10 số trong 1 board
+### 4u. Quá 10 số trong 1 board
 
 ```json
 {
@@ -384,80 +493,121 @@ POST http://localhost:4010/player/keno/bets
   "boards": [
     {
       "boardNo": "A",
+      "playType": "pick10",
       "numbers": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11"]
     }
   ]
 }
 ```
 
-### 4u. drawId trùng lặp
+### 4v. drawId trùng lặp
 
 ```json
 {
   "drawIds": ["2026-02-28.001", "2026-02-28.001"],
-  "boards": [{ "boardNo": "A", "numbers": ["42"] }]
+  "boards": [{ "boardNo": "A", "playType": "pick1", "numbers": ["42"] }]
 }
 ```
 
-### 4v. drawId sai format
+### 4w. drawId sai format
 
 ```json
 {
   "drawIds": ["invalid-draw-id"],
-  "boards": [{ "boardNo": "A", "numbers": ["42"] }]
+  "boards": [{ "boardNo": "A", "playType": "pick1", "numbers": ["42"] }]
 }
 ```
 
-### 4w. Side bet playType không hợp lệ
+### 4x. boardNo trùng lặp
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "invalidType", "bet": "big" }]
+  "boards": [
+    { "boardNo": "A", "playType": "pick1", "numbers": ["10"] },
+    { "boardNo": "A", "playType": "bigSmall", "bet": "big" }
+  ]
 }
 ```
 
-### 4x. Side bet giá trị bet không hợp lệ
+### 4y. boardNo vượt quá "C" (không hợp lệ)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "bigSmall", "bet": "invalidBet" }]
+  "boards": [{ "boardNo": "D", "playType": "pick1", "numbers": ["42"] }]
 }
 ```
 
-### 4y. betCount = 0 (dưới phạm vi)
+### 4z. boardNo thiếu (bắt buộc)
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [{ "boardNo": "A", "numbers": ["42"], "betCount": 0 }]
+  "boards": [{ "playType": "pick1", "numbers": ["42"] }]
 }
 ```
 
-### 4z. betCount âm
+### 4aa. bigSmall thiếu bet
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [{ "boardNo": "A", "numbers": ["42"], "betCount": -1 }]
+  "boards": [{ "boardNo": "A", "playType": "bigSmall" }]
 }
 ```
 
-### 4aa. betCount là float
+### 4ab. Giá trị bet không hợp lệ
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "boards": [{ "boardNo": "A", "numbers": ["42"], "betCount": 1.5 }]
+  "boards": [{ "boardNo": "A", "playType": "bigSmall", "bet": "invalidBet" }]
 }
 ```
 
-### 4ab. betCount cho side bet không hợp lệ
+### 4ac. playType không hợp lệ
 
 ```json
 {
   "drawIds": ["2026-02-28.001"],
-  "sideBets": [{ "playType": "bigSmall", "bet": "big", "betCount": 0 }]
+  "boards": [{ "boardNo": "A", "playType": "invalidType", "bet": "big" }]
+}
+```
+
+### 4ad. betCount = 0 (dưới phạm vi)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [{ "boardNo": "A", "playType": "pick1", "numbers": ["42"], "betCount": 0 }]
+}
+```
+
+### 4ae. betCount âm
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [{ "boardNo": "A", "playType": "pick1", "numbers": ["42"], "betCount": -1 }]
+}
+```
+
+### 4af. betCount là float
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [{ "boardNo": "A", "playType": "pick1", "numbers": ["42"], "betCount": 1.5 }]
+}
+```
+
+### 4ag. Gửi sideBets (không còn hỗ trợ — expect 400)
+
+```json
+{
+  "drawIds": ["2026-02-28.001"],
+  "boards": [{ "boardNo": "A", "playType": "pick1", "numbers": ["42"] }],
+  "sideBets": [{ "playType": "bigSmall", "bet": "big" }]
 }
 ```

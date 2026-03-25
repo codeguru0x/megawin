@@ -36,13 +36,13 @@
     "@megawin/app-core": "workspace:*",
     "@megawin/data": "workspace:*",
     "@megawin/game-core": "workspace:*",
-    "@megawin/shared": "workspace:*",
     "@megawin/next": "workspace:*",
-    "mongodb": "^7.1.0"
+    "@megawin/shared": "workspace:*",
+    "mongodb": "^7.1.1"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@types/node": "^25.5.0",
-    "typescript": "5.9.3"
+    "typescript": "6.0.2"
   }
 }

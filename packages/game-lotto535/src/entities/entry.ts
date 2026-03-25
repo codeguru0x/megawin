@@ -54,6 +54,7 @@ export interface EntryResult {
    * Lưu dạng string (zero-padded "01"-"12").
    */
   winningSpecial: string;
+
   /** Thời điểm công bố kết quả. */
   publishedAt: Date;
 }
@@ -67,10 +68,13 @@ export interface EntryPayout {
    * Hiện tại = winAmount (chưa có thuế).
    */
   payoutAmount: number;
+
   /** Chi tiết theo từng hạng giải. */
   tiers: EntryPayoutTier[];
+
   /** Thời điểm settle. */
   settledAt: Date;
+
   /**
    * Trạng thái gửi tiền trả thưởng cho tenant.
    * Chỉ có ý nghĩa khi winAmount > 0.
@@ -175,7 +179,7 @@ export interface TicketEntryDoc {
 
   /**
    * Tổng đơn vị cược = Σ(expandedLines × betCount).
-   * Backward compat: data cũ không có field này → fallback = lineCount.
+   * Dùng để tính tiền: amount = betUnitCount × unitPrice.
    */
   betUnitCount: number;
 
@@ -245,6 +249,7 @@ export interface TicketEntryDoc {
 export interface EntryBoardSnapshot {
   /** Mã board ("A", "B", "C", "D", "E"). */
   boardNo: string;
+
   /** Kiểu chơi của board (standard, mainCover, specialCover...). */
   playType: PlayType;
 
@@ -261,33 +266,103 @@ export interface EntryBoardSnapshot {
   betCount: number;
 }
 
-/** Chi tiết trả thưởng cho 1 hạng giải trong entry. */
+/**
+ * Chi tiết trả thưởng cho 1 hạng giải trong entry (Lotto 5/35).
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * VÌ SAO LOTTO 5/35 CÓ `betUnitCount` CÒN MEGA 6/45 / POWER 6/55 THÌ KHÔNG?
+ * ─────────────────────────────────────────────────────────────────
+ *
+ * Cả 3 game đều lưu `winAmount = unitAmount × betCount` vào từng line doc
+ * khi settle → `EntryPayoutTier.amount = Σ(winAmount)` đều đúng ở cả 3 game.
+ *
+ * Điểm khác biệt: Lotto 5/35 có **Split Cycle** (chia Jackpot tích luỹ
+ * xuống tier1–tier5 khi JP >= 12 tỷ và không ai trúng JP).
+ * Bonus split được phân bổ theo **tỷ lệ đơn vị tham gia dự thưởng** (betCount),
+ * không phải theo số lines vật lý (hitCount).
+ *
+ * Để tính tỷ lệ đó, `CalculateFinancials` cần biết:
+ *   `tierBetUnitCounts[tier] = Σ(betUnitCount của tất cả entries trúng tier)`
+ *
+ * Số liệu này được aggregate trực tiếp từ entry collection qua $group:
+ *   `$sum: "$payout.tiers.betUnitCount"`
+ *
+ * Nếu không lưu `betUnitCount` trong tier, phải query thêm line collection riêng
+ * → thêm DB round-trip, tách khỏi $facet đang aggregate entries 1 lần duy nhất.
+ *
+ * Mega 6/45 và Power 6/55 không có Split Cycle nên không cần số liệu này
+ * → không lưu `betUnitCount` trong tier, tiết kiệm storage và giữ schema gọn.
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * VÍ DỤ — Split Cycle phân bổ SAI nếu dùng hitCount thay vì betUnitCount:
+ * ─────────────────────────────────────────────────────────────────
+ *
+ * Kỳ split: jackpotPool = 12.000.000.000 VND, tier1 nhận 2/6 = 4.000.000.000.
+ *
+ * Player A: Bao 6 (6 lines), betCount = 3, trúng 2 lines tier1
+ *   → hitCount = 2, betUnitCount = 2 × 3 = 6
+ *   → đóng góp 6 × 10.000đ = 60.000đ để tham gia dự thưởng tier1
+ *
+ * Player B: Standard (1 line), betCount = 1, trúng 1 line tier1
+ *   → hitCount = 1, betUnitCount = 1 × 1 = 1
+ *   → đóng góp 1 × 10.000đ = 10.000đ để tham gia dự thưởng tier1
+ *
+ * Tổng betUnitCount tier1 toàn kỳ = 6 + 1 = 7 đơn vị.
+ * bonusPerUnit = floor(4.000.000.000 / 7) = 571.428.571 VND.
+ *
+ * Phân bổ ĐÚNG (theo betUnitCount):
+ *   Player A nhận: 571.428.571 × 6 = 3.428.571.426 VND
+ *   Player B nhận: 571.428.571 × 1 =   571.428.571 VND
+ *   Tổng = 3.999.999.997 VND ✓ (sai số do floor, đúng luật)
+ *
+ * Phân bổ SAI (nếu dùng hitCount):
+ *   Tổng hitCount = 2 + 1 = 3, bonusPerHit = floor(4.000.000.000 / 3) = 1.333.333.333.
+ *   Player A nhận: 1.333.333.333 × 2 = 2.666.666.666 VND ← thiếu ~762 triệu
+ *   Player B nhận: 1.333.333.333 × 1 = 1.333.333.333 VND ← dư ~762 triệu
+ *   → Vi phạm luật Vietlott: "chia theo tỷ lệ giá trị tham gia dự thưởng"
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * QUY TẮC THIẾT KẾ:
+ * ─────────────────────────────────────────────────────────────────
+ * Thêm `betUnitCount` vào `EntryPayoutTier` khi và chỉ khi game có cơ chế
+ * cần aggregate `Σ(betCount × hitCount)` per tier **từ entry collection**
+ * sau khi settle xong (ví dụ: split cycle, bonus distribution theo tỷ lệ).
+ */
 export interface EntryPayoutTier {
   /** Hạng giải – type-safe enum. */
   tier: PrizeTier;
 
-  /** Số line trúng hạng này. */
+  /** Số lines vật lý trúng hạng này (không nhân betCount). */
   hitCount: number;
 
   /**
-   * Tổng đơn vị cược trúng hạng này = Σ betCount của các lines trúng tier đó.
-   * Khi tất cả betCount = 1 → betUnitCount = hitCount.
-   * Dùng cho aggregateSettleSummary (tierBetUnitCounts) và applySplitBonusForTier.
+   * Tổng đơn vị cược trúng hạng này = Σ(betCount) của các lines trúng tier.
+   *
+   * Khác `hitCount`: `betUnitCount = hitCount × betCount` (khi 1 board, 1 betCount).
+   * Với multi-board hoặc betCount > 1: chỉ cộng betCount của lines **thuộc tier này**.
+   *
+   * Dùng cho 2 mục đích:
+   *   1. `aggregateSettleSummary` → `tierBetUnitCounts` → đầu vào `calculateSplitDistribution`
+   *   2. `applySplitBonusForTier` → tính bonus từng entry = bonusPerUnit × betUnitCount
    */
-  betUnitCount?: number;
+  betUnitCount: number;
 
   /**
-   * Tiền thưởng mỗi hit (VND).
-   * Bao gồm cả split bonus nếu đang trong kỳ chia Jackpot.
+   * Tiền thưởng mỗi đơn vị tham gia dự thưởng (VND).
+   * Giải cố định: = prizeTable[tier]. Jackpot: = 0 tại SettleEntries, patch ở PatchJackpotPrize.
    */
   unitAmount: number;
 
-  /** Tổng tiền hạng này = unitAmount × betUnitCount (hoặc hitCount nếu betUnitCount không có). */
+  /**
+   * Tổng tiền hạng này (VND) = unitAmount × betUnitCount.
+   * Đã nhân betCount — entry betCount=3 trúng tier2 nhận gấp 3 entry betCount=1.
+   */
   amount: number;
 
   /**
-   * Đánh dấu tiền thưởng có bao gồm phần bổ sung
-   * từ chia Jackpot (split cycle) hay không.
+   * Đánh dấu tier này là phần thưởng bổ sung từ Split Cycle (chia Jackpot tích luỹ).
+   * Khi `true`: tier được thêm bởi `ApplySplitBonuses` sau settle, không phải từ kết quả quay.
+   * Khi `false` hoặc `undefined`: tier từ kết quả khớp số bình thường.
    */
   isSplitBonus?: boolean;
 }

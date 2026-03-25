@@ -119,7 +119,6 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
       // Đếm bet units theo tier (bỏ qua Jackpot và Consolation)
       // Quy tắc Vietlott: split bonus chia theo tỷ lệ đơn vị tham gia dự thưởng (betCount)
       // tierBetUnitCounts = Σ(hitCount × betCount) per tier — tổng đơn vị tham gia thực tế.
-      // Backward compat: data cũ betCount = 1 → tierBetUnitCounts = tierWinnerCounts.
       const winnerCountPerTier = new Map<PrizeTier, number>();
       for (const [tierStr, betUnitCount] of Object.entries(settleSummary.tierBetUnitCounts)) {
         if (tierStr === PrizeTier.Jackpot || tierStr === PrizeTier.Consolation) continue;

@@ -86,7 +86,7 @@ export function DrawManagementSection() {
 
     return {
       // Mega 6/45: 6 số chính (01-45), cast cứng vì luôn đúng từ DB
-      winningMain: d.result.winningMain as [string, string, string, string, string, string],
+      winningNumbers: d.result.winningNumbers as [string, string, string, string, string, string],
       settledAt:
         d.result.publishedAt instanceof Date
           ? d.result.publishedAt.toISOString()

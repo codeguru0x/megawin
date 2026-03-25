@@ -2,8 +2,8 @@
  * Bingo 18 – Live Entries DTO
  *
  * Dùng cho live feed panel trên dashboard vận hành.
- * Bingo 18 có boards cơ bản (singleNum/doubleMatch/tripleMatch) tách biệt side bets.
- * Cấu trúc khác Keno: board có number? + tripleKind?, side bet có sum? + bet?.
+ * Bingo 18: boards[] chứa cả cơ bản và bổ sung, phân biệt qua playType.
+ * Cấu trúc board có number? + tripleKind? (cơ bản) + sum? + bet? (bổ sung).
  */
 
 import type {
@@ -24,21 +24,25 @@ export interface GetLiveEntriesInput {
   limit?: number;
 }
 
-// ─── Board & SideBet ─────────────────────────────────────────────────────────
+// ─── Board ───────────────────────────────────────────────────────────────────
 
 /**
- * Một board cơ bản trong entry Bingo 18.
- * Basic boards: singleNum (1 số), doubleMatch (1 cặp), tripleMatch (specific/any).
+ * Một board trong entry Bingo 18 — cả cơ bản và bổ sung.
+ *
+ * - singleNum/doubleMatch: number bắt buộc.
+ * - tripleMatch: tripleKind bắt buộc, number nếu specific.
+ * - sumTotal: sum bắt buộc.
+ * - bigSmallDraw: bet bắt buộc.
  */
 export interface LiveEntryBoard {
   /** Mã board (format "B01", "B02",...). */
   boardNo: string;
-  /** Loại cược: singleNum | doubleMatch | tripleMatch. */
+  /** Loại cược: singleNum | doubleMatch | tripleMatch | sumTotal | bigSmallDraw. */
   playType: Bingo18PlayType;
   /**
    * Số đã chọn (1-6).
    * Dùng cho singleNum + doubleMatch + tripleMatch-specific.
-   * undefined với tripleMatch-any.
+   * undefined với tripleMatch-any, sumTotal, bigSmallDraw.
    */
   number?: number;
   /**
@@ -46,24 +50,9 @@ export interface LiveEntryBoard {
    * Chỉ set cho tripleMatch.
    */
   tripleKind?: Bingo18TripleKind;
-}
-
-/**
- * Một side bet trong entry Bingo 18.
- * sumTotal: chọn tổng cụ thể (3-18). bigSmallDraw: chọn lớn/hòa/nhỏ.
- */
-export interface LiveEntrySideBet {
-  /** Loại side bet: sumTotal | bigSmallDraw. */
-  playType: Bingo18PlayType;
-  /**
-   * Tổng cụ thể đã chọn (3-18).
-   * Chỉ set cho sumTotal.
-   */
+  /** Tổng cụ thể đã chọn (3-18). Chỉ set cho sumTotal. */
   sum?: number;
-  /**
-   * Cược lớn/hòa/nhỏ: "big" | "draw" | "small".
-   * Chỉ set cho bigSmallDraw.
-   */
+  /** Cược lớn/hòa/nhỏ: "big" | "draw" | "small". Chỉ set cho bigSmallDraw. */
   bet?: Bingo18BigSmallBet;
 }
 
@@ -79,14 +68,10 @@ export interface LiveEntryItem {
   tenantId: string;
   /** Tổng tiền cược (VND). */
   amount: number;
-  /** Số boards cơ bản. */
+  /** Số boards (cả cơ bản và bổ sung). */
   boardCount: number;
-  /** Số side bets. */
-  sideBetCount: number;
-  /** Danh sách boards cơ bản (tối đa 6). */
+  /** Danh sách boards (cả cơ bản và bổ sung). */
   boards: LiveEntryBoard[];
-  /** Danh sách side bets. */
-  sideBets: LiveEntrySideBet[];
   /** Thời điểm đặt cược (ISO 8601). */
   createdAt: string;
 }

@@ -18,7 +18,7 @@
  * KHÁC BIỆT SO VỚI LOTTO535/MEGA645/POWER655:
  *   - KHÔNG có jackpotContribution (Bingo 18 không có Jackpot — field không tồn tại)
  *   - companyTake = financials.companyTake (Bingo 18 dùng tên field companyTake)
- *   - KHÔNG có lineCount (Bingo 18 dùng selectionCount = boards+sideBets, không lineCount)
+ *   - KHÔNG có lineCount (Bingo 18 dùng selectionCount = boards, không lineCount)
  *
  * CRASH-SAFE:
  *   - Crash sau tenant upsert (partial): retry upsert overwrite → idempotent.

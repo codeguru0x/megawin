@@ -5,18 +5,15 @@
  *
  * 1 document = 1 vé Bingo 18 (purchase intent).
  * Bingo 18 cho phép:
- * - Boards cơ bản: Một số, Hai số trùng, Ba số trùng
- * - Side bets: Cộng tổng, Lớn/Hòa/Nhỏ
+ * - Boards A-F: bất kỳ loại chơi nào
+ * - Cách chơi cơ bản: Một số, Hai số trùng, Ba số trùng
+ * - Cách chơi bổ sung: Cộng tổng, Lớn/Hòa/Nhỏ
+ * - Mọi loại chơi đều nằm trong mảng boards[], phân biệt qua playType
  * - Mệnh giá: 10.000đ mỗi lần tham gia
  * - Chơi nhiều kỳ liên tiếp (multi-draw)
  */
 
-import type {
-  Bingo18PlayType,
-  Bingo18SideBetPlayType,
-  Bingo18BigSmallBet,
-  Bingo18TripleKind,
-} from "./enums";
+import type { Bingo18PlayType, Bingo18BigSmallBet, Bingo18TripleKind } from "./enums";
 import type { TicketChannel, TicketStatus } from "@megawin/game-core/entities";
 import type { ISODateString } from "./types";
 
@@ -28,9 +25,9 @@ import type { ISODateString } from "./types";
 export interface TicketPricing {
   /** Mệnh giá 1 lần tham gia dự thưởng (VND). Snapshot từ global config. */
   unitPrice: number;
-  /** Số selections mỗi kỳ = boards.length + sideBets.length. Đếm bets logic, KHÔNG tính multiplier. */
+  /** Số selections mỗi kỳ = boards.length. Đếm bets logic, KHÔNG tính multiplier. */
   selectionsPerDraw: number;
-  /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount) + Σ(sideBet.betCount). Dùng tính tiền: amountPerDraw = betUnitsPerDraw × unitPrice. */
+  /** Tổng đơn vị cược mỗi kỳ = Σ(board.betCount). Dùng tính tiền: amountPerDraw = betUnitsPerDraw × unitPrice. */
   betUnitsPerDraw: number;
   /** Tiền cược mỗi kỳ (VND) = betUnitsPerDraw × unitPrice. */
   amountPerDraw: number;
@@ -80,36 +77,35 @@ export interface TicketVoidSummary {
 }
 
 // ─────────────────────────────────────────────
-// Board – Cách chơi cơ bản
+// Board – Tất cả loại chơi (Panels A-F)
 // ─────────────────────────────────────────────
 
-/** Board cơ bản — 1 lựa chọn cược trên bảng Bingo 18. */
-export interface BasicBoard {
-  /** Mã board, format "B01", "B02",... Unique trong 1 ticket. */
+/**
+ * 1 board trên vé Bingo 18 — đại diện cho 1 lựa chọn cược.
+ *
+ * Unified: cả cách chơi cơ bản và bổ sung đều nằm trong cùng 1 interface,
+ * phân biệt qua playType.
+ *
+ * - singleNum: bắt buộc `number` (1-6).
+ * - doubleMatch: bắt buộc `number` (1-6).
+ * - tripleMatch: bắt buộc `tripleKind` + `number` nếu tripleKind = "specific".
+ * - sumTotal: bắt buộc `sum` (3-18).
+ * - bigSmallDraw: bắt buộc `bet` ("big"/"draw"/"small").
+ */
+export interface Board {
+  /** Mã board: "A"–"F". Unique trong 1 ticket. */
   boardNo: string;
-  /** Loại cược: "singleNum" | "doubleMatch" | "tripleMatch". Quyết định cách tính thưởng. */
+  /** Loại cược: "singleNum" | "doubleMatch" | "tripleMatch" | "sumTotal" | "bigSmallDraw". */
   playType: Bingo18PlayType;
-  /** Số đã chọn (1-6) cho singleNum/doubleMatch, hoặc undefined cho tripleMatch any. */
+  /** Số đã chọn (1-6). Dùng cho singleNum, doubleMatch, tripleMatch specific. Undefined cho sumTotal, bigSmallDraw, tripleMatch any. */
   number?: number;
   /** Chỉ dùng cho tripleMatch: "specific" (chọn số) hoặc "any" (bất kỳ bộ ba). */
   tripleKind?: Bingo18TripleKind;
-  /** Số lần tham gia dự thưởng cho board này (≥ minBetCount, ≤ maxBetCount). Player chọn khi đặt cược. */
-  betCount: number;
-}
-
-// ─────────────────────────────────────────────
-// Side Bet – Cách chơi bổ sung
-// ─────────────────────────────────────────────
-
-/** Side Bet — cược bổ sung ngoài board cơ bản. */
-export interface SideBet {
-  /** Loại side bet: "sumTotal" (đoán tổng) hoặc "bigSmallDraw" (lớn/hoà/nhỏ). */
-  playType: Bingo18SideBetPlayType;
-  /** Tổng cụ thể (3-18) cho sumTotal, hoặc big/draw/small cho bigSmallDraw. */
+  /** Tổng cụ thể (3-18). Chỉ dùng cho sumTotal. Undefined cho các loại khác. */
   sum?: number;
-  /** Cược lớn/hoà/nhỏ. Chỉ dùng cho bigSmallDraw. */
+  /** Cược lớn/hoà/nhỏ. Chỉ dùng cho bigSmallDraw. Undefined cho các loại khác. */
   bet?: Bingo18BigSmallBet;
-  /** Số lần tham gia dự thưởng cho side bet này (≥ minBetCount, ≤ maxBetCount). Player chọn khi đặt cược. */
+  /** Số lần tham gia dự thưởng cho board này (≥ minBetCount, ≤ maxBetCount). Player chọn khi đặt cược. */
   betCount: number;
 }
 
@@ -156,15 +152,10 @@ export interface TicketDoc {
   /** Thông tin giá vé, tính tại thời điểm mua. */
   pricing: TicketPricing;
 
-  // ───── Boards cơ bản ─────
+  // ───── Boards (tất cả loại chơi, panels A-F) ─────
 
-  /** Danh sách boards cơ bản (singleNum, doubleMatch, tripleMatch). Tối đa maxBasicBoardsPerTicket. */
-  boards: BasicBoard[];
-
-  // ───── Side Bets ─────
-
-  /** Danh sách side bets (sumTotal, bigSmallDraw). */
-  sideBets: SideBet[];
+  /** Danh sách boards — mỗi board là 1 lựa chọn cược. Tối đa 6 boards (A-F). */
+  boards: Board[];
 
   // ───── Progress ─────
 
@@ -205,10 +196,13 @@ export interface TicketDoc {
    * Luồng: pending → active (khi entry đầu tiên tạo) → completed (tất cả kỳ settled).
    */
   status: TicketStatus;
+
   /** Optimistic concurrency version. Tăng +1 mỗi lần update. */
   version: number;
+
   /** Thời điểm mua vé. Set 1 lần khi tạo, không đổi. */
   createdAt: Date;
+
   /** Thời điểm cập nhật cuối cùng. Tự động cập nhật mỗi khi document thay đổi. */
   updatedAt: Date;
 }

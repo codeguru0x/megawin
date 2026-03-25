@@ -51,8 +51,7 @@ function mapDrawResult(draw: DrawEntity): PlayerDrawResultInfo {
       evenCount: result.evenCount,
       oddCount: result.oddCount,
     },
-    basicPrizes: draw.settleSummary?.basicPrizes ?? [],
-    sideBetPrizes: draw.settleSummary?.sideBetPrizes ?? [],
+    prizes: draw.settleSummary?.prizes ?? [],
     vietlottRef: draw.vietlottRef
       ? {
           drawPeriod: draw.vietlottRef.drawPeriod,

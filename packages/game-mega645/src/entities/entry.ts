@@ -41,7 +41,8 @@ export interface EntryResult {
    * 6 số trúng thưởng theo thứ tự quay gốc (không sort).
    * Lưu dạng string[] (zero-padded "01"-"45") — dùng trực tiếp từ MongoDB, tránh cast.
    */
-  winningMain: string[];
+  winningNumbers: string[];
+
   /** Thời điểm công bố kết quả. */
   publishedAt: Date;
 }
@@ -123,7 +124,6 @@ export interface TicketEntryDoc {
   lineCount: number;
   /**
    * Tổng đơn vị cược = Σ(expandedLines × betCount). Dùng tính tiền.
-   * Khi betCount = 1 cho mọi board thì betUnitCount = lineCount.
    */
   betUnitCount: number;
   /**
@@ -165,10 +165,12 @@ export interface TicketEntryDoc {
 export interface EntryBoardSnapshot {
   /** Ký hiệu board ("A".."F"). */
   boardNo: string;
+
   /** Kiểu chơi (standard / bao5 / bao7-18). */
   playType: PlayType;
-  /** Danh sách số chính người chơi đã chọn ("01"-"45"). */
-  mainNumbers: string[];
+
+  /** Danh sách số người chơi đã chọn ("01"-"45"). */
+  numbers: string[];
 
   /**
    * Số line sau khi expand từ board.
@@ -177,21 +179,47 @@ export interface EntryBoardSnapshot {
    * - bao7-18: C(N, 6)
    */
   expandedLines: number;
+
   /** Số lần cược nhân bội (≥ minBetCount). Snapshot từ ticket board. */
   betCount: number;
 }
 
-/** Chi tiết trúng thưởng 1 hạng giải trong entry. */
+/**
+ * Chi tiết trúng thưởng 1 hạng giải trong entry (Mega 6/45).
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * VÌ SAO KHÔNG CÓ `betUnitCount`?
+ * ─────────────────────────────────────────────────────────────────
+ *
+ * Mega 6/45 không có Split Cycle (chia Jackpot tích luỹ xuống các hạng giải
+ * thấp hơn). Vì vậy không cần aggregate `Σ(betCount × hitCount)` per tier
+ * từ entry collection sau khi settle.
+ *
+ * `betCount` đã được tính vào `winAmount` của từng line doc khi settle:
+ *   `winAmount = unitAmount × betCount`
+ * → `amount = Σ(winAmount từ lines)` — đã nhân betCount, không cần lưu thêm.
+ *
+ * Để biết lý do đầy đủ và ví dụ phân bổ split bonus theo betUnitCount,
+ * xem JSDoc của `EntryPayoutTier` trong `@megawin/game-lotto535/entities`.
+ * ─────────────────────────────────────────────────────────────────
+ */
 export interface EntryPayoutTier {
   /** Hạng giải (jackpot / tier1 / tier2 / tier3). */
   tier: PrizeTier;
-  /** Số line trúng hạng giải này. */
+
+  /** Số lines vật lý trúng hạng giải này (không nhân betCount). */
   hitCount: number;
-  /** Tiền thưởng cho 1 line (VND). Với Jackpot = giá trị Jackpot hiện tại. */
+
+  /**
+   * Tiền thưởng cho 1 đơn vị tham gia dự thưởng (VND).
+   * Jackpot: = 0 tại SettleEntries, patch ở PatchJackpotPrize khi biết pool chính xác.
+   */
   unitAmount: number;
+
   /**
    * Tổng tiền thưởng hạng giải này (VND).
-   * Công thức: hitCount × unitAmount.
+   * Đã nhân betCount — player betCount=3 trúng tier2 nhận gấp 3 player betCount=1.
+   * Công thức: `Σ(winAmount per line)` = `hitCount × unitAmount × betCount` (khi 1 board).
    */
   amount: number;
 }

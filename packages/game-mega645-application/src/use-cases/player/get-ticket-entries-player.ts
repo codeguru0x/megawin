@@ -2,7 +2,7 @@
  * Use Case: Get Ticket Entries for Player (Mega 6/45)
  *
  * Lấy tất cả entries của ticket — chỉ trả entries, không kèm ticket.
- * Mega 6/45: entry result chỉ có winningMain (không có winningSpecial).
+ * Mega 6/45: entry result chỉ có winningNumbers (không có winningSpecial).
  */
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
@@ -53,8 +53,8 @@ function mapPlayerEntry(entry: TicketEntryEntity): PlayerEntryInfo {
     entrySummary: entry.entrySummary,
     result: entry.result
       ? {
-          winningMain: [...entry.result.winningMain],
-          publishedAt: entry.result.publishedAt.toISOString(),
+          winningNumbers: entry.result?.winningNumbers,
+          publishedAt: entry.result?.publishedAt.toISOString(),
         }
       : undefined,
     outcome: entry.outcome,

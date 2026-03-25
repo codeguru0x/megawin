@@ -105,7 +105,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     // Trường hợp đơn giản nhất (99%+ cases): 1 JP line per entry, tất cả boards betCount đồng nhất.
     // Trường hợp phức tạp: lấy JP lines từ DB để tính chính xác.
     const jpLinesData = await this.lineRepo.getJackpotLinesForDraw(drawId);
-    const totalBetUnits = jpLinesData.reduce((sum, line) => sum + (line.betCount ?? 1), 0);
+    const totalBetUnits = jpLinesData.reduce((sum, line) => sum + line.betCount, 0);
 
     const totalJackpotPrize = jackpotOpeningAmount + jackpotContribution;
     const jackpotPerUnit = Math.floor(totalJackpotPrize / Math.max(totalBetUnits, 1));
@@ -122,7 +122,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
       if (!entryIdStr) continue;
       betUnitsByEntry.set(
         entryIdStr,
-        (betUnitsByEntry.get(entryIdStr) ?? 0) + (line.betCount ?? 1),
+        (betUnitsByEntry.get(entryIdStr) ?? 0) + line.betCount,
       );
     }
 
@@ -147,7 +147,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
       // betCount: lấy từ lines data thay vì estimate từ boards
       const entryBetUnits = jpLinesData
         .filter((l) => l.entryId?.toString() === e.id)
-        .reduce((sum, l) => sum + (l.betCount ?? 1), 0);
+        .reduce((sum, l) => sum + l.betCount, 0);
       return {
         accountId: e.accountId,
         username: e.username,

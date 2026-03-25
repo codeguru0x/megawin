@@ -50,11 +50,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "mongodb": "^7.1.0"
+    "mongodb": "^7.1.1"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
-    "@types/node": "^25.2.1",
-    "typescript": "5.9.3"
+    "@types/node": "^25.5.0",
+    "typescript": "6.0.2"
   }
 }

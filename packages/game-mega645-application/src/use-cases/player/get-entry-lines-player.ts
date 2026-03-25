@@ -1,8 +1,8 @@
 /**
  * Use Case: Get Entry Lines for Player (Mega 6/45)
  *
- * Mega 6/45 lines: chỉ có main (không có special).
- * matchResult: mainMatchCount + tier (không có specialMatched).
+ * Mega 6/45 lines: chỉ có numbers (không có special).
+ * matchResult: matchCount + tier (không có specialMatched).
  */
 
 import { ApiGatewayUseCase, AppException } from "@megawin/app-core/use-cases";
@@ -59,10 +59,10 @@ function mapPlayerLine(line: TicketLineDoc): PlayerLineInfo {
   return {
     boardNo: line.boardNo,
     lineIndex: line.lineIndex,
-    main: line.main,
-    betCount: line.betCount ?? 1,
+    numbers: line.numbers,
+    betCount: line.betCount,
     matchResult: {
-      mainMatchCount: line.matchResult.mainMatchCount,
+      matchCount: line.matchResult.matchCount,
       tier: line.matchResult.tier,
       winAmount: line.matchResult.winAmount,
     },

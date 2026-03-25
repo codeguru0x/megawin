@@ -63,7 +63,7 @@ export function Mega645EntryDetailDialog({
   // scheduled = đang chờ kết quả, chưa có payout/result → KHÔNG hiển thị lãi/lỗ
   const isScheduled = status === "scheduled";
 
-  const winningSet = new Set(entry.result?.winningMain ?? []);
+  const winningSet = new Set(entry.result?.winningNumbers ?? []);
 
   const playType =
     boards.length > 0 && boards[0]
@@ -210,7 +210,7 @@ export function Mega645EntryDetailDialog({
                       {MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType}
                     </Badge>
                     <div className="flex flex-wrap gap-1">
-                      {board.mainNumbers.map((num) => (
+                      {board.numbers.map((num) => (
                         <span
                           key={num}
                           className={`inline-flex size-7 items-center justify-center rounded-full text-xs font-medium ${
@@ -239,7 +239,7 @@ export function Mega645EntryDetailDialog({
                 Kết quả — Kỳ {entry.drawId}
               </p>
               <div className="flex flex-wrap justify-center gap-1.5">
-                {entry.result.winningMain.map((num) => (
+                {entry.result.winningNumbers.map((num) => (
                   <span
                     key={num}
                     className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground"

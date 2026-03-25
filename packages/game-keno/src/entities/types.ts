@@ -146,7 +146,12 @@ export interface EvenOddPrizes {
 }
 
 /**
- * Giới hạn trả thưởng mỗi kỳ quay cho bậc cao.
+ * Giới hạn trả thưởng mỗi kỳ quay cho bậc cao (pick8, pick9, pick10).
+ *
+ * Quy tắc Vietlott: khi tổng số bộ trúng vượt `maxSetsForFixed`,
+ * thay vì trả giá cố định, pool `maxPerDraw` được chia đều cho tất cả bộ trúng.
+ *
+ * Dùng bởi step `ApplyPayoutCaps` trong settle pipeline.
  */
 export interface PayoutCaps {
   /** Bậc 8 trùng 8: ≤50 bộ → 200tr/bộ, >50 bộ → 10 tỷ chia đều. */
@@ -162,13 +167,22 @@ export interface PayoutCaps {
   pick10MaxSetsForFixed: number;
 }
 
-/** Tỷ lệ tài chính – dùng trong GlobalConfigDoc.rates. */
+/** Tỷ lệ tài chính — dùng trong `GlobalConfigDoc.rates`. */
 export interface FinancialRates {
-  /** Hoa hồng đại lý mặc định (tỷ lệ trên doanh thu). */
+  /**
+   * Hoa hồng đại lý mặc định áp dụng cho tất cả tenant chưa có TenantConfig.
+   * Đơn vị: tỷ lệ [0, 1]. Ví dụ: 0.20 = 20%.
+   * Override per tenant qua `TenantConfigDoc.commissionRate`.
+   */
   defaultCommissionRate: number;
 }
 
-/** Quy tắc chơi – dùng trong GlobalConfigDoc.play. */
+/**
+ * Quy tắc gameplay — dùng trong `GlobalConfigDoc.play`.
+ *
+ * Toàn bộ các tham số này có thể được staff chỉnh sửa qua backoffice UI.
+ * Thay đổi có hiệu lực ngay cho các ticket mới — ticket cũ đã paid không bị ảnh hưởng.
+ */
 export interface PlayRules {
   /** Mệnh giá 1 lần tham gia (VND). Default: 10.000 */
   unitPrice: number;
@@ -196,8 +210,13 @@ export interface PlayRules {
 }
 
 /**
- * Override giải thưởng cho tenant.
- * Dùng chung bởi GlobalConfigDoc (default values) và TenantConfigDoc (override).
+ * Override giải thưởng cho tenant — subset các fields cần ghi đè so với global config.
+ *
+ * Dùng chung bởi:
+ * - `GlobalConfigDoc` (đặt default values)
+ * - `TenantConfigDoc` (override per tenant — các field không set sẽ dùng global)
+ *
+ * Tất cả fields optional: tenant chỉ cần override đúng phần họ muốn thay đổi.
  */
 export interface KenoPrizeOverrides {
   basicPrizes?: BasicPrizes;

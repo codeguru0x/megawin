@@ -33,8 +33,8 @@ export interface PrizeTierRule {
   tier: PrizeTier;
   /** Tên hiển thị hạng giải (tiếng Việt). */
   label: string;
-  /** Số lượng số chính cần trùng để đạt hạng (6=Jackpot, 5=Nhất, 4=Nhì, 3=Ba). */
-  mainMatch: number;
+  /** Số lượng số cần trùng để đạt hạng (6=Jackpot, 5=Nhất, 4=Nhì, 3=Ba). */
+  requiredMatches: number;
   /** Giá trị giải thưởng mặc định (VND). Jackpot = 0 vì là giải tích luỹ. */
   defaultAmount: number;
   /** Có được nhận bonus từ split cycle hay không. Jackpot = false, các tier còn lại = true. */
@@ -49,28 +49,28 @@ export const DEFAULT_PRIZE_TIER_RULES: readonly PrizeTierRule[] = [
   {
     tier: PrizeTier.Jackpot,
     label: "Giải Đặc Biệt",
-    mainMatch: 6,
+    requiredMatches: 6,
     defaultAmount: 0,
     splitEligible: false,
   },
   {
     tier: PrizeTier.Tier1,
     label: "Giải Nhất",
-    mainMatch: 5,
+    requiredMatches: 5,
     defaultAmount: 10_000_000,
     splitEligible: true,
   },
   {
     tier: PrizeTier.Tier2,
     label: "Giải Nhì",
-    mainMatch: 4,
+    requiredMatches: 4,
     defaultAmount: 300_000,
     splitEligible: true,
   },
   {
     tier: PrizeTier.Tier3,
     label: "Giải Ba",
-    mainMatch: 3,
+    requiredMatches: 3,
     defaultAmount: 30_000,
     splitEligible: true,
   },
@@ -84,8 +84,8 @@ export const DEFAULT_PRIZE_TIER_RULES: readonly PrizeTierRule[] = [
 export interface LineMatchResult {
   /** Hạng giải trúng (null nếu < 3 số trùng → không trúng). */
   tier: PrizeTier | null;
-  /** Số lượng số chính trùng (0-6). */
-  mainMatchCount: number;
+  /** Số lượng số trùng (0-6). */
+  matchCount: number;
 }
 
 // ─────────────────────────────────────────────
@@ -94,7 +94,7 @@ export interface LineMatchResult {
 
 /**
  * Xác định hạng giải cho 1 line dựa trên số lượng match.
- * Mega 6/45 chỉ cần so sánh mainMatchCount.
+ * Mega 6/45 chỉ cần so sánh matchCount.
  *
  * @example
  * determineTier(6) // → "jackpot"
@@ -103,9 +103,9 @@ export interface LineMatchResult {
  * determineTier(3) // → "tier3"
  * determineTier(2) // → null
  */
-export function determineTier(mainMatchCount: number): PrizeTier | null {
+export function determineTier(matchCount: number): PrizeTier | null {
   for (const rule of DEFAULT_PRIZE_TIER_RULES) {
-    if (mainMatchCount >= rule.mainMatch) {
+    if (matchCount >= rule.requiredMatches) {
       return rule.tier;
     }
   }
@@ -116,9 +116,7 @@ export function getPrizeTierRule(tier: PrizeTier): PrizeTierRule | undefined {
   return DEFAULT_PRIZE_TIER_RULES.find((r) => r.tier === tier);
 }
 
-export function buildPrizeAmountMap(
-  prizeAmounts: PrizeAmounts
-): ReadonlyMap<PrizeTier, number> {
+export function buildPrizeAmountMap(prizeAmounts: PrizeAmounts): ReadonlyMap<PrizeTier, number> {
   const map = new Map<PrizeTier, number>();
   const amounts = prizeAmounts as unknown as Record<string, number>;
   for (const rule of DEFAULT_PRIZE_TIER_RULES) {

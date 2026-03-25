@@ -15,7 +15,7 @@ import type { Mega645PlayType, Mega645PrizeTier } from "./enums";
  */
 export interface Mega645SelectionInput {
   /** Danh sách số chọn. Dạng string zero-padded `"01"`–`"45"`. */
-  mainNumbers: string[];
+  numbers: string[];
 }
 
 /**
@@ -52,7 +52,7 @@ export interface Mega645BoardInput {
  *     {
  *       boardNo: "A",
  *       playType: "standard",
- *       selection: { mainNumbers: ["05", "12", "22", "31", "40", "45"] },
+ *       selection: { numbers: ["05", "12", "22", "31", "40", "45"] },
  *     },
  *   ],
  * };
@@ -104,11 +104,11 @@ export interface Mega645GameRules {
  * Giá trị giải thưởng cố định Mega 6/45 (không bao gồm Jackpot).
  */
 export interface Mega645PrizeAmounts {
-  /** Giải nhất — khớp 5 số chính (VND). */
+  /** Giải nhất — khớp 5/6 số (VND). */
   tier1: number;
-  /** Giải nhì — khớp 4 số chính (VND). */
+  /** Giải nhì — khớp 4/6 số (VND). */
   tier2: number;
-  /** Giải ba — khớp 3 số chính (VND). */
+  /** Giải ba — khớp 3/6 số (VND). */
   tier3: number;
 }
 
@@ -247,7 +247,7 @@ export interface Mega645TicketSummary {
     /** Số đã chọn. */
     selection: {
       /** Danh sách số chính. Dạng string zero-padded `"01"`–`"45"`. */
-      mainNumbers: string[];
+      numbers: string[];
     };
     /** Số lines được expand từ kiểu chơi này. */
     expandedLines: number;
@@ -303,8 +303,6 @@ export interface Mega645TicketSummary {
 export interface Mega645EntryResult {
   /** Mã kỳ quay. Format: `YYYY-MM-DD.NNN`. */
   drawId: string;
-  /** Ngày quay. Format: `YYYY-MM-DD`. */
-  drawDate: string;
   /** Trạng thái entry. VD: `"pending"`, `"settled"`, `"voided"`. */
   status: string;
   /** Tiền cược kỳ này (VND). */
@@ -317,8 +315,8 @@ export interface Mega645EntryResult {
   betUnitCount: number;
   /** Kết quả quay. `undefined` nếu chưa có kết quả. */
   result?: {
-    /** 6 số trúng thưởng. Giá trị nguyên `1`–`45`. */
-    winningMain: number[];
+    /** 6 số trúng thưởng (sorted, zero-padded `"01"`–`"45"`). */
+    winningNumbers: string[];
     /** Thời điểm công bố (ISO 8601). */
     publishedAt: string;
   };
@@ -388,7 +386,7 @@ export interface Mega645DrawTierPrize {
  * ```ts
  * const result = await client.mega645.getDrawResult("2026-03-08.001");
  *
- * console.log(`Số: ${result.result.winningMain.join(", ")}`);
+ * console.log(`Số: ${result.result.winningNumbers.join(", ")}`);
  * // "Số: 06, 12, 13, 25, 31, 32"
  *
  * console.log(`Jackpot: ${result.jackpot.closingAmount.toLocaleString()} VND`);
@@ -418,7 +416,7 @@ export interface Mega645DrawResultDetail {
    */
   result: {
     /** 6 số chính trúng thưởng (sorted, zero-padded `"01"`–`"45"`). */
-    winningMain: string[];
+    winningNumbers: string[];
     /** Thời điểm công bố (ISO 8601). */
     publishedAt: string;
   };
@@ -458,7 +456,7 @@ export interface Mega645DrawResultDetail {
  * ```ts
  * const { draws } = await client.mega645.listDrawResults({ size: 10 });
  * for (const draw of draws) {
- *   console.log(`Kỳ ${draw.drawId}: ${draw.result.winningMain.join(", ")}`);
+ *   console.log(`Kỳ ${draw.drawId}: ${draw.result.winningNumbers.join(", ")}`);
  *   console.log(`JP: ${draw.jackpot.closingAmount.toLocaleString()} VND`);
  * }
  * ```
@@ -478,7 +476,7 @@ export interface Mega645DrawResultSummary {
    */
   result: {
     /** 6 số chính trúng thưởng (sorted, zero-padded `"01"`–`"45"`). */
-    winningMain: string[];
+    winningNumbers: string[];
     /** Thời điểm công bố (ISO 8601). */
     publishedAt: string;
   };
@@ -652,14 +650,31 @@ export interface Mega645CurrentDrawResponse {
  * Thông tin Jackpot Mega 6/45 hiện tại.
  *
  * Trả về bởi `client.mega645.getJackpot()`.
+ *
+ * Mega 6/45 KHÔNG có Split Cycle — Jackpot tích luỹ vô hạn cho đến khi có người trúng 6/6.
+ *
+ * @example
+ * ```ts
+ * const jp = await client.mega645.getJackpot();
+ * console.log(`Jackpot: ${jp.currentAmount.toLocaleString()} VND`);
+ * console.log(`Cycle #${jp.cycleNo} — ${jp.drawCount} kỳ đã quay`);
+ * ```
  */
 export interface Mega645JackpotResponse {
+  /** Số thứ tự cycle Jackpot (tăng dần mỗi khi có người trúng). */
+  cycleNo: number;
   /** Giá trị Jackpot hiện tại (VND). */
-  jackpotAmount: number;
-  /** ID chu kỳ Jackpot đang chạy. */
-  cycleId: string;
-  /** Thời điểm mở cycle (ISO 8601). */
-  openedAt: string;
+  currentAmount: number;
+  /** Số tiền khởi điểm (seed) khi bắt đầu cycle mới (VND). */
+  seedAmount: number;
+  /** Số tiền Jackpot cao nhất đạt được trong cycle hiện tại (VND). */
+  peakAmount: number;
+  /** Tổng tiền đã tích luỹ vào Jackpot từ đầu cycle (VND). */
+  totalContribution: number;
+  /** Số kỳ quay đã settle trong cycle hiện tại. */
+  drawCount: number;
+  /** DrawId của kỳ đầu tiên trong cycle. Format: `YYYY-MM-DD.NNN`. */
+  startDrawId: string;
 }
 
 /**
@@ -689,15 +704,89 @@ export interface Mega645TicketEntriesResponse {
 }
 
 /**
- * Danh sách lines chi tiết của một entry Mega 6/45.
+ * Chi tiết một dòng cược (line) Mega 6/45 đã được expand.
+ *
+ * Mega 6/45 chỉ có `numbers` (6 số chính), không có số đặc biệt.
+ * Mỗi line tương ứng với 1 tổ hợp 6 số từ 1 board.
+ *
+ * Dùng trong {@link Mega645EntryLinesResponse}.
+ */
+export interface Mega645LineInfo {
+  /** Ký hiệu board chứa dòng này. VD: `"A"`, `"B"`. */
+  boardNo: string;
+  /** Chỉ số dòng trong board (0-based). */
+  lineIndex: number;
+  /**
+   * 6 số của dòng này (zero-padded `"01"`–`"45"`, sorted ascending).
+   *
+   * Với Standard: trùng với `selection.numbers` của board.
+   * Với Bao: mỗi line là 1 tổ hợp C(n,6) từ bộ số đã chọn.
+   */
+  numbers: string[];
+  /**
+   * Số lần nhân cược cho dòng này (≥ 1).
+   *
+   * Tiền thưởng dòng = unitPrize × betCount. UI hiển thị `"×N"` khi betCount > 1.
+   */
+  betCount: number;
+  /** Kết quả so khớp với kết quả quay. Chỉ có khi entry đã settled. */
+  matchResult: {
+    /** Số lượng số khớp với kết quả (0–6). */
+    matchCount: number;
+    /**
+     * Hạng giải trúng. `null` nếu không trúng.
+     *
+     * | tier      | matchCount |
+     * |-----------|------------|
+     * | `"jackpot"` | 6/6      |
+     * | `"tier1"` | 5/6        |
+     * | `"tier2"` | 4/6        |
+     * | `"tier3"` | 3/6        |
+     */
+    tier: string | null;
+    /**
+     * Tiền thưởng dòng này (VND).
+     * Jackpot = 0 tại đây — giá trị chính xác tính sau khi biết số winners.
+     */
+    winAmount: number;
+  };
+}
+
+/**
+ * Danh sách lines chi tiết của một entry Mega 6/45 (cursor-based pagination).
  *
  * Trả về bởi `client.mega645.getEntryLines()`.
+ * Chỉ khả dụng khi entry đã ở trạng thái `"settled"`.
+ *
+ * @example
+ * ```ts
+ * const page1 = await client.mega645.getEntryLines(entryId, { size: 50 });
+ * for (const line of page1.lines) {
+ *   console.log(`[${line.boardNo}#${line.lineIndex}] ${line.numbers.join(",")} — khớp ${line.matchResult.matchCount}/6`);
+ * }
+ *
+ * if (page1.nextCursor !== null) {
+ *   const page2 = await client.mega645.getEntryLines(entryId, {
+ *     size: 50,
+ *     cursor: page1.nextCursor,
+ *   });
+ * }
+ * ```
  */
 export interface Mega645EntryLinesResponse {
-  /** ID entry. */
+  /** ID entry đang xem. */
   entryId: string;
-  /** Danh sách lines đã expand từ boards. */
-  lines: Array<{ mainNumbers: number[] }>;
+  /** ID kỳ quay entry thuộc về. Format: `YYYY-MM-DD.NNN`. */
+  drawId: string;
+  /** Danh sách lines trong trang hiện tại. */
+  lines: Mega645LineInfo[];
+  /**
+   * Cursor cho trang tiếp theo — giá trị `lineIndex` của dòng cuối cùng.
+   * `null` nếu đã hết dữ liệu.
+   */
+  nextCursor: number | null;
+  /** Số lines mỗi trang (echo lại `size` từ request). */
+  size: number;
 }
 
 /**

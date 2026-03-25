@@ -160,6 +160,7 @@ import {
   KENO_PICK_MAX,
   KENO_BIG_SMALL_BOUNDARY,
 } from "../entities/types";
+import { getPlayTypeFromPickCount } from "./play-types";
 
 const POOL = KENO_NUMBER_MAX; // 80
 const DRAW = KENO_DRAW_COUNT; // 20
@@ -211,17 +212,17 @@ export const TOTAL_OUTCOMES = combinationBig(POOL, DRAW);
 // Basic Play Odds (pick1 – pick10)
 // ─────────────────────────────────────────────
 
-/** Thông tin xác suất cho 1 mức thưởng trong 1 bậc chơi. */
+/** Thông tin xác suất và kỳ vọng cho 1 mức thưởng trong 1 bậc chơi cơ bản. */
 export interface KenoTierOdds {
   /** Số lượng số chọn (1-10). */
   pickCount: number;
-  /** Số lượng số trùng. */
+  /** Số lượng số trùng để được giải thưởng này. */
   matchCount: number;
-  /** Số cách trúng (favorable outcomes) dạng BigInt. */
+  /** Số cách trúng (favorable outcomes). BigInt vì C(80,20) vượt MAX_SAFE_INTEGER. */
   waysBig: bigint;
-  /** Xác suất P = ways / TOTAL_OUTCOMES. */
+  /** Xác suất P = ways / TOTAL_OUTCOMES. Float [0, 1]. */
   probability: number;
-  /** 1 in N (inverse of probability). */
+  /** 1 in N (nghịch đảo xác suất). Dùng để hiển thị "1 trong N lần". */
   oneInN: number;
 }
 
@@ -235,6 +236,14 @@ function matchWays(k: number, m: number): bigint {
 
 /**
  * Tính xác suất cho tất cả mức thưởng có giải của 1 bậc chơi.
+ *
+ * Kết quả dùng để:
+ * - Hiển thị bảng odds trên backoffice UI (staff xem RTP từng bậc)
+ * - Tính gross margin khi staff muốn điều chỉnh bảng giải thưởng
+ * - Tài liệu hóa cơ cấu giải thưởng
+ *
+ * @param pickCount - Số lượng số chọn (1-10)
+ * @param matchCounts - Các mức matchCount có giải (ví dụ [10, 9, 8, 7, 6, 5, 0] cho pick10)
  */
 export function getOddsForPick(pickCount: number, matchCounts: number[]): KenoTierOdds[] {
   return matchCounts.map((matchCount) => {
@@ -264,7 +273,12 @@ const PICK_MATCH_COUNTS: Record<number, number[]> = {
 
 /**
  * Bảng xác suất đầy đủ cho tất cả 10 bậc chơi cơ bản.
- * Kết quả tính sẵn, immutable.
+ *
+ * Mỗi lần gọi tính lại — kết quả là pure function, không cache.
+ * Dùng cho staff UI (backoffice game config) để xem RTP từng bậc
+ * khi thay đổi bảng giải thưởng.
+ *
+ * @returns Map<pickCount (1-10), KenoTierOdds[]>
  */
 export function getBasicOddsTable(): Map<number, KenoTierOdds[]> {
   const table = new Map<number, KenoTierOdds[]>();
@@ -286,11 +300,17 @@ export function getBasicOddsTable(): Map<number, KenoTierOdds[]> {
  *
  * Tương tự cho Chẵn/Lẻ vì pool cũng chia 40/40.
  */
+/** Xác suất và kỳ vọng cho 1 outcome cụ thể của side bet. */
 export interface SideBetOdds {
+  /** Tên hiển thị outcome (ví dụ: "Lớn (≥13)", "Hoà (10-10)"). */
   label: string;
+  /** Ngưỡng số để trúng outcome này (ví dụ: "≥13", "11-12", "10"). */
   count: number | string;
+  /** Số cách trúng (BigInt). */
   waysBig: bigint;
+  /** Xác suất xảy ra outcome [0, 1]. */
   probability: number;
+  /** Nghịch đảo xác suất ("1 trong N lần"). */
   oneInN: number;
 }
 
@@ -393,38 +413,53 @@ export function getEvenOddOdds(): {
 // Profit Analysis (Basic Play)
 // ─────────────────────────────────────────────
 
-/** Phân tích lợi nhuận cho 1 mức thưởng. */
+/** Phân tích lợi nhuận kỳ vọng cho 1 mức thưởng cụ thể. */
 export interface TierProfitAnalysis {
+  /** Số lượng số chọn. */
   pickCount: number;
+  /** Số lượng số trùng ứng với mức thưởng này. */
   matchCount: number;
+  /** Xác suất xảy ra [0, 1]. */
   probability: number;
+  /** Nghịch đảo xác suất. */
   oneInN: number;
+  /** Giá trị giải thưởng hiện tại (VND). Đọc từ config. */
   currentPrize: number;
-  /** Expected payout per ticket = probability × prize. */
+  /** Kỳ vọng trả thưởng mỗi ticket = probability × prize (VND). */
   expectedPayout: number;
-  /** payoutRatio = expectedPayout / unitPrice. */
+  /** Tỷ lệ hoàn trả = expectedPayout / unitPrice. Nếu > 1.0 → công ty lỗ ở tier này. */
   payoutRatio: number;
-  /** Giá trị giải thưởng tối đa để hoà vốn = unitPrice / probability. */
+  /** Giải thưởng tối đa để hoà vốn = unitPrice / probability (VND). */
   breakEvenPrize: number;
 }
 
-/** Tổng hợp lợi nhuận toàn bộ 1 bậc chơi. */
+/** Tổng hợp phân tích lợi nhuận cho toàn bộ 1 bậc chơi (pick N). */
 export interface PickProfitSummary {
+  /** Số lượng số chọn. */
   pickCount: number;
+  /** Mệnh giá ticket (VND). */
   unitPrice: number;
+  /** Phân tích từng mức thưởng có giải. */
   tiers: TierProfitAnalysis[];
+  /** Tổng kỳ vọng trả thưởng mỗi ticket = Σ(tier.expectedPayout) (VND). */
   totalExpectedPayout: number;
+  /** Tổng tỷ lệ hoàn trả = totalExpectedPayout / unitPrice. RTP > 1.0 → công ty lỗ bậc này. */
   totalPayoutRatio: number;
+  /** Biên lợi nhuận gộp mỗi ticket = unitPrice - totalExpectedPayout (VND). */
   grossMarginPerTicket: number;
+  /** Biên lợi nhuận gộp (%). Dùng để so sánh tổng quan giữa các bậc chơi. */
   grossMarginPercent: number;
 }
 
 /**
- * Phân tích lợi nhuận cho 1 bậc chơi.
+ * Phân tích lợi nhuận cho 1 bậc chơi cơ bản.
+ *
+ * Dùng trên backoffice UI khi staff muốn xem RTP của 1 pick type cụ thể
+ * trước khi quyết định thay đổi bảng giải thưởng.
  *
  * @param pickCount - Số lượng số chọn (1-10)
- * @param prizes - Map matchCount → prize VND (từ config)
- * @param unitPrice - Mệnh giá (VND)
+ * @param prizes - Map matchCount (string) → prize (VND) cho pick này
+ * @param unitPrice - Mệnh giá ticket (VND). Keno mặc định 10.000
  */
 export function analyzeProfitabilityForPick(
   pickCount: number,
@@ -471,8 +506,12 @@ export function analyzeProfitabilityForPick(
 /**
  * Phân tích lợi nhuận cho TẤT CẢ 10 bậc chơi cơ bản.
  *
- * @param basicPrizes - Bảng giải thưởng (từ config.basicPrizes)
- * @param unitPrice - Mệnh giá (VND)
+ * Dùng trên backoffice UI trang "Prize Table" — hiển thị tổng quan RTP
+ * toàn bộ game khi staff review hoặc chỉnh sửa bảng giải thưởng.
+ *
+ * @param basicPrizes - Toàn bộ bảng giải thưởng (từ `GlobalConfigDoc.basicPrizes`)
+ * @param unitPrice - Mệnh giá ticket (VND)
+ * @returns Mảng 10 phần tử, index 0 = pick1, index 9 = pick10
  */
 export function analyzeAllPicksProfitability(
   basicPrizes: Record<string, Record<string, number>>,
@@ -480,25 +519,36 @@ export function analyzeAllPicksProfitability(
 ): PickProfitSummary[] {
   const summaries: PickProfitSummary[] = [];
   for (let pick = KENO_PICK_MIN; pick <= KENO_PICK_MAX; pick++) {
-    const prizes = basicPrizes[`pick${pick}`] ?? {};
+    // pick ∈ [KENO_PICK_MIN, KENO_PICK_MAX] → luôn hợp lệ.
+    const prizes = basicPrizes[getPlayTypeFromPickCount(pick)] ?? {};
     summaries.push(analyzeProfitabilityForPick(pick, prizes, unitPrice));
   }
   return summaries;
 }
 
-/** Phân tích lợi nhuận cho cược Lớn/Nhỏ. */
+/** Phân tích lợi nhuận cho 1 outcome cụ thể của side bet (Lớn/Nhỏ hoặc Chẵn/Lẻ). */
 export interface SideBetProfitAnalysis {
+  /** Tên hiển thị outcome. */
   label: string;
+  /** Xác suất xảy ra [0, 1]. */
   probability: number;
+  /** Nghịch đảo xác suất. */
   oneInN: number;
+  /** Giá trị giải thưởng hiện tại (VND). */
   currentPrize: number;
+  /** Kỳ vọng trả thưởng mỗi ticket = probability × prize (VND). */
   expectedPayout: number;
+  /** Tỷ lệ hoàn trả = expectedPayout / unitPrice. */
   payoutRatio: number;
+  /** Giải thưởng tối đa để hoà vốn (VND). */
   breakEvenPrize: number;
 }
 
 /**
  * Phân tích lợi nhuận cho cược Lớn/Nhỏ.
+ *
+ * @param prizes - Bảng giải thưởng Lớn/Nhỏ (từ `GlobalConfigDoc.bigSmallPrizes`)
+ * @param unitPrice - Mệnh giá ticket (VND)
  */
 export function analyzeBigSmallProfitability(
   prizes: {
@@ -547,6 +597,9 @@ export function analyzeBigSmallProfitability(
 
 /**
  * Phân tích lợi nhuận cho cược Chẵn/Lẻ.
+ *
+ * @param prizes - Bảng giải thưởng Chẵn/Lẻ (từ `GlobalConfigDoc.evenOddPrizes`)
+ * @param unitPrice - Mệnh giá ticket (VND)
  */
 export function analyzeEvenOddProfitability(
   prizes: {

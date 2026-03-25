@@ -16,7 +16,6 @@
  *   - Lock auto-expire: nếu step function crash, lock hết hạn sau TTL
  */
 
-import type { Long } from "mongodb";
 import type { GameProduct } from "./game-core.enums";
 
 /**
@@ -47,10 +46,4 @@ export interface FeedSyncCursorEntity {
    * Scheduler set = now + TTL khi acquire. SaveCursor set = null khi release.
    */
   lockedUntil: Date | null;
-
-  /**
-   * ID của execution đang giữ lock.
-   * Dùng cho debug/monitoring. SaveCursor verify trước khi release.
-   */
-  lockedBy: string | null;
 }

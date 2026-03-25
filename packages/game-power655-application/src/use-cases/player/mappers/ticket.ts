@@ -32,8 +32,7 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
         mainNumbers: b.selection.mainNumbers,
       },
       lineCount: b.derived.expandedLines,
-      // betCount fallback sang 1 cho vé cũ chưa có multiplier.
-      betCount: b.betCount ?? 1,
+      betCount: b.betCount,
     })),
     progress: {
       totalDraws: ticket.drawPlan.drawCount,

@@ -14,16 +14,16 @@
  * Kiểu chơi Bingo 18.
  *
  * Bingo 18 dùng 3 viên xúc xắc, mỗi viên cho giá trị 1-6.
- * Có 2 nhóm cược chính:
+ * Tất cả loại cược đều nằm trong `boards[]`:
  *
- * **Board cơ bản** (dùng trong `boards`):
+ * **Board cơ bản:**
  * | Value           | Mô tả                                                   |
  * |-----------------|---------------------------------------------------------|
  * | `"singleNum"`   | Đoán 1 số xuất hiện bao nhiêu lần trong 3 xúc xắc      |
  * | `"doubleMatch"` | Đoán ít nhất 2 trong 3 xúc xắc có giá trị giống nhau   |
  * | `"tripleMatch"` | Đoán cả 3 xúc xắc có giá trị giống nhau                |
  *
- * **Side Bet** (dùng trong `sideBets`):
+ * **Board cược bổ sung:**
  * | Value           | Mô tả                                                   |
  * |-----------------|---------------------------------------------------------|
  * | `"sumTotal"`    | Đoán tổng 3 xúc xắc bằng đúng 1 giá trị (3-18)         |

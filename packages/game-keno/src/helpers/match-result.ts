@@ -24,11 +24,22 @@ import {
 // Draw Result (input)
 // ─────────────────────────────────────────────
 
+/**
+ * Input tối giản kết quả kỳ quay cần thiết cho các hàm match.
+ *
+ * Tách ra khỏi `DrawResult` (entity) để helpers có thể dùng mà không
+ * cần import toàn bộ entity layer — giảm coupling giữa helpers và DB layer.
+ */
 export interface DrawResultForMatch {
+  /** 20 số trúng thưởng dạng string "01"-"80". */
   winningNumbers: string[];
+  /** Số lượng số "lớn" (41-80) trong 20 số quay. */
   bigCount: number;
+  /** Số lượng số "nhỏ" (1-40) trong 20 số quay. */
   smallCount: number;
+  /** Số lượng số chẵn trong 20 số quay. */
   evenCount: number;
+  /** Số lượng số lẻ trong 20 số quay. */
   oddCount: number;
 }
 
@@ -36,17 +47,39 @@ export interface DrawResultForMatch {
 // Basic Match (cách chơi cơ bản)
 // ─────────────────────────────────────────────
 
+/**
+ * Kết quả khớp số cho 1 board cách chơi cơ bản.
+ *
+ * Trả về bởi `matchBasicBoard()` — chứa đủ thông tin để:
+ * - Ghi vào `EntryBoardPayout` (settleEntries step)
+ * - Hiển thị cho player: "Bạn trúng X/Y số"
+ */
 export interface BasicMatchResult {
+  /** Số lượng số người chơi trùng với kết quả quay. */
   matchCount: number;
+  /** Số lượng số người chơi đã chọn (= numbers.length). */
   pickCount: number;
+  /** Danh sách các số trùng (subset của numbers). */
   matchedNumbers: string[];
+  /** true nếu winAmount > 0 (trúng ít nhất 1 bậc giải). */
+  isWin: boolean;
+  /**
+   * Tiền thắng tính cho 1 đơn vị cược (VND).
+   * Settle layer nhân thêm `betCount` khi ghi vào `EntryBoardPayout.winAmount`.
+   */
   winAmount: number;
 }
 
 /**
- * Match 1 board cơ bản với kết quả quay.
- * @param numbers - Số dạng string "01"-"80" từ board
- * @param result - Kết quả quay (string[] "01"-"80")
+ * So khớp 1 board cách chơi cơ bản với kết quả kỳ quay.
+ *
+ * Dùng `Set` cho `winningNumbers` → O(n) thay vì O(n²).
+ * Kết quả trả về đã tính sẵn `winAmount` per-unit; settle layer
+ * nhân thêm `betCount` khi ghi vào `EntryBoardPayout`.
+ *
+ * @param numbers - Số người chơi chọn, dạng string "01"-"80"
+ * @param result - Kết quả kỳ quay (gồm winningNumbers + bigCount/smallCount...)
+ * @param prizeTable - Bảng giải thưởng (mặc định dùng DEFAULT_BASIC_PRIZE_TABLE)
  */
 export function matchBasicBoard(
   numbers: string[],
@@ -64,24 +97,53 @@ export function matchBasicBoard(
   const matchCount = matchedNumbers.length;
   const winAmount = lookupBasicPrize(pickCount, matchCount, prizeTable);
 
-  return { matchCount, pickCount, matchedNumbers, winAmount };
+  return { matchCount, pickCount, matchedNumbers, isWin: winAmount > 0, winAmount };
 }
 
 // ─────────────────────────────────────────────
 // Side Bet Match (cách chơi bổ sung)
 // ─────────────────────────────────────────────
 
+/**
+ * Kết quả khớp cho 1 side bet (Lớn/Nhỏ hoặc Chẵn/Lẻ).
+ *
+ * Trả về bởi `matchBigSmallBet()` / `matchEvenOddBet()`.
+ * Settle layer dùng để điền `EntrySideBetPayout`.
+ */
 export interface SideBetMatchResult {
+  /**
+   * Mô tả trạng thái kỳ quay đối với bet này.
+   * Ví dụ: "big13Plus", "small1112", "draw", "even1314", "odd15Plus"...
+   *
+   * LƯU Ý: `outcome` mô tả trạng thái DRAW, không phải win/lose của player.
+   * Player đặt "big", draw ra 8 số lớn → outcome = "big8", isWin = false.
+   */
   outcome: string;
   /**
    * Convenience alias cho `winAmount > 0`.
    * Invariant: isWin = true ↔ winAmount > 0. Không có ngoại lệ.
-   * Lưu kèm winAmount để client đọc win/lose trực tiếp.
+   * Lưu kèm winAmount để client đọc win/lose trực tiếp mà không cần so sánh số.
    */
   isWin: boolean;
+  /**
+   * Tiền thắng tính cho 1 đơn vị cược (VND).
+   * Settle layer nhân thêm `betCount` khi ghi vào `EntrySideBetPayout.winAmount`.
+   */
   winAmount: number;
 }
 
+/**
+ * So khớp cược Lớn/Nhỏ với kết quả kỳ quay.
+ *
+ * Logic phân loại outcome dựa trên `bigCount` và `smallCount`:
+ * - Cược "big": trúng nếu bigCount ≥ 11, hoàn vốn nếu 11-12, thua nếu < 11
+ * - Cược "bigSmallDraw": trúng khi bigCount = smallCount = 10
+ * - Cược "small": đối xứng với "big"
+ *
+ * @param bet - Lựa chọn người chơi đặt (big / bigSmallDraw / small)
+ * @param result - Kết quả kỳ quay (cần bigCount, smallCount)
+ * @param prizes - Bảng giải thưởng Lớn/Nhỏ (mặc định DEFAULT_BIG_SMALL_PRIZES)
+ */
 export function matchBigSmallBet(
   bet: KenoBigSmallBet,
   result: DrawResultForMatch,
@@ -118,6 +180,20 @@ export function matchBigSmallBet(
   }
 }
 
+/**
+ * So khớp cược Chẵn/Lẻ với kết quả kỳ quay.
+ *
+ * Logic phân loại outcome dựa trên `evenCount` và `oddCount`:
+ * - Cược "even": trúng lớn nếu ≥15 chẵn, trúng nhỏ nếu 13-14, thua nếu < 13
+ * - Cược "even1112": trúng chỉ khi evenCount = 11 hoặc 12
+ * - Cược "evenOddDraw": trúng khi evenCount = oddCount = 10
+ * - Cược "odd1112": đối xứng với "even1112"
+ * - Cược "odd": đối xứng với "even"
+ *
+ * @param bet - Lựa chọn người chơi đặt
+ * @param result - Kết quả kỳ quay (cần evenCount, oddCount)
+ * @param prizes - Bảng giải thưởng Chẵn/Lẻ (mặc định DEFAULT_EVEN_ODD_PRIZES)
+ */
 export function matchEvenOddBet(
   bet: KenoEvenOddBet,
   result: DrawResultForMatch,
@@ -170,6 +246,15 @@ export function matchEvenOddBet(
 // Draw Result Stats
 // ─────────────────────────────────────────────
 
+/**
+ * Tính bigCount, smallCount, evenCount, oddCount từ 20 số quay.
+ *
+ * Gọi sau khi nhận `winningNumbers` từ Vietlott — kết quả lưu vào
+ * `DrawResult` (draw entity) và copy sang `EntryResult` (entry entity)
+ * khi settle để tiện tra cứu mà không cần join draw.
+ *
+ * @param winningNumbers - Mảng 20 số dạng string "01"-"80"
+ */
 export function computeDrawStats(winningNumbers: string[]): {
   bigCount: number;
   smallCount: number;

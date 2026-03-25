@@ -30,14 +30,12 @@ export interface EntryTenantSnapshot {
   commissionAmount: number;
 }
 
-/** Tóm tắt nội dung cược, snapshot từ ticket. Dùng để hiển thị + settle. */
+/** Tóm tắt nội dung cược, snapshot từ ticket. boards[] chứa cả cơ bản và bổ sung. */
 export interface EntrySummary {
   /** Mã vé (display), format do hệ thống sinh. */
   ticketNo: string;
-  /** Danh sách boards cơ bản (singleNum, doubleMatch, tripleMatch). */
+  /** Danh sách boards — cả cơ bản (singleNum, doubleMatch, tripleMatch) và bổ sung (sumTotal, bigSmallDraw). */
   boards: EntryBoardSnapshot[];
-  /** Danh sách side bets (sumTotal, bigSmallDraw). */
-  sideBets: EntrySideBetSnapshot[];
 }
 
 /**
@@ -55,14 +53,12 @@ export interface EntryResult {
 
 /** Chi tiết thanh toán. Set sau khi settle tính xong thắng/thua. */
 export interface EntryPayout {
-  /** Tổng tiền thắng = Σ(boardPayouts.winAmount) + Σ(sideBetPayouts.winAmount). */
+  /** Tổng tiền thắng = Σ(boardPayouts.winAmount). */
   winAmount: number;
   /** Tiền trả cho player = winAmount (Bingo 18 không có payout cap). */
   payoutAmount: number;
-  /** Chi tiết payout từng board cơ bản. */
+  /** Chi tiết payout từng board (cả cơ bản và bổ sung). */
   boardPayouts: EntryBoardPayout[];
-  /** Chi tiết payout từng side bet. */
-  sideBetPayouts: EntrySideBetPayout[];
   /** Thời điểm settle hoàn tất (tính toán xong thắng/thua). */
   settledAt: Date;
   /** Trạng thái dispatch tiền thưởng vào ví player. */
@@ -139,9 +135,9 @@ export interface TicketEntryDoc {
 
   // ───── Stake ─────
 
-  /** Số lượng cược (selections) = boards.length + sideBets.length. Đếm số bets logic, KHÔNG tính multiplier. */
+  /** Số lượng cược (selections) = boards.length. Đếm số bets logic, KHÔNG tính multiplier. */
   selectionCount: number;
-  /** Tổng đơn vị cược thực tế = Σ(board.betCount) + Σ(sideBet.betCount). Dùng tính tiền: amount = betUnitCount × unitPrice. */
+  /** Tổng đơn vị cược thực tế = Σ(board.betCount). Dùng tính tiền: amount = betUnitCount × unitPrice. */
   betUnitCount: number;
   /** Tổng tiền cược (VND) = betUnitCount × unitPrice. Trừ từ ví player khi tạo entry. */
   amount: number;
@@ -193,33 +189,37 @@ export interface TicketEntryDoc {
 // Sub-types
 // ─────────────────────────────────────────────
 
-/** Snapshot 1 board cơ bản từ ticket. Lưu cùng entry để settle mà không cần join ticket. */
+/**
+ * Snapshot 1 board từ ticket — cả cơ bản và bổ sung.
+ *
+ * - singleNum / doubleMatch: boardNo + playType + number.
+ * - tripleMatch: boardNo + playType + tripleKind + number (nếu specific).
+ * - sumTotal: boardNo + playType + sum.
+ * - bigSmallDraw: boardNo + playType + bet.
+ */
 export interface EntryBoardSnapshot {
-  /** Mã board, format "B01", "B02",... Unique trong 1 ticket. */
+  /** Mã board: "A"–"F". Unique trong 1 ticket. */
   boardNo: string;
-  /** Loại cược: "singleNum" | "doubleMatch" | "tripleMatch". Quyết định cách tính thưởng. */
+  /** Loại cược: "singleNum" | "doubleMatch" | "tripleMatch" | "sumTotal" | "bigSmallDraw". */
   playType: Bingo18PlayType;
-  /** Số đã chọn (1-6). Dùng cho singleNum + doubleMatch. undefined cho tripleMatch any. */
+  /** Số đã chọn (1-6). Dùng cho singleNum, doubleMatch, tripleMatch specific. */
   number?: number;
-  /** Phân loại triple: "specific" (chọn số cụ thể) hoặc "any" (bất kỳ bộ ba). Chỉ dùng cho tripleMatch. */
+  /** Phân loại triple: "specific" | "any". Chỉ dùng cho tripleMatch. */
   tripleKind?: Bingo18TripleKind;
-  /** Số lần tham gia dự thưởng. Snapshot từ ticket board lúc place-bet. */
-  betCount: number;
-}
-
-/** Snapshot 1 side bet từ ticket. Lưu cùng entry để settle. */
-export interface EntrySideBetSnapshot {
-  /** Loại side bet: "sumTotal" | "bigSmallDraw". */
-  playType: Bingo18PlayType;
   /** Tổng cụ thể đã chọn (3-18). Chỉ dùng cho sumTotal. */
   sum?: number;
   /** Cược lớn/hoà/nhỏ: "big" | "draw" | "small". Chỉ dùng cho bigSmallDraw. */
   bet?: Bingo18BigSmallBet;
-  /** Số lần tham gia dự thưởng. Snapshot từ ticket side bet lúc place-bet. */
+  /** Số lần tham gia dự thưởng. Snapshot từ ticket board lúc place-bet. */
   betCount: number;
 }
 
-/** Kết quả payout 1 board cơ bản sau settle. */
+/**
+ * Kết quả payout 1 board — cả cơ bản và bổ sung.
+ *
+ * - Cơ bản (singleNum/doubleMatch/tripleMatch): dùng matchCount + isWin, outcome = undefined.
+ * - Bổ sung (sumTotal/bigSmallDraw): dùng outcome + isWin, matchCount = null.
+ */
 export interface EntryBoardPayout {
   /** Mã board tương ứng trong entrySummary.boards. */
   boardNo: string;
@@ -227,60 +227,53 @@ export interface EntryBoardPayout {
   playType: Bingo18PlayType;
   /**
    * Phân loại triple: "specific" (1.200.000đ) hoặc "any" (200.000đ).
-   * Chỉ set cho tripleMatch — undefined với singleNum và doubleMatch.
-   * Lưu vào payout để aggregation settleSummary có thể phân biệt 2 mức giải.
+   * Chỉ set cho tripleMatch — undefined cho các loại khác.
    */
   tripleKind?: Bingo18TripleKind;
-
-  /** Số lần số đã chọn xuất hiện trong kết quả (0-3). Chỉ relevant cho singleNum. */
-  matchCount: number;
-
-  /** Số lần tham gia dự thưởng. Snapshot từ board. winAmount = unitWinAmount × betCount. */
-  betCount: number;
-
-  /** Giá trị giải per-unit (VND) trước khi nhân betCount. = 0 nếu thua. */
-  unitWinAmount: number;
-
-  /** Tiền thắng thực tế (VND) = giá trị giải per-unit × betCount. Đã nhân multiplier. */
-  winAmount: number;
-}
-
-/** Kết quả payout 1 side bet sau settle. */
-export interface EntrySideBetPayout {
-  /** Loại side bet. */
-  playType: Bingo18PlayType;
-  /** Tổng đã chọn (3-18). Chỉ set cho sumTotal. */
+  /**
+   * Số lần số đã chọn xuất hiện trong kết quả (0-3). Meaningful cho cơ bản.
+   * Bổ sung (sumTotal/bigSmallDraw): null — field không áp dụng.
+   */
+  matchCount: number | null;
+  /**
+   * Tổng đã chọn (3-18). Chỉ set cho sumTotal.
+   * Undefined cho các loại khác.
+   */
   sum?: number;
-  /** Cược lớn/hoà/nhỏ. Chỉ set cho bigSmallDraw. */
+  /**
+   * Cược lớn/hoà/nhỏ. Chỉ set cho bigSmallDraw.
+   * Undefined cho các loại khác.
+   */
   bet?: Bingo18BigSmallBet;
   /**
    * Kết quả thực tế của kỳ quay — encode theo playType:
    * - sumTotal: giá trị tổng 3 số dưới dạng string, ví dụ "9", "14".
    * - bigSmallDraw: "big" | "small" | "draw" tương ứng với tổng >= 12, <= 9, 10-11.
    *
-   * Lưu để player xem lại kết quả mà không cần join draw.
+   * Chỉ set cho bổ sung (sumTotal/bigSmallDraw). Cơ bản: undefined.
    * KHÔNG dùng field này để xác định thắng/thua — dùng `isWin`.
    */
-  outcome: string;
+  outcome?: string;
   /**
-   * Kết quả matching: player chọn đúng hay không.
+   * Kết quả matching: player thắng hay thua board này.
+   * Set cho TẤT CẢ play types — cơ bản lẫn bổ sung.
    *
-   * `true`  = player thắng (lựa chọn khớp với kết quả quay).
-   * `false` = player thua.
+   * **Lý do tồn tại (denormalized flag):**
+   * Keno/Bingo18 không có `TicketLineDoc` riêng như các lottery game — kết quả per-board
+   * chỉ được lưu tại đây. Mỗi play type có logic xác định thắng/thua khác nhau:
+   *  - singleNum:    `matchCount > 0`
+   *  - doubleMatch:  `matchCount >= 2`
+   *  - tripleMatch:  `matchCount === 3`
+   *  - sumTotal:     `sum === tổng 3 mặt xúc xắc`
+   *  - bigSmallDraw: `bet === outcome`
+   * `isWin` normalize tất cả thành 1 boolean duy nhất tại thời điểm settle, giúp
+   * downstream consumers (SDK, backoffice, feed, reports) không cần tự implement
+   * lại matching logic per play type.
    *
-   * Tại sao cần field riêng thay vì kiểm tra `winAmount > 0`?
-   * Side bet KHÔNG có field nào encode kết quả matching một cách tường minh:
-   * - `outcome` ghi kết quả quay thực tế, nhưng KHÔNG cho biết player thắng hay thua
-   *   (phải so sánh `outcome` với `bet`/`sum` player đã chọn — logic nằm trong rules layer).
-   * - `winAmount` là hệ quả tài chính, không phải kết quả matching.
-   *
-   * So sánh với BoardPayout: board dùng `matchCount > 0` làm proxy "thắng" —
-   * side bet không có field tương đương nên cần `isWin` lấp chỗ trống.
-   *
-   * Dùng bởi `aggregateSideBetPrizeSummary` để filter `{ isWin: true }`.
+   * `true` = player thắng (winAmount > 0). `false` = player thua.
    */
   isWin: boolean;
-  /** Số lần tham gia dự thưởng. Snapshot từ sideBet. winAmount = unitWinAmount × betCount. */
+  /** Số lần tham gia dự thưởng. Snapshot từ board. winAmount = unitWinAmount × betCount. */
   betCount: number;
   /** Giá trị giải per-unit (VND) trước khi nhân betCount. = 0 nếu thua. */
   unitWinAmount: number;

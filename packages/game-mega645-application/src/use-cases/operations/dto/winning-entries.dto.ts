@@ -34,7 +34,7 @@ export interface WinningEntryBoard {
   boardNo: string;
   playType: PlayType;
   /** Các số chính đã chọn (01-45, zero-padded). */
-  mainNumbers: string[];
+  numbers: string[];
   /** Số lines expanded của board này. */
   expandedLines: number;
 }

@@ -5,7 +5,7 @@
  * Dùng chung bởi các use cases: ListPending, ListAll, GetTicketEntries.
  */
 
-import type { BasicBoard, TicketEntity } from "@megawin/game-keno/entities";
+import type { TicketEntity } from "@megawin/game-keno/entities";
 import type { PlayerTicketSummary } from "../dto/player.dto";
 
 export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
@@ -24,16 +24,13 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
       amountPerDraw: ticket.pricing.amountPerDraw,
       totalAmount: ticket.pricing.totalAmount,
     },
-    boards: ticket.boards.map((b: BasicBoard) => ({
+    // boards[] chứa cả cơ bản (pick1-pick10) và bổ sung (bigSmall/evenOdd).
+    boards: ticket.boards.map((b) => ({
       boardNo: b.boardNo,
       playType: b.playType,
-      numbers: b.numbers,
+      ...(b.numbers ? { numbers: b.numbers } : {}),
+      ...(b.bet ? { bet: String(b.bet) } : {}),
       betCount: b.betCount,
-    })),
-    sideBets: ticket.sideBets.map((s) => ({
-      playType: s.playType,
-      bet: s.bet,
-      betCount: s.betCount,
     })),
     progress: {
       totalDraws: ticket.progress.totalDraws,

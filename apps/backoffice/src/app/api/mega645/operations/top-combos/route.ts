@@ -10,7 +10,7 @@ const useCase = new GetTopCombosUseCase();
  *
  * Top N bộ số phổ biến nhất trong một kỳ quay Mega 6/45.
  * Rank theo entryCount (số entries chứa combo) giảm dần.
- * Mega 6/45: combo = playType + sorted mainNumbers (không có specialNumbers).
+ * Mega 6/45: combo = playType + sorted numbers (không có specialNumbers).
  */
 const topCombosQuerySchema = z.object({
   drawId: z.string().min(1, "drawId là bắt buộc."),

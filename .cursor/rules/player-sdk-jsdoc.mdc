@@ -1,65 +1,61 @@
 ---
 description: JSDoc standards & README conventions for player-sdk — ensures TypeDoc generates clear, complete API documentation for tenants
 globs: packages/player-sdk/**/*.{ts,md}
-alwaysApply: false
+alwaysApply: true
 ---
 
 # Player SDK — JSDoc Standards for TypeDoc
 
-Package `@megawin/player-sdk` generates API docs for tenants via TypeDoc (`pnpm docs:build`).
-All public exports MUST have complete JSDoc. Internal code marked `@internal` is excluded.
+`@megawin/player-sdk` xuất bản API docs cho tenant qua TypeDoc (`pnpm docs:build`).
+Mọi public export **bắt buộc** có JSDoc đầy đủ. Code được tag `@internal` sẽ bị loại khỏi output.
 
-## Rules
+## Quy tắc JSDoc
 
-### Every public interface/type MUST have
+### Public interface / type
 
-- One-line summary describing purpose and when to use it
-- `@example` with realistic usage when the type is a primary input/output (at least for top-level response/request types)
+- Một dòng summary: type này đại diện cho cái gì, dùng khi nào.
+- `@example` với usage thực tế trên tất cả top-level request/response type — tenant copy thẳng vào app.
 
-### Every property MUST have
+### Property
 
-- One-line description explaining meaning, not just repeating the name
-- Data format in description: ISO 8601, `YYYY-MM-DD`, `YYYY-MM-DD.NNN`, zero-padded `"01"-"80"`, etc.
-- Unit if applicable: `(VND)`, `(milliseconds)`, `(seconds)`
-- Possible values for string unions: describe inline or link to enum
-- Example value when format is non-obvious — xem bảng ticketNo bên dưới
+- Mô tả *ý nghĩa*, không chỉ đặt lại tên. `/** The ticket ID. */` không có giá trị gì.
+- Ghi rõ data format: ISO 8601, `YYYY-MM-DD`, `YYYY-MM-DD.NNN`, zero-padded `"01"–"80"`, v.v.
+- Ghi unit khi cần: `(VND)`, `(ms)`, `(seconds)`.
+- Với string union, liệt kê possible values inline hoặc link đến enum.
+- Kèm example value khi format không hiển nhiên — xem bảng ticketNo bên dưới.
 
-### Every API method (in `KenoApi`, `Lotto535Api`, etc.) MUST have
+### API method (`KenoApi`, `Lotto535Api`, …)
 
-- Summary (what it does, not how)
-- `**Endpoint:**` line with HTTP method + path
-- `@param` for each parameter with description
-- `@returns` describing the response shape
-- `@throws` with `{@link ApiClientError}` for each known error code
-- `@example` with complete, copy-pasteable code snippet
+- Summary: method làm gì, không mô tả cách làm.
+- `**Endpoint:**` — HTTP method + path.
+- `@param` cho từng parameter.
+- `@returns` — shape của response.
+- `@throws {@link ApiClientError}` cho mọi error code đã biết.
+- `@example` — snippet hoàn chỉnh, copy-pasteable. Không dùng code mẫu thiếu.
 
-### Enum constants MUST have
+### Enum constant
 
-- JSDoc on the const object (group description) with a table of values + meanings
-- Comment or JSDoc on each value explaining its meaning
+- JSDoc trên const object với bảng value/meaning.
+- Inline comment trên từng member giải thích semantic.
 
 ## DrawId Format Convention
 
-**Tất cả drawId trong hệ thống MegaWin dùng format `YYYY-MM-DD.NNN`** (dấu chấm ngăn cách, KHÔNG phải gạch ngang).
+Tất cả `drawId` trong hệ thống dùng format `YYYY-MM-DD.NNN` — dấu chấm, **không phải** gạch ngang.
 
-- Đúng: `"2026-03-07.001"`, `"2026-03-07.095"`, `"2026-03-07.010"`
-- SAI: `"2026-03-07-001"` ← gạch ngang là sai
+- Đúng: `"2026-03-07.001"`, `"2026-03-07.095"`
+- Sai: `"2026-03-07-001"` ← gạch ngang không hợp lệ
 
-Khi viết JSDoc, README, hoặc comment trong sdk:
-- Luôn ghi format là `` `YYYY-MM-DD.NNN` `` (có dấu chấm)
-- Ví dụ phải dùng dạng `"2026-03-07.001"` (không phải `"2026-03-07-001"`)
+Khi viết JSDoc và README examples, luôn dùng format `` `YYYY-MM-DD.NNN` ``.
 
 ## TicketNo Format Convention
 
-**Tất cả ticketNo trong hệ thống MegaWin dùng format `{PREFIX}-{YYYYMMDD}-{NNNNN}`.**
+Tất cả `ticketNo` theo format `{PREFIX}-{YYYYMMDD}-{NNNNN}`.
 
-- `{PREFIX}` — viết tắt theo game (xem bảng dưới)
-- `{YYYYMMDD}` — ngày mua vé, compact (không có dấu gạch ngang)
-- `{NNNNN}` — số thứ tự trong ngày, zero-padded tối thiểu 5 chữ số, tăng monotonically per account
+- `{PREFIX}` — viết tắt theo game (xem bảng)
+- `{YYYYMMDD}` — ngày mua vé, compact, không có separator
+- `{NNNNN}` — zero-padded sequence number (tối thiểu 5 chữ số), tăng monotonically per account
 
-**Prefix theo game:**
-
-| Game | GameProduct | Prefix | Ví dụ ticketNo |
+| Game | gameKey | Prefix | Ví dụ |
 |---|---|---|---|
 | Keno | `keno` | `KENO` | `"KENO-20260307-00001"` |
 | Lotto 5/35 | `lotto535` | `L535` | `"L535-20260307-00008"` |
@@ -69,49 +65,55 @@ Khi viết JSDoc, README, hoặc comment trong sdk:
 | Max 3D Pro | `max3dpro` | `M3DP` | `"M3DP-20260307-00004"` |
 | Bingo 18 | `bingo18` | `B18` | `"B18-20260307-00007"` |
 
-Khi viết JSDoc `ticketNo` property cho từng game, PHẢI dùng đúng prefix và format trên. Ví dụ:
-- Keno: `/** Mã vé hiển thị cho người chơi. VD: \`"KENO-20260307-00001"\`. */`
-- Lotto 5/35: `/** Mã vé hiển thị cho người chơi. VD: \`"L535-20260307-00008"\`. */`
+Khi document property `ticketNo` cho từng game, dùng đúng prefix và format trong `@example`.
 
-## Changelog Requirement
+## Changelog
 
-**Mỗi lần release SDK mới, PHẢI cập nhật `packages/player-sdk/CHANGELOG.md` TRƯỚC KHI build.**
+**Cập nhật `packages/player-sdk/CHANGELOG.md` trước mỗi release.** Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [Semantic Versioning](https://semver.org/).
 
-Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Versioning: [Semantic Versioning](https://semver.org/).
+### Categories
 
-### Quy tắc ghi changelog
+- **Added** — endpoint mới, type mới, enum value mới
+- **Changed** — sửa type hoặc behavior hiện có (breaking nếu ảnh hưởng consumer)
+- **Deprecated** — sắp bị xoá; phải kèm migration path
+- **Removed** — xoá hẳn API, type, hoặc enum value (BREAKING)
+- **Fixed** — type mismatch giữa SDK và handler
 
-- **Added** — API endpoint mới, type mới, enum value mới
-- **Changed** — Thay đổi type hiện có (breaking nếu ảnh hưởng consumer), thay đổi behavior
-- **Deprecated** — Tính năng sắp bị xóa (phải kèm hướng dẫn alternative)
-- **Removed** — Xóa hẳn API, type, enum value (BREAKING)
-- **Fixed** — Sửa lỗi type mismatch giữa SDK và handler
+Mọi breaking change phải có **Migration** code block trong entry.
 
-Mọi breaking change PHẢI có **Migration Guide** section trong changelog entry.
+### Breaking change là khi nào?
 
-### BREAKING change là khi nào?
-
-1. Đổi tên/xóa field trong response interface đang được export
+1. Đổi tên hoặc xoá field trên response interface đang được export
 2. Thêm required field vào request input interface
-3. Đổi kiểu dữ liệu của field (VD: `number[]` → `string[]`)
-4. Xóa enum value
-5. Đổi tên method trong `*Api` interface
+3. Đổi type của field (`number[]` → `string[]`)
+4. Xoá enum value
+5. Đổi tên method trên bất kỳ `*Api` interface nào
 
-### Cập nhật phiên bản
+### Versioning
 
-- **KHÔNG tự động bump `version`** trong `packages/player-sdk/package.json` — developer tự bump thủ công sau khi review CHANGELOG
-- PATCH: chỉ sửa lỗi type, docs, không thay đổi interface
-- MINOR: thêm API/type mới, không breaking change
-- MAJOR: có breaking change
+- **Không tự bump** `version` trong `package.json` — đó là bước manual sau khi review CHANGELOG.
+- PATCH — sửa lỗi type, cập nhật docs, không đổi interface
+- MINOR — thêm API/type mới, không có breaking change
+- MAJOR — có breaking change
+
+### Lời văn trong CHANGELOG
+
+Viết theo phong cách **senior developer**: tiếng Việt cho prose giải thích, tiếng Anh cho thuật ngữ chuyên ngành. Câu ngắn, dứt khoát. Không padding.
+
+- **Đúng:** "Đổi sang zero-padded string cho nhất quán với toàn bộ hệ thống."
+- **Sai:** "Trường này được đổi từ `number[]` thành `string[]` (zero-padded) để đồng nhất với tất cả các game khác trong hệ thống."
+- **Đúng:** "`matchResult` trước khai báo optional, nhưng `getEntryLines` chỉ trả data khi entry đã settled — luôn có. Đã bỏ dấu `?`."
+- **Sai:** "`matchResult` trước đây khai báo là optional (`matchResult?`), nhưng endpoint `getEntryLines` chỉ trả lines khi entry đã settled — tức là `matchResult` luôn có mặt. Đã đổi thành required."
+
+Các thuật ngữ **luôn dùng tiếng Anh**: `field`, `type`, `interface`, `handler`, `endpoint`, `payload`, `shape`, `optional`, `required`, `breaking change`, `migration`, `zero-padded`, `response`, `request`, `schema`, `enum`, `union`, `discriminated union`, `cursor`, `pagination`, `factory`, `barrel`, `entry point`, `bundle`, `build`, `deploy`, `release`, `SDK`, `API`, `DTO`, `repo`, `commit`, `branch`, `merge`.
 
 ---
 
-## API Location Map — Vị trí chính xác các API
+## API Location Map
 
-Dùng bảng này để tra cứu nhanh khi cần kiểm tra hoặc đồng bộ SDK với handler.
+Tra cứu nhanh khi cần sync SDK với handler.
 
-### Handler Location (api-player)
+### Handler location (`api-player`)
 
 ```
 apps/api-player/src/handlers/{game}/{action}.ts
@@ -127,7 +129,7 @@ apps/api-player/src/handlers/{game}/{action}.ts
 | Max 3D Pro | `apps/api-player/src/handlers/max3dpro/` |
 | Bingo 18 | `apps/api-player/src/handlers/bingo18/` |
 
-**Action files (đặt tên chuẩn):**
+**Action filenames chuẩn:**
 - `place-bet.ts` — POST bets
 - `get-game-config.ts` — GET config
 - `get-current-draw.ts` — GET draws/current
@@ -139,9 +141,10 @@ apps/api-player/src/handlers/{game}/{action}.ts
 - `list-draw-results.ts` — GET draw-results
 - `get-draw-result.ts` — GET draw-results/{drawId}
 
-### DTO Location (use-case layer)
+### DTO location (use-case layer)
 
-Input/output DTO của từng game:
+Source of truth cho response type của từng game:
+
 ```
 packages/game-{game}-application/src/use-cases/player/dto/player.dto.ts
 ```
@@ -156,135 +159,120 @@ packages/game-{game}-application/src/use-cases/player/dto/player.dto.ts
 | Max 3D Pro | `packages/game-max3dpro-application/src/use-cases/player/dto/player.dto.ts` |
 | Bingo 18 | `packages/game-bingo18-application/src/use-cases/player/dto/player.dto.ts` |
 
-### SDK Source Location
+### SDK source layout
 
 ```
 packages/player-sdk/src/
-├── endpoints.ts              ← URL paths registry cho toàn bộ API
-├── index.ts                  ← Main exports cho @megawin/player-sdk
+├── endpoints.ts              ← URL path registry
+├── index.ts                  ← Main barrel — tất cả public exports
 ├── client.ts                 ← createPlayerClient factory
-├── apis/{game}.ts            ← CHỈ chứa {Game}Api interface + create{Game}Api factory (KHÔNG định nghĩa type)
+├── apis/{game}.ts            ← CHỈ chứa {Game}Api interface + create{Game}Api factory (không định nghĩa type ở đây)
 └── {game}/
-    ├── enums.ts              ← PlayType, PrizeTier enums
-    ├── types.ts              ← TẤT CẢ type definitions: Input, Params, Response, Config, DrawInfo, TicketSummary...
+    ├── enums.ts              ← PlayType, PrizeTier, …
+    ├── types.ts              ← TẤT CẢ type definitions: Input, Params, Response, Config, DrawInfo, TicketSummary, …
     └── index.ts              ← export * from "./enums"; export * from "./types"
 ```
 
-### Quy trình đồng bộ SDK ↔ Handler
+### Quy trình sync SDK ↔ Handler
 
-Khi có thay đổi ở handler:
+Khi handler thay đổi:
 
-1. **Đọc handler** `apps/api-player/src/handlers/{game}/{action}.ts` — xem Zod schema input/output
-2. **Đọc DTO** `packages/game-{game}-application/src/use-cases/player/dto/player.dto.ts` — xem output type chính xác
-3. **Cập nhật** `packages/player-sdk/src/{game}/types.ts` — thêm/sửa type definitions (Input, Params, Response...)
-4. **Cập nhật** `packages/player-sdk/src/apis/{game}.ts` — chỉ import types từ `../{game}`, KHÔNG định nghĩa type mới ở đây
-5. **Cập nhật** `packages/player-sdk/src/endpoints.ts` nếu có path mới
-6. **Cập nhật** `packages/player-sdk/src/index.ts` nếu có type mới cần export (export từ `./{game}`, không phải `./apis/{game}`)
-7. **Ghi changelog** `packages/player-sdk/CHANGELOG.md`
-8. **Verify**: `pnpm --filter @megawin/player-sdk check-types`
+1. **Đọc handler** `apps/api-player/src/handlers/{game}/{action}.ts` — kiểm tra Zod schema để biết input/output shape.
+2. **Đọc DTO** `packages/game-{game}-application/src/use-cases/player/dto/player.dto.ts` — đây là source of truth cho response type.
+3. **Cập nhật** `packages/player-sdk/src/{game}/types.ts` — thêm/sửa type definitions.
+4. **Cập nhật** `packages/player-sdk/src/apis/{game}.ts` — chỉ import types từ `../{game}`, không định nghĩa type mới ở đây.
+5. **Cập nhật** `packages/player-sdk/src/endpoints.ts` nếu có path mới.
+6. **Cập nhật** `packages/player-sdk/src/index.ts` nếu có export mới (re-export từ `./{game}`, không phải `./apis/{game}`).
+7. **Ghi changelog** `packages/player-sdk/CHANGELOG.md`.
+8. **Verify**: `pnpm --filter @megawin/player-sdk check-types`.
 
-### Quy tắc bắt buộc — SDK Input PHẢI mirror Zod handler schema
+### SDK Input phải mirror Zod handler schema
 
-**TRƯỚC KHI** khai báo hoặc sửa bất kỳ `{Game}TicketPurchaseInput` hay `{Game}*BoardInput`, **PHẢI đọc** Zod schema tại `apps/api-player/src/handlers/{game}/place-bet.ts`.
+**Trước khi** khai báo hoặc sửa bất kỳ `{Game}TicketPurchaseInput` hay `{Game}*BoardInput`, **đọc** Zod schema tại `apps/api-player/src/handlers/{game}/place-bet.ts`.
 
-SDK Input type phải phản ánh **chính xác** những gì handler chấp nhận:
-
-| Zod schema | SDK type tương ứng |
+| Zod schema | SDK type |
 |---|---|
 | `z.string()` (required) | `field: string` |
 | `z.string().optional()` | `field?: string` |
 | `z.array(...)` | `field: T[]` |
-| `z.number().default(1)` | `field?: number` (optional, mặc định 1 ở server) |
-| `z.number().positive()` (không default) | `field: number` (required) |
+| `z.number().default(1)` | `field?: number` (server tự default = 1) |
+| `z.number().positive()` (không có default) | `field: number` (required) |
 
-**Nguyên tắc `betCount`:** Mọi handler đều phải khai báo `betCount: z.number().int().positive().default(1)`. SDK khai báo `betCount?: number`. Nếu handler thiếu `.default(1)`, **sửa handler** (không sửa SDK thành required).
+**`betCount` rule:** Mọi handler phải khai báo `betCount: z.number().int().positive().default(1)`. SDK khai báo `betCount?: number`. Nếu handler thiếu `.default(1)`, sửa handler — không sửa SDK thành required.
 
-**Nguyên tắc place-bet input model theo game:**
-
-| Model | Games | Field chọn kỳ quay |
-|---|---|---|
-| `drawIds: string[]` | Tất cả 7 games | Mảng drawId cụ thể (min 1, max theo game) |
-
-> **Lưu ý lịch sử:** Trước v1.0.11, SDK các game Mega645/Lotto535/Power655/Max3D/Max3DPro khai báo sai `drawId + drawCount`. Từ v1.0.11 tất cả game đều dùng `drawIds: string[]`.
+**`drawIds` rule:** Tất cả 7 games dùng `drawIds: string[]` để chọn kỳ quay. Trước v1.0.11 một số SDK khai báo sai thành `drawId + drawCount` — đã được sửa.
 
 ---
 
 ## README.md Structure & Conventions
 
-`README.md` là trang chủ của TypeDoc — mục đích duy nhất là giúp tenant cài đặt và bắt đầu ngay.
+README là landing page của TypeDoc. Mục tiêu duy nhất: đưa tenant từ zero đến API call đầu tiên.
 
-### Structure (theo thứ tự này)
+### Thứ tự sections
 
-1. **Tên + mô tả ngắn** — 1-2 dòng
-2. **Cài đặt** — hướng dẫn tải + cài theo 2 cách (NPM package và browser `<script>` tag)
-3. **Quickstart** — đoạn code ngắn tạo client và gọi API ngay
+1. **Tên + mô tả ngắn** — một dòng
+2. **Installation** — NPM package URL + browser `<script>` tag
+3. **Quickstart** — tạo client, gọi API, thấy kết quả
 4. **Imports** — bảng import path
-5. **Khởi tạo client** — đầy đủ options với comment giải thích
-6. **Game APIs** — mỗi game có section riêng, ví dụ đặt cược + các thao tác chính
-7. **`client.player`** — các API chung (số dư)
-8. **Error Handling** — chỉ dùng `try/catch` chung chung, KHÔNG đặt tên game cụ thể trong example
-9. **Token Storage** — bảng storage options + code examples
-10. **Tương thích** — browser/RN/Node versions
+5. **Client setup** — options object đầy đủ với inline comments
+6. **Game APIs** — một section mỗi game: `placeBet` + các read operation chính
+7. **`client.player`** — shared APIs (số dư, v.v.)
+8. **Error Handling** — chỉ dùng `try/catch` generic, không hardcode tên game
+9. **Token Storage** — bảng options + code examples
+10. **Compatibility** — browser / RN / Node versions
 11. **Downloads** — bảng links
-12. **Changelog** — link `[Changelog](./CHANGELOG.md)` để tenant track breaking changes
+12. **Changelog** — `[Changelog](./CHANGELOG.md)`
 
-### Download links (luôn dùng đúng links này)
+### Download links — luôn dùng đúng URLs này
 
-- NPM Package latest: `https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/latest/megawin-player-sdk.tgz`
+- NPM latest: `https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/latest/megawin-player-sdk.tgz`
 - Browser JS latest: `https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/latest/megawin-player-sdk-browser.js`
 - Browser GZ latest: `https://megawin-sdk.s3.ap-southeast-1.amazonaws.com/player-sdk/latest/megawin-player-sdk-browser.js.gz`
-- Versioned: thay `/latest/` bằng `/v{VERSION}/` (VD: `/v1.0.0/`)
-- API base URL placeholder: `https://api.domain.com` (KHÔNG dùng `api.megawin.com`)
+- Versioned: đổi `/latest/` thành `/v{VERSION}/` (VD: `/v1.0.0/`)
+- API base URL placeholder: `https://api.domain.com` (không dùng `api.megawin.com`)
 
 ### Conventions
 
-- Cài đặt: luôn hướng dẫn cả NPM package (dùng URL trực tiếp, **KHÔNG** dùng `curl` + `file:`) VÀ browser `<script>` tag
-- Cài NPM đúng cách: `npm install <URL>` — URL ghi thẳng vào `package.json`, CI/CD tự tải lại, không phụ thuộc file local
-- Versioned install: hướng dẫn cụ thể URL theo version `v1.0.0`
-- Game API sections: mỗi game (`client.keno`, `client.lotto535`, `client.mega645`, ...) có section riêng với ví dụ hoạt động
-- `client.auth`: KHÔNG đưa vào README (xem TypeDoc cho chi tiết)
-- `client.api` (raw HTTP): KHÔNG đưa vào README
-- `client.player.getBetHistory` / `client.player.getGameResult`: KHÔNG đưa vào README nếu endpoint chưa có
-- Error Handling: dùng `try/catch` chung, KHÔNG hardcode `.keno.placeBet(...)` — dùng `await client.[game].someMethod(...)`
+- Install qua `npm install <URL>` — URL ghi thẳng vào `package.json`, CI tự tải lại. Không dùng `curl` + `file:`.
+- Mỗi game có section `### client.{game} — {Tên Game}` với `placeBet` example hoạt động + results/tickets.
+- `client.auth` và `client.api` (raw HTTP) quá low-level cho README — trỏ về TypeDoc.
+- `client.player.getBetHistory` / `getGameResult` — bỏ qua cho đến khi endpoint thực sự tồn tại.
+- Error Handling — dùng `await client.[game].someMethod(...)` làm generic placeholder, không hardcode game cụ thể.
 
 ### Per-game API sections
 
-Mỗi game trong README PHẢI có:
-- Tiêu đề `### client.[gameKey] — [Tên Game]`
-- Import type input nếu có
-- Ví dụ đặt cược hoàn chỉnh (nếu game hỗ trợ)
-- Ví dụ xem kết quả draw (nếu có `listDrawResults` / `getDrawResult`)
-- Ví dụ xem vé (nếu có `listPendingTickets` / `listTickets`)
+Mỗi game **phải** có section bao gồm:
+- `placeBet` example (nếu game hỗ trợ)
+- `listDrawResults` / `getDrawResult` (nếu có)
+- `listPendingTickets` / `listTickets`
 
-Danh sách games hiện có trong SDK (LUÔN có section trong README):
-- `client.keno` — Game Keno
-- `client.lotto535` — Game Lotto 5/35
-- `client.mega645` — Game Mega 6/45
-- `client.power655` — Game Power 6/55
-- `client.max3d` — Game Max 3D
-- `client.max3dpro` — Game Max 3D Pro
-- `client.bingo18` — Game Bingo 18
+Games hiện có trong SDK:
+
+- `client.keno` — Keno
+- `client.lotto535` — Lotto 5/35
+- `client.mega645` — Mega 6/45
+- `client.power655` — Power 6/55
+- `client.max3d` — Max 3D
+- `client.max3dpro` — Max 3D Pro
+- `client.bingo18` — Bingo 18
 
 ## Good Example — API Method
 
 ````typescript
 /**
- * Lấy danh sách vé Keno đang chờ xử lý.
- *
- * Trả về các vé mà kỳ quay chưa kết thúc hoặc chưa settle xong.
- * Hỗ trợ phân trang cursor-based.
+ * Trả về danh sách vé Keno đang chờ xử lý — kỳ quay chưa đóng hoặc chưa settle.
+ * Hỗ trợ cursor-based pagination.
  *
  * **Endpoint:** `GET /player/keno/tickets/pending`
  *
- * @param params - Tham số phân trang (tùy chọn)
+ * @param params - Pagination options (tuỳ chọn)
  * @returns Danh sách vé kèm cursor cho trang tiếp theo
  *
- * @throws {@link ApiClientError} code `UNAUTHORIZED` — chưa xác thực hoặc token hết hạn
+ * @throws {@link ApiClientError} `UNAUTHORIZED` — token thiếu hoặc hết hạn
  *
  * @example
  * ```ts
  * const page1 = await client.keno.listPendingTickets({ size: 10 });
- * console.log(page1.tickets.length); // up to 10
  *
  * if (page1.nextCursor) {
  *   const page2 = await client.keno.listPendingTickets({
@@ -301,16 +289,17 @@ listPendingTickets(params?: KenoListTicketsParams): Promise<KenoListTicketsRespo
 
 ```typescript
 /**
- * Tóm tắt vé Keno cho UI danh sách vé.
+ * Ticket summary cho list views — trả về bởi `listPendingTickets` và `listTickets`.
  *
- * Trả về bởi {@link KenoApi.listPendingTickets} và {@link KenoApi.listTickets}.
+ * @see {@link KenoApi.listPendingTickets}
+ * @see {@link KenoApi.listTickets}
  */
 export interface KenoTicketSummary {
-  /** ID vé trong hệ thống. */
+  /** Internal ticket ID. */
   id: string;
   /** Mã vé hiển thị cho người chơi. VD: `"KENO-20260307-00001"`. */
   ticketNo: string;
-  /** Trạng thái hiển thị. */
+  /** Display status — derive từ draw state + settlement. */
   status: KenoTicketDisplayStatus;
   /** Tổng tiền cược (VND). */
   totalAmount: number;
@@ -319,108 +308,105 @@ export interface KenoTicketSummary {
 }
 ```
 
-## Anti-patterns — Do NOT
+## Anti-patterns — Không làm
 
-- `/** The ticket ID. */` — too generic, say what kind of ID and its format
-- Skip `@example` on API methods — tenants copy examples directly
-- Use `@internal` on public-facing types — they won't appear in docs
-- Add JSDoc that just repeats the property name — add format, unit, or meaning
-- Mention `client.auth` or `client.api` in README — too advanced, refer to TypeDoc
-- Hardcode a specific game in the Error Handling section of README
-- Include `getBetHistory` or `getGameResult` in README until those endpoints exist
-- Use `number[]` for lottery numbers that are zero-padded strings — always use `string[]`
-- Forget to update CHANGELOG.md when adding/modifying/removing APIs
+- `/** The ticket ID. */` — không có giá trị. Ghi rõ format, loại, hoặc scope.
+- Bỏ qua `@example` trên API method — tenant copy thẳng vào app.
+- Tag public-facing type bằng `@internal` — type đó sẽ biến mất khỏi TypeDoc.
+- Lặp lại tên property trong description — phải thêm format, unit, hoặc intent.
+- Nhắc đến `client.auth` hoặc `client.api` trong README — để TypeDoc lo.
+- Hardcode tên game trong Error Handling example.
+- Nhắc đến `getBetHistory` hoặc `getGameResult` trong README trước khi endpoint tồn tại.
+- Dùng `number[]` cho số xổ số cần zero-padded string — luôn dùng `string[]`.
+- Quên cập nhật `CHANGELOG.md` khi có bất kỳ thay đổi nào trên public API.
 
 ---
 
 ## Release Checklist — Thêm Game Mới
 
-Khi thêm game mới vào SDK, **PHẢI** cập nhật đầy đủ tất cả các file dưới đây theo đúng thứ tự. Nếu bỏ sót bất kỳ mục nào, release sẽ bị lỗi hoặc thiếu API cho tenant.
+Khi ship game mới vào SDK, cập nhật tất cả các file dưới đây theo đúng thứ tự. Bỏ sót một bước là release bị lỗi build hoặc thiếu API cho tenant.
 
 ### 1. Domain types — `src/{game}/`
 
 ```
 src/{game}/
-├── enums.ts   ← const enum objects + type aliases (export * from index.ts)
-├── types.ts   ← TẤT CẢ type definitions (export * from index.ts)
+├── enums.ts   ← const enum objects + type aliases
+├── types.ts   ← TẤT CẢ type definitions
 └── index.ts   ← export * from "./enums"; export * from "./types";
 ```
 
-- [ ] `enums.ts` — định nghĩa tất cả enum cần thiết (PlayType, PrizeTier, ...)
-- [ ] `types.ts` — định nghĩa **tất cả** types: TicketPurchaseInput, GameConfigResponse, DrawInfo, TicketSummary, EntryResult, LineInfo, DrawResultSummary, DrawResultInfo, DrawTierPrize, **PlaceBetResponse, CurrentDrawResponse, JackpotResponse, ListTicketsParams, ListAllTicketsParams, ListTicketsResponse, TicketEntriesResponse, EntryLinesParams, EntryLinesResponse, ListDrawResultsParams, ListDrawResultsResponse**
-- [ ] `index.ts` — `export * from "./enums"` và `export * from "./types"` (KHÔNG re-export thêm ở `types.ts`)
-- [ ] Mọi interface/property đều có JSDoc đầy đủ theo rules ở trên
+- [ ] `enums.ts` — định nghĩa đầy đủ enums: `PlayType`, `PrizeTier`, …
+- [ ] `types.ts` — định nghĩa tất cả types: `TicketPurchaseInput`, `GameConfigResponse`, `DrawInfo`, `TicketSummary`, `EntryResult`, `LineInfo`, `DrawResultSummary`, `DrawResultInfo`, `DrawTierPrize`, `PlaceBetResponse`, `CurrentDrawResponse`, `JackpotResponse`, `ListTicketsParams`, `ListAllTicketsParams`, `ListTicketsResponse`, `TicketEntriesResponse`, `EntryLinesParams`, `EntryLinesResponse`, `ListDrawResultsParams`, `ListDrawResultsResponse`
+- [ ] `index.ts` — chỉ `export * from "./enums"` và `export * from "./types"`
+- [ ] Mọi interface và property có JSDoc đầy đủ
 
 ### 2. API module — `src/apis/{game}.ts`
 
-**LƯU Ý: `apis/{game}.ts` CHỈ được chứa `{Game}Api` interface và `create{Game}Api` factory. KHÔNG định nghĩa bất kỳ type/interface nào ở đây — tất cả types import từ `../{game}`.**
+`apis/{game}.ts` chỉ chứa `{Game}Api` interface và `create{Game}Api` factory. Không định nghĩa type ở đây — import tất cả từ `../{game}`.
 
-- [ ] Tạo `{Game}Api` interface với đầy đủ methods: `getGameConfig`, `getCurrentDraw`, `placeBet`, `listPendingTickets`, `listTickets`, `getTicketEntries`, `getEntryLines` (nếu có), `getJackpot` (nếu có), `listDrawResults`, `getDrawResult`
-- [ ] Tạo `create{Game}Api(http)` factory function (`@internal`)
-- [ ] Mọi method có đầy đủ JSDoc: summary, `**Endpoint:**`, `@param`, `@returns`, `@throws`, `@example`
-- [ ] Import tất cả types cần thiết từ `../{game}` (KHÔNG export type từ file này)
+- [ ] `{Game}Api` interface với đầy đủ methods: `getGameConfig`, `getCurrentDraw`, `placeBet`, `listPendingTickets`, `listTickets`, `getTicketEntries`, `getEntryLines` (nếu có), `getJackpot` (nếu có), `listDrawResults`, `getDrawResult`
+- [ ] `create{Game}Api(http)` factory (`@internal`)
+- [ ] Mọi method có JSDoc đầy đủ: summary, `**Endpoint:**`, `@param`, `@returns`, `@throws`, `@example`
+- [ ] Tất cả types import từ `../{game}` — không export gì từ file này
 
 ### 3. Endpoints registry — `src/endpoints.ts`
 
-- [ ] Thêm key `{game}` vào `ENDPOINTS` object với đầy đủ paths tương ứng server
+- [ ] Thêm key `{game}` với đầy đủ path strings
 - [ ] Bao gồm `listDrawResults` và `getDrawResult` paths nếu game hỗ trợ
 
 ### 4. Client — `src/client.ts`
 
 - [ ] Import `create{Game}Api` và `{Game}Api` từ `./apis/{game}`
-- [ ] Thêm `readonly {game}: {Game}Api` vào `PlayerClient` interface
+- [ ] Thêm `readonly {game}: {Game}Api` vào `PlayerClient`
 - [ ] Khởi tạo `const {game} = create{Game}Api(authedClient)` trong `createPlayerClient`
-- [ ] Return `{game}` trong object cuối hàm `createPlayerClient`
+- [ ] Return `{game}` trong object cuối hàm
 
-### 5. Main entry point — `src/index.ts`
+### 5. Main barrel — `src/index.ts`
 
-- [ ] `export type { {Game}Api }` từ `./apis/{game}` (CHỈ export Api interface từ apis/)
-- [ ] `export type { {Game}TicketPurchaseInput, {Game}PlaceBetResponse, {Game}CurrentDrawResponse, {Game}JackpotResponse, {Game}ListTicketsParams, {Game}ListAllTicketsParams, {Game}ListTicketsResponse, {Game}TicketEntriesResponse, {Game}EntryLinesParams, {Game}EntryLinesResponse, {Game}ListDrawResultsParams, {Game}ListDrawResultsResponse, {Game}GameConfigResponse, ..., {Game}DrawResultSummary, {Game}DrawResultInfo, {Game}DrawTierPrize }` từ `./{game}` (tất cả types từ game module)
-- [ ] `export { {Game}PlayType, {Game}PrizeTier, ... }` (enums không phải type, export giá trị thật)
+- [ ] `export type { {Game}Api }` từ `./apis/{game}` (chỉ Api interface từ apis/)
+- [ ] `export type { {Game}TicketPurchaseInput, {Game}PlaceBetResponse, … }` từ `./{game}` (tất cả public types)
+- [ ] `export { {Game}PlayType, {Game}PrizeTier, … }` (enum values — không phải types)
 
 ### 6. Build config — `tsup.config.ts`
 
-- [ ] Thêm entry: `{game}: "src/{game}/index.ts"` vào config CJS/ESM (config đầu tiên)
+- [ ] Thêm entry: `{game}: "src/{game}/index.ts"` vào config CJS/ESM đầu tiên
 
 ### 7. Package exports — `package.json`
 
-- [ ] Thêm subpath `"./{game}"` với đầy đủ `import` (`.d.ts` + `.js`) và `require` (`.d.cts` + `.cjs`)
+- [ ] Thêm subpath `"./{game}"` với `import` (`.d.ts` + `.js`) và `require` (`.d.cts` + `.cjs`)
 
 ### 8. TypeDoc config — `typedoc.json`
 
-- [ ] Thêm `"src/{game}/index.ts"` vào mảng `entryPoints`
+- [ ] Thêm `"src/{game}/index.ts"` vào `entryPoints`
 
 ### 9. CHANGELOG.md
 
 - [ ] Ghi `### Added` với tất cả methods và types mới
-- [ ] Ghi `### Changed` với breaking changes (nếu có)
-- [ ] **KHÔNG tự bump** version trong `package.json` — developer tự bump thủ công
+- [ ] Ghi `### Changed` cho breaking changes (nếu có)
+- [ ] **Không tự bump** `version` trong `package.json` — đó là bước manual
 
 ### 10. README — `README.md`
 
 - [ ] Thêm row vào bảng imports: `@megawin/player-sdk/{game}` | `{Game}TicketPurchaseInput`
-- [ ] Thêm section `### client.{game} — Game {Tên Game}` với ví dụ `placeBet`, `listPendingTickets`, và `listDrawResults` / `getDrawResult` nếu có
-- [ ] Thêm prefix vào bảng TicketNo format
-- [ ] Cập nhật link Changelog nếu cần
+- [ ] Thêm section `### client.{game} — {Tên Game}` với `placeBet`, `listPendingTickets`, và draw result examples
+- [ ] Thêm ticket prefix vào bảng TicketNo format
 
 ### 11. Rule này — `.cursor/rules/player-sdk-jsdoc.mdc`
 
 - [ ] Thêm game vào bảng **TicketNo Format Convention**
 - [ ] Thêm `client.{game}` vào danh sách **Per-game API sections**
-- [ ] Cập nhật **Game Registry** bảng dưới
+- [ ] Cập nhật bảng **Game Registry** bên dưới
 
 ---
 
-## Game Registry — Danh sách Games Hiện Tại
-
-Đây là danh sách **chính thức** — source of truth. Khi thêm game mới, cập nhật bảng này.
+## Game Registry — Source of Truth
 
 | gameKey | Tên game | Prefix | api file | domain dir | Jackpot | getEntryLines | listDrawResults |
 |---|---|---|---|---|:---:|:---:|:---:|
-| `keno` | Game Keno | `KENO` | `apis/keno.ts` | `src/keno/` | — | ✅ | ✅ |
-| `lotto535` | Game Lotto 5/35 | `L535` | `apis/lotto535.ts` | `src/lotto535/` | ✅ | ✅ | ✅ |
-| `mega645` | Game Mega 6/45 | `M645` | `apis/mega645.ts` | `src/mega645/` | ✅ | ✅ | ✅ |
-| `power655` | Game Power 6/55 | `P655` | `apis/power655.ts` | `src/power655/` | ✅ | ✅ | ✅ |
-| `max3d` | Game Max 3D | `M3D` | `apis/max3d.ts` | `src/max3d/` | — | ✅ | ✅ |
-| `max3dpro` | Game Max 3D Pro | `M3DP` | `apis/max3dpro.ts` | `src/max3dpro/` | — | ✅ | ✅ |
-| `bingo18` | Game Bingo 18 | `B18` | `apis/bingo18.ts` | `src/bingo18/` | — | — | ✅ |
+| `keno` | Keno | `KENO` | `apis/keno.ts` | `src/keno/` | — | ✅ | ✅ |
+| `lotto535` | Lotto 5/35 | `L535` | `apis/lotto535.ts` | `src/lotto535/` | ✅ | ✅ | ✅ |
+| `mega645` | Mega 6/45 | `M645` | `apis/mega645.ts` | `src/mega645/` | ✅ | ✅ | ✅ |
+| `power655` | Power 6/55 | `P655` | `apis/power655.ts` | `src/power655/` | ✅ | ✅ | ✅ |
+| `max3d` | Max 3D | `M3D` | `apis/max3d.ts` | `src/max3d/` | — | ✅ | ✅ |
+| `max3dpro` | Max 3D Pro | `M3DP` | `apis/max3dpro.ts` | `src/max3dpro/` | — | ✅ | ✅ |
+| `bingo18` | Bingo 18 | `B18` | `apis/bingo18.ts` | `src/bingo18/` | — | — | ✅ |

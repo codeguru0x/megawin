@@ -134,7 +134,7 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
         // Dùng để nhân vào winAmount của từng line doc khi settle.
         const betCountByBoard = new Map<string, number>();
         for (const b of entry.entrySummary.boards) {
-          betCountByBoard.set(b.boardNo, b.betCount ?? 1);
+          betCountByBoard.set(b.boardNo, b.betCount);
         }
 
         // ── Step 1-2: Expand boards → lines, match với kết quả quay ──
@@ -236,7 +236,7 @@ function toBoardsForExpand(snapshots: EntryBoardSnapshot[]): Board[] {
       specialNumbers: s.specialNumbers,
     },
     derived: { expandedLines: s.expandedLines },
-    betCount: s.betCount ?? 1,
+    betCount: s.betCount,
   }));
 }
 
@@ -265,7 +265,7 @@ function buildPayoutTiersFromLines(
 
     const existing = tierMap.get(tier) ?? { hitCount: 0, betUnitCount: 0, totalAmount: 0 };
     existing.hitCount += 1;
-    existing.betUnitCount += line.betCount ?? 1;
+    existing.betUnitCount += line.betCount;
     existing.totalAmount += winAmount;
     tierMap.set(tier, existing);
   }

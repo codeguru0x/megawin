@@ -6,16 +6,15 @@ import type {
   GetWinningEntriesInput,
   GetWinningEntriesOutput,
   WinningBoardDetail,
-  WinningSideBetDetail,
 } from "./dto/winning-entries.dto";
 
 /**
  * Danh sách entries trúng thưởng của một kỳ quay Bingo 18.
  *
  * Cursor-based pagination: sort by payout.winAmount desc.
- * Bingo 18 khác biệt:
- *   - Board detail: matchCount (singleNum: 1/2/3) + tripleKind? (specific/any)
- *   - Side bet detail: sum/bet + outcome + isWin + winAmount
+ * boardDetails chứa cả cơ bản và bổ sung:
+ *   - Cơ bản: matchCount (singleNum: 1/2/3) + tripleKind? (specific/any)
+ *   - Bổ sung: sum/bet + outcome + isWin + winAmount, matchCount = null
  *   - KHÔNG có payout cap (giải cố định, đơn giản hơn Keno)
  */
 export class GetWinningEntriesUseCase extends NextApiUseCase<
@@ -50,28 +49,21 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
       },
       nextCursor,
       entries: entries.map((e) => {
+        // boardPayouts chứa cả cơ bản và bổ sung — lọc boards thắng (winAmount > 0)
         const boardDetails: WinningBoardDetail[] = (e.payout?.boardPayouts ?? [])
           .filter((b: any) => b.winAmount > 0)
           .map((b: any) => ({
             boardNo: b.boardNo as string,
             playType: b.playType as any,
-            // Lấy number từ entrySummary.boards tương ứng boardNo
             number: (e.entrySummary?.boards ?? []).find((sb: any) => sb.boardNo === b.boardNo)
               ?.number,
             tripleKind: b.tripleKind as any,
-            matchCount: b.matchCount as number,
+            matchCount: b.matchCount as number | null,
+            sum: b.sum as number | undefined,
+            bet: b.bet as any,
+            outcome: b.outcome as string | undefined,
+            isWin: b.isWin as boolean,
             winAmount: b.winAmount as number,
-          }));
-
-        const sideBetDetails: WinningSideBetDetail[] = (e.payout?.sideBetPayouts ?? [])
-          .filter((s: any) => s.winAmount > 0)
-          .map((s: any) => ({
-            playType: s.playType as any,
-            sum: s.sum as number | undefined,
-            bet: s.bet as any,
-            outcome: s.outcome as string,
-            isWin: true,
-            winAmount: s.winAmount as number,
           }));
 
         return {
@@ -81,7 +73,6 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
           amount: e.amount,
           winAmount: e.payout?.winAmount ?? 0,
           boardDetails,
-          sideBetDetails,
           createdAt: e.createdAt.toISOString(),
           settledAt: e.payout?.settledAt?.toISOString() ?? "",
         };

@@ -10,20 +10,12 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { nowVN } from "@megawin/shared/utils";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 
-const PUBLISHABLE_STATUSES = new Set<string>([
-  DrawStatus.SalesClosed,
-  DrawStatus.Published,
-]);
+const PUBLISHABLE_STATUSES = new Set<string>([DrawStatus.SalesClosed, DrawStatus.Published]);
 
-export class PublishResultUseCase extends NextApiUseCase<
-  PublishResultInput,
-  PublishResultOutput
-> {
+export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, PublishResultOutput> {
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(
-    input: PublishResultInput,
-  ): Promise<PublishResultOutput> {
+  protected async execute(input: PublishResultInput): Promise<PublishResultOutput> {
     this.validateResult(input);
 
     const draw = await this.drawRepo.getDrawById(input.drawId);
@@ -45,32 +37,19 @@ export class PublishResultUseCase extends NextApiUseCase<
     const resultData = {
       numbers,
       sum,
+      publishedAt,
     };
 
-    if (draw.status === DrawStatus.SalesClosed) {
-      const updated = await this.drawRepo.publishResult(
-        input.drawId,
-        resultData,
-        input.vietlottRef,
-      );
+    const updated = await this.drawRepo.publishResult(
+      input.drawId,
+      resultData,
+      input.vietlottRef,
+    );
 
-      if (!updated) {
-        throw AppException.internal(
-          `Chuyển trạng thái kỳ ${input.drawId} thất bại. Vui lòng thử lại.`,
-        );
-      }
-    } else {
-      const success = await this.drawRepo.updateResult(
-        input.drawId,
-        { ...resultData, publishedAt },
-        input.vietlottRef,
+    if (!updated) {
+      throw AppException.internal(
+        `Publish kết quả kỳ ${input.drawId} thất bại. Vui lòng thử lại.`,
       );
-
-      if (!success) {
-        throw AppException.internal(
-          `Cập nhật kết quả kỳ ${input.drawId} thất bại.`,
-        );
-      }
     }
 
     return {
@@ -88,10 +67,7 @@ export class PublishResultUseCase extends NextApiUseCase<
     const { numbers } = input;
 
     if (!Array.isArray(numbers) || numbers.length !== BINGO18_DRAW_COUNT) {
-      throw new AppException(
-        "DRAW_RESULT_INVALID",
-        `Phải có đúng ${BINGO18_DRAW_COUNT} số.`,
-      );
+      throw new AppException("DRAW_RESULT_INVALID", `Phải có đúng ${BINGO18_DRAW_COUNT} số.`);
     }
 
     for (const n of numbers) {

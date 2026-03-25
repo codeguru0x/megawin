@@ -30,9 +30,8 @@ export interface OpsSummaryOutput {
   /**
    * Tổng đơn vị cược = Σ(betUnitCount).
    * Phân biệt với totalLines khi có betCount > 1.
-   * Optional — backward compat.
    */
-  totalBetUnits?: number;
+  totalBetUnits: number;
   /** Số người chơi unique. */
   uniquePlayers: number;
   /** Tổng hoa hồng đại lý (VND). */

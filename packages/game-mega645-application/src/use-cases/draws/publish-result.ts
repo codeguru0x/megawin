@@ -12,8 +12,8 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import {
-  MEGA645_MAIN_COUNT,
-  VALID_MAIN_NUMBER_SET,
+  MEGA645_NUMBER_COUNT,
+  VALID_NUMBER_SET,
 } from "@megawin/game-mega645/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
@@ -47,68 +47,54 @@ export class PublishResultUseCase extends NextApiUseCase<
       );
     }
 
-    const winningMain = [...input.winningMain];
+    const winningNumbers = [...input.winningNumbers];
     const publishedAt = nowVN();
 
-    if (draw.status === DrawStatus.SalesClosed) {
-      const updated = await this.drawRepo.publishResult(
-        input.drawId,
-        { winningMain },
-        input.vietlottRef
-      );
+    const updated = await this.drawRepo.publishResult(
+      input.drawId,
+      { winningNumbers, publishedAt },
+      input.vietlottRef
+    );
 
-      if (!updated) {
-        throw AppException.internal(
-          `Chuyển trạng thái kỳ ${input.drawId} thất bại. Vui lòng thử lại.`
-        );
-      }
-    } else {
-      const success = await this.drawRepo.updateResult(
-        input.drawId,
-        { winningMain, publishedAt },
-        input.vietlottRef
+    if (!updated) {
+      throw AppException.internal(
+        `Publish kết quả kỳ ${input.drawId} thất bại. Vui lòng thử lại.`
       );
-
-      if (!success) {
-        throw AppException.internal(
-          `Cập nhật kết quả kỳ ${input.drawId} thất bại.`
-        );
-      }
     }
 
     return {
       drawId: input.drawId,
       status: DrawStatus.Published,
       result: {
-        winningMain: input.winningMain,
+        winningNumbers: input.winningNumbers,
         publishedAt: publishedAt.toISOString(),
       },
     };
   }
 
   private validateResult(input: PublishResultInput): void {
-    const { winningMain } = input;
+    const { winningNumbers } = input;
 
     if (
-      !Array.isArray(winningMain) ||
-      winningMain.length !== MEGA645_MAIN_COUNT
+      !Array.isArray(winningNumbers) ||
+      winningNumbers.length !== MEGA645_NUMBER_COUNT
     ) {
       throw new AppException(
         "DRAW_RESULT_INVALID",
-        `Phải có đúng ${MEGA645_MAIN_COUNT} số chính.`
+        `Phải có đúng ${MEGA645_NUMBER_COUNT} số chính.`
       );
     }
 
-    const uniqueMain = new Set(winningMain);
-    if (uniqueMain.size !== MEGA645_MAIN_COUNT) {
+    const uniqueMain = new Set(winningNumbers);
+    if (uniqueMain.size !== MEGA645_NUMBER_COUNT) {
       throw new AppException(
         "DRAW_RESULT_INVALID",
         "Các số chính phải khác nhau."
       );
     }
 
-    for (const n of winningMain) {
-      if (!VALID_MAIN_NUMBER_SET.has(n)) {
+    for (const n of winningNumbers) {
+      if (!VALID_NUMBER_SET.has(n)) {
         throw new AppException(
           "DRAW_RESULT_INVALID",
           `Số chính "${n}" không hợp lệ (phải từ "01" đến "45").`

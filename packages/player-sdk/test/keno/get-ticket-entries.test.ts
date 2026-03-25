@@ -10,7 +10,6 @@ const TICKET_WITH_ENTRIES = {
     drawPlan: { drawIds: ["2026-02-25.001", "2026-02-25.002"], drawCount: 2 },
     pricing: { unitPrice: 10000, betsPerDraw: 1, amountPerDraw: 10000, totalAmount: 20000 },
     boards: [{ boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] }],
-    sideBets: [],
     progress: { totalDraws: 2, settledDraws: 1 },
     settlement: { totalWinAmount: 50000 },
     createdAt: "2026-02-25T10:00:00Z",
@@ -26,7 +25,6 @@ const TICKET_WITH_ENTRIES = {
       entrySummary: {
         ticketNo: "K-20260225-001-0001",
         boards: [{ boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] }],
-        sideBets: [],
       },
       result: {
         winningNumbers: [
@@ -45,7 +43,6 @@ const TICKET_WITH_ENTRIES = {
         boardPayouts: [
           { boardNo: "A", playType: "pick5", matchCount: 3, pickCount: 5, winAmount: 50000 },
         ],
-        sideBetPayouts: [],
       },
     },
     {
@@ -58,7 +55,6 @@ const TICKET_WITH_ENTRIES = {
       entrySummary: {
         ticketNo: "K-20260225-001-0001",
         boards: [{ boardNo: "A", playType: "pick5", numbers: ["01", "15", "33", "44", "60"] }],
-        sideBets: [],
       },
     },
   ],

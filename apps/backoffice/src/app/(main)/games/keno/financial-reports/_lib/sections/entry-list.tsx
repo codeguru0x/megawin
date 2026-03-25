@@ -24,6 +24,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS, ENTRY_STATUS_LABELS } from "@megawin/game-core/labels";
 import { toTenantUsername } from "@megawin/shared/utils";
+import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
 import type { TicketEntryEntity } from "@megawin/game-keno/entities";
 import { useKenoEntries } from "../use-report-queries";
 import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
@@ -71,8 +72,14 @@ export function KenoEntryDetailDialog({
   if (!entry) return null;
 
   const payout = entry.payout as any;
-  const boardPayouts: any[] = payout?.boardPayouts ?? [];
-  const sideBetPayouts: any[] = payout?.sideBetPayouts ?? [];
+  const allBoardPayouts: any[] = payout?.boardPayouts ?? [];
+  // Phân tách boardPayouts thành cơ bản (pick) và bổ sung (side bet) theo playType
+  const basicBoardPayouts = allBoardPayouts.filter(
+    (b: any) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType),
+  );
+  const sideBetPayouts = allBoardPayouts.filter((b: any) =>
+    KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType),
+  );
   const winAmount: number = payout?.winAmount ?? 0;
   const payoutAmount: number = payout?.payoutAmount ?? 0;
   // scheduled = đang chờ kết quả — KHÔNG hiển thị lãi/lỗ
@@ -223,13 +230,13 @@ export function KenoEntryDetailDialog({
             )}
 
             {/* Boards cơ bản */}
-            {boardPayouts.length > 0 && (
+            {basicBoardPayouts.length > 0 && (
               <div className="rounded-lg border p-3">
                 <p className="mb-2 text-xs font-semibold text-muted-foreground">
                   Panel A/B — Kết quả chọn số
                 </p>
                 <div className="space-y-3">
-                  {boardPayouts.map((board: any, i: number) => {
+                  {basicBoardPayouts.map((board: any, i: number) => {
                     const selectedNums: string[] = board.selectedNumbers ?? [];
                     const matchedNums = new Set<string>(board.matchedNumbers ?? []);
                     const playTypeLabel =
@@ -242,7 +249,7 @@ export function KenoEntryDetailDialog({
                               Panel {String.fromCharCode(65 + i)}
                             </Badge>
                             <span className="text-xs text-muted-foreground">{playTypeLabel}</span>
-                            {board.matchCount > 0 && (
+                            {board.matchCount != null && board.matchCount > 0 && (
                               <Badge className="bg-profit text-profit-foreground text-xs">
                                 Trúng {board.matchCount}
                               </Badge>
@@ -386,8 +393,7 @@ export function EntryList({
                   const p = payout(entry);
                   const winAmount = p?.winAmount ?? 0;
                   const payoutAmount = p?.payoutAmount ?? 0;
-                  const boardCount =
-                    (p?.boardPayouts?.length ?? 0) + (p?.sideBetPayouts?.length ?? 0);
+                  const boardCount = p?.boardPayouts?.length ?? 0;
                   return (
                     <TableRow
                       key={entry.id}

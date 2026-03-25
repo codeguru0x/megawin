@@ -16,6 +16,8 @@ import type { GlobalConfigDoc } from "../entities/global-config";
  *
  * Được tổng hợp từ DB (aggregateRevenueByTenant + aggregateSettledPayoutSummary)
  * trước khi gọi `calculateKenoDrawFinancials()`.
+ *
+ * Tất cả giá trị đơn vị VND, integer.
  */
 export interface DrawFinancialInput {
   /** Tổng doanh thu = Σ(entry.amount) cho tất cả entries không void (VND). */
@@ -28,7 +30,11 @@ export interface DrawFinancialInput {
 
 /**
  * Kết quả tính tài chính kỳ quay Keno.
- * Ghi vào draw.financial sau khi settle hoàn tất.
+ *
+ * Ghi vào `draw.financial` sau khi settle hoàn tất (step CalculateFinancials).
+ * CRASH-SAFE: idempotent — chạy lại overwrite toàn bộ financial.
+ *
+ * Tất cả giá trị đơn vị VND, integer. companyTake có thể âm.
  */
 export interface DrawFinancialResult {
   /** Tổng doanh thu (VND). Copy từ input. */
@@ -113,7 +119,10 @@ export function calculateCappedPrize(
  * Cấu hình mặc định Keno theo quy tắc Vietlott.
  *
  * Dùng khi chưa có GlobalConfig trong DB, hoặc làm seed data ban đầu.
- * Đơn vị tiền: VND. Đơn vị tỷ lệ: 0–1.
+ * Mọi giá trị đều có thể được staff override qua backoffice UI — đây
+ * chỉ là default để hệ thống chạy được ngay khi mới deploy.
+ *
+ * Đơn vị tiền: VND (integer). Đơn vị tỷ lệ: 0–1 (float).
  */
 export const DEFAULT_KENO_CONFIG: Pick<
   GlobalConfigDoc,

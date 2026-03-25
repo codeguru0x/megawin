@@ -53,6 +53,7 @@ import type { EntryFeedDoc, GameProduct } from "@megawin/game-core/entities";
 import { EntryFeedRepository } from "../infras/repos/entry-feed-repo";
 import { FeedSyncCursorRepository } from "../infras/repos/feed-sync-cursor-repo";
 import { Long } from "mongodb";
+import { longToString } from "@megawin/data/mongo";
 
 /** Batch size mặc định nếu không truyền vào. */
 const DEFAULT_BATCH_SIZE = 500;
@@ -125,7 +126,7 @@ export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<
   /**
    * @param gameProduct GameProduct enum value cho game này.
    */
-  constructor(private readonly gameProduct: GameProduct) {
+  constructor(protected readonly gameProduct: GameProduct) {
     super();
   }
 
@@ -161,16 +162,14 @@ export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<
 
     // ── Bước 1: Acquire distributed lock ─────────────────────────────────────
     // Lock TTL = 3 phút. Nếu Lambda khác đang giữ → skip lần này.
-    const lockResult = await this.cursorRepo.acquireLock(
-      this.gameProduct,
-      `${this.gameProduct}-feed-sync`,
-    );
+    const lockResult = await this.cursorRepo.acquireLock(this.gameProduct);
 
     if (!lockResult.acquired) {
       console.log(
         `[${this.gameProduct}] Feed sync lock đang bị giữ — skip lần này. ` +
           `Lambda đang chạy sẽ tự release khi hoàn tất hoặc lock tự expire sau 3 phút.`,
       );
+
       return {
         done: false,
         skipped: true,
@@ -179,7 +178,7 @@ export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<
         totalUpserted: 0,
         totalSkipped: 0,
         elapsedMs: Date.now() - startTime,
-      };
+      } as SyncEntryFeedResult;
     }
 
     // ── Bước 2: Sync loop ─────────────────────────────────────────────────────
@@ -213,8 +212,7 @@ export abstract class BaseSyncEntryFeedUseCase extends InternalUseCase<
         // feedDocs đã sorted theo version ASC (từ getChangedEntries)
         // feedDocs.length > 0 đã check ở trên → lastDoc luôn tồn tại
         const lastDoc = feedDocs[feedDocs.length - 1]!;
-        lastVersion =
-          lastDoc.version instanceof Long ? lastDoc.version.toString() : String(lastDoc.version);
+        lastVersion = longToString(lastDoc.version);
 
         // Save cursor + gia hạn lock ngay sau mỗi batch
         // → crash chỉ mất tối đa 1 batch (500 entries)

@@ -7,7 +7,7 @@
 
 import { z } from "zod";
 import { DRAW_ID_REGEX } from "@megawin/shared/constants";
-import { MEGA645_MAIN_MIN, MEGA645_MAIN_MAX, MEGA645_MAIN_COUNT } from "../entities/types";
+import { MEGA645_NUMBER_MIN, MEGA645_NUMBER_MAX, MEGA645_NUMBER_COUNT } from "../entities/types";
 
 /** Board nos hợp lệ cho Mega 6/45: tối đa 6 boards, ký hiệu A-F. */
 export const VALID_BOARD_NOS = ["A", "B", "C", "D", "E", "F"] as const;
@@ -17,7 +17,7 @@ export const VALID_BOARD_NOS = ["A", "B", "C", "D", "E", "F"] as const;
  * Số hợp lệ: "01"-"45" (string 2 ký tự, zero-padded).
  * Regex bắt: 01-09, 10-39, 40-45.
  */
-export const mega645MainNumberSchema = z
+export const mega645NumberSchema = z
   .string()
   .regex(/^(0[1-9]|[1-3][0-9]|4[0-5])$/, "Số phải từ '01' đến '45'");
 
@@ -37,11 +37,11 @@ const pad2 = (n: number) => String(n).padStart(2, "0");
  * Schema validate kết quả kỳ quay Mega 6/45.
  *
  * Dùng chung bởi: PublishResultAction (client form) và API route handler.
- * - winningMain: MEGA645_MAIN_COUNT số chính, mỗi số trong [MAIN_MIN, MAIN_MAX], không trùng
+ * - winningNumbers: MEGA645_NUMBER_COUNT số, mỗi số trong [MEGA645_NUMBER_MIN, MEGA645_NUMBER_MAX], không trùng
  * - Mega 6/45 không có số đặc biệt (khác Lotto 5/35)
  */
 export const publishResultSchema = z.object({
-  winningMain: z
+  winningNumbers: z
     .array(
       z
         .string()
@@ -49,14 +49,14 @@ export const publishResultSchema = z.object({
         .refine(
           (v) => {
             const n = Number(v);
-            return Number.isInteger(n) && n >= MEGA645_MAIN_MIN && n <= MEGA645_MAIN_MAX;
+            return Number.isInteger(n) && n >= MEGA645_NUMBER_MIN && n <= MEGA645_NUMBER_MAX;
           },
-          `Số chính phải từ ${pad2(MEGA645_MAIN_MIN)} đến ${pad2(MEGA645_MAIN_MAX)}`,
+          `Số chính phải từ ${pad2(MEGA645_NUMBER_MIN)} đến ${pad2(MEGA645_NUMBER_MAX)}`,
         ),
     )
-    .length(MEGA645_MAIN_COUNT, `Cần đúng ${MEGA645_MAIN_COUNT} số chính`)
+    .length(MEGA645_NUMBER_COUNT, `Cần đúng ${MEGA645_NUMBER_COUNT} số chính`)
     .refine(
-      (nums) => new Set(nums.map(Number)).size === MEGA645_MAIN_COUNT,
+      (nums) => new Set(nums.map(Number)).size === MEGA645_NUMBER_COUNT,
       "Các số phải khác nhau",
     ),
 });
@@ -93,7 +93,7 @@ export const editScheduleSchema = z
 
     if (!isNaN(openMs) && !isNaN(closeMs) && closeMs <= openMs) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["salesCloseTime"],
         message: "Giờ đóng bán phải sau giờ mở bán",
       });
@@ -101,7 +101,7 @@ export const editScheduleSchema = z
 
     if (!isNaN(closeMs) && !isNaN(drawMs) && drawMs <= closeMs) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["drawTime"],
         message: "Giờ quay số phải sau giờ đóng bán",
       });

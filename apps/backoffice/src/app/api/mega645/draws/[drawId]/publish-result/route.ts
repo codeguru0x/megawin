@@ -4,17 +4,17 @@ import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities";
 import { PublishResultUseCase } from "@megawin/game-mega645-application/use-cases/draws";
 import {
-  MEGA645_MAIN_COUNT,
+  MEGA645_NUMBER_COUNT,
 } from "@megawin/game-mega645/entities";
-import { mega645MainNumberSchema } from "@megawin/game-mega645/schemas";
+import { mega645NumberSchema } from "@megawin/game-mega645/schemas";
 
 const publishResultSchema = z
   .object({
-    winningMain: z
-      .array(mega645MainNumberSchema)
+    winningNumbers: z
+      .array(mega645NumberSchema)
       .length(
-        MEGA645_MAIN_COUNT,
-        `Phải có đúng ${MEGA645_MAIN_COUNT} số chính.`
+        MEGA645_NUMBER_COUNT,
+        `Phải có đúng ${MEGA645_NUMBER_COUNT} số chính.`
       ),
     vietlottRef: z
       .object({
@@ -24,8 +24,8 @@ const publishResultSchema = z
       .optional(),
   })
   .refine(
-    (data) => new Set(data.winningMain).size === data.winningMain.length,
-    { message: "Các số chính không được trùng nhau.", path: ["winningMain"] }
+    (data) => new Set(data.winningNumbers).size === data.winningNumbers.length,
+    { message: "Các số chính không được trùng nhau.", path: ["winningNumbers"] }
   );
 
 const publishResultUseCase = new PublishResultUseCase();

@@ -9,6 +9,7 @@
  *   - companyTake = revenue - prizes - commission
  *
  * Đồng thời denormalize settleSummary lên draw cho player API.
+ * prizes[] chứa cả cơ bản và bổ sung (unified), phân biệt qua playType.
  * Chỉ lưu các giải có winnerCount > 0 — compact document.
  *
  * IDEMPOTENT: aggregate từ DB → chạy lại cho kết quả giống nhau.
@@ -18,8 +19,7 @@
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { calculateBingo18DrawFinancials } from "@megawin/game-bingo18/rules";
 import type {
-  DrawBasicPrizeSummary,
-  DrawSideBetPrizeSummary,
+  DrawPrizeSummary,
   DrawSettleSummary,
   DrawFinancial,
   DrawStats,
@@ -48,13 +48,12 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
   protected async execute(input: SettleContext): Promise<SettleFinancials> {
     const { drawId } = input;
 
-    // Chạy song song 3 queries để giảm latency.
+    // Chạy song song 2 queries để giảm latency.
     // Query 1: gộp revenue + commission + payout trong 1 pipeline (tất cả entries đã Settled).
-    // Query 2+3: prize summary tách riêng vì $unwind boardPayouts/sideBetPayouts khác nhau.
-    const [summary, basicPrizeSummary, sideBetPrizeSummary] = await Promise.all([
+    // Query 2: unified prize summary — boardPayouts chứa cả cơ bản và bổ sung.
+    const [summary, prizeSummary] = await Promise.all([
       this.entryRepo.aggregateSettledFinancialSummary(drawId),
-      this.entryRepo.aggregateBasicPrizeSummary(drawId),
-      this.entryRepo.aggregateSideBetPrizeSummary(drawId),
+      this.entryRepo.aggregatePrizeSummary(drawId),
     ]);
 
     const fin = calculateBingo18DrawFinancials({
@@ -64,30 +63,25 @@ export class CalculateFinancialsUseCase extends InternalUseCase<SettleContext, S
     });
 
     // ── Build settleSummary cho player API ─────────────────────────────────
-    // Chỉ lưu các giải có winnerCount > 0 — tránh lưu tất cả combination possible.
-    // basicPrizes: (playType, matchCount) → đủ để UI hiển thị bảng giải theo cách chơi.
-    // sideBetPrizes: (playType, bet) → hiển thị cộng tổng + lớn/hòa/nhỏ.
-    const basicPrizes: DrawBasicPrizeSummary[] = basicPrizeSummary.map((bp) => ({
-      playType: bp.playType as Bingo18PlayType,
-      matchCount: bp.matchCount,
+    // prizes[] chứa cả cơ bản và bổ sung, phân biệt qua playType.
+    // Chỉ lưu các combination có winnerCount > 0 → compact document.
+    // Group key: (playType, matchCount?, tripleKind?, sum?, bet?).
+    const prizes: DrawPrizeSummary[] = prizeSummary.map((p) => ({
+      playType: p.playType as Bingo18PlayType,
+      matchCount: p.matchCount,
       // tripleKind chỉ có ý nghĩa với tripleMatch; null từ aggregation → bỏ qua (undefined).
-      ...(bp.tripleKind != null && {
-        tripleKind: bp.tripleKind,
+      ...(p.tripleKind != null && {
+        tripleKind: p.tripleKind as Bingo18TripleKind,
       }),
-      winnerCount: bp.winnerCount,
-      prizePerUnit: bp.prizePerUnit,
+      // sum (number) cho sumTotal — null từ aggregation → bỏ qua.
+      ...(p.sum != null && { sum: p.sum }),
+      // bet (string) cho bigSmallDraw — null từ aggregation → bỏ qua.
+      ...(p.bet != null && { bet: p.bet as Bingo18BigSmallBet }),
+      winnerCount: p.winnerCount,
+      prizePerUnit: p.prizePerUnit,
     }));
 
-    const sideBetPrizes: DrawSideBetPrizeSummary[] = sideBetPrizeSummary.map((sb) => ({
-      playType: sb.playType as Bingo18PlayType,
-      // sum (number) cho sumTotal, bet (string) cho bigSmallDraw — không trộn lẫn.
-      ...(sb.sum != null && { sum: sb.sum }),
-      ...(sb.bet != null && { bet: sb.bet }),
-      winnerCount: sb.winnerCount,
-      prizePerUnit: sb.prizePerUnit,
-    }));
-
-    const settleSummary: DrawSettleSummary = { basicPrizes, sideBetPrizes };
+    const settleSummary: DrawSettleSummary = { prizes };
 
     // Ghi financial + stats + settleSummary trong 1 DB call (idempotent overwrite).
     // 3 embedded docs này chỉ được set 1 lần duy nhất → full overwrite an toàn.

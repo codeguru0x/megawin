@@ -54,13 +54,9 @@ import type { EntryOutcome, EntryStatus, GameProduct } from "./game-core.enums";
 export interface FeedVoidInfo {
   /** Tiền cược gốc trước khi huỷ (VND). */
   originalAmount: number;
+
   /** Tiền hoàn trả cho player (VND). */
   refundAmount: number;
-  /**
-   * Trạng thái hoàn tiền.
-   * Ví dụ: "pending" | "completed" | "failed" (tuỳ game RefundStatus).
-   */
-  refundStatus: string;
 
   /** Thời điểm entry bị huỷ. */
   voidedAt: Date;
@@ -160,6 +156,12 @@ export interface EntryFeedDoc {
   status: EntryStatus;
 
   // ───── Financials ─────
+
+  /** Tổng đơn vị cược thực tế. Dùng tính tiền: amount = betUnitCount × unitPrice. */
+  betUnitCount: number;
+
+  /** Mệnh giá 1 lần tham gia dự thưởng (VND). Snapshot từ global config (mặc định 10.000đ). */
+  unitPrice: number;
 
   /**
    * Tiền cược kỳ này (VND).
@@ -269,8 +271,11 @@ export interface EntryFeedDoc {
 
   // ───── Timestamps ─────
 
+  /** Thời điểm tạo document. */
+  createdAt: Date;
+
   /**
-   * Thời điểm entry gốc (trong collection riêng của game) được cập nhật.
+   * Thời điểm document được cập nhật.
    * Phản ánh lúc entry thực sự thay đổi trạng thái.
    */
   updatedAt: Date;

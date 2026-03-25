@@ -5,8 +5,8 @@
  *
  * Bingo 18 khác biệt so với các game khác:
  *   - KHÔNG có Jackpot — financial chỉ có profit = revenue - prizes - commission
- *   - Cách chơi cơ bản: singleNum, doubleMatch, tripleMatch (3 loại)
- *   - Side bets: sumTotal (tổng 3-18), bigSmallDraw (lớn/hòa/nhỏ)
+ *   - 5 cách chơi: singleNum, doubleMatch, tripleMatch, sumTotal, bigSmallDraw
+ *   - Tất cả nằm trong boards[] — phân biệt cơ bản/bổ sung qua playType
  *   - 3 xúc xắc (1-6), tần suất cao ~160 kỳ/ngày
  *   - TripleKind: specific (1.2tr) vs any (200k) — concept riêng Bingo 18
  */
@@ -32,12 +32,10 @@ export interface OpsSummaryOutput {
   /** Tổng entries (= số vé tham gia kỳ). */
   totalEntries: number;
   /**
-   * Tổng boards cơ bản (singleNum + doubleMatch + tripleMatch).
+   * Tổng boards (cả cơ bản và bổ sung).
    * Bingo 18 tối đa 6 boards/vé.
    */
   totalBoards: number;
-  /** Tổng side bets (sumTotal + bigSmallDraw). */
-  totalSideBets: number;
   /** Số người chơi unique (distinct accountId). */
   totalPlayers: number;
   /** Tổng hoa hồng đại lý (VND). */
@@ -53,10 +51,8 @@ export interface TenantBreakdownItem {
   tenantId: string;
   /** Số entries. */
   entries: number;
-  /** Số boards cơ bản. */
+  /** Số boards (cả cơ bản và bổ sung). */
   boards: number;
-  /** Số side bets. */
-  sideBets: number;
   /** Số người chơi unique. */
   players: number;
   /** Doanh thu (VND). */

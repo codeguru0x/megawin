@@ -2,19 +2,18 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
 import type {
   GetWinningEntriesInput,
   GetWinningEntriesOutput,
   WinningEntryBoardDetail,
-  WinningEntrySideBetDetail,
 } from "./dto/winning-entries.dto";
 
 /**
  * Danh sách entries trúng thưởng của một kỳ quay Keno.
  *
  * Cursor-based pagination: sort by payout.winAmount desc.
- * Keno khác biệt: board detail dùng matchCount/pickCount, không phải PrizeTier.
- * Side bet detail có outcome + isWin + winAmount.
+ * boardDetails[] chứa cả cơ bản (matchCount/pickCount) và bổ sung (outcome/isWin).
  */
 export class GetWinningEntriesUseCase extends NextApiUseCase<
   GetWinningEntriesInput,
@@ -45,31 +44,36 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
       summary,
       nextCursor,
       entries: entries.map((e) => {
+        // boardPayouts[] chứa cả cơ bản (pick1-pick10) và bổ sung (bigSmall/evenOdd).
+        // Cơ bản: matchCount + pickCount meaningful, bet/outcome/isWin = undefined.
+        // Bổ sung: bet + outcome + isWin meaningful, matchCount = 0, pickCount = 0.
         const boardDetails: WinningEntryBoardDetail[] = (e.payout?.boardPayouts ?? [])
           .filter((b: any) => b.winAmount > 0)
-          .map((b: any) => ({
-            boardNo: b.boardNo as number,
-            playType: b.playType as string,
-            // Lấy numbers từ entrySummary.boards tương ứng boardNo
-            numbers:
-              (e.entrySummary?.boards ?? []).find((sb: any) => sb.boardNo === b.boardNo)?.numbers ??
-              [],
-            matchCount: b.matchCount as number,
-            pickCount: b.pickCount as number,
-            winAmount: b.winAmount as number,
-            isCapped:
-              (e.hasCappablePrize ?? false) && b.pickCount >= 8 && b.matchCount === b.pickCount,
-          }));
+          .map((b: any) => {
+            const isSideBet = KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType);
+            const board = (e.entrySummary?.boards ?? []).find(
+              (sb: any) => sb.boardNo === b.boardNo,
+            );
 
-        const sideBetDetails: WinningEntrySideBetDetail[] = (e.payout?.sideBetPayouts ?? [])
-          .filter((s: any) => s.winAmount > 0)
-          .map((s: any) => ({
-            playType: s.playType as string,
-            bet: s.bet as string,
-            outcome: s.outcome as string,
-            isWin: true,
-            winAmount: s.winAmount as number,
-          }));
+            return {
+              boardNo: b.boardNo as string,
+              playType: b.playType as string,
+              // Cơ bản: numbers từ entrySummary. Bổ sung: undefined.
+              ...(board?.numbers ? { numbers: board.numbers as string[] } : {}),
+              matchCount: b.matchCount as number | null,
+              pickCount: b.pickCount as number | null,
+              // Bổ sung: bet + outcome + isWin. Cơ bản: undefined.
+              ...(b.bet ? { bet: b.bet as string } : {}),
+              ...(b.outcome !== undefined ? { outcome: b.outcome as string } : {}),
+              isWin: b.isWin as boolean,
+              winAmount: b.winAmount as number,
+              isCapped:
+                !isSideBet &&
+                (e.hasCappablePrize ?? false) &&
+                b.pickCount >= 8 &&
+                b.matchCount === b.pickCount,
+            };
+          });
 
         return {
           entryId: e.id,
@@ -78,7 +82,6 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
           amount: e.amount,
           winAmount: e.payout?.winAmount ?? 0,
           boardDetails,
-          sideBetDetails,
           createdAt: e.createdAt.toISOString(),
           settledAt: e.payout?.settledAt?.toISOString() ?? "",
         };

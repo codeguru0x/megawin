@@ -1,6 +1,6 @@
 {
   "name": "@megawin/player-sdk",
-  "version": "1.0.12",
+  "version": "1.0.15",
   "description": "MegaWin Player SDK – HTTP client + game types cho đối tác tích hợp",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -117,9 +117,10 @@
   "license": "ISC",
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
+    "@types/node": "^25.5.0",
     "tsup": "^8.5.1",
-    "typedoc": "^0.28.17",
-    "typescript": "5.9.3",
-    "vitest": "^4.0.18"
+    "typedoc": "^0.28.18",
+    "typescript": "6.0.2",
+    "vitest": "^4.1.1"
   }
 }

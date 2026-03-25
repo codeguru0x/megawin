@@ -38,5 +38,5 @@ import { SyncEntryFeedUseCase } from "@megawin/game-power655-application/use-cas
 const useCase = new SyncEntryFeedUseCase();
 
 export async function handler() {
-  return useCase.run({ batchSize: 500 });
+  return useCase.run();
 }

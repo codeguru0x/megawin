@@ -98,3 +98,4 @@ build:
 
 functions:
   - ${file(src/functions/player-endpoint.yml)}
+  - ${file(src/functions/entry-feed-endpoint.yml)}

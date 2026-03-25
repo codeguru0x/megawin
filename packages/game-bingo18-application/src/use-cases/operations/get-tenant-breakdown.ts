@@ -6,8 +6,8 @@ import type { OpsQueryInput, TenantBreakdownOutput } from "./dto/operations.dto"
 /**
  * Phân tích doanh thu theo đại lý cho Bingo 18 Operations Dashboard.
  *
- * Group by tenantId — revenue, commission, entries, boards, sideBets, players.
- * Bingo 18 tách biệt boards (basic) và sideBets (sumTotal/bigSmallDraw).
+ * Group by tenantId — revenue, commission, entries, boards, players.
+ * boards[] chứa cả cơ bản và bổ sung, đếm chung.
  * Sorted by revenue desc.
  */
 export class GetTenantBreakdownUseCase extends NextApiUseCase<

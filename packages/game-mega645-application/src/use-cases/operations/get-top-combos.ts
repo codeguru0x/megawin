@@ -7,7 +7,7 @@ import type { GetTopCombosInput, GetTopCombosOutput, TopComboItem } from "./dto/
 /**
  * Lấy top N "bộ số phổ biến nhất" trong một kỳ quay Mega 6/45.
  *
- * Nhóm boards theo combo key (playType + sorted mainNumbers),
+ * Nhóm boards theo combo key (playType + sorted numbers),
  * rank theo entryCount (số entries chứa combo) giảm dần.
  *
  * Mega 6/45: không có specialNumbers nên combo key đơn giản hơn Lotto 5/35.
@@ -31,7 +31,7 @@ export class GetTopCombosUseCase extends NextApiUseCase<GetTopCombosInput, GetTo
     const combos: TopComboItem[] = rows.map((r, idx) => ({
       rank: idx + 1,
       playType: r.playType,
-      mainNumbers: r.mainNumbers,
+      numbers: r.numbers,
       entryCount: r.entryCount,
       totalAmount: r.totalAmount,
     }));

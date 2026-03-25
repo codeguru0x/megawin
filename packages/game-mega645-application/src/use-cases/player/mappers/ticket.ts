@@ -3,7 +3,7 @@
  *
  * Chuyển đổi TicketEntity → PlayerTicketSummary cho API response.
  * Dùng chung bởi các use cases: ListPending, ListAll, GetTicketEntries.
- * Mega 6/45: boards chỉ có mainNumbers (không có specialNumbers).
+ * Mega 6/45: boards chỉ có numbers (không có specialNumbers).
  */
 
 import type { Board, TicketEntity } from "@megawin/game-mega645/entities";
@@ -29,10 +29,10 @@ export function mapPlayerTicket(ticket: TicketEntity): PlayerTicketSummary {
       boardNo: b.boardNo,
       playType: b.playType,
       selection: {
-        mainNumbers: b.selection.mainNumbers,
+        numbers: b.selection.numbers,
       },
       expandedLines: b.derived.expandedLines,
-      betCount: b.betCount ?? 1,
+      betCount: b.betCount,
     })),
     progress: {
       totalDraws: ticket.progress.totalDraws,

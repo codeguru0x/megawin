@@ -182,7 +182,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       mainNumbers: b.selection.mainNumbers,
       specialNumbers: b.selection.specialNumbers,
       expandedLines: b.derived.expandedLines,
-      betCount: b.betCount ?? 1,
+      betCount: b.betCount,
     }));
 
     const entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">> = [];

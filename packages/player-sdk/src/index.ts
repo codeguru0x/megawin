@@ -43,8 +43,7 @@ export type { Bingo18Api } from "./apis/bingo18";
 // ---- Game sub-types (referenced by API responses, needed for docs) ----
 export type {
   Bingo18TicketPurchaseInput,
-  Bingo18BasicBoard,
-  Bingo18SideBet,
+  Bingo18BoardInput,
   Bingo18GameConfigResponse,
   Bingo18GameRules,
   Bingo18PrizesConfig,
@@ -56,8 +55,7 @@ export type {
   Bingo18TenantConfig,
   Bingo18DrawInfo,
   Bingo18TicketSummary,
-  Bingo18DrawBasicPrize,
-  Bingo18DrawSideBetPrize,
+  Bingo18DrawPrize,
   Bingo18DrawResultSummary,
   Bingo18DrawResultInfo,
   Bingo18PlaceBetResponse,

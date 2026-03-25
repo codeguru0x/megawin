@@ -8,7 +8,7 @@ import type {
   EntryBoardSnapshot,
 } from "@megawin/game-mega645/entities";
 import { PlayType } from "@megawin/game-mega645/entities";
-import { calculateLineCount, getRequiredMainCount } from "@megawin/game-mega645/rules/play-types";
+import { calculateLineCount, getRequiredNumberCount } from "@megawin/game-mega645/rules/play-types";
 
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { PlaceBetStore } from "../../infras/repos/place-bet-store";
@@ -73,11 +73,11 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         boardNo: bi.boardNo,
         playType,
         selection: {
-          mainNumbers: [...bi.selection.mainNumbers].sort(),
+          numbers: [...bi.selection.numbers].sort(),
         },
         derived: {
           expandedLines: lineCount,
-          baoSize: playType !== PlayType.Standard ? getRequiredMainCount(playType) : undefined,
+          baoSize: playType !== PlayType.Standard ? getRequiredNumberCount(playType) : undefined,
         },
         betCount,
       });
@@ -107,7 +107,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const unitPrice = play.unitPrice;
     // betUnitsPerDraw = tổng đơn vị cược thực tế (lines × betCount per board).
     const betUnitsPerDraw = builtBoards.reduce(
-      (sum, b) => sum + b.derived.expandedLines * (b.betCount ?? 1),
+      (sum, b) => sum + b.derived.expandedLines * b.betCount,
       0,
     );
     const amountPerDraw = unitPrice * betUnitsPerDraw;
@@ -166,9 +166,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const boardSnapshots: EntryBoardSnapshot[] = builtBoards.map((b) => ({
       boardNo: b.boardNo,
       playType: b.playType,
-      mainNumbers: b.selection.mainNumbers,
+      numbers: b.selection.numbers,
       expandedLines: b.derived.expandedLines,
-      betCount: b.betCount ?? 1,
+      betCount: b.betCount,
     }));
 
     const entryDocs: Array<Omit<TicketEntryDoc, "_id" | "version">> = [];
