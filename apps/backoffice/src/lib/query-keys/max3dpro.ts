@@ -91,8 +91,22 @@ export const max3dproKeys = {
 
   // ─── Outstanding ───────────────────────────────────────────────────────────
 
-  /** Outstanding entries đang chờ settle (live, refetch 60s) */
+  /** Invalidate toàn bộ outstanding (draws + tenants + players + entries) */
   outstanding: [MODULE, "outstanding"] as const,
+
+  /** Level 1: danh sách draws outstanding (live, refetch 60s) */
+  outstandingDraws: [MODULE, "outstanding", "draws"] as const,
+
+  /** Level 2: tenant breakdown của 1 draw */
+  outstandingTenants: (drawId: string) => [MODULE, "outstanding", "tenants", { drawId }] as const,
+
+  /** Level 3: player breakdown của 1 draw × 1 tenant */
+  outstandingPlayers: (p: { drawId: string; tenantId: string }) =>
+    [MODULE, "outstanding", "players", p] as const,
+
+  /** Level 4: entries của 1 draw × 1 tenant × 1 player */
+  outstandingEntries: (p: { drawId: string; tenantId: string; accountId: string }) =>
+    [MODULE, "outstanding", "entries", p] as const,
 
   // ─── Void Reports ──────────────────────────────────────────────────────────
 

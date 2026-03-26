@@ -6,5 +6,9 @@ export type {
   OutstandingDrawCounts,
 } from "./entry.types";
 export type { OutstandingGameSummary } from "./outstanding.types";
+export type {
+  OutstandingTenantBreakdownRow,
+  OutstandingPlayerBreakdownRow,
+} from "./entry-outstanding.types";
 export type { TicketSummary } from "./ticket.types";
 export type { TenantConfigFields } from "./config.types";

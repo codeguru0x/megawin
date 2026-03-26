@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Ticket } from "lucide-react";
+import { Ticket, Building2, User, Clock, Banknote, HandCoins } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -21,11 +21,18 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber } from "@megawin/shared/utils";
-import { REPORT_COLUMN_LABELS, ENTRY_STATUS_LABELS } from "@megawin/game-core/labels";
-import { toTenantUsername } from "@megawin/shared/utils";
+import { formatNumber, displayVNDateTime, toTenantUsername, formatVN } from "@megawin/shared/utils";
+import {
+  REPORT_COLUMN_LABELS,
+  ENTRY_STATUS_LABELS,
+  ENTRY_OUTCOME_LABELS,
+} from "@megawin/game-core/labels";
 import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
-import type { TicketEntryEntity } from "@megawin/game-keno/entities";
+import type {
+  TicketEntryEntity,
+  EntryBoardSnapshot,
+  EntryBoardPayout,
+} from "@megawin/game-keno/entities";
 import { useKenoEntries } from "../use-report-queries";
 import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
 
@@ -57,6 +64,38 @@ const KENO_BET_LABELS: Record<string, string> = {
   evenOddDraw: "Hoà Chẵn/Lẻ",
 };
 
+// ─── Board Color Map ──────────────────────────────────────────────────────────
+
+const BOARD_COLORS: Record<string, string> = {
+  A: "var(--board-a)",
+  B: "var(--board-b)",
+  C: "var(--board-c)",
+};
+
+// ─── Ball helper ──────────────────────────────────────────────────────────────
+
+function Ball({
+  n,
+  variant = "default",
+}: {
+  n: string;
+  variant?: "default" | "matched" | "result";
+}) {
+  const cls =
+    variant === "matched"
+      ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
+      : variant === "result"
+        ? "bg-primary text-primary-foreground"
+        : "bg-muted text-muted-foreground";
+  return (
+    <span
+      className={`inline-flex size-7 items-center justify-center rounded-full text-[11px] font-bold tabular-nums ${cls}`}
+    >
+      {n}
+    </span>
+  );
+}
+
 // ─── Entry Detail Dialog ──────────────────────────────────────────────────────
 
 /** Chi tiết 1 entry Keno — boards chọn số, side bets, kết quả 20 số. */
@@ -71,210 +110,289 @@ export function KenoEntryDetailDialog({
 }) {
   if (!entry) return null;
 
-  const payout = entry.payout as any;
-  const allBoardPayouts: any[] = payout?.boardPayouts ?? [];
-  // Phân tách boardPayouts thành cơ bản (pick) và bổ sung (side bet) theo playType
-  const basicBoardPayouts = allBoardPayouts.filter(
-    (b: any) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType),
+  // Đọc boards từ entrySummary (luôn có, kể cả khi scheduled)
+  const boards: EntryBoardSnapshot[] = entry.entrySummary?.boards ?? [];
+  const basicBoards = boards.filter((b) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType));
+  const sideBetBoards = boards.filter((b) => KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType));
+
+  // Payout data — chỉ có sau khi settle
+  const boardPayoutsMap = new Map<string, EntryBoardPayout>(
+    (entry.payout?.boardPayouts ?? []).map((p: EntryBoardPayout) => [p.boardNo + p.playType, p]),
   );
-  const sideBetPayouts = allBoardPayouts.filter((b: any) =>
-    KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType),
-  );
-  const winAmount: number = payout?.winAmount ?? 0;
-  const payoutAmount: number = payout?.payoutAmount ?? 0;
-  // scheduled = đang chờ kết quả — KHÔNG hiển thị lãi/lỗ
+  const payoutAmount: number = entry.payout?.payoutAmount ?? 0;
+  const isWin = payoutAmount > 0;
+  const outcome = entry.outcome as string | undefined;
   const isScheduled = entry.status === "scheduled";
   const playerNet = isScheduled ? null : payoutAmount - entry.amount;
 
-  const winningNumbers = new Set<string>((entry as any).result?.winningNumbers ?? []);
+  // 20 số kết quả kỳ quay — chỉ có sau settle/publish
+  const winningSet = new Set<string>(entry.result?.winningNumbers ?? []);
 
-  const displayName = toTenantUsername(entry.username) ?? entry.accountId;
-  const isLongName = displayName.length > 20;
+  const tenantUsername = toTenantUsername(entry.username);
+  const MAX_LEN = 14;
+  const displayUsername =
+    tenantUsername.length > MAX_LEN ? tenantUsername.slice(0, MAX_LEN) + "…" : tenantUsername;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Chi tiết Entry — Keno</DialogTitle>
-          <DialogDescription>
-            {entry.entrySummary?.ticketNo || entry.id} · {entry.drawId}
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Ticket className="size-4" />
+            Chi tiết Entry — Keno
+          </DialogTitle>
+          <DialogDescription className="font-mono text-xs">
+            {entry.entrySummary?.ticketNo ?? entry.id} · {entry.drawId}
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[72vh]">
-          <div className="space-y-5 pr-2">
-            {/* Thông tin cơ bản */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground">Tài khoản</p>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <p className={`text-sm font-bold ${isLongName ? "max-w-40 truncate" : ""}`}>
-                        {displayName}
-                      </p>
-                    </TooltipTrigger>
-                    {isLongName && (
-                      <TooltipContent>
-                        <p>{entry.accountId}</p>
+
+        <ScrollArea className="max-h-[76vh]">
+          <div className="space-y-4 pr-2">
+            {/* ── 1. Metadata strip ──────────────────────────────────── */}
+            <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 rounded-lg bg-muted/50 px-4 py-3 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <User className="size-3.5 shrink-0" />
+                  Người chơi
+                </span>
+                {tenantUsername.length > MAX_LEN ? (
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="cursor-default font-semibold">{displayUsername}</span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p className="font-mono text-xs">{tenantUsername}</p>
                       </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <span className="font-semibold">{tenantUsername}</span>
+                )}
               </div>
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground">{REPORT_COLUMN_LABELS.drawId}</p>
-                <p className="font-mono text-sm font-bold">{entry.drawId}</p>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Ticket className="size-3.5 shrink-0" />
+                  Panels
+                </span>
+                <span className="font-semibold tabular-nums">{boards.length}</span>
               </div>
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground">Đại lý</p>
-                <p className="text-sm font-bold">{entry.tenantId}</p>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Building2 className="size-3.5 shrink-0" />
+                  Đại lý
+                </span>
+                <span className="font-semibold">{entry.tenantId}</span>
               </div>
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground">Trạng thái</p>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Clock className="size-3.5 shrink-0" />
+                  Đặt lúc
+                </span>
+                <span className="font-semibold tabular-nums">
+                  {formatVN(new Date(entry.createdAt as unknown as string), "dd/MM HH:mm")}
+                </span>
+              </div>
+            </div>
+
+            {/* ── 2. Status row ──────────────────────────────────────── */}
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border px-4 py-2.5">
+              <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                Trạng thái
+              </span>
+              <Badge
+                variant={
+                  entry.status === "settled"
+                    ? "default"
+                    : entry.status === "void"
+                      ? "destructive"
+                      : "secondary"
+                }
+              >
+                {ENTRY_STATUS_LABELS[entry.status as keyof typeof ENTRY_STATUS_LABELS] ??
+                  entry.status}
+              </Badge>
+              {outcome && !isScheduled && (
                 <Badge
-                  variant={
-                    entry.status === "settled"
-                      ? "default"
-                      : entry.status === "void"
-                        ? "destructive"
-                        : "secondary"
+                  className={
+                    isWin
+                      ? "border-transparent bg-profit text-profit-foreground hover:bg-profit/80"
+                      : ""
                   }
-                  className="mt-0.5"
+                  variant={outcome === "void" ? "destructive" : isWin ? "default" : "secondary"}
                 >
-                  {ENTRY_STATUS_LABELS[entry.status as keyof typeof ENTRY_STATUS_LABELS] ??
-                    entry.status}
+                  {ENTRY_OUTCOME_LABELS[outcome as keyof typeof ENTRY_OUTCOME_LABELS] ?? outcome}
                 </Badge>
-              </div>
-            </div>
-
-            {/* Trạng thái đang chờ */}
-            {isScheduled && (
-              <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/30">
-                <Badge variant="secondary">Đang chờ quay số</Badge>
-                <p className="text-xs text-muted-foreground">
-                  Kết quả sẽ có sau kỳ quay · {entry.drawId}
-                </p>
-              </div>
-            )}
-
-            {/* Tài chính */}
-            <div
-              className={`grid gap-3 ${isScheduled ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4"}`}
-            >
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground">Tiền cược</p>
-                <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
-              </div>
-              {!isScheduled && (
-                <>
-                  <div className="rounded-lg bg-muted/50 p-3">
-                    <p className="text-xs text-muted-foreground">Tiền thắng</p>
-                    <p className="text-sm font-bold tabular-nums">{formatNumber(winAmount)}</p>
-                  </div>
-                  <div className="rounded-lg bg-muted/50 p-3">
-                    <p className="text-xs text-muted-foreground">
-                      {REPORT_COLUMN_LABELS.totalPayout}
-                    </p>
-                    <p className="text-sm font-bold tabular-nums">{formatNumber(payoutAmount)}</p>
-                  </div>
-                </>
               )}
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground">Hoa hồng đại lý</p>
-                <p className="text-sm font-bold tabular-nums">
-                  {formatNumber(entry.tenant.commissionAmount)}
-                </p>
-              </div>
+              {isScheduled && (
+                <span className="ml-auto text-[11px] text-amber-600 dark:text-amber-400">
+                  Kết quả có sau kỳ quay
+                </span>
+              )}
             </div>
 
-            {/* Lãi/Lỗ khách hàng — chỉ hiển thị sau khi settle/void */}
-            {playerNet !== null && (
-              <div className="rounded-lg border p-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Lãi / Lỗ (khách hàng)</span>
-                  <span
-                    className={`text-sm font-bold tabular-nums ${
-                      playerNet > 0
-                        ? "text-profit"
-                        : playerNet < 0
-                          ? "text-loss"
-                          : "text-muted-foreground"
-                    }`}
-                  >
-                    {playerNet > 0 ? "+" : ""}
-                    {formatNumber(playerNet)}
-                  </span>
+            {/* ── 3. Financial KPI ───────────────────────────────────── */}
+            {isScheduled ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/50">
+                    <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Tiền cược</p>
+                    <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
+                    <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Hoa hồng đại lý</p>
+                    <p className="text-sm font-bold tabular-nums">
+                      {formatNumber(entry.tenant.commissionAmount)}
+                    </p>
+                  </div>
                 </div>
               </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="flex items-center gap-2.5 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/50">
+                    <Banknote className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Tiền cược</p>
+                    <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
+                    <Banknote className="size-3.5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {REPORT_COLUMN_LABELS.totalPayout}
+                    </p>
+                    <p className={`text-sm font-bold tabular-nums ${isWin ? "text-profit" : ""}`}>
+                      {formatNumber(payoutAmount)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
+                    <HandCoins className="size-3.5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Hoa hồng ĐL</p>
+                    <p className="text-sm font-bold tabular-nums">
+                      {formatNumber(entry.tenant.commissionAmount)}
+                    </p>
+                  </div>
+                </div>
+                {playerNet !== null && (
+                  <div className="rounded-lg bg-muted/50 p-3">
+                    <p className="text-[11px] text-muted-foreground">Lãi/lỗ (khách)</p>
+                    <p
+                      className={`text-sm font-bold tabular-nums ${
+                        playerNet > 0
+                          ? "text-profit"
+                          : playerNet < 0
+                            ? "text-loss"
+                            : "text-muted-foreground"
+                      }`}
+                    >
+                      {playerNet > 0 ? "+" : ""}
+                      {formatNumber(playerNet)}
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
 
-            {/* Kết quả — 20 số quay */}
-            {winningNumbers.size > 0 && (
-              <div className="rounded-lg border p-3">
-                <p className="mb-3 text-xs font-semibold text-muted-foreground">
-                  Kết quả — {entry.drawId}
+            {/* ── 4. Kết quả 20 số kỳ quay ─────────────────────────── */}
+            {winningSet.size > 0 && !isScheduled && (
+              <div className="rounded-lg border p-4">
+                <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Kết quả kỳ quay — {entry.drawId}
                 </p>
                 <div className="flex flex-wrap justify-center gap-1.5">
-                  {[...winningNumbers]
+                  {[...winningSet]
                     .sort((a, b) => Number(a) - Number(b))
                     .map((num) => (
-                      <span
-                        key={num}
-                        className="inline-flex size-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
-                      >
-                        {num}
-                      </span>
+                      <Ball key={num} n={num} variant="result" />
                     ))}
                 </div>
               </div>
             )}
 
-            {/* Boards cơ bản */}
-            {basicBoardPayouts.length > 0 && (
-              <div className="rounded-lg border p-3">
-                <p className="mb-2 text-xs font-semibold text-muted-foreground">
-                  Panel A/B — Kết quả chọn số
-                </p>
-                <div className="space-y-3">
-                  {basicBoardPayouts.map((board: any, i: number) => {
-                    const selectedNums: string[] = board.selectedNumbers ?? [];
-                    const matchedNums = new Set<string>(board.matchedNumbers ?? []);
-                    const playTypeLabel =
-                      KENO_PLAY_TYPE_LABELS[`pick${board.pickCount}`] ?? `Pick ${board.pickCount}`;
+            {/* ── 5. Bộ số đã chọn (cơ bản pick1-pick10) ──────────── */}
+            {basicBoards.length > 0 && (
+              <div className="rounded-lg border p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Bộ số đã chọn
+                  </p>
+                  {!isScheduled && winningSet.size > 0 && (
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <span className="inline-block size-3 rounded-full bg-primary" />
+                      Trúng
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2.5">
+                  {basicBoards.map((board) => {
+                    const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                    const payout = boardPayoutsMap.get(board.boardNo + board.playType);
+                    const pickLabel = KENO_PLAY_TYPE_LABELS[board.playType] ?? board.playType;
+                    const nums: string[] = board.numbers ?? [];
                     return (
-                      <div key={i} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                              Panel {String.fromCharCode(65 + i)}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">{playTypeLabel}</span>
-                            {board.matchCount != null && board.matchCount > 0 && (
-                              <Badge className="bg-profit text-profit-foreground text-xs">
-                                Trúng {board.matchCount}
-                              </Badge>
-                            )}
-                          </div>
-                          {board.winAmount > 0 && (
-                            <span className="text-sm font-bold text-profit tabular-nums">
-                              +{formatNumber(board.winAmount)}
+                      <div
+                        key={board.boardNo + board.playType}
+                        className="flex flex-wrap items-center gap-1.5 rounded-md border-l-[3px] py-1 pl-3"
+                        style={{ borderLeftColor: boardColor }}
+                      >
+                        {/* Label */}
+                        <div className="flex w-24 shrink-0 items-center gap-1.5">
+                          <span className="text-xs font-bold" style={{ color: boardColor }}>
+                            {board.boardNo}
+                          </span>
+                          <span className="rounded bg-secondary px-1 py-0.5 text-[9px] text-muted-foreground">
+                            {pickLabel}
+                          </span>
+                          {board.betCount > 1 && (
+                            <span className="rounded bg-secondary px-1 py-0.5 text-[9px] text-muted-foreground">
+                              ×{board.betCount}
                             </span>
                           )}
                         </div>
-                        <div className="flex flex-wrap gap-1">
-                          {selectedNums.map((num) => (
-                            <span
-                              key={num}
-                              className={`inline-flex size-7 items-center justify-center rounded-full text-xs font-bold ${
-                                matchedNums.has(num)
-                                  ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-1"
-                                  : "bg-muted text-muted-foreground"
-                              }`}
-                            >
-                              {num}
-                            </span>
-                          ))}
-                        </div>
+                        {/* Numbers */}
+                        {nums.map((n) => (
+                          <Ball
+                            key={n}
+                            n={n}
+                            variant={!isScheduled && winningSet.has(n) ? "matched" : "default"}
+                          />
+                        ))}
+                        {/* Match result badge */}
+                        {payout && !isScheduled && (
+                          <div className="ml-auto flex items-center gap-1.5">
+                            {payout.isWin ? (
+                              <>
+                                <Badge className="bg-profit text-profit-foreground text-[10px] px-1.5 py-0">
+                                  Trúng {payout.matchCount ?? 0}/{payout.pickCount ?? 0}
+                                </Badge>
+                                <span className="text-sm font-bold text-profit tabular-nums">
+                                  +{formatNumber(payout.winAmount)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground">
+                                {payout.matchCount ?? 0}/{payout.pickCount ?? 0} số
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -282,52 +400,56 @@ export function KenoEntryDetailDialog({
               </div>
             )}
 
-            {/* Side bets */}
-            {sideBetPayouts.length > 0 && (
-              <div className="rounded-lg border p-3">
-                <p className="mb-2 text-xs font-semibold text-muted-foreground">
-                  Panel C — Side Bets
+            {/* ── 6. Side bets ──────────────────────────────────────── */}
+            {sideBetBoards.length > 0 && (
+              <div className="rounded-lg border p-4">
+                <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Cược bổ sung
                 </p>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Loại cược</TableHead>
-                      <TableHead>Cược</TableHead>
-                      <TableHead className="text-right">Kết quả</TableHead>
-                      <TableHead className="text-right">Tiền thắng</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sideBetPayouts.map((bet: any, i: number) => (
-                      <TableRow key={i}>
-                        <TableCell className="text-xs">
-                          {KENO_PLAY_TYPE_LABELS[bet.playType] ?? bet.playType}
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {KENO_BET_LABELS[bet.bet] ?? bet.bet}
-                        </TableCell>
-                        <TableCell className="text-right text-xs">
-                          {bet.winAmount > 0 ? (
-                            <Badge className="bg-profit text-profit-foreground text-xs">
-                              Trúng
-                            </Badge>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right text-sm tabular-nums">
-                          {bet.winAmount > 0 ? (
-                            <span className="font-bold text-profit">
-                              +{formatNumber(bet.winAmount)}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">0</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <div className="space-y-2">
+                  {sideBetBoards.map((board) => {
+                    const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                    const payout = boardPayoutsMap.get(board.boardNo + board.playType);
+                    const typeLabel = KENO_PLAY_TYPE_LABELS[board.playType] ?? board.playType;
+                    const betLabel = board.bet ? (KENO_BET_LABELS[board.bet] ?? board.bet) : "—";
+                    return (
+                      <div
+                        key={board.boardNo + board.playType}
+                        className="flex items-center gap-3 rounded-md border-l-[3px] py-2 pl-3 text-sm"
+                        style={{ borderLeftColor: boardColor }}
+                      >
+                        <span className="text-xs font-bold w-5" style={{ color: boardColor }}>
+                          {board.boardNo}
+                        </span>
+                        <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                          {typeLabel}
+                        </span>
+                        <span className="font-semibold">{betLabel}</span>
+                        {board.betCount > 1 && (
+                          <span className="text-[10px] text-muted-foreground">
+                            ×{board.betCount}
+                          </span>
+                        )}
+                        {payout && !isScheduled && (
+                          <div className="ml-auto flex items-center gap-2">
+                            {payout.isWin ? (
+                              <>
+                                <Badge className="bg-profit text-profit-foreground text-[10px] px-1.5 py-0">
+                                  Trúng
+                                </Badge>
+                                <span className="font-bold text-profit tabular-nums">
+                                  +{formatNumber(payout.winAmount)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground">Không trúng</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -336,7 +458,6 @@ export function KenoEntryDetailDialog({
     </Dialog>
   );
 }
-
 // ─── Entry List ───────────────────────────────────────────────────────────────
 
 export function EntryList({

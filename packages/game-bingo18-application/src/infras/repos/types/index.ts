@@ -16,3 +16,7 @@ export type {
 } from "./entry.types";
 export type { OutstandingGameSummary } from "./outstanding.types";
 export type { TicketSummary } from "./ticket.types";
+export type {
+  OutstandingTenantBreakdownRow,
+  OutstandingPlayerBreakdownRow,
+} from "./entry-outstanding.types";

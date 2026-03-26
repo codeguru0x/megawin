@@ -9,6 +9,8 @@ import type {
   DrawSummaryResult,
   TenantAggregateSummary,
   PlayerBreakdownRow,
+  OutstandingTenantBreakdownRow,
+  OutstandingPlayerBreakdownRow,
 } from "../../infras/repos";
 
 export interface ListSettleDrawReportsInput {
@@ -88,6 +90,35 @@ export interface ListVoidReportsOutput {
 
 export interface GetOutstandingReportsOutput {
   data: OutstandingDrawReport[];
+}
+
+// ─── Outstanding Drill-Down ───────────────────────────────────────────────────
+
+export interface ListOutstandingDrawTenantsInput {
+  drawId: string;
+}
+
+export interface ListOutstandingDrawTenantsOutput {
+  data: OutstandingTenantBreakdownRow[];
+}
+
+export interface ListOutstandingTenantPlayersInput {
+  drawId: string;
+  tenantId: string;
+}
+
+export interface ListOutstandingTenantPlayersOutput {
+  data: OutstandingPlayerBreakdownRow[];
+}
+
+export interface ListOutstandingPlayerEntriesInput {
+  drawId: string;
+  tenantId: string;
+  accountId: string;
+}
+
+export interface ListOutstandingPlayerEntriesOutput {
+  data: TicketEntryEntity[];
 }
 
 // ─── Sync Outstanding ─────────────────────────────────────────────────────────

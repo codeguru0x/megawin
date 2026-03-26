@@ -13,6 +13,9 @@ import type {
   ListEntryBreakdownOutput,
   GetOutstandingReportsOutput,
   ListVoidReportsOutput,
+  ListOutstandingDrawTenantsOutput,
+  ListOutstandingTenantPlayersOutput,
+  ListOutstandingPlayerEntriesOutput,
 } from "@megawin/game-max3dpro-application/use-cases/reports";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
@@ -118,11 +121,60 @@ export function useMax3DProEntries(drawId: string, tenantId: string, accountId: 
 /** Các kỳ quay đang outstanding (chưa settle). Tự refresh mỗi 60 giây. */
 export function useMax3DProOutstanding() {
   return useQuery({
-    queryKey: max3dproKeys.outstanding,
+    queryKey: max3dproKeys.outstandingDraws,
     queryFn: () =>
       apiClient
         .get<GetOutstandingReportsOutput>("/max3dpro/reports/outstanding")
         .then((r) => r.data),
+    refetchInterval: 60_000,
+  });
+}
+
+/** Tenant breakdown cho 1 draw outstanding. Drill cấp 2. Tự refresh mỗi 60 giây. */
+export function useMax3DProOutstandingDrawTenants(drawId: string | null) {
+  return useQuery({
+    queryKey: max3dproKeys.outstandingTenants(drawId ?? ""),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingDrawTenantsOutput>(
+          `/max3dpro/reports/outstanding/draws/${drawId}/tenants`,
+        )
+        .then((r) => r.data),
+    enabled: !!drawId,
+    refetchInterval: 60_000,
+  });
+}
+
+/** Player breakdown cho 1 draw × 1 tenant outstanding. Drill cấp 3. Tự refresh mỗi 60 giây. */
+export function useMax3DProOutstandingTenantPlayers(drawId: string, tenantId: string | null) {
+  return useQuery({
+    queryKey: max3dproKeys.outstandingPlayers({ drawId, tenantId: tenantId ?? "" }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingTenantPlayersOutput>(
+          `/max3dpro/reports/outstanding/draws/${drawId}/tenants/${tenantId}/players`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId),
+    refetchInterval: 60_000,
+  });
+}
+
+/** Entries outstanding của 1 player trong 1 draw × tenant. Drill cấp 4. Tự refresh mỗi 60 giây. */
+export function useMax3DProOutstandingPlayerEntries(
+  drawId: string,
+  tenantId: string,
+  accountId: string | null,
+) {
+  return useQuery({
+    queryKey: max3dproKeys.outstandingEntries({ drawId, tenantId, accountId: accountId ?? "" }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingPlayerEntriesOutput>(
+          `/max3dpro/reports/outstanding/draws/${drawId}/tenants/${tenantId}/players/${accountId}/entries`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId && accountId),
     refetchInterval: 60_000,
   });
 }

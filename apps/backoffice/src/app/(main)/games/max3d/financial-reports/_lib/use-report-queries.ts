@@ -13,6 +13,9 @@ import type {
   ListEntryBreakdownOutput,
   GetOutstandingReportsOutput,
   ListVoidReportsOutput,
+  ListOutstandingDrawTenantsOutput,
+  ListOutstandingTenantPlayersOutput,
+  ListOutstandingPlayerEntriesOutput,
 } from "@megawin/game-max3d-application/use-cases/reports";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
@@ -118,10 +121,54 @@ export function useMax3DEntries(drawId: string, tenantId: string, accountId: str
 /** Các kỳ quay đang outstanding (chưa settle). Tự refresh mỗi 60 giây. */
 export function useMax3DOutstanding() {
   return useQuery({
-    queryKey: max3dKeys.outstanding,
+    queryKey: max3dKeys.outstandingDraws,
     queryFn: () =>
       apiClient.get<GetOutstandingReportsOutput>("/max3d/reports/outstanding").then((r) => r.data),
     refetchInterval: 60_000,
+  });
+}
+
+/** Tenant breakdown cho 1 draw outstanding — drill cấp 2. */
+export function useMax3DOutstandingDrawTenants(drawId: string | null) {
+  return useQuery({
+    queryKey: max3dKeys.outstandingTenants(drawId ?? ""),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingDrawTenantsOutput>(`/max3d/reports/outstanding/draws/${drawId}/tenants`)
+        .then((r) => r.data),
+    enabled: !!drawId,
+  });
+}
+
+/** Player breakdown cho 1 draw × 1 tenant outstanding — drill cấp 3. */
+export function useMax3DOutstandingTenantPlayers(drawId: string, tenantId: string | null) {
+  return useQuery({
+    queryKey: max3dKeys.outstandingPlayers({ drawId, tenantId: tenantId ?? "" }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingTenantPlayersOutput>(
+          `/max3d/reports/outstanding/draws/${drawId}/tenants/${tenantId}/players`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId),
+  });
+}
+
+/** Entry list của 1 player trong 1 draw × tenant outstanding — drill cấp 4. */
+export function useMax3DOutstandingPlayerEntries(
+  drawId: string,
+  tenantId: string,
+  accountId: string | null,
+) {
+  return useQuery({
+    queryKey: max3dKeys.outstandingEntries({ drawId, tenantId, accountId: accountId ?? "" }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingPlayerEntriesOutput>(
+          `/max3d/reports/outstanding/draws/${drawId}/tenants/${tenantId}/players/${accountId}/entries`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId && accountId),
   });
 }
 

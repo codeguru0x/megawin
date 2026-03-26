@@ -13,6 +13,9 @@ import type {
   ListEntryBreakdownOutput,
   GetOutstandingReportsOutput,
   ListVoidReportsOutput,
+  ListOutstandingDrawTenantsOutput,
+  ListOutstandingTenantPlayersOutput,
+  ListOutstandingPlayerEntriesOutput,
 } from "@megawin/game-mega645-application/use-cases/reports";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
@@ -118,12 +121,62 @@ export function useMega645Entries(drawId: string, tenantId: string, accountId: s
 /** Các kỳ quay đang outstanding (chưa settle). Tự refresh mỗi 60 giây. */
 export function useMega645Outstanding() {
   return useQuery({
-    queryKey: mega645Keys.outstanding,
+    queryKey: mega645Keys.outstandingDraws,
     queryFn: () =>
       apiClient
         .get<GetOutstandingReportsOutput>("/mega645/reports/outstanding")
         .then((r) => r.data),
     refetchInterval: 60_000,
+  });
+}
+
+/** Tenant breakdown của 1 draw outstanding. Drill cấp 2. */
+export function useMega645OutstandingDrawTenants(drawId: string | null) {
+  return useQuery({
+    queryKey: mega645Keys.outstandingTenants(drawId ?? ""),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingDrawTenantsOutput>(
+          `/mega645/reports/outstanding/draws/${drawId}/tenants`,
+        )
+        .then((r) => r.data),
+    enabled: !!drawId,
+  });
+}
+
+/** Player breakdown của 1 draw × 1 tenant outstanding. Drill cấp 3. */
+export function useMega645OutstandingTenantPlayers(drawId: string, tenantId: string | null) {
+  return useQuery({
+    queryKey: mega645Keys.outstandingPlayers({ drawId, tenantId: tenantId ?? "" }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingTenantPlayersOutput>(
+          `/mega645/reports/outstanding/draws/${drawId}/tenants/${tenantId}/players`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId),
+  });
+}
+
+/** Entries outstanding của 1 player. Drill cấp 4. */
+export function useMega645OutstandingPlayerEntries(
+  drawId: string,
+  tenantId: string,
+  accountId: string | null,
+) {
+  return useQuery({
+    queryKey: mega645Keys.outstandingEntries({
+      drawId,
+      tenantId,
+      accountId: accountId ?? "",
+    }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingPlayerEntriesOutput>(
+          `/mega645/reports/outstanding/draws/${drawId}/tenants/${tenantId}/players/${accountId}/entries`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId && accountId),
   });
 }
 

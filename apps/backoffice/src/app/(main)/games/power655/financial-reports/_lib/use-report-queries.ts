@@ -13,6 +13,9 @@ import type {
   ListEntryBreakdownOutput,
   GetOutstandingReportsOutput,
   ListVoidReportsOutput,
+  ListOutstandingDrawTenantsOutput,
+  ListOutstandingTenantPlayersOutput,
+  ListOutstandingPlayerEntriesOutput,
 } from "@megawin/game-power655-application/use-cases/reports";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
@@ -118,11 +121,64 @@ export function usePower655Entries(drawId: string, tenantId: string, accountId: 
 /** Các kỳ quay đang outstanding (chưa settle). Tự refresh mỗi 60 giây. */
 export function usePower655Outstanding() {
   return useQuery({
-    queryKey: power655Keys.outstanding,
+    queryKey: power655Keys.outstandingDraws,
     queryFn: () =>
       apiClient
         .get<GetOutstandingReportsOutput>("/power655/reports/outstanding")
         .then((r) => r.data),
+    refetchInterval: 60_000,
+  });
+}
+
+/** Tenant breakdown của 1 draw outstanding — drill cấp 2. Tự refresh mỗi 60 giây. */
+export function usePower655OutstandingDrawTenants(drawId: string | null) {
+  return useQuery({
+    queryKey: power655Keys.outstandingTenants(drawId ?? ""),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingDrawTenantsOutput>(
+          `/power655/reports/outstanding/draws/${drawId}/tenants`,
+        )
+        .then((r) => r.data),
+    enabled: !!drawId,
+    refetchInterval: 60_000,
+  });
+}
+
+/** Player breakdown của 1 draw × 1 tenant outstanding — drill cấp 3. Tự refresh mỗi 60 giây. */
+export function usePower655OutstandingTenantPlayers(drawId: string, tenantId: string | null) {
+  return useQuery({
+    queryKey: power655Keys.outstandingPlayers({ drawId, tenantId: tenantId ?? "" }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingTenantPlayersOutput>(
+          `/power655/reports/outstanding/draws/${drawId}/tenants/${tenantId}/players`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId),
+    refetchInterval: 60_000,
+  });
+}
+
+/** Entries của 1 player trong 1 draw × tenant outstanding — drill cấp 4. Tự refresh mỗi 60 giây. */
+export function usePower655OutstandingPlayerEntries(
+  drawId: string,
+  tenantId: string,
+  accountId: string | null,
+) {
+  return useQuery({
+    queryKey: power655Keys.outstandingEntries({
+      drawId,
+      tenantId,
+      accountId: accountId ?? "",
+    }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingPlayerEntriesOutput>(
+          `/power655/reports/outstanding/draws/${drawId}/tenants/${tenantId}/players/${accountId}/entries`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId && accountId),
     refetchInterval: 60_000,
   });
 }

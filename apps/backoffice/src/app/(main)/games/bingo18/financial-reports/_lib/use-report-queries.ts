@@ -13,6 +13,9 @@ import type {
   ListEntryBreakdownOutput,
   GetOutstandingReportsOutput,
   ListVoidReportsOutput,
+  ListOutstandingDrawTenantsOutput,
+  ListOutstandingTenantPlayersOutput,
+  ListOutstandingPlayerEntriesOutput,
 } from "@megawin/game-bingo18-application/use-cases/reports";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
@@ -118,12 +121,62 @@ export function useBingo18Entries(drawId: string, tenantId: string, accountId: s
 /** Các kỳ quay đang outstanding (chưa settle). Tự refresh mỗi 60 giây. */
 export function useBingo18Outstanding() {
   return useQuery({
-    queryKey: bingo18Keys.outstanding,
+    queryKey: bingo18Keys.outstandingDraws,
     queryFn: () =>
       apiClient
         .get<GetOutstandingReportsOutput>("/bingo18/reports/outstanding")
         .then((r) => r.data),
     refetchInterval: 60_000,
+  });
+}
+
+/** Tenant breakdown của 1 draw outstanding — drill cấp 2. */
+export function useBingo18OutstandingDrawTenants(drawId: string | null) {
+  return useQuery({
+    queryKey: bingo18Keys.outstandingTenants(drawId ?? ""),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingDrawTenantsOutput>(
+          `/bingo18/reports/outstanding/draws/${drawId}/tenants`,
+        )
+        .then((r) => r.data),
+    enabled: !!drawId,
+  });
+}
+
+/** Player breakdown của 1 draw × 1 tenant outstanding — drill cấp 3. */
+export function useBingo18OutstandingTenantPlayers(drawId: string, tenantId: string | null) {
+  return useQuery({
+    queryKey: bingo18Keys.outstandingPlayers({ drawId, tenantId: tenantId ?? "" }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingTenantPlayersOutput>(
+          `/bingo18/reports/outstanding/draws/${drawId}/tenants/${tenantId}/players`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId),
+  });
+}
+
+/** Danh sách entries outstanding của 1 player — drill cấp 4. */
+export function useBingo18OutstandingPlayerEntries(
+  drawId: string,
+  tenantId: string,
+  accountId: string | null,
+) {
+  return useQuery({
+    queryKey: bingo18Keys.outstandingEntries({
+      drawId,
+      tenantId,
+      accountId: accountId ?? "",
+    }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingPlayerEntriesOutput>(
+          `/bingo18/reports/outstanding/draws/${drawId}/tenants/${tenantId}/players/${accountId}/entries`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId && accountId),
   });
 }
 

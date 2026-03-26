@@ -12,6 +12,7 @@ export { SettleDrawReportRepository } from "./settle-draw-report-repo";
 export { SettleTenantReportRepository } from "./settle-tenant-report-repo";
 export { VoidReportRepository } from "./void-report-repo";
 export { OutstandingReportRepository } from "./outstanding-report-repo";
+export { EntryOutstandingRepository } from "./entry-outstanding-repo";
 export { SystemSettleGameDailyRepo } from "./system-settle-game-daily-repo";
 export { SystemSettleTenantDailyRepo } from "./system-settle-tenant-daily-repo";
 export { SystemOutstandingRepo } from "./system-outstanding-repo";

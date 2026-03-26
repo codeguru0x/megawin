@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Ticket } from "lucide-react";
+import { Ticket, Building2, User, Clock, Layers, Banknote, HandCoins } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -20,31 +20,82 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { formatNumber } from "@megawin/shared/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatNumber, toTenantUsername, formatVN } from "@megawin/shared/utils";
 import {
   REPORT_COLUMN_LABELS,
   ENTRY_STATUS_LABELS,
   ENTRY_OUTCOME_LABELS,
 } from "@megawin/game-core/labels";
+import {
+  LOTTO535_PLAY_TYPE_LABELS,
+  LOTTO535_PRIZE_TIER_LABELS,
+} from "@megawin/game-lotto535/labels";
 import type { TicketEntryEntity } from "@megawin/game-lotto535/entities";
 import { useLotto535Entries } from "../use-report-queries";
 import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
 
-// ─── Lotto 5/35 Prize Tier Labels ─────────────────────────────────────────────
+// ─── Board Color Map ──────────────────────────────────────────────────────────
 
-const LOTTO535_PRIZE_TIER_LABELS: Record<string, string> = {
-  jackpot: "Giải Độc Đắc",
-  tier1: "Giải Nhất",
-  tier2: "Giải Nhì",
-  tier3: "Giải Ba",
-  tier4: "Giải Tư",
-  tier5: "Giải Năm",
-  consolation: "Giải KK",
+const BOARD_COLORS: Record<string, string> = {
+  A: "var(--board-a)",
+  B: "var(--board-b)",
+  C: "var(--board-c)",
+  D: "var(--board-d)",
+  E: "var(--board-e)",
+  F: "var(--board-f)",
 };
+
+// ─── Ball Display Helpers ─────────────────────────────────────────────────────
+
+function Ball({
+  n,
+  variant = "default",
+  size = "md",
+  title,
+}: {
+  n: string;
+  variant?: "default" | "matched" | "special" | "special-matched" | "result" | "result-special";
+  size?: "sm" | "md";
+  title?: string;
+}) {
+  const sizeClass = size === "sm" ? "size-7 text-[11px]" : "size-8 text-xs";
+  const colorClass =
+    variant === "matched"
+      ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
+      : variant === "special"
+        ? "bg-muted text-muted-foreground ring-1 ring-amber-400"
+        : variant === "special-matched"
+          ? "bg-amber-500 text-white ring-2 ring-amber-300/40"
+          : variant === "result"
+            ? "bg-primary text-primary-foreground"
+            : variant === "result-special"
+              ? "bg-amber-500 text-white"
+              : "bg-muted text-muted-foreground";
+  return (
+    <span
+      title={title}
+      className={`inline-flex items-center justify-center rounded-full font-bold tabular-nums ${sizeClass} ${colorClass}`}
+    >
+      {n}
+    </span>
+  );
+}
 
 // ─── Entry Detail Dialog ──────────────────────────────────────────────────────
 
-/** Chi tiết 1 entry Lotto 5/35 — bộ số, số đặc biệt, kết quả quay, giải trúng. */
+/**
+ * Chi tiết 1 entry Lotto 5/35.
+ *
+ * Layout:
+ * 1. Header: title + "ticketNo · drawId"
+ * 2. Metadata strip (2 col): Người chơi · Dòng cược / Đại lý · Đặt lúc
+ * 3. Status row
+ * 4. Financial KPI: Outstanding (2 ô) hoặc Settled (4 ô)
+ * 5. Kết quả kỳ quay: 5 main + 1 special (chỉ khi settled)
+ * 6. Bộ số đã chọn: boards với mainNumbers + specialNumbers tách riêng
+ * 7. Giải trúng (chỉ khi settled + có tiers)
+ */
 export function Lotto535EntryDetailDialog({
   entry,
   open,
@@ -60,59 +111,87 @@ export function Lotto535EntryDetailDialog({
   const boards = entry.entrySummary.boards ?? [];
   const isWin = (entry.payout?.payoutAmount ?? 0) > 0;
   const outcome = entry.outcome as string | undefined;
-  // scheduled = đang chờ kết quả — KHÔNG hiển thị lãi/lỗ (payout chưa có)
+  // scheduled = đang chờ kết quả — KHÔNG hiển thị payout, lãi/lỗ, kết quả
   const isScheduled = entry.status === "scheduled";
   const playerNet = isScheduled ? null : (entry.payout?.payoutAmount ?? 0) - entry.amount;
 
-  const winningMain = new Set<string>(entry.result?.winningMain ?? []);
-  const winningSpecial = entry.result?.winningSpecial as string | undefined;
+  const winningMainSet = new Set<string>(entry.result?.winningMain ?? []);
+  const winningSpecial = (entry.result as any)?.winningSpecial as string | undefined;
 
-  const infoItems = [
-    { label: "Mã vé", value: entry.entrySummary.ticketNo },
-    { label: REPORT_COLUMN_LABELS.drawId, value: entry.drawId },
-    { label: "Đại lý", value: (entry as any).tenantId ?? "" },
-    { label: REPORT_COLUMN_LABELS.lineCount, value: formatNumber(entry.lineCount) },
-  ];
+  const tenantUsername = toTenantUsername(entry.username);
+  const MAX_USERNAME_LEN = 14;
+  const truncatedUsername =
+    tenantUsername.length > MAX_USERNAME_LEN
+      ? tenantUsername.slice(0, MAX_USERNAME_LEN) + "…"
+      : tenantUsername;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Chi tiết Entry — Lotto 5/35</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Ticket className="size-4" />
+            Chi tiết Entry — Lotto 5/35
+          </DialogTitle>
+          <DialogDescription className="font-mono text-xs">
             {entry.entrySummary.ticketNo} · {entry.drawId}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[72vh]">
-          <div className="space-y-4 pr-1">
-            {/* Thông tin cơ bản */}
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {infoItems.map((item) => (
-                <div key={item.label} className="min-w-0 rounded-lg bg-muted/50 p-3">
-                  <p className="text-[11px] text-muted-foreground">{item.label}</p>
-                  <p className="truncate text-sm font-bold" title={item.value}>
-                    {item.value}
-                  </p>
-                </div>
-              ))}
+        <ScrollArea className="max-h-[76vh]">
+          <div className="space-y-4 pr-2">
+            {/* ── 1. Metadata 2-column ──────────────────────────────────── */}
+            <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 rounded-lg bg-muted/50 px-4 py-3 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <User className="size-3.5 shrink-0" />
+                  Người chơi
+                </span>
+                {tenantUsername.length > MAX_USERNAME_LEN ? (
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="cursor-default font-semibold">{truncatedUsername}</span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p className="font-mono text-xs">{tenantUsername}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <span className="font-semibold">{tenantUsername}</span>
+                )}
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Layers className="size-3.5 shrink-0" />
+                  {REPORT_COLUMN_LABELS.lineCount}
+                </span>
+                <span className="font-semibold tabular-nums">{formatNumber(entry.lineCount)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Building2 className="size-3.5 shrink-0" />
+                  Đại lý
+                </span>
+                <span className="font-semibold">{(entry as any).tenantId ?? "—"}</span>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Clock className="size-3.5 shrink-0" />
+                  Đặt lúc
+                </span>
+                <span className="font-semibold tabular-nums">
+                  {formatVN(new Date(entry.createdAt as unknown as string), "dd/MM HH:mm")}
+                </span>
+              </div>
             </div>
 
-            {/* Trạng thái đang chờ — hiển thị thay thế tài chính khi scheduled */}
-            {isScheduled && (
-              <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/30">
-                <Badge variant="secondary">Đang chờ quay số</Badge>
-                <p className="text-xs text-muted-foreground">
-                  Kết quả sẽ có sau kỳ quay · {entry.drawId}
-                </p>
-              </div>
-            )}
-
-            {/* Trạng thái & kết quả */}
-            <div className="flex flex-wrap items-center gap-2 rounded-lg border p-3">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            {/* ── 2. Status row ──────────────────────────────────────────── */}
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border px-4 py-2.5">
+              <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 Trạng thái
-              </p>
+              </span>
               <Badge
                 variant={
                   entry.status === "settled"
@@ -137,139 +216,255 @@ export function Lotto535EntryDetailDialog({
                   {ENTRY_OUTCOME_LABELS[outcome as keyof typeof ENTRY_OUTCOME_LABELS] ?? outcome}
                 </Badge>
               )}
-            </div>
-
-            {/* Tài chính */}
-            <div className={`grid gap-x-4 gap-y-2 ${isScheduled ? "grid-cols-2" : "grid-cols-4"}`}>
-              <div>
-                <p className="text-[11px] text-muted-foreground">Tiền cược</p>
-                <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
-              </div>
-              {!isScheduled && (
-                <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalPayout}
-                  </p>
-                  <p className={`text-sm font-bold tabular-nums ${isWin ? "text-profit" : ""}`}>
-                    {formatNumber(entry.payout?.payoutAmount ?? 0)}
-                  </p>
-                </div>
-              )}
-              <div>
-                <p className="text-[11px] text-muted-foreground">
-                  {REPORT_COLUMN_LABELS.totalCommission}
-                </p>
-                <p className="text-sm font-bold tabular-nums">
-                  {formatNumber(entry.tenant.commissionAmount)}
-                </p>
-              </div>
-              {playerNet !== null && (
-                <div>
-                  <p className="text-[11px] text-muted-foreground">Lãi/lỗ (khách)</p>
-                  <p
-                    className={`text-sm font-bold tabular-nums ${
-                      playerNet > 0
-                        ? "text-profit"
-                        : playerNet < 0
-                          ? "text-loss"
-                          : "text-muted-foreground"
-                    }`}
-                  >
-                    {playerNet > 0 ? "+" : ""}
-                    {formatNumber(playerNet)}
-                  </p>
-                </div>
+              {isScheduled && (
+                <span className="ml-auto text-[11px] text-amber-600 dark:text-amber-400">
+                  Kết quả có sau kỳ quay
+                </span>
               )}
             </div>
 
-            {/* Kết quả quay — 5 số chính + 1 số đặc biệt */}
-            {entry.result && (
-              <div className="rounded-lg border p-3">
-                <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            {/* ── 3. Financial KPI strip ─────────────────────────────────── */}
+            {isScheduled ? (
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/50">
+                    <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Tiền cược</p>
+                    <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
+                    <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {REPORT_COLUMN_LABELS.totalCommission}
+                    </p>
+                    <p className="text-sm font-bold tabular-nums">
+                      {formatNumber(entry.tenant.commissionAmount)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="flex items-center gap-2.5 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/50">
+                    <Banknote className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Tiền cược</p>
+                    <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
+                    <Banknote className="size-3.5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {REPORT_COLUMN_LABELS.totalPayout}
+                    </p>
+                    <p className={`text-sm font-bold tabular-nums ${isWin ? "text-profit" : ""}`}>
+                      {formatNumber(entry.payout?.payoutAmount ?? 0)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
+                    <HandCoins className="size-3.5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {REPORT_COLUMN_LABELS.totalCommission}
+                    </p>
+                    <p className="text-sm font-bold tabular-nums">
+                      {formatNumber(entry.tenant.commissionAmount)}
+                    </p>
+                  </div>
+                </div>
+                {playerNet !== null && (
+                  <div className="rounded-lg bg-muted/50 p-3">
+                    <p className="text-[11px] text-muted-foreground">Lãi/lỗ (khách)</p>
+                    <p
+                      className={`text-sm font-bold tabular-nums ${
+                        playerNet > 0
+                          ? "text-profit"
+                          : playerNet < 0
+                            ? "text-loss"
+                            : "text-muted-foreground"
+                      }`}
+                    >
+                      {playerNet > 0 ? "+" : ""}
+                      {formatNumber(playerNet)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── 4. Kết quả kỳ quay ────────────────────────────────────── */}
+            {entry.result && !isScheduled && (
+              <div className="rounded-lg border p-4">
+                <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   Kết quả — Kỳ {entry.drawId}
                 </p>
-                <div className="flex flex-wrap justify-center gap-1.5">
+                <div className="flex flex-wrap items-center justify-center gap-2">
                   {entry.result.winningMain.map((n: string) => (
-                    <span
-                      key={n}
-                      className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
-                    >
-                      {n}
-                    </span>
+                    <Ball key={n} n={n} variant="result" />
                   ))}
                   {winningSpecial && (
-                    <span
-                      className="inline-flex size-8 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white"
-                      title="Số đặc biệt"
-                    >
-                      {winningSpecial}
-                    </span>
+                    <>
+                      <span className="select-none text-muted-foreground/40">|</span>
+                      <Ball n={winningSpecial} variant="result-special" title="Số đặc biệt" />
+                      <span className="text-[10px] text-muted-foreground">đặc biệt</span>
+                    </>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Bộ số đã chọn — highlight trùng kết quả */}
+            {/* ── 5. Bộ số đã chọn ──────────────────────────────────────── */}
             {boards.length > 0 && (
-              <div className="rounded-lg border p-3">
-                <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  Bộ số đã chọn
-                </p>
-                <div className="space-y-2">
-                  {boards.map((board, i: number) => (
-                    <div key={i} className="flex flex-wrap items-center gap-1.5">
-                      <span className="w-5 text-[10px] font-semibold text-muted-foreground">
-                        {String.fromCharCode(65 + i)}
+              <div className="rounded-lg border p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Bộ số đã chọn
+                  </p>
+                  {entry.result && !isScheduled && (
+                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <span className="inline-block size-3 rounded-full bg-primary" />
+                        Trúng chính
                       </span>
-                      {board.mainNumbers.map((n: string) => (
-                        <span
-                          key={n}
-                          className={`inline-flex size-7 items-center justify-center rounded-full text-[11px] font-bold ${
-                            winningMain.has(n)
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted text-muted-foreground"
-                          }`}
-                        >
-                          {n}
-                        </span>
-                      ))}
-                      {/* Số đặc biệt của board */}
-                      {board.specialNumbers[0] && (
-                        <span
-                          className={`inline-flex size-7 items-center justify-center rounded-full text-[11px] font-bold ${
-                            board.specialNumbers[0] === winningSpecial
-                              ? "bg-amber-500 text-white"
-                              : "bg-muted text-muted-foreground ring-1 ring-amber-400"
-                          }`}
-                          title="Số đặc biệt"
-                        >
-                          {board.specialNumbers[0]}
-                        </span>
-                      )}
+                      <span className="flex items-center gap-1">
+                        <span className="inline-block size-3 rounded-full bg-amber-500" />
+                        Trúng đặc biệt
+                      </span>
                     </div>
-                  ))}
+                  )}
+                </div>
+                <div className="space-y-2.5">
+                  {boards.map((board, i) => {
+                    const playLabel =
+                      board.playType === "standard"
+                        ? null
+                        : (LOTTO535_PLAY_TYPE_LABELS[board.playType] ?? board.playType);
+                    const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                    return (
+                      <div
+                        key={i}
+                        className="grid items-center gap-x-3 rounded-md border-l-[3px] py-2 pl-3"
+                        style={{
+                          borderLeftColor: boardColor,
+                          gridTemplateColumns: "2rem 4rem 1fr",
+                        }}
+                      >
+                        {/* Cột 1: Tên board */}
+                        <div className="flex items-center justify-center self-stretch">
+                          <span
+                            className="text-sm font-extrabold leading-none"
+                            style={{ color: boardColor }}
+                          >
+                            {board.boardNo}
+                          </span>
+                        </div>
+
+                        {/* Cột 2: Kiểu chơi (hàng 1) + Số lines (hàng 2) */}
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[11px] font-semibold text-foreground leading-tight">
+                            {playLabel ?? "Thường"}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground leading-tight">
+                            {board.expandedLines > 1
+                              ? `${formatNumber(board.expandedLines)} lines`
+                              : "1 line"}
+                            {board.betCount > 1 && (
+                              <span className="ml-1 text-muted-foreground/70">
+                                ×{board.betCount}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+
+                        {/* Cột 3: Các số đã chọn */}
+                        <div className="flex flex-wrap items-center gap-1">
+                          {/* Số chính */}
+                          {board.mainNumbers.map((n: string) => (
+                            <Ball
+                              key={`m-${n}`}
+                              n={n}
+                              size="sm"
+                              variant={winningMainSet.has(n) ? "matched" : "default"}
+                            />
+                          ))}
+                          {/* Phân tách số chính / số đặc biệt */}
+                          {board.specialNumbers.length > 0 && (
+                            <span className="select-none px-0.5 text-muted-foreground/40">|</span>
+                          )}
+                          {/* Số đặc biệt */}
+                          {board.specialNumbers.map((n: string) => (
+                            <Ball
+                              key={`s-${n}`}
+                              n={n}
+                              size="sm"
+                              variant={
+                                !isScheduled && n === winningSpecial ? "special-matched" : "special"
+                              }
+                              title="Số đặc biệt"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            {/* Giải trúng */}
-            {tiers.length > 0 && (
-              <div className="rounded-lg border border-profit/30 bg-profit/5 p-3">
-                <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-profit">
+            {/* ── 6. Giải trúng ─────────────────────────────────────────── */}
+            {tiers.length > 0 && !isScheduled && (
+              <div className="rounded-lg border border-profit/30 bg-profit/5 p-4">
+                <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-profit">
                   Giải trúng
                 </p>
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {tiers.map(
-                    (tier: { tier: string; hitCount: number; amount: number }, i: number) => (
-                      <div key={i} className="flex items-center justify-between text-sm">
-                        <Badge variant="secondary">
-                          {LOTTO535_PRIZE_TIER_LABELS[tier.tier] ?? tier.tier}
-                        </Badge>
-                        <span className="tabular-nums font-semibold text-profit">
-                          ×{tier.hitCount} · {formatNumber(tier.amount)}
+                    (
+                      tier: { tier: string; hitCount: number; unitAmount: number; amount: number },
+                      i: number,
+                    ) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between rounded-md bg-background/60 px-3 py-1.5 text-sm"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="font-medium">
+                            {LOTTO535_PRIZE_TIER_LABELS[
+                              tier.tier as keyof typeof LOTTO535_PRIZE_TIER_LABELS
+                            ] ?? tier.tier}
+                          </Badge>
+                          <span className="text-[11px] text-muted-foreground">
+                            ×{tier.hitCount} line
+                            {tier.unitAmount > 0 && ` · ${formatNumber(tier.unitAmount)}/line`}
+                          </span>
+                        </div>
+                        <span className="tabular-nums font-bold text-profit">
+                          {formatNumber(tier.amount)}
                         </span>
                       </div>
                     ),
+                  )}
+                  {tiers.length > 1 && (
+                    <div className="flex items-center justify-between border-t pt-2 text-sm font-bold">
+                      <span className="text-muted-foreground">Tổng thưởng</span>
+                      <span className="tabular-nums text-profit">
+                        {formatNumber(entry.payout?.payoutAmount ?? 0)}
+                      </span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -360,7 +555,9 @@ export function EntryList({
                       <TableCell>
                         {tiers.length > 0 ? (
                           <Badge variant="secondary">
-                            {LOTTO535_PRIZE_TIER_LABELS[tiers[0]?.tier ?? ""] ?? tiers[0]?.tier}
+                            {LOTTO535_PRIZE_TIER_LABELS[
+                              tiers[0]?.tier as keyof typeof LOTTO535_PRIZE_TIER_LABELS
+                            ] ?? tiers[0]?.tier}
                             {tiers.length > 1 ? ` +${tiers.length - 1}` : ""}
                           </Badge>
                         ) : (

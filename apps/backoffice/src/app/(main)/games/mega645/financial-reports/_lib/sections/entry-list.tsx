@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Ticket } from "lucide-react";
+import { Ticket, Building2, User, Clock, Layers, Banknote, HandCoins } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -19,7 +19,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { formatNumber } from "@megawin/shared/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatNumber, toTenantUsername, formatVN } from "@megawin/shared/utils";
 import type { TicketEntryEntity } from "@megawin/game-mega645/entities";
 import { PlayType, PrizeTier } from "@megawin/game-mega645/entities/enums";
 import { MEGA645_PLAY_TYPE_LABELS, MEGA645_PRIZE_TIER_LABELS } from "@megawin/game-mega645/labels";
@@ -28,22 +30,75 @@ import {
   ENTRY_OUTCOME_LABELS,
   REPORT_COLUMN_LABELS,
 } from "@megawin/game-core/labels";
-import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
-import { toTenantUsername } from "@megawin/shared/utils";
+import type { EntryStatus } from "@megawin/game-core/entities";
 import { useMega645Entries } from "../use-report-queries";
 import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
 
+// ─── Board Color Map ──────────────────────────────────────────────────────────
+
 /**
- * Lấy phần tên hiển thị ngắn gọn từ username.
- * Format username: "playerExternalId@tenantId" → trả về "playerExternalId".
- * Nếu không parse được → giữ nguyên.
+ * CSS variable name cho từng board (A–F).
+ * Dùng chung cho tất cả 7 games — định nghĩa trong globals.css.
  */
-function shortDisplayName(username: string | undefined | null, accountId: string): string {
-  const raw = username || accountId;
-  return toTenantUsername(raw) ?? raw;
+const BOARD_COLORS: Record<string, string> = {
+  A: "var(--board-a)",
+  B: "var(--board-b)",
+  C: "var(--board-c)",
+  D: "var(--board-d)",
+  E: "var(--board-e)",
+  F: "var(--board-f)",
+};
+
+// ─── Ball Display Helper ──────────────────────────────────────────────────────
+
+/**
+ * Hiển thị 1 quả bóng số tròn.
+ * - matched (xanh chính): trùng số thắng
+ * - default (muted): chưa có kết quả hoặc không trúng
+ * - result: hiển thị số kết quả kỳ quay
+ */
+function Ball({
+  n,
+  variant = "default",
+  size = "md",
+}: {
+  n: string;
+  variant?: "default" | "matched" | "result";
+  size?: "sm" | "md";
+}) {
+  const sizeClass = size === "sm" ? "size-7 text-[11px]" : "size-8 text-xs";
+  const colorClass =
+    variant === "matched"
+      ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
+      : variant === "result"
+        ? "bg-primary text-primary-foreground"
+        : "bg-muted text-muted-foreground";
+  return (
+    <span
+      className={`inline-flex items-center justify-center rounded-full font-bold tabular-nums ${sizeClass} ${colorClass}`}
+    >
+      {n}
+    </span>
+  );
 }
 
-/** Chi tiết 1 entry Mega 6/45 — bộ số, kết quả quay, giải trúng. */
+// ─── Entry Detail Dialog ──────────────────────────────────────────────────────
+
+/**
+ * Chi tiết 1 entry Mega 6/45.
+ *
+ * Layout:
+ * 1. Header: title + "ticketNo · drawId"
+ * 2. Metadata grid 2-column (Người chơi · Dòng cược / Đại lý · Đặt lúc)
+ * 3. Status row (badge trạng thái + outcome)
+ * 4. Financial KPI:
+ *    - Outstanding: Tiền cược · Hoa hồng (2 ô)
+ *    - Settled: Tiền cược · Trả thưởng · Hoa hồng · Lãi/lỗ (4 ô)
+ * 5. Kết quả kỳ quay (6 winning numbers — chỉ khi có result, không phải scheduled)
+ *    Mega 6/45 KHÔNG có bonus number.
+ * 6. Bộ số đã chọn: boards A-F (6 số / board — highlight khi khớp)
+ * 7. Giải trúng (chỉ khi có payout.tiers và không phải scheduled)
+ */
 export function Mega645EntryDetailDialog({
   entry,
   open,
@@ -57,225 +112,345 @@ export function Mega645EntryDetailDialog({
 
   const tiers = entry.payout?.tiers ?? [];
   const boards = entry.entrySummary.boards ?? [];
-  const status = entry.status as EntryStatus;
-  const outcome = entry.outcome as EntryOutcome | undefined;
-  const isWin = outcome === "win";
-  // scheduled = đang chờ kết quả, chưa có payout/result → KHÔNG hiển thị lãi/lỗ
-  const isScheduled = status === "scheduled";
-
-  const winningSet = new Set(entry.result?.winningNumbers ?? []);
-
-  const playType =
-    boards.length > 0 && boards[0]
-      ? (MEGA645_PLAY_TYPE_LABELS[boards[0].playType as PlayType] ?? boards[0].playType)
-      : "—";
-
-  const displayName = shortDisplayName(entry.username, entry.accountId);
-
-  // Lãi/lỗ chỉ có ý nghĩa sau khi settle — không tính cho scheduled entry
+  const isWin = (entry.payout?.payoutAmount ?? 0) > 0;
+  const outcome = entry.outcome as string | undefined;
+  // scheduled = đang chờ kết quả — KHÔNG hiển thị payout, lãi/lỗ, kết quả
+  const isScheduled = entry.status === "scheduled";
   const playerNet = isScheduled ? null : (entry.payout?.payoutAmount ?? 0) - entry.amount;
+
+  // Mega 6/45: chỉ có winningNumbers, KHÔNG có bonusNumber
+  const winningSet = new Set<string>(entry.result?.winningNumbers ?? []);
+
+  const tenantUsername = toTenantUsername(entry.username);
+  const MAX_USERNAME_LEN = 14;
+  const truncatedUsername =
+    tenantUsername.length > MAX_USERNAME_LEN
+      ? tenantUsername.slice(0, MAX_USERNAME_LEN) + "…"
+      : tenantUsername;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Ticket className="size-4" />
             Chi tiết Entry — Mega 6/45
           </DialogTitle>
           <DialogDescription className="font-mono text-xs">
-            {entry.entrySummary.ticketNo}
+            {entry.entrySummary.ticketNo} · {entry.drawId}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="-mx-6 max-h-[72vh] space-y-3 overflow-y-auto px-6">
-          {/* ── Thông tin vé ── */}
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { label: REPORT_COLUMN_LABELS.drawId, value: entry.drawId, mono: true },
-              { label: "Đại lý", value: entry.tenantId },
-              { label: "Người chơi", value: displayName },
-              { label: "Kiểu chơi", value: playType },
-              { label: "Boards", value: formatNumber(boards.length) },
-              { label: REPORT_COLUMN_LABELS.lineCount, value: formatNumber(entry.lineCount) },
-            ].map((item) => (
-              <div key={item.label} className="min-w-0 rounded-md bg-muted/40 px-3 py-2">
-                <p className="text-[11px] text-muted-foreground">{item.label}</p>
-                <p
-                  className={`truncate text-sm font-semibold tabular-nums ${item.mono ? "font-mono text-xs" : ""}`}
-                  title={item.value}
-                >
-                  {item.value}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* ── Trạng thái đang chờ — hiển thị thay thế tài chính khi scheduled ── */}
-          {isScheduled && (
-            <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-800 dark:bg-amber-950/30">
-              <Badge variant="secondary">Đang chờ quay số</Badge>
-              <p className="text-xs text-muted-foreground">
-                Kết quả sẽ có sau kỳ quay · {entry.drawId}
-              </p>
-            </div>
-          )}
-
-          {/* ── Tài chính + Trạng thái ── */}
-          <div className="rounded-lg border p-3">
-            <div className="mb-2.5 flex items-center justify-between">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Tài chính
-              </p>
-              <div className="flex items-center gap-1.5">
-                <Badge
-                  variant={
-                    status === "settled"
-                      ? "default"
-                      : status === "void"
-                        ? "destructive"
-                        : "secondary"
-                  }
-                >
-                  {ENTRY_STATUS_LABELS[status] ?? status}
-                </Badge>
-                {outcome && (
-                  <Badge
-                    className={
-                      isWin
-                        ? "border-transparent bg-profit text-profit-foreground hover:bg-profit/80"
-                        : ""
-                    }
-                    variant={outcome === "void" ? "destructive" : isWin ? "default" : "secondary"}
-                  >
-                    {ENTRY_OUTCOME_LABELS[outcome] ?? outcome}
-                  </Badge>
+        <ScrollArea className="max-h-[76vh]">
+          <div className="space-y-4 pr-2">
+            {/* ── 1. Metadata 2-column ───────────────────────────────────── */}
+            <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 rounded-lg bg-muted/50 px-4 py-3 text-sm">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <User className="size-3.5 shrink-0" />
+                  Người chơi
+                </span>
+                {tenantUsername.length > MAX_USERNAME_LEN ? (
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="cursor-default font-semibold">{truncatedUsername}</span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p className="font-mono text-xs">{tenantUsername}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <span className="font-semibold">{tenantUsername}</span>
                 )}
               </div>
-            </div>
-            <div className={`grid gap-x-4 gap-y-2 ${isScheduled ? "grid-cols-2" : "grid-cols-4"}`}>
-              <div>
-                <p className="text-[11px] text-muted-foreground">Tiền cược</p>
-                <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Layers className="size-3.5 shrink-0" />
+                  {REPORT_COLUMN_LABELS.lineCount}
+                </span>
+                <span className="font-semibold tabular-nums">{formatNumber(entry.lineCount)}</span>
               </div>
-              {!isScheduled && (
-                <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalPayout}
-                  </p>
-                  <p className={`text-sm font-bold tabular-nums ${isWin ? "text-profit" : ""}`}>
-                    {formatNumber(entry.payout?.payoutAmount ?? 0)}
-                  </p>
-                </div>
-              )}
-              <div>
-                <p className="text-[11px] text-muted-foreground">
-                  {REPORT_COLUMN_LABELS.totalCommission}
-                </p>
-                <p className="text-sm font-bold tabular-nums">
-                  {formatNumber(entry.tenant.commissionAmount)}
-                </p>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Building2 className="size-3.5 shrink-0" />
+                  Đại lý
+                </span>
+                <span className="font-semibold">{entry.tenantId ?? "—"}</span>
               </div>
-              {playerNet !== null && (
-                <div>
-                  <p className="text-[11px] text-muted-foreground">Lãi/lỗ (khách)</p>
-                  <p
-                    className={`text-sm font-bold tabular-nums ${
-                      playerNet > 0
-                        ? "text-profit"
-                        : playerNet < 0
-                          ? "text-loss"
-                          : "text-muted-foreground"
-                    }`}
-                  >
-                    {playerNet > 0 ? "+" : ""}
-                    {formatNumber(playerNet)}
-                  </p>
-                </div>
-              )}
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Clock className="size-3.5 shrink-0" />
+                  Đặt lúc
+                </span>
+                <span className="font-semibold tabular-nums">
+                  {formatVN(new Date(entry.createdAt as unknown as string), "dd/MM HH:mm")}
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* ── Bộ số đã chọn — highlight trùng kết quả quay ── */}
-          {boards.length > 0 && (
-            <div className="rounded-lg border p-3">
-              <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Bộ số đã chọn
-              </p>
-              <div className="space-y-2">
-                {boards.map((board, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <Badge variant="outline" className="shrink-0 text-[10px]">
-                      {board.boardNo} ·{" "}
-                      {MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType}
-                    </Badge>
-                    <div className="flex flex-wrap gap-1">
-                      {board.numbers.map((num) => (
-                        <span
-                          key={num}
-                          className={`inline-flex size-7 items-center justify-center rounded-full text-xs font-medium ${
-                            winningSet.has(num)
-                              ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
-                              : "bg-muted"
-                          }`}
-                        >
-                          {num}
-                        </span>
-                      ))}
+            {/* ── 2. Status row ──────────────────────────────────────────── */}
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border px-4 py-2.5">
+              <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                Trạng thái
+              </span>
+              <Badge
+                variant={
+                  entry.status === "settled"
+                    ? "default"
+                    : entry.status === "void"
+                      ? "destructive"
+                      : "secondary"
+                }
+              >
+                {ENTRY_STATUS_LABELS[entry.status as keyof typeof ENTRY_STATUS_LABELS] ??
+                  entry.status}
+              </Badge>
+              {outcome && (
+                <Badge
+                  className={
+                    isWin
+                      ? "border-transparent bg-profit text-profit-foreground hover:bg-profit/80"
+                      : ""
+                  }
+                  variant={outcome === "void" ? "destructive" : isWin ? "default" : "secondary"}
+                >
+                  {ENTRY_OUTCOME_LABELS[outcome as keyof typeof ENTRY_OUTCOME_LABELS] ?? outcome}
+                </Badge>
+              )}
+              {isScheduled && (
+                <span className="ml-auto text-[11px] text-amber-600 dark:text-amber-400">
+                  Kết quả có sau kỳ quay
+                </span>
+              )}
+            </div>
+
+            {/* ── 3. Financial KPI strip ─────────────────────────────────── */}
+            {isScheduled ? (
+              /* Outstanding mode: Tiền cược · Hoa hồng ĐL */
+              <div className="grid grid-cols-2 gap-2">
+                <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/50">
+                    <Banknote className="size-4 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Tiền cược</p>
+                    <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
+                    <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {REPORT_COLUMN_LABELS.totalCommission}
+                    </p>
+                    <p className="text-sm font-bold tabular-nums">
+                      {formatNumber(entry.tenant.commissionAmount)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Settled mode: đầy đủ 4 KPIs */
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="flex items-center gap-2.5 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-900/50">
+                    <Banknote className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">Tiền cược</p>
+                    <p className="text-sm font-bold tabular-nums">{formatNumber(entry.amount)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
+                    <Banknote className="size-3.5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {REPORT_COLUMN_LABELS.totalPayout}
+                    </p>
+                    <p className={`text-sm font-bold tabular-nums ${isWin ? "text-profit" : ""}`}>
+                      {formatNumber(entry.payout?.payoutAmount ?? 0)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2.5 rounded-lg bg-muted/50 p-3">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
+                    <HandCoins className="size-3.5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {REPORT_COLUMN_LABELS.totalCommission}
+                    </p>
+                    <p className="text-sm font-bold tabular-nums">
+                      {formatNumber(entry.tenant.commissionAmount)}
+                    </p>
+                  </div>
+                </div>
+                {playerNet !== null && (
+                  <div className="rounded-lg bg-muted/50 p-3">
+                    <p className="text-[11px] text-muted-foreground">Lãi/lỗ (khách)</p>
+                    <p
+                      className={`text-sm font-bold tabular-nums ${
+                        playerNet > 0
+                          ? "text-profit"
+                          : playerNet < 0
+                            ? "text-loss"
+                            : "text-muted-foreground"
+                      }`}
+                    >
+                      {playerNet > 0 ? "+" : ""}
+                      {formatNumber(playerNet)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── 4. Kết quả kỳ quay ────────────────────────────────────── */}
+            {/* Mega 6/45: 6 winning numbers, KHÔNG có bonus number */}
+            {entry.result && !isScheduled && (
+              <div className="rounded-lg border p-4">
+                <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Kết quả — Kỳ {entry.drawId}
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {entry.result.winningNumbers.map((n: string) => (
+                    <Ball key={n} n={n} variant="result" />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── 5. Bộ số đã chọn ──────────────────────────────────────── */}
+            {/* Mega 6/45: mỗi board chọn 6 số từ pool 01-45.              */}
+            {/* Highlight logic: số trùng winningNumbers → matched (xanh)  */}
+            {boards.length > 0 && (
+              <div className="rounded-lg border p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Bộ số đã chọn
+                  </p>
+                  {entry.result && !isScheduled && (
+                    /* Legend chú thích màu — chỉ hiển thị khi có kết quả */
+                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <span className="inline-block size-3 rounded-full bg-primary" />
+                        Trúng
+                      </span>
                     </div>
-                    <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">
-                      {board.expandedLines} lines
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+                  )}
+                </div>
+                <div className="space-y-2.5">
+                  {boards.map((board, i) => {
+                    const playLabel =
+                      MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType;
+                    const isStandard = board.playType === PlayType.Standard;
+                    const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                    return (
+                      <div
+                        key={i}
+                        className="grid items-center gap-x-3 rounded-md border-l-[3px] py-2 pl-3"
+                        style={{
+                          borderLeftColor: boardColor,
+                          gridTemplateColumns: "2rem 4rem 1fr",
+                        }}
+                      >
+                        {/* Cột 1: Tên board */}
+                        <div className="flex items-center justify-center self-stretch">
+                          <span
+                            className="text-sm font-extrabold leading-none"
+                            style={{ color: boardColor }}
+                          >
+                            {board.boardNo}
+                          </span>
+                        </div>
 
-          {/* ── Kết quả quay — chỉ hiển thị sau khi có kết quả ── */}
-          {entry.result && (
-            <div className="rounded-lg border p-3">
-              <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Kết quả — Kỳ {entry.drawId}
-              </p>
-              <div className="flex flex-wrap justify-center gap-1.5">
-                {entry.result.winningNumbers.map((num) => (
-                  <span
-                    key={num}
-                    className="inline-flex size-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground"
-                  >
-                    {num}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+                        {/* Cột 2: Kiểu chơi (hàng 1) + số lines (hàng 2) */}
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[11px] font-semibold leading-tight text-foreground">
+                            {isStandard ? "Thường" : playLabel}
+                          </span>
+                          <span className="text-[10px] leading-tight text-muted-foreground">
+                            {board.expandedLines > 1
+                              ? `${formatNumber(board.expandedLines)} lines`
+                              : "1 line"}
+                            {board.betCount > 1 && (
+                              <span className="ml-1 text-muted-foreground/70">
+                                ×{board.betCount}
+                              </span>
+                            )}
+                          </span>
+                        </div>
 
-          {/* ── Giải trúng — chỉ hiển thị khi có giải ── */}
-          {tiers.length > 0 && (
-            <div className="rounded-lg border border-profit/30 bg-profit/5 p-3">
-              <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-profit">
-                Giải trúng
-              </p>
-              <div className="space-y-1.5">
-                {tiers.map((tier, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm">
-                    <Badge variant="secondary">
-                      {MEGA645_PRIZE_TIER_LABELS[tier.tier as PrizeTier] ?? tier.tier}
-                    </Badge>
-                    <span className="tabular-nums font-semibold text-profit">
-                      ×{tier.hitCount} · {formatNumber(tier.amount)}
-                    </span>
-                  </div>
-                ))}
+                        {/* Cột 3: Danh sách số */}
+                        <div className="flex flex-wrap items-center gap-1">
+                          {board.numbers.map((n: string) => (
+                            <Ball
+                              key={n}
+                              n={n}
+                              size="sm"
+                              variant={winningSet.has(n) ? "matched" : "default"}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+
+            {/* ── 6. Giải trúng ─────────────────────────────────────────── */}
+            {tiers.length > 0 && !isScheduled && (
+              <div className="rounded-lg border border-profit/30 bg-profit/5 p-4">
+                <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-profit">
+                  Giải trúng
+                </p>
+                <div className="space-y-2">
+                  {tiers.map((tier, i: number) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between rounded-md bg-background/60 px-3 py-1.5 text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="font-medium">
+                          {MEGA645_PRIZE_TIER_LABELS[tier.tier as PrizeTier] ?? tier.tier}
+                        </Badge>
+                        <span className="text-[11px] text-muted-foreground">
+                          ×{tier.hitCount} line
+                          {tier.unitAmount > 0 && ` · ${formatNumber(tier.unitAmount)}/line`}
+                        </span>
+                      </div>
+                      <span className="tabular-nums font-bold text-profit">
+                        {formatNumber(tier.amount)}
+                      </span>
+                    </div>
+                  ))}
+                  {/* Tổng giải */}
+                  {tiers.length > 1 && (
+                    <div className="flex items-center justify-between border-t pt-2 text-sm font-bold">
+                      <span className="text-muted-foreground">Tổng thưởng</span>
+                      <span className="tabular-nums text-profit">
+                        {formatNumber(entry.payout?.payoutAmount ?? 0)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
 }
+
+// ─── Entry List ───────────────────────────────────────────────────────────────
 
 /** Cấp 4: Danh sách entries của 1 player cho 1 draw × 1 tenant. */
 export function EntryList({
@@ -291,11 +466,6 @@ export function EntryList({
 }) {
   const [selectedEntry, setSelectedEntry] = useState<TicketEntryEntity | null>(null);
   const { data, isLoading, error } = useMega645Entries(drawId, tenantId, accountId);
-
-  // Tên hiển thị: dùng playerDisplayName từ breadcrumb (đã strip @tenant), fallback về accountId
-  const displayName = playerDisplayName
-    ? shortDisplayName(playerDisplayName, accountId)
-    : shortDisplayName(null, accountId);
 
   if (isLoading) return <TableSkeleton rows={5} />;
   if (error) return <ErrorCard />;
@@ -322,13 +492,9 @@ export function EntryList({
               <TableHeader>
                 <TableRow>
                   <TableHead>Mã vé</TableHead>
-                  <TableHead>Kiểu chơi</TableHead>
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.lineCount}</TableHead>
-                  <TableHead className="text-right">Cược</TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
-                  <TableHead className="text-right">
-                    {REPORT_COLUMN_LABELS.totalCommission}
-                  </TableHead>
                   <TableHead>Giải</TableHead>
                   <TableHead>Trạng thái</TableHead>
                 </TableRow>
@@ -336,12 +502,6 @@ export function EntryList({
               <TableBody>
                 {data.map((entry) => {
                   const entryTiers = entry.payout?.tiers ?? [];
-                  const entryBoards = entry.entrySummary.boards ?? [];
-                  const playType =
-                    entryBoards.length > 0 && entryBoards[0]
-                      ? (MEGA645_PLAY_TYPE_LABELS[entryBoards[0].playType as PlayType] ??
-                        entryBoards[0].playType)
-                      : "—";
                   const status = entry.status as EntryStatus;
 
                   return (
@@ -351,7 +511,6 @@ export function EntryList({
                       onClick={() => setSelectedEntry(entry)}
                     >
                       <TableCell className="font-medium">{entry.entrySummary.ticketNo}</TableCell>
-                      <TableCell>{playType}</TableCell>
                       <TableCell className="text-right tabular-nums">
                         {formatNumber(entry.lineCount)}
                       </TableCell>
@@ -361,7 +520,7 @@ export function EntryList({
                       <TableCell className="text-right tabular-nums">
                         {status === "settled" ? (
                           (entry.payout?.payoutAmount ?? 0) > 0 ? (
-                            <span className="font-medium">
+                            <span className="font-medium text-profit">
                               {formatNumber(entry.payout?.payoutAmount ?? 0)}
                             </span>
                           ) : (
@@ -371,18 +530,13 @@ export function EntryList({
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">
-                        {formatNumber(entry.tenant.commissionAmount)}
-                      </TableCell>
                       <TableCell>
                         {entryTiers.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {entryTiers.map((tier, i) => (
-                              <Badge key={i} variant="secondary" className="text-[10px]">
-                                {MEGA645_PRIZE_TIER_LABELS[tier.tier as PrizeTier] ?? tier.tier}
-                              </Badge>
-                            ))}
-                          </div>
+                          <Badge variant="secondary">
+                            {MEGA645_PRIZE_TIER_LABELS[entryTiers[0]?.tier as PrizeTier] ??
+                              entryTiers[0]?.tier}
+                            {entryTiers.length > 1 ? ` +${entryTiers.length - 1}` : ""}
+                          </Badge>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
@@ -397,7 +551,8 @@ export function EntryList({
                                 : "secondary"
                           }
                         >
-                          {ENTRY_STATUS_LABELS[status] ?? status}
+                          {ENTRY_STATUS_LABELS[status as keyof typeof ENTRY_STATUS_LABELS] ??
+                            status}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -408,7 +563,8 @@ export function EntryList({
           </div>
         </CardContent>
       </Card>
-      <EntryDetailDialog
+
+      <Mega645EntryDetailDialog
         entry={selectedEntry}
         open={!!selectedEntry}
         onClose={() => setSelectedEntry(null)}
@@ -416,6 +572,3 @@ export function EntryList({
     </>
   );
 }
-
-// Alias internal — giữ backward compat với EntryList
-const EntryDetailDialog = Mega645EntryDetailDialog;

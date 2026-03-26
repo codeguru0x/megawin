@@ -13,6 +13,9 @@ import type {
   ListEntryBreakdownOutput,
   GetOutstandingReportsOutput,
   ListVoidReportsOutput,
+  ListOutstandingDrawTenantsOutput,
+  ListOutstandingTenantPlayersOutput,
+  ListOutstandingPlayerEntriesOutput,
 } from "@megawin/game-lotto535-application/use-cases/reports";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
@@ -118,11 +121,60 @@ export function useLotto535Entries(drawId: string, tenantId: string, accountId: 
 /** Các kỳ quay đang outstanding (chưa settle). Tự refresh mỗi 60 giây. */
 export function useLotto535Outstanding() {
   return useQuery({
-    queryKey: lotto535Keys.outstanding,
+    queryKey: lotto535Keys.outstandingDraws,
     queryFn: () =>
       apiClient
         .get<GetOutstandingReportsOutput>("/lotto535/reports/outstanding")
         .then((r) => r.data),
+    refetchInterval: 60_000,
+  });
+}
+
+/** Tenant breakdown cho 1 draw outstanding. Drill cấp 2. Tự refresh mỗi 60 giây. */
+export function useLotto535OutstandingDrawTenants(drawId: string | null) {
+  return useQuery({
+    queryKey: lotto535Keys.outstandingTenants(drawId ?? ""),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingDrawTenantsOutput>(
+          `/lotto535/reports/outstanding/draws/${drawId}/tenants`,
+        )
+        .then((r) => r.data),
+    enabled: !!drawId,
+    refetchInterval: 60_000,
+  });
+}
+
+/** Player breakdown cho 1 draw × 1 tenant outstanding. Drill cấp 3. Tự refresh mỗi 60 giây. */
+export function useLotto535OutstandingTenantPlayers(drawId: string, tenantId: string | null) {
+  return useQuery({
+    queryKey: lotto535Keys.outstandingPlayers({ drawId, tenantId: tenantId ?? "" }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingTenantPlayersOutput>(
+          `/lotto535/reports/outstanding/draws/${drawId}/${tenantId}/players`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId),
+    refetchInterval: 60_000,
+  });
+}
+
+/** Entries outstanding của 1 player trong 1 draw × tenant. Drill cấp 4. Tự refresh mỗi 60 giây. */
+export function useLotto535OutstandingPlayerEntries(
+  drawId: string,
+  tenantId: string,
+  accountId: string | null,
+) {
+  return useQuery({
+    queryKey: lotto535Keys.outstandingEntries({ drawId, tenantId, accountId: accountId ?? "" }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingPlayerEntriesOutput>(
+          `/lotto535/reports/outstanding/draws/${drawId}/${tenantId}/${accountId}/entries`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId && accountId),
     refetchInterval: 60_000,
   });
 }

@@ -18,3 +18,7 @@ export type {
 } from "./draw.types";
 export type { TicketSummary } from "./ticket.types";
 export type { TenantConfigFields } from "./config.types";
+export type {
+  OutstandingTenantBreakdownRow,
+  OutstandingPlayerBreakdownRow,
+} from "./entry-outstanding.types";

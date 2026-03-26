@@ -622,3 +622,151 @@ import { DrawRepository } from "../../../../../../packages/game-lotto535-applica
 - `<Card>` không có `gap-0 py-0`
 - `<CardTitle>` không có icon kèm theo
 - KPI card dùng shadcn Card vertical layout — phải dùng pattern horizontal icon (mục 1.2a)
+
+---
+
+## PHẦN 7 — REPORT DRILL-DOWN NAVIGATION
+
+Quy tắc BẮT BUỘC cho mọi report view có nhiều cấp drill-down (Financial Reports, Outstanding, Void Reports...).
+
+### 7.1 URL State & History (nuqs)
+
+1. **Mọi drill level PHẢI persist vào URL** qua `nuqs` — user refresh giữ nguyên view, browser back hoạt động đúng.
+2. **DrillLevel tính tự động từ URL params** — KHÔNG lưu `level` riêng. Ví dụ:
+   - Không có `draw` → Level 1 (list)
+   - Có `draw` → Level 2 (draw detail)
+   - Có `draw` + `tenant` → Level 3 (tenant detail)
+   - Có `draw` + `tenant` + `player` → Level 4 (entries)
+3. **Navigation helpers** tập trung trong `use-report-filters.ts` — mỗi level có `navigateTo*` function clear đúng params.
+4. **Clear params khi drill up**: khi quay về Level 1, clear tất cả `draw`, `tenant`, `player` (set `null`).
+
+```tsx
+// ✅ ĐÚNG — nuqs drill navigation
+const navigateToDraw = (drawId: string) => {
+  setDraw(drawId);
+  setTenant(null);   // clear deeper levels
+  setPlayer(null);
+};
+
+const navigateToList = () => {
+  setDraw(null);
+  setTenant(null);
+  setPlayer(null);
+};
+```
+
+### 7.2 Breadcrumb (BẮT BUỘC cho multi-level views)
+
+1. **Mọi view có ≥ 2 drill levels PHẢI có breadcrumb** hiển thị path đầy đủ.
+2. Breadcrumb nằm **trên table**, dưới KPI strip (nếu có).
+3. Mỗi segment breadcrumb là **clickable link** (trừ segment cuối = current level).
+4. Dùng pattern inline: `[Root] > [Level 2 label] > [Level 3 label] > Current`.
+5. Breadcrumb PHẢI sync với URL state — click segment = gọi `navigateTo*` tương ứng.
+
+```tsx
+// ✅ Breadcrumb pattern chuẩn
+<div className="flex items-center gap-1 text-sm">
+  <button onClick={navigateToList} className="text-muted-foreground hover:text-foreground">
+    Kỳ quay
+  </button>
+  <ChevronRight className="size-3.5 text-muted-foreground" />
+  {tenantId ? (
+    <>
+      <button onClick={() => navigateToDraw(drawId)} className="text-muted-foreground hover:text-foreground">
+        {drawId}
+      </button>
+      <ChevronRight className="size-3.5 text-muted-foreground" />
+      <span className="font-medium">{tenantId}</span>
+    </>
+  ) : (
+    <span className="font-medium">{drawId}</span>
+  )}
+</div>
+```
+
+### 7.3 Row Click → Drill Down (KHÔNG cần icon)
+
+1. **Click vào row bất kỳ vị trí nào** → chuyển sang view con (drill level tiếp theo). Dùng `onClick` trên `<TableRow>` + `cursor-pointer`.
+2. **KHÔNG thêm icon chevron/arrow** ở cuối row cho drill-down cùng page — click row là đủ.
+3. **Icon link CHỈ dùng khi chuyển sang PAGE KHÁC** (route khác, không phải drill level) — ví dụ: link từ outstanding sang operations page, hoặc link từ draw ID sang draw detail page.
+4. Khi cần icon link sang page khác: đặt icon trên **1 cột dữ liệu chính** (VD: drawId, ticketNo), chỉ hiện khi hover vào cell đó — KHÔNG luôn hiển thị.
+
+```tsx
+// ✅ ĐÚNG — click row drill down (cùng page, khác level)
+<TableRow
+  className="cursor-pointer hover:bg-muted/50"
+  onClick={() => navigateToDraw(row.original.drawId)}
+>
+  <TableCell>{row.original.drawId}</TableCell>
+  <TableCell className="text-right tabular-nums">{formatNumber(row.original.entryCount)}</TableCell>
+</TableRow>
+
+// ✅ ĐÚNG — icon link sang page khác (hover-only)
+<TableCell className="group">
+  <span className="inline-flex items-center gap-1">
+    {row.original.drawId}
+    <Link href={`/games/power655/operations?draw=${row.original.drawId}`}>
+      <ExternalLink className="size-3.5 text-muted-foreground opacity-0 group-hover:opacity-100" />
+    </Link>
+  </span>
+</TableCell>
+
+// ❌ SAI — icon chevron cuối row cho drill cùng page
+<TableCell className="text-right">
+  <ChevronRight className="size-4" />
+</TableCell>
+```
+
+### 7.4 Component Reuse (DRY) cho Report Views
+
+Report drill-down views PHẢI ưu tiên **component chia sẻ theo game** để reuse giữa:
+- Per-game report pages (`/games/{game}/outstanding`, `/games/{game}/financial-reports`)
+- Player account pages (`/accounts/players/[accountId]/outstanding`)
+
+**Cấu trúc thư mục ưu tiên:**
+
+```
+apps/backoffice/src/app/(main)/games/{game}/
+├── outstanding/
+│   ├── page.tsx                    ← Entry point (Suspense wrapper)
+│   └── _components/
+│       └── outstanding-content.tsx  ← Orchestrator: render correct drill level
+├── financial-reports/
+│   ├── page.tsx
+│   └── _lib/
+│       ├── use-report-filters.ts   ← URL state (nuqs) + DrillLevel + navigation helpers
+│       ├── use-report-queries.ts   ← React Query hooks (tất cả API calls)
+│       ├── tabs/
+│       └── sections/
+│           ├── shared-states.tsx    ← TableSkeleton, ErrorCard, EmptyCard
+│           └── entry-list.tsx       ← Entry table + EntryDetailDialog (reusable)
+└── _shared/
+    └── components/                  ← Components dùng chung giữa outstanding + financial + player page
+        ├── tenant-breakdown.tsx     ← Bảng tenant breakdown (dùng cho cả settle lẫn outstanding)
+        ├── player-breakdown.tsx     ← Bảng player breakdown
+        └── entry-table.tsx          ← Bảng entries (adapt mode: outstanding vs settled)
+```
+
+**Quy tắc:**
+- Component game-specific **đặt trong `_shared/components/`** của game đó — KHÔNG đặt trong `src/components/` global trừ khi cross-game.
+- Nếu component **khác nhau giữa outstanding vs financial** (ví dụ: outstanding không có cột payout), dùng prop `mode: "outstanding" | "settled"` để điều kiện render — KHÔNG duplicate component.
+- `EntryDetailDialog` per game đã có outstanding mode (`status === "scheduled"` → ẩn kết quả) — reuse, KHÔNG tạo dialog mới.
+- Player account page (`/accounts/players/[accountId]/outstanding`) import component từ `games/{game}/_shared/` — KHÔNG copy code.
+
+### 7.5 Quick Checklist — Report Drill-Down
+
+**✅ Phải làm:**
+- URL state qua `nuqs` cho mọi drill param (`draw`, `tenant`, `player`)
+- Breadcrumb trên mọi view ≥ 2 levels
+- Click row → drill down (cursor-pointer, không cần icon)
+- DrillLevel tự tính từ URL params
+- Navigation helpers clear deeper params khi drill up
+- Component reuse qua `_shared/components/` per game
+- `EntryDetailDialog` reuse outstanding mode
+
+**❌ Không làm:**
+- Icon chevron/arrow cuối row cho drill cùng page
+- Lưu `level` state riêng biệt — tính từ URL
+- Duplicate component cho outstanding vs financial — dùng prop `mode`
+- Copy code giữa per-game page và player account page
+- `useSearchParams` thủ công — dùng `nuqs`

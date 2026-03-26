@@ -13,6 +13,9 @@ import type {
   ListEntryBreakdownOutput,
   GetOutstandingReportsOutput,
   ListVoidReportsOutput,
+  ListOutstandingDrawTenantsOutput,
+  ListOutstandingTenantPlayersOutput,
+  ListOutstandingPlayerEntriesOutput,
 } from "@megawin/game-keno-application/use-cases/reports";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
@@ -118,10 +121,58 @@ export function useKenoEntries(drawId: string, tenantId: string, accountId: stri
 /** Các kỳ quay đang outstanding (chưa settle). Tự refresh mỗi 60 giây. */
 export function useKenoOutstanding() {
   return useQuery({
-    queryKey: kenoKeys.outstanding,
+    queryKey: kenoKeys.outstandingDraws,
     queryFn: () =>
       apiClient.get<GetOutstandingReportsOutput>("/keno/reports/outstanding").then((r) => r.data),
     refetchInterval: 60_000,
+  });
+}
+
+/** Tenant breakdown của 1 draw outstanding — drill cấp 2. */
+export function useKenoOutstandingDrawTenants(drawId: string | null) {
+  return useQuery({
+    queryKey: kenoKeys.outstandingTenants(drawId ?? ""),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingDrawTenantsOutput>(`/keno/reports/outstanding/draws/${drawId}/tenants`)
+        .then((r) => r.data),
+    enabled: !!drawId,
+  });
+}
+
+/** Player breakdown của 1 draw × 1 tenant outstanding — drill cấp 3. */
+export function useKenoOutstandingTenantPlayers(drawId: string, tenantId: string | null) {
+  return useQuery({
+    queryKey: kenoKeys.outstandingPlayers({ drawId, tenantId: tenantId ?? "" }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingTenantPlayersOutput>(
+          `/keno/reports/outstanding/draws/${drawId}/tenants/${tenantId}/players`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId),
+  });
+}
+
+/** Entries outstanding của 1 player trong draw × tenant — drill cấp 4. */
+export function useKenoOutstandingPlayerEntries(
+  drawId: string,
+  tenantId: string,
+  accountId: string | null,
+) {
+  return useQuery({
+    queryKey: kenoKeys.outstandingEntries({
+      drawId,
+      tenantId,
+      accountId: accountId ?? "",
+    }),
+    queryFn: () =>
+      apiClient
+        .get<ListOutstandingPlayerEntriesOutput>(
+          `/keno/reports/outstanding/draws/${drawId}/tenants/${tenantId}/players/${accountId}/entries`,
+        )
+        .then((r) => r.data),
+    enabled: !!(drawId && tenantId && accountId),
   });
 }
 
