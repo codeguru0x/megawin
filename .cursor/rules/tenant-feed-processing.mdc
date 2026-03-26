@@ -1,0 +1,489 @@
+---
+globs: packages/game-core/src/entities/entry-feed*,apps/api-tenant/**/*feed*,apps/api-tenant/**/*bet*
+alwaysApply: false
+---
+
+# Tenant Feed Processing & Agent Report Architecture
+
+Hướng dẫn tenant developer xây dựng hệ thống xử lý feed entries từ Megawin và build reports cho hệ thống đại lý đa cấp.
+
+---
+
+## 1. Tổng Quan Kiến Trúc
+
+### Data Flow — 3 Phase Tách Biệt
+
+```
+Phase 1: SYNC + CALCULATE          Phase 2: REBUILD              Phase 3: QUERY
+─────────────────────────          ──────────────────             ─────────────
+Feed API                           Per dirty draw                SUM drawSummaries
+  → lookup player path             aggregate entryMirrors        (~300 docs/ngày)
+  → lazy load commission deltas     → fan-out 5 levels           < 10ms mọi cấp
+  → nhân delta × amounts            → deleteMany + insertMany
+  → upsert entryMirrors             → idempotent
+```
+
+### Nguyên Tắc Bất Biến
+
+- **P1 — entryMirrors là source of truth.** Reports luôn derived từ entryMirrors.
+- **P2 — KHÔNG BAO GIỜ dùng `$inc` cho reports.** Dùng REPLACE (deleteMany + insertMany).
+- **P3 — Commission deltas tính lazy lúc sync, snapshot vào entry.** Rebuild chỉ SUM thuần.
+- **P4 — Rebuild scope = 1 draw.** KHÔNG rebuild cả ngày. KHÔNG sealed (draw có thể resettle/void).
+- **P5 — Fixed fields per level** (company, manager, super, master, agent) trên entryMirrors. KHÔNG dùng array.
+- **P6 — Commission config lưu tương đối** (% of commissionAmount, không phải % of stakeAmount).
+
+---
+
+## 2. Hệ Thống Tài Khoản — Cấu Trúc Cố Định 6 Cấp
+
+```
+company → manager → super → master → agent → player
+```
+
+### Collection: `accounts`
+
+Quản lý identity + hierarchy. Tách biệt khỏi game config.
+
+```typescript
+interface Account {
+  _id: string;
+  username: string;
+  level: "company" | "manager" | "super" | "master" | "agent" | "player";
+  parentId: string | null;        // null = company (root)
+  path: string[];                 // ancestor chain: ["C1", "M1", "S1", "MA1", "A1"]
+  depth: number;                  // 0=company ... 5=player
+  status: "active" | "suspended";
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+**Path dùng array `string[]`** — multikey index, exact match `{ path: "M1" }` nhanh hơn regex. Compound index hỗ trợ tốt.
+
+**Indexes:**
+
+```
+{ _id: 1 }                       // primary
+{ parentId: 1 }                  // direct children
+{ path: 1 }                      // descendants (multikey)
+{ path: 1, level: 1 }            // descendants filtered by level
+```
+
+---
+
+## 3. Commission Config — Per Account × Per Game
+
+### Collection: `accountGameConfigs`
+
+Mỗi game có config riêng biệt. Tách khỏi accounts.
+
+```typescript
+interface AccountGameConfig {
+  _id: string;                    // "accountId:gameProduct"
+  accountId: string;
+  gameProduct: string;            // "keno", "lotto535", ...
+  path: string[];                 // denormalize từ account.path — cascade update không cần join
+
+  /**
+   * % of commissionAmount (TƯƠNG ĐỐI, không phải % of stakeAmount).
+   * Company = 1.0 (nhận 100% commissionAmount từ Megawin).
+   * Manager = 0.80 (nhận 80% commissionAmount, company giữ 20%).
+   * Ràng buộc: child.commissionShare ≤ parent.commissionShare.
+   */
+  commissionShare: number;
+
+  // positionShare: number;       // tương lai — % thầu trên GGR
+
+  updatedAt: Date;
+}
+```
+
+**Indexes:**
+
+```
+{ accountId: 1, gameProduct: 1 }  // unique, lookup per account+game
+{ path: 1, gameProduct: 1 }       // cascade update descendants
+```
+
+### Commission Config — Lưu Tương Đối
+
+**DB lưu:** `commissionShare` = % of commissionAmount (0.00 − 1.00)
+
+**UI hiển thị:** `displayPercent = commissionShare × megawinCommissionRate`
+
+**UI → DB:** `commissionShare = inputPercent / megawinCommissionRate`
+
+```
+megawinCommissionRate = 0.20 (20%, hardcode trong env config)
+
+DB: Manager commissionShare = 0.80
+UI hiển thị: 0.80 × 20% = 16% (trên tiền cược)
+
+Megawin đổi sang 15%: chỉ update env config.
+UI tự hiển thị: 0.80 × 15% = 12%. DB KHÔNG ĐỔI.
+```
+
+**`megawinCommissionRate`** hardcode trong env config. Rất ít khi thay đổi — khi đổi Megawin sẽ thông báo trước.
+
+### Cascade Update Config
+
+Khi parent giảm commissionShare, tất cả descendants vi phạm phải clamp xuống.
+
+```
+Company hạ Manager M1 từ 0.80 → 0.50 (game keno):
+
+Bước 1: Update M1
+  db.accountGameConfigs.updateOne(
+    { accountId: "M1", gameProduct: "keno" },
+    { $set: { commissionShare: 0.50 } }
+  )
+
+Bước 2: Clamp TẤT CẢ descendants — 1 operation, không recursive
+  db.accountGameConfigs.updateMany(
+    { path: "M1", gameProduct: "keno", commissionShare: { $gt: 0.50 } },
+    [{ $set: { commissionShare: { $min: ["$commissionShare", 0.50] } } }]
+  )
+```
+
+**`{ path: "M1" }` + multikey index → exact match, 1 query, không cần biết full prefix.**
+
+**`$min` tự clamp:** share ≤ 0.50 → giữ nguyên. Share > 0.50 → giảm xuống 0.50.
+
+**Tăng share:** không cascade. Children vẫn hợp lệ (child ≤ parent vẫn đúng).
+
+### Ví Dụ Cascade
+
+```
+Trước: C1(1.0) → M1(0.80) → S1(0.60) → MA1(0.40) → A1(0.20) → P1(0)
+
+Company hạ M1 xuống 0.50:
+  M1: 0.80 → 0.50
+  S1: 0.60 > 0.50 → clamp xuống 0.50
+  MA1: 0.40 ≤ 0.50 → giữ nguyên
+  A1: 0.20 ≤ 0.50 → giữ nguyên
+
+Sau: C1(1.0) → M1(0.50) → S1(0.50) → MA1(0.40) → A1(0.20) → P1(0)
+```
+
+---
+
+## 4. Commission Deltas — Lazy Calculate, Cache In-Memory
+
+### KHÔNG pre-calculate collection cho tất cả players
+
+Player có thể hàng triệu, nhiều không bao giờ chơi. Pre-calculate = lãng phí. Config change ở company level = rebuild triệu profiles = không khả thi.
+
+### Lazy Calculate Lúc Sync
+
+```
+Entry đến cho Player P1 (game keno):
+  1. cache.get("P1:keno") → miss?
+  2. Load P1.path = ["C1", "M1", "S1", "MA1", "A1"]
+  3. Load 6 configs (5 ancestors + P1) cho game keno: 1 batch query
+  4. Tính commission deltas:
+     C1: (1.00 − 0.80) = 0.20
+     M1: (0.80 − 0.60) = 0.20
+     S1: (0.60 − 0.40) = 0.20
+     MA1: (0.40 − 0.20) = 0.20
+     A1: (0.20 − 0.00) = 0.20
+  5. cache.set("P1:keno", deltas) → TTL 10 phút
+  6. Cho mỗi entry: myCommissionEarned = delta × commissionAmount (1 phép nhân)
+```
+
+### Cache Strategy
+
+```
+In-memory Map<string, CommissionDeltas>
+Key:   "playerId:gameProduct"
+Value: { company: { agentId, username, delta }, manager: {...}, ... }
+TTL:   10 phút
+```
+
+- **Config change** → clear cache (hoặc để TTL tự expire)
+- **Worker restart** → cold cache, tự warm lại sau vài batch
+- **Batch optimization:** extract unique (playerId, gameProduct) chưa cached → 1 batch query → cache all
+
+### Tính Commission Per Entry
+
+```
+commissionAmount = 20,000 VND (từ Megawin feed)
+deltas = cache.get("P1:keno")
+
+company.myCommissionEarned  = 0.20 × 20,000 = 4,000
+manager.myCommissionEarned  = 0.20 × 20,000 = 4,000
+super.myCommissionEarned    = 0.20 × 20,000 = 4,000
+master.myCommissionEarned   = 0.20 × 20,000 = 4,000
+agent.myCommissionEarned    = 0.20 × 20,000 = 4,000
+Tổng phân phối: 20,000 = 100% × commissionAmount ✓
+```
+
+### Company — Retained vs Agent Tree
+
+```
+Company tổng thu    = commissionAmount (100% từ Megawin)
+Company distributed = commissionAmount × company.commissionShare (phần đưa vào agent tree)
+Company retained    = commissionAmount × (1 − company.commissionShare) (phần giữ riêng)
+Company tree earned = company.myCommissionEarned (phần company hưởng trong tree)
+```
+
+Nếu `company.commissionShare = 1.0` → retained = 0, toàn bộ phân phối vào tree.
+
+---
+
+## 5. AgentSplit Schema — Gắn Per Level Trên Entry
+
+```typescript
+interface AgentSplit {
+  agentId: string;
+  username: string;                 // snapshot — report không cần lookup accounts
+  commissionShare: number;          // config snapshot lúc sync (tương đối)
+  commissionDelta: number;          // (myShare − childShare) snapshot
+  myCommissionEarned: number;       // commissionDelta × commissionAmount
+  // myPositionAmount: number;      // tương lai — khi thêm positionShare
+  // uplinePositionAmount: number;  // tương lai
+}
+```
+
+---
+
+## 6. entryMirrors — Source of Truth
+
+### Schema
+
+```typescript
+interface EntryMirror {
+  _id: string;                      // = entryId từ Megawin
+  version: string;                  // cursor từ Megawin feed
+
+  // ─── Từ Megawin feed (giữ nguyên) ───
+  gameProduct: string;
+  ticketId: string;
+  ticketNo: string;
+  accountId: string;
+  username: string;
+  drawId: string;
+  financialDate: string;            // "YYYY-MM-DD"
+  status: "scheduled" | "settled" | "void";
+  outcome?: "win" | "loss" | "void";
+
+  stakeAmount: number;
+  winAmount: number;
+  payoutAmount: number;
+  ggr: number;
+  commissionRate: number;
+  commissionAmount: number;
+
+  betContent: unknown;
+  drawResult?: unknown;
+  payoutDetail?: unknown;
+  voidInfo?: { originalAmount: number; refundAmount: number; voidedAt: Date };
+
+  createdAt: Date;
+  updatedAt: Date;
+
+  // ─── Tenant enrich + Commission splits (fixed fields) ───
+  agentPath: string[];              // ["C1", "M1", "S1", "MA1", "A1"]
+
+  company:  AgentSplit;
+  manager:  AgentSplit;
+  super:    AgentSplit;
+  master:   AgentSplit;
+  agent:    AgentSplit;
+
+  syncedAt: Date;
+}
+```
+
+### Indexes
+
+```
+{ version: 1 }                                             // poll cursor
+{ drawId: 1 }                                              // rebuild per draw
+{ "company.agentId": 1, financialDate: 1, status: 1 }     // company report
+{ "manager.agentId": 1, financialDate: 1, status: 1 }     // manager report
+{ "super.agentId": 1, financialDate: 1, status: 1 }       // super report
+{ "master.agentId": 1, financialDate: 1, status: 1 }      // master report
+{ "agent.agentId": 1, financialDate: 1, status: 1 }       // agent report
+{ accountId: 1, financialDate: 1 }                         // player drill-down
+```
+
+---
+
+## 7. Sync Worker — Phase 1
+
+### Quy Trình
+
+```
+1. Load lastVersion từ syncState
+2. Poll feed: GET /tenant/bets/feed?afterVersion={n}&limit=1000
+3. Extract unique (playerId, gameProduct) pairs chưa cached
+4. Batch load: player paths + commission configs → tính deltas → cache
+5. Với mỗi entry:
+   a. deltas = cache.get(playerId:gameProduct)
+   b. Tính myCommissionEarned = delta × commissionAmount cho 5 levels
+   c. Build entry mirror doc với fixed fields
+6. bulkWrite upsert entryMirrors (ordered: false)
+7. Collect dirty drawIds
+8. Save lastVersion + dirtyDrawIds vào syncState
+9. Loop nếu hasMore = true
+```
+
+### syncState Collection
+
+```typescript
+interface SyncState {
+  _id: "feedSync";
+  lastVersion: string;
+  dirtyDrawIds: string[];
+  lastSyncAt: Date;
+}
+```
+
+### Idempotency
+
+- Upsert by `_id = entryId` → ghi đè toàn bộ → chạy lại cho cùng kết quả.
+- Config snapshot trên entry → entries cũ không bị ảnh hưởng khi config thay đổi.
+- Crash giữa batch → restart từ lastVersion → upsert lại = idempotent.
+
+---
+
+## 8. drawSummaries — Pre-Aggregated Reports (Phase 2)
+
+### Schema
+
+```typescript
+interface DrawSummary {
+  _id: string;                      // "drawId:agentId"
+  drawId: string;
+  financialDate: string;
+  gameProduct: string;
+  reportType: "outstanding" | "financial" | "void";
+
+  agentId: string;
+  level: "company" | "manager" | "super" | "master" | "agent";
+  username: string;                 // snapshot — hiển thị trực tiếp, không cần lookup
+
+  // ─── Player totals dưới agent này ───
+  entryCount: number;
+  totalStake: number;
+  totalPayout: number;
+  totalGgr: number;
+  totalCommission: number;
+  winCount: number;
+  lossCount: number;
+
+  // ─── Commission split (SUM từ entryMirrors) ───
+  myCommissionEarned: number;
+
+  // ─── Void only ───
+  totalOriginalAmount: number;
+  totalRefundAmount: number;
+
+  rebuiltAt: Date;
+}
+```
+
+### Indexes
+
+```
+{ drawId: 1 }                                              // rebuild delete + insert
+{ agentId: 1, financialDate: 1, reportType: 1 }            // report query
+{ financialDate: 1 }                                       // TTL cleanup
+```
+
+### Rebuild Per Dirty Draw
+
+```
+1. Lấy dirtyDrawIds từ syncState
+2. Với mỗi drawId:
+   a. Aggregate entryMirrors WHERE drawId = X:
+      - $group by { 5 agent IDs, gameProduct, status }
+      - SUM: entryCount, totalStake, totalGgr, myCommissionEarned, ...
+      - 1 query duy nhất, group by tất cả 5 agent IDs cùng lúc
+   b. Fan-out trong app: mỗi group → 5 DrawSummary docs (1 per level)
+   c. deleteMany({ drawId }) + insertMany → idempotent
+3. Clear dirtyDrawIds
+```
+
+### Kích Thước Ước Tính
+
+```
+1 draw ≈ 150 unique agents (tổng 5 cấp)
+300 draws/ngày × 150 = ~45K docs/ngày
+Mỗi doc ≈ 200 bytes → ~9MB/ngày
+```
+
+---
+
+## 9. Report Queries — Phase 3
+
+### Tổng Quan Cho 1 Agent (SUM drawSummaries)
+
+Agent xem report ngày → query drawSummaries WHERE agentId + financialDate + reportType → SUM ~300 docs → < 10ms.
+
+### Breakdown Theo Downline
+
+Agent muốn xem từng child đóng góp bao nhiêu:
+- Lấy danh sách children IDs từ accounts collection (cached)
+- Query drawSummaries WHERE agentId IN [children] → group by agentId
+
+### Player Drill-Down
+
+Xem chi tiết entries của 1 player → query trực tiếp entryMirrors:
+- Index: `{ "agent.agentId": 1, financialDate: 1, status: 1 }`
+- Scope nhỏ (~1K-10K entries), không cần pre-aggregate.
+
+---
+
+## 10. Pre-Aggregation Layers — Chỉ Thêm Khi Cần
+
+```
+Layer 1: drawSummaries (draw × agent)       ~45K docs/ngày    ← BẮT BUỘC
+Layer 2: dailyGameSummaries (date × agent × game)             ← KHÔNG CẦN (300 docs SUM đủ nhanh)
+Layer 3: dailySummaries (date × agent)                        ← KHÔNG CẦN
+```
+
+**Nguyên tắc: thêm layer khi profiling cho thấy bottleneck, không thêm trước.**
+
+---
+
+## 11. Config Thay Đổi
+
+### Default: Chỉ Áp Dụng Cho Entries Mới
+
+Config mới → clear commission delta cache → entries mới sync dùng config mới.
+Entries cũ giữ nguyên snapshot trên entryMirrors — đúng business logic.
+
+### Retroactive (Hiếm)
+
+Nếu cần áp config mới cho entries cũ:
+1. Đánh dấu entries cần recalculate (filter by agentPath + financialDate)
+2. Batch recalculate commission splits trên entryMirrors
+3. Đánh dấu affected draws dirty → rebuild drawSummaries
+
+---
+
+## 12. Crash-Safety
+
+| Crash point | Hậu quả | Recovery |
+|---|---|---|
+| Giữa sync batch | Một số entries chưa upsert | Restart từ lastVersion → upsert lại (idempotent) |
+| Sau sync, trước rebuild | dirtyDrawIds đã save, chưa rebuild | Restart → rebuild dirty draws |
+| Giữa rebuild | Một số draws chưa rebuild | dirtyDrawIds chưa clear → rebuild lại |
+| Sau rebuild | Hoàn thành | Clear dirtyDrawIds |
+
+**Mọi phase đều idempotent.** Chạy lại bao nhiêu lần cũng cho kết quả giống nhau.
+
+---
+
+## 13. KHÔNG ĐƯỢC Làm
+
+- KHÔNG dùng `$inc` cho bất kỳ report nào.
+- KHÔNG dùng array `agentSplits[]` trên entryMirrors — dùng fixed fields (company, manager, super, master, agent).
+- KHÔNG `$unwind` trong MongoDB — fan-out trong app.
+- KHÔNG sealed draws — draw có thể resettle hoặc void sau settle.
+- KHÔNG rebuild cả ngày tài chính — chỉ rebuild per dirty draw.
+- KHÔNG thêm pre-aggregation layers khi chưa có profiling data.
+- KHÔNG pre-calculate PlayerCommissionProfile collection — dùng lazy calculate + in-memory cache.
+- KHÔNG lưu commission config dạng % of stakeAmount — lưu tương đối (% of commissionAmount).
+- KHÔNG update commission configs khi megawinRate thay đổi — chỉ update env config, UI tự convert.
