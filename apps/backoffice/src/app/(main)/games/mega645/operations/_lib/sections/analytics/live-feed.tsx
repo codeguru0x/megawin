@@ -12,7 +12,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatNumber, displayVNTimeWithSeconds } from "@megawin/shared/utils";
 import { Activity, Radio } from "lucide-react";
 import { PLAY_TYPE_COLORS } from "./analytics-panels";
-import { NumberBadge } from "./number-heatmap";
+import { NumbersWithTooltip } from "./number-heatmap";
 import type { LiveFeedEntry } from "../../types";
 import { toTenantUsername } from "@megawin/shared/utils";
 
@@ -32,7 +32,7 @@ export function LiveFeed({
           <Activity className="size-4 text-muted-foreground shrink-0" />
           <CardTitle className="text-sm font-semibold">Cược gần nhất</CardTitle>
           {!isSettled && (
-            <span className="ml-auto flex items-center gap-1 text-[10px] text-teal-500 font-medium">
+            <span className="ml-auto flex items-center gap-1 text-xs text-teal-500 font-medium">
               <span className="size-1.5 rounded-full bg-teal-500 animate-pulse" />
               Live
             </span>
@@ -55,9 +55,10 @@ export function LiveFeed({
                 <div
                   key={e.entryId}
                   className={cn(
-                    "rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/40",
+                    "rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/40 border-l-2",
                     i === 0 && "bg-muted/20",
                   )}
+                  style={{ borderLeftColor: color?.fill ?? "transparent" }}
                 >
                   <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
                     {/* Row 1: play type */}
@@ -70,7 +71,7 @@ export function LiveFeed({
                       />
                       <span
                         className={cn(
-                          "text-[11px] font-semibold truncate",
+                          "text-xs font-semibold truncate",
                           color?.text ?? "text-muted-foreground",
                         )}
                       >
@@ -79,12 +80,10 @@ export function LiveFeed({
                     </div>
                     <div /> {/* empty right cell */}
                     {/* Row 2: numbers (left) | amount (right) */}
-                    <div className="flex items-center gap-1 flex-wrap">
-                      {numbers.map((n, idx) => (
-                        <NumberBadge key={`m-${idx}`} num={n} />
-                      ))}
+                    <div className="min-w-0 overflow-hidden flex items-center gap-1">
+                      <NumbersWithTooltip numbers={numbers} variant="soft" />
                       {suffix && (
-                        <span className="text-[9px] text-muted-foreground ml-0.5">{suffix}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">{suffix}</span>
                       )}
                     </div>
                     <div className="flex items-start justify-end">
@@ -93,7 +92,7 @@ export function LiveFeed({
                       </span>
                     </div>
                     {/* Row 3: username · tenant (left) | time (right) */}
-                    <div className="text-[10px] text-muted-foreground truncate">
+                    <div className="text-xs text-muted-foreground truncate">
                       {e.username && (
                         <>
                           <span className="font-medium text-foreground/70">
@@ -105,7 +104,7 @@ export function LiveFeed({
                       {e.tenant}
                     </div>
                     <div className="flex items-start justify-end">
-                      <span className="text-[10px] font-mono tabular-nums text-muted-foreground">
+                      <span className="text-xs font-mono tabular-nums text-muted-foreground">
                         {displayVNTimeWithSeconds(e.time)}
                       </span>
                     </div>

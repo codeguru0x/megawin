@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { Clock, RefreshCw, CalendarClock, Ticket, HandCoins, Banknote } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -19,7 +19,7 @@ import { formatNumber, formatVNDCompact, displayVNTimeWithSeconds } from "@megaw
 import type { SystemOutstandingGameDaily } from "@megawin/game-core/entities";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import { SYSTEM_ICON_GRADIENT } from "@/lib/game-colors";
+import { SYSTEM_ICON_GRADIENT, getGameHex } from "@/lib/game-colors";
 import { useSystemOutstanding } from "../financial/_lib/use-report-queries";
 
 // Nhãn cột đặc thù trang hệ thống
@@ -134,6 +134,7 @@ function KpiStrip({ data, isLoading }: KpiStripProps) {
 // ─── Content ──────────────────────────────────────────────────────────────────
 
 function SystemOutstandingContent() {
+  const router = useRouter();
   const { data, isLoading, error, dataUpdatedAt, refetch, isFetching } = useSystemOutstanding();
 
   const updatedAt = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
@@ -191,7 +192,7 @@ function SystemOutstandingContent() {
         <CardHeader className="px-5 pb-2 pt-4">
           <div className="flex items-center gap-2">
             <Clock className="size-4 text-muted-foreground" />
-            <CardTitle className="text-sm font-semibold">Outstanding theo game</CardTitle>
+            <CardTitle className="text-sm font-semibold">Đơn chờ theo game</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="px-0 pb-4 pt-0">
@@ -234,20 +235,22 @@ function SystemOutstandingContent() {
                     const slug = GAME_OUTSTANDING_PATH[row.gameProduct as GameProduct];
                     const gameName =
                       GAME_LABELS[row.gameProduct as keyof typeof GAME_LABELS] ?? row.gameProduct;
+                    const gameHex = getGameHex(row.gameProduct);
 
                     return (
-                      <TableRow key={row.gameProduct}>
+                      <TableRow
+                        key={row.gameProduct}
+                        className={cn(slug && "cursor-pointer hover:bg-muted/50")}
+                        onClick={() => slug && router.push(`/games/${slug}/outstanding`)}
+                      >
                         <TableCell className="pl-5 font-medium">
-                          {slug ? (
-                            <Link
-                              href={`/games/${slug}/outstanding`}
-                              className="underline-offset-4 hover:underline"
-                            >
-                              {gameName}
-                            </Link>
-                          ) : (
-                            gameName
-                          )}
+                          <span className="inline-flex items-center gap-2">
+                            <span
+                              className="size-2 shrink-0 rounded-full"
+                              style={{ backgroundColor: gameHex }}
+                            />
+                            {gameName}
+                          </span>
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {formatNumber(row.activeDrawCount)}

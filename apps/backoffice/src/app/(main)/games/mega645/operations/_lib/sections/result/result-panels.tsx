@@ -93,7 +93,7 @@ function JackpotWinnerBanner({
             <p className="text-sm font-bold text-teal-800 dark:text-teal-300 tracking-tight">
               🎉 ĐỘC ĐẮC — CÓ NGƯỜI TRÚNG!
             </p>
-            <Badge className="bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-400/50 text-[10px] px-2 h-4.5 gap-1">
+            <Badge className="bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-400/50 text-xs px-2 h-4.5 gap-1">
               <Star className="size-2.5 fill-current" />
               {winnerCount} line trúng
             </Badge>
@@ -121,7 +121,7 @@ function JackpotWinnerRow({ t }: { t: DrawResult["tiers"][number] }) {
           <Gem className="size-3.5 text-teal-500 shrink-0 animate-pulse" />
           <Badge
             variant="outline"
-            className="border-teal-300 bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-700 text-[11px] px-2 py-0 h-5 gap-1"
+            className="border-teal-300 bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-700 text-xs px-2 py-0 h-5 gap-1"
           >
             <Star className="size-2.5 fill-teal-500 text-teal-500" />
             {t.label}
@@ -211,10 +211,10 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
             )}
           >
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Kết quả
               </span>
-              <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60 group-hover:text-primary/60 transition-colors">
+              <span className="flex items-center gap-1 text-xs text-muted-foreground/60 group-hover:text-primary/60 transition-colors">
                 <ExternalLink className="size-3" />
                 Xem entries trúng
               </span>
@@ -229,16 +229,16 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
           {/* Prize table */}
           <div className="rounded-xl border overflow-hidden">
             <div className="grid grid-cols-[1fr_5rem_7rem_7rem] gap-x-2 px-3 py-2 bg-muted/40 border-b">
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Hạng giải
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-right">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
                 Lines
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-right">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
                 Tiền/line
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-right">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
                 Tổng giải
               </span>
             </div>
@@ -277,7 +277,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                     )}
                     <Badge
                       variant="outline"
-                      className={cn("text-[11px] border px-2 py-0 h-5", cfg?.badge)}
+                      className={cn("text-xs border px-2 py-0 h-5", cfg?.badge)}
                     >
                       {t.label}
                     </Badge>
@@ -487,7 +487,7 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
         <div className="mt-2 rounded-xl border border-border/60 bg-muted/20 overflow-hidden">
           <div className="flex items-center gap-2 px-3 py-2 border-b border-border/40 bg-muted/30">
             <Gem className="size-3.5 text-teal-500 shrink-0" />
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Biến động Jackpot
             </span>
           </div>

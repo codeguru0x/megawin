@@ -168,7 +168,7 @@ export function EditScheduleAction({
                 {errors.drawDate?.message ?? errors.drawTime?.message}
               </p>
             )}
-            <p className="text-[11px] text-muted-foreground/70">
+            <p className="text-xs text-muted-foreground/70">
               Hiếm khi thay đổi. Chỉ sửa nếu lịch quay chính thức thay đổi.
             </p>
           </div>

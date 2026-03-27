@@ -15,18 +15,19 @@ import { formatNumber } from "@megawin/shared/utils";
 import { Layers } from "lucide-react";
 import type { TenantRow, PlayTypeRow } from "../../types";
 
-// ─── Color palette — Power 6/55 (purple theme) ───────────────────────────────
+// ─── Color palette — Power 6/55 (red/orange theme) ──────────────────────────
+// Standard = red (brand color), các kiểu bao dùng màu phân biệt
 
 export const PLAY_TYPE_COLORS: Record<
   string,
   { dot: string; text: string; fill: string; bg: string; border: string }
 > = {
   standard: {
-    dot: "bg-purple-500",
-    text: "text-purple-600 dark:text-purple-400",
-    fill: "#a855f7",
-    bg: "bg-purple-50/60 dark:bg-purple-950/20",
-    border: "border-purple-200/60 dark:border-purple-800/40",
+    dot: "bg-red-500",
+    text: "text-red-600 dark:text-red-400",
+    fill: "#dc2626",
+    bg: "bg-red-50/60 dark:bg-red-950/20",
+    border: "border-red-200/60 dark:border-red-800/40",
   },
   /** Bao 5: 5 số → 50 lines (55-5=50, ghép bổ sung). Màu green để phân biệt với bao7-18. */
   bao5: {
@@ -183,10 +184,10 @@ function PlayTypeItem({ d }: { d: PlayTypeRow }) {
             {formatNumber(d.revenue)}
           </p>
           <div className="flex items-baseline gap-2 mt-1 flex-wrap">
-            <span className="text-[11px] text-muted-foreground tabular-nums">
+            <span className="text-xs text-muted-foreground tabular-nums">
               <span className="font-semibold text-foreground">{formatNumber(d.lines)}</span> lines
             </span>
-            <span className="text-[11px] text-muted-foreground tabular-nums">
+            <span className="text-xs text-muted-foreground tabular-nums">
               <span className="font-semibold text-foreground">{formatNumber(d.entries)}</span>{" "}
               entries
             </span>
@@ -253,10 +254,10 @@ export function TenantBreakdown({ tenants }: { tenants: TenantRow[] }) {
             style={{ gridTemplateColumns: "6rem 5rem 5rem 5.5rem 1fr" }}
           >
             <span className="text-xs font-medium truncate">{t.tenantName}</span>
-            <span className="text-[11px] tabular-nums text-muted-foreground text-right">
+            <span className="text-xs tabular-nums text-muted-foreground text-right">
               {formatNumber(t.entries)} ent
             </span>
-            <span className="text-[11px] tabular-nums text-muted-foreground text-right">
+            <span className="text-xs tabular-nums text-muted-foreground text-right">
               {formatNumber(t.lines)} ln
             </span>
             <span className="text-xs tabular-nums font-semibold text-foreground text-right">
@@ -265,11 +266,11 @@ export function TenantBreakdown({ tenants }: { tenants: TenantRow[] }) {
             <div className="flex items-center gap-2">
               <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-purple-500/60 transition-all"
+                  className="h-full rounded-full bg-red-500/60 transition-all"
                   style={{ width: `${t.pct}%` }}
                 />
               </div>
-              <span className="text-[11px] font-medium text-muted-foreground tabular-nums w-8 text-right shrink-0">
+              <span className="text-xs font-medium text-muted-foreground tabular-nums w-8 text-right shrink-0">
                 {t.pct.toFixed(0)}%
               </span>
             </div>

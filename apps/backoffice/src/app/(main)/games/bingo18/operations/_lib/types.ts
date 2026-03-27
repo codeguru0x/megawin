@@ -85,6 +85,16 @@ export interface LiveFeedEntry {
   playType: string;
   /** Số đã chọn (singleNum → [n], doubleMatch → [n], tripleMatch-specific → [n], else []) */
   numbers: number[];
+  /**
+   * Tổng điểm đã cược (3-18). Chỉ set cho sumTotal.
+   * Hiển thị: "Tổng 9"
+   */
+  sum?: number;
+  /**
+   * Loại cược lớn/hòa/nhỏ. Chỉ set cho bigSmallDraw.
+   * Hiển thị label: "Lớn" | "Hòa" | "Nhỏ"
+   */
+  bet?: string;
   /** Tiền cược (VND). */
   amount: number;
   username: string;

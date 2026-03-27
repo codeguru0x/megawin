@@ -131,7 +131,7 @@ function LifecycleStepper({ steps }: { steps: Step[] }) {
             <div className="text-center w-16">
               <p
                 className={cn(
-                  "text-[11px] font-medium leading-tight",
+                  "text-xs font-medium leading-tight",
                   step.state === "active" && "text-foreground font-semibold",
                   step.state === "done" && "text-muted-foreground",
                   step.state === "pending" && "text-muted-foreground/40",
@@ -140,7 +140,7 @@ function LifecycleStepper({ steps }: { steps: Step[] }) {
                 {step.label}
               </p>
               {step.time && (
-                <p className="text-[9px] font-mono tabular-nums text-muted-foreground/60 mt-0.5">
+                <p className="text-[10px] font-mono tabular-nums text-muted-foreground/60 mt-0.5">
                   {step.time}
                 </p>
               )}
@@ -486,7 +486,7 @@ export function DrawCommandCenter({
                 <DrawStatusBadge status={status} />
               </div>
               <div className="flex items-center gap-3 flex-wrap">
-                <p className="text-[11px] text-muted-foreground font-mono shrink-0">
+                <p className="text-xs text-muted-foreground font-mono shrink-0">
                   {draw.drawId}
                 </p>
                 <ScheduleChips draw={draw} />
@@ -505,7 +505,7 @@ export function DrawCommandCenter({
             {/* Kết quả hiển thị khi Published (chưa settle) — Mega 6/45: 6 số chính */}
             {status === DrawStatus.Published && result && (
               <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/20 px-4 py-3 flex-wrap justify-center">
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mr-1">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1">
                   KQ
                 </span>
                 {result.winningNumbers.map((n) => (

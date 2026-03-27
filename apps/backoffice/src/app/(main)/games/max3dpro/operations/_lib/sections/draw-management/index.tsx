@@ -97,7 +97,10 @@ export function DrawManagementSection() {
         totalRevenue: d.financial?.totalRevenue ?? 0,
         totalFixedPrizes: d.financial?.totalFixedPrizes ?? 0,
         totalAgentCommission: d.financial?.totalAgentCommission ?? 0,
-        companyTake: d.financial?.companyTake ?? 0,
+        profit:
+          (d.financial?.totalRevenue ?? 0) -
+          (d.financial?.totalFixedPrizes ?? 0) -
+          (d.financial?.totalAgentCommission ?? 0),
       },
     };
   })();

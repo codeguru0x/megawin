@@ -1,11 +1,18 @@
 "use client";
 
+/**
+ * Lotto 5/35 Operations — Live Feed
+ *
+ * Hiển thị N entries cược gần nhất của kỳ quay đang chạy.
+ * Lotto 5/35: mainNumbers (01-35) + specialNumbers (01-12, chỉ khi SpecialCover).
+ */
+
 import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatNumber, displayVNTimeWithSeconds } from "@megawin/shared/utils";
 import { Activity, Radio } from "lucide-react";
 import { PLAY_TYPE_COLORS } from "./analytics-panels";
-import { NumberBadge } from "./number-heatmap";
+import { NumbersWithTooltip } from "./number-heatmap";
 import type { LiveFeedEntry } from "../../types";
 import { toTenantUsername } from "@megawin/shared/utils";
 
@@ -24,6 +31,12 @@ export function LiveFeed({
         <div className="flex items-center gap-2">
           <Activity className="size-4 text-muted-foreground shrink-0" />
           <CardTitle className="text-sm font-semibold">Cược gần nhất</CardTitle>
+          {!isSettled && (
+            <span className="ml-auto flex items-center gap-1 text-xs text-amber-500 font-medium">
+              <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+              Live
+            </span>
+          )}
         </div>
       </CardHeader>
       {/* Chiều cao cố định, scroll khi vượt */}
@@ -43,9 +56,10 @@ export function LiveFeed({
                 <div
                   key={e.entryId}
                   className={cn(
-                    "rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/40",
+                    "rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/40 border-l-2",
                     i === 0 && "bg-muted/20",
                   )}
+                  style={{ borderLeftColor: color?.fill ?? "transparent" }}
                 >
                   {/* Grid 3 rows × 2 cols:
                       row1: play-type label | (empty)
@@ -62,7 +76,7 @@ export function LiveFeed({
                       />
                       <span
                         className={cn(
-                          "text-[11px] font-semibold truncate",
+                          "text-xs font-semibold truncate",
                           color?.text ?? "text-muted-foreground",
                         )}
                       >
@@ -70,20 +84,20 @@ export function LiveFeed({
                       </span>
                     </div>
                     <div /> {/* empty right cell for row 1 */}
-                    {/* Row 2: number badges (left) | amount (right) — vertically aligned */}
-                    <div className="flex items-center gap-1 flex-wrap">
-                      {mainNumbers.map((n, idx) => (
-                        <NumberBadge key={`m-${idx}`} num={n} variant="main" size="sm" />
-                      ))}
+                    {/* Row 2: number badges (left) | amount (right) */}
+                    <div className="min-w-0 overflow-hidden flex items-center gap-1">
+                      <NumbersWithTooltip numbers={mainNumbers} variant="soft" ballVariant="main" />
                       {suffix && (
-                        <span className="text-[9px] text-muted-foreground ml-0.5">{suffix}</span>
+                        <span className="text-xs text-muted-foreground shrink-0">{suffix}</span>
                       )}
                       {specialNumbers.length > 0 && (
                         <>
-                          <span className="text-xs text-muted-foreground mx-0.5">+</span>
-                          {specialNumbers.map((n, idx) => (
-                            <NumberBadge key={`s-${idx}`} num={n} variant="special" size="sm" />
-                          ))}
+                          <span className="text-xs text-muted-foreground mx-0.5 shrink-0">+</span>
+                          <NumbersWithTooltip
+                            numbers={specialNumbers}
+                            variant="soft"
+                            ballVariant="special"
+                          />
                         </>
                       )}
                     </div>
@@ -93,7 +107,7 @@ export function LiveFeed({
                       </span>
                     </div>
                     {/* Row 3: username · tenant (left) | time (right) */}
-                    <div className="text-[10px] text-muted-foreground truncate">
+                    <div className="text-xs text-muted-foreground truncate">
                       {e.username && (
                         <>
                           <span className="font-medium text-foreground/70">
@@ -105,7 +119,7 @@ export function LiveFeed({
                       {e.tenant}
                     </div>
                     <div className="flex items-start justify-end">
-                      <span className="text-[10px] font-mono tabular-nums text-muted-foreground">
+                      <span className="text-xs font-mono tabular-nums text-muted-foreground">
                         {displayVNTimeWithSeconds(e.time)}
                       </span>
                     </div>

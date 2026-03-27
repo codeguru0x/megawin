@@ -97,8 +97,9 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
   const isDrilling = !!fd && !!gp;
 
   const handleRowClick = (financialDate: string, gameProduct: string) => {
-    void setFd(financialDate);
-    void setGp(gameProduct);
+    // push history entry để browser Back quay về bảng tổng hợp (view 1)
+    void setFd(financialDate, { history: "push" });
+    void setGp(gameProduct, { history: "push" });
   };
 
   const handleBackToList = () => {

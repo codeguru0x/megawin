@@ -131,9 +131,16 @@ export function AnalyticsSection() {
         playType,
         // singleNum/doubleMatch có number; tripleMatch-specific có number; else []
         numbers:
-          firstBoard && BINGO18_BASIC_PLAY_TYPE_SET.has(firstBoard.playType) && (firstBoard as any).number !== undefined
+          firstBoard &&
+          BINGO18_BASIC_PLAY_TYPE_SET.has(firstBoard.playType) &&
+          (firstBoard as any).number !== undefined
             ? [(firstBoard as any).number as number]
             : [],
+        // sumTotal: sum là tổng đã chọn (3-18)
+        sum: rawType === "sumTotal" ? ((firstBoard as any).sum as number | undefined) : undefined,
+        // bigSmallDraw: bet là "big" | "draw" | "small"
+        bet:
+          rawType === "bigSmallDraw" ? ((firstBoard as any).bet as string | undefined) : undefined,
         amount: e.amount,
         username: e.username,
         tenant: e.tenantId,

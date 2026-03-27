@@ -197,7 +197,7 @@ export function EditScheduleAction({
                 }}
               />
             </div>
-            <p className="text-[11px] text-muted-foreground/70">
+            <p className="text-xs text-muted-foreground/70">
               Mặc định 18:00, T3/T5/T7. Chỉ sửa nếu cần thiết.
             </p>
           </div>

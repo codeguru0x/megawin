@@ -21,9 +21,9 @@ function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub }: KpiCardPr
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground truncate">{label}</p>
+        <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
         <p className="text-lg font-bold tabular-nums text-foreground leading-tight">{value}</p>
-        {sub && <p className="text-[11px] text-muted-foreground truncate">{sub}</p>}
+        {sub && <p className="text-xs text-muted-foreground truncate">{sub}</p>}
       </div>
     </div>
   );
@@ -69,8 +69,8 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
       />
       <KpiCard
         icon={CircleDollarSign}
-        iconBg="bg-purple-100 dark:bg-purple-900/50"
-        iconColor="text-purple-600 dark:text-purple-400"
+        iconBg="bg-red-100 dark:bg-red-900/50"
+        iconColor="text-red-600 dark:text-red-400"
         label="Doanh thu thuần"
         value={formatNumber(kpi.netRevenue)}
         sub="Sau hoa hồng đại lý"

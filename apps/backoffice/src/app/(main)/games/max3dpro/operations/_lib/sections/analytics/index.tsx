@@ -111,7 +111,12 @@ export function AnalyticsSection() {
       (e: {
         entryId: string;
         createdAt: string;
-        boards: Array<{ playMode: string; triplets: string[]; lineCount: number }>;
+        boards: Array<{
+          playMode: string;
+          triplets: string[];
+          lineCount: number;
+          betCount?: number;
+        }>;
         amount: number;
         username?: string;
         tenantId: string;
@@ -125,6 +130,7 @@ export function AnalyticsSection() {
           playModeLabel: MAX3DPRO_PLAY_MODE_LABELS[playMode] ?? playMode,
           triplets: firstBoard?.triplets ?? [],
           lineCount: firstBoard?.lineCount ?? 1,
+          betCount: firstBoard?.betCount ?? 1,
           amount: e.amount,
           username: e.username ?? "",
           tenant: e.tenantId,

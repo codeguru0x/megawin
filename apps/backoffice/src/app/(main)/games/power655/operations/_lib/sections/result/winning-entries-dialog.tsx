@@ -83,7 +83,7 @@ function EntryNumbers({ entry }: { entry: WinningEntryItem }) {
     <div className="flex flex-col gap-1.5">
       {entry.boards.map((b) => (
         <div key={b.boardNo} className="flex items-start gap-1.5">
-          <span className="text-[10px] font-medium text-muted-foreground/50 w-4 shrink-0 mt-1 tabular-nums">
+          <span className="text-xs font-medium text-muted-foreground/50 w-4 shrink-0 mt-1 tabular-nums">
             {b.boardNo}
           </span>
           <div className="flex items-center gap-0.5 flex-wrap max-w-[360px]">
@@ -113,7 +113,7 @@ function KpiBar({
   return (
     <div className="flex items-stretch divide-x divide-border/40 border-b bg-muted/20 shrink-0">
       <div className="flex flex-col justify-center px-6 py-3 w-44 shrink-0">
-        <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
           Kỳ quay
         </p>
         <p className="font-mono text-sm font-semibold text-foreground tracking-tight mt-0.5">
@@ -125,7 +125,7 @@ function KpiBar({
           <Users className="size-4 text-blue-500" />
         </div>
         <div>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
             Entries trúng
           </p>
           <p className="text-xl font-semibold tabular-nums text-foreground leading-tight mt-0.5">
@@ -138,7 +138,7 @@ function KpiBar({
           <Hash className="size-4 text-purple-500" />
         </div>
         <div>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
             Lines trúng
           </p>
           <p className="text-xl font-semibold tabular-nums text-foreground leading-tight mt-0.5">
@@ -151,7 +151,7 @@ function KpiBar({
           <Banknote className="size-4 text-amber-500" />
         </div>
         <div>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
             Tổng chi trả thưởng
           </p>
           <p className="text-xl font-semibold tabular-nums text-foreground leading-tight mt-0.5">
@@ -303,7 +303,7 @@ function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: num
           )}
           <div>
             <p className="text-sm text-foreground">{displayName}</p>
-            <p className="text-[10px] text-muted-foreground/50 font-mono mt-0.5 truncate max-w-32">
+            <p className="text-xs text-muted-foreground/50 font-mono mt-0.5 truncate max-w-32">
               @{entry.tenantId}
             </p>
           </div>
@@ -311,7 +311,7 @@ function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: num
       </TableCell>
       <TableCell className="py-3 text-right">
         <span className="text-sm tabular-nums text-foreground">{formatNumber(entry.amount)}</span>
-        <p className="text-[10px] text-muted-foreground/50 mt-0.5">{entry.lineCount} lines</p>
+        <p className="text-xs text-muted-foreground/50 mt-0.5">{entry.lineCount} lines</p>
       </TableCell>
       <TableCell className="py-3">
         <EntryNumbers entry={entry} />

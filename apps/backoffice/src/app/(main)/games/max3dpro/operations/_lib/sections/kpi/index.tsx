@@ -24,7 +24,7 @@ function KpiCard({ icon: Icon, iconBg, iconColor, label, value, loading }: KpiCa
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground truncate">{label}</p>
+        <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
         {loading ? (
           <Skeleton className="h-7 w-24 mt-0.5" />
         ) : (

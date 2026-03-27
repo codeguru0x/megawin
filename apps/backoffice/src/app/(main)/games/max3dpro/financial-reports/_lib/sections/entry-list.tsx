@@ -315,86 +315,85 @@ export function Max3dproEntryDetailDialog({
                     Bộ số đã chọn
                   </p>
                   {entry.result && !isScheduled && (
-                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <span className="inline-block size-3 rounded-full bg-profit" />
-                        Bộ trúng
-                      </span>
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                      <span className="inline-block size-3 rounded bg-profit" />
+                      Bộ trúng
                     </div>
                   )}
                 </div>
-                <div className="space-y-2.5">
+                <div className="space-y-2">
                   {boards.map((board, i) => {
                     const modeLabel = playModeLabel(board);
                     const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
                     return (
                       <div
                         key={i}
-                        className="rounded-md border-l-[3px] py-2 pl-3 pr-2"
-                        style={{ borderLeftColor: boardColor }}
+                        className="grid items-center gap-x-3 rounded-md border-l-[3px] py-2 pl-3 pr-2"
+                        style={{
+                          borderLeftColor: boardColor,
+                          gridTemplateColumns: "2rem 5rem 1fr",
+                        }}
                       >
-                        {/* Board label + playMode */}
-                        <div className="mb-1.5 flex items-center gap-1.5">
-                          <span className="text-xs font-bold" style={{ color: boardColor }}>
+                        {/* Cột 1: Tên board */}
+                        <div className="flex items-center justify-center self-stretch">
+                          <span
+                            className="text-sm font-extrabold leading-none"
+                            style={{ color: boardColor }}
+                          >
                             {board.boardNo}
-                          </span>
-                          {modeLabel && (
-                            <span className="rounded bg-secondary px-1 py-0.5 text-[9px] text-muted-foreground">
-                              {modeLabel}
-                            </span>
-                          )}
-                          {board.betCount > 1 && (
-                            <span className="rounded bg-secondary px-1 py-0.5 text-[9px] text-muted-foreground">
-                              ×{board.betCount}
-                            </span>
-                          )}
-                          <span className="ml-auto text-[10px] text-muted-foreground">
-                            {formatNumber(board.lineCount)} cặp
                           </span>
                         </div>
 
-                        {/* multiDigit: hiển thị digits đầu + digits cuối */}
-                        {board.playMode === "multiDigit" &&
-                        board.frontDigits &&
-                        board.backDigits ? (
-                          <div className="flex flex-wrap items-center gap-2">
-                            <div className="flex items-center gap-1">
-                              <span className="text-[10px] text-muted-foreground">Đầu:</span>
-                              <div className="flex gap-0.5">
-                                {board.frontDigits.map((d, j) => (
-                                  <span
-                                    key={j}
-                                    className="inline-flex size-6 items-center justify-center rounded bg-muted text-xs font-bold tabular-nums"
-                                  >
-                                    {d}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                            <span className="text-muted-foreground/40">×</span>
-                            <div className="flex items-center gap-1">
-                              <span className="text-[10px] text-muted-foreground">Cuối:</span>
-                              <div className="flex gap-0.5">
-                                {board.backDigits.map((d, j) => (
-                                  <span
-                                    key={j}
-                                    className="inline-flex size-6 items-center justify-center rounded bg-muted text-xs font-bold tabular-nums"
-                                  >
-                                    {d}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          /* multiNumber: hiển thị từng triplet */
-                          <div className="flex flex-wrap gap-1">
-                            {board.triplets.map((t, j) => {
+                        {/* Cột 2: Kiểu chơi + số cặp */}
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[11px] font-semibold leading-tight text-foreground">
+                            {modeLabel ?? "Thường"}
+                          </span>
+                          <span className="text-[10px] leading-tight text-muted-foreground">
+                            {formatNumber(board.lineCount)} cặp
+                            {board.betCount > 1 && (
+                              <span className="ml-1 text-muted-foreground/70">
+                                ×{board.betCount}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+
+                        {/* Cột 3: Số đã chọn */}
+                        <div className="flex flex-wrap items-center gap-1">
+                          {board.playMode === "multiDigit" &&
+                          board.frontDigits &&
+                          board.backDigits ? (
+                            /* multiDigit: digits đầu × digits cuối */
+                            <>
+                              {board.frontDigits.map((d, j) => (
+                                <span
+                                  key={`f-${j}`}
+                                  className="inline-flex size-6 items-center justify-center rounded bg-muted font-mono text-[11px] font-bold tabular-nums text-muted-foreground"
+                                >
+                                  {d}
+                                </span>
+                              ))}
+                              <span className="select-none px-0.5 text-[10px] text-muted-foreground/40">
+                                ×
+                              </span>
+                              {board.backDigits.map((d, j) => (
+                                <span
+                                  key={`b-${j}`}
+                                  className="inline-flex size-6 items-center justify-center rounded bg-muted font-mono text-[11px] font-bold tabular-nums text-muted-foreground"
+                                >
+                                  {d}
+                                </span>
+                              ))}
+                            </>
+                          ) : (
+                            /* multiNumber: từng triplet, highlight nếu trúng */
+                            board.triplets.map((t, j) => {
                               const isMatched = !isScheduled && resultSet.has(t);
                               return (
                                 <span
                                   key={j}
-                                  className={`inline-flex items-center justify-center rounded px-1.5 py-0.5 font-mono text-xs font-bold tabular-nums ${
+                                  className={`inline-flex items-center justify-center rounded px-1.5 py-0.5 font-mono text-[11px] font-bold tabular-nums ${
                                     isMatched
                                       ? "bg-profit text-profit-foreground ring-1 ring-profit/40"
                                       : "bg-muted text-muted-foreground"
@@ -403,9 +402,9 @@ export function Max3dproEntryDetailDialog({
                                   {t}
                                 </span>
                               );
-                            })}
-                          </div>
-                        )}
+                            })
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -419,7 +418,7 @@ export function Max3dproEntryDetailDialog({
                 <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   Kết quả — Kỳ {entry.drawId}
                 </p>
-                <div className="space-y-1.5 text-xs">
+                <div className="space-y-1.5">
                   {[
                     { label: "Đặc Biệt", triplets: entry.result.special },
                     { label: "Giải Nhất", triplets: entry.result.first },
@@ -434,7 +433,7 @@ export function Max3dproEntryDetailDialog({
                         {triplets.map((t, i) => (
                           <span
                             key={i}
-                            className="inline-flex items-center justify-center rounded bg-muted px-1.5 py-0.5 font-mono font-bold tabular-nums text-muted-foreground"
+                            className="inline-flex items-center justify-center rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] font-bold tabular-nums text-muted-foreground"
                           >
                             {t}
                           </span>

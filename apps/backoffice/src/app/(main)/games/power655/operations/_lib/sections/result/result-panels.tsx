@@ -132,7 +132,7 @@ function JackpotWinnerBanner({
             </p>
             <Badge
               className={cn(
-                "text-[10px] px-2 h-4.5 gap-1 border",
+                "text-xs px-2 h-4.5 gap-1 border",
                 isJp1
                   ? "bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-400/50"
                   : "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-400/50",
@@ -182,11 +182,11 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
     <>
       <Card
         className={cn(
-          "shadow-sm",
+          "gap-0 py-0 shadow-sm",
           (hasJp1Winner || hasJp2Winner) && "ring-1 ring-purple-400/40 dark:ring-purple-500/30",
         )}
       >
-        <CardHeader className="pb-2">
+        <CardHeader className="px-5 pb-2 pt-4">
           <div className="flex items-center gap-2">
             <div
               className={cn(
@@ -216,7 +216,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 pt-0">
+        <CardContent className="px-5 pb-4 pt-0 space-y-4">
           {hasJp1Winner && jp1Tier && (
             <JackpotWinnerBanner
               winnerCount={jp1Tier.winnerCount}
@@ -246,10 +246,10 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
             )}
           >
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Kết quả
               </span>
-              <span className="flex items-center gap-1 text-[10px] text-muted-foreground/60 group-hover:text-primary/60 transition-colors">
+              <span className="flex items-center gap-1 text-xs text-muted-foreground/60 group-hover:text-primary/60 transition-colors">
                 <ExternalLink className="size-3" />
                 Xem entries trúng
               </span>
@@ -270,16 +270,16 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
           {/* Prize table */}
           <div className="rounded-xl border overflow-hidden">
             <div className="grid grid-cols-[1fr_5rem_7rem_7rem] gap-x-2 px-3 py-2 bg-muted/40 border-b">
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Hạng giải
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-right">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
                 Lines
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-right">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
                 Tiền/line
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-right">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
                 Tổng giải
               </span>
             </div>
@@ -314,7 +314,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                     )}
                     <Badge
                       variant="outline"
-                      className={cn("text-[11px] border px-2 py-0 h-5", cfg?.badge)}
+                      className={cn("text-xs border px-2 py-0 h-5", cfg?.badge)}
                     >
                       {t.label}
                     </Badge>
@@ -503,8 +503,8 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
   ];
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-2">
+    <Card className="gap-0 py-0 shadow-sm">
+      <CardHeader className="px-5 pb-2 pt-4">
         <div className="flex items-center gap-2">
           <div className="flex size-7 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50 shrink-0">
             <Coins className="size-3.5 text-blue-600 dark:text-blue-400" />
@@ -518,7 +518,7 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-0 pt-0">
+      <CardContent className="px-5 pb-4 pt-0 space-y-0">
         <div className="divide-y-0">
           {rows.map((row) => (
             <AccountRow key={row.label} row={row} />
@@ -529,7 +529,7 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
         <div className="mt-2 rounded-xl border border-border/60 bg-muted/20 overflow-hidden">
           <div className="flex items-center gap-2 px-3 py-2 border-b border-border/40 bg-muted/30">
             <Gem className="size-3.5 text-purple-500 shrink-0" />
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Biến động Jackpot
             </span>
           </div>

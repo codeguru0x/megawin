@@ -58,7 +58,7 @@ function LastUpdatedBadge({
   }, [qc, opsParams]);
 
   return (
-    <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70 tabular-nums">
+    <span className="flex items-center gap-1 text-xs text-muted-foreground/70 tabular-nums">
       <span className="relative flex size-1.5">
         <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-400 opacity-60" />
         <span className="relative inline-flex size-1.5 rounded-full bg-green-500" />

@@ -104,8 +104,8 @@ export interface DrawFinancialDisplay {
   totalFixedPrizes: number;
   /** Tổng hoa hồng đại lý (VND). */
   totalAgentCommission: number;
-  /** Phần công ty giữ lại (VND). */
-  companyTake: number;
+  /** Lợi nhuận = revenue - prizes - commission (VND). Có thể âm. */
+  profit: number;
 }
 
 // ─── Void Info ───────────────────────────────────────────────────────────────
@@ -131,6 +131,8 @@ export interface LiveFeedEntry {
   triplets: string[];
   /** Số cặp TripletPair cược. */
   lineCount: number;
+  /** Số lần cược nhân bội (≥ 1). Hiển thị badge ×N khi > 1. */
+  betCount: number;
   /** Tiền cược (VND). */
   amount: number;
   username: string;

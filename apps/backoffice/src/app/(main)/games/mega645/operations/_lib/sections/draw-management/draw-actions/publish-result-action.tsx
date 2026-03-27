@@ -167,7 +167,7 @@ export function PublishResultAction({
                 <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
               </div>
               <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                 Tùy chọn
               </span>
             </div>

@@ -1,0 +1,502 @@
+---
+description: Quy tắc thiết kế trang Vận hành (Operations) cho tất cả 7 game — layout zones, number display, heatmap, live feed, top combos, analytics panels, jackpot handling.
+globs: apps/backoffice/src/app/(main)/games/*/operations/**/*.{tsx,ts}
+alwaysApply: false
+---
+
+# Operations Page — Shared Design Pattern
+
+**Reference implementation:** `games/mega645/operations/`
+**Mục tiêu:** Staff ngồi monitor 8+ giờ — readability, eye comfort, visual hierarchy rõ ràng.
+
+---
+
+## 1. Game Registry — Đặc Điểm Mỗi Game
+
+| Game | gameKey | Jackpot | Number Pool | Grid | Heatmap | Đặc thù |
+|------|---------|:-------:|-------------|------|:-------:|----------|
+| Mega 6/45 | `mega645` | ✅ | 01–45 | 9×5 | ✅ | 6 số chính, teal theme |
+| Power 6/55 | `power655` | ✅ (kép JP1+JP2) | 01–55 + bonus | 11×5 | ✅ | 6 số + 1 bonus, red/orange theme |
+| Lotto 5/35 | `lotto535` | ✅ | 01–35 + ĐB 01–12 | 7×5 + 4×3 | ✅ | 5 số + 1 ĐB, amber theme |
+| Keno | `keno` | — | 01–80 | 10×8 | ✅ | 10 pick types + side bets, orange theme |
+| Max 3D | `max3d` | — | 000–999 (triplets) | — | — | 20 bộ ba/kỳ, basic+plus modes, violet theme |
+| Max 3D Pro | `max3dpro` | — | 000–999 (triplets) | — | — | Tương tự Max 3D, pink theme |
+| Bingo 18 | `bingo18` | — | 1–6 (3 xúc xắc) | — | — | Dice histogram thay heatmap, green theme |
+
+**Key differences ảnh hưởng UI:**
+
+- **Có Jackpot** (Mega645, Power655, Lotto535): có Zone Jackpot Hero Card + Biến động Jackpot trong Financial Summary.
+- **Không Jackpot** (Keno, Max3D, Max3DPro, Bingo18): bỏ Zone Jackpot, Financial Summary đơn giản hơn (profit = revenue - prizes - commission).
+- **Có Number Heatmap** (Mega645, Power655, Lotto535, Keno): grid số + intensity scale + TopCombos.
+- **Không có Heatmap** (Max3D, Max3DPro): triplet-based, dùng analytics khác (top triplets, mode distribution).
+- **Không có Heatmap** (Bingo18): dice-based, dùng dice histogram.
+
+---
+
+## 2. Page Layout — Zones
+
+Mọi trang Operations PHẢI theo thứ tự zones. Zone có điều kiện sẽ tự ẩn.
+
+```
+Zone 1: PageHeader
+         — Game icon gradient + title + DrawSelector + "Tạo kỳ quay" button
+         — LastUpdatedBadge (khi draw đang active)
+
+Zone 2: Jackpot Hero Card  ← CHỈ game có Jackpot (mega645, power655, lotto535)
+         — Import từ ../jackpot/_lib/jackpot-overview-section
+         — Hiện khi có draw được chọn: {draw && <JackpotHeroCard />}
+
+Zone 3: Draw Management
+         — Command center + lifecycle stepper + action buttons (publish, void, edit)
+
+Zone 4: KPI Strip
+         — 6 KPI cards horizontal icon
+
+Zone 5: Result & Financial  ← CHỈ hiện khi published/settling/settled
+         — ResultAndPrize: kết quả + bảng tier
+         — FinancialSummary: ledger doanh thu
+         — Game có Jackpot: thêm section "Biến động Jackpot" (trước/đóng góp/sau)
+         — Game không Jackpot: chỉ có revenue - commission - prizes = profit
+
+Zone 6: Analytics  ← CHỈ hiện khi salesOpen trở đi
+         — PlayTypeCard: phân bổ kiểu chơi
+         — NumberHeatmap/TripletAnalytics/DiceHistogram (tùy game)
+         — LiveFeed: cược gần nhất
+```
+
+### Zone 2 — Jackpot conditional rendering
+
+```tsx
+// ✅ Game có Jackpot (mega645, power655, lotto535)
+import { JackpotHeroCard } from "../jackpot/_lib/jackpot-overview-section";
+{draw && <JackpotHeroCard />}
+
+// ✅ Game KHÔNG có Jackpot (keno, max3d, max3dpro, bingo18)
+// Không import, không render — Zone 2 không tồn tại
+```
+
+### Zone 5 — Financial Summary variants
+
+```tsx
+// ✅ Game có Jackpot — FinancialSummary bao gồm:
+// - Doanh thu gộp (+)
+// - Hoa hồng đại lý (-)
+// - Chi trả giải thưởng (-)
+// - Công ty thu (-)           ← CHỈ game có Jackpot
+// - Thu thuần trước Jackpot (=)
+// - Đóng góp Jackpot (+)     ← CHỈ game có Jackpot
+// - Section "Biến động Jackpot": trước kỳ / + đóng góp / sau kỳ
+
+// ✅ Game KHÔNG có Jackpot — FinancialSummary đơn giản:
+// - Doanh thu gộp (+)
+// - Hoa hồng đại lý (-)
+// - Chi trả giải thưởng (-)
+// - Lợi nhuận (=)  ← revenue - commission - prizes, có thể âm
+// KHÔNG có: companyTake, jackpotContribution, Biến động Jackpot section
+```
+
+### Zone 6 — Analytics grid layout
+
+```tsx
+<section className="space-y-4">
+  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+    Phân tích cược
+  </h2>
+  <PlayTypeCard distribution={playTypes} />
+  <div className="grid gap-4 lg:grid-cols-[7fr_3fr] items-stretch">
+    <NumberHeatmap numbers={numberFreq} topCombos={topCombos} tenants={tenants} />
+    <LiveFeed entries={liveFeed} isSettled={isSettled} />
+  </div>
+</section>
+```
+
+**Tỉ lệ:** Heatmap/Analytics 70% — LiveFeed 30%. LiveFeed bên phải, scroll riêng (`maxHeight: 950`).
+
+---
+
+## 3. Number Badge — 3 Variants (cho game có heatmap)
+
+Áp dụng cho: **Mega645, Power655, Lotto535, Keno**. Không áp dụng cho Max3D/Max3DPro/Bingo18.
+
+| Variant | Zone | Style | Mục đích |
+|---------|------|-------|----------|
+| `filled` (default) | Heatmap grid | Nền đậm + heatLevel intensity | Primary focus |
+| `soft` | TopCombos, LiveFeed | Nền nhạt + chữ đậm | Supporting info |
+| `outlined` | Dự phòng | Viền mỏng, nền trong | Nhẹ nhất (chưa dùng) |
+
+### Implementation
+
+```tsx
+export type NumberBadgeVariant = "filled" | "outlined" | "soft";
+
+export function NumberBadge({ num, muted, variant = "filled", heatLevel }) {
+  let colorClass: string;
+  if (muted) {
+    colorClass = "bg-muted/40 text-muted-foreground";
+  } else if (variant === "soft") {
+    colorClass = "bg-{game}-100 text-{game}-700 dark:bg-{game}-900/40 dark:text-{game}-300";
+  } else if (variant === "outlined") {
+    colorClass = "border border-{game}-400/70 text-{game}-600 bg-transparent ...";
+  } else {
+    colorClass = heatLevel ? HEAT_BADGE_STYLES[heatLevel] : "bg-{game}-600 text-white";
+  }
+  return (
+    <span className={cn(
+      "inline-flex items-center justify-center rounded-full font-bold tabular-nums leading-none shrink-0",
+      HEATMAP_BADGE_SIZE, HEATMAP_BADGE_TEXT, colorClass,
+    )}>{num}</span>
+  );
+}
+```
+
+**Quy tắc:**
+
+- Size: luôn dùng **shared token** `HEATMAP_BADGE_SIZE` (`size-6` = 24px).
+- Text: luôn dùng **shared token** `HEATMAP_BADGE_TEXT` (`text-[11px]`).
+- TopCombos + LiveFeed: **luôn `variant="soft"`** — KHÔNG dùng `filled`.
+
+---
+
+## 4. Heatmap Intensity Scale — 5 Levels (cho game có heatmap)
+
+```typescript
+type HeatLevel = "cold" | "low" | "mid" | "warm" | "hot";
+
+function getHeatLevel(count: number, maxCount: number): HeatLevel {
+  if (count === 0 || maxCount === 0) return "cold";
+  const ratio = count / maxCount;
+  if (ratio >= 0.8)  return "hot";
+  if (ratio >= 0.55) return "warm";
+  if (ratio >= 0.3)  return "mid";
+  if (ratio >= 0.1)  return "low";
+  return "cold";
+}
+```
+
+- Badge: gradient từ `{game}-300` (cold) → `{game}-700` (warm) → `amber-500` (hot).
+- Hot level: **amber cross-game** + `ring-2 ring-amber-300/50`.
+- Cell background: subtle tinting cho mid/warm/hot.
+
+### Shared design tokens
+
+**Source:** `src/components/games/shared/game-number-tokens.ts`
+
+```typescript
+export const HEATMAP_BADGE_SIZE = "size-6";         // 24px — đồng nhất tất cả game
+export const HEATMAP_BADGE_TEXT = "text-[11px]";     // T4 font tier
+export const HEATMAP_CELL_PT = "pt-8";               // padding-top cho badge absolute
+export const HEATMAP_CELL_DATA_SIZE = "text-[11px]"; // T4 — amount trong cell
+export const HEATMAP_CELL_SUB_SIZE = "text-[10px]";  // T5 — count/multiplier
+```
+
+**BẮT BUỘC dùng tokens** cho tất cả game có heatmap. KHÔNG hardcode size.
+
+### Grid dimensions per game
+
+| Game | Pool | Cols | Rows | Has Special Grid |
+|------|------|------|------|:----------------:|
+| Lotto 5/35 | 35+12 | 7+4 | 5+3 | ✅ (ĐB 01–12) |
+| Mega 6/45 | 45 | 9 | 5 | — |
+| Power 6/55 | 55 | 11 | 5 | — (bonus riêng) |
+| Keno | 80 | 10 | 8 | — |
+
+Badge size cố định `size-6` — game nhiều số thì nhiều hàng, KHÔNG thu nhỏ badge.
+
+---
+
+## 5. NumbersWithTooltip — Collapse Long Lists
+
+Dùng cho **TopCombos** và **LiveFeed**. Khi entry có > 7 số, collapse vào `+N` tooltip.
+
+```typescript
+const NUMBERS_VISIBLE_LIMIT = 7;
+```
+
+```tsx
+<div className="flex items-center gap-1 flex-nowrap overflow-hidden">
+  {visible.map((n) => <NumberBadge key={n} num={n} variant="soft" />)}
+  {needsCollapse && (
+    <TooltipProvider delayDuration={100}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="... text-xs ... px-1.5 h-6 ...">+{hidden.length}</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="text-xs text-muted-foreground mb-1.5">Tất cả {numbers.length} số</p>
+          <div className="flex items-center gap-1 flex-wrap max-w-[200px]">
+            {numbers.map((n) => <NumberBadge key={n} num={n} variant="soft" />)}
+          </div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )}
+</div>
+```
+
+**Quy tắc:** `flex-nowrap overflow-hidden`, `+N` badge cùng `h-6` với NumberBadge, tooltip full list wrapped.
+
+---
+
+## 6. Top Combos
+
+Top 3 bộ số phổ biến nhất, nằm dưới heatmap grid trong cùng Card.
+
+```tsx
+<div className="flex items-center gap-2.5 rounded-lg border border-border/40 bg-muted/10 px-3 py-2">
+  <span className="text-sm leading-none shrink-0">{medal}</span>       {/* 🥇🥈🥉 */}
+  <div className="flex-1 min-w-0 overflow-hidden">
+    <NumbersWithTooltip numbers={c.numbers} variant="soft" />
+    <p className="text-xs text-muted-foreground mt-1">{playTypeLabel}</p>
+  </div>
+  <div className="text-right shrink-0">
+    <p className="text-xs font-semibold tabular-nums text-foreground">{entryCount} vé</p>
+    <p className="text-xs tabular-nums text-muted-foreground">{formatNumber(totalAmount)}</p>
+  </div>
+</div>
+```
+
+- Badge: `variant="soft"`, dùng `NumbersWithTooltip`.
+- Medal: `["🥇", "🥈", "🥉"]`, rank > 3 dùng `#N`.
+- Tất cả text ngoài badge: `text-xs` minimum.
+
+---
+
+## 7. Live Feed
+
+Danh sách entries cược gần nhất. Nằm bên phải heatmap (30% width). Pattern **đồng nhất mọi game**.
+
+### Entry structure — 3-row grid
+
+```
+Row 1: [color dot] PlayType label                    (empty)
+Row 2: NumberBadges (soft) + suffix          Amount (right-aligned)
+Row 3: Username · Tenant                     Timestamp (right-aligned)
+```
+
+### Key design decisions
+
+1. **Left border by play type**: `border-l-2` + `style={{ borderLeftColor: color?.fill }}`.
+2. **Entry mới nhất**: `bg-muted/20` subtle highlight.
+3. **Number badges**: `variant="soft"` + `NumbersWithTooltip` — collapse > 7, `flex-nowrap`.
+4. **Live indicator**: chấm pulse + "Live" khi draw đang mở bán.
+5. **Scroll**: `overflow-y-auto` + `maxHeight: 950`.
+
+### Adaptation per game type
+
+| Game type | Row 2 content |
+|-----------|---------------|
+| Number-pool (Mega, Power, Lotto, Keno) | `NumbersWithTooltip` + suffix (bao type) |
+| Triplet (Max3D, Max3DPro) | Triplet badges (000–999) + playMode label |
+| Dice (Bingo18) | Dice display + bet type label |
+
+### Font sizes — tất cả `text-xs` (12px)
+
+| Element | Class |
+|---------|-------|
+| PlayType label | `text-xs font-semibold` + play type color |
+| Number suffix | `text-xs text-muted-foreground` |
+| Amount | `text-xs font-semibold tabular-nums text-foreground` |
+| Username · Tenant | `text-xs text-muted-foreground` |
+| Timestamp | `text-xs font-mono tabular-nums text-muted-foreground` |
+| Live indicator | `text-xs text-{game}-500 font-medium` |
+
+---
+
+## 8. PlayType Cards
+
+Mỗi play type: revenue (hero), lines/entries (sub), mini SVG pie chart (%).
+
+### Pattern đồng nhất
+
+```tsx
+<div className={cn("rounded-xl border p-3.5 transition-all", color.bg, color.border)}>
+  <div className="flex items-center gap-2 mb-2">
+    <div className={cn("size-2.5 rounded-full shrink-0", color.dot)} />
+    <span className={cn("text-xs font-semibold truncate flex-1", color.text)}>{label}</span>
+  </div>
+  <div className="flex items-center gap-2">
+    <div className="flex-1 min-w-0">
+      <p className="text-lg font-bold tabular-nums text-foreground leading-tight">{revenue}</p>
+      <div className="flex items-baseline gap-2 mt-1 flex-wrap">
+        <span className="text-xs text-muted-foreground tabular-nums">
+          <span className="font-semibold text-foreground">{lines}</span> lines
+        </span>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          <span className="font-semibold text-foreground">{entries}</span> entries
+        </span>
+      </div>
+    </div>
+    <MiniPie pct={pct} fill={color.fill} size={44} />
+  </div>
+</div>
+```
+
+### PLAY_TYPE_COLORS
+
+Mỗi game định nghĩa `PLAY_TYPE_COLORS: Record<string, { dot, text, fill, bg, border }>` trong `analytics-panels.tsx`. Reuse cho cả PlayTypeCard lẫn LiveFeed border-left.
+
+Grid: `grid grid-cols-3 gap-3`. Sort by lines descending, filter `lines === 0`.
+
+---
+
+## 9. Tenant Breakdown
+
+Nằm dưới TopCombos trong NumberHeatmap Card. Grid 5 cột:
+
+```
+[TenantName 6rem] [Entries 5rem] [Lines 5rem] [Revenue 5.5rem] [Progress bar + %]
+```
+
+Tất cả text: `text-xs`. Progress bar: `h-1.5 rounded-full bg-{game}-500/60`.
+
+---
+
+## 10. KPI Strip
+
+6 KPI cards horizontal icon — theo pattern `frontend-dev.mdc` section 1.2a.
+
+```tsx
+<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+  <KpiCard icon={...} label="..." value="..." sub="..." />
+</div>
+```
+
+| # | Label | Icon | Color |
+|---|-------|------|-------|
+| 1 | Doanh thu | CircleDollarSign | emerald |
+| 2 | Entries | FileText | blue |
+| 3 | Lines | Hash | indigo |
+| 4 | Người chơi | Users | violet |
+| 5 | Hoa hồng ĐL | Wallet | amber |
+| 6 | Doanh thu thuần | CircleDollarSign | game theme color |
+
+---
+
+## 11. Font Size Standard
+
+Theo tiêu chuẩn typography trong `frontend-dev.mdc` section 1.2:
+
+| Tier | Size | Dùng cho |
+|------|------|----------|
+| T1 (18px) | `text-lg` | Page title, KPI value, section title |
+| T2 (14px) | `text-sm` | Card title, body, table data |
+| T3 (12px) | `text-xs` | **Minimum** cho mọi text ngoài heatmap grid |
+| T4 (11px) | `text-[11px]` | **Chỉ** heatmap grid cell — dùng shared token |
+| T5 (10px) | `text-[10px]` | **Chỉ** heatmap grid sub-text, stepper time — dùng shared token |
+
+**KHÔNG BAO GIỜ** dùng `text-[8px]` hoặc `text-[9px]`.
+
+---
+
+## 12. Data Types — UI Layer
+
+Mỗi game PHẢI có `_lib/types.ts` với:
+
+| Interface | Mô tả | Mọi game |
+|-----------|--------|:--------:|
+| `OpsKpi` | 6 KPI values | ✅ |
+| `TenantRow` | Tenant breakdown | ✅ |
+| `PlayTypeRow` | Play type distribution | ✅ |
+| `LiveFeedEntry` | Entry trong live feed | ✅ |
+| `NumberFreq` | Number frequency (heatmap) | Chỉ game có heatmap |
+| `DrawResult` | Kết quả + tiers | ✅ |
+| `DrawFinancialDisplay` | Tài chính kỳ | ✅ (fields khác nhau) |
+
+### DrawFinancialDisplay — 2 variants
+
+```typescript
+// Game CÓ Jackpot (mega645, power655, lotto535)
+interface DrawFinancialDisplay {
+  totalRevenue: number;
+  totalFixedPrizes: number;
+  totalAgentCommission: number;
+  companyTake: number;           // ← chỉ game có Jackpot
+  jackpotContribution: number;   // ← chỉ game có Jackpot
+  jackpotBefore: number;         // ← chỉ game có Jackpot
+  jackpotAfter: number;          // ← chỉ game có Jackpot
+}
+
+// Game KHÔNG có Jackpot (keno, max3d, max3dpro, bingo18)
+interface DrawFinancialDisplay {
+  totalRevenue: number;
+  totalFixedPrizes: number;
+  totalAgentCommission: number;
+  profit: number;                // = revenue - prizes - commission
+}
+```
+
+---
+
+## 13. File Structure Chuẩn
+
+```
+games/{game}/operations/
+├── page.tsx                                    ← Suspense + DrawContextProvider
+├── _lib/
+│   ├── types.ts                                ← UI-layer interfaces
+│   ├── use-draw-context.tsx                    ← DrawContextProvider + useDrawContext
+│   ├── use-operations.ts                       ← React Query hooks
+│   ├── draw-selector.tsx                       ← DrawSelector dropdown
+│   └── sections/
+│       ├── kpi/
+│       │   ├── index.tsx
+│       │   └── kpi-strip.tsx
+│       ├── draw-management/
+│       │   ├── index.tsx
+│       │   ├── draw-command-center.tsx
+│       │   └── draw-actions/
+│       │       ├── index.ts
+│       │       ├── create-draw-action.tsx
+│       │       ├── publish-result-action.tsx
+│       │       ├── edit-schedule-action.tsx
+│       │       └── void-draw-action.tsx
+│       ├── analytics/
+│       │   ├── index.tsx                       ← Orchestrator + adapters
+│       │   ├── analytics-panels.tsx            ← PlayTypeCard + TenantBreakdown + PLAY_TYPE_COLORS
+│       │   ├── number-heatmap.tsx              ← NumberBadge + Grid + TopCombos (game có heatmap)
+│       │   └── live-feed.tsx                   ← LiveFeed (mọi game)
+│       └── result/
+│           ├── index.tsx
+│           ├── result-panels.tsx               ← ResultAndPrize + FinancialSummary
+│           └── winning-entries-dialog.tsx
+```
+
+---
+
+## 14. Checklist — Thêm/Cập nhật Operations Page
+
+### ✅ Phải làm — Mọi game
+
+- [ ] 6 zones theo đúng thứ tự (bỏ Zone 2 nếu không có Jackpot)
+- [ ] `_lib/types.ts` — UI interfaces (DrawFinancialDisplay đúng variant)
+- [ ] KPI Strip — 6 cards, horizontal icon pattern, `text-xs` label/sub
+- [ ] PlayTypeCard — `PLAY_TYPE_COLORS` per game, MiniPie SVG, grid 3 cols
+- [ ] LiveFeed — `border-l-2` by play type, `variant="soft"`, `flex-nowrap overflow-hidden`
+- [ ] Font sizes: minimum `text-xs` ngoài heatmap grid
+- [ ] Tooltip content: `text-xs`
+- [ ] LastUpdatedBadge — `text-xs`, pulse dot, font-mono timestamp
+
+### ✅ Phải làm — Game có Heatmap (mega645, power655, lotto535, keno)
+
+- [ ] NumberBadge — 3 variants, dùng shared tokens
+- [ ] Heatmap 5-level intensity (cold→hot), amber cho hot
+- [ ] `NumbersWithTooltip` — collapse > 7, reuse cho TopCombos + LiveFeed
+- [ ] TopCombos — `variant="soft"`, medal emoji
+- [ ] Shared tokens từ `game-number-tokens.ts`
+
+### ✅ Phải làm — Game có Jackpot (mega645, power655, lotto535)
+
+- [ ] Zone 2: `{draw && <JackpotHeroCard />}`
+- [ ] FinancialSummary: companyTake + jackpotContribution + Biến động Jackpot section
+- [ ] DrawFinancialDisplay: bao gồm jackpot fields
+
+### ❌ Không làm
+
+- [ ] `variant="filled"` ngoài heatmap grid — dùng `soft`
+- [ ] Wrap numbers xuống dòng trong LiveFeed/TopCombos — `flex-nowrap overflow-hidden`
+- [ ] `text-[10px]`/`text-[11px]` ngoài heatmap grid — dùng `text-xs`
+- [ ] `text-[8px]`/`text-[9px]` ở bất kỳ đâu
+- [ ] Thu nhỏ badge cho game nhiều số — giữ `size-6`, thêm hàng grid
+- [ ] Hardcode play type colors inline — tách vào `PLAY_TYPE_COLORS`
+- [ ] JackpotHeroCard cho game không có Jackpot
+- [ ] companyTake/jackpotContribution trong Financial cho game không Jackpot

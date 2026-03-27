@@ -123,7 +123,7 @@ function LifecycleStepper({ steps }: { steps: Step[] }) {
             <div className="text-center w-16">
               <p
                 className={cn(
-                  "text-[11px] font-medium leading-tight",
+                  "text-xs font-medium leading-tight",
                   step.state === "active" && "text-foreground font-semibold",
                   step.state === "done" && "text-muted-foreground",
                   step.state === "pending" && "text-muted-foreground/40",
@@ -132,7 +132,7 @@ function LifecycleStepper({ steps }: { steps: Step[] }) {
                 {step.label}
               </p>
               {step.time && (
-                <p className="text-[9px] font-mono tabular-nums text-muted-foreground/60 mt-0.5">
+                <p className="text-[10px] font-mono tabular-nums text-muted-foreground/60 mt-0.5">
                   {step.time}
                 </p>
               )}
@@ -245,7 +245,7 @@ function ScheduleChips({ draw }: { draw: DrawSelectorItem }) {
 function ResultDisplay({ result }: { result: DrawResult }) {
   return (
     <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3 space-y-2">
-      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         Kết quả quay số
       </p>
       <div className="space-y-1.5">
@@ -256,7 +256,7 @@ function ResultDisplay({ result }: { result: DrawResult }) {
           { label: "Ba", triplets: result.third, variant: "third" as const },
         ].map((row) => (
           <div key={row.label} className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold text-muted-foreground min-w-8 text-right">
+            <span className="text-xs font-bold text-muted-foreground min-w-8 text-right">
               {row.label}
             </span>
             {row.triplets.map((t, i) => (
@@ -473,9 +473,7 @@ export function DrawCommandCenter({
                 <DrawStatusBadge status={status} />
               </div>
               <div className="flex items-center gap-3 flex-wrap">
-                <p className="text-[11px] text-muted-foreground font-mono shrink-0">
-                  {draw.drawId}
-                </p>
+                <p className="text-xs text-muted-foreground font-mono shrink-0">{draw.drawId}</p>
                 <ScheduleChips draw={draw} />
                 {status === DrawStatus.SalesOpen && (
                   <span className="inline-flex items-center gap-1 text-xs font-medium tabular-nums text-muted-foreground">

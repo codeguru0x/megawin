@@ -84,7 +84,7 @@ function TripletChip({
 }) {
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-md px-2 py-0.5 font-mono text-sm font-bold tabular-nums ${
+      className={`inline-flex items-center justify-center rounded-md px-2 py-0.5 font-mono text-[11px] font-bold tabular-nums ${
         variant === "matched"
           ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
           : "bg-muted text-muted-foreground"
@@ -372,33 +372,48 @@ export function Max3dEntryDetailDialog({
                     </div>
                   )}
                 </div>
-                <div className="space-y-2.5">
+
+                {/* 3-column grid: [Col1: Board] [Col2: Thông tin cược] [Col3: Số đã chọn] */}
+                <div className="divide-y">
                   {boards.map((board, i) => {
                     const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
                     const playLabel = getPlayTypeLabel(board.playType, board.playMode);
+
                     return (
                       <div
                         key={i}
-                        className="flex flex-wrap items-center gap-2 rounded-md border-l-[3px] py-1.5 pl-3"
-                        style={{ borderLeftColor: boardColor }}
+                        className="grid items-center gap-x-3 rounded-md border-l-[3px] py-2 pl-3"
+                        style={{
+                          borderLeftColor: boardColor,
+                          gridTemplateColumns: "2rem 5rem 1fr",
+                        }}
                       >
-                        {/* Board label + play type badges */}
-                        <div className="flex w-24 shrink-0 items-center gap-1.5">
-                          <span className="text-xs font-bold" style={{ color: boardColor }}>
+                        {/* ── Cột 1: Board label ───────────────────── */}
+                        <div className="flex items-center justify-center self-stretch">
+                          <span
+                            className="text-sm font-extrabold leading-none"
+                            style={{ color: boardColor }}
+                          >
                             {board.boardNo}
                           </span>
-                          {playLabel && (
-                            <span className="rounded bg-secondary px-1 py-0.5 text-[9px] text-muted-foreground">
-                              {playLabel}
-                            </span>
-                          )}
-                          {board.betCount > 1 && (
-                            <span className="rounded bg-secondary px-1 py-0.5 text-[9px] text-muted-foreground">
-                              ×{board.betCount}
-                            </span>
-                          )}
                         </div>
-                        {/* Triplets: highlight nếu trùng kết quả */}
+
+                        {/* ── Cột 2: Kiểu chơi + số cặp ──────────── */}
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[11px] font-semibold leading-tight text-foreground">
+                            {playLabel ?? "Thẳng"}
+                          </span>
+                          <span className="text-[10px] leading-tight text-muted-foreground">
+                            {board.lineCount} cặp
+                            {board.betCount > 1 && (
+                              <span className="ml-1 text-muted-foreground/70">
+                                ×{board.betCount}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+
+                        {/* ── Cột 3: Bộ số đã chọn (triplet chips) ─── */}
                         <div className="flex flex-wrap items-center gap-1.5">
                           {board.triplets.map((t, ti) => (
                             <TripletChip
@@ -410,12 +425,6 @@ export function Max3dEntryDetailDialog({
                             />
                           ))}
                         </div>
-                        {/* lineCount nếu > 1 (combo expand) */}
-                        {board.lineCount > 1 && (
-                          <span className="text-[10px] text-muted-foreground">
-                            ({board.lineCount} cặp)
-                          </span>
-                        )}
                       </div>
                     );
                   })}
@@ -444,16 +453,16 @@ export function Max3dEntryDetailDialog({
                           <Badge variant="secondary" className="font-medium">
                             {tierLabel}
                           </Badge>
-                          <span className="rounded bg-secondary px-1 py-0.5 text-[9px] text-muted-foreground">
+                          <span className="rounded bg-secondary px-1 py-0.5 text-[10px] text-muted-foreground">
                             {modeTag}
                           </span>
                           <span className="text-[11px] text-muted-foreground">
-                            ×{tier.hitCount}
+                            ×{tier.hitCount} lần
                             {tier.unitAmount > 0 && ` · ${formatNumber(tier.unitAmount)}/lần`}
                           </span>
                         </div>
                         <span className="tabular-nums font-bold text-profit">
-                          +{formatNumber(tier.amount)}
+                          {formatNumber(tier.amount)}
                         </span>
                       </div>
                     );

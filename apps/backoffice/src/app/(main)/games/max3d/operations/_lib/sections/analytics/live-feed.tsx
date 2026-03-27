@@ -1,13 +1,28 @@
 "use client";
 
+/**
+ * Max 3D — Live Feed
+ *
+ * Hiển thị entries cược gần nhất, pattern đồng nhất với các game khác.
+ * border-l-2 theo play mode color, font size minimum text-xs.
+ *
+ * Label rule: Basic Straight và Plus Straight là default → KHÔNG hiển thị label.
+ * Chỉ hiển thị label khi play type khác default (combo3, combo6).
+ */
+
 import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber, displayVNTimeWithSeconds } from "@megawin/shared/utils";
+import { formatNumber, displayVNTimeWithSeconds, toTenantUsername } from "@megawin/shared/utils";
 import { Activity, Radio } from "lucide-react";
+import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
 import { PLAY_MODE_COLORS } from "./analytics-panels";
 import { TripletDisplay } from "@/components/games/max3d/triplet-display";
 import type { LiveFeedEntry } from "../../types";
-import { toTenantUsername } from "@megawin/shared/utils";
+
+const COMBO_LABELS: Record<string, string> = {
+  [PlayType.Combo3]: "Tổ hợp 3",
+  [PlayType.Combo6]: "Tổ hợp 6",
+};
 
 export function LiveFeed({
   entries,
@@ -23,9 +38,9 @@ export function LiveFeed({
           <Activity className="size-4 text-muted-foreground shrink-0" />
           <CardTitle className="text-sm font-semibold">Cược gần nhất</CardTitle>
           {!isSettled && (
-            <span className="relative flex size-1.5 ml-auto">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
+            <span className="ml-auto flex items-center gap-1 text-xs text-violet-600 font-medium">
+              <span className="size-1.5 rounded-full bg-violet-500 animate-pulse" />
+              Live
             </span>
           )}
         </div>
@@ -41,50 +56,62 @@ export function LiveFeed({
             {entries.map((e, i) => {
               const key = `${e.playMode}.${e.playType}`;
               const color = PLAY_MODE_COLORS[key];
+              const isPlus = e.playMode === PlayMode.Plus;
+              const isCombo = e.playType === PlayType.Combo3 || e.playType === PlayType.Combo6;
+              const modeLabel = isPlus ? "3D+" : "";
+              const comboLabel = COMBO_LABELS[e.playType] ?? "";
+              const displayLabel = [modeLabel, comboLabel].filter(Boolean).join(" ");
+
               return (
                 <div
                   key={e.entryId}
                   className={cn(
-                    "rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/40",
+                    "rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/40 border-l-2",
                     i === 0 && "bg-muted/20",
                   )}
+                  style={{ borderLeftColor: color?.fill ?? "transparent" }}
                 >
                   <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
-                    {/* Row 1: play type label */}
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <div
-                        className={cn(
-                          "size-1.5 rounded-full shrink-0",
-                          color?.dot ?? "bg-muted-foreground",
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "text-[11px] font-semibold truncate",
-                          color?.text ?? "text-muted-foreground",
-                        )}
-                      >
-                        {e.playTypeLabel}
-                      </span>
-                    </div>
-                    <div />
-                    {/* Row 2: triplets | amount */}
-                    <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                    {/* Row 1: play type label (chỉ hiển thị khi khác default) */}
+                    {displayLabel ? (
+                      <>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <div
+                            className={cn(
+                              "size-1.5 rounded-full shrink-0",
+                              color?.dot ?? "bg-muted-foreground",
+                            )}
+                          />
+                          <span
+                            className={cn(
+                              "text-xs font-semibold truncate",
+                              color?.text ?? "text-muted-foreground",
+                            )}
+                          >
+                            {displayLabel}
+                          </span>
+                        </div>
+                        <div />
+                      </>
+                    ) : null}
+
+                    {/* Row 2: triplets + meta | amount */}
+                    <div className="flex items-center gap-1 flex-nowrap overflow-hidden">
                       {e.triplets.slice(0, 4).map((t, idx) => (
                         <TripletDisplay key={idx} value={t} variant="default" size="sm" />
                       ))}
                       {e.triplets.length > 4 && (
-                        <span className="text-[9px] text-muted-foreground">
+                        <span className="text-xs text-muted-foreground shrink-0">
                           +{e.triplets.length - 4}
                         </span>
                       )}
-                      {e.lineCount > 1 && (
-                        <span className="text-[9px] text-muted-foreground ml-0.5">
+                      {isCombo && e.lineCount > 1 && (
+                        <span className="text-xs text-muted-foreground shrink-0 ml-0.5">
                           ({e.lineCount} lines)
                         </span>
                       )}
                       {e.betCount > 1 && (
-                        <span className="text-[9px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1 rounded ml-0.5">
+                        <span className="text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1 rounded shrink-0 ml-0.5">
                           ×{e.betCount}
                         </span>
                       )}
@@ -94,8 +121,9 @@ export function LiveFeed({
                         {formatNumber(e.amount)}
                       </span>
                     </div>
+
                     {/* Row 3: username · tenant | time */}
-                    <div className="text-[10px] text-muted-foreground truncate mt-0.5">
+                    <div className="text-xs text-muted-foreground truncate">
                       {e.username && (
                         <>
                           <span className="font-medium text-foreground/70">
@@ -107,7 +135,7 @@ export function LiveFeed({
                       {e.tenant}
                     </div>
                     <div className="flex items-start justify-end">
-                      <span className="text-[10px] font-mono tabular-nums text-muted-foreground">
+                      <span className="text-xs font-mono tabular-nums text-muted-foreground">
                         {displayVNTimeWithSeconds(e.time)}
                       </span>
                     </div>

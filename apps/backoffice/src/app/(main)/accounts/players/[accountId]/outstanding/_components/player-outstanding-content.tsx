@@ -1,12 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQueryState, parseAsString } from "nuqs";
-import { Clock, RefreshCw, Receipt, DollarSign, Gamepad2, ChevronRight } from "lucide-react";
+import { useQueryState, parseAsString, parseAsInteger } from "nuqs";
+import {
+  Clock,
+  RefreshCw,
+  Receipt,
+  DollarSign,
+  Gamepad2,
+  ChevronRight,
+  ChevronLeft,
+} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS } from "@megawin/game-core/labels";
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
+import { Pagination } from "@megawin/shared/constants/pagination";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -55,6 +64,8 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
 
   // og = outstanding game đang drill (view 2)
   const [og, setOg] = useQueryState("og", parseAsString);
+  // ogp = page hiện tại trong view 2 (per draw pagination)
+  const [ogp, setOgp] = useQueryState("ogp", parseAsInteger.withDefault(1));
 
   // entryId đang chọn để mở dialog (view 3)
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
@@ -112,11 +123,15 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
   const gameLabel = og ? (GAME_LABELS[og as GameProduct] ?? og) : "";
 
   const handleSelectGame = (gp: string) => {
-    void setOg(gp);
+    // push history entry để browser Back quay về danh sách game (view 1)
+    void setOg(gp, { history: "push" });
+    void setOgp(null);
   };
 
   const handleBackToGames = () => {
+    // replace vì đây là navigation ngược — không tạo entry mới
     void setOg(null);
+    void setOgp(null);
   };
 
   const handleSelectEntry = (entryId: string, game: string) => {
@@ -197,10 +212,10 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
       ) : isDrillingGame ? (
         /* View 2: Entries grouped by drawId trong 1 game */
         <OutstandingDrawsView
-          gameLabel={gameLabel}
           byDraw={byDraw}
           onSelectEntry={handleSelectEntry}
-          selectedGame={og}
+          page={ogp}
+          onPageChange={(p) => void setOgp(p)}
         />
       ) : (
         /* View 1: Danh sách game */
@@ -231,6 +246,9 @@ function OutstandingGamesView({
   }>;
   onSelectGame: (gp: string) => void;
 }) {
+  const totalEntries = byGame.reduce((s, g) => s + g.entries.length, 0);
+  const totalStake = byGame.reduce((s, g) => s + g.totalStake, 0);
+
   return (
     <Card className="gap-0 py-0">
       <CardHeader className="px-5 pb-2 pt-4">
@@ -239,15 +257,14 @@ function OutstandingGamesView({
           <CardTitle className="text-sm font-semibold">Đơn chờ theo game</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="px-0 pb-4 pt-0">
         <div className="overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="text-xs">
-                <TableHead>Game</TableHead>
-                <TableHead className="text-right">Số đơn</TableHead>
-                <TableHead className="text-right">Tiền cược</TableHead>
-                <TableHead className="w-6" />
+              <TableRow>
+                <TableHead className="pl-5 text-xs">Game</TableHead>
+                <TableHead className="text-right text-xs">Số đơn</TableHead>
+                <TableHead className="pr-5 text-right text-xs">Tiền cược</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -258,28 +275,42 @@ function OutstandingGamesView({
                 return (
                   <TableRow
                     key={gp}
-                    className="cursor-pointer text-xs hover:bg-muted/50"
+                    className="cursor-pointer hover:bg-muted/50"
                     onClick={() => onSelectGame(gp)}
                   >
-                    <TableCell>
+                    <TableCell className="pl-5">
                       <div className="flex items-center gap-2">
-                        <span className={cn("inline-block size-2 rounded-full", c.twBg)} />
-                        <span className="font-medium">{label}</span>
+                        <span className={cn("inline-block size-2 shrink-0 rounded-full", c.twBg)} />
+                        <span className="text-sm font-medium">{label}</span>
                       </div>
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      <Badge variant="secondary">{group.entries.length}</Badge>
+                      <Badge variant="secondary" className="text-xs tabular-nums">
+                        {formatNumber(group.entries.length)}
+                      </Badge>
                     </TableCell>
-                    <TableCell className="text-right tabular-nums font-medium">
+                    <TableCell className="pr-5 text-right text-sm tabular-nums font-medium">
                       {formatNumber(group.totalStake)}
-                    </TableCell>
-                    <TableCell>
-                      <ChevronRight className="size-3.5 text-muted-foreground" />
                     </TableCell>
                   </TableRow>
                 );
               })}
             </TableBody>
+            {byGame.length > 0 && (
+              <tfoot>
+                <TableRow className="border-t bg-muted/50">
+                  <TableCell className="pl-5 text-sm font-semibold">Tổng cộng</TableCell>
+                  <TableCell className="text-right">
+                    <Badge variant="secondary" className="text-xs tabular-nums font-semibold">
+                      {formatNumber(totalEntries)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="pr-5 text-right text-sm tabular-nums font-semibold">
+                    {formatNumber(totalStake)}
+                  </TableCell>
+                </TableRow>
+              </tfoot>
+            )}
           </Table>
         </div>
       </CardContent>
@@ -290,19 +321,19 @@ function OutstandingGamesView({
 // ─── View 2: Entries grouped by draw ─────────────────────────────────────────
 
 function OutstandingDrawsView({
-  gameLabel,
   byDraw,
   onSelectEntry,
-  selectedGame,
+  page,
+  onPageChange,
 }: {
-  gameLabel: string;
   byDraw: Array<{
     drawId: string;
     entries: PlayerOutstandingEntryResponse[];
     totalStake: number;
   }>;
   onSelectEntry: (entryId: string, game: string) => void;
-  selectedGame: string;
+  page: number;
+  onPageChange: (p: number) => void;
 }) {
   if (byDraw.length === 0) {
     return (
@@ -312,55 +343,56 @@ function OutstandingDrawsView({
     );
   }
 
+  // Phân trang theo kỳ quay (mỗi kỳ là 1 card)
+  const pageSize = Pagination.Default.Size;
+  const totalPages = Math.ceil(byDraw.length / pageSize);
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+  const paginated = byDraw.slice((safePage - 1) * pageSize, safePage * pageSize);
+
   return (
     <div className="flex flex-col gap-4">
-      {byDraw.map((drawGroup) => (
+      {paginated.map((drawGroup) => (
         <Card key={drawGroup.drawId} className="gap-0 py-0">
           <CardHeader className="px-5 pb-2 pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-sm font-semibold">Kỳ {drawGroup.drawId}</CardTitle>
-                <p className="text-xs text-muted-foreground">
-                  {drawGroup.entries.length} đơn · {gameLabel} · Tổng cược:{" "}
-                  {formatNumber(drawGroup.totalStake)}
-                </p>
-              </div>
+            <div className="flex items-center gap-2">
+              <Clock className="size-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-semibold">Kỳ {drawGroup.drawId}</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="px-0 pb-4 pt-0">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="text-xs">
-                    <TableHead>Mã vé</TableHead>
-                    <TableHead>Ngày tài chính</TableHead>
-                    <TableHead className="text-right">Tiền cược</TableHead>
-                    <TableHead className="text-right">Hoa hồng</TableHead>
-                    <TableHead>Thời gian đặt</TableHead>
+                  <TableRow>
+                    <TableHead className="pl-5 text-xs">Mã vé</TableHead>
+                    <TableHead className="text-xs">Ngày tài chính</TableHead>
+                    <TableHead className="text-right text-xs">Tiền cược</TableHead>
+                    <TableHead className="text-right text-xs">Hoa hồng</TableHead>
+                    <TableHead className="pr-5 text-xs">Thời gian đặt</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {drawGroup.entries.map((entry) => (
                     <TableRow
                       key={entry.entryId}
-                      className="cursor-pointer text-xs hover:bg-muted/50"
+                      className="cursor-pointer hover:bg-muted/50"
                       onClick={() => onSelectEntry(entry.entryId, entry.gameProduct)}
                     >
-                      <TableCell>
-                        <button className="font-mono text-primary underline-offset-2 hover:underline">
+                      <TableCell className="pl-5">
+                        <button className="font-mono text-sm text-primary underline-offset-2 hover:underline">
                           {entry.ticketNo || entry.entryId.slice(-8)}
                         </button>
                       </TableCell>
-                      <TableCell className="tabular-nums text-muted-foreground">
+                      <TableCell className="text-sm tabular-nums text-muted-foreground">
                         {entry.financialDate}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-right text-sm tabular-nums font-medium">
                         {formatNumber(entry.amount)}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                      <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
                         {formatNumber(entry.commissionAmount)}
                       </TableCell>
-                      <TableCell className="tabular-nums text-muted-foreground">
+                      <TableCell className="pr-5 text-sm tabular-nums text-muted-foreground">
                         {entry.createdAt
                           ? new Date(entry.createdAt).toLocaleString("vi-VN", {
                               day: "2-digit",
@@ -380,6 +412,37 @@ function OutstandingDrawsView({
           </CardContent>
         </Card>
       ))}
+
+      {/* Pagination controls — chỉ hiển thị khi có nhiều hơn 1 trang */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-1 pt-1">
+          <p className="text-xs text-muted-foreground">
+            Trang {safePage} / {totalPages} · {byDraw.length} kỳ
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1 text-xs"
+              disabled={safePage <= 1}
+              onClick={() => onPageChange(safePage - 1)}
+            >
+              <ChevronLeft className="size-3.5" />
+              Trước
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1 text-xs"
+              disabled={safePage >= totalPages}
+              onClick={() => onPageChange(safePage + 1)}
+            >
+              Sau
+              <ChevronRight className="size-3.5" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

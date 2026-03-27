@@ -1,13 +1,19 @@
 "use client";
 
+/**
+ * Max 3D Pro — Live Feed
+ *
+ * Hiển thị entries cược gần nhất, pattern đồng nhất với Max3D và các game khác.
+ * border-l-2 theo play mode color, font size minimum text-xs.
+ */
+
 import { cn } from "@/lib/utils";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber, displayVNTimeWithSeconds } from "@megawin/shared/utils";
+import { formatNumber, displayVNTimeWithSeconds, toTenantUsername } from "@megawin/shared/utils";
 import { Activity, Radio } from "lucide-react";
 import { PLAY_MODE_COLORS } from "./analytics-panels";
 import { TripletDisplay } from "@/components/games/max3d/triplet-display";
 import type { LiveFeedEntry } from "../../types";
-import { toTenantUsername } from "@megawin/shared/utils";
 
 export function LiveFeed({
   entries,
@@ -23,9 +29,9 @@ export function LiveFeed({
           <Activity className="size-4 text-muted-foreground shrink-0" />
           <CardTitle className="text-sm font-semibold">Cược gần nhất</CardTitle>
           {!isSettled && (
-            <span className="relative flex size-1.5 ml-auto">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
+            <span className="ml-auto flex items-center gap-1 text-xs text-pink-600 font-medium">
+              <span className="size-1.5 rounded-full bg-pink-500 animate-pulse" />
+              Live
             </span>
           )}
         </div>
@@ -44,9 +50,10 @@ export function LiveFeed({
                 <div
                   key={e.entryId}
                   className={cn(
-                    "rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/40",
+                    "rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/40 border-l-2",
                     i === 0 && "bg-muted/20",
                   )}
+                  style={{ borderLeftColor: color?.fill ?? "transparent" }}
                 >
                   <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
                     {/* Row 1: play mode label */}
@@ -59,7 +66,7 @@ export function LiveFeed({
                       />
                       <span
                         className={cn(
-                          "text-[11px] font-semibold truncate",
+                          "text-xs font-semibold truncate",
                           color?.text ?? "text-muted-foreground",
                         )}
                       >
@@ -67,19 +74,25 @@ export function LiveFeed({
                       </span>
                     </div>
                     <div />
-                    {/* Row 2: triplets | amount */}
-                    <div className="flex items-center gap-1 flex-wrap mt-0.5">
+
+                    {/* Row 2: triplets + meta | amount */}
+                    <div className="flex items-center gap-1 flex-nowrap overflow-hidden mt-0.5">
                       {e.triplets.slice(0, 4).map((t, idx) => (
                         <TripletDisplay key={idx} value={t} variant="default" size="sm" />
                       ))}
                       {e.triplets.length > 4 && (
-                        <span className="text-[9px] text-muted-foreground">
+                        <span className="text-xs text-muted-foreground shrink-0">
                           +{e.triplets.length - 4}
                         </span>
                       )}
                       {e.lineCount > 1 && (
-                        <span className="text-[9px] text-muted-foreground ml-0.5">
+                        <span className="text-xs text-muted-foreground shrink-0 ml-0.5">
                           ({e.lineCount} cặp)
+                        </span>
+                      )}
+                      {e.betCount > 1 && (
+                        <span className="text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1 rounded shrink-0 ml-0.5">
+                          ×{e.betCount}
                         </span>
                       )}
                     </div>
@@ -88,8 +101,9 @@ export function LiveFeed({
                         {formatNumber(e.amount)}
                       </span>
                     </div>
+
                     {/* Row 3: username · tenant | time */}
-                    <div className="text-[10px] text-muted-foreground truncate mt-0.5">
+                    <div className="text-xs text-muted-foreground truncate mt-0.5">
                       {e.username && (
                         <>
                           <span className="font-medium text-foreground/70">
@@ -101,7 +115,7 @@ export function LiveFeed({
                       {e.tenant}
                     </div>
                     <div className="flex items-start justify-end">
-                      <span className="text-[10px] font-mono tabular-nums text-muted-foreground">
+                      <span className="text-xs font-mono tabular-nums text-muted-foreground">
                         {displayVNTimeWithSeconds(e.time)}
                       </span>
                     </div>

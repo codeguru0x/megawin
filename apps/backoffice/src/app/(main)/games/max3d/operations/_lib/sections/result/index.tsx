@@ -79,10 +79,13 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
   const nonZeroTiers = result.tiers.filter((t) => t.winnerCount > 0);
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-3">
+    <Card className="gap-0 py-0 shadow-sm">
+      <CardHeader className="px-5 pb-2 pt-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold">Kết quả quay số</CardTitle>
+          <div className="flex items-center gap-2">
+            <Trophy className="size-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-semibold">Kết quả quay số</CardTitle>
+          </div>
           {nonZeroTiers.length > 0 && (
             <Button
               variant="outline"
@@ -96,7 +99,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="px-5 pb-4 pt-0 space-y-4">
         {/* 20 bộ ba số */}
         <div className="rounded-xl border bg-muted/20 p-4 space-y-2">
           {[
@@ -106,7 +109,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
             { label: "Giải Ba", triplets: result.third, variant: "third" as const },
           ].map((row) => (
             <div key={row.label} className="flex items-center gap-3">
-              <span className="text-[11px] font-semibold text-muted-foreground w-20 shrink-0">
+              <span className="text-xs font-semibold text-muted-foreground w-20 shrink-0">
                 {row.label}
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -121,7 +124,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
         {/* Prize tiers table */}
         {result.tiers.length > 0 && (
           <div>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
               Giải thưởng
             </p>
             <div className="space-y-1">
@@ -146,7 +149,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       {cfg.icon && <cfg.icon className="size-3.5 shrink-0 text-amber-500" />}
-                      <Badge variant="outline" className={cn("text-[10px] py-0", cfg.badge)}>
+                      <Badge variant="outline" className={cn("text-xs py-0", cfg.badge)}>
                         {label}
                       </Badge>
                     </div>
@@ -185,7 +188,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
               </div>
             ))}
             {winnersData && winnersData.entries.length > 10 && (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 +{winnersData.entries.length - 10} vé khác
               </p>
             )}
@@ -203,11 +206,14 @@ function FinancialSummary({ financial }: { financial: DrawFinancialDisplay }) {
     financial.totalRevenue - financial.totalFixedPrizes - financial.totalAgentCommission;
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold">Tài chính</CardTitle>
+    <Card className="gap-0 py-0 shadow-sm">
+      <CardHeader className="px-5 pb-2 pt-4">
+        <div className="flex items-center gap-2">
+          <Coins className="size-4 text-muted-foreground" />
+          <CardTitle className="text-sm font-semibold">Tài chính</CardTitle>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="px-5 pb-4 pt-0 space-y-3">
         <FinancialRow
           icon={CircleDollarSign}
           iconBg="bg-emerald-100 dark:bg-emerald-900/40"

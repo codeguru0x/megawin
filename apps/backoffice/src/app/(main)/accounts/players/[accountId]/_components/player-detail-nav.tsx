@@ -30,8 +30,10 @@ interface PlayerDetailNavProps {
 
 /**
  * Sidebar navigation cho trang Player Detail.
- * Pattern nhất quán với AccountNav trong /me/layout.
- * Sub-routes: /accounts/players/[accountId]/overview|financials|outstanding
+ *
+ * <Link> dẫn đến path thuần (không query params) → chuyển tab luôn clear URL state.
+ * Drill-down trong từng tab dùng nuqs với `history: "push"` để browser Back
+ * quay về đúng level trước đó (xem outstanding-content, financials-content).
  */
 export function PlayerDetailNav({ accountId }: PlayerDetailNavProps) {
   const pathname = usePathname();

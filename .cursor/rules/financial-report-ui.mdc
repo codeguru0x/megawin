@@ -247,14 +247,28 @@ SAI:   { tenantId: "Y", financialDate: { $gte, $lte } } → group by accountId
 
 ## 6. Format Số Liệu
 
-### 6.1 Hai tầng
+### 6.1 Hai tầng — BẮT BUỘC phân biệt KPI vs Bảng
 
-| Vị trí | Format | Ví dụ |
-|--------|--------|-------|
-| KPI Cards | Compact + tooltip full | `2.5 tỷ` (hover: `2,534,500,000`) |
-| Bảng báo cáo | Full VND separator | `2,534,500,000` |
-| Summary row | Full VND separator, **bold** | **`4,713,400,000`** |
-| Export | Integer nguyên | `2534500000` |
+| Vị trí | Format | Ví dụ | Formatter |
+|--------|--------|-------|-----------|
+| KPI Cards — cột tiền | Compact có đơn vị | `2.5 tỷ`, `450 triệu` | `formatVNDCompact` |
+| KPI Cards — cột count | Số có separator | `1,234` | `formatNumber` |
+| Bảng báo cáo — cột tiền | Số thuần có separator, **không ký tự đơn vị** | `2,534,500,000` | `formatNumber` |
+| Bảng báo cáo — cột count | Số có separator | `1,234` | `formatNumber` |
+| Summary row — cột tiền | Số thuần có separator, **bold** | **`4,713,400,000`** | `formatNumber` |
+| Export | Integer nguyên | `2534500000` | — |
+
+**Quy tắc quan trọng — Bảng báo cáo:**
+- **KHÔNG dùng `formatVND`** (có ký tự `₫`) trong bất kỳ ô nào của bảng.
+- **KHÔNG dùng `formatVNDCompact`** (có chữ `triệu`, `tỷ`) trong bất kỳ ô nào của bảng.
+- Tất cả giá trị số trong bảng — kể cả cột tiền — đều dùng **`formatNumber`**.
+- Điều này đảm bảo mọi ô trong bảng cùng kiểu chữ, cùng kích thước, alignment ổn định.
+
+```
+✅ ĐÚNG — bảng: 2,534,500,000
+❌ SAI  — bảng: 2,534,500,000 ₫   (formatVND — có ký tự ₫)
+❌ SAI  — bảng: 2.5 tỷ            (formatVNDCompact — compact)
+```
 
 ### 6.2 Shared formatters — `@megawin/shared/utils/number`
 
@@ -262,19 +276,20 @@ Tất cả formatters đã có sẵn trong `packages/shared/src/utils/number.ts`
 
 ```typescript
 import {
-  formatVND,          // Full VND separator: 2,534,500,000 ₫ (bảng kế toán)
-  formatVNDCompact,   // Compact tiếng Việt: 2.53 tỷ, 450 triệu (KPI cards)
+  formatVNDCompact,   // Compact tiếng Việt: 2.53 tỷ, 450 triệu — CHỈ dùng cho KPI cards
+  formatNumber,       // Số với separator: 1,234,567 — dùng cho MỌI ô trong bảng
+  formatVND,          // Full VND separator có ký tự ₫ — KHÔNG dùng trong bảng
   formatPercent,      // Phần trăm: 72.5% (1 decimal mặc định)
-  formatNumber,       // Số với separator: 1,234,567 (entry count, draw count...)
   formatCurrency,     // Compact K/M/B/T (dùng khi cần suffix tiếng Anh)
 } from "@megawin/shared/utils/number";
 ```
 
 **Quy tắc import:**
-- KPI Cards: `formatVNDCompact` (compact) + tooltip `formatVND` (full)
-- Bảng kế toán, Summary Row: `formatVND`
+- KPI Cards (cột tiền): `formatVNDCompact`
+- KPI Cards (cột count): `formatNumber`
+- Bảng báo cáo (tất cả cột, kể cả tiền): `formatNumber`
 - Cột phần trăm (Payout %, Margin %): `formatPercent`
-- Cột count (entries, draws, players...): `formatNumber`
+- `formatVND` — KHÔNG dùng trong bảng, chỉ dùng khi cần hiển thị full với ký tự `₫` (tooltip, export label)
 - **KHÔNG** tạo `apps/backoffice/src/lib/format/vnd.ts` — dùng shared package
 
 Date formatters tại `@megawin/shared/utils/date`:
@@ -332,7 +347,10 @@ KHÔNG hiển thị WoW% hay period comparison. Chỉ tổng tuyệt đối + me
 
 ## 8. Bảng — Quy tắc
 
-- Tất cả cột tiền: `formatVND()`, right-aligned, `tabular-nums`
+- Tất cả cột số trong bảng (tiền, count, percentage): `formatNumber()`, right-aligned, `tabular-nums`
+- **KHÔNG dùng `formatVND` hay `formatVNDCompact` trong bảng** — chỉ dùng cho KPI cards
+- Tất cả ô trong bảng phải cùng `text-sm`, không mix size
+- Màu text mặc định `text-foreground`; cột phụ (commission ước tính) dùng `text-muted-foreground`
 - Summary Footer Row **TỔNG CỘNG** (bold) bắt buộc
 - Payout % = totalPayout / totalStake × 100 (tính từ tổng, KHÔNG average)
 - Sticky header, sortable columns, pagination 20 rows/page
@@ -477,7 +495,7 @@ Theo `Dashboard-UI-Design.mdc` §9. Skeleton matching layout, actionable empty s
 - KHÔNG trộn settle + outstanding + void vào cùng 1 page
 - KHÔNG query player/entry cross-draw
 - KHÔNG hiển thị WoW% trên KPI cards
-- KHÔNG dùng compact format trong bảng kế toán
+- **KHÔNG dùng `formatVND` hay `formatVNDCompact` trong ô bảng** — chỉ `formatNumber` cho mọi cột số trong bảng
 - KHÔNG dùng `useState` cho state cần persist URL — dùng `nuqs`
 - KHÔNG hardcode mock data
 - KHÔNG thêm cột `jackpotContribution` cho game không có Jackpot

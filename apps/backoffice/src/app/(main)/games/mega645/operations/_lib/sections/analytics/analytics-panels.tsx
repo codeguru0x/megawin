@@ -182,10 +182,10 @@ function PlayTypeItem({ d }: { d: PlayTypeRow }) {
             {formatNumber(d.revenue)}
           </p>
           <div className="flex items-baseline gap-2 mt-1 flex-wrap">
-            <span className="text-[11px] text-muted-foreground tabular-nums">
+            <span className="text-xs text-muted-foreground tabular-nums">
               <span className="font-semibold text-foreground">{formatNumber(d.lines)}</span> lines
             </span>
-            <span className="text-[11px] text-muted-foreground tabular-nums">
+            <span className="text-xs text-muted-foreground tabular-nums">
               <span className="font-semibold text-foreground">{formatNumber(d.entries)}</span>{" "}
               entries
             </span>
@@ -252,10 +252,10 @@ export function TenantBreakdown({ tenants }: { tenants: TenantRow[] }) {
             style={{ gridTemplateColumns: "6rem 5rem 5rem 5.5rem 1fr" }}
           >
             <span className="text-xs font-medium truncate">{t.tenantName}</span>
-            <span className="text-[11px] tabular-nums text-muted-foreground text-right">
+            <span className="text-xs tabular-nums text-muted-foreground text-right">
               {formatNumber(t.entries)} ent
             </span>
-            <span className="text-[11px] tabular-nums text-muted-foreground text-right">
+            <span className="text-xs tabular-nums text-muted-foreground text-right">
               {formatNumber(t.lines)} ln
             </span>
             <span className="text-xs tabular-nums font-semibold text-foreground text-right">
@@ -268,7 +268,7 @@ export function TenantBreakdown({ tenants }: { tenants: TenantRow[] }) {
                   style={{ width: `${t.pct}%` }}
                 />
               </div>
-              <span className="text-[11px] font-medium text-muted-foreground tabular-nums w-8 text-right shrink-0">
+              <span className="text-xs font-medium text-muted-foreground tabular-nums w-8 text-right shrink-0">
                 {t.pct.toFixed(0)}%
               </span>
             </div>

@@ -341,20 +341,20 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               className="grid items-center gap-x-3 px-4 py-2 bg-muted/40 border-b"
               style={{ gridTemplateColumns: "1.5rem 1fr 7rem auto" }}
             >
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 #
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Ngày quay
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Giờ quay
               </span>
               <div className="flex items-center gap-2">
                 {preview.data && preview.data.draws.length > 0 && (
                   <button
                     onClick={applyPreview}
-                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     title="Áp lại gợi ý từ preview"
                   >
                     <RefreshCw className="size-3" />
@@ -362,7 +362,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                 )}
                 <button
                   onClick={toggleAll}
-                  className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {allOpen ? (
                     <Unlock className="size-3 text-purple-600" />

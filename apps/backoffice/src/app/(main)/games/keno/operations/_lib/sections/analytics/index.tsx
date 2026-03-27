@@ -98,14 +98,21 @@ export function AnalyticsSection() {
     if (!liveData) return [];
     return liveData.entries.map((e) => {
       // Lấy board cơ bản đầu tiên để hiển thị preview, fallback side bet nếu không có
-      const firstBasicBoard = e.boards.find((b) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any));
-      const firstSideBetBoard = e.boards.find((b) => KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any));
+      const firstBasicBoard = e.boards.find(
+        (b) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any),
+      );
+      const firstSideBetBoard = e.boards.find((b) =>
+        KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any),
+      );
       const previewBoard = firstBasicBoard ?? firstSideBetBoard;
+      const isSideBet = !firstBasicBoard && !!firstSideBetBoard;
       return {
         entryId: e.entryId,
         time: e.createdAt,
         playType: previewBoard?.playType ?? "unknown",
         numbers: previewBoard?.numbers ?? [],
+        // Side bet: map bet field để hiển thị cụ thể ("big", "small", "even", "odd", ...)
+        bet: isSideBet ? (previewBoard as any)?.bet : undefined,
         amount: e.amount,
         username: e.username,
         tenant: e.tenantId,
@@ -124,12 +131,7 @@ export function AnalyticsSection() {
       <PlayTypeCard playTypes={playTypes} />
 
       <div className="grid gap-4 lg:grid-cols-[7fr_3fr] items-stretch">
-        <NumberHeatmap
-          numbers={numberFreq}
-          combos={topCombos}
-          tenants={tenants}
-          drawId={effectiveDrawId}
-        />
+        <NumberHeatmap numbers={numberFreq} combos={topCombos} tenants={tenants} />
         <LiveFeed
           entries={liveEntries}
           totalCount={liveData?.totalCount ?? 0}

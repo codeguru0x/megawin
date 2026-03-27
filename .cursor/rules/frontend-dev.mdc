@@ -26,19 +26,83 @@ alwaysApply: false
 
 ---
 
-### 1.2 Typography Scale
+### 1.2 Typography Scale & Font Size Standard
 
-| Vị trí | Class |
-|--------|-------|
-| Page title | `text-lg font-semibold tracking-tight text-foreground` |
-| Section title | `text-lg font-semibold` |
-| Card title | `text-sm font-semibold` |
-| Body | `text-sm` |
-| Meta / caption / subtitle | `text-xs text-muted-foreground` |
-| KPI value | `text-lg font-bold tabular-nums` |
-| Table numbers | `text-sm tabular-nums` |
+Hệ thống **5 tầng font size** — thiết kế cho staff ngồi monitor dài hạn (8+ giờ), giảm eye strain.
 
-> **Lưu ý:** Page title dùng `text-lg` cố định (không responsive `md:text-2xl`). Subtitle dùng `text-xs`, không phải `text-sm`.
+#### Nguyên tắc cốt lõi
+
+1. **Minimum `text-xs` (12px)** cho mọi text functional (đọc được, tương tác được) trên toàn bộ page.
+2. **`text-[11px]` và `text-[10px]` CHỈ dùng trong vùng data-dense đặc biệt** — heatmap grid cells, stepper dots — nơi space vật lý giới hạn.
+3. **KHÔNG BAO GIỜ dùng `text-[8px]` hoặc `text-[9px]`** cho bất kỳ text nào trên UI.
+4. **Page title dùng `text-lg` cố định** (không responsive `md:text-2xl`). Subtitle dùng `text-xs`, không phải `text-sm`.
+
+#### Bảng quy chuẩn
+
+| Tầng | Size | Class | Dùng cho |
+|------|------|-------|----------|
+| **T1 — Hero** | 18px | `text-lg` | Page title, KPI value, section title |
+| **T2 — Primary** | 14px | `text-sm` | Card title, body text, table data, button label, dialog content |
+| **T3 — Secondary** | 12px | `text-xs` | Meta/caption, subtitle, table header, badge text, timestamp, tooltip content, breadcrumb, sub-text, live indicator, username, tab label |
+| **T4 — Dense** | 11px | `text-[11px]` | **Chỉ dùng trong** heatmap grid cell — data amount, number badge text |
+| **T5 — Micro** | 10px | `text-[10px]` | **Chỉ dùng trong** heatmap grid cell — sub-label (count, multiplier), stepper time dot |
+
+#### Mapping chi tiết theo vị trí UI
+
+| Vị trí | Class | Ghi chú |
+|--------|-------|---------|
+| Page title | `text-lg font-semibold tracking-tight text-foreground` | T1 |
+| Section title | `text-lg font-semibold` | T1 |
+| KPI value | `text-lg font-bold tabular-nums` | T1 |
+| Card title | `text-sm font-semibold` | T2 |
+| Body text | `text-sm` | T2 |
+| Table cell data | `text-sm tabular-nums` | T2 |
+| Table header | `text-xs font-medium text-muted-foreground uppercase tracking-wider` | T3 |
+| Meta / caption / subtitle | `text-xs text-muted-foreground` | T3 |
+| KPI label | `text-xs font-medium text-muted-foreground` | T3 |
+| KPI sub-text | `text-xs text-muted-foreground` | T3 |
+| Badge text | `text-xs` | T3 |
+| Timestamp / mono data | `text-xs font-mono tabular-nums` | T3 |
+| Tooltip content | `text-xs` | T3 |
+| Live indicator | `text-xs` | T3 |
+| Username / tenant info | `text-xs text-muted-foreground` | T3 |
+| Heatmap cell — amount | `text-[11px] tabular-nums` | T4 — grid cell only |
+| Heatmap cell — count/multiplier | `text-[10px]` | T5 — grid cell only |
+| Stepper time (lifecycle dot) | `text-[10px] font-mono` | T5 — space giới hạn |
+
+#### Shared heatmap tokens
+
+Heatmap grid cells dùng shared tokens từ `src/components/games/shared/game-number-tokens.ts`:
+
+```typescript
+export const HEATMAP_BADGE_TEXT = "text-[11px]";     // T4 — số trong badge
+export const HEATMAP_CELL_DATA_SIZE = "text-[11px]"; // T4 — amount trong cell
+export const HEATMAP_CELL_SUB_SIZE = "text-[10px]";  // T5 — count/multiplier
+```
+
+Khi thêm game mới có heatmap, **BẮT BUỘC dùng tokens này** — KHÔNG tự hardcode size.
+
+#### Quy tắc khi viết code mới
+
+```tsx
+// ✅ ĐÚNG — text ngoài heatmap grid dùng text-xs trở lên
+<span className="text-xs text-muted-foreground">{timestamp}</span>
+<span className="text-xs font-mono tabular-nums">{displayVNTime(time)}</span>
+<Badge className="text-xs px-2 h-5">{label}</Badge>
+
+// ✅ ĐÚNG — heatmap grid cell dùng token shared
+import { HEATMAP_CELL_DATA_SIZE, HEATMAP_CELL_SUB_SIZE } from "@/components/games/shared/game-number-tokens";
+<span className={cn(HEATMAP_CELL_DATA_SIZE, "tabular-nums")}>{formatNumber(amount)}</span>
+<span className={cn(HEATMAP_CELL_SUB_SIZE, "text-muted-foreground")}>{count}×</span>
+
+// ❌ SAI — text-[10px] hoặc text-[11px] ngoài heatmap grid
+<span className="text-[11px] text-muted-foreground">{username}</span>
+<p className="text-[10px] uppercase tracking-widest">{label}</p>
+
+// ❌ SAI — text-[8px] hoặc text-[9px] ở bất kỳ đâu
+<span className="text-[9px]">{detail}</span>
+<span className="text-[8px]">{note}</span>
+```
 
 ---
 
@@ -55,9 +119,9 @@ function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub }) {
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
         <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
-        <p className="truncate text-[11px] text-muted-foreground">{sub}</p>
+        <p className="truncate text-xs text-muted-foreground">{sub}</p>
       </div>
     </div>
   );
@@ -68,9 +132,9 @@ function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub }) {
 - **Container:** `rounded-xl border bg-card p-4 shadow-sm` — KHÔNG dùng `shadcn Card` cho KPI
 - **Icon:** `size-10 rounded-lg` với nền màu semantic: `bg-{color}-100 dark:bg-{color}-900/50`
 - **Icon glyph:** `size-5` với màu tương ứng: `text-{color}-600 dark:text-{color}-400`
-- **Label:** `text-[11px] font-medium text-muted-foreground`
+- **Label:** `text-xs font-medium text-muted-foreground`
 - **Value:** `text-lg font-bold tabular-nums text-foreground`
-- **Sub text:** `text-[11px] text-muted-foreground`
+- **Sub text:** `text-xs text-muted-foreground`
 - **Grid:** `grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5` (5 KPI) hoặc `sm:grid-cols-4` (4 KPI)
 
 **Bảng màu icon chuẩn:**
@@ -599,6 +663,8 @@ import { DrawRepository } from "../../../../../../packages/game-lotto535-applica
 ### ✅ Phải làm
 
 - `tabular-nums` cho mọi số trong table / KPI
+- **Font size tối thiểu `text-xs` (12px)** cho mọi text ngoài heatmap grid (theo mục 1.2)
+- Heatmap grid dùng shared tokens từ `game-number-tokens.ts` — KHÔNG hardcode size
 - KPI card dùng pattern horizontal icon (mục 1.2a): `rounded-xl border bg-card p-4 shadow-sm` + icon `size-10 rounded-lg` nền màu
 - `gap-0 py-0` trên `<Card>` + `px-5 pt-4 pb-2` trên `<CardHeader>` (chỉ cho data card, KHÔNG cho KPI card)
 - Icon `size-4 text-muted-foreground` bên trái mọi `<CardTitle>`
@@ -611,6 +677,8 @@ import { DrawRepository } from "../../../../../../packages/game-lotto535-applica
 
 ### ❌ Không làm
 
+- **`text-[8px]`, `text-[9px]` ở bất kỳ đâu** — vi phạm minimum readability
+- **`text-[10px]`, `text-[11px]` ngoài heatmap grid / stepper** — phải dùng `text-xs` trở lên
 - Hardcode color (`bg-teal-500`, `#14b8a6`) thay vì dùng token / `GAME_COLORS`
 - Hardcode label `Record<string, string>` trong component
 - `useState("")` cho selector cần persist URL — dùng `nuqs`

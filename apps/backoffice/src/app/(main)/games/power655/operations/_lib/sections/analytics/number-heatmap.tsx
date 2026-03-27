@@ -4,8 +4,9 @@
  * Power 6/55 — Number Heatmap
  *
  * Grid 11 × 5 = 55 số chính (01-55).
- * Power 6/55 không có số đặc biệt trong heatmap chính — bonus chỉ dùng để tính JP2.
- * Theme: purple/indigo.
+ * 5-level heat intensity scale (cold → hot, amber cross-game cho hot).
+ * NumberBadge: filled (heatmap grid) / soft (TopCombos + LiveFeed) / outlined.
+ * NumbersWithTooltip: collapse > 7 số, dùng cho TopCombos + LiveFeed.
  */
 
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { formatNumber, formatCurrency } from "@megawin/shared/utils";
 import { BarChart2, Star, Trophy } from "lucide-react";
 import { POWER655_PLAY_TYPE_LABELS } from "@megawin/game-power655/labels";
+import type { PlayType } from "@megawin/game-power655/entities";
 import {
   HEATMAP_BADGE_SIZE,
   HEATMAP_BADGE_TEXT,
@@ -21,34 +23,148 @@ import {
   HEATMAP_CELL_DATA_SIZE,
   HEATMAP_CELL_SUB_SIZE,
 } from "@/components/games/shared/game-number-tokens";
+import { GAME_COLORS } from "@/lib/game-colors";
+import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { TenantBreakdown } from "./analytics-panels";
 import type { NumberFreq, TenantRow } from "../../types";
 import type { TopComboItem } from "../../use-operations";
 
-// ─── Power655 number colors ───────────────────────────────────────────────────
+// ─── Power 6/55 color tokens ─────────────────────────────────────────────────
+// Brand: red-600 (#dc2626) — source of truth: GAME_COLORS[GameProduct.Power655].hex
 
-const POWER_MAIN_HEX = "#9333ea"; // purple-600
-const POWER_MAIN_BG = "bg-purple-600";
+const POWER_HEX = GAME_COLORS[GameProduct.Power655].hex; // "#dc2626" red-600
 const POWER_MUTED_BG = "bg-muted/40 text-muted-foreground";
 
+// ─── Heatmap Intensity Scale ─────────────────────────────────────────────────
+// 5 cấp độ intensity: cold→low→mid→warm→hot (amber cross-game cho hot).
+// Staff quét mắt nhận ra ngay số "nóng" vs "lạnh" mà không cần hover.
+
+type HeatLevel = "cold" | "low" | "mid" | "warm" | "hot";
+
+const HEAT_BADGE_STYLES: Record<HeatLevel, string> = {
+  cold: "bg-red-200/80 text-red-900 dark:bg-red-900/40 dark:text-red-200",
+  low: "bg-red-300 text-red-900 dark:bg-red-800 dark:text-red-100",
+  mid: "bg-red-400 text-white dark:bg-red-700",
+  warm: "bg-red-600 text-white",
+  hot: "bg-amber-500 text-white ring-2 ring-amber-300/50",
+};
+
+const HEAT_CELL_BG: Record<HeatLevel, string> = {
+  cold: "",
+  low: "",
+  mid: "bg-red-50/40 dark:bg-red-950/10",
+  warm: "bg-red-50/70 dark:bg-red-950/20",
+  hot: "bg-amber-50/60 dark:bg-amber-950/15",
+};
+
+function getHeatLevel(count: number, maxCount: number): HeatLevel {
+  if (count === 0 || maxCount === 0) return "cold";
+  const ratio = count / maxCount;
+  if (ratio >= 0.8) return "hot";
+  if (ratio >= 0.55) return "warm";
+  if (ratio >= 0.3) return "mid";
+  if (ratio >= 0.1) return "low";
+  return "cold";
+}
+
 // ─── Number Badge ─────────────────────────────────────────────────────────────
+
+export type NumberBadgeVariant = "filled" | "outlined" | "soft";
 
 /**
  * Badge tròn hiển thị số Power 6/55.
  * Size đồng nhất: size-6 (24px) — dùng shared token HEATMAP_BADGE_SIZE.
+ *
+ * Variants phân cấp visual hierarchy:
+ * - filled (default): heatmap grid — primary, heat intensity
+ * - soft: TopCombos + LiveFeed — nền nhạt, chữ đậm
+ * - outlined: dự phòng — viền mỏng
  */
-export function NumberBadge({ num, muted = false }: { num: string; muted?: boolean }) {
+export function NumberBadge({
+  num,
+  variant = "filled",
+  muted = false,
+  heatLevel,
+}: {
+  num: string;
+  variant?: NumberBadgeVariant;
+  muted?: boolean;
+  /** Chỉ dùng cho variant="filled" trong heatmap grid. */
+  heatLevel?: HeatLevel;
+}) {
+  let colorClass: string;
+  if (muted) {
+    colorClass = POWER_MUTED_BG;
+  } else if (variant === "outlined") {
+    colorClass =
+      "border border-red-400/70 text-red-600 bg-transparent dark:border-red-600 dark:text-red-400";
+  } else if (variant === "soft") {
+    colorClass = "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
+  } else {
+    // filled — heat intensity
+    colorClass = heatLevel ? HEAT_BADGE_STYLES[heatLevel] : "bg-red-600 text-white";
+  }
+
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center rounded-full font-bold tabular-nums leading-none shrink-0 text-white",
+        "inline-flex items-center justify-center rounded-full font-bold tabular-nums leading-none shrink-0",
         HEATMAP_BADGE_SIZE,
         HEATMAP_BADGE_TEXT,
-        muted ? POWER_MUTED_BG : POWER_MAIN_BG,
+        colorClass,
       )}
     >
       {num}
     </span>
+  );
+}
+
+// ─── NumbersWithTooltip — collapse khi > 7 số ────────────────────────────────
+
+const NUMBERS_VISIBLE_LIMIT = 7;
+
+export function NumbersWithTooltip({
+  numbers,
+  variant = "soft",
+}: {
+  numbers: string[];
+  variant?: "soft" | "filled";
+}) {
+  const needsCollapse = numbers.length > NUMBERS_VISIBLE_LIMIT;
+  const visible = needsCollapse ? numbers.slice(0, NUMBERS_VISIBLE_LIMIT) : numbers;
+  const hidden = needsCollapse ? numbers.slice(NUMBERS_VISIBLE_LIMIT) : [];
+
+  return (
+    <div className="flex items-center gap-1 flex-nowrap overflow-hidden">
+      {visible.map((n) => (
+        <NumberBadge key={n} num={n} variant={variant} />
+      ))}
+      {needsCollapse && (
+        <TooltipProvider delayDuration={100}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex items-center justify-center rounded-full bg-muted hover:bg-muted-foreground/20 text-muted-foreground text-xs font-semibold tabular-nums px-1.5 h-6 shrink-0 cursor-default transition-colors">
+                +{hidden.length}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent
+              side="top"
+              sideOffset={6}
+              showArrow={false}
+              avoidCollisions
+              className="bg-popover text-popover-foreground border border-border shadow-lg rounded-xl px-3 py-2.5"
+            >
+              <p className="text-xs text-muted-foreground mb-1.5">Tất cả {numbers.length} số</p>
+              <div className="flex items-center gap-1 flex-wrap max-w-[200px]">
+                {numbers.map((n) => (
+                  <NumberBadge key={n} num={n} variant={variant} />
+                ))}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </div>
   );
 }
 
@@ -60,16 +176,19 @@ function NumberCell({
   row,
   totalCols,
   totalRows,
+  heatLevel,
 }: {
   n: NumberFreq;
   col: number;
   row: number;
   totalCols: number;
   totalRows: number;
+  heatLevel: HeatLevel;
 }) {
   const isEmpty = n.count === 0;
   const isLastCol = col === totalCols - 1;
   const isLastRow = row === totalRows - 1;
+  const cellBg = isEmpty ? "" : HEAT_CELL_BG[heatLevel];
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -77,18 +196,19 @@ function NumberCell({
         <TooltipTrigger asChild>
           <div
             className={cn(
-              "relative cursor-default select-none transition-colors bg-card hover:bg-muted/40",
+              "relative cursor-default select-none transition-colors hover:bg-muted/40",
               "border-r border-b border-border/50",
               isLastCol && "border-r-0",
               isLastRow && "border-b-0",
               // HEATMAP_CELL_PT (pt-8): badge size-6 (24px) absolute top-1 + khoảng cách
               HEATMAP_CELL_PT,
               "pb-1.5 px-1",
+              cellBg || "bg-card",
             )}
           >
             {/* Badge số — absolute top-left, size-6 (24px) từ shared token */}
             <span className="absolute top-1 left-1">
-              <NumberBadge num={n.number} muted={isEmpty} />
+              <NumberBadge num={n.number} muted={isEmpty} heatLevel={heatLevel} />
             </span>
             <div className="flex flex-col items-center gap-0.5">
               {isEmpty ? (
@@ -127,24 +247,24 @@ function NumberCell({
             <NumberBadge num={n.number} muted={isEmpty} />
           </div>
           {isEmpty ? (
-            <p className="text-[11px] text-muted-foreground">Chưa có cược</p>
+            <p className="text-xs text-muted-foreground">Chưa có cược</p>
           ) : (
             <div className="space-y-1 min-w-[148px]">
               <div className="flex justify-between gap-8">
-                <span className="text-[11px] text-muted-foreground">Tổng cược</span>
-                <span className="text-[11px] font-semibold tabular-nums text-foreground">
+                <span className="text-xs text-muted-foreground">Tổng cược</span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">
                   {formatNumber(n.amount)}
                 </span>
               </div>
               <div className="flex justify-between gap-8">
-                <span className="text-[11px] text-muted-foreground">Lần xuất hiện</span>
-                <span className="text-[11px] font-semibold tabular-nums text-foreground">
+                <span className="text-xs text-muted-foreground">Lần xuất hiện</span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">
                   {formatNumber(n.count)}
                 </span>
               </div>
               <div className="flex justify-between gap-8">
-                <span className="text-[11px] text-muted-foreground">Lines</span>
-                <span className="text-[11px] font-semibold tabular-nums text-foreground">
+                <span className="text-xs text-muted-foreground">Lines</span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">
                   {formatNumber(n.lines)}
                 </span>
               </div>
@@ -164,6 +284,7 @@ function MainGrid({ numbers }: { numbers: NumberFreq[] }) {
   const byNum = new Map(numbers.map((n) => [n.number, n]));
   const totalAmount = numbers.reduce((a, n) => a + n.amount, 0);
   const totalCount = numbers.reduce((a, n) => a + n.count, 0);
+  const maxCount = numbers.reduce((a, n) => Math.max(a, n.count), 0);
   const totalRows = Math.ceil(TOTAL / COLS);
 
   return (
@@ -172,13 +293,13 @@ function MainGrid({ numbers }: { numbers: NumberFreq[] }) {
         <div className="flex items-center gap-1.5">
           <span
             className="inline-flex items-center justify-center size-4 rounded-full shrink-0"
-            style={{ background: POWER_MAIN_HEX }}
+            style={{ background: POWER_HEX }}
           >
             <Star className="size-2.5 text-white" />
           </span>
           <span className="text-xs font-semibold text-foreground">Số chính (01–55)</span>
         </div>
-        <span className="text-[11px] tabular-nums text-muted-foreground">
+        <span className="text-xs tabular-nums text-muted-foreground">
           {formatNumber(totalCount)} lượt ·{" "}
           {formatCurrency(totalAmount, { million: "tr", thousand: "k", decimals: 1 })}
         </span>
@@ -198,6 +319,7 @@ function MainGrid({ numbers }: { numbers: NumberFreq[] }) {
               row={Math.floor(i / COLS)}
               totalCols={COLS}
               totalRows={totalRows}
+              heatLevel={getHeatLevel(n.count, maxCount)}
             />
           );
         })}
@@ -227,21 +349,17 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
             <span className="text-sm leading-none shrink-0">
               {medals[c.rank - 1] ?? `#${c.rank}`}
             </span>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1 flex-wrap">
-                {c.mainNumbers.map((n) => (
-                  <NumberBadge key={n} num={n} />
-                ))}
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                {POWER655_PLAY_TYPE_LABELS[c.playType as keyof typeof POWER655_PLAY_TYPE_LABELS] ?? c.playType}
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <NumbersWithTooltip numbers={c.mainNumbers} variant="soft" />
+              <p className="text-xs text-muted-foreground mt-1">
+                {POWER655_PLAY_TYPE_LABELS[c.playType as PlayType] ?? c.playType}
               </p>
             </div>
             <div className="text-right shrink-0">
               <p className="text-xs font-semibold tabular-nums text-foreground">
                 {c.entryCount} vé
               </p>
-              <p className="text-[11px] tabular-nums text-muted-foreground">
+              <p className="text-xs tabular-nums text-muted-foreground">
                 {formatNumber(c.totalAmount)}
               </p>
             </div>
@@ -257,6 +375,7 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
 /**
  * NumberHeatmap — Power 6/55.
  * Grid 11×5 = 55 số chính (01-55).
+ * Theme: purple với heat intensity 5 levels (cold→hot, amber cho hot).
  */
 export function NumberHeatmap({
   mainNumbers,

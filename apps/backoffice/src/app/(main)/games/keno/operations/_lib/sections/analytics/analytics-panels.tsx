@@ -200,7 +200,7 @@ function PickCard({ row }: { row: PlayTypeRow }) {
       <div className="flex items-center justify-between gap-1 min-w-0">
         <div className="flex items-center gap-1.5 min-w-0">
           <div className={cn("size-1.5 rounded-full shrink-0", s.dot)} />
-          <span className={cn("text-[11px] font-bold truncate", s.text)}>{row.label}</span>
+          <span className={cn("text-xs font-bold truncate", s.text)}>{row.label}</span>
         </div>
         <MiniDonut pct={row.pct} fill={s.fill} size={32} />
       </div>
@@ -209,7 +209,7 @@ function PickCard({ row }: { row: PlayTypeRow }) {
         {formatNumber(row.revenue)}
       </p>
       {/* Count */}
-      <p className="text-[10px] text-muted-foreground tabular-nums leading-none">
+      <p className="text-xs text-muted-foreground tabular-nums leading-none">
         {formatNumber(row.selections)} lượt
       </p>
     </div>
@@ -237,7 +237,7 @@ function SideBetCard({ row }: { row: PlayTypeRow }) {
           <p className="text-base font-bold tabular-nums text-foreground leading-tight">
             {formatNumber(row.revenue)}
           </p>
-          <p className="text-[11px] text-muted-foreground tabular-nums mt-1">
+          <p className="text-xs text-muted-foreground tabular-nums mt-1">
             <span className="font-semibold text-foreground">{formatNumber(row.selections)}</span>{" "}
             lượt
             {" · "}
@@ -310,7 +310,7 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
           <div className="grid gap-4 @[640px]/main:grid-cols-[3fr_2fr]">
             {/* ── Cột trái: Pick 1–10 grid 5×2 ── */}
             <div className="flex flex-col gap-2">
-              <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/50">
+              <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground/50">
                 Cơ bản — Pick 1 đến 10
               </p>
               <div className="flex-1 grid grid-cols-5 auto-rows-fr gap-2">
@@ -322,7 +322,7 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
 
             {/* ── Cột phải: Side bets stretch full height ── */}
             <div className="flex flex-col gap-2">
-              <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/50">
+              <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground/50">
                 Side Bets
               </p>
               {sideBets.length === 0 ? (
@@ -378,7 +378,7 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
         ) : (
           <div className="rounded-xl border overflow-hidden">
             <div
-              className="grid gap-x-2 px-3 py-2 bg-muted/40 border-b text-[11px] font-medium text-muted-foreground uppercase tracking-wider"
+              className="grid gap-x-2 px-3 py-2 bg-muted/40 border-b text-xs font-medium text-muted-foreground uppercase tracking-wider"
               style={{ gridTemplateColumns: "1fr 5rem 5rem 6rem" }}
             >
               <span>Đại lý</span>
@@ -398,11 +398,11 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
                     style={{ width: `${(t.revenue / maxRevenue) * 100}%` }}
                   />
                   <div className="relative flex items-center gap-2 min-w-0">
-                    <span className="text-[10px] font-bold text-muted-foreground/40 w-4 tabular-nums shrink-0">
+                    <span className="text-xs font-bold text-muted-foreground/40 w-4 tabular-nums shrink-0">
                       {i + 1}
                     </span>
                     <span className="text-sm font-medium truncate">{t.tenantId}</span>
-                    <span className="text-[10px] text-muted-foreground/50 shrink-0">
+                    <span className="text-xs text-muted-foreground/50 shrink-0">
                       {t.pct.toFixed(0)}%
                     </span>
                   </div>

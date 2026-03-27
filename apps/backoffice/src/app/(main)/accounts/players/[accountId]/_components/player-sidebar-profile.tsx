@@ -73,11 +73,8 @@ export function PlayerSidebarProfile({ accountId }: PlayerSidebarProfileProps) {
           {initials}
         </div>
         <div className="text-center">
-          <p className="font-mono text-xs font-semibold leading-tight text-foreground">
-            {profile.username}
-          </p>
           {profile.displayName && profile.displayName !== profile.username && (
-            <p className="mt-0.5 max-w-[160px] truncate text-[11px] leading-tight text-muted-foreground">
+            <p className="font-mono text-xs font-semibold leading-tight text-foreground">
               {profile.displayName}
             </p>
           )}

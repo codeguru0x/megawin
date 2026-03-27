@@ -128,16 +128,16 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               className="grid items-center gap-x-3 px-4 py-2 bg-muted/40 border-b"
               style={{ gridTemplateColumns: "1.5rem 1fr 7rem 5rem" }}
             >
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 #
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Ngày quay
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Giờ quay
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Kỳ số
               </span>
             </div>

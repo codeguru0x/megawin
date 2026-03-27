@@ -198,7 +198,7 @@ export function PublishResultAction({
               <div className="flex items-center gap-2">
                 <div className={`h-1 w-6 rounded-full bg-linear-to-r ${tier.color}`} />
                 <Label className="text-sm font-semibold">{tier.label}</Label>
-                <Badge variant="outline" className={`text-[10px] border-0 ${tier.badgeClass}`}>
+                <Badge variant="outline" className={`text-xs border-0 ${tier.badgeClass}`}>
                   {tier.count} bộ
                 </Badge>
               </div>
@@ -209,7 +209,7 @@ export function PublishResultAction({
                     const isValid = val.length === 3 && validateTriplet(val);
                     return (
                       <div key={i} className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-medium text-muted-foreground w-4 text-right">
+                        <span className="text-xs font-medium text-muted-foreground w-4 text-right">
                           {i + 1}
                         </span>
                         <Input
@@ -238,7 +238,7 @@ export function PublishResultAction({
                   <div key={tier.key} className="flex items-center gap-2">
                     <Badge
                       variant="outline"
-                      className={`text-[10px] border-0 min-w-[3rem] justify-center ${tier.badgeClass}`}
+                      className={`text-xs border-0 min-w-[3rem] justify-center ${tier.badgeClass}`}
                     >
                       {tier.shortLabel}
                     </Badge>

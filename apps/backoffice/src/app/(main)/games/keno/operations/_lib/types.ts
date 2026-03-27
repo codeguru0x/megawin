@@ -83,6 +83,12 @@ export interface LiveFeedEntry {
   playType: string;
   /** Số đã chọn của board đầu tiên. */
   numbers: string[];
+  /**
+   * Loại cược side bet. Chỉ set cho bigSmall / evenOdd.
+   * bigSmall: "big" | "small" | "bigSmallDraw"
+   * evenOdd: "even" | "odd" | ... (các giá trị KenoEvenOddBet)
+   */
+  bet?: string;
   /** Tiền cược (VND). */
   amount: number;
   username: string;
