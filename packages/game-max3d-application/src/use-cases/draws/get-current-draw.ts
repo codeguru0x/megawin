@@ -12,7 +12,7 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-max3d/entities";;
+import type { DrawEntity } from "@megawin/game-max3d/entities";
 import type {
   GetCurrentDrawInput,
   GetCurrentDrawOutput,
@@ -33,13 +33,13 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(
-    input: GetCurrentDrawInput
-  ): Promise<GetCurrentDrawOutput> {
+  protected async execute(input: GetCurrentDrawInput): Promise<GetCurrentDrawOutput> {
     const allowStatuses = input.allowStatuses ?? ACTIVE_STATUSES;
 
+    // Max 3D quay T2/T4/T6 — khoảng cách tối đa giữa 2 kỳ = 3 ngày (T6→T2).
+    // lookbackDays = 7 đảm bảo không bỏ sót draws active chưa settle từ tuần trước.
     const [activeDraws, lastSettled] = await Promise.all([
-      this.drawRepo.getActiveDraws(allowStatuses),
+      this.drawRepo.getActiveDraws(allowStatuses, 7),
       this.drawRepo.getLatestSettledDraw(),
     ]);
 

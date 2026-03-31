@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Loader2, Send, ExternalLink, CalendarDays, Hash, Dice5 } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Check, Loader2, ExternalLink, CalendarDays, Hash, Dice5 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,7 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -21,6 +23,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { DevRandomFillButton, generateRandomNumber } from "@/components/dev-random-fill-button";
 import { todayVN } from "@megawin/shared/utils";
 import type { DrawSelectorItem } from "../../../use-operations";
@@ -29,16 +39,23 @@ import { usePublishResult } from "../../../use-operations";
 const DICE_COUNT = 3;
 const DICE_MIN = 1;
 const DICE_MAX = 6;
+const DICE_VALUES = [1, 2, 3, 4, 5, 6] as const;
 
-function validateDice(nums: string[]): string | null {
-  for (let i = 0; i < DICE_COUNT; i++) {
-    const n = Number(nums[i]);
-    if (!n || !Number.isInteger(n) || n < DICE_MIN || n > DICE_MAX) {
-      return `Xúc xắc #${i + 1} phải là số nguyên từ ${DICE_MIN} đến ${DICE_MAX}.`;
-    }
-  }
-  return null;
-}
+const diceSchema = z
+  .number({ message: "Vui lòng chọn số." })
+  .int()
+  .min(DICE_MIN, `Phải chọn số từ ${DICE_MIN} đến ${DICE_MAX}.`)
+  .max(DICE_MAX, `Phải chọn số từ ${DICE_MIN} đến ${DICE_MAX}.`);
+
+const publishResultSchema = z.object({
+  dice0: diceSchema,
+  dice1: diceSchema,
+  dice2: diceSchema,
+  vietlotDate: z.string(),
+  vietlotPeriod: z.string(),
+});
+
+type PublishResultValues = z.infer<typeof publishResultSchema>;
 
 /**
  * Dialog công bố kết quả kỳ quay Bingo 18.
@@ -61,29 +78,33 @@ export function PublishResultAction({
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange ?? setInternalOpen;
 
-  const [numbers, setNumbers] = useState<string[]>(Array(DICE_COUNT).fill(""));
-  const [vietlotDate, setVietlotDate] = useState(todayVN());
-  const [vietlotPeriod, setVietlotPeriod] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const publishResult = usePublishResult();
 
-  const sum = numbers.reduce((s, n) => s + (Number(n) || 0), 0);
+  const form = useForm<PublishResultValues>({
+    resolver: zodResolver(publishResultSchema),
+    defaultValues: {
+      dice0: undefined as unknown as number,
+      dice1: undefined as unknown as number,
+      dice2: undefined as unknown as number,
+      vietlotDate: todayVN(),
+      vietlotPeriod: "",
+    },
+  });
 
-  function handleSubmit() {
-    setError(null);
-    const err = validateDice(numbers);
-    if (err) {
-      setError(err);
-      return;
-    }
+  const [d0, d1, d2] = useWatch({ control: form.control, name: ["dice0", "dice1", "dice2"] });
+  const sum = (Number(d0) || 0) + (Number(d1) || 0) + (Number(d2) || 0);
 
+  function onSubmit(values: PublishResultValues) {
     const body: {
-      diceNumbers: number[];
+      numbers: number[];
       vietlottRef?: { drawPeriod: string; drawDate: string };
-    } = { diceNumbers: numbers.map(Number) };
+    } = { numbers: [values.dice0, values.dice1, values.dice2] };
 
-    if (vietlotPeriod.trim()) {
-      body.vietlottRef = { drawPeriod: vietlotPeriod.trim(), drawDate: vietlotDate };
+    if (values.vietlotPeriod.trim()) {
+      body.vietlottRef = {
+        drawPeriod: values.vietlotPeriod.trim(),
+        drawDate: values.vietlotDate,
+      };
     }
 
     publishResult.mutate(
@@ -91,17 +112,20 @@ export function PublishResultAction({
       {
         onSuccess: () => {
           setIsOpen(false);
-          setNumbers(Array(DICE_COUNT).fill(""));
-          setVietlotPeriod("");
-          setVietlotDate(todayVN());
-          setError(null);
+          form.reset();
         },
       },
     );
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(v) => {
+        setIsOpen(v);
+        if (!v) form.reset();
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
@@ -111,117 +135,134 @@ export function PublishResultAction({
           <DialogDescription>Nhập 3 số xúc xắc (1–6). Tổng: 3–18.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="flex size-6 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
-                <Dice5 className="size-3.5 text-amber-600 dark:text-amber-400" />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 py-2">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="flex size-6 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
+                  <Dice5 className="size-3.5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <FormLabel className="text-sm font-semibold">Kết quả xúc xắc</FormLabel>
+                <DevRandomFillButton
+                  onFill={() => {
+                    const nums = Array.from({ length: DICE_COUNT }, () =>
+                      generateRandomNumber(DICE_MIN, DICE_MAX),
+                    );
+                    form.setValue("dice0", nums[0]!, { shouldValidate: true });
+                    form.setValue("dice1", nums[1]!, { shouldValidate: true });
+                    form.setValue("dice2", nums[2]!, { shouldValidate: true });
+                  }}
+                />
               </div>
-              <Label className="text-sm font-semibold">Kết quả xúc xắc</Label>
-              <DevRandomFillButton
-                onFill={() => {
-                  const nums = Array.from({ length: DICE_COUNT }, () =>
-                    generateRandomNumber(DICE_MIN, DICE_MAX),
-                  );
-                  setNumbers(nums.map(String));
-                  setError(null);
-                }}
-              />
-            </div>
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <div className="flex items-center gap-3">
-                {numbers.map((val, idx) => (
-                  <Select
-                    key={idx}
-                    value={val}
-                    onValueChange={(v) => {
-                      const next = [...numbers];
-                      next[idx] = v;
-                      setNumbers(next);
-                      setError(null);
-                    }}
-                  >
-                    <SelectTrigger className="h-14 w-16 text-center text-2xl font-bold tabular-nums">
-                      <SelectValue placeholder="?" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[1, 2, 3, 4, 5, 6].map((n) => (
-                        <SelectItem key={n} value={String(n)} className="text-lg font-semibold">
-                          {n}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ))}
-                <div className="flex items-center gap-2 ml-2">
-                  <span className="text-xl text-muted-foreground">=</span>
-                  <span className="text-2xl font-bold tabular-nums text-amber-600 dark:text-amber-400">
-                    {sum > 0 ? sum : "?"}
-                  </span>
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <div className="flex items-center gap-2">
+                  {(["dice0", "dice1", "dice2"] as const).map((fieldName) => (
+                    <FormField
+                      key={fieldName}
+                      control={form.control}
+                      name={fieldName}
+                      render={({ field }) => (
+                        <FormItem className="flex-1 min-w-0 space-y-0">
+                          <Select
+                            value={field.value != null ? String(field.value) : ""}
+                            onValueChange={(v) => field.onChange(Number(v))}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-14 w-full text-center text-2xl font-bold tabular-nums">
+                                <SelectValue placeholder="?" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {DICE_VALUES.map((n) => (
+                                <SelectItem
+                                  key={n}
+                                  value={String(n)}
+                                  className="text-lg font-semibold"
+                                >
+                                  {n}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                  <div className="flex shrink-0 items-center gap-2 ml-1">
+                    <span className="text-xl text-muted-foreground">=</span>
+                    <span className="text-2xl font-bold tabular-nums text-amber-600 dark:text-amber-400">
+                      {sum > 0 ? sum : "?"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <Separator />
+            <Separator />
 
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
-                <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
+                  <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <FormLabel className="text-sm font-semibold">Tham chiếu Vietlott</FormLabel>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  Tùy chọn
+                </span>
               </div>
-              <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                Tùy chọn
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <CalendarDays className="size-3" /> Ngày Vietlott
-                </Label>
-                <Input
-                  type="date"
-                  value={vietlotDate}
-                  onChange={(e) => setVietlotDate(e.target.value)}
-                  className="font-mono text-sm"
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="vietlotDate"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <CalendarDays className="size-3" /> Ngày Vietlott
+                      </FormLabel>
+                      <FormControl>
+                        <Input type="date" className="font-mono text-sm" {...field} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="vietlotPeriod"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <Hash className="size-3" /> Mã kỳ Vietlott
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="VD: 123456"
+                          className="font-mono text-sm"
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Hash className="size-3" /> Mã kỳ Vietlott
-                </Label>
-                <Input
-                  type="text"
-                  value={vietlotPeriod}
-                  onChange={(e) => setVietlotPeriod(e.target.value)}
-                  placeholder="VD: 123456"
-                  className="font-mono text-sm"
-                />
-              </div>
             </div>
-          </div>
 
-          {error && (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
-              <p className="text-sm font-medium text-destructive">{error}</p>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Huỷ bỏ
-          </Button>
-          <Button onClick={handleSubmit} disabled={publishResult.isPending || disabled}>
-            {publishResult.isPending ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <Check className="mr-2 size-4" />
-            )}
-            Xác nhận
-          </Button>
-        </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                Huỷ bỏ
+              </Button>
+              <Button type="submit" disabled={publishResult.isPending || disabled}>
+                {publishResult.isPending ? (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                ) : (
+                  <Check className="mr-2 size-4" />
+                )}
+                Xác nhận
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

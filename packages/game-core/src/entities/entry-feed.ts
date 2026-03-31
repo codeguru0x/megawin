@@ -221,6 +221,12 @@ export interface EntryFeedDoc {
   username: string;
 
   /**
+   * IP address của player lúc đặt cược (IPv4 hoặc IPv6).
+   * Snapshot từ ticket lúc place-bet, lưu để audit trail và phát hiện gian lận.
+   */
+  ip: string;
+
+  /**
    * Ngày tài chính mà đơn cược này thuộc về, format "YYYY-MM-DD".
    * Có thể khác drawDate: theo business rule ngày tài chính tính từ 11h sáng.
    * Tenant dùng để group báo cáo tài chính hàng ngày.

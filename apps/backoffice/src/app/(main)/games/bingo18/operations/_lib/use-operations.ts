@@ -235,7 +235,7 @@ export function useCloseSales() {
 }
 
 export function usePublishResult() {
-  return useDrawAction<{ diceNumbers: number[] }>(
+  return useDrawAction<{ numbers: number[]; vietlottRef?: { drawPeriod: string; drawDate: string } }>(
     (id) => `/bingo18/draws/${id}/publish-result`,
     "post",
     "Đã công bố kết quả.",

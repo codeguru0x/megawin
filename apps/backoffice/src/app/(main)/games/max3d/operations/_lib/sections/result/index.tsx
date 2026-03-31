@@ -139,7 +139,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
                   tier.tier;
                 return (
                   <div
-                    key={tier.tier}
+                    key={`${tier.mode}-${tier.tier}`}
                     className={cn(
                       "grid items-center gap-x-3 rounded-lg border border-transparent px-3 py-2",
                       cfg.row,
@@ -304,29 +304,41 @@ export function ResultSection() {
     const d = drawDetailData?.draw;
     if (!d?.result) return undefined;
 
-    const tierLabels: Record<string, string> = {
-      ...MAX3D_BASIC_PRIZE_TIER_LABELS,
-      ...MAX3D_PLUS_PRIZE_TIER_LABELS,
-    };
     // settleSummary của Max 3D tách thành basicTiers và plusTiers (không có tiers chung)
     const basicTierMap = new Map((d.settleSummary?.basicTiers ?? []).map((t) => [t.tier, t]));
     const plusTierMap = new Map((d.settleSummary?.plusTiers ?? []).map((t) => [t.tier, t]));
-    const basicTierKeys = Object.keys(MAX3D_BASIC_PRIZE_TIER_LABELS);
-    const allTierKeys = [...basicTierKeys, ...Object.keys(MAX3D_PLUS_PRIZE_TIER_LABELS)];
-    const tiers = allTierKeys.map((tier) => {
-      // basicTiers cho các tier thuộc Max 3D Cơ Bản, plusTiers cho Max 3D+
-      const t = basicTierKeys.includes(tier) ? basicTierMap.get(tier) : plusTierMap.get(tier);
+
+    // Basic và Plus chia sẻ tên tier (special/first/second/third) nên phải gom riêng biệt
+    // để tránh duplicate key và đọc sai data (plus special bị map sang basicTierMap).
+    const basicTiers = Object.keys(MAX3D_BASIC_PRIZE_TIER_LABELS).map((tier) => {
+      const t = basicTierMap.get(tier);
       const winnerCount = t?.winnerCount ?? 0;
       const prizeAmount =
         winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
+        mode: "basic" as const,
         tier: tier as BasicPrizeTier,
-        label: tierLabels[tier] ?? String(tier),
+        label: MAX3D_BASIC_PRIZE_TIER_LABELS[tier as BasicPrizeTier] ?? String(tier),
         winnerCount,
         prizeAmount,
         totalPrize: t?.prizeAmount ?? 0,
       };
     });
+    const plusTiers = Object.keys(MAX3D_PLUS_PRIZE_TIER_LABELS).map((tier) => {
+      const t = plusTierMap.get(tier);
+      const winnerCount = t?.winnerCount ?? 0;
+      const prizeAmount =
+        winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
+      return {
+        mode: "plus" as const,
+        tier: tier as PlusPrizeTier,
+        label: MAX3D_PLUS_PRIZE_TIER_LABELS[tier as PlusPrizeTier] ?? String(tier),
+        winnerCount,
+        prizeAmount,
+        totalPrize: t?.prizeAmount ?? 0,
+      };
+    });
+    const tiers = [...basicTiers, ...plusTiers];
 
     const r = d.result;
     return {

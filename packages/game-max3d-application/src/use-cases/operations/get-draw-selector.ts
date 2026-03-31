@@ -1,7 +1,7 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-max3d/entities";;
+import type { DrawEntity } from "@megawin/game-max3d/entities";
 import type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selector.dto";
 
 /**
@@ -29,13 +29,17 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
 
     const recentStatuses = [DrawStatus.Settled, DrawStatus.Void];
 
+    // Max 3D quay T2/T4/T6 — khoảng cách tối đa giữa 2 kỳ = 3 ngày (T6→T2).
+    // lookbackDays = 7 đảm bảo không bỏ sót draws active chưa settle từ tuần trước.
+    const LOOKBACK_DAYS = 7;
+
     const [activeDraws, recentDraws, scheduledDraws] = await Promise.all([
       // Active: salesOpen, salesClosed, published, settling, voiding
-      this.drawRepo.getActiveDraws(activeStatuses),
+      this.drawRepo.getActiveDraws(activeStatuses, LOOKBACK_DAYS),
       // Recent: settled hoặc void
-      this.drawRepo.getActiveDraws(recentStatuses),
+      this.drawRepo.getActiveDraws(recentStatuses, LOOKBACK_DAYS),
       // Scheduled: chưa mở bán
-      this.drawRepo.getActiveDraws([DrawStatus.Scheduled]),
+      this.drawRepo.getActiveDraws([DrawStatus.Scheduled], LOOKBACK_DAYS),
     ]);
 
     // Chỉ lấy scheduled có drawDate từ hôm qua trở đi (bắt kỳ chưa mở bán)

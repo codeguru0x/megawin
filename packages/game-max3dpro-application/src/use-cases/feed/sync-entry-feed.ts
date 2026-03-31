@@ -58,6 +58,7 @@ function mapToFeedDoc(e: TicketEntryEntity, gameProduct: GameProduct): Omit<Entr
     tenantId: e.tenantId,
     accountId: e.accountId,
     username: toTenantUsername(e.username),
+    ip: e.ipAddress ?? "",
     financialDate: e.financialDate,
     drawId: e.drawId,
     status: e.status,

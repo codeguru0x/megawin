@@ -1,10 +1,11 @@
 "use client";
 
-import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
+import { CalendarClock, ExternalLink, Loader2, ListOrdered } from "lucide-react";
+import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
 import { useCurrentDraw } from "./_lib/use-draws";
 import { useGameConfig } from "../config/_lib/use-game-config";
-import { CreateDrawDialog } from "./_lib/create-draw-dialog";
 import { Max3dPrimaryDrawCard, Max3dQueueDrawCard } from "./_lib/active-draw-card";
 import { DrawHistorySection } from "./_lib/draw-history-section";
 
@@ -31,12 +32,10 @@ export default function Max3dDrawsPage() {
               Max 3D — Quản lý kỳ quay
             </h1>
             <p className="text-xs text-muted-foreground">
-              {drawsPerDay} kỳ/ngày ({drawTimes.join(" & ")}). T2/T4/T6 hàng tuần. Tạo kỳ quay và
-              xem lịch sử.
+              {drawsPerDay} kỳ/ngày ({drawTimes.join(" & ")}). T2/T4/T6 hàng tuần.
             </p>
           </div>
         </div>
-        <CreateDrawDialog />
       </div>
 
       {isLoading ? (
@@ -72,9 +71,15 @@ export default function Max3dDrawsPage() {
           <div>
             <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Nhấn &ldquo;Tạo kỳ quay&rdquo; để bắt đầu kỳ mới.
+              Vào trang Vận hành để tạo kỳ quay mới.
             </p>
           </div>
+          <Button variant="outline" size="sm" className="gap-1.5" asChild>
+            <Link href="/games/max3d/operations">
+              <ExternalLink className="size-3.5" />
+              Đến trang vận hành
+            </Link>
+          </Button>
         </div>
       )}
 

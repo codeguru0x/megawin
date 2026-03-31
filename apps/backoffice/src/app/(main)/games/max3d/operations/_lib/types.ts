@@ -86,6 +86,8 @@ export interface DrawResult {
   third: [string, string, string, string, string, string, string, string];
   settledAt: string;
   tiers: {
+    /** Play mode của tier — phân biệt basic `special` vs plus `special`. */
+    mode: "basic" | "plus";
     tier: BasicPrizeTier | PlusPrizeTier;
     label: string;
     /** Số lines trúng thưởng. */
