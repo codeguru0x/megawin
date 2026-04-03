@@ -12,11 +12,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
-import { Cell, Pie as RechartsPie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-
-// recharts 2.x class components chưa tương thích @types/react 19
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const Pie = RechartsPie as any;
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import type { PieLabelRenderProps } from "recharts/types/polar/Pie";
 import { BarChart2, PieChart as PieChartIcon } from "lucide-react";
 import { getGameLabel, type DashboardDayKpis } from "../_lib/compute";
 import { getGameHex } from "@/lib/game-colors";
@@ -50,16 +47,15 @@ function PieTooltip({ active, payload }: PieTooltipProps) {
 
 // ─── Recharts custom label trên pie slices ──────────────────────────────────
 
-interface LabelProps {
-  cx: number;
-  cy: number;
-  midAngle: number;
-  innerRadius: number;
-  outerRadius: number;
-  percent: number;
-}
-
-function renderPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }: LabelProps) {
+function renderPieLabel({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+}: PieLabelRenderProps) {
+  if (!cx || !cy || !midAngle || !innerRadius || !outerRadius || !percent) return null;
   // Chỉ label slice >= 5% để tránh chồng chéo
   if (percent < 0.05) return null;
   const RADIAN = Math.PI / 180;
