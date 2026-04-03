@@ -120,6 +120,10 @@ export function appResultToApiResponse<T>(
 /**
  * Bắt mọi loại error và trả NextResponse chuẩn.
  * Dùng trong catch block của route handler.
+ *
+ * AppException / AppError → trả message gốc (đã kiểm soát nội dung).
+ * Unexpected error (AWS SDK, DB, runtime…) → log chi tiết cho audit,
+ * chỉ trả message chung "Internal server error" — không leak thông tin nhạy cảm.
  */
 export function catchToApiResponse(err: unknown): NextResponse<ApiErrorResponse> {
   if (err instanceof AppException) {
@@ -128,10 +132,13 @@ export function catchToApiResponse(err: unknown): NextResponse<ApiErrorResponse>
   if (isAppError(err)) {
     return appErrorToApiResponse(err as AppError);
   }
-  const message = err instanceof Error ? err.message : "Internal server error";
+
+  // Unexpected error — log đầy đủ cho audit, KHÔNG trả message gốc cho client.
+  console.error("[API] Unhandled error:", err);
+
   return apiError(500, {
     code: APP_ERROR_CODES.INTERNAL,
-    message,
+    message: "Lỗi xảy ra trên hệ thống, vui lòng liên hệ quản trị viên.",
   });
 }
 

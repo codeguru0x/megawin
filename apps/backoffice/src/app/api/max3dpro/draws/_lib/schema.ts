@@ -1,8 +1,17 @@
 import { z } from "zod";
 import { DRAW_STATUS_VALUES } from "@megawin/game-core/entities";
 
+const createDrawItemSchema = z.object({
+  /** Ngày quay theo lịch T3/T5/T7, format YYYY-MM-DD. */
+  drawDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "drawDate phải là YYYY-MM-DD."),
+  /** Giờ quay (ISO 8601 với timezone offset, VD: `2026-04-08T18:00:00+07:00`). */
+  drawTime: z.iso.datetime({ offset: true }),
+  /** Mở bán ngay khi tạo xong. */
+  openNow: z.boolean().default(true),
+});
+
 export const createDrawSchema = z.object({
-  count: z.coerce.number().int().min(1).max(12).default(2),
+  draws: z.array(createDrawItemSchema).min(1).max(12),
 });
 
 export const previewDrawsSchema = z.object({
@@ -10,9 +19,7 @@ export const previewDrawsSchema = z.object({
 });
 
 export const listDrawsQuerySchema = z.object({
-  status: z
-    .enum(DRAW_STATUS_VALUES as [string, ...string[]])
-    .optional(),
+  status: z.enum(DRAW_STATUS_VALUES as [string, ...string[]]).optional(),
   fromDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "fromDate phải là YYYY-MM-DD.")

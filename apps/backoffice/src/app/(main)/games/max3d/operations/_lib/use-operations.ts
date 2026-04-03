@@ -74,14 +74,15 @@ export function usePreviewDraws(count: number) {
 
 /**
  * Tạo nhiều kỳ quay Max 3D liên tiếp.
- * Backend tự tính slot theo lịch T2/T4/T6, mỗi ngày 1 kỳ.
+ * Mỗi phần tử trong `draws` chứa drawDate, drawTime, openNow.
  * Invalidate toàn bộ cache max3d sau khi tạo thành công.
  */
 export function useCreateDraw() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { count: number }) =>
-      apiClient.post<CreateDrawsOutput>("/max3d/draws", data),
+    mutationFn: (data: {
+      draws: { drawDate: string; drawTime: string; openNow: boolean }[];
+    }) => apiClient.post<CreateDrawsOutput>("/max3d/draws", data),
     onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: max3dKeys.all });
       toast.success(`Đã tạo ${result.draws.length} kỳ quay Max 3D.`);

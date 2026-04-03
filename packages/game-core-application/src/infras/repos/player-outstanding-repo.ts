@@ -59,11 +59,18 @@ export class PlayerOutstandingRepository extends GameCoreBaseRepo<any> {
               _id: 1,
               ticketId: 1,
               "entrySummary.ticketNo": 1,
+              // boards để tính boardCount
+              "entrySummary.boards": 1,
               drawId: 1,
               financialDate: 1,
               amount: 1,
               "tenant.tenantId": 1,
               "tenant.commissionAmount": 1,
+              // lineCount/selectionCount tùy game
+              lineCount: 1,
+              selectionCount: 1,
+              // betUnitCount tổng số đơn vị cược
+              betUnitCount: 1,
               createdAt: 1,
             },
             sort: { createdAt: -1 },
@@ -85,6 +92,14 @@ export class PlayerOutstandingRepository extends GameCoreBaseRepo<any> {
           amount: (doc.amount as number) ?? 0,
           // commissionAmount nằm trong embedded object tenant
           commissionAmount: (doc.tenant?.commissionAmount as number) ?? 0,
+          // boardCount từ số boards trong entrySummary
+          boardCount: Array.isArray(doc.entrySummary?.boards)
+            ? (doc.entrySummary.boards as unknown[]).length
+            : undefined,
+          // lineCount: games có lines; undefined → keno/bingo18
+          lineCount:
+            (doc.lineCount as number | undefined) ?? (doc.selectionCount as number | undefined),
+          betUnitCount: doc.betUnitCount as number | undefined,
           createdAt: doc.createdAt ? new Date(doc.createdAt as Date).toISOString() : "",
         }),
       );

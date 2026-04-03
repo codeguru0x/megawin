@@ -309,29 +309,90 @@ Financial date tại `@megawin/shared/utils/financial-date`:
 import { getFinancialDate } from "@megawin/shared/utils/financial-date";
 ```
 
-### 6.3 Số âm: `-XXX,XXX,XXX` với `text-danger`
+### 6.3 Số âm: `-XXX,XXX,XXX` với `text-loss`
 
-### 6.4 Color coding
+### 6.4 Color coding — Semantic tokens
+
+Project dùng **semantic color tokens** `text-profit` (xanh) và `text-loss` (đỏ), **KHÔNG** dùng `text-danger`/`text-success`.
 
 | Metric | Điều kiện | Token |
 |--------|-----------|-------|
-| netProfit > 0 | Lãi | `text-success` |
-| netProfit < 0 | Lỗ | `text-danger` |
-| Payout % < 80% | Tốt | `text-success` |
-| Payout % 80-95% | Cảnh giác | `text-warning` |
-| Payout % > 95% | Nguy hiểm | `text-danger` |
+| netProfit > 0 | Lãi | `text-profit` |
+| netProfit < 0 | Lỗ | `text-loss` |
+| GGR < 0 | Âm | `text-loss` |
+| GGR > 0 | Dương | `text-profit` |
+| Payout % > 95% | Nguy hiểm | `text-loss` |
+| Payout % > 80% | Cảnh giác | `text-warning` |
+| Payout % ≤ 80% | Bình thường | (mặc định — không thêm class) |
+
+**Lợi nhuận ròng — Quy tắc bắt buộc:**
+- **LUÔN** dùng `text-loss` khi âm và `text-profit` khi dương — cả KPI cards và bảng.
+- Mục đích: nhìn một cái biết ngay thắng/thua. Không cùng text color mặc định với các số liệu khác.
+- Sử dụng `getNetProfitColor(value)` từ `payout-ratio.tsx` để lấy color class.
+
+**KHÔNG dùng:**
+- `text-danger` — không tồn tại trong design system, dùng `text-loss`
+- `text-success` — không tồn tại trong design system, dùng `text-profit`
+
+### 6.5 Tỷ lệ trả thưởng (Payout Ratio) — Format & Color
+
+**Reusable component** tại `apps/backoffice/src/components/reports/payout-ratio.tsx`.
+
+```typescript
+import {
+  formatPayoutRatio,   // format: formatNumber(ratio * 100, { decimals: 1 }) + "%" — có thousand separator
+  getPayoutRatioColor, // color class theo ngưỡng: > 95% text-loss, > 80% text-warning, else default
+  getNetProfitColor,   // color class: âm → text-loss, dương → text-profit, zero → default
+  PayoutRatioCell,     // <span> dùng trong ô bảng
+  PayoutRatioKpi,      // <span> dùng trong KPI card
+} from "@/components/reports/payout-ratio";
+```
+
+**Quy tắc bắt buộc:**
+- Tỷ lệ trả thưởng **PHẢI dùng `formatPayoutRatio`** — có thousand separator khi giá trị % > 1,000.
+- **KHÔNG dùng `formatPercent`** cho tỷ lệ trả thưởng trong bảng — `formatPercent` thiếu thousand separator.
+- Tất cả số liệu thống kê trong bảng (tiền, count, percentage) **PHẢI có `tabular-nums`**.
+- Color coding payout ratio: `text-loss` khi **> 95%**, `text-warning` khi **> 80%**, dưới 80% giữ mặc định.
+- Color coding netProfit / GGR: **LUÔN** dùng `getNetProfitColor()` — âm = `text-loss`, dương = `text-profit`.
+- Áp dụng cho cả KPI cards và ô bảng.
+
+### 6.6 Default Date Range
+
+Mặc định khi vào trang: **7 ngày qua** (today - 6 → today). Preset "7 ngày qua" trong FinancialDateRangePicker.
 
 ---
 
 ## 7. KPI Cards
 
-### System Financial: 4 cards
+### Quy tắc chung cho KPI Cards
 
-Doanh Thu (totalStake) · Trả Thưởng (totalPayout) · GGR (ggr + margin%) · Lợi Nhuận Ròng (netProfit + net margin%)
+- KPI cột tiền **PHẢI** dùng `formatVNDCompact` (đ, triệu, tỷ) — KHÔNG dùng `formatNumber` cho KPI value.
+- KPI cột count dùng `formatNumber`.
+- KPI Tỷ lệ trả thưởng dùng `formatPayoutRatio` + `getPayoutRatioColor`.
+- KPI Lợi nhuận ròng **PHẢI** dùng `getNetProfitColor` — luôn đỏ khi âm, xanh khi dương.
+- KPI Doanh thu thuần (GGR) **PHẢI** dùng `getNetProfitColor` — luôn đỏ khi âm, xanh khi dương.
+- Sub text chỉ chứa thông tin bổ sung **không trùng** với các KPI khác đã hiển thị bên cạnh:
+  - **Lợi nhuận ròng**: KHÔNG có sub text (GGR và HH đã có card riêng).
+  - **Tỷ lệ trả thưởng**: KHÔNG có sub text (Tiền cược đã có card riêng).
+  - **Tiền cược**: sub = "X lượt cược".
+  - **Doanh thu thuần (GGR)**: sub = "Trả thưởng: X".
+  - **Hoa hồng ĐL**: sub = "X đại lý" (hoặc không).
+
+### System Financial — Tab "Theo game": 5 cards
+
+Tiền Cược (totalStake) · Doanh Thu Thuần (ggr) · Hoa Hồng ĐL (totalCommission) · Lợi Nhuận Ròng (netProfit) · Tỷ Lệ Trả Thưởng (payoutRatio)
+
+### System Financial — Tab "Tổng quan ngày": 6 cards
+
+Tổng Kỳ Quay (drawCount) · Tiền Cược · Doanh Thu Thuần · Hoa Hồng ĐL · Lợi Nhuận Ròng · Tỷ Lệ Trả Thưởng
+
+### System Financial — Tab "Theo đại lý": 6 cards
+
+Số Đại Lý (tenantCount) · Tiền Cược · Doanh Thu Thuần · Hoa Hồng ĐL · Lợi Nhuận Ròng · Tỷ Lệ Trả Thưởng
 
 ### Per-Game Financial: 6 cards
 
-Kỳ Quay (drawCount) · Doanh Thu · Trả Thưởng (+ payout%) · GGR (+ margin%) · Hoa Hồng ĐL · Lợi Nhuận Ròng
+Kỳ Quay (drawCount) · Tiền Cược · Trả Thưởng (+ payout%) · GGR (+ margin%) · Hoa Hồng ĐL · Lợi Nhuận Ròng
 
 ### Outstanding: 3 cards
 

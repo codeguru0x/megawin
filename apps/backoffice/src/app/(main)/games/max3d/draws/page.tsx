@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { useCurrentDraw } from "./_lib/use-draws";
-import { useGameConfig } from "../config/_lib/use-game-config";
+import { useGameConfig } from "../config/game/_lib/use-game-config";
 import { Max3dPrimaryDrawCard, Max3dQueueDrawCard } from "./_lib/active-draw-card";
 import { DrawHistorySection } from "./_lib/draw-history-section";
 

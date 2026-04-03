@@ -5,7 +5,6 @@ import {
   ArrowUpRight,
   Banknote,
   CircleDollarSign,
-  Download,
   Percent,
   Ticket,
   TrendingUp,
@@ -13,14 +12,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -40,15 +32,51 @@ import {
 import { StatCard } from "@/components/games/lotto535/stat-card";
 
 const DAILY_REPORT = [
-  { date: "22/02/2026", tickets: 156, revenue: 15_600_000, payout: 2_340_000, commission: 3_120_000, players: 89 },
-  { date: "21/02/2026", tickets: 134, revenue: 12_800_000, payout: 1_920_000, commission: 2_560_000, players: 72 },
-  { date: "20/02/2026", tickets: 142, revenue: 14_200_000, payout: 3_550_000, commission: 2_840_000, players: 81 },
-  { date: "19/02/2026", tickets: 128, revenue: 11_500_000, payout: 1_150_000, commission: 2_300_000, players: 65 },
-  { date: "18/02/2026", tickets: 119, revenue: 10_700_000, payout: 2_140_000, commission: 2_140_000, players: 58 },
+  {
+    date: "22/02/2026",
+    tickets: 156,
+    revenue: 15_600_000,
+    payout: 2_340_000,
+    commission: 3_120_000,
+    players: 89,
+  },
+  {
+    date: "21/02/2026",
+    tickets: 134,
+    revenue: 12_800_000,
+    payout: 1_920_000,
+    commission: 2_560_000,
+    players: 72,
+  },
+  {
+    date: "20/02/2026",
+    tickets: 142,
+    revenue: 14_200_000,
+    payout: 3_550_000,
+    commission: 2_840_000,
+    players: 81,
+  },
+  {
+    date: "19/02/2026",
+    tickets: 128,
+    revenue: 11_500_000,
+    payout: 1_150_000,
+    commission: 2_300_000,
+    players: 65,
+  },
+  {
+    date: "18/02/2026",
+    tickets: 119,
+    revenue: 10_700_000,
+    payout: 2_140_000,
+    commission: 2_140_000,
+    players: 58,
+  },
 ];
 
 function fmtVND(n: number) {
-  if (n >= 1_000_000) return (n / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 }) + " tr";
+  if (n >= 1_000_000)
+    return (n / 1_000_000).toLocaleString("vi-VN", { maximumFractionDigits: 1 }) + " tr";
   return n.toLocaleString("vi-VN") + " ₫";
 }
 
@@ -64,10 +92,6 @@ export default function TenantReportsPage() {
             Doanh thu, hoa hồng và thống kê hoạt động.
           </p>
         </div>
-        <Button variant="outline">
-          <Download className="mr-2 size-4" />
-          Xuất Excel
-        </Button>
       </div>
 
       {/* KPI */}
@@ -115,9 +139,7 @@ export default function TenantReportsPage() {
                 <ArrowUpRight className="size-3" /> 12.3%
               </span>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Payout rate: 15%
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Payout rate: 15%</p>
           </CardContent>
         </Card>
         <Card>
@@ -133,9 +155,7 @@ export default function TenantReportsPage() {
                 <ArrowUpRight className="size-3" /> 9.8%
               </span>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              = Doanh thu - Payout - Hoa hồng
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">= Doanh thu - Payout - Hoa hồng</p>
           </CardContent>
         </Card>
         <Card>
@@ -149,9 +169,7 @@ export default function TenantReportsPage() {
                 <ArrowDownRight className="size-3" /> -2.1%
               </span>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Tỷ lệ payout / doanh thu
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Tỷ lệ payout / doanh thu</p>
           </CardContent>
         </Card>
       </div>
@@ -160,9 +178,7 @@ export default function TenantReportsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Báo cáo theo ngày</CardTitle>
-          <CardDescription>
-            Chi tiết doanh thu, hoa hồng và payout mỗi ngày
-          </CardDescription>
+          <CardDescription>Chi tiết doanh thu, hoa hồng và payout mỗi ngày</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -201,12 +217,8 @@ export default function TenantReportsPage() {
                   return (
                     <TableRow key={row.date}>
                       <TableCell className="font-medium">{row.date}</TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {row.tickets}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {row.players}
-                      </TableCell>
+                      <TableCell className="text-right tabular-nums">{row.tickets}</TableCell>
+                      <TableCell className="text-right tabular-nums">{row.players}</TableCell>
                       <TableCell className="text-right tabular-nums">
                         {fmtVND(row.revenue)}
                       </TableCell>

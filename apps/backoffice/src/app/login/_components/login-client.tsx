@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { signIn } from "@/lib/auth-client";
 import { APP_CONFIG } from "@/config/app-config";
 
-const AUTO_REDIRECT_SECONDS = 3;
+const AUTO_REDIRECT_SECONDS = 1;
 
 export function LoginClient({ callbackUrl }: { readonly callbackUrl?: string }) {
   const [isLoading, setIsLoading] = useState(false);

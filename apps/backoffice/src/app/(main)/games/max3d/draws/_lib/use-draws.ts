@@ -41,27 +41,6 @@ interface ListDrawsOutput {
   draws: DrawSummary[];
 }
 
-interface CreateDrawsOutput {
-  draws: Array<{
-    drawId: string;
-    drawNo: number;
-    drawDate: string;
-    drawTime: string;
-    closeAt: string;
-    status: string;
-  }>;
-}
-
-interface PreviewDrawsOutput {
-  draws: Array<{
-    drawNo: number;
-    drawDate: string;
-    drawTime: string;
-    closeAt: string;
-    status: string;
-  }>;
-}
-
 export interface ListDrawsParams {
   status?: DrawStatus;
   fromDate?: string;
@@ -77,8 +56,7 @@ export interface ListDrawsParams {
 export function useCurrentDraw() {
   return useQuery({
     queryKey: max3dKeys.currentDraw,
-    queryFn: () =>
-      apiClient.get<GetCurrentDrawOutput>("/max3d/draws/current"),
+    queryFn: () => apiClient.get<GetCurrentDrawOutput>("/max3d/draws/current"),
     refetchInterval: 15_000,
   });
 }
@@ -99,17 +77,6 @@ export function useDrawsList(params: ListDrawsParams) {
   });
 }
 
-export function usePreviewDraws(count: number) {
-  return useQuery({
-    queryKey: [...max3dKeys.all, "preview", count] as const,
-    queryFn: () =>
-      apiClient.get<PreviewDrawsOutput>("/max3d/draws/preview", {
-        params: { count },
-      }),
-    enabled: count > 0,
-  });
-}
-
 // ─────────────────────────────────────────────
 // Mutations
 // ─────────────────────────────────────────────
@@ -117,7 +84,7 @@ export function usePreviewDraws(count: number) {
 function useDrawAction<TBody = void>(
   actionPath: (drawId: string) => string,
   method: "post" | "patch",
-  successMessage: string
+  successMessage: string,
 ) {
   const qc = useQueryClient();
   return useMutation({
@@ -130,27 +97,17 @@ function useDrawAction<TBody = void>(
       toast.success(successMessage);
     },
     onError: (err) => {
-      toast.error(
-        err instanceof ApiClientError ? err.message : "Thao tác thất bại."
-      );
+      toast.error(err instanceof ApiClientError ? err.message : "Thao tác thất bại.");
     },
   });
 }
 
 export function useOpenSales() {
-  return useDrawAction(
-    (id) => `/max3d/draws/${id}/open-sales`,
-    "post",
-    "Đã mở bán vé."
-  );
+  return useDrawAction((id) => `/max3d/draws/${id}/open-sales`, "post", "Đã mở bán vé.");
 }
 
 export function useCloseSales() {
-  return useDrawAction(
-    (id) => `/max3d/draws/${id}/close-sales`,
-    "post",
-    "Đã đóng bán vé."
-  );
+  return useDrawAction((id) => `/max3d/draws/${id}/close-sales`, "post", "Đã đóng bán vé.");
 }
 
 export function usePublishResult() {
@@ -161,26 +118,18 @@ export function usePublishResult() {
       second: [string, string, string, string, string, string];
       third: [string, string, string, string, string, string, string, string];
     };
-  }>(
-    (id) => `/max3d/draws/${id}/publish-result`,
-    "post",
-    "Đã công bố kết quả."
-  );
+  }>((id) => `/max3d/draws/${id}/publish-result`, "post", "Đã công bố kết quả.");
 }
 
 export function useTriggerSettle() {
-  return useDrawAction(
-    (id) => `/max3d/draws/${id}/trigger-settle`,
-    "post",
-    "Đã bắt đầu kết sổ."
-  );
+  return useDrawAction((id) => `/max3d/draws/${id}/trigger-settle`, "post", "Đã bắt đầu kết sổ.");
 }
 
 export function useVoidDraw() {
   return useDrawAction<{ reason: string }>(
     (id) => `/max3d/draws/${id}/void`,
     "post",
-    "Đã huỷ kỳ quay."
+    "Đã huỷ kỳ quay.",
   );
 }
 
@@ -188,23 +137,6 @@ export function useUpdateSchedule() {
   return useDrawAction<{ salesOpenAt: string; salesCloseAt: string; drawTime?: string }>(
     (id) => `/max3d/draws/${id}/schedule`,
     "patch",
-    "Đã cập nhật lịch."
+    "Đã cập nhật lịch.",
   );
-}
-
-export function useCreateDraw() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: { count: number }) =>
-      apiClient.post<CreateDrawsOutput>("/max3d/draws", data),
-    onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: max3dKeys.all });
-      toast.success(`Đã tạo ${res.draws.length} kỳ quay mới.`);
-    },
-    onError: (err) => {
-      toast.error(
-        err instanceof ApiClientError ? err.message : "Tạo kỳ quay thất bại."
-      );
-    },
-  });
 }

@@ -27,6 +27,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { getGameColors } from "@/lib/game-colors";
+import { getNetProfitColor } from "@/components/reports/payout-ratio";
 import { cn } from "@/lib/utils";
 
 import { usePlayerFinancials, type PlayerFinancialRecord } from "../../_shared/queries";
@@ -174,8 +175,8 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
               <CardTitle className="text-sm font-semibold">Chi tiết tài chính theo ngày</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="px-5 pb-4 pt-0">
-            <div className="overflow-hidden rounded-md border">
+          <CardContent className="p-0">
+            <div className="overflow-hidden rounded-none">
               {isLoading ? (
                 <div className="space-y-0">
                   <div className="flex gap-4 border-b px-4 py-3">
@@ -205,19 +206,40 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow className="text-xs">
-                      <TableHead className="w-24">Ngày</TableHead>
-                      <TableHead className="w-24">Game</TableHead>
-                      <TableHead className="text-right">Kỳ</TableHead>
-                      <TableHead className="text-right">Đơn</TableHead>
-                      <TableHead className="text-right">Settled</TableHead>
-                      <TableHead className="text-right">W / V</TableHead>
-                      <TableHead className="text-right">Tiền cược</TableHead>
-                      <TableHead className="text-right">Trả thưởng</TableHead>
-                      <TableHead className="text-right">GGR</TableHead>
-                      <TableHead className="text-right">Hoa hồng</TableHead>
-                      <TableHead className="text-right">Lợi nhuận</TableHead>
-                      <TableHead className="w-6" />
+                    <TableRow>
+                      <TableHead className="pl-5 w-24 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Ngày
+                      </TableHead>
+                      <TableHead className="w-24 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Game
+                      </TableHead>
+                      <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Kỳ
+                      </TableHead>
+                      <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Đơn
+                      </TableHead>
+                      <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Settled
+                      </TableHead>
+                      <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        W / V
+                      </TableHead>
+                      <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Tiền cược
+                      </TableHead>
+                      <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Trả thưởng
+                      </TableHead>
+                      <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        GGR
+                      </TableHead>
+                      <TableHead className="text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Hoa hồng
+                      </TableHead>
+                      <TableHead className="pr-5 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Lợi nhuận
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -228,28 +250,28 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
                       return (
                         <TableRow
                           key={`${row.financialDate}-${gProd}-${idx}`}
-                          className="h-10 cursor-pointer text-xs hover:bg-muted/50"
+                          className="h-10 cursor-pointer hover:bg-muted/50"
                           onClick={() => handleRowClick(row.financialDate, gProd)}
                         >
-                          <TableCell className="tabular-nums text-muted-foreground">
+                          <TableCell className="pl-5 text-sm tabular-nums text-muted-foreground">
                             {row.financialDate}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-sm">
                             <div className="flex items-center gap-1.5">
                               <span className={cn("inline-block size-2 rounded-full", c.twBg)} />
                               <span className="font-medium">{gameLabel}</span>
                             </div>
                           </TableCell>
-                          <TableCell className="text-right tabular-nums">
+                          <TableCell className="text-right text-sm tabular-nums">
                             {formatNumber(row.drawCount)}
                           </TableCell>
-                          <TableCell className="text-right tabular-nums">
+                          <TableCell className="text-right text-sm tabular-nums">
                             {formatNumber(row.entryCount)}
                           </TableCell>
-                          <TableCell className="text-right tabular-nums">
+                          <TableCell className="text-right text-sm tabular-nums">
                             {formatNumber(row.settledCount)}
                           </TableCell>
-                          <TableCell className="text-right tabular-nums">
+                          <TableCell className="text-right text-sm tabular-nums">
                             <span className="text-emerald-600 dark:text-emerald-400">
                               {formatNumber(row.winCount)}
                             </span>
@@ -258,51 +280,50 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
                               {formatNumber(row.voidCount)}
                             </span>
                           </TableCell>
-                          <TableCell className="text-right tabular-nums">
+                          <TableCell className="text-right text-sm tabular-nums">
                             {formatNumber(row.totalStake)}
                           </TableCell>
-                          <TableCell className="text-right tabular-nums">
+                          <TableCell className="text-right text-sm tabular-nums">
                             {formatNumber(row.totalPayout)}
                           </TableCell>
                           <TableCell
                             className={cn(
-                              "text-right tabular-nums font-medium",
-                              row.ggr < 0 ? "text-destructive" : "",
+                              "text-right text-sm tabular-nums font-medium",
+                              getNetProfitColor(row.ggr),
                             )}
                           >
                             {formatNumber(row.ggr)}
                           </TableCell>
-                          <TableCell className="text-right tabular-nums text-muted-foreground">
+                          <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
                             {formatNumber(row.totalCommission)}
                           </TableCell>
                           <TableCell
                             className={cn(
-                              "text-right tabular-nums font-medium",
-                              row.netProfit < 0 ? "text-destructive" : "",
+                              "pr-5 text-right text-sm tabular-nums font-medium",
+                              getNetProfitColor(row.netProfit),
                             )}
                           >
                             {formatNumber(row.netProfit)}
-                          </TableCell>
-                          <TableCell>
-                            <ChevronRight className="size-3.5 text-muted-foreground" />
                           </TableCell>
                         </TableRow>
                       );
                     })}
                   </TableBody>
                   <TableFooter>
-                    <TableRow className="h-10 text-xs font-semibold">
-                      <TableCell colSpan={2}>TỔNG CỘNG</TableCell>
-                      <TableCell className="text-right tabular-nums">
+                    <TableRow className="h-10">
+                      <TableCell className="pl-5 text-sm font-semibold" colSpan={2}>
+                        TỔNG CỘNG
+                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums font-semibold">
                         {formatNumber(totals.drawCount)}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-right text-sm tabular-nums font-semibold">
                         {formatNumber(totals.entryCount)}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-right text-sm tabular-nums font-semibold">
                         {formatNumber(totals.settledCount)}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-right text-sm tabular-nums font-semibold">
                         <span className="text-emerald-600 dark:text-emerald-400">
                           {formatNumber(totals.winCount)}
                         </span>
@@ -311,32 +332,31 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
                           {formatNumber(totals.voidCount)}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-right text-sm tabular-nums font-semibold">
                         {formatNumber(totals.totalStake)}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-right text-sm tabular-nums font-semibold">
                         {formatNumber(totals.totalPayout)}
                       </TableCell>
                       <TableCell
                         className={cn(
-                          "text-right tabular-nums",
-                          totals.ggr < 0 ? "text-destructive" : "",
+                          "text-right text-sm tabular-nums font-semibold",
+                          getNetProfitColor(totals.ggr),
                         )}
                       >
                         {formatNumber(totals.ggr)}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                      <TableCell className="text-right text-sm tabular-nums font-semibold text-muted-foreground">
                         {formatNumber(totals.totalCommission)}
                       </TableCell>
                       <TableCell
                         className={cn(
-                          "text-right tabular-nums",
-                          totals.netProfit < 0 ? "text-destructive" : "",
+                          "pr-5 text-right text-sm tabular-nums font-semibold",
+                          getNetProfitColor(totals.netProfit),
                         )}
                       >
                         {formatNumber(totals.netProfit)}
                       </TableCell>
-                      <TableCell />
                     </TableRow>
                   </TableFooter>
                 </Table>

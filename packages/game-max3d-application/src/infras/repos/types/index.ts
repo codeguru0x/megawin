@@ -10,5 +10,6 @@ export type {
   OutstandingTenantBreakdownRow,
   OutstandingPlayerBreakdownRow,
 } from "./entry-outstanding.types";
+export type { VoidTenantBreakdownRow, VoidPlayerBreakdownRow } from "./entry-void.types";
 export type { TicketSummary } from "./ticket.types";
 export type { TenantConfigFields } from "./config.types";

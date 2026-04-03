@@ -1,8 +1,8 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import Link from "next/link";
 import { AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
+import { displayVNDateTime } from "@megawin/shared/utils/date";
 
 import { Badge } from "@/components/ui/badge";
 
@@ -19,20 +19,13 @@ export const playerAccountsColumns: ColumnDef<PlayerAccount>[] = [
   {
     accessorKey: "username",
     header: "Tên tài khoản",
-    cell: ({ row }) => (
-      <Link
-        href={`/accounts/players/${row.original.accountId}/overview`}
-        className="font-mono text-xs font-medium text-primary underline-offset-4 hover:underline"
-      >
-        {row.original.username}
-      </Link>
-    ),
+    cell: ({ row }) => <span className="font-mono text-sm">{row.original.username}</span>,
     enableSorting: false,
   },
   {
     accessorKey: "displayName",
     header: "Tên hiển thị",
-    cell: ({ row }) => <span className="text-xs">{row.original.displayName}</span>,
+    cell: ({ row }) => <span className="text-sm">{row.original.displayName}</span>,
     enableSorting: false,
   },
   {
@@ -52,10 +45,8 @@ export const playerAccountsColumns: ColumnDef<PlayerAccount>[] = [
     accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => (
-      <span className="tabular-nums text-xs text-muted-foreground">
-        {row.original.createdAt
-          ? new Date(row.original.createdAt).toLocaleDateString("vi-VN")
-          : "—"}
+      <span className="text-sm tabular-nums">
+        {row.original.createdAt ? displayVNDateTime(new Date(row.original.createdAt)) : "—"}
       </span>
     ),
     enableSorting: false,
@@ -70,28 +61,21 @@ export const searchResultColumns: ColumnDef<PlayerAccount>[] = [
   {
     accessorKey: "username",
     header: "Tên tài khoản",
-    cell: ({ row }) => (
-      <Link
-        href={`/accounts/players/${row.original.accountId}/overview`}
-        className="font-mono text-xs font-medium text-primary underline-offset-4 hover:underline"
-      >
-        {row.original.username}
-      </Link>
-    ),
+    cell: ({ row }) => <span className="font-mono text-sm">{row.original.username}</span>,
     enableSorting: false,
   },
   {
     accessorKey: "tenantId",
     header: "Tenant",
     cell: ({ row }) => (
-      <span className="font-mono text-xs text-muted-foreground">{row.original.tenantId}</span>
+      <span className="font-mono text-sm text-muted-foreground">{row.original.tenantId}</span>
     ),
     enableSorting: false,
   },
   {
     accessorKey: "displayName",
     header: "Tên hiển thị",
-    cell: ({ row }) => <span className="text-xs">{row.original.displayName}</span>,
+    cell: ({ row }) => <span className="text-sm">{row.original.displayName}</span>,
     enableSorting: false,
   },
   {
@@ -111,10 +95,8 @@ export const searchResultColumns: ColumnDef<PlayerAccount>[] = [
     accessorKey: "createdAt",
     header: "Ngày tạo",
     cell: ({ row }) => (
-      <span className="tabular-nums text-xs text-muted-foreground">
-        {row.original.createdAt
-          ? new Date(row.original.createdAt).toLocaleDateString("vi-VN")
-          : "—"}
+      <span className="text-sm tabular-nums">
+        {row.original.createdAt ? displayVNDateTime(new Date(row.original.createdAt)) : "—"}
       </span>
     ),
     enableSorting: false,

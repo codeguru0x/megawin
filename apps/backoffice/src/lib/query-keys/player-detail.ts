@@ -20,9 +20,12 @@ export const playerDetailKeys = {
   /** Đơn cược đang chờ (on-demand, staleTime thấp). */
   outstanding: (accountId: string) => [MODULE, "player-detail", accountId, "outstanding"] as const,
   /** Danh sách entries settled/voided trong 1 ngày × 1 game (drill tab Tài chính). */
-  entries: (accountId: string, params: { financialDate: string; game: string }) =>
+  entries: (accountId: string, params: { financialDate: string; game: string; drawId?: string }) =>
     [MODULE, "player-detail", accountId, "entries", params] as const,
   /** Full entry doc cho EntryDetailDialog — dùng cho cả outstanding lẫn settled entry. */
   entryDetail: (accountId: string, entryId: string, game: string) =>
     [MODULE, "player-detail", accountId, "entry-detail", entryId, game] as const,
+  /** Breakdown theo drawId trong 1 ngày × 1 game (View 3 tab Tài chính). */
+  drawBreakdown: (accountId: string, params: { financialDate: string; game: string }) =>
+    [MODULE, "player-detail", accountId, "draw-breakdown", params] as const,
 };

@@ -28,7 +28,7 @@
  *      b. line.matchResult.winAmount — jackpotPerUnit × betCount per line
  *      c. draw.settleSummary.tiers[jackpot].prizeAmount
  *
- *   4. Cập nhật draw.stats.totalPayoutAmount (+= totalJackpotPayout)
+ *   4. Cập nhật draw.stats.totalPayoutAmount (re-aggregate từ entries, $set idempotent)
  *
  * ────────────────────────────────────────────────
  * BACKWARD COMPAT:
@@ -121,13 +121,10 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
       this.drawRepo.patchSettleSummaryJackpotPrize(drawId, totalJackpotPrize),
     ]);
 
-    // ── Bước 4: Cập nhật draw.stats.totalPayoutAmount ──────────────────────
-    // $inc KHÔNG idempotent → chỉ gọi khi entries thực sự được patch lần đầu.
-    // totalJackpotPayout = Σ(jackpotPerUnit × betCount) cho mỗi entry JP.
-    const totalJackpotPayout = jackpotPerUnit * totalBetUnits;
-    if (patchedEntries > 0) {
-      await this.drawRepo.incrementTotalPayout(drawId, totalJackpotPayout);
-    }
+    // ── Bước 4: Re-aggregate totalPayout từ entries rồi $set → idempotent ──
+    // Thay thế $inc (không idempotent): tính lại từ source of truth (entries).
+    const totalPayout = await this.entryRepo.aggregateTotalPayout(drawId);
+    await this.drawRepo.setTotalPayout(drawId, totalPayout);
 
     // ── Build winners list để truyền sang FinalizeSettle ────────────────────
     const winners: JackpotWinnerInfo[] = jackpotEntries.map((e) => {

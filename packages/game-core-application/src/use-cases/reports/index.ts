@@ -8,6 +8,7 @@ export { GetPlayerFinancialsUseCase } from "./get-player-financials";
 export { GetPlayerOutstandingUseCase } from "./get-player-outstanding";
 export { GetPlayerEntriesUseCase } from "./get-player-entries";
 export { GetPlayerEntryDetailUseCase } from "./get-player-entry-detail";
+export { GetPlayerDrawBreakdownUseCase } from "./get-player-draw-breakdown";
 
 export type {
   GetDailyOverviewInput,
@@ -29,4 +30,6 @@ export type {
   GetPlayerEntriesOutput,
   GetPlayerEntryDetailInput,
   GetPlayerEntryDetailOutput,
+  GetPlayerDrawBreakdownInput,
+  GetPlayerDrawBreakdownOutput,
 } from "./types";

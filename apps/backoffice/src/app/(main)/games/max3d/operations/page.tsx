@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Radio, SearchX } from "lucide-react";
+import { Plus, Radio, SearchX } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { max3dKeys } from "@/lib/query-keys";
@@ -10,11 +10,11 @@ import { displayVNTimeWithSeconds } from "@megawin/shared/utils";
 
 import { DrawContextProvider, useDrawContext } from "./_lib/use-draw-context";
 import { DrawSelector } from "./_lib/draw-selector";
+import { CreateDrawAction } from "./_lib/sections/draw-management/draw-actions";
 import { DrawManagementSection } from "./_lib/sections/draw-management";
 import { KpiSection } from "./_lib/sections/kpi";
 import { ResultSection } from "./_lib/sections/result";
 import { AnalyticsSection } from "./_lib/sections/analytics";
-import { CreateDrawDialog } from "../draws/_lib/create-draw-dialog";
 
 // ─── Last Updated Badge ───────────────────────────────────────────────────────
 
@@ -71,8 +71,17 @@ function OperationsContent() {
     isActiveForRefresh,
     opsParams,
   } = useDrawContext();
+  const [createOpen, setCreateOpen] = useState(false);
 
-  if (drawNotFound || noDrawAvailable) return <DrawNotFound noData={noDrawAvailable} />;
+  if (drawNotFound || noDrawAvailable)
+    return (
+      <DrawNotFound
+        noData={noDrawAvailable}
+        onCreateOpen={() => setCreateOpen(true)}
+        createOpen={createOpen}
+        setCreateOpen={setCreateOpen}
+      />
+    );
 
   return (
     <div className="@container/main flex flex-col gap-6">
@@ -99,10 +108,15 @@ function OperationsContent() {
             onSelect={onSelectDraw}
             historicalDraw={isHistorical ? draw : undefined}
           />
-          {/* CreateDrawDialog tự quản lý state nội bộ + trigger button */}
-          <CreateDrawDialog />
+          <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
+            <Plus className="size-4" />
+            Tạo kỳ quay
+          </Button>
         </div>
       </div>
+
+      {/* Create draw dialog */}
+      <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
 
       {/* Zone 1: Draw management — command center + dialogs */}
       <DrawManagementSection />
@@ -121,7 +135,17 @@ function OperationsContent() {
 
 // ─── Draw Not Found ──────────────────────────────────────────────────────────
 
-function DrawNotFound({ noData = false }: { noData?: boolean }) {
+function DrawNotFound({
+  noData = false,
+  onCreateOpen,
+  createOpen,
+  setCreateOpen,
+}: {
+  noData?: boolean;
+  onCreateOpen?: () => void;
+  createOpen?: boolean;
+  setCreateOpen?: (open: boolean) => void;
+}) {
   return (
     <div className="@container/main flex flex-col gap-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -136,8 +160,19 @@ function DrawNotFound({ noData = false }: { noData?: boolean }) {
             <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
           </div>
         </div>
-        {noData && <CreateDrawDialog />}
+        {noData && onCreateOpen && (
+          <div className="flex items-center gap-3">
+            <Button size="sm" className="gap-2" onClick={onCreateOpen}>
+              <Plus className="size-4" />
+              Tạo kỳ quay
+            </Button>
+          </div>
+        )}
       </div>
+
+      {noData && createOpen !== undefined && setCreateOpen && (
+        <CreateDrawAction open={createOpen} onOpenChange={setCreateOpen} />
+      )}
 
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-20 text-center">
         <div className="flex size-12 items-center justify-center rounded-full bg-muted">
@@ -155,7 +190,12 @@ function DrawNotFound({ noData = false }: { noData?: boolean }) {
           <Button variant="outline" size="sm" asChild>
             <Link href="/games/max3d/draws">Lịch sử kỳ quay</Link>
           </Button>
-          {!noData && (
+          {noData ? (
+            <Button size="sm" className="gap-2" onClick={onCreateOpen}>
+              <Plus className="size-4" />
+              Tạo kỳ quay
+            </Button>
+          ) : (
             <Button size="sm" asChild>
               <Link href="/games/max3d/operations">Về trang vận hành</Link>
             </Button>

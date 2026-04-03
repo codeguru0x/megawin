@@ -2,19 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, BarChart3, Clock } from "lucide-react";
+import { BarChart3, Clock } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const playerNavItems = [
   {
-    title: "Tổng quan",
-    href: "overview",
-    icon: LayoutDashboard,
-  },
-  {
     title: "Tài chính",
-    href: "financials",
+    href: "settle",
     icon: BarChart3,
   },
   {

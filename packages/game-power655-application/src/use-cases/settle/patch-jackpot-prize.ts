@@ -37,14 +37,14 @@
  *   6. Patch song song (idempotent):
  *      a. entry.payout.tiers[jackpotN] → unitAmount, amount, winAmount
  *      b. line.matchResult.winAmount   → jackpotPerUnit × line.betCount
- *   7. incrementTotalPayout nếu có patch
+ *   7. Re-aggregate totalPayout từ entries rồi $set (idempotent)
  *
  * ────────────────────────────────────────────────
  * IDEMPOTENT:
  * ────────────────────────────────────────────────
  *   - patchJackpotPrizePerEntry:  filter amount = 0 → skip nếu đã patch
  *   - patchJackpotLinesPerUnit:   filter winAmount = 0 → skip nếu đã patch
- *   - incrementTotalPayout:       guard bởi patchedEntries > 0
+ *   - setTotalPayout:             re-aggregate từ entries rồi $set → luôn đúng
  *
  * Input: SettleContextWithFinancials
  * Output: { drawId, jp1EntriesPatched, jp2EntriesPatched, winners }
@@ -90,7 +90,6 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
 
     let jp1EntriesPatched = 0;
     let jp2EntriesPatched = 0;
-    let totalIncrementAmount = 0;
     const winners: JackpotWinnerInfo[] = [];
 
     // ── JP1: patch theo tỷ lệ betCount ─────────────────────────────────────
@@ -101,10 +100,6 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
         jp1CurrentAmount + jackpot1Contribution,
       );
       jp1EntriesPatched = result.patchedCount;
-
-      if (result.patchedCount > 0) {
-        totalIncrementAmount += result.totalPrizeDistributed;
-      }
 
       // Build winners list để truyền sang FinalizeSettle
       for (const [entryId, info] of result.perEntryAmounts) {
@@ -132,10 +127,6 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
       );
       jp2EntriesPatched = result.patchedCount;
 
-      if (result.patchedCount > 0) {
-        totalIncrementAmount += result.totalPrizeDistributed;
-      }
-
       // Build winners list để truyền sang FinalizeSettle
       for (const [entryId, info] of result.perEntryAmounts) {
         const entry = await this.entryRepo.getEntryById(entryId);
@@ -154,7 +145,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     }
 
     // ── Cập nhật draw.stats.totalPayout + settleSummary Jackpot prizeAmount ───
-    // incrementTotalPayout: $inc KHÔNG idempotent → guard bởi totalIncrementAmount > 0.
+    // Re-aggregate totalPayout từ entries (source of truth) rồi $set → idempotent.
     // patchSettleSummaryJackpot: $set → idempotent (set giá trị, không cộng).
     const jackpotPatches: Array<{ tier: PrizeTier; prizeAmount: number }> = [];
 
@@ -175,10 +166,12 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
       });
     }
 
+    // Re-aggregate totalPayout từ entries sau khi patch JP → $set absolute value.
+    // Idempotent: bất kể retry bao nhiêu lần, kết quả luôn chính xác.
+    const totalPayout = await this.entryRepo.aggregateTotalPayout(drawId);
+
     await Promise.all([
-      totalIncrementAmount > 0
-        ? this.drawRepo.incrementTotalPayout(drawId, totalIncrementAmount)
-        : Promise.resolve(),
+      this.drawRepo.setTotalPayout(drawId, totalPayout),
       jackpotPatches.length > 0
         ? this.drawRepo.patchSettleSummaryJackpot(drawId, jackpotPatches)
         : Promise.resolve(),

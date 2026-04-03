@@ -1,16 +1,23 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Info, List } from "lucide-react";
+import { AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
+import { displayVNDateTime } from "@megawin/shared/utils/date";
 
-import { DataTable } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useDataTableInstance } from "@/hooks/use-data-table-instance";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import { usePlayerAccountsCursor } from "../../_shared/queries";
-import { ACCOUNTS_PAGE_SIZE } from "../../_shared/constants";
-import { playerAccountsColumns } from "./columns";
 import type { PlayerAccount } from "../_lib/schema";
 
 interface PlayersTableProps {
@@ -27,6 +34,12 @@ interface PlayersTableProps {
   toolbarControls?: React.ReactNode;
 }
 
+const STATUS_VARIANT: Record<string, "default" | "outline" | "secondary" | "destructive"> = {
+  active: "default",
+  read_only: "secondary",
+  suspended: "destructive",
+};
+
 export function PlayersTable({
   tenantId,
   after,
@@ -36,19 +49,12 @@ export function PlayersTable({
   tenantSelector,
   toolbarControls,
 }: PlayersTableProps) {
+  const router = useRouter();
   const cursor = after ? { after } : before ? { before } : undefined;
 
   const { data, isLoading, error } = usePlayerAccountsCursor(tenantId, cursor);
 
   const accounts = data?.accounts ?? [];
-
-  const table = useDataTableInstance<PlayerAccount, unknown>({
-    data: accounts,
-    columns: playerAccountsColumns,
-    enableRowSelection: false,
-    defaultPageSize: ACCOUNTS_PAGE_SIZE,
-    getRowId: (row) => row.accountId,
-  });
 
   if (!tenantId) {
     return (
@@ -82,7 +88,7 @@ export function PlayersTable({
           </div>
           <div className="flex items-center gap-1.5">
             {accounts.length > 0 && !isLoading && (
-              <span className="text-[11px] tabular-nums text-muted-foreground">
+              <span className="text-xs tabular-nums text-muted-foreground">
                 {accounts.length} tài khoản
               </span>
             )}
@@ -90,7 +96,7 @@ export function PlayersTable({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="flex size-full flex-col gap-0 px-0 pb-0 pt-0">
+      <CardContent className="px-0 pb-0 pt-0">
         {error && <p className="px-5 pb-2 text-sm text-destructive">{error.message}</p>}
 
         {isLoading ? (
@@ -103,18 +109,38 @@ export function PlayersTable({
             </p>
           </div>
         ) : (
-          <DataTable table={table} columns={playerAccountsColumns} />
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-5">Tên tài khoản</TableHead>
+                  <TableHead>Tên hiển thị</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead className="pr-5 text-right">Ngày tạo</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {accounts.map((account) => (
+                  <AccountRow
+                    key={account.accountId}
+                    account={account}
+                    onClick={() => router.push(`/accounts/players/${account.accountId}/settle`)}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
 
-        {/* Prev / Next navigation — căn phải, chỉ hiện khi có data */}
+        {/* Prev / Next navigation */}
         {!isLoading && accounts.length > 0 && (
           <div className="flex items-center justify-end gap-2 border-t px-5 py-3">
             <Button
               variant="outline"
               size="sm"
               onClick={() => {
-                const cursor = data?.prevCursor;
-                if (cursor) onPrev(cursor);
+                const prevCursor = data?.prevCursor;
+                if (prevCursor) onPrev(prevCursor);
               }}
               disabled={!data?.hasPrev}
             >
@@ -125,8 +151,8 @@ export function PlayersTable({
               variant="outline"
               size="sm"
               onClick={() => {
-                const cursor = data?.nextCursor;
-                if (cursor) onNext(cursor);
+                const nextCursor = data?.nextCursor;
+                if (nextCursor) onNext(nextCursor);
               }}
               disabled={!data?.hasNext}
             >
@@ -137,5 +163,25 @@ export function PlayersTable({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function AccountRow({ account, onClick }: { account: PlayerAccount; onClick: () => void }) {
+  const status = account.status as AccountStatus;
+  return (
+    <TableRow className="cursor-pointer hover:bg-muted/50" onClick={onClick}>
+      <TableCell className="pl-5">
+        <span className="font-mono text-sm">{account.username}</span>
+      </TableCell>
+      <TableCell className="text-sm">{account.displayName}</TableCell>
+      <TableCell>
+        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>
+          {AccountStatusLabel[status] ?? status}
+        </Badge>
+      </TableCell>
+      <TableCell className="pr-5 text-right text-sm tabular-nums text-muted-foreground">
+        {account.createdAt ? displayVNDateTime(new Date(account.createdAt)) : "—"}
+      </TableCell>
+    </TableRow>
   );
 }

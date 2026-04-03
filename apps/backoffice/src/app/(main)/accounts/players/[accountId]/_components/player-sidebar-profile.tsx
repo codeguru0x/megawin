@@ -79,7 +79,7 @@ export function PlayerSidebarProfile({ accountId }: PlayerSidebarProfileProps) {
             </p>
           )}
         </div>
-        <Badge variant={statusVariant} className="h-[18px] text-[10px]">
+        <Badge variant={statusVariant} className="h-5 text-xs">
           {statusLabel}
         </Badge>
       </div>
@@ -120,7 +120,7 @@ function CopyableId({ value }: { value: string }) {
 
   return (
     <div className="flex items-center gap-1 border-y border-border/50 px-1 py-2">
-      <span className="min-w-0 truncate font-mono text-[10px] text-muted-foreground" title={value}>
+      <span className="min-w-0 truncate font-mono text-xs text-muted-foreground" title={value}>
         {value}
       </span>
       <button
@@ -150,10 +150,10 @@ function SidebarRow({
     <div className="flex items-center justify-between gap-1 px-1 py-2">
       <div className="flex shrink-0 items-center gap-1.5">
         <Icon className="size-3 shrink-0 text-muted-foreground" />
-        <span className="text-[11px] text-muted-foreground">{label}</span>
+        <span className="text-xs text-muted-foreground">{label}</span>
       </div>
       <span
-        className={`truncate text-right text-[11px] font-medium text-foreground ${mono ? "font-mono" : ""}`}
+        className={`truncate text-right text-xs font-medium text-foreground ${mono ? "font-mono" : ""}`}
       >
         {value}
       </span>

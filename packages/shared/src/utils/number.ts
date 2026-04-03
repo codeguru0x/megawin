@@ -82,15 +82,17 @@ export function formatVND(amount: number | undefined | null): string {
  */
 export function formatVNDCompact(amount: number | undefined | null): string {
   const n = amount ?? 0;
-  if (n >= 1_000_000_000) {
-    const billions = n / 1_000_000_000;
-    return `${billions.toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tỷ`;
+  const abs = Math.abs(n);
+  const sign = n < 0 ? "-" : "";
+  if (abs >= 1_000_000_000) {
+    const billions = abs / 1_000_000_000;
+    return `${sign}${billions.toLocaleString("vi-VN", { maximumFractionDigits: 2 })} tỷ`;
   }
-  if (n >= 1_000_000) {
-    const millions = n / 1_000_000;
-    return `${millions.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} triệu`;
+  if (abs >= 1_000_000) {
+    const millions = abs / 1_000_000;
+    return `${sign}${millions.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} triệu`;
   }
-  return n.toLocaleString("vi-VN") + " ₫";
+  return `${sign}${abs.toLocaleString("vi-VN")} ₫`;
 }
 
 /**

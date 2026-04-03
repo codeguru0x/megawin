@@ -21,6 +21,7 @@ export class GetPlayerEntriesUseCase extends NextApiUseCase<
       input.accountId,
       input.financialDate,
       input.game as GameProduct,
+      input.drawId,
     );
     return { data };
   }

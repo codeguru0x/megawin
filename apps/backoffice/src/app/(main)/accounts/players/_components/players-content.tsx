@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryStates, parseAsString } from "nuqs";
 import { Loader2, Search, SearchX, UserSearch, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
+import { displayVNDateTime } from "@megawin/shared/utils/date";
 
-import { DataTable } from "@/components/data-table/data-table";
-import { DataTableViewOptions } from "@/components/data-table/data-table-view-options";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,11 +18,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useDataTableInstance } from "@/hooks/use-data-table-instance";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useTenantOptions } from "@/hooks/use-tenant-options";
 
 import { useSearchPlayerAccounts } from "../../_shared/queries";
-import { searchResultColumns } from "./columns";
 import { PlayersTable } from "./players-table";
 import type { PlayerAccount } from "../_lib/schema";
 
@@ -223,6 +230,12 @@ export function PlayersContent() {
 // SearchResultCard — hiển thị kết quả tìm kiếm (0-N kết quả)
 // ─────────────────────────────────────────────────────────────────────────────
 
+const STATUS_VARIANT: Record<string, "default" | "outline" | "secondary" | "destructive"> = {
+  active: "default",
+  read_only: "secondary",
+  suspended: "destructive",
+};
+
 function SearchResultCard({
   keyword,
   toolbarControls,
@@ -230,17 +243,10 @@ function SearchResultCard({
   keyword: string;
   toolbarControls: React.ReactNode;
 }) {
+  const router = useRouter();
   const { data, isLoading, error } = useSearchPlayerAccounts(keyword);
 
   const accounts = data?.accounts ?? [];
-
-  const table = useDataTableInstance<PlayerAccount, unknown>({
-    data: accounts,
-    columns: searchResultColumns,
-    enableRowSelection: false,
-    defaultPageSize: 20,
-    getRowId: (row) => row.accountId,
-  });
 
   return (
     <Card className="gap-0 py-0">
@@ -256,14 +262,11 @@ function SearchResultCard({
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-1">
-            {toolbarControls}
-            <DataTableViewOptions table={table} />
-          </div>
+          <div className="flex items-center gap-1">{toolbarControls}</div>
         </div>
       </CardHeader>
       <CardContent className="px-0 pb-0 pt-0">
-        {error && <p className="px-5 text-sm text-destructive">{error.message}</p>}
+        {error && <p className="px-5 pb-2 text-sm text-destructive">{error.message}</p>}
         {isLoading ? (
           <div className="flex h-[120px] items-center justify-center gap-2 text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
@@ -278,7 +281,49 @@ function SearchResultCard({
             </p>
           </div>
         ) : (
-          <DataTable table={table} columns={searchResultColumns} />
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-5">Tên tài khoản</TableHead>
+                  <TableHead>Tenant</TableHead>
+                  <TableHead>Tên hiển thị</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                  <TableHead className="pr-5 text-right">Ngày tạo</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {accounts.map((account) => {
+                  const status = account.status as AccountStatus;
+                  return (
+                    <TableRow
+                      key={account.accountId}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => router.push(`/accounts/players/${account.accountId}/settle`)}
+                    >
+                      <TableCell className="pl-5">
+                        <span className="font-mono text-sm">{account.username}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm text-muted-foreground">
+                          {account.tenantId}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm">{account.displayName}</TableCell>
+                      <TableCell>
+                        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>
+                          {AccountStatusLabel[status] ?? status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="pr-5 text-right text-sm tabular-nums text-muted-foreground">
+                        {account.createdAt ? displayVNDateTime(new Date(account.createdAt)) : "—"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
     </Card>

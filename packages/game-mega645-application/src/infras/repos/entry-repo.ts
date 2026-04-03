@@ -183,6 +183,26 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   // ─────────────────────────────────────────────
 
   /**
+   * Re-aggregate tổng payoutAmount từ tất cả settled entries cho 1 draw.
+   *
+   * Dùng sau PatchJackpotPrize để tính totalPayout chính xác (giải cố định + jackpot).
+   * Kết quả dùng cho $set trên DrawDoc → **idempotent** (thay vì $inc).
+   * Query đơn giản: $match + $group + 1 $sum, hit index { drawId, status }.
+   */
+  async aggregateTotalPayout(drawId: string): Promise<number> {
+    const result = await this.aggregate([
+      { $match: { drawId, status: { $ne: EntryStatus.Void } } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+        },
+      },
+    ]);
+    return (result[0] as any)?.total ?? 0;
+  }
+
+  /**
    * Aggregate tổng doanh thu và hoa hồng cho 1 draw (exclude voided entries).
    * Group by null — 1 document kết quả, hiệu quả hơn aggregateRevenueByTenant
    * khi caller chỉ cần 2 scalar tổng.
@@ -1599,7 +1619,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     ]);
     return (result as any[]).map((r) => ({
       accountId: r._id as string,
-      username: r.username as string,
+      username: (r.username ?? r._id) as string,
       entryCount: r.entryCount as number,
       lineCount: r.lineCount as number,
       totalStake: r.totalStake as number,

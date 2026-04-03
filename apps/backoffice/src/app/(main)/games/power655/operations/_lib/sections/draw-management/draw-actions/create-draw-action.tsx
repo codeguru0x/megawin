@@ -322,6 +322,15 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   Trùng ngày — kiểm tra lại
                 </Badge>
               )}
+              {preview.data && preview.data.draws.length > 0 && (
+                <button
+                  onClick={applyPreview}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  title="Áp lại gợi ý từ preview"
+                >
+                  <RefreshCw className="size-3" />
+                </button>
+              )}
               {hasFewerPreviewSlots && (
                 <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
                   Gợi ý chỉ có {previewCount}/{count} kỳ — tự điền các ô trống
@@ -339,7 +348,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           <div className="rounded-xl border overflow-hidden">
             <div
               className="grid items-center gap-x-3 px-4 py-2 bg-muted/40 border-b"
-              style={{ gridTemplateColumns: "1.5rem 1fr 7rem auto" }}
+              style={{ gridTemplateColumns: "1.5rem 1fr 6.5rem 9rem" }}
             >
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 #
@@ -350,16 +359,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Giờ quay
               </span>
-              <div className="flex items-center gap-2">
-                {preview.data && preview.data.draws.length > 0 && (
-                  <button
-                    onClick={applyPreview}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    title="Áp lại gợi ý từ preview"
-                  >
-                    <RefreshCw className="size-3" />
-                  </button>
-                )}
+              <div className="flex items-center justify-end">
                 <button
                   onClick={toggleAll}
                   className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -391,7 +391,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                           ? "bg-purple-50/50 dark:bg-purple-950/15"
                           : "hover:bg-muted/20",
                     )}
-                    style={{ gridTemplateColumns: "1.5rem 1fr 7rem auto" }}
+                    style={{ gridTemplateColumns: "1.5rem 1fr 6.5rem 9rem" }}
                   >
                     <span
                       className={cn(
@@ -418,11 +418,26 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       hasError={false}
                     />
 
-                    <Switch
-                      checked={row.isOpen}
-                      onCheckedChange={() => updateRow(i, { isOpen: !row.isOpen })}
-                      className={cn("data-[state=checked]:bg-purple-600")}
-                    />
+                    <div
+                      onClick={() => updateRow(i, { isOpen: !row.isOpen })}
+                      className="flex items-center justify-end gap-1.5 cursor-pointer select-none"
+                    >
+                      <Switch
+                        checked={row.isOpen}
+                        onCheckedChange={() => updateRow(i, { isOpen: !row.isOpen })}
+                        className={cn("data-[state=checked]:bg-purple-600 pointer-events-none")}
+                      />
+                      <span
+                        className={cn(
+                          "text-[11px] font-medium min-w-12 text-left",
+                          row.isOpen
+                            ? "text-purple-600 dark:text-purple-400"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        {row.isOpen ? "Mở bán" : "Chờ lịch"}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
@@ -434,14 +449,6 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               Có ngày bị trùng trong danh sách — mỗi ngày chỉ được tạo 1 kỳ.
             </p>
           )}
-
-          <div className="flex items-center gap-2 rounded-lg bg-muted/30 px-3 py-2.5 text-xs text-muted-foreground">
-            <Unlock className="size-3.5 shrink-0 text-purple-500" />
-            <span>
-              Bật switch = mở bán ngay sau khi tạo. Tắt = kỳ ở trạng thái Scheduled (cần mở thủ
-              công).
-            </span>
-          </div>
         </div>
 
         <DialogFooter>

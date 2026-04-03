@@ -15,6 +15,7 @@ export { SettleTenantReportRepository } from "./settle-tenant-report-repo";
 export { VoidReportRepository } from "./void-report-repo";
 export { OutstandingReportRepository } from "./outstanding-report-repo";
 export { EntryOutstandingRepository } from "./entry-outstanding-repo";
+export { EntryVoidRepository } from "./entry-void-repo";
 
 export type { JackpotCycleEntity } from "@megawin/game-mega645/entities";
 export type { DrawEntity } from "@megawin/game-mega645/entities";
@@ -29,4 +30,6 @@ export type {
   PlayerBreakdownRow,
   OutstandingTenantBreakdownRow,
   OutstandingPlayerBreakdownRow,
+  VoidTenantBreakdownRow,
+  VoidPlayerBreakdownRow,
 } from "./types";

@@ -295,6 +295,64 @@ shadcn `Card` mặc định có `py-6 gap-6` — PHẢI override để tránh kh
 - Click row → mở RightDrawer (chi tiết / actions / audit)
 - Mỗi table PHẢI có `DataTableViewOptions`
 
+### 1.7a Table Column Padding — Cột Đầu & Cột Cuối (BẮT BUỘC)
+
+Khi table nằm trong `<CardContent className="p-0">` hoặc bất kỳ container nào **loại bỏ padding mặc định**, cột đầu và cột cuối sẽ bị sát mép card. **BẮT BUỘC** thêm padding tường cho 2 cột biên:
+
+| Cột | TableHead | TableCell (body) | TableCell (footer) |
+|-----|-----------|------------------|--------------------|
+| **Đầu tiên** | `pl-5` | `pl-5` | `pl-5` |
+| **Cuối cùng** | `pr-5` | `pr-5` | `pr-5` |
+
+**Áp dụng cho tất cả rows:** header row, mọi body row, footer summary row.
+
+```tsx
+// ✅ ĐÚNG — table trong CardContent p-0
+<CardContent className="p-0">
+  <Table>
+    <TableHeader>
+      <TableRow>
+        <TableHead className="pl-5">Ngày</TableHead>
+        <TableHead className="text-right">Doanh thu</TableHead>
+        <TableHead className="pr-5 text-right">Lợi nhuận</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      <TableRow>
+        <TableCell className="pl-5 font-mono">2026-03-01</TableCell>
+        <TableCell className="text-right tabular-nums">{formatNumber(revenue)}</TableCell>
+        <TableCell className="pr-5 text-right tabular-nums">{formatNumber(profit)}</TableCell>
+      </TableRow>
+    </TableBody>
+    <TableFooter>
+      <TableRow>
+        <TableCell className="pl-5 font-semibold">Tổng cộng</TableCell>
+        <TableCell className="text-right tabular-nums font-semibold">{formatNumber(totalRevenue)}</TableCell>
+        <TableCell className="pr-5 text-right tabular-nums font-semibold">{formatNumber(totalProfit)}</TableCell>
+      </TableRow>
+    </TableFooter>
+  </Table>
+</CardContent>
+
+// ❌ SAI — thiếu pl-5/pr-5, content sát mép card
+<CardContent className="p-0">
+  <Table>
+    <TableHeader>
+      <TableRow>
+        <TableHead>Ngày</TableHead>         {/* ← sát mép trái */}
+        <TableHead className="text-right">Lợi nhuận</TableHead>  {/* ← sát mép phải */}
+      </TableRow>
+    </TableHeader>
+  </Table>
+</CardContent>
+```
+
+**Quy tắc xác định cột đầu/cuối:**
+- **Cột đầu** = `<TableHead>` / `<TableCell>` đầu tiên trong mỗi `<TableRow>` (bao gồm cả footer).
+- **Cột cuối** = `<TableHead>` / `<TableCell>` cuối cùng trong mỗi `<TableRow>` (bao gồm cả footer).
+- Nếu cột đầu vừa cần `pl-5` vừa có class khác: merge vào cùng `className` — ví dụ `className="pl-5 font-mono text-sm"`.
+- Nếu cột cuối vừa cần `pr-5` vừa là `text-right`: viết `className="pr-5 text-right tabular-nums"`.
+
 ---
 
 ### 1.8 Game Brand Colors
@@ -658,6 +716,150 @@ import { DrawRepository } from "../../../../../../packages/game-lotto535-applica
 
 ---
 
+## PHẦN 5b — FORM HANDLING (BẮT BUỘC)
+
+### 5b.1 Stack ưu tiên
+
+**BẮT BUỘC dùng React Hook Form + Zod + React Query cho mọi form có mutation (POST/PUT/DELETE).** Đây là stack chuẩn — KHÔNG dùng `useState` thủ công để quản lý form state trừ khi có lý do kỹ thuật cụ thể (VD: form chỉ có 1 field và không cần validation).
+
+| Layer | Tool | Mục đích |
+|-------|------|----------|
+| **Form state** | `react-hook-form` | Quản lý field values, dirty/touched, validation |
+| **Validation** | `zod` + `@hookform/resolvers/zod` | Schema validation, type inference |
+| **Mutation** | `useMutation` từ `@tanstack/react-query` | API call, loading/error state, cache invalidation |
+| **UI** | shadcn `<Form>`, `<FormField>`, `<FormItem>`, `<FormLabel>`, `<FormControl>`, `<FormMessage>` | Accessible form fields với error display |
+
+### 5b.2 Pattern chuẩn
+
+```tsx
+// ✅ ĐÚNG — Form pattern đầy đủ
+"use client";
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+
+// Zod schema đặt NGOÀI component — không inline bên trong function
+const formSchema = z.object({
+  name: z.string().min(1, "Tên là bắt buộc."),
+  amount: z.number().positive("Phải lớn hơn 0."),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+export function MyForm() {
+  const queryClient = useQueryClient();
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { name: "", amount: 0 },
+  });
+
+  const mutation = useMutation({
+    mutationFn: (values: FormValues) =>
+      apiClient.post("/some-endpoint", values),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: someKeys.all });
+      form.reset();
+      toast.success("Thành công.");
+    },
+    onError: (error) => {
+      if (error instanceof ApiClientError) {
+        toast.error(error.message);
+      } else {
+        toast.error("Đã xảy ra lỗi.");
+      }
+    },
+  });
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))}>
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tên</FormLabel>
+              <FormControl>
+                <Input placeholder="Nhập tên" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending ? "Đang lưu..." : "Lưu"}
+        </Button>
+      </form>
+    </Form>
+  );
+}
+```
+
+```tsx
+// ❌ SAI — useState thủ công cho form có nhiều fields
+function BadForm() {
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState(0);
+  const [error, setError] = useState("");
+
+  function handleSubmit() {
+    if (!name) { setError("Tên là bắt buộc."); return; }  // ← validate thủ công
+    mutation.mutate({ name, amount });
+  }
+  // ...
+}
+```
+
+### 5b.3 Quy tắc chi tiết
+
+1. **Zod schema đặt ngoài component** (module-level const) — không inline bên trong function body.
+2. **`type FormValues = z.infer<typeof formSchema>`** — luôn derive type từ schema, không viết tay.
+3. **Reset form khi close dialog** — gọi `form.reset()` trong `onSuccess` hoặc `onOpenChange(false)`.
+4. **`mutation.isPending`** để disable submit button và show loading state — không dùng `useState(false)` riêng.
+5. **Error toast qua `onError`** — không toast lỗi trong submit handler.
+6. **`form.watch()` hoặc `useWatch()`** để đọc field value real-time (VD: password strength, conditional render) — không dùng `useState` song song với form field.
+7. **Icon trong input** — dùng absolute positioned icon bên trong relative wrapper, không dùng addon component.
+8. **`shouldValidate: true`** khi `setValue` programmatically (VD: auto-generate password) để trigger validation ngay.
+
+### 5b.4 Dialog Form Pattern (BẮT BUỘC)
+
+Form trong Dialog PHẢI có header với icon gradient theo `SYSTEM_ICON_GRADIENT` (hệ thống) hoặc màu game tương ứng:
+
+```tsx
+// ✅ ĐÚNG — Dialog header với icon
+<DialogHeader>
+  <div className="flex items-center gap-3">
+    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-indigo-600 shadow-sm">
+      <SomeIcon className="size-4.5 text-white" />
+    </div>
+    <div>
+      <DialogTitle>Tiêu đề</DialogTitle>
+      <DialogDescription className="text-xs">Mô tả ngắn gọn.</DialogDescription>
+    </div>
+  </div>
+</DialogHeader>
+
+// ❌ SAI — không có icon
+<DialogHeader>
+  <DialogTitle>Tiêu đề</DialogTitle>
+  <DialogDescription>Mô tả.</DialogDescription>
+</DialogHeader>
+```
+
+### 5b.5 Ngoại lệ — Khi KHÔNG cần react-hook-form
+
+Form đơn giản chỉ có **1 field** và **không cần validation phức tạp** có thể dùng `useState` kết hợp với `useMutation`. Tuy nhiên phải dùng `zodResolver` ngay khi:
+- Form có ≥ 2 fields
+- Cần hiển thị inline error message
+- Có logic validation cross-field (VD: confirm password)
+- Form có nhiều loại input (checkbox, select, radio...)
+
+---
+
 ## PHẦN 6 — QUICK CHECKLIST
 
 ### ✅ Phải làm
@@ -669,11 +871,14 @@ import { DrawRepository } from "../../../../../../packages/game-lotto535-applica
 - `gap-0 py-0` trên `<Card>` + `px-5 pt-4 pb-2` trên `<CardHeader>` (chỉ cho data card, KHÔNG cho KPI card)
 - Icon `size-4 text-muted-foreground` bên trái mọi `<CardTitle>`
 - Icon `size-9 rounded-xl` + gradient trong PageHeader
+- **Form có ≥ 2 fields hoặc mutation: react-hook-form + Zod + `useMutation`** — Zod schema ngoài component, `form.reset()` khi close, `mutation.isPending` cho loading state (mục 5b)
+- **Dialog form: header với icon gradient** `size-9 rounded-xl` theo mục 5b.4
 - `<Suspense>` bọc mọi component dùng `useQueryState`
 - Query hooks tách file riêng, dùng `accountsKeys.*` từ `lib/query-keys/`
 - Label import từ package, cast an toàn trước khi index
 - API route dùng `withApi()` + `.body(schema)` + use case từ package
 - Empty state + loading skeleton match layout
+- **`pl-5` cột đầu tiên + `pr-5` cột cuối cùng** cho mọi table trong `CardContent p-0` — áp dụng cho TableHead, TableCell (body), TableCell (footer) (mục 1.7a)
 
 ### ❌ Không làm
 
@@ -684,12 +889,15 @@ import { DrawRepository } from "../../../../../../packages/game-lotto535-applica
 - `useState("")` cho selector cần persist URL — dùng `nuqs`
 - `useQuery` inline trong component — tách ra `_lib/queries.ts`
 - Hardcode queryKey string — dùng `accountsKeys.*`
+- **`useState` thủ công cho form ≥ 2 fields** — phải dùng react-hook-form
+- **Dialog form thiếu icon header** — mọi dialog form phải có icon gradient (mục 5b.4)
 - `useSearchParams` + `useEffect` sync state thủ công
 - Gọi repo trực tiếp trong API route — phải qua use case
 - Skip Zod validation trong API route — phải dùng `.body(schema)`
 - `<Card>` không có `gap-0 py-0`
 - `<CardTitle>` không có icon kèm theo
 - KPI card dùng shadcn Card vertical layout — phải dùng pattern horizontal icon (mục 1.2a)
+- **Thiếu `pl-5`/`pr-5`** ở cột đầu/cuối khi table nằm trong container không có padding (mục 1.7a)
 
 ---
 

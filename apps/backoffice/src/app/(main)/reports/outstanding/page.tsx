@@ -20,7 +20,7 @@ import type { SystemOutstandingGameDaily } from "@megawin/game-core/entities";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { SYSTEM_ICON_GRADIENT, getGameHex } from "@/lib/game-colors";
-import { useSystemOutstanding } from "../financial/_lib/use-report-queries";
+import { useSystemOutstanding } from "../settle/_lib/use-report-queries";
 
 // Nhãn cột đặc thù trang hệ thống
 const COL_LABELS = {
@@ -161,7 +161,7 @@ function SystemOutstandingContent() {
               Outstanding — Số liệu đang chờ
             </h1>
             <p className="text-xs text-muted-foreground">
-              Entries chưa settle toàn hệ thống · Tự động refresh mỗi 60s
+              Phiếu cược chưa settle trên toàn hệ thống · Tự động refresh mỗi 60s
             </p>
           </div>
         </div>
@@ -241,7 +241,7 @@ function SystemOutstandingContent() {
                       <TableRow
                         key={row.gameProduct}
                         className={cn(slug && "cursor-pointer hover:bg-muted/50")}
-                        onClick={() => slug && router.push(`/games/${slug}/outstanding`)}
+                        onClick={() => slug && router.push(`/games/${slug}/reports/outstanding`)}
                       >
                         <TableCell className="pl-5 font-medium">
                           <span className="inline-flex items-center gap-2">
@@ -264,7 +264,7 @@ function SystemOutstandingContent() {
                         <TableCell className="text-right tabular-nums">
                           {formatNumber(row.totalEntryCount)}
                         </TableCell>
-                        <TableCell className="text-right tabular-nums text-muted-foreground">
+                        <TableCell className="text-right tabular-nums">
                           {formatNumber(row.totalEstimatedCommission)}
                         </TableCell>
                         <TableCell className="pr-5 text-right tabular-nums font-medium">
@@ -285,7 +285,7 @@ function SystemOutstandingContent() {
                       <TableCell className="text-right tabular-nums">
                         {formatNumber(totalEntries)}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                      <TableCell className="text-right tabular-nums">
                         {formatNumber(totalCommission)}
                       </TableCell>
                       <TableCell className="pr-5 text-right tabular-nums font-semibold">

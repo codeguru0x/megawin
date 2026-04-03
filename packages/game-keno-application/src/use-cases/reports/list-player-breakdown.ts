@@ -17,7 +17,7 @@ export class ListPlayerBreakdownUseCase extends NextApiUseCase<
     const rows = await this.repo.aggregatePlayersByDrawAndTenant(input.drawId, input.tenantId);
     const data = rows.map((r) => ({
       accountId: r.accountId,
-      username: r.accountId,
+      username: r.username,
       entryCount: r.entryCount,
       totalStake: r.totalStake,
       totalWin: r.totalWin,

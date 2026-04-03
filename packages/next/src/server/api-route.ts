@@ -201,14 +201,9 @@ export class ApiRouteBuilder<
 
           if (cfg.authRequirements.roles?.length) {
             const userRoles = session.user.roles ?? [];
-            console.log("[auth check] userRoles:", userRoles);
-            console.log("[auth check] requiredRoles:", cfg.authRequirements.roles);
-            console.log("[auth check] superRoles:", cfg.superRoles);
             const hasSuperRole = cfg.superRoles?.some((r) => userRoles.includes(r));
-            console.log("[auth check] hasSuperRole:", hasSuperRole);
             if (!hasSuperRole) {
               const hasRole = cfg.authRequirements.roles.some((r) => userRoles.includes(r));
-              console.log("[auth check] hasRole:", hasRole);
               if (!hasRole) {
                 return apiError(403, {
                   code: APP_ERROR_CODES.FORBIDDEN,

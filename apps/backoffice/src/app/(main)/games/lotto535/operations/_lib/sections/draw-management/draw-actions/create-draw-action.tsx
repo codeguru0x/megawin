@@ -347,6 +347,15 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                   {scheduledCount} chờ lịch
                 </Badge>
               )}
+              {preview.data && preview.data.draws.length > 0 && (
+                <button
+                  onClick={applyPreview}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  title="Áp lại gợi ý từ preview"
+                >
+                  <RefreshCw className="size-3" />
+                </button>
+              )}
               {hasFewerPreviewSlots && (
                 <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
                   Gợi ý chỉ có {previewCount}/{count} kỳ — tự điền các ô trống
@@ -365,7 +374,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             {/* Table header */}
             <div
               className="grid items-center gap-x-3 px-4 py-2 bg-muted/40 border-b"
-              style={{ gridTemplateColumns: "1.5rem 1fr 8.5rem 7rem auto" }}
+              style={{ gridTemplateColumns: "1.5rem 1fr 8.5rem 6.5rem 9rem" }}
             >
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 #
@@ -379,17 +388,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Giờ quay
               </span>
-              {/* Toggle all + Apply preview */}
-              <div className="flex items-center gap-2">
-                {preview.data && preview.data.draws.length > 0 && (
-                  <button
-                    onClick={applyPreview}
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    title="Áp lại gợi ý từ preview"
-                  >
-                    <RefreshCw className="size-3" />
-                  </button>
-                )}
+              <div className="flex items-center justify-end">
                 <button
                   onClick={toggleAll}
                   className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -422,7 +421,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       "grid items-center gap-x-3 px-4 py-2.5 transition-colors",
                       row.isOpen ? "bg-emerald-50/50 dark:bg-emerald-950/15" : "hover:bg-muted/20",
                     )}
-                    style={{ gridTemplateColumns: "1.5rem 1fr 8.5rem 7rem auto" }}
+                    style={{ gridTemplateColumns: "1.5rem 1fr 8.5rem 6.5rem 9rem" }}
                   >
                     {/* Số thứ tự */}
                     <span
@@ -476,7 +475,10 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                     />
 
                     {/* Per-row open switch */}
-                    <div className="flex items-center gap-1.5">
+                    <div
+                      onClick={() => toggleSlot(i)}
+                      className="flex items-center justify-end gap-1.5 cursor-pointer select-none"
+                    >
                       {row.isOpen ? (
                         <Unlock className="size-3 text-emerald-500 shrink-0" />
                       ) : (
@@ -485,8 +487,18 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       <Switch
                         checked={row.isOpen}
                         onCheckedChange={() => toggleSlot(i)}
-                        className="scale-75 origin-right"
+                        className="scale-75 origin-right pointer-events-none"
                       />
+                      <span
+                        className={cn(
+                          "text-[11px] font-medium min-w-12 text-left",
+                          row.isOpen
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        {row.isOpen ? "Mở bán" : "Chờ lịch"}
+                      </span>
                     </div>
                   </div>
                 );

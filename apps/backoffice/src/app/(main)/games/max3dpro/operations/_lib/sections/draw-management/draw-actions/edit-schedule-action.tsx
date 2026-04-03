@@ -85,14 +85,16 @@ export function EditScheduleAction({
       setError("Vui lòng nhập giờ quay số.");
       return;
     }
-    if (salesClose <= salesOpen) {
+    const salesOpenTs = toVNDate(salesOpenDate, salesOpen).getTime();
+    const salesCloseTs = toVNDate(salesCloseDate, salesClose).getTime();
+    if (salesCloseTs <= salesOpenTs) {
       setError("Giờ đóng bán phải lớn hơn giờ mở bán.");
       return;
     }
 
     const body: { salesOpenAt: string; salesCloseAt: string; drawTime?: string } = {
-      salesOpenAt: toVNDate(salesOpenDate, salesOpen).toISOString(),
-      salesCloseAt: toVNDate(salesCloseDate, salesClose).toISOString(),
+      salesOpenAt: new Date(salesOpenTs).toISOString(),
+      salesCloseAt: new Date(salesCloseTs).toISOString(),
     };
 
     // So sánh với lịch quay gốc (draw.drawDate + draw.drawTime) để phát hiện thay đổi

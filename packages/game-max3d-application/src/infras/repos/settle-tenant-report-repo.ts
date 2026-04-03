@@ -26,7 +26,10 @@ import type { TenantAggregateSummary } from "./types";
  *
  * 1 doc = 1 tenant × 1 draw. Unique index: { drawId: 1, tenantId: 1 }.
  */
-export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEntity, SettleTenantReportMapper> {
+export class SettleTenantReportRepository extends BaseRepo<
+  SettleTenantReportEntity,
+  SettleTenantReportMapper
+> {
   constructor() {
     super({ collName: MAX3D_SETTLE_TENANT_REPORTS, dataMapper: new SettleTenantReportMapper() });
   }
@@ -101,10 +104,10 @@ export class SettleTenantReportRepository extends BaseRepo<SettleTenantReportEnt
           entryCount: { $sum: "$entryCount" },
           playerCount: { $sum: "$playerCount" },
           lineCount: { $sum: { $ifNull: ["$lineCount", 0] } },
-          totalStake: { $sum: "$financial.totalRevenue" },
-          totalWin: { $sum: "$financial.totalWin" },
-          totalPayout: { $sum: "$financial.totalPayout" },
-          ggr: { $sum: "$financial.ggr" },
+          totalStake: { $sum: "$totalStake" },
+          totalWin: { $sum: "$totalWin" },
+          totalPayout: { $sum: "$totalPayout" },
+          ggr: { $sum: "$ggr" },
           totalCommission: { $sum: "$totalCommission" },
         },
       },

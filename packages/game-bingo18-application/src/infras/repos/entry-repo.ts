@@ -1123,6 +1123,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   ): Promise<
     Array<{
       accountId: string;
+      username: string;
       entryCount: number;
       totalStake: number;
       totalWin: number;
@@ -1134,6 +1135,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       {
         $group: {
           _id: "$accountId",
+          username: { $first: "$username" },
           entryCount: { $sum: 1 },
           totalStake: { $sum: "$amount" },
           totalWin: { $sum: { $ifNull: ["$payout.winAmount", 0] } },
@@ -1144,6 +1146,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     ]);
     return (result as any[]).map((r) => ({
       accountId: r._id,
+      username: r.username ?? r._id,
       entryCount: r.entryCount,
       totalStake: r.totalStake,
       totalWin: r.totalWin,

@@ -384,6 +384,26 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   // ─────────────────────────────────────────────
 
   /**
+   * Re-aggregate tổng payoutAmount từ tất cả non-void entries cho 1 draw.
+   *
+   * Dùng sau PatchJackpotPrize để tính totalPayout chính xác (giải cố định + jackpot).
+   * Kết quả dùng cho $set trên DrawDoc → **idempotent** (thay vì $inc).
+   * Query đơn giản: $match + $group + 1 $sum, hit index { drawId, status }.
+   */
+  async aggregateTotalPayout(drawId: string): Promise<number> {
+    const result = await this.aggregate([
+      { $match: { drawId, status: { $ne: EntryStatus.Void } } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: { $ifNull: ["$payout.payoutAmount", 0] } },
+        },
+      },
+    ]);
+    return (result[0] as any)?.total ?? 0;
+  }
+
+  /**
    * Aggregate tổng doanh thu và hoa hồng cho 1 draw (exclude voided entries).
    * Group by null — 1 document kết quả, hiệu quả hơn group by tenant
    * khi caller chỉ cần 2 scalar tổng.
@@ -1761,7 +1781,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
    * Aggregate players cho 1 draw × 1 tenant. Drill cấp 3 trong financial reports.
    *
    * BẮT BUỘC drawId + tenantId — KHÔNG query cross-draw.
-   * Index: { drawId: 1, "tenant.tenantId": 1, accountId: 1 }
+   * Index: { drawId: 1, tenantId: 1, accountId: 1 }
    */
   async aggregatePlayersByDrawAndTenant(
     drawId: string,
@@ -1772,7 +1792,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       {
         $match: {
           drawId,
-          "tenant.tenantId": tenantId,
+          tenantId,
           status: "settled",
         },
       },
@@ -1798,7 +1818,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
     return (result as any[]).map((r) => ({
       accountId: r._id as string,
-      username: r.username as string,
+      username: (r.username ?? r._id) as string,
       entryCount: r.entryCount as number,
       lineCount: r.lineCount as number,
       totalStake: r.totalStake as number,
@@ -1810,7 +1830,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   /**
    * Query entries cho 1 draw × 1 tenant × 1 player. Drill cấp 4.
    *
-   * Index: { drawId: 1, "tenant.tenantId": 1, accountId: 1 }
+   * Index: { drawId: 1, tenantId: 1, accountId: 1 }
    */
   async findByDrawTenantPlayer(
     drawId: string,
@@ -1819,7 +1839,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   ): Promise<TicketEntryEntity[]> {
     return this.findMany({
       drawId,
-      "tenant.tenantId": tenantId,
+      tenantId,
       accountId,
     });
   }

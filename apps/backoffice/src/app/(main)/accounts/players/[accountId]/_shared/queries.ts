@@ -101,6 +101,12 @@ export interface PlayerOutstandingEntryResponse {
   financialDate: string;
   amount: number;
   commissionAmount: number;
+  /** Số boards trong vé. Undefined khi data cũ chưa có field này. */
+  boardCount?: number;
+  /** Số lines (games có lines). Undefined khi game không có lines (keno, bingo18). */
+  lineCount?: number;
+  /** Số đơn vị cược. Undefined khi data cũ chưa có field này. */
+  betUnitCount?: number;
   createdAt: string;
 }
 
@@ -147,7 +153,12 @@ export interface PlayerSettledEntryResponse {
   status: string;
   outcome: string | null;
   amount: number;
+  /** Số boards trong vé. Undefined khi data cũ chưa có field này. */
+  boardCount?: number;
+  /** Số lines (games có lines) hoặc selections (keno/bingo18). */
   lineCount: number;
+  /** Số đơn vị cược. Undefined khi data cũ chưa có field này. */
+  betUnitCount?: number;
   commissionAmount: number;
   winAmount: number;
   payoutAmount: number;
@@ -157,14 +168,20 @@ export interface PlayerSettledEntryResponse {
 
 /**
  * Danh sách entries settled/voided của 1 player trong 1 ngày × 1 game.
- * Drill cấp 2 từ bảng tài chính. Chỉ gọi khi có financialDate + game.
+ * Drill cấp 2/4 từ bảng tài chính. Optional drawId filter cho View 4.
  */
-export function usePlayerEntries(accountId: string, financialDate: string, game: string) {
+export function usePlayerEntries(
+  accountId: string,
+  financialDate: string,
+  game: string,
+  drawId?: string,
+) {
+  const drawParam = drawId ? `&drawId=${drawId}` : "";
   return useQuery({
-    queryKey: playerDetailKeys.entries(accountId, { financialDate, game }),
+    queryKey: playerDetailKeys.entries(accountId, { financialDate, game, drawId }),
     queryFn: () =>
       apiClient.get<{ data: PlayerSettledEntryResponse[] }>(
-        `/accounts/players/${accountId}/entries?financialDate=${financialDate}&game=${game}`,
+        `/accounts/players/${accountId}/entries?financialDate=${financialDate}&game=${game}${drawParam}`,
       ),
     enabled: !!accountId && !!financialDate && !!game,
     select: (res) => res.data,
@@ -188,6 +205,35 @@ export function usePlayerEntryDetail(accountId: string, entryId: string, game: s
         `/accounts/players/${accountId}/entries/${entryId}?game=${game}`,
       ),
     enabled: !!accountId && !!entryId && !!game,
+    select: (res) => res.data,
+  });
+}
+
+// ─── Draw breakdown types + hook ──────────────────────────────────────────────
+
+/** Breakdown 1 kỳ quay (drawId) của player trong 1 ngày × 1 game (View 3). */
+export interface PlayerDrawBreakdownResponse {
+  drawId: string;
+  entryCount: number;
+  totalStake: number;
+  totalPayout: number;
+  ggr: number;
+  totalCommission: number;
+  netProfit: number;
+}
+
+/**
+ * Breakdown theo kỳ quay trong 1 ngày × 1 game.
+ * View 3 Player Detail → Tài chính drill-down.
+ */
+export function usePlayerDrawBreakdown(accountId: string, financialDate: string, game: string) {
+  return useQuery({
+    queryKey: playerDetailKeys.drawBreakdown(accountId, { financialDate, game }),
+    queryFn: () =>
+      apiClient.get<{ data: PlayerDrawBreakdownResponse[] }>(
+        `/accounts/players/${accountId}/draws?financialDate=${financialDate}&game=${game}`,
+      ),
+    enabled: !!accountId && !!financialDate && !!game,
     select: (res) => res.data,
   });
 }

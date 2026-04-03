@@ -22,5 +22,6 @@ export const GET = withApi()
       accountId,
       financialDate: query.financialDate,
       game: query.game,
+      drawId: query.drawId,
     });
   });

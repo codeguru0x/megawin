@@ -25,8 +25,7 @@ function parseCognitoRoles(raw: unknown): AccountRole[] {
 
   return items.filter(
     (r): r is AccountRole =>
-      typeof r === "string" &&
-      (ALL_ROLE_VALUES as readonly string[]).includes(r)
+      typeof r === "string" && (ALL_ROLE_VALUES as readonly string[]).includes(r),
   );
 }
 
@@ -34,22 +33,12 @@ function parseCognitoRoles(raw: unknown): AccountRole[] {
  * Resolve session từ better-auth.
  * Đọc session cookie từ request headers → trả RouteSession hoặc null.
  */
-async function getSession(
-  req: NextRequest
-): Promise<RouteSession<AccountRole> | null> {
+async function getSession(req: NextRequest): Promise<RouteSession<AccountRole> | null> {
   const session = await auth.api.getSession({ headers: req.headers });
 
   if (!session) return null;
 
   const user = session.user as Record<string, unknown>;
-
-  console.log("[getSession] user object:", JSON.stringify(user, null, 2));
-  console.log(
-    "[getSession] user.roles:",
-    user.roles,
-    "type:",
-    typeof user.roles
-  );
 
   const roles = parseCognitoRoles(user.roles ?? []);
   const accountStatus = (user.accountStatus as string) ?? AccountStatus.Active;

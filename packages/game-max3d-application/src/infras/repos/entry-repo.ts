@@ -1559,7 +1559,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       {
         $group: {
           _id: "$accountId",
-          username: { $first: { $ifNull: ["$player.username", "$accountId"] } },
+          username: { $first: "$username" },
           entryCount: { $sum: 1 },
           lineCount: { $sum: { $ifNull: ["$lineCount", 0] } },
           totalStake: { $sum: "$amount" },
@@ -1572,7 +1572,7 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
     return (result as any[]).map((r) => ({
       accountId: r._id,
-      username: r.username,
+      username: r.username ?? r._id,
       entryCount: r.entryCount,
       lineCount: r.lineCount ?? 0,
       totalStake: r.totalStake,

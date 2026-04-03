@@ -26,7 +26,10 @@ import type { DrawSummaryResult } from "./types";
  *
  * 1 doc = 1 draw. Unique index: { drawId: 1 }.
  */
-export class SettleDrawReportRepository extends BaseRepo<SettleDrawReportEntity, SettleDrawReportMapper> {
+export class SettleDrawReportRepository extends BaseRepo<
+  SettleDrawReportEntity,
+  SettleDrawReportMapper
+> {
   constructor() {
     super({ collName: MAX3D_SETTLE_DRAW_REPORTS, dataMapper: new SettleDrawReportMapper() });
   }
@@ -122,12 +125,12 @@ export class SettleDrawReportRepository extends BaseRepo<SettleDrawReportEntity,
           playerCount: { $sum: "$playerCount" },
           tenantCount: { $sum: "$tenantCount" },
           lineCount: { $sum: { $ifNull: ["$lineCount", 0] } },
-          totalStake: { $sum: "$financial.totalRevenue" },
-          totalWin: { $sum: "$financial.totalWin" },
-          totalPayout: { $sum: "$financial.totalPayout" },
-          ggr: { $sum: "$financial.ggr" },
-          totalCommission: { $sum: "$financial.totalCommission" },
-          netProfit: { $sum: "$financial.netProfit" },
+          totalStake: { $sum: "$totalStake" },
+          totalWin: { $sum: "$totalWin" },
+          totalPayout: { $sum: "$totalPayout" },
+          ggr: { $sum: "$ggr" },
+          totalCommission: { $sum: "$totalCommission" },
+          netProfit: { $sum: "$netProfit" },
         },
       },
     ]);

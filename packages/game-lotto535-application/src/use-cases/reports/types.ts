@@ -15,6 +15,8 @@ import type {
   PlayerBreakdownRow,
   OutstandingTenantBreakdownRow,
   OutstandingPlayerBreakdownRow,
+  VoidTenantBreakdownRow,
+  VoidPlayerBreakdownRow,
 } from "../../infras/repos";
 
 // ─── Draw Reports ─────────────────────────────────────────────────────────────
@@ -114,6 +116,35 @@ export interface ListVoidReportsInput {
 
 export interface ListVoidReportsOutput {
   data: VoidDrawReport[];
+}
+
+// ─── Void Drill-Down ─────────────────────────────────────────────────────────
+
+export interface ListVoidDrawTenantsInput {
+  drawId: string;
+}
+
+export interface ListVoidDrawTenantsOutput {
+  data: VoidTenantBreakdownRow[];
+}
+
+export interface ListVoidTenantPlayersInput {
+  drawId: string;
+  tenantId: string;
+}
+
+export interface ListVoidTenantPlayersOutput {
+  data: VoidPlayerBreakdownRow[];
+}
+
+export interface ListVoidPlayerEntriesInput {
+  drawId: string;
+  tenantId: string;
+  accountId: string;
+}
+
+export interface ListVoidPlayerEntriesOutput {
+  data: TicketEntryEntity[];
 }
 
 // ─── Outstanding ──────────────────────────────────────────────────────────────

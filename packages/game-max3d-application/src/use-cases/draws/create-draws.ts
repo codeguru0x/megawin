@@ -5,10 +5,9 @@
  * Max 3D quay vào T2/T4/T6 lúc 18:00 (theo drawDaysOfWeek config).
  *
  * Flow:
- *   1. Load global config → lấy play rules (drawTimes, drawDaysOfWeek, salesCloseBeforeMinutes)
- *   2. Lấy danh sách draws đã tồn tại → skip draws đã có
- *   3. Tính draw slots khả dụng (calcMax3dDrawSlots)
- *   4. Tạo từng draw: status Scheduled (chờ staff mở bán)
+ *   1. Nhận `draws[]` từ input — mỗi phần tử chứa drawDate, drawTime, openNow
+ *   2. Tính drawNo từ lịch (1 kỳ/ngày) và generate drawId
+ *   3. Tạo từng draw: status Scheduled hoặc SalesOpen (theo openNow)
  *
  * Max 3D không có Jackpot tích lũy → không tạo jackpot cycle.
  */
@@ -17,7 +16,7 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { generateDrawId } from "@megawin/game-max3d/helpers";
-import { getFinancialDate } from "@megawin/shared/utils";
+import { getFinancialDate, subtractMinutes } from "@megawin/shared/utils";
 import type { DrawNo } from "@megawin/game-max3d/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
@@ -29,14 +28,14 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(input: CreateDrawsInput): Promise<CreateDrawsOutput> {
-    const { count } = input;
+    const { draws: inputDraws } = input;
+
+    if (inputDraws.length < 1 || inputDraws.length > 12) {
+      throw AppException.badRequest("Số kỳ tạo phải từ 1 đến 12.");
+    }
 
     const globalConfig = await this.getGlobalConfig.run();
     const { play } = globalConfig;
-
-    if (count < 1 || count > 12) {
-      throw AppException.badRequest("Số kỳ tạo phải từ 1 đến 12.");
-    }
 
     const existingActiveDraws = await this.drawRepo.getActiveDraws([
       DrawStatus.Scheduled,
@@ -47,31 +46,41 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
     ]);
     const existingDrawIds = new Set(existingActiveDraws.map((d) => d.drawId));
 
-    const slots = calcMax3dDrawSlots(new Date(), count, play, existingDrawIds);
-    if (slots.length === 0) {
-      throw AppException.badRequest("Không còn slot quay nào khả dụng.");
-    }
+    // Tính slots để lấy drawNo tương ứng với từng drawDate
+    const slots = calcMax3dDrawSlots(new Date(), inputDraws.length + 12, play, existingDrawIds);
 
     const now = new Date();
     const draws: CreateDrawsOutputItem[] = [];
 
-    for (const slot of slots) {
-      const drawId = generateDrawId(slot.drawDate, slot.drawNo as any);
+    for (const item of inputDraws) {
+      // Tìm slot tương ứng với drawDate từ input
+      const matchingSlot = slots.find((s) => s.drawDate === item.drawDate);
 
-      const existing = await this.drawRepo.getDrawById(drawId);
-      if (existing) continue;
+      if (!matchingSlot) {
+        throw AppException.badRequest(
+          `Ngày "${item.drawDate}" không phải ngày quay hợp lệ (T2/T4/T6) hoặc kỳ đã tồn tại.`,
+        );
+      }
 
-      const status = DrawStatus.Scheduled;
+      const drawId = generateDrawId(item.drawDate, matchingSlot.drawNo as any);
+
+      const existingDraw = await this.drawRepo.getDrawById(drawId);
+      if (existingDraw) continue;
+
+      const drawTime = new Date(item.drawTime);
+      const closeAt = subtractMinutes(drawTime, play.salesCloseBeforeMinutes);
+      const status = item.openNow ? DrawStatus.SalesOpen : DrawStatus.Scheduled;
 
       await this.drawRepo.createDraw({
         drawId,
-        drawDate: slot.drawDate,
-        financialDate: getFinancialDate(slot.drawTime),
-        drawNo: slot.drawNo as DrawNo,
-        drawTime: slot.drawTime,
+        drawDate: item.drawDate,
+        financialDate: getFinancialDate(drawTime),
+        drawNo: matchingSlot.drawNo as DrawNo,
+        drawTime,
         status,
         sales: {
-          closeAt: slot.closeAt,
+          closeAt,
+          ...(item.openNow ? { openAt: now } : {}),
         },
         createdAt: now,
         updatedAt: now,
@@ -79,11 +88,11 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
 
       draws.push({
         drawId,
-        drawDate: slot.drawDate,
-        drawNo: slot.drawNo,
-        drawTime: slot.drawTime.toISOString(),
-        closeAt: slot.closeAt.toISOString(),
-        financialDate: getFinancialDate(slot.drawTime),
+        drawDate: item.drawDate,
+        drawNo: matchingSlot.drawNo,
+        drawTime: drawTime.toISOString(),
+        closeAt: closeAt.toISOString(),
+        financialDate: getFinancialDate(drawTime),
         status,
       });
     }

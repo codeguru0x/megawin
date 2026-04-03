@@ -14,6 +14,12 @@ export const playerFinancialsQuerySchema = z.object({
 export const playerEntriesQuerySchema = z.object({
   financialDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "financialDate phải là YYYY-MM-DD"),
   game: z.string().min(1, "game là bắt buộc"),
+  drawId: z.string().optional(),
+});
+
+export const playerDrawBreakdownQuerySchema = z.object({
+  financialDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "financialDate phải là YYYY-MM-DD"),
+  game: z.string().min(1, "game là bắt buộc"),
 });
 
 export const playerEntryDetailQuerySchema = z.object({

@@ -5,7 +5,7 @@ import { CalendarClock, Loader2, ListOrdered, Dice5 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useBingo18CurrentDraw } from "./_lib/use-draws";
-import { useBingo18GameConfig } from "../config/_lib/use-game-config";
+import { useBingo18GameConfig } from "../config/game/_lib/use-game-config";
 import { Bingo18PrimaryDrawCard, Bingo18QueueDrawCard } from "./_lib/active-draw-card";
 import { Bingo18DrawHistorySection } from "./_lib/draw-history-section";
 

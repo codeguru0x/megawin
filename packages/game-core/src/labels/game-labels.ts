@@ -190,11 +190,24 @@ export const REPORT_COLUMN_LABELS = {
   /** Số đại lý tham gia. */
   tenantCount: "Đại lý",
   /** Số lượt cược (entries). */
-  entryCount: "Lượt cược",
+  entryCount: "Phiếu cược",
   /** Số dòng cược (lines — game có lines: lotto535, mega645, power655, max3d, max3dpro). */
-  lineCount: "Dòng cược",
-  /** Tổng tiền cược pending (VND). Outstanding reports. */
-  totalStake: "Tổng tiền cược",
+  lineCount: "Bộ số",
+  /**
+   * Cột "Boards/Lines" trên entry-level table — hiển thị `{boardCount}/{lineCount}`.
+   * Dùng cho game có nhiều boards: max3d, max3dpro, mega645, power655, lotto535.
+   */
+  boardsLines: "Bảng/Bộ số",
+
+  /** Label cột "Bảng" trong bảng báo cáo. */
+  board: "Bảng",
+
+  /** Label cột "Game" trong bảng báo cáo. */
+  game: "Game",
+  /** Label cột "Kỳ quay" trong bảng báo cáo. */
+  drawCount: "Kỳ quay",
+  /** Tổng tiền cược (VND). Financial & Outstanding reports. */
+  totalStake: "Tiền cược",
   /** Ước tính hoa hồng đại lý (VND). Outstanding reports. */
   estimatedCommission: "Ước tính hoa hồng",
   /** Tổng tiền thắng (VND). Settle reports. */
@@ -202,9 +215,11 @@ export const REPORT_COLUMN_LABELS = {
   /** Tổng tiền trả thưởng (VND). Settle reports. */
   totalPayout: "Trả thưởng",
   /** Gross Gaming Revenue = totalStake - totalPayout (VND). */
-  ggr: "Doanh thu thuần (GGR)",
+  ggr: "Doanh thu thuần",
   /** Tỷ lệ trả thưởng = totalPayout / totalStake (%). */
   payoutPercent: "Tỷ lệ trả thưởng",
+  /** Số lần cược (betUnitCount). Entry-level reports. */
+  betUnitCount: "Tổng lần cược",
   /** Tổng hoa hồng đại lý (VND). Settle reports. */
   totalCommission: "Hoa hồng đại lý",
   /** Lợi nhuận ròng (VND). Có thể âm khi trúng jackpot. */
@@ -217,6 +232,18 @@ export const REPORT_COLUMN_LABELS = {
   totalOriginalStake: "Tiền cược gốc",
   /** Tổng tiền hoàn trả (VND). Void reports. */
   totalRefundAmount: "Tiền hoàn trả",
+
+  /** Lãi / Lỗ (KH). */
+  playerNetProfit: "Lãi / Lỗ (KH)",
+
+  /** Tên cột "Tài khoản" trong bảng báo cáo người chơi. */
+  accountName: "Tài khoản",
+
+  /** Tên cột "Đại lý" trong bảng báo cáo đại lý. */
+  tenantId: "Đại lý",
+
+  /** Tổng tiền cược. */
+
   /** Nhãn dòng tổng cộng ở footer bảng. */
   summary: "TỔNG CỘNG",
 } as const;

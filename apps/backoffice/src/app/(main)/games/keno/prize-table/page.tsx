@@ -18,7 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatVND, formatCurrency } from "@megawin/shared/utils";
 
-import { useKenoGameConfig, type KenoGameConfig } from "../config/_lib/use-game-config";
+import { useKenoGameConfig, type KenoGameConfig } from "../config/game/_lib/use-game-config";
 
 // ─────────────────────────────────────────────
 // Constants

@@ -12,7 +12,7 @@
 import { ObjectId } from "mongodb";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GameCoreBaseRepo } from "./game-core-base-repo";
-import type { PlayerSettledEntryRow } from "./types";
+import type { PlayerSettledEntryRow, PlayerDrawBreakdownRow } from "./types";
 
 /** Map gameProduct → tên collection ticket_entries tương ứng. */
 const ENTRY_COLLECTIONS: Record<GameProduct, string> = {
@@ -32,10 +32,10 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
   }
 
   /**
-   * Entries settled/voided của 1 player trong 1 ngày × 1 game.
+   * Entries settled/voided của 1 player trong 1 ngày × 1 game, optional filter theo drawId.
    *
-   * Drill cấp 2 từ bảng tài chính Player Detail.
-   * Filter: { accountId, financialDate, status ∈ [settled, void] }.
+   * Drill cấp 2/4 từ bảng tài chính Player Detail.
+   * Filter: { accountId, financialDate, status ∈ [settled, void], drawId? }.
    * Sort: createdAt desc (entry mới nhất trước).
    *
    * Index cần: { accountId: 1, financialDate: 1 } trên mỗi {game}_ticket_entries.
@@ -45,6 +45,7 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
     accountId: string,
     financialDate: string,
     gameProduct: GameProduct,
+    drawId?: string,
   ): Promise<PlayerSettledEntryRow[]> {
     const collName = ENTRY_COLLECTIONS[gameProduct];
     if (!collName) return [];
@@ -59,6 +60,8 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
           financialDate,
           // Chỉ lấy entries đã có kết quả — settled hoặc void
           status: { $in: ["settled", "void"] },
+          // Optional filter theo drawId (View 4 khi drill từ 1 kỳ quay cụ thể)
+          ...(drawId ? { drawId } : {}),
         },
         {
           // Project summary fields — đủ để hiển thị bảng entries
@@ -66,6 +69,8 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
             _id: 1,
             ticketId: 1,
             "entrySummary.ticketNo": 1,
+            // boardCount = số boards trong entry
+            "entrySummary.boards": 1,
             drawId: 1,
             "tenant.tenantId": 1,
             status: 1,
@@ -74,6 +79,8 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
             // lineCount hoặc selectionCount — tùy game
             lineCount: 1,
             selectionCount: 1,
+            // betUnitCount = tổng số đơn vị cược
+            betUnitCount: 1,
             "tenant.commissionAmount": 1,
             // payout chỉ có khi win
             "payout.winAmount": 1,
@@ -95,6 +102,10 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
       const lineCount =
         (doc.lineCount as number | undefined) ?? (doc.selectionCount as number | undefined) ?? 0;
 
+      // boardCount = số boards trong entrySummary
+      const boards = entrySummary?.boards as unknown[] | undefined;
+      const boardCount = boards?.length;
+
       return {
         entryId: String(doc._id),
         ticketId: (doc.ticketId as string) ?? "",
@@ -104,7 +115,9 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
         status: (doc.status as string) ?? "",
         outcome: (doc.outcome as string | null | undefined) ?? null,
         amount: (doc.amount as number) ?? 0,
+        boardCount,
         lineCount,
+        betUnitCount: doc.betUnitCount as number | undefined,
         commissionAmount: (tenant?.commissionAmount as number) ?? 0,
         winAmount: (payout?.winAmount as number) ?? 0,
         payoutAmount: (payout?.payoutAmount as number) ?? 0,
@@ -144,5 +157,80 @@ export class PlayerEntryRepository extends GameCoreBaseRepo<any> {
     // Map _id → id (string) để match TicketEntryEntity convention
     const { _id, ...rest } = doc;
     return { id: String(_id), ...rest };
+  }
+
+  /**
+   * Aggregate entries theo drawId cho View 3: breakdown kỳ quay trong 1 ngày × 1 game × 1 player.
+   *
+   * Pipeline: $match { accountId, financialDate, game, status ∈ [settled, void] }
+   *           → $group by drawId → compute financial metrics.
+   *
+   * Financial fields (totalStake, totalPayout, totalCommission) chỉ tính entries settled.
+   * entryCount đếm cả settled + void.
+   * Sort: drawId asc.
+   */
+  async aggregatePlayerDrawsInDay(
+    accountId: string,
+    financialDate: string,
+    gameProduct: GameProduct,
+  ): Promise<PlayerDrawBreakdownRow[]> {
+    const collName = ENTRY_COLLECTIONS[gameProduct];
+    if (!collName) return [];
+
+    const db = await this.getDb();
+    const coll = db.collection(collName);
+
+    const pipeline = [
+      {
+        $match: {
+          accountId,
+          financialDate,
+          status: { $in: ["settled", "void"] },
+        },
+      },
+      {
+        $group: {
+          _id: "$drawId",
+          entryCount: { $sum: 1 },
+          // Financial chỉ tính settled (status = "settled"), bỏ void
+          totalStake: {
+            $sum: { $cond: [{ $eq: ["$status", "settled"] }, "$amount", 0] },
+          },
+          totalPayout: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "settled"] }, { $ifNull: ["$payout.payoutAmount", 0] }, 0],
+            },
+          },
+          totalCommission: {
+            $sum: {
+              $cond: [
+                { $eq: ["$status", "settled"] },
+                { $ifNull: ["$tenant.commissionAmount", 0] },
+                0,
+              ],
+            },
+          },
+        },
+      },
+      { $sort: { _id: 1 as const } },
+    ];
+
+    const results = await coll.aggregate(pipeline).toArray();
+
+    return results.map((r): PlayerDrawBreakdownRow => {
+      const totalStake = (r["totalStake"] as number) ?? 0;
+      const totalPayout = (r["totalPayout"] as number) ?? 0;
+      const totalCommission = (r["totalCommission"] as number) ?? 0;
+      const ggr = totalStake - totalPayout;
+      return {
+        drawId: (r["_id"] as string) ?? "",
+        entryCount: (r["entryCount"] as number) ?? 0,
+        totalStake,
+        totalPayout,
+        ggr,
+        totalCommission,
+        netProfit: ggr - totalCommission,
+      };
+    });
   }
 }

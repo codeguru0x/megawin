@@ -1,10 +1,11 @@
 "use client";
 
-import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
+import { CalendarClock, ExternalLink, Loader2, ListOrdered } from "lucide-react";
+import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
 import { useCurrentDraw } from "./_lib/use-draws";
-import { useGameConfig } from "../config/_lib/use-game-config";
-import { CreateDrawDialog } from "./_lib/create-draw-dialog";
+import { useGameConfig } from "../config/game/_lib/use-game-config";
 import { Max3dproPrimaryDrawCard, Max3dproQueueDrawCard } from "./_lib/active-draw-card";
 import { DrawHistorySection } from "./_lib/draw-history-section";
 
@@ -28,15 +29,13 @@ export default function Max3dproDrawsPage() {
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Max 3D Pro — Quản lý kỳ quay
+              Max 3D Pro — Kỳ quay
             </h1>
             <p className="text-xs text-muted-foreground">
-              {drawsPerDay} kỳ/ngày ({drawTimes.join(" & ")}). T3/T5/T7 hàng tuần. Xem lịch sử và
-              tạo kỳ mới.
+              {drawsPerDay} kỳ/ngày ({drawTimes.join(" & ")}). T3/T5/T7 hàng tuần.
             </p>
           </div>
         </div>
-        <CreateDrawDialog />
       </div>
 
       {isLoading ? (
@@ -72,9 +71,22 @@ export default function Max3dproDrawsPage() {
           <div>
             <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Nhấn &ldquo;Tạo kỳ quay&rdquo; để bắt đầu kỳ mới.
+              Vào trang{" "}
+              <Link
+                href="/games/max3dpro/operations"
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                Vận hành
+              </Link>{" "}
+              để tạo kỳ mới.
             </p>
           </div>
+          <Button variant="outline" size="sm" className="gap-1.5" asChild>
+            <Link href="/games/max3dpro/operations">
+              <ExternalLink className="size-3.5" />
+              Đến trang vận hành
+            </Link>
+          </Button>
         </div>
       )}
 

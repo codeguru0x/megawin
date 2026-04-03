@@ -12,6 +12,7 @@ import type {
   PlayerOverviewResult,
   PlayerOutstandingSummary,
   PlayerSettledEntryRow,
+  PlayerDrawBreakdownRow,
 } from "../../infras/repos/types";
 import type {
   SystemSettleGameDaily,
@@ -140,6 +141,8 @@ export interface GetPlayerEntriesInput {
   financialDate: string;
   /** Game product string (vd: "mega645"). */
   game: string;
+  /** Optional: filter theo 1 kỳ quay cụ thể (View 4 từ draw breakdown). */
+  drawId?: string;
 }
 
 export interface GetPlayerEntriesOutput {
@@ -169,4 +172,20 @@ export interface GetPlayerEntryDetailOutput {
    * Consumer cast sang đúng TicketEntryEntity của từng game.
    */
   data: unknown | null;
+}
+
+// ─── Player Draw Breakdown (View 3 — kỳ quay trong ngày) ────────────────────
+
+export interface GetPlayerDrawBreakdownInput {
+  /** ID tài khoản player. */
+  accountId: string;
+  /** Ngày tài chính (YYYY-MM-DD). */
+  financialDate: string;
+  /** Game product string (vd: "keno"). */
+  game: string;
+}
+
+export interface GetPlayerDrawBreakdownOutput {
+  /** Breakdown theo drawId — aggregate entries trong 1 ngày × 1 game × 1 player. */
+  data: PlayerDrawBreakdownRow[];
 }

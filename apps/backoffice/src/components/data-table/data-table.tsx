@@ -17,7 +17,15 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { type ColumnDef, flexRender, type Table as TanStackTable } from "@tanstack/react-table";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import { DraggableRow } from "./draggable-row";
 
@@ -26,6 +34,10 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   dndEnabled?: boolean;
   onReorder?: (newData: TData[]) => void;
+  /** Override className cho TableHeader. Mặc định: "sticky top-0 z-10 bg-muted". */
+  headerClassName?: string;
+  /** Click handler cho từng row. Khi có, row sẽ có cursor-pointer. */
+  onRowClick?: (row: TData) => void;
 }
 
 function renderTableBody<TData, TValue>({
@@ -33,11 +45,13 @@ function renderTableBody<TData, TValue>({
   columns,
   dndEnabled,
   dataIds,
+  onRowClick,
 }: {
   table: TanStackTable<TData>;
   columns: ColumnDef<TData, TValue>[];
   dndEnabled: boolean;
   dataIds: UniqueIdentifier[];
+  onRowClick?: (row: TData) => void;
 }) {
   if (!table.getRowModel().rows.length) {
     return (
@@ -58,14 +72,23 @@ function renderTableBody<TData, TValue>({
     );
   }
   return table.getRowModel().rows.map((row) => (
-    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+    <TableRow
+      key={row.id}
+      data-state={row.getIsSelected() && "selected"}
+      className={onRowClick ? "cursor-pointer hover:bg-muted/50" : undefined}
+      onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+    >
       {row.getVisibleCells().map((cell) => (
         <TableCell
           key={cell.id}
           style={{
             width: cell.column.columnDef.size ? `${cell.column.columnDef.size}px` : undefined,
-            minWidth: cell.column.columnDef.minSize ? `${cell.column.columnDef.minSize}px` : undefined,
-            maxWidth: cell.column.columnDef.maxSize ? `${cell.column.columnDef.maxSize}px` : undefined,
+            minWidth: cell.column.columnDef.minSize
+              ? `${cell.column.columnDef.minSize}px`
+              : undefined,
+            maxWidth: cell.column.columnDef.maxSize
+              ? `${cell.column.columnDef.maxSize}px`
+              : undefined,
           }}
         >
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -80,10 +103,18 @@ export function DataTable<TData, TValue>({
   columns,
   dndEnabled = false,
   onReorder,
+  headerClassName,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
-  const dataIds: UniqueIdentifier[] = table.getRowModel().rows.map((row) => Number(row.id) as UniqueIdentifier);
+  const dataIds: UniqueIdentifier[] = table
+    .getRowModel()
+    .rows.map((row) => Number(row.id) as UniqueIdentifier);
   const sortableId = React.useId();
-  const sensors = useSensors(useSensor(MouseSensor, {}), useSensor(TouchSensor, {}), useSensor(KeyboardSensor, {}));
+  const sensors = useSensors(
+    useSensor(MouseSensor, {}),
+    useSensor(TouchSensor, {}),
+    useSensor(KeyboardSensor, {}),
+  );
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -99,7 +130,7 @@ export function DataTable<TData, TValue>({
 
   const tableContent = (
     <Table>
-      <TableHeader className="sticky top-0 z-10 bg-muted">
+      <TableHeader className={cn("sticky top-0 z-10 bg-muted", headerClassName)}>
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>
             {headerGroup.headers.map((header) => {
@@ -108,12 +139,20 @@ export function DataTable<TData, TValue>({
                   key={header.id}
                   colSpan={header.colSpan}
                   style={{
-                    width: header.column.columnDef.size ? `${header.column.columnDef.size}px` : undefined,
-                    minWidth: header.column.columnDef.minSize ? `${header.column.columnDef.minSize}px` : undefined,
-                    maxWidth: header.column.columnDef.maxSize ? `${header.column.columnDef.maxSize}px` : undefined,
+                    width: header.column.columnDef.size
+                      ? `${header.column.columnDef.size}px`
+                      : undefined,
+                    minWidth: header.column.columnDef.minSize
+                      ? `${header.column.columnDef.minSize}px`
+                      : undefined,
+                    maxWidth: header.column.columnDef.maxSize
+                      ? `${header.column.columnDef.maxSize}px`
+                      : undefined,
                   }}
                 >
-                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(header.column.columnDef.header, header.getContext())}
                 </TableHead>
               );
             })}
@@ -121,7 +160,7 @@ export function DataTable<TData, TValue>({
         ))}
       </TableHeader>
       <TableBody className="**:data-[slot=table-cell]:first:w-8">
-        {renderTableBody({ table, columns, dndEnabled, dataIds })}
+        {renderTableBody({ table, columns, dndEnabled, dataIds, onRowClick })}
       </TableBody>
     </Table>
   );

@@ -12,7 +12,7 @@ export class ListPlayerBreakdownUseCase extends NextApiUseCase<
     return {
       data: rows.map((r) => ({
         accountId: r.accountId,
-        username: r.accountId,
+        username: r.username,
         entryCount: r.entryCount,
         totalStake: r.totalStake,
         totalWin: r.totalWin,

@@ -26,10 +26,8 @@
  *      b. line.matchResult.winAmount  → cập nhật winAmount cho từng line trúng JP
  *      c. draw.settleSummary.tiers[jackpot].prizeAmount → player API đọc đúng giá trị ($set)
  *
- *   4. Cập nhật draw.stats.totalPayoutAmount (+= totalJackpotPayout):
- *      CHỈ gọi khi bước 3a thực sự patch entries (modifiedCount > 0).
- *      Lý do: $inc KHÔNG idempotent — nếu retry mà entries đã patch xong,
- *      modifiedCount = 0 → skip $inc → tránh cộng dồn sai.
+ *   4. Cập nhật draw.stats.totalPayoutAmount (re-aggregate từ entries, $set idempotent):
+ *      Thay thế $inc bằng re-aggregate + $set → hoàn toàn idempotent, không cần guard.
  *
  * ────────────────────────────────────────────────
  * TẠI SAO TÁCH RIÊNG (KHÔNG GỘP VỚI SPLIT BONUSES):
@@ -45,7 +43,7 @@
  * ────────────────────────────────────────────────
  *   - patchJackpotPrize: chỉ update entries có tiers[jackpot].amount = 0
  *   - patchJackpotLineWinAmount: chỉ update lines có matchResult.winAmount = 0
- *   - incrementTotalPayout: guard bởi patchedEntries > 0 (xem mục 4 ở trên)
+ *   - setTotalPayout: re-aggregate từ entries rồi $set → luôn đúng
  *
  * Input: SettleContext (đã có financials, financials.hasJackpotWinner = true)
  * Output: { drawId, entriesPatched }
@@ -120,10 +118,7 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
     for (const line of jpLinesData) {
       const entryIdStr = line.entryId?.toString() ?? "";
       if (!entryIdStr) continue;
-      betUnitsByEntry.set(
-        entryIdStr,
-        (betUnitsByEntry.get(entryIdStr) ?? 0) + line.betCount,
-      );
+      betUnitsByEntry.set(entryIdStr, (betUnitsByEntry.get(entryIdStr) ?? 0) + line.betCount);
     }
 
     const [patchedEntries] = await Promise.all([
@@ -133,12 +128,10 @@ export class PatchJackpotPrizeUseCase extends InternalUseCase<
       this.drawRepo.patchSettleSummaryJackpotPrize(drawId, totalJackpotPrize),
     ]);
 
-    // ── Bước 4: Cập nhật draw.stats.totalPayoutAmount ──
-    // $inc KHÔNG idempotent → chỉ gọi khi entries thực sự được patch lần đầu.
-    const totalJackpotPayout = jackpotPerUnit * totalBetUnits;
-    if (patchedEntries > 0) {
-      await this.drawRepo.incrementTotalPayout(drawId, totalJackpotPayout);
-    }
+    // ── Bước 4: Re-aggregate totalPayout từ entries rồi $set → idempotent ──
+    // Thay thế $inc (không idempotent): tính lại từ source of truth (entries).
+    const totalPayout = await this.entryRepo.aggregateTotalPayout(drawId);
+    await this.drawRepo.setTotalPayout(drawId, totalPayout);
 
     // ── Build winners list để truyền sang FinalizeSettle ──
     const winners: JackpotWinnerInfo[] = jackpotEntries.map((e) => {

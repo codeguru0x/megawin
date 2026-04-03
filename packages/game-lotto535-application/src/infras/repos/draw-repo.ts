@@ -299,6 +299,26 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
+   * Set stats.totalPayoutAmount bằng giá trị tuyệt đối (re-aggregated từ entries).
+   *
+   * Thay thế incrementTotalPayout ($inc) — **idempotent**: chạy lại bao nhiêu lần
+   * cũng cho kết quả đúng vì giá trị được tính lại từ source of truth (entries).
+   */
+  async setTotalPayout(drawId: string, totalPayout: number): Promise<boolean> {
+    return await this.updateOne(
+      { drawId },
+      {
+        $set: {
+          "stats.totalPayoutAmount": totalPayout,
+          updatedAt: new Date(),
+        },
+      },
+    );
+  }
+
+  /**
+   * @deprecated Dùng setTotalPayout thay thế — $set idempotent, không cần guard.
+   *
    * Cộng thêm jackpot prize vào stats.totalPayoutAmount khi có JP winner.
    * Gọi bởi PatchJackpotPrize (step 4a) SAU khi patch entries.
    *
@@ -475,7 +495,6 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     }
     return await this.updateOne({ drawId }, { $set });
   }
-
 }
 
 export { VALID_TRANSITIONS };

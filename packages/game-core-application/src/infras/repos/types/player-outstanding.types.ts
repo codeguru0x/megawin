@@ -25,6 +25,22 @@ export interface PlayerOutstandingEntry {
   amount: number;
   /** Hoa hồng đại lý snapshot lúc đặt cược (VND). */
   commissionAmount: number;
+  /**
+   * Số boards trong vé = `entrySummary.boards.length`.
+   * Tất cả 7 game đều có. `undefined` khi data cũ không truyền vào.
+   */
+  boardCount?: number;
+  /**
+   * Số lines sau khi expand (lotto535, mega645, power655, max3d, max3dpro).
+   * Keno/Bingo18: `undefined`.
+   */
+  lineCount?: number;
+  /**
+   * Số đơn vị cược = Σ(expandedLines × betCount) cho games có lines,
+   * hoặc Σ(board.betCount) cho Keno/Bingo18.
+   * `undefined` khi data cũ chưa có field này.
+   */
+  betUnitCount?: number;
   /** Thời điểm tạo entry (ISO string). */
   createdAt: string;
 }

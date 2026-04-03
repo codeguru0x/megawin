@@ -112,4 +112,17 @@ export const max3dproKeys = {
 
   /** Kỳ quay đã void (date range) */
   voidReports: (params: { from: string; to: string }) => [MODULE, "void-reports", params] as const,
+
+  // ─── Void Reports (drill-down) ─────────────────────────────────────────────
+
+  /** Level 2: tenant breakdown của 1 draw void */
+  voidDrawTenants: (drawId: string) => [MODULE, "void", "tenants", { drawId }] as const,
+
+  /** Level 3: player breakdown của 1 draw × 1 tenant void */
+  voidTenantPlayers: (p: { drawId: string; tenantId: string }) =>
+    [MODULE, "void", "players", p] as const,
+
+  /** Level 4: entries void của 1 draw × 1 tenant × 1 player */
+  voidPlayerEntries: (p: { drawId: string; tenantId: string; accountId: string }) =>
+    [MODULE, "void", "entries", p] as const,
 };

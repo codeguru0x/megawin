@@ -1,14 +1,33 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
-import type { DrawEntity } from "@megawin/game-max3dpro/entities";;
+import type { DrawEntity } from "@megawin/game-max3dpro/entities";
 
 // ─────────────────────────────────────────────
 // CreateDraws (batch – tạo nhiều kỳ liên tiếp)
 // ─────────────────────────────────────────────
 
+/**
+ * Thông tin override cho 1 kỳ trong batch tạo.
+ * Nếu truyền `drawDate` + `drawTime`, backend dùng giá trị này thay vì tự tính từ lịch cố định.
+ */
+export interface CreateDrawItemOverride {
+  /**
+   * Ngày quay (format: `YYYY-MM-DD`).
+   * Phải trùng với ngày T3/T5/T7 theo lịch Max 3D Pro.
+   */
+  drawDate: string;
+  /** Giờ quay ISO 8601 (VD: `2026-04-08T18:00:00+07:00`). */
+  drawTime: string;
+  /** Mở bán ngay khi tạo xong. Mặc định `true`. */
+  openNow: boolean;
+}
+
 export interface CreateDrawsInput {
-  /** Số kỳ cần tạo (1-12). */
-  count: number;
+  /**
+   * Danh sách kỳ cần tạo — mỗi phần tử tương ứng 1 slot lịch quay.
+   * Backend dùng `drawDate` + `drawTime` từ input; nếu thiếu, tự tính theo lịch T3/T5/T7.
+   */
+  draws: CreateDrawItemOverride[];
 }
 
 export interface CreateDrawsOutputItem {

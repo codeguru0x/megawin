@@ -79,7 +79,7 @@ export function usePreviewDraws(count: number) {
 export function useCreateDraw() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { count: number }) =>
+    mutationFn: (data: { draws: { drawDate: string; drawTime: string; openNow: boolean }[] }) =>
       apiClient.post<CreateDrawsOutput>("/max3dpro/draws", data),
     onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: max3dproKeys.all });

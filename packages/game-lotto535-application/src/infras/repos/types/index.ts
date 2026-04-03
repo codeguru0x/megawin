@@ -10,3 +10,7 @@ export type {
   OutstandingTenantBreakdownRow,
   OutstandingPlayerBreakdownRow,
 } from "./entry-outstanding.types";
+export type {
+  VoidTenantBreakdownRow,
+  VoidPlayerBreakdownRow,
+} from "./entry-void.types";
