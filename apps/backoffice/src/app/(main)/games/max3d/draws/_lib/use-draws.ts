@@ -23,14 +23,30 @@ export interface CurrentDrawInfo {
 }
 
 export interface DrawSummary {
+  id: string;
   drawId: string;
   drawDate: string;
+  financialDate?: string;
   drawNo: number;
   drawTime: string;
+  closeAt?: string;
+  openAt?: string;
   status: string;
   hasResult: boolean;
+  result?: {
+    special: string[];
+    first: string[];
+    second: string[];
+    third: string[];
+  };
   ticketEntryCount?: number;
   totalRevenue?: number;
+  totalPayout?: number;
+  financial?: {
+    totalFixedPrizes: number;
+    totalAgentCommission: number;
+    companyTake: number;
+  };
 }
 
 interface GetCurrentDrawOutput {
@@ -39,6 +55,8 @@ interface GetCurrentDrawOutput {
 
 interface ListDrawsOutput {
   draws: DrawSummary[];
+  page: number;
+  size: number;
 }
 
 export interface ListDrawsParams {

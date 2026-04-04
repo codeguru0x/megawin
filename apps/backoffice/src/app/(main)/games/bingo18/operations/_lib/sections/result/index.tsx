@@ -19,10 +19,7 @@ import {
   BINGO18_BASIC_PLAY_TYPE_SET,
   BINGO18_SIDE_BET_PLAY_TYPE_SET,
 } from "@megawin/game-bingo18/entities";
-import {
-  BINGO18_PLAY_TYPE_LABELS,
-  BINGO18_TRIPLE_KIND_LABELS,
-} from "@megawin/game-bingo18/labels";
+import { BINGO18_PLAY_TYPE_LABELS, BINGO18_TRIPLE_KIND_LABELS } from "@megawin/game-bingo18/labels";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatNumber } from "@megawin/shared/utils";
 import {
@@ -84,10 +81,70 @@ const BOARD_PRIZE_LABELS: Record<string, string> = {
 };
 
 const SIDE_BET_RESULT_LABELS: Record<string, string> = {
-  big: "Lớn (11-18)",
-  small: "Nhỏ (3-10)",
-  draw: "Hoà",
+  big: "Lớn (12-18)",
+  small: "Nhỏ (3-9)",
+  draw: "Hoà (10-11)",
 };
+
+// ─── Dice stats helpers ──────────────────────────────────────────────────────
+
+/** Xác định kết quả Lớn/Nhỏ/Hoà dựa vào tổng. */
+function getBigSmallResult(sum: number): "big" | "small" | "draw" {
+  if (sum <= 9) return "small";
+  if (sum >= 12) return "big";
+  return "draw";
+}
+
+/** Kiểm tra có đôi (≥2 số giống nhau) không. */
+function hasDouble(nums: number[]): boolean {
+  const counts = nums.reduce<Record<number, number>>((acc, n) => {
+    acc[n] = (acc[n] ?? 0) + 1;
+    return acc;
+  }, {});
+  return Object.values(counts).some((c) => c >= 2);
+}
+
+/** Kiểm tra có ba giống nhau không. */
+function hasTriple(nums: number[]): boolean {
+  return nums.length === 3 && nums[0] === nums[1] && nums[1] === nums[2];
+}
+
+// ─── DiceStat Badge ──────────────────────────────────────────────────────────
+
+function DiceStatBadge({
+  label,
+  sublabel,
+  active,
+  colorClass,
+  activeClass,
+}: {
+  label: string;
+  sublabel?: string;
+  active: boolean;
+  colorClass: string;
+  activeClass: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-all duration-150",
+        active ? cn("shadow-sm ring-1 ring-offset-1", activeClass) : colorClass,
+      )}
+    >
+      {label}
+      {sublabel && (
+        <span
+          className={cn(
+            "rounded-full px-1 py-0 text-[10px] font-bold tabular-nums min-w-[1.2rem] text-center",
+            active ? "bg-white/30" : "bg-current/10 opacity-80",
+          )}
+        >
+          {sublabel}
+        </span>
+      )}
+    </div>
+  );
+}
 
 // ─── Result + Prize ──────────────────────────────────────────────────────────────
 
@@ -133,16 +190,76 @@ function ResultAndPrize({ result, drawId }: { result: Bingo18ResultData; drawId:
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-primary/70 transition-colors"
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-primary/70 transition-colors cursor-pointer"
                 >
                   <ExternalLink className="size-3" />
-                  Xem entries trúng
+                  Xem phiếu cược trúng thưởng
                 </button>
               </div>
             </div>
             <div className="flex justify-center">
-              <DiceDisplay numbers={result.diceNumbers} size="lg" showSum />
+              <DiceDisplay numbers={result.diceNumbers} size="md" showSum />
             </div>
+
+            {/* Stats badges — Lớn/Nhỏ/Hoà + phân tích đôi/ba */}
+            {result.diceNumbers.length === 3 && (
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                {/* Badge Lớn / Nhỏ / Hoà */}
+                {(() => {
+                  const bsResult = getBigSmallResult(result.sum);
+                  return (
+                    <>
+                      <DiceStatBadge
+                        label="Nhỏ (3-9)"
+                        active={bsResult === "small"}
+                        colorClass="bg-blue-50/70 text-blue-400 border-blue-200/70 dark:bg-blue-950/10 dark:text-blue-500/70 dark:border-blue-900/50"
+                        activeClass="bg-amber-500 text-white border-amber-500 dark:bg-amber-500 ring-amber-400"
+                      />
+                      <DiceStatBadge
+                        label="Hoà (10-11)"
+                        active={bsResult === "draw"}
+                        colorClass="bg-slate-50/70 text-slate-400 border-slate-200/70 dark:bg-slate-950/10 dark:text-slate-500/70 dark:border-slate-900/50"
+                        activeClass="bg-amber-500 text-white border-amber-500 dark:bg-amber-500 ring-amber-400"
+                      />
+                      <DiceStatBadge
+                        label="Lớn (12-18)"
+                        active={bsResult === "big"}
+                        colorClass="bg-red-50/70 text-red-400 border-red-200/70 dark:bg-red-950/10 dark:text-red-500/70 dark:border-red-900/50"
+                        activeClass="bg-amber-500 text-white border-amber-500 dark:bg-amber-500 ring-amber-400"
+                      />
+                    </>
+                  );
+                })()}
+
+                {/* Separator */}
+                <span className="text-border/80 select-none">·</span>
+
+                {/* Badge đôi / ba */}
+                {hasTriple(result.diceNumbers) ? (
+                  <DiceStatBadge
+                    label="Ba giống nhau"
+                    sublabel={String(result.diceNumbers[0])}
+                    active
+                    colorClass=""
+                    activeClass="bg-amber-500 text-white border-amber-500 dark:bg-amber-500 ring-amber-400"
+                  />
+                ) : hasDouble(result.diceNumbers) ? (
+                  <DiceStatBadge
+                    label="Có đôi"
+                    active
+                    colorClass=""
+                    activeClass="bg-amber-500/80 text-white border-amber-400 dark:bg-amber-500/80 ring-amber-300"
+                  />
+                ) : (
+                  <DiceStatBadge
+                    label="Tất cả khác nhau"
+                    active={false}
+                    colorClass="bg-muted/60 text-muted-foreground/50 border-border/50"
+                    activeClass=""
+                  />
+                )}
+              </div>
+            )}
           </div>
 
           {/* Board prizes */}
@@ -434,7 +551,7 @@ export function ResultSection() {
       });
 
     return {
-      diceNumbers: r.diceNumbers ?? [],
+      diceNumbers: r.numbers ?? r.diceNumbers ?? [],
       sum: r.sum ?? 0,
       boardPrizes,
       sideBetPrizes,

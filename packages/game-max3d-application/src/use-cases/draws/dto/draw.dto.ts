@@ -1,6 +1,6 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { Max3dDrawResult } from "@megawin/game-max3d/entities";
-import type { DrawEntity } from "@megawin/game-max3d/entities";;
+import type { DrawEntity } from "@megawin/game-max3d/entities";
 
 // ─────────────────────────────────────────────
 // CreateDraws (batch – tạo nhiều kỳ liên tiếp)
@@ -177,19 +177,34 @@ export interface DrawSummary {
   drawTime: string;
   /** Trạng thái hiện tại của kỳ quay. */
   status: string;
+  /** Ngày tài chính (YYYY-MM-DD). */
+  financialDate?: string;
+  /** Thời điểm đóng bán (ISO 8601). */
+  closeAt?: string;
+  /** Thời điểm mở bán (ISO 8601). */
+  openAt?: string;
   /** Đã có kết quả quay thưởng hay chưa. */
   hasResult: boolean;
+  /** Kết quả quay — 20 bộ ba số chia 4 hạng. */
+  result?: {
+    special: string[];
+    first: string[];
+    second: string[];
+    third: string[];
+  };
   /** Số lượt đặt cược (ticket entries) trong kỳ. */
   ticketEntryCount?: number;
   /** Tổng doanh thu bán vé của kỳ. */
   totalRevenue?: number;
+  /** Tổng tiền trả thưởng thực tế (VND) — từ stats.totalPayoutAmount. */
+  totalPayout?: number;
   /** Thông tin tài chính tổng hợp của kỳ quay. */
   financial?: {
     /** Tổng tiền thưởng cố định đã trả. */
     totalFixedPrizes: number;
     /** Tổng hoa hồng đại lý. */
     totalAgentCommission: number;
-    /** Phần lợi nhuận công ty giữ lại. */
+    /** Lợi nhuận thực tế công ty (VND) = revenue - prizes - commission. */
     companyTake: number;
   };
 }

@@ -1,6 +1,6 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawNo } from "@megawin/game-lotto535/entities";
-import type { DrawEntity } from "@megawin/game-lotto535/entities";;
+import type { DrawEntity } from "@megawin/game-lotto535/entities";
 
 // ─────────────────────────────────────────────
 // CreateDraws (batch – tạo nhiều kỳ liên tiếp)
@@ -208,6 +208,14 @@ export interface DrawSummary {
   totalRevenue?: number;
   /** Tổng tiền trả thưởng (VND) — chỉ có sau khi settle. */
   totalPrizesPayout?: number;
+  /** Tổng tiền trả thưởng thực tế bao gồm Jackpot (VND) — từ stats.totalPayoutAmount. */
+  totalPayout?: number;
+  /** Ngày tài chính của kỳ quay (YYYY-MM-DD). */
+  financialDate?: string;
+  /** Giờ đóng cược (ISO 8601). */
+  closeAt?: string;
+  /** Giờ mở cược (ISO 8601). */
+  openAt?: string;
   /** Thông tin tài chính tổng hợp — chỉ có sau khi settle. */
   financial?: {
     /** Tổng giải thưởng cố định đã trả (VND) — không bao gồm Jackpot. */
@@ -220,6 +228,11 @@ export interface DrawSummary {
      * (có thể bị cắt nếu vượt quá phần còn lại).
      */
     companyTake: number;
+    /**
+     * Lợi nhuận thực tế của công ty (VND) — sau khi trừ tất cả các khoản.
+     * Bằng companyTake khi không có kỳ split; khác companyTake khi Jackpot được chia.
+     */
+    actualCompanyTake: number;
     /**
      * Phần đóng góp vào quỹ Jackpot (VND).
      * Công thức: jackpotContribution = totalRevenue − totalFixedPrizes − totalAgentCommission − companyTake

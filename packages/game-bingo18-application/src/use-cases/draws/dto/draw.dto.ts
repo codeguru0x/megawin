@@ -164,18 +164,42 @@ export interface DrawSummary {
   drawId: string;
   /** Ngày quay (YYYY-MM-DD). */
   drawDate: string;
+  /** Ngày tài chính (YYYY-MM-DD). */
+  financialDate?: string;
   /** Số thứ tự kỳ trong ngày. */
   drawNo: number;
   /** Thời điểm quay (ISO 8601). */
   drawTime: string;
+  /** Thời điểm đóng bán (ISO 8601). */
+  closeAt?: string;
+  /** Thời điểm mở bán (ISO 8601). */
+  openAt?: string;
   /** Trạng thái hiện tại của kỳ quay. */
   status: string;
   /** true nếu đã có kết quả quay (numbers + sum). */
   hasResult: boolean;
+  /** Kết quả quay — 3 số xúc xắc và tổng. */
+  result?: {
+    /** 3 số xúc xắc (1-6). */
+    diceNumbers: number[];
+    /** Tổng 3 số (3-18). */
+    sum: number;
+  };
   /** Số lượng entry đã tham gia kỳ này. */
   ticketEntryCount?: number;
   /** Tổng doanh thu (VND) từ entries. */
   totalRevenue?: number;
+  /** Tổng tiền trả thưởng thực tế (VND) — từ stats.totalPayoutAmount. */
+  totalPayout?: number;
+  /** Thông tin tài chính tổng hợp sau settle. */
+  financial?: {
+    /** Tổng tiền thưởng đã trả. */
+    totalPrizes: number;
+    /** Tổng hoa hồng đại lý (VND). */
+    totalAgentCommission: number;
+    /** Lợi nhuận thực tế công ty (VND) = revenue - prizes - commission. */
+    companyTake: number;
+  };
 }
 
 export interface ListDrawsOutput {

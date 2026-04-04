@@ -22,14 +22,25 @@ export class ListDrawsUseCase extends NextApiUseCase<ListDrawsInput, ListDrawsOu
       id: d.id,
       drawId: d.drawId,
       drawDate: d.drawDate,
+      financialDate: d.financialDate,
       drawNo: d.drawNo,
       drawTime: d.drawTime.toISOString(),
+      openAt: d.sales?.openAt?.toISOString(),
+      closeAt: d.sales.closeAt.toISOString(),
       status: d.status,
       hasResult: !!d.result,
       // Truyền winningNumbers sang UI để hiển thị số trúng trên draw history card
       result: d.result?.winningNumbers ? { winningNumbers: d.result.winningNumbers } : undefined,
       ticketEntryCount: d.stats?.ticketEntryCount,
       totalRevenue: d.stats?.totalSalesAmount,
+      totalPayout: d.stats?.totalPayoutAmount,
+      financial: d.financial
+        ? {
+            totalPrizes: d.financial.totalPrizes,
+            totalAgentCommission: d.financial.totalAgentCommission,
+            companyTake: d.financial.companyTake,
+          }
+        : undefined,
     }));
 
     return { draws: summaries, page, size };

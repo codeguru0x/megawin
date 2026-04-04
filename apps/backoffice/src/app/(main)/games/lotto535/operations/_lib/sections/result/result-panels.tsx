@@ -211,26 +211,29 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
           )}
 
           {/* Winning numbers — căn giữa + clickable */}
-          <button
-            type="button"
-            onClick={() => setDialogOpen(true)}
+          <div
             className={cn(
-              "group w-full flex flex-col items-center gap-3 rounded-xl border px-4 py-4",
-              "transition-all duration-150 cursor-pointer",
-              "hover:shadow-sm hover:border-primary/30 hover:bg-muted/30",
+              "w-full flex flex-col items-center gap-3 rounded-xl border px-4 py-4",
               hasJackpotWinner
                 ? "bg-amber-50/40 border-amber-200/60 dark:bg-amber-950/10 dark:border-amber-800/40"
                 : "bg-muted/20",
             )}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex-1" />
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 Kết quả
               </span>
-              <span className="flex items-center gap-1 text-xs text-muted-foreground/60 group-hover:text-primary/60 transition-colors">
-                <ExternalLink className="size-3" />
-                Xem entries trúng
-              </span>
+              <div className="flex-1 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setDialogOpen(true)}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-primary/70 transition-colors cursor-pointer"
+                >
+                  <ExternalLink className="size-3" />
+                  Xem phiếu cược trúng thưởng
+                </button>
+              </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap justify-center">
               {result.winningMain.map((n) => (
@@ -239,7 +242,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
               <div className="w-px h-6 bg-border mx-0.5" />
               <LottoNumberBall number={result.winningSpecial} variant="special" size="md" />
             </div>
-          </button>
+          </div>
 
           {/* Prize table — compact rows */}
           <div className="rounded-xl border overflow-hidden">

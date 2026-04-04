@@ -1,253 +1,114 @@
 "use client";
 
-import { useState } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Filter,
-  Loader2,
-  MoreHorizontal,
-} from "lucide-react";
+/**
+ * Bingo 18 — Draw History Section
+ *
+ * Wrapper game-specific: quản lý URL state (nuqs) cho filter + page,
+ * fetch data, inject render props vào DrawHistoryTable chung.
+ *
+ * Bingo 18 ~160 kỳ/ngày — mặc định filter hôm nay.
+ * Bingo 18 không có Jackpot: companyTake = profit.
+ * Kết quả: 3 xúc xắc (1-6) dùng DiceDisplay.
+ */
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useRouter } from "next/navigation";
+import { useQueryState, parseAsString, parseAsInteger } from "nuqs";
+
 import { Bingo18DrawStatusBadge } from "@/components/games/bingo18/draw-status-badge";
 import { DiceDisplay } from "@/components/games/bingo18/dice-display";
-import { formatVNDCompact as formatVND, formatVNTime, todayVN } from "@megawin/shared/utils";
-import { DrawStatus } from "@megawin/game-core/entities";
+import { DrawHistoryTable } from "@/components/draws";
+import type { CommonDrawSummary } from "@/components/draws";
+import { subDays, formatVNDate, todayVN } from "@megawin/shared/utils";
+import { Pagination } from "@megawin/shared/constants";
+import type { DrawStatus } from "@megawin/game-core/entities";
 
-import type { Bingo18DrawSummary, ListDrawsParams } from "./use-draws";
+import type { Bingo18DrawSummary } from "./use-draws";
 import { useBingo18DrawsList } from "./use-draws";
 
-const PAGE_SIZE = 20;
+const OPS_BASE = "/games/bingo18/operations";
 
-const HISTORY_STATUSES = [
-  { value: "all", label: "Tất cả" },
-  { value: DrawStatus.Settled, label: "Hoàn tất" },
-  { value: DrawStatus.Published, label: "Đã công bố" },
-  { value: DrawStatus.SalesClosed, label: "Đóng bán" },
-  { value: DrawStatus.Void, label: "Đã huỷ" },
-];
-
-export function Bingo18DrawHistorySection() {
-  const [status, setStatus] = useState("all");
-  const [selectedDate, setSelectedDate] = useState(todayVN());
-  const [page, setPage] = useState(1);
-  const [appliedFilters, setAppliedFilters] = useState<ListDrawsParams>({
-    page: 1,
-    size: PAGE_SIZE,
-    fromDate: todayVN(),
-    toDate: todayVN(),
-  });
-
-  const { data, isLoading, isFetching } = useBingo18DrawsList(appliedFilters);
-  const draws = data?.draws ?? [];
-  const hasNext = draws.length === PAGE_SIZE;
-
-  function applyFilters() {
-    const params: ListDrawsParams = {
-      page: 1,
-      size: PAGE_SIZE,
-      status: status !== "all" ? (status as DrawStatus) : undefined,
-      fromDate: selectedDate || undefined,
-      toDate: selectedDate || undefined,
-    };
-    setPage(1);
-    setAppliedFilters(params);
-  }
-
-  function goToPage(p: number) {
-    setPage(p);
-    setAppliedFilters((prev) => ({ ...prev, page: p }));
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Lịch sử kỳ quay</CardTitle>
-        <CardDescription>
-          Các kỳ quay đã hoàn thành, sắp xếp mới nhất trước.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Trạng thái" />
-            </SelectTrigger>
-            <SelectContent>
-              {HISTORY_STATUSES.map((s) => (
-                <SelectItem key={s.value} value={s.value}>
-                  {s.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Input
-            type="date"
-            className="w-40"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={applyFilters}
-            disabled={isFetching}
-          >
-            {isFetching ? (
-              <Loader2 className="mr-1 size-3.5 animate-spin" />
-            ) : (
-              <Filter className="mr-1 size-3.5" />
-            )}
-            Lọc
-          </Button>
-        </div>
-
-        <div className="overflow-x-auto rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-44">Draw ID</TableHead>
-                <TableHead className="w-20">Kỳ</TableHead>
-                <TableHead className="w-20">Giờ</TableHead>
-                <TableHead className="w-28">Trạng thái</TableHead>
-                <TableHead>Kết quả</TableHead>
-                <TableHead className="w-24 text-right">Vé</TableHead>
-                <TableHead className="w-32 text-right">Doanh thu</TableHead>
-                <TableHead className="w-14" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
-                    <Loader2 className="mx-auto size-6 animate-spin text-muted-foreground" />
-                  </TableCell>
-                </TableRow>
-              ) : draws.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={8}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    Không có kỳ quay nào.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                draws.map((draw) => (
-                  <DrawRow key={draw.drawId} draw={draw} />
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        {draws.length > 0 && (
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Trang {page}</p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page <= 1 || isFetching}
-                onClick={() => goToPage(page - 1)}
-              >
-                <ChevronLeft className="mr-1 size-4" />
-                Trước
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!hasNext || isFetching}
-                onClick={() => goToPage(page + 1)}
-              >
-                Sau
-                <ChevronRight className="ml-1 size-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+function defaultFrom(): string {
+  return formatVNDate(subDays(new Date(), 6));
 }
 
-function DrawRow({ draw }: { draw: Bingo18DrawSummary }) {
+function defaultTo(): string {
+  return todayVN();
+}
+
+function toCommon(draw: Bingo18DrawSummary): Bingo18DrawSummary & CommonDrawSummary {
+  return {
+    ...draw,
+    financialDate: draw.financialDate ?? draw.drawDate,
+    closeAt: draw.closeAt ?? draw.drawTime,
+    totalEntries: draw.ticketEntryCount,
+    totalPayout: draw.totalPayout,
+    totalAgentCommission: draw.financial?.totalAgentCommission,
+  };
+}
+
+export function Bingo18DrawHistorySection() {
+  const router = useRouter();
+
+  const [statusParam, setStatusParam] = useQueryState(
+    "histStatus",
+    parseAsString.withDefault("all"),
+  );
+  const [fromDate, setFromDate] = useQueryState(
+    "histFrom",
+    parseAsString.withDefault(defaultFrom()),
+  );
+  const [toDate, setToDate] = useQueryState("histTo", parseAsString.withDefault(defaultTo()));
+  const [page, setPage] = useQueryState(
+    "histPage",
+    parseAsInteger.withDefault(1).withOptions({ history: "push" }),
+  );
+
+  const statusFilter = statusParam !== "all" ? (statusParam as DrawStatus) : undefined;
+
+  const { data, isLoading, isFetching } = useBingo18DrawsList({
+    size: Pagination.Default.Size,
+    status: statusFilter,
+    fromDate,
+    toDate,
+    page,
+  });
+
+  const rawDraws = data?.draws ?? [];
+  const draws = rawDraws.map(toCommon);
+  const hasMore = rawDraws.length === (data?.size ?? Pagination.Default.Size);
+
+  function handleDateChange(from: string, to: string) {
+    setFromDate(from);
+    setToDate(to);
+    setPage(null);
+  }
+
+  function handleStatusChange(value: string) {
+    setStatusParam(value === "all" ? null : value);
+    setPage(null);
+  }
+
   return (
-    <TableRow>
-      <TableCell className="font-mono text-sm">{draw.drawId}</TableCell>
-      <TableCell>
-        <Badge variant="outline">Kỳ {draw.drawNo}</Badge>
-      </TableCell>
-      <TableCell className="tabular-nums">
-        {formatVNTime(new Date(draw.drawTime))}
-      </TableCell>
-      <TableCell>
-        <Bingo18DrawStatusBadge status={draw.status} />
-      </TableCell>
-      <TableCell>
-        {draw.result ? (
-          <DiceDisplay numbers={draw.result.diceNumbers} size="sm" showSum />
-        ) : (
-          <span className="text-sm text-muted-foreground">—</span>
-        )}
-      </TableCell>
-      <TableCell className="text-right tabular-nums">
-        {draw.ticketEntryCount != null && draw.ticketEntryCount > 0
-          ? draw.ticketEntryCount.toLocaleString("vi-VN")
-          : "—"}
-      </TableCell>
-      <TableCell className="text-right tabular-nums">
-        {draw.totalRevenue != null && draw.totalRevenue > 0
-          ? formatVND(draw.totalRevenue)
-          : "—"}
-      </TableCell>
-      <TableCell>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8">
-              <MoreHorizontal className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>
-              <Eye className="mr-2 size-4" />
-              Xem chi tiết
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TableCell>
-    </TableRow>
+    <DrawHistoryTable
+      draws={draws}
+      isLoading={isLoading}
+      isFetching={isFetching}
+      page={page}
+      hasMore={hasMore}
+      fromDate={fromDate}
+      toDate={toDate}
+      statusValue={statusParam}
+      onDateChange={handleDateChange}
+      onStatusChange={handleStatusChange}
+      onPageNext={() => setPage(page + 1)}
+      onPagePrev={() => page > 1 && setPage(page - 1)}
+      onRowClick={(draw) => router.push(`${OPS_BASE}?draw=${draw.drawId}`)}
+      renderStatusBadge={(status) => <Bingo18DrawStatusBadge status={status as DrawStatus} />}
+      renderResult={(draw) => {
+        const result = draw.result as { diceNumbers?: number[] } | undefined;
+        if (!result?.diceNumbers?.length) return null;
+        return <DiceDisplay numbers={result.diceNumbers} size="sm" showSum />;
+      }}
+    />
   );
 }

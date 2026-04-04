@@ -2,10 +2,7 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { ListDrawsInput, ListDrawsOutput, DrawSummary } from "./dto/draw.dto";
 
-export class ListDrawsUseCase extends NextApiUseCase<
-  ListDrawsInput,
-  ListDrawsOutput
-> {
+export class ListDrawsUseCase extends NextApiUseCase<ListDrawsInput, ListDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: ListDrawsInput): Promise<ListDrawsOutput> {
@@ -25,12 +22,24 @@ export class ListDrawsUseCase extends NextApiUseCase<
       id: d.id,
       drawId: d.drawId,
       drawDate: d.drawDate,
+      financialDate: d.financialDate,
       drawNo: d.drawNo,
       drawTime: d.drawTime.toISOString(),
+      openAt: d.sales?.openAt?.toISOString(),
+      closeAt: d.sales.closeAt.toISOString(),
       status: d.status,
       hasResult: !!d.result,
+      result: d.result ? { diceNumbers: d.result.numbers, sum: d.result.sum } : undefined,
       ticketEntryCount: d.stats?.ticketEntryCount,
       totalRevenue: d.stats?.totalSalesAmount,
+      totalPayout: d.stats?.totalPayoutAmount,
+      financial: d.financial
+        ? {
+            totalPrizes: d.financial.totalPrizes,
+            totalAgentCommission: d.financial.totalAgentCommission,
+            companyTake: d.financial.companyTake,
+          }
+        : undefined,
     }));
 
     return { draws: summaries, page, size };

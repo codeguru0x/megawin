@@ -11,10 +11,9 @@
 
 import Link from "next/link";
 import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 import { useKenoCurrentDraw } from "./_lib/use-draws";
-import { KenoPrimaryDrawCard, KenoQueueDrawCard } from "./_lib/active-draw-card";
+import { KenoPrimaryDrawCard, KenoQueueDrawCard } from "@/components/games/keno/active-draw-card";
 import { DrawHistorySection } from "./_lib/draw-history-section";
 
 export default function KenoDrawsPage() {
@@ -27,7 +26,7 @@ export default function KenoDrawsPage() {
   return (
     <div className="@container/main flex flex-col gap-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
         <div className="flex items-center gap-3">
           <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-orange-600 shadow-sm">
             <CalendarClock className="size-4.5 text-white" />
@@ -39,9 +38,6 @@ export default function KenoDrawsPage() {
             </p>
           </div>
         </div>
-        <Button size="sm" variant="outline" asChild>
-          <Link href="/games/keno/operations">Trang vận hành</Link>
-        </Button>
       </div>
 
       {/* Active Draws */}

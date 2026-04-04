@@ -28,7 +28,9 @@ import {
   Ban,
   Loader2,
   CalendarCheck,
+  ClipboardPen,
 } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { formatNumber, displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
@@ -45,6 +47,7 @@ interface DrawCommandProps {
   onOpenSales?: () => void;
   onCloseSales?: () => void;
   onPublishResult?: () => void;
+  onRepublishResult?: () => void;
   onTriggerSettle?: () => void;
   onEditSchedule?: () => void;
   onVoidDraw?: () => void;
@@ -292,6 +295,7 @@ export function DrawCommandCenter({
   onOpenSales,
   onCloseSales,
   onPublishResult,
+  onRepublishResult,
   onTriggerSettle,
   onEditSchedule,
   onVoidDraw,
@@ -309,6 +313,7 @@ export function DrawCommandCenter({
   const canVoid = [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(
     status as any,
   );
+  const canRepublish = status === DrawStatus.Published || status === DrawStatus.Settled;
   const canReopenSales = status === DrawStatus.SalesClosed;
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
   const isSettled = status === DrawStatus.Settled;
@@ -532,23 +537,31 @@ export function DrawCommandCenter({
                   <nextAction.icon className="size-3.5" /> {nextAction.label}
                 </Button>
               )}
+              {isSettled && (
+                <Button variant="outline" size="sm" className="gap-1.5" disabled>
+                  <RotateCcw className="size-3.5" /> Re-settle
+                </Button>
+              )}
+              {canRepublish && (
+                <Button variant="outline" size="sm" onClick={onRepublishResult} className="gap-1.5">
+                  <ClipboardPen className="size-3.5" /> Sửa kết quả
+                </Button>
+              )}
               {canReopenSales && (
                 <Button variant="outline" size="sm" onClick={onOpenSales} className="gap-1.5">
                   <Unlock className="size-3.5" /> Mở lại bán
                 </Button>
               )}
-              {isSettled && (
-                <>
-                  <Button variant="outline" size="sm" className="gap-1.5" disabled>
-                    <RotateCcw className="size-3.5" /> Re-settle
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-1.5">
-                    <FileText className="size-3.5" /> Xem báo cáo
-                  </Button>
-                </>
-              )}
             </div>
             <div className="flex items-center gap-1">
+              {isSettled && (
+                <Link
+                  href={`/games/keno/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}
+                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5"
+                >
+                  <FileText className="size-3.5" /> Xem báo cáo
+                </Link>
+              )}
               {canEdit && (
                 <Button
                   variant="ghost"

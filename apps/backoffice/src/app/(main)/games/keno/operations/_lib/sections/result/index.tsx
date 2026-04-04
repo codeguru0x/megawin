@@ -115,7 +115,7 @@ function HighlightedBall({
   filter: HighlightFilter;
 }) {
   const baseClass =
-    "inline-flex items-center justify-center rounded-full font-bold tabular-nums select-none size-7 text-xs transition-all duration-150";
+    "inline-flex items-center justify-center rounded-full font-bold tabular-nums select-none size-9 text-sm transition-all duration-150";
 
   if (highlight === "dim") {
     // Số không thuộc nhóm chọn → mờ đi
@@ -231,17 +231,17 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
             {/* Header: "KẾT QUẢ" căn giữa + link xem entries */}
             <div className="flex items-center justify-between">
               <div className="flex-1" />
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
                 Kết quả
               </span>
               <div className="flex-1 flex justify-end">
                 <button
                   type="button"
                   onClick={() => setDialogOpen(true)}
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-primary/70 transition-colors"
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-primary/70 transition-colors cursor-pointer"
                 >
                   <ExternalLink className="size-3" />
-                  Xem entries trúng
+                  Xem phiếu cược trúng thưởng
                 </button>
               </div>
             </div>

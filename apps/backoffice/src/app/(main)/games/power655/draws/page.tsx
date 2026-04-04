@@ -10,9 +10,9 @@
  * Theme: violet/purple.
  */
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 import { useCurrentDraw } from "./_lib/use-draws";
 import {
@@ -31,21 +31,16 @@ export default function Power655DrawsPage() {
   return (
     <div className="@container/main flex flex-col gap-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
-            <CalendarClock className="size-4.5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Power 6/55 — Kỳ quay
-            </h1>
-            <p className="text-xs text-muted-foreground">Tổng quan kỳ quay hiện tại và lịch sử</p>
-          </div>
+      <div className="flex items-center gap-3">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
+          <CalendarClock className="size-4.5 text-white" />
         </div>
-        <Button size="sm" variant="outline" asChild>
-          <Link href="/games/power655/operations">Trang vận hành</Link>
-        </Button>
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
+            Power 6/55 — Kỳ quay
+          </h1>
+          <p className="text-xs text-muted-foreground">Tổng quan kỳ quay hiện tại và lịch sử</p>
+        </div>
       </div>
 
       {/* Active Draws */}
@@ -96,7 +91,9 @@ export default function Power655DrawsPage() {
       )}
 
       {/* History */}
-      <DrawHistorySection />
+      <Suspense>
+        <DrawHistorySection />
+      </Suspense>
     </div>
   );
 }

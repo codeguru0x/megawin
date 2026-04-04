@@ -27,7 +27,12 @@ import { DrawStatus } from "@megawin/game-core/entities";
 
 import { useDrawContext } from "../../use-draw-context";
 import { DrawCommandCenter } from "./draw-command-center";
-import { PublishResultAction, EditScheduleAction, VoidDrawAction } from "./draw-actions";
+import {
+  PublishResultAction,
+  EditScheduleAction,
+  VoidDrawAction,
+  type PublishResultCurrentValues,
+} from "./draw-actions";
 import { useOpenSales, useCloseSales, useTriggerSettle, useDrawDetail } from "../../use-operations";
 
 import type { KenoDrawResult, VoidInfo } from "../../types";
@@ -69,6 +74,20 @@ export function DrawManagementSection() {
     };
   })();
 
+  const currentResult: PublishResultCurrentValues | undefined = (() => {
+    const d = drawDetailData?.draw;
+    if (!d?.result) return undefined;
+    return {
+      winningNumbers: d.result.winningNumbers ?? [],
+      vietlottRef: d.vietlottRef
+        ? {
+            drawPeriod: d.vietlottRef.drawPeriod,
+            drawDate: String(d.vietlottRef.drawDate ?? ""),
+          }
+        : undefined,
+    };
+  })();
+
   const voidInfo: VoidInfo | undefined = (() => {
     const d = drawDetailData?.draw;
     if (!d?.voidInfo) return undefined;
@@ -95,6 +114,7 @@ export function DrawManagementSection() {
         onOpenSales={() => setOpenSalesConfirm(true)}
         onCloseSales={() => setCloseSalesConfirm(true)}
         onPublishResult={() => setPublishOpen(true)}
+        onRepublishResult={() => setPublishOpen(true)}
         onTriggerSettle={() => setSettleConfirm(true)}
         onEditSchedule={() => setEditScheduleOpen(true)}
         onVoidDraw={() => setVoidOpen(true)}
@@ -106,6 +126,7 @@ export function DrawManagementSection() {
         disabled={false}
         open={publishOpen}
         onOpenChange={setPublishOpen}
+        currentResult={currentResult}
       />
       <EditScheduleAction
         draw={draw}

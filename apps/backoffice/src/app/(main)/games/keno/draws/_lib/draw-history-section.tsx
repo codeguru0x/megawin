@@ -3,324 +3,119 @@
 /**
  * Keno — Draw History Section
  *
- * Danh sách lịch sử kỳ quay Keno với filter theo trạng thái, khoảng ngày.
- * Keno: ~120 kỳ/ngày → filter theo ngày quan trọng hơn.
- * Offset pagination (page/size).
- * Mỗi row có link đến trang vận hành.
+ * Wrapper game-specific: quản lý URL state (nuqs) cho filter + page,
+ * fetch data, inject render props vào DrawHistoryTable chung.
+ *
+ * Keno ~120 kỳ/ngày — mặc định filter 1 ngày gần nhất thay vì 7 ngày.
+ * Keno không có Jackpot: companyTake = profit.
+ * Kết quả: 20 số (01-80) dùng KenoNumberBall.
  */
 
-import { useState, useCallback } from "react";
-import Link from "next/link";
-import { ExternalLink, Filter, Loader2, CalendarIcon } from "lucide-react";
-import type { DateRange } from "react-day-picker";
-import { format } from "date-fns";
+import { useRouter } from "next/navigation";
+import { useQueryState, parseAsString, parseAsInteger } from "nuqs";
 
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { KenoNumberBall } from "@/components/games/keno/keno-number-ball";
 import { KenoDrawStatusBadge } from "@/components/games/keno/draw-status-badge";
-import { cn } from "@/lib/utils";
-import { formatVND, formatNumber, formatVNDate, formatVNTime, subDays, todayVN } from "@megawin/shared/utils";
+import { DrawHistoryTable } from "@/components/draws";
+import type { CommonDrawSummary } from "@/components/draws";
+import { formatVNDate, subDays, todayVN } from "@megawin/shared/utils";
 import { Pagination } from "@megawin/shared/constants";
-import { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawStatus } from "@megawin/game-core/entities";
 
-import type { DrawSummary, ListDrawsParams } from "./use-draws";
+import type { DrawSummary } from "./use-draws";
 import { useKenoDrawsList } from "./use-draws";
 
 const OPS_BASE = "/games/keno/operations";
 
-function defaultRange(): DateRange {
+function defaultFrom(): string {
+  return formatVNDate(subDays(new Date(), 6));
+}
+
+function defaultTo(): string {
+  return todayVN();
+}
+
+function toCommon(draw: DrawSummary): DrawSummary & CommonDrawSummary {
   return {
-    from: subDays(new Date(), 1),
-    to: new Date(),
+    ...draw,
+    financialDate: draw.financialDate ?? draw.drawDate,
+    closeAt: draw.closeAt ?? draw.drawTime,
+    totalEntries: draw.ticketEntryCount,
+    totalPayout: draw.totalPayout,
+    // Keno: financial dùng totalPrizes; map vào totalPayout nếu chưa có từ stats
+    totalAgentCommission: draw.financial?.totalAgentCommission,
   };
 }
 
-const HISTORY_STATUSES = [
-  { value: "all", label: "Tất cả" },
-  { value: DrawStatus.Settled, label: "Hoàn tất" },
-  { value: DrawStatus.Published, label: "Đã công bố" },
-  { value: DrawStatus.SalesClosed, label: "Đóng bán" },
-  { value: DrawStatus.Void, label: "Đã huỷ" },
-];
-
-// ─── Date Range Picker ────────────────────────────────────────────────────────
-
-function DateRangePicker({
-  value,
-  onChange,
-}: {
-  value: DateRange | undefined;
-  onChange: (range: DateRange | undefined) => void;
-}) {
-  const [open, setOpen] = useState(false);
-
-  const label = value?.from
-    ? value.to
-      ? `${format(value.from, "dd/MM/yyyy")} – ${format(value.to, "dd/MM/yyyy")}`
-      : format(value.from, "dd/MM/yyyy")
-    : "Chọn khoảng thời gian";
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            "w-64 justify-start gap-2 font-normal",
-            !value?.from && "text-muted-foreground",
-          )}
-        >
-          <CalendarIcon className="size-3.5 shrink-0" />
-          <span className="truncate text-sm">{label}</span>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="range"
-          selected={value}
-          onSelect={onChange}
-          numberOfMonths={2}
-          disabled={{ after: new Date() }}
-          defaultMonth={value?.from}
-        />
-        <div className="flex items-center justify-end gap-2 border-t px-3 py-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              onChange(defaultRange());
-              setOpen(false);
-            }}
-          >
-            Mặc định
-          </Button>
-          <Button size="sm" disabled={!value?.from} onClick={() => setOpen(false)}>
-            Áp dụng
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-// ─── Winning Numbers — 20 số mini badges ─────────────────────────────────────
-
-function WinningNumbers({ numbers }: { numbers: string[] }) {
-  return (
-    <div className="flex items-center gap-0.5 flex-wrap">
-      {numbers.map((n) => (
-        <span
-          key={n}
-          className="inline-flex items-center justify-center size-5 rounded-full bg-orange-500 text-white text-[9px] font-bold tabular-nums"
-        >
-          {n}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-// ─── Section ──────────────────────────────────────────────────────────────────
-
 export function DrawHistorySection() {
-  const [status, setStatus] = useState("all");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(defaultRange);
-  const [page, setPage] = useState(1);
+  const router = useRouter();
 
-  const [appliedFilters, setAppliedFilters] = useState<ListDrawsParams>(() => ({
-    size: Pagination.Default.Size,
-    fromDate: formatVNDate(subDays(new Date(), 1)),
-    toDate: todayVN(),
-    page: 1,
-  }));
-
-  const { data, isLoading, isFetching } = useKenoDrawsList(appliedFilters);
-
-  const draws = data?.draws ?? [];
-  const hasMore = draws.length === (appliedFilters.size ?? Pagination.Default.Size);
-
-  const applyFilters = useCallback(() => {
-    const params: ListDrawsParams = {
-      size: Pagination.Default.Size,
-      status: status !== "all" ? (status as DrawStatus) : undefined,
-      fromDate: dateRange?.from ? formatVNDate(dateRange.from) : undefined,
-      toDate: dateRange?.to ? formatVNDate(dateRange.to) : undefined,
-      page: 1,
-    };
-    setPage(1);
-    setAppliedFilters(params);
-  }, [status, dateRange]);
-
-  function goNext() {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    setAppliedFilters((prev) => ({ ...prev, page: nextPage }));
-  }
-
-  function goPrev() {
-    if (page <= 1) return;
-    const prevPage = page - 1;
-    setPage(prevPage);
-    setAppliedFilters((prev) => ({ ...prev, page: prevPage }));
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Lịch sử kỳ quay</CardTitle>
-        <CardDescription>
-          Các kỳ quay đã hoàn thành, sắp xếp mới nhất trước. Keno ~120 kỳ/ngày.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Filter bar */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Trạng thái" />
-            </SelectTrigger>
-            <SelectContent>
-              {HISTORY_STATUSES.map((s) => (
-                <SelectItem key={s.value} value={s.value}>
-                  {s.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <DateRangePicker value={dateRange} onChange={setDateRange} />
-
-          <Button variant="outline" size="sm" onClick={applyFilters} disabled={isFetching}>
-            {isFetching ? (
-              <Loader2 className="mr-1 size-3.5 animate-spin" />
-            ) : (
-              <Filter className="mr-1 size-3.5" />
-            )}
-            Lọc
-          </Button>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto rounded-md border">
-          <Table className="table-fixed">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-36">Kỳ quay</TableHead>
-                <TableHead className="w-16">Giờ</TableHead>
-                <TableHead className="w-28">Trạng thái</TableHead>
-                <TableHead className="w-64">Kết quả (20 số)</TableHead>
-                <TableHead className="w-24 text-right">Entries</TableHead>
-                <TableHead className="w-32 text-right">Doanh thu</TableHead>
-                <TableHead className="w-10" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    <Loader2 className="mx-auto size-6 animate-spin text-muted-foreground" />
-                  </TableCell>
-                </TableRow>
-              ) : draws.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                    Không có kỳ quay nào trong khoảng thời gian đã chọn.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                draws.map((draw) => <DrawRow key={draw.drawId} draw={draw} />)
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        {/* Pagination */}
-        {draws.length > 0 && (
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">Trang {page}</p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page <= 1 || isFetching}
-                onClick={goPrev}
-              >
-                Trước
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!hasMore || isFetching}
-                onClick={goNext}
-              >
-                Sau
-              </Button>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+  const [statusParam, setStatusParam] = useQueryState(
+    "histStatus",
+    parseAsString.withDefault("all"),
   );
-}
+  const [fromDate, setFromDate] = useQueryState(
+    "histFrom",
+    parseAsString.withDefault(defaultFrom()),
+  );
+  const [toDate, setToDate] = useQueryState("histTo", parseAsString.withDefault(defaultTo()));
+  const [page, setPage] = useQueryState(
+    "histPage",
+    parseAsInteger.withDefault(1).withOptions({ history: "push" }),
+  );
 
-// ─── Draw Row ─────────────────────────────────────────────────────────────────
+  const statusFilter = statusParam !== "all" ? (statusParam as DrawStatus) : undefined;
 
-function DrawRow({ draw }: { draw: DrawSummary }) {
+  const { data, isLoading, isFetching } = useKenoDrawsList({
+    size: Pagination.Default.Size,
+    status: statusFilter,
+    fromDate,
+    toDate,
+    page,
+  });
+
+  const rawDraws = data?.draws ?? [];
+  const draws = rawDraws.map(toCommon);
+  const hasMore = rawDraws.length === (data?.size ?? Pagination.Default.Size);
+
+  function handleDateChange(from: string, to: string) {
+    setFromDate(from);
+    setToDate(to);
+    setPage(null);
+  }
+
+  function handleStatusChange(value: string) {
+    setStatusParam(value === "all" ? null : value);
+    setPage(null);
+  }
+
   return (
-    <TableRow>
-      <TableCell>
-        <Link
-          href={`${OPS_BASE}?draw=${draw.drawId}`}
-          className="font-mono text-sm font-semibold hover:underline underline-offset-2"
-        >
-          {draw.drawId}
-        </Link>
-      </TableCell>
-      <TableCell className="tabular-nums text-sm text-muted-foreground">
-        {formatVNTime(new Date(draw.drawTime))}
-      </TableCell>
-      <TableCell>
-        <KenoDrawStatusBadge status={draw.status} />
-      </TableCell>
-      <TableCell>
-        {draw.result?.winningNumbers ? (
-          <WinningNumbers numbers={draw.result.winningNumbers} />
-        ) : (
-          <span className="text-xs text-muted-foreground">—</span>
-        )}
-      </TableCell>
-      <TableCell className="text-right tabular-nums text-sm">
-        {draw.ticketEntryCount != null && draw.ticketEntryCount > 0
-          ? formatNumber(draw.ticketEntryCount)
-          : "—"}
-      </TableCell>
-      <TableCell className="text-right tabular-nums text-sm">
-        {draw.totalRevenue != null && draw.totalRevenue > 0 ? formatVND(draw.totalRevenue) : "—"}
-      </TableCell>
-      <TableCell>
-        <Button variant="ghost" size="icon" className="size-7" asChild>
-          <Link href={`${OPS_BASE}?draw=${draw.drawId}`} title="Xem tại trang vận hành">
-            <ExternalLink className="size-3.5" />
-          </Link>
-        </Button>
-      </TableCell>
-    </TableRow>
+    <DrawHistoryTable
+      draws={draws}
+      isLoading={isLoading}
+      isFetching={isFetching}
+      page={page}
+      hasMore={hasMore}
+      fromDate={fromDate}
+      toDate={toDate}
+      statusValue={statusParam}
+      onDateChange={handleDateChange}
+      onStatusChange={handleStatusChange}
+      onPageNext={() => setPage(page + 1)}
+      onPagePrev={() => page > 1 && setPage(page - 1)}
+      onRowClick={(draw) => router.push(`${OPS_BASE}?draw=${draw.drawId}`)}
+      renderStatusBadge={(status) => <KenoDrawStatusBadge status={status as DrawStatus} />}
+      renderResult={(draw) => {
+        const result = draw.result as { winningNumbers?: string[] } | undefined;
+        if (!result?.winningNumbers?.length) return null;
+        return (
+          <div className="flex flex-wrap items-center gap-0.5">
+            {result.winningNumbers.map((n) => (
+              <KenoNumberBall key={n} number={Number(n)} size="sm" />
+            ))}
+          </div>
+        );
+      }}
+    />
   );
 }

@@ -30,8 +30,11 @@ export class ListDrawsUseCase extends NextApiUseCase<ListDrawsInput, ListDrawsOu
       id: d.id,
       drawId: d.drawId,
       drawDate: d.drawDate,
+      financialDate: d.financialDate,
       drawNo: d.drawNo,
       drawTime: d.drawTime.toISOString(),
+      openAt: d.sales?.openAt?.toISOString(),
+      closeAt: d.sales.closeAt.toISOString(),
       status: d.status,
       jackpotAmount: d.jackpot?.openingAmount,
       jackpotClosingAmount: d.jackpot?.closingAmount,
@@ -47,11 +50,13 @@ export class ListDrawsUseCase extends NextApiUseCase<ListDrawsInput, ListDrawsOu
       totalLineCount: d.stats?.totalLineCount,
       totalRevenue: d.stats?.totalSalesAmount,
       totalPrizesPayout: d.stats?.totalPayoutAmount,
+      totalPayout: d.stats?.totalPayoutAmount,
       financial: d.financial
         ? {
             totalFixedPrizes: d.financial.totalFixedPrizes,
             totalAgentCommission: d.financial.totalAgentCommission,
             companyTake: d.financial.actualCompanyTake,
+            actualCompanyTake: d.financial.actualCompanyTake,
             jackpotContribution: d.financial.jackpotContribution,
           }
         : undefined,

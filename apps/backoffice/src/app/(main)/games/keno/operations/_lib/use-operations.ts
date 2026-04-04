@@ -239,6 +239,7 @@ export function useCloseSales() {
 export function usePublishResult() {
   return useDrawAction<{
     winningNumbers: string[];
+    vietlottRef?: { drawPeriod: string; drawDate: string };
   }>((id) => `/keno/draws/${id}/publish-result`, "post", "Đã công bố kết quả.");
 }
 

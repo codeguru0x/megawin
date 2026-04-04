@@ -1,6 +1,6 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawNo } from "@megawin/game-mega645/entities";
-import type { DrawEntity } from "@megawin/game-mega645/entities";;
+import type { DrawEntity } from "@megawin/game-mega645/entities";
 
 // ─────────────────────────────────────────────
 // CreateDraws (batch – tạo nhiều kỳ liên tiếp)
@@ -187,18 +187,28 @@ export interface DrawSummary {
   };
   /** Kỳ này có phải kỳ split cycle không. */
   isSplitCycle?: boolean;
+  /** Ngày tài chính (YYYY-MM-DD). */
+  financialDate?: string;
+  /** Thời điểm đóng bán (ISO 8601). */
+  closeAt?: string;
+  /** Thời điểm mở bán (ISO 8601). */
+  openAt?: string;
   /** Tổng số entry (lượt tham gia) trong kỳ. */
   ticketEntryCount?: number;
   /** Tổng doanh thu kỳ quay (VND). */
   totalRevenue?: number;
+  /** Tổng tiền trả thưởng thực tế (VND) — từ stats.totalPayoutAmount. */
+  totalPayout?: number;
   /** Thông tin tài chính tổng hợp sau settle. */
   financial?: {
     /** Tổng giải thưởng cố định đã trả (tier2 + tier3 + tier4) — VND. */
     totalFixedPrizes: number;
     /** Tổng hoa hồng đại lý (VND). */
     totalAgentCommission: number;
-    /** Phần công ty được hưởng (VND). */
+    /** Phần công ty được hưởng theo config (VND). */
     companyTake: number;
+    /** Lợi nhuận thực tế công ty (VND) — sau tất cả các khoản. */
+    actualCompanyTake: number;
     /** Đóng góp vào quỹ jackpot trong kỳ (VND). */
     jackpotContribution: number;
   };

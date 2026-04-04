@@ -18,15 +18,15 @@ import {
 } from "@megawin/game-max3d/labels";
 import { formatNumber } from "@megawin/shared/utils";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TripletDisplay } from "@/components/games/max3d/triplet-display";
 import { Trophy, Users, Coins, ArrowDownRight, CircleDollarSign, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { useDrawContext } from "../../use-draw-context";
-import { useDrawDetail, useWinningEntries, type WinningEntryItem } from "../../use-operations";
+import { useDrawDetail } from "../../use-operations";
 import type { DrawResult, DrawFinancialDisplay } from "../../types";
+import { WinningEntriesDialog } from "./winning-entries-dialog";
 
 // ─── Tier config ──────────────────────────────────────────────────────────────
 
@@ -73,129 +73,105 @@ const RESULT_SHOW = new Set<string>([
 // ─── Result Card ──────────────────────────────────────────────────────────────
 
 function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) {
-  const [showWinners, setShowWinners] = useState(false);
-  const { data: winnersData, isLoading: winnersLoading } = useWinningEntries(drawId, showWinners);
-
-  const nonZeroTiers = result.tiers.filter((t) => t.winnerCount > 0);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
-    <Card className="gap-0 py-0 shadow-sm">
-      <CardHeader className="px-5 pb-2 pt-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Trophy className="size-4 text-muted-foreground" />
-            <CardTitle className="text-sm font-semibold">Kết quả quay số</CardTitle>
-          </div>
-          {nonZeroTiers.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 h-7 text-xs"
-              onClick={() => setShowWinners(!showWinners)}
-            >
-              <ExternalLink className="size-3" />
-              Vé trúng thưởng
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="px-5 pb-4 pt-0 space-y-4">
-        {/* 20 bộ ba số */}
-        <div className="rounded-xl border bg-muted/20 p-4 space-y-2">
-          {[
-            { label: "Đặc Biệt", triplets: result.special, variant: "special" as const },
-            { label: "Giải Nhất", triplets: result.first, variant: "first" as const },
-            { label: "Giải Nhì", triplets: result.second, variant: "second" as const },
-            { label: "Giải Ba", triplets: result.third, variant: "third" as const },
-          ].map((row) => (
-            <div key={row.label} className="flex items-center gap-3">
-              <span className="text-xs font-semibold text-muted-foreground w-20 shrink-0">
-                {row.label}
+    <>
+      <Card className="gap-0 py-0 shadow-sm">
+        <CardContent className="px-5 pb-4 pt-4 space-y-4">
+          {/* 20 bộ ba số — header bên trong card */}
+          <div className="rounded-xl border bg-muted/20 px-4 py-4 space-y-3">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex-1" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Kết quả
               </span>
-              <div className="flex flex-wrap gap-1.5">
-                {row.triplets.map((t, i) => (
-                  <TripletDisplay key={i} value={t} variant={row.variant} size="sm" />
+              <div className="flex-1 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setDialogOpen(true)}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-primary/70 transition-colors cursor-pointer"
+                >
+                  <ExternalLink className="size-3" />
+                  Xem phiếu cược trúng thưởng
+                </button>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <div className="space-y-2">
+                {[
+                  { label: "Đặc Biệt", triplets: result.special, variant: "special" as const },
+                  { label: "Giải Nhất", triplets: result.first, variant: "first" as const },
+                  { label: "Giải Nhì", triplets: result.second, variant: "second" as const },
+                  { label: "Giải Ba", triplets: result.third, variant: "third" as const },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-muted-foreground w-16 shrink-0">
+                      {row.label}
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {row.triplets.map((t, i) => (
+                        <TripletDisplay key={i} value={t} variant={row.variant} size="sm" />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
-          ))}
-        </div>
-
-        {/* Prize tiers table */}
-        {result.tiers.length > 0 && (
-          <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              Giải thưởng
-            </p>
-            <div className="space-y-1">
-              {result.tiers.map((tier) => {
-                const cfg = TIER_CONFIG[tier.tier] ?? {
-                  badge: "border-border bg-muted/40 text-muted-foreground",
-                  row: "",
-                };
-                const label =
-                  MAX3D_BASIC_PRIZE_TIER_LABELS[tier.tier as BasicPrizeTier] ??
-                  MAX3D_PLUS_PRIZE_TIER_LABELS[tier.tier as PlusPrizeTier] ??
-                  tier.tier;
-                return (
-                  <div
-                    key={`${tier.mode}-${tier.tier}`}
-                    className={cn(
-                      "grid items-center gap-x-3 rounded-lg border border-transparent px-3 py-2",
-                      cfg.row,
-                      tier.winnerCount === 0 && "opacity-40",
-                    )}
-                    style={{ gridTemplateColumns: "7rem 4rem 6rem 6rem" }}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      {cfg.icon && <cfg.icon className="size-3.5 shrink-0 text-amber-500" />}
-                      <Badge variant="outline" className={cn("text-xs py-0", cfg.badge)}>
-                        {label}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs tabular-nums text-muted-foreground">
-                      <Users className="size-3" />
-                      {formatNumber(tier.winnerCount)}
-                    </div>
-                    <p className="text-xs tabular-nums text-right text-muted-foreground">
-                      {tier.prizeAmount > 0 ? formatNumber(tier.prizeAmount) : "—"}
-                    </p>
-                    <p className="text-xs font-semibold tabular-nums text-right">
-                      {tier.totalPrize > 0 ? formatNumber(tier.totalPrize) : "—"}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
           </div>
-        )}
 
-        {/* Winning entries quick view */}
-        {showWinners && (
-          <div className="rounded-xl border bg-muted/10 p-3 space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Vé trúng thưởng{" "}
-              {winnersLoading
-                ? "(đang tải...)"
-                : winnersData
-                  ? `(${winnersData.entries.length} vé)`
-                  : ""}
-            </p>
-            {winnersData?.entries.slice(0, 10).map((entry: WinningEntryItem) => (
-              <div key={entry.entryId} className="flex items-center gap-2 text-xs">
-                <span className="font-mono text-muted-foreground">{entry.entryId.slice(-8)}</span>
-                <span className="font-semibold tabular-nums">{formatNumber(entry.winAmount)}</span>
-              </div>
-            ))}
-            {winnersData && winnersData.entries.length > 10 && (
-              <p className="text-xs text-muted-foreground">
-                +{winnersData.entries.length - 10} vé khác
+          {/* Prize tiers table */}
+          {result.tiers.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Giải thưởng
               </p>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <div className="space-y-1">
+                {result.tiers.map((tier) => {
+                  const cfg = TIER_CONFIG[tier.tier] ?? {
+                    badge: "border-border bg-muted/40 text-muted-foreground",
+                    row: "",
+                  };
+                  const label =
+                    MAX3D_BASIC_PRIZE_TIER_LABELS[tier.tier as BasicPrizeTier] ??
+                    MAX3D_PLUS_PRIZE_TIER_LABELS[tier.tier as PlusPrizeTier] ??
+                    tier.tier;
+                  return (
+                    <div
+                      key={`${tier.mode}-${tier.tier}`}
+                      className={cn(
+                        "grid items-center gap-x-3 rounded-lg border border-transparent px-3 py-2",
+                        cfg.row,
+                        tier.winnerCount === 0 && "opacity-40",
+                      )}
+                      style={{ gridTemplateColumns: "7rem 4rem 6rem 6rem" }}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        {cfg.icon && <cfg.icon className="size-3.5 shrink-0 text-amber-500" />}
+                        <Badge variant="outline" className={cn("text-xs py-0", cfg.badge)}>
+                          {label}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs tabular-nums text-muted-foreground">
+                        <Users className="size-3" />
+                        {formatNumber(tier.winnerCount)}
+                      </div>
+                      <p className="text-xs tabular-nums text-right text-muted-foreground">
+                        {tier.prizeAmount > 0 ? formatNumber(tier.prizeAmount) : "—"}
+                      </p>
+                      <p className="text-xs font-semibold tabular-nums text-right">
+                        {tier.totalPrize > 0 ? formatNumber(tier.totalPrize) : "—"}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      <WinningEntriesDialog drawId={drawId} open={dialogOpen} onOpenChange={setDialogOpen} />
+    </>
   );
 }
 

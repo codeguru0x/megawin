@@ -33,7 +33,7 @@ export function AppSidebar({ scope: _scope, ...props }: AppSidebarProps) {
       sidebarVariant: s.sidebarVariant,
       sidebarCollapsible: s.sidebarCollapsible,
       isSynced: s.isSynced,
-    }))
+    })),
   );
 
   const variant = isSynced ? sidebarVariant : props.variant;
@@ -47,9 +47,7 @@ export function AppSidebar({ scope: _scope, ...props }: AppSidebarProps) {
             <SidebarMenuButton asChild>
               <Link prefetch={false} href="/">
                 <Crown />
-                <span className="font-semibold text-base">
-                  {APP_CONFIG.name}
-                </span>
+                <span className="font-semibold text-base">{APP_CONFIG.name}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -60,6 +58,11 @@ export function AppSidebar({ scope: _scope, ...props }: AppSidebarProps) {
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
+        <div className="group-data-[collapsible=icon]:hidden border-t border-sidebar-border px-3 pt-2 pb-1 text-xs leading-relaxed text-sidebar-foreground/40">
+          <p>
+            {APP_CONFIG.copyright} v.{APP_CONFIG.version}
+          </p>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

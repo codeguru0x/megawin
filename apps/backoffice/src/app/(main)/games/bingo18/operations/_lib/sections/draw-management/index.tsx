@@ -27,7 +27,12 @@ import { DrawStatus } from "@megawin/game-core/entities";
 
 import { useDrawContext } from "../../use-draw-context";
 import { DrawCommandCenter } from "./draw-command-center";
-import { PublishResultAction, EditScheduleAction, VoidDrawAction } from "./draw-actions";
+import {
+  PublishResultAction,
+  EditScheduleAction,
+  VoidDrawAction,
+  type PublishResultCurrentValues,
+} from "./draw-actions";
 import { useOpenSales, useCloseSales, useTriggerSettle, useDrawDetail } from "../../use-operations";
 
 import type { Bingo18DrawResult, VoidInfo } from "../../types";
@@ -58,10 +63,27 @@ export function DrawManagementSection() {
     if (!d?.result) return undefined;
     const r = d.result as any;
     return {
-      diceNumbers: r.diceNumbers ?? [],
+      diceNumbers: r.numbers ?? r.diceNumbers ?? [],
       sum: r.sum ?? 0,
       publishedAt:
         r.publishedAt instanceof Date ? r.publishedAt.toISOString() : String(r.publishedAt ?? ""),
+    };
+  })();
+
+  const currentResult: PublishResultCurrentValues | undefined = (() => {
+    const d = drawDetailData?.draw;
+    if (!d?.result) return undefined;
+    const r = d.result as any;
+    const nums = (r.numbers ?? r.diceNumbers) as number[] | undefined;
+    if (!nums || nums.length !== 3) return undefined;
+    return {
+      diceNumbers: [nums[0]!, nums[1]!, nums[2]!] as [number, number, number],
+      vietlottRef: (d as any).vietlottRef
+        ? {
+            drawPeriod: (d as any).vietlottRef.drawPeriod,
+            drawDate: String((d as any).vietlottRef.drawDate ?? ""),
+          }
+        : undefined,
     };
   })();
 
@@ -89,6 +111,7 @@ export function DrawManagementSection() {
         onOpenSales={() => setOpenSalesConfirm(true)}
         onCloseSales={() => setCloseSalesConfirm(true)}
         onPublishResult={() => setPublishOpen(true)}
+        onRepublishResult={() => setPublishOpen(true)}
         onTriggerSettle={() => setSettleConfirm(true)}
         onEditSchedule={() => setEditScheduleOpen(true)}
         onVoidDraw={() => setVoidOpen(true)}
@@ -100,6 +123,7 @@ export function DrawManagementSection() {
         disabled={false}
         open={publishOpen}
         onOpenChange={setPublishOpen}
+        currentResult={currentResult}
       />
       <EditScheduleAction
         draw={draw}

@@ -12,7 +12,6 @@
 
 import Link from "next/link";
 import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 import { useCurrentDraw } from "./_lib/use-draws";
 import {
@@ -31,21 +30,16 @@ export default function Mega645DrawsPage() {
   return (
     <div className="@container/main flex flex-col gap-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-teal-500 to-teal-600 shadow-sm">
-            <CalendarClock className="size-4.5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Mega 6/45 — Kỳ quay
-            </h1>
-            <p className="text-xs text-muted-foreground">Tổng quan kỳ quay hiện tại và lịch sử</p>
-          </div>
+      <div className="flex items-center gap-3">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-teal-500 to-teal-600 shadow-sm">
+          <CalendarClock className="size-4.5 text-white" />
         </div>
-        <Button size="sm" variant="outline" asChild>
-          <Link href="/games/mega645/operations">Trang vận hành</Link>
-        </Button>
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
+            Mega 6/45 — Kỳ quay
+          </h1>
+          <p className="text-xs text-muted-foreground">Tổng quan kỳ quay hiện tại và lịch sử</p>
+        </div>
       </div>
 
       {/* Active Draws */}

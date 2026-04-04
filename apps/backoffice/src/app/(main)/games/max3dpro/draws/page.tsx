@@ -1,12 +1,14 @@
 "use client";
 
-import { CalendarClock, ExternalLink, Loader2, ListOrdered } from "lucide-react";
+import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
 import { useCurrentDraw } from "./_lib/use-draws";
 import { useGameConfig } from "../config/game/_lib/use-game-config";
-import { Max3dproPrimaryDrawCard, Max3dproQueueDrawCard } from "./_lib/active-draw-card";
+import {
+  Max3dproPrimaryDrawCard,
+  Max3dproQueueDrawCard,
+} from "@/components/games/max3dpro/active-draw-card";
 import { DrawHistorySection } from "./_lib/draw-history-section";
 
 export default function Max3dproDrawsPage() {
@@ -22,7 +24,7 @@ export default function Max3dproDrawsPage() {
 
   return (
     <div className="@container/main flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
         <div className="flex items-center gap-3">
           <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-pink-500 to-pink-600 shadow-sm">
             <CalendarClock className="size-4.5 text-white" />
@@ -81,12 +83,6 @@ export default function Max3dproDrawsPage() {
               để tạo kỳ mới.
             </p>
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5" asChild>
-            <Link href="/games/max3dpro/operations">
-              <ExternalLink className="size-3.5" />
-              Đến trang vận hành
-            </Link>
-          </Button>
         </div>
       )}
 

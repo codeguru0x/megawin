@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Loader2, Send, Dice3, HelpCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Check, Loader2, Dice3, HelpCircle, ExternalLink, CalendarDays, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,161 +17,234 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DevRandomFillButton } from "@/components/dev-random-fill-button";
-import { TripletDisplay } from "@/components/games/max3d/triplet-display";
+import { todayVN } from "@megawin/shared/utils";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
+
+const tripletSchema = z.string().regex(/^\d{3}$/, "Phải là 3 chữ số (000–999)");
+
+const publishResultSchema = z.object({
+  special: z.tuple([tripletSchema, tripletSchema]),
+  first: z.tuple([tripletSchema, tripletSchema, tripletSchema, tripletSchema]),
+  second: z.tuple([
+    tripletSchema,
+    tripletSchema,
+    tripletSchema,
+    tripletSchema,
+    tripletSchema,
+    tripletSchema,
+  ]),
+  third: z.tuple([
+    tripletSchema,
+    tripletSchema,
+    tripletSchema,
+    tripletSchema,
+    tripletSchema,
+    tripletSchema,
+    tripletSchema,
+    tripletSchema,
+  ]),
+  vietlotDate: z.string(),
+  vietlotPeriod: z.string(),
+});
+
+type PublishResultFormValues = z.infer<typeof publishResultSchema>;
 
 const TIER_CONFIG = [
   {
     key: "special" as const,
     label: "Giải Đặc Biệt",
-    shortLabel: "ĐB",
     count: 2,
-    variant: "special" as const,
     color: "from-amber-400 to-orange-500",
     badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
   },
   {
     key: "first" as const,
     label: "Giải Nhất",
-    shortLabel: "Nhất",
     count: 4,
-    variant: "first" as const,
     color: "from-rose-500 to-pink-600",
     badgeClass: "bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300",
   },
   {
     key: "second" as const,
     label: "Giải Nhì",
-    shortLabel: "Nhì",
     count: 6,
-    variant: "second" as const,
     color: "from-blue-500 to-indigo-600",
     badgeClass: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
   },
   {
     key: "third" as const,
     label: "Giải Ba",
-    shortLabel: "Ba",
     count: 8,
-    variant: "third" as const,
     color: "from-emerald-500 to-teal-600",
     badgeClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
   },
 ];
 
-function generateRandomTriplet(): string {
-  return String(Math.floor(Math.random() * 1000)).padStart(3, "0");
-}
-
-function validateTriplet(val: string): boolean {
-  return /^\d{3}$/.test(val);
-}
-
-type TierKey = "special" | "first" | "second" | "third";
-
-interface TripletState {
-  special: string[];
-  first: string[];
-  second: string[];
-  third: string[];
-}
-
-const INITIAL_STATE: TripletState = {
+const EMPTY_DEFAULTS: PublishResultFormValues = {
   special: ["", ""],
   first: ["", "", "", ""],
   second: ["", "", "", "", "", ""],
   third: ["", "", "", "", "", "", "", ""],
+  vietlotDate: todayVN(),
+  vietlotPeriod: "",
 };
+
+export interface PublishResultCurrentValues {
+  special: [string, string];
+  first: [string, string, string, string];
+  second: [string, string, string, string, string, string];
+  third: [string, string, string, string, string, string, string, string];
+  vietlottRef?: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
+function buildDefaults(current?: PublishResultCurrentValues): PublishResultFormValues {
+  if (!current) return EMPTY_DEFAULTS;
+  return {
+    special: current.special.length === 2 ? current.special : EMPTY_DEFAULTS.special,
+    first: current.first.length === 4 ? current.first : EMPTY_DEFAULTS.first,
+    second: current.second.length === 6 ? current.second : EMPTY_DEFAULTS.second,
+    third: current.third.length === 8 ? current.third : EMPTY_DEFAULTS.third,
+    vietlotDate: current.vietlottRef?.drawDate ?? todayVN(),
+    vietlotPeriod: current.vietlottRef?.drawPeriod ?? "",
+  };
+}
+
+function generateRandomTriplet(): string {
+  return String(Math.floor(Math.random() * 1000)).padStart(3, "0");
+}
 
 export function PublishResultAction({
   draw,
   disabled,
   open,
   onOpenChange,
+  currentResult,
 }: {
   draw: DrawSelectorItem;
   disabled?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  currentResult?: PublishResultCurrentValues;
 }) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange ?? setInternalOpen;
-  const [triplets, setTriplets] = useState<TripletState>({ ...INITIAL_STATE });
-  const [error, setError] = useState<string | null>(null);
   const publishResult = usePublishResult();
 
-  const isRepublish = draw.status === "published";
+  const isRepublish = draw.status === "published" || draw.status === "settled";
 
-  function updateTriplet(tier: TierKey, index: number, value: string) {
-    const cleaned = value.replace(/\D/g, "").slice(0, 3);
-    setTriplets((prev) => {
-      const next = { ...prev };
-      next[tier] = [...prev[tier]];
-      next[tier][index] = cleaned;
-      return next;
-    });
-    setError(null);
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<PublishResultFormValues>({
+    resolver: zodResolver(publishResultSchema),
+    defaultValues: EMPTY_DEFAULTS,
+    mode: "onSubmit",
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      reset(buildDefaults(currentResult));
+    } else {
+      reset(EMPTY_DEFAULTS);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, currentResult]);
+
+  function handleOpenChange(nextOpen: boolean) {
+    setIsOpen(nextOpen);
   }
 
   function fillRandom() {
-    setTriplets({
-      special: Array.from({ length: 2 }, generateRandomTriplet),
-      first: Array.from({ length: 4 }, generateRandomTriplet),
-      second: Array.from({ length: 6 }, generateRandomTriplet),
-      third: Array.from({ length: 8 }, generateRandomTriplet),
-    });
-    setError(null);
+    setValue("special", [generateRandomTriplet(), generateRandomTriplet()]);
+    setValue("first", [
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+    ]);
+    setValue("second", [
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+    ]);
+    setValue("third", [
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+      generateRandomTriplet(),
+    ]);
   }
 
-  function handleSubmit() {
-    setError(null);
-
-    for (const tier of TIER_CONFIG) {
-      for (let i = 0; i < tier.count; i++) {
-        const val = triplets[tier.key][i];
-        if (!val || !validateTriplet(val)) {
-          setError(`${tier.label} #${i + 1}: phải là 3 chữ số (000–999).`);
-          return;
-        }
-      }
-    }
-
-    const body = {
+  function onSubmit(values: PublishResultFormValues) {
+    const body: {
       result: {
-        special: triplets.special as [string, string],
-        first: triplets.first as [string, string, string, string],
-        second: triplets.second as [string, string, string, string, string, string],
-        third: triplets.third as [string, string, string, string, string, string, string, string],
+        special: [string, string];
+        first: [string, string, string, string];
+        second: [string, string, string, string, string, string];
+        third: [string, string, string, string, string, string, string, string];
+      };
+      vietlottRef?: { drawPeriod: string; drawDate: string };
+    } = {
+      result: {
+        special: values.special,
+        first: values.first,
+        second: values.second,
+        third: values.third,
       },
     };
+
+    if (values.vietlotPeriod.trim()) {
+      body.vietlottRef = {
+        drawPeriod: values.vietlotPeriod.trim(),
+        drawDate: values.vietlotDate,
+      };
+    }
 
     publishResult.mutate(
       { drawId: draw.drawId, body },
       {
         onSuccess: () => {
-          setIsOpen(false);
-          setTriplets({ ...INITIAL_STATE });
-          setError(null);
+          handleOpenChange(false);
         },
       },
     );
   }
 
-  const filledCount = Object.values(triplets)
+  const allValues = watch();
+  const filledCount = (
+    Object.entries(allValues)
+      .filter(([k]) => !["vietlotDate", "vietlotPeriod"].includes(k))
+      .map(([, v]) => v) as string[][]
+  )
     .flat()
-    .filter((v) => validateTriplet(v)).length;
+    .filter((v) => /^\d{3}$/.test(v)).length;
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Dice3 className="size-5 text-red-500" />
-            {isRepublish ? "Sửa kết quả" : "Cập nhật kết quả"} kỳ {draw.drawId}
+            <Dice3 className="size-4.5 text-pink-500" />
+            {isRepublish ? "Sửa kết quả" : "Công bố kết quả"} — Kỳ {draw.drawDate}
           </DialogTitle>
           <DialogDescription className="flex items-center gap-2">
             Nhập 20 bộ ba số (000–999): 2 ĐB + 4 Nhất + 6 Nhì + 8 Ba.
@@ -179,100 +255,127 @@ export function PublishResultAction({
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-xs">
                 Mỗi kỳ quay Max 3D Pro có 20 bộ ba số kết quả, phân theo 4 hạng giải. Mỗi bộ là 3
-                chữ số từ 000 đến 999.
+                chữ số từ 000 đến 999. Thứ tự 2 bộ Đặc Biệt quan trọng — phân biệt giải ĐB và giải
+                phụ ĐB.
               </TooltipContent>
             </Tooltip>
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
-          <div className="flex items-center justify-between">
-            <Badge variant="secondary" className="tabular-nums">
-              {filledCount}/20 bộ số
-            </Badge>
-            <DevRandomFillButton onFill={fillRandom} />
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="space-y-5 py-2">
+            <div className="flex items-center justify-between">
+              <Badge variant="secondary" className="tabular-nums">
+                {filledCount}/20 bộ số
+              </Badge>
+              <DevRandomFillButton onFill={fillRandom} />
+            </div>
+
+            {TIER_CONFIG.map((tier) => {
+              const tierErrors = errors[tier.key];
+              return (
+                <div key={tier.key} className="space-y-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className={`h-1 w-6 rounded-full bg-linear-to-r ${tier.color}`} />
+                    <Label className="text-sm font-semibold">{tier.label}</Label>
+                    <Badge variant="outline" className={`text-xs border-0 ${tier.badgeClass}`}>
+                      {tier.count} bộ
+                    </Badge>
+                    {tier.key === "special" && (
+                      <span className="text-xs text-muted-foreground">
+                        (thứ tự quay có ý nghĩa)
+                      </span>
+                    )}
+                  </div>
+                  <div className="rounded-lg border bg-muted/20 p-3">
+                    <div className="grid grid-cols-6 gap-2">
+                      {Array.from({ length: tier.count }, (_, i) => {
+                        const fieldError = Array.isArray(tierErrors) ? tierErrors[i] : undefined;
+                        return (
+                          <div key={i} className="flex flex-col gap-1">
+                            <span className="text-xs font-medium text-muted-foreground text-center">
+                              {i + 1}
+                            </span>
+                            <Input
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={3}
+                              {...register(`${tier.key}.${i}` as `special.0`, {
+                                onChange: (e) => {
+                                  const cleaned = e.target.value.replace(/\D/g, "").slice(0, 3);
+                                  e.target.value = cleaned;
+                                },
+                              })}
+                              className={`w-full text-center font-mono text-sm font-bold tabular-nums ${fieldError ? "border-destructive" : ""}`}
+                              placeholder="000"
+                            />
+                            {fieldError?.message && (
+                              <p className="text-[10px] text-destructive text-center leading-tight">
+                                {fieldError.message}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          {TIER_CONFIG.map((tier) => (
-            <div key={tier.key} className="space-y-2.5">
-              <div className="flex items-center gap-2">
-                <div className={`h-1 w-6 rounded-full bg-linear-to-r ${tier.color}`} />
-                <Label className="text-sm font-semibold">{tier.label}</Label>
-                <Badge variant="outline" className={`text-xs border-0 ${tier.badgeClass}`}>
-                  {tier.count} bộ
-                </Badge>
+          <Separator className="my-1" />
+
+          <div className="space-y-3 py-2">
+            <div className="flex items-center gap-2">
+              <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
+                <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="rounded-lg border bg-muted/20 p-3">
-                <div className="flex flex-wrap gap-2">
-                  {Array.from({ length: tier.count }, (_, i) => {
-                    const val = triplets[tier.key][i] ?? "";
-                    const isValid = val.length === 3 && validateTriplet(val);
-                    return (
-                      <div key={i} className="flex items-center gap-1.5">
-                        <span className="text-xs font-medium text-muted-foreground w-4 text-right">
-                          {i + 1}
-                        </span>
-                        <Input
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={3}
-                          value={val}
-                          onChange={(e) => updateTriplet(tier.key, i, e.target.value)}
-                          className={`w-16 text-center font-mono text-sm font-bold tabular-nums ${isValid ? "border-green-300 dark:border-green-700" : ""}`}
-                          placeholder="000"
-                        />
-                        {isValid && <TripletDisplay value={val} variant={tier.variant} size="sm" />}
-                      </div>
-                    );
-                  })}
+              <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                Tùy chọn
+              </span>
+            </div>
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <p className="mb-3 text-xs text-muted-foreground">
+                Liên kết kỳ quay với dữ liệu Vietlott chính thức để đối soát
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <CalendarDays className="size-3" /> Ngày Vietlott
+                  </Label>
+                  <Input type="date" className="font-mono text-sm" {...register("vietlotDate")} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <Hash className="size-3" /> Mã kỳ Vietlott
+                  </Label>
+                  <Input
+                    type="text"
+                    placeholder="VD: 123456"
+                    className="font-mono text-sm"
+                    {...register("vietlotPeriod")}
+                  />
                 </div>
               </div>
             </div>
-          ))}
+          </div>
 
-          {filledCount === 20 && (
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Xem trước kết quả</p>
-              <div className="space-y-2">
-                {TIER_CONFIG.map((tier) => (
-                  <div key={tier.key} className="flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className={`text-xs border-0 min-w-12 justify-center ${tier.badgeClass}`}
-                    >
-                      {tier.shortLabel}
-                    </Badge>
-                    <div className="flex flex-wrap gap-1">
-                      {triplets[tier.key].map((val, i) => (
-                        <TripletDisplay key={i} value={val} variant={tier.variant} size="sm" />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
-              <p className="text-sm font-medium text-destructive">{error}</p>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Huỷ bỏ
-          </Button>
-          <Button onClick={handleSubmit} disabled={publishResult.isPending || disabled}>
-            {publishResult.isPending ? (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            ) : (
-              <Send className="mr-2 size-4" />
-            )}
-            Xác nhận
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="pt-4">
+            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+              Huỷ bỏ
+            </Button>
+            <Button type="submit" disabled={publishResult.isPending}>
+              {publishResult.isPending ? (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              ) : (
+                <Check className="mr-2 size-4" />
+              )}
+              Xác nhận
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

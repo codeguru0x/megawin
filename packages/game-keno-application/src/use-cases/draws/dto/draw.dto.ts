@@ -128,14 +128,31 @@ export interface DrawSummary {
   id: string;
   drawId: string;
   drawDate: string;
+  /** Ngày tài chính (YYYY-MM-DD). */
+  financialDate?: string;
   drawNo: number;
   drawTime: string;
+  /** Thời điểm đóng bán (ISO 8601). */
+  closeAt?: string;
+  /** Thời điểm mở bán (ISO 8601). */
+  openAt?: string;
   status: string;
   hasResult: boolean;
   /** 20 số trúng thưởng (01-80), chỉ có sau khi published. */
   result?: { winningNumbers: string[] };
   ticketEntryCount?: number;
   totalRevenue?: number;
+  /** Tổng tiền trả thưởng thực tế (VND) — từ stats.totalPayoutAmount. */
+  totalPayout?: number;
+  /** Thông tin tài chính tổng hợp sau settle. */
+  financial?: {
+    /** Tổng tiền thưởng đã trả. */
+    totalPrizes: number;
+    /** Tổng hoa hồng đại lý (VND). */
+    totalAgentCommission: number;
+    /** Lợi nhuận thực tế công ty (VND) = revenue - prizes - commission. */
+    companyTake: number;
+  };
 }
 
 export interface ListDrawsOutput {

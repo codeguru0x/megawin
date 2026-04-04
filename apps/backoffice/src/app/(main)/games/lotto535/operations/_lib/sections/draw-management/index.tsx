@@ -29,7 +29,12 @@ import { LOTTO535_PRIZE_TIER_LABELS } from "@megawin/game-lotto535/labels";
 
 import { useDrawContext } from "../../use-draw-context";
 import { DrawCommandCenter } from "./draw-command-center";
-import { PublishResultAction, EditScheduleAction, VoidDrawAction } from "./draw-actions";
+import {
+  PublishResultAction,
+  EditScheduleAction,
+  VoidDrawAction,
+  type PublishResultCurrentValues,
+} from "./draw-actions";
 import { useOpenSales, useCloseSales, useTriggerSettle, useDrawDetail } from "../../use-operations";
 
 import type { DrawResult, VoidInfo } from "../../types";
@@ -119,6 +124,22 @@ export function DrawManagementSection() {
     };
   })();
 
+  // Pre-fill values cho dialog sửa kết quả (published + settled)
+  const currentResult: PublishResultCurrentValues | undefined = (() => {
+    const d = drawDetailData?.draw;
+    if (!d?.result) return undefined;
+    return {
+      winningMain: d.result.winningMain,
+      winningSpecial: d.result.winningSpecial,
+      vietlottRef: d.vietlottRef
+        ? {
+            drawPeriod: d.vietlottRef.drawPeriod,
+            drawDate: String(d.vietlottRef.drawDate ?? ""),
+          }
+        : undefined,
+    };
+  })();
+
   if (!draw) return null;
 
   return (
@@ -130,6 +151,7 @@ export function DrawManagementSection() {
         onOpenSales={() => setOpenSalesConfirm(true)}
         onCloseSales={() => setCloseSalesConfirm(true)}
         onPublishResult={() => setPublishOpen(true)}
+        onRepublishResult={() => setPublishOpen(true)}
         onTriggerSettle={() => setSettleConfirm(true)}
         onEditSchedule={() => setEditScheduleOpen(true)}
         onVoidDraw={() => setVoidOpen(true)}
@@ -141,6 +163,7 @@ export function DrawManagementSection() {
         disabled={false}
         open={publishOpen}
         onOpenChange={setPublishOpen}
+        currentResult={currentResult}
       />
       <EditScheduleAction
         draw={draw}

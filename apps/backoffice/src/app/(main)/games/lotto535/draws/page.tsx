@@ -1,8 +1,8 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
-import { CalendarClock, ExternalLink, ListOrdered, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CalendarClock, ListOrdered, Loader2 } from "lucide-react";
 
 import { useCurrentDraw } from "./_lib/use-draws";
 import {
@@ -83,7 +83,9 @@ export default function AdminDrawsPage() {
       )}
 
       {/* History */}
-      <DrawHistorySection />
+      <Suspense>
+        <DrawHistorySection />
+      </Suspense>
     </div>
   );
 }

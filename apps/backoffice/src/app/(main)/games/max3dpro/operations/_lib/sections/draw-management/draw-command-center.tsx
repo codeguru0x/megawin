@@ -11,12 +11,15 @@ import {
   Pencil,
   Trash2,
   RotateCcw,
+  FileText,
   ChevronRight,
   AlertTriangle,
   Ban,
   Loader2,
   CalendarCheck,
+  ClipboardPen,
 } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawStatusBadge } from "@/components/games/max3dpro/draw-status-badge";
@@ -34,6 +37,7 @@ interface DrawCommandProps {
   onOpenSales?: () => void;
   onCloseSales?: () => void;
   onPublishResult?: () => void;
+  onRepublishResult?: () => void;
   onTriggerSettle?: () => void;
   onEditSchedule?: () => void;
   onVoidDraw?: () => void;
@@ -240,35 +244,6 @@ function ScheduleChips({ draw }: { draw: DrawSelectorItem }) {
   );
 }
 
-// ─── Result Display (20 triplets) ────────────────────────────────────────────
-
-function ResultDisplay({ result }: { result: DrawResult }) {
-  return (
-    <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3 space-y-2">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-        Kết quả quay số
-      </p>
-      <div className="space-y-1.5">
-        {[
-          { label: "ĐB", triplets: result.special, variant: "special" as const },
-          { label: "Nhất", triplets: result.first, variant: "first" as const },
-          { label: "Nhì", triplets: result.second, variant: "second" as const },
-          { label: "Ba", triplets: result.third, variant: "third" as const },
-        ].map((row) => (
-          <div key={row.label} className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-bold text-muted-foreground min-w-8 text-right">
-              {row.label}
-            </span>
-            {row.triplets.map((t, i) => (
-              <TripletDisplay key={i} value={t} variant={row.variant} size="sm" />
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function DrawCommandCenter({
@@ -278,6 +253,7 @@ export function DrawCommandCenter({
   onOpenSales,
   onCloseSales,
   onPublishResult,
+  onRepublishResult,
   onTriggerSettle,
   onEditSchedule,
   onVoidDraw,
@@ -289,15 +265,11 @@ export function DrawCommandCenter({
   const canVoid = [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(
     status as never,
   );
+  const canRepublish = status === DrawStatus.Published || status === DrawStatus.Settled;
   const canReopenSales = status === DrawStatus.SalesClosed;
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
   const isSettled = status === DrawStatus.Settled;
   const isSettling = status === DrawStatus.Settling;
-  const RESULT_SHOW = new Set<string>([
-    DrawStatus.Published,
-    DrawStatus.Settling,
-    DrawStatus.Settled,
-  ]);
 
   type ActionConfig = {
     label: string;
@@ -492,12 +464,6 @@ export function DrawCommandCenter({
             <div className="w-full max-w-[45%] min-w-64">
               <LifecycleStepper steps={steps} />
             </div>
-            {/* Kết quả quay số — hiển thị khi Published/Settling/Settled */}
-            {RESULT_SHOW.has(status) && result && (
-              <div className="w-full">
-                <ResultDisplay result={result} />
-              </div>
-            )}
           </div>
         )}
 
@@ -541,18 +507,31 @@ export function DrawCommandCenter({
                   <nextAction.icon className="size-3.5" /> {nextAction.label}
                 </Button>
               )}
-              {canReopenSales && (
-                <Button variant="outline" size="sm" onClick={onOpenSales} className="gap-1.5">
-                  <Unlock className="size-3.5" /> Mở lại bán
-                </Button>
-              )}
               {isSettled && (
                 <Button variant="outline" size="sm" className="gap-1.5" disabled>
                   <RotateCcw className="size-3.5" /> Re-settle
                 </Button>
               )}
+              {canRepublish && (
+                <Button variant="outline" size="sm" onClick={onRepublishResult} className="gap-1.5">
+                  <ClipboardPen className="size-3.5" /> Sửa kết quả
+                </Button>
+              )}
+              {canReopenSales && (
+                <Button variant="outline" size="sm" onClick={onOpenSales} className="gap-1.5">
+                  <Unlock className="size-3.5" /> Mở lại bán
+                </Button>
+              )}
             </div>
             <div className="flex items-center gap-1">
+              {isSettled && (
+                <Link
+                  href={`/games/max3dpro/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}
+                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5"
+                >
+                  <FileText className="size-3.5" /> Xem báo cáo
+                </Link>
+              )}
               {canEdit && (
                 <Button
                   variant="ghost"

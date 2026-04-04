@@ -16,8 +16,9 @@ export interface Bingo18CurrentDrawInfo {
     closeAt: string;
   };
   result?: {
-    diceNumbers: number[];
+    numbers: number[];
     sum: number;
+    publishedAt?: string;
   };
   stats?: {
     ticketEntryCount: number;
@@ -26,17 +27,27 @@ export interface Bingo18CurrentDrawInfo {
 }
 
 export interface Bingo18DrawSummary {
+  id: string;
   drawId: string;
   drawNo: number;
   drawDate: string;
+  financialDate?: string;
   drawTime: string;
+  closeAt?: string;
+  openAt?: string;
   status: string;
   hasResult: boolean;
-  ticketEntryCount?: number;
-  totalRevenue?: number;
   result?: {
     diceNumbers: number[];
     sum: number;
+  };
+  ticketEntryCount?: number;
+  totalRevenue?: number;
+  totalPayout?: number;
+  financial?: {
+    totalPrizes: number;
+    totalAgentCommission: number;
+    companyTake: number;
   };
 }
 
@@ -46,6 +57,8 @@ interface GetCurrentDrawOutput {
 
 interface ListDrawsOutput {
   draws: Bingo18DrawSummary[];
+  page: number;
+  size: number;
 }
 
 export interface ListDrawsParams {

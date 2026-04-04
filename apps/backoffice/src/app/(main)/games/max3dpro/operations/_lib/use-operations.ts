@@ -298,6 +298,7 @@ export function usePublishResult() {
       second: [string, string, string, string, string, string];
       third: [string, string, string, string, string, string, string, string];
     };
+    vietlottRef?: { drawPeriod: string; drawDate: string };
   }>((id) => `/max3dpro/draws/${id}/publish-result`, "post", "Đã công bố kết quả.");
 }
 

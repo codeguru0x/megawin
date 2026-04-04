@@ -11,10 +11,14 @@ interface TripletDisplayProps {
 
 const VARIANT_STYLES: Record<string, string> = {
   default: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
-  special: "bg-linear-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-amber-200/40 dark:shadow-amber-900/30",
-  first: "bg-linear-to-br from-rose-500 to-pink-600 text-white shadow-md shadow-rose-200/40 dark:shadow-rose-900/30",
-  second: "bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-200/40 dark:shadow-blue-900/30",
-  third: "bg-linear-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-200/40 dark:shadow-emerald-900/30",
+  special:
+    "bg-linear-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-amber-200/50 dark:shadow-amber-900/30",
+  first:
+    "bg-linear-to-br from-red-500 to-rose-600 text-white shadow-md shadow-red-200/40 dark:shadow-red-900/20",
+  second:
+    "bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-sm shadow-blue-200/40 dark:shadow-blue-900/20",
+  third:
+    "bg-linear-to-br from-emerald-500 to-green-600 text-white shadow-sm shadow-emerald-200/40 dark:shadow-emerald-900/20",
 };
 
 const SIZE_STYLES: Record<string, string> = {
@@ -37,7 +41,7 @@ export function TripletDisplay({
         "inline-flex items-center justify-center font-mono font-bold tabular-nums select-none tracking-wider",
         VARIANT_STYLES[variant],
         SIZE_STYLES[size],
-        className
+        className,
       )}
     >
       {padded}

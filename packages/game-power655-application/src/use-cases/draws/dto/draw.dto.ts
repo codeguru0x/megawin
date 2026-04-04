@@ -172,10 +172,16 @@ export interface DrawSummary {
   drawId: string;
   /** Ngày quay, định dạng YYYY-MM-DD. */
   drawDate: string;
+  /** Ngày tài chính (YYYY-MM-DD). Thường trùng drawDate. */
+  financialDate: string;
   /** Số thứ tự kỳ quay trong năm. */
   drawNo: DrawNo;
-  /** Giờ quay, định dạng HH:mm (giờ VN). */
+  /** Giờ quay, ISO 8601 (giờ VN). */
   drawTime: string;
+  /** Thời điểm mở bán (ISO 8601). Undefined nếu chưa mở bán. */
+  openAt?: string;
+  /** Thời điểm đóng bán (ISO 8601). */
+  closeAt: string;
   /** Trạng thái hiện tại của kỳ quay. */
   status: string;
   /** Jackpot 1 opening — chỉ có cho draws đã settle. */
@@ -199,14 +205,25 @@ export interface DrawSummary {
   totalEntries?: number;
   /** Tổng doanh thu từ vé cược (VND). */
   totalRevenue?: number;
+  /**
+   * Tổng tiền thưởng thực tế đã trả (cố định + jackpot) (VND).
+   * Chỉ có sau khi settle. Dùng để tính GGR chính xác.
+   */
+  totalPayout?: number;
   /** Thông tin tài chính chi tiết (chỉ có sau khi settle). */
   financial?: {
-    /** Tổng giải thưởng cố định đã trả (tier3/tier4/tier5) (VND). */
+    /** Tổng giải thưởng cố định đã trả (tier1/tier2/tier3) (VND). */
     totalFixedPrizes: number;
     /** Tổng hoa hồng đại lý (VND). */
     totalAgentCommission: number;
-    /** Phần lợi nhuận công ty (VND). */
+    /** Phần lợi nhuận công ty dự kiến (VND). */
     companyTake: number;
+    /**
+     * Phần lợi nhuận công ty thực tế (VND).
+     * = min(companyTake, max(revenue - prizes - commission, 0)).
+     * Dùng cho cột "Lợi nhuận ròng" — đây là số tiền công ty thực tế giữ lại.
+     */
+    actualCompanyTake: number;
     /**
      * Đóng góp vào quỹ Jackpot 1 (VND).
      * Công thức: revenue × jp1Ratio.
