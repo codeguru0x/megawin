@@ -6,6 +6,6 @@ export const APP_CONFIG = {
   copyright: `© ${currentYear} - Megawin`,
   meta: {
     title: "Megawin Backoffice",
-    description: "Megawin Backoffice admin dashboard.",
+    description: "Megawin Backoffice",
   },
 };
