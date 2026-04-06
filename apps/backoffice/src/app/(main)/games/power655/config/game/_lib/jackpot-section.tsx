@@ -271,8 +271,9 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                   Power 6/55 có <strong>Dual Jackpot</strong>: Jackpot 1 (trùng 6/6) tối thiểu 30
                   tỷ, Jackpot 2 (trùng 5/6 + bonus) tối thiểu 3 tỷ. Tích luỹ mỗi kỳ theo tỷ lệ
                   Jackpot 1/Jackpot 2. Jackpot tích lũy không giới hạn đến khi có winner —{" "}
-                  <strong>không có cơ chế Split</strong>. Overflow Jackpot 1 chỉ kích hoạt khi
-                  Jackpot 1 &gt; ngưỡng tràn, không có Jackpot 1 winner, và có Jackpot 2 winner.
+                  <strong>không có cơ chế chia giải (split)</strong>. Overflow Jackpot 1 chỉ kích
+                  hoạt khi Jackpot 1 &gt; ngưỡng tràn, không có Jackpot 1 winner, và có Jackpot 2
+                  winner.
                 </p>
               </div>
             </div>

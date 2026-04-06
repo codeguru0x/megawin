@@ -4,10 +4,8 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { toExecutionName } from "@megawin/game-core/utils";
 import { startExecution } from "@megawin/app-core/aws/sf";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
-
-const SETTLE_SFN_ARN = process.env.BINGO18_SETTLE_SFN_ARN!;
+import { logError } from "@megawin/shared/utils";
 
 /**
  * Kết sổ kỳ quay Bingo18.
@@ -18,25 +16,17 @@ const SETTLE_SFN_ARN = process.env.BINGO18_SETTLE_SFN_ARN!;
  *      - Nếu draw đã ở settling (retry) → skip transition
  *   3. Start Settle Step Function (deterministic name → idempotent)
  */
-export class TriggerSettleUseCase extends NextApiUseCase<
-  TriggerSettleInput,
-  TriggerSettleOutput
-> {
+export class TriggerSettleUseCase extends NextApiUseCase<TriggerSettleInput, TriggerSettleOutput> {
   private readonly drawRepo = new DrawRepository();
-  private readonly entryRepo = new EntryRepository();
 
-  protected async execute(
-    input: TriggerSettleInput
-  ): Promise<TriggerSettleOutput> {
+  protected async execute(input: TriggerSettleInput): Promise<TriggerSettleOutput> {
     const draw = await this.drawRepo.getDrawById(input.drawId);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
     }
 
     if (!draw.result) {
-      throw AppException.badRequest(
-        "Chưa có kết quả quay – phải publish result trước khi kết sổ."
-      );
+      throw AppException.badRequest("Chưa có kết quả quay – phải publish result trước khi kết sổ.");
     }
 
     if (draw.status !== DrawStatus.Settling) {
@@ -45,32 +35,25 @@ export class TriggerSettleUseCase extends NextApiUseCase<
       if (!updated) {
         throw new AppException(
           "DRAW_INVALID_TRANSITION",
-          `Không thể kết sổ – draw hiện tại không ở trạng thái "published".`
+          `Không thể kết sổ – draw hiện tại không ở trạng thái "published".`,
         );
       }
     }
 
     try {
       await startExecution({
-        stateMachineArn: SETTLE_SFN_ARN,
+        stateMachineArn: input.SETTLE_SFN_ARN,
         name: toExecutionName(input.drawId),
         input: { drawId: input.drawId },
       });
     } catch (err) {
-      throw new AppException(
-        "SFN_START_FAILED",
-        `Không thể khởi chạy settle worker: ${(err as Error).message}`
-      );
+      logError("TriggerSettle", err, { drawId: input.drawId });
+      throw new AppException("SFN_START_FAILED", `Không thể khởi chạy settle worker`);
     }
-
-    const totalEntries = await this.entryRepo.countEntriesByDrawId(
-      input.drawId
-    );
 
     return {
       drawId: input.drawId,
       status: DrawStatus.Settling,
-      totalEntries,
     };
   }
 }

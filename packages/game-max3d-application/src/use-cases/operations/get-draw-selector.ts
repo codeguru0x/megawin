@@ -1,5 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { DrawStatus } from "@megawin/game-core/entities";
+import { yesterdayVN, formatVNDate, subDays } from "@megawin/shared/utils";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawEntity } from "@megawin/game-max3d/entities";
 import type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selector.dto";
@@ -43,19 +44,11 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
     ]);
 
     // Chỉ lấy scheduled có drawDate từ hôm qua trở đi (bắt kỳ chưa mở bán)
-    const yesterdayStr = (() => {
-      const d = new Date();
-      d.setDate(d.getDate() - 1);
-      return d.toISOString().substring(0, 10);
-    })();
+    const yesterdayStr = yesterdayVN();
     const futureOnly = scheduledDraws.filter((d) => d.drawDate >= yesterdayStr);
 
     // Chỉ lấy recent trong 48h qua
-    const twoDaysAgoStr = (() => {
-      const d = new Date();
-      d.setDate(d.getDate() - 2);
-      return d.toISOString().substring(0, 10);
-    })();
+    const twoDaysAgoStr = formatVNDate(subDays(new Date(), 2));
     const recentOnly = recentDraws.filter((d) => d.drawDate >= twoDaysAgoStr);
 
     const toItem = (d: DrawEntity, group: DrawSelectorItem["group"]): DrawSelectorItem => {

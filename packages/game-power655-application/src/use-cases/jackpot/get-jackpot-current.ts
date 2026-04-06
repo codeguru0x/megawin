@@ -48,6 +48,7 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCur
             drawCount: activeCycle.drawCount,
             startDrawId: activeCycle.startDrawId,
             startedAt: activeCycle.createdAt.toISOString(),
+            jackpot2ResetCount: activeCycle.jackpot2ResetCount,
           }
         : {
             cycleNo: 0,
@@ -59,6 +60,7 @@ export class GetJackpotCurrentUseCase extends NextApiUseCase<void, GetJackpotCur
             drawCount: 0,
             startDrawId: "",
             startedAt: new Date().toISOString(),
+            jackpot2ResetCount: 0,
           },
       config: {
         jp1OverflowThreshold: config.jp1OverflowThreshold,

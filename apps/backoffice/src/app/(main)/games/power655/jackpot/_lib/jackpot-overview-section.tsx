@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  CircleDollarSign,
-  Flame,
-  Hash,
-  Layers,
-  Target,
-  TrendingUp,
-  Trophy,
-  Zap,
-} from "lucide-react";
+import { CircleDollarSign, Flame, Hash, Layers, TrendingUp, Trophy, Zap } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -74,7 +65,7 @@ export function JackpotHeroCard() {
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-red-700/70 dark:text-red-400/60">
-                Power 6/55 Dual Jackpot — Cycle #{cycle.cycleNo}
+                Power 6/55 Dual Jackpot — Vòng #{cycle.cycleNo}
               </p>
               {/* JP1 primary — dòng lớn */}
               <div className="mt-0.5 flex items-baseline gap-2">
@@ -165,7 +156,7 @@ export function JackpotHeroCard() {
 // ─── JackpotKpiCards ──────────────────────────────────────────────────────────
 
 /**
- * 4 KPI cards: tích luỹ kỳ, tổng JP, ngưỡng overflow, seed.
+ * 4 KPI cards: tích luỹ kỳ, tổng tích luỹ JP1, tổng tích luỹ JP2, số lần JP2 trao thưởng.
  * Dùng độc lập — dùng trong trang /operations và /jackpot.
  */
 export function JackpotKpiCards() {
@@ -183,18 +174,24 @@ export function JackpotKpiCards() {
 
   if (!data) return null;
 
-  const { cycle, config, jackpot1Progress, jackpot2Progress } = data;
-  const jp1 = cycle.jackpot1CurrentAmount;
-  const jp2 = cycle.jackpot2CurrentAmount;
-  const totalJp = jp1 + jp2;
+  const { cycle, jackpot1Progress, jackpot2Progress } = data;
 
-  const jp1Growth =
-    jackpot1Progress.seed > 0
-      ? Math.round(((jp1 - jackpot1Progress.seed) / jackpot1Progress.seed) * 100)
-      : 0;
+  // Phần tích luỹ thuần = current - seed (không tính seed ban đầu).
+  // Tương đương cycle.totalContribution của Lotto 5/35 / Mega 6/45.
+  const jp1Contribution = jackpot1Progress.current - jackpot1Progress.seed;
+  const jp2Contribution = jackpot2Progress.current - jackpot2Progress.seed;
+
+  // % tăng JP1 so với khởi điểm seed
+  const jp1GrowthPct =
+    jackpot1Progress.seed > 0 ? Math.round((jp1Contribution / jackpot1Progress.seed) * 100) : 0;
+
+  // % tăng JP2 so với khởi điểm seed hiện tại (seed reset mỗi lần JP2 trao thưởng)
+  const jp2GrowthPct =
+    jackpot2Progress.seed > 0 ? Math.round((jp2Contribution / jackpot2Progress.seed) * 100) : 0;
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Card 1: Số kỳ tích luỹ liên tiếp */}
       <KpiCard
         icon={Layers}
         iconBg="bg-blue-100 dark:bg-blue-900/50"
@@ -203,30 +200,54 @@ export function JackpotKpiCards() {
         value={`${cycle.drawCount} kỳ`}
         sub={`Từ ${cycle.startDrawId || "—"}`}
       />
+      {/* Card 2: Tổng tích luỹ JP1 + % tăng so với khởi điểm */}
       <KpiCard
         icon={CircleDollarSign}
         iconBg="bg-red-100 dark:bg-red-900/50"
         iconColor="text-red-600 dark:text-red-400"
-        label="Tổng Jackpot (JP1 + JP2)"
-        value={formatVNDCompact(totalJp)}
-        sub={`JP1: ${formatVNDCompact(jp1)} · JP2: ${formatVNDCompact(jp2)}`}
-        trend={jp1Growth > 0 ? { value: jp1Growth, isPositive: true } : undefined}
+        label="Tổng tích luỹ JP1"
+        value={formatVNDCompact(jp1Contribution)}
+        sub={
+          jp1GrowthPct > 0 ? (
+            <>
+              <span className="font-semibold text-profit">+{jp1GrowthPct}%</span>
+              {" so với khởi điểm"}
+            </>
+          ) : (
+            `Khởi điểm: ${formatVNDCompact(jackpot1Progress.seed)}`
+          )
+        }
       />
+      {/* Card 3: Tổng tích luỹ JP2 + % tăng so với khởi điểm */}
       <KpiCard
-        icon={Target}
-        iconBg="bg-violet-100 dark:bg-violet-900/50"
-        iconColor="text-violet-600 dark:text-violet-400"
-        label="Ngưỡng overflow JP1"
-        value={formatVNDCompact(config.jp1OverflowThreshold)}
-        sub={`Còn ${formatVNDCompact(Math.max(config.jp1OverflowThreshold - jp1, 0))}`}
+        icon={TrendingUp}
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
+        label="Tổng tích luỹ JP2"
+        value={formatVNDCompact(jp2Contribution)}
+        sub={
+          jp2GrowthPct > 0 ? (
+            <>
+              <span className="font-semibold text-profit">+{jp2GrowthPct}%</span>
+              {" so với khởi điểm"}
+            </>
+          ) : (
+            `Khởi điểm: ${formatVNDCompact(jackpot2Progress.seed)}`
+          )
+        }
       />
+      {/* Card 4: Số lần JP2 đã trao thưởng và reset trong vòng tích luỹ hiện tại */}
       <KpiCard
         icon={Hash}
         iconBg="bg-amber-100 dark:bg-amber-900/50"
         iconColor="text-amber-600 dark:text-amber-400"
-        label="Seed JP1 / JP2"
-        value={formatVNDCompact(jackpot1Progress.seed)}
-        sub={`JP2 Seed: ${formatVNDCompact(jackpot2Progress.seed)}`}
+        label="Số lần JP2 trao thưởng"
+        value={`${cycle.jackpot2ResetCount} lần`}
+        sub={
+          cycle.jackpot2ResetCount > 0
+            ? "JP2 đã reset, JP1 vẫn tích luỹ"
+            : "JP2 chưa trao thưởng vòng này"
+        }
       />
     </div>
   );
@@ -271,15 +292,13 @@ function KpiCard({
   label,
   value,
   sub,
-  trend,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   iconBg: string;
   iconColor: string;
   label: string;
   value: string;
-  sub?: string;
-  trend?: { value: number; isPositive: boolean };
+  sub?: React.ReactNode;
 }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
@@ -288,22 +307,7 @@ function KpiCard({
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-        <div className="flex items-baseline gap-1.5">
-          <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
-          {trend && (
-            <span
-              className={cn(
-                "text-xs font-semibold",
-                trend.isPositive
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-red-600 dark:text-red-400",
-              )}
-            >
-              {trend.isPositive ? "+" : ""}
-              {trend.value}%
-            </span>
-          )}
-        </div>
+        <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
         {sub && <p className="truncate text-[11px] text-muted-foreground">{sub}</p>}
       </div>
     </div>

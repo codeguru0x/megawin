@@ -309,7 +309,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                   <span className="text-right">Giải thưởng mặc định</span>
                   <HeaderTooltip
                     label="CP kỳ vọng / line"
-                    tip="Với Jackpot 1/Jackpot 2 là giải tích luỹ, chi phí kỳ vọng = Xác suất × Giá trị seed tối thiểu. Thực tế khi jackpot tích luỹ lớn, chi phí sẽ cao hơn."
+                    tip="Với Jackpot 1/Jackpot 2 là giải tích luỹ, chi phí kỳ vọng = Xác suất × Giá trị khởi điểm tối thiểu. Thực tế khi jackpot tích luỹ lớn, chi phí sẽ cao hơn."
                     className="justify-end"
                   />
                   <HeaderTooltip
@@ -366,7 +366,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
 
                       <span className="text-right tabular-nums text-muted-foreground">
                         {isJackpot ? (
-                          <span className="italic">Seed: {fmt(defaultPrize)}</span>
+                          <span className="italic">Khởi điểm: {fmt(defaultPrize)}</span>
                         ) : (
                           `${fmt(defaultPrize)} VND`
                         )}

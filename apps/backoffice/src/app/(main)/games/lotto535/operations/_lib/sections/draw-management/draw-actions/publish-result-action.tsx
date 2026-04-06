@@ -27,10 +27,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
-  DevRandomFillButton,
+  RandomFillButton,
   generateUniqueRandomNumbers,
   generateRandomNumber,
-} from "@/components/dev-random-fill-button";
+} from "@/components/draws";
 import {
   LOTTO535_MAIN_MIN,
   LOTTO535_MAIN_MAX,
@@ -261,7 +261,7 @@ export function PublishResultAction({
                   <Dice5 className="size-3.5 text-violet-600 dark:text-violet-400" />
                 </div>
                 <Label className="text-sm font-semibold">Kết quả quay số</Label>
-                <DevRandomFillButton onFill={fillRandom} />
+                <RandomFillButton onFill={fillRandom} />
               </div>
 
               <div className="rounded-lg border bg-muted/30 p-4 space-y-4">

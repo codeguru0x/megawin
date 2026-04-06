@@ -246,4 +246,38 @@ export const REPORT_COLUMN_LABELS = {
 
   /** Nhãn dòng tổng cộng ở footer bảng. */
   summary: "TỔNG CỘNG",
+
+  // ─────────────────────────────────────────────
+  // Jackpot columns (dùng chung cho lotto535, mega645, power655)
+  // ─────────────────────────────────────────────
+
+  /** Số tiền Jackpot đầu kỳ (VND). Jackpot history table. */
+  jackpotOpeningAmount: "Đầu kỳ",
+  /** Phần tích lũy vào quỹ Jackpot trong kỳ (VND). */
+  jackpotContributionAmount: "Tích lũy",
+  /** Số tiền Jackpot cuối kỳ (VND). */
+  jackpotClosingAmount: "Cuối kỳ",
+  /** Có người trúng Jackpot trong kỳ không. */
+  jackpotWinner: "Jackpot",
+  /** Kỳ quay có chia giải Jackpot không. */
+  jackpotSplit: "Chia giải",
+
+  // ─────────────────────────────────────────────
+  // Dual Jackpot columns (Power 6/55 — JP1 + JP2)
+  // ─────────────────────────────────────────────
+
+  /** Số tiền Jackpot 1 đầu kỳ (VND). Power 6/55 history table. */
+  jp1OpeningAmount: "JP1 Đầu kỳ",
+  /** Phần tích lũy vào quỹ Jackpot 1 trong kỳ (VND). */
+  jp1ContributionAmount: "JP1 Tích lũy",
+  /** Số tiền Jackpot 1 cuối kỳ (VND). */
+  jp1ClosingAmount: "JP1 Cuối kỳ",
+  /** Phần JP1 tràn chuyển sang JP2 kỳ này (VND). 0 nếu không overflow. */
+  jp1Overflow: "JP1 Overflow",
+  /** Số tiền Jackpot 2 đầu kỳ (VND). Power 6/55 history table. */
+  jp2OpeningAmount: "JP2 Đầu kỳ",
+  /** Phần tích lũy vào quỹ Jackpot 2 trong kỳ (VND). Bao gồm jp1Overflow nếu có. */
+  jp2ContributionAmount: "JP2 Tích lũy",
+  /** Số tiền Jackpot 2 cuối kỳ (VND). */
+  jp2ClosingAmount: "JP2 Cuối kỳ",
 } as const;

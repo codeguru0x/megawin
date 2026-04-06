@@ -9,5 +9,5 @@ export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .handler(async ({ params }) => {
     const { drawId } = params as { drawId: string };
-    return triggerSettleUseCase.run({ drawId, KENO_SETTLE_SFN_ARN: env.KENO_SETTLE_SFN_ARN! });
+    return triggerSettleUseCase.run({ drawId, SETTLE_SFN_ARN: env.KENO_SETTLE_SFN_ARN! });
   });

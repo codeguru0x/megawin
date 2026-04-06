@@ -319,8 +319,6 @@ Project dùng **semantic color tokens** `text-profit` (xanh) và `text-loss` (đ
 |--------|-----------|-------|
 | netProfit > 0 | Lãi | `text-profit` |
 | netProfit < 0 | Lỗ | `text-loss` |
-| GGR < 0 | Âm | `text-loss` |
-| GGR > 0 | Dương | `text-profit` |
 | Payout % > 95% | Nguy hiểm | `text-loss` |
 | Payout % > 80% | Cảnh giác | `text-warning` |
 | Payout % ≤ 80% | Bình thường | (mặc định — không thêm class) |
@@ -330,9 +328,19 @@ Project dùng **semantic color tokens** `text-profit` (xanh) và `text-loss` (đ
 - Mục đích: nhìn một cái biết ngay thắng/thua. Không cùng text color mặc định với các số liệu khác.
 - Sử dụng `getNetProfitColor(value)` từ `payout-ratio.tsx` để lấy color class.
 
+**Bảng báo cáo — color CHỈ áp dụng cho cột Lợi nhuận ròng:**
+- Cột **Lợi nhuận ròng**: `getNetProfitColor(value)` — âm đỏ, dương xanh, zero mặc định.
+- Cột **GGR**, **Trả thưởng**, **Tiền cược**, **Hoa hồng**: `text-foreground` mặc định — **KHÔNG thêm màu semantic**.
+- Lý do: chỉ Lợi nhuận ròng mang tính quyết định thắng/lỗ; các cột khác là số liệu tham chiếu trung tính.
+
+**KPI cards** — màu áp dụng rộng hơn:
+- KPI Lợi nhuận ròng: `getNetProfitColor` — luôn đỏ khi âm, xanh khi dương.
+- KPI Doanh thu thuần (GGR): `getNetProfitColor` — luôn đỏ khi âm, xanh khi dương.
+
 **KHÔNG dùng:**
 - `text-danger` — không tồn tại trong design system, dùng `text-loss`
 - `text-success` — không tồn tại trong design system, dùng `text-profit`
+- `text-muted-foreground` trên cột số trong bảng tài chính (Tiền cược, Trả thưởng, GGR, Hoa hồng) — mọi cột số dùng `text-foreground` mặc định
 
 ### 6.5 Tỷ lệ trả thưởng (Payout Ratio) — Format & Color
 
@@ -353,7 +361,8 @@ import {
 - **KHÔNG dùng `formatPercent`** cho tỷ lệ trả thưởng trong bảng — `formatPercent` thiếu thousand separator.
 - Tất cả số liệu thống kê trong bảng (tiền, count, percentage) **PHẢI có `tabular-nums`**.
 - Color coding payout ratio: `text-loss` khi **> 95%**, `text-warning` khi **> 80%**, dưới 80% giữ mặc định.
-- Color coding netProfit / GGR: **LUÔN** dùng `getNetProfitColor()` — âm = `text-loss`, dương = `text-profit`.
+- Color coding trong **bảng**: chỉ cột **Lợi nhuận ròng** dùng `getNetProfitColor()` — các cột khác giữ `text-foreground`.
+- Color coding trên **KPI cards**: Lợi nhuận ròng + GGR đều dùng `getNetProfitColor()`.
 - Áp dụng cho cả KPI cards và ô bảng.
 
 ### 6.6 Default Date Range
@@ -410,12 +419,32 @@ KHÔNG hiển thị WoW% hay period comparison. Chỉ tổng tuyệt đối + me
 
 - Tất cả cột số trong bảng (tiền, count, percentage): `formatNumber()`, right-aligned, `tabular-nums`
 - **KHÔNG dùng `formatVND` hay `formatVNDCompact` trong bảng** — chỉ dùng cho KPI cards
-- Tất cả ô trong bảng phải cùng `text-sm`, không mix size
-- Màu text mặc định `text-foreground`; cột phụ (commission ước tính) dùng `text-muted-foreground`
-- Summary Footer Row **TỔNG CỘNG** (bold) bắt buộc
+- Tất cả ô trong bảng phải cùng `text-xs` hoặc `text-sm` nhất quán, không mix size
+- **Màu text mặc định `text-foreground` cho tất cả cột số** — KHÔNG dùng `text-muted-foreground` trên cột số tài chính
+- **Chỉ cột Lợi nhuận ròng** mới dùng `getNetProfitColor(value)` — cột khác (GGR, Trả thưởng, Tiền cược, Hoa hồng) giữ `text-foreground`
+- Summary Footer Row **TỔNG CỘNG** (bold, uppercase) bắt buộc — dùng `REPORT_COLUMN_LABELS.summary` từ `@megawin/game-core/labels`
+- Header cột bảng **BẮT BUỘC dùng `REPORT_COLUMN_LABELS`** từ `@megawin/game-core/labels` — KHÔNG hardcode string tiếng Việt
 - Payout % = totalPayout / totalStake × 100 (tính từ tổng, KHÔNG average)
 - Sticky header, sortable columns, pagination 20 rows/page
 - Export CSV + Excel button ở page header
+
+### Column Labels — BẮT BUỘC dùng `REPORT_COLUMN_LABELS`
+
+```typescript
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+
+// ✅ ĐÚNG — dùng label từ package
+<TableHead>{REPORT_COLUMN_LABELS.totalStake}</TableHead>   // "Tiền cược"
+<TableHead>{REPORT_COLUMN_LABELS.totalPayout}</TableHead>  // "Trả thưởng"
+<TableHead>{REPORT_COLUMN_LABELS.ggr}</TableHead>          // "Doanh thu thuần"
+<TableHead>{REPORT_COLUMN_LABELS.totalCommission}</TableHead> // "Hoa hồng đại lý"
+<TableHead>{REPORT_COLUMN_LABELS.netProfit}</TableHead>    // "Lợi nhuận ròng"
+<TableCell>{REPORT_COLUMN_LABELS.summary}</TableCell>      // "TỔNG CỘNG" (footer)
+
+// ❌ SAI — hardcode string
+<TableHead>Tiền cược</TableHead>
+<TableCell>Tổng cộng</TableCell>
+```
 
 ### Game-specific columns
 

@@ -25,10 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import {
-  DevRandomFillButton,
-  generateUniqueRandomNumbers,
-} from "@/components/dev-random-fill-button";
+import { RandomFillButton, generateUniqueRandomNumbers } from "@/components/draws";
 import {
   POWER655_MAIN_MIN,
   POWER655_MAIN_MAX,
@@ -256,7 +253,7 @@ export function PublishResultAction({
                   <Dice5 className="size-3.5 text-purple-600 dark:text-purple-400" />
                 </div>
                 <Label className="text-sm font-semibold">Kết quả quay số</Label>
-                <DevRandomFillButton onFill={fillRandom} />
+                <RandomFillButton onFill={fillRandom} />
               </div>
 
               <div className="rounded-lg border bg-muted/30 p-4 space-y-4">

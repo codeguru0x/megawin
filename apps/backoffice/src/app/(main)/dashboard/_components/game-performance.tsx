@@ -12,13 +12,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Pie, PieChart, ResponsiveContainer, Sector, Tooltip } from "recharts";
 import type { PieLabelRenderProps } from "recharts/types/polar/Pie";
+import type { SectorProps } from "recharts";
 import { BarChart2, PieChart as PieChartIcon } from "lucide-react";
 import { getGameLabel, type DashboardDayKpis } from "../_lib/compute";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { getGameHex } from "@/lib/game-colors";
 import { GameTableSkeleton, ChartSkeleton } from "./skeletons";
 import Link from "next/link";
+
+// ─── Helpers color theo rule financial-report-ui ─────────────────────────────
+
+function getNetProfitClass(value: number) {
+  if (value < 0) return "text-red-600 dark:text-red-400";
+  if (value > 0) return "text-emerald-600 dark:text-emerald-400";
+  return "";
+}
 
 // ─── Pie Chart Tooltip ──────────────────────────────────────────────────────
 
@@ -78,6 +88,12 @@ function renderPieLabel({
   );
 }
 
+// ─── Pie slice shape — thay thế Cell (deprecated từ Recharts 4.0) ────────────
+
+function renderPieSlice(props: SectorProps & { gameProduct?: string }) {
+  return <Sector {...props} fill={getGameHex(props.gameProduct ?? "")} />;
+}
+
 // ─── Game Overview — Pie (trái) + Table (phải) ──────────────────────────────
 
 interface GameOverviewProps {
@@ -90,7 +106,7 @@ interface GameOverviewProps {
  *
  * Layout 2 cột trên xl:
  * - Trái: Donut chart phân bổ doanh thu với % label trực tiếp trên slices
- * - Phải: Table chi tiết (Doanh thu · GGR · Lợi nhuận · Số vé · Kỳ)
+ * - Phải: Table chi tiết theo thứ tự: Game · Kỳ · Tiền cược · Trả thưởng · GGR · Hoa hồng ĐL · Lợi nhuận ròng
  *
  * Dùng dữ liệu KPI đã compute — không fetch thêm.
  */
@@ -107,8 +123,9 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
       pct: kpis.totalStake > 0 ? (r.totalStake / kpis.totalStake) * 100 : 0,
     }));
 
-  // Tổng hoa hồng cho hàng tổng
+  // Tổng hoa hồng + trả thưởng cho hàng tổng
   const totalCommission = kpis.byGame.reduce((s, r) => s + r.totalCommission, 0);
+  const totalPayout = kpis.byGame.reduce((s, r) => s + r.totalPayout, 0);
 
   return (
     <Card className="gap-0 py-0">
@@ -136,17 +153,14 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                     strokeWidth={0}
                     label={renderPieLabel}
                     labelLine={false}
-                  >
-                    {chartData.map((entry) => (
-                      <Cell key={entry.gameProduct} fill={getGameHex(entry.gameProduct)} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<PieTooltip />} />
+                    shape={renderPieSlice}
+                  />
+                  <Tooltip content={<PieTooltip />} wrapperStyle={{ zIndex: 20 }} />
                 </PieChart>
               </ResponsiveContainer>
-              {/* Center label */}
-              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-                <p className="text-[9px] font-medium uppercase tracking-wider text-muted-foreground">
+              {/* Center label — z-10 để nằm trên SVG, tooltip dùng z-20 nên sẽ đè lên được */}
+              <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                   Tổng DT
                 </p>
                 <p className="text-sm font-bold tabular-nums text-foreground">
@@ -154,7 +168,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                 </p>
               </div>
             </div>
-            {/* Mini legend dưới chart */}
+            {/* Mini legend dưới chart — text-[10px] chấp nhận vì trong vùng chart compact */}
             <div className="mt-2 flex flex-wrap justify-center gap-x-3 gap-y-1 px-2">
               {chartData.map((item) => (
                 <div key={item.gameProduct} className="flex items-center gap-1">
@@ -162,35 +176,42 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                     className="size-1.5 shrink-0 rounded-full"
                     style={{ background: getGameHex(item.gameProduct) }}
                   />
-                  <span className="text-[10px] text-muted-foreground">{item.name}</span>
+                  <span className="text-xs text-muted-foreground">{item.name}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* ── Table — cột phải ──────────────────────────────────── */}
+          {/* Thứ tự cột: Game · Tiền cược · Trả thưởng · GGR · Hoa hồng ĐL · Lợi nhuận ròng */}
           <div className="min-w-0 flex-1 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="h-9 pl-4 text-xs">Game</TableHead>
-                  <TableHead className="h-9 text-right text-xs">Doanh thu</TableHead>
-                  <TableHead className="h-9 text-right text-xs">GGR</TableHead>
-                  <TableHead className="h-9 text-right text-xs">Hoa hồng</TableHead>
-                  <TableHead className="h-9 text-right text-xs">Lợi nhuận</TableHead>
-                  <TableHead className="h-9 text-right text-xs">Số vé</TableHead>
-                  <TableHead className="h-9 pr-4 text-right text-xs">Kỳ</TableHead>
+                  <TableHead className="h-9 pl-5 text-xs">{REPORT_COLUMN_LABELS.game}</TableHead>
+                  <TableHead className="h-9 text-right text-xs">
+                    {REPORT_COLUMN_LABELS.totalStake}
+                  </TableHead>
+                  <TableHead className="h-9 text-right text-xs">
+                    {REPORT_COLUMN_LABELS.totalPayout}
+                  </TableHead>
+                  <TableHead className="h-9 text-right text-xs">
+                    {REPORT_COLUMN_LABELS.ggr}
+                  </TableHead>
+                  <TableHead className="h-9 text-right text-xs">
+                    {REPORT_COLUMN_LABELS.totalCommission}
+                  </TableHead>
+                  <TableHead className="h-9 pr-5 text-right text-xs">
+                    {REPORT_COLUMN_LABELS.netProfit}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {kpis.byGame.map((row) => (
-                  <TableRow
-                    key={row.gameProduct}
-                    className={cn("h-9", row.netProfit < 0 && "bg-red-50/40 dark:bg-red-950/20")}
-                  >
-                    <TableCell className="py-0 pl-4">
+                  <TableRow key={row.gameProduct} className="h-9">
+                    <TableCell className="py-0 pl-5">
                       <Link
-                        href={`/games/${row.gameProduct}/financial-reports`}
+                        href={`/games/${row.gameProduct}/reports/settle`}
                         className="flex items-center gap-2 hover:underline"
                       >
                         <span
@@ -201,59 +222,52 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                       </Link>
                     </TableCell>
                     <TableCell className="py-0 text-right text-xs tabular-nums">
-                      {formatVNDCompact(row.totalStake)}
+                      {formatNumber(row.totalStake)}
                     </TableCell>
-                    <TableCell className="py-0 text-right">
+                    <TableCell className="py-0 text-right text-xs tabular-nums">
+                      {formatNumber(row.totalPayout)}
+                    </TableCell>
+                    <TableCell className="py-0 text-right text-xs tabular-nums">
+                      {formatNumber(row.ggr)}
+                    </TableCell>
+                    <TableCell className="py-0 text-right text-xs tabular-nums">
+                      {formatNumber(row.totalCommission)}
+                    </TableCell>
+                    <TableCell className="py-0 pr-5 text-right">
                       <span
-                        className={cn(
-                          "text-xs tabular-nums",
-                          row.ggr < 0 ? "text-red-600 dark:text-red-400" : "text-foreground",
-                        )}
+                        className={cn("text-xs tabular-nums", getNetProfitClass(row.netProfit))}
                       >
-                        {formatVNDCompact(row.ggr)}
+                        {formatNumber(row.netProfit)}
                       </span>
-                    </TableCell>
-                    <TableCell className="py-0 text-right text-xs tabular-nums text-muted-foreground">
-                      {formatVNDCompact(row.totalCommission)}
-                    </TableCell>
-                    <TableCell className="py-0 text-right">
-                      <span
-                        className={cn(
-                          "text-xs tabular-nums",
-                          row.netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-foreground",
-                        )}
-                      >
-                        {formatVNDCompact(row.netProfit)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="py-0 text-right text-xs tabular-nums text-muted-foreground">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
-                    <TableCell className="py-0 pr-4 text-right text-xs tabular-nums text-muted-foreground">
-                      {row.drawCount}
                     </TableCell>
                   </TableRow>
                 ))}
-                {/* Hàng tổng */}
+                {/* Hàng TỔNG CỘNG */}
                 <TableRow className="h-9 border-t-2 bg-muted/30 font-semibold hover:bg-muted/40">
-                  <TableCell className="py-0 pl-4 text-xs">Tổng cộng</TableCell>
-                  <TableCell className="py-0 text-right text-xs tabular-nums">
-                    {formatVNDCompact(kpis.totalStake)}
+                  <TableCell className="py-0 pl-5 text-xs font-semibold uppercase tracking-wide">
+                    {REPORT_COLUMN_LABELS.summary}
                   </TableCell>
                   <TableCell className="py-0 text-right text-xs tabular-nums">
-                    {formatVNDCompact(kpis.totalGgr)}
-                  </TableCell>
-                  <TableCell className="py-0 text-right text-xs tabular-nums text-muted-foreground">
-                    {formatVNDCompact(totalCommission)}
+                    {formatNumber(kpis.totalStake)}
                   </TableCell>
                   <TableCell className="py-0 text-right text-xs tabular-nums">
-                    {formatVNDCompact(kpis.totalProfit)}
+                    {formatNumber(totalPayout)}
                   </TableCell>
-                  <TableCell className="py-0 text-right text-xs tabular-nums text-muted-foreground">
-                    {formatNumber(kpis.totalEntries)}
+                  <TableCell className="py-0 text-right text-xs tabular-nums">
+                    {formatNumber(kpis.totalGgr)}
                   </TableCell>
-                  <TableCell className="py-0 pr-4 text-right text-xs tabular-nums text-muted-foreground">
-                    {formatNumber(kpis.totalDraws)}
+                  <TableCell className="py-0 text-right text-xs tabular-nums">
+                    {formatNumber(totalCommission)}
+                  </TableCell>
+                  <TableCell className="py-0 pr-5 text-right">
+                    <span
+                      className={cn(
+                        "text-xs tabular-nums font-semibold",
+                        getNetProfitClass(kpis.totalProfit),
+                      )}
+                    >
+                      {formatNumber(kpis.totalProfit)}
+                    </span>
                   </TableCell>
                 </TableRow>
               </TableBody>
@@ -320,7 +334,7 @@ function PayoutRatioBar({
 /**
  * Tỷ lệ trả thưởng (payout ratio) theo game.
  *
- * Bar màu theo mức độ rủi ro: xanh → vàng → cam → đỏ.
+ * Bars xếp từ trên xuống theo thứ tự từ cao nhất → thấp nhất, gap cố định (không justify-evenly).
  * Badge tổng bên header. Không có ký tự ₫ trong labels.
  * Thiết kế h-full để fit cột 1/3 cạnh card GameOverview.
  */
@@ -350,7 +364,7 @@ export function PayoutRatioChart({ kpis, isLoading }: PayoutRatioChartProps) {
           <Badge
             variant="outline"
             className={cn(
-              "shrink-0 text-[10px] tabular-nums",
+              "shrink-0 text-xs tabular-nums",
               isOverallDanger
                 ? "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-400"
                 : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400",
@@ -361,7 +375,8 @@ export function PayoutRatioChart({ kpis, isLoading }: PayoutRatioChartProps) {
         </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col justify-between px-5 pb-4 pt-0">
-        <div className="flex flex-1 flex-col justify-evenly py-1">
+        {/* Bars xếp sát nhau từ trên xuống, gap cố định — không rời rạc */}
+        <div className="flex flex-col gap-2 py-2">
           {rows.map((row) => (
             <PayoutRatioBar
               key={row.gameProduct}
@@ -372,9 +387,7 @@ export function PayoutRatioChart({ kpis, isLoading }: PayoutRatioChartProps) {
         </div>
         {/* Chú thích: bar = màu game cố định; text % thay đổi theo mức cảnh báo */}
         <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-            Số %:
-          </p>
+          <p className="text-xs font-medium text-muted-foreground">Số %:</p>
           {[
             { textClass: "text-foreground", label: "< 85%" },
             { textClass: "text-yellow-600 dark:text-yellow-400", label: "85–95%" },
@@ -382,7 +395,7 @@ export function PayoutRatioChart({ kpis, isLoading }: PayoutRatioChartProps) {
             { textClass: "text-red-600 dark:text-red-400", label: "> 100%" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1">
-              <span className={cn("text-[10px] tabular-nums font-medium", item.textClass)}>
+              <span className={cn("text-xs tabular-nums font-medium", item.textClass)}>
                 {item.label}
               </span>
             </div>

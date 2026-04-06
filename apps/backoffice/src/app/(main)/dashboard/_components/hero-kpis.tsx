@@ -33,7 +33,7 @@ function TrendBadge({ value }: { value: number }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-0.5 text-[10px] font-semibold",
+        "inline-flex items-center gap-0.5 text-xs font-semibold",
         isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
       )}
     >
@@ -84,7 +84,7 @@ function KpiCard({
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
         <p className={cn("text-lg font-bold tabular-nums text-foreground", todayValueClassName)}>
           {todayValue}
         </p>
@@ -92,19 +92,19 @@ function KpiCard({
         <div className="mt-0.5 flex h-4 items-center gap-1.5">
           {yesterdayValue != null ? (
             <>
-              <span className="text-[11px] tabular-nums text-muted-foreground">
+              <span className="text-xs tabular-nums text-muted-foreground">
                 Qua: {yesterdayValue}
               </span>
               {trend != null ? (
                 <TrendBadge value={trend} />
               ) : (
-                <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground/60">
+                <span className="flex items-center gap-0.5 text-xs text-muted-foreground/60">
                   <Minus className="size-2.5" />
                 </span>
               )}
             </>
           ) : (
-            <span className="text-[11px] text-muted-foreground/50">—</span>
+            <span className="text-xs text-muted-foreground/50">—</span>
           )}
         </div>
       </div>

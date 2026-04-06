@@ -4,21 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
+import { formatNumber, formatVNDCompact, calcRelativeTime } from "@megawin/shared/utils";
 import { getGameLabel } from "../_lib/compute";
 import { getGameColors } from "@/lib/game-colors";
 import type {
   DrawTimelineEvent,
   GetDashboardDrawsOutput,
 } from "@/app/api/dashboard/draws/_lib/types";
-import {
-  CheckCircle2,
-  Clock3,
-  CalendarClock,
-  Zap,
-  Play,
-  ExternalLink,
-} from "lucide-react";
+import { CheckCircle2, Clock3, CalendarClock, Zap, Play, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -30,31 +23,15 @@ interface DrawTimelineProps {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function useRelativeTime(isoDate: string): string {
-  const [label, setLabel] = useState(() => calcRelative(isoDate));
+  const [label, setLabel] = useState(() => calcRelativeTime(isoDate));
 
   useEffect(() => {
-    setLabel(calcRelative(isoDate));
-    const id = setInterval(() => setLabel(calcRelative(isoDate)), 15_000);
+    setLabel(calcRelativeTime(isoDate));
+    const id = setInterval(() => setLabel(calcRelativeTime(isoDate)), 15_000);
     return () => clearInterval(id);
   }, [isoDate]);
 
   return label;
-}
-
-function calcRelative(isoDate: string): string {
-  const diff = Math.round((new Date(isoDate).getTime() - Date.now()) / 1000);
-  const abs = Math.abs(diff);
-  if (abs < 60) return diff < 0 ? "vừa xong" : "ngay bây giờ";
-  if (abs < 3600) {
-    const m = Math.round(abs / 60);
-    return diff < 0 ? `${m}ph trước` : `trong ${m}ph`;
-  }
-  if (abs < 86400) {
-    const h = Math.round(abs / 3600);
-    return diff < 0 ? `${h}h trước` : `trong ${h}h`;
-  }
-  const d = Math.round(abs / 86400);
-  return diff < 0 ? `${d}ng trước` : `trong ${d}ng`;
 }
 
 /** Tạo URL đến trang vận hành của game với draw được chọn sẵn. */
@@ -96,19 +73,19 @@ function DrawEventRow({ event }: { event: DrawTimelineEvent }) {
       <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">
         {getGameLabel(event.gameProduct)}
       </span>
-      <span className="shrink-0 font-mono text-[11px] text-muted-foreground">
+      <span className="shrink-0 font-mono text-xs text-muted-foreground">
         {formatDrawLabel(event.drawDate, event.drawNo)}
       </span>
       <div className="flex shrink-0 items-center gap-1.5">
         {isActive && event.pendingEntries != null && (
-          <span className="text-[10px] tabular-nums text-blue-600 dark:text-blue-400">
+          <span className="text-xs tabular-nums text-blue-600 dark:text-blue-400">
             {formatNumber(event.pendingEntries)} vé
             {event.pendingStake != null && event.pendingStake > 0 && (
               <> · {formatVNDCompact(event.pendingStake)}</>
             )}
           </span>
         )}
-        <span className="w-16 text-right text-[11px] tabular-nums text-muted-foreground">
+        <span className="w-16 text-right text-xs tabular-nums text-muted-foreground">
           {relTime}
         </span>
         <ExternalLink className="size-3 shrink-0 text-muted-foreground/0 transition-opacity group-hover:text-muted-foreground/60" />
@@ -153,7 +130,7 @@ function Column({ title, icon, count, accent, children, emptyText }: ColumnProps
         <Badge
           variant="secondary"
           className={cn(
-            "ml-auto h-4 min-w-5 justify-center px-1.5 text-[9px] font-bold",
+            "ml-auto h-4 min-w-5 justify-center px-1.5 text-[10px] font-bold",
             accent === "blue" && "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
             accent === "emerald" &&
               "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
@@ -240,7 +217,7 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1">
               <Zap className="size-3 text-amber-500" />
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Quay nhanh
               </span>
             </div>
@@ -254,17 +231,17 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
                 >
                   <span className="size-1.5 rounded-full" style={{ background: c.hex }} />
                   <span className="text-xs font-medium">{getGameLabel(g.gameProduct)}</span>
-                  <span className="text-[10px] text-muted-foreground">·</span>
+                  <span className="text-xs text-muted-foreground">·</span>
                   {g.activeCount > 0 && (
-                    <span className="text-[11px] tabular-nums text-blue-600 dark:text-blue-400">
-                      {g.activeCount} đang chơi
+                    <span className="text-xs tabular-nums text-blue-600 dark:text-blue-400">
+                      {g.activeCount} kỳ đang diễn ra
                     </span>
                   )}
                   {g.scheduledCount > 0 && (
                     <>
-                      <span className="text-[10px] text-muted-foreground">·</span>
-                      <span className="text-[11px] tabular-nums text-muted-foreground">
-                        {g.scheduledCount} chờ
+                      <span className="text-xs text-muted-foreground">·</span>
+                      <span className="text-xs tabular-nums text-muted-foreground">
+                        {g.scheduledCount} kỳ sắp diễn ra
                       </span>
                     </>
                   )}

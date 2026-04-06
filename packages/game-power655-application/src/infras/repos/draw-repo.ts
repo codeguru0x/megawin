@@ -468,6 +468,44 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       { sort: { drawId: 1 } },
     );
   }
+
+  /**
+   * Lấy danh sách draws đã settled trong 1 jackpot cycle, mới nhất trước.
+   *
+   * Filter theo `drawId >= startDrawId`. Nếu có `endDrawId` (cycle đã đóng),
+   * thêm điều kiện `drawId <= endDrawId` để giới hạn đúng phạm vi cycle.
+   * Hỗ trợ phân trang theo `page` và `size`.
+   *
+   * @param startDrawId - drawId đầu tiên của cycle
+   * @param endDrawId - drawId cuối của cycle (undefined nếu cycle vẫn đang active)
+   * @param page - Trang hiện tại (1-based)
+   * @param size - Số lượng mỗi trang
+   */
+  async getSettledDrawsInCycle(
+    startDrawId: string,
+    endDrawId: string | undefined,
+    page: number,
+    size: number,
+  ): Promise<{ draws: DrawEntity[]; total: number }> {
+    const drawIdFilter: Record<string, unknown> = { $gte: startDrawId };
+    if (endDrawId) drawIdFilter.$lte = endDrawId;
+
+    const query: Record<string, unknown> = {
+      status: DrawStatus.Settled,
+      drawId: drawIdFilter,
+    };
+
+    const [draws, total] = await Promise.all([
+      this.findMany(query, {
+        sort: { drawId: -1 },
+        skip: (page - 1) * size,
+        limit: size,
+      }),
+      this.count(query),
+    ]);
+
+    return { draws, total };
+  }
 }
 
 export { VALID_TRANSITIONS };

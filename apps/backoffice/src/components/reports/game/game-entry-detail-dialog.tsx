@@ -3,7 +3,7 @@
 /**
  * GameEntryDetailDialog — wrapper hiển thị EntryDetailDialog đúng game.
  *
- * Dispatch theo gameProduct sang dialog game-specific đã tồn tại trong financial-reports.
+ * Dispatch theo gameProduct sang dialog game-specific đã tồn tại trong reports/settle.
  *
  * LƯU Ý hiển thị theo trạng thái entry:
  * - scheduled (outstanding): chỉ có entrySummary + amount + drawId — KHÔNG có payout/result.
@@ -39,7 +39,7 @@ export interface GameEntryDetailDialogProps {
 
 /**
  * Wrapper render đúng EntryDetailDialog game-specific theo `game` prop.
- * Reuse 100% dialog logic đã implement trong financial-reports của từng game.
+ * Reuse 100% dialog logic đã implement trong reports/settle của từng game.
  */
 export function GameEntryDetailDialog({ game, entry, open, onClose }: GameEntryDetailDialogProps) {
   const props = { entry, open, onClose };

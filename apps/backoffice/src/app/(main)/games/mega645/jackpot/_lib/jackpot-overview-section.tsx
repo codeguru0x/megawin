@@ -57,14 +57,14 @@ export function JackpotHeroCard() {
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-teal-700/70 dark:text-teal-400/60">
-                Jackpot Mega 6/45 — Cycle #{cycle.cycleNo}
+                Jackpot Mega 6/45 — Vòng #{cycle.cycleNo}
               </p>
               <p className="mt-0.5 text-3xl font-extrabold tabular-nums tracking-tight text-teal-900 dark:text-teal-100">
                 {formatVND(cycle.currentAmount)}
               </p>
               {growthPct > 0 && (
                 <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-emerald-700/80 dark:text-emerald-400/70">
-                  <MoveUpRight className="size-3.5" />+{growthPct}% so với seed
+                  <MoveUpRight className="size-3.5" />+{growthPct}% so với khởi điểm
                 </p>
               )}
             </div>
@@ -121,7 +121,7 @@ export function JackpotHeroCard() {
                   : "Đang tải..."}
             </span>
             <span>
-              Mốc ×{progress?.nextMultiple ?? "?"} · Seed {formatVNDCompact(cycle.seedAmount)}
+              Mốc ×{progress?.nextMultiple ?? "?"} · Khởi điểm {formatVNDCompact(cycle.seedAmount)}
             </span>
           </div>
         </div>
@@ -172,14 +172,18 @@ export function JackpotKpiCards() {
         icon={CircleDollarSign}
         iconBg="bg-emerald-100 dark:bg-emerald-900/50"
         iconColor="text-emerald-600 dark:text-emerald-400"
-        label="Tổng đóng góp"
+        label="Tổng tích lũy"
         value={formatVNDCompact(cycle.totalContribution)}
         sub={
-          growthPct > 0
-            ? `+${growthPct}% so với seed`
-            : `Seed: ${formatVNDCompact(cycle.seedAmount)}`
+          growthPct > 0 ? (
+            <>
+              <span className="font-semibold text-profit">+{growthPct}%</span>
+              {" so với khởi điểm"}
+            </>
+          ) : (
+            `Khởi điểm: ${formatVNDCompact(cycle.seedAmount)}`
+          )
         }
-        trend={growthPct > 0 ? { value: growthPct, isPositive: true } : undefined}
       />
       <KpiCard
         icon={Sigma}
@@ -187,7 +191,7 @@ export function JackpotKpiCards() {
         iconColor="text-cyan-600 dark:text-cyan-400"
         label="Đỉnh cao nhất"
         value={formatVNDCompact(cycle.peakAmount)}
-        sub={`Cycle #${cycle.cycleNo}`}
+        sub={`Vòng #${cycle.cycleNo}`}
       />
       <KpiCard
         icon={Target}
@@ -195,7 +199,7 @@ export function JackpotKpiCards() {
         iconColor="text-teal-600 dark:text-teal-400"
         label="Mốc tiếp theo"
         value={formatVNDCompact(progress?.milestoneThreshold ?? 0)}
-        sub={`×${progress?.nextMultiple ?? "?"} seed — mốc tham chiếu`}
+        sub={`×${progress?.nextMultiple ?? "?"} khởi điểm — mốc tham chiếu`}
       />
     </div>
   );
@@ -240,15 +244,13 @@ function KpiCard({
   label,
   value,
   sub,
-  trend,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   iconBg: string;
   iconColor: string;
   label: string;
   value: string;
-  sub?: string;
-  trend?: { value: number; isPositive: boolean };
+  sub?: React.ReactNode;
 }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
@@ -257,22 +259,7 @@ function KpiCard({
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-        <div className="flex items-baseline gap-1.5">
-          <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
-          {trend && (
-            <span
-              className={cn(
-                "text-xs font-semibold",
-                trend.isPositive
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-red-600 dark:text-red-400",
-              )}
-            >
-              {trend.isPositive ? "+" : ""}
-              {trend.value}%
-            </span>
-          )}
-        </div>
+        <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
         {sub && <p className="truncate text-[11px] text-muted-foreground">{sub}</p>}
       </div>
     </div>

@@ -20,11 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -46,10 +42,7 @@ interface JackpotSectionProps {
   isPending: boolean;
 }
 
-const TIER_LABELS: Record<
-  string,
-  { label: string; badge: string; color: string }
-> = {
+const TIER_LABELS: Record<string, { label: string; badge: string; color: string }> = {
   tier1: { label: "Giải Nhất", badge: "1st", color: "bg-amber-500 text-white" },
   tier2: { label: "Giải Nhì", badge: "2nd", color: "bg-slate-400 text-white" },
   tier3: { label: "Giải Ba", badge: "3rd", color: "bg-amber-700 text-white" },
@@ -57,11 +50,7 @@ const TIER_LABELS: Record<
   tier5: { label: "Giải Năm", badge: "5th", color: "bg-slate-600 text-white" },
 };
 
-export function JackpotSection({
-  config,
-  onSave,
-  isPending,
-}: JackpotSectionProps) {
+export function JackpotSection({ config, onSave, isPending }: JackpotSectionProps) {
   const form = useForm<JackpotFormValues>({
     resolver: zodResolver(jackpotFormSchema) as any,
     values: {
@@ -125,12 +114,9 @@ export function JackpotSection({
               {/* Left: Seed & Threshold */}
               <div className="space-y-5 p-6">
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Cấu hình Jackpot
-                  </h3>
+                  <h3 className="text-sm font-semibold text-foreground">Cấu hình Jackpot</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Giá trị khởi điểm khi bắt đầu chu kỳ mới và ngưỡng kích hoạt
-                    chia
+                    Giá trị khởi điểm khi bắt đầu chu kỳ mới và ngưỡng kích hoạt chia
                   </p>
                 </div>
 
@@ -175,7 +161,7 @@ export function JackpotSection({
                     <FormItem>
                       <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         <LabelWithTooltip
-                          label="Ngưỡng kích hoạt chia (Split)"
+                          label="Ngưỡng kích hoạt chia (Ngưỡng chia)"
                           tip="Khi quỹ Jackpot vượt ngưỡng này, hệ thống sẽ kích hoạt cơ chế chia (split) — phân bổ phần vượt vào các giải cố định theo tỷ lệ chia bên phải. Mục đích: hạn chế Jackpot tích luỹ quá lớn."
                         />
                       </FormLabel>
@@ -203,79 +189,64 @@ export function JackpotSection({
                 />
               </div>
 
-              {/* Right: Split Ratios */}
+              {/* Right: Split Ratios (Ngưỡng chia) */}
               <div className="border-t p-6 lg:border-l lg:border-t-0">
                 <div className="mb-4">
                   <h3 className="text-sm font-semibold text-foreground">
-                    Tỷ lệ phân bổ khi chia (Split)
+                    Tỷ lệ phân bổ khi chia (Ngưỡng chia)
                   </h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Phần vượt ngưỡng sẽ chia cho các giải cố định theo tỷ lệ
-                    phần dưới đây
+                    Phần vượt ngưỡng sẽ chia cho các giải cố định theo tỷ lệ phần dưới đây
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  {(["tier1", "tier2", "tier3", "tier4", "tier5"] as const).map(
-                    (t) => {
-                      const tier = TIER_LABELS[t]!;
-                      const val = form.watch(t) || 0;
-                      const pct =
-                        total > 0 ? ((val / total) * 100).toFixed(1) : "0.0";
-                      return (
-                        <FormField
-                          key={t}
-                          control={form.control}
-                          name={t}
-                          render={({ field }) => (
-                            <FormItem>
-                              <div className="group flex items-center gap-3 rounded-lg border bg-muted/30 px-3 py-2 transition-colors hover:bg-muted/50">
-                                <Badge
-                                  className={`${tier.color} w-9 justify-center text-[10px] font-bold`}
-                                >
-                                  {tier.badge}
-                                </Badge>
-                                <span className="flex-1 text-sm font-medium">
-                                  {tier.label}
-                                </span>
-                                <FormControl>
-                                  <MoneyInput
-                                    className="h-8 w-16 text-center font-semibold"
-                                    value={field.value}
-                                    onValueChange={(v) =>
-                                      field.onChange(v ?? 1)
-                                    }
-                                    onBlur={field.onBlur}
-                                    name={field.name}
-                                    ref={field.ref}
-                                    thousandSeparator={false}
-                                  />
-                                </FormControl>
-                                <span className="w-14 text-right text-xs tabular-nums text-muted-foreground">
-                                  {pct}%
-                                </span>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      );
-                    }
-                  )}
+                  {(["tier1", "tier2", "tier3", "tier4", "tier5"] as const).map((t) => {
+                    const tier = TIER_LABELS[t]!;
+                    const val = form.watch(t) || 0;
+                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : "0.0";
+                    return (
+                      <FormField
+                        key={t}
+                        control={form.control}
+                        name={t}
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="group flex items-center gap-3 rounded-lg border bg-muted/30 px-3 py-2 transition-colors hover:bg-muted/50">
+                              <Badge
+                                className={`${tier.color} w-9 justify-center text-[10px] font-bold`}
+                              >
+                                {tier.badge}
+                              </Badge>
+                              <span className="flex-1 text-sm font-medium">{tier.label}</span>
+                              <FormControl>
+                                <MoneyInput
+                                  className="h-8 w-16 text-center font-semibold"
+                                  value={field.value}
+                                  onValueChange={(v) => field.onChange(v ?? 1)}
+                                  onBlur={field.onBlur}
+                                  name={field.name}
+                                  ref={field.ref}
+                                  thousandSeparator={false}
+                                />
+                              </FormControl>
+                              <span className="w-14 text-right text-xs tabular-nums text-muted-foreground">
+                                {pct}%
+                              </span>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    );
+                  })}
 
                   <div className="flex items-center gap-3 rounded-lg border border-dashed px-3 py-2">
-                    <Badge
-                      variant="outline"
-                      className="w-9 justify-center text-[10px]"
-                    >
+                    <Badge variant="outline" className="w-9 justify-center text-[10px]">
                       KK
                     </Badge>
-                    <span className="flex-1 text-sm text-muted-foreground">
-                      Khuyến Khích
-                    </span>
-                    <span className="text-xs text-muted-foreground italic">
-                      Không tham gia
-                    </span>
+                    <span className="flex-1 text-sm text-muted-foreground">Khuyến Khích</span>
+                    <span className="text-xs text-muted-foreground italic">Không tham gia</span>
                   </div>
                 </div>
 
@@ -292,24 +263,16 @@ export function JackpotSection({
               <div className="flex items-start gap-2">
                 <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
                 <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
-                  Đơn vị làm tròn cố định <strong>5,000đ</strong>. Phần dư do
-                  làm tròn sẽ cộng vào hạng cao nhất có người trúng. Giải Nhất
-                  luôn nhận phần dư nếu có.
+                  Đơn vị làm tròn cố định <strong>5,000đ</strong>. Phần dư do làm tròn sẽ cộng vào
+                  hạng cao nhất có người trúng. Giải Nhất luôn nhận phần dư nếu có.
                 </p>
               </div>
             </div>
           </CardContent>
 
           <CardFooter className="justify-end border-t px-6 py-3">
-            <Button
-              type="submit"
-              disabled={isPending || !form.formState.isDirty}
-            >
-              {isPending ? (
-                <Spinner className="mr-2" />
-              ) : (
-                <Save className="mr-2 size-4" />
-              )}
+            <Button type="submit" disabled={isPending || !form.formState.isDirty}>
+              {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
               Lưu cấu hình Jackpot
             </Button>
           </CardFooter>

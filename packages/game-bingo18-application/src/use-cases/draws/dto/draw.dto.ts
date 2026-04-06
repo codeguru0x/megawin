@@ -129,6 +129,9 @@ export interface PublishResultOutput {
 export interface TriggerSettleInput {
   /** ID kỳ quay cần trigger settle. */
   drawId: string;
+
+  /** ARN của Step Function để kết sổ. */
+  SETTLE_SFN_ARN: string;
 }
 
 export interface TriggerSettleOutput {
@@ -136,8 +139,6 @@ export interface TriggerSettleOutput {
   drawId: string;
   /** Trạng thái sau khi trigger (settling). */
   status: string;
-  /** Tổng entries cần settle. */
-  totalEntries: number;
 }
 
 // ─────────────────────────────────────────────

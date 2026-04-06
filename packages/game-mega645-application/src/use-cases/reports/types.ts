@@ -123,6 +123,16 @@ export interface ListOutstandingPlayerEntriesOutput {
   data: TicketEntryEntity[];
 }
 
+// ─── Get Entry By Id ──────────────────────────────────────────────────────────
+
+export interface GetEntryByIdInput {
+  entryId: string;
+}
+
+export interface GetEntryByIdOutput {
+  entry: TicketEntryEntity;
+}
+
 // ─── Sync Outstanding ─────────────────────────────────────────────────────────
 
 export interface SyncOutstandingResult {

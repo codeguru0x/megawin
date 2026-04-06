@@ -32,6 +32,7 @@ import {
   POWER655_PRIZE_TIER_LABELS,
   getPower655PlayTypeLabel,
 } from "@megawin/game-power655/labels";
+import { PrizeTier } from "@megawin/game-power655/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
 // ─── Board Color Map ──────────────────────────────────────────────────────────
 
@@ -109,6 +110,16 @@ export function Power655EntryDetailDialog({
   if (!entry) return null;
 
   const tiers = entry.payout?.tiers ?? [];
+  const TIER_ORDER: Record<string, number> = {
+    [PrizeTier.Jackpot1]: 0,
+    [PrizeTier.Jackpot2]: 1,
+    [PrizeTier.Tier1]: 2,
+    [PrizeTier.Tier2]: 3,
+    [PrizeTier.Tier3]: 4,
+  };
+  const sortedTiers = [...tiers].sort(
+    (a, b) => (TIER_ORDER[a.tier] ?? 99) - (TIER_ORDER[b.tier] ?? 99),
+  );
   const boards = entry.entrySummary.boards ?? [];
   const isScheduled = entry.status === EntryStatus.Scheduled;
   const isSettled = entry.status === EntryStatus.Settled;
@@ -330,7 +341,7 @@ export function Power655EntryDetailDialog({
             {/* ── 4. Kết quả & Bộ số đã chọn ─────────────────────────────── */}
             {entry.result && !isScheduled && boards.length > 0 ? (
               <div className="rounded-lg border p-4">
-                <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="mb-2 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   Kết quả
                 </p>
                 <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
@@ -349,7 +360,6 @@ export function Power655EntryDetailDialog({
                             : "result-bonus"
                         }
                       />
-                      <span className="text-[10px] text-muted-foreground">bonus</span>
                     </>
                   )}
                 </div>
@@ -472,7 +482,7 @@ export function Power655EntryDetailDialog({
                   Giải trúng
                 </p>
                 <div className="space-y-2">
-                  {tiers.map((tier: EntryPayoutTier, i: number) => (
+                  {sortedTiers.map((tier: EntryPayoutTier, i: number) => (
                     <div
                       key={i}
                       className="flex items-center justify-between rounded-md bg-background/60 px-3 py-1.5 text-sm"
@@ -481,9 +491,8 @@ export function Power655EntryDetailDialog({
                         <Badge variant="secondary" className="font-medium">
                           {POWER655_PRIZE_TIER_LABELS[tier.tier] ?? tier.tier}
                         </Badge>
-                        <span className="text-[11px] text-muted-foreground">
-                          ×{tier.hitCount} line
-                          {tier.unitAmount > 0 && ` · ${formatNumber(tier.unitAmount)}/line`}
+                        <span className="inline-flex items-center rounded-full bg-profit/15 px-2 py-0.5 text-[11px] font-bold tabular-nums text-profit">
+                          ×{tier.hitCount} lần
                         </span>
                       </div>
                       <span className="tabular-nums font-bold text-profit">
@@ -491,14 +500,6 @@ export function Power655EntryDetailDialog({
                       </span>
                     </div>
                   ))}
-                  {tiers.length > 1 && (
-                    <div className="flex items-center justify-between border-t pt-2 text-sm font-bold">
-                      <span className="text-muted-foreground">Tổng thưởng</span>
-                      <span className="tabular-nums text-profit">
-                        {formatNumber(entry.payout?.payoutAmount ?? 0)}
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
             )}

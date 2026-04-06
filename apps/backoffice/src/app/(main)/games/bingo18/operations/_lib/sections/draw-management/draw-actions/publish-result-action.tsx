@@ -39,7 +39,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { DevRandomFillButton, generateRandomNumber } from "@/components/dev-random-fill-button";
+import { RandomFillButton, generateRandomNumber } from "@/components/draws";
 import { todayVN } from "@megawin/shared/utils";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
@@ -185,7 +185,7 @@ export function PublishResultAction({
                   <Dice5 className="size-3.5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <FormLabel className="text-sm font-semibold">Kết quả xúc xắc</FormLabel>
-                <DevRandomFillButton
+                <RandomFillButton
                   onFill={() => {
                     const nums = Array.from({ length: DICE_COUNT }, () =>
                       generateRandomNumber(DICE_MIN, DICE_MAX),

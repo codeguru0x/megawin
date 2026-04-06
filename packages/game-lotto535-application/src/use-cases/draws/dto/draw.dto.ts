@@ -140,8 +140,8 @@ export interface PublishResultOutput {
 export interface TriggerSettleInput {
   /** Mã kỳ quay cần kích hoạt settle. */
   drawId: string;
-  /** ARN của Step Function kết sổ Lotto 5/35. */
-  LOTTO535_SETTLE_SFN_ARN: string;
+  /** ARN của Step Function để kết sổ. */
+  SETTLE_SFN_ARN: string;
 }
 
 export interface TriggerSettleOutput {

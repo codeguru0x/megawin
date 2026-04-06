@@ -3,16 +3,19 @@
  */
 
 export { GetJackpotCurrentUseCase } from "./get-jackpot-current";
-export { ListJackpotHistoryUseCase } from "./list-jackpot-history";
 export { ListJackpotCyclesUseCase } from "./list-jackpot-cycles";
+export { ListAllJackpotCycleOptionsUseCase } from "./list-all-jackpot-cycle-options";
+export { ListJackpotHistoryByCycleUseCase } from "./list-jackpot-history-by-cycle";
 
 export type {
   GetJackpotCurrentOutput,
-  ListJackpotHistoryInput,
-  ListJackpotHistoryOutput,
   JackpotHistoryItem,
   ListJackpotCyclesInput,
   ListJackpotCyclesOutput,
   JackpotCycleSummary,
   JackpotWinnerSummary,
+  ListJackpotHistoryByCycleInput,
+  ListJackpotHistoryByCycleOutput,
+  ListAllJackpotCycleOptionsOutput,
+  JackpotCycleOption,
 } from "./dto/jackpot.dto";

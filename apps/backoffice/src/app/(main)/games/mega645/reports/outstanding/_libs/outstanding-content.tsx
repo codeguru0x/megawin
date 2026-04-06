@@ -188,7 +188,7 @@ export function Mega645OutstandingContent() {
         lineCountLabel="Bộ số"
       />
 
-      {/* Dialog chi tiết entry — reuse từ financial-reports */}
+      {/* Dialog chi tiết entry — reuse từ reports/settle */}
       <Mega645EntryDetailDialog
         entry={selectedEntry}
         open={!!selectedEntry}

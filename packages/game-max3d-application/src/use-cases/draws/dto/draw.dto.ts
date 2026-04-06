@@ -134,6 +134,9 @@ export interface PublishResultOutput {
 export interface TriggerSettleInput {
   /** Mã định danh kỳ quay cần đối soát. */
   drawId: string;
+
+  /** ARN của Step Function để kết sổ. */
+  SETTLE_SFN_ARN: string;
 }
 
 export interface TriggerSettleOutput {
@@ -141,10 +144,6 @@ export interface TriggerSettleOutput {
   drawId: string;
   /** Trạng thái kỳ quay sau khi đối soát. */
   status: string;
-  /** Tổng số lượt đặt cược (ticket entries) cần đối soát. */
-  totalEntries: number;
-  /** Tổng lines cần settle. */
-  totalLines: number;
 }
 
 // ─────────────────────────────────────────────

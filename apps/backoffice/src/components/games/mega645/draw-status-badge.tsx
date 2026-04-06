@@ -21,11 +21,11 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
     className: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 animate-pulse",
   },
   published: {
-    label: "Đã công bố",
+    label: "Đã có kết quả",
     className: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
   },
   settling: {
-    label: "Đang settle",
+    label: "Đang kết sổ",
     className:
       "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 animate-pulse",
   },

@@ -31,6 +31,14 @@ import {
 
 export const VN_TIMEZONE = "Asia/Ho_Chi_Minh";
 
+/**
+ * UTC offset cố định của Việt Nam (+07:00).
+ *
+ * Dùng để tạo Date từ string mà không phụ thuộc vào system timezone của server.
+ * Vietnam không có DST nên offset luôn là +07:00.
+ */
+export const VN_UTC_OFFSET = "+07:00";
+
 // ─────────────────────────────────────────────
 // Tạo Date từ components (theo giờ VN)
 // ─────────────────────────────────────────────
@@ -38,38 +46,45 @@ export const VN_TIMEZONE = "Asia/Ho_Chi_Minh";
 /**
  * Tạo Date từ "YYYY-MM-DD" + "HH:mm" theo giờ VN.
  *
+ * Luôn đúng bất kể system timezone của server (UTC hay VN).
+ * Dùng explicit `+07:00` offset thay vì TZDate string constructor
+ * vì `new TZDate(str, tz)` parse string dựa trên system timezone nội bộ,
+ * dẫn đến lệch 7 tiếng khi server chạy UTC.
+ *
  * Ví dụ: toVNDate("2026-02-15", "13:00") → Date tương ứng 13:00 VN (= 06:00 UTC).
  */
 export function toVNDate(dateStr: string, timeStr: string): Date {
-  const tzDate = new TZDate(`${dateStr}T${timeStr}:00`, VN_TIMEZONE);
-  return new Date(tzDate.getTime());
+  return new Date(`${dateStr}T${timeStr}:00${VN_UTC_OFFSET}`);
 }
 
 /**
  * Tạo Date từ "YYYY-MM-DD" + "HH:mm:ss" theo giờ VN.
  *
  * Dùng cho game có chu kỳ ngắn (Keno, Bingo18) — cần độ chính xác đến giây.
- * Ví dụ: toVNDateWithSeconds("2026-02-15", "13:00:45") → Date tương ứng 13:00:45 VN.
+ * Luôn đúng bất kể system timezone của server.
+ *
+ * Ví dụ: toVNDateWithSeconds("2026-02-15", "13:00:45") → Date tương ứng 13:00:45 VN (= 06:00:45 UTC).
  */
 export function toVNDateWithSeconds(dateStr: string, timeStr: string): Date {
-  const tzDate = new TZDate(`${dateStr}T${timeStr}`, VN_TIMEZONE);
-  return new Date(tzDate.getTime());
+  return new Date(`${dateStr}T${timeStr}${VN_UTC_OFFSET}`);
 }
 
 /**
  * Tạo Date từ "YYYY-MM-DD" lúc 00:00:00 giờ VN.
+ *
+ * Luôn đúng bất kể system timezone của server.
  */
 export function toVNStartOfDay(dateStr: string): Date {
-  const tzDate = new TZDate(`${dateStr}T00:00:00`, VN_TIMEZONE);
-  return new Date(tzDate.getTime());
+  return new Date(`${dateStr}T00:00:00${VN_UTC_OFFSET}`);
 }
 
 /**
  * Tạo Date từ "YYYY-MM-DD" lúc 23:59:59.999 giờ VN.
+ *
+ * Luôn đúng bất kể system timezone của server.
  */
 export function toVNEndOfDay(dateStr: string): Date {
-  const tzDate = new TZDate(`${dateStr}T23:59:59.999`, VN_TIMEZONE);
-  return new Date(tzDate.getTime());
+  return new Date(`${dateStr}T23:59:59.999${VN_UTC_OFFSET}`);
 }
 
 // ─────────────────────────────────────────────
@@ -153,6 +168,30 @@ export function formatVN(date: Date, pattern: string): string {
  */
 export function todayVN(): string {
   return formatVNDate(new Date());
+}
+
+/**
+ * Lấy ngày tài chính hiện tại "YYYY-MM-DD" theo giờ VN.
+ *
+ * Ngày tài chính thay đổi lúc 11:00 VN — trước 11h → vẫn thuộc ngày hôm qua.
+ * Dùng thay cho các `getFinancialDateToday()` local trong từng game package.
+ *
+ * Ví dụ: gọi lúc 09:00 VN ngày 15/2 → trả "2026-02-14"
+ *         gọi lúc 13:00 VN ngày 15/2 → trả "2026-02-15"
+ */
+export function financialDateTodayVN(): string {
+  const now = new Date();
+  // Dùng UTC math trực tiếp — không phụ thuộc system timezone.
+  // vnMinutes là tổng phút trong ngày tính theo giờ VN (0–1439).
+  const vnMinutes = (now.getUTCHours() * 60 + now.getUTCMinutes() + 7 * 60) % (24 * 60);
+  const vnDate = new Date(now.getTime() + 7 * 60 * 60_000);
+  if (vnMinutes < 11 * 60) {
+    vnDate.setUTCDate(vnDate.getUTCDate() - 1);
+  }
+  const y = vnDate.getUTCFullYear();
+  const m = String(vnDate.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(vnDate.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 /**
@@ -255,4 +294,41 @@ export function floorTime(date: Date, intervalMinutes: number = 1): Date {
 export function ceilTime(date: Date, intervalMinutes: number = 1): Date {
   const ms = intervalMinutes * 60_000;
   return new Date(Math.ceil(date.getTime() / ms) * ms);
+}
+
+// ─────────────────────────────────────────────
+// Relative time label (tiếng Việt)
+// ─────────────────────────────────────────────
+
+/**
+ * Tính khoảng cách giữa 1 ISO timestamp và thời điểm hiện tại,
+ * trả về chuỗi tiếng Việt dạng ngắn dùng cho timeline, countdown, v.v.
+ *
+ * Output examples:
+ * - "vừa xong"       ← quá khứ < 60 giây
+ * - "ngay bây giờ"   ← tương lai < 60 giây
+ * - "5ph trước"      ← quá khứ, tính bằng phút
+ * - "trong 5ph"      ← tương lai, tính bằng phút
+ * - "2h trước"       ← quá khứ, tính bằng giờ
+ * - "trong 2h"       ← tương lai, tính bằng giờ
+ * - "3ng trước"      ← quá khứ, tính bằng ngày
+ * - "trong 3ng"      ← tương lai, tính bằng ngày
+ *
+ * @param isoDate - ISO 8601 timestamp string.
+ * @param now - Thời điểm so sánh. Mặc định = `Date.now()`.
+ */
+export function calcRelativeTime(isoDate: string, now: number = Date.now()): string {
+  const diff = Math.round((new Date(isoDate).getTime() - now) / 1000);
+  const abs = Math.abs(diff);
+  if (abs < 60) return diff < 0 ? "vừa xong" : "ngay bây giờ";
+  if (abs < 3600) {
+    const m = Math.round(abs / 60);
+    return diff < 0 ? `${m}ph trước` : `trong ${m}ph`;
+  }
+  if (abs < 86400) {
+    const h = Math.round(abs / 3600);
+    return diff < 0 ? `${h}h trước` : `trong ${h}h`;
+  }
+  const d = Math.round(abs / 86400);
+  return diff < 0 ? `${d}ng trước` : `trong ${d}ng`;
 }

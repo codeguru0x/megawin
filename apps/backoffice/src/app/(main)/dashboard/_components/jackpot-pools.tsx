@@ -84,7 +84,7 @@ function Mega645Card({ data }: { data: DashboardJackpotInfo }) {
             variant="outline"
             className="border-teal-300/60 bg-teal-50/80 text-[10px] text-teal-700 dark:border-teal-700/60 dark:bg-teal-950/50 dark:text-teal-300"
           >
-            Cycle #{data.cycleNo}
+            Vòng #{data.cycleNo}
           </Badge>
         </div>
 
@@ -109,7 +109,7 @@ function Mega645Card({ data }: { data: DashboardJackpotInfo }) {
               trackClassName="bg-teal-200/60 dark:bg-teal-900/50"
             />
             <div className="flex items-center justify-between text-[11px] text-teal-700/60 dark:text-teal-400/50">
-              <span>Seed: {formatVNDCompact(data.seedAmount)}</span>
+              <span>Khởi điểm: {formatVNDCompact(data.seedAmount)}</span>
               <span className="flex items-center gap-1">
                 {isHot && <Flame className="size-3 text-red-500" />}
                 {pct.toFixed(1)}% mục tiêu
@@ -186,7 +186,7 @@ function Power655Card({ data }: { data: DashboardPower655JackpotInfo }) {
             variant="outline"
             className="border-red-300/60 bg-red-50/80 text-[10px] text-red-700 dark:border-red-700/60 dark:bg-red-950/50 dark:text-red-300"
           >
-            Cycle #{data.cycleNo}
+            Vòng #{data.cycleNo}
           </Badge>
         </div>
 
@@ -234,7 +234,7 @@ function Power655Card({ data }: { data: DashboardPower655JackpotInfo }) {
             trackClassName="bg-red-200/50 dark:bg-red-900/40"
           />
           <div className="flex items-center justify-between text-[11px] text-red-700/60 dark:text-red-400/50">
-            <span>Seed: {formatVNDCompact(data.jp1Seed)}</span>
+            <span>Khởi điểm: {formatVNDCompact(data.jp1Seed)}</span>
             <span>Overflow: {formatVNDCompact(data.jp1OverflowThreshold)}</span>
           </div>
         </div>
@@ -298,7 +298,7 @@ function Lotto535Card({ data }: { data: DashboardJackpotInfo }) {
             variant="outline"
             className="border-amber-300/60 bg-amber-50/80 text-[10px] text-amber-700 dark:border-amber-700/60 dark:bg-amber-950/50 dark:text-amber-300"
           >
-            Cycle #{data.cycleNo}
+            Vòng #{data.cycleNo}
           </Badge>
         </div>
 
@@ -323,10 +323,10 @@ function Lotto535Card({ data }: { data: DashboardJackpotInfo }) {
               trackClassName="bg-amber-200/60 dark:bg-amber-900/50"
             />
             <div className="flex items-center justify-between text-[11px] text-amber-700/60 dark:text-amber-400/50">
-              <span>Seed: {formatVNDCompact(data.seedAmount)}</span>
+              <span>Khởi điểm: {formatVNDCompact(data.seedAmount)}</span>
               <span className="flex items-center gap-1">
                 {isHot && <Flame className="size-3 text-red-500" />}
-                Split: {formatVNDCompact(data.splitThreshold)}
+                Ngưỡng chia: {formatVNDCompact(data.splitThreshold)}
               </span>
             </div>
           </div>

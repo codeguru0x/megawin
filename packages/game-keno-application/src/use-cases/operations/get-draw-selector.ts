@@ -1,7 +1,7 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { displayVNTime, formatVNDate } from "@megawin/shared/utils";
+import { displayVNTime } from "@megawin/shared/utils";
 import type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selector.dto";
 
 /**
@@ -41,7 +41,7 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
       group: DrawSelectorItem["group"],
     ): DrawSelectorItem => ({
       drawId: draw.drawId,
-      drawDate: formatVNDate(new Date(draw.drawDate)),
+      drawDate: draw.drawDate,
       drawNo: draw.drawNo,
       drawTime: displayVNTime(draw.drawTime),
       salesCloseAt: draw.sales.closeAt.toISOString(),

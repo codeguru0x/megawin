@@ -23,6 +23,7 @@
 
 import { TZDate } from "@date-fns/tz";
 import { format, subDays } from "date-fns";
+import { VN_UTC_OFFSET } from "./date";
 
 const DEFAULT_TIMEZONE = "Asia/Ho_Chi_Minh";
 const FINANCIAL_DAY_START_HOUR = 11;
@@ -68,30 +69,23 @@ export function getFinancialDate(
  */
 export function getFinancialDateRange(
   financialDate: string,
-  timezone: string = DEFAULT_TIMEZONE,
+  // timezone parameter kept for backward compat — only Asia/Ho_Chi_Minh (+07:00) is supported.
+  _timezone: string = DEFAULT_TIMEZONE,
 ): { start: Date; end: Date } {
-  const start = new TZDate(
-    `${financialDate}T${String(FINANCIAL_DAY_START_HOUR).padStart(2, "0")}:00:00`,
-    timezone,
-  );
+  const hourStr = String(FINANCIAL_DAY_START_HOUR).padStart(2, "0");
+
+  // Dùng explicit +07:00 offset thay vì TZDate string constructor để tránh
+  // lệch giờ khi server chạy UTC (new TZDate(str, tz) parse dựa vào system timezone).
+  const start = new Date(`${financialDate}T${hourStr}:00:00${VN_UTC_OFFSET}`);
 
   const nextDay = format(
-    new TZDate(
-      new Date(start.getTime() + 24 * 60 * 60 * 1000),
-      timezone,
-    ),
+    new TZDate(new Date(start.getTime() + 24 * 60 * 60 * 1000), DEFAULT_TIMEZONE),
     FINANCIAL_DATE_FORMAT,
   );
 
-  const end = new TZDate(
-    `${nextDay}T${String(FINANCIAL_DAY_START_HOUR).padStart(2, "0")}:00:00`,
-    timezone,
-  );
+  const end = new Date(`${nextDay}T${hourStr}:00:00${VN_UTC_OFFSET}`);
 
-  return {
-    start: new Date(start.getTime()),
-    end: new Date(end.getTime()),
-  };
+  return { start, end };
 }
 
 /**

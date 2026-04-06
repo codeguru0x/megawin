@@ -49,7 +49,7 @@ export function JackpotHeroCard() {
             </div>
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-amber-700/70 dark:text-amber-400/60">
-                Jackpot hiện tại — Cycle #{cycle.cycleNo}
+                Jackpot hiện tại — Vòng #{cycle.cycleNo}
               </p>
               <p className="mt-0.5 text-3xl font-extrabold tabular-nums tracking-tight text-amber-900 dark:text-amber-100">
                 {formatVND(cycle.currentAmount)}
@@ -97,7 +97,7 @@ export function JackpotHeroCard() {
                 ? `Còn thiếu ${formatVNDCompact(progress.remaining)}`
                 : "Đã đạt ngưỡng chia"}
             </span>
-            <span>Seed {formatVNDCompact(cycle.seedAmount)}</span>
+            <span>Khởi điểm {formatVNDCompact(cycle.seedAmount)}</span>
           </div>
         </div>
       </div>
@@ -146,14 +146,18 @@ export function JackpotKpiCards() {
         icon={CircleDollarSign}
         iconBg="bg-emerald-100 dark:bg-emerald-900/50"
         iconColor="text-emerald-600 dark:text-emerald-400"
-        label="Tổng đóng góp"
+        label="Tổng tích lũy"
         value={formatVNDCompact(cycle.totalContribution)}
         sub={
-          growthPct > 0
-            ? `+${growthPct}% so với seed`
-            : `Seed: ${formatVNDCompact(cycle.seedAmount)}`
+          growthPct > 0 ? (
+            <>
+              <span className="font-semibold text-profit">+{growthPct}%</span>
+              {" so với khởi điểm"}
+            </>
+          ) : (
+            `Khởi điểm: ${formatVNDCompact(cycle.seedAmount)}`
+          )
         }
-        trend={growthPct > 0 ? { value: growthPct, isPositive: true } : undefined}
       />
       <KpiCard
         icon={TrendingUp}
@@ -161,7 +165,7 @@ export function JackpotKpiCards() {
         iconColor="text-purple-600 dark:text-purple-400"
         label="Đỉnh cao nhất"
         value={formatVNDCompact(cycle.peakAmount)}
-        sub={`Cycle #${cycle.cycleNo}`}
+        sub={`Vòng #${cycle.cycleNo}`}
       />
       <KpiCard
         icon={Target}
@@ -218,15 +222,13 @@ function KpiCard({
   label,
   value,
   sub,
-  trend,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   iconBg: string;
   iconColor: string;
   label: string;
   value: string;
-  sub?: string;
-  trend?: { value: number; isPositive: boolean };
+  sub?: React.ReactNode;
 }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
@@ -234,24 +236,9 @@ function KpiCard({
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-        <div className="flex items-baseline gap-1.5">
-          <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
-          {trend && (
-            <span
-              className={cn(
-                "text-xs font-semibold",
-                trend.isPositive
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-red-600 dark:text-red-400",
-              )}
-            >
-              {trend.isPositive ? "+" : ""}
-              {trend.value}%
-            </span>
-          )}
-        </div>
-        {sub && <p className="truncate text-[11px] text-muted-foreground">{sub}</p>}
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
+        {sub && <p className="truncate text-xs text-muted-foreground">{sub}</p>}
       </div>
     </div>
   );

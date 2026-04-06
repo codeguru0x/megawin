@@ -120,7 +120,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                     <FormItem>
                       <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         <LabelWithTooltip
-                          label="Giá trị khởi điểm (Seed)"
+                          label="Giá trị khởi điểm"
                           tip="Số tiền khởi điểm của Jackpot khi bắt đầu chu kỳ mới (sau khi có người trúng Jackpot hoặc reset). Đây là giá trị tối thiểu người chơi có thể trúng Jackpot."
                         />
                       </FormLabel>
@@ -154,7 +154,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                     <FormItem>
                       <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                         <LabelWithTooltip
-                          label="Ngưỡng kích hoạt chia (Split)"
+                          label="Ngưỡng kích hoạt chia"
                           tip="Khi quỹ Jackpot vượt ngưỡng này, hệ thống sẽ kích hoạt cơ chế chia (split) — phân bổ phần vượt vào các giải cố định theo tỷ lệ chia bên phải. Mục đích: hạn chế Jackpot tích luỹ quá lớn."
                         />
                       </FormLabel>
@@ -185,9 +185,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
               {/* Right: Split Ratios — 3 tiers */}
               <div className="border-t p-6 lg:border-l lg:border-t-0">
                 <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Tỷ lệ phân bổ khi chia (Split)
-                  </h3>
+                  <h3 className="text-sm font-semibold text-foreground">Tỷ lệ phân bổ khi chia</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Phần vượt ngưỡng sẽ chia cho các giải cố định theo tỷ lệ phần dưới đây
                   </p>

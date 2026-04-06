@@ -427,6 +427,48 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
+   * Lấy draws đã settled trong 1 vòng Jackpot (cycle) theo khoảng drawId.
+   *
+   * Dùng cho bảng "Lịch sử Jackpot" lọc theo cycle.
+   * drawId format YYYY-MM-DD.NNN → lexicographic = chronological order.
+   *
+   * - Sort: drawId DESC (mới nhất trên cùng).
+   * - Index: { status: 1, drawId: 1 }
+   *
+   * @param startDrawId - DrawId bắt đầu vòng (inclusive).
+   * @param endDrawId - DrawId kết thúc vòng (inclusive). null = active cycle, lấy đến hiện tại.
+   * @param page - Trang hiện tại (1-based).
+   * @param size - Số lượng mỗi trang.
+   */
+  async getSettledDrawsInCycle(
+    startDrawId: string,
+    endDrawId: string | null,
+    page: number,
+    size: number,
+  ): Promise<{ draws: DrawEntity[]; total: number }> {
+    const filter: Record<string, unknown> = {
+      status: DrawStatus.Settled,
+      "jackpot.closingAmount": { $exists: true },
+      drawId: { $gte: startDrawId },
+    };
+
+    if (endDrawId) {
+      (filter.drawId as Record<string, unknown>).$lte = endDrawId;
+    }
+
+    const [draws, total] = await Promise.all([
+      this.findMany(filter, {
+        sort: { drawId: -1 },
+        skip: (page - 1) * size,
+        limit: size,
+      }),
+      this.count(filter),
+    ]);
+
+    return { draws, total };
+  }
+
+  /**
    * Lấy các draws đang active theo danh sách statuses.
    *
    * Thêm `drawDate >= today - lookbackDays` để tận dụng compound index

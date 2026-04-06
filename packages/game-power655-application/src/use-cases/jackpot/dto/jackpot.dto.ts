@@ -30,6 +30,12 @@ export interface GetJackpotCurrentOutput {
     startDrawId: string;
     /** Thời điểm bắt đầu cycle (ISO 8601). */
     startedAt: string;
+    /**
+     * Số lần Jackpot 2 đã trao thưởng và reset về seed trong cycle này.
+     * JP2 có thể reset nhiều lần trong 1 cycle vì JP2 winner KHÔNG đóng cycle.
+     * = 0 khi cycle mới tạo, tăng mỗi lần JP2 có winner.
+     */
+    jackpot2ResetCount: number;
   };
   /** Cấu hình jackpot: overflow threshold. */
   config: {
@@ -75,42 +81,51 @@ export interface ListJackpotHistoryInput {
 }
 
 export interface JackpotHistoryItem {
-  /** ID kỳ quay. */
+  /** ID kỳ quay. Format: YYYY-MM-DD.NNN */
   drawId: string;
   /** Ngày quay, định dạng YYYY-MM-DD. */
   drawDate: string;
   /** Số thứ tự kỳ quay. */
   drawNo: number;
-  /** Giờ quay, định dạng HH:mm. */
+  /** Giờ quay (ISO 8601). */
   drawTime: string;
-  /** Số dư Jackpot 1 đầu kỳ (VND). */
+  /** Số dư Jackpot 1 đầu kỳ (VND). Snapshot từ `draw.jackpot.openingJackpot1`. */
   openingJackpot1: number;
-  /** Số dư Jackpot 2 đầu kỳ (VND). */
+  /** Số dư Jackpot 2 đầu kỳ (VND). Snapshot từ `draw.jackpot.openingJackpot2`. */
   openingJackpot2: number;
-  /** Số dư Jackpot 1 cuối kỳ (VND). */
+  /** Số dư Jackpot 1 cuối kỳ (VND). Snapshot từ `draw.jackpot.closingJackpot1`. */
   closingJackpot1: number;
-  /** Số dư Jackpot 2 cuối kỳ (VND). */
+  /** Số dư Jackpot 2 cuối kỳ (VND). Snapshot từ `draw.jackpot.closingJackpot2`. */
   closingJackpot2: number;
   /**
-   * Đóng góp vào JP1 kỳ này (VND).
-   * Công thức: totalRevenue × jp1Ratio.
+   * Đóng góp vào JP1 kỳ này (VND). Từ `draw.financial.jackpot1Contribution`.
+   * Đã trừ jp1Overflow nếu overflow kích hoạt.
    */
   jackpot1Contribution: number;
   /**
-   * Đóng góp vào JP2 kỳ này (VND).
-   * Công thức: totalRevenue × jp2Ratio + jp1Overflow.
+   * Đóng góp vào JP2 kỳ này (VND). Từ `draw.financial.jackpot2Contribution`.
+   * Bao gồm jp1Overflow nếu overflow kích hoạt VÀ có JP2 winner kỳ đó.
    */
   jackpot2Contribution: number;
+  /**
+   * Phần JP1 tràn chuyển sang JP2 kỳ này (VND). Từ `draw.financial.jp1Overflow`.
+   * = 0 nếu không overflow hoặc không có JP2 winner.
+   */
+  jp1Overflow: number;
   /** Có người trúng Jackpot 1 (6/6) trong kỳ này hay không. */
   hasJackpot1Winner: boolean;
   /** Có người trúng Jackpot 2 (5/6 + bonus) trong kỳ này hay không. */
   hasJackpot2Winner: boolean;
-  /** Kỳ này có phải kỳ split cycle không. */
-  isSplitCycle?: boolean;
-  /** Tổng số entries tham gia kỳ quay. */
+  /** Tổng số entries tham gia kỳ quay. Từ `draw.stats.ticketEntryCount`. */
   totalEntries: number;
-  /** Tổng doanh thu kỳ quay (VND). */
+  /** Tổng doanh thu bán vé kỳ quay (VND). Từ `draw.financial.totalRevenue`. */
   totalRevenue: number;
+  /** Tổng tiền trả giải cố định (tier1–tier3, VND). Từ `draw.financial.totalFixedPrizes`. */
+  totalFixedPrizes: number;
+  /** Công ty thu về (sau cap, VND). Từ `draw.financial.actualCompanyTake`. */
+  actualCompanyTake: number;
+  /** Tỷ lệ công ty thu theo cấu hình (0–1). Từ `draw.financial.companyTakeRate`. */
+  companyTakeRate: number;
 }
 
 export interface ListJackpotHistoryOutput {
@@ -209,4 +224,46 @@ export interface ListJackpotCyclesOutput {
   size: number;
   /** Tổng số cycles. */
   total: number;
+}
+
+// ─── ListJackpotHistoryByCycle ───
+
+export interface ListJackpotHistoryByCycleInput {
+  /** Số thứ tự cycle cần xem lịch sử (1-based). */
+  cycleNo: number;
+  /** Trang hiện tại (1-based, mặc định 1). */
+  page?: number;
+  /** Số lượng mỗi trang (mặc định 20). */
+  size?: number;
+}
+
+export interface ListJackpotHistoryByCycleOutput {
+  /** Danh sách draws trong cycle, mới nhất trên cùng. */
+  draws: JackpotHistoryItem[];
+  /** Trang hiện tại. */
+  page: number;
+  /** Số lượng mỗi trang. */
+  size: number;
+  /** Tổng số draws trong cycle. */
+  total: number;
+}
+
+// ─── ListAllJackpotCycleOptions ───
+
+export interface JackpotCycleOption {
+  /** Số thứ tự cycle. */
+  cycleNo: number;
+  /** Trạng thái cycle ("active" hoặc "closed"). */
+  status: string;
+  /** ID kỳ quay đầu tiên của cycle. */
+  startDrawId: string;
+  /** Lý do đóng cycle: jackpot1_winner / both_winner / manual_reset (chỉ khi closed). */
+  closedReason?: string;
+}
+
+export interface ListAllJackpotCycleOptionsOutput {
+  /** Danh sách cycle options cho selector, mới nhất trước. Tối đa 10 vòng. */
+  cycles: JackpotCycleOption[];
+  /** cycleNo của vòng active hiện tại (để pre-select). */
+  activeCycleNo: number | null;
 }

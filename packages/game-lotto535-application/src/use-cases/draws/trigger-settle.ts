@@ -9,6 +9,7 @@ import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
+import { logError } from "@megawin/shared/utils";
 
 /**
  * Kết sổ kỳ quay Lotto 5/35.
@@ -27,7 +28,7 @@ export class TriggerSettleUseCase extends NextApiUseCase<TriggerSettleInput, Tri
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(input: TriggerSettleInput): Promise<TriggerSettleOutput> {
-    if (!input.LOTTO535_SETTLE_SFN_ARN) {
+    if (!input.SETTLE_SFN_ARN) {
       throw AppException.badRequest("Worker kết sổ Lotto 5/35 không được cấu hình.");
     }
 
@@ -74,12 +75,12 @@ export class TriggerSettleUseCase extends NextApiUseCase<TriggerSettleInput, Tri
 
     try {
       await startExecution({
-        stateMachineArn: input.LOTTO535_SETTLE_SFN_ARN,
+        stateMachineArn: input.SETTLE_SFN_ARN,
         name: toExecutionName(input.drawId),
         input: { drawId: input.drawId },
       });
     } catch (err) {
-      console.error(err);
+      logError("TriggerSettle", err, { drawId: input.drawId });
       throw new AppException("SFN_START_FAILED", `Không thể khởi chạy settle worker`);
     }
 

@@ -35,14 +35,12 @@ Quản trị viên hệ thống MegaWin — quản lý toàn bộ game, tài kho
 | **Games — Keno** | `/games/keno/draws` | Quản lý kỳ quay Keno |
 | | `/games/keno/config` | Cấu hình game Keno |
 | | `/games/keno/prize-table` | Bảng giải thưởng Keno |
-| | `/games/keno/financial-reports` | Báo cáo tài chính Keno |
-| **Games — Lotto 5/35** | `/games/lotto535/draws` | Quản lý kỳ quay Lotto 5/35 |
+\| **Games — Lotto 5/35** | `/games/lotto535/draws` | Quản lý kỳ quay Lotto 5/35 |
 | | `/games/lotto535/config` | Cấu hình game Lotto 5/35 |
 | | `/games/lotto535/jackpot` | Quản lý jackpot |
 | | `/games/lotto535/multi-draw` | Multi-draw management |
 | | `/games/lotto535/pending-tickets` | Vé đang chờ xử lý |
-| | `/games/lotto535/financial-reports` | Báo cáo tài chính Lotto 5/35 |
-| **CRM** | `/crm` | Quản lý khách hàng |
+\| **CRM** | `/crm` | Quản lý khách hàng |
 | **Finance** | `/finance` | Quản lý tài chính |
 
 ### Tenant pages (`/(tenant)/`)

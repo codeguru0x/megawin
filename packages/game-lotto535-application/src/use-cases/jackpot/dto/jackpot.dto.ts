@@ -77,29 +77,39 @@ export interface ListJackpotHistoryInput {
   size?: number;
 }
 
+/**
+ * Lịch sử Jackpot theo 1 kỳ quay đã settle.
+ * Dùng cho bảng "Lịch sử Jackpot" lọc theo Vòng Jackpot (cycle).
+ */
 export interface JackpotHistoryItem {
-  /** Mã kỳ quay. */
+  /** Mã kỳ quay. Format: YYYY-MM-DD.NNN */
   drawId: string;
   /** Ngày quay (YYYY-MM-DD). */
   drawDate: string;
-  /** Số thứ tự kỳ trong ngày. */
+  /** Số thứ tự kỳ trong ngày (1 = kỳ 13h, 2 = kỳ 21h). */
   drawNo: number;
-  /** Giờ quay (HH:mm). */
+  /** Giờ quay (ISO 8601). */
   drawTime: string;
-  /** Số tiền Jackpot đầu kỳ (VND). */
+  /** Số tiền Jackpot đầu kỳ (VND). Snapshot từ `draw.jackpot.openingAmount`. */
   openingAmount: number;
-  /** Đóng góp vào quỹ Jackpot trong kỳ này (VND). */
+  /** Đóng góp vào quỹ Jackpot trong kỳ này (VND). Từ `draw.financial.jackpotContribution`. */
   contribution: number;
-  /** Số tiền Jackpot cuối kỳ (VND) = openingAmount + contribution (hoặc seed nếu có winner/split). */
+  /** Số tiền Jackpot cuối kỳ (VND). Snapshot từ `draw.jackpot.closingAmount`. */
   closingAmount: number;
   /** Có người trúng Jackpot trong kỳ này hay không. */
   hasWinner: boolean;
-  /** Kỳ này có chia Jackpot hay không. */
+  /** Kỳ này là kỳ chia giải hay không. */
   isSplitCycle: boolean;
-  /** Tổng entries tham gia kỳ quay. */
+  /** Tổng entries tham gia kỳ quay. Từ `draw.stats.ticketEntryCount`. */
   ticketEntryCount: number;
-  /** Tổng doanh thu kỳ quay (VND). */
+  /** Tổng doanh thu bán vé kỳ quay (VND). Từ `draw.financial.totalRevenue`. */
   totalRevenue: number;
+  /** Tổng tiền trả giải cố định (tier1 → consolation, VND). Từ `draw.financial.totalFixedPrizes`. */
+  totalFixedPrizes: number;
+  /** Công ty thu về (sau cap, VND). Từ `draw.financial.actualCompanyTake`. */
+  actualCompanyTake: number;
+  /** Tỷ lệ công ty thu theo cấu hình (0–1). Từ `draw.financial.companyTakeRate`. */
+  companyTakeRate: number;
 }
 
 export interface ListJackpotHistoryOutput {
@@ -109,6 +119,63 @@ export interface ListJackpotHistoryOutput {
   page: number;
   /** Số lượng mỗi trang. */
   size: number;
+}
+
+// ─────────────────────────────────────────────
+// ListJackpotHistoryByCycle (theo cycleNo)
+// ─────────────────────────────────────────────
+
+/**
+ * Input lọc lịch sử Jackpot theo 1 Vòng Jackpot (cycle) cụ thể.
+ * cycleNo = null → lấy draws của cycle đang active.
+ */
+export interface ListJackpotHistoryByCycleInput {
+  /** Số thứ tự vòng Jackpot (cycleNo). null = vòng hiện tại. */
+  cycleNo: number | null;
+  /** Trang hiện tại (1-based, mặc định 1). */
+  page?: number;
+  /** Số lượng mỗi trang (mặc định 20). */
+  size?: number;
+}
+
+export interface ListJackpotHistoryByCycleOutput {
+  /** Danh sách kỳ quay trong vòng Jackpot đã chọn, mới nhất trước. */
+  draws: JackpotHistoryItem[];
+  /** Trang hiện tại (1-based). */
+  page: number;
+  /** Số lượng mỗi trang. */
+  size: number;
+  /** Tổng số kỳ trong vòng này. */
+  total: number;
+}
+
+// ─────────────────────────────────────────────
+// ListAllJackpotCycleOptions (selector)
+// ─────────────────────────────────────────────
+
+/**
+ * Tóm tắt 1 vòng Jackpot — dùng cho cycle selector dropdown.
+ */
+export interface JackpotCycleOption {
+  /** Số thứ tự vòng (cycleNo). */
+  cycleNo: number;
+  /** Trạng thái vòng (active / closed). */
+  status: string;
+  /** Lý do đóng vòng (winner / split / manual_reset, nếu đã đóng). */
+  closeReason?: string;
+  /** Số tiền Jackpot khi kết thúc vòng (VND). */
+  currentAmount: number;
+  /** Số kỳ quay trong vòng. */
+  drawCount: number;
+  /** Thời điểm bắt đầu vòng (ISO 8601). */
+  startedAt: string;
+  /** Thời điểm kết thúc vòng (ISO 8601, nếu đã đóng). */
+  closedAt?: string;
+}
+
+export interface ListAllJackpotCycleOptionsOutput {
+  /** Tất cả vòng Jackpot từ mới nhất đến cũ nhất (active trước). */
+  cycles: JackpotCycleOption[];
 }
 
 // ─────────────────────────────────────────────

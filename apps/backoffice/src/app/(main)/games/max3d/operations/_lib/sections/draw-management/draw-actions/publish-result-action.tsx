@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { DevRandomFillButton } from "@/components/dev-random-fill-button";
+import { RandomFillButton } from "@/components/draws";
 import { todayVN } from "@megawin/shared/utils";
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
@@ -269,7 +269,7 @@ export function PublishResultAction({
               <Badge variant="secondary" className="tabular-nums">
                 {filledCount}/20 bộ số
               </Badge>
-              <DevRandomFillButton onFill={fillRandom} />
+              <RandomFillButton onFill={fillRandom} />
             </div>
 
             {TIER_CONFIG.map((tier) => {

@@ -11,6 +11,6 @@ export const POST = withApi()
     const { drawId } = params as { drawId: string };
     return triggerSettleUseCase.run({
       drawId,
-      LOTTO535_SETTLE_SFN_ARN: env.LOTTO535_SETTLE_SFN_ARN!,
+      SETTLE_SFN_ARN: env.LOTTO535_SETTLE_SFN_ARN!,
     });
   });

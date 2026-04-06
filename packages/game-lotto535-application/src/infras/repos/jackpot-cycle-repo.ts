@@ -154,4 +154,27 @@ export class JackpotCycleRepository extends BaseRepo<JackpotCycleEntity, Jackpot
   async countClosedCycles(): Promise<number> {
     return this.count({ status: JackpotCycleStatus.Closed });
   }
+
+  /**
+   * Lấy 1 cycle theo cycleNo.
+   * Dùng khi cần biết startDrawId + endDrawId để lọc draws trong cycle đó.
+   */
+  async getCycleByNo(cycleNo: number): Promise<JackpotCycleEntity | null> {
+    return this.findOne({ cycleNo });
+  }
+
+  /**
+   * Lấy tất cả cycles từ mới nhất đến cũ nhất — dùng cho cycle selector dropdown.
+   * Active cycle (nếu có) luôn xuất hiện đầu tiên.
+   * Số lượng cycles thường nhỏ (hàng chục), Lấy mặc định 10 cycles.
+   */
+  async listAllCycles(limit: number = 10): Promise<JackpotCycleEntity[]> {
+    return this.findMany(
+      {},
+      {
+        sort: { cycleNo: -1 },
+        limit,
+      },
+    );
+  }
 }

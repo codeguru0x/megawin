@@ -25,11 +25,12 @@ export const power655Keys = {
   /** Jackpot hiện tại */
   jackpotCurrent: [MODULE, "jackpot-current"] as const,
 
-  /** Lịch sử jackpot (có phân trang / filter) */
-  jackpotHistory: (params?: Record<string, unknown>) =>
-    params
-      ? ([MODULE, "jackpot-history", params] as const)
-      : ([MODULE, "jackpot-history"] as const),
+  /** Danh sách cycle options cho selector "Lịch sử Jackpot" (tối đa 10 vòng). */
+  jackpotCycleOptions: [MODULE, "jackpot-cycle-options"] as const,
+
+  /** Lịch sử jackpot theo cycle (có phân trang). */
+  jackpotHistoryByCycle: (params: Record<string, unknown>) =>
+    [MODULE, "jackpot-history-by-cycle", params] as const,
 
   /** Danh sách chu kỳ jackpot (có phân trang / filter) */
   jackpotCycles: (params?: Record<string, unknown>) =>
@@ -92,6 +93,9 @@ export const power655Keys = {
   /** Entry list của 1 player trong 1 kỳ quay */
   reportEntries: (params: { drawId: string; tenantId: string; accountId: string }) =>
     [MODULE, "report-entries", params] as const,
+
+  /** Chi tiết 1 entry theo entryId — dùng cho dialog jackpot winner detail */
+  reportEntryById: (entryId: string) => [MODULE, "report-entry", entryId] as const,
 
   // ─── Outstanding ───────────────────────────────────────────────────────────
 

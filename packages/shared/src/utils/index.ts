@@ -3,6 +3,7 @@ export * from "./date";
 export * from "./env";
 export * from "./financial-date";
 export * from "./ip";
+export * from "./log";
 export * from "./number";
 export * from "./player-username";
 export * from "./unique";

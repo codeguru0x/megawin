@@ -42,9 +42,12 @@ export const env = createEnv({
 
   client: {
     NEXT_PUBLIC_SITE_URL: z.url(),
+    /** Môi trường deploy: `"development"` | `"staging"` | `"production"`. */
+    NEXT_PUBLIC_APP_ENV: z.enum(["development", "staging", "production"]),
   },
 
   experimental__runtimeEnv: {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
   },
 });

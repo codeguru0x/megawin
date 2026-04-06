@@ -168,7 +168,7 @@ export function EditScheduleAction({
               </p>
             )}
             <p className="text-xs text-muted-foreground/70">
-              Hiếm khi thay đổi. Chỉ sửa nếu lịch quay chính thức thay đổi.
+              Chỉ sửa nếu lịch quay chính thức thay đổi.
             </p>
           </div>
 

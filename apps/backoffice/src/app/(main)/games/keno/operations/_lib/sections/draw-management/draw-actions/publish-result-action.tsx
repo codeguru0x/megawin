@@ -25,10 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import {
-  DevRandomFillButton,
-  generateUniqueRandomNumbers,
-} from "@/components/dev-random-fill-button";
+import { RandomFillButton, generateUniqueRandomNumbers } from "@/components/draws";
 import { todayVN } from "@megawin/shared/utils";
 import { KENO_NUMBER_MIN, KENO_NUMBER_MAX, KENO_DRAW_COUNT } from "@megawin/game-keno/entities";
 import type { DrawSelectorItem } from "../../../use-operations";
@@ -221,7 +218,7 @@ export function PublishResultAction({
                   <Dice5 className="size-3.5 text-orange-600 dark:text-orange-400" />
                 </div>
                 <Label className="text-sm font-semibold">20 số trúng (theo thứ tự quay)</Label>
-                <DevRandomFillButton onFill={fillRandom} />
+                <RandomFillButton onFill={fillRandom} />
               </div>
 
               <div className="rounded-lg border bg-muted/30 p-3">

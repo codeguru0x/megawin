@@ -19,8 +19,8 @@ export default function AdminJackpotPage() {
             Mega 6/45 — Jackpot
           </h1>
           <p className="text-xs text-muted-foreground">
-            Jackpot tích lũy vô hạn (roll-over) — không có trần, không có chia giải. Seed mặc định
-            12 tỷ VND.
+            Jackpot tích lũy vô hạn (roll-over) — không có trần, không có chia giải. Khởi điểm mặc
+            định 12 tỷ VND.
           </p>
         </div>
       </div>

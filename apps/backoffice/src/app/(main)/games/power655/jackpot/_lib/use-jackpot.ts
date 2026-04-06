@@ -1,20 +1,30 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { apiClient } from "@megawin/next/client";
 import { Pagination } from "@megawin/shared/constants";
 import { power655Keys } from "@/lib/query-keys";
 import type {
   GetJackpotCurrentOutput,
-  ListJackpotHistoryOutput,
   ListJackpotCyclesOutput,
+  ListAllJackpotCycleOptionsOutput,
+  ListJackpotHistoryByCycleOutput,
 } from "@megawin/game-power655-application/use-cases/jackpot";
+import type { GetEntryByIdOutput } from "@megawin/game-power655-application/use-cases/reports";
 
-export type { GetJackpotCurrentOutput, ListJackpotHistoryOutput, ListJackpotCyclesOutput };
+export type {
+  GetJackpotCurrentOutput,
+  ListJackpotCyclesOutput,
+  ListAllJackpotCycleOptionsOutput,
+  ListJackpotHistoryByCycleOutput,
+};
 export type {
   JackpotHistoryItem,
   JackpotCycleSummary,
   JackpotWinnerSummary,
+  JackpotCycleOption,
 } from "@megawin/game-power655-application/use-cases/jackpot";
 
 export function useJackpotCurrent() {
@@ -25,18 +35,34 @@ export function useJackpotCurrent() {
   });
 }
 
-export interface JackpotHistoryParams {
+/** Lấy danh sách cycle options cho selector "Lịch sử Jackpot" (tối đa 10 vòng). */
+export function useJackpotCycleOptions() {
+  return useQuery({
+    queryKey: power655Keys.jackpotCycleOptions,
+    queryFn: () =>
+      apiClient.get<ListAllJackpotCycleOptionsOutput>("/power655/jackpot/cycle-options"),
+  });
+}
+
+export interface JackpotHistoryByCycleParams {
+  cycleNo: number;
   page: number;
 }
 
-export function useJackpotHistory(params: JackpotHistoryParams) {
+/** Lấy lịch sử draws theo jackpot cycle đã chọn, phân trang. */
+export function useJackpotHistoryByCycle(params: JackpotHistoryByCycleParams) {
   const size = Pagination.Default.Size;
   return useQuery({
-    queryKey: power655Keys.jackpotHistory({ page: params.page, size }),
+    queryKey: power655Keys.jackpotHistoryByCycle({
+      cycleNo: params.cycleNo,
+      page: params.page,
+      size,
+    }),
     queryFn: () =>
-      apiClient.get<ListJackpotHistoryOutput>("/power655/jackpot", {
-        params: { page: params.page, size },
+      apiClient.get<ListJackpotHistoryByCycleOutput>("/power655/jackpot/history-by-cycle", {
+        params: { cycleNo: params.cycleNo, page: params.page, size },
       }),
+    enabled: params.cycleNo > 0,
   });
 }
 
@@ -53,4 +79,41 @@ export function useJackpotCycles(params: JackpotCyclesParams) {
         params: { page: params.page, size },
       }),
   });
+}
+
+/**
+ * Lấy chi tiết 1 entry by ID — dùng cho dialog chi tiết jackpot winner.
+ * Tự báo toast lỗi khi không tìm thấy hoặc request thất bại.
+ * `onNotFound` được gọi để component có thể đóng dialog.
+ */
+export function useJackpotEntryDetail(
+  entryId: string | null,
+  { onNotFound }: { onNotFound?: () => void } = {},
+) {
+  const query = useQuery({
+    queryKey: power655Keys.reportEntryById(entryId ?? ""),
+    queryFn: () =>
+      apiClient
+        .get<GetEntryByIdOutput>(`/power655/reports/entries/${entryId}`)
+        .then((r) => r.entry),
+    enabled: !!entryId,
+  });
+
+  useEffect(() => {
+    if (!entryId) return;
+    if (query.isError) {
+      toast.error("Không thể tải thông tin phiếu cược", {
+        description: "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.",
+      });
+      onNotFound?.();
+    } else if (query.isFetched && !query.isLoading && !query.data) {
+      toast.error("Không tìm thấy phiếu cược", {
+        description: "Phiếu cược này không còn dữ liệu hoặc đã bị xóa.",
+      });
+      onNotFound?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query.isError, query.isFetched, query.isLoading, query.data, entryId]);
+
+  return query;
 }
