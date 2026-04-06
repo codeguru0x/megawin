@@ -21,6 +21,7 @@ import type {
   ApiResponseMeta,
   ApiSuccessResponse,
 } from "../types";
+import { logError } from "@megawin/shared/utils";
 
 // ============ Success ============
 
@@ -134,7 +135,7 @@ export function catchToApiResponse(err: unknown): NextResponse<ApiErrorResponse>
   }
 
   // Unexpected error — log đầy đủ cho audit, KHÔNG trả message gốc cho client.
-  console.error("[API] Unhandled error:", err);
+  logError("[API] Unhandled error:", err);
 
   return apiError(500, {
     code: APP_ERROR_CODES.INTERNAL,

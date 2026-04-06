@@ -68,10 +68,11 @@ export function useJackpotHistoryByCycle(params: JackpotHistoryByCycleParams) {
 
 export interface JackpotCyclesParams {
   page: number;
+  size?: number;
 }
 
 export function useJackpotCycles(params: JackpotCyclesParams) {
-  const size = Pagination.Default.Size;
+  const size = params.size ?? Pagination.Default.Size;
   return useQuery({
     queryKey: power655Keys.jackpotCycles({ page: params.page, size }),
     queryFn: () =>

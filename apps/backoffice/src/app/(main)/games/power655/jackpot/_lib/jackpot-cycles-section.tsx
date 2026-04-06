@@ -1,20 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Crown,
-  Loader2,
-  RefreshCcw,
-  Sparkles,
-  Trophy,
-  User,
-} from "lucide-react";
+import { ChevronDown, Crown, Loader2, RefreshCcw, Sparkles, Trophy, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import {
@@ -23,7 +12,6 @@ import {
   displayVNDateTime,
   toTenantUsername,
 } from "@megawin/shared/utils";
-import { Pagination } from "@megawin/shared/constants";
 import {
   useJackpotCycles,
   useJackpotEntryDetail,
@@ -32,7 +20,7 @@ import {
 } from "./use-jackpot";
 import { Power655EntryDetailDialog } from "../../reports/settle/_lib/sections/entry-detail-dialog";
 
-const PAGE_SIZE = Pagination.Default.Size;
+const LATEST_COUNT = 3;
 
 /** Mapping closedReason → label + variant cho Power 6/55 dual jackpot. */
 const CLOSE_REASON_MAP: Record<string, { label: string; variant: "winner" | "neutral" }> = {
@@ -55,13 +43,9 @@ const JP_TYPE_BADGE: Record<string, { label: string; className: string }> = {
 };
 
 export function JackpotCyclesSection() {
-  const [page, setPage] = useState(1);
-  const { data, isLoading, isFetching } = useJackpotCycles({ page });
+  const { data, isLoading } = useJackpotCycles({ page: 1, size: LATEST_COUNT });
 
   const cycles = data?.cycles ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-  const hasNext = page * PAGE_SIZE < total;
 
   return (
     <div className="space-y-4">
@@ -89,34 +73,6 @@ export function JackpotCyclesSection() {
           </div>
         ) : (
           cycles.map((cycle) => <CycleCard key={cycle.id} cycle={cycle} />)
-        )}
-
-        {cycles.length > 0 && (
-          <div className="flex items-center justify-between pt-1">
-            <p className="text-xs tabular-nums text-muted-foreground">
-              Trang {page} / {totalPages}
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page <= 1 || isFetching}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                <ChevronLeft className="mr-1 size-3.5" />
-                Trước
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!hasNext || isFetching}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Sau
-                <ChevronRight className="ml-1 size-3.5" />
-              </Button>
-            </div>
-          </div>
         )}
       </div>
     </div>
