@@ -135,7 +135,7 @@ function PickPrizeGroup({
             {matchCounts.some((m) => isCapped(pick, m)) && (
               <Badge
                 variant="outline"
-                className="text-[10px] border-red-300 text-red-600 dark:text-red-400"
+                className="text-xs border-red-300 text-red-600 dark:text-red-400"
               >
                 Có giới hạn
               </Badge>
@@ -155,12 +155,12 @@ function PickPrizeGroup({
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-2 space-y-0.5">
-          <div className="grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 bg-muted/40 px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             <span>Mức trúng</span>
             <span className="text-right">Giá trị thưởng</span>
             <HeaderTooltip
               label="Xác suất"
-              tip="1 in N: cứ N vé bán ra thì kỳ vọng 1 vé trúng."
+              tip="1 trong N: cứ N vé bán ra thì kỳ vọng 1 vé trúng."
               className="justify-end"
             />
             <HeaderTooltip
@@ -169,8 +169,8 @@ function PickPrizeGroup({
               className="justify-end"
             />
             <HeaderTooltip
-              label="Tỷ lệ trả"
-              tip="Tỷ lệ trả thưởng so với mệnh giá. >100% = lỗ."
+              label="Tỷ lệ TT"
+              tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%. Trên 100% = LỖ."
               className="justify-end"
             />
             <HeaderTooltip
@@ -212,8 +212,16 @@ function PickPrizeGroup({
                       {profit ? `1 : ${fmt(Math.round(profit.oneInN))}` : "–"}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    {profit && `Xác suất: ${(profit.probability * 100).toFixed(6)}%`}
+                  <TooltipContent side="top" className="max-w-72 text-xs">
+                    {profit && (
+                      <>
+                        Số cách trúng:{" "}
+                        {fmt(Math.round(profit.probability * Number(TOTAL_OUTCOMES)))} /{" "}
+                        {fmt(Number(TOTAL_OUTCOMES))}
+                        <br />
+                        Xác suất: {(profit.probability * 100).toFixed(6)}%
+                      </>
+                    )}
                   </TooltipContent>
                 </Tooltip>
                 <span className="text-right text-xs tabular-nums font-medium">
@@ -309,7 +317,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
   return (
     <Card className="overflow-hidden py-0 gap-0">
       <CardContent className="p-0">
-        <div className="px-5 py-3">
+        <div className="p-6 pb-4">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h3 className="text-sm font-semibold text-foreground">
@@ -318,7 +326,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
               <p className="text-xs text-muted-foreground mt-0.5">
                 Cấu hình giá trị cho từng bậc (1-10 số) theo số trùng
                 {" · "}Mệnh giá: <strong>{fmt(unitPrice)} VND</strong>
-                {" · "}Không gian mẫu: <strong>≈ 3.54 × 10¹⁵</strong>
+                {" · "}Không gian mẫu: <strong>≈ 3.54 × 10¹⁵ (3,535,316,142,212,174,320)</strong>
               </p>
             </div>
             <div className="text-right text-xs shrink-0">
@@ -344,7 +352,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
           </div>
         </div>
 
-        <div className="border-t px-5 py-3">
+        <div className="border-t px-6 py-3">
           <div className="grid gap-2 lg:grid-cols-2">
             <div className="space-y-2">
               {[10, 9, 8, 7].map((pick) => (
@@ -372,7 +380,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
         </div>
       </CardContent>
 
-      <CardFooter className="justify-end border-t px-5 py-2.5">
+      <CardFooter className="justify-end border-t px-6 py-3">
         <Button type="button" disabled={isPending || !isDirty} onClick={handleSubmit}>
           {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
           Lưu giải thưởng cơ bản

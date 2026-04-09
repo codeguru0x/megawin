@@ -17,6 +17,7 @@ import type {
 
 export interface Bingo18GameConfig {
   version: number;
+  updatedAt: string;
   singleNumPrizes: SingleNumPrizes;
   doubleMatchPrizes: DoubleMatchPrizes;
   tripleMatchPrizes: TripleMatchPrizes;

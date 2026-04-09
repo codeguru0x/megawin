@@ -16,7 +16,7 @@
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  *
  *   Tổng cách quay 20 số từ 80 số:
- *     C(80,20) = 3,535,027,396,898,400 (≈ 3.535 × 10¹⁵)
+ *     C(80,20) = 3,535,316,142,212,174,320 (≈ 3.535 × 10¹⁸)
  *
  *   Vượt quá Number.MAX_SAFE_INTEGER → dùng BigInt cho tính toán.
  *
@@ -132,17 +132,13 @@
  * │ Trùng │ Xác suất ≈       │ Giải thưởng   │ Expected Payout │ Payout Ratio │
  * ├───────┼──────────────────┼───────────────┼─────────────────┼──────────────┤
  * │ 10/10 │ 1/8,911,711      │ 2,000,000,000 │ 224.42 VND      │ 2.24%        │
- * │ 9/10  │ 1/163,381        │ 800,000,000   │ 4,896.49 VND    │ 48.96%       │
- * │ 8/10  │ 1/7,384          │ 200,000,000   │ 27,085.32 VND   │ 270.85%  ⚠️  │
- * │ 7/10  │ 1/621            │ 1,000,000     │ 1,610.30 VND    │ 16.10%       │
- * │ 6/10  │ 1/87             │ 40,000        │ 459.77 VND      │ 4.60%        │
- * │ 5/10  │ ~5.14%           │ 10,000        │ 514.28 VND      │ 5.14%        │
+ * │ 9/10  │ 1/163,381        │ 150,000,000   │ 918.14 VND      │ 9.18%        │
+ * │ 8/10  │ 1/7,384          │ 8,000,000     │ 1,083.01 VND    │ 10.83%       │
+ * │ 7/10  │ 1/621            │ 710,000       │ 1,143.32 VND    │ 11.43%       │
+ * │ 6/10  │ 1/87             │ 80,000        │ 919.54 VND      │ 9.20%        │
+ * │ 5/10  │ ~5.14%           │ 20,000        │ 1,028.56 VND    │ 10.29%       │
  * │ 0/10  │ ~4.58%           │ 10,000        │ 458.28 VND      │ 4.58%        │
  * └───────┴──────────────────┴───────────────┴─────────────────┴──────────────┘
- *
- *   ⚠️ Pick 10 trùng 8: payout ratio > 100% → lỗ kỳ vọng cho tier này
- *      nhưng bù lại bởi các tier khác có margin dương.
- *      (Keno dùng cơ chế cap: >50 bộ trùng 8 → pool 10 tỷ chia đều)
  *
  *   Phân bổ doanh thu mỗi ticket (mặc định):
  *     100% Revenue = 10,000 VND
@@ -171,7 +167,7 @@ const DRAW = KENO_DRAW_COUNT; // 20
 
 /**
  * Tính C(n, k) bằng BigInt để tránh mất precision với số lớn.
- * C(80,20) ≈ 3.535 × 10^15 – vượt quá Number.MAX_SAFE_INTEGER.
+ * C(80,20) = 3,535,316,142,212,174,320 ≈ 3.535 × 10^18 – vượt quá Number.MAX_SAFE_INTEGER.
  */
 function combinationBig(n: number, k: number): bigint {
   if (k < 0 || k > n) return 0n;
@@ -184,27 +180,13 @@ function combinationBig(n: number, k: number): bigint {
   return result;
 }
 
-/**
- * C(n, k) trả về number (dùng khi kết quả đủ nhỏ).
- */
-function combination(n: number, k: number): number {
-  if (k < 0 || k > n) return 0;
-  if (k === 0 || k === n) return 1;
-  const kk = Math.min(k, n - k);
-  let result = 1;
-  for (let i = 0; i < kk; i++) {
-    result = (result * (n - i)) / (i + 1);
-  }
-  return Math.round(result);
-}
-
 // ─────────────────────────────────────────────
 // Total Outcomes
 // ─────────────────────────────────────────────
 
 /**
  * Tổng không gian mẫu = C(80, 20).
- * ≈ 3,535,027,396,898,400
+ * = 3,535,316,142,212,174,320 (≈ 3.535 × 10¹⁸)
  */
 export const TOTAL_OUTCOMES = combinationBig(POOL, DRAW);
 

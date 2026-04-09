@@ -22,7 +22,7 @@
  */
 
 import { PlayType } from "../entities/enums";
-import { MEGA645_NUMBER_COUNT, VALID_NUMBER_SET, type BoardSelection } from "../entities/types";
+import { VALID_NUMBER_SET, type BoardSelection } from "../entities/types";
 
 // ─────────────────────────────────────────────
 // Combination helper

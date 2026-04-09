@@ -88,9 +88,9 @@ const PRIZE_GROUPS: PrizeGroupDef[] = [
     badgeColor: "bg-blue-500",
     isSingleBet: true,
     entries: [
-      { key: "match1", label: "Trùng 1/3", desc: "Số chọn xuất hiện 1 lần" },
-      { key: "match2", label: "Trùng 2/3", desc: "Số chọn xuất hiện 2 lần" },
-      { key: "match3", label: "Trùng 3/3", desc: "Số chọn xuất hiện 3 lần" },
+      { key: "match1", label: "Trùng 1/3", desc: "số chọn xuất hiện 1 lần" },
+      { key: "match2", label: "Trùng 2/3", desc: "số chọn xuất hiện 2 lần" },
+      { key: "match3", label: "Trùng 3/3", desc: "số chọn xuất hiện 3 lần" },
     ],
   },
   {
@@ -100,7 +100,7 @@ const PRIZE_GROUPS: PrizeGroupDef[] = [
     icon: <Dice2 className="size-3.5 text-white" />,
     badgeColor: "bg-purple-500",
     isSingleBet: true,
-    entries: [{ key: "win", label: "Trùng ≥2/3", desc: "Ít nhất 2 số trùng số chọn" }],
+    entries: [{ key: "win", label: "Trùng ≥2/3", desc: "ít nhất 2 số trùng số chọn" }],
   },
   {
     id: "tripleMatch",
@@ -126,7 +126,7 @@ const PRIZE_GROUPS: PrizeGroupDef[] = [
       return {
         key: String(sum),
         label: `Tổng ${sum}`,
-        desc: `Tổng 3 xúc xắc = ${sum}`,
+        desc: `tổng 3 xúc xắc = ${sum}`,
       };
     }),
   },
@@ -138,9 +138,9 @@ const PRIZE_GROUPS: PrizeGroupDef[] = [
     badgeColor: "bg-amber-500",
     isSingleBet: false,
     entries: [
-      { key: "big", label: "Lớn", desc: "Tổng ≥ 12 (trừ bộ ba trùng)" },
-      { key: "small", label: "Nhỏ", desc: "Tổng ≤ 9 (trừ bộ ba trùng)" },
-      { key: "draw", label: "Hoà", desc: "Tổng 10 hoặc 11" },
+      { key: "big", label: "Lớn", desc: "tổng ≥ 12 (trừ bộ ba trùng)" },
+      { key: "small", label: "Nhỏ", desc: "tổng ≤ 9 (trừ bộ ba trùng)" },
+      { key: "draw", label: "Hoà", desc: "tổng 10 hoặc 11" },
     ],
   },
 ];
@@ -370,7 +370,7 @@ function PrizeGroup({
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-2 space-y-0.5">
-          <div className="grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 bg-muted/40 px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             <span>Mức trúng</span>
             <span className="text-right">Giá trị thưởng</span>
             <HeaderTooltip
@@ -384,8 +384,8 @@ function PrizeGroup({
               className="justify-end"
             />
             <HeaderTooltip
-              label="Tỷ lệ trả"
-              tip="Tỷ lệ trả thưởng so với mệnh giá. >100% = lỗ."
+              label="Tỷ lệ TT"
+              tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%. Trên 100% = LỖ."
               className="justify-end"
             />
             <HeaderTooltip
@@ -423,8 +423,15 @@ function PrizeGroup({
                       {tier ? `1 : ${fmt(Math.round(tier.oneInN))}` : "–"}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    {tier && `Xác suất: ${(tier.probability * 100).toFixed(4)}%`}
+                  <TooltipContent side="top" className="max-w-72 text-xs">
+                    {tier && (
+                      <>
+                        Số cách trúng: {fmt(Math.round(tier.probability * TOTAL_OUTCOMES))} /{" "}
+                        {TOTAL_OUTCOMES}
+                        <br />
+                        Xác suất: {(tier.probability * 100).toFixed(4)}%
+                      </>
+                    )}
                   </TooltipContent>
                 </Tooltip>
                 <span className="text-right text-xs tabular-nums font-medium">
@@ -551,7 +558,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
   return (
     <Card className="overflow-hidden py-0 gap-0">
       <CardContent className="p-0">
-        <div className="px-5 py-3">
+        <div className="p-6 pb-4">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h3 className="text-sm font-semibold text-foreground">Giải thưởng Bingo 18</h3>
@@ -598,7 +605,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
           </div>
         </div>
 
-        <div className="border-t px-5 py-3 space-y-2">
+        <div className="border-t px-6 py-3 space-y-2">
           {PRIZE_GROUPS.map((group, i) => (
             <PrizeGroup
               key={group.id}
@@ -612,7 +619,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
         </div>
       </CardContent>
 
-      <CardFooter className="justify-end border-t px-5 py-2.5">
+      <CardFooter className="justify-end border-t px-6 py-3">
         <Button type="button" disabled={isPending || !isDirty} onClick={handleSubmit}>
           {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
           Lưu giải thưởng Bingo 18

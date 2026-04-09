@@ -9,6 +9,7 @@ import {
   analyzeEvenOddProfitability,
   getBigSmallOdds,
   getEvenOddOdds,
+  TOTAL_OUTCOMES,
 } from "@megawin/game-keno/rules";
 import { MoneyInput } from "@megawin/ui/components/money-input";
 
@@ -137,12 +138,13 @@ function BigSmallGroup({
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-2 space-y-0.5">
-          <div className="grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 bg-muted/40 px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {" "}
             <span>Kết quả</span>
             <span className="text-right">Giá trị thưởng</span>
             <HeaderTooltip
               label="Xác suất"
-              tip="Xác suất xảy ra kết quả này trong 1 kỳ quay."
+              tip="1 trong N: cứ N kỳ quay thì kỳ vọng xảy ra 1 lần. Hover vào từng ô để xem % chính xác."
               className="justify-end"
             />
             <HeaderTooltip
@@ -151,8 +153,8 @@ function BigSmallGroup({
               className="justify-end"
             />
             <HeaderTooltip
-              label="Tỷ lệ trả"
-              tip="Tỷ lệ trả thưởng so với mệnh giá. >100% = lỗ."
+              label="Tỷ lệ TT"
+              tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%. Trên 100% = LỖ."
               className="justify-end"
             />
             <HeaderTooltip
@@ -179,11 +181,13 @@ function BigSmallGroup({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="text-right text-xs tabular-nums text-muted-foreground cursor-help">
-                      {(odds.probability * 100).toFixed(1)}%
+                      {`1 : ${fmt(Math.round(1 / odds.probability))}`}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    {`1 : ${fmt(Math.round(1 / odds.probability))}`}
+                  <TooltipContent side="top" className="max-w-72 text-xs">
+                    Số cách trúng: {fmt(Number(odds.waysBig))} / {fmt(Number(TOTAL_OUTCOMES))}
+                    <br />
+                    Xác suất: {(odds.probability * 100).toFixed(4)}%
                   </TooltipContent>
                 </Tooltip>
                 <span className="text-right text-xs tabular-nums font-medium">
@@ -298,12 +302,13 @@ function EvenOddGroup({
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-2 space-y-0.5">
-          <div className="grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 px-2 py-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="grid grid-cols-[2fr_160px_100px_120px_100px_120px] items-center gap-2 bg-muted/40 px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {" "}
             <span>Kết quả</span>
             <span className="text-right">Giá trị thưởng</span>
             <HeaderTooltip
               label="Xác suất"
-              tip="Xác suất xảy ra kết quả này trong 1 kỳ quay."
+              tip="1 trong N: cứ N kỳ quay thì kỳ vọng xảy ra 1 lần. Hover vào từng ô để xem % chính xác."
               className="justify-end"
             />
             <HeaderTooltip
@@ -312,8 +317,8 @@ function EvenOddGroup({
               className="justify-end"
             />
             <HeaderTooltip
-              label="Tỷ lệ trả"
-              tip="Tỷ lệ trả thưởng so với mệnh giá. >100% = lỗ."
+              label="Tỷ lệ TT"
+              tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%. Trên 100% = LỖ."
               className="justify-end"
             />
             <HeaderTooltip
@@ -340,11 +345,13 @@ function EvenOddGroup({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <span className="text-right text-xs tabular-nums text-muted-foreground cursor-help">
-                      {(odds.probability * 100).toFixed(1)}%
+                      {`1 : ${fmt(Math.round(1 / odds.probability))}`}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="text-xs">
-                    {`1 : ${fmt(Math.round(1 / odds.probability))}`}
+                  <TooltipContent side="top" className="max-w-72 text-xs">
+                    Số cách trúng: {fmt(Number(odds.waysBig))} / {fmt(Number(TOTAL_OUTCOMES))}
+                    <br />
+                    Xác suất: {(odds.probability * 100).toFixed(4)}%
                   </TooltipContent>
                 </Tooltip>
                 <span className="text-right text-xs tabular-nums font-medium">
@@ -418,17 +425,17 @@ export function SideBetsSection({ config, onSave, isPending }: SideBetsSectionPr
   return (
     <Card className="overflow-hidden py-0 gap-0">
       <CardContent className="p-0">
-        <div className="px-5 py-3">
+        <div className="p-6 pb-4">
           <h3 className="text-sm font-semibold text-foreground">
             Giải thưởng bổ sung – Lớn/Nhỏ & Chẵn/Lẻ
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Giải thưởng cho cách chơi bổ sung (Panel C)
+            Giải thưởng cho cách chơi bổ sung (Lớn/Nhỏ, Chẵn/Lẻ)
             {" · "}Mệnh giá: <strong>{fmt(unitPrice)} VND</strong>
           </p>
         </div>
 
-        <div className="border-t px-5 py-3">
+        <div className="border-t px-6 py-3">
           <div className="grid gap-2 lg:grid-cols-2">
             <div className="space-y-2">
               <BigSmallGroup
@@ -454,7 +461,7 @@ export function SideBetsSection({ config, onSave, isPending }: SideBetsSectionPr
         </div>
       </CardContent>
 
-      <CardFooter className="justify-end border-t px-5 py-2.5">
+      <CardFooter className="justify-end border-t px-6 py-3">
         <Button type="button" disabled={isPending || !isDirty} onClick={handleSubmit}>
           {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
           Lưu giải thưởng bổ sung

@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save, Clock, Globe } from "lucide-react";
+import { Save, HelpCircle } from "lucide-react";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
 
@@ -17,9 +17,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
+import { TimeInput } from "@/components/ui/time-input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -74,6 +74,22 @@ interface PlayRulesSectionProps {
 
 const DRAWS_PER_DAY = 2;
 
+function LabelWithTooltip({ label, tip }: { label: string; tip: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      {label}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <HelpCircle className="size-3.5 cursor-help text-muted-foreground/60" />
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-72 text-xs">
+          {tip}
+        </TooltipContent>
+      </Tooltip>
+    </span>
+  );
+}
+
 export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSectionProps) {
   const form = useForm<PlayFormValues>({
     resolver: zodResolver(playFormSchema) as any,
@@ -104,8 +120,6 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
     });
   }
 
-  const fmt = (n: number) => n.toLocaleString("en-US");
-
   return (
     <Card className="overflow-hidden py-0 gap-0">
       <Form {...form}>
@@ -117,7 +131,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">Giá vé & Giới hạn</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Cấu hình giá và các giới hạn chơi
+                    Cấu hình giá 1 lượt chơi và các giới hạn số lượng khi đặt cược.
                   </p>
                 </div>
 
@@ -126,8 +140,11 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                   name="unitPrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        Giá mỗi dòng
+                      <FormLabel className="text-xs text-muted-foreground">
+                        <LabelWithTooltip
+                          label="Giá mỗi lượt chơi"
+                          tip="Giá 1 line × 1 lần tham gia dự thưởng (betCount). Tổng tiền vé = số lines × betCount × giá này."
+                        />
                       </FormLabel>
                       <FormControl>
                         <div className="relative">
@@ -144,9 +161,6 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                           </span>
                         </div>
                       </FormControl>
-                      <p className="text-xs text-muted-foreground tabular-nums">
-                        = {fmt(field.value || 0)}đ / line
-                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -159,7 +173,10 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">
-                          Min betCount
+                          <LabelWithTooltip
+                            label="Số lượt tối thiểu"
+                            tip="Số lần tham gia dự thưởng tối thiểu mỗi board. Người chơi không thể chọn ít hơn giá trị này."
+                          />
                         </FormLabel>
                         <FormControl>
                           <MoneyInput
@@ -182,7 +199,10 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">
-                          Max betCount
+                          <LabelWithTooltip
+                            label="Số lượt tối đa"
+                            tip="Số lần tham gia dự thưởng tối đa mỗi board. Tiền thưởng nhân theo số lượt — trúng với betCount=5 nhận 5× giá trị giải."
+                          />
                         </FormLabel>
                         <FormControl>
                           <MoneyInput
@@ -208,7 +228,10 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">
-                          Max boards/vé
+                          <LabelWithTooltip
+                            label="Số boards tối đa / vé"
+                            tip="Số lượng board (A, B, C…) tối đa trên 1 vé. Mỗi board là 1 tập hợp số chơi độc lập, được settle riêng."
+                          />
                         </FormLabel>
                         <FormControl>
                           <MoneyInput
@@ -231,7 +254,10 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">
-                          Max kỳ liên tiếp
+                          <LabelWithTooltip
+                            label="Kỳ liên tiếp tối đa"
+                            tip="Mua 1 vé đăng ký tham gia tối đa bao nhiêu kỳ quay liên tiếp (multi-draw). Mỗi kỳ tạo 1 entry riêng."
+                          />
                         </FormLabel>
                         <FormControl>
                           <MoneyInput
@@ -254,7 +280,10 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">
-                          Đóng trước (phút)
+                          <LabelWithTooltip
+                            label="Đóng bán trước"
+                            tip="Ngừng nhận vé trước giờ quay số bao nhiêu phút. Kỳ 2 phải cách Kỳ 1 ít nhất bằng giá trị này."
+                          />
                         </FormLabel>
                         <FormControl>
                           <MoneyInput
@@ -279,17 +308,21 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 <div className="mb-5">
                   <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Cố định {DRAWS_PER_DAY} kỳ quay mỗi ngày
+                    Cố định {DRAWS_PER_DAY} kỳ quay mỗi ngày — giờ quay áp dụng cho tất cả ngày
+                    trong tuần.
                   </p>
                 </div>
 
                 <div className="mb-5">
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+                  <p className="text-xs text-muted-foreground mb-1.5">
                     Số kỳ quay / ngày
                   </p>
                   <div className="flex h-9 w-20 items-center justify-center rounded-md border bg-muted/50 text-sm font-semibold tabular-nums text-muted-foreground">
                     {DRAWS_PER_DAY}
                   </div>
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Không thể thay đổi — Lotto 5/35 cố định 2 kỳ/ngày.
+                  </p>
                 </div>
 
                 <div className="space-y-3">
@@ -302,17 +335,15 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                       name="drawTime1"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs text-muted-foreground">Kỳ 1</FormLabel>
-                          <div className="relative">
-                            <Clock className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                            <FormControl>
-                              <Input
-                                className="pl-8 text-center font-mono text-sm font-semibold"
-                                placeholder="HH:mm"
-                                {...field}
-                              />
-                            </FormControl>
-                          </div>
+                          <FormLabel className="text-xs text-muted-foreground">
+                            <LabelWithTooltip
+                              label="Kỳ 1 (buổi sáng)"
+                              tip="Kỳ quay số buổi sáng. DrawId kết thúc .001."
+                            />
+                          </FormLabel>
+                          <FormControl>
+                            <TimeInput {...field} />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -322,32 +353,20 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                       name="drawTime2"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs text-muted-foreground">Kỳ 2</FormLabel>
-                          <div className="relative">
-                            <Clock className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                            <FormControl>
-                              <Input
-                                className="pl-8 text-center font-mono text-sm font-semibold"
-                                placeholder="HH:mm"
-                                {...field}
-                              />
-                            </FormControl>
-                          </div>
+                          <FormLabel className="text-xs text-muted-foreground">
+                            <LabelWithTooltip
+                              label="Kỳ 2 (buổi tối)"
+                              tip="Kỳ quay số buổi tối. DrawId kết thúc .002. Kỳ duy nhất kích hoạt cơ chế chia Jackpot khi vượt ngưỡng."
+                            />
+                          </FormLabel>
+                          <FormControl>
+                            <TimeInput {...field} />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                </div>
-
-                <div className="mt-4 flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
-                  <Globe className="size-3.5 text-muted-foreground" />
-                  <p className="text-xs text-muted-foreground">
-                    Múi giờ:{" "}
-                    <Badge variant="secondary" className="ml-1 font-mono text-[10px]">
-                      Asia/Ho_Chi_Minh
-                    </Badge>
-                  </p>
                 </div>
               </div>
             </div>

@@ -1,0 +1,681 @@
+---
+description: Quy tắc thiết kế UI cho trang cấu hình game (Game Config) — Card pattern, section layout, info header, data table, form fields, badge, rates bar, footer.
+globs: apps/backoffice/src/app/(main)/games/*/config/**/*.{tsx,ts}
+alwaysApply: false
+---
+
+# Game Config UI — Quy Tắc Thiết Kế
+
+**Scope:** Trang cấu hình game (`/games/{game}/config/game`).  
+Bao gồm: Prizes, Play Rules, Rates, Jackpot, Payout Caps, Side Bets.
+
+Rule này **bổ sung** `frontend-dev.mdc` — mọi token spacing/typography/color trong frontend-dev vẫn áp dụng.
+
+---
+
+## 1. Card Structure — Headless Pattern (BẮT BUỘC)
+
+Config card **KHÔNG dùng `<CardHeader>` / `<CardTitle>`**. Thay vào đó dùng "headless card" — tất cả nội dung nằm trong `<CardContent>`.
+
+### 1.1 Anatomy
+
+```
+┌─────────────────────────────────────────────────┐
+│ Card  className="overflow-hidden py-0 gap-0"    │
+│ ┌─────────────────────────────────────────────┐ │
+│ │ CardContent  className="p-0"                │ │
+│ │ ┌─────────────────────────────────────────┐ │ │
+│ │ │ Info Section  className="p-6 pb-4"      │ │ │
+│ │ │  h3 title + p description + KPI metrics │ │ │
+│ │ └─────────────────────────────────────────┘ │ │
+│ │ ┌─────────────────────────────────────────┐ │ │
+│ │ │ Data Section  className="border-t ..."  │ │ │
+│ │ │  table / form fields / content          │ │ │
+│ │ └─────────────────────────────────────────┘ │ │
+│ └─────────────────────────────────────────────┘ │
+│ ┌─────────────────────────────────────────────┐ │
+│ │ CardFooter  className="border-t px-6 py-3" │ │
+│ │  Submit button                              │ │
+│ └─────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────┘
+```
+
+### 1.2 Code Pattern
+
+```tsx
+// ✅ ĐÚNG — Headless card cho config
+<Card className="overflow-hidden py-0 gap-0">
+  <Form {...form}>
+    <form onSubmit={form.handleSubmit(handleSubmit)}>
+      <CardContent className="p-0">
+        {/* ── Info Section ─────────────────────────── */}
+        <div className="p-6 pb-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                Tiêu đề section
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Mô tả ngắn gọn — thông tin bổ sung nếu cần.
+              </p>
+            </div>
+            {/* KPI metrics — optional, bên phải */}
+            <div className="flex items-center gap-4 text-xs shrink-0">
+              ...
+            </div>
+          </div>
+        </div>
+
+        {/* ── Data Section ─────────────────────────── */}
+        <div className="border-t overflow-x-auto">
+          {/* table header, form fields, etc. */}
+        </div>
+      </CardContent>
+
+      <CardFooter className="justify-end border-t px-6 py-3">
+        <Button type="submit" disabled={isPending || !form.formState.isDirty}>
+          {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
+          Lưu cấu hình
+        </Button>
+      </CardFooter>
+    </form>
+  </Form>
+</Card>
+```
+
+```tsx
+// ❌ SAI — Dùng CardHeader cho config card
+<Card className="gap-0 py-0">
+  <CardHeader className="border-b px-5 pt-4 pb-2">
+    <CardTitle className="text-sm font-semibold">Tiêu đề</CardTitle>
+  </CardHeader>
+  <CardContent>...</CardContent>
+</Card>
+```
+
+### 1.3 Khi nào dùng CardHeader vs Headless
+
+| Context | Pattern | Lý do |
+|---------|---------|-------|
+| **Dashboard data card** | `CardHeader` + `CardTitle` + icon | Read-only card, cần visual hierarchy rõ ràng |
+| **Config section card** | Headless (h3 trong CardContent) | Editable form, info section linh hoạt hơn |
+
+---
+
+## 2. Info Section — Tiêu Đề & Mô Tả
+
+### 2.1 Typography Chuẩn
+
+| Element | Class | Size |
+|---------|-------|------|
+| Section title (h3) | `text-sm font-semibold text-foreground` | 14px — T2 |
+| Description (p) | `text-xs text-muted-foreground mt-0.5` | 12px — T3 |
+| Inline stats trong description | `<strong>` wrap | Inherit size, bold |
+
+### 2.2 Layout
+
+```tsx
+// ✅ Title + Description + KPI (horizontal)
+<div className="p-6 pb-4">
+  <div className="flex items-start justify-between gap-4">
+    <div>
+      <h3 className="text-sm font-semibold text-foreground">Tiêu đề</h3>
+      <p className="text-xs text-muted-foreground mt-0.5">
+        Mô tả section — stat 1: <strong>{value1}</strong>
+        {" · "}stat 2: <strong>{value2}</strong>
+      </p>
+    </div>
+    {/* Optional KPI bên phải */}
+  </div>
+</div>
+```
+
+### 2.3 KPI Metrics Block (Info Section — bên phải)
+
+Chỉ dùng cho prizes-section hoặc section cần hiển thị analytics real-time:
+
+```tsx
+<div className="flex items-center gap-4 text-xs shrink-0">
+  <div className="text-right">
+    <span className="text-muted-foreground">Label</span>
+    <div className="font-semibold tabular-nums">
+      {fmt(value)} VND
+    </div>
+  </div>
+</div>
+```
+
+**Quy tắc KPI:**
+- Container: `text-xs` — tất cả text bên trong inherit 12px
+- Label: `text-muted-foreground`
+- Value: `font-semibold tabular-nums` (không hardcode color trừ semantic)
+- Semantic color CHỈ cho:
+  - Lợi nhuận dương: `text-emerald-600`
+  - Lợi nhuận âm: `text-red-600`
+  - Không có cảnh báo trung gian → KHÔNG dùng amber/yellow cho KPI
+
+---
+
+## 3. Spacing Tokens (BẮT BUỘC)
+
+| Element | Padding | Ghi chú |
+|---------|---------|---------|
+| Card root | `py-0 gap-0` | Loại bỏ default shadcn spacing |
+| Info section | `p-6 pb-4` | 24px sides, 24px top, 16px bottom |
+| Data section | `border-t` + content padding riêng | Phân tách visual |
+| Table header row | `px-6 py-2.5` | Bên trong data section |
+| Table data row | `px-6 py-3` | Bên trong data section |
+| Form grid (2-col layout) | `p-6` mỗi column | Play rules 2-col |
+| CardFooter | `border-t px-6 py-3` | Submit button |
+
+**KHÔNG MIX padding `p-5` và `p-6`** trong cùng 1 game. Tất cả config section dùng `p-6`.
+
+---
+
+## 4. Data Table (trong Config Card)
+
+### 4.1 Table Header
+
+```tsx
+<div className="grid grid-cols-[...] items-center gap-3 bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground min-w-[...]">
+  <span>Column name</span>
+  <HeaderTooltip label="Column" tip="Tooltip text" className="justify-end" />
+</div>
+```
+
+**Quy tắc:**
+- Background: `bg-muted/40` — KHÔNG dùng màu khác
+- Text: `text-xs font-medium uppercase tracking-wider text-muted-foreground`
+- Layout: `grid` với cột `auto` cho badge, `1fr` cho label, fixed width cho data columns
+- Min-width: đặt `min-w-[...]` để horizontal scroll khi cần
+
+### 4.2 Table Data Row
+
+```tsx
+<div className={`grid grid-cols-[...] items-center gap-3 px-6 py-3 transition-colors hover:bg-muted/20 min-w-[...] ${
+  idx < items.length - 1 ? "border-b" : ""
+}`}>
+  {/* cells */}
+</div>
+```
+
+### 4.3 Table Total/Summary Row
+
+```tsx
+<div className="grid grid-cols-[...] items-center gap-3 rounded-b-md border-t-2 bg-muted/30 px-6 py-2.5 text-xs font-semibold uppercase tracking-wider min-w-[...]">
+  <span>Tổng cộng</span>
+  <span className="text-right tabular-nums">{fmt(totalValue)}</span>
+  ...
+</div>
+```
+
+**Quy tắc Total Row:**
+- Text "Tổng cộng": `uppercase tracking-wider` — đồng nhất với table header
+- Background: `bg-muted/30` — nhạt hơn header (`bg-muted/40`)
+- Border: `border-t-2` — viền dày phân tách data rows
+- Corner: `rounded-b-md` — bo góc dưới table
+- Tất cả số liệu: **BẮT BUỘC** dùng `fmt()` (`formatNumber`) + `tabular-nums`
+- Percentage: `tabular-nums text-muted-foreground` — read-only style
+
+---
+
+## 5. Badge — Tier Prize Badge
+
+### 5.1 Size
+
+Badge trong table row: **`text-xs font-bold`** (12px).
+
+```tsx
+// ✅ ĐÚNG
+<Badge className={`${p.color} w-9 justify-center text-xs font-bold`}>
+  {p.badge}
+</Badge>
+
+// ❌ SAI — text-[10px] vi phạm minimum readability
+<Badge className={`${p.color} w-9 justify-center text-[10px] font-bold`}>
+  {p.badge}
+</Badge>
+```
+
+### 5.2 Jackpot Tag Badge
+
+Dùng `Badge` component variant="secondary" thay vì custom `<span>`:
+
+```tsx
+// ✅ ĐÚNG
+<Badge
+  variant="secondary"
+  className="text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
+>
+  Jackpot 1
+</Badge>
+
+// ❌ SAI — custom span, text-[10px]
+<span className="rounded px-1.5 py-0.5 text-[10px] font-bold bg-red-100 text-red-700">
+  Jackpot 1
+</span>
+```
+
+### 5.3 Timezone Badge
+
+```tsx
+// ✅ ĐÚNG
+<Badge variant="secondary" className="ml-1 font-mono text-xs">
+  Asia/Ho_Chi_Minh
+</Badge>
+
+// ❌ SAI — text-[10px]
+<Badge variant="secondary" className="ml-1 font-mono text-[10px]">
+  Asia/Ho_Chi_Minh
+</Badge>
+```
+
+---
+
+## 6. Data Cell Typography
+
+### 6.1 Cell Variants
+
+| Cell type | Class |
+|-----------|-------|
+| Label (tier name) | `text-sm font-medium` |
+| Sub-label (desc) | `text-xs text-muted-foreground` |
+| Number (amount, prob) | `text-xs tabular-nums` hoặc `text-sm tabular-nums` |
+| Current value (readonly) | `text-xs tabular-nums text-muted-foreground` |
+| Computed (expected payout) | `text-xs tabular-nums font-medium` |
+| % Ratio | `text-xs tabular-nums font-semibold` + semantic color |
+| Tooltip target | thêm `cursor-help` |
+
+### 6.2 Semantic Colors cho Data Cells
+
+CHỈ 3 semantic colors cho ratio/percentage data:
+
+| Condition | Color | Use case |
+|-----------|-------|----------|
+| Lỗ / vượt ngưỡng | `text-red-600` | payout ratio > 100%, over break-even |
+| Cảnh báo | `text-amber-600` | payout ratio 50-100% |
+| Tốt / có lãi | `text-emerald-600` | payout ratio < 50%, margin dương |
+
+```tsx
+// ✅ ĐÚNG — 3 tầng semantic
+<span className={`text-xs tabular-nums font-semibold ${
+  ratio > 1 ? "text-red-600"
+  : ratio > 0.5 ? "text-amber-600"
+  : "text-emerald-600"
+}`}>
+
+// ❌ SAI — dùng violet, indigo, hoặc màu trang trí cho data
+<span className="text-violet-600 font-semibold">{rate}%</span>
+```
+
+### 6.3 Text read-only (không phải data semantic)
+
+Dùng `text-muted-foreground` — KHÔNG dùng custom color:
+
+```tsx
+// ✅ ĐÚNG — planned rate column (read-only, informational)
+<span className="text-xs tabular-nums font-semibold text-muted-foreground">
+  {rate.toFixed(2)}%
+</span>
+
+// ❌ SAI — violet không có ý nghĩa semantic
+<span className="text-xs tabular-nums font-semibold text-violet-600 dark:text-violet-400">
+  {rate.toFixed(2)}%
+</span>
+```
+
+---
+
+## 7. Rates Section — Allocation Bar
+
+### 7.1 Pattern
+
+```tsx
+<div className="flex h-3 overflow-hidden rounded-full bg-muted">
+  <div className="bg-blue-500 transition-all" style={{ width: `${commissionPct}%` }} />
+  <div className="bg-emerald-500 transition-all" style={{ width: `${companyPct}%` }} />
+</div>
+```
+
+### 7.2 Legend
+
+```tsx
+// ✅ ĐÚNG — text-xs cho legend
+<div className="flex items-center gap-4 text-xs text-muted-foreground">
+  <div className="flex items-center gap-1.5">
+    <div className="size-2.5 rounded-full bg-blue-500" />
+    <span>Hoa hồng đại lý</span>
+    <span className="font-semibold tabular-nums">{pct}%</span>
+  </div>
+</div>
+
+// ❌ SAI — text-[11px] cho legend
+<div className="flex items-center gap-4 text-[11px] text-muted-foreground">
+```
+
+### 7.3 Màu sắc bar chuẩn
+
+| Segment | Color | Use case |
+|---------|-------|----------|
+| Hoa hồng đại lý | `bg-blue-500` | Commission rate |
+| Thu công ty | `bg-emerald-500` | Company rate |
+| Phần còn lại | `bg-muted-foreground/30` | Remainder (implicit) |
+
+---
+
+## 8. Play Rules Section — 2-Column Layout
+
+### 8.1 Grid Pattern
+
+```tsx
+<CardContent className="p-0">
+  <div className="grid gap-0 lg:grid-cols-2">
+    {/* Left column */}
+    <div className="space-y-5 p-6">
+      <div>
+        <h3 className="text-sm font-semibold text-foreground">Giá vé & Giới hạn</h3>
+        <p className="text-xs text-muted-foreground mt-0.5">Mô tả</p>
+      </div>
+      {/* form fields */}
+    </div>
+
+    {/* Right column */}
+    <div className="border-t p-6 lg:border-l lg:border-t-0">
+      <div className="mb-5">
+        <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
+        <p className="text-xs text-muted-foreground mt-0.5">Mô tả</p>
+      </div>
+      {/* schedule fields */}
+    </div>
+  </div>
+</CardContent>
+```
+
+### 8.2 Sub-section Header (bên trong column)
+
+Sub-header **CHỈ dùng khi nhóm 2+ fields** bên dưới. Nếu label cho 1 control/value duy nhất → dùng field label.
+
+```tsx
+// ✅ ĐÚNG — sub-header nhóm 2 fields (Kỳ 1 + Kỳ 2, hoặc Kỳ đầu tiên + Kỳ cuối cùng)
+<p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+  Khung giờ hoạt động
+</p>
+
+// ✅ ĐÚNG — field label cho 1 input/control/static value duy nhất
+<FormLabel className="text-xs text-muted-foreground">Giờ quay</FormLabel>
+<Label className="text-xs text-muted-foreground">Ngày quay trong tuần</Label>
+<p className="text-xs text-muted-foreground mb-1.5">Số kỳ quay / ngày</p>
+
+// ❌ SAI — uppercase cho label 1 control duy nhất
+<Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+  Ngày quay trong tuần
+</Label>
+```
+
+---
+
+## 9. Form Field Labels
+
+### 9.1 Styles
+
+| Variant | Class | Use case |
+|---------|-------|----------|
+| Section sub-header | `text-xs font-medium uppercase tracking-wider text-muted-foreground` | Nhóm **2+ fields** (VD: "Khung giờ hoạt động" → Kỳ đầu tiên + Kỳ cuối cùng, "Giờ quay" → Kỳ 1 + Kỳ 2) |
+| Field label | `text-xs text-muted-foreground` | Label cho **1** input, toggle group, hoặc static value (VD: "Giờ quay", "Ngày quay trong tuần", "Số kỳ quay / ngày") |
+| Input value | `font-semibold` | Trên MoneyInput / Input |
+| Helper text | `text-xs text-muted-foreground tabular-nums` | Dưới input (VD: "= 10,000đ / line") |
+
+**Quy tắc phân biệt:**
+- Label cho **1 control** (input, toggle group, static value) → **field label** (lowercase)
+- Label nhóm **2+ controls** bên dưới → **sub-header** (uppercase tracking-wider)
+
+### 9.2 Text Mô Tả (desc) — Viết Thường (BẮT BUỘC)
+
+Mọi text mô tả bên cạnh tên hạng giải / label / input **PHẢI viết thường** (sentence case hoặc lowercase).
+**KHÔNG viết IN HOA** từng chữ (Title Case) hoặc toàn bộ (UPPERCASE) trừ từ viết tắt kỹ thuật (VD: ĐB, VND, JP).
+
+```tsx
+// ✅ ĐÚNG — viết thường tự nhiên
+{ label: "Giải Nhất", desc: "5 số chính" }
+{ label: "Giải Nhì", desc: "4 chính + ĐB" }
+{ label: "Giải Đặc Biệt", desc: "trùng 1 trong 2 bộ ĐB" }
+{ label: "Trùng 2/3", desc: "số chọn xuất hiện 2 lần" }
+
+// ❌ SAI — Title Case hoặc in hoa không cần thiết
+{ label: "Giải Nhất", desc: "5 Số Chính" }
+{ label: "Giải Đặc Biệt", desc: "Trùng 1 Trong 2 Bộ ĐB" }
+```
+
+**Quy tắc áp dụng cho:**
+- `desc` trong `PRIZE_FIELDS`, `BASIC_FIELDS`, `COMBO_FIELDS`, `PLUS_FIELDS`, `STANDARD_FIELDS`
+- Description text trong `PrizeGroupDef` (Keno, Bingo18)
+- Sub-label trong table row
+- Helper text dưới input
+- Text mô tả trong info section (ngoại trừ tiêu đề section h3 — h3 viết hoa đầu câu bình thường)
+
+### 9.3 Input Suffix (VND, %, phút)
+
+```tsx
+// ✅ ĐÚNG — suffix bên trong input
+<div className="relative">
+  <MoneyInput className="pr-14 font-semibold" ... />
+  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+    VND
+  </span>
+</div>
+```
+
+---
+
+## 10. Cột Xác Suất — Prizes Table (BẮT BUỘC)
+
+### 10.1 Hiển thị mặc định: `1:N`
+
+Cột xác suất trong bảng cấu hình trả thưởng **BẮT BUỘC** hiển thị dạng `1 : N` làm giá trị mặc định.
+
+```tsx
+// ✅ ĐÚNG — hiển thị 1:N, click/hover để xem chi tiết
+<span className="text-right text-xs tabular-nums text-muted-foreground cursor-help">
+  {odds ? `1 : ${fmt(Math.round(odds.oneInN))}` : "–"}
+</span>
+```
+
+### 10.2 Tooltip xác suất — Nội dung BẮT BUỘC
+
+Tooltip khi hover cột xác suất **PHẢI** bao gồm đủ 2 thông tin:
+
+1. **Số cách trúng thưởng** (tỷ lệ x / y): `Số cách trúng: {ways} / {totalOutcomes}`
+2. **Xác suất theo %**: `Xác suất: {probability}%`
+
+```tsx
+// ✅ ĐÚNG — tooltip đầy đủ 2 dòng
+<TooltipContent side="top" className="max-w-72 text-xs">
+  {odds && (
+    <>
+      Số cách trúng: {fmt(odds.ways)} / {fmt(TOTAL_OUTCOMES)}
+      <br />
+      Xác suất: {(odds.probability * 100).toFixed(6)}%
+    </>
+  )}
+</TooltipContent>
+
+// ❌ SAI — chỉ có xác suất %, thiếu số cách trúng
+<TooltipContent side="top" className="text-xs">
+  {odds && `Xác suất: ${(odds.probability * 100).toFixed(6)}%`}
+</TooltipContent>
+
+// ❌ SAI — thiếu xác suất %
+<TooltipContent side="top" className="text-xs">
+  {odds && `Số cách trúng: ${fmt(odds.ways)} / ${fmt(TOTAL_OUTCOMES)}`}
+</TooltipContent>
+```
+
+### 10.3 Áp dụng cho tất cả game
+
+Quy tắc này áp dụng **đồng nhất** trên tất cả 7 game:
+- Lotto 5/35, Mega 6/45, Power 6/55: cột "Xác suất" trong prizes table + full odds reference table
+- Keno: cột "Xác suất" trong từng PickPrizeGroup
+- Bingo 18: cột "Xác suất" trong từng PrizeGroup
+- Max 3D, Max 3D Pro: cột "Xác suất" trong OddsRow
+
+**Decimal precision**: Dùng `.toFixed(6)` cho game có xác suất rất nhỏ (Lotto/Mega/Power/Max3D), `.toFixed(4)` cho game xúc xắc (Bingo18). Keno tùy bậc.
+
+---
+
+## 11. Info / Warning Box
+
+```tsx
+// ✅ ĐÚNG — info box nhẹ
+<div className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
+  <Globe className="size-3.5 text-muted-foreground" />
+  <p className="text-xs text-muted-foreground">
+    Múi giờ: <Badge variant="secondary" className="ml-1 font-mono text-xs">Asia/Ho_Chi_Minh</Badge>
+  </p>
+</div>
+
+// ✅ ĐÚNG — warning box (cần chú ý)
+<div className="flex items-start gap-2 rounded-lg bg-amber-50/80 dark:bg-amber-950/20 px-3 py-2">
+  <Info className="mt-0.5 size-3.5 text-amber-500" />
+  <p className="text-xs text-amber-700 dark:text-amber-400">
+    Cảnh báo nội dung...
+  </p>
+</div>
+```
+
+---
+
+## 12. KHÔNG ĐƯỢC vi phạm
+
+| Rule | Lý do |
+|------|-------|
+| `text-[10px]` hoặc `text-[9px]` hoặc `text-[8px]` | Vi phạm minimum readability (T3 = 12px). CHỈ heatmap grid mới được dùng text < 12px |
+| `text-[11px]` ngoài heatmap grid | Dùng `text-xs` (12px) thay thế |
+| `text-violet-*`, `text-indigo-*` cho data cell | Không có ý nghĩa semantic. Dùng red/amber/emerald hoặc muted-foreground |
+| Mix `p-5` và `p-6` trong cùng game | Phải nhất quán — tất cả config dùng `p-6` |
+| `<CardHeader>` / `<CardTitle>` trong config card | Config dùng headless pattern |
+| Custom `<span>` thay Badge component | Dùng `<Badge>` để nhất quán shadow, border-radius, padding |
+| Hardcode `formatNumber` inline | Import `formatNumber` từ `@megawin/shared/utils` hoặc dùng `const fmt = formatNumber` |
+| Text mô tả (desc) viết hoa Title Case / UPPERCASE | Phải viết thường (sentence case). Chỉ viết tắt kỹ thuật (ĐB, VND, JP) mới in hoa |
+| Tooltip xác suất thiếu thông tin | Phải có đủ 2 dòng: số cách trúng (x/y) + xác suất (%) |
+| `<Tabs defaultValue>` trên config page | Phải dùng `nuqs` controlled mode (`value` + `onValueChange`) để lưu URL |
+| Số liệu trong table không dùng `formatNumber` | Import `formatNumber` (hoặc `const fmt = formatNumber`), dùng `fmt()` cho mọi số — kể cả total row |
+| Total row label viết thường | Label "Tổng cộng" phải `uppercase tracking-wider` — đồng nhất với header |
+| Dùng "Tỷ lệ trả", "Tỷ lệ KH" hoặc biến thể khác cho cột tỷ lệ trả thưởng | Tên cột chuẩn là **"Tỷ lệ TT"** — viết tắt của "Tỷ lệ trả thưởng", đồng nhất trên tất cả 7 game |
+| Sub-header (uppercase) cho label 1 control duy nhất | Sub-header **CHỈ** khi nhóm 2+ fields. Label cho 1 input/toggle/static value → dùng field label (`text-xs text-muted-foreground`) |
+
+---
+
+## 13. Quick Checklist — Khi Tạo Config Section Mới
+
+- [ ] Card: `className="overflow-hidden py-0 gap-0"`
+- [ ] CardContent: `className="p-0"`
+- [ ] Info section: `p-6 pb-4` + `h3 text-sm font-semibold` + `p text-xs text-muted-foreground mt-0.5`
+- [ ] Data section: `border-t` separator
+- [ ] Table header: `bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground`
+- [ ] Table row: `px-6 py-3 hover:bg-muted/20 border-b` (trừ row cuối)
+- [ ] Badge: `text-xs font-bold` (minimum)
+- [ ] Number cells: `tabular-nums`
+- [ ] Semantic colors: red (lỗ) / amber (cảnh báo) / emerald (tốt) — KHÔNG dùng violet/indigo cho data
+- [ ] Footer: `border-t px-6 py-3` + Submit button
+- [ ] Form fields: `text-xs` labels, `font-semibold` input values
+- [ ] Không `text-[10px]`, `text-[11px]` — chỉ `text-xs` trở lên
+- [ ] Text mô tả (desc): viết thường, KHÔNG Title Case / UPPERCASE (trừ viết tắt ĐB, VND, JP)
+- [ ] Cột xác suất: hiển thị `1 : N` mặc định, tooltip có đủ "Số cách trúng: x / y" + "Xác suất: ...%"
+- [ ] Total row: `uppercase tracking-wider`, tất cả số dùng `fmt()` + `tabular-nums`
+- [ ] Tab state: dùng `nuqs` lưu trên URL (xem section 14)
+- [ ] Tên cột "Tỷ lệ TT" — không dùng "Tỷ lệ trả", "Tỷ lệ KH", hay biến thể khác (xem section 15)
+- [ ] Sub-header (uppercase) CHỈ cho nhóm 2+ fields — label 1 control dùng field label (lowercase)
+
+---
+
+## 14. Tab URL State — `nuqs` (BẮT BUỘC)
+
+Trang config game có nhiều tab (Jackpot, Giải thưởng, Tài chính, Luật chơi...). Tab đang chọn **BẮT BUỘC** lưu trên URL để hỗ trợ refresh, browser back/forward, và share link trực tiếp.
+
+### 14.1 Dùng `nuqs` + `parseAsStringEnum`
+
+```tsx
+import { useQueryState, parseAsStringEnum } from "nuqs";
+
+const [tab, setTab] = useQueryState(
+  "tab",
+  parseAsStringEnum(["jackpot", "prizes", "rates", "play"]).withDefault("jackpot"),
+);
+```
+
+### 14.2 Tabs controlled mode
+
+```tsx
+// ✅ ĐÚNG — controlled Tabs, state trên URL
+<Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+  <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
+    <TabsTrigger value="jackpot">Jackpot kép</TabsTrigger>
+    <TabsTrigger value="prizes">Giải thưởng</TabsTrigger>
+    ...
+  </TabsList>
+  <TabsContent value="jackpot">...</TabsContent>
+  ...
+</Tabs>
+
+// ❌ SAI — defaultValue, mất state khi refresh
+<Tabs defaultValue="jackpot">
+```
+
+### 14.3 Quy tắc
+
+- **Query param name**: `tab` — nhất quán trên tất cả game config pages
+- **Default value**: tab đầu tiên trong danh sách (VD: `"jackpot"`, `"prizes"`)
+- **History mode**: `nuqs` mặc định dùng `pushState` — browser back/forward hoạt động
+- **Áp dụng cho**: mọi trang config game có `<Tabs>` — Power 6/55, Mega 6/45, Lotto 5/35, Keno, Max 3D, Max 3D Pro, Bingo 18
+- **NuqsAdapter**: đã setup ở root layout — không cần setup thêm
+
+### 14.4 Ví dụ URL
+
+```
+/games/power655/config/game               → tab mặc định (jackpot)
+/games/power655/config/game?tab=prizes     → tab Giải thưởng
+/games/power655/config/game?tab=rates      → tab Tài chính
+/games/power655/config/game?tab=play       → tab Luật chơi
+```
+
+---
+
+## 15. Tên Cột Table — Chuẩn Hóa (BẮT BUỘC)
+
+Tên cột trong table config giải thưởng **phải nhất quán** trên tất cả 7 game. Không tự đặt tên cột mới.
+
+### 15.1 Bảng tên cột chuẩn
+
+| Cột | Tên chuẩn | Viết tắt giải thích | KHÔNG dùng |
+|-----|-----------|---------------------|------------|
+| Tỷ lệ trả thưởng | **Tỷ lệ TT** | TT = Trả Thưởng | Tỷ lệ trả, Tỷ lệ KH, Tỷ lệ TH, Tỷ lệ % |
+| Chi phí kỳ vọng | **CP kỳ vọng** | CP = Chi Phí | Chi phí, Expected cost, CP/line |
+| Xác suất trúng | **Xác suất** | — | Probability, Prob, XS |
+| Giá trị hoà vốn | **Hoà vốn** | — | Break-even, Max hoà vốn |
+| Số kỳ vọng/kỳ | **CP kỳ vọng** | — (dùng chung) | Tổng chi kỳ vọng |
+| Hạng giải | **Hạng giải** | — | Tier, Giải thưởng |
+| Giá trị giải | **Giá trị** | — | Prize value, Mệnh giá |
+
+### 15.2 Tooltip chuẩn cho "Tỷ lệ TT"
+
+Tooltip của cột "Tỷ lệ TT" **PHẢI** giải thích công thức và điều kiện lỗ:
+
+```tsx
+// ✅ ĐÚNG — giải thích đầy đủ
+<HeaderTooltip
+  label="Tỷ lệ TT"
+  tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%. Trên 100% = LỖ."
+  className="justify-end"
+/>
+
+// ❌ SAI — tên cũ
+<HeaderTooltip label="Tỷ lệ trả" ... />
+<HeaderTooltip label="Tỷ lệ KH" ... />
+```
+
+### 15.3 Áp dụng
+
+Quy tắc này áp dụng cho tất cả file:
+- `prizes-section.tsx` của 7 game (Keno, Lotto 5/35, Mega 6/45, Power 6/55, Max 3D, Max 3D Pro, Bingo 18)
+- `side-bets-section.tsx` (Keno)
+- Bất kỳ table config mới nào thêm sau này

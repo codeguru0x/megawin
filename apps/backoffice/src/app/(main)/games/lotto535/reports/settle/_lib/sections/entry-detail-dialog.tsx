@@ -356,7 +356,6 @@ export function Lotto535EntryDetailDialog({
                         }
                         title="Số đặc biệt"
                       />
-                      <span className="text-[10px] text-muted-foreground">đặc biệt</span>
                     </>
                   )}
                 </div>

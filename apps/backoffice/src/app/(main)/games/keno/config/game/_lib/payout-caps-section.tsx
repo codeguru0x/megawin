@@ -79,14 +79,14 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
-            <div className="px-5 py-3">
+            <div className="p-6 pb-4">
               <h3 className="text-sm font-semibold text-foreground">Giới hạn trả thưởng mỗi kỳ</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Giới hạn tổng giải thưởng cho bậc cao (8, 9, 10) khi có nhiều bộ trúng
               </p>
             </div>
 
-            <div className="border-t bg-amber-50/80 px-5 py-2.5 dark:bg-amber-950/20">
+            <div className="border-t bg-amber-50/80 px-6 py-2.5 dark:bg-amber-950/20">
               <div className="flex items-start gap-2">
                 <Info className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
                 <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-400">
@@ -96,7 +96,7 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
               </div>
             </div>
 
-            <div className="border-t space-y-4 p-5">
+            <div className="border-t space-y-4 p-6">
               {CAP_ROWS.map((cap) => {
                 const maxPerDraw = form.watch(cap.maxPerDrawField);
                 const maxSets = form.watch(cap.maxSetsField);
@@ -170,7 +170,7 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
             </div>
           </CardContent>
 
-          <CardFooter className="justify-end border-t px-5 py-2.5">
+          <CardFooter className="justify-end border-t px-6 py-3">
             <Button type="submit" disabled={isPending || !form.formState.isDirty}>
               {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
               Lưu giới hạn trả thưởng

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,7 +14,12 @@ import {
   Save,
   CheckCircle2,
   XCircle,
+  Users,
+  CircleCheck,
+  CircleX,
 } from "lucide-react";
+
+import { displayVNDateTime } from "@megawin/shared/utils";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
 
@@ -25,12 +30,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -55,10 +55,7 @@ import {
   useUpdateTenantConfig,
   type TenantConfig,
 } from "./_lib/use-tenant-config";
-import {
-  useTenantOptions,
-  type TenantOption,
-} from "@/hooks/use-tenant-options";
+import { useTenantOptions, type TenantOption } from "@/hooks/use-tenant-options";
 
 const tenantFormSchema = z.object({
   commissionRate: z.coerce.number().min(0).max(100),
@@ -69,8 +66,7 @@ type TenantFormValues = z.infer<typeof tenantFormSchema>;
 
 export default function Power655TenantConfigPage() {
   const { data: tenantConfigs, isLoading, isError, error } = useTenantConfigs();
-  const { data: tenantOptionsData, isLoading: isLoadingOptions } =
-    useTenantOptions();
+  const { data: tenantOptionsData, isLoading: isLoadingOptions } = useTenantOptions();
   const createMutation = useCreateTenantConfig();
 
   const [search, setSearch] = useState("");
@@ -80,7 +76,7 @@ export default function Power655TenantConfigPage() {
 
   const displayNameMap = useMemo(
     () => new Map(tenantOptions?.map((t) => [t.tenantId, t.displayName]) ?? []),
-    [tenantOptions]
+    [tenantOptions],
   );
 
   const filtered = useMemo(() => {
@@ -89,21 +85,17 @@ export default function Power655TenantConfigPage() {
     const q = search.toLowerCase();
     return tenantConfigs.filter((c) => {
       const name = displayNameMap.get(c.tenantId) ?? "";
-      return (
-        c.tenantId.toLowerCase().includes(q) || name.toLowerCase().includes(q)
-      );
+      return c.tenantId.toLowerCase().includes(q) || name.toLowerCase().includes(q);
     });
   }, [tenantConfigs, search, displayNameMap]);
 
-  const stats = useMemo(() => {
-    if (!tenantConfigs) return { total: 0, active: 0, inactive: 0 };
-    const active = tenantConfigs.filter((c) => c.isEnabled).length;
-    return {
-      total: tenantConfigs.length,
-      active,
-      inactive: tenantConfigs.length - active,
-    };
-  }, [tenantConfigs]);
+  const stats = tenantConfigs
+    ? {
+        total: tenantConfigs.length,
+        active: tenantConfigs.filter((c) => c.isEnabled).length,
+        inactive: tenantConfigs.filter((c) => !c.isEnabled).length,
+      }
+    : { total: 0, active: 0, inactive: 0 };
 
   function handleCreateTenant(tenantId: string) {
     if (tenantConfigs?.some((c) => c.tenantId === tenantId)) return;
@@ -114,7 +106,7 @@ export default function Power655TenantConfigPage() {
     <div className="@container/main flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
             <Building2 className="size-4.5 text-white" />
           </div>
           <div>
@@ -126,56 +118,62 @@ export default function Power655TenantConfigPage() {
             </p>
           </div>
         </div>
-        <AddTenantDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          tenantOptions={tenantOptions}
-          existingIds={tenantConfigs?.map((c) => c.tenantId) ?? []}
-          isLoadingOptions={isLoadingOptions}
-          onCreateTenant={handleCreateTenant}
-          isCreating={createMutation.isPending}
-        />
+        <div className="flex items-center gap-2">
+          {(tenantConfigs?.length ?? 0) > 1 && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Tìm theo tên hoặc ID đại lý…"
+                className="h-9 w-64 pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          )}
+          <AddTenantDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            tenantOptions={tenantOptions}
+            existingIds={tenantConfigs?.map((c) => c.tenantId) ?? []}
+            isLoadingOptions={isLoadingOptions}
+            onCreateTenant={handleCreateTenant}
+            isCreating={createMutation.isPending}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
         <KpiCard
+          icon={Users}
+          iconBg="bg-indigo-100 dark:bg-indigo-900/50"
+          iconColor="text-indigo-600 dark:text-indigo-400"
           label="Tổng đại lý"
           value={stats.total}
           isLoading={isLoading}
         />
         <KpiCard
+          icon={CircleCheck}
+          iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+          iconColor="text-emerald-600 dark:text-emerald-400"
           label="Đang hoạt động"
           value={stats.active}
           isLoading={isLoading}
-          variant="success"
         />
         <KpiCard
+          icon={CircleX}
+          iconBg="bg-red-100 dark:bg-red-900/50"
+          iconColor="text-red-500 dark:text-red-400"
           label="Vô hiệu hoá"
           value={stats.inactive}
           isLoading={isLoading}
-          variant="danger"
         />
       </div>
-
-      {(tenantConfigs?.length ?? 0) > 1 && (
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Tìm theo tên hoặc ID đại lý…"
-            className="h-9 pl-9"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      )}
-
       {isLoading && <CardListSkeleton />}
 
       {isError && (
         <div className="rounded-xl border border-destructive/50 bg-destructive/10 p-6">
           <p className="text-sm text-destructive">
-            Không thể tải danh sách:{" "}
-            {error instanceof Error ? error.message : "Lỗi không xác định"}
+            Không thể tải danh sách: {error instanceof Error ? error.message : "Lỗi không xác định"}
           </p>
         </div>
       )}
@@ -199,44 +197,43 @@ export default function Power655TenantConfigPage() {
   );
 }
 
+// ─────────────────────────────────────────────
+// KPI Card
+// ─────────────────────────────────────────────
+
 function KpiCard({
+  icon: Icon,
+  iconBg,
+  iconColor,
   label,
   value,
   isLoading,
-  variant,
 }: {
+  icon: React.ElementType;
+  iconBg: string;
+  iconColor: string;
   label: string;
   value: number;
   isLoading: boolean;
-  variant?: "success" | "danger";
 }) {
-  const colorClass =
-    variant === "success"
-      ? "text-emerald-600 dark:text-emerald-400"
-      : variant === "danger"
-        ? "text-red-500 dark:text-red-400"
-        : "text-foreground";
   return (
-    <div className="rounded-xl border bg-card p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      {isLoading ? (
-        <Skeleton className="mt-1 h-8 w-12" />
-      ) : (
-        <p className={`mt-1 text-2xl font-semibold tabular-nums ${colorClass}`}>
-          {value}
-        </p>
-      )}
+    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+      <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
+        <Icon className={`size-5 ${iconColor}`} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-muted-foreground">{label}</p>
+        {isLoading ? (
+          <Skeleton className="mt-1 h-6 w-10" />
+        ) : (
+          <p className="text-lg font-bold tabular-nums text-foreground">{value}</p>
+        )}
+      </div>
     </div>
   );
 }
 
-function TenantCard({
-  config,
-  displayName,
-}: {
-  config: TenantConfig;
-  displayName?: string;
-}) {
+function TenantCard({ config, displayName }: { config: TenantConfig; displayName?: string }) {
   const mutation = useUpdateTenantConfig(config.tenantId);
   const form = useForm<TenantFormValues>({
     resolver: zodResolver(tenantFormSchema) as any,
@@ -251,8 +248,7 @@ function TenantCard({
     const data: Record<string, unknown> = {};
     const newRate = values.commissionRate / 100;
     if (newRate !== config.commissionRate) data.commissionRate = newRate;
-    if (values.isEnabled !== config.isEnabled)
-      data.isEnabled = values.isEnabled;
+    if (values.isEnabled !== config.isEnabled) data.isEnabled = values.isEnabled;
     if (Object.keys(data).length === 0) return;
     mutation.mutate(data);
   }
@@ -261,7 +257,7 @@ function TenantCard({
     <Card className="overflow-hidden gap-0 py-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
-          <CardHeader className="flex-row items-center justify-between gap-3 border-b px-6 py-4">
+          <CardHeader className="flex-row items-center justify-between gap-3 border-b px-5 py-4">
             <div className="flex items-center gap-3">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted">
                 <Building2 className="size-4.5 text-muted-foreground" />
@@ -271,17 +267,9 @@ function TenantCard({
                   <h3 className="truncate text-sm font-semibold text-foreground">
                     {displayName || config.tenantId}
                   </h3>
-                  <Badge
-                    variant="secondary"
-                    className="border-violet-200 bg-violet-100 font-mono text-[11px] text-violet-700 tabular-nums dark:border-violet-800 dark:bg-violet-950/50 dark:text-violet-400"
-                  >
-                    v{config.version}
-                  </Badge>
                 </div>
                 {displayName && (
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                    {config.tenantId}
-                  </p>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{config.tenantId}</p>
                 )}
               </div>
             </div>
@@ -311,12 +299,8 @@ function TenantCard({
                           <TrendingUp className="size-4 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                          <FormLabel className="text-sm font-semibold">
-                            Hoa hồng đại lý
-                          </FormLabel>
-                          <p className="text-xs text-muted-foreground">
-                            Tỷ lệ trên tổng doanh thu
-                          </p>
+                          <FormLabel className="text-sm font-semibold">Hoa hồng đại lý</FormLabel>
+                          <p className="text-xs text-muted-foreground">Tỷ lệ trên tổng doanh thu</p>
                         </div>
                       </div>
                       <div className="flex items-baseline gap-2">
@@ -335,9 +319,7 @@ function TenantCard({
                             }
                           />
                         </FormControl>
-                        <span className="text-lg font-semibold text-muted-foreground">
-                          %
-                        </span>
+                        <span className="text-lg font-semibold text-muted-foreground">%</span>
                       </div>
                       <FormMessage />
                     </FormItem>
@@ -359,20 +341,13 @@ function TenantCard({
                           />
                         </div>
                         <div>
-                          <FormLabel className="text-sm font-semibold">
-                            Trạng thái game
-                          </FormLabel>
-                          <p className="text-xs text-muted-foreground">
-                            Cho phép đại lý bán vé
-                          </p>
+                          <FormLabel className="text-sm font-semibold">Trạng thái game</FormLabel>
+                          <p className="text-xs text-muted-foreground">Cho phép đại lý bán vé</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                         <span
                           className={`text-sm font-medium ${isEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}
@@ -388,16 +363,9 @@ function TenantCard({
             </div>
           </CardContent>
 
-          <CardFooter className="justify-between border-t px-6 py-3">
-            <p className="text-[11px] tabular-nums text-muted-foreground">
-              Cập nhật lần cuối:{" "}
-              {new Date(config.updatedAt).toLocaleDateString("vi-VN", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
+          <CardFooter className="justify-between border-t px-5 py-3">
+            <p className="text-xs tabular-nums text-muted-foreground">
+              v{config.version} · Cập nhật {displayVNDateTime(config.updatedAt)}
             </p>
             <Button
               type="submit"
@@ -437,18 +405,16 @@ function AddTenantDialog({
 }) {
   const [dialogSearch, setDialogSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
-  const existingSet = useMemo(() => new Set(existingIds), [existingIds]);
+  const existingSet = new Set(existingIds);
   const available = useMemo(
     () => tenantOptions?.filter((t) => !existingSet.has(t.tenantId)) ?? [],
-    [tenantOptions, existingSet]
+    [tenantOptions, existingSet],
   );
   const filtered = useMemo(() => {
     if (!dialogSearch.trim()) return available;
     const q = dialogSearch.toLowerCase();
     return available.filter(
-      (t) =>
-        t.tenantId.toLowerCase().includes(q) ||
-        t.displayName.toLowerCase().includes(q)
+      (t) => t.tenantId.toLowerCase().includes(q) || t.displayName.toLowerCase().includes(q),
     );
   }, [available, dialogSearch]);
 
@@ -470,10 +436,17 @@ function AddTenantDialog({
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Thêm cấu hình đại lý</DialogTitle>
-          <DialogDescription>
-            Chọn đại lý từ hệ thống để tạo cấu hình Power 6/55.
-          </DialogDescription>
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
+              <Building2 className="size-4.5 text-white" />
+            </div>
+            <div>
+              <DialogTitle>Thêm cấu hình đại lý</DialogTitle>
+              <DialogDescription className="text-xs">
+                Chọn đại lý từ hệ thống để tạo cấu hình Power 6/55.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <div className="relative">
@@ -497,9 +470,7 @@ function AddTenantDialog({
               <div className="flex flex-col items-center justify-center py-12">
                 <AlertCircle className="size-6 text-muted-foreground/40" />
                 <p className="mt-2 text-xs text-muted-foreground">
-                  {dialogSearch
-                    ? "Không tìm thấy"
-                    : "Tất cả đại lý đã có cấu hình"}
+                  {dialogSearch ? "Không tìm thấy" : "Tất cả đại lý đã có cấu hình"}
                 </p>
               </div>
             )}
@@ -515,16 +486,12 @@ function AddTenantDialog({
                     <Building2 className="size-4 text-muted-foreground" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {t.displayName}
-                    </p>
-                    <p className="truncate text-[11px] text-muted-foreground">
-                      {t.tenantId}
-                    </p>
+                    <p className="truncate text-sm font-medium">{t.displayName}</p>
+                    <p className="truncate text-xs text-muted-foreground">{t.tenantId}</p>
                   </div>
                   <Badge
                     variant={t.status === "active" ? "default" : "secondary"}
-                    className="shrink-0 text-[10px]"
+                    className="shrink-0 text-xs"
                   >
                     {t.status === "active" ? "Hoạt động" : t.status}
                   </Badge>
@@ -556,14 +523,10 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
         <Building2 className="size-6 text-muted-foreground/50" />
       </div>
       <p className="mt-4 text-sm font-medium text-foreground">
-        {hasSearch
-          ? "Không tìm thấy đại lý phù hợp"
-          : "Chưa có đại lý nào được cấu hình"}
+        {hasSearch ? "Không tìm thấy đại lý phù hợp" : "Chưa có đại lý nào được cấu hình"}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
-        {hasSearch
-          ? "Thử tìm kiếm với từ khoá khác"
-          : 'Nhấn "Thêm đại lý" ở góc phải để bắt đầu'}
+        {hasSearch ? "Thử tìm kiếm với từ khoá khác" : 'Nhấn "Thêm đại lý" ở góc phải để bắt đầu'}
       </p>
     </div>
   );

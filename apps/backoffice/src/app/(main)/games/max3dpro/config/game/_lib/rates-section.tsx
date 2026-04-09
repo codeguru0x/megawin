@@ -75,7 +75,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                   />
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <span className="inline-block size-2 rounded-full bg-blue-500" />
                   Hoa hồng: {commissionRate}%
@@ -123,7 +123,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                         <span className="text-lg font-semibold text-muted-foreground">%</span>
                       </div>
 
-                      <p className="text-[11px] tabular-nums text-muted-foreground">Tối đa 100%</p>
+                      <p className="text-xs tabular-nums text-muted-foreground">Tối đa 100%</p>
                     </div>
                     <FormMessage />
                   </FormItem>

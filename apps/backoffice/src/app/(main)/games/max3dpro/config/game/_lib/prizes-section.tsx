@@ -15,20 +15,10 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import type { GameConfig } from "./use-game-config";
 
@@ -54,17 +44,81 @@ interface PrizesSectionProps {
 }
 
 const STANDARD_FIELDS = [
-  { key: "special" as const, tier: "special" as const, label: "Giải Đặc Biệt", desc: "2 bộ trùng đúng thứ tự 2 bộ ĐB", badge: "ĐB", color: "bg-red-600 text-white" },
-  { key: "specialSub" as const, tier: "specialSub" as const, label: "Giải phụ Đặc Biệt", desc: "2 bộ trùng ngược thứ tự 2 bộ ĐB", badge: "pĐB", color: "bg-red-500 text-white" },
-  { key: "first" as const, tier: "first" as const, label: "Giải Nhất", desc: "2 bộ đều trùng trong 4 bộ Nhất", badge: "1st", color: "bg-amber-500 text-white" },
-  { key: "second" as const, tier: "second" as const, label: "Giải Nhì", desc: "2 bộ đều trùng trong 6 bộ Nhì", badge: "2nd", color: "bg-slate-400 text-white" },
-  { key: "third" as const, tier: "third" as const, label: "Giải Ba", desc: "2 bộ đều trùng trong 8 bộ Ba", badge: "3rd", color: "bg-amber-700 text-white" },
-  { key: "fourth" as const, tier: "fourth" as const, label: "Giải Tư", desc: "2 bộ trùng bất kỳ (cross-tier)", badge: "4th", color: "bg-slate-500 text-white" },
-  { key: "fifth" as const, tier: "fifth" as const, label: "Giải Năm", desc: "1 bộ trùng bộ ĐB", badge: "5th", color: "bg-slate-600 text-white" },
-  { key: "sixth" as const, tier: "sixth" as const, label: "Giải Sáu", desc: "1 bộ trùng bộ Nhất/Nhì/Ba", badge: "6th", color: "bg-emerald-600 text-white" },
+  {
+    key: "special" as const,
+    tier: "special" as const,
+    label: "Giải Đặc Biệt",
+    desc: "2 bộ trùng đúng thứ tự 2 bộ ĐB",
+    badge: "ĐB",
+    color: "bg-red-600 text-white",
+  },
+  {
+    key: "specialSub" as const,
+    tier: "specialSub" as const,
+    label: "Giải phụ Đặc Biệt",
+    desc: "2 bộ trùng ngược thứ tự 2 bộ ĐB",
+    badge: "pĐB",
+    color: "bg-red-500 text-white",
+  },
+  {
+    key: "first" as const,
+    tier: "first" as const,
+    label: "Giải Nhất",
+    desc: "2 bộ đều trùng trong 4 bộ Nhất",
+    badge: "1st",
+    color: "bg-amber-500 text-white",
+  },
+  {
+    key: "second" as const,
+    tier: "second" as const,
+    label: "Giải Nhì",
+    desc: "2 bộ đều trùng trong 6 bộ Nhì",
+    badge: "2nd",
+    color: "bg-slate-400 text-white",
+  },
+  {
+    key: "third" as const,
+    tier: "third" as const,
+    label: "Giải Ba",
+    desc: "2 bộ đều trùng trong 8 bộ Ba",
+    badge: "3rd",
+    color: "bg-amber-700 text-white",
+  },
+  {
+    key: "fourth" as const,
+    tier: "fourth" as const,
+    label: "Giải Tư",
+    desc: "2 bộ trùng bất kỳ (cross-tier)",
+    badge: "4th",
+    color: "bg-slate-500 text-white",
+  },
+  {
+    key: "fifth" as const,
+    tier: "fifth" as const,
+    label: "Giải Năm",
+    desc: "1 bộ trùng bộ ĐB",
+    badge: "5th",
+    color: "bg-slate-600 text-white",
+  },
+  {
+    key: "sixth" as const,
+    tier: "sixth" as const,
+    label: "Giải Sáu",
+    desc: "1 bộ trùng bộ Nhất/Nhì/Ba",
+    badge: "6th",
+    color: "bg-emerald-600 text-white",
+  },
 ] as const;
 
-function HeaderTooltip({ label, tip, className }: { label: string; tip: string; className?: string }) {
+function HeaderTooltip({
+  label,
+  tip,
+  className,
+}: {
+  label: string;
+  tip: string;
+  className?: string;
+}) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -73,7 +127,9 @@ function HeaderTooltip({ label, tip, className }: { label: string; tip: string; 
           <Info className="size-3 text-muted-foreground/60" />
         </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-64 text-xs">{tip}</TooltipContent>
+      <TooltipContent side="top" className="max-w-64 text-xs">
+        {tip}
+      </TooltipContent>
     </Tooltip>
   );
 }
@@ -104,10 +160,14 @@ function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel }: ProfitBarP
         </div>
         <div className="text-right">
           <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
-          <div className={`font-bold tabular-nums ${analysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-            {analysis.grossMarginPercent >= 0
-              ? <TrendingUp className="mr-1 inline size-3.5" />
-              : <TrendingDown className="mr-1 inline size-3.5" />}
+          <div
+            className={`font-bold tabular-nums ${analysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"}`}
+          >
+            {analysis.grossMarginPercent >= 0 ? (
+              <TrendingUp className="mr-1 inline size-3.5" />
+            ) : (
+              <TrendingDown className="mr-1 inline size-3.5" />
+            )}
             {analysis.grossMarginPercent.toFixed(2)}%
             <span className="ml-1 font-normal text-muted-foreground">
               ({fmt(Math.round(analysis.grossMarginPerLine))} VND/line)
@@ -128,11 +188,27 @@ function TableHeader() {
     <div className={TABLE_HEADER_CLS}>
       <span className="w-9" />
       <span>Hạng giải</span>
-      <span className="text-right">Giá trị</span>
-      <HeaderTooltip label="Xác suất" tip="Xác suất trúng giải cho 1 line. '1 : N' nghĩa là cứ N line bán ra thì kỳ vọng 1 line trúng." className="justify-end" />
-      <HeaderTooltip label="CP kỳ vọng" tip="Chi phí trả thưởng kỳ vọng cho mỗi line = Xác suất × Giá trị giải." className="justify-end" />
-      <HeaderTooltip label="Tỷ lệ trả" tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá line × 100%. Trên 100% = LỖ." className="justify-end" />
-      <HeaderTooltip label="Hoà vốn tối đa" tip="Giá trị giải thưởng tối đa để không lỗ = Giá line ÷ Xác suất." className="justify-end" />
+      <span className="text-right">Giá trị thưởng</span>
+      <HeaderTooltip
+        label="Xác suất"
+        tip="Xác suất trúng giải cho 1 line. '1 : N' nghĩa là cứ N line bán ra thì kỳ vọng 1 line trúng."
+        className="justify-end"
+      />
+      <HeaderTooltip
+        label="CP kỳ vọng"
+        tip="Chi phí trả thưởng kỳ vọng cho mỗi line = Xác suất × Giá trị giải."
+        className="justify-end"
+      />
+      <HeaderTooltip
+        label="Tỷ lệ TT"
+        tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá line × 100%. Trên 100% = LỖ."
+        className="justify-end"
+      />
+      <HeaderTooltip
+        label="Hoà vốn"
+        tip="Giá trị giải thưởng tối đa để không lỗ = Giá line ÷ Xác suất."
+        className="justify-end"
+      />
     </div>
   );
 }
@@ -140,7 +216,9 @@ function TableHeader() {
 interface OddsRowProps {
   field: { key: string; label: string; desc: string; badge: string; color: string };
   odds: { probability: number; oneInN: number; ways?: number } | undefined;
-  profit: { expectedPayout: number; payoutRatio: number; breakEvenPrize: number; currentPrize: number } | undefined;
+  profit:
+    | { expectedPayout: number; payoutRatio: number; breakEvenPrize: number; currentPrize: number }
+    | undefined;
   formField: any;
   isLast: boolean;
   totalOutcomes: number;
@@ -156,7 +234,7 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
       render={({ field }) => (
         <FormItem>
           <div className={`${TABLE_ROW_CLS} ${isLast ? "" : "border-b"}`}>
-            <Badge className={`${p.color} w-9 justify-center text-[10px] font-bold`}>{p.badge}</Badge>
+            <Badge className={`${p.color} w-9 justify-center text-xs font-bold`}>{p.badge}</Badge>
             <div>
               <span className="text-sm font-medium">{p.label}</span>
               <span className="ml-2 text-xs text-muted-foreground">{p.desc}</span>
@@ -178,29 +256,44 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
                 </span>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-72 text-xs">
-                {odds && <>Xác suất: {(odds.probability * 100).toFixed(6)}%</>}
+                {odds && (
+                  <>
+                    Số cách trúng: {fmt(Math.round(odds.probability * totalOutcomes))} /{" "}
+                    {fmt(totalOutcomes)}
+                    <br />
+                    Xác suất: {(odds.probability * 100).toFixed(6)}%
+                  </>
+                )}
               </TooltipContent>
             </Tooltip>
             <span className="text-right text-xs tabular-nums font-medium">
               {profit ? `${fmt(Math.round(profit.expectedPayout))} VND` : "–"}
             </span>
-            <span className={`text-right text-xs tabular-nums font-semibold ${
-              profit && profit.payoutRatio > 1 ? "text-red-600"
-                : profit && profit.payoutRatio > 0.5 ? "text-amber-600"
-                  : "text-emerald-600"
-            }`}>
+            <span
+              className={`text-right text-xs tabular-nums font-semibold ${
+                profit && profit.payoutRatio > 1
+                  ? "text-red-600"
+                  : profit && profit.payoutRatio > 0.5
+                    ? "text-amber-600"
+                    : "text-emerald-600"
+              }`}
+            >
               {profit ? `${(profit.payoutRatio * 100).toFixed(2)}%` : "–"}
             </span>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className={`text-right text-xs tabular-nums cursor-help ${isOverBreakEven ? "text-red-600 font-bold" : "text-muted-foreground"}`}>
+                <span
+                  className={`text-right text-xs tabular-nums cursor-help ${isOverBreakEven ? "text-red-600 font-bold" : "text-muted-foreground"}`}
+                >
                   {profit ? `${fmt(Math.round(profit.breakEvenPrize))} VND` : "–"}
                 </span>
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-80 text-xs">
                 {isOverBreakEven
                   ? `Giải thưởng (${fmt(profit!.currentPrize)}) vượt mức hoà vốn (${fmt(Math.round(profit!.breakEvenPrize))}) → LỖ`
-                  : profit ? `Tối đa ${fmt(Math.round(profit.breakEvenPrize))} VND mà vẫn hoà vốn` : "–"}
+                  : profit
+                    ? `Tối đa ${fmt(Math.round(profit.breakEvenPrize))} VND mà vẫn hoà vốn`
+                    : "–"}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -232,23 +325,27 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
   const proOdds = useMemo(() => getProOddsTable(), []);
 
   const proAnalysis = useMemo(
-    () => analyzeProProfitability(
-      {
-        special: w.special,
-        specialSub: w.specialSub,
-        first: w.first,
-        second: w.second,
-        third: w.third,
-        fourth: w.fourth,
-        fifth: w.fifth,
-        sixth: w.sixth,
-      },
-      unitPrice,
-    ),
+    () =>
+      analyzeProProfitability(
+        {
+          special: w.special,
+          specialSub: w.specialSub,
+          first: w.first,
+          second: w.second,
+          third: w.third,
+          fourth: w.fourth,
+          fifth: w.fifth,
+          sixth: w.sixth,
+        },
+        unitPrice,
+      ),
     [w.special, w.specialSub, w.first, w.second, w.third, w.fourth, w.fifth, w.sixth, unitPrice],
   );
 
-  const proProfitMap = useMemo(() => new Map(proAnalysis.tiers.map((t) => [t.tier, t])), [proAnalysis]);
+  const proProfitMap = useMemo(
+    () => new Map(proAnalysis.tiers.map((t) => [t.tier, t])),
+    [proAnalysis],
+  );
   const proOddsMap = useMemo(() => new Map(proOdds.map((o) => [o.tier, o])), [proOdds]);
 
   function handleSubmit(values: PrizesFormValues) {
@@ -274,7 +371,12 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
             <div className="p-6 pb-4">
-              <ProfitBar analysis={proAnalysis} unitPrice={unitPrice} totalOutcomes={PRO_TOTAL_OUTCOMES} modeLabel="Max 3D Pro — 1 cặp 2 bộ ba số" />
+              <ProfitBar
+                analysis={proAnalysis}
+                unitPrice={unitPrice}
+                totalOutcomes={PRO_TOTAL_OUTCOMES}
+                modeLabel="Max 3D Pro — 1 cặp 2 bộ ba số"
+              />
             </div>
             <div className="border-t overflow-x-auto">
               <TableHeader />

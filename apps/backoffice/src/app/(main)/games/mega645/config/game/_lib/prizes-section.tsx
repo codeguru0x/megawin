@@ -114,171 +114,298 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
-            <div className="p-6 pb-4">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Bảng giải thưởng cố định
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Giá trị giải thưởng mặc định cho từng hạng giải (VND)
-                    {" · "}Tổng không gian mẫu: <strong>{fmt(TOTAL_OUTCOMES)}</strong>
-                    {" · "}Giá 1 line: <strong>{fmt(unitPrice)} VND</strong>
-                  </p>
-                </div>
-                <div className="flex items-center gap-4 text-xs shrink-0">
-                  <div className="text-right">
-                    <span className="text-muted-foreground">Trả thưởng kỳ vọng / line</span>
-                    <div className="font-semibold tabular-nums">
-                      {fmt(Math.round(profitAnalysis.totalExpectedPayout))} VND
+            <div className="grid gap-0 lg:grid-cols-[3fr_2fr]">
+              {/* ── Left: Editable prizes ─────────────────────── */}
+              <div className="overflow-x-auto p-6">
+                <div className="mb-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground">
+                        Bảng giải thưởng cố định
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Giá trị giải thưởng mặc định (VND) — Jackpot Độc Đắc là giải tích luỹ riêng
+                        {" · "}Mẫu: <strong>{fmt(TOTAL_OUTCOMES)}</strong>
+                        {" · "}Giá: <strong>{fmt(unitPrice)} VND</strong>
+                      </p>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
-                    <div
-                      className={`font-bold tabular-nums ${
-                        profitAnalysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"
-                      }`}
-                    >
-                      {profitAnalysis.grossMarginPercent >= 0 ? (
-                        <TrendingUp className="mr-1 inline size-3.5" />
-                      ) : (
-                        <TrendingDown className="mr-1 inline size-3.5" />
-                      )}
-                      {profitAnalysis.grossMarginPercent.toFixed(2)}%
-                      <span className="ml-1 font-normal text-muted-foreground">
-                        ({fmt(Math.round(profitAnalysis.grossMarginPerLine))} VND/line)
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t overflow-x-auto">
-              {/* Table header */}
-              <div className="grid grid-cols-[auto_1fr_176px_120px_120px_140px_100px_140px] items-center gap-3 bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground min-w-[1060px]">
-                <span className="w-9" />
-                <span>Hạng giải</span>
-                <span className="text-right">Giá trị mới</span>
-                <span className="text-right">Hiện tại</span>
-                <HeaderTooltip
-                  label="Xác suất"
-                  tip="Xác suất trúng giải cho 1 line. Hiển thị dạng '1 : N' nghĩa là cứ N line bán ra thì kỳ vọng có 1 line trúng giải này."
-                  className="justify-end"
-                />
-                <HeaderTooltip
-                  label="CP kỳ vọng"
-                  tip="Chi phí trả thưởng kỳ vọng cho mỗi line bán ra ở giải này. Công thức: Xác suất × Giá trị giải thưởng."
-                  className="justify-end"
-                />
-                <HeaderTooltip
-                  label="Tỷ lệ trả"
-                  tip="Tỷ lệ trả thưởng = Chi phí kỳ vọng ÷ Giá 1 line × 100%. Trên 100% nghĩa là giải này đang LỖ."
-                  className="justify-end"
-                />
-                <HeaderTooltip
-                  label="Tối đa hoà vốn"
-                  tip="Giá trị giải thưởng tối đa để giải này không bị lỗ. Công thức: Giá 1 line ÷ Xác suất."
-                  className="justify-end"
-                />
-              </div>
-
-              {/* Table rows */}
-              {PRIZE_FIELDS.map((p, idx) => {
-                const odds = oddsMap.get(p.key);
-                const profit = profitMap.get(p.key);
-                const isOverBreakEven = profit && profit.currentPrize > profit.breakEvenPrize;
-
-                return (
-                  <FormField
-                    key={p.key}
-                    control={form.control}
-                    name={p.key}
-                    render={({ field }) => (
-                      <FormItem>
+                    <div className="flex items-center gap-4 text-xs shrink-0">
+                      <div className="text-right">
+                        <span className="text-muted-foreground">Kỳ vọng trả / line</span>
+                        <div className="font-semibold tabular-nums">
+                          {fmt(Math.round(profitAnalysis.totalExpectedPayout))} VND
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
                         <div
-                          className={`grid grid-cols-[auto_1fr_176px_120px_120px_140px_100px_140px] items-center gap-3 px-6 py-3 transition-colors hover:bg-muted/20 min-w-[1060px] ${
-                            idx < PRIZE_FIELDS.length - 1 ? "border-b" : ""
+                          className={`font-bold tabular-nums ${
+                            profitAnalysis.grossMarginPercent >= 0
+                              ? "text-emerald-600"
+                              : "text-red-600"
                           }`}
                         >
-                          <Badge className={`${p.color} w-9 justify-center text-[10px] font-bold`}>
-                            {p.badge}
-                          </Badge>
-                          <div>
-                            <span className="text-sm font-medium">{p.label}</span>
-                            <span className="ml-2 text-xs text-muted-foreground">{p.desc}</span>
-                          </div>
-                          <FormControl>
-                            <MoneyInput
-                              className="w-44 text-right font-semibold"
-                              value={field.value}
-                              onValueChange={(v) => field.onChange(v ?? 0)}
-                              onBlur={field.onBlur}
-                              name={field.name}
-                              ref={field.ref}
-                            />
-                          </FormControl>
-                          <span className="text-right text-xs tabular-nums text-muted-foreground">
-                            {fmt(config.defaultPrizes[p.key])} VND
+                          {profitAnalysis.grossMarginPercent >= 0 ? (
+                            <TrendingUp className="mr-1 inline size-3.5" />
+                          ) : (
+                            <TrendingDown className="mr-1 inline size-3.5" />
+                          )}
+                          {profitAnalysis.grossMarginPercent.toFixed(2)}%
+                          <span className="ml-1 font-normal text-muted-foreground">
+                            ({fmt(Math.round(profitAnalysis.grossMarginPerLine))} VND/line)
                           </span>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="text-right text-xs tabular-nums text-muted-foreground cursor-help">
-                                {odds ? `1 : ${fmt(Math.round(odds.oneInN))}` : "–"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border overflow-hidden">
+                  {/* Table header */}
+                  <div className="grid grid-cols-[auto_1fr_152px_112px_112px_96px_116px] items-center gap-3 bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground min-w-[820px]">
+                    <span className="w-9" />
+                    <span>Hạng giải</span>
+                    <span className="text-right">Giá trị thưởng</span>
+                    <HeaderTooltip
+                      label="Xác suất"
+                      tip="Xác suất trúng giải cho 1 line. '1 : N' nghĩa là cứ N line bán ra thì kỳ vọng 1 line trúng."
+                      className="justify-end"
+                    />
+                    <HeaderTooltip
+                      label="CP kỳ vọng"
+                      tip="Chi phí trả thưởng kỳ vọng / line. Công thức: Xác suất × Giá trị giải."
+                      className="justify-end"
+                    />
+                    <HeaderTooltip
+                      label="Tỷ lệ TT"
+                      tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%. Trên 100% = LỖ."
+                      className="justify-end"
+                    />
+                    <HeaderTooltip
+                      label="Hoà vốn"
+                      tip="Giá trị giải tối đa để không lỗ. Công thức: Giá 1 line ÷ Xác suất."
+                      className="justify-end"
+                    />
+                  </div>
+
+                  {/* Table rows */}
+                  {PRIZE_FIELDS.map((p, idx) => {
+                    const odds = oddsMap.get(p.key);
+                    const profit = profitMap.get(p.key);
+                    const isOverBreakEven = profit && profit.currentPrize > profit.breakEvenPrize;
+
+                    return (
+                      <FormField
+                        key={p.key}
+                        control={form.control}
+                        name={p.key}
+                        render={({ field }) => (
+                          <FormItem>
+                            <div
+                              className={`grid grid-cols-[auto_1fr_152px_112px_112px_96px_116px] items-center gap-3 px-6 py-3 transition-colors hover:bg-muted/20 min-w-[820px] ${
+                                idx < PRIZE_FIELDS.length - 1 ? "border-b" : ""
+                              }`}
+                            >
+                              <Badge className={`${p.color} w-9 justify-center text-xs font-bold`}>
+                                {p.badge}
+                              </Badge>
+                              <div>
+                                <span className="text-sm font-medium">{p.label}</span>
+                                <span className="ml-2 text-xs text-muted-foreground">{p.desc}</span>
+                              </div>
+                              <FormControl>
+                                <MoneyInput
+                                  className="w-36 text-right font-semibold"
+                                  value={field.value}
+                                  onValueChange={(v) => field.onChange(v ?? 0)}
+                                  onBlur={field.onBlur}
+                                  name={field.name}
+                                  ref={field.ref}
+                                />
+                              </FormControl>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="text-right text-xs tabular-nums text-muted-foreground cursor-help">
+                                    {odds ? `1 : ${fmt(Math.round(odds.oneInN))}` : "–"}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-72 text-xs">
+                                  {odds && (
+                                    <>
+                                      Số cách trúng: {fmt(odds.ways)} / {fmt(TOTAL_OUTCOMES)}
+                                      <br />
+                                      Xác suất: {(odds.probability * 100).toFixed(6)}%
+                                    </>
+                                  )}
+                                </TooltipContent>
+                              </Tooltip>
+                              <span className="text-right text-xs tabular-nums font-medium">
+                                {profit ? `${fmt(Math.round(profit.expectedPayout))}` : "–"}
                               </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="max-w-72 text-xs">
-                              {odds && (
-                                <>
-                                  Số cách trúng: {fmt(odds.ways)} / {fmt(TOTAL_OUTCOMES)}
-                                  <br />
-                                  Xác suất: {(odds.probability * 100).toFixed(6)}%
-                                </>
-                              )}
-                            </TooltipContent>
-                          </Tooltip>
-                          <span className="text-right text-xs tabular-nums font-medium">
-                            {profit ? `${fmt(Math.round(profit.expectedPayout))} VND` : "–"}
-                          </span>
-                          <span
-                            className={`text-right text-xs tabular-nums font-semibold ${
-                              profit && profit.payoutRatio > 1
-                                ? "text-red-600"
-                                : profit && profit.payoutRatio > 0.5
-                                  ? "text-amber-600"
-                                  : "text-emerald-600"
-                            }`}
-                          >
-                            {profit ? `${(profit.payoutRatio * 100).toFixed(2)}%` : "–"}
-                          </span>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
                               <span
-                                className={`text-right text-xs tabular-nums cursor-help ${
-                                  isOverBreakEven
-                                    ? "text-red-600 font-bold"
-                                    : "text-muted-foreground"
+                                className={`text-right text-xs tabular-nums font-semibold ${
+                                  profit && profit.payoutRatio > 1
+                                    ? "text-red-600"
+                                    : profit && profit.payoutRatio > 0.5
+                                      ? "text-amber-600"
+                                      : "text-emerald-600"
                                 }`}
                               >
-                                {profit ? `${fmt(Math.round(profit.breakEvenPrize))} VND` : "–"}
+                                {profit ? `${(profit.payoutRatio * 100).toFixed(2)}%` : "–"}
                               </span>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="max-w-80 text-xs">
-                              {isOverBreakEven
-                                ? `Giải thưởng hiện tại (${fmt(profit!.currentPrize)} VND) đã vượt mức hoà vốn (${fmt(Math.round(profit!.breakEvenPrize))} VND) → giải này đang LỖ`
-                                : profit
-                                  ? `Có thể đặt giải thưởng tối đa ${fmt(Math.round(profit.breakEvenPrize))} VND mà vẫn hoà vốn cho giải này`
-                                  : "–"}
-                            </TooltipContent>
-                          </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span
+                                    className={`text-right text-xs tabular-nums cursor-help ${
+                                      isOverBreakEven
+                                        ? "text-red-600 font-bold"
+                                        : "text-muted-foreground"
+                                    }`}
+                                  >
+                                    {profit ? `${fmt(Math.round(profit.breakEvenPrize))}` : "–"}
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="max-w-80 text-xs">
+                                  {isOverBreakEven
+                                    ? `Giải thưởng hiện tại (${fmt(profit!.currentPrize)}) đã vượt mức hoà vốn (${fmt(Math.round(profit!.breakEvenPrize))}) → LỖ`
+                                    : profit
+                                      ? `Tối đa ${fmt(Math.round(profit.breakEvenPrize))} VND mà vẫn hoà vốn`
+                                      : "–"}
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                            <FormMessage className="px-6" />
+                          </FormItem>
+                        )}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ── Right: Full odds reference ────────────────── */}
+              <div className="border-t p-6 lg:border-l lg:border-t-0 overflow-x-auto">
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Xác suất &amp; tỷ lệ trả thưởng
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Toàn bộ hạng giải bao gồm Jackpot Độc Đắc.
+                  </p>
+                </div>
+
+                <div className="rounded-lg border overflow-hidden">
+                  {/* Header */}
+                  <div className="grid grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground min-w-[520px]">
+                    <span>Hạng giải</span>
+                    <span className="text-right">Xác suất</span>
+                    <span className="text-right">Giá trị</span>
+                    <HeaderTooltip
+                      label="CP kỳ vọng"
+                      tip="Chi phí kỳ vọng / line = Xác suất × Giá trị giải. Với Jackpot là giá trị khởi điểm."
+                      className="justify-end"
+                    />
+                    <HeaderTooltip
+                      label="Tỷ lệ TT"
+                      tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%."
+                      className="justify-end"
+                    />
+                  </div>
+
+                  {/* Rows */}
+                  {oddsTable.map((row, idx) => {
+                    const isJackpot = row.tier === "jackpot";
+                    const defaultPrize = isJackpot
+                      ? config.jackpot.seedAmount
+                      : (config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes] ?? 0);
+                    const expectedPayout = row.probability * defaultPrize;
+                    const payoutRate = unitPrice > 0 ? (expectedPayout / unitPrice) * 100 : 0;
+
+                    return (
+                      <div
+                        key={row.tier}
+                        className={`grid grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 px-6 py-3 text-xs transition-colors hover:bg-muted/20 min-w-[520px] ${
+                          idx < oddsTable.length - 1 ? "border-b" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          {isJackpot && (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
+                            >
+                              JP
+                            </Badge>
+                          )}
+                          <span className="font-medium text-foreground">{row.label}</span>
                         </div>
-                        <FormMessage className="px-6" />
-                      </FormItem>
-                    )}
-                  />
-                );
-              })}
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="cursor-help text-right tabular-nums text-muted-foreground">
+                              1:{fmt(Math.round(row.oneInN))}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-72 text-xs">
+                            Số cách trúng: {fmt(Math.round(row.ways))} / {fmt(TOTAL_OUTCOMES)}
+                            <br />
+                            Xác suất: {(row.probability * 100).toFixed(6)}%
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <span className="text-right tabular-nums text-muted-foreground">
+                          {fmt(defaultPrize)}
+                        </span>
+
+                        <span className="text-right tabular-nums font-medium">
+                          {fmt(Math.round(expectedPayout))}
+                        </span>
+
+                        <span className="text-right tabular-nums font-semibold text-muted-foreground">
+                          {payoutRate.toFixed(2)}%
+                        </span>
+                      </div>
+                    );
+                  })}
+
+                  {/* Total row */}
+                  <div className="grid grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 rounded-b-md border-t-2 bg-muted/30 px-6 py-2.5 text-xs font-semibold uppercase tracking-wider min-w-[520px]">
+                    <span>Tổng cộng</span>
+                    <span />
+                    <span />
+                    <span className="text-right tabular-nums">
+                      {fmt(
+                        Math.round(
+                          oddsTable.reduce((sum, row) => {
+                            const isJP = row.tier === "jackpot";
+                            const prize = isJP
+                              ? config.jackpot.seedAmount
+                              : (config.defaultPrizes[
+                                  row.tier as keyof typeof config.defaultPrizes
+                                ] ?? 0);
+                            return sum + row.probability * prize;
+                          }, 0),
+                        ),
+                      )}
+                    </span>
+                    <span className="text-right tabular-nums text-muted-foreground">
+                      {oddsTable
+                        .reduce((sum, row) => {
+                          const isJP = row.tier === "jackpot";
+                          const prize = isJP
+                            ? config.jackpot.seedAmount
+                            : (config.defaultPrizes[
+                                row.tier as keyof typeof config.defaultPrizes
+                              ] ?? 0);
+                          const ep = row.probability * prize;
+                          return sum + (unitPrice > 0 ? (ep / unitPrice) * 100 : 0);
+                        }, 0)
+                        .toFixed(2)}
+                      %
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
 

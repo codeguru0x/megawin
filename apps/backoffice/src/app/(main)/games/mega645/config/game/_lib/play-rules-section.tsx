@@ -3,8 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Save, Clock, Globe, CalendarDays } from "lucide-react";
-import { formatNumber } from "@megawin/shared/utils";
+import { Save, HelpCircle } from "lucide-react";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
 
@@ -18,24 +17,24 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { TimeInput } from "@/components/ui/time-input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import type { GameConfig } from "./use-game-config";
 
 const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-const DAY_OPTIONS = [
-  { value: 0, label: "CN" },
-  { value: 1, label: "T2" },
-  { value: 2, label: "T3" },
-  { value: 3, label: "T4" },
-  { value: 4, label: "T5" },
-  { value: 5, label: "T6" },
-  { value: 6, label: "T7" },
-] as const;
+const DAY_LABELS: Record<number, string> = {
+  0: "Chủ nhật",
+  1: "Thứ 2",
+  2: "Thứ 3",
+  3: "Thứ 4",
+  4: "Thứ 5",
+  5: "Thứ 6",
+  6: "Thứ 7",
+};
 
 const playFormSchema = z
   .object({
@@ -50,7 +49,7 @@ const playFormSchema = z
     drawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
   })
   .refine((data) => data.minBetCount <= data.maxBetCount, {
-    message: "Min lần cược phải ≤ Max lần cược",
+    message: "Số lần tối đa phải ≥ số lần tối thiểu",
     path: ["minBetCount"],
   });
 
@@ -60,6 +59,22 @@ interface PlayRulesSectionProps {
   config: GameConfig;
   onSave: (data: Record<string, unknown>) => void;
   isPending: boolean;
+}
+
+function LabelWithTooltip({ label, tip }: { label: string; tip: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      {label}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <HelpCircle className="size-3.5 cursor-help text-muted-foreground/60" />
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-72 text-xs">
+          {tip}
+        </TooltipContent>
+      </Tooltip>
+    </span>
+  );
 }
 
 export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSectionProps) {
@@ -78,6 +93,16 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
     },
   });
 
+  const drawDays = form.watch("drawDaysOfWeek") ?? [];
+
+  function toggleDay(day: number) {
+    const current = form.getValues("drawDaysOfWeek");
+    const next = current.includes(day)
+      ? current.filter((d) => d !== day)
+      : [...current, day].sort();
+    form.setValue("drawDaysOfWeek", next, { shouldDirty: true });
+  }
+
   function handleSubmit(values: PlayFormValues) {
     onSave({
       play: {
@@ -94,21 +119,18 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
     });
   }
 
-  const fmt = formatNumber;
-  const watchedDays = form.watch("drawDaysOfWeek") ?? [];
-
   return (
     <Card className="overflow-hidden py-0 gap-0">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
             <div className="grid gap-0 lg:grid-cols-2">
-              {/* Left: Pricing & Limits */}
+              {/* Cột trái — Giá vé & Giới hạn */}
               <div className="space-y-5 p-6">
                 <div>
                   <h3 className="text-sm font-semibold text-foreground">Giá vé & Giới hạn</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Cấu hình giá và các giới hạn chơi
+                    Cấu hình giá 1 lượt chơi và các giới hạn số lượng khi đặt cược.
                   </p>
                 </div>
 
@@ -117,8 +139,11 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                   name="unitPrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        Giá mỗi dòng
+                      <FormLabel className="text-xs text-muted-foreground">
+                        <LabelWithTooltip
+                          label="Giá mỗi lượt chơi"
+                          tip="Giá 1 line × 1 lần tham gia dự thưởng (betCount). Tổng tiền vé = số lines × betCount × giá này."
+                        />
                       </FormLabel>
                       <FormControl>
                         <div className="relative">
@@ -135,22 +160,22 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                           </span>
                         </div>
                       </FormControl>
-                      <p className="text-xs text-muted-foreground tabular-nums">
-                        = {fmt(field.value || 0)}đ / line
-                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <div className="grid grid-cols-5 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <FormField
                     control={form.control}
                     name="maxBoardsPerTicket"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">
-                          Max boards/vé
+                          <LabelWithTooltip
+                            label="Số boards tối đa / vé"
+                            tip="Số lượng board (A, B, C…) tối đa trên 1 vé. Mỗi board là 1 tập hợp 6 số chơi độc lập, được settle riêng."
+                          />
                         </FormLabel>
                         <FormControl>
                           <MoneyInput
@@ -173,7 +198,10 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">
-                          Max kỳ liên tiếp
+                          <LabelWithTooltip
+                            label="Kỳ liên tiếp tối đa"
+                            tip="Mua 1 vé đăng ký tham gia tối đa bao nhiêu kỳ quay liên tiếp (multi-draw). Mỗi kỳ tạo 1 entry riêng."
+                          />
                         </FormLabel>
                         <FormControl>
                           <MoneyInput
@@ -196,7 +224,10 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">
-                          Đóng trước (phút)
+                          <LabelWithTooltip
+                            label="Đóng bán trước"
+                            tip="Ngừng nhận vé trước giờ quay số bao nhiêu phút."
+                          />
                         </FormLabel>
                         <FormControl>
                           <MoneyInput
@@ -213,13 +244,19 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                       </FormItem>
                     )}
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
                     name="minBetCount"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">
-                          Min lần cược/board
+                          <LabelWithTooltip
+                            label="Số lượt tối thiểu"
+                            tip="Số lần tham gia dự thưởng tối thiểu mỗi board. Người chơi không thể chọn ít hơn giá trị này."
+                          />
                         </FormLabel>
                         <FormControl>
                           <MoneyInput
@@ -242,13 +279,16 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs text-muted-foreground">
-                          Max lần cược/board
+                          <LabelWithTooltip
+                            label="Số lượt tối đa"
+                            tip="Số lần tham gia dự thưởng tối đa mỗi board. Tiền thưởng nhân theo số lượt — trúng với betCount=5 nhận 5× giá trị giải."
+                          />
                         </FormLabel>
                         <FormControl>
                           <MoneyInput
                             className="text-center font-semibold"
                             value={field.value}
-                            onValueChange={(v) => field.onChange(v ?? 1)}
+                            onValueChange={(v) => field.onChange(v ?? 10)}
                             onBlur={field.onBlur}
                             name={field.name}
                             ref={field.ref}
@@ -262,115 +302,70 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 </div>
               </div>
 
-              {/* Right: Schedule */}
+              {/* Cột phải — Lịch quay số */}
               <div className="border-t p-6 lg:border-l lg:border-t-0">
                 <div className="mb-5">
                   <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Cố định {form.watch("drawsPerWeek")} kỳ quay mỗi tuần
+                    {form.watch("drawsPerWeek")} kỳ quay mỗi tuần — Mega 6/45 quay T4, T6, CN.
                   </p>
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="drawsPerWeek"
-                  render={({ field }) => (
-                    <FormItem className="mb-5">
-                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        Số kỳ quay / tuần
-                      </FormLabel>
-                      <FormControl>
-                        <MoneyInput
-                          className="h-9 w-20 text-center font-semibold"
-                          value={field.value}
-                          onValueChange={(v) => field.onChange(v ?? 1)}
-                          onBlur={field.onBlur}
-                          name={field.name}
-                          ref={field.ref}
-                          thousandSeparator={false}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="drawDaysOfWeek"
-                  render={() => (
-                    <FormItem className="mb-5">
-                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2 block">
-                        Ngày quay trong tuần
-                      </FormLabel>
-                      <div className="flex flex-wrap gap-2">
-                        {DAY_OPTIONS.map((day) => {
-                          const checked = watchedDays.includes(day.value);
-                          return (
-                            <label
-                              key={day.value}
-                              className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium cursor-pointer transition-colors ${
-                                checked
-                                  ? "border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-700 dark:bg-orange-950/30 dark:text-orange-400"
-                                  : "hover:bg-muted/50"
-                              }`}
-                            >
-                              <Checkbox
-                                checked={checked}
-                                onCheckedChange={(c) => {
-                                  const next = c
-                                    ? [...watchedDays, day.value].sort()
-                                    : watchedDays.filter((d) => d !== day.value);
-                                  form.setValue("drawDaysOfWeek", next, {
-                                    shouldDirty: true,
-                                  });
-                                }}
-                                className="sr-only"
-                              />
-                              <CalendarDays className="size-3.5" />
-                              {day.label}
-                            </label>
-                          );
-                        })}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="space-y-3">
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Giờ quay
+                <div className="mb-5">
+                  <p className="text-xs text-muted-foreground mb-1.5">
+                    Số kỳ quay / tuần
                   </p>
+                  <div className="flex h-9 w-20 items-center justify-center rounded-md border bg-muted/50 text-sm font-semibold tabular-nums text-muted-foreground">
+                    {form.watch("drawsPerWeek")}
+                  </div>
+                </div>
+
+                <div className="space-y-5">
                   <FormField
                     control={form.control}
                     name="drawTime"
                     render={({ field }) => (
                       <FormItem>
-                        <div className="relative w-32">
-                          <Clock className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                          <FormControl>
-                            <Input
-                              className="pl-8 text-center font-mono text-sm font-semibold"
-                              placeholder="HH:mm"
-                              {...field}
-                            />
-                          </FormControl>
-                        </div>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          <LabelWithTooltip
+                            label="Giờ quay"
+                            tip="Giờ quay số duy nhất trong ngày. Áp dụng cho tất cả ngày quay được chọn bên dưới."
+                          />
+                        </FormLabel>
+                        <FormControl>
+                          <TimeInput {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
 
-                <div className="mt-4 flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
-                  <Globe className="size-3.5 text-muted-foreground" />
-                  <p className="text-xs text-muted-foreground">
-                    Múi giờ:{" "}
-                    <Badge variant="secondary" className="ml-1 font-mono text-[10px]">
-                      Asia/Ho_Chi_Minh
-                    </Badge>
-                  </p>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">
+                      Ngày quay trong tuần
+                    </Label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[1, 2, 3, 4, 5, 6, 0].map((day) => (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => toggleDay(day)}
+                          className={`flex h-9 items-center justify-center rounded-lg border px-3 text-sm font-medium transition-colors ${
+                            drawDays.includes(day)
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-background text-muted-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {DAY_LABELS[day]}
+                        </button>
+                      ))}
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="drawDaysOfWeek"
+                      render={() => <FormMessage />}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

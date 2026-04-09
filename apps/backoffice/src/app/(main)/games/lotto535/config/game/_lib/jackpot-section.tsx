@@ -125,9 +125,9 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                   name="seedAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      <FormLabel className="text-xs text-muted-foreground">
                         <LabelWithTooltip
-                          label="Giá trị khởi điểm (Seed)"
+                          label="Giá trị khởi điểm"
                           tip="Số tiền khởi điểm của Jackpot khi bắt đầu chu kỳ mới (sau khi có người trúng Jackpot hoặc reset). Đây là giá trị tối thiểu người chơi có thể trúng Jackpot."
                         />
                       </FormLabel>
@@ -146,9 +146,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                           </span>
                         </div>
                       </FormControl>
-                      <p className="text-xs text-muted-foreground tabular-nums">
-                        = {fmt(field.value || 0)}đ khi bắt đầu Jackpot mới
-                      </p>
+
                       <FormMessage />
                     </FormItem>
                   )}
@@ -159,7 +157,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                   name="splitThreshold"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      <FormLabel className="text-xs text-muted-foreground">
                         <LabelWithTooltip
                           label="Ngưỡng kích hoạt chia (Ngưỡng chia)"
                           tip="Khi quỹ Jackpot vượt ngưỡng này, hệ thống sẽ kích hoạt cơ chế chia (split) — phân bổ phần vượt vào các giải cố định theo tỷ lệ chia bên phải. Mục đích: hạn chế Jackpot tích luỹ quá lớn."
@@ -214,7 +212,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                           <FormItem>
                             <div className="group flex items-center gap-3 rounded-lg border bg-muted/30 px-3 py-2 transition-colors hover:bg-muted/50">
                               <Badge
-                                className={`${tier.color} w-9 justify-center text-[10px] font-bold`}
+                                className={`${tier.color} w-9 justify-center text-xs font-bold`}
                               >
                                 {tier.badge}
                               </Badge>
@@ -242,7 +240,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                   })}
 
                   <div className="flex items-center gap-3 rounded-lg border border-dashed px-3 py-2">
-                    <Badge variant="outline" className="w-9 justify-center text-[10px]">
+                    <Badge variant="outline" className="w-9 justify-center text-xs">
                       KK
                     </Badge>
                     <span className="flex-1 text-sm text-muted-foreground">Khuyến Khích</span>
@@ -252,9 +250,15 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
 
                 <Separator className="my-3" />
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">Tổng phần</span>
-                  <span className="font-bold tabular-nums">{total}</span>
+                <div className="flex items-center gap-3 px-0">
+                  <div className="w-9 shrink-0" />
+                  <span className="flex-1 text-sm font-medium">Tổng phần</span>
+                  <div className="h-8 w-16 flex items-center justify-center">
+                    <span className="font-bold tabular-nums text-sm">{total}</span>
+                  </div>
+                  <span className="w-14 text-right text-xs tabular-nums text-muted-foreground">
+                    100%
+                  </span>
                 </div>
               </div>
             </div>

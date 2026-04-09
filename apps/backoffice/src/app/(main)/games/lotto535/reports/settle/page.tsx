@@ -28,7 +28,7 @@ function Lotto535FinancialContent() {
               Doanh thu, trả thưởng, hoa hồng theo kỳ quay và đại lý
             </p>
           </div>
-        </div>å
+        </div>
         <div className="flex items-center gap-2">
           <FinancialDateRangePicker
             from={from}

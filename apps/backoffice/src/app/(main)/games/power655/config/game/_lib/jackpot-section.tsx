@@ -1,10 +1,9 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Save, Info, HelpCircle } from "lucide-react";
-import { formatNumber } from "@megawin/shared/utils";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
 
@@ -25,23 +24,37 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 import type { GameConfig } from "./use-game-config";
 
-const jackpotFormSchema = z.object({
-  jp1SeedAmount: z.coerce.number().int().nonnegative("Phải >= 0"),
-  jp2SeedAmount: z.coerce.number().int().nonnegative("Phải >= 0"),
-  jp1ContributionRatio: z.coerce.number().min(0).max(100),
-  jp2ContributionRatio: z.coerce.number().min(0).max(100),
-  jp1OverflowThreshold: z.coerce.number().int().nonnegative("Phải >= 0"),
-});
+const jackpotFormSchema = z
+  .object({
+    jp1SeedAmount: z.coerce.number().int().nonnegative("Phải >= 0"),
+    jp2SeedAmount: z.coerce.number().int().nonnegative("Phải >= 0"),
+    jp1ContributionRatio: z.coerce.number().int().min(1).max(99),
+    jp1OverflowThreshold: z.coerce.number().int().nonnegative("Phải >= 0"),
+  })
+  .refine((v) => v.jp2SeedAmount <= v.jp1SeedAmount, {
+    message: "Giá trị khởi điểm JP2 phải ≤ JP1.",
+    path: ["jp2SeedAmount"],
+  })
+  .refine((v) => v.jp1OverflowThreshold > v.jp1SeedAmount, {
+    message: "Ngưỡng tràn phải lớn hơn giá trị khởi điểm JP1.",
+    path: ["jp1OverflowThreshold"],
+  })
+  .transform((v) => ({ ...v, jp2ContributionRatio: 100 - v.jp1ContributionRatio }));
 
-type JackpotFormValues = z.infer<typeof jackpotFormSchema>;
+type JackpotFormInput = {
+  jp1SeedAmount: number;
+  jp2SeedAmount: number;
+  jp1ContributionRatio: number;
+  jp1OverflowThreshold: number;
+};
+
+type JackpotFormValues = JackpotFormInput & { jp2ContributionRatio: number };
 
 interface JackpotSectionProps {
   config: GameConfig;
   onSave: (data: Record<string, unknown>) => void;
   isPending: boolean;
 }
-
-const fmt = formatNumber;
 
 function LabelWithTooltip({ label, tip }: { label: string; tip: string }) {
   return (
@@ -60,16 +73,18 @@ function LabelWithTooltip({ label, tip }: { label: string; tip: string }) {
 }
 
 export function JackpotSection({ config, onSave, isPending }: JackpotSectionProps) {
-  const form = useForm<JackpotFormValues>({
+  const form = useForm<JackpotFormInput>({
     resolver: zodResolver(jackpotFormSchema) as any,
     values: {
       jp1SeedAmount: config.jackpot.jackpot1.seedAmount,
       jp2SeedAmount: config.jackpot.jackpot2.seedAmount,
-      jp1ContributionRatio: config.jackpot.jp1ContributionRatio * 100,
-      jp2ContributionRatio: config.jackpot.jp2ContributionRatio * 100,
+      jp1ContributionRatio: Math.round(config.jackpot.jp1ContributionRatio * 100),
       jp1OverflowThreshold: config.jackpot.jp1OverflowThreshold,
     },
   });
+
+  const jp1Ratio = useWatch({ control: form.control, name: "jp1ContributionRatio" }) ?? 90;
+  const jp2Ratio = 100 - jp1Ratio;
 
   function handleSubmit(values: JackpotFormValues) {
     onSave({
@@ -86,90 +101,90 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
   return (
     <Card className="overflow-hidden py-0 gap-0">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)}>
+        <form onSubmit={form.handleSubmit(handleSubmit as any)}>
           <CardContent className="p-0">
-            <div className="p-6 space-y-5">
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">
-                  Cấu hình Jackpot kép (Dual Jackpot)
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Jackpot 1 (trùng 6/6 số chính) và Jackpot 2 (trùng 5/6 số chính + số bonus)
-                </p>
-              </div>
+            <div className="p-6 pb-4">
+              <h3 className="text-sm font-semibold text-foreground">Jackpot kép (Dual Jackpot)</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Jackpot 1 (trùng 6/6 số chính, tối thiểu 30 tỷ) và Jackpot 2 (trùng 5/6 + số bonus,
+                tối thiểu 3 tỷ). Cả hai tích luỹ song song theo tỷ lệ đã cài đặt.
+              </p>
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="jp1SeedAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        <Badge className="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 mr-1">
-                          Jackpot 1
-                        </Badge>
-                        <LabelWithTooltip
-                          label="Giá trị khởi điểm"
-                          tip="Số tiền khởi điểm của Jackpot 1 khi bắt đầu chu kỳ mới (sau khi có người trúng hoặc reset). Mặc định 30 tỷ VND."
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <MoneyInput
-                            className="pr-14 font-semibold"
-                            value={field.value}
-                            onValueChange={(v) => field.onChange(v ?? 0)}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            ref={field.ref}
+            <div className="border-t px-6 py-5">
+              <div className="space-y-5">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="jp1SeedAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          <Badge className="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 mr-1">
+                            Jackpot 1
+                          </Badge>
+                          <LabelWithTooltip
+                            label="Giá trị khởi điểm"
+                            tip="Số tiền khởi điểm của Jackpot 1 khi bắt đầu chu kỳ mới (sau khi có người trúng hoặc reset). Mặc định 30 tỷ VND."
                           />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
-                            VND
-                          </span>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="jp2SeedAmount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 mr-1">
-                          Jackpot 2
-                        </Badge>
-                        <LabelWithTooltip
-                          label="Giá trị khởi điểm"
-                          tip="Số tiền khởi điểm của Jackpot 2 khi bắt đầu chu kỳ mới (sau khi có người trúng hoặc reset). Mặc định 3 tỷ VND."
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <MoneyInput
-                            className="pr-14 font-semibold"
-                            value={field.value}
-                            onValueChange={(v) => field.onChange(v ?? 0)}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            ref={field.ref}
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <MoneyInput
+                              className="pr-14 font-semibold"
+                              value={field.value}
+                              onValueChange={(v) => field.onChange(v ?? 0)}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                              VND
+                            </span>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="jp2SeedAmount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 mr-1">
+                            Jackpot 2
+                          </Badge>
+                          <LabelWithTooltip
+                            label="Giá trị khởi điểm"
+                            tip="Số tiền khởi điểm của Jackpot 2 khi bắt đầu chu kỳ mới (sau khi có người trúng hoặc reset). Mặc định 3 tỷ VND."
                           />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
-                            VND
-                          </span>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <MoneyInput
+                              className="pr-14 font-semibold"
+                              value={field.value}
+                              onValueChange={(v) => field.onChange(v ?? 0)}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                              VND
+                            </span>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              <Separator />
+                <Separator />
 
-              <div className="grid grid-cols-2 gap-4">
+                {/* Tỷ lệ tích luỹ JP1 / JP2 */}
                 <FormField
                   control={form.control}
                   name="jp1ContributionRatio"
@@ -177,107 +192,140 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground">
                         <LabelWithTooltip
-                          label="Jackpot 1 — Tỷ lệ tích luỹ (%)"
-                          tip="Phần trăm doanh thu tích luỹ vào quỹ Jackpot 1 mỗi kỳ quay. Ví dụ: nếu đặt 90%, thì 90% phần tích luỹ Jackpot sẽ đổ vào Jackpot 1."
+                          label="Tỷ lệ tích luỹ Jackpot 1 / Jackpot 2"
+                          tip="Phân bổ phần tích luỹ Jackpot giữa JP1 và JP2. Tổng hai tỷ lệ luôn = 100%. Mặc định 90% JP1 / 10% JP2."
                         />
                       </FormLabel>
-                      <div className="flex items-baseline gap-2">
-                        <FormControl>
-                          <MoneyInput
-                            className="h-10 w-20 text-center font-semibold"
-                            value={field.value}
-                            onValueChange={(v) => field.onChange(v ?? 0)}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            ref={field.ref}
-                            decimalScale={1}
-                            thousandSeparator={false}
-                          />
-                        </FormControl>
-                        <span className="text-sm text-muted-foreground">%</span>
+
+                      {/* Bar trực quan — cập nhật theo input bên dưới */}
+                      <div className="flex h-7 w-full overflow-hidden rounded-md text-xs font-semibold">
+                        <div
+                          className="flex items-center justify-center text-white transition-[width] duration-150"
+                          style={{
+                            width: `${jp1Ratio}%`,
+                            background: "linear-gradient(90deg, #ef4444, #f97316)",
+                          }}
+                        >
+                          {jp1Ratio >= 5 && `JP1 · ${jp1Ratio}%`}
+                        </div>
+                        <div
+                          className="flex items-center justify-center bg-blue-500 text-white transition-[width] duration-150"
+                          style={{ width: `${jp2Ratio}%` }}
+                        >
+                          {jp2Ratio >= 5 && `JP2 · ${jp2Ratio}%`}
+                        </div>
                       </div>
+
+                      {/* Input số cho cả 2 ô — luôn đồng bộ, tổng = 100 */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-muted-foreground">
+                            Jackpot 1 — Tỷ lệ tích luỹ
+                          </p>
+                          <div className="flex items-baseline gap-1.5">
+                            <FormControl>
+                              <MoneyInput
+                                className="h-9 w-20 text-center font-semibold"
+                                value={field.value ?? 90}
+                                onValueChange={(v) => {
+                                  const clamped = Math.min(99, Math.max(1, v ?? 1));
+                                  field.onChange(clamped);
+                                }}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
+                                decimalScale={0}
+                                thousandSeparator={false}
+                                isAllowed={({ floatValue }) =>
+                                  floatValue === undefined || (floatValue >= 1 && floatValue <= 99)
+                                }
+                              />
+                            </FormControl>
+                            <span className="text-sm text-muted-foreground">%</span>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-muted-foreground">
+                            Jackpot 2 — Tỷ lệ tích luỹ
+                          </p>
+                          <div className="flex items-baseline gap-1.5">
+                            <MoneyInput
+                              className="h-9 w-20 text-center font-semibold"
+                              value={jp2Ratio}
+                              onValueChange={(v) => {
+                                const jp2 = Math.min(99, Math.max(1, v ?? 1));
+                                field.onChange(100 - jp2);
+                              }}
+                              decimalScale={0}
+                              thousandSeparator={false}
+                              isAllowed={({ floatValue }) =>
+                                floatValue === undefined || (floatValue >= 1 && floatValue <= 99)
+                              }
+                            />
+                            <span className="text-sm text-muted-foreground">%</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        Tổng:{" "}
+                        <span className="font-semibold text-foreground">
+                          {jp1Ratio + jp2Ratio}%
+                        </span>{" "}
+                        · JP1 + JP2 luôn = 100%
+                      </p>
+
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
-                  name="jp2ContributionRatio"
+                  name="jp1OverflowThreshold"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs text-muted-foreground">
                         <LabelWithTooltip
-                          label="Jackpot 2 — Tỷ lệ tích luỹ (%)"
-                          tip="Phần trăm doanh thu tích luỹ vào quỹ Jackpot 2 mỗi kỳ quay. Ví dụ: nếu đặt 10%, thì 10% phần tích luỹ Jackpot sẽ đổ vào Jackpot 2."
+                          label="Jackpot 1 — Ngưỡng tràn (Overflow)"
+                          tip="Khi quỹ Jackpot 1 vượt quá ngưỡng này và kỳ đó có Jackpot 2 winner, phần tiền dư ra sẽ tự động chuyển sang quỹ Jackpot 2 kỳ đó. Nếu không ai trúng cả Jackpot 1 lẫn Jackpot 2, Jackpot 1 tiếp tục tăng không bị giới hạn."
                         />
                       </FormLabel>
-                      <div className="flex items-baseline gap-2">
-                        <FormControl>
+                      <FormControl>
+                        <div className="relative">
                           <MoneyInput
-                            className="h-10 w-20 text-center font-semibold"
+                            className="pr-14 font-semibold"
                             value={field.value}
                             onValueChange={(v) => field.onChange(v ?? 0)}
                             onBlur={field.onBlur}
                             name={field.name}
                             ref={field.ref}
-                            decimalScale={1}
-                            thousandSeparator={false}
                           />
-                        </FormControl>
-                        <span className="text-sm text-muted-foreground">%</span>
-                      </div>
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
+                            VND
+                          </span>
+                        </div>
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="jp1OverflowThreshold"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs text-muted-foreground">
-                      <LabelWithTooltip
-                        label="Jackpot 1 — Ngưỡng tràn (Overflow)"
-                        tip="Khi quỹ Jackpot 1 vượt quá ngưỡng này và kỳ đó có Jackpot 2 winner, phần tiền dư ra sẽ tự động chuyển sang quỹ Jackpot 2 kỳ đó. Nếu không ai trúng cả Jackpot 1 lẫn Jackpot 2, Jackpot 1 tiếp tục tăng không bị giới hạn."
-                      />
-                    </FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <MoneyInput
-                          className="pr-14 font-semibold"
-                          value={field.value}
-                          onValueChange={(v) => field.onChange(v ?? 0)}
-                          onBlur={field.onBlur}
-                          name={field.name}
-                          ref={field.ref}
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground">
-                          VND
-                        </span>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="border-t bg-blue-50/80 px-6 py-3 dark:bg-blue-950/20">
-              <div className="flex items-start gap-2">
-                <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
-                <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
-                  Power 6/55 có <strong>Dual Jackpot</strong>: Jackpot 1 (trùng 6/6) tối thiểu 30
-                  tỷ, Jackpot 2 (trùng 5/6 + bonus) tối thiểu 3 tỷ. Tích luỹ mỗi kỳ theo tỷ lệ
-                  Jackpot 1/Jackpot 2. Jackpot tích lũy không giới hạn đến khi có winner —{" "}
-                  <strong>không có cơ chế chia giải (split)</strong>. Overflow Jackpot 1 chỉ kích
-                  hoạt khi Jackpot 1 &gt; ngưỡng tràn, không có Jackpot 1 winner, và có Jackpot 2
-                  winner.
-                </p>
-              </div>
             </div>
           </CardContent>
+
+          <div className="border-t bg-blue-50/80 px-6 py-3 dark:bg-blue-950/20">
+            <div className="flex items-start gap-2">
+              <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
+              <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
+                Power 6/55 có <strong>Dual Jackpot</strong>: Jackpot 1 (trùng 6/6) tối thiểu 30 tỷ,
+                Jackpot 2 (trùng 5/6 + bonus) tối thiểu 3 tỷ. Tích luỹ mỗi kỳ theo tỷ lệ Jackpot
+                1/Jackpot 2. Jackpot tích lũy không giới hạn đến khi có người trúng —{" "}
+                <strong>không có cơ chế chia giải (split)</strong>. Overflow Jackpot 1 chỉ kích hoạt
+                khi Jackpot 1 &gt; ngưỡng tràn, không có Jackpot 1 winner, và có Jackpot 2 winner.
+              </p>
+            </div>
+          </div>
 
           <CardFooter className="justify-end border-t px-6 py-3">
             <Button type="submit" disabled={isPending || !form.formState.isDirty}>

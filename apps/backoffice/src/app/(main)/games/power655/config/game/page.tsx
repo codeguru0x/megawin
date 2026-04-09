@@ -1,8 +1,9 @@
 "use client";
 
 import { Trophy, DollarSign, Percent, Settings2 } from "lucide-react";
+import { useQueryState, parseAsStringEnum } from "nuqs";
 
-import { Badge } from "@/components/ui/badge";
+import { displayVNDateTime } from "@megawin/shared/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
@@ -24,26 +25,27 @@ function ConfigSkeleton() {
 export default function Power655ConfigPage() {
   const { data: config, isLoading, isError, error } = useGameConfig();
   const mutation = useUpdateGameConfig();
+  const [tab, setTab] = useQueryState(
+    "tab",
+    parseAsStringEnum(["jackpot", "prizes", "rates", "play"]).withDefault("jackpot"),
+  );
 
   const handleSave = (data: Record<string, unknown>) => mutation.mutate(data);
 
   return (
     <div className="@container/main flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
-            <Settings2 className="size-4 text-white" />
-          </div>
+      <div className="flex items-center gap-2.5">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-linear-to-br from-red-500 to-orange-500 shadow-sm">
+          <Settings2 className="size-4 text-white" />
+        </div>
+        <div>
           <h1 className="text-base font-semibold tracking-tight text-foreground">
             Power 6/55 — Cấu hình
           </h1>
           {config && (
-            <Badge
-              variant="secondary"
-              className="border-red-200 bg-red-100 font-mono text-[11px] text-red-700 tabular-nums dark:border-red-800 dark:bg-red-950/50 dark:text-red-400"
-            >
-              v{config.version}
-            </Badge>
+            <p className="text-xs tabular-nums text-muted-foreground">
+              v{config.version} · Cập nhật {displayVNDateTime(config.updatedAt)}
+            </p>
           )}
         </div>
       </div>
@@ -59,7 +61,7 @@ export default function Power655ConfigPage() {
       )}
 
       {config && (
-        <Tabs defaultValue="jackpot">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
           <TabsList variant="line" className="w-full justify-start gap-0 border-b px-0">
             <TabsTrigger value="jackpot" className="gap-1.5">
               <Trophy className="size-4 text-red-500" />

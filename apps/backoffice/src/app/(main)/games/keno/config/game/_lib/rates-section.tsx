@@ -57,14 +57,14 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)}>
           <CardContent className="p-0">
-            <div className="px-5 py-3">
+            <div className="p-6 pb-4">
               <h3 className="text-sm font-semibold text-foreground">Tỷ lệ tài chính</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Keno không có Jackpot — công ty thu toàn bộ phần dư sau trả thưởng và hoa hồng
               </p>
             </div>
 
-            <div className="mx-5 mb-2 space-y-1.5">
+            <div className="mx-6 mb-2 space-y-1.5">
               <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
                 <div className="flex h-full">
                   <div
@@ -73,7 +73,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                   />
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <span className="inline-block size-2 rounded-full bg-blue-500" />
                   Hoa hồng: {commissionRate}%
@@ -87,7 +87,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
               </div>
             </div>
 
-            <div className="border-t p-5">
+            <div className="border-t p-6">
               <FormField
                 control={form.control}
                 name="defaultCommissionRate"
@@ -121,7 +121,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                         </FormControl>
                         <span className="text-lg font-semibold text-muted-foreground">%</span>
                       </div>
-                      <p className="text-[11px] tabular-nums text-muted-foreground">Tối đa 100%</p>
+                      <p className="text-xs tabular-nums text-muted-foreground">Tối đa 100%</p>
                     </div>
                     <FormMessage />
                   </FormItem>
@@ -130,7 +130,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
             </div>
           </CardContent>
 
-          <CardFooter className="justify-end border-t px-5 py-2.5">
+          <CardFooter className="justify-end border-t px-6 py-3">
             <Button type="submit" disabled={isPending || !form.formState.isDirty}>
               {isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-4" />}
               Lưu tỷ lệ tài chính
