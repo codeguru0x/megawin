@@ -113,6 +113,7 @@ export function GameTenantReportTable({
           iconColor="text-emerald-600 dark:text-emerald-400"
           label={REPORT_COLUMN_LABELS.totalStake}
           value={formatVNDCompact(totals.totalStake)}
+          sub={`${formatNumber(totals.entryCount)} lượt cược`}
         />
         <KpiCard
           icon={TrendingDown}
@@ -194,8 +195,7 @@ export function GameTenantReportTable({
                 {rows.map((row) => {
                   const rowNetProfit =
                     row.netProfit ?? row.totalStake - row.totalPayout - row.totalCommission;
-                  const rowPayoutRatio =
-                    row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
+                  const rowPayoutRatio = row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
                   return (
                     <TableRow
                       key={row.tenantId}

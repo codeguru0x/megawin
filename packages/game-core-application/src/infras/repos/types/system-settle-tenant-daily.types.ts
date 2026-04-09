@@ -48,3 +48,28 @@ export interface TenantSummaryRow {
   /** Lợi nhuận ròng = ggr - totalCommission (VND). */
   netProfit: number;
 }
+
+/**
+ * Aggregate result khi drill-down game breakdown cho 1 tenant — SUM cross-date.
+ * 1 row = 1 gameProduct, gộp tất cả financialDate trong date range.
+ * Dùng cho TenantDetailView (inline expand tab "Theo đại lý").
+ */
+export interface TenantGameBreakdownRow {
+  /** Game product identifier. */
+  gameProduct: string;
+  drawCount: number;
+  entryCount: number;
+  playerCount: number;
+  /** Tổng doanh thu bán vé (VND). */
+  totalStake: number;
+  /** Tổng tiền thắng (VND). */
+  totalWin: number;
+  /** Tổng trả thưởng (VND). */
+  totalPayout: number;
+  /** Gross Gaming Revenue = totalStake - totalPayout (VND). */
+  ggr: number;
+  /** Hoa hồng đại lý (VND). */
+  commission: number;
+  /** Lợi nhuận ròng = ggr - commission (VND). */
+  netProfit: number;
+}

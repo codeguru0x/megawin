@@ -25,7 +25,7 @@ import { SYSTEM_SETTLE_TENANT_DAILY } from "@megawin/game-core/entities";
 import type { GameProduct } from "@megawin/game-core/entities";
 import { SystemSettleTenantDailyMapper } from "../mappers";
 import { GameCoreBaseRepo } from "./game-core-base-repo";
-import type { TenantSummaryRow } from "./types";
+import type { TenantSummaryRow, TenantGameBreakdownRow } from "./types";
 
 /**
  * Base repository ghi và query system tenant daily settle reports.
@@ -183,28 +183,63 @@ export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<
   }
 
   /**
-   * Game breakdown cho 1 tenant trong date range — dùng inline expand.
+   * Game breakdown cho 1 tenant trong date range — SUM cross-date per game.
    *
-   * Query system_settle_tenant_daily WHERE tenantId + financialDate in range.
+   * Aggregate system_settle_tenant_daily WHERE tenantId + financialDate in range,
+   * group by gameProduct → 1 row per game.
    * Sort theo gameProduct ascending.
-   * Index: { financialDate: 1, tenantId: 1 }
+   * Index: { financialDate: 1, tenantId: 1, gameProduct: 1 }
    */
   async findTenantGameBreakdown(
     tenantId: string,
     from: string,
     to: string,
-  ): Promise<SystemSettleTenantDailyEntity[]> {
-    return this.findMany(
+  ): Promise<TenantGameBreakdownRow[]> {
+    const result = await this.aggregate([
+      // Lọc theo tenant + date range
       {
-        tenantId,
-        financialDate: {
-          $gte: from,
-          $lte: to,
+        $match: {
+          tenantId,
+          financialDate: {
+            $gte: from,
+            $lte: to,
+          },
         },
       },
+      // Nhóm theo gameProduct → SUM cross-date
       {
-        sort: { gameProduct: 1 },
+        $group: {
+          _id: "$gameProduct",
+          drawCount: { $sum: "$drawCount" },
+          entryCount: { $sum: "$entryCount" },
+          playerCount: { $sum: "$playerCount" },
+          totalStake: { $sum: "$totalStake" },
+          totalWin: { $sum: "$totalWin" },
+          totalPayout: { $sum: "$totalPayout" },
+          ggr: { $sum: "$ggr" },
+          commission: { $sum: "$commission" },
+          netProfit: { $sum: "$netProfit" },
+        },
       },
-    );
+      // Sắp xếp theo gameProduct ascending
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+    ]);
+
+    return result.map((r) => ({
+      gameProduct: r["_id"] as string,
+      drawCount: r["drawCount"] as number,
+      entryCount: r["entryCount"] as number,
+      playerCount: r["playerCount"] as number,
+      totalStake: r["totalStake"] as number,
+      totalWin: r["totalWin"] as number,
+      totalPayout: r["totalPayout"] as number,
+      ggr: r["ggr"] as number,
+      commission: r["commission"] as number,
+      netProfit: r["netProfit"] as number,
+    }));
   }
 }

@@ -36,7 +36,10 @@ import {
 import { useSystemReportFilters } from "../use-report-filters";
 import { useSystemByTenant, useSystemTenantBreakdown } from "../use-report-queries";
 import { TableSkeleton, ErrorCard, EmptyCard } from "../sections/shared-states";
-import type { TenantSummaryRow } from "@megawin/game-core-application/repos";
+import type {
+  TenantSummaryRow,
+  TenantGameBreakdownRow,
+} from "@megawin/game-core-application/repos";
 
 // ─── KPI Card primitive ───────────────────────────────────────────────────────
 
@@ -354,7 +357,7 @@ function TenantDetailView({ tenantId }: { tenantId: string }) {
     totalStake: data.reduce((s, r) => s + r.totalStake, 0),
     totalPayout: data.reduce((s, r) => s + r.totalPayout, 0),
     ggr: data.reduce((s, r) => s + r.ggr, 0),
-    totalCommission: data.reduce((s, r) => s + r.totalCommission, 0),
+    commission: data.reduce((s, r) => s + r.commission, 0),
     netProfit: data.reduce((s, r) => s + r.netProfit, 0),
   };
   const totalPayoutRatio = totals.totalStake > 0 ? totals.totalPayout / totals.totalStake : 0;
@@ -431,7 +434,7 @@ function TenantDetailView({ tenantId }: { tenantId: string }) {
                       {formatNumber(row.ggr)}
                     </TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.totalCommission)}
+                      {formatNumber(row.commission)}
                     </TableCell>
                     <TableCell
                       className={cn(
@@ -470,7 +473,7 @@ function TenantDetailView({ tenantId }: { tenantId: string }) {
                   {formatNumber(totals.ggr)}
                 </TableCell>
                 <TableCell className="text-right text-sm tabular-nums font-semibold">
-                  {formatNumber(totals.totalCommission)}
+                  {formatNumber(totals.commission)}
                 </TableCell>
                 <TableCell
                   className={cn(

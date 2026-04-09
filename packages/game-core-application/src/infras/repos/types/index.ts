@@ -7,6 +7,7 @@ export type {
 export type {
   SettleTenantDailyAggregateResult,
   TenantSummaryRow,
+  TenantGameBreakdownRow,
 } from "./system-settle-tenant-daily.types";
 export type { OutstandingPerGameAggregateResult } from "./system-outstanding.types";
 export type {

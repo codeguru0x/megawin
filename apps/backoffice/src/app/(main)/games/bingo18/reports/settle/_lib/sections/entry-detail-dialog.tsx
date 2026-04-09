@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Ticket,
   Building2,
@@ -141,7 +142,9 @@ export function Bingo18EntryDetailDialog({
     ? allBoardSnapshots.filter((s) => payoutByBoardNo.get(s.boardNo)?.isWin).length
     : 0;
 
-  const tenantUsername = toTenantUsername(entry.username ?? (entry as any).accountId ?? "");
+  const accountId = (entry as any).accountId ?? "";
+  const tenantUsername = toTenantUsername(entry.username ?? accountId);
+  const playerLink = `/accounts/players/${accountId}`;
   const MAX_USERNAME_LEN = 14;
   const truncatedUsername =
     tenantUsername.length > MAX_USERNAME_LEN
@@ -187,7 +190,12 @@ export function Bingo18EntryDetailDialog({
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <span className="cursor-default font-semibold">{truncatedUsername}</span>
+                        <Link
+                          href={playerLink}
+                          className="cursor-pointer font-semibold hover:underline"
+                        >
+                          {truncatedUsername}
+                        </Link>
                       </TooltipTrigger>
                       <TooltipContent side="top">
                         <p className="font-mono text-xs">{tenantUsername}</p>
@@ -195,7 +203,9 @@ export function Bingo18EntryDetailDialog({
                     </Tooltip>
                   </TooltipProvider>
                 ) : (
-                  <span className="font-semibold">{tenantUsername}</span>
+                  <Link href={playerLink} className="font-semibold hover:underline">
+                    {tenantUsername}
+                  </Link>
                 )}
               </div>
               <div className="flex items-center justify-between gap-2">
@@ -218,7 +228,7 @@ export function Bingo18EntryDetailDialog({
                   Đặt lúc
                 </span>
                 <span className="font-semibold tabular-nums">
-                  {formatVN(new Date(entry.createdAt as unknown as string), "dd/MM HH:mm")}
+                  {formatVN(new Date(entry.createdAt as unknown as string), "HH:mm dd/MM")}
                 </span>
               </div>
             </div>

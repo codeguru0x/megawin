@@ -8,6 +8,7 @@ import type {
   DailyOverviewRow,
   GameSummaryRow,
   TenantSummaryRow,
+  TenantGameBreakdownRow,
   DashboardGameDailyData,
   PlayerOverviewResult,
   PlayerOutstandingSummary,
@@ -17,7 +18,6 @@ import type {
 import type {
   SystemSettleGameDaily,
   SystemOutstandingGameDaily,
-  SystemSettleTenantDaily,
   PlayerSettleGameDailyEntity,
 } from "@megawin/game-core/entities";
 
@@ -57,7 +57,7 @@ export interface GetTenantSummaryInput {
 }
 
 export interface GetTenantSummaryOutput {
-  data: TenantSummaryRow[] | SystemSettleTenantDaily[];
+  data: TenantSummaryRow[] | TenantGameBreakdownRow[];
 }
 
 // ─── Outstanding ──────────────────────────────────────────────────────────────

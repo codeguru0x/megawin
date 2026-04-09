@@ -9,8 +9,11 @@ import type {
   GetTenantSummaryOutput,
   GetSystemOutstandingOutput,
 } from "@megawin/game-core-application/use-cases/reports";
-import type { SystemSettleGameDaily, SystemSettleTenantDaily } from "@megawin/game-core/entities";
-import type { TenantSummaryRow } from "@megawin/game-core-application/repos";
+import type { SystemSettleGameDaily } from "@megawin/game-core/entities";
+import type {
+  TenantSummaryRow,
+  TenantGameBreakdownRow,
+} from "@megawin/game-core-application/repos";
 
 // ─── System Financial Queries ─────────────────────────────────────────────────
 
@@ -83,8 +86,8 @@ export function useSystemByTenant(from: string, to: string, game?: string) {
 }
 
 /**
- * Breakdown theo game cho 1 tenant cụ thể — inline expand row.
- * Có `tenantId` → server trả SystemSettleTenantDaily[] (1 row/game).
+ * Breakdown theo game cho 1 tenant cụ thể — aggregate SUM cross-date.
+ * Có `tenantId` → server trả TenantGameBreakdownRow[] (1 row/game).
  */
 export function useSystemTenantBreakdown(tenantId: string, from: string, to: string) {
   return useQuery({
@@ -94,7 +97,7 @@ export function useSystemTenantBreakdown(tenantId: string, from: string, to: str
         .get<GetTenantSummaryOutput>("/reports/financial/by-tenant", {
           params: { tenantId, from, to },
         })
-        .then((r) => r.data as SystemSettleTenantDaily[]),
+        .then((r) => r.data as TenantGameBreakdownRow[]),
     enabled: !!(tenantId && from && to),
   });
 }
