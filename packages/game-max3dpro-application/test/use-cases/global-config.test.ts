@@ -62,31 +62,15 @@ describe("GameConfigRepository – Global Config (Max 3D Pro)", () => {
     const config = await repo.getGlobalConfig();
 
     expect(config!.play).toBeDefined();
-    expect(config!.play.unitPrice).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.play.unitPrice,
-    );
-    expect(config!.play.maxBoardsPerTicket).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.play.maxBoardsPerTicket,
-    );
-    expect(config!.play.maxDrawCount).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.play.maxDrawCount,
-    );
+    expect(config!.play.unitPrice).toBe(DEFAULT_MAX3D_PRO_CONFIG.play.unitPrice);
+    expect(config!.play.maxBoardsPerTicket).toBe(DEFAULT_MAX3D_PRO_CONFIG.play.maxBoardsPerTicket);
+    expect(config!.play.maxDrawCount).toBe(DEFAULT_MAX3D_PRO_CONFIG.play.maxDrawCount);
     expect(config!.play.salesCloseBeforeMinutes).toBe(
       DEFAULT_MAX3D_PRO_CONFIG.play.salesCloseBeforeMinutes,
     );
-    expect(config!.play.drawsPerDay).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.play.drawsPerDay,
-    );
-    expect(config!.play.drawTimes).toEqual(
-      DEFAULT_MAX3D_PRO_CONFIG.play.drawTimes,
-    );
+    expect(config!.play.drawsPerDay).toBe(DEFAULT_MAX3D_PRO_CONFIG.play.drawsPerDay);
+    expect(config!.play.drawTimes).toEqual(DEFAULT_MAX3D_PRO_CONFIG.play.drawTimes);
     expect(config!.play.drawDaysOfWeek).toEqual([2, 4, 6]);
-    expect(config!.play.multiNumberMin).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.play.multiNumberMin,
-    );
-    expect(config!.play.multiNumberMax).toBe(
-      DEFAULT_MAX3D_PRO_CONFIG.play.multiNumberMax,
-    );
   });
 
   it("upsertGlobalConfig cập nhật partial fields", async () => {

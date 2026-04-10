@@ -29,7 +29,7 @@ const playFormSchema = z
   .object({
     unitPrice: z.coerce.number().int().positive("Phải > 0"),
     minBetCount: z.coerce.number().int().min(1, "Tối thiểu 1"),
-    maxBetCount: z.coerce.number().int().min(1, "Tối thiểu 1").max(50, "Tối đa 50"),
+    maxBetCount: z.coerce.number().int().min(1, "Tối thiểu 1"),
     maxBasicBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
     maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
     salesCloseBeforeSeconds: z.coerce.number().int().positive("Phải > 0"),
@@ -254,7 +254,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                             onBlur={field.onBlur}
                             name={field.name}
                             ref={field.ref}
-                            thousandSeparator={false}
+                            thousandSeparator={true}
                           />
                         </FormControl>
                         <FormMessage />
@@ -280,7 +280,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                             onBlur={field.onBlur}
                             name={field.name}
                             ref={field.ref}
-                            thousandSeparator={false}
+                            thousandSeparator={true}
                           />
                         </FormControl>
                         <FormMessage />

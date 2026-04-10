@@ -44,8 +44,6 @@ const playSchema = z
       .array(z.number().int().min(0).max(6))
       .min(1, "Phải chọn ít nhất 1 ngày quay.")
       .max(7),
-    multiNumberMin: positiveInt,
-    multiNumberMax: positiveInt,
   })
   .partial();
 

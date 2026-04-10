@@ -26,7 +26,12 @@ import {
   max3dproDigitSchema,
   VALID_BOARD_NOS,
 } from "@megawin/game-max3dpro/schemas";
-import { PlayMode, PlayType } from "@megawin/game-max3dpro/entities";
+import {
+  PlayMode,
+  PlayType,
+  MAX3D_PRO_MULTI_NUMBER_MIN,
+  MAX3D_PRO_MULTI_NUMBER_MAX,
+} from "@megawin/game-max3dpro/entities";
 import { isUnique } from "@megawin/shared/utils";
 import { boardsOrderRefine } from "../../lib/schemas";
 
@@ -39,7 +44,10 @@ const max3dproMultiNumberBoardSchema = z.object({
   boardNo: z.enum(VALID_BOARD_NOS),
   playMode: z.literal(PlayMode.MultiNumber),
   playType: z.literal(PlayType.Straight),
-  triplets: z.array(max3dproTripletSchema).min(3).max(20),
+  triplets: z
+    .array(max3dproTripletSchema)
+    .min(MAX3D_PRO_MULTI_NUMBER_MIN)
+    .max(MAX3D_PRO_MULTI_NUMBER_MAX),
   /** Số lần cược nhân bội (≥ 1). Mặc định 1 cho backward compat. */
   betCount: z.number().int().min(1).default(1),
 });

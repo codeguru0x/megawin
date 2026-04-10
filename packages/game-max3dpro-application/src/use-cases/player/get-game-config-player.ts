@@ -38,8 +38,6 @@ export class GetGameConfigPlayerUseCase extends ApiGatewayUseCase<
         drawsPerDay: globalConfig.play.drawsPerDay,
         drawTimes: globalConfig.play.drawTimes,
         drawDaysOfWeek: globalConfig.play.drawDaysOfWeek,
-        multiNumberMin: globalConfig.play.multiNumberMin,
-        multiNumberMax: globalConfig.play.multiNumberMax,
       },
       prizes: {
         special: globalConfig.defaultPrizes.standard.special,

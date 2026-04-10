@@ -149,10 +149,6 @@ export interface Max3dproGameRules {
   drawTimes: string[];
   /** Ngày quay trong tuần (0=CN, 2=T3, 4=T5, 6=T7). */
   drawDaysOfWeek: number[];
-  /** Số bộ ba số tối thiểu cho multiNumber mode. */
-  multiNumberMin: number;
-  /** Số bộ ba số tối đa cho multiNumber mode. */
-  multiNumberMax: number;
   /** Số lần cược tối thiểu cho 1 board. */
   minBetCount: number;
   /** Số lần cược tối đa cho 1 board. */

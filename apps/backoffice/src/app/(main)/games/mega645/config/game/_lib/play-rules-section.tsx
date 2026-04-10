@@ -39,8 +39,8 @@ const DAY_LABELS: Record<number, string> = {
 const playFormSchema = z
   .object({
     unitPrice: z.coerce.number().int().positive("Phải > 0"),
-    minBetCount: z.coerce.number().int().min(1, "Tối thiểu 1").max(50, "Tối đa 50"),
-    maxBetCount: z.coerce.number().int().min(1, "Tối thiểu 1").max(50, "Tối đa 50"),
+    minBetCount: z.coerce.number().int().min(1, "Tối thiểu 1"),
+    maxBetCount: z.coerce.number().int().min(1, "Tối thiểu 1"),
     maxBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
     maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
     salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
@@ -266,7 +266,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                             onBlur={field.onBlur}
                             name={field.name}
                             ref={field.ref}
-                            thousandSeparator={false}
+                            thousandSeparator={true}
                           />
                         </FormControl>
                         <FormMessage />
@@ -292,7 +292,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                             onBlur={field.onBlur}
                             name={field.name}
                             ref={field.ref}
-                            thousandSeparator={false}
+                            thousandSeparator={true}
                           />
                         </FormControl>
                         <FormMessage />
@@ -312,9 +312,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 </div>
 
                 <div className="mb-5">
-                  <p className="text-xs text-muted-foreground mb-1.5">
-                    Số kỳ quay / tuần
-                  </p>
+                  <p className="text-xs text-muted-foreground mb-1.5">Số kỳ quay / tuần</p>
                   <div className="flex h-9 w-20 items-center justify-center rounded-md border bg-muted/50 text-sm font-semibold tabular-nums text-muted-foreground">
                     {form.watch("drawsPerWeek")}
                   </div>
@@ -341,9 +339,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                   />
 
                   <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">
-                      Ngày quay trong tuần
-                    </Label>
+                    <Label className="text-xs text-muted-foreground">Ngày quay trong tuần</Label>
                     <div className="flex flex-wrap gap-1.5">
                       {[1, 2, 3, 4, 5, 6, 0].map((day) => (
                         <button

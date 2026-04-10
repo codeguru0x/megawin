@@ -69,7 +69,7 @@ const playSchema = z
   .object({
     unitPrice: positiveInt,
     minBetCount: z.number().int().min(1, "Tối thiểu 1"),
-    maxBetCount: z.number().int().min(1, "Tối thiểu 1").max(50, "Tối đa 50"),
+    maxBetCount: z.number().int().min(1, "Tối thiểu 1"),
     maxBasicBoardsPerTicket: positiveInt,
     maxDrawCount: positiveInt,
     salesCloseBeforeSeconds: positiveInt,

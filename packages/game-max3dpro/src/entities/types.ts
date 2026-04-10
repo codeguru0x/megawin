@@ -141,8 +141,4 @@ export interface PlayRules {
   drawTimes: string[];
   /** Các ngày trong tuần được phép quay (0=CN, 1=T2, ..., 6=T7). */
   drawDaysOfWeek: number[];
-  /** Số lượng bộ ba số tối thiểu cho multiNumber mode. */
-  multiNumberMin: number;
-  /** Số lượng bộ ba số tối đa cho multiNumber mode. */
-  multiNumberMax: number;
 }

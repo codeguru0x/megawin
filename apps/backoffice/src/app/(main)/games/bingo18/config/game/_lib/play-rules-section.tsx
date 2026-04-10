@@ -249,7 +249,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                             onBlur={field.onBlur}
                             name={field.name}
                             ref={field.ref}
-                            thousandSeparator={false}
+                            thousandSeparator={true}
                           />
                         </FormControl>
                         <FormMessage />
@@ -275,7 +275,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                             onBlur={field.onBlur}
                             name={field.name}
                             ref={field.ref}
-                            thousandSeparator={false}
+                            thousandSeparator={true}
                           />
                         </FormControl>
                         <FormMessage />

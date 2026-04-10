@@ -40,18 +40,12 @@ const playFormSchema = z
   .object({
     unitPrice: z.coerce.number().int().positive("Phải > 0"),
     minBetCount: z.coerce.number().int().min(1, "Tối thiểu 1"),
-    maxBetCount: z.coerce.number().int().min(1, "Tối thiểu 1").max(50, "Tối đa 50"),
+    maxBetCount: z.coerce.number().int().min(1, "Tối thiểu 1"),
     maxBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
     maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
     salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
     drawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
     drawDaysOfWeek: z.array(z.number()).min(1, "Chọn ít nhất 1 ngày quay"),
-    multiNumberMin: z.coerce.number().int().min(2, "Tối thiểu 2"),
-    multiNumberMax: z.coerce.number().int().min(2, "Tối thiểu 2"),
-  })
-  .refine((data) => data.multiNumberMax >= data.multiNumberMin, {
-    message: "Max phải ≥ Min",
-    path: ["multiNumberMax"],
   })
   .refine((data) => data.maxBetCount >= data.minBetCount, {
     message: "Max phải ≥ Min",
@@ -96,8 +90,6 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
       salesCloseBeforeMinutes: config.play.salesCloseBeforeMinutes,
       drawTime: config.play.drawTimes[0] ?? "18:00",
       drawDaysOfWeek: config.play.drawDaysOfWeek ?? [2, 4, 6],
-      multiNumberMin: config.play.multiNumberMin ?? 3,
-      multiNumberMax: config.play.multiNumberMax ?? 20,
     },
   });
 
@@ -123,8 +115,6 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
         drawsPerDay: DRAWS_PER_DAY,
         drawTimes: [values.drawTime],
         drawDaysOfWeek: values.drawDaysOfWeek.sort((a, b) => a - b),
-        multiNumberMin: values.multiNumberMin,
-        multiNumberMax: values.multiNumberMax,
       },
     });
   }
@@ -276,7 +266,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                             onBlur={field.onBlur}
                             name={field.name}
                             ref={field.ref}
-                            thousandSeparator={false}
+                            thousandSeparator={true}
                           />
                         </FormControl>
                         <FormMessage />
@@ -302,73 +292,13 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                             onBlur={field.onBlur}
                             name={field.name}
                             ref={field.ref}
-                            thousandSeparator={false}
+                            thousandSeparator={true}
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Giới hạn bao nhiều bộ số (multiNumber)
-                  </p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                      control={form.control}
-                      name="multiNumberMin"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs text-muted-foreground">
-                            <LabelWithTooltip
-                              label="Số bộ ba tối thiểu"
-                              tip="Số bộ ba số tối thiểu khi chơi multiNumber. Từ N bộ ba, hệ thống tạo P(N,2) = N×(N-1) cặp ordered pair."
-                            />
-                          </FormLabel>
-                          <FormControl>
-                            <MoneyInput
-                              className="text-center font-semibold"
-                              value={field.value}
-                              onValueChange={(v) => field.onChange(v ?? 0)}
-                              onBlur={field.onBlur}
-                              name={field.name}
-                              ref={field.ref}
-                              thousandSeparator={false}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="multiNumberMax"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs text-muted-foreground">
-                            <LabelWithTooltip
-                              label="Số bộ ba tối đa"
-                              tip="Số bộ ba số tối đa khi chơi multiNumber. VD: 20 bộ ba → 380 cặp → 3.800.000đ/kỳ."
-                            />
-                          </FormLabel>
-                          <FormControl>
-                            <MoneyInput
-                              className="text-center font-semibold"
-                              value={field.value}
-                              onValueChange={(v) => field.onChange(v ?? 0)}
-                              onBlur={field.onBlur}
-                              name={field.name}
-                              ref={field.ref}
-                              thousandSeparator={false}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
                 </div>
               </div>
 
@@ -382,9 +312,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 </div>
 
                 <div className="mb-5">
-                  <p className="text-xs text-muted-foreground mb-1.5">
-                    Số kỳ quay / ngày
-                  </p>
+                  <p className="text-xs text-muted-foreground mb-1.5">Số kỳ quay / ngày</p>
                   <div className="flex h-9 w-20 items-center justify-center rounded-md border bg-muted/50 text-sm font-semibold tabular-nums text-muted-foreground">
                     {DRAWS_PER_DAY}
                   </div>
@@ -411,9 +339,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                   />
 
                   <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">
-                      Ngày quay trong tuần
-                    </Label>
+                    <Label className="text-xs text-muted-foreground">Ngày quay trong tuần</Label>
                     <div className="flex flex-wrap gap-1.5">
                       {[1, 2, 3, 4, 5, 6, 0].map((day) => (
                         <button

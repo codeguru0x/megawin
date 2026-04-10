@@ -166,61 +166,6 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                   )}
                 />
 
-                <div className="grid grid-cols-2 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="minBetCount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">
-                          <LabelWithTooltip
-                            label="Số lượt tối thiểu"
-                            tip="Số lần tham gia dự thưởng tối thiểu mỗi board. Người chơi không thể chọn ít hơn giá trị này."
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <MoneyInput
-                            className="text-center font-semibold"
-                            value={field.value}
-                            onValueChange={(v) => field.onChange(v ?? 1)}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            ref={field.ref}
-                            thousandSeparator={false}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="maxBetCount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs text-muted-foreground">
-                          <LabelWithTooltip
-                            label="Số lượt tối đa"
-                            tip="Số lần tham gia dự thưởng tối đa mỗi board. Tiền thưởng nhân theo số lượt — trúng với betCount=5 nhận 5× giá trị giải."
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <MoneyInput
-                            className="text-center font-semibold"
-                            value={field.value}
-                            onValueChange={(v) => field.onChange(v ?? 10)}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            ref={field.ref}
-                            thousandSeparator={false}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
                 <div className="grid grid-cols-3 gap-3">
                   <FormField
                     control={form.control}
@@ -301,6 +246,60 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                     )}
                   />
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="minBetCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          <LabelWithTooltip
+                            label="Số lượt tối thiểu"
+                            tip="Số lần tham gia dự thưởng tối thiểu mỗi board. Người chơi không thể chọn ít hơn giá trị này."
+                          />
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 1)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={true}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="maxBetCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground">
+                          <LabelWithTooltip
+                            label="Số lượt tối đa"
+                            tip="Số lần tham gia dự thưởng tối đa mỗi board. Tiền thưởng nhân theo số lượt — trúng với betCount=5 nhận 5× giá trị giải."
+                          />
+                        </FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            className="text-center font-semibold"
+                            value={field.value}
+                            onValueChange={(v) => field.onChange(v ?? 10)}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            thousandSeparator={true}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
               {/* Right: Schedule */}
@@ -314,9 +313,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 </div>
 
                 <div className="mb-5">
-                  <p className="text-xs text-muted-foreground mb-1.5">
-                    Số kỳ quay / ngày
-                  </p>
+                  <p className="text-xs text-muted-foreground mb-1.5">Số kỳ quay / ngày</p>
                   <div className="flex h-9 w-20 items-center justify-center rounded-md border bg-muted/50 text-sm font-semibold tabular-nums text-muted-foreground">
                     {DRAWS_PER_DAY}
                   </div>

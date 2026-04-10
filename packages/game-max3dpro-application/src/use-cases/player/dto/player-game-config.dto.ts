@@ -13,8 +13,6 @@ export interface PlayerGameRules {
   drawsPerDay: number;
   drawTimes: string[];
   drawDaysOfWeek: number[];
-  multiNumberMin: number;
-  multiNumberMax: number;
 }
 
 export interface PlayerPrizeAmounts {

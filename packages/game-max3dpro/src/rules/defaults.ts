@@ -43,7 +43,5 @@ export const DEFAULT_MAX3D_PRO_CONFIG: {
     drawsPerDay: 1,
     drawTimes: ["18:00"],
     drawDaysOfWeek: [2, 4, 6],
-    multiNumberMin: 3,
-    multiNumberMax: 20,
   },
 };
