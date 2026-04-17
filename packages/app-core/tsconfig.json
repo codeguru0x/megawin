@@ -4,6 +4,20 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "test"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test"
+  ],
+  "references": [
+    {
+      "path": "../../tooling/vitest-config"
+    },
+    {
+      "path": "../shared"
+    }
+  ]
 }

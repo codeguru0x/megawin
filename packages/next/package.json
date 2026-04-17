@@ -4,8 +4,8 @@
   "type": "module",
   "description": "Next.js App Router v16 utilities – API route builder, REST client, standardized responses",
   "scripts": {
-    "dev": "tsc --watch",
-    "build": "tsc",
+    "dev": "tsc -b --watch",
+    "build": "tsc -b",
     "check-types": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest --watch",

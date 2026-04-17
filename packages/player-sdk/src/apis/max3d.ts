@@ -77,7 +77,7 @@ export interface Max3dApi {
    * **Endpoint:** `POST /games/max3d/bets`
    *
    * @param input - Thông tin vé: drawId, drawCount, boards (tối đa 4 boards)
-   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount
+   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount, balance sau cược
    *
    * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
    * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
@@ -98,6 +98,7 @@ export interface Max3dApi {
    * });
    * console.log(result.ticketNo);    // "M3D-20260307-00005"
    * console.log(result.totalAmount); // 40000
+   * console.log(result.balance);     // 960000
    * ```
    */
   placeBet(input: Max3dTicketPurchaseInput): Promise<Max3dPlaceBetResponse>;

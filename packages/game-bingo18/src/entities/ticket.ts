@@ -200,6 +200,13 @@ export interface TicketDoc {
   /** Optimistic concurrency version. Tăng +1 mỗi lần update. */
   version: number;
 
+  /**
+   * Transaction ID (UUIDv7) — link ticket ↔ WAL (tx_intents).
+   * Dùng bởi recovery scheduler để check ticket tồn tại khi xử lý orphan WAL.
+   * Tickets cũ chưa có field này sẽ là null trong DB — không ảnh hưởng vì không cần re-process.
+   */
+  tx: string;
+
   /** Thời điểm mua vé. Set 1 lần khi tạo, không đổi. */
   createdAt: Date;
 

@@ -56,6 +56,8 @@ export interface PlaceBetOutput {
   ticketNo: string;
   /** Trạng thái vé sau khi tạo (pending). */
   status: string;
+  /** Số dư ví player sau khi trừ tiền cược (VND). Từ response tenant. */
+  balance: number;
   drawPlan: {
     /** Danh sách drawId đã chọn. */
     drawIds: string[];

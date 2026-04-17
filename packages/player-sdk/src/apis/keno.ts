@@ -130,7 +130,7 @@ export interface KenoApi {
    * @param input - Thông tin đặt cược
    * @param input.drawIds - Danh sách drawId kỳ quay tham gia (1-30, không trùng)
    * @param input.boards - Boards cược — bao gồm board chọn số (tối đa 2) và cược bổ sung (Lớn/Nhỏ, Chẵn/Lẻ)
-   * @returns Thông tin vé vừa tạo gồm ticketId, pricing, và counts
+   * @returns Thông tin vé vừa tạo gồm ticketId, pricing, balance sau cược, và counts
    *
    * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
    * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
@@ -148,6 +148,7 @@ export interface KenoApi {
    * });
    * console.log(result.ticketNo);            // "KENO-20260307-00001"
    * console.log(result.pricing.totalAmount);  // 10000
+   * console.log(result.balance);              // 990000
    *
    * // Cược nhiều kỳ + cược bổ sung
    * const result2 = await client.keno.placeBet({

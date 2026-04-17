@@ -2,6 +2,9 @@
 import type { ApiResponse } from "@megawin/shared/api-types";
 import { ApiClientError } from "@megawin/shared/api-types";
 
+import type { RetryConfig } from "./retry";
+import { resolveRetryConfig, withRetry } from "./retry";
+
 // ============ Types ============
 
 export interface HttpClientConfig {
@@ -17,10 +20,27 @@ export interface HttpClientConfig {
    * Set "include" khi cần gửi cookies cross-origin (vd better-auth).
    */
   credentials?: RequestCredentials;
+  /**
+   * Default retry config cho mọi request. Mặc định: không retry.
+   *
+   * Shorthand: truyền `number` = maxRetries với default settings.
+   * Per-request override qua {@link RequestOptions.retry}.
+   *
+   * @example
+   * ```ts
+   * // Retry 3 lần với default backoff
+   * const http = createHttpClient({ baseUrl: "...", retry: 3 });
+   *
+   * // Full config
+   * const http = createHttpClient({
+   *   baseUrl: "...",
+   *   retry: { maxRetries: 3, baseDelay: 1000 },
+   * });
+   * ```
+   */
+  retry?: RetryConfig | number;
   /** Hook trước mỗi request – inject headers, transform config. */
-  onRequest?: (
-    config: RequestConfig,
-  ) => RequestConfig | Promise<RequestConfig>;
+  onRequest?: (config: RequestConfig) => RequestConfig | Promise<RequestConfig>;
   /** Hook khi nhận error – global error handling (redirect, toast, etc.). */
   onError?: (error: ApiClientError) => void | Promise<void>;
 }
@@ -42,6 +62,14 @@ export interface RequestOptions {
   timeout?: number;
   /** Next.js extended fetch options (revalidate, tags). */
   next?: { revalidate?: number | false; tags?: string[] };
+  /**
+   * Override retry cho request cụ thể.
+   *
+   * - `number` — maxRetries với default settings.
+   * - `RetryConfig` — full control.
+   * - `false` — disable retry cho request này (kể cả khi client có default).
+   */
+  retry?: RetryConfig | number | false;
 }
 
 export interface HttpClient {
@@ -52,23 +80,11 @@ export interface HttpClient {
     },
   ): Promise<T>;
 
-  post<T = unknown>(
-    path: string,
-    body?: unknown,
-    options?: RequestOptions,
-  ): Promise<T>;
+  post<T = unknown>(path: string, body?: unknown, options?: RequestOptions): Promise<T>;
 
-  put<T = unknown>(
-    path: string,
-    body?: unknown,
-    options?: RequestOptions,
-  ): Promise<T>;
+  put<T = unknown>(path: string, body?: unknown, options?: RequestOptions): Promise<T>;
 
-  patch<T = unknown>(
-    path: string,
-    body?: unknown,
-    options?: RequestOptions,
-  ): Promise<T>;
+  patch<T = unknown>(path: string, body?: unknown, options?: RequestOptions): Promise<T>;
 
   delete<T = unknown>(path: string, options?: RequestOptions): Promise<T>;
 }
@@ -84,9 +100,7 @@ function buildUrl(
   path: string,
   params?: Record<string, string | number | boolean | undefined>,
 ): string {
-  const url = path.startsWith("http")
-    ? path
-    : `${baseUrl}${normalizePath(path)}`;
+  const url = path.startsWith("http") ? path : `${baseUrl}${normalizePath(path)}`;
 
   if (!params) return url;
 
@@ -136,10 +150,22 @@ async function parseResponse<T>(response: Response): Promise<T> {
  * Auto-unwrap ApiResponse: trả T trực tiếp khi success, throw ApiClientError khi lỗi.
  * Tương thích: browser, Node 22+, edge runtime, Deno.
  *
+ * Retry: mặc định không retry. Bật qua `config.retry` (client-wide)
+ * hoặc `options.retry` (per-request). Khi bật, retry exponential backoff + jitter ±30%
+ * cho status codes tạm thời (0, 408, 429, 502, 503, 504).
+ *
  * @example
+ * ```ts
+ * // Không retry (mặc định) — phù hợp browser / Next.js
  * const api = createHttpClient({ baseUrl: "https://api.example.com" });
- * const users = await api.get<User[]>("/users");
- * const user = await api.post<User>("/users", { name: "John" });
+ *
+ * // Retry 3 lần — phù hợp server-to-server outbound calls
+ * const api = createHttpClient({ baseUrl: "https://api.tenant.com", retry: 3 });
+ *
+ * // Per-request override
+ * const users = await api.get<User[]>("/users", { retry: false });
+ * const result = await api.post<Tx>("/tx", body, { retry: 5 });
+ * ```
  */
 export function createHttpClient(config: HttpClientConfig): HttpClient {
   const { baseUrl } = config;
@@ -147,7 +173,11 @@ export function createHttpClient(config: HttpClientConfig): HttpClient {
   const defaultTimeout = config.timeout ?? 30_000;
   const credentials = config.credentials ?? "same-origin";
 
-  async function request<T>(
+  /**
+   * Thực hiện 1 HTTP request — không retry, không gọi onError.
+   * Retry và onError được xử lý ở layer ngoài (`request()`).
+   */
+  async function executeOnce<T>(
     method: string,
     path: string,
     body?: unknown,
@@ -203,17 +233,17 @@ export function createHttpClient(config: HttpClientConfig): HttpClient {
         fetchInit.next = options.next;
       }
 
+      //   const t0 = Date.now();
       const response = await fetch(reqConfig.url, fetchInit);
+      //   const elapsed = Date.now() - t0;
+      //   console.log(`[HttpClient] ${method} ${url} → ${response.status} in ${elapsed}ms`);
+
       return await parseResponse<T>(response);
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        if (config.onError) await config.onError(err);
-        throw err;
-      }
+      if (err instanceof ApiClientError) throw err;
 
-      const isAbort =
-        err instanceof DOMException && err.name === "AbortError";
-      const clientError = new ApiClientError(isAbort ? 408 : 0, {
+      const isAbort = err instanceof DOMException && err.name === "AbortError";
+      throw new ApiClientError(isAbort ? 408 : 0, {
         code: isAbort ? "TIMEOUT" : "NETWORK_ERROR",
         message: isAbort
           ? `Request timed out after ${timeout}ms`
@@ -221,10 +251,36 @@ export function createHttpClient(config: HttpClientConfig): HttpClient {
             ? err.message
             : "Network error",
       });
-      if (config.onError) await config.onError(clientError);
-      throw clientError;
     } finally {
       clearTimeout(timeoutId);
+    }
+  }
+
+  /**
+   * Entry point: resolve retry config → executeOnce (có hoặc không retry) → onError trên lỗi cuối.
+   *
+   * onError chỉ fire 1 lần sau khi retry exhausted — không fire trên mỗi attempt.
+   */
+  async function request<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+    options?: RequestOptions & {
+      params?: Record<string, string | number | boolean | undefined>;
+    },
+  ): Promise<T> {
+    const retryConfig = resolveRetryConfig(options?.retry, config.retry);
+
+    try {
+      if (retryConfig) {
+        return await withRetry(() => executeOnce<T>(method, path, body, options), retryConfig);
+      }
+      return await executeOnce<T>(method, path, body, options);
+    } catch (err) {
+      if (err instanceof ApiClientError && config.onError) {
+        await config.onError(err);
+      }
+      throw err;
     }
   }
 

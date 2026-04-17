@@ -5,8 +5,8 @@
   "type": "module",
   "description": "Authentication & authorization middleware for API Gateway Lambda",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsc -b",
+    "dev": "tsc -b --watch",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist"
   },

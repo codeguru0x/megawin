@@ -1,0 +1,189 @@
+# Tenant Gateway — Quy Tắc Phát Triển
+
+Globs: packages/tenant-gateway/**
+
+Package `@megawin/tenant-gateway` là HTTP client MegaWin dùng để gọi callback API của tenant.
+Tenant developer đọc code + JSDoc + docs để implement callback server.
+Mọi thay đổi trong package này ảnh hưởng trực tiếp tới khả năng tích hợp của tenant.
+
+---
+
+## 1. JSDoc — Viết Cho Tenant Developer Đọc
+
+Mọi export (type, interface, function, field) **BẮT BUỘC** có JSDoc `/** */` đầy đủ.
+
+Tiêu chuẩn:
+
+- Mô tả **ý nghĩa business**, không chỉ đặt lại tên field.
+- Ghi **format** và **đơn vị**: ISO 4217, VND, `"YYYY-MM-DD.NNN"`, lowercase, v.v.
+- Ghi **ví dụ cụ thể** bằng `@example` cho mọi interface và method — tenant copy thẳng vào code.
+- Ghi **khi nào MegaWin gọi** endpoint này (bet, settle, void, ...).
+- Ghi **tenant cần làm gì** khi nhận request (validate, check idempotency, ...).
+- Ghi rõ field nào **bắt buộc** khi nào (ví dụ `refTx` bắt buộc khi `reason = "rollback" | "refund"`).
+
+Anti-patterns:
+
+- `/** The transaction ID. */` — không có giá trị. Phải ghi format, idempotency rule, ví dụ.
+- Bỏ `@example` trên API method — tenant không biết cách gọi.
+- Dùng `//` cho declaration (IDE không hiển thị khi hover).
+
+**Tham chiếu:** Tuân thủ đầy đủ `.cursor/rules/code-quality-standards.mdc`.
+
+---
+
+## 2. Cập Nhật Docs + OpenAPI Khi Thay Đổi API
+
+Package có **3 nguồn documentation** phải đồng bộ khi API thay đổi:
+
+| File | Mục đích | Audience |
+| --- | --- | --- |
+| `docs/openapi.yaml` | HTTP contract (source of truth) | Tenant developer — mọi ngôn ngữ |
+| `docs/callback-api-guide.md` | Business guide: flow, idempotency, checklist | Tenant developer — đọc trước khi code |
+| `src/**/*.ts` (JSDoc) | TypeScript type reference | MegaWin internal + TS tenant |
+
+Mỗi khi thay đổi **bất kỳ điều nào** dưới đây, **BẮT BUỘC** cập nhật cả 3 nguồn:
+
+- Thêm/xoá/đổi tên endpoint (path, method).
+- Thêm/xoá/đổi tên field trong request hoặc response.
+- Thêm/xoá giá trị trong `TransactionAction`, `TransactionReason`, `TransactionErrorCode`.
+- Thay đổi retry policy, timeout, batch size.
+- Thêm API module mới (ngoài Transaction và Balance).
+
+**Thứ tự cập nhật:** `openapi.yaml` (spec) → TypeScript types (code) → `callback-api-guide.md` (guide).
+
+Nếu docs lệch code → tenant implement sai → giao dịch lỗi production.
+
+### OpenAPI spec rules
+
+- File: `docs/openapi.yaml`, format OpenAPI 3.1.
+- Mỗi endpoint phải có: `summary`, `description`, `requestBody`/`parameters`, `responses` với **multiple examples** (success, duplicate, failed).
+- Mỗi schema property phải có: `type`, `description`, `example`.
+- Enum schemas (`TransactionAction`, `TransactionReason`, `TransactionStatus`, `TransactionErrorCode`) phải có bảng giải thích trong `description`.
+- Validate trước khi commit: `pnpm docs:lint`.
+- Preview locally: `pnpm docs:preview`.
+- Build HTML: `pnpm docs:build` → output `docs/index.html`.
+
+---
+
+## 3. Cấu Trúc Thư Mục — Tách Biệt Theo API Module
+
+```text
+src/
+├── shared/              ← Types + utilities dùng chung
+│   ├── types.ts         ← TransactionAction, Reason, Status, ErrorCode, Config
+│   ├── retry.ts         ← withRetry utility
+│   └── index.ts
+├── transaction/         ← Transaction API module
+│   ├── types.ts         ← Request/Response types cho single + batch
+│   ├── transaction-api.ts ← TransactionApi interface + factory
+│   └── index.ts
+├── balance/             ← Balance API module
+│   ├── types.ts         ← GetBalanceRequest/Response
+│   ├── balance-api.ts   ← BalanceApi interface + factory
+│   └── index.ts
+├── client.ts            ← TenantGatewayClient composite = TransactionApi & BalanceApi & ...
+└── index.ts             ← Main barrel exports
+```
+
+Quy tắc:
+
+- Mỗi nhóm API (transaction, balance, ...) nằm trong **thư mục riêng**.
+- Types (request/response) tách file riêng `types.ts` trong thư mục API đó.
+- API interface + factory tách file riêng `{name}-api.ts`.
+- Mỗi thư mục có `index.ts` barrel re-export.
+- `client.ts` chỉ compose các sub-APIs, không chứa business logic.
+- Khi thêm API module mới: tạo thư mục mới, tạo types + api file, thêm vào `client.ts`.
+
+KHÔNG được:
+
+- Đặt tất cả types vào 1 file duy nhất.
+- Đặt logic API trong `client.ts` — phải tách ra module riêng.
+- Import trực tiếp từ file internal (ví dụ `../transaction/transaction-api`) ngoài package — chỉ import qua barrel `index.ts`.
+
+---
+
+## 4. Retry — Mặc Định 3 Lần
+
+Mọi HTTP request tới tenant server **BẮT BUỘC** đi qua `withRetry()` từ `shared/retry.ts`.
+
+Retry policy:
+
+- Retry mặc định: **3 lần** (tổng 4 attempts).
+- Backoff: exponential 500ms base, jitter ±30%.
+- Retryable status codes: `408`, `429`, `502`, `503`, `504`.
+- Không retry: `400`, `401`, `403`, `404`, `422` (lỗi business, retry vô nghĩa).
+
+KHÔNG được:
+
+- Gọi `http.post()` / `http.get()` trực tiếp mà không wrap `withRetry()`.
+- Tự implement retry logic riêng — dùng `withRetry` duy nhất.
+- Thay đổi retry mặc định mà không cập nhật docs cho tenant.
+
+Retry an toàn vì tenant xử lý idempotent qua `tx` field.
+
+---
+
+## 5. Naming Conventions
+
+| Concept | Field name | Giá trị ví dụ |
+| --- | --- | --- |
+| Transaction ID (idempotency key) | `tx` | `"bet-01HXYZ123ABC"` |
+| Reference transaction | `refTx` | `"bet-01HXYZ123ABC"` |
+| Player identifier | `playerId` | `"john_doe"` (lowercase username tenant đăng ký) |
+| Game identifier | `gameId` | `"keno"`, `"lotto535"` (khác `gameProduct` internal) |
+| Round/Draw/Spin | `roundId` | `"2026-04-10.095"` |
+| Ticket number | `metadata.ticketNo` | `"KENO-20260410-00001"` (trong metadata, không top-level) |
+
+KHÔNG được:
+
+- Dùng `transactionId` — dùng `tx`.
+- Dùng `referenceTransactionId` — dùng `refTx`.
+- Dùng `gameProduct` trong callback API — dùng `gameId` (internal dùng `gameProduct`).
+- Đặt `ticketNo` ở top-level — phải nằm trong `metadata`.
+
+---
+
+## 6. Comment Maintenance — Giữ Đồng Bộ Với Code
+
+Mỗi lần thay đổi code, **BẮT BUỘC** thực hiện:
+
+1. **Review tất cả JSDoc và `//` comment liên quan** đến đoạn code vừa sửa.
+2. Nếu comment **không còn đúng** với logic mới → **sửa comment cho khớp**. Comment sai nguy hiểm hơn không có comment — tenant implement theo docs cũ sẽ gây lỗi production.
+3. Nếu thêm logic mới → **thêm comment giải thích** tại sao cần, edge case, business rule.
+
+Nguyên tắc:
+
+- **KHÔNG xoá comment** trừ khi đoạn code tương ứng bị xoá hoàn toàn.
+- **KHÔNG sửa comment không liên quan** đến thay đổi hiện tại. Chỉ chạm vào comment thuộc scope đang sửa.
+- Comment phải **chi tiết và cụ thể nhất có thể** — đây là documentation cho tenant developer. Mỗi field, mỗi method, mỗi business rule đều cần giải thích rõ ràng lý do tồn tại, format dữ liệu, ràng buộc, và ví dụ.
+
+Ví dụ đúng:
+
+```typescript
+// TRƯỚC — code cũ:
+/**
+ * Gửi single transaction tới tenant callback server.
+ * Retry tự động 3 lần nếu gặp lỗi tạm thời (408, 429, 5xx).
+ */
+async transaction(req: TransactionRequest): Promise<TransactionResponse>
+
+// SAU — thêm timeout config, phải cập nhật JSDoc:
+/**
+ * Gửi single transaction tới tenant callback server.
+ * Retry tự động 3 lần nếu gặp lỗi tạm thời (408, 429, 5xx).
+ * Timeout per-request có thể tuỳ chỉnh qua `TenantGatewayConfig.timeout` (mặc định 10s).
+ */
+async transaction(req: TransactionRequest): Promise<TransactionResponse>
+```
+
+Ví dụ sai:
+
+```typescript
+// TRƯỚC:
+/** Retry tự động 3 lần. */
+async transaction(req: TransactionRequest): Promise<TransactionResponse>
+
+// SAU — đổi sang 5 lần nhưng QUÊN sửa comment:
+/** Retry tự động 3 lần. */  // ← SAI: comment nói 3 nhưng code là 5
+async transaction(req: TransactionRequest): Promise<TransactionResponse>
+```

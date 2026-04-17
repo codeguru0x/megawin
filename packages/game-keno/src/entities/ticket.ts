@@ -242,6 +242,13 @@ export interface TicketDoc {
    */
   version: number;
 
+  /**
+   * Transaction ID (UUIDv7) — link ticket ↔ WAL (tx_intents).
+   * Dùng bởi recovery scheduler để check ticket tồn tại khi xử lý orphan WAL.
+   * Tickets cũ chưa có field này sẽ là null trong DB — không ảnh hưởng vì không cần re-process.
+   */
+  tx: string;
+
   /** Thời điểm ticket được tạo (= lúc player đặt cược). */
   createdAt: Date;
   /** Thời điểm cập nhật gần nhất (sau mỗi settle/void cycle). */

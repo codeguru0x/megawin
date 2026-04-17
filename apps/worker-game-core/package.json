@@ -1,0 +1,38 @@
+{
+  "name": "@megawin/worker-game-core",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cross-game workers — WAL recovery, shared scheduled tasks",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "build:deps": "turbo run build --filter=@megawin/worker-game-core^...",
+    "deploy:dev": "pnpm build:deps && set -a && . ./.env.dev && set +a && serverless deploy --stage dev",
+    "deploy:prod": "pnpm build:deps && set -a && . ./.env.prod && set +a && serverless deploy --stage prod"
+  },
+  "dependencies": {
+    "@megawin/app-core": "workspace:*",
+    "@megawin/data": "workspace:*",
+    "@megawin/game-bingo18-application": "workspace:*",
+    "@megawin/game-core": "workspace:*",
+    "@megawin/game-core-application": "workspace:*",
+    "@megawin/game-keno-application": "workspace:*",
+    "@megawin/game-lotto535-application": "workspace:*",
+    "@megawin/game-max3d-application": "workspace:*",
+    "@megawin/game-max3dpro-application": "workspace:*",
+    "@megawin/game-mega645-application": "workspace:*",
+    "@megawin/game-power655-application": "workspace:*",
+    "@megawin/shared": "workspace:*",
+    "@megawin/tenant-gateway": "workspace:*"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@types/node": "^25.5.0",
+    "serverless-offline": "^14.5.0",
+    "tsx": "^4.21.0",
+    "typescript": "6.0.2"
+  }
+}

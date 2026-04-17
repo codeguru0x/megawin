@@ -37,6 +37,7 @@ provider:
   runtime: nodejs24.x
   stage: ${opt:stage, 'dev'}
   region: ap-southeast-1
+  timeout: 29
   logRetentionInDays: 14
   profile: sls_deploy_${opt:stage, self:provider.stage}
 

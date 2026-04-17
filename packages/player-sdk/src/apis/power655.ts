@@ -97,7 +97,7 @@ export interface Power655Api {
    * **Endpoint:** `POST /games/power655/bets`
    *
    * @param input - Thông tin vé: drawId, drawCount, boards (tối đa 5 boards)
-   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount
+   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount, balance sau cược
    *
    * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
    * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
@@ -119,6 +119,7 @@ export interface Power655Api {
    * });
    * console.log(result.ticketNo);    // "P655-20260307-00002"
    * console.log(result.totalAmount); // 10000
+   * console.log(result.balance);     // 990000
    * ```
    */
   placeBet(input: Power655TicketPurchaseInput): Promise<Power655PlaceBetResponse>;

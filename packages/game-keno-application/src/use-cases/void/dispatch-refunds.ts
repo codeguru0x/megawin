@@ -9,15 +9,11 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import {
-  createTenantGatewayClient,
-  type TenantGatewayClient,
-  type RefundItem,
-} from "@megawin/tenant-gateway";
+import { tenantGateway, type BatchTransactionItem } from "@megawin/tenant-gateway";
 import { GameProduct } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import type { VoidContext } from "./types";
+import { DEFAULT_CURRENCY } from "@megawin/shared/types";
 
 const BATCH_QUERY_LIMIT = 200;
 const REFUND_CHUNK_SIZE = 50;
@@ -40,17 +36,11 @@ export class DispatchRefundBatchUseCase extends InternalUseCase<
   DispatchRefundBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
-  private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
 
   /** Dispatch refund cho 1 batch entries đã void. Loop cho đến khi done = true. */
-  protected async execute(
-    input: VoidContext
-  ): Promise<DispatchRefundBatchResult> {
+  protected async execute(input: VoidContext): Promise<DispatchRefundBatchResult> {
     const { drawId } = input;
-    const entries = await this.entryRepo.getPendingRefundEntries(
-      drawId,
-      BATCH_QUERY_LIMIT
-    );
+    const entries = await this.entryRepo.getPendingRefundEntries(drawId, BATCH_QUERY_LIMIT);
 
     if (entries.length === 0) {
       return {
@@ -68,13 +58,7 @@ export class DispatchRefundBatchUseCase extends InternalUseCase<
     let totalFailed = 0;
 
     for (const [tenantId, tenantEntries] of tenantGroups) {
-      const result = await dispatchRefundToTenant(
-        this.entryRepo,
-        this.getTenantConfig,
-        tenantId,
-        drawId,
-        tenantEntries
-      );
+      const result = await dispatchRefundToTenant(this.entryRepo, tenantId, drawId, tenantEntries);
       tenantResults.push(result);
       totalDispatched += result.dispatched;
       totalFailed += result.failed;
@@ -116,30 +100,11 @@ function extractId(entry: any): string {
   return entry.id ?? entry._id?.toHexString?.() ?? String(entry._id);
 }
 
-async function loadGatewayClient(
-  getTenantConfig: GetTenantConfigInternalUseCase,
-  tenantId: string
-): Promise<TenantGatewayClient | null> {
-  const tenantConfig = await getTenantConfig.run({ tenantId });
-
-  const callbackBaseUrl = (tenantConfig as any)?.callbackBaseUrl;
-  const apiKey = (tenantConfig as any)?.apiKey;
-  if (!callbackBaseUrl) return null;
-
-  return createTenantGatewayClient({
-    callbackBaseUrl,
-    apiKey: apiKey ?? "",
-    tenantId,
-    timeout: 30_000,
-  });
-}
-
 async function dispatchRefundToTenant(
   entryRepo: EntryRepository,
-  getTenantConfig: GetTenantConfigInternalUseCase,
   tenantId: string,
   drawId: string,
-  entries: any[]
+  entries: any[],
 ): Promise<{
   tenantId: string;
   dispatched: number;
@@ -148,15 +113,15 @@ async function dispatchRefundToTenant(
 }> {
   const totalRefundAmount = entries.reduce(
     (s: number, e: any) => s + (e.voidInfo?.refundAmount ?? 0),
-    0
+    0,
   );
 
-  const gateway = await loadGatewayClient(getTenantConfig, tenantId);
+  const gateway = await tenantGateway.getClient(tenantId);
 
   if (!gateway) {
     console.warn(
       `[dispatch-refund-keno] Tenant ${tenantId}: no callbackBaseUrl. ` +
-        `${entries.length} entries, ${totalRefundAmount} VND (DRY-RUN → auto-dispatched)`
+        `${entries.length} entries, ${totalRefundAmount} VND (DRY-RUN → auto-dispatched)`,
     );
     for (const e of entries) {
       await entryRepo.markRefundDispatched(extractId(e));
@@ -174,38 +139,52 @@ async function dispatchRefundToTenant(
   let failed = 0;
 
   for (const batch of batches) {
-    const items: RefundItem[] = batch.map((e: any) => ({
-      playerId: e.accountId,
-      entryId: extractId(e),
-      amount: e.voidInfo?.refundAmount ?? 0,
-      currency: "VND",
-      transactionId: `refund-${drawId}-${extractId(e)}`,
-      gameId: GameProduct.Keno,
-      roundId: drawId,
-      ticketNo: e.entrySummary?.ticketNo ?? "",
-      description: `Hoàn tiền Keno kỳ ${drawId} – kỳ bị huỷ`,
-    }));
+    const txToEntryId = new Map<string, string>();
+    const items: BatchTransactionItem[] = batch.map((e: any) => {
+      const entryId = extractId(e);
+      const tx = e.voidInfo!.refundTx;
+      txToEntryId.set(tx, entryId);
+      return {
+        action: "credit" as const,
+        reason: "refund" as const,
+        tx,
+        playerId: e.accountId,
+        amount: e.voidInfo?.refundAmount ?? 0,
+        currency: DEFAULT_CURRENCY,
+        gameId: GameProduct.Keno,
+        roundIds: [drawId],
+        description: `Hoàn tiền Keno kỳ ${drawId} – kỳ bị huỷ`,
+        metadata: { entryId, ticketNo: e.entrySummary?.ticketNo ?? "" },
+      };
+    });
 
     try {
-      const response = await gateway.batchRefund({ items });
+      const response = await gateway.batchTransaction({ items });
 
-      for (const r of response.results) {
-        if (r.status === "success" || r.status === "duplicate") {
-          await entryRepo.markRefundDispatched(r.entryId);
+      if (!response.success) {
+        const errMsg = response.error?.message ?? "Batch transaction failed";
+        console.error(`[dispatch-refund-keno] Tenant ${tenantId} batch error: ${errMsg}`);
+        for (const e of batch) {
+          await entryRepo.markRefundFailed(extractId(e), errMsg);
+        }
+        failed += batch.length;
+        continue;
+      }
+
+      for (const r of response.data!.results) {
+        const entryId = txToEntryId.get(r.tx);
+        if (!entryId) continue;
+        if (r.success) {
+          await entryRepo.markRefundDispatched(entryId);
           dispatched++;
         } else {
-          await entryRepo.markRefundFailed(
-            r.entryId,
-            r.error ?? "Tenant returned failed"
-          );
+          await entryRepo.markRefundFailed(entryId, r.error?.message ?? "Tenant returned failed");
           failed++;
         }
       }
     } catch (err: any) {
       const errMsg = err?.message ?? String(err);
-      console.error(
-        `[dispatch-refund-keno] Tenant ${tenantId} batch failed: ${errMsg}`
-      );
+      console.error(`[dispatch-refund-keno] Tenant ${tenantId} batch failed: ${errMsg}`);
       for (const e of batch) {
         await entryRepo.markRefundFailed(extractId(e), errMsg);
       }

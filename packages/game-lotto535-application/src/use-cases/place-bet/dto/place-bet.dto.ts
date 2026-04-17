@@ -61,6 +61,8 @@ export interface PlaceBetOutput {
   ticketNo: string;
   /** Trạng thái vé sau khi tạo (thường là "active"). */
   status: string;
+  /** Số dư ví player sau khi trừ tiền cược (VND). Từ response tenant. */
+  balance: number;
   /** Kế hoạch tham gia các kỳ quay. */
   drawPlan: {
     /** Danh sách mã kỳ quay đã đăng ký. */

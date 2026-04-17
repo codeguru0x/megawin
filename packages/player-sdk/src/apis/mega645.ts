@@ -91,7 +91,7 @@ export interface Mega645Api {
    * **Endpoint:** `POST /games/mega645/bets`
    *
    * @param input - Thông tin vé: drawId, drawCount, boards
-   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount
+   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount, balance sau cược
    *
    * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
    * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
@@ -113,6 +113,7 @@ export interface Mega645Api {
    * });
    * console.log(result.ticketNo);    // "M645-20260307-00003"
    * console.log(result.totalAmount); // 10000
+   * console.log(result.balance);     // 990000
    * ```
    */
   placeBet(input: Mega645TicketPurchaseInput): Promise<Mega645PlaceBetResponse>;

@@ -23,6 +23,7 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { generateId } from "@megawin/shared/utils";
 import {
   Bingo18PlayType,
   BINGO18_BASIC_PLAY_TYPE_SET,
@@ -256,6 +257,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             // payoutStatus chỉ set khi có tiền thưởng → trigger dispatch payout workflow.
             // Entry thua (winAmount = 0) không cần dispatch → bỏ qua payoutStatus.
             payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
+            // UUIDv7 idempotency key — chỉ sinh khi entry thắng (cần dispatch payout cho tenant).
+            // Entry thua không phát sinh giao dịch → không cần tx.
+            payoutTx: hasWin ? generateId() : undefined,
           } satisfies EntryPayout,
           // outcome "win" / "loss" — Bingo 18 không có "partial_win" (không có payout cap).
           outcome: hasWin ? EntryOutcome.Win : EntryOutcome.Loss,
@@ -271,7 +275,9 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
       // ── Bước 4: Bulk write ─────────────────────────────────────────────────
       // Mỗi updateOne có filter { status: "scheduled" } → idempotent: entry đã settled
       // sẽ không bị overwrite nếu step này chạy lại do crash.
-      await this.entryRepo.bulkSettleEntries(settleOps);
+      if (settleOps.length > 0) {
+        await this.entryRepo.bulkSettleEntries(settleOps);
+      }
     }
 
     // Hết thời gian cho phép — trả done: false để Step Function gọi lại lần nữa.

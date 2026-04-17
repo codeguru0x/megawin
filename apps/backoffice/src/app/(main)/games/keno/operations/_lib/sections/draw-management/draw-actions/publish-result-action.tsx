@@ -1,9 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState, useEffect, useRef } from "react";
 import {
   Check,
   Loader2,
@@ -12,6 +9,7 @@ import {
   CalendarDays,
   Hash,
   ClipboardCheck,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,88 +31,81 @@ import { usePublishResult } from "../../../use-operations";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
-// Validate từng ô: phải là số nguyên trong [01, 80]
-const kenoNumberSchema = z.string().superRefine((v, ctx) => {
-  if (!v || v.trim() === "") {
-    ctx.addIssue({ code: "custom", message: "Bắt buộc" });
-    return;
-  }
-  if (!/^\d{2}$/.test(v)) {
-    ctx.addIssue({
-      code: "custom",
-      message: `${pad2(KENO_NUMBER_MIN)}–${pad2(KENO_NUMBER_MAX)}`,
-    });
-    return;
-  }
-  const n = parseInt(v, 10);
-  if (n < KENO_NUMBER_MIN || n > KENO_NUMBER_MAX) {
-    ctx.addIssue({ code: "custom", message: `${pad2(KENO_NUMBER_MIN)}–${pad2(KENO_NUMBER_MAX)}` });
-  }
-});
-
-const publishResultSchema = z
-  .object({
-    winningNumbers: z.array(kenoNumberSchema).length(KENO_DRAW_COUNT),
-    vietlotDate: z.string(),
-    vietlotPeriod: z.string(),
-  })
-  .superRefine((data, ctx) => {
-    // Chỉ kiểm tra trùng khi tất cả ô đã pass per-field validation
-    const validNums = data.winningNumbers
-      .map((v) => parseInt(v, 10))
-      .filter((n) => !isNaN(n) && n >= KENO_NUMBER_MIN && n <= KENO_NUMBER_MAX);
-
-    if (validNums.length !== KENO_DRAW_COUNT) return;
-
-    const seen = new Set<number>();
-    for (let i = 0; i < validNums.length; i++) {
-      const n = validNums[i]!;
-      if (seen.has(n)) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Các số không được trùng nhau.",
-          path: ["winningNumbers"],
-        });
-        return;
-      }
-      seen.add(n);
-    }
-  });
-
-type PublishResultFormValues = z.infer<typeof publishResultSchema>;
-
-const EMPTY_DEFAULTS: PublishResultFormValues = {
-  winningNumbers: Array(KENO_DRAW_COUNT).fill("") as string[],
-  vietlotDate: todayVN(),
-  vietlotPeriod: "",
-};
+// ─── Types ──────────────────────────────────────────────────────────
 
 export interface PublishResultCurrentValues {
   winningNumbers: string[];
-  vietlottRef?: {
-    drawPeriod: string;
-    drawDate: string;
-  };
+  vietlottRef?: { drawPeriod: string; drawDate: string };
 }
 
-function buildDefaults(current?: PublishResultCurrentValues): PublishResultFormValues {
-  if (!current) return EMPTY_DEFAULTS;
-  return {
-    winningNumbers:
-      current.winningNumbers.length === KENO_DRAW_COUNT
-        ? current.winningNumbers
-        : EMPTY_DEFAULTS.winningNumbers,
-    vietlotDate: current.vietlottRef?.drawDate ?? todayVN(),
-    vietlotPeriod: current.vietlottRef?.drawPeriod ?? "",
-  };
+interface ValidationResult {
+  messages: string[];
+  fieldErrors: Set<number>;
 }
 
-/**
- * Dialog công bố kết quả kỳ quay Keno.
- *
- * Keno: nhập 20 số trúng (01-80), không có số đặc biệt, không có Vietlott ref.
- * Số được nhập theo thứ tự quay (thứ tự quan trọng cho UI hiển thị).
- */
+const VALID: ValidationResult = { messages: [], fieldErrors: new Set() };
+
+// ─── Validate — 1 hàm duy nhất, trả messages + fieldErrors ─────────
+
+function validateKenoNumbers(numbers: string[]): ValidationResult {
+  const messages: string[] = [];
+  const fieldErrors = new Set<number>();
+  const parsed: (number | null)[] = [];
+  const emptyIndices: number[] = [];
+
+  for (let i = 0; i < numbers.length; i++) {
+    const v = numbers[i]?.trim() ?? "";
+    if (!v) {
+      emptyIndices.push(i);
+      fieldErrors.add(i);
+      parsed.push(null);
+      continue;
+    }
+    if (v.length !== 2) {
+      messages.push(`Ô ${i + 1}: phải nhập đủ 2 chữ số (VD: ${pad2(KENO_NUMBER_MIN)})`);
+      fieldErrors.add(i);
+      parsed.push(null);
+      continue;
+    }
+    const n = parseInt(v, 10);
+    if (isNaN(n) || n < KENO_NUMBER_MIN || n > KENO_NUMBER_MAX) {
+      messages.push(
+        `Ô ${i + 1}: số ${v} ngoài dải ${pad2(KENO_NUMBER_MIN)}–${pad2(KENO_NUMBER_MAX)}`,
+      );
+      fieldErrors.add(i);
+      parsed.push(null);
+    } else {
+      parsed.push(n);
+    }
+  }
+
+  if (emptyIndices.length > 0) {
+    messages.push(
+      `Còn ${emptyIndices.length} ô chưa nhập (ô ${emptyIndices.map((i) => i + 1).join(", ")})`,
+    );
+  }
+
+  // Check trùng
+  const posMap = new Map<number, number[]>();
+  for (let i = 0; i < parsed.length; i++) {
+    const n = parsed[i];
+    if (n == null) continue;
+    const arr = posMap.get(n);
+    if (arr) arr.push(i);
+    else posMap.set(n, [i]);
+  }
+  for (const [value, positions] of posMap) {
+    if (positions.length > 1) {
+      messages.push(`Số ${pad2(value)} bị trùng (ô ${positions.map((i) => i + 1).join(", ")})`);
+      for (const idx of positions) fieldErrors.add(idx);
+    }
+  }
+
+  return messages.length > 0 ? { messages, fieldErrors } : VALID;
+}
+
+// ─── Component ──────────────────────────────────────────────────────
+
 export function PublishResultAction({
   draw,
   disabled,
@@ -132,71 +123,70 @@ export function PublishResultAction({
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange ?? setInternalOpen;
   const publishResult = usePublishResult();
-
   const isRepublish = draw.status === "published" || draw.status === "settled";
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    reset,
-    formState: { errors },
-  } = useForm<PublishResultFormValues>({
-    resolver: zodResolver(publishResultSchema),
-    defaultValues: EMPTY_DEFAULTS,
-    mode: "onChange",
-  });
+  const [numbers, setNumbers] = useState<string[]>(Array(KENO_DRAW_COUNT).fill(""));
+  const [vietlotDate, setVietlotDate] = useState(todayVN());
+  const [vietlotPeriod, setVietlotPeriod] = useState("");
+  const [validation, setValidation] = useState<ValidationResult>(VALID);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
-    if (isOpen) {
-      reset(buildDefaults(currentResult));
-    } else {
-      reset(EMPTY_DEFAULTS);
+    if (isOpen && currentResult) {
+      setNumbers(
+        currentResult.winningNumbers.length === KENO_DRAW_COUNT
+          ? currentResult.winningNumbers.map((n) => n.padStart(2, "0"))
+          : Array(KENO_DRAW_COUNT).fill(""),
+      );
+      setVietlotDate(currentResult.vietlottRef?.drawDate ?? todayVN());
+      setVietlotPeriod(currentResult.vietlottRef?.drawPeriod ?? "");
+    } else if (!isOpen) {
+      setNumbers(Array(KENO_DRAW_COUNT).fill(""));
+      setVietlotDate(todayVN());
+      setVietlotPeriod("");
+      setValidation(VALID);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentResult]);
 
-  function handleOpenChange(nextOpen: boolean) {
-    setIsOpen(nextOpen);
+  function handleNumberChange(index: number, raw: string) {
+    const cleaned = raw.replace(/\D/g, "").slice(0, 2);
+    setNumbers((prev) => {
+      const next = [...prev];
+      next[index] = cleaned;
+      return next;
+    });
   }
 
   function fillRandom() {
     const drawn = generateUniqueRandomNumbers(KENO_DRAW_COUNT, KENO_NUMBER_MIN, KENO_NUMBER_MAX);
-    const padded = drawn.map((n) => String(n).padStart(2, "0"));
-    setValue("winningNumbers", padded);
+    setNumbers(drawn.map((n) => pad2(n)));
+    setValidation(VALID);
   }
 
-  function onSubmit(values: PublishResultFormValues) {
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const result = validateKenoNumbers(numbers);
+    setValidation(result);
+    if (result.messages.length > 0) {
+      const firstErrorIdx = [...result.fieldErrors][0];
+      if (firstErrorIdx !== undefined) inputRefs.current[firstErrorIdx]?.focus();
+      return;
+    }
+
     const body: {
       winningNumbers: string[];
       vietlottRef?: { drawPeriod: string; drawDate: string };
-    } = {
-      winningNumbers: values.winningNumbers.map((n) => n.padStart(2, "0")),
-    };
+    } = { winningNumbers: numbers.map((n) => n.padStart(2, "0")) };
 
-    if (values.vietlotPeriod.trim()) {
-      body.vietlottRef = {
-        drawPeriod: values.vietlotPeriod.trim(),
-        drawDate: values.vietlotDate,
-      };
+    if (vietlotPeriod.trim()) {
+      body.vietlottRef = { drawPeriod: vietlotPeriod.trim(), drawDate: vietlotDate };
     }
 
-    publishResult.mutate(
-      { drawId: draw.drawId, body },
-      {
-        onSuccess: () => {
-          handleOpenChange(false);
-        },
-      },
-    );
+    publishResult.mutate({ drawId: draw.drawId, body }, { onSuccess: () => setIsOpen(false) });
   }
 
-  const numberErrors = errors.winningNumbers;
-  const globalError =
-    !Array.isArray(numberErrors) && numberErrors?.message ? numberErrors.message : null;
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -210,7 +200,7 @@ export function PublishResultAction({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-2">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
@@ -223,43 +213,39 @@ export function PublishResultAction({
 
               <div className="rounded-lg border bg-muted/30 p-3">
                 <div className="grid grid-cols-5 gap-2">
-                  {Array.from({ length: KENO_DRAW_COUNT }, (_, i) => {
-                    const fieldError = Array.isArray(numberErrors) ? numberErrors[i] : undefined;
-                    return (
-                      <div key={i} className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-muted-foreground text-center">
-                          {i + 1}
-                        </span>
-                        <Input
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={2}
-                          {...register(`winningNumbers.${i}`, {
-                            onChange: (e) => {
-                              const cleaned = e.target.value.replace(/\D/g, "").slice(0, 2);
-                              e.target.value = cleaned;
-                            },
-                          })}
-                          className={`w-full text-center font-mono text-sm font-semibold tabular-nums ${fieldError ? "border-destructive" : ""}`}
-                          placeholder={pad2(i + 1)}
-                        />
-                        {fieldError?.message && (
-                          <p className="text-[10px] text-destructive text-center leading-tight">
-                            {fieldError.message}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {Array.from({ length: KENO_DRAW_COUNT }, (_, i) => (
+                    <div key={i} className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-muted-foreground text-center">
+                        {i + 1}
+                      </span>
+                      <Input
+                        ref={(el) => {
+                          inputRefs.current[i] = el;
+                        }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={2}
+                        value={numbers[i]}
+                        onChange={(e) => handleNumberChange(i, e.target.value)}
+                        className={`w-full text-center font-mono text-sm font-semibold tabular-nums ${validation.fieldErrors.has(i) ? "border-destructive" : ""}`}
+                        placeholder={pad2(i + 1)}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
 
-            {globalError && (
-              <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
-                <p className="text-sm font-medium text-destructive">{globalError}</p>
-              </div>
-            )}
+              {validation.messages.length > 0 && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 space-y-1">
+                  {validation.messages.map((msg, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <AlertCircle className="size-3.5 text-destructive shrink-0 mt-0.5" />
+                      <p className="text-sm text-destructive">{msg}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <Separator />
 
@@ -278,7 +264,12 @@ export function PublishResultAction({
                   <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
                     <CalendarDays className="size-3" /> Ngày Vietlott
                   </Label>
-                  <Input type="date" className="font-mono text-sm" {...register("vietlotDate")} />
+                  <Input
+                    type="date"
+                    className="font-mono text-sm"
+                    value={vietlotDate}
+                    onChange={(e) => setVietlotDate(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
@@ -288,7 +279,8 @@ export function PublishResultAction({
                     type="text"
                     placeholder="VD: 123456"
                     className="font-mono text-sm"
-                    {...register("vietlotPeriod")}
+                    value={vietlotPeriod}
+                    onChange={(e) => setVietlotPeriod(e.target.value)}
                   />
                 </div>
               </div>
@@ -296,7 +288,7 @@ export function PublishResultAction({
           </div>
 
           <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Huỷ bỏ
             </Button>
             <Button type="submit" disabled={publishResult.isPending || disabled}>

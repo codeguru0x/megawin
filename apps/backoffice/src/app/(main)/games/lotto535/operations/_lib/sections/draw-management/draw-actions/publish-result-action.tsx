@@ -1,9 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState, useEffect, useRef } from "react";
 import {
   Check,
   Loader2,
@@ -13,6 +10,7 @@ import {
   Dice5,
   Star,
   ClipboardCheck,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,94 +42,103 @@ import { usePublishResult } from "../../../use-operations";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
+// ─── Types ──────────────────────────────────────────────────────────
+
 export interface PublishResultCurrentValues {
   winningMain: string[];
   winningSpecial: string;
-  vietlottRef?: {
-    drawPeriod: string;
-    drawDate: string;
-  };
+  vietlottRef?: { drawPeriod: string; drawDate: string };
 }
 
-const mainNumberSchema = z.string().superRefine((v, ctx) => {
-  if (!v || v.trim() === "") {
-    ctx.addIssue({ code: "custom", message: "Bắt buộc" });
-    return;
-  }
-  if (!/^\d{2}$/.test(v)) {
-    ctx.addIssue({
-      code: "custom",
-      message: `${pad2(LOTTO535_MAIN_MIN)}–${pad2(LOTTO535_MAIN_MAX)}`,
-    });
-    return;
-  }
-  const n = parseInt(v, 10);
-  if (n < LOTTO535_MAIN_MIN || n > LOTTO535_MAIN_MAX) {
-    ctx.addIssue({
-      code: "custom",
-      message: `${pad2(LOTTO535_MAIN_MIN)}–${pad2(LOTTO535_MAIN_MAX)}`,
-    });
-  }
-});
+interface ValidationResult {
+  messages: string[];
+  mainErrors: Set<number>;
+  specialError: boolean;
+}
 
-const specialNumberSchema = z.string().superRefine((v, ctx) => {
-  if (!v || v.trim() === "") {
-    ctx.addIssue({ code: "custom", message: "Bắt buộc" });
-    return;
-  }
-  if (!/^\d{2}$/.test(v)) {
-    ctx.addIssue({
-      code: "custom",
-      message: `${pad2(LOTTO535_SPECIAL_MIN)}–${pad2(LOTTO535_SPECIAL_MAX)}`,
-    });
-    return;
-  }
-  const n = parseInt(v, 10);
-  if (n < LOTTO535_SPECIAL_MIN || n > LOTTO535_SPECIAL_MAX) {
-    ctx.addIssue({
-      code: "custom",
-      message: `${pad2(LOTTO535_SPECIAL_MIN)}–${pad2(LOTTO535_SPECIAL_MAX)}`,
-    });
-  }
-});
+const VALID: ValidationResult = { messages: [], mainErrors: new Set(), specialError: false };
 
-const publishResultSchema = z
-  .object({
-    winningMain: z.array(mainNumberSchema).length(LOTTO535_MAIN_COUNT),
-    winningSpecial: specialNumberSchema,
-    vietlotDate: z.string(),
-    vietlotPeriod: z.string(),
-  })
-  .superRefine((data, ctx) => {
-    const validMains = data.winningMain
-      .map((v) => parseInt(v, 10))
-      .filter((n) => !isNaN(n) && n >= LOTTO535_MAIN_MIN && n <= LOTTO535_MAIN_MAX);
+// ─── Validate ───────────────────────────────────────────────────────
 
-    if (validMains.length !== LOTTO535_MAIN_COUNT) return;
+function validateLotto535(mains: string[], special: string): ValidationResult {
+  const messages: string[] = [];
+  const mainErrors = new Set<number>();
+  let specialError = false;
+  const parsed: (number | null)[] = [];
+  const emptyIndices: number[] = [];
 
-    const seen = new Set<number>();
-    for (let i = 0; i < validMains.length; i++) {
-      const n = validMains[i]!;
-      if (seen.has(n)) {
-        ctx.addIssue({
-          code: "custom",
-          message: "Các số chính không được trùng nhau.",
-          path: ["winningMain"],
-        });
-        return;
-      }
-      seen.add(n);
+  for (let i = 0; i < mains.length; i++) {
+    const v = mains[i]?.trim() ?? "";
+    if (!v) {
+      emptyIndices.push(i);
+      mainErrors.add(i);
+      parsed.push(null);
+      continue;
     }
-  });
+    if (v.length !== 2) {
+      messages.push(`Ô ${i + 1}: phải nhập đủ 2 chữ số (VD: ${pad2(LOTTO535_MAIN_MIN)})`);
+      mainErrors.add(i);
+      parsed.push(null);
+      continue;
+    }
+    const n = parseInt(v, 10);
+    if (isNaN(n) || n < LOTTO535_MAIN_MIN || n > LOTTO535_MAIN_MAX) {
+      messages.push(
+        `Ô ${i + 1}: số ${v} ngoài dải ${pad2(LOTTO535_MAIN_MIN)}–${pad2(LOTTO535_MAIN_MAX)}`,
+      );
+      mainErrors.add(i);
+      parsed.push(null);
+    } else {
+      parsed.push(n);
+    }
+  }
 
-type PublishResultFormValues = z.infer<typeof publishResultSchema>;
+  if (emptyIndices.length > 0) {
+    messages.push(
+      `Còn ${emptyIndices.length} ô số chính chưa nhập (ô ${emptyIndices.map((i) => i + 1).join(", ")})`,
+    );
+  }
 
-const EMPTY_DEFAULTS: PublishResultFormValues = {
-  winningMain: Array(LOTTO535_MAIN_COUNT).fill("") as string[],
-  winningSpecial: "",
-  vietlotDate: todayVN(),
-  vietlotPeriod: "",
-};
+  // Check trùng số chính
+  const posMap = new Map<number, number[]>();
+  for (let i = 0; i < parsed.length; i++) {
+    const n = parsed[i];
+    if (n == null) continue;
+    const arr = posMap.get(n);
+    if (arr) arr.push(i);
+    else posMap.set(n, [i]);
+  }
+  for (const [value, positions] of posMap) {
+    if (positions.length > 1) {
+      messages.push(
+        `Số chính ${pad2(value)} bị trùng (ô ${positions.map((i) => i + 1).join(", ")})`,
+      );
+      for (const idx of positions) mainErrors.add(idx);
+    }
+  }
+
+  // Check số đặc biệt
+  const sv = special.trim();
+  if (!sv) {
+    messages.push("Chưa nhập số đặc biệt");
+    specialError = true;
+  } else if (sv.length !== 2) {
+    messages.push(`Số đặc biệt: phải nhập đủ 2 chữ số (VD: ${pad2(LOTTO535_SPECIAL_MIN)})`);
+    specialError = true;
+  } else {
+    const sn = parseInt(sv, 10);
+    if (isNaN(sn) || sn < LOTTO535_SPECIAL_MIN || sn > LOTTO535_SPECIAL_MAX) {
+      messages.push(
+        `Số đặc biệt ${sv} ngoài dải ${pad2(LOTTO535_SPECIAL_MIN)}–${pad2(LOTTO535_SPECIAL_MAX)}`,
+      );
+      specialError = true;
+    }
+  }
+
+  return messages.length > 0 ? { messages, mainErrors, specialError } : VALID;
+}
+
+// ─── Component ──────────────────────────────────────────────────────
 
 export function PublishResultAction({
   draw,
@@ -150,94 +157,83 @@ export function PublishResultAction({
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange ?? setInternalOpen;
   const publishResult = usePublishResult();
-
   const isRepublish = draw.status === "published" || draw.status === "settled";
 
-  function buildDefaults(prefill?: PublishResultCurrentValues): PublishResultFormValues {
-    if (!prefill) return EMPTY_DEFAULTS;
-    return {
-      winningMain:
-        prefill.winningMain.length === LOTTO535_MAIN_COUNT
-          ? prefill.winningMain.map((n) => n.padStart(2, "0"))
-          : (Array(LOTTO535_MAIN_COUNT).fill("") as string[]),
-      winningSpecial: prefill.winningSpecial ? prefill.winningSpecial.padStart(2, "0") : "",
-      vietlotDate: prefill.vietlottRef?.drawDate ?? todayVN(),
-      vietlotPeriod: prefill.vietlottRef?.drawPeriod ?? "",
-    };
-  }
+  const [mains, setMains] = useState<string[]>(Array(LOTTO535_MAIN_COUNT).fill(""));
+  const [special, setSpecial] = useState("");
+  const [vietlotDate, setVietlotDate] = useState(todayVN());
+  const [vietlotPeriod, setVietlotPeriod] = useState("");
+  const [validation, setValidation] = useState<ValidationResult>(VALID);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    reset,
-    formState: { errors },
-  } = useForm<PublishResultFormValues>({
-    resolver: zodResolver(publishResultSchema),
-    defaultValues: EMPTY_DEFAULTS,
-    mode: "onChange",
-  });
-
-  // Pre-fill form với kết quả hiện tại khi dialog mở.
-  // Dùng useEffect thay vì handleOpenChange(true) vì `open` được
-  // điều khiển từ ngoài — Dialog không trigger onOpenChange khi prop thay đổi.
   useEffect(() => {
-    if (isOpen) {
-      reset(buildDefaults(currentResult));
-    } else {
-      reset(EMPTY_DEFAULTS);
+    if (isOpen && currentResult) {
+      setMains(
+        currentResult.winningMain.length === LOTTO535_MAIN_COUNT
+          ? currentResult.winningMain.map((n) => n.padStart(2, "0"))
+          : Array(LOTTO535_MAIN_COUNT).fill(""),
+      );
+      setSpecial(currentResult.winningSpecial ? currentResult.winningSpecial.padStart(2, "0") : "");
+      setVietlotDate(currentResult.vietlottRef?.drawDate ?? todayVN());
+      setVietlotPeriod(currentResult.vietlottRef?.drawPeriod ?? "");
+    } else if (!isOpen) {
+      setMains(Array(LOTTO535_MAIN_COUNT).fill(""));
+      setSpecial("");
+      setVietlotDate(todayVN());
+      setVietlotPeriod("");
+      setValidation(VALID);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, currentResult]);
 
-  function handleOpenChange(nextOpen: boolean) {
-    setIsOpen(nextOpen);
+  function handleMainChange(index: number, raw: string) {
+    const cleaned = raw.replace(/\D/g, "").slice(0, 2);
+    setMains((prev) => {
+      const next = [...prev];
+      next[index] = cleaned;
+      return next;
+    });
   }
 
   function fillRandom() {
-    const mains = generateUniqueRandomNumbers(
+    const mainNums = generateUniqueRandomNumbers(
       LOTTO535_MAIN_COUNT,
       LOTTO535_MAIN_MIN,
       LOTTO535_MAIN_MAX,
     );
-    const special = generateRandomNumber(LOTTO535_SPECIAL_MIN, LOTTO535_SPECIAL_MAX);
-    setValue(
-      "winningMain",
-      mains.map((n) => pad2(n)),
-    );
-    setValue("winningSpecial", pad2(special));
+    const specialNum = generateRandomNumber(LOTTO535_SPECIAL_MIN, LOTTO535_SPECIAL_MAX);
+    setMains(mainNums.map((n) => pad2(n)));
+    setSpecial(pad2(specialNum));
+    setValidation(VALID);
   }
 
-  function onSubmit(values: PublishResultFormValues) {
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const result = validateLotto535(mains, special);
+    setValidation(result);
+    if (result.messages.length > 0) {
+      const firstIdx = [...result.mainErrors][0];
+      if (firstIdx !== undefined) inputRefs.current[firstIdx]?.focus();
+      return;
+    }
+
     const body: {
       winningMain: string[];
       winningSpecial: string;
       vietlottRef?: { drawPeriod: string; drawDate: string };
     } = {
-      winningMain: values.winningMain.map((n) => n.padStart(2, "0")),
-      winningSpecial: values.winningSpecial.padStart(2, "0"),
+      winningMain: mains.map((n) => n.padStart(2, "0")),
+      winningSpecial: special.padStart(2, "0"),
     };
 
-    if (values.vietlotPeriod.trim()) {
-      body.vietlottRef = {
-        drawPeriod: values.vietlotPeriod.trim(),
-        drawDate: values.vietlotDate,
-      };
+    if (vietlotPeriod.trim()) {
+      body.vietlottRef = { drawPeriod: vietlotPeriod.trim(), drawDate: vietlotDate };
     }
 
-    publishResult.mutate(
-      { drawId: draw.drawId, body },
-      { onSuccess: () => handleOpenChange(false) },
-    );
+    publishResult.mutate({ drawId: draw.drawId, body }, { onSuccess: () => setIsOpen(false) });
   }
 
-  const mainErrors = errors.winningMain;
-  const mainGlobalError =
-    !Array.isArray(mainErrors) && mainErrors?.message ? mainErrors.message : null;
-  const specialError = errors.winningSpecial?.message;
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -252,9 +248,8 @@ export function PublishResultAction({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit}>
           <div className="space-y-6 py-2">
-            {/* Kết quả quay số */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <div className="flex size-6 items-center justify-center rounded-md bg-violet-100 dark:bg-violet-900/50">
@@ -265,48 +260,34 @@ export function PublishResultAction({
               </div>
 
               <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
-                {/* 5 số chính */}
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">
                     {LOTTO535_MAIN_COUNT} số chính (không trùng, {pad2(LOTTO535_MAIN_MIN)}–
                     {pad2(LOTTO535_MAIN_MAX)})
                   </p>
                   <div className="grid grid-cols-5 gap-2">
-                    {Array.from({ length: LOTTO535_MAIN_COUNT }, (_, i) => {
-                      const fieldError = Array.isArray(mainErrors) ? mainErrors[i] : undefined;
-                      return (
-                        <div key={i} className="flex flex-col gap-1">
-                          <span className="text-xs font-medium text-muted-foreground text-center">
-                            {i + 1}
-                          </span>
-                          <Input
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={2}
-                            {...register(`winningMain.${i}`, {
-                              onChange: (e) => {
-                                e.target.value = e.target.value.replace(/\D/g, "").slice(0, 2);
-                              },
-                            })}
-                            className={`w-full text-center font-mono text-sm font-semibold tabular-nums ${fieldError ? "border-destructive" : ""}`}
-                            placeholder={pad2(i + 1)}
-                          />
-                          {fieldError?.message && (
-                            <p className="text-[10px] text-destructive text-center leading-tight">
-                              {fieldError.message}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
+                    {Array.from({ length: LOTTO535_MAIN_COUNT }, (_, i) => (
+                      <div key={i} className="flex flex-col gap-1">
+                        <span className="text-xs font-medium text-muted-foreground text-center">
+                          {i + 1}
+                        </span>
+                        <Input
+                          ref={(el) => {
+                            inputRefs.current[i] = el;
+                          }}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={2}
+                          value={mains[i]}
+                          onChange={(e) => handleMainChange(i, e.target.value)}
+                          className={`w-full text-center font-mono text-sm font-semibold tabular-nums ${validation.mainErrors.has(i) ? "border-destructive" : ""}`}
+                          placeholder={pad2(i + 1)}
+                        />
+                      </div>
+                    ))}
                   </div>
-
-                  {mainGlobalError && (
-                    <p className="mt-1 text-sm font-medium text-destructive">{mainGlobalError}</p>
-                  )}
                 </div>
 
-                {/* Số đặc biệt */}
                 <div className="border-t pt-3 space-y-2">
                   <div className="flex items-center gap-1.5">
                     <Star className="size-3 text-amber-500" />
@@ -314,32 +295,32 @@ export function PublishResultAction({
                       Số đặc biệt ({pad2(LOTTO535_SPECIAL_MIN)}–{pad2(LOTTO535_SPECIAL_MAX)})
                     </p>
                   </div>
-                  <div className="flex flex-col gap-1 w-fit">
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={2}
-                      {...register("winningSpecial", {
-                        onChange: (e) => {
-                          e.target.value = e.target.value.replace(/\D/g, "").slice(0, 2);
-                        },
-                      })}
-                      className={`w-20 text-center font-mono text-sm font-semibold tabular-nums border-amber-200 dark:border-amber-800 ${specialError ? "border-destructive" : ""}`}
-                      placeholder={pad2(LOTTO535_SPECIAL_MIN)}
-                    />
-                    {specialError && (
-                      <p className="text-[10px] text-destructive text-center leading-tight">
-                        {specialError}
-                      </p>
-                    )}
-                  </div>
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={2}
+                    value={special}
+                    onChange={(e) => setSpecial(e.target.value.replace(/\D/g, "").slice(0, 2))}
+                    className={`w-20 text-center font-mono text-sm font-semibold tabular-nums border-amber-200 dark:border-amber-800 ${validation.specialError ? "border-destructive" : ""}`}
+                    placeholder={pad2(LOTTO535_SPECIAL_MIN)}
+                  />
                 </div>
               </div>
+
+              {validation.messages.length > 0 && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 space-y-1">
+                  {validation.messages.map((msg, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <AlertCircle className="size-3.5 text-destructive shrink-0 mt-0.5" />
+                      <p className="text-sm text-destructive">{msg}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <Separator />
 
-            {/* Tham chiếu Vietlott */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
@@ -359,7 +340,12 @@ export function PublishResultAction({
                     <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
                       <CalendarDays className="size-3" /> Ngày Vietlott
                     </Label>
-                    <Input type="date" className="font-mono text-sm" {...register("vietlotDate")} />
+                    <Input
+                      type="date"
+                      className="font-mono text-sm"
+                      value={vietlotDate}
+                      onChange={(e) => setVietlotDate(e.target.value)}
+                    />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
@@ -369,7 +355,8 @@ export function PublishResultAction({
                       type="text"
                       placeholder="VD: 00123"
                       className="font-mono text-sm"
-                      {...register("vietlotPeriod")}
+                      value={vietlotPeriod}
+                      onChange={(e) => setVietlotPeriod(e.target.value)}
                     />
                   </div>
                 </div>
@@ -378,7 +365,7 @@ export function PublishResultAction({
           </div>
 
           <DialogFooter className="pt-2">
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Huỷ bỏ
             </Button>
             <Button type="submit" disabled={publishResult.isPending || disabled}>

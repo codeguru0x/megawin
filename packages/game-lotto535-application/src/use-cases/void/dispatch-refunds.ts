@@ -55,15 +55,11 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import {
-  createTenantGatewayClient,
-  type TenantGatewayClient,
-  type RefundItem,
-} from "@megawin/tenant-gateway";
+import { tenantGateway, type BatchTransactionItem } from "@megawin/tenant-gateway";
 import { GameProduct } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 import type { VoidContext } from "./types";
+import { DEFAULT_CURRENCY } from "@megawin/shared/types";
 
 /** Số entries query mỗi lần (nhỏ hơn settle batch vì có I/O tới tenant). */
 const BATCH_QUERY_LIMIT = 200;
@@ -97,7 +93,6 @@ export class DispatchRefundBatchUseCase extends InternalUseCase<
   DispatchRefundBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
-  private readonly tenantConfigRepo = new TenantConfigRepository();
 
   /** Dispatch refund cho 1 batch entries đã void. Loop cho đến khi done = true. */
   protected async execute(input: VoidContext): Promise<DispatchRefundBatchResult> {
@@ -126,13 +121,7 @@ export class DispatchRefundBatchUseCase extends InternalUseCase<
 
     // ── STEP 3: Dispatch refund cho từng tenant ──
     for (const [tenantId, tenantEntries] of tenantGroups) {
-      const result = await dispatchRefundToTenant(
-        this.entryRepo,
-        this.tenantConfigRepo,
-        tenantId,
-        drawId,
-        tenantEntries,
-      );
+      const result = await dispatchRefundToTenant(this.entryRepo, tenantId, drawId, tenantEntries);
       tenantResults.push(result);
       totalDispatched += result.dispatched;
       totalFailed += result.failed;
@@ -181,44 +170,8 @@ function extractId(entry: any): string {
   return entry.id ?? entry._id?.toHexString?.() ?? String(entry._id);
 }
 
-/**
- * Load TenantGateway client cho 1 tenant.
- * Trả null nếu tenant không có callbackBaseUrl (dev/test → DRY-RUN).
- */
-async function loadGatewayClient(
-  tenantConfigRepo: TenantConfigRepository,
-  tenantId: string,
-): Promise<TenantGatewayClient | null> {
-  const tenantConfig = await tenantConfigRepo.getTenantConfig(tenantId);
-
-  const callbackBaseUrl = (tenantConfig as any)?.callbackBaseUrl;
-  const apiKey = (tenantConfig as any)?.apiKey;
-
-  if (!callbackBaseUrl) return null;
-
-  return createTenantGatewayClient({
-    callbackBaseUrl,
-    apiKey: apiKey ?? "",
-    tenantId,
-    timeout: 30_000,
-  });
-}
-
-/**
- * Dispatch refund cho entries của 1 tenant cụ thể.
- *
- * Flow:
- *   1. Load TenantGateway client
- *   2. Nếu không có gateway (dev/test) → DRY-RUN: auto-mark dispatched
- *   3. Chunk entries ≤ 50, gọi gateway.batchRefund cho từng chunk
- *   4. Mark dispatched/failed per entry dựa trên response
- *
- * transactionId format: "refund-{drawId}-{entryId}"
- *   → Tenant dùng làm idempotency key, duplicate call = no-op
- */
 async function dispatchRefundToTenant(
   entryRepo: EntryRepository,
-  tenantConfigRepo: TenantConfigRepository,
   tenantId: string,
   drawId: string,
   entries: any[],
@@ -234,7 +187,7 @@ async function dispatchRefundToTenant(
     0,
   );
 
-  const gateway = await loadGatewayClient(tenantConfigRepo, tenantId);
+  const gateway = await tenantGateway.getClient(tenantId);
 
   // DRY-RUN: tenant không có callbackBaseUrl → auto-mark dispatched
   // Dùng cho dev/test environment, hoặc tenant mới chưa setup callback
@@ -261,32 +214,46 @@ async function dispatchRefundToTenant(
 
   for (const batch of batches) {
     // Build refund items cho tenant
-    const items: RefundItem[] = batch.map((e: any) => ({
-      playerId: e.accountId,
-      accountId: e.accountId,
-      entryId: extractId(e),
-      amount: e.voidInfo?.refundAmount ?? 0,
-      currency: "VND",
-      // transactionId = idempotency key → tenant nhận duplicate = no-op
-      transactionId: `refund-${drawId}-${extractId(e)}`,
-      gameId: GameProduct.Lotto535,
-      roundId: drawId,
-      ticketNo: e.entrySummary?.ticketNo ?? "",
-      description: `Hoàn tiền Lotto 5/35 kỳ ${drawId} – kỳ bị huỷ`,
-    }));
+    const txToEntryId = new Map<string, string>();
+    const items: BatchTransactionItem[] = batch.map((e: any) => {
+      const entryId = extractId(e);
+      const tx = e.voidInfo!.refundTx;
+      txToEntryId.set(tx, entryId);
+      return {
+        action: "credit" as const,
+        reason: "refund" as const,
+        tx,
+        playerId: e.accountId,
+        amount: e.voidInfo?.refundAmount ?? 0,
+        currency: DEFAULT_CURRENCY,
+        gameId: GameProduct.Lotto535,
+        roundIds: [drawId],
+        description: `Hoàn tiền Lotto 5/35 kỳ ${drawId} – kỳ bị huỷ`,
+        metadata: { entryId, ticketNo: e.entrySummary?.ticketNo ?? "" },
+      };
+    });
 
     try {
-      const response = await gateway.batchRefund({ items });
+      const response = await gateway.batchTransaction({ items });
 
-      // Xử lý response per entry
-      for (const r of response.results) {
-        if (r.status === "success" || r.status === "duplicate") {
-          // "duplicate" = tenant đã nhận rồi (retry case) → coi như thành công
-          await entryRepo.markRefundDispatched(r.entryId);
+      if (!response.success) {
+        const errMsg = response.error?.message ?? "Batch transaction failed";
+        console.error(`[dispatch-refund] Tenant ${tenantId} batch error: ${errMsg}`);
+        for (const e of batch) {
+          await entryRepo.markRefundFailed(extractId(e), errMsg);
+        }
+        failed += batch.length;
+        continue;
+      }
+
+      for (const r of response.data!.results) {
+        const entryId = txToEntryId.get(r.tx);
+        if (!entryId) continue;
+        if (r.success) {
+          await entryRepo.markRefundDispatched(entryId);
           dispatched++;
         } else {
-          // "failed" → mark failed, sẽ retry ở vòng tiếp theo
-          await entryRepo.markRefundFailed(r.entryId, r.error ?? "Tenant returned failed");
+          await entryRepo.markRefundFailed(entryId, r.error?.message ?? "Tenant returned failed");
           failed++;
         }
       }

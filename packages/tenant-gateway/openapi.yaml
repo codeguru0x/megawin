@@ -1,0 +1,846 @@
+openapi: 3.1.0
+info:
+  title: MegaWin Callback API
+  version: 1.0.0
+  description: |
+    MegaWin gọi ngược (callback) vào API của tenant để thực hiện giao dịch
+    trên ví player. Tenant implement 3 endpoints này trên server của mình.
+
+    ## Luồng hoạt động
+
+    ```
+    Player → Tenant App → MegaWin API (đặt cược, xem kết quả)
+                     ↑
+    MegaWin ─────────┘ callback (trừ tiền, cộng tiền, check balance)
+    ```
+
+    ## Nguyên tắc chung
+
+    ### Idempotency
+    Mọi giao dịch có `tx` unique. Tenant **PHẢI** kiểm tra trùng trước khi xử lý.
+    Nếu `tx` đã xử lý → trả `success: true` với `data.duplicate: true` + balance hiện tại.
+
+    ### Action + Reason
+    - `action` — quyết định money flow: `"debit"` (trừ) hoặc `"credit"` (cộng).
+    - `reason` — audit trail, **không** ảnh hưởng logic cộng/trừ.
+
+    ### Player ID
+    `playerId` là **lowercase username** mà tenant đăng ký khi tạo player trên MegaWin.
+
+    ### Retry Policy (phía MegaWin)
+
+    **Tầng HTTP (tất cả endpoint):**
+    - Tối đa 3 lần retry (tổng 4 attempts).
+    - Exponential backoff: 500ms → 1s → 2s (jitter ±30%).
+    - Retryable: `0` (network error), `408`, `429`, `502`, `503`, `504`.
+    - **KHÔNG retry `500`** — coi là bug permanent. Tenant muốn MegaWin retry → trả `502`/`503`.
+
+    **Tầng business (chỉ batch payout/refund):**
+    - Per-item `success: false` → MegaWin mark failed → dispatch loop (Step Function) **chủ động gửi lại cùng `tx`** ở batch tiếp (tối đa 10 vòng).
+    - Đây KHÔNG phải HTTP retry — là business-level retry. Tenant phải xử lý idempotency qua `tx`.
+    - Single transaction (place-bet): `success: false` → huỷ hẳn, không retry.
+  contact:
+    name: MegaWin Integration Team
+
+servers:
+  - url: https://api.tenant.com
+    description: Tenant callback server
+
+security:
+  - apiKey: []
+    tenantId: []
+
+tags:
+  - name: Transaction
+    description: Cộng/trừ tiền ví player — single và batch.
+  - name: Balance
+    description: Query số dư ví player.
+
+paths:
+  /transaction:
+    post:
+      operationId: transaction
+      tags: [Transaction]
+      summary: Thực hiện 1 giao dịch trên ví player
+      description: |
+        MegaWin gọi khi cần debit hoặc credit ví 1 player.
+
+        **Khi nào MegaWin gọi:**
+        | Thời điểm | Action | Reason |
+        |-----------|--------|--------|
+        | Player đặt cược | `debit` | `bet` |
+        | Bet thất bại | `credit` | `rollback` |
+        | Thưởng khuyến mãi | `credit` | `bonus` |
+        | Điều chỉnh thủ công | `debit` hoặc `credit` | `adjustment` |
+
+        **Idempotency:** Tenant kiểm tra `tx` trùng → trả `success: true` với `data.duplicate: true` nếu đã xử lý.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionRequest"
+            examples:
+              betDebit:
+                summary: Player đặt cược Keno
+                value:
+                  action: debit
+                  reason: bet
+                  tx: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"
+                  playerId: john_doe
+                  amount: 50000
+                  currency: VND
+                  gameId: keno
+                  roundIds: ["2026-04-10.095"]
+                  description: Đặt cược Keno kỳ 2026-04-10.095
+                  metadata:
+                    ticketNo: KENO-20260410-00001
+              rollbackCredit:
+                summary: Hoàn tiền bet lỗi
+                value:
+                  action: credit
+                  reason: rollback
+                  tx: "019078a0-c3d4-7abc-9ef0-123456789abc"
+                  playerId: john_doe
+                  amount: 50000
+                  currency: VND
+                  gameId: keno
+                  roundIds: ["2026-04-10.095"]
+                  description: Hoàn tiền bet lỗi Keno kỳ 2026-04-10.095
+                  metadata:
+                    refTx: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"
+      responses:
+        "200":
+          description: "Giao dịch đã xử lý — đọc `success` để biết kết quả."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionResponse"
+              examples:
+                success:
+                  summary: Giao dịch thành công
+                  value:
+                    success: true
+                    data:
+                      tx: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"
+                      balance: 950000
+                      currency: VND
+                duplicate:
+                  summary: Đã xử lý trước đó (idempotent)
+                  value:
+                    success: true
+                    data:
+                      tx: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"
+                      balance: 950000
+                      currency: VND
+                      duplicate: true
+                insufficientBalance:
+                  summary: Không đủ số dư
+                  value:
+                    success: false
+                    error:
+                      code: INSUFFICIENT_BALANCE
+                      message: "Player balance 30,000 VND < bet amount 50,000 VND"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /transaction/batch:
+    post:
+      operationId: batchTransaction
+      tags: [Transaction]
+      summary: Thực hiện nhiều giao dịch cùng lúc
+      description: |
+        MegaWin gửi tối đa **50 items** per batch. Tenant xử lý từng item độc lập.
+
+        **Khi nào MegaWin gọi:**
+        | Thời điểm | Action | Reason |
+        |-----------|--------|--------|
+        | Settle kỳ quay — trả thưởng | `credit` | `payout` |
+        | Void draw — hoàn tiền | `credit` | `refund` |
+
+        **Partial success:** Nếu 1 item fail, các items khác vẫn phải xử lý.
+        Items có `success: false` được mark failed — dispatch loop (Step Function) **chủ động gửi lại cùng `tx`** ở batch tiếp (tối đa 10 vòng). Đây là business-level retry.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchTransactionRequest"
+            examples:
+              payoutBatch:
+                summary: Trả thưởng Keno cho 2 players
+                value:
+                  items:
+                    - action: credit
+                      reason: payout
+                      tx: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"
+                      playerId: john_doe
+                      amount: 200000
+                      currency: VND
+                      gameId: keno
+                      roundIds: ["2026-04-10.095"]
+                      description: Trả thưởng Keno kỳ 2026-04-10.095
+                      metadata:
+                        ticketNo: KENO-20260410-00001
+                        entryId: 01HXYZ789DEF
+                    - action: credit
+                      reason: payout
+                      tx: "019078a0-c3d4-7abc-9ef0-2d3e4f5a6b7c"
+                      playerId: jane_smith
+                      amount: 500000
+                      currency: VND
+                      gameId: keno
+                      roundIds: ["2026-04-10.095"]
+                      description: Trả thưởng Keno kỳ 2026-04-10.095
+                      metadata:
+                        ticketNo: KENO-20260410-00007
+                        entryId: 01HABC456GHI
+      responses:
+        "200":
+          description: "Batch đã xử lý — đọc `success` và `data.results` để biết kết quả per item."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchTransactionResponse"
+              examples:
+                allSuccess:
+                  summary: Tất cả thành công
+                  value:
+                    success: true
+                    data:
+                      results:
+                        - tx: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"
+                          success: true
+                          balance: 1200000
+                        - tx: "019078a0-c3d4-7abc-9ef0-2d3e4f5a6b7c"
+                          success: true
+                          balance: 2500000
+                partialFailure:
+                  summary: Partial success — 1 item fail
+                  value:
+                    success: true
+                    data:
+                      results:
+                        - tx: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"
+                          success: true
+                          balance: 1200000
+                        - tx: "019078a0-c3d4-7abc-9ef0-2d3e4f5a6b7c"
+                          success: false
+                          error:
+                            code: PLAYER_NOT_FOUND
+                            message: Player not found
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /transaction/{tx}/status:
+    get:
+      operationId: getTransactionStatus
+      tags: [Transaction]
+      summary: Kiểm tra trạng thái 1 giao dịch
+      description: |
+        Read-only — không tạo/sửa giao dịch. Recovery scheduler dùng để xác nhận
+        tenant đã xử lý debit chưa trước khi quyết định rollback.
+
+        **Mục đích:** Ngăn **phantom credit** — scenario:
+        1. MegaWin gửi debit → timeout → không biết tenant đã xử lý chưa.
+        2. Recovery check status → `success: false` (NOT_FOUND) → xoá WAL, không rollback.
+        3. Recovery check status → `success: true` → debit đã xảy ra → kiểm tra ticket.
+      parameters:
+        - name: tx
+          in: path
+          required: true
+          description: Transaction ID (UUIDv7) cần kiểm tra.
+          schema:
+            type: string
+            format: uuid
+          example: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"
+      responses:
+        "200":
+          description: "Kết quả check — đọc `success` để biết tx đã xử lý thành công chưa."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionStatusResponse"
+              examples:
+                processed:
+                  summary: Giao dịch đã xử lý thành công
+                  value:
+                    success: true
+                    data:
+                      processedAt: "2026-04-10T07:30:00Z"
+                notFound:
+                  summary: Tx không tồn tại
+                  value:
+                    success: false
+                    error:
+                      code: NOT_FOUND
+                      message: Transaction not found
+                failed:
+                  summary: Đã nhận nhưng xử lý thất bại
+                  value:
+                    success: false
+                    error:
+                      code: INSUFFICIENT_BALANCE
+                      message: Not enough balance
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /balance:
+    get:
+      operationId: getBalance
+      tags: [Balance]
+      summary: Lấy số dư ví player
+      description: |
+        MegaWin gọi để lấy balance hiện tại, hiển thị cho player trên UI game.
+      parameters:
+        - name: playerId
+          in: query
+          required: true
+          description: |
+            Lowercase username của player đã đăng ký trên tenant.
+          schema:
+            type: string
+          example: john_doe
+        - name: currency
+          in: query
+          required: false
+          description: |
+            Mã tiền tệ ISO 4217. Mặc định `"VND"`.
+            MegaWin luôn gửi kèm `currency=VND` — query string không bao giờ thiếu field này.
+          schema:
+            type: string
+            default: VND
+          example: VND
+      responses:
+        "200":
+          description: Balance hiện tại của player.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetBalanceResponse"
+              examples:
+                normal:
+                  summary: Balance bình thường
+                  value:
+                    success: true
+                    data:
+                      playerId: john_doe
+                      balance: 1500000
+                      currency: VND
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API key mà tenant cung cấp cho MegaWin.
+    tenantId:
+      type: apiKey
+      in: header
+      name: x-tenant-id
+      description: Mã tenant — identify request thuộc tenant nào.
+
+  schemas:
+    TransactionAction:
+      type: string
+      enum: [debit, credit]
+      description: |
+        Hành động trên ví player.
+        - `debit` — trừ tiền (player → MegaWin).
+        - `credit` — cộng tiền (MegaWin → player).
+
+    TransactionReason:
+      type: string
+      enum: [bet, payout, refund, rollback, bonus, adjustment]
+      description: |
+        Lý do giao dịch — cho audit trail, **không** ảnh hưởng logic cộng/trừ.
+        | Reason | Action thường đi kèm | Mô tả |
+        |--------|---------------------|-------|
+        | `bet` | `debit` | Player đặt cược |
+        | `payout` | `credit` | Trả thưởng |
+        | `refund` | `credit` | Hoàn tiền kỳ quay bị huỷ |
+        | `rollback` | `credit` | Hoàn debit lỗi |
+        | `bonus` | `credit` | Thưởng khuyến mãi |
+        | `adjustment` | cả hai | Điều chỉnh thủ công |
+
+    TransactionErrorCode:
+      type: string
+      enum:
+        - INSUFFICIENT_BALANCE
+        - PLAYER_NOT_FOUND
+        - WALLET_FROZEN
+        - INVALID_CURRENCY
+        - INTERNAL_ERROR
+      description: |
+        Mã lỗi chuẩn khi giao dịch (debit/credit/rollback) thất bại.
+        Áp dụng cho cả single transaction và batch transaction.
+        | Code | Single (place-bet) | Batch (payout/refund) | Mô tả |
+        |------|--------------------|-----------------------|-------|
+        | `INSUFFICIENT_BALANCE` | Huỷ, không retry | Dispatch loop gửi lại (10 vòng) | Số dư không đủ để debit (khi `force` không phải `true`) |
+        | `PLAYER_NOT_FOUND` | Huỷ, không retry | Dispatch loop gửi lại (10 vòng) | Player không tồn tại |
+        | `WALLET_FROZEN` | Huỷ, không retry | Dispatch loop gửi lại (10 vòng) | Ví bị đóng băng |
+        | `INVALID_CURRENCY` | Huỷ, không retry | Dispatch loop gửi lại (10 vòng) | Tiền tệ không hợp lệ |
+        | `INTERNAL_ERROR` | Huỷ, không retry | Dispatch loop gửi lại (10 vòng) | Lỗi nội bộ tenant — KHÔNG lưu vào DB. Nên trả HTTP 502/503 nếu chưa xử lý giao dịch |
+
+    TransactionStatusErrorCode:
+      type: string
+      enum:
+        - INSUFFICIENT_BALANCE
+        - PLAYER_NOT_FOUND
+        - WALLET_FROZEN
+        - INVALID_CURRENCY
+        - INTERNAL_ERROR
+        - NOT_FOUND
+      description: |
+        Mã lỗi cho Transaction Status Check API.
+        Superset của `TransactionErrorCode` + `NOT_FOUND`.
+        Scheduler chỉ đọc `success` boolean, không đọc error code.
+        | Code | Mô tả |
+        |------|-------|
+        | `NOT_FOUND` | Tx không có record trong DB — giao dịch chưa xảy ra |
+        | `INSUFFICIENT_BALANCE` | Tx fail (chỉ nếu tenant lưu failure) |
+        | `PLAYER_NOT_FOUND` | Tx fail (chỉ nếu tenant lưu failure) |
+        | `WALLET_FROZEN` | Tx fail (chỉ nếu tenant lưu failure) |
+        | `INVALID_CURRENCY` | Tx fail (chỉ nếu tenant lưu failure) |
+        | `INTERNAL_ERROR` | Lỗi nội bộ tenant khi check — scheduler coi là `success: false` → xoá WAL. Dùng HTTP 502/503 nếu muốn scheduler retry |
+
+    BalanceErrorCode:
+      type: string
+      enum:
+        - PLAYER_NOT_FOUND
+        - INVALID_CURRENCY
+        - INTERNAL_ERROR
+      description: |
+        Mã lỗi chuẩn khi query số dư thất bại.
+        | Code | MegaWin retry (HTTP 200) | Mô tả |
+        |------|--------------------------|-------|
+        | `PLAYER_NOT_FOUND` | Không | Player không tồn tại |
+        | `INVALID_CURRENCY` | Không | Tiền tệ không nằm trong thoả thuận 2 bên |
+        | `INTERNAL_ERROR` | Không | Lỗi nội bộ tenant — nên trả HTTP 502/503 thay vì HTTP 200 |
+
+    CallbackErrorInfo:
+      type: object
+      required: [code, message]
+      description: |
+        Chi tiết lỗi chuẩn — dùng chung cho mọi callback API.
+        `code` bị giới hạn per API — xem `TransactionErrorCode`, `TransactionStatusErrorCode`, `BalanceErrorCode`.
+      properties:
+        code:
+          type: string
+          description: Mã lỗi machine-readable. Giá trị hợp lệ tuỳ từng API.
+          example: INSUFFICIENT_BALANCE
+        message:
+          type: string
+          description: Mô tả lỗi human-readable.
+          example: "Player balance 30,000 VND < bet amount 50,000 VND"
+
+    TransactionErrorInfo:
+      type: object
+      required: [code, message]
+      description: "Error info cho Transaction API — `code` giới hạn trong `TransactionErrorCode`."
+      properties:
+        code:
+          $ref: "#/components/schemas/TransactionErrorCode"
+        message:
+          type: string
+          description: Mô tả lỗi human-readable.
+          example: "Player balance 30,000 VND < bet amount 50,000 VND"
+
+    TransactionStatusErrorInfo:
+      type: object
+      required: [code, message]
+      description: "Error info cho Transaction Status API — `code` giới hạn trong `TransactionStatusErrorCode`."
+      properties:
+        code:
+          $ref: "#/components/schemas/TransactionStatusErrorCode"
+        message:
+          type: string
+          description: Mô tả lỗi human-readable.
+          example: Transaction not found
+
+    BalanceErrorInfo:
+      type: object
+      required: [code, message]
+      description: "Error info cho Balance API — `code` giới hạn trong `BalanceErrorCode`."
+      properties:
+        code:
+          $ref: "#/components/schemas/BalanceErrorCode"
+        message:
+          type: string
+          description: Mô tả lỗi human-readable.
+          example: Player not found
+
+    TransactionRequest:
+      type: object
+      required: [action, reason, tx, playerId, amount, currency]
+      description: |
+        Payload MegaWin gửi khi thực hiện 1 giao dịch trên ví player.
+        Tenant đọc `action` để biết cộng/trừ, đọc `reason` để ghi audit log.
+        `tx` là idempotency key — kiểm tra trùng trước khi xử lý.
+      properties:
+        action:
+          $ref: "#/components/schemas/TransactionAction"
+        reason:
+          $ref: "#/components/schemas/TransactionReason"
+        tx:
+          type: string
+          format: uuid
+          description: |
+            Mã giao dịch unique — **idempotency key**.
+
+            Format: UUIDv7 (RFC 9562) — opaque, time-ordered, 36 chars.
+            Tenant PHẢI kiểm tra `tx` đã tồn tại chưa:
+            - Đã xử lý → trả `success: true` với `data.duplicate: true` + balance hiện tại.
+            - Chưa có → xử lý giao dịch, lưu `tx`, trả `success: true` với data.
+          example: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"
+        playerId:
+          type: string
+          description: |
+            Player ID — **lowercase username** tenant đăng ký khi tạo player.
+            Tenant dùng để lookup ví player.
+          example: john_doe
+        amount:
+          type: number
+          exclusiveMinimum: 0
+          description: |
+            Số tiền giao dịch (VND). Luôn > 0.
+            Direction xác định bởi `action`, không phải dấu của amount.
+          example: 50000
+        currency:
+          type: string
+          description: |
+            Mã tiền tệ ISO 4217. Hiện tại MegaWin chỉ gửi `"VND"`.
+            Tenant PHẢI validate — trả `INVALID_CURRENCY` nếu không hỗ trợ.
+          example: VND
+        gameId:
+          type: string
+          description: |
+            Mã sản phẩm game. Giá trị hiện tại: `keno`, `lotto535`, `mega645`,
+            `power655`, `max3d`, `max3dpro`, `bingo18`. Có thể mở rộng.
+          example: keno
+        roundIds:
+          type: array
+          items:
+            type: string
+          description: |
+            Danh sách kỳ quay / phiên chơi mà giao dịch này liên quan.
+            Multi-draw bet: 1 lần debit cover nhiều kỳ.
+            - Lottery: drawIds, format `YYYY-MM-DD.NNN`.
+            - Casino: spinIds. Sports: matchIds.
+          example: ["2026-04-10.095"]
+        description:
+          type: string
+          description: |
+            Mô tả giao dịch — hiển thị cho player trên lịch sử.
+            MegaWin gửi tiếng Việt.
+          example: Đặt cược Keno kỳ 2026-04-10.095
+        force:
+          type: boolean
+          default: false
+          description: |
+            `true` = debit bắt buộc, kể cả balance < amount (cho phép âm).
+            MegaWin chỉ gửi `force: true` khi cần thu hồi payout sai.
+            Tenant PHẢI thực hiện debit khi `force: true` — không trả INSUFFICIENT_BALANCE.
+        metadata:
+          type: object
+          additionalProperties: true
+          description: |
+            Dữ liệu mở rộng game-specific. Tenant có thể lưu hoặc bỏ qua.
+            Key phổ biến: `ticketNo` (mã vé), `entryId` (MegaWin entry ID).
+            Rollback/refund có thể chứa `refTx` (tx gốc cần hoàn).
+          example:
+            ticketNo: KENO-20260410-00001
+
+    TransactionResponse:
+      type: object
+      required: [success]
+      description: "Response single transaction — CallbackResponse<TransactionData, TransactionErrorCode> envelope."
+      properties:
+        success:
+          type: boolean
+          description: "`true` = thành công, `false` = thất bại."
+        data:
+          type: object
+          description: "Dữ liệu giao dịch — chỉ có khi `success: true`."
+          properties:
+            tx:
+              type: string
+              format: uuid
+              description: "Echo lại `tx` từ request."
+              example: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"
+            balance:
+              type: number
+              description: Số dư ví player sau giao dịch (VND).
+              example: 950000
+            currency:
+              type: string
+              description: Mã tiền tệ.
+              example: VND
+            duplicate:
+              type: boolean
+              description: "`true` nếu tx đã xử lý trước đó (idempotent)."
+          required: [tx, balance, currency]
+        error:
+          $ref: "#/components/schemas/TransactionErrorInfo"
+
+    BatchTransactionItem:
+      type: object
+      required: [action, reason, tx, playerId, amount, currency]
+      description: |
+        1 item trong batch — cấu trúc giống `TransactionRequest`.
+        Mỗi item là giao dịch độc lập — 1 item fail không ảnh hưởng items khác.
+      properties:
+        action:
+          $ref: "#/components/schemas/TransactionAction"
+        reason:
+          $ref: "#/components/schemas/TransactionReason"
+        tx:
+          type: string
+          format: uuid
+          description: |
+            Mã giao dịch unique per item — idempotency key.
+            Format: UUIDv7 (RFC 9562) — opaque, time-ordered, 36 chars.
+          example: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"
+        playerId:
+          type: string
+          description: Lowercase username player.
+          example: john_doe
+        amount:
+          type: number
+          exclusiveMinimum: 0
+          description: Số tiền giao dịch (VND). Luôn > 0.
+          example: 200000
+        currency:
+          type: string
+          description: Mã tiền tệ ISO 4217.
+          example: VND
+        gameId:
+          type: string
+          description: Mã sản phẩm game.
+          example: keno
+        roundIds:
+          type: array
+          items:
+            type: string
+          description: Danh sách kỳ quay / phiên chơi.
+          example: ["2026-04-10.095"]
+        description:
+          type: string
+          description: Mô tả giao dịch (tiếng Việt).
+          example: Trả thưởng Keno kỳ 2026-04-10.095
+        force:
+          type: boolean
+          default: false
+          description: "`true` = debit bắt buộc, kể cả balance âm. Xem TransactionRequest.force."
+        metadata:
+          type: object
+          additionalProperties: true
+          description: "Dữ liệu mở rộng. Key phổ biến: `ticketNo`, `entryId`."
+          example:
+            ticketNo: KENO-20260410-00001
+            entryId: 01HXYZ789DEF
+
+    BatchTransactionRequest:
+      type: object
+      required: [items]
+      description: |
+        Payload batch — chứa 1 → 50 items.
+        Tenant xử lý từng item độc lập, trả kết quả per item.
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/BatchTransactionItem"
+          description: Danh sách giao dịch cần xử lý. Tối đa 50 items/batch.
+
+    BatchTransactionItemResult:
+      type: object
+      required: [tx, success]
+      description: Kết quả xử lý 1 item trong batch.
+      properties:
+        tx:
+          type: string
+          format: uuid
+          description: "Echo lại `tx` từ item."
+          example: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"
+        success:
+          type: boolean
+          description: "`true` = item thành công, `false` = thất bại."
+        balance:
+          type: number
+          description: Số dư ví sau giao dịch (VND). Optional.
+          example: 1200000
+        duplicate:
+          type: boolean
+          description: "`true` nếu tx đã xử lý trước đó."
+        error:
+          $ref: "#/components/schemas/TransactionErrorInfo"
+
+    BatchTransactionResponse:
+      type: object
+      required: [success]
+      description: "Response batch — outer CallbackResponse<BatchTransactionData, TransactionErrorCode> envelope + per-item results."
+      properties:
+        success:
+          type: boolean
+          description: "`true` = batch đã xử lý (đọc data.results), `false` = toàn bộ thất bại."
+        data:
+          type: object
+          description: "Dữ liệu batch — chỉ có khi `success: true`."
+          properties:
+            results:
+              type: array
+              items:
+                $ref: "#/components/schemas/BatchTransactionItemResult"
+              description: "Kết quả per item — cùng thứ tự với `items` trong request."
+          required: [results]
+        error:
+          $ref: "#/components/schemas/TransactionErrorInfo"
+
+    GetBalanceResponse:
+      type: object
+      required: [success]
+      description: "Response balance — CallbackResponse<BalanceData, BalanceErrorCode> envelope."
+      properties:
+        success:
+          type: boolean
+          description: "`true` = query OK, `false` = thất bại."
+        data:
+          type: object
+          description: "Balance data — chỉ có khi `success: true`."
+          properties:
+            playerId:
+              type: string
+              description: Echo lại từ request.
+              example: john_doe
+            balance:
+              type: number
+              minimum: 0
+              description: Số dư hiện tại (VND).
+              example: 1500000
+            currency:
+              type: string
+              description: Mã tiền tệ.
+              example: VND
+          required: [playerId, balance, currency]
+        error:
+          $ref: "#/components/schemas/BalanceErrorInfo"
+
+    TransactionStatusResponse:
+      type: object
+      required: [success]
+      description: "Response transaction status check — CallbackResponse<TransactionStatusData, TransactionStatusErrorCode> envelope."
+      properties:
+        success:
+          type: boolean
+          description: "`true` = tx tồn tại và đã xử lý thành công, `false` = không tồn tại hoặc đã fail."
+        data:
+          type: object
+          description: "Dữ liệu status — chỉ có khi `success: true`."
+          properties:
+            processedAt:
+              type: string
+              format: date-time
+              description: Thời điểm giao dịch được xử lý (ISO 8601). Optional.
+              example: "2026-04-10T07:30:00Z"
+        error:
+          $ref: "#/components/schemas/TransactionStatusErrorInfo"
+
+  responses:
+    Unauthorized:
+      description: API key sai hoặc thiếu.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [success, error]
+            properties:
+              success:
+                type: boolean
+                enum: [false]
+              error:
+                type: object
+                required: [code, message]
+                properties:
+                  code:
+                    type: string
+                    enum: [UNAUTHORIZED]
+                  message:
+                    type: string
+            example:
+              success: false
+              error:
+                code: UNAUTHORIZED
+                message: Invalid or missing API key
+    BadRequest:
+      description: Body JSON invalid hoặc thiếu field bắt buộc.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [success, error]
+            properties:
+              success:
+                type: boolean
+                enum: [false]
+              error:
+                type: object
+                required: [code, message]
+                properties:
+                  code:
+                    type: string
+                    enum: [BAD_REQUEST]
+                  message:
+                    type: string
+            example:
+              success: false
+              error:
+                code: BAD_REQUEST
+                message: "Missing required field: playerId"
+    InternalError:
+      description: |
+        Lỗi server tenant — tenant nên trả 502/503 để MegaWin retry. 500 KHÔNG được retry.
+        Body có thể không theo envelope chuẩn (crash trước khi format response).
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                enum: [false]
+              error:
+                oneOf:
+                  - type: object
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                  - type: string
+            example:
+              success: false
+              error:
+                code: INTERNAL_ERROR
+                message: Internal server error

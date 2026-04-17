@@ -4,7 +4,20 @@
  * Đặt cược Keno với tất cả entries tạo ngay (all-or-nothing):
  *   - Player gửi danh sách drawIds đang mở bán
  *   - Server validate tất cả draws → reject nếu 1 draw không hợp lệ
+ *   - Debit player qua tenant gateway (WAL-protected)
  *   - Tạo entries cho TẤT CẢ draws ngay lập tức
+ *
+ * DEBIT FLOW (WAL-protected):
+ *   1. Validate input (tenant, draws, boards, pricing)
+ *   2. DebitPlayerService.debit() — ghi WAL + gọi tenant debit
+ *   3. saveAtomically(ticket { tx }, entries) — ticket link với WAL qua tx
+ *   4. DebitPlayerService.markCompleted(tx) — WAL → COMPLETED
+ *
+ * CRASH SCENARIOS:
+ *   - Crash trước debit → WAL DEBIT_PENDING, scheduler confirm debit = not_found → xoá WAL
+ *   - Crash sau debit, trước save → scheduler confirm debit = success, no ticket → rollback credit
+ *   - Crash sau save, trước markCompleted → scheduler confirm debit = success, ticket exists → markCompleted
+ *   - Crash sau markCompleted → đã hoàn tất, TTL cleanup 14 ngày
  *
  * boards[] chứa cả cơ bản (pick1-pick10) và bổ sung (bigSmall/evenOdd),
  * phân biệt qua playType. Validation chi tiết ở Zod handler (discriminated union).
@@ -28,7 +41,9 @@ import { PlaceBetStore } from "../../infras/repos/place-bet-store";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
+import { DebitPlayerService } from "@megawin/game-core-application/services";
 import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
+import { Currency } from "@megawin/shared/types";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { nowVN, getFinancialDate } from "@megawin/shared/utils";
 import { ObjectId } from "mongodb";
@@ -39,6 +54,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
   private readonly ticketCounter = new TicketCounterRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
+  private readonly debitService = new DebitPlayerService();
 
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
     const {
@@ -146,6 +162,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const ticketNo = buildTicketNo(GameProduct.Keno, date, seq);
     const drawCount = drawIds.length;
 
+    // tx (UUIDv7) generate sớm để gán vào ticketDoc — link ticket ↔ WAL.
+    const tx = this.debitService.generateTx();
+
     // _id phải là ObjectId instance để MongoDB lưu đúng kiểu và mapper có thể gọi toHexString().
     const ticketObjectId = new ObjectId();
     const ticketId = ticketObjectId.toHexString();
@@ -174,6 +193,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         totalDraws: drawCount,
         settledDraws: 0,
       },
+      tx,
       financialDate: getFinancialDate(now),
       status: TicketStatus.Paid,
       version: 0,
@@ -219,12 +239,40 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       });
     }
 
+    // ── 10. Debit player via WAL — ngay trước save để giảm cửa sổ crash ──
+    // Ghi WAL (DEBIT_PENDING) → gọi tenant debit → return balance.
+    // tx đã generate ở bước 7 và gán vào ticketDoc.tx.
+    // Nếu tenant reject (insufficient balance, etc.) → throw AppException (WAL xoá).
+    // Nếu tenant unreachable → throw serviceUnavailable (WAL giữ, scheduler xử lý).
+    // Nếu WAL insert fail (MongoDB down) → throw serviceUnavailable (chưa debit, an toàn).
+    const { balance } = await this.debitService.debit({
+      tx,
+      tenantId,
+      accountId,
+      username,
+      amount: totalAmount,
+      currency: Currency.VND,
+      gameId: GameProduct.Keno,
+      roundIds: drawIds,
+      description: `Đặt cược Keno ${drawCount} kỳ ${drawIds[0]}${drawCount > 1 ? `→${drawIds[drawCount - 1]}` : ""}`,
+      metadata: { ticketNo },
+    });
+
+    // ── 11. Save ticket + entries atomically ──
+    // Nếu crash SAU đây nhưng TRƯỚC markCompleted:
+    // Scheduler confirm debit = success → ticket exists → markCompleted (self-heal).
     await this.placeBetStore.saveAtomically(ticketDoc, entryDocs);
+
+    // ── 12. Mark WAL completed ──
+    // Nếu crash trước dòng này → scheduler xử lý (ticket exists → markCompleted).
+    // Gọi thành công → WAL = COMPLETED → TTL 14 ngày.
+    await this.debitService.markCompleted(tx);
 
     return {
       ticketId,
       ticketNo,
       status: TicketStatus.Paid,
+      balance,
       drawPlan: {
         drawIds,
         drawCount,

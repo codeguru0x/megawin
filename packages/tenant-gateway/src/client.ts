@@ -1,134 +1,131 @@
 /**
- * TenantGatewayClient -- HTTP client gọi callback API của tenant.
+ * TenantGatewayClient — HTTP client gọi callback API của tenant.
  *
  * MegaWin gọi tenant server để:
- * - Trừ/cộng tiền player (debit/credit)
- * - Rollback giao dịch lỗi
- * - Kiểm tra số dư
- * - Gửi báo cáo (settlement, round result)
+ * - Trừ/cộng tiền player qua Transaction API.
+ * - Kiểm tra số dư qua Balance API.
  *
- * Security: API Key header (tenant cung cấp cho MegaWin).
- * Retry: exponential backoff với idempotency qua transactionId.
+ * Security: API Key qua header `x-api-key` (tenant cung cấp cho MegaWin).
+ * Retry: exponential backoff (500ms base, max 3 retries) cho mọi request — tích hợp
+ * sẵn trong HttpClient layer, không cần wrap thủ công.
+ * Idempotency: mọi transaction có `tx` unique — retry an toàn.
+ *
+ * Client được tạo per-tenant tại runtime từ {@link TenantGatewayConfig}.
+ * Callers gọi `createTenantGatewayClient(config)` với config load từ TenantConfig DB.
+ *
+ * @example
+ * ```ts
+ * import { createTenantGatewayClient } from "@megawin/tenant-gateway";
+ *
+ * const gateway = createTenantGatewayClient({
+ *   callbackBaseUrl: "https://api.tenant.com",
+ *   apiKey: "sk_live_abc123",
+ *   tenantId: "acme",
+ *   timeout: 30_000,
+ * });
+ *
+ * // Single transaction — bet debit
+ * const result = await gateway.transaction({
+ *   action: "debit",
+ *   reason: "bet",
+ *   tx: "bet-01HXYZ123ABC",
+ *   playerId: "john_doe",
+ *   amount: 50000,
+ *   currency: "VND",
+ * });
+ *
+ * // Batch transaction — payout
+ * const batch = await gateway.batchTransaction({
+ *   items: [
+ *     { action: "credit", reason: "payout", tx: "payout-keno-...", ... },
+ *   ],
+ * });
+ *
+ * // Balance check
+ * const result = await gateway.getBalance({ playerId: "john_doe" });
+ * if (result.success) console.log(result.data!.balance);
+ * ```
  */
 
-import {
-  createHttpClient,
-  type HttpClient,
-  ApiClientError,
-} from "@megawin/http-client";
+import { createHttpClient, type HttpClient } from "@megawin/http-client";
 
-import type {
-  TenantGatewayConfig,
-  TenantGatewayClient,
-  DebitRequest,
-  DebitResponse,
-  CreditRequest,
-  CreditResponse,
-  RollbackRequest,
-  RollbackResponse,
-  GetBalanceRequest,
-  GetBalanceResponse,
-  SubmitReportRequest,
-  SubmitReportResponse,
-  BatchPayoutRequest,
-  BatchPayoutResponse,
-  BatchRefundRequest,
-  BatchRefundResponse,
-} from "./types";
+import type { TenantGatewayConfig } from "./shared/types";
+import { createTransactionApi, type TransactionApi } from "./transaction";
+import { createBalanceApi, type BalanceApi } from "./balance";
 
-// ============ Retry config ============
-
+/** Default timeout cho HTTP requests (ms). */
 const DEFAULT_TIMEOUT = 10_000;
-const MAX_RETRIES = 3;
-const RETRY_BASE_DELAY_MS = 500;
 
-const RETRYABLE_STATUS_CODES = new Set([408, 429, 502, 503, 504]);
+// ─────────────────────────────────────────────────────────────────────────────
+// TenantGatewayClient Interface
+// ─────────────────────────────────────────────────────────────────────────────
 
-async function withRetry<T>(
-  fn: () => Promise<T>,
-  maxRetries: number = MAX_RETRIES,
-): Promise<T> {
-  let lastError: unknown;
+/**
+ * Composite client gộp tất cả callback APIs.
+ *
+ * Hiện tại gồm {@link TransactionApi} và {@link BalanceApi}.
+ * Khi thêm API mới (report, notification, ...) sẽ extend thêm.
+ *
+ * Tạo instance qua {@link createTenantGatewayClient}.
+ */
+export interface TenantGatewayClient extends TransactionApi, BalanceApi {}
 
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (err) {
-      lastError = err;
+// ─────────────────────────────────────────────────────────────────────────────
+// Factory
+// ─────────────────────────────────────────────────────────────────────────────
 
-      if (attempt === maxRetries) break;
-
-      const shouldRetry =
-        err instanceof ApiClientError &&
-        RETRYABLE_STATUS_CODES.has(err.status);
-
-      if (!shouldRetry) break;
-
-      const delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt);
-      const jitter = Math.random() * delay * 0.3;
-      await new Promise((r) => setTimeout(r, delay + jitter));
-    }
-  }
-
-  throw lastError;
-}
-
-// ============ Callback paths ============
-
-const PATHS = {
-  debit: "/megawin/callback/debit",
-  credit: "/megawin/callback/credit",
-  rollback: "/megawin/callback/rollback",
-  balance: "/megawin/callback/balance",
-  report: "/megawin/callback/report",
-  batchPayout: "/megawin/callback/payout/batch",
-  batchRefund: "/megawin/callback/refund/batch",
-} as const;
-
-// ============ Factory ============
-
-export function createTenantGatewayClient(
-  config: TenantGatewayConfig,
-): TenantGatewayClient {
+/**
+ * Tạo TenantGatewayClient từ config của tenant.
+ *
+ * Khởi tạo HTTP client với:
+ * - `x-api-key` header — authenticate request từ MegaWin.
+ * - `x-tenant-id` header — identify tenant.
+ * - Timeout mặc định 10s, override được qua config.
+ *
+ * Mỗi lần gọi tạo client mới — không cache. Callers tạo client tại đầu use case,
+ * dùng xong bỏ. Phù hợp cho serverless (Lambda) vì không giữ state.
+ *
+ * @param config - Cấu hình kết nối: URL, API key, tenant ID, timeout.
+ * @returns Client với đầy đủ Transaction + Balance APIs.
+ *
+ * @example
+ * ```ts
+ * // Load config từ DB
+ * const tenantConfig = await tenantConfigRepo.getTenantConfig(tenantId);
+ *
+ * const gateway = createTenantGatewayClient({
+ *   callbackBaseUrl: tenantConfig.callbackBaseUrl,
+ *   apiKey: tenantConfig.apiKey ?? "",
+ *   tenantId,
+ *   timeout: 30_000,
+ * });
+ *
+ * // Sử dụng
+ * await gateway.transaction({ ... });
+ * await gateway.batchTransaction({ ... });
+ * const { balance } = await gateway.getBalance({ playerId: "john_doe" });
+ * ```
+ */
+export function createTenantGatewayClient(config: TenantGatewayConfig): TenantGatewayClient {
   const { callbackBaseUrl, apiKey, tenantId, timeout = DEFAULT_TIMEOUT } = config;
 
   const http: HttpClient = createHttpClient({
     baseUrl: callbackBaseUrl,
     timeout,
+    retry: 3,
     headers: {
-      "X-Api-Key": apiKey,
-      "X-Tenant-Id": tenantId,
+      "x-api-key": apiKey,
+      "x-tenant-id": tenantId,
     },
   });
 
+  // Compose từ các sub-APIs.
+  // Khi thêm API mới, tạo factory mới và spread vào đây.
+  const transactionApi = createTransactionApi(http);
+  const balanceApi = createBalanceApi(http);
+
   return {
-    debit: (req: DebitRequest) =>
-      withRetry(() => http.post<DebitResponse>(PATHS.debit, req)),
-
-    credit: (req: CreditRequest) =>
-      withRetry(() => http.post<CreditResponse>(PATHS.credit, req)),
-
-    rollback: (req: RollbackRequest) =>
-      withRetry(() => http.post<RollbackResponse>(PATHS.rollback, req)),
-
-    getBalance: (req: GetBalanceRequest) =>
-      withRetry(() =>
-        http.get<GetBalanceResponse>(PATHS.balance, {
-          params: {
-            playerId: req.playerId,
-            currency: req.currency,
-          },
-        }),
-      ),   
-
-    submitReport: (req: SubmitReportRequest) =>
-      withRetry(() => http.post<SubmitReportResponse>(PATHS.report, req)),
-
-    batchPayout: (req: BatchPayoutRequest) =>
-      withRetry(() => http.post<BatchPayoutResponse>(PATHS.batchPayout, req)),
-
-    batchRefund: (req: BatchRefundRequest) =>
-      withRetry(() => http.post<BatchRefundResponse>(PATHS.batchRefund, req)),
+    ...transactionApi,
+    ...balanceApi,
   };
 }
- 

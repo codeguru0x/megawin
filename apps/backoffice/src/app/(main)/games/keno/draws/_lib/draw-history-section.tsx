@@ -110,9 +110,11 @@ export function DrawHistorySection() {
         if (!result?.winningNumbers?.length) return null;
         return (
           <div className="flex flex-wrap items-center gap-0.5">
-            {result.winningNumbers.map((n) => (
-              <KenoNumberBall key={n} number={Number(n)} size="sm" />
-            ))}
+            {[...result.winningNumbers]
+              .sort((a, b) => Number(a) - Number(b))
+              .map((n) => (
+                <KenoNumberBall key={n} number={Number(n)} size="sm" />
+              ))}
           </div>
         );
       }}

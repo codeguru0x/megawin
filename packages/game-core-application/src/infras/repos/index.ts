@@ -15,3 +15,4 @@ export { SystemOutstandingReportRepository } from "./system-outstanding-report-r
 export { PlayerSettleGameDailyRepository } from "./player-settle-game-daily-repo";
 export { PlayerOutstandingRepository } from "./player-outstanding-repo";
 export { PlayerEntryRepository } from "./player-entry-repo";
+export { TxIntentRepository } from "./tx-intent-repo";

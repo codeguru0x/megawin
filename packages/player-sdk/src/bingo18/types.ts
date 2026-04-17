@@ -698,6 +698,7 @@ export interface Bingo18TicketEntriesResponse {
  * });
  * console.log(result.ticketId);            // "65abc..."
  * console.log(result.pricing.totalAmount); // 20000
+ * console.log(result.balance);             // 980000
  * ```
  */
 export interface Bingo18PlaceBetResponse {
@@ -707,6 +708,8 @@ export interface Bingo18PlaceBetResponse {
   ticketNo: string;
   /** Trạng thái vé sau khi tạo. */
   status: string;
+  /** Số dư ví player sau khi trừ tiền cược (VND). */
+  balance: number;
 
   /** Kế hoạch kỳ quay. */
   drawPlan: {

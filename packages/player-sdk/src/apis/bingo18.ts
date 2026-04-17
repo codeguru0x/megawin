@@ -75,7 +75,7 @@ export interface Bingo18Api {
    * **Endpoint:** `POST /games/bingo18/bets`
    *
    * @param input - Thông tin vé: drawIds, boards
-   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount
+   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount, balance sau cược
    *
    * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
    * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
@@ -96,6 +96,7 @@ export interface Bingo18Api {
    * });
    * console.log(result.ticketNo);    // "B18-20260307-00007"
    * console.log(result.pricing.totalAmount); // 60000
+   * console.log(result.balance);             // 940000
    * ```
    */
   placeBet(input: Bingo18TicketPurchaseInput): Promise<Bingo18PlaceBetResponse>;

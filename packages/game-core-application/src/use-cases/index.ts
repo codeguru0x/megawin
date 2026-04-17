@@ -1,8 +1,5 @@
 export { BaseSyncEntryFeedUseCase } from "./sync-entry-feed";
-export type {
-  SyncEntryFeedInput,
-  SyncEntryFeedResult,
-} from "./sync-entry-feed";
+export type { SyncEntryFeedInput, SyncEntryFeedResult } from "./sync-entry-feed";
 
 export { GetEntryFeedUseCase } from "./get-entry-feed";
 export type { GetEntryFeedInput } from "./get-entry-feed";
@@ -28,3 +25,6 @@ export type {
   PublishPlayerDailyResult,
   PlayerDailyPublisher,
 } from "./publish-player-daily";
+
+export { RecoverOrphanTxIntentsUseCase } from "./recover-orphan-tx-intents";
+export type { RecoverOrphanTxIntentsResult, TicketExistsFn } from "./recover-orphan-tx-intents";

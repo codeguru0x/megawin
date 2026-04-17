@@ -61,6 +61,8 @@ export interface PlaceBetOutput {
   ticketId: string;
   ticketNo: string;
   status: string;
+  /** Số dư ví player sau khi trừ tiền cược (VND). Từ response tenant. */
+  balance: number;
   drawPlan: {
     drawIds: string[];
     drawCount: number;

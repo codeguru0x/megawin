@@ -6,13 +6,6 @@ export {
   type RequestOptions,
 } from "./http-client";
 
-export {
-  ApiClientError,
-  type ApiResponse,
-  type ApiSuccessResponse,
-  type ApiErrorResponse,
-  type ApiErrorDetail,
-  type ApiResponseMeta,
-  isApiSuccess,
-  isApiError,
-} from "@megawin/shared/api-types";
+export { withRetry, resolveRetryConfig, type RetryConfig } from "./retry";
+
+export { ApiClientError } from "@megawin/shared/api-types";

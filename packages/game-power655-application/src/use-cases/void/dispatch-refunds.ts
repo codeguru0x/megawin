@@ -24,16 +24,12 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import {
-  createTenantGatewayClient,
-  type TenantGatewayClient,
-  type RefundItem,
-} from "@megawin/tenant-gateway";
+import { tenantGateway, type BatchTransactionItem } from "@megawin/tenant-gateway";
 import { GameProduct } from "@megawin/game-core/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
-import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 import type { VoidContext } from "./types";
 import type { TicketEntryEntity } from "@megawin/game-power655/entities";
+import { DEFAULT_CURRENCY } from "@megawin/shared/types";
 
 /** Số entries tối đa query mỗi lần gọi Lambda. */
 const BATCH_QUERY_LIMIT = 200;
@@ -81,19 +77,13 @@ export class DispatchRefundBatchUseCase extends InternalUseCase<
   DispatchRefundBatchResult
 > {
   private readonly entryRepo = new EntryRepository();
-  private readonly tenantConfigRepo = new TenantConfigRepository();
 
-  protected async execute(
-    input: VoidContext
-  ): Promise<DispatchRefundBatchResult> {
+  protected async execute(input: VoidContext): Promise<DispatchRefundBatchResult> {
     const { drawId } = input;
 
     // ── Bước 1: Query entries cần dispatch refund ──────────────────────
     // Chỉ lấy entries có voidInfo.refundStatus = pending hoặc failed (retry).
-    const entries = await this.entryRepo.getPendingRefundEntries(
-      drawId,
-      BATCH_QUERY_LIMIT
-    );
+    const entries = await this.entryRepo.getPendingRefundEntries(drawId, BATCH_QUERY_LIMIT);
 
     // Không còn entries cần refund → báo done.
     if (entries.length === 0) {
@@ -115,13 +105,7 @@ export class DispatchRefundBatchUseCase extends InternalUseCase<
 
     // ── Bước 3: Dispatch refund cho từng tenant ───────────────────────
     for (const [tenantId, tenantEntries] of tenantGroups) {
-      const result = await dispatchRefundToTenant(
-        this.entryRepo,
-        this.tenantConfigRepo,
-        tenantId,
-        drawId,
-        tenantEntries
-      );
+      const result = await dispatchRefundToTenant(this.entryRepo, tenantId, drawId, tenantEntries);
       tenantResults.push(result);
       totalDispatched += result.dispatched;
       totalFailed += result.failed;
@@ -180,33 +164,6 @@ function extractId(entry: TicketEntryEntity): string {
 }
 
 /**
- * Load TenantGateway client từ TenantConfig.
- *
- * @param tenantConfigRepo - Repo để đọc TenantConfig
- * @param tenantId - ID tenant cần load
- * @returns TenantGatewayClient nếu tenant có callbackBaseUrl, null nếu không
- *
- * Khi trả về null → tenant chưa cấu hình gateway → DRY-RUN mode:
- * entries sẽ được auto-mark dispatched mà không gọi API thực.
- */
-async function loadGatewayClient(
-  tenantConfigRepo: TenantConfigRepository,
-  tenantId: string
-): Promise<TenantGatewayClient | null> {
-  const tenantConfig = await tenantConfigRepo.getTenantConfig(tenantId);
-  const callbackBaseUrl = (tenantConfig as any)?.callbackBaseUrl;
-  const apiKey = (tenantConfig as any)?.apiKey;
-  if (!callbackBaseUrl) return null;
-
-  return createTenantGatewayClient({
-    callbackBaseUrl,
-    apiKey: apiKey ?? "",
-    tenantId,
-    timeout: 30_000,
-  });
-}
-
-/**
  * Dispatch refund cho tất cả entries của 1 tenant cụ thể.
  *
  * Luồng:
@@ -223,7 +180,6 @@ async function loadGatewayClient(
  *   - markRefundFailed ghi lý do lỗi vào DB → debug và audit trail
  *
  * @param entryRepo - Repo entries để cập nhật refund status
- * @param tenantConfigRepo - Repo để load gateway config
  * @param tenantId - ID tenant
  * @param drawId - ID kỳ quay (dùng cho transactionId)
  * @param entries - Danh sách entries cần refund của tenant này
@@ -231,7 +187,6 @@ async function loadGatewayClient(
  */
 async function dispatchRefundToTenant(
   entryRepo: EntryRepository,
-  tenantConfigRepo: TenantConfigRepository,
   tenantId: string,
   drawId: string,
   entries: TicketEntryEntity[],
@@ -241,12 +196,9 @@ async function dispatchRefundToTenant(
   failed: number;
   totalRefundAmount: number;
 }> {
-  const totalRefundAmount = entries.reduce(
-    (s, e) => s + (e.voidInfo?.refundAmount ?? 0),
-    0,
-  );
+  const totalRefundAmount = entries.reduce((s, e) => s + (e.voidInfo?.refundAmount ?? 0), 0);
 
-  const gateway = await loadGatewayClient(tenantConfigRepo, tenantId);
+  const gateway = await tenantGateway.getClient(tenantId);
 
   // ── DRY-RUN: tenant chưa cấu hình callbackBaseUrl ────────────────
   // Không gọi API, chỉ mark dispatched. Tenant tự xử lý hoàn tiền khi kết nối sau.
@@ -273,34 +225,46 @@ async function dispatchRefundToTenant(
   let failed = 0;
 
   for (const batch of batches) {
-    // Map entries → RefundItem payload cho TenantGateway API.
-    // transactionId = "refund-{drawId}-{entryId}" → idempotency key cho gateway.
-    const items: RefundItem[] = batch.map((e) => ({
-      playerId: e.accountId,
-      accountId: e.accountId,
-      entryId: extractId(e),
-      amount: e.voidInfo?.refundAmount ?? 0,
-      currency: "VND",
-      transactionId: `refund-${drawId}-${extractId(e)}`,
-      gameId: GameProduct.Power655,
-      roundId: drawId,
-      ticketNo: e.entrySummary?.ticketNo ?? "",
-      description: `Hoàn tiền Power 6/55 kỳ ${drawId} – kỳ bị huỷ`,
-    }));
+    const txToEntryId = new Map<string, string>();
+    const items: BatchTransactionItem[] = batch.map((e) => {
+      const entryId = extractId(e);
+      const tx = e.voidInfo!.refundTx;
+      txToEntryId.set(tx, entryId);
+      return {
+        action: "credit" as const,
+        reason: "refund" as const,
+        tx,
+        playerId: e.accountId,
+        amount: e.voidInfo?.refundAmount ?? 0,
+        currency: DEFAULT_CURRENCY,
+        gameId: GameProduct.Power655,
+        roundIds: [drawId],
+        description: `Hoàn tiền Power 6/55 kỳ ${drawId} – kỳ bị huỷ`,
+        metadata: { entryId, ticketNo: e.entrySummary?.ticketNo ?? "" },
+      };
+    });
 
     try {
-      const response = await gateway.batchRefund({ items });
+      const response = await gateway.batchTransaction({ items });
 
-      // Per-entry result: mark dispatched nếu success/duplicate, failed nếu lỗi.
-      // "duplicate" = gateway đã nhận request này trước đó → idempotent, coi như OK.
-      for (const r of response.results) {
-        if (r.status === "success" || r.status === "duplicate") {
-          await entryRepo.markRefundDispatched(r.entryId);
+      if (!response.success) {
+        const errMsg = response.error?.message ?? "Batch transaction failed";
+        console.error(`[dispatch-refund] Tenant ${tenantId} batch failed: ${errMsg}`);
+        for (const e of batch) {
+          await entryRepo.markRefundFailed(extractId(e), errMsg);
+        }
+        failed += batch.length;
+        continue;
+      }
+
+      for (const r of response.data!.results) {
+        const entryId = txToEntryId.get(r.tx);
+        if (!entryId) continue;
+        if (r.success) {
+          await entryRepo.markRefundDispatched(entryId);
           dispatched++;
         } else {
-          // markRefundFailed ghi error message vào DB → retry ở lần gọi sau
-          // (getPendingRefundEntries query cả status = failed).
-          await entryRepo.markRefundFailed(r.entryId, r.error ?? "Tenant returned failed");
+          await entryRepo.markRefundFailed(entryId, r.error?.message ?? "Tenant returned failed");
           failed++;
         }
       }

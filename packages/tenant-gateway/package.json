@@ -5,10 +5,13 @@
   "description": "Outbound HTTP client to call tenant server APIs (debit, credit, balance, report)",
   "main": "index.js",
   "scripts": {
-    "dev": "tsc --watch",
+    "dev": "tsc -b --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc",
-    "clean": "rm -rf dist"
+    "build": "tsc -b",
+    "clean": "rm -rf dist",
+    "docs:preview": "redocly preview-docs openapi.yaml",
+    "docs:lint": "redocly lint openapi.yaml",
+    "docs:build": "rm -rf docs && redocly build-docs openapi.yaml -o docs/index.html"
   },
   "keywords": [
     "megawin",
@@ -26,11 +29,15 @@
     }
   },
   "dependencies": {
+    "@megawin/data": "workspace:*",
     "@megawin/http-client": "workspace:*",
-    "@megawin/shared": "workspace:*"
+    "@megawin/identity": "workspace:*",
+    "@megawin/shared": "workspace:*",
+    "lru-cache": "^11.3.3"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
+    "@redocly/cli": "^2.26.0",
     "@types/node": "^25.5.0",
     "typescript": "6.0.2"
   }

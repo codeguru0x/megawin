@@ -36,7 +36,9 @@ import { PlaceBetStore } from "../../infras/repos/place-bet-store";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { GetTenantConfigInternalUseCase } from "../tenant-config/get-tenant-config-internal";
 import { TicketCounterRepository } from "@megawin/game-core-application/repos";
+import { DebitPlayerService } from "@megawin/game-core-application/services";
 import { buildTicketNo, GameProduct } from "@megawin/game-core/entities";
+import { Currency } from "@megawin/shared/types";
 import { getFinancialDate, nowVN } from "@megawin/shared/utils";
 import type { PlaceBetInput, PlaceBetOutput } from "./dto/place-bet.dto";
 import { ObjectId } from "mongodb";
@@ -51,6 +53,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
   private readonly ticketCounter = new TicketCounterRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
+  private readonly debitService = new DebitPlayerService();
 
   /** @inheritdoc */
   protected async execute(input: PlaceBetInput): Promise<PlaceBetOutput> {
@@ -156,6 +159,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     const { seq, date } = await this.ticketCounter.nextTicketSeq(accountId);
     const ticketNo = buildTicketNo(GameProduct.Power655, date, seq);
 
+    // tx (UUIDv7) generate sớm để gán vào ticketDoc — link ticket ↔ WAL.
+    const tx = this.debitService.generateTx();
+
     // _id phải là ObjectId instance để MongoDB lưu đúng kiểu và mapper có thể gọi toHexString().
     const ticketObjectId = new ObjectId();
     const ticketId = ticketObjectId.toHexString();
@@ -184,6 +190,7 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
         totalDraws: drawCount,
         settledDraws: 0,
       },
+      tx,
       financialDate: getFinancialDate(now),
       status: TicketStatus.Paid as any,
       version: 0,
@@ -230,12 +237,29 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
       });
     }
 
+    // ── 10. Debit player via WAL — ngay trước save để giảm cửa sổ crash ──
+    const { balance } = await this.debitService.debit({
+      tx,
+      tenantId,
+      accountId,
+      username,
+      amount: totalAmount,
+      currency: Currency.VND,
+      gameId: GameProduct.Power655,
+      roundIds: drawIds,
+      description: `Đặt cược Power 6/55 ${drawCount} kỳ ${drawIds[0]}${drawCount > 1 ? `→${drawIds[drawCount - 1]}` : ""}`,
+      metadata: { ticketNo },
+    });
+
     await this.placeBetStore.saveAtomically(ticketDoc, entryDocs as any[]);
+
+    await this.debitService.markCompleted(tx);
 
     return {
       ticketId,
       ticketNo,
       status: TicketStatus.Paid,
+      balance,
       drawPlan: {
         drawIds,
         drawCount,

@@ -40,6 +40,7 @@
     { "path": "apps/worker-lotto535" },
     { "path": "apps/worker-max3d" },
     { "path": "apps/worker-max3dpro" },
-    { "path": "apps/worker-power655" }
+    { "path": "apps/worker-power655" },
+    { "path": "apps/worker-game-core" }
   ]
 }

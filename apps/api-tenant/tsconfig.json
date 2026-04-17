@@ -4,6 +4,35 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "test"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test"
+  ],
+  "references": [
+    {
+      "path": "../../packages/app-core"
+    },
+    {
+      "path": "../../packages/auth"
+    },
+    {
+      "path": "../../packages/game-core"
+    },
+    {
+      "path": "../../packages/game-core-application"
+    },
+    {
+      "path": "../../packages/identity"
+    },
+    {
+      "path": "../../packages/identity-application"
+    },
+    {
+      "path": "../../packages/shared"
+    }
+  ]
 }

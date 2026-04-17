@@ -155,7 +155,7 @@ export interface Lotto535Api {
    * @param input - Thông tin đặt cược
    * @param input.drawIds - Danh sách drawId các kỳ tham gia. Format mỗi ID: `YYYY-MM-DD.NNN`
    * @param input.boards - Danh sách boards (tối đa 5, không trùng boardNo)
-   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount
+   * @returns Thông tin vé vừa tạo gồm ticketId, ticketNo, totalAmount, balance sau cược
    *
    * @throws {@link ApiClientError} code `INSUFFICIENT_BALANCE` — không đủ số dư
    * @throws {@link ApiClientError} code `DRAW_CLOSED` — kỳ quay đã đóng bán
@@ -178,6 +178,7 @@ export interface Lotto535Api {
    * });
    * console.log(result.ticketNo);    // "L535-20260307-00008"
    * console.log(result.totalAmount); // 30000
+   * console.log(result.balance);     // 970000
    *
    * // Vé Bao (MainCover): 8 số chính + 1 số đặc biệt, 3 kỳ
    * const result2 = await client.lotto535.placeBet({

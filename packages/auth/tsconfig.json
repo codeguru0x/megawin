@@ -4,6 +4,25 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "references": [
+    {
+      "path": "../app-core"
+    },
+    {
+      "path": "../identity"
+    },
+    {
+      "path": "../identity-application"
+    },
+    {
+      "path": "../shared"
+    }
+  ]
 }

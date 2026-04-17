@@ -1,0 +1,8 @@
+recover-tx-intents:
+  handler: src/handlers/recovery/recover-tx-intents.handler
+  timeout: 120
+  memorySize: 256
+  events:
+    - schedule:
+        rate: rate(2 minutes)
+        enabled: true

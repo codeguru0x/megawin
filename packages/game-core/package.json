@@ -5,9 +5,9 @@
   "type": "module",
   "description": "Shared game domain – unified entry status, change sequence, entry feed (internal only)",
   "scripts": {
-    "dev": "tsc --watch",
+    "dev": "tsc -b --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc",
+    "build": "tsc -b",
     "clean": "rm -rf dist"
   },
   "exports": {
@@ -50,6 +50,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@megawin/shared": "workspace:*",
     "mongodb": "^7.1.1"
   },
   "devDependencies": {

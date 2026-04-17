@@ -253,21 +253,47 @@ interface ProfitBarProps {
   unitPrice: number;
   totalOutcomes: number;
   modeLabel: string;
+  /** Số lines per board. Combo3 = 3, Combo6 = 6, còn lại = 1. */
+  lineCount?: number;
 }
 
-function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel }: ProfitBarProps) {
+function ProfitBar({
+  analysis,
+  unitPrice,
+  totalOutcomes,
+  modeLabel,
+  lineCount = 1,
+}: ProfitBarProps) {
+  const boardCost = unitPrice * lineCount;
+  const isCombo = lineCount > 1;
+
   return (
     <div className="flex items-start justify-between gap-4">
       <div>
         <h3 className="text-sm font-semibold text-foreground">{modeLabel}</h3>
         <p className="text-xs text-muted-foreground mt-0.5">
           Tổng không gian mẫu: <strong>{fmt(totalOutcomes)}</strong>
-          {" · "}Giá 1 line: <strong>{fmt(unitPrice)} VND</strong>
+          {" · "}
+          {isCombo ? (
+            <>
+              Giá 1 board: <strong>{fmt(boardCost)} VND</strong>
+              <span className="text-muted-foreground/70">
+                {" "}
+                ({lineCount} lines × {fmt(unitPrice)})
+              </span>
+            </>
+          ) : (
+            <>
+              Giá 1 line: <strong>{fmt(unitPrice)} VND</strong>
+            </>
+          )}
         </p>
       </div>
       <div className="flex items-center gap-4 text-xs shrink-0">
         <div className="text-right">
-          <span className="text-muted-foreground">CP kỳ vọng / line</span>
+          <span className="text-muted-foreground">
+            CP kỳ vọng{isCombo ? " / board" : " / line"}
+          </span>
           <div className="font-semibold tabular-nums">
             {fmt(Math.round(analysis.totalExpectedPayout))} VND
           </div>
@@ -284,7 +310,7 @@ function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel }: ProfitBarP
             )}
             {analysis.grossMarginPercent.toFixed(2)}%
             <span className="ml-1 font-normal text-muted-foreground">
-              ({fmt(Math.round(analysis.grossMarginPerLine))} VND/line)
+              ({fmt(Math.round(analysis.grossMarginPerLine))} VND{isCombo ? "/board" : "/line"})
             </span>
           </div>
         </div>
@@ -468,6 +494,8 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
 
   const combo3Analysis = useMemo(() => {
     const odds = combo3Odds;
+    const lineCount = 3;
+    const boardCost = unitPrice * lineCount;
     const prizes = {
       special: w.combo3Special,
       first: w.combo3First,
@@ -484,23 +512,27 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
         oneInN: o.oneInN,
         currentPrize: prize,
         expectedPayout: ep,
-        payoutRatio: unitPrice > 0 ? ep / unitPrice : 0,
-        breakEvenPrize: o.probability > 0 ? unitPrice / o.probability : Infinity,
+        payoutRatio: boardCost > 0 ? ep / boardCost : 0,
+        breakEvenPrize: o.probability > 0 ? boardCost / o.probability : Infinity,
       };
     });
     const totalEP = tiers.reduce((s, t) => s + t.expectedPayout, 0);
-    const gm = unitPrice - totalEP;
+    const gm = boardCost - totalEP;
     return {
+      lineCount,
+      boardCost,
       tiers,
       totalExpectedPayout: totalEP,
-      totalPayoutRatio: unitPrice > 0 ? totalEP / unitPrice : 0,
+      totalPayoutRatio: boardCost > 0 ? totalEP / boardCost : 0,
       grossMarginPerLine: gm,
-      grossMarginPercent: unitPrice > 0 ? (gm / unitPrice) * 100 : 0,
+      grossMarginPercent: boardCost > 0 ? (gm / boardCost) * 100 : 0,
     };
   }, [w.combo3Special, w.combo3First, w.combo3Second, w.combo3Third, unitPrice, combo3Odds]);
 
   const combo6Analysis = useMemo(() => {
     const odds = combo6Odds;
+    const lineCount = 6;
+    const boardCost = unitPrice * lineCount;
     const prizes = {
       special: w.combo6Special,
       first: w.combo6First,
@@ -517,18 +549,20 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
         oneInN: o.oneInN,
         currentPrize: prize,
         expectedPayout: ep,
-        payoutRatio: unitPrice > 0 ? ep / unitPrice : 0,
-        breakEvenPrize: o.probability > 0 ? unitPrice / o.probability : Infinity,
+        payoutRatio: boardCost > 0 ? ep / boardCost : 0,
+        breakEvenPrize: o.probability > 0 ? boardCost / o.probability : Infinity,
       };
     });
     const totalEP = tiers.reduce((s, t) => s + t.expectedPayout, 0);
-    const gm = unitPrice - totalEP;
+    const gm = boardCost - totalEP;
     return {
+      lineCount,
+      boardCost,
       tiers,
       totalExpectedPayout: totalEP,
-      totalPayoutRatio: unitPrice > 0 ? totalEP / unitPrice : 0,
+      totalPayoutRatio: boardCost > 0 ? totalEP / boardCost : 0,
       grossMarginPerLine: gm,
-      grossMarginPercent: unitPrice > 0 ? (gm / unitPrice) * 100 : 0,
+      grossMarginPercent: boardCost > 0 ? (gm / boardCost) * 100 : 0,
     };
   }, [w.combo6Special, w.combo6First, w.combo6Second, w.combo6Third, unitPrice, combo6Odds]);
 
@@ -669,6 +703,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     unitPrice={unitPrice}
                     totalOutcomes={BASIC_TOTAL_OUTCOMES}
                     modeLabel="Tổ Hợp 3 (Combo3) — 3 hoán vị"
+                    lineCount={3}
                   />
                 </div>
                 <div className="border-t overflow-x-auto">
@@ -692,6 +727,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     unitPrice={unitPrice}
                     totalOutcomes={BASIC_TOTAL_OUTCOMES}
                     modeLabel="Tổ Hợp 6 (Combo6) — 6 hoán vị"
+                    lineCount={6}
                   />
                 </div>
                 <div className="border-t overflow-x-auto">

@@ -132,34 +132,23 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     const version = await this.nextVersion();
     const now = new Date();
 
-    const ops = items.map((item) => {
-      const $set: Record<string, unknown> = {
-        status: EntryStatus.Settled,
-        outcome: item.outcome,
-        result: item.result,
-        "payout.winAmount": item.payout.winAmount,
-        "payout.payoutAmount": item.payout.payoutAmount,
-        "payout.tiers": item.payout.tiers,
-        "payout.settledAt": item.payout.settledAt,
-        version,
-        updatedAt: now,
-      };
-
-      if (item.payout.payoutStatus) {
-        $set["payout.payoutStatus"] = item.payout.payoutStatus;
-        $set["payout.payoutRetryCount"] = 0;
-      }
-
-      return {
-        updateOne: {
-          filter: { _id: new ObjectId(item.entryId), status: EntryStatus.Scheduled },
-          update: { $set },
+    const ops = items.map((item) => ({
+      updateOne: {
+        filter: { _id: new ObjectId(item.entryId), status: EntryStatus.Scheduled },
+        update: {
+          $set: {
+            status: EntryStatus.Settled,
+            payout: item.payout,
+            outcome: item.outcome,
+            result: item.result,
+            version,
+            updatedAt: now,
+          },
         },
-      };
-    });
+      },
+    }));
 
-    const col = await this.getCollection();
-    const result = await col.bulkWrite(ops);
+    const result = await this.bulkWrite(ops);
     return { modifiedCount: result.modifiedCount };
   }
 

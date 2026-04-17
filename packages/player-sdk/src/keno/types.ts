@@ -624,6 +624,7 @@ export interface KenoTicketEntriesResponse {
  * console.log(result.ticketId);            // "65abc..."
  * console.log(result.ticketNo);            // "KENO-20260307-00001"
  * console.log(result.pricing.totalAmount); // 10000
+ * console.log(result.balance);             // 990000
  * ```
  */
 export interface KenoPlaceBetResponse {
@@ -633,6 +634,8 @@ export interface KenoPlaceBetResponse {
   ticketNo: string;
   /** Trạng thái vé sau khi tạo. */
   status: string;
+  /** Số dư ví player sau khi trừ tiền cược (VND). */
+  balance: number;
 
   /** Kế hoạch kỳ quay. */
   drawPlan: {

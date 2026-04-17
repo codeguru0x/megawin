@@ -9,6 +9,16 @@ interface TripletDisplayProps {
   className?: string;
 }
 
+export type TierVariant = "special" | "first" | "second" | "third";
+
+/** Màu dot/icon cho từng giải — dùng chung ở publish-result-action và result display */
+export const TIER_DOT_STYLES: Record<TierVariant, string> = {
+  special: "bg-gradient-to-br from-violet-500 to-purple-600",
+  first: "bg-gradient-to-br from-sky-500 to-blue-600",
+  second: "bg-gradient-to-br from-fuchsia-500 to-pink-600",
+  third: "bg-gradient-to-br from-teal-400 to-cyan-500",
+};
+
 const VARIANT_STYLES: Record<string, string> = {
   default: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
   special:

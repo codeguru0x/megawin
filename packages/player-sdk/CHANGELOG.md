@@ -5,6 +5,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ---
 
+## [1.0.16] - 2026-04-17
+
+### Added
+
+#### `placeBet()` — thêm `balance` vào response (tất cả games)
+
+Tất cả `PlaceBetResponse` giờ trả thêm `balance: number` — số dư ví player sau khi trừ tiền cược (VND). Tenant dùng field này để cập nhật UI ngay sau khi cược, không cần gọi thêm API lấy số dư.
+
+Áp dụng cho: `KenoPlaceBetResponse`, `Lotto535PlaceBetResponse`, `Mega645PlaceBetResponse`, `Power655PlaceBetResponse`, `Max3dPlaceBetResponse`, `Max3dproPlaceBetResponse`, `Bingo18PlaceBetResponse`.
+
+```ts
+const result = await client.keno.placeBet({ ... });
+console.log(result.balance); // 990000
+```
+
+---
+
 ## [1.0.15] - 2026-03-25
 
 ### Fixed — Đồng bộ SDK types với API thực tế (tất cả games)

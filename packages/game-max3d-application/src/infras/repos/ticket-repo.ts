@@ -191,4 +191,15 @@ export class TicketRepository extends BaseRepo<TicketEntity, TicketMapper> {
     const result = await this.bulkWrite(ops, { ordered: false });
     return result.modifiedCount;
   }
+
+  /**
+   * Kiểm tra ticket tồn tại theo transaction ID (WAL recovery).
+   *
+   * Recovery scheduler dùng method này để xác định ticket đã được save thành công
+   * sau khi confirm debit = success. Nếu ticket exists → markCompleted WAL.
+   * Nếu không → rollback credit.
+   */
+  async existsByTx(tx: string): Promise<boolean> {
+    return await this.exists({ tx });
+  }
 }

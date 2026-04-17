@@ -249,11 +249,16 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
             {/* Grid 10 cột — 20 số căn giữa, gap nhỏ */}
             <div className="flex justify-center">
               <div className="grid grid-cols-10 gap-1">
-                {result.winningNumbers.slice(0, 20).map((n) => {
-                  const num = Number(n);
-                  const hl = getNumberHighlight(num, highlight);
-                  return <HighlightedBall key={n} number={num} highlight={hl} filter={highlight} />;
-                })}
+                {[...result.winningNumbers]
+                  .slice(0, 20)
+                  .sort((a, b) => Number(a) - Number(b))
+                  .map((n) => {
+                    const num = Number(n);
+                    const hl = getNumberHighlight(num, highlight);
+                    return (
+                      <HighlightedBall key={n} number={num} highlight={hl} filter={highlight} />
+                    );
+                  })}
               </div>
             </div>
 

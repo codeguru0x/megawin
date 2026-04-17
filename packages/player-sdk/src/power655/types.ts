@@ -566,6 +566,8 @@ export interface Power655PlaceBetResponse {
   ticketNo: string;
   /** Trạng thái vé sau khi tạo. */
   status: string;
+  /** Số dư ví player sau khi trừ tiền cược (VND). */
+  balance: number;
 
   /** Kế hoạch kỳ quay. */
   drawPlan: {

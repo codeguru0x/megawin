@@ -55,6 +55,11 @@
       "types": "./src/api-types/index.ts",
       "import": "./src/api-types/index.ts",
       "default": "./dist/api-types/index.js"
+    },
+    "./types": {
+      "types": "./src/types/index.ts",
+      "import": "./src/types/index.ts",
+      "default": "./dist/types/index.js"
     }
   },
   "devDependencies": {
@@ -67,6 +72,7 @@
   "dependencies": {
     "@date-fns/tz": "^1.4.1",
     "date-fns": "^4.1.0",
-    "ulid": "^3.0.2"
+    "ulid": "^3.0.2",
+    "uuid": "^13.0.0"
   }
 }

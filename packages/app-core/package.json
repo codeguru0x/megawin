@@ -5,9 +5,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsc --watch",
+    "dev": "tsc -b --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc",
+    "build": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "clean": "rm -rf dist"

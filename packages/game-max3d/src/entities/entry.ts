@@ -144,6 +144,17 @@ export interface EntryPayout {
   payoutConfirmedAt?: Date;
   /** Thông báo lỗi nếu payout thất bại. */
   payoutError?: string;
+
+  /**
+   * Idempotency key cho payout transaction — UUIDv7 (RFC 9562).
+   *
+   * Sinh tại settle time, ghi atomic cùng payout data.
+   * Dispatch đọc field này làm `tx` khi gửi tenant — retry luôn gửi cùng giá trị.
+   * Chỉ sinh khi entry thắng (có payout cần dispatch).
+   *
+   * @example `"019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"`
+   */
+  payoutTx?: string;
 }
 
 /** Snapshot kết quả kỳ quay ghi vào entry khi settle. */
@@ -168,6 +179,16 @@ export interface EntryVoidInfo {
   refundConfirmedAt?: Date;
   /** Thông báo lỗi nếu hoàn tiền thất bại. */
   refundError?: string;
+
+  /**
+   * Idempotency key cho refund transaction — UUIDv7 (RFC 9562).
+   *
+   * Sinh tại void time, ghi atomic cùng void data.
+   * Mọi entry bị void đều phát sinh refund → field này required.
+   *
+   * @example `"01907a12-c3d4-7abc-9ef0-123456789abc"`
+   */
+  refundTx: string;
 }
 
 // ─────────────────────────────────────────────

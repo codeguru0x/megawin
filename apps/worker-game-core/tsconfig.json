@@ -1,0 +1,56 @@
+{
+  "extends": "@megawin/typescript-config/serverless.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test"
+  ],
+  "references": [
+    {
+      "path": "../../packages/app-core"
+    },
+    {
+      "path": "../../packages/data"
+    },
+    {
+      "path": "../../packages/game-bingo18-application"
+    },
+    {
+      "path": "../../packages/game-core"
+    },
+    {
+      "path": "../../packages/game-core-application"
+    },
+    {
+      "path": "../../packages/game-keno-application"
+    },
+    {
+      "path": "../../packages/game-lotto535-application"
+    },
+    {
+      "path": "../../packages/game-max3d-application"
+    },
+    {
+      "path": "../../packages/game-max3dpro-application"
+    },
+    {
+      "path": "../../packages/game-mega645-application"
+    },
+    {
+      "path": "../../packages/game-power655-application"
+    },
+    {
+      "path": "../../packages/shared"
+    },
+    {
+      "path": "../../packages/tenant-gateway"
+    }
+  ]
+}

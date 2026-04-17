@@ -1,9 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
   Check,
   Loader2,
@@ -12,6 +9,7 @@ import {
   Hash,
   Dice5,
   ClipboardCheck,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
   Select,
@@ -31,14 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { RandomFillButton, generateRandomNumber } from "@/components/draws";
 import { todayVN } from "@megawin/shared/utils";
 import type { DrawSelectorItem } from "../../../use-operations";
@@ -49,55 +40,47 @@ const DICE_MIN = 1;
 const DICE_MAX = 6;
 const DICE_VALUES = [1, 2, 3, 4, 5, 6] as const;
 
-const diceSchema = z
-  .number({ message: "Vui lòng chọn số." })
-  .int()
-  .min(DICE_MIN, `Phải chọn số từ ${DICE_MIN} đến ${DICE_MAX}.`)
-  .max(DICE_MAX, `Phải chọn số từ ${DICE_MIN} đến ${DICE_MAX}.`);
-
-const publishResultSchema = z.object({
-  dice0: diceSchema,
-  dice1: diceSchema,
-  dice2: diceSchema,
-  vietlotDate: z.string(),
-  vietlotPeriod: z.string(),
-});
-
-type PublishResultValues = z.infer<typeof publishResultSchema>;
-
-const EMPTY_DICE_DEFAULTS = {
-  dice0: undefined as unknown as number,
-  dice1: undefined as unknown as number,
-  dice2: undefined as unknown as number,
-  vietlotDate: todayVN(),
-  vietlotPeriod: "",
-};
+// ─── Types ──────────────────────────────────────────────────────────
 
 export interface PublishResultCurrentValues {
   diceNumbers: [number, number, number];
-  vietlottRef?: {
-    drawPeriod: string;
-    drawDate: string;
-  };
+  vietlottRef?: { drawPeriod: string; drawDate: string };
 }
 
-function buildDefaults(current?: PublishResultCurrentValues): PublishResultValues {
-  if (!current || current.diceNumbers.length !== 3) return EMPTY_DICE_DEFAULTS;
-  return {
-    dice0: current.diceNumbers[0],
-    dice1: current.diceNumbers[1],
-    dice2: current.diceNumbers[2],
-    vietlotDate: current.vietlottRef?.drawDate ?? todayVN(),
-    vietlotPeriod: current.vietlottRef?.drawPeriod ?? "",
-  };
+interface ValidationResult {
+  messages: string[];
+  fieldErrors: Set<number>;
 }
 
-/**
- * Dialog công bố kết quả kỳ quay Bingo 18.
- *
- * Bingo 18: nhập 3 số xúc xắc (1-6), không có Jackpot ref.
- * Sum tự tính và hiển thị preview.
- */
+const VALID: ValidationResult = { messages: [], fieldErrors: new Set() };
+
+// ─── Validate ───────────────────────────────────────────────────────
+
+function validateDice(dice: (number | undefined)[]): ValidationResult {
+  const messages: string[] = [];
+  const fieldErrors = new Set<number>();
+  const missing: number[] = [];
+
+  for (let i = 0; i < DICE_COUNT; i++) {
+    const d = dice[i];
+    if (d === undefined || d === null) {
+      missing.push(i);
+      fieldErrors.add(i);
+    } else if (!Number.isInteger(d) || d < DICE_MIN || d > DICE_MAX) {
+      messages.push(`Xúc xắc ${i + 1}: giá trị ${d} ngoài dải ${DICE_MIN}–${DICE_MAX}`);
+      fieldErrors.add(i);
+    }
+  }
+
+  if (missing.length > 0) {
+    messages.push(`Chưa chọn xúc xắc ${missing.map((i) => i + 1).join(", ")}`);
+  }
+
+  return messages.length > 0 ? { messages, fieldErrors } : VALID;
+}
+
+// ─── Component ──────────────────────────────────────────────────────
+
 export function PublishResultAction({
   draw,
   disabled,
@@ -114,59 +97,64 @@ export function PublishResultAction({
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange ?? setInternalOpen;
-
   const publishResult = usePublishResult();
-
   const isRepublish = draw.status === "published" || draw.status === "settled";
 
-  const form = useForm<PublishResultValues>({
-    resolver: zodResolver(publishResultSchema),
-    defaultValues: EMPTY_DICE_DEFAULTS,
-  });
+  const [dice, setDice] = useState<(number | undefined)[]>([undefined, undefined, undefined]);
+  const [vietlotDate, setVietlotDate] = useState(todayVN());
+  const [vietlotPeriod, setVietlotPeriod] = useState("");
+  const [validation, setValidation] = useState<ValidationResult>(VALID);
 
   useEffect(() => {
-    if (isOpen) {
-      form.reset(buildDefaults(currentResult));
-    } else {
-      form.reset(EMPTY_DICE_DEFAULTS);
+    if (isOpen && currentResult?.diceNumbers?.length === 3) {
+      setDice([...currentResult.diceNumbers]);
+      setVietlotDate(currentResult.vietlottRef?.drawDate ?? todayVN());
+      setVietlotPeriod(currentResult.vietlottRef?.drawPeriod ?? "");
+    } else if (!isOpen) {
+      setDice([undefined, undefined, undefined]);
+      setVietlotDate(todayVN());
+      setVietlotPeriod("");
+      setValidation(VALID);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentResult]);
 
-  const [d0, d1, d2] = useWatch({ control: form.control, name: ["dice0", "dice1", "dice2"] });
-  const sum = (Number(d0) || 0) + (Number(d1) || 0) + (Number(d2) || 0);
+  function handleDiceChange(index: number, value: number) {
+    setDice((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  }
 
-  function onSubmit(values: PublishResultValues) {
+  function fillRandom() {
+    const nums = Array.from({ length: DICE_COUNT }, () => generateRandomNumber(DICE_MIN, DICE_MAX));
+    setDice(nums);
+    setValidation(VALID);
+  }
+
+  const sum = dice.reduce<number>((s, d) => s + (d ?? 0), 0);
+  const allSelected = dice.every((d) => d !== undefined);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const result = validateDice(dice);
+    setValidation(result);
+    if (result.messages.length > 0) return;
+
     const body: {
       numbers: number[];
       vietlottRef?: { drawPeriod: string; drawDate: string };
-    } = { numbers: [values.dice0, values.dice1, values.dice2] };
+    } = { numbers: dice as number[] };
 
-    if (values.vietlotPeriod.trim()) {
-      body.vietlottRef = {
-        drawPeriod: values.vietlotPeriod.trim(),
-        drawDate: values.vietlotDate,
-      };
+    if (vietlotPeriod.trim()) {
+      body.vietlottRef = { drawPeriod: vietlotPeriod.trim(), drawDate: vietlotDate };
     }
 
-    publishResult.mutate(
-      { drawId: draw.drawId, body },
-      {
-        onSuccess: () => {
-          setIsOpen(false);
-          form.reset();
-        },
-      },
-    );
+    publishResult.mutate({ drawId: draw.drawId, body }, { onSuccess: () => setIsOpen(false) });
   }
 
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(v) => {
-        setIsOpen(v);
-      }}
-    >
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -177,77 +165,58 @@ export function PublishResultAction({
           <DialogDescription>Nhập 3 số xúc xắc (1–6). Tổng: 3–18.</DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 py-2">
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-5 py-2">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <div className="flex size-6 items-center justify-center rounded-md bg-amber-100 dark:bg-amber-900/50">
                   <Dice5 className="size-3.5 text-amber-600 dark:text-amber-400" />
                 </div>
-                <FormLabel className="text-sm font-semibold">Kết quả xúc xắc</FormLabel>
-                <RandomFillButton
-                  onFill={() => {
-                    const nums = Array.from({ length: DICE_COUNT }, () =>
-                      generateRandomNumber(DICE_MIN, DICE_MAX),
-                    );
-                    form.setValue("dice0", nums[0]!, { shouldValidate: true });
-                    form.setValue("dice1", nums[1]!, { shouldValidate: true });
-                    form.setValue("dice2", nums[2]!, { shouldValidate: true });
-                  }}
-                />
+                <Label className="text-sm font-semibold">Kết quả xúc xắc</Label>
+                <RandomFillButton onFill={fillRandom} />
               </div>
+
               <div className="rounded-lg border bg-muted/30 p-4">
                 <div className="grid grid-cols-3 gap-3">
-                  {(["dice0", "dice1", "dice2"] as const).map((fieldName, i) => (
-                    <FormField
-                      key={fieldName}
-                      control={form.control}
-                      name={fieldName}
-                      render={({ field }) => (
-                        <FormItem className="space-y-1">
-                          <span className="block text-xs font-medium text-muted-foreground text-center">
-                            {i + 1}
-                          </span>
-                          <Select
-                            value={field.value != null ? String(field.value) : ""}
-                            onValueChange={(v) => field.onChange(Number(v))}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="h-14 w-full text-center text-2xl font-bold tabular-nums">
-                                <SelectValue placeholder="?" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {DICE_VALUES.map((n) => (
-                                <SelectItem
-                                  key={n}
-                                  value={String(n)}
-                                  className="text-lg font-semibold"
-                                >
-                                  {n}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  {dice.map((value, i) => (
+                    <div key={i} className="space-y-1">
+                      <span className="block text-xs font-medium text-muted-foreground text-center">
+                        {i + 1}
+                      </span>
+                      <Select
+                        value={value != null ? String(value) : ""}
+                        onValueChange={(v) => handleDiceChange(i, Number(v))}
+                      >
+                        <SelectTrigger
+                          className={`h-14 w-full text-center text-2xl font-bold tabular-nums ${validation.fieldErrors.has(i) ? "border-destructive" : ""}`}
+                        >
+                          <SelectValue placeholder="?" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DICE_VALUES.map((n) => (
+                            <SelectItem key={n} value={String(n)} className="text-lg font-semibold">
+                              {n}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   ))}
                 </div>
 
-                {/* Tổng — gắn liền với 3 ô chọn, hiển thị ngay bên dưới */}
                 <div className="mt-3 flex items-center justify-between rounded-md border bg-background px-4 py-2.5">
                   <span className="text-sm text-muted-foreground">Tổng</span>
                   <div className="flex items-baseline gap-1.5">
                     <span
                       className={`text-2xl font-bold tabular-nums transition-colors ${
-                        sum > 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/40"
+                        allSelected
+                          ? "text-amber-600 dark:text-amber-400"
+                          : "text-muted-foreground/40"
                       }`}
                     >
-                      {sum > 0 ? sum : "—"}
+                      {allSelected ? sum : "—"}
                     </span>
-                    {sum > 0 && (
+                    {allSelected && (
                       <span className="text-xs text-muted-foreground">
                         ({sum <= 9 ? "Nhỏ" : sum <= 13 ? "Hoà" : "Lớn"} ·{" "}
                         {sum % 2 === 0 ? "Chẵn" : "Lẻ"})
@@ -256,6 +225,17 @@ export function PublishResultAction({
                   </div>
                 </div>
               </div>
+
+              {validation.messages.length > 0 && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 space-y-1">
+                  {validation.messages.map((msg, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <AlertCircle className="size-3.5 text-destructive shrink-0 mt-0.5" />
+                      <p className="text-sm text-destructive">{msg}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <Separator />
@@ -265,7 +245,7 @@ export function PublishResultAction({
                 <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
                   <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
                 </div>
-                <FormLabel className="text-sm font-semibold">Tham chiếu Vietlott</FormLabel>
+                <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
                 <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                   Tùy chọn
                 </span>
@@ -275,58 +255,48 @@ export function PublishResultAction({
                   Liên kết kỳ quay với dữ liệu Vietlott chính thức để đối soát
                 </p>
                 <div className="grid grid-cols-2 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="vietlotDate"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1.5">
-                        <FormLabel className="text-xs text-muted-foreground flex items-center gap-1.5">
-                          <CalendarDays className="size-3" /> Ngày Vietlott
-                        </FormLabel>
-                        <FormControl>
-                          <Input type="date" className="font-mono text-sm" {...field} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="vietlotPeriod"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1.5">
-                        <FormLabel className="text-xs text-muted-foreground flex items-center gap-1.5">
-                          <Hash className="size-3" /> Mã kỳ Vietlott
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="text"
-                            placeholder="VD: 123456"
-                            className="font-mono text-sm"
-                            {...field}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <CalendarDays className="size-3" /> Ngày Vietlott
+                    </Label>
+                    <Input
+                      type="date"
+                      className="font-mono text-sm"
+                      value={vietlotDate}
+                      onChange={(e) => setVietlotDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Hash className="size-3" /> Mã kỳ Vietlott
+                    </Label>
+                    <Input
+                      type="text"
+                      placeholder="VD: 123456"
+                      className="font-mono text-sm"
+                      value={vietlotPeriod}
+                      onChange={(e) => setVietlotPeriod(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-                Huỷ bỏ
-              </Button>
-              <Button type="submit" disabled={publishResult.isPending || disabled}>
-                {publishResult.isPending ? (
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                ) : (
-                  <Check className="mr-2 size-4" />
-                )}
-                Xác nhận
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+          <DialogFooter className="pt-2">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              Huỷ bỏ
+            </Button>
+            <Button type="submit" disabled={publishResult.isPending || disabled}>
+              {publishResult.isPending ? (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              ) : (
+                <Check className="mr-2 size-4" />
+              )}
+              Xác nhận
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

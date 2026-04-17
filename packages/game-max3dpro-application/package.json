@@ -17,6 +17,11 @@
       "import": "./src/infras/repos/index.ts",
       "default": "./dist/infras/repos/index.js"
     },
+    "./services": {
+      "types": "./src/services/index.ts",
+      "import": "./src/services/index.ts",
+      "default": "./dist/services/index.js"
+    },
     "./use-cases/draws": {
       "types": "./src/use-cases/draws/index.ts",
       "import": "./src/use-cases/draws/index.ts",

@@ -3,6 +3,41 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "include": ["src", "test"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src",
+    "test"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ],
+  "references": [
+    {
+      "path": "../../tooling/vitest-config"
+    },
+    {
+      "path": "../app-core"
+    },
+    {
+      "path": "../data"
+    },
+    {
+      "path": "../game-core"
+    },
+    {
+      "path": "../game-core-application"
+    },
+    {
+      "path": "../game-keno"
+    },
+    {
+      "path": "../next"
+    },
+    {
+      "path": "../shared"
+    },
+    {
+      "path": "../tenant-gateway"
+    }
+  ]
 }
