@@ -4,8 +4,8 @@
   "type": "module",
   "description": "Universal HTTP REST client – native fetch, zero dependencies",
   "scripts": {
-    "dev": "tsc -b --watch",
-    "build": "tsc -b",
+    "dev": "tsc --watch",
+    "build": "tsc",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf dist"
   },

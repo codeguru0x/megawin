@@ -16,8 +16,8 @@
     "lint": "eslint . --max-warnings 0",
     "generate:component": "turbo gen react-component",
     "check-types": "tsc --noEmit",
-    "dev": "tsc -b --watch",
-    "build": "tsc -b",
+    "dev": "tsc --watch",
+    "build": "tsc",
     "clean": "rm -rf dist"
   },
   "devDependencies": {

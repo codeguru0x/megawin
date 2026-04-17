@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsc -p tsconfig.build.json --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc -b tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json",
     "test": "vitest",
     "clean": "rm -rf dist"
   },

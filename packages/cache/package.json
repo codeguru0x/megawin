@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -b",
-    "dev": "tsc -b --watch",
+    "build": "tsc",
+    "dev": "tsc --watch",
     "check-types": "tsc --noEmit",
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf dist"

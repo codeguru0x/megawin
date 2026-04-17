@@ -5,9 +5,9 @@
   "description": "Outbound HTTP client to call tenant server APIs (debit, credit, balance, report)",
   "main": "index.js",
   "scripts": {
-    "dev": "tsc -b --watch",
+    "dev": "tsc --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc -b",
+    "build": "tsc",
     "clean": "rm -rf dist",
     "docs:preview": "redocly preview-docs openapi.yaml",
     "docs:lint": "redocly lint openapi.yaml",

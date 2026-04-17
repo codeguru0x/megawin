@@ -4,38 +4,6 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "test"
-  ],
-  "references": [
-    {
-      "path": "../../packages/app-core"
-    },
-    {
-      "path": "../../packages/data"
-    },
-    {
-      "path": "../../packages/game-core"
-    },
-    {
-      "path": "../../packages/game-core-application"
-    },
-    {
-      "path": "../../packages/game-mega645"
-    },
-    {
-      "path": "../../packages/game-mega645-application"
-    },
-    {
-      "path": "../../packages/shared"
-    },
-    {
-      "path": "../../packages/tenant-gateway"
-    }
-  ]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "test"]
 }

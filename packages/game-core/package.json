@@ -5,9 +5,9 @@
   "type": "module",
   "description": "Shared game domain – unified entry status, change sequence, entry feed (internal only)",
   "scripts": {
-    "dev": "tsc -b --watch",
+    "dev": "tsc --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc -b",
+    "build": "tsc",
     "clean": "rm -rf dist"
   },
   "exports": {

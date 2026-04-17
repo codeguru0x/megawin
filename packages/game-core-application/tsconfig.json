@@ -5,25 +5,5 @@
     "outDir": "dist"
   },
   "include": ["src"],
-  "exclude": ["node_modules", "dist"],
-  "references": [
-    {
-      "path": "../app-core"
-    },
-    {
-      "path": "../data"
-    },
-    {
-      "path": "../game-core"
-    },
-    {
-      "path": "../next"
-    },
-    {
-      "path": "../shared"
-    },
-    {
-      "path": "../tenant-gateway"
-    }
-  ]
+  "exclude": ["node_modules", "dist"]
 }

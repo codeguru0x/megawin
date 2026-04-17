@@ -6,9 +6,7 @@
     "declaration": false,
     "declarationMap": false,
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"]
     }
   },
   "include": [
@@ -18,84 +16,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ],
-  "references": [
-    {
-      "path": "../../packages/app-core"
-    },
-    {
-      "path": "../../packages/data"
-    },
-    {
-      "path": "../../packages/game-bingo18"
-    },
-    {
-      "path": "../../packages/game-bingo18-application"
-    },
-    {
-      "path": "../../packages/game-core"
-    },
-    {
-      "path": "../../packages/game-core-application"
-    },
-    {
-      "path": "../../packages/game-keno"
-    },
-    {
-      "path": "../../packages/game-keno-application"
-    },
-    {
-      "path": "../../packages/game-lotto535"
-    },
-    {
-      "path": "../../packages/game-lotto535-application"
-    },
-    {
-      "path": "../../packages/game-max3d"
-    },
-    {
-      "path": "../../packages/game-max3d-application"
-    },
-    {
-      "path": "../../packages/game-max3dpro"
-    },
-    {
-      "path": "../../packages/game-max3dpro-application"
-    },
-    {
-      "path": "../../packages/game-mega645"
-    },
-    {
-      "path": "../../packages/game-mega645-application"
-    },
-    {
-      "path": "../../packages/game-power655"
-    },
-    {
-      "path": "../../packages/game-power655-application"
-    },
-    {
-      "path": "../../packages/http-client"
-    },
-    {
-      "path": "../../packages/identity"
-    },
-    {
-      "path": "../../packages/identity-application"
-    },
-    {
-      "path": "../../packages/next"
-    },
-    {
-      "path": "../../packages/shared"
-    },
-    {
-      "path": "../../packages/tenant-gateway"
-    },
-    {
-      "path": "../../packages/ui"
-    }
-  ]
+  "exclude": ["node_modules"]
 }

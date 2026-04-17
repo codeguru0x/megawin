@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsc -p --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc -b",
+    "build": "tsc",
     "clean": "rm -rf dist"
   },
   "exports": {

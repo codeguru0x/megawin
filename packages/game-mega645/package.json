@@ -5,9 +5,9 @@
   "type": "module",
   "description": "Mega 6/45 – Domain layer: entities, rules, helpers, schemas, indexes",
   "scripts": {
-    "dev": "tsc -b --watch",
+    "dev": "tsc --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc -b",
+    "build": "tsc",
     "clean": "rm -rf dist"
   },
   "exports": {

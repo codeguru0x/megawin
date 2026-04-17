@@ -3,41 +3,6 @@
   "compilerOptions": {
     "outDir": "dist"
   },
-  "include": [
-    "src",
-    "test"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ],
-  "references": [
-    {
-      "path": "../../tooling/vitest-config"
-    },
-    {
-      "path": "../app-core"
-    },
-    {
-      "path": "../data"
-    },
-    {
-      "path": "../game-core"
-    },
-    {
-      "path": "../game-core-application"
-    },
-    {
-      "path": "../game-mega645"
-    },
-    {
-      "path": "../next"
-    },
-    {
-      "path": "../shared"
-    },
-    {
-      "path": "../tenant-gateway"
-    }
-  ]
+  "include": ["src", "test"],
+  "exclude": ["node_modules", "dist"]
 }

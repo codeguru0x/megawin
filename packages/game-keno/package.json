@@ -5,9 +5,9 @@
   "type": "module",
   "description": "Keno game domain – entities, rules, helpers (internal only)",
   "scripts": {
-    "dev": "tsc -b --watch",
+    "dev": "tsc --watch",
     "check-types": "tsc --noEmit",
-    "build": "tsc -b",
+    "build": "tsc",
     "clean": "rm -rf dist"
   },
   "exports": {
