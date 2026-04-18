@@ -1,4 +1,3 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "files": []
+  "$schema": "https://json.schemastore.org/tsconfig"
 }
