@@ -2,11 +2,11 @@
  * Power 6/55 – Void Draw Use Cases barrel export.
  *
  * Step Function flow cho huỷ cược 1 kỳ:
- *   1. PrepareVoid        → validate draw, load context → VoidContext
- *   2. VoidEntries        → batch loop: void entries + tính refund
- *   3. SyncTicketSummaries → recompute ticket (dùng use case từ settle/)
- *   4. DispatchRefunds    → batch loop: gửi refund cho tenant
- *   5. FinalizeVoid       → update draw summary, đóng flow
+ *   1. PrepareVoid            → validate draw, load context → VoidContext
+ *   2. VoidEntries            → batch loop: void entries + sinh refundTx
+ *   3. SyncTicketSummaries    → recompute ticket (dùng use case từ settle/)
+ *   4. EnqueueDispatchRefunds → bulk insert refund orders vào outbox
+ *   5. FinalizeVoid           → update draw summary, đóng flow
  */
 
 export type { VoidContext } from "./types";
@@ -17,8 +17,8 @@ export type { PrepareVoidInput } from "./prepare-void";
 export { VoidEntriesBatchUseCase } from "./void-entries";
 export type { VoidEntriesBatchResult } from "./void-entries";
 
-export { DispatchRefundBatchUseCase } from "./dispatch-refunds";
-export type { DispatchRefundBatchResult } from "./dispatch-refunds";
+export { EnqueueDispatchRefundsUseCase } from "./enqueue-dispatch-refunds";
+export type { EnqueueDispatchRefundsOutput } from "./enqueue-dispatch-refunds";
 
 export { FinalizeVoidUseCase } from "./finalize-void";
 export type { FinalizeVoidResult } from "./finalize-void";

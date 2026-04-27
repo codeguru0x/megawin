@@ -103,11 +103,21 @@ export const MEGA645_INDEXES: readonly IndexSpec[] = [
     key: {
       drawId: 1,
       status: 1,
-      "payout.payoutStatus": 1,
       "payout.winAmount": 1,
+      "payout.payoutTx": 1,
     },
-    options: { name: "idx_draw_payoutStatus" },
-    purpose: "Payout worker query",
+    options: { name: "idx_draw_payoutTx", sparse: true },
+    purpose: "Enqueue dispatch payouts: query entries thắng đã sinh payoutTx",
+  },
+  {
+    collection: Mega645Collections.TicketEntries,
+    key: {
+      drawId: 1,
+      status: 1,
+      "voidInfo.refundTx": 1,
+    },
+    options: { name: "idx_draw_refundTx", sparse: true },
+    purpose: "Enqueue dispatch refunds: paginate voided entries theo refundTx ASC",
   },
   {
     collection: Mega645Collections.TicketEntries,

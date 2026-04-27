@@ -1,7 +1,7 @@
 /**
  * Lambda: build-void-report (Power 6/55)
  *
- * Bước mới trong Power655 Void Step Function (sau DispatchRefunds, trước FinalizeVoid).
+ * Bước mới trong Power655 Void Step Function (trước EnqueueDispatchRefunds, sau SyncTicketSummaries).
  * Cleanup settle reports (nếu void-after-settle) + build void report.
  *
  * IDEMPOTENT: upsert pattern, deleteMany idempotent — crash-safe.

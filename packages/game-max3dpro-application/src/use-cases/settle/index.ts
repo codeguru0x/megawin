@@ -26,6 +26,12 @@ export type { SyncTicketSummariesResult, DrawSyncInput } from "./sync-ticket-sum
 export { FinalizeSettleUseCase } from "./finalize-settle";
 export type { FinalizeSettleResult } from "./finalize-settle";
 
+export { EnqueueDispatchPayoutsUseCase } from "./enqueue-dispatch-payouts";
+export type {
+  EnqueueDispatchPayoutsInput,
+  EnqueueDispatchPayoutsOutput,
+} from "./enqueue-dispatch-payouts";
+
 export { PublishSettleDailyUseCase } from "./publish-settle-daily";
 export type { PublishSettleDailyInput } from "./publish-settle-daily";
 

@@ -2,7 +2,7 @@
  * Use Case: Finalize Void (Power 6/55)
  *
  * Step cuối của Void Draw Step Function.
- * Pipeline: prepare-void → void-entries → sync-ticket-summaries → dispatch-refunds → **finalize-void**
+ * Pipeline: prepare-void → void-entries → sync-ticket-summaries → **finalize-void** → enqueue-dispatch-refunds
  *
  * Tổng kết quá trình void và chuyển draw sang trạng thái cuối cùng (void).
  *

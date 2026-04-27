@@ -39,3 +39,32 @@ export interface PlayerBreakdownRow {
   /** Tổng tiền trả thưởng (VND). */
   totalPayout: number;
 }
+
+/**
+ * Shape tối thiểu của 1 winning entry cần để build `TenantDispatchOrderDoc`.
+ *
+ * Chỉ projection các field thiết yếu từ `getWinningEntriesForDispatch` —
+ * nhỏ gọn, không load toàn bộ entry document (boards, tiers, ...).
+ */
+export interface WinningEntryForDispatch {
+  id: string;
+  tenantId: string;
+  accountId: string;
+  username: string;
+  ticketNo: string;
+  payoutAmount: number;
+  payoutTx: string;
+}
+
+/**
+ * Shape tối thiểu của 1 voided entry cần để build `TenantDispatchOrderDoc`.
+ */
+export interface VoidedEntryForDispatch {
+  id: string;
+  tenantId: string;
+  accountId: string;
+  username: string;
+  ticketNo: string;
+  refundAmount: number;
+  refundTx: string;
+}

@@ -111,32 +111,6 @@ export type PrizeTier = (typeof PrizeTier)[keyof typeof PrizeTier];
 export const PRIZE_TIER_VALUES = Object.values(PrizeTier);
 
 // ─────────────────────────────────────────────
-// Payout Status
-// ─────────────────────────────────────────────
-
-export const PayoutStatus = {
-  Pending: "pending",
-  Dispatched: "dispatched",
-  Confirmed: "confirmed",
-  Failed: "failed",
-} as const;
-
-export type PayoutStatus = (typeof PayoutStatus)[keyof typeof PayoutStatus];
-
-// ─────────────────────────────────────────────
-// Refund Status
-// ─────────────────────────────────────────────
-
-export const RefundStatus = {
-  Pending: "pending",
-  Dispatched: "dispatched",
-  Confirmed: "confirmed",
-  Failed: "failed",
-} as const;
-
-export type RefundStatus = (typeof RefundStatus)[keyof typeof RefundStatus];
-
-// ─────────────────────────────────────────────
 // Basic Tier – Nhóm kết quả quay (ĐB / Nhất / Nhì / Ba)
 // ─────────────────────────────────────────────
 

@@ -2,12 +2,12 @@
  * Keno – Void Draw Use Cases barrel export.
  *
  * Step Function flow cho huỷ cược 1 kỳ:
- *   1. PrepareVoid        → validate draw, load context → VoidContext
- *   2. VoidEntries        → batch loop: void entries + tính refund
+ *   1. PrepareVoid         → validate draw, load context → VoidContext
+ *   2. VoidEntries         → batch loop: void entries + tính refund
  *   3. SyncTicketSummaries → recompute ticket progress
- *   4. DispatchRefunds    → batch loop: gửi refund cho tenant
- *   5. BuildVoidReport    → cleanup settle reports (nếu void-after-settle) + ghi void report
- *   6. FinalizeVoid       → update draw summary, đóng flow
+ *   4. BuildVoidReport     → cleanup settle reports (nếu void-after-settle) + ghi void report
+ *   5. FinalizeVoid        → update draw summary, đóng flow
+ *   6. EnqueueDispatchRefunds → bulk insert tenant_dispatch_orders (async gửi tenant)
  */
 
 export type { VoidContext } from "./types";
@@ -18,8 +18,8 @@ export type { PrepareVoidInput } from "./prepare-void";
 export { VoidEntriesBatchUseCase } from "./void-entries";
 export type { VoidEntriesBatchResult } from "./void-entries";
 
-export { DispatchRefundBatchUseCase } from "./dispatch-refunds";
-export type { DispatchRefundBatchResult } from "./dispatch-refunds";
+export { EnqueueDispatchRefundsUseCase } from "./enqueue-dispatch-refunds";
+export type { EnqueueDispatchRefundsOutput } from "./enqueue-dispatch-refunds";
 
 export { BuildVoidReportUseCase } from "./build-void-report";
 export type { BuildVoidReportResult } from "./build-void-report";

@@ -13,6 +13,8 @@ export type {
   OpsSummary,
   WinningEntriesSummary,
   PrizeSummaryRow,
+  WinningEntryForDispatch,
+  VoidedEntryForDispatch,
 } from "./entry.types";
 export type { OutstandingGameSummary } from "./outstanding.types";
 export type { TicketSummary } from "./ticket.types";

@@ -19,7 +19,6 @@ import { generateId } from "@megawin/shared/utils";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
 import type { EntryVoidInfo } from "@megawin/game-power655/entities";
-import { RefundStatus } from "@megawin/game-power655/entities";
 
 export interface VoidEntriesBatchResult {
   /** ID kỳ quay đang void. */
@@ -65,7 +64,7 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEn
       }
 
       // Map sang { entryId, voidInfo } — business rule: refundAmount = amount,
-      // refundStatus = pending, voidedAt = now (thời điểm xử lý batch này).
+      // voidedAt = now (thời điểm xử lý batch này).
       // amount fallback 0 phòng trường hợp data migration thiếu field.
       const now = new Date();
       const items = entries.map((entry) => {
@@ -74,9 +73,9 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEn
           voidInfo: {
             originalAmount: entry.amount ?? 0,
             refundAmount: entry.amount ?? 0,
-            refundStatus: RefundStatus.Pending,
             voidedAt: now,
-            // UUIDv7 idempotency key — mọi entry void đều cần refund tenant.
+            // UUIDv7 idempotency key — worker-tenant-dispatch seed làm `TenantDispatchOrderDoc.tx`.
+            // Trạng thái dispatch lưu tại `tenant_dispatch_orders` — không còn trên entry.
             refundTx: generateId(),
           } satisfies EntryVoidInfo,
         };

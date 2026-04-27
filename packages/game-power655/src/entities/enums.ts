@@ -95,39 +95,3 @@ export const PlayType = {
   Bao18: "bao18",
 } as const;
 export type PlayType = (typeof PlayType)[keyof typeof PlayType];
-
-/**
- * Trạng thái chi trả thưởng cho entry thắng.
- *
- * Flow: pending → dispatched → confirmed
- *                  ↘ failed (retry up to 10 lần)
- */
-export const PayoutStatus = {
-  /** Chờ gửi yêu cầu trả thưởng cho tenant. */
-  Pending: "pending",
-  /** Đã gửi yêu cầu qua TenantGateway API, chờ xác nhận. */
-  Dispatched: "dispatched",
-  /** Tenant xác nhận đã trả thưởng thành công. */
-  Confirmed: "confirmed",
-  /** Gửi thất bại – sẽ retry. Xem lastError để biết lý do. */
-  Failed: "failed",
-} as const;
-export type PayoutStatus = (typeof PayoutStatus)[keyof typeof PayoutStatus];
-
-/**
- * Trạng thái hoàn tiền khi kỳ quay bị void.
- *
- * Flow: pending → dispatched → confirmed
- *                  ↘ failed (retry up to 10 lần)
- */
-export const RefundStatus = {
-  /** Chờ gửi yêu cầu hoàn tiền cho tenant. */
-  Pending: "pending",
-  /** Đã gửi yêu cầu qua TenantGateway API, chờ xác nhận. */
-  Dispatched: "dispatched",
-  /** Tenant xác nhận đã hoàn tiền thành công. */
-  Confirmed: "confirmed",
-  /** Gửi thất bại – sẽ retry. Xem lastError để biết lý do. */
-  Failed: "failed",
-} as const;
-export type RefundStatus = (typeof RefundStatus)[keyof typeof RefundStatus];

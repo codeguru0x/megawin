@@ -1,0 +1,19 @@
+process-batch:
+  handler: src/handlers/dispatch/process-batch.handler
+  timeout: 60
+  memorySize: 512
+  reservedConcurrency: 1
+  events:
+    - schedule:
+        rate: rate(1 minute)
+        enabled: true
+
+process-retry-batch:
+  handler: src/handlers/dispatch/process-retry-batch.handler
+  timeout: 300
+  memorySize: 512
+  reservedConcurrency: 1
+  events:
+    - schedule:
+        rate: rate(3 minutes)
+        enabled: true

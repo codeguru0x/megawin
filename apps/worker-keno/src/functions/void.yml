@@ -10,10 +10,6 @@ void-sync-ticket-summaries:
   handler: src/handlers/void/sync-ticket-summaries.handler
   timeout: 900
 
-void-dispatch-refunds:
-  handler: src/handlers/void/dispatch-refunds.handler
-  timeout: 900
-
 void-build-void-report:
   handler: src/handlers/void/build-void-report.handler
   timeout: 900
@@ -29,3 +25,7 @@ void-publish-player-daily:
 void-finalize:
   handler: src/handlers/void/finalize-void.handler
   timeout: 900
+
+void-enqueue-dispatch-refunds:
+  handler: src/handlers/void/enqueue-dispatch-refunds.handler
+  timeout: 300

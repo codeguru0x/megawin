@@ -26,7 +26,6 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { generateId } from "@megawin/shared/utils";
-import { PayoutStatus } from "@megawin/game-max3d/entities";
 import { EntryOutcome } from "@megawin/game-core/entities";
 import type {
   TicketLineDoc,
@@ -164,7 +163,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             payoutAmount: entryWinAmount,
             tiers: payoutTiers,
             settledAt: now,
-            payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
             // UUIDv7 idempotency key — chỉ sinh khi entry thắng (cần dispatch payout cho tenant).
             // Entry thua không phát sinh giao dịch → không cần tx.
             payoutTx: hasWin ? generateId() : undefined,

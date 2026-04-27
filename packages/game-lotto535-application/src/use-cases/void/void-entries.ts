@@ -15,7 +15,7 @@
  *   2. Với mỗi entry: tính refundAmount = entry.amount (hoàn toàn bộ tiền cược)
  *   3. bulkVoidEntries:
  *      - Chuyển entry status: scheduled → voided
- *      - Ghi voidInfo: { refundAmount, refundStatus: "pending", voidedAt }
+ *      - Ghi voidInfo: { refundAmount, refundTx (UUIDv7), voidedAt }
  *      - Atomic guard: chỉ update nếu status = "scheduled"
  *   4. Lặp cho đến khi hết entries hoặc timeout
  *
@@ -23,7 +23,9 @@
  * REFUND LOGIC:
  * ────────────────────────────────────────────────
  *   - Mỗi entry void → refundAmount = entry.amount (số tiền vé)
- *   - refundStatus = "pending" → sẽ được DispatchRefunds gửi hoàn cho tenant
+ *   - refundTx = UUIDv7 → `EnqueueDispatchRefunds` bulk insert vào
+ *     `tenant_dispatch_orders` (outbox); worker-tenant-dispatch thực
+ *     hiện gửi hoàn cho tenant bất đồng bộ.
  *   - Multi-draw ticket: chỉ void entry thuộc kỳ bị huỷ
  *     (ticket vẫn active cho các kỳ khác)
  *   - Single-draw ticket: void entry duy nhất → ticket sẽ bị đánh dấu refunded
@@ -39,7 +41,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { generateId } from "@megawin/shared/utils";
-import { RefundStatus, type EntryVoidInfo } from "@megawin/game-lotto535/entities";
+import type { EntryVoidInfo } from "@megawin/game-lotto535/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
 
@@ -79,14 +81,13 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEn
         voidInfo: {
           originalAmount: entry.amount ?? 0,
           refundAmount: entry.amount ?? 0,
-          refundStatus: RefundStatus.Pending,
           voidedAt: now,
           // UUIDv7 idempotency key — mọi entry void đều cần refund tenant.
           refundTx: generateId(),
         } satisfies EntryVoidInfo,
       }));
 
-      // Bulk void: scheduled → voided + ghi voidInfo { refundAmount, refundStatus: "pending" }
+      // Bulk void: scheduled → voided + ghi voidInfo { refundAmount, refundTx }
       // Atomic per entry: guard status = "scheduled" → entries đã void thì skip
       await this.entryRepo.bulkVoidEntries(items);
     }

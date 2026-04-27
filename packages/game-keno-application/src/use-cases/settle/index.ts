@@ -35,3 +35,9 @@ export type { PublishSettleDailyInput } from "./publish-settle-daily";
 
 export { PublishPlayerDailyUseCase } from "./publish-player-daily";
 export type { PublishPlayerDailyInput } from "./publish-player-daily";
+
+export { EnqueueDispatchPayoutsUseCase } from "./enqueue-dispatch-payouts";
+export type {
+  EnqueueDispatchPayoutsInput,
+  EnqueueDispatchPayoutsOutput,
+} from "./enqueue-dispatch-payouts";

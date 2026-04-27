@@ -46,7 +46,7 @@
  *
  *   6. Collect settle op → settleOps array
  *      - outcome: "win" hoặc "loss" (trúng jackpot → "win" dù amount tạm = 0)
- *      - payoutStatus: "pending" nếu thắng
+ *      - payoutTx: UUIDv7 nếu thắng (idempotent key cho outbox)
  *
  *   7. entryRepo.bulkSettleEntries(settleOps)
  *      Persist ENTRIES (batch) — chỉ update nếu status = "scheduled" (atomic guard)
@@ -65,7 +65,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { generateId } from "@megawin/shared/utils";
-import { PrizeTier, PayoutStatus } from "@megawin/game-lotto535/entities";
+import { PrizeTier } from "@megawin/game-lotto535/entities";
 import type {
   TicketLineDoc,
   EntryBoardSnapshot,
@@ -196,7 +196,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             payoutAmount: winAmount,
             tiers: payoutTiers,
             settledAt: now,
-            payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
             // UUIDv7 idempotency key — chỉ sinh khi entry thắng (cần dispatch payout cho tenant).
             // Entry thua không phát sinh giao dịch → không cần tx.
             payoutTx: hasWin ? generateId() : undefined,

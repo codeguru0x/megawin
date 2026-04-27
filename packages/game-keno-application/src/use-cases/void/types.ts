@@ -11,19 +11,19 @@
  *   PrepareVoid → output = VoidContext
  *   VoidEntries → nhận VoidContext, trả done/false (loop)
  *   SyncTicketSummaries → nhận VoidContext
- *   DispatchRefunds → nhận VoidContext, trả done/false (loop)
  *   FinalizeVoid → nhận VoidContext
+ *   EnqueueDispatchRefunds → nhận { drawId } (bulk enqueue outbox, chạy sau finalize)
  *
  * Void flow đơn giản hơn settle: không có financial calculation,
  * không có jackpot, không có payout caps. Tất cả step chỉ cần drawId
  * và metadata cơ bản của draw.
  *
  * ┌──────────────────────────────────────────────────────────────────┐
- * │ PrepareVoid         → VoidContext                               │
- * │ VoidEntries         ← VoidContext (loop, batch void entries)    │
- * │ SyncTicketSummaries ← VoidContext (loop, recompute tickets)     │
- * │ DispatchRefunds     ← VoidContext (loop, gửi refund tenant)    │
- * │ FinalizeVoid        ← VoidContext (transition → void)           │
+ * │ PrepareVoid           → VoidContext                               │
+ * │ VoidEntries           ← VoidContext (loop, batch void entries)    │
+ * │ SyncTicketSummaries   ← VoidContext (loop, recompute tickets)     │
+ * │ FinalizeVoid          ← VoidContext (transition → void)           │
+ * │ EnqueueDispatchRefunds ← { drawId } (bulk enqueue outbox)         │
  * └──────────────────────────────────────────────────────────────────┘
  */
 

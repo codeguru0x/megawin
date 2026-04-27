@@ -15,7 +15,7 @@
  *     → Step Function merge: settleCtx.financials = result
  *   BuildReport → nhận SettleContext (có financials)
  *   FinalizeSettle → nhận SettleContext (có financials)
- *   DispatchPayouts → nhận { drawId } (package riêng)
+ *   EnqueueDispatchPayouts → nhận { drawId } (bulk enqueue outbox, chạy sau finalize)
  *
  * Mỗi step destructure những field cần dùng. Không define input riêng
  * (trừ PrepareSettleInput vì step đầu chỉ nhận drawId).
@@ -84,14 +84,14 @@ export interface SettleFinancials {
  * Step Function chỉ dùng 1 biến `$settleCtx` — không cần `$financials` riêng.
  *
  * ┌──────────────────────────────────────────────────────────────────┐
- * │ PrepareSettle       → SettleContext (financials = undefined)     │
- * │ SettleEntries       ← SettleContext                              │
- * │ SyncTicketSummaries ← SettleContext                              │
- * │ CalculateFinancials ← SettleContext → SettleFinancials           │
- * │   ↳ SFN merge: settleCtx.financials = result                    │
- * │ BuildReport         ← SettleContext (financials có)              │
- * │ FinalizeSettle      ← SettleContextWithFinancials (bắt buộc)    │
- * │ DispatchPayouts     ← { drawId } (package riêng)                │
+ * │ PrepareSettle          → SettleContext (financials = undefined)  │
+ * │ SettleEntries          ← SettleContext                           │
+ * │ SyncTicketSummaries    ← SettleContext                           │
+ * │ CalculateFinancials    ← SettleContext → SettleFinancials        │
+ * │   ↳ SFN merge: settleCtx.financials = result                     │
+ * │ BuildReport            ← SettleContext (financials có)           │
+ * │ FinalizeSettle         ← SettleContextWithFinancials (bắt buộc)  │
+ * │ EnqueueDispatchPayouts ← { drawId } (bulk enqueue outbox)        │
  * └──────────────────────────────────────────────────────────────────┘
  */
 export interface SettleContext {

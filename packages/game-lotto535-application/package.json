@@ -48,11 +48,6 @@
       "import": "./src/use-cases/jackpot/index.ts",
       "default": "./dist/use-cases/jackpot/index.js"
     },
-    "./use-cases/payout": {
-      "types": "./src/use-cases/payout/index.ts",
-      "import": "./src/use-cases/payout/index.ts",
-      "default": "./dist/use-cases/payout/index.js"
-    },
     "./use-cases/void": {
       "types": "./src/use-cases/void/index.ts",
       "import": "./src/use-cases/void/index.ts",
@@ -97,6 +92,7 @@
     "@megawin/game-lotto535": "workspace:*",
     "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
+    "@megawin/tenant-dispatch": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*",
     "mongodb": "^7.1.1"
   },

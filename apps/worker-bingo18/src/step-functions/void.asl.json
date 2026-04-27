@@ -161,7 +161,7 @@
       "Type": "Task",
       "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-finalize",
       "Arguments": "{% $voidCtx %}",
-      "Next": "DispatchRefunds",
+      "Next": "EnqueueDispatchRefunds",
       "Retry": [
         {
           "ErrorEquals": [
@@ -178,27 +178,24 @@
         }
       ]
     },
-    "DispatchRefunds": {
+    "EnqueueDispatchRefunds": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-dispatch-refunds",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-enqueue-dispatch-refunds",
       "Arguments": "{% $voidCtx %}",
       "Assign": {
-        "refundResult": "{% $states.result %}"
+        "enqueueResult": "{% $states.result %}"
       },
-      "Next": "CheckRefundDone",
+      "Next": "CheckEnqueueDone",
       "Retry": [
         {
           "ErrorEquals": [
-            "Lambda.ServiceException",
-            "Lambda.AWSLambdaException",
-            "Lambda.SdkClientException",
-            "Lambda.TooManyRequestsException",
-            "States.TaskFailed",
-            "States.Timeout"
+            "States.ALL"
           ],
           "IntervalSeconds": 10,
-          "MaxAttempts": 3,
-          "BackoffRate": 2
+          "MaxAttempts": 10,
+          "BackoffRate": 2,
+          "MaxDelaySeconds": 120,
+          "JitterStrategy": "FULL"
         }
       ],
       "Catch": [
@@ -206,33 +203,27 @@
           "ErrorEquals": [
             "States.ALL"
           ],
-          "Next": "RefundFailed"
+          "Next": "EnqueueRetryWait"
         }
       ]
     },
-    "CheckRefundDone": {
+    "CheckEnqueueDone": {
       "Type": "Choice",
       "Choices": [
         {
-          "Condition": "{% $refundResult.done %}",
-          "Next": "RefundComplete"
+          "Condition": "{% $enqueueResult.done %}",
+          "Next": "VoidSucceeded"
         }
       ],
-      "Default": "RefundWait"
+      "Default": "EnqueueDispatchRefunds"
     },
-    "RefundWait": {
+    "VoidSucceeded": {
+      "Type": "Succeed"
+    },
+    "EnqueueRetryWait": {
       "Type": "Wait",
-      "Seconds": 5,
-      "Next": "DispatchRefunds"
-    },
-    "RefundComplete": {
-      "Type": "Pass",
-      "End": true
-    },
-    "RefundFailed": {
-      "Type": "Pass",
-      "Comment": "Refund error – void đã hoàn tất (status = void). Admin retry thủ công.",
-      "End": true
+      "Seconds": 300,
+      "Next": "EnqueueDispatchRefunds"
     }
   }
 }

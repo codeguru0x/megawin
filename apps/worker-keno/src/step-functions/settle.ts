@@ -54,8 +54,9 @@
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  9. DispatchPayouts (loop)               │
- *  │     done = true khi hết pending payouts  │
+ *  │  9. EnqueueDispatchPayouts               │
+ *  │     Bulk insert tenant_dispatch_orders.  │
+ *  │     Worker-tenant-dispatch chạy thật.    │
  *  └──────────────────────────────────────────┘
  *
  * DATA FLOW (Assign-based):
@@ -90,6 +91,24 @@ const LAMBDA_RETRY = [
     IntervalSeconds: 10,
     MaxAttempts: 3,
     BackoffRate: 2.0,
+  },
+];
+
+/**
+ * Retry riêng cho state EnqueueDispatch* — bọc kín mọi lỗi.
+ * Inner: 10 attempt, 10→120s (cap), backoff 2, FULL jitter.
+ * Ngoài Retry, Catch chuyển sang EnqueueRetryWait (Wait 5 phút) rồi vòng lại
+ * chính state enqueue — tạo outer-loop retry không giới hạn đến khi thành công.
+ * Idempotent: bulkEnqueue dùng unique `tx`, gọi lại chỉ skip duplicate.
+ */
+const ENQUEUE_RETRY = [
+  {
+    ErrorEquals: ["States.ALL"],
+    IntervalSeconds: 10,
+    MaxAttempts: 10,
+    BackoffRate: 2.0,
+    MaxDelaySeconds: 120,
+    JitterStrategy: "FULL",
   },
 ];
 
@@ -195,51 +214,49 @@ export const SETTLE_STATE_MACHINE = {
       Type: "Task",
       Resource: lambdaArn("settle-finalize"),
       Arguments: "{% $settleCtx %}",
-      Next: "DispatchPayouts",
+      Next: "EnqueueDispatchPayouts",
       Retry: LAMBDA_RETRY,
     },
 
-    DispatchPayouts: {
+    EnqueueDispatchPayouts: {
       Type: "Task",
-      Resource: lambdaArn("settle-dispatch-payouts"),
+      Resource: lambdaArn("settle-enqueue-dispatch-payouts"),
       Arguments: "{% $settleCtx %}",
-      Assign: { payoutResult: "{% $states.result %}" },
-      Next: "CheckPayoutDone",
-      Retry: LAMBDA_RETRY,
+      Assign: { enqueueResult: "{% $states.result %}" },
+      Next: "CheckEnqueueDone",
+      Retry: ENQUEUE_RETRY,
       Catch: [
         {
           ErrorEquals: ["States.ALL"],
-          Next: "PayoutFailed",
+          Next: "EnqueueRetryWait",
         },
       ],
     },
 
-    CheckPayoutDone: {
+    // Loop cho đến khi use-case trả done=true (đã enqueue hết winners).
+    // Lambda timeout 10 phút cho mỗi lần, state function loop lại nếu còn.
+    CheckEnqueueDone: {
       Type: "Choice",
       Choices: [
         {
-          Condition: "{% $payoutResult.done %}",
-          Next: "PayoutComplete",
+          Condition: "{% $enqueueResult.done %}",
+          Next: "SettleSucceeded",
         },
       ],
-      Default: "PayoutWait",
+      Default: "EnqueueDispatchPayouts",
     },
 
-    PayoutWait: {
+    SettleSucceeded: {
+      Type: "Succeed",
+    },
+
+    // Outer-loop retry: sau khi inner Retry (10 lần, 10→120s) vẫn fail,
+    // Wait 5 phút rồi vòng lại EnqueueDispatchPayouts. Không giới hạn số vòng —
+    // chạy đến khi thành công. Idempotent nhờ unique `tx` tại tenant_dispatch_orders.
+    EnqueueRetryWait: {
       Type: "Wait",
-      Seconds: 5,
-      Next: "DispatchPayouts",
-    },
-
-    PayoutComplete: {
-      Type: "Pass",
-      End: true,
-    },
-
-    PayoutFailed: {
-      Type: "Pass",
-      Comment: "Payout error – settle vẫn hoàn tất, admin retry thủ công",
-      End: true,
+      Seconds: 300,
+      Next: "EnqueueDispatchPayouts",
     },
   },
 };

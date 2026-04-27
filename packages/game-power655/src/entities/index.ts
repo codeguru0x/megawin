@@ -4,7 +4,7 @@
  * Import: `import { ... } from "@megawin/game-power655/entities"`
  *
  * Chứa tất cả domain types cho game Power 6/55:
- * - Enums: PrizeTier, PlayType, PayoutStatus, RefundStatus, Power655Collections
+ * - Enums: PrizeTier, PlayType, Power655Collections
  * - Types: BonusNumber, LineValue, JackpotConfig, PrizeAmounts, ...
  * - Entities: DrawDoc, TicketDoc, TicketEntryDoc, TicketLineDoc, JackpotCycleDoc, ...
  */

@@ -1,0 +1,30 @@
+{
+  "name": "@megawin/worker-tenant-dispatch",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tenant dispatch worker — polls tenant_dispatch_orders outbox, calls tenant batchTransaction API with retry/backoff.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "build:deps": "turbo run build --filter=@megawin/worker-tenant-dispatch^...",
+    "deploy:dev": "pnpm build:deps && set -a && . ./.env.dev && set +a && serverless deploy --stage dev",
+    "deploy:prod": "pnpm build:deps && set -a && . ./.env.prod && set +a && serverless deploy --stage prod"
+  },
+  "dependencies": {
+    "@megawin/app-core": "workspace:*",
+    "@megawin/data": "workspace:*",
+    "@megawin/shared": "workspace:*",
+    "@megawin/tenant-dispatch": "workspace:*",
+    "@megawin/tenant-gateway": "workspace:*"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@types/node": "^25.5.0",
+    "serverless-offline": "^14.5.0",
+    "tsx": "^4.21.0",
+    "typescript": "6.0.2"
+  }
+}

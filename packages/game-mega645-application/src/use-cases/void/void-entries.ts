@@ -10,7 +10,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { generateId } from "@megawin/shared/utils";
-import { RefundStatus, type EntryVoidInfo } from "@megawin/game-mega645/entities";
+import { type EntryVoidInfo } from "@megawin/game-mega645/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
 
@@ -63,9 +63,9 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEn
           // refundAmount = 100% tiền cược
           // Void draw → hoàn toàn bộ
           refundAmount: entry.amount ?? 0,
-          refundStatus: RefundStatus.Pending,
           voidedAt: now,
-          // UUIDv7 idempotency key — mọi entry void đều cần refund tenant.
+          // UUIDv7 idempotency key — worker-tenant-dispatch seed làm `TenantDispatchOrderDoc.tx`.
+          // Trạng thái dispatch lưu tại `tenant_dispatch_orders` — không còn trên entry.
           refundTx: generateId(),
         } satisfies EntryVoidInfo,
       }));

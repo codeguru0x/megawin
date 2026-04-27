@@ -1,7 +1,7 @@
 /**
  * Lambda: build-void-report (Bingo 18)
  *
- * Bước mới trong Bingo 18 Void Step Function (sau DispatchRefunds, trước FinalizeVoid).
+ * Bước mới trong Bingo 18 Void Step Function (trước EnqueueDispatchRefunds, sau SyncTicketSummaries).
  * Cleanup settle reports (nếu void-after-settle) + build void report.
  *
  * IDEMPOTENT: upsert pattern, deleteMany idempotent — crash-safe.

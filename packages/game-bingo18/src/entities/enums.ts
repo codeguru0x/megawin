@@ -126,29 +126,3 @@ export const Bingo18TripleKind = {
 } as const;
 
 export type Bingo18TripleKind = (typeof Bingo18TripleKind)[keyof typeof Bingo18TripleKind];
-
-// ─────────────────────────────────────────────
-// Payout Status
-// ─────────────────────────────────────────────
-
-export const PayoutStatus = {
-  Pending: "pending",
-  Dispatched: "dispatched",
-  Confirmed: "confirmed",
-  Failed: "failed",
-} as const;
-
-export type PayoutStatus = (typeof PayoutStatus)[keyof typeof PayoutStatus];
-
-// ─────────────────────────────────────────────
-// Refund Status
-// ─────────────────────────────────────────────
-
-export const RefundStatus = {
-  Pending: "pending",
-  Dispatched: "dispatched",
-  Confirmed: "confirmed",
-  Failed: "failed",
-} as const;
-
-export type RefundStatus = (typeof RefundStatus)[keyof typeof RefundStatus];

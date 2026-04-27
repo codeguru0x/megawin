@@ -246,7 +246,7 @@
       "Type": "Task",
       "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-settle-finalize",
       "Arguments": "{% $settleCtx %}",
-      "Next": "DispatchPayouts",
+      "Next": "EnqueueDispatchPayouts",
       "Retry": [
         {
           "ErrorEquals": [
@@ -263,27 +263,24 @@
         }
       ]
     },
-    "DispatchPayouts": {
+    "EnqueueDispatchPayouts": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-settle-dispatch-payouts",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-lotto535-dev-settle-enqueue-dispatch-payouts",
       "Arguments": "{% $settleCtx %}",
       "Assign": {
-        "payoutResult": "{% $states.result %}"
+        "enqueueResult": "{% $states.result %}"
       },
-      "Next": "CheckPayoutDone",
+      "Next": "CheckEnqueueDone",
       "Retry": [
         {
           "ErrorEquals": [
-            "Lambda.ServiceException",
-            "Lambda.AWSLambdaException",
-            "Lambda.SdkClientException",
-            "Lambda.TooManyRequestsException",
-            "States.TaskFailed",
-            "States.Timeout"
+            "States.ALL"
           ],
           "IntervalSeconds": 10,
-          "MaxAttempts": 3,
-          "BackoffRate": 2
+          "MaxAttempts": 10,
+          "BackoffRate": 2,
+          "MaxDelaySeconds": 120,
+          "JitterStrategy": "FULL"
         }
       ],
       "Catch": [
@@ -291,33 +288,27 @@
           "ErrorEquals": [
             "States.ALL"
           ],
-          "Next": "PayoutFailed"
+          "Next": "EnqueueRetryWait"
         }
       ]
     },
-    "CheckPayoutDone": {
+    "CheckEnqueueDone": {
       "Type": "Choice",
       "Choices": [
         {
-          "Condition": "{% $payoutResult.done %}",
-          "Next": "PayoutComplete"
+          "Condition": "{% $enqueueResult.done %}",
+          "Next": "SettleSucceeded"
         }
       ],
-      "Default": "PayoutWait"
+      "Default": "EnqueueDispatchPayouts"
     },
-    "PayoutWait": {
+    "SettleSucceeded": {
+      "Type": "Succeed"
+    },
+    "EnqueueRetryWait": {
       "Type": "Wait",
-      "Seconds": 5,
-      "Next": "DispatchPayouts"
-    },
-    "PayoutComplete": {
-      "Type": "Pass",
-      "End": true
-    },
-    "PayoutFailed": {
-      "Type": "Pass",
-      "Comment": "Payout error – settle vẫn hoàn tất, admin retry thủ công",
-      "End": true
+      "Seconds": 300,
+      "Next": "EnqueueDispatchPayouts"
     }
   }
 }

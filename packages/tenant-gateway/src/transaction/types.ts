@@ -358,7 +358,16 @@ export interface BatchTransactionItem {
    */
   tx: string;
 
-  /** Player ID (lowercase username đã đăng ký trên tenant). @example `"john_doe"` */
+  /**
+   * Tenant-side player identifier — lowercase username đã đăng ký trên tenant
+   * (còn gọi là "player external ID").
+   *
+   * Cùng ý nghĩa với {@link TransactionRequest.playerId}. KHÔNG phải MegaWin
+   * internal `accountId` — sender phải derive từ MegaWin username qua
+   * `toTenantUsername(username)` (strip suffix `@tenantId`).
+   *
+   * @example `"john_doe"`
+   */
   playerId: string;
 
   /** Số tiền giao dịch (VND). Luôn > 0. */

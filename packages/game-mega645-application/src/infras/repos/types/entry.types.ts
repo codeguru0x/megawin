@@ -41,3 +41,40 @@ export interface OutstandingDrawCounts {
   playerCount: number;
   tenantCount: number;
 }
+
+// ─────────────────────────────────────────────
+// Dispatch Outbox DTOs
+// ─────────────────────────────────────────────
+
+/**
+ * Minimal projection của winning entry để enqueue vào `tenant_dispatch_orders`.
+ *
+ * Dùng bởi `EnqueueDispatchPayoutsUseCase` — chỉ cần fields để build
+ * `TenantDispatchOrderDoc`, tránh load full entry (boards, tiers, etc.).
+ */
+export interface WinningEntryForDispatch {
+  id: string;
+  tenantId: string;
+  accountId: string;
+  username: string;
+  ticketNo: string;
+  payoutAmount: number;
+  /** UUIDv7 sinh tại settle time — idempotency key để worker gửi tenant. */
+  payoutTx: string;
+}
+
+/**
+ * Minimal projection của voided entry để enqueue refund vào `tenant_dispatch_orders`.
+ *
+ * Dùng bởi `EnqueueDispatchRefundsUseCase`.
+ */
+export interface VoidedEntryForDispatch {
+  id: string;
+  tenantId: string;
+  accountId: string;
+  username: string;
+  ticketNo: string;
+  refundAmount: number;
+  /** UUIDv7 sinh tại void time — idempotency key để worker gửi tenant. */
+  refundTx: string;
+}

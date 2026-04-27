@@ -29,7 +29,6 @@ import {
   BINGO18_BASIC_PLAY_TYPE_SET,
   type Bingo18BigSmallBet,
   type Bingo18TripleKind,
-  PayoutStatus,
 } from "@megawin/game-bingo18/entities";
 import type { EntryPayout, EntryResult, EntryBoardPayout } from "@megawin/game-bingo18/entities";
 import {
@@ -254,9 +253,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             payoutAmount: winAmount,
             boardPayouts,
             settledAt: now,
-            // payoutStatus chỉ set khi có tiền thưởng → trigger dispatch payout workflow.
-            // Entry thua (winAmount = 0) không cần dispatch → bỏ qua payoutStatus.
-            payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
             // UUIDv7 idempotency key — chỉ sinh khi entry thắng (cần dispatch payout cho tenant).
             // Entry thua không phát sinh giao dịch → không cần tx.
             payoutTx: hasWin ? generateId() : undefined,

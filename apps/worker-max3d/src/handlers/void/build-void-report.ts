@@ -1,7 +1,7 @@
 /**
  * Lambda: build-void-report (Max 3D)
  *
- * Bước mới trong Max 3D Void Step Function (sau DispatchRefunds, trước FinalizeVoid).
+ * Bước trong Max 3D Void Step Function (sau VoidEntries, trước FinalizeVoid).
  * Cleanup settle reports (nếu void-after-settle) + build void report.
  *
  * IDEMPOTENT: upsert pattern, deleteMany idempotent — crash-safe.

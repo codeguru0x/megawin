@@ -110,39 +110,3 @@ export const PlayType = {
 export type PlayType = (typeof PlayType)[keyof typeof PlayType];
 
 export const MEGA645_PLAY_TYPE_VALUES = Object.values(PlayType);
-
-// ─────────────────────────────────────────────
-// Payout Status
-// ─────────────────────────────────────────────
-
-/**
- * Trạng thái gửi tiền trả thưởng cho tenant.
- * Flow: pending → dispatched → confirmed
- *                 ↘ failed → (retry) → dispatched
- */
-export const PayoutStatus = {
-  Pending: "pending",
-  Dispatched: "dispatched",
-  Confirmed: "confirmed",
-  Failed: "failed",
-} as const;
-
-export type PayoutStatus = (typeof PayoutStatus)[keyof typeof PayoutStatus];
-
-// ─────────────────────────────────────────────
-// Refund Status
-// ─────────────────────────────────────────────
-
-/**
- * Trạng thái hoàn tiền khi entry bị void.
- * Flow: pending → dispatched → confirmed
- *                 ↘ failed → (retry) → dispatched
- */
-export const RefundStatus = {
-  Pending: "pending",
-  Dispatched: "dispatched",
-  Confirmed: "confirmed",
-  Failed: "failed",
-} as const;
-
-export type RefundStatus = (typeof RefundStatus)[keyof typeof RefundStatus];

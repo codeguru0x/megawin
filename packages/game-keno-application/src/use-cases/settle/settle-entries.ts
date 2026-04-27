@@ -40,7 +40,6 @@ import {
   type KenoBigSmallBet,
   type KenoEvenOddBet,
   KenoPlayType,
-  PayoutStatus,
   CAPPABLE_PICK_COUNTS,
   KENO_BASIC_PLAY_TYPE_SET,
 } from "@megawin/game-keno/entities";
@@ -198,9 +197,6 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             payoutAmount: winAmount,
             boardPayouts,
             settledAt: now,
-            payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
-            // UUIDv7 idempotency key — chỉ sinh khi entry thắng (cần dispatch payout cho tenant).
-            // Entry thua không phát sinh giao dịch → không cần tx.
             payoutTx: hasWin ? generateId() : undefined,
           } satisfies EntryPayout,
           outcome: hasWin ? EntryOutcome.Win : EntryOutcome.Loss,

@@ -24,6 +24,12 @@ export type { BuildSettleReportResult } from "./build-settle-report";
 export { FinalizeSettleUseCase } from "./finalize-settle";
 export type { FinalizeSettleResult } from "./finalize-settle";
 
+export { EnqueueDispatchPayoutsUseCase } from "./enqueue-dispatch-payouts";
+export type {
+  EnqueueDispatchPayoutsInput,
+  EnqueueDispatchPayoutsOutput,
+} from "./enqueue-dispatch-payouts";
+
 export { PatchJackpotPrizeUseCase } from "./patch-jackpot-prize";
 export type { PatchJackpotPrizeResult } from "./patch-jackpot-prize";
 

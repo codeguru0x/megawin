@@ -14,8 +14,6 @@
 
 import {
   Bingo18Collections,
-  PayoutStatus,
-  RefundStatus,
   type EntryPayout,
   type EntryVoidInfo,
   type EntryResult,
@@ -32,6 +30,8 @@ import type {
   OpsSummary,
   WinningEntriesSummary,
   PrizeSummaryRow,
+  WinningEntryForDispatch,
+  VoidedEntryForDispatch,
 } from "./types";
 import { BaseRepo } from "./base-repo";
 import { EntryMapper } from "../mappers/entry-mapper";
@@ -154,66 +154,54 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     };
   }
 
-  // ─── Payout Dispatch ───
+  // ─── Payout Dispatch (enqueue to outbox) ───
 
-  async getPendingPayoutEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
-    return await this.findMany(
+  /**
+   * Lấy winning entries cho 1 draw để enqueue vào tenant_dispatch_orders.
+   *
+   * Chỉ trả về fields tối thiểu cần build `TenantDispatchOrderDoc` — giảm payload
+   * khi kỳ quay có hàng ngàn winners.
+   *
+   * Filter: status=Settled + payout.winAmount > 0 + có payoutTx.
+   */
+  async getWinningEntriesForDispatch(params: {
+    drawId: string;
+    afterTx?: string;
+    limit: number;
+  }): Promise<WinningEntryForDispatch[]> {
+    const { drawId, afterTx, limit } = params;
+
+    const docs = await this.findManyAsDocuments(
       {
         drawId,
         status: EntryStatus.Settled,
         "payout.winAmount": { $gt: 0 },
-        $or: [
-          { "payout.payoutStatus": PayoutStatus.Pending },
-          { "payout.payoutStatus": PayoutStatus.Failed },
-          { "payout.payoutStatus": { $exists: false } },
-        ],
+        "payout.payoutTx": afterTx ? { $gt: afterTx } : { $exists: true },
       },
-      { sort: { tenantId: 1, createdAt: 1 }, limit },
-    );
-  }
-
-  async countPendingPayoutEntries(drawId: string): Promise<number> {
-    return await this.count({
-      drawId,
-      status: EntryStatus.Settled,
-      "payout.winAmount": { $gt: 0 },
-      $or: [
-        { "payout.payoutStatus": PayoutStatus.Pending },
-        { "payout.payoutStatus": PayoutStatus.Failed },
-        { "payout.payoutStatus": { $exists: false } },
-      ],
-    });
-  }
-
-  async batchMarkPayoutDispatched(entryIds: string[]): Promise<number> {
-    const objectIds = entryIds.map((id) => new ObjectId(id));
-    const result = await this.updateMany(
-      { _id: { $in: objectIds } as any },
       {
-        $set: {
-          "payout.payoutStatus": PayoutStatus.Dispatched,
-          "payout.payoutDispatchedAt": new Date(),
-          updatedAt: new Date(),
+        sort: { "payout.payoutTx": 1 },
+        limit,
+        projection: {
+          _id: 1,
+          tenantId: 1,
+          accountId: 1,
+          username: 1,
+          "entrySummary.ticketNo": 1,
+          "payout.payoutAmount": 1,
+          "payout.payoutTx": 1,
         },
       },
     );
-    return result.modifiedCount;
-  }
 
-  async batchMarkPayoutFailed(entryIds: string[], error: string): Promise<number> {
-    const objectIds = entryIds.map((id) => new ObjectId(id));
-    const result = await this.updateMany(
-      { _id: { $in: objectIds } as any },
-      {
-        $set: {
-          "payout.payoutStatus": PayoutStatus.Failed,
-          "payout.payoutLastError": error,
-          updatedAt: new Date(),
-        },
-        $inc: { "payout.payoutRetryCount": 1 },
-      },
-    );
-    return result.modifiedCount;
+    return docs.map((d) => ({
+      id: d._id.toHexString(),
+      tenantId: d.tenantId,
+      accountId: d.accountId,
+      username: d.username,
+      ticketNo: d.entrySummary?.ticketNo ?? "",
+      payoutAmount: d.payout?.payoutAmount ?? 0,
+      payoutTx: d.payout?.payoutTx,
+    }));
   }
 
   // ─── Void Draw ───
@@ -261,46 +249,45 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     return { modifiedCount: result.modifiedCount };
   }
 
-  /** Lấy entries đã void nhưng chưa hoàn tiền. */
-  async getPendingRefundEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
-    return await this.findMany(
+  /** Lấy voided entries cho 1 draw để enqueue refund dispatch. */
+  async getVoidedEntriesForDispatch(params: {
+    drawId: string;
+    afterTx?: string;
+    limit: number;
+  }): Promise<VoidedEntryForDispatch[]> {
+    const { drawId, afterTx, limit } = params;
+
+    const docs = await this.findManyAsDocuments(
       {
         drawId,
         status: EntryStatus.Void,
-        "voidInfo.refundStatus": {
-          $in: [RefundStatus.Pending, RefundStatus.Failed],
-        },
+        "voidInfo.refundAmount": { $gt: 0 },
+        "voidInfo.refundTx": afterTx ? { $gt: afterTx } : { $exists: true },
       },
-      { sort: { createdAt: 1 }, limit },
-    );
-  }
-
-  /** Đánh dấu entry đã dispatch refund thành công. */
-  async markRefundDispatched(entryId: string): Promise<boolean> {
-    return await this.updateOne(
-      { _id: new ObjectId(entryId) },
       {
-        $set: {
-          "voidInfo.refundStatus": RefundStatus.Dispatched,
-          "voidInfo.refundedAt": new Date(),
-          updatedAt: new Date(),
+        sort: { "voidInfo.refundTx": 1 },
+        limit,
+        projection: {
+          _id: 1,
+          tenantId: 1,
+          accountId: 1,
+          username: 1,
+          "entrySummary.ticketNo": 1,
+          "voidInfo.refundAmount": 1,
+          "voidInfo.refundTx": 1,
         },
       },
     );
-  }
 
-  /** Đánh dấu entry refund thất bại. */
-  async markRefundFailed(entryId: string, error: string): Promise<boolean> {
-    return await this.updateOne(
-      { _id: new ObjectId(entryId) },
-      {
-        $set: {
-          "voidInfo.refundStatus": RefundStatus.Failed,
-          "voidInfo.refundLastError": error,
-          updatedAt: new Date(),
-        },
-      },
-    );
+    return docs.map((d) => ({
+      id: d._id.toHexString(),
+      tenantId: d.tenantId,
+      accountId: d.accountId,
+      username: d.username,
+      ticketNo: d.entrySummary?.ticketNo ?? "",
+      refundAmount: d.voidInfo?.refundAmount ?? 0,
+      refundTx: d.voidInfo?.refundTx,
+    }));
   }
 
   /** Aggregate tổng kết void cho 1 draw. */

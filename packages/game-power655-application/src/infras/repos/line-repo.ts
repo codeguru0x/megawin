@@ -9,6 +9,7 @@
 
 import { Power655Collections } from "@megawin/game-power655/entities";
 import type { TicketLineDoc } from "@megawin/game-power655/entities";
+import { chunk } from "@megawin/shared/utils";
 import { ObjectId } from "mongodb";
 import { BaseRepo } from "./base-repo";
 
@@ -34,9 +35,8 @@ export class LineRepository extends BaseRepo<any> {
       },
     }));
 
-    for (let i = 0; i < ops.length; i += LineRepository.BULK_CHUNK_SIZE) {
-      const chunk = ops.slice(i, i + LineRepository.BULK_CHUNK_SIZE);
-      await this.bulkWrite(chunk, { ordered: false });
+    for (const batch of chunk(ops, LineRepository.BULK_CHUNK_SIZE)) {
+      await this.bulkWrite(batch, { ordered: false });
     }
   }
 

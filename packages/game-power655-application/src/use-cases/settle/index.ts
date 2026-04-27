@@ -16,6 +16,12 @@ export type { PrepareSettleInput } from "./prepare-settle";
 export { SettleEntriesBatchUseCase } from "./settle-entries";
 export type { SettleEntriesBatchResult } from "./settle-entries";
 
+export { EnqueueDispatchPayoutsUseCase } from "./enqueue-dispatch-payouts";
+export type {
+  EnqueueDispatchPayoutsInput,
+  EnqueueDispatchPayoutsOutput,
+} from "./enqueue-dispatch-payouts";
+
 export { CalculateFinancialsUseCase } from "./calculate-financials";
 
 export { BuildSettleReportUseCase } from "./build-settle-report";

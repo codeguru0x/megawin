@@ -6,7 +6,7 @@
  * 1 document = 1 ticket tham gia 1 kỳ quay cụ thể.
  */
 
-import type { PlayType, PrizeTier, PayoutStatus, RefundStatus } from "./enums";
+import type { PlayType, PrizeTier } from "./enums";
 import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
 import type { ISODateString } from "./types";
 import type { Long } from "@megawin/game-core/types";
@@ -60,21 +60,16 @@ export interface EntryPayout {
   tiers: EntryPayoutTier[];
   /** Thời điểm settle (tính toán kết quả). */
   settledAt: Date;
-  /** Trạng thái gửi tiền trả thưởng cho tenant. */
-  payoutStatus?: PayoutStatus;
-  /** Thời điểm gửi lệnh chuyển tiền trả thưởng. */
-  payoutDispatchedAt?: Date;
-  /** Số lần retry gửi tiền trả thưởng (khi gặp lỗi). */
-  payoutRetryCount?: number;
-  /** Lỗi cuối cùng khi gửi tiền trả thưởng. */
-  payoutLastError?: string;
 
   /**
    * Idempotency key cho payout transaction — UUIDv7 (RFC 9562).
    *
    * Sinh tại settle time, ghi atomic cùng payout data.
-   * Dispatch đọc field này làm `tx` khi gửi tenant — retry luôn gửi cùng giá trị.
-   * Chỉ sinh khi entry thắng (có payout cần dispatch).
+   * `EnqueueDispatchPayouts` đọc field này, seed vào `TenantDispatchOrderDoc.tx`
+   * để worker gửi tenant idempotent. Chỉ sinh khi entry thắng (có payout cần dispatch).
+   *
+   * Trạng thái dispatch (pending/dispatched/failed) lưu tại
+   * `tenant_dispatch_orders` — KHÔNG còn lưu trên entry.
    *
    * @example `"019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"`
    */
@@ -87,18 +82,16 @@ export interface EntryVoidInfo {
   originalAmount: number;
   /** Số tiền hoàn trả (VND). Thường = originalAmount. */
   refundAmount: number;
-  /** Trạng thái hoàn tiền. */
-  refundStatus: RefundStatus;
   /** Thời điểm huỷ. */
   voidedAt: Date;
-  /** Thời điểm hoàn tiền thành công. */
-  refundedAt?: Date;
 
   /**
    * Idempotency key cho refund transaction — UUIDv7 (RFC 9562).
    *
-   * Sinh tại void time, ghi atomic cùng void data.
-   * Mọi entry bị void đều phát sinh refund → field này required.
+   * Sinh tại void time, ghi atomic cùng void data. Worker dùng field này làm
+   * `TenantDispatchOrderDoc.tx` — retry luôn gửi cùng giá trị → tenant idempotent.
+   *
+   * Trạng thái dispatch lưu tại `tenant_dispatch_orders` — KHÔNG còn trên entry.
    *
    * @example `"01907a12-c3d4-7abc-9ef0-123456789abc"`
    */

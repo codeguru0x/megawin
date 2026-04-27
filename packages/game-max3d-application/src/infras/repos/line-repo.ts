@@ -1,5 +1,6 @@
 import { Max3dCollections } from "@megawin/game-max3d/entities";
 import type { TicketLineDoc } from "@megawin/game-max3d/entities";
+import { chunk } from "@megawin/shared/utils";
 import { ObjectId } from "mongodb";
 import { BaseRepo } from "./base-repo";
 
@@ -39,9 +40,8 @@ export class LineRepository extends BaseRepo<any> {
     }));
 
     // Chunk để tránh quá tải batch size limit của MongoDB
-    for (let i = 0; i < ops.length; i += BULK_CHUNK_SIZE) {
-      const chunk = ops.slice(i, i + BULK_CHUNK_SIZE);
-      await this.bulkWrite(chunk, { ordered: false });
+    for (const batch of chunk(ops, BULK_CHUNK_SIZE)) {
+      await this.bulkWrite(batch, { ordered: false });
     }
   }
 

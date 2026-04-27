@@ -2,7 +2,7 @@
  * Use Case: Build Void Report (Max 3D)
  *
  * ═══════════════════════════════════════════════════════════════════════
- * STEP MỚI TRONG VOID FLOW (sau DispatchRefunds, trước FinalizeVoid)
+ * STEP MỚI TRONG VOID FLOW (sau VoidEntries, trước FinalizeVoid)
  * ═══════════════════════════════════════════════════════════════════════
  *
  * Xây dựng void report và dọn dẹp settle reports (nếu void-after-settle).

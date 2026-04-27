@@ -11,6 +11,7 @@
 
 import { Lotto535Collections, PrizeTier } from "@megawin/game-lotto535/entities";
 import type { TicketLineDoc } from "@megawin/game-lotto535/entities";
+import { chunk } from "@megawin/shared/utils";
 import { BaseRepo } from "./base-repo";
 
 export class LineRepository extends BaseRepo<any> {
@@ -37,9 +38,8 @@ export class LineRepository extends BaseRepo<any> {
       },
     }));
 
-    for (let i = 0; i < ops.length; i += LineRepository.BULK_CHUNK_SIZE) {
-      const chunk = ops.slice(i, i + LineRepository.BULK_CHUNK_SIZE);
-      await this.bulkWrite(chunk, { ordered: false });
+    for (const batch of chunk(ops, LineRepository.BULK_CHUNK_SIZE)) {
+      await this.bulkWrite(batch, { ordered: false });
     }
   }
 

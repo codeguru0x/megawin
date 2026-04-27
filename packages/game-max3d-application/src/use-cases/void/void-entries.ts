@@ -14,7 +14,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { generateId } from "@megawin/shared/utils";
-import { RefundStatus, type EntryVoidInfo } from "@megawin/game-max3d/entities";
+import type { EntryVoidInfo } from "@megawin/game-max3d/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import type { VoidContext } from "./types";
 
@@ -46,7 +46,6 @@ export class VoidEntriesBatchUseCase extends InternalUseCase<VoidContext, VoidEn
         voidInfo: {
           originalAmount: entry.amount ?? 0,
           refundAmount: entry.amount ?? 0,
-          refundStatus: RefundStatus.Pending,
           voidedAt: now,
           // UUIDv7 idempotency key — mọi entry void đều cần refund tenant.
           refundTx: generateId(),

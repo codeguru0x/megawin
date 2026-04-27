@@ -13,13 +13,7 @@
  * phân biệt qua playType. Tương tự boardPayouts[] chứa payout cho tất cả boards.
  */
 
-import type {
-  KenoBigSmallBet,
-  KenoEvenOddBet,
-  KenoPlayType,
-  PayoutStatus,
-  RefundStatus,
-} from "./enums";
+import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "./enums";
 import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
 import type { ISODateString } from "./types";
 import type { Long } from "@megawin/game-core/types";
@@ -74,17 +68,21 @@ export interface EntryPayout {
   boardPayouts: EntryBoardPayout[];
   /** Thời điểm settle. */
   settledAt: Date;
-  payoutStatus?: PayoutStatus;
-  payoutDispatchedAt?: Date;
-  payoutRetryCount?: number;
-  payoutLastError?: string;
 
   /**
    * Idempotency key cho payout transaction — UUIDv7 (RFC 9562).
    *
    * Sinh tại settle time, ghi atomic cùng payout data.
-   * Dispatch đọc field này làm `tx` khi gửi tenant — retry luôn gửi cùng giá trị.
-   * Chỉ sinh khi entry thắng (có payout cần dispatch).
+   * `EnqueueDispatchPayouts` đọc field này, seed vào `TenantDispatchOrderDoc.tx`
+   * để worker gửi tenant idempotent. Chỉ sinh khi entry thắng (có payout cần dispatch).
+   *
+   * Trạng thái dispatch (pending/dispatched/failed) lưu tại
+   * `tenant_dispatch_orders` — KHÔNG còn lưu trên entry.
+   *
+   * Lifecycle resettle (Giai đoạn 2): khi resettle, field này bị overwrite bằng
+   * UUIDv7 mới atomic cùng `reversalTx` + `reversalAmount` snapshot payout cũ.
+   * Giá trị cũ đã được record trong `tenant_dispatch_orders` — không mất, tra qua
+   * `listBySource({ gameId, sourceKind: "payout", sourceId: entryId })`.
    *
    * @example `"019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"`
    */
@@ -94,24 +92,25 @@ export interface EntryPayout {
 /**
  * Thông tin huỷ cược + hoàn tiền.
  * Chỉ có khi entry bị void (draw void / admin void).
+ *
+ * Trạng thái dispatch refund (pending/dispatched/failed) lưu tại
+ * `tenant_dispatch_orders` — KHÔNG còn lưu trên entry. `refundTx` giữ lại
+ * làm idempotency seed khi enqueue dispatch.
  */
 export interface EntryVoidInfo {
   /** Tiền cược gốc của entry này (= amount). */
   originalAmount: number;
   /** Tiền hoàn trả cho player. */
   refundAmount: number;
-  /** Trạng thái hoàn tiền. */
-  refundStatus: RefundStatus;
   /** Thời điểm huỷ. */
   voidedAt: Date;
-  /** Thời điểm hoàn tiền. */
-  refundedAt?: Date;
 
   /**
    * Idempotency key cho refund transaction — UUIDv7 (RFC 9562).
    *
    * Sinh tại void time, ghi atomic cùng void data.
    * Mọi entry bị void đều phát sinh refund → field này required.
+   * `EnqueueDispatchRefunds` seed vào `TenantDispatchOrderDoc.tx`.
    *
    * @example `"01907a12-c3d4-7abc-9ef0-123456789abc"`
    */

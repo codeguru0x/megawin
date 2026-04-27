@@ -8,41 +8,71 @@ import type { TicketEntryEntity } from "@megawin/game-max3dpro/entities";
 import { Max3dproEntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
 import { VoidContent } from "@/components/reports/game/void";
 import type {
-  VoidDrawRow, VoidTenantRow, VoidPlayerRow, VoidEntryRow,
+  VoidDrawRow,
+  VoidTenantRow,
+  VoidPlayerRow,
+  VoidEntryRow,
 } from "@/components/reports/game/void";
 import {
-  useMax3DProVoidReports, useMax3DProVoidDrawTenants,
-  useMax3DProVoidTenantPlayers, useMax3DProVoidPlayerEntries,
+  useMax3DProVoidReports,
+  useMax3DProVoidDrawTenants,
+  useMax3DProVoidTenantPlayers,
+  useMax3DProVoidPlayerEntries,
 } from "../../settle/_lib/use-report-queries";
 import { useMax3DProVoidFilters } from "./use-void-filters";
 
 const c = GAME_COLORS[GameProduct.Max3dpro];
 
 function mapDrawRow(r: {
-  drawId: string; financialDate: string; entryCount: number;
-  playerCount: number; tenantCount: number;
-  totalOriginalStake: number; totalRefundAmount: number;
+  drawId: string;
+  financialDate: string;
+  entryCount: number;
+  playerCount: number;
+  tenantCount: number;
+  totalOriginalStake: number;
+  totalRefundAmount: number;
 }): VoidDrawRow {
-  return { drawId: r.drawId, financialDate: r.financialDate, entryCount: r.entryCount,
-    playerCount: r.playerCount, tenantCount: r.tenantCount,
-    totalOriginalStake: r.totalOriginalStake, totalRefundAmount: r.totalRefundAmount };
+  return {
+    drawId: r.drawId,
+    financialDate: r.financialDate,
+    entryCount: r.entryCount,
+    playerCount: r.playerCount,
+    tenantCount: r.tenantCount,
+    totalOriginalStake: r.totalOriginalStake,
+    totalRefundAmount: r.totalRefundAmount,
+  };
 }
 
 function mapTenantRow(r: {
-  tenantId: string; playerCount: number; entryCount: number;
-  totalOriginalStake: number; totalRefundAmount: number;
+  tenantId: string;
+  playerCount: number;
+  entryCount: number;
+  totalOriginalStake: number;
+  totalRefundAmount: number;
 }): VoidTenantRow {
-  return { tenantId: r.tenantId, playerCount: r.playerCount, entryCount: r.entryCount,
-    totalOriginalStake: r.totalOriginalStake, totalRefundAmount: r.totalRefundAmount };
+  return {
+    tenantId: r.tenantId,
+    playerCount: r.playerCount,
+    entryCount: r.entryCount,
+    totalOriginalStake: r.totalOriginalStake,
+    totalRefundAmount: r.totalRefundAmount,
+  };
 }
 
 function mapPlayerRow(r: {
-  accountId: string; username: string; entryCount: number;
-  totalOriginalStake: number; totalRefundAmount: number;
+  accountId: string;
+  username: string;
+  entryCount: number;
+  totalOriginalStake: number;
+  totalRefundAmount: number;
 }): VoidPlayerRow {
-  return { accountId: r.accountId, displayName: toTenantUsername(r.username || r.accountId),
-    entryCount: r.entryCount, totalOriginalStake: r.totalOriginalStake,
-    totalRefundAmount: r.totalRefundAmount };
+  return {
+    accountId: r.accountId,
+    displayName: toTenantUsername(r.username || r.accountId),
+    entryCount: r.entryCount,
+    totalOriginalStake: r.totalOriginalStake,
+    totalRefundAmount: r.totalRefundAmount,
+  };
 }
 
 function mapEntryRow(entry: TicketEntryEntity): VoidEntryRow {
@@ -54,16 +84,23 @@ function mapEntryRow(entry: TicketEntryEntity): VoidEntryRow {
     lineCount: entry.lineCount ?? undefined,
     originalAmount: entry.amount,
     refundAmount: entry.voidInfo?.refundAmount ?? entry.amount,
-    refundStatus: entry.voidInfo?.refundStatus,
   };
 }
 
 export function Max3DProVoidReportsContent() {
   const {
-    from, to, onDateChange,
-    drawId, tenantId, playerId, playerName,
+    from,
+    to,
+    onDateChange,
+    drawId,
+    tenantId,
+    playerId,
+    playerName,
     level,
-    navigateToList, navigateToDraw, navigateToTenant, navigateToPlayer,
+    navigateToList,
+    navigateToDraw,
+    navigateToTenant,
+    navigateToPlayer,
   } = useMax3DProVoidFilters();
 
   const [selectedEntry, setSelectedEntry] = useState<TicketEntryEntity | null>(null);
@@ -85,14 +122,39 @@ export function Max3DProVoidReportsContent() {
       <VoidContent
         gameName="Max 3D Pro"
         iconGradient={c.iconGradient}
-        from={from} to={to} onDateChange={onDateChange}
-        drawId={drawId} tenantId={tenantId} playerId={playerId} playerName={playerName}
+        from={from}
+        to={to}
+        onDateChange={onDateChange}
+        drawId={drawId}
+        tenantId={tenantId}
+        playerId={playerId}
+        playerName={playerName}
         level={level}
         navigation={{ navigateToList, navigateToDraw, navigateToTenant, navigateToPlayer }}
-        drawsData={{ data: mappedDraws, isLoading: drawsQuery.isLoading, error: drawsQuery.error, refetch: drawsQuery.refetch }}
-        tenantData={{ data: mappedTenants, isLoading: tenantQuery.isLoading, error: tenantQuery.error, refetch: tenantQuery.refetch }}
-        playerData={{ data: mappedPlayers, isLoading: playerQuery.isLoading, error: playerQuery.error, refetch: playerQuery.refetch }}
-        entryData={{ data: mappedEntries, isLoading: entryQuery.isLoading, error: entryQuery.error, refetch: entryQuery.refetch }}
+        drawsData={{
+          data: mappedDraws,
+          isLoading: drawsQuery.isLoading,
+          error: drawsQuery.error,
+          refetch: drawsQuery.refetch,
+        }}
+        tenantData={{
+          data: mappedTenants,
+          isLoading: tenantQuery.isLoading,
+          error: tenantQuery.error,
+          refetch: tenantQuery.refetch,
+        }}
+        playerData={{
+          data: mappedPlayers,
+          isLoading: playerQuery.isLoading,
+          error: playerQuery.error,
+          refetch: playerQuery.refetch,
+        }}
+        entryData={{
+          data: mappedEntries,
+          isLoading: entryQuery.isLoading,
+          error: entryQuery.error,
+          refetch: entryQuery.refetch,
+        }}
         onEntryClick={(row) => {
           const entity = entryEntityMap.get(row.id);
           if (entity) setSelectedEntry(entity);

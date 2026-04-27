@@ -1,7 +1,6 @@
 import {
   Max3dCollections,
   PlayMode,
-  PayoutStatus,
   type EntryPayout,
   type EntryVoidInfo,
   type TicketEntryDoc,
@@ -17,12 +16,16 @@ import type {
   PlayerBreakdownRow,
   OutstandingDrawMetrics,
   OutstandingDrawCounts,
+  WinningEntryForDispatch,
+  VoidedEntryForDispatch,
 } from "./types/entry.types";
 
 /**
  * Repository quản lý TicketEntry lifecycle — Max 3D.
  *
- * Bao gồm insert, settle, void, payout dispatch, aggregation cho reports và operations dashboard.
+ * Bao gồm insert, settle, void, aggregation cho reports và operations dashboard.
+ * Dispatch orders (payout/refund) được ghi vào generic `tenant_dispatch_orders`
+ * outbox — không còn lưu trực tiếp trên entry.
  * Version được stamp từ EntryChangeSeqRepository để sync feed hoạt động chính xác.
  */
 export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
@@ -33,16 +36,6 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       collName: Max3dCollections.TicketEntries,
       dataMapper: new EntryMapper(),
     });
-  }
-
-  private get payoutStatusPending() {
-    return PayoutStatus.Pending;
-  }
-  private get payoutStatusFailed() {
-    return PayoutStatus.Failed;
-  }
-  private get payoutStatusDispatched() {
-    return PayoutStatus.Dispatched;
   }
 
   // ─── Version ───
@@ -395,113 +388,53 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
     }));
   }
 
-  // ─── Payout Dispatch ───
+  // ─── Payout Dispatch (Outbox Enqueue) ───
 
   /**
-   * Lấy N entries pending payout (winAmount > 0, status pending/failed/missing).
-   * Sort: tenantId asc, createdAt asc — đảm bảo consistent batching per tenant.
+   * Lấy winning entries để build `TenantDispatchOrderDoc` cho outbox.
+   *
+   * Projection tối thiểu (_id, tenantId, accountId, username, ticketNo,
+   * payoutAmount, payoutTx) — không load boards/tiers/etc.
+   * Dùng bởi `EnqueueDispatchPayoutsUseCase`.
    */
-  async getPendingPayoutEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
-    return await this.findMany(
+  async getWinningEntriesForDispatch(params: {
+    drawId: string;
+    afterTx?: string;
+    limit: number;
+  }): Promise<WinningEntryForDispatch[]> {
+    const { drawId, afterTx, limit } = params;
+
+    const docs = await this.findManyAsDocuments(
       {
         drawId,
         status: EntryStatus.Settled,
         "payout.winAmount": { $gt: 0 },
-        $or: [
-          { "payout.payoutStatus": this.payoutStatusPending },
-          { "payout.payoutStatus": this.payoutStatusFailed },
-          { "payout.payoutStatus": { $exists: false } },
-        ],
+        "payout.payoutTx": afterTx ? { $gt: afterTx } : { $exists: true },
       },
-      { sort: { tenantId: 1, createdAt: 1 }, limit },
-    );
-  }
-
-  /** Đếm entries pending payout của 1 draw. */
-  async countPendingPayoutEntries(drawId: string): Promise<number> {
-    return await this.count({
-      drawId,
-      status: EntryStatus.Settled,
-      "payout.winAmount": { $gt: 0 },
-      $or: [
-        { "payout.payoutStatus": this.payoutStatusPending },
-        { "payout.payoutStatus": this.payoutStatusFailed },
-        { "payout.payoutStatus": { $exists: false } },
-      ],
-    });
-  }
-
-  /**
-   * Mark 1 entry payout = dispatched.
-   * Idempotent — ghi đè nếu chạy lại.
-   */
-  async markPayoutDispatched(entryId: string): Promise<boolean> {
-    return await this.updateOne(
-      { _id: new ObjectId(entryId) },
       {
-        $set: {
-          "payout.payoutStatus": this.payoutStatusDispatched,
-          "payout.payoutDispatchedAt": new Date(),
-          updatedAt: new Date(),
+        sort: { "payout.payoutTx": 1 },
+        limit,
+        projection: {
+          _id: 1,
+          tenantId: 1,
+          accountId: 1,
+          username: 1,
+          "entrySummary.ticketNo": 1,
+          "payout.payoutAmount": 1,
+          "payout.payoutTx": 1,
         },
       },
     );
-  }
 
-  /**
-   * Mark 1 entry payout = failed + ghi error message + tăng retryCount.
-   */
-  async markPayoutFailed(entryId: string, error: string): Promise<boolean> {
-    return await this.updateOne(
-      { _id: new ObjectId(entryId) },
-      {
-        $set: {
-          "payout.payoutStatus": this.payoutStatusFailed,
-          "payout.payoutLastError": error,
-          updatedAt: new Date(),
-        },
-        $inc: { "payout.payoutRetryCount": 1 },
-      },
-    );
-  }
-
-  /**
-   * Batch mark nhiều entries payout = dispatched trong 1 updateMany.
-   * Trả về modifiedCount.
-   */
-  async batchMarkPayoutDispatched(entryIds: string[]): Promise<number> {
-    const objectIds = entryIds.map((id) => new ObjectId(id));
-    const result = await this.updateMany(
-      { _id: { $in: objectIds } as any },
-      {
-        $set: {
-          "payout.payoutStatus": this.payoutStatusDispatched,
-          "payout.payoutDispatchedAt": new Date(),
-          updatedAt: new Date(),
-        },
-      },
-    );
-    return result.modifiedCount;
-  }
-
-  /**
-   * Batch mark nhiều entries payout = failed + ghi error + tăng retryCount.
-   * Trả về modifiedCount.
-   */
-  async batchMarkPayoutFailed(entryIds: string[], error: string): Promise<number> {
-    const objectIds = entryIds.map((id) => new ObjectId(id));
-    const result = await this.updateMany(
-      { _id: { $in: objectIds } as any },
-      {
-        $set: {
-          "payout.payoutStatus": this.payoutStatusFailed,
-          "payout.payoutLastError": error,
-          updatedAt: new Date(),
-        },
-        $inc: { "payout.payoutRetryCount": 1 },
-      },
-    );
-    return result.modifiedCount;
+    return docs.map((d) => ({
+      id: d._id.toHexString(),
+      tenantId: d.tenantId,
+      accountId: d.accountId,
+      username: d.username,
+      ticketNo: d.entrySummary?.ticketNo ?? "",
+      payoutAmount: d.payout?.payoutAmount ?? 0,
+      payoutTx: d.payout?.payoutTx,
+    }));
   }
 
   // ─── Void Draw ───
@@ -556,51 +489,49 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   }
 
   /**
-   * Lấy N entries pending refund (status=Void, refundStatus pending/failed).
-   * Sort: createdAt asc — FIFO.
+   * Lấy voided entries để build `TenantDispatchOrderDoc` cho outbox (refund).
+   *
+   * Projection tối thiểu tương tự `getWinningEntriesForDispatch`.
+   * Dùng bởi `EnqueueDispatchRefundsUseCase`.
    */
-  async getPendingRefundEntries(drawId: string, limit: number): Promise<TicketEntryEntity[]> {
-    return await this.findMany(
+  async getVoidedEntriesForDispatch(params: {
+    drawId: string;
+    afterTx?: string;
+    limit: number;
+  }): Promise<VoidedEntryForDispatch[]> {
+    const { drawId, afterTx, limit } = params;
+
+    const docs = await this.findManyAsDocuments(
       {
         drawId,
         status: EntryStatus.Void,
-        "voidInfo.refundStatus": { $in: ["pending", "failed"] },
+        "voidInfo.refundAmount": { $gt: 0 },
+        "voidInfo.refundTx": afterTx ? { $gt: afterTx } : { $exists: true },
       },
-      { sort: { createdAt: 1 }, limit },
-    );
-  }
-
-  /**
-   * Mark 1 entry refund = dispatched.
-   * Idempotent.
-   */
-  async markRefundDispatched(entryId: string): Promise<boolean> {
-    return await this.updateOne(
-      { _id: new ObjectId(entryId) },
       {
-        $set: {
-          "voidInfo.refundStatus": "dispatched",
-          "voidInfo.refundedAt": new Date(),
-          updatedAt: new Date(),
+        sort: { "voidInfo.refundTx": 1 },
+        limit,
+        projection: {
+          _id: 1,
+          tenantId: 1,
+          accountId: 1,
+          username: 1,
+          "entrySummary.ticketNo": 1,
+          "voidInfo.refundAmount": 1,
+          "voidInfo.refundTx": 1,
         },
       },
     );
-  }
 
-  /**
-   * Mark 1 entry refund = failed + ghi error message.
-   */
-  async markRefundFailed(entryId: string, error: string): Promise<boolean> {
-    return await this.updateOne(
-      { _id: new ObjectId(entryId) },
-      {
-        $set: {
-          "voidInfo.refundStatus": "failed",
-          "voidInfo.refundLastError": error,
-          updatedAt: new Date(),
-        },
-      },
-    );
+    return docs.map((d) => ({
+      id: d._id.toHexString(),
+      tenantId: d.tenantId,
+      accountId: d.accountId,
+      username: d.username,
+      ticketNo: d.entrySummary?.ticketNo ?? "",
+      refundAmount: d.voidInfo?.refundAmount ?? 0,
+      refundTx: d.voidInfo?.refundTx,
+    }));
   }
 
   /**

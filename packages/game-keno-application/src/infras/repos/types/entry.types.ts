@@ -55,3 +55,33 @@ export interface OutstandingDrawCounts {
   playerCount: number;
   tenantCount: number;
 }
+
+/**
+ * Shape tối thiểu trả về cho `getWinningEntriesForDispatch` — dùng bởi
+ * `EnqueueDispatchPayoutsUseCase` để build `TenantDispatchOrderDoc`.
+ *
+ * Chỉ chứa fields cần thiết cho dispatch → giảm payload khi Keno draw có hàng nghìn winners.
+ */
+export interface WinningEntryForDispatch {
+  id: string;
+  tenantId: string;
+  accountId: string;
+  username: string;
+  ticketNo: string;
+  payoutAmount: number;
+  payoutTx: string;
+}
+
+/**
+ * Shape tối thiểu trả về cho `getVoidedEntriesForDispatch` — dùng bởi
+ * `EnqueueDispatchRefundsUseCase` để build `TenantDispatchOrderDoc`.
+ */
+export interface VoidedEntryForDispatch {
+  id: string;
+  tenantId: string;
+  accountId: string;
+  username: string;
+  ticketNo: string;
+  refundAmount: number;
+  refundTx: string;
+}

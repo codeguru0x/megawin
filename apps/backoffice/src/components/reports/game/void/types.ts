@@ -56,8 +56,6 @@ export interface VoidEntryRow {
   originalAmount: number;
   /** Tiền hoàn trả (VND). */
   refundAmount: number;
-  /** Trạng thái hoàn trả: pending, dispatched, confirmed, failed. */
-  refundStatus?: string;
 }
 
 /** Callbacks navigation cho drill-down. */

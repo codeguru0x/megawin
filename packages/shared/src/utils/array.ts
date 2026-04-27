@@ -62,3 +62,28 @@ export function isUniqueBy<T, K>(arr: readonly T[], keyFn: (item: T) => K): bool
   }
   return true;
 }
+
+/**
+ * Chia mảng thành nhiều nhóm kích thước `size`.
+ *
+ * Nhóm cuối có thể nhỏ hơn `size` nếu `arr.length` không chia hết.
+ * `size <= 0` ném `RangeError` để tránh infinite loop.
+ *
+ * Dùng thay cho pattern `for (let i = 0; i < arr.length; i += size)` lặp đi lặp lại
+ * ở bulk-write repos (lines, dispatch orders...).
+ *
+ * @example
+ * chunk([1, 2, 3, 4, 5], 2)  // [[1, 2], [3, 4], [5]]
+ * chunk([], 2)                // []
+ * chunk([1, 2], 5)            // [[1, 2]]
+ */
+export function chunk<T>(arr: readonly T[], size: number): T[][] {
+  if (size <= 0) {
+    throw new RangeError(`chunk size must be > 0, got ${size}`);
+  }
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    out.push(arr.slice(i, i + size));
+  }
+  return out;
+}

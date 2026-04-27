@@ -47,9 +47,9 @@
  *  └────────┬────────────────┘
  *           ▼
  *  ┌──────────────────────────────────────────┐
- *  │  7. DispatchRefunds (loop)               │
- *  │     Gửi refund qua TenantGateway API    │
- *  │     done = true khi hết pending refunds  │
+ *  │  7. EnqueueDispatchRefunds               │
+ *  │     Bulk insert tenant_dispatch_orders   │
+ *  │     (async gửi tenant bằng worker khác)  │
  *  │     Chạy SAU FinalizeVoid — void nội bộ  │
  *  │     hoàn tất độc lập với tenant API      │
  *  └──────────────────────────────────────────┘
@@ -62,8 +62,9 @@
  *   Mỗi step idempotent. Entries đã void/refund tự filter ra.
  *
  * REFUND SAU FINALIZE:
- *   DispatchRefunds chạy sau FinalizeVoid — nhất quán với settle (DispatchPayouts sau FinalizeSettle).
- *   Nếu tenant API down → draw vẫn = void (không treo ở voiding). Admin retry thủ công.
+ *   EnqueueDispatchRefunds chạy sau FinalizeVoid — nhất quán với settle
+ *   (EnqueueDispatchPayouts sau FinalizeSettle).
+ *   Nếu enqueue fail → draw vẫn = void. Admin retry thủ công qua BO.
  *
  * Max 3D KHÔNG có Jackpot → không cần rollback jackpot chain.
  *
@@ -93,6 +94,24 @@ const LAMBDA_RETRY = [
     IntervalSeconds: 10,
     MaxAttempts: 3,
     BackoffRate: 2.0,
+  },
+];
+
+/**
+ * Retry riêng cho state EnqueueDispatch* — bọc kín mọi lỗi.
+ * Inner: 10 attempt, 10→120s (cap), backoff 2, FULL jitter.
+ * Ngoài Retry, Catch chuyển sang EnqueueRetryWait (Wait 5 phút) rồi vòng lại
+ * chính state enqueue — tạo outer-loop retry không giới hạn đến khi thành công.
+ * Idempotent: bulkEnqueue dùng unique `tx`, gọi lại chỉ skip duplicate.
+ */
+const ENQUEUE_RETRY = [
+  {
+    ErrorEquals: ["States.ALL"],
+    IntervalSeconds: 10,
+    MaxAttempts: 10,
+    BackoffRate: 2.0,
+    MaxDelaySeconds: 120,
+    JitterStrategy: "FULL",
   },
 ];
 
@@ -180,51 +199,48 @@ export const VOID_STATE_MACHINE = {
       Type: "Task",
       Resource: lambdaArn("void-finalize"),
       Arguments: "{% $voidCtx %}",
-      Next: "DispatchRefunds",
+      Next: "EnqueueDispatchRefunds",
       Retry: LAMBDA_RETRY,
     },
 
-    DispatchRefunds: {
+    EnqueueDispatchRefunds: {
       Type: "Task",
-      Resource: lambdaArn("void-dispatch-refunds"),
+      Resource: lambdaArn("void-enqueue-dispatch-refunds"),
       Arguments: "{% $voidCtx %}",
-      Assign: { refundResult: "{% $states.result %}" },
-      Next: "CheckRefundDone",
-      Retry: LAMBDA_RETRY,
+      Assign: { enqueueResult: "{% $states.result %}" },
+      Next: "CheckEnqueueDone",
+      Retry: ENQUEUE_RETRY,
       Catch: [
         {
           ErrorEquals: ["States.ALL"],
-          Next: "RefundFailed",
+          Next: "EnqueueRetryWait",
         },
       ],
     },
 
-    CheckRefundDone: {
+    // Loop cho đến khi use-case trả done=true (đã enqueue hết voided entries).
+    CheckEnqueueDone: {
       Type: "Choice",
       Choices: [
         {
-          Condition: "{% $refundResult.done %}",
-          Next: "RefundComplete",
+          Condition: "{% $enqueueResult.done %}",
+          Next: "VoidSucceeded",
         },
       ],
-      Default: "RefundWait",
+      Default: "EnqueueDispatchRefunds",
     },
 
-    RefundWait: {
+    VoidSucceeded: {
+      Type: "Succeed",
+    },
+
+    // Outer-loop retry: sau khi inner Retry (10 lần, 10→120s) vẫn fail,
+    // Wait 5 phút rồi vòng lại EnqueueDispatchRefunds. Không giới hạn số vòng —
+    // chạy đến khi thành công. Idempotent nhờ unique `tx` tại tenant_dispatch_orders.
+    EnqueueRetryWait: {
       Type: "Wait",
-      Seconds: 5,
-      Next: "DispatchRefunds",
-    },
-
-    RefundComplete: {
-      Type: "Pass",
-      End: true,
-    },
-
-    RefundFailed: {
-      Type: "Pass",
-      Comment: "Refund error – void đã hoàn tất (status = void). Admin retry thủ công.",
-      End: true,
+      Seconds: 300,
+      Next: "EnqueueDispatchRefunds",
     },
   },
 };

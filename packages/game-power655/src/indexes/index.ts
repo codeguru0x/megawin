@@ -123,11 +123,21 @@ export const POWER655_INDEXES: readonly IndexSpec[] = [
     key: {
       drawId: 1,
       status: 1,
-      "payout.payoutStatus": 1,
       "payout.winAmount": 1,
+      "payout.payoutTx": 1,
     },
-    options: { name: "idx_draw_payoutStatus" },
-    purpose: "Payout worker",
+    options: { name: "idx_draw_payoutTx", sparse: true },
+    purpose: "Enqueue dispatch payouts",
+  },
+  {
+    collection: Power655Collections.TicketEntries,
+    key: {
+      drawId: 1,
+      status: 1,
+      "voidInfo.refundTx": 1,
+    },
+    options: { name: "idx_draw_refundTx", sparse: true },
+    purpose: "Enqueue dispatch refunds: paginate voided entries theo refundTx ASC",
   },
   {
     collection: Power655Collections.TicketEntries,

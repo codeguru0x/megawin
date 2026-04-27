@@ -2,7 +2,7 @@
  * Use Case: Build Void Report (Keno)
  *
  * ═══════════════════════════════════════════════════════════════════════
- * STEP MỚI TRONG VOID FLOW (sau DispatchRefunds, trước FinalizeVoid)
+ * STEP MỚI TRONG VOID FLOW (sau SyncTicketSummaries, trước FinalizeVoid)
  * ═══════════════════════════════════════════════════════════════════════
  *
  * Xây dựng void report và dọn dẹp settle reports (nếu void-after-settle).

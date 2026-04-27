@@ -1,7 +1,7 @@
 /**
  * Lambda: build-void-report (Mega 6/45)
  *
- * Bước mới trong Mega645 Void Step Function (sau DispatchRefunds, trước FinalizeVoid).
+ * Bước mới trong Mega645 Void Step Function (trước EnqueueDispatchRefunds, sau SyncTicketSummaries).
  * Cleanup settle reports (nếu void-after-settle) + build void report.
  *
  * IDEMPOTENT: upsert pattern, deleteMany idempotent — crash-safe.

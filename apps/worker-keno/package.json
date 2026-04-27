@@ -21,6 +21,7 @@
     "@megawin/game-keno": "workspace:*",
     "@megawin/game-keno-application": "workspace:*",
     "@megawin/shared": "workspace:*",
+    "@megawin/tenant-dispatch": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*"
   },
   "devDependencies": {

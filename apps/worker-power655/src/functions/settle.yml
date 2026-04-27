@@ -34,6 +34,6 @@ settle-finalize:
   handler: src/handlers/settle/finalize-settle.handler
   timeout: 900
 
-settle-dispatch-payouts:
-  handler: src/handlers/settle/dispatch-payouts.handler
+settle-enqueue-dispatch-payouts:
+  handler: src/handlers/settle/enqueue-dispatch-payouts.handler
   timeout: 900

@@ -88,7 +88,6 @@ function mapEntryRow(entry: TicketEntryEntity): VoidEntryRow {
     lineCount: entry.lineCount ?? undefined,
     originalAmount: entry.amount,
     refundAmount: entry.voidInfo?.refundAmount ?? entry.amount,
-    refundStatus: entry.voidInfo?.refundStatus,
   };
 }
 

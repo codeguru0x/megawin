@@ -402,6 +402,9 @@ importers:
       '@megawin/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@megawin/tenant-dispatch':
+        specifier: workspace:*
+        version: link:../../packages/tenant-dispatch
       '@megawin/tenant-gateway':
         specifier: workspace:*
         version: link:../../packages/tenant-gateway
@@ -660,6 +663,9 @@ importers:
       '@megawin/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@megawin/tenant-dispatch':
+        specifier: workspace:*
+        version: link:../../packages/tenant-dispatch
       '@megawin/tenant-gateway':
         specifier: workspace:*
         version: link:../../packages/tenant-gateway
@@ -895,6 +901,40 @@ importers:
         specifier: 6.0.2
         version: 6.0.2
 
+  apps/worker-tenant-dispatch:
+    dependencies:
+      '@megawin/app-core':
+        specifier: workspace:*
+        version: link:../../packages/app-core
+      '@megawin/data':
+        specifier: workspace:*
+        version: link:../../packages/data
+      '@megawin/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      '@megawin/tenant-dispatch':
+        specifier: workspace:*
+        version: link:../../packages/tenant-dispatch
+      '@megawin/tenant-gateway':
+        specifier: workspace:*
+        version: link:../../packages/tenant-gateway
+    devDependencies:
+      '@megawin/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@types/node':
+        specifier: ^25.5.0
+        version: 25.5.0
+      serverless-offline:
+        specifier: ^14.5.0
+        version: 14.5.0(serverless@4.31.2)
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: 6.0.2
+        version: 6.0.2
+
   packages/app-core:
     dependencies:
       '@aws-sdk/client-cognito-identity-provider':
@@ -1055,6 +1095,9 @@ importers:
       '@megawin/shared':
         specifier: workspace:*
         version: link:../shared
+      '@megawin/tenant-dispatch':
+        specifier: workspace:*
+        version: link:../tenant-dispatch
       '@megawin/tenant-gateway':
         specifier: workspace:*
         version: link:../tenant-gateway
@@ -1176,6 +1219,9 @@ importers:
       '@megawin/shared':
         specifier: workspace:*
         version: link:../shared
+      '@megawin/tenant-dispatch':
+        specifier: workspace:*
+        version: link:../tenant-dispatch
       '@megawin/tenant-gateway':
         specifier: workspace:*
         version: link:../tenant-gateway
@@ -1244,6 +1290,9 @@ importers:
       '@megawin/shared':
         specifier: workspace:*
         version: link:../shared
+      '@megawin/tenant-dispatch':
+        specifier: workspace:*
+        version: link:../tenant-dispatch
       '@megawin/tenant-gateway':
         specifier: workspace:*
         version: link:../tenant-gateway
@@ -1318,6 +1367,9 @@ importers:
       '@megawin/shared':
         specifier: workspace:*
         version: link:../shared
+      '@megawin/tenant-dispatch':
+        specifier: workspace:*
+        version: link:../tenant-dispatch
       '@megawin/tenant-gateway':
         specifier: workspace:*
         version: link:../tenant-gateway
@@ -1392,6 +1444,9 @@ importers:
       '@megawin/shared':
         specifier: workspace:*
         version: link:../shared
+      '@megawin/tenant-dispatch':
+        specifier: workspace:*
+        version: link:../tenant-dispatch
       '@megawin/tenant-gateway':
         specifier: workspace:*
         version: link:../tenant-gateway
@@ -1463,6 +1518,9 @@ importers:
       '@megawin/shared':
         specifier: workspace:*
         version: link:../shared
+      '@megawin/tenant-dispatch':
+        specifier: workspace:*
+        version: link:../tenant-dispatch
       '@megawin/tenant-gateway':
         specifier: workspace:*
         version: link:../tenant-gateway
@@ -1534,6 +1592,9 @@ importers:
       '@megawin/shared':
         specifier: workspace:*
         version: link:../shared
+      '@megawin/tenant-dispatch':
+        specifier: workspace:*
+        version: link:../tenant-dispatch
       '@megawin/tenant-gateway':
         specifier: workspace:*
         version: link:../tenant-gateway
@@ -1728,6 +1789,37 @@ importers:
       vitest:
         specifier: 4.1.1
         version: 4.1.1(@opentelemetry/api@1.9.0)(@types/node@25.5.0)(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))
+
+  packages/tenant-dispatch:
+    dependencies:
+      '@megawin/app-core':
+        specifier: workspace:*
+        version: link:../app-core
+      '@megawin/data':
+        specifier: workspace:*
+        version: link:../data
+      '@megawin/next':
+        specifier: workspace:*
+        version: link:../next
+      '@megawin/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@megawin/tenant-gateway':
+        specifier: workspace:*
+        version: link:../tenant-gateway
+      mongodb:
+        specifier: ^7.1.1
+        version: 7.1.1
+    devDependencies:
+      '@megawin/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@types/node':
+        specifier: ^25.5.0
+        version: 25.5.0
+      typescript:
+        specifier: 6.0.2
+        version: 6.0.2
 
   packages/tenant-gateway:
     dependencies:

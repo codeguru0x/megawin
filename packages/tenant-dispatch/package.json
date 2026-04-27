@@ -1,0 +1,64 @@
+{
+  "name": "@megawin/tenant-dispatch",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Centralized tenant dispatch (outbox pattern) — queue payout/refund/reversal orders, worker dispatches to tenant APIs with retry + backoff.",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "check-types": "tsc --noEmit",
+    "build:deps": "turbo build --filter=@megawin/tenant-dispatch^...",
+    "clean": "rm -rf dist"
+  },
+  "exports": {
+    "./entities": {
+      "types": "./src/entities/index.ts",
+      "import": "./src/entities/index.ts",
+      "default": "./dist/entities/index.js"
+    },
+    "./constants": {
+      "types": "./src/constants.ts",
+      "import": "./src/constants.ts",
+      "default": "./dist/constants.js"
+    },
+    "./builders": {
+      "types": "./src/builders/index.ts",
+      "import": "./src/builders/index.ts",
+      "default": "./dist/builders/index.js"
+    },
+    "./repos": {
+      "types": "./src/infras/repos/index.ts",
+      "import": "./src/infras/repos/index.ts",
+      "default": "./dist/infras/repos/index.js"
+    },
+    "./use-cases/enqueue": {
+      "types": "./src/use-cases/enqueue/index.ts",
+      "import": "./src/use-cases/enqueue/index.ts",
+      "default": "./dist/use-cases/enqueue/index.js"
+    },
+    "./use-cases/process": {
+      "types": "./src/use-cases/process/index.ts",
+      "import": "./src/use-cases/process/index.ts",
+      "default": "./dist/use-cases/process/index.js"
+    },
+    "./use-cases/admin": {
+      "types": "./src/use-cases/admin/index.ts",
+      "import": "./src/use-cases/admin/index.ts",
+      "default": "./dist/use-cases/admin/index.js"
+    }
+  },
+  "dependencies": {
+    "@megawin/app-core": "workspace:*",
+    "@megawin/data": "workspace:*",
+    "@megawin/next": "workspace:*",
+    "@megawin/shared": "workspace:*",
+    "@megawin/tenant-gateway": "workspace:*",
+    "mongodb": "^7.1.1"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@types/node": "^25.5.0",
+    "typescript": "6.0.2"
+  }
+}

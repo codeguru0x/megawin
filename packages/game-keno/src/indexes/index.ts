@@ -113,6 +113,27 @@ export const KENO_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: KenoCollections.TicketEntries,
+    key: {
+      drawId: 1,
+      status: 1,
+      "payout.winAmount": 1,
+      "payout.payoutTx": 1,
+    },
+    options: { name: "idx_draw_payoutTx", sparse: true },
+    purpose: "Enqueue dispatch payouts: paginate winners theo payoutTx ASC",
+  },
+  {
+    collection: KenoCollections.TicketEntries,
+    key: {
+      drawId: 1,
+      status: 1,
+      "voidInfo.refundTx": 1,
+    },
+    options: { name: "idx_draw_refundTx", sparse: true },
+    purpose: "Enqueue dispatch refunds: paginate voided entries theo refundTx ASC",
+  },
+  {
+    collection: KenoCollections.TicketEntries,
     key: { tenantId: 1, accountId: 1, drawDate: -1 },
     options: { name: "idx_tenant_account_drawDate" },
     purpose: "Lịch sử chơi: player xem entries gần đây",

@@ -30,7 +30,7 @@
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { generateId } from "@megawin/shared/utils";
-import { PrizeTier, PayoutStatus } from "@megawin/game-mega645/entities";
+import { PrizeTier } from "@megawin/game-mega645/entities";
 import type {
   TicketLineDoc,
   EntryPayout,
@@ -169,10 +169,8 @@ export class SettleEntriesBatchUseCase extends InternalUseCase<
             payoutAmount: winAmount,
             tiers: payoutTiers,
             settledAt: now,
-            // payoutStatus = "pending" chỉ khi có tiền thưởng thực (> 0).
-            // Jackpot winner: winAmount = 0 lúc này → sẽ được set bởi FinalizeSettle.
-            payoutStatus: hasWin ? PayoutStatus.Pending : undefined,
             // UUIDv7 idempotency key — chỉ sinh khi entry thắng (cần dispatch payout cho tenant).
+            // Worker-tenant-dispatch dùng giá trị này làm `TenantDispatchOrderDoc.tx`.
             // Entry thua không phát sinh giao dịch → không cần tx.
             payoutTx: hasWin ? generateId() : undefined,
           } satisfies EntryPayout,
