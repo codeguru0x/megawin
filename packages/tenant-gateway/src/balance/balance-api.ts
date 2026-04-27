@@ -66,6 +66,10 @@ export interface BalanceApi {
 /**
  * Tạo BalanceApi instance từ HttpClient đã cấu hình.
  *
+ * Dùng `rawResponse: true` để giữ envelope {@link CallbackResponse} — caller cần
+ * phân biệt `success: true` + `data.balance` với `success: false` + `error.code`
+ * (`PLAYER_NOT_FOUND`, `INVALID_CURRENCY`).
+ *
  * @internal Dùng bởi `createTenantGatewayClient` — không export ra ngoài package.
  */
 export function createBalanceApi(http: HttpClient): BalanceApi {
@@ -76,6 +80,7 @@ export function createBalanceApi(http: HttpClient): BalanceApi {
           playerId: req.playerId,
           currency: req.currency ?? DEFAULT_CURRENCY,
         },
+        rawResponse: true,
       }),
   };
 }

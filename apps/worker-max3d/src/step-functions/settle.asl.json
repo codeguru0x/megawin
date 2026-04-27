@@ -5,7 +5,7 @@
   "States": {
     "PrepareSettle": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-prepare",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-prepare:$LATEST",
       "Assign": {
         "settleCtx": "{% $states.result %}"
       },
@@ -28,7 +28,7 @@
     },
     "SettleEntries": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-entries",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-entries:$LATEST",
       "Arguments": "{% $settleCtx %}",
       "Assign": {
         "settleResult": "{% $states.result %}"
@@ -62,7 +62,7 @@
     },
     "SyncTicketSummaries": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-sync-ticket-summaries",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-sync-ticket-summaries:$LATEST",
       "Arguments": "{% $settleCtx %}",
       "Assign": {
         "syncResult": "{% $states.result %}"
@@ -96,7 +96,7 @@
     },
     "CalculateFinancials": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-calculate-financials",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-calculate-financials:$LATEST",
       "Arguments": "{% $settleCtx %}",
       "Assign": {
         "settleCtx": "{% $merge([$settleCtx, { 'financials': $states.result }]) %}"
@@ -120,7 +120,7 @@
     },
     "BuildSettleReport": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-build-settle-report",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-build-settle-report:$LATEST",
       "Arguments": "{% $settleCtx %}",
       "Next": "PublishSettleDaily",
       "Retry": [
@@ -141,7 +141,7 @@
     },
     "PublishSettleDaily": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-publish-settle-daily",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-publish-settle-daily:$LATEST",
       "Arguments": "{% $settleCtx %}",
       "Next": "PublishPlayerDaily",
       "Retry": [
@@ -162,7 +162,7 @@
     },
     "PublishPlayerDaily": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-publish-player-daily",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-publish-player-daily:$LATEST",
       "Arguments": "{% $settleCtx %}",
       "Next": "FinalizeSettle",
       "Retry": [
@@ -183,7 +183,7 @@
     },
     "FinalizeSettle": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-finalize",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-finalize:$LATEST",
       "Arguments": "{% $settleCtx %}",
       "Next": "EnqueueDispatchPayouts",
       "Retry": [
@@ -204,7 +204,7 @@
     },
     "EnqueueDispatchPayouts": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-enqueue-dispatch-payouts",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-max3d-dev-settle-enqueue-dispatch-payouts:$LATEST",
       "Arguments": "{% $settleCtx %}",
       "Assign": {
         "enqueueResult": "{% $states.result %}"
@@ -213,7 +213,12 @@
       "Retry": [
         {
           "ErrorEquals": [
-            "States.ALL"
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
           ],
           "IntervalSeconds": 10,
           "MaxAttempts": 10,
@@ -246,7 +251,7 @@
     },
     "EnqueueRetryWait": {
       "Type": "Wait",
-      "Seconds": 300,
+      "Seconds": 60,
       "Next": "EnqueueDispatchPayouts"
     }
   }

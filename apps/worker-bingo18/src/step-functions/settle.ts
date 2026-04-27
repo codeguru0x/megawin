@@ -70,7 +70,7 @@ const SERVICE = "mw-worker-bingo18";
 const STAGE = "dev";
 
 function lambdaArn(functionName: string): string {
-  return `arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:${SERVICE}-${STAGE}-${functionName}`;
+  return `arn:aws:lambda:${REGION}:${ACCOUNT_ID}:function:${SERVICE}-${STAGE}-${functionName}:$LATEST`;
 }
 
 const LAMBDA_RETRY = [
@@ -90,15 +90,26 @@ const LAMBDA_RETRY = [
 ];
 
 /**
- * Retry riêng cho state EnqueueDispatch* — bọc kín mọi lỗi.
+ * Retry riêng cho state EnqueueDispatch* — chỉ retry lỗi transient của AWS
+ * Lambda / Step Functions (throttle, service exception, SDK, timeout).
+ * Không retry `States.ALL` ở tầng này để bug code / permission error không
+ * bị nuốt — những lỗi đó rơi thẳng xuống Catch → EnqueueRetryWait.
+ *
  * Inner: 10 attempt, 10→120s (cap), backoff 2, FULL jitter.
- * Ngoài Retry, Catch chuyển sang EnqueueRetryWait (Wait 5 phút) rồi vòng lại
- * chính state enqueue — tạo outer-loop retry không giới hạn đến khi thành công.
+ * Ngoài Retry, Catch (States.ALL) chuyển sang EnqueueRetryWait (Wait 60s)
+ * rồi vòng lại chính state enqueue — outer-loop retry không giới hạn.
  * Idempotent: bulkEnqueue dùng unique `tx`, gọi lại chỉ skip duplicate.
  */
 const ENQUEUE_RETRY = [
   {
-    ErrorEquals: ["States.ALL"],
+    ErrorEquals: [
+      "Lambda.ServiceException",
+      "Lambda.AWSLambdaException",
+      "Lambda.SdkClientException",
+      "Lambda.TooManyRequestsException",
+      "States.TaskFailed",
+      "States.Timeout",
+    ],
     IntervalSeconds: 10,
     MaxAttempts: 10,
     BackoffRate: 2.0,
@@ -239,11 +250,11 @@ export const SETTLE_STATE_MACHINE = {
     },
 
     // Outer-loop retry: sau khi inner Retry (10 lần, 10→120s) vẫn fail,
-    // Wait 5 phút rồi vòng lại EnqueueDispatchPayouts. Không giới hạn số vòng —
+    // Wait 60s rồi vòng lại EnqueueDispatchPayouts. Không giới hạn số vòng —
     // chạy đến khi thành công. Idempotent nhờ unique `tx` tại tenant_dispatch_orders.
     EnqueueRetryWait: {
       Type: "Wait",
-      Seconds: 300,
+      Seconds: 60,
       Next: "EnqueueDispatchPayouts",
     },
   },

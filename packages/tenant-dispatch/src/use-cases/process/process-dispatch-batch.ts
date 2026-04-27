@@ -92,7 +92,15 @@ export abstract class ProcessDispatchBatchBaseUseCase extends InternalUseCase<
   /** Fetch pending orders thuộc lane — main hoặc retry. */
   protected abstract fetchPending(limit: number): Promise<PendingDispatchOrder[]>;
 
-  protected async execute(input: ProcessDispatchBatchInput): Promise<ProcessDispatchBatchOutput> {
+  /**
+   * input is optional, so we need to default it to an empty object
+   * tránh bị throw error vì input.limit is undefined
+   * @param input - The input to the process
+   * @returns The output of the process
+   */
+  protected async execute(
+    input: ProcessDispatchBatchInput = {},
+  ): Promise<ProcessDispatchBatchOutput> {
     const limit = input.limit ?? this.defaultLimit();
     const maxExecutionMs = input.maxExecutionMs ?? this.defaultMaxExecutionMs();
     const startTime = Date.now();

@@ -185,19 +185,27 @@ export interface TransactionApi {
 /**
  * Tạo TransactionApi instance từ HttpClient đã cấu hình.
  *
+ * Mọi call đều set `rawResponse: true` — tenant callback trả envelope
+ * {@link CallbackResponse} 2 tầng (outer + per-item), và `success: false` là
+ * câu trả lời nghiệp vụ hợp lệ (ví dụ status check `NOT_FOUND`). HttpClient
+ * default sẽ auto-unwrap + throw khi `success: false` → mất thông tin và
+ * làm dispatch loop / recovery scheduler rẽ sai nhánh.
+ *
  * @internal Dùng bởi `createTenantGatewayClient` — không export ra ngoài package.
  */
 export function createTransactionApi(http: HttpClient): TransactionApi {
   return {
     transaction: (req: TransactionRequest) =>
-      http.post<TransactionResponse>(CALLBACK_PATHS.transaction, req),
+      http.post<TransactionResponse>(CALLBACK_PATHS.transaction, req, { rawResponse: true }),
 
     batchTransaction: (req: BatchTransactionRequest) =>
-      http.post<BatchTransactionResponse>(CALLBACK_PATHS.batchTransaction, req),
+      http.post<BatchTransactionResponse>(CALLBACK_PATHS.batchTransaction, req, {
+        rawResponse: true,
+      }),
 
     checkTransactionStatus: (tx: string) => {
       const path = CALLBACK_PATHS.transactionStatus.replace(":tx", tx);
-      return http.get<TransactionStatusResponse>(path);
+      return http.get<TransactionStatusResponse>(path, { rawResponse: true });
     },
   };
 }

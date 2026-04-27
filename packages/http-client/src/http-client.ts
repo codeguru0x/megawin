@@ -70,6 +70,31 @@ export interface RequestOptions {
    * - `false` — disable retry cho request này (kể cả khi client có default).
    */
   retry?: RetryConfig | number | false;
+  /**
+   * Bypass auto-unwrap + auto-throw của default parser.
+   *
+   * **Default `false`** — parser áp dụng convention chuẩn của MegaWin API:
+   * - `success: true` → trả `json.data` (unwrap).
+   * - `success: false` → throw `ApiClientError` với error code từ envelope.
+   *
+   * **`true`** — trả nguyên JSON `{ success, data?, error? }` cho caller, **chỉ throw khi HTTP status non-ok**
+   * (4xx/5xx sau khi hết retry). Caller tự check `response.success` và quyết định xử lý.
+   *
+   * Dùng khi call outbound đến bên ngoài có envelope riêng cần preserve — ví dụ tenant callback
+   * (`@megawin/tenant-gateway`) có 2 tầng success (outer batch + inner per-item), hoặc
+   * endpoint mà `success: false` là câu trả lời nghiệp vụ hợp lệ (status check `NOT_FOUND`).
+   *
+   * @example
+   * ```ts
+   * const res = await http.post<BatchTransactionResponse>(path, body, { rawResponse: true });
+   * if (!res.success) {
+   *   // Batch-level fail — xử lý riêng theo flow nghiệp vụ
+   * } else {
+   *   for (const item of res.data!.results) { ... }
+   * }
+   * ```
+   */
+  rawResponse?: boolean;
 }
 
 export interface HttpClient {
@@ -114,7 +139,7 @@ function buildUrl(
   return url.includes("?") ? `${url}&${qs}` : `${url}?${qs}`;
 }
 
-async function parseResponse<T>(response: Response): Promise<T> {
+async function parseResponse<T>(response: Response, rawResponse?: boolean): Promise<T> {
   const contentType = response.headers.get("content-type") ?? "";
 
   if (!contentType.includes("application/json")) {
@@ -125,6 +150,20 @@ async function parseResponse<T>(response: Response): Promise<T> {
       });
     }
     return undefined as T;
+  }
+
+  // rawResponse mode: chỉ throw khi HTTP non-ok; giữ nguyên envelope cho caller.
+  // Áp dụng cho outbound calls tới bên ngoài có envelope riêng (tenant callback):
+  // caller cần phân biệt "business `success: false` có chủ đích" vs "transport error".
+  if (rawResponse) {
+    const json = (await response.json()) as T;
+    if (!response.ok) {
+      throw new ApiClientError(response.status, {
+        code: "NETWORK_ERROR",
+        message: `HTTP ${response.status} ${response.statusText}`,
+      });
+    }
+    return json;
   }
 
   const json = (await response.json()) as ApiResponse<T>;
@@ -238,7 +277,7 @@ export function createHttpClient(config: HttpClientConfig): HttpClient {
       //   const elapsed = Date.now() - t0;
       //   console.log(`[HttpClient] ${method} ${url} → ${response.status} in ${elapsed}ms`);
 
-      return await parseResponse<T>(response);
+      return await parseResponse<T>(response, options?.rawResponse);
     } catch (err) {
       if (err instanceof ApiClientError) throw err;
 

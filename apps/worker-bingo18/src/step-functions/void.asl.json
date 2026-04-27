@@ -5,7 +5,7 @@
   "States": {
     "PrepareVoid": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-prepare",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-prepare:$LATEST",
       "Assign": {
         "voidCtx": "{% $states.result %}"
       },
@@ -28,7 +28,7 @@
     },
     "VoidEntries": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-entries",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-entries:$LATEST",
       "Arguments": "{% $voidCtx %}",
       "Assign": {
         "voidResult": "{% $states.result %}"
@@ -62,7 +62,7 @@
     },
     "SyncTicketSummaries": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-sync-ticket-summaries",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-sync-ticket-summaries:$LATEST",
       "Arguments": "{% $voidCtx %}",
       "Assign": {
         "syncResult": "{% $states.result %}"
@@ -96,7 +96,7 @@
     },
     "BuildVoidReport": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-build-void-report",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-build-void-report:$LATEST",
       "Arguments": "{% $voidCtx %}",
       "Next": "PublishSettleDaily",
       "Retry": [
@@ -117,7 +117,7 @@
     },
     "PublishSettleDaily": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-publish-settle-daily",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-publish-settle-daily:$LATEST",
       "Arguments": "{% $voidCtx %}",
       "Next": "PublishPlayerDaily",
       "Retry": [
@@ -138,7 +138,7 @@
     },
     "PublishPlayerDaily": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-publish-player-daily",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-publish-player-daily:$LATEST",
       "Arguments": "{% $voidCtx %}",
       "Next": "FinalizeVoid",
       "Retry": [
@@ -159,7 +159,7 @@
     },
     "FinalizeVoid": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-finalize",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-finalize:$LATEST",
       "Arguments": "{% $voidCtx %}",
       "Next": "EnqueueDispatchRefunds",
       "Retry": [
@@ -180,7 +180,7 @@
     },
     "EnqueueDispatchRefunds": {
       "Type": "Task",
-      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-enqueue-dispatch-refunds",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-void-enqueue-dispatch-refunds:$LATEST",
       "Arguments": "{% $voidCtx %}",
       "Assign": {
         "enqueueResult": "{% $states.result %}"
@@ -189,7 +189,12 @@
       "Retry": [
         {
           "ErrorEquals": [
-            "States.ALL"
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
           ],
           "IntervalSeconds": 10,
           "MaxAttempts": 10,
@@ -222,7 +227,7 @@
     },
     "EnqueueRetryWait": {
       "Type": "Wait",
-      "Seconds": 300,
+      "Seconds": 60,
       "Next": "EnqueueDispatchRefunds"
     }
   }

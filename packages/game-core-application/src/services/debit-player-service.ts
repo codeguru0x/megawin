@@ -49,11 +49,7 @@ import { ApiClientError } from "@megawin/shared/api-types";
 import { TransactionAction, TransactionReason } from "@megawin/shared/types";
 import type { Currency } from "@megawin/shared/types";
 import { tenantGateway } from "@megawin/tenant-gateway";
-import type {
-  TenantGatewayClient,
-  TransactionRequest,
-  TransactionData,
-} from "@megawin/tenant-gateway";
+import type { TenantGatewayClient, TransactionRequest } from "@megawin/tenant-gateway";
 import { generateId, logError, toTenantUsername } from "@megawin/shared/utils";
 import { TxIntentPhase } from "@megawin/game-core/entities";
 
@@ -284,13 +280,15 @@ export class DebitPlayerService {
   /**
    * Gọi tenant debit API và xử lý response.
    *
-   * http-client auto-unwrap: success → trả TransactionData, failure → throw ApiClientError.
-   * Phân loại lỗi dựa trên HTTP status:
+   * Tenant-gateway dùng `rawResponse: true` — response giữ nguyên `CallbackResponse` envelope:
+   * - `success: true` → đọc `data.balance`, return cho caller.
+   * - `success: false` → business rejection (INSUFFICIENT_BALANCE, PLAYER_NOT_FOUND, WALLET_FROZEN...)
+   *   → debit chắc chắn CHƯA apply → xoá WAL + throw `AppException.badRequest`.
    *
-   * - status 200 (business rejection), 400 (invalid body), 401 (sai API key):
-   *   debit chắc chắn CHƯA apply → xoá WAL + throw badRequest.
-   * - Mọi status khác (0, 408, 429, 500, 502–504):
-   *   không chắc debit đã apply → giữ WAL cho scheduler recovery.
+   * Lỗi HTTP/transport → HttpClient throw `ApiClientError`, xử lý theo status:
+   * - 400 (invalid body), 401 (sai API key) → debit CHƯA apply → xoá WAL + throw badRequest.
+   * - Mọi status khác (0, 408, 429, 500, 502–504) → không chắc debit đã apply
+   *   → giữ WAL cho scheduler recovery.
    */
   private async callTenantDebit(
     input: DebitPlayerInput,
@@ -313,10 +311,25 @@ export class DebitPlayerService {
         metadata: input.metadata,
       };
 
-      // Gọi sang tenant debit API
-      const result = (await client.transaction(txRequest)) as unknown as TransactionData;
-      return { balance: result.balance };
+      // Gọi sang tenant debit API — response là CallbackResponse envelope (rawResponse).
+      // Tenant có 2 kiểu fail:
+      // 1. Business rejection — HTTP 200 + success:false (INSUFFICIENT_BALANCE, PLAYER_NOT_FOUND...):
+      //    debit chắc chắn CHƯA apply → xoá WAL + throw badRequest (giống rejection 4xx).
+      // 2. Transport / 5xx error — HttpClient throw ApiClientError, xử lý trong catch block.
+      const response = await client.transaction(txRequest);
+
+      if (!response.success) {
+        await this.safeDeleteWal(tx);
+        throw AppException.badRequest(
+          response.error?.message ||
+            "Không thể thực hiện giao dịch số dư tài khoản, hãy thử lại sau.",
+        );
+      }
+
+      return { balance: response.data!.balance };
     } catch (error) {
+     
+
       if (error instanceof ApiClientError && this.isTenantRejection(error)) {
         await this.safeDeleteWal(tx);
         throw AppException.badRequest(
@@ -337,20 +350,22 @@ export class DebitPlayerService {
   }
 
   /**
-   * Tenant đã nhận request và reject rõ ràng → debit chưa apply, xoá WAL an toàn.
+   * Tenant đã nhận request và reject rõ ràng ở tầng HTTP → debit chưa apply, xoá WAL an toàn.
    *
-   * Theo callback contract, 3 HTTP status chỉ ra debit chắc chắn CHƯA xảy ra:
-   * - 200 + success:false → tenant xử lý request, reject ở tầng business
-   *   (INSUFFICIENT_BALANCE, PLAYER_NOT_FOUND, WALLET_FROZEN, etc.)
-   * - 400 → body JSON invalid / thiếu field → tenant chưa vào business logic
-   * - 401 → sai API key → tenant chưa vào business logic
+   * Theo callback contract, 2 HTTP status chỉ ra debit chắc chắn CHƯA xảy ra:
+   * - 400 → body JSON invalid / thiếu field → tenant chưa vào business logic.
+   * - 401 → sai API key → tenant chưa vào business logic.
+   *
+   * Business rejection (HTTP 200 + `success: false`, ví dụ INSUFFICIENT_BALANCE) KHÔNG đi qua
+   * đây — HttpClient `rawResponse` giữ envelope, nhánh `!response.success` trong
+   * `callTenantDebit` xử lý trực tiếp bằng `AppException.badRequest`.
    *
    * Mọi status khác (0, 408, 429, 500, 502–504) → không chắc debit đã apply
    * → giữ WAL cho scheduler recovery (check status → heal/rollback).
    */
   private isTenantRejection(error: ApiClientError): boolean {
     const s = error.status;
-    return s === 200 || s === 400 || s === 401;
+    return s === 400 || s === 401;
   }
 
   // ── Private: Cleanup ──────────────────────────────────────────────────────
