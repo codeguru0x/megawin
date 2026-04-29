@@ -7,9 +7,20 @@ isProject: false
 
 # Worker Lock Infrastructure Plan
 
-> **Status**: Proposed. Chưa implement — dùng `reservedConcurrency: 1` ở Lambda
-> làm biện pháp primary hiện tại. Plan này ghi lại giải pháp tổng quát để dùng
-> chung cho mọi worker trong monorepo khi cần mutual exclusion mạnh hơn.
+> **Status**: ✅ IMPLEMENTED (`@megawin/worker-core`). Plan này giữ lại cho
+> historical context — **source of truth hiện tại là code trong
+> `packages/worker-core/`** (đặc biệt `entities/worker-lock.ts`,
+> `infras/repos/worker-lock-repo.ts`, `use-cases/locked-worker-use-case.ts`).
+>
+> Khác biệt chính so với plan gốc:
+> - `WorkerRunMeta` đã bị **flatten** — `cursor`, `lastSuccessAt`, `lastError`
+>   nằm trực tiếp trên `WorkerLockDoc`, không còn embedded `meta`.
+> - `withLock` helper function đã thay bằng abstract class `LockedWorkerUseCase`.
+> - Doc KHÔNG dùng TTL index — release chỉ clear `ownerToken = null`, giữ meta
+>   vĩnh viễn. Crash recovery qua filter `expiresAt <= now`.
+> - Repo có `finalizeRun` gộp cursor + lastSuccessAt + lastError thành 1 DB call.
+> - Subclass dùng `this.setCursor(value)` trong `runLocked` để buffer cursor —
+>   base class ghi 1 lần duy nhất khi finalize.
 
 ## 0. Mục tiêu
 
@@ -46,7 +57,7 @@ tương lai (metrics, heartbeat helpers, v.v.) mà không cần tạo thêm pack
 Tên `active` dễ nhầm với "lock đang active". Dùng `isEnabled: boolean` — rõ
 ràng đây là configuration flag, không phải runtime state. Default `true`.
 
-### DD-3: Execution metadata → `WorkerRunMeta` tối giản (3 fields)
+### DD-3: Execution metadata → `WorkerRunMeta` tối giản (3 fields, `| null`)
 
 Chỉ giữ fields có giá trị thực sự:
 
@@ -58,9 +69,15 @@ Chỉ giữ fields có giá trị thực sự:
 | `processedCount` | Bỏ | Metrics, không phải checkpoint |
 | `lastSuccessAt` | **Giữ** | Ops detect stuck worker — "lần cuối thành công khi nào?" |
 | `lastFailedAt` | Bỏ | Dư thừa — `lastError` đã đủ để biết có lỗi hay không |
-| `lastError` | **Giữ** | Debug khi worker lỗi liên tục; cleared về `undefined` khi success |
+| `lastError` | **Giữ** | Debug khi worker lỗi liên tục; reset về `null` khi success |
 
-**Về `cursor` type**: dùng `string`, không dùng `bigint`/`Long`. MongoDB BSON Long
+**Về null vs undefined**: tất cả fields là `T | null` (required, nullable), **không** dùng
+`T | undefined` (optional). Lý do:
+- `$set: { field: null }` work bình thường trong MongoDB.
+- `$set: { field: undefined }` KHÔNG work — phải `$unset`, phức tạp hoá logic.
+- Shape luôn ổn định — tenant/ops biết chính xác fields nào tồn tại.
+
+**Về `cursor` type**: dùng `string | null`, không dùng `bigint`/`Long`. MongoDB BSON Long
 không serialize được qua JSON an toàn — codebase đã có pattern `longToString()` để
 convert trước khi lưu. Worker nào dùng Long sequence number (VD: change stream
 lastVersion) sẽ `.toString()` trước khi ghi vào cursor, và `Long.fromString()`
@@ -115,20 +132,23 @@ export interface WorkerRunMeta {
    * - Đọc lại: `Long.fromString(cursor)`
    *
    * VD: change stream version `"9007199254740993"`, ISO timestamp `"2026-04-27T10:00:00Z"`.
+   *
+   * `null` = chưa từng set (khác với field không tồn tại — cho phân biệt rõ).
    */
-  cursor?: string;
+  cursor: string | null;
   /**
    * ISO 8601 timestamp lần chạy cuối thành công.
    * Dùng bởi ops để detect stuck worker ("lần cuối thành công khi nào?").
    * Set tự động bởi `withLock` sau khi fn() hoàn thành không lỗi.
+   * `null` = worker chưa từng chạy thành công lần nào.
    */
-  lastSuccessAt?: string;
+  lastSuccessAt: string | null;
   /**
    * Error message ngắn gọn từ lần chạy cuối thất bại.
-   * Set tự động bởi `withLock` khi fn() throw.
-   * Cleared về `undefined` khi fn() thành công — luôn phản ánh trạng thái hiện tại.
+   * Set tự động bởi `withLock` khi fn() throw; reset về `null` khi fn() thành công.
+   * `null` = lần chạy gần nhất thành công (hoặc worker chưa từng chạy).
    */
-  lastError?: string;
+  lastError: string | null;
 }
 
 /**
@@ -283,7 +303,12 @@ async tryAcquire({ lockKey, ownerToken, ttlSeconds }: AcquireOptions): Promise<b
         $setOnInsert: {
           // isEnabled chỉ set khi insert mới — KHÔNG overwrite giá trị ops đã set.
           isEnabled: true,
-          meta: {},
+          // Khởi tạo meta với tất cả fields = null để shape ổn định ngay từ đầu.
+          meta: {
+            cursor: null,
+            lastSuccessAt: null,
+            lastError: null,
+          },
         },
       },
       {
@@ -353,12 +378,19 @@ async updateMeta(
   ownerToken: string,
   meta: Partial<WorkerRunMeta>,
 ): Promise<boolean> {
-  // Dùng dot notation để partial update meta — không overwrite toàn bộ embedded doc.
+  // Dùng dot notation để partial update — không overwrite toàn bộ embedded doc.
+  // `null` value được ghi trực tiếp qua $set (MongoDB support `$set: { field: null }`
+  // nhưng KHÔNG support `$set: { field: undefined }`). Skip undefined keys.
   const $set: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(meta)) {
     if (value !== undefined) {
       $set[`meta.${key}`] = value;
     }
+  }
+
+  // Không có field nào thực sự update → skip DB round-trip.
+  if (Object.keys($set).length === 0) {
+    return true;
   }
 
   const result = await this._collection.updateOne(
@@ -490,17 +522,17 @@ export type WithLockResult<T> =
  *
  * ## Lifecycle của meta fields
  *
- * | Field           | Ghi khi nào                          | Ghi bởi  |
- * | --------------- | ------------------------------------ | -------- |
- * | `cursor`        | Worker tự gọi `updateMeta({ cursor })` | Worker   |
- * | `lastSuccessAt` | Sau khi fn() hoàn thành không lỗi   | withLock |
- * | `lastError`     | Khi fn() throw (set); khi success (clear) | withLock |
+ * | Field           | Ghi khi nào                                           | Ghi bởi  |
+ * | --------------- | ----------------------------------------------------- | -------- |
+ * | `cursor`        | Worker tự gọi `updateMeta({ cursor })`                | Worker   |
+ * | `lastSuccessAt` | Sau khi fn() hoàn thành không lỗi                     | withLock |
+ * | `lastError`     | fn() throw → set message; fn() success → reset `null` | withLock |
  *
  * ## Flow
  * 1. `findByKey` → check `isEnabled`. Nếu `false` → skip "disabled".
  * 2. `tryAcquire` → nếu fail → skip "locked".
  * 3. Chạy `fn(ctx)` — `ctx.heartbeat()` gia hạn TTL khi cần.
- * 4. Cập nhật `lastSuccessAt` + clear `lastError` sau khi fn thành công.
+ * 4. Cập nhật `lastSuccessAt` + reset `lastError = null` sau khi fn thành công.
  * 5. Cập nhật `lastError` khi fn throw — không suppress exception.
  * 6. `release` trong finally — unlock dù fn throw.
  *
@@ -534,10 +566,10 @@ export async function withLock<T>(
       heartbeat: () => repo.extend(lockKey, ownerToken, ttlSeconds),
     });
 
-    // Thành công: ghi lastSuccessAt + clear lastError.
+    // Thành công: ghi lastSuccessAt + reset lastError về null.
     await repo.updateMeta(lockKey, ownerToken, {
       lastSuccessAt: new Date().toISOString(),
-      lastError: undefined,
+      lastError: null,
     });
 
     return { status: "executed", value };
@@ -565,18 +597,10 @@ import { ProcessMainDispatchBatchUseCase } from "@megawin/tenant-dispatch/use-ca
 
 const useCase = new ProcessMainDispatchBatchUseCase();
 
-export async function handler(event: unknown, ctx: { awsRequestId: string }) {
-  const result = await withLock(
-    "tenant-dispatch:main",
-    90,
-    async ({ heartbeat }) => {
-      return await useCase.run();
-    },
-    {
-      version: process.env.WORKER_VERSION,
-      invocationId: ctx.awsRequestId,
-    },
-  );
+export async function handler() {
+  const result = await withLock("tenant-dispatch:main", 90, async () => {
+    return await useCase.run();
+  });
 
   if (result.status === "skipped") {
     console.info(`[tenant-dispatch] main skipped — reason: ${result.reason}`);
@@ -591,23 +615,43 @@ export async function handler(event: unknown, ctx: { awsRequestId: string }) {
 Tương tự cho retry lane: `lockKey = "tenant-dispatch:retry"`, `ttl = 330`
 (> 300s Lambda timeout + buffer).
 
-Ví dụ worker với checkpoint cursor:
+Ví dụ worker dùng checkpoint cursor (Long sequence number từ change stream):
 
 ```typescript
-// Worker settle dùng cursor để biết đã xử lý đến đâu
-const result = await withLock("worker-settle:keno", 120, async ({ heartbeat }) => {
-  const lock = await repo.findByKey("worker-settle:keno");
-  const lastCursor = lock?.meta.cursor; // resume từ đây nếu run lại sau crash
+import { withLock, WorkerLockRepository } from "@megawin/worker-core";
+import { Long } from "mongodb";
 
-  const { processedCount, nextCursor } = await settleUseCase.run({ fromCursor: lastCursor });
+const lockKey = "feed-sync:keno";
+const repo = new WorkerLockRepository();
 
-  // Cập nhật cursor để lần sau resume đúng chỗ.
-  await repo.updateMeta("worker-settle:keno", ownerToken, {
-    cursor: nextCursor,
-    processedCount,
-  });
+const result = await withLock(lockKey, 180, async ({ heartbeat }) => {
+  // Đọc cursor từ lock doc — resume từ lastVersion sau crash.
+  const lock = await repo.findByKey(lockKey);
+  // MongoDB Long sequence → string khi lưu vào cursor, Long.fromString khi dùng.
+  const afterVersion = lock?.meta.cursor !== null && lock?.meta.cursor !== undefined
+    ? Long.fromString(lock.meta.cursor)
+    : Long.fromNumber(0);
 
-  return { processedCount };
+  let processed = 0;
+  let lastVersion = afterVersion;
+
+  while (true) {
+    const batch = await fetchBatch({ afterVersion: lastVersion });
+    if (batch.length === 0) break;
+
+    await processBatch(batch);
+    lastVersion = batch[batch.length - 1].version;
+    processed += batch.length;
+
+    // Persist checkpoint sau mỗi batch — crash chỉ mất tối đa 1 batch.
+    await repo.updateMeta(lockKey, ownerToken, {
+      cursor: lastVersion.toString(),
+    });
+
+    await heartbeat(); // gia hạn lock TTL nếu cần
+  }
+
+  return { processed };
 });
 ```
 
@@ -651,19 +695,22 @@ phí, cover 99% cases). `worker-core` là line #2 cho strict correctness.
 
 - Unit: `WorkerLockRepository` với mongodb-memory-server.
   - `tryAcquire` thành công khi không có lock.
-  - `tryAcquire` fail khi lock đã hold bởi owner khác.
+  - `tryAcquire` fail khi lock đang held bởi owner khác.
   - `tryAcquire` reentrant với cùng owner.
   - `tryAcquire` takeover khi lock expired.
   - `tryAcquire` dùng `$setOnInsert` — không overwrite `isEnabled: false` đã set.
   - `release` chỉ work với đúng owner.
   - `extend` chỉ work khi lock còn hiệu lực + đúng owner.
-  - `updateMeta` partial update đúng field, không overwrite toàn bộ `meta`.
+  - `updateMeta` partial update với dot notation — không overwrite `cursor` khi chỉ update `lastSuccessAt`.
+  - `updateMeta` với `lastError: null` → ghi null vào DB (không phải xoá field).
+  - `updateMeta` với param rỗng `{}` → no-op, không gọi DB.
 - Unit: `withLock`
-  - Skip với `reason: "disabled"` khi `isEnabled: false`.
-  - Skip với `reason: "locked"` khi lock đang held.
-  - Ghi `lastSuccessAt` khi fn thành công.
-  - Ghi `lastFailedAt` + `lastError` khi fn throw.
+  - Skip `"disabled"` khi `isEnabled: false`.
+  - Skip `"locked"` khi lock đang held.
+  - Ghi `lastSuccessAt` + reset `lastError = null` khi fn thành công.
+  - Ghi `lastError` (string) khi fn throw; exception vẫn propagate ra caller.
   - Release trong finally dù fn throw.
+  - `cursor` không bị overwrite bởi `withLock` — chỉ worker tự ghi.
 - Integration: 2 Node process cùng call `withLock` trên cùng `lockKey` → chỉ 1 bên fn() chạy.
 - Race test: 10 process đồng thời → đúng 1 thắng, 9 return `{ status: "skipped" }`.
 

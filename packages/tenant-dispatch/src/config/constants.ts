@@ -67,3 +67,43 @@ export const DISPATCH_MAIN_MAX_EXECUTION_MS = 55 * 1000;
  * margin). Retry lane làm việc chậm hơn nên margin lớn hơn chút cũng an toàn.
  */
 export const DISPATCH_RETRY_MAX_EXECUTION_MS = 285 * 1000;
+
+// ─────────────────────────────────────────────
+// Distributed lock — worker-core integration
+// ─────────────────────────────────────────────
+
+/**
+ * Lock key cho main lane. Mỗi invocation cạnh tranh cùng key này → chỉ 1 chạy
+ * tại 1 thời điểm. Tách khỏi retry lane để 2 lane chạy song song.
+ */
+export const DISPATCH_MAIN_LOCK_KEY = "tenant-dispatch:main";
+
+/**
+ * Lock key cho retry lane. Mutually exclusive với main lane (filter
+ * `retryCount $exists` khác nhau) nên không cần cùng lock.
+ */
+export const DISPATCH_RETRY_LOCK_KEY = "tenant-dispatch:retry";
+
+/**
+ * TTL lock main lane (giây). Bằng đúng Lambda timeout.
+ *
+ * ## Lý do chọn bằng Lambda timeout, KHÔNG cộng buffer
+ *
+ * TTL chỉ có tác dụng khi worker **crash không release**. Release bình thường
+ * clear `ownerToken = null` → invocation kế tiếp acquire ngay qua filter
+ * `{ ownerToken: null }`, KHÔNG phải đợi `expiresAt`.
+ *
+ * Khi crash: `expiresAt = acquireTime + TTL`. Vì Lambda bị kill cứng ở `timeout`,
+ * runtime tối đa = `timeout`. Chọn `TTL = timeout` đảm bảo:
+ * - A crash lúc T ∈ [0, timeout] → `expiresAt = T_acquire + timeout`.
+ * - Schedule lần sau T=60s → `now - acquireTime ≥ timeout` → takeover được.
+ *
+ * Cộng thêm buffer (VD 90s) KHÔNG giải quyết vấn đề gì — chỉ khiến invocation
+ * sau phải chờ lâu hơn để takeover khi worker thật sự chết.
+ */
+export const DISPATCH_MAIN_LOCK_TTL_SECONDS = 60;
+
+/**
+ * TTL lock retry lane (giây). Bằng đúng Lambda timeout — cùng lý do như main.
+ */
+export const DISPATCH_RETRY_LOCK_TTL_SECONDS = 300;

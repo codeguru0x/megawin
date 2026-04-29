@@ -18,7 +18,8 @@
     "@megawin/data": "workspace:*",
     "@megawin/shared": "workspace:*",
     "@megawin/tenant-dispatch": "workspace:*",
-    "@megawin/tenant-gateway": "workspace:*"
+    "@megawin/tenant-gateway": "workspace:*",
+    "@megawin/worker-core": "workspace:*"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",

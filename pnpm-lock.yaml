@@ -918,6 +918,9 @@ importers:
       '@megawin/tenant-gateway':
         specifier: workspace:*
         version: link:../../packages/tenant-gateway
+      '@megawin/worker-core':
+        specifier: workspace:*
+        version: link:../../packages/worker-core
     devDependencies:
       '@megawin/typescript-config':
         specifier: workspace:*
@@ -1807,6 +1810,9 @@ importers:
       '@megawin/tenant-gateway':
         specifier: workspace:*
         version: link:../tenant-gateway
+      '@megawin/worker-core':
+        specifier: workspace:*
+        version: link:../worker-core
       mongodb:
         specifier: ^7.1.1
         version: 7.1.1
@@ -1906,6 +1912,28 @@ importers:
       eslint:
         specifier: ^10.0.2
         version: 10.0.2(jiti@2.6.1)
+      typescript:
+        specifier: 6.0.2
+        version: 6.0.2
+
+  packages/worker-core:
+    dependencies:
+      '@megawin/app-core':
+        specifier: workspace:*
+        version: link:../app-core
+      '@megawin/data':
+        specifier: workspace:*
+        version: link:../data
+      mongodb:
+        specifier: ^7.1.1
+        version: 7.1.1
+    devDependencies:
+      '@megawin/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@types/node':
+        specifier: ^25.5.0
+        version: 25.5.0
       typescript:
         specifier: 6.0.2
         version: 6.0.2

@@ -6,14 +6,24 @@
  *
  * Race giữa main và retry worker KHÔNG xảy ra: filter `$exists: false` (main)
  * và `$exists: true` (retry) mutually exclusive.
+ *
+ * Distributed lock phủ thêm 1 lớp chống overlap ở cold-start: nếu lock đang
+ * held → return `{ skipped: true, reason: "locked" }` ngay, không chờ.
  */
 
+import { isLockedWorkerSkipped } from "@megawin/worker-core";
 import { ProcessMainDispatchBatchUseCase } from "@megawin/tenant-dispatch/use-cases/process";
 
 const useCase = new ProcessMainDispatchBatchUseCase();
 
 export async function handler() {
   const result = await useCase.run();
+
+  if (isLockedWorkerSkipped(result)) {
+    console.info(`[tenant-dispatch][main] skipped: ${result.reason}`);
+    return result;
+  }
+
   console.info(`[tenant-dispatch][main] ${JSON.stringify(result)}`);
   return result;
 }

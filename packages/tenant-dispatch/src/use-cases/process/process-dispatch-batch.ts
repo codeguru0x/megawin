@@ -38,15 +38,25 @@
  * Tenant dedup theo `tx`. Dù `reservedConcurrency: 1` vẫn có thể overlap
  * ngắn ở cold-start boundary → cùng 1 tx có thể gửi 2 lần, tenant trả
  * `duplicate: true`, `bulkApplyBatchResult` idempotent.
+ *
+ * ## Distributed lock
+ *
+ * Extends {@link LockedWorkerUseCase} — main/retry lane mỗi lane 1 `lockKey`
+ * riêng, đảm bảo chỉ 1 invocation chạy tại 1 thời điểm. Overlap ở cold-start
+ * (issue của `reservedConcurrency: 1`) được lock phủ tiếp.
+ *
+ * `ctx.heartbeat()` KHÔNG được gọi vì không cần thiết: TTL (90s/330s) luôn
+ * lớn hơn Lambda timeout (60s/300s), lock chắc chắn outlive toàn bộ execution.
+ * Heartbeat chỉ có giá trị khi TTL < total runtime — không đúng với use case này.
  */
 
-import { InternalUseCase } from "@megawin/app-core/use-cases";
 import {
   tenantGateway,
   type BatchTransactionItem,
   type TenantGatewayClient,
 } from "@megawin/tenant-gateway";
 import { chunk, toTenantUsername } from "@megawin/shared/utils";
+import { LockedWorkerUseCase } from "@megawin/worker-core/use-cases";
 
 import { DispatchOrderRepository } from "../../infras/repos/dispatch-order-repo";
 import type { PendingDispatchOrder } from "../../infras/repos/types";
@@ -77,7 +87,7 @@ interface BatchResultAccumulator {
   failed: { tx: string; error: string; nextAttemptAt: Date }[];
 }
 
-export abstract class ProcessDispatchBatchBaseUseCase extends InternalUseCase<
+export abstract class ProcessDispatchBatchBaseUseCase extends LockedWorkerUseCase<
   ProcessDispatchBatchInput,
   ProcessDispatchBatchOutput
 > {
@@ -97,8 +107,7 @@ export abstract class ProcessDispatchBatchBaseUseCase extends InternalUseCase<
    * tránh bị throw error vì input.limit is undefined
    * @param input - The input to the process
    * @returns The output of the process
-   */
-  protected async execute(
+   */  protected async runLocked(
     input: ProcessDispatchBatchInput = {},
   ): Promise<ProcessDispatchBatchOutput> {
     const limit = input.limit ?? this.defaultLimit();
