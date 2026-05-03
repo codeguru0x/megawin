@@ -7,7 +7,7 @@ import { listStuckOrdersQuerySchema } from "../_lib/schema";
 const useCase = new ListStuckOrdersUseCase();
 
 export const GET = withApi()
-  .auth({ roles: [CompanyRole.Admin] })
+  .auth({ roles: [CompanyRole.Staff] })
   .query(listStuckOrdersQuerySchema)
   .handler(async ({ query }) =>
     useCase.run({

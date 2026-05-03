@@ -46,6 +46,11 @@
       "types": "./src/use-cases/admin/index.ts",
       "import": "./src/use-cases/admin/index.ts",
       "default": "./dist/use-cases/admin/index.js"
+    },
+    "./shared/labels": {
+      "types": "./src/shared/labels/index.ts",
+      "import": "./src/shared/labels/index.ts",
+      "default": "./dist/shared/labels/index.js"
     }
   },
   "dependencies": {

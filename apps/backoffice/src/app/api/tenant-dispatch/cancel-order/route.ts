@@ -7,6 +7,6 @@ import { cancelOrderSchema } from "../_lib/schema";
 const useCase = new CancelOrderUseCase();
 
 export const POST = withApi()
-  .auth({ roles: [CompanyRole.Admin] })
+  .auth({ roles: [CompanyRole.Staff] })
   .body(cancelOrderSchema)
   .handler(async ({ body }) => useCase.run({ tx: body.tx }));

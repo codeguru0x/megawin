@@ -19,12 +19,14 @@ import {
   MongoClient,
   ObjectId,
   OptionalId,
+  ReplaceOptions,
   Sort,
   TransactionOptions,
   UpdateFilter,
   UpdateOptions,
   UpdateResult,
   WithId,
+  WithoutId,
 } from "mongodb";
 
 import { getMongoClient, getMongoDb } from "./client";
@@ -374,6 +376,36 @@ export abstract class MongoRepository<
     await this.initBeforeUse();
 
     return await this._collection.updateMany(filter, update, options);
+  }
+
+  /**
+   * Thay thế toàn bộ 1 document theo điều kiện (true overwrite).
+   *
+   * Khác với `updateOne + $set`: `replaceOne` **thay toàn bộ** doc — mọi field
+   * không có trong `replacement` sẽ bị **xoá** khỏi DB. `_id` được giữ nguyên
+   * khi doc đã tồn tại.
+   *
+   * Dùng khi cần idempotent overwrite theo business key (không phải `_id`) và
+   * muốn đảm bảo optional field cũ không sót lại — ví dụ log record có retry,
+   * attempt sau success không còn `error` → phải unset `error` cũ.
+   *
+   * `$set` KHÔNG phù hợp cho use case này vì MongoDB driver strip `undefined`
+   * trước khi gửi → field cũ bị giữ lại → misleading state.
+   *
+   * @param filter - Điều kiện match doc
+   * @param replacement - Doc mới, KHÔNG chứa `_id` (giữ `_id` cũ nếu match)
+   * @param options - Options (`upsert`, `session`, …)
+   * @returns `true` nếu match-and-replace hoặc upsert thành công
+   */
+  public async replaceOne(
+    filter: Filter<Document>,
+    replacement: WithoutId<Document>,
+    options?: ReplaceOptions,
+  ): Promise<boolean> {
+    await this.initBeforeUse();
+
+    const result = await this._collection.replaceOne(filter, replacement, options);
+    return result.modifiedCount === 1 || result.upsertedCount === 1 || result.matchedCount === 1;
   }
 
   /**

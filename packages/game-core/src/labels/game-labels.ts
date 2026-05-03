@@ -171,6 +171,53 @@ export function getTicketChannelLabel(channel: TicketChannel): string {
 }
 
 // ─────────────────────────────────────────────
+// Transaction Action / Reason Labels (ví tenant — dùng chung backoffice)
+// ─────────────────────────────────────────────
+
+import { TransactionAction, TransactionReason } from "@megawin/shared/types";
+
+/**
+ * Nhãn hiển thị cho `TransactionAction` — thao tác lên ví player tại tenant.
+ *
+ * Dùng cho BO audit / dispatch log table. Luôn cặp đôi với `TRANSACTION_REASON_LABELS`
+ * để thể hiện đầy đủ ngữ nghĩa (action = hướng, reason = lý do nghiệp vụ).
+ */
+export const TRANSACTION_ACTION_LABELS: Record<TransactionAction, string> = {
+  [TransactionAction.Debit]: "Trừ tiền",
+  [TransactionAction.Credit]: "Cộng tiền",
+} as const;
+
+/** Lấy label action — fallback về key gốc nếu không match. */
+export function getTransactionActionLabel(action: TransactionAction): string {
+  return TRANSACTION_ACTION_LABELS[action] ?? action;
+}
+
+/**
+ * Nhãn hiển thị cho `TransactionReason` — lý do nghiệp vụ của giao dịch ví.
+ *
+ * Các reason tương ứng với nguồn sinh ra giao dịch:
+ * - `bet` — player đặt cược (Debit).
+ * - `payout` — trả thưởng sau settle (Credit).
+ * - `refund` — hoàn tiền khi void draw (Credit).
+ * - `rollback` — hoàn debit lỗi place-bet (Credit).
+ * - `bonus` — thưởng khuyến mãi (Credit).
+ * - `adjustment` — điều chỉnh thủ công operator (Debit/Credit).
+ */
+export const TRANSACTION_REASON_LABELS: Record<TransactionReason, string> = {
+  [TransactionReason.Bet]: "Đặt cược",
+  [TransactionReason.Payout]: "Trả thưởng",
+  [TransactionReason.Refund]: "Hoàn cược",
+  [TransactionReason.Rollback]: "Hoàn debit",
+  [TransactionReason.Bonus]: "Khuyến mãi",
+  [TransactionReason.Adjustment]: "Điều chỉnh",
+} as const;
+
+/** Lấy label reason — fallback về key gốc nếu không match. */
+export function getTransactionReasonLabel(reason: TransactionReason): string {
+  return TRANSACTION_REASON_LABELS[reason] ?? reason;
+}
+
+// ─────────────────────────────────────────────
 // Report Column Labels (dùng chung mọi game)
 // ─────────────────────────────────────────────
 

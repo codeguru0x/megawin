@@ -12,7 +12,7 @@ export class DispatchOrderMapper extends MongoMapper<Document, TenantDispatchOrd
   }
 
   protected mapProps(doc: Document): TenantDispatchOrderEntity {
-    const { _id, ...rest } = doc as any;
+    const { _id, ...rest } = doc;
     return { id: _id.toHexString(), ...rest } as TenantDispatchOrderEntity;
   }
 }

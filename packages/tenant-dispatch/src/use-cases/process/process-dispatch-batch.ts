@@ -107,7 +107,7 @@ export abstract class ProcessDispatchBatchBaseUseCase extends LockedWorkerUseCas
    * tránh bị throw error vì input.limit is undefined
    * @param input - The input to the process
    * @returns The output of the process
-   */  protected async runLocked(
+   */ protected async runLocked(
     input: ProcessDispatchBatchInput = {},
   ): Promise<ProcessDispatchBatchOutput> {
     const limit = input.limit ?? this.defaultLimit();
@@ -239,9 +239,11 @@ export abstract class ProcessDispatchBatchBaseUseCase extends LockedWorkerUseCas
             error: errMsg,
           }),
         );
+
         for (const o of orders) {
           this.queueFailure(o, errMsg, acc);
         }
+
         return;
       }
 

@@ -1829,6 +1829,9 @@ importers:
 
   packages/tenant-gateway:
     dependencies:
+      '@megawin/app-core':
+        specifier: workspace:*
+        version: link:../app-core
       '@megawin/data':
         specifier: workspace:*
         version: link:../data
@@ -1838,12 +1841,18 @@ importers:
       '@megawin/identity':
         specifier: workspace:*
         version: link:../identity
+      '@megawin/next':
+        specifier: workspace:*
+        version: link:../next
       '@megawin/shared':
         specifier: workspace:*
         version: link:../shared
       lru-cache:
         specifier: ^11.3.3
         version: 11.3.3
+      mongodb:
+        specifier: ^7.1.1
+        version: 7.1.1
     devDependencies:
       '@megawin/typescript-config':
         specifier: workspace:*

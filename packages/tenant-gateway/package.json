@@ -26,14 +26,32 @@
       "types": "./src/index.ts",
       "import": "./src/index.ts",
       "default": "./dist/index.js"
+    },
+    "./entities": {
+      "types": "./src/entities/index.ts",
+      "import": "./src/entities/index.ts",
+      "default": "./dist/entities/index.js"
+    },
+    "./use-cases/tx-logs": {
+      "types": "./src/use-cases/tx-logs/index.ts",
+      "import": "./src/use-cases/tx-logs/index.ts",
+      "default": "./dist/use-cases/tx-logs/index.js"
+    },
+    "./shared/labels": {
+      "types": "./src/shared/labels/index.ts",
+      "import": "./src/shared/labels/index.ts",
+      "default": "./dist/shared/labels/index.js"
     }
   },
   "dependencies": {
+    "@megawin/app-core": "workspace:*",
     "@megawin/data": "workspace:*",
     "@megawin/http-client": "workspace:*",
     "@megawin/identity": "workspace:*",
+    "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
-    "lru-cache": "^11.3.3"
+    "lru-cache": "^11.3.3",
+    "mongodb": "^7.1.1"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",

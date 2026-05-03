@@ -21,6 +21,8 @@ export const MODULES = {
   bingo18: "bingo18",
   reports: "reports",
   dashboard: "dashboard",
+  txLogs: "tx-logs",
+  tenantDispatch: "tenant-dispatch",
 } as const;
 
 /** Union type tất cả module ID hợp lệ */

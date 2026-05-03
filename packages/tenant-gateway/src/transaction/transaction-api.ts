@@ -12,15 +12,104 @@
  */
 
 import type { HttpClient } from "@megawin/http-client";
+import { generateId } from "@megawin/shared/utils";
 
+import { TxLogEventType, TxLogStatus, TxLoggingPolicy } from "../entities/enums";
+import type { TxLogInput } from "../entities/tx-log";
 import { CALLBACK_PATHS } from "../shared";
+import {
+  classifyItem,
+  classifyBatchOuterReject,
+  classifyThrown,
+  type ClassifiedOutcome,
+} from "../shared/tx-log-classifier";
+import { logTxUseCase, logTxBulkUseCase } from "../shared/tx-logging";
 import type {
   TransactionRequest,
   TransactionResponse,
   BatchTransactionRequest,
   BatchTransactionResponse,
+  BatchTransactionItem,
   TransactionStatusResponse,
 } from "./types";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Logging policy — kiểm soát việc ghi `tx_logs` theo call site
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Options chung cho `transaction` / `batchTransaction` — tách metadata khỏi payload gửi tenant. */
+export interface TransactionCallOptions {
+  /**
+   * Policy ghi `tx_logs`. Default: `TxLoggingPolicy.Always` — log mọi outcome
+   * (backward compat). Xem {@link TxLoggingPolicy} cho chi tiết từng policy
+   * và bảng quy tắc.
+   */
+  logging?: TxLoggingPolicy;
+}
+
+/**
+ * Quyết định có skip log cho 1 outcome không, dựa trên policy.
+ *
+ * Khi `policy === TxLoggingPolicy.OnSuccessOrUncertain`, chỉ log outcome mà
+ * system còn giữ state → cần reconcile hoặc forensic:
+ * - Success (audit trail).
+ * - Uncertainty: timeout, network, HTTP 5xx/408/429, batch outer reject →
+ *   WAL / dispatch order chưa được clear, scheduler sẽ retry.
+ *
+ * Skip mọi case tenant đã **dứt khoát từ chối** (system lập tức
+ * `safeDeleteWal`, không còn gì reconcile):
+ * - Business reject (HTTP 200 + `success: false`).
+ * - HTTP 400 / 401 reject ở HTTP layer.
+ *
+ * Module-level pure function — không có closure state, safe để call N lần.
+ */
+function shouldSkipLog(policy: TxLoggingPolicy, outcome: ClassifiedOutcome): boolean {
+  if (policy === TxLoggingPolicy.Off) {
+    return true;
+  }
+
+  if (policy === TxLoggingPolicy.Always) {
+    return false;
+  }
+
+  // policy === TxLoggingPolicy.OnSuccessOrUncertain — whitelist các case LOG,
+
+  // còn lại skip. An toàn hơn blacklist (network error không có httpStatus
+  // nhưng vẫn uncertainty → phải log).
+
+  // Success case: log luôn.
+  if (outcome.status === TxLogStatus.Success) {
+    return false;
+  }
+
+  const err = outcome.error;
+  if (!err) {
+    return false; // defensive — Failed mà thiếu error thì log cho dễ debug.
+  }
+
+  // Batch outer reject hoặc transport-level uncertainty.
+  if (err.batchOuterRejected) {
+    return false;
+  }
+
+  if (err.code === "TIMEOUT" || err.code === "NETWORK_ERROR") {
+    return false;
+  }
+
+  // HTTP-level uncertainty — 408 timeout (nếu không phải code TIMEOUT),
+  // 429 rate limit, 5xx server error. Tenant chưa chắc đã nhận được / apply
+  // transaction → WAL giữ cho scheduler.
+  if (
+    err.httpStatus !== undefined &&
+    (err.httpStatus >= 500 || err.httpStatus === 408 || err.httpStatus === 429)
+  ) {
+    return false;
+  }
+
+  // Còn lại: business reject (HTTP 200 + `success: false`), HTTP 400 / 401 —
+  // tenant dứt khoát từ chối → caller safeDeleteWal → không cần log.
+  return true;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TransactionApi Interface
@@ -54,22 +143,27 @@ export interface TransactionApi {
    * **Business error (HTTP 200 + `success: false`):** Xoá WAL → reject bet → dừng hẳn, không retry.
    *
    * @param req - Payload giao dịch. @see {@link TransactionRequest}
+   * @param options - Call options (logging policy, …). @see {@link TransactionCallOptions}
    * @returns {@link TransactionResponse} — `success: true` + `data: TransactionData` hoặc `success: false` + `error`.
    * @throws {@link ApiClientError} khi tenant server lỗi sau hết retry.
    *
    * @example
    * ```ts
-   * // Debit khi player đặt cược
-   * const result = await api.transaction({
-   *   action: "debit",
-   *   reason: "bet",
-   *   tx: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b",
-   *   playerId: "john_doe",
-   *   amount: 150000,
-   *   currency: "VND",
-   *   gameId: "keno",
-   *   roundIds: ["2026-04-10.095", "2026-04-10.096", "2026-04-10.097"],
-   * });
+   * // Debit khi player đặt cược — align với safeDeleteWal lifecycle, skip
+   * // log case system cleanup (business reject / HTTP 4xx).
+   * const result = await api.transaction(
+   *   {
+   *     action: "debit",
+   *     reason: "bet",
+   *     tx: "019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b",
+   *     playerId: "john_doe",
+   *     amount: 150000,
+   *     currency: "VND",
+   *     gameId: "keno",
+   *     roundIds: ["2026-04-10.095", "2026-04-10.096", "2026-04-10.097"],
+   *   },
+   *   { logging: TxLoggingPolicy.OnSuccessOrUncertain },
+   * );
    *
    * if (!result.success) {
    *   // result.error?.code === "INSUFFICIENT_BALANCE"
@@ -77,7 +171,10 @@ export interface TransactionApi {
    * // result.data!.balance — số dư sau giao dịch
    * ```
    */
-  transaction(req: TransactionRequest): Promise<TransactionResponse>;
+  transaction(
+    req: TransactionRequest,
+    options?: TransactionCallOptions,
+  ): Promise<TransactionResponse>;
 
   /**
    * Thực hiện batch giao dịch trên ví nhiều players.
@@ -102,11 +199,13 @@ export interface TransactionApi {
    * - Inner: `data.results[].success` — từng item thành công hay thất bại.
    *
    * @param req - Payload chứa danh sách items. @see {@link BatchTransactionRequest}
+   * @param options - Call options (logging policy, …). @see {@link TransactionCallOptions}
    * @returns {@link BatchTransactionResponse} — outer envelope + per-item results.
    * @throws {@link ApiClientError} khi tenant server lỗi sau hết retry.
    *
    * @example
    * ```ts
+   * // Dispatch credit/payout dùng default `Always` — luôn log, audit đầy đủ.
    * const result = await api.batchTransaction({
    *   items: [
    *     {
@@ -134,7 +233,10 @@ export interface TransactionApi {
    * }
    * ```
    */
-  batchTransaction(req: BatchTransactionRequest): Promise<BatchTransactionResponse>;
+  batchTransaction(
+    req: BatchTransactionRequest,
+    options?: TransactionCallOptions,
+  ): Promise<BatchTransactionResponse>;
 
   /**
    * Kiểm tra trạng thái giao dịch — read-only, không side effect.
@@ -191,19 +293,276 @@ export interface TransactionApi {
  * default sẽ auto-unwrap + throw khi `success: false` → mất thông tin và
  * làm dispatch loop / recovery scheduler rẽ sai nhánh.
  *
+ * ## Logging (fire-and-forget, không block flow)
+ *
+ * Wrap `transaction` và `batchTransaction` để log audit vào `tx_logs`:
+ * - 1 doc / item (batch sinh N docs cùng `batchId`).
+ * - Log thành công hoặc thất bại theo {@link TxLoggingPolicy} mà caller chọn.
+ * - Default `TxLoggingPolicy.Always` — log mọi outcome (dispatch/credit/payout).
+ * - `TxLoggingPolicy.OnSuccessOrUncertain` — debit dùng, skip business reject
+ *   + HTTP 400/401 vì caller đã `safeDeleteWal` (no reconcile needed).
+ * - `checkTransactionStatus` KHÔNG log (read-only, tần suất cao, không cần audit).
+ *
+ * @param http - HttpClient đã inject api key + headers.
+ * @param tenantId - Dùng stamp vào log để filter/group theo tenant.
  * @internal Dùng bởi `createTenantGatewayClient` — không export ra ngoài package.
  */
-export function createTransactionApi(http: HttpClient): TransactionApi {
-  return {
-    transaction: (req: TransactionRequest) =>
-      http.post<TransactionResponse>(CALLBACK_PATHS.transaction, req, { rawResponse: true }),
 
-    batchTransaction: (req: BatchTransactionRequest) =>
-      http.post<BatchTransactionResponse>(CALLBACK_PATHS.batchTransaction, req, {
-        rawResponse: true,
+// Singleton use cases được share từ `shared/tx-logging`. Fire-and-forget:
+// caller dùng `void useCase.run(...)` để không block main flow; repo tự
+// swallow insert error + console.error.
+
+/**
+ * Safety-net cho log fire-and-forget.
+ *
+ * Repo `upsertLog`/`upsertLogs` đã `try/catch` + `console.error`, nhưng
+ * wrapper `.catch()` này **defensive** phòng khi ai đó refactor quên swallow
+ * → tránh `unhandledRejection` crash process (Node ≥ 15 default behavior).
+ *
+ * Không log lại ở đây để tránh double log noise.
+ */
+function safeFireAndForget(p: Promise<unknown>): void {
+  // Đã log ở repo. Swallow để không crash Lambda / Next.js server.
+  void p.catch(() => {});
+}
+
+/**
+ * Build `TxLogInput` cho 1 single transaction — dùng chung cho success path
+ * và exception path để tránh duplicate object literal.
+ */
+function buildSingleLogInput(args: {
+  tenantId: string;
+  req: TransactionRequest;
+  responsePayload: unknown;
+  outcome: ClassifiedOutcome;
+}): Omit<TxLogInput, "createdAt"> {
+  return {
+    eventType: TxLogEventType.Transaction,
+    tx: args.req.tx,
+    batchId: args.req.tx,
+    tenantId: args.tenantId,
+    requestPayload: args.req,
+    responsePayload: args.responsePayload,
+    status: args.outcome.status,
+    error: args.outcome.error,
+  };
+}
+
+/**
+ * Build 1 `TxLogInput` cho 1 item trong batch. Caller map qua `req.items` tuỳ
+ * path (outer reject / outer success / exception) để sinh `responsePayload +
+ * outcome` cho từng item.
+ */
+function buildBatchItemLogInput(args: {
+  tenantId: string;
+  batchId: string;
+  item: BatchTransactionItem;
+  responsePayload: unknown;
+  outcome: ClassifiedOutcome;
+}): Omit<TxLogInput, "createdAt"> {
+  return {
+    eventType: TxLogEventType.BatchTransaction,
+    tx: args.item.tx,
+    batchId: args.batchId,
+    tenantId: args.tenantId,
+    requestPayload: args.item,
+    responsePayload: args.responsePayload,
+    status: args.outcome.status,
+    error: args.outcome.error,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Log helpers — module-level pure functions
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Đóng gói cặp `classify + build + fire` cho từng path để main flow của
+// `transaction` / `batchTransaction` chỉ còn 3 bước: post → log → return.
+// Đặt ở module-level (không nested trong `createTransactionApi`) để tránh
+// re-allocate 4 closures mỗi lần factory chạy — factory có thể được gọi nhiều
+// lần cho nhiều tenant khác nhau trong cùng process.
+
+/** Log 1 single transaction khi HTTP 200 (bất kể outer success / fail). */
+function logSingleSuccess(
+  tenantId: string,
+  req: TransactionRequest,
+  response: TransactionResponse,
+  policy: TxLoggingPolicy,
+): void {
+  const outcome = response.success
+    ? classifyItem({ success: true })
+    : classifyItem({ success: false, error: response.error });
+
+  if (shouldSkipLog(policy, outcome)) {
+    return;
+  }
+
+  safeFireAndForget(
+    logTxUseCase.run(buildSingleLogInput({ tenantId, req, responsePayload: response, outcome })),
+  );
+}
+
+/** Log 1 single transaction khi exception (timeout / network / HTTP 4xx/5xx). */
+function logSingleError(
+  tenantId: string,
+  req: TransactionRequest,
+  err: unknown,
+  policy: TxLoggingPolicy,
+): void {
+  const outcome = classifyThrown(err);
+
+  if (shouldSkipLog(policy, outcome)) {
+    return;
+  }
+
+  safeFireAndForget(
+    logTxUseCase.run(buildSingleLogInput({ tenantId, req, responsePayload: undefined, outcome })),
+  );
+}
+
+/**
+ * Log N items của batch khi HTTP 200 — 2 trường hợp:
+ * - Outer reject: cùng `outcome` + `responsePayload = response` cho mọi item.
+ * - Outer success: outcome per-item theo `results[idx]`; thiếu result → `MISSING_RESULT`.
+ *
+ * Policy apply per-item: outer reject → tất cả items share outcome
+ * `BATCH_REJECTED` với `batchOuterRejected = true` → luôn log (uncertainty).
+ * Outer success → từng item có outcome riêng, skip per-item nếu `shouldSkipLog`.
+ */
+function logBatchSuccess(
+  tenantId: string,
+  req: BatchTransactionRequest,
+  batchId: string,
+  response: BatchTransactionResponse,
+  policy: TxLoggingPolicy,
+): void {
+  if (!response.success) {
+    // Outer reject: `responsePayload` là full envelope để UI thấy error + context.
+    const outcome = classifyBatchOuterReject(response.error);
+    if (shouldSkipLog(policy, outcome)) {
+      return;
+    }
+
+    const inputs = req.items.map((item) =>
+      buildBatchItemLogInput({
+        tenantId,
+        batchId,
+        item,
+        responsePayload: response,
+        outcome,
       }),
+    );
+    safeFireAndForget(logTxBulkUseCase.run(inputs));
+    return;
+  }
+
+  // Outer success: match results[i] ↔ items[i] theo index (tenant contract).
+  // `results.length` PHẢI bằng `items.length`; defensive: thiếu → MISSING_RESULT.
+  const results = response.data?.results ?? [];
+
+  const inputs: Array<Omit<TxLogInput, "createdAt">> = [];
+  for (let idx = 0; idx < req.items.length; idx++) {
+    const item = req.items[idx]!;
+    const result = results[idx];
+
+    const outcome = result
+      ? classifyItem({ success: result.success, error: result.error })
+      : classifyItem({
+          success: false,
+          error: { code: "MISSING_RESULT", message: "Missing result for item" },
+        });
+
+    if (shouldSkipLog(policy, outcome)) {
+      continue;
+    }
+
+    inputs.push(
+      buildBatchItemLogInput({
+        tenantId,
+        batchId,
+        item,
+        responsePayload: result,
+        outcome,
+      }),
+    );
+  }
+
+  // Bulk use case tự no-op khi empty — an toàn.
+  safeFireAndForget(logTxBulkUseCase.run(inputs));
+}
+
+/**
+ * Log N items của batch khi exception — cùng 1 `outcome` cho mọi item.
+ * `responsePayload = undefined` vì http-client không expose body khi throw.
+ *
+ * Exception path luôn là transport / HTTP 4xx/5xx / timeout — outcome chung
+ * cho cả batch, nên chỉ cần check `shouldSkipLog` 1 lần.
+ */
+function logBatchError(
+  tenantId: string,
+  req: BatchTransactionRequest,
+  batchId: string,
+  err: unknown,
+  policy: TxLoggingPolicy,
+): void {
+  const outcome = classifyThrown(err);
+
+  if (shouldSkipLog(policy, outcome)) {
+    return;
+  }
+
+  const inputs = req.items.map((item) =>
+    buildBatchItemLogInput({
+      tenantId,
+      batchId,
+      item,
+      responsePayload: undefined,
+      outcome,
+    }),
+  );
+
+  safeFireAndForget(logTxBulkUseCase.run(inputs));
+}
+
+export function createTransactionApi(http: HttpClient, tenantId: string): TransactionApi {
+  return {
+    transaction: async (req: TransactionRequest, options?: TransactionCallOptions) => {
+      const policy = options?.logging ?? TxLoggingPolicy.Always;
+      // Single tx: 1 doc / 1 transaction, batchId = tx (để UI render thống nhất).
+      try {
+        const response = await http.post<TransactionResponse>(CALLBACK_PATHS.transaction, req, {
+          rawResponse: true,
+        });
+        logSingleSuccess(tenantId, req, response, policy);
+        return response;
+      } catch (err) {
+        logSingleError(tenantId, req, err, policy);
+        throw err;
+      }
+    },
+
+    batchTransaction: async (req: BatchTransactionRequest, options?: TransactionCallOptions) => {
+      const policy = options?.logging ?? TxLoggingPolicy.Always;
+      // Batch: 1 doc / item cùng chung 1 batchId. Items không có sẵn batchId →
+      // sinh UUIDv7 per call (ordered theo thời gian, link các items lại).
+      const batchId = generateId();
+
+      try {
+        const response = await http.post<BatchTransactionResponse>(
+          CALLBACK_PATHS.batchTransaction,
+          req,
+          { rawResponse: true },
+        );
+        logBatchSuccess(tenantId, req, batchId, response, policy);
+        return response;
+      } catch (err) {
+        logBatchError(tenantId, req, batchId, err, policy);
+        throw err;
+      }
+    },
 
     checkTransactionStatus: (tx: string) => {
+      // Không log — read-only, tần suất cao (recovery scheduler), không có giá trị audit.
       const path = CALLBACK_PATHS.transactionStatus.replace(":tx", tx);
       return http.get<TransactionStatusResponse>(path, { rawResponse: true });
     },

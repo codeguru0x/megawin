@@ -48,7 +48,11 @@ export type {
   TransactionStatusData,
   TransactionStatusResponse,
   TransactionApi,
+  TransactionCallOptions,
 } from "./transaction";
+
+// ── Logging policy ───────────────────────────────────────────────────────────
+export { TxLoggingPolicy } from "./entities/enums";
 
 // ── Balance types ────────────────────────────────────────────────────────────
 export type { GetBalanceRequest, GetBalanceResponse, BalanceData, BalanceApi } from "./balance";

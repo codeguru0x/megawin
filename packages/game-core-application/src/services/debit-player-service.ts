@@ -48,7 +48,7 @@ import { AppException } from "@megawin/shared/errors";
 import { ApiClientError } from "@megawin/shared/api-types";
 import { TransactionAction, TransactionReason } from "@megawin/shared/types";
 import type { Currency } from "@megawin/shared/types";
-import { tenantGateway } from "@megawin/tenant-gateway";
+import { tenantGateway, TxLoggingPolicy } from "@megawin/tenant-gateway";
 import type { TenantGatewayClient, TransactionRequest } from "@megawin/tenant-gateway";
 import { generateId, logError, toTenantUsername } from "@megawin/shared/utils";
 import { TxIntentPhase } from "@megawin/game-core/entities";
@@ -316,7 +316,16 @@ export class DebitPlayerService {
       // 1. Business rejection — HTTP 200 + success:false (INSUFFICIENT_BALANCE, PLAYER_NOT_FOUND...):
       //    debit chắc chắn CHƯA apply → xoá WAL + throw badRequest (giống rejection 4xx).
       // 2. Transport / 5xx error — HttpClient throw ApiClientError, xử lý trong catch block.
-      const response = await client.transaction(txRequest);
+      //
+      // logging: TxLoggingPolicy.OnSuccessOrUncertain — align với safeDeleteWal lifecycle.
+      // - Skip log khi tenant business reject / HTTP 400 / 401 → WAL bị xoá,
+      //   không có gì để reconcile → log không có giá trị, chỉ flood khi
+      //   player spam retry với `INSUFFICIENT_BALANCE`.
+      // - Vẫn log khi success (audit) và uncertainty (timeout/5xx/network) —
+      //   đúng lúc WAL được giữ cho scheduler recovery + forensic.
+      const response = await client.transaction(txRequest, {
+        logging: TxLoggingPolicy.OnSuccessOrUncertain,
+      });
 
       if (!response.success) {
         await this.safeDeleteWal(tx);

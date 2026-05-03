@@ -1,10 +1,10 @@
-# Tenant Transaction Logging — Thiết kế triển khai (v3)
+# Tenant Transaction Logging — Thiết kế triển khai (v5)
 
 > **Source**: `packages/tenant-gateway/to-dos/transaction-logging.md`
-> **Status**: Planning — refactor round 3 (per feedback).
+> **Status**: Planning — refactor round 5 (folder tenant-tx-logs, labels in shared, bỏ siblings, list-by-batch riêng, dùng shared pagination/date, bỏ `expiresAt`).
 > **DB đích**: `megawin-tenant`
 > **Collection**: `tx_logs` (đồng bộ convention với `tx_intents`)
-> **Retention**: 3 tháng (90 ngày) — MongoDB TTL index.
+> **Retention**: 3 tháng (90 ngày) — MongoDB TTL index trên `createdAt`.
 
 ---
 
@@ -19,7 +19,7 @@
 
 ---
 
-## 2. Quyết định theo feedback round 3
+## 2. Quyết định theo feedback
 
 | # | Feedback | Quyết định |
 |---|----------|------------|
@@ -30,6 +30,12 @@
 | 5 | Có cần `latencyMs`? | **Bỏ.** Chỉ log **sau khi nhận response** (hoặc throw) — 1 DB call duy nhất. `createdAt` = thời điểm log (~ thời điểm nhận response). Dispute/performance đo qua APM / CloudWatch, không phải DB field. |
 | 6 | Tên collection | `tx_logs` (thay vì `transaction_logs`). |
 | 7 | UI filter | Exact tx + date range + status (`success \| failed`). |
+| 8 | `batchOuter` và `httpStatus` có cần không? | **Bỏ cả 2.** `batchOuter.success` chính là `status` của doc rồi (outer fail → tất cả items status=failed). `httpStatus` chỉ hữu ích khi failed → merge vào `error` object. Khi success thì không cần gì ngoài `responsePayload`. |
+| 9 | API folder + route tên | **Đổi** sang `tenant-tx-logs`: `/api/tenant-tx-logs/...` và `(main)/reports/tenant-tx-logs/`. |
+| 10 | Labels để ở đâu? | **Di chuyển** `packages/tenant-gateway/src/shared/labels/`. Label là kiến thức domain của `tx-log`, phải đi kèm package tenant-gateway để FE/BE chung 1 nguồn. |
+| 11 | `GetTxLogByTxUseCase` trả siblings? | **Bỏ siblings.** Use-case chỉ trả đúng log của `tx` đó. UI muốn xem batch → click `batchId` → gọi API `list-by-batch` mới (có phân trang). |
+| 12 | Pagination / date format | Dùng `Pagination` (`@megawin/shared/constants/pagination`) và `displayVNDateTime` (`@megawin/shared/utils/date`). KHÔNG tự định nghĩa lại. |
+| 13 | `expiresAt` trong doc | **Bỏ.** TTL index chạy trên `createdAt` với `expireAfterSeconds = 90 * 86400`. Logger chỉ stamp `createdAt`. |
 
 ---
 
@@ -46,8 +52,9 @@
  * - `Failed` = mọi trường hợp còn lại: business reject (`success: false`),
  *   outer batch reject, timeout, network error, HTTP 4xx/5xx.
  *
- * Chi tiết lỗi (code, message, stack) tra cứu qua `responsePayload` + `errorCode`
- * + `errorMessage` trong doc. UI phân biệt bằng cách đọc `responsePayload`.
+ * Chi tiết lỗi (code, message, httpStatus, batchOuterRejected) tra cứu qua
+ * object `error` trên doc (chỉ có khi `status = failed`) + `responsePayload`.
+ * UI phân biệt bằng cách đọc `error.code` / `error.batchOuterRejected`.
  */
 export const TxLogStatus = {
   Success: "success",
@@ -76,11 +83,13 @@ export type TxLogEventType = (typeof TxLogEventType)[keyof typeof TxLogEventType
 ### 4.1 Nguyên tắc
 
 - **Single call**: 1 doc với `tx = request.tx`, `batchId = tx`.
-- **Batch N items**: N docs, mỗi doc có `tx = item.tx` (unique per item), tất cả share cùng `batchId` (UUIDv7 sinh mới).
-- Trong doc: `requestPayload` = **per-item payload** (`BatchTransactionItem` object) — KHÔNG lưu cả batch; `responsePayload` = **per-item result** (`BatchTransactionItemResult`) + `batchOuter` cho envelope info.
-- Trường hợp outer batch fail / throw: vẫn insert N docs (1 per item gốc), `responsePayload = undefined`, `batchOuterError` chứa lý do chung.
+- **Batch N items**: N docs, mỗi doc có `tx = item.tx` (unique), cùng `batchId` (UUIDv7 sinh mới).
+- `requestPayload` = per-item payload (`BatchTransactionItem` cho batch, `TransactionRequest` cho single).
+- `responsePayload` = per-item result. `undefined` khi throw (timeout/network/HTTP error).
+- `status = success` khi tenant trả `item.success: true` → KHÔNG có `error` field → document clean chỉ có request + response.
+- `status = failed` → có `error` object chứa TẤT CẢ thông tin debug: `code`, `message`, `httpStatus?`, `batchOuterRejected?`.
 
-### 4.2 Schema
+### 4.2 Schema — gọn, chỉ giữ field nào cần query / filter
 
 ```ts
 // packages/tenant-gateway/src/entities/tx-log.ts
@@ -89,33 +98,78 @@ import type { TransactionErrorCode } from "../shared/types";
 import type { TxLogEventType, TxLogStatus } from "./enums";
 
 /**
+ * Chi tiết lỗi — CHỈ có khi `status = failed`.
+ *
+ * Tất cả thông tin debug tập trung ở đây, tránh optional field rải rác
+ * ở top-level. Khi success → field `error` không tồn tại trong doc.
+ *
+ * ## Các nguồn lỗi & mapping
+ *
+ * | Nguồn                      | `code`                         | `httpStatus` | `batchOuterRejected` |
+ * |----------------------------|--------------------------------|--------------|----------------------|
+ * | Business reject per-item   | `response.error.code`          | 200          | —                    |
+ * | Batch outer reject         | `response.error.code`          | 200          | `true`               |
+ * | HTTP 4xx/5xx               | `"HTTP_<status>"`              | `<status>`   | —                    |
+ * | Timeout                    | `"TIMEOUT"`                    | —            | —                    |
+ * | Network (DNS, ECONNREFUSED)| `err.code` hoặc `"NETWORK_ERROR"` | —         | —                    |
+ * | Batch item missing trong response | `"MISSING_RESULT"`      | 200          | —                    |
+ */
+export interface TxLogError {
+  /**
+   * Machine-readable code:
+   * - Business fail: {@link TransactionErrorCode} (vd `INSUFFICIENT_BALANCE`).
+   * - HTTP error: `"HTTP_500"`, `"HTTP_502"`, …
+   * - Transport: `"TIMEOUT"`, `"ECONNREFUSED"`, `"ENOTFOUND"`, `"NETWORK_ERROR"`.
+   */
+  code: TransactionErrorCode | string;
+
+  /** Human-readable message từ tenant hoặc từ exception. */
+  message: string;
+
+  /**
+   * HTTP status code — CHỈ có khi lỗi phát sinh từ HTTP layer (4xx/5xx).
+   * Business fail, timeout, network error KHÔNG có field này.
+   */
+  httpStatus?: number;
+
+  /**
+   * `true` khi lỗi này do tenant reject **toàn bộ batch** ở outer envelope
+   * (`BatchTransactionResponse.success = false`).
+   *
+   * Giúp phân biệt "batch bị reject nên tất cả items failed" vs "item này
+   * fail riêng theo business rule". Single event KHÔNG có field này.
+   */
+  batchOuterRejected?: boolean;
+}
+
+/**
  * Raw MongoDB document — collection `tx_logs` (DB `megawin-tenant`).
  *
- * ## Thiết kế
+ * **1 document = 1 transaction.** Search theo `tx` trả đúng 1 record.
+ * Batch N items → N docs nhóm qua `batchId`.
  *
- * **1 document = 1 transaction.** Tìm kiếm/audit theo `tx` luôn trả về đúng
- * 1 record. Batch N items → N docs riêng, nhóm lại qua `batchId`.
+ * Payload raw JSON (`Record<string, unknown>`) — generic mọi game/product.
+ * Chỉ log sau khi nhận response / exception → 1 DB call / transaction.
  *
- * Payload raw JSON (`Record<string, unknown>`) — generic cho mọi game/product,
- * không phụ thuộc schema cụ thể.
+ * ## Trạng thái document
  *
- * Log chỉ ghi **sau khi nhận response** (hoặc khi exception). 1 DB call / 1
- * transaction — không có pre-request write.
+ * - **Success** (`status = success`): có `requestPayload` + `responsePayload`.
+ *   KHÔNG có `error`. `responsePayload` đã chứa đủ thông tin (balance, duplicate, ...).
+ * - **Failed business** (`status = failed`): có `requestPayload` + `responsePayload`
+ *   + `error` (code/message từ tenant).
+ * - **Failed outer batch**: có `requestPayload` + `responsePayload` (outer envelope)
+ *   + `error` với `batchOuterRejected: true`.
+ * - **Failed HTTP**: có `requestPayload` + optional `responsePayload` (body parse được)
+ *   + `error` với `httpStatus`.
+ * - **Failed timeout / network**: có `requestPayload` + `error` (code = TIMEOUT/...)
+ *   KHÔNG có `responsePayload`.
  *
  * ## Indexes (xem §7)
- *
- * - `{ tx: 1 }` unique — tra cứu chính xác + chống duplicate insert.
- * - `{ batchId: 1 }` — group items cùng batch.
- * - `{ createdAt: -1 }` — list sort newest-first.
- * - `{ tenantId: 1, createdAt: -1 }` — filter theo tenant.
- * - `{ status: 1, createdAt: -1 }` — UI lọc "chỉ xem failed".
- * - `{ expiresAt: 1 }` TTL — auto-delete sau 90 ngày.
  */
 export interface TxLogDoc {
   _id: unknown;
 
   // ── Event identity ────────────────────────────────────────────
-  /** Loại API. Xem {@link TxLogEventType}. */
   eventType: TxLogEventType;
 
   /**
@@ -123,92 +177,56 @@ export interface TxLogDoc {
    * - Single: = `request.tx`.
    * - Batch item: = `item.tx`.
    *
-   * Unique index → chống duplicate insert nếu logger bị gọi lại với cùng tx.
+   * Unique index.
    */
   tx: string;
 
   /**
-   * Group key của HTTP call.
-   * - Single: = `tx` (1 call = 1 item).
-   * - Batch: UUIDv7 mới, tất cả N items share giá trị này.
-   *
-   * Cho phép drill "xem tất cả items trong cùng batch call".
+   * Group key per HTTP call.
+   * - Single: = `tx`.
+   * - Batch: UUIDv7 mới, share bởi N items cùng batch.
    */
   batchId: string;
 
   // ── Routing ───────────────────────────────────────────────────
-  /** Tenant đích. */
   tenantId: string;
 
   // ── Request / Response — raw evidence ─────────────────────────
   /**
-   * Payload gửi đi — full JSON.
-   *
-   * - Single: `TransactionRequest` shape `{ action, reason, tx, playerId,
-   *   amount, currency, gameId?, roundIds?, description?, force?, metadata? }`.
-   * - Batch item: `BatchTransactionItem` shape — chỉ phần item này, không
-   *   phải cả batch. Tránh duplicate storage N lần.
+   * Payload gửi đi — per-item.
+   * - Single: `TransactionRequest`.
+   * - Batch item: `BatchTransactionItem` (phần item này, không phải cả batch).
    */
   requestPayload: Record<string, unknown>;
 
   /**
    * Response từ tenant — per-item.
-   *
-   * - Single success: full `TransactionResponse` (`{ success: true, data: {...} }`).
-   * - Single fail: full `TransactionResponse` (`{ success: false, error: {...} }`).
-   * - Batch item: `BatchTransactionItemResult` object cho item này.
-   * - Timeout / network error / batch outer fail: `undefined`.
-   * - HTTP 4xx/5xx non-JSON: `{ __raw: string, __parseError: true }`.
+   * - Single: full `TransactionResponse`.
+   * - Batch item: `BatchTransactionItemResult`.
+   * - Batch outer reject: full `BatchTransactionResponse` (outer error + empty data).
+   * - Timeout / network error: `undefined`.
+   * - HTTP error với body non-JSON: `{ __raw: string, __parseError: true }`.
    */
   responsePayload?: Record<string, unknown>;
 
-  /**
-   * Batch outer envelope info — chỉ khi `eventType = BatchTransaction`.
-   *
-   * Giúp phân biệt: "item fail vì outer batch bị tenant reject toàn bộ" vs
-   * "item fail vì business error per-item". Single event KHÔNG có field này.
-   */
-  batchOuter?: {
-    /** Tenant trả `success: true` ở outer envelope? */
-    success: boolean;
-    /** Outer error khi `success: false` (auth fail, payload invalid, ...). */
-    error?: { code: string; message: string };
-  };
-
-  // ── HTTP ───────────────────────────────────────────────────────
-  /**
-   * HTTP status code của response.
-   * - 200 khi tenant trả envelope bình thường (success hoặc business fail).
-   * - 4xx/5xx khi `HttpError`.
-   * - `undefined` khi timeout / network error (chưa có response).
-   */
-  httpStatus?: number;
-
   // ── Result ─────────────────────────────────────────────────────
-  /** `success` hoặc `failed`. Xem {@link TxLogStatus}. */
+  /** `success` hoặc `failed`. */
   status: TxLogStatus;
 
   /**
-   * Error code khi `status = failed`:
-   * - Business fail per-item: `response.error.code` (vd `INSUFFICIENT_BALANCE`).
-   * - Outer batch fail: `batchOuter.error.code`.
-   * - HTTP: `"HTTP_500"`, `"HTTP_502"`, …
-   * - Timeout: `"TIMEOUT"`.
-   * - Network: `"ECONNREFUSED"`, `"ENOTFOUND"`, `"ECONNRESET"`, …
-   *
-   * KHÔNG có khi `status = success`.
+   * Error details — CHỈ có khi `status = failed`.
+   * Tập trung mọi thông tin debug (code, message, httpStatus, batchOuterRejected).
    */
-  errorCode?: TransactionErrorCode | string;
-
-  /** Error message human-readable. KHÔNG có khi success. */
-  errorMessage?: string;
+  error?: TxLogError;
 
   // ── Timestamps ─────────────────────────────────────────────────
-  /** Thời điểm log được ghi (~ sau khi nhận response / exception). */
+  /**
+   * Thời điểm log được ghi (~ thời điểm nhận response / exception).
+   *
+   * **Đồng thời là TTL anchor** — TTL index `{ createdAt: 1 }` với
+   * `expireAfterSeconds = 90 * 86_400`. KHÔNG cần field `expiresAt` riêng.
+   */
   createdAt: Date;
-
-  /** TTL — auto-delete sau 90 ngày. */
-  expiresAt: Date;
 }
 
 /** Entity sau khi qua mapper. */
@@ -216,11 +234,11 @@ export interface TxLogEntity extends Omit<TxLogDoc, "_id"> {
   id: string;
 }
 
-/** Input cho insert — không có `_id`. */
+/** Input cho insert. */
 export type TxLogInput = Omit<TxLogDoc, "_id">;
 ```
 
-### 4.3 Tổng kết 12 field top-level
+### 4.3 Tổng kết — chỉ còn 9 field top-level
 
 | Field | Kiểu | Bắt buộc | Ý nghĩa |
 |-------|------|----------|---------|
@@ -229,15 +247,13 @@ export type TxLogInput = Omit<TxLogDoc, "_id">;
 | `tx` | string (UUIDv7) | ✓ unique | Idempotency key. |
 | `batchId` | string | ✓ | Group per HTTP call. |
 | `tenantId` | string | ✓ | Partition. |
-| `requestPayload` | JSON | ✓ | Raw evidence. |
-| `responsePayload` | JSON \| undefined | — | Raw response (nếu có). |
-| `batchOuter` | `{ success, error? }` \| undefined | — | Chỉ batch event. |
-| `httpStatus` | number \| undefined | — | 200 / 4xx / 5xx. |
+| `requestPayload` | JSON | ✓ | Raw request. |
+| `responsePayload` | JSON \| undefined | — | Raw response (undefined khi throw). |
 | `status` | `"success" \| "failed"` | ✓ | Filter chính. |
-| `errorCode` | string \| undefined | — | Code khi failed. |
-| `errorMessage` | string \| undefined | — | Message khi failed. |
-| `createdAt` | Date | ✓ | Sort + TTL anchor. |
-| `expiresAt` | Date | ✓ | TTL auto-delete. |
+| `error` | `TxLogError` \| undefined | — | Chỉ khi failed. |
+| `createdAt` | Date | ✓ | Sort + **TTL anchor**. |
+
+So với bản đầu: bỏ `batchOuter` + `httpStatus` top-level (gộp vào `error`) + bỏ `expiresAt` (TTL dùng trực tiếp `createdAt` với `expireAfterSeconds = 90 * 86_400`).
 
 ---
 
@@ -388,15 +404,11 @@ export class TxLogRepository extends TenantGatewayBaseRepo<TxLogEntity, TxLogMap
   }
 
   /**
-   * Trả tất cả items thuộc cùng 1 batch (hoặc 1 doc nếu single).
-   * Sort theo `createdAt` ASC để đúng thứ tự insert.
-   */
-  async findByBatchId(batchId: string): Promise<TxLogEntity[]> {
-    return await this.find({ batchId }, { sort: { createdAt: 1 } });
-  }
-
-  /**
    * List logs cho UI — cursor paginate, sort newest-first.
+   *
+   * Dùng cho cả 2 use case: filter tổng quát và list-by-batchId.
+   * Khi `filter.batchId` có giá trị → tương đương "list tất cả items trong batch"
+   * với cùng cơ chế phân trang.
    */
   async listLogs(
     filter: ListTxLogsFilter,
@@ -498,17 +510,19 @@ export const TX_LOG_INDEXES: ReadonlyArray<IndexDescription> = [
   // Group per HTTP batch call.
   { key: { batchId: 1 }, name: "batchId" },
 
-  // List default sort khi không filter.
-  { key: { createdAt: -1 }, name: "createdAt" },
+  // List default sort khi không filter + TTL anchor.
+  // TTL expireAfterSeconds = 90 ngày — MongoDB so sánh `createdAt + 90d` với now.
+  {
+    key: { createdAt: -1 },
+    name: "createdAt_ttl",
+    expireAfterSeconds: 90 * 86_400,
+  },
 
   // Filter theo tenant.
   { key: { tenantId: 1, createdAt: -1 }, name: "tenantId_createdAt" },
 
   // UI "chỉ xem failed".
   { key: { status: 1, createdAt: -1 }, name: "status_createdAt" },
-
-  // TTL — auto-delete sau 90 ngày.
-  { key: { expiresAt: 1 }, name: "ttl_expiresAt", expireAfterSeconds: 0 },
 ];
 ```
 
@@ -522,20 +536,26 @@ export const TX_LOG_INDEXES: ReadonlyArray<IndexDescription> = [
 // packages/tenant-gateway/src/shared/tx-log-classifier.ts
 
 import { ApiClientError } from "@megawin/http-client";
+import type { TxLogError } from "../entities/tx-log";
 import { TxLogStatus } from "../entities/enums";
 
+/**
+ * Kết quả phân loại 1 outcome — gồm `status` và optional `error`.
+ *
+ * - `status = success` → KHÔNG có `error`.
+ * - `status = failed` → có `error` với đầy đủ code/message (+ optional httpStatus,
+ *   batchOuterRejected).
+ */
 export interface ClassifiedOutcome {
   status: TxLogStatus;
-  errorCode?: string;
-  errorMessage?: string;
+  error?: TxLogError;
 }
 
 /**
  * Classify 1 item result (single transaction hoặc batch item).
  *
- * Rule:
- * - success=true → Success (bao gồm duplicate=true, duplicate vẫn là thành công).
- * - success=false → Failed + error.code/message từ response.
+ * - `success = true` → Success (bao gồm `duplicate = true`).
+ * - `success = false` → Failed + error từ response.
  */
 export function classifyItem(item: {
   success: boolean;
@@ -544,22 +564,45 @@ export function classifyItem(item: {
   if (item.success) return { status: TxLogStatus.Success };
   return {
     status: TxLogStatus.Failed,
-    errorCode: item.error?.code,
-    errorMessage: item.error?.message,
+    error: {
+      code: item.error?.code ?? "UNKNOWN",
+      message: item.error?.message ?? "",
+    },
+  };
+}
+
+/**
+ * Classify outer batch reject (`BatchTransactionResponse.success = false`).
+ *
+ * Thêm `batchOuterRejected: true` để UI phân biệt với item-level business fail.
+ */
+export function classifyBatchOuterReject(outerError?: {
+  code: string;
+  message: string;
+}): ClassifiedOutcome {
+  return {
+    status: TxLogStatus.Failed,
+    error: {
+      code: outerError?.code ?? "BATCH_REJECTED",
+      message: outerError?.message ?? "",
+      batchOuterRejected: true,
+    },
   };
 }
 
 /**
  * Classify exception throw từ HttpClient.
  *
- * Rule (ordering):
- * 1. `ApiClientError` với httpStatus → Failed + `HTTP_<status>` + parse body.
+ * Ordering:
+ * 1. `ApiClientError` có `httpStatus` → Failed + `HTTP_<status>` + parse body.
  * 2. Name/message match timeout/aborted → Failed + `TIMEOUT`.
  * 3. Default → Failed + `err.code` hoặc `NETWORK_ERROR`.
+ *
+ * Return kèm `responsePayload` (nếu parse được body của HTTP error) để caller
+ * ghi vào doc.
  */
 export function classifyThrown(err: unknown): {
   outcome: ClassifiedOutcome;
-  httpStatus?: number;
   responsePayload?: Record<string, unknown>;
 } {
   const anyErr = err as any;
@@ -570,10 +613,12 @@ export function classifyThrown(err: unknown): {
     return {
       outcome: {
         status: TxLogStatus.Failed,
-        errorCode: `HTTP_${status}`,
-        errorMessage: message,
+        error: {
+          code: `HTTP_${status}`,
+          message,
+          httpStatus: status,
+        },
       },
-      httpStatus: status,
       responsePayload: tryParseRawBody(anyErr.responseBody),
     };
   }
@@ -581,12 +626,20 @@ export function classifyThrown(err: unknown): {
   const name = typeof anyErr?.name === "string" ? anyErr.name : "";
   if (/timeout|aborterror|aborted/i.test(name) || /timeout|aborted/i.test(message)) {
     return {
-      outcome: { status: TxLogStatus.Failed, errorCode: "TIMEOUT", errorMessage: message },
+      outcome: {
+        status: TxLogStatus.Failed,
+        error: { code: "TIMEOUT", message },
+      },
     };
   }
 
   const code = typeof anyErr?.code === "string" ? anyErr.code : "NETWORK_ERROR";
-  return { outcome: { status: TxLogStatus.Failed, errorCode: code, errorMessage: message } };
+  return {
+    outcome: {
+      status: TxLogStatus.Failed,
+      error: { code, message },
+    },
+  };
 }
 
 function tryParseRawBody(body: unknown): Record<string, unknown> | undefined {
@@ -611,29 +664,27 @@ function tryParseRawBody(body: unknown): Record<string, unknown> | undefined {
 import { TxLogRepository } from "../infras/repos";
 import type { TxLogInput } from "../entities";
 
-const RETENTION_MS = 90 * 86_400_000;
-
 const repo = new TxLogRepository();
 
 /**
- * Fire-and-forget log 1 doc. Tự điền `createdAt` + `expiresAt`.
+ * Fire-and-forget log 1 doc. Tự stamp `createdAt` = now.
+ *
+ * TTL do MongoDB quản lý qua index trên `createdAt` (xem {@link TX_LOG_INDEXES}).
+ * Không cần field `expiresAt` — `expireAfterSeconds` làm việc đó.
  */
-export async function logTx(input: Omit<TxLogInput, "createdAt" | "expiresAt">): Promise<void> {
-  const createdAt = new Date();
-  const expiresAt = new Date(createdAt.getTime() + RETENTION_MS);
-  await repo.insertLog({ ...input, createdAt, expiresAt });
+export async function logTx(input: Omit<TxLogInput, "createdAt">): Promise<void> {
+  await repo.insertLog({ ...input, createdAt: new Date() });
 }
 
 /**
- * Fire-and-forget bulk log N docs (batch). Tự điền timestamps chung.
+ * Fire-and-forget bulk log N docs (batch). Stamp cùng 1 `createdAt` cho cả batch.
  */
 export async function logTxBulk(
-  inputs: Array<Omit<TxLogInput, "createdAt" | "expiresAt">>,
+  inputs: Array<Omit<TxLogInput, "createdAt">>,
 ): Promise<void> {
   if (inputs.length === 0) return;
   const createdAt = new Date();
-  const expiresAt = new Date(createdAt.getTime() + RETENTION_MS);
-  const docs: TxLogInput[] = inputs.map((i) => ({ ...i, createdAt, expiresAt }));
+  const docs: TxLogInput[] = inputs.map((i) => ({ ...i, createdAt }));
   await repo.insertLogs(docs);
 }
 ```
@@ -648,7 +699,8 @@ export async function logTxBulk(
 - **Batch N items → N docs**, cùng `batchId` (UUIDv7 sinh tại wrap).
 - `requestPayload` batch = `BatchTransactionItem` của chính item (KHÔNG lưu cả batch).
 - `responsePayload` batch = `BatchTransactionItemResult` của item.
-- Outer batch fail (throw hoặc `success: false` outer) → vẫn ghi N docs với `responsePayload: undefined`, `batchOuter.success: false` + `batchOuter.error`.
+- Outer batch reject (`success: false` ở outer) → N docs failed với `error.batchOuterRejected = true`, `responsePayload = undefined`.
+- Transport error (timeout/network/HTTP) → N docs failed, dùng `classifyThrown`.
 
 ### 9.2 Pseudo-code
 
@@ -657,7 +709,11 @@ export async function logTxBulk(
 
 import { randomUUID } from "node:crypto";
 import { logTx, logTxBulk } from "../shared/tx-logger";
-import { classifyItem, classifyThrown } from "../shared/tx-log-classifier";
+import {
+  classifyItem,
+  classifyBatchOuterReject,
+  classifyThrown,
+} from "../shared/tx-log-classifier";
 import { TxLogEventType, TxLogStatus } from "../entities/enums";
 
 export function createTransactionApi(http: HttpClient, tenantId: string): TransactionApi {
@@ -677,12 +733,11 @@ export function createTransactionApi(http: HttpClient, tenantId: string): Transa
           tenantId,
           requestPayload: req as any,
           responsePayload: response as any,
-          httpStatus: 200,
           ...outcome,
         });
         return response;
       } catch (err) {
-        const { outcome, httpStatus, responsePayload } = classifyThrown(err);
+        const { outcome, responsePayload } = classifyThrown(err);
         void logTx({
           eventType: TxLogEventType.Transaction,
           tx: req.tx,
@@ -690,7 +745,6 @@ export function createTransactionApi(http: HttpClient, tenantId: string): Transa
           tenantId,
           requestPayload: req as any,
           responsePayload,
-          httpStatus,
           ...outcome,
         });
         throw err;
@@ -706,31 +760,24 @@ export function createTransactionApi(http: HttpClient, tenantId: string): Transa
           { rawResponse: true },
         );
 
-        // Outer batch fail → N docs với cùng outer error.
+        // Outer batch reject → N docs failed với batchOuterRejected=true.
         if (!response.success) {
+          const outcome = classifyBatchOuterReject(response.error);
           const docs = req.items.map((item) => ({
             eventType: TxLogEventType.BatchTransaction,
             tx: item.tx,
             batchId,
             tenantId,
             requestPayload: item as any,
-            responsePayload: undefined,
-            batchOuter: {
-              success: false,
-              error: response.error
-                ? { code: response.error.code, message: response.error.message }
-                : undefined,
-            },
-            httpStatus: 200,
-            status: TxLogStatus.Failed,
-            errorCode: response.error?.code,
-            errorMessage: response.error?.message,
+            // Lưu nguyên outer response — debug context đầy đủ.
+            responsePayload: response as any,
+            ...outcome,
           }));
           void logTxBulk(docs);
           return response;
         }
 
-        // Outer success → N docs, mỗi doc classify từ item result tương ứng.
+        // Outer success → N docs, classify từng item theo result.
         const resultMap = new Map(
           (response.data?.results ?? []).map((r) => [r.tx, r]),
         );
@@ -740,8 +787,10 @@ export function createTransactionApi(http: HttpClient, tenantId: string): Transa
             ? classifyItem({ success: result.success, error: result.error })
             : {
                 status: TxLogStatus.Failed,
-                errorCode: "MISSING_RESULT",
-                errorMessage: "Tenant response thiếu result cho tx này",
+                error: {
+                  code: "MISSING_RESULT",
+                  message: "Tenant response thiếu result cho tx này",
+                },
               };
           return {
             eventType: TxLogEventType.BatchTransaction,
@@ -750,16 +799,14 @@ export function createTransactionApi(http: HttpClient, tenantId: string): Transa
             tenantId,
             requestPayload: item as any,
             responsePayload: result as any,
-            batchOuter: { success: true },
-            httpStatus: 200,
             ...outcome,
           };
         });
         void logTxBulk(docs);
         return response;
       } catch (err) {
-        // Transport error → N docs failed, chung outer info.
-        const { outcome, httpStatus, responsePayload } = classifyThrown(err);
+        // Transport/HTTP error → N docs failed cùng error object.
+        const { outcome, responsePayload } = classifyThrown(err);
         const docs = req.items.map((item) => ({
           eventType: TxLogEventType.BatchTransaction,
           tx: item.tx,
@@ -767,11 +814,6 @@ export function createTransactionApi(http: HttpClient, tenantId: string): Transa
           tenantId,
           requestPayload: item as any,
           responsePayload,
-          batchOuter: {
-            success: false,
-            error: { code: outcome.errorCode ?? "NETWORK_ERROR", message: outcome.errorMessage ?? "" },
-          },
-          httpStatus,
           ...outcome,
         }));
         void logTxBulk(docs);
@@ -808,10 +850,13 @@ packages/tenant-gateway/src/use-cases/
     ├── index.ts
     ├── types.ts
     ├── list-tx-logs.ts
+    ├── list-tx-logs-by-batch.ts
     └── get-tx-log-by-tx.ts
 ```
 
 ### 10.2 Types
+
+Dùng lại `Pagination` từ `@megawin/shared/constants/pagination` và `ApiResponseMeta` style cho output → **KHÔNG tự viết lại cấu trúc pagination**.
 
 ```ts
 // packages/tenant-gateway/src/use-cases/tx-logs/types.ts
@@ -819,35 +864,49 @@ packages/tenant-gateway/src/use-cases/
 import type { TxLogEntity } from "../../entities";
 import type { TxLogStatus, TxLogEventType } from "../../entities/enums";
 
+/** Cursor reusable cho cả list + list-by-batch. */
+export interface TxLogCursor {
+  createdAt: string;
+  id: string;
+}
+
 export interface ListTxLogsInput {
   /** Exact tx. Khi có → bỏ qua `from/to`. */
   tx?: string;
-  /** Range start (ISO datetime). */
   from?: string;
-  /** Range end (ISO datetime). */
   to?: string;
   status?: TxLogStatus;
   tenantId?: string;
   eventType?: TxLogEventType;
   batchId?: string;
-  cursor?: { createdAt: string; id: string } | null;
+  cursor?: TxLogCursor | null;
+  /** Default = `Pagination.Default.Size` (20). Max = `Pagination.Max.Size` (100). */
   limit?: number;
 }
 
 export interface ListTxLogsOutput {
   data: TxLogEntity[];
-  nextCursor: { createdAt: string; id: string } | null;
+  nextCursor: TxLogCursor | null;
 }
 
+/** Input cho `GetTxLogByTxUseCase` — chỉ cần `tx`. */
 export interface GetTxLogByTxInput {
   tx: string;
 }
 
+/** Output — chỉ trả đúng record của tx, không kèm siblings. */
 export interface GetTxLogByTxOutput {
-  /** Trả record của tx + tất cả items cùng `batchId` để UI hiển thị context batch. */
   log: TxLogEntity | null;
-  siblings: TxLogEntity[];
 }
+
+/** Input cho `ListTxLogsByBatchUseCase` — list tất cả items cùng batch, có paging. */
+export interface ListTxLogsByBatchInput {
+  batchId: string;
+  cursor?: TxLogCursor | null;
+  limit?: number;
+}
+
+export type ListTxLogsByBatchOutput = ListTxLogsOutput;
 ```
 
 ### 10.3 `ListTxLogsUseCase`
@@ -855,13 +914,13 @@ export interface GetTxLogByTxOutput {
 ```ts
 // packages/tenant-gateway/src/use-cases/tx-logs/list-tx-logs.ts
 
+import { Pagination } from "@megawin/shared/constants/pagination";
 import { NextApiUseCase } from "@megawin/next/server";
 import { TxLogRepository } from "../../infras/repos";
 import type { ListTxLogsInput, ListTxLogsOutput } from "./types";
 
-const DEFAULT_LIMIT = 50;
-const MAX_LIMIT = 100;
 const MAX_RANGE_DAYS = 31;
+const RETENTION_DAYS = 90;
 
 /**
  * List tx logs cho Backoffice. Sort newest-first, cursor paginate.
@@ -878,7 +937,10 @@ export class ListTxLogsUseCase extends NextApiUseCase<ListTxLogsInput, ListTxLog
   private readonly repo = new TxLogRepository();
 
   protected async execute(input: ListTxLogsInput): Promise<ListTxLogsOutput> {
-    const limit = Math.min(input.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const limit = Math.min(
+      input.limit ?? Pagination.Default.Size,
+      Pagination.Max.Size,
+    );
     const cursor = input.cursor
       ? { createdAt: new Date(input.cursor.createdAt), id: input.cursor.id }
       : null;
@@ -886,9 +948,7 @@ export class ListTxLogsUseCase extends NextApiUseCase<ListTxLogsInput, ListTxLog
     const from = input.from ? new Date(input.from) : undefined;
     const to = input.to ? new Date(input.to) : undefined;
 
-    if (!input.tx && from && to) {
-      this.validateRange(from, to);
-    }
+    if (!input.tx && from && to) this.validateRange(from, to);
 
     return await this.repo.listLogs(
       {
@@ -906,10 +966,9 @@ export class ListTxLogsUseCase extends NextApiUseCase<ListTxLogsInput, ListTxLog
 
   private validateRange(from: Date, to: Date): void {
     if (from > to) throw new Error("BAD_RANGE: from > to");
-    const now = Date.now();
-    const retentionFloor = now - 90 * 86_400_000;
+    const retentionFloor = Date.now() - RETENTION_DAYS * 86_400_000;
     if (from.getTime() < retentionFloor) {
-      throw new Error("BAD_RANGE: from ngoài retention 90 ngày");
+      throw new Error(`BAD_RANGE: from ngoài retention ${RETENTION_DAYS} ngày`);
     }
     const rangeDays = (to.getTime() - from.getTime()) / 86_400_000;
     if (rangeDays > MAX_RANGE_DAYS) {
@@ -929,38 +988,74 @@ import { TxLogRepository } from "../../infras/repos";
 import type { GetTxLogByTxInput, GetTxLogByTxOutput } from "./types";
 
 /**
- * Tra cứu 1 tx. Trả:
- * - `log`: record của tx (unique, có thể null nếu không tồn tại / đã TTL).
- * - `siblings`: các items khác cùng batch (khi `log.eventType = batch_transaction`).
+ * Tra cứu log của 1 `tx` — chỉ trả đúng 1 record (hoặc null khi không tồn tại
+ * / đã bị TTL).
+ *
+ * **Không** tự load siblings. UI muốn xem các items cùng batch → click vào
+ * `batchId` để gọi `ListTxLogsByBatchUseCase` (có phân trang).
  */
 export class GetTxLogByTxUseCase extends NextApiUseCase<GetTxLogByTxInput, GetTxLogByTxOutput> {
   private readonly repo = new TxLogRepository();
 
   protected async execute(input: GetTxLogByTxInput): Promise<GetTxLogByTxOutput> {
     const log = await this.repo.findByTx(input.tx);
-    if (!log) return { log: null, siblings: [] };
-
-    if (log.eventType === "transaction") {
-      return { log, siblings: [] };
-    }
-
-    const batch = await this.repo.findByBatchId(log.batchId);
-    const siblings = batch.filter((b) => b.id !== log.id);
-    return { log, siblings };
+    return { log };
   }
 }
 ```
 
-### 10.5 Barrels
+### 10.5 `ListTxLogsByBatchUseCase`
+
+```ts
+// packages/tenant-gateway/src/use-cases/tx-logs/list-tx-logs-by-batch.ts
+
+import { Pagination } from "@megawin/shared/constants/pagination";
+import { NextApiUseCase } from "@megawin/next/server";
+import { TxLogRepository } from "../../infras/repos";
+import type { ListTxLogsByBatchInput, ListTxLogsByBatchOutput } from "./types";
+
+/**
+ * List tất cả items thuộc cùng 1 `batchId`, có phân trang (cursor).
+ *
+ * Dùng khi user click vào `batchId` ở UI để xem full context của batch.
+ * Sort newest-first — nhất quán với `ListTxLogsUseCase`.
+ */
+export class ListTxLogsByBatchUseCase extends NextApiUseCase<
+  ListTxLogsByBatchInput,
+  ListTxLogsByBatchOutput
+> {
+  private readonly repo = new TxLogRepository();
+
+  protected async execute(
+    input: ListTxLogsByBatchInput,
+  ): Promise<ListTxLogsByBatchOutput> {
+    const limit = Math.min(
+      input.limit ?? Pagination.Default.Size,
+      Pagination.Max.Size,
+    );
+    const cursor = input.cursor
+      ? { createdAt: new Date(input.cursor.createdAt), id: input.cursor.id }
+      : null;
+
+    return await this.repo.listLogs(
+      { batchId: input.batchId },
+      { limit, cursor },
+    );
+  }
+}
+```
+
+### 10.6 Barrels
 
 ```ts
 // packages/tenant-gateway/src/use-cases/tx-logs/index.ts
 export * from "./types";
 export * from "./list-tx-logs";
+export * from "./list-tx-logs-by-batch";
 export * from "./get-tx-log-by-tx";
 ```
 
-### 10.6 Subpath export — `package.json`
+### 10.7 Subpath export — `package.json`
 
 ```json
 {
@@ -984,19 +1079,21 @@ export * from "./get-tx-log-by-tx";
 ## 11. Backoffice — API Routes
 
 ```
-apps/backoffice/src/app/api/tenant-logs/transactions/
-├── route.ts              ← GET list + filter
-└── [tx]/route.ts         ← GET detail (log + siblings)
+apps/backoffice/src/app/api/tenant-tx-logs/
+├── route.ts                   ← GET list + filter
+├── [tx]/route.ts              ← GET detail (log only)
+└── batches/[batchId]/route.ts ← GET list items trong batch (có paging)
 ```
 
 ### 11.1 List route
 
 ```ts
-// apps/backoffice/src/app/api/tenant-logs/transactions/route.ts
+// apps/backoffice/src/app/api/tenant-tx-logs/route.ts
 
 import { z } from "zod";
 import { withApi } from "@megawin/next/server";
 import { CompanyRole } from "@megawin/shared/roles";
+import { Pagination } from "@megawin/shared/constants/pagination";
 import {
   ListTxLogsUseCase,
   type ListTxLogsInput,
@@ -1013,7 +1110,7 @@ const querySchema = z.object({
   batchId: z.string().optional(),
   cursorCreatedAt: z.string().datetime().optional(),
   cursorId: z.string().optional(),
-  limit: z.coerce.number().int().min(1).max(100).optional(),
+  limit: z.coerce.number().int().min(1).max(Pagination.Max.Size).optional(),
 });
 
 const useCase = new ListTxLogsUseCase();
@@ -1044,7 +1141,7 @@ export const GET = withApi({
 ### 11.2 Detail route
 
 ```ts
-// apps/backoffice/src/app/api/tenant-logs/transactions/[tx]/route.ts
+// apps/backoffice/src/app/api/tenant-tx-logs/[tx]/route.ts
 
 import { z } from "zod";
 import { withApi } from "@megawin/next/server";
@@ -1061,6 +1158,42 @@ export const GET = withApi({
 });
 ```
 
+### 11.3 List-by-batch route
+
+```ts
+// apps/backoffice/src/app/api/tenant-tx-logs/batches/[batchId]/route.ts
+
+import { z } from "zod";
+import { withApi } from "@megawin/next/server";
+import { CompanyRole } from "@megawin/shared/roles";
+import { Pagination } from "@megawin/shared/constants/pagination";
+import { ListTxLogsByBatchUseCase } from "@megawin/tenant-gateway/use-cases/tx-logs";
+
+const paramsSchema = z.object({ batchId: z.string().trim().min(1) });
+const querySchema = z.object({
+  cursorCreatedAt: z.string().datetime().optional(),
+  cursorId: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(Pagination.Max.Size).optional(),
+});
+
+const useCase = new ListTxLogsByBatchUseCase();
+
+export const GET = withApi({
+  auth: { roles: [CompanyRole.Staff, CompanyRole.Admin] },
+  paramsSchema,
+  querySchema,
+  handler: async ({ params, query }) =>
+    await useCase.run({
+      batchId: params.batchId,
+      limit: query.limit,
+      cursor:
+        query.cursorCreatedAt && query.cursorId
+          ? { createdAt: query.cursorCreatedAt, id: query.cursorId }
+          : null,
+    }),
+});
+```
+
 Cú pháp `withApi` thực tế phụ thuộc helper hiện có của `@megawin/next/server` — điều chỉnh khi implement.
 
 ---
@@ -1074,7 +1207,7 @@ Thêm item vào group "Báo cáo":
 ```ts
 {
   title: "Nhật ký giao dịch",
-  url: "/reports/tenant-transactions",
+  url: "/reports/tenant-tx-logs",
   icon: FileClock,
   roles: [CompanyRole.Staff],
 },
@@ -1083,8 +1216,9 @@ Thêm item vào group "Báo cáo":
 ### 12.2 Page structure
 
 ```
-apps/backoffice/src/app/(main)/reports/tenant-transactions/
+apps/backoffice/src/app/(main)/reports/tenant-tx-logs/
 ├── page.tsx                       ← Suspense wrapper
+├── batches/[batchId]/page.tsx     ← Page list items trong 1 batch
 ├── _components/
 │   ├── tx-log-content.tsx         ← Orchestrator
 │   ├── tx-log-filter-bar.tsx      ← Filter: tx | date range + status
@@ -1110,16 +1244,18 @@ Ràng buộc:
 ### 12.4 URL state (nuqs)
 
 ```
-/reports/tenant-transactions
+/reports/tenant-tx-logs
   ?tx=<uuid>                      // mode 1
   // OR
   ?from=2026-04-01&to=2026-04-29&status=failed   // mode 2
   ?detail=<tx>                    // open drawer
+
+/reports/tenant-tx-logs/batches/<batchId>   // page list items trong batch
 ```
 
 ### 12.5 Table columns
 
-Theo rule `frontend-dev.mdc` §1.7 / §1.7a:
+Dùng `displayVNDateTime` từ `@megawin/shared/utils/date`. Theo rule `frontend-dev.mdc` §1.7 / §1.7a:
 
 | Cột | Width | Content | Class |
 |-----|-------|---------|-------|
@@ -1128,33 +1264,45 @@ Theo rule `frontend-dev.mdc` §1.7 / §1.7a:
 | Event | 90px | `Single` / `Batch` | `text-xs` |
 | Tenant | 120px | `tenantId` | `text-xs` |
 | Tx | 280px | `tx` monospace + copy icon | `text-xs font-mono` |
-| BatchId | 100px | `batchId` short (8 chars) + icon khi batch | `text-xs font-mono text-muted-foreground` |
-| HTTP | 60px | `httpStatus` hoặc `—` | `text-right tabular-nums` |
-| Error | 240px | `errorCode` + truncate `errorMessage` | `pr-5 text-xs text-muted-foreground` |
+| BatchId | 120px | `batchId` short (8 chars) → **Link** đến `/reports/tenant-tx-logs/batches/<batchId>` khi `eventType = batch` | `text-xs font-mono text-muted-foreground` |
+| Error | 280px | `error.code` + truncate `error.message` (hoặc `—` khi success) | `pr-5 text-xs text-muted-foreground` |
 
-Click row → drawer.
+Click row (trừ cột BatchId) → drawer. Click vào BatchId → navigate sang page list-by-batch.
 
 ### 12.6 Drawer content
 
 - **Header**: badge status + eventType + tenant + `displayVNDateTime(createdAt)`.
-- **Identity**: `tx`, `batchId` (copy button), `httpStatus`.
-- **Error box** (khi failed): `errorCode` + `errorMessage` + `batchOuter.error` nếu có.
+- **Identity**: `tx` (copy) · `batchId` (copy + **Link** đến page list-by-batch nếu là batch event).
+- **Error box** (khi failed): `error.code` + `error.message` + optional `error.httpStatus` chip + `Batch bị reject toàn bộ` chip khi `error.batchOuterRejected = true`.
 - **Request section**: pretty-printed JSON `requestPayload` (copy button).
 - **Response section**: pretty-printed JSON `responsePayload` (copy button) — hoặc empty state "Không có response (timeout/network error)".
-- **Siblings** (chỉ batch): bảng N-1 items cùng `batchId` — columns: Tx · Status · Action (từ `requestPayload.action`) · Player · Amount · Error. Click → chuyển sang tx đó.
 
-### 12.7 Labels
+Drawer **KHÔNG** embed siblings table. Siblings hiển thị ở page riêng `/reports/tenant-tx-logs/batches/<batchId>` — có đủ filter, paging, scroll.
+
+### 12.7 List-by-batch page
+
+Page `/reports/tenant-tx-logs/batches/<batchId>`:
+- Breadcrumb: `Nhật ký giao dịch / Batch <short>`
+- Header card: `batchId` full, `tenantId`, `eventType = batch_transaction`, số items total (derive từ response), `createdAt` của item đầu tiên.
+- Table: dùng lại `tx-log-table.tsx` với data = `ListTxLogsByBatchOutput.data`, infinite scroll theo `nextCursor`.
+- Click row → drawer chi tiết `tx` (tái dùng logic drawer).
+
+### 12.8 Labels — đặt trong `tenant-gateway/src/shared/labels/`
+
+Label là domain knowledge của `tx-log` → để ở package `tenant-gateway` để FE/BE chung 1 nguồn. **Không** đặt riêng ở FE.
 
 ```ts
-// packages/tenant-gateway/src/labels/index.ts
+// packages/tenant-gateway/src/shared/labels/tx-log-labels.ts
 
-import { TxLogStatus, TxLogEventType } from "../entities/enums";
+import { TxLogStatus, TxLogEventType } from "../../entities/enums";
 
+/** Label hiển thị status. */
 export const TX_LOG_STATUS_LABELS: Record<TxLogStatus, string> = {
   success: "Thành công",
   failed: "Thất bại",
 };
 
+/** Variant badge theo status. */
 export const TX_LOG_STATUS_VARIANT: Record<
   TxLogStatus,
   "default" | "destructive"
@@ -1163,10 +1311,21 @@ export const TX_LOG_STATUS_VARIANT: Record<
   failed: "destructive",
 };
 
+/** Label hiển thị eventType. */
 export const TX_LOG_EVENT_TYPE_LABELS: Record<TxLogEventType, string> = {
   transaction: "Single",
   batch_transaction: "Batch",
 };
+```
+
+```ts
+// packages/tenant-gateway/src/shared/labels/index.ts
+export * from "./tx-log-labels";
+```
+
+```ts
+// packages/tenant-gateway/src/index.ts — re-export
+export * from "./shared/labels";
 ```
 
 ---
@@ -1180,6 +1339,7 @@ export const txLogKeys = {
   all: ["tx-logs"] as const,
   list: (filters: object) => [...txLogKeys.all, "list", filters] as const,
   byTx: (tx: string) => [...txLogKeys.all, "tx", tx] as const,
+  byBatch: (batchId: string) => [...txLogKeys.all, "batch", batchId] as const,
 };
 
 export function useTxLogList(filters: {
@@ -1201,7 +1361,7 @@ export function useTxLogList(filters: {
         params.set("cursorCreatedAt", pageParam.createdAt);
         params.set("cursorId", pageParam.id);
       }
-      const res = await fetch(`/api/tenant-logs/transactions?${params}`);
+      const res = await fetch(`/api/tenant-tx-logs?${params}`);
       if (!res.ok) throw new Error("list failed");
       return res.json();
     },
@@ -1215,10 +1375,33 @@ export function useTxLogDetail(tx: string | null) {
     queryKey: tx ? txLogKeys.byTx(tx) : txLogKeys.all,
     enabled: !!tx,
     queryFn: async () => {
-      const res = await fetch(`/api/tenant-logs/transactions/${tx}`);
+      const res = await fetch(`/api/tenant-tx-logs/${tx}`);
       if (!res.ok) throw new Error("detail failed");
       return res.json();
     },
+  });
+}
+
+/** List tất cả items trong 1 batch — dùng ở page `/batches/<batchId>`. */
+export function useTxLogsByBatch(batchId: string | null) {
+  return useInfiniteQuery({
+    queryKey: batchId ? txLogKeys.byBatch(batchId) : txLogKeys.all,
+    enabled: !!batchId,
+    initialPageParam: null as { createdAt: string; id: string } | null,
+    queryFn: async ({ pageParam }) => {
+      const params = new URLSearchParams();
+      if (pageParam) {
+        params.set("cursorCreatedAt", pageParam.createdAt);
+        params.set("cursorId", pageParam.id);
+      }
+      const res = await fetch(
+        `/api/tenant-tx-logs/batches/${batchId}?${params}`,
+      );
+      if (!res.ok) throw new Error("list-by-batch failed");
+      return res.json();
+    },
+    getNextPageParam: (last) => last.nextCursor,
+    staleTime: 10_000,
   });
 }
 ```
@@ -1229,8 +1412,8 @@ export function useTxLogDetail(tx: string | null) {
 
 ### 14.1 Retention
 
-- Logger stamp `expiresAt = createdAt + 90 days`.
-- TTL index trên `expiresAt`.
+- TTL index đặt trực tiếp trên `createdAt` với `expireAfterSeconds = 90 * 86_400`.
+- Logger **không** tự stamp `expiresAt` — MongoDB tự quản.
 - API enforce `from >= today - 90d` (return 400 khi vi phạm).
 - UI date picker min/max.
 
@@ -1250,39 +1433,41 @@ Trong `logTx` / `logTxBulk`, nếu `JSON.stringify(payload).length > 100_000` �
 
 ## 15. Migration & Rollout
 
-1. **Migration**: apply `TX_LOG_INDEXES` vào `megawin-tenant.tx_logs`.
-2. **Deploy `tenant-gateway`**: logger + classifier + wrap + use-cases. Log bắt đầu ghi ngay.
-3. **Deploy BE routes**: `/api/tenant-logs/transactions` + `[tx]`.
-4. **Deploy FE**: page + sidebar.
-5. **Smoke**: 1 single transaction + 1 batch → confirm log doc xuất hiện với đúng `tx`, `batchId`, `status`.
+1. **Migration**: apply `TX_LOG_INDEXES` vào `megawin-tenant.tx_logs` (TTL chạy trên `createdAt`).
+2. **Deploy `tenant-gateway`**: logger + classifier + wrap + use-cases + labels. Log bắt đầu ghi ngay.
+3. **Deploy BE routes**: `/api/tenant-tx-logs`, `/api/tenant-tx-logs/[tx]`, `/api/tenant-tx-logs/batches/[batchId]`.
+4. **Deploy FE**: page list + page by-batch + sidebar.
+5. **Smoke**: 1 single transaction + 1 batch → confirm log doc xuất hiện với đúng `tx`, `batchId`, `status`; click batchId → đúng N items.
 
 ---
 
 ## 16. Checklist implementation
 
 - [ ] **Step 1** `packages/tenant-gateway/src/entities/enums.ts` — `TxLogStatus` (success|failed), `TxLogEventType`
-- [ ] **Step 2** `packages/tenant-gateway/src/entities/tx-log.ts` — `TxLogDoc` / `TxLogEntity` / `TxLogInput`
+- [ ] **Step 2** `packages/tenant-gateway/src/entities/tx-log.ts` — `TxLogDoc` / `TxLogEntity` / `TxLogInput` (9 field top-level, KHÔNG có `expiresAt`)
 - [ ] **Step 3** `packages/tenant-gateway/src/entities/index.ts` — barrel
 - [ ] **Step 4** `packages/tenant-gateway/src/infras/base-repo.ts` — `TenantGatewayBaseRepo`
 - [ ] **Step 5** `packages/tenant-gateway/src/infras/mappers/tx-log-mapper.ts` + barrel
 - [ ] **Step 6** `packages/tenant-gateway/src/infras/repos/types/tx-log.types.ts` + barrel
-- [ ] **Step 7** `packages/tenant-gateway/src/infras/repos/tx-log-repo.ts`
+- [ ] **Step 7** `packages/tenant-gateway/src/infras/repos/tx-log-repo.ts` — `insertLog/insertLogs/findByTx/listLogs`
 - [ ] **Step 8** `packages/tenant-gateway/src/infras/repos/index.ts` — re-export
-- [ ] **Step 9** `packages/tenant-gateway/src/infras/indexes/tx-log-indexes.ts` — TX_LOG_INDEXES
-- [ ] **Step 10** `packages/tenant-gateway/src/shared/tx-log-classifier.ts`
-- [ ] **Step 11** `packages/tenant-gateway/src/shared/tx-logger.ts` — `logTx` + `logTxBulk`
-- [ ] **Step 12** `packages/tenant-gateway/src/labels/index.ts` — labels
-- [ ] **Step 13** `packages/tenant-gateway/src/transaction/transaction-api.ts` — wrap single + batch (N docs)
+- [ ] **Step 9** `packages/tenant-gateway/src/infras/indexes/tx-log-indexes.ts` — TX_LOG_INDEXES (TTL trên `createdAt`)
+- [ ] **Step 10** `packages/tenant-gateway/src/shared/tx-log-classifier.ts` — 3 classify function
+- [ ] **Step 11** `packages/tenant-gateway/src/shared/tx-logger.ts` — `logTx` + `logTxBulk` (chỉ stamp `createdAt`)
+- [ ] **Step 12** `packages/tenant-gateway/src/shared/labels/tx-log-labels.ts` + barrel
+- [ ] **Step 13** `packages/tenant-gateway/src/transaction/transaction-api.ts` — wrap single + batch
 - [ ] **Step 14** `packages/tenant-gateway/src/client.ts` — pass `config.tenantId` to factory
-- [ ] **Step 15** `packages/tenant-gateway/src/use-cases/tx-logs/` — types + `ListTxLogsUseCase` + `GetTxLogByTxUseCase` + barrel
+- [ ] **Step 15** `packages/tenant-gateway/src/use-cases/tx-logs/` — types + `ListTxLogsUseCase` + `GetTxLogByTxUseCase` (không siblings) + `ListTxLogsByBatchUseCase` + barrel
 - [ ] **Step 16** `packages/tenant-gateway/package.json` — subpath export `./use-cases/tx-logs`
 - [ ] **Step 17** `packages/tenant-gateway/src/index.ts` — re-export entities + labels
 - [ ] **Step 18** Migration script apply `TX_LOG_INDEXES` vào `megawin-tenant.tx_logs`
-- [ ] **Step 19** `apps/backoffice/src/app/api/tenant-logs/transactions/route.ts`
-- [ ] **Step 20** `apps/backoffice/src/app/api/tenant-logs/transactions/[tx]/route.ts`
-- [ ] **Step 21** `apps/backoffice/src/navigation/sidebar/sidebar-items.ts` — add menu item
-- [ ] **Step 22** FE page + filter bar + table + drawer + React Query hooks
-- [ ] **Step 23** Smoke test — single + batch (partial fail) + timeout → verify correct `tx`, `batchId`, `status`, `responsePayload`
+- [ ] **Step 19** `apps/backoffice/src/app/api/tenant-tx-logs/route.ts`
+- [ ] **Step 20** `apps/backoffice/src/app/api/tenant-tx-logs/[tx]/route.ts`
+- [ ] **Step 21** `apps/backoffice/src/app/api/tenant-tx-logs/batches/[batchId]/route.ts`
+- [ ] **Step 22** `apps/backoffice/src/navigation/sidebar/sidebar-items.ts` — add menu item `/reports/tenant-tx-logs`
+- [ ] **Step 23** FE page `(main)/reports/tenant-tx-logs/page.tsx` + filter bar + table + drawer + hooks
+- [ ] **Step 24** FE page `(main)/reports/tenant-tx-logs/batches/[batchId]/page.tsx` (reuse table + drawer)
+- [ ] **Step 25** Smoke test — single + batch (partial fail) + timeout → verify `tx`, `batchId`, `status`, `responsePayload` + click batch navigate đúng
 
 ---
 
@@ -1290,18 +1475,20 @@ Trong `logTx` / `logTxBulk`, nếu `JSON.stringify(payload).length > 100_000` �
 
 - [x] 2 events `transaction` + `batch_transaction` log đầy đủ. `check_status` + `balance` KHÔNG log.
 - [x] 1 transaction = 1 doc. Batch N items = N docs cùng `batchId`. Tra cứu theo `tx` luôn trả đúng 1 record.
-- [x] Status chỉ `success` / `failed`. Chi tiết lỗi trong `responsePayload` + `errorCode` + `errorMessage`.
+- [x] Status chỉ `success` / `failed`. Chi tiết lỗi gom trong object `error` (code, message, httpStatus?, batchOuterRejected?). Khi success → KHÔNG có field `error`.
 - [x] `requestPayload` / `responsePayload` raw JSON — generic cho mọi game. Payload tiến hoá (thêm `batchKey` tenant response) không cần sửa schema.
 - [x] Chỉ 1 DB call / transaction (log sau response, không log pre-request).
 - [x] Collection tên `tx_logs` trong DB `megawin-tenant`.
-- [x] TTL 90 ngày — verify index.
+- [x] TTL 90 ngày chạy trực tiếp trên `createdAt` — KHÔNG có field `expiresAt`.
 - [x] Logger fail KHÔNG block dispatch / place-bet.
 - [x] UI filter:
   - Mode "by tx": exact match, disable range/status.
   - Mode "by range": date picker + status selector (tất cả / success / failed). Range ≤ 31 ngày, ≤ 90 ngày retention.
-- [x] Click row → drawer với full request/response + siblings cùng batchId khi batch event.
+- [x] Click row → drawer chỉ có request/response/error của `tx` đó (KHÔNG embed siblings).
+- [x] Click `batchId` → navigate sang page `/reports/tenant-tx-logs/batches/<batchId>` với phân trang riêng.
 - [x] Role `CompanyRole.Staff+` mới truy cập.
-- [x] Schema 12 field top-level (không duplicate thông tin đã có trong payload).
+- [x] Schema 9 field top-level. Labels ở `packages/tenant-gateway/src/shared/labels/`.
+- [x] Pagination dùng `Pagination` const của `@megawin/shared`. Date format dùng `displayVNDateTime` của `@megawin/shared/utils/date`. KHÔNG tự viết lại.
 
 
 

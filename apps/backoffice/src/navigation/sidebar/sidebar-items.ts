@@ -18,6 +18,10 @@ import {
   Clock,
   CircleDollarSign,
   Ban,
+  FileSearch,
+  Send,
+  Undo2,
+  History,
 } from "lucide-react";
 
 import { CompanyRole } from "@megawin/identity/entities";
@@ -98,9 +102,8 @@ export const operatorSidebarItems: NavGroup[] = [
       },
     ],
   },
-
   {
-    id: 4,
+    id: 3,
     label: "Trò chơi",
     items: [
       {
@@ -436,7 +439,7 @@ export const operatorSidebarItems: NavGroup[] = [
     ],
   },
   {
-    id: 3,
+    id: 4,
     label: "Tài khoản",
     items: [
       {
@@ -453,6 +456,22 @@ export const operatorSidebarItems: NavGroup[] = [
         title: "Người chơi",
         url: "/accounts/players",
         icon: User,
+      },
+    ],
+  },
+  {
+    id: 5,
+    label: "Giao dịch đại lý",
+    items: [
+      {
+        title: "Lệnh gửi đại lý",
+        url: "/reports/transactions/dispatch",
+        icon: Send,
+      },
+      {
+        title: "Lịch sử giao dịch",
+        url: "/reports/transactions/api-logs",
+        icon: FileSearch,
       },
     ],
   },

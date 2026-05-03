@@ -1,4 +1,5 @@
-import type { AnyBulkWriteOperation } from "mongodb";
+import type { AnyBulkWriteOperation, Filter, Document } from "mongodb";
+import { ObjectId } from "mongodb";
 
 import { TenantDispatchBaseRepo } from "./base-repo";
 import { DispatchOrderMapper } from "../mappers/dispatch-order-mapper";
@@ -13,6 +14,12 @@ import type {
   BatchProgress,
   ListBySourceFilter,
   ListStuckFilter,
+  ListDispatchOrdersFilter,
+  ListDispatchOrdersResult,
+  DispatchSummary,
+  DispatchSummaryFilter,
+  DispatchFacets,
+  DispatchFacetsFilter,
 } from "./types";
 import { RETRY_ALERT_THRESHOLD } from "../../config";
 
@@ -351,6 +358,312 @@ export class DispatchOrderRepository extends TenantDispatchBaseRepo<
       firstCreatedAt: r.firstCreatedAt as Date | undefined,
       lastDispatchedAt: r.lastDispatchedAt as Date | undefined,
       dispatchedAmount: r.dispatchedAmount as number,
+    };
+  }
+
+  /**
+   * List orders tổng hợp với cursor pagination cho BO main view.
+   *
+   * Filter compose theo nhiều dimension (tenant, game, status, sourceKind,
+   * retryMode, batchKey, createdAt range). Sort `{ createdAt: -1, _id: -1 }`
+   * — lấy order mới nhất lên đầu, `_id` tie-break cho các record cùng giây.
+   *
+   * Cursor format: `{ createdAt, id }` với `id` là hex string. Fetch `limit + 1`
+   * để detect còn trang sau — nếu có, trả về record cuối trong trang hiện tại
+   * làm `nextCursor`, KHÔNG bao gồm trong `data`.
+   *
+   * Index hint: `{ createdAt: -1, _id: -1 }` + optional per-dimension indexes.
+   */
+  async listWithCursor(filter: ListDispatchOrdersFilter): Promise<ListDispatchOrdersResult> {
+    const mongoFilter = this.buildListFilter(filter);
+
+    // Cộng cursor vào filter: lấy các record "cũ hơn" record cuối trang trước.
+    // Tie-break qua `_id` để đảm bảo sort stable khi nhiều record trùng `createdAt`.
+    if (filter.cursor) {
+      const cursorId = new ObjectId(filter.cursor.id);
+      mongoFilter.$or = [
+        { createdAt: { $lt: filter.cursor.createdAt } },
+        { createdAt: filter.cursor.createdAt, _id: { $lt: cursorId } },
+      ];
+    }
+
+    const docs = await this.findMany(mongoFilter, {
+      sort: { createdAt: -1, _id: -1 },
+      limit: filter.limit + 1,
+    });
+
+    // Detect còn trang sau: fetch (limit + 1), nếu đủ → tách record cuối thành cursor.
+    let nextCursor: ListDispatchOrdersResult["nextCursor"] = null;
+    let data = docs;
+    if (docs.length > filter.limit) {
+      data = docs.slice(0, filter.limit);
+      const last = data[data.length - 1];
+      if (last) {
+        nextCursor = {
+          createdAt: last.createdAt.toISOString(),
+          id: last.id,
+        };
+      }
+    }
+
+    return { data, nextCursor };
+  }
+
+  /**
+   * Aggregate KPI summary cho 1 query range — dùng cho BO KPI strip.
+   *
+   * `$facet` 2 nhánh:
+   * - `byStatus`: group by `status`, sum count + amount.
+   * - `retryBuckets`: chỉ pending + split theo ngưỡng `stuckMinRetry`.
+   *
+   * Sau đó compose về `DispatchSummary`. KPI KHÔNG chịu ảnh hưởng
+   * `status`/`sourceKind`/`retryMode` filter — luôn phản ánh toàn range.
+   *
+   * Index hint: `{ createdAt: -1 }` (từ bộ lọc range) + per-dimension indexes
+   * khi có `tenantId` / `gameId` / `batchKey`.
+   */
+  async aggregateSummary(filter: DispatchSummaryFilter): Promise<DispatchSummary> {
+    const matchStage = this.buildSummaryMatch(filter);
+    const stuckMinRetry = filter.stuckMinRetry ?? RETRY_ALERT_THRESHOLD;
+
+    const pipeline: Document[] = [
+      // Lọc theo range + dimension bắt buộc trước khi facet để giảm khối lượng scan.
+      { $match: matchStage },
+      {
+        $facet: {
+          // Nhánh 1 — count + sumAmount theo status, không phân biệt retry.
+          byStatus: [
+            {
+              $group: {
+                _id: "$status",
+                count: { $sum: 1 },
+                sumAmount: { $sum: "$amount" },
+              },
+            },
+          ],
+          // Nhánh 2 — chỉ pending, split "retrying" (>=1 & <ngưỡng) vs "stuck" (>=ngưỡng).
+          retryBuckets: [
+            { $match: { status: DispatchOrderStatus.Pending } },
+            {
+              $group: {
+                _id: null,
+                retrying: {
+                  $sum: {
+                    $cond: [
+                      {
+                        $and: [
+                          { $gte: [{ $ifNull: ["$retryCount", 0] }, 1] },
+                          { $lt: [{ $ifNull: ["$retryCount", 0] }, stuckMinRetry] },
+                        ],
+                      },
+                      1,
+                      0,
+                    ],
+                  },
+                },
+                stuck: {
+                  $sum: {
+                    $cond: [{ $gte: [{ $ifNull: ["$retryCount", 0] }, stuckMinRetry] }, 1, 0],
+                  },
+                },
+              },
+            },
+          ],
+        },
+      },
+    ];
+
+    const [raw] = await this.aggregate(pipeline);
+    return this.mapSummaryResult(raw);
+  }
+
+  /**
+   * Distinct tenant + game có orders trong range. Dùng cho filter dropdown FE.
+   *
+   * Range filter only — KHÔNG filter `status`/`retryMode` để Staff luôn chọn được
+   * toàn bộ tenants/games đã từng có order trong khoảng thời gian.
+   *
+   * Index hint: `{ createdAt: 1 }` cho range scan, sau đó in-memory group theo
+   * tenant/gameId. Với range 7 ngày × 10k orders → cost thấp.
+   */
+  async aggregateFacets(filter: DispatchFacetsFilter): Promise<DispatchFacets> {
+    const match: Filter<Document> = {};
+    if (filter.from || filter.to) {
+      const createdAt: Record<string, Date> = {};
+      if (filter.from) createdAt.$gte = filter.from;
+      if (filter.to) createdAt.$lte = filter.to;
+      match.createdAt = createdAt;
+    }
+
+    const pipeline: Document[] = [
+      // Lọc orders trong range trước khi facet
+      { $match: match },
+      {
+        $facet: {
+          // Distinct tenantIds + count
+          tenants: [
+            {
+              $group: {
+                _id: "$tenantId",
+                count: { $sum: 1 },
+              },
+            },
+            { $sort: { count: -1 } },
+            { $limit: 50 },
+          ],
+          // Distinct gameIds + count
+          games: [
+            {
+              $group: {
+                _id: "$gameId",
+                count: { $sum: 1 },
+              },
+            },
+            { $sort: { count: -1 } },
+          ],
+        },
+      },
+    ];
+
+    const [raw] = await this.aggregate(pipeline);
+    const rawTenants = ((raw as any)?.tenants ?? []) as Array<{ _id: string; count: number }>;
+    const rawGames = ((raw as any)?.games ?? []) as Array<{ _id: string; count: number }>;
+
+    return {
+      tenants: rawTenants.map((r) => ({ value: r._id, count: r.count })),
+      games: rawGames.map((r) => ({ value: r._id, count: r.count })),
+    };
+  }
+
+  /**
+   * Build MongoDB filter từ `ListDispatchOrdersFilter` — không include cursor.
+   *
+   * Cursor được cộng thêm trong `listWithCursor` sau khi gọi hàm này.
+   */
+  private buildListFilter(filter: ListDispatchOrdersFilter): Filter<Document> {
+    const mongoFilter: Filter<Document> = {};
+
+    if (filter.tx) {
+      mongoFilter.tx = filter.tx;
+    }
+    if (filter.tenantId) {
+      mongoFilter.tenantId = filter.tenantId;
+    }
+    if (filter.gameId) {
+      mongoFilter.gameId = filter.gameId;
+    }
+    if (filter.status) {
+      mongoFilter.status = filter.status;
+    }
+    if (filter.sourceKind) {
+      mongoFilter.sourceKind = filter.sourceKind;
+    }
+    if (filter.batchKey) {
+      mongoFilter.batchKey = filter.batchKey;
+    }
+    if (filter.accountId) {
+      mongoFilter.accountId = filter.accountId;
+    }
+    if (filter.username) {
+      // Normalize: MegaWin lưu username lowercase (xem toMegawinUsername).
+      // Staff có thể gõ uppercase → lowercase trước khi match.
+      mongoFilter.username = filter.username.toLowerCase();
+    }
+
+    // retryMode map sang MongoDB filter — 3 chế độ không chồng lấn.
+    //
+    // **Rule:** retryMode CHỈ áp dụng cho orders `Pending`. Orders đã
+    // `Dispatched` hoặc `Cancelled` là terminal state — retryCount lưu lại
+    // để audit nhưng không còn "retry" gì nữa. Nếu không force `status =
+    // Pending`, query sẽ trả về orders đã Dispatched sau N retry → user báo
+    // "đang retry" nhưng thực tế đã xong (bug).
+    if (filter.retryMode) {
+      const stuckMinRetry = filter.stuckMinRetry ?? RETRY_ALERT_THRESHOLD;
+
+      // Auto-scope về Pending. Nếu caller truyền status khác, respect caller
+      // (edge case: ops muốn xem "orders Cancelled từng bị stuck" để audit).
+      if (!filter.status) {
+        mongoFilter.status = DispatchOrderStatus.Pending;
+      }
+
+      if (filter.retryMode === "fresh") {
+        mongoFilter.retryCount = { $exists: false };
+      } else if (filter.retryMode === "retrying") {
+        mongoFilter.retryCount = { $gte: 1, $lt: stuckMinRetry };
+      } else {
+        mongoFilter.retryCount = { $gte: stuckMinRetry };
+      }
+    }
+
+    if (filter.from || filter.to) {
+      const createdAt: Record<string, Date> = {};
+      if (filter.from) createdAt.$gte = filter.from;
+      if (filter.to) createdAt.$lte = filter.to;
+      mongoFilter.createdAt = createdAt;
+    }
+
+    return mongoFilter;
+  }
+
+  /** Match stage cho `aggregateSummary` — subset của list filter. */
+  private buildSummaryMatch(filter: DispatchSummaryFilter): Filter<Document> {
+    const mongoFilter: Filter<Document> = {};
+    if (filter.tenantId) mongoFilter.tenantId = filter.tenantId;
+    if (filter.gameId) mongoFilter.gameId = filter.gameId;
+    if (filter.batchKey) mongoFilter.batchKey = filter.batchKey;
+
+    if (filter.from || filter.to) {
+      const createdAt: Record<string, Date> = {};
+      if (filter.from) createdAt.$gte = filter.from;
+      if (filter.to) createdAt.$lte = filter.to;
+      mongoFilter.createdAt = createdAt;
+    }
+
+    return mongoFilter;
+  }
+
+  /** Map raw $facet output → typed `DispatchSummary`. */
+  private mapSummaryResult(raw: unknown): DispatchSummary {
+    const byStatus = ((raw as any)?.byStatus ?? []) as Array<{
+      _id: DispatchOrderStatus;
+      count: number;
+      sumAmount: number;
+    }>;
+    const retryBucketsArr = ((raw as any)?.retryBuckets ?? []) as Array<{
+      retrying: number;
+      stuck: number;
+    }>;
+    const retryBuckets = retryBucketsArr[0] ?? { retrying: 0, stuck: 0 };
+
+    let total = 0;
+    let pending = 0;
+    let dispatched = 0;
+    let cancelled = 0;
+    let totalAmount = 0;
+    let dispatchedAmount = 0;
+
+    for (const row of byStatus) {
+      total += row.count;
+      totalAmount += row.sumAmount;
+      if (row._id === DispatchOrderStatus.Pending) {
+        pending = row.count;
+      } else if (row._id === DispatchOrderStatus.Dispatched) {
+        dispatched = row.count;
+        dispatchedAmount = row.sumAmount;
+      } else if (row._id === DispatchOrderStatus.Cancelled) {
+        cancelled = row.count;
+      }
+    }
+
+    return {
+      total,
+      pending,
+      dispatched,
+      cancelled,
+      retrying: retryBuckets.retrying,
+      stuck: retryBuckets.stuck,
+      totalAmount,
+      dispatchedAmount,
     };
   }
 }

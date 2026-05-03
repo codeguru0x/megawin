@@ -11,5 +11,5 @@ export type {
   TransactionStatusResponse,
 } from "./types";
 
-export type { TransactionApi } from "./transaction-api";
+export type { TransactionApi, TransactionCallOptions } from "./transaction-api";
 export { createTransactionApi } from "./transaction-api";

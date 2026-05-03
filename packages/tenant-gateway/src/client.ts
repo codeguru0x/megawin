@@ -121,7 +121,7 @@ export function createTenantGatewayClient(config: TenantGatewayConfig): TenantGa
 
   // Compose từ các sub-APIs.
   // Khi thêm API mới, tạo factory mới và spread vào đây.
-  const transactionApi = createTransactionApi(http);
+  const transactionApi = createTransactionApi(http, tenantId);
   const balanceApi = createBalanceApi(http);
 
   return {
