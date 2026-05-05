@@ -53,6 +53,6 @@ export const IDENTITY_KIND_LABELS: Record<IdentityKind, string> = {
 export const IDENTITY_HINT = [
   "Tx ID: UUID (VD: 019bc10d-4395-7f8e-…)",
   "Account ID: ULID 26 ký tự (VD: 01HXYZABC123…)",
-  "Username: playerId@tenantId (VD: player@tenantId)",
+  "Username: playerId@tenantId (VD: tk01@one)",
   "Batch Key: mặc định — mọi giá trị khác, VD keno:settle:2026-04-11.007:payout",
 ].join("\n");
