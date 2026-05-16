@@ -15,12 +15,12 @@
   "license": "ISC",
   "dependencies": {
     "@megawin/shared": "workspace:*",
-    "lodash": "^4.17.23",
+    "lodash": "^4.18.1",
     "redis": "^5.10.0"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
-    "@types/lodash": "^4.17.23",
+    "@types/lodash": "^4.17.24",
     "@types/node": "^25.5.0",
     "typescript": "^6.0.2"
   }

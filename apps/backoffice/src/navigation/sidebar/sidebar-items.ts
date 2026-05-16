@@ -3,7 +3,6 @@ import {
   Building2,
   Briefcase,
   User,
-  Users,
   ChessBishop,
   ChessKing,
   ChessQueen,
