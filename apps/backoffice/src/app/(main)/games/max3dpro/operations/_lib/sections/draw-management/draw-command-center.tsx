@@ -263,6 +263,21 @@ function shouldShowResettle(draw: DrawSelectorItem): boolean {
   return new Date(draw.drawResultAt).getTime() > new Date(draw.settledAt).getTime();
 }
 
+/**
+ * Khi draw đang `Settling`, xác định lần kết sổ đang chạy là Settle (lần đầu)
+ * hay Resettle (kết sổ lại sau republish) — để nút "Thử lại" trong banner
+ * gọi đúng action.
+ *
+ * Cùng tiêu chí với {@link shouldShowResettle} nhưng KHÔNG ràng buộc status
+ * `Published` (status hiện tại là `Settling`): nếu đã settle ≥ 1 lần và kết quả
+ * mới hơn lần settle trước → phiên này là Resettle.
+ */
+function isResettleSession(draw: DrawSelectorItem): boolean {
+  if (!draw.settledAt) return false;
+  if (!draw.drawResultAt) return false;
+  return new Date(draw.drawResultAt).getTime() > new Date(draw.settledAt).getTime();
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function DrawCommandCenter({
@@ -305,6 +320,10 @@ export function DrawCommandCenter({
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
   const isSettled = status === DrawStatus.Settled;
   const isSettling = status === DrawStatus.Settling;
+  // Banner Settling có thể bị "kẹt" nếu worker không start được (SFN_START_FAILED)
+  // hoặc staff reload trang giữa chừng. Nút "Thử lại" kín đáo gọi lại đúng action
+  // (Settle lần đầu hoặc Resettle) — backend idempotent nên an toàn để bấm lại.
+  const settlingRetryHandler = isResettleSession(draw) ? onTriggerResettle : onTriggerSettle;
 
   type ActionConfig = {
     label: string;
@@ -525,9 +544,28 @@ export function DrawCommandCenter({
         )}
 
         {isSettling && (
-          <div className="mt-4 flex items-center gap-2.5 rounded-lg border bg-muted/40 px-3 py-2.5">
-            <Loader2 className="size-3.5 text-orange-500 animate-spin shrink-0" />
-            <p className="text-xs font-medium">Đang kết sổ...</p>
+          <div className="mt-4 flex items-center justify-between gap-2.5 rounded-lg border bg-muted/40 px-3 py-2.5">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Loader2 className="size-3.5 text-orange-500 animate-spin shrink-0" />
+              <p className="text-xs font-medium">Đang kết sổ...</p>
+            </div>
+            {settlingRetryHandler && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={settlingRetryHandler}
+                    className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/70 hover:text-foreground transition-colors shrink-0"
+                  >
+                    <RotateCcw className="size-3" /> Thử lại
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-56 text-xs">
+                  Dùng khi kết sổ bị treo (worker không khởi động hoặc vừa tải lại trang). An toàn
+                  để bấm — nếu đang chạy bình thường, hệ thống sẽ bỏ qua.
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
         )}
 
