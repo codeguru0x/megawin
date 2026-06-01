@@ -101,8 +101,8 @@
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.5.0",
     "next": "^16.2.6",
-    "typescript": "6.0.2",
+    "typescript": "^6.0.3",
     "vite": "latest",
-    "vitest": "4.1.1"
+    "vitest": "^4.1.7"
   }
 }

@@ -1,0 +1,96 @@
+{
+  "Comment": "Bingo 18 Resettle Step Function – Kết sổ lại kỳ quay (crash-safe)",
+  "QueryLanguage": "JSONata",
+  "StartAt": "PrepareResettle",
+  "States": {
+    "PrepareResettle": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-resettle-prepare:$LATEST",
+      "Next": "EnqueueReversals",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "EnqueueReversals": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:ap-southeast-1:YOUR_ACCOUNT_ID:function:mw-worker-bingo18-dev-resettle-enqueue-reversals:$LATEST",
+      "Next": "StartSettleExecution",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 10,
+          "BackoffRate": 2,
+          "MaxDelaySeconds": 120,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "EnqueueRetryWait"
+        }
+      ]
+    },
+    "EnqueueRetryWait": {
+      "Type": "Wait",
+      "Seconds": 60,
+      "Next": "EnqueueReversals"
+    },
+    "StartSettleExecution": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Arguments": {
+        "StateMachineArn": "arn:aws:states:ap-southeast-1:YOUR_ACCOUNT_ID:stateMachine:mw-worker-bingo18-dev-settle",
+        "Input": {
+          "drawId": "{% $states.input.drawId %}",
+          "resettleContext": {
+            "resettleId": "{% $states.input.resettleId %}",
+            "lockOwnerToken": "{% $states.input.lockOwnerToken %}",
+            "lockKey": "{% $states.input.lockKey %}"
+          }
+        }
+      },
+      "Next": "ResettleSucceeded",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed",
+            "States.Timeout"
+          ],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ]
+    },
+    "ResettleSucceeded": {
+      "Type": "Succeed"
+    }
+  }
+}

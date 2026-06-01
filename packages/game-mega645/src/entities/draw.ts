@@ -227,6 +227,15 @@ export interface DrawDoc {
   /** Tổng kết xử lý hoàn tiền sau khi void. */
   voidSummary?: DrawVoidSummary;
 
+  /**
+   * Thời điểm kết sổ thành công (high-water mark).
+   *
+   * Set bởi `FinalizeSettle` khi settle complete. Đánh dấu kỳ đã được kết sổ —
+   * dùng để chặn gọi `trigger-settle` lặp lại trên kỳ đã settle (Mega 6/45
+   * không có resettle nên field này không bao giờ bị $unset).
+   */
+  settledAt?: Date;
+
   // ───── Timestamps ─────
 
   /** Thời điểm tạo document. */

@@ -4,9 +4,13 @@ packages:
   - tooling/*
   - '!**/test/**'
 
-ignoredBuiltDependencies:
-  - serverless
-  - sharp
+overrides:
+  '@types/react': ^19.2.15
+  '@types/react-dom': ^19.2.3
 
-onlyBuiltDependencies:
-  - esbuild
+allowBuilds:
+  esbuild: true
+  protobufjs: true
+  core-js: false
+  serverless: false
+  sharp: false

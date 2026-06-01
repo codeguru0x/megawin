@@ -8,15 +8,16 @@
  *
  * CRASH-SAFE: transitionStatus atomic, idempotent.
  *
- * @input  SettleContextWithFinancials ($settleCtx, financials bắt buộc)
+ * @input  SettleContext ($settleCtx — financials đã merge từ CalculateFinancials,
+ *                        body không đọc financials)
  * @output FinalizeSettleResult
  */
 
 import { FinalizeSettleUseCase } from "@megawin/game-max3d-application/use-cases/settle";
-import type { SettleContextWithFinancials } from "@megawin/game-max3d-application/use-cases/settle";
+import type { SettleContext } from "@megawin/game-max3d-application/use-cases/settle";
 
 const useCase = new FinalizeSettleUseCase();
 
-export async function handler(event: SettleContextWithFinancials) {
+export async function handler(event: SettleContext) {
   return useCase.run(event);
 }

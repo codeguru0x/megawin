@@ -106,6 +106,10 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
           salesOpenAt: remoteDraw.sales?.openAt as unknown as string | undefined,
           salesCloseAt: (remoteDraw.sales?.closeAt as unknown as string) ?? "",
           drawResultAt: remoteDraw.result?.publishedAt as unknown as string | undefined,
+          // settledAt là high-water mark — bắt buộc map từ remote để UI phân biệt
+          // "Kết sổ" (chưa từng settle) vs "Kết sổ lại" (đã settle, republish kết quả).
+          // Thiếu field này → canVoid = true (Hủy kỳ hiện sai) + Resettle không hiện.
+          settledAt: remoteDraw.settledAt as unknown as string | undefined,
           status: remoteDraw.status,
           financialDate: remoteDraw.financialDate ?? remoteDraw.drawDate,
           group: "recent" as const,

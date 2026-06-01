@@ -104,8 +104,11 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   // ─── Status Transitions (atomic, type-safe) ───
 
   /**
-   * Chuyển draw settling → settled + ghi dual jackpot snapshot.
+   * Chuyển draw settling → settled + ghi dual jackpot snapshot + stamp settledAt.
    * Dùng dot notation để chỉ cập nhật các field cần thiết.
+   *
+   * `settledAt` là high-water mark đánh dấu kỳ đã kết sổ — dùng để chặn gọi
+   * trigger-settle lặp lại (Power 6/55 không có resettle).
    */
   async settleComplete(
     drawId: string,
@@ -124,6 +127,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       "jackpot.closingJackpot1": jackpot.closingJackpot1,
       "jackpot.openingJackpot2": jackpot.openingJackpot2,
       "jackpot.closingJackpot2": jackpot.closingJackpot2,
+      settledAt: now,
       updatedAt: now,
     };
 

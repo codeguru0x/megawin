@@ -2,7 +2,7 @@
  * Max 3D Pro – Settle Use Cases barrel export.
  */
 
-export type { SettleFinancials, SettleContext, SettleContextWithFinancials } from "./types";
+export type { SettleFinancials, SettleContext, ResettleContext } from "./types";
 
 export type {
   Max3dproDrawResult as Max3dProDrawResult,

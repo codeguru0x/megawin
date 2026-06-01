@@ -6,6 +6,8 @@ export type {
   OutstandingDrawCounts,
   WinningEntryForDispatch,
   VoidedEntryForDispatch,
+  ReversalCandidate,
+  ReversalEntryForDispatch,
 } from "./entry.types";
 export type { OutstandingGameSummary } from "./outstanding.types";
 export type {

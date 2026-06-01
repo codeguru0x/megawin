@@ -214,6 +214,23 @@ export interface DrawDoc {
   /** Tổng hợp kết quả void. */
   voidSummary?: DrawVoidSummary;
 
+  /**
+   * Thời điểm kết sổ thành công lần gần nhất (high-water mark).
+   *
+   * Dùng để phân biệt "Settle lần đầu" vs "Resettle":
+   * - `null/undefined` → chưa từng settle. UI hiện nút "Kết sổ" (trigger-settle).
+   * - `>= result.publishedAt` → đã settle, không có republish mới. Không hiện nút.
+   * - `< result.publishedAt` → có republish mới sau lần settle gần nhất. UI hiện
+   *   nút "Kết sổ lại" (trigger-resettle).
+   *
+   * Set bởi `FinalizeSettle` mỗi khi settle complete — overwrite cả lần đầu lẫn
+   * resettle (luôn = thời điểm settle gần nhất).
+   *
+   * KHÔNG bị $unset khi `republishResultAfterSettled` — đây là high-water mark
+   * lịch sử settle, dùng để phân biệt với draw chưa từng settle.
+   */
+  settledAt?: Date;
+
   // ───── Timestamps ─────
 
   /** Thời điểm tạo kỳ quay. Set 1 lần khi tạo document, không đổi. */

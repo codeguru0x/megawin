@@ -22,7 +22,7 @@
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@types/node": "^25.5.0",
-    "typescript": "6.0.2"
+    "typescript": "^6.0.3"
   },
   "dependencies": {
     "@megawin/shared": "workspace:*"

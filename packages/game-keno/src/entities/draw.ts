@@ -182,20 +182,37 @@ export interface DrawDoc {
   /** Kết quả kỳ quay. */
   result?: DrawResult;
 
-  /** Phân tích tài chính kỳ quay. */
+  /** Phân tích tài chính kỳ quay sau kết sổ. */
   financial?: DrawFinancial;
 
-  /** Thống kê vận hành. */
+  /** Thống kê vận hành sau kết sổ. */
   stats?: DrawStats;
+
+  /** Tổng kết settle sau khi kết sổ — denormalize cho player API xem kết quả kỳ quay. */
+  settleSummary?: DrawSettleSummary;
 
   /** Thông tin khi kỳ quay bị huỷ. */
   voidInfo?: DrawVoidInfo;
 
-  /** Tổng kết void flow (entries refund). */
+  /** Tổng kết void flow (entries refund) sau khi void hoàn tất. */
   voidSummary?: DrawVoidSummary;
 
-  /** Tổng kết settle — denormalize cho player API xem kết quả kỳ quay. */
-  settleSummary?: DrawSettleSummary;
+  /**
+   * Thời điểm kết sổ thành công lần gần nhất (high-water mark).
+   *
+   * Dùng để phân biệt "Settle lần đầu" vs "Resettle":
+   * - `null/undefined` → chưa từng settle. UI hiện nút "Kết sổ" (trigger-settle).
+   * - `>= result.publishedAt` → đã settle, không có republish mới. Không hiện nút.
+   * - `< result.publishedAt` → có republish mới sau lần settle gần nhất. UI hiện
+   *   nút "Kết sổ lại" (trigger-resettle).
+   *
+   * Set bởi `FinalizeSettle` mỗi khi settle complete — overwrite cả lần đầu lẫn
+   * resettle (luôn = thời điểm settle gần nhất).
+   *
+   * KHÔNG bị $unset khi `republishResultAfterSettled` — đây là high-water mark
+   * lịch sử settle, dùng để phân biệt với draw chưa từng settle.
+   */
+  settledAt?: Date;
 
   // ───── Timestamps ─────
 

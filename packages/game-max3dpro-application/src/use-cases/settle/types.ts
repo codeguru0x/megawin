@@ -14,7 +14,7 @@
  *   CalculateFinancials → nhận SettleContext, trả SettleFinancials
  *     → Step Function merge: settleCtx.financials = result
  *   BuildReport → nhận SettleContext (có financials)
- *   FinalizeSettle → nhận SettleContextWithFinancials (financials bắt buộc)
+ *   FinalizeSettle → nhận SettleContext (có financials)
  *   DispatchPayouts → nhận { drawId } (package riêng)
  *
  * Mỗi step destructure những field cần dùng. Không define input riêng
@@ -54,6 +54,57 @@ export interface SettleFinancials {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ResettleContext – propagate qua Settle SFN khi nested từ Resettle SFN
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Context phiên resettle, propagate xuyên Settle SFN khi được gọi nested
+ * từ Resettle SFN.
+ *
+ * Tồn tại trên `SettleContext` ⇔ pipeline đang ở chế độ resettle:
+ *   - `FinalizeSettle` → KHÔNG bump version (đã ở trạng thái settling, chỉ
+ *     transition Settling → Settled), unlock business lock.
+ *   - `EnqueueDispatchPayouts` → enqueue chỉ entries có `payoutTx` MỚI hơn
+ *     so với phiên resettle trước (filter qua `metadata.resettleId`).
+ *
+ * Field này nằm GAME-SPECIFIC vì là phần của settle context per game — KHÔNG
+ * extract ra `game-core` (worker settle mỗi game tự handle resettle context).
+ */
+export interface ResettleContext {
+  /**
+   * ID phiên resettle (UUIDv7) — sinh tại BO API `TriggerResettle`, làm
+   * session key xuyên SFN. Dùng để:
+   *   - Tag `EntryReversal.resettleId` snapshot.
+   *   - Tag `TenantDispatchOrderDoc.metadata.resettleId` (reversal + payout mới).
+   *   - Filter dispatch orders thuộc phiên resettle hiện tại.
+   *   - `BusinessLock.token` để release lock idempotent từ FinalizeSettle.
+   */
+  resettleId: string;
+
+  /**
+   * Token sở hữu lock `max3dpro:resettle:{drawId}` — sinh tại BO API cùng lúc
+   * với `resettleId`, đảm bảo chỉ chủ lock mới có quyền release.
+   *
+   * `FinalizeSettle` (resettle path) gọi `BusinessLockCoordinator.release()`
+   * với token này để giải phóng lock idempotent (race-safe).
+   */
+  lockOwnerToken: string;
+
+  /**
+   * Lock key của phiên resettle (`{game}:resettle:{drawId}`) — propagate từ
+   * `TriggerResettleUseCase` (BO API) qua SFN tới `FinalizeSettle`.
+   *
+   * Build qua `buildResettleLockKey(GameProduct.Max3dpro, drawId)` từ
+   * `@megawin/game-core/utils` — single source of truth cho format key.
+   *
+   * Propagate qua context (thay vì rebuild ở mỗi step) để tránh duplicate
+   * format string acquire ≠ release → silent bug khi đổi convention (lock
+   * không release đúng, chỉ giải qua TTL sau ~10 phút).
+   */
+  lockKey: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SettleContext – single context xuyên suốt settle pipeline
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -73,7 +124,7 @@ export interface SettleFinancials {
  * │ CalculateFinancials ← SettleContext → SettleFinancials           │
  * │   ↳ SFN merge: settleCtx.financials = result                    │
  * │ BuildReport         ← SettleContext (financials có)              │
- * │ FinalizeSettle      ← SettleContextWithFinancials (bắt buộc)    │
+ * │ FinalizeSettle      ← SettleContext                             │
  * │ DispatchPayouts     ← { drawId } (package riêng)                │
  * └──────────────────────────────────────────────────────────────────┘
  */
@@ -120,20 +171,23 @@ export interface SettleContext {
    *
    * undefined TRƯỚC khi CalculateFinancials chạy.
    * Sau CalculateFinancials, Step Function merge kết quả vào đây.
-   * Các step sau truy cập financials qua field này.
-   *
-   * FinalizeSettle YÊU CẦU financials bắt buộc (dùng SettleContextWithFinancials).
+   * Các step sau (BuildReport, FinalizeSettle, PublishSettleDaily,
+   * PublishPlayerDaily) truy cập qua field này — đọc defensive với optional
+   * chain (`financials?.X`) nếu cần.
    */
   financials?: SettleFinancials;
-}
 
-/**
- * SettleContext với financials BẮT BUỘC — dùng cho các step SAU CalculateFinancials
- * mà CẦN financials để hoạt động (FinalizeSettle).
- *
- * Tại runtime, Step Function đảm bảo financials đã được merge trước khi
- * gọi các step này. Type này cung cấp compile-time safety.
- */
-export type SettleContextWithFinancials = SettleContext & {
-  financials: SettleFinancials;
-};
+  /**
+   * Marker resettle path — present ⇔ Settle SFN đang được gọi nested từ
+   * Resettle SFN.
+   *
+   * Absent → settle lần đầu, mọi step chạy bình thường (bump version, batchKey
+   *   `max3dpro:settle:{drawId}:payout`).
+   * Present → resettle path:
+   *   - `EnqueueDispatchPayouts` derive batchKey resettle (`max3dpro:resettle:
+   *     {drawId}:{resettleId}:payout`).
+   *   - `FinalizeSettle` không bump version, transition Settling → Settled,
+   *     release business lock qua `lockOwnerToken`.
+   */
+  resettleContext?: ResettleContext;
+}

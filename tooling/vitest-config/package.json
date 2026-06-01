@@ -9,11 +9,11 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "vitest": "4.1.1"
+    "vitest": "^4.1.7"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@types/node": "^25.5.0",
-    "typescript": "6.0.2"
+    "typescript": "^6.0.3"
   }
 }

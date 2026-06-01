@@ -89,7 +89,7 @@ export interface DrawTransitionOutput {
 }
 
 // ─────────────────────────────────────────────
-// PublishResult
+// PublishResult / RepublishResult / UpdateVietlottRef
 // ─────────────────────────────────────────────
 
 export interface PublishResultInput {
@@ -122,8 +122,41 @@ export interface PublishResultOutput {
   };
 }
 
+/**
+ * Republish CHỈ nhận `numbers` — KHÔNG có `vietlottRef`.
+ *
+ * Sửa metadata tham chiếu Vietlott thuộc endpoint riêng `update-vietlott-ref`
+ * để không kéo theo resettle khi staff chỉ cần fix drawPeriod/drawDate.
+ */
+export interface RepublishResultInput {
+  /** ID kỳ quay đã settled cần sửa kết quả. */
+  drawId: string;
+  /** 3 số kết quả mới (mỗi số 1-6). */
+  numbers: number[];
+}
+
+export type RepublishResultOutput = PublishResultOutput;
+
+export interface UpdateVietlottRefInput {
+  /** ID kỳ quay cần cập nhật vietlottRef. */
+  drawId: string;
+  /** Tham chiếu Vietlott mới. */
+  vietlottRef: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
+export interface UpdateVietlottRefOutput {
+  drawId: string;
+  vietlottRef: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
 // ─────────────────────────────────────────────
-// TriggerSettle
+// TriggerSettle / TriggerResettle
 // ─────────────────────────────────────────────
 
 export interface TriggerSettleInput {
@@ -139,6 +172,22 @@ export interface TriggerSettleOutput {
   drawId: string;
   /** Trạng thái sau khi trigger (settling). */
   status: string;
+}
+
+export interface TriggerResettleInput {
+  /** ID kỳ quay cần resettle. */
+  drawId: string;
+  /** ARN của Step Function resettle Bingo 18 (orchestrate cả Settle SFN bên trong). */
+  RESETTLE_SFN_ARN: string;
+}
+
+export interface TriggerResettleOutput {
+  drawId: string;
+  status: string;
+  /** ID phiên resettle — staff theo dõi qua `metadata.resettleId` ở dispatch orders. */
+  resettleId: string;
+  /** Owner token của WorkerLock — debug / trace. */
+  lockOwnerToken: string;
 }
 
 // ─────────────────────────────────────────────

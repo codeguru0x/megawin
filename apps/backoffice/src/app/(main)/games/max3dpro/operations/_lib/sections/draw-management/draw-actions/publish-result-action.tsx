@@ -28,8 +28,28 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { RandomFillButton } from "@/components/draws";
 import { TIER_DOT_STYLES, type TierVariant } from "@/components/games/max3dpro/triplet-display";
 import { todayVN } from "@megawin/shared/utils";
+import { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawSelectorItem } from "../../../use-operations";
-import { usePublishResult } from "../../../use-operations";
+import { usePublishResult, useRepublishResult } from "../../../use-operations";
+
+// ─── Types ──────────────────────────────────────────────────────────
+
+export interface PublishResultCurrentValues {
+  special: [string, string];
+  first: [string, string, string, string];
+  second: [string, string, string, string, string, string];
+  third: [string, string, string, string, string, string, string, string];
+  vietlottRef?: { drawPeriod: string; drawDate: string };
+}
+
+interface ValidationResult {
+  messages: string[];
+  fieldErrors: Map<string, Set<number>>;
+}
+
+const VALID: ValidationResult = { messages: [], fieldErrors: new Map() };
+
+// ─── Config ─────────────────────────────────────────────────────────
 
 const TIER_CONFIG: { key: TierVariant; label: string; count: number }[] = [
   { key: "special", label: "Giải Đặc Biệt", count: 2 },
@@ -38,12 +58,11 @@ const TIER_CONFIG: { key: TierVariant; label: string; count: number }[] = [
   { key: "third", label: "Giải Ba", count: 8 },
 ];
 
-interface ValidationResult {
-  messages: string[];
-  fieldErrors: Map<string, Set<number>>;
-}
+// ─── Helpers ────────────────────────────────────────────────────────
 
-const VALID: ValidationResult = { messages: [], fieldErrors: new Map() };
+function generateRandomTriplet(): string {
+  return String(Math.floor(Math.random() * 1000)).padStart(3, "0");
+}
 
 function validateMax3dPro(
   tiers: { key: string; label: string; values: string[] }[],
@@ -53,48 +72,34 @@ function validateMax3dPro(
 
   for (const tier of tiers) {
     const emptyIndices: number[] = [];
-    const invalidIndices: number[] = [];
+    const tierErrors = new Set<number>();
 
     for (let i = 0; i < tier.values.length; i++) {
-      const v = tier.values[i];
-      if (!v || v.trim() === "") {
+      const v = tier.values[i]?.trim() ?? "";
+      if (!v) {
         emptyIndices.push(i);
-      } else if (!/^\d{3}$/.test(v)) {
-        invalidIndices.push(i);
+        tierErrors.add(i);
+        continue;
+      }
+      if (!/^\d{3}$/.test(v)) {
+        messages.push(`${tier.label} ô ${i + 1}: phải là 3 chữ số (000–999)`);
+        tierErrors.add(i);
       }
     }
 
-    const errorSet = new Set<number>([...emptyIndices, ...invalidIndices]);
-    if (errorSet.size > 0) fieldErrors.set(tier.key, errorSet);
-
     if (emptyIndices.length > 0) {
       messages.push(
-        `Giải ${tier.label}: còn ${emptyIndices.length} ô chưa nhập (ô ${emptyIndices.map((i) => i + 1).join(", ")})`,
+        `${tier.label}: còn ${emptyIndices.length} ô chưa nhập (ô ${emptyIndices.map((i) => i + 1).join(", ")})`,
       );
     }
-    for (const i of invalidIndices) {
-      messages.push(`Giải ${tier.label} ô ${i + 1}: phải là 3 chữ số (000–999)`);
-    }
+
+    if (tierErrors.size > 0) fieldErrors.set(tier.key, tierErrors);
   }
 
-  if (messages.length === 0) return VALID;
-  return { messages, fieldErrors };
+  return messages.length > 0 ? { messages, fieldErrors } : VALID;
 }
 
-function generateRandomTriplet(): string {
-  return String(Math.floor(Math.random() * 1000)).padStart(3, "0");
-}
-
-export interface PublishResultCurrentValues {
-  special: [string, string];
-  first: [string, string, string, string];
-  second: [string, string, string, string, string, string];
-  third: [string, string, string, string, string, string, string, string];
-  vietlottRef?: {
-    drawPeriod: string;
-    drawDate: string;
-  };
-}
+// ─── Component ──────────────────────────────────────────────────────
 
 export function PublishResultAction({
   draw,
@@ -113,56 +118,61 @@ export function PublishResultAction({
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange ?? setInternalOpen;
   const publishResult = usePublishResult();
+  const republishResult = useRepublishResult();
+  // Settled → endpoint /republish-result (workflow Resettle bước 1).
+  // SalesClosed | Published → endpoint /publish-result thường.
+  const isRepublishAfterSettled = draw.status === DrawStatus.Settled;
+  const isRepublish = draw.status === DrawStatus.Published || draw.status === DrawStatus.Settled;
+  const mutation = isRepublishAfterSettled ? republishResult : publishResult;
 
-  const isRepublish = draw.status === "published" || draw.status === "settled";
-
-  const [special, setSpecial] = useState<string[]>(["", ""]);
-  const [first, setFirst] = useState<string[]>(["", "", "", ""]);
-  const [second, setSecond] = useState<string[]>(["", "", "", "", "", ""]);
-  const [third, setThird] = useState<string[]>(["", "", "", "", "", "", "", ""]);
+  const [special, setSpecial] = useState<string[]>(Array(2).fill(""));
+  const [first, setFirst] = useState<string[]>(Array(4).fill(""));
+  const [second, setSecond] = useState<string[]>(Array(6).fill(""));
+  const [third, setThird] = useState<string[]>(Array(8).fill(""));
   const [vietlotDate, setVietlotDate] = useState(todayVN());
   const [vietlotPeriod, setVietlotPeriod] = useState("");
   const [validation, setValidation] = useState<ValidationResult>(VALID);
 
-  const tierStateMap: Record<string, { values: string[]; set: (v: string[]) => void }> = {
-    special: { values: special, set: setSpecial },
-    first: { values: first, set: setFirst },
-    second: { values: second, set: setSecond },
-    third: { values: third, set: setThird },
+  const tierValues: Record<
+    string,
+    { get: string[]; set: React.Dispatch<React.SetStateAction<string[]>> }
+  > = {
+    special: { get: special, set: setSpecial },
+    first: { get: first, set: setFirst },
+    second: { get: second, set: setSecond },
+    third: { get: third, set: setThird },
   };
 
-  function getTierState(key: string) {
-    return tierStateMap[key]!;
-  }
-
   useEffect(() => {
-    if (isOpen) {
-      setSpecial(currentResult?.special.length === 2 ? [...currentResult.special] : ["", ""]);
-      setFirst(currentResult?.first.length === 4 ? [...currentResult.first] : ["", "", "", ""]);
-      setSecond(
-        currentResult?.second.length === 6 ? [...currentResult.second] : ["", "", "", "", "", ""],
+    if (isOpen && currentResult) {
+      setSpecial(
+        currentResult.special.length === 2 ? [...currentResult.special] : Array(2).fill(""),
       );
-      setThird(
-        currentResult?.third.length === 8
-          ? [...currentResult.third]
-          : ["", "", "", "", "", "", "", ""],
-      );
-      setVietlotDate(currentResult?.vietlottRef?.drawDate ?? todayVN());
-      setVietlotPeriod(currentResult?.vietlottRef?.drawPeriod ?? "");
-    } else {
-      setSpecial(["", ""]);
-      setFirst(["", "", "", ""]);
-      setSecond(["", "", "", "", "", ""]);
-      setThird(["", "", "", "", "", "", "", ""]);
+      setFirst(currentResult.first.length === 4 ? [...currentResult.first] : Array(4).fill(""));
+      setSecond(currentResult.second.length === 6 ? [...currentResult.second] : Array(6).fill(""));
+      setThird(currentResult.third.length === 8 ? [...currentResult.third] : Array(8).fill(""));
+      setVietlotDate(currentResult.vietlottRef?.drawDate ?? todayVN());
+      setVietlotPeriod(currentResult.vietlottRef?.drawPeriod ?? "");
+    } else if (!isOpen) {
+      setSpecial(Array(2).fill(""));
+      setFirst(Array(4).fill(""));
+      setSecond(Array(6).fill(""));
+      setThird(Array(8).fill(""));
       setVietlotDate(todayVN());
       setVietlotPeriod("");
+      setValidation(VALID);
     }
-    setValidation(VALID);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentResult]);
 
-  function handleOpenChange(nextOpen: boolean) {
-    setIsOpen(nextOpen);
+  function handleTierChange(tierKey: string, index: number, raw: string) {
+    const cleaned = raw.replace(/\D/g, "").slice(0, 3);
+    const entry = tierValues[tierKey];
+    if (!entry) return;
+    entry.set((prev) => {
+      const next = [...prev];
+      next[index] = cleaned;
+      return next;
+    });
   }
 
   function fillRandom() {
@@ -170,58 +180,61 @@ export function PublishResultAction({
     setFirst(Array.from({ length: 4 }, generateRandomTriplet));
     setSecond(Array.from({ length: 6 }, generateRandomTriplet));
     setThird(Array.from({ length: 8 }, generateRandomTriplet));
+    setValidation(VALID);
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
     const result = validateMax3dPro(
-      TIER_CONFIG.map((t) => ({ key: t.key, label: t.label, values: getTierState(t.key).values })),
+      TIER_CONFIG.map((t) => ({
+        key: t.key,
+        label: t.label,
+        values: tierValues[t.key]?.get ?? [],
+      })),
     );
     setValidation(result);
     if (result.messages.length > 0) return;
 
-    const body: {
-      result: {
-        special: [string, string];
-        first: [string, string, string, string];
-        second: [string, string, string, string, string, string];
-        third: [string, string, string, string, string, string, string, string];
-      };
-      vietlottRef?: { drawPeriod: string; drawDate: string };
-    } = {
-      result: {
-        special: special as [string, string],
-        first: first as [string, string, string, string],
-        second: second as [string, string, string, string, string, string],
-        third: third as [string, string, string, string, string, string, string, string],
-      },
+    const resultBody = {
+      special: special as [string, string],
+      first: first as [string, string, string, string],
+      second: second as [string, string, string, string, string, string],
+      third: third as [string, string, string, string, string, string, string, string],
     };
 
-    if (vietlotPeriod.trim()) {
-      body.vietlottRef = {
-        drawPeriod: vietlotPeriod.trim(),
-        drawDate: vietlotDate,
-      };
+    if (isRepublishAfterSettled) {
+      // Republish chỉ submit `result`. Sửa vietlottRef có endpoint riêng
+      // để không kéo theo resettle khi staff chỉ sửa metadata tham chiếu.
+      republishResult.mutate(
+        { drawId: draw.drawId, body: { result: resultBody } },
+        { onSuccess: () => setIsOpen(false) },
+      );
+      return;
     }
 
-    publishResult.mutate(
-      { drawId: draw.drawId, body },
-      { onSuccess: () => handleOpenChange(false) },
-    );
+    const body: {
+      result: typeof resultBody;
+      vietlottRef?: { drawPeriod: string; drawDate: string };
+    } = { result: resultBody };
+
+    if (vietlotPeriod.trim()) {
+      body.vietlottRef = { drawPeriod: vietlotPeriod.trim(), drawDate: vietlotDate };
+    }
+
+    publishResult.mutate({ drawId: draw.drawId, body }, { onSuccess: () => setIsOpen(false) });
   }
 
-  const filledCount = [...special, ...first, ...second, ...third].filter((v) =>
-    /^\d{3}$/.test(v),
-  ).length;
+  const filledCount = [special, first, second, third]
+    .flat()
+    .filter((v) => /^\d{3}$/.test(v)).length;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Dice3 className="size-4.5 text-pink-500" />
-            {isRepublish ? "Sửa kết quả" : "Công bố kết quả"} — Kỳ {draw.drawDate}
+            {isRepublish ? "Sửa kết quả" : "Công bố kết quả"} — Kỳ {draw.drawId}
           </DialogTitle>
           <DialogDescription className="flex items-center gap-2">
             Nhập 20 bộ ba số (000–999): 2 ĐB + 4 Nhất + 6 Nhì + 8 Ba.
@@ -248,8 +261,8 @@ export function PublishResultAction({
             </div>
 
             {TIER_CONFIG.map((tier) => {
-              const fieldErrors = validation.fieldErrors.get(tier.key);
-              const { values, set } = getTierState(tier.key);
+              const errors = validation.fieldErrors.get(tier.key);
+              const values = tierValues[tier.key]?.get ?? [];
               return (
                 <div key={tier.key} className="space-y-2.5">
                   <div className="flex items-center gap-2">
@@ -274,14 +287,9 @@ export function PublishResultAction({
                             type="text"
                             inputMode="numeric"
                             maxLength={3}
-                            value={values[i] ?? ""}
-                            onChange={(e) => {
-                              const cleaned = e.target.value.replace(/\D/g, "").slice(0, 3);
-                              const next = [...values];
-                              next[i] = cleaned;
-                              set(next);
-                            }}
-                            className={`w-full text-center font-mono text-sm font-bold tabular-nums ${fieldErrors?.has(i) ? "border-destructive" : ""}`}
+                            value={values[i]}
+                            onChange={(e) => handleTierChange(tier.key, i, e.target.value)}
+                            className={`w-full text-center font-mono text-sm font-bold tabular-nums ${errors?.has(i) ? "border-destructive" : ""}`}
                             placeholder="000"
                           />
                         </div>
@@ -303,57 +311,61 @@ export function PublishResultAction({
               </div>
             )}
 
-            <Separator />
+            {!isRepublishAfterSettled && (
+              <>
+                <Separator />
 
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
-                  <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
-                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  Tùy chọn
-                </span>
-              </div>
-              <div className="rounded-lg border bg-muted/30 p-4">
-                <p className="mb-3 text-xs text-muted-foreground">
-                  Liên kết kỳ quay với dữ liệu Vietlott chính thức để đối soát
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <CalendarDays className="size-3" /> Ngày Vietlott
-                    </Label>
-                    <Input
-                      type="date"
-                      className="font-mono text-sm"
-                      value={vietlotDate}
-                      onChange={(e) => setVietlotDate(e.target.value)}
-                    />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
+                      <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      Tùy chọn
+                    </span>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <Hash className="size-3" /> Mã kỳ Vietlott
-                    </Label>
-                    <Input
-                      type="text"
-                      placeholder="VD: 123456"
-                      className="font-mono text-sm"
-                      value={vietlotPeriod}
-                      onChange={(e) => setVietlotPeriod(e.target.value)}
-                    />
+                  <div className="rounded-lg border bg-muted/30 p-4">
+                    <p className="mb-3 text-xs text-muted-foreground">
+                      Liên kết kỳ quay với dữ liệu Vietlott chính thức để đối soát
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <CalendarDays className="size-3" /> Ngày Vietlott
+                        </Label>
+                        <Input
+                          type="date"
+                          className="font-mono text-sm"
+                          value={vietlotDate}
+                          onChange={(e) => setVietlotDate(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                          <Hash className="size-3" /> Mã kỳ Vietlott
+                        </Label>
+                        <Input
+                          type="text"
+                          placeholder="VD: 123456"
+                          className="font-mono text-sm"
+                          value={vietlotPeriod}
+                          onChange={(e) => setVietlotPeriod(e.target.value)}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
 
           <DialogFooter className="pt-4">
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Huỷ bỏ
             </Button>
-            <Button type="submit" disabled={publishResult.isPending}>
-              {publishResult.isPending ? (
+            <Button type="submit" disabled={mutation.isPending || disabled}>
+              {mutation.isPending ? (
                 <Loader2 className="mr-2 size-4 animate-spin" />
               ) : (
                 <Check className="mr-2 size-4" />

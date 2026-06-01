@@ -7,6 +7,7 @@ export { GameConfigRepository } from "./game-config-repo";
 export { TenantConfigRepository } from "./tenant-config-repo";
 export { TicketRepository } from "./ticket-repo";
 export { EntryRepository } from "./entry-repo";
+export { EntryResettleRepository } from "./entry-resettle-repo";
 export { PlayerDailyEntryRepository } from "./player-daily-entry-repo";
 export { SettleDrawReportRepository } from "./settle-draw-report-repo";
 export { SettleTenantReportRepository } from "./settle-tenant-report-repo";

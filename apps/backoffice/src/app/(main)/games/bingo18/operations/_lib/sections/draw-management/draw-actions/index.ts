@@ -1,5 +1,7 @@
 export { PublishResultAction } from "./publish-result-action";
 export type { PublishResultCurrentValues } from "./publish-result-action";
+export { UpdateVietlottRefAction } from "./update-vietlott-ref-action";
+export type { VietlottRefValues } from "./update-vietlott-ref-action";
 export { EditScheduleAction } from "./edit-schedule-action";
 export { VoidDrawAction } from "./void-draw-action";
 export { CreateDrawAction } from "./create-draw-action";

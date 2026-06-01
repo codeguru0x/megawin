@@ -27,6 +27,17 @@ export interface DrawSelectorItem {
   scheduledDrawAt: string;
   /** Thời điểm công bố kết quả (ISO 8601), chỉ có sau khi published. */
   drawResultAt?: string;
+  /**
+   * Thời điểm settle hoàn tất gần nhất (ISO 8601), chỉ có sau khi đã settle ≥ 1 lần.
+   *
+   * Dùng để FE phân biệt 2 case có cùng status `Published`:
+   *   - `settledAt == null`: draw vừa publish lần đầu → hiển thị "Kết sổ".
+   *   - `settledAt != null && drawResultAt > settledAt`: đã republish kết
+   *     quả mới sau settle → hiển thị "Kết sổ lại" (Resettle).
+   *
+   * KHÔNG bị $unset bởi `republishResultAfterSettled` — high-water mark lịch sử.
+   */
+  settledAt?: string;
   status: DrawStatus;
   /** Ngày tài chính (YYYY-MM-DD). */
   financialDate: string;

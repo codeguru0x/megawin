@@ -70,8 +70,13 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
           d.sales?.closeAt instanceof Date
             ? d.sales.closeAt.toISOString()
             : String(d.sales?.closeAt ?? ""),
-        drawResultAt: drawTimeDate.toISOString(),
+        // `drawResultAt` = thời điểm publish kết quả thực tế (sau khi staff bấm
+        // "Công bố"). KHÔNG fallback về drawTime: UI so sánh drawResultAt với
+        // settledAt để quyết định "Kết sổ lại". Fallback về giờ quay dự kiến (luôn
+        // < settledAt) sẽ làm Resettle không bao giờ hiện. undefined khi chưa publish.
+        drawResultAt: d.result?.publishedAt?.toISOString(),
         status: d.status,
+        settledAt: d.settledAt?.toISOString(),
         financialDate: d.financialDate ?? d.drawDate,
         group,
       };

@@ -40,6 +40,11 @@
       "import": "./src/use-cases/draws/index.ts",
       "default": "./dist/use-cases/draws/index.js"
     },
+    "./use-cases/resettle": {
+      "types": "./src/use-cases/resettle/index.ts",
+      "import": "./src/use-cases/resettle/index.ts",
+      "default": "./dist/use-cases/resettle/index.js"
+    },
     "./use-cases/game-config": {
       "types": "./src/use-cases/game-config/index.ts",
       "import": "./src/use-cases/game-config/index.ts",
@@ -94,14 +99,15 @@
     "@megawin/shared": "workspace:*",
     "@megawin/tenant-dispatch": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*",
+    "@megawin/worker-core": "workspace:*",
     "mongodb": "^7.1.1"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.5.0",
-    "typescript": "6.0.2",
+    "typescript": "^6.0.3",
     "vite": "latest",
-    "vitest": "4.1.1"
+    "vitest": "^4.1.7"
   }
 }

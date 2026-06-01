@@ -5,15 +5,15 @@
  *
  * IDEMPOTENT: re-aggregate toàn bộ → overwrite system reports.
  *
- * @input  { financialDate: string }
+ * @input  SettleContext ($settleCtx — chỉ đọc `financialDate`)
  * @output PublishSettleDailyResult
  */
 
 import { PublishSettleDailyUseCase } from "@megawin/game-keno-application/use-cases/settle";
-import type { SettleContextWithFinancials } from "@megawin/game-keno-application/use-cases/settle";
+import type { SettleContext } from "@megawin/game-keno-application/use-cases/settle";
 
 const useCase = new PublishSettleDailyUseCase();
 
-export async function handler(event: SettleContextWithFinancials) {
+export async function handler(event: SettleContext) {
   return useCase.run(event);
 }

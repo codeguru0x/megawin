@@ -99,12 +99,10 @@
 
 import { randomUUID } from "node:crypto";
 import { InternalUseCase } from "@megawin/app-core/use-cases";
+import { truncateErrorMessage } from "@megawin/shared/utils";
 
 import { WorkerLockRepository } from "../infras/repos";
 import type { LockedWorkerResult } from "./types";
-
-/** Giới hạn độ dài `lastError`. 500 ký tự đủ chứa top-frame stack + message. */
-const MAX_ERROR_LENGTH = 500;
 
 export abstract class LockedWorkerUseCase<I, O> extends InternalUseCase<I, LockedWorkerResult<O>> {
   protected readonly lockRepo = new WorkerLockRepository();
@@ -261,7 +259,7 @@ export abstract class LockedWorkerUseCase<I, O> extends InternalUseCase<I, Locke
     try {
       await this.lockRepo.finalizeAndRelease(this._lockKey, this._ownerToken, {
         lastSuccessAt: error ? undefined : new Date().toISOString(),
-        lastError: error ? truncateError(error) : null,
+        lastError: error ? truncateErrorMessage(error) : null,
       });
     } catch (err) {
       console.warn(`[worker-lock] finalizeAndRelease failed: ${this._lockKey}`, err);
@@ -273,9 +271,4 @@ export abstract class LockedWorkerUseCase<I, O> extends InternalUseCase<I, Locke
 
     return value as O;
   }
-}
-
-function truncateError(err: unknown): string {
-  const raw = err instanceof Error ? err.message : String(err);
-  return raw.length > MAX_ERROR_LENGTH ? `${raw.slice(0, MAX_ERROR_LENGTH)}… [truncated]` : raw;
 }

@@ -61,8 +61,8 @@
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.5.0",
-    "typescript": "6.0.2",
-    "vitest": "4.1.1"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "*",

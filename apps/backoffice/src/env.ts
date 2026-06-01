@@ -23,6 +23,8 @@ export const env = createEnv({
     REDIS_URI: z.string().min(1),
 
     /** Step Function ARNs */
+
+    /** Settle Step Function ARNs */
     KENO_SETTLE_SFN_ARN: z.string().min(1),
     BINGO18_SETTLE_SFN_ARN: z.string().min(1),
     LOTTO535_SETTLE_SFN_ARN: z.string().min(1),
@@ -31,6 +33,7 @@ export const env = createEnv({
     MAX3D_SETTLE_SFN_ARN: z.string().min(1),
     MAX3DPRO_SETTLE_SFN_ARN: z.string().min(1),
 
+    /** Void Step Function ARNs */
     KENO_VOID_SFN_ARN: z.string().min(1),
     BINGO18_VOID_SFN_ARN: z.string().min(1),
     LOTTO535_VOID_SFN_ARN: z.string().min(1),
@@ -38,6 +41,12 @@ export const env = createEnv({
     POWER655_VOID_SFN_ARN: z.string().min(1),
     MAX3D_VOID_SFN_ARN: z.string().min(1),
     MAX3DPRO_VOID_SFN_ARN: z.string().min(1),
+
+    /** Resettle Step Function ARNs */
+    KENO_RESETTLE_SFN_ARN: z.string().min(1),
+    BINGO18_RESETTLE_SFN_ARN: z.string().min(1),
+    MAX3D_RESETTLE_SFN_ARN: z.string().min(1),
+    MAX3DPRO_RESETTLE_SFN_ARN: z.string().min(1),
   },
 
   client: {

@@ -29,6 +29,7 @@ import {
   Loader2,
   CalendarCheck,
   ClipboardPen,
+  Link as LinkIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -48,7 +49,9 @@ interface DrawCommandProps {
   onCloseSales?: () => void;
   onPublishResult?: () => void;
   onRepublishResult?: () => void;
+  onUpdateVietlottRef?: () => void;
   onTriggerSettle?: () => void;
+  onTriggerResettle?: () => void;
   onEditSchedule?: () => void;
   onVoidDraw?: () => void;
 }
@@ -168,9 +171,30 @@ function LifecycleStepper({ steps }: { steps: Step[] }) {
   );
 }
 
+// ─── Resettle detection helper ─────────────────────────────────────────────────
+
+/**
+ * Phân biệt 2 case có cùng `status === Published`:
+ *   - draw vừa publish kết quả lần đầu, chưa từng settle → hiển thị "Kết sổ".
+ *   - draw đã settle ≥ 1 lần và staff vừa republish kết quả mới → hiển thị "Kết sổ lại".
+ *
+ * Edge case quan trọng: nếu `settledAt` null hoặc `publishedAt <= settledAt`
+ * → KHÔNG cho phép Resettle (chống staff bấm nhầm; backend cũng có guard tương ứng).
+ */
+function shouldShowResettle(draw: DrawSelectorItem): boolean {
+  if (draw.status !== DrawStatus.Published) return false;
+  if (!draw.settledAt) return false;
+  if (!draw.drawResultAt) return false;
+  return new Date(draw.drawResultAt).getTime() > new Date(draw.settledAt).getTime();
+}
+
 // ─── Next Action ──────────────────────────────────────────────────────────────
 
-function getNextAction(draw: DrawSelectorItem, handlers: Partial<DrawCommandProps>) {
+function getNextAction(
+  draw: DrawSelectorItem,
+  handlers: Partial<DrawCommandProps>,
+  isResettleReady: boolean,
+) {
   switch (draw.status) {
     case DrawStatus.Scheduled:
       return { label: "Mở bán", handler: handlers.onOpenSales, icon: Unlock, className: "" };
@@ -189,8 +213,16 @@ function getNextAction(draw: DrawSelectorItem, handlers: Partial<DrawCommandProp
         icon: Radio,
       };
     case DrawStatus.Published:
+      if (isResettleReady) {
+        return {
+          label: "Kết sổ lại",
+          handler: handlers.onTriggerResettle,
+          icon: RotateCcw,
+          className: "bg-orange-600 hover:bg-orange-700 text-white",
+        };
+      }
       return {
-        label: "Kết sổ (Settle)",
+        label: "Kết sổ",
         handler: handlers.onTriggerSettle,
         icon: ChevronRight,
         className: "",
@@ -296,24 +328,45 @@ export function DrawCommandCenter({
   onCloseSales,
   onPublishResult,
   onRepublishResult,
+  onUpdateVietlottRef,
   onTriggerSettle,
+  onTriggerResettle,
   onEditSchedule,
   onVoidDraw,
 }: DrawCommandProps) {
   const status = draw.status as DrawStatus;
   const steps = getSteps(draw, result);
-  const nextAction = getNextAction(draw, {
-    onOpenSales,
-    onCloseSales,
-    onPublishResult,
-    onTriggerSettle,
-  });
+  const isResettleReady = shouldShowResettle(draw);
+  const nextAction = getNextAction(
+    draw,
+    {
+      onOpenSales,
+      onCloseSales,
+      onPublishResult,
+      onTriggerSettle,
+      onTriggerResettle,
+    },
+    isResettleReady,
+  );
 
   const canEdit = [DrawStatus.Scheduled, DrawStatus.SalesOpen].includes(status as any);
-  const canVoid = [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(
-    status as any,
-  );
+  // Cấm huỷ kỳ nếu đã từng kết sổ (settledAt là high-water mark, không bị $unset
+  // khi republish). Sau khi sửa kết quả của kỳ đã settle, status về Published
+  // nhưng đây là luồng chờ resettle — chỉ được kết sổ lại, không được huỷ.
+  // Backend cũng guard tương ứng trong VoidDrawUseCase.
+  const canVoid =
+    !draw.settledAt &&
+    [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(status as any);
+  // Cho phép sửa kết quả khi:
+  //   - status = Published (kết quả vừa publish, kể cả lần đầu hay đã settle xong và republish chuẩn bị resettle)
+  //   - status = Settled (kịch bản phát hiện sai sót sau khi đã kết sổ → mở luồng resettle)
   const canRepublish = status === DrawStatus.Published || status === DrawStatus.Settled;
+  // vietlottRef là metadata tham chiếu (drawPeriod/drawDate Vietlott) — sửa
+  // KHÔNG kéo theo resettle. Cho phép sau khi đã có result: Published/Settling/Settled.
+  const canEditVietlottRef =
+    status === DrawStatus.Published ||
+    status === DrawStatus.Settling ||
+    status === DrawStatus.Settled;
   const canReopenSales = status === DrawStatus.SalesClosed;
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
   const isSettled = status === DrawStatus.Settled;
@@ -535,14 +588,19 @@ export function DrawCommandCenter({
                   <nextAction.icon className="size-3.5" /> {nextAction.label}
                 </Button>
               )}
-              {isSettled && (
-                <Button variant="outline" size="sm" className="gap-1.5" disabled>
-                  <RotateCcw className="size-3.5" /> Re-settle
-                </Button>
-              )}
               {canRepublish && (
                 <Button variant="outline" size="sm" onClick={onRepublishResult} className="gap-1.5">
                   <ClipboardPen className="size-3.5" /> Sửa kết quả
+                </Button>
+              )}
+              {canEditVietlottRef && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onUpdateVietlottRef}
+                  className="gap-1.5"
+                >
+                  <LinkIcon className="size-3.5" /> Sửa tham chiếu Vietlott
                 </Button>
               )}
               {canReopenSales && (

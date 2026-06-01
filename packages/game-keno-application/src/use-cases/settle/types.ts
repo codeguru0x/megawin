@@ -94,6 +94,49 @@ export interface SettleFinancials {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ResettleContext – marker propagate qua SFN khi settle nested từ resettle
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Marker indicating Settle SFN này được nested từ Resettle SFN.
+ *
+ * Khi present:
+ *   - `EnqueueDispatchPayouts` derive `batchKey` resettle (`keno:resettle:
+ *     {drawId}:{resettleId}:payout`) thay vì batchKey settle mặc định
+ *     `keno:settle:{drawId}:payout`.
+ *   - `FinalizeSettle` release `WorkerLock` qua `lockOwnerToken`.
+ *   - `description` của dispatch order suffix " (resettle)".
+ *
+ * Khi absent: Settle SFN chạy bình thường cho lần settle đầu — không đụng lock,
+ * không đổi batchKey.
+ *
+ * NOTE: `payoutBatchKey` KHÔNG có trong context — convention naming
+ * centralize ở `EnqueueDispatchPayoutsUseCase` (derive từ `drawId +
+ * resettleId`), đồng nhất với pattern `reversalBatchKey` ở resettle path.
+ * Bỏ field này giúp SFN ASL không build batchKey qua JSONata, contract
+ * cross-SFN gọn hơn.
+ */
+export interface ResettleContext {
+  /** UUIDv7 phiên resettle hiện tại — dùng tracing + `sourceContext.resettleId`. */
+  resettleId: string;
+  /** ownerToken `WorkerLock` — `FinalizeSettle` truyền vào `finalizeAndRelease`. */
+  lockOwnerToken: string;
+  /**
+   * Lock key của phiên resettle (`{game}:resettle:{drawId}`) — propagate từ
+   * `TriggerResettleUseCase` (BO API) xuyên SFN tới `FinalizeSettleUseCase`.
+   *
+   * Build qua `buildResettleLockKey(GameProduct.Keno, drawId)` từ
+   * `@megawin/game-core/utils` — single source of truth cho format key.
+   *
+   * Propagate qua context (thay vì rebuild ở mỗi step) để:
+   *   - Tránh duplicate format string acquire ≠ release → silent bug khi đổi
+   *     convention (lock không release đúng, chỉ giải qua TTL sau 5 phút).
+   *   - `FinalizeSettle` không cần biết game cụ thể — code generic.
+   */
+  lockKey: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SettleContext – single context xuyên suốt settle pipeline
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -114,7 +157,7 @@ export interface SettleFinancials {
  * │ CalculateFinancials ← SettleContext → SettleFinancials           │
  * │   ↳ SFN merge: settleCtx.financials = result                   │
  * │ BuildReport         ← SettleContext (financials có)              │
- * │ FinalizeSettle      ← SettleContextWithFinancials (bắt buộc)   │
+ * │ FinalizeSettle      ← SettleContext                             │
  * │ DispatchPayouts     ← SettleContext                             │
  * └──────────────────────────────────────────────────────────────────┘
  */
@@ -165,15 +208,17 @@ export interface SettleContext {
    * BuildReport và FinalizeSettle truy cập financials qua field này.
    */
   financials?: SettleFinancials;
-}
 
-/**
- * SettleContext với financials BẮT BUỘC — dùng cho các step SAU CalculateFinancials
- * mà CẦN financials để hoạt động (FinalizeSettle).
- *
- * Tại runtime, Step Function đảm bảo financials đã được merge trước khi
- * gọi các step này. Type này cung cấp compile-time safety.
- */
-export type SettleContextWithFinancials = SettleContext & {
-  financials: SettleFinancials;
-};
+  /**
+   * Marker resettle path — propagate qua mọi step SFN.
+   *
+   * - Absent → settle lần đầu, mọi step chạy bình thường.
+   * - Present → nested settle từ resettle:
+   *     • `EnqueueDispatchPayouts` derive batchKey resettle từ `drawId + resettleId`.
+   *     • `FinalizeSettle` release `WorkerLock` qua `lockOwnerToken`.
+   *
+   * Set bởi `Resettle SFN.StartSettleExecution` khi nested call vào Settle SFN.
+   * `PrepareSettle` propagate xuyên flow — KHÔNG đụng status logic.
+   */
+  resettleContext?: ResettleContext;
+}

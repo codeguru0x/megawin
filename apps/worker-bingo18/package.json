@@ -10,6 +10,7 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "build:deps": "turbo run build --filter=@megawin/worker-bingo18^...",
+    "build:sfn": "bash src/step-functions/generate-asl.sh",
     "deploy:dev": "pnpm build:deps && set -a && . ./.env.dev && set +a && serverless deploy --stage dev",
     "deploy:prod": "pnpm build:deps && set -a && . ./.env.prod && set +a && serverless deploy --stage prod"
   },
@@ -28,6 +29,6 @@
     "@types/node": "^25.5.0",
     "serverless-offline": "^14.5.0",
     "tsx": "^4.21.0",
-    "typescript": "6.0.2"
+    "typescript": "^6.0.3"
   }
 }

@@ -84,7 +84,8 @@ export interface DrawResult {
   second: [string, string, string, string, string, string];
   /** 8 bộ ba Giải Ba. */
   third: [string, string, string, string, string, string, string, string];
-  settledAt: string;
+  /** Thời điểm kết sổ thật (ISO 8601) — undefined nếu chưa từng settle. Hiển thị ở bước "Kết sổ". */
+  settledAt?: string;
   tiers: {
     /** Play mode của tier — phân biệt basic `special` vs plus `special`. */
     mode: "basic" | "plus";

@@ -168,8 +168,13 @@ export class WorkerLockRepository extends WorkerCoreBaseRepo<WorkerLockEntity, W
       lastError?: string | null;
     } = { ownerToken: null };
 
-    if (fields.lastSuccessAt !== undefined) $set.lastSuccessAt = fields.lastSuccessAt;
-    if (fields.lastError !== undefined) $set.lastError = fields.lastError;
+    if (fields.lastSuccessAt !== undefined) {
+      $set.lastSuccessAt = fields.lastSuccessAt;
+    }
+
+    if (fields.lastError !== undefined) {
+      $set.lastError = fields.lastError;
+    }
 
     return await this.updateOne({ lockKey, ownerToken }, { $set });
   }

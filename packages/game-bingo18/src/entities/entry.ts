@@ -7,11 +7,7 @@
  * Đơn vị vận hành chính cho settle + report.
  */
 
-import type {
-  Bingo18PlayType,
-  Bingo18BigSmallBet,
-  Bingo18TripleKind,
-} from "./enums";
+import type { Bingo18PlayType, Bingo18BigSmallBet, Bingo18TripleKind } from "./enums";
 import type { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
 import type { ISODateString } from "./types";
 import type { Long } from "@megawin/game-core/types";
@@ -78,6 +74,90 @@ export interface EntryPayout {
    * @example `"019078a0-b4c5-7def-8a3b-1c2d3e4f5a6b"`
    */
   payoutTx?: string;
+}
+
+/**
+ * Snapshot reversal — chỉ tồn tại khi entry đã đi qua ÍT NHẤT 1 phiên resettle.
+ *
+ * Workflow resettle:
+ *   1. `TriggerResettle` (BO API): sinh `resettleId` (UUIDv7) làm session key.
+ *   2. `PrepareResettle` step 1 (`clearReversalSnapshot`): wipe reversal phiên
+ *      cũ (đảm bảo entries thắng phiên N-1 nhưng KHÔNG thắng phiên N không
+ *      lingers reversal cũ → tránh re-enqueue double-debit).
+ *   3. `PrepareResettle` step 2 (`bulkSetReversal`): copy `payout.payoutAmount`
+ *      (cũ) sang `reversalAmount`, sinh MỚI `reversalTx` (UUIDv7) làm idempotency
+ *      key cho dispatch reversal, ghi atomic cùng `resettleId`. KHÔNG snapshot
+ *      `payout.payoutTx` cũ — payoutTx cũ đã được dispatch xong (FIFO outbox);
+ *      reversal là transaction MỚI, độc lập.
+ *      Sau snapshot → reset entry về `Scheduled` để Settle SFN replay.
+ *   4. `EnqueueReversals`: đọc `reversal.reversalTx` + `reversalAmount` để tạo
+ *      reversal dispatch order (Debit ngược tenant).
+ *   5. `FinalizeSettle` (resettle path): **KHÔNG** clear `reversal` field.
+ *      Field giữ lại làm audit trail (xem semantic kép bên dưới).
+ *
+ * **SEMANTIC KÉP** — field này có 2 vai trò theo lifecycle:
+ *
+ * (a) **Dispatch payload** (giữa `PrepareResettle` và `FinalizeSettle`):
+ *     `EnqueueReversals` đọc field để build dispatch order. Phải hợp lệ và
+ *     khớp 1-1 với phiên resettle hiện tại.
+ *
+ * (b) **Audit trail** (sau `FinalizeSettle`, trước phiên resettle kế tiếp):
+ *     Field giữ snapshot phiên resettle GẦN NHẤT — CS/forensic query trực
+ *     tiếp trên entry doc:
+ *       - `reversal.resettleId` → trace nhóm phiên resettle.
+ *       - `reversal.reversalTx` → join `tenant_dispatch_orders` để xem trạng
+ *         thái dispatch.
+ *       - `reversal.reversalAmount` → so với `payout.payoutAmount` mới: biết
+ *         phiên resettle giảm/tăng bao nhiêu cho vé này.
+ *     **Audit chỉ giữ phiên gần nhất** — phiên N+1 overwrite phiên N. Cần audit
+ *     đầy đủ chuỗi phiên → query `tenant_dispatch_orders` với
+ *     `sourceKind=Reversal, sourceId=entryId`.
+ *
+ * **Lifecycle giữa 2 phiên resettle**:
+ *   - Entry thắng cả phiên N và N+1: `bulkSetReversal` overwrite reversal phiên
+ *     N+1 lên phiên N.
+ *   - Entry thắng phiên N nhưng KHÔNG thắng N+1: `clearReversalSnapshot` ở
+ *     `PrepareResettle.step1` của phiên N+1 wipe reversal phiên N → bắt buộc
+ *     để tránh `EnqueueReversals` phiên N+1 trả entry này (double-debit).
+ *
+ * IDEMPOTENT: `reversalTx` UUIDv7 unique → outbox unique index reject duplicate.
+ */
+export interface EntryReversal {
+  /**
+   * Idempotency key cho reversal dispatch transaction — UUIDv7 (RFC 9562).
+   *
+   * Sinh MỚI tại `PrepareResettle` (không copy từ `payout.payoutTx` cũ — payout cũ
+   * là transaction đã dispatch, reversal là transaction mới độc lập).
+   * Ghi atomic cùng `reversalAmount` + `resettleId` qua `bulkSetReversal`.
+   * `EnqueueReversals` seed vào `TenantDispatchOrderDoc.tx` để outbox dispatch
+   * idempotent xuống tenant.
+   *
+   * Sau `FinalizeSettle`: giữ lại làm audit pointer — join với
+   * `tenant_dispatch_orders` để tra trạng thái dispatch của reversal.
+   *
+   * @example `"01a0b1c2-d3e4-7fab-89cd-ef0123456789"`
+   */
+  reversalTx: string;
+
+  /**
+   * Số tiền cần ghi nợ (debit) lại tenant — copy từ `payout.payoutAmount`
+   * tại thời điểm snapshot (VND). Đây là số tiền đã credit cho tenant ở phiên
+   * settle/resettle TRƯỚC, cần đảo ngược.
+   *
+   * Sau `FinalizeSettle`: giữ lại làm audit — so với `payout.payoutAmount` mới
+   * để biết phiên resettle hiện tại đã thay đổi bao nhiêu cho vé này.
+   */
+  reversalAmount: number;
+
+  /**
+   * ID phiên resettle (UUIDv7) — sinh tại `TriggerResettle` BO API, propagate
+   * xuyên SFN. Dùng để trace nhóm tất cả entry trong cùng phiên resettle, ghi
+   * vào `TenantDispatchOrderDoc.metadata.resettleId`.
+   *
+   * Sau `FinalizeSettle`: giữ lại làm audit — trace cụ thể phiên nào đã
+   * resettle vé này gần đây nhất.
+   */
+  resettleId: string;
 }
 
 /**
@@ -194,6 +274,19 @@ export interface TicketEntryDoc {
    * Toàn bộ tiền cược được hoàn 100%.
    */
   voidInfo?: EntryVoidInfo;
+
+  // ───── Reversal (khi resettle) ─────
+
+  /**
+   * Snapshot reversal — chỉ tồn tại khi entry đã đi qua ÍT NHẤT 1 phiên resettle.
+   *
+   * Set tại `PrepareResettle.bulkSetReversal`, KHÔNG clear ở `FinalizeSettle`
+   * (giữ làm audit trail của phiên resettle gần nhất). Đọc bởi `EnqueueReversals`
+   * (giữa Prepare và Finalize) và bởi CS/forensic queries (sau Finalize).
+   *
+   * Xem JSDoc {@link EntryReversal} cho semantic kép.
+   */
+  reversal?: EntryReversal;
 
   // ───── Timestamps ─────
 

@@ -49,6 +49,7 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
       // drawTime luôn có — giờ quay theo lịch, dùng để pre-fill form sửa lịch
       scheduledDrawAt: draw.drawTime.toISOString(),
       drawResultAt: draw.result?.publishedAt?.toISOString(),
+      settledAt: draw.settledAt?.toISOString(),
       status: draw.status as DrawStatus,
       financialDate: draw.financialDate,
       group,

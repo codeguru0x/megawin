@@ -1,19 +1,7 @@
-import { z } from "zod";
-
 import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities";
 import { PublishResultUseCase } from "@megawin/game-bingo18-application/use-cases/draws";
-import {
-  BINGO18_DRAW_COUNT,
-  BINGO18_DICE_MIN,
-  BINGO18_DICE_MAX,
-} from "@megawin/game-bingo18/entities";
-
-const publishResultSchema = z.object({
-  numbers: z
-    .array(z.number().int().min(BINGO18_DICE_MIN).max(BINGO18_DICE_MAX))
-    .length(BINGO18_DRAW_COUNT, `Phải có đúng ${BINGO18_DRAW_COUNT} số.`),
-});
+import { publishResultSchema } from "../_lib/schema";
 
 const publishResultUseCase = new PublishResultUseCase();
 

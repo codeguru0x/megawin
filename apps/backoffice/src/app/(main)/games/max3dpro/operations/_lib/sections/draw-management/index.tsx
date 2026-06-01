@@ -34,11 +34,19 @@ import { useDrawContext } from "../../use-draw-context";
 import { DrawCommandCenter } from "./draw-command-center";
 import {
   PublishResultAction,
+  UpdateVietlottRefAction,
   EditScheduleAction,
   VoidDrawAction,
   type PublishResultCurrentValues,
+  type VietlottRefValues,
 } from "./draw-actions";
-import { useOpenSales, useCloseSales, useTriggerSettle, useDrawDetail } from "../../use-operations";
+import {
+  useOpenSales,
+  useCloseSales,
+  useTriggerSettle,
+  useTriggerResettle,
+  useDrawDetail,
+} from "../../use-operations";
 
 import type { DrawResult, VoidInfo } from "../../types";
 
@@ -56,15 +64,18 @@ export function DrawManagementSection() {
   const { draw, effectiveDrawId } = useDrawContext();
 
   const [publishOpen, setPublishOpen] = useState(false);
+  const [vietlottRefOpen, setVietlottRefOpen] = useState(false);
   const [editScheduleOpen, setEditScheduleOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
   const [openSalesConfirm, setOpenSalesConfirm] = useState(false);
   const [closeSalesConfirm, setCloseSalesConfirm] = useState(false);
   const [settleConfirm, setSettleConfirm] = useState(false);
+  const [resettleConfirm, setResettleConfirm] = useState(false);
 
   const openSales = useOpenSales();
   const closeSales = useCloseSales();
   const triggerSettle = useTriggerSettle();
+  const triggerResettle = useTriggerResettle();
 
   const { data: drawDetailData } = useDrawDetail(
     draw && RESULT_SHOW.has(draw.status) ? effectiveDrawId : undefined,
@@ -95,8 +106,9 @@ export function DrawManagementSection() {
       first: r.first as [string, string, string, string],
       second: r.second as [string, string, string, string, string, string],
       third: r.third as [string, string, string, string, string, string, string, string],
-      settledAt:
-        r.publishedAt instanceof Date ? r.publishedAt.toISOString() : String(r.publishedAt ?? ""),
+      // settledAt = thời điểm kết sổ thật (hiển thị ở bước "Kết sổ" của stepper).
+      // Lấy từ d.settledAt, KHÔNG phải result.publishedAt (đó là thời điểm công bố KQ).
+      settledAt: d.settledAt instanceof Date ? d.settledAt.toISOString() : undefined,
       tiers,
       financial: {
         totalRevenue: d.financial?.totalRevenue ?? 0,
@@ -143,6 +155,16 @@ export function DrawManagementSection() {
     };
   })();
 
+  const currentVietlottRef: VietlottRefValues | undefined = (() => {
+    const d = drawDetailData?.draw;
+    const v = d?.vietlottRef;
+    if (!v?.drawPeriod) return undefined;
+    return {
+      drawPeriod: v.drawPeriod,
+      drawDate: String(v.drawDate ?? ""),
+    };
+  })();
+
   if (!draw) return null;
 
   return (
@@ -155,7 +177,9 @@ export function DrawManagementSection() {
         onCloseSales={() => setCloseSalesConfirm(true)}
         onPublishResult={() => setPublishOpen(true)}
         onRepublishResult={() => setPublishOpen(true)}
+        onUpdateVietlottRef={() => setVietlottRefOpen(true)}
         onTriggerSettle={() => setSettleConfirm(true)}
+        onTriggerResettle={() => setResettleConfirm(true)}
         onEditSchedule={() => setEditScheduleOpen(true)}
         onVoidDraw={() => setVoidOpen(true)}
       />
@@ -167,6 +191,12 @@ export function DrawManagementSection() {
         open={publishOpen}
         onOpenChange={setPublishOpen}
         currentResult={currentResult}
+      />
+      <UpdateVietlottRefAction
+        draw={draw}
+        open={vietlottRefOpen}
+        onOpenChange={setVietlottRefOpen}
+        currentValues={currentVietlottRef}
       />
       <EditScheduleAction
         draw={draw}
@@ -235,6 +265,31 @@ export function DrawManagementSection() {
               disabled={triggerSettle.isPending}
             >
               Xác nhận kết sổ
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm: Kết sổ lại (Resettle) */}
+      <AlertDialog open={resettleConfirm} onOpenChange={setResettleConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận kết sổ lại?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Kỳ <strong>{draw.drawId}</strong> sẽ được kết sổ LẠI với kết quả vừa cập nhật. Hệ
+              thống sẽ tự động hoàn lại các khoản chi trả của lần kết sổ trước, sau đó tính toán và
+              phân bổ giải thưởng theo kết quả mới. Thao tác không thể hoàn tác — hãy chắc chắn kết
+              quả mới đã đúng.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Huỷ bỏ</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => triggerResettle.mutate({ drawId: effectiveDrawId })}
+              disabled={triggerResettle.isPending}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              Xác nhận kết sổ lại
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

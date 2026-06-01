@@ -6,15 +6,15 @@
  *
  * IDEMPOTENT: delete + re-aggregate → overwrite player daily reports.
  *
- * @input  { financialDate: string }
+ * @input  SettleContext ($settleCtx — chỉ đọc `financialDate`)
  * @output PublishPlayerDailyResult
  */
 
 import { PublishPlayerDailyUseCase } from "@megawin/game-max3dpro-application/use-cases/settle";
-import type { SettleContextWithFinancials } from "@megawin/game-max3dpro-application/use-cases/settle";
+import type { SettleContext } from "@megawin/game-max3dpro-application/use-cases/settle";
 
 const useCase = new PublishPlayerDailyUseCase();
 
-export async function handler(event: SettleContextWithFinancials) {
+export async function handler(event: SettleContext) {
   return useCase.run(event);
 }

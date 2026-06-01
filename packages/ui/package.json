@@ -24,10 +24,10 @@
     "@megawin/eslint-config": "workspace:*",
     "@megawin/typescript-config": "workspace:*",
     "@types/node": "^25.5.0",
-    "@types/react": "19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "19.2.3",
     "eslint": "^10.0.2",
-    "typescript": "6.0.2"
+    "typescript": "^6.0.3"
   },
   "dependencies": {
     "@megawin/shared": "workspace:*",

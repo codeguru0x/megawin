@@ -10,6 +10,8 @@
  * - `logError(label, err, ctx?)` — ghi `console.error` đúng format cho Vercel
  * - `logWarn(label, message, ctx?)` — ghi `console.warn` có structured context
  * - `logInfo(label, message, ctx?)` — ghi `console.log` có structured context
+ * - `truncateErrorMessage(err, maxLength?)` — trích + truncate error message
+ *   để persist vào DB field có giới hạn độ dài
  */
 
 import { AppException } from "../errors/app-exception";
@@ -157,4 +159,38 @@ export function logInfo(label: string, message: string, ctx?: LogContext): void 
   } else {
     console.log(`[${label}]`, message);
   }
+}
+
+// ── Error message helpers ─────────────────────────────────────────────────────
+
+/** Default cap cho error message khi persist vào DB / log fields có giới hạn. */
+const DEFAULT_TRUNCATE_LENGTH = 500;
+
+/**
+ * Trích `message` từ bất kỳ `unknown` error và truncate xuống dưới `maxLength`.
+ *
+ * Dùng khi cần persist error message vào field có giới hạn độ dài (VD:
+ * `worker_locks.lastError`, audit log) — tránh bloat DB và đảm bảo render đẹp
+ * trên các UI có max width.
+ *
+ * Trả về:
+ * - `Error` instance → `err.message`.
+ * - Primitive / object khác → `String(err)`.
+ *
+ * Cuối chuỗi truncated thêm `… [truncated]` để consumer biết đã bị cắt.
+ *
+ * @param err       - Bất kỳ error object nào.
+ * @param maxLength - Số ký tự tối đa trước khi truncate. Default `500`.
+ *
+ * @example
+ * await lockRepo.finalizeAndRelease(key, token, {
+ *   lastError: truncateErrorMessage(err),
+ * });
+ */
+export function truncateErrorMessage(
+  err: unknown,
+  maxLength: number = DEFAULT_TRUNCATE_LENGTH,
+): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  return raw.length > maxLength ? `${raw.slice(0, maxLength)}… [truncated]` : raw;
 }

@@ -20,24 +20,52 @@ export class LineRepository extends BaseRepo<any> {
   /**
    * Upsert nhiều lines, chunk theo BULK_CHUNK_SIZE để tránh quá tải MongoDB.
    *
-   * Filter: (entryId, lineIndex) — đảm bảo idempotent.
-   * $setOnInsert: chỉ ghi khi insert mới, không overwrite nếu đã tồn tại.
+   * Filter: `(entryId, lineIndex)` — unique key, đảm bảo idempotent.
+   *
+   * **Strategy lai `$set` + `$setOnInsert`**:
+   *   - `$set` cho mọi business field (matchResult, triplets, payout, ...)
+   *     → resettle ghi đè được payout/tier mới khi drawResult thay đổi.
+   *   - `$setOnInsert` cho `createdAt` → giữ thời điểm insert lần đầu, không
+   *     bị refresh khi settle retry hoặc khi resettle ghi đè business fields.
+   *
+   * **Tại sao không dùng `$setOnInsert` cho toàn bộ doc**: workflow Resettle
+   * re-settle entries → re-build lines theo drawResult mới (winningTriplets,
+   * tier, payoutAmount). Nếu chỉ `$setOnInsert` thì khi resettle, line cũ vẫn
+   * giữ payout cũ → stale data → dispatch sai.
+   *
+   * **Tại sao tách `createdAt` riêng**: trong settle pipeline, nếu crash giữa
+   * `upsertLines` và `bulkSettleEntries`, retry sẽ gọi `upsertLines` lần 2 với
+   * `createdAt = now2` (≠ now1). Dùng `$setOnInsert` để `createdAt` giữ
+   * timestamp lần đầu — đảm bảo tính immutable của field audit-only này.
+   *
+   * **Pattern này áp dụng cho mọi game**: `(entryId, lineIndex)` filter,
+   * `$set` cho business fields, `$setOnInsert` cho `createdAt`.
+   *
+   * Idempotent: settle lần đầu insert mới; resettle overwrite business fields
+   * cùng filter `(entryId, lineIndex)` → kết quả deterministic theo input cuối.
    */
   async upsertLines(lines: Array<Omit<TicketLineDoc, "_id">>): Promise<void> {
     if (lines.length === 0) {
       return;
     }
 
-    const ops = lines.map((doc) => ({
-      updateOne: {
-        filter: {
-          entryId: doc.entryId,
-          lineIndex: doc.lineIndex,
+    const ops = lines.map((doc) => {
+      // Tách createdAt khỏi $set: chỉ ghi khi insert mới.
+      const { createdAt, ...rest } = doc;
+      return {
+        updateOne: {
+          filter: {
+            entryId: doc.entryId,
+            lineIndex: doc.lineIndex,
+          },
+          update: {
+            $set: rest,
+            $setOnInsert: { createdAt },
+          },
+          upsert: true,
         },
-        update: { $setOnInsert: doc },
-        upsert: true,
-      },
-    }));
+      };
+    });
 
     // Chunk để tránh quá tải batch size limit của MongoDB
     for (const batch of chunk(ops, BULK_CHUNK_SIZE)) {

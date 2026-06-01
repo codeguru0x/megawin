@@ -152,6 +152,56 @@ export interface EntryVoidInfo {
   refundTx: string;
 }
 
+/**
+ * Snapshot reversal — chỉ tồn tại khi entry đã đi qua ÍT NHẤT 1 phiên resettle.
+ *
+ * Workflow resettle:
+ *   1. `TriggerResettle` (BO API): sinh `resettleId` (UUIDv7) làm session key.
+ *   2. `PrepareResettle` step 1 (`clearReversalSnapshot`): wipe reversal phiên cũ
+ *      để tránh entries thắng phiên N-1 nhưng KHÔNG thắng phiên N lingers reversal cũ.
+ *   3. `PrepareResettle` step 2 (`bulkSetReversal`): copy `payout.payoutAmount` cũ
+ *      sang `reversalAmount`, sinh MỚI `reversalTx` (UUIDv7), ghi atomic cùng
+ *      `resettleId`. Sau đó reset entry về `Scheduled` để Settle SFN replay.
+ *   4. `EnqueueReversals`: đọc `reversal.reversalTx` + `reversalAmount` để tạo
+ *      reversal dispatch order.
+ *   5. `FinalizeSettle` (resettle path): KHÔNG clear `reversal` field — giữ làm
+ *      audit trail của phiên resettle gần nhất.
+ *
+ * **SEMANTIC KÉP** — field này có 2 vai trò theo lifecycle:
+ *  (a) Dispatch payload (giữa PrepareResettle và FinalizeSettle).
+ *  (b) Audit trail (sau FinalizeSettle, trước phiên resettle kế tiếp).
+ *
+ * IDEMPOTENT: `reversalTx` UUIDv7 unique → outbox unique index reject duplicate.
+ */
+export interface EntryReversal {
+  /**
+   * Idempotency key cho reversal dispatch transaction — UUIDv7 (RFC 9562).
+   *
+   * Sinh MỚI tại `PrepareResettle` (KHÔNG copy từ `payout.payoutTx` cũ — payout
+   * cũ đã dispatch xong, reversal là transaction mới độc lập).
+   * Ghi atomic cùng `reversalAmount` + `resettleId` qua `bulkSetReversal`.
+   * `EnqueueReversals` seed vào `TenantDispatchOrderDoc.tx` để outbox dispatch
+   * idempotent xuống tenant.
+   *
+   * @example `"01a0b1c2-d3e4-7fab-89cd-ef0123456789"`
+   */
+  reversalTx: string;
+
+  /**
+   * Số tiền cần ghi nợ (debit) lại tenant — copy từ `payout.payoutAmount`
+   * tại thời điểm snapshot (VND). Đây là số tiền đã credit cho tenant ở phiên
+   * settle/resettle TRƯỚC, cần đảo ngược.
+   */
+  reversalAmount: number;
+
+  /**
+   * ID phiên resettle (UUIDv7) — sinh tại `TriggerResettle` BO API, propagate
+   * xuyên SFN. Dùng để trace nhóm tất cả entry trong cùng phiên resettle, ghi
+   * vào `TenantDispatchOrderDoc.metadata.resettleId`.
+   */
+  resettleId: string;
+}
+
 // ─────────────────────────────────────────────
 // Ticket Entry Document
 // ─────────────────────────────────────────────
@@ -212,6 +262,17 @@ export interface TicketEntryDoc {
 
   /** Thông tin huỷ entry (khi void). */
   voidInfo?: EntryVoidInfo;
+
+  /**
+   * Snapshot reversal — chỉ tồn tại khi entry đã đi qua ÍT NHẤT 1 phiên resettle.
+   *
+   * Set tại `PrepareResettle.bulkSetReversal`, KHÔNG clear ở `FinalizeSettle`
+   * (giữ làm audit trail của phiên resettle gần nhất). Đọc bởi `EnqueueReversals`
+   * (giữa Prepare và Finalize) và bởi CS/forensic queries (sau Finalize).
+   *
+   * Xem JSDoc {@link EntryReversal} cho semantic kép.
+   */
+  reversal?: EntryReversal;
 
   /** Phiên bản optimistic locking. */
   version: Long;

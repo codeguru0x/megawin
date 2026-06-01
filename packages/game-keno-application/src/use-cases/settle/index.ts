@@ -7,7 +7,7 @@ export type {
   KenoSettleConfig,
   SettleFinancials,
   SettleContext,
-  SettleContextWithFinancials,
+  ResettleContext,
 } from "./types";
 
 export { PrepareSettleUseCase } from "./prepare-settle";

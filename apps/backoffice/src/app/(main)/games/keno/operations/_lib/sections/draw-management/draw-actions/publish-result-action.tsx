@@ -27,7 +27,8 @@ import { RandomFillButton, generateUniqueRandomNumbers } from "@/components/draw
 import { todayVN } from "@megawin/shared/utils";
 import { KENO_NUMBER_MIN, KENO_NUMBER_MAX, KENO_DRAW_COUNT } from "@megawin/game-keno/entities";
 import type { DrawSelectorItem } from "../../../use-operations";
-import { usePublishResult } from "../../../use-operations";
+import { usePublishResult, useRepublishResult } from "../../../use-operations";
+import { DrawStatus } from "@megawin/game-core/entities";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
@@ -123,7 +124,12 @@ export function PublishResultAction({
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange ?? setInternalOpen;
   const publishResult = usePublishResult();
-  const isRepublish = draw.status === "published" || draw.status === "settled";
+  const republishResult = useRepublishResult();
+  // Settled → endpoint /republish-result (workflow Resettle bước 1).
+  // SalesClosed | Published → endpoint /publish-result thường.
+  const isRepublishAfterSettled = draw.status === DrawStatus.Settled;
+  const isRepublish = draw.status === DrawStatus.Published || draw.status === DrawStatus.Settled;
+  const mutation = isRepublishAfterSettled ? republishResult : publishResult;
 
   const [numbers, setNumbers] = useState<string[]>(Array(KENO_DRAW_COUNT).fill(""));
   const [vietlotDate, setVietlotDate] = useState(todayVN());
@@ -173,10 +179,22 @@ export function PublishResultAction({
       return;
     }
 
+    const winningNumbers = numbers.map((n) => n.padStart(2, "0"));
+
+    if (isRepublishAfterSettled) {
+      // Republish chỉ submit `winningNumbers`. Sửa vietlottRef có endpoint riêng
+      // để không kéo theo resettle khi staff chỉ sửa metadata tham chiếu.
+      republishResult.mutate(
+        { drawId: draw.drawId, body: { winningNumbers } },
+        { onSuccess: () => setIsOpen(false) },
+      );
+      return;
+    }
+
     const body: {
       winningNumbers: string[];
       vietlottRef?: { drawPeriod: string; drawDate: string };
-    } = { winningNumbers: numbers.map((n) => n.padStart(2, "0")) };
+    } = { winningNumbers };
 
     if (vietlotPeriod.trim()) {
       body.vietlottRef = { drawPeriod: vietlotPeriod.trim(), drawDate: vietlotDate };
@@ -191,8 +209,7 @@ export function PublishResultAction({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ClipboardCheck className="size-4.5 text-orange-500" />
-            {isRepublish ? "Sửa kết quả" : "Công bố kết quả"} — Kỳ{" "}
-            {String(draw.drawNo).padStart(3, "0")} · {draw.drawDate} {draw.drawTime}
+            {isRepublish ? "Sửa kết quả" : "Công bố kết quả"} — Kỳ {draw.drawId}
           </DialogTitle>
           <DialogDescription>
             Nhập {KENO_DRAW_COUNT} số trúng ({pad2(KENO_NUMBER_MIN)}–{pad2(KENO_NUMBER_MAX)}). Thứ
@@ -247,52 +264,56 @@ export function PublishResultAction({
               )}
             </div>
 
-            <Separator />
+            {!isRepublishAfterSettled && (
+              <>
+                <Separator />
 
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
-                  <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex size-6 items-center justify-center rounded-md bg-blue-100 dark:bg-blue-900/50">
+                      <ExternalLink className="size-3.5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      Tùy chọn
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <CalendarDays className="size-3" /> Ngày Vietlott
+                      </Label>
+                      <Input
+                        type="date"
+                        className="font-mono text-sm"
+                        value={vietlotDate}
+                        onChange={(e) => setVietlotDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <Hash className="size-3" /> Mã kỳ Vietlott
+                      </Label>
+                      <Input
+                        type="text"
+                        placeholder="VD: 123456"
+                        className="font-mono text-sm"
+                        value={vietlotPeriod}
+                        onChange={(e) => setVietlotPeriod(e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <Label className="text-sm font-semibold">Tham chiếu Vietlott</Label>
-                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  Tùy chọn
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                    <CalendarDays className="size-3" /> Ngày Vietlott
-                  </Label>
-                  <Input
-                    type="date"
-                    className="font-mono text-sm"
-                    value={vietlotDate}
-                    onChange={(e) => setVietlotDate(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                    <Hash className="size-3" /> Mã kỳ Vietlott
-                  </Label>
-                  <Input
-                    type="text"
-                    placeholder="VD: 123456"
-                    className="font-mono text-sm"
-                    value={vietlotPeriod}
-                    onChange={(e) => setVietlotPeriod(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
 
           <DialogFooter className="pt-2">
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Huỷ bỏ
             </Button>
-            <Button type="submit" disabled={publishResult.isPending || disabled}>
-              {publishResult.isPending ? (
+            <Button type="submit" disabled={mutation.isPending || disabled}>
+              {mutation.isPending ? (
                 <Loader2 className="mr-2 size-4 animate-spin" />
               ) : (
                 <Check className="mr-2 size-4" />

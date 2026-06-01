@@ -74,7 +74,7 @@ export interface DrawTransitionOutput {
 }
 
 // ─────────────────────────────────────────────
-// PublishResult
+// PublishResult / RepublishResult / UpdateVietlottRef
 // ─────────────────────────────────────────────
 
 export interface PublishResultInput {
@@ -96,8 +96,38 @@ export interface PublishResultOutput {
   };
 }
 
+/**
+ * Republish CHỈ nhận `winningNumbers` — KHÔNG có `vietlottRef`.
+ *
+ * Sửa metadata tham chiếu Vietlott thuộc endpoint riêng `update-vietlott-ref`
+ * để không kéo theo resettle khi staff chỉ cần fix drawPeriod/drawDate.
+ */
+export interface RepublishResultInput {
+  drawId: string;
+  /** 20 số trúng thưởng ("01"-"80"), unique, giữ nguyên thứ tự quay. */
+  winningNumbers: string[];
+}
+
+export type RepublishResultOutput = PublishResultOutput;
+
+export interface UpdateVietlottRefInput {
+  drawId: string;
+  vietlottRef: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
+export interface UpdateVietlottRefOutput {
+  drawId: string;
+  vietlottRef: {
+    drawPeriod: string;
+    drawDate: string;
+  };
+}
+
 // ─────────────────────────────────────────────
-// TriggerSettle
+// TriggerSettle / TriggerResettle
 // ─────────────────────────────────────────────
 
 export interface TriggerSettleInput {
@@ -109,6 +139,21 @@ export interface TriggerSettleInput {
 export interface TriggerSettleOutput {
   drawId: string;
   status: string;
+}
+
+export interface TriggerResettleInput {
+  drawId: string;
+  /** ARN của Step Function resettle Keno (orchestrate cả Settle SFN bên trong). */
+  RESETTLE_SFN_ARN: string;
+}
+
+export interface TriggerResettleOutput {
+  drawId: string;
+  status: string;
+  /** ID phiên resettle — staff theo dõi qua `metadata.resettleId` ở dispatch orders. */
+  resettleId: string;
+  /** Owner token của WorkerLock — debug / trace. */
+  lockOwnerToken: string;
 }
 
 // ─────────────────────────────────────────────

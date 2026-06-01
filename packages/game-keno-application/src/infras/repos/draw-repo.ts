@@ -32,8 +32,12 @@ import { DrawMapper } from "../mappers/draw-mapper";
 /**
  * Valid status transitions cho Keno Draw.
  *
- * Flow: scheduled → salesOpen → salesClosed → published → settling → settled
- *          ↘ void        ↑↓         ↘ void       ↘ void
+ * Flow chính: scheduled → salesOpen → salesClosed → published → settling → settled
+ *               ↘ void          ↑↓         ↘ void       ↘ void
+ *
+ * Resettle path: settled → published (chỉ qua republishResultAfterSettled).
+ *   Cho phép sửa kết quả sau settle, sau đó nhấn "Kết sổ lại" để chạy resettle.
+ *   KHÔNG cho phép settled → voiding (đã kết sổ là chốt, không thể huỷ).
  */
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
   [DrawStatus.Scheduled]: new Set([DrawStatus.SalesOpen, DrawStatus.Voiding]),
@@ -45,6 +49,7 @@ const VALID_TRANSITIONS: Record<string, Set<string>> = {
   ]),
   [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Voiding]),
   [DrawStatus.Settling]: new Set([DrawStatus.Settled]),
+  [DrawStatus.Settled]: new Set([DrawStatus.Published]),
   [DrawStatus.Voiding]: new Set([DrawStatus.Void]),
 };
 
@@ -152,7 +157,13 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
   }
 
-  /** Chuyển draw settling → settled + stamp settledAt. Atomic, idempotent. */
+  /**
+   * Chuyển draw settling → settled + stamp settledAt. Atomic, idempotent.
+   *
+   * `settledAt` ở đây là **high-water mark** — overwrite mỗi lần settle thành công
+   * (cả lần đầu lẫn resettle). Dùng để phân biệt "Settle lần đầu" vs "Resettle"
+   * tại API trigger-resettle và UI logic. KHÔNG bị $unset khi republish.
+   */
   async settleComplete(drawId: string): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Settling];
     if (!allowed?.has(DrawStatus.Settled)) return null;
@@ -323,6 +334,88 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
         status: { $in: [DrawStatus.SalesClosed, DrawStatus.Published] },
       },
       { $set },
+      {
+        returnDocument: "after",
+      },
+    );
+  }
+
+  /**
+   * Re-publish kết quả khi draw đã settled — bước đầu của workflow Resettle.
+   *
+   * Transition `settled → published` (atomic, idempotent).
+   * KHÔNG cho phép sửa qua `publishResult` thông thường vì status filter ở đó
+   * không bao gồm `settled`.
+   *
+   * Side effects:
+   * - Set: `status = published`, `result = newResult`, `updatedAt`.
+   * - $unset: `financial`, `stats`, `settleSummary` — đây là dữ liệu của lần settle
+   *   cũ, sau khi resettle sẽ được tính lại.
+   *
+   * KHÔNG đụng `vietlottRef` — sửa metadata tham chiếu thuộc endpoint riêng
+   * `updateVietlottRef`. Tách ra để tránh kéo theo resettle khi staff chỉ
+   * cần sửa drawPeriod/drawDate.
+   *
+   * KHÔNG $unset `settledAt` — đây là high-water mark lịch sử settle, dùng để biết
+   * draw đã từng settle (phân biệt với Settle lần đầu).
+   */
+  async republishResultAfterSettled(
+    drawId: string,
+    result: DrawResult,
+  ): Promise<DrawEntity | null> {
+    const allowed = VALID_TRANSITIONS[DrawStatus.Settled];
+    if (!allowed?.has(DrawStatus.Published)) {
+      return null;
+    }
+
+    return await this.findOneAndUpdate(
+      {
+        drawId,
+        status: DrawStatus.Settled,
+      },
+      {
+        $set: {
+          status: DrawStatus.Published,
+          result,
+          updatedAt: new Date(),
+        },
+        $unset: {
+          financial: "",
+          stats: "",
+          settleSummary: "",
+        },
+      },
+      {
+        returnDocument: "after",
+      },
+    );
+  }
+
+  /**
+   * Cập nhật CHỈ `vietlottRef` — không đụng status / result / settle data.
+   *
+   * `vietlottRef` là metadata tham chiếu sang Vietlott (drawPeriod, drawDate),
+   * KHÔNG tham gia matching numbers / payout calculation → sửa field này
+   * KHÔNG yêu cầu resettle.
+   *
+   * Cho phép ở `Published` / `Settling` / `Settled` (sau publish trở đi).
+   * Trước publish staff dùng `publishResult` để nhập cả vietlottRef cùng result.
+   *
+   * Atomic, idempotent — gọi nhiều lần với cùng giá trị OK.
+   * Return null nếu draw status không nằm trong scope cho phép.
+   */
+  async updateVietlottRef(
+    drawId: string,
+    vietlottRef: DrawVietlottRef,
+  ): Promise<DrawEntity | null> {
+    return await this.findOneAndUpdate(
+      {
+        drawId,
+        status: { $in: [DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled] },
+      },
+      {
+        $set: { vietlottRef, updatedAt: new Date() },
+      },
       {
         returnDocument: "after",
       },

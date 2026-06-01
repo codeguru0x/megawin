@@ -302,12 +302,57 @@ export function usePublishResult() {
   }>((id) => `/max3dpro/draws/${id}/publish-result`, "post", "Đã công bố kết quả.");
 }
 
+/**
+ * Sửa kết quả của draw đã settle — bước 1 của workflow Resettle.
+ *
+ * CHỈ nhận `result` (20 bộ ba số) — sửa `vietlottRef` thuộc `useUpdateVietlottRef`
+ * vì sửa metadata tham chiếu KHÔNG yêu cầu resettle.
+ *
+ * Sau khi gọi thành công, draw chuyển từ `Settled` về `Published` (data settle cũ
+ * bị clear). Staff sau đó nhấn "Kết sổ lại" để chạy `useTriggerResettle`.
+ */
+export function useRepublishResult() {
+  return useDrawAction<{
+    result: {
+      special: [string, string];
+      first: [string, string, string, string];
+      second: [string, string, string, string, string, string];
+      third: [string, string, string, string, string, string, string, string];
+    };
+  }>((id) => `/max3dpro/draws/${id}/republish-result`, "post", "Đã cập nhật kết quả.");
+}
+
+/**
+ * Cập nhật CHỈ `vietlottRef` (drawPeriod, drawDate) — KHÔNG kéo theo resettle.
+ *
+ * Cho phép ở status `Published`/`Settling`/`Settled`. Sửa metadata tham chiếu
+ * không ảnh hưởng tới matching/payout, không cần re-run settle.
+ */
+export function useUpdateVietlottRef() {
+  return useDrawAction<{ drawPeriod: string; drawDate: string }>(
+    (id) => `/max3dpro/draws/${id}/vietlott-ref`,
+    "post",
+    "Đã cập nhật tham chiếu Vietlott.",
+  );
+}
+
 export function useTriggerSettle() {
   return useDrawAction(
     (id) => `/max3dpro/draws/${id}/trigger-settle`,
     "post",
     "Đã bắt đầu kết sổ.",
   );
+}
+
+/**
+ * Khởi chạy phiên Resettle — bước 2 của workflow.
+ *
+ * Backend sẽ acquire WorkerLock + transition `Published → Settling` + start
+ * Resettle SFN. Hiển thị nút này CHỈ khi draw đã `settledAt != null` và
+ * `result.publishedAt > settledAt` (đã có republish kết quả mới).
+ */
+export function useTriggerResettle() {
+  return useDrawAction((id) => `/max3dpro/draws/${id}/resettle`, "post", "Đã bắt đầu kết sổ lại.");
 }
 
 export function useVoidDraw() {

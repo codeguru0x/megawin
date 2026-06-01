@@ -56,8 +56,7 @@ export class DispatchOrderRepository extends TenantDispatchBaseRepo<
     });
   }
 
-  /**
-   * Bulk insert orders với tolerance cho duplicate `tx`.
+  /** Bulk insert orders với tolerance cho duplicate `tx`.
    *
    * Dùng `insertMany({ ordered: false })` — pattern chuẩn MongoDB cho
    * "insert-if-not-exists": những `tx` đã tồn tại raise duplicate key

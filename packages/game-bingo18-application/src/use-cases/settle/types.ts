@@ -14,7 +14,7 @@
  *     → Step Function merge: settleCtx.financials = result
  *   SyncTicketSummaries → nhận SettleContext
  *   BuildReport → nhận SettleContext (financials có)
- *   FinalizeSettle → nhận SettleContextWithFinancials (financials bắt buộc)
+ *   FinalizeSettle → nhận SettleContext
  *   DispatchPayouts → nhận { drawId } (package riêng)
  *
  * Mỗi step destructure những field cần dùng. Không define input riêng
@@ -94,6 +94,56 @@ export interface SettleFinancials {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ResettleContext – propagate qua Settle SFN khi nested từ Resettle SFN
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Context phiên resettle, propagate xuyên Settle SFN khi được gọi nested
+ * từ Resettle SFN.
+ *
+ * Tồn tại trên `SettleContext` ⇔ pipeline đang ở chế độ resettle:
+ *   - `FinalizeSettle` → KHÔNG bump version (đã ở trạng thái settling, chỉ
+ *     transition Settling → Settled), unlock business lock.
+ *   - `EnqueueDispatchPayouts` → enqueue chỉ entries có `payoutTx` MỚI hơn
+ *     so với phiên resettle trước (filter qua `metadata.resettleId`).
+ *
+ * Field này nằm GAME-SPECIFIC vì là phần của settle context per game — KHÔNG
+ * extract ra `game-core` (worker settle mỗi game tự handle resettle context).
+ */
+export interface ResettleContext {
+  /**
+   * ID phiên resettle (UUIDv7) — sinh tại BO API `TriggerResettle`, làm
+   * session key xuyên SFN. Dùng để:
+   *   - Tag `EntryReversal.resettleId` snapshot.
+   *   - Tag `TenantDispatchOrderDoc.metadata.resettleId` (reversal + payout mới).
+   *   - Filter dispatch orders thuộc phiên resettle hiện tại.
+   *   - `BusinessLock.token` để release lock idempotent từ FinalizeSettle.
+   */
+  resettleId: string;
+
+  /**
+   * Token sở hữu lock `bingo18:resettle:{drawId}` — sinh tại BO API cùng lúc
+   * với `resettleId`, đảm bảo chỉ chủ lock mới có quyền release.
+   *
+   * `FinalizeSettle` (resettle path) gọi `BusinessLockCoordinator.release()`
+   * với token này để giải phóng lock idempotent (race-safe).
+   */
+  lockOwnerToken: string;
+
+  /**
+   * Lock key của phiên resettle (`{game}:resettle:{drawId}`) — propagate từ
+   * `TriggerResettleUseCase` (BO API) qua SFN tới `FinalizeSettle`.
+   *
+   * Build qua `buildResettleLockKey(GameProduct.Bingo18, drawId)` từ
+   * `@megawin/game-core/utils` — single source of truth cho format key.
+   *
+   * Propagate qua context (thay vì rebuild ở mỗi step) để tránh duplicate
+   * format string acquire ≠ release → silent bug khi đổi convention.
+   */
+  lockKey: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SettleContext – single context xuyên suốt settle pipeline
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -113,7 +163,7 @@ export interface SettleFinancials {
  * │   ↳ SFN merge: settleCtx.financials = result                   │
  * │ SyncTicketSummaries   ← SettleContext (loop, recompute tickets) │
  * │ BuildReport           ← SettleContext (financials có)           │
- * │ FinalizeSettle        ← SettleContextWithFinancials (bắt buộc) │
+ * │ FinalizeSettle        ← SettleContext                           │
  * │ DispatchPayouts       ← { drawId } (package riêng)             │
  * └──────────────────────────────────────────────────────────────────┘
  */
@@ -163,15 +213,25 @@ export interface SettleContext {
    * Các step sau (BuildReport, FinalizeSettle) truy cập qua field này.
    */
   financials?: SettleFinancials;
-}
 
-/**
- * SettleContext với financials BẮT BUỘC — dùng cho các step SAU CalculateFinancials
- * mà CẦN financials để hoạt động (FinalizeSettle).
- *
- * Tại runtime, Step Function đảm bảo financials đã được merge trước khi
- * gọi các step này. Type này cung cấp compile-time safety.
- */
-export type SettleContextWithFinancials = SettleContext & {
-  financials: SettleFinancials;
-};
+  /**
+   * Resettle session context — chỉ tồn tại khi Settle SFN được gọi NESTED
+   * từ Resettle SFN (PrepareResettle đã wipe payout/result, snapshot reversal,
+   * reset entries về Scheduled).
+   *
+   * `undefined` ↔ pipeline ở chế độ settle lần đầu (không có gì khác biệt với
+   * settle hiện tại).
+   *
+   * Truyền qua bởi:
+   *   - Resettle SFN: `prepare-resettle` step output `resettleContext`, merge
+   *     vào input của Settle SFN nested execution.
+   *   - PrepareSettle (settle path khi resettle): pass-through field này.
+   *
+   * Đọc bởi:
+   *   - `EnqueueDispatchPayouts` → tag dispatch orders với `metadata.resettleId`,
+   *     batch key dùng resettleId để cô lập phiên.
+   *   - `FinalizeSettle` → unlock `bingo18:resettle:{drawId}` với
+   *     `lockOwnerToken`, KHÔNG bump version (transition Settling → Settled).
+   */
+  resettleContext?: ResettleContext;
+}

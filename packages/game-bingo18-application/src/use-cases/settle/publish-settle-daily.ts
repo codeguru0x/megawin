@@ -17,7 +17,7 @@ import {
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { SystemSettleGameDailyRepo, SystemSettleTenantDailyRepo } from "../../infras/repos";
 
-/** Input tối thiểu — chỉ cần financialDate từ SettleContextWithFinancials. */
+/** Input tối thiểu — chỉ cần financialDate từ SettleContext. */
 export interface PublishSettleDailyInput {
   /** Ngày tài chính (YYYY-MM-DD). */
   financialDate: string;

@@ -71,6 +71,7 @@ build:
 
 functions:
   - ${file(src/functions/settle.yml)}
+  - ${file(src/functions/resettle.yml)}
   - ${file(src/functions/void.yml)}
   - ${file(src/functions/feed.yml)}
   - ${file(src/functions/outstanding.yml)}

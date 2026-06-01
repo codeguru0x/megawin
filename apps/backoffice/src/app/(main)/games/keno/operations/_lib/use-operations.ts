@@ -210,6 +210,14 @@ function useDrawAction<TBody = void>(
   actionPath: (drawId: string) => string,
   method: "post" | "patch",
   successMessage: string,
+  options?: {
+    /**
+     * Tắt toast lỗi mặc định. Dùng cho action hiển thị lỗi inline trong dialog
+     * (settle/resettle) — dialog tự đọc `mutation.error` để render + nút "Thử lại",
+     * tránh toast trùng lặp với panel lỗi trong dialog.
+     */
+    silentError?: boolean;
+  },
 ) {
   const qc = useQueryClient();
   return useMutation({
@@ -222,6 +230,9 @@ function useDrawAction<TBody = void>(
       toast.success(successMessage);
     },
     onError: (err) => {
+      if (options?.silentError) {
+        return;
+      }
       const { title, description } = formatErrorToast(err, "Thao tác thất bại.");
       toast.error(title, { description });
     },
@@ -243,8 +254,52 @@ export function usePublishResult() {
   }>((id) => `/keno/draws/${id}/publish-result`, "post", "Đã công bố kết quả.");
 }
 
+/**
+ * Sửa kết quả của draw đã settle — bước 1 của workflow Resettle.
+ *
+ * CHỈ nhận `winningNumbers` — sửa `vietlottRef` thuộc `useUpdateVietlottRef`
+ * vì sửa metadata tham chiếu KHÔNG yêu cầu resettle.
+ *
+ * Sau khi gọi thành công, draw chuyển từ `Settled` về `Published` (data settle cũ
+ * bị clear). Staff sau đó nhấn "Kết sổ lại" để chạy `useTriggerResettle`.
+ */
+export function useRepublishResult() {
+  return useDrawAction<{
+    winningNumbers: string[];
+  }>((id) => `/keno/draws/${id}/republish-result`, "post", "Đã cập nhật kết quả.");
+}
+
+/**
+ * Cập nhật CHỈ `vietlottRef` (drawPeriod, drawDate) — KHÔNG kéo theo resettle.
+ *
+ * Cho phép ở status `Published`/`Settling`/`Settled`. Sửa metadata tham chiếu
+ * không ảnh hưởng tới matching/payout, không cần re-run settle.
+ */
+export function useUpdateVietlottRef() {
+  return useDrawAction<{ drawPeriod: string; drawDate: string }>(
+    (id) => `/keno/draws/${id}/vietlott-ref`,
+    "post",
+    "Đã cập nhật tham chiếu Vietlott.",
+  );
+}
+
 export function useTriggerSettle() {
-  return useDrawAction((id) => `/keno/draws/${id}/trigger-settle`, "post", "Đã bắt đầu kết sổ.");
+  return useDrawAction((id) => `/keno/draws/${id}/trigger-settle`, "post", "Đã bắt đầu kết sổ.", {
+    silentError: true,
+  });
+}
+
+/**
+ * Khởi chạy phiên Resettle — bước 2 của workflow.
+ *
+ * Backend sẽ acquire WorkerLock + transition `Published → Settling` + start
+ * Resettle SFN. Hiển thị nút này CHỈ khi draw đã `settledAt != null` và
+ * `result.publishedAt > settledAt` (đã có republish kết quả mới).
+ */
+export function useTriggerResettle() {
+  return useDrawAction((id) => `/keno/draws/${id}/resettle`, "post", "Đã bắt đầu kết sổ lại.", {
+    silentError: true,
+  });
 }
 
 export function useVoidDraw() {
