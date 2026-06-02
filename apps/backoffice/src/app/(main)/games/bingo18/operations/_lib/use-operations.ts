@@ -234,42 +234,17 @@ export function useCloseSales() {
   return useDrawAction((id) => `/bingo18/draws/${id}/close-sales`, "post", "Đã đóng bán vé.");
 }
 
+/**
+ * Single entry point cho "nhập/sửa kết quả" Bingo 18 — gửi `numbers` +
+ * `vietlottRef?` cùng lúc. Backend (`PublishResultUseCase`) tự phân biệt publish
+ * lần đầu, republish sau settle (kéo resettle), hay chỉ cập nhật vietlottRef
+ * (KHÔNG resettle) dựa trên `settledAt` và so sánh numbers cũ vs mới.
+ */
 export function usePublishResult() {
   return useDrawAction<{
     numbers: number[];
     vietlottRef?: { drawPeriod: string; drawDate: string };
   }>((id) => `/bingo18/draws/${id}/publish-result`, "post", "Đã công bố kết quả.");
-}
-
-/**
- * Sửa kết quả của draw đã settle — bước 1 của workflow Resettle.
- *
- * CHỈ nhận `numbers` — sửa `vietlottRef` thuộc `useUpdateVietlottRef`
- * vì sửa metadata tham chiếu KHÔNG yêu cầu resettle.
- *
- * Sau khi gọi thành công, draw chuyển từ `Settled` về `Published` (data settle cũ
- * bị clear). Staff sau đó nhấn "Kết sổ lại" để chạy `useTriggerResettle`.
- */
-export function useRepublishResult() {
-  return useDrawAction<{ numbers: number[] }>(
-    (id) => `/bingo18/draws/${id}/republish-result`,
-    "post",
-    "Đã cập nhật kết quả.",
-  );
-}
-
-/**
- * Cập nhật CHỈ `vietlottRef` (drawPeriod, drawDate) — KHÔNG kéo theo resettle.
- *
- * Cho phép ở status `Published`/`Settling`/`Settled`. Sửa metadata tham chiếu
- * không ảnh hưởng tới matching/payout, không cần re-run settle.
- */
-export function useUpdateVietlottRef() {
-  return useDrawAction<{ drawPeriod: string; drawDate: string }>(
-    (id) => `/bingo18/draws/${id}/vietlott-ref`,
-    "post",
-    "Đã cập nhật tham chiếu Vietlott.",
-  );
 }
 
 export function useTriggerSettle() {

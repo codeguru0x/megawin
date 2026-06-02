@@ -8,6 +8,7 @@
  */
 
 import type { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawSales, DrawVietlottRef } from "@megawin/game-core/types";
 import type { ISODateString, DrawNo } from "./types";
 import type { Max3dDrawResult } from "./draw-result";
 
@@ -15,21 +16,7 @@ import type { Max3dDrawResult } from "./draw-result";
 // Embedded Document Interfaces
 // ─────────────────────────────────────────────
 
-/** Cửa sổ bán vé. */
-export interface DrawSales {
-  /** Thời điểm mở bán. undefined nếu chưa mở. */
-  openAt?: Date;
-  /** Thời điểm đóng bán = drawTime − salesCloseBeforeMinutes. */
-  closeAt: Date;
-}
-
-/** Tham chiếu kỳ quay Vietlott chính thức. */
-export interface DrawVietlottRef {
-  /** Mã kỳ quay Vietlott. */
-  drawPeriod: string;
-  /** Ngày quay theo Vietlott. */
-  drawDate: ISODateString;
-}
+export type { DrawSales, DrawVietlottRef };
 
 /**
  * Kết quả kỳ quay đã công bố. Set khi publish result.

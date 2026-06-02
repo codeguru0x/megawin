@@ -93,9 +93,37 @@ const $set = { jackpot };
 | Stats | `DrawStats` | Tất cả games |
 | Void info | `DrawVoidInfo` | Tất cả games |
 | Void summary | `DrawVoidSummary` | Tất cả games |
-| Sales window | `DrawSales` | Tất cả games |
+| Sales window | `DrawSales` | **game-core** (shared) |
 | Result | `DrawResult` | Tất cả games |
-| Vietlott ref | `DrawVietlottRef` | Tất cả games |
+| Vietlott ref | `DrawVietlottRef` | **game-core** (shared) |
+
+### Shared embedded docs — định nghĩa ở game-core
+
+`DrawSales` và `DrawVietlottRef` có cấu trúc GIỐNG NHAU ở mọi game nên được định nghĩa
+MỘT LẦN tại `packages/game-core/src/types/index.ts` (cạnh `DrawTenantFinancial`).
+Mỗi game **re-export** thay vì tự định nghĩa lại — tránh duplication, đảm bảo đồng bộ.
+
+**ĐÚNG — re-export ở `{game}/src/entities/draw.ts`:**
+
+```typescript
+import type { DrawSales, DrawVietlottRef } from "@megawin/game-core/types";
+
+export type { DrawSales, DrawVietlottRef };
+```
+
+**SAI — tự định nghĩa lại trong từng game:**
+
+```typescript
+// Duplication: khi cần đổi shape phải sửa 7 chỗ, dễ lệch nhau.
+export interface DrawSales {
+  openAt?: Date;
+  closeAt: Date;
+}
+```
+
+Các nơi tiêu thụ (`DrawDoc.sales`, repo method params, DTO) vẫn import tên `DrawSales`/`DrawVietlottRef`
+như cũ — qua re-export nên không cần đổi gì. Repo dùng `DrawVietlottRef` cho param, KHÔNG dùng
+`DrawDocBase["vietlottRef"]` (indexed access) — xem mục 2.
 
 ## 5. Format MongoDB Query (dễ đọc, dễ review)
 

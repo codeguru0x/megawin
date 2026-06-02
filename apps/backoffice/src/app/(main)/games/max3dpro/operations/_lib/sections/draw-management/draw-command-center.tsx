@@ -18,7 +18,6 @@ import {
   Loader2,
   CalendarCheck,
   ClipboardPen,
-  Link as LinkIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -38,7 +37,6 @@ interface DrawCommandProps {
   onCloseSales?: () => void;
   onPublishResult?: () => void;
   onRepublishResult?: () => void;
-  onUpdateVietlottRef?: () => void;
   onTriggerSettle?: () => void;
   onTriggerResettle?: () => void;
   onEditSchedule?: () => void;
@@ -288,7 +286,6 @@ export function DrawCommandCenter({
   onCloseSales,
   onPublishResult,
   onRepublishResult,
-  onUpdateVietlottRef,
   onTriggerSettle,
   onTriggerResettle,
   onEditSchedule,
@@ -309,13 +306,11 @@ export function DrawCommandCenter({
   // Cho phép sửa kết quả khi:
   //   - status = Published (kể cả lần đầu hay sau settle để chuẩn bị resettle).
   //   - status = Settled (phát hiện sai sót sau khi đã kết sổ → mở luồng resettle).
+  // Form sửa kết quả nay gộp cả tham chiếu Vietlott; sửa riêng vietlottRef (không
+  // đổi kết quả) sẽ KHÔNG kích hoạt resettle — backend tự phân biệt.
+  // Khi status = Settling, action bar bị ẩn hoàn toàn (xem `!isSettling` bên dưới)
+  // nên không cần guard riêng cho nút này.
   const canRepublish = status === DrawStatus.Published || status === DrawStatus.Settled;
-  // vietlottRef là metadata tham chiếu (drawPeriod/drawDate Vietlott) — sửa
-  // KHÔNG kéo theo resettle. Cho phép sau khi đã có result: Published/Settling/Settled.
-  const canEditVietlottRef =
-    status === DrawStatus.Published ||
-    status === DrawStatus.Settling ||
-    status === DrawStatus.Settled;
   const canReopenSales = status === DrawStatus.SalesClosed;
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
   const isSettled = status === DrawStatus.Settled;
@@ -591,16 +586,6 @@ export function DrawCommandCenter({
               {canRepublish && (
                 <Button variant="outline" size="sm" onClick={onRepublishResult} className="gap-1.5">
                   <ClipboardPen className="size-3.5" /> Sửa kết quả
-                </Button>
-              )}
-              {canEditVietlottRef && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onUpdateVietlottRef}
-                  className="gap-1.5"
-                >
-                  <LinkIcon className="size-3.5" /> Sửa tham chiếu Vietlott
                 </Button>
               )}
               {canReopenSales && (

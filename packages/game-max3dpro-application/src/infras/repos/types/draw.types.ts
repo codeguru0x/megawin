@@ -2,6 +2,8 @@
  * Draw infrastructure types — dùng chung cho DrawRepository.
  */
 
+import type { DrawVietlottRef } from "@megawin/game-max3dpro/entities";
+
 /**
  * Thông tin void: lý do, người thực hiện, thời điểm.
  * Dùng làm param của `drawRepo.voidDraw()`.
@@ -28,10 +30,7 @@ export interface DrawDocBase {
   stats?: DrawDocBaseStats;
   voidInfo?: DrawDocBaseVoidInfo;
   voidSummary?: DrawDocBaseVoidSummary;
-  vietlottRef?: {
-    drawPeriod: string;
-    drawDate: string;
-  };
+  vietlottRef?: DrawVietlottRef;
 }
 
 /**

@@ -6,8 +6,6 @@ export { PreviewDrawsUseCase } from "./preview-draws";
 export { OpenSalesUseCase } from "./open-sales";
 export { CloseSalesUseCase } from "./close-sales";
 export { PublishResultUseCase } from "./publish-result";
-export { RepublishResultUseCase } from "./republish-result";
-export { UpdateVietlottRefUseCase } from "./update-vietlott-ref";
 export { TriggerSettleUseCase } from "./trigger-settle";
 export { TriggerResettleUseCase } from "./trigger-resettle";
 export { ListDrawsUseCase } from "./list-draws";
@@ -33,10 +31,6 @@ export type {
   DrawTransitionOutput,
   PublishResultInput,
   PublishResultOutput,
-  RepublishResultInput,
-  RepublishResultOutput,
-  UpdateVietlottRefInput,
-  UpdateVietlottRefOutput,
   TriggerSettleInput,
   TriggerSettleOutput,
   TriggerResettleInput,

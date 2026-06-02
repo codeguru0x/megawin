@@ -16,33 +16,15 @@ const vietlottRefObjectSchema = z.object({
 });
 
 /**
- * Body schema cho `publish-result` — publish kết quả lần đầu (Sales/Published).
+ * Body schema cho `publish-result` — single entry point cho "nhập/sửa kết quả".
  *
- * Cho phép gửi kèm `vietlottRef` vì lúc publish lần đầu staff thường nhập
- * đồng thời số trúng + tham chiếu Vietlott.
+ * Nhận `winningNumbers` + `vietlottRef?` cùng lúc (mọi trạng thái dùng chung
+ * form). Use case tự phân biệt: publish lần đầu, republish sau settle (kéo
+ * resettle), hay chỉ cập nhật vietlottRef (KHÔNG resettle) dựa trên `settledAt`
+ * và so sánh winningNumbers cũ vs mới.
  */
 export const publishResultSchema = z.object({
   winningNumbers: winningNumbersSchema,
   vietlottRef: vietlottRefObjectSchema.optional(),
 });
 export type PublishResultBody = z.infer<typeof publishResultSchema>;
-
-/**
- * Body schema cho `republish-result` — sửa kết quả sau settle (kéo resettle).
- *
- * KHÔNG nhận `vietlottRef` — sửa metadata tham chiếu thuộc endpoint riêng
- * `vietlott-ref` để không kéo theo resettle không cần thiết.
- */
-export const republishResultSchema = z.object({
-  winningNumbers: winningNumbersSchema,
-});
-export type RepublishResultBody = z.infer<typeof republishResultSchema>;
-
-/**
- * Body schema cho `vietlott-ref` — sửa CHỈ metadata tham chiếu Vietlott.
- *
- * `vietlottRef` không tham gia matching/payout → cập nhật KHÔNG yêu cầu
- * resettle. Use case enforce status `Published`/`Settling`/`Settled`.
- */
-export const vietlottRefSchema = vietlottRefObjectSchema;
-export type VietlottRefBody = z.infer<typeof vietlottRefSchema>;

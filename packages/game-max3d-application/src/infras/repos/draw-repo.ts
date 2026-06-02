@@ -195,9 +195,10 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * - $unset: `financial`, `stats`, `settleSummary` — đây là dữ liệu của lần settle
    *   cũ, sau khi resettle sẽ được tính lại.
    *
-   * KHÔNG đụng `vietlottRef` — sửa metadata tham chiếu thuộc endpoint riêng
-   * `updateVietlottRef`. Tách ra để tránh kéo theo resettle khi staff chỉ
-   * cần sửa drawPeriod/drawDate.
+   * Gộp `vietlottRef` (optional) vào cùng `$set` để tránh chạy 2 query khi staff
+   * vừa sửa result vừa giữ/đổi vietlottRef trước resettle. `vietlottRef` là
+   * metadata đối soát, KHÔNG tham gia matching/payout nên việc ghi cùng lần với
+   * result không kéo theo hệ quả nghiệp vụ — resettle chỉ phụ thuộc result mới.
    *
    * KHÔNG $unset `settledAt` — đây là high-water mark lịch sử settle, dùng để biết
    * draw đã từng settle (phân biệt với Settle lần đầu).
@@ -205,11 +206,22 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async republishResultAfterSettled(
     drawId: string,
     result: Max3dDrawResult & { publishedAt: Date },
+    vietlottRef?: DrawVietlottRef,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Settled];
-   
+
     if (!allowed?.has(DrawStatus.Published)) {
       return null;
+    }
+
+    const $set: Record<string, unknown> = {
+      status: DrawStatus.Published,
+      result,
+      updatedAt: new Date(),
+    };
+
+    if (vietlottRef) {
+      $set.vietlottRef = vietlottRef;
     }
 
     return await this.findOneAndUpdate(
@@ -218,11 +230,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
         status: DrawStatus.Settled,
       },
       {
-        $set: {
-          status: DrawStatus.Published,
-          result,
-          updatedAt: new Date(),
-        },
+        $set,
         $unset: {
           financial: "",
           stats: "",

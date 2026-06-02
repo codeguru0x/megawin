@@ -89,7 +89,7 @@ export interface DrawTransitionOutput {
 }
 
 // ─────────────────────────────────────────────
-// PublishResult / RepublishResult / UpdateVietlottRef
+// PublishResult — single entry point cho "nhập/sửa kết quả"
 // ─────────────────────────────────────────────
 
 export interface PublishResultInput {
@@ -119,39 +119,6 @@ export interface PublishResultOutput {
     sum: number;
     /** Thời điểm công bố (ISO 8601). */
     publishedAt: string;
-  };
-}
-
-/**
- * Republish CHỈ nhận `numbers` — KHÔNG có `vietlottRef`.
- *
- * Sửa metadata tham chiếu Vietlott thuộc endpoint riêng `update-vietlott-ref`
- * để không kéo theo resettle khi staff chỉ cần fix drawPeriod/drawDate.
- */
-export interface RepublishResultInput {
-  /** ID kỳ quay đã settled cần sửa kết quả. */
-  drawId: string;
-  /** 3 số kết quả mới (mỗi số 1-6). */
-  numbers: number[];
-}
-
-export type RepublishResultOutput = PublishResultOutput;
-
-export interface UpdateVietlottRefInput {
-  /** ID kỳ quay cần cập nhật vietlottRef. */
-  drawId: string;
-  /** Tham chiếu Vietlott mới. */
-  vietlottRef: {
-    drawPeriod: string;
-    drawDate: string;
-  };
-}
-
-export interface UpdateVietlottRefOutput {
-  drawId: string;
-  vietlottRef: {
-    drawPeriod: string;
-    drawDate: string;
   };
 }
 

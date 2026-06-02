@@ -34,9 +34,7 @@ import {
   PublishResultAction,
   EditScheduleAction,
   VoidDrawAction,
-  UpdateVietlottRefAction,
   type PublishResultCurrentValues,
-  type VietlottRefValues,
 } from "./draw-actions";
 import {
   useOpenSales,
@@ -56,7 +54,6 @@ export function DrawManagementSection() {
   const [publishOpen, setPublishOpen] = useState(false);
   const [editScheduleOpen, setEditScheduleOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
-  const [vietlottRefOpen, setVietlottRefOpen] = useState(false);
   const [openSalesConfirm, setOpenSalesConfirm] = useState(false);
   const [closeSalesConfirm, setCloseSalesConfirm] = useState(false);
   const [settleConfirm, setSettleConfirm] = useState(false);
@@ -102,15 +99,6 @@ export function DrawManagementSection() {
     };
   })();
 
-  const currentVietlottRef: VietlottRefValues | undefined = (() => {
-    const d = drawDetailData?.draw;
-    if (!d?.vietlottRef) return undefined;
-    return {
-      drawPeriod: d.vietlottRef.drawPeriod,
-      drawDate: String(d.vietlottRef.drawDate ?? ""),
-    };
-  })();
-
   const voidInfo: VoidInfo | undefined = (() => {
     const d = drawDetailData?.draw;
     if (!d?.voidInfo) return undefined;
@@ -138,7 +126,6 @@ export function DrawManagementSection() {
         onCloseSales={() => setCloseSalesConfirm(true)}
         onPublishResult={() => setPublishOpen(true)}
         onRepublishResult={() => setPublishOpen(true)}
-        onUpdateVietlottRef={() => setVietlottRefOpen(true)}
         onTriggerSettle={() => setSettleConfirm(true)}
         onTriggerResettle={() => setResettleConfirm(true)}
         onEditSchedule={() => setEditScheduleOpen(true)}
@@ -152,12 +139,6 @@ export function DrawManagementSection() {
         open={publishOpen}
         onOpenChange={setPublishOpen}
         currentResult={currentResult}
-      />
-      <UpdateVietlottRefAction
-        draw={draw}
-        open={vietlottRefOpen}
-        onOpenChange={setVietlottRefOpen}
-        currentValues={currentVietlottRef}
       />
       <EditScheduleAction
         draw={draw}

@@ -98,7 +98,7 @@ export interface DrawTransitionOutput {
 }
 
 // ─────────────────────────────────────────────
-// PublishResult / RepublishResult / UpdateVietlottRef
+// PublishResult
 // ─────────────────────────────────────────────
 
 export interface PublishResultInput {
@@ -124,39 +124,6 @@ export interface PublishResultOutput {
   result: Max3dDrawResult & {
     /** Thời điểm công bố kết quả (ISO datetime). */
     publishedAt: string;
-  };
-}
-
-/**
- * Republish CHỈ nhận `result` (20 bộ ba số) — KHÔNG có `vietlottRef`.
- *
- * Sửa metadata tham chiếu Vietlott thuộc endpoint riêng `update-vietlott-ref`
- * để không kéo theo resettle khi staff chỉ cần fix drawPeriod/drawDate.
- */
-export interface RepublishResultInput {
-  /** Mã định danh kỳ quay đã settled cần sửa kết quả. */
-  drawId: string;
-  /** Kết quả quay thưởng mới: 20 bộ ba số (2 ĐB + 4 Nhất + 6 Nhì + 8 Ba). */
-  result: Max3dDrawResult;
-}
-
-export type RepublishResultOutput = PublishResultOutput;
-
-export interface UpdateVietlottRefInput {
-  /** Mã định danh kỳ quay cần cập nhật vietlottRef. */
-  drawId: string;
-  /** Tham chiếu Vietlott mới. */
-  vietlottRef: {
-    drawPeriod: string;
-    drawDate: string;
-  };
-}
-
-export interface UpdateVietlottRefOutput {
-  drawId: string;
-  vietlottRef: {
-    drawPeriod: string;
-    drawDate: string;
   };
 }
 

@@ -26,6 +26,35 @@ export type ISODateString = string;
 export type { Long } from "mongodb";
 
 // ─────────────────────────────────────────────
+// Draw Embedded Documents (dùng chung cho tất cả game)
+// ─────────────────────────────────────────────
+
+/**
+ * Cửa sổ bán vé của một kỳ quay.
+ *
+ * Cấu trúc giống nhau cho mọi game (Lotto535, Keno, Max3d, ...).
+ * Mỗi game import từ đây thay vì tự định nghĩa lại.
+ */
+export interface DrawSales {
+  /** Thời điểm mở bán. undefined nếu chưa mở. */
+  openAt?: Date;
+  /** Thời điểm đóng bán = drawTime - salesCloseBeforeMinutes/Seconds (từ game config). */
+  closeAt: Date;
+}
+
+/**
+ * Tham chiếu đến kỳ quay Vietlott chính thức tương ứng (dùng để đối soát).
+ *
+ * Cấu trúc giống nhau cho mọi game. Mỗi game import từ đây thay vì tự định nghĩa lại.
+ */
+export interface DrawVietlottRef {
+  /** Mã kỳ quay Vietlott (ví dụ "00123"). Lấy từ website/hệ thống Vietlott. */
+  drawPeriod: string;
+  /** Ngày quay Vietlott, format "YYYY-MM-DD". */
+  drawDate: ISODateString;
+}
+
+// ─────────────────────────────────────────────
 // Draw Tenant Financial (dùng chung cho tất cả game)
 // ─────────────────────────────────────────────
 

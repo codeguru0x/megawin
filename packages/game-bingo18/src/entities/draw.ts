@@ -10,6 +10,7 @@
  */
 
 import type { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawSales, DrawVietlottRef } from "@megawin/game-core/types";
 import type { Bingo18PlayType, Bingo18BigSmallBet, Bingo18TripleKind } from "./enums";
 import type { ISODateString } from "./types";
 
@@ -17,21 +18,7 @@ import type { ISODateString } from "./types";
 // Embedded Document Interfaces
 // ─────────────────────────────────────────────
 
-/** Cửa sổ bán vé cho kỳ quay. */
-export interface DrawSales {
-  /** Thời điểm bắt đầu bán vé. undefined nếu chưa mở bán. */
-  openAt?: Date;
-  /** Thời điểm đóng bán = drawTime - salesCloseBeforeSeconds (từ global config). */
-  closeAt: Date;
-}
-
-/** Tham chiếu kỳ quay Vietlott tương ứng (nếu liên kết). */
-export interface DrawVietlottRef {
-  /** Mã kỳ quay Vietlott. */
-  drawPeriod: string;
-  /** Ngày quay Vietlott, format "YYYY-MM-DD". */
-  drawDate: ISODateString;
-}
+export type { DrawSales, DrawVietlottRef };
 
 /**
  * Kết quả kỳ quay: 3 số từ {1,2,3,4,5,6}.

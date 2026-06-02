@@ -36,11 +36,9 @@ import { useDrawContext } from "../../use-draw-context";
 import { DrawCommandCenter } from "./draw-command-center";
 import {
   PublishResultAction,
-  UpdateVietlottRefAction,
   EditScheduleAction,
   VoidDrawAction,
   type PublishResultCurrentValues,
-  type VietlottRefValues,
 } from "./draw-actions";
 import {
   useOpenSales,
@@ -64,7 +62,6 @@ export function DrawManagementSection() {
   const { draw, effectiveDrawId } = useDrawContext();
 
   const [publishOpen, setPublishOpen] = useState(false);
-  const [vietlottRefOpen, setVietlottRefOpen] = useState(false);
   const [editScheduleOpen, setEditScheduleOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
   const [openSalesConfirm, setOpenSalesConfirm] = useState(false);
@@ -173,16 +170,6 @@ export function DrawManagementSection() {
     };
   })();
 
-  const currentVietlottRef: VietlottRefValues | undefined = (() => {
-    const d = drawDetailData?.draw;
-    const v = d?.vietlottRef;
-    if (!v?.drawPeriod) return undefined;
-    return {
-      drawPeriod: v.drawPeriod,
-      drawDate: String(v.drawDate ?? ""),
-    };
-  })();
-
   if (!draw) return null;
 
   return (
@@ -195,7 +182,6 @@ export function DrawManagementSection() {
         onCloseSales={() => setCloseSalesConfirm(true)}
         onPublishResult={() => setPublishOpen(true)}
         onRepublishResult={() => setPublishOpen(true)}
-        onUpdateVietlottRef={() => setVietlottRefOpen(true)}
         onTriggerSettle={() => setSettleConfirm(true)}
         onTriggerResettle={() => setResettleConfirm(true)}
         onEditSchedule={() => setEditScheduleOpen(true)}
@@ -209,12 +195,6 @@ export function DrawManagementSection() {
         open={publishOpen}
         onOpenChange={setPublishOpen}
         currentResult={currentResult}
-      />
-      <UpdateVietlottRefAction
-        draw={draw}
-        open={vietlottRefOpen}
-        onOpenChange={setVietlottRefOpen}
-        currentValues={currentVietlottRef}
       />
       <EditScheduleAction
         draw={draw}

@@ -10,6 +10,7 @@
  */
 
 import type { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawSales, DrawVietlottRef } from "@megawin/game-core/types";
 import type { ISODateString } from "./types";
 import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "./enums";
 
@@ -17,20 +18,7 @@ import type { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "./enums";
 // Embedded Document Interfaces
 // ─────────────────────────────────────────────
 
-/** Cửa sổ bán vé cho kỳ quay. */
-export interface DrawSales {
-  /** Thời điểm mở bán. Chỉ có sau khi staff nhấn "Mở bán". */
-  openAt?: Date;
-  /** Keno đóng bán 5 phút trước giờ quay (configurable). */
-  closeAt: Date;
-}
-
-/** Tham chiếu kỳ quay Vietlott. */
-export interface DrawVietlottRef {
-  /** Mã kỳ quay Vietlott (ví dụ "123456"). */
-  drawPeriod: string;
-  drawDate: ISODateString;
-}
+export type { DrawSales, DrawVietlottRef };
 
 /**
  * Kết quả kỳ quay: 20 số từ 01-80.

@@ -2,7 +2,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { subDays, formatVNDate } from "@megawin/shared/utils";
 import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
-import type { DrawEntity } from "@megawin/game-max3dpro/entities";
+import type { DrawEntity, DrawVietlottRef } from "@megawin/game-max3dpro/entities";
 import type { FindOptions } from "mongodb";
 import { DrawMapper } from "../mappers/draw-mapper";
 import { BaseRepo } from "./base-repo";
@@ -160,7 +160,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async publishResult(
     drawId: string,
     result: Max3dproDrawResult & { publishedAt: Date },
-    vietlottRef?: DrawDocBase["vietlottRef"],
+    vietlottRef?: DrawVietlottRef,
   ): Promise<DrawEntity | null> {
     const $set: Record<string, unknown> = {
       status: DrawStatus.Published,
@@ -195,9 +195,10 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * - $unset: `financial`, `stats`, `settleSummary` — đây là dữ liệu của lần settle
    *   cũ, sau khi resettle sẽ được tính lại.
    *
-   * KHÔNG đụng `vietlottRef` — sửa metadata tham chiếu thuộc endpoint riêng
-   * `updateVietlottRef`. Tách ra để tránh kéo theo resettle khi staff chỉ
-   * cần sửa drawPeriod/drawDate.
+   * Gộp `vietlottRef` (optional) vào cùng `$set` để tránh chạy 2 query khi staff
+   * vừa sửa result vừa giữ/đổi vietlottRef trước resettle. `vietlottRef` là
+   * metadata đối soát, KHÔNG tham gia matching/payout nên việc ghi cùng lần với
+   * result không kéo theo hệ quả nghiệp vụ — resettle chỉ phụ thuộc result mới.
    *
    * KHÔNG $unset `settledAt` — đây là high-water mark lịch sử settle, dùng để biết
    * draw đã từng settle (phân biệt với Settle lần đầu).
@@ -205,10 +206,21 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   async republishResultAfterSettled(
     drawId: string,
     result: Max3dproDrawResult & { publishedAt: Date },
+    vietlottRef?: DrawVietlottRef,
   ): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Settled];
     if (!allowed?.has(DrawStatus.Published)) {
       return null;
+    }
+
+    const $set: Record<string, unknown> = {
+      status: DrawStatus.Published,
+      result,
+      updatedAt: new Date(),
+    };
+
+    if (vietlottRef) {
+      $set.vietlottRef = vietlottRef;
     }
 
     return await this.findOneAndUpdate(
@@ -217,11 +229,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
         status: DrawStatus.Settled,
       },
       {
-        $set: {
-          status: DrawStatus.Published,
-          result,
-          updatedAt: new Date(),
-        },
+        $set,
         $unset: {
           financial: "",
           stats: "",
@@ -249,7 +257,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    */
   async updateVietlottRef(
     drawId: string,
-    vietlottRef: NonNullable<DrawDocBase["vietlottRef"]>,
+    vietlottRef: DrawVietlottRef,
   ): Promise<DrawEntity | null> {
     return await this.findOneAndUpdate(
       {

@@ -14,24 +14,14 @@
  */
 
 import type { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawSales, DrawVietlottRef } from "@megawin/game-core/types";
 import type { ISODateString, DrawNo } from "./types";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces
 // ─────────────────────────────────────────────
 
-/** Cửa sổ bán vé cho kỳ quay. */
-export interface DrawSales {
-  /** Thời điểm mở bán. Chỉ có sau khi staff nhấn "Mở bán". */
-  openAt?: Date;
-
-  /**
-   * Thời điểm đóng bán.
-   * Thường = drawTime - 30 phút (cấu hình trong gameConfig.play.salesCloseBeforeMinutes).
-   * Backend reject mua vé cho draw này sau closeAt.
-   */
-  closeAt: Date;
-}
+export type { DrawSales, DrawVietlottRef };
 
 /**
  * Kết quả kỳ quay. Set khi status chuyển sang "published".
@@ -193,22 +183,6 @@ export interface DrawVoidSummary {
   totalRefundAmount: number;
   /** Thời điểm void flow hoàn tất. */
   completedAt: Date;
-}
-
-/**
- * Tham chiếu kỳ quay Vietlott chính thức.
- * Cho phép khách hàng biết kết quả kỳ nào của Vietlott được sử dụng.
- * Staff nhập trên backoffice khi import kết quả.
- */
-export interface DrawVietlottRef {
-  /**
-   * Mã kỳ quay Vietlott (ví dụ "00123").
-   * Lấy từ website/hệ thống Vietlott.
-   */
-  drawPeriod: string;
-
-  /** Ngày quay Vietlott. */
-  drawDate: ISODateString;
 }
 
 // ─────────────────────────────────────────────

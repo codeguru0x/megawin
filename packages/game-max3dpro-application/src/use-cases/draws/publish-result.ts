@@ -1,28 +1,40 @@
 /**
- * Use Case: Publish Result (Max 3D Pro)
+ * Use Case: Publish Result (Max 3D Pro) — single entry point cho "nhập/sửa kết quả".
  *
- * Nhập/sửa kết quả kỳ quay.
+ * Nhận `{ result, vietlottRef? }` từ 1 form thống nhất ở UI (mọi trạng thái dùng
+ * chung form) và TỰ quyết định hành động dựa trên `settledAt` (high-water mark)
+ * + so sánh result cũ vs mới:
  *
- * Cho phép:
- *   - salesClosed → published (lần đầu publish)
- *   - published → published (sửa kết quả trước khi settle)
+ *   1. Chưa từng settle (`settledAt == null`):
+ *      - `salesClosed → published`: publish lần đầu (ghi result + vietlottRef).
+ *      - `published → published`: sửa result trước khi settle (ghi đè + vietlottRef).
  *
- * Validate:
- *   - 20 bộ ba số: 2 ĐB + 4 Nhất + 6 Nhì + 8 Ba
- *   - Mỗi bộ ba phải là string "000"-"999" (regex /^\d{3}$/)
+ *   2. Đã settle (`settledAt != null`) — result chắc chắn đã có, phân biệt qua
+ *      `isSameMax3dproResult`:
+ *      - Result KHÔNG đổi → chỉ cập nhật vietlottRef (nếu có), GIỮ NGUYÊN status
+ *        và data settle. KHÔNG mở resettle.
+ *      - Result CÓ đổi:
+ *        · status `Settled`  → `republishResultAfterSettled` (settled→published,
+ *          $unset financial/stats/settleSummary, ghi result + vietlottRef trong
+ *          cùng 1 query) → mở luồng resettle.
+ *        · status `Published` (đang chờ resettle) → ghi đè result + vietlottRef,
+ *          giữ `Published` (vẫn chờ resettle).
+ *
+ * `Settling` → reject (đang kết sổ, không cho sửa).
+ *
+ * Việc tách result (tham gia matching/payout → buộc resettle) khỏi vietlottRef
+ * (metadata đối soát → KHÔNG resettle) được giữ nguyên ở repo layer; use case
+ * này chỉ orchestrate gọi đúng method.
+ *
+ * Validate input (20 bộ ba số đúng phân bố 2/4/6/8 + format triplet `/^\d{3}$/`)
+ * thực hiện ở route layer qua Zod schema `publishResultSchema` — use-case
+ * không validate lại để tránh duplicate.
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
-import {
-  MAX3D_PRO_DRAW_COUNT_SPECIAL,
-  MAX3D_PRO_DRAW_COUNT_FIRST,
-  MAX3D_PRO_DRAW_COUNT_SECOND,
-  MAX3D_PRO_DRAW_COUNT_THIRD,
-  MAX3D_PRO_DRAW_TOTAL,
-} from "@megawin/game-max3dpro/entities";
-import type { Max3dproDrawResult, Triplet } from "@megawin/game-max3dpro/entities";
+import { isSameMax3dproResult } from "@megawin/game-max3dpro/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 import { nowVN } from "@megawin/shared/utils";
@@ -30,22 +42,15 @@ import { nowVN } from "@megawin/shared/utils";
 const PUBLISHABLE_STATUSES = new Set<string>([
   DrawStatus.SalesClosed,
   DrawStatus.Published,
+  DrawStatus.Settled,
 ]);
 
-const TRIPLET_REGEX = /^\d{3}$/;
-
-export class PublishResultUseCase extends NextApiUseCase<
-  PublishResultInput,
-  PublishResultOutput
-> {
+export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, PublishResultOutput> {
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(
-    input: PublishResultInput
-  ): Promise<PublishResultOutput> {
-    this.validateResult(input.result);
-
+  protected async execute(input: PublishResultInput): Promise<PublishResultOutput> {
     const draw = await this.drawRepo.getDrawById(input.drawId);
+
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
     }
@@ -53,12 +58,70 @@ export class PublishResultUseCase extends NextApiUseCase<
     if (!PUBLISHABLE_STATUSES.has(draw.status)) {
       throw new AppException(
         "DRAW_INVALID_TRANSITION",
-        `Không thể publish kết quả – draw ở trạng thái "${draw.status}", cần "salesClosed" hoặc "published".`
+        `Không thể publish kết quả – draw ở trạng thái "${draw.status}".`,
       );
     }
 
     const publishedAt = nowVN();
+    // `settledAt` là high-water mark — set lần đầu khi FinalizeSettle chạy, KHÔNG
+    // bị $unset khi republish. Dùng nó (KHÔNG dùng status) để biết đã từng settle.
+    const hasSettledBefore = Boolean(draw.settledAt);
 
+    // ── Nhánh 1: chưa từng settle → publish bình thường (result + vietlottRef) ──
+    if (!hasSettledBefore) {
+      return this.publish(input, publishedAt);
+    }
+
+    // ── Nhánh 2: đã settle → quyết định theo result có đổi hay không ──
+    // Đã settle ⇒ result chắc chắn tồn tại (FinalizeSettle yêu cầu có result).
+    // Result KHÔNG đổi → chỉ là sửa metadata vietlottRef → KHÔNG resettle.
+    const resultUnchanged = isSameMax3dproResult(draw.result!, input.result);
+
+    if (resultUnchanged) {
+      if (input.vietlottRef) {
+        const updated = await this.drawRepo.updateVietlottRef(input.drawId, input.vietlottRef);
+
+        if (!updated) {
+          throw AppException.internal(
+            `Cập nhật Vietlott Ref kỳ ${input.drawId} thất bại — draw status đã thay đổi.`,
+          );
+        }
+      }
+
+      // Giữ nguyên status + result hiện tại (không đổi gì về kết quả/settle).
+      return this.toOutput(input, draw.status, draw.result!.publishedAt ?? publishedAt);
+    }
+
+    // Result CÓ đổi sau settle.
+    if (draw.status === DrawStatus.Settled) {
+      // settled → published + $unset data settle cũ → mở luồng resettle.
+      // Ghi result + vietlottRef trong CÙNG 1 query (vietlottRef không kéo
+      // resettle, nhưng gộp vào tránh thừa 1 round-trip mỗi lần sửa).
+      const updated = await this.drawRepo.republishResultAfterSettled(
+        input.drawId,
+        { ...input.result, publishedAt },
+        input.vietlottRef,
+      );
+
+      if (!updated) {
+        throw AppException.internal(
+          `Sửa kết quả kỳ ${input.drawId} thất bại — draw không còn ở "settled" (có thể đã bị thay đổi đồng thời).`,
+        );
+      }
+
+      return this.toOutput(input, DrawStatus.Published, publishedAt);
+    }
+
+    // status === Published (đã settle ≥ 1 lần, đang chờ resettle): ghi đè result
+    // mới + vietlottRef, giữ Published. publishResult cho phép Published→Published.
+    return this.publish(input, publishedAt);
+  }
+
+  /** Ghi result (+ vietlottRef nếu có) qua `drawRepo.publishResult`, → `Published`. */
+  private async publish(
+    input: PublishResultInput,
+    publishedAt: Date,
+  ): Promise<PublishResultOutput> {
     const updated = await this.drawRepo.publishResult(
       input.drawId,
       { ...input.result, publishedAt },
@@ -66,76 +129,25 @@ export class PublishResultUseCase extends NextApiUseCase<
     );
 
     if (!updated) {
-      throw AppException.internal(
-        `Publish kết quả kỳ ${input.drawId} thất bại. Vui lòng thử lại.`,
-      );
+      throw AppException.internal(`Publish kết quả kỳ ${input.drawId} thất bại. Vui lòng thử lại.`);
     }
 
+    return this.toOutput(input, DrawStatus.Published, publishedAt);
+  }
+
+  /** Build output shape thống nhất. */
+  private toOutput(
+    input: PublishResultInput,
+    status: string,
+    publishedAt: Date,
+  ): PublishResultOutput {
     return {
       drawId: input.drawId,
-      status: DrawStatus.Published,
+      status,
       result: {
         ...input.result,
         publishedAt: publishedAt.toISOString(),
       },
     };
-  }
-
-  private validateResult(result: Max3dproDrawResult): void {
-    this.validateTripletArray(
-      result.special,
-      "special",
-      MAX3D_PRO_DRAW_COUNT_SPECIAL
-    );
-    this.validateTripletArray(
-      result.first,
-      "first",
-      MAX3D_PRO_DRAW_COUNT_FIRST
-    );
-    this.validateTripletArray(
-      result.second,
-      "second",
-      MAX3D_PRO_DRAW_COUNT_SECOND
-    );
-    this.validateTripletArray(
-      result.third,
-      "third",
-      MAX3D_PRO_DRAW_COUNT_THIRD
-    );
-
-    const total =
-      result.special.length +
-      result.first.length +
-      result.second.length +
-      result.third.length;
-
-    if (total !== MAX3D_PRO_DRAW_TOTAL) {
-      throw new AppException(
-        "DRAW_RESULT_INVALID",
-        `Tổng bộ ba số phải là ${MAX3D_PRO_DRAW_TOTAL}, nhận được ${total}.`
-      );
-    }
-  }
-
-  private validateTripletArray(
-    triplets: Triplet[],
-    tierName: string,
-    expectedCount: number
-  ): void {
-    if (!Array.isArray(triplets) || triplets.length !== expectedCount) {
-      throw new AppException(
-        "DRAW_RESULT_INVALID",
-        `Giải ${tierName} phải có đúng ${expectedCount} bộ ba số, nhận được ${triplets?.length ?? 0}.`
-      );
-    }
-
-    for (const t of triplets) {
-      if (!TRIPLET_REGEX.test(t)) {
-        throw new AppException(
-          "DRAW_RESULT_INVALID",
-          `Bộ ba số "${t}" ở giải ${tierName} không hợp lệ (cần 3 chữ số 000-999).`
-        );
-      }
-    }
   }
 }
