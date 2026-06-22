@@ -1,30 +1,34 @@
 /**
- * Use Case: Publish Result (Power 6/55)
+ * Use Case: Publish Result (Power 6/55) — single entry point cho "nhập/sửa kết quả".
  *
- * Nhập/sửa kết quả kỳ quay.
+ * Nhận `{ winningMain, bonusNumber, vietlottRef? }` từ 1 form thống nhất ở UI
+ * và TỰ quyết định hành động dựa trên `settledAt` + so sánh result cũ vs mới:
  *
- * Cho phép:
- *   - salesClosed → published (lần đầu publish)
- *   - published → published (sửa kết quả trước khi settle)
+ *   1. Chưa từng settle (`settledAt == null`):
+ *      - `salesClosed → published`: publish lần đầu.
+ *      - `published → published`: sửa result trước khi settle (ghi đè).
  *
- * Validate:
- *   - 6 số chính unique, trong range [1, 55]
- *   - 1 bonus number trong range [1, 55], KHÁC 6 số chính
+ *   2. Đã settle (`settledAt != null`) — result chắc chắn đã có, phân biệt qua
+ *      `isSamePower655Result`:
+ *      - Result KHÔNG đổi → chỉ cập nhật vietlottRef (nếu có). KHÔNG mở resettle.
+ *      - Result CÓ đổi:
+ *        · status `Settled`  → `republishResultAfterSettled` (settled→published,
+ *          GIỮ settledAt, $unset financial/stats/settleSummary, ghi result +
+ *          vietlottRef) → mở luồng resettle.
+ *        · status `Published` (đang chờ resettle) → ghi đè result + vietlottRef.
  *
- * KHÔNG stamp kết quả vào entries ở bước này.
- * Settle worker sẽ đọc result từ draw và cập nhật vào entries khi tính thắng thua.
+ * `Settling` → reject (đang kết sổ, không cho sửa).
+ *
+ * Validate input (6 số chính `"01"–"55"` unique + 1 bonus `"01"–"55"` khác số
+ * chính) thực hiện ở route layer qua Zod schema `publishResultSchema` — use-case
+ * không validate lại để tránh duplicate.
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type {
-  DrawVietlottRef,
-} from "@megawin/game-power655/entities";
-import {
-  POWER655_MAIN_COUNT,
-  VALID_MAIN_NUMBER_SET,
-} from "@megawin/game-power655/entities";
+import { isSamePower655Result } from "@megawin/game-power655/rules";
+import type { DrawVietlottRef } from "@megawin/game-power655/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 import { nowVN } from "@megawin/shared/utils";
@@ -32,24 +36,14 @@ import { nowVN } from "@megawin/shared/utils";
 const PUBLISHABLE_STATUSES = new Set<string>([
   DrawStatus.SalesClosed,
   DrawStatus.Published,
+  DrawStatus.Settled,
 ]);
 
-/**
- * Publish kết quả kỳ quay Power 6/55.
- * Validate 6 số chính (1-55) + 1 bonus number (1-55, khác 6 số chính).
- */
-export class PublishResultUseCase extends NextApiUseCase<
-  PublishResultInput,
-  PublishResultOutput
-> {
+export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, PublishResultOutput> {
   private readonly drawRepo = new DrawRepository();
 
   /** @inheritdoc */
-  protected async execute(
-    input: PublishResultInput
-  ): Promise<PublishResultOutput> {
-    this.validateResult(input);
-
+  protected async execute(input: PublishResultInput): Promise<PublishResultOutput> {
     const draw = await this.drawRepo.getDrawById(input.drawId);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
@@ -58,7 +52,7 @@ export class PublishResultUseCase extends NextApiUseCase<
     if (!PUBLISHABLE_STATUSES.has(draw.status)) {
       throw new AppException(
         "DRAW_INVALID_TRANSITION",
-        `Không thể publish kết quả – draw ở trạng thái "${draw.status}", cần "salesClosed" hoặc "published".`
+        `Không thể publish kết quả – draw ở trạng thái "${draw.status}".`,
       );
     }
 
@@ -66,27 +60,98 @@ export class PublishResultUseCase extends NextApiUseCase<
     const bonusNumber = input.bonusNumber;
     const publishedAt = nowVN();
 
-    const vietlottRef: DrawVietlottRef | undefined = input.vietlottRef
-      ? {
-          drawPeriod: input.vietlottRef.drawPeriod,
-          drawDate: input.vietlottRef.drawDate,
-        }
-      : undefined;
+    // `settledAt` là high-water mark — set lần đầu khi FinalizeSettle chạy, KHÔNG
+    // bị $unset khi republish. Dùng nó (KHÔNG dùng status) để biết đã từng settle.
+    const hasSettledBefore = Boolean(draw.settledAt);
 
+    // ── Nhánh 1: chưa từng settle → publish bình thường ──────────────────
+    if (!hasSettledBefore) {
+      return this.publish(input.drawId, winningMain, bonusNumber, publishedAt, input.vietlottRef);
+    }
+
+    // ── Nhánh 2: đã settle → quyết định theo result có đổi hay không ──────
+    // Đã settle ⇒ result chắc chắn tồn tại.
+    const resultUnchanged = isSamePower655Result(draw.result!, {
+      winningMain,
+      bonusNumber,
+      publishedAt: draw.result!.publishedAt,
+    });
+
+    if (resultUnchanged) {
+      // Result không đổi → chỉ sửa metadata vietlottRef nếu có. KHÔNG resettle.
+      if (input.vietlottRef) {
+        const updated = await this.drawRepo.updateVietlottRef(input.drawId, input.vietlottRef);
+
+        if (!updated) {
+          throw AppException.internal(
+            `Cập nhật Vietlott Ref kỳ ${input.drawId} thất bại — draw status đã thay đổi.`,
+          );
+        }
+      }
+
+      // Giữ nguyên status + result hiện tại.
+      return {
+        drawId: input.drawId,
+        status: draw.status,
+        result: {
+          winningMain,
+          bonusNumber,
+          publishedAt: (draw.result!.publishedAt ?? publishedAt).toISOString(),
+        },
+      };
+    }
+
+    // Result CÓ đổi sau settle.
+    if (draw.status === DrawStatus.Settled) {
+      // settled → published (GIỮ settledAt, $unset financial/stats/settleSummary)
+      // → mở luồng resettle.
+      const updated = await this.drawRepo.republishResultAfterSettled(
+        input.drawId,
+        { winningMain, bonusNumber, publishedAt },
+        input.vietlottRef,
+      );
+
+      if (!updated) {
+        throw AppException.internal(
+          `Sửa kết quả kỳ ${input.drawId} thất bại — draw không còn ở "settled" (có thể đã bị thay đổi đồng thời).`,
+        );
+      }
+
+      return {
+        drawId: input.drawId,
+        status: DrawStatus.Published,
+        result: {
+          winningMain,
+          bonusNumber,
+          publishedAt: publishedAt.toISOString(),
+        },
+      };
+    }
+
+    // status === Published (đã settle ≥ 1 lần, đang chờ resettle): ghi đè result mới.
+    return this.publish(input.drawId, winningMain, bonusNumber, publishedAt, input.vietlottRef);
+  }
+
+  /** Ghi result (+ vietlottRef nếu có) qua `drawRepo.publishResult` → `Published`. */
+  private async publish(
+    drawId: string,
+    winningMain: string[],
+    bonusNumber: string,
+    publishedAt: Date,
+    vietlottRef?: DrawVietlottRef,
+  ): Promise<PublishResultOutput> {
     const updated = await this.drawRepo.publishResult(
-      input.drawId,
+      drawId,
       { winningMain, bonusNumber, publishedAt },
-      vietlottRef
+      vietlottRef,
     );
 
     if (!updated) {
-      throw AppException.internal(
-        `Publish kết quả kỳ ${input.drawId} thất bại. Vui lòng thử lại.`
-      );
+      throw AppException.internal(`Publish kết quả kỳ ${drawId} thất bại. Vui lòng thử lại.`);
     }
 
     return {
-      drawId: input.drawId,
+      drawId,
       status: DrawStatus.Published,
       result: {
         winningMain,
@@ -94,55 +159,5 @@ export class PublishResultUseCase extends NextApiUseCase<
         publishedAt: publishedAt.toISOString(),
       },
     };
-  }
-
-  /**
-   * Validate kết quả kỳ quay Power 6/55.
-   * - 6 số chính unique, range [1, 55]
-   * - 1 bonus number range [1, 55], khác tất cả 6 số chính
-   */
-  private validateResult(input: PublishResultInput): void {
-    const { winningMain, bonusNumber } = input;
-
-    if (
-      !Array.isArray(winningMain) ||
-      winningMain.length !== POWER655_MAIN_COUNT
-    ) {
-      throw new AppException(
-        "DRAW_RESULT_INVALID",
-        `Phải có đúng ${POWER655_MAIN_COUNT} số chính.`
-      );
-    }
-
-    const uniqueMain = new Set(winningMain);
-    if (uniqueMain.size !== POWER655_MAIN_COUNT) {
-      throw new AppException(
-        "DRAW_RESULT_INVALID",
-        "Các số chính phải khác nhau."
-      );
-    }
-
-    for (const n of winningMain) {
-      if (!VALID_MAIN_NUMBER_SET.has(n)) {
-        throw new AppException(
-          "DRAW_RESULT_INVALID",
-          `Số chính "${n}" không hợp lệ (phải từ "01" đến "55").`
-        );
-      }
-    }
-
-    if (!VALID_MAIN_NUMBER_SET.has(bonusNumber)) {
-      throw new AppException(
-        "DRAW_RESULT_INVALID",
-        `Bonus number "${bonusNumber}" không hợp lệ (phải từ "01" đến "55").`
-      );
-    }
-
-    if (uniqueMain.has(bonusNumber)) {
-      throw new AppException(
-        "DRAW_RESULT_INVALID",
-        "Bonus number không được trùng với bất kỳ số chính nào."
-      );
-    }
   }
 }

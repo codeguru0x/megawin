@@ -63,6 +63,11 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
         status: d.status,
         financialDate: d.financialDate ?? d.drawDate,
         group,
+        // High-water mark — kỳ đã settle ít nhất 1 lần.
+        settledAt: d.settledAt instanceof Date ? d.settledAt.toISOString() : undefined,
+        // publishedAt của result gần nhất — so sánh với settledAt để biết có result mới.
+        resultPublishedAt:
+          d.result?.publishedAt instanceof Date ? d.result.publishedAt.toISOString() : undefined,
       };
     };
 

@@ -218,8 +218,9 @@ export interface DrawDoc {
    * Thời điểm kết sổ thành công (high-water mark).
    *
    * Set bởi `FinalizeSettle` khi settle complete. Đánh dấu kỳ đã được kết sổ —
-   * dùng để chặn gọi `trigger-settle` lặp lại trên kỳ đã settle (Mega 6/45
-   * không có resettle nên field này không bao giờ bị $unset).
+   * dùng để chặn gọi `trigger-settle` lặp lại trên kỳ đã settle. Với resettle:
+   * `$unset` trong `republishResultAfterSettled` (đưa kỳ về Published để settle
+   * lại), re-set khi settle lại thành công.
    */
   settledAt?: Date;
 

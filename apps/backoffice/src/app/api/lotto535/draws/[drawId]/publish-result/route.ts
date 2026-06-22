@@ -9,18 +9,23 @@ import {
 } from "@megawin/game-lotto535/schemas";
 import { LOTTO535_MAIN_COUNT } from "@megawin/game-lotto535/entities";
 
-const publishResultSchema = z.object({
-  winningMain: z
-    .array(lotto535MainNumberSchema)
-    .length(LOTTO535_MAIN_COUNT, `Phải có đúng ${LOTTO535_MAIN_COUNT} số chính.`),
-  winningSpecial: lotto535SpecialNumberSchema,
-  vietlottRef: z
-    .object({
-      drawPeriod: z.string(),
-      drawDate: z.string(),
-    })
-    .optional(),
-});
+const publishResultSchema = z
+  .object({
+    winningMain: z
+      .array(lotto535MainNumberSchema)
+      .length(LOTTO535_MAIN_COUNT, `Phải có đúng ${LOTTO535_MAIN_COUNT} số chính.`),
+    winningSpecial: lotto535SpecialNumberSchema,
+    vietlottRef: z
+      .object({
+        drawPeriod: z.string(),
+        drawDate: z.string(),
+      })
+      .optional(),
+  })
+  .refine((data) => new Set(data.winningMain).size === data.winningMain.length, {
+    message: "Các số chính không được trùng nhau.",
+    path: ["winningMain"],
+  });
 
 const publishResultUseCase = new PublishResultUseCase();
 

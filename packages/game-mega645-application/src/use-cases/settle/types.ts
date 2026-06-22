@@ -25,6 +25,7 @@
  */
 
 import type { PrizeAmounts, JackpotWinnerInfo } from "@megawin/game-mega645/entities";
+import type { ResettleScenario } from "@megawin/game-mega645/rules";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Primitive shared types
@@ -253,6 +254,22 @@ export interface SettleContext {
    * undefined khi không có JP winner (roll-over).
    */
   jackpotWinners?: JackpotWinnerInfo[];
+
+  /**
+   * Context resettle — chỉ có khi pipeline được khởi động từ TriggerResettleUseCase.
+   *
+   * undefined trong flow settle bình thường (kỳ quay lần đầu).
+   *
+   * FinalizeSettle đọc field này để:
+   *   1. Upsert Cycle Ledger entry với giá trị chính xác kỳ T.
+   *   2. Quyết định có cập nhật jackpot cycle hay không (skipCycleUpdate).
+   *
+   * PrepareSettle đọc field này để:
+   *   1. Đọc jackpotOpeningAmount từ ledger(T).openingJp thay vì activeCycle
+   *      (activeCycle không còn đúng sau khi cycle đã được update ở các kỳ sau T).
+   *   2. Set cycleDrawCountBefore = ledger(T).seq - 1 (thay vì activeCycle.drawCount).
+   */
+  resettleContext?: ResettleContext;
 }
 
 /**
@@ -265,3 +282,103 @@ export interface SettleContext {
 export type SettleContextWithFinancials = SettleContext & {
   financials: SettleFinancials;
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ResettleContext — chỉ dùng khi pipeline chạy từ resettle flow
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Context đặc biệt cho resettle pipeline — pass qua SFN input.
+ *
+ * Được tạo bởi `TriggerResettleUseCase` và gắn vào SFN input.
+ * `PrepareSettleUseCase` đọc để override jackpotOpeningAmount và cycleDrawCountBefore.
+ * `FinalizeSettleUseCase` đọc để upsert ledger entry và quyết định skipCycleUpdate.
+ *
+ * Mega 6/45 là SINGLE JACKPOT → chỉ 1 field `openingJp` (không có openingJp1/2,
+ * không có overflow).
+ *
+ * ── openingJp ───────────────────────────────────────────────────────────────
+ * Đọc từ `JackpotCycleEntryRepository.findByDraw(drawId).openingJp`.
+ * Đây là giá trị Jackpot TRƯỚC khi cộng contribution kỳ T — đúng là opening
+ * của kỳ T, không bị ảnh hưởng bởi các kỳ settle sau.
+ *
+ * Lý do không dùng `activeCycle.currentAmount`:
+ *   - activeCycle.currentAmount phản ánh trạng thái HIỆN TẠI của cycle.
+ *   - Sau khi các kỳ T+1, T+2,... settle xong, activeCycle đã bị cập nhật theo
+ *     contribution của các kỳ đó — không còn là opening của kỳ T.
+ *
+ * ── cycleDrawCountBefore ─────────────────────────────────────────────────────
+ * = `ledger(T).seq - 1` — số kỳ đã settle TRƯỚC kỳ T trong cycle.
+ * `FinalizeSettle` dùng để set `drawCount = cycleDrawCountBefore + 1` (idempotent).
+ *
+ * ── skipCycleUpdate ─────────────────────────────────────────────────────────
+ * - `false` (Type A): FinalizeSettle cập nhật jackpot cycle như bình thường.
+ * - `true` (Type B1/B2): FinalizeSettle BỎ QUA bước updateJackpotCycle.
+ *   DBA can thiệp cycle thủ công sau khi entries đã re-settle xong.
+ *
+ * ── cascadeOpeningUpdate ─────────────────────────────────────────────────────
+ * Chỉ true cho cascade B2 (kỳ T+n, n≥1). Khi true, FinalizeSettle cho phép
+ * `upsertEntry` ghi đè `openingJp` trong ledger (thay vì $setOnInsert) vì
+ * opening kỳ T+n = closing kỳ T+n-1 vừa thay đổi do resettle kỳ trước.
+ */
+export interface ResettleContext {
+  /** Session ID duy nhất cho phiên resettle — UUIDv7, sinh bởi BO API. */
+  resettleId: string;
+  /**
+   * Loại scenario phát hiện bởi `DetectResettleBoundariesUseCase`.
+   * Dùng để log, audit, và hiển thị trạng thái trên BO UI.
+   */
+  scenario: ResettleScenario;
+  /**
+   * Giá trị Jackpot đầu kỳ T — đọc từ ledger(T).openingJp.
+   * Override activeCycle.currentAmount trong PrepareSettle.
+   */
+  openingJp: number;
+  /**
+   * Số kỳ trong cycle TRƯỚC kỳ T = ledger(T).seq - 1.
+   * Override activeCycle.drawCount trong PrepareSettle để tính cycleDrawCountBefore.
+   * FinalizeSettle set drawCount = cycleDrawCountBefore + 1 (idempotent).
+   */
+  cycleDrawCountBefore: number;
+  /**
+   * Tổng contribution của cycle TRƯỚC kỳ T (VND) = `openingJp - cycle.seedAmount`.
+   *
+   * Override activeCycle.totalContribution trong PrepareSettle. Cần thiết vì
+   * `activeCycle.totalContribution` đã CỘNG contribution kỳ T (và các kỳ T+1…)
+   * từ lần settle trước → không còn là "trước kỳ T". FinalizeSettle (Type A
+   * roll-over) tính `newContribution = cycleContributionBefore + jpContribution`
+   * (tuyệt đối → idempotent).
+   *
+   * Bất biến cycle (single jackpot, không winner giữa cycle):
+   *   openingJp(T) = seedAmount + Σ contribution các kỳ < T
+   *   → cycleContributionBefore = openingJp(T) - seedAmount.
+   */
+  cycleContributionBefore: number;
+  /**
+   * cycleNo của cycle CHỨA kỳ T — đọc từ `ledger(T).cycleNo`.
+   *
+   * Override việc lookup `getActiveCycle()` trong PrepareSettle. Cần thiết vì:
+   *   - Khi kỳ T trúng JP, cycle chứa T đã bị ĐÓNG (status = "closed"). Nếu chưa
+   *     có kỳ sau T → chưa có active cycle nào → `getActiveCycle()` trả null →
+   *     PrepareSettle ném "Không tìm thấy Jackpot Cycle" khi resettle.
+   *   - Ngay cả khi đã có cycle mới (active), đó là cycle SAU kỳ T với config khác.
+   *     Resettle kỳ T phải đọc đúng cycle CHỨA T.
+   *
+   * PrepareSettle dùng `getCycleByNo(cycleNo)` (lookup bất kể status) để đọc đúng
+   * cycle của kỳ T — kể cả khi cycle đã closed.
+   */
+  cycleNo: number;
+  /**
+   * Nếu true: FinalizeSettle BỎ QUA bước `updateJackpotCycle`.
+   * Dùng cho Type B1/B2 khi DBA cần can thiệp cycle thủ công.
+   * Nếu false (Type A): FinalizeSettle cập nhật cycle như bình thường.
+   */
+  skipCycleUpdate: boolean;
+  /**
+   * Nếu true (chỉ cascade B2, kỳ T+n với n≥1): cho phép `upsertEntry` ghi đè
+   * `openingJp` trong ledger. Cần thiết vì opening kỳ T+n = closing kỳ T+n-1
+   * vừa đổi do resettle kỳ trước trong chuỗi cascade. Mặc định undefined/false
+   * (settle lần đầu + Type A/B1 + chính kỳ T): opening bất biến ($setOnInsert).
+   */
+  cascadeOpeningUpdate?: boolean;
+}

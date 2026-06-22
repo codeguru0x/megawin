@@ -14,7 +14,10 @@ import type {
   GetTopCombosOutput,
   GetWinningEntriesOutput,
 } from "@megawin/game-power655-application/use-cases/operations";
-import type { GetDrawDetailOutput } from "@megawin/game-power655-application/use-cases/draws";
+import type {
+  GetDrawDetailOutput,
+  ResettlePreflightOutput,
+} from "@megawin/game-power655-application/use-cases/draws";
 import type { PreviewDrawsOutput } from "@megawin/game-power655-application/use-cases/draws";
 
 export type {
@@ -40,6 +43,7 @@ export type {
 } from "@megawin/game-power655-application/use-cases/operations";
 
 export type { GetDrawDetailOutput } from "@megawin/game-power655-application/use-cases/draws";
+export type { ResettlePreflightOutput } from "@megawin/game-power655-application/use-cases/draws";
 
 export interface OpsQueryParams {
   financialDate?: string;
@@ -263,6 +267,70 @@ export function useTriggerSettle() {
     "post",
     "Đã bắt đầu kết sổ.",
   );
+}
+
+/**
+ * Khởi chạy phiên Resettle — bước 2 của workflow.
+ *
+ * Staff gọi SAU khi đã xem pre-flight và xác nhận kết quả mới qua publish-result.
+ * Backend sẽ acquire WorkerLock + transition `Published → Settling` + start Resettle SFN.
+ *
+ * Hiển thị nút này CHỈ khi:
+ *   - `draw.settledAt` != null (đã từng settle).
+ *   - `draw.resultPublishedAt > draw.settledAt` (có kết quả mới sau settle).
+ */
+export function useTriggerResettle() {
+  return useDrawAction<{ dbaConfirmed: boolean }>(
+    (id) => `/power655/draws/${id}/resettle`,
+    "post",
+    "Đã bắt đầu kết sổ lại.",
+  );
+}
+
+/**
+ * Mở cổng resettle cho kỳ T+n trong cascade TYPE_B2 khi KẾT QUẢ SỐ KHÔNG ĐỔI.
+ *
+ * Cascade B2: sửa kết quả kỳ T kéo theo các kỳ đã settle sau (T+1…T+n) phải
+ * re-settle vì pool dual jackpot (JP1 + JP2) đổi — nhưng số quay của chúng không
+ * đổi nên không publish lại được. Hook này re-stamp `result.publishedAt` (giữ
+ * winningMain + bonusNumber), chuyển `Settled → Published` để mở cổng "Kết sổ lại".
+ *
+ * Gọi với `dbaConfirmed: true`. Sau khi thành công, staff bấm "Kết sổ lại"
+ * (useTriggerResettle) cho chính kỳ này như bình thường.
+ */
+export function useReopenForCascade() {
+  return useDrawAction<{ dbaConfirmed: boolean }>(
+    (id) => `/power655/draws/${id}/resettle-reopen`,
+    "post",
+    "Đã mở lại kỳ để kết sổ lại theo chuỗi.",
+  );
+}
+
+/**
+ * Pre-flight phân tích tác động trước khi resettle.
+ *
+ * Gọi với kết quả đề xuất mới (chưa publish) để detect scenario:
+ *   - `TYPE_A`: tự động hoàn toàn.
+ *   - `TYPE_B1`: auto payout, DBA cập nhật jackpot cycle (1 kỳ).
+ *   - `TYPE_B2`: cascade từng kỳ — auto payout, DBA chốt cycle giữa mỗi bước.
+ *   - `LEDGER_MISSING`: bất thường data integrity (ledger entry mất) → báo kỹ thuật.
+ */
+export function useResettlePreflight() {
+  return useMutation({
+    mutationFn: ({
+      drawId,
+      proposedWinningMain,
+      proposedBonusNumber,
+    }: {
+      drawId: string;
+      proposedWinningMain: string[];
+      proposedBonusNumber: string;
+    }) =>
+      apiClient.post<ResettlePreflightOutput>(`/power655/draws/${drawId}/resettle-preflight`, {
+        proposedWinningMain,
+        proposedBonusNumber,
+      }),
+  });
 }
 
 export function useVoidDraw() {

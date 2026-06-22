@@ -49,6 +49,7 @@ import {
 } from "@megawin/game-lotto535/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import { JackpotCycleEntryRepository } from "../../infras/repos/jackpot-cycle-entry-repo";
 import type { SettleContextWithFinancials, LottoSplitTierDetail } from "./types";
 
 export interface FinalizeSettleResult {
@@ -92,9 +93,10 @@ export class FinalizeSettleUseCase extends InternalUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
+  private readonly cycleEntryRepo = new JackpotCycleEntryRepository();
 
   protected async execute(input: SettleContextWithFinancials): Promise<FinalizeSettleResult> {
-    const { drawId, isSplitCycle, jackpotOpeningAmount, financials } = input;
+    const { drawId, isSplitCycle, jackpotOpeningAmount, financials, resettleContext } = input;
     const closingAmount = jackpotOpeningAmount + financials.jackpotContribution;
 
     // ── Bước 1: Chuyển draw status settling → settled + ghi jackpot snapshot ──
@@ -116,8 +118,33 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       }
     }
 
-    // ── Bước 2: Cập nhật JackpotCycle ─────────────────────────────────────────
-    await this.updateJackpotCycle(input);
+    // ── Bước 2: Upsert Cycle Ledger (luôn chạy — settle lần đầu + resettle) ──
+    const splitExecuted = isSplitCycle && financials.splitDetails != null;
+    await this.cycleEntryRepo.upsertEntry(
+      {
+        cycleNo: input.config.cycleNo,
+        drawId,
+        drawNo: input.drawNo,
+        seq: input.config.cycleDrawCountBefore + 1,
+        opening: jackpotOpeningAmount,
+        contribution: financials.jackpotContribution,
+        closing: closingAmount,
+        hasJpWinner: financials.hasJackpotWinner,
+        didSplit: splitExecuted,
+        isSplitCycleAtSettle: isSplitCycle,
+        settledAt: new Date(),
+      },
+      resettleContext?.cascadeOpeningUpdate ?? false,
+    );
+
+    // ── Bước 3: Cập nhật JackpotCycle ─────────────────────────────────────────
+    if (resettleContext?.skipCycleUpdate) {
+      console.log(
+        `[Resettle] skipCycleUpdate=true (scenario=${resettleContext.scenario}) → bỏ qua updateJackpotCycle.`,
+      );
+    } else {
+      await this.updateJackpotCycle(input);
+    }
 
     return {
       drawId,

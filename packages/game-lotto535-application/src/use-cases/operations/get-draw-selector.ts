@@ -61,7 +61,13 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
           d.sales?.closeAt instanceof Date
             ? d.sales.closeAt.toISOString()
             : String(d.sales?.closeAt ?? ""),
-        drawResultAt: drawTimeDate.toISOString(),
+        drawResultAt:
+          d.result?.publishedAt instanceof Date
+            ? d.result.publishedAt.toISOString()
+            : drawTimeDate.toISOString(),
+        settledAt: d.settledAt instanceof Date ? d.settledAt.toISOString() : undefined,
+        resultPublishedAt:
+          d.result?.publishedAt instanceof Date ? d.result.publishedAt.toISOString() : undefined,
         status: d.status,
         financialDate: d.financialDate ?? d.drawDate,
         group,

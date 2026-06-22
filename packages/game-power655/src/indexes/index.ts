@@ -141,6 +141,27 @@ export const POWER655_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: Power655Collections.TicketEntries,
+    key: {
+      drawId: 1,
+      status: 1,
+      "reversal.reversalTx": 1,
+    },
+    options: { name: "idx_draw_reversalTx", sparse: true },
+    purpose: "EnqueueReversals: paginate entries có reversal theo reversalTx ASC",
+  },
+  {
+    collection: Power655Collections.TicketEntries,
+    key: {
+      drawId: 1,
+      status: 1,
+      "entrySummary.boards.mainNumbers": 1,
+    },
+    options: { name: "idx_draw_status_boardNumbers" },
+    purpose:
+      "Resettle pre-flight: existsJpWinnerForDraw match JP1/JP2 bằng $elemMatch+$all (IXSCAN multikey, không scan toàn kỳ)",
+  },
+  {
+    collection: Power655Collections.TicketEntries,
     key: { version: 1 },
     options: { name: "idx_version" },
     purpose: "Feed sync",
@@ -158,6 +179,13 @@ export const POWER655_INDEXES: readonly IndexSpec[] = [
     key: { status: 1, drawTime: 1 },
     options: { name: "idx_status_drawTime" },
     purpose: "Scheduler",
+  },
+  {
+    collection: Power655Collections.Draws,
+    key: { status: 1, drawId: 1 },
+    options: { name: "idx_status_drawId" },
+    purpose:
+      "Resettle cascade guard: findPendingResettleBeforeDraw (status ∈ {Published,Settling} + drawId < T) — ESR equality+range, IXSCAN không scan kỳ Settled cũ",
   },
   {
     collection: Power655Collections.Draws,
@@ -210,6 +238,22 @@ export const POWER655_INDEXES: readonly IndexSpec[] = [
     key: { status: 1, closedAt: -1 },
     options: { name: "idx_status_closedAt" },
     purpose: "Lịch sử cycles",
+  },
+
+  // ─── power655JackpotCycleEntries (Cycle Ledger) ───
+  {
+    collection: Power655Collections.JackpotCycleEntries,
+    key: { cycleNo: 1, seq: 1 },
+    options: { unique: true, name: "idx_cycleNo_seq_unique" },
+    purpose:
+      "listByCycle, findLatestInCycle, sumContributionBefore, upsertEntry — sort chronological trong cycle",
+  },
+  {
+    collection: Power655Collections.JackpotCycleEntries,
+    key: { drawId: 1 },
+    options: { unique: true, name: "idx_drawId_unique" },
+    purpose:
+      "findByDraw + cross-cycle chain (findSettledChainAfterDraw / findClosingStateBeforeDraw) — drawId $gt/$lt sort theo thời gian",
   },
 
   // ─── power655DailyReports ───

@@ -24,6 +24,7 @@ import type {
   DrawStats,
   DrawSettleSummary,
   DrawResult,
+  DrawVietlottRef,
   DrawVoidSummary,
 } from "@megawin/game-mega645/entities";
 import { BaseRepo } from "./base-repo";
@@ -47,6 +48,9 @@ const VALID_TRANSITIONS: Record<string, Set<string>> = {
   ]),
   [DrawStatus.Published]: new Set([DrawStatus.Settling, DrawStatus.Voiding]),
   [DrawStatus.Settling]: new Set([DrawStatus.Settled]),
+  // Resettle path: settled → published khi staff cập nhật kết quả.
+  // Sau đó re-trigger settle flow bình thường: published → settling → settled.
+  [DrawStatus.Settled]: new Set([DrawStatus.Published]),
   [DrawStatus.Voiding]: new Set([DrawStatus.Void]),
 };
 
@@ -81,6 +85,39 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findMany({ drawId: { $in: drawIds } }, { sort: { drawDate: 1, drawNo: 1 } });
   }
 
+  /**
+   * Guard thứ tự cascade (TYPE_B2): tìm kỳ TRƯỚC `drawId` (XUYÊN CYCLE) đang DỞ
+   * resettle — đã republish kết quả mới nhưng chưa re-settle xong.
+   *
+   * ── Vì sao query trực tiếp trên `draws` (KHÔNG quét ledger) ──────────────────
+   * Câu hỏi guard thuần về trạng thái DrawDoc: "có kỳ nào < T đã republish
+   * (`result.publishedAt > settledAt`) nhưng chưa Settled không?". Quét toàn bộ
+   * ledger trước T (hàng chục nghìn kỳ sau nhiều năm) rồi `getDrawsByIds` là O(n)
+   * lãng phí + rủi ro cap limit. Thay vào đó lọc thẳng `draws`:
+   *   - `drawId < T` + `status ∈ {Published, Settling}` (đang trong luồng resettle)
+   *     → IXSCAN trên `{status, drawId}`, chỉ chạm tập NHỎ kỳ đang dở.
+   *   - `$expr publishedAt > settledAt` áp trên tập nhỏ đó (loại kỳ vừa settle lần
+   *     đầu — publishedAt < settledAt). $expr chỉ đánh giá trên vài doc đã lọc, KHÔNG
+   *     full scan.
+   * Chỉ cần 1 kỳ vi phạm gần T nhất để báo lỗi → `findOne` + `limit(1)`, không tải list.
+   *
+   * Dùng trong `TriggerResettle.assertNoPendingPriorDraw`. Cross-cycle an toàn vì
+   * lọc theo `drawId` (chronological) không khoá cycleNo.
+   *
+   * @param drawId - Kỳ T đang muốn resettle (tìm kỳ dở có drawId < T).
+   * @returns Kỳ dở gần T nhất (drawId lớn nhất < T), hoặc `null` nếu mọi kỳ trước đã hoàn tất.
+   */
+  async findPendingResettleBeforeDraw(drawId: string): Promise<DrawEntity | null> {
+    return await this.findOne(
+      {
+        drawId: { $lt: drawId },
+        status: { $in: [DrawStatus.Published, DrawStatus.Settling] },
+        $expr: { $gt: ["$result.publishedAt", "$settledAt"] },
+      },
+      { sort: { drawId: -1 } },
+    );
+  }
+
   async listDraws(
     filter: { status?: string; fromDate?: string; toDate?: string },
     page: number,
@@ -104,11 +141,12 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   /**
    * Chuyển draw settling → settled + ghi jackpot snapshot.
    * Dùng dot notation để chỉ cập nhật các field cần thiết.
+   *
+   * `settledAt` là high-water mark đánh dấu kỳ đã kết sổ — re-stamp mỗi khi
+   * settle hoàn tất (cả lần đầu lẫn mỗi phiên resettle). `republishResultAfterSettled`
+   * KHÔNG $unset field này; chỉ ghi đè giá trị mới tại đây khi phiên resettle xong.
    */
-  async settleComplete(
-    drawId: string,
-    jackpot: Pick<DrawJackpotSnapshot, "openingAmount" | "closingAmount">,
-  ): Promise<DrawEntity | null> {
+  async settleComplete(drawId: string, jackpot: DrawJackpotSnapshot): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Settling];
     if (!allowed?.has(DrawStatus.Settled)) return null;
 
@@ -492,6 +530,118 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       },
       { sort: { drawId: 1 } },
     );
+  }
+
+  // ─── Resettle helpers ─────────────────────────────────────────────────────
+
+  /**
+   * Publish lại kết quả cho kỳ đã settle (resettle path).
+   *
+   * Transition: settled → published.
+   *
+   * Side effects:
+   * - $set: `status = published`, `result`, `updatedAt`, (+ `vietlottRef` nếu có).
+   * - $unset: `financial`, `stats`, `settleSummary` — dữ liệu lần settle CŨ. Trong
+   *   giai đoạn Published-chờ-resettle, draw KHÔNG được mang số liệu tài chính lỗi
+   *   thời (API/UI đọc lúc này sẽ sai). Re-settle sẽ ghi lại đầy đủ qua
+   *   `updateSettleResult` ($set overwrite).
+   *
+   * KHÔNG $unset `settledAt` — đây là high-water mark lịch sử settle:
+   *   - `PublishResultUseCase` dùng nó (KHÔNG dùng status) để biết kỳ đã từng settle.
+   *   - `TriggerResettleUseCase` dùng `settledAt.getTime()` làm token execution name
+   *     (deterministic qua các retry BO API → AWS idempotent). $unset sẽ khiến
+   *     `draw.settledAt.getTime()` crash và rẽ nhánh sai khi sửa result lần 2.
+   *   FinalizeSettle re-stamp `settledAt` ở cuối phiên resettle (settleComplete).
+   *
+   * Chỉ được gọi bởi `PublishResultUseCase` khi kỳ đang ở status=settled VÀ
+   * staff submit kết quả mới. Sau khi hàm này chạy xong, ResettleWorker sẽ
+   * trigger settle flow lại bình thường: published → settling → settled.
+   *
+   * Idempotent: filter `status=settled` → no-op nếu đã về published (retry).
+   */
+  async republishResultAfterSettled(
+    drawId: string,
+    result: DrawResult,
+    vietlottRef?: DrawVietlottRef,
+  ): Promise<DrawEntity | null> {
+    const $set: Record<string, unknown> = {
+      status: DrawStatus.Published,
+      result,
+      updatedAt: new Date(),
+    };
+
+    if (vietlottRef) {
+      $set.vietlottRef = vietlottRef;
+    }
+
+    return await this.findOneAndUpdate(
+      { drawId, status: DrawStatus.Settled },
+      {
+        $set,
+        // Xoá data settle CŨ — re-settle sẽ tính lại. KHÔNG đụng `settledAt`
+        // (high-water mark, cần cho resettle token + phân biệt đã-từng-settle).
+        $unset: { financial: "", stats: "", settleSummary: "" },
+      },
+      { returnDocument: "after" },
+    );
+  }
+
+  /**
+   * Mở lại kỳ T+n trong cascade B2 để resettle dù KẾT QUẢ SỐ KHÔNG ĐỔI.
+   *
+   * Cascade TYPE_B2: sửa kết quả kỳ T kéo theo các kỳ settle sau (T+1…T+n) phải
+   * re-settle vì pool jackpot tích luỹ đổi — NHƯNG số quay của các kỳ này KHÔNG
+   * đổi. Luồng publish-result thông thường return sớm khi `resultUnchanged` nên
+   * không chuyển `Settled → Published`, khiến kỳ T+n không vào được luồng resettle
+   * (`DRAW_NO_NEW_RESULT`). Method này là entry point riêng cho cascade: re-stamp
+   * `result.publishedAt = now` (để `publishedAt > settledAt`, mở cổng trigger),
+   * GIỮ NGUYÊN `result.winningNumbers`, chuyển `Settled → Published`, $unset data
+   * settle cũ. KHÔNG đụng `settledAt` (high-water mark).
+   *
+   * Idempotent theo status: filter `status = Settled` → gọi lại trên kỳ đã
+   * Published trả null (no-op). Caller (`ReopenForCascadeUseCase`) đã guard chỉ
+   * kỳ thực sự nằm trong chain cascade mới được gọi.
+   *
+   * @param drawId - Kỳ T+n cần mở lại (đang ở status Settled).
+   * @param publishedAt - Mốc thời gian re-stamp cho `result.publishedAt`.
+   * @returns DrawEntity sau update, hoặc `null` nếu kỳ không còn ở `Settled`.
+   */
+  async reopenForResettle(drawId: string, publishedAt: Date): Promise<DrawEntity | null> {
+    return await this.findOneAndUpdate(
+      {
+        drawId,
+        status: DrawStatus.Settled,
+      },
+      {
+        $set: {
+          status: DrawStatus.Published,
+          // GIỮ winningNumbers; chỉ re-stamp publishedAt để vượt cổng
+          // `publishedAt > settledAt` của TriggerResettle. settledAt giữ nguyên.
+          "result.publishedAt": publishedAt,
+          updatedAt: new Date(),
+        },
+        // Xoá data settle CŨ — re-settle sẽ tính lại (giống republishResultAfterSettled).
+        $unset: {
+          financial: "",
+          stats: "",
+          settleSummary: "",
+        },
+      },
+      {
+        returnDocument: "after",
+      },
+    );
+  }
+
+  /**
+   * Cập nhật vietlottRef trên kỳ đã settle (không đổi status).
+   *
+   * Dùng khi staff muốn update tham chiếu Vietlott sau khi đã settle,
+   * mà không cần trigger lại settle flow (kết quả vẫn đúng).
+   * Không $unset settledAt — chỉ update metadata.
+   */
+  async updateVietlottRef(drawId: string, vietlottRef: DrawVietlottRef): Promise<boolean> {
+    return await this.updateOne({ drawId }, { $set: { vietlottRef, updatedAt: new Date() } });
   }
 }
 

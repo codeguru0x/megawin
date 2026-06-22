@@ -11,6 +11,7 @@ import {
   Pencil,
   Trash2,
   RotateCcw,
+  RefreshCw,
   FileText,
   ChevronRight,
   AlertTriangle,
@@ -18,6 +19,7 @@ import {
   Loader2,
   CalendarCheck,
   ClipboardPen,
+  MoreVertical,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -25,6 +27,14 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { formatNumber, displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
 import { DrawStatusBadge } from "@/components/games/lotto535/draw-status-badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { DrawSelectorItem } from "../../use-operations";
 import type { DrawResult, VoidInfo } from "../../types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -38,6 +48,8 @@ interface DrawCommandProps {
   onPublishResult?: () => void;
   onRepublishResult?: () => void;
   onTriggerSettle?: () => void;
+  onTriggerResettle?: () => void;
+  onReopenForCascade?: () => void;
   onEditSchedule?: () => void;
   onVoidDraw?: () => void;
 }
@@ -160,9 +172,33 @@ function LifecycleStepper({ steps }: { steps: Step[] }) {
   );
 }
 
+// ─── Resettle detection helper ───────────────────────────────────────────────
+
+/**
+ * Phân biệt 2 case có cùng `status === Published`:
+ *   - draw vừa publish kết quả lần đầu, chưa từng settle → hiển thị "Kết sổ".
+ *   - draw đã settle ≥ 1 lần và staff vừa republish kết quả mới → hiển thị "Kết sổ lại".
+ *
+ * Lotto 5/35 dùng `resultPublishedAt` (publishedAt của result gần nhất) làm mốc
+ * so sánh với `settledAt`.
+ *
+ * Edge case quan trọng: nếu `settledAt` null hoặc `resultPublishedAt <= settledAt`
+ * → KHÔNG cho phép Resettle (chống staff bấm nhầm; backend cũng có guard tương ứng).
+ */
+function shouldShowResettle(draw: DrawSelectorItem): boolean {
+  if (draw.status !== DrawStatus.Published) return false;
+  if (!draw.settledAt) return false;
+  if (!draw.resultPublishedAt) return false;
+  return new Date(draw.resultPublishedAt).getTime() > new Date(draw.settledAt).getTime();
+}
+
 // ─── Next Action ─────────────────────────────────────────────────────────────
 
-function getNextAction(draw: DrawSelectorItem, handlers: Partial<DrawCommandProps>) {
+function getNextAction(
+  draw: DrawSelectorItem,
+  handlers: Partial<DrawCommandProps>,
+  isResettleReady: boolean,
+) {
   switch (draw.status) {
     case DrawStatus.Scheduled:
       return { label: "Mở bán", handler: handlers.onOpenSales, icon: Unlock, className: "" };
@@ -181,6 +217,15 @@ function getNextAction(draw: DrawSelectorItem, handlers: Partial<DrawCommandProp
         icon: Radio,
       };
     case DrawStatus.Published:
+      // Đã settle ≥ 1 lần + có kết quả mới → nút chính là "Kết sổ lại".
+      if (isResettleReady) {
+        return {
+          label: "Kết sổ lại",
+          handler: handlers.onTriggerResettle,
+          icon: RotateCcw,
+          className: "bg-orange-600 hover:bg-orange-700 text-white",
+        };
+      }
       return {
         label: "Kết sổ (Settle)",
         handler: handlers.onTriggerSettle,
@@ -315,27 +360,49 @@ export function DrawCommandCenter({
   onPublishResult,
   onRepublishResult,
   onTriggerSettle,
+  onTriggerResettle,
+  onReopenForCascade,
   onEditSchedule,
   onVoidDraw,
 }: DrawCommandProps) {
   const status = draw.status;
   const steps = getSteps(draw, result);
-  const nextAction = getNextAction(draw, {
-    onOpenSales,
-    onCloseSales,
-    onPublishResult,
-    onTriggerSettle,
-  });
+  const isResettleReady = shouldShowResettle(draw);
+  const nextAction = getNextAction(
+    draw,
+    {
+      onOpenSales,
+      onCloseSales,
+      onPublishResult,
+      onTriggerSettle,
+      onTriggerResettle,
+    },
+    isResettleReady,
+  );
 
   const canEdit = [DrawStatus.Scheduled, DrawStatus.SalesOpen].includes(status as any);
-  const canVoid = [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(
-    status as any,
-  );
+  // Không cho huỷ kỳ đã từng settle (settledAt != null) — đó là luồng chờ resettle,
+  // chỉ được "Kết sổ lại", không được huỷ. Backend cũng guard trong VoidDrawUseCase.
+  const canVoid =
+    !draw.settledAt &&
+    [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(status as any);
   const canReopenSales = status === DrawStatus.SalesClosed;
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
   const isSettled = status === DrawStatus.Settled;
   const isSettling = status === DrawStatus.Settling;
   const canRepublish = status === DrawStatus.Published || status === DrawStatus.Settled;
+
+  // Kỳ T+n trong cascade B2 với KẾT QUẢ SỐ KHÔNG ĐỔI → không đủ điều kiện
+  // resettle thường (vì publish-result return sớm, không re-stamp publishedAt).
+  // Hiển thị nút "Mở để kết sổ lại": status = Settled, đã từng settle, NHƯNG
+  // resultPublishedAt KHÔNG mới hơn settledAt (đúng dấu hiệu kỳ chưa republish).
+  // Guard cascade thật (có kỳ trước đang dở) do backend kiểm tra — UI chỉ mở lối vào.
+  const canReopenForCascade = (() => {
+    if (!onReopenForCascade) return false;
+    if (status !== DrawStatus.Settled || !draw.settledAt) return false;
+    if (!draw.resultPublishedAt) return true;
+    return new Date(draw.resultPublishedAt) <= new Date(draw.settledAt);
+  })();
 
   const accentGradient =
     {
@@ -444,6 +511,10 @@ export function DrawCommandCenter({
     DrawStatus.Voiding,
   ].includes(status as any);
 
+  // Menu phụ (góc phải trên): gom các action ít dùng / điều hướng — "Xem báo cáo",
+  // "Mở để kết sổ lại", và chỗ cho audit log... Chỉ render khi có ít nhất 1 item.
+  const hasOverflowMenu = isSettled || canReopenForCascade;
+
   return (
     <div className={cn("rounded-xl border overflow-hidden", cardBorder, cardBg)}>
       {/* Top accent bar — gradient theo status */}
@@ -452,7 +523,7 @@ export function DrawCommandCenter({
       <div className="px-5 py-4">
         {/* Row 1: Identity */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex items-start gap-3 min-w-0">
+          <div className="flex items-start gap-3 min-w-0 flex-1">
             {/* Status icon với animation */}
             <div
               className={cn(
@@ -496,7 +567,42 @@ export function DrawCommandCenter({
             </div>
           </div>
 
-          {/* Refresh timer đã chuyển lên page header (LastUpdatedBadge) */}
+          {/* Overflow menu — action ít dùng / điều hướng, gom vào góc phải trên */}
+          {hasOverflowMenu && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8 shrink-0 text-muted-foreground"
+                  aria-label="Thao tác khác"
+                >
+                  <MoreVertical className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Thao tác khác</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {isSettled && (
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href={`/games/lotto535/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}
+                    >
+                      <FileText className="size-3.5" /> Xem báo cáo
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {canReopenForCascade && (
+                  <DropdownMenuItem
+                    onClick={onReopenForCascade}
+                    className="text-orange-700 focus:text-orange-800 dark:text-orange-400 dark:focus:text-orange-300"
+                  >
+                    <RefreshCw className="size-3.5" /> Mở để kết sổ lại
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         {/* Row 2: Stepper */}
@@ -551,11 +657,6 @@ export function DrawCommandCenter({
                   <nextAction.icon className="size-3.5" /> {nextAction.label}
                 </Button>
               )}
-              {isSettled && (
-                <Button variant="outline" size="sm" className="gap-1.5" disabled>
-                  <RotateCcw className="size-3.5" /> Re-settle
-                </Button>
-              )}
               {canRepublish && (
                 <Button variant="outline" size="sm" onClick={onRepublishResult} className="gap-1.5">
                   <ClipboardPen className="size-3.5" /> Sửa kết quả
@@ -568,14 +669,6 @@ export function DrawCommandCenter({
               )}
             </div>
             <div className="flex items-center gap-1">
-              {isSettled && (
-                <Link
-                  href={`/games/lotto535/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}
-                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5"
-                >
-                  <FileText className="size-3.5" /> Xem báo cáo
-                </Link>
-              )}
               {canEdit && (
                 <Button
                   variant="ghost"

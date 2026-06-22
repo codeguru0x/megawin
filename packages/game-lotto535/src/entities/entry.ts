@@ -236,6 +236,14 @@ export interface TicketEntryDoc {
    */
   voidInfo?: EntryVoidInfo;
 
+  // ───── Reversal (Resettle) ─────
+
+  /**
+   * Snapshot reversal — chỉ tồn tại khi entry đã đi qua ít nhất 1 phiên resettle.
+   * Xem {@link EntryReversal}.
+   */
+  reversal?: EntryReversal;
+
   // ───── Timestamps ─────
 
   /** Thời điểm tạo entry (= thời điểm place-bet thành công). */
@@ -377,6 +385,20 @@ export interface EntryPayoutTier {
    * Khi `false` hoặc `undefined`: tier từ kết quả khớp số bình thường.
    */
   isSplitBonus?: boolean;
+}
+
+/**
+ * Snapshot reversal cho resettle — debit lại payout cũ trước khi re-settle.
+ *
+ * Workflow: PrepareResettle snapshot → EnqueueReversals dispatch → giữ audit sau FinalizeSettle.
+ */
+export interface EntryReversal {
+  /** Idempotency key reversal dispatch — UUIDv7, sinh mới mỗi phiên resettle. */
+  reversalTx: string;
+  /** Số tiền debit tenant (VND) — copy từ `payout.payoutAmount` lúc snapshot. */
+  reversalAmount: number;
+  /** Session resettle (UUIDv7) — correlate audit theo phiên. */
+  resettleId: string;
 }
 
 /**

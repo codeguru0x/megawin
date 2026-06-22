@@ -34,11 +34,12 @@ import { buildPrizeAmountMap } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
-import type { SettleContext } from "./types";
+import type { SettleContext, ResettleContext } from "./types";
 
 export interface PrepareSettleInput {
-  /** Mã kỳ quay cần settle — phải ở trạng thái "settling". */
   drawId: string;
+  /** Nested từ Resettle SFN — override opening + isSplitCycle. */
+  resettleContext?: ResettleContext;
 }
 
 export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, SettleContext> {
@@ -48,7 +49,7 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
 
   /** Load context cho settle flow. Throw nếu draw không hợp lệ. */
   protected async execute(input: PrepareSettleInput): Promise<SettleContext> {
-    const { drawId } = input;
+    const { drawId, resettleContext } = input;
 
     // ── 1. Validate draw tồn tại ──
     const draw = await this.drawRepo.getDrawById(drawId);
@@ -71,44 +72,50 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
       throw AppException.businessRuleViolation(`Draw ${drawId} chưa có kết quả quay.`);
     }
 
-    // ── 4. Load config + active jackpot cycle song song (tối ưu I/O) ──
-    const [globalConfig, existingCycle] = await Promise.all([
+    // ── 4. Load config + jackpot cycle song song (tối ưu I/O) ──
+    // Resettle: đọc cycle CHỨA kỳ T theo cycleNo (kể cả đã closed) — KHÔNG dùng
+    //   getActiveCycle vì cycle của T có thể đã đóng (trúng Jackpot) và chưa có
+    //   cycle mới (chưa có kỳ sau T).
+    // Settle lần đầu: kỳ T nằm trong cycle đang active → getActiveCycle đúng.
+    //   Cycle luôn được CreateDrawsUseCase.ensureActiveCycleExists đảm bảo tồn tại
+    //   trước khi kỳ vào "settling"; nếu null ở đây → data integrity bất thường,
+    //   ném lỗi (KHÔNG tự createCycle: sẽ dùng seed mặc định sai sau split).
+    const [globalConfig, settleCycle] = await Promise.all([
       this.getGlobalConfig.run(),
-      this.cycleRepo.getActiveCycle(),
+      resettleContext
+        ? this.cycleRepo.getCycleByNo(resettleContext.cycleNo)
+        : this.cycleRepo.getActiveCycle(),
     ]);
 
     if (!globalConfig) {
       throw AppException.businessRuleViolation(`Không tìm thấy cấu hình game.`);
     }
 
-    // Safety net: nếu cycle bị đóng mà chưa tạo mới (VD: finalize-settle đóng cycle
-    // nhưng không có draw tiếp theo để tạo cycle mới ngay) → tạo tại đây.
-    // trong create-draws đã có rồi tuy nhiên để tránh lỗi khi crash giữa chừng tạo mới thêm ở đây
-    let activeCycle = existingCycle;
-    if (!activeCycle) {
-      await this.cycleRepo.createCycle({
-        startDrawId: drawId,
-        seedAmount: globalConfig.jackpot.seedAmount,
-        config: {
-          splitThreshold: globalConfig.jackpot.splitThreshold,
-          splitRatios: globalConfig.jackpot.splitRatios,
-        },
-      });
-      activeCycle = await this.cycleRepo.getActiveCycle();
-      if (!activeCycle) {
-        throw AppException.businessRuleViolation(`Không thể tạo Jackpot Cycle mới.`);
-      }
+    if (!settleCycle) {
+      throw AppException.businessRuleViolation(
+        resettleContext
+          ? `Không tìm thấy Jackpot Cycle #${resettleContext.cycleNo} của kỳ ${drawId}.`
+          : `Không tìm thấy Jackpot Cycle.`,
+      );
     }
 
     // ── 5. Xác định Jackpot đầu kỳ ──
-    const jackpotOpeningAmount = activeCycle.currentAmount;
+    let jackpotOpeningAmount = settleCycle.currentAmount;
+    let cycleContributionBefore = settleCycle.totalContribution;
+    let cycleDrawCountBefore = settleCycle.drawCount;
+    const cycleNo = settleCycle.cycleNo;
+
+    if (resettleContext) {
+      // Resettle: opening từ ledger / cascade — KHÔNG đọc settleCycle.currentAmount.
+      jackpotOpeningAmount = resettleContext.opening;
+      cycleContributionBefore = resettleContext.cycleContributionBefore;
+      cycleDrawCountBefore = resettleContext.cycleDrawCountBefore;
+    }
 
     // ── 6. Xác định isSplitCycle ──
-    // Split chỉ xảy ra ở kỳ Evening (drawNo === 2) khi Jackpot >= splitThreshold.
-    // Tính tại runtime vì Jackpot thay đổi sau mỗi kỳ settle —
-    // không thể xác định chính xác lúc tạo draw.
+    // Split phụ thuộc opening — resettle PHẢI tính lại từ opening mới.
     const isSplitCycle =
-      draw.drawNo === DrawNo.Evening && jackpotOpeningAmount >= activeCycle.config.splitThreshold;
+      draw.drawNo === DrawNo.Evening && jackpotOpeningAmount >= settleCycle.config.splitThreshold;
 
     // ── 7. Build bảng giải thưởng (tier → amount VND) ──
     const prizeMap = buildPrizeAmountMap(globalConfig.defaultPrizes);
@@ -130,14 +137,15 @@ export class PrepareSettleUseCase extends InternalUseCase<PrepareSettleInput, Se
       isSplitCycle,
       prizeAmounts,
       config: {
-        seedAmount: activeCycle.seedAmount,
-        splitRatios: activeCycle.config.splitRatios,
+        seedAmount: settleCycle.seedAmount,
+        splitRatios: settleCycle.config.splitRatios,
         companyRate: globalConfig.rates.companyRate,
-        splitThreshold: activeCycle.config.splitThreshold,
-        cycleNo: activeCycle.cycleNo,
-        cycleContributionBefore: activeCycle.totalContribution,
-        cycleDrawCountBefore: activeCycle.drawCount,
+        splitThreshold: settleCycle.config.splitThreshold,
+        cycleNo,
+        cycleContributionBefore,
+        cycleDrawCountBefore,
       },
+      resettleContext,
     };
   }
 }

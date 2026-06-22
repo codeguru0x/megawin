@@ -33,6 +33,13 @@ export interface DrawSelectorItem {
   salesCloseAt: string;
   /** Thời điểm quay số dự kiến (ISO 8601) — undefined nếu chưa có. */
   drawResultAt?: string;
+  /** Thời điểm settle gần nhất (ISO 8601) — high-water mark resettle. */
+  settledAt?: string;
+  /**
+   * publishedAt của result gần nhất (ISO 8601).
+   * So sánh với `settledAt` để biết có kết quả mới sau settle.
+   */
+  resultPublishedAt?: string;
   /** Trạng thái kỳ quay. */
   status: string;
   /** Ngày tài chính (YYYY-MM-DD) — dùng để filter analytics đúng ngày. */

@@ -1,42 +1,28 @@
 /**
- * Use Case: Publish Result (Lotto 5/35)
+ * Use Case: Publish Result (Lotto 5/35) — single entry point nhập/sửa kết quả.
  *
- * Nhập/sửa kết quả kỳ quay.
- *
- * Cho phép:
- *   - salesClosed → published (lần đầu publish)
- *   - published → published (sửa kết quả trước khi settle)
- *
- * Validate:
- *   - 5 số chính unique, thuộc tập "01"-"35"
- *   - 1 số đặc biệt thuộc tập "01"-"12"
- *
- * Kết quả lưu ĐÚNG THỨ TỰ QUAY (draw order) — không sort.
- *
- * KHÔNG stamp kết quả vào entries ở bước này.
- * Settle worker sẽ đọc result từ draw và cập nhật vào entries khi tính thắng thua.
+ * Đã settle: so `isSameLotto535Result` → republish mở resettle hoặc chỉ sửa vietlottRef.
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
-import {
-  LOTTO535_MAIN_COUNT,
-  VALID_MAIN_NUMBER_SET,
-  VALID_SPECIAL_NUMBER_SET,
-} from "@megawin/game-lotto535/entities";
+import { isSameLotto535Result } from "@megawin/game-lotto535/rules";
+import type { DrawVietlottRef } from "@megawin/game-lotto535/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 import { nowVN } from "@megawin/shared/utils";
 
-const PUBLISHABLE_STATUSES = new Set<string>([DrawStatus.SalesClosed, DrawStatus.Published]);
+const PUBLISHABLE_STATUSES = new Set<string>([
+  DrawStatus.SalesClosed,
+  DrawStatus.Published,
+  DrawStatus.Settled,
+]);
 
 export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, PublishResultOutput> {
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(input: PublishResultInput): Promise<PublishResultOutput> {
-    this.validateResult(input);
-
     const draw = await this.drawRepo.getDrawById(input.drawId);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
@@ -45,69 +31,122 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
     if (!PUBLISHABLE_STATUSES.has(draw.status)) {
       throw new AppException(
         "DRAW_INVALID_TRANSITION",
-        `Không thể publish kết quả – draw ở trạng thái "${draw.status}", cần "salesClosed" hoặc "published".`,
+        `Không thể publish kết quả – draw ở trạng thái "${draw.status}".`,
       );
     }
 
-    // Giữ nguyên thứ tự quay (draw order) — KHÔNG sort
-    const resultData = {
-      winningMain: [...input.winningMain],
-      winningSpecial: input.winningSpecial,
-      publishedAt: nowVN(),
-    };
+    const winningMain = [...input.winningMain];
+    const winningSpecial = input.winningSpecial;
+    const publishedAt = nowVN();
+
+    const hasSettledBefore = Boolean(draw.settledAt);
+
+    if (!hasSettledBefore) {
+      return this.publishFirstTime(
+        input.drawId,
+        winningMain,
+        winningSpecial,
+        publishedAt,
+        input.vietlottRef,
+      );
+    }
+
+    const resultUnchanged = isSameLotto535Result(draw.result!, {
+      winningMain,
+      winningSpecial,
+      publishedAt: draw.result!.publishedAt,
+    });
+
+    if (resultUnchanged) {
+      if (input.vietlottRef) {
+        const updated = await this.drawRepo.updateVietlottRef(input.drawId, input.vietlottRef);
+
+        if (!updated) {
+          throw AppException.internal(`Cập nhật Vietlott Ref kỳ ${input.drawId} thất bại.`);
+        }
+      }
+
+      return {
+        drawId: input.drawId,
+        status: draw.status,
+        result: {
+          winningMain,
+          winningSpecial,
+          publishedAt: (draw.result!.publishedAt ?? publishedAt).toISOString(),
+        },
+      };
+    }
+
+    if (draw.status === DrawStatus.Settled) {
+      const updated = await this.drawRepo.republishResultAfterSettled(
+        input.drawId,
+        { winningMain, winningSpecial, publishedAt },
+        input.vietlottRef,
+      );
+
+      if (!updated) {
+        throw AppException.internal(
+          `Sửa kết quả kỳ ${input.drawId} thất bại — draw không còn ở "settled".`,
+        );
+      }
+
+      return {
+        drawId: input.drawId,
+        status: DrawStatus.Published,
+        result: {
+          winningMain,
+          winningSpecial,
+          publishedAt: publishedAt.toISOString(),
+        },
+      };
+    }
 
     const updated = await this.drawRepo.publishResult(
       input.drawId,
-      resultData,
+      { winningMain, winningSpecial, publishedAt },
       input.vietlottRef,
     );
 
     if (!updated) {
-      throw AppException.internal(
-        `Publish kết quả kỳ ${input.drawId} thất bại. Vui lòng thử lại.`,
-      );
+      throw AppException.internal(`Publish kết quả kỳ ${input.drawId} thất bại.`);
     }
 
     return {
       drawId: input.drawId,
       status: DrawStatus.Published,
       result: {
-        winningMain: input.winningMain,
-        winningSpecial: input.winningSpecial,
-        publishedAt: resultData.publishedAt.toISOString(),
+        winningMain,
+        winningSpecial,
+        publishedAt: publishedAt.toISOString(),
       },
     };
   }
 
-  private validateResult(input: PublishResultInput): void {
-    const { winningMain, winningSpecial } = input;
+  private async publishFirstTime(
+    drawId: string,
+    winningMain: string[],
+    winningSpecial: string,
+    publishedAt: Date,
+    vietlottRef?: DrawVietlottRef,
+  ): Promise<PublishResultOutput> {
+    const updated = await this.drawRepo.publishResult(
+      drawId,
+      { winningMain, winningSpecial, publishedAt },
+      vietlottRef,
+    );
 
-    if (!Array.isArray(winningMain) || winningMain.length !== LOTTO535_MAIN_COUNT) {
-      throw new AppException(
-        "DRAW_RESULT_INVALID",
-        `Phải có đúng ${LOTTO535_MAIN_COUNT} số chính.`,
-      );
+    if (!updated) {
+      throw AppException.internal(`Publish kết quả kỳ ${drawId} thất bại.`);
     }
 
-    const uniqueMain = new Set(winningMain);
-    if (uniqueMain.size !== LOTTO535_MAIN_COUNT) {
-      throw new AppException("DRAW_RESULT_INVALID", "Các số chính phải khác nhau.");
-    }
-
-    for (const n of winningMain) {
-      if (!VALID_MAIN_NUMBER_SET.has(n)) {
-        throw new AppException(
-          "DRAW_RESULT_INVALID",
-          `Số chính "${n}" không hợp lệ (phải từ "01" đến "35").`,
-        );
-      }
-    }
-
-    if (!VALID_SPECIAL_NUMBER_SET.has(winningSpecial)) {
-      throw new AppException(
-        "DRAW_RESULT_INVALID",
-        `Số đặc biệt "${winningSpecial}" không hợp lệ (phải từ "01" đến "12").`,
-      );
-    }
+    return {
+      drawId,
+      status: DrawStatus.Published,
+      result: {
+        winningMain,
+        winningSpecial,
+        publishedAt: publishedAt.toISOString(),
+      },
+    };
   }
 }

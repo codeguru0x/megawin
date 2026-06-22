@@ -111,6 +111,10 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
           status: remoteDraw.status,
           financialDate: remoteDraw.financialDate ?? remoteDraw.drawDate,
           group: "recent" as const,
+          // High-water mark + mốc result mới — BẮT BUỘC có để nút "Kết sổ lại"
+          // hiển thị đúng cho kỳ historical (không nằm trong selector list).
+          settledAt: remoteDraw.settledAt as unknown as string | undefined,
+          resultPublishedAt: remoteDraw.result?.publishedAt as unknown as string | undefined,
         }
       : undefined;
   const draw = drawFromSelector ?? drawFromRemote;

@@ -1,9 +1,16 @@
 import { nowVN, generateULID } from "@megawin/shared/utils";
-import { ObjectId } from "mongodb";
+import { ObjectId, type Document } from "mongodb";
 import { AccountMapper } from "../mappers/account-mapper";
 import { IdentityBaseRepo } from "./identity-base-repo";
 import { AccountType, AccountStatus, AgentRole, PlayerRole } from "@megawin/identity/entities";
-import type { AccountEntity, CompanyAccountEntity, AgentAccountEntity, PlayerAccountEntity, CompanyRole, MfaStatus } from "@megawin/identity/entities";
+import type {
+  AccountEntity,
+  CompanyAccountEntity,
+  AgentAccountEntity,
+  PlayerAccountEntity,
+  CompanyRole,
+  MfaStatus,
+} from "@megawin/identity/entities";
 
 export class AccountRepository extends IdentityBaseRepo<AccountEntity, AccountMapper> {
   constructor() {
@@ -78,6 +85,29 @@ export class AccountRepository extends IdentityBaseRepo<AccountEntity, AccountMa
       },
       { upsert: true, returnDocument: "after" },
     )) as CompanyAccountEntity | null;
+  }
+
+  /**
+   * Tìm account bất kỳ (Company/Agent/Player) theo username.
+   *
+   * Username lưu trong DB là lowercase → normalize input trước khi query.
+   * Hỗ trợ `projection` để chỉ lấy field cần thiết, giảm payload.
+   *
+   * LƯU Ý: AccountMapper yêu cầu `_id` để map → khi truyền projection,
+   * KHÔNG được loại `_id` (đừng set `_id: 0`).
+   *
+   * @param username - username cần tra cứu (không phân biệt hoa/thường)
+   * @param options.projection - Mongo projection, vd `{ roles: 1, status: 1 }`
+   * @returns AccountEntity hoặc null nếu không tồn tại
+   */
+  public async getAccountByUsername(
+    username: string,
+    options?: { projection?: Document },
+  ): Promise<AccountEntity | null> {
+    return this.findOne(
+      { username: username.toLowerCase() },
+      options?.projection ? { projection: options.projection } : undefined,
+    );
   }
 
   public async listCompanyAccounts(): Promise<CompanyAccountEntity[]> {

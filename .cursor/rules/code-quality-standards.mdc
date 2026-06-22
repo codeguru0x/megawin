@@ -190,3 +190,35 @@ const settleOps: Array<{
 2. Tìm trong `packages/game-*-application/src/use-cases/*/types.ts` — use case types.
 3. Tìm trong `packages/game-core/` — shared game-core types.
 4. Nếu thực sự chưa có → tạo mới trong đúng package, export ra barrel (`index.ts`).
+
+### 5.1. Ưu tiên type chia sẻ từ `game-core` — KHÔNG dùng indexed-access `Doc["field"]`
+
+Các embedded type dùng chung cho mọi game (`DrawSales`, `DrawVietlottRef`, `DrawTenantFinancial`, …)
+sống ở `@megawin/game-core/types` và được mỗi game re-export qua entity barrel.
+
+Khi viết signature repo/use-case, **import thẳng named type** từ game-core (hoặc entity barrel
+của game) thay vì dùng indexed-access `DrawDoc["vietlottRef"]`. Indexed-access che mất tên type
+thật, khó đọc, khó tìm reference, và lệ thuộc vào shape của `Doc` thay vì contract chia sẻ.
+
+```typescript
+/** SAI — indexed-access, che tên type, lệ thuộc DrawDoc shape */
+async updateVietlottRef(drawId: string, vietlottRef: DrawDoc["vietlottRef"]): Promise<boolean>
+
+/** ĐÚNG — dùng thẳng type chia sẻ từ game-core (re-export qua entities) */
+import type { DrawVietlottRef } from "@megawin/game-power655/entities";
+async updateVietlottRef(drawId: string, vietlottRef: DrawVietlottRef): Promise<boolean>
+```
+
+### 5.2. KHÔNG `Pick<T, ...>` khi đã chọn đủ TẤT CẢ field của `T`
+
+`Pick<T, "a" | "b" | "c" | "d">` mà `T` chỉ có đúng 4 field `a,b,c,d` thì **bằng chính `T`** —
+chỉ thêm noise và rủi ro lệch khi `T` đổi field. Dùng thẳng `T`. Chỉ `Pick` khi thực sự
+lấy **một tập con** nhỏ hơn.
+
+```typescript
+/** SAI — Pick liệt kê đủ cả 4 field của DrawJackpot (DrawJackpot chỉ có 4 field) */
+jackpot: Pick<DrawJackpot, "openingJackpot1" | "closingJackpot1" | "openingJackpot2" | "closingJackpot2">
+
+/** ĐÚNG — dùng thẳng interface */
+jackpot: DrawJackpot
+```

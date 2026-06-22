@@ -34,9 +34,16 @@ import {
   PublishResultAction,
   EditScheduleAction,
   VoidDrawAction,
+  ResettleAction,
   type PublishResultCurrentValues,
 } from "./draw-actions";
-import { useOpenSales, useCloseSales, useTriggerSettle, useDrawDetail } from "../../use-operations";
+import {
+  useOpenSales,
+  useCloseSales,
+  useTriggerSettle,
+  useDrawDetail,
+  useReopenForCascade,
+} from "../../use-operations";
 
 import type { DrawResult, VoidInfo } from "../../types";
 
@@ -50,13 +57,16 @@ export function DrawManagementSection() {
   const [publishOpen, setPublishOpen] = useState(false);
   const [editScheduleOpen, setEditScheduleOpen] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
+  const [resettleOpen, setResettleOpen] = useState(false);
   const [openSalesConfirm, setOpenSalesConfirm] = useState(false);
   const [closeSalesConfirm, setCloseSalesConfirm] = useState(false);
   const [settleConfirm, setSettleConfirm] = useState(false);
+  const [reopenConfirm, setReopenConfirm] = useState(false);
 
   const openSales = useOpenSales();
   const closeSales = useCloseSales();
   const triggerSettle = useTriggerSettle();
+  const reopenForCascade = useReopenForCascade();
 
   const { data: drawDetailData } = useDrawDetail(
     draw && RESULT_SHOW.has(draw.status as any) ? effectiveDrawId : undefined,
@@ -151,6 +161,8 @@ export function DrawManagementSection() {
         onPublishResult={() => setPublishOpen(true)}
         onRepublishResult={() => setPublishOpen(true)}
         onTriggerSettle={() => setSettleConfirm(true)}
+        onTriggerResettle={() => setResettleOpen(true)}
+        onReopenForCascade={() => setReopenConfirm(true)}
         onEditSchedule={() => setEditScheduleOpen(true)}
         onVoidDraw={() => setVoidOpen(true)}
       />
@@ -170,6 +182,14 @@ export function DrawManagementSection() {
         onOpenChange={setEditScheduleOpen}
       />
       <VoidDrawAction draw={draw} disabled={false} open={voidOpen} onOpenChange={setVoidOpen} />
+
+      {/* Resettle dialog — pre-flight + confirm */}
+      <ResettleAction
+        draw={draw}
+        open={resettleOpen}
+        onOpenChange={setResettleOpen}
+        currentResult={currentResult}
+      />
 
       {/* Confirm: Mở bán */}
       <AlertDialog open={openSalesConfirm} onOpenChange={setOpenSalesConfirm}>
@@ -230,6 +250,42 @@ export function DrawManagementSection() {
               disabled={triggerSettle.isPending}
             >
               Xác nhận kết sổ
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm: Mở để kết sổ lại (cascade B2, số không đổi) */}
+      <AlertDialog open={reopenConfirm} onOpenChange={setReopenConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mở lại kỳ để kết sổ lại theo chuỗi?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Kỳ <strong>{draw.drawDate}</strong> có số quay <strong>không thay đổi</strong>{" "}
+                  nhưng nằm trong chuỗi cascade (TYPE_B2) do kỳ trước được kết sổ lại. Thao tác này
+                  đưa kỳ về trạng thái <strong>Published</strong> để vào lại luồng kết sổ lại — số
+                  trúng được giữ nguyên.
+                </p>
+                <p className="font-medium text-orange-600 dark:text-orange-400">
+                  Chỉ thực hiện khi DBA đã xác nhận cập nhật jackpot cycle thủ công.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Huỷ bỏ</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                reopenForCascade.mutate({
+                  drawId: effectiveDrawId,
+                  body: { dbaConfirmed: true },
+                })
+              }
+              disabled={reopenForCascade.isPending}
+            >
+              Xác nhận mở lại
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

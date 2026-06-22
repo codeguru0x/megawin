@@ -26,6 +26,18 @@ export interface DrawSelectorItem {
   financialDate: string;
   /** Nhóm hiển thị trong dropdown. */
   group: "active" | "future" | "recent";
+  /**
+   * Thời điểm kết sổ thành công (ISO 8601). High-water mark.
+   * Có giá trị khi kỳ đã settle ít nhất 1 lần.
+   * Dùng để UI xác định kỳ đủ điều kiện resettle.
+   */
+  settledAt?: string;
+  /**
+   * Thời điểm công bố kết quả gần nhất (ISO 8601).
+   * Dùng để so sánh với `settledAt` — nếu `resultPublishedAt > settledAt`
+   * thì đã có kết quả mới và có thể hiện nút "Kết sổ lại".
+   */
+  resultPublishedAt?: string;
 }
 
 export interface GetDrawSelectorOutput {

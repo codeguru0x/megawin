@@ -247,7 +247,8 @@ export interface DrawDoc {
   /**
    * Thời điểm kết sổ thành công (high-water mark). Set bởi FinalizeSettle khi
    * settle complete. Đánh dấu kỳ đã được kết sổ — dùng để chặn gọi trigger-settle
-   * lặp lại trên kỳ đã settle (Power 6/55 không có resettle nên không bị $unset).
+   * lặp lại trên kỳ đã settle. Với resettle: $unset trong `republishResultAfterSettled`,
+   * re-set khi settle lại thành công.
    */
   settledAt?: Date;
   /** Thời điểm tạo document. */

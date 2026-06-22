@@ -21,7 +21,7 @@
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@types/lodash": "^4.17.24",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.9.4",
     "typescript": "^6.0.3"
   }
 }

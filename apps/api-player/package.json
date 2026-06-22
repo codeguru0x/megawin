@@ -44,10 +44,10 @@
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
-    "@types/node": "^25.5.0",
-    "serverless-offline": "^14.5.0",
+    "@types/node": "^25.9.4",
+    "serverless-offline": "^14.7.3",
     "typescript": "^6.0.3",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.9"
   }
 }

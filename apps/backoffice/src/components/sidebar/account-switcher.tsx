@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BadgeCheck, LogOut } from "lucide-react";
+import { BadgeCheck, BookOpen, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -66,6 +66,12 @@ export function AccountSwitcher() {
             <Link href="/me">
               <BadgeCheck />
               Thông tin cá nhân
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/guides">
+              <BookOpen />
+              Hướng dẫn sử dụng
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>

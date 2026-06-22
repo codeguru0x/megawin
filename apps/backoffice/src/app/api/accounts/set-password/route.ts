@@ -8,10 +8,14 @@ const setPasswordSchema = z.object({
   password: z.string().min(8).max(128),
 });
 
+const useCase = new SetAccountPasswordUseCase();
+
+// Staff được phép đổi pass (cho Staff khác); Admin (super role) tự động pass.
+// Phân quyền chi tiết "Staff không đổi pass Admin" enforce trong use case dựa trên callerRoles.
 export const POST = withApi()
-  .auth({ roles: [CompanyRole.Admin] })
+  .auth({ roles: [CompanyRole.Staff] })
   .body(setPasswordSchema)
-  .handler(async ({ body }) => {
-    const useCase = new SetAccountPasswordUseCase();
-    return useCase.run(body);
+  .handler(async ({ body, session }) => {
+    const callerRoles = (session?.user.roles ?? []) as CompanyRole[];
+    return useCase.run({ ...body, callerRoles });
   });

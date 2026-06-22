@@ -15,7 +15,10 @@ import type {
   GetWinningEntriesOutput,
 } from "@megawin/game-lotto535-application/use-cases/operations";
 import type { GetDrawDetailOutput } from "@megawin/game-lotto535-application/use-cases/draws";
-import type { PreviewDrawsOutput } from "@megawin/game-lotto535-application/use-cases/draws";
+import type {
+  PreviewDrawsOutput,
+  ResettlePreflightOutput,
+} from "@megawin/game-lotto535-application/use-cases/draws";
 
 export type {
   OpsSummaryOutput,
@@ -39,7 +42,10 @@ export type {
   WinningEntriesSummary,
 } from "@megawin/game-lotto535-application/use-cases/operations";
 
-export type { GetDrawDetailOutput } from "@megawin/game-lotto535-application/use-cases/draws";
+export type {
+  GetDrawDetailOutput,
+  ResettlePreflightOutput,
+} from "@megawin/game-lotto535-application/use-cases/draws";
 
 export interface OpsQueryParams {
   financialDate?: string;
@@ -264,6 +270,60 @@ export function useTriggerSettle() {
     "post",
     "Đã bắt đầu kết sổ.",
   );
+}
+
+/**
+ * Khởi chạy Resettle SFN sau khi staff đã publish kết quả mới và xem pre-flight.
+ */
+export function useTriggerResettle() {
+  return useDrawAction<{ dbaConfirmed: boolean }>(
+    (id) => `/lotto535/draws/${id}/resettle`,
+    "post",
+    "Đã bắt đầu kết sổ lại.",
+  );
+}
+
+/**
+ * Mở cổng resettle cho kỳ T+n trong cascade TYPE_B2 khi KẾT QUẢ SỐ KHÔNG ĐỔI.
+ *
+ * Cascade B2: sửa kết quả kỳ T kéo theo các kỳ đã settle sau (T+1…T+n) phải
+ * re-settle vì pool jackpot + ranh giới split cycle đổi — nhưng số quay của chúng
+ * không đổi nên không publish lại được. Hook này re-stamp `result.publishedAt`
+ * (giữ winningMain + winningSpecial), chuyển `Settled → Published` để mở cổng
+ * "Kết sổ lại".
+ *
+ * Gọi với `dbaConfirmed: true`. Sau khi thành công, staff bấm "Kết sổ lại"
+ * (useTriggerResettle) cho chính kỳ này như bình thường.
+ */
+export function useReopenForCascade() {
+  return useDrawAction<{ dbaConfirmed: boolean }>(
+    (id) => `/lotto535/draws/${id}/resettle-reopen`,
+    "post",
+    "Đã mở lại kỳ để kết sổ lại theo chuỗi.",
+  );
+}
+
+/** Pre-flight phân tích tác động trước khi resettle. */
+export function useResettlePreflight() {
+  return useMutation({
+    mutationFn: ({
+      drawId,
+      proposedWinningMain,
+      proposedWinningSpecial,
+    }: {
+      drawId: string;
+      proposedWinningMain: string[];
+      proposedWinningSpecial: string;
+    }) =>
+      apiClient.post<ResettlePreflightOutput>(`/lotto535/draws/${drawId}/resettle-preflight`, {
+        proposedWinningMain,
+        proposedWinningSpecial,
+      }),
+    onError: (err) => {
+      const { title, description } = formatErrorToast(err, "Phân tích tác động thất bại.");
+      toast.error(title, { description });
+    },
+  });
 }
 
 export function useVoidDraw() {

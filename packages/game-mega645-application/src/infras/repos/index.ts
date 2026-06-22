@@ -10,6 +10,8 @@ export { EntryRepository } from "./entry-repo";
 export { PlayerDailyEntryRepository } from "./player-daily-entry-repo";
 export { LineRepository } from "./line-repo";
 export { JackpotCycleRepository } from "./jackpot-cycle-repo";
+export { JackpotCycleEntryRepository } from "./jackpot-cycle-entry-repo";
+export { EntryResettleRepository } from "./entry-resettle-repo";
 export { SettleDrawReportRepository } from "./settle-draw-report-repo";
 export { SettleTenantReportRepository } from "./settle-tenant-report-repo";
 export { VoidReportRepository } from "./void-report-repo";
@@ -18,6 +20,7 @@ export { EntryOutstandingRepository } from "./entry-outstanding-repo";
 export { EntryVoidRepository } from "./entry-void-repo";
 
 export type { JackpotCycleEntity } from "@megawin/game-mega645/entities";
+export type { JackpotCycleEntryEntity } from "@megawin/game-mega645/entities";
 export type { DrawEntity } from "@megawin/game-mega645/entities";
 export { SystemSettleGameDailyRepo } from "./system-settle-game-daily-repo";
 export { SystemSettleTenantDailyRepo } from "./system-settle-tenant-daily-repo";
@@ -32,4 +35,6 @@ export type {
   OutstandingPlayerBreakdownRow,
   VoidTenantBreakdownRow,
   VoidPlayerBreakdownRow,
+  ReversalCandidate,
+  ReversalEntryForDispatch,
 } from "./types";

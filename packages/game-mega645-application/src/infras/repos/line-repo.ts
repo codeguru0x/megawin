@@ -3,8 +3,10 @@
  *
  * Collection: mega645_ticket_lines
  *
- * Lines tạo tại settle time, immutable sau insert.
- * upsertLines() dùng bulkWrite + $setOnInsert → idempotent khi retry.
+ * Lines tạo tại settle time. Business fields (matchResult, numbers, betCount, …)
+ * có thể đổi khi RESETTLE với kết quả mới → upsertLines dùng hybrid
+ * `$set` (business fields) + `$setOnInsert` (createdAt) để vừa cho phép overwrite
+ * khi re-settle, vừa giữ `createdAt` immutable kể cả khi settle retry sau crash.
  */
 
 import { Mega645Collections, PrizeTier } from "@megawin/game-mega645/entities";
@@ -21,21 +23,34 @@ export class LineRepository extends BaseRepo<any> {
   /**
    * Idempotent bulk upsert lines cho 1 entry.
    *
-   * Dùng bulkWrite + $setOnInsert: nếu doc (entryId, lineIndex) đã tồn tại → skip.
-   * Chạy lại bao nhiêu lần cũng cho kết quả giống nhau, không duplicate, không error.
+   * Hybrid strategy (BẮT BUỘC cho mọi game — xem resettle plan §A):
+   *   - `$set` cho business fields (matchResult, numbers, betCount, …): RESETTLE re-build
+   *     lines theo drawResult MỚI → phải overwrite. Nếu dùng `$setOnInsert` cho toàn
+   *     doc, line cũ giữ `matchResult` theo kết quả CŨ → PatchJackpotPrize query sai
+   *     tier + player view hiển thị sai.
+   *   - `$setOnInsert` cho `createdAt`: settle retry sau crash (giữa upsertLines và
+   *     bulkSettleEntries) gọi lại với `now2 ≠ now1`; dùng `$set` sẽ refresh createdAt,
+   *     phá semantic "thời điểm tạo line".
    */
   private static readonly BULK_CHUNK_SIZE = 500;
 
   async upsertLines(lines: Array<Omit<TicketLineDoc, "_id">>): Promise<void> {
     if (lines.length === 0) return;
 
-    const ops = lines.map((doc) => ({
-      updateOne: {
-        filter: { entryId: doc.entryId, lineIndex: doc.lineIndex },
-        update: { $setOnInsert: doc },
-        upsert: true,
-      },
-    }));
+    const ops = lines.map((doc) => {
+      // Tách createdAt khỏi $set: chỉ ghi khi insert mới (immutable timestamp).
+      const { createdAt, ...rest } = doc;
+      return {
+        updateOne: {
+          filter: { entryId: doc.entryId, lineIndex: doc.lineIndex },
+          update: {
+            $set: rest, // business fields — overwrite OK khi resettle
+            $setOnInsert: { createdAt },
+          },
+          upsert: true,
+        },
+      };
+    });
 
     for (const batch of chunk(ops, LineRepository.BULK_CHUNK_SIZE)) {
       await this.bulkWrite(batch, { ordered: false });

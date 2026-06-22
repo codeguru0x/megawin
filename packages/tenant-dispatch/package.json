@@ -60,11 +60,11 @@
     "@megawin/shared": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*",
     "@megawin/worker-core": "workspace:*",
-    "mongodb": "^7.1.1"
+    "mongodb": "^7.3.0"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.9.4",
     "typescript": "^6.0.3"
   }
 }

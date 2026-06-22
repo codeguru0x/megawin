@@ -232,6 +232,17 @@ export interface TicketEntryDoc {
    */
   voidInfo?: EntryVoidInfo;
 
+  // ───── Reversal (Resettle) ─────
+
+  /**
+   * Snapshot reversal — chỉ tồn tại khi entry đã đi qua ÍT NHẤT 1 phiên resettle.
+   *
+   * Vai trò kép: (a) dispatch payload giữa PrepareResettle → FinalizeSettle;
+   * (b) audit trail sau FinalizeSettle.
+   * Xem JSDoc {@link EntryReversal} cho semantic đầy đủ và workflow chi tiết.
+   */
+  reversal?: EntryReversal;
+
   // ───── Timestamps ─────
 
   /** Thời điểm tạo document. */
@@ -247,6 +258,58 @@ export interface TicketEntryDoc {
    * Worker dùng field này để detect thay đổi: version > lastProcessedVersion.
    */
   version: Long;
+}
+
+/**
+ * Snapshot reversal cho 1 phiên resettle — chỉ tồn tại khi entry đã đi qua
+ * ÍT NHẤT 1 phiên resettle.
+ *
+ * Workflow resettle (xem `trigger-resettle.ts` và `prepare-resettle.ts`):
+ *   1. `TriggerResettle` (BO API): sinh `resettleId` (UUIDv7) làm session key.
+ *   2. `PrepareResettle` step 1 (`clearReversalSnapshot`): wipe reversal phiên cũ
+ *      để tránh entries thắng phiên N-1 nhưng KHÔNG thắng phiên N lingers reversal cũ
+ *      → double-debit nếu không wipe.
+ *   3. `PrepareResettle` step 2 (`bulkSetReversal`): copy `payout.payoutAmount` cũ
+ *      sang `reversalAmount`, sinh MỚI `reversalTx` (UUIDv7), ghi atomic cùng
+ *      `resettleId`. Sau đó `resetEntriesForResettle` reset entry về `Scheduled`.
+ *   4. `EnqueueReversals`: đọc `reversal.reversalTx` + `reversalAmount` để tạo
+ *      reversal dispatch order (debit tenant).
+ *   5. `FinalizeSettle` (resettle path): KHÔNG clear `reversal` field — giữ làm
+ *      audit trail của phiên resettle gần nhất.
+ *
+ * **SEMANTIC KÉP** — field này có 2 vai trò theo lifecycle:
+ *  (a) Dispatch payload: giữa `PrepareResettle` và `FinalizeSettle` (phiên đang chạy).
+ *  (b) Audit trail: sau `FinalizeSettle`, trước phiên resettle kế tiếp.
+ *
+ * IDEMPOTENT: `reversalTx` UUIDv7 unique → outbox unique index reject duplicate.
+ */
+export interface EntryReversal {
+  /**
+   * Idempotency key cho reversal dispatch transaction — UUIDv7 (RFC 9562).
+   *
+   * Sinh MỚI tại `PrepareResettle` (KHÔNG copy từ `payout.payoutTx` cũ — payout
+   * cũ đã dispatch xong, reversal là transaction mới độc lập).
+   * Ghi atomic cùng `reversalAmount` + `resettleId` qua `bulkSetReversal`.
+   * `EnqueueReversals` seed vào `TenantDispatchOrderDoc.tx` để outbox dispatch
+   * idempotent xuống tenant.
+   *
+   * @example `"01a0b1c2-d3e4-7fab-89cd-ef0123456789"`
+   */
+  reversalTx: string;
+
+  /**
+   * Số tiền cần ghi nợ (debit) lại tenant — copy từ `payout.payoutAmount`
+   * tại thời điểm snapshot (VND).
+   * Đây là số tiền đã credit cho tenant ở phiên settle/resettle TRƯỚC, cần đảo ngược.
+   */
+  reversalAmount: number;
+
+  /**
+   * Session ID của phiên resettle đã tạo reversal này — UUIDv7.
+   * Dùng để correlate audit trail theo phiên (nhiều entries, 1 resettleId).
+   * Cũng là discriminator để biết reversal này thuộc phiên nào nếu cần debug.
+   */
+  resettleId: string;
 }
 
 /** Application layer entity (version chuyển Long → string). */
@@ -284,39 +347,87 @@ export interface EntryBoardSnapshot {
  * Chi tiết trúng thưởng 1 hạng giải trong entry (Power 6/55).
  *
  * ─────────────────────────────────────────────────────────────────
- * VÌ SAO KHÔNG CÓ `betUnitCount`?
+ * VÌ SAO KHÔNG CÓ `betUnitCount`? (KHÔNG phải thiếu sót — đây là chủ đích)
  * ─────────────────────────────────────────────────────────────────
  *
- * Power 6/55 không có Split Cycle. Cơ chế Overflow (JP1 > 300 tỷ) chuyển
- * phần vượt ngưỡng sang JP2 — không chia xuống tier1/tier2/tier3 theo
- * tỷ lệ betCount. Vì vậy không cần aggregate `Σ(betCount × hitCount)` per
- * tier từ entry collection sau settle.
+ * Câu hỏi: cả giải cố định (tier1/2/3) lẫn Jackpot (JP1/JP2) đều phải nhân
+ * betCount theo luật Vietlott — vậy sao tier KHÔNG cần lưu `betUnitCount`?
  *
- * `betCount` đã được tính vào `winAmount` của từng line doc khi settle:
- *   `winAmount = unitAmount × betCount`
- * → `amount = Σ(winAmount từ lines)` — đã nhân betCount, không cần lưu thêm.
+ * Trả lời: `betUnitCount` trên tier CHỈ cần khi game phải aggregate
+ * `Σ(betCount của lines trúng) per tier` **TỪ entry collection** sau settle
+ * (ví dụ Split Cycle của Lotto 5/35 chia Jackpot tích luỹ xuống tier1–tier5
+ * theo tỷ lệ giá trị tham gia dự thưởng). Power 6/55 KHÔNG rơi vào nhóm này:
  *
- * Để biết lý do đầy đủ và ví dụ phân bổ split bonus theo betUnitCount,
- * xem JSDoc của `EntryPayoutTier` trong `@megawin/game-lotto535/entities`.
+ *   1. KHÔNG có Split Cycle (theo luật Vietlott — Jackpot chỉ tích luỹ đến
+ *      khi có winner, không chia xuống giải thấp hơn). Cơ chế Overflow
+ *      (JP1 vượt ngưỡng) chỉ CHUYỂN phần dư sang JP2, KHÔNG phân bổ xuống
+ *      tier1/2/3 theo tỷ lệ betCount.
+ *
+ *   2. Khi chia Jackpot cho nhiều winners, `PatchJackpotPrize` lấy betCount
+ *      TRỰC TIẾP từ line collection (`getJackpotWinningLines` →
+ *      `totalBetUnits = Σ(line.betCount)`), KHÔNG đọc `EntryPayoutTier.betUnitCount`.
+ *      Line collection là nguồn chính xác hơn — chứa từng line vật lý trúng JP.
+ *
+ * → Lưu `betUnitCount` trên tier sẽ là dead field: không nơi nào đọc, chỉ tốn
+ *   storage và tạo rủi ro lệch số liệu. Vì vậy CỐ TÌNH bỏ.
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * betCount VẪN ĐƯỢC NHÂN ĐÚNG — chỉ là KHÔNG qua field `betUnitCount`:
+ * ─────────────────────────────────────────────────────────────────
+ *
+ *   • Giải cố định (tier1/2/3): `SettleEntries` ghi mỗi line
+ *       `winAmount = unitAmount × betCount`
+ *     → `amount = Σ(winAmount per line)` — đã nhân betCount sẵn.
+ *
+ *   • Jackpot (JP1/JP2): `amount = 0` tại settle; `PatchJackpotPrize` patch
+ *       `amount = jackpotPerUnit × entryBetUnits`
+ *     với `entryBetUnits = Σ(line.betCount)` lấy từ line collection.
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * NGUỒN LUẬT VIETLOTT (đã đối chiếu thể lệ chính thức):
+ * ─────────────────────────────────────────────────────────────────
+ *   "Trong trường hợp có nhiều người trúng thưởng giải Jackpot thì giải
+ *    Jackpot được chia đều theo tỷ lệ giá trị tham gia dự thưởng của người
+ *    trúng thưởng."
+ *   "Giá trị lĩnh thưởng của các giải thưởng từ Giải Nhất đến Giải Ba được
+ *    tính theo số lần tham gia dự thưởng (01 lần = 10.000đ) nhân với giá trị
+ *    giải thưởng tương ứng với 01 lần tham gia."
+ *   Nguồn: https://info.vietlott-sms.vn/game_power.html
+ *
+ * → "Giá trị tham gia dự thưởng" = `betCount`. Code chia Jackpot theo betCount
+ *   (không chia đều per-người) là ĐÚNG luật.
+ *
+ * Để xem game CẦN `betUnitCount` (có Split Cycle) hoạt động ra sao và ví dụ
+ * phân bổ sai nếu dùng hitCount thay vì betUnitCount, đọc JSDoc của
+ * `EntryPayoutTier` trong `@megawin/game-lotto535/entities`.
  * ─────────────────────────────────────────────────────────────────
  */
 export interface EntryPayoutTier {
   /** Hạng giải: jackpot1, jackpot2, tier1, tier2, tier3. */
   tier: PrizeTier;
 
-  /** Số lines vật lý trúng hạng này (không nhân betCount). */
+  /**
+   * Số lines vật lý trúng hạng này — KHÔNG nhân betCount.
+   * Đây là số đầu vé thực tế khớp tier, không phải số đơn vị tham gia dự thưởng.
+   * (Số đơn vị = `Σ(line.betCount)`, lấy từ line collection khi cần — xem JSDoc interface.)
+   */
   hitCount: number;
 
   /**
-   * Tiền thưởng mỗi đơn vị tham gia dự thưởng (VND).
-   * JP1/JP2: = 0 tại SettleEntries, patch ở FinalizeSettle khi biết pool chính xác.
+   * Tiền thưởng cho 01 lần tham gia dự thưởng (VND) — đơn giá theo luật Vietlott.
+   * tier1/2/3: hằng số theo bảng giải.
+   * JP1/JP2: = 0 tại SettleEntries; patch ở PatchJackpotPrize = `jackpotPerUnit`
+   * khi đã biết pool + tổng betUnits winners.
    */
   unitAmount: number;
 
   /**
-   * Tổng tiền hạng này (VND).
-   * Đã nhân betCount — player betCount=3 trúng tier1 nhận gấp 3 player betCount=1.
-   * Công thức: `Σ(winAmount per line)` = `hitCount × unitAmount × betCount` (khi 1 board).
+   * Tổng tiền hạng này cho entry (VND) — ĐÃ nhân betCount.
+   * Player betCount=3 trúng tier1 nhận gấp 3 player betCount=1.
+   *
+   * tier1/2/3: `amount = Σ(winAmount per line)` = `hitCount × unitAmount × betCount` (khi 1 board).
+   * JP1/JP2:   `amount = jackpotPerUnit × entryBetUnits` (patch ở PatchJackpotPrize),
+   *            với `entryBetUnits = Σ(line.betCount)` của các line trúng JP — lấy từ line collection.
    */
   amount: number;
 }

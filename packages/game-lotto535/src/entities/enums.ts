@@ -28,6 +28,8 @@ export const Lotto535Collections = {
   GameConfigs: "lotto535_game_configs",
   /** Collection lưu vòng đời Jackpot (cycle tích luỹ → chia/trúng). */
   JackpotCycles: "lotto535_jackpot_cycles",
+  /** Cycle Ledger — lịch sử tích luỹ per-draw trong jackpot cycle (resettle). */
+  JackpotCycleEntries: "lotto535_jackpot_cycle_entries",
 } as const;
 
 // ─────────────────────────────────────────────

@@ -1802,4 +1802,34 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
       accountId,
     });
   }
+
+  /**
+   * Pre-flight: kỳ T có JP winner (5 main + special) với kết quả đề xuất không.
+   *
+   * Board-level `$elemMatch`: mainNumbers chứa đủ 5 số winning + specialNumbers
+   * chứa winningSpecial. Conservative — có thể over-detect với Bao nhưng an toàn
+   * cho phân loại scenario (TYPE_B1 thay vì TYPE_A).
+   *
+   * @param statuses - status entries cần quét. Resettle truyền `[Settled, Scheduled]`:
+   *   match cả entries chưa reset (`Settled` — pre-flight) lẫn entries đã bị
+   *   PrepareResettle reset về `Scheduled` (re-detect khi retry). Match theo
+   *   selection vé (`entrySummary.boards`) nên độc lập với status/payout.
+   */
+  async existsJpWinnerForDraw(
+    drawId: string,
+    proposedWinningMain: string[],
+    proposedWinningSpecial: string,
+    statuses: string[],
+  ): Promise<boolean> {
+    return this.exists({
+      drawId,
+      status: { $in: statuses },
+      "entrySummary.boards": {
+        $elemMatch: {
+          mainNumbers: { $all: proposedWinningMain },
+          specialNumbers: proposedWinningSpecial,
+        },
+      },
+    });
+  }
 }

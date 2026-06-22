@@ -3,8 +3,10 @@
  *
  * Collection: power655TicketLines
  *
- * Lines tạo tại settle time, immutable sau insert.
- * upsertLines() dùng bulkWrite + $setOnInsert → idempotent khi retry.
+ * Lines tạo tại settle time. Business fields (matchResult, main, betCount, …)
+ * có thể đổi khi RESETTLE với kết quả mới → upsertLines dùng hybrid
+ * `$set` (business fields) + `$setOnInsert` (createdAt) để vừa cho phép overwrite
+ * khi re-settle, vừa giữ `createdAt` immutable kể cả khi settle retry sau crash.
  */
 
 import { Power655Collections } from "@megawin/game-power655/entities";
@@ -20,20 +22,35 @@ export class LineRepository extends BaseRepo<any> {
 
   /**
    * Idempotent bulk upsert lines cho 1 entry.
-   * Dùng bulkWrite + $setOnInsert: nếu doc (entryId, lineIndex) đã tồn tại → skip.
+   *
+   * Hybrid strategy (BẮT BUỘC cho mọi game — xem max3d-resettle plan §A):
+   *   - `$set` cho business fields (matchResult, main, betCount, …): RESETTLE re-build
+   *     lines theo drawResult MỚI → phải overwrite. Nếu dùng `$setOnInsert` cho toàn
+   *     doc, line cũ giữ `matchResult` theo kết quả CŨ → PatchJackpotPrize query sai
+   *     tier + player view hiển thị sai.
+   *   - `$setOnInsert` cho `createdAt`: settle retry sau crash (giữa upsertLines và
+   *     bulkSettleEntries) gọi lại với `now2 ≠ now1`; dùng `$set` sẽ refresh createdAt,
+   *     phá semantic "thời điểm tạo line".
    */
   private static readonly BULK_CHUNK_SIZE = 500;
 
   async upsertLines(lines: Array<Omit<TicketLineDoc, "_id">>): Promise<void> {
     if (lines.length === 0) return;
 
-    const ops = lines.map((doc) => ({
-      updateOne: {
-        filter: { entryId: doc.entryId, lineIndex: doc.lineIndex },
-        update: { $setOnInsert: doc },
-        upsert: true,
-      },
-    }));
+    const ops = lines.map((doc) => {
+      // Tách createdAt khỏi $set: chỉ ghi khi insert mới (immutable timestamp).
+      const { createdAt, ...rest } = doc;
+      return {
+        updateOne: {
+          filter: { entryId: doc.entryId, lineIndex: doc.lineIndex },
+          update: {
+            $set: rest, // business fields — overwrite OK khi resettle
+            $setOnInsert: { createdAt },
+          },
+          upsert: true,
+        },
+      };
+    });
 
     for (const batch of chunk(ops, LineRepository.BULK_CHUNK_SIZE)) {
       await this.bulkWrite(batch, { ordered: false });
@@ -135,8 +152,6 @@ export class LineRepository extends BaseRepo<any> {
     const winningLines = await this.getJackpotWinningLines(drawId, jackpotTier);
     if (winningLines.length === 0) return 0;
 
-    const col = await this.getCollection();
-
     const ops = winningLines.map((line) => {
       const winAmount = jackpotPerUnit * line.betCount;
       return {
@@ -150,7 +165,7 @@ export class LineRepository extends BaseRepo<any> {
       };
     });
 
-    const result = await this.bulkWrite(ops as any, { ordered: false });
+    const result = await this.bulkWrite(ops, { ordered: false });
     return result.modifiedCount;
   }
 }

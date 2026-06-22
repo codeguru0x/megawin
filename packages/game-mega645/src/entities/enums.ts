@@ -28,6 +28,12 @@ export const Mega645Collections = {
   GameConfigs: "mega645_game_configs",
   /** Collection chu kỳ Jackpot: theo dõi tích luỹ & chia Jackpot. */
   JackpotCycles: "mega645_jackpot_cycles",
+  /**
+   * Collection ledger kỳ quay trong cycle: 1 document = 1 kỳ đã settle trong 1
+   * cycle. Lưu lịch sử opening/closing jackpot bất biến per-draw — single source
+   * of truth cho resettle (đọc opening), DBA restore cycle, và audit tích luỹ.
+   */
+  JackpotCycleEntries: "mega645_jackpot_cycle_entries",
 } as const;
 
 // ─────────────────────────────────────────────

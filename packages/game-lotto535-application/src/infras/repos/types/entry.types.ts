@@ -68,3 +68,20 @@ export interface VoidedEntryForDispatch {
   refundAmount: number;
   refundTx: string;
 }
+
+/** Settled entry có payout > 0 — candidate reversal trước resettle. */
+export interface ReversalCandidate {
+  id: string;
+  payoutAmount: number;
+}
+
+/** Entry có reversal snapshot — enqueue debit tenant. */
+export interface ReversalEntryForDispatch {
+  id: string;
+  tenantId: string;
+  accountId: string;
+  username: string;
+  ticketNo: string;
+  reversalAmount: number;
+  reversalTx: string;
+}

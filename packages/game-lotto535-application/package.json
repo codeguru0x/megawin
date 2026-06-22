@@ -82,6 +82,11 @@
       "types": "./src/use-cases/reports/index.ts",
       "import": "./src/use-cases/reports/index.ts",
       "default": "./dist/use-cases/reports/index.js"
+    },
+    "./use-cases/resettle": {
+      "types": "./src/use-cases/resettle/index.ts",
+      "import": "./src/use-cases/resettle/index.ts",
+      "default": "./dist/use-cases/resettle/index.js"
     }
   },
   "dependencies": {
@@ -94,15 +99,16 @@
     "@megawin/shared": "workspace:*",
     "@megawin/tenant-dispatch": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*",
-    "mongodb": "^7.1.1"
+    "@megawin/worker-core": "workspace:*",
+    "mongodb": "^7.3.0"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
-    "@types/node": "^25.5.0",
-    "next": "^16.2.6",
+    "@types/node": "^25.9.4",
+    "next": "^16.2.9",
     "typescript": "^6.0.3",
     "vite": "latest",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.9"
   }
 }

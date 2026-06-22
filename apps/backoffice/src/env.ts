@@ -47,6 +47,9 @@ export const env = createEnv({
     BINGO18_RESETTLE_SFN_ARN: z.string().min(1),
     MAX3D_RESETTLE_SFN_ARN: z.string().min(1),
     MAX3DPRO_RESETTLE_SFN_ARN: z.string().min(1),
+    POWER655_RESETTLE_SFN_ARN: z.string().min(1),
+    LOTTO535_RESETTLE_SFN_ARN: z.string().min(1),
+    MEGA645_RESETTLE_SFN_ARN: z.string().min(1),
   },
 
   client: {

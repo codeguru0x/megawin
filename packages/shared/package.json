@@ -65,14 +65,14 @@
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.9.4",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.9"
   },
   "dependencies": {
-    "@date-fns/tz": "^1.4.1",
-    "date-fns": "^4.1.0",
+    "@date-fns/tz": "^1.5.0",
+    "date-fns": "^4.4.0",
     "ulid": "^3.0.2",
-    "uuid": "^13.0.0"
+    "uuid": "^14.0.0"
   }
 }

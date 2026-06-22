@@ -154,6 +154,73 @@ export interface TriggerSettleOutput {
 }
 
 // ─────────────────────────────────────────────
+// TriggerResettle / ResettlePreflight
+// ─────────────────────────────────────────────
+
+export interface TriggerResettleInput {
+  drawId: string;
+  RESETTLE_SFN_ARN: string;
+  dbaConfirmed?: boolean;
+}
+
+export interface TriggerResettleOutput {
+  drawId: string;
+  status: string;
+  resettleId: string;
+  lockOwnerToken: string;
+}
+
+// ─────────────────────────────────────────────
+// ReopenForCascade
+// ─────────────────────────────────────────────
+
+export interface ReopenForCascadeInput {
+  /** ID kỳ T+n cần mở lại để cascade resettle (đang ở status Settled). */
+  drawId: string;
+  /**
+   * Xác nhận Quản trị hệ thống đồng ý mở lại kỳ T+n trong cascade B2.
+   * BẮT BUỘC `true` — reopen chỉ phục vụ cascade cần can thiệp cycle thủ công.
+   * Thiếu → reject `RESETTLE_REQUIRES_DBA`.
+   */
+  dbaConfirmed?: boolean;
+}
+
+export interface ReopenForCascadeOutput {
+  /** ID kỳ quay đã mở lại. */
+  drawId: string;
+  /** Trạng thái sau khi mở lại (luôn "published"). */
+  status: string;
+  /** Kết quả giữ nguyên + publishedAt mới re-stamp (ISO datetime). */
+  result: {
+    /** 5 số chính trúng thưởng ("01"-"35") — GIỮ NGUYÊN, không đổi. */
+    winningMain: string[];
+    /** Số đặc biệt ("01"-"12") — GIỮ NGUYÊN, không đổi. */
+    winningSpecial: string;
+    /** Thời điểm re-stamp publishedAt (ISO datetime) — > settledAt. */
+    publishedAt: string;
+  };
+}
+
+export interface ResettlePreflightInput {
+  drawId: string;
+  proposedWinningMain: string[];
+  proposedWinningSpecial: string;
+}
+
+export interface ResettlePreflightOutput {
+  drawId: string;
+  scenario: string;
+  message: string;
+  hasNewJpWinner: boolean;
+  hadOldJpWinner: boolean;
+  newWouldSplit: boolean;
+  hadOldSplit: boolean;
+  chainLength: number;
+  lastAffectedDrawId?: string;
+  chainDrawIds?: string[];
+}
+
+// ─────────────────────────────────────────────
 // ListDraws
 // ─────────────────────────────────────────────
 

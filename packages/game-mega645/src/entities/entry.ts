@@ -98,6 +98,58 @@ export interface EntryVoidInfo {
   refundTx: string;
 }
 
+/**
+ * Snapshot reversal cho 1 phiên resettle — chỉ tồn tại khi entry đã đi qua
+ * ÍT NHẤT 1 phiên resettle.
+ *
+ * Workflow resettle (xem `trigger-resettle.ts` và `prepare-resettle.ts`):
+ *   1. `TriggerResettle` (BO API): sinh `resettleId` (UUIDv7) làm session key.
+ *   2. `PrepareResettle` step 1 (`clearReversalSnapshot`): wipe reversal phiên cũ
+ *      để tránh entries thắng phiên N-1 nhưng KHÔNG thắng phiên N lingers reversal cũ
+ *      → double-debit nếu không wipe.
+ *   3. `PrepareResettle` step 2 (`bulkSetReversal`): copy `payout.payoutAmount` cũ
+ *      sang `reversalAmount`, sinh MỚI `reversalTx` (UUIDv7), ghi atomic cùng
+ *      `resettleId`. Sau đó `resetEntriesForResettle` reset entry về `Scheduled`.
+ *   4. `EnqueueReversals`: đọc `reversal.reversalTx` + `reversalAmount` để tạo
+ *      reversal dispatch order (debit tenant).
+ *   5. `FinalizeSettle` (resettle path): KHÔNG clear `reversal` field — giữ làm
+ *      audit trail của phiên resettle gần nhất.
+ *
+ * **SEMANTIC KÉP** — field này có 2 vai trò theo lifecycle:
+ *  (a) Dispatch payload: giữa `PrepareResettle` và `FinalizeSettle` (phiên đang chạy).
+ *  (b) Audit trail: sau `FinalizeSettle`, trước phiên resettle kế tiếp.
+ *
+ * IDEMPOTENT: `reversalTx` UUIDv7 unique → outbox unique index reject duplicate.
+ */
+export interface EntryReversal {
+  /**
+   * Idempotency key cho reversal dispatch transaction — UUIDv7 (RFC 9562).
+   *
+   * Sinh MỚI tại `PrepareResettle` (KHÔNG copy từ `payout.payoutTx` cũ — payout
+   * cũ đã dispatch xong, reversal là transaction mới độc lập).
+   * Ghi atomic cùng `reversalAmount` + `resettleId` qua `bulkSetReversal`.
+   * `EnqueueReversals` seed vào `TenantDispatchOrderDoc.tx` để outbox dispatch
+   * idempotent xuống tenant.
+   *
+   * @example `"01a0b1c2-d3e4-7fab-89cd-ef0123456789"`
+   */
+  reversalTx: string;
+
+  /**
+   * Số tiền cần ghi nợ (debit) lại tenant — copy từ `payout.payoutAmount`
+   * tại thời điểm snapshot (VND).
+   * Đây là số tiền đã credit cho tenant ở phiên settle/resettle TRƯỚC, cần đảo ngược.
+   */
+  reversalAmount: number;
+
+  /**
+   * Session ID của phiên resettle đã tạo reversal này — UUIDv7.
+   * Dùng để correlate audit trail theo phiên (nhiều entries, 1 resettleId).
+   * Cũng là discriminator để biết reversal này thuộc phiên nào nếu cần debug.
+   */
+  resettleId: string;
+}
+
 // ─────────────────────────────────────────────
 // Entry Document
 // ─────────────────────────────────────────────
@@ -162,6 +214,17 @@ export interface TicketEntryDoc {
 
   /** Thông tin huỷ entry (khi kỳ quay bị void). */
   voidInfo?: EntryVoidInfo;
+
+  // ───── Reversal (Resettle) ─────
+
+  /**
+   * Snapshot reversal — chỉ tồn tại khi entry đã đi qua ÍT NHẤT 1 phiên resettle.
+   *
+   * Vai trò kép: (a) dispatch payload giữa PrepareResettle → FinalizeSettle;
+   * (b) audit trail sau FinalizeSettle.
+   * Xem JSDoc {@link EntryReversal} cho semantic đầy đủ và workflow chi tiết.
+   */
+  reversal?: EntryReversal;
 
   /** Thời điểm tạo document. */
   createdAt: Date;

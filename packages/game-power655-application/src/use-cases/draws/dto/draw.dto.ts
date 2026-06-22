@@ -107,8 +107,6 @@ export interface PublishResultInput {
     drawPeriod: string;
     /** Ngày quay Vietlott, định dạng YYYY-MM-DD. */
     drawDate: string;
-    /** Nguồn dữ liệu kết quả (ví dụ: "vietlott.vn", "manual"). */
-    source?: string;
   };
 }
 
@@ -145,6 +143,121 @@ export interface TriggerSettleOutput {
   drawId: string;
   /** Trạng thái mới sau trigger (thường là "settling"). */
   status: string;
+}
+
+// ─────────────────────────────────────────────
+// TriggerResettle
+// ─────────────────────────────────────────────
+
+export interface TriggerResettleInput {
+  /** ID kỳ quay cần resettle. */
+  drawId: string;
+  /** ARN của Step Function resettle (orchestrate cả Settle SFN bên trong). */
+  RESETTLE_SFN_ARN: string;
+  /**
+   * Xác nhận Quản trị hệ thống đã đồng ý thực hiện resettle cho scenario cần
+   * can thiệp cycle thủ công (TYPE_B1 + TYPE_B2 cascade).
+   *
+   * - TYPE_A: bỏ qua — không cần xác nhận.
+   * - TYPE_B1 / TYPE_B2: BẮT BUỘC `true`. Worker auto hoàn tiền + kết sổ lại
+   *   payout (`skipCycleUpdate=true`), nhưng cycle do Quản trị hệ thống chốt
+   *   thủ công sau mỗi kỳ. Thiếu xác nhận → reject `RESETTLE_REQUIRES_DBA`.
+   */
+  dbaConfirmed?: boolean;
+}
+
+export interface TriggerResettleOutput {
+  drawId: string;
+  status: string;
+  /** ID phiên resettle — staff theo dõi qua `metadata.resettleId` ở dispatch orders. */
+  resettleId: string;
+  /** Owner token của WorkerLock — debug / trace. */
+  lockOwnerToken: string;
+}
+
+// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// ReopenForCascade
+// ─────────────────────────────────────────────
+
+export interface ReopenForCascadeInput {
+  /** ID kỳ T+n cần mở lại để cascade resettle (đang ở status Settled). */
+  drawId: string;
+  /**
+   * Xác nhận Quản trị hệ thống đồng ý mở lại kỳ T+n trong cascade B2.
+   * BẮT BUỘC `true` — reopen chỉ phục vụ cascade cần can thiệp cycle thủ công.
+   * Thiếu → reject `RESETTLE_REQUIRES_DBA`.
+   */
+  dbaConfirmed?: boolean;
+}
+
+export interface ReopenForCascadeOutput {
+  /** ID kỳ quay đã mở lại. */
+  drawId: string;
+  /** Trạng thái sau khi mở lại (luôn "published"). */
+  status: string;
+  /** Kết quả giữ nguyên + publishedAt mới re-stamp (ISO datetime). */
+  result: {
+    /** 6 số chính trúng thưởng ("01"-"55") — GIỮ NGUYÊN, không đổi. */
+    winningMain: string[];
+    /** Bonus number ("01"-"55") — GIỮ NGUYÊN, không đổi. */
+    bonusNumber: string;
+    /** Thời điểm re-stamp publishedAt (ISO datetime) — > settledAt. */
+    publishedAt: string;
+  };
+}
+
+// ─────────────────────────────────────────────
+// ResettlePreflight
+// ─────────────────────────────────────────────
+
+export interface ResettlePreflightInput {
+  /** Bonus number dự kiến — zero-padded "01"–"55". */
+  proposedBonusNumber: string;
+}
+
+export interface ResettlePreflightOutput {
+  drawId: string;
+  /**
+   * Scenario phát hiện — xác định staff / DBA cần làm gì tiếp theo.
+   * `TYPE_A`: tự động hoàn toàn.
+   * `TYPE_B1`: auto payout, DBA cập nhật cycle thủ công (T là kỳ mới nhất).
+   * `TYPE_B2`: cascade step-wise — resettle tuần tự từng kỳ (auto payout),
+   *            DBA chốt cycle giữa các bước. KHÔNG còn là full-DBA tính tay.
+   * `LEDGER_MISSING`: ledger entry null dù kỳ đã settled — bất thường data
+   *                   integrity, không xảy ra trong vận hành bình thường → báo kỹ thuật.
+   */
+  scenario: string;
+  /** Chuỗi mô tả ngắn cho staff UI hiểu rõ tác động. */
+  message: string;
+  /**
+   * Kết quả ĐỀ XUẤT có phát sinh JP winner hay không.
+   * `false` khi scenario = LEDGER_MISSING (không thể xác định).
+   */
+  hasNewJpWinner: boolean;
+  /**
+   * Kết quả CŨ (đã settle trước) có JP winner hay không.
+   * Dùng để hiển thị case "gỡ winner cũ" (có → không) cho staff.
+   * `false` khi scenario = LEDGER_MISSING.
+   */
+  hadOldJpWinner: boolean;
+  /**
+   * Tổng số kỳ bị ảnh hưởng trong chain sau T (không tính T).
+   * 0 khi TYPE_A hoặc LEDGER_MISSING.
+   */
+  chainLength: number;
+  /**
+   * Kỳ settle mới nhất trong chain bị ảnh hưởng.
+   * undefined khi không có chain (TYPE_A, TYPE_B1).
+   */
+  lastAffectedDrawId?: string;
+  /**
+   * Danh sách drawId cần cascade resettle theo thứ tự (gồm cả T), sorted theo
+   * `seq` ASC. Chỉ có giá trị khi TYPE_B2 — staff resettle tuần tự theo đúng
+   * thứ tự này, DBA chốt cycle giữa mỗi kỳ.
+   * undefined khi TYPE_A / TYPE_B1 / LEDGER_MISSING.
+   */
+  chainDrawIds?: string[];
 }
 
 // ─────────────────────────────────────────────

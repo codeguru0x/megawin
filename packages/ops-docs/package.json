@@ -1,0 +1,22 @@
+{
+  "name": "@megawin/ops-docs",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Hệ thống tài liệu vận hành: bản developer (SSOT, không hiển thị backoffice) + bản staff (render trong backoffice).",
+  "exports": {
+    "./manifest": {
+      "types": "./src/manifest.ts",
+      "import": "./src/manifest.ts",
+      "default": "./src/manifest.ts"
+    },
+    "./docs/*": "./docs/*"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "typescript": "^6.0.3"
+  }
+}

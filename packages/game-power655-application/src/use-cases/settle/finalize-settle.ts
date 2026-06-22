@@ -64,6 +64,7 @@ import type { JackpotCycleClosedReason } from "@megawin/game-power655/entities";
 import { JackpotCycleClosedReasons, JackpotType } from "@megawin/game-power655/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import { JackpotCycleEntryRepository } from "../../infras/repos/jackpot-cycle-entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import type { SettleContextWithFinancials } from "./types";
 
@@ -99,10 +100,11 @@ export class FinalizeSettleUseCase extends InternalUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
+  private readonly cycleEntryRepo = new JackpotCycleEntryRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
   protected async execute(input: SettleContextWithFinancials): Promise<FinalizeSettleResult> {
-    const { drawId, jp1CurrentAmount, jp2CurrentAmount, financials } = input;
+    const { drawId, jp1CurrentAmount, jp2CurrentAmount, financials, resettleContext } = input;
 
     // closingJp1 = JP1 pool cuối kỳ = opening + contribution kỳ này.
     // Nếu có JP1 winner → đây là tổng tiền winner nhận (contribution không bị cap vì overflow
@@ -140,8 +142,45 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       }
     }
 
-    // ── Bước 2: Cập nhật JackpotCycle ─────────────────────────────────────────
-    await this.updateJackpotCycle(input);
+    // ── Bước 2: Upsert Cycle Ledger entry (luôn chạy — cả lần đầu lẫn resettle) ──
+    // Ghi/cập nhật immutable record per-draw vào JackpotCycleEntries.
+    // `seq` = cycleDrawCountBefore + 1 = vị trí kỳ này trong cycle (1-based).
+    // Với settle lần đầu: upsert tạo entry mới.
+    // Với resettle (Type A): upsert cập nhật entry cũ (contribution mới, winner flag mới,
+    //   closingJp1/2 mới) — opening KHÔNG thay đổi ($setOnInsert giữ nguyên).
+    await this.cycleEntryRepo.upsertEntry(
+      {
+        cycleNo: input.config.cycleNo,
+        drawId,
+        drawNo: input.drawNo,
+        seq: input.config.cycleDrawCountBefore + 1,
+        openingJp1: jp1CurrentAmount,
+        openingJp2: jp2CurrentAmount,
+        jp1Contribution: financials.jackpot1Contribution,
+        jp2Contribution: financials.jackpot2Contribution,
+        jp1Overflow: financials.jp1Overflow,
+        closingJp1,
+        closingJp2,
+        hasJp1Winner: financials.hasJackpot1Winner,
+        hasJp2Winner: financials.hasJackpot2Winner,
+        jp2DidReset: financials.hasJackpot2Winner,
+        settledAt: new Date(),
+      },
+      // Cascade B2 (kỳ T+n): opening = closing kỳ trước vừa đổi → ghi đè opening
+      // trong ledger thay vì giữ $setOnInsert. Các trường hợp khác: opening bất biến.
+      resettleContext?.cascadeOpeningUpdate ?? false,
+    );
+
+    // ── Bước 3: Cập nhật JackpotCycle ─────────────────────────────────────────
+    // skipCycleUpdate = true (Type B1/B2): DBA can thiệp cycle thủ công → bỏ qua.
+    // skipCycleUpdate = false hoặc undefined (Type A + settle lần đầu): cập nhật bình thường.
+    if (resettleContext?.skipCycleUpdate) {
+      console.log(
+        `[Resettle] skipCycleUpdate=true (scenario=${resettleContext.scenario}) → bỏ qua updateJackpotCycle. DBA sẽ cập nhật cycle thủ công.`,
+      );
+    } else {
+      await this.updateJackpotCycle(input);
+    }
 
     return {
       drawId,

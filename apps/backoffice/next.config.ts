@@ -27,6 +27,7 @@ const nextConfig: NextConfig = {
     "@megawin/identity",
     "@megawin/identity-application",
     "@megawin/next",
+    "@megawin/ops-docs",
     "@megawin/shared",
     "@megawin/tenant-gateway",
   ],
@@ -40,6 +41,23 @@ const nextConfig: NextConfig = {
   ],
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts", "date-fns", "@radix-ui/react-icons"],
+  },
+  // Cho phép import nội dung file .md dạng raw string (bản staff ops-docs).
+  // Turbopack (dev): dùng raw-loader. Webpack (production build): asset/source.
+  turbopack: {
+    rules: {
+      "*.md": {
+        loaders: ["raw-loader"],
+        as: "*.js",
+      },
+    },
+  },
+  webpack: (config) => {
+    config.module.rules.push({
+      test: /\.md$/,
+      type: "asset/source",
+    });
+    return config;
   },
 };
 

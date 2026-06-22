@@ -1,5 +1,50 @@
 import { z } from "zod";
 import { DRAW_STATUS_VALUES } from "@megawin/game-core/entities";
+import {
+  lotto535MainNumberSchema,
+  lotto535SpecialNumberSchema,
+} from "@megawin/game-lotto535/schemas";
+import { LOTTO535_MAIN_COUNT } from "@megawin/game-lotto535/entities";
+
+/** Mảng số chính Lotto 5/35 — đúng LOTTO535_MAIN_COUNT phần tử. */
+const winningMainArraySchema = z
+  .array(lotto535MainNumberSchema)
+  .length(LOTTO535_MAIN_COUNT, `Phải có đúng ${LOTTO535_MAIN_COUNT} số chính.`);
+
+function areMainNumbersDistinct(mainNumbers: string[]): boolean {
+  return new Set(mainNumbers).size === mainNumbers.length;
+}
+
+/**
+ * Schema body cho `POST /draws/[drawId]/resettle-preflight` — phân tích tác
+ * động trước khi resettle. Dùng tên field `proposed*` (kết quả đề xuất).
+ */
+export const resettlePreflightSchema = z
+  .object({
+    proposedWinningMain: winningMainArraySchema,
+    proposedWinningSpecial: lotto535SpecialNumberSchema,
+  })
+  .refine((data) => areMainNumbersDistinct(data.proposedWinningMain), {
+    message: "Các số chính không được trùng nhau.",
+    path: ["proposedWinningMain"],
+  });
+
+/** Schema body cho `POST /draws/[drawId]/resettle` — khởi chạy Resettle SFN. */
+export const triggerResettleSchema = z.object({
+  dbaConfirmed: z.boolean().default(false),
+});
+
+/**
+ * Schema body cho `POST /draws/[drawId]/resettle-reopen` — mở cổng resettle cho
+ * kỳ T+n trong cascade TYPE_B2 khi KẾT QUẢ SỐ KHÔNG ĐỔI.
+ *
+ * `dbaConfirmed`: BẮT BUỘC `true`. Reopen chỉ phục vụ cascade cần Quản trị hệ
+ * thống can thiệp cycle thủ công — không cho phép tự động. Mặc định `false`
+ * (use-case sẽ reject `RESETTLE_REQUIRES_DBA`).
+ */
+export const reopenForCascadeSchema = z.object({
+  dbaConfirmed: z.boolean().default(false),
+});
 
 const createDrawSlotSchema = z.object({
   /** Ngày quay, format YYYY-MM-DD (theo giờ VN). */

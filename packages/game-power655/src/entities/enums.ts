@@ -22,6 +22,13 @@ export const Power655Collections = {
   Draws: "power655_draws",
   /** Chu kỳ Jackpot – theo dõi tích luỹ JP1 + JP2 từ seed đến khi có winner. */
   JackpotCycles: "power655_jackpot_cycles",
+  /**
+   * Cycle Ledger — lịch sử tích luỹ per-draw trong jackpot cycle.
+   * Mỗi document = 1 kỳ quay settle trong 1 cycle; immutable sau settle.
+   * Single source of truth cho opening/closing jackpot theo từng kỳ.
+   * Dùng cho resettle (PrepareSettle đọc opening từ ledger) và DBA restore.
+   */
+  JackpotCycleEntries: "power655_jackpot_cycle_entries",
 } as const;
 
 /**

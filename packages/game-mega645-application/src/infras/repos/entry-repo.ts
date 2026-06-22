@@ -1599,4 +1599,48 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   ): Promise<TicketEntryEntity[]> {
     return this.findMany({ drawId, tenantId, accountId });
   }
+
+  // ─────────────────────────────────────────────
+  // Resettle – Jackpot winner pre-flight detection
+  // ─────────────────────────────────────────────
+
+  /**
+   * Kiểm tra NHANH liệu kết quả ĐỀ XUẤT có sinh ra Jackpot winner trong draw không.
+   *
+   * Dùng bởi `DetectBoundariesUseCase` (resettle pre-flight) để phân loại scenario:
+   * có winner → cycle đóng → cần xét cascade (Type B); không winner → roll-over (Type A).
+   *
+   * **Mega 6/45 — SINGLE jackpot (6/6):** chỉ 1 điều kiện trúng JP — tồn tại 1 board
+   * chứa ĐỦ cả 6 số winning (`$all`). KHÔNG có bonus number, KHÔNG có JP2 → query
+   * đơn giản hơn Power 6/55 (1 clause thay vì 2).
+   *
+   * **Bao N:** board chọn N=6–18 số. `$all` containment đúng tự nhiên — board phải
+   * chứa đủ 6 số winning; board chỉ 6 số trùng đủ cũng thỏa. `$elemMatch` bảo đảm
+   * 6 số nằm trên CÙNG 1 board (không gộp số từ board khác).
+   *
+   * Hit index `{ drawId, status, "entrySummary.boards.numbers" }` (compound, multikey
+   * trên field cuối). Hỗ trợ Settled (resettle lần đầu) + Scheduled (entries đã bị
+   * PrepareResettle reset nhưng chưa re-settle — retry detection). `exists` dùng
+   * count limit:1 → dừng ngay khi gặp winner đầu tiên.
+   *
+   * @param drawId - Kỳ quay cần check
+   * @param proposedWinningNumbers - 6 số chính đề xuất (string zero-padded "01"-"45")
+   * @param statuses - Các status entry cần quét (vd. [Settled, Scheduled])
+   * @returns true nếu tồn tại ít nhất 1 board trúng Jackpot theo kết quả đề xuất
+   */
+  async existsJpWinnerForDraw(
+    drawId: string,
+    proposedWinningNumbers: string[],
+    statuses: string[],
+  ): Promise<boolean> {
+    // JP: tồn tại 1 board chứa đủ cả 6 số winning (→ 6/6 match).
+    // count limit:1 dừng ngay khi gặp winner đầu tiên.
+    return this.exists({
+      drawId,
+      status: { $in: statuses },
+      "entrySummary.boards": {
+        $elemMatch: { numbers: { $all: proposedWinningNumbers } },
+      },
+    });
+  }
 }

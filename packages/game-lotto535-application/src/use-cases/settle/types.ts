@@ -26,6 +26,7 @@
  */
 
 import { JackpotWinnerInfo } from "@megawin/game-lotto535/entities";
+import type { ResettleScenario } from "@megawin/game-lotto535/rules";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Primitive shared types
@@ -369,6 +370,44 @@ export interface SettleContext {
    * undefined khi không có JP winner (roll-over hoặc split).
    */
   jackpotWinners?: JackpotWinnerInfo[];
+
+  /**
+   * Context resettle — từ TriggerResettle, nested vào Settle SFN.
+   * PrepareSettle đọc `opening`; FinalizeSettle upsert ledger + `skipCycleUpdate`.
+   */
+  resettleContext?: ResettleContext;
+}
+
+/**
+ * Context đặc biệt cho resettle pipeline.
+ */
+export interface ResettleContext {
+  resettleId: string;
+  scenario: ResettleScenario;
+  /** Jackpot opening kỳ T (VND) — từ ledger / cascade closing(K-1). */
+  opening: number;
+  /** Tổng contribution cycle TRƯỚC kỳ T — sum ledger contribution seq < T.seq. */
+  cycleContributionBefore: number;
+  /** drawCount TRƯỚC kỳ T = ledger(T).seq - 1. */
+  cycleDrawCountBefore: number;
+  /**
+   * cycleNo của cycle CHỨA kỳ T — đọc từ `ledger(T).cycleNo`.
+   *
+   * Override việc lookup `getActiveCycle()` trong PrepareSettle. Cần thiết vì:
+   *   - Khi kỳ T trúng Jackpot, cycle chứa T đã bị ĐÓNG (status = "closed"). Nếu
+   *     chưa có kỳ sau T → chưa có active cycle nào → safety-net `createCycle`
+   *     sẽ tạo cycle MỚI với seed mặc định và dùng cycleNo sai cho kỳ T.
+   *   - Ngay cả khi đã có cycle mới (active), đó là cycle SAU kỳ T với config khác.
+   *     Resettle kỳ T phải đọc đúng cycle CHỨA T.
+   *
+   * PrepareSettle dùng `getCycleByNo(cycleNo)` (lookup bất kể status) để đọc đúng
+   * cycle của kỳ T — kể cả khi cycle đã closed.
+   */
+  cycleNo: number;
+  /** true: FinalizeSettle bỏ qua updateJackpotCycle (TYPE_B1/B2). */
+  skipCycleUpdate: boolean;
+  /** Cascade B2: ghi đè `ledger.opening` qua upsertEntry. */
+  cascadeOpeningUpdate?: boolean;
 }
 
 /**

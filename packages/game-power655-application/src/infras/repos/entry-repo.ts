@@ -1560,4 +1560,88 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
   ): Promise<TicketEntryEntity[]> {
     return this.findMany({ drawId, tenantId, accountId });
   }
+
+  /**
+   * Phát hiện kỳ T có người trúng Jackpot (JP1/JP2) với kết quả ĐỀ XUẤT hay không
+   * — dùng bởi `DetectResettleBoundariesUseCase` ở bước pre-flight.
+   *
+   * Chạy trên BO API (Next.js/Vercel) qua `TriggerResettleUseCase` → BẮT BUỘC
+   * sub-second cả khi kỳ có hàng trăm nghìn → 1 triệu entries (jackpot game).
+   *
+   * **Vì sao KHÔNG dùng aggregation `$unwind` + `$setIntersection`:** cách đó phải
+   * đọc + tính CPU trên TOÀN BỘ entries của kỳ (kể cả board thua); worst case
+   * "không có winner" (TYPE_A — phổ biến nhất) phải quét hết mới trả `false`.
+   * COLLSCAN/CPU tuyến tính theo số entries → rủi ro timeout.
+   *
+   * **Cách dùng ở đây — index-only `$elemMatch` + `$all`:** điều kiện JP cực hiếm
+   * và biểu diễn được bằng containment trên multikey index
+   * `entrySummary.boards.mainNumbers`. MongoDB lọc bằng IXSCAN, chỉ chạm vào
+   * documents thực sự chứa các số đó (gần như 0 khi không có winner) →
+   * `count({ limit: 1 })` trả về tức thì, KHÔNG phụ thuộc tổng số entries.
+   *
+   * **Tối ưu `$or` (tránh 7 IXSCAN):** thay vì 1 (JP1) + 6 (JP2) clause top-level
+   * — mỗi cái 1 IXSCAN riêng phải dedup `_id` — gom JP2 vào MỘT `$elemMatch` duy
+   * nhất, bound bằng `bonus` (1 số cụ thể, chỉ ~1/55 board chứa → cực chọn lọc).
+   * Chỉ các board chứa bonus mới eval tiếp `$or` 6 tổ hợp 5-số (đã ở RAM, KHÔNG
+   * thêm IXSCAN). Kết quả: chỉ 2 clause top-level (JP1 + JP2), 2 IXSCAN thay vì 7.
+   *
+   * **Luật match** (theo `prize-tiers.ts` + `match-result.ts`):
+   * - JP1 = 1 line trùng đúng 6/6 số chính → tồn tại board chứa ĐỦ cả 6 số winning.
+   * - JP2 = 1 line trùng 5/6 + bonus → tồn tại board chứa bonus + ít nhất 5/6 winning.
+   *   Bonus LUÔN ∉ winningMain (quay từ 49 bóng còn lại) nên bonus là số thứ 6 độc
+   *   lập; "5 trong 6" = 6 tổ hợp con (bỏ lần lượt từng số winning).
+   *
+   * **Bao N:** board chọn N=5–18 số. `$all` containment đúng tự nhiên — board phải
+   * chứa đủ các phần tử trong tổ hợp; bao5 (5 số) không bao giờ thỏa JP1 (cần 6).
+   * `$elemMatch` bảo đảm các số nằm trên CÙNG 1 board (không gộp số từ board khác).
+   *
+   * Hit index `{ drawId, status, "entrySummary.boards.mainNumbers" }` (compound,
+   * multikey trên field cuối). Hỗ trợ Settled (resettle lần đầu) + Scheduled
+   * (entries đã bị PrepareResettle reset nhưng chưa re-settle — retry detection).
+   *
+   * @param drawId - Kỳ quay cần check
+   * @param proposedWinningMain - 6 số chính đề xuất (string zero-padded "01"-"55")
+   * @param proposedBonusNumber - Bonus number đề xuất (string zero-padded)
+   * @param statuses - Các status entry cần quét (vd. [Settled, Scheduled])
+   * @returns true nếu tồn tại ít nhất 1 board trúng JP1 hoặc JP2 theo kết quả đề xuất
+   */
+  async existsJpWinnerForDraw(
+    drawId: string,
+    proposedWinningMain: string[],
+    proposedBonusNumber: string,
+    statuses: string[],
+  ): Promise<boolean> {
+    // JP1: tồn tại 1 board chứa đủ cả 6 số winning (→ 6/6 main match).
+    const jp1Clause = {
+      "entrySummary.boards": {
+        $elemMatch: { mainNumbers: { $all: proposedWinningMain } },
+      },
+    };
+
+    // JP2: tồn tại 1 board chứa bonus VÀ ít nhất 5/6 số winning.
+    // "5/6" = bỏ lần lượt từng số → 6 tổ hợp; board chỉ cần thỏa MỘT trong số đó.
+    // Bound IXSCAN = `mainNumbers: bonus` (1 số cụ thể, chọn lọc cao); 6 tổ hợp
+    // 5-số nằm trong $or NỘI BỘ $elemMatch → eval trên candidate đã fetch, không
+    // sinh thêm IXSCAN. Bonus ∉ winningMain (luật chơi) nên không trùng số nào.
+    // Lặp từng số winning, tạo 6 tổ hợp 5-số, và gom vào $or.
+    const jp2FiveOfSixCombos = proposedWinningMain.map((_, dropIdx) => ({
+      mainNumbers: { $all: proposedWinningMain.filter((_, i) => i !== dropIdx) },
+    }));
+    const jp2Clause = {
+      "entrySummary.boards": {
+        $elemMatch: {
+          mainNumbers: proposedBonusNumber,
+          $or: jp2FiveOfSixCombos,
+        },
+      },
+    };
+
+    // Một query duy nhất, 1 roundtrip, 2 clause top-level (JP1 + JP2).
+    // count limit:1 dừng ngay khi gặp winner đầu tiên.
+    return this.exists({
+      drawId,
+      status: { $in: statuses },
+      $or: [jp1Clause, jp2Clause],
+    });
+  }
 }

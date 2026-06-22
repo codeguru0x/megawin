@@ -1,0 +1,7 @@
+resettle-prepare:
+  handler: src/handlers/resettle/prepare-resettle.handler
+  timeout: 900
+
+resettle-enqueue-reversals:
+  handler: src/handlers/resettle/enqueue-reversals.handler
+  timeout: 900

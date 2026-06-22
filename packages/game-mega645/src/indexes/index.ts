@@ -141,6 +141,13 @@ export const MEGA645_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: Mega645Collections.Draws,
+    key: { status: 1, drawId: 1 },
+    options: { name: "idx_status_drawId" },
+    purpose:
+      "Resettle cascade guard: findPendingResettleBeforeDraw (status ∈ {Published,Settling} + drawId < T) — ESR equality+range, IXSCAN không scan kỳ Settled cũ",
+  },
+  {
+    collection: Mega645Collections.Draws,
     key: { drawDate: 1, drawNo: 1 },
     options: { name: "idx_drawDate_drawNo" },
     purpose: "UI danh sách draws theo ngày",
@@ -184,5 +191,20 @@ export const MEGA645_INDEXES: readonly IndexSpec[] = [
     key: { status: 1, closedAt: -1 },
     options: { name: "idx_status_closedAt" },
     purpose: "Lịch sử cycles",
+  },
+
+  // ───── mega645JackpotCycleEntries (Cycle Ledger) ─────
+  {
+    collection: Mega645Collections.JackpotCycleEntries,
+    key: { cycleNo: 1, seq: 1 },
+    options: { unique: true, name: "idx_cycleNo_seq_unique" },
+    purpose: "listByCycle, findLatestInCycle, upsertEntry — sort chronological trong cycle",
+  },
+  {
+    collection: Mega645Collections.JackpotCycleEntries,
+    key: { drawId: 1 },
+    options: { unique: true, name: "idx_drawId_unique" },
+    purpose:
+      "findByDraw lookup theo kỳ; findSettledChainAfterDraw + findClosingJpBeforeDraw — range scan drawId (cascade B2 xuyên cycle, resolve opening theo thời gian)",
   },
 ];

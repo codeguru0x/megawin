@@ -78,3 +78,40 @@ export interface VoidedEntryForDispatch {
   /** UUIDv7 sinh tại void time — idempotency key để worker gửi tenant. */
   refundTx: string;
 }
+
+// ─────────────────────────────────────────────
+// Resettle DTOs
+// ─────────────────────────────────────────────
+
+/**
+ * Minimal projection của settled entry có payout > 0 — cần reversal trước khi resettle.
+ *
+ * Chỉ entries `Settled` có `payout.payoutAmount > 0` mới cần reversal —
+ * vì chỉ những entries đó từng phát sinh payout dispatch ở phiên settle trước.
+ * Entries thua (payoutAmount = 0) không cần reversal, chỉ cần reset về Scheduled.
+ */
+export interface ReversalCandidate {
+  /** Entry _id (hex string). */
+  id: string;
+  /** payout.payoutAmount cũ — sẽ trở thành reversalAmount để debit ngược. */
+  payoutAmount: number;
+}
+
+/**
+ * Shape tối thiểu trả về cho `getEntriesWithReversalForDispatch` — dùng bởi
+ * `EnqueueReversalsUseCase` để build reversal `TenantDispatchOrderDoc`.
+ *
+ * Chỉ chứa fields cần thiết cho reversal dispatch.
+ */
+export interface ReversalEntryForDispatch {
+  /** Entry _id (hex string). */
+  id: string;
+  tenantId: string;
+  accountId: string;
+  username: string;
+  ticketNo: string;
+  /** Số tiền debit lại tenant (VND) = `reversal.reversalAmount`. */
+  reversalAmount: number;
+  /** Idempotency key cho reversal dispatch (UUIDv7). */
+  reversalTx: string;
+}

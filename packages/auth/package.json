@@ -33,7 +33,7 @@
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@types/aws-lambda": "^8.10.161",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.9.4",
     "typescript": "^6.0.3"
   }
 }

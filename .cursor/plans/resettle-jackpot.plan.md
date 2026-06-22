@@ -1,3 +1,10 @@
+---
+name: ""
+overview: ""
+todos: []
+isProject: false
+---
+
 # Resettle Plan 2 — Game Có Jackpot
 
 > **Scope**: Lotto 5/35, Mega 6/45, Power 6/55
@@ -1150,6 +1157,3 @@ for (const d of drawsInCycle) {
 ---
 
 **END Plan 2 — Resettle Jackpot.**
-
-
-

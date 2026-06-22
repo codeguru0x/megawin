@@ -5,16 +5,15 @@ import { CompanyRole } from "@megawin/identity/entities";
 import { UpdateScheduleUseCase } from "@megawin/game-power655-application/use-cases/draws";
 
 const scheduleSchema = z.object({
-  salesOpenAt: z.string().datetime({
+  salesOpenAt: z.iso.datetime({
     offset: true,
     message: "Thời gian mở bán phải là ISO datetime.",
   }),
-  salesCloseAt: z.string().datetime({
+  salesCloseAt: z.iso.datetime({
     offset: true,
     message: "Thời gian đóng bán phải là ISO datetime.",
   }),
-  drawTime: z
-    .string()
+  drawTime: z.iso
     .datetime({ offset: true, message: "Giờ quay số phải là ISO datetime." })
     .optional(),
 });

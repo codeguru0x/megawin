@@ -14,5 +14,6 @@ export * from "./entry";
 export * from "./line";
 export * from "./draw";
 export * from "./jackpot-cycle";
+export * from "./jackpot-cycle-entry";
 export * from "./report";
 export * from "./feed-types";

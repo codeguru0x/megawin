@@ -57,15 +57,15 @@
     "@megawin/shared": "workspace:*",
     "jose": "^6.2.2",
     "lodash": "^4.18.1",
-    "mongodb": "^7.1.1"
+    "mongodb": "^7.3.0"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
-    "@types/node": "^25.5.0",
-    "next": "^16.2.6",
+    "@types/node": "^25.9.4",
+    "next": "^16.2.9",
     "typescript": "^6.0.3",
     "vite": "latest",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.9"
   }
 }

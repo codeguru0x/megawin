@@ -18,12 +18,21 @@ import {
   Loader2,
   CalendarCheck,
   ClipboardPen,
+  MoreVertical,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawStatusBadge } from "@/components/games/max3d/draw-status-badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
 import type { DrawSelectorItem } from "../../use-operations";
@@ -469,7 +478,7 @@ export function DrawCommandCenter({
       <div className="px-5 py-4">
         {/* Row 1: Identity */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div className="flex items-start gap-3 min-w-0">
+          <div className="flex items-start gap-3 min-w-0 flex-1">
             <div
               className={cn(
                 "relative flex size-8 items-center justify-center rounded-lg shrink-0 mt-0.5 shadow-sm",
@@ -512,6 +521,31 @@ export function DrawCommandCenter({
               </div>
             </div>
           </div>
+          {isSettled && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 shrink-0 text-muted-foreground"
+                >
+                  <MoreVertical className="size-4" />
+                  <span className="sr-only">Thao tác khác</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Thao tác khác</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link
+                    href={`/games/max3d/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}
+                  >
+                    <FileText className="size-3.5" /> Xem báo cáo
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         {/* Row 2: Stepper */}
@@ -594,14 +628,6 @@ export function DrawCommandCenter({
               )}
             </div>
             <div className="flex items-center gap-1">
-              {isSettled && (
-                <Link
-                  href={`/games/max3d/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}
-                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5"
-                >
-                  <FileText className="size-3.5" /> Xem báo cáo
-                </Link>
-              )}
               {canEdit && (
                 <Button
                   variant="ghost"

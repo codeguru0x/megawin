@@ -186,6 +186,40 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
     options: { name: "idx_version" },
     purpose: "Feed sync worker: scan entries thay đổi kể từ version cuối cùng đã sync",
   },
+  {
+    collection: Lotto535Collections.TicketEntries,
+    key: { drawId: 1, "reversal.reversalTx": 1 },
+    options: { name: "idx_draw_reversalTx", sparse: true },
+    purpose: "EnqueueReversals: cursor pagination theo reversalTx ASC",
+  },
+  {
+    collection: Lotto535Collections.TicketEntries,
+    key: {
+      drawId: 1,
+      status: 1,
+      "entrySummary.boards.mainNumbers": 1,
+    },
+    options: { name: "idx_draw_status_boardNumbers" },
+    purpose:
+      "Resettle pre-flight: existsJpWinnerForDraw match JP winner bằng $elemMatch+$all (IXSCAN multikey, không scan toàn kỳ)",
+  },
+
+  // ─────────────────────────────────────────
+  // lotto535JackpotCycleEntries (Cycle Ledger)
+  // ─────────────────────────────────────────
+  {
+    collection: Lotto535Collections.JackpotCycleEntries,
+    key: { cycleNo: 1, seq: 1 },
+    options: { unique: true, name: "idx_cycle_seq_unique" },
+    purpose: "Sort chronological trong cycle + unique vị trí kỳ",
+  },
+  {
+    collection: Lotto535Collections.JackpotCycleEntries,
+    key: { drawId: 1 },
+    options: { unique: true, name: "idx_drawId_unique" },
+    purpose:
+      "Lookup ledger theo kỳ; findSettledChainAfterDraw + findClosingBeforeDraw — range scan drawId (cascade B2 xuyên cycle, resolve opening theo thời gian)",
+  },
 
   // ─────────────────────────────────────────
   // lotto535DailyReports
@@ -242,7 +276,7 @@ export const LOTTO535_INDEXES: readonly IndexSpec[] = [
     key: { status: 1, drawId: -1 },
     options: { name: "idx_status_drawId_desc" },
     purpose:
-      "Player draw results: filter settled draws + cursor pagination theo drawId (upper bound từ ngày)",
+      "Player draw results: filter settled draws + cursor pagination theo drawId. CŨNG phục vụ resettle cascade guard findPendingResettleBeforeDraw (status ∈ {Published,Settling} + drawId < T, sort drawId DESC) — ESR equality+range, IXSCAN không scan kỳ Settled cũ",
   },
   {
     collection: Lotto535Collections.Draws,

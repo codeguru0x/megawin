@@ -4,6 +4,8 @@ export { OpenSalesUseCase } from "./open-sales";
 export { CloseSalesUseCase } from "./close-sales";
 export { PublishResultUseCase } from "./publish-result";
 export { TriggerSettleUseCase } from "./trigger-settle";
+export { TriggerResettleUseCase } from "./trigger-resettle";
+export { ReopenForCascadeUseCase } from "./reopen-for-cascade";
 export { ListDrawsUseCase } from "./list-draws";
 export { GetDrawDetailUseCase } from "./get-draw-detail";
 export { GetCurrentDrawUseCase } from "./get-current-draw";
@@ -11,10 +13,13 @@ export { VoidDrawUseCase } from "./void-draw";
 export { AutoEnrollEntriesUseCase } from "./auto-enroll-entries";
 export { UpdateScheduleUseCase } from "./update-schedule";
 
+export { DetectResettleBoundariesUseCase } from "../resettle/detect-boundaries";
 export type {
-  AutoEnrollInput,
-  AutoEnrollOutput,
-} from "./auto-enroll-entries";
+  DetectResettleBoundariesInput,
+  DetectResettleBoundariesOutput,
+} from "../resettle/detect-boundaries";
+
+export type { AutoEnrollInput, AutoEnrollOutput } from "./auto-enroll-entries";
 
 export type {
   GetCurrentDrawInput,
@@ -35,6 +40,12 @@ export type {
   PublishResultOutput,
   TriggerSettleInput,
   TriggerSettleOutput,
+  TriggerResettleInput,
+  TriggerResettleOutput,
+  ReopenForCascadeInput,
+  ReopenForCascadeOutput,
+  ResettlePreflightInput,
+  ResettlePreflightOutput,
   ListDrawsInput,
   ListDrawsOutput,
   DrawSummary,
@@ -42,12 +53,6 @@ export type {
   GetDrawDetailOutput,
 } from "./dto/draw.dto";
 
-export type {
-  UpdateScheduleInput,
-  UpdateScheduleOutput,
-} from "./update-schedule";
+export type { UpdateScheduleInput, UpdateScheduleOutput } from "./update-schedule";
 
-export type {
-  VoidDrawInput,
-  VoidDrawOutput,
-} from "./void-draw";
+export type { VoidDrawInput, VoidDrawOutput } from "./void-draw";

@@ -2,6 +2,7 @@ export { DrawMapper } from "./draw-mapper";
 export { EntryMapper } from "./entry-mapper";
 export { GameConfigMapper } from "./global-config-mapper";
 export { JackpotCycleMapper } from "./jackpot-cycle-mapper";
+export { JackpotCycleEntryMapper } from "./jackpot-cycle-entry-mapper";
 export { TenantConfigMapper } from "./tenant-config-mapper";
 export { TicketMapper } from "./ticket-mapper";
 export { SettleDrawReportMapper } from "./settle-draw-report-mapper";

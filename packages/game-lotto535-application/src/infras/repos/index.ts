@@ -16,6 +16,8 @@ export { EntryRepository } from "./entry-repo";
 export { PlayerDailyEntryRepository } from "./player-daily-entry-repo";
 export { LineRepository } from "./line-repo";
 export { JackpotCycleRepository } from "./jackpot-cycle-repo";
+export { JackpotCycleEntryRepository } from "./jackpot-cycle-entry-repo";
+export { EntryResettleRepository } from "./entry-resettle-repo";
 export type { JackpotCycleEntity } from "@megawin/game-lotto535/entities";
 export { SettleDrawReportRepository } from "./settle-draw-report-repo";
 export { SettleTenantReportRepository } from "./settle-tenant-report-repo";

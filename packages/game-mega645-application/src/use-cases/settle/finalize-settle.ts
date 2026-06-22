@@ -39,6 +39,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { JackpotCycleCloseReason } from "@megawin/game-mega645/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import { JackpotCycleEntryRepository } from "../../infras/repos/jackpot-cycle-entry-repo";
 import type { SettleConfig, SettleContextWithFinancials } from "./types";
 
 export interface FinalizeSettleResult {
@@ -74,6 +75,15 @@ export interface FinalizeSettleResult {
  * ─────────────────────────────────────────────────────────────────────────────
  * closingAmount = openingAmount + contribution → tích luỹ sang kỳ sau.
  * updateCycleStats dùng giá trị tuyệt đối (không cộng dồn từ activeCycle) → idempotent.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * CYCLE LEDGER + RESETTLE
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Bước 2 LUÔN upsert 1 entry vào mega645_jackpot_cycle_entries (cả settle lần đầu
+ * lẫn resettle) — single source of truth opening/closing per-draw.
+ * Khi có `resettleContext`:
+ *   - skipCycleUpdate=true (Type B1/B2) → BỎ QUA updateJackpotCycle (DBA chốt cycle).
+ *   - cascadeOpeningUpdate=true (cascade B2) → upsertEntry ghi đè openingJp ledger.
  */
 export class FinalizeSettleUseCase extends InternalUseCase<
   SettleContextWithFinancials,
@@ -81,9 +91,10 @@ export class FinalizeSettleUseCase extends InternalUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
+  private readonly cycleEntryRepo = new JackpotCycleEntryRepository();
 
   protected async execute(input: SettleContextWithFinancials): Promise<FinalizeSettleResult> {
-    const { drawId, jackpotOpeningAmount, financials } = input;
+    const { drawId, jackpotOpeningAmount, financials, resettleContext } = input;
     const closingAmount = jackpotOpeningAmount + financials.jackpotContribution;
 
     // ── Bước 1: Chuyển draw status settling → settled + ghi jackpot snapshot ──
@@ -104,8 +115,40 @@ export class FinalizeSettleUseCase extends InternalUseCase<
       }
     }
 
-    // ── Bước 2: Cập nhật JackpotCycle ─────────────────────────────────────────
-    await this.updateJackpotCycle(input);
+    // ── Bước 2: Upsert Cycle Ledger entry (luôn chạy — cả lần đầu lẫn resettle) ──
+    // Ghi/cập nhật immutable record per-draw vào mega645_jackpot_cycle_entries.
+    // `seq` = cycleDrawCountBefore + 1 = vị trí kỳ này trong cycle (1-based).
+    // Settle lần đầu: upsert tạo entry mới.
+    // Resettle Type A: upsert cập nhật entry cũ (jpContribution mới, hasJpWinner mới,
+    //   closingJp mới) — openingJp KHÔNG đổi ($setOnInsert giữ nguyên).
+    // Cascade B2: cascadeOpeningUpdate=true → ghi đè cả openingJp (= closing kỳ trước).
+    await this.cycleEntryRepo.upsertEntry(
+      {
+        cycleNo: input.config.cycleNo,
+        drawId,
+        drawNo: input.drawNo,
+        seq: input.config.cycleDrawCountBefore + 1,
+        openingJp: jackpotOpeningAmount,
+        jpContribution: financials.jackpotContribution,
+        closingJp: closingAmount,
+        hasJpWinner: financials.hasJackpotWinner,
+        settledAt: new Date(),
+      },
+      // Cascade B2 (kỳ T+n): opening = closing kỳ trước vừa đổi → ghi đè opening
+      // trong ledger thay vì giữ $setOnInsert. Các trường hợp khác: opening bất biến.
+      resettleContext?.cascadeOpeningUpdate ?? false,
+    );
+
+    // ── Bước 3: Cập nhật JackpotCycle ─────────────────────────────────────────
+    // skipCycleUpdate = true (Type B1/B2): DBA can thiệp cycle thủ công → bỏ qua.
+    // skipCycleUpdate = false hoặc undefined (Type A + settle lần đầu): cập nhật bình thường.
+    if (resettleContext?.skipCycleUpdate) {
+      console.log(
+        `[Resettle] skipCycleUpdate=true (scenario=${resettleContext.scenario}) → bỏ qua updateJackpotCycle. DBA sẽ cập nhật cycle thủ công.`,
+      );
+    } else {
+      await this.updateJackpotCycle(input);
+    }
 
     return {
       drawId,
