@@ -181,6 +181,32 @@ export type DrawStatus = (typeof DrawStatus)[keyof typeof DrawStatus];
 
 export const DRAW_STATUS_VALUES = Object.values(DrawStatus);
 
+/**
+ * Các trạng thái "ĐÃ HOÀN THÀNH" của một kỳ quay — kỳ đã đi tới điểm cuối lifecycle.
+ *
+ * - `Settled`: đã kết sổ xong (đã trả thưởng / đối soát).
+ * - `Void`: đã huỷ kỳ xong (đã void entries + hoàn tiền).
+ *
+ * Đây là **source of truth** cho khái niệm "hoàn thành". Mọi nơi cần phân biệt
+ * kỳ hoàn thành vs chưa hoàn thành (guard thứ tự kết sổ, báo cáo, …) phải derive
+ * từ đây thay vì liệt kê tay — để khi thêm status mới không bị sót.
+ */
+export const DRAW_COMPLETED_STATUSES: readonly DrawStatus[] = [DrawStatus.Settled, DrawStatus.Void];
+
+/**
+ * Các trạng thái "CHƯA HOÀN THÀNH" — derive tự động = tất cả status − completed.
+ *
+ * FAIL-SAFE: thêm bất kỳ `DrawStatus` mới nào trong tương lai → mặc định rơi vào
+ * nhóm này (vì không nằm trong {@link DRAW_COMPLETED_STATUSES}) → các guard coi nó
+ * là "kỳ còn dở" và chặn. Tránh bug âm thầm bỏ sót status mới.
+ *
+ * Dùng trong query `$in` (không phải `$nin`) để giữ tight index bound — vừa an
+ * toàn vừa tối ưu IXSCAN.
+ */
+export const DRAW_UNFINISHED_STATUSES: readonly DrawStatus[] = DRAW_STATUS_VALUES.filter(
+  (status) => !DRAW_COMPLETED_STATUSES.includes(status),
+);
+
 // ─────────────────────────────────────────────
 // Draw Result Source (dùng chung cho tất cả game)
 // ─────────────────────────────────────────────

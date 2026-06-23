@@ -1,4 +1,4 @@
-import { DrawStatus } from "@megawin/game-core/entities";
+import { DrawStatus, DRAW_UNFINISHED_STATUSES } from "@megawin/game-core/entities";
 import { subDays, formatVNDate } from "@megawin/shared/utils";
 import { Max3dproCollections } from "@megawin/game-max3dpro/entities";
 import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
@@ -272,6 +272,38 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
       },
     );
   }
+  /**
+   * Tìm kỳ quay CHƯA HOÀN THÀNH gần nhất TRƯỚC drawId (theo thứ tự thời gian).
+   *
+   * Guard thứ tự kết sổ: phải settle TUẦN TỰ theo thời gian (drawId tăng dần).
+   * Không cho kết sổ kỳ T nếu còn kỳ trước đó (drawId < T) chưa "hoàn thành".
+   * "Hoàn thành" = đã kết sổ (settled) HOẶC đã huỷ (void) — xem
+   * {@link DRAW_COMPLETED_STATUSES}. Mọi status khác coi là chưa hoàn thành và chặn.
+   *
+   * FAIL-SAFE: tập status truy vấn là {@link DRAW_UNFINISHED_STATUSES} — derive tự
+   * động = tất cả DrawStatus − completed. Thêm status mới trong tương lai → mặc định
+   * rơi vào nhóm "chưa hoàn thành" → guard vẫn chặn, không bị sót.
+   *
+   * Tối ưu DB: dùng `$in` (KHÔNG dùng `$nin` vì negation không tạo được tight index
+   * bound) → equality prefix trên index `{ status: 1, drawId: 1 }` (idx_status_drawId).
+   * Sort `drawId: -1` lấy kỳ dở GẦN T nhất; `findOne` tự thêm limit 1 → IXSCAN dừng
+   * ngay record đầu.
+   *
+   * @param drawId - upper bound (exclusive). Chỉ xét kỳ có drawId < drawId này.
+   * @returns kỳ chưa hoàn thành gần T nhất, hoặc null nếu mọi kỳ trước đã settled/void.
+   */
+  async findUnfinishedDrawBefore(drawId: string): Promise<DrawEntity | null> {
+    return await this.findOne(
+      {
+        drawId: { $lt: drawId },
+        status: { $in: [...DRAW_UNFINISHED_STATUSES] },
+      },
+      // Chỉ cần drawId + status cho thông báo lỗi → projection giảm payload:
+      // deserialize/transfer 3 field nhỏ (kèm _id mapper cần) thay vì nguyên doc.
+      { sort: { drawId: -1 }, projection: { drawId: 1, status: 1 } },
+    );
+  }
+
   async triggerSettle(drawId: string): Promise<DrawEntity | null> {
     const allowed = VALID_TRANSITIONS[DrawStatus.Published];
     if (!allowed?.has(DrawStatus.Settling)) return null;

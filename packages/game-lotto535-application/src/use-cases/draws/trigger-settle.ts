@@ -59,6 +59,18 @@ export class TriggerSettleUseCase extends NextApiUseCase<TriggerSettleInput, Tri
       );
     }
 
+    // Guard thứ tự kết sổ: phải settle TUẦN TỰ theo thời gian. Nếu còn kỳ trước
+    // đó (drawId < kỳ này) CHƯA HOÀN THÀNH (chưa settled và chưa void) → chặn,
+    // bắt buộc hoàn tất kỳ trước rồi mới kết sổ kỳ này. Tránh trả thưởng/đối soát
+    // sai thứ tự thời gian (không thể kết sổ kỳ chiều khi kỳ sáng còn dở).
+    const unfinishedPrior = await this.drawRepo.findUnfinishedDrawBefore(input.drawId);
+    if (unfinishedPrior) {
+      throw new AppException(
+        "DRAW_SETTLE_ORDER",
+        `Không thể kết sổ – kỳ quay ${unfinishedPrior.drawId} trước đó chưa hoàn thành. Phải kết sổ hoặc huỷ kỳ trước theo thứ tự.`,
+      );
+    }
+
     // Chỉ kết sổ được khi đang ở Published (lần đầu) hoặc Settling (retry
     // idempotent sau khi startExecution fail giữa chừng). Mọi status khác —
     // Scheduled/SalesOpen/SalesClosed/Settled/Voiding/Void — reject ngay,

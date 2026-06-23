@@ -30,9 +30,11 @@ export interface VoidDrawOutput extends DrawTransitionOutput {
  *   1. Validate draw status (scheduled/salesClosed/published)
  *   2. CẤM void nếu draw đã từng kết sổ (`settledAt != null`) — kỳ đã kết sổ
  *      chỉ được kết sổ lại (resettle), không được huỷ.
- *   3. Transition draw → void (atomic)
+ *   3. Guard thứ tự: chặn nếu còn kỳ trước (drawId nhỏ hơn) chưa hoàn thành
+ *      (chưa settled và chưa void) — bắt buộc đóng kỳ cũ nhất trước.
+ *   4. Transition draw → void (atomic)
  *      - Nếu draw đã ở void (retry) → skip transition
- *   4. Start Void Step Function (deterministic name → idempotent)
+ *   5. Start Void Step Function (deterministic name → idempotent)
  *
  * Idempotent: staff nhấn lại bao nhiêu lần cũng an toàn.
  * Nếu SF đã đang chạy (cùng deterministic name), AWS ném `ExecutionAlreadyExists`
@@ -59,6 +61,20 @@ export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutpu
           "DRAW_INVALID_TRANSITION",
           `Không thể huỷ kỳ quay đã kết sổ (${input.drawId}). ` +
             `Kỳ đã kết sổ chỉ có thể kết sổ lại sau khi sửa kết quả.`,
+        );
+      }
+
+      // Guard thứ tự đóng kỳ: phải xử lý TUẦN TỰ theo thời gian. Nếu còn kỳ
+      // trước đó (drawId < kỳ này) CHƯA HOÀN THÀNH (chưa settled và chưa void)
+      // → chặn, bắt buộc đóng kỳ cũ nhất trước. Void là một cách "đóng kỳ" như
+      // settle, nên cũng phải theo thứ tự — không được huỷ kỳ chiều khi kỳ sáng
+      // còn dở. Không deadlock: operator luôn xử lý kỳ cũ nhất trước, kỳ trước
+      // nó chắc chắn đã hoàn thành.
+      const unfinishedPrior = await this.drawRepo.findUnfinishedDrawBefore(input.drawId);
+      if (unfinishedPrior) {
+        throw new AppException(
+          "DRAW_VOID_ORDER",
+          `Không thể huỷ – kỳ quay ${unfinishedPrior.drawId} trước đó chưa hoàn thành. Phải kết sổ hoặc huỷ các kỳ trước theo thứ tự.`,
         );
       }
 
