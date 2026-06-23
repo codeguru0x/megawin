@@ -227,7 +227,7 @@ function getNextAction(
         };
       }
       return {
-        label: "Kết sổ (Settle)",
+        label: "Kết sổ",
         handler: handlers.onTriggerSettle,
         icon: ChevronRight,
         className: "",

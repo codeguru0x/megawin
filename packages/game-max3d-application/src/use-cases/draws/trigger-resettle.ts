@@ -62,7 +62,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
 
     // ── Step 1: validate draw + result ───────────────────────────────────
     const draw = await this.drawRepo.getDrawById(drawId);
-    
+
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${drawId} không tồn tại.`);
     }
@@ -174,7 +174,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
       const settledAtToken = draw.settledAt.getTime();
       await startExecution({
         stateMachineArn: input.RESETTLE_SFN_ARN,
-        name: `${toExecutionName(drawId)}-resettle-${settledAtToken}`,
+        name: `${toExecutionName(drawId)}-${settledAtToken}`,
         input: {
           drawId,
           resettleId,

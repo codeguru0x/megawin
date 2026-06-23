@@ -20,8 +20,8 @@ Và kỳ này là **kỳ mới nhất đã kết sổ** — phía sau nó chưa 
 ## Các bước thực hiện
 
 1. **Báo trước cho Quản trị viên (DBA)**: sắp có kết sổ lại loại Type B1 để DBA chuẩn bị.
-2. Mở màn **Vận hành** của Mega 6/45, chọn kỳ cần sửa, bấm **Kết sổ lại** và nhập kết quả mới.
-3. Hệ thống xác nhận đây là **Type B1** — bấm tiếp tục.
+2. Mở màn **Vận hành** của Mega 6/45, chọn kỳ cần sửa (đang ở trạng thái **Đã kết sổ**), bấm **Sửa kết quả** và nhập kết quả mới, rồi công bố. Kỳ chuyển sang **Đã công bố**.
+3. Nút **Kết sổ lại** (màu cam) xuất hiện. Bấm **Kết sổ lại** — hệ thống hiển thị kết quả vừa sửa để rà soát và xác nhận đây là **Type B1**. Bấm tiếp tục.
 4. Đợi hệ thống chạy xong, trạng thái kỳ chuyển về **Đã kết sổ**.
 5. **Báo Quản trị viên** rằng kỳ đã kết sổ xong để DBA cập nhật chu kỳ Jackpot.
 6. Đợi Quản trị viên **xác nhận đã cập nhật xong**.

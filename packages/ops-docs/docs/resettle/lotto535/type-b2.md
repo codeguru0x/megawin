@@ -20,15 +20,15 @@ Hệ thống sẽ cho biết danh sách các kỳ cần xử lý và **đúng th
 ## Các bước thực hiện (lặp cho từng kỳ, đúng thứ tự)
 
 1. Kết sổ lại kỳ hiện tại trên màn hình **Vận hành**:
-   - Kỳ **đầu tiên**: nhập kết quả mới.
-   - Các kỳ **sau**: số quay **không đổi** nên hệ thống không tự mở luồng kết sổ lại. Bấm nút **"Mở để kết sổ lại"** (màu cam) để đưa kỳ vào luồng, rồi bấm **"Kết sổ lại"** như bình thường (tiền Jackpot và việc chia giải có thể đổi dù số quay giữ nguyên).
+   - Kỳ **đầu tiên**: bấm **Sửa kết quả**, nhập kết quả mới rồi công bố. Sau đó nút **Kết sổ lại** (màu cam) xuất hiện — bấm để chạy.
+   - Các kỳ **sau**: số quay **không đổi** nên không cần (và không được) sửa kết quả. Hệ thống không tự mở luồng kết sổ lại — mở **menu ⋮ (góc phải trên, cạnh tiêu đề kỳ)** rồi chọn **"Mở để kết sổ lại"** để đưa kỳ vào luồng. Sau đó nút **"Kết sổ lại"** (màu cam) xuất hiện ở thanh thao tác — bấm để chạy (tiền Jackpot và việc chia giải có thể đổi dù số quay giữ nguyên).
 2. Đợi hệ thống báo kỳ này **Đã kết sổ**.
 3. **Báo Quản trị viên** cập nhật chu kỳ Jackpot cho kỳ vừa xong.
 4. **ĐỢI Quản trị viên xác nhận xong** rồi mới chuyển sang kỳ kế tiếp.
 
 Lặp lại cho đến hết danh sách.
 
-> Lưu ý về nút **"Mở để kết sổ lại"**: chỉ xuất hiện ở các kỳ **Đã kết sổ** có số quay không đổi. Nút này chỉ **mở cổng** kết sổ lại — KHÔNG tự kiểm tra kỳ có thuộc chuỗi hay không. Vì vậy **chỉ bấm khi Quản trị viên đã chỉ định kỳ này nằm trong danh sách cascade**. Sau khi mở, vẫn phải bấm **"Kết sổ lại"** để chạy.
+> Lưu ý về mục **"Mở để kết sổ lại"**: nằm trong **menu ⋮ ở góc phải trên** của khung kỳ, chỉ xuất hiện ở các kỳ **Đã kết sổ** có số quay không đổi. Mục này chỉ **mở cổng** kết sổ lại — KHÔNG tự kiểm tra kỳ có thuộc chuỗi hay không. Vì vậy **chỉ chọn khi Quản trị viên đã chỉ định kỳ này nằm trong danh sách cascade**. Sau khi mở, vẫn phải bấm **"Kết sổ lại"** để chạy.
 
 ## Dấu hiệu hoàn tất
 

@@ -204,8 +204,7 @@ function ScenarioCard({ preflight }: { preflight: ResettlePreflightOutput }) {
           )}
           <p className="text-xs text-orange-700 dark:text-orange-300 leading-relaxed">
             Bạn <span className="font-semibold">PHẢI phối hợp Quản trị hệ thống</span> chốt Jackpot
-            Cycle sau mỗi kỳ. Resettle kỳ sau khi kỳ trước chưa xong sẽ bị chặn
-            (RESETTLE_CASCADE_ORDER).
+            Cycle sau mỗi kỳ. Resettle kỳ sau khi kỳ trước chưa xong sẽ bị chặn.
           </p>
         </div>
       )}
@@ -321,9 +320,9 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
                 <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-3">
                   <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
                   <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
-                    Đây là kết quả <span className="font-semibold">đã sửa</span> của kỳ này. Vui lòng
-                    kiểm tra lại lần cuối trước khi phân tích tác động. Nếu sai, đóng dialog và bấm{" "}
-                    <span className="font-semibold">"Sửa kết quả"</span> để cập nhật lại.
+                    Đây là kết quả <span className="font-semibold">đã sửa</span> của kỳ này. Vui
+                    lòng kiểm tra lại lần cuối trước khi phân tích tác động. Nếu sai, đóng dialog và
+                    bấm <span className="font-semibold">"Sửa kết quả"</span> để cập nhật lại.
                   </p>
                 </div>
 
@@ -427,7 +426,7 @@ export function ResettleAction({ draw, open, onOpenChange, currentResult }: Rese
                     </>
                   ) : preflightResult?.scenario === "TYPE_B2" ? (
                     <>
-                      <AlertTriangle className="size-3.5 mr-1.5" /> Cascade kỳ này — Kết sổ lại
+                      <AlertTriangle className="size-3.5 mr-1.5" /> Đã báo Admin — Kết sổ lại
                     </>
                   ) : (
                     <>

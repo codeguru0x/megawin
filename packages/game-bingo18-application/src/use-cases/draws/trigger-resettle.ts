@@ -167,7 +167,7 @@ export class TriggerResettleUseCase extends NextApiUseCase<
       const settledAtToken = draw.settledAt.getTime();
       await startExecution({
         stateMachineArn: input.RESETTLE_SFN_ARN,
-        name: `${toExecutionName(drawId)}-resettle-${settledAtToken}`,
+        name: `${toExecutionName(drawId)}-${settledAtToken}`,
         input: {
           drawId,
           resettleId,

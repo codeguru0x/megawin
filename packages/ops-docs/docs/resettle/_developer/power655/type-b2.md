@@ -79,7 +79,7 @@ sequenceDiagram
 
 **Cách 1 (khuyến nghị) — UI / endpoint `resettle-reopen`:**
 
-Trên màn hình Vận hành, kỳ T+n (đã settled, số không đổi) hiện nút **"Mở để kết sổ lại"**. Bấm nút → gọi:
+Trên màn hình Vận hành, kỳ T+n (đã settled, số không đổi) hiện mục **"Mở để kết sổ lại"** trong menu ⋮ (góc phải trên khung kỳ). Chọn mục này → gọi:
 
 ```
 POST /api/power655/draws/<DRAW_ID_K>/resettle-reopen

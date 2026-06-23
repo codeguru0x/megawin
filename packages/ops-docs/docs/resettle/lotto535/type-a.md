@@ -12,10 +12,13 @@ Chỉ cần **Nhân viên vận hành (Staff)**. Không cần Quản trị viên
 
 ## Các bước thực hiện
 
-1. Mở màn **Vận hành (Operations)** của Lotto 5/35, tìm đúng kỳ cần sửa.
-2. Bấm **Kết sổ lại** và nhập kết quả mới (dãy số trúng).
-3. Hệ thống tự kiểm tra và xác nhận đây là trường hợp **Type A** — bấm tiếp tục.
-4. Đợi hệ thống chạy xong. Trạng thái kỳ sẽ chuyển về **Đã kết sổ (settled)**.
+1. Mở màn **Vận hành (Operations)** của Lotto 5/35, tìm đúng kỳ cần sửa (đang ở trạng thái **Đã kết sổ**).
+2. Bấm **Sửa kết quả** và nhập kết quả mới (dãy số trúng), rồi công bố. Kết quả cũ bị ghi đè; kỳ chuyển sang trạng thái **Đã công bố**.
+3. Lúc này nút **Kết sổ lại** (màu cam) mới xuất hiện. Bấm **Kết sổ lại**.
+4. Hệ thống hiển thị lại kết quả vừa sửa để rà soát, tự kiểm tra và xác nhận đây là trường hợp **Type A** — bấm tiếp tục.
+5. Đợi hệ thống chạy xong. Trạng thái kỳ sẽ chuyển về **Đã kết sổ (settled)**.
+
+> Nút **Kết sổ lại** chỉ hiện sau khi đã **Sửa kết quả** thành công. Nếu chưa thấy nút, kiểm tra lại đã công bố kết quả mới chưa.
 
 ## Dấu hiệu hoàn tất
 
