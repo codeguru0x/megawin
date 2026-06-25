@@ -22,8 +22,8 @@ import type {
   SystemOutstandingGameDailyEntity,
 } from "@megawin/game-core/entities";
 import { SYSTEM_OUTSTANDING_GAME_DAILY } from "@megawin/game-core/entities";
+import { ReportRepo } from "@megawin/data/mongo";
 import { SystemOutstandingGameDailyMapper } from "../mappers";
-import { GameCoreBaseRepo } from "./game-core-base-repo";
 
 /**
  * Base repository ghi và query system outstanding report.
@@ -31,7 +31,7 @@ import { GameCoreBaseRepo } from "./game-core-base-repo";
  * Chỉ làm việc với system_outstanding_game_daily collection.
  * Per-game aggregate logic nằm ở subclass trong mỗi game package.
  */
-export class SystemOutstandingReportRepository extends GameCoreBaseRepo<
+export class SystemOutstandingReportRepository extends ReportRepo<
   SystemOutstandingGameDailyEntity,
   SystemOutstandingGameDailyMapper
 > {

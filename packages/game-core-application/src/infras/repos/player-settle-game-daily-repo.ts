@@ -25,8 +25,8 @@ import type {
   PlayerSettleGameDailyEntity,
 } from "@megawin/game-core/entities";
 import { PLAYER_SETTLE_GAME_DAILY } from "@megawin/game-core/entities";
+import { ReportRepo } from "@megawin/data/mongo";
 import { PlayerSettleGameDailyMapper } from "../mappers";
-import { GameCoreBaseRepo } from "./game-core-base-repo";
 import type { PlayerOverviewResult, PlayerGameBreakdownRow } from "./types";
 
 /**
@@ -35,7 +35,7 @@ import type { PlayerOverviewResult, PlayerGameBreakdownRow } from "./types";
  * Chỉ làm việc với player_settle_game_daily collection.
  * Per-game aggregate logic nằm ở mỗi game package (entry repo → aggregate → truyền vào đây).
  */
-export class PlayerSettleGameDailyRepository extends GameCoreBaseRepo<
+export class PlayerSettleGameDailyRepository extends ReportRepo<
   PlayerSettleGameDailyEntity,
   PlayerSettleGameDailyMapper
 > {

@@ -23,8 +23,8 @@ import type {
   SystemSettleGameDailyEntity,
 } from "@megawin/game-core/entities";
 import { SYSTEM_SETTLE_GAME_DAILY } from "@megawin/game-core/entities";
+import { ReportRepo } from "@megawin/data/mongo";
 import { SystemSettleGameDailyMapper } from "../mappers";
-import { GameCoreBaseRepo } from "./game-core-base-repo";
 import type { DailyOverviewRow, DashboardGameDailyData, GameSummaryRow } from "./types";
 
 /**
@@ -33,7 +33,7 @@ import type { DailyOverviewRow, DashboardGameDailyData, GameSummaryRow } from ".
  * Chỉ làm việc với system_settle_game_daily collection.
  * Per-game aggregate logic nằm ở subclass trong mỗi game package.
  */
-export class SystemSettleGameDailyRepository extends GameCoreBaseRepo<
+export class SystemSettleGameDailyRepository extends ReportRepo<
   SystemSettleGameDailyEntity,
   SystemSettleGameDailyMapper
 > {

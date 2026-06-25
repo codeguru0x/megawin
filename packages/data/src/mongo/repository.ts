@@ -5,6 +5,7 @@ import {
   BulkWriteResult,
   ClientSession,
   Collection,
+  CollectionOptions,
   CountOptions,
   Db,
   DeleteOptions,
@@ -42,6 +43,15 @@ export abstract class MongoRepository<
   protected _mongoEnvKey: string;
   protected _clientOptions?: ConstructorParameters<typeof MongoClient>[1];
 
+  /**
+   * Options áp khi lấy `Collection` qua `db.collection(name, options)`.
+   *
+   * Dùng để route đọc sang node cụ thể (`readPreference` Analytics Node), set
+   * `readConcern`/`writeConcern` hoặc BSON options — mà KHÔNG tạo client riêng
+   * (client cache theo `mongoEnvKey`, không tính option này).
+   */
+  protected _collectionOptions?: CollectionOptions;
+
   protected _db!: Db;
 
   protected _dbName!: string;
@@ -60,12 +70,14 @@ export abstract class MongoRepository<
     dbName,
     collName,
     clientOptions,
+    collectionOptions,
     dataMapper,
   }: {
     mongoEnvKey?: string;
     dbName: string;
     collName: string;
     clientOptions?: ConstructorParameters<typeof MongoClient>[1];
+    collectionOptions?: CollectionOptions;
     dataMapper?: TDataMapper;
   }) {
     if (!dbName) {
@@ -82,6 +94,7 @@ export abstract class MongoRepository<
     this._collName = collName;
 
     this._clientOptions = clientOptions;
+    this._collectionOptions = collectionOptions;
 
     // Nếu không có mapper thì mặc định dùng mapper hết từ mongodb collection sang entity
     this._dataMapper = dataMapper ?? new DefaultMongoMapper<Document, TEntity>();
@@ -97,7 +110,10 @@ export abstract class MongoRepository<
   public async getCollection(): Promise<Collection<Document>> {
     if (!this._collection) {
       const db = await this.getDb();
-      this._collection = db.collection(this._collName);
+      // Áp collectionOptions (vd readPreference Analytics Node) nếu có.
+      this._collection = this._collectionOptions
+        ? db.collection(this._collName, this._collectionOptions)
+        : db.collection(this._collName);
     }
 
     return this._collection;
@@ -143,9 +159,8 @@ export abstract class MongoRepository<
       return;
     }
 
-    // Lấy collection nếu chưa có
-    const db = await this.getDb();
-    this._collection = db.collection(this._collName);
+    // Dùng chung getCollection() để cùng áp _collectionOptions (DRY).
+    await this.getCollection();
   }
 
   /**

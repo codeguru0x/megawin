@@ -5,6 +5,15 @@ export { longToString } from "./long";
 export { MongoMapper, DefaultMongoMapper } from "./mapper";
 export { MongoRepository } from "./repository";
 export {
+  SharedRepo,
+  GameRepo,
+  IdentityRepo,
+  TenantRepo,
+  ReportRepo,
+  ReportReadRepo,
+  AuditRepo,
+} from "./base-repos";
+export {
   isObjectId,
   newObjectId,
   toObjectId,
