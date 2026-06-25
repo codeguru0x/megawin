@@ -23,8 +23,8 @@ import type {
 } from "@megawin/game-core/entities";
 import { SYSTEM_SETTLE_TENANT_DAILY } from "@megawin/game-core/entities";
 import type { GameProduct } from "@megawin/game-core/entities";
+import { ReportRepo } from "@megawin/data/mongo";
 import { SystemSettleTenantDailyMapper } from "../mappers";
-import { GameCoreBaseRepo } from "./game-core-base-repo";
 import type { TenantSummaryRow, TenantGameBreakdownRow } from "./types";
 
 /**
@@ -33,7 +33,7 @@ import type { TenantSummaryRow, TenantGameBreakdownRow } from "./types";
  * Chỉ làm việc với system_settle_tenant_daily collection.
  * Per-game aggregate logic nằm ở subclass trong mỗi game package.
  */
-export class SystemSettleTenantDailyRepository extends GameCoreBaseRepo<
+export class SystemSettleTenantDailyRepository extends ReportRepo<
   SystemSettleTenantDailyEntity,
   SystemSettleTenantDailyMapper
 > {

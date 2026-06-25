@@ -9,16 +9,15 @@
  * @internal Không export ra ngoài package.
  */
 
-import { MongoRepository, Constants } from "@megawin/data/mongo";
+import { IdentityRepo } from "@megawin/data/mongo";
 import type { TenantEntity } from "@megawin/identity/entities";
 
 type TenantCallbackConfig = Pick<TenantEntity, "tenantId" | "callbackBaseUrl" | "apiKey">;
 
-export class TenantCallbackConfigRepo extends MongoRepository<TenantEntity> {
+export class TenantCallbackConfigRepo extends IdentityRepo<TenantEntity> {
   constructor() {
     super({
       collName: "tenants",
-      dbName: Constants.Default.DbName,
     });
   }
 
