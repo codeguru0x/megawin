@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 import { CompanyRole } from "@megawin/identity/entities";
 import { VoidDrawUseCase } from "@megawin/game-keno-application/use-cases/draws";
 import { env } from "@/env";
@@ -20,7 +21,7 @@ export const POST = withApi()
     return voidDrawUseCase.run({
       drawId,
       reason: body.reason,
-      voidedBy: session!.user.username,
+      actor: actorFromSession(session!),
       KENO_VOID_SFN_ARN: env.KENO_VOID_SFN_ARN!,
     });
   });

@@ -1,4 +1,5 @@
 import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 import { CompanyRole } from "@megawin/identity/entities";
 import {
   GetGlobalConfigApiUseCase,
@@ -7,17 +8,18 @@ import {
 
 import { updateBingo18GameConfigSchema } from "./_lib/schema";
 
+const getGameConfigUseCase = new GetGlobalConfigApiUseCase();
+const updateGameConfigUseCase = new UpdateGameConfigUseCase();
+
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .handler(async () => {
-    const useCase = new GetGlobalConfigApiUseCase();
-    return useCase.run();
+    return getGameConfigUseCase.run();
   });
 
 export const PUT = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(updateBingo18GameConfigSchema)
-  .handler(async ({ body }) => {
-    const useCase = new UpdateGameConfigUseCase();
-    return useCase.run(body);
+  .handler(async ({ body, session }) => {
+    return updateGameConfigUseCase.run({ ...body, actor: actorFromSession(session!) });
   });

@@ -46,6 +46,7 @@ import { startExecution, ExecutionAlreadyExists } from "@megawin/app-core/aws/sf
 import { generateId, logError } from "@megawin/shared/utils";
 import { BusinessLockCoordinator } from "@megawin/worker-core";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { auditResettle } from "../../services/audit-log";
 import type { TriggerResettleInput, TriggerResettleOutput } from "./dto/draw.dto";
 
 const RESETTLE_LOCK_TTL_SECONDS = 600; // 10 phút — Max3D pipeline có thêm reporting steps.
@@ -147,6 +148,17 @@ export class TriggerResettleUseCase extends NextApiUseCase<
             "DRAW_INVALID_TRANSITION",
             `Không thể resettle – draw không còn ở "published".`,
           );
+        }
+
+        // Audit staff bấm kết sổ lại (chỉ ghi ở lần transition thật, không ghi
+        // lại ở retry idempotent). Fire-and-forget.
+        if (input.actor) {
+          auditResettle({
+            actor: input.actor,
+            drawId,
+            prevStatus: draw.status,
+            resettleId,
+          });
         }
       }
 

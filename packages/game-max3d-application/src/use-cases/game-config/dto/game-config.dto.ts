@@ -3,7 +3,8 @@ import type {
   Max3dPrizeConfig,
   PlayRules,
 } from "@megawin/game-max3d/entities";
-import type { GlobalConfigEntity } from "@megawin/game-max3d/entities";;
+import type { GlobalConfigEntity } from "@megawin/game-max3d/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 
 type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
@@ -29,6 +30,8 @@ export interface UpdateGameConfigInput {
   defaultPrizes?: DeepPartial<Max3dPrizeConfig>;
   /** Quy tắc chơi (playModes, playTypes, pricing, …). */
   play?: Partial<PlayRules>;
+  /** Chủ thể thực hiện — dùng cho audit. */
+  actor: AuditActor;
 }
 
 export interface UpdateGameConfigOutput {

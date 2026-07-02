@@ -1,25 +1,31 @@
 import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 import { CompanyRole } from "@megawin/identity/entities";
 import {
   GetTenantConfigUseCase,
   UpdateTenantConfigUseCase,
 } from "@megawin/game-bingo18-application/use-cases/tenant-config";
 
-import { updateTenantConfigSchema } from "../_lib/schema";
+import { tenantIdParamSchema, updateTenantConfigSchema } from "../_lib/schema";
+
+const getTenantConfigUseCase = new GetTenantConfigUseCase();
+const updateTenantConfigUseCase = new UpdateTenantConfigUseCase();
 
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
+  .params(tenantIdParamSchema)
   .handler(async ({ params }) => {
-    const { tenantId } = params as { tenantId: string };
-    const useCase = new GetTenantConfigUseCase();
-    return useCase.run({ tenantId });
+    return getTenantConfigUseCase.run({ tenantId: params.tenantId });
   });
 
 export const PUT = withApi()
   .auth({ roles: [CompanyRole.Staff] })
+  .params(tenantIdParamSchema)
   .body(updateTenantConfigSchema)
-  .handler(async ({ params, body }) => {
-    const { tenantId } = params as { tenantId: string };
-    const useCase = new UpdateTenantConfigUseCase();
-    return useCase.run({ tenantId, ...body });
+  .handler(async ({ params, body, session }) => {
+    return updateTenantConfigUseCase.run({
+      tenantId: params.tenantId,
+      ...body,
+      actor: actorFromSession(session!),
+    });
   });

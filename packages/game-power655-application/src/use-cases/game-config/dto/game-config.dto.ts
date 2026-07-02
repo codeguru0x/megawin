@@ -5,6 +5,7 @@ import type {
   PlayRules,
 } from "@megawin/game-power655/entities";
 import type { GlobalConfigEntity } from "@megawin/game-power655/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 
 // ─────────────────────────────────────────────
 // GetGameConfig
@@ -52,6 +53,8 @@ export interface UpdateGameConfigInput {
    * - schedule: lịch quay trong tuần
    */
   play?: Partial<PlayRules>;
+  /** Chủ thể thực hiện — dùng cho audit. */
+  actor: AuditActor;
 }
 
 export interface UpdateGameConfigOutput {

@@ -28,6 +28,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.4.0",
     "@megawin/app-core": "workspace:*",
+    "@megawin/audit": "workspace:*",
     "@megawin/data": "workspace:*",
     "@megawin/game-bingo18": "workspace:*",
     "@megawin/game-bingo18-application": "workspace:*",

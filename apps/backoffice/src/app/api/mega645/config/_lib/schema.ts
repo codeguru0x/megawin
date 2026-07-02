@@ -4,17 +4,9 @@ const positiveInt = z.number().int().positive();
 const nonNegativeInt = z.number().int().nonnegative();
 const rate = z.number().min(0).max(1);
 
-const splitRatiosSchema = z.object({
-  tier1: positiveInt,
-  tier2: positiveInt,
-  tier3: positiveInt,
-});
-
 const jackpotSchema = z
   .object({
     seedAmount: nonNegativeInt,
-    splitThreshold: nonNegativeInt,
-    splitRatios: splitRatiosSchema,
   })
   .partial();
 

@@ -1,0 +1,167 @@
+/**
+ * Enums & action registry cho audit log.
+ *
+ * Mọi enum dùng pattern `const object + type` (không `enum` keyword) — đồng bộ
+ * convention monorepo (vd `GameProduct`, `TicketStatus`). Value là string ổn
+ * định lưu thẳng vào Mongo, không phụ thuộc thứ tự khai báo.
+ */
+
+/**
+ * Loại chủ thể thực hiện hành động.
+ *
+ * - `company` — staff/admin nội bộ (Backoffice).
+ * - `agent` — đại lý.
+ * - `player` — người chơi (hiếm khi là actor của audit, chủ yếu là target).
+ * - `system` — máy tự chạy (worker Step Function, cron, queue consumer).
+ * - `unknown` — KHÔNG map được loại tài khoản về 4 giá trị trên (vd loại tài khoản
+ *   mới chưa khai báo, data migrate lỗi). Là **cờ forensic**: query `actorType =
+ *   "unknown"` để truy ra audit bất thường cần sửa code adapter — KHÔNG dùng làm
+ *   giá trị hợp lệ trong luồng bình thường.
+ */
+export const AuditActorType = {
+  Company: "company",
+  Agent: "agent",
+  Player: "player",
+  System: "system",
+  Unknown: "unknown",
+} as const;
+export type AuditActorType = (typeof AuditActorType)[keyof typeof AuditActorType];
+
+/**
+ * Nhóm hành động — tiền tố của {@link AuditAction} (`{category}.{verb}`).
+ *
+ * Là 1 chiều filter top-level có index (`{ category: 1, ts: -1 }`).
+ */
+export const AuditCategory = {
+  Draw: "draw",
+  Player: "player",
+  Config: "config",
+  Auth: "auth",
+  Account: "account",
+  Finance: "finance",
+  System: "system",
+} as const;
+export type AuditCategory = (typeof AuditCategory)[keyof typeof AuditCategory];
+
+/** Kết quả hành động — `success` hoặc `failure`. */
+export const AuditStatus = {
+  Success: "success",
+  Failure: "failure",
+} as const;
+export type AuditStatus = (typeof AuditStatus)[keyof typeof AuditStatus];
+
+/**
+ * Loại đối tượng bị tác động — dùng cho deep-link resolver ở BO.
+ *
+ * `(targetType, game, targetId)` đủ để build URL nội bộ tới trang chi tiết đối
+ * tượng. VD `draw` + `keno` + `2026-03-07.095` → trang vận hành kỳ Keno.
+ */
+export const AuditTargetType = {
+  Draw: "draw",
+  Player: "player",
+  GameConfig: "game_config",
+  TenantConfig: "tenant_config",
+  Account: "account",
+  Tenant: "tenant",
+} as const;
+export type AuditTargetType = (typeof AuditTargetType)[keyof typeof AuditTargetType];
+
+/**
+ * Registry toàn bộ audit action — nhóm theo {@link AuditCategory}.
+ *
+ * QUY TẮC mở rộng (đọc kỹ trước khi thêm):
+ * 1. Value format `{category}.{verb}` — snake_case cho verb. PHẢI UNIQUE toàn cục.
+ *    Vì category là prefix nên format này tự đảm bảo unique.
+ * 2. Thêm verb mới → thêm vào đúng nhóm category bên dưới (KHÔNG tạo nhóm rời rạc).
+ * 3. Thêm category mới → (a) thêm vào {@link AuditCategory}, (b) tạo nhóm mới ở
+ *    đây, (c) bổ sung label ở `AuditActionLabel` (labels.ts) — `Record` ép buộc
+ *    nên quên label sẽ lỗi compile.
+ * 4. KHÔNG xoá action đã ship (log cũ vẫn tham chiếu) — chỉ deprecate qua comment.
+ * 5. Mỗi action map tới 1 {@link AuditCategory} + (thường) 1 {@link AuditTargetType}
+ *    nhất quán — xem bảng §3.2 trong plan.
+ * 6. **TUYỆT ĐỐI KHÔNG nhúng tên game vào action.** Verb dùng CHUNG cho cả 7 game
+ *    — game phân biệt qua field `game` riêng trong {@link AuditLogDoc}, KHÔNG qua
+ *    action. Đúng: `draw.void` + `game: "keno"`. SAI: `keno.draw.void`,
+ *    `AUDIT_ACTIONS.keno.*`. Nhờ vậy thêm 1 game = 0 dòng đổi ở registry này;
+ *    registry chỉ phình theo số *loại hành động*, không theo số game.
+ *
+ * @example
+ * ```ts
+ * record({ action: AUDIT_ACTIONS.draw.void, ... });
+ * // action === "draw.void"
+ * ```
+ */
+export const AUDIT_ACTIONS = {
+  /** category=draw, target=draw. Vận hành kỳ quay. */
+  draw: {
+    publishResult: "draw.publish_result",
+    republishResult: "draw.republish_result",
+    void: "draw.void",
+    // `settle`/`resettle` = staff BẤM NÚT kết sổ / kết sổ lại từ BO (hành động
+    // chủ động, ghi actor người thật). KHÁC `system.settle_finalized` bên dưới —
+    // đó là worker báo ĐÃ HOÀN TẤT sau khi SFN chạy xong (actor = system).
+    settle: "draw.settle",
+    resettle: "draw.resettle",
+    // Thao tác vòng đời bán vé + lịch — staff chủ động đổi trạng thái kỳ ở BO.
+    openSales: "draw.open_sales",
+    closeSales: "draw.close_sales",
+    updateSchedule: "draw.update_schedule",
+    updateVietlottRef: "draw.update_vietlott_ref",
+    // Mở lại kỳ đã settled để chạy cascade jackpot (split cycle) — CHỈ game có
+    // jackpot (lotto535/mega645/power655). Keno/max3d/max3dpro/bingo18 không có.
+    reopenForCascade: "draw.reopen_for_cascade",
+  },
+  /** category=player, target=player. Quản trị tài khoản người chơi. */
+  player: {
+    suspend: "player.suspend",
+    activate: "player.activate",
+  },
+  /** category=config, target=game_config|tenant. Cập nhật cấu hình. */
+  config: {
+    updateGlobal: "config.update_global",
+    updateTenant: "config.update_tenant",
+  },
+  /** category=auth, target=account. Đăng nhập/đăng xuất. */
+  auth: {
+    login: "auth.login",
+    logout: "auth.logout",
+    loginFailed: "auth.login_failed",
+  },
+  /**
+   * category=account, target=account. Thao tác QUẢN TRỊ tài khoản (đổi mật khẩu,
+   * bật/tắt MFA). Phân biệt với `auth` (login/logout — phiên đăng nhập).
+   *
+   * `setPassword` = 1 tài khoản đặt lại pass CHO tài khoản KHÁC (cross-account —
+   * ghi đầy đủ actor + target). `changeOwnPassword`/`enableMfa`/`disableMfa` =
+   * thao tác lên CHÍNH tài khoản mình (self — chỉ ghi sự kiện, KHÔNG ghi chi tiết
+   * nhạy cảm như password/secret).
+   */
+  account: {
+    setPassword: "account.set_password",
+    changeOwnPassword: "account.change_own_password",
+    enableMfa: "account.enable_mfa",
+    disableMfa: "account.disable_mfa",
+  },
+  /** category=finance, target=account. Điều chỉnh tài chính. */
+  finance: {
+    adjustBalance: "finance.adjust_balance",
+  },
+  /** category=system, target=draw. Action hệ thống tự chạy (worker). */
+  system: {
+    settleFinalized: "system.settle_finalized",
+    voidFinalized: "system.void_finalized",
+  },
+} as const;
+
+/** Lấy union mọi value của object. Distributive — áp lên từng member của union. */
+type ValueOf<T> = T extends unknown ? T[keyof T] : never;
+
+/**
+ * Union mọi giá trị action — type cho `AuditLogDoc.action`.
+ *
+ * `ValueOf` 2 lần: lần đầu lấy từng nhóm category, lần hai distribute lấy mọi
+ * verb trong từng nhóm. `ValueOf` phải distributive (dùng `extends unknown`) vì
+ * các nhóm khác shape — `keyof` trên union nhóm = giao key = rỗng = `never`.
+ * Ép `action` chỉ nhận string trong {@link AUDIT_ACTIONS} (compile-time guard).
+ */
+export type AuditAction = ValueOf<ValueOf<typeof AUDIT_ACTIONS>>;

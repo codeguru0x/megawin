@@ -3,15 +3,16 @@ import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { nowVN } from "@megawin/shared/utils";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
+import { auditOpenSales } from "../../services/audit-log";
+import type { DrawTransitionInput, DrawTransitionOutput } from "./dto/draw.dto";
 
 export class OpenSalesUseCase extends NextApiUseCase<
-  DrawIdInput,
+  DrawTransitionInput,
   DrawTransitionOutput
 > {
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(input: DrawIdInput): Promise<DrawTransitionOutput> {
+  protected async execute(input: DrawTransitionInput): Promise<DrawTransitionOutput> {
     const draw = await this.drawRepo.getDrawById(input.drawId);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
@@ -38,6 +39,11 @@ export class OpenSalesUseCase extends NextApiUseCase<
       throw AppException.internal(
         `Không thể chuyển trạng thái draw ${input.drawId}. Vui lòng thử lại.`
       );
+    }
+
+    // Audit staff mở bán — fire-and-forget, chỉ khi có actor (route BO truyền).
+    if (input.actor) {
+      auditOpenSales({ actor: input.actor, drawId: input.drawId, prevStatus: draw.status });
     }
 
     return {

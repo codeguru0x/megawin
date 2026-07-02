@@ -54,6 +54,7 @@ import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { nowVN } from "@megawin/shared/utils";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { auditReopenForCascade } from "../../services/audit-log";
 import type { ReopenForCascadeInput, ReopenForCascadeOutput } from "./dto/draw.dto";
 
 export class ReopenForCascadeUseCase extends NextApiUseCase<
@@ -131,6 +132,17 @@ export class ReopenForCascadeUseCase extends NextApiUseCase<
         "DRAW_INVALID_TRANSITION",
         `Mở lại kỳ ${drawId} thất bại — draw không còn ở "settled". Vui lòng tải lại.`,
       );
+    }
+
+    // Audit staff mở lại kỳ đã settled cho cascade jackpot (settled → published).
+    // Chỉ ghi ở lần reopen thật (nhánh idempotent no-op ở trên đã return sớm).
+    // Fire-and-forget.
+    if (input.actor) {
+      auditReopenForCascade({
+        actor: input.actor,
+        drawId,
+        prevStatus: DrawStatus.Settled,
+      });
     }
 
     return {

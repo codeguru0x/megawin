@@ -62,6 +62,7 @@ export { reportsKeys } from "./reports";
 export { dashboardKeys } from "./dashboard";
 export { txLogsKeys } from "./tx-logs";
 export { tenantDispatchKeys } from "./tenant-dispatch";
+export { auditLogsKeys, type AuditLogsListFilters } from "./audit-logs";
 
 import { lotto535Keys } from "./lotto535";
 import { kenoKeys } from "./keno";
@@ -78,6 +79,7 @@ import { reportsKeys } from "./reports";
 import { dashboardKeys } from "./dashboard";
 import { txLogsKeys } from "./tx-logs";
 import { tenantDispatchKeys } from "./tenant-dispatch";
+import { auditLogsKeys } from "./audit-logs";
 
 export const queryKeys = {
   tenants: tenantsKeys,
@@ -95,4 +97,5 @@ export const queryKeys = {
   dashboard: dashboardKeys,
   txLogs: txLogsKeys,
   tenantDispatch: tenantDispatchKeys,
+  auditLogs: auditLogsKeys,
 } as const;

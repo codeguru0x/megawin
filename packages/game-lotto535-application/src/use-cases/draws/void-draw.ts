@@ -3,7 +3,9 @@ import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { toExecutionName } from "@megawin/game-core/utils";
 import { startExecution, ExecutionAlreadyExists } from "@megawin/app-core/aws/sf";
+import type { AuditActor } from "@megawin/audit/logger";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { auditDrawVoid } from "../../services/audit-log";
 import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
 
 const VOIDABLE_STATUSES = new Set<string>([
@@ -16,7 +18,8 @@ export interface VoidDrawInput extends DrawIdInput {
   /** ARN của Step Function huỷ kỳ quay Lotto 5/35. */
   LOTTO535_VOID_SFN_ARN: string;
   reason: string;
-  voidedBy?: string;
+  /** Chủ thể thực hiện — thay cho `voidedBy`, dùng cho audit + ghi draw. */
+  actor: AuditActor;
 }
 
 export interface VoidDrawOutput extends DrawTransitionOutput {
@@ -91,13 +94,22 @@ export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutpu
 
       const updated = await this.drawRepo.voidDraw(input.drawId, draw.status, {
         reason: input.reason,
-        voidedBy: input.voidedBy,
+        voidedBy: input.actor.name,
         voidedAt: new Date(),
       });
 
       if (!updated) {
         throw AppException.internal("Huỷ kỳ quay thất bại – race condition.");
       }
+
+      // Audit sau khi transition thành công (chỉ ghi 1 lần — nhánh alreadyVoiding
+      // là retry, không ghi trùng). Fire-and-forget: không chặn flow.
+      auditDrawVoid({
+        actor: input.actor,
+        drawId: input.drawId,
+        prevStatus: draw.status,
+        reason: input.reason,
+      });
     }
 
     try {

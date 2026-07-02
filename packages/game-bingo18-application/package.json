@@ -91,6 +91,7 @@
   "license": "ISC",
   "dependencies": {
     "@megawin/app-core": "workspace:*",
+    "@megawin/audit": "workspace:*",
     "@megawin/data": "workspace:*",
     "@megawin/game-bingo18": "workspace:*",
     "@megawin/game-core": "workspace:*",

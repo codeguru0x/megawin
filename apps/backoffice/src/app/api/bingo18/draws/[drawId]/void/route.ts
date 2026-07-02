@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 import { CompanyRole } from "@megawin/identity/entities";
 import { VoidDrawUseCase } from "@megawin/game-bingo18-application/use-cases/draws";
 
@@ -18,6 +19,6 @@ export const POST = withApi()
     return voidDrawUseCase.run({
       drawId,
       reason: body.reason,
-      voidedBy: session?.user.email ?? session?.user.id,
+      actor: actorFromSession(session!),
     });
   });

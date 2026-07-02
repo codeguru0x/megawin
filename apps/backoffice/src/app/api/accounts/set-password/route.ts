@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 import { CompanyRole } from "@megawin/identity/entities";
 import { SetAccountPasswordUseCase } from "@megawin/identity-application/use-cases/accounts";
 
@@ -17,5 +18,5 @@ export const POST = withApi()
   .body(setPasswordSchema)
   .handler(async ({ body, session }) => {
     const callerRoles = (session?.user.roles ?? []) as CompanyRole[];
-    return useCase.run({ ...body, callerRoles });
+    return useCase.run({ ...body, callerRoles, actor: actorFromSession(session!) });
   });

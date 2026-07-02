@@ -1,4 +1,5 @@
 import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 import { CompanyRole } from "@megawin/identity/entities";
 import {
   GetGlobalConfigApiUseCase,
@@ -19,6 +20,6 @@ export const GET = withApi()
 export const PUT = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(updateGameConfigSchema)
-  .handler(async ({ body }) => {
-    return updateGameConfigUseCase.run(body);
+  .handler(async ({ body, session }) => {
+    return updateGameConfigUseCase.run({ ...body, actor: actorFromSession(session!) });
   });

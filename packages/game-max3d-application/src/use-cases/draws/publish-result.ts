@@ -36,6 +36,7 @@ import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { isSameMax3dResult } from "@megawin/game-max3d/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { auditPublishResult, auditRepublishResult } from "../../services/audit-log";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 import { nowVN } from "@megawin/shared/utils";
 
@@ -86,6 +87,17 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
             `Cập nhật Vietlott Ref kỳ ${input.drawId} thất bại — draw status đã thay đổi.`,
           );
         }
+
+        // Kết quả KHÔNG đổi, chỉ sửa vietlottRef → không mở resettle. Vẫn ghi
+        // audit qua auditPublishResult (result giữ nguyên) để lưu vết ai đổi ref
+        // — theo quyết định gộp vietlottRef vào publish, không tách action riêng.
+        // Fire-and-forget.
+        auditPublishResult({
+          actor: input.actor,
+          drawId: input.drawId,
+          result: draw.result!,
+          vietlottRef: input.vietlottRef,
+        });
       }
 
       console.log("Giữ nguyên kết quả", draw.result!.publishedAt);
@@ -111,6 +123,14 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
         );
       }
 
+      // Sửa kết quả sau settle → republish (mở luồng resettle). Fire-and-forget.
+      auditRepublishResult({
+        actor: input.actor,
+        drawId: input.drawId,
+        result: input.result,
+        vietlottRef: input.vietlottRef,
+      });
+
       return this.toOutput(input, DrawStatus.Published, publishedAt);
     }
 
@@ -133,6 +153,15 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
     if (!updated) {
       throw AppException.internal(`Publish kết quả kỳ ${input.drawId} thất bại. Vui lòng thử lại.`);
     }
+
+    // Publish lần đầu / sửa trước settle / ghi đè Published (chờ resettle):
+    // đều là publish thường (không mở resettle mới). Fire-and-forget.
+    auditPublishResult({
+      actor: input.actor,
+      drawId: input.drawId,
+      result: input.result,
+      vietlottRef: input.vietlottRef,
+    });
 
     return this.toOutput(input, DrawStatus.Published, publishedAt);
   }

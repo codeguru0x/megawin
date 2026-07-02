@@ -98,6 +98,7 @@
   },
   "dependencies": {
     "@megawin/app-core": "workspace:*",
+    "@megawin/audit": "workspace:*",
     "@megawin/data": "workspace:*",
     "@megawin/game-core": "workspace:*",
     "@megawin/game-core-application": "workspace:*",

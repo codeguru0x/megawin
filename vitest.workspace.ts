@@ -9,5 +9,6 @@ export default [
   "packages/game-max3d-application/vitest.config.ts",
   "packages/game-max3dpro-application/vitest.config.ts",
   "packages/game-bingo18-application/vitest.config.ts",
+  "packages/audit/vitest.config.ts",
   "packages/player-sdk/vitest.config.ts",
 ];

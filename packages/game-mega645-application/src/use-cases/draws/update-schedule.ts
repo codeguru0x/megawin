@@ -8,13 +8,17 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { auditUpdateSchedule } from "../../services/audit-log";
 
 export interface UpdateScheduleInput {
   drawId: string;
   salesOpenAt: string;
   salesCloseAt: string;
   drawTime?: string;
+  /** Chủ thể thực hiện (staff BO) — dùng cho audit. Optional cho caller nội bộ. */
+  actor?: AuditActor;
 }
 
 export interface UpdateScheduleOutput {
@@ -23,10 +27,7 @@ export interface UpdateScheduleOutput {
   drawTime: string;
 }
 
-const EDITABLE_STATUSES = new Set<string>([
-  DrawStatus.Scheduled,
-  DrawStatus.SalesOpen,
-]);
+const EDITABLE_STATUSES = new Set<string>([DrawStatus.Scheduled, DrawStatus.SalesOpen]);
 
 export class UpdateScheduleUseCase extends NextApiUseCase<
   UpdateScheduleInput,
@@ -34,9 +35,7 @@ export class UpdateScheduleUseCase extends NextApiUseCase<
 > {
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(
-    input: UpdateScheduleInput
-  ): Promise<UpdateScheduleOutput> {
+  protected async execute(input: UpdateScheduleInput): Promise<UpdateScheduleOutput> {
     const draw = await this.drawRepo.getDrawById(input.drawId);
     if (!draw) {
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
@@ -45,14 +44,14 @@ export class UpdateScheduleUseCase extends NextApiUseCase<
     if (!EDITABLE_STATUSES.has(draw.status)) {
       throw new AppException(
         "DRAW_INVALID_TRANSITION",
-        `Không thể sửa lịch – draw ở trạng thái "${draw.status}". Chỉ sửa khi "scheduled" hoặc "salesOpen".`
+        `Không thể sửa lịch – draw ở trạng thái "${draw.status}". Chỉ sửa khi "scheduled" hoặc "salesOpen".`,
       );
     }
 
     const openAt = new Date(input.salesOpenAt);
     const closeAt = new Date(input.salesCloseAt);
     const newDrawTime = input.drawTime ? new Date(input.drawTime) : null;
-    const drawTime = newDrawTime ?? new Date(draw.drawTime);
+    const drawTime = newDrawTime ?? draw.drawTime;
 
     if (isNaN(openAt.getTime()) || isNaN(closeAt.getTime())) {
       throw AppException.badRequest("Thời gian mở/đóng bán không hợp lệ.");
@@ -68,7 +67,7 @@ export class UpdateScheduleUseCase extends NextApiUseCase<
 
     if (closeAt >= drawTime) {
       throw AppException.badRequest(
-        `Giờ đóng bán phải nhỏ hơn giờ quay số (${drawTime.toISOString()}).`
+        `Giờ đóng bán phải nhỏ hơn giờ quay số (${drawTime.toISOString()}).`,
       );
     }
 
@@ -80,6 +79,25 @@ export class UpdateScheduleUseCase extends NextApiUseCase<
 
     if (!updated) {
       throw AppException.internal("Cập nhật lịch thất bại.");
+    }
+
+    // Audit staff sửa lịch (fire-and-forget). `before` lấy từ snapshot draw
+    // trước khi update để tái dựng diff; `after` là giá trị vừa ghi.
+    if (input.actor) {
+      auditUpdateSchedule({
+        actor: input.actor,
+        drawId: input.drawId,
+        before: {
+          openAt: draw.sales.openAt?.toISOString(),
+          closeAt: draw.sales.closeAt.toISOString(),
+          drawTime: draw.drawTime.toISOString(),
+        },
+        after: {
+          openAt: openAt.toISOString(),
+          closeAt: closeAt.toISOString(),
+          drawTime: drawTime.toISOString(),
+        },
+      });
     }
 
     return {

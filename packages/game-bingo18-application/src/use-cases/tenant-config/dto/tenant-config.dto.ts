@@ -1,4 +1,5 @@
-import type { TenantConfigEntity } from "@megawin/game-bingo18/entities";;
+import type { TenantConfigEntity } from "@megawin/game-bingo18/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 
 // ─────────────────────────────────────────────
 // ListTenantConfigs
@@ -34,6 +35,8 @@ export interface UpdateTenantConfigInput {
   commissionRate?: number;
   /** Bật/tắt tenant cho game Bingo 18. */
   isEnabled?: boolean;
+  /** Chủ thể thực hiện (staff BO) — dùng cho audit. */
+  actor: AuditActor;
 }
 
 export interface UpdateTenantConfigOutput {

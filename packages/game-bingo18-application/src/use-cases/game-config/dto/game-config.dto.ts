@@ -7,7 +7,8 @@ import type {
   BigSmallDrawPrizes,
   PlayRules,
 } from "@megawin/game-bingo18/entities";
-import type { GlobalConfigEntity } from "@megawin/game-bingo18/entities";;
+import type { GlobalConfigEntity } from "@megawin/game-bingo18/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 
 // ─────────────────────────────────────────────
 // GetGameConfig
@@ -37,6 +38,8 @@ export interface UpdateGameConfigInput {
   bigSmallDrawPrizes?: Partial<BigSmallDrawPrizes>;
   /** Cấu hình luật chơi (drawInterval, salesDuration, …). */
   play?: Partial<PlayRules>;
+  /** Chủ thể thực hiện (staff BO) — dùng cho audit. */
+  actor: AuditActor;
 }
 
 export interface UpdateGameConfigOutput {

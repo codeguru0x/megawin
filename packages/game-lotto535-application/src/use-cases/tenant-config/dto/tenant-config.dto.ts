@@ -1,4 +1,5 @@
-import type { TenantConfigEntity } from "@megawin/game-lotto535/entities";;
+import type { TenantConfigEntity } from "@megawin/game-lotto535/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 
 // ─────────────────────────────────────────────
 // ListTenantConfigs
@@ -37,6 +38,8 @@ export interface UpdateTenantConfigInput {
   commissionRate?: number;
   /** Bật/tắt tenant — tenant bị tắt không thể đặt cược. */
   isEnabled?: boolean;
+  /** Chủ thể thực hiện — dùng cho audit. */
+  actor: AuditActor;
 }
 
 export interface UpdateTenantConfigOutput {

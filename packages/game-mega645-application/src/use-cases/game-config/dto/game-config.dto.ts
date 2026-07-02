@@ -4,7 +4,8 @@ import type {
   PrizeAmounts,
   PlayRules,
 } from "@megawin/game-mega645/entities";
-import type { GlobalConfigEntity } from "@megawin/game-mega645/entities";;
+import type { GlobalConfigEntity } from "@megawin/game-mega645/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 
 // ─────────────────────────────────────────────
 // GetGameConfig
@@ -40,6 +41,8 @@ export interface UpdateGameConfigInput {
    * Bao gồm: minNumbers, maxNumbers, numberRange, allowedPlayTypes.
    */
   play?: Partial<PlayRules>;
+  /** Chủ thể thực hiện (staff BO) — dùng cho audit. */
+  actor: AuditActor;
 }
 
 export interface UpdateGameConfigOutput {

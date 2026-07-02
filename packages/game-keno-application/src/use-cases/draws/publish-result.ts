@@ -38,6 +38,7 @@ import { computeDrawStats } from "@megawin/game-keno/helpers";
 import { isSameKenoResult } from "@megawin/game-keno/rules";
 import { nowVN } from "@megawin/shared/utils";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { auditPublishResult, auditRepublishResult } from "../../services/audit-log";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 
 const PUBLISHABLE_STATUSES = new Set<string>([
@@ -87,6 +88,17 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
             `Cập nhật Vietlott Ref kỳ ${input.drawId} thất bại — draw status đã thay đổi.`,
           );
         }
+
+        // Kết quả KHÔNG đổi, chỉ sửa vietlottRef → không mở resettle. Vẫn ghi
+        // audit qua auditPublishResult (winningNumbers giữ nguyên) để lưu vết
+        // ai đổi ref — theo quyết định gộp vietlottRef vào publish, không tách
+        // action riêng. Fire-and-forget.
+        auditPublishResult({
+          actor: input.actor,
+          drawId: input.drawId,
+          winningNumbers: draw.result!.winningNumbers,
+          vietlottRef: input.vietlottRef,
+        });
       }
 
       // Giữ nguyên status + result hiện tại (không đổi gì về kết quả/settle).
@@ -113,6 +125,14 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
         );
       }
 
+      // Sửa kết quả sau settle → republish (mở luồng resettle). Fire-and-forget.
+      auditRepublishResult({
+        actor: input.actor,
+        drawId: input.drawId,
+        winningNumbers: input.winningNumbers,
+        vietlottRef: input.vietlottRef,
+      });
+
       return this.toOutput(input, DrawStatus.Published, publishedAt);
     }
 
@@ -134,6 +154,15 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
     if (!updated) {
       throw AppException.internal(`Publish kết quả kỳ ${input.drawId} thất bại. Vui lòng thử lại.`);
     }
+
+    // Publish lần đầu / sửa trước settle / ghi đè Published (chờ resettle):
+    // đều là publish thường (không mở resettle mới). Fire-and-forget.
+    auditPublishResult({
+      actor: input.actor,
+      drawId: input.drawId,
+      winningNumbers: input.winningNumbers,
+      vietlottRef: input.vietlottRef,
+    });
 
     return this.toOutput(input, DrawStatus.Published, publishedAt);
   }

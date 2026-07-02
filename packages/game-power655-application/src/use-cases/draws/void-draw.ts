@@ -3,7 +3,9 @@ import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { toExecutionName } from "@megawin/game-core/utils";
 import { startExecution, ExecutionAlreadyExists } from "@megawin/app-core/aws/sf";
+import type { AuditActor } from "@megawin/audit/logger";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { auditDrawVoid } from "../../services/audit-log";
 import type { DrawIdInput, DrawTransitionOutput } from "./dto/draw.dto";
 import type { DrawVoidInfo } from "@megawin/game-power655/entities";
 
@@ -17,7 +19,8 @@ const VOIDABLE_STATUSES = new Set<string>([
 
 export interface VoidDrawInput extends DrawIdInput {
   reason: string;
-  voidedBy?: string;
+  /** Chủ thể thực hiện — thay cho `voidedBy`, dùng cho audit + ghi draw. */
+  actor: AuditActor;
 }
 
 export interface VoidDrawOutput extends DrawTransitionOutput {
@@ -89,7 +92,7 @@ export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutpu
       // Build DrawVoidInfo typed — compiler bắt lỗi nếu thiếu field.
       const voidInfo: DrawVoidInfo = {
         reason: input.reason,
-        voidedBy: input.voidedBy,
+        voidedBy: input.actor.name,
         voidedAt: new Date(),
       };
       const updated = await this.drawRepo.voidDraw(input.drawId, draw.status, voidInfo);
@@ -97,6 +100,15 @@ export class VoidDrawUseCase extends NextApiUseCase<VoidDrawInput, VoidDrawOutpu
       if (!updated) {
         throw AppException.internal("Huỷ kỳ quay thất bại – race condition.");
       }
+
+      // Audit sau khi transition thành công (chỉ ghi 1 lần — nhánh alreadyVoiding
+      // là retry, không ghi trùng). Fire-and-forget: không chặn flow.
+      auditDrawVoid({
+        actor: input.actor,
+        drawId: input.drawId,
+        prevStatus: draw.status,
+        reason: input.reason,
+      });
     }
 
     try {

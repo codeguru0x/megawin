@@ -7,12 +7,16 @@ import {
   COGNITO_WORKFORCE_CLIENT_ID,
 } from "@megawin/app-core/aws/cognito";
 import { MfaStatus } from "@megawin/identity/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 import { AccountRepository } from "../../infras/repos/account-repo";
+import { auditDisableMfa } from "../../services/audit-log";
 
 export interface DisableMfaInput {
   username: string;
   password: string;
   totpCode: string;
+  /** Chủ thể thực hiện (chính chủ tài khoản) — dùng cho audit log self. */
+  actor: AuditActor;
 }
 
 export interface DisableMfaOutput {
@@ -62,6 +66,9 @@ export class DisableMfaUseCase extends NextApiUseCase<DisableMfaInput, DisableMf
 
     const repo = new AccountRepository();
     await repo.updateMfaStatus(input.username, MfaStatus.Disabled);
+
+    // Audit self SAU khi tắt MFA thành công. Chỉ ghi sự kiện — KHÔNG ghi password/TOTP.
+    auditDisableMfa({ actor: input.actor });
 
     return { success: true };
   }
