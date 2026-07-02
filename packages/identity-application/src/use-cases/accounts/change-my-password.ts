@@ -5,11 +5,15 @@ import {
   COGNITO_WORKFORCE_POOL_ID,
   COGNITO_WORKFORCE_CLIENT_ID,
 } from "@megawin/app-core/aws/cognito";
+import type { AuditActor } from "@megawin/audit/logger";
+import { auditChangeOwnPassword } from "../../services/audit-log";
 
 export interface ChangeMyPasswordInput {
   username: string;
   currentPassword: string;
   newPassword: string;
+  /** Chủ thể thực hiện (chính chủ tài khoản) — dùng cho audit log self. */
+  actor: AuditActor;
 }
 
 export interface ChangeMyPasswordOutput {
@@ -50,6 +54,9 @@ export class ChangeMyPasswordUseCase extends NextApiUseCase<
 
       throw AppException.internal(`Đổi mật khẩu thất bại: ${errMessage}`);
     }
+
+    // Audit self SAU khi đổi pass thành công. Chỉ ghi sự kiện — KHÔNG ghi password.
+    auditChangeOwnPassword({ actor: input.actor });
 
     return { success: true };
   }

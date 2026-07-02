@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 import { CompanyRole } from "@megawin/identity/entities";
 import { VerifyAndEnableMfaUseCase } from "@megawin/identity-application/use-cases/accounts";
 
@@ -23,5 +24,6 @@ export const POST = withApi()
       username,
       totpCode: body.totpCode,
       accessToken: body.accessToken,
+      actor: actorFromSession(session!),
     });
   });

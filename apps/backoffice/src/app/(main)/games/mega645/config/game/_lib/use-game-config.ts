@@ -10,8 +10,6 @@ interface GameConfig {
   tenantId: null;
   jackpot: {
     seedAmount: number;
-    splitThreshold: number;
-    splitRatios: { tier1: number; tier2: number; tier3: number };
   };
   rates: {
     defaultCommissionRate: number;

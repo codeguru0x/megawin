@@ -8,6 +8,7 @@ import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
+import { auditSettle } from "../../services/audit-log";
 import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
 import { logError } from "@megawin/shared/utils";
 
@@ -111,6 +112,12 @@ export class TriggerSettleUseCase extends NextApiUseCase<TriggerSettleInput, Tri
           "DRAW_INVALID_TRANSITION",
           `Không thể kết sổ – draw hiện tại không ở trạng thái "published".`,
         );
+      }
+
+      // Audit staff bấm kết sổ (chỉ ghi ở lần transition thật published→settling,
+      // không ghi lại ở retry idempotent). Fire-and-forget.
+      if (input.actor) {
+        auditSettle({ actor: input.actor, drawId: input.drawId, prevStatus: draw.status });
       }
     }
 

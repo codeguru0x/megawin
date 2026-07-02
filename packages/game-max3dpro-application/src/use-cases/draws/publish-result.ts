@@ -36,6 +36,7 @@ import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { isSameMax3dproResult } from "@megawin/game-max3dpro/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { auditPublishResult, auditRepublishResult } from "../../services/audit-log";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 import { nowVN } from "@megawin/shared/utils";
 
@@ -86,6 +87,17 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
             `Cập nhật Vietlott Ref kỳ ${input.drawId} thất bại — draw status đã thay đổi.`,
           );
         }
+
+        // Kết quả KHÔNG đổi, chỉ sửa vietlottRef → không mở resettle. Vẫn ghi
+        // audit qua auditPublishResult (result giữ nguyên) để lưu vết ai đổi
+        // ref — theo quyết định gộp vietlottRef vào publish, không tách action
+        // riêng. Fire-and-forget.
+        auditPublishResult({
+          actor: input.actor,
+          drawId: input.drawId,
+          result: draw.result!,
+          vietlottRef: input.vietlottRef,
+        });
       }
 
       // Giữ nguyên status + result hiện tại (không đổi gì về kết quả/settle).
@@ -108,6 +120,14 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
           `Sửa kết quả kỳ ${input.drawId} thất bại — draw không còn ở "settled" (có thể đã bị thay đổi đồng thời).`,
         );
       }
+
+      // Sửa kết quả sau settle → republish (mở luồng resettle). Fire-and-forget.
+      auditRepublishResult({
+        actor: input.actor,
+        drawId: input.drawId,
+        result: input.result,
+        vietlottRef: input.vietlottRef,
+      });
 
       return this.toOutput(input, DrawStatus.Published, publishedAt);
     }

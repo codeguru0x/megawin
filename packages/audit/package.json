@@ -1,0 +1,58 @@
+{
+  "name": "@megawin/audit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Centralized audit log — entities, repo, logger",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "check-types": "tsc --noEmit",
+    "build:deps": "turbo build --filter=@megawin/audit^...",
+    "pretest": "pnpm build:deps",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "clean": "rm -rf dist"
+  },
+  "exports": {
+    "./entities": {
+      "types": "./src/entities/index.ts",
+      "import": "./src/entities/index.ts",
+      "default": "./dist/entities/index.js"
+    },
+    "./logger": {
+      "types": "./src/logger/index.ts",
+      "import": "./src/logger/index.ts",
+      "default": "./dist/logger/index.js"
+    },
+    "./repos": {
+      "types": "./src/infras/repos/index.ts",
+      "import": "./src/infras/repos/index.ts",
+      "default": "./dist/infras/repos/index.js"
+    },
+    "./use-cases": {
+      "types": "./src/use-cases/index.ts",
+      "import": "./src/use-cases/index.ts",
+      "default": "./dist/use-cases/index.js"
+    },
+    "./indexes": {
+      "types": "./src/indexes/index.ts",
+      "import": "./src/indexes/index.ts",
+      "default": "./dist/indexes/index.js"
+    }
+  },
+  "dependencies": {
+    "@megawin/data": "workspace:*",
+    "@megawin/next": "workspace:*",
+    "@megawin/shared": "workspace:*",
+    "mongodb": "^7.3.0"
+  },
+  "devDependencies": {
+    "@megawin/typescript-config": "workspace:*",
+    "@megawin/vitest-config": "workspace:*",
+    "@types/node": "^25.9.4",
+    "typescript": "^6.0.3",
+    "vite": "latest",
+    "vitest": "^4.1.9"
+  }
+}

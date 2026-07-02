@@ -1,5 +1,6 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawEntity } from "@megawin/game-bingo18/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 
 // ─────────────────────────────────────────────
 // CreateDraw (batch)
@@ -79,6 +80,16 @@ export interface DrawIdInput {
   drawId: string;
 }
 
+/**
+ * Input cho open/close-sales — kèm actor để ghi audit ai đổi trạng thái kỳ.
+ * `actor` optional để không phá các caller nội bộ chỉ cần chuyển trạng thái;
+ * route BO luôn truyền actor.
+ */
+export interface DrawTransitionInput extends DrawIdInput {
+  /** Chủ thể thực hiện (staff BO) — dùng cho audit. Optional cho caller nội bộ. */
+  actor?: AuditActor;
+}
+
 export interface DrawTransitionOutput {
   /** ID kỳ quay đã chuyển trạng thái. */
   drawId: string;
@@ -104,6 +115,8 @@ export interface PublishResultInput {
     /** Ngày quay Vietlott (YYYY-MM-DD). */
     drawDate: string;
   };
+  /** Chủ thể thực hiện — dùng cho audit. */
+  actor: AuditActor;
 }
 
 export interface PublishResultOutput {
@@ -132,6 +145,9 @@ export interface TriggerSettleInput {
 
   /** ARN của Step Function để kết sổ. */
   SETTLE_SFN_ARN: string;
+
+  /** Chủ thể thực hiện (staff BO) — dùng cho audit. Optional cho caller nội bộ. */
+  actor?: AuditActor;
 }
 
 export interface TriggerSettleOutput {
@@ -146,6 +162,8 @@ export interface TriggerResettleInput {
   drawId: string;
   /** ARN của Step Function resettle Bingo 18 (orchestrate cả Settle SFN bên trong). */
   RESETTLE_SFN_ARN: string;
+  /** Chủ thể thực hiện (staff BO) — dùng cho audit. Optional cho caller nội bộ. */
+  actor?: AuditActor;
 }
 
 export interface TriggerResettleOutput {

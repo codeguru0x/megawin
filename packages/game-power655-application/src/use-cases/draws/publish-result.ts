@@ -29,7 +29,9 @@ import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
 import { isSamePower655Result } from "@megawin/game-power655/rules";
 import type { DrawVietlottRef } from "@megawin/game-power655/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { auditPublishResult, auditRepublishResult } from "../../services/audit-log";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 import { nowVN } from "@megawin/shared/utils";
 
@@ -66,7 +68,14 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
 
     // ── Nhánh 1: chưa từng settle → publish bình thường ──────────────────
     if (!hasSettledBefore) {
-      return this.publish(input.drawId, winningMain, bonusNumber, publishedAt, input.vietlottRef);
+      return this.publish(
+        input.drawId,
+        winningMain,
+        bonusNumber,
+        publishedAt,
+        input.actor,
+        input.vietlottRef,
+      );
     }
 
     // ── Nhánh 2: đã settle → quyết định theo result có đổi hay không ──────
@@ -87,6 +96,18 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
             `Cập nhật Vietlott Ref kỳ ${input.drawId} thất bại — draw status đã thay đổi.`,
           );
         }
+
+        // Kết quả KHÔNG đổi, chỉ sửa vietlottRef → không mở resettle. Vẫn ghi
+        // audit qua auditPublishResult (số quay giữ nguyên) để lưu vết ai đổi ref
+        // — theo quyết định gộp vietlottRef vào publish, không tách action riêng.
+        // Fire-and-forget.
+        auditPublishResult({
+          actor: input.actor,
+          drawId: input.drawId,
+          winningMain: draw.result!.winningMain,
+          bonusNumber: draw.result!.bonusNumber,
+          vietlottRef: input.vietlottRef,
+        });
       }
 
       // Giữ nguyên status + result hiện tại.
@@ -117,6 +138,15 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
         );
       }
 
+      // Sửa kết quả sau settle → republish (mở luồng resettle). Fire-and-forget.
+      auditRepublishResult({
+        actor: input.actor,
+        drawId: input.drawId,
+        winningMain,
+        bonusNumber,
+        vietlottRef: input.vietlottRef,
+      });
+
       return {
         drawId: input.drawId,
         status: DrawStatus.Published,
@@ -129,7 +159,14 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
     }
 
     // status === Published (đã settle ≥ 1 lần, đang chờ resettle): ghi đè result mới.
-    return this.publish(input.drawId, winningMain, bonusNumber, publishedAt, input.vietlottRef);
+    return this.publish(
+      input.drawId,
+      winningMain,
+      bonusNumber,
+      publishedAt,
+      input.actor,
+      input.vietlottRef,
+    );
   }
 
   /** Ghi result (+ vietlottRef nếu có) qua `drawRepo.publishResult` → `Published`. */
@@ -138,6 +175,7 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
     winningMain: string[],
     bonusNumber: string,
     publishedAt: Date,
+    actor: AuditActor,
     vietlottRef?: DrawVietlottRef,
   ): Promise<PublishResultOutput> {
     const updated = await this.drawRepo.publishResult(
@@ -149,6 +187,10 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
     if (!updated) {
       throw AppException.internal(`Publish kết quả kỳ ${drawId} thất bại. Vui lòng thử lại.`);
     }
+
+    // Publish thường (lần đầu chưa settle, hoặc ghi đè khi đang chờ resettle) →
+    // không mở resettle mới. Fire-and-forget.
+    auditPublishResult({ actor, drawId, winningMain, bonusNumber, vietlottRef });
 
     return {
       drawId,

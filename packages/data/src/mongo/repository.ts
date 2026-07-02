@@ -35,6 +35,7 @@ import { DefaultMongoMapper, MongoMapper } from "./mapper";
 
 import { Constants } from "./constants";
 import { BaseEntity } from "./base-entity";
+import type { CursorPage } from "./cursor-page";
 
 export abstract class MongoRepository<
   TEntity extends BaseEntity,
@@ -299,6 +300,60 @@ export abstract class MongoRepository<
     options = Object.assign(options ?? {}, { limit: size, skip: skip });
 
     return await this.findMany(filter, options);
+  }
+
+  /**
+   * Phân trang **cursor-based** (seek method) — khung dùng chung cho mọi repo
+   * cursor-paginate, thay cho offset `paging()` khi data lớn / append-heavy.
+   *
+   * Lo phần **lặp đi lặp lại** ở mọi cursor-paging: query `limit + 1` để biết
+   * `hasMore` mà KHÔNG cần `count()` toàn collection, slice về đúng `limit`, dựng
+   * `nextCursor` từ record cuối page. Phần **riêng domain** (build filter + encode
+   * cursor + chọn sort) do caller tự lo qua `filter`/`sort`/`toCursor`.
+   *
+   * Caller chịu trách nhiệm:
+   * - `filter` đã gồm **điều kiện cursor** của page trước (vd `$or` cho compound
+   *   `(ts, _id)`, hoặc `{ _id: { $lt } }` cho scalar) — base KHÔNG tự encode vì
+   *   shape cursor khác nhau giữa các domain.
+   * - `sort` **khớp** thứ tự cursor (vd `{ ts: -1, _id: -1 }`) + có index tương ứng.
+   * - `toCursor` trả cursor đã **serialize HTTP-safe** (string/number/plain object).
+   *
+   * @typeParam TCursor - Kiểu con trỏ trang kế (scalar hoặc compound). Tự suy từ
+   *   return type của `toCursor`.
+   * @param filter - Filter đầy đủ (điều kiện nghiệp vụ + cursor page trước)
+   * @param options - `sort` + `limit` + `toCursor` (build cursor từ record cuối)
+   * @returns `data` (đã slice về `limit`) + `nextCursor` (`null` nếu hết)
+   *
+   * @example
+   * ```ts
+   * return this.cursorPaging(this.buildFilter(f, cursor), {
+   *   sort: { ts: -1, _id: -1 },
+   *   limit,
+   *   toCursor: (last) => ({ ts: last.ts.toISOString(), id: last.id }),
+   * });
+   * ```
+   */
+  protected async cursorPaging<TCursor>(
+    filter: Filter<Document>,
+    options: {
+      sort: Sort;
+      limit: number;
+      toCursor: (last: TEntity) => TCursor;
+    },
+  ): Promise<CursorPage<TEntity, TCursor>> {
+    const { sort, limit, toCursor } = options;
+
+    // Lấy limit + 1 để biết còn trang sau không, KHÔNG count toàn collection.
+    const docs = await this.findMany(filter, { sort, limit: limit + 1 });
+
+    const hasMore = docs.length > limit;
+    const data = hasMore ? docs.slice(0, limit) : docs;
+    const last = data[data.length - 1];
+
+    // nextCursor dựng từ record cuối page hiện tại → trang kế dùng làm boundary.
+    const nextCursor = hasMore && last ? toCursor(last) : null;
+
+    return { data, nextCursor };
   }
 
   /**

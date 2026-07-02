@@ -36,6 +36,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { isSameBingo18Result } from "@megawin/game-bingo18/rules";
 import { nowVN } from "@megawin/shared/utils";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { auditPublishResult, auditRepublishResult } from "../../services/audit-log";
 import type { PublishResultInput, PublishResultOutput } from "./dto/draw.dto";
 
 const PUBLISHABLE_STATUSES = new Set<string>([
@@ -88,14 +89,29 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
             `Cập nhật Vietlott Ref kỳ ${input.drawId} thất bại — draw status đã thay đổi.`,
           );
         }
+
+        // Kết quả KHÔNG đổi, chỉ sửa vietlottRef → không mở resettle. Vẫn ghi
+        // audit qua auditPublishResult để lưu vết ai đổi ref — theo quyết định
+        // gộp vietlottRef vào publish, không tách action riêng. numbers/sum lấy
+        // từ `draw.result` (kết quả hiện hành trong DB), KHÔNG từ input — hành
+        // động này không đổi kết quả. Fire-and-forget.
+        auditPublishResult({
+          actor: input.actor,
+          drawId: input.drawId,
+          numbers: draw.result!.numbers,
+          sum: draw.result!.sum,
+          vietlottRef: input.vietlottRef,
+        });
       }
 
       // Giữ nguyên status + result hiện tại (không đổi gì về kết quả/settle).
+      // Trả về result đang lưu trong DB, KHÔNG echo input — hành động này chỉ
+      // sửa vietlottRef.
       return this.toOutput(
         input.drawId,
         draw.status,
-        numbers,
-        sum,
+        draw.result!.numbers,
+        draw.result!.sum,
         draw.result!.publishedAt ?? publishedAt,
       );
     }
@@ -116,6 +132,15 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
           `Sửa kết quả kỳ ${input.drawId} thất bại — draw không còn ở "settled" (có thể đã bị thay đổi đồng thời).`,
         );
       }
+
+      // Sửa kết quả sau settle → republish (mở luồng resettle). Fire-and-forget.
+      auditRepublishResult({
+        actor: input.actor,
+        drawId: input.drawId,
+        numbers,
+        sum,
+        vietlottRef: input.vietlottRef,
+      });
 
       return this.toOutput(input.drawId, DrawStatus.Published, numbers, sum, publishedAt);
     }
@@ -141,6 +166,16 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
     if (!updated) {
       throw AppException.internal(`Publish kết quả kỳ ${input.drawId} thất bại. Vui lòng thử lại.`);
     }
+
+    // Publish lần đầu / sửa trước settle / ghi đè Published (chờ resettle):
+    // đều là publish thường (không mở resettle mới). Fire-and-forget.
+    auditPublishResult({
+      actor: input.actor,
+      drawId: input.drawId,
+      numbers,
+      sum,
+      vietlottRef: input.vietlottRef,
+    });
 
     return this.toOutput(input.drawId, DrawStatus.Published, numbers, sum, publishedAt);
   }

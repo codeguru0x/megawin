@@ -1,6 +1,7 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawNo } from "@megawin/game-power655/entities";
 import type { DrawEntity } from "@megawin/game-power655/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 
 // ─────────────────────────────────────────────
 // CreateDraws (batch – tạo nhiều kỳ liên tiếp)
@@ -81,6 +82,16 @@ export interface DrawIdInput {
   drawId: string;
 }
 
+/**
+ * Input cho open/close-sales — kèm actor để ghi audit ai đổi trạng thái kỳ.
+ * `actor` optional để không phá các caller nội bộ chỉ cần chuyển trạng thái;
+ * route BO luôn truyền actor.
+ */
+export interface DrawTransitionInput extends DrawIdInput {
+  /** Chủ thể thực hiện (staff BO) — dùng cho audit. Optional cho caller nội bộ. */
+  actor?: AuditActor;
+}
+
 export interface DrawTransitionOutput {
   /** ID của kỳ quay đã chuyển trạng thái. */
   drawId: string;
@@ -108,6 +119,8 @@ export interface PublishResultInput {
     /** Ngày quay Vietlott, định dạng YYYY-MM-DD. */
     drawDate: string;
   };
+  /** Chủ thể thực hiện — dùng cho audit. */
+  actor: AuditActor;
 }
 
 export interface PublishResultOutput {
@@ -136,6 +149,9 @@ export interface TriggerSettleInput {
 
   /** ARN của Step Function để kết sổ. */
   SETTLE_SFN_ARN: string;
+
+  /** Chủ thể thực hiện (staff BO) — dùng cho audit. Optional cho caller nội bộ. */
+  actor?: AuditActor;
 }
 
 export interface TriggerSettleOutput {
@@ -164,6 +180,8 @@ export interface TriggerResettleInput {
    *   thủ công sau mỗi kỳ. Thiếu xác nhận → reject `RESETTLE_REQUIRES_DBA`.
    */
   dbaConfirmed?: boolean;
+  /** Chủ thể thực hiện (staff BO) — dùng cho audit. Optional cho caller nội bộ. */
+  actor?: AuditActor;
 }
 
 export interface TriggerResettleOutput {
@@ -189,6 +207,8 @@ export interface ReopenForCascadeInput {
    * Thiếu → reject `RESETTLE_REQUIRES_DBA`.
    */
   dbaConfirmed?: boolean;
+  /** Chủ thể thực hiện (staff BO) — dùng cho audit. Optional cho caller nội bộ. */
+  actor?: AuditActor;
 }
 
 export interface ReopenForCascadeOutput {

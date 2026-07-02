@@ -1,4 +1,5 @@
-import type { TenantConfigEntity } from "@megawin/game-mega645/entities";;
+import type { TenantConfigEntity } from "@megawin/game-mega645/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 
 // ─────────────────────────────────────────────
 // ListTenantConfigs
@@ -34,6 +35,8 @@ export interface UpdateTenantConfigInput {
   commissionRate?: number;
   /** Bật/tắt tenant tham gia game Mega 6/45. */
   isEnabled?: boolean;
+  /** Chủ thể thực hiện — dùng cho audit. */
+  actor: AuditActor;
 }
 
 export interface UpdateTenantConfigOutput {

@@ -4,7 +4,8 @@ import type {
   PrizeAmounts,
   PlayRules,
 } from "@megawin/game-lotto535/entities";
-import type { GlobalConfigEntity } from "@megawin/game-lotto535/entities";;
+import type { GlobalConfigEntity } from "@megawin/game-lotto535/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 
 // ─────────────────────────────────────────────
 // GetGameConfig
@@ -28,6 +29,8 @@ export interface UpdateGameConfigInput {
   defaultPrizes?: Partial<PrizeAmounts>;
   /** Quy tắc chơi (unitPrice, maxBoardsPerTicket, maxDrawCount, ...). Partial update. */
   play?: Partial<PlayRules>;
+  /** Chủ thể thực hiện — dùng cho audit. */
+  actor: AuditActor;
 }
 
 export interface UpdateGameConfigOutput {

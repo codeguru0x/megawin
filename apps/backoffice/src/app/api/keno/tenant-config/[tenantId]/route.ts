@@ -1,25 +1,26 @@
 import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 import { CompanyRole } from "@megawin/identity/entities";
 import {
   GetTenantConfigUseCase,
   UpdateTenantConfigUseCase,
 } from "@megawin/game-keno-application/use-cases/tenant-config";
 
-import { updateTenantConfigSchema } from "../_lib/schema";
+import { tenantIdParamSchema, updateTenantConfigSchema } from "../_lib/schema";
 
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
+  .params(tenantIdParamSchema)
   .handler(async ({ params }) => {
-    const { tenantId } = params as { tenantId: string };
     const useCase = new GetTenantConfigUseCase();
-    return useCase.run({ tenantId });
+    return useCase.run({ tenantId: params.tenantId });
   });
 
 export const PUT = withApi()
   .auth({ roles: [CompanyRole.Staff] })
+  .params(tenantIdParamSchema)
   .body(updateTenantConfigSchema)
-  .handler(async ({ params, body }) => {
-    const { tenantId } = params as { tenantId: string };
+  .handler(async ({ params, body, session }) => {
     const useCase = new UpdateTenantConfigUseCase();
-    return useCase.run({ tenantId, ...body });
+    return useCase.run({ tenantId: params.tenantId, ...body, actor: actorFromSession(session!) });
   });

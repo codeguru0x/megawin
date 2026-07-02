@@ -2,10 +2,8 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
-import type {
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput,
-} from "./dto/game-config.dto";
+import { auditUpdateGameConfig } from "../../services/audit-log";
+import type { UpdateGameConfigInput, UpdateGameConfigOutput } from "./dto/game-config.dto";
 
 /**
  * Cập nhật cấu hình game toàn cục (upsert).
@@ -25,9 +23,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
 > {
   private readonly repo = new GameConfigRepository();
 
-  protected async execute(
-    input: UpdateGameConfigInput
-  ): Promise<UpdateGameConfigOutput> {
+  protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {
     this.validateInput(input);
     const existing = await this.repo.getGlobalConfig();
 
@@ -46,8 +42,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
         : undefined,
       defaultPrizes: input.defaultPrizes
         ? {
-            ...(existing?.defaultPrizes ??
-              DEFAULT_LOTTO535_CONFIG.defaultPrizes),
+            ...(existing?.defaultPrizes ?? DEFAULT_LOTTO535_CONFIG.defaultPrizes),
             ...input.defaultPrizes,
           }
         : undefined,
@@ -68,6 +63,15 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
       throw AppException.internal("Cập nhật GameConfig thất bại.");
     }
 
+    // Audit sau khi upsert thành công. Chỉ ghi giá trị MỚI của các nhóm đã đổi
+    // (`changed`) — muốn biết giá trị cũ thì trace ngược record version trước.
+    // Fire-and-forget: không chặn response.
+    auditUpdateGameConfig({
+      actor: input.actor,
+      version: updated.version,
+      changed: cleanMerged,
+    });
+
     return {
       config: updated,
       version: updated.version,
@@ -82,9 +86,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
         defaultCommissionRate !== undefined &&
         (defaultCommissionRate < 0 || defaultCommissionRate > 1)
       ) {
-        throw AppException.badRequest(
-          "defaultCommissionRate phải trong range [0, 1]."
-        );
+        throw AppException.badRequest("defaultCommissionRate phải trong range [0, 1].");
       }
 
       if (companyRate !== undefined && (companyRate < 0 || companyRate > 1)) {
@@ -101,16 +103,10 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
     }
 
     if (input.jackpot) {
-      if (
-        input.jackpot.seedAmount !== undefined &&
-        input.jackpot.seedAmount < 0
-      ) {
+      if (input.jackpot.seedAmount !== undefined && input.jackpot.seedAmount < 0) {
         throw AppException.badRequest("seedAmount phải >= 0.");
       }
-      if (
-        input.jackpot.splitThreshold !== undefined &&
-        input.jackpot.splitThreshold < 0
-      ) {
+      if (input.jackpot.splitThreshold !== undefined && input.jackpot.splitThreshold < 0) {
         throw AppException.badRequest("splitThreshold phải >= 0.");
       }
     }

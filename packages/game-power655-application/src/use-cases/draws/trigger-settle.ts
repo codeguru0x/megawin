@@ -5,6 +5,7 @@ import { DrawStatus } from "@megawin/game-core/entities";
 import { toExecutionName } from "@megawin/game-core/utils";
 import { startExecution, ExecutionAlreadyExists } from "@megawin/app-core/aws/sf";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { auditSettle } from "../../services/audit-log";
 import type { TriggerSettleInput, TriggerSettleOutput } from "./dto/draw.dto";
 
 /**
@@ -80,6 +81,12 @@ export class TriggerSettleUseCase extends NextApiUseCase<TriggerSettleInput, Tri
           "DRAW_INVALID_TRANSITION",
           `Không thể kết sổ – draw hiện tại không ở trạng thái "published".`,
         );
+      }
+
+      // Audit staff bấm kết sổ (chỉ ghi ở lần transition thật published→settling,
+      // không ghi lại ở retry idempotent). Fire-and-forget.
+      if (input.actor) {
+        auditSettle({ actor: input.actor, drawId: input.drawId, prevStatus: draw.status });
       }
     }
 

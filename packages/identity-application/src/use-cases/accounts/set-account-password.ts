@@ -2,7 +2,9 @@ import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { adminSetUserPassword, COGNITO_WORKFORCE_POOL_ID } from "@megawin/app-core/aws/cognito";
 import { CompanyRole } from "@megawin/identity/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 import { AccountRepository } from "../../infras/repos/account-repo";
+import { auditSetAccountPassword } from "../../services/audit-log";
 
 export interface SetAccountPasswordInput {
   username: string;
@@ -13,6 +15,8 @@ export interface SetAccountPasswordInput {
    * Admin (super role) đổi pass cho mọi tài khoản.
    */
   callerRoles: CompanyRole[];
+  /** Chủ thể thực hiện (caller) — dùng cho audit log cross-account. */
+  actor: AuditActor;
 }
 
 export interface SetAccountPasswordOutput {
@@ -33,6 +37,13 @@ export class SetAccountPasswordUseCase extends NextApiUseCase<
       username: input.username,
       password: input.password,
       permanent: false,
+    });
+
+    // Audit cross-account SAU khi Cognito đổi pass thành công. Fire-and-forget:
+    // không chặn flow. Chỉ ghi cờ passwordReset — KHÔNG ghi giá trị mật khẩu.
+    auditSetAccountPassword({
+      actor: input.actor,
+      targetUsername: input.username,
     });
 
     return { username: input.username };

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 import { CompanyRole } from "@megawin/identity/entities";
 import { UpdateScheduleUseCase } from "@megawin/game-power655-application/use-cases/draws";
 
@@ -23,7 +24,7 @@ const updateScheduleUseCase = new UpdateScheduleUseCase();
 export const PATCH = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(scheduleSchema)
-  .handler(async ({ params, body }) => {
+  .handler(async ({ params, body, session }) => {
     const { drawId } = params as { drawId: string };
-    return updateScheduleUseCase.run({ drawId, ...body });
+    return updateScheduleUseCase.run({ drawId, ...body, actor: actorFromSession(session!) });
   });

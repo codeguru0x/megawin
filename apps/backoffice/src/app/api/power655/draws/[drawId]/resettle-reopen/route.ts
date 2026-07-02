@@ -1,4 +1,5 @@
 import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 import { CompanyRole } from "@megawin/identity/entities";
 import { ReopenForCascadeUseCase } from "@megawin/game-power655-application/use-cases/draws";
 
@@ -34,10 +35,11 @@ const reopenForCascadeUseCase = new ReopenForCascadeUseCase();
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(reopenForCascadeSchema)
-  .handler(async ({ params, body }) => {
+  .handler(async ({ params, body, session }) => {
     const { drawId } = params as { drawId: string };
     return reopenForCascadeUseCase.run({
       drawId,
       dbaConfirmed: body.dbaConfirmed,
+      actor: actorFromSession(session!),
     });
   });

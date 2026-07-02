@@ -23,6 +23,7 @@ export const MODULES = {
   dashboard: "dashboard",
   txLogs: "tx-logs",
   tenantDispatch: "tenant-dispatch",
+  auditLogs: "audit-logs",
 } as const;
 
 /** Union type tất cả module ID hợp lệ */

@@ -12,7 +12,9 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
 import { DrawStatus } from "@megawin/game-core/entities";
+import type { AuditActor } from "@megawin/audit/logger";
 import { DrawRepository } from "../../infras/repos/draw-repo";
+import { auditUpdateSchedule } from "../../services/audit-log";
 
 export interface UpdateScheduleInput {
   drawId: string;
@@ -22,6 +24,8 @@ export interface UpdateScheduleInput {
   salesCloseAt: string;
   /** ISO string – giờ quay số mới (tùy chọn, hiếm khi thay đổi). */
   drawTime?: string;
+  /** Chủ thể thực hiện (staff BO) — dùng cho audit. Optional cho caller nội bộ. */
+  actor?: AuditActor;
 }
 
 export interface UpdateScheduleOutput {
@@ -58,7 +62,7 @@ export class UpdateScheduleUseCase extends NextApiUseCase<
     const openAt = new Date(input.salesOpenAt);
     const closeAt = new Date(input.salesCloseAt);
     const newDrawTime = input.drawTime ? new Date(input.drawTime) : null;
-    const drawTime = newDrawTime ?? new Date(draw.drawTime);
+    const drawTime = newDrawTime ?? draw.drawTime;
 
     if (isNaN(openAt.getTime()) || isNaN(closeAt.getTime())) {
       throw AppException.badRequest("Thời gian mở/đóng bán không hợp lệ.");
@@ -86,6 +90,25 @@ export class UpdateScheduleUseCase extends NextApiUseCase<
 
     if (!updated) {
       throw AppException.internal("Cập nhật lịch thất bại.");
+    }
+
+    // Audit staff sửa lịch (fire-and-forget). `before` lấy từ snapshot draw
+    // trước khi update để tái dựng diff; `after` là giá trị vừa ghi.
+    if (input.actor) {
+      auditUpdateSchedule({
+        actor: input.actor,
+        drawId: input.drawId,
+        before: {
+          openAt: draw.sales.openAt?.toISOString(),
+          closeAt: draw.sales.closeAt.toISOString(),
+          drawTime: draw.drawTime.toISOString(),
+        },
+        after: {
+          openAt: openAt.toISOString(),
+          closeAt: closeAt.toISOString(),
+          drawTime: drawTime.toISOString(),
+        },
+      });
     }
 
     return {

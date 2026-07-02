@@ -19,8 +19,8 @@ import {
   Ban,
   FileSearch,
   Send,
-  Undo2,
   History,
+  Tv,
 } from "lucide-react";
 
 import { CompanyRole } from "@megawin/identity/entities";
@@ -74,14 +74,19 @@ export interface NavGroup {
 export const operatorSidebarItems: NavGroup[] = [
   {
     id: 1,
-    label: "Quản lý",
+    label: "Hệ thống",
     items: [
       {
-        title: "Ứng dụng",
+        title: "Ứng dụng đối tác",
         url: "/tenants",
         icon: Briefcase,
         /** Chỉ admin mới có quyền quản lý ứng dụng (tenants). */
         roles: [CompanyRole.Admin],
+      },
+      {
+        title: "Lịch sử thao tác",
+        url: "/audit-logs",
+        icon: History,
       },
     ],
   },
@@ -431,6 +436,59 @@ export const operatorSidebarItems: NavGroup[] = [
           {
             title: "Cấu hình đại lý",
             url: "/games/max3dpro/config/tenant",
+            icon: Building2,
+          },
+        ],
+      },
+      {
+        title: "Xổ số TT",
+        url: "#",
+        comingSoon: true,
+        icon: Tv,
+        subItems: [
+          {
+            title: "Vận hành",
+            url: "#",
+            comingSoon: true,
+            icon: Activity,
+            sectionLabel: "Vận hành",
+          },
+          {
+            title: "Kỳ quay",
+            url: "#",
+            comingSoon: true,
+            icon: CalendarClock,
+          },
+          {
+            title: "Báo cáo tài chính",
+            url: "#",
+            comingSoon: true,
+            icon: CircleDollarSign,
+            sectionLabel: "Báo cáo",
+          },
+          {
+            title: "Tồn đọng",
+            url: "#",
+            comingSoon: true,
+            icon: Clock,
+          },
+          {
+            title: "Kỳ huỷ",
+            url: "#",
+            comingSoon: true,
+            icon: Ban,
+          },
+          {
+            title: "Cấu hình game",
+            url: "#",
+            comingSoon: true,
+            icon: Settings2,
+            sectionLabel: "Cài đặt",
+          },
+          {
+            title: "Cấu hình đại lý",
+            url: "#",
+            comingSoon: true,
             icon: Building2,
           },
         ],

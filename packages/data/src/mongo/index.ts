@@ -1,4 +1,6 @@
 export type { BaseEntity } from "./base-entity";
+export type { CursorPage } from "./cursor-page";
+export { encodeCursor, decodeCursor } from "./cursor-codec";
 export { Constants } from "./constants";
 export { getMongoClient, getMongoDb } from "./client";
 export { longToString } from "./long";
