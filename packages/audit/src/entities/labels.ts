@@ -9,7 +9,7 @@ import type { AuditAction } from "./audit-log.enums";
 
 /** Nhãn tiếng Việt cho loại chủ thể thực hiện hành động. */
 export const AuditActorTypeLabel: Record<AuditActorType, string> = {
-  [AuditActorType.Company]: "Nhân viên",
+  [AuditActorType.Company]: "Nhân viên Cty",
   [AuditActorType.Agent]: "Đại lý",
   [AuditActorType.Player]: "Người chơi",
   [AuditActorType.System]: "Hệ thống",
