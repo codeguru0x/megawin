@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getGameLabel } from "@/lib/game-labels";
+import { GameBadge } from "@/components/game-badge";
 import { cn } from "@/lib/utils";
 
 export interface AuditLogsTableProps {
@@ -97,18 +97,19 @@ export function AuditLogsTable({
                     {displayVNDateTime(row.ts)}
                   </TableCell>
 
-                  {/* Actor — tên snapshot + badge loại + roles */}
+                  {/* Actor — tên + badge loại + roles gọn trên 1 dòng (roles nối "·") */}
                   <TableCell>
-                    <div className="flex flex-col gap-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="truncate text-sm font-medium">{row.actorName}</span>
-                        <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                          {AuditActorTypeLabel[row.actorType]}
-                        </span>
-                      </div>
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <span className="truncate text-sm font-medium">{row.actorName}</span>
+                      <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                        {AuditActorTypeLabel[row.actorType]}
+                      </span>
                       {row.actorRoles.length > 0 && (
-                        <span className="truncate text-xs text-muted-foreground">
-                          {row.actorRoles.join(", ")}
+                        <span
+                          className="truncate text-xs text-muted-foreground"
+                          title={row.actorRoles.join(", ")}
+                        >
+                          · {row.actorRoles.join(", ")}
                         </span>
                       )}
                     </div>
@@ -124,16 +125,12 @@ export function AuditLogsTable({
                     </div>
                   </TableCell>
 
-                  {/* Đối tượng — label tự mô tả + game. Loại đối tượng suy ra từ label
+                  {/* Đối tượng — label tự mô tả + game badge màu. Loại đối tượng suy ra từ label
                       (thường lặp: "Cấu hình game Keno"); chi tiết "đổi gì" xem drawer. */}
                   <TableCell className="text-sm">
                     <div className="flex flex-wrap items-center gap-1.5">
                       {targetText && <span className="truncate">{targetText}</span>}
-                      {row.game && (
-                        <span className="shrink-0 text-xs text-muted-foreground">
-                          {getGameLabel(row.game)}
-                        </span>
-                      )}
+                      {row.game && <GameBadge gameProduct={row.game} />}
                     </div>
                   </TableCell>
 

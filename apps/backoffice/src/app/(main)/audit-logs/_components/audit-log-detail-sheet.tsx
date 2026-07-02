@@ -19,7 +19,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { getGameLabel } from "@/lib/game-labels";
+import { GameBadge } from "@/components/game-badge";
 import { cn } from "@/lib/utils";
 
 import { useAuditLogDetail } from "../_lib/use-queries";
@@ -116,59 +116,69 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
 
   return (
     <div className="flex flex-col gap-5 px-5 py-4">
-      {/* Summary */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span
-          className={cn(
-            "rounded px-2 py-0.5 text-xs font-medium",
-            isSuccess ? "bg-profit/10 text-profit" : "bg-destructive/10 text-destructive",
-          )}
-        >
-          {AuditStatusLabel[log.status]}
-        </span>
-        <span className="rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-          {AuditCategoryLabel[log.category]}
-        </span>
-        <span className="text-sm font-medium">{actionLabel}</span>
-        <span className="ml-auto font-mono text-sm tabular-nums text-muted-foreground">
-          {displayVNDateTime(log.ts)}
-        </span>
+      {/* Summary — action là tiêu đề chính, badge trạng thái/nhóm phía trên, thời gian nhỏ dưới */}
+      <div className="flex flex-col gap-1.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={cn(
+              "rounded-full px-2 py-0.5 text-xs font-medium",
+              isSuccess ? "bg-profit/10 text-profit" : "bg-destructive/10 text-destructive",
+            )}
+          >
+            {AuditStatusLabel[log.status]}
+          </span>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+            {AuditCategoryLabel[log.category]}
+          </span>
+          <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">
+            {displayVNDateTime(log.ts)}
+          </span>
+        </div>
+        <h2 className="text-base font-semibold leading-tight">{actionLabel}</h2>
       </div>
 
-      {/* Actor + target */}
-      <div className="flex flex-col gap-2 rounded-md border p-3">
-        <Field label="Người thực hiện">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium">{log.actorName}</span>
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+      {/* Actor + target — 2 khối gọn, mã ID inline nhỏ dưới tên */}
+      <div className="grid gap-3 rounded-md border p-3 sm:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            Thực hiện bởi
+          </span>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate text-sm font-medium">{log.actorName}</span>
+            <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
               {AuditActorTypeLabel[log.actorType]}
             </span>
-            <span className="font-mono text-xs text-muted-foreground">{log.actorId}</span>
           </div>
-        </Field>
-        {log.actorRoles.length > 0 && (
-          <Field label="Vai trò">
-            <span className="text-sm text-muted-foreground">{log.actorRoles.join(", ")}</span>
-          </Field>
-        )}
-        {log.tenantId && (
-          <Field label="Tenant">
-            <span className="font-mono text-sm">{log.tenantId}</span>
-          </Field>
-        )}
-        <Field label="Đối tượng">
-          <div className="flex flex-wrap items-center gap-2">
+          {log.actorRoles.length > 0 && (
+            <span
+              className="truncate text-xs text-muted-foreground"
+              title={log.actorRoles.join(", ")}
+            >
+              {log.actorRoles.join(", ")}
+            </span>
+          )}
+        </div>
+
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            Đối tượng
+          </span>
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className="text-sm">{AuditTargetTypeLabel[log.targetType]}</span>
-            {(log.targetLabel || log.targetId) && (
-              <span className="font-mono text-xs text-muted-foreground">
-                {log.targetLabel || log.targetId}
-              </span>
-            )}
-            {log.game && (
-              <span className="text-xs text-muted-foreground">{getGameLabel(log.game)}</span>
-            )}
+            {log.game && <GameBadge gameProduct={log.game} />}
           </div>
-        </Field>
+          {(log.targetLabel || log.targetId) && (
+            <span
+              className="truncate font-mono text-[11px] text-muted-foreground/70"
+              title={log.targetLabel || log.targetId}
+            >
+              {log.targetLabel || log.targetId}
+            </span>
+          )}
+          {log.tenantId && (
+            <span className="truncate text-xs text-muted-foreground">Tenant: {log.tenantId}</span>
+          )}
+        </div>
       </div>
 
       {/* Error box — chỉ hiện khi failure */}
@@ -189,8 +199,13 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
           transition có cả before/after → 2 cột so sánh. */}
       {hasChanges && (
         <div className="flex flex-col gap-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Thay đổi
+            {diffKeys.size > 0 && (
+              <span className="rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-amber-700 dark:text-amber-300">
+                {diffKeys.size}
+              </span>
+            )}
           </h3>
           {log.changes?.before !== undefined ? (
             <div className="grid grid-cols-2 gap-2">
