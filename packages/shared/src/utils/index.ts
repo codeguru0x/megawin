@@ -5,5 +5,6 @@ export * from "./financial-date";
 export * from "./ip";
 export * from "./log";
 export * from "./number";
+export * from "./object";
 export * from "./player-username";
 export * from "./unique";

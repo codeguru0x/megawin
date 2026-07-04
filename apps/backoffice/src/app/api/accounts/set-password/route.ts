@@ -16,7 +16,11 @@ const useCase = new SetAccountPasswordUseCase();
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(setPasswordSchema)
-  .handler(async ({ body, session }) => {
+  .handler(async ({ body, session, request }) => {
     const callerRoles = (session?.user.roles ?? []) as CompanyRole[];
-    return useCase.run({ ...body, callerRoles, actor: actorFromSession(session!) });
+    return useCase.run({
+      ...body,
+      callerRoles,
+      actor: actorFromSession(session!, request),
+    });
   });

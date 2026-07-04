@@ -1,11 +1,15 @@
 /**
- * BO use case — list audit log với filter đa chiều + cursor pagination.
+ * BO use case — list audit log ADMIN/STAFF: filter đa chiều + cursor pagination.
  *
- * Dùng cho trang "Lịch sử thao tác" trong Backoffice. Hỗ trợ:
+ * Dùng cho trang "Lịch sử thao tác" (toàn hệ thống) trong Backoffice. Hỗ trợ:
  * - Filter theo `from/to` (date range đã convert sang UTC boundary ở route).
  * - Filter theo mọi chiều top-level: actor, tenant, game, category, action,
  *   target, status.
  * - Cursor-based pagination `(ts, _id)` — stable khi data insert liên tục.
+ *
+ * KHÔNG có self-scope: đây là view toàn cục cho admin/staff. Nhật ký cá nhân
+ * ("Nhật ký của tôi") tách riêng ở {@link ListMyAuditLogsUseCase} với input hẹp,
+ * ép self-scope theo accountId — client không thể mở rộng phạm vi xem log.
  *
  * KISS: mọi parse + validate (date boundary, range cap, limit default, cursor
  * decode) đã làm ở Zod schema tại route. Use-case chỉ map input → filter và gọi
@@ -52,6 +56,8 @@ export interface ListAuditLogsInput {
   /** Tìm actor theo `actorId` (chính xác) hoặc `actorName` (chứa, không dấu hoa/thường). */
   actor?: string;
   actorType?: AuditActorType;
+  /** Khớp chính xác IP actor — tra "mọi thao tác phát từ IP X". */
+  ip?: string;
   tenantId?: string;
   /** GameProduct key: keno | bingo18 | ... */
   game?: string;
@@ -83,6 +89,7 @@ export class ListAuditLogsUseCase extends NextApiUseCase<ListAuditLogsInput, Aud
       to: input.to,
       actor: input.actor,
       actorType: input.actorType,
+      ip: input.ip,
       tenantId: input.tenantId,
       game: input.game,
       category: input.category,

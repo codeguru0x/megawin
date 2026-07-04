@@ -15,7 +15,7 @@ export interface DisableMfaInput {
   username: string;
   password: string;
   totpCode: string;
-  /** Chủ thể thực hiện (chính chủ tài khoản) — dùng cho audit log self. */
+  /** Chủ thể thực hiện (chính chủ tài khoản) — dùng cho audit log self (IP gắn sẵn). */
   actor: AuditActor;
 }
 

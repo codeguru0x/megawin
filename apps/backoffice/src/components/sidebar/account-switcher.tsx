@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BadgeCheck, BookOpen, LogOut } from "lucide-react";
+import { BadgeCheck, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -16,6 +16,13 @@ import { useAuth } from "@/providers/auth-provider";
 import { signOutAndRedirect } from "@/lib/auth/sign-out";
 import { getInitials } from "@/lib/utils";
 
+/**
+ * Menu tài khoản RÚT GỌN ở header (góc trên phải) — shortcut nhanh.
+ *
+ * CỐ Ý chỉ gồm "Thông tin cá nhân" + "Thoát" để tránh trùng lặp với menu đầy đủ
+ * ở sidebar footer ({@link NavUser}). Header ưu tiên cho tiện ích global (theme,
+ * sau này thêm thông báo/help); menu tài khoản đầy đủ thuộc về sidebar footer.
+ */
 export function AccountSwitcher() {
   const { session, isPending } = useAuth();
 
@@ -66,12 +73,6 @@ export function AccountSwitcher() {
             <Link href="/me">
               <BadgeCheck />
               Thông tin cá nhân
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/guides">
-              <BookOpen />
-              Hướng dẫn sử dụng
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>

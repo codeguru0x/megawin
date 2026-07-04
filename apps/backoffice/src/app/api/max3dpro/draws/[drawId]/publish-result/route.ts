@@ -9,12 +9,12 @@ const publishResultUseCase = new PublishResultUseCase();
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(publishResultSchema)
-  .handler(async ({ params, body, session }) => {
+  .handler(async ({ params, body, session, request }) => {
     const { drawId } = params as { drawId: string };
     return publishResultUseCase.run({
       drawId,
       result: body.result,
       vietlottRef: body.vietlottRef,
-      actor: actorFromSession(session!),
+      actor: actorFromSession(session!, request),
     });
   });

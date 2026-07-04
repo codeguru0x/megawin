@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CircleUser, EllipsisVertical, LogOut } from "lucide-react";
+import { BookOpen, EllipsisVertical, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -19,10 +19,18 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { ACCOUNT_NAV_ITEMS } from "@/lib/account-nav";
 import { useAuth } from "@/providers/auth-provider";
 import { signOutAndRedirect } from "@/lib/auth/sign-out";
 import { getInitials } from "@/lib/utils";
 
+/**
+ * Menu tài khoản ĐẦY ĐỦ ở sidebar footer (góc dưới trái) — "identity anchor".
+ *
+ * Đây là điểm vào CHÍNH cho khu vực tài khoản cá nhân: liệt kê toàn bộ
+ * {@link ACCOUNT_NAV_ITEMS} (Profile / Nhật ký / Đổi mật khẩu / MFA) + Hướng dẫn
+ * + Thoát. Menu rút gọn ở header ({@link AccountSwitcher}) chỉ là shortcut nhanh.
+ */
 export function NavUser() {
   const { session, isPending } = useAuth();
   const { isMobile } = useSidebar();
@@ -96,10 +104,18 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              {ACCOUNT_NAV_ITEMS.map((item) => (
+                <DropdownMenuItem key={item.href} asChild>
+                  <Link href={item.href}>
+                    <item.icon />
+                    {item.title}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
               <DropdownMenuItem asChild>
-                <Link href="/me">
-                  <CircleUser />
-                  Thông tin cá nhân
+                <Link href="/guides">
+                  <BookOpen />
+                  Hướng dẫn sử dụng
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>

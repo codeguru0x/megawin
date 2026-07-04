@@ -12,7 +12,7 @@ export interface ChangeMyPasswordInput {
   username: string;
   currentPassword: string;
   newPassword: string;
-  /** Chủ thể thực hiện (chính chủ tài khoản) — dùng cho audit log self. */
+  /** Chủ thể thực hiện (chính chủ tài khoản) — dùng cho audit log self (IP gắn sẵn). */
   actor: AuditActor;
 }
 

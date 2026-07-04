@@ -34,11 +34,11 @@ const reopenForCascadeUseCase = new ReopenForCascadeUseCase();
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(reopenForCascadeSchema)
-  .handler(async ({ params, body, session }) => {
+  .handler(async ({ params, body, session, request }) => {
     const { drawId } = params as { drawId: string };
     return reopenForCascadeUseCase.run({
       drawId,
       dbaConfirmed: body.dbaConfirmed,
-      actor: actorFromSession(session!),
+      actor: actorFromSession(session!, request),
     });
   });

@@ -10,6 +10,7 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
+import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
 
 import { PlaceBetUseCase } from "@megawin/game-max3d-application/use-cases/place-bet";
 import type { PlaceBetBoardInput } from "@megawin/game-max3d-application/use-cases/place-bet";
@@ -82,7 +83,7 @@ export const handler = withPlayerAuth(
   async (event) => {
     const { tenantId, accountId, username } = event.user;
     const { drawIds, boards: rawBoards } = event.schema.body;
-    const ipAddress = event.requestContext.http.sourceIp;
+    const ipAddress = extractClientIpFromApiGatewayV2(event);
 
     const boards: PlaceBetBoardInput[] = rawBoards.map((b: Max3dBoard) => ({
       boardNo: b.boardNo,

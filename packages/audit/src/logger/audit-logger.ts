@@ -1,5 +1,7 @@
+import { pruneUndefined } from "@megawin/shared/utils";
+
 import { AuditLogRepository } from "../infras/repos";
-import type { AuditLogInsertDoc } from "../entities";
+import type { AuditHttpContext, AuditLogInsertDoc, AuditMetadata } from "../entities";
 import { AuditStatus } from "../entities";
 
 import type { AuditEventInput } from "./types";
@@ -36,10 +38,39 @@ function getRepo(): AuditLogRepository {
 }
 
 /**
+ * Gom HTTP context của actor (userAgent/requestId/… phẳng ở input) thành object
+ * `http`, chỉ giữ field có giá trị; `undefined` nếu không field nào có giá trị.
+ *
+ * Thêm field HTTP mới (vd `deviceId`) chỉ cần thêm field vào `AuditEventInput` +
+ * 1 dòng trong candidate dưới đây — `pruneUndefined` (`@megawin/shared/utils`) tự
+ * loại field trống, không phải sửa điều kiện hard-code.
+ */
+function buildHttpContext(input: AuditEventInput): AuditHttpContext | undefined {
+  return pruneUndefined<AuditHttpContext>({
+    userAgent: input.userAgent,
+    requestId: input.requestId,
+  });
+}
+
+/**
+ * Gộp HTTP context vào `metadata.http`, giữ nguyên `worker`/`extra` caller đã truyền.
+ *
+ * Trả `undefined` khi KHÔNG có `metadata` lẫn HTTP context → không ghi object
+ * `metadata` rỗng vào DB (doc gọn). `http` chỉ gắn khi có ≥1 field giá trị.
+ */
+function buildMetadata(input: AuditEventInput): AuditMetadata | undefined {
+  const http = buildHttpContext(input);
+  if (!input.metadata && !http) return undefined;
+  return { ...input.metadata, ...(http && { http }) };
+}
+
+/**
  * Build `AuditLogInsertDoc` từ input — điền field hệ thống.
  *
  * `ts` mặc định `new Date()` (UTC). `status` mặc định `success`. `game` mặc định
- * `""` (không thuộc game cụ thể) — tầng lưu trữ luôn có sentinel để index đồng nhất.
+ * `""` (không thuộc game cụ thể). `ip` mặc định `""` (không bắt được) — tầng lưu
+ * trữ luôn có sentinel để index đồng nhất. HTTP context (userAgent/requestId)
+ * KHÔNG sentinel (không index) — gom vào `metadata.http` qua {@link buildMetadata}.
  */
 function toDoc(input: AuditEventInput): AuditLogInsertDoc {
   return {
@@ -49,6 +80,7 @@ function toDoc(input: AuditEventInput): AuditLogInsertDoc {
     actorName: input.actorName,
     actorRoles: input.actorRoles,
     tenantId: input.tenantId,
+    ip: input.ip ?? "",
     action: input.action,
     category: input.category,
     game: input.game ?? "",
@@ -59,7 +91,7 @@ function toDoc(input: AuditEventInput): AuditLogInsertDoc {
     errorCode: input.errorCode,
     errorMessage: input.errorMessage,
     changes: input.changes,
-    metadata: input.metadata,
+    metadata: buildMetadata(input),
   };
 }
 

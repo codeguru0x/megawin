@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 
 import { useAuditLogFilters } from "../_lib/use-filters";
-import { useAuditLogList } from "../_lib/use-queries";
+import { useAuditLogList, useAuditLogDetail } from "../_lib/use-queries";
 import { AuditLogsFilterBar } from "./audit-logs-filter-bar";
 import { AuditLogsTable } from "./audit-logs-table";
 import { AuditLogDetailSheet } from "./audit-log-detail-sheet";
@@ -55,6 +55,8 @@ export function AuditLogsContent() {
   const rows = query.data?.data ?? [];
   const nextCursor = query.data?.nextCursor ?? null;
 
+  const detailQuery = useAuditLogDetail(detail || null);
+
   return (
     <div className="flex flex-col gap-4">
       <AuditLogsFilterBar />
@@ -75,7 +77,7 @@ export function AuditLogsContent() {
         </CardContent>
       </Card>
 
-      <AuditLogDetailSheet id={detail || null} onClose={closeDetail} />
+      <AuditLogDetailSheet id={detail || null} onClose={closeDetail} query={detailQuery} />
     </div>
   );
 }

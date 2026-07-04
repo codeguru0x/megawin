@@ -7,7 +7,7 @@ const openSalesUseCase = new OpenSalesUseCase();
 
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
-  .handler(async ({ params, session }) => {
+  .handler(async ({ params, session, request }) => {
     const { drawId } = params as { drawId: string };
-    return openSalesUseCase.run({ drawId, actor: actorFromSession(session!) });
+    return openSalesUseCase.run({ drawId, actor: actorFromSession(session!, request) });
   });

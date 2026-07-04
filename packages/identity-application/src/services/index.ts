@@ -3,4 +3,6 @@ export {
   auditChangeOwnPassword,
   auditEnableMfa,
   auditDisableMfa,
+  auditLogin,
+  auditLogout,
 } from "./audit-log";

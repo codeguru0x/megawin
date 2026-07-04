@@ -22,12 +22,21 @@ import {
 import { GameBadge } from "@/components/game-badge";
 import { cn } from "@/lib/utils";
 
-import { useAuditLogDetail } from "../_lib/use-queries";
-
 export interface AuditLogDetailSheetProps {
   /** `null` = đóng drawer. */
   id: string | null;
   onClose: () => void;
+  /**
+   * Kết quả fetch chi tiết record — dependency-injected bởi parent (admin hoặc
+   * self-scoped). Sheet chỉ render, KHÔNG tự chọn endpoint. Trang admin truyền
+   * `useAuditLogDetail(id)`; trang "Nhật ký của tôi" truyền hook self-scoped gọi
+   * `/me/audit-logs/{id}`. Nhờ vậy 1 component UISheet dùng chung cho cả hai.
+   */
+  query: {
+    data: AuditLogEntity | undefined;
+    isLoading: boolean;
+    error: Error | null;
+  };
 }
 
 /**
@@ -65,9 +74,9 @@ function changedKeys(before: unknown, after: unknown): Set<string> {
   return keys;
 }
 
-export function AuditLogDetailSheet({ id, onClose }: AuditLogDetailSheetProps) {
+export function AuditLogDetailSheet({ id, onClose, query }: AuditLogDetailSheetProps) {
   const isOpen = !!id;
-  const { data: log, isLoading, error } = useAuditLogDetail(id);
+  const { data: log, isLoading, error } = query;
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -91,7 +100,7 @@ export function AuditLogDetailSheet({ id, onClose }: AuditLogDetailSheetProps) {
             <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
               <AlertCircle className="size-8 text-destructive/60" />
               <p className="text-sm font-medium text-destructive">Không tải được chi tiết</p>
-              <p className="text-xs text-muted-foreground">{(error as Error).message}</p>
+              <p className="text-xs text-muted-foreground">{error.message}</p>
             </div>
           )}
 
@@ -105,9 +114,13 @@ export function AuditLogDetailSheet({ id, onClose }: AuditLogDetailSheetProps) {
 function DetailBody({ log }: { log: AuditLogEntity }) {
   const isSuccess = log.status === AuditStatus.Success;
   const actionLabel = AuditActionLabel[log.action] ?? log.action;
-  const http = log.metadata?.http;
   const worker = log.metadata?.worker;
   const extra = log.metadata?.extra;
+  // IP là top-level indexed field (forensic) — hiển thị cạnh actor ("Thực hiện
+  // bởi"). userAgent/requestId gom trong metadata.http (không index, chỉ hiển
+  // thị/correlation) → thuộc khối "Nội dung" kỹ thuật.
+  const ip = log.ip;
+  const http = log.metadata?.http;
   const hasChanges =
     log.changes && (log.changes.before !== undefined || log.changes.after !== undefined);
   const diffKeys = hasChanges
@@ -149,16 +162,31 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
               {AuditActorTypeLabel[log.actorType]}
             </span>
           </div>
-          {log.actorRoles.length > 0 && (
-            <span
-              className="truncate text-xs text-muted-foreground"
-              title={log.actorRoles.join(", ")}
-            >
-              {log.actorRoles.join(", ")}
-            </span>
+          {/* Roles + IP trên cùng 1 hàng flex-wrap: roles là text (truncate khi
+              dài), IP là badge shrink-0 (như badge actorType) — luôn cạnh actor,
+              không đẩy layout xuống dòng lệch với cột "Đối tượng". IP thuộc
+              "who/where", luôn có với thao tác của người (chỉ vắng ở worker). */}
+          {(log.actorRoles.length > 0 || ip) && (
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              {log.actorRoles.length > 0 && (
+                <span
+                  className="min-w-0 truncate text-xs text-muted-foreground"
+                  title={log.actorRoles.join(", ")}
+                >
+                  {log.actorRoles.join(", ")}
+                </span>
+              )}
+              {ip && (
+                <span
+                  className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground"
+                  title="Địa chỉ IP"
+                >
+                  {ip}
+                </span>
+              )}
+            </div>
           )}
         </div>
-
         <div className="flex min-w-0 flex-col gap-1">
           <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             Đối tượng
@@ -218,40 +246,23 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
         </div>
       )}
 
-      {/* Metadata */}
-      {(http || worker || extra) && (
+      {/* Nội dung — HTTP context kỹ thuật + worker + metadata bổ sung. IP đã
+          hiển thị cạnh actor nên KHÔNG lặp ở đây. */}
+      {(http?.userAgent || http?.requestId || worker || extra) && (
         <div className="flex flex-col gap-2">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Nội dung
           </h3>
           <div className="flex flex-col gap-2 rounded-md border p-3">
-            {http && (
-              <>
-                {http.method && http.path && (
-                  <Field label="Request">
-                    <span className="break-all font-mono text-xs">
-                      {http.method} {http.path}
-                    </span>
-                  </Field>
-                )}
-                {http.ip && (
-                  <Field label="IP">
-                    <span className="font-mono text-xs">{http.ip}</span>
-                  </Field>
-                )}
-                {http.userAgent && (
-                  <Field label="User-Agent">
-                    <span className="break-all text-xs text-muted-foreground">
-                      {http.userAgent}
-                    </span>
-                  </Field>
-                )}
-                {http.requestId && (
-                  <Field label="Request ID">
-                    <span className="break-all font-mono text-xs">{http.requestId}</span>
-                  </Field>
-                )}
-              </>
+            {http?.userAgent && (
+              <Field label="Thiết bị">
+                <span className="break-all text-xs">{http.userAgent}</span>
+              </Field>
+            )}
+            {http?.requestId && (
+              <Field label="Request ID">
+                <span className="break-all font-mono text-xs">{http.requestId}</span>
+              </Field>
             )}
             {worker && (
               <>

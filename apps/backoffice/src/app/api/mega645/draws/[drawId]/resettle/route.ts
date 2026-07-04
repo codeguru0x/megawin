@@ -30,12 +30,12 @@ const triggerResettleUseCase = new TriggerResettleUseCase();
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(triggerResettleSchema)
-  .handler(async ({ params, body, session }) => {
+  .handler(async ({ params, body, session, request }) => {
     const { drawId } = params as { drawId: string };
     return triggerResettleUseCase.run({
       drawId,
       RESETTLE_SFN_ARN: env.MEGA645_RESETTLE_SFN_ARN,
       dbaConfirmed: body.dbaConfirmed,
-      actor: actorFromSession(session!),
+      actor: actorFromSession(session!, request),
     });
   });

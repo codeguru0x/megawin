@@ -7,7 +7,7 @@ const closeSalesUseCase = new CloseSalesUseCase();
 
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
-  .handler(async ({ params, session }) => {
+  .handler(async ({ params, session, request }) => {
     const { drawId } = params as { drawId: string };
-    return closeSalesUseCase.run({ drawId, actor: actorFromSession(session!) });
+    return closeSalesUseCase.run({ drawId, actor: actorFromSession(session!, request) });
   });

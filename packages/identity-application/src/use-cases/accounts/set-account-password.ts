@@ -15,7 +15,7 @@ export interface SetAccountPasswordInput {
    * Admin (super role) đổi pass cho mọi tài khoản.
    */
   callerRoles: CompanyRole[];
-  /** Chủ thể thực hiện (caller) — dùng cho audit log cross-account. */
+  /** Chủ thể thực hiện (caller) — dùng cho audit log cross-account (IP gắn sẵn). */
   actor: AuditActor;
 }
 

@@ -32,6 +32,7 @@
  */
 
 import { withPlayerAuth } from "@megawin/auth";
+import { extractClientIpFromApiGatewayV2 } from "@megawin/shared/utils/ip";
 
 import { PlaceBetUseCase } from "@megawin/game-bingo18-application/use-cases/place-bet";
 import {
@@ -157,7 +158,7 @@ export const handler = withPlayerAuth(
   async (event) => {
     const { tenantId, accountId, username } = event.user;
     const { drawIds, boards } = event.schema.body;
-    const ipAddress = event.requestContext.http.sourceIp;
+    const ipAddress = extractClientIpFromApiGatewayV2(event);
 
     return useCase.run({
       tenantId,

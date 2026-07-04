@@ -4,7 +4,6 @@ import {
   AuditCategory,
   AuditTargetType,
   type AuditAction,
-  type AuditHttpContext,
   type AuditScalar,
 } from "@megawin/audit/entities";
 import { GameProduct } from "@megawin/game-core/entities";
@@ -44,10 +43,9 @@ type PublishResultArgs = {
    * `metadata.extra`, không phải `changes`. Bỏ qua nếu không kèm ref.
    */
   vietlottRef?: { drawPeriod: string; drawDate: string };
-  meta?: AuditHttpContext;
 };
 
-/** Spread 5 field actor → DRY giữa các audit function. */
+/** Spread 5 field actor + ip → DRY giữa các audit function. */
 function actorFields(a: AuditActor) {
   return {
     actorId: a.id,
@@ -55,6 +53,7 @@ function actorFields(a: AuditActor) {
     actorName: a.name,
     actorRoles: a.roles,
     tenantId: a.tenantId,
+    ip: a.ip,
   };
 }
 
@@ -65,14 +64,12 @@ function actorFields(a: AuditActor) {
  * @param args.drawId - Id kỳ quay (`YYYY-MM-DD.NNN`).
  * @param args.prevStatus - Trạng thái draw trước khi void (dữ liệu runtime).
  * @param args.reason - Lý do huỷ (tuỳ chọn).
- * @param args.meta - Context HTTP (ip/userAgent/requestId…) nếu có.
  */
 export function auditDrawVoid(args: {
   actor: AuditActor;
   drawId: string;
   prevStatus: string;
   reason?: string;
-  meta?: AuditHttpContext;
 }): void {
   record({
     ...actorFields(args.actor),
@@ -83,7 +80,7 @@ export function auditDrawVoid(args: {
     targetId: args.drawId,
     targetLabel: `Kỳ ${args.drawId}`,
     changes: { before: { status: args.prevStatus } },
-    metadata: { http: args.meta, extra: dropUndefined({ reason: args.reason }) },
+    metadata: { extra: dropUndefined({ reason: args.reason }) },
   });
 }
 
@@ -116,7 +113,6 @@ function recordPublishResult(
       after: { winningMain: args.winningMain, winningSpecial: args.winningSpecial },
     },
     metadata: {
-      http: args.meta,
       extra: dropUndefined({
         vietlottDrawPeriod: args.vietlottRef?.drawPeriod,
         vietlottDrawDate: args.vietlottRef?.drawDate,
@@ -136,7 +132,6 @@ function recordPublishResult(
  * @param args.winningMain - 5 số chính (zero-padded `"01"`–`"35"`).
  * @param args.winningSpecial - 1 số đặc biệt (zero-padded `"01"`–`"12"`).
  * @param args.vietlottRef - Tham chiếu Vietlott (drawPeriod/drawDate) nếu có.
- * @param args.meta - Context HTTP nếu có.
  */
 export function auditPublishResult(args: PublishResultArgs): void {
   recordPublishResult(AUDIT_ACTIONS.draw.publishResult, args);
@@ -167,7 +162,6 @@ function recordStatusTransition(
     actor: AuditActor;
     drawId: string;
     prevStatus: string;
-    meta?: AuditHttpContext;
     extra?: Record<string, AuditScalar>;
   },
 ): void {
@@ -182,7 +176,7 @@ function recordStatusTransition(
     changes: {
       before: { status: args.prevStatus },
     },
-    metadata: { http: args.meta, extra: args.extra },
+    metadata: { extra: args.extra },
   });
 }
 
@@ -195,14 +189,8 @@ function recordStatusTransition(
  * @param args.actor - Chủ thể thực hiện.
  * @param args.drawId - Id kỳ quay (`YYYY-MM-DD.NNN`).
  * @param args.prevStatus - Trạng thái draw trước khi transition sang settling.
- * @param args.meta - Context HTTP nếu có.
  */
-export function auditSettle(args: {
-  actor: AuditActor;
-  drawId: string;
-  prevStatus: string;
-  meta?: AuditHttpContext;
-}): void {
+export function auditSettle(args: { actor: AuditActor; drawId: string; prevStatus: string }): void {
   recordStatusTransition(AUDIT_ACTIONS.draw.settle, {
     ...args,
   });
@@ -216,20 +204,17 @@ export function auditSettle(args: {
  * @param args.drawId - Id kỳ quay (`YYYY-MM-DD.NNN`).
  * @param args.prevStatus - Trạng thái draw trước khi transition sang settling.
  * @param args.resettleId - Session key của phiên resettle (tracing/snapshot).
- * @param args.meta - Context HTTP nếu có.
  */
 export function auditResettle(args: {
   actor: AuditActor;
   drawId: string;
   prevStatus: string;
   resettleId?: string;
-  meta?: AuditHttpContext;
 }): void {
   recordStatusTransition(AUDIT_ACTIONS.draw.resettle, {
     actor: args.actor,
     drawId: args.drawId,
     prevStatus: args.prevStatus,
-    meta: args.meta,
     extra: dropUndefined({ resettleId: args.resettleId }),
   });
 }
@@ -246,19 +231,16 @@ export function auditResettle(args: {
  * @param args.actor - Chủ thể thực hiện (staff, đã xác nhận DBA).
  * @param args.drawId - Id kỳ quay (`YYYY-MM-DD.NNN`).
  * @param args.prevStatus - Trạng thái draw trước khi mở lại (thường `settled`).
- * @param args.meta - Context HTTP nếu có.
  */
 export function auditReopenForCascade(args: {
   actor: AuditActor;
   drawId: string;
   prevStatus: string;
-  meta?: AuditHttpContext;
 }): void {
   recordStatusTransition(AUDIT_ACTIONS.draw.reopenForCascade, {
     actor: args.actor,
     drawId: args.drawId,
     prevStatus: args.prevStatus,
-    meta: args.meta,
   });
 }
 
@@ -268,13 +250,11 @@ export function auditReopenForCascade(args: {
  * @param args.actor - Chủ thể thực hiện.
  * @param args.drawId - Id kỳ quay (`YYYY-MM-DD.NNN`).
  * @param args.prevStatus - Trạng thái draw trước khi mở bán.
- * @param args.meta - Context HTTP nếu có.
  */
 export function auditOpenSales(args: {
   actor: AuditActor;
   drawId: string;
   prevStatus: string;
-  meta?: AuditHttpContext;
 }): void {
   recordStatusTransition(AUDIT_ACTIONS.draw.openSales, {
     ...args,
@@ -287,13 +267,11 @@ export function auditOpenSales(args: {
  * @param args.actor - Chủ thể thực hiện.
  * @param args.drawId - Id kỳ quay (`YYYY-MM-DD.NNN`).
  * @param args.prevStatus - Trạng thái draw trước khi đóng bán.
- * @param args.meta - Context HTTP nếu có.
  */
 export function auditCloseSales(args: {
   actor: AuditActor;
   drawId: string;
   prevStatus: string;
-  meta?: AuditHttpContext;
 }): void {
   recordStatusTransition(AUDIT_ACTIONS.draw.closeSales, {
     ...args,
@@ -310,14 +288,12 @@ export function auditCloseSales(args: {
  * @param args.drawId - Id kỳ quay (`YYYY-MM-DD.NNN`).
  * @param args.before - Lịch cũ (ISO 8601): openAt/closeAt/drawTime.
  * @param args.after - Lịch mới (ISO 8601): openAt/closeAt/drawTime.
- * @param args.meta - Context HTTP nếu có.
  */
 export function auditUpdateSchedule(args: {
   actor: AuditActor;
   drawId: string;
   before: { openAt?: string; closeAt?: string; drawTime?: string };
   after: { openAt: string; closeAt: string; drawTime: string };
-  meta?: AuditHttpContext;
 }): void {
   record({
     ...actorFields(args.actor),
@@ -328,7 +304,6 @@ export function auditUpdateSchedule(args: {
     targetId: args.drawId,
     targetLabel: `Kỳ ${args.drawId}`,
     changes: { before: dropUndefined(args.before), after: args.after },
-    metadata: { http: args.meta },
   });
 }
 
@@ -345,13 +320,11 @@ export function auditUpdateSchedule(args: {
  * @param args.actor - Chủ thể thực hiện.
  * @param args.version - Version config sau khi upsert (đã auto-increment).
  * @param args.changed - Các nhóm field đã đổi kèm giá trị mới.
- * @param args.meta - Context HTTP nếu có.
  */
 export function auditUpdateGameConfig(args: {
   actor: AuditActor;
   version: number;
   changed: Record<string, unknown>;
-  meta?: AuditHttpContext;
 }): void {
   record({
     ...actorFields(args.actor),
@@ -362,7 +335,7 @@ export function auditUpdateGameConfig(args: {
     targetId: GAME,
     targetLabel: "Cấu hình game",
     changes: { after: flattenChanges(args.changed) },
-    metadata: { http: args.meta, extra: { version: args.version } },
+    metadata: { extra: { version: args.version } },
   });
 }
 
@@ -383,14 +356,12 @@ type TenantConfigSnapshot = {
  * @param args.tenantId - Id tenant sở hữu cấu hình.
  * @param args.version - Version config sau khi upsert (đã auto-increment).
  * @param args.after - Snapshot config sau khi sửa.
- * @param args.meta - Context HTTP nếu có.
  */
 export function auditUpdateTenantConfig(args: {
   actor: AuditActor;
   tenantId: string;
   version: number;
   after: TenantConfigSnapshot;
-  meta?: AuditHttpContext;
 }): void {
   record({
     ...actorFields(args.actor),
@@ -402,7 +373,6 @@ export function auditUpdateTenantConfig(args: {
     targetLabel: `Cấu hình Lotto 5/35 tenant ${args.tenantId}`,
     changes: { after: dropUndefined(args.after) },
     metadata: {
-      http: args.meta,
       extra: { version: args.version },
     },
   });

@@ -14,7 +14,7 @@ export interface VerifyAndEnableMfaInput {
   username: string;
   totpCode: string;
   accessToken: string;
-  /** Chủ thể thực hiện (chính chủ tài khoản) — dùng cho audit log self. */
+  /** Chủ thể thực hiện (chính chủ tài khoản) — dùng cho audit log self (IP gắn sẵn). */
   actor: AuditActor;
 }
 

@@ -3,6 +3,11 @@ import { AuditRepo } from "@megawin/data/mongo";
 
 import { AUDIT_LOG_COLLECTION } from "../../indexes";
 import type { AuditLogDoc, AuditLogEntity, AuditLogInsertDoc } from "../../entities";
+import {
+  AuditTargetType,
+  SELF_ACTIVITY_ACTIONS,
+  SELF_ACTIVITY_TARGET_ACTIONS,
+} from "../../entities";
 import { AuditLogMapper } from "../mappers";
 import type {
   AuditLogCursor,
@@ -92,10 +97,14 @@ export class AuditLogRepository extends AuditRepo<AuditLogEntity, AuditLogMapper
   /**
    * Build Mongo filter từ {@link AuditLogFilter} + cursor.
    *
-   * `from`/`to` gộp thành `{ ts: { $gte, $lte } }`. Cursor `(ts, _id)` thành
-   * `$or` 2 nhánh (`ts < cursor.ts` HOẶC `ts == cursor.ts && _id < cursor.id`).
-   * Cả range `ts` lẫn cursor cùng tác động `ts` nên mọi điều kiện gộp qua `$and`
-   * để không ghi đè nhau.
+   * Gom 3 nhóm điều kiện — cùng đẩy vào `conditions`, cuối cùng `$and` (mọi
+   * nhánh dùng chung field `ts` nên phải `$and`, không ghi đè nhau):
+   * 1. **Chung + admin**: `ts` range + các chiều top-level (actor/ip/game/…).
+   *    Me request chỉ set `from/to/action/status` nên các nhánh còn lại no-op.
+   * 2. **Self-scope**: tách sang {@link buildSelfScopeConditions} — chỉ có khi
+   *    `selfScope` set (trang "Nhật ký của tôi").
+   * 3. **Cursor** `(ts, _id)`: `$or` 2 nhánh (`ts < cursor.ts` HOẶC bằng `ts` +
+   *    `_id < cursor.id`).
    */
   private buildFilter(
     filter: AuditLogFilter,
@@ -122,6 +131,11 @@ export class AuditLogRepository extends AuditRepo<AuditLogEntity, AuditLogMapper
     if (filter.actorType) {
       conditions.push({ actorType: filter.actorType });
     }
+    if (filter.ip) {
+      // Khớp chính xác IP — dùng index { ip: 1, ts: -1 }. Không regex: IP là
+      // giá trị chuẩn, tra cứu forensic cần đúng tuyệt đối.
+      conditions.push({ ip: filter.ip });
+    }
     if (filter.tenantId) {
       conditions.push({ tenantId: filter.tenantId });
     }
@@ -144,6 +158,10 @@ export class AuditLogRepository extends AuditRepo<AuditLogEntity, AuditLogMapper
       conditions.push({ status: filter.status });
     }
 
+    if (filter.selfScope !== undefined) {
+      conditions.push(...this.buildSelfScopeConditions(filter.selfScope));
+    }
+
     if (cursor) {
       conditions.push({
         $or: [{ ts: { $lt: cursor.ts } }, { ts: cursor.ts, _id: { $lt: new ObjectId(cursor.id) } }],
@@ -157,5 +175,45 @@ export class AuditLogRepository extends AuditRepo<AuditLogEntity, AuditLogMapper
       return conditions[0]!;
     }
     return { $and: conditions };
+  }
+
+  /**
+   * Build điều kiện self-scope cho trang "Nhật ký của tôi" — chỉ nhóm action
+   * security SELF (auth/account), record phải LIÊN QUAN đến chính user (`me`).
+   *
+   * Trả mảng điều kiện (caller đẩy vào `$and`):
+   * 1. `action ∈ SELF_ACTIVITY_ACTIONS` — ẩn hành động nghiệp vụ.
+   * 2. Scope theo user:
+   *    - Mặc định thuần SELF (`actorId = me`) — action nơi actor = target,
+   *      không lộ thông tin ai khác.
+   *    - Chiều "mình là target" (CROSS action: admin reset pass CHO mình) chỉ
+   *      bật cho whitelist hẹp `SELF_ACTIVITY_TARGET_ACTIONS`. Hiện RỖNG nên
+   *      nhánh `$or` target bị bỏ hẳn (thuần SELF). Whitelist tách riêng để
+   *      thêm CROSS action mới không tự động lộ actor/IP cho target.
+   *
+   * @param me - accountId user đang xem (route ép từ session). `""` → không
+   *   khớp record nào (an toàn: session thiếu accountId trả rỗng).
+   */
+  private buildSelfScopeConditions(me: string): Filter<AuditLogDoc>[] {
+    const conditions: Filter<AuditLogDoc>[] = [
+      { action: { $in: [...SELF_ACTIVITY_ACTIONS] } } as Filter<AuditLogDoc>,
+    ];
+
+    if (SELF_ACTIVITY_TARGET_ACTIONS.length > 0) {
+      conditions.push({
+        $or: [
+          { actorId: me },
+          {
+            action: { $in: [...SELF_ACTIVITY_TARGET_ACTIONS] },
+            targetType: AuditTargetType.Account,
+            targetId: me,
+          },
+        ],
+      } as Filter<AuditLogDoc>);
+    } else {
+      conditions.push({ actorId: me } as Filter<AuditLogDoc>);
+    }
+
+    return conditions;
   }
 }

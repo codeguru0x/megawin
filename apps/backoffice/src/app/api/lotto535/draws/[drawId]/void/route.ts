@@ -15,12 +15,12 @@ const voidDrawUseCase = new VoidDrawUseCase();
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(voidSchema)
-  .handler(async ({ params, body, session }) => {
+  .handler(async ({ params, body, session, request }) => {
     const { drawId } = params as { drawId: string };
     return voidDrawUseCase.run({
       drawId,
       reason: body.reason,
-      actor: actorFromSession(session!),
+      actor: actorFromSession(session!, request),
       LOTTO535_VOID_SFN_ARN: env.LOTTO535_VOID_SFN_ARN!,
     });
   });

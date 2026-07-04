@@ -9,10 +9,13 @@
  */
 
 import { betterAuth } from "better-auth";
+import { createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 
-import { ClaimKey, AccountStatus } from "@megawin/identity/entities";
+import { ClaimKey, AccountStatus, AccountType } from "@megawin/identity/entities";
+import { auditLogin } from "@megawin/identity-application/services";
 
+import { actorFromAuthUser } from "@/lib/audit-actor";
 import { env } from "@/env";
 
 export const auth = betterAuth({
@@ -124,6 +127,42 @@ export const auth = betterAuth({
    */
   onAPIError: {
     errorURL: `${env.BETTER_AUTH_URL}/auth/error`,
+  },
+
+  /**
+   * Hook sau mỗi better-auth endpoint — dùng để audit `auth.login`.
+   *
+   * Chạy sau OAuth callback (`/callback/:id`) khi Cognito redirect về. Nếu
+   * `ctx.context.newSession` tồn tại → phiên vừa được tạo → đăng nhập thành công.
+   * Chỉ audit `company`/`agent` (KHÔNG `player` — volume lớn gây rác dữ liệu).
+   *
+   * Fire-and-forget: audit fail KHÔNG bao giờ chặn luồng đăng nhập. IP + HTTP
+   * context (userAgent/requestId) của actor lấy từ `ctx.headers` (request tới
+   * callback), gắn sẵn trong {@link actorFromAuthUser}. `auditLogin` chủ động lưu
+   * HTTP context (login là action cần nhận diện thiết bị đăng nhập).
+   *
+   * LƯU Ý: `auth.logout` KHÔNG audit ở đây — better-auth xoá cookie trong endpoint
+   * signOut trước khi hook chạy nên mất actor. Logout được audit ở route
+   * `/api/auth/sign-out-redirect` (còn session hợp lệ).
+   */
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      const newSession = ctx.context.newSession;
+      if (!newSession) return;
+
+      const user = newSession.user as Record<string, unknown>;
+      const accountType = user.accountType as string | undefined;
+
+      // Chỉ ghi company/agent — player bỏ qua để tránh rác dữ liệu volume lớn.
+      if (accountType !== AccountType.Company && accountType !== AccountType.Agent) {
+        return;
+      }
+
+      console.log("better-auth hook after ctx.headers:", JSON.stringify(ctx.headers, null, 2));
+      auditLogin({
+        actor: actorFromAuthUser(user, ctx.headers),
+      });
+    }),
   },
 
   /**

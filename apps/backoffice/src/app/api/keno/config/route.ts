@@ -20,6 +20,9 @@ export const GET = withApi()
 export const PUT = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(updateKenoGameConfigSchema)
-  .handler(async ({ body, session }) => {
-    return updateGameConfigUseCase.run({ ...body, actor: actorFromSession(session!) });
+  .handler(async ({ body, session, request }) => {
+    return updateGameConfigUseCase.run({
+      ...body,
+      actor: actorFromSession(session!, request),
+    });
   });

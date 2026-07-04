@@ -57,7 +57,7 @@ export { bingo18Keys } from "./bingo18";
 export { tenantsKeys } from "./tenants";
 export { accountsKeys } from "./accounts";
 export { playerDetailKeys } from "./player-detail";
-export { meKeys } from "./me";
+export { meKeys, type MyAuditLogsListFilters } from "./me";
 export { reportsKeys } from "./reports";
 export { dashboardKeys } from "./dashboard";
 export { txLogsKeys } from "./tx-logs";

@@ -2,34 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CircleUser, KeyRound, ShieldCheck } from "lucide-react";
 
+import { ACCOUNT_NAV_ITEMS } from "@/lib/account-nav";
 import { cn } from "@/lib/utils";
-
-const accountNavItems = [
-  {
-    title: "Thông tin cá nhân",
-    href: "/me",
-    icon: CircleUser,
-  },
-  {
-    title: "Đổi mật khẩu",
-    href: "/me/change-password",
-    icon: KeyRound,
-  },
-  {
-    title: "Bảo mật (MFA)",
-    href: "/me/mfa",
-    icon: ShieldCheck,
-  },
-] as const;
 
 export function AccountNav() {
   const pathname = usePathname();
 
   return (
     <nav className="flex flex-row gap-1 lg:flex-col">
-      {accountNavItems.map((item) => {
+      {ACCOUNT_NAV_ITEMS.map((item) => {
         const isActive = pathname === item.href;
         return (
           <Link

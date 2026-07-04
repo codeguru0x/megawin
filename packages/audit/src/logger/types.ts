@@ -39,6 +39,22 @@ export interface AuditEventInput {
   actorRoles: string[];
   /** tenantId liên quan. `""` nếu không thuộc tenant. */
   tenantId: string;
+  /**
+   * IP client của actor (`x-forwarded-for` đầu / `x-real-ip` / remote address).
+   * Optional ở tầng input — logger điền sentinel `""` khi bỏ trống (worker/job,
+   * hoặc route chưa nối). Lưu xuống DB luôn là top-level indexed để filter forensic.
+   */
+  ip?: string;
+  /**
+   * User-Agent client. Optional — lưu top-level (KHÔNG index), chỉ hiển thị.
+   * Bỏ trống → không ghi (undefined), KHÔNG dùng sentinel như `ip`.
+   */
+  userAgent?: string;
+  /**
+   * Request/trace id để correlation audit ↔ application log. Optional — lưu
+   * top-level (KHÔNG index). Bỏ trống → không ghi.
+   */
+  requestId?: string;
 
   // ── WHAT ──
   action: AuditAction;
