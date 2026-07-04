@@ -56,6 +56,7 @@ const boundarySchema = (kind: "start" | "end") =>
  * Toàn bộ parse + validate ở đây — use-case nhận input đã sạch:
  * - `from`/`to`: `YYYY-MM-DD` (giờ VN) hoặc ISO → `Date` UTC boundary.
  * - `actor`: khớp `actorId` (chính xác) hoặc `actorName` (chứa) — repo lo `$or`.
+ * - `ip`: khớp chính xác IP actor (forensic) — dùng index `{ ip: 1, ts: -1 }`.
  * - `limit`: coerce number, cap `[1, Max.Size]`, default `Default.Size`.
  * - `cursor`: opaque base64url token → decode thành `AuditLogCursor (ts, id)`.
  *   Token thiếu/hỏng → `undefined` (trang đầu). Client KHÔNG tự dựng cursor.
@@ -68,6 +69,7 @@ export const listAuditLogsQuerySchema = z
     to: boundarySchema("end").optional(),
     actor: z.string().min(1).optional(),
     actorType: z.enum(actorTypeValues).optional(),
+    ip: z.string().min(1).optional(),
     tenantId: z.string().min(1).optional(),
     game: z.string().min(1).optional(),
     category: z.enum(categoryValues).optional(),

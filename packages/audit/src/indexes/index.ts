@@ -20,6 +20,7 @@ import type { IndexDescription } from "mongodb";
  *   { key: { ts: -1, _id: -1 }, name: "ts_id_desc" },
  *   { key: { ts: 1 }, name: "ts_ttl", expireAfterSeconds: 7776000 },
  *   { key: { actorId: 1, ts: -1 }, name: "actor_ts" },
+ *   { key: { ip: 1, ts: -1 }, name: "ip_ts" },
  *   { key: { targetType: 1, targetId: 1, ts: -1 }, name: "target_ts" },
  *   { key: { game: 1, action: 1, ts: -1 }, name: "game_action_ts" },
  *   { key: { category: 1, ts: -1 }, name: "category_ts" },
@@ -46,6 +47,8 @@ export const AUDIT_LOG_INDEXES: readonly IndexDescription[] = [
   { key: { ts: 1 }, name: "ts_ttl", expireAfterSeconds: AUDIT_TTL_SECONDS },
   // "theo tài khoản" — mọi hành động của 1 actor, newest-first.
   { key: { actorId: 1, ts: -1 }, name: "actor_ts" },
+  // "theo IP" — mọi hành động phát từ 1 IP (forensic: truy nguồn bất thường).
+  { key: { ip: 1, ts: -1 }, name: "ip_ts" },
   // "theo đối tượng" — mọi hành động trên 1 kỳ / player / config.
   { key: { targetType: 1, targetId: 1, ts: -1 }, name: "target_ts" },
   // "theo game + loại hành động".

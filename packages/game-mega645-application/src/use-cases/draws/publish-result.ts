@@ -146,7 +146,13 @@ export class PublishResultUseCase extends NextApiUseCase<PublishResultInput, Pub
     }
 
     // status === Published (đã settle ≥ 1 lần, đang chờ resettle): ghi đè result mới.
-    return this.publish(input.drawId, winningNumbers, publishedAt, input.actor, input.vietlottRef);
+    return this.publish(
+      input.drawId,
+      winningNumbers,
+      publishedAt,
+      input.actor,
+      input.vietlottRef,
+    );
   }
 
   /** Ghi result (+ vietlottRef nếu có) qua `drawRepo.publishResult` → `Published`. */

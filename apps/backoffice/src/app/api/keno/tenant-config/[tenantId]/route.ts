@@ -20,7 +20,11 @@ export const PUT = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .params(tenantIdParamSchema)
   .body(updateTenantConfigSchema)
-  .handler(async ({ params, body, session }) => {
+  .handler(async ({ params, body, session, request }) => {
     const useCase = new UpdateTenantConfigUseCase();
-    return useCase.run({ tenantId: params.tenantId, ...body, actor: actorFromSession(session!) });
+    return useCase.run({
+      tenantId: params.tenantId,
+      ...body,
+      actor: actorFromSession(session!, request),
+    });
   });

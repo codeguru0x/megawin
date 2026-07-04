@@ -17,13 +17,13 @@ const verifyAndEnableMfaUseCase = new VerifyAndEnableMfaUseCase();
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(verifyMfaSchema)
-  .handler(async ({ body, session }) => {
+  .handler(async ({ body, session, request }) => {
     const username = session!.user.username;
 
     return verifyAndEnableMfaUseCase.run({
       username,
       totpCode: body.totpCode,
       accessToken: body.accessToken,
-      actor: actorFromSession(session!),
+      actor: actorFromSession(session!, request),
     });
   });

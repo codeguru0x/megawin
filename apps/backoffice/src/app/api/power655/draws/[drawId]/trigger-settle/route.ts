@@ -8,11 +8,11 @@ const triggerSettleUseCase = new TriggerSettleUseCase();
 
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
-  .handler(async ({ params, session }) => {
+  .handler(async ({ params, session, request }) => {
     const { drawId } = params as { drawId: string };
     return triggerSettleUseCase.run({
       drawId,
       SETTLE_SFN_ARN: env.POWER655_SETTLE_SFN_ARN!,
-      actor: actorFromSession(session!),
+      actor: actorFromSession(session!, request),
     });
   });

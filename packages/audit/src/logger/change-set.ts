@@ -1,3 +1,5 @@
+import { omitUndefined } from "@megawin/shared/utils";
+
 import type { AuditChangeSet, AuditChangeValue } from "../entities";
 
 /**
@@ -13,16 +15,18 @@ import type { AuditChangeSet, AuditChangeValue } from "../entities";
  *
  * `AuditChangeValue` KHÔNG gồm `undefined` (không ghi field rỗng vào DB). Helper
  * nhận input optional (`{ openAt?: string }`) rồi lọc undefined trước khi ghi.
+ * LUÔN trả object (kể cả `{}`) — `changes.before/after` là `AuditChangeSet`, không
+ * optional-empty. Cần "rỗng → undefined" (bỏ hẳn key khỏi doc) thì dùng
+ * `pruneUndefined` từ `@megawin/shared/utils`.
+ *
+ * Chỉ là wrapper gắn type audit quanh {@link omitUndefined} (logic lọc chung ở
+ * shared) — giữ tên domain + kiểu `AuditChangeSet` cho 7 game service dùng.
  *
  * @param obj - Object có thể chứa field `undefined`.
  * @returns `AuditChangeSet` chỉ còn field có giá trị.
  */
 export function dropUndefined(obj: Record<string, AuditChangeValue | undefined>): AuditChangeSet {
-  const out: AuditChangeSet = {};
-  for (const [k, v] of Object.entries(obj)) {
-    if (v !== undefined) out[k] = v;
-  }
-  return out;
+  return omitUndefined(obj) as AuditChangeSet;
 }
 
 /** Mảng primitive (`number[]`/`string[]`) → là {@link AuditChangeValue} hợp lệ, KHÔNG flatten tiếp. */

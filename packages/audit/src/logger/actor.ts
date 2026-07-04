@@ -7,12 +7,13 @@ import type { AuditActorType } from "../entities";
  * nhận trực tiếp `AuthContext` (Lambda) / `RouteSession` (BO) — hai shape khác
  * nhau + lệ thuộc tầng vận chuyển. Tầng route map sang `AuditActor` qua factory
  * (`actorFromAuthContext` / `actorFromSession` — đặt ở adapter layer), rồi thread
- * xuống use-case input. Worker tự chạy dùng {@link systemActor}.
+ * xuống use-case input. `ip` gắn sẵn khi dựng actor nên use-case chỉ nhận 1 field
+ * `actor`, KHÔNG cần `ip` riêng. Worker tự chạy dùng {@link systemActor}.
  *
  * @example
  * ```ts
- * // route handler (BO):
- * const actor = actorFromSession(session.user);
+ * // route handler (BO): ip gắn sẵn vào actor từ request.
+ * const actor = actorFromSession(session, request);
  * await useCase.run({ ...input, actor });
  * ```
  */
@@ -27,13 +28,31 @@ export interface AuditActor {
   roles: string[];
   /** tenantId liên quan. `""` nếu company action không thuộc tenant. */
   tenantId: string;
+  /**
+   * IP client của actor lúc thực hiện (forensic). Gắn ngay khi dựng actor ở tầng
+   * route (`actorFromSession(session, request)`) nên đi kèm actor xuống use-case —
+   * KHÔNG cần thread `ip` riêng qua từng DTO. `undefined` với worker/job
+   * ({@link systemActor}) hoặc route chưa nối request; logger điền sentinel `""`.
+   */
+  ip?: string;
+  /**
+   * User-Agent client (trình duyệt/thiết bị) lúc thực hiện. Gắn cùng `ip` khi dựng
+   * actor ở route/hook. Chỉ để hiển thị (nhận diện thiết bị lạ), KHÔNG filter.
+   * `undefined` với worker/job hoặc khi không bắt được header.
+   */
+  userAgent?: string;
+  /**
+   * Request/trace id để correlation audit ↔ application log. Gắn cùng `ip` khi
+   * dựng actor. `undefined` nếu request không kèm trace id (worker/job).
+   */
+  requestId?: string;
 }
 
 /**
  * Actor cho action hệ thống (worker Step Function, cron, queue consumer).
  *
  * Dùng khi không có người thực hiện — `id`/`name` = `"system"`, `roles` rỗng,
- * `tenantId` rỗng.
+ * `tenantId` rỗng, không có `ip` (máy tự chạy).
  */
 export const systemActor = (): AuditActor => ({
   id: "system",

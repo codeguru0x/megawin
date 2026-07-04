@@ -8,11 +8,11 @@ const triggerResettleUseCase = new TriggerResettleUseCase();
 
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
-  .handler(async ({ params, session }) => {
+  .handler(async ({ params, session, request }) => {
     const { drawId } = params as { drawId: string };
     return triggerResettleUseCase.run({
       drawId,
       RESETTLE_SFN_ARN: env.BINGO18_RESETTLE_SFN_ARN!,
-      actor: actorFromSession(session!),
+      actor: actorFromSession(session!, request),
     });
   });

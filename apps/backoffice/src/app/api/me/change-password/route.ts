@@ -31,13 +31,13 @@ const changeMyPasswordUseCase = new ChangeMyPasswordUseCase();
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(changePasswordSchema)
-  .handler(async ({ body, session }) => {
+  .handler(async ({ body, session, request }) => {
     const username = session!.user.username;
 
     return changeMyPasswordUseCase.run({
       username,
       currentPassword: body.currentPassword,
       newPassword: body.newPassword,
-      actor: actorFromSession(session!),
+      actor: actorFromSession(session!, request),
     });
   });

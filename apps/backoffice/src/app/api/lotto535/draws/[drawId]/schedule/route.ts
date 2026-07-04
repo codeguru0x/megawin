@@ -16,7 +16,7 @@ const updateScheduleUseCase = new UpdateScheduleUseCase();
 export const PATCH = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(scheduleSchema)
-  .handler(async ({ params, body, session }) => {
+  .handler(async ({ params, body, session, request }) => {
     const { drawId } = params as { drawId: string };
-    return updateScheduleUseCase.run({ drawId, ...body, actor: actorFromSession(session!) });
+    return updateScheduleUseCase.run({ drawId, ...body, actor: actorFromSession(session!, request) });
   });

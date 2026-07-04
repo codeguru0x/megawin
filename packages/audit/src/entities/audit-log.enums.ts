@@ -106,7 +106,6 @@ export const AUDIT_ACTIONS = {
     openSales: "draw.open_sales",
     closeSales: "draw.close_sales",
     updateSchedule: "draw.update_schedule",
-    updateVietlottRef: "draw.update_vietlott_ref",
     // Mở lại kỳ đã settled để chạy cascade jackpot (split cycle) — CHỈ game có
     // jackpot (lotto535/mega645/power655). Keno/max3d/max3dpro/bingo18 không có.
     reopenForCascade: "draw.reopen_for_cascade",
@@ -121,11 +120,11 @@ export const AUDIT_ACTIONS = {
     updateGlobal: "config.update_global",
     updateTenant: "config.update_tenant",
   },
-  /** category=auth, target=account. Đăng nhập/đăng xuất. */
+  /** category=auth, target=account. Đăng nhập/đăng xuất — CHỈ ghi cho tài khoản
+   * `company` và `agent` (KHÔNG ghi `player` để tránh rác dữ liệu volume lớn). */
   auth: {
     login: "auth.login",
     logout: "auth.logout",
-    loginFailed: "auth.login_failed",
   },
   /**
    * category=account, target=account. Thao tác QUẢN TRỊ tài khoản (đổi mật khẩu,
@@ -152,6 +151,93 @@ export const AUDIT_ACTIONS = {
     voidFinalized: "system.void_finalized",
   },
 } as const;
+
+/**
+ * Tập action **self-visible** — hiện ở trang "Nhật ký của tôi" (`/me/activity`)
+ * để CHÍNH CHỦ tự giám sát bảo mật tài khoản (phát hiện đăng nhập lạ, bị đổi
+ * mật khẩu / MFA).
+ *
+ * Đây là nguồn chân lý DUY NHẤT cho cả API whitelist lẫn UI filter — tránh lệch
+ * giữa 2 tầng. CỐ Ý chỉ gồm sự kiện bảo mật **SELF** (actor = target: mình tự
+ * đăng nhập / đổi mật khẩu / bật-tắt MFA của mình), KHÔNG gồm hành động nghiệp
+ * vụ (`draw.*`, `config.*`, `finance.*`, `player.*`, `system.*`).
+ *
+ * ## Vì sao loại hành động nghiệp vụ?
+ *
+ * Theo nguyên tắc **separation of duties** (SOC2 / NIST): người thực hiện KHÔNG
+ * tự giám sát nhật ký nghiệp vụ của chính mình — việc đó thuộc quản lý/auditor
+ * xem qua trang admin (`/audit-logs`). Trang cá nhân chỉ là "security activity"
+ * kiểu Google/GitHub/AWS: login, logout, đổi mật khẩu, MFA.
+ *
+ * ## Vì sao KHÔNG có `account.set_password` (CROSS action)?
+ *
+ * `set_password` là action **CROSS**: actor (admin/staff) ≠ target (nạn nhân bị
+ * reset pass). Cho target xem record này = lộ danh tính + **IP của admin** cho
+ * cấp dưới, và mọi `changes`/`metadata` thêm sau sẽ tự động rò rỉ. Vì vậy CỐ Ý
+ * loại — chỉ giữ action SELF nơi actor = target, an toàn tuyệt đối.
+ *
+ * ## Ngữ nghĩa chiều target — {@link SELF_ACTIVITY_TARGET_ACTIONS}
+ *
+ * Mặc định query self-scope chỉ match `actorId = me` (SELF). Chiều "mình là
+ * target" là tính năng ĐỘC LẬP, chỉ bật cho whitelist hẹp
+ * {@link SELF_ACTIVITY_TARGET_ACTIONS} — hiện RỖNG. Muốn cho nạn nhân thấy 1
+ * CROSS action nào đó thì phải thêm CÓ CHỦ ĐÍCH vào whitelist đó (sau khi review
+ * nó không lộ thông tin actor nhạy cảm), KHÔNG mở mặc định cho mọi action.
+ *
+ * @example
+ * ```ts
+ * if (SELF_ACTIVITY_ACTION_SET.has(action)) {
+ *   // action được phép hiện ở trang cá nhân
+ * }
+ * ```
+ */
+export const SELF_ACTIVITY_ACTIONS = [
+  AUDIT_ACTIONS.auth.login,
+  AUDIT_ACTIONS.auth.logout,
+  AUDIT_ACTIONS.account.changeOwnPassword,
+  AUDIT_ACTIONS.account.enableMfa,
+  AUDIT_ACTIONS.account.disableMfa,
+] as const;
+
+/** Union các action self-visible — hẹp hơn {@link AuditAction}. */
+export type SelfActivityAction = (typeof SELF_ACTIVITY_ACTIONS)[number];
+
+/**
+ * `Set` để lookup O(1) — dùng ở API whitelist / guard.
+ * Khai `Set<AuditAction>` (không hẹp) để nhận input `AuditAction` bất kỳ khi check.
+ */
+export const SELF_ACTIVITY_ACTION_SET: ReadonlySet<AuditAction> = new Set<AuditAction>(
+  SELF_ACTIVITY_ACTIONS,
+);
+
+/**
+ * Whitelist action được match ở **chiều target** trên trang "Nhật ký của tôi" —
+ * record mà user là ĐỐI TƯỢNG bị tác động (không phải người thực hiện).
+ *
+ * ## Vì sao tách riêng khỏi {@link SELF_ACTIVITY_ACTIONS}?
+ *
+ * Chiều target chỉ có ý nghĩa với **CROSS action** (actor ≠ target): admin reset
+ * pass / tắt MFA CHO user — tín hiệu bị chiếm quyền mà nạn nhân nên biết. NHƯNG
+ * cho target xem CROSS record = lộ `actorName`/`actorRoles`/`ip` của admin. Vì
+ * vậy chiều này KHÔNG bật mặc định — chỉ action nằm trong whitelist NÀY mới được
+ * match qua target, buộc mọi bổ sung phải cân nhắc rủi ro lộ thông tin actor.
+ *
+ * ## Hiện trạng: RỖNG (cố ý)
+ *
+ * `account.set_password` là ứng viên duy nhất nhưng đã loại: (1) rủi ro lộ IP +
+ * danh tính admin cho cấp dưới; (2) `auditSetAccountPassword` ghi
+ * `targetId = username` (không phải accountId) nên chiều target vốn không khớp.
+ * Muốn bật lại: sửa handler ghi `targetId = accountId`, ẩn actor khi target xem,
+ * rồi thêm vào đây.
+ *
+ * Rỗng ⇒ query bỏ hẳn nhánh `$or` target ⇒ hành vi thuần SELF (`actorId = me`).
+ */
+export const SELF_ACTIVITY_TARGET_ACTIONS = [] as const satisfies readonly AuditAction[];
+
+/** `Set` lookup O(1) cho whitelist chiều target. Hiện rỗng. */
+export const SELF_ACTIVITY_TARGET_ACTION_SET: ReadonlySet<AuditAction> = new Set<AuditAction>(
+  SELF_ACTIVITY_TARGET_ACTIONS,
+);
 
 /** Lấy union mọi value của object. Distributive — áp lên từng member của union. */
 type ValueOf<T> = T extends unknown ? T[keyof T] : never;

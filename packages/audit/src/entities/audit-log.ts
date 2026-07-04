@@ -7,23 +7,6 @@ import type {
 } from "./audit-log.enums";
 
 /**
- * Context request HTTP (route Backoffice hoặc Lambda API). Optional toàn bộ —
- * mỗi field chỉ điền khi tầng route bắt được.
- */
-export interface AuditHttpContext {
-  /** IP client (`x-forwarded-for` / remote address). */
-  ip?: string;
-  /** User-Agent header của client. */
-  userAgent?: string;
-  /** Request id để trace cross-service (`x-request-id` / `x-amzn-trace-id`). */
-  requestId?: string;
-  /** HTTP method. VD: `POST`, `PUT`, `PATCH`. */
-  method?: string;
-  /** Path đã gọi. VD: `/api/keno/draws/2026-03-07.095/void`. */
-  path?: string;
-}
-
-/**
  * Context worker / job hệ thống (Step Function, cron, queue consumer).
  * Optional toàn bộ — điền khi action đến từ máy tự chạy.
  */
@@ -37,13 +20,45 @@ export interface AuditWorkerContext {
 }
 
 /**
- * Metadata audit — một trong hai context (HTTP hoặc worker) + `extra`.
+ * HTTP request context của actor — các thuộc tính request **KHÔNG index**, chỉ để
+ * hiển thị + correlation. Sống trong `metadata.http` (xem {@link AuditMetadata}).
  *
- * KHÔNG index. Chỉ phục vụ xem chi tiết + trace. Một record chỉ đến từ 1 nguồn
- * nên thường chỉ có `http` HOẶC `worker`, không cả hai.
+ * CỐ Ý tách khỏi `ip`: `ip` là field forensic **có index** (`{ ip: 1, ts: -1 }`)
+ * nên nằm top-level rời (`AuditLogDoc.ip`), KHÔNG gói vào đây. Object `http` gom
+ * các field HTTP còn lại (không cần filter) để mở rộng sau này (thêm field HTTP
+ * mới chỉ sửa 1 chỗ, không đẻ thêm cột top-level). Optional toàn bộ — thiếu ở
+ * worker/job hoặc khi route không bắt được header.
+ */
+export interface AuditHttpContext {
+  /**
+   * User-Agent thô (trình duyệt/thiết bị/OS) từ header `user-agent`. Chỉ hiển thị
+   * (trang "Nhật ký bảo mật" giúp user nhận diện thiết bị lạ khi login) — KHÔNG
+   * filter (chuỗi UA biến thiên vô hạn, index vô nghĩa).
+   */
+  userAgent?: string;
+  /**
+   * Request/trace id để correlation audit ↔ application log (CloudWatch/OTel).
+   * Nguồn: header `x-request-id` / `x-amzn-trace-id` (Web) hoặc
+   * `requestContext.requestId` (Lambda). Chỉ tra chéo khi điều tra — KHÔNG filter.
+   */
+  requestId?: string;
+}
+
+/**
+ * Metadata audit — context bổ sung không index: HTTP request + worker + `extra`
+ * nghiệp vụ.
+ *
+ * KHÔNG index. Chỉ phục vụ xem chi tiết + trace. `ip` của actor KHÔNG ở đây — nó
+ * là field indexed nên nằm top-level `AuditLogDoc.ip` (filter forensic). Các
+ * thuộc tính HTTP còn lại (`userAgent`/`requestId`) không index → gom vào
+ * `http` bên dưới.
  */
 export interface AuditMetadata {
-  /** Có khi action đến từ HTTP request (BO/Lambda API). */
+  /**
+   * HTTP request context không index (`userAgent`/`requestId`) — chỉ hiển thị +
+   * correlation. Optional — thiếu ở worker/job hoặc khi không bắt được header.
+   * Caller opt-in ở từng action cụ thể (không phải audit nào cũng cần lưu).
+   */
   http?: AuditHttpContext;
   /** Có khi action đến từ worker/job tự chạy. */
   worker?: AuditWorkerContext;
@@ -102,9 +117,10 @@ export interface AuditChanges {
  * mỗi block field bên dưới trả lời 1 câu hỏi, đủ để tái dựng "ai làm gì, lên cái
  * gì, lúc nào, kết quả ra sao":
  * - **WHEN** (`ts`) — hành động xảy ra lúc nào (UTC).
- * - **WHO** (`actorId/actorType/actorName/actorRoles/tenantId`) — ai thực hiện.
- *   `actorName`/`actorRoles` là **snapshot tại thời điểm** (forensic), KHÔNG join
- *   về account hiện tại.
+ * - **WHO** (`actorId/actorType/actorName/actorRoles/tenantId/ip`) — ai
+ *   thực hiện, từ IP nào. `actorName`/`actorRoles` là **snapshot tại thời
+ *   điểm** (forensic), KHÔNG join về account hiện tại. `ip` indexed để tra cứu
+ *   forensic. UA/requestId (không index) nằm ở `metadata.http` (correlation).
  * - **WHAT** (`action/category/game`) — hành động gì, thuộc nhóm nào, game nào.
  * - **ON** (`targetType/targetId/targetLabel`) — tác động lên đối tượng nào.
  * - **OUTCOME** (`status/errorCode`) — thành công hay thất bại.
@@ -152,6 +168,14 @@ export interface AuditLogDoc {
   actorRoles: string[];
   /** tenantId liên quan. `""` nếu company action không thuộc tenant. */
   tenantId: string;
+  /**
+   * IP client của actor lúc thực hiện (`x-forwarded-for` đầu / `x-real-ip` /
+   * remote address). Sentinel `""` khi không bắt được (worker/job tự chạy, hoặc
+   * route chưa nối). **Top-level + indexed** (`{ ip: 1, ts: -1 }`) — là thuộc
+   * tính forensic tra cứu ("liệt kê mọi hành động từ IP X"), nên KHÔNG để trong
+   * `metadata` (không index).
+   */
+  ip: string;
 
   // ── WHAT (action) ──
   /** Mã hành động format `{category}.{verb}`. VD: `"draw.void"`. Unique per action. */
@@ -199,7 +223,7 @@ export interface AuditLogDoc {
   // ── CONTEXT (không index, chỉ xem chi tiết) ──
   /** Diff trước/sau cho mutation. Optional. */
   changes?: AuditChanges;
-  /** Metadata bổ sung — tổng quát cho cả HTTP request lẫn worker. */
+  /** Metadata bổ sung — HTTP request context + worker + extra nghiệp vụ. */
   metadata?: AuditMetadata;
 }
 

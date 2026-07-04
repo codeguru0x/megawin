@@ -34,7 +34,6 @@ export const AuditActionLabel: Record<AuditAction, string> = {
   [AUDIT_ACTIONS.draw.openSales]: "Mở bán kỳ",
   [AUDIT_ACTIONS.draw.closeSales]: "Đóng bán kỳ",
   [AUDIT_ACTIONS.draw.updateSchedule]: "Cập nhật lịch kỳ",
-  [AUDIT_ACTIONS.draw.updateVietlottRef]: "Cập nhật tham chiếu Vietlott",
   [AUDIT_ACTIONS.draw.reopenForCascade]: "Mở lại kỳ (cascade jackpot)",
 
   // player
@@ -48,7 +47,6 @@ export const AuditActionLabel: Record<AuditAction, string> = {
   // auth
   [AUDIT_ACTIONS.auth.login]: "Đăng nhập",
   [AUDIT_ACTIONS.auth.logout]: "Đăng xuất",
-  [AUDIT_ACTIONS.auth.loginFailed]: "Đăng nhập thất bại",
 
   // account
   [AUDIT_ACTIONS.account.setPassword]: "Đặt lại mật khẩu tài khoản",

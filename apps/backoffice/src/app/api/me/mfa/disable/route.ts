@@ -17,13 +17,13 @@ const disableMfaUseCase = new DisableMfaUseCase();
 export const POST = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .body(disableMfaSchema)
-  .handler(async ({ body, session }) => {
+  .handler(async ({ body, session, request }) => {
     const username = session!.user.username;
 
     return disableMfaUseCase.run({
       username,
       password: body.password,
       totpCode: body.totpCode,
-      actor: actorFromSession(session!),
+      actor: actorFromSession(session!, request),
     });
   });

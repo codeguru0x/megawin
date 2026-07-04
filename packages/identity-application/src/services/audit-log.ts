@@ -1,10 +1,5 @@
 import { record, type AuditActor } from "@megawin/audit/logger";
-import {
-  AUDIT_ACTIONS,
-  AuditCategory,
-  AuditTargetType,
-  type AuditHttpContext,
-} from "@megawin/audit/entities";
+import { AUDIT_ACTIONS, AuditCategory, AuditTargetType } from "@megawin/audit/entities";
 
 /**
  * Identity account audit-log helpers — nhóm free functions ghi audit log cho các
@@ -28,7 +23,7 @@ import {
  *   ghi `changes` chi tiết nhạy cảm (password/secret/TOTP).
  */
 
-/** Spread 5 field actor → DRY giữa các audit function (giống game). */
+/** Spread 5 field actor + ip → DRY giữa các audit function (giống game). */
 function actorFields(a: AuditActor) {
   return {
     actorId: a.id,
@@ -36,6 +31,22 @@ function actorFields(a: AuditActor) {
     actorName: a.name,
     actorRoles: a.roles,
     tenantId: a.tenantId,
+    ip: a.ip,
+  };
+}
+
+/**
+ * Spread HTTP context KHÔNG index (`userAgent`/`requestId`) — OPT-IN per-action.
+ *
+ * Tách khỏi {@link actorFields}: KHÔNG mọi action đều cần thiết bị/correlation.
+ * Chỉ action mà HTTP context có giá trị forensic (login/logout) mới spread
+ * `...httpFields(actor)` để tránh nhồi rác vào mọi record. Bỏ field `undefined`
+ * là việc của logger (`dropUndefined`).
+ */
+function httpFields(a: AuditActor) {
+  return {
+    userAgent: a.userAgent,
+    requestId: a.requestId,
   };
 }
 
@@ -47,15 +58,11 @@ function actorFields(a: AuditActor) {
  * `changes.after` chỉ ghi cờ `passwordReset: true` — TUYỆT ĐỐI KHÔNG ghi giá trị
  * mật khẩu.
  *
- * @param args.actor - Caller thực hiện (đã normalize ở route qua actorFromSession).
+ * @param args.actor - Caller thực hiện (đã normalize ở route qua actorFromSession,
+ *   IP forensic gắn sẵn trong actor).
  * @param args.targetUsername - Username tài khoản bị đặt lại mật khẩu.
- * @param args.meta - Context HTTP (ip/userAgent/requestId) nếu có.
  */
-export function auditSetAccountPassword(args: {
-  actor: AuditActor;
-  targetUsername: string;
-  meta?: AuditHttpContext;
-}): void {
+export function auditSetAccountPassword(args: { actor: AuditActor; targetUsername: string }): void {
   record({
     ...actorFields(args.actor),
     action: AUDIT_ACTIONS.account.setPassword,
@@ -63,7 +70,6 @@ export function auditSetAccountPassword(args: {
     targetType: AuditTargetType.Account,
     targetId: args.targetUsername,
     targetLabel: `Tài khoản ${args.targetUsername}`,
-    metadata: { http: args.meta },
   });
 }
 
@@ -73,17 +79,17 @@ export function auditSetAccountPassword(args: {
  * Chỉ ghi sự kiện "đã đổi mật khẩu" — KHÔNG ghi mật khẩu cũ/mới. `actor` = target
  * nên `targetId` = `actor.id`.
  *
- * @param args.actor - Chủ thể (chính là chủ tài khoản).
- * @param args.meta - Context HTTP nếu có.
+ * @param args.actor - Chủ thể (chính là chủ tài khoản), IP forensic gắn sẵn.
  */
-export function auditChangeOwnPassword(args: { actor: AuditActor; meta?: AuditHttpContext }): void {
+export function auditChangeOwnPassword(args: { actor: AuditActor }): void {
   record({
     ...actorFields(args.actor),
     action: AUDIT_ACTIONS.account.changeOwnPassword,
     category: AuditCategory.Account,
     targetType: AuditTargetType.Account,
     targetId: args.actor.id,
-    metadata: { http: args.meta },
+    // SELF: actor = target → hiển thị username thay vì accountId khó đọc.
+    targetLabel: args.actor.name,
   });
 }
 
@@ -92,17 +98,17 @@ export function auditChangeOwnPassword(args: { actor: AuditActor; meta?: AuditHt
  *
  * Chỉ ghi sự kiện — KHÔNG ghi secret/TOTP. `actor` = target.
  *
- * @param args.actor - Chủ thể (chính là chủ tài khoản).
- * @param args.meta - Context HTTP nếu có.
+ * @param args.actor - Chủ thể (chính là chủ tài khoản), IP forensic gắn sẵn.
  */
-export function auditEnableMfa(args: { actor: AuditActor; meta?: AuditHttpContext }): void {
+export function auditEnableMfa(args: { actor: AuditActor }): void {
   record({
     ...actorFields(args.actor),
     action: AUDIT_ACTIONS.account.enableMfa,
     category: AuditCategory.Account,
     targetType: AuditTargetType.Account,
     targetId: args.actor.id,
-    metadata: { http: args.meta },
+    // SELF: actor = target → hiển thị username thay vì accountId khó đọc.
+    targetLabel: args.actor.name,
   });
 }
 
@@ -111,16 +117,58 @@ export function auditEnableMfa(args: { actor: AuditActor; meta?: AuditHttpContex
  *
  * Chỉ ghi sự kiện — KHÔNG ghi password/TOTP đã dùng để xác thực. `actor` = target.
  *
- * @param args.actor - Chủ thể (chính là chủ tài khoản).
- * @param args.meta - Context HTTP nếu có.
+ * @param args.actor - Chủ thể (chính là chủ tài khoản), IP forensic gắn sẵn.
  */
-export function auditDisableMfa(args: { actor: AuditActor; meta?: AuditHttpContext }): void {
+export function auditDisableMfa(args: { actor: AuditActor }): void {
   record({
     ...actorFields(args.actor),
     action: AUDIT_ACTIONS.account.disableMfa,
     category: AuditCategory.Account,
     targetType: AuditTargetType.Account,
     targetId: args.actor.id,
-    metadata: { http: args.meta },
+    // SELF: actor = target → hiển thị username thay vì accountId khó đọc.
+    targetLabel: args.actor.name,
+  });
+}
+
+/**
+ * Audit đăng nhập thành công — CHỈ cho tài khoản công ty (`company`) và đại lý
+ * (`agent`). KHÔNG ghi cho `player` (volume lớn → rác dữ liệu audit).
+ *
+ * `actor` = target (tự đăng nhập chính mình). Chỉ ghi sự kiện + IP + HTTP context
+ * (userAgent/requestId để nhận diện thiết bị), KHÔNG ghi token/credential. Caller
+ * (auth hook) tự lọc actorType trước khi gọi.
+ *
+ * @param args.actor - Chủ thể vừa đăng nhập (đã normalize, IP + HTTP context gắn sẵn).
+ */
+export function auditLogin(args: { actor: AuditActor }): void {
+  record({
+    ...actorFields(args.actor),
+    ...httpFields(args.actor),
+    action: AUDIT_ACTIONS.auth.login,
+    category: AuditCategory.Auth,
+    targetType: AuditTargetType.Account,
+    targetId: args.actor.id,
+    // SELF: actor = target → hiển thị username thay vì accountId khó đọc.
+    targetLabel: args.actor.name,
+  });
+}
+
+/**
+ * Audit đăng xuất — CHỈ cho tài khoản công ty (`company`) và đại lý (`agent`).
+ * KHÔNG ghi cho `player`. `actor` = target. Ghi kèm HTTP context (userAgent/requestId).
+ *
+ * @param args.actor - Chủ thể vừa đăng xuất (đã normalize, IP + HTTP context gắn sẵn).
+ */
+export function auditLogout(args: { actor: AuditActor }): void {
+  record({
+    ...actorFields(args.actor),
+    ...httpFields(args.actor),
+    action: AUDIT_ACTIONS.auth.logout,
+    category: AuditCategory.Auth,
+    targetType: AuditTargetType.Account,
+    targetId: args.actor.id,
+    // SELF: actor = target → hiển thị username thay vì accountId khó đọc.
+    targetLabel: args.actor.name,
   });
 }

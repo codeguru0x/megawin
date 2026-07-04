@@ -33,6 +33,11 @@ export interface AuditLogFilter {
    */
   actor?: string;
   actorType?: AuditActorType;
+  /**
+   * Khớp chính xác IP của actor (`AuditLogDoc.ip`). Forensic: "liệt kê mọi hành
+   * động phát từ IP X". Dùng index `{ ip: 1, ts: -1 }`.
+   */
+  ip?: string;
   tenantId?: string;
   /** GameProduct key. */
   game?: string;
@@ -42,6 +47,20 @@ export interface AuditLogFilter {
   /** Id đối tượng — tra "mọi thao tác trên kỳ X / player Y". */
   targetId?: string;
   status?: AuditStatus;
+  /**
+   * Self-scope cho trang "Nhật ký của tôi" — chỉ trả security event LIÊN QUAN
+   * đến 1 tài khoản, KHÔNG cho xem log người khác.
+   *
+   * Khi set, repo thêm điều kiện `$and`:
+   * 1. `action ∈ SELF_ACTIVITY_ACTIONS` — chỉ nhóm auth/account SELF, ẩn hành động nghiệp vụ.
+   * 2. `actorId = accountId` — mặc định chỉ chiều SELF (actor = target). Chiều
+   *    "mình là target" chỉ bật cho whitelist `SELF_ACTIVITY_TARGET_ACTIONS`
+   *    (hiện rỗng → không match qua target, tránh lộ actor/IP CROSS action).
+   *
+   * Route API tự ép giá trị này từ session → client KHÔNG thể tự truyền accountId
+   * khác. `""` (session thiếu accountId) → không khớp record nào (an toàn, trả rỗng).
+   */
+  selfScope?: string;
 }
 
 /**
