@@ -1,3 +1,4 @@
+export * from "./alpha-label";
 export * from "./array";
 export * from "./date";
 export * from "./env";

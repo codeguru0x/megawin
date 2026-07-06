@@ -34,6 +34,7 @@ import type {
   EntryPayoutTier,
 } from "@megawin/game-max3dpro/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
+import { boardColorVar } from "@/lib/game-colors";
 // ─── Triplet Chip ─────────────────────────────────────────────────────────────
 
 function TripletChip({
@@ -82,15 +83,6 @@ const PRIZE_TIER_ORDER: string[] = [
   "fifth",
   "sixth",
 ];
-
-// ─── Board Color Map (A–D, Max 3D Pro tối đa 4 boards) ───────────────────────
-
-const BOARD_COLORS: Record<string, string> = {
-  A: "var(--board-a)",
-  B: "var(--board-b)",
-  C: "var(--board-c)",
-  D: "var(--board-d)",
-};
 
 // ─── Play Mode Label ──────────────────────────────────────────────────────────
 
@@ -411,7 +403,7 @@ export function Max3dproEntryDetailDialog({
                 <div className="space-y-2">
                   {boards.map((board, i) => {
                     const modeLabel = playModeLabel(board);
-                    const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                    const boardColor = boardColorVar(board.boardNo);
                     return (
                       <div
                         key={i}
@@ -491,7 +483,7 @@ export function Max3dproEntryDetailDialog({
                   <div className="space-y-2">
                     {boards.map((board, i) => {
                       const modeLabel = playModeLabel(board);
-                      const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                      const boardColor = boardColorVar(board.boardNo);
                       return (
                         <div
                           key={i}

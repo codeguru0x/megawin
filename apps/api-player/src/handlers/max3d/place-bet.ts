@@ -17,14 +17,11 @@ import type { PlaceBetBoardInput } from "@megawin/game-max3d-application/use-cas
 
 import { TicketChannel } from "@megawin/game-core/entities";
 import z from "zod";
-import {
-  max3dTripletSchema,
-  max3dDrawIdSchema,
-  VALID_BOARD_NOS,
-} from "@megawin/game-max3d/schemas";
+import { max3dTripletSchema, max3dDrawIdSchema } from "@megawin/game-max3d/schemas";
+import { MAX3D_MAX_BOARDS } from "@megawin/game-max3d/rules";
 import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
 import { isUnique } from "@megawin/shared/utils";
-import { boardsOrderRefine } from "../../lib/schemas";
+import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ─── Board schemas (discriminated by playMode) ───
 
@@ -32,7 +29,7 @@ import { boardsOrderRefine } from "../../lib/schemas";
  * Basic mode: straight/combo3/combo6 — client chọn đúng 1 bộ ba số.
  */
 const max3dBasicBoardSchema = z.object({
-  boardNo: z.enum(VALID_BOARD_NOS),
+  boardNo: z.string(),
   playMode: z.literal(PlayMode.Basic),
   playType: z.enum([PlayType.Straight, PlayType.Combo3, PlayType.Combo6]),
   triplets: z.array(max3dTripletSchema).length(1),
@@ -44,7 +41,7 @@ const max3dBasicBoardSchema = z.object({
  * combo3/combo6 không hỗ trợ cho Plus mode.
  */
 const max3dPlusBoardSchema = z.object({
-  boardNo: z.enum(VALID_BOARD_NOS),
+  boardNo: z.string(),
   playMode: z.literal(PlayMode.Plus),
   playType: z.literal(PlayType.Straight),
   triplets: z.array(max3dTripletSchema).length(2),
@@ -64,13 +61,9 @@ export const max3dPlaceBetBodySchema = z.object({
     .min(1)
     .max(6)
     .refine(isUnique, { message: "Các drawId không được trùng lặp." }),
-  boards: z
-    .array(max3dBoardSchema)
-    .min(1)
-    .max(VALID_BOARD_NOS.length)
-    .refine(boardsOrderRefine(VALID_BOARD_NOS), {
-      message: "Boards phải theo thứ tự liên tục từ A (A → A,B → A,B,C...).",
-    }),
+  boards: z.array(max3dBoardSchema).min(1).max(MAX3D_MAX_BOARDS).refine(boardsSequentialRefine(), {
+    message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
+  }),
 });
 
 export type Max3dBoard = z.infer<typeof max3dBoardSchema>;

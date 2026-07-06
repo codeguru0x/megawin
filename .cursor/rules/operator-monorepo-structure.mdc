@@ -1,0 +1,151 @@
+---
+description: Naming & project structure cho product Operator (PAM/Wallet B2C) trong monorepo megawin — tránh va chạm ngữ nghĩa với RGS core
+alwaysApply: true
+---
+
+# Operator Platform — Monorepo Naming & Structure
+
+Quy tắc source-control cho **MegaWin Operator** (product B2C: player thật, ví thật, nạp/rút, đại lý)
+sống chung monorepo với **MegaWin core (RGS)**. Thiết kế chi tiết ở
+[`docs/operator/operator-platform-design.md`](../../docs/operator/operator-platform-design.md).
+
+Mục tiêu của rule: **operator và core dùng CHUNG bộ từ vựng nghiệp vụ (`agent`, `player`, `wallet`,
+`balance`, `tenant`) nhưng KHÁC ngữ nghĩa** (operator = B2C tự vận hành; core = B2B cung cấp game cho tenant).
+Không có kỷ luật naming → 6-12 tháng nữa hai thế giới trộn lẫn, gây bug phân quyền + bug tính tiền.
+
+---
+
+## 1. Luật vàng: prefix `operator-` là BẮT BUỘC, KHÔNG ngoại lệ
+
+**MỌI app và package thuộc product Operator PHẢI mang prefix `operator-`.** Kể cả những tên "nghe có vẻ
+riêng" như wallet, payment, affiliate. Không có ngoại lệ.
+
+- App: `apps/operator-<domain>[-<runtime-suffix>]`
+- Package: `packages/operator-<domain>[-application]`, name `@megawin/operator-<domain>`
+
+**Nguyên tắc một dòng:** `operator-<domain>[-<runtime>]`. **Product prefix đứng TRƯỚC, runtime là suffix.**
+Điều này ĐẢO LẠI convention `api-*`/`worker-*` của core một cách CÓ CHỦ ĐÍCH: với operator, "thuộc product
+nào" quan trọng hơn "chạy bằng gì", vì mìn va chạm nằm ở tầng ngữ nghĩa product.
+
+Lý do siết tuyệt đối (không cho tên domain trần như `wallet`, `payment`):
+1. Lint glob `operator-*` bắt trọn boundary — không phải liệt kê từng exception.
+2. Đọc tên biết ngay thế giới nào, không cần đọc code.
+3. Chừa tên trần (`wallet`, `agent`) cho khả năng generalize thành sản phẩm B2B multi-tenant tương lai (§4).
+
+---
+
+## 2. Bằng chứng va chạm ĐÃ tồn tại trong core (đọc trước khi đặt tên)
+
+Đây KHÔNG phải rủi ro giả định — các va chạm này đang có thật trong code core:
+
+| Từ | Nghĩa trong CORE (B2B — giữ nguyên) | Nghĩa trong OPERATOR (B2C — mới) | Cách tránh |
+|---|---|---|---|
+| **agent** | `AgentRole` / `AccountType.Agent` (`packages/identity/src/entities/account.ts`): tài khoản **đại diện cho 1 tenant**, đăng nhập `backoffice`, Cognito **workforce pool**. `findAgentByTenantId` = mỗi tenant đúng 1 agent. | Đại lý/affiliate bán hàng đa tầng cho **player B2C**, ví hoa hồng, cây phân cấp, RevShare/NGR. | **Đổi từ:** dùng **`affiliate`**, KHÔNG dùng `agent`. → `operator-affiliate`, `operator-affiliate-portal`. |
+| **balance / wallet** | `tenant-gateway` `BalanceData`: số dư ví player **nằm ở phía TENANT**, core chỉ query hộ qua callback. Core KHÔNG sở hữu ví. | Ví thật do **operator sở hữu**, double-entry ledger, Postgres. | Prefix: **`operator-wallet`**. Chừa `wallet` trần cho Wallet-as-a-Service tenant B2B tương lai (§4). |
+| **player** | `PlayerAccountEntity` / `PlayerRole` / `playerId` (B2B: player thuộc tenant). | Player B2C thật của operator (có ví, KYC, nạp/rút). | Không đặt package tên `player` trần. Dùng `operator-core` cho PlayerId nội bộ operator. |
+| **core** | Đã bị chiếm 3 lần: `app-core` (infra AWS), `game-core` (domain game), `worker-core` (infra worker). | Domain chung operator. | `operator-core` — an toàn nhờ prefix. KHÔNG đặt `core` trần. |
+| **tenant** | `tenant-gateway`, `tenantId` khắp core: tenant B2B mua game. | Operator "đóng vai một tenant" (`megawin-play`). | KHÔNG tạo package operator tên `tenant-*`. Đó là namespace của core. |
+
+**Câu hỏi tương lai đã cân nhắc:**
+- *"MegaWin có trang cho agent/tenant B2B tương lai không?"* → CÓ khả năng cao (VD `apps/tenant-portal`,
+  `apps/agent-console`). Vì vậy operator KHÔNG được giành tên `agent-portal` trần → dùng `operator-affiliate-portal`.
+- *"MegaWin cung cấp ví cho tenant không tự làm ví (Wallet-as-a-Service)?"* → Có thể. Vì vậy `wallet` trần
+  được để dành; ví của operator là `operator-wallet` (§4).
+
+---
+
+## 3. Cấu trúc chuẩn (flat `apps/*` + `packages/*` — KHÔNG đổi workspace/turbo config)
+
+Monorepo là source-control strategy, KHÔNG phải deployment model. Giữ flat, phân biệt bằng **naming prefix**,
+deploy vẫn per-app bằng `turbo run <task> --filter=@megawin/operator-<app>...`.
+
+```
+apps/
+  # ── OPERATOR — FE (Next.js 16, theo tiền lệ apps/backoffice) ──
+  operator-web/               @megawin/operator-web              player: game + ví + My Account + (support)
+  operator-backoffice/        @megawin/operator-backoffice       nhân viên operator (duyệt rút, KYC, CS console)
+  operator-affiliate-portal/  @megawin/operator-affiliate-portal đại lý/affiliate B2C
+
+  # ── OPERATOR — Backend (product prefix TRƯỚC, runtime suffix SAU) ──
+  operator-api/               @megawin/operator-api              Lambda+Middy — BFF chính
+  operator-support-api/       @megawin/operator-support-api      Lambda+Middy — orchestration CS
+  operator-wallet-svc/        @megawin/operator-wallet-svc       ECS Fargate — ví+ledger (Postgres, stateful)
+  operator-worker-payout/     @megawin/operator-worker-payout    Lambda — payout async
+  operator-worker-reconcile/  @megawin/operator-worker-reconcile Lambda — đối soát core↔operator↔PSP
+  operator-worker-support/    @megawin/operator-worker-support   Lambda — sync context CS, proactive msg
+
+packages/
+  # ── OPERATOR domain + application (mirror game-*/game-*-application) ──
+  operator-core/              operator-core-application/         domain + repos/use-cases chung operator (Mongo)
+  operator-wallet/            operator-wallet-application/       ví double-entry + infra Postgres
+  operator-payment/           operator-payment-application/      PSP adapter (VNPay/MoMo/VietQR)
+  operator-affiliate/         operator-affiliate-application/    cây đại lý + commission engine (NGR/RevShare)
+  operator-support/           operator-support-application/      domain + repos/use-cases CS (Mongo)
+  operator-bonus/             operator-bonus-application/        (P5) ví bonus + wagering requirement
+  operator-kyc/               operator-kyc-application/          (P2) eKYC, tài liệu, tiers
+  operator-risk/              operator-risk-application/         (P5) rule engine, fraud score
+
+  # ── OPERATOR infra/support mới ──
+  operator-data-sql/          @megawin/operator-data-sql         Postgres layer (song song @megawin/data Mongo)
+  operator-auth/              @megawin/operator-auth             Operator IdP (better-auth/Cognito player pool + map B2B core)
+  operator-support-ai/        @megawin/operator-support-ai       abstraction AI/RAG (Comm100|Bedrock|self-hosted)
+  operator-channel-adapters/  @megawin/operator-channel-adapters Zalo/Telegram/WhatsApp/Email → 1 message shape
+```
+
+Runtime suffix hợp lệ: `-web`, `-backoffice`, `-portal`, `-api`, `-svc` (service dài hạn stateful), `-worker-<job>`.
+
+`-svc` là suffix MỚI dành riêng service dài hạn (ECS Fargate, connection pool, transaction dài) — báo hiệu
+"không deploy như Lambda". Dùng tiết kiệm, đúng bản chất.
+
+---
+
+## 4. Chừa đường cho generalize B2B tương lai (KHÔNG over-engineer sớm)
+
+> **Quyết định đã chốt:** [ADR-0001 — Wallet/PAM thuộc Operator, không đưa vào core](../../docs/operator/adr/0001-wallet-in-operator-not-core.md).
+> Core giữ RGS-pure; operator là 1 tenant đặc biệt implement callback. KHÔNG xây PAM-as-a-Service ở core khi
+> chưa có tenant thật yêu cầu.
+
+Operator = "một tenant đặc biệt" (`operator-as-a-tenant`). Về lâu dài một số capability có thể tách thành
+sản phẩm B2B dùng chung cho nhiều tenant. **KHÔNG xây multi-tenant ngay** — chỉ CHỪA TÊN:
+
+- `operator-wallet` (scoped cho product operator). Nếu tương lai làm **Wallet-as-a-Service** cho tenant B2B →
+  tạo package MỚI lúc đó (tên trần `wallet` hoặc `tenant-wallet`), KHÔNG refactor `operator-wallet`.
+- `wallet`, `agent`, `player`, `tenant-*` (tên trần) = **để dành**, không ai được chiếm cho operator.
+
+---
+
+## 5. Boundary enforced by lint (không chỉ bằng tên)
+
+Bổ sung `dependency-cruiser` ở root, chạy trong task `lint`:
+
+1. **`no-core-to-operator`**: cấm CORE import OPERATOR. Core (`packages/game-*`, `packages/identity*`,
+   `packages/tenant-*`, `apps/api-player`, `apps/api-tenant`, `apps/worker-<game>`, `apps/backoffice`) **KHÔNG
+   được** import bất kỳ `@megawin/operator-*`. Nếu vi phạm = đã phá "operator-as-a-tenant" (core phải
+   product-agnostic).
+2. **`operator-import-core-allowlist`**: OPERATOR chỉ được import core qua allowlist package cầu nối:
+   `@megawin/shared`, `app-core`, `data`, `cache`, `audit`, `tenant-gateway`, `player-sdk`, `auth`, `next`,
+   `ui`, `http-client`. KHÔNG import thẳng `game-*`, `identity*` internals.
+
+---
+
+## 6. Layering trong mỗi package operator (giống game-*/game-*-application)
+
+- `operator-<ctx>` (domain, pure): `entities/`, `rules/`, `helpers/`, `schemas/` — không I/O.
+- `operator-<ctx>-application` (infra + use-cases): `use-cases/<group>/`, `infras/repos/`, `infras/mappers/`, `services/`.
+- Subpath exports (`./entities`, `./repos`, `./use-cases/<group>`), mỗi thư mục có barrel `index.ts`.
+- Package.json exports: `types`/`import` → `src`, `default` → `dist`.
+- SQL (Postgres) chỉ nằm trong `operator-wallet-application` + các application tài chính, qua `@megawin/operator-data-sql`.
+  Core game Lambda KHÔNG bao giờ kéo Postgres driver vào bundle.
+
+---
+
+## 7. Checklist thêm app/package operator mới
+
+- [ ] Tên có prefix `operator-` (app + package). Không có ngoại lệ (§1).
+- [ ] Không dùng từ va chạm trần: `agent` (dùng `affiliate`), `wallet`/`player`/`tenant`/`core` trần (§2).
+- [ ] Backend: product prefix trước, runtime suffix sau (`operator-<domain>-api|svc|worker-<job>`) (§3).
+- [ ] Package tài chính SQL import `@megawin/operator-data-sql`, không đụng `@megawin/data` (Mongo core).
+- [ ] Không import core internals ngoài allowlist (§5).
+- [ ] Domain vs application tách đúng layering (§6).
+- [ ] Deploy per-app bằng `turbo --filter`, không đổi `pnpm-workspace.yaml`/`turbo.json`.
+```

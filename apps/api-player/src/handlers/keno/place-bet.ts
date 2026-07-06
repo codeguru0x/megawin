@@ -37,17 +37,15 @@ import { PlaceBetUseCase } from "@megawin/game-keno-application/use-cases/place-
 import { kenoNumberSchema, kenoDrawIdSchema } from "@megawin/game-keno/schemas";
 import { TicketChannel } from "@megawin/game-core/entities";
 import { KenoBigSmallBet, KenoEvenOddBet, KenoPlayType } from "@megawin/game-keno/entities";
+import { KENO_MAX_BOARDS } from "@megawin/game-keno/rules";
 import z from "zod";
-import { boardsOrderRefine } from "../../lib/schemas";
+import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ============ Board Schemas — Tách riêng theo playType ============
 
-/** boardNo hợp lệ: A, B, C. Tối đa 3 panels. */
-const KENO_BOARD_NO = ["A", "B", "C"] as const;
-
 /** Schema dùng chung cho tất cả boards: boardNo + betCount. */
 const baseBoardFields = {
-  boardNo: z.enum(KENO_BOARD_NO),
+  boardNo: z.string(),
   betCount: z.number().int().min(1).default(1),
 } as const;
 
@@ -141,9 +139,9 @@ export const kenoPlaceBetBodySchema = z.object({
   boards: z
     .array(kenoBoardSchema)
     .min(1, "Phải có ít nhất 1 board.")
-    .max(KENO_BOARD_NO.length)
-    .refine(boardsOrderRefine(KENO_BOARD_NO), {
-      message: "Boards phải theo thứ tự liên tục từ A (A → A,B → A,B,C...).",
+    .max(KENO_MAX_BOARDS)
+    .refine(boardsSequentialRefine(), {
+      message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
     }),
 });
 

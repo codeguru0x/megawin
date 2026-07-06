@@ -22,7 +22,14 @@ export interface Mega645SelectionInput {
  * Một board trong vé Mega 6/45.
  */
 export interface Mega645BoardInput {
-  /** Ký hiệu board. VD: `"A"`, `"B"`, `"C"`. */
+  /**
+   * Ký hiệu board trong vé, sinh tự động theo thứ tự chữ cái: `"A"`, `"B"`, ..., `"Z"`,
+   * rồi `"AA"`, `"AB"`, ... — giống đánh cột bảng tính. Board đầu tiên luôn là `"A"`.
+   *
+   * Các board phải liên tục từ `"A"` (không skip, không trùng): 1 board → `["A"]`,
+   * 3 board → `["A","B","C"]`. Số board tối đa mỗi vé do cấu hình game quyết định
+   * (`maxBoardsPerTicket`), không cố định 6.
+   */
   boardNo: string;
   /** Kiểu chơi của board này. */
   playType: Mega645PlayType;
@@ -70,7 +77,10 @@ export interface Mega645TicketPurchaseInput {
    * - Không được trùng lặp
    */
   drawIds: string[];
-  /** Danh sách boards trong vé. Tối đa 6 boards, không được trùng boardNo. */
+  /**
+   * Danh sách boards trong vé. Ít nhất 1 board, boardNo liên tục từ `"A"`.
+   * Số board tối đa do cấu hình game quyết định (`maxBoardsPerTicket`).
+   */
   boards: Mega645BoardInput[];
 }
 

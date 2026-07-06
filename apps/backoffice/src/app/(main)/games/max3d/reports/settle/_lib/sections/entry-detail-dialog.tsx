@@ -30,6 +30,7 @@ import { formatNumber, toTenantUsername, formatVN } from "@megawin/shared/utils"
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import type { TicketEntryEntity, EntryBoardSnapshot } from "@megawin/game-max3d/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
+import { boardColorVar } from "@/lib/game-colors";
 
 // ─── Max 3D Prize Tier Labels ─────────────────────────────────────────────────
 
@@ -60,15 +61,6 @@ const PRIZE_TIER_ORDER: string[] = [
   "fifth",
   "sixth",
 ];
-
-// ─── Board Color Map ──────────────────────────────────────────────────────────
-
-const BOARD_COLORS: Record<string, string> = {
-  A: "var(--board-a)",
-  B: "var(--board-b)",
-  C: "var(--board-c)",
-  D: "var(--board-d)",
-};
 
 // ─── PlayType Label ───────────────────────────────────────────────────────────
 
@@ -410,7 +402,7 @@ export function Max3dEntryDetailDialog({
                 </p>
                 <div className="space-y-2">
                   {boards.map((board, i) => {
-                    const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                    const boardColor = boardColorVar(board.boardNo);
                     const playLabel = getPlayTypeLabel(board.playType, board.playMode);
                     return (
                       <div
@@ -464,7 +456,7 @@ export function Max3dEntryDetailDialog({
                   </p>
                   <div className="space-y-2">
                     {boards.map((board, i) => {
-                      const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                      const boardColor = boardColorVar(board.boardNo);
                       const playLabel = getPlayTypeLabel(board.playType, board.playMode);
                       return (
                         <div

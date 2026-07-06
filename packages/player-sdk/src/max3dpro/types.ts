@@ -23,7 +23,14 @@
  * ```
  */
 export interface Max3dproMultiNumberBoardInput {
-  /** Ký hiệu board trong vé. Tối đa 4 boards, không được trùng. */
+  /**
+   * Ký hiệu board trong vé, sinh tự động theo thứ tự chữ cái: `"A"`, `"B"`, ..., `"Z"`,
+   * rồi `"AA"`, `"AB"`, ... — giống đánh cột bảng tính. Board đầu tiên luôn là `"A"`.
+   *
+   * Các board phải liên tục từ `"A"` (không skip, không trùng): 1 board → `["A"]`,
+   * 3 board → `["A","B","C"]`. Số board tối đa mỗi vé do cấu hình game quyết định
+   * (`maxBoardsPerTicket`), không cố định 4.
+   */
   boardNo: string;
   /** Chế độ chơi, luôn là `"multiNumber"` cho interface này. */
   playMode: "multiNumber";
@@ -61,7 +68,14 @@ export interface Max3dproMultiNumberBoardInput {
  * ```
  */
 export interface Max3dproMultiDigitBoardInput {
-  /** Ký hiệu board trong vé. Tối đa 4 boards, không được trùng. */
+  /**
+   * Ký hiệu board trong vé, sinh tự động theo thứ tự chữ cái: `"A"`, `"B"`, ..., `"Z"`,
+   * rồi `"AA"`, `"AB"`, ... — giống đánh cột bảng tính. Board đầu tiên luôn là `"A"`.
+   *
+   * Các board phải liên tục từ `"A"` (không skip, không trùng): 1 board → `["A"]`,
+   * 3 board → `["A","B","C"]`. Số board tối đa mỗi vé do cấu hình game quyết định
+   * (`maxBoardsPerTicket`), không cố định 4.
+   */
   boardNo: string;
   /** Chế độ chơi, luôn là `"multiDigit"` cho interface này. */
   playMode: "multiDigit";
@@ -133,7 +147,11 @@ export interface Max3dproTicketPurchaseInput {
    * - Không được trùng lặp
    */
   drawIds: string[];
-  /** Danh sách boards trong vé. Tối đa 4 boards, không được trùng boardNo. */
+  /**
+   * Danh sách boards trong vé (tối thiểu 1). Các board phải liên tục từ `"A"`,
+   * không skip, không trùng `boardNo`. Số board tối đa do cấu hình game quyết định
+   * (`maxBoardsPerTicket`), không cố định 4.
+   */
   boards: Max3dproBoardInput[];
 }
 

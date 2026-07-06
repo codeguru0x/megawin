@@ -9,6 +9,19 @@
  *   (companyTake có thể âm — công ty chịu lỗ)
  */
 
+/**
+ * Hard cap tuyệt đối số board mỗi vé Max 3D Pro — chống payload lạm dụng.
+ *
+ * Đây KHÔNG phải giới hạn nghiệp vụ (giới hạn thật là `play.maxBoardsPerTicket`
+ * trong game config, có thể nhỏ hơn). Dùng làm trần cứng ở 2 tầng:
+ * - Zod schema place-bet: `boards[]` không quá {@link MAX3DPRO_MAX_BOARDS}.
+ * - Zod schema update game config: `maxBoardsPerTicket` không cấu hình vượt trần này.
+ *
+ * Đảm bảo `maxBoardsPerTicket` luôn ≤ số board tối đa mà API chấp nhận.
+ */
+export const MAX3DPRO_MAX_BOARDS = 100;
+
+
 export interface DrawFinancialInput {
   /** Tổng doanh thu = Σ(entry.amount). */
   totalRevenue: number;

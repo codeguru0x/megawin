@@ -1,3 +1,4 @@
+import { KENO_MAX_BOARDS } from "@megawin/game-keno/rules";
 import { z } from "zod";
 
 const positiveInt = z.number().int().positive();
@@ -70,7 +71,10 @@ const playSchema = z
     unitPrice: positiveInt,
     minBetCount: z.number().int().min(1, "Tối thiểu 1"),
     maxBetCount: z.number().int().min(1, "Tối thiểu 1"),
-    maxBasicBoardsPerTicket: positiveInt,
+    maxBasicBoardsPerTicket: positiveInt.max(
+      KENO_MAX_BOARDS,
+      `Số board tối đa không được vượt ${KENO_MAX_BOARDS}.`,
+    ),
     maxDrawCount: positiveInt,
     salesCloseBeforeSeconds: positiveInt,
     drawIntervalMinutes: positiveInt,

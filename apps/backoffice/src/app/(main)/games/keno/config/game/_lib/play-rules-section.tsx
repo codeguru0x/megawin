@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Save, HelpCircle } from "lucide-react";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
+import { KENO_MAX_BOARDS } from "@megawin/game-keno/rules";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -30,7 +31,11 @@ const playFormSchema = z
     unitPrice: z.coerce.number().int().positive("Phải > 0"),
     minBetCount: z.coerce.number().int().min(1, "Tối thiểu 1"),
     maxBetCount: z.coerce.number().int().min(1, "Tối thiểu 1"),
-    maxBasicBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
+    maxBasicBoardsPerTicket: z.coerce
+      .number()
+      .int()
+      .positive("Phải > 0")
+      .max(KENO_MAX_BOARDS, `Tối đa ${KENO_MAX_BOARDS}`),
     maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
     salesCloseBeforeSeconds: z.coerce.number().int().positive("Phải > 0"),
     drawIntervalMinutes: z.coerce.number().int().positive("Phải > 0"),
@@ -162,7 +167,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Số boards tối đa / vé"
-                            tip="Số panel (A, B, C) tối đa trên 1 vé. Mỗi panel chơi 1 cách độc lập — pick1–10, lớn/nhỏ, chẵn/lẻ."
+                            tip={`Số panel (A, B, C) tối đa trên 1 vé. Mỗi panel chơi 1 cách độc lập — pick1–10, lớn/nhỏ, chẵn/lẻ. Không được cấu hình vượt quá ${KENO_MAX_BOARDS} (hard cap toàn hệ thống).`}
                           />
                         </FormLabel>
                         <FormControl>

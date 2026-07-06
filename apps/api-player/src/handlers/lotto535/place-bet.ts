@@ -16,10 +16,10 @@ import {
   lotto535MainNumberSchema,
   lotto535SpecialNumberSchema,
   lotto535DrawIdSchema,
-  VALID_BOARD_NOS,
 } from "@megawin/game-lotto535/schemas";
+import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
 import { PlayType } from "@megawin/game-lotto535/entities";
-import { boardsOrderRefine } from "../../lib/schemas";
+import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ─── Composite schemas ───
 
@@ -30,7 +30,7 @@ export const lotto535SelectionSchema = z.object({
 
 export const lotto535BoardSchema = z
   .object({
-    boardNo: z.enum(VALID_BOARD_NOS),
+    boardNo: z.string(),
     playType: z.enum([
       PlayType.Standard,
       PlayType.MainCover,
@@ -137,9 +137,9 @@ export const lotto535PlaceBetBodySchema = z.object({
   boards: z
     .array(lotto535BoardSchema)
     .min(1)
-    .max(VALID_BOARD_NOS.length)
-    .refine(boardsOrderRefine(VALID_BOARD_NOS), {
-      message: "Boards phải theo thứ tự liên tục từ A (A → A,B → A,B,C...).",
+    .max(LOTTO535_MAX_BOARDS)
+    .refine(boardsSequentialRefine(), {
+      message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
     }),
 });
 

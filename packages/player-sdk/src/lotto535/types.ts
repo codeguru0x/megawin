@@ -72,9 +72,12 @@ export interface Lotto535SelectionInput {
  */
 export interface Lotto535BoardInput {
   /**
-   * Mã board: `"A"`, `"B"`, `"C"`, `"D"`, hoặc `"E"`.
+   * Ký hiệu board trong vé, sinh tự động theo thứ tự chữ cái: `"A"`, `"B"`, ..., `"Z"`,
+   * rồi `"AA"`, `"AB"`, ... — giống đánh cột bảng tính. Board đầu tiên luôn là `"A"`.
    *
-   * Không được trùng boardNo giữa các boards trong cùng 1 vé.
+   * Các board phải liên tục từ `"A"` (không skip, không trùng): 1 board → `["A"]`,
+   * 3 board → `["A","B","C"]`. Số board tối đa mỗi vé do cấu hình game quyết định
+   * (`maxBoardsPerTicket`), không cố định 5.
    */
   boardNo: string;
 
@@ -147,7 +150,8 @@ export interface Lotto535TicketPurchaseInput {
   /**
    * Danh sách boards.
    *
-   * Tối đa 5 boards, không được trùng boardNo.
+   * Ít nhất 1 board, boardNo liên tục từ `"A"`. Số board tối đa do cấu hình game
+   * quyết định (`maxBoardsPerTicket`).
    */
   boards: Lotto535BoardInput[];
 }

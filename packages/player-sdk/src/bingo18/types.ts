@@ -32,8 +32,12 @@ import type { Bingo18PlayType, Bingo18TripleKind, Bingo18BigSmallBet } from "./e
  */
 export interface Bingo18BoardInput {
   /**
-   * Ký hiệu board trong vé. Mỗi vé tối đa 6 boards, không được trùng.
-   * Giá trị hợp lệ: `"A"`, `"B"`, `"C"`, `"D"`, `"E"`, `"F"`.
+   * Ký hiệu board trong vé, sinh tự động theo thứ tự chữ cái: `"A"`, `"B"`, ..., `"Z"`,
+   * rồi `"AA"`, `"AB"`, ... — giống đánh cột bảng tính. Board đầu tiên luôn là `"A"`.
+   *
+   * Các board phải liên tục từ `"A"` (không skip, không trùng): 1 board → `["A"]`,
+   * 3 board → `["A","B","C"]`. Số board tối đa mỗi vé do cấu hình game quyết định
+   * (`maxBasicBoardsPerTicket`), không cố định 6.
    */
   boardNo: string;
   /**
@@ -128,8 +132,8 @@ export interface Bingo18TicketPurchaseInput {
   /**
    * Danh sách boards cược — bao gồm cả cơ bản và cược bổ sung.
    *
-   * - Tối đa 6 boards mỗi vé (boardNo "A"-"F"), bất kỳ loại chơi nào
-   * - Không được trùng `boardNo`
+   * - Tối thiểu 1 board; số tối đa theo cấu hình game (`maxBasicBoardsPerTicket`)
+   * - `boardNo` sinh tự động, liên tục từ `"A"` (A, B, C... Z, AA...), không trùng
    */
   boards: Bingo18BoardInput[];
 }

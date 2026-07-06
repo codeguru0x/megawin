@@ -23,7 +23,8 @@
  * ║ │ bigSmallDraw  │ bet: "big"|"draw"|"small"                           │ ║
  * ║ └───────────────┴──────────────────────────────────────────────────────┘ ║
  * ║                                                                         ║
- * ║ boardNo: "A"-"F" — tối đa 6 boards, không trùng boardNo.              ║
+ * ║ boardNo: sinh động theo thứ tự chữ cái A, B, C... Z, AA, AB... không trùng.  ║
+ * ║ Số board tối đa theo game config (maxBasicBoardsPerTicket); Zod hard cap 100. ║
  * ║ Bất kỳ panel nào cũng có thể chơi bất kỳ loại nào.                    ║
  * ║                                                                         ║
  * ║ SDK migration: thay sideBets[] bằng boards[] với playType tương ứng,   ║
@@ -46,17 +47,15 @@ import {
   Bingo18BigSmallBet,
   Bingo18TripleKind,
 } from "@megawin/game-bingo18/entities";
+import { BINGO18_MAX_BOARDS } from "@megawin/game-bingo18/rules";
 import z from "zod";
-import { boardsOrderRefine } from "../../lib/schemas";
+import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ============ Board Schemas — Tách riêng theo playType ============
 
-/** boardNo hợp lệ: A-F. Tối đa 6 panels. */
-const BINGO18_BOARD_NO = ["A", "B", "C", "D", "E", "F"] as const;
-
 /** Schema dùng chung cho tất cả boards: boardNo + betCount. */
 const baseBoardFields = {
-  boardNo: z.enum(BINGO18_BOARD_NO),
+  boardNo: z.string(),
   betCount: z.number().int().positive().default(1),
 } as const;
 
@@ -146,9 +145,9 @@ export const bingo18PlaceBetBodySchema = z.object({
   boards: z
     .array(bingo18BoardSchema)
     .min(1, "Phải có ít nhất 1 board.")
-    .max(BINGO18_BOARD_NO.length)
-    .refine(boardsOrderRefine(BINGO18_BOARD_NO), {
-      message: "Boards phải theo thứ tự liên tục từ A (A → A,B → A,B,C...).",
+    .max(BINGO18_MAX_BOARDS)
+    .refine(boardsSequentialRefine(), {
+      message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
     }),
 });
 

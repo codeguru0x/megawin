@@ -13,7 +13,7 @@
 
 import type { TicketStatus, TicketChannel } from "@megawin/game-core/entities";
 import type { PlayType } from "./enums";
-import type { BoardSelection, BoardNo, ISODateString } from "./types";
+import type { BoardSelection, ISODateString } from "./types";
 
 // ─────────────────────────────────────────────
 // Embedded Document Interfaces
@@ -115,10 +115,11 @@ export interface TicketVoidSummary {
  */
 export interface Board {
   /**
-   * Ký hiệu bảng: "A", "B", "C", "D", "E".
-   * Dùng để tham chiếu khi hiển thị kết quả.
+   * Ký hiệu bảng sinh tự động theo thứ tự chữ cái: "A", "B", ..., "Z", "AA", "AB", ...
+   * (giống đánh cột bảng tính). Board đầu tiên luôn là "A".
+   * Số board tối đa mỗi vé do cấu hình game quyết định (`maxBoardsPerTicket`).
    */
-  boardNo: BoardNo;
+  boardNo: string;
   /** Loại chơi: standard, bao5, bao7-bao18. */
   playType: PlayType;
   /** Các số đã chọn. Số lượng phụ thuộc playType. */

@@ -35,6 +35,22 @@ import {
 } from "../entities/types";
 
 // ─────────────────────────────────────────────
+// Play Rule Hard Caps (chống abuse — độc lập với config động)
+// ─────────────────────────────────────────────
+
+/**
+ * Hard cap tuyệt đối số board mỗi vé Lotto 5/35 — chống payload lạm dụng.
+ *
+ * Đây KHÔNG phải giới hạn nghiệp vụ (giới hạn thật là `play.maxBoardsPerTicket`
+ * trong game config, có thể nhỏ hơn). Dùng làm trần cứng ở 2 tầng:
+ * - Zod schema place-bet: `boards[]` không quá {@link LOTTO535_MAX_BOARDS}.
+ * - Zod schema update game config: `maxBoardsPerTicket` không cấu hình vượt trần này.
+ *
+ * Đảm bảo `maxBoardsPerTicket` luôn ≤ số board tối đa mà API chấp nhận.
+ */
+export const LOTTO535_MAX_BOARDS = 100;
+
+// ─────────────────────────────────────────────
 // Combination helper
 // ─────────────────────────────────────────────
 

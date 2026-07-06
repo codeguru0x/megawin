@@ -39,16 +39,7 @@ import type {
 } from "@megawin/game-bingo18/entities";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { EntryStatus } from "@megawin/game-core/entities";
-// ─── Board Color Map ──────────────────────────────────────────────────────────
-
-const BOARD_COLORS: Record<string, string> = {
-  A: "var(--board-a)",
-  B: "var(--board-b)",
-  C: "var(--board-c)",
-  D: "var(--board-d)",
-  E: "var(--board-e)",
-  F: "var(--board-f)",
-};
+import { boardColorVar } from "@/lib/game-colors";
 
 // ─── Dice Display ─────────────────────────────────────────────────────────────
 
@@ -378,7 +369,7 @@ export function Bingo18EntryDetailDialog({
                 </p>
                 <div className="space-y-2">
                   {allBoardSnapshots.map((snapshot, i) => {
-                    const boardColor = BOARD_COLORS[snapshot.boardNo] ?? BOARD_COLORS.A;
+                    const boardColor = boardColorVar(snapshot.boardNo);
                     const bp = payoutByBoardNo.get(snapshot.boardNo);
                     const isSideBet = BINGO18_SIDE_BET_PLAY_TYPE_SET.has(snapshot.playType);
                     const boardIsWin = bp?.isWin ?? false;
@@ -505,7 +496,7 @@ export function Bingo18EntryDetailDialog({
                   </div>
                   <div className="space-y-2">
                     {allBoardSnapshots.map((snapshot, i) => {
-                      const boardColor = BOARD_COLORS[snapshot.boardNo] ?? BOARD_COLORS.A;
+                      const boardColor = boardColorVar(snapshot.boardNo);
 
                       let selectionContent: React.ReactNode;
                       if (

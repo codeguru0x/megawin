@@ -34,7 +34,10 @@ vi.mock("@megawin/game-lotto535/schemas", () => ({
   lotto535MainNumberSchema: z.string(),
   lotto535SpecialNumberSchema: z.string(),
   lotto535DrawIdSchema: z.string(),
-  VALID_BOARD_NOS: ["A", "B", "C", "D", "E"],
+}));
+
+vi.mock("@megawin/game-lotto535/rules", () => ({
+  LOTTO535_MAX_BOARDS: 100,
 }));
 
 const VALID_BODY = {
@@ -112,8 +115,12 @@ describe("POST /player/lotto535/bets", () => {
     expect(response.statusCode).toBe(400);
   });
 
-  it("should reject when boards exceed max (5)", async () => {
-    const boards = Array.from({ length: 6 }, (_, i) => ({
+  /**
+   * Validates that exceeding the hard cap (LOTTO535_MAX_BOARDS = 100) is rejected.
+   * Giới hạn nghiệp vụ thật (maxBoardsPerTicket) được check ở use case, không phải Zod.
+   */
+  it("should reject when boards exceed hard cap (100)", async () => {
+    const boards = Array.from({ length: 101 }, (_, i) => ({
       boardNo: String.fromCharCode(65 + i),
       playType: "standard",
       selection: {

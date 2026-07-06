@@ -18,9 +18,12 @@ import type { KenoBigSmallBet, KenoEvenOddBet } from "./enums";
  */
 interface KenoBoardBase {
   /**
-   * Mã board: `"A"`, `"B"`, hoặc `"C"`.
+   * Ký hiệu board trong vé, sinh tự động theo thứ tự chữ cái: `"A"`, `"B"`, ..., `"Z"`,
+   * rồi `"AA"`, `"AB"`, ... — giống đánh cột bảng tính. Board đầu tiên luôn là `"A"`.
    *
-   * Bắt buộc cho mọi board. Mỗi vé tối đa 3 boards, không trùng boardNo.
+   * Các board phải liên tục từ `"A"` (không skip, không trùng): 1 board → `["A"]`,
+   * 3 board → `["A","B","C"]`. Số board tối đa mỗi vé do cấu hình game quyết định
+   * (`maxBasicBoardsPerTicket`), không cố định 3.
    */
   boardNo: string;
   /**
@@ -193,7 +196,8 @@ export interface KenoTicketPurchaseInput {
   /**
    * Boards cược — bao gồm cả board chọn số (pick1-pick10) lẫn cược bổ sung (bigSmall, evenOdd).
    *
-   * Tối đa 3 boards (boardNo "A"/"B"/"C"), bất kỳ loại nào.
+   * Ít nhất 1 board, boardNo liên tục từ `"A"`. Số board tối đa do cấu hình game
+   * quyết định (`maxBasicBoardsPerTicket`).
    */
   boards: KenoBoardInput[];
 }

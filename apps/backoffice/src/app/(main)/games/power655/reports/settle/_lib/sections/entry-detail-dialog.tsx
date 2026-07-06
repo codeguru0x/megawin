@@ -35,16 +35,7 @@ import {
 } from "@megawin/game-power655/labels";
 import { PrizeTier } from "@megawin/game-power655/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
-// ─── Board Color Map ──────────────────────────────────────────────────────────
-
-const BOARD_COLORS: Record<string, string> = {
-  A: "var(--board-a)",
-  B: "var(--board-b)",
-  C: "var(--board-c)",
-  D: "var(--board-d)",
-  E: "var(--board-e)",
-  F: "var(--board-f)",
-};
+import { boardColorVar } from "@/lib/game-colors";
 
 // ─── Ball Display Helpers ─────────────────────────────────────────────────────
 
@@ -381,7 +372,7 @@ export function Power655EntryDetailDialog({
                 <div className="space-y-2">
                   {boards.map((board, i) => {
                     const playLabel = getPower655PlayTypeLabel(board.playType);
-                    const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                    const boardColor = boardColorVar(board.boardNo);
                     return (
                       <div
                         key={i}
@@ -440,7 +431,7 @@ export function Power655EntryDetailDialog({
                   <div className="space-y-2">
                     {boards.map((board, i) => {
                       const playLabel = getPower655PlayTypeLabel(board.playType);
-                      const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                      const boardColor = boardColorVar(board.boardNo);
                       return (
                         <div
                           key={i}

@@ -23,7 +23,13 @@ export interface Power655SelectionInput {
  * Một board trong vé Power 6/55.
  */
 export interface Power655BoardInput {
-  /** Ký hiệu board. VD: `"A"`, `"B"`, `"C"`. */
+  /**
+   * Ký hiệu board — nhãn dạng cột spreadsheet: `"A"`, `"B"`, …, `"Z"`, `"AA"`, `"AB"`, …
+   *
+   * Các board phải liên tục từ `"A"` (không skip, không trùng): 1 board → `["A"]`,
+   * 3 board → `["A","B","C"]`. Số board tối đa mỗi vé do cấu hình game quyết định
+   * (`maxBoardsPerTicket`), không cố định 5.
+   */
   boardNo: string;
   /** Kiểu chơi của board này. */
   playType: Power655PlayType;
@@ -68,7 +74,10 @@ export interface Power655TicketPurchaseInput {
    * - Không được trùng lặp
    */
   drawIds: string[];
-  /** Danh sách boards trong vé. Tối đa 5 boards, không được trùng boardNo. */
+  /**
+   * Danh sách boards trong vé. Tối thiểu 1, tối đa theo cấu hình game
+   * (`maxBoardsPerTicket`). `boardNo` phải liên tục từ `"A"`, không trùng.
+   */
   boards: Power655BoardInput[];
 }
 

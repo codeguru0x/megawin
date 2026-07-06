@@ -9,6 +9,22 @@
 import { PlayType } from "../entities/enums";
 import { POWER655_MAIN_COUNT, VALID_MAIN_NUMBER_SET } from "../entities/types";
 
+// ─────────────────────────────────────────────
+// Play Rule Hard Caps (chống abuse — độc lập với config động)
+// ─────────────────────────────────────────────
+
+/**
+ * Hard cap tuyệt đối số board mỗi vé Power 6/55 — chống payload lạm dụng.
+ *
+ * Đây KHÔNG phải giới hạn nghiệp vụ (giới hạn thật là `play.maxBoardsPerTicket`
+ * trong game config, có thể nhỏ hơn). Dùng làm trần cứng ở 2 tầng:
+ * - Zod schema place-bet: `boards[]` không quá {@link POWER655_MAX_BOARDS}.
+ * - Zod schema update game config: `maxBoardsPerTicket` không cấu hình vượt trần này.
+ *
+ * Đảm bảo `maxBoardsPerTicket` luôn ≤ số board tối đa mà API chấp nhận.
+ */
+export const POWER655_MAX_BOARDS = 100;
+
 // ─── Combinatorics ───
 
 export function combination(n: number, k: number): number {

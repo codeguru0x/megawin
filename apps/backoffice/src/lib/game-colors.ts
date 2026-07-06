@@ -1,4 +1,5 @@
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+import { alphaLabelToNumber } from "@megawin/shared/utils";
 
 /**
  * Brand color token cho từng game — single source of truth.
@@ -233,4 +234,37 @@ export function getGameColors(gameProduct: string): GameColorTokens {
  */
 export function getGameHex(gameProduct: string): string {
   return getGameColors(gameProduct).hex;
+}
+
+/**
+ * 6 CSS variables màu board (`--board-a`..`--board-f`) định nghĩa trong globals.css,
+ * có sẵn light + dark mode. Dùng làm palette cho board indicator (border-left/badge/dot).
+ */
+const BOARD_COLOR_VARS = [
+  "var(--board-a)",
+  "var(--board-b)",
+  "var(--board-c)",
+  "var(--board-d)",
+  "var(--board-e)",
+  "var(--board-f)",
+] as const;
+
+/**
+ * Màu ổn định cho 1 boardNo bất kỳ — hỗ trợ số board động (A, B, ... Z, AA, AB...).
+ *
+ * Map boardNo theo thứ tự chữ cái (`alphaLabelToNumber`) rồi tuần hoàn qua 6 màu
+ * palette → board thứ 7 ("G") lại dùng màu của "A". Deterministic: cùng boardNo
+ * luôn ra cùng màu. An toàn với boardNo không hợp lệ (fallback màu đầu tiên).
+ *
+ * @param boardNo Ký hiệu board (A, B, ... AA...).
+ * @returns Chuỗi `var(--board-*)` dùng cho inline style / border color.
+ */
+export function boardColorVar(boardNo: string): string {
+  let index: number;
+  try {
+    index = (alphaLabelToNumber(boardNo) - 1) % BOARD_COLOR_VARS.length;
+  } catch {
+    index = 0; // fallback cho boardNo không hợp lệ
+  }
+  return BOARD_COLOR_VARS[index] ?? BOARD_COLOR_VARS[0];
 }

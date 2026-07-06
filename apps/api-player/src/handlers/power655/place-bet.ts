@@ -15,14 +15,11 @@ import { PlaceBetUseCase } from "@megawin/game-power655-application/use-cases/pl
 
 import { TicketChannel } from "@megawin/game-core/entities";
 import z from "zod";
-import {
-  power655MainNumberSchema,
-  power655DrawIdSchema,
-  VALID_BOARD_NOS,
-} from "@megawin/game-power655/schemas";
+import { power655MainNumberSchema, power655DrawIdSchema } from "@megawin/game-power655/schemas";
 import { PlayType } from "@megawin/game-power655/entities";
+import { POWER655_MAX_BOARDS } from "@megawin/game-power655/rules";
 import { isUnique } from "@megawin/shared/utils";
-import { boardsOrderRefine } from "../../lib/schemas";
+import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ─── Composite schemas ───
 
@@ -32,7 +29,7 @@ export const power655SelectionSchema = z.object({
 
 export const power655BoardSchema = z
   .object({
-    boardNo: z.enum(VALID_BOARD_NOS),
+    boardNo: z.string(),
     playType: z.enum([
       PlayType.Standard,
       PlayType.Bao5,
@@ -175,9 +172,9 @@ export const power655PlaceBetBodySchema = z.object({
   boards: z
     .array(power655BoardSchema)
     .min(1)
-    .max(VALID_BOARD_NOS.length)
-    .refine(boardsOrderRefine(VALID_BOARD_NOS), {
-      message: "Boards phải theo thứ tự liên tục từ A (A → A,B → A,B,C...).",
+    .max(POWER655_MAX_BOARDS)
+    .refine(boardsSequentialRefine(), {
+      message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
     }),
 });
 

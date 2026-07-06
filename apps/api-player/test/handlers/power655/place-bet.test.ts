@@ -46,7 +46,10 @@ vi.mock("@megawin/game-power655/entities", () => ({
 vi.mock("@megawin/game-power655/schemas", () => ({
   power655MainNumberSchema: z.string(),
   power655DrawIdSchema: z.string(),
-  VALID_BOARD_NOS: ["A", "B", "C", "D", "E"],
+}));
+
+vi.mock("@megawin/game-power655/rules", () => ({
+  POWER655_MAX_BOARDS: 100,
 }));
 
 const VALID_BODY = {
@@ -184,9 +187,12 @@ describe("POST /player/power655/bets", () => {
     expect(response.statusCode).toBe(400);
   });
 
-  /** Validates that exceeding the 5-board maximum is rejected. */
-  it("should reject when boards exceed max (5)", async () => {
-    const boards = Array.from({ length: 6 }, (_, i) => ({
+  /**
+   * Validates that exceeding the hard cap (POWER655_MAX_BOARDS = 100) is rejected.
+   * Giới hạn nghiệp vụ thật (maxBoardsPerTicket) được check ở use case, không phải Zod.
+   */
+  it("should reject when boards exceed hard cap (100)", async () => {
+    const boards = Array.from({ length: 101 }, (_, i) => ({
       boardNo: String.fromCharCode(65 + i),
       playType: "standard",
       selection: {
