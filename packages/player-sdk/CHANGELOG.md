@@ -5,6 +5,40 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ---
 
+## [1.0.18]
+
+### Changed — `boardNo` hỗ trợ số board động (tất cả games)
+
+`boardNo` không còn giới hạn cứng theo danh sách chữ cái cố định (VD `"A"`–`"F"` hay `"A"`–`"D"`). Board giờ sinh tự động theo thứ tự chữ cái kiểu bảng tính: `"A"`, `"B"`, ..., `"Z"`, `"AA"`, `"AB"`, ... Số board tối đa mỗi vé do cấu hình game quyết định, không hard-code.
+
+Type không đổi (`boardNo: string`) — thuần cập nhật JSDoc, **không breaking**. Tenant gửi nhiều hơn số board cũ (nếu game cho phép) chỉ cần tiếp tục đánh `boardNo` liên tục từ `"A"`, không skip, không trùng.
+
+Áp dụng cho tất cả games. Field cấu hình giới hạn board:
+
+| Game       | SDK type                                                        | Field giới hạn            |
+| ---------- | --------------------------------------------------------------- | ------------------------- |
+| Keno       | `KenoBoardInput`                                                | `maxBasicBoardsPerTicket` |
+| Lotto 5/35 | `Lotto535BoardInput`                                            | `maxBoardsPerTicket`      |
+| Mega 6/45  | `Mega645BoardInput`                                             | `maxBoardsPerTicket`      |
+| Power 6/55 | `Power655BoardInput`                                            | `maxBoardsPerTicket`      |
+| Max 3D     | `Max3dBoardInput`                                               | `maxBoardsPerTicket`      |
+| Max 3D Pro | `Max3dproMultiNumberBoardInput`, `Max3dproMultiDigitBoardInput` | `maxBoardsPerTicket`      |
+| Bingo 18   | `Bingo18BoardInput`                                             | `maxBasicBoardsPerTicket` |
+
+```ts
+// Board đánh liên tục từ "A", số lượng theo cấu hình game
+await client.mega645.placeBet({
+  drawIds: ["2026-03-07.001"],
+  boards: [
+    { boardNo: "A" /* ... */ },
+    { boardNo: "B" /* ... */ },
+    // ... "C", "D", ... tối đa theo maxBoardsPerTicket
+  ],
+});
+```
+
+---
+
 ## [1.0.16] - 2026-04-17
 
 ### Added

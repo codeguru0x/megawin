@@ -34,16 +34,7 @@ import {
 } from "@megawin/game-lotto535/labels";
 import type { TicketEntryEntity } from "@megawin/game-lotto535/entities";
 import { EntryStatus } from "@megawin/game-core/entities";
-// ─── Board Color Map ──────────────────────────────────────────────────────────
-
-const BOARD_COLORS: Record<string, string> = {
-  A: "var(--board-a)",
-  B: "var(--board-b)",
-  C: "var(--board-c)",
-  D: "var(--board-d)",
-  E: "var(--board-e)",
-  F: "var(--board-f)",
-};
+import { boardColorVar } from "@/lib/game-colors";
 
 // ─── Ball Display Helpers ─────────────────────────────────────────────────────
 
@@ -382,7 +373,7 @@ export function Lotto535EntryDetailDialog({
                       board.playType === "standard"
                         ? null
                         : (LOTTO535_PLAY_TYPE_LABELS[board.playType] ?? board.playType);
-                    const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                    const boardColor = boardColorVar(board.boardNo);
                     return (
                       <div
                         key={i}
@@ -455,7 +446,7 @@ export function Lotto535EntryDetailDialog({
                         board.playType === "standard"
                           ? null
                           : (LOTTO535_PLAY_TYPE_LABELS[board.playType] ?? board.playType);
-                      const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                      const boardColor = boardColorVar(board.boardNo);
                       return (
                         <div
                           key={i}

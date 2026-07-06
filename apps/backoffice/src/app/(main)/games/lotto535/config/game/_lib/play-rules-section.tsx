@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Save, HelpCircle } from "lucide-react";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
+import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -35,7 +36,11 @@ const playFormSchema = z
     unitPrice: z.coerce.number().int().positive("Phải > 0"),
     minBetCount: z.coerce.number().int().min(1, "Phải ≥ 1"),
     maxBetCount: z.coerce.number().int().min(1, "Phải ≥ 1"),
-    maxBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
+    maxBoardsPerTicket: z.coerce
+      .number()
+      .int()
+      .positive("Phải > 0")
+      .max(LOTTO535_MAX_BOARDS, `Tối đa ${LOTTO535_MAX_BOARDS}`),
     maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
     salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
     drawTime1: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
@@ -175,7 +180,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Số boards tối đa / vé"
-                            tip="Số lượng board (A, B, C…) tối đa trên 1 vé. Mỗi board là 1 tập hợp số chơi độc lập, được settle riêng."
+                            tip={`Số lượng board (A, B, C…) tối đa trên 1 vé. Mỗi board là 1 tập hợp số chơi độc lập, được settle riêng. Không được cấu hình vượt quá ${LOTTO535_MAX_BOARDS} (hard cap toàn hệ thống).`}
                           />
                         </FormLabel>
                         <FormControl>

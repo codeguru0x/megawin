@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { BINGO18_MAX_BOARDS } from "@megawin/game-bingo18/rules";
+
 const positiveInt = z.number().int().positive();
 const nonNegativeInt = z.number().int().nonnegative();
 const rate = z.number().min(0).max(1);
@@ -61,7 +63,10 @@ const playSchema = z
     unitPrice: positiveInt,
     minBetCount: positiveInt,
     maxBetCount: positiveInt,
-    maxBasicBoardsPerTicket: positiveInt,
+    maxBasicBoardsPerTicket: positiveInt.max(
+      BINGO18_MAX_BOARDS,
+      `Số board tối đa không được vượt ${BINGO18_MAX_BOARDS}.`,
+    ),
     maxDrawCount: positiveInt,
     salesCloseBeforeSeconds: positiveInt,
     drawIntervalMinutes: positiveInt,

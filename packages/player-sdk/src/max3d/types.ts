@@ -10,6 +10,13 @@ import type { Max3dPlayMode, Max3dPlayType } from "./enums";
 // ─────────────────────────────────────────────
 
 export interface Max3dBoardInput {
+  /**
+   * Ký hiệu board — nhãn dạng cột spreadsheet: `"A"`, `"B"`, …, `"Z"`, `"AA"`, `"AB"`, …
+   *
+   * Các board phải liên tục từ `"A"` (không skip, không trùng): 1 board → `["A"]`,
+   * 3 board → `["A","B","C"]`. Số board tối đa mỗi vé do cấu hình game quyết định
+   * (`maxBoardsPerTicket`), không cố định 4.
+   */
   boardNo: string;
   playMode: Max3dPlayMode;
   playType: Max3dPlayType;
@@ -55,7 +62,10 @@ export interface Max3dTicketPurchaseInput {
    * - Không được trùng lặp
    */
   drawIds: string[];
-  /** Danh sách boards trong vé. Tối đa 4 boards, không được trùng boardNo. */
+  /**
+   * Danh sách boards trong vé. Tối thiểu 1, tối đa theo cấu hình game
+   * (`maxBoardsPerTicket`). `boardNo` phải liên tục từ `"A"`, không trùng.
+   */
   boards: Max3dBoardInput[];
 }
 

@@ -34,6 +34,7 @@ import type {
 } from "@megawin/game-keno/entities";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { EntryStatus } from "@megawin/game-core/entities";
+import { boardColorVar } from "@/lib/game-colors";
 // ─── Keno Play Type Labels ─────────────────────────────────────────────────────
 
 const KENO_PLAY_TYPE_LABELS: Record<string, string> = {
@@ -60,14 +61,6 @@ const KENO_BET_LABELS: Record<string, string> = {
   even1112: "Chẵn 11-12",
   odd1112: "Lẻ 11-12",
   evenOddDraw: "Hoà Chẵn/Lẻ",
-};
-
-// ─── Board Color Map ──────────────────────────────────────────────────────────
-
-const BOARD_COLORS: Record<string, string> = {
-  A: "var(--board-a)",
-  B: "var(--board-b)",
-  C: "var(--board-c)",
 };
 
 // ─── Ball helper ──────────────────────────────────────────────────────────────
@@ -374,7 +367,7 @@ export function KenoEntryDetailDialog({
                 </p>
                 <div className="space-y-2">
                   {boards.map((board) => {
-                    const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                    const boardColor = boardColorVar(board.boardNo);
                     const payout = boardPayoutsMap.get(board.boardNo + board.playType);
                     const isSideBet = KENO_SIDE_BET_PLAY_TYPE_SET.has(board.playType);
                     const pickLabel = KENO_PLAY_TYPE_LABELS[board.playType] ?? board.playType;
@@ -474,7 +467,7 @@ export function KenoEntryDetailDialog({
                   </div>
                   <div className="space-y-2">
                     {boards.map((board) => {
-                      const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                      const boardColor = boardColorVar(board.boardNo);
                       const isSideBet = KENO_SIDE_BET_PLAY_TYPE_SET.has(board.playType);
                       const pickLabel = KENO_PLAY_TYPE_LABELS[board.playType] ?? board.playType;
 

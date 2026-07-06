@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Save, HelpCircle } from "lucide-react";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
+import { BINGO18_MAX_BOARDS } from "@megawin/game-bingo18/rules";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -29,7 +30,11 @@ const playFormSchema = z.object({
   unitPrice: z.coerce.number().int().positive("Phải > 0"),
   minBetCount: z.coerce.number().int().min(1, "Phải ≥ 1"),
   maxBetCount: z.coerce.number().int().positive("Phải > 0"),
-  maxBasicBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
+  maxBasicBoardsPerTicket: z.coerce
+    .number()
+    .int()
+    .positive("Phải > 0")
+    .max(BINGO18_MAX_BOARDS, `Tối đa ${BINGO18_MAX_BOARDS}`),
   maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
   salesCloseBeforeSeconds: z.coerce.number().int().positive("Phải > 0"),
   drawIntervalMinutes: z.coerce.number().int().positive("Phải > 0"),
@@ -157,7 +162,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Số boards tối đa / vé"
-                            tip="Số panel (A–F) tối đa trên 1 vé. Mỗi panel chơi 1 cách độc lập — một số, hai trùng, ba trùng, cộng tổng, lớn/hòa/nhỏ."
+                            tip={`Số panel (A–F) tối đa trên 1 vé. Mỗi panel chơi 1 cách độc lập — một số, hai trùng, ba trùng, cộng tổng, lớn/hòa/nhỏ. Không được cấu hình vượt quá ${BINGO18_MAX_BOARDS} (hard cap toàn hệ thống).`}
                           />
                         </FormLabel>
                         <FormControl>

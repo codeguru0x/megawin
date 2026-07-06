@@ -25,7 +25,6 @@ import {
   max3dproTripletSchema,
   max3dproDrawIdSchema,
   max3dproDigitSchema,
-  VALID_BOARD_NOS,
 } from "@megawin/game-max3dpro/schemas";
 import {
   PlayMode,
@@ -33,8 +32,9 @@ import {
   MAX3D_PRO_MULTI_NUMBER_MIN,
   MAX3D_PRO_MULTI_NUMBER_MAX,
 } from "@megawin/game-max3dpro/entities";
+import { MAX3DPRO_MAX_BOARDS } from "@megawin/game-max3dpro/rules";
 import { isUnique } from "@megawin/shared/utils";
-import { boardsOrderRefine } from "../../lib/schemas";
+import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ─── Board schemas (discriminated by playMode) ───
 
@@ -42,7 +42,7 @@ import { boardsOrderRefine } from "../../lib/schemas";
  * multiNumber: chọn 3-20 bộ ba số, hệ thống tạo P(n,2) ordered pairs.
  */
 const max3dproMultiNumberBoardSchema = z.object({
-  boardNo: z.enum(VALID_BOARD_NOS),
+  boardNo: z.string(),
   playMode: z.literal(PlayMode.MultiNumber),
   playType: z.literal(PlayType.Straight),
   triplets: z
@@ -57,7 +57,7 @@ const max3dproMultiNumberBoardSchema = z.object({
  * multiDigit: chọn đúng 3 chữ số đầu + 3 chữ số sau, hệ thống expand hoán vị.
  */
 const max3dproMultiDigitBoardSchema = z.object({
-  boardNo: z.enum(VALID_BOARD_NOS),
+  boardNo: z.string(),
   playMode: z.literal(PlayMode.MultiDigit),
   playType: z.literal(PlayType.Straight),
   frontDigits: z.array(max3dproDigitSchema).length(3),
@@ -82,9 +82,9 @@ export const max3dproPlaceBetBodySchema = z.object({
   boards: z
     .array(max3dproBoardSchema)
     .min(1)
-    .max(VALID_BOARD_NOS.length)
-    .refine(boardsOrderRefine(VALID_BOARD_NOS), {
-      message: "Boards phải theo thứ tự liên tục từ A (A → A,B → A,B,C...).",
+    .max(MAX3DPRO_MAX_BOARDS)
+    .refine(boardsSequentialRefine(), {
+      message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
     }),
 });
 

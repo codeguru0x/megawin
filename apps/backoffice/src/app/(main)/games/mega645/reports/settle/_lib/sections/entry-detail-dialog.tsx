@@ -32,6 +32,7 @@ import { PlayType, PrizeTier } from "@megawin/game-mega645/entities/enums";
 import { MEGA645_PLAY_TYPE_LABELS, MEGA645_PRIZE_TIER_LABELS } from "@megawin/game-mega645/labels";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { EntryStatus } from "@megawin/game-core/entities";
+import { boardColorVar } from "@/lib/game-colors";
 
 // ─── Prize Tier Order ─────────────────────────────────────────────────────────
 
@@ -42,17 +43,6 @@ const MEGA645_PRIZE_TIER_ORDER: PrizeTier[] = [
   PrizeTier.Tier2,
   PrizeTier.Tier3,
 ];
-
-// ─── Board Color Map ──────────────────────────────────────────────────────────
-
-const BOARD_COLORS: Record<string, string> = {
-  A: "var(--board-a)",
-  B: "var(--board-b)",
-  C: "var(--board-c)",
-  D: "var(--board-d)",
-  E: "var(--board-e)",
-  F: "var(--board-f)",
-};
 
 // ─── Ball Display Helper ──────────────────────────────────────────────────────
 
@@ -362,7 +352,7 @@ export function Mega645EntryDetailDialog({
                     const playLabel =
                       MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType;
                     const isStandard = board.playType === PlayType.Standard;
-                    const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                    const boardColor = boardColorVar(board.boardNo);
                     return (
                       <div
                         key={i}
@@ -422,7 +412,7 @@ export function Mega645EntryDetailDialog({
                       const playLabel =
                         MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType;
                       const isStandard = board.playType === PlayType.Standard;
-                      const boardColor = BOARD_COLORS[board.boardNo] ?? BOARD_COLORS.A;
+                      const boardColor = boardColorVar(board.boardNo);
                       return (
                         <div
                           key={i}

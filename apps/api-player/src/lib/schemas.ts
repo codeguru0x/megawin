@@ -8,6 +8,7 @@
 import { z } from "zod";
 
 import { Pagination, OBJECT_ID_REGEX } from "@megawin/shared/constants";
+import { alphaLabelSequence } from "@megawin/shared/utils";
 
 // ─── Primitives ───
 
@@ -61,4 +62,20 @@ export function boardsOrderRefine(
   validBoardNos: readonly string[],
 ): (boards: Array<{ boardNo: string }>) => boolean {
   return (boards) => boards.every((board, i) => board.boardNo === validBoardNos[i]);
+}
+
+/**
+ * Biến thể động của {@link boardsOrderRefine} — KHÔNG cần danh sách boardNo cố định.
+ *
+ * Tự sinh sequence chữ cái theo độ dài boards (A, B, C... AA...) rồi ép
+ * `boards[i].boardNo === sequence[i]`. Dùng cho game cho phép số board động theo
+ * config (không giới hạn A-F). Prefix liên tục từ "A" -> implies không skip, không trùng.
+ *
+ * Ví dụ: [A] ✅  [A,B] ✅  [A,B,C,D,E,F,G] ✅  [B] ❌  [A,C] ❌
+ */
+export function boardsSequentialRefine(): (boards: Array<{ boardNo: string }>) => boolean {
+  return (boards) => {
+    const expected = alphaLabelSequence(boards.length);
+    return boards.every((board, i) => board.boardNo === expected[i]);
+  };
 }

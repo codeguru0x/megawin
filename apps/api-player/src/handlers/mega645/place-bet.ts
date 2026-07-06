@@ -16,9 +16,10 @@ import { PlaceBetUseCase } from "@megawin/game-mega645-application/use-cases/pla
 import { TicketChannel } from "@megawin/game-core/entities";
 import z from "zod";
 import { mega645NumberSchema, mega645DrawIdSchema } from "@megawin/game-mega645/schemas";
-import { PlayType, VALID_BOARD_NOS } from "@megawin/game-mega645/entities";
+import { PlayType } from "@megawin/game-mega645/entities";
+import { MEGA645_MAX_BOARDS } from "@megawin/game-mega645/rules";
 import { isUnique } from "@megawin/shared/utils";
-import { boardsOrderRefine } from "../../lib/schemas";
+import { boardsSequentialRefine } from "../../lib/schemas";
 
 // ─── Composite schemas ───
 
@@ -28,7 +29,7 @@ export const mega645SelectionSchema = z.object({
 
 export const mega645BoardSchema = z
   .object({
-    boardNo: z.enum(VALID_BOARD_NOS),
+    boardNo: z.string(),
     playType: z.enum([
       PlayType.Standard,
       PlayType.Bao5,
@@ -172,9 +173,9 @@ export const mega645PlaceBetBodySchema = z.object({
   boards: z
     .array(mega645BoardSchema)
     .min(1)
-    .max(VALID_BOARD_NOS.length)
-    .refine(boardsOrderRefine(VALID_BOARD_NOS), {
-      message: "Boards phải theo thứ tự liên tục từ A (A → A,B → A,B,C...).",
+    .max(MEGA645_MAX_BOARDS)
+    .refine(boardsSequentialRefine(), {
+      message: "Boards phải liên tục và đúng thứ tự bắt đầu từ A (A, B, C … Z, AA, AB, AC …).",
     }),
 });
 

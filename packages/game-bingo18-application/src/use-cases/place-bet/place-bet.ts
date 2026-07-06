@@ -64,8 +64,9 @@ export class PlaceBetUseCase extends ApiGatewayUseCase<PlaceBetInput, PlaceBetOu
     }
 
     // ── 3. Validate boards ──
-    // boards.length >= 1 đã validate bởi Zod schema.
-    // Giới hạn maxBasicBoardsPerTicket là runtime config → cần check lại ở đây.
+    // boards.length >= 1 và boardNo đúng thứ tự chữ cái (A, B, C... AA...) đã validate bởi Zod schema.
+    // Zod chỉ chặn hard cap (chống abuse); maxBasicBoardsPerTicket là runtime config →
+    // đây là NƠI DUY NHẤT enforce giới hạn số board thật theo cấu hình game.
     if (boardInputs.length > play.maxBasicBoardsPerTicket) {
       throw AppException.badRequest(`Số board tối đa là ${play.maxBasicBoardsPerTicket}.`);
     }

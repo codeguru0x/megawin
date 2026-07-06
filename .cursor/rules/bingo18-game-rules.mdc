@@ -31,13 +31,13 @@ Bingo 18 là game xổ số nhanh dạng xúc xắc của Vietlott. **ĐƠN GI�
 
 > **KIẾN TRÚC QUAN TRỌNG**: Bingo 18 sử dụng kiến trúc **unified boards** — TẤT CẢ loại chơi (cơ bản: singleNum, doubleMatch, tripleMatch VÀ bổ sung: sumTotal, bigSmallDraw) đều nằm trong **cùng 1 mảng `boards[]`**, phân biệt qua field `playType`.
 >
-> **KHÔNG CÒN** `sideBets[]` tách riêng. Mỗi board có `boardNo` duy nhất ("A"-"F").
+> **KHÔNG CÒN** `sideBets[]` tách riêng. Mỗi board có `boardNo` duy nhất, sinh tự động theo thứ tự chữ cái (A, B, C... Z, AA...).
 
 ### Interface BasicBoard (unified)
 
 ```typescript
 interface BasicBoard {
-  boardNo: string;           // "A"-"F"
+  boardNo: string;           // "A", "B", ... "Z", "AA"... — sinh tự động, liên tục từ "A"
   playType: Bingo18PlayType; // "singleNum" | "doubleMatch" | "tripleMatch" | "sumTotal" | "bigSmallDraw"
   number?: number;           // 1-6, cho singleNum/doubleMatch/tripleMatch specific
   tripleKind?: Bingo18TripleKind; // "specific" | "any", chỉ cho tripleMatch
@@ -56,7 +56,7 @@ amountPerDraw     = betUnitsPerDraw × unitPrice (10.000đ)
 totalAmount       = amountPerDraw × drawCount
 ```
 
-**Giới hạn**: Tối đa 6 boards (panels A-F), bất kỳ loại chơi nào.
+**Giới hạn**: Tối thiểu 1 board; tối đa theo game config (`play.maxBasicBoardsPerTicket`). `boardNo` sinh tự động liên tục từ "A" (A, B... Z, AA...). Bất kỳ panel nào cũng chơi được bất kỳ loại nào.
 
 ---
 
@@ -205,7 +205,7 @@ prepare-void → void-entries → dispatch-refunds → finalize-void
 | **Ticket cấu trúc** | **Unified boards[]** | Unified boards[] | Board only |
 | **Giá vé** | 10.000đ/cách chơi | 10.000đ | 10.000đ |
 | **TripleKind** | **CÓ** (specific/any) | Không | Không |
-| **Panels** | A-F (tối đa 6) | A-C (tối đa 3) | A-E (tối đa 5) |
+| **Panels** | Động, theo config (min 1) | A-C (tối đa 3) | A-E (tối đa 5) |
 
 **Điểm đặc thù Bingo 18:**
 1. **Đơn giản nhất** — không có jackpot, payout caps, split, tính pool
@@ -282,7 +282,10 @@ z.union([
 ]);
 ```
 
-boardNo: "A"-"F" — tối đa 6 boards, không trùng boardNo.
+boardNo: sinh tự động liên tục từ "A" (A, B... Z, AA...) — min 1, max theo config, không trùng.
+Zod chỉ chặn hard cap `BINGO18_MAX_BOARDS` (=100, define ở `@megawin/game-bingo18/rules`);
+giới hạn thật (maxBasicBoardsPerTicket) check ở use-case. Config `maxBasicBoardsPerTicket` cũng
+bị ràng ≤ `BINGO18_MAX_BOARDS` ở schema update config (backoffice) → luôn ≤ trần API.
 Request body: `{ drawIds, boards }` — KHÔNG CÒN `sideBets`.
 
 ---
@@ -322,5 +325,5 @@ Request body: `{ drawIds, boards }` — KHÔNG CÒN `sideBets`.
 17. **Số nguyên 1-6**: KHÔNG zero-padded (khác Lotto/Mega/Power dùng string "01"-"55")
 18. **Commission snapshot**: commissionRate snapshot lúc place-bet
 19. **Zod validation**: Place-bet handler dùng `z.union()` — mỗi playType có schema riêng, type-safe
-20. **6 panels**: boardNo "A"-"F", bất kỳ panel nào cũng chơi bất kỳ loại nào
+20. **Panels động**: boardNo sinh tự động (A, B... Z, AA...), min 1, max theo `play.maxBasicBoardsPerTicket`; bất kỳ panel nào cũng chơi bất kỳ loại nào
 21. **Backoffice hiển thị**: Dùng `BINGO18_BASIC_PLAY_TYPE_SET` / `BINGO18_SIDE_BET_PLAY_TYPE_SET` để filter boards/boardPayouts/prizes khi hiển thị "Giải cơ bản" vs "Giải bổ sung"

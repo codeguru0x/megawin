@@ -32,6 +32,11 @@ Callback contract của core (`packages/tenant-gateway/src/transaction/types.ts`
 
 **Lợi ích:** `commissionRate` của tenant `megawin-play` chính là **biên lợi nhuận giữ lại của MegaWin** trên sản phẩm của mình → kế toán nội bộ vẫn sạch, dùng đúng báo cáo `DrawTenantFinancial` hiện có.
 
+> **Quyết định kiến trúc — vì sao ví ở Operator chứ KHÔNG ở core:** xem [ADR-0001](./adr/0001-wallet-in-operator-not-core.md).
+> Tóm tắt: core cố tình RGS-pure (không giữ tiền); đưa PAM/ledger vào core sẽ đổi bản chất sản phẩm (nghĩa vụ
+> giữ tiền/AML/PCI), tăng blast radius cho mọi tenant, và phá đồng nhất Mongo. Chưa tenant nào cần thuê PAM →
+> giữ ví ở `operator-wallet`, thiết kế sạch để trích xuất thành sản phẩm B2B sau này nếu có nhu cầu (Phương án A + kỷ luật C).
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                    MEGAWIN CORE (RGS — GIỮ NGUYÊN)                        │
@@ -89,7 +94,7 @@ NHÓM VẬN HÀNH & TĂNG TRƯỞNG
 |---|---|---|---|
 | **operator-web** (player) | Người chơi cuối | Chơi game real-time, ví, nạp/rút, "My Account"; landing cần SEO | **Next.js 16** |
 | **operator-backoffice** | Nhân viên operator | Dashboard nội bộ, bảng nặng, duyệt rút, real-time | **Next.js 16** |
-| **agent-portal** | Đại lý/affiliate | Dashboard hoa hồng, link giới thiệu, quản lý cấp dưới | **Next.js 16** |
+| **operator-affiliate-portal** | Đại lý/affiliate | Dashboard hoa hồng, link giới thiệu, quản lý cấp dưới | **Next.js 16** |
 | CMS/Marketing | Marketing | Landing, khuyến mãi | Gộp vào operator-web / CMS |
 
 **Chốt framework = Next.js 16 cho cả 3 app** (không dùng TanStack Start cho MVP — xem §11 phân tích chi tiết). Lý do ngắn gọn: repo đã chuẩn hoá Next.js 16 + `@megawin/next` + `@megawin/ui` + better-auth + TanStack Query; team chưa từng làm TanStack Start; TanStack Start còn Release Candidate (chưa GA); AI hỗ trợ Next.js tốt hơn hẳn. Reuse tối đa, 1 chuẩn auth/build/lint, implement nhanh cho team ít người.
@@ -230,7 +235,7 @@ TRẢ THƯỞNG (batch):  settle worker → batch payout callback → Operator:
 - **P0 — Foundation:** đăng ký tenant `megawin-play`; Operator API implement callback contract (`/transaction`, `/transaction/batch`, `/balance`, status); ví + ledger cơ bản (nạp thủ công). → chạy e2e 1 game. Job reconcile core↔operator từ đây.
 - **P1 — Player MVP:** operator-web (đăng ký/đăng nhập, chơi 1-2 game, ví, lịch sử); nạp/rút 1 PSP; KYC cơ bản.
 - **P2 — Payment & Ops:** thêm PSP, tự động nạp/rút, operator-backoffice (duyệt rút, quản lý player, đối soát).
-- **P3 — Affiliate:** link giới thiệu, commission RevShare/NGR, agent-portal.
+- **P3 — Affiliate:** link giới thiệu, commission RevShare/NGR, operator-affiliate-portal.
 - **P4 — Đại lý tiền mặt multi-tier:** cây phân cấp, ví đại lý, hạn mức tín dụng, chia hoa hồng theo tầng.
 - **P5 — Bonus/Promotion, Risk/Anti-fraud, mở full 7 game.**
 
@@ -253,7 +258,7 @@ TRẢ THƯỞNG (batch):  settle worker → batch payout callback → Operator:
 
 - ~~Backoffice/Agent dùng TanStack Start ngay hay Next.js trước?~~ → **CHỐT: Next.js 16 cho cả 3 app** (xem §11.2).
 - ~~Code trong monorepo hay tách repo?~~ → **CHỐT: ở trong monorepo, deploy độc lập bằng `turbo --filter`** (xem §11.1).
-- Operator API: serverless (như core) hay service dài hạn cho wallet? → **khuyến nghị: hybrid** — API/BFF serverless, RIÊNG `wallet-service` là service dài hạn (§11.4). Cần chốt runtime cụ thể (ECS Fargate / App Runner).
+- Operator API: serverless (như core) hay service dài hạn cho wallet? → **khuyến nghị: hybrid** — API/BFF serverless, RIÊNG `operator-wallet-svc` là service dài hạn (§11.4). Cần chốt runtime cụ thể (ECS Fargate / App Runner).
 - PSP đầu tiên tích hợp là gì? (VNPay/MoMo/VietQR)
 - Ngưỡng KYC/AML theo quy định VN cụ thể.
 - Tỷ lệ RevShare mặc định + số tầng override tối đa.
@@ -289,24 +294,39 @@ mỗi lần contract đổi, mất "go to definition" xuyên package, mất refa
 
 **Khi nào MỚI nên tách (hybrid, để dành tương lai):** khi cần **hard security/compliance boundary** cho
 ví tiền thật (VD kiểm toán PCI-DSS yêu cầu tách quyền truy cập git, hoặc tách team vận hành tài chính
-riêng). Lúc đó **chỉ tách đúng `wallet-service`** sang repo riêng, phần còn lại ở monorepo. Không tách sớm.
+riêng). Lúc đó **chỉ tách đúng `operator-wallet-svc`** sang repo riêng, phần còn lại ở monorepo. Không tách sớm.
 
 **Cấu trúc đề xuất trong monorepo (thêm vào, không sửa core):**
 
+> **Naming discipline — xem rule `.cursor/rules/operator-monorepo-structure.mdc`.** Nguyên tắc: **prefix
+> `operator-` BẮT BUỘC cho MỌI app/package** (không ngoại lệ), vì operator (B2C) và core (B2B) dùng chung bộ
+> từ vựng nhưng khác ngữ nghĩa. Bằng chứng va chạm ĐÃ có trong core: `AgentRole`/`AccountType.Agent`
+> (`packages/identity`) là **agent B2B đại diện tenant** — KHÁC hẳn đại lý B2C của operator → operator dùng từ
+> **`affiliate`**, không dùng `agent`. `balance` trong `tenant-gateway` là **ví phía tenant** — khác `operator-wallet`
+> do operator sở hữu. Format tên: **product prefix TRƯỚC, runtime suffix SAU** (`operator-<domain>-api|svc|worker-<job>`).
+
 ```
 apps/
-  operator-web/          # Next.js — player (chơi game + My Account + landing SEO)
-  operator-backoffice/   # Next.js — nhân viên operator
-  agent-portal/          # Next.js — đại lý/affiliate
-  operator-api/          # Serverless BFF (Lambda + Middy + Zod, như api-player)
-  wallet-service/        # Service dài hạn (ECS Fargate/App Runner) — ví + ledger, DB transaction
-  worker-operator-*/     # workers async: payout, reconcile, notification
+  operator-web/               # Next.js — player (chơi game + My Account + landing SEO)
+  operator-backoffice/        # Next.js — nhân viên operator
+  operator-affiliate-portal/  # Next.js — đại lý/affiliate B2C (KHÔNG dùng "agent" — trùng agent B2B core)
+  operator-api/               # Serverless BFF (Lambda + Middy + Zod, như api-player)
+  operator-wallet-svc/        # Service dài hạn (ECS Fargate/App Runner) — ví + ledger, DB transaction (suffix -svc)
+  operator-worker-payout/     # worker async: payout
+  operator-worker-reconcile/  # worker async: đối soát core↔operator↔PSP
 packages/
-  operator-core/         # domain types dùng chung Operator (Money VND, LedgerEntry, ...)
-  wallet/                # use-cases ví/ledger (thuần logic, không I/O)
-  payment/               # Payment Adapter (PSP-agnostic) + adapters VNPay/MoMo/VietQR
-  agent/                 # cây đại lý + commission engine (NGR/RevShare)
+  operator-core/              # domain types dùng chung Operator (Money VND, LedgerEntry, PlayerId nội bộ, ...)
+  operator-wallet/            # use-cases ví/ledger (thuần logic, không I/O) — "wallet" trần để dành cho WaaS B2B tương lai
+  operator-payment/           # Payment Adapter (PSP-agnostic) + adapters VNPay/MoMo/VietQR
+  operator-affiliate/         # cây đại lý + commission engine (NGR/RevShare)
+  operator-data-sql/          # Postgres layer (song song @megawin/data Mongo) — CHỈ nhánh tài chính operator
 ```
+
+**Vì sao prefix tuyệt đối:** (1) lint glob `operator-*` bắt trọn boundary, không cần liệt kê exception;
+(2) đọc tên biết ngay thế giới nào; (3) chừa tên trần (`wallet`, `agent`, `player`, `tenant-*`) cho khả năng
+generalize thành sản phẩm B2B multi-tenant tương lai (VD Wallet-as-a-Service cho tenant không tự làm ví) —
+KHÔNG over-engineer sớm, chỉ chừa tên. Boundary còn được enforce bằng `dependency-cruiser` (core KHÔNG import
+operator; operator chỉ import core qua allowlist package cầu nối).
 
 ### 11.2 Có nên thêm TanStack Start? (team chưa từng làm — AI có bù được không?)
 
@@ -346,7 +366,7 @@ không phải "một web quản lý tài khoản riêng".
   system, chia đôi trải nghiệm — phản tác dụng.
 
 - **Logic + data** (query ledger, transaction history, tổng hợp báo cáo) → đặt ở **backend service ổn định**
-  (`wallet-service` cho số dư/ledger; `operator-api` BFF cho tổng hợp báo cáo). Next.js chỉ là **BFF mỏng**
+  (`operator-wallet-svc` cho số dư/ledger; `operator-api` BFF cho tổng hợp báo cáo). Next.js chỉ là **BFF mỏng**
   gọi xuống qua một **API contract ổn định**.
 
 **Vì sao cách này "tránh trả giá":** contract ổn định ở giữa cho phép **UI đổi liên tục** (redesign, đổi
@@ -359,7 +379,7 @@ khỏi phần không được đổi (ledger/tài khoản) bằng một lớp AP
 └───────────────────────────┬─────────────────────────────┘
               API contract ổn định (đường ranh giới thật)
 ┌───────────────────────────▼─────────────────────────────┐
-│  operator-api (BFF) → wallet-service (ledger, số dư)     │  ← domain ổn định, ít đổi
+│  operator-api (BFF) → operator-wallet-svc (ledger, số dư)│  ← domain ổn định, ít đổi
 │                     → reporting (báo cáo chơi game)       │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -390,7 +410,7 @@ Chỉ tự viết phần lõi khác biệt (wallet/ledger, commission engine).
 | Observability | **CloudWatch** + alarm cho job reconcile lệch | báo động lệch 1 xu (§5) |
 
 **Điểm cần lưu ý về compute cho wallet:** Lambda + PostgreSQL dễ gây *connection storm* (mỗi lambda mở 1
-connection). Hai lối đi an toàn: (a) `wallet-service` là service dài hạn trên **ECS Fargate/App Runner**
+connection). Hai lối đi an toàn: (a) `operator-wallet-svc` là service dài hạn trên **ECS Fargate/App Runner**
 (giữ connection pool, transaction ổn định) — khuyến nghị; hoặc (b) giữ Lambda nhưng bắt buộc **RDS Proxy**
 để pool connection. Phần BFF/API stateless còn lại vẫn nên serverless để rẻ và co giãn tốt.
 
@@ -440,7 +460,7 @@ Nguyên tắc chung cho cả hai kịch bản:
 
 - **Game views tải động / app game riêng** → thêm/sửa game KHÔNG ảnh hưởng My Account. Tránh barrel import
   (React best-practices §2.1, §2.4).
-- **My Account đọc qua BFF ổn định** (§11.3): UI đổi thoải mái, contract xuống `wallet-service` giữ nguyên.
+- **My Account đọc qua BFF ổn định** (§11.3): UI đổi thoải mái, contract xuống `operator-wallet-svc` giữ nguyên.
 - **Marketing/landing** static/ISR, CMS-driven — SEO tốt, không kéo bundle nặng của game.
 
 > **Vì bạn xác nhận game do team/công nghệ khác làm và muốn SSO dùng nhiều nơi → chọn Kịch bản B.**
@@ -625,7 +645,7 @@ sang Managed login → Cognito thấy cookie còn hạn → **trả token luôn,
              └──────────┬───────────┘        └──────────┬───────────┘
                         │  gọi Operator API/BFF (đính token server-side)
                         ▼                               ▼
-             ┌──────────────────── Operator API / wallet-service ───────────────────┐
+             ┌──────────────── Operator API / operator-wallet-svc ────────────────┐
              │  verify token (Cognito JWKS) → playerId → ledger/số dư/lịch sử        │
              └───────────────────────────────────────────────────────────────────────┘
 ```
@@ -672,7 +692,7 @@ Chuẩn hiện hành (IETF OAuth browser-based apps + BFF pattern):
 - **KHÔNG để token trong `localStorage`** hay cookie non-HttpOnly chia sẻ giữa subdomain.
 - **CORS chặt:** BFF chỉ cho credentials từ origin tin cậy (danh sách app đã đăng ký).
 - **CSRF protection** trên BFF (better-auth có sẵn).
-- **Frontend chỉ gọi BFF của chính nó**; BFF đính token khi gọi xuống Operator API / wallet-service. Frontend
+- **Frontend chỉ gọi BFF của chính nó**; BFF đính token khi gọi xuống Operator API / operator-wallet-svc. Frontend
   KHÔNG gọi thẳng resource server bằng token trong JS.
 
 ### 13.5 Nối tiếp identity core (B2B) — không mất mạch với §12.2

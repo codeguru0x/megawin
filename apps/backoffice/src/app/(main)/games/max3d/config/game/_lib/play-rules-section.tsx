@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Save, HelpCircle } from "lucide-react";
 
 import { MoneyInput } from "@megawin/ui/components/money-input";
+import { MAX3D_MAX_BOARDS } from "@megawin/game-max3d/rules";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -41,7 +42,11 @@ const playFormSchema = z
     unitPrice: z.coerce.number().int().positive("Phải > 0"),
     minBetCount: z.coerce.number().int().min(1, "Tối thiểu 1"),
     maxBetCount: z.coerce.number().int().min(1, "Tối thiểu 1"),
-    maxBoardsPerTicket: z.coerce.number().int().positive("Phải > 0"),
+    maxBoardsPerTicket: z.coerce
+      .number()
+      .int()
+      .positive("Phải > 0")
+      .max(MAX3D_MAX_BOARDS, `Tối đa ${MAX3D_MAX_BOARDS}`),
     maxDrawCount: z.coerce.number().int().positive("Phải > 0"),
     salesCloseBeforeMinutes: z.coerce.number().int().positive("Phải > 0"),
     drawTime: z.string().regex(timePattern, "Format HH:mm (00:00 – 23:59)"),
@@ -174,7 +179,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         <FormLabel className="text-xs text-muted-foreground">
                           <LabelWithTooltip
                             label="Số boards tối đa / vé"
-                            tip="Số board (A–D) tối đa trên 1 vé. Mỗi board là 1 bộ ba số chơi độc lập."
+                            tip={`Số board (A–D) tối đa trên 1 vé. Mỗi board là 1 bộ ba số chơi độc lập. Không được cấu hình vượt quá ${MAX3D_MAX_BOARDS} (hard cap toàn hệ thống).`}
                           />
                         </FormLabel>
                         <FormControl>
