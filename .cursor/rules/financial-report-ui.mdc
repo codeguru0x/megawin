@@ -7,7 +7,7 @@ alwaysApply: false
 # Financial Report UI — Design & Implementation Rules
 
 Quy tắc thiết kế UI trang báo cáo tài chính. ĐỌC TOÀN BỘ trước khi code.
-Tuân thủ: `Dashboard-UI-Design.mdc`, `frontend-url-state.mdc`, `code-quality-standards.mdc`, `mongodb-repository-architecture.mdc`.
+Tuân thủ: `Dashboard-UI-Design.mdc`, `frontend-url-state.mdc`, `code-quality-standards.mdc`, `mongodb.mdc`.
 
 ---
 
@@ -462,7 +462,7 @@ import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 
 ## 9. Repository Architecture — Tách Types & Query
 
-**Xem chi tiết đầy đủ tại `mongodb-repository-architecture.mdc`.**
+**Xem chi tiết đầy đủ tại `mongodb.mdc` §2–4.**
 
 Tóm tắt 3 quy tắc bắt buộc:
 
@@ -470,7 +470,7 @@ Tóm tắt 3 quy tắc bắt buộc:
 
 2. **KHÔNG MongoDB query trong Use Case**: Use case TUYỆT ĐỐI KHÔNG chứa `$match`, `$group`, `collection.aggregate()`... Mọi DB operations phải đi qua repo method.
 
-3. **KHÔNG gọi Repo trực tiếp từ API Route**: Luồng bắt buộc là **API Route → Use Case → Repository**. API Route chỉ được phép gọi Use Case. Xem `mongodb-repository-architecture.mdc` §3b.
+3. **KHÔNG gọi Repo trực tiếp từ API Route**: Luồng bắt buộc là **API Route → Use Case → Repository**. API Route chỉ được phép gọi Use Case. Xem `mongodb.mdc` §4.
 
 ---
 
@@ -570,7 +570,7 @@ export const GET = withApi()
 - `OutstandingReportRepo`: `findAll`
 - `EntryRepo`: `aggregatePlayersByDrawAndTenant`, `findByDrawTenantPlayer`
 
-Tất cả return types của các method trên → khai báo trong `repos/types/{concern}.types.ts`, **KHÔNG** inline trong repo file (xem `mongodb-repository-architecture.mdc` §2).
+Tất cả return types của các method trên → khai báo trong `repos/types/{concern}.types.ts`, **KHÔNG** inline trong repo file (xem `mongodb.mdc` §2).
 
 ---
 
@@ -591,6 +591,6 @@ Theo `Dashboard-UI-Design.mdc` §9. Skeleton matching layout, actionable empty s
 - KHÔNG thêm cột `jackpotContribution` cho game không có Jackpot
 - KHÔNG thêm cột `lineCount` cho game không có lines
 - KHÔNG skip Summary Footer Row
-- KHÔNG khai báo interface/type trong file `*-repo.ts` — tách ra `repos/types/` (xem `mongodb-repository-architecture.mdc` §2)
+- KHÔNG khai báo interface/type trong file `*-repo.ts` — tách ra `repos/types/` (xem `mongodb.mdc` §2)
 - KHÔNG viết MongoDB query trực tiếp trong use case — phải đi qua repo method (xem §9.2)
-- **KHÔNG** khởi tạo hoặc gọi Repository class trực tiếp từ API Route — phải đi qua Use Case (xem §10 và `mongodb-repository-architecture.mdc` §3b)
+- **KHÔNG** khởi tạo hoặc gọi Repository class trực tiếp từ API Route — phải đi qua Use Case (xem §10 và `mongodb.mdc` §4)

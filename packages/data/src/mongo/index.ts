@@ -6,6 +6,8 @@ export { getMongoClient, getMongoDb } from "./client";
 export { longToString } from "./long";
 export { MongoMapper, DefaultMongoMapper } from "./mapper";
 export { MongoRepository } from "./repository";
+export { docPath } from "./dot-path";
+export type { DotPath, FieldPath } from "./dot-path";
 export {
   SharedRepo,
   GameRepo,
