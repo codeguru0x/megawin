@@ -1,12 +1,13 @@
 /**
- * Use Case: Get Tenant Config (Bingo 18) – Internal
+ * Use Case: Get Tenant Config (Bingo18) – Internal
  *
  * Điểm truy cập duy nhất để lấy tenant config trong các use case nội bộ.
  * Tất cả use cases (place-bet, dispatch-payout, dispatch-refund…)
  * nên dùng use case này thay vì gọi repo trực tiếp.
  *
- * // TODO: Thêm in-memory cache (TTL ~30-60s) tương tự GetGlobalConfigUseCase.
- * // Cache key = tenantId. Invalidate khi admin cập nhật tenant config.
+ * Cache concern (key, TTL, loader, invalidation) sống ở `caches/tenant-config.cache.ts`
+ * — use-case chỉ gọi `tenantConfigCache.fetch(tenantId)`. Invalidate khi admin
+ * cập nhật qua `tenantConfigCache.invalidate(tenantId)` (xem update-tenant-config.ts).
  *
  * Cách dùng từ use case khác:
  *   private readonly getTenantConfig = new GetTenantConfigInternalUseCase();
@@ -14,8 +15,8 @@
  */
 
 import { InternalUseCase } from "@megawin/app-core/use-cases";
-import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
-import type { TenantConfigEntity } from "@megawin/game-bingo18/entities";;
+import { tenantConfigCache } from "../../caches/tenant-config.cache";
+import type { TenantConfigEntity } from "@megawin/game-bingo18/entities";
 
 export interface GetTenantConfigInternalInput {
   tenantId: string;
@@ -25,14 +26,7 @@ export class GetTenantConfigInternalUseCase extends InternalUseCase<
   GetTenantConfigInternalInput,
   TenantConfigEntity | null
 > {
-  private readonly repo = new TenantConfigRepository();
-
-  // TODO: Thêm cache layer tại đây (Map<tenantId, { data, expireAt }>)
-  // để tránh query DB mỗi lần. Sẽ implement cùng lúc với GlobalConfig cache.
-
-  protected async execute(
-    input: GetTenantConfigInternalInput,
-  ): Promise<TenantConfigEntity | null> {
-    return await this.repo.getTenantConfig(input.tenantId);
+  protected async execute(input: GetTenantConfigInternalInput): Promise<TenantConfigEntity | null> {
+    return await tenantConfigCache.fetch(input.tenantId);
   }
 }

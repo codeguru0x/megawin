@@ -9,8 +9,9 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
+import { AccountType } from "@megawin/identity/entities";
 
-const PUBLIC_ROUTES = ["/login", "/api/auth", "/auth/error"];
+const PUBLIC_ROUTES = ["/login", "/api/auth", "/auth/error", "/unauthorized"];
 const SESSION_DATA_COOKIE = "better-auth.session_data";
 
 function isPublicRoute(pathname: string): boolean {
@@ -82,9 +83,10 @@ export function proxy(request: NextRequest) {
   const sessionData = parseSessionData(request);
   if (sessionData) {
     const user = sessionData.user as Record<string, unknown> | undefined;
-    const accountType = user?.accountType as string | undefined;
+    const accountType = user?.accountType as AccountType | undefined;
 
-    if (accountType && accountType !== "company") {
+    // Chỉ cho phép accountType === "company" truy cập.
+    if (accountType && accountType !== AccountType.Company) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
   }

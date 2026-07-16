@@ -24,13 +24,13 @@
   },
   "dependencies": {
     "@megawin/shared": "workspace:*",
-    "mongodb": "^7.3.0"
+    "mongodb": "^7.5.0"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.9.4",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.10"
   }
 }

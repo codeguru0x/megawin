@@ -514,7 +514,7 @@ packages/audit/
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.9.4",
     "typescript": "^6.0.3",
-    "vite": "latest",
+     "vite": "^8.1.4",
     "vitest": "^4.1.9"
   }
 }

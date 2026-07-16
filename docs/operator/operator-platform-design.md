@@ -32,10 +32,16 @@ Callback contract của core (`packages/tenant-gateway/src/transaction/types.ts`
 
 **Lợi ích:** `commissionRate` của tenant `megawin-play` chính là **biên lợi nhuận giữ lại của MegaWin** trên sản phẩm của mình → kế toán nội bộ vẫn sạch, dùng đúng báo cáo `DrawTenantFinancial` hiện có.
 
-> **Quyết định kiến trúc — vì sao ví ở Operator chứ KHÔNG ở core:** xem [ADR-0001](./adr/0001-wallet-in-operator-not-core.md).
+> **Quyết định kiến trúc — vì sao ví ở Operator chứ KHÔNG ở core:** xem [ADR-0001](./adr/player-wallet/0001-wallet-in-operator-not-core.md).
 > Tóm tắt: core cố tình RGS-pure (không giữ tiền); đưa PAM/ledger vào core sẽ đổi bản chất sản phẩm (nghĩa vụ
 > giữ tiền/AML/PCI), tăng blast radius cho mọi tenant, và phá đồng nhất Mongo. Chưa tenant nào cần thuê PAM →
 > giữ ví ở `operator-wallet`, thiết kế sạch để trích xuất thành sản phẩm B2B sau này nếu có nhu cầu (Phương án A + kỷ luật C).
+>
+> **Kiến trúc chi tiết Player + Wallet (đã chốt):** [ADR-0002](./adr/player-wallet/0002-player-account-architecture.md)
+> (identity 2 tầng — Cognito pool riêng cho player B2C, PlayerDoc Mongo, map sang core qua `api-tenant /player/login`),
+> [ADR-0003](./adr/player-wallet/0003-wallet-ledger-architecture.md) (Aurora PostgreSQL ledger double-entry,
+> `operator-wallet-svc` ECS Fargate, 4 callback endpoints), và
+> [ADR-0004](./adr/player-wallet/0004-wallet-player-implementation-plan.md) (kế hoạch triển khai 6 phase).
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -64,7 +70,7 @@ NHÓM TÀI CHÍNH (strong consistency — PostgreSQL, ACID)
 
 NHÓM IDENTITY & TUÂN THỦ
   5. Player Identity      — hồ sơ, đăng nhập, map sang Cognito core
-  6. KYC / Verification   — eKYC, tài liệu, source-of-funds
+  6. KYC / Verification   — tự xây: upload tài liệu, duyệt tay, source-of-funds
   7. Risk / AML / Fraud   — chấm điểm rủi ro, chống đa tài khoản
   8. Responsible Gaming   — giới hạn, tự loại trừ (self-exclusion)
 
@@ -224,7 +230,7 @@ TRẢ THƯỞNG (batch):  settle worker → batch payout callback → Operator:
 | Payment (PSP) | VNPay / MoMo / ZaloPay / VietQR — qua Payment Adapter | VND; chữ ký webhook giữ ở Secrets Manager/KMS |
 | Auth player | Cognito core (login qua api-tenant) + session Operator | không dựng lại IdP |
 | Đại lý | closure table / materialized path | cây phân cấp |
-| KYC/Risk | rule engine + eKYC bên thứ 3 (VNPT eKYC, FPT.AI); tài liệu ở S3+KMS | bắt buộc cho tiền thật |
+| KYC/Risk | **tự xây** trong `operator-kyc`: rule engine + hàng đợi duyệt tài liệu trên backoffice; tài liệu ở S3+KMS | bắt buộc cho tiền thật; không thuê eKYC bên thứ 3 |
 | Notification | SNS / SES / Pinpoint | email/SMS/push/OTP — không tự dựng |
 | Infra | Turborepo (monorepo, deploy độc lập bằng `--filter`), Serverless Framework, AWS | đã có — xem §11.1, §11.4 |
 
@@ -403,7 +409,7 @@ Chỉ tự viết phần lõi khác biệt (wallet/ledger, commission engine).
 | Compute BFF/API | **Lambda + API Gateway** | như `api-player` |
 | Compute wallet (cần connection pool + transaction dài) | **ECS Fargate** hoặc **App Runner** | tránh cold-start & connection storm của Lambda lên Postgres; dùng RDS Proxy nếu vẫn muốn Lambda |
 | Auth player | **Cognito core** qua `api-tenant` + session Operator | KHÔNG dựng lại IdP |
-| eKYC | VNPT eKYC / FPT.AI (3rd-party) | không tự làm nhận diện |
+| KYC (tự xây) | **S3 + KMS** (lưu tài liệu) + hàng đợi duyệt trên backoffice | không thuê eKYC bên thứ 3; duyệt tay + rule engine nội bộ |
 | Bí mật/khoá | **Secrets Manager** + **KMS** | chữ ký PSP webhook, khoá ledger |
 | Notification (email/SMS/push/OTP) | **SNS** / **SES** / **Pinpoint** | không tự dựng SMTP |
 | File/tài liệu KYC | **S3** (+ mã hoá KMS) | như bucket SDK hiện có |

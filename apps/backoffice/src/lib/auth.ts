@@ -27,47 +27,55 @@ export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
 
   /**
-   * Custom fields trên user – better-auth sẽ lưu & trả lại trong session.
-   * mapProfileToUser populate các fields này từ Cognito token claims.
+   * Custom fields trên user – better-auth lưu & trả lại trong session.
+   * `mapProfileToUser` populate các fields này từ Cognito ID token claims.
+   *
+   * QUAN TRỌNG — `input: true` là BẮT BUỘC (không dùng `input: false`):
+   * từ better-auth 1.6.23 (PR #10196), OAuth sign-up/sign-in bỏ qua mọi field
+   * đánh dấu `input: false` khi ghi user từ provider profile. App này chạy
+   * DB-less + Cognito nên toàn bộ giá trị đến từ ID token đã ký (user KHÔNG tự
+   * nhập được — không có endpoint signup/updateUser mở), do đó `input: true`
+   * không tạo rủi ro nhưng lại giữ `mapProfileToUser` hoạt động → `accountType`
+   * và `roles` có mặt trong `session_data`, tránh redirect nhầm `/unauthorized`.
    */
   user: {
     additionalFields: {
       sub: {
         type: "string",
         required: false,
-        input: false,
+        input: true,
       },
       roles: {
         type: "string",
         required: false,
         defaultValue: "",
-        input: false,
+        input: true,
       },
       accountStatus: {
         type: "string",
         required: false,
         defaultValue: AccountStatus.Active,
-        input: false,
+        input: true,
       },
       accountId: {
         type: "string",
         required: false,
-        input: false,
+        input: true,
       },
       tenantId: {
         type: "string",
         required: false,
-        input: false,
+        input: true,
       },
       accountType: {
         type: "string",
         required: false,
-        input: false,
+        input: true,
       },
       username: {
         type: "string",
         required: false,
-        input: false,
+        input: true,
       },
     },
   },
@@ -85,6 +93,15 @@ export const auth = betterAuth({
       region: env.COGNITO_WORKFORCE_REGION,
       userPoolId: env.COGNITO_WORKFORCE_POOL_ID,
       redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/cognito`,
+      /**
+       * Refresh custom fields (accountType, roles, …) mỗi lần đăng nhập lại.
+       *
+       * Khi user đã tồn tại (in-memory adapter còn giữ record trong 1 process),
+       * better-auth mặc định CHỈ update account tokens, KHÔNG ghi lại user fields.
+       * Bật cờ này để nhánh sign-in chạy lại `mapProfileToUser` → giá trị từ ID
+       * token luôn được đồng bộ vào session, không phụ thuộc user cũ hay mới.
+       */
+      overrideUserInfoOnSignIn: true,
       mapProfileToUser: (profile) => {
         const raw = profile as Record<string, unknown>;
 
@@ -148,7 +165,9 @@ export const auth = betterAuth({
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
       const newSession = ctx.context.newSession;
-      if (!newSession) return;
+      if (!newSession) {
+        return;
+      }
 
       const user = newSession.user as Record<string, unknown>;
       const accountType = user.accountType as string | undefined;
@@ -159,6 +178,7 @@ export const auth = betterAuth({
       }
 
       console.log("better-auth hook after ctx.headers:", JSON.stringify(ctx.headers, null, 2));
+
       auditLogin({
         actor: actorFromAuthUser(user, ctx.headers),
       });

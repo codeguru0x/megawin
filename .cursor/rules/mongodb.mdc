@@ -108,10 +108,25 @@ await this.aggregate([
 
 - `DotPath` đi xuyên array tự nhiên (multikey): `f("entrySummary.boards.picks")` hợp lệ,
   KHÔNG cần index số.
-- `Record<string, V>` (dynamic key như `draw.markets`): path segment động không type được —
-  build path bằng template literal từ key đã validate: `` `markets.${marketKey}.status` ``
-  với `marketKey: LotteryMarketKey` (typed value, KHÔNG nhận string trần). Phần suffix cố định
-  (`.status`) nên khớp `DotPath<LotteryDrawMarket>`.
+- `Record<string, V>` (dynamic key như `draw.markets`): `docPath<TDoc>` chỉ validate được phần
+  path **cố định**, KHÔNG validate được segment key động vì `keyof Record<string, V> = string`.
+  → tách 2 lớp validate:
+  - **Key động**: validate bằng **type của biến**, KHÔNG phải `string` trần
+    (`const marketKey: LotteryMarketKey = ...`).
+  - **Suffix cố định**: dùng `docPath` của chính sub-doc để bắt typo field:
+
+  ```typescript
+  const fMarket = docPath<LotteryDrawMarket>();  // validate NỘI BỘ 1 market
+  const marketKey: LotteryMarketKey = buildMarketKey(playType, position, betMode);
+
+  // key validate bằng type + suffix validate bằng docPath<LotteryDrawMarket>
+  const path = `markets.${marketKey}.${fMarket("status")}` as const;
+  await this.updateOne({ drawId }, { $set: { [path]: "closed" } });
+  ```
+
+  Nếu suffix để literal trần (`` `markets.${marketKey}.status` ``) thì key vẫn an toàn (nhờ type
+  `LotteryMarketKey`) nhưng `.status` không được compiler kiểm — chấp nhận được cho path 1 tầng,
+  nhưng path sub-doc nhiều tầng thì nên dùng `fMarket(...)`.
 - Test path: mỗi package data-heavy nên có 2 loại test — **runtime** (`test/**/*.test.ts`,
   vitest) và **compile-time** (`test/**/*.type-test.ts`, chứa `@ts-expect-error`, chỉ kiểm bởi
   `tsc`/`check-types`). Mẫu tại `packages/data/test/mongo/`.

@@ -3,10 +3,8 @@ import { AppException } from "@megawin/shared/errors";
 import { DEFAULT_MAX3D_PRO_CONFIG } from "@megawin/game-max3dpro/rules";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
-import type {
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput,
-} from "./dto/game-config.dto";
+import { globalConfigCache } from "../../caches/global-config.cache";
+import type { UpdateGameConfigInput, UpdateGameConfigOutput } from "./dto/game-config.dto";
 
 /**
  * Cập nhật cấu hình game toàn cục (upsert).
@@ -27,9 +25,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
 > {
   private readonly repo = new GameConfigRepository();
 
-  protected async execute(
-    input: UpdateGameConfigInput
-  ): Promise<UpdateGameConfigOutput> {
+  protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {
     this.validateInput(input);
     const existing = await this.repo.getGlobalConfig();
 
@@ -42,8 +38,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
         : undefined,
       defaultPrizes: input.defaultPrizes
         ? {
-            ...(existing?.defaultPrizes ??
-              DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes),
+            ...(existing?.defaultPrizes ?? DEFAULT_MAX3D_PRO_CONFIG.defaultPrizes),
             ...input.defaultPrizes,
           }
         : undefined,
@@ -65,6 +60,9 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
     if (!updated) {
       throw AppException.internal("Cập nhật GameConfig thất bại.");
     }
+
+    // Config đã đổi → xoá cache để process này đọc bản mới ngay.
+    await globalConfigCache.invalidate();
 
     // Audit sau khi upsert thành công. Chỉ ghi giá trị MỚI của các nhóm đã đổi
     // (`changed`) — muốn biết giá trị cũ thì trace ngược record version trước.
@@ -89,9 +87,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
         defaultCommissionRate !== undefined &&
         (defaultCommissionRate < 0 || defaultCommissionRate > 1)
       ) {
-        throw AppException.badRequest(
-          "defaultCommissionRate phải trong range [0, 1]."
-        );
+        throw AppException.badRequest("defaultCommissionRate phải trong range [0, 1].");
       }
     }
 
@@ -101,9 +97,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
       if (standard) {
         for (const [key, value] of Object.entries(standard)) {
           if (value !== undefined && (typeof value !== "number" || value < 0)) {
-            throw AppException.badRequest(
-              `Giải thưởng standard.${key} phải là số dương.`
-            );
+            throw AppException.badRequest(`Giải thưởng standard.${key} phải là số dương.`);
           }
         }
       }
@@ -113,7 +107,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
       for (const day of input.play.drawDaysOfWeek) {
         if (!Number.isInteger(day) || day < 0 || day > 6) {
           throw AppException.badRequest(
-            "drawDaysOfWeek phải là mảng số nguyên [0-6] (0=CN, 1=T2, ..., 6=T7)."
+            "drawDaysOfWeek phải là mảng số nguyên [0-6] (0=CN, 1=T2, ..., 6=T7).",
           );
         }
       }

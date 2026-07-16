@@ -78,6 +78,7 @@ provider:
   environment:
     STAGE: ${opt:stage, self:provider.stage}
     MONGODB_URI: ${env:MONGODB_URI, ssm:/${opt:stage, self:provider.stage}/megawin/MONGODB_URI}
+    REDIS_URI: ${env:REDIS_URI, ssm:/${opt:stage, self:provider.stage}/megawin/REDIS_URI}
 
   httpApi:
     cors:

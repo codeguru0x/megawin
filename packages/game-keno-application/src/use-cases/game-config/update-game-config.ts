@@ -3,6 +3,7 @@ import { AppException } from "@megawin/shared/errors";
 import { DEFAULT_KENO_CONFIG } from "@megawin/game-keno/rules";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
+import { globalConfigCache } from "../../caches/global-config.cache";
 import type { UpdateGameConfigInput, UpdateGameConfigOutput } from "./dto/game-config.dto";
 
 /**
@@ -69,6 +70,10 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
     if (!updated) {
       throw AppException.internal("Cập nhật Keno GameConfig thất bại.");
     }
+
+    // Invalidate cache read-through của globalConfigCache —
+    // process này thấy config mới ngay; container khác trễ tối đa TTL cache.
+    await globalConfigCache.invalidate();
 
     // Audit sau khi upsert thành công. Chỉ ghi giá trị MỚI của các nhóm đã đổi
     // (`changed`) — muốn biết giá trị cũ thì trace ngược record version trước.
