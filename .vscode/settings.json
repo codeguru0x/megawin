@@ -34,8 +34,8 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsserver.experimental.enableProjectDiagnostics": true,
   "prettier.resolveGlobalModules": false,
   "prettier.documentSelectors": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json"],
   "prettier.requireConfig": true,
@@ -67,5 +67,16 @@
     "!Cidr sequence",
     "!GetAZs scalar"
   ],
-  "editor.hover.enabled": true
+  "editor.hover.enabled": true,
+  "better-comments.tags": [
+    {
+      "tag": "//",
+      "color": "#474747",
+      "strikethrough": false,
+      "underline": false,
+      "backgroundColor": "transparent",
+      "bold": false,
+      "italic": false
+    }
+  ]
 }

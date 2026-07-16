@@ -2,7 +2,7 @@
  * Type cho outstanding report summary aggregate — Max 3D.
  *
  * Tách ra khỏi outstanding-report-repo.ts để tránh circular imports
- * và giữ đúng convention mongodb-repository-architecture §2.
+ * và giữ đúng convention mongodb §2.
  * Max 3D CÓ lineCount.
  */
 

@@ -170,12 +170,15 @@ export abstract class ProcessDispatchBatchBaseUseCase extends LockedWorkerUseCas
   ): Promise<void> {
     const client = await tenantGateway.getClient(tenantId);
 
-    // Không có client = tenant chưa setup `callbackBaseUrl`. Đây là LỖI CẤU HÌNH,
-    // KHÔNG được mark `Dispatched` (sẽ mất credit thật của player). Queue failure
-    // để retry lần sau (nếu admin setup xong sẽ tự thành công) và surface lên BO UI
-    // stuck orders sau khi chạm `RETRY_ALERT_THRESHOLD` để staff xử lý.
+    // Không có client = tenant chưa setup `callbackBaseUrl`. Trong context dispatch
+    // (đã confirm debit thành công trước đó) đây là LỖI CẤU HÌNH, KHÔNG được mark
+    // `Dispatched` (sẽ mất credit thật của player). Queue failure để retry lần sau
+    // (nếu admin setup xong sẽ tự thành công) và surface lên BO UI stuck orders sau
+    // khi chạm `RETRY_ALERT_THRESHOLD` để staff xử lý.
     //
-    // `tenantGateway.getClient` đã log error khi không có config → không log lại ở đây.
+    // `tenantGateway.getClient` chỉ `logWarn` (no config là trạng thái hợp lệ ở
+    // context khác, VD DRY-RUN) — mức độ nghiêm trọng ở ĐÂY do use case này quyết,
+    // nên log riêng qua `queueFailure`/`errMsg`, không dựa vào log của gateway.
     if (!client) {
       const errMsg = `[no_tenant_config] Tenant ${tenantId} chưa cấu hình callbackBaseUrl`;
       for (const o of orders) {

@@ -16,7 +16,6 @@ import {
   FindOptions,
   InsertManyResult,
   InsertOneOptions,
-  InsertOneResult,
   MongoClient,
   ObjectId,
   OptionalId,
@@ -26,7 +25,6 @@ import {
   UpdateFilter,
   UpdateOptions,
   UpdateResult,
-  WithId,
   WithoutId,
 } from "mongodb";
 

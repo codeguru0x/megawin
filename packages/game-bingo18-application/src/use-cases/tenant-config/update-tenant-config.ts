@@ -3,6 +3,7 @@ import { AppException } from "@megawin/shared/errors";
 import { TenantConfigRepository } from "../../infras/repos/tenant-config-repo";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateTenantConfig } from "../../services/audit-log";
+import { tenantConfigCache } from "../../caches/tenant-config.cache";
 import type { UpdateTenantConfigInput, UpdateTenantConfigOutput } from "./dto/tenant-config.dto";
 
 /**
@@ -43,6 +44,9 @@ export class UpdateTenantConfigUseCase extends NextApiUseCase<
     if (!updated) {
       throw AppException.internal(`Cập nhật cấu hình tenant "${input.tenantId}" thất bại.`);
     }
+
+    // Config đã đổi → xoá cache tenant này để process này đọc bản mới ngay.
+    await tenantConfigCache.invalidate(input.tenantId);
 
     // Audit sau khi upsert thành công. Chỉ ghi giá trị MỚI (`after`) từ entity đã
     // ghi — muốn biết giá trị cũ thì trace ngược record version trước.

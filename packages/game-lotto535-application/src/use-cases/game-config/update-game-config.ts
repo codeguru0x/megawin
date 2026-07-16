@@ -3,6 +3,7 @@ import { AppException } from "@megawin/shared/errors";
 import { DEFAULT_LOTTO535_CONFIG } from "@megawin/game-lotto535/rules";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
+import { globalConfigCache } from "../../caches/global-config.cache";
 import type { UpdateGameConfigInput, UpdateGameConfigOutput } from "./dto/game-config.dto";
 
 /**
@@ -62,6 +63,9 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
     if (!updated) {
       throw AppException.internal("Cập nhật GameConfig thất bại.");
     }
+
+    // Config đã đổi → xoá cache để process này đọc bản mới ngay.
+    await globalConfigCache.invalidate();
 
     // Audit sau khi upsert thành công. Chỉ ghi giá trị MỚI của các nhóm đã đổi
     // (`changed`) — muốn biết giá trị cũ thì trace ngược record version trước.

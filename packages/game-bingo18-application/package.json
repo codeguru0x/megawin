@@ -70,6 +70,11 @@
       "import": "./src/use-cases/reports/index.ts",
       "default": "./dist/use-cases/reports/index.js"
     },
+    "./caches": {
+      "types": "./src/caches/index.ts",
+      "import": "./src/caches/index.ts",
+      "default": "./dist/caches/index.js"
+    },
     "./repos": {
       "types": "./src/infras/repos/index.ts",
       "import": "./src/infras/repos/index.ts",
@@ -92,6 +97,7 @@
   "dependencies": {
     "@megawin/app-core": "workspace:*",
     "@megawin/audit": "workspace:*",
+    "@megawin/cache": "workspace:*",
     "@megawin/data": "workspace:*",
     "@megawin/game-bingo18": "workspace:*",
     "@megawin/game-core": "workspace:*",
@@ -101,14 +107,14 @@
     "@megawin/tenant-dispatch": "workspace:*",
     "@megawin/tenant-gateway": "workspace:*",
     "@megawin/worker-core": "workspace:*",
-    "mongodb": "^7.3.0"
+    "mongodb": "^7.5.0"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
     "@megawin/vitest-config": "workspace:*",
     "@types/node": "^25.9.4",
     "typescript": "^6.0.3",
-    "vite": "latest",
-    "vitest": "^4.1.9"
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10"
   }
 }

@@ -3,7 +3,12 @@
 - **Status:** Accepted
 - **Ngày:** 2026-07-05
 - **Người quyết định:** Kiến trúc MegaWin Operator
-- **Liên quan:** [`operator-platform-design.md`](../operator-platform-design.md) §11, rule `.cursor/rules/operator-monorepo-structure.mdc`, `packages/tenant-gateway/callback-api-guide.md`
+- **Liên quan:** [`operator-platform-design.md`](../../operator-platform-design.md) §11, rule `.cursor/rules/operator-monorepo-structure.mdc`, `packages/tenant-gateway/callback-api-guide.md`
+- **Triển khai bởi:** [ADR-0002](./0002-player-account-architecture.md) (kiến trúc player),
+  [ADR-0003](./0003-wallet-ledger-architecture.md) (kiến trúc ví & ledger),
+  [ADR-0004](./0004-wallet-player-implementation-plan.md) (kế hoạch triển khai từng bước)
+- **Tái khẳng định bởi:** [ADR-0005](./0005-reassess-pam-as-a-service.md) (đánh giá lại phương án B
+  2026-07-11 — giữ A, thiết kế operator single-tenant sạch + delta plan sẵn cho B)
 
 ---
 

@@ -3,10 +3,8 @@ import { AppException } from "@megawin/shared/errors";
 import { DEFAULT_BINGO18_CONFIG } from "@megawin/game-bingo18/rules";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
 import { auditUpdateGameConfig } from "../../services/audit-log";
-import type {
-  UpdateGameConfigInput,
-  UpdateGameConfigOutput,
-} from "./dto/game-config.dto";
+import { globalConfigCache } from "../../caches/global-config.cache";
+import type { UpdateGameConfigInput, UpdateGameConfigOutput } from "./dto/game-config.dto";
 
 /**
  * Cập nhật cấu hình game Bingo 18 toàn cục (upsert).
@@ -29,9 +27,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
 > {
   private readonly repo = new GameConfigRepository();
 
-  protected async execute(
-    input: UpdateGameConfigInput
-  ): Promise<UpdateGameConfigOutput> {
+  protected async execute(input: UpdateGameConfigInput): Promise<UpdateGameConfigOutput> {
     this.validateInput(input);
     const existing = await this.repo.getGlobalConfig();
 
@@ -89,6 +85,9 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
       throw AppException.internal("Cập nhật Bingo18 GameConfig thất bại.");
     }
 
+    // Config đã đổi → xoá cache để process này đọc bản mới ngay.
+    await globalConfigCache.invalidate();
+
     // Audit sau khi upsert thành công. Chỉ ghi giá trị MỚI của các nhóm đã đổi
     // (`changed`) — muốn biết giá trị cũ thì trace ngược record version trước.
     // Fire-and-forget: không chặn response.
@@ -112,18 +111,14 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
         defaultCommissionRate !== undefined &&
         (defaultCommissionRate < 0 || defaultCommissionRate > 1)
       ) {
-        throw AppException.badRequest(
-          "defaultCommissionRate phải trong range [0, 1]."
-        );
+        throw AppException.badRequest("defaultCommissionRate phải trong range [0, 1].");
       }
     }
 
     if (input.singleNumPrizes) {
       for (const [key, value] of Object.entries(input.singleNumPrizes)) {
         if (typeof value !== "number" || value < 0) {
-          throw AppException.badRequest(
-            `Giải thưởng singleNumPrizes.${key} phải là số dương.`
-          );
+          throw AppException.badRequest(`Giải thưởng singleNumPrizes.${key} phải là số dương.`);
         }
       }
     }
@@ -131,9 +126,7 @@ export class UpdateGameConfigUseCase extends NextApiUseCase<
     if (input.sumTotalPrizes) {
       for (const [sumStr, value] of Object.entries(input.sumTotalPrizes)) {
         if (typeof value !== "number" || value < 0) {
-          throw AppException.badRequest(
-            `Giải thưởng sumTotalPrizes[${sumStr}] phải là số dương.`
-          );
+          throw AppException.badRequest(`Giải thưởng sumTotalPrizes[${sumStr}] phải là số dương.`);
         }
       }
     }

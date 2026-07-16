@@ -3,6 +3,7 @@ export * from "./array";
 export * from "./date";
 export * from "./env";
 export * from "./financial-date";
+export * from "./hash";
 export * from "./ip";
 export * from "./log";
 export * from "./number";

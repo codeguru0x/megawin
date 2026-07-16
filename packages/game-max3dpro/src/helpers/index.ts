@@ -3,4 +3,3 @@
  */
 
 export * from "./draw-id";
-export * from "./selection-hash";

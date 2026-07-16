@@ -10,9 +10,8 @@
  */
 
 import { IdentityRepo } from "@megawin/data/mongo";
-import type { TenantEntity } from "@megawin/identity/entities";
-
-type TenantCallbackConfig = Pick<TenantEntity, "tenantId" | "callbackBaseUrl" | "apiKey">;
+import type { TenantCallbackConfig } from "./types";
+import { TenantEntity } from "@megawin/identity/entities";
 
 export class TenantCallbackConfigRepo extends IdentityRepo<TenantEntity> {
   constructor() {
@@ -21,6 +20,11 @@ export class TenantCallbackConfigRepo extends IdentityRepo<TenantEntity> {
     });
   }
 
+  /**
+   * Lấy callback config của tenant từ identity DB.
+   * @param tenantId - ID của tenant.
+   * @returns - Callback config của tenant.
+   */
   async getCallbackConfig(tenantId: string): Promise<TenantCallbackConfig | null> {
     return await this.findOne(
       { tenantId },

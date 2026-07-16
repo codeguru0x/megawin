@@ -4,11 +4,20 @@
  * Self-contained: tự resolve config từ identity DB, cache per tenantId, concurrent dedup.
  * Consumer chỉ cần import `tenantGateway` và gọi `.getClient(tenantId)`.
  *
- * Cache tuned cho tenant config (URL + API key hầu như không đổi):
- * - TTL 10 phút — chấp nhận stale ngắn, giảm DB query gần như về 0.
- * - Max 500 tenants — headroom lớn, mỗi entry ~200 bytes.
- * - Stale-on-reject — DB lỗi → trả stale client thay vì throw.
+ * ## Cache CONFIG, không cache CLIENT
+ *
+ * Cache lớp DATA (callback config) qua `@megawin/cache`, rồi build
+ * `TenantGatewayClient` mỗi lần gọi. Lý do:
+ * - Client chỉ là wrapper mỏng quanh `fetch` — không giữ socket/connection pool
+ *   → tạo lại mỗi lần gần như free. Cái đắt là DB query, và đó mới là thứ được cache.
+ * - Config JSON-serializable → dùng được cả L1 memory lẫn L2 Redis (khi có
+ *   `REDIS_URI`). Nếu cache client object sẽ mất method khi serialize qua Redis.
+ *
+ * Hành vi cache (thừa hưởng từ `createCachedFetcher`, xem `caches/`):
+ * - TTL 10 phút — chấp nhận stale ngắn, giảm DB query gần về 0.
+ * - Stale-on-error — DB lỗi → trả config cũ trong process thay vì throw.
  * - Concurrent dedup — cùng tenantId đồng thời chỉ trigger 1 DB query.
+ * - Negative cache — tenant chưa setup → cache `null`, không dội DB.
  *
  * @example
  * ```ts
@@ -23,82 +32,15 @@
  * ```
  */
 
-import { LRUCache } from "lru-cache";
 import { createTenantGatewayClient, type TenantGatewayClient } from "./client";
-import { TenantCallbackConfigRepo } from "./infras/repos/tenant-callback-config-repo";
-import { logError } from "@megawin/shared/utils";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Cache internals
-// ─────────────────────────────────────────────────────────────────────────────
+import { tenantCallbackConfigCache } from "./caches";
+import { logWarn } from "@megawin/shared/utils";
 
 /**
  * Timeout cho mỗi HTTP request tới tenant gateway (ms).
  * 30s đủ cho batchTransaction qua internet; tenant API chậm hơn thì cần tune per-tenant.
  */
 const DEFAULT_TIMEOUT = 30_000;
-
-/**
- * Thời gian cache 1 TenantGatewayClient (ms).
- *
- * 10 phút: callbackBaseUrl + apiKey gần như không bao giờ thay đổi giữa các kỳ quay.
- * Settle 1 draw (200 entries × 4 batches) hoàn tất trong ~30s → 1 DB query / 10 phút / tenant.
- *
- * Trade-off: nếu admin rotate apiKey, client cũ vẫn dùng tối đa 10 phút.
- * Workaround: gọi `tenantGateway.invalidate(tenantId)` khi update config.
- */
-const CACHE_TTL_MS = 10 * 60_000;
-
-/**
- * Số tenant tối đa giữ trong cache cùng lúc.
- *
- * 500 = headroom rất lớn cho production (hiện ~10-50 tenants active).
- * Mỗi entry ~200 bytes (1 HttpClient instance + metadata) → ~100KB total.
- * LRU evict tenant ít dùng nhất khi đầy → không lo memory leak.
- */
-const CACHE_MAX_SIZE = 500;
-
-const NO_CONFIG = Symbol("NO_CONFIG");
-type CacheValue = TenantGatewayClient | typeof NO_CONFIG;
-
-let repo: TenantCallbackConfigRepo | null = null;
-let cache: LRUCache<string, CacheValue> | null = null;
-
-function getRepo(): TenantCallbackConfigRepo {
-  if (!repo) repo = new TenantCallbackConfigRepo();
-  return repo;
-}
-
-function getCache(): LRUCache<string, CacheValue> {
-  if (!cache) {
-    cache = new LRUCache<string, CacheValue>({
-      max: CACHE_MAX_SIZE,
-      ttl: CACHE_TTL_MS,
-
-      // DB lỗi → trả stale client (config hiếm khi đổi → stale vẫn đúng).
-      allowStaleOnFetchRejection: true,
-      allowStaleOnFetchAbort: true,
-
-      // Không tự purge expired — evict lazy khi access hoặc khi cần slot.
-      ttlAutopurge: false,
-
-      fetchMethod: async (tenantId: string): Promise<CacheValue> => {
-        const config = await getRepo().getCallbackConfig(tenantId);
-        if (!config?.callbackBaseUrl) {
-          return NO_CONFIG;
-        }
-
-        return createTenantGatewayClient({
-          callbackBaseUrl: config.callbackBaseUrl,
-          apiKey: config.apiKey ?? "",
-          tenantId: config.tenantId,
-          timeout: DEFAULT_TIMEOUT,
-        });
-      },
-    });
-  }
-  return cache;
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public facade
@@ -118,39 +60,54 @@ function getCache(): LRUCache<string, CacheValue> {
  * await client.batchTransaction({ items });
  *
  * // Khi admin update callbackBaseUrl hoặc rotate API key:
- * tenantGateway.invalidate(tenantId);
+ * await tenantGateway.invalidate(tenantId);
  * ```
  */
 export const tenantGateway = {
   /**
-   * Lấy TenantGatewayClient cho tenant — cached, concurrent dedup.
+   * Lấy TenantGatewayClient cho tenant — config cached, concurrent dedup.
    *
-   * Trả `null` nếu tenant chưa setup callbackBaseUrl (DRY-RUN mode).
-   * Kết quả null cũng được cache — không query DB lại trong TTL.
+   * Trả `null` nếu tenant chưa setup callbackBaseUrl (DRY-RUN mode). Kết quả
+   * `null` cũng được negative-cache — không query DB lại trong TTL.
+   *
+   * "Chưa có config" là 1 trạng thái nghiệp vụ hợp lệ (DRY-RUN), KHÔNG phải lỗi
+   * kỹ thuật — mỗi caller có policy xử lý khác nhau (block request, queue retry,
+   * hoặc coi là no-op). Vì vậy gateway CHỈ `logWarn` để observability, KHÔNG
+   * `throw`/`logError` và KHÔNG tự quyết mức độ nghiêm trọng — quyền đó thuộc
+   * về caller (VD `debit-player-service` throw `AppException.badRequest`).
+   *
+   * Client được build mới mỗi lần từ config đã cache (rẻ, không I/O).
    *
    * @param tenantId - ID tenant cần lấy client.
    */
   async getClient(tenantId: string): Promise<TenantGatewayClient | null> {
-    const value = await getCache().fetch(tenantId);
+    const config = await tenantCallbackConfigCache.fetch(tenantId);
 
-    if (value === NO_CONFIG || value === undefined) {
-      logError("TenantGateway", new Error(`No config found for tenant ${tenantId}`), { tenantId });
+    if (!config?.callbackBaseUrl) {
+      logWarn("TenantGateway", "Tenant chưa cấu hình callbackBaseUrl (DRY-RUN)", { tenantId });
       return null;
     }
 
-    return value;
+    return createTenantGatewayClient({
+      callbackBaseUrl: config.callbackBaseUrl,
+      apiKey: config.apiKey ?? "",
+      tenantId: config.tenantId,
+      timeout: DEFAULT_TIMEOUT,
+    });
   },
 
   /**
-   * Xoá cache cho 1 tenant — gọi khi admin update callbackBaseUrl hoặc rotate API key.
-   * Request tiếp theo sẽ re-resolve từ DB.
+   * Xoá cache config cho 1 tenant — gọi khi admin update callbackBaseUrl hoặc
+   * rotate API key. Request tiếp theo sẽ re-resolve từ DB.
+   *
+   * Khi bật Redis (L2), xoá cả entry Redis → mọi process thấy config mới ngay.
    */
-  invalidate(tenantId: string): void {
-    cache?.delete(tenantId);
+  async invalidate(tenantId: string): Promise<void> {
+    await tenantCallbackConfigCache.invalidate(tenantId);
   },
 
-  /** Xoá toàn bộ cache — dùng khi deploy hoặc bulk config change. */
-  invalidateAll(): void {
-    cache?.clear();
+  /** Xoá toàn bộ cache config — dùng khi deploy hoặc bulk config change. */
+  async invalidateAll(): Promise<void> {
+    await tenantCallbackConfigCache.invalidateAll();
   },
 } as const;

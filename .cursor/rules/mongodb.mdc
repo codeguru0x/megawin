@@ -1,0 +1,429 @@
+---
+description: MongoDB — kiến trúc Repository, ranh giới Use Case/API, typed dot-path (docPath) chống typo, và tham chiếu MongoDB agent skills
+globs:
+  - packages/game-*-application/src/infras/repos/**/*.ts
+  - packages/game-core-application/src/infras/repos/**/*.ts
+  - packages/*-application/src/infras/repos/**/*.ts
+  - packages/game-*-application/src/use-cases/**/*.ts
+  - packages/data/src/mongo/*.ts
+alwaysApply: false
+---
+
+# MongoDB — Repository Architecture + Typed Dot-Path
+
+Rule chung cho MỌI việc chạm MongoDB trong monorepo: kiến trúc Repository, ranh giới Use
+Case/API Route, và typed dot-path chống typo string path. ĐỌC TOÀN BỘ trước khi viết repo,
+use case, hoặc query. Tuân thủ song song `entity-typesafe-mongodb.mdc` và `code-quality-standards.mdc`.
+
+## 0. Dùng MongoDB agent skills đã cài (BẮT BUỘC)
+
+Cursor IDE này đã cài **MongoDB plugin skills** (maintained by MongoDB). Khi task chạm tới các
+chủ đề dưới đây, **PHẢI đọc và tuân theo skill tương ứng** trước khi tự quyết:
+
+| Task | Skill | Đọc khi |
+|---|---|---|
+| Thiết kế/đổi schema, embed-vs-reference, unbounded array, 16MB limit, TTL/archive, polymorphic, schema versioning | `mongodb-schema-design` | Tạo/sửa `*Doc` entity, đổi cấu trúc collection |
+| Query chậm, index, `explain`, tối ưu pipeline | `mongodb-query-optimizer` | User hỏi về performance/slow query/index |
+| Setup MCP, natural-language query, search/AI | `mongodb-mcp-setup`, `mongodb-natural-language-querying`, `mongodb-search-and-ai` | Khi cần verify schema thật qua MCP |
+
+Skill path: `~/.cursor/plugins/cache/cursor-public/mongodb/*/skills/<name>/SKILL.md`.
+
+> **Nguyên tắc lõi từ `mongodb-schema-design`:** *"Data that is accessed together should be
+> stored together."* Thiết kế schema quanh **access pattern** (query/endpoint), không phải quanh
+> entity. Bad schema là gốc rễ của hầu hết vấn đề performance — index/query không cứu được model sai.
+
+---
+
+## 1. Typed Dot-Path — chống typo string path trong repo
+
+String dot-path (`"financial.totalRevenue"`, `"tenant.tenantId"`) trong filter/`$set`/`$inc`
+**không được compiler kiểm tra**. Đổi tên field trong entity Doc mà quên sửa string trong repo
+→ MongoDB âm thầm tạo field mới / filter không match — bug không có lỗi runtime.
+
+### 1.1 Quy tắc
+
+Mọi dot-path lồng cấp (có dấu `.`) trong repo method **PHẢI** đi qua helper `docPath<TDoc>()`
+từ `@megawin/data/mongo`. Field cấp 1 (`drawId`, `status`) dùng object literal bình thường.
+
+**Khai báo 1 lần ở đầu file repo, tên biến `f`** (viết tắt "field"), module-level, zero runtime cost:
+
+```typescript
+import { docPath } from "@megawin/data/mongo";
+import type { LotteryDrawDoc, LotteryTicketEntryDoc } from "@megawin/game-lottery/entities";
+
+const f = docPath<LotteryDrawDoc>();
+```
+
+`f` (tức `docPath`) nhận **cả 2 dạng** — khớp đúng cách Mongo viết ở mỗi vị trí:
+
+- Update/filter key (KHÔNG `$`): `f("financial.totalRevenue")`
+- Aggregate value ref (CÓ `$`): `f("$payout.payoutAmount")`
+
+`$` là ngữ pháp của chính Mongo (value ref bên aggregate bắt buộc `$`; update key cấm `$`) —
+helper chỉ validate **phần path** theo `DotPath<TDoc>`, còn `$` do người viết đặt đúng vị trí.
+1 hàm cho cả 2 vì `$` đã nằm sẵn trong string truyền vào; không cần 2 helper riêng.
+
+```typescript
+// ✅ ĐÚNG — compiler validate path theo LotteryDrawDoc
+await this.updateOne(
+  { drawId },
+  {
+    $set: {
+      [f("financial.totalRevenue")]: revenue,
+      [`markets.${marketKey}.status`]: "closed", // Record<K,V> — xem §1.3 dynamic key
+      updatedAt: now,
+    },
+  },
+);
+
+// ❌ SAI — string trần, rename field không bắt được
+await this.updateOne(
+  { drawId },
+  { $set: { "financial.totalRevenue": revenue } },
+);
+
+// ✅ Aggregate value ref — cùng docPath, truyền chuỗi có sẵn `$`
+const fe = docPath<LotteryTicketEntryDoc>();
+await this.aggregate([
+  {
+    $group: {
+      _id: null,
+      totalPayout: { $sum: fe("$payout.payoutAmount") }, // khớp 1:1 chuỗi Mongo
+    },
+  },
+]);
+```
+
+### 1.2 Phạm vi áp dụng
+
+| Chỗ dùng | Helper |
+|---|---|
+| Filter có path lồng: `{ [f("tenant.tenantId")]: id }` | `docPath` ✅ |
+| `$set`/`$inc`/`$unset` path lồng | `docPath` ✅ |
+| Aggregate `$match` field lồng (build object ngoài pipeline rồi spread) | `docPath` ✅ khuyến khích |
+| Aggregate `$group`/`$project`/`$expr`/`$sum` value ref (`"$payout.payoutAmount"`) | `docPath` ✅ (truyền `$...`) |
+| Field cấp 1 (`drawId`, `status`, `version`) | ❌ không cần |
+
+### 1.3 Lưu ý
+
+- `DotPath` đi xuyên array tự nhiên (multikey): `f("entrySummary.boards.picks")` hợp lệ,
+  KHÔNG cần index số.
+- `Record<string, V>` (dynamic key như `draw.markets`): `docPath<TDoc>` chỉ validate được phần
+  path **cố định**, KHÔNG validate được segment key động vì `keyof Record<string, V> = string`.
+  → tách 2 lớp validate:
+  - **Key động**: validate bằng **type của biến**, KHÔNG phải `string` trần
+    (`const marketKey: LotteryMarketKey = ...`).
+  - **Suffix cố định**: dùng `docPath` của chính sub-doc để bắt typo field:
+
+  ```typescript
+  const fMarket = docPath<LotteryDrawMarket>();  // validate NỘI BỘ 1 market
+  const marketKey: LotteryMarketKey = buildMarketKey(playType, position, betMode);
+
+  // key validate bằng type + suffix validate bằng docPath<LotteryDrawMarket>
+  const path = `markets.${marketKey}.${fMarket("status")}` as const;
+  await this.updateOne({ drawId }, { $set: { [path]: "closed" } });
+  ```
+
+  Nếu suffix để literal trần (`` `markets.${marketKey}.status` ``) thì key vẫn an toàn (nhờ type
+  `LotteryMarketKey`) nhưng `.status` không được compiler kiểm — chấp nhận được cho path 1 tầng,
+  nhưng path sub-doc nhiều tầng thì nên dùng `fMarket(...)`.
+- Test path: mỗi package data-heavy nên có 2 loại test — **runtime** (`test/**/*.test.ts`,
+  vitest) và **compile-time** (`test/**/*.type-test.ts`, chứa `@ts-expect-error`, chỉ kiểm bởi
+  `tsc`/`check-types`). Mẫu tại `packages/data/test/mongo/`.
+- Rule này bổ sung `entity-typesafe-mongodb.mdc` (named interface + dot notation partial
+  update) — không thay thế.
+
+### 1.4 Performance — có ảnh hưởng gì không?
+
+**KHÔNG.** `docPath` là **identity function** — nhận `path` và `return path` nguyên vẹn:
+
+```typescript
+export function docPath<TDoc>(): <P extends FieldPath<TDoc> & string>(path: P) => P {
+  return (path) => path;
+}
+```
+
+- **Runtime: zero cost.** Không transform, không allocation, không regex. Chuỗi truyền vào ===
+  chuỗi trả ra. `[f("a.b")]: v` biên dịch tương đương `["a.b"]: v` — Mongo nhận đúng string đó.
+- **Compile-time only.** Toàn bộ giá trị nằm ở type-check (`DotPath<TDoc>` bắt typo lúc build).
+  Sau khi TS strip types, còn lại một hàm gọi trả về chính đối số — engine JIT inline gần như biến mất.
+- **Declare `f` một lần / file** (module-level) nên không tạo closure mới mỗi query.
+
+→ An toàn dùng ở mọi hot path (place-bet, settle). Chi phí thực tế = 0 so với viết string trần,
+đổi lại có type-safety.
+
+---
+
+## 2. File `*-repo.ts` CHỈ chứa Class + Query Logic
+
+File repository (`*-repo.ts`) **TUYỆT ĐỐI CHỈ** chứa:
+
+- Class kế thừa `BaseRepo<T>`
+- Constructor
+- Các method thực hiện MongoDB operations (`find`, `aggregate`, `findOneAndUpdate`, `updateOne`, `deleteMany`...)
+
+**KHÔNG ĐƯỢC** khai báo `interface`, `type`, hoặc bất kỳ type definition nào bên trong file `*-repo.ts`.
+
+### 2.1 Tách Interfaces/Types ra thư mục `repos/types/`
+
+Tất cả aggregate result types, query-specific types, helper types dùng làm input/output cho
+repo methods **PHẢI** nằm trong thư mục `types/` riêng bên trong `repos/`, mỗi file theo concern.
+
+```
+packages/game-{game}-application/src/infras/repos/
+├── types/
+│   ├── index.ts                        ← Barrel re-export tất cả types
+│   ├── settle-draw-report.types.ts     ← Types cho SettleDrawReportRepo
+│   ├── entry.types.ts                  ← Types cho EntryRepo (aggregate results)
+│   └── outstanding.types.ts            ← Types cho OutstandingReportRepo
+├── base-repo.ts
+├── draw-repo.ts                        ← CHỈ class + query, import từ ./types
+├── entry-repo.ts
+└── index.ts                            ← Re-export classes + re-export từ ./types
+```
+
+### 2.2 Quy tắc tách file types
+
+| Nguyên tắc | Mô tả |
+|-------------|--------|
+| **1 file per repo concern** | Types cho `settle-draw-report-repo.ts` → `settle-draw-report.types.ts` |
+| **Đặt tên**: `{concern}.types.ts` | Suffix `.types.ts` phân biệt rõ với repo files |
+| **Barrel `types/index.ts`** | Re-export tất cả, consumer chỉ cần `import from "./types"` |
+| **Ít types** (1-2 interface) | Vẫn tạo file riêng — giữ convention nhất quán, dễ mở rộng sau |
+
+### 2.3 Phân loại types — đặt ở đâu?
+
+| Loại type | Nơi khai báo | Ví dụ |
+|-----------|-------------|-------|
+| Entity document types | `packages/game-*/src/entities/` | `DrawDoc`, `TicketEntryDoc`, `SettleDrawReport` |
+| Embedded document types | `packages/game-*/src/entities/` | `DrawFinancial`, `DrawStats`, `EntryPayout` |
+| Aggregate/query result types | `repos/types/{concern}.types.ts` | `DrawSummaryResult`, `PlayerBreakdownRow` |
+| Use case pipeline types | `use-cases/*/types.ts` | `SettleContext`, `VoidContext` |
+
+**Quy tắc vàng:** Nếu type là output riêng của 1 repo method (không phải entity document), nó
+thuộc về `repos/types/`.
+
+### 2.4 Ví dụ ĐÚNG
+
+```typescript
+// ── repos/types/entry.types.ts ──────────────────────────────────────
+/**
+ * Aggregate players cho 1 draw × 1 tenant.
+ * Kết quả $group by accountId. Dùng drill cấp 3 financial reports.
+ */
+export interface PlayerBreakdownRow {
+  accountId: string;
+  username: string;
+  entryCount: number;
+  totalStake: number;
+  totalPayout: number;
+}
+```
+
+```typescript
+// ── settle-draw-report-repo.ts ──────────────────────────────────────
+import type { SettleDrawReport } from "@megawin/game-lotto535/entities";
+import type { DrawSummaryResult } from "./types";
+import { BaseRepo } from "./base-repo";
+
+export class SettleDrawReportRepository extends BaseRepo<any> {
+  /** Aggregate summary cho KPI strip. */
+  async aggregateSummary(from: string, to: string): Promise<DrawSummaryResult | null> {
+    const result = await this.aggregate([
+      // ... MongoDB pipeline ...
+    ]);
+    return result[0] ?? null;
+  }
+}
+```
+
+### 2.5 Ví dụ SAI
+
+```typescript
+// ❌ SAI: interface khai báo trong file repo
+export interface DrawSummaryResult {    // ← KHÔNG ĐƯỢC ở đây
+  drawCount: number;
+}
+export class SettleDrawReportRepository extends BaseRepo<any> { ... }
+
+// ❌ SAI: return type inline không tái sử dụng được
+async aggregateSummary(): Promise<{ drawCount: number; totalStake: number }> { ... }
+// → Khai báo named interface trong types/{concern}.types.ts
+```
+
+---
+
+## 3. KHÔNG MongoDB Query trong Use Case
+
+Use case **TUYỆT ĐỐI KHÔNG** chứa trực tiếp bất kỳ MongoDB operation nào (`aggregate`, `find`,
+`updateOne`, `$match`, `$group`, `$lookup`...). Mọi truy vấn/cập nhật DB **PHẢI** đóng gói thành
+method trong Repository class. Use case chỉ gọi repo method.
+
+```typescript
+// ✅ ĐÚNG — use case gọi repo method, KHÔNG biết pipeline bên trong
+export class BuildSettleReportUseCase extends InternalUseCase<SettleContext, BuildSettleReportResult> {
+  private readonly entryRepo = new EntryRepository();
+  private readonly tenantReportRepo = new SettleTenantReportRepository();
+
+  protected async execute(input: SettleContext): Promise<BuildSettleReportResult> {
+    const tenantMetrics = await this.entryRepo.aggregateTenantSettleMetrics(input.drawId);
+    const tenantReports = tenantMetrics.map((m) => this.buildTenantReport(m, input));
+    await this.tenantReportRepo.upsertTenantReports(tenantReports);
+    return { drawId: input.drawId, financialDate, tenantCount };
+  }
+}
+
+// ❌ SAI — MongoDB query lẫn vào business logic → không test được, không reuse
+protected async execute(input: SettleContext) {
+  const tenantMetrics = await this.entryRepo.aggregate([
+    { $match: { drawId: input.drawId, status: "settled" } },
+    { $group: { _id: "$tenant.tenantId", totalStake: { $sum: "$amount" } } },
+  ]);
+}
+```
+
+| Concern | Trách nhiệm |
+|---------|-------------|
+| **Repository** | Query DB, map raw result → typed interface. Đổi query chỉ ảnh hưởng 1 file. |
+| **Use case** | Business logic, orchestrate, gọi repo methods. Không phụ thuộc implementation DB. |
+| **API Route** | Parse request, **gọi use case**, format response. KHÔNG gọi repo trực tiếp. |
+
+---
+
+## 4. KHÔNG Gọi Repo Trực Tiếp từ API Route
+
+API Route Handler **TUYỆT ĐỐI KHÔNG** khởi tạo hoặc gọi Repository class trực tiếp. Mọi data
+access từ API route **PHẢI** đi qua Use Case (bỏ qua use case → business logic phân tán, không
+test được, khó audit).
+
+```typescript
+// ── apps/backoffice/src/app/api/lotto535/reports/draws/route.ts ──────
+import { ListSettleDrawReportsUseCase } from "@megawin/game-lotto535-application/use-cases/reports";
+
+const useCase = new ListSettleDrawReportsUseCase(); // module-level singleton
+
+export const GET = withApi()
+  .auth({ roles: [CompanyRole.Staff] })
+  .query(querySchema)
+  .handler(async ({ query }) => {
+    return useCase.run(query); // ✅ gọi use case — KHÔNG gọi repo
+  });
+
+// ❌ SAI — API route khởi tạo repo và gọi trực tiếp
+const repo = new SettleDrawReportRepository();
+export const GET = withApi().handler(async ({ query }) => {
+  const data = await repo.findByDateRange(query.from, query.to); // ← KHÔNG ĐƯỢC
+  return apiSuccess({ data });
+});
+```
+
+Report use cases đặt trong `use-cases/reports/` riêng. Dù chỉ delegate sang repo, vẫn tạo use
+case class để centralize validation (VD date range ≤ 90 ngày), audit logging, dễ mock trong test.
+
+---
+
+## 5. Aggregate Pipeline — Format + docPath
+
+Tuân thủ `entity-typesafe-mongodb.mdc` §5 (mỗi field 1 dòng). Thêm:
+
+- **Mỗi stage có comment** giải thích mục đích.
+- **Value ref path lồng** dùng `f("$...")` (§1). Field cấp 1 (`$amount`) viết thẳng được.
+- **Trả typed result** — map rõ ràng, KHÔNG return raw `any` (còn `_id`, field name có thể lệch).
+
+```typescript
+const fe = docPath<TicketEntryDoc>();
+const result = await this.aggregate([
+  // Lọc entries đã settle trong 1 draw + 1 tenant
+  {
+    $match: {
+      drawId,
+      [fe("tenant.tenantId")]: tenantId,
+      status: "settled",
+    },
+  },
+  // Nhóm theo player → tính metrics per player
+  {
+    $group: {
+      _id: "$accountId",
+      username: { $first: fe("$player.username") },
+      entryCount: { $sum: 1 },
+      totalStake: { $sum: "$amount" },
+      totalPayout: { $sum: fe("$payout.payoutAmount") },
+    },
+  },
+]);
+
+// ✅ map sang typed interface
+return result.map((r: any) => ({
+  accountId: r._id as string,
+  username: r.username as string,
+  entryCount: r.entryCount as number,
+  totalStake: r.totalStake as number,
+  totalPayout: r.totalPayout as number,
+}));
+```
+
+---
+
+## 6. Repo Method JSDoc + Barrel Export
+
+Mỗi repo method public **PHẢI** có JSDoc: **mục đích** (feature/tab/step nào), **filter chính**,
+**idempotent?** (write methods), **index hint** nếu query phụ thuộc index cụ thể.
+
+```typescript
+/**
+ * Aggregate players cho 1 draw × 1 tenant. Drill cấp 3 trong financial reports.
+ *
+ * BẮT BUỘC drawId + tenantId — KHÔNG query cross-draw.
+ * Index: { drawId: 1, "tenant.tenantId": 1, accountId: 1 }
+ */
+async aggregatePlayersByDrawAndTenant(drawId: string, tenantId: string): Promise<PlayerBreakdownRow[]>
+```
+
+`repos/index.ts` export: (1) tất cả Repository classes, (2) re-export types từ `types/` barrel.
+
+```typescript
+export type * from "./types";
+export { BaseRepo } from "./base-repo";
+export { DrawRepository } from "./draw-repo";
+export { EntryRepository } from "./entry-repo";
+```
+
+---
+
+## 7. Checklist
+
+### Repo method mới
+
+- [ ] Path lồng đi qua `f = docPath<TDoc>()`? (§1)
+- [ ] Return type là named interface trong `repos/types/{concern}.types.ts` + re-export?
+- [ ] JSDoc mô tả mục đích, filter, idempotent, index?
+- [ ] Aggregate: mỗi stage có comment, value ref dùng `f("$...")`, map sang typed interface?
+
+### Use case mới
+
+- [ ] KHÔNG có MongoDB query trực tiếp — tất cả đi qua repo method?
+- [ ] Pipeline-specific types trong `use-cases/*/types.ts`? Import entity types, KHÔNG duplicate?
+
+### API Route mới
+
+- [ ] KHÔNG khởi tạo repo trực tiếp — dùng Use Case (module-level singleton)?
+- [ ] Query/params validate bằng Zod?
+
+### Schema mới / đổi
+
+- [ ] Đã đọc skill `mongodb-schema-design` (embed-vs-reference, unbounded array, 16MB)? (§0)
+- [ ] Entity/embedded types trong `packages/game-*/src/entities/`?
+
+---
+
+## 8. KHÔNG ĐƯỢC làm
+
+- **KHÔNG** viết string dot-path trần trong repo — path lồng phải qua `f = docPath<TDoc>()` (§1).
+- **KHÔNG** khai báo `interface`/`type` trong file `*-repo.ts` — tách ra `types/{concern}.types.ts`.
+- **KHÔNG** nhồi tất cả types vào 1 file `types.ts` — tách theo concern.
+- **KHÔNG** viết MongoDB query (`$match`, `$group`, `aggregate([...])`) trong use case.
+- **KHÔNG** return raw `any` từ aggregate — phải map sang typed interface.
+- **KHÔNG** duplicate entity types (DrawDoc, SettleDrawReport...) — import từ entity package.
+- **KHÔNG** khởi tạo/gọi Repository class trực tiếp từ API Route — phải đi qua Use Case (§4).
+- **KHÔNG** tự quyết schema/index/performance khi có MongoDB skill tương ứng — đọc skill trước (§0).

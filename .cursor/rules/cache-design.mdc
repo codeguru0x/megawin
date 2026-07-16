@@ -1,0 +1,209 @@
+---
+description: Quy tắc thiết kế cache — kiến trúc caches/, key convention, invalidation
+globs: packages/**/src/caches/**,packages/cache/src/**
+alwaysApply: false
+---
+
+# Cache Design Rules — @megawin/cache
+
+Chuẩn dùng cache trong toàn monorepo. Core wrapper: `createCachedFetcher` (`packages/cache/src/cached-fetcher.ts`)
+— đã có sẵn single-flight, fail-open, negative caching. KHÔNG tự viết cache logic mới.
+
+> **Quy tắc lấy dữ liệu:** cache hit → trả ngay; miss → load từ source; source lỗi → **throw** (không
+> che giấu lỗi DB). Lớp chịu lỗi khi DB down là **L2 Redis** (shared, sống qua cold start), KHÔNG dùng
+> stale-in-RAM per-process (cold start là mất, tạo kỳ vọng "luôn có dữ liệu" sai lệch).
+
+## 1. Kiến trúc — cache module tách khỏi use-case
+
+Mỗi application package đặt cache trong `src/caches/`, layer **song song** với `use-cases/`:
+
+```
+packages/game-{game}-application/src/
+├── caches/
+│   ├── global-config.cache.ts    ← sở hữu key + TTL + loader + invalidation
+│   ├── tenant-config.cache.ts
+│   └── index.ts                  ← barrel, export qua subpath "./caches"
+└── use-cases/
+```
+
+- File `*.cache.ts` export object `{entity}Cache = { fetch, invalidate }` — module-level singleton.
+- Use-case CHỈ import từ `caches/`, KHÔNG gọi `createCachedFetcher` inline trong file use-case.
+- Update use-case gọi `xxxCache.invalidate(...)` NGAY SAU khi ghi DB thành công.
+- Store luôn lấy qua `getDefaultCacheStore()` — memory-only mặc định, tự nâng cấp tiered L1+L2 khi có `REDIS_URI`. KHÔNG tự `new` store trong cache module.
+
+## 2. Key convention — tránh trùng lặp toàn project
+
+Format bắt buộc, build bằng `cacheKey()` (throw nếu part chứa `:`):
+
+```
+{namespace}:{entity}:{version}[:{discriminator}]
+└──────── keyPrefix (TĨNH) ──┘ └── động, runtime ──┘
+```
+
+| Phần | Quy tắc | Ví dụ | Khai ở đâu |
+|---|---|---|---|
+| namespace | gameKey hoặc domain — duy nhất toàn repo | `keno`, `identity`, `tenant-gw` | `CacheNamespace` (`packages/cache/src/namespaces.ts`) |
+| entity | tên dữ liệu, kebab-case | `global-config`, `tenant-config` | `XXX_CACHE_KEYS` trong `caches/keys.ts` của package |
+| version | `v{n}` — bump khi đổi shape data (tránh deserialize sai sau deploy) | `v1` | cùng `caches/keys.ts` |
+| discriminator | id cụ thể (userId, tenantId…) | `tenant_abc` | **KHÔNG khai** — fetcher tự append từ arg `fetch()` / `keyOf` |
+
+### 2.1. Namespace đăng ký tập trung (chống va chạm cross-package)
+
+- MỌI namespace phải khai trong `CacheNamespace` (`packages/cache/src/namespaces.ts`) — thêm domain mới = thêm 1 dòng.
+- KHÔNG hard-code chuỗi namespace rời rạc trong `cacheKey(...)`. Luôn `cacheKey(CacheNamespace.Xxx, ...)`.
+- Namespace = tên package bỏ prefix `game-`/`-application`. Package ngoài game dùng domain riêng, KHÔNG dùng lại namespace của game.
+
+### 2.2. keyPrefix TĨNH đăng ký trong `caches/keys.ts` của mỗi package
+
+- Mỗi package có 1 file `src/caches/keys.ts` export `XXX_CACHE_KEYS = { entity: cacheKey(NS, "entity", "v1") }`.
+- Cache module + mọi consumer (kể cả invalidate ở package khác) import prefix từ file này — 1 nguồn sự thật, đổi tên/bump version chỉ sửa 1 chỗ.
+- KHÔNG gọi `cacheKey(...)` trực tiếp trong file `*.cache.ts` — chỉ dùng `XXX_CACHE_KEYS.entity`.
+
+### 2.3. Discriminator ĐỘNG (userId, tenantId…) — build runtime, KHÔNG khai trong keys.ts
+
+`keyPrefix` chỉ chứa phần tĩnh (`identity:user:v1`). Phần động ghép lúc `fetch(arg)` bởi `buildKey`
+(`packages/cache/src/cached-fetcher.ts`). Ba dạng arg:
+
+| Dạng arg | `keyOf` | Key runtime |
+|---|---|---|
+| `string` (userId, tenantId) | không cần | `keyPrefix:{arg}` |
+| `object` / nhiều field | **BẮT BUỘC** | `keyPrefix:{keyOf(arg)}` |
+| `object` mà quên `keyOf` | — | **throw** (fail sớm, chống collision `[object Object]`) |
+
+Quy tắc bắt buộc khi viết `keyOf` cho object:
+
+- Nối field bằng `_` hoặc `-`, TUYỆT ĐỐI không `:` (phá phân tầng key → `buildKey` throw).
+- Thứ tự field TƯỜNG MINH và ổn định. KHÔNG `JSON.stringify(arg)` / `Object.values().join()` (đổi thứ tự → cache miss oan).
+- Field nhạy cảm (apiKey, email, token) PHẢI `hashKeyPart()` — key lộ trong log Redis.
+- Chuẩn hoá field (`trim().toLowerCase()`) để tránh phân mảnh cache do khác hoa/thường.
+- Cân nhắc cardinality: chỉ dùng object làm key khi tổ hợp field có tập giá trị hữu hạn, lặp lại (role, locale…). Tránh `(userId, timestamp)` → mỗi key 1 lần dùng, cache vô nghĩa.
+
+### 2.4. Nhiều view cho CÙNG 1 entity — mỗi view 1 fetcher + 1 keyPrefix riêng
+
+Một entity thường cần nhiều "hình dạng query": VD tenant config có view **1 tenant cụ thể**
+(`fetch(tenantId)`) và view **list tất cả tenant** (`fetch()`). MỖI view là 1 loader khác,
+shape kết quả khác, TTL có thể khác → **tách thành nhiều fetcher độc lập**, KHÔNG nhồi chung.
+
+- Mỗi view có **entity name riêng** trong `keys.ts` (`tenant-config` vs `tenant-config-list`)
+  → 2 nhánh key tách biệt, không đụng nhau.
+- Gom mọi view của 1 entity trong **cùng 1 file** `*.cache.ts` (cohesion cao), export 1 object
+  `{ fetch, fetchAll, invalidateTenant, ... }`.
+
+**⚠️ INVALIDATION LIÊN ĐỚI — chỗ dễ sai nhất:** sửa 1 item làm CŨ (lỗi thời) CẢ view item lẫn view list
+(list chứa item đó). Quy chuẩn:
+
+- **Đóng gói fan-out TRONG cache module.** Cache module tự biết entity có mấy view; use-case
+  KHÔNG được biết. Export method đặt tên theo **Ý ĐỊNH nghiệp vụ** (`invalidateTenant`), method này
+  tự xoá mọi view liên quan. Use-case chỉ gọi **1 dòng**.
+- **KHÔNG** để use-case gọi lần lượt `oneFetcher.invalidate()` + `listFetcher.invalidate()` — thêm
+  view thứ 3 sẽ phải sửa mọi use-case → dễ sót → cache lệch âm thầm.
+- Các lệnh xoá độc lập → dùng **`Promise.all`** (chạy song song), không `await` tuần tự.
+- Cache **1 view** (đa số hiện tại) → giữ `{ fetch, invalidate }`, đừng thêm method thừa khi chưa có view thứ 2.
+
+```typescript
+// keys.ts — 2 view = 2 entity name khác nhau
+export const BINGO18_CACHE_KEYS = {
+  tenantConfig: cacheKey(NS, "tenant-config", "v1"),        // "…:tenant-config:v1:{tenantId}"
+  tenantConfigList: cacheKey(NS, "tenant-config-list", "v1"), // "…:tenant-config-list:v1"
+} as const;
+
+// tenant-config.cache.ts — 2 fetcher trong cùng file
+const oneFetcher = createCachedFetcher<string, TenantConfigEntity | null>(
+  (tenantId) => getRepo().getTenantConfig(tenantId),
+  { store: getDefaultCacheStore(), keyPrefix: BINGO18_CACHE_KEYS.tenantConfig, ttlSec: 60 },
+);
+const listFetcher = createCachedFetcher<void, TenantConfigEntity[]>(
+  () => getRepo().listTenantConfigs(),
+  { store: getDefaultCacheStore(), keyPrefix: BINGO18_CACHE_KEYS.tenantConfigList, ttlSec: 120 },
+);
+
+export const tenantConfigCache = {
+  fetch: (tenantId: string) => oneFetcher.fetch(tenantId),
+  fetchAll: () => listFetcher.fetch(),
+  /** "Tenant này vừa đổi" → tự xoá CẢ cache tenant đó LẪN cache list (song song). */
+  invalidateTenant: (tenantId: string) =>
+    Promise.all([oneFetcher.invalidate(tenantId), listFetcher.invalidate()]),
+};
+
+// Trong update use-case — 1 dòng, đúng ý định, không cần biết có mấy view:
+await tenantConfigCache.invalidateTenant(tenantId);
+```
+
+```typescript
+// ❌ SAI — use-case tự gọi lần lượt từng fetcher (rò rỉ chi tiết cache; thêm view → sửa mọi use-case)
+await oneFetcher.invalidate(tenantId);
+await listFetcher.invalidate();
+```
+
+## 3. TTL & negative caching
+
+- TTL bắt buộc, hữu hạn. Config hiếm đổi: 60s. Data đổi thường xuyên: cân nhắc 5–15s hoặc không cache.
+- Kết quả `null` mặc định được cache theo `ttlSec`. Muốn thấy record mới ngay sau khi tạo → `negativeTtlSec: 0`.
+- Cross-process invalidation dựa vào TTL (hoặc L2 Redis khi bật) — chấp nhận staleness tối đa = TTL.
+
+## 4. Ví dụ chuẩn
+
+```typescript
+// src/caches/keys.ts — đăng ký key TĨNH của package (1 nguồn sự thật)
+import { CacheNamespace, cacheKey } from "@megawin/cache";
+const NS = CacheNamespace.Identity;
+export const IDENTITY_CACHE_KEYS = {
+  user: cacheKey(NS, "user", "v1"),               // "identity:user:v1"
+  permission: cacheKey(NS, "permission", "v1"),   // "identity:permission:v1"
+} as const;
+```
+
+```typescript
+// src/caches/user.cache.ts — discriminator string (userId), ghép runtime
+const fetcher = createCachedFetcher<string, UserEntity | null>(
+  async (userId) => await new AccountRepository().getUserById(userId),
+  {
+    store: getDefaultCacheStore(),
+    keyPrefix: IDENTITY_CACHE_KEYS.user,   // TĨNH — userId KHÔNG khai ở đây
+    ttlSec: 60,
+  },
+);
+export const userCache = {
+  fetch: (userId: string) => fetcher.fetch(userId),          // → "identity:user:v1:{userId}"
+  invalidate: (userId: string) => fetcher.invalidate(userId),
+};
+```
+
+```typescript
+// discriminator OBJECT nhiều field → BẮT BUỘC keyOf
+const fetcher = createCachedFetcher<{ tenantId: string; role: string }, PermissionEntity | null>(
+  async ({ tenantId, role }) => await repo.getPermissions(tenantId, role),
+  {
+    store: getDefaultCacheStore(),
+    keyPrefix: IDENTITY_CACHE_KEYS.permission,
+    ttlSec: 60,
+    keyOf: ({ tenantId, role }) => `${tenantId}_${role}`,   // nối bằng "_", thứ tự tường minh
+  },
+);
+```
+
+```typescript
+// ❌ SAI — cacheKey inline trong cache module (phải dùng XXX_CACHE_KEYS từ keys.ts)
+keyPrefix: cacheKey("identity", "user", "v1"),
+
+// ❌ SAI — namespace hard-code chuỗi (phải dùng CacheNamespace.Identity)
+cacheKey("identity", "user", "v1");
+
+// ❌ SAI — object arg mà quên keyOf → buildKey throw "[object Object]"
+createCachedFetcher<{ a: string }, T>(loader, { keyPrefix, ttlSec: 60 });
+
+// ❌ SAI — keyOf nối bằng ":" (phá phân tầng key → throw) hoặc JSON.stringify (mong manh)
+keyOf: ({ a, b }) => `${a}:${b}`;
+keyOf: (arg) => JSON.stringify(arg);
+```
+
+## 5. Checklist thêm cache mới
+
+- [ ] Namespace đã có trong `CacheNamespace` (`packages/cache/src/namespaces.ts`)? Nếu chưa → thêm 1 dòng.
+- [ ] Đăng ký prefix trong `src/caches/keys.ts`: `XXX_CACHE_KEYS.entity = cacheKey(CacheNamespace.Xxx, "entity", "v1")`.
+- [ ] Tạo `src/caches/{entity}.cache.ts`, dùng `keyPrefix: XXX_CACHE_KEYS.entity` (KHÔNG `cacheKey()` inline), export `{entity}Cache = { fetch, invalidate }`.
+- [ ] Arg là object/nhiều field → khai `keyOf` (nối `_`, không `:`, không `JSON.stringify`); secret → `hashKeyPart()`.
+- [ ] Export qua barrel `caches/index.ts` (kèm `XXX_CACHE_KEYS`) + subpath `"./caches"` trong package.json.
+- [ ] Update use-case gọi `invalidate` sau khi ghi DB thành công.
+- [ ] Entity có nhiều view (1 item + list…)? → mỗi view 1 entity name + 1 fetcher riêng; đóng gói fan-out invalidation trong 1 method (`invalidateXxx`) đặt tên theo ý định, use-case gọi 1 dòng (§2.4).
+- [ ] Bump `v{n}` trong `keys.ts` nếu đổi shape data đã cache.

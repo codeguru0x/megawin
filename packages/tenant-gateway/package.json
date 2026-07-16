@@ -32,6 +32,11 @@
       "import": "./src/entities/index.ts",
       "default": "./dist/entities/index.js"
     },
+    "./caches": {
+      "types": "./src/caches/index.ts",
+      "import": "./src/caches/index.ts",
+      "default": "./dist/caches/index.js"
+    },
     "./use-cases/tx-logs": {
       "types": "./src/use-cases/tx-logs/index.ts",
       "import": "./src/use-cases/tx-logs/index.ts",
@@ -45,13 +50,13 @@
   },
   "dependencies": {
     "@megawin/app-core": "workspace:*",
+    "@megawin/cache": "workspace:*",
     "@megawin/data": "workspace:*",
     "@megawin/http-client": "workspace:*",
     "@megawin/identity": "workspace:*",
     "@megawin/next": "workspace:*",
     "@megawin/shared": "workspace:*",
-    "lru-cache": "^11.3.3",
-    "mongodb": "^7.3.0"
+    "mongodb": "^7.5.0"
   },
   "devDependencies": {
     "@megawin/typescript-config": "workspace:*",
