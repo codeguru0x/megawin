@@ -99,7 +99,7 @@ export function TxLogTable({
 
   if (isLoading) {
     return (
-      <div className="flex h-[240px] items-center justify-center gap-2 text-muted-foreground">
+      <div className="flex h-60 items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="size-4 animate-spin" />
         <span className="text-sm">Đang tải nhật ký…</span>
       </div>
@@ -108,7 +108,7 @@ export function TxLogTable({
 
   if (rows.length === 0) {
     return (
-      <div className="flex h-[240px] flex-col items-center justify-center gap-1 text-center">
+      <div className="flex h-60 flex-col items-center justify-center gap-1 text-center">
         <Inbox className="size-8 text-muted-foreground/40" />
         <p className="text-sm font-medium text-muted-foreground">Không có dữ liệu</p>
         <p className="text-xs text-muted-foreground">Thử nới khoảng thời gian hoặc xoá bộ lọc.</p>
@@ -123,16 +123,16 @@ export function TxLogTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-[170px] pl-5">Thời gian</TableHead>
-              <TableHead className="w-[60px] text-center">Trạng thái</TableHead>
+              <TableHead className="w-15 text-center">Trạng thái</TableHead>
               <TableHead className="w-[90px]">Loại</TableHead>
-              <TableHead className="w-[120px]">Tenant</TableHead>
-              <TableHead className="w-[100px]">Action</TableHead>
-              <TableHead className="w-[120px]">Lý do</TableHead>
-              <TableHead className="w-[140px]">Người chơi</TableHead>
-              <TableHead className="w-[120px]">Game</TableHead>
-              <TableHead className="w-[140px] text-right">Số tiền</TableHead>
-              <TableHead className="w-[280px]">Tx ID</TableHead>
-              {!hideBatchColumn && <TableHead className="w-[140px]">Batch</TableHead>}
+              <TableHead className="w-30">Tenant</TableHead>
+              <TableHead className="w-25">Action</TableHead>
+              <TableHead className="w-30">Lý do</TableHead>
+              <TableHead className="w-35">Người chơi</TableHead>
+              <TableHead className="w-30">Game</TableHead>
+              <TableHead className="w-35 text-right">Số tiền</TableHead>
+              <TableHead className="w-70">Tx ID</TableHead>
+              {!hideBatchColumn && <TableHead className="w-35">Batch</TableHead>}
               <TableHead className="pr-5">Lỗi</TableHead>
             </TableRow>
           </TableHeader>
@@ -196,7 +196,7 @@ export function TxLogTable({
 
                   {/* Player ID — đây là tenant-side playerId gửi đi (đã strip @tenantId) */}
                   <TableCell
-                    className="max-w-[140px] truncate font-mono text-sm"
+                    className="max-w-35 truncate font-mono text-sm"
                     title={req.playerId ?? undefined}
                   >
                     {req.playerId ?? <span className="text-muted-foreground">—</span>}

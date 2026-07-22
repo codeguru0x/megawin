@@ -12,8 +12,12 @@
  */
 
 import { Bingo18Collections } from "@megawin/game-bingo18/entities";
-import { DrawStatus, DRAW_UNFINISHED_STATUSES } from "@megawin/game-core/entities";
-import { subDays, formatVNDate } from "@megawin/shared/utils";
+import {
+  DrawStatus,
+  DRAW_UNFINISHED_STATUSES,
+  DRAW_COMPLETED_STATUSES,
+} from "@megawin/game-core/entities";
+import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
 import type { FindOptions } from "mongodb";
 import type {
   DrawDoc,
@@ -97,22 +101,45 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     });
   }
 
-  async getActiveDraws(
-    allowStatuses: string[],
-    lookbackDays?: number,
+  /**
+   * Lấy kỳ chưa hoàn thành (unfinished) — single source of truth "kỳ đang vận hành".
+   *
+   * Nguồn dữ liệu chung cho GetCurrentDraw + GetDrawSelector — đảm bảo không bỏ sót
+   * kỳ đang vận hành bị kẹt (stuck) lâu ngày do KHÔNG có cron tự động đóng/mở bán.
+   * Query dùng `$in` trên `statuses` (subset của {@link DRAW_UNFINISHED_STATUSES}) →
+   * equality prefix trên `idx_status_drawId_desc`, IXSCAN.
+   *
+   * Sort `drawId: -1` (mới nhất trước) — khớp chiều index, không cần in-memory sort.
+   *
+   * @param statuses - Subset status cần lấy (default: toàn bộ DRAW_UNFINISHED_STATUSES).
+   *   Truyền subset hẹp hơn cho consumer cần giới hạn phạm vi (VD: player-facing chỉ
+   *   [SalesOpen, SalesClosed] — không lộ Settling/Voiding vốn chỉ dành cho staff).
+   */
+  async getUnfinishedDraws(
+    statuses: readonly UnfinishedDrawStatus[] = DRAW_UNFINISHED_STATUSES,
     options?: FindOptions,
   ): Promise<DrawEntity[]> {
-    const query: Record<string, unknown> = {
-      status: { $in: allowStatuses },
-    };
-    // Khi lookbackDays được cung cấp, filter theo ngày để giới hạn số lượng kết quả
-    // (dùng cho settled/void draws có thể rất nhiều). Active draws không filter ngày
-    // để không bỏ sót kỳ đang vận hành bị trễ qua ngày.
-    if (lookbackDays !== undefined) {
-      const fromDateStr = formatVNDate(subDays(new Date(), lookbackDays));
-      query.drawDate = { $gte: fromDateStr };
-    }
-    return await this.findMany(query, { sort: { drawDate: 1, drawNo: 1 }, ...options });
+    return await this.findMany(
+      { status: { $in: [...statuses] } },
+      { sort: { drawId: -1 }, ...options },
+    );
+  }
+
+  /**
+   * Lấy N kỳ đã hoàn thành gần nhất (settled/void) — dùng cho nhóm "recent" trên draw selector
+   * (tra soát/resettle nhanh), KHÔNG dùng để phát hiện kỳ kẹt (đã có `getUnfinishedDraws`).
+   *
+   * Lấy theo SỐ PHIÊN thay vì lookback theo ngày — nhất quán với các game khác dù Bingo 18
+   * quay tần suất cao (~160 kỳ/ngày), tránh phải lookback + limit riêng lẻ như trước.
+   *
+   * Performance: `status $in DRAW_COMPLETED_STATUSES` là equality prefix của idx_status_drawId_desc,
+   * sort `drawId desc` khớp chiều index → IXSCAN, dừng ngay khi đủ `limit`.
+   */
+  async getRecentCompletedDraws(limit = 5, options?: FindOptions): Promise<DrawEntity[]> {
+    return await this.findMany(
+      { status: { $in: [...DRAW_COMPLETED_STATUSES] } },
+      { sort: { drawId: -1 }, limit, ...options },
+    );
   }
 
   /**
@@ -128,7 +155,7 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
    * rơi vào nhóm "chưa hoàn thành" → guard vẫn chặn, không bị sót.
    *
    * Tối ưu DB: dùng `$in` (KHÔNG dùng `$nin` vì negation không tạo được tight index
-   * bound) → equality prefix trên index `{ status: 1, drawId: 1 }` (idx_status_drawId).
+   * bound) → equality prefix trên index `{ status: 1, drawId: -1 }` (idx_status_drawId_desc).
    * Sort `drawId: -1` lấy kỳ dở GẦN T nhất; `findOne` tự thêm limit 1 → IXSCAN dừng
    * ngay record đầu.
    *
@@ -490,5 +517,3 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.findMany(query, { sort: { drawDate: -1, drawId: -1 }, limit: size });
   }
 }
-
-export { VALID_TRANSITIONS };

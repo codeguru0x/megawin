@@ -11,11 +11,7 @@ export { GetCurrentDrawUseCase } from "./get-current-draw";
 export { VoidDrawUseCase } from "./void-draw";
 export { UpdateScheduleUseCase } from "./update-schedule";
 
-export type {
-  GetCurrentDrawInput,
-  GetCurrentDrawOutput,
-  CurrentDrawInfo,
-} from "./dto/current-draw.dto";
+export type { GetCurrentDrawOutput, CurrentDrawInfo } from "./dto/current-draw.dto";
 
 export type {
   CreateDrawsInput,

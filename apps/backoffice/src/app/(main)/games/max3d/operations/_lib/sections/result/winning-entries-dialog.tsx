@@ -281,7 +281,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
                   <TableHead className="pl-6 w-12 text-center">#</TableHead>
                   <TableHead className="w-44">Người chơi</TableHead>
                   <TableHead className="w-24 text-right">Tiền cược</TableHead>
-                  <TableHead className="min-w-[240px]">Bộ ba số</TableHead>
+                  <TableHead className="min-w-60">Bộ ba số</TableHead>
                   <TableHead className="w-44">Hạng giải trúng</TableHead>
                   <TableHead className="w-32 text-right">Tổng thưởng</TableHead>
                   <TableHead className="pr-6 w-36">Thời gian</TableHead>

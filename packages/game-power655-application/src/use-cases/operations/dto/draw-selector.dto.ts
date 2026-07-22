@@ -5,7 +5,7 @@
  * Power 6/55 chỉ quay 1 kỳ/ngày (drawNo = 1 cố định).
  */
 
-import type { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
 
 export interface DrawSelectorItem {
   drawId: string;
@@ -25,7 +25,7 @@ export interface DrawSelectorItem {
   /** Ngày tài chính của kỳ (YYYY-MM-DD). */
   financialDate: string;
   /** Nhóm hiển thị trong dropdown. */
-  group: "active" | "future" | "recent";
+  group: DrawSelectorGroup;
   /**
    * Thời điểm kết sổ thành công (ISO 8601). High-water mark.
    * Có giá trị khi kỳ đã settle ít nhất 1 lần.

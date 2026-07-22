@@ -15,7 +15,7 @@
 
 import { createContext, useContext, useCallback, type ReactNode } from "react";
 import { useQueryState } from "nuqs";
-import { DrawStatus } from "@megawin/game-core/entities";
+import { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
 import {
   useDrawSelectorList,
   useDrawDetail,
@@ -68,7 +68,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   // Auto-select kỳ active nếu không có selectedDrawId
   const effectiveDrawId =
     selectedDrawId ||
-    draws.find((d: DrawSelectorItem) => d.group === "active")?.drawId ||
+    draws.find((d: DrawSelectorItem) => d.group === DrawSelectorGroup.Active)?.drawId ||
     draws[0]?.drawId ||
     "";
 
@@ -112,7 +112,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
           settledAt: remoteDraw.settledAt as unknown as string | undefined,
           status: remoteDraw.status,
           financialDate: remoteDraw.financialDate ?? remoteDraw.drawDate,
-          group: "recent" as const,
+          group: DrawSelectorGroup.Recent,
         }
       : undefined;
   const draw = drawFromSelector ?? drawFromRemote;
@@ -120,7 +120,8 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   const status = draw?.status ?? remoteDraw?.status;
   const isSettled = status === DrawStatus.Settled;
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
-  const isActiveForRefresh = !isHistorical && draw?.group === "active" && !isSettled;
+  const isActiveForRefresh =
+    !isHistorical && draw?.group === DrawSelectorGroup.Active && !isSettled;
 
   const opsParams: OpsQueryParams = {
     drawId: effectiveDrawId,
@@ -131,7 +132,8 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
     (drawId: string) => {
       // Khi chọn active draw → xoá param khỏi URL để giữ URL gọn
       const activeDrawId =
-        draws.find((d: DrawSelectorItem) => d.group === "active")?.drawId || draws[0]?.drawId;
+        draws.find((d: DrawSelectorItem) => d.group === DrawSelectorGroup.Active)?.drawId ||
+        draws[0]?.drawId;
       setSelectedDrawId(drawId === activeDrawId ? null : drawId);
     },
     [draws, setSelectedDrawId],

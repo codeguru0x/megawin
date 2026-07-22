@@ -19,7 +19,7 @@ import { useJackpotCurrent } from "./use-jackpot";
 export function JackpotHeroCard() {
   const { data, isLoading } = useJackpotCurrent();
 
-  if (isLoading) return <Skeleton className="h-[280px] rounded-2xl" />;
+  if (isLoading) return <Skeleton className="h-70 rounded-2xl" />;
   if (!data) return null;
 
   const { cycle, config, jackpot1Progress, jackpot2Progress } = data;
@@ -166,7 +166,7 @@ export function JackpotKpiCards() {
     return (
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-[88px] rounded-xl" />
+          <Skeleton key={i} className="h-22 rounded-xl" />
         ))}
       </div>
     );
@@ -265,10 +265,10 @@ export function JackpotOverviewSection() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-[280px] rounded-2xl" />
+        <Skeleton className="h-70 rounded-2xl" />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-[88px] rounded-xl" />
+            <Skeleton key={i} className="h-22 rounded-xl" />
           ))}
         </div>
       </div>

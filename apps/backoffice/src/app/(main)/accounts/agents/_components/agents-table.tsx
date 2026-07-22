@@ -59,9 +59,9 @@ export function AgentAccountsTable() {
       <CardContent className="px-0 pb-0 pt-0">
         {error && <p className="px-5 pb-2 text-sm text-destructive">{error.message}</p>}
         {isLoading ? (
-          <div className="h-[320px] animate-pulse bg-muted" />
+          <div className="h-80 animate-pulse bg-muted" />
         ) : accounts.length === 0 ? (
-          <div className="flex h-[200px] flex-col items-center justify-center gap-1 text-center">
+          <div className="flex h-50 flex-col items-center justify-center gap-1 text-center">
             <p className="text-sm font-medium text-muted-foreground">
               Chưa có tài khoản đại lý nào
             </p>

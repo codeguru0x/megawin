@@ -229,7 +229,7 @@ export function DispatchFilterBar() {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-[320px] p-4">
+            <PopoverContent align="end" className="w-80 p-4">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">

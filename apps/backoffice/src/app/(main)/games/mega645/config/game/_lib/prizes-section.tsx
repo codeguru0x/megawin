@@ -162,7 +162,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
 
                 <div className="rounded-lg border overflow-hidden">
                   {/* Table header */}
-                  <div className="grid grid-cols-[auto_1fr_152px_112px_112px_96px_116px] items-center gap-3 bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground min-w-[820px]">
+                  <div className="grid grid-cols-[auto_1fr_152px_112px_112px_96px_116px] items-center gap-3 bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground min-w-205">
                     <span className="w-9" />
                     <span>Hạng giải</span>
                     <span className="text-right">Giá trị thưởng</span>
@@ -202,7 +202,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                         render={({ field }) => (
                           <FormItem>
                             <div
-                              className={`grid grid-cols-[auto_1fr_152px_112px_112px_96px_116px] items-center gap-3 px-6 py-3 transition-colors hover:bg-muted/20 min-w-[820px] ${
+                              className={`grid grid-cols-[auto_1fr_152px_112px_112px_96px_116px] items-center gap-3 px-6 py-3 transition-colors hover:bg-muted/20 min-w-205 ${
                                 idx < PRIZE_FIELDS.length - 1 ? "border-b" : ""
                               }`}
                             >
@@ -296,7 +296,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
 
                 <div className="rounded-lg border overflow-hidden">
                   {/* Header */}
-                  <div className="grid grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground min-w-[520px]">
+                  <div className="grid grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground min-w-130">
                     <span>Hạng giải</span>
                     <span className="text-right">Xác suất</span>
                     <span className="text-right">Giá trị</span>
@@ -324,7 +324,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                     return (
                       <div
                         key={row.tier}
-                        className={`grid grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 px-6 py-3 text-xs transition-colors hover:bg-muted/20 min-w-[520px] ${
+                        className={`grid grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 px-6 py-3 text-xs transition-colors hover:bg-muted/20 min-w-130 ${
                           idx < oddsTable.length - 1 ? "border-b" : ""
                         }`}
                       >
@@ -369,7 +369,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                   })}
 
                   {/* Total row */}
-                  <div className="grid grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 rounded-b-md border-t-2 bg-muted/30 px-6 py-2.5 text-xs font-semibold uppercase tracking-wider min-w-[520px]">
+                  <div className="grid grid-cols-[1fr_104px_116px_104px_84px] items-center gap-3 rounded-b-md border-t-2 bg-muted/30 px-6 py-2.5 text-xs font-semibold uppercase tracking-wider min-w-130">
                     <span>Tổng cộng</span>
                     <span />
                     <span />

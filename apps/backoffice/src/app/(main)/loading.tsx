@@ -8,8 +8,8 @@ export default function MainLoading() {
           <Skeleton key={i} className="h-24 rounded-lg" />
         ))}
       </div>
-      <Skeleton className="h-[320px] w-full rounded-lg" />
-      <Skeleton className="h-[400px] w-full rounded-lg" />
+      <Skeleton className="h-80 w-full rounded-lg" />
+      <Skeleton className="h-100 w-full rounded-lg" />
     </div>
   );
 }

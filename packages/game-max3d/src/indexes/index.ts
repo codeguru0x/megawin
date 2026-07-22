@@ -159,10 +159,10 @@ export const MAX3D_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: Max3dCollections.Draws,
-    key: { status: 1, drawId: 1 },
-    options: { name: "idx_status_drawId" },
+    key: { status: 1, drawId: -1 },
+    options: { name: "idx_status_drawId_desc" },
     purpose:
-      "Settle order guard: findUnfinishedDrawBefore (status ∈ 6 trạng thái chưa hoàn thành + drawId < T) — ESR equality+range, IXSCAN không scan kỳ Settled/Void cũ",
+      "Settle order guard: findUnfinishedDrawBefore (status ∈ 6 trạng thái chưa hoàn thành + drawId < T) — ESR equality+range, IXSCAN không scan kỳ Settled/Void cũ. Đồng thời phục vụ getUnfinishedDraws (kỳ active dashboard).",
   },
   {
     collection: Max3dCollections.Draws,

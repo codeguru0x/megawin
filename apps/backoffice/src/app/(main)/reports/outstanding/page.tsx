@@ -211,7 +211,7 @@ function SystemOutstandingContent() {
               ))}
             </div>
           ) : rows.length === 0 ? (
-            <div className="flex h-[200px] flex-col items-center justify-center gap-1 text-center">
+            <div className="flex h-50 flex-col items-center justify-center gap-1 text-center">
               <p className="text-sm font-medium text-muted-foreground">
                 Không có draw active nào trên hệ thống.
               </p>

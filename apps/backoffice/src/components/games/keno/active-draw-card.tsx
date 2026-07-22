@@ -24,7 +24,7 @@ import {
   formatNumber,
 } from "@megawin/shared/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { KenoCurrentDrawInfo } from "@megawin/game-keno-application/use-cases/draws";
+import type { CurrentDrawInfo } from "@megawin/game-keno-application/use-cases/draws";
 
 // ─── Status → visual mapping ─────────────────────────────────────────────────
 // Keno dùng tông màu orange/sky — theme được thiết kế riêng cho game quay số nhanh
@@ -154,7 +154,7 @@ function getStatusIcon(status: string) {
 
 // ─── Primary Draw Card ────────────────────────────────────────────────────────
 
-export function KenoPrimaryDrawCard({ draw }: { draw: KenoCurrentDrawInfo }) {
+export function KenoPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
   const status = draw.status;
   const vis = STATUS_VISUALS[status] ?? DEFAULT_VISUAL;
   const drawTime = formatVNTime(new Date(draw.drawTime));
@@ -219,7 +219,6 @@ export function KenoPrimaryDrawCard({ draw }: { draw: KenoCurrentDrawInfo }) {
             </div>
           </div>
         </div>
-
         {/* Schedule chips */}
         <div className="flex items-center gap-4 flex-wrap">
           {draw.sales.openAt && (
@@ -276,8 +275,8 @@ export function KenoPrimaryDrawCard({ draw }: { draw: KenoCurrentDrawInfo }) {
             </TooltipContent>
           </Tooltip>
         </div>
-
-        {/* Metrics */}        {showStats && (
+        {/* Metrics */}{" "}
+        {showStats && (
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex items-center gap-3 rounded-xl border bg-white/80 dark:bg-card p-3">
               <div className="flex size-8 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50">
@@ -303,7 +302,6 @@ export function KenoPrimaryDrawCard({ draw }: { draw: KenoCurrentDrawInfo }) {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
@@ -311,7 +309,7 @@ export function KenoPrimaryDrawCard({ draw }: { draw: KenoCurrentDrawInfo }) {
 
 // ─── Queue Draw Card ──────────────────────────────────────────────────────────
 
-export function KenoQueueDrawCard({ draw }: { draw: KenoCurrentDrawInfo }) {
+export function KenoQueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
   const status = draw.status;
   const vis = STATUS_VISUALS[status] ?? DEFAULT_VISUAL;
   const drawTime = formatVNTime(new Date(draw.drawTime));

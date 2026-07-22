@@ -11,8 +11,8 @@
  */
 
 import { ApiGatewayUseCase } from "@megawin/app-core/use-cases";
+import type { DrawEntity } from "@megawin/game-max3dpro/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "../../infras/repos/draw-repo";
 import type {
   PlayerListDrawResultsInput,
   PlayerListDrawResultsOutput,

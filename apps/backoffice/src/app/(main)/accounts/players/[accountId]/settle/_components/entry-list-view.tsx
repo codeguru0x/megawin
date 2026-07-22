@@ -80,7 +80,7 @@ export function EntryListView({
   if (isError) {
     return (
       <Card className="gap-0 py-0">
-        <CardContent className="flex h-[160px] items-center justify-center">
+        <CardContent className="flex h-40 items-center justify-center">
           <p className="text-sm text-destructive">Không thể tải danh sách entries.</p>
         </CardContent>
       </Card>
@@ -90,7 +90,7 @@ export function EntryListView({
   if (!entries?.length) {
     return (
       <Card className="gap-0 py-0">
-        <CardContent className="flex h-[160px] items-center justify-center">
+        <CardContent className="flex h-40 items-center justify-center">
           <p className="text-sm text-muted-foreground">Không có entry nào cho kỳ quay này.</p>
         </CardContent>
       </Card>

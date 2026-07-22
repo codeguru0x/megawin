@@ -357,7 +357,7 @@ export function JackpotsSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       {Array.from({ length: 3 }).map((_, i) => (
-        <Skeleton key={i} className="h-[200px] rounded-2xl" />
+        <Skeleton key={i} className="h-50 rounded-2xl" />
       ))}
     </div>
   );

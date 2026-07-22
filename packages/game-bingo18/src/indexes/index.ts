@@ -149,10 +149,11 @@ export const BINGO18_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: Bingo18Collections.Draws,
-    key: { status: 1, drawId: 1 },
-    options: { name: "idx_status_drawId" },
+    key: { status: 1, drawId: -1 },
+    options: { name: "idx_status_drawId_desc" },
     purpose:
-      "Settle order guard: findUnfinishedDrawBefore (status ∈ 6 trạng thái chưa hoàn thành + drawId < T) — ESR equality+range, IXSCAN không scan kỳ Settled/Void cũ",
+      "Settle order guard: findUnfinishedDrawBefore (status ∈ 6 trạng thái chưa hoàn thành + drawId < T) — ESR equality+range, IXSCAN không scan kỳ Settled/Void cũ. " +
+      "Đồng thời phục vụ getUnfinishedDraws (status $in DRAW_UNFINISHED_STATUSES, sort drawId desc) — nguồn dữ liệu chung cho GetCurrentDraw + GetDrawSelector, không lookback ngày.",
   },
   {
     collection: Bingo18Collections.Draws,

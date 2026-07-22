@@ -522,7 +522,7 @@ function AddTenantDialog({
             />
           </div>
 
-          <ScrollArea className="h-[260px] rounded-lg border">
+          <ScrollArea className="h-65 rounded-lg border">
             {isLoadingOptions && (
               <div className="space-y-1 p-2">
                 {Array.from({ length: 4 }).map((_, i) => (

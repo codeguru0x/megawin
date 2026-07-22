@@ -17,7 +17,7 @@
 
 import { createContext, useContext, useCallback, type ReactNode } from "react";
 import { useQueryState } from "nuqs";
-import { DrawStatus } from "@megawin/game-core/entities";
+import { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
 import {
   useDrawSelectorList,
   useDrawDetail,
@@ -67,7 +67,10 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
 
   // Auto-select kỳ active nếu không có selectedDrawId
   const effectiveDrawId =
-    selectedDrawId || draws.find((d) => d.group === "active")?.drawId || draws[0]?.drawId || "";
+    selectedDrawId ||
+    draws.find((d) => d.group === DrawSelectorGroup.Active)?.drawId ||
+    draws[0]?.drawId ||
+    "";
 
   // Luôn fetch draw detail cho effectiveDrawId — dù trong list hay kỳ cũ
   const {
@@ -110,7 +113,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
           drawResultAt: remoteDraw.result?.publishedAt as unknown as string | undefined,
           status: remoteDraw.status,
           financialDate: remoteDraw.financialDate ?? remoteDraw.drawDate,
-          group: "recent" as const,
+          group: DrawSelectorGroup.Recent,
           // High-water mark + mốc result mới — BẮT BUỘC có để nút "Kết sổ lại"
           // hiển thị đúng cho kỳ historical (không nằm trong selector list).
           settledAt: remoteDraw.settledAt as unknown as string | undefined,
@@ -123,7 +126,8 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   const status = draw?.status ?? remoteDraw?.status;
   const isSettled = status === DrawStatus.Settled;
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
-  const isActiveForRefresh = !isHistorical && draw?.group === "active" && !isSettled;
+  const isActiveForRefresh =
+    !isHistorical && draw?.group === DrawSelectorGroup.Active && !isSettled;
 
   const opsParams: OpsQueryParams = {
     drawId: effectiveDrawId,
@@ -133,7 +137,8 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   const onSelectDraw = useCallback(
     (drawId: string) => {
       // Khi chọn active draw → xoá param khỏi URL để giữ URL gọn
-      const activeDrawId = draws.find((d) => d.group === "active")?.drawId || draws[0]?.drawId;
+      const activeDrawId =
+        draws.find((d) => d.group === DrawSelectorGroup.Active)?.drawId || draws[0]?.drawId;
       setSelectedDrawId(drawId === activeDrawId ? null : drawId);
     },
     [draws, setSelectedDrawId],

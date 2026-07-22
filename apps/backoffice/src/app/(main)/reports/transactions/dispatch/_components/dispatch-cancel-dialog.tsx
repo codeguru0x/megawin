@@ -69,7 +69,7 @@ export function DispatchCancelDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && !isPending && onClose()}>
-      <DialogContent className="sm:max-w-[440px]">
+      <DialogContent className="sm:max-w-110">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white shadow-sm">

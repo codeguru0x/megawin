@@ -118,7 +118,7 @@ export function AuditLogsFilterBar() {
           }}
           onBlur={() => setActor(actorInput)}
           placeholder="Người thực hiện (tên / ID)"
-          className="h-8 w-[200px] pl-8 text-xs"
+          className="h-8 w-50 pl-8 text-xs"
         />
       </div>
 
@@ -159,7 +159,7 @@ export function AuditLogsFilterBar() {
       </Select>
 
       <Select value={game || "all"} onValueChange={(v) => setGame(v === "all" ? "" : v)}>
-        <SelectTrigger size="sm" className="h-8 w-[120px] text-xs">
+        <SelectTrigger size="sm" className="h-8 w-30 text-xs">
           <SelectValue placeholder="Game" />
         </SelectTrigger>
         <SelectContent>
@@ -176,7 +176,7 @@ export function AuditLogsFilterBar() {
         value={category ?? "all"}
         onValueChange={(v) => setCategory(v === "all" ? null : (v as AuditCategory))}
       >
-        <SelectTrigger size="sm" className="h-8 w-[120px] text-xs">
+        <SelectTrigger size="sm" className="h-8 w-30 text-xs">
           <SelectValue placeholder="Nhóm" />
         </SelectTrigger>
         <SelectContent>
@@ -207,7 +207,7 @@ export function AuditLogsFilterBar() {
         value={targetType ?? "all"}
         onValueChange={(v) => setTargetType(v === "all" ? null : (v as AuditTargetType))}
       >
-        <SelectTrigger size="sm" className="h-8 w-[140px] text-xs">
+        <SelectTrigger size="sm" className="h-8 w-35 text-xs">
           <SelectValue placeholder="Loại đối tượng" />
         </SelectTrigger>
         <SelectContent>
@@ -224,7 +224,7 @@ export function AuditLogsFilterBar() {
         value={status ?? "all"}
         onValueChange={(v) => setStatus(v === "all" ? null : (v as AuditStatus))}
       >
-        <SelectTrigger size="sm" className="h-8 w-[120px] text-xs">
+        <SelectTrigger size="sm" className="h-8 w-30 text-xs">
           <SelectValue placeholder="Kết quả" />
         </SelectTrigger>
         <SelectContent>

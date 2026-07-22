@@ -43,7 +43,7 @@ export interface HighFreqGameSummary {
   gameProduct: string;
   /** Số kỳ đang diễn ra (active). */
   activeCount: number;
-  /** Số kỳ đã hoàn thành gần đây (settled/voided 48h). */
+  /** Số kỳ đã hoàn thành gần đây (N phiên gần nhất). */
   settledCount: number;
   /** Số kỳ chờ mở (scheduled). */
   scheduledCount: number;

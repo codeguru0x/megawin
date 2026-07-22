@@ -119,10 +119,10 @@ function BatchProgressCard({
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Skeleton className="h-[92px]" />
-        <Skeleton className="h-[92px]" />
-        <Skeleton className="h-[92px]" />
-        <Skeleton className="h-[92px]" />
+        <Skeleton className="h-23" />
+        <Skeleton className="h-23" />
+        <Skeleton className="h-23" />
+        <Skeleton className="h-23" />
       </div>
     );
   }
@@ -130,7 +130,7 @@ function BatchProgressCard({
   if (!data) {
     return (
       <Card>
-        <CardContent className="flex h-[120px] items-center justify-center text-sm text-muted-foreground">
+        <CardContent className="flex h-30 items-center justify-center text-sm text-muted-foreground">
           Không có dữ liệu batch.
         </CardContent>
       </Card>

@@ -1,5 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
+import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository as Mega645DrawRepo } from "@megawin/game-mega645-application/repos";
 import { DrawRepository as Power655DrawRepo } from "@megawin/game-power655-application/repos";
 import { DrawRepository as Lotto535DrawRepo } from "@megawin/game-lotto535-application/repos";
@@ -14,8 +15,11 @@ import type {
   GetDashboardDrawsOutput,
 } from "./types";
 
-/** Statuses mà dashboard coi là "active" — đang diễn ra, chưa settle/void xong. */
-const ACTIVE_STATUSES = [
+/**
+ * Statuses mà dashboard coi là "active" — đang diễn ra, chưa settle/void xong.
+ * Subset của `UnfinishedDrawStatus`, loại `Scheduled` (xử lý riêng ở nhóm scheduled).
+ */
+const ACTIVE_STATUSES: readonly UnfinishedDrawStatus[] = [
   DrawStatus.SalesOpen,
   DrawStatus.SalesClosed,
   DrawStatus.Published,
@@ -23,20 +27,17 @@ const ACTIVE_STATUSES = [
   DrawStatus.Voiding,
 ];
 
-/** Statuses đã hoàn thành — settle hoặc void. */
-const COMPLETED_STATUSES = [DrawStatus.Settled, DrawStatus.Void];
-
 /** Games tần suất cao — gộp summary thay vì list từng kỳ. */
 const HIGH_FREQ_GAMES = new Set<string>([GameProduct.Keno, GameProduct.Bingo18]);
 
-/** Lookback 2 ngày cho settled draws. */
-const SETTLED_LOOKBACK_DAYS = 2;
+/** Số kỳ settled/void gần nhất hiển thị cho games tần suất thấp (lottery). */
+const SETTLED_RECENT_LIMIT = 5;
+
+/** Số kỳ settled/void gần nhất dùng để đếm cho games tần suất cao (chỉ dùng cho count). */
+const HIGH_FREQ_SETTLED_LIMIT = 30;
 
 /** Giới hạn scheduled draws cho mỗi game (tránh quá nhiều dữ liệu). */
 const SCHEDULED_LIMIT = 5;
-
-/** Giới hạn settled draws cho high-freq games (chỉ dùng cho count). */
-const HIGH_FREQ_SETTLED_LIMIT = 30;
 
 /**
  * Lấy draw timeline cross-game cho dashboard.
@@ -45,9 +46,12 @@ const HIGH_FREQ_SETTLED_LIMIT = 30;
  * Không thể đặt ở game-core-application (vi phạm dependency direction).
  *
  * Gọi song song 7 game × 3 status groups qua Promise.allSettled:
- *   - Active: đang mở bán / đóng bán / published / settling / voiding
- *   - Settled: settled hoặc void trong 48h gần nhất
- *   - Scheduled: chưa mở bao giờ, sắp tới
+ *   - Active: đang mở bán / đóng bán / published / settling / voiding — `getUnfinishedDraws`,
+ *     KHÔNG lookback theo ngày nên không bỏ sót kỳ kẹt cũ (root cause bug đã fix ở
+ *     GetCurrentDraw/GetDrawSelector, áp dụng lại ở đây).
+ *   - Settled: N kỳ settled/void gần nhất theo SỐ PHIÊN (`getRecentCompletedDraws`), không lookback
+ *     theo ngày — tránh rỗng cho game tần suất thấp (quay 1-3 lần/tuần).
+ *   - Scheduled: chưa mở bao giờ, sắp tới — `getUnfinishedDraws([Scheduled], sort asc + limit)`.
  *
  * Keno + Bingo18 → HighFreqGameSummary (aggregate count, không list từng kỳ).
  * 5 game còn lại → DrawTimelineEvent[] chi tiết.
@@ -104,24 +108,21 @@ export class GetDashboardDrawsUseCase extends NextApiUseCase<void, GetDashboardD
   private async fetchGameDraws(
     game: string,
     repo: {
-      getActiveDraws: (
-        statuses: string[],
-        lookback?: number,
-        opts?: { limit?: number },
+      getUnfinishedDraws: (
+        statuses: readonly UnfinishedDrawStatus[],
+        opts?: { sort?: Record<string, 1 | -1>; limit?: number },
       ) => Promise<DrawLike[]>;
+      getRecentCompletedDraws: (limit?: number) => Promise<DrawLike[]>;
     },
   ): Promise<GameDrawResult> {
     const isHighFreq = HIGH_FREQ_GAMES.has(game);
 
     // Chạy song song 3 queries cho mỗi game
     const [activeDraws, settledDraws, scheduledDraws] = await Promise.all([
-      repo.getActiveDraws(ACTIVE_STATUSES),
-      repo.getActiveDraws(
-        COMPLETED_STATUSES,
-        SETTLED_LOOKBACK_DAYS,
-        isHighFreq ? { limit: HIGH_FREQ_SETTLED_LIMIT } : undefined,
-      ),
-      repo.getActiveDraws([DrawStatus.Scheduled], undefined, {
+      repo.getUnfinishedDraws(ACTIVE_STATUSES),
+      repo.getRecentCompletedDraws(isHighFreq ? HIGH_FREQ_SETTLED_LIMIT : SETTLED_RECENT_LIMIT),
+      repo.getUnfinishedDraws([DrawStatus.Scheduled], {
+        sort: { drawId: 1 },
         limit: isHighFreq ? 10 : SCHEDULED_LIMIT,
       }),
     ]);

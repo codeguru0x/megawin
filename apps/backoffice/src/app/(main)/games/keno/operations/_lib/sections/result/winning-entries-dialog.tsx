@@ -45,7 +45,7 @@ function BoardChip({ board }: { board: WinningEntryBoardDetail }) {
         {board.boardNo}
       </span>
       <div className="flex flex-col gap-0.5">
-        <div className="flex items-center gap-0.5 flex-wrap max-w-[200px]">
+        <div className="flex items-center gap-0.5 flex-wrap max-w-50">
           {board.numbers?.slice(0, board.pickCount ?? 0).map((n, i) => (
             <KenoNumberBall key={i} number={Number(n)} size="sm" />
           ))}
@@ -303,7 +303,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
                   <TableHead className="pl-6 w-12 text-center">#</TableHead>
                   <TableHead className="w-44">Người chơi</TableHead>
                   <TableHead className="w-24 text-right">Tiền cược</TableHead>
-                  <TableHead className="min-w-[240px]">Boards / Side bets</TableHead>
+                  <TableHead className="min-w-60">Boards / Side bets</TableHead>
                   <TableHead className="w-40">Chi tiết thưởng</TableHead>
                   <TableHead className="w-32 text-right">Tổng thưởng</TableHead>
                   <TableHead className="pr-6 w-36">Thời gian</TableHead>

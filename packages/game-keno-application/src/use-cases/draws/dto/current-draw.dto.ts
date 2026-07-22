@@ -2,11 +2,7 @@
 // GetCurrentDraw / GetActiveDraws
 // ─────────────────────────────────────────────
 
-export interface GetCurrentDrawInput {
-  allowStatuses?: string[];
-}
-
-export interface KenoCurrentDrawInfo {
+export interface CurrentDrawInfo {
   drawId: string;
   drawDate: string;
   drawNo: number;
@@ -27,6 +23,6 @@ export interface KenoCurrentDrawInfo {
 }
 
 export interface GetCurrentDrawOutput {
-  currentDraw: KenoCurrentDrawInfo | null;
-  activeDraws: KenoCurrentDrawInfo[];
+  currentDraw: CurrentDrawInfo | null;
+  activeDraws: CurrentDrawInfo[];
 }

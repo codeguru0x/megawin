@@ -141,10 +141,10 @@ export const MEGA645_INDEXES: readonly IndexSpec[] = [
   },
   {
     collection: Mega645Collections.Draws,
-    key: { status: 1, drawId: 1 },
-    options: { name: "idx_status_drawId" },
+    key: { status: 1, drawId: -1 },
+    options: { name: "idx_status_drawId_desc" },
     purpose:
-      "Resettle cascade guard: findPendingResettleBeforeDraw (status ∈ {Published,Settling} + drawId < T) — ESR equality+range, IXSCAN không scan kỳ Settled cũ",
+      "Resettle cascade guard: findPendingResettleBeforeDraw (status ∈ {Published,Settling} + drawId < T) — ESR equality+range, IXSCAN không scan kỳ Settled cũ. Đồng thời phục vụ getUnfinishedDraws (single source of truth kỳ đang vận hành).",
   },
   {
     collection: Mega645Collections.Draws,

@@ -10,40 +10,22 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
-import { DrawStatus } from "@megawin/game-core/entities";
+import { sortBy } from "@megawin/shared/utils";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type { DrawEntity } from "@megawin/game-max3d/entities";
-import type {
-  GetCurrentDrawInput,
-  GetCurrentDrawOutput,
-  CurrentDrawInfo,
-} from "./dto/current-draw.dto";
+import type { GetCurrentDrawOutput, CurrentDrawInfo } from "./dto/current-draw.dto";
 
-const ACTIVE_STATUSES = [
-  DrawStatus.Scheduled,
-  DrawStatus.SalesOpen,
-  DrawStatus.SalesClosed,
-  DrawStatus.Published,
-  DrawStatus.Settling,
-];
-
-export class GetCurrentDrawUseCase extends NextApiUseCase<
-  GetCurrentDrawInput,
-  GetCurrentDrawOutput
-> {
+export class GetCurrentDrawUseCase extends NextApiUseCase<void, GetCurrentDrawOutput> {
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(input: GetCurrentDrawInput): Promise<GetCurrentDrawOutput> {
-    const allowStatuses = input.allowStatuses ?? ACTIVE_STATUSES;
-
-    // Max 3D quay T2/T4/T6 — khoảng cách tối đa giữa 2 kỳ = 3 ngày (T6→T2).
-    // lookbackDays = 7 đảm bảo không bỏ sót draws active chưa settle từ tuần trước.
-    const [activeDraws, lastSettled] = await Promise.all([
-      this.drawRepo.getActiveDraws(allowStatuses, 7),
+  protected async execute(): Promise<GetCurrentDrawOutput> {
+    const [unfinishedDraws, lastSettled] = await Promise.all([
+      this.drawRepo.getUnfinishedDraws(),
       this.drawRepo.getLatestSettledDraw(),
     ]);
 
-    const mapped = activeDraws.map(mapDrawInfo);
+    // getUnfinishedDraws trả về DESC (drawId:-1); re-sort ASC để giữ thứ tự hiển thị cũ→mới.
+    const mapped = sortBy(unfinishedDraws, (d) => d.drawId).map(mapDrawInfo);
 
     return {
       currentDraw: mapped[0] ?? null,

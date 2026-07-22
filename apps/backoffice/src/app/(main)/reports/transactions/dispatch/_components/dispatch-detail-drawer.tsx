@@ -49,7 +49,7 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-[680px]">
+      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-170">
         <SheetHeader className="border-b px-5 py-4">
           <SheetTitle className="text-lg font-semibold">Chi tiết dispatch order</SheetTitle>
           <SheetDescription className="text-xs text-muted-foreground">
@@ -59,7 +59,7 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
 
         <div className="flex-1 overflow-y-auto">
           {isLoading && (
-            <div className="flex h-[240px] items-center justify-center gap-2 text-muted-foreground">
+            <div className="flex h-60 items-center justify-center gap-2 text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
               <span className="text-sm">Đang tải…</span>
             </div>
@@ -317,7 +317,7 @@ function PayloadSection({ title, json }: { title: string; json: string }) {
         {title}
       </h3>
       {json ? (
-        <pre className="max-h-[360px] overflow-auto rounded-md border bg-muted/40 p-3 font-mono text-xs leading-relaxed">
+        <pre className="max-h-90 overflow-auto rounded-md border bg-muted/40 p-3 font-mono text-xs leading-relaxed">
           {json}
         </pre>
       ) : (

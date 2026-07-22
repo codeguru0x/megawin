@@ -47,7 +47,7 @@ export function MyActivityFilterBar() {
       />
 
       <Select value={action || "all"} onValueChange={(v) => setAction(v === "all" ? "" : v)}>
-        <SelectTrigger size="sm" className="h-8 w-[220px] text-xs">
+        <SelectTrigger size="sm" className="h-8 w-55 text-xs">
           <SelectValue placeholder="Hành động" />
         </SelectTrigger>
         <SelectContent>
@@ -64,7 +64,7 @@ export function MyActivityFilterBar() {
         value={status ?? "all"}
         onValueChange={(v) => setStatus(v === "all" ? null : (v as AuditStatus))}
       >
-        <SelectTrigger size="sm" className="h-8 w-[120px] text-xs">
+        <SelectTrigger size="sm" className="h-8 w-30 text-xs">
           <SelectValue placeholder="Kết quả" />
         </SelectTrigger>
         <SelectContent>

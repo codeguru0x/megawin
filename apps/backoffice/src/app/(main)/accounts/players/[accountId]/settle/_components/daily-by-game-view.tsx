@@ -62,7 +62,7 @@ export function DailyByGameView({ accountId, from, to, game, onRowClick }: Daily
   if (isError) {
     return (
       <Card className="gap-0 py-0">
-        <CardContent className="flex h-[160px] items-center justify-center">
+        <CardContent className="flex h-40 items-center justify-center">
           <p className="text-sm text-destructive">Không thể tải dữ liệu.</p>
         </CardContent>
       </Card>
@@ -72,7 +72,7 @@ export function DailyByGameView({ accountId, from, to, game, onRowClick }: Daily
   if (records.length === 0) {
     return (
       <Card className="gap-0 py-0">
-        <CardContent className="flex h-[160px] flex-col items-center justify-center gap-1 text-center">
+        <CardContent className="flex h-40 flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm font-medium text-muted-foreground">Chưa có dữ liệu</p>
           <p className="text-xs text-muted-foreground">
             Không có dữ liệu trong khoảng thời gian đã chọn.

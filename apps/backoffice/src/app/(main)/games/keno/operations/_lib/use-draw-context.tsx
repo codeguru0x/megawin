@@ -4,15 +4,15 @@
  * Keno Operations — Draw Selection Context
  *
  * Cung cấp draw đang được chọn và opsParams cho toàn trang operations.
- * Keno khác Mega 6/45: nhiều kỳ/ngày (~120) → group active/upcoming/recent.
+ * Keno khác Mega 6/45: nhiều kỳ/ngày (~120) → group active/future/recent.
  * drawNo có ý nghĩa (001-120) — dùng kết hợp với drawDate để hiển thị.
  *
- * Auto-select: ưu tiên kỳ đang active, fallback kỳ upcoming đầu tiên.
+ * Auto-select: ưu tiên kỳ đang active, fallback kỳ future đầu tiên.
  */
 
 import { createContext, useContext, useCallback, type ReactNode } from "react";
 import { useQueryState } from "nuqs";
-import { DrawStatus } from "@megawin/game-core/entities";
+import { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
 import {
   useDrawSelectorList,
   useDrawDetail,
@@ -49,11 +49,11 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
 
   const selectedInList = selectedDrawId ? draws.some((d) => d.drawId === selectedDrawId) : false;
 
-  // Auto-select: kỳ active trước, sau đó upcoming, cuối cùng bất kỳ kỳ đầu tiên
+  // Auto-select: kỳ active trước, sau đó future, cuối cùng bất kỳ kỳ đầu tiên
   const effectiveDrawId =
     selectedDrawId ||
-    draws.find((d) => d.group === "active")?.drawId ||
-    draws.find((d) => d.group === "upcoming")?.drawId ||
+    draws.find((d) => d.group === DrawSelectorGroup.Active)?.drawId ||
+    draws.find((d) => d.group === DrawSelectorGroup.Future)?.drawId ||
     draws[0]?.drawId ||
     "";
 
@@ -96,7 +96,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
           settledAt: remoteDraw.settledAt as unknown as string | undefined,
           status: remoteDraw.status,
           financialDate: remoteDraw.financialDate ?? remoteDraw.drawDate,
-          group: "recent" as const,
+          group: DrawSelectorGroup.Recent,
         }
       : undefined;
   const draw = drawFromSelector ?? drawFromRemote;
@@ -104,7 +104,8 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   const status = draw?.status ?? remoteDraw?.status;
   const isSettled = status === DrawStatus.Settled;
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
-  const isActiveForRefresh = !isHistorical && draw?.group === "active" && !isSettled;
+  const isActiveForRefresh =
+    !isHistorical && draw?.group === DrawSelectorGroup.Active && !isSettled;
 
   const opsParams: OpsQueryParams = {
     drawId: effectiveDrawId,
@@ -115,8 +116,8 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
     (drawId: string) => {
       // Khi chọn active draw (hoặc clear selection) → xoá param khỏi URL để giữ URL gọn
       const activeDrawId =
-        draws.find((d) => d.group === "active")?.drawId ||
-        draws.find((d) => d.group === "upcoming")?.drawId ||
+        draws.find((d) => d.group === DrawSelectorGroup.Active)?.drawId ||
+        draws.find((d) => d.group === DrawSelectorGroup.Future)?.drawId ||
         draws[0]?.drawId;
       setSelectedDrawId(drawId === activeDrawId ? null : drawId);
     },

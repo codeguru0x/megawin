@@ -53,7 +53,7 @@ const BASE = "/keno/operations";
 
 /**
  * Danh sách kỳ quay cho dropdown chọn kỳ.
- * Keno: ~120 kỳ/ngày — group active/upcoming/recent.
+ * Keno: ~120 kỳ/ngày — group active/future/recent.
  * Refetch mỗi 15s (tần suất cao hơn do kỳ ngắn ~8 phút).
  */
 export function useDrawSelectorList() {

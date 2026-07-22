@@ -336,7 +336,7 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
               <span className="text-right">Người chơi</span>
               <span className="text-right">Doanh thu</span>
             </div>
-            <div className="divide-y divide-border/50 max-h-[280px] overflow-y-auto">
+            <div className="divide-y divide-border/50 max-h-70 overflow-y-auto">
               {tenants.map((t, i) => (
                 <div
                   key={t.tenantId}

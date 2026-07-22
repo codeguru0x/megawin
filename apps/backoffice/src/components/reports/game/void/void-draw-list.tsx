@@ -35,7 +35,7 @@ export function VoidDrawList({ data, onRowClick }: VoidDrawListProps) {
   if (data.length === 0) {
     return (
       <Card className="gap-0 py-0">
-        <CardContent className="flex h-[200px] flex-col items-center justify-center text-center">
+        <CardContent className="flex h-50 flex-col items-center justify-center text-center">
           <p className="text-sm text-muted-foreground">
             Không có kỳ quay void nào trong khoảng thời gian đã chọn.
           </p>

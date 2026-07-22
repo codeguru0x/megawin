@@ -14,11 +14,7 @@ export { VoidDrawUseCase } from "./void-draw";
 export { UpdateScheduleUseCase } from "./update-schedule";
 export { GetDrawDetailUseCase } from "./get-draw-detail";
 
-export type {
-  GetCurrentDrawInput,
-  GetCurrentDrawOutput,
-  KenoCurrentDrawInfo,
-} from "./dto/current-draw.dto";
+export type { GetCurrentDrawOutput, CurrentDrawInfo } from "./dto/current-draw.dto";
 
 export type {
   CreateDrawInput,

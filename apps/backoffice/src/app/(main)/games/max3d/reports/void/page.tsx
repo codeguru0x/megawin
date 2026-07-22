@@ -17,7 +17,7 @@ export default function Max3DVoidReportsPage() {
           <Skeleton className="h-12 w-full rounded-lg" />
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-[72px] w-full rounded-xl" />
+              <Skeleton key={i} className="h-18 w-full rounded-xl" />
             ))}
           </div>
           <Skeleton className="h-64 w-full rounded-xl" />

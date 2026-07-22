@@ -5,7 +5,7 @@ import { apiClient } from "@megawin/next/client";
 import type { DrawStatus } from "@megawin/game-core/entities";
 import { bingo18Keys } from "@/lib/query-keys";
 
-export interface Bingo18CurrentDrawInfo {
+export interface CurrentDrawInfo {
   drawId: string;
   drawNo: number;
   drawDate: string;
@@ -52,7 +52,7 @@ export interface Bingo18DrawSummary {
 }
 
 interface GetCurrentDrawOutput {
-  activeDraws: Bingo18CurrentDrawInfo[];
+  activeDraws: CurrentDrawInfo[];
 }
 
 interface ListDrawsOutput {

@@ -18,7 +18,7 @@ function ConfigSkeleton() {
   return (
     <div className="space-y-4">
       <Skeleton className="h-10 w-80 rounded-lg" />
-      <Skeleton className="h-[420px] rounded-xl" />
+      <Skeleton className="h-105 rounded-xl" />
     </div>
   );
 }

@@ -105,7 +105,7 @@ export default async function GuideDocPage({ params }: PageProps) {
         <DocPager prev={prev} next={next} />
       </article>
 
-      <aside className="hidden w-[220px] shrink-0 xl:block">
+      <aside className="hidden w-55 shrink-0 xl:block">
         <div className="sticky top-10">
           <TableOfContents items={toc} />
         </div>

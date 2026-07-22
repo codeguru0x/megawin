@@ -1,13 +1,6 @@
-import type { DrawStatus } from "@megawin/game-core/entities";
-
 // ─────────────────────────────────────────────
 // GetCurrentDraw
 // ─────────────────────────────────────────────
-
-export interface GetCurrentDrawInput {
-  /** Danh sách trạng thái cho phép khi truy vấn kỳ hiện tại (mặc định: tất cả trạng thái active). */
-  allowStatuses?: DrawStatus[];
-}
 
 export interface CurrentDrawInfo {
   /** ID duy nhất của kỳ quay. */

@@ -22,7 +22,7 @@ export function DocsSidebarShell() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden w-[260px] shrink-0 border-r lg:block">
+      <aside className="hidden w-65 shrink-0 border-r lg:block">
         <div className="sticky top-0 flex h-[calc(100dvh-3rem)] flex-col">
           <div className="border-b p-3">
             <DocsSearch />
@@ -42,7 +42,7 @@ export function DocsSidebarShell() {
               Mục lục
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[300px] p-0">
+          <SheetContent side="left" className="w-75 p-0">
             <SheetTitle className="sr-only">Điều hướng hướng dẫn</SheetTitle>
             <div className="border-b p-3">
               <DocsSearch />

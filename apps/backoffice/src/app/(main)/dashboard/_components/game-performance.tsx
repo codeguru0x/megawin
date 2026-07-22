@@ -138,7 +138,7 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
       <CardContent className="p-0">
         <div className="flex flex-col xl:flex-row">
           {/* ── Pie chart — cột trái ─────────────────────────────────── */}
-          <div className="flex shrink-0 flex-col items-center justify-center border-b px-4 pb-4 pt-1 xl:w-[260px] xl:border-b-0 xl:border-r xl:pb-4">
+          <div className="flex shrink-0 flex-col items-center justify-center border-b px-4 pb-4 pt-1 xl:w-65 xl:border-b-0 xl:border-r xl:pb-4">
             <div className="relative">
               <ResponsiveContainer width={220} height={220}>
                 <PieChart>

@@ -9,51 +9,32 @@
  */
 
 import { NextApiUseCase } from "@megawin/next/server";
-import { DrawStatus } from "@megawin/game-core/entities";
+import { sortBy } from "@megawin/shared/utils";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { JackpotCycleRepository } from "../../infras/repos/jackpot-cycle-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
-import type { DrawEntity } from "@megawin/game-lotto535/entities";;
-import type {
-  GetCurrentDrawInput,
-  GetCurrentDrawOutput,
-  CurrentDrawInfo,
-} from "./dto/current-draw.dto";
+import type { DrawEntity } from "@megawin/game-lotto535/entities";
+import type { GetCurrentDrawOutput, CurrentDrawInfo } from "./dto/current-draw.dto";
 
-const ACTIVE_STATUSES = [
-  DrawStatus.Scheduled,
-  DrawStatus.SalesOpen,
-  DrawStatus.SalesClosed,
-  DrawStatus.Published,
-  DrawStatus.Settling,
-];
-
-export class GetCurrentDrawUseCase extends NextApiUseCase<
-  GetCurrentDrawInput,
-  GetCurrentDrawOutput
-> {
+export class GetCurrentDrawUseCase extends NextApiUseCase<void, GetCurrentDrawOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly cycleRepo = new JackpotCycleRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  protected async execute(
-    input: GetCurrentDrawInput
-  ): Promise<GetCurrentDrawOutput> {
-    const allowStatuses = input.allowStatuses ?? ACTIVE_STATUSES;
+  protected async execute(): Promise<GetCurrentDrawOutput> {
+    const [unfinishedDraws, lastSettled, activeCycle, globalConfig] = await Promise.all([
+      this.drawRepo.getUnfinishedDraws(),
+      this.drawRepo.getLatestSettledDraw(),
+      this.cycleRepo.getActiveCycle(),
+      this.getGlobalConfig.run(),
+    ]);
 
-    const [activeDraws, lastSettled, activeCycle, globalConfig] =
-      await Promise.all([
-        this.drawRepo.getActiveDraws(allowStatuses),
-        this.drawRepo.getLatestSettledDraw(),
-        this.cycleRepo.getActiveCycle(),
-        this.getGlobalConfig.run(),
-      ]);
+    const jackpotCurrentAmount = activeCycle?.currentAmount ?? globalConfig.jackpot.seedAmount;
 
-    const jackpotCurrentAmount =
-      activeCycle?.currentAmount ?? globalConfig.jackpot.seedAmount;
-
-    const mapped = activeDraws.map((d) =>
-      mapDrawInfo(d, jackpotCurrentAmount, globalConfig.jackpot.splitThreshold)
+    // getUnfinishedDraws trả về DESC (drawId:-1); re-sort ASC để currentDraw (mapped[0]) là kỳ
+    // sớm nhất chưa đóng — không phải kỳ tương lai xa nhất khi có nhiều kỳ mở đồng thời.
+    const mapped = sortBy(unfinishedDraws, (d) => d.drawId).map((d) =>
+      mapDrawInfo(d, jackpotCurrentAmount, globalConfig.jackpot.splitThreshold),
     );
 
     return {
@@ -89,7 +70,7 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<
 function mapDrawInfo(
   draw: DrawEntity,
   jackpotCurrentAmount: number,
-  splitThreshold: number
+  splitThreshold: number,
 ): CurrentDrawInfo {
   return {
     drawId: draw.drawId,
@@ -102,8 +83,7 @@ function mapDrawInfo(
       closeAt: draw.sales.closeAt.toISOString(),
     },
     jackpotCurrentAmount,
-    splitCycleIntent:
-      jackpotCurrentAmount >= splitThreshold && draw.drawNo === 2,
+    splitCycleIntent: jackpotCurrentAmount >= splitThreshold && draw.drawNo === 2,
     stats: draw.stats
       ? {
           ticketEntryCount: draw.stats.ticketEntryCount,
