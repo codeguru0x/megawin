@@ -127,7 +127,7 @@ export function PlayersContent() {
         <>
           <div className="flex items-center gap-1 rounded-md bg-muted px-2 py-1">
             <Search className="size-3 text-muted-foreground" />
-            <span className="max-w-[140px] truncate font-mono text-xs text-foreground">
+            <span className="max-w-35 truncate font-mono text-xs text-foreground">
               {activeSearch}
             </span>
           </div>
@@ -188,7 +188,7 @@ export function PlayersContent() {
   // Tenant selector dùng chung — chỉ hiển thị khi không search
   const tenantSelector = !isSearchActive && (
     <Select value={activeTenantId} onValueChange={handleTenantChange} disabled={isLoadingOptions}>
-      <SelectTrigger className="h-7 w-auto max-w-[220px] border-0 bg-transparent px-1.5 text-xs font-medium shadow-none focus:ring-0">
+      <SelectTrigger className="h-7 w-auto max-w-55 border-0 bg-transparent px-1.5 text-xs font-medium shadow-none focus:ring-0">
         <SelectValue placeholder={isLoadingOptions ? "Đang tải..." : "Chọn đối tác"} />
       </SelectTrigger>
       <SelectContent>
@@ -268,12 +268,12 @@ function SearchResultCard({
       <CardContent className="px-0 pb-0 pt-0">
         {error && <p className="px-5 pb-2 text-sm text-destructive">{error.message}</p>}
         {isLoading ? (
-          <div className="flex h-[120px] items-center justify-center gap-2 text-muted-foreground">
+          <div className="flex h-30 items-center justify-center gap-2 text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
             <span className="text-sm">Đang tìm kiếm...</span>
           </div>
         ) : accounts.length === 0 ? (
-          <div className="flex h-[120px] flex-col items-center justify-center gap-1 text-center">
+          <div className="flex h-30 flex-col items-center justify-center gap-1 text-center">
             <SearchX className="size-8 text-muted-foreground/40" />
             <p className="text-sm font-medium text-muted-foreground">Không tìm thấy</p>
             <p className="text-xs text-muted-foreground">

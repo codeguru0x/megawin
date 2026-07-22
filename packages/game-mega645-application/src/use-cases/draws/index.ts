@@ -19,11 +19,7 @@ export type {
   DetectResettleBoundariesOutput,
 } from "../resettle/detect-boundaries";
 
-export type {
-  GetCurrentDrawInput,
-  GetCurrentDrawOutput,
-  CurrentDrawInfo,
-} from "./dto/current-draw.dto";
+export type { GetCurrentDrawOutput, CurrentDrawInfo } from "./dto/current-draw.dto";
 
 export type {
   CreateDrawsInput,

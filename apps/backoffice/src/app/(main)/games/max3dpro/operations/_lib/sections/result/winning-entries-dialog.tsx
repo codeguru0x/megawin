@@ -50,7 +50,7 @@ function BoardChip({ board }: { board: WinningEntryItem["boards"][number] }) {
         {board.boardNo}
       </span>
       <div className="flex flex-col gap-0.5">
-        <div className="flex items-center gap-1 flex-wrap max-w-[260px]">
+        <div className="flex items-center gap-1 flex-wrap max-w-65">
           {board.triplets.map((t, i) => (
             <TripletDisplay key={i} value={t} variant="special" size="sm" />
           ))}
@@ -277,7 +277,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
                   <TableHead className="pl-6 w-12 text-center">#</TableHead>
                   <TableHead className="w-44">Người chơi</TableHead>
                   <TableHead className="w-24 text-right">Tiền cược</TableHead>
-                  <TableHead className="min-w-[260px]">Bộ ba số</TableHead>
+                  <TableHead className="min-w-65">Bộ ba số</TableHead>
                   <TableHead className="w-48">Hạng giải trúng</TableHead>
                   <TableHead className="w-32 text-right">Tổng thưởng</TableHead>
                   <TableHead className="pr-6 w-36">Thời gian</TableHead>

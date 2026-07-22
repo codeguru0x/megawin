@@ -51,7 +51,7 @@ export function AuditLogsTable({
 }: AuditLogsTableProps) {
   if (isLoading) {
     return (
-      <div className="flex h-[240px] items-center justify-center gap-2 text-muted-foreground">
+      <div className="flex h-60 items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="size-4 animate-spin" />
         <span className="text-sm">Đang tải lịch sử…</span>
       </div>
@@ -60,7 +60,7 @@ export function AuditLogsTable({
 
   if (rows.length === 0) {
     return (
-      <div className="flex h-[240px] flex-col items-center justify-center gap-1 text-center">
+      <div className="flex h-60 flex-col items-center justify-center gap-1 text-center">
         <Inbox className="size-8 text-muted-foreground/40" />
         <p className="text-sm font-medium text-muted-foreground">Không có dữ liệu</p>
         <p className="text-xs text-muted-foreground">Thử nới khoảng thời gian hoặc xoá bộ lọc.</p>
@@ -75,10 +75,10 @@ export function AuditLogsTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-[170px] pl-5">Thời gian</TableHead>
-              <TableHead className="w-[220px]">Người thực hiện</TableHead>
-              <TableHead className="w-[280px]">Hành động</TableHead>
+              <TableHead className="w-55">Người thực hiện</TableHead>
+              <TableHead className="w-70">Hành động</TableHead>
               <TableHead>Đối tượng</TableHead>
-              <TableHead className="w-[120px] pr-5 text-center">Kết quả</TableHead>
+              <TableHead className="w-30 pr-5 text-center">Kết quả</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -1,17 +1,8 @@
-import type { DrawStatus } from "@megawin/game-core/entities";
 import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
 
 // ─────────────────────────────────────────────
 // GetCurrentDraw
 // ─────────────────────────────────────────────
-
-export interface GetCurrentDrawInput {
-  /**
-   * Cho phép trả draw ở các status cụ thể.
-   * Nếu không truyền, mặc định trả tất cả draw active.
-   */
-  allowStatuses?: DrawStatus[];
-}
 
 export interface CurrentDrawInfo {
   /** Mã định danh kỳ quay (format: MAX3DPRO-YYYYMMDD-NN). */

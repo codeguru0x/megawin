@@ -1,33 +1,27 @@
+/**
+ * Use Case: Get Current Draw (Keno)
+ *
+ * Lấy tất cả kỳ quay chưa hoàn thành (multi-draw support, tối đa 20 kỳ liên tiếp):
+ *   - activeDraws[]: tất cả kỳ unfinished sorted by drawId asc
+ *   - currentDraw: kỳ đầu tiên (backward compat)
+ *
+ * Keno không có Jackpot → không cần đọc jackpot cycle.
+ */
+
 import { NextApiUseCase } from "@megawin/next/server";
-import { DrawStatus } from "@megawin/game-core/entities";
+import { sortBy } from "@megawin/shared/utils";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import type { DrawEntity } from "@megawin/game-keno/entities";;
-import type {
-  GetCurrentDrawInput,
-  GetCurrentDrawOutput,
-  KenoCurrentDrawInfo,
-} from "./dto/current-draw.dto";
+import type { DrawEntity } from "@megawin/game-keno/entities";
+import type { GetCurrentDrawOutput, CurrentDrawInfo } from "./dto/current-draw.dto";
 
-const ACTIVE_STATUSES = [
-  DrawStatus.Scheduled,
-  DrawStatus.SalesOpen,
-  DrawStatus.SalesClosed,
-  DrawStatus.Published,
-  DrawStatus.Settling,
-];
-
-export class GetCurrentDrawUseCase extends NextApiUseCase<
-  GetCurrentDrawInput,
-  GetCurrentDrawOutput
-> {
+export class GetCurrentDrawUseCase extends NextApiUseCase<void, GetCurrentDrawOutput> {
   private readonly drawRepo = new DrawRepository();
 
-  protected async execute(
-    input: GetCurrentDrawInput,
-  ): Promise<GetCurrentDrawOutput> {
-    const allowStatuses = input.allowStatuses ?? ACTIVE_STATUSES;
-    const draws = await this.drawRepo.getActiveDraws(allowStatuses);
-    const mapped = draws.map(mapDrawInfo);
+  protected async execute(): Promise<GetCurrentDrawOutput> {
+    const unfinishedDraws = await this.drawRepo.getUnfinishedDraws();
+
+    // getUnfinishedDraws trả về DESC (drawId:-1); re-sort ASC để giữ thứ tự hiển thị cũ→mới.
+    const mapped = sortBy(unfinishedDraws, (d) => d.drawId).map(mapDrawInfo);
 
     return {
       currentDraw: mapped[0] ?? null,
@@ -36,7 +30,7 @@ export class GetCurrentDrawUseCase extends NextApiUseCase<
   }
 }
 
-function mapDrawInfo(draw: DrawEntity): KenoCurrentDrawInfo {
+function mapDrawInfo(draw: DrawEntity): CurrentDrawInfo {
   return {
     drawId: draw.drawId,
     drawDate: draw.drawDate,

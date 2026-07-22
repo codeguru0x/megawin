@@ -57,7 +57,7 @@ export function GameOverviewView({ data, isLoading, onRowClick }: GameOverviewVi
   if (!data || data.games.length === 0) {
     return (
       <Card className="gap-0 py-0">
-        <CardContent className="flex h-[160px] flex-col items-center justify-center gap-1 text-center">
+        <CardContent className="flex h-40 flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm font-medium text-muted-foreground">Chưa có dữ liệu</p>
           <p className="text-xs text-muted-foreground">
             Player chưa tham gia game nào trong khoảng thời gian này.

@@ -5,6 +5,8 @@
  * Max 3D quay 3 lần/tuần (T2, T4, T6) lúc 18h00 — 1 kỳ/ngày.
  */
 
+import type { DrawSelectorGroup } from "@megawin/game-core/entities";
+
 // ─────────────────────────────────────────────
 // GetDrawSelectorList
 // ─────────────────────────────────────────────
@@ -55,5 +57,5 @@ export interface DrawSelectorItem {
    * - future: kỳ scheduled chưa đến
    * - recent: kỳ đã hoàn thành trong 48h (settled, void)
    */
-  group: "active" | "future" | "recent";
+  group: DrawSelectorGroup;
 }

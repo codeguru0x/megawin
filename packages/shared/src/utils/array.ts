@@ -87,3 +87,38 @@ export function chunk<T>(arr: readonly T[], size: number): T[][] {
   }
   return out;
 }
+
+/**
+ * Sắp xếp mảng theo giá trị rút ra bởi `keyFn`, KHÔNG mutate input (dùng `toSorted`).
+ *
+ * String key: so sánh bằng `localeCompare` — đúng cho `drawId` dạng `"YYYY-MM-DD.NNN"`
+ * (không dùng `<`/`>` vì đó là so sánh theo code unit, không phải theo ngôn ngữ).
+ * Number key: so sánh số học.
+ *
+ * Thay thế pattern `arr.toSorted((a, b) => a.drawId.localeCompare(b.drawId))` lặp lại
+ * ở nhiều use-case (`get-current-draw.ts`, `get-draw-selector.ts` của cả 7 game).
+ *
+ * @param arr - Mảng cần sắp xếp.
+ * @param keyFn - Hàm rút giá trị so sánh (string hoặc number) từ mỗi phần tử.
+ * @param order - `"asc"` (mặc định, cũ→mới) hoặc `"desc"` (mới→cũ).
+ *
+ * @example
+ * sortBy(draws, (d) => d.drawId)              // ASC theo drawId
+ * sortBy(draws, (d) => d.drawId, "desc")      // DESC theo drawId
+ * sortBy(users, (u) => u.totalStake, "desc")  // DESC theo số
+ */
+export function sortBy<T>(
+  arr: readonly T[],
+  keyFn: (item: T) => string | number,
+  order: "asc" | "desc" = "asc",
+): T[] {
+  const dir = order === "asc" ? 1 : -1;
+  return arr.toSorted((a, b) => {
+    const ka = keyFn(a);
+    const kb = keyFn(b);
+    if (typeof ka === "string" && typeof kb === "string") {
+      return ka.localeCompare(kb) * dir;
+    }
+    return ((ka as number) - (kb as number)) * dir;
+  });
+}

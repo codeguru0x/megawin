@@ -86,7 +86,7 @@ export const tenantColumns: ColumnDef<Tenant>[] = [
     accessorKey: "callbackBaseUrl",
     header: "Callback URL",
     cell: ({ row }) => (
-      <span className="text-muted-foreground text-xs max-w-[200px] truncate block">
+      <span className="text-muted-foreground text-xs max-w-50 truncate block">
         {row.original.callbackBaseUrl}
       </span>
     ),

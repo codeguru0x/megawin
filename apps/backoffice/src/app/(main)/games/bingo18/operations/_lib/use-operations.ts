@@ -52,7 +52,7 @@ const BASE = "/bingo18/operations";
 
 /**
  * Danh sách kỳ quay cho dropdown chọn kỳ.
- * Bingo 18: ~160 kỳ/ngày — group active/upcoming/recent.
+ * Bingo 18: ~160 kỳ/ngày — group active/future/recent.
  * Refetch mỗi 15s (tần suất cao do kỳ ngắn ~6 phút).
  */
 export function useDrawSelectorList() {

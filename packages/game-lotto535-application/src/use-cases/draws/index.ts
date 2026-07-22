@@ -21,11 +21,7 @@ export type {
 
 export type { AutoEnrollInput, AutoEnrollOutput } from "./auto-enroll-entries";
 
-export type {
-  GetCurrentDrawInput,
-  GetCurrentDrawOutput,
-  CurrentDrawInfo,
-} from "./dto/current-draw.dto";
+export type { GetCurrentDrawOutput, CurrentDrawInfo } from "./dto/current-draw.dto";
 
 export type {
   CreateDrawsInput,

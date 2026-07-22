@@ -24,7 +24,7 @@ export default function Loading() {
           <div className="size-7 animate-pulse rounded bg-muted" />
         </div>
         <div className="px-0 pb-0 pt-0">
-          <div className="h-[320px] animate-pulse bg-muted" />
+          <div className="h-80 animate-pulse bg-muted" />
         </div>
       </div>
     </div>

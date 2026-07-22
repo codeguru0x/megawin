@@ -182,6 +182,12 @@ export type DrawStatus = (typeof DrawStatus)[keyof typeof DrawStatus];
 export const DRAW_STATUS_VALUES = Object.values(DrawStatus);
 
 /**
+ * Union literal của các status "ĐÃ HOÀN THÀNH" — derive từ {@link DRAW_COMPLETED_STATUSES}.
+ * Dùng làm kiểu tham số ở nơi CHỈ chấp nhận status hoàn thành (VD `getRecentCompletedDraws`).
+ */
+export type CompletedDrawStatus = typeof DrawStatus.Settled | typeof DrawStatus.Void;
+
+/**
  * Các trạng thái "ĐÃ HOÀN THÀNH" của một kỳ quay — kỳ đã đi tới điểm cuối lifecycle.
  *
  * - `Settled`: đã kết sổ xong (đã trả thưởng / đối soát).
@@ -191,7 +197,20 @@ export const DRAW_STATUS_VALUES = Object.values(DrawStatus);
  * kỳ hoàn thành vs chưa hoàn thành (guard thứ tự kết sổ, báo cáo, …) phải derive
  * từ đây thay vì liệt kê tay — để khi thêm status mới không bị sót.
  */
-export const DRAW_COMPLETED_STATUSES: readonly DrawStatus[] = [DrawStatus.Settled, DrawStatus.Void];
+export const DRAW_COMPLETED_STATUSES: readonly CompletedDrawStatus[] = [
+  DrawStatus.Settled,
+  DrawStatus.Void,
+];
+
+const COMPLETED_STATUS_SET = new Set<DrawStatus>(DRAW_COMPLETED_STATUSES);
+
+/**
+ * Union literal của các status "CHƯA HOÀN THÀNH" — derive tự động = `DrawStatus` −
+ * {@link CompletedDrawStatus}. Dùng làm kiểu tham số `statuses` của `getUnfinishedDraws` ở mọi
+ * game — compiler CHẶN CỨNG việc lỡ truyền `Settled`/`Void` vào (tránh vô tình gây full-collection
+ * scan trên phần dữ liệu unfinished — nơi vốn KHÔNG lookback theo ngày).
+ */
+export type UnfinishedDrawStatus = Exclude<DrawStatus, CompletedDrawStatus>;
 
 /**
  * Các trạng thái "CHƯA HOÀN THÀNH" — derive tự động = tất cả status − completed.
@@ -203,8 +222,8 @@ export const DRAW_COMPLETED_STATUSES: readonly DrawStatus[] = [DrawStatus.Settle
  * Dùng trong query `$in` (không phải `$nin`) để giữ tight index bound — vừa an
  * toàn vừa tối ưu IXSCAN.
  */
-export const DRAW_UNFINISHED_STATUSES: readonly DrawStatus[] = DRAW_STATUS_VALUES.filter(
-  (status) => !DRAW_COMPLETED_STATUSES.includes(status),
+export const DRAW_UNFINISHED_STATUSES: readonly UnfinishedDrawStatus[] = DRAW_STATUS_VALUES.filter(
+  (status): status is UnfinishedDrawStatus => !COMPLETED_STATUS_SET.has(status),
 );
 
 // ─────────────────────────────────────────────
@@ -280,3 +299,30 @@ export const EntryOutcome = {
 export type EntryOutcome = (typeof EntryOutcome)[keyof typeof EntryOutcome];
 
 export const ENTRY_OUTCOME_VALUES = Object.values(EntryOutcome);
+
+// ─────────────────────────────────────────────
+// Draw Selector Group (dùng chung cho tất cả game)
+// ─────────────────────────────────────────────
+
+/**
+ * Nhóm hiển thị kỳ quay trên draw selector dropdown (dashboard vận hành) – dùng chung cho mọi game.
+ *
+ * - `Active`: kỳ đang xử lý (salesOpen, salesClosed, published, settling, voiding) — mọi kỳ
+ *   unfinished ngoại trừ scheduled còn nằm trong tương lai.
+ * - `Future`: kỳ scheduled chưa đến.
+ * - `Recent`: kỳ đã hoàn thành gần đây (settled, void) — dùng để resettle/tra soát nhanh.
+ *
+ * Đây là single source of truth cho `DrawSelectorItem["group"]` — mọi `get-draw-selector.ts` và
+ * UI dropdown (`draw-selector.tsx`, `use-draw-context.tsx`) của từng game phải import từ đây thay
+ * vì tự khai báo lại union string literal.
+ */
+export const DrawSelectorGroup = {
+  /** Kỳ đang xử lý — chưa hoàn thành và không còn nằm trong tương lai. */
+  Active: "active",
+  /** Kỳ scheduled chưa đến. */
+  Future: "future",
+  /** Kỳ đã hoàn thành gần đây (settled/void). */
+  Recent: "recent",
+} as const;
+
+export type DrawSelectorGroup = (typeof DrawSelectorGroup)[keyof typeof DrawSelectorGroup];

@@ -18,7 +18,7 @@ import { Bingo18DrawStatusBadge } from "@/components/games/bingo18/draw-status-b
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatVND, formatVNTime, displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
-import type { Bingo18CurrentDrawInfo } from "@/app/(main)/games/bingo18/draws/_lib/use-draws";
+import type { CurrentDrawInfo } from "@/app/(main)/games/bingo18/draws/_lib/use-draws";
 
 // ─── Status → visual mapping ─────────────────────────────────────────────────
 // Bingo 18 dùng tông màu amber/orange thể hiện xúc xắc — khác với lotto (green) và keno (cyan)
@@ -148,7 +148,7 @@ function getStatusIcon(status: string) {
 
 // ─── Primary Draw Card ────────────────────────────────────────────────────────
 
-export function Bingo18PrimaryDrawCard({ draw }: { draw: Bingo18CurrentDrawInfo }) {
+export function Bingo18PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
   const status = draw.status;
   const vis = STATUS_VISUALS[status] ?? DEFAULT_VISUAL;
   const drawTime = formatVNTime(new Date(draw.drawTime));
@@ -305,7 +305,7 @@ export function Bingo18PrimaryDrawCard({ draw }: { draw: Bingo18CurrentDrawInfo 
 
 // ─── Queue Draw Card ──────────────────────────────────────────────────────────
 
-export function Bingo18QueueDrawCard({ draw }: { draw: Bingo18CurrentDrawInfo }) {
+export function Bingo18QueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
   const status = draw.status;
   const vis = STATUS_VISUALS[status] ?? DEFAULT_VISUAL;
   const drawTime = formatVNTime(new Date(draw.drawTime));

@@ -113,7 +113,7 @@ export function VoidEntryList({
       </CardHeader>
       <CardContent className="px-0 pb-4 pt-0">
         {rows.length === 0 ? (
-          <div className="flex h-[120px] items-center justify-center">
+          <div className="flex h-30 items-center justify-center">
             <p className="text-sm text-muted-foreground">Không có entries void.</p>
           </div>
         ) : (
@@ -121,8 +121,8 @@ export function VoidEntryList({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[200px] pl-5">Mã vé</TableHead>
-                  <TableHead className="w-[120px] text-right">{boardsLineColLabel}</TableHead>
+                  <TableHead className="w-50 pl-5">Mã vé</TableHead>
+                  <TableHead className="w-30 text-right">{boardsLineColLabel}</TableHead>
                   <TableHead className="w-[150px] text-right">Cược gốc</TableHead>
                   <TableHead className="w-[150px] pr-5 text-right">Hoàn trả</TableHead>
                 </TableRow>

@@ -2,12 +2,7 @@
 // GetCurrentDraw / GetActiveDraws
 // ─────────────────────────────────────────────
 
-export interface GetCurrentDrawInput {
-  /** Danh sách status cho phép lọc (vd: ["salesOpen", "salesClosed"]). Nếu bỏ trống → lấy tất cả. */
-  allowStatuses?: string[];
-}
-
-export interface Bingo18CurrentDrawInfo {
+export interface CurrentDrawInfo {
   /** ID kỳ quay hiện tại. */
   drawId: string;
   /** Ngày quay (YYYY-MM-DD). */
@@ -45,7 +40,7 @@ export interface Bingo18CurrentDrawInfo {
 
 export interface GetCurrentDrawOutput {
   /** Kỳ quay hiện tại gần nhất (null nếu không có). */
-  currentDraw: Bingo18CurrentDrawInfo | null;
+  currentDraw: CurrentDrawInfo | null;
   /** Danh sách tất cả kỳ quay đang hoạt động (salesOpen/salesClosed). */
-  activeDraws: Bingo18CurrentDrawInfo[];
+  activeDraws: CurrentDrawInfo[];
 }

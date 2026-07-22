@@ -305,11 +305,11 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
       {isLoading ? (
         <TableSkeleton cols={5} />
       ) : isError ? (
-        <div className="flex h-[160px] items-center justify-center text-sm text-destructive">
+        <div className="flex h-40 items-center justify-center text-sm text-destructive">
           Không thể tải dữ liệu.
         </div>
       ) : !data || data.entries.length === 0 ? (
-        <div className="flex h-[160px] flex-col items-center justify-center gap-1 text-center">
+        <div className="flex h-40 flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm font-medium text-muted-foreground">Không có đơn cược đang chờ</p>
           <p className="text-xs text-muted-foreground">Tất cả đơn cược đã được settle hoặc void.</p>
         </div>
@@ -474,7 +474,7 @@ function DrawsView({
 }) {
   if (byDraw.length === 0) {
     return (
-      <div className="flex h-[160px] items-center justify-center text-sm text-muted-foreground">
+      <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
         Không có đơn chờ trong game này.
       </div>
     );

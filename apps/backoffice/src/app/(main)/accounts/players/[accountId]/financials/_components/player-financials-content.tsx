@@ -193,11 +193,11 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
                   ))}
                 </div>
               ) : isError ? (
-                <div className="flex h-[160px] items-center justify-center">
+                <div className="flex h-40 items-center justify-center">
                   <p className="text-sm text-destructive">Không thể tải dữ liệu.</p>
                 </div>
               ) : records.length === 0 ? (
-                <div className="flex h-[160px] flex-col items-center justify-center gap-1 text-center">
+                <div className="flex h-40 flex-col items-center justify-center gap-1 text-center">
                   <p className="text-sm font-medium text-muted-foreground">Chưa có dữ liệu</p>
                   <p className="text-xs text-muted-foreground">
                     Thử thay đổi khoảng thời gian hoặc bộ lọc game.

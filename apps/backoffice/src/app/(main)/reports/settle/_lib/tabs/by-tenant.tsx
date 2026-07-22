@@ -170,7 +170,7 @@ function TenantListView() {
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-[76px] animate-pulse rounded-xl border bg-muted" />
+            <div key={i} className="h-19 animate-pulse rounded-xl border bg-muted" />
           ))}
         </div>
         <TableSkeleton />

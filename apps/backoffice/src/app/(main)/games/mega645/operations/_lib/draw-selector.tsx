@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { CheckCircle2, Circle, Clock, XCircle, TriangleAlert, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DrawStatus } from "@megawin/game-core/entities";
+import { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
 import { DrawStatusBadge } from "@/components/games/mega645/draw-status-badge";
 import {
   Select,
@@ -46,7 +46,7 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
 // ─── DrawSelectorItem Row ────────────────────────────────────────────────────
 
 function DrawRow({ draw }: { draw: DrawSelectorItem }) {
-  const isFuture = draw.group === "future";
+  const isFuture = draw.group === DrawSelectorGroup.Future;
 
   return (
     <div className="flex items-center justify-between w-full gap-3 py-0.5">
@@ -77,16 +77,16 @@ export function DrawSelector({
 }: DrawSelectorProps) {
   const selected = draws.find((d) => d.drawId === selectedDrawId) ?? historicalDraw;
 
-  const active = draws.filter((d) => d.group === "active");
-  const future = draws.filter((d) => d.group === "future");
-  const recent = draws.filter((d) => d.group === "recent");
+  const active = draws.filter((d) => d.group === DrawSelectorGroup.Active);
+  const future = draws.filter((d) => d.group === DrawSelectorGroup.Future);
+  const recent = draws.filter((d) => d.group === DrawSelectorGroup.Recent);
 
   // Khi kỳ chọn là kỳ cũ ngoài selector list → dùng value="" để không tick item nào
   const isInList = draws.some((d) => d.drawId === selectedDrawId);
 
   return (
     <Select value={isInList ? selectedDrawId : ""} onValueChange={onSelect}>
-      <SelectTrigger className="h-9 w-[240px] gap-2 text-sm font-medium">
+      <SelectTrigger className="h-9 w-60 gap-2 text-sm font-medium">
         <div className="flex items-center gap-2 min-w-0">
           {selected && STATUS_ICON[selected.status]}
           <SelectValue placeholder="Chọn kỳ quay">
@@ -94,7 +94,7 @@ export function DrawSelector({
           </SelectValue>
         </div>
       </SelectTrigger>
-      <SelectContent className="w-[300px]" align="end">
+      <SelectContent className="w-75" align="end">
         {active.length > 0 && (
           <SelectGroup>
             <SelectLabel className="flex items-center gap-1.5 text-xs text-muted-foreground uppercase tracking-wider pb-1">
@@ -102,7 +102,7 @@ export function DrawSelector({
                 <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-400 opacity-75" />
                 <span className="relative inline-flex size-1.5 rounded-full bg-green-500" />
               </span>
-              Cần xử lý
+              Đang diễn ra
             </SelectLabel>
             {active.map((draw) => (
               <SelectItem key={draw.drawId} value={draw.drawId} className="py-2">
@@ -117,7 +117,7 @@ export function DrawSelector({
         {future.length > 0 && (
           <SelectGroup>
             <SelectLabel className="text-xs text-muted-foreground uppercase tracking-wider pb-1">
-              Kỳ tương lai
+              Kỳ sắp tới
             </SelectLabel>
             {future.map((draw) => (
               <SelectItem key={draw.drawId} value={draw.drawId} className="py-2">
@@ -132,7 +132,7 @@ export function DrawSelector({
         {recent.length > 0 && (
           <SelectGroup>
             <SelectLabel className="text-xs text-muted-foreground uppercase tracking-wider pb-1">
-              Vừa hoàn thành (48h)
+              Vừa hoàn thành
             </SelectLabel>
             {recent.map((draw) => (
               <SelectItem key={draw.drawId} value={draw.drawId} className="py-2">

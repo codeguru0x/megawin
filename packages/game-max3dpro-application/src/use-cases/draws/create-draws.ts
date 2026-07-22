@@ -37,13 +37,9 @@ export class CreateDrawsUseCase extends NextApiUseCase<CreateDrawsInput, CreateD
     const globalConfig = await this.getGlobalConfig.run();
     const { play } = globalConfig;
 
-    const existingActiveDraws = await this.drawRepo.getActiveDraws([
-      DrawStatus.Scheduled,
-      DrawStatus.SalesOpen,
-      DrawStatus.SalesClosed,
-      DrawStatus.Published,
-      DrawStatus.Settling,
-    ]);
+    // getUnfinishedDraws() default = TOÀN BỘ status chưa hoàn thành (KHÔNG lookback ngày) — không
+    // bỏ sót kỳ Voiding (trước đây bị thiếu trong allowStatuses, có thể gây tạo trùng slot).
+    const existingActiveDraws = await this.drawRepo.getUnfinishedDraws();
     const existingDrawIds = new Set(existingActiveDraws.map((d) => d.drawId));
 
     // Tính slots để lấy drawNo tương ứng với từng drawDate

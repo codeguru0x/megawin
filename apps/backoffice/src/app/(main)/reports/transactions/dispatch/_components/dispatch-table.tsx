@@ -112,7 +112,7 @@ export function DispatchTable({
 
   if (isLoading) {
     return (
-      <div className="flex h-[240px] items-center justify-center gap-2 text-muted-foreground">
+      <div className="flex h-60 items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="size-4 animate-spin" />
         <span className="text-sm">Đang tải orders…</span>
       </div>
@@ -121,7 +121,7 @@ export function DispatchTable({
 
   if (rows.length === 0) {
     return (
-      <div className="flex h-[240px] flex-col items-center justify-center gap-1 text-center">
+      <div className="flex h-60 flex-col items-center justify-center gap-1 text-center">
         <Inbox className="size-8 text-muted-foreground/40" />
         <p className="text-sm font-medium text-muted-foreground">Không có dispatch order nào</p>
         <p className="text-xs text-muted-foreground">Thử nới khoảng thời gian hoặc xoá bộ lọc.</p>
@@ -135,17 +135,17 @@ export function DispatchTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[160px] pl-5">Thời gian</TableHead>
-              <TableHead className="w-[60px] text-center">Trạng thái</TableHead>
-              <TableHead className="w-[100px]">Loại</TableHead>
-              <TableHead className="w-[120px]">Tenant</TableHead>
-              <TableHead className="w-[100px]">Action</TableHead>
-              <TableHead className="w-[120px]">Lý do</TableHead>
-              <TableHead className="w-[140px]">Người chơi</TableHead>
-              <TableHead className="w-[120px]">Game</TableHead>
-              <TableHead className="w-[140px] text-right">Số tiền</TableHead>
+              <TableHead className="w-40 pl-5">Thời gian</TableHead>
+              <TableHead className="w-15 text-center">Trạng thái</TableHead>
+              <TableHead className="w-25">Loại</TableHead>
+              <TableHead className="w-30">Tenant</TableHead>
+              <TableHead className="w-25">Action</TableHead>
+              <TableHead className="w-30">Lý do</TableHead>
+              <TableHead className="w-35">Người chơi</TableHead>
+              <TableHead className="w-30">Game</TableHead>
+              <TableHead className="w-35 text-right">Số tiền</TableHead>
               {showRetryColumn && <TableHead>Retry & Lỗi</TableHead>}
-              {!hideBatchColumn && <TableHead className="w-[200px]">Batch</TableHead>}
+              {!hideBatchColumn && <TableHead className="w-50">Batch</TableHead>}
               <TableHead className="w-[50px] pr-5 text-right" />
             </TableRow>
           </TableHeader>
@@ -214,7 +214,7 @@ export function DispatchTable({
                   </TableCell>
 
                   <TableCell
-                    className="max-w-[140px] truncate font-mono text-sm"
+                    className="max-w-35 truncate font-mono text-sm"
                     title={row.username}
                   >
                     {row.username}
@@ -228,7 +228,7 @@ export function DispatchTable({
 
                   {/* Retry & Lỗi — gộp 1 cell */}
                   {showRetryColumn && (
-                    <TableCell className="max-w-[360px] text-sm">
+                    <TableCell className="max-w-90 text-sm">
                       {retryCount === 0 && !errMsg ? (
                         <span className="text-sm text-muted-foreground">—</span>
                       ) : (

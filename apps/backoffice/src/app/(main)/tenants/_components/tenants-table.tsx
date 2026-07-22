@@ -39,7 +39,7 @@ export function TenantsTable() {
         {error && <p className="text-destructive text-sm">{error.message}</p>}
         <div className="overflow-hidden rounded-md border">
           {isLoading ? (
-            <div className="h-[320px] animate-pulse bg-muted" />
+            <div className="h-80 animate-pulse bg-muted" />
           ) : (
             <DataTable table={table} columns={tenantColumns} />
           )}

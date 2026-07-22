@@ -135,7 +135,7 @@ function OutstandingSkeleton({ showLineCount }: { showLineCount?: boolean }) {
         )}
       >
         {[...Array(cols)].map((_, i) => (
-          <Skeleton key={i} className="h-[72px] w-full rounded-xl" />
+          <Skeleton key={i} className="h-18 w-full rounded-xl" />
         ))}
       </div>
       <Skeleton className="h-64 w-full rounded-xl" />

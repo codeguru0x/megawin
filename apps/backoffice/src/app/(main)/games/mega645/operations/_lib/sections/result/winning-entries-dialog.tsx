@@ -79,7 +79,7 @@ function EntryNumbers({ entry }: { entry: WinningEntryItem }) {
           <span className="text-xs font-medium text-muted-foreground/50 w-4 shrink-0 mt-1 tabular-nums">
             {b.boardNo}
           </span>
-          <div className="flex items-center gap-0.5 flex-wrap max-w-[320px]">
+          <div className="flex items-center gap-0.5 flex-wrap max-w-80">
             {b.numbers.map((n) => (
               <MegaNumberBall key={n} number={Number(n)} size="sm" />
             ))}
@@ -242,7 +242,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
                   <TableHead className="pl-6 w-12 text-center">#</TableHead>
                   <TableHead className="w-44">Người chơi</TableHead>
                   <TableHead className="w-28 text-right">Tiền cược</TableHead>
-                  <TableHead className="min-w-[280px]">Số chơi</TableHead>
+                  <TableHead className="min-w-70">Số chơi</TableHead>
                   <TableHead className="w-52">Hạng trúng</TableHead>
                   <TableHead className="w-36 text-right">Tiền thưởng</TableHead>
                   <TableHead className="pr-6 w-36">Thời gian</TableHead>

@@ -7,22 +7,16 @@
 
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
-import { DrawStatus } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GetGlobalConfigInternalUseCase } from "../game-config/get-global-config-internal";
 import { calcMax3dDrawSlots } from "../../helpers/calc-draw-slots";
 import type { PreviewDrawsInput, PreviewDrawsOutput } from "./dto/draw.dto";
 
-export class PreviewDrawsUseCase extends NextApiUseCase<
-  PreviewDrawsInput,
-  PreviewDrawsOutput
-> {
+export class PreviewDrawsUseCase extends NextApiUseCase<PreviewDrawsInput, PreviewDrawsOutput> {
   private readonly drawRepo = new DrawRepository();
   private readonly getGlobalConfig = new GetGlobalConfigInternalUseCase();
 
-  protected async execute(
-    input: PreviewDrawsInput
-  ): Promise<PreviewDrawsOutput> {
+  protected async execute(input: PreviewDrawsInput): Promise<PreviewDrawsOutput> {
     const { count } = input;
 
     const globalConfig = await this.getGlobalConfig.run();
@@ -31,21 +25,12 @@ export class PreviewDrawsUseCase extends NextApiUseCase<
       throw AppException.badRequest("Số kỳ xem trước phải từ 1 đến 12.");
     }
 
-    const existingActiveDraws = await this.drawRepo.getActiveDraws([
-      DrawStatus.Scheduled,
-      DrawStatus.SalesOpen,
-      DrawStatus.SalesClosed,
-      DrawStatus.Published,
-      DrawStatus.Settling,
-    ]);
+    // getUnfinishedDraws() default = TOÀN BỘ status chưa hoàn thành (KHÔNG lookback ngày) — không
+    // bỏ sót kỳ Voiding (trước đây bị thiếu trong allowStatuses, có thể gây tạo trùng slot).
+    const existingActiveDraws = await this.drawRepo.getUnfinishedDraws();
     const existingDrawIds = new Set(existingActiveDraws.map((d) => d.drawId));
 
-    const slots = calcMax3dDrawSlots(
-      new Date(),
-      count,
-      globalConfig.play,
-      existingDrawIds
-    );
+    const slots = calcMax3dDrawSlots(new Date(), count, globalConfig.play, existingDrawIds);
 
     return {
       draws: slots.map((s) => ({

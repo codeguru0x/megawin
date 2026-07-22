@@ -64,7 +64,7 @@ export function DrawBreakdownView({
   if (isError) {
     return (
       <Card className="gap-0 py-0">
-        <CardContent className="flex h-[160px] items-center justify-center">
+        <CardContent className="flex h-40 items-center justify-center">
           <p className="text-sm text-destructive">Không thể tải dữ liệu.</p>
         </CardContent>
       </Card>
@@ -74,7 +74,7 @@ export function DrawBreakdownView({
   if (!rows || rows.length === 0) {
     return (
       <Card className="gap-0 py-0">
-        <CardContent className="flex h-[160px] flex-col items-center justify-center gap-1 text-center">
+        <CardContent className="flex h-40 flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm font-medium text-muted-foreground">Không có kỳ quay nào</p>
           <p className="text-xs text-muted-foreground">
             Player không tham gia kỳ quay nào trong ngày này.

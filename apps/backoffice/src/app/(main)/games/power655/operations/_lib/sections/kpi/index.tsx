@@ -23,7 +23,7 @@ export function KpiSection() {
     return (
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-[72px] rounded-xl" />
+          <Skeleton key={i} className="h-18 rounded-xl" />
         ))}
       </div>
     );

@@ -5,7 +5,7 @@ import { apiClient, ApiClientError } from "@megawin/next/client";
 import { toast } from "sonner";
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type {
-  KenoCurrentDrawInfo,
+  CurrentDrawInfo,
   GetCurrentDrawOutput,
   DrawSummary,
   ListDrawsOutput,
@@ -14,7 +14,7 @@ import type {
 } from "@megawin/game-keno-application/use-cases/draws";
 import { kenoKeys } from "@/lib/query-keys";
 
-export type { KenoCurrentDrawInfo, DrawSummary };
+export type { CurrentDrawInfo, DrawSummary };
 
 export interface ListDrawsParams {
   status?: DrawStatus;
@@ -70,7 +70,7 @@ export function useKenoPreviewDraws(drawDate: string, count: number) {
 function useKenoDrawAction<TBody = void>(
   actionPath: (drawId: string) => string,
   method: "post" | "patch",
-  successMessage: string
+  successMessage: string,
 ) {
   const qc = useQueryClient();
   return useMutation({
@@ -83,27 +83,17 @@ function useKenoDrawAction<TBody = void>(
       toast.success(successMessage);
     },
     onError: (err) => {
-      toast.error(
-        err instanceof ApiClientError ? err.message : "Thao tác thất bại."
-      );
+      toast.error(err instanceof ApiClientError ? err.message : "Thao tác thất bại.");
     },
   });
 }
 
 export function useKenoOpenSales() {
-  return useKenoDrawAction(
-    (id) => `/keno/draws/${id}/open-sales`,
-    "post",
-    "Đã mở bán vé."
-  );
+  return useKenoDrawAction((id) => `/keno/draws/${id}/open-sales`, "post", "Đã mở bán vé.");
 }
 
 export function useKenoCloseSales() {
-  return useKenoDrawAction(
-    (id) => `/keno/draws/${id}/close-sales`,
-    "post",
-    "Đã đóng bán vé."
-  );
+  return useKenoDrawAction((id) => `/keno/draws/${id}/close-sales`, "post", "Đã đóng bán vé.");
 }
 
 export function useKenoPublishResult() {
@@ -117,7 +107,7 @@ export function useKenoTriggerSettle() {
   return useKenoDrawAction(
     (id) => `/keno/draws/${id}/trigger-settle`,
     "post",
-    "Đã bắt đầu kết sổ."
+    "Đã bắt đầu kết sổ.",
   );
 }
 
@@ -125,7 +115,7 @@ export function useKenoVoidDraw() {
   return useKenoDrawAction<{ reason: string }>(
     (id) => `/keno/draws/${id}/void`,
     "post",
-    "Đã huỷ kỳ quay."
+    "Đã huỷ kỳ quay.",
   );
 }
 
@@ -133,7 +123,7 @@ export function useKenoUpdateSchedule() {
   return useKenoDrawAction<{ salesOpenAt: string; salesCloseAt: string; drawTime?: string }>(
     (id) => `/keno/draws/${id}/schedule`,
     "patch",
-    "Đã cập nhật lịch."
+    "Đã cập nhật lịch.",
   );
 }
 
@@ -147,9 +137,7 @@ export function useKenoCreateDraw() {
       toast.success(`Đã tạo ${res.draws.length} kỳ quay mới.`);
     },
     onError: (err) => {
-      toast.error(
-        err instanceof ApiClientError ? err.message : "Tạo kỳ quay thất bại."
-      );
+      toast.error(err instanceof ApiClientError ? err.message : "Tạo kỳ quay thất bại.");
     },
   });
 }

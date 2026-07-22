@@ -180,8 +180,8 @@ function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel }: ProfitBarP
 }
 
 const TABLE_GRID = "grid grid-cols-[auto_1fr_176px_120px_140px_100px_140px] items-center gap-3";
-const TABLE_HEADER_CLS = `${TABLE_GRID} bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground min-w-[960px]`;
-const TABLE_ROW_CLS = `${TABLE_GRID} px-6 py-3 transition-colors hover:bg-muted/20 min-w-[960px]`;
+const TABLE_HEADER_CLS = `${TABLE_GRID} bg-muted/40 px-6 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground min-w-240`;
+const TABLE_ROW_CLS = `${TABLE_GRID} px-6 py-3 transition-colors hover:bg-muted/20 min-w-240`;
 
 function TableHeader() {
   return (

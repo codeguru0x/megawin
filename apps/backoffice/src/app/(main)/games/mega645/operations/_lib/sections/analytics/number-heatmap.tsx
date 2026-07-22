@@ -193,7 +193,7 @@ function NumberCell({
           {isEmpty ? (
             <p className="text-xs text-muted-foreground">Chưa có cược</p>
           ) : (
-            <div className="space-y-1 min-w-[148px]">
+            <div className="space-y-1 min-w-37">
               <div className="flex justify-between gap-8">
                 <span className="text-xs text-muted-foreground">Tổng cược</span>
                 <span className="text-xs font-semibold tabular-nums text-foreground">
@@ -308,7 +308,7 @@ function NumbersWithTooltip({
               className="bg-popover text-popover-foreground border border-border shadow-lg rounded-xl px-3 py-2.5"
             >
               <p className="text-xs text-muted-foreground mb-1.5">Tất cả {numbers.length} số</p>
-              <div className="flex items-center gap-1 flex-wrap max-w-[200px]">
+              <div className="flex items-center gap-1 flex-wrap max-w-50">
                 {numbers.map((n) => (
                   <NumberBadge key={n} num={n} variant={variant} />
                 ))}

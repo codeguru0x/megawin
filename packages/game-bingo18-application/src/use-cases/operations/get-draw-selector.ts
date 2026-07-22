@@ -1,16 +1,21 @@
 import { NextApiUseCase } from "@megawin/next/server";
-import { DrawStatus } from "@megawin/game-core/entities";
+import { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
 import { DrawRepository } from "../../infras/repos/draw-repo";
-import { displayVNTime } from "@megawin/shared/utils";
+import { displayVNTime, sortBy } from "@megawin/shared/utils";
 import type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selector.dto";
 
 /**
  * Dropdown chọn kỳ quay cho Bingo 18 Operations Dashboard.
  *
  * Bingo 18 có ~160 kỳ/ngày (6 phút/kỳ) — group theo trạng thái để tránh quá tải:
- *   - active: đang xử lý (salesOpen/salesClosed/published/settling/voiding)
- *   - upcoming: scheduled, chỉ lấy 10 kỳ tiếp theo
- *   - recent: settled/void gần đây, tối đa 15 kỳ
+ *   - active: unfinished còn lại (salesOpen/salesClosed/published/settling/voiding, và cả
+ *     scheduled đã tới hạn/quá khứ — coi như cần xử lý).
+ *   - future: scheduled sắp tới, chỉ lấy 10 kỳ gần nhất (sort drawId asc).
+ *   - recent: 5 kỳ settled/void gần đây nhất.
+ *
+ * `active` + `future` cùng lấy từ 1 query `getUnfinishedDraws()` (KHÔNG lookback ngày) rồi
+ * phân loại in-memory — tránh bỏ sót kỳ kẹt cũ dù trễ bao lâu.
+ * `recent` lấy theo SỐ PHIÊN (không lookback ngày) — xem `getRecentCompletedDraws`.
  *
  * DrawId format: "YYYY-MM-DD.NNN".
  */
@@ -18,27 +23,23 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(): Promise<GetDrawSelectorOutput> {
-    const [activeDraws, upcomingDraws, recentDraws] = await Promise.all([
-      // Active draws: KHÔNG filter ngày — tránh bỏ sót kỳ đang vận hành bị trễ qua ngày.
-      // Bao gồm voiding vì kỳ đang trong quy trình hủy vẫn cần hiển thị để giám sát.
-      this.drawRepo.getActiveDraws([
-        DrawStatus.SalesOpen,
-        DrawStatus.SalesClosed,
-        DrawStatus.Published,
-        DrawStatus.Settling,
-        DrawStatus.Voiding,
-      ]),
-      // Kỳ scheduled sắp tới — lấy 10 kỳ đầu
-      this.drawRepo.getActiveDraws([DrawStatus.Scheduled]).then((draws) => draws.slice(0, 10)),
-      // Settled/void gần đây — giới hạn 1 ngày lookback, lấy 15 kỳ cuối (sort drawTime desc)
-      this.drawRepo
-        .getActiveDraws([DrawStatus.Settled, DrawStatus.Void], 1)
-        .then((draws) => draws.reverse().slice(0, 15)),
+    const [unfinishedDraws, recentDrawsDesc] = await Promise.all([
+      this.drawRepo.getUnfinishedDraws(),
+      this.drawRepo.getRecentCompletedDraws(5),
     ]);
 
+    // getRecentCompletedDraws trả về DESC — re-sort ASC để giữ thứ tự hiển thị cũ→mới.
+    const recentDraws = sortBy(recentDrawsDesc, (d) => d.drawId);
+
+    const futureDraws = sortBy(
+      unfinishedDraws.filter((d) => d.status === DrawStatus.Scheduled),
+      (d) => d.drawId,
+    ).slice(0, 10);
+    const activeDraws = unfinishedDraws.filter((d) => d.status !== DrawStatus.Scheduled);
+
     const toItem = (
-      draw: (typeof activeDraws)[0],
-      group: DrawSelectorItem["group"],
+      draw: (typeof unfinishedDraws)[0],
+      group:DrawSelectorGroup,
     ): DrawSelectorItem => ({
       drawId: draw.drawId,
       drawDate: draw.drawDate,
@@ -56,9 +57,9 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
     });
 
     const draws: DrawSelectorItem[] = [
-      ...activeDraws.map((d) => toItem(d, "active")),
-      ...upcomingDraws.map((d) => toItem(d, "upcoming")),
-      ...recentDraws.map((d) => toItem(d, "recent")),
+      ...activeDraws.map((d) => toItem(d, DrawSelectorGroup.Active)),
+      ...futureDraws.map((d) => toItem(d, DrawSelectorGroup.Future)),
+      ...recentDraws.map((d) => toItem(d, DrawSelectorGroup.Recent)),
     ];
 
     return { draws };

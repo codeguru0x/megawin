@@ -86,7 +86,7 @@ export function VoidTenantBreakdown({
       </CardHeader>
       <CardContent className="px-0 pb-4 pt-0">
         {rows.length === 0 ? (
-          <div className="flex h-[120px] items-center justify-center">
+          <div className="flex h-30 items-center justify-center">
             <p className="text-sm text-muted-foreground">Không có dữ liệu.</p>
           </div>
         ) : (

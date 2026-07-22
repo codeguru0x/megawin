@@ -16,12 +16,21 @@
  */
 
 import { GameProduct, DrawStatus } from "@megawin/game-core/entities";
+import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
 import { InternalUseCase } from "@megawin/app-core/use-cases";
 import { SyncSystemOutstandingUseCase } from "@megawin/game-core-application/use-cases";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { OutstandingReportRepository } from "../../infras/repos/outstanding-report-repo";
 import { SystemOutstandingRepo } from "../../infras/repos/system-outstanding-repo";
+
+/** Kỳ có thể còn outstanding stake — loại Scheduled (chưa mở bán) và Voiding (đã hoàn tiền). */
+const OUTSTANDING_STATUSES: readonly UnfinishedDrawStatus[] = [
+  DrawStatus.SalesOpen,
+  DrawStatus.SalesClosed,
+  DrawStatus.Published,
+  DrawStatus.Settling,
+];
 
 export interface SyncOutstandingResult {
   /** Số draw đã upsert outstanding report. */
@@ -47,13 +56,12 @@ export class SyncOutstandingUseCase extends InternalUseCase<void, SyncOutstandin
 
   protected async execute(_input: void): Promise<SyncOutstandingResult> {
     // ── Bước 1: Lấy drawIds active để tăng selectivity cho entry queries ────
-    // Keno có ~120 kỳ/ngày, lookbackDays = 1 để bao phủ hôm nay và hôm qua.
+    // Keno có ~120 kỳ/ngày. getUnfinishedDraws (KHÔNG lookback ngày) — không bỏ sót kỳ kẹt cũ
+    // hơn lookbackDays trước đây (status là equality prefix của idx_status_drawId_desc, IXSCAN
+    // chỉ chạm vài chục kỳ unfinished dù collection có hàng triệu doc Settled).
     // Thêm drawId vào $match giúp MongoDB dùng index { drawId: 1, status: 1 }
     // thay vì scan toàn bộ collection theo status.
-    const activeDraws = await this.drawRepo.getActiveDraws(
-      [DrawStatus.SalesOpen, DrawStatus.SalesClosed, DrawStatus.Published, DrawStatus.Settling],
-      2,
-    );
+    const activeDraws = await this.drawRepo.getUnfinishedDraws(OUTSTANDING_STATUSES);
     const activeDrawIds = activeDraws.map((d) => d.drawId);
 
     if (activeDrawIds.length === 0) {

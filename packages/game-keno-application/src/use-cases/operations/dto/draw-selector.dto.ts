@@ -5,7 +5,7 @@
  * Keno có ~120 kỳ/ngày (8 phút/kỳ) — group theo trạng thái để tránh quá tải.
  */
 
-import type { DrawStatus } from "@megawin/game-core/entities";
+import type { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
 
 export interface DrawSelectorItem {
   /** Mã định danh kỳ (format YYYY-MM-DD.NNN). */
@@ -44,10 +44,10 @@ export interface DrawSelectorItem {
   /**
    * Nhóm hiển thị trong dropdown.
    * active: đang xử lý (salesOpen/salesClosed/published/settling/voiding).
-   * upcoming: kỳ scheduled sắp tới.
+   * future: kỳ scheduled sắp tới.
    * recent: kỳ settled hoặc void gần đây.
    */
-  group: "active" | "upcoming" | "recent";
+  group: DrawSelectorGroup;
 }
 
 export interface GetDrawSelectorOutput {

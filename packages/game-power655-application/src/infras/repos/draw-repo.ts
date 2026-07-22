@@ -14,8 +14,12 @@
  */
 
 import { Power655Collections } from "@megawin/game-power655/entities";
-import { DrawStatus, DRAW_UNFINISHED_STATUSES } from "@megawin/game-core/entities";
-import { subDays, formatVNDate } from "@megawin/shared/utils";
+import {
+  DrawStatus,
+  DRAW_UNFINISHED_STATUSES,
+  DRAW_COMPLETED_STATUSES,
+} from "@megawin/game-core/entities";
+import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
 import type { FindOptions } from "mongodb";
 import type {
   DrawDoc,
@@ -398,19 +402,42 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     );
   }
 
-  /** Lấy tất cả draws đang active (theo danh sách statuses). */
-  async getActiveDraws(
-    allowStatuses: string[],
-    lookbackDays = 2,
+  /**
+   * Lấy kỳ chưa hoàn thành (unfinished) — single source of truth "kỳ đang vận hành".
+   *
+   * Lọc thuần theo status ∈ `statuses` (subset của DRAW_UNFINISHED_STATUSES), KHÔNG lookback theo
+   * drawDate. An toàn về performance: `status` là equality prefix của idx_status_drawId_desc →
+   * IXSCAN chỉ chạm kỳ unfinished (vài chục), không bao giờ scan kỳ Settled/Void cũ (đa số dữ liệu).
+   * Bắt trọn 100% kỳ kẹt bất kể cũ bao lâu.
+   *
+   * @param statuses - Subset status cần lấy (default: toàn bộ DRAW_UNFINISHED_STATUSES).
+   *   Truyền subset hẹp hơn cho consumer cần giới hạn phạm vi (VD: player-facing chỉ
+   *   [SalesOpen, SalesClosed] — không lộ Settling/Voiding vốn chỉ dành cho staff).
+   */
+  async getUnfinishedDraws(
+    statuses: readonly UnfinishedDrawStatus[] = DRAW_UNFINISHED_STATUSES,
     options?: FindOptions,
   ): Promise<DrawEntity[]> {
-    const fromDateStr = formatVNDate(subDays(new Date(), lookbackDays));
     return await this.findMany(
-      {
-        status: { $in: allowStatuses },
-        drawDate: { $gte: fromDateStr },
-      },
-      { sort: { drawDate: 1, drawNo: 1 }, ...options },
+      { status: { $in: [...statuses] } },
+      { sort: { drawId: -1 }, ...options },
+    );
+  }
+
+  /**
+   * Lấy N kỳ đã hoàn thành gần nhất (settled/void) — dùng cho nhóm "recent" trên draw selector
+   * (tra soát/resettle nhanh), KHÔNG dùng để phát hiện kỳ kẹt (đã có `getUnfinishedDraws`).
+   *
+   * Lấy theo SỐ PHIÊN thay vì lookback theo ngày: Power 6/55 chỉ quay 3 kỳ/tuần, lookback theo
+   * ngày dễ trả về rỗng đúng lúc cần tra soát. Lấy theo N phiên tự thích ứng tần suất.
+   *
+   * Performance: `status $in DRAW_COMPLETED_STATUSES` là equality prefix của idx_status_drawId_desc,
+   * sort `drawId desc` khớp chiều index → IXSCAN, dừng ngay khi đủ `limit`.
+   */
+  async getRecentCompletedDraws(limit = 5, options?: FindOptions): Promise<DrawEntity[]> {
+    return await this.findMany(
+      { status: { $in: [...DRAW_COMPLETED_STATUSES] } },
+      { sort: { drawId: -1 }, limit, ...options },
     );
   }
 
@@ -675,5 +702,3 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
     return await this.updateOne({ drawId }, { $set: { vietlottRef, updatedAt: new Date() } });
   }
 }
-
-export { VALID_TRANSITIONS };

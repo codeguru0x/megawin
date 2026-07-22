@@ -12,8 +12,12 @@
  */
 
 import { KenoCollections } from "@megawin/game-keno/entities";
-import { DrawStatus, DRAW_UNFINISHED_STATUSES } from "@megawin/game-core/entities";
-import { subDays, formatVNDate } from "@megawin/shared/utils";
+import {
+  DrawStatus,
+  DRAW_UNFINISHED_STATUSES,
+  DRAW_COMPLETED_STATUSES,
+} from "@megawin/game-core/entities";
+import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
 import type { FindOptions } from "mongodb";
 import type {
   DrawDoc,
@@ -103,31 +107,42 @@ export class DrawRepository extends BaseRepo<DrawEntity, DrawMapper> {
   }
 
   /**
-   * Tất cả kỳ quay đang ở trạng thái allowStatuses.
-   * lookbackDays: giới hạn theo ngày để tránh quét toàn bộ collection (dùng cho settled).
-   *   - undefined: không filter ngày — dùng cho active draws (không bỏ sót kỳ bị trễ).
-   *   - số ngày: chỉ lấy từ (today - lookbackDays) trở về sau.
-   * options: MongoDB FindOptions bổ sung (projection, limit...).
+   * Lấy kỳ chưa hoàn thành (unfinished) — single source of truth "kỳ đang vận hành".
+   *
+   * Lọc thuần theo status ∈ `statuses` (subset của DRAW_UNFINISHED_STATUSES), KHÔNG lookback theo
+   * drawDate. An toàn về performance: `status` là equality prefix của idx_status_drawId_desc →
+   * IXSCAN chỉ chạm kỳ unfinished, không bao giờ scan kỳ Settled/Void cũ. Bắt trọn 100% kỳ kẹt
+   * bất kể cũ bao lâu.
+   *
+   * @param statuses - Subset status cần lấy (default: toàn bộ DRAW_UNFINISHED_STATUSES).
+   *   Truyền subset hẹp hơn cho consumer cần giới hạn phạm vi (VD: player-facing chỉ
+   *   [SalesOpen, SalesClosed] — không lộ Settling/Voiding vốn chỉ dành cho staff).
    */
-  async getActiveDraws(
-    allowStatuses: string[],
-    lookbackDays?: number,
+  async getUnfinishedDraws(
+    statuses: readonly UnfinishedDrawStatus[] = DRAW_UNFINISHED_STATUSES,
     options?: FindOptions,
   ): Promise<DrawEntity[]> {
-    const query: Record<string, unknown> = {
-      status: { $in: allowStatuses },
-    };
-    // Khi lookbackDays được cung cấp, filter theo ngày để giới hạn số lượng kết quả
-    // (dùng cho settled draws có thể rất nhiều). Active draws không filter ngày
-    // để không bỏ sót kỳ đang vận hành bị trễ qua ngày.
-    if (lookbackDays !== undefined) {
-      const fromDateStr = formatVNDate(subDays(new Date(), lookbackDays));
-      query.drawDate = { $gte: fromDateStr };
-    }
-    return await this.findMany(query, {
-      sort: { drawDate: 1, drawNo: 1 },
-      ...options,
-    });
+    return await this.findMany(
+      { status: { $in: [...statuses] } },
+      { sort: { drawId: -1 }, ...options },
+    );
+  }
+
+  /**
+   * Lấy N kỳ đã hoàn thành gần nhất (settled/void) — dùng cho nhóm "recent" trên draw selector
+   * (tra soát/resettle nhanh), KHÔNG dùng để phát hiện kỳ kẹt (đã có `getUnfinishedDraws`).
+   *
+   * Lấy theo SỐ PHIÊN thay vì lookback theo ngày — nhất quán với các game khác dù Keno
+   * quay tần suất cao (~120 kỳ/ngày), tránh phải lookback + limit riêng lẻ như trước.
+   *
+   * Performance: `status $in DRAW_COMPLETED_STATUSES` là equality prefix của idx_status_drawId_desc,
+   * sort `drawId desc` khớp chiều index → IXSCAN, dừng ngay khi đủ `limit`.
+   */
+  async getRecentCompletedDraws(limit = 5, options?: FindOptions): Promise<DrawEntity[]> {
+    return await this.findMany(
+      { status: { $in: [...DRAW_COMPLETED_STATUSES] } },
+      { sort: { drawId: -1 }, limit, ...options },
+    );
   }
 
   /**

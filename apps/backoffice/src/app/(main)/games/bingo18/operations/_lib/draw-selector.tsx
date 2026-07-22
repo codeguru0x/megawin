@@ -6,7 +6,7 @@
  * Bingo 18 có ~160 kỳ/ngày, 1 kỳ mỗi 6 phút → danh sách lớn.
  * Dùng Command Palette pattern (Popover + search inline):
  * - Search/filter theo giờ quay hoặc số kỳ
- * - Group: Cần xử lý | Kỳ sắp tới | Vừa hoàn thành
+ * - Group: Đang diễn ra | Kỳ sắp tới | Vừa hoàn thành
  * - Scroll 300px per group
  */
 
@@ -24,7 +24,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DrawStatus } from "@megawin/game-core/entities";
+import { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
 import { Bingo18DrawStatusBadge } from "@/components/games/bingo18/draw-status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,8 +68,8 @@ const STATUS_DOT: Record<string, React.ReactNode> = {
 // ─── Group config ──────────────────────────────────────────────────────────
 
 const GROUP_CONFIG = {
-  active: {
-    label: "Cần xử lý",
+  [DrawSelectorGroup.Active]: {
+    label: "Đang diễn ra",
     color: "text-green-600 dark:text-green-400",
     badgeClass:
       "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-green-200",
@@ -80,14 +80,14 @@ const GROUP_CONFIG = {
       </span>
     ),
   },
-  upcoming: {
+  [DrawSelectorGroup.Future]: {
     label: "Kỳ sắp tới",
     color: "text-slate-500 dark:text-slate-400",
     badgeClass:
       "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200",
     icon: <Circle className="size-1.5 fill-slate-400 text-slate-400" />,
   },
-  recent: {
+  [DrawSelectorGroup.Recent]: {
     label: "Vừa hoàn thành",
     color: "text-emerald-600 dark:text-emerald-400",
     badgeClass:
@@ -230,12 +230,21 @@ export function DrawSelector({
     }
   }, [open]);
 
-  const allActive = useMemo(() => draws.filter((d) => d.group === "active"), [draws]);
-  const allUpcoming = useMemo(() => draws.filter((d) => d.group === "upcoming"), [draws]);
-  const allRecent = useMemo(() => draws.filter((d) => d.group === "recent"), [draws]);
+  const allActive = useMemo(
+    () => draws.filter((d) => d.group === DrawSelectorGroup.Active),
+    [draws],
+  );
+  const allFuture = useMemo(
+    () => draws.filter((d) => d.group === DrawSelectorGroup.Future),
+    [draws],
+  );
+  const allRecent = useMemo(
+    () => draws.filter((d) => d.group === DrawSelectorGroup.Recent),
+    [draws],
+  );
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return { active: allActive, upcoming: allUpcoming, recent: allRecent };
+    if (!search.trim()) return { active: allActive, future: allFuture, recent: allRecent };
 
     const q = search.trim().toLowerCase();
     const match = (d: DrawSelectorItem) =>
@@ -245,12 +254,12 @@ export function DrawSelector({
 
     return {
       active: allActive.filter(match),
-      upcoming: allUpcoming.filter(match),
+      future: allFuture.filter(match),
       recent: allRecent.filter(match),
     };
-  }, [search, allActive, allUpcoming, allRecent]);
+  }, [search, allActive, allFuture, allRecent]);
 
-  const totalFiltered = filtered.active.length + filtered.upcoming.length + filtered.recent.length;
+  const totalFiltered = filtered.active.length + filtered.future.length + filtered.recent.length;
 
   function handleSelect(drawId: string) {
     onSelect(drawId);
@@ -263,7 +272,7 @@ export function DrawSelector({
         <Button
           variant="outline"
           size="sm"
-          className="h-9 min-w-[200px] max-w-[280px] justify-between gap-2 font-normal"
+          className="h-9 min-w-50 max-w-70 justify-between gap-2 font-normal"
           aria-expanded={open}
         >
           <TriggerLabel draw={selected} />
@@ -292,13 +301,13 @@ export function DrawSelector({
           <div className="mb-2 flex items-center gap-1.5 rounded-md bg-green-50 dark:bg-green-950/40 px-2.5 py-1.5">
             <Zap className="size-3 text-green-500 shrink-0" />
             <span className="text-[11px] text-green-700 dark:text-green-400">
-              {allActive.length} kỳ cần xử lý
-              {allUpcoming.length > 0 && ` · ${allUpcoming.length} sắp tới`}
+              {allActive.length} kỳ đang diễn ra
+              {allFuture.length > 0 && ` · ${allFuture.length} sắp tới`}
             </span>
           </div>
         )}
 
-        <div className="max-h-[420px] overflow-y-auto space-y-2">
+        <div className="max-h-105 overflow-y-auto space-y-2">
           {totalFiltered === 0 ? (
             <p className="py-6 text-center text-xs text-muted-foreground">
               Không tìm thấy kỳ quay.
@@ -306,26 +315,26 @@ export function DrawSelector({
           ) : (
             <>
               <GroupSection
-                group="active"
+                group={DrawSelectorGroup.Active}
                 draws={filtered.active}
                 selectedDrawId={selectedDrawId}
                 onSelect={handleSelect}
               />
 
-              {filtered.active.length > 0 && filtered.upcoming.length > 0 && <Separator />}
+              {filtered.active.length > 0 && filtered.future.length > 0 && <Separator />}
 
               <GroupSection
-                group="upcoming"
-                draws={filtered.upcoming}
+                group={DrawSelectorGroup.Future}
+                draws={filtered.future}
                 selectedDrawId={selectedDrawId}
                 onSelect={handleSelect}
               />
 
-              {(filtered.active.length > 0 || filtered.upcoming.length > 0) &&
+              {(filtered.active.length > 0 || filtered.future.length > 0) &&
                 filtered.recent.length > 0 && <Separator />}
 
               <GroupSection
-                group="recent"
+                group={DrawSelectorGroup.Recent}
                 draws={filtered.recent}
                 selectedDrawId={selectedDrawId}
                 onSelect={handleSelect}
