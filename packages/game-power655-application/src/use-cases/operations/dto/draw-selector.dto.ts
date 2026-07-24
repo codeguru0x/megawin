@@ -24,7 +24,7 @@ export interface DrawSelectorItem {
   status: DrawStatus;
   /** Ngày tài chính của kỳ (YYYY-MM-DD). */
   financialDate: string;
-  /** Nhóm hiển thị trong dropdown. */
+  /** Nhóm hiển thị trong dropdown. active/future sort ASC, recent sort DESC (mới nhất lên đầu). */
   group: DrawSelectorGroup;
   /**
    * Thời điểm kết sổ thành công (ISO 8601). High-water mark.

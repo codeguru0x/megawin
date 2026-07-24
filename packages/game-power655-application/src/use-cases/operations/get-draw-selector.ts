@@ -19,7 +19,8 @@ import type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selecto
  * Nhóm active/future lấy từ `getUnfinishedDraws()` — KHÔNG lookback theo ngày, không sót kỳ nào.
  * Nhóm recent lấy theo SỐ PHIÊN (không lookback ngày) — xem `getRecentCompletedDraws`.
  * Power 6/55: 3 kỳ/tuần (thứ 3, 5, 7), 1 kỳ/ngày (drawNo = 1 cố định).
- * Sorted theo drawDate asc (trong mỗi nhóm).
+ * Sorted: active/future theo drawDate ASC (cũ→mới). recent theo drawDate DESC (mới→cũ) — kỳ
+ * vừa hoàn thành gần nhất lên đầu, dễ theo dõi.
  */
 export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelectorOutput> {
   private readonly drawRepo = new DrawRepository();
@@ -40,8 +41,6 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
       unfinishedDraws.filter((d) => d.status === DrawStatus.Scheduled),
       (d) => d.drawId,
     );
-    // getRecentCompletedDraws trả về DESC — re-sort ASC để giữ thứ tự hiển thị cũ→mới.
-    const recentSorted = sortBy(recentDraws, (d) => d.drawId);
 
     const toItem = (d: DrawEntity, group: DrawSelectorGroup): DrawSelectorItem => {
       // drawTime luôn là Date thật (DrawEntity.drawTime: Date, không optional) — không cần guard.
@@ -71,7 +70,10 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
     const draws: DrawSelectorItem[] = [
       ...activeDraws.map((d) => toItem(d, DrawSelectorGroup.Active)),
       ...futureOnly.map((d) => toItem(d, DrawSelectorGroup.Future)),
-      ...recentSorted.map((d) => toItem(d, DrawSelectorGroup.Recent)),
+      // getRecentCompletedDraws đã trả về DESC (drawId:-1, mới nhất trước) — dùng thẳng, KHÔNG
+      // re-sort ASC như active/future: "vừa hoàn thành" nên hiện kỳ mới nhất lên đầu để staff
+      // không phải kéo xuống cuối danh sách mới thấy kỳ vừa xong.
+      ...recentDraws.map((d) => toItem(d, DrawSelectorGroup.Recent)),
     ];
 
     return { draws };

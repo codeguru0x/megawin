@@ -11,7 +11,7 @@ import type { GetDrawSelectorOutput, DrawSelectorItem } from "./dto/draw-selecto
  *   - active: unfinished còn lại (salesOpen/salesClosed/published/settling/voiding, và cả
  *     scheduled đã tới hạn/quá khứ — coi như cần xử lý).
  *   - future: scheduled sắp tới, chỉ lấy 10 kỳ gần nhất (sort drawTime asc).
- *   - recent: 5 kỳ settled/void gần đây nhất.
+ *   - recent: 5 kỳ settled/void gần đây nhất (sort drawId desc — mới nhất lên đầu, dễ theo dõi).
  *
  * `active` + `future` cùng lấy từ 1 query `getUnfinishedDraws()` (KHÔNG lookback ngày) rồi
  * phân loại in-memory — tránh bỏ sót kỳ kẹt cũ dù trễ bao lâu.
@@ -23,13 +23,10 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
   private readonly drawRepo = new DrawRepository();
 
   protected async execute(): Promise<GetDrawSelectorOutput> {
-    const [unfinishedDraws, recentDrawsDesc] = await Promise.all([
+    const [unfinishedDraws, recentDraws] = await Promise.all([
       this.drawRepo.getUnfinishedDraws(),
       this.drawRepo.getRecentCompletedDraws(5),
     ]);
-
-    // getRecentCompletedDraws trả về DESC — re-sort ASC để giữ thứ tự hiển thị cũ→mới.
-    const recentDraws = sortBy(recentDrawsDesc, (d) => d.drawId);
 
     const futureDraws = sortBy(
       unfinishedDraws.filter((d) => d.status === DrawStatus.Scheduled),
@@ -59,6 +56,8 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
     const draws: DrawSelectorItem[] = [
       ...activeDraws.map((d) => toItem(d, DrawSelectorGroup.Active)),
       ...futureDraws.map((d) => toItem(d, DrawSelectorGroup.Future)),
+      // getRecentCompletedDraws đã trả về DESC (drawId:-1, mới nhất trước) — dùng thẳng, KHÔNG
+      // re-sort ASC như active/future: "vừa hoàn thành" nên hiện kỳ mới nhất lên đầu, dễ theo dõi.
       ...recentDraws.map((d) => toItem(d, DrawSelectorGroup.Recent)),
     ];
 
