@@ -3,7 +3,7 @@
 /**
  * Max 3D Pro — Winning Entries Dialog
  *
- * Báo cáo entries trúng thưởng Max 3D Pro.
+ * Báo cáo phiếu trúng thưởng Max 3D Pro.
  * Max 3D Pro đặc thù:
  * - boards[].triplets: danh sách bộ ba (multiNumber: 3-20 bộ, multiDigit: expand từ frontDigits × backDigits).
  * - playMode: multiNumber / multiDigit.
@@ -12,7 +12,7 @@
  * - isDuplicate: 2 bộ ba giống nhau → giải thưởng × 2.
  */
 
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Table,
@@ -23,9 +23,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { TripletDisplay } from "@/components/games/max3dpro/triplet-display";
-import { formatNumber, displayVNDateTime } from "@megawin/shared/utils";
+import { formatNumber, formatVN } from "@megawin/shared/utils";
 import { toTenantUsername } from "@megawin/shared/utils";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { Trophy, Loader2, FileSearch, Users, Banknote } from "lucide-react";
 import {
   MAX3DPRO_PLAY_MODE_LABELS,
@@ -34,12 +36,23 @@ import {
 } from "@megawin/game-max3dpro/labels";
 import { PrizeTier } from "@megawin/game-max3dpro/entities";
 import { cn } from "@/lib/utils";
-import { useWinningEntries } from "../../use-operations";
+import {
+  useWinningEntries,
+  useWinningEntryDetail,
+  WINNING_ENTRIES_PAGE_SIZE,
+} from "../../use-operations";
 import type { WinningEntryItem } from "../../use-operations";
+import { Max3dproEntryDetailDialog } from "../../../../reports/settle/_lib/sections/entry-detail-dialog";
 
 // ─── Board chip ───────────────────────────────────────────────────────────────
 
-function BoardChip({ board }: { board: WinningEntryItem["boards"][number] }) {
+function BoardChip({
+  board,
+  winningSet,
+}: {
+  board: WinningEntryItem["boards"][number];
+  winningSet: Set<string>;
+}) {
   const modeLabel =
     MAX3DPRO_PLAY_MODE_LABELS[board.playMode as keyof typeof MAX3DPRO_PLAY_MODE_LABELS] ??
     board.playMode;
@@ -52,7 +65,12 @@ function BoardChip({ board }: { board: WinningEntryItem["boards"][number] }) {
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-1 flex-wrap max-w-65">
           {board.triplets.map((t, i) => (
-            <TripletDisplay key={i} value={t} variant="special" size="sm" />
+            <TripletDisplay
+              key={i}
+              value={t}
+              variant={winningSet.has(t) ? "matched" : "default"}
+              size="sm"
+            />
           ))}
         </div>
         <span className="text-[10px] text-orange-600 dark:text-orange-400 font-medium">
@@ -98,66 +116,88 @@ function TierChip({ tier }: { tier: WinningEntryItem["tiers"][number] }) {
   );
 }
 
-// ─── KPI bar ──────────────────────────────────────────────────────────────────
+// ─── KPI card ─────────────────────────────────────────────────────────────────
+
+/**
+ * KPI card đồng bộ với KPI Strip của trang Operations (operations-page-ui.mdc §10).
+ * rounded-xl border bg-card shadow-sm · icon size-10 rounded-lg nền đặc · value text-lg font-bold.
+ */
+function KpiCard({
+  icon: Icon,
+  iconBg,
+  iconColor,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  iconBg: string;
+  iconColor: string;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm flex-1 min-w-0">
+      <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
+        <Icon className={cn("size-5", iconColor)} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
+        <p className="text-lg font-bold tabular-nums text-foreground leading-tight">{value}</p>
+      </div>
+    </div>
+  );
+}
 
 function KpiBar({
-  drawId,
   totalWinningEntries,
   totalWinAmount,
 }: {
-  drawId: string;
   totalWinningEntries: number;
   totalWinAmount: number;
 }) {
   return (
-    <div className="flex items-stretch divide-x divide-border/40 border-b bg-muted/20 shrink-0">
-      <div className="flex flex-col justify-center px-6 py-3 w-44 shrink-0">
-        <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-          Kỳ quay
-        </p>
-        <p className="font-mono text-sm font-semibold text-foreground tracking-tight mt-0.5">
-          {drawId}
-        </p>
-      </div>
-      <div className="flex flex-1 items-center gap-3 px-6 py-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-blue-500/10 border border-blue-500/20 shrink-0">
-          <Users className="size-4 text-blue-500" />
-        </div>
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-            Entries trúng
-          </p>
-          <p className="text-xl font-semibold tabular-nums text-foreground leading-tight mt-0.5">
-            {formatNumber(totalWinningEntries)}
-          </p>
-        </div>
-      </div>
-      <div className="flex flex-1 items-center gap-3 px-6 py-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-amber-500/15 border border-amber-500/30 shrink-0">
-          <Banknote className="size-4 text-amber-500" />
-        </div>
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-            Tổng chi trả
-          </p>
-          <p className="text-xl font-semibold tabular-nums text-foreground leading-tight mt-0.5">
-            {formatNumber(totalWinAmount)}
-          </p>
-        </div>
-      </div>
+    <div className="flex gap-3 border-b bg-muted/20 px-6 py-3 shrink-0">
+      <KpiCard
+        icon={Users}
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
+        label={REPORT_COLUMN_LABELS.winningEntryCount}
+        value={formatNumber(totalWinningEntries)}
+      />
+      <KpiCard
+        icon={Banknote}
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
+        label={REPORT_COLUMN_LABELS.totalWinningPayout}
+        value={formatNumber(totalWinAmount)}
+      />
     </div>
   );
 }
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
-function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: number }) {
+function WinningEntryRow({
+  entry,
+  rowNo,
+  onClick,
+}: {
+  entry: WinningEntryItem;
+  rowNo: number;
+  onClick: () => void;
+}) {
   const displayName = toTenantUsername(entry.username) ?? entry.username;
+  const winningSet = new Set(entry.winningTriplets);
 
   return (
-    <TableRow className="align-top group transition-colors hover:bg-muted/30">
+    <TableRow
+      onClick={onClick}
+      className="align-top group transition-colors hover:bg-muted/30 cursor-pointer"
+    >
       <TableCell className="pl-6 py-3 text-center">
-        <span className="text-xs text-muted-foreground/50 tabular-nums">{rowNo}</span>
+        <span className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-xs font-semibold tabular-nums text-muted-foreground">
+          {rowNo}
+        </span>
       </TableCell>
       <TableCell className="py-3">
         <div>
@@ -173,7 +213,7 @@ function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: num
       <TableCell className="py-3">
         <div className="flex flex-col gap-1.5">
           {entry.boards.map((b, i) => (
-            <BoardChip key={i} board={b} />
+            <BoardChip key={i} board={b} winningSet={winningSet} />
           ))}
         </div>
       </TableCell>
@@ -184,15 +224,13 @@ function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: num
           ))}
         </div>
       </TableCell>
-      <TableCell className="py-3 text-right">
+      <TableCell className="py-3 pr-6 text-right">
         <p className="text-sm tabular-nums text-foreground font-medium">
           {formatNumber(entry.winAmount)}
         </p>
-      </TableCell>
-      <TableCell className="py-3 pr-6">
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {displayVNDateTime(entry.createdAt)}
-        </span>
+        <p className="text-xs text-muted-foreground/50 tabular-nums mt-0.5">
+          {formatVN(new Date(entry.createdAt), "HH:mm dd/MM")}
+        </p>
       </TableCell>
     </TableRow>
   );
@@ -207,11 +245,20 @@ interface WinningEntriesDialogProps {
 }
 
 export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntriesDialogProps) {
-  const { data, isLoading } = useWinningEntries(drawId, open);
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useWinningEntries(
+    drawId,
+    open,
+  );
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const { data: selectedEntry } = useWinningEntryDetail(selectedEntryId, {
+    onNotFound: () => setSelectedEntryId(null),
+  });
   const handleOpenChange = useCallback((o: boolean) => onOpenChange(o), [onOpenChange]);
 
-  const entries = data?.entries ?? [];
-  const summary = data?.summary;
+  // Gộp entries từ tất cả trang đã load — KPI (summary) lấy từ trang đầu, độc lập
+  // với số trang đã load vì backend tính bằng aggregate riêng quét toàn bộ kỳ.
+  const entries = useMemo(() => data?.pages.flatMap((p) => p.entries) ?? [], [data]);
+  const summary = data?.pages[0]?.summary;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -231,10 +278,10 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
             </div>
             <div>
               <DialogTitle className="text-base font-bold tracking-tight">
-                Báo cáo entries trúng thưởng
+                Danh sách trúng thưởng
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                Danh sách chi tiết · sắp xếp theo tiền thưởng cao nhất
+                Kỳ <span className="font-mono text-foreground">{drawId}</span>
               </DialogDescription>
             </div>
           </div>
@@ -242,7 +289,6 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
 
         {summary && (
           <KpiBar
-            drawId={drawId}
             totalWinningEntries={summary.totalWinningEntries}
             totalWinAmount={summary.totalWinAmount}
           />
@@ -263,10 +309,10 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
               </div>
               <div className="text-center">
                 <p className="text-base font-semibold text-foreground">
-                  Không có entry trúng thưởng
+                  Không có phiếu trúng thưởng
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Kỳ này không có entries nào trúng thưởng.
+                  Kỳ này không có phiếu cược nào trúng thưởng.
                 </p>
               </div>
             </div>
@@ -274,18 +320,26 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
             <Table>
               <TableHeader className="sticky top-0 z-10">
                 <TableRow className="hover:bg-muted/40">
-                  <TableHead className="pl-6 w-12 text-center">#</TableHead>
-                  <TableHead className="w-44">Người chơi</TableHead>
-                  <TableHead className="w-24 text-right">Tiền cược</TableHead>
-                  <TableHead className="min-w-65">Bộ ba số</TableHead>
-                  <TableHead className="w-48">Hạng giải trúng</TableHead>
-                  <TableHead className="w-32 text-right">Tổng thưởng</TableHead>
-                  <TableHead className="pr-6 w-36">Thời gian</TableHead>
+                  <TableHead className="pl-6 w-12 text-center">STT</TableHead>
+                  <TableHead className="w-44">{REPORT_COLUMN_LABELS.player}</TableHead>
+                  <TableHead className="w-28 text-right">
+                    {REPORT_COLUMN_LABELS.totalStake}
+                  </TableHead>
+                  <TableHead className="min-w-65">{REPORT_COLUMN_LABELS.tripletsPlayed}</TableHead>
+                  <TableHead className="w-48">{REPORT_COLUMN_LABELS.prizeTier}</TableHead>
+                  <TableHead className="pr-6 w-40 text-right">
+                    {REPORT_COLUMN_LABELS.winAmount}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {entries.map((entry: WinningEntryItem, idx: number) => (
-                  <WinningEntryRow key={entry.entryId} entry={entry} rowNo={idx + 1} />
+                  <WinningEntryRow
+                    key={entry.entryId}
+                    entry={entry}
+                    rowNo={idx + 1}
+                    onClick={() => setSelectedEntryId(entry.entryId)}
+                  />
                 ))}
               </TableBody>
             </Table>
@@ -293,11 +347,38 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
         </div>
 
         {entries.length > 0 && (
-          <div className="shrink-0 border-t bg-muted/20 px-6 py-2.5 flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{entries.length} entries</span>
+          <div className="shrink-0 border-t bg-muted/20 px-6 py-2.5 flex items-center justify-between gap-2">
+            <span className="text-xs text-muted-foreground">
+              Hiển thị {formatNumber(entries.length)}
+              {summary && ` / ${formatNumber(summary.totalWinningEntries)}`} phiếu trúng
+            </span>
+            {hasNextPage && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                disabled={isFetchingNextPage}
+                onClick={() => fetchNextPage()}
+              >
+                {isFetchingNextPage ? (
+                  <>
+                    <Loader2 className="size-3.5 animate-spin" />
+                    Đang tải…
+                  </>
+                ) : (
+                  `Tải thêm ${WINNING_ENTRIES_PAGE_SIZE}`
+                )}
+              </Button>
+            )}
           </div>
         )}
       </DialogContent>
+
+      <Max3dproEntryDetailDialog
+        entry={selectedEntry ?? null}
+        open={!!selectedEntryId}
+        onClose={() => setSelectedEntryId(null)}
+      />
     </Dialog>
   );
 }

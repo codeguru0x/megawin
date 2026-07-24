@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 interface TripletDisplayProps {
   value: string;
-  variant?: "default" | "special" | "first" | "second" | "third";
+  variant?: "default" | "special" | "first" | "second" | "third" | "matched" | "result";
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -29,6 +29,9 @@ const VARIANT_STYLES: Record<string, string> = {
     "bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-sm shadow-blue-200/40 dark:shadow-blue-900/20",
   third:
     "bg-linear-to-br from-emerald-500 to-green-600 text-white shadow-sm shadow-emerald-200/40 dark:shadow-emerald-900/20",
+  // Highlight đối chiếu kết quả (entry-detail + winning-entries dialog):
+  matched: "bg-primary text-primary-foreground ring-2 ring-primary/30",
+  result: "bg-muted/60 text-muted-foreground/50",
 };
 
 const SIZE_STYLES: Record<string, string> = {

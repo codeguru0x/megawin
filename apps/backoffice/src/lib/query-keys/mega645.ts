@@ -70,8 +70,7 @@ export const mega645Keys = {
   opsTopCombos: (drawId: string) => [MODULE, "ops-top-combos", drawId] as const,
 
   /** Operations dashboard – winning entries của 1 kỳ quay (cursor-based) */
-  opsWinningEntries: (drawId: string, cursor: string) =>
-    [MODULE, "ops-winning-entries", drawId, cursor] as const,
+  opsWinningEntries: (drawId: string) => [MODULE, "ops-winning-entries", drawId] as const,
 
   // ─── Financial Reports ─────────────────────────────────────────────────────
 

@@ -57,8 +57,7 @@ export const max3dKeys = {
   opsTopCombos: (drawId: string) => [MODULE, "ops-top-combos", drawId] as const,
 
   /** Operations dashboard – winning entries của 1 kỳ quay (cursor-based) */
-  opsWinningEntries: (drawId: string, cursor: string) =>
-    [MODULE, "ops-winning-entries", drawId, cursor] as const,
+  opsWinningEntries: (drawId: string) => [MODULE, "ops-winning-entries", drawId] as const,
 
   // ─── Financial Reports ─────────────────────────────────────────────────────
 
@@ -88,6 +87,9 @@ export const max3dKeys = {
   /** Entry list của 1 player trong 1 kỳ quay */
   reportEntries: (params: { drawId: string; tenantId: string; accountId: string }) =>
     [MODULE, "report-entries", params] as const,
+
+  /** Chi tiết 1 entry theo entryId — dùng cho dialog xem chi tiết từ Winning Entries Dialog */
+  reportEntryById: (entryId: string) => [MODULE, "report-entry", entryId] as const,
 
   // ─── Outstanding ───────────────────────────────────────────────────────────
 

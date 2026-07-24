@@ -91,14 +91,31 @@ export interface DrawFinancialDisplay {
   totalFixedPrizes: number;
   /** Tổng hoa hồng đại lý (VND). */
   totalAgentCommission: number;
-  /** Phần công ty giữ lại (VND). */
+  /** Công ty thu lý thuyết (VND) = round(revenue × companyRate). Mức trần trước cap. */
   companyTake: number;
+  /**
+   * Công ty THỰC THU (VND) sau cap bởi số dư.
+   * = min(companyTake, max(revenue − commission − fixedPrizes, 0)). Dùng để tính Thu thuần.
+   */
+  actualCompanyTake: number;
   /** Phần đóng góp Jackpot (VND). */
   jackpotContribution: number;
   /** Jackpot pool đầu kỳ (VND). */
   jackpotBefore: number;
-  /** Jackpot pool cuối kỳ (VND). */
+  /**
+   * Jackpot pool cuối kỳ (VND) = jackpotBefore + jackpotContribution.
+   * Có winner: pool đã trao cho winner. Split: quỹ trước khi chia tier1-5. Roll-over: mang sang kỳ sau.
+   */
   jackpotAfter: number;
+  /** Kỳ này có người trúng độc đắc hay không. */
+  hasJackpotWinner: boolean;
+  /** Kỳ này là kỳ chia giải (split cycle) — JP chia cho tier1-5 thay vì trao độc đắc. */
+  isSplitCycle: boolean;
+  /**
+   * Tổng pool Jackpot đã xử lý kỳ này (VND) = jackpotBefore + jackpotContribution.
+   * Có winner: trao cho winner. Split: chia cho tier1-5. 0 nếu roll-over.
+   */
+  jackpotPrizeAwarded: number;
 }
 
 // ─── Void Info ───────────────────────────────────────────────────────────────

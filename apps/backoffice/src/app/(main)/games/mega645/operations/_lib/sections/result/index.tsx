@@ -52,6 +52,12 @@ export function ResultSection() {
       };
     });
 
+    // Jackpot winner: winnerCount > 0 ở tier jackpot. Pool đã trao = totalPrize tier đó
+    // (đã patch = jackpotBefore + contribution bởi PatchJackpotPrize).
+    const jackpotTier = tierMap.get(PrizeTier.Jackpot);
+    const hasJackpotWinner = (jackpotTier?.winnerCount ?? 0) > 0;
+    const jackpotPrizeAwarded = hasJackpotWinner ? (jackpotTier?.prizeAmount ?? 0) : 0;
+
     return {
       // Mega 6/45: 6 số chính (01-45), không có winningSpecial
       winningNumbers: d.result.winningNumbers as [string, string, string, string, string, string],
@@ -65,9 +71,12 @@ export function ResultSection() {
         totalFixedPrizes: d.financial?.totalFixedPrizes ?? 0,
         totalAgentCommission: d.financial?.totalAgentCommission ?? 0,
         companyTake: d.financial?.companyTake ?? 0,
+        actualCompanyTake: d.financial?.actualCompanyTake ?? 0,
         jackpotContribution: d.financial?.jackpotContribution ?? 0,
         jackpotBefore: d.jackpot?.openingAmount ?? 0,
         jackpotAfter: d.jackpot?.closingAmount ?? 0,
+        hasJackpotWinner,
+        jackpotPrizeAwarded,
       },
     };
   }, [drawDetailData]);

@@ -195,12 +195,17 @@ function PickCard({ row }: { row: PlayTypeRow }) {
         s.bg,
         s.border,
       )}
+      title={row.label}
     >
       {/* Label + donut */}
       <div className="flex items-center justify-between gap-1 min-w-0">
         <div className="flex items-center gap-1.5 min-w-0">
           <div className={cn("size-1.5 rounded-full shrink-0", s.dot)} />
-          <span className={cn("text-xs font-bold truncate", s.text)}>{row.label}</span>
+          {/* Container hẹp → label rút gọn "P1"…"P10" (full label ở title tooltip) */}
+          <span className={cn("text-xs font-bold truncate", s.text)}>
+            <span className="@[820px]/main:hidden">P{n}</span>
+            <span className="hidden @[820px]/main:inline">{row.label}</span>
+          </span>
         </div>
         <MiniDonut pct={row.pct} fill={s.fill} size={32} />
       </div>

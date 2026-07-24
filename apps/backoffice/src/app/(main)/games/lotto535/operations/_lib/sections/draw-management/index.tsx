@@ -36,7 +36,13 @@ import {
   ResettleAction,
   type PublishResultCurrentValues,
 } from "./draw-actions";
-import { useOpenSales, useCloseSales, useTriggerSettle, useDrawDetail, useReopenForCascade } from "../../use-operations";
+import {
+  useOpenSales,
+  useCloseSales,
+  useTriggerSettle,
+  useDrawDetail,
+  useReopenForCascade,
+} from "../../use-operations";
 
 import type { DrawResult, VoidInfo } from "../../types";
 
@@ -106,9 +112,16 @@ export function DrawManagementSection() {
         totalFixedPrizes: d.financial?.totalFixedPrizes ?? 0,
         totalAgentCommission: d.financial?.totalAgentCommission ?? 0,
         companyTake: d.financial?.companyTake ?? 0,
+        actualCompanyTake: d.financial?.actualCompanyTake ?? 0,
         jackpotContribution: d.financial?.jackpotContribution ?? 0,
         jackpotBefore: d.jackpot?.openingAmount ?? 0,
         jackpotAfter: d.jackpot?.closingAmount ?? 0,
+        hasJackpotWinner: (tierMap.get(PrizeTier.Jackpot)?.winnerCount ?? 0) > 0,
+        isSplitCycle: d.jackpot?.isSplitCycle ?? false,
+        jackpotPrizeAwarded:
+          (tierMap.get(PrizeTier.Jackpot)?.winnerCount ?? 0) > 0 || d.jackpot?.isSplitCycle
+            ? (d.jackpot?.openingAmount ?? 0) + (d.financial?.jackpotContribution ?? 0)
+            : 0,
       },
     };
   })();

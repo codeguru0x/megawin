@@ -87,7 +87,12 @@ export interface JackpotCycleEntryDoc {
   /**
    * Phần tích luỹ cộng vào Jackpot kỳ này (VND).
    * = `DrawFinancial.jackpotContribution` sau settle.
-   * = 0 nếu có Jackpot winner (winner nhận toàn bộ pool, cycle mới bắt đầu từ seed).
+   * Công thức: max(revenue − fixedPrizes − commission − actualCompanyTake, 0).
+   *
+   * LƯU Ý: giá trị này KHÔNG bị ép về 0 khi có Jackpot winner. Contribution vẫn
+   * là phần dư của kỳ (có thể > 0 nếu kỳ có lãi) và được CỘNG vào pool trước khi
+   * trao cho winner: `totalJackpotPrize = openingJp + jpContribution` (xem
+   * PatchJackpotPrizeUseCase). = 0 chỉ khi kỳ không còn dư (lỗ hoặc hoà).
    */
   jpContribution: number;
 

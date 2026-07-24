@@ -1,5 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
+import { Pagination } from "@megawin/shared/constants/pagination";
 import { EntryRepository } from "../../infras/repos/entry-repo";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import type {
@@ -26,7 +27,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
 
   protected async execute(input: GetWinningEntriesInput): Promise<GetWinningEntriesOutput> {
     const { drawId } = input;
-    const limit = Math.min(input.limit ?? 50, 200);
+    const limit = Math.min(input.limit ?? Pagination.Report.Size, Pagination.Report.Max);
 
     const draw = await this.drawRepo.getDrawById(drawId);
     if (!draw) {
@@ -72,6 +73,8 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
           tenantId: e.tenantId,
           amount: e.amount,
           winAmount: e.payout?.winAmount ?? 0,
+          winningNumbers: e.result?.numbers ?? [],
+          drawSum: e.result?.sum ?? 0,
           boardDetails,
           createdAt: e.createdAt.toISOString(),
           settledAt: e.payout?.settledAt?.toISOString() ?? "",

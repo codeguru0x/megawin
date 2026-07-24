@@ -19,6 +19,8 @@ export interface OpsKpi {
   uniquePlayers: number;
   /** Tổng hoa hồng đại lý (VND). */
   totalCommission: number;
+  /** Doanh thu thuần (VND) = totalRevenue − totalCommission. */
+  netRevenue: number;
 }
 
 // ─── Tenant Breakdown ────────────────────────────────────────────────────────
@@ -60,7 +62,11 @@ export interface KenoDrawFinancialDisplay {
   totalPrizes: number;
   /** Tổng hoa hồng đại lý (VND). */
   totalAgentCommission: number;
-  /** Phần công ty giữ lại (VND). */
+  /**
+   * Lợi nhuận công ty của kỳ (VND). Công thức: revenue − prizes − commission.
+   * Keno không có Jackpot nên đây là con số cuối cùng — có thể ÂM khi chi trả
+   * giải vượt doanh thu (trúng lớn ở bậc pick cao).
+   */
   companyTake: number;
 }
 

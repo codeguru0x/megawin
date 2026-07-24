@@ -81,7 +81,7 @@ export interface DrawJackpotSnapshot {
  * Populate sau khi settle xong.
  *
  * Công thức:
- *   jackpotContribution = totalRevenue - totalFixedPrizes - totalAgentCommission - companyTake
+ *   jackpotContribution = max(totalRevenue - totalFixedPrizes - totalAgentCommission - actualCompanyTake, 0)
  */
 export interface DrawFinancial {
   /** Tổng doanh thu tiền cược (100% revenue). */
@@ -103,9 +103,9 @@ export interface DrawFinancial {
   companyTake: number;
 
   /**
-   * Tiền tích luỹ vào Jackpot kỳ tiếp theo.
-   * = totalRevenue - totalFixedPrizes - totalAgentCommission - companyTake
-   * Có thể âm nếu trả thưởng nhiều hơn doanh thu (company bù).
+   * Tiền tích luỹ vào Jackpot kỳ tiếp theo (VND).
+   * = max(totalRevenue - totalFixedPrizes - totalAgentCommission - actualCompanyTake, 0).
+   * Luôn >= 0: nếu tính ra âm (doanh thu không đủ bù giải + hoa hồng) thì = 0.
    */
   jackpotContribution: number;
 }

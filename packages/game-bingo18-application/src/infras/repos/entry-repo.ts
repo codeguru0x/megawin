@@ -60,6 +60,11 @@ export class EntryRepository extends BaseRepo<TicketEntryEntity, EntryMapper> {
 
   // ─── Query ───
 
+  /** Lấy 1 entry theo entryId — dùng cho dialog xem chi tiết từ Winning Entries Dialog. */
+  async getEntryById(entryId: string): Promise<TicketEntryEntity | null> {
+    return await this.findOne({ _id: new ObjectId(entryId) });
+  }
+
   /** Lấy tất cả entries của 1 ticket, sắp xếp theo drawId tăng dần. */
   async getEntriesByTicketId(ticketId: string): Promise<TicketEntryEntity[]> {
     return await this.findMany(

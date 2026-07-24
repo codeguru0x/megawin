@@ -78,6 +78,10 @@ export interface WinningEntryItem {
   amount: number;
   /** Tổng tiền trúng thưởng (VND). */
   winAmount: number;
+  /** 3 số kết quả kỳ quay (1-6) — snapshot gắn vào entry lúc settle. Dùng highlight số trúng. */
+  winningNumbers: number[];
+  /** Tổng 3 số kết quả (3-18). Dùng đối chiếu sumTotal/bigSmallDraw. */
+  drawSum: number;
   /** Chi tiết từng board trúng (cả cơ bản và bổ sung). */
   boardDetails: WinningBoardDetail[];
   /** Thời điểm đặt cược. */

@@ -51,6 +51,62 @@ export function Bingo18NumberBall({
   );
 }
 
+// ─── Match Die ───────────────────────────────────────────────────────────────
+
+/**
+ * Variant của xúc xắc dùng để đối chiếu số player chọn với kết quả quay.
+ *
+ * Dùng chung giữa entry-detail-dialog (báo cáo settle) và winning-entries-dialog
+ * (báo cáo trúng thưởng Operations) — 1 nguồn chân lý cho cách highlight số trúng.
+ *
+ * - `matched`: số player chọn TRÙNG kết quả quay — nền primary + ring.
+ * - `result`: 1 trong 3 số kết quả kỳ quay.
+ * - `default`: số player chọn KHÔNG trúng — muted.
+ */
+export type Bingo18MatchDieVariant = "default" | "matched" | "result";
+
+const BINGO18_MATCH_DIE_STYLE: Record<Bingo18MatchDieVariant, string> = {
+  matched: "bg-primary text-primary-foreground ring-2 ring-primary/30",
+  result: "bg-primary text-primary-foreground shadow-md",
+  default: "bg-muted text-muted-foreground",
+};
+
+const BINGO18_MATCH_DIE_SIZE: Record<"sm" | "md" | "lg", { die: string; round: string }> = {
+  sm: { die: "size-7 text-xs", round: "rounded-lg" },
+  md: { die: "size-8 text-sm", round: "rounded-lg" },
+  lg: { die: "size-11 text-xl font-extrabold rounded-full", round: "rounded-full" },
+};
+
+/**
+ * Xúc xắc đối chiếu Bingo 18 (1-6) — semantic theo `primary` token, không hardcode màu game.
+ *
+ * @param n - Giá trị xúc xắc (1-6).
+ * @param variant - Trạng thái đối chiếu với kết quả quay.
+ */
+export function Bingo18MatchDie({
+  n,
+  variant = "default",
+  size = "md",
+}: {
+  n: number | string;
+  variant?: Bingo18MatchDieVariant;
+  size?: "sm" | "md" | "lg";
+}) {
+  const { die, round } = BINGO18_MATCH_DIE_SIZE[size];
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center justify-center font-bold tabular-nums",
+        round,
+        die,
+        BINGO18_MATCH_DIE_STYLE[variant],
+      )}
+    >
+      {n}
+    </span>
+  );
+}
+
 // ─── DiceDisplay (backward-compatible wrapper) ───────────────────────────────
 
 interface DiceDisplayProps {
@@ -64,12 +120,7 @@ interface DiceDisplayProps {
  * Hiển thị kết quả 3 số Bingo 18 dưới dạng number balls (amber).
  * Tự động highlight đôi / ba giống nhau.
  */
-export function DiceDisplay({
-  numbers,
-  size = "md",
-  showSum = true,
-  className,
-}: DiceDisplayProps) {
+export function DiceDisplay({ numbers, size = "md", showSum = true, className }: DiceDisplayProps) {
   const sum = numbers.reduce((a, b) => a + b, 0);
 
   // Đánh dấu các số xuất hiện ≥ 2 lần để highlight

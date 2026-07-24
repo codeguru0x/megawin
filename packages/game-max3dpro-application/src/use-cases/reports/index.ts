@@ -5,6 +5,7 @@ export { ListTenantReportsUseCase } from "./list-tenant-reports";
 export { ListTenantDrawsUseCase } from "./list-tenant-draws";
 export { ListPlayerBreakdownUseCase } from "./list-player-breakdown";
 export { ListEntryBreakdownUseCase } from "./list-entry-breakdown";
+export { GetEntryByIdUseCase } from "./get-entry-by-id";
 export { ListVoidReportsUseCase } from "./list-void-reports";
 export { GetOutstandingReportsUseCase } from "./get-outstanding-reports";
 export { SyncOutstandingUseCase } from "./sync-outstanding";
@@ -30,6 +31,8 @@ export type {
   ListPlayerBreakdownOutput,
   ListEntryBreakdownInput,
   ListEntryBreakdownOutput,
+  GetEntryByIdInput,
+  GetEntryByIdOutput,
   ListVoidReportsInput,
   ListVoidReportsOutput,
   GetOutstandingReportsOutput,

@@ -1,7 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient, formatErrorToast } from "@megawin/next/client";
+import { Pagination } from "@megawin/shared/constants/pagination";
 import { toast } from "sonner";
 import { lotto535Keys } from "@/lib/query-keys";
 import type {
@@ -14,6 +16,7 @@ import type {
   GetTopCombosOutput,
   GetWinningEntriesOutput,
 } from "@megawin/game-lotto535-application/use-cases/operations";
+import type { GetEntryByIdOutput } from "@megawin/game-lotto535-application/use-cases/reports";
 import type { GetDrawDetailOutput } from "@megawin/game-lotto535-application/use-cases/draws";
 import type {
   PreviewDrawsOutput,
@@ -206,19 +209,75 @@ export function useOpsTopCombos(drawId: string | undefined, isSettled: boolean) 
 // ─────────────────────────────────────────────
 
 /**
- * Danh sách entries trúng thưởng + summary kế toán của 1 kỳ quay.
+ * Số entries mỗi trang khi load "Winning Entries" — dùng chung
+ * `Pagination.Report` với backend (`GetWinningEntriesUseCase`) để 2 phía
+ * luôn khớp nhau, không lệch magic number khi 1 bên đổi mà bên kia quên sửa.
+ */
+export const WINNING_ENTRIES_PAGE_SIZE = Pagination.Report.Size;
+
+/**
+ * Danh sách entries trúng thưởng + summary kế toán của 1 kỳ quay — infinite scroll.
+ *
+ * KPI (`summary`) được backend tính bằng 1 aggregate riêng quét TOÀN BỘ entries
+ * trúng của kỳ (không phụ thuộc cursor/limit) → luôn chính xác dù danh sách
+ * bên dưới mới load 1 trang hay đã load hết. `summary` lấy từ trang đầu tiên,
+ * các trang sau server vẫn trả summary giống nhau (idempotent).
+ *
  * Chỉ fetch khi enabled=true (dialog mở). staleTime = Infinity vì kỳ đã settle.
  */
 export function useWinningEntries(drawId: string | undefined, enabled: boolean) {
-  return useQuery({
-    queryKey: lotto535Keys.opsWinningEntries(drawId ?? "", "all"),
-    queryFn: () =>
+  return useInfiniteQuery({
+    queryKey: lotto535Keys.opsWinningEntries(drawId ?? ""),
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam }) =>
       apiClient.get<GetWinningEntriesOutput>(`${BASE}/winning-entries`, {
-        params: { drawId: drawId!, limit: 200 },
+        params: {
+          drawId: drawId!,
+          limit: WINNING_ENTRIES_PAGE_SIZE,
+          ...(pageParam ? { cursor: pageParam } : {}),
+        },
       }),
+    getNextPageParam: (last) => last.nextCursor,
     enabled: !!drawId && enabled,
     staleTime: Infinity,
   });
+}
+
+/**
+ * Chi tiết đầy đủ 1 entry theo entryId — dùng khi click vào 1 dòng trong
+ * Winning Entries Dialog để xem lại phiếu cược gốc (board, kết quả, giải trúng).
+ * Tự báo toast lỗi khi không tìm thấy hoặc request thất bại.
+ */
+export function useWinningEntryDetail(
+  entryId: string | null,
+  { onNotFound }: { onNotFound?: () => void } = {},
+) {
+  const query = useQuery({
+    queryKey: lotto535Keys.reportEntryById(entryId ?? ""),
+    queryFn: () =>
+      apiClient
+        .get<GetEntryByIdOutput>(`/lotto535/reports/entries/${entryId}`)
+        .then((r) => r.entry),
+    enabled: !!entryId,
+  });
+
+  useEffect(() => {
+    if (!entryId) return;
+    if (query.isError) {
+      toast.error("Không thể tải thông tin phiếu cược", {
+        description: "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.",
+      });
+      onNotFound?.();
+    } else if (query.isFetched && !query.isLoading && !query.data) {
+      toast.error("Không tìm thấy phiếu cược", {
+        description: "Phiếu cược này không còn dữ liệu hoặc đã bị xóa.",
+      });
+      onNotFound?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query.isError, query.isFetched, query.isLoading, query.data, entryId]);
+
+  return query;
 }
 
 // ─────────────────────────────────────────────

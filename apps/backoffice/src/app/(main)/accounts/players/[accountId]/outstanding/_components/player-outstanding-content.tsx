@@ -336,7 +336,7 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
       <GameEntryDetailDialog
         game={selectedEntryGame ?? ""}
         entry={isLoadingDetail ? null : (entryDetail ?? null)}
-        open={!!selectedEntryId && !!selectedEntryGame && !isLoadingDetail}
+        open={!!selectedEntryId && !!selectedEntryGame}
         onClose={handleCloseDialog}
       />
     </div>

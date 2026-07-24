@@ -1,5 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
+import { Pagination } from "@megawin/shared/constants/pagination";
 import { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-max3dpro/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -47,7 +48,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
     }
 
-    const limit = Math.min(input.limit ?? 50, 200);
+    const limit = Math.min(input.limit ?? Pagination.Report.Size, Pagination.Report.Max);
     const cursorId = input.cursor ?? undefined;
 
     const [entries, summary] = await Promise.all([
@@ -88,6 +89,20 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
         };
       });
 
+      // Toàn bộ 20 bộ ba số kết quả kỳ quay (special + first + second + third),
+      // flatten + dedup để highlight bộ ba trúng trên board.
+      const r = e.result;
+      const winningTriplets: string[] = r
+        ? [
+            ...new Set([
+              ...(r.special ?? []),
+              ...(r.first ?? []),
+              ...(r.second ?? []),
+              ...(r.third ?? []),
+            ]),
+          ]
+        : [];
+
       return {
         entryId: e.id,
         username: e.username,
@@ -98,6 +113,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
         amount: e.amount,
         winAmount: e.payout?.winAmount ?? 0,
         boards,
+        winningTriplets,
         tiers,
         createdAt: e.createdAt.toISOString(),
         settledAt: (e.payout?.settledAt ?? e.updatedAt).toISOString(),

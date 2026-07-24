@@ -1,5 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
+import { Pagination } from "@megawin/shared/constants/pagination";
 import { EntryStatus, EntryOutcome } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-power655/entities";
 import { EntryRepository } from "../../infras/repos/entry-repo";
@@ -41,7 +42,7 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
       throw AppException.notFound(`Kỳ quay ${input.drawId} không tồn tại.`);
     }
 
-    const limit = Math.min(input.limit ?? 50, 200);
+    const limit = Math.min(input.limit ?? Pagination.Report.Size, Pagination.Report.Max);
     const cursorId = input.cursor ?? undefined;
 
     const [entries, summary] = await Promise.all([
@@ -64,6 +65,8 @@ export class GetWinningEntriesUseCase extends NextApiUseCase<
           mainNumbers: b.mainNumbers,
           expandedLines: b.expandedLines,
         })),
+        winningMain: e.result?.winningMain ?? [],
+        bonusNumber: e.result?.bonusNumber ?? "",
         tiers: payoutTiers.map((t) => ({
           tier: t.tier,
           tierLabel: TIER_LABELS[t.tier] ?? t.tier,

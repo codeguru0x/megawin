@@ -56,6 +56,13 @@ export function ResultSection() {
       };
     });
 
+    // Winner detection từ settleSummary. Pool đã trao = prizeAmount tier JP (đã patch
+    // = opening + contribution bởi PatchJackpotPrize).
+    const jp1Tier = tierMap.get(PrizeTier.Jackpot1);
+    const jp2Tier = tierMap.get(PrizeTier.Jackpot2);
+    const hasJackpot1Winner = (jp1Tier?.winnerCount ?? 0) > 0;
+    const hasJackpot2Winner = (jp2Tier?.winnerCount ?? 0) > 0;
+
     return {
       winningMain: d.result.winningMain as [string, string, string, string, string, string],
       bonusNumber: d.result.bonusNumber ?? "",
@@ -69,12 +76,18 @@ export function ResultSection() {
         totalFixedPrizes: d.financial?.totalFixedPrizes ?? 0,
         totalAgentCommission: d.financial?.totalAgentCommission ?? 0,
         companyTake: d.financial?.companyTake ?? 0,
+        actualCompanyTake: d.financial?.actualCompanyTake ?? 0,
         jackpot1Contribution: d.financial?.jackpot1Contribution ?? 0,
         jackpot2Contribution: d.financial?.jackpot2Contribution ?? 0,
+        jp1Overflow: d.financial?.jp1Overflow ?? 0,
         jackpot1Before: d.jackpot?.openingJackpot1 ?? 0,
         jackpot1After: d.jackpot?.closingJackpot1 ?? 0,
         jackpot2Before: d.jackpot?.openingJackpot2 ?? 0,
         jackpot2After: d.jackpot?.closingJackpot2 ?? 0,
+        hasJackpot1Winner,
+        hasJackpot2Winner,
+        jackpot1PrizeAwarded: hasJackpot1Winner ? (jp1Tier?.prizeAmount ?? 0) : 0,
+        jackpot2PrizeAwarded: hasJackpot2Winner ? (jp2Tier?.prizeAmount ?? 0) : 0,
       },
     };
   }, [drawDetailData]);
