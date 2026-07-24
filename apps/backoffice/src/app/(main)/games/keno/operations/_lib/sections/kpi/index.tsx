@@ -22,8 +22,8 @@ export function KpiSection() {
 
   if (isLoading) {
     return (
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, i) => (
           <Skeleton key={i} className="h-18 rounded-xl" />
         ))}
       </div>
@@ -38,7 +38,12 @@ export function KpiSection() {
     totalBoards: data.totalBoards,
     uniquePlayers: data.uniquePlayers,
     totalCommission: data.totalCommission,
+    netRevenue: data.totalRevenue - data.totalCommission,
   };
 
-  return <KpiStrip kpi={kpi} />;
+  return (
+    <div className="space-y-3">
+      <KpiStrip kpi={kpi} />
+    </div>
+  );
 }

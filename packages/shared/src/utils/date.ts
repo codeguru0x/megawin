@@ -297,6 +297,32 @@ export function ceilTime(date: Date, intervalMinutes: number = 1): Date {
 }
 
 // ─────────────────────────────────────────────
+// Duration formatting (countdown)
+// ─────────────────────────────────────────────
+
+/**
+ * Format 1 khoảng thời gian (duration, ms) thành dạng đồng hồ đếm ngược:
+ * `mm:ss`, hoặc `h:mm:ss` khi ≥ 1 giờ. Giá trị âm được clamp về `00:00`.
+ *
+ * Timezone-independent — input là duration, không phải timestamp.
+ * Dùng cho countdown UI (draw command center, sales-close timer, v.v.).
+ *
+ * Ví dụ:
+ * - `formatDurationClock(90_000)`    → `"01:30"`
+ * - `formatDurationClock(3_723_000)` → `"1:02:03"`
+ * - `formatDurationClock(-500)`      → `"00:00"`
+ */
+export function formatDurationClock(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const mm = String(m).padStart(2, "0");
+  const ss = String(s).padStart(2, "0");
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+// ─────────────────────────────────────────────
 // Relative time label (tiếng Việt)
 // ─────────────────────────────────────────────
 

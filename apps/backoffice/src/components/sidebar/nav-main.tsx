@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -45,6 +46,28 @@ const NavItemExpanded = ({
   isActive: (url: string, subItems?: NavMainItem["subItems"]) => boolean;
   isSubmenuOpen: (subItems?: NavMainItem["subItems"]) => boolean;
 }) => {
+  // Item không có submenu → link thuần, KHÔNG bọc Collapsible/CollapsibleTrigger.
+  // Bọc trigger lên <Link> gắn aria-controls/aria-expanded (useId) gây hydration
+  // mismatch và sai ngữ nghĩa (link không phải trigger).
+  if (!item.subItems) {
+    return (
+      <SidebarMenuItem key={item.title}>
+        <SidebarMenuButton
+          asChild
+          aria-disabled={item.comingSoon}
+          isActive={isActive(item.url)}
+          tooltip={item.title}
+        >
+          <Link prefetch={false} href={item.url} target={item.newTab ? "_blank" : undefined}>
+            {item.icon && <item.icon />}
+            <span>{item.title}</span>
+            {item.comingSoon && <IsComingSoon />}
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
   return (
     <Collapsible
       key={item.title}
@@ -54,62 +77,45 @@ const NavItemExpanded = ({
     >
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          {item.subItems ? (
-            <SidebarMenuButton
-              disabled={item.comingSoon}
-              isActive={isActive(item.url, item.subItems)}
-              tooltip={item.title}
-            >
-              {item.icon && <item.icon />}
-              <span>{item.title}</span>
-              {item.comingSoon && <IsComingSoon />}
-              <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-            </SidebarMenuButton>
-          ) : (
-            <SidebarMenuButton
-              asChild
-              aria-disabled={item.comingSoon}
-              isActive={isActive(item.url)}
-              tooltip={item.title}
-            >
-              <Link prefetch={false} href={item.url} target={item.newTab ? "_blank" : undefined}>
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
-                {item.comingSoon && <IsComingSoon />}
-              </Link>
-            </SidebarMenuButton>
-          )}
+          <SidebarMenuButton
+            disabled={item.comingSoon}
+            isActive={isActive(item.url, item.subItems)}
+            tooltip={item.title}
+          >
+            {item.icon && <item.icon />}
+            <span>{item.title}</span>
+            {item.comingSoon && <IsComingSoon />}
+            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+          </SidebarMenuButton>
         </CollapsibleTrigger>
-        {item.subItems && (
-          <CollapsibleContent>
-            <SidebarMenuSub>
-              {item.subItems.map((subItem) => (
-                <SidebarMenuSubItem key={subItem.title}>
-                  {subItem.sectionLabel && (
-                    <p className="px-2 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                      {subItem.sectionLabel}
-                    </p>
-                  )}
-                  <SidebarMenuSubButton
-                    aria-disabled={subItem.comingSoon}
-                    isActive={isActive(subItem.url)}
-                    asChild
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {item.subItems.map((subItem) => (
+              <SidebarMenuSubItem key={subItem.title}>
+                {subItem.sectionLabel && (
+                  <p className="px-2 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                    {subItem.sectionLabel}
+                  </p>
+                )}
+                <SidebarMenuSubButton
+                  aria-disabled={subItem.comingSoon}
+                  isActive={isActive(subItem.url)}
+                  asChild
+                >
+                  <Link
+                    prefetch={false}
+                    href={subItem.url}
+                    target={subItem.newTab ? "_blank" : undefined}
                   >
-                    <Link
-                      prefetch={false}
-                      href={subItem.url}
-                      target={subItem.newTab ? "_blank" : undefined}
-                    >
-                      {subItem.icon && <subItem.icon />}
-                      <span>{subItem.title}</span>
-                      {subItem.comingSoon && <IsComingSoon />}
-                    </Link>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-              ))}
-            </SidebarMenuSub>
-          </CollapsibleContent>
-        )}
+                    {subItem.icon && <subItem.icon />}
+                    <span>{subItem.title}</span>
+                    {subItem.comingSoon && <IsComingSoon />}
+                  </Link>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            ))}
+          </SidebarMenuSub>
+        </CollapsibleContent>
       </SidebarMenuItem>
     </Collapsible>
   );
@@ -138,30 +144,33 @@ const NavItemCollapsed = ({
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-50 space-y-1" side="right" align="start">
           {item.subItems?.map((subItem) => (
-            <DropdownMenuItem key={subItem.title} asChild>
+            // sectionLabel render NGOÀI DropdownMenuItem — asChild (Radix Slot)
+            // chỉ nhận đúng 1 child, 2 children gây lỗi runtime/hydration.
+            <Fragment key={subItem.title}>
               {subItem.sectionLabel && (
                 <p className="px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 pointer-events-none">
                   {subItem.sectionLabel}
                 </p>
               )}
-              <SidebarMenuSubButton
-                key={subItem.title}
-                asChild
-                className="focus-visible:ring-0"
-                aria-disabled={subItem.comingSoon}
-                isActive={isActive(subItem.url)}
-              >
-                <Link
-                  prefetch={false}
-                  href={subItem.url}
-                  target={subItem.newTab ? "_blank" : undefined}
+              <DropdownMenuItem asChild>
+                <SidebarMenuSubButton
+                  asChild
+                  className="focus-visible:ring-0"
+                  aria-disabled={subItem.comingSoon}
+                  isActive={isActive(subItem.url)}
                 >
-                  {subItem.icon && <subItem.icon className="[&>svg]:text-sidebar-foreground" />}
-                  <span>{subItem.title}</span>
-                  {subItem.comingSoon && <IsComingSoon />}
-                </Link>
-              </SidebarMenuSubButton>
-            </DropdownMenuItem>
+                  <Link
+                    prefetch={false}
+                    href={subItem.url}
+                    target={subItem.newTab ? "_blank" : undefined}
+                  >
+                    {subItem.icon && <subItem.icon className="[&>svg]:text-sidebar-foreground" />}
+                    <span>{subItem.title}</span>
+                    {subItem.comingSoon && <IsComingSoon />}
+                  </Link>
+                </SidebarMenuSubButton>
+              </DropdownMenuItem>
+            </Fragment>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>

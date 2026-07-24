@@ -3,14 +3,14 @@
 /**
  * Keno — Winning Entries Dialog
  *
- * Báo cáo entries trúng thưởng Keno.
- * Keno khác Mega 6/45:
- * - Boards: matchCount/pickCount thay vì PrizeTier
- * - Side bets: playType + bet + outcome
- * - Có thể có cappedEntries (bậc 8/9/10 bị payout cap)
+ * Báo cáo phiếu trúng thưởng Keno cho staff monitor.
+ * Cột "Chi tiết trúng thưởng" gộp board + số + tiền vào 1 dòng/board để dễ đối chiếu:
+ * - Cơ bản (pick): highlight số trúng (matched) vs không trúng (default) so với winningNumbers.
+ * - Side bet (bigSmall/evenOdd): nhãn cược + outcome diễn giải mức giải.
+ * - Board bị payout cap (bậc 8/9/10) được đánh dấu [cap].
  */
 
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Table,
@@ -20,120 +20,198 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { KenoNumberBall } from "@/components/games/keno/keno-number-ball";
-import { formatNumber, displayVNDateTime } from "@megawin/shared/utils";
+import { KenoMatchBall } from "@/components/games/keno/keno-number-ball";
+import { boardColorVar } from "@/lib/game-colors";
+import { formatNumber, formatVN } from "@megawin/shared/utils";
 import { toTenantUsername } from "@megawin/shared/utils";
-import { Badge } from "@/components/ui/badge";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { Trophy, Loader2, FileSearch, Users, Banknote, AlertCircle } from "lucide-react";
-import { useWinningEntries } from "../../use-operations";
+import {
+  useWinningEntries,
+  useWinningEntryDetail,
+  WINNING_ENTRIES_PAGE_SIZE,
+} from "../../use-operations";
 import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS } from "@megawin/game-keno/labels";
 import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
 import type { WinningEntryItem, WinningEntryBoardDetail } from "../../use-operations";
+import { KenoEntryDetailDialog } from "../../../../reports/settle/_lib/sections/entry-detail-dialog";
 
-// ─── Board chip ───────────────────────────────────────────────────────────────
+// ─── Labels ────────────────────────────────────────────────────────────────────
 
 const KENO_BET_LABELS: Record<string, string> = {
   ...KENO_BIG_SMALL_BET_LABELS,
   ...KENO_EVEN_ODD_BET_LABELS,
 };
 
-function BoardChip({ board }: { board: WinningEntryBoardDetail }) {
+/**
+ * Diễn giải outcome side bet thắng → mô tả ngắn mức trúng cho staff.
+ * outcome win khả dĩ: big13Plus, big1112, small13Plus, small1112, draw,
+ * even15Plus, even1314, even1112, odd15Plus, odd1314, odd1112.
+ */
+const KENO_OUTCOME_LABELS: Record<string, string> = {
+  big13Plus: "≥13 số Lớn",
+  big1112: "11-12 số Lớn",
+  small13Plus: "≥13 số Nhỏ",
+  small1112: "11-12 số Nhỏ",
+  even15Plus: "≥15 số Chẵn",
+  even1314: "13-14 số Chẵn",
+  even1112: "11-12 số Chẵn",
+  odd15Plus: "≥15 số Lẻ",
+  odd1314: "13-14 số Lẻ",
+  odd1112: "11-12 số Lẻ",
+  draw: "Hoà 10-10",
+};
+
+// ─── Board detail row (1 dòng/board trong cột gộp) ──────────────────────────────
+
+function BasicBoardDetail({
+  board,
+  winningSet,
+}: {
+  board: WinningEntryBoardDetail;
+  winningSet: Set<string>;
+}) {
+  const boardColor = boardColorVar(board.boardNo);
+  const numbers = board.numbers ?? [];
   return (
-    <div className="flex items-start gap-1.5">
-      <span className="text-[10px] font-medium text-muted-foreground/50 w-4 shrink-0 mt-0.5 tabular-nums">
+    <div
+      className="grid items-center gap-x-2 rounded-md border-l-[3px] py-1.5 pl-2"
+      style={{
+        borderLeftColor: boardColor,
+        gridTemplateColumns: "1.25rem minmax(0,1fr) auto",
+      }}
+    >
+      <span className="text-xs font-extrabold leading-none" style={{ color: boardColor }}>
         {board.boardNo}
       </span>
-      <div className="flex flex-col gap-0.5">
-        <div className="flex items-center gap-0.5 flex-wrap max-w-50">
-          {board.numbers?.slice(0, board.pickCount ?? 0).map((n, i) => (
-            <KenoNumberBall key={i} number={Number(n)} size="sm" />
-          ))}
+      <div className="flex flex-col gap-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-foreground whitespace-nowrap">
+            Pick {board.pickCount ?? 0}/{board.matchCount ?? 0}
+            {board.isCapped && <span className="ml-1 text-amber-600">[cap]</span>}
+          </span>
+          <div className="flex items-center gap-0.5 flex-wrap">
+            {numbers.map((n) => (
+              <KenoMatchBall key={n} n={n} variant={winningSet.has(n) ? "matched" : "default"} />
+            ))}
+          </div>
         </div>
-        <span className="text-[10px] text-orange-600 dark:text-orange-400 font-medium">
-          Pick {board.pickCount ?? 0} — Trúng {board.matchCount ?? 0}
-          {board.isCapped && <span className="ml-1 text-amber-600">(cap)</span>}
+      </div>
+      <span className="text-xs tabular-nums font-semibold text-primary whitespace-nowrap justify-self-end">
+        +{formatNumber(board.winAmount)}
+      </span>
+    </div>
+  );
+}
+
+function SideBetDetail({ board }: { board: WinningEntryBoardDetail }) {
+  const boardColor = boardColorVar(board.boardNo);
+  const typeLabel = board.playType === "bigSmall" ? "Lớn/Nhỏ" : "Chẵn/Lẻ";
+  const betLabel = KENO_BET_LABELS[board.bet ?? ""] ?? board.bet ?? "—";
+  const outcomeLabel = board.outcome ? KENO_OUTCOME_LABELS[board.outcome] : undefined;
+  return (
+    <div
+      className="grid items-center gap-x-2 rounded-md border-l-[3px] py-1.5 pl-2"
+      style={{
+        borderLeftColor: boardColor,
+        gridTemplateColumns: "1.25rem minmax(0,1fr) auto",
+      }}
+    >
+      <span className="text-xs font-extrabold leading-none" style={{ color: boardColor }}>
+        {board.boardNo}
+      </span>
+      <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+        <span className="rounded bg-cyan-50 px-1.5 py-0.5 text-xs font-semibold text-cyan-700 border border-cyan-200 dark:bg-cyan-950/20 dark:text-cyan-400 dark:border-cyan-900 whitespace-nowrap">
+          {typeLabel} · {betLabel}
         </span>
+        {outcomeLabel && (
+          <span className="text-xs text-muted-foreground whitespace-nowrap">{outcomeLabel}</span>
+        )}
+      </div>
+      <span className="text-xs tabular-nums font-semibold text-cyan-700 dark:text-cyan-400 whitespace-nowrap justify-self-end">
+        +{formatNumber(board.winAmount)}
+      </span>
+    </div>
+  );
+}
+
+// ─── KPI card ─────────────────────────────────────────────────────────────────
+
+/**
+ * KPI card đồng bộ với KPI Strip của trang Operations (operations-page-ui.mdc §10).
+ * rounded-xl border bg-card shadow-sm · icon size-10 rounded-lg nền đặc · value text-lg font-bold.
+ */
+function KpiCard({
+  icon: Icon,
+  iconBg,
+  iconColor,
+  label,
+  value,
+  valueColor,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  iconBg: string;
+  iconColor: string;
+  label: string;
+  value: string;
+  valueColor?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm flex-1 min-w-0">
+      <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
+        <Icon className={cn("size-5", iconColor)} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
+        <p
+          className={cn(
+            "text-lg font-bold tabular-nums leading-tight",
+            valueColor ?? "text-foreground",
+          )}
+        >
+          {value}
+        </p>
       </div>
     </div>
   );
 }
 
-function SideBetChip({ board }: { board: WinningEntryBoardDetail }) {
-  const typeLabel = board.playType === "bigSmall" ? "L/N" : "C/L";
-  return (
-    <Badge
-      variant="outline"
-      className="h-5 px-1.5 text-[10px] bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/20 dark:text-cyan-400"
-    >
-      {typeLabel} {KENO_BET_LABELS[board.bet ?? ""] ?? board.bet}
-    </Badge>
-  );
-}
-
-// ─── KPI bar ──────────────────────────────────────────────────────────────────
-
 function KpiBar({
-  drawId,
   totalWinningEntries,
   totalWinAmount,
   cappedEntries,
 }: {
-  drawId: string;
   totalWinningEntries: number;
   totalWinAmount: number;
   cappedEntries: number;
 }) {
   return (
-    <div className="flex items-stretch divide-x divide-border/40 border-b bg-muted/20 shrink-0">
-      <div className="flex flex-col justify-center px-6 py-3 w-44 shrink-0">
-        <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-          Kỳ quay
-        </p>
-        <p className="font-mono text-sm font-semibold text-foreground tracking-tight mt-0.5">
-          {drawId}
-        </p>
-      </div>
-      <div className="flex flex-1 items-center gap-3 px-6 py-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-blue-500/10 border border-blue-500/20 shrink-0">
-          <Users className="size-4 text-blue-500" />
-        </div>
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-            Entries trúng
-          </p>
-          <p className="text-xl font-semibold tabular-nums text-foreground leading-tight mt-0.5">
-            {formatNumber(totalWinningEntries)}
-          </p>
-        </div>
-      </div>
-      <div className="flex flex-1 items-center gap-3 px-6 py-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-amber-500/15 border border-amber-500/30 shrink-0">
-          <Banknote className="size-4 text-amber-500" />
-        </div>
-        <div>
-          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-            Tổng chi trả
-          </p>
-          <p className="text-xl font-semibold tabular-nums text-foreground leading-tight mt-0.5">
-            {formatNumber(totalWinAmount)}
-          </p>
-        </div>
-      </div>
+    <div className="flex gap-3 border-b bg-muted/20 px-6 py-3 shrink-0">
+      <KpiCard
+        icon={Users}
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
+        label={REPORT_COLUMN_LABELS.winningEntryCount}
+        value={formatNumber(totalWinningEntries)}
+      />
+      <KpiCard
+        icon={Banknote}
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
+        label={REPORT_COLUMN_LABELS.totalWinningPayout}
+        value={formatNumber(totalWinAmount)}
+      />
       {cappedEntries > 0 && (
-        <div className="flex flex-1 items-center gap-3 px-6 py-3">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-amber-500/10 border border-amber-500/20 shrink-0">
-            <AlertCircle className="size-4 text-amber-500" />
-          </div>
-          <div>
-            <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-              Bị Payout Cap
-            </p>
-            <p className="text-xl font-semibold tabular-nums text-amber-600 dark:text-amber-400 leading-tight mt-0.5">
-              {formatNumber(cappedEntries)}
-            </p>
-          </div>
-        </div>
+        <KpiCard
+          icon={AlertCircle}
+          iconBg="bg-amber-100 dark:bg-amber-900/50"
+          iconColor="text-amber-600 dark:text-amber-400"
+          label="Bị Payout Cap"
+          value={formatNumber(cappedEntries)}
+          valueColor="text-amber-600 dark:text-amber-400"
+        />
       )}
     </div>
   );
@@ -141,9 +219,18 @@ function KpiBar({
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
-function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: number }) {
+function WinningEntryRow({
+  entry,
+  rowNo,
+  onClick,
+}: {
+  entry: WinningEntryItem;
+  rowNo: number;
+  onClick: () => void;
+}) {
   const displayName = toTenantUsername(entry.username) ?? entry.username;
   const hasCapped = entry.boardDetails.some((b) => b.isCapped);
+  const winningSet = new Set(entry.winningNumbers);
 
   // Phân tách boardDetails thành basic boards và side bet boards
   const basicBoards = entry.boardDetails.filter(
@@ -155,20 +242,30 @@ function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: num
 
   return (
     <TableRow
+      onClick={onClick}
       className={cn(
-        "align-top group transition-colors",
-        hasCapped
-          ? "bg-amber-50/50 dark:bg-amber-950/10 hover:bg-amber-50/80 dark:hover:bg-amber-950/20"
-          : "hover:bg-muted/30",
+        "align-top group transition-colors hover:bg-muted/30 cursor-pointer",
+        // Entry bị payout cap: chỉ dùng border trái mảnh làm chỉ báo — nền phẳng để
+        // bảng đồng nhất, tránh nền loang gây khó quét mắt. Nhãn [cap] đã có trong board detail.
+        hasCapped && "border-l-[3px] border-l-amber-400",
       )}
     >
       <TableCell className="pl-6 py-3 text-center">
-        <span className="text-xs text-muted-foreground/50 tabular-nums">{rowNo}</span>
+        <span
+          className={cn(
+            "inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
+            hasCapped
+              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+              : "bg-muted text-muted-foreground",
+          )}
+        >
+          {rowNo}
+        </span>
       </TableCell>
       <TableCell className="py-3">
         <div>
           <p className="text-sm text-foreground">{displayName}</p>
-          <p className="text-[10px] text-muted-foreground/50 font-mono mt-0.5 truncate max-w-32">
+          <p className="text-xs text-muted-foreground/60 font-mono mt-0.5 truncate max-w-32">
             @{entry.tenantId}
           </p>
         </div>
@@ -177,47 +274,22 @@ function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: num
         <span className="text-sm tabular-nums text-foreground">{formatNumber(entry.amount)}</span>
       </TableCell>
       <TableCell className="py-3">
-        {/* Basic boards */}
-        {basicBoards.length > 0 && (
-          <div className="flex flex-col gap-1.5">
-            {basicBoards.map((b, i) => (
-              <BoardChip key={i} board={b} />
-            ))}
-          </div>
-        )}
-        {/* Side bets — hiển thị từ unified boardDetails, filter bởi playType */}
-        {sideBetBoards.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1">
-            {sideBetBoards.map((b, i) => (
-              <SideBetChip key={i} board={b} />
-            ))}
-          </div>
-        )}
-      </TableCell>
-      <TableCell className="py-3">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           {basicBoards.map((b, i) => (
-            <span key={i} className="text-xs tabular-nums text-orange-700 dark:text-orange-400">
-              +{formatNumber(b.winAmount)}
-              {b.isCapped && <span className="ml-1 text-amber-500">[cap]</span>}
-            </span>
+            <BasicBoardDetail key={`b-${i}`} board={b} winningSet={winningSet} />
           ))}
           {sideBetBoards.map((b, i) => (
-            <span key={i} className="text-xs tabular-nums text-cyan-700 dark:text-cyan-400">
-              +{formatNumber(b.winAmount)}
-            </span>
+            <SideBetDetail key={`s-${i}`} board={b} />
           ))}
         </div>
       </TableCell>
-      <TableCell className="py-3 text-right">
-        <p className="text-sm tabular-nums text-foreground font-medium">
+      <TableCell className="py-3 pr-6 text-right">
+        <p className="text-sm tabular-nums text-foreground font-semibold">
           {formatNumber(entry.winAmount)}
         </p>
-      </TableCell>
-      <TableCell className="py-3 pr-6">
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {displayVNDateTime(entry.createdAt)}
-        </span>
+        <p className="text-xs text-muted-foreground/50 tabular-nums mt-0.5">
+          {formatVN(new Date(entry.createdAt), "HH:mm dd/MM")}
+        </p>
       </TableCell>
     </TableRow>
   );
@@ -232,11 +304,20 @@ interface WinningEntriesDialogProps {
 }
 
 export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntriesDialogProps) {
-  const { data, isLoading } = useWinningEntries(drawId, open);
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useWinningEntries(
+    drawId,
+    open,
+  );
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const { data: selectedEntry } = useWinningEntryDetail(selectedEntryId, {
+    onNotFound: () => setSelectedEntryId(null),
+  });
   const handleOpenChange = useCallback((o: boolean) => onOpenChange(o), [onOpenChange]);
 
-  const entries = data?.entries ?? [];
-  const summary = data?.summary;
+  // Gộp entries từ tất cả trang đã load — KPI (summary) lấy từ trang đầu, độc lập
+  // với số trang đã load vì backend tính bằng aggregate riêng quét toàn bộ kỳ.
+  const entries = useMemo(() => data?.pages.flatMap((p) => p.entries) ?? [], [data]);
+  const summary = data?.pages[0]?.summary;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -256,10 +337,10 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
             </div>
             <div>
               <DialogTitle className="text-base font-bold tracking-tight">
-                Báo cáo entries trúng thưởng
+                Danh sách trúng thưởng
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                Danh sách chi tiết · sắp xếp theo tiền thưởng cao nhất
+                Kỳ <span className="font-mono text-foreground">{drawId}</span>
               </DialogDescription>
             </div>
           </div>
@@ -267,7 +348,6 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
 
         {summary && (
           <KpiBar
-            drawId={drawId}
             totalWinningEntries={summary.totalWinningEntries}
             totalWinAmount={summary.totalWinAmount}
             cappedEntries={summary.cappedEntries}
@@ -289,10 +369,10 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
               </div>
               <div className="text-center">
                 <p className="text-base font-semibold text-foreground">
-                  Không có entry trúng thưởng
+                  Không có phiếu trúng thưởng
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Kỳ này không có entries nào trúng thưởng.
+                  Kỳ này không có phiếu cược nào trúng thưởng.
                 </p>
               </div>
             </div>
@@ -300,18 +380,25 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
             <Table>
               <TableHeader className="sticky top-0 z-10">
                 <TableRow className="hover:bg-muted/40">
-                  <TableHead className="pl-6 w-12 text-center">#</TableHead>
-                  <TableHead className="w-44">Người chơi</TableHead>
-                  <TableHead className="w-24 text-right">Tiền cược</TableHead>
-                  <TableHead className="min-w-60">Boards / Side bets</TableHead>
-                  <TableHead className="w-40">Chi tiết thưởng</TableHead>
-                  <TableHead className="w-32 text-right">Tổng thưởng</TableHead>
-                  <TableHead className="pr-6 w-36">Thời gian</TableHead>
+                  <TableHead className="pl-6 w-12 text-center">STT</TableHead>
+                  <TableHead className="w-44">{REPORT_COLUMN_LABELS.player}</TableHead>
+                  <TableHead className="w-28 text-right">
+                    {REPORT_COLUMN_LABELS.totalStake}
+                  </TableHead>
+                  <TableHead className="min-w-96">{REPORT_COLUMN_LABELS.winningDetail}</TableHead>
+                  <TableHead className="pr-6 w-40 text-right">
+                    {REPORT_COLUMN_LABELS.winAmount}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {entries.map((entry, idx) => (
-                  <WinningEntryRow key={entry.entryId} entry={entry} rowNo={idx + 1} />
+                  <WinningEntryRow
+                    key={entry.entryId}
+                    entry={entry}
+                    rowNo={idx + 1}
+                    onClick={() => setSelectedEntryId(entry.entryId)}
+                  />
                 ))}
               </TableBody>
             </Table>
@@ -319,11 +406,38 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
         </div>
 
         {entries.length > 0 && (
-          <div className="shrink-0 border-t bg-muted/20 px-6 py-2.5 flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{entries.length} entries</span>
+          <div className="shrink-0 border-t bg-muted/20 px-6 py-2.5 flex items-center justify-between gap-2">
+            <span className="text-xs text-muted-foreground">
+              Hiển thị {formatNumber(entries.length)}
+              {summary && ` / ${formatNumber(summary.totalWinningEntries)}`} phiếu trúng
+            </span>
+            {hasNextPage && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                disabled={isFetchingNextPage}
+                onClick={() => fetchNextPage()}
+              >
+                {isFetchingNextPage ? (
+                  <>
+                    <Loader2 className="size-3.5 animate-spin" />
+                    Đang tải…
+                  </>
+                ) : (
+                  `Tải thêm ${WINNING_ENTRIES_PAGE_SIZE}`
+                )}
+              </Button>
+            )}
           </div>
         )}
       </DialogContent>
+
+      <KenoEntryDetailDialog
+        entry={selectedEntry ?? null}
+        open={!!selectedEntryId}
+        onClose={() => setSelectedEntryId(null)}
+      />
     </Dialog>
   );
 }

@@ -3,11 +3,11 @@
 /**
  * Mega 6/45 — Winning Entries Dialog
  *
- * Báo cáo kế toán toàn màn hình danh sách entries trúng thưởng.
+ * Báo cáo kế toán toàn màn hình danh sách phiếu trúng thưởng.
  * Mega 6/45: không có specialNumbers — chỉ hiển thị numbers (01-45).
  */
 
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Table,
@@ -17,14 +17,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { MegaNumberBall } from "@/components/games/mega645/mega-number-ball";
-import { formatNumber, displayVNDateTime } from "@megawin/shared/utils";
+import { MegaMatchBall } from "@/components/games/mega645/mega-number-ball";
+import { formatNumber, formatVN } from "@megawin/shared/utils";
 import { toTenantUsername } from "@megawin/shared/utils";
 import { PrizeTier } from "@megawin/game-mega645/entities";
-import { Trophy, Gem, Star, Loader2, FileSearch, Users, Hash, Banknote } from "lucide-react";
-import { useWinningEntries } from "../../use-operations";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { Trophy, Star, Loader2, FileSearch, Users, Hash, Banknote } from "lucide-react";
+import {
+  useWinningEntries,
+  useWinningEntryDetail,
+  WINNING_ENTRIES_PAGE_SIZE,
+} from "../../use-operations";
 import type { WinningEntryItem, WinningEntryTierDetail } from "../../use-operations";
+import { Mega645EntryDetailDialog } from "../../../../reports/settle/_lib/sections/entry-detail-dialog";
 
 // ─── Tier config ──────────────────────────────────────────────────────────────
 
@@ -72,6 +79,7 @@ function TierChip({ tier }: { tier: WinningEntryTierDetail }) {
 
 function EntryNumbers({ entry }: { entry: WinningEntryItem }) {
   if (entry.boards.length === 0) return <span className="text-muted-foreground/40 text-sm">—</span>;
+  const winningSet = new Set(entry.winningNumbers);
   return (
     <div className="flex flex-col gap-1.5">
       {entry.boards.map((b) => (
@@ -81,7 +89,12 @@ function EntryNumbers({ entry }: { entry: WinningEntryItem }) {
           </span>
           <div className="flex items-center gap-0.5 flex-wrap max-w-80">
             {b.numbers.map((n) => (
-              <MegaNumberBall key={n} number={Number(n)} size="sm" />
+              <MegaMatchBall
+                key={n}
+                n={n}
+                size="sm"
+                variant={winningSet.has(n) ? "matched" : "default"}
+              />
             ))}
           </div>
         </div>
@@ -90,68 +103,70 @@ function EntryNumbers({ entry }: { entry: WinningEntryItem }) {
   );
 }
 
-// ─── KPI bar ──────────────────────────────────────────────────────────────────
+// ─── KPI card ─────────────────────────────────────────────────────────────────
+
+/**
+ * KPI card đồng bộ với KPI Strip của trang Operations (operations-page-ui.mdc §10).
+ * rounded-xl border bg-card shadow-sm · icon size-10 rounded-lg nền đặc · value text-lg font-bold.
+ */
+function KpiCard({
+  icon: Icon,
+  iconBg,
+  iconColor,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  iconBg: string;
+  iconColor: string;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm flex-1 min-w-0">
+      <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
+        <Icon className={cn("size-5", iconColor)} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
+        <p className="text-lg font-bold tabular-nums text-foreground leading-tight">{value}</p>
+      </div>
+    </div>
+  );
+}
 
 function KpiBar({
-  drawId,
   totalWinningEntries,
   totalWinningLines,
   totalWinAmount,
 }: {
-  drawId: string;
   totalWinningEntries: number;
   totalWinningLines: number;
   totalWinAmount: number;
 }) {
   return (
-    <div className="flex items-stretch divide-x divide-border/40 border-b bg-muted/20 shrink-0">
-      <div className="flex flex-col justify-center px-6 py-3 w-44 shrink-0">
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          Kỳ quay
-        </p>
-        <p className="font-mono text-sm font-semibold text-foreground tracking-tight mt-0.5">
-          {drawId}
-        </p>
-      </div>
-      <div className="flex flex-1 items-center gap-3 px-6 py-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-blue-500/10 border border-blue-500/20 shrink-0">
-          <Users className="size-4 text-blue-500" />
-        </div>
-        <div>
-          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            Entries trúng
-          </p>
-          <p className="text-xl font-semibold tabular-nums text-foreground leading-tight mt-0.5">
-            {formatNumber(totalWinningEntries)}
-          </p>
-        </div>
-      </div>
-      <div className="flex flex-1 items-center gap-3 px-6 py-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-teal-500/10 border border-teal-500/20 shrink-0">
-          <Hash className="size-4 text-teal-500" />
-        </div>
-        <div>
-          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            Lines trúng
-          </p>
-          <p className="text-xl font-semibold tabular-nums text-foreground leading-tight mt-0.5">
-            {formatNumber(totalWinningLines)}
-          </p>
-        </div>
-      </div>
-      <div className="flex flex-1 items-center gap-3 px-6 py-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-amber-500/15 border border-amber-500/30 shrink-0">
-          <Banknote className="size-4 text-amber-500" />
-        </div>
-        <div>
-          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            Tổng chi trả thưởng
-          </p>
-          <p className="text-xl font-semibold tabular-nums text-foreground leading-tight mt-0.5">
-            {formatNumber(totalWinAmount)}
-          </p>
-        </div>
-      </div>
+    <div className="flex gap-3 border-b bg-muted/20 px-6 py-3 shrink-0">
+      <KpiCard
+        icon={Users}
+        iconBg="bg-blue-100 dark:bg-blue-900/50"
+        iconColor="text-blue-600 dark:text-blue-400"
+        label={REPORT_COLUMN_LABELS.winningEntryCount}
+        value={formatNumber(totalWinningEntries)}
+      />
+      <KpiCard
+        icon={Hash}
+        iconBg="bg-teal-100 dark:bg-teal-900/50"
+        iconColor="text-teal-600 dark:text-teal-400"
+        label={REPORT_COLUMN_LABELS.winningLineCount}
+        value={formatNumber(totalWinningLines)}
+      />
+      <KpiCard
+        icon={Banknote}
+        iconBg="bg-amber-100 dark:bg-amber-900/50"
+        iconColor="text-amber-600 dark:text-amber-400"
+        label={REPORT_COLUMN_LABELS.totalWinningPayout}
+        value={formatNumber(totalWinAmount)}
+      />
     </div>
   );
 }
@@ -165,7 +180,14 @@ interface WinningEntriesDialogProps {
 }
 
 export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntriesDialogProps) {
-  const { data, isLoading } = useWinningEntries(drawId, open);
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useWinningEntries(
+    drawId,
+    open,
+  );
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
+  const { data: selectedEntry } = useWinningEntryDetail(selectedEntryId, {
+    onNotFound: () => setSelectedEntryId(null),
+  });
 
   const handleOpenChange = useCallback(
     (o: boolean) => {
@@ -174,8 +196,10 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
     [onOpenChange],
   );
 
-  const entries = data?.entries ?? [];
-  const summary = data?.summary;
+  // Gộp entries từ tất cả trang đã load — KPI (summary) lấy từ trang đầu, độc lập
+  // với số trang đã load vì backend tính bằng aggregate riêng quét toàn bộ kỳ.
+  const entries = useMemo(() => data?.pages.flatMap((p) => p.entries) ?? [], [data]);
+  const summary = data?.pages[0]?.summary;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -195,10 +219,10 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
             </div>
             <div>
               <DialogTitle className="text-base font-bold tracking-tight">
-                Báo cáo entries trúng thưởng
+                Danh sách trúng thưởng
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                Danh sách chi tiết · sắp xếp theo tiền thưởng cao nhất
+                Kỳ <span className="font-mono text-foreground">{drawId}</span>
               </DialogDescription>
             </div>
           </div>
@@ -206,7 +230,6 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
 
         {summary && (
           <KpiBar
-            drawId={drawId}
             totalWinningEntries={summary.totalWinningEntries}
             totalWinningLines={summary.totalWinningLines}
             totalWinAmount={summary.totalWinAmount}
@@ -228,10 +251,10 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
               </div>
               <div className="text-center">
                 <p className="text-base font-semibold text-foreground">
-                  Không có entry trúng thưởng
+                  Không có phiếu trúng thưởng
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Kỳ này không có lines nào trúng thưởng.
+                  Kỳ này không có bộ số nào trúng thưởng.
                 </p>
               </div>
             </div>
@@ -239,18 +262,26 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
             <Table>
               <TableHeader className="sticky top-0 z-10">
                 <TableRow className="hover:bg-muted/40">
-                  <TableHead className="pl-6 w-12 text-center">#</TableHead>
-                  <TableHead className="w-44">Người chơi</TableHead>
-                  <TableHead className="w-28 text-right">Tiền cược</TableHead>
-                  <TableHead className="min-w-70">Số chơi</TableHead>
-                  <TableHead className="w-52">Hạng trúng</TableHead>
-                  <TableHead className="w-36 text-right">Tiền thưởng</TableHead>
-                  <TableHead className="pr-6 w-36">Thời gian</TableHead>
+                  <TableHead className="pl-6 w-12 text-center">STT</TableHead>
+                  <TableHead className="w-44">{REPORT_COLUMN_LABELS.player}</TableHead>
+                  <TableHead className="w-28 text-right">
+                    {REPORT_COLUMN_LABELS.totalStake}
+                  </TableHead>
+                  <TableHead className="min-w-70">{REPORT_COLUMN_LABELS.numbersPlayed}</TableHead>
+                  <TableHead className="w-52">{REPORT_COLUMN_LABELS.prizeTier}</TableHead>
+                  <TableHead className="pr-6 w-40 text-right">
+                    {REPORT_COLUMN_LABELS.winAmount}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {entries.map((entry, idx) => (
-                  <WinningEntryRow key={entry.entryId} entry={entry} rowNo={idx + 1} />
+                  <WinningEntryRow
+                    key={entry.entryId}
+                    entry={entry}
+                    rowNo={idx + 1}
+                    onClick={() => setSelectedEntryId(entry.entryId)}
+                  />
                 ))}
               </TableBody>
             </Table>
@@ -258,47 +289,83 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
         </div>
 
         {entries.length > 0 && (
-          <div className="shrink-0 border-t bg-muted/20 px-6 py-2.5 flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{entries.length} entries</span>
+          <div className="shrink-0 border-t bg-muted/20 px-6 py-2.5 flex items-center justify-between gap-2">
+            <span className="text-xs text-muted-foreground">
+              Hiển thị {formatNumber(entries.length)}
+              {summary && ` / ${formatNumber(summary.totalWinningEntries)}`} phiếu trúng
+            </span>
+            {hasNextPage && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                disabled={isFetchingNextPage}
+                onClick={() => fetchNextPage()}
+              >
+                {isFetchingNextPage ? (
+                  <>
+                    <Loader2 className="size-3.5 animate-spin" />
+                    Đang tải…
+                  </>
+                ) : (
+                  `Tải thêm ${WINNING_ENTRIES_PAGE_SIZE}`
+                )}
+              </Button>
+            )}
           </div>
         )}
       </DialogContent>
+
+      <Mega645EntryDetailDialog
+        entry={selectedEntry ?? null}
+        open={!!selectedEntryId}
+        onClose={() => setSelectedEntryId(null)}
+      />
     </Dialog>
   );
 }
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
-function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: number }) {
+function WinningEntryRow({
+  entry,
+  rowNo,
+  onClick,
+}: {
+  entry: WinningEntryItem;
+  rowNo: number;
+  onClick: () => void;
+}) {
   const displayName = toTenantUsername(entry.username) ?? entry.username;
   const hasJackpot = entry.tiers.some((t) => t.tier === PrizeTier.Jackpot && t.hitCount > 0);
 
   return (
     <TableRow
+      onClick={onClick}
       className={cn(
-        "align-top group transition-colors",
-        hasJackpot
-          ? "bg-teal-50/50 dark:bg-teal-950/10 hover:bg-teal-50/80 dark:hover:bg-teal-950/20 border-l-[3px] border-l-teal-400"
-          : "hover:bg-muted/30",
+        "align-top group transition-colors hover:bg-muted/30 cursor-pointer",
+        // Entry trúng Jackpot: chỉ dùng border trái mảnh làm chỉ báo — nền phẳng để
+        // bảng đồng nhất, tránh nền loang gây khó quét mắt. Icon nhận biết JP nằm trong chip Hạng trúng.
+        hasJackpot && "border-l-[3px] border-l-teal-400",
       )}
     >
       <TableCell className="pl-6 py-3 text-center">
-        <span className="text-xs text-muted-foreground/50 tabular-nums">{rowNo}</span>
+        <span
+          className={cn(
+            "inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
+            hasJackpot
+              ? "bg-teal-500/10 text-teal-600 dark:text-teal-400"
+              : "bg-muted text-muted-foreground",
+          )}
+        >
+          {rowNo}
+        </span>
       </TableCell>
       <TableCell className="py-3">
-        <div className="flex items-center gap-2">
-          {hasJackpot ? (
-            <Gem className="size-3.5 text-teal-500 shrink-0 animate-pulse" />
-          ) : (
-            <div className="size-3.5 shrink-0" />
-          )}
-          <div>
-            <p className="text-sm text-foreground">{displayName}</p>
-            <p className="text-xs text-muted-foreground/50 font-mono mt-0.5 truncate max-w-32">
-              @{entry.tenantId}
-            </p>
-          </div>
-        </div>
+        <p className="text-sm text-foreground">{displayName}</p>
+        <p className="text-xs text-muted-foreground/50 font-mono mt-0.5 truncate max-w-32">
+          @{entry.tenantId}
+        </p>
       </TableCell>
       <TableCell className="py-3 text-right">
         <span className="text-sm tabular-nums text-foreground">{formatNumber(entry.amount)}</span>
@@ -321,15 +388,13 @@ function WinningEntryRow({ entry, rowNo }: { entry: WinningEntryItem; rowNo: num
           ))}
         </div>
       </TableCell>
-      <TableCell className="py-3 text-right">
+      <TableCell className="py-3 pr-6 text-right">
         <p className="text-sm tabular-nums text-foreground font-medium">
           {formatNumber(entry.winAmount)}
         </p>
-      </TableCell>
-      <TableCell className="py-3 pr-6">
-        <span className="text-xs text-muted-foreground tabular-nums">
-          {displayVNDateTime(entry.createdAt)}
-        </span>
+        <p className="text-xs text-muted-foreground/50 tabular-nums mt-0.5">
+          {formatVN(new Date(entry.createdAt), "HH:mm dd/MM")}
+        </p>
       </TableCell>
     </TableRow>
   );

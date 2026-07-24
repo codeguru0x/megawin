@@ -85,15 +85,34 @@ export interface DrawFinancialDisplay {
   totalRevenue: number;
   totalFixedPrizes: number;
   totalAgentCommission: number;
+  /** Công ty thu lý thuyết (VND) = round(revenue × companyRate). Mức trần trước cap. */
   companyTake: number;
-  /** Đóng góp vào JP1 (VND). */
+  /**
+   * Công ty THỰC THU (VND) sau cap bởi số dư.
+   * = min(companyTake, max(revenue − commission − fixedPrizes, 0)). Dùng để tính Thu thuần.
+   */
+  actualCompanyTake: number;
+  /** Đóng góp vào JP1 (VND). Đã trừ jp1Overflow nếu overflow kích hoạt. */
   jackpot1Contribution: number;
-  /** Đóng góp vào JP2 (VND). */
+  /** Đóng góp vào JP2 (VND). Đã cộng jp1Overflow nếu overflow kích hoạt + có JP2 winner. */
   jackpot2Contribution: number;
+  /**
+   * Phần JP1 vượt ngưỡng chuyển sang JP2 (VND).
+   * > 0 chỉ khi: JP1 > threshold + không có JP1 winner + có JP2 winner.
+   */
+  jp1Overflow: number;
   jackpot1Before: number;
   jackpot1After: number;
   jackpot2Before: number;
   jackpot2After: number;
+  /** Kỳ này có người trúng JP1 (6/6) hay không. */
+  hasJackpot1Winner: boolean;
+  /** Kỳ này có người trúng JP2 (5/6 + bonus) hay không. */
+  hasJackpot2Winner: boolean;
+  /** Tổng pool JP1 đã trao cho winner (VND) = opening + contribution. 0 nếu không có winner. */
+  jackpot1PrizeAwarded: number;
+  /** Tổng pool JP2 đã trao cho winner (VND) = opening + contribution. 0 nếu không có winner. */
+  jackpot2PrizeAwarded: number;
 }
 
 // ─── Void Info ───────────────────────────────────────────────────────────────

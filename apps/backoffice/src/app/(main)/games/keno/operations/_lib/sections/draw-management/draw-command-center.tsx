@@ -18,7 +18,6 @@ import {
   Lock,
   Unlock,
   Radio,
-  Timer,
   Pencil,
   Trash2,
   RotateCcw,
@@ -48,6 +47,12 @@ import {
 import type { DrawSelectorItem } from "../../use-operations";
 import type { KenoDrawResult, VoidInfo } from "../../types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Countdown,
+  OverdueBanner,
+  useOverdue,
+  DEFAULT_OVERDUE_GRACE,
+} from "@/components/games/shared/draw-countdown";
 
 interface DrawCommandProps {
   draw: DrawSelectorItem;
@@ -91,6 +96,8 @@ function getSteps(draw: DrawSelectorItem, result?: KenoDrawResult): Step[] {
   return [
     {
       label: "Mở bán",
+      // salesOpenAt chỉ có sau khi kỳ đã mở bán — kỳ Scheduled sẽ không hiện giờ
+      time: draw.salesOpenAt ? displayVNTime(draw.salesOpenAt) : undefined,
       state: active(DrawStatus.SalesOpen)
         ? "active"
         : done([DrawStatus.SalesOpen])
@@ -108,6 +115,10 @@ function getSteps(draw: DrawSelectorItem, result?: KenoDrawResult): Step[] {
     },
     {
       label: "Công bố KQ",
+      // drawResultAt = thời điểm publish thực tế; fallback giờ quay theo lịch khi chưa publish
+      time: draw.drawResultAt
+        ? displayVNTime(draw.drawResultAt)
+        : displayVNTime(draw.scheduledDrawAt),
       state: active(DrawStatus.Published)
         ? "active"
         : done([DrawStatus.Published])
@@ -116,7 +127,8 @@ function getSteps(draw: DrawSelectorItem, result?: KenoDrawResult): Step[] {
     },
     {
       label: "Kết sổ",
-      time: result?.settledAt ? displayVNTime(result.settledAt) : undefined,
+      // Ưu tiên settledAt từ selector (luôn có sau settle) — result chỉ có khi đã load detail
+      time: draw.settledAt ? displayVNTime(draw.settledAt) : undefined,
       state: active(DrawStatus.Settling) ? "active" : s === DrawStatus.Settled ? "done" : "pending",
     },
   ];
@@ -500,6 +512,21 @@ export function DrawCommandCenter({
           ? Loader2
           : Radio;
 
+  // ── Overdue detection: trạng thái "kẹt" khi scheduler/worker không chạy ────
+  // Keno chu kỳ ngắn ~8 phút → dùng ngưỡng grace mặc định (30s / 2 phút).
+  // SalesOpen quá giờ đóng + grace → close-sales scheduler có thể lỗi.
+  const closeOverdue =
+    useOverdue(
+      status === DrawStatus.SalesOpen ? draw.salesCloseAt : undefined,
+      DEFAULT_OVERDUE_GRACE.close,
+    ) && status === DrawStatus.SalesOpen;
+  // SalesClosed quá giờ quay + grace mà chưa Published → publish worker có thể lỗi.
+  const publishOverdue =
+    useOverdue(
+      status === DrawStatus.SalesClosed ? draw.scheduledDrawAt : undefined,
+      DEFAULT_OVERDUE_GRACE.publish,
+    ) && status === DrawStatus.SalesClosed;
+
   return (
     <div className={cn("rounded-xl border overflow-hidden", cardBorder, cardBg)}>
       <div className={cn("h-1 w-full bg-linear-to-r", accentGradient)} />
@@ -546,11 +573,23 @@ export function DrawCommandCenter({
                   {draw.drawId}
                 </p>
                 <ScheduleChips draw={draw} />
-                {status === DrawStatus.SalesOpen && (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium tabular-nums text-amber-600 dark:text-amber-400">
-                    <Timer className="size-3 shrink-0" />
-                    Đóng lúc {displayVNTime(draw.salesCloseAt)}
-                  </span>
+                {/* Countdown theo trạng thái — thay chip giờ tĩnh, người trực ca
+                    không cần tự nhìn đồng hồ (Keno chu kỳ ~8 phút).
+                    Không có countdown "Mở bán sau": salesOpenAt chỉ set NGAY khi
+                    mở bán (không có đặt lịch mở bán trước). */}
+                {status === DrawStatus.SalesOpen && !closeOverdue && (
+                  <Countdown
+                    target={draw.salesCloseAt}
+                    prefix="Đóng bán sau"
+                    className="text-amber-600 dark:text-amber-400"
+                  />
+                )}
+                {status === DrawStatus.SalesClosed && !publishOverdue && (
+                  <Countdown
+                    target={draw.scheduledDrawAt}
+                    prefix="Quay số sau"
+                    className="text-violet-600 dark:text-violet-400"
+                  />
                 )}
               </div>
             </div>
@@ -591,6 +630,10 @@ export function DrawCommandCenter({
             {/* Kết quả đã chuyển sang section "Kết quả & Phân bổ giải thưởng" bên dưới */}
           </div>
         )}
+
+        {/* Overdue banners: trạng thái kẹt — scheduler/worker không chuyển status đúng giờ */}
+        {closeOverdue && <OverdueBanner message="Quá giờ đóng bán, hãy đóng kỳ này." />}
+        {publishOverdue && <OverdueBanner message="Quá giờ quay số nhưng chưa công bố kết quả." />}
 
         {/* Void info */}
         {isVoided && voidInfo && (

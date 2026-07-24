@@ -23,9 +23,10 @@ export interface GetOpsSummaryInput {
   drawId?: string;
 }
 
-export interface OpsSummaryOutput {
-  /** Ngày tài chính đang xem. */
-  financialDate: string;
+/**
+ * Bộ KPI tổng hợp của một kỳ/ngày.
+ */
+export interface OpsSummaryKpi {
   /** Tổng doanh thu (VND). Công thức: Σ(entry.amount). */
   totalRevenue: number;
   /** Tổng entries (= số vé tham gia kỳ). */
@@ -41,6 +42,11 @@ export interface OpsSummaryOutput {
   totalCommission: number;
   /** Tổng payout (VND) — chỉ có với entries đã settle. */
   totalPayout: number;
+}
+
+export interface OpsSummaryOutput extends OpsSummaryKpi {
+  /** Ngày tài chính đang xem. */
+  financialDate: string;
 }
 
 // ─────────────────────────────────────────────

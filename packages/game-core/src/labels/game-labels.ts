@@ -327,4 +327,35 @@ export const REPORT_COLUMN_LABELS = {
   jp2ContributionAmount: "JP2 Tích lũy",
   /** Số tiền Jackpot 2 cuối kỳ (VND). */
   jp2ClosingAmount: "JP2 Cuối kỳ",
+
+  // ─────────────────────────────────────────────
+  // Winning entries columns (operations — danh sách trúng thưởng, dùng chung 7 game)
+  // ─────────────────────────────────────────────
+
+  /** Số phiếu cược trúng thưởng trong kỳ (winning entries dialog KPI). */
+  winningEntryCount: "Phiếu trúng",
+  /** Số bộ số trúng thưởng trong kỳ — games có khái niệm lines (lotto535, mega645, power655). */
+  winningLineCount: "Bộ số trúng",
+  /** Tổng tiền đã chi trả thưởng cho toàn bộ entries trúng trong kỳ (winning entries dialog KPI). */
+  totalWinningPayout: "Tổng chi trả thưởng",
+
+  /**
+   * Tên cột định danh người chơi trong bảng winning entries (khác `playerCount` —
+   * `playerCount` là số đếm tổng hợp cho báo cáo, không phải tiêu đề cột định danh).
+   */
+  player: "Người chơi",
+
+  /** Bộ số người chơi đã chọn theo từng board (winning entries dialog). */
+  numbersPlayed: "Số chơi",
+  /** Bộ ba số người chơi đã chọn theo từng board — chỉ max3d, max3dpro (triplet 000-999). */
+  tripletsPlayed: "Bộ ba số",
+  /** Hạng giải trúng của entry (Jackpot, Nhất, Nhì…). */
+  prizeTier: "Hạng trúng",
+  /** Tổng tiền thưởng entry nhận được (VND). = Σ prize các line trúng. */
+  winAmount: "Tiền thưởng",
+  /**
+   * Cột gộp board + số + tiền thưởng vào 1 dòng/board — dùng cho game unified boards
+   * (keno, bingo18) nơi mỗi board có thể là cách chơi khác nhau (basic/side bet).
+   */
+  winningDetail: "Chi tiết trúng thưởng",
 } as const;

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LottoNumberBall } from "@/components/games/lotto535/lotto-number-ball";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PrizeTier } from "@megawin/game-lotto535/entities";
 import { formatNumber } from "@megawin/shared/utils";
 import {
@@ -18,6 +19,8 @@ import {
   Star,
   Sparkles,
   ExternalLink,
+  Info,
+  Split,
 } from "lucide-react";
 import type { DrawResult, DrawFinancialDisplay } from "../../types";
 import { WinningEntriesDialog } from "./winning-entries-dialog";
@@ -128,7 +131,7 @@ function JackpotWinnerRow({ t }: { t: DrawResult["tiers"][number] }) {
   return (
     <div className="relative overflow-hidden border-b border-amber-200/70 dark:border-amber-800/50">
       <div className="absolute inset-0 bg-linear-to-r from-amber-50/80 via-yellow-50/60 to-amber-50/30 dark:from-amber-950/30 dark:via-yellow-950/20 dark:to-transparent" />
-      <div className="relative grid grid-cols-[1fr_5rem_7rem_7rem] gap-x-2 px-3 py-3 items-center">
+      <div className="relative grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-3 items-center">
         <div className="flex items-center gap-2">
           <Gem className="size-3.5 text-amber-500 shrink-0 animate-pulse" />
           <Badge
@@ -143,10 +146,10 @@ function JackpotWinnerRow({ t }: { t: DrawResult["tiers"][number] }) {
           {formatNumber(t.winnerCount)}
         </span>
         <span className="text-right tabular-nums text-sm text-amber-600/70 dark:text-amber-400/70">
-          {t.prizeAmount > 0 ? formatNumber(t.prizeAmount) : "—"}
+          {formatNumber(t.prizeAmount)}
         </span>
         <span className="text-right tabular-nums text-sm font-bold text-amber-600 dark:text-amber-400">
-          {t.totalPrize > 0 ? formatNumber(t.totalPrize) : "—"}
+          {formatNumber(t.totalPrize)}
         </span>
       </div>
     </div>
@@ -231,7 +234,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                   className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-primary/70 transition-colors cursor-pointer"
                 >
                   <ExternalLink className="size-3" />
-                  Xem phiếu cược trúng thưởng
+                  Phiếu cược trúng thưởng
                 </button>
               </div>
             </div>
@@ -247,7 +250,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
           {/* Prize table — compact rows */}
           <div className="rounded-xl border overflow-hidden">
             {/* Header */}
-            <div className="grid grid-cols-[1fr_5rem_7rem_7rem] gap-x-2 px-3 py-2 bg-muted/40 border-b">
+            <div className="grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2 bg-muted/40 border-b">
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Hạng giải
               </span>
@@ -255,10 +258,10 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                 Lines
               </span>
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
-                Tiền/line
+                Giá trị thưởng
               </span>
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
-                Tổng giải
+                Tổng thưởng
               </span>
             </div>
 
@@ -277,7 +280,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                 <div
                   key={t.tier}
                   className={cn(
-                    "grid grid-cols-[1fr_5rem_7rem_7rem] gap-x-2 px-3 py-2.5 items-center",
+                    "grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2.5 items-center",
                     idx < result.tiers.length - 1 && "border-b border-border/50",
                     hasWinner ? cfg?.row : "",
                   )}
@@ -307,36 +310,38 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                       "text-right tabular-nums text-sm font-semibold",
                       hasWinner
                         ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-muted-foreground/30",
+                        : "text-muted-foreground/40",
                     )}
                   >
-                    {hasWinner ? formatNumber(t.winnerCount) : "—"}
+                    {formatNumber(t.winnerCount)}
                   </span>
 
                   <span
                     className={cn(
                       "text-right tabular-nums text-sm",
-                      hasWinner ? "text-muted-foreground" : "text-muted-foreground/30",
+                      hasWinner ? "text-muted-foreground" : "text-muted-foreground/40",
                     )}
                   >
-                    {t.prizeAmount > 0 && hasWinner ? formatNumber(t.prizeAmount) : "—"}
+                    {formatNumber(t.prizeAmount)}
                   </span>
 
                   <span
                     className={cn(
                       "text-right tabular-nums text-sm font-bold",
-                      t.totalPrize > 0 ? "text-foreground" : "text-muted-foreground/30",
+                      t.totalPrize > 0 ? "text-foreground" : "text-muted-foreground/40",
                     )}
                   >
-                    {t.totalPrize > 0 ? formatNumber(t.totalPrize) : "—"}
+                    {formatNumber(t.totalPrize)}
                   </span>
                 </div>
               );
             })}
 
             {/* Footer total — các cột thẳng hàng với header */}
-            <div className="grid grid-cols-[1fr_5rem_7rem_7rem] gap-x-2 px-3 py-2.5 items-center border-t bg-muted/20">
-              <span className="text-xs font-semibold text-muted-foreground">Tổng</span>
+            <div className="grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2.5 items-center border-t bg-muted/20">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Tổng cộng
+              </span>
               <span className="text-right tabular-nums text-sm font-bold text-foreground">
                 {formatNumber(totalWinningLines)}
               </span>
@@ -367,10 +372,17 @@ interface LedgerRow {
   bold?: boolean;
   indent?: boolean;
   separator?: boolean;
+  /** Chú thích hiển thị qua icon (i) — làm rõ nghĩa khoản mục cho staff. */
+  hint?: string;
 }
 
 function AccountRow({ row }: { row: LedgerRow }) {
   const Icon = row.icon;
+  // Giá trị 0 ở khoản trừ/cộng phụ là trung tính → bỏ dấu +/− và ép muted,
+  // tránh "−0"/"+0" gây nhiễu. Dòng kết quả (sign "=") giữ nguyên logic màu.
+  const isZeroSide = row.value === 0 && row.sign !== "=";
+  const displaySign = isZeroSide ? "" : row.sign;
+  const displayColor = isZeroSide ? "text-muted-foreground" : row.valueColor;
   return (
     <div
       className={cn(
@@ -393,15 +405,29 @@ function AccountRow({ row }: { row: LedgerRow }) {
         >
           {row.label}
         </span>
+        {row.hint && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="shrink-0 text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-help"
+                aria-label={`Giải thích ${row.label}`}
+              >
+                <Info className="size-3" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-64">{row.hint}</TooltipContent>
+          </Tooltip>
+        )}
       </div>
       <span
         className={cn(
           "tabular-nums text-sm font-mono shrink-0",
           row.bold ? "font-bold" : "",
-          row.valueColor,
+          displayColor,
         )}
       >
-        {row.sign !== "=" ? row.sign : ""}
+        {displaySign !== "=" ? displaySign : ""}
         {formatNumber(row.value)}
       </span>
     </div>
@@ -409,8 +435,22 @@ function AccountRow({ row }: { row: LedgerRow }) {
 }
 
 export function FinancialSummary({ financial: f }: { financial: DrawFinancialDisplay }) {
+  // Cấu trúc "báo cáo phân bổ doanh thu" — số học liền mạch từ trên xuống:
+  //   Doanh thu − Hoa hồng − Giải cố định = Số dư sau giải & HH
+  //   Số dư − Trích quỹ Jackpot = Kết quả công ty (P&L kỳ)
+  // Kết quả công ty = actualCompanyTake khi kỳ có dư (phần dư còn lại đã trích quỹ JP),
+  // hoặc = số âm khi giải cố định vượt doanh thu (công ty bù phần thiếu).
   const netAfterPrizes = f.totalRevenue - f.totalAgentCommission - f.totalFixedPrizes;
-  const netAfterCompany = netAfterPrizes - f.companyTake;
+  const companyResult = netAfterPrizes - f.jackpotContribution;
+  const companyCapped = f.actualCompanyTake < f.companyTake;
+
+  // Hint dòng kết quả — giải thích đúng theo từng kịch bản để staff không đọc nhầm.
+  const resultHint =
+    companyResult < 0
+      ? "Giải cố định vượt doanh thu — công ty bù phần thiếu. Khoản trao độc đắc/chia giải (nếu có) trả từ quỹ Jackpot tích luỹ, không tính vào P&L kỳ này."
+      : companyCapped
+        ? `Bằng phần công ty thực thu. Mức lý thuyết ${formatNumber(f.companyTake)} (doanh thu × tỷ lệ), nhưng kỳ này không đủ dư nên chỉ thực thu ${formatNumber(f.actualCompanyTake)}.`
+        : "Bằng phần công ty thực thu (doanh thu × tỷ lệ). Toàn bộ phần dư còn lại đã trích vào quỹ Jackpot.";
 
   const rows: LedgerRow[] = [
     {
@@ -419,8 +459,9 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
       iconColor: "text-emerald-600 dark:text-emerald-400",
       label: "Doanh thu gộp",
       value: f.totalRevenue,
+      // Dòng input gốc → trung tính, chỉ khoản trừ & kết quả mới có màu ngữ nghĩa
       sign: "+",
-      valueColor: "text-emerald-700 dark:text-emerald-400",
+      valueColor: "text-foreground",
       bold: true,
     },
     {
@@ -429,54 +470,64 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
       iconColor: "text-slate-500 dark:text-slate-400",
       label: "Hoa hồng đại lý",
       value: f.totalAgentCommission,
+      // Khoản chi bình thường → muted (không dùng destructive để tránh "báo động giả")
       sign: "-",
-      valueColor: "text-destructive",
+      valueColor: "text-muted-foreground",
       indent: true,
     },
     {
       icon: Trophy,
       iconBg: "bg-amber-100 dark:bg-amber-900/50",
       iconColor: "text-amber-600 dark:text-amber-400",
-      label: "Chi trả giải thưởng",
+      label: "Chi trả giải cố định",
       value: f.totalFixedPrizes,
       sign: "-",
-      valueColor: "text-destructive",
+      valueColor: "text-muted-foreground",
       indent: true,
+      hint: "Chỉ gồm các giải cố định (hạng 1–5). Giải độc đắc/kỳ chia giải trả từ quỹ tích luỹ — xem khối Biến động Jackpot bên dưới.",
     },
-    ...(f.companyTake > 0
-      ? [
-          {
-            icon: Coins,
-            iconBg: "bg-slate-100 dark:bg-slate-800",
-            iconColor: "text-slate-500 dark:text-slate-400",
-            label: "Công ty thu",
-            value: f.companyTake,
-            sign: "-" as const,
-            valueColor: "text-destructive",
-            indent: true,
-          },
-        ]
-      : []),
     {
       icon: ArrowDownRight,
       iconBg: "bg-blue-100 dark:bg-blue-900/50",
       iconColor: "text-blue-600 dark:text-blue-400",
-      label: "Thu thuần (trước Jackpot)",
-      value: netAfterCompany,
+      label: "Số dư sau giải & hoa hồng",
+      value: netAfterPrizes,
       sign: "=",
-      valueColor: netAfterCompany >= 0 ? "text-blue-700 dark:text-blue-400" : "text-destructive",
+      valueColor: netAfterPrizes >= 0 ? "text-foreground" : "text-destructive",
       bold: true,
       separator: true,
+      hint: "Subtotal trung gian = Doanh thu − Hoa hồng − Giải cố định. Phần dư này được phân bổ cho công ty thực thu và quỹ Jackpot.",
     },
     {
       icon: TrendingDown,
       iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
       iconColor: "text-emerald-600 dark:text-emerald-400",
-      label: "Đóng góp Jackpot",
+      label: "Trích quỹ Jackpot",
       value: f.jackpotContribution,
-      sign: "+",
-      valueColor: "text-emerald-700 dark:text-emerald-400",
+      // Tiền ĐI RA khỏi P&L công ty vào quỹ (liability) → dấu −, muted
+      sign: "-",
+      valueColor: "text-muted-foreground",
       indent: true,
+      hint: `Phần dư còn lại sau khi công ty thực thu ${formatNumber(f.actualCompanyTake)} — trích vào quỹ Jackpot. Kỳ hoà/lỗ → 0. Khi có winner (hoặc kỳ chia giải), phần này vẫn được cộng vào pool rồi trao/chia hết.`,
+    },
+    {
+      icon: Coins,
+      iconBg:
+        companyResult >= 0
+          ? "bg-emerald-100 dark:bg-emerald-900/50"
+          : "bg-red-100 dark:bg-red-900/50",
+      iconColor:
+        companyResult >= 0
+          ? "text-emerald-600 dark:text-emerald-400"
+          : "text-red-600 dark:text-red-400",
+      label: "Kết quả công ty (P&L kỳ)",
+      value: companyResult,
+      sign: "=",
+      valueColor:
+        companyResult >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive",
+      bold: true,
+      separator: true,
+      hint: resultHint,
     },
   ];
 
@@ -512,6 +563,33 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Biến động Jackpot
             </span>
+            {f.hasJackpotWinner && (
+              <Badge className="ml-auto bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/40 text-[10px] px-1.5 h-4 gap-1">
+                <Star className="size-2 fill-current" />
+                Đã trao
+              </Badge>
+            )}
+            {f.isSplitCycle && !f.hasJackpotWinner && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="ml-auto flex items-center"
+                    aria-label="Giải thích kỳ chia giải"
+                  >
+                    <Badge className="bg-violet-500/15 text-violet-700 dark:text-violet-300 border border-violet-400/40 text-[10px] px-1.5 h-4 gap-1 cursor-help">
+                      <Info className="size-2.5" />
+                      Kỳ chia giải
+                    </Badge>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-64">
+                  Jackpot vượt ngưỡng, không ai trúng độc đắc và là kỳ quay tối → toàn bộ quỹ được
+                  chia đều cho người trúng hạng 1–5 thay vì trao độc đắc. Cycle đóng, kỳ sau quỹ
+                  khởi động lại từ mức seed do công ty ứng.
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
 
           {/* Rows — dùng cùng layout flex với AccountRow */}
@@ -530,12 +608,85 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
                 +{formatNumber(f.jackpotContribution)}
               </span>
             </div>
-            <div className="flex items-center justify-between gap-3 px-3 py-2 bg-muted/20">
-              <span className="text-sm font-bold text-foreground pl-8">Sau kỳ</span>
-              <span className="tabular-nums text-sm font-mono font-bold text-amber-600 dark:text-amber-400 shrink-0">
-                {formatNumber(f.jackpotAfter)}
-              </span>
-            </div>
+
+            {f.hasJackpotWinner ? (
+              <>
+                <div className="flex items-center justify-between gap-3 px-3 py-2">
+                  <span className="flex items-center gap-1 text-sm text-amber-600 dark:text-amber-400 pl-8">
+                    <Gem className="size-3" />− Trao độc đắc
+                  </span>
+                  <span className="tabular-nums text-sm font-mono font-semibold text-amber-600 dark:text-amber-400 shrink-0">
+                    −{formatNumber(f.jackpotPrizeAwarded)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-3 px-3 py-2 bg-muted/20">
+                  <span className="flex items-center gap-1 text-sm font-bold text-foreground pl-8">
+                    Quỹ sau kỳ
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button type="button" aria-label="Giải thích quỹ sau kỳ">
+                          <Info className="size-3 text-muted-foreground/40 hover:text-muted-foreground" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-64">
+                        Đã trao hết cho người trúng độc đắc. Cycle đóng, kỳ sau quỹ khởi động lại từ
+                        mức seed do công ty ứng.
+                      </TooltipContent>
+                    </Tooltip>
+                  </span>
+                  <span className="tabular-nums text-sm font-mono font-bold text-amber-600 dark:text-amber-400 shrink-0">
+                    0
+                  </span>
+                </div>
+                <div className="px-3 py-1.5 bg-muted/10">
+                  <p className="text-[11px] text-muted-foreground/70 pl-8">
+                    Kỳ kế tiếp quỹ khởi động lại từ mức seed do công ty ứng.
+                  </p>
+                </div>
+              </>
+            ) : f.isSplitCycle ? (
+              <>
+                <div className="flex items-center justify-between gap-3 px-3 py-2">
+                  <span className="flex items-center gap-1 text-sm text-violet-600 dark:text-violet-400 pl-8">
+                    <Split className="size-3" />− Chia cho hạng 1–5
+                  </span>
+                  <span className="tabular-nums text-sm font-mono font-semibold text-violet-600 dark:text-violet-400 shrink-0">
+                    −{formatNumber(f.jackpotPrizeAwarded)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-3 px-3 py-2 bg-muted/20">
+                  <span className="flex items-center gap-1 text-sm font-bold text-foreground pl-8">
+                    Quỹ sau kỳ
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button type="button" aria-label="Giải thích quỹ sau kỳ">
+                          <Info className="size-3 text-muted-foreground/40 hover:text-muted-foreground" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-64">
+                        Toàn bộ quỹ đã chia đều cho người trúng hạng 1–5. Cycle đóng, kỳ sau quỹ
+                        khởi động lại từ mức seed do công ty ứng.
+                      </TooltipContent>
+                    </Tooltip>
+                  </span>
+                  <span className="tabular-nums text-sm font-mono font-bold text-violet-600 dark:text-violet-400 shrink-0">
+                    0
+                  </span>
+                </div>
+                <div className="px-3 py-1.5 bg-muted/10">
+                  <p className="text-[11px] text-muted-foreground/70 pl-8">
+                    Kỳ kế tiếp quỹ khởi động lại từ mức seed do công ty ứng.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-between gap-3 px-3 py-2 bg-muted/20">
+                <span className="text-sm font-bold text-foreground pl-8">Sau kỳ</span>
+                <span className="tabular-nums text-sm font-mono font-bold text-amber-600 dark:text-amber-400 shrink-0">
+                  {formatNumber(f.jackpotAfter)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

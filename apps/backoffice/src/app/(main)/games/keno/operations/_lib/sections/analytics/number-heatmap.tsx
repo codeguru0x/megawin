@@ -287,12 +287,19 @@ function NumberCell({
 const COLS = 10;
 const TOTAL = 80;
 
+/**
+ * Ngưỡng dữ liệu thưa: tổng lượt chọn < 10 → heatmap chưa có ý nghĩa thống kê,
+ * hiện hint để người trực ca không hiểu nhầm màu nhạt = "số lạnh".
+ */
+const SPARSE_DATA_THRESHOLD = 10;
+
 function KenoGrid({ numbers }: { numbers: NumberFreqItem[] }) {
   const byNum = new Map(numbers.map((n) => [n.number, n]));
   const totalCount = numbers.reduce((a, n) => a + n.count, 0);
   const totalAmount = numbers.reduce((a, n) => a + n.amount, 0);
   const maxCount = numbers.reduce((a, n) => Math.max(a, n.count), 0);
   const totalRows = Math.ceil(TOTAL / COLS);
+  const isSparse = totalCount > 0 && totalCount < SPARSE_DATA_THRESHOLD;
 
   return (
     <div className="space-y-2">
@@ -332,6 +339,11 @@ function KenoGrid({ numbers }: { numbers: NumberFreqItem[] }) {
           );
         })}
       </div>
+      {isSparse && (
+        <p className="text-[11px] text-muted-foreground/60 italic">
+          Dữ liệu còn ít ({formatNumber(totalCount)} lượt) — heatmap sẽ rõ hơn khi có thêm cược.
+        </p>
+      )}
     </div>
   );
 }

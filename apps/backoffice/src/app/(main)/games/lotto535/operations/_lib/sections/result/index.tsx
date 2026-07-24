@@ -63,6 +63,16 @@ export function ResultSection() {
       };
     });
 
+    const jackpotTier = tierMap.get(PrizeTier.Jackpot);
+    const hasJackpotWinner = (jackpotTier?.winnerCount ?? 0) > 0;
+    const isSplitCycle = d.jackpot?.isSplitCycle ?? false;
+    const jackpotBefore = d.jackpot?.openingAmount ?? 0;
+    const jackpotContribution = d.financial?.jackpotContribution ?? 0;
+    // Pool xử lý kỳ này = opening + contribution.
+    // Winner: trao winner. Split: chia tier1-5. Roll-over: 0 (không "trao" gì).
+    const jackpotPrizeAwarded =
+      hasJackpotWinner || isSplitCycle ? jackpotBefore + jackpotContribution : 0;
+
     return {
       winningMain: d.result.winningMain as [string, string, string, string, string],
       winningSpecial: d.result.winningSpecial,
@@ -76,9 +86,13 @@ export function ResultSection() {
         totalFixedPrizes: d.financial?.totalFixedPrizes ?? 0,
         totalAgentCommission: d.financial?.totalAgentCommission ?? 0,
         companyTake: d.financial?.companyTake ?? 0,
-        jackpotContribution: d.financial?.jackpotContribution ?? 0,
-        jackpotBefore: d.jackpot?.openingAmount ?? 0,
+        actualCompanyTake: d.financial?.actualCompanyTake ?? 0,
+        jackpotContribution,
+        jackpotBefore,
         jackpotAfter: d.jackpot?.closingAmount ?? 0,
+        hasJackpotWinner,
+        isSplitCycle,
+        jackpotPrizeAwarded,
       },
     };
   }, [drawDetailData]);

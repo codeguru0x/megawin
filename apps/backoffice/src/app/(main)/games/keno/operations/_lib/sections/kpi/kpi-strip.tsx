@@ -30,17 +30,18 @@ function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub }: KpiCardPr
 }
 
 /**
- * KPI strip cho Keno Operations.
+ * KPI strip cho Keno Operations — 6 cards theo pattern chuẩn `operations-page-ui.mdc` §10.
  *
- * Keno: boards bao gồm cả cơ bản (pick1-10) và bổ sung (bigSmall/evenOdd).
+ * Keno: boards bao gồm cả cơ bản (pick1-10) và bổ sung (bigSmall/evenOdd) —
+ * card "Boards" thay cho "Lines" của các game expand lines (1 board = 1 line).
  */
 export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       <KpiCard
         icon={CircleDollarSign}
-        iconBg="bg-orange-100 dark:bg-orange-900/50"
-        iconColor="text-orange-600 dark:text-orange-400"
+        iconBg="bg-emerald-100 dark:bg-emerald-900/50"
+        iconColor="text-emerald-600 dark:text-emerald-400"
         label="Doanh thu"
         value={formatNumber(kpi.totalRevenue)}
       />
@@ -72,6 +73,14 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
         iconColor="text-amber-600 dark:text-amber-400"
         label="Hoa hồng ĐL"
         value={formatNumber(kpi.totalCommission)}
+      />
+      <KpiCard
+        icon={CircleDollarSign}
+        iconBg="bg-orange-100 dark:bg-orange-900/50"
+        iconColor="text-orange-600 dark:text-orange-400"
+        label="Doanh thu thuần"
+        value={formatNumber(kpi.netRevenue)}
+        sub="Sau hoa hồng đại lý"
       />
     </div>
   );

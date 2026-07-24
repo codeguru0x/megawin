@@ -94,14 +94,34 @@ export interface DrawFinancialDisplay {
   totalFixedPrizes: number;
   /** Tổng hoa hồng đại lý (VND). */
   totalAgentCommission: number;
-  /** Phần công ty giữ lại (VND). */
+  /**
+   * Phần công ty giữ lại trên lý thuyết (VND) = round(totalRevenue × companyTakeRate).
+   * Có thể lớn hơn số thực thu khi kỳ lỗ — dùng để hiển thị mức trần lý thuyết.
+   */
   companyTake: number;
+  /**
+   * Phần công ty THỰC THU (VND) sau khi cap bởi số dư còn lại.
+   * = min(companyTake, max(revenue − commission − fixedPrizes, 0)).
+   * Đây là số tiền công ty thực sự nhận — dùng để tính Thu thuần.
+   */
+  actualCompanyTake: number;
   /** Phần đóng góp Jackpot (VND). */
   jackpotContribution: number;
   /** Jackpot pool đầu kỳ (VND). */
   jackpotBefore: number;
-  /** Jackpot pool cuối kỳ (VND). */
+  /**
+   * Jackpot pool cuối kỳ (VND) = jackpotBefore + jackpotContribution.
+   * LƯU Ý: khi có winner, đây là pool ĐÃ TRAO cho winner (không phải quỹ còn lại);
+   * quỹ thực tế cho kỳ sau reset về seed ở JackpotCycle.
+   */
   jackpotAfter: number;
+  /** Kỳ này có người trúng Jackpot hay không. */
+  hasJackpotWinner: boolean;
+  /**
+   * Tổng tiền Jackpot đã trao cho winner kỳ này (VND).
+   * = jackpotBefore + jackpotContribution khi có winner, 0 khi không.
+   */
+  jackpotPrizeAwarded: number;
 }
 
 // ─── Void Info ───────────────────────────────────────────────────────────────

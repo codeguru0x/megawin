@@ -95,6 +95,47 @@ import { JackpotHeroCard } from "../jackpot/_lib/jackpot-overview-section";
 // KHÔNG có: companyTake, jackpotContribution, Biến động Jackpot section
 ```
 
+### Zone 5 — Financial Summary: chuẩn MÀU & HIỂN THỊ (BẮT BUỘC mọi game)
+
+Ledger tài chính phân 3 tầng ngữ nghĩa. Chỉ dòng KẾT QUẢ mới được dùng màu mạnh (xanh/đỏ);
+các dòng khác trung tính để mắt tập trung vào lợi nhuận. Áp dụng đồng nhất cho cả 2 pattern render
+(inline `.map()` như keno/bingo18, hoặc component `AccountRow`/`FinancialRow` như mega/power/lotto/max3d).
+
+| Loại dòng | Ví dụ | `valueColor` | Dấu | Ghi chú |
+|---|---|---|---|---|
+| **Input gốc** | Doanh thu gộp | `text-foreground` | `+` | KHÔNG dùng màu theme game (emerald/amber/orange…) đậm — dễ bị nhầm là cảnh báo |
+| **Khoản trừ** | Hoa hồng ĐL, Chi trả giải, Công ty thu | `text-muted-foreground` | `−` | KHÔNG dùng `text-destructive`/`text-red-*` — đây là chi phí bình thường, đỏ gây "báo động giả" |
+| **Khoản cộng phụ** | Đóng góp Jackpot | `text-muted-foreground` hoặc màu theme nhạt | `+` | Chỉ game có Jackpot |
+| **Kết quả** | Lợi nhuận / Thu thuần (trước Jackpot) | ≥ 0: màu theme game hoặc emerald/blue; < 0: `text-destructive` + icon `TrendingDown` | `=` | Dòng DUY NHẤT dùng màu ngữ nghĩa mạnh. Icon nền đổi theo dấu |
+
+**Xử lý giá trị = 0 (BẮT BUỘC):** khi một dòng khoản trừ/cộng phụ có `value === 0`, **bỏ dấu** `+`/`−`
+và ép `text-muted-foreground` — hiển thị `0` trung tính, KHÔNG bao giờ render `−0` màu đỏ (gây nhiễu,
+vô nghĩa vì 0 không phải khoản chi). Dòng kết quả (`sign === "="`) giữ nguyên logic màu kể cả khi = 0.
+
+```tsx
+// Chuẩn xử lý zero cho MỖI row trước khi render giá trị:
+const isZeroDeduction = row.value === 0 && row.sign !== "=";
+const displaySign = isZeroDeduction ? "" : row.sign;      // bỏ dấu khi = 0
+const displayColor = isZeroDeduction ? "text-muted-foreground" : row.valueColor;
+// ...
+<span className={cn("tabular-nums text-sm font-mono shrink-0", row.bold && "font-bold", displayColor)}>
+  {displaySign !== "=" ? displaySign : ""}
+  {formatNumber(row.value)}
+</span>
+```
+
+**Icon nền (`iconBg`/`iconColor`):** giữ màu phân loại theo loại dòng (cam/slate/amber/teal…) — icon nền
+CHỈ để phân biệt loại khoản mục, KHÔNG mang nghĩa cảnh báo. Riêng dòng kết quả: icon + nền đổi theo dấu
+(≥0 → emerald/blue theme + `TrendingUp`; <0 → red + `TrendingDown`).
+
+**Cảnh báo lỗ:** game không Jackpot khi `profit < 0` render thêm banner đỏ dưới ledger
+("Kỳ này chi trả vượt doanh thu — kiểm tra các entry trúng giải lớn"). Đây là chỗ đỏ HỢP LỆ vì
+lỗ là tín hiệu thật sự cần chú ý.
+
+**KHÔNG dùng note thừa:** bỏ note kiểu "Game X không có Jackpot…" (icon `ChartNoAxesColumnIncreasing`)
+— thông tin này đã thể hiện qua chính cấu trúc ledger (không có dòng Jackpot).
+
+
 ### Zone 6 — Analytics grid layout
 
 ```tsx

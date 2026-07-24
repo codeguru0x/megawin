@@ -71,6 +71,11 @@ export interface WinningEntryItem {
   winAmount: number;
   /** Boards (bộ ba số). */
   boards: WinningEntryBoard[];
+  /**
+   * Toàn bộ 20 bộ ba số kết quả kỳ quay (special + first + second + third),
+   * đã flatten và dedup — snapshot lúc settle. Dùng highlight bộ ba trúng.
+   */
+  winningTriplets: string[];
   /** Chi tiết trúng từng hạng giải. */
   tiers: WinningEntryTierDetail[];
   /** Thời điểm đặt cược (ISO 8601). */

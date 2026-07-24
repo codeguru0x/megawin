@@ -75,6 +75,16 @@ export interface ListEntryBreakdownInput {
 export interface ListEntryBreakdownOutput {
   data: TicketEntryEntity[];
 }
+// ─── Get Entry By Id ──────────────────────────────────────────────────────────
+
+export interface GetEntryByIdInput {
+  entryId: string;
+}
+
+export interface GetEntryByIdOutput {
+  entry: TicketEntryEntity;
+}
+
 export interface ListVoidReportsInput {
   from: string;
   to: string;

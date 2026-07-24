@@ -37,6 +37,13 @@ export interface WinningEntryItem {
   amount: number;
   winAmount: number;
   boards: WinningEntryBoard[];
+  /**
+   * 6 số chính kết quả kỳ quay (01-55, zero-padded) — snapshot lúc settle.
+   * Dùng highlight số trúng khi đối chiếu với board.mainNumbers.
+   */
+  winningMain: string[];
+  /** Bonus number kỳ quay (01-55, zero-padded). Rỗng nếu chưa có kết quả. */
+  bonusNumber: string;
   tiers: WinningEntryTierDetail[];
   createdAt: string;
   settledAt: string;

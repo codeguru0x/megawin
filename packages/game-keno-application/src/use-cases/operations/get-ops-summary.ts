@@ -15,11 +15,15 @@ export class GetOpsSummaryUseCase extends NextApiUseCase<GetOpsSummaryInput, Ops
 
   protected async execute(input: GetOpsSummaryInput): Promise<OpsSummaryOutput> {
     const financialDate = input.financialDate ?? getFinancialDateToday();
+
     const summary = await this.entryRepo.aggregateOpsSummary({
       financialDate,
       drawId: input.drawId,
     });
 
-    return { financialDate, ...summary };
+    return {
+      financialDate,
+      ...summary,
+    };
   }
 }

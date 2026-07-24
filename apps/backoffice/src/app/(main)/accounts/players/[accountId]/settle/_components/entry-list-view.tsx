@@ -140,7 +140,7 @@ function PlayerEntryDetailLoader({
     <GameEntryDetailDialog
       game={game}
       entry={isLoading ? null : (entryDetail ?? null)}
-      open={open && !isLoading}
+      open={open}
       onClose={onClose}
     />
   );
