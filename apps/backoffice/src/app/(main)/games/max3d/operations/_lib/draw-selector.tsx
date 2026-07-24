@@ -52,12 +52,12 @@ function DrawRow({ draw }: { draw: DrawSelectorItem }) {
     <div className="flex items-center justify-between w-full gap-3 py-0.5">
       <div className="flex items-center gap-2 min-w-0">
         {STATUS_ICON[draw.status] ?? <Circle className="size-2 fill-slate-300 text-slate-300" />}
-        {/* Max 3D: drawNo luôn là 1 nên không hiển thị "Kỳ N" */}
+        {/* Max 3D: 1 kỳ/ngày (drawNo luôn là 1) nên chỉ hiển thị ngày, không hiển thị "Kỳ N" */}
         <span className={cn("text-sm font-medium truncate", isFuture && "text-muted-foreground")}>
-          {draw.drawDate}
+          Ngày {draw.drawDate}
         </span>
         <span className="text-xs text-muted-foreground font-mono tabular-nums shrink-0">
-          · {draw.drawTime}
+          {draw.drawTime}
         </span>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
