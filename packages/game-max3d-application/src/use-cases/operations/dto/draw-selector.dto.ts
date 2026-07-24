@@ -12,7 +12,10 @@ import type { DrawSelectorGroup } from "@megawin/game-core/entities";
 // ─────────────────────────────────────────────
 
 export interface GetDrawSelectorOutput {
-  /** Danh sách kỳ quay cho dropdown, sorted theo drawDate. */
+  /**
+   * Danh sách kỳ quay cho dropdown.
+   * active/future: sorted ASC (cũ→mới). recent: sorted DESC (mới→cũ, dễ theo dõi kỳ vừa xong).
+   */
   draws: DrawSelectorItem[];
 }
 
@@ -53,9 +56,9 @@ export interface DrawSelectorItem {
   financialDate: string;
   /**
    * Phân nhóm để hiển thị trong dropdown:
-   * - active: cần xử lý (salesOpen, salesClosed, published, settling, voiding)
-   * - future: kỳ scheduled chưa đến
-   * - recent: kỳ đã hoàn thành trong 48h (settled, void)
+   * - active: cần xử lý (salesOpen, salesClosed, published, settling, voiding), sort ASC
+   * - future: kỳ scheduled chưa đến, sort ASC
+   * - recent: kỳ đã hoàn thành gần nhất (settled, void), sort DESC (mới nhất lên đầu)
    */
   group: DrawSelectorGroup;
 }

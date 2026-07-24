@@ -12,7 +12,10 @@ import type { DrawSelectorGroup } from "@megawin/game-core/entities";
 // ─────────────────────────────────────────────
 
 export interface GetDrawSelectorOutput {
-  /** Danh sách kỳ quay cho dropdown, sorted theo drawDate+drawNo. */
+  /**
+   * Danh sách kỳ quay cho dropdown.
+   * active/future: sorted ASC (cũ→mới). recent: sorted DESC (mới→cũ, dễ theo dõi kỳ vừa xong).
+   */
   draws: DrawSelectorItem[];
 }
 

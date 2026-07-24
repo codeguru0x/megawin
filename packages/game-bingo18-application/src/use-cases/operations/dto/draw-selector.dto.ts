@@ -44,9 +44,9 @@ export interface DrawSelectorItem {
   financialDate: string;
   /**
    * Nhóm hiển thị trong dropdown.
-   * active: đang xử lý (salesOpen/salesClosed/published/settling/voiding).
-   * future: kỳ scheduled sắp tới.
-   * recent: kỳ settled hoặc void gần đây.
+   * active: đang xử lý (salesOpen/salesClosed/published/settling/voiding), sort ASC (cũ→mới).
+   * future: kỳ scheduled sắp tới, sort ASC (cũ→mới).
+   * recent: kỳ settled hoặc void gần đây, sort DESC (mới→cũ) — kỳ vừa hoàn thành lên đầu.
    */
   group: DrawSelectorGroup;
 }
