@@ -66,7 +66,7 @@ export interface NumberFreq {
 
 export interface DrawResult {
   /** 6 số chính (01-55). */
-  winningMain: [string, string, string, string, string, string];
+  winningMain: string[];
   /** Số thưởng (bonus number). */
   bonusNumber: string;
   settledAt: string;

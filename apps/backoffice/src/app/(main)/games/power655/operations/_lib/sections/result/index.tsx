@@ -64,8 +64,8 @@ export function ResultSection() {
     const hasJackpot2Winner = (jp2Tier?.winnerCount ?? 0) > 0;
 
     return {
-      winningMain: d.result.winningMain as [string, string, string, string, string, string],
-      bonusNumber: d.result.bonusNumber ?? "",
+      winningMain: d.result.winningMain,
+      bonusNumber: d.result.bonusNumber,
       settledAt: d.result.publishedAt,
       tiers,
       financial: {

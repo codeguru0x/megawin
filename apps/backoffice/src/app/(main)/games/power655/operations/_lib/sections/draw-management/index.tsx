@@ -105,8 +105,8 @@ export function DrawManagementSection() {
 
     return {
       // Power 6/55: 6 số chính (01-55)
-      winningMain: d.result.winningMain ,
-      bonusNumber: d.result.bonusNumber ?? "",
+      winningMain: d.result.winningMain,
+      bonusNumber: d.result.bonusNumber,
       settledAt: d.result.publishedAt,
       tiers,
       financial: {
@@ -150,7 +150,7 @@ export function DrawManagementSection() {
     if (!d?.voidInfo) return undefined;
     return {
       reason: d.voidInfo.reason,
-      voidedBy: d.voidInfo.voidedBy ?? "system",
+      voidedBy: d.voidInfo.voidedBy,
       voidedAt: d.voidInfo.voidedAt,
       refundAmount: d.voidSummary?.totalRefundAmount ?? 0,
       entryCount: d.voidSummary?.totalVoidedEntries ?? 0,

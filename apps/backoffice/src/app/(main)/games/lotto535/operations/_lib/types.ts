@@ -68,7 +68,8 @@ export interface NumberFreq {
 // ─── Settled Draw Result ─────────────────────────────────────────────────────
 
 export interface DrawResult {
-  winningMain: [string, string, string, string, string];
+  /** 5 số chính (01-35). */
+  winningMain: string[];
   winningSpecial: string;
   settledAt: string;
   tiers: {

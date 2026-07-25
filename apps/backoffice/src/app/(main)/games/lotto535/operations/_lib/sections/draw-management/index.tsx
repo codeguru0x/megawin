@@ -100,7 +100,7 @@ export function DrawManagementSection() {
     });
 
     return {
-      winningMain: d.result.winningMain as [string, string, string, string, string],
+      winningMain: d.result.winningMain,
       winningSpecial: d.result.winningSpecial,
       settledAt: d.result.publishedAt,
       tiers,
