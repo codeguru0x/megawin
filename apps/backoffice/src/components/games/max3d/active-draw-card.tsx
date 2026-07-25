@@ -1,24 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Ban,
-  CalendarCheck,
-  CircleDollarSign,
-  Clock,
-  Loader2,
-  Lock,
-  Radio,
-  Ticket,
-  Unlock,
-} from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { DrawStatus } from "@megawin/game-core/entities";
+import { displayVNDateTime, displayVNTime, formatVND, formatVNTime } from "@megawin/shared/utils";
+import { Ban, CalendarCheck, CircleDollarSign, Clock, Loader2, Lock, Radio, Ticket, Unlock } from "lucide-react";
+
+import type { CurrentDrawInfo } from "@/app/(main)/games/max3d/draws/_lib/use-draws";
 import { DrawStatusBadge } from "@/components/games/max3d/draw-status-badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatVND, formatVNTime, displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
-import { DrawStatus } from "@megawin/game-core/entities";
-import type { CurrentDrawInfo } from "@/app/(main)/games/max3d/draws/_lib/use-draws";
+import { cn } from "@/lib/utils";
 
 // ─── Status → visual mapping ─────────────────────────────────────────────────
 // Max 3D dùng tông màu violet — T2/T4/T6, game triplet số
@@ -157,12 +148,7 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
 
   const showStats =
     draw.stats &&
-    [
-      DrawStatus.SalesClosed,
-      DrawStatus.Published,
-      DrawStatus.Settling,
-      DrawStatus.Settled,
-    ].includes(status as any);
+    [DrawStatus.SalesClosed, DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled].includes(status as any);
 
   return (
     <div className={cn("rounded-xl border overflow-hidden", vis.border, vis.cardBg)}>
@@ -178,24 +164,13 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 vis.iconBg,
               )}
             >
-              <StatusIcon
-                className={cn(
-                  "size-4",
-                  vis.iconColor,
-                  status === DrawStatus.Settling && "animate-spin",
-                )}
-              />
+              <StatusIcon className={cn("size-4", vis.iconColor, status === DrawStatus.Settling && "animate-spin")} />
               {showPing && (
                 <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
                   <span
-                    className={cn(
-                      "absolute inline-flex size-full animate-ping rounded-full opacity-70",
-                      vis.pingColor,
-                    )}
+                    className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-70", vis.pingColor)}
                   />
-                  <span
-                    className={cn("relative inline-flex size-2.5 rounded-full", vis.dotColor)}
-                  />
+                  <span className={cn("relative inline-flex size-2.5 rounded-full", vis.dotColor)} />
                 </span>
               )}
             </div>
@@ -219,10 +194,7 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
           {draw.sales.openAt && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div
-                  title={undefined}
-                  className="flex items-center gap-1.5 cursor-default select-none"
-                >
+                <div title={undefined} className="flex items-center gap-1.5 cursor-default select-none">
                   <Unlock className="size-3.5 text-emerald-500" />
                   <span className="text-xs text-muted-foreground">Mở bán</span>
                   <span className="text-xs font-mono font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
@@ -237,10 +209,7 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
           )}
           <Tooltip>
             <TooltipTrigger asChild>
-              <div
-                title={undefined}
-                className="flex items-center gap-1.5 cursor-default select-none"
-              >
+              <div title={undefined} className="flex items-center gap-1.5 cursor-default select-none">
                 <Lock className="size-3.5 text-amber-500" />
                 <span className="text-xs text-muted-foreground">Đóng bán</span>
                 <span className="text-xs font-mono font-bold tabular-nums text-amber-600 dark:text-amber-400">
@@ -254,10 +223,7 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div
-                title={undefined}
-                className="flex items-center gap-1.5 cursor-default select-none"
-              >
+              <div title={undefined} className="flex items-center gap-1.5 cursor-default select-none">
                 <Clock className="size-3.5 text-violet-500" />
                 <span className="text-xs text-muted-foreground">Quay số</span>
                 <span className="text-xs font-mono font-bold tabular-nums text-violet-600 dark:text-violet-400">
@@ -291,9 +257,7 @@ export function Max3dPrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
               </div>
               <div>
                 <p className="text-[11px] text-muted-foreground">Doanh thu</p>
-                <p className="text-sm font-semibold tabular-nums">
-                  {formatVND(draw.stats!.totalSalesAmount)}
-                </p>
+                <p className="text-sm font-semibold tabular-nums">{formatVND(draw.stats!.totalSalesAmount)}</p>
               </div>
             </div>
           </div>
@@ -320,20 +284,12 @@ export function Max3dQueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div
-              className={cn(
-                "relative flex size-7 items-center justify-center rounded-lg shrink-0",
-                vis.iconBg,
-              )}
-            >
+            <div className={cn("relative flex size-7 items-center justify-center rounded-lg shrink-0", vis.iconBg)}>
               <StatusIcon className={cn("size-3", vis.iconColor)} />
               {showPing && (
                 <span className="absolute -right-0.5 -top-0.5 flex size-2">
                   <span
-                    className={cn(
-                      "absolute inline-flex size-full animate-ping rounded-full opacity-70",
-                      vis.pingColor,
-                    )}
+                    className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-70", vis.pingColor)}
                   />
                   <span className={cn("relative inline-flex size-2 rounded-full", vis.dotColor)} />
                 </span>

@@ -1,22 +1,14 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Save, TrendingUp } from "lucide-react";
-
 import { MoneyInput } from "@megawin/ui/components/money-input";
+import { Save, TrendingUp } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
 
 import type { GameConfig } from "./use-game-config";
@@ -59,8 +51,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
             <div className="p-6 pb-4">
               <h3 className="text-sm font-semibold text-foreground">Tỷ lệ tài chính</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Max 3D Pro không có Jackpot — công ty thu toàn bộ phần còn lại sau hoa hồng và giải
-                thưởng cố định
+                Max 3D Pro không có Jackpot — công ty thu toàn bộ phần còn lại sau hoa hồng và giải thưởng cố định
               </p>
             </div>
 

@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ApiClientError, apiClient } from "@megawin/next/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Dices, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Dices, Eye, EyeOff } from "lucide-react";
-import { apiClient, ApiClientError } from "@megawin/next/client";
-import { accountsKeys } from "@/lib/query-keys/accounts";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,27 +21,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTenantOptions } from "@/hooks/use-tenant-options";
+import { accountsKeys } from "@/lib/query-keys/accounts";
 
-import type { CreateAgentAccountResponse } from "../_lib/types";
 import { generatePassword } from "../../_shared/generate-password";
+import type { CreateAgentAccountResponse } from "../_lib/types";
 
 const createAgentSchema = z.object({
   username: z.string().min(3, "Tên tài khoản tối thiểu 3 ký tự."),
@@ -68,8 +56,7 @@ export function CreateAgentAccountDialog() {
   });
 
   const mutation = useMutation({
-    mutationFn: (values: CreateAgentValues) =>
-      apiClient.post<CreateAgentAccountResponse>("/accounts/agents", values),
+    mutationFn: (values: CreateAgentValues) => apiClient.post<CreateAgentAccountResponse>("/accounts/agents", values),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: accountsKeys.agents });
       setOpen(false);
@@ -105,8 +92,8 @@ export function CreateAgentAccountDialog() {
             <Badge variant="secondary" className="text-xs">
               Agent
             </Badge>
-            . Mật khẩu tạm thời, người dùng sẽ phải đổi khi đăng nhập lần đầu. Mỗi Tenant chỉ được
-            gán 1 đại lý duy nhất.
+            . Mật khẩu tạm thời, người dùng sẽ phải đổi khi đăng nhập lần đầu. Mỗi Tenant chỉ được gán 1 đại lý duy
+            nhất.
           </DialogDescription>
         </DialogHeader>
 
@@ -121,9 +108,7 @@ export function CreateAgentAccountDialog() {
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue
-                          placeholder={isLoadingTenants ? "Đang tải..." : "Chọn Tenant"}
-                        />
+                        <SelectValue placeholder={isLoadingTenants ? "Đang tải..." : "Chọn Tenant"} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -133,9 +118,7 @@ export function CreateAgentAccountDialog() {
                         </SelectItem>
                       ))}
                       {tenants.length === 0 && !isLoadingTenants && (
-                        <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                          Chưa có Tenant nào.
-                        </div>
+                        <div className="px-2 py-4 text-center text-sm text-muted-foreground">Chưa có Tenant nào.</div>
                       )}
                     </SelectContent>
                   </Select>
@@ -205,12 +188,7 @@ export function CreateAgentAccountDialog() {
             />
 
             <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpen(false)}
-                disabled={mutation.isPending}
-              >
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={mutation.isPending}>
                 Huỷ
               </Button>
               <Button type="submit" disabled={mutation.isPending}>

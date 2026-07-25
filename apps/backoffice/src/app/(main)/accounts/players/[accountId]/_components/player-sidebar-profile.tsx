@@ -1,8 +1,9 @@
 "use client";
 
-import { Building2, Clock, Copy, Check } from "lucide-react";
 import { useState } from "react";
-import { AccountStatusLabel, AccountStatus } from "@megawin/identity/entities";
+
+import { type AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
+import { Building2, Check, Clock, Copy } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -74,9 +75,7 @@ export function PlayerSidebarProfile({ accountId }: PlayerSidebarProfileProps) {
         </div>
         <div className="text-center">
           {profile.displayName && profile.displayName !== profile.username && (
-            <p className="font-mono text-xs font-semibold leading-tight text-foreground">
-              {profile.displayName}
-            </p>
+            <p className="font-mono text-xs font-semibold leading-tight text-foreground">{profile.displayName}</p>
           )}
         </div>
         <Badge variant={statusVariant} className="h-5 text-xs">
@@ -152,9 +151,7 @@ function SidebarRow({
         <Icon className="size-3 shrink-0 text-muted-foreground" />
         <span className="text-xs text-muted-foreground">{label}</span>
       </div>
-      <span
-        className={`truncate text-right text-xs font-medium text-foreground ${mono ? "font-mono" : ""}`}
-      >
+      <span className={`truncate text-right text-xs font-medium text-foreground ${mono ? "font-mono" : ""}`}>
         {value}
       </span>
     </div>

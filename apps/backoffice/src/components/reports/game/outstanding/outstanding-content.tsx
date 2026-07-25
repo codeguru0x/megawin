@@ -1,24 +1,26 @@
 "use client";
 
 import { Clock, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { OutstandingKpiStrip } from "./outstanding-kpi-strip";
+import { cn } from "@/lib/utils";
+
 import { OutstandingBreadcrumb } from "./outstanding-breadcrumb";
 import { OutstandingDrawList } from "./outstanding-draw-list";
-import { OutstandingTenantBreakdown } from "./outstanding-tenant-breakdown";
-import { OutstandingPlayerBreakdown } from "./outstanding-player-breakdown";
 import { OutstandingEntryList } from "./outstanding-entry-list";
+import { OutstandingKpiStrip } from "./outstanding-kpi-strip";
+import { OutstandingPlayerBreakdown } from "./outstanding-player-breakdown";
+import { OutstandingTenantBreakdown } from "./outstanding-tenant-breakdown";
 import type {
-  OutstandingDrillLevel,
   OutstandingDrawRow,
-  OutstandingTenantRow,
-  OutstandingPlayerRow,
+  OutstandingDrillLevel,
   OutstandingEntryRow,
   OutstandingKpiData,
+  OutstandingPlayerRow,
+  OutstandingTenantRow,
 } from "./types";
 
 // ─── Sub-types cho async data ─────────────────────────────────────────────────
@@ -128,12 +130,7 @@ function OutstandingSkeleton({ showLineCount }: { showLineCount?: boolean }) {
           <Skeleton className="h-3.5 w-72" />
         </div>
       </div>
-      <div
-        className={cn(
-          "grid grid-cols-2 gap-3 sm:grid-cols-3",
-          cols === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4",
-        )}
-      >
+      <div className={cn("grid grid-cols-2 gap-3 sm:grid-cols-3", cols === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4")}>
         {[...Array(cols)].map((_, i) => (
           <Skeleton key={i} className="h-18 w-full rounded-xl" />
         ))}
@@ -197,9 +194,7 @@ export function OutstandingContent({
           <Clock className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">
-            {gameName} — Outstanding
-          </h1>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">{gameName} — Outstanding</h1>
           <div className="flex items-center gap-1.5">
             <p className="text-xs text-muted-foreground">Entries chưa settle</p>
             <LiveDot isFetching={drawsData.isLoading} onRefresh={() => drawsData.refetch()} />
@@ -209,11 +204,7 @@ export function OutstandingContent({
 
       {/* KPI Strip — chỉ Level 1 */}
       {level === "list" && (
-        <OutstandingKpiStrip
-          data={kpiData}
-          showLineCount={showLineCount}
-          lineCountLabel={lineCountLabel}
-        />
+        <OutstandingKpiStrip data={kpiData} showLineCount={showLineCount} lineCountLabel={lineCountLabel} />
       )}
 
       {/* Breadcrumb — từ Level 2 trở lên */}

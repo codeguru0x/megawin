@@ -10,15 +10,15 @@
  */
 
 import { useMemo } from "react";
+
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-lotto535/entities";
 import { LOTTO535_PRIZE_TIER_LABELS } from "@megawin/game-lotto535/labels";
 
+import type { DrawResult } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
 import { useDrawDetail } from "../../use-operations";
-import { ResultAndPrize, FinancialSummary } from "./result-panels";
-
-import type { DrawResult } from "../../types";
+import { FinancialSummary, ResultAndPrize } from "./result-panels";
 
 const RESULT_SHOW = new Set([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
 
@@ -51,9 +51,7 @@ export function ResultSection() {
       const winnerCount = t?.winnerCount ?? 0;
       // prizeAmount = tiền/line: ưu tiên từ config, fallback 0 cho Jackpot (tích luỹ)
       const prizeAmount =
-        winnerCount > 0 && t?.prizeAmount
-          ? Math.round(t.prizeAmount / winnerCount)
-          : (configPricePerLine[tier] ?? 0);
+        winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : (configPricePerLine[tier] ?? 0);
       return {
         tier,
         label: LOTTO535_PRIZE_TIER_LABELS[tier] ?? String(tier),
@@ -70,8 +68,7 @@ export function ResultSection() {
     const jackpotContribution = d.financial?.jackpotContribution ?? 0;
     // Pool xử lý kỳ này = opening + contribution.
     // Winner: trao winner. Split: chia tier1-5. Roll-over: 0 (không "trao" gì).
-    const jackpotPrizeAwarded =
-      hasJackpotWinner || isSplitCycle ? jackpotBefore + jackpotContribution : 0;
+    const jackpotPrizeAwarded = hasJackpotWinner || isSplitCycle ? jackpotBefore + jackpotContribution : 0;
 
     return {
       winningMain: d.result.winningMain,
@@ -98,9 +95,7 @@ export function ResultSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Kết quả & Tài chính
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Kết quả & Tài chính</h2>
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <ResultAndPrize result={result} drawId={effectiveDrawId} />
         <FinancialSummary financial={result.financial} />

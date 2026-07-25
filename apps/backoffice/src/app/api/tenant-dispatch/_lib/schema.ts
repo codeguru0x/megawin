@@ -1,15 +1,9 @@
-import { z } from "zod";
 import { DispatchOrderStatus, DispatchSourceKind } from "@megawin/tenant-dispatch/entities";
+import { z } from "zod";
 
-const sourceKindValues = Object.values(DispatchSourceKind) as [
-  DispatchSourceKind,
-  ...DispatchSourceKind[],
-];
+const sourceKindValues = Object.values(DispatchSourceKind) as [DispatchSourceKind, ...DispatchSourceKind[]];
 
-const statusValues = Object.values(DispatchOrderStatus) as [
-  DispatchOrderStatus,
-  ...DispatchOrderStatus[],
-];
+const statusValues = Object.values(DispatchOrderStatus) as [DispatchOrderStatus, ...DispatchOrderStatus[]];
 
 const retryModeValues = ["fresh", "retrying", "stuck"] as const;
 

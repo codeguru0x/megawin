@@ -26,8 +26,7 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
   },
   settling: {
     label: "Đang kết sổ",
-    className:
-      "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 animate-pulse",
+    className: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300 animate-pulse",
   },
   settled: {
     label: "Hoàn tất",

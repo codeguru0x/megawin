@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+
 import { Building2, Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -19,11 +20,7 @@ export function TenantsList() {
     if (!tenants) return [];
     if (!search.trim()) return tenants;
     const q = search.toLowerCase();
-    return tenants.filter(
-      (t) =>
-        t.tenantId.toLowerCase().includes(q) ||
-        t.displayName.toLowerCase().includes(q)
-    );
+    return tenants.filter((t) => t.tenantId.toLowerCase().includes(q) || t.displayName.toLowerCase().includes(q));
   }, [tenants, search]);
 
   const stats = useMemo(() => {
@@ -36,23 +33,9 @@ export function TenantsList() {
     <>
       {/* KPI Row */}
       <div className="grid grid-cols-3 gap-4">
-        <KpiCard
-          label="Tổng đối tác"
-          value={stats.total}
-          isLoading={isLoading}
-        />
-        <KpiCard
-          label="Đang hoạt động"
-          value={stats.active}
-          isLoading={isLoading}
-          variant="success"
-        />
-        <KpiCard
-          label="Vô hiệu hoá"
-          value={stats.inactive}
-          isLoading={isLoading}
-          variant="danger"
-        />
+        <KpiCard label="Tổng đối tác" value={stats.total} isLoading={isLoading} />
+        <KpiCard label="Đang hoạt động" value={stats.active} isLoading={isLoading} variant="success" />
+        <KpiCard label="Vô hiệu hoá" value={stats.inactive} isLoading={isLoading} variant="danger" />
       </div>
 
       {/* Search */}
@@ -75,16 +58,13 @@ export function TenantsList() {
       {isError && (
         <div className="rounded-xl border border-destructive/50 bg-destructive/10 p-6">
           <p className="text-sm text-destructive">
-            Không thể tải danh sách:{" "}
-            {error instanceof Error ? error.message : "Lỗi không xác định"}
+            Không thể tải danh sách: {error instanceof Error ? error.message : "Lỗi không xác định"}
           </p>
         </div>
       )}
 
       {/* Empty */}
-      {!isLoading && !isError && filtered.length === 0 && (
-        <EmptyState hasSearch={!!search.trim()} />
-      )}
+      {!isLoading && !isError && filtered.length === 0 && <EmptyState hasSearch={!!search.trim()} />}
 
       {/* Tenant Cards */}
       {!isLoading && !isError && filtered.length > 0 && (
@@ -122,9 +102,7 @@ function KpiCard({
       {isLoading ? (
         <Skeleton className="mt-1 h-8 w-12" />
       ) : (
-        <p className={`mt-1 text-2xl font-semibold tabular-nums ${colorClass}`}>
-          {value}
-        </p>
+        <p className={`mt-1 text-2xl font-semibold tabular-nums ${colorClass}`}>{value}</p>
       )}
     </div>
   );
@@ -140,9 +118,7 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
         {hasSearch ? "Không tìm thấy đối tác phù hợp" : "Chưa có đối tác nào"}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
-        {hasSearch
-          ? "Thử tìm kiếm với từ khoá khác"
-          : 'Nhấn "Thêm đối tác" ở góc phải để bắt đầu'}
+        {hasSearch ? "Thử tìm kiếm với từ khoá khác" : 'Nhấn "Thêm đối tác" ở góc phải để bắt đầu'}
       </p>
     </div>
   );

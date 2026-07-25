@@ -1,10 +1,11 @@
-import { NextApiUseCase } from "@megawin/next/server";
-import { GetJackpotCurrentUseCase as Mega645JpUseCase } from "@megawin/game-mega645-application/use-cases/jackpot";
-import { GetJackpotCurrentUseCase as Power655JpUseCase } from "@megawin/game-power655-application/use-cases/jackpot";
+import type { GetJackpotCurrentOutput as Lotto535JpOutput } from "@megawin/game-lotto535-application/use-cases/jackpot";
 import { GetJackpotCurrentUseCase as Lotto535JpUseCase } from "@megawin/game-lotto535-application/use-cases/jackpot";
 import type { GetJackpotCurrentOutput as Mega645JpOutput } from "@megawin/game-mega645-application/use-cases/jackpot";
+import { GetJackpotCurrentUseCase as Mega645JpUseCase } from "@megawin/game-mega645-application/use-cases/jackpot";
 import type { GetJackpotCurrentOutput as Power655JpOutput } from "@megawin/game-power655-application/use-cases/jackpot";
-import type { GetJackpotCurrentOutput as Lotto535JpOutput } from "@megawin/game-lotto535-application/use-cases/jackpot";
+import { GetJackpotCurrentUseCase as Power655JpUseCase } from "@megawin/game-power655-application/use-cases/jackpot";
+import { NextApiUseCase } from "@megawin/next/server";
+
 import type {
   DashboardJackpotInfo,
   DashboardPower655JackpotInfo,
@@ -21,10 +22,7 @@ import type {
  *   - 1 game throw (không có active cycle, v.v.) không làm hỏng 2 game còn lại.
  *   - Lotto535 throw AppException khi chưa có active cycle → trả null.
  */
-export class GetDashboardJackpotsUseCase extends NextApiUseCase<
-  void,
-  GetDashboardJackpotsOutput
-> {
+export class GetDashboardJackpotsUseCase extends NextApiUseCase<void, GetDashboardJackpotsOutput> {
   private readonly mega645Uc = new Mega645JpUseCase();
   private readonly power655Uc = new Power655JpUseCase();
   private readonly lotto535Uc = new Lotto535JpUseCase();
@@ -45,9 +43,7 @@ export class GetDashboardJackpotsUseCase extends NextApiUseCase<
     };
   }
 
-  private mapMega645(
-    result: PromiseSettledResult<{ data: Mega645JpOutput }>,
-  ): DashboardJackpotInfo | null {
+  private mapMega645(result: PromiseSettledResult<{ data: Mega645JpOutput }>): DashboardJackpotInfo | null {
     if (result.status === "rejected") return null;
     const { cycle, progress } = result.value.data;
     return {
@@ -59,9 +55,7 @@ export class GetDashboardJackpotsUseCase extends NextApiUseCase<
     };
   }
 
-  private mapPower655(
-    result: PromiseSettledResult<{ data: Power655JpOutput }>,
-  ): DashboardPower655JackpotInfo | null {
+  private mapPower655(result: PromiseSettledResult<{ data: Power655JpOutput }>): DashboardPower655JackpotInfo | null {
     if (result.status === "rejected") return null;
     const { cycle, config } = result.value.data;
     return {
@@ -75,9 +69,7 @@ export class GetDashboardJackpotsUseCase extends NextApiUseCase<
     };
   }
 
-  private mapLotto535(
-    result: PromiseSettledResult<{ data: Lotto535JpOutput }>,
-  ): DashboardJackpotInfo | null {
+  private mapLotto535(result: PromiseSettledResult<{ data: Lotto535JpOutput }>): DashboardJackpotInfo | null {
     if (result.status === "rejected") return null;
     const { cycle, config, progress } = result.value.data;
     return {

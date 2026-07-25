@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
 
 import { tenantsKeys } from "@/lib/query-keys";
 

@@ -1,10 +1,11 @@
-import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities";
 import {
+  type CreateCompanyAccountInput,
   CreateCompanyAccountUseCase,
   ListCompanyAccountsUseCase,
-  type CreateCompanyAccountInput,
 } from "@megawin/identity-application/use-cases/accounts";
+
+import { withApi } from "@/lib/api";
 
 import { createAccountSchema } from "./_lib/schema";
 

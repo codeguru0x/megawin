@@ -10,22 +10,24 @@
  * 5-level heat intensity scale (cold → hot, amber cross-game cho hot).
  */
 
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber, formatCurrency } from "@megawin/shared/utils";
-import { BarChart2, Trophy } from "lucide-react";
-import { KenoPlayType } from "@megawin/game-keno/entities";
+import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+import type { KenoPlayType } from "@megawin/game-keno/entities";
 import { KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
+import { formatCurrency, formatNumber } from "@megawin/shared/utils";
+import { BarChart2, Trophy } from "lucide-react";
+
 import {
   HEATMAP_BADGE_SIZE,
   HEATMAP_BADGE_TEXT,
-  HEATMAP_CELL_PT,
   HEATMAP_CELL_DATA_SIZE,
+  HEATMAP_CELL_PT,
   HEATMAP_CELL_SUB_SIZE,
 } from "@/components/games/shared/game-number-tokens";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { GAME_COLORS } from "@/lib/game-colors";
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+import { cn } from "@/lib/utils";
+
 import type { TenantRow } from "../../types";
 import type { TopComboItem } from "../../use-operations";
 
@@ -96,8 +98,7 @@ export function NumberBadge({
   if (muted) {
     colorClass = KENO_MUTED_BG;
   } else if (variant === "outlined") {
-    colorClass =
-      "border border-sky-400/70 text-sky-600 bg-transparent dark:border-sky-600 dark:text-sky-400";
+    colorClass = "border border-sky-400/70 text-sky-600 bg-transparent dark:border-sky-600 dark:text-sky-400";
   } else if (variant === "soft") {
     colorClass = "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300";
   } else {
@@ -123,13 +124,7 @@ export function NumberBadge({
 
 const NUMBERS_VISIBLE_LIMIT = 7;
 
-export function NumbersWithTooltip({
-  numbers,
-  variant = "soft",
-}: {
-  numbers: string[];
-  variant?: "soft" | "filled";
-}) {
+export function NumbersWithTooltip({ numbers, variant = "soft" }: { numbers: string[]; variant?: "soft" | "filled" }) {
   const needsCollapse = numbers.length > NUMBERS_VISIBLE_LIMIT;
   const visible = needsCollapse ? numbers.slice(0, NUMBERS_VISIBLE_LIMIT) : numbers;
   const hidden = needsCollapse ? numbers.slice(NUMBERS_VISIBLE_LIMIT) : [];
@@ -220,20 +215,10 @@ function NumberCell({
                 <span className="text-[11px] text-muted-foreground/20 tabular-nums">–</span>
               ) : (
                 <>
-                  <span
-                    className={cn(
-                      HEATMAP_CELL_DATA_SIZE,
-                      "font-bold tabular-nums leading-tight text-foreground",
-                    )}
-                  >
+                  <span className={cn(HEATMAP_CELL_DATA_SIZE, "font-bold tabular-nums leading-tight text-foreground")}>
                     {formatCurrency(n.amount, { million: "tr", thousand: "k", decimals: 0 })}
                   </span>
-                  <span
-                    className={cn(
-                      HEATMAP_CELL_SUB_SIZE,
-                      "tabular-nums leading-none text-muted-foreground",
-                    )}
-                  >
+                  <span className={cn(HEATMAP_CELL_SUB_SIZE, "tabular-nums leading-none text-muted-foreground")}>
                     {formatNumber(n.count)}x
                   </span>
                 </>
@@ -258,21 +243,15 @@ function NumberCell({
             <div className="space-y-1 min-w-37">
               <div className="flex justify-between gap-8">
                 <span className="text-xs text-muted-foreground">Lần xuất hiện</span>
-                <span className="text-xs font-semibold tabular-nums text-foreground">
-                  {formatNumber(n.count)}
-                </span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(n.count)}</span>
               </div>
               <div className="flex justify-between gap-8">
                 <span className="text-xs text-muted-foreground">Tổng cược</span>
-                <span className="text-xs font-semibold tabular-nums text-foreground">
-                  {formatNumber(n.amount)}
-                </span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(n.amount)}</span>
               </div>
               <div className="flex justify-between gap-8">
                 <span className="text-xs text-muted-foreground">Entries</span>
-                <span className="text-xs font-semibold tabular-nums text-foreground">
-                  {formatNumber(n.entries)}
-                </span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(n.entries)}</span>
               </div>
             </div>
           )}
@@ -315,8 +294,7 @@ function KenoGrid({ numbers }: { numbers: NumberFreqItem[] }) {
           <span className="text-xs text-muted-foreground/50">(side bets không hiện ở đây)</span>
         </div>
         <span className="text-xs tabular-nums text-muted-foreground">
-          {formatNumber(totalCount)} lượt ·{" "}
-          {formatCurrency(totalAmount, { million: "tr", thousand: "k", decimals: 1 })}
+          {formatNumber(totalCount)} lượt · {formatCurrency(totalAmount, { million: "tr", thousand: "k", decimals: 1 })}
         </span>
       </div>
       <div
@@ -366,9 +344,7 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
             key={c.rank}
             className="flex items-center gap-2.5 rounded-lg border border-border/40 bg-muted/10 px-3 py-2"
           >
-            <span className="text-sm leading-none shrink-0">
-              {medals[c.rank - 1] ?? `#${c.rank}`}
-            </span>
+            <span className="text-sm leading-none shrink-0">{medals[c.rank - 1] ?? `#${c.rank}`}</span>
             <div className="flex-1 min-w-0 overflow-hidden">
               <NumbersWithTooltip numbers={c.numbers as string[]} variant="soft" />
               <p className="text-xs text-muted-foreground mt-1">
@@ -376,9 +352,7 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
               </p>
             </div>
             <div className="text-right shrink-0">
-              <p className="text-xs font-semibold tabular-nums text-foreground">
-                {c.boardCount} boards
-              </p>
+              <p className="text-xs font-semibold tabular-nums text-foreground">{c.boardCount} boards</p>
               <p className="text-xs tabular-nums text-muted-foreground">{c.entryCount} vé</p>
             </div>
           </div>
@@ -407,21 +381,14 @@ function TenantBreakdown({ tenants }: { tenants: TenantRow[] }) {
             style={{ gridTemplateColumns: "6rem 5rem 5rem 5.5rem 1fr" }}
           >
             <span className="text-xs font-medium truncate">{t.tenantId}</span>
-            <span className="text-xs tabular-nums text-muted-foreground text-right">
-              {formatNumber(t.entries)} ent
-            </span>
-            <span className="text-xs tabular-nums text-muted-foreground text-right">
-              {formatNumber(t.players)} ng
-            </span>
+            <span className="text-xs tabular-nums text-muted-foreground text-right">{formatNumber(t.entries)} ent</span>
+            <span className="text-xs tabular-nums text-muted-foreground text-right">{formatNumber(t.players)} ng</span>
             <span className="text-xs tabular-nums font-semibold text-foreground text-right">
               {formatNumber(t.revenue)}
             </span>
             <div className="flex items-center gap-2">
               <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-sky-500/60 transition-all"
-                  style={{ width: `${t.pct}%` }}
-                />
+                <div className="h-full rounded-full bg-sky-500/60 transition-all" style={{ width: `${t.pct}%` }} />
               </div>
               <span className="text-xs font-medium text-muted-foreground tabular-nums w-8 text-right shrink-0">
                 {t.pct.toFixed(0)}%

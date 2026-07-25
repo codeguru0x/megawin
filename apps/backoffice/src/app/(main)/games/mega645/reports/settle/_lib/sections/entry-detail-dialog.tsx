@@ -1,50 +1,41 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Ticket,
-  Building2,
-  User,
-  Clock,
-  Layers,
-  Banknote,
-  HandCoins,
-  CheckCircle2,
-  XCircle,
-  Timer,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber, toTenantUsername, formatVN } from "@megawin/shared/utils";
+
+import { EntryStatus } from "@megawin/game-core/entities";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import type { TicketEntryEntity } from "@megawin/game-mega645/entities";
 import { PlayType, PrizeTier } from "@megawin/game-mega645/entities/enums";
 import { MEGA645_PLAY_TYPE_LABELS, MEGA645_PRIZE_TIER_LABELS } from "@megawin/game-mega645/labels";
-import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import { EntryStatus } from "@megawin/game-core/entities";
-import { boardColorVar } from "@/lib/game-colors";
+import { formatNumber, formatVN, toTenantUsername } from "@megawin/shared/utils";
+import {
+  Banknote,
+  Building2,
+  CheckCircle2,
+  Clock,
+  HandCoins,
+  Layers,
+  Minus,
+  Ticket,
+  Timer,
+  TrendingDown,
+  TrendingUp,
+  User,
+  XCircle,
+} from "lucide-react";
+
 import { MegaMatchBall } from "@/components/games/mega645/mega-number-ball";
 import { EntryDetailDialogLoading } from "@/components/games/shared/skeletons/entry-detail-skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { boardColorVar } from "@/lib/game-colors";
 
 // ─── Prize Tier Order ─────────────────────────────────────────────────────────
 
 /** Thứ tự hiển thị giải thưởng: Jackpot → Giải nhất → Giải nhì → Giải ba */
-const MEGA645_PRIZE_TIER_ORDER: PrizeTier[] = [
-  PrizeTier.Jackpot,
-  PrizeTier.Tier1,
-  PrizeTier.Tier2,
-  PrizeTier.Tier3,
-];
+const MEGA645_PRIZE_TIER_ORDER: PrizeTier[] = [PrizeTier.Jackpot, PrizeTier.Tier1, PrizeTier.Tier2, PrizeTier.Tier3];
 
 // ─── Entry Detail Dialog ──────────────────────────────────────────────────────
 
@@ -111,9 +102,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
   const playerLink = `/accounts/players/${entry.accountId}`;
   const MAX_USERNAME_LEN = 14;
   const truncatedUsername =
-    tenantUsername.length > MAX_USERNAME_LEN
-      ? tenantUsername.slice(0, MAX_USERNAME_LEN) + "…"
-      : tenantUsername;
+    tenantUsername.length > MAX_USERNAME_LEN ? tenantUsername.slice(0, MAX_USERNAME_LEN) + "…" : tenantUsername;
 
   return (
     <>
@@ -153,10 +142,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link
-                        href={playerLink}
-                        className="cursor-pointer font-semibold hover:underline"
-                      >
+                      <Link href={playerLink} className="cursor-pointer font-semibold hover:underline">
                         {truncatedUsername}
                       </Link>
                     </TooltipTrigger>
@@ -221,12 +207,8 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalCommission}
-                  </p>
-                  <p className="text-sm font-bold tabular-nums">
-                    {formatNumber(entry.tenant.commissionAmount)}
-                  </p>
+                  <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
             </div>
@@ -254,12 +236,8 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <Banknote className="size-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalPayout}
-                  </p>
-                  <p className="text-sm font-bold tabular-nums">
-                    {formatNumber(entry.payout?.payoutAmount ?? 0)}
-                  </p>
+                  <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.totalPayout}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.payout?.payoutAmount ?? 0)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
@@ -267,12 +245,8 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalCommission}
-                  </p>
-                  <p className="text-sm font-bold tabular-nums">
-                    {formatNumber(entry.tenant.commissionAmount)}
-                  </p>
+                  <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
               {playerNet !== null && (
@@ -295,16 +269,10 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     )}
                   </div>
                   <div>
-                    <p className="text-[11px] text-muted-foreground">
-                      {REPORT_COLUMN_LABELS.playerNetProfit}
-                    </p>
+                    <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
                     <p
                       className={`text-sm font-bold tabular-nums ${
-                        playerNet > 0
-                          ? "text-profit"
-                          : playerNet < 0
-                            ? "text-loss"
-                            : "text-foreground"
+                        playerNet > 0 ? "text-profit" : playerNet < 0 ? "text-loss" : "text-foreground"
                       }`}
                     >
                       {playerNet > 0 ? "+" : ""}
@@ -319,15 +287,11 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 4. Kết quả & Bộ số đã chọn — gộp thành 1 card để so sánh trực quan */}
           {entry.result && !isScheduled && boards.length > 0 ? (
             <div className="rounded-lg border p-4">
-              <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Kết quả
-              </p>
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Kết quả</p>
               <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
                 {entry.result.winningNumbers.map((n: string) => {
                   const playerPicked = boards.some((b) => b.numbers.includes(n));
-                  return (
-                    <MegaMatchBall key={n} n={n} variant={playerPicked ? "matched" : "result"} />
-                  );
+                  return <MegaMatchBall key={n} n={n} variant={playerPicked ? "matched" : "result"} />;
                 })}
               </div>
 
@@ -338,8 +302,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               </p>
               <div className="space-y-2.5">
                 {boards.map((board, i) => {
-                  const playLabel =
-                    MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType;
+                  const playLabel = MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType;
                   const isStandard = board.playType === PlayType.Standard;
                   const boardColor = boardColorVar(board.boardNo);
                   return (
@@ -352,10 +315,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                       }}
                     >
                       <div className="flex items-center justify-center self-stretch">
-                        <span
-                          className="text-sm font-extrabold leading-none"
-                          style={{ color: boardColor }}
-                        >
+                        <span className="text-sm font-extrabold leading-none" style={{ color: boardColor }}>
                           {board.boardNo}
                         </span>
                       </div>
@@ -364,24 +324,15 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           {isStandard ? "Thường" : playLabel}
                         </span>
                         <span className="text-[10px] leading-tight text-muted-foreground">
-                          {board.expandedLines > 1
-                            ? `${formatNumber(board.expandedLines)} lines`
-                            : "1 line"}
+                          {board.expandedLines > 1 ? `${formatNumber(board.expandedLines)} lines` : "1 line"}
                         </span>
                         {board.betCount > 1 && (
-                          <span className="text-[10px] leading-tight text-muted-foreground/70">
-                            ×{board.betCount}
-                          </span>
+                          <span className="text-[10px] leading-tight text-muted-foreground/70">×{board.betCount}</span>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-1">
                         {board.numbers.map((n: string) => (
-                          <MegaMatchBall
-                            key={n}
-                            n={n}
-                            size="sm"
-                            variant={winningSet.has(n) ? "matched" : "default"}
-                          />
+                          <MegaMatchBall key={n} n={n} size="sm" variant={winningSet.has(n) ? "matched" : "default"} />
                         ))}
                       </div>
                     </div>
@@ -398,8 +349,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 </p>
                 <div className="space-y-2.5">
                   {boards.map((board, i) => {
-                    const playLabel =
-                      MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType;
+                    const playLabel = MEGA645_PLAY_TYPE_LABELS[board.playType as PlayType] ?? board.playType;
                     const isStandard = board.playType === PlayType.Standard;
                     const boardColor = boardColorVar(board.boardNo);
                     return (
@@ -412,10 +362,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         }}
                       >
                         <div className="flex items-center justify-center self-stretch">
-                          <span
-                            className="text-sm font-extrabold leading-none"
-                            style={{ color: boardColor }}
-                          >
+                          <span className="text-sm font-extrabold leading-none" style={{ color: boardColor }}>
                             {board.boardNo}
                           </span>
                         </div>
@@ -424,9 +371,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                             {isStandard ? "Thường" : playLabel}
                           </span>
                           <span className="text-[10px] leading-tight text-muted-foreground">
-                            {board.expandedLines > 1
-                              ? `${formatNumber(board.expandedLines)} lines`
-                              : "1 line"}
+                            {board.expandedLines > 1 ? `${formatNumber(board.expandedLines)} lines` : "1 line"}
                           </span>
                           {board.betCount > 1 && (
                             <span className="text-[10px] leading-tight text-muted-foreground/70">
@@ -450,9 +395,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 6. Giải trúng ─────────────────────────────────────────── */}
           {tiers.length > 0 && !isScheduled && (
             <div className="rounded-lg border border-profit/30 bg-profit/5 p-4">
-              <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-profit">
-                Giải trúng
-              </p>
+              <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-profit">Giải trúng</p>
               <div className="space-y-2">
                 {[...tiers]
                   .sort(
@@ -473,9 +416,7 @@ function Mega645EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           ×{tier.hitCount} lần
                         </span>
                       </div>
-                      <span className="tabular-nums font-bold text-profit">
-                        {formatNumber(tier.amount)}
-                      </span>
+                      <span className="tabular-nums font-bold text-profit">{formatNumber(tier.amount)}</span>
                     </div>
                   ))}
               </div>

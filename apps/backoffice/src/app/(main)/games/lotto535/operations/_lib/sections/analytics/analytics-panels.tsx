@@ -1,53 +1,53 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatNumber } from "@megawin/shared/utils";
 import { Layers } from "lucide-react";
-import type { TenantRow, PlayTypeRow } from "../../types";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+import type { PlayTypeRow, TenantRow } from "../../types";
 
 // ─── Color palette — synced across live-feed, heatmap, play types ────────────
 
-export const PLAY_TYPE_COLORS: Record<
-  string,
-  { dot: string; text: string; fill: string; bg: string; border: string }
-> = {
-  mainCover: {
-    dot: "bg-blue-500",
-    text: "text-blue-600 dark:text-blue-400",
-    fill: "#3b82f6",
-    bg: "bg-blue-50/60 dark:bg-blue-950/20",
-    border: "border-blue-200/60 dark:border-blue-800/40",
-  },
-  mainCover4: {
-    dot: "bg-violet-500",
-    text: "text-violet-600 dark:text-violet-400",
-    fill: "#8b5cf6",
-    bg: "bg-violet-50/60 dark:bg-violet-950/20",
-    border: "border-violet-200/60 dark:border-violet-800/40",
-  },
-  standard: {
-    dot: "bg-emerald-500",
-    text: "text-emerald-600 dark:text-emerald-400",
-    fill: "#10b981",
-    bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
-    border: "border-emerald-200/60 dark:border-emerald-800/40",
-  },
-  specialCover: {
-    dot: "bg-amber-500",
-    text: "text-amber-600 dark:text-amber-400",
-    fill: "#f59e0b",
-    bg: "bg-amber-50/60 dark:bg-amber-950/20",
-    border: "border-amber-200/60 dark:border-amber-800/40",
-  },
-  quickPick: {
-    dot: "bg-rose-400",
-    text: "text-rose-500 dark:text-rose-400",
-    fill: "#fb7185",
-    bg: "bg-rose-50/60 dark:bg-rose-950/20",
-    border: "border-rose-200/60 dark:border-rose-800/40",
-  },
-};
+export const PLAY_TYPE_COLORS: Record<string, { dot: string; text: string; fill: string; bg: string; border: string }> =
+  {
+    mainCover: {
+      dot: "bg-blue-500",
+      text: "text-blue-600 dark:text-blue-400",
+      fill: "#3b82f6",
+      bg: "bg-blue-50/60 dark:bg-blue-950/20",
+      border: "border-blue-200/60 dark:border-blue-800/40",
+    },
+    mainCover4: {
+      dot: "bg-violet-500",
+      text: "text-violet-600 dark:text-violet-400",
+      fill: "#8b5cf6",
+      bg: "bg-violet-50/60 dark:bg-violet-950/20",
+      border: "border-violet-200/60 dark:border-violet-800/40",
+    },
+    standard: {
+      dot: "bg-emerald-500",
+      text: "text-emerald-600 dark:text-emerald-400",
+      fill: "#10b981",
+      bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
+      border: "border-emerald-200/60 dark:border-emerald-800/40",
+    },
+    specialCover: {
+      dot: "bg-amber-500",
+      text: "text-amber-600 dark:text-amber-400",
+      fill: "#f59e0b",
+      bg: "bg-amber-50/60 dark:bg-amber-950/20",
+      border: "border-amber-200/60 dark:border-amber-800/40",
+    },
+    quickPick: {
+      dot: "bg-rose-400",
+      text: "text-rose-500 dark:text-rose-400",
+      fill: "#fb7185",
+      bg: "bg-rose-50/60 dark:bg-rose-950/20",
+      border: "border-rose-200/60 dark:border-rose-800/40",
+    },
+  };
 
 const DEFAULT_COLOR = {
   dot: "bg-muted-foreground/40",
@@ -73,15 +73,7 @@ function MiniPie({ pct, fill, size = 44 }: { pct: number; fill: string; size?: n
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
       {/* Track */}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={r}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={5}
-        className="text-muted/60"
-      />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeWidth={5} className="text-muted/60" />
       {/* Arc — start from top (rotate -90deg) */}
       <circle
         cx={cx}
@@ -129,16 +121,13 @@ function PlayTypeItem({ d }: { d: PlayTypeRow }) {
       <div className="flex items-center gap-2">
         {/* Left: revenue + lines + entries */}
         <div className="flex-1 min-w-0">
-          <p className="text-lg font-bold tabular-nums text-foreground leading-tight">
-            {formatNumber(d.revenue)}
-          </p>
+          <p className="text-lg font-bold tabular-nums text-foreground leading-tight">{formatNumber(d.revenue)}</p>
           <div className="flex items-baseline gap-2 mt-1 flex-wrap">
             <span className="text-xs text-muted-foreground tabular-nums">
               <span className="font-semibold text-foreground">{formatNumber(d.lines)}</span> lines
             </span>
             <span className="text-xs text-muted-foreground tabular-nums">
-              <span className="font-semibold text-foreground">{formatNumber(d.entries)}</span>{" "}
-              entries
+              <span className="font-semibold text-foreground">{formatNumber(d.entries)}</span> entries
             </span>
           </div>
         </div>
@@ -208,22 +197,15 @@ export function TenantBreakdown({ tenants }: { tenants: TenantRow[] }) {
             style={{ gridTemplateColumns: "6rem 5rem 5rem 5.5rem 1fr" }}
           >
             <span className="text-xs font-medium truncate">{t.tenantName}</span>
-            <span className="text-xs tabular-nums text-muted-foreground text-right">
-              {formatNumber(t.entries)} ent
-            </span>
-            <span className="text-xs tabular-nums text-muted-foreground text-right">
-              {formatNumber(t.lines)} ln
-            </span>
+            <span className="text-xs tabular-nums text-muted-foreground text-right">{formatNumber(t.entries)} ent</span>
+            <span className="text-xs tabular-nums text-muted-foreground text-right">{formatNumber(t.lines)} ln</span>
             <span className="text-xs tabular-nums font-semibold text-foreground text-right">
               {formatNumber(t.revenue)}
             </span>
             {/* Bar chiếm toàn bộ cột cuối (~50%) */}
             <div className="flex items-center gap-2">
               <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-amber-500/60 transition-all"
-                  style={{ width: `${t.pct}%` }}
-                />
+                <div className="h-full rounded-full bg-amber-500/60 transition-all" style={{ width: `${t.pct}%` }} />
               </div>
               <span className="text-xs font-medium text-muted-foreground tabular-nums w-8 text-right shrink-0">
                 {t.pct.toFixed(0)}%

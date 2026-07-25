@@ -1,23 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { GAME_COLORS } from "@/lib/game-colors";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { toTenantUsername } from "@megawin/shared/utils/player-username";
 import type { TicketEntryEntity } from "@megawin/game-lotto535/entities";
-import { Lotto535EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
+import { toTenantUsername } from "@megawin/shared/utils/player-username";
+
+import type { VoidDrawRow, VoidEntryRow, VoidPlayerRow, VoidTenantRow } from "@/components/reports/game/void";
 import { VoidContent } from "@/components/reports/game/void";
-import type {
-  VoidDrawRow,
-  VoidTenantRow,
-  VoidPlayerRow,
-  VoidEntryRow,
-} from "@/components/reports/game/void";
+import { GAME_COLORS } from "@/lib/game-colors";
+
+import { Lotto535EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
 import {
-  useLotto535VoidReports,
   useLotto535VoidDrawTenants,
-  useLotto535VoidTenantPlayers,
   useLotto535VoidPlayerEntries,
+  useLotto535VoidReports,
+  useLotto535VoidTenantPlayers,
 } from "../../settle/_lib/use-report-queries";
 import { useLotto535VoidFilters } from "./use-void-filters";
 
@@ -186,11 +184,7 @@ export function Lotto535VoidReportsContent() {
         lineCountLabel="Bộ số"
       />
 
-      <Lotto535EntryDetailDialog
-        entry={selectedEntry}
-        open={!!selectedEntry}
-        onClose={() => setSelectedEntry(null)}
-      />
+      <Lotto535EntryDetailDialog entry={selectedEntry} open={!!selectedEntry} onClose={() => setSelectedEntry(null)} />
     </>
   );
 }

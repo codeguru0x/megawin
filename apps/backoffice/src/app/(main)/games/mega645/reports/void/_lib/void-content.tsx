@@ -1,23 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { GAME_COLORS } from "@/lib/game-colors";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { toTenantUsername } from "@megawin/shared/utils/player-username";
 import type { TicketEntryEntity } from "@megawin/game-mega645/entities";
-import { Mega645EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
+import { toTenantUsername } from "@megawin/shared/utils/player-username";
+
+import type { VoidDrawRow, VoidEntryRow, VoidPlayerRow, VoidTenantRow } from "@/components/reports/game/void";
 import { VoidContent } from "@/components/reports/game/void";
-import type {
-  VoidDrawRow,
-  VoidTenantRow,
-  VoidPlayerRow,
-  VoidEntryRow,
-} from "@/components/reports/game/void";
+import { GAME_COLORS } from "@/lib/game-colors";
+
+import { Mega645EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
 import {
-  useMega645VoidReports,
   useMega645VoidDrawTenants,
-  useMega645VoidTenantPlayers,
   useMega645VoidPlayerEntries,
+  useMega645VoidReports,
+  useMega645VoidTenantPlayers,
 } from "../../settle/_lib/use-report-queries";
 import { useMega645VoidFilters } from "./use-void-filters";
 
@@ -177,11 +175,7 @@ export function Mega645VoidReportsContent() {
         lineCountLabel="Bộ số"
       />
 
-      <Mega645EntryDetailDialog
-        entry={selectedEntry}
-        open={!!selectedEntry}
-        onClose={() => setSelectedEntry(null)}
-      />
+      <Mega645EntryDetailDialog entry={selectedEntry} open={!!selectedEntry} onClose={() => setSelectedEntry(null)} />
     </>
   );
 }

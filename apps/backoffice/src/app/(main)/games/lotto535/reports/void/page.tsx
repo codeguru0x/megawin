@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { Lotto535VoidReportsContent } from "./_lib/void-content";
 
 export default function Lotto535VoidReportsPage() {

@@ -1,23 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { GAME_COLORS } from "@/lib/game-colors";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { toTenantUsername } from "@megawin/shared/utils/player-username";
 import type { TicketEntryEntity } from "@megawin/game-lotto535/entities";
-import { Lotto535EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
-import { OutstandingContent } from "@/components/reports/game/outstanding";
+import { toTenantUsername } from "@megawin/shared/utils/player-username";
+
 import type {
   OutstandingDrawRow,
-  OutstandingTenantRow,
-  OutstandingPlayerRow,
   OutstandingEntryRow,
+  OutstandingPlayerRow,
+  OutstandingTenantRow,
 } from "@/components/reports/game/outstanding";
+import { OutstandingContent } from "@/components/reports/game/outstanding";
+import { GAME_COLORS } from "@/lib/game-colors";
+
+import { Lotto535EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
 import {
   useLotto535Outstanding,
   useLotto535OutstandingDrawTenants,
-  useLotto535OutstandingTenantPlayers,
   useLotto535OutstandingPlayerEntries,
+  useLotto535OutstandingTenantPlayers,
 } from "../../settle/_lib/use-report-queries";
 import { useLotto535OutstandingFilters } from "./use-outstanding-filters";
 
@@ -189,11 +192,7 @@ export function Lotto535OutstandingContent() {
       />
 
       {/* Dialog chi tiết entry — reuse từ settle */}
-      <Lotto535EntryDetailDialog
-        entry={selectedEntry}
-        open={!!selectedEntry}
-        onClose={() => setSelectedEntry(null)}
-      />
+      <Lotto535EntryDetailDialog entry={selectedEntry} open={!!selectedEntry} onClose={() => setSelectedEntry(null)} />
     </>
   );
 }

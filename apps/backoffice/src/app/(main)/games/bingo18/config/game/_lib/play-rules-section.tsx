@@ -1,23 +1,15 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Save, HelpCircle } from "lucide-react";
-
-import { MoneyInput } from "@megawin/ui/components/money-input";
 import { BINGO18_MAX_BOARDS } from "@megawin/game-bingo18/rules";
+import { MoneyInput } from "@megawin/ui/components/money-input";
+import { HelpCircle, Save } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
 import { TimeInput } from "@/components/ui/time-input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -50,15 +42,7 @@ interface PlayRulesSectionProps {
   isPending: boolean;
 }
 
-function LabelWithTooltip({
-  label,
-  tip,
-  className,
-}: {
-  label: string;
-  tip: string;
-  className?: string;
-}) {
+function LabelWithTooltip({ label, tip, className }: { label: string; tip: string; className?: string }) {
   return (
     <span className={`inline-flex items-center gap-1 ${className ?? ""}`}>
       {label}

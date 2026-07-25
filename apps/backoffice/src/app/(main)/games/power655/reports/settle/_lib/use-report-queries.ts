@@ -1,22 +1,23 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@megawin/next/client";
-import { power655Keys } from "@/lib/query-keys";
 import type {
   GetDrawSummaryOutput,
-  ListSettleDrawReportsOutput,
-  ListDrawTenantsOutput,
-  ListTenantReportsOutput,
-  ListTenantDrawsOutput,
-  ListPlayerBreakdownOutput,
-  ListEntryBreakdownOutput,
   GetOutstandingReportsOutput,
-  ListVoidReportsOutput,
+  ListDrawTenantsOutput,
+  ListEntryBreakdownOutput,
   ListOutstandingDrawTenantsOutput,
-  ListOutstandingTenantPlayersOutput,
   ListOutstandingPlayerEntriesOutput,
+  ListOutstandingTenantPlayersOutput,
+  ListPlayerBreakdownOutput,
+  ListSettleDrawReportsOutput,
+  ListTenantDrawsOutput,
+  ListTenantReportsOutput,
+  ListVoidReportsOutput,
 } from "@megawin/game-power655-application/use-cases/reports";
+import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
+
+import { power655Keys } from "@/lib/query-keys";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
 
@@ -51,9 +52,7 @@ export function usePower655DrawTenants(drawId: string | null) {
   return useQuery({
     queryKey: power655Keys.reportDrawTenants(drawId ?? ""),
     queryFn: () =>
-      apiClient
-        .get<ListDrawTenantsOutput>(`/power655/reports/draws/${drawId}/tenants`)
-        .then((r) => r.data),
+      apiClient.get<ListDrawTenantsOutput>(`/power655/reports/draws/${drawId}/tenants`).then((r) => r.data),
     enabled: !!drawId,
   });
 }
@@ -122,10 +121,7 @@ export function usePower655Entries(drawId: string, tenantId: string, accountId: 
 export function usePower655Outstanding() {
   return useQuery({
     queryKey: power655Keys.outstandingDraws,
-    queryFn: () =>
-      apiClient
-        .get<GetOutstandingReportsOutput>("/power655/reports/outstanding")
-        .then((r) => r.data),
+    queryFn: () => apiClient.get<GetOutstandingReportsOutput>("/power655/reports/outstanding").then((r) => r.data),
     refetchInterval: 60_000,
   });
 }
@@ -136,9 +132,7 @@ export function usePower655OutstandingDrawTenants(drawId: string | null) {
     queryKey: power655Keys.outstandingTenants(drawId ?? ""),
     queryFn: () =>
       apiClient
-        .get<ListOutstandingDrawTenantsOutput>(
-          `/power655/reports/outstanding/draws/${drawId}/tenants`,
-        )
+        .get<ListOutstandingDrawTenantsOutput>(`/power655/reports/outstanding/draws/${drawId}/tenants`)
         .then((r) => r.data),
     enabled: !!drawId,
     refetchInterval: 60_000,
@@ -161,11 +155,7 @@ export function usePower655OutstandingTenantPlayers(drawId: string, tenantId: st
 }
 
 /** Entries của 1 player trong 1 draw × tenant outstanding — drill cấp 4. Tự refresh mỗi 60 giây. */
-export function usePower655OutstandingPlayerEntries(
-  drawId: string,
-  tenantId: string,
-  accountId: string | null,
-) {
+export function usePower655OutstandingPlayerEntries(drawId: string, tenantId: string, accountId: string | null) {
   return useQuery({
     queryKey: power655Keys.outstandingEntries({
       drawId,
@@ -238,18 +228,12 @@ export function usePower655VoidTenantPlayers(drawId: string, tenantId: string | 
 }
 
 /** Entries void của 1 player trong 1 draw × tenant. Drill cấp 4. */
-export function usePower655VoidPlayerEntries(
-  drawId: string,
-  tenantId: string,
-  accountId: string | null,
-) {
+export function usePower655VoidPlayerEntries(drawId: string, tenantId: string, accountId: string | null) {
   return useQuery({
     queryKey: power655Keys.voidPlayerEntries({ drawId, tenantId, accountId: accountId ?? "" }),
     queryFn: () =>
       apiClient
-        .get<ListEntryBreakdownOutput>(
-          `/power655/reports/void/draws/${drawId}/${tenantId}/${accountId}/entries`,
-        )
+        .get<ListEntryBreakdownOutput>(`/power655/reports/void/draws/${drawId}/${tenantId}/${accountId}/entries`)
         .then((r) => r.data),
     enabled: !!(drawId && tenantId && accountId),
   });

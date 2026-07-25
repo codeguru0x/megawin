@@ -2,18 +2,17 @@ import type { ReactNode } from "react";
 
 import { cookies } from "next/headers";
 
-import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { ClientAccountGuard } from "@/components/auth/client-account-guard";
+import { AccountSwitcher } from "@/components/sidebar/account-switcher";
+import { AppSidebar } from "@/components/sidebar/app-sidebar";
+import { ThemeSwitcher } from "@/components/sidebar/theme-switcher";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { requireOperatorSession } from "@/lib/auth-guard";
 import { SIDEBAR_COLLAPSIBLE_VALUES, SIDEBAR_VARIANT_VALUES } from "@/lib/preferences/layout";
 import { cn } from "@/lib/utils";
-import { requireOperatorSession } from "@/lib/auth-guard";
-import { getPreference } from "@/server/server-actions";
 import { QueryProvider } from "@/providers/query-provider";
-
-import { AccountSwitcher } from "@/components/sidebar/account-switcher";
-import { ThemeSwitcher } from "@/components/sidebar/theme-switcher";
+import { getPreference } from "@/server/server-actions";
 
 export default async function MainLayout({ children }: Readonly<{ children: ReactNode }>) {
   await requireOperatorSession();
@@ -45,10 +44,7 @@ export default async function MainLayout({ children }: Readonly<{ children: Reac
               <div className="flex w-full items-center justify-between px-4 lg:px-6">
                 <div className="flex items-center gap-1 lg:gap-2">
                   <SidebarTrigger className="-ml-1" />
-                  <Separator
-                    orientation="vertical"
-                    className="mx-2 data-[orientation=vertical]:h-4"
-                  />
+                  <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
                 </div>
                 <div className="flex items-center gap-2">
                   <ThemeSwitcher />

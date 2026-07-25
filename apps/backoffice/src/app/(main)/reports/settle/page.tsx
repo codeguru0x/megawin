@@ -1,15 +1,18 @@
 "use client";
 
 import { Suspense } from "react";
-import { BarChart3, CalendarDays, Gamepad2, Building2 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import { BarChart3, Building2, CalendarDays, Gamepad2 } from "lucide-react";
+
 import { FinancialDateRangePicker } from "@/components/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SYSTEM_ICON_GRADIENT } from "@/lib/game-colors";
-import { useSystemReportFilters } from "./_lib/use-report-filters";
-import { DailyOverviewTab } from "./_lib/tabs/daily-overview";
+
 import { ByGameTab } from "./_lib/tabs/by-game";
 import { ByTenantTab } from "./_lib/tabs/by-tenant";
+import { DailyOverviewTab } from "./_lib/tabs/daily-overview";
+import { useSystemReportFilters } from "./_lib/use-report-filters";
 
 function SystemFinancialReportsContent() {
   const { tab, setTab, from, to, setFrom, setTo } = useSystemReportFilters();
@@ -25,12 +28,8 @@ function SystemFinancialReportsContent() {
             <BarChart3 className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Báo cáo tài chính hệ thống
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Tổng hợp doanh thu, trả thưởng, lợi nhuận toàn hệ thống
-            </p>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Báo cáo tài chính hệ thống</h1>
+            <p className="text-xs text-muted-foreground">Tổng hợp doanh thu, trả thưởng, lợi nhuận toàn hệ thống</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

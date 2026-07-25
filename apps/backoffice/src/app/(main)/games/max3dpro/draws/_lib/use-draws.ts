@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient, ApiClientError } from "@megawin/next/client";
-import { toast } from "sonner";
 import type { DrawStatus } from "@megawin/game-core/entities";
+import { ApiClientError, apiClient } from "@megawin/next/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 import { max3dproKeys } from "@/lib/query-keys";
 
 export interface CurrentDrawInfo {
@@ -107,9 +108,7 @@ function useDrawAction<TBody = void>(
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
-      method === "post"
-        ? apiClient.post(actionPath(drawId), body)
-        : apiClient.patch(actionPath(drawId), body),
+      method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: max3dproKeys.all });
       toast.success(successMessage);
@@ -140,19 +139,11 @@ export function usePublishResult() {
 }
 
 export function useTriggerSettle() {
-  return useDrawAction(
-    (id) => `/max3dpro/draws/${id}/trigger-settle`,
-    "post",
-    "Đã bắt đầu kết sổ.",
-  );
+  return useDrawAction((id) => `/max3dpro/draws/${id}/trigger-settle`, "post", "Đã bắt đầu kết sổ.");
 }
 
 export function useVoidDraw() {
-  return useDrawAction<{ reason: string }>(
-    (id) => `/max3dpro/draws/${id}/void`,
-    "post",
-    "Đã huỷ kỳ quay.",
-  );
+  return useDrawAction<{ reason: string }>((id) => `/max3dpro/draws/${id}/void`, "post", "Đã huỷ kỳ quay.");
 }
 
 export function useUpdateSchedule() {

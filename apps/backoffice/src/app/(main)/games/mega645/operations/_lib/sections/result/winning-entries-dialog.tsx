@@ -8,52 +8,39 @@
  */
 
 import { useCallback, useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { MegaMatchBall } from "@/components/games/mega645/mega-number-ball";
-import { formatNumber, formatVN } from "@megawin/shared/utils";
-import { toTenantUsername } from "@megawin/shared/utils";
-import { PrizeTier } from "@megawin/game-mega645/entities";
+
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import { Trophy, Star, Loader2, FileSearch, Users, Hash, Banknote } from "lucide-react";
-import {
-  useWinningEntries,
-  useWinningEntryDetail,
-  WINNING_ENTRIES_PAGE_SIZE,
-} from "../../use-operations";
-import type { WinningEntryItem, WinningEntryTierDetail } from "../../use-operations";
+import { PrizeTier } from "@megawin/game-mega645/entities";
+import { formatNumber, formatVN, toTenantUsername } from "@megawin/shared/utils";
+import { Banknote, FileSearch, Hash, Loader2, Star, Trophy, Users } from "lucide-react";
+
+import { MegaMatchBall } from "@/components/games/mega645/mega-number-ball";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+
 import { Mega645EntryDetailDialog } from "../../../../reports/settle/_lib/sections/entry-detail-dialog";
+import type { WinningEntryItem, WinningEntryTierDetail } from "../../use-operations";
+import { useWinningEntries, useWinningEntryDetail, WINNING_ENTRIES_PAGE_SIZE } from "../../use-operations";
 
 // ─── Tier config ──────────────────────────────────────────────────────────────
 
 const TIER_STYLE: Partial<Record<PrizeTier, { badge: string; winColor: string }>> = {
   [PrizeTier.Jackpot]: {
-    badge:
-      "border-teal-400/60 bg-teal-500/10 text-teal-600 dark:text-teal-400 dark:border-teal-500/50",
+    badge: "border-teal-400/60 bg-teal-500/10 text-teal-600 dark:text-teal-400 dark:border-teal-500/50",
     winColor: "text-teal-500 dark:text-teal-400",
   },
   [PrizeTier.Tier1]: {
-    badge:
-      "border-emerald-400/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 dark:border-emerald-500/50",
+    badge: "border-emerald-400/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 dark:border-emerald-500/50",
     winColor: "text-emerald-600 dark:text-emerald-400",
   },
   [PrizeTier.Tier2]: {
-    badge:
-      "border-cyan-400/60 bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 dark:border-cyan-500/50",
+    badge: "border-cyan-400/60 bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 dark:border-cyan-500/50",
     winColor: "text-cyan-600 dark:text-cyan-400",
   },
   [PrizeTier.Tier3]: {
-    badge:
-      "border-blue-400/60 bg-blue-500/10 text-blue-700 dark:text-blue-400 dark:border-blue-500/50",
+    badge: "border-blue-400/60 bg-blue-500/10 text-blue-700 dark:text-blue-400 dark:border-blue-500/50",
     winColor: "text-blue-600 dark:text-blue-400",
   },
 };
@@ -89,12 +76,7 @@ function EntryNumbers({ entry }: { entry: WinningEntryItem }) {
           </span>
           <div className="flex items-center gap-0.5 flex-wrap max-w-80">
             {b.numbers.map((n) => (
-              <MegaMatchBall
-                key={n}
-                n={n}
-                size="sm"
-                variant={winningSet.has(n) ? "matched" : "default"}
-              />
+              <MegaMatchBall key={n} n={n} size="sm" variant={winningSet.has(n) ? "matched" : "default"} />
             ))}
           </div>
         </div>
@@ -180,10 +162,7 @@ interface WinningEntriesDialogProps {
 }
 
 export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntriesDialogProps) {
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useWinningEntries(
-    drawId,
-    open,
-  );
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useWinningEntries(drawId, open);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const { data: selectedEntry } = useWinningEntryDetail(selectedEntryId, {
     onNotFound: () => setSelectedEntryId(null),
@@ -218,9 +197,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
               <Trophy className="size-5 text-teal-500" />
             </div>
             <div>
-              <DialogTitle className="text-base font-bold tracking-tight">
-                Danh sách trúng thưởng
-              </DialogTitle>
+              <DialogTitle className="text-base font-bold tracking-tight">Danh sách trúng thưởng</DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                 Kỳ <span className="font-mono text-foreground">{drawId}</span>
               </DialogDescription>
@@ -250,12 +227,8 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
                 <FileSearch className="size-7 text-muted-foreground/40" />
               </div>
               <div className="text-center">
-                <p className="text-base font-semibold text-foreground">
-                  Không có phiếu trúng thưởng
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Kỳ này không có bộ số nào trúng thưởng.
-                </p>
+                <p className="text-base font-semibold text-foreground">Không có phiếu trúng thưởng</p>
+                <p className="mt-1 text-sm text-muted-foreground">Kỳ này không có bộ số nào trúng thưởng.</p>
               </div>
             </div>
           ) : (
@@ -264,14 +237,10 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
                 <TableRow className="hover:bg-muted/40">
                   <TableHead className="pl-6 w-12 text-center">STT</TableHead>
                   <TableHead className="w-44">{REPORT_COLUMN_LABELS.player}</TableHead>
-                  <TableHead className="w-28 text-right">
-                    {REPORT_COLUMN_LABELS.totalStake}
-                  </TableHead>
+                  <TableHead className="w-28 text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                   <TableHead className="min-w-70">{REPORT_COLUMN_LABELS.numbersPlayed}</TableHead>
                   <TableHead className="w-52">{REPORT_COLUMN_LABELS.prizeTier}</TableHead>
-                  <TableHead className="pr-6 w-40 text-right">
-                    {REPORT_COLUMN_LABELS.winAmount}
-                  </TableHead>
+                  <TableHead className="pr-6 w-40 text-right">{REPORT_COLUMN_LABELS.winAmount}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -327,15 +296,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
-function WinningEntryRow({
-  entry,
-  rowNo,
-  onClick,
-}: {
-  entry: WinningEntryItem;
-  rowNo: number;
-  onClick: () => void;
-}) {
+function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; rowNo: number; onClick: () => void }) {
   const displayName = toTenantUsername(entry.username) ?? entry.username;
   const hasJackpot = entry.tiers.some((t) => t.tier === PrizeTier.Jackpot && t.hitCount > 0);
 
@@ -353,9 +314,7 @@ function WinningEntryRow({
         <span
           className={cn(
             "inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
-            hasJackpot
-              ? "bg-teal-500/10 text-teal-600 dark:text-teal-400"
-              : "bg-muted text-muted-foreground",
+            hasJackpot ? "bg-teal-500/10 text-teal-600 dark:text-teal-400" : "bg-muted text-muted-foreground",
           )}
         >
           {rowNo}
@@ -363,9 +322,7 @@ function WinningEntryRow({
       </TableCell>
       <TableCell className="py-3">
         <p className="text-sm text-foreground">{displayName}</p>
-        <p className="text-xs text-muted-foreground/50 font-mono mt-0.5 truncate max-w-32">
-          @{entry.tenantId}
-        </p>
+        <p className="text-xs text-muted-foreground/50 font-mono mt-0.5 truncate max-w-32">@{entry.tenantId}</p>
       </TableCell>
       <TableCell className="py-3 text-right">
         <span className="text-sm tabular-nums text-foreground">{formatNumber(entry.amount)}</span>
@@ -379,9 +336,7 @@ function WinningEntryRow({
           {entry.tiers.map((t) => (
             <div key={t.tier} className="flex items-center gap-2">
               <TierChip tier={t} />
-              <span
-                className={cn("text-xs tabular-nums", TIER_STYLE[t.tier as PrizeTier]?.winColor)}
-              >
+              <span className={cn("text-xs tabular-nums", TIER_STYLE[t.tier as PrizeTier]?.winColor)}>
                 +{formatNumber(t.amount)}
               </span>
             </div>
@@ -389,9 +344,7 @@ function WinningEntryRow({
         </div>
       </TableCell>
       <TableCell className="py-3 pr-6 text-right">
-        <p className="text-sm tabular-nums text-foreground font-medium">
-          {formatNumber(entry.winAmount)}
-        </p>
+        <p className="text-sm tabular-nums text-foreground font-medium">{formatNumber(entry.winAmount)}</p>
         <p className="text-xs text-muted-foreground/50 tabular-nums mt-0.5">
           {formatVN(new Date(entry.createdAt), "HH:mm dd/MM")}
         </p>

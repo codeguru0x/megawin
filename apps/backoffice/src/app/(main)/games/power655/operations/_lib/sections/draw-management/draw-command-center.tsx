@@ -28,16 +28,8 @@ import {
 } from "lucide-react";
 
 import { Power655DrawStatusBadge as DrawStatusBadge } from "@/components/games/power655/draw-status-badge";
-import {
-  Countdown,
-  getOverdueGrace,
-  OverdueBanner,
-  useOverdue,
-} from "@/components/games/shared/draw-countdown";
-import {
-  getDrawLifecycleSteps,
-  LifecycleStepper,
-} from "@/components/games/shared/draw-lifecycle-stepper";
+import { Countdown, getOverdueGrace, OverdueBanner, useOverdue } from "@/components/games/shared/draw-countdown";
+import { getDrawLifecycleSteps, LifecycleStepper } from "@/components/games/shared/draw-lifecycle-stepper";
 import { getNextAction } from "@/components/games/shared/draw-next-action";
 import { shouldShowResettle } from "@/components/games/shared/draw-resettle";
 import { ScheduleChips } from "@/components/games/shared/draw-schedule-chips";
@@ -93,10 +85,7 @@ export function DrawCommandCenter({
   // xem GAME_OVERDUE_GRACE). Countdown/Overdue nhận thẳng target ISO của kỳ đang chọn.
   const grace = getOverdueGrace(GameProduct.Power655);
   // close: quá salesCloseAt + grace mà vẫn SalesOpen → scheduler close-sales kẹt.
-  const closeOverdue = useOverdue(
-    status === DrawStatus.SalesOpen ? draw.salesCloseAt : undefined,
-    grace.close,
-  );
+  const closeOverdue = useOverdue(status === DrawStatus.SalesOpen ? draw.salesCloseAt : undefined, grace.close);
   // publish: quá giờ quay theo lịch + grace mà vẫn SalesClosed → worker publish kẹt.
   const publishOverdue = useOverdue(
     status === DrawStatus.SalesClosed ? draw.scheduledDrawAt : undefined,
@@ -118,8 +107,7 @@ export function DrawCommandCenter({
   // Không cho huỷ kỳ đã từng settle (settledAt != null) — đó là luồng chờ resettle,
   // chỉ được "Kết sổ lại", không được huỷ. Backend cũng guard trong VoidDrawUseCase.
   const canVoid =
-    !draw.settledAt &&
-    [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(status as any);
+    !draw.settledAt && [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(status as any);
   const canRepublish = status === DrawStatus.Published || status === DrawStatus.Settled;
   const canReopenSales = status === DrawStatus.SalesClosed;
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
@@ -263,20 +251,11 @@ export function DrawCommandCenter({
                 iconBg,
               )}
             >
-              <StatusIcon
-                className={cn(
-                  "size-3.5",
-                  iconColor,
-                  status === DrawStatus.Settling && "animate-spin",
-                )}
-              />
+              <StatusIcon className={cn("size-3.5", iconColor, status === DrawStatus.Settling && "animate-spin")} />
               {showPing && (
                 <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
                   <span
-                    className={cn(
-                      "absolute inline-flex size-full animate-ping rounded-full opacity-70",
-                      pingColor,
-                    )}
+                    className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-70", pingColor)}
                   />
                   <span className={cn("relative inline-flex size-2.5 rounded-full", dotColor)} />
                 </span>
@@ -285,20 +264,14 @@ export function DrawCommandCenter({
             <div className="min-w-0 space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
                 {/* Power 6/55: 1 kỳ/ngày nên hiển thị ngày */}
-                <h2 className="text-sm font-semibold tracking-tight">
-                  Power 6/55 — {draw.drawDate}
-                </h2>
+                <h2 className="text-sm font-semibold tracking-tight">Power 6/55 — {draw.drawDate}</h2>
                 <DrawStatusBadge status={status} />
               </div>
               <div className="flex items-center gap-3 flex-wrap">
                 <p className="text-xs text-muted-foreground font-mono shrink-0">{draw.drawId}</p>
                 <ScheduleChips draw={draw} />
-                {status === DrawStatus.SalesOpen && (
-                  <Countdown target={draw.salesCloseAt} prefix="Đóng bán sau" />
-                )}
-                {status === DrawStatus.SalesClosed && (
-                  <Countdown target={draw.scheduledDrawAt} prefix="Quay số sau" />
-                )}
+                {status === DrawStatus.SalesOpen && <Countdown target={draw.salesCloseAt} prefix="Đóng bán sau" />}
+                {status === DrawStatus.SalesClosed && <Countdown target={draw.scheduledDrawAt} prefix="Quay số sau" />}
               </div>
             </div>
           </div>
@@ -321,9 +294,7 @@ export function DrawCommandCenter({
                 <DropdownMenuSeparator />
                 {isSettled && (
                   <DropdownMenuItem asChild>
-                    <Link
-                      href={`/games/power655/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}
-                    >
+                    <Link href={`/games/power655/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}>
                       <FileText className="size-3.5" /> Xem báo cáo
                     </Link>
                   </DropdownMenuItem>
@@ -368,9 +339,7 @@ export function DrawCommandCenter({
             <p className="text-xs text-muted-foreground">
               Hủy bởi <span className="font-medium text-foreground">{voidInfo.voidedBy}</span> ·{" "}
               {displayVNDateTime(voidInfo.voidedAt)} · Hoàn{" "}
-              <span className="font-semibold tabular-nums text-foreground">
-                {formatNumber(voidInfo.refundAmount)}
-              </span>
+              <span className="font-semibold tabular-nums text-foreground">{formatNumber(voidInfo.refundAmount)}</span>
             </p>
           </div>
         )}
@@ -383,9 +352,7 @@ export function DrawCommandCenter({
         )}
 
         {status === DrawStatus.Scheduled && (
-          <p className="mt-4 text-xs text-muted-foreground text-center py-1">
-            Chưa có dữ liệu cược — kỳ chưa mở bán
-          </p>
+          <p className="mt-4 text-xs text-muted-foreground text-center py-1">Chưa có dữ liệu cược — kỳ chưa mở bán</p>
         )}
 
         {/* Action bar */}
@@ -414,12 +381,7 @@ export function DrawCommandCenter({
             </div>
             <div className="flex items-center gap-1">
               {canEdit && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onEditSchedule}
-                  className="gap-1.5 text-muted-foreground"
-                >
+                <Button variant="ghost" size="sm" onClick={onEditSchedule} className="gap-1.5 text-muted-foreground">
                   <Pencil className="size-3.5" /> Sửa lịch
                 </Button>
               )}

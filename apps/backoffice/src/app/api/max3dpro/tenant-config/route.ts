@@ -1,6 +1,7 @@
-import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities";
 import { ListTenantConfigsUseCase } from "@megawin/game-max3dpro-application/use-cases/tenant-config";
+import { CompanyRole } from "@megawin/identity/entities";
+
+import { withApi } from "@/lib/api";
 
 const listTenantConfigsUseCase = new ListTenantConfigsUseCase();
 

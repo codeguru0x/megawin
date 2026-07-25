@@ -2,26 +2,16 @@
 
 import type { ReactNode } from "react";
 
-import { useQuery } from "@tanstack/react-query";
 import {
-  CircleUser,
-  Mail,
-  Shield,
-  ShieldCheck,
-  ShieldOff,
-  UserCog,
-  Clock,
-  Loader2,
-  Briefcase,
-} from "lucide-react";
-import { apiClient } from "@megawin/next/client";
-import {
-  AccountTypeLabel,
-  CompanyRoleLabel,
-  AgentRoleLabel,
   AccountStatusLabel,
+  AccountTypeLabel,
+  AgentRoleLabel,
+  CompanyRoleLabel,
   MfaStatusLabel,
 } from "@megawin/identity/entities";
+import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
+import { Briefcase, CircleUser, Clock, Loader2, Mail, Shield, ShieldCheck, ShieldOff, UserCog } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,8 +83,7 @@ export function ProfileCard() {
     );
   }
 
-  const mfaConfig =
-    mfaStatusConfig[data.mfaStatus as keyof typeof mfaStatusConfig] ?? mfaStatusConfig.none;
+  const mfaConfig = mfaStatusConfig[data.mfaStatus as keyof typeof mfaStatusConfig] ?? mfaStatusConfig.none;
   const MfaIcon = mfaConfig.icon;
 
   return (
@@ -106,9 +95,7 @@ export function ProfileCard() {
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Thông tin cá nhân</CardTitle>
-            <CardDescription className="mt-0.5 text-xs">
-              Thông tin tài khoản đang đăng nhập
-            </CardDescription>
+            <CardDescription className="mt-0.5 text-xs">Thông tin tài khoản đang đăng nhập</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -119,19 +106,14 @@ export function ProfileCard() {
             label="Tên tài khoản"
             value={<span className="font-mono text-sm">{data.username}</span>}
           />
-          <InfoRow
-            icon={<UserCog className="size-4" />}
-            label="Tên hiển thị"
-            value={data.displayName}
-          />
+          <InfoRow icon={<UserCog className="size-4" />} label="Tên hiển thị" value={data.displayName} />
           <InfoRow icon={<Mail className="size-4" />} label="Email" value={data.username} />
           <InfoRow
             icon={<Briefcase className="size-4" />}
             label="Loại tài khoản"
             value={
               <Badge variant="outline">
-                {AccountTypeLabel[data.accountType as keyof typeof AccountTypeLabel] ??
-                  data.accountType}
+                {AccountTypeLabel[data.accountType as keyof typeof AccountTypeLabel] ?? data.accountType}
               </Badge>
             }
           />

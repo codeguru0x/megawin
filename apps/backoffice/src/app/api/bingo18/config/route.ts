@@ -1,10 +1,11 @@
-import { withApi } from "@/lib/api";
-import { actorFromSession } from "@/lib/audit-actor";
-import { CompanyRole } from "@megawin/identity/entities";
 import {
   GetGlobalConfigApiUseCase,
   UpdateGameConfigUseCase,
 } from "@megawin/game-bingo18-application/use-cases/game-config";
+import { CompanyRole } from "@megawin/identity/entities";
+
+import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 
 import { updateBingo18GameConfigSchema } from "./_lib/schema";
 

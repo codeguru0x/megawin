@@ -20,16 +20,8 @@ import {
 } from "lucide-react";
 
 import { DrawStatusBadge } from "@/components/games/max3dpro/draw-status-badge";
-import {
-  Countdown,
-  getOverdueGrace,
-  OverdueBanner,
-  useOverdue,
-} from "@/components/games/shared/draw-countdown";
-import {
-  getDrawLifecycleSteps,
-  LifecycleStepper,
-} from "@/components/games/shared/draw-lifecycle-stepper";
+import { Countdown, getOverdueGrace, OverdueBanner, useOverdue } from "@/components/games/shared/draw-countdown";
+import { getDrawLifecycleSteps, LifecycleStepper } from "@/components/games/shared/draw-lifecycle-stepper";
 import { getNextAction } from "@/components/games/shared/draw-next-action";
 import { isResettleSession, shouldShowResettle } from "@/components/games/shared/draw-resettle";
 import { ScheduleChips } from "@/components/games/shared/draw-schedule-chips";
@@ -87,10 +79,8 @@ export function DrawCommandCenter({
     useOverdue(status === DrawStatus.SalesOpen ? draw.salesCloseAt : undefined, grace.close) &&
     status === DrawStatus.SalesOpen;
   const publishOverdue =
-    useOverdue(
-      status === DrawStatus.SalesClosed ? draw.scheduledDrawAt : undefined,
-      grace.publish,
-    ) && status === DrawStatus.SalesClosed;
+    useOverdue(status === DrawStatus.SalesClosed ? draw.scheduledDrawAt : undefined, grace.publish) &&
+    status === DrawStatus.SalesClosed;
 
   const canEdit = [DrawStatus.Scheduled, DrawStatus.SalesOpen].includes(status as never);
   // Cấm huỷ kỳ nếu đã từng kết sổ (settledAt là high-water mark, không bị $unset
@@ -98,8 +88,7 @@ export function DrawCommandCenter({
   // nhưng đây là luồng chờ resettle — chỉ được kết sổ lại, không được huỷ.
   // Backend cũng guard tương ứng trong VoidDrawUseCase.
   const canVoid =
-    !draw.settledAt &&
-    [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(status as never);
+    !draw.settledAt && [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(status as never);
   // Cho phép sửa kết quả khi:
   //   - status = Published (kể cả lần đầu hay sau settle để chuẩn bị resettle).
   //   - status = Settled (phát hiện sai sót sau khi đã kết sổ → mở luồng resettle).
@@ -234,20 +223,11 @@ export function DrawCommandCenter({
                 iconBg,
               )}
             >
-              <StatusIcon
-                className={cn(
-                  "size-3.5",
-                  iconColor,
-                  status === DrawStatus.Settling && "animate-spin",
-                )}
-              />
+              <StatusIcon className={cn("size-3.5", iconColor, status === DrawStatus.Settling && "animate-spin")} />
               {showPing && (
                 <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
                   <span
-                    className={cn(
-                      "absolute inline-flex size-full animate-ping rounded-full opacity-70",
-                      pingColor,
-                    )}
+                    className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-70", pingColor)}
                   />
                   <span className={cn("relative inline-flex size-2.5 rounded-full", dotColor)} />
                 </span>
@@ -255,9 +235,7 @@ export function DrawCommandCenter({
             </div>
             <div className="min-w-0 space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-sm font-semibold tracking-tight">
-                  Max 3D Pro — {draw.drawDate}
-                </h2>
+                <h2 className="text-sm font-semibold tracking-tight">Max 3D Pro — {draw.drawDate}</h2>
                 <DrawStatusBadge status={status} />
               </div>
               <div className="flex items-center gap-3 flex-wrap">
@@ -283,11 +261,7 @@ export function DrawCommandCenter({
           {isSettled && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-7 shrink-0 text-muted-foreground"
-                >
+                <Button variant="ghost" size="icon" className="size-7 shrink-0 text-muted-foreground">
                   <MoreVertical className="size-4" />
                   <span className="sr-only">Thao tác khác</span>
                 </Button>
@@ -296,9 +270,7 @@ export function DrawCommandCenter({
                 <DropdownMenuLabel>Thao tác khác</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link
-                    href={`/games/max3dpro/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}
-                  >
+                  <Link href={`/games/max3dpro/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}>
                     <FileText className="size-3.5" /> Xem báo cáo
                   </Link>
                 </DropdownMenuItem>
@@ -351,8 +323,8 @@ export function DrawCommandCenter({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-56 text-xs">
-                  Dùng khi kết sổ bị treo (worker không khởi động hoặc vừa tải lại trang). An toàn
-                  để bấm — nếu đang chạy bình thường, hệ thống sẽ bỏ qua.
+                  Dùng khi kết sổ bị treo (worker không khởi động hoặc vừa tải lại trang). An toàn để bấm — nếu đang
+                  chạy bình thường, hệ thống sẽ bỏ qua.
                 </TooltipContent>
               </Tooltip>
             )}
@@ -360,9 +332,7 @@ export function DrawCommandCenter({
         )}
 
         {status === DrawStatus.Scheduled && (
-          <p className="mt-4 text-xs text-muted-foreground text-center py-1">
-            Chưa có dữ liệu cược — kỳ chưa mở bán
-          </p>
+          <p className="mt-4 text-xs text-muted-foreground text-center py-1">Chưa có dữ liệu cược — kỳ chưa mở bán</p>
         )}
 
         {/* Action bar */}
@@ -391,12 +361,7 @@ export function DrawCommandCenter({
             </div>
             <div className="flex items-center gap-1">
               {canEdit && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onEditSchedule}
-                  className="gap-1.5 text-muted-foreground"
-                >
+                <Button variant="ghost" size="sm" onClick={onEditSchedule} className="gap-1.5 text-muted-foreground">
                   <Pencil className="size-3.5" /> Sửa lịch
                 </Button>
               )}

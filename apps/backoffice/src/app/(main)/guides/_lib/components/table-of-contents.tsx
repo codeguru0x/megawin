@@ -41,9 +41,7 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
 
   return (
     <div>
-      <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">
-        Trên trang này
-      </p>
+      <p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">Trên trang này</p>
       <ul className="space-y-1 text-sm">
         {items.map((item) => (
           <li key={item.id} style={{ paddingLeft: (item.level - 2) * 12 }}>
@@ -51,9 +49,7 @@ export function TableOfContents({ items }: { items: TocItem[] }) {
               href={`#${item.id}`}
               className={cn(
                 "block py-0.5 transition-colors",
-                activeId === item.id
-                  ? "text-foreground font-medium"
-                  : "text-muted-foreground hover:text-foreground",
+                activeId === item.id ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground",
               )}
             >
               {item.text}

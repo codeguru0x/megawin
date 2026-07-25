@@ -14,22 +14,25 @@
  *   5. Analytics (play type, heatmap 55 số, live feed)
  */
 
-import { Suspense, useState, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+
 import Link from "next/link";
-import { Plus, Radio, SearchX } from "lucide-react";
+
+import { displayVNTimeWithSeconds } from "@megawin/shared/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { Plus, Radio, SearchX } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { power655Keys } from "@/lib/query-keys";
-import { displayVNTimeWithSeconds } from "@megawin/shared/utils";
 
-import { DrawContextProvider, useDrawContext } from "./_lib/use-draw-context";
-import { DrawSelector } from "./_lib/draw-selector";
-import { CreateDrawAction } from "./_lib/sections/draw-management/draw-actions";
-import { DrawManagementSection } from "./_lib/sections/draw-management";
-import { KpiSection } from "./_lib/sections/kpi";
-import { AnalyticsSection } from "./_lib/sections/analytics";
-import { ResultSection } from "./_lib/sections/result";
 import { JackpotHeroCard } from "../jackpot/_lib/jackpot-overview-section";
+import { DrawSelector } from "./_lib/draw-selector";
+import { AnalyticsSection } from "./_lib/sections/analytics";
+import { DrawManagementSection } from "./_lib/sections/draw-management";
+import { CreateDrawAction } from "./_lib/sections/draw-management/draw-actions";
+import { KpiSection } from "./_lib/sections/kpi";
+import { ResultSection } from "./_lib/sections/result";
+import { DrawContextProvider, useDrawContext } from "./_lib/use-draw-context";
 
 // ─── Last Updated Badge ───────────────────────────────────────────────────────
 
@@ -38,11 +41,7 @@ import { JackpotHeroCard } from "../jackpot/_lib/jackpot-overview-section";
  * Theo dõi opsSummary (refetch mỗi 30s) — query phản ánh dữ liệu live chính xác nhất.
  * Dùng DOM ref + setInterval để check mỗi giây, tránh re-render React.
  */
-function LastUpdatedBadge({
-  opsParams,
-}: {
-  opsParams: { drawId?: string; financialDate?: string };
-}) {
+function LastUpdatedBadge({ opsParams }: { opsParams: { drawId?: string; financialDate?: string } }) {
   const qc = useQueryClient();
   const spanRef = useRef<HTMLSpanElement>(null);
 
@@ -106,9 +105,7 @@ function OperationsContent() {
             <Radio className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Power 6/55 — Vận hành
-            </h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Power 6/55 — Vận hành</h1>
             <div className="flex items-center gap-2">
               <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
               {isActiveForRefresh ? <LastUpdatedBadge opsParams={opsParams} /> : null}
@@ -171,9 +168,7 @@ function DrawNotFound({
             <Radio className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Power 6/55 — Vận hành
-            </h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Power 6/55 — Vận hành</h1>
             <p className="text-xs text-muted-foreground">Quản lý và giám sát kỳ quay</p>
           </div>
         </div>

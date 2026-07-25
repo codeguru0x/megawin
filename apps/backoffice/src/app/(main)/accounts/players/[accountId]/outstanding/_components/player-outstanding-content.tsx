@@ -1,46 +1,33 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { useQueryState, parseAsString, parseAsInteger } from "nuqs";
-import {
-  Clock,
-  CalendarClock,
-  Ticket,
-  HandCoins,
-  Banknote,
-  ChevronRight,
-  ChevronLeft,
-} from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
-import { Pagination } from "@megawin/shared/constants/pagination";
+import type React from "react";
+import { useMemo, useState } from "react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { getGameColors } from "@/lib/game-colors";
-import { playerDetailKeys } from "@/lib/query-keys/player-detail";
-import { cn } from "@/lib/utils";
+import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { Pagination } from "@megawin/shared/constants/pagination";
+import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { Banknote, CalendarClock, ChevronLeft, ChevronRight, Clock, HandCoins, Ticket } from "lucide-react";
+import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
+
 import { GameEntryDetailDialog } from "@/components/reports/game/game-entry-detail-dialog";
 import { OutstandingEntryList } from "@/components/reports/game/outstanding/outstanding-entry-list";
 import type { OutstandingEntryRow } from "@/components/reports/game/outstanding/types";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { getGameColors } from "@/lib/game-colors";
+import { playerDetailKeys } from "@/lib/query-keys/player-detail";
+import { cn } from "@/lib/utils";
 
 import {
-  usePlayerOutstanding,
-  usePlayerEntryDetail,
-  type PlayerOutstandingSummaryResponse,
   type PlayerOutstandingEntryResponse,
+  type PlayerOutstandingSummaryResponse,
+  usePlayerEntryDetail,
+  usePlayerOutstanding,
 } from "../../_shared/queries";
 
 interface PlayerOutstandingContentProps {
@@ -260,10 +247,7 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
               <span className="font-medium text-foreground">Đơn cược đang chờ</span>
             ) : view === "draws" ? (
               <>
-                <button
-                  className="text-muted-foreground hover:text-foreground"
-                  onClick={handleBackToGames}
-                >
+                <button className="text-muted-foreground hover:text-foreground" onClick={handleBackToGames}>
                   Đơn cược đang chờ
                 </button>
                 <ChevronRight className="size-3.5 text-muted-foreground" />
@@ -271,17 +255,11 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
               </>
             ) : (
               <>
-                <button
-                  className="text-muted-foreground hover:text-foreground"
-                  onClick={handleBackToGames}
-                >
+                <button className="text-muted-foreground hover:text-foreground" onClick={handleBackToGames}>
                   Đơn cược đang chờ
                 </button>
                 <ChevronRight className="size-3.5 text-muted-foreground" />
-                <button
-                  className="text-muted-foreground hover:text-foreground"
-                  onClick={handleBackToDraws}
-                >
+                <button className="text-muted-foreground hover:text-foreground" onClick={handleBackToDraws}>
                   {gameLabel}
                 </button>
                 <ChevronRight className="size-3.5 text-muted-foreground" />
@@ -305,9 +283,7 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
       {isLoading ? (
         <TableSkeleton cols={5} />
       ) : isError ? (
-        <div className="flex h-40 items-center justify-center text-sm text-destructive">
-          Không thể tải dữ liệu.
-        </div>
+        <div className="flex h-40 items-center justify-center text-sm text-destructive">Không thể tải dữ liệu.</div>
       ) : !data || data.entries.length === 0 ? (
         <div className="flex h-40 flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm font-medium text-muted-foreground">Không có đơn cược đang chờ</p>
@@ -414,12 +390,8 @@ function GamesView({
                         <span className="text-sm font-medium">{label}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(group.drawCount)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(group.entryCount)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(group.drawCount)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(group.entryCount)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(group.totalCommission)}
                     </TableCell>
@@ -433,9 +405,7 @@ function GamesView({
             {byGame.length > 0 && (
               <tfoot>
                 <TableRow className="border-t bg-muted/30 font-semibold">
-                  <TableCell className="pl-5 text-sm font-semibold">
-                    {REPORT_COLUMN_LABELS.summary}
-                  </TableCell>
+                  <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
                   <TableCell className="text-right text-sm tabular-nums font-semibold">
                     {formatNumber(totals.drawCount)}
                   </TableCell>
@@ -524,9 +494,7 @@ function DrawsView({
                   onClick={() => onSelectDraw(draw.drawId)}
                 >
                   <TableCell className="pl-5 font-mono text-sm">{draw.drawId}</TableCell>
-                  <TableCell className="text-right text-sm tabular-nums">
-                    {formatNumber(draw.entryCount)}
-                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{formatNumber(draw.entryCount)}</TableCell>
                   <TableCell className="text-right text-sm tabular-nums">
                     {formatNumber(draw.totalCommission)}
                   </TableCell>
@@ -538,9 +506,7 @@ function DrawsView({
             </TableBody>
             <tfoot>
               <TableRow className="border-t bg-muted/30">
-                <TableCell className="pl-5 text-sm font-semibold">
-                  {REPORT_COLUMN_LABELS.summary}
-                </TableCell>
+                <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
                 <TableCell className="text-right text-sm tabular-nums font-semibold">
                   {formatNumber(totals.entryCount)}
                 </TableCell>

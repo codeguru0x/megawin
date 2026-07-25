@@ -1,6 +1,7 @@
-import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities";
 import { SearchPlayerAccountsUseCase } from "@megawin/identity-application/use-cases/accounts";
+
+import { withApi } from "@/lib/api";
 
 import { searchPlayerQuerySchema } from "./_lib/schema";
 

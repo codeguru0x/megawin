@@ -11,32 +11,23 @@
  */
 
 import { useCallback, useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { KenoMatchBall } from "@/components/games/keno/keno-number-ball";
-import { boardColorVar } from "@/lib/game-colors";
-import { formatNumber, formatVN } from "@megawin/shared/utils";
-import { toTenantUsername } from "@megawin/shared/utils";
+
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import { Trophy, Loader2, FileSearch, Users, Banknote, AlertCircle } from "lucide-react";
-import {
-  useWinningEntries,
-  useWinningEntryDetail,
-  WINNING_ENTRIES_PAGE_SIZE,
-} from "../../use-operations";
-import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS } from "@megawin/game-keno/labels";
 import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
-import type { WinningEntryItem, WinningEntryBoardDetail } from "../../use-operations";
+import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS } from "@megawin/game-keno/labels";
+import { formatNumber, formatVN, toTenantUsername } from "@megawin/shared/utils";
+import { AlertCircle, Banknote, FileSearch, Loader2, Trophy, Users } from "lucide-react";
+
+import { KenoMatchBall } from "@/components/games/keno/keno-number-ball";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { boardColorVar } from "@/lib/game-colors";
+import { cn } from "@/lib/utils";
+
 import { KenoEntryDetailDialog } from "../../../../reports/settle/_lib/sections/entry-detail-dialog";
+import type { WinningEntryBoardDetail, WinningEntryItem } from "../../use-operations";
+import { useWinningEntries, useWinningEntryDetail, WINNING_ENTRIES_PAGE_SIZE } from "../../use-operations";
 
 // ─── Labels ────────────────────────────────────────────────────────────────────
 
@@ -66,13 +57,7 @@ const KENO_OUTCOME_LABELS: Record<string, string> = {
 
 // ─── Board detail row (1 dòng/board trong cột gộp) ──────────────────────────────
 
-function BasicBoardDetail({
-  board,
-  winningSet,
-}: {
-  board: WinningEntryBoardDetail;
-  winningSet: Set<string>;
-}) {
+function BasicBoardDetail({ board, winningSet }: { board: WinningEntryBoardDetail; winningSet: Set<string> }) {
   const boardColor = boardColorVar(board.boardNo);
   const numbers = board.numbers ?? [];
   return (
@@ -126,9 +111,7 @@ function SideBetDetail({ board }: { board: WinningEntryBoardDetail }) {
         <span className="rounded bg-cyan-50 px-1.5 py-0.5 text-xs font-semibold text-cyan-700 border border-cyan-200 dark:bg-cyan-950/20 dark:text-cyan-400 dark:border-cyan-900 whitespace-nowrap">
           {typeLabel} · {betLabel}
         </span>
-        {outcomeLabel && (
-          <span className="text-xs text-muted-foreground whitespace-nowrap">{outcomeLabel}</span>
-        )}
+        {outcomeLabel && <span className="text-xs text-muted-foreground whitespace-nowrap">{outcomeLabel}</span>}
       </div>
       <span className="text-xs tabular-nums font-semibold text-cyan-700 dark:text-cyan-400 whitespace-nowrap justify-self-end">
         +{formatNumber(board.winAmount)}
@@ -165,14 +148,7 @@ function KpiCard({
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
-        <p
-          className={cn(
-            "text-lg font-bold tabular-nums leading-tight",
-            valueColor ?? "text-foreground",
-          )}
-        >
-          {value}
-        </p>
+        <p className={cn("text-lg font-bold tabular-nums leading-tight", valueColor ?? "text-foreground")}>{value}</p>
       </div>
     </div>
   );
@@ -219,26 +195,14 @@ function KpiBar({
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
-function WinningEntryRow({
-  entry,
-  rowNo,
-  onClick,
-}: {
-  entry: WinningEntryItem;
-  rowNo: number;
-  onClick: () => void;
-}) {
+function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; rowNo: number; onClick: () => void }) {
   const displayName = toTenantUsername(entry.username) ?? entry.username;
   const hasCapped = entry.boardDetails.some((b) => b.isCapped);
   const winningSet = new Set(entry.winningNumbers);
 
   // Phân tách boardDetails thành basic boards và side bet boards
-  const basicBoards = entry.boardDetails.filter(
-    (b) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any),
-  );
-  const sideBetBoards = entry.boardDetails.filter((b) =>
-    KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any),
-  );
+  const basicBoards = entry.boardDetails.filter((b) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any));
+  const sideBetBoards = entry.boardDetails.filter((b) => KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any));
 
   return (
     <TableRow
@@ -254,9 +218,7 @@ function WinningEntryRow({
         <span
           className={cn(
             "inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
-            hasCapped
-              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-              : "bg-muted text-muted-foreground",
+            hasCapped ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : "bg-muted text-muted-foreground",
           )}
         >
           {rowNo}
@@ -265,9 +227,7 @@ function WinningEntryRow({
       <TableCell className="py-3">
         <div>
           <p className="text-sm text-foreground">{displayName}</p>
-          <p className="text-xs text-muted-foreground/60 font-mono mt-0.5 truncate max-w-32">
-            @{entry.tenantId}
-          </p>
+          <p className="text-xs text-muted-foreground/60 font-mono mt-0.5 truncate max-w-32">@{entry.tenantId}</p>
         </div>
       </TableCell>
       <TableCell className="py-3 text-right">
@@ -284,9 +244,7 @@ function WinningEntryRow({
         </div>
       </TableCell>
       <TableCell className="py-3 pr-6 text-right">
-        <p className="text-sm tabular-nums text-foreground font-semibold">
-          {formatNumber(entry.winAmount)}
-        </p>
+        <p className="text-sm tabular-nums text-foreground font-semibold">{formatNumber(entry.winAmount)}</p>
         <p className="text-xs text-muted-foreground/50 tabular-nums mt-0.5">
           {formatVN(new Date(entry.createdAt), "HH:mm dd/MM")}
         </p>
@@ -304,10 +262,7 @@ interface WinningEntriesDialogProps {
 }
 
 export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntriesDialogProps) {
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useWinningEntries(
-    drawId,
-    open,
-  );
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useWinningEntries(drawId, open);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const { data: selectedEntry } = useWinningEntryDetail(selectedEntryId, {
     onNotFound: () => setSelectedEntryId(null),
@@ -336,9 +291,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
               <Trophy className="size-5 text-orange-500" />
             </div>
             <div>
-              <DialogTitle className="text-base font-bold tracking-tight">
-                Danh sách trúng thưởng
-              </DialogTitle>
+              <DialogTitle className="text-base font-bold tracking-tight">Danh sách trúng thưởng</DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                 Kỳ <span className="font-mono text-foreground">{drawId}</span>
               </DialogDescription>
@@ -368,12 +321,8 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
                 <FileSearch className="size-7 text-muted-foreground/40" />
               </div>
               <div className="text-center">
-                <p className="text-base font-semibold text-foreground">
-                  Không có phiếu trúng thưởng
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Kỳ này không có phiếu cược nào trúng thưởng.
-                </p>
+                <p className="text-base font-semibold text-foreground">Không có phiếu trúng thưởng</p>
+                <p className="mt-1 text-sm text-muted-foreground">Kỳ này không có phiếu cược nào trúng thưởng.</p>
               </div>
             </div>
           ) : (
@@ -382,13 +331,9 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
                 <TableRow className="hover:bg-muted/40">
                   <TableHead className="pl-6 w-12 text-center">STT</TableHead>
                   <TableHead className="w-44">{REPORT_COLUMN_LABELS.player}</TableHead>
-                  <TableHead className="w-28 text-right">
-                    {REPORT_COLUMN_LABELS.totalStake}
-                  </TableHead>
+                  <TableHead className="w-28 text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                   <TableHead className="min-w-96">{REPORT_COLUMN_LABELS.winningDetail}</TableHead>
-                  <TableHead className="pr-6 w-40 text-right">
-                    {REPORT_COLUMN_LABELS.winAmount}
-                  </TableHead>
+                  <TableHead className="pr-6 w-40 text-right">{REPORT_COLUMN_LABELS.winAmount}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ApiClientError, apiClient } from "@megawin/next/client";
+import { useMutation } from "@tanstack/react-query";
+import { Check, CheckCircle2, Copy, Dices, Eye, EyeOff, KeyRound, Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { cn } from "@/lib/utils";
-import { Check, CheckCircle2, Copy, Dices, Eye, EyeOff, KeyRound, Lock } from "lucide-react";
-import { apiClient, ApiClientError } from "@megawin/next/client";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,15 +19,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 import { generatePassword } from "./generate-password";
 
@@ -141,9 +135,7 @@ export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordD
             <div className="border-t" />
             <div className="flex items-center justify-between gap-4">
               <span className="text-xs font-medium text-muted-foreground">Mật khẩu mới</span>
-              <span className="font-mono text-sm font-semibold tracking-wider">
-                {successPassword}
-              </span>
+              <span className="font-mono text-sm font-semibold tracking-wider">{successPassword}</span>
             </div>
           </div>
 
@@ -181,8 +173,7 @@ export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordD
             <div>
               <DialogTitle>Đặt mật khẩu mới</DialogTitle>
               <DialogDescription className="text-xs">
-                Đặt mật khẩu tạm thời cho{" "}
-                <span className="font-semibold text-foreground">{username}</span>.
+                Đặt mật khẩu tạm thời cho <span className="font-semibold text-foreground">{username}</span>.
               </DialogDescription>
             </div>
           </div>
@@ -242,16 +233,12 @@ export function SetPasswordDialog({ open, onOpenChange, username }: SetPasswordD
                             key={i}
                             className={cn(
                               "h-1 flex-1 rounded-full transition-all duration-300",
-                              i < strength
-                                ? (STRENGTH_CONFIG[strength]?.color ?? "bg-muted")
-                                : "bg-muted",
+                              i < strength ? (STRENGTH_CONFIG[strength]?.color ?? "bg-muted") : "bg-muted",
                             )}
                           />
                         ))}
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Độ mạnh: {STRENGTH_CONFIG[strength]?.label}
-                      </p>
+                      <p className="text-xs text-muted-foreground">Độ mạnh: {STRENGTH_CONFIG[strength]?.label}</p>
                     </div>
                   )}
                   <FormMessage className="text-xs" />

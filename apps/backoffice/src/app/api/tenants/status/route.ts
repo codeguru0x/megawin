@@ -1,6 +1,7 @@
-import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities";
 import { UpdateTenantStatusUseCase } from "@megawin/identity-application/use-cases/tenants";
+
+import { withApi } from "@/lib/api";
 
 import { updateTenantStatusSchema } from "../_lib/schema";
 

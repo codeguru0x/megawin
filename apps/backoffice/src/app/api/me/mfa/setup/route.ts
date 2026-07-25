@@ -1,7 +1,8 @@
-import { z } from "zod";
-import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities";
 import { SetupMfaUseCase } from "@megawin/identity-application/use-cases/accounts";
+import { z } from "zod";
+
+import { withApi } from "@/lib/api";
 
 const setupMfaSchema = z.object({
   password: z.string().min(1, "Vui lòng nhập mật khẩu"),

@@ -1,11 +1,13 @@
 "use client";
 
-import { toTenantUsername } from "@megawin/shared/utils";
 import type { TicketEntryEntity } from "@megawin/game-lotto535/entities";
+import { toTenantUsername } from "@megawin/shared/utils";
+
+import { type EntryRow, GamePlayerEntryList } from "@/components/reports/game/settle";
+
 import { useLotto535Entries } from "../use-report-queries";
-import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
 import { Lotto535EntryDetailDialog } from "./entry-detail-dialog";
-import { GamePlayerEntryList, type EntryRow } from "@/components/reports/game/settle";
+import { EmptyCard, ErrorCard, TableSkeleton } from "./shared-states";
 
 export function EntryList({
   drawId,

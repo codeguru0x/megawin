@@ -8,15 +8,14 @@
  * @see https://better-auth.com/docs/integrations/next
  */
 
+import { AccountStatus, AccountType, ClaimKey } from "@megawin/identity/entities";
+import { auditLogin } from "@megawin/identity-application/services";
 import { betterAuth } from "better-auth";
 import { createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 
-import { ClaimKey, AccountStatus, AccountType } from "@megawin/identity/entities";
-import { auditLogin } from "@megawin/identity-application/services";
-
-import { actorFromAuthUser } from "@/lib/audit-actor";
 import { env } from "@/env";
+import { actorFromAuthUser } from "@/lib/audit-actor";
 
 export const auth = betterAuth({
   /**

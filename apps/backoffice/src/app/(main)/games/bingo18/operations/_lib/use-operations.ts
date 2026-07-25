@@ -1,46 +1,47 @@
 "use client";
 
 import { useEffect } from "react";
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+import type { GetDrawDetailOutput } from "@megawin/game-bingo18-application/use-cases/draws";
+import type {
+  DiceFrequencyOutput,
+  GetDrawSelectorOutput,
+  GetLiveEntriesOutput,
+  GetTopCombosOutput,
+  GetWinningEntriesOutput,
+  OpsSummaryOutput,
+  PlayTypeDistributionOutput,
+  TenantBreakdownOutput,
+} from "@megawin/game-bingo18-application/use-cases/operations";
+import type { GetEntryByIdOutput } from "@megawin/game-bingo18-application/use-cases/reports";
 import { apiClient, formatErrorToast } from "@megawin/next/client";
 import { Pagination } from "@megawin/shared/constants/pagination";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { bingo18Keys } from "@/lib/query-keys";
-import type {
-  OpsSummaryOutput,
-  TenantBreakdownOutput,
-  DiceFrequencyOutput,
-  PlayTypeDistributionOutput,
-  GetLiveEntriesOutput,
-  GetDrawSelectorOutput,
-  GetTopCombosOutput,
-  GetWinningEntriesOutput,
-} from "@megawin/game-bingo18-application/use-cases/operations";
-import type { GetDrawDetailOutput } from "@megawin/game-bingo18-application/use-cases/draws";
-import type { GetEntryByIdOutput } from "@megawin/game-bingo18-application/use-cases/reports";
 
-export type {
-  OpsSummaryOutput,
-  TenantBreakdownOutput,
-  TenantBreakdownItem,
-  DiceFrequencyOutput,
-  DiceFrequencyItem,
-  PlayTypeDistributionOutput,
-  PlayTypeDistributionItem,
-  GetLiveEntriesOutput,
-  LiveEntryItem,
-  LiveEntryBoard,
-  GetDrawSelectorOutput,
-  DrawSelectorItem,
-  GetTopCombosOutput,
-  TopComboItem,
-  GetWinningEntriesOutput,
-  WinningEntryItem,
-  WinningBoardDetail,
-  WinningEntriesSummary,
-} from "@megawin/game-bingo18-application/use-cases/operations";
+import { bingo18Keys } from "@/lib/query-keys";
 
 export type { GetDrawDetailOutput } from "@megawin/game-bingo18-application/use-cases/draws";
+export type {
+  DiceFrequencyItem,
+  DiceFrequencyOutput,
+  DrawSelectorItem,
+  GetDrawSelectorOutput,
+  GetLiveEntriesOutput,
+  GetTopCombosOutput,
+  GetWinningEntriesOutput,
+  LiveEntryBoard,
+  LiveEntryItem,
+  OpsSummaryOutput,
+  PlayTypeDistributionItem,
+  PlayTypeDistributionOutput,
+  TenantBreakdownItem,
+  TenantBreakdownOutput,
+  TopComboItem,
+  WinningBoardDetail,
+  WinningEntriesSummary,
+  WinningEntryItem,
+} from "@megawin/game-bingo18-application/use-cases/operations";
 
 export interface OpsQueryParams {
   financialDate?: string;
@@ -226,14 +227,10 @@ export function useWinningEntries(drawId: string | undefined, enabled: boolean) 
  * Chi tiết đầy đủ 1 entry theo entryId — dùng cho dialog xem chi tiết từ Winning Entries Dialog.
  * Tự động toast lỗi + gọi `onNotFound` khi entry không tồn tại hoặc lỗi tải.
  */
-export function useWinningEntryDetail(
-  entryId: string | null,
-  { onNotFound }: { onNotFound?: () => void } = {},
-) {
+export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { onNotFound?: () => void } = {}) {
   const query = useQuery({
     queryKey: bingo18Keys.reportEntryById(entryId ?? ""),
-    queryFn: () =>
-      apiClient.get<GetEntryByIdOutput>(`/bingo18/reports/entries/${entryId}`).then((r) => r.entry),
+    queryFn: () => apiClient.get<GetEntryByIdOutput>(`/bingo18/reports/entries/${entryId}`).then((r) => r.entry),
     enabled: !!entryId,
   });
 
@@ -269,9 +266,7 @@ function useDrawAction<TBody = void>(
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
-      method === "post"
-        ? apiClient.post(actionPath(drawId), body)
-        : apiClient.patch(actionPath(drawId), body),
+      method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: bingo18Keys.all });
       toast.success(successMessage);
@@ -320,11 +315,7 @@ export function useTriggerResettle() {
 }
 
 export function useVoidDraw() {
-  return useDrawAction<{ reason: string }>(
-    (id) => `/bingo18/draws/${id}/void`,
-    "post",
-    "Đã huỷ kỳ quay.",
-  );
+  return useDrawAction<{ reason: string }>((id) => `/bingo18/draws/${id}/void`, "post", "Đã huỷ kỳ quay.");
 }
 
 export function useUpdateSchedule() {

@@ -15,23 +15,23 @@
  */
 
 import { useMemo } from "react";
-import { DrawStatus } from "@megawin/game-core/entities";
-import { KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
-import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
 
+import { DrawStatus } from "@megawin/game-core/entities";
+import { KENO_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-keno/entities";
+import { KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
+
+import type { LiveFeedEntry, TenantRow } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
 import {
+  useOpsLiveEntries,
+  useOpsNumberFrequency,
   useOpsPlayTypeDistribution,
   useOpsTenantBreakdown,
-  useOpsNumberFrequency,
   useOpsTopCombos,
-  useOpsLiveEntries,
 } from "../../use-operations";
 import { PlayTypeCard } from "./analytics-panels";
-import { NumberHeatmap } from "./number-heatmap";
 import { LiveFeed } from "./live-feed";
-
-import type { TenantRow, LiveFeedEntry } from "../../types";
+import { NumberHeatmap } from "./number-heatmap";
 
 const ANALYTICS_SHOW = new Set([
   DrawStatus.SalesOpen,
@@ -98,12 +98,8 @@ export function AnalyticsSection() {
     if (!liveData) return [];
     return liveData.entries.map((e) => {
       // Lấy board cơ bản đầu tiên để hiển thị preview, fallback side bet nếu không có
-      const firstBasicBoard = e.boards.find(
-        (b) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any),
-      );
-      const firstSideBetBoard = e.boards.find((b) =>
-        KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any),
-      );
+      const firstBasicBoard = e.boards.find((b) => !KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any));
+      const firstSideBetBoard = e.boards.find((b) => KENO_SIDE_BET_PLAY_TYPE_SET.has(b.playType as any));
       const previewBoard = firstBasicBoard ?? firstSideBetBoard;
       const isSideBet = !firstBasicBoard && !!firstSideBetBoard;
       return {
@@ -124,19 +120,13 @@ export function AnalyticsSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Phân tích cược
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Phân tích cược</h2>
 
       <PlayTypeCard playTypes={playTypes} />
 
       <div className="grid gap-4 lg:grid-cols-[7fr_3fr] items-stretch">
         <NumberHeatmap numbers={numberFreq} combos={topCombos} tenants={tenants} />
-        <LiveFeed
-          entries={liveEntries}
-          totalCount={liveData?.totalCount ?? 0}
-          isSettled={isSettled}
-        />
+        <LiveFeed entries={liveEntries} totalCount={liveData?.totalCount ?? 0} isSettled={isSettled} />
       </div>
     </section>
   );

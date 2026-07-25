@@ -1,20 +1,15 @@
 "use client";
 
-import { Building2, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatNumber } from "@megawin/shared/utils";
-import type { VoidTenantRow } from "./types";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { Building2, RefreshCw } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+import type { VoidTenantRow } from "./types";
 
 export interface VoidTenantBreakdownProps {
   drawId: string;
@@ -80,9 +75,7 @@ export function VoidTenantBreakdown({
           <Building2 className="size-4 text-muted-foreground" />
           <CardTitle className="text-sm font-semibold">Đại lý — Kỳ {drawId}</CardTitle>
         </div>
-        <CardDescription className="text-xs">
-          {rows.length} đại lý · Click để xem tài khoản
-        </CardDescription>
+        <CardDescription className="text-xs">{rows.length} đại lý · Click để xem tài khoản</CardDescription>
       </CardHeader>
       <CardContent className="px-0 pb-4 pt-0">
         {rows.length === 0 ? (
@@ -97,12 +90,8 @@ export function VoidTenantBreakdown({
                   <TableHead className="pl-5">{REPORT_COLUMN_LABELS.tenantId}</TableHead>
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.playerCount}</TableHead>
-                  <TableHead className="text-right">
-                    {REPORT_COLUMN_LABELS.totalOriginalStake}
-                  </TableHead>
-                  <TableHead className="pr-5 text-right">
-                    {REPORT_COLUMN_LABELS.totalRefundAmount}
-                  </TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalOriginalStake}</TableHead>
+                  <TableHead className="pr-5 text-right">{REPORT_COLUMN_LABELS.totalRefundAmount}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -113,12 +102,8 @@ export function VoidTenantBreakdown({
                     onClick={() => onRowClick(row.tenantId)}
                   >
                     <TableCell className="pl-5 text-sm font-medium">{row.tenantId}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.playerCount)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.playerCount)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(row.totalOriginalStake)}
                     </TableCell>

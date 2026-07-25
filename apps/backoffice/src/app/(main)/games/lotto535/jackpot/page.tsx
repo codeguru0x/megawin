@@ -1,13 +1,14 @@
 "use client";
 
+import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+import { GAME_LABELS } from "@megawin/game-core/labels";
 import { Trophy } from "lucide-react";
 
 import { GAME_COLORS } from "@/lib/game-colors";
-import { GAME_LABELS } from "@megawin/game-core/labels";
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { JackpotOverviewSection } from "./_lib/jackpot-overview-section";
-import { JackpotHistorySection } from "./_lib/jackpot-history-section";
+
 import { JackpotCyclesSection } from "./_lib/jackpot-cycles-section";
+import { JackpotHistorySection } from "./_lib/jackpot-history-section";
+import { JackpotOverviewSection } from "./_lib/jackpot-overview-section";
 
 const c = GAME_COLORS[GameProduct.Lotto535];
 

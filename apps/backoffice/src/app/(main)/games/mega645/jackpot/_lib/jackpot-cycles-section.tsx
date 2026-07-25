@@ -1,25 +1,22 @@
 "use client";
 
 import { useState } from "react";
+
+import { JackpotCycleCloseReason } from "@megawin/game-mega645/entities";
+import { displayVNDateTime, formatNumber, formatVNDCompact, toTenantUsername } from "@megawin/shared/utils";
 import { ChevronDown, Crown, Loader2, RefreshCcw, Sparkles, Trophy, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+
+import { Mega645EntryDetailDialog } from "../../reports/settle/_lib/sections/entry-detail-dialog";
 import {
-  formatVNDCompact,
-  formatNumber,
-  displayVNDateTime,
-  toTenantUsername,
-} from "@megawin/shared/utils";
-import {
-  useJackpotCycles,
-  useJackpotEntryDetail,
   type JackpotCycleSummary,
   type JackpotWinnerSummary,
+  useJackpotCycles,
+  useJackpotEntryDetail,
 } from "./use-jackpot";
-import { JackpotCycleCloseReason } from "@megawin/game-mega645/entities";
-import { Mega645EntryDetailDialog } from "../../reports/settle/_lib/sections/entry-detail-dialog";
 
 const LATEST_COUNT = 3;
 
@@ -36,9 +33,7 @@ export function JackpotCyclesSection() {
         </div>
         <div>
           <h2 className="text-sm font-semibold text-foreground">Lịch sử vòng tích lũy</h2>
-          <p className="text-xs text-muted-foreground">
-            Danh sách các vòng tích luỹ jackpot gần nhất
-          </p>
+          <p className="text-xs text-muted-foreground">Danh sách các vòng tích luỹ jackpot gần nhất</p>
         </div>
       </div>
 
@@ -70,8 +65,7 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
         className={cn(
           "overflow-hidden rounded-xl border shadow-sm transition-colors",
           isWinner && "border-teal-200 bg-teal-50/30 dark:border-teal-800/50 dark:bg-teal-950/10",
-          isManual &&
-            "border-slate-200 bg-slate-50/30 dark:border-slate-700/40 dark:bg-slate-950/10",
+          isManual && "border-slate-200 bg-slate-50/30 dark:border-slate-700/40 dark:bg-slate-950/10",
           !isWinner && !isManual && "bg-card",
         )}
       >
@@ -81,9 +75,7 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
             <div
               className={cn(
                 "flex size-11 shrink-0 items-center justify-center rounded-xl",
-                isWinner
-                  ? "bg-linear-to-br from-teal-400 to-emerald-500 shadow-md shadow-teal-500/20"
-                  : "bg-muted",
+                isWinner ? "bg-linear-to-br from-teal-400 to-emerald-500 shadow-md shadow-teal-500/20" : "bg-muted",
               )}
             >
               {isWinner ? (
@@ -139,9 +131,7 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
               <StatMini label="Kết thúc" value={formatNumber(cycle.currentAmount)} />
             </div>
 
-            {isWinner && cycle.winners && cycle.winners.length > 0 && (
-              <WinnerList winners={cycle.winners} />
-            )}
+            {isWinner && cycle.winners && cycle.winners.length > 0 && <WinnerList winners={cycle.winners} />}
           </div>
         </CollapsibleContent>
       </div>
@@ -186,9 +176,7 @@ function WinnerList({ winners }: { winners: JackpotWinnerSummary[] }) {
 
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Người trúng Jackpot
-      </p>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Người trúng Jackpot</p>
       <div className="space-y-2">
         {winners.map((w, idx) => (
           <button

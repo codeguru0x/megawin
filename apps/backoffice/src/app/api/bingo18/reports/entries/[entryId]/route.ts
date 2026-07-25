@@ -1,6 +1,7 @@
-import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities";
 import { GetEntryByIdUseCase } from "@megawin/game-bingo18-application/use-cases/reports";
+import { CompanyRole } from "@megawin/identity/entities";
+
+import { withApi } from "@/lib/api";
 
 const useCase = new GetEntryByIdUseCase();
 

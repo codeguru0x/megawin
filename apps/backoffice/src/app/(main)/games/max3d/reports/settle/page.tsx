@@ -1,14 +1,16 @@
 "use client";
 
 import { Suspense } from "react";
-import { Building2, CalendarRange, CircleDollarSign } from "lucide-react";
-import { FinancialDateRangePicker } from "@/components/date-picker";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Building2, CalendarRange, CircleDollarSign } from "lucide-react";
+
+import { FinancialDateRangePicker } from "@/components/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMax3dReportFilters } from "./_lib/use-report-filters";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { ByDrawTab } from "./_lib/tabs/by-draw";
 import { ByTenantTab } from "./_lib/tabs/by-tenant";
+import { useMax3dReportFilters } from "./_lib/use-report-filters";
 
 function Max3DFinancialContent() {
   const { tab, setTab, from, to, setFrom, setTo } = useMax3dReportFilters();
@@ -21,9 +23,7 @@ function Max3DFinancialContent() {
             <CircleDollarSign className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Max 3D — Báo cáo tài chính
-            </h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Max 3D — Báo cáo tài chính</h1>
             <p className="text-xs text-muted-foreground">
               Doanh thu, trả thưởng, hoa hồng theo kỳ quay và đại lý · T2, T4, T6
             </p>

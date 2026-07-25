@@ -12,17 +12,19 @@
  * vì cursor là opaque string, không thể persist trên URL.
  */
 
-import { useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useQueryState, parseAsString, parseAsInteger } from "nuqs";
+import { useEffect, useRef } from "react";
 
-import { LottoNumberBall } from "@/components/games/lotto535/lotto-number-ball";
-import { DrawStatusBadge } from "@/components/games/lotto535/draw-status-badge";
-import { DrawHistoryTable } from "@/components/draws";
-import type { CommonDrawSummary } from "@/components/draws";
-import { formatVNDate, subDays, todayVN } from "@megawin/shared/utils";
-import { Pagination } from "@megawin/shared/constants";
+import { useRouter } from "next/navigation";
+
 import type { DrawStatus } from "@megawin/game-core/entities";
+import { Pagination } from "@megawin/shared/constants";
+import { formatVNDate, subDays, todayVN } from "@megawin/shared/utils";
+import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
+
+import type { CommonDrawSummary } from "@/components/draws";
+import { DrawHistoryTable } from "@/components/draws";
+import { DrawStatusBadge } from "@/components/games/lotto535/draw-status-badge";
+import { LottoNumberBall } from "@/components/games/lotto535/lotto-number-ball";
 
 import type { DrawSummary } from "./use-draws";
 import { useDrawsList } from "./use-draws";
@@ -61,19 +63,10 @@ export function DrawHistorySection() {
 
   // URL state — filter + page persist trên URL và push vào history stack.
   // Bấm back sẽ khôi phục đúng page number đã xem.
-  const [statusParam, setStatusParam] = useQueryState(
-    "histStatus",
-    parseAsString.withDefault("all"),
-  );
-  const [fromDate, setFromDate] = useQueryState(
-    "histFrom",
-    parseAsString.withDefault(defaultFrom()),
-  );
+  const [statusParam, setStatusParam] = useQueryState("histStatus", parseAsString.withDefault("all"));
+  const [fromDate, setFromDate] = useQueryState("histFrom", parseAsString.withDefault(defaultFrom()));
   const [toDate, setToDate] = useQueryState("histTo", parseAsString.withDefault(defaultTo()));
-  const [page, setPage] = useQueryState(
-    "histPage",
-    parseAsInteger.withDefault(1).withOptions({ history: "push" }),
-  );
+  const [page, setPage] = useQueryState("histPage", parseAsInteger.withDefault(1).withOptions({ history: "push" }));
 
   // Cursor map: page number → cursor string.
   // Lưu trong ref (không trigger re-render), tồn tại suốt phiên.

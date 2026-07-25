@@ -1,16 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Check,
-  Loader2,
-  Dice3,
-  HelpCircle,
-  ExternalLink,
-  CalendarDays,
-  Hash,
-  AlertCircle,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+
+import { DrawStatus } from "@megawin/game-core/entities";
+import { todayVN } from "@megawin/shared/utils";
+import { AlertCircle, CalendarDays, Check, Dice3, ExternalLink, Hash, HelpCircle, Loader2 } from "lucide-react";
+
+import { RandomFillButton } from "@/components/draws";
+import { TIER_DOT_STYLES, type TierVariant } from "@/components/games/max3dpro/triplet-display";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,13 +20,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { RandomFillButton } from "@/components/draws";
-import { TIER_DOT_STYLES, type TierVariant } from "@/components/games/max3dpro/triplet-display";
-import { todayVN } from "@megawin/shared/utils";
-import { DrawStatus } from "@megawin/game-core/entities";
+
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
 
@@ -64,9 +58,7 @@ function generateRandomTriplet(): string {
   return String(Math.floor(Math.random() * 1000)).padStart(3, "0");
 }
 
-function validateMax3dPro(
-  tiers: { key: string; label: string; values: string[] }[],
-): ValidationResult {
+function validateMax3dPro(tiers: { key: string; label: string; values: string[] }[]): ValidationResult {
   const messages: string[] = [];
   const fieldErrors = new Map<string, Set<number>>();
 
@@ -131,10 +123,7 @@ export function PublishResultAction({
   const [vietlotPeriod, setVietlotPeriod] = useState("");
   const [validation, setValidation] = useState<ValidationResult>(VALID);
 
-  const tierValues: Record<
-    string,
-    { get: string[]; set: React.Dispatch<React.SetStateAction<string[]>> }
-  > = {
+  const tierValues: Record<string, { get: string[]; set: React.Dispatch<React.SetStateAction<string[]>> }> = {
     special: { get: special, set: setSpecial },
     first: { get: first, set: setFirst },
     second: { get: second, set: setSecond },
@@ -143,9 +132,7 @@ export function PublishResultAction({
 
   useEffect(() => {
     if (isOpen && currentResult) {
-      setSpecial(
-        currentResult.special.length === 2 ? [...currentResult.special] : Array(2).fill(""),
-      );
+      setSpecial(currentResult.special.length === 2 ? [...currentResult.special] : Array(2).fill(""));
       setFirst(currentResult.first.length === 4 ? [...currentResult.first] : Array(4).fill(""));
       setSecond(currentResult.second.length === 6 ? [...currentResult.second] : Array(6).fill(""));
       setThird(currentResult.third.length === 8 ? [...currentResult.third] : Array(8).fill(""));
@@ -212,9 +199,7 @@ export function PublishResultAction({
     publishResult.mutate({ drawId: draw.drawId, body }, { onSuccess: () => setIsOpen(false) });
   }
 
-  const filledCount = [special, first, second, third]
-    .flat()
-    .filter((v) => /^\d{3}$/.test(v)).length;
+  const filledCount = [special, first, second, third].flat().filter((v) => /^\d{3}$/.test(v)).length;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -232,8 +217,8 @@ export function PublishResultAction({
                 <HelpCircle className="size-3.5 text-muted-foreground" />
               </TooltipTrigger>
               <TooltipContent side="bottom" className="max-w-xs">
-                20 bộ ba số từ &apos;000&apos; đến &apos;999&apos;. Thứ tự 2 bộ Đặc Biệt phân biệt
-                giải ĐB/phụ ĐB. Gồm 4 giải: Đặc Biệt (2), Nhất (4), Nhì (6), Ba (8).
+                20 bộ ba số từ &apos;000&apos; đến &apos;999&apos;. Thứ tự 2 bộ Đặc Biệt phân biệt giải ĐB/phụ ĐB. Gồm 4
+                giải: Đặc Biệt (2), Nhất (4), Nhì (6), Ba (8).
               </TooltipContent>
             </Tooltip>
           </DialogDescription>
@@ -254,23 +239,17 @@ export function PublishResultAction({
               return (
                 <div key={tier.key} className="space-y-2.5">
                   <div className="flex items-center gap-2">
-                    <span
-                      className={`size-2.5 rounded-full shrink-0 ${TIER_DOT_STYLES[tier.key]}`}
-                    />
+                    <span className={`size-2.5 rounded-full shrink-0 ${TIER_DOT_STYLES[tier.key]}`} />
                     <Label className="text-sm font-semibold">{tier.label}</Label>
                     {tier.key === "special" && (
-                      <span className="text-xs text-muted-foreground">
-                        (thứ tự quay có ý nghĩa)
-                      </span>
+                      <span className="text-xs text-muted-foreground">(thứ tự quay có ý nghĩa)</span>
                     )}
                   </div>
                   <div className="rounded-lg border bg-muted/20 p-3">
                     <div className="grid grid-cols-6 gap-2">
                       {Array.from({ length: tier.count }, (_, i) => (
                         <div key={i} className="flex flex-col gap-1">
-                          <span className="text-xs font-medium text-muted-foreground text-center">
-                            {i + 1}
-                          </span>
+                          <span className="text-xs font-medium text-muted-foreground text-center">{i + 1}</span>
                           <Input
                             type="text"
                             inputMode="numeric"
@@ -313,8 +292,8 @@ export function PublishResultAction({
               </div>
               <div className="rounded-lg border bg-muted/30 p-4">
                 <p className="mb-3 text-xs text-muted-foreground">
-                  Liên kết kỳ quay với dữ liệu Vietlott chính thức để đối soát. Chỉ sửa tham chiếu
-                  (giữ nguyên kết quả) sẽ KHÔNG kích hoạt kết sổ lại.
+                  Liên kết kỳ quay với dữ liệu Vietlott chính thức để đối soát. Chỉ sửa tham chiếu (giữ nguyên kết quả)
+                  sẽ KHÔNG kích hoạt kết sổ lại.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">

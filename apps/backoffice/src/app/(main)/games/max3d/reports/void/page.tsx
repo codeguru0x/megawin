@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { Max3DVoidReportsContent } from "./_lib/void-content";
 
 export default function Max3DVoidReportsPage() {

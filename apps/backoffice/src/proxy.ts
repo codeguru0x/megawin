@@ -8,8 +8,9 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { getSessionCookie } from "better-auth/cookies";
+
 import { AccountType } from "@megawin/identity/entities";
+import { getSessionCookie } from "better-auth/cookies";
 
 const PUBLIC_ROUTES = ["/login", "/api/auth", "/auth/error", "/unauthorized"];
 const SESSION_DATA_COOKIE = "better-auth.session_data";

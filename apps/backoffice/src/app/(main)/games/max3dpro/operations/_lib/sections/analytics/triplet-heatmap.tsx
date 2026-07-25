@@ -11,15 +11,18 @@
  */
 
 import { useMemo } from "react";
+
+import { formatNumber } from "@megawin/shared/utils";
+import { AlertTriangle, Hash } from "lucide-react";
+
+import { TripletDisplay } from "@/components/games/max3d/triplet-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber } from "@megawin/shared/utils";
-import { Hash, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TripletDisplay } from "@/components/games/max3d/triplet-display";
-import { TenantBreakdown } from "./analytics-panels";
-import type { TripletFreq, TenantRow } from "../../types";
+
+import type { TenantRow, TripletFreq } from "../../types";
 import type { TopPairComboItem } from "../../use-operations";
+import { TenantBreakdown } from "./analytics-panels";
 
 // ─── Heat Intensity ──────────────────────────────────────────────────────────
 
@@ -55,13 +58,7 @@ const MEDALS = ["🥇", "🥈", "🥉"];
 
 // ─── Summary Ribbon ──────────────────────────────────────────────────────────
 
-function SummaryRibbon({
-  triplets,
-  totalRevenue,
-}: {
-  triplets: TripletFreq[];
-  totalRevenue: number;
-}) {
+function SummaryRibbon({ triplets, totalRevenue }: { triplets: TripletFreq[]; totalRevenue: number }) {
   const uniqueCount = triplets.length;
   const totalBets = triplets.reduce((a, t) => a + t.count, 0);
 
@@ -136,9 +133,7 @@ function RankedTripletList({ triplets }: { triplets: TripletFreq[] }) {
                   )}
                   style={{ gridTemplateColumns: "1.5rem 2.5rem 1fr 4rem 5rem" }}
                 >
-                  <span
-                    className={cn("text-xs font-bold tabular-nums text-center", RANK_STYLES[heat])}
-                  >
+                  <span className={cn("text-xs font-bold tabular-nums text-center", RANK_STYLES[heat])}>
                     {medal ?? `#${i + 1}`}
                   </span>
 
@@ -149,8 +144,7 @@ function RankedTripletList({ triplets }: { triplets: TripletFreq[] }) {
                     className={cn(
                       heat === "hot" &&
                         "bg-amber-100! text-amber-800! dark:bg-amber-900/60! dark:text-amber-200! ring-1 ring-amber-300/50",
-                      heat === "warm" &&
-                        "bg-pink-100! text-pink-800! dark:bg-pink-900/60! dark:text-pink-200!",
+                      heat === "warm" && "bg-pink-100! text-pink-800! dark:bg-pink-900/60! dark:text-pink-200!",
                     )}
                   />
 
@@ -203,17 +197,13 @@ function TopPairCombos({ combos }: { combos: TopPairComboItem[] }) {
             key={`${c.first}-${c.second}`}
             className="flex items-center gap-2 rounded-lg border bg-muted/15 px-2.5 py-1.5"
           >
-            <span className="text-xs font-bold tabular-nums text-muted-foreground w-4">
-              {MEDALS[i] ?? `#${i + 1}`}
-            </span>
+            <span className="text-xs font-bold tabular-nums text-muted-foreground w-4">{MEDALS[i] ?? `#${i + 1}`}</span>
             <TripletDisplay value={c.first} variant="default" size="sm" />
             <span className="text-xs text-muted-foreground font-bold">—</span>
             <TripletDisplay value={c.second} variant="default" size="sm" />
             <div className="ml-auto flex items-center gap-2 text-xs tabular-nums text-muted-foreground">
               <span>×{formatNumber(c.boardCount)}</span>
-              {c.totalAmount > 0 && (
-                <span className="font-medium text-foreground">{formatNumber(c.totalAmount)}</span>
-              )}
+              {c.totalAmount > 0 && <span className="font-medium text-foreground">{formatNumber(c.totalAmount)}</span>}
             </div>
           </div>
         ))}

@@ -1,31 +1,22 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { Suspense } from "react";
+
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 const ERROR_MESSAGES: Record<string, string> = {
-  please_restart_the_process:
-    "Phiên xác thực đã hết hạn hoặc bị gián đoạn. Vui lòng thử đăng nhập lại.",
+  please_restart_the_process: "Phiên xác thực đã hết hạn hoặc bị gián đoạn. Vui lòng thử đăng nhập lại.",
   UNKNOWN: "Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.",
   invalid_request: "Yêu cầu không hợp lệ. Vui lòng thử lại.",
-  access_denied:
-    "Truy cập bị từ chối. Bạn không có quyền truy cập tài nguyên này.",
-  server_error:
-    "Lỗi hệ thống. Vui lòng thử lại sau hoặc liên hệ quản trị viên.",
-  temporarily_unavailable:
-    "Hệ thống tạm thời không khả dụng. Vui lòng thử lại sau.",
+  access_denied: "Truy cập bị từ chối. Bạn không có quyền truy cập tài nguyên này.",
+  server_error: "Lỗi hệ thống. Vui lòng thử lại sau hoặc liên hệ quản trị viên.",
+  temporarily_unavailable: "Hệ thống tạm thời không khả dụng. Vui lòng thử lại sau.",
 };
 
 const FALLBACK_MESSAGE = "Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.";
@@ -59,14 +50,10 @@ function AuthErrorContent() {
 
         <CardContent className="space-y-4 text-center">
           <div className="inline-flex items-center gap-2 rounded-md border bg-muted/50 px-3 py-1.5">
-            <span className="font-mono text-muted-foreground text-xs">
-              {formatErrorCode(displayCode)}
-            </span>
+            <span className="font-mono text-muted-foreground text-xs">{formatErrorCode(displayCode)}</span>
           </div>
 
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            {displayMessage}
-          </p>
+          <p className="text-muted-foreground text-sm leading-relaxed">{displayMessage}</p>
         </CardContent>
 
         <CardFooter className="flex justify-center gap-3">
@@ -76,11 +63,7 @@ function AuthErrorContent() {
               Đăng nhập lại
             </Button>
           </Link>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.location.reload()}
-          >
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
             <RefreshCw />
             Thử lại
           </Button>

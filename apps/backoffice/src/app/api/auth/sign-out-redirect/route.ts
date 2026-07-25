@@ -1,9 +1,10 @@
-import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities";
-import { GetSignOutRedirectUrlUseCase } from "@megawin/identity-application/use-cases/security";
 import { auditLogout } from "@megawin/identity-application/services";
-import { actorFromSession } from "@/lib/audit-actor";
+import { GetSignOutRedirectUrlUseCase } from "@megawin/identity-application/use-cases/security";
+
 import { env } from "@/env";
+import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 
 const getSignOutRedirectUrlUseCase = new GetSignOutRedirectUrlUseCase();
 

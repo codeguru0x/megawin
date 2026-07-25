@@ -1,16 +1,18 @@
 "use client";
 
 import { toTenantUsername } from "@megawin/shared/utils";
+
 import {
-  GameTenantReportTable,
-  GameTenantDrawList,
   GamePlayerBreakdownTable,
   GameTenantBreadcrumb,
+  GameTenantDrawList,
+  GameTenantReportTable,
 } from "@/components/reports/game/settle";
-import { useMega645ReportFilters } from "../use-report-filters";
-import { useMega645TenantList, useMega645TenantDraws, useMega645Players } from "../use-report-queries";
-import { TableSkeleton, ErrorCard, EmptyCard } from "../sections/shared-states";
+
 import { EntryList } from "../sections/entry-list";
+import { EmptyCard, ErrorCard, TableSkeleton } from "../sections/shared-states";
+import { useMega645ReportFilters } from "../use-report-filters";
+import { useMega645Players, useMega645TenantDraws, useMega645TenantList } from "../use-report-queries";
 
 function TenantSummaryTable() {
   const { from, to, navigateToTenantDrills } = useMega645ReportFilters();
@@ -19,7 +21,7 @@ function TenantSummaryTable() {
   if (isLoading) return <TableSkeleton rows={6} />;
   if (error) return <ErrorCard />;
   if (!data?.length)
-    return (<EmptyCard icon="building" message="Không có dữ liệu" description="Không tìm thấy dữ liệu đại lý." />);
+    return <EmptyCard icon="building" message="Không có dữ liệu" description="Không tìm thấy dữ liệu đại lý." />;
 
   const rows = data.map((r) => ({ ...r, netProfit: r.totalStake - r.totalPayout - r.totalCommission }));
   return <GameTenantReportTable rows={rows} onRowClick={navigateToTenantDrills} showLineCount />;
@@ -32,10 +34,18 @@ function TenantDrawList({ tenantId }: { tenantId: string }) {
   if (isLoading) return <TableSkeleton rows={8} />;
   if (error) return <ErrorCard />;
   if (!data?.data.length)
-    return (<EmptyCard icon="calendar" message="Không có dữ liệu" description="Không có kỳ quay nào." />);
+    return <EmptyCard icon="calendar" message="Không có dữ liệu" description="Không có kỳ quay nào." />;
 
   const rows = data.data.map((r) => ({ ...r, netProfit: r.totalStake - r.totalPayout - r.totalCommission }));
-  return <GameTenantDrawList tenantId={tenantId} rows={rows} totalCount={data.total} onRowClick={navigateToDrawInTenant} showLineCount />;
+  return (
+    <GameTenantDrawList
+      tenantId={tenantId}
+      rows={rows}
+      totalCount={data.total}
+      onRowClick={navigateToDrawInTenant}
+      showLineCount
+    />
+  );
 }
 
 function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: string }) {
@@ -44,7 +54,7 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
 
   if (isLoading) return <TableSkeleton rows={5} />;
   if (!players?.length)
-    return (<EmptyCard icon="ticket" message="Không có dữ liệu" description="Không có player nào." />);
+    return <EmptyCard icon="ticket" message="Không có dữ liệu" description="Không có player nào." />;
 
   const rows = players.map((p) => ({
     accountId: p.accountId,
@@ -57,21 +67,28 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
   }));
 
   return (
-    <GamePlayerBreakdownTable drawId={drawId} tenantId={tenantId} rows={rows}
+    <GamePlayerBreakdownTable
+      drawId={drawId}
+      tenantId={tenantId}
+      rows={rows}
       onRowClick={(accountId, displayName) => navigateToEntriesFromTenant(accountId, displayName)}
-      showLineCount />
+      showLineCount
+    />
   );
 }
 
 function Breadcrumb() {
-  const { level, drawId, tenantId, accountId, playerName, navigateToList, navigateBackToTenantDraws, setLevel } = useMega645ReportFilters();
+  const { level, drawId, tenantId, accountId, playerName, navigateToList, navigateBackToTenantDraws, setLevel } =
+    useMega645ReportFilters();
 
   return (
     <GameTenantBreadcrumb
       rootLabel="Đại lý"
       tenantId={tenantId ?? undefined}
       drawId={level === "draw-tenants" || level === "entries" ? (drawId ?? undefined) : undefined}
-      playerName={level === "entries" && accountId ? (playerName ?? toTenantUsername(accountId) ?? accountId) : undefined}
+      playerName={
+        level === "entries" && accountId ? (playerName ?? toTenantUsername(accountId) ?? accountId) : undefined
+      }
       onRootClick={navigateToList}
       onTenantClick={tenantId ? () => navigateBackToTenantDraws() : undefined}
       onDrawClick={drawId && level === "entries" ? () => void setLevel("draw-tenants") : undefined}

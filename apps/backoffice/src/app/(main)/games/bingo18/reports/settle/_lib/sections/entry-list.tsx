@@ -1,11 +1,13 @@
 "use client";
 
-import { toTenantUsername } from "@megawin/shared/utils";
 import type { TicketEntryEntity } from "@megawin/game-bingo18/entities";
+import { toTenantUsername } from "@megawin/shared/utils";
+
+import { type EntryRow, GamePlayerEntryList } from "@/components/reports/game/settle";
+
 import { useBingo18Entries } from "../use-report-queries";
-import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
 import { Bingo18EntryDetailDialog } from "./entry-detail-dialog";
-import { GamePlayerEntryList, type EntryRow } from "@/components/reports/game/settle";
+import { EmptyCard, ErrorCard, TableSkeleton } from "./shared-states";
 
 export function EntryList({
   drawId,
@@ -28,8 +30,7 @@ export function EntryList({
     const p = entry.payout as any;
     const boardCount = entry.entrySummary?.boards?.length ?? 0;
     // Bingo18 không có lineCount — betUnitCount = Σ(board.betCount)
-    const betUnitCount =
-      entry.entrySummary?.boards?.reduce((sum: number, b: any) => sum + (b.betCount ?? 1), 0) ?? 0;
+    const betUnitCount = entry.entrySummary?.boards?.reduce((sum: number, b: any) => sum + (b.betCount ?? 1), 0) ?? 0;
     return {
       id: entry.id,
       ticketNo: entry.entrySummary?.ticketNo ?? entry.id.slice(-8),

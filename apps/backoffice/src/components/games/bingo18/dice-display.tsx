@@ -27,12 +27,7 @@ interface Bingo18NumberBallProps {
   className?: string;
 }
 
-export function Bingo18NumberBall({
-  number,
-  size = "md",
-  highlight = false,
-  className,
-}: Bingo18NumberBallProps) {
+export function Bingo18NumberBall({ number, size = "md", highlight = false, className }: Bingo18NumberBallProps) {
   const { ball, text } = BALL_SIZE[size];
   return (
     <span
@@ -40,9 +35,7 @@ export function Bingo18NumberBall({
         "inline-flex items-center justify-center rounded-full font-bold tabular-nums select-none leading-none shrink-0 transition-all duration-150",
         ball,
         text,
-        highlight
-          ? "bg-amber-500 text-white ring-2 ring-amber-400 ring-offset-1"
-          : "bg-amber-500 text-white",
+        highlight ? "bg-amber-500 text-white ring-2 ring-amber-400 ring-offset-1" : "bg-amber-500 text-white",
         className,
       )}
     >
@@ -133,24 +126,12 @@ export function DiceDisplay({ numbers, size = "md", showSum = true, className }:
   return (
     <div className={cn("flex items-center gap-2", className)}>
       {numbers.map((n, i) => (
-        <Bingo18NumberBall
-          key={i}
-          number={n}
-          size={size}
-          highlight={hasDuplicates && (counts[n] ?? 0) >= 2}
-        />
+        <Bingo18NumberBall key={i} number={n} size={size} highlight={hasDuplicates && (counts[n] ?? 0) >= 2} />
       ))}
       {showSum && numbers.length > 0 && (
         <div className="flex items-center gap-1 ml-1">
           <span className="text-muted-foreground">=</span>
-          <span
-            className={cn(
-              "font-bold tabular-nums text-amber-600 dark:text-amber-400",
-              SUM_SIZE[size],
-            )}
-          >
-            {sum}
-          </span>
+          <span className={cn("font-bold tabular-nums text-amber-600 dark:text-amber-400", SUM_SIZE[size])}>{sum}</span>
         </div>
       )}
     </div>

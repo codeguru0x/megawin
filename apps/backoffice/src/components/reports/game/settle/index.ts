@@ -7,32 +7,24 @@
  * ```
  */
 
-export { KpiCard } from "./kpi-card";
-export type { KpiCardProps } from "./kpi-card";
-
-export { GameDrawKpiStrip, GameDrawKpiStripSkeleton } from "./game-draw-kpi-strip";
 export type { GameDrawKpiData, GameDrawKpiStripProps } from "./game-draw-kpi-strip";
-
-export { GameDrawReportTable } from "./game-draw-report-table";
+export { GameDrawKpiStrip, GameDrawKpiStripSkeleton } from "./game-draw-kpi-strip";
 export type { DrawReportRow, GameDrawReportTableProps } from "./game-draw-report-table";
-
-export { GameDrawTenantTable } from "./game-draw-tenant-table";
+export { GameDrawReportTable } from "./game-draw-report-table";
 export type { DrawTenantRow, GameDrawTenantTableProps } from "./game-draw-tenant-table";
-
-export { GameTenantReportTable } from "./game-tenant-report-table";
-export type { TenantSummaryRow, GameTenantReportTableProps } from "./game-tenant-report-table";
-
-export { GameTenantDrawList } from "./game-tenant-draw-list";
-export type { TenantDrawRow, GameTenantDrawListProps } from "./game-tenant-draw-list";
-
-export { GamePlayerBreakdownTable } from "./game-player-breakdown-table";
+export { GameDrawTenantTable } from "./game-draw-tenant-table";
 export type {
-  PlayerBreakdownRow,
   GamePlayerBreakdownTableProps,
+  PlayerBreakdownRow,
 } from "./game-player-breakdown-table";
-
-export { GameDrawBreadcrumb, GameTenantBreadcrumb } from "./game-report-breadcrumb";
-export type { GameDrawBreadcrumbProps, GameTenantBreadcrumbProps } from "./game-report-breadcrumb";
-
-export { GamePlayerEntryList } from "./game-player-entry-list";
+export { GamePlayerBreakdownTable } from "./game-player-breakdown-table";
 export type { EntryRow, GamePlayerEntryListProps } from "./game-player-entry-list";
+export { GamePlayerEntryList } from "./game-player-entry-list";
+export type { GameDrawBreadcrumbProps, GameTenantBreadcrumbProps } from "./game-report-breadcrumb";
+export { GameDrawBreadcrumb, GameTenantBreadcrumb } from "./game-report-breadcrumb";
+export type { GameTenantDrawListProps, TenantDrawRow } from "./game-tenant-draw-list";
+export { GameTenantDrawList } from "./game-tenant-draw-list";
+export type { GameTenantReportTableProps, TenantSummaryRow } from "./game-tenant-report-table";
+export { GameTenantReportTable } from "./game-tenant-report-table";
+export type { KpiCardProps } from "./kpi-card";
+export { KpiCard } from "./kpi-card";

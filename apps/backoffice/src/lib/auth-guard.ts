@@ -9,8 +9,8 @@ import { redirect } from "next/navigation";
 
 import { AccountType } from "@megawin/identity/entities";
 
-import { requireSession } from "@/lib/auth-server";
 import type { Session } from "@/lib/auth";
+import { requireSession } from "@/lib/auth-server";
 
 export async function requireOperatorSession(): Promise<Session> {
   const session = await requireSession();

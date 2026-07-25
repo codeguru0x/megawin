@@ -13,6 +13,11 @@
  */
 
 import { useState } from "react";
+
+import { DrawStatus } from "@megawin/game-core/entities";
+import { PrizeTier } from "@megawin/game-lotto535/entities";
+import { LOTTO535_PRIZE_TIER_LABELS } from "@megawin/game-lotto535/labels";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,28 +28,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { DrawStatus } from "@megawin/game-core/entities";
-import { PrizeTier } from "@megawin/game-lotto535/entities";
-import { LOTTO535_PRIZE_TIER_LABELS } from "@megawin/game-lotto535/labels";
-
-import { useDrawContext } from "../../use-draw-context";
-import { DrawCommandCenter } from "./draw-command-center";
-import {
-  PublishResultAction,
-  EditScheduleAction,
-  VoidDrawAction,
-  ResettleAction,
-  type PublishResultCurrentValues,
-} from "./draw-actions";
-import {
-  useOpenSales,
-  useCloseSales,
-  useTriggerSettle,
-  useDrawDetail,
-  useReopenForCascade,
-} from "../../use-operations";
 
 import type { DrawResult, VoidInfo } from "../../types";
+import { useDrawContext } from "../../use-draw-context";
+import {
+  useCloseSales,
+  useDrawDetail,
+  useOpenSales,
+  useReopenForCascade,
+  useTriggerSettle,
+} from "../../use-operations";
+import {
+  EditScheduleAction,
+  PublishResultAction,
+  type PublishResultCurrentValues,
+  ResettleAction,
+  VoidDrawAction,
+} from "./draw-actions";
+import { DrawCommandCenter } from "./draw-command-center";
 
 const RESULT_SHOW = new Set([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
 
@@ -88,8 +89,7 @@ export function DrawManagementSection() {
     const tiers = tierOrder.map((tier) => {
       const t = tierMap.get(tier);
       const winnerCount = t?.winnerCount ?? 0;
-      const prizeAmount =
-        winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
+      const prizeAmount = winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         tier,
         label: LOTTO535_PRIZE_TIER_LABELS[tier] ?? String(tier),
@@ -178,19 +178,9 @@ export function DrawManagementSection() {
         onOpenChange={setPublishOpen}
         currentResult={currentResult}
       />
-      <EditScheduleAction
-        draw={draw}
-        disabled={false}
-        open={editScheduleOpen}
-        onOpenChange={setEditScheduleOpen}
-      />
+      <EditScheduleAction draw={draw} disabled={false} open={editScheduleOpen} onOpenChange={setEditScheduleOpen} />
       <VoidDrawAction draw={draw} disabled={false} open={voidOpen} onOpenChange={setVoidOpen} />
-      <ResettleAction
-        draw={draw}
-        open={resettleOpen}
-        onOpenChange={setResettleOpen}
-        currentResult={currentResult}
-      />
+      <ResettleAction draw={draw} open={resettleOpen} onOpenChange={setResettleOpen} currentResult={currentResult} />
 
       {/* Confirm: Mở để kết sổ lại (cascade B2, số không đổi) */}
       <AlertDialog open={reopenConfirm} onOpenChange={setReopenConfirm}>
@@ -200,10 +190,9 @@ export function DrawManagementSection() {
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <p>
-                  Kỳ <strong>{draw.drawDate}</strong> có số quay <strong>không thay đổi</strong>{" "}
-                  nhưng nằm trong chuỗi cascade (TYPE_B2) do kỳ trước được kết sổ lại. Thao tác này
-                  đưa kỳ về trạng thái <strong>Published</strong> để vào lại luồng kết sổ lại — số
-                  trúng được giữ nguyên.
+                  Kỳ <strong>{draw.drawDate}</strong> có số quay <strong>không thay đổi</strong> nhưng nằm trong chuỗi
+                  cascade (TYPE_B2) do kỳ trước được kết sổ lại. Thao tác này đưa kỳ về trạng thái{" "}
+                  <strong>Published</strong> để vào lại luồng kết sổ lại — số trúng được giữ nguyên.
                 </p>
                 <p className="font-medium text-orange-600 dark:text-orange-400">
                   Chỉ thực hiện khi DBA đã xác nhận cập nhật jackpot cycle thủ công.
@@ -276,8 +265,8 @@ export function DrawManagementSection() {
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận kết sổ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Kỳ <strong>{draw.drawId}</strong> sẽ được đưa vào quy trình kết sổ. Thao tác này sẽ
-              tính toán và phân bổ giải thưởng cho tất cả các vé.
+              Kỳ <strong>{draw.drawId}</strong> sẽ được đưa vào quy trình kết sổ. Thao tác này sẽ tính toán và phân bổ
+              giải thưởng cho tất cả các vé.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

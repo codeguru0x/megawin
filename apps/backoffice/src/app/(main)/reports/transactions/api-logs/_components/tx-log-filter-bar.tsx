@@ -1,23 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, X } from "lucide-react";
-import { TxLogStatus, TxLogEventType } from "@megawin/tenant-gateway/entities";
-import {
-  TX_LOG_STATUS_LABELS,
-  TX_LOG_EVENT_TYPE_LABELS,
-} from "@megawin/tenant-gateway/shared/labels";
 
+import { TxLogEventType, TxLogStatus } from "@megawin/tenant-gateway/entities";
+import { TX_LOG_EVENT_TYPE_LABELS, TX_LOG_STATUS_LABELS } from "@megawin/tenant-gateway/shared/labels";
+import { Search, X } from "lucide-react";
+
+import { FinancialDateRangePicker } from "@/components/date-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { FinancialDateRangePicker } from "@/components/date-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 import { useTxLogFilters } from "../_lib/use-filters";
@@ -30,8 +22,7 @@ import { useTxLogFilters } from "../_lib/use-filters";
  * - Khi có `tx` → right cluster bị disable để tránh confusion.
  */
 export function TxLogFilterBar() {
-  const { tx, from, to, status, eventType, isTxMode, setTx, setRange, setStatus, setEventType } =
-    useTxLogFilters();
+  const { tx, from, to, status, eventType, isTxMode, setTx, setRange, setStatus, setEventType } = useTxLogFilters();
 
   // Local input state — chỉ commit vào URL khi user submit để tránh
   // refetch mỗi ký tự.
@@ -80,12 +71,7 @@ export function TxLogFilterBar() {
             Xoá
           </Button>
         ) : (
-          <Button
-            size="sm"
-            className="h-8 shrink-0 px-3 text-xs"
-            onClick={handleSubmitTx}
-            disabled={!txInput.trim()}
-          >
+          <Button size="sm" className="h-8 shrink-0 px-3 text-xs" onClick={handleSubmitTx} disabled={!txInput.trim()}>
             <Search className="size-3.5" />
             Tìm
           </Button>

@@ -1,31 +1,34 @@
 "use client";
 
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { apiClient } from "@megawin/next/client";
-import { Pagination } from "@megawin/shared/constants";
-import { power655Keys } from "@/lib/query-keys";
+
 import type {
   GetJackpotCurrentOutput,
-  ListJackpotCyclesOutput,
   ListAllJackpotCycleOptionsOutput,
+  ListJackpotCyclesOutput,
   ListJackpotHistoryByCycleOutput,
 } from "@megawin/game-power655-application/use-cases/jackpot";
 import type { GetEntryByIdOutput } from "@megawin/game-power655-application/use-cases/reports";
+import { apiClient } from "@megawin/next/client";
+import { Pagination } from "@megawin/shared/constants";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { power655Keys } from "@/lib/query-keys";
+
+export type {
+  JackpotCycleOption,
+  JackpotCycleSummary,
+  JackpotHistoryItem,
+  JackpotWinnerSummary,
+} from "@megawin/game-power655-application/use-cases/jackpot";
 
 export type {
   GetJackpotCurrentOutput,
-  ListJackpotCyclesOutput,
   ListAllJackpotCycleOptionsOutput,
+  ListJackpotCyclesOutput,
   ListJackpotHistoryByCycleOutput,
 };
-export type {
-  JackpotHistoryItem,
-  JackpotCycleSummary,
-  JackpotWinnerSummary,
-  JackpotCycleOption,
-} from "@megawin/game-power655-application/use-cases/jackpot";
 
 export function useJackpotCurrent() {
   return useQuery({
@@ -39,8 +42,7 @@ export function useJackpotCurrent() {
 export function useJackpotCycleOptions() {
   return useQuery({
     queryKey: power655Keys.jackpotCycleOptions,
-    queryFn: () =>
-      apiClient.get<ListAllJackpotCycleOptionsOutput>("/power655/jackpot/cycle-options"),
+    queryFn: () => apiClient.get<ListAllJackpotCycleOptionsOutput>("/power655/jackpot/cycle-options"),
   });
 }
 
@@ -87,16 +89,10 @@ export function useJackpotCycles(params: JackpotCyclesParams) {
  * Tự báo toast lỗi khi không tìm thấy hoặc request thất bại.
  * `onNotFound` được gọi để component có thể đóng dialog.
  */
-export function useJackpotEntryDetail(
-  entryId: string | null,
-  { onNotFound }: { onNotFound?: () => void } = {},
-) {
+export function useJackpotEntryDetail(entryId: string | null, { onNotFound }: { onNotFound?: () => void } = {}) {
   const query = useQuery({
     queryKey: power655Keys.reportEntryById(entryId ?? ""),
-    queryFn: () =>
-      apiClient
-        .get<GetEntryByIdOutput>(`/power655/reports/entries/${entryId}`)
-        .then((r) => r.entry),
+    queryFn: () => apiClient.get<GetEntryByIdOutput>(`/power655/reports/entries/${entryId}`).then((r) => r.entry),
     enabled: !!entryId,
   });
 

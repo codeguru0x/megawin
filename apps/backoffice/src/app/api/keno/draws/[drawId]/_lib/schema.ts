@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { KENO_DRAW_COUNT } from "@megawin/game-keno/entities";
+import { z } from "zod";
 
 const kenoNumberSchema = z.string().regex(/^(0[1-9]|[1-7][0-9]|80)$/);
 

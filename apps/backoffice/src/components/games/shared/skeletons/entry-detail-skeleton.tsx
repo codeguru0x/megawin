@@ -11,7 +11,8 @@
  */
 
 import { Loader2 } from "lucide-react";
-import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+
+import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function EntryDetailSkeleton() {
   return (
@@ -76,9 +77,7 @@ export function EntryDetailDialogLoading({ title }: { title: string }) {
           </span>
           {title}
         </DialogTitle>
-        <DialogDescription className="text-xs text-muted-foreground">
-          Đang tải chi tiết phiếu cược…
-        </DialogDescription>
+        <DialogDescription className="text-xs text-muted-foreground">Đang tải chi tiết phiếu cược…</DialogDescription>
       </DialogHeader>
       <EntryDetailSkeleton />
     </>

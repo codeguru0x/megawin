@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ApiClientError, apiClient } from "@megawin/next/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowRight,
-  Copy,
   Check,
+  Copy,
   Eye,
   EyeOff,
   KeyRound,
@@ -18,35 +19,23 @@ import {
   Smartphone,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { apiClient, ApiClientError } from "@megawin/next/client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-  InputOTPSeparator,
-} from "@/components/ui/input-otp";
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 import { meKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 
 import {
-  setupMfaSchema,
-  verifyMfaSchema,
   type SetupMfaFormValues,
-  type VerifyMfaFormValues,
   type SetupMfaResponse,
+  setupMfaSchema,
+  type VerifyMfaFormValues,
+  verifyMfaSchema,
 } from "../_lib/schema";
 
 type WizardStep = "password" | "qrcode" | "verify" | "done";
@@ -87,17 +76,14 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
   });
 
   const setupMutation = useMutation({
-    mutationFn: (values: SetupMfaFormValues) =>
-      apiClient.post<SetupMfaResponse>("/me/mfa/setup", values),
+    mutationFn: (values: SetupMfaFormValues) => apiClient.post<SetupMfaResponse>("/me/mfa/setup", values),
     onSuccess: (data) => {
       setSetupData(data);
       setAccessToken(data.accessToken);
       setStep("qrcode");
     },
     onError: (error) => {
-      toast.error(
-        error instanceof ApiClientError ? error.message : "Xác thực thất bại. Vui lòng thử lại.",
-      );
+      toast.error(error instanceof ApiClientError ? error.message : "Xác thực thất bại. Vui lòng thử lại.");
     },
   });
 
@@ -112,11 +98,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
       setStep("done");
     },
     onError: (error) => {
-      toast.error(
-        error instanceof ApiClientError
-          ? error.message
-          : "Mã xác thực không đúng. Vui lòng thử lại.",
-      );
+      toast.error(error instanceof ApiClientError ? error.message : "Mã xác thực không đúng. Vui lòng thử lại.");
     },
   });
 
@@ -138,8 +120,8 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
           <div className="text-center">
             <h3 className="text-lg font-semibold">MFA đã được kích hoạt</h3>
             <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
-              Tài khoản của bạn đã được bảo vệ bằng xác thực 2 lớp. Từ giờ mỗi lần đăng nhập, bạn
-              cần nhập mã từ app Authenticator.
+              Tài khoản của bạn đã được bảo vệ bằng xác thực 2 lớp. Từ giờ mỗi lần đăng nhập, bạn cần nhập mã từ app
+              Authenticator.
             </p>
           </div>
           <Button onClick={onClose} className="mt-1">
@@ -159,9 +141,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Thiết lập MFA</CardTitle>
-            <CardDescription className="mt-0.5 text-xs">
-              Bảo vệ tài khoản bằng xác thực 2 lớp
-            </CardDescription>
+            <CardDescription className="mt-0.5 text-xs">Bảo vệ tài khoản bằng xác thực 2 lớp</CardDescription>
           </div>
         </div>
 
@@ -180,11 +160,8 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                       className={cn(
                         "flex size-8 items-center justify-center rounded-full border-2 transition-all",
                         isCompleted && "border-primary bg-primary text-primary-foreground",
-                        isCurrent &&
-                          "border-primary bg-primary/10 text-primary ring-4 ring-primary/10",
-                        !isCompleted &&
-                          !isCurrent &&
-                          "border-muted-foreground/25 text-muted-foreground/50",
+                        isCurrent && "border-primary bg-primary/10 text-primary ring-4 ring-primary/10",
+                        !isCompleted && !isCurrent && "border-muted-foreground/25 text-muted-foreground/50",
                       )}
                     >
                       {isCompleted ? <Check className="size-4" /> : <Icon className="size-3.5" />}
@@ -265,12 +242,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                 )}
               />
               <div className="flex justify-end gap-3 pt-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onClose}
-                  disabled={setupMutation.isPending}
-                >
+                <Button type="button" variant="outline" onClick={onClose} disabled={setupMutation.isPending}>
                   Huỷ
                 </Button>
                 <Button type="submit" disabled={setupMutation.isPending}>
@@ -311,8 +283,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                     2
                   </span>
                   <span className="text-muted-foreground">
-                    Chọn <strong className="text-foreground">Thêm tài khoản</strong> rồi quét mã QR
-                    bên dưới
+                    Chọn <strong className="text-foreground">Thêm tài khoản</strong> rồi quét mã QR bên dưới
                   </span>
                 </li>
               </ol>
@@ -331,25 +302,13 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
 
             {/* Secret code fallback — chia nhóm 4 ký tự */}
             <div className="rounded-lg border p-4">
-              <p className="mb-2.5 text-xs font-medium text-muted-foreground">
-                Không quét được? Nhập mã thủ công:
-              </p>
+              <p className="mb-2.5 text-xs font-medium text-muted-foreground">Không quét được? Nhập mã thủ công:</p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 select-all rounded-md bg-muted px-3 py-2.5 font-mono text-xs leading-relaxed tracking-wider">
                   {formatSecret(setupData.secretCode)}
                 </code>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="shrink-0"
-                  onClick={handleCopySecret}
-                >
-                  {copied ? (
-                    <Check className="size-4 text-emerald-600" />
-                  ) : (
-                    <Copy className="size-4" />
-                  )}
+                <Button type="button" variant="outline" size="icon" className="shrink-0" onClick={handleCopySecret}>
+                  {copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
                 </Button>
               </div>
             </div>
@@ -387,8 +346,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                   <Smartphone className="size-5 text-primary" />
                 </div>
                 <p className="text-center text-sm text-muted-foreground">
-                  Mở app Authenticator và nhập mã <strong className="text-foreground">6 số</strong>{" "}
-                  đang hiển thị
+                  Mở app Authenticator và nhập mã <strong className="text-foreground">6 số</strong> đang hiển thị
                 </p>
               </div>
 
@@ -399,12 +357,7 @@ export function MfaSetupWizard({ onClose }: MfaSetupWizardProps) {
                   <FormItem className="flex flex-col items-center gap-2">
                     <FormLabel className="sr-only">Mã xác thực</FormLabel>
                     <FormControl>
-                      <InputOTP
-                        maxLength={6}
-                        value={field.value}
-                        onChange={field.onChange}
-                        autoFocus
-                      >
+                      <InputOTP maxLength={6} value={field.value} onChange={field.onChange} autoFocus>
                         <InputOTPGroup>
                           <InputOTPSlot index={0} />
                           <InputOTPSlot index={1} />

@@ -1,23 +1,15 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Save, Info, HelpCircle } from "lucide-react";
-
 import { MoneyInput } from "@megawin/ui/components/money-input";
+import { HelpCircle, Info, Save } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -190,9 +182,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
               {/* Right: Split Ratios (Ngưỡng chia) */}
               <div className="border-t p-6 lg:border-l lg:border-t-0">
                 <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Tỷ lệ phân bổ khi chia (Ngưỡng chia)
-                  </h3>
+                  <h3 className="text-sm font-semibold text-foreground">Tỷ lệ phân bổ khi chia (Ngưỡng chia)</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Phần vượt ngưỡng sẽ chia cho các giải cố định theo tỷ lệ phần dưới đây
                   </p>
@@ -211,9 +201,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                         render={({ field }) => (
                           <FormItem>
                             <div className="group flex items-center gap-3 rounded-lg border bg-muted/30 px-3 py-2 transition-colors hover:bg-muted/50">
-                              <Badge
-                                className={`${tier.color} w-9 justify-center text-xs font-bold`}
-                              >
+                              <Badge className={`${tier.color} w-9 justify-center text-xs font-bold`}>
                                 {tier.badge}
                               </Badge>
                               <span className="flex-1 text-sm font-medium">{tier.label}</span>
@@ -228,9 +216,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                                   thousandSeparator={false}
                                 />
                               </FormControl>
-                              <span className="w-14 text-right text-xs tabular-nums text-muted-foreground">
-                                {pct}%
-                              </span>
+                              <span className="w-14 text-right text-xs tabular-nums text-muted-foreground">{pct}%</span>
                             </div>
                             <FormMessage />
                           </FormItem>
@@ -256,9 +242,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                   <div className="h-8 w-16 flex items-center justify-center">
                     <span className="font-bold tabular-nums text-sm">{total}</span>
                   </div>
-                  <span className="w-14 text-right text-xs tabular-nums text-muted-foreground">
-                    100%
-                  </span>
+                  <span className="w-14 text-right text-xs tabular-nums text-muted-foreground">100%</span>
                 </div>
               </div>
             </div>
@@ -267,8 +251,8 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
               <div className="flex items-start gap-2">
                 <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
                 <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
-                  Đơn vị làm tròn cố định <strong>5,000đ</strong>. Phần dư do làm tròn sẽ cộng vào
-                  hạng cao nhất có người trúng. Giải Nhất luôn nhận phần dư nếu có.
+                  Đơn vị làm tròn cố định <strong>5,000đ</strong>. Phần dư do làm tròn sẽ cộng vào hạng cao nhất có
+                  người trúng. Giải Nhất luôn nhận phần dư nếu có.
                 </p>
               </div>
             </div>

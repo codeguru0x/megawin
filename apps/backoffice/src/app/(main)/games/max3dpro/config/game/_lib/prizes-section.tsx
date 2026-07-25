@@ -1,22 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
-import { useForm } from "react-hook-form";
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Save, TrendingUp, TrendingDown, Info } from "lucide-react";
-
+import { analyzeProProfitability, getProOddsTable, PRO_TOTAL_OUTCOMES } from "@megawin/game-max3dpro/rules";
 import { MoneyInput } from "@megawin/ui/components/money-input";
-import {
-  analyzeProProfitability,
-  getProOddsTable,
-  PRO_TOTAL_OUTCOMES,
-} from "@megawin/game-max3dpro/rules";
+import { Info, Save, TrendingDown, TrendingUp } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -110,15 +106,7 @@ const STANDARD_FIELDS = [
   },
 ] as const;
 
-function HeaderTooltip({
-  label,
-  tip,
-  className,
-}: {
-  label: string;
-  tip: string;
-  className?: string;
-}) {
+function HeaderTooltip({ label, tip, className }: { label: string; tip: string; className?: string }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -154,9 +142,7 @@ function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel }: ProfitBarP
       <div className="flex items-center gap-4 text-xs shrink-0">
         <div className="text-right">
           <span className="text-muted-foreground">CP kỳ vọng / line</span>
-          <div className="font-semibold tabular-nums">
-            {fmt(Math.round(analysis.totalExpectedPayout))} VND
-          </div>
+          <div className="font-semibold tabular-nums">{fmt(Math.round(analysis.totalExpectedPayout))} VND</div>
         </div>
         <div className="text-right">
           <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
@@ -216,9 +202,7 @@ function TableHeader() {
 interface OddsRowProps {
   field: { key: string; label: string; desc: string; badge: string; color: string };
   odds: { probability: number; oneInN: number; ways?: number } | undefined;
-  profit:
-    | { expectedPayout: number; payoutRatio: number; breakEvenPrize: number; currentPrize: number }
-    | undefined;
+  profit: { expectedPayout: number; payoutRatio: number; breakEvenPrize: number; currentPrize: number } | undefined;
   formField: any;
   isLast: boolean;
   totalOutcomes: number;
@@ -258,8 +242,7 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
               <TooltipContent side="top" className="max-w-72 text-xs">
                 {odds && (
                   <>
-                    Số cách trúng: {fmt(Math.round(odds.probability * totalOutcomes))} /{" "}
-                    {fmt(totalOutcomes)}
+                    Số cách trúng: {fmt(Math.round(odds.probability * totalOutcomes))} / {fmt(totalOutcomes)}
                     <br />
                     Xác suất: {(odds.probability * 100).toFixed(6)}%
                   </>
@@ -342,10 +325,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
     [w.special, w.specialSub, w.first, w.second, w.third, w.fourth, w.fifth, w.sixth, unitPrice],
   );
 
-  const proProfitMap = useMemo(
-    () => new Map(proAnalysis.tiers.map((t) => [t.tier, t])),
-    [proAnalysis],
-  );
+  const proProfitMap = useMemo(() => new Map(proAnalysis.tiers.map((t) => [t.tier, t])), [proAnalysis]);
   const proOddsMap = useMemo(() => new Map(proOdds.map((o) => [o.tier, o])), [proOdds]);
 
   function handleSubmit(values: PrizesFormValues) {

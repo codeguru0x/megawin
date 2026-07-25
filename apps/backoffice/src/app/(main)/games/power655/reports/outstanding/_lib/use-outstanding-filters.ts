@@ -1,7 +1,8 @@
 "use client";
 
-import { useQueryState, parseAsString } from "nuqs";
 import { useCallback } from "react";
+
+import { parseAsString, useQueryState } from "nuqs";
 
 import type { OutstandingDrillLevel } from "@/components/reports/game/outstanding";
 

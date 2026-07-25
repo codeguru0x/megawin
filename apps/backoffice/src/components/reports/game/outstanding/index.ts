@@ -6,31 +6,24 @@
  * ```
  */
 
-export { OutstandingContent } from "./outstanding-content";
-export type { OutstandingContentProps } from "./outstanding-content";
-
-export { OutstandingKpiStrip } from "./outstanding-kpi-strip";
-
-export { OutstandingBreadcrumb } from "./outstanding-breadcrumb";
 export type { OutstandingBreadcrumbProps } from "./outstanding-breadcrumb";
-
-export { OutstandingDrawList } from "./outstanding-draw-list";
+export { OutstandingBreadcrumb } from "./outstanding-breadcrumb";
+export type { OutstandingContentProps } from "./outstanding-content";
+export { OutstandingContent } from "./outstanding-content";
 export type { OutstandingDrawListProps } from "./outstanding-draw-list";
-
-export { OutstandingTenantBreakdown } from "./outstanding-tenant-breakdown";
-export type { OutstandingTenantBreakdownProps } from "./outstanding-tenant-breakdown";
-
-export { OutstandingPlayerBreakdown } from "./outstanding-player-breakdown";
-export type { OutstandingPlayerBreakdownProps } from "./outstanding-player-breakdown";
-
-export { OutstandingEntryList } from "./outstanding-entry-list";
+export { OutstandingDrawList } from "./outstanding-draw-list";
 export type { OutstandingEntryListProps } from "./outstanding-entry-list";
-
+export { OutstandingEntryList } from "./outstanding-entry-list";
+export { OutstandingKpiStrip } from "./outstanding-kpi-strip";
+export type { OutstandingPlayerBreakdownProps } from "./outstanding-player-breakdown";
+export { OutstandingPlayerBreakdown } from "./outstanding-player-breakdown";
+export type { OutstandingTenantBreakdownProps } from "./outstanding-tenant-breakdown";
+export { OutstandingTenantBreakdown } from "./outstanding-tenant-breakdown";
 export type {
-  OutstandingDrillLevel,
   OutstandingDrawRow,
-  OutstandingTenantRow,
-  OutstandingPlayerRow,
+  OutstandingDrillLevel,
   OutstandingEntryRow,
   OutstandingKpiData,
+  OutstandingPlayerRow,
+  OutstandingTenantRow,
 } from "./types";

@@ -1,19 +1,12 @@
 "use client";
 
-import { Building2 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { Building2 } from "lucide-react";
+
 import { PayoutRatioCell } from "@/components/reports/payout-ratio";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 /**
  * Một hàng trong bảng breakdown đại lý của 1 kỳ quay cụ thể.
@@ -45,12 +38,7 @@ export interface GameDrawTenantTableProps {
  *
  * Columns: Đại lý · Người chơi · Lượt cược · [Số dòng] · Tiền cược · Trả thưởng · Tỷ lệ TT · Doanh thu thuần · Hoa hồng ĐL
  */
-export function GameDrawTenantTable({
-  drawId,
-  rows,
-  onRowClick,
-  showLineCount = false,
-}: GameDrawTenantTableProps) {
+export function GameDrawTenantTable({ drawId, rows, onRowClick, showLineCount = false }: GameDrawTenantTableProps) {
   const totals = rows.reduce(
     (acc, r) => ({
       playerCount: acc.playerCount + r.playerCount,
@@ -89,9 +77,7 @@ export function GameDrawTenantTable({
                 <TableHead>Đại lý</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.playerCount}</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
-                {showLineCount && (
-                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.lineCount}</TableHead>
-                )}
+                {showLineCount && <TableHead className="text-right">{REPORT_COLUMN_LABELS.lineCount}</TableHead>}
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.payoutPercent}</TableHead>
@@ -109,29 +95,19 @@ export function GameDrawTenantTable({
                     onClick={() => onRowClick(row.tenantId)}
                   >
                     <TableCell className="text-sm font-medium">{row.tenantId}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.playerCount)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.playerCount)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
                     {showLineCount && (
                       <TableCell className="text-right text-sm tabular-nums">
                         {formatNumber(row.lineCount ?? 0)}
                       </TableCell>
                     )}
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.totalStake)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.totalPayout)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalStake)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalPayout)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
                       <PayoutRatioCell ratio={payoutRatio} />
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.ggr)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.ggr)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(row.totalCommission)}
                     </TableCell>
@@ -141,9 +117,7 @@ export function GameDrawTenantTable({
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell className="text-sm font-semibold">
-                  {REPORT_COLUMN_LABELS.summary}
-                </TableCell>
+                <TableCell className="text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
                 <TableCell className="text-right text-sm tabular-nums font-semibold text-muted-foreground" />
                 <TableCell className="text-right text-sm tabular-nums font-semibold">
                   {formatNumber(totals.entryCount)}

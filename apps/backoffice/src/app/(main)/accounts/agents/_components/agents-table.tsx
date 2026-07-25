@@ -1,24 +1,12 @@
 "use client";
 
-import { List } from "lucide-react";
-import {
-  AccountStatus,
-  MfaStatus,
-  AccountStatusLabel,
-  MfaStatusLabel,
-} from "@megawin/identity/entities";
+import { type AccountStatus, AccountStatusLabel, MfaStatus, MfaStatusLabel } from "@megawin/identity/entities";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
+import { List } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 import { useAgentAccounts } from "../../_shared/queries";
 import type { AgentAccount } from "../_lib/schema";
@@ -50,9 +38,7 @@ export function AgentAccountsTable() {
             <CardTitle className="text-sm font-semibold">Danh sách đại lý</CardTitle>
           </div>
           {accounts.length > 0 && !isLoading && (
-            <span className="text-xs tabular-nums text-muted-foreground">
-              {accounts.length} tài khoản
-            </span>
+            <span className="text-xs tabular-nums text-muted-foreground">{accounts.length} tài khoản</span>
           )}
         </div>
       </CardHeader>
@@ -62,9 +48,7 @@ export function AgentAccountsTable() {
           <div className="h-80 animate-pulse bg-muted" />
         ) : accounts.length === 0 ? (
           <div className="flex h-50 flex-col items-center justify-center gap-1 text-center">
-            <p className="text-sm font-medium text-muted-foreground">
-              Chưa có tài khoản đại lý nào
-            </p>
+            <p className="text-sm font-medium text-muted-foreground">Chưa có tài khoản đại lý nào</p>
             <p className="text-xs text-muted-foreground">
               Tạo tài khoản mới bằng nút &ldquo;Thêm đại lý&rdquo; ở trên.
             </p>
@@ -116,9 +100,7 @@ function AgentAccountRow({ account, index }: { account: AgentAccount; index: num
         </Badge>
       </TableCell>
       <TableCell>
-        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>
-          {AccountStatusLabel[status] ?? status}
-        </Badge>
+        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>{AccountStatusLabel[status] ?? status}</Badge>
       </TableCell>
       <TableCell>
         <Badge variant={MFA_VARIANT[mfa] ?? "outline"}>{MfaStatusLabel[mfa] ?? mfa}</Badge>

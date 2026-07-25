@@ -30,16 +30,8 @@ import {
 } from "lucide-react";
 
 import { Bingo18DrawStatusBadge } from "@/components/games/bingo18/draw-status-badge";
-import {
-  Countdown,
-  DEFAULT_OVERDUE_GRACE,
-  OverdueBanner,
-  useOverdue,
-} from "@/components/games/shared/draw-countdown";
-import {
-  getDrawLifecycleSteps,
-  LifecycleStepper,
-} from "@/components/games/shared/draw-lifecycle-stepper";
+import { Countdown, DEFAULT_OVERDUE_GRACE, OverdueBanner, useOverdue } from "@/components/games/shared/draw-countdown";
+import { getDrawLifecycleSteps, LifecycleStepper } from "@/components/games/shared/draw-lifecycle-stepper";
 import { getNextAction } from "@/components/games/shared/draw-next-action";
 import { shouldShowResettle } from "@/components/games/shared/draw-resettle";
 import { ScheduleChips } from "@/components/games/shared/draw-schedule-chips";
@@ -106,8 +98,7 @@ export function DrawCommandCenter({
   // nhưng đây là luồng chờ resettle — chỉ được kết sổ lại, không được huỷ.
   // Backend cũng guard tương ứng trong VoidDrawUseCase.
   const canVoid =
-    !draw.settledAt &&
-    [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(status as any);
+    !draw.settledAt && [DrawStatus.Scheduled, DrawStatus.SalesClosed, DrawStatus.Published].includes(status as any);
   // Cho phép sửa kết quả khi:
   //   - status = Published (kết quả vừa publish, kể cả lần đầu hay đã settle xong và republish chuẩn bị resettle)
   //   - status = Settled (kịch bản phát hiện sai sót sau khi đã kết sổ → mở luồng resettle)
@@ -229,16 +220,12 @@ export function DrawCommandCenter({
   // Bingo18 chu kỳ rất ngắn (~6 phút) → dùng ngưỡng grace mặc định (30s / 2 phút).
   // SalesOpen quá giờ đóng + grace → close-sales scheduler có thể lỗi.
   const closeOverdue =
-    useOverdue(
-      status === DrawStatus.SalesOpen ? draw.salesCloseAt : undefined,
-      DEFAULT_OVERDUE_GRACE.close,
-    ) && status === DrawStatus.SalesOpen;
+    useOverdue(status === DrawStatus.SalesOpen ? draw.salesCloseAt : undefined, DEFAULT_OVERDUE_GRACE.close) &&
+    status === DrawStatus.SalesOpen;
   // SalesClosed quá giờ quay + grace mà chưa Published → publish worker có thể lỗi.
   const publishOverdue =
-    useOverdue(
-      status === DrawStatus.SalesClosed ? draw.scheduledDrawAt : undefined,
-      DEFAULT_OVERDUE_GRACE.publish,
-    ) && status === DrawStatus.SalesClosed;
+    useOverdue(status === DrawStatus.SalesClosed ? draw.scheduledDrawAt : undefined, DEFAULT_OVERDUE_GRACE.publish) &&
+    status === DrawStatus.SalesClosed;
 
   return (
     <div className={cn("rounded-xl border overflow-hidden", cardBorder, cardBg)}>
@@ -254,20 +241,11 @@ export function DrawCommandCenter({
                 iconBg,
               )}
             >
-              <StatusIcon
-                className={cn(
-                  "size-3.5",
-                  iconColor,
-                  status === DrawStatus.Settling && "animate-spin",
-                )}
-              />
+              <StatusIcon className={cn("size-3.5", iconColor, status === DrawStatus.Settling && "animate-spin")} />
               {showPing && (
                 <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
                   <span
-                    className={cn(
-                      "absolute inline-flex size-full animate-ping rounded-full opacity-70",
-                      pingColor,
-                    )}
+                    className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-70", pingColor)}
                   />
                   <span className={cn("relative inline-flex size-2.5 rounded-full", dotColor)} />
                 </span>
@@ -281,9 +259,7 @@ export function DrawCommandCenter({
                 <Bingo18DrawStatusBadge status={status} />
               </div>
               <div className="flex items-center gap-3 flex-wrap">
-                <p className="text-[11px] text-muted-foreground font-mono shrink-0">
-                  {draw.drawId}
-                </p>
+                <p className="text-[11px] text-muted-foreground font-mono shrink-0">{draw.drawId}</p>
                 <ScheduleChips draw={draw} />
                 {/* Countdown theo trạng thái — thay chip giờ tĩnh, người trực ca
                     không cần tự nhìn đồng hồ (Bingo18 chu kỳ ~6 phút).
@@ -309,11 +285,7 @@ export function DrawCommandCenter({
           {isSettled && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-7 shrink-0 text-muted-foreground"
-                >
+                <Button variant="ghost" size="icon" className="size-7 shrink-0 text-muted-foreground">
                   <MoreVertical className="size-4" />
                   <span className="sr-only">Thao tác khác</span>
                 </Button>
@@ -322,9 +294,7 @@ export function DrawCommandCenter({
                 <DropdownMenuLabel>Thao tác khác</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link
-                    href={`/games/bingo18/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}
-                  >
+                  <Link href={`/games/bingo18/reports/settle?drawId=${draw.drawId}&level=draw-tenants`}>
                     <FileText className="size-3.5" /> Xem báo cáo
                   </Link>
                 </DropdownMenuItem>
@@ -356,9 +326,7 @@ export function DrawCommandCenter({
             <p className="text-xs text-muted-foreground">
               Hủy bởi <span className="font-medium text-foreground">{voidInfo.voidedBy}</span> ·{" "}
               {displayVNDateTime(voidInfo.voidedAt)} · Hoàn{" "}
-              <span className="font-semibold tabular-nums text-foreground">
-                {formatNumber(voidInfo.refundAmount)}
-              </span>
+              <span className="font-semibold tabular-nums text-foreground">{formatNumber(voidInfo.refundAmount)}</span>
             </p>
           </div>
         )}
@@ -371,9 +339,7 @@ export function DrawCommandCenter({
         )}
 
         {status === DrawStatus.Scheduled && (
-          <p className="mt-4 text-xs text-muted-foreground text-center py-1">
-            Chưa có dữ liệu cược — kỳ chưa mở bán
-          </p>
+          <p className="mt-4 text-xs text-muted-foreground text-center py-1">Chưa có dữ liệu cược — kỳ chưa mở bán</p>
         )}
 
         {/* Action bar */}
@@ -402,12 +368,7 @@ export function DrawCommandCenter({
             </div>
             <div className="flex items-center gap-1">
               {canEdit && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onEditSchedule}
-                  className="gap-1.5 text-muted-foreground"
-                >
+                <Button variant="ghost" size="sm" onClick={onEditSchedule} className="gap-1.5 text-muted-foreground">
                   <Pencil className="size-3.5" /> Sửa lịch
                 </Button>
               )}

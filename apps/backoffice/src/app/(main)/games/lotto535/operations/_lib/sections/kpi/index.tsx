@@ -8,6 +8,7 @@
  */
 
 import { DrawStatus } from "@megawin/game-core/entities";
+
 import { useDrawContext } from "../../use-draw-context";
 import { useOpsSummary } from "../../use-operations";
 import { KpiStrip } from "./kpi-strip";
@@ -41,9 +42,7 @@ export function KpiSection() {
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Tổng quan cược
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tổng quan cược</h2>
       <KpiStrip kpi={kpi} />
     </section>
   );

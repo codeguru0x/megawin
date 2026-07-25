@@ -1,18 +1,18 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient, ApiClientError } from "@megawin/next/client";
+import { ApiClientError, apiClient } from "@megawin/next/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { tenantsKeys } from "@/lib/query-keys";
 
 import type { Tenant } from "./schema";
 import type {
-  ListTenantsResponse,
   CreateTenantResponse,
+  ListTenantsResponse,
+  RegenerateApiKeyResponse,
   UpdateTenantResponse,
   UpdateTenantStatusResponse,
-  RegenerateApiKeyResponse,
 } from "./types";
 
 export function useTenants() {
@@ -33,18 +33,13 @@ export function useCreateTenant() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (values: CreateTenantInput) =>
-      apiClient.post<CreateTenantResponse>("/tenants", values),
+    mutationFn: (values: CreateTenantInput) => apiClient.post<CreateTenantResponse>("/tenants", values),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: tenantsKeys.all });
       toast.success(`Tạo tenant "${data.tenantId}" thành công.`);
     },
     onError: (error) => {
-      toast.error(
-        error instanceof ApiClientError
-          ? error.message
-          : "Đã xảy ra lỗi khi tạo tenant."
-      );
+      toast.error(error instanceof ApiClientError ? error.message : "Đã xảy ra lỗi khi tạo tenant.");
     },
   });
 }
@@ -60,18 +55,13 @@ export function useUpdateTenant() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (values: UpdateTenantInput) =>
-      apiClient.patch<UpdateTenantResponse>("/tenants", values),
+    mutationFn: (values: UpdateTenantInput) => apiClient.patch<UpdateTenantResponse>("/tenants", values),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: tenantsKeys.all });
       toast.success(`Đã cập nhật tenant "${variables.tenantId}".`);
     },
     onError: (error) => {
-      toast.error(
-        error instanceof ApiClientError
-          ? error.message
-          : "Đã xảy ra lỗi khi cập nhật."
-      );
+      toast.error(error instanceof ApiClientError ? error.message : "Đã xảy ra lỗi khi cập nhật.");
     },
   });
 }
@@ -87,16 +77,10 @@ export function useToggleTenantStatus() {
       }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: tenantsKeys.all });
-      toast.success(
-        `Đã ${data.status === "active" ? "kích hoạt" : "vô hiệu hóa"} tenant "${data.tenantId}".`
-      );
+      toast.success(`Đã ${data.status === "active" ? "kích hoạt" : "vô hiệu hóa"} tenant "${data.tenantId}".`);
     },
     onError: (error) => {
-      toast.error(
-        error instanceof ApiClientError
-          ? error.message
-          : "Không thể cập nhật trạng thái."
-      );
+      toast.error(error instanceof ApiClientError ? error.message : "Không thể cập nhật trạng thái.");
     },
   });
 }
@@ -114,11 +98,7 @@ export function useRegenerateApiKey() {
       toast.success("Đã tạo API key mới.");
     },
     onError: (error) => {
-      toast.error(
-        error instanceof ApiClientError
-          ? error.message
-          : "Không thể tạo API key mới."
-      );
+      toast.error(error instanceof ApiClientError ? error.message : "Không thể tạo API key mới.");
     },
   });
 }

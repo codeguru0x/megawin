@@ -1,6 +1,7 @@
-import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities";
 import { GetJackpotCurrentUseCase } from "@megawin/game-mega645-application/use-cases/jackpot";
+import { CompanyRole } from "@megawin/identity/entities";
+
+import { withApi } from "@/lib/api";
 
 const getJackpotCurrentUseCase = new GetJackpotCurrentUseCase();
 

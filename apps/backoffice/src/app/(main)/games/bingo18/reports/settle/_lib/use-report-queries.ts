@@ -1,22 +1,23 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@megawin/next/client";
-import { bingo18Keys } from "@/lib/query-keys";
 import type {
   GetDrawSummaryOutput,
-  ListSettleDrawReportsOutput,
-  ListDrawTenantsOutput,
-  ListTenantReportsOutput,
-  ListTenantDrawsOutput,
-  ListPlayerBreakdownOutput,
-  ListEntryBreakdownOutput,
   GetOutstandingReportsOutput,
-  ListVoidReportsOutput,
+  ListDrawTenantsOutput,
+  ListEntryBreakdownOutput,
   ListOutstandingDrawTenantsOutput,
-  ListOutstandingTenantPlayersOutput,
   ListOutstandingPlayerEntriesOutput,
+  ListOutstandingTenantPlayersOutput,
+  ListPlayerBreakdownOutput,
+  ListSettleDrawReportsOutput,
+  ListTenantDrawsOutput,
+  ListTenantReportsOutput,
+  ListVoidReportsOutput,
 } from "@megawin/game-bingo18-application/use-cases/reports";
+import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
+
+import { bingo18Keys } from "@/lib/query-keys";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
 
@@ -50,10 +51,7 @@ export function useBingo18DrawList(from: string, to: string, page: number) {
 export function useBingo18DrawTenants(drawId: string | null) {
   return useQuery({
     queryKey: bingo18Keys.reportDrawTenants(drawId ?? ""),
-    queryFn: () =>
-      apiClient
-        .get<ListDrawTenantsOutput>(`/bingo18/reports/draws/${drawId}/tenants`)
-        .then((r) => r.data),
+    queryFn: () => apiClient.get<ListDrawTenantsOutput>(`/bingo18/reports/draws/${drawId}/tenants`).then((r) => r.data),
     enabled: !!drawId,
   });
 }
@@ -122,10 +120,7 @@ export function useBingo18Entries(drawId: string, tenantId: string, accountId: s
 export function useBingo18Outstanding() {
   return useQuery({
     queryKey: bingo18Keys.outstandingDraws,
-    queryFn: () =>
-      apiClient
-        .get<GetOutstandingReportsOutput>("/bingo18/reports/outstanding")
-        .then((r) => r.data),
+    queryFn: () => apiClient.get<GetOutstandingReportsOutput>("/bingo18/reports/outstanding").then((r) => r.data),
     refetchInterval: 60_000,
   });
 }
@@ -136,9 +131,7 @@ export function useBingo18OutstandingDrawTenants(drawId: string | null) {
     queryKey: bingo18Keys.outstandingTenants(drawId ?? ""),
     queryFn: () =>
       apiClient
-        .get<ListOutstandingDrawTenantsOutput>(
-          `/bingo18/reports/outstanding/draws/${drawId}/tenants`,
-        )
+        .get<ListOutstandingDrawTenantsOutput>(`/bingo18/reports/outstanding/draws/${drawId}/tenants`)
         .then((r) => r.data),
     enabled: !!drawId,
   });
@@ -159,11 +152,7 @@ export function useBingo18OutstandingTenantPlayers(drawId: string, tenantId: str
 }
 
 /** Danh sách entries outstanding của 1 player — drill cấp 4. */
-export function useBingo18OutstandingPlayerEntries(
-  drawId: string,
-  tenantId: string,
-  accountId: string | null,
-) {
+export function useBingo18OutstandingPlayerEntries(drawId: string, tenantId: string, accountId: string | null) {
   return useQuery({
     queryKey: bingo18Keys.outstandingEntries({
       drawId,
@@ -235,18 +224,12 @@ export function useBingo18VoidTenantPlayers(drawId: string, tenantId: string | n
 }
 
 /** Entries void của 1 player trong 1 draw × tenant. Drill cấp 4. */
-export function useBingo18VoidPlayerEntries(
-  drawId: string,
-  tenantId: string,
-  accountId: string | null,
-) {
+export function useBingo18VoidPlayerEntries(drawId: string, tenantId: string, accountId: string | null) {
   return useQuery({
     queryKey: bingo18Keys.voidPlayerEntries({ drawId, tenantId, accountId: accountId ?? "" }),
     queryFn: () =>
       apiClient
-        .get<ListEntryBreakdownOutput>(
-          `/bingo18/reports/void/draws/${drawId}/${tenantId}/${accountId}/entries`,
-        )
+        .get<ListEntryBreakdownOutput>(`/bingo18/reports/void/draws/${drawId}/${tenantId}/${accountId}/entries`)
         .then((r) => r.data),
     enabled: !!(drawId && tenantId && accountId),
   });

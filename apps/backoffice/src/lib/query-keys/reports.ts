@@ -9,16 +9,13 @@ export const reportsKeys = {
   // ─── System Financial Reports ──────────────────────────────────────────────
 
   /** Tab "Tổng quan ngày" — aggregate by financialDate */
-  financialDaily: (params: { from: string; to: string }) =>
-    [MODULE, "financial-daily", params] as const,
+  financialDaily: (params: { from: string; to: string }) => [MODULE, "financial-daily", params] as const,
 
   /** Inline expand 1 ngày → raw game breakdown docs */
-  financialDayBreakdown: (date: string) =>
-    [MODULE, "financial-day-breakdown", date] as const,
+  financialDayBreakdown: (date: string) => [MODULE, "financial-day-breakdown", date] as const,
 
   /** Tab "Theo game" — aggregate by gameProduct */
-  financialByGame: (params: { from: string; to: string }) =>
-    [MODULE, "financial-by-game", params] as const,
+  financialByGame: (params: { from: string; to: string }) => [MODULE, "financial-by-game", params] as const,
 
   /** Tab "Theo đại lý" — aggregate by tenantId */
   financialByTenant: (params: { from: string; to: string; game?: string }) =>

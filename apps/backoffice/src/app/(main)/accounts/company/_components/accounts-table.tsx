@@ -1,26 +1,19 @@
 "use client";
 
-import { List } from "lucide-react";
 import {
-  AccountStatus,
-  CompanyRole,
-  MfaStatus,
+  type AccountStatus,
   AccountStatusLabel,
+  type CompanyRole,
   CompanyRoleLabel,
+  MfaStatus,
   MfaStatusLabel,
 } from "@megawin/identity/entities";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
+import { List } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 import { useCompanyAccounts } from "../../_shared/queries";
 import type { CompanyAccount } from "../_lib/schema";
@@ -52,9 +45,7 @@ export function CompanyAccountsTable() {
             <CardTitle className="text-sm font-semibold">Danh sách tài khoản</CardTitle>
           </div>
           {accounts.length > 0 && !isLoading && (
-            <span className="text-xs tabular-nums text-muted-foreground">
-              {accounts.length} tài khoản
-            </span>
+            <span className="text-xs tabular-nums text-muted-foreground">{accounts.length} tài khoản</span>
           )}
         </div>
       </CardHeader>
@@ -120,9 +111,7 @@ function CompanyAccountRow({ account, index }: { account: CompanyAccount; index:
         </div>
       </TableCell>
       <TableCell>
-        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>
-          {AccountStatusLabel[status] ?? status}
-        </Badge>
+        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>{AccountStatusLabel[status] ?? status}</Badge>
       </TableCell>
       <TableCell>
         <Badge variant={MFA_VARIANT[mfa] ?? "outline"}>{MfaStatusLabel[mfa] ?? mfa}</Badge>

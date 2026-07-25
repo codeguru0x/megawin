@@ -12,6 +12,11 @@
  */
 
 import { useState } from "react";
+
+import { DrawStatus } from "@megawin/game-core/entities";
+import { PrizeTier } from "@megawin/game-power655/entities";
+import { POWER655_PRIZE_TIER_LABELS } from "@megawin/game-power655/labels";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,28 +27,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { DrawStatus } from "@megawin/game-core/entities";
-import { PrizeTier } from "@megawin/game-power655/entities";
-import { POWER655_PRIZE_TIER_LABELS } from "@megawin/game-power655/labels";
-
-import { useDrawContext } from "../../use-draw-context";
-import { DrawCommandCenter } from "./draw-command-center";
-import {
-  PublishResultAction,
-  EditScheduleAction,
-  VoidDrawAction,
-  ResettleAction,
-  type PublishResultCurrentValues,
-} from "./draw-actions";
-import {
-  useOpenSales,
-  useCloseSales,
-  useTriggerSettle,
-  useDrawDetail,
-  useReopenForCascade,
-} from "../../use-operations";
 
 import type { DrawResult, VoidInfo } from "../../types";
+import { useDrawContext } from "../../use-draw-context";
+import {
+  useCloseSales,
+  useDrawDetail,
+  useOpenSales,
+  useReopenForCascade,
+  useTriggerSettle,
+} from "../../use-operations";
+import {
+  EditScheduleAction,
+  PublishResultAction,
+  type PublishResultCurrentValues,
+  ResettleAction,
+  VoidDrawAction,
+} from "./draw-actions";
+import { DrawCommandCenter } from "./draw-command-center";
 
 const RESULT_SHOW = new Set([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
 
@@ -150,7 +151,7 @@ export function DrawManagementSection() {
     if (!d?.voidInfo) return undefined;
     return {
       reason: d.voidInfo.reason,
-      voidedBy: d.voidInfo.voidedBy,
+      voidedBy: d.voidInfo.voidedBy ?? "",
       voidedAt: d.voidInfo.voidedAt,
       refundAmount: d.voidSummary?.totalRefundAmount ?? 0,
       entryCount: d.voidSummary?.totalVoidedEntries ?? 0,

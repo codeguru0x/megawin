@@ -7,7 +7,7 @@
  * DB schema.
  */
 
-import { PrizeTier, PlayType } from "@megawin/game-lotto535/entities";
+import type { PlayType, PrizeTier } from "@megawin/game-lotto535/entities";
 
 // ─── KPI ─────────────────────────────────────────────────────────────────────
 

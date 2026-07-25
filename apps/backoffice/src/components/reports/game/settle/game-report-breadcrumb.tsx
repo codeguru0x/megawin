@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 
 export interface GameDrawBreadcrumbProps {
@@ -35,12 +36,7 @@ export function GameDrawBreadcrumb({
 }: GameDrawBreadcrumbProps) {
   return (
     <div className="flex flex-wrap items-center gap-1 text-sm">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-auto px-2 py-1 text-xs"
-        onClick={onRootClick}
-      >
+      <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={onRootClick}>
         {rootLabel}
       </Button>
 
@@ -48,12 +44,7 @@ export function GameDrawBreadcrumb({
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
           {onDrawClick ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-auto px-2 py-1 text-xs"
-              onClick={onDrawClick}
-            >
+            <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={onDrawClick}>
               {drawId}
             </Button>
           ) : (
@@ -66,18 +57,11 @@ export function GameDrawBreadcrumb({
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
           {onTenantClick ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-auto px-2 py-1 text-xs"
-              onClick={onTenantClick}
-            >
+            <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={onTenantClick}>
               {tenantId}
             </Button>
           ) : (
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-              {tenantId}
-            </span>
+            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{tenantId}</span>
           )}
         </>
       )}
@@ -85,9 +69,7 @@ export function GameDrawBreadcrumb({
       {playerName && (
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
-          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-            {playerName}
-          </span>
+          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{playerName}</span>
         </>
       )}
     </div>
@@ -125,12 +107,7 @@ export function GameTenantBreadcrumb({
 }: GameTenantBreadcrumbProps) {
   return (
     <div className="flex flex-wrap items-center gap-1 text-sm">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-auto px-2 py-1 text-xs"
-        onClick={onRootClick}
-      >
+      <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={onRootClick}>
         {rootLabel}
       </Button>
 
@@ -138,18 +115,11 @@ export function GameTenantBreadcrumb({
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
           {onTenantClick ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-auto px-2 py-1 text-xs"
-              onClick={onTenantClick}
-            >
+            <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={onTenantClick}>
               {tenantId}
             </Button>
           ) : (
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-              {tenantId}
-            </span>
+            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{tenantId}</span>
           )}
         </>
       )}
@@ -158,12 +128,7 @@ export function GameTenantBreadcrumb({
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
           {onDrawClick ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-auto px-2 py-1 text-xs"
-              onClick={onDrawClick}
-            >
+            <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={onDrawClick}>
               {drawId}
             </Button>
           ) : (
@@ -175,9 +140,7 @@ export function GameTenantBreadcrumb({
       {playerName && (
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
-          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-            {playerName}
-          </span>
+          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{playerName}</span>
         </>
       )}
     </div>

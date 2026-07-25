@@ -1,26 +1,17 @@
 "use client";
 
-import { Layers } from "lucide-react";
+import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+import type { PlayerOverviewResult } from "@megawin/game-core-application/repos";
 import { formatNumber } from "@megawin/shared/utils";
+import { Layers } from "lucide-react";
 
+import { getNetProfitColor, PayoutRatioCell } from "@/components/reports/payout-ratio";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getGameColors } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
-import { PayoutRatioCell, getNetProfitColor } from "@/components/reports/payout-ratio";
-
-import type { PlayerOverviewResult } from "@megawin/game-core-application/repos";
 
 interface GameOverviewViewProps {
   data: PlayerOverviewResult | undefined;
@@ -59,9 +50,7 @@ export function GameOverviewView({ data, isLoading, onRowClick }: GameOverviewVi
       <Card className="gap-0 py-0">
         <CardContent className="flex h-40 flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm font-medium text-muted-foreground">Chưa có dữ liệu</p>
-          <p className="text-xs text-muted-foreground">
-            Player chưa tham gia game nào trong khoảng thời gian này.
-          </p>
+          <p className="text-xs text-muted-foreground">Player chưa tham gia game nào trong khoảng thời gian này.</p>
         </CardContent>
       </Card>
     );
@@ -119,18 +108,12 @@ export function GameOverviewView({ data, isLoading, onRowClick }: GameOverviewVi
                         <span className="font-medium">{gameLabel}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.drawCount)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.drawCount)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums font-medium">
                       {formatNumber(row.totalStake)}
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.totalPayout)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalPayout)}</TableCell>
                     <TableCell className="text-right text-sm">
                       <PayoutRatioCell ratio={payoutRatio} />
                     </TableCell>
@@ -154,9 +137,7 @@ export function GameOverviewView({ data, isLoading, onRowClick }: GameOverviewVi
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell className="pl-5 text-sm font-semibold">
-                  {REPORT_COLUMN_LABELS.summary}
-                </TableCell>
+                <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
                 <TableCell className="text-right text-sm tabular-nums font-semibold">
                   {formatNumber(totals.drawCount)}
                 </TableCell>

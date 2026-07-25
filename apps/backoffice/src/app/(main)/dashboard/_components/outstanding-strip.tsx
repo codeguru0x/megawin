@@ -1,21 +1,16 @@
 "use client";
 
-import {
-  Activity,
-  Layers,
-  Ticket,
-  Users,
-  DollarSign,
-  Building2,
-  ArrowUpRight,
-} from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import { formatNumber, formatVNDCompact, formatVND } from "@megawin/shared/utils";
-import { getGameHex } from "@/lib/game-colors";
-import { getGameLabel } from "../_lib/compute";
-import type { SystemOutstandingGameDaily } from "@megawin/game-core/entities/financial-report";
 import Link from "next/link";
+
+import type { SystemOutstandingGameDaily } from "@megawin/game-core/entities/financial-report";
+import { formatNumber, formatVND, formatVNDCompact } from "@megawin/shared/utils";
+import { Activity, ArrowUpRight, Building2, DollarSign, Layers, Ticket, Users } from "lucide-react";
+
+import { Skeleton } from "@/components/ui/skeleton";
+import { getGameHex } from "@/lib/game-colors";
+import { cn } from "@/lib/utils";
+
+import { getGameLabel } from "../_lib/compute";
 
 interface OutstandingStripProps {
   data: SystemOutstandingGameDaily[] | undefined;
@@ -68,7 +63,8 @@ function MetricCard({ icon: Icon, label, value, color }: MetricCardProps) {
         color === "indigo" && "border-indigo-200/70 bg-indigo-50/60 dark:border-indigo-800/40 dark:bg-indigo-950/30",
         color === "violet" && "border-violet-200/70 bg-violet-50/60 dark:border-violet-800/40 dark:bg-violet-950/30",
         color === "rose" && "border-rose-200/70 bg-rose-50/60 dark:border-rose-800/40 dark:bg-rose-950/30",
-        color === "emerald" && "border-emerald-200/70 bg-emerald-50/60 dark:border-emerald-800/40 dark:bg-emerald-950/30",
+        color === "emerald" &&
+          "border-emerald-200/70 bg-emerald-50/60 dark:border-emerald-800/40 dark:bg-emerald-950/30",
       )}
     >
       <Icon
@@ -134,9 +130,7 @@ function GameCard({
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         {/* Tên game + % */}
         <div className="flex items-center justify-between gap-1">
-          <span className="truncate text-xs font-semibold text-foreground">
-            {getGameLabel(gameProduct)}
-          </span>
+          <span className="truncate text-xs font-semibold text-foreground">{getGameLabel(gameProduct)}</span>
           <span
             className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white"
             style={{ background: hex }}
@@ -146,9 +140,7 @@ function GameCard({
         </div>
 
         {/* Tiền pending — nổi bật */}
-        <span className="text-sm font-bold tabular-nums text-foreground">
-          {formatVNDCompact(stake)}
-        </span>
+        <span className="text-sm font-bold tabular-nums text-foreground">{formatVNDCompact(stake)}</span>
 
         {/* Chi tiết: kỳ · vé · NC · đại lý */}
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0 text-[10px] tabular-nums text-muted-foreground">
@@ -246,18 +238,8 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
 
       {/* ── Row 2: KPI Metrics — 6 cards, mỗi card 1 màu riêng ──── */}
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-        <MetricCard
-          icon={DollarSign}
-          label="Tổng tiền pending"
-          value={formatVNDCompact(totalStake)}
-          color="blue"
-        />
-        <MetricCard
-          icon={DollarSign}
-          label="Ước tính HH"
-          value={formatVNDCompact(totalCommission)}
-          color="amber"
-        />
+        <MetricCard icon={DollarSign} label="Tổng tiền pending" value={formatVNDCompact(totalStake)} color="blue" />
+        <MetricCard icon={DollarSign} label="Ước tính HH" value={formatVNDCompact(totalCommission)} color="amber" />
         <MetricCard icon={Layers} label="Kỳ quay đang mở" value={formatNumber(totalDraws)} color="indigo" />
         <MetricCard icon={Ticket} label="Vé chờ xử lý" value={formatNumber(totalEntries)} color="violet" />
         <MetricCard icon={Users} label="Người chơi" value={formatNumber(totalPlayers)} color="rose" />
@@ -288,17 +270,10 @@ export function OutstandingStrip({ data, isLoading }: OutstandingStripProps) {
         <div className="pointer-events-none absolute inset-0 flex h-4 items-center overflow-hidden rounded-full">
           {sorted.map((g) => {
             const pct = totalStake > 0 ? (g.totalOutstandingStake / totalStake) * 100 : 0;
-            if (pct < 8)
-              return <div key={g.gameProduct} style={{ width: `${Math.max(pct, 0)}%` }} />;
+            if (pct < 8) return <div key={g.gameProduct} style={{ width: `${Math.max(pct, 0)}%` }} />;
             return (
-              <div
-                key={g.gameProduct}
-                className="flex h-full items-center justify-center"
-                style={{ width: `${pct}%` }}
-              >
-                <span className="text-[9px] font-bold text-white drop-shadow-sm">
-                  {pct.toFixed(0)}%
-                </span>
+              <div key={g.gameProduct} className="flex h-full items-center justify-center" style={{ width: `${pct}%` }}>
+                <span className="text-[9px] font-bold text-white drop-shadow-sm">{pct.toFixed(0)}%</span>
               </div>
             );
           })}

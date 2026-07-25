@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { Power655VoidReportsContent } from "./_lib/void-content";
 
 export default function Power655VoidReportsPage() {

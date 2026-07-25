@@ -1,30 +1,22 @@
 "use client";
 
 import { useState } from "react";
+
 import {
   Building2,
+  Calendar,
+  Check,
+  CheckCircle2,
+  Copy,
   Eye,
   EyeOff,
-  Copy,
-  Check,
-  Pencil,
-  RefreshCw,
   Globe,
   Key,
-  Calendar,
-  CheckCircle2,
+  Pencil,
+  RefreshCw,
   XCircle,
 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +27,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -44,12 +39,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 
 import type { Tenant } from "../_lib/schema";
-import {
-  useToggleTenantStatus,
-  useRegenerateApiKey,
-} from "../_lib/use-tenants";
+import { useRegenerateApiKey, useToggleTenantStatus } from "../_lib/use-tenants";
 import { EditTenantDialog } from "./edit-tenant-dialog";
 
 export function TenantCard({ tenant }: { tenant: Tenant }) {
@@ -91,34 +84,18 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="truncate text-sm font-semibold text-foreground">
-                  {tenant.displayName}
-                </h3>
-                <Badge
-                  variant={isActive ? "default" : "destructive"}
-                  className="shrink-0 gap-1 text-xs"
-                >
-                  {isActive ? (
-                    <CheckCircle2 className="size-3" />
-                  ) : (
-                    <XCircle className="size-3" />
-                  )}
+                <h3 className="truncate text-sm font-semibold text-foreground">{tenant.displayName}</h3>
+                <Badge variant={isActive ? "default" : "destructive"} className="shrink-0 gap-1 text-xs">
+                  {isActive ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
                   {isActive ? "Hoạt động" : "Vô hiệu"}
                 </Badge>
               </div>
-              <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                {tenant.tenantId}
-              </p>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">{tenant.tenantId}</p>
             </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1.5 text-xs"
-              onClick={() => setEditOpen(true)}
-            >
+            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setEditOpen(true)}>
               <Pencil className="size-3.5" />
               Chỉnh sửa
             </Button>
@@ -145,9 +122,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">API Key</p>
-                  <p className="text-xs text-muted-foreground">
-                    Xác thực khi gọi API
-                  </p>
+                  <p className="text-xs text-muted-foreground">Xác thực khi gọi API</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -186,9 +161,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
               <div className="mb-4 flex items-center gap-3">
                 <div
                   className={`flex size-9 items-center justify-center rounded-lg ${
-                    isActive
-                      ? "bg-emerald-100 dark:bg-emerald-950/40"
-                      : "bg-red-100 dark:bg-red-950/40"
+                    isActive ? "bg-emerald-100 dark:bg-emerald-950/40" : "bg-red-100 dark:bg-red-950/40"
                   }`}
                 >
                   {isActive ? (
@@ -199,9 +172,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Trạng thái</p>
-                  <p className="text-xs text-muted-foreground">
-                    Cho phép truy cập dịch vụ
-                  </p>
+                  <p className="text-xs text-muted-foreground">Cho phép truy cập dịch vụ</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -212,9 +183,7 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
                 />
                 <span
                   className={`text-sm font-medium ${
-                    isActive
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-red-500 dark:text-red-400"
+                    isActive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
                   }`}
                 >
                   {isActive ? "Đang hoạt động" : "Đã vô hiệu hoá"}
@@ -229,12 +198,8 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
             <div className="flex items-center gap-3 px-6 py-4">
               <Globe className="size-4 shrink-0 text-muted-foreground" />
               <div className="min-w-0">
-                <p className="text-[11px] text-muted-foreground">
-                  Callback URL
-                </p>
-                <p className="truncate text-xs font-medium text-foreground">
-                  {tenant.callbackBaseUrl}
-                </p>
+                <p className="text-[11px] text-muted-foreground">Callback URL</p>
+                <p className="truncate text-xs font-medium text-foreground">{tenant.callbackBaseUrl}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 px-6 py-4">
@@ -267,20 +232,12 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
               minute: "2-digit",
             })}
           </p>
-          {tenant.description && (
-            <p className="text-[11px] italic text-muted-foreground">
-              {tenant.description}
-            </p>
-          )}
+          {tenant.description && <p className="text-[11px] italic text-muted-foreground">{tenant.description}</p>}
         </CardFooter>
       </Card>
 
       {/* Edit Dialog */}
-      <EditTenantDialog
-        tenant={tenant}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-      />
+      <EditTenantDialog tenant={tenant} open={editOpen} onOpenChange={setEditOpen} />
 
       {/* Toggle Status Confirmation */}
       <AlertDialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
@@ -296,15 +253,13 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={toggleStatus.isPending}>
-              Huỷ
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={toggleStatus.isPending}>Huỷ</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
                 toggleStatus.mutate(
                   { tenantId: tenant.tenantId, status: nextStatus },
-                  { onSuccess: () => setStatusDialogOpen(false) }
+                  { onSuccess: () => setStatusDialogOpen(false) },
                 );
               }}
               disabled={toggleStatus.isPending}
@@ -321,25 +276,12 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>API Key mới</DialogTitle>
-              <DialogDescription>
-                Sao chép API key mới ngay. Key cũ đã bị thay thế.
-              </DialogDescription>
+              <DialogDescription>Sao chép API key mới ngay. Key cũ đã bị thay thế.</DialogDescription>
             </DialogHeader>
             <div className="flex items-center gap-2 rounded-md border bg-muted/50 p-3">
-              <code className="flex-1 break-all text-sm font-mono">
-                {newApiKey}
-              </code>
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0"
-                onClick={() => handleCopy(newApiKey)}
-              >
-                {copied ? (
-                  <Check className="size-4 text-emerald-600" />
-                ) : (
-                  <Copy className="size-4" />
-                )}
+              <code className="flex-1 break-all text-sm font-mono">{newApiKey}</code>
+              <Button variant="outline" size="icon" className="shrink-0" onClick={() => handleCopy(newApiKey)}>
+                {copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
               </Button>
             </div>
             <DialogFooter>
@@ -351,18 +293,13 @@ export function TenantCard({ tenant }: { tenant: Tenant }) {
         <AlertDialog open={regenDialogOpen} onOpenChange={setRegenDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>
-                Tạo API key mới cho &quot;{tenant.tenantId}&quot;?
-              </AlertDialogTitle>
+              <AlertDialogTitle>Tạo API key mới cho &quot;{tenant.tenantId}&quot;?</AlertDialogTitle>
               <AlertDialogDescription>
-                API key hiện tại sẽ bị vô hiệu ngay lập tức. Đối tác cần cập
-                nhật key mới để tiếp tục sử dụng dịch vụ.
+                API key hiện tại sẽ bị vô hiệu ngay lập tức. Đối tác cần cập nhật key mới để tiếp tục sử dụng dịch vụ.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={regenKey.isPending}>
-                Huỷ
-              </AlertDialogCancel>
+              <AlertDialogCancel disabled={regenKey.isPending}>Huỷ</AlertDialogCancel>
               <AlertDialogAction
                 onClick={(e) => {
                   e.preventDefault();

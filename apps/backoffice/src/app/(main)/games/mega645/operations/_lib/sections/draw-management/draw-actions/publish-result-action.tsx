@@ -1,16 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import {
-  Check,
-  Loader2,
-  ExternalLink,
-  CalendarDays,
-  Hash,
-  Dice5,
-  ClipboardCheck,
-  AlertCircle,
-} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+import { MEGA645_NUMBER_COUNT, MEGA645_NUMBER_MAX, MEGA645_NUMBER_MIN } from "@megawin/game-mega645/entities";
+import { todayVN } from "@megawin/shared/utils";
+import { AlertCircle, CalendarDays, Check, ClipboardCheck, Dice5, ExternalLink, Hash, Loader2 } from "lucide-react";
+
+import { generateUniqueRandomNumbers, RandomFillButton } from "@/components/draws";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,13 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { RandomFillButton, generateUniqueRandomNumbers } from "@/components/draws";
-import {
-  MEGA645_NUMBER_MIN,
-  MEGA645_NUMBER_MAX,
-  MEGA645_NUMBER_COUNT,
-} from "@megawin/game-mega645/entities";
-import { todayVN } from "@megawin/shared/utils";
+
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
 
@@ -73,9 +63,7 @@ function validateMega645Numbers(numbers: string[]): ValidationResult {
     }
     const n = parseInt(v, 10);
     if (isNaN(n) || n < MEGA645_NUMBER_MIN || n > MEGA645_NUMBER_MAX) {
-      messages.push(
-        `Ô ${i + 1}: số ${v} ngoài dải ${pad2(MEGA645_NUMBER_MIN)}–${pad2(MEGA645_NUMBER_MAX)}`,
-      );
+      messages.push(`Ô ${i + 1}: số ${v} ngoài dải ${pad2(MEGA645_NUMBER_MIN)}–${pad2(MEGA645_NUMBER_MAX)}`);
       fieldErrors.add(i);
       parsed.push(null);
     } else {
@@ -84,9 +72,7 @@ function validateMega645Numbers(numbers: string[]): ValidationResult {
   }
 
   if (emptyIndices.length > 0) {
-    messages.push(
-      `Còn ${emptyIndices.length} ô chưa nhập (ô ${emptyIndices.map((i) => i + 1).join(", ")})`,
-    );
+    messages.push(`Còn ${emptyIndices.length} ô chưa nhập (ô ${emptyIndices.map((i) => i + 1).join(", ")})`);
   }
 
   const posMap = new Map<number, number[]>();
@@ -161,11 +147,7 @@ export function PublishResultAction({
   }
 
   function fillRandom() {
-    const drawn = generateUniqueRandomNumbers(
-      MEGA645_NUMBER_COUNT,
-      MEGA645_NUMBER_MIN,
-      MEGA645_NUMBER_MAX,
-    );
+    const drawn = generateUniqueRandomNumbers(MEGA645_NUMBER_COUNT, MEGA645_NUMBER_MIN, MEGA645_NUMBER_MAX);
     setNumbers(drawn.map((n) => pad2(n)));
     setValidation(VALID);
   }
@@ -201,8 +183,7 @@ export function PublishResultAction({
             {isRepublish ? "Sửa kết quả" : "Công bố kết quả"} — Kỳ {draw.drawDate}
           </DialogTitle>
           <DialogDescription>
-            Nhập {MEGA645_NUMBER_COUNT} số chính ({pad2(MEGA645_NUMBER_MIN)}–
-            {pad2(MEGA645_NUMBER_MAX)}).
+            Nhập {MEGA645_NUMBER_COUNT} số chính ({pad2(MEGA645_NUMBER_MIN)}–{pad2(MEGA645_NUMBER_MAX)}).
             {isRepublish && " Kết quả cũ sẽ bị ghi đè. Chỉ có hiệu lực trước khi kết sổ."}
           </DialogDescription>
         </DialogHeader>
@@ -220,15 +201,12 @@ export function PublishResultAction({
 
               <div className="rounded-lg border bg-muted/30 p-4">
                 <p className="mb-3 text-xs text-muted-foreground">
-                  {MEGA645_NUMBER_COUNT} số chính (không trùng, {pad2(MEGA645_NUMBER_MIN)}–
-                  {pad2(MEGA645_NUMBER_MAX)})
+                  {MEGA645_NUMBER_COUNT} số chính (không trùng, {pad2(MEGA645_NUMBER_MIN)}–{pad2(MEGA645_NUMBER_MAX)})
                 </p>
                 <div className="grid grid-cols-6 gap-2">
                   {Array.from({ length: MEGA645_NUMBER_COUNT }, (_, i) => (
                     <div key={i} className="flex flex-col gap-1">
-                      <span className="text-xs font-medium text-muted-foreground text-center">
-                        {i + 1}
-                      </span>
+                      <span className="text-xs font-medium text-muted-foreground text-center">{i + 1}</span>
                       <Input
                         ref={(el) => {
                           inputRefs.current[i] = el;

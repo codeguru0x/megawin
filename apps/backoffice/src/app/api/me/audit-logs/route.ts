@@ -1,6 +1,7 @@
-import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities";
 import { ListMyAuditLogsUseCase } from "@megawin/audit/use-cases";
+import { CompanyRole } from "@megawin/identity/entities";
+
+import { withApi } from "@/lib/api";
 
 import { listMyAuditLogsQuerySchema } from "./_lib/schema";
 
@@ -21,6 +22,4 @@ const useCase = new ListMyAuditLogsUseCase();
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })
   .query(listMyAuditLogsQuerySchema)
-  .handler(async ({ query, session }) =>
-    useCase.run({ ...query, accountId: session!.user.accountId ?? "" }),
-  );
+  .handler(async ({ query, session }) => useCase.run({ ...query, accountId: session!.user.accountId ?? "" }));

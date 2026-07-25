@@ -1,18 +1,20 @@
 "use client";
 
-import { Trophy, Zap, Flame, TrendingUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
+import Link from "next/link";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { GAME_COLORS } from "@/lib/game-colors";
+import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
+import { Flame, TrendingUp, Trophy, Zap } from "lucide-react";
+
 import type {
   DashboardJackpotInfo,
   DashboardPower655JackpotInfo,
   GetDashboardJackpotsOutput,
 } from "@/app/api/dashboard/jackpots/_lib/types";
-import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { GAME_COLORS } from "@/lib/game-colors";
+import { cn } from "@/lib/utils";
 
 interface JackpotPoolsProps {
   data: GetDashboardJackpotsOutput | undefined;
@@ -60,19 +62,14 @@ function Mega645Card({ data }: { data: DashboardJackpotInfo }) {
         c.gradientFromDark,
         c.gradientViaDark,
         c.gradientToDark,
-        isHot
-          ? "border-teal-400 dark:border-teal-700/70"
-          : "border-teal-200 dark:border-teal-800/50",
+        isHot ? "border-teal-400 dark:border-teal-700/70" : "border-teal-200 dark:border-teal-800/50",
       )}
     >
       <div className="pointer-events-none absolute -right-8 -top-8 size-40 rounded-full bg-linear-to-br from-teal-300/20 to-cyan-300/10 blur-3xl dark:from-teal-500/8 dark:to-cyan-500/4" />
 
       <div className="relative space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <Link
-            href="/games/mega645/jackpot"
-            className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
-          >
+          <Link href="/games/mega645/jackpot" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
             <div className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-teal-400 to-emerald-500 shadow-md shadow-teal-500/25">
               <Trophy className="size-4.5 text-white" />
             </div>
@@ -92,9 +89,7 @@ function Mega645Card({ data }: { data: DashboardJackpotInfo }) {
           <p className="text-2xl font-extrabold tabular-nums tracking-tight text-teal-900 dark:text-teal-100">
             {formatVNDCompact(data.currentAmount)}
           </p>
-          <p className="mt-0.5 text-[11px] text-teal-700/60 dark:text-teal-400/50">
-            {formatVND(data.currentAmount)}
-          </p>
+          <p className="mt-0.5 text-[11px] text-teal-700/60 dark:text-teal-400/50">{formatVND(data.currentAmount)}</p>
         </div>
 
         {data.progressPercent != null && (
@@ -119,15 +114,11 @@ function Mega645Card({ data }: { data: DashboardJackpotInfo }) {
         )}
 
         <div className="flex items-center justify-between">
-          <p className="text-[11px] text-teal-700/50 dark:text-teal-400/40">
-            {data.drawCount} kỳ đã tích lũy
-          </p>
+          <p className="text-[11px] text-teal-700/50 dark:text-teal-400/40">{data.drawCount} kỳ đã tích lũy</p>
           {data.drawCount > 0 && (
             <p className="flex items-center gap-1 text-[11px] text-teal-700/50 dark:text-teal-400/40">
               <TrendingUp className="size-3" />~
-              {formatVNDCompact(
-                Math.round((data.currentAmount - data.seedAmount) / data.drawCount),
-              )}
+              {formatVNDCompact(Math.round((data.currentAmount - data.seedAmount) / data.drawCount))}
               /kỳ
             </p>
           )}
@@ -145,10 +136,7 @@ function Mega645Card({ data }: { data: DashboardJackpotInfo }) {
  */
 function Power655Card({ data }: { data: DashboardPower655JackpotInfo }) {
   const c = GAME_COLORS[GameProduct.Power655];
-  const jp1Pct =
-    data.jp1OverflowThreshold > 0
-      ? Math.min((data.jp1Current / data.jp1OverflowThreshold) * 100, 110)
-      : 0;
+  const jp1Pct = data.jp1OverflowThreshold > 0 ? Math.min((data.jp1Current / data.jp1OverflowThreshold) * 100, 110) : 0;
   const isHot = jp1Pct >= 80;
   const isOverflow = data.jp1Current >= data.jp1OverflowThreshold;
 
@@ -240,9 +228,7 @@ function Power655Card({ data }: { data: DashboardPower655JackpotInfo }) {
         </div>
 
         <div className="flex items-center justify-between">
-          <p className="text-[11px] text-red-700/50 dark:text-red-400/40">
-            {data.drawCount} kỳ đã tích lũy
-          </p>
+          <p className="text-[11px] text-red-700/50 dark:text-red-400/40">{data.drawCount} kỳ đã tích lũy</p>
           {data.drawCount > 0 && (
             <p className="flex items-center gap-1 text-[11px] text-red-700/50 dark:text-red-400/40">
               <TrendingUp className="size-3" />~
@@ -274,9 +260,7 @@ function Lotto535Card({ data }: { data: DashboardJackpotInfo }) {
         c.gradientFromDark,
         c.gradientViaDark,
         c.gradientToDark,
-        isHot
-          ? "border-red-300 dark:border-red-800/60"
-          : "border-amber-200 dark:border-amber-800/50",
+        isHot ? "border-red-300 dark:border-red-800/60" : "border-amber-200 dark:border-amber-800/50",
       )}
     >
       <div className="pointer-events-none absolute -right-8 -top-8 size-40 rounded-full bg-linear-to-br from-yellow-300/20 to-orange-300/10 blur-3xl dark:from-yellow-500/8 dark:to-orange-500/4" />
@@ -306,9 +290,7 @@ function Lotto535Card({ data }: { data: DashboardJackpotInfo }) {
           <p className="text-2xl font-extrabold tabular-nums tracking-tight text-amber-900 dark:text-amber-100">
             {formatVNDCompact(data.currentAmount)}
           </p>
-          <p className="mt-0.5 text-[11px] text-amber-700/60 dark:text-amber-400/50">
-            {formatVND(data.currentAmount)}
-          </p>
+          <p className="mt-0.5 text-[11px] text-amber-700/60 dark:text-amber-400/50">{formatVND(data.currentAmount)}</p>
         </div>
 
         {data.splitThreshold != null && data.progressPercent != null && (
@@ -333,15 +315,11 @@ function Lotto535Card({ data }: { data: DashboardJackpotInfo }) {
         )}
 
         <div className="flex items-center justify-between">
-          <p className="text-[11px] text-amber-700/50 dark:text-amber-400/40">
-            {data.drawCount} kỳ đã tích lũy
-          </p>
+          <p className="text-[11px] text-amber-700/50 dark:text-amber-400/40">{data.drawCount} kỳ đã tích lũy</p>
           {data.drawCount > 0 && (
             <p className="flex items-center gap-1 text-[11px] text-amber-700/50 dark:text-amber-400/40">
               <TrendingUp className="size-3" />~
-              {formatVNDCompact(
-                Math.round((data.currentAmount - data.seedAmount) / data.drawCount),
-              )}
+              {formatVNDCompact(Math.round((data.currentAmount - data.seedAmount) / data.drawCount))}
               /kỳ
             </p>
           )}

@@ -8,18 +8,15 @@
  * Hiển thị board đầu tiên hoặc side bet đầu tiên.
  */
 
-import { cn } from "@/lib/utils";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber, displayVNTimeWithSeconds } from "@megawin/shared/utils";
+import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS, KENO_PLAY_TYPE_LABELS } from "@megawin/game-keno/labels";
+import { displayVNTimeWithSeconds, formatNumber, toTenantUsername } from "@megawin/shared/utils";
 import { Activity, Radio } from "lucide-react";
-import { toTenantUsername } from "@megawin/shared/utils";
-import {
-  KENO_PLAY_TYPE_LABELS,
-  KENO_BIG_SMALL_BET_LABELS,
-  KENO_EVEN_ODD_BET_LABELS,
-} from "@megawin/game-keno/labels";
-import { NumbersWithTooltip } from "./number-heatmap";
+
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
 import type { LiveFeedEntry } from "../../types";
+import { NumbersWithTooltip } from "./number-heatmap";
 
 // ─── PlayType color map — Keno ───────────────────────────────────────────────
 
@@ -89,9 +86,7 @@ export function LiveFeed({
           <div className="space-y-0.5">
             {entries.map((e, i) => {
               const color = PLAY_TYPE_COLORS[e.playType];
-              const label =
-                KENO_PLAY_TYPE_LABELS[e.playType as keyof typeof KENO_PLAY_TYPE_LABELS] ??
-                e.playType;
+              const label = KENO_PLAY_TYPE_LABELS[e.playType as keyof typeof KENO_PLAY_TYPE_LABELS] ?? e.playType;
               const isSideBet = e.playType === "bigSmall" || e.playType === "evenOdd";
               const isLargeBet = e.amount >= LARGE_BET_THRESHOLD;
 
@@ -111,18 +106,8 @@ export function LiveFeed({
                   <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
                     {/* Row 1: play type */}
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <div
-                        className={cn(
-                          "size-1.5 rounded-full shrink-0",
-                          color?.dot ?? "bg-muted-foreground",
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "text-xs font-semibold truncate",
-                          color?.text ?? "text-muted-foreground",
-                        )}
-                      >
+                      <div className={cn("size-1.5 rounded-full shrink-0", color?.dot ?? "bg-muted-foreground")} />
+                      <span className={cn("text-xs font-semibold truncate", color?.text ?? "text-muted-foreground")}>
                         {label}
                       </span>
                       {isLargeBet && (
@@ -138,8 +123,7 @@ export function LiveFeed({
                         (() => {
                           if (e.playType === "bigSmall" && e.bet !== undefined) {
                             // bigSmall: "Lớn" | "Hoà Lớn Nhỏ" | "Nhỏ"
-                            const betLabel =
-                              (KENO_BIG_SMALL_BET_LABELS as Record<string, string>)[e.bet] ?? e.bet;
+                            const betLabel = (KENO_BIG_SMALL_BET_LABELS as Record<string, string>)[e.bet] ?? e.bet;
                             return (
                               <span className="inline-flex h-5 items-center justify-center rounded-full bg-cyan-500/15 px-2 text-xs font-semibold text-cyan-700 dark:text-cyan-400 shrink-0">
                                 {betLabel}
@@ -148,8 +132,7 @@ export function LiveFeed({
                           }
                           if (e.playType === "evenOdd" && e.bet !== undefined) {
                             // evenOdd: "Chẵn" | "Chẵn 11-12" | "Hoà Chẵn Lẻ" | "Lẻ 11-12" | "Lẻ"
-                            const betLabel =
-                              (KENO_EVEN_ODD_BET_LABELS as Record<string, string>)[e.bet] ?? e.bet;
+                            const betLabel = (KENO_EVEN_ODD_BET_LABELS as Record<string, string>)[e.bet] ?? e.bet;
                             return (
                               <span className="inline-flex h-5 items-center justify-center rounded-full bg-teal-500/15 px-2 text-xs font-semibold text-teal-700 dark:text-teal-400 shrink-0">
                                 {betLabel}

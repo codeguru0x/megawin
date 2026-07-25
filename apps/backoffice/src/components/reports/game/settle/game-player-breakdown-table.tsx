@@ -1,17 +1,11 @@
 "use client";
 
-import { Users } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { Users } from "lucide-react";
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 /**
  * Một hàng player trong bảng breakdown.
@@ -73,9 +67,7 @@ export function GamePlayerBreakdownTable({
               <TableRow>
                 <TableHead>Tài khoản</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
-                {showLineCount && (
-                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.lineCount}</TableHead>
-                )}
+                {showLineCount && <TableHead className="text-right">{REPORT_COLUMN_LABELS.lineCount}</TableHead>}
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
                 <TableHead className="text-right">Lãi / Lỗ (KH)</TableHead>
@@ -92,24 +84,16 @@ export function GamePlayerBreakdownTable({
                     onClick={() => onRowClick(row.accountId, row.displayName)}
                   >
                     <TableCell className="text-sm font-medium">{row.displayName}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
                     {showLineCount && (
                       <TableCell className="text-right text-sm tabular-nums">
                         {formatNumber(row.lineCount ?? 0)}
                       </TableCell>
                     )}
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.totalStake)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.totalPayout)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalStake)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalPayout)}</TableCell>
                     <TableCell
-                      className={`text-right text-sm tabular-nums font-medium ${
-                        playerNet > 0 ? "text-profit" : ""
-                      }`}
+                      className={`text-right text-sm tabular-nums font-medium ${playerNet > 0 ? "text-profit" : ""}`}
                     >
                       {playerNet > 0 ? "+" : ""}
                       {formatNumber(playerNet)}

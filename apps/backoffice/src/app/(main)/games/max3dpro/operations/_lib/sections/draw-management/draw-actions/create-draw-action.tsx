@@ -11,11 +11,16 @@
  * - Không hiển thị thời gian đóng bán
  */
 
-import { useState, useEffect, useRef } from "react";
-import { Check, Loader2, CalendarPlus, Unlock, Lock, RefreshCw, CalendarIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+import { formatVNDate, formatVNTime } from "@megawin/shared/utils";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import { CalendarIcon, CalendarPlus, Check, Loader2, Lock, RefreshCw, Unlock } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -26,12 +31,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { formatVNTime, formatVNDate } from "@megawin/shared/utils";
+
 import { useCreateDraw, usePreviewDraws } from "../../../use-operations";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -118,12 +121,7 @@ function DatePickerCell({
               : "border-input text-foreground",
           )}
         >
-          <CalendarIcon
-            className={cn(
-              "size-3.5 shrink-0",
-              hasError ? "text-amber-400" : "text-muted-foreground",
-            )}
-          />
+          <CalendarIcon className={cn("size-3.5 shrink-0", hasError ? "text-amber-400" : "text-muted-foreground")} />
           <span className={cn("flex-1 text-left font-mono", !value && "text-muted-foreground/60")}>
             {value || "Chọn ngày"}
           </span>
@@ -295,8 +293,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             Tạo kỳ quay Max 3D Pro
           </DialogTitle>
           <DialogDescription>
-            Tạo nhiều kỳ liên tiếp. Lịch gợi ý theo T3/T5/T7 lúc 18:00 — staff có thể chỉnh ngày và
-            giờ nếu cần.
+            Tạo nhiều kỳ liên tiếp. Lịch gợi ý theo T3/T5/T7 lúc 18:00 — staff có thể chỉnh ngày và giờ nếu cần.
           </DialogDescription>
         </DialogHeader>
 
@@ -304,9 +301,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           {/* Số kỳ + badges */}
           <div className="flex items-end gap-4 flex-wrap">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Số kỳ mở
-              </Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Số kỳ mở</Label>
               <Input
                 type="number"
                 min={1}
@@ -328,9 +323,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                 </span>
               )}
               {openCount > 0 && (
-                <Badge className="bg-green-600 hover:bg-green-600 text-white text-xs">
-                  {openCount} mở bán
-                </Badge>
+                <Badge className="bg-green-600 hover:bg-green-600 text-white text-xs">{openCount} mở bán</Badge>
               )}
               {scheduledCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
@@ -369,25 +362,15 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider text-center">
                 Thứ
               </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                Ngày quay
-              </span>
-              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                Giờ quay
-              </span>
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Ngày quay</span>
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Giờ quay</span>
               <div className="flex items-center justify-end">
                 <button
                   onClick={toggleAll}
                   className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {allOpen ? (
-                    <Unlock className="size-3 text-green-600" />
-                  ) : (
-                    <Lock className="size-3" />
-                  )}
-                  <span className={cn(allOpen && "text-green-600 dark:text-green-400")}>
-                    {allOpen ? "Đóng" : "Mở"}
-                  </span>
+                  {allOpen ? <Unlock className="size-3 text-green-600" /> : <Lock className="size-3" />}
+                  <span className={cn(allOpen && "text-green-600 dark:text-green-400")}>{allOpen ? "Đóng" : "Mở"}</span>
                 </button>
               </div>
             </div>
@@ -423,11 +406,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                     </span>
 
                     {/* Ngày quay */}
-                    <DatePickerCell
-                      value={row.date}
-                      onChange={(date) => updateRow(i, { date })}
-                      hasError={dateErr}
-                    />
+                    <DatePickerCell value={row.date} onChange={(date) => updateRow(i, { date })} hasError={dateErr} />
 
                     {/* Giờ quay */}
                     <TimePickerCell
@@ -449,9 +428,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       <span
                         className={cn(
                           "text-[11px] font-medium min-w-12 text-left",
-                          row.isOpen
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-muted-foreground",
+                          row.isOpen ? "text-green-600 dark:text-green-400" : "text-muted-foreground",
                         )}
                       >
                         {row.isOpen ? "Mở bán" : "Chờ lịch"}
@@ -479,11 +456,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             disabled={!canSubmit}
             className={cn(someOpen && "bg-green-600 hover:bg-green-700 text-white")}
           >
-            {createDraw.isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <Check className="size-4" />
-            )}
+            {createDraw.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
             Tạo {count} kỳ quay
           </Button>
         </DialogFooter>

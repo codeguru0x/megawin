@@ -1,42 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Ticket,
-  Building2,
-  User,
-  Clock,
-  Layers,
-  Banknote,
-  HandCoins,
-  CheckCircle2,
-  XCircle,
-  Timer,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber, toTenantUsername, formatVN } from "@megawin/shared/utils";
-import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import {
-  LOTTO535_PLAY_TYPE_LABELS,
-  LOTTO535_PRIZE_TIER_LABELS,
-} from "@megawin/game-lotto535/labels";
-import type { TicketEntryEntity } from "@megawin/game-lotto535/entities";
+
 import { EntryStatus } from "@megawin/game-core/entities";
-import { boardColorVar } from "@/lib/game-colors";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import type { TicketEntryEntity } from "@megawin/game-lotto535/entities";
+import { LOTTO535_PLAY_TYPE_LABELS, LOTTO535_PRIZE_TIER_LABELS } from "@megawin/game-lotto535/labels";
+import { formatNumber, formatVN, toTenantUsername } from "@megawin/shared/utils";
+import {
+  Banknote,
+  Building2,
+  CheckCircle2,
+  Clock,
+  HandCoins,
+  Layers,
+  Minus,
+  Ticket,
+  Timer,
+  TrendingDown,
+  TrendingUp,
+  User,
+  XCircle,
+} from "lucide-react";
+
 import { LottoMatchBall } from "@/components/games/lotto535/lotto-number-ball";
 import { EntryDetailDialogLoading } from "@/components/games/shared/skeletons/entry-detail-skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { boardColorVar } from "@/lib/game-colors";
 
 // ─── Entry Detail Dialog ──────────────────────────────────────────────────────
 
@@ -105,9 +98,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
   const playerLink = `/accounts/players/${entry.accountId}`;
   const MAX_USERNAME_LEN = 14;
   const truncatedUsername =
-    tenantUsername.length > MAX_USERNAME_LEN
-      ? tenantUsername.slice(0, MAX_USERNAME_LEN) + "…"
-      : tenantUsername;
+    tenantUsername.length > MAX_USERNAME_LEN ? tenantUsername.slice(0, MAX_USERNAME_LEN) + "…" : tenantUsername;
 
   return (
     <>
@@ -147,10 +138,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link
-                        href={playerLink}
-                        className="cursor-pointer font-semibold hover:underline"
-                      >
+                      <Link href={playerLink} className="cursor-pointer font-semibold hover:underline">
                         {truncatedUsername}
                       </Link>
                     </TooltipTrigger>
@@ -214,12 +202,8 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalCommission}
-                  </p>
-                  <p className="text-sm font-bold tabular-nums">
-                    {formatNumber(entry.tenant.commissionAmount)}
-                  </p>
+                  <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
             </div>
@@ -247,12 +231,8 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <Banknote className="size-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalPayout}
-                  </p>
-                  <p className="text-sm font-bold tabular-nums">
-                    {formatNumber(entry.payout?.payoutAmount ?? 0)}
-                  </p>
+                  <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.totalPayout}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.payout?.payoutAmount ?? 0)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
@@ -260,12 +240,8 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalCommission}
-                  </p>
-                  <p className="text-sm font-bold tabular-nums">
-                    {formatNumber(entry.tenant.commissionAmount)}
-                  </p>
+                  <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
               {playerNet !== null && (
@@ -288,16 +264,10 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     )}
                   </div>
                   <div>
-                    <p className="text-[11px] text-muted-foreground">
-                      {REPORT_COLUMN_LABELS.playerNetProfit}
-                    </p>
+                    <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
                     <p
                       className={`text-sm font-bold tabular-nums ${
-                        playerNet > 0
-                          ? "text-profit"
-                          : playerNet < 0
-                            ? "text-loss"
-                            : "text-foreground"
+                        playerNet > 0 ? "text-profit" : playerNet < 0 ? "text-loss" : "text-foreground"
                       }`}
                     >
                       {playerNet > 0 ? "+" : ""}
@@ -314,24 +284,18 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {entry.result && !isScheduled && boards.length > 0 ? (
             <div className="rounded-lg border p-4">
               {/* Hàng kết quả kỳ quay */}
-              <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Kết quả
-              </p>
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Kết quả</p>
               <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
                 {entry.result.winningMain.map((n: string) => {
                   const playerPicked = allPickedMain.has(n);
-                  return (
-                    <LottoMatchBall key={n} n={n} variant={playerPicked ? "matched" : "result"} />
-                  );
+                  return <LottoMatchBall key={n} n={n} variant={playerPicked ? "matched" : "result"} />;
                 })}
                 {winningSpecial && (
                   <>
                     <span className="select-none text-muted-foreground/40">|</span>
                     <LottoMatchBall
                       n={winningSpecial}
-                      variant={
-                        allPickedSpecial.has(winningSpecial) ? "special-matched" : "result-special"
-                      }
+                      variant={allPickedSpecial.has(winningSpecial) ? "special-matched" : "result-special"}
                       title="Số đặc biệt"
                     />
                   </>
@@ -362,10 +326,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                       }}
                     >
                       <div className="flex items-center justify-center self-stretch">
-                        <span
-                          className="text-sm font-extrabold leading-none"
-                          style={{ color: boardColor }}
-                        >
+                        <span className="text-sm font-extrabold leading-none" style={{ color: boardColor }}>
                           {board.boardNo}
                         </span>
                       </div>
@@ -374,14 +335,10 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           {playLabel ?? "Thường"}
                         </span>
                         <span className="text-[10px] leading-tight text-muted-foreground">
-                          {board.expandedLines > 1
-                            ? `${formatNumber(board.expandedLines)} lines`
-                            : "1 line"}
+                          {board.expandedLines > 1 ? `${formatNumber(board.expandedLines)} lines` : "1 line"}
                         </span>
                         {board.betCount > 1 && (
-                          <span className="text-[10px] leading-tight text-muted-foreground/70">
-                            ×{board.betCount}
-                          </span>
+                          <span className="text-[10px] leading-tight text-muted-foreground/70">×{board.betCount}</span>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-1">
@@ -435,10 +392,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         }}
                       >
                         <div className="flex items-center justify-center self-stretch">
-                          <span
-                            className="text-sm font-extrabold leading-none"
-                            style={{ color: boardColor }}
-                          >
+                          <span className="text-sm font-extrabold leading-none" style={{ color: boardColor }}>
                             {board.boardNo}
                           </span>
                         </div>
@@ -447,9 +401,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                             {playLabel ?? "Thường"}
                           </span>
                           <span className="text-[10px] leading-tight text-muted-foreground">
-                            {board.expandedLines > 1
-                              ? `${formatNumber(board.expandedLines)} lines`
-                              : "1 line"}
+                            {board.expandedLines > 1 ? `${formatNumber(board.expandedLines)} lines` : "1 line"}
                           </span>
                           {board.betCount > 1 && (
                             <span className="text-[10px] leading-tight text-muted-foreground/70">
@@ -465,13 +417,7 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                             <span className="select-none px-0.5 text-muted-foreground/40">|</span>
                           )}
                           {board.specialNumbers.map((n: string) => (
-                            <LottoMatchBall
-                              key={`s-${n}`}
-                              n={n}
-                              size="sm"
-                              variant="special"
-                              title="Số đặc biệt"
-                            />
+                            <LottoMatchBall key={`s-${n}`} n={n} size="sm" variant="special" title="Số đặc biệt" />
                           ))}
                         </div>
                       </div>
@@ -485,32 +431,24 @@ function Lotto535EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 4. Giải trúng ─────────────────────────────────────────── */}
           {tiers.length > 0 && !isScheduled && (
             <div className="rounded-lg border border-profit/30 bg-profit/5 p-4">
-              <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-profit">
-                Giải trúng
-              </p>
+              <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-profit">Giải trúng</p>
               <div className="space-y-2">
                 {tiers.map(
-                  (
-                    tier: { tier: string; hitCount: number; unitAmount: number; amount: number },
-                    i: number,
-                  ) => (
+                  (tier: { tier: string; hitCount: number; unitAmount: number; amount: number }, i: number) => (
                     <div
                       key={i}
                       className="flex items-center justify-between rounded-md bg-background/60 px-3 py-1.5 text-sm"
                     >
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary" className="font-medium">
-                          {LOTTO535_PRIZE_TIER_LABELS[
-                            tier.tier as keyof typeof LOTTO535_PRIZE_TIER_LABELS
-                          ] ?? tier.tier}
+                          {LOTTO535_PRIZE_TIER_LABELS[tier.tier as keyof typeof LOTTO535_PRIZE_TIER_LABELS] ??
+                            tier.tier}
                         </Badge>
                         <span className="inline-flex items-center rounded-full bg-profit/15 px-2 py-0.5 text-[11px] font-bold tabular-nums text-profit">
                           ×{tier.hitCount} lần
                         </span>
                       </div>
-                      <span className="tabular-nums font-bold text-profit">
-                        {formatNumber(tier.amount)}
-                      </span>
+                      <span className="tabular-nums font-bold text-profit">{formatNumber(tier.amount)}</span>
                     </div>
                   ),
                 )}

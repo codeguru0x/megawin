@@ -1,9 +1,9 @@
 "use client";
 
-import { useQueryStates, parseAsString, parseAsStringLiteral } from "nuqs";
-import { subDays } from "date-fns";
-import { todayVN, formatVNDate, TZDate, VN_TIMEZONE } from "@megawin/shared/utils";
+import { formatVNDate, TZDate, todayVN, VN_TIMEZONE } from "@megawin/shared/utils";
 import { DispatchOrderStatus, DispatchSourceKind } from "@megawin/tenant-dispatch/entities";
+import { subDays } from "date-fns";
+import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 
 /**
  * URL state cho trang "Lệnh gửi đại lý".
@@ -25,14 +25,8 @@ import { DispatchOrderStatus, DispatchSourceKind } from "@megawin/tenant-dispatc
  * Default range: today-7 → today.
  */
 
-const STATUS_VALUES = Object.values(DispatchOrderStatus) as [
-  DispatchOrderStatus,
-  ...DispatchOrderStatus[],
-];
-const KIND_VALUES = Object.values(DispatchSourceKind) as [
-  DispatchSourceKind,
-  ...DispatchSourceKind[],
-];
+const STATUS_VALUES = Object.values(DispatchOrderStatus) as [DispatchOrderStatus, ...DispatchOrderStatus[]];
+const KIND_VALUES = Object.values(DispatchSourceKind) as [DispatchSourceKind, ...DispatchSourceKind[]];
 const RETRY_MODES = ["fresh", "retrying", "stuck"] as const;
 
 export type DispatchRetryMode = (typeof RETRY_MODES)[number];
@@ -72,10 +66,7 @@ export function useDispatchFilters() {
    * Set identity lookup — đặt đúng 1 field (theo kind) và xoá 3 field còn lại
    * + xoá mọi dimension filter để URL sạch.
    */
-  function setIdentity(
-    kind: "tx" | "batchKey" | "accountId" | "username" | null,
-    value: string,
-  ) {
+  function setIdentity(kind: "tx" | "batchKey" | "accountId" | "username" | null, value: string) {
     const trimmed = value.trim();
     void setState({
       tx: kind === "tx" && trimmed ? trimmed : null,

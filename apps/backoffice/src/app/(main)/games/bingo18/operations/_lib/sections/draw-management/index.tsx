@@ -13,6 +13,9 @@
  */
 
 import { useState } from "react";
+
+import { DrawStatus } from "@megawin/game-core/entities";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,25 +26,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { DrawStatus } from "@megawin/game-core/entities";
-
-import { useDrawContext } from "../../use-draw-context";
-import { DrawCommandCenter } from "./draw-command-center";
-import {
-  PublishResultAction,
-  EditScheduleAction,
-  VoidDrawAction,
-  type PublishResultCurrentValues,
-} from "./draw-actions";
-import {
-  useOpenSales,
-  useCloseSales,
-  useTriggerSettle,
-  useTriggerResettle,
-  useDrawDetail,
-} from "../../use-operations";
 
 import type { Bingo18DrawResult, VoidInfo } from "../../types";
+import { useDrawContext } from "../../use-draw-context";
+import { useCloseSales, useDrawDetail, useOpenSales, useTriggerResettle, useTriggerSettle } from "../../use-operations";
+import {
+  EditScheduleAction,
+  PublishResultAction,
+  type PublishResultCurrentValues,
+  VoidDrawAction,
+} from "./draw-actions";
+import { DrawCommandCenter } from "./draw-command-center";
 
 const RESULT_SHOW = new Set([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
 
@@ -73,8 +68,7 @@ export function DrawManagementSection() {
     return {
       diceNumbers: r.numbers ?? r.diceNumbers ?? [],
       sum: r.sum ?? 0,
-      publishedAt:
-        r.publishedAt instanceof Date ? r.publishedAt.toISOString() : String(r.publishedAt ?? ""),
+      publishedAt: r.publishedAt instanceof Date ? r.publishedAt.toISOString() : String(r.publishedAt ?? ""),
     };
   })();
 
@@ -134,12 +128,7 @@ export function DrawManagementSection() {
         onOpenChange={setPublishOpen}
         currentResult={currentResult}
       />
-      <EditScheduleAction
-        draw={draw}
-        disabled={false}
-        open={editScheduleOpen}
-        onOpenChange={setEditScheduleOpen}
-      />
+      <EditScheduleAction draw={draw} disabled={false} open={editScheduleOpen} onOpenChange={setEditScheduleOpen} />
       <VoidDrawAction draw={draw} disabled={false} open={voidOpen} onOpenChange={setVoidOpen} />
 
       {/* Confirm: Mở bán */}
@@ -227,9 +216,8 @@ export function DrawManagementSection() {
               <strong>
                 {draw.drawDate} · Kỳ {String(draw.drawNo).padStart(3, "0")}
               </strong>{" "}
-              đã từng kết sổ. Thao tác này sẽ <strong>hoàn lại tất cả payout đã trả</strong> trước
-              đó (reversal) và chạy lại pipeline kết sổ với kết quả mới. Quy trình bất khả nghịch —
-              hãy đảm bảo kết quả mới đã chính xác.
+              đã từng kết sổ. Thao tác này sẽ <strong>hoàn lại tất cả payout đã trả</strong> trước đó (reversal) và chạy
+              lại pipeline kết sổ với kết quả mới. Quy trình bất khả nghịch — hãy đảm bảo kết quả mới đã chính xác.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

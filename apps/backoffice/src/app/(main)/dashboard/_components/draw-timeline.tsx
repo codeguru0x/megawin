@@ -1,19 +1,20 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import { formatNumber, formatVNDCompact, calcRelativeTime } from "@megawin/shared/utils";
-import { getGameLabel } from "../_lib/compute";
-import { getGameColors } from "@/lib/game-colors";
-import type {
-  DrawTimelineEvent,
-  GetDashboardDrawsOutput,
-} from "@/app/api/dashboard/draws/_lib/types";
-import { CheckCircle2, Clock3, CalendarClock, Zap, Play, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
+
 import Link from "next/link";
+
+import { calcRelativeTime, formatNumber, formatVNDCompact } from "@megawin/shared/utils";
+import { CalendarClock, CheckCircle2, Clock3, ExternalLink, Play, Zap } from "lucide-react";
+
+import type { DrawTimelineEvent, GetDashboardDrawsOutput } from "@/app/api/dashboard/draws/_lib/types";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getGameColors } from "@/lib/game-colors";
+import { cn } from "@/lib/utils";
+
+import { getGameLabel } from "../_lib/compute";
 
 interface DrawTimelineProps {
   data: GetDashboardDrawsOutput | undefined;
@@ -65,8 +66,7 @@ function DrawEventRow({ event }: { event: DrawTimelineEvent }) {
       className={cn(
         "group flex items-center gap-2 rounded-md px-2.5 py-2 transition-colors",
         "hover:bg-muted/60 dark:hover:bg-muted/30",
-        isActive &&
-          "bg-blue-50/50 dark:bg-blue-950/20 hover:bg-blue-100/60 dark:hover:bg-blue-950/30",
+        isActive && "bg-blue-50/50 dark:bg-blue-950/20 hover:bg-blue-100/60 dark:hover:bg-blue-950/30",
       )}
     >
       <span className="size-2 shrink-0 rounded-full" style={{ background: c.hex }} />
@@ -80,14 +80,10 @@ function DrawEventRow({ event }: { event: DrawTimelineEvent }) {
         {isActive && event.pendingEntries != null && (
           <span className="text-xs tabular-nums text-blue-600 dark:text-blue-400">
             {formatNumber(event.pendingEntries)} vé
-            {event.pendingStake != null && event.pendingStake > 0 && (
-              <> · {formatVNDCompact(event.pendingStake)}</>
-            )}
+            {event.pendingStake != null && event.pendingStake > 0 && <> · {formatVNDCompact(event.pendingStake)}</>}
           </span>
         )}
-        <span className="w-16 text-right text-xs tabular-nums text-muted-foreground">
-          {relTime}
-        </span>
+        <span className="w-16 text-right text-xs tabular-nums text-muted-foreground">{relTime}</span>
         <ExternalLink className="size-3 shrink-0 text-muted-foreground/0 transition-opacity group-hover:text-muted-foreground/60" />
       </div>
     </Link>
@@ -132,8 +128,7 @@ function Column({ title, icon, count, accent, children, emptyText }: ColumnProps
           className={cn(
             "ml-auto h-4 min-w-5 justify-center px-1.5 text-[10px] font-bold",
             accent === "blue" && "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
-            accent === "emerald" &&
-              "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
+            accent === "emerald" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
             accent === "muted" && "bg-muted text-muted-foreground",
           )}
         >
@@ -145,9 +140,7 @@ function Column({ title, icon, count, accent, children, emptyText }: ColumnProps
         {count > 0 ? (
           children
         ) : (
-          <p className="px-2 py-6 text-center text-xs text-muted-foreground">
-            {emptyText ?? "Không có"}
-          </p>
+          <p className="px-2 py-6 text-center text-xs text-muted-foreground">{emptyText ?? "Không có"}</p>
         )}
       </div>
     </div>
@@ -217,9 +210,7 @@ export function DrawTimeline({ data, isLoading }: DrawTimelineProps) {
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1">
               <Zap className="size-3 text-amber-500" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Quay nhanh
-              </span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quay nhanh</span>
             </div>
             {data.highFreqGames.map((g) => {
               const c = getGameColors(g.gameProduct);

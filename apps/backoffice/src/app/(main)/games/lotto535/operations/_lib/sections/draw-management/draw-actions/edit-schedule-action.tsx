@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+import { type EditScheduleInput, editScheduleSchema } from "@megawin/game-lotto535/schemas";
+import { formatVNDate, formatVNTime, toVNDate } from "@megawin/shared/utils";
 import { Check, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,10 +19,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { editScheduleSchema, type EditScheduleInput } from "@megawin/game-lotto535/schemas";
+
 import type { DrawSelectorItem } from "../../../use-operations";
 import { useUpdateSchedule } from "../../../use-operations";
-import { toVNDate, formatVNDate, formatVNTime } from "@megawin/shared/utils";
 
 /** Chuyển "DD/MM/YYYY" → "YYYY-MM-DD" cho HTML input[type=date] */
 function vnDateToISO(vnDate: string): string {
@@ -98,10 +101,7 @@ export function EditScheduleAction({
       body.drawTime = drawISO;
     }
 
-    updateSchedule.mutate(
-      { drawId: draw.drawId, body },
-      { onSuccess: () => onOpenChange?.(false) },
-    );
+    updateSchedule.mutate({ drawId: draw.drawId, body }, { onSuccess: () => onOpenChange?.(false) });
   }
 
   const {
@@ -115,17 +115,13 @@ export function EditScheduleAction({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Sửa lịch kỳ {draw.drawId}</DialogTitle>
-          <DialogDescription>
-            Giờ đóng bán phải lớn hơn giờ mở bán và nhỏ hơn giờ quay số.
-          </DialogDescription>
+          <DialogDescription>Giờ đóng bán phải lớn hơn giờ mở bán và nhỏ hơn giờ quay số.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={rhfSubmit(handleSubmit)} className="space-y-4 py-2">
           {/* Mở bán */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Giờ mở bán
-            </Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giờ mở bán</Label>
             <div className="flex gap-2">
               <Input type="date" className="flex-1" {...register("salesOpenDate")} />
               <Input type="time" className="w-28" {...register("salesOpenTime")} />
@@ -139,9 +135,7 @@ export function EditScheduleAction({
 
           {/* Đóng bán */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Giờ đóng bán
-            </Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giờ đóng bán</Label>
             <div className="flex gap-2">
               <Input type="date" className="flex-1" {...register("salesCloseDate")} />
               <Input type="time" className="w-28" {...register("salesCloseTime")} />
@@ -155,9 +149,7 @@ export function EditScheduleAction({
 
           {/* Quay số */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Giờ quay số
-            </Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giờ quay số</Label>
             <div className="flex gap-2">
               <Input type="date" className="flex-1" {...register("drawDate")} />
               <Input type="time" className="w-28" {...register("drawTime")} />
@@ -167,9 +159,7 @@ export function EditScheduleAction({
                 {errors.drawDate?.message ?? errors.drawTime?.message}
               </p>
             )}
-            <p className="text-xs text-muted-foreground/70">
-              Chỉ sửa nếu lịch quay chính thức thay đổi.
-            </p>
+            <p className="text-xs text-muted-foreground/70">Chỉ sửa nếu lịch quay chính thức thay đổi.</p>
           </div>
 
           <DialogFooter>

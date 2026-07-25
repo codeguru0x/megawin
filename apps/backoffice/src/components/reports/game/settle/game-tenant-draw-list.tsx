@@ -1,20 +1,13 @@
 "use client";
 
-import { CalendarRange } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { CalendarRange } from "lucide-react";
+
 import { getNetProfitColor, PayoutRatioCell } from "@/components/reports/payout-ratio";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 /**
  * Một hàng kỳ quay trong bảng danh sách kỳ quay của 1 đại lý.
@@ -106,9 +99,7 @@ export function GameTenantDrawList({
                 <TableHead>{REPORT_COLUMN_LABELS.drawId}</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.playerCount}</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
-                {showLineCount && (
-                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.lineCount}</TableHead>
-                )}
+                {showLineCount && <TableHead className="text-right">{REPORT_COLUMN_LABELS.lineCount}</TableHead>}
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.payoutPercent}</TableHead>
@@ -119,8 +110,7 @@ export function GameTenantDrawList({
             </TableHeader>
             <TableBody>
               {rows.map((row) => {
-                const rowNetProfit =
-                  row.netProfit ?? row.totalStake - row.totalPayout - row.totalCommission;
+                const rowNetProfit = row.netProfit ?? row.totalStake - row.totalPayout - row.totalCommission;
                 const payoutRatio = row.totalStake > 0 ? row.totalPayout / row.totalStake : 0;
                 return (
                   <TableRow
@@ -130,37 +120,24 @@ export function GameTenantDrawList({
                   >
                     <TableCell className="text-sm">{row.financialDate}</TableCell>
                     <TableCell className="text-sm font-mono">{row.drawId}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.playerCount)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.playerCount)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
                     {showLineCount && (
                       <TableCell className="text-right text-sm tabular-nums">
                         {formatNumber(row.lineCount ?? 0)}
                       </TableCell>
                     )}
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.totalStake)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.totalPayout)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalStake)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalPayout)}</TableCell>
                     <TableCell className="text-right text-sm">
                       <PayoutRatioCell ratio={payoutRatio} />
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.ggr)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.ggr)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(row.totalCommission)}
                     </TableCell>
                     <TableCell
-                      className={cn(
-                        "text-right text-sm tabular-nums font-medium",
-                        getNetProfitColor(rowNetProfit),
-                      )}
+                      className={cn("text-right text-sm tabular-nums font-medium", getNetProfitColor(rowNetProfit))}
                     >
                       {formatNumber(rowNetProfit)}
                     </TableCell>
@@ -202,10 +179,7 @@ export function GameTenantDrawList({
                   {formatNumber(totals.totalCommission)}
                 </TableCell>
                 <TableCell
-                  className={cn(
-                    "text-right text-sm tabular-nums font-semibold",
-                    getNetProfitColor(totals.netProfit),
-                  )}
+                  className={cn("text-right text-sm tabular-nums font-semibold", getNetProfitColor(totals.netProfit))}
                 >
                   {formatNumber(totals.netProfit)}
                 </TableCell>

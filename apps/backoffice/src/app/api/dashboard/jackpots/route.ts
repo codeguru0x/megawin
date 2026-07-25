@@ -1,6 +1,7 @@
-import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities";
+
 import { GetDashboardJackpotsUseCase } from "@/app/api/dashboard/jackpots/_lib/get-dashboard-jackpots";
+import { withApi } from "@/lib/api";
 
 const useCase = new GetDashboardJackpotsUseCase();
 

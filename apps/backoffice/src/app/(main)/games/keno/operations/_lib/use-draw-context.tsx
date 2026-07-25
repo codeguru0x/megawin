@@ -10,15 +10,12 @@
  * Auto-select: ưu tiên kỳ đang active, fallback kỳ future đầu tiên.
  */
 
-import { createContext, useContext, useCallback, type ReactNode } from "react";
+import { createContext, type ReactNode, useCallback, useContext } from "react";
+
+import { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
 import { useQueryState } from "nuqs";
-import { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
-import {
-  useDrawSelectorList,
-  useDrawDetail,
-  type DrawSelectorItem,
-  type OpsQueryParams,
-} from "./use-operations";
+
+import { type DrawSelectorItem, type OpsQueryParams, useDrawDetail, useDrawSelectorList } from "./use-operations";
 
 // ─── Context shape ────────────────────────────────────────────────────────────
 
@@ -65,15 +62,10 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
 
   const remoteDraw = remoteDrawData?.draw;
 
-  const isHistorical =
-    !!selectedDrawId && !selectorLoading && draws.length > 0 && !selectedInList && !!remoteDraw;
+  const isHistorical = !!selectedDrawId && !selectorLoading && draws.length > 0 && !selectedInList && !!remoteDraw;
 
   const drawNotFound =
-    !!selectedDrawId &&
-    !selectorLoading &&
-    !selectedInList &&
-    !remoteLoading &&
-    (remoteError || !remoteDraw);
+    !!selectedDrawId && !selectorLoading && !selectedInList && !remoteLoading && (remoteError || !remoteDraw);
 
   const noDrawAvailable = !selectedDrawId && !selectorLoading && draws.length === 0;
 
@@ -104,8 +96,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   const status = draw?.status ?? remoteDraw?.status;
   const isSettled = status === DrawStatus.Settled;
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
-  const isActiveForRefresh =
-    !isHistorical && draw?.group === DrawSelectorGroup.Active && !isSettled;
+  const isActiveForRefresh = !isHistorical && draw?.group === DrawSelectorGroup.Active && !isSettled;
 
   const opsParams: OpsQueryParams = {
     drawId: effectiveDrawId,

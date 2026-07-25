@@ -15,6 +15,11 @@
  */
 
 import { useState } from "react";
+
+import { DrawStatus } from "@megawin/game-core/entities";
+import type { BasicPrizeTier, PlusPrizeTier } from "@megawin/game-max3d/entities";
+import { MAX3D_BASIC_PRIZE_TIER_LABELS, MAX3D_PLUS_PRIZE_TIER_LABELS } from "@megawin/game-max3d/labels";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,36 +30,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { DrawStatus } from "@megawin/game-core/entities";
-import { BasicPrizeTier, PlusPrizeTier } from "@megawin/game-max3d/entities";
-import {
-  MAX3D_BASIC_PRIZE_TIER_LABELS,
-  MAX3D_PLUS_PRIZE_TIER_LABELS,
-} from "@megawin/game-max3d/labels";
-
-import { useDrawContext } from "../../use-draw-context";
-import { DrawCommandCenter } from "./draw-command-center";
-import {
-  PublishResultAction,
-  EditScheduleAction,
-  VoidDrawAction,
-  type PublishResultCurrentValues,
-} from "./draw-actions";
-import {
-  useOpenSales,
-  useCloseSales,
-  useTriggerSettle,
-  useTriggerResettle,
-  useDrawDetail,
-} from "../../use-operations";
 
 import type { DrawResult, VoidInfo } from "../../types";
+import { useDrawContext } from "../../use-draw-context";
+import { useCloseSales, useDrawDetail, useOpenSales, useTriggerResettle, useTriggerSettle } from "../../use-operations";
+import {
+  EditScheduleAction,
+  PublishResultAction,
+  type PublishResultCurrentValues,
+  VoidDrawAction,
+} from "./draw-actions";
+import { DrawCommandCenter } from "./draw-command-center";
 
-const RESULT_SHOW = new Set<string>([
-  DrawStatus.Published,
-  DrawStatus.Settling,
-  DrawStatus.Settled,
-]);
+const RESULT_SHOW = new Set<string>([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -74,9 +62,7 @@ export function DrawManagementSection() {
   const triggerSettle = useTriggerSettle();
   const triggerResettle = useTriggerResettle();
 
-  const { data: drawDetailData } = useDrawDetail(
-    draw && RESULT_SHOW.has(draw.status) ? effectiveDrawId : undefined,
-  );
+  const { data: drawDetailData } = useDrawDetail(draw && RESULT_SHOW.has(draw.status) ? effectiveDrawId : undefined);
 
   const result: DrawResult | undefined = (() => {
     const d = drawDetailData?.draw;
@@ -91,8 +77,7 @@ export function DrawManagementSection() {
     const basicTiers = Object.keys(MAX3D_BASIC_PRIZE_TIER_LABELS).map((tier) => {
       const t = basicTierMap.get(tier);
       const winnerCount = t?.winnerCount ?? 0;
-      const prizeAmount =
-        winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
+      const prizeAmount = winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         mode: "basic" as const,
         tier: tier as BasicPrizeTier,
@@ -105,8 +90,7 @@ export function DrawManagementSection() {
     const plusTiers = Object.keys(MAX3D_PLUS_PRIZE_TIER_LABELS).map((tier) => {
       const t = plusTierMap.get(tier);
       const winnerCount = t?.winnerCount ?? 0;
-      const prizeAmount =
-        winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
+      const prizeAmount = winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         mode: "plus" as const,
         tier: tier as PlusPrizeTier,
@@ -193,12 +177,7 @@ export function DrawManagementSection() {
         onOpenChange={setPublishOpen}
         currentResult={currentResult}
       />
-      <EditScheduleAction
-        draw={draw}
-        disabled={false}
-        open={editScheduleOpen}
-        onOpenChange={setEditScheduleOpen}
-      />
+      <EditScheduleAction draw={draw} disabled={false} open={editScheduleOpen} onOpenChange={setEditScheduleOpen} />
       <VoidDrawAction draw={draw} disabled={false} open={voidOpen} onOpenChange={setVoidOpen} />
 
       {/* Confirm: Mở bán */}
@@ -249,8 +228,8 @@ export function DrawManagementSection() {
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận kết sổ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Kỳ <strong>{draw.drawId}</strong> sẽ được đưa vào quy trình kết sổ. Thao tác này sẽ
-              tính toán và phân bổ giải thưởng cho tất cả các vé.
+              Kỳ <strong>{draw.drawId}</strong> sẽ được đưa vào quy trình kết sổ. Thao tác này sẽ tính toán và phân bổ
+              giải thưởng cho tất cả các vé.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -271,10 +250,9 @@ export function DrawManagementSection() {
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận kết sổ lại?</AlertDialogTitle>
             <AlertDialogDescription>
-              Kỳ <strong>{draw.drawId}</strong> sẽ được kết sổ LẠI với kết quả vừa cập nhật. Hệ
-              thống sẽ tự động hoàn lại các khoản chi trả của lần kết sổ trước, sau đó tính toán và
-              phân bổ giải thưởng theo kết quả mới. Thao tác không thể hoàn tác — hãy chắc chắn kết
-              quả mới đã đúng.
+              Kỳ <strong>{draw.drawId}</strong> sẽ được kết sổ LẠI với kết quả vừa cập nhật. Hệ thống sẽ tự động hoàn
+              lại các khoản chi trả của lần kết sổ trước, sau đó tính toán và phân bổ giải thưởng theo kết quả mới. Thao
+              tác không thể hoàn tác — hãy chắc chắn kết quả mới đã đúng.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

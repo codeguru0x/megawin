@@ -1,22 +1,23 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@megawin/next/client";
-import { kenoKeys } from "@/lib/query-keys";
 import type {
   GetDrawSummaryOutput,
-  ListSettleDrawReportsOutput,
-  ListDrawTenantsOutput,
-  ListTenantReportsOutput,
-  ListTenantDrawsOutput,
-  ListPlayerBreakdownOutput,
-  ListEntryBreakdownOutput,
   GetOutstandingReportsOutput,
-  ListVoidReportsOutput,
+  ListDrawTenantsOutput,
+  ListEntryBreakdownOutput,
   ListOutstandingDrawTenantsOutput,
-  ListOutstandingTenantPlayersOutput,
   ListOutstandingPlayerEntriesOutput,
+  ListOutstandingTenantPlayersOutput,
+  ListPlayerBreakdownOutput,
+  ListSettleDrawReportsOutput,
+  ListTenantDrawsOutput,
+  ListTenantReportsOutput,
+  ListVoidReportsOutput,
 } from "@megawin/game-keno-application/use-cases/reports";
+import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
+
+import { kenoKeys } from "@/lib/query-keys";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
 
@@ -50,10 +51,7 @@ export function useKenoDrawList(from: string, to: string, page: number) {
 export function useKenoDrawTenants(drawId: string | null) {
   return useQuery({
     queryKey: kenoKeys.reportDrawTenants(drawId ?? ""),
-    queryFn: () =>
-      apiClient
-        .get<ListDrawTenantsOutput>(`/keno/reports/draws/${drawId}/tenants`)
-        .then((r) => r.data),
+    queryFn: () => apiClient.get<ListDrawTenantsOutput>(`/keno/reports/draws/${drawId}/tenants`).then((r) => r.data),
     enabled: !!drawId,
   });
 }
@@ -122,10 +120,7 @@ export function useKenoEntries(drawId: string, tenantId: string, accountId: stri
 export function useKenoOutstanding() {
   return useQuery({
     queryKey: kenoKeys.outstandingDraws,
-    queryFn: () =>
-      apiClient
-        .get<GetOutstandingReportsOutput>("/keno/reports/outstanding")
-        .then((r) => r.data),
+    queryFn: () => apiClient.get<GetOutstandingReportsOutput>("/keno/reports/outstanding").then((r) => r.data),
     refetchInterval: 60_000,
   });
 }
@@ -136,9 +131,7 @@ export function useKenoOutstandingDrawTenants(drawId: string | null) {
     queryKey: kenoKeys.outstandingTenants(drawId ?? ""),
     queryFn: () =>
       apiClient
-        .get<ListOutstandingDrawTenantsOutput>(
-          `/keno/reports/outstanding/draws/${drawId}/tenants`,
-        )
+        .get<ListOutstandingDrawTenantsOutput>(`/keno/reports/outstanding/draws/${drawId}/tenants`)
         .then((r) => r.data),
     enabled: !!drawId,
   });
@@ -159,11 +152,7 @@ export function useKenoOutstandingTenantPlayers(drawId: string, tenantId: string
 }
 
 /** Entries outstanding của 1 player trong draw × tenant — drill cấp 4. */
-export function useKenoOutstandingPlayerEntries(
-  drawId: string,
-  tenantId: string,
-  accountId: string | null,
-) {
+export function useKenoOutstandingPlayerEntries(drawId: string, tenantId: string, accountId: string | null) {
   return useQuery({
     queryKey: kenoKeys.outstandingEntries({
       drawId,
@@ -235,18 +224,12 @@ export function useKenoVoidTenantPlayers(drawId: string, tenantId: string | null
 }
 
 /** Entries void của 1 player trong 1 draw × tenant. Drill cấp 4. */
-export function useKenoVoidPlayerEntries(
-  drawId: string,
-  tenantId: string,
-  accountId: string | null,
-) {
+export function useKenoVoidPlayerEntries(drawId: string, tenantId: string, accountId: string | null) {
   return useQuery({
     queryKey: kenoKeys.voidPlayerEntries({ drawId, tenantId, accountId: accountId ?? "" }),
     queryFn: () =>
       apiClient
-        .get<ListEntryBreakdownOutput>(
-          `/keno/reports/void/draws/${drawId}/${tenantId}/${accountId}/entries`,
-        )
+        .get<ListEntryBreakdownOutput>(`/keno/reports/void/draws/${drawId}/${tenantId}/${accountId}/entries`)
         .then((r) => r.data),
     enabled: !!(drawId && tenantId && accountId),
   });

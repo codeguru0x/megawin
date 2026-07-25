@@ -1,17 +1,16 @@
 "use client";
 
 import { useMemo } from "react";
+
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Inbox, Loader2, MoreHorizontal, XCircle } from "lucide-react";
+
+import { TRANSACTION_ACTION_LABELS, TRANSACTION_REASON_LABELS } from "@megawin/game-core/labels";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { formatNumber } from "@megawin/shared/utils/number";
-import { TRANSACTION_ACTION_LABELS, TRANSACTION_REASON_LABELS } from "@megawin/game-core/labels";
 import type { TenantDispatchOrderEntity } from "@megawin/tenant-dispatch/entities";
 import { DispatchOrderStatus } from "@megawin/tenant-dispatch/entities";
-import {
-  DISPATCH_ORDER_STATUS_LABELS,
-  DISPATCH_SOURCE_KIND_LABELS,
-} from "@megawin/tenant-dispatch/shared/labels";
+import { DISPATCH_ORDER_STATUS_LABELS, DISPATCH_SOURCE_KIND_LABELS } from "@megawin/tenant-dispatch/shared/labels";
+import { CheckCircle2, Inbox, Loader2, MoreHorizontal, XCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,14 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getGameLabel } from "@/lib/game-labels";
 import { cn } from "@/lib/utils";
 
@@ -213,10 +205,7 @@ export function DispatchTable({
                     {TRANSACTION_REASON_LABELS[row.reason]}
                   </TableCell>
 
-                  <TableCell
-                    className="max-w-35 truncate font-mono text-sm"
-                    title={row.username}
-                  >
+                  <TableCell className="max-w-35 truncate font-mono text-sm" title={row.username}>
                     {row.username}
                   </TableCell>
 
@@ -234,20 +223,12 @@ export function DispatchTable({
                       ) : (
                         <div className="flex flex-col gap-0.5">
                           {retryCount > 0 && (
-                            <span
-                              className={cn(
-                                "font-mono text-sm tabular-nums",
-                                getRetryClass(retryCount),
-                              )}
-                            >
+                            <span className={cn("font-mono text-sm tabular-nums", getRetryClass(retryCount))}>
                               {retryCount}× retry
                             </span>
                           )}
                           {errMsg && (
-                            <span
-                              className="block truncate text-xs text-muted-foreground"
-                              title={errMsg}
-                            >
+                            <span className="block truncate text-xs text-muted-foreground" title={errMsg}>
                               {errMsg}
                             </span>
                           )}
@@ -264,9 +245,7 @@ export function DispatchTable({
                         className="group flex flex-col items-start gap-0.5 text-left"
                         onClick={(e) => {
                           e.stopPropagation();
-                          router.push(
-                            `/reports/transactions/dispatch/batches/${encodeURIComponent(row.batchKey)}`,
-                          );
+                          router.push(`/reports/transactions/dispatch/batches/${encodeURIComponent(row.batchKey)}`);
                         }}
                         title={row.batchKey}
                       >
@@ -287,20 +266,13 @@ export function DispatchTable({
                   <TableCell className="pr-5 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="size-7"
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                        <Button size="icon" variant="ghost" className="size-7" onClick={(e) => e.stopPropagation()}>
                           <MoreHorizontal className="size-4" />
                           <span className="sr-only">Mở menu</span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuItem onClick={() => onOpenDetail(row.tx)}>
-                          Xem chi tiết
-                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onOpenDetail(row.tx)}>Xem chi tiết</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           disabled={!isPending}

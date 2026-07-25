@@ -10,24 +10,26 @@
  */
 
 import { useMemo, useState } from "react";
+
 import { DrawStatus } from "@megawin/game-core/entities";
-import { BasicPrizeTier, PlusPrizeTier } from "@megawin/game-max3d/entities";
+import type { BasicPrizeTier, PlusPrizeTier } from "@megawin/game-max3d/entities";
 import {
   MAX3D_BASIC_PRIZE_TIER_LABELS,
-  MAX3D_PLUS_PRIZE_TIER_LABELS,
   MAX3D_PLAY_MODE_LABELS,
+  MAX3D_PLUS_PRIZE_TIER_LABELS,
 } from "@megawin/game-max3d/labels";
 import { formatNumber } from "@megawin/shared/utils";
+import { Coins, ExternalLink, Info, TrendingDown, TrendingUp, Trophy, Users } from "lucide-react";
+
+import { TripletDisplay } from "@/components/games/max3d/triplet-display";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { TripletDisplay } from "@/components/games/max3d/triplet-display";
-import { Trophy, Users, Coins, ExternalLink, TrendingUp, TrendingDown, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+import type { DrawFinancialDisplay, DrawResult } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
 import { useDrawDetail } from "../../use-operations";
-import type { DrawResult, DrawFinancialDisplay } from "../../types";
 import { WinningEntriesDialog } from "./winning-entries-dialog";
 
 // ─── Tier config ──────────────────────────────────────────────────────────────
@@ -41,8 +43,7 @@ type TierConfig = { badge: string; row: string; icon?: React.ElementType };
  */
 const TIER_CONFIG: Record<string, TierConfig> = {
   special: {
-    badge:
-      "border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700",
+    badge: "border-amber-300 bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700",
     row: "bg-amber-50/60 dark:bg-amber-950/10 border-l-2 border-l-amber-400",
     icon: Trophy,
   },
@@ -57,8 +58,7 @@ const TIER_CONFIG: Record<string, TierConfig> = {
     row: "",
   },
   third: {
-    badge:
-      "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
+    badge: "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
     row: "",
   },
   fourth: { badge: "border-border bg-muted/40 text-muted-foreground", row: "" },
@@ -66,11 +66,7 @@ const TIER_CONFIG: Record<string, TierConfig> = {
   sixth: { badge: "border-border bg-muted/40 text-muted-foreground", row: "" },
 };
 
-const RESULT_SHOW = new Set<string>([
-  DrawStatus.Published,
-  DrawStatus.Settling,
-  DrawStatus.Settled,
-]);
+const RESULT_SHOW = new Set<string>([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
 
 // ─── Prize tier group (Cơ Bản hoặc Plus) ─────────────────────────────────────
 
@@ -89,12 +85,8 @@ function PrizeTierGroup({ title, tiers }: { title: string; tiers: TierRow[] }) {
   return (
     <div className="rounded-xl border overflow-hidden">
       <div className="grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2 bg-muted/40 border-b">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          {title}
-        </span>
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
-          Số trúng
-        </span>
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">Số trúng</span>
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
           Giá trị thưởng
         </span>
@@ -165,16 +157,12 @@ function PrizeTierGroup({ title, tiers }: { title: string; tiers: TierRow[] }) {
       })}
 
       <div className="grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2.5 items-center border-t bg-muted/20">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          Tổng cộng
-        </span>
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tổng cộng</span>
         <span className="text-right tabular-nums text-sm font-bold text-foreground">
           {formatNumber(totalWinnerCount)}
         </span>
         <span />
-        <span className="text-right tabular-nums text-sm font-bold text-foreground">
-          {formatNumber(totalPrize)}
-        </span>
+        <span className="text-right tabular-nums text-sm font-bold text-foreground">{formatNumber(totalPrize)}</span>
       </div>
     </div>
   );
@@ -200,13 +188,9 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
             <div>
               <CardTitle className="text-sm font-semibold">Kết quả & Phân bổ giải thưởng</CardTitle>
               <CardDescription className="text-xs mt-0.5">
-                <span className="font-semibold text-foreground tabular-nums">
-                  {formatNumber(totalWinnerCount)}
-                </span>{" "}
+                <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalWinnerCount)}</span>{" "}
                 line trúng thưởng · Tổng giải{" "}
-                <span className="font-semibold text-foreground tabular-nums">
-                  {formatNumber(totalPrize)}
-                </span>
+                <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalPrize)}</span>
               </CardDescription>
             </div>
           </div>
@@ -216,9 +200,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
           <div className="rounded-xl border bg-muted/20 px-4 py-4 space-y-3">
             <div className="flex items-center justify-between w-full">
               <div className="flex-1" />
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Kết quả
-              </span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kết quả</span>
               <div className="flex-1 flex justify-end">
                 <button
                   type="button"
@@ -239,9 +221,7 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
                   { label: "Giải Ba", triplets: result.third, variant: "third" as const },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-muted-foreground w-16 shrink-0">
-                      {row.label}
-                    </span>
+                    <span className="text-xs font-semibold text-muted-foreground w-16 shrink-0">{row.label}</span>
                     <div className="flex flex-wrap gap-1.5">
                       {row.triplets.map((t, i) => (
                         <TripletDisplay key={i} value={t} variant={row.variant} size="sm" />
@@ -257,12 +237,8 @@ function ResultCard({ result, drawId }: { result: DrawResult; drawId: string }) 
               tuy dùng chung tên tier (special/first/second/third) nhưng mức thưởng khác nhau */}
           {result.tiers.length > 0 && (
             <div className="space-y-3">
-              {basicTiers.length > 0 && (
-                <PrizeTierGroup title={MAX3D_PLAY_MODE_LABELS.basic} tiers={basicTiers} />
-              )}
-              {plusTiers.length > 0 && (
-                <PrizeTierGroup title={MAX3D_PLAY_MODE_LABELS.plus} tiers={plusTiers} />
-              )}
+              {basicTiers.length > 0 && <PrizeTierGroup title={MAX3D_PLAY_MODE_LABELS.basic} tiers={basicTiers} />}
+              {plusTiers.length > 0 && <PrizeTierGroup title={MAX3D_PLAY_MODE_LABELS.plus} tiers={plusTiers} />}
             </div>
           )}
         </CardContent>
@@ -294,9 +270,7 @@ function FinancialSummary({ financial: f }: { financial: DrawFinancialDisplay })
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Phân bổ doanh thu sau kết sổ
-            </CardDescription>
+            <CardDescription className="text-xs mt-0.5">Phân bổ doanh thu sau kết sổ</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -336,12 +310,8 @@ function FinancialSummary({ financial: f }: { financial: DrawFinancialDisplay })
           },
           {
             icon: isProfit ? TrendingUp : TrendingDown,
-            iconBg: isProfit
-              ? "bg-emerald-100 dark:bg-emerald-900/50"
-              : "bg-red-100 dark:bg-red-900/50",
-            iconColor: isProfit
-              ? "text-emerald-600 dark:text-emerald-400"
-              : "text-red-600 dark:text-red-400",
+            iconBg: isProfit ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50",
+            iconColor: isProfit ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
             label: "Kết quả công ty (P&L kỳ)",
             value: netProfit,
             sign: "=" as const,
@@ -367,20 +337,10 @@ function FinancialSummary({ financial: f }: { financial: DrawFinancialDisplay })
               )}
             >
               <div className="flex items-center gap-2 min-w-0">
-                <div
-                  className={cn(
-                    "flex size-6 items-center justify-center rounded-md shrink-0",
-                    row.iconBg,
-                  )}
-                >
+                <div className={cn("flex size-6 items-center justify-center rounded-md shrink-0", row.iconBg)}>
                   <row.icon className={cn("size-3.5", row.iconColor)} />
                 </div>
-                <span
-                  className={cn(
-                    "text-sm",
-                    row.bold ? "font-semibold text-foreground" : "text-muted-foreground",
-                  )}
-                >
+                <span className={cn("text-sm", row.bold ? "font-semibold text-foreground" : "text-muted-foreground")}>
                   {row.label}
                 </span>
                 {row.hint && (
@@ -399,11 +359,7 @@ function FinancialSummary({ financial: f }: { financial: DrawFinancialDisplay })
                 )}
               </div>
               <span
-                className={cn(
-                  "tabular-nums text-sm font-mono shrink-0",
-                  row.bold ? "font-bold" : "",
-                  displayColor,
-                )}
+                className={cn("tabular-nums text-sm font-mono shrink-0", row.bold ? "font-bold" : "", displayColor)}
               >
                 {displaySign !== "=" ? displaySign : ""}
                 {formatNumber(row.value)}
@@ -449,8 +405,7 @@ export function ResultSection() {
     const basicTiers = Object.keys(MAX3D_BASIC_PRIZE_TIER_LABELS).map((tier) => {
       const t = basicTierMap.get(tier);
       const winnerCount = t?.winnerCount ?? 0;
-      const prizeAmount =
-        winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
+      const prizeAmount = winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         mode: "basic" as const,
         tier: tier as BasicPrizeTier,
@@ -463,8 +418,7 @@ export function ResultSection() {
     const plusTiers = Object.keys(MAX3D_PLUS_PRIZE_TIER_LABELS).map((tier) => {
       const t = plusTierMap.get(tier);
       const winnerCount = t?.winnerCount ?? 0;
-      const prizeAmount =
-        winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
+      const prizeAmount = winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         mode: "plus" as const,
         tier: tier as PlusPrizeTier,
@@ -497,9 +451,7 @@ export function ResultSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Kết quả & Tài chính
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Kết quả & Tài chính</h2>
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <ResultCard result={result} drawId={effectiveDrawId} />
         <FinancialSummary financial={result.financial} />

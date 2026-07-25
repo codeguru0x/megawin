@@ -1,23 +1,15 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Save, HelpCircle } from "lucide-react";
-
-import { MoneyInput } from "@megawin/ui/components/money-input";
 import { LOTTO535_MAX_BOARDS } from "@megawin/game-lotto535/rules";
+import { MoneyInput } from "@megawin/ui/components/money-input";
+import { HelpCircle, Save } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
 import { TimeInput } from "@/components/ui/time-input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -312,8 +304,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 <div className="mb-5">
                   <h3 className="text-sm font-semibold text-foreground">Lịch quay số</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Cố định {DRAWS_PER_DAY} kỳ quay mỗi ngày — giờ quay áp dụng cho tất cả ngày
-                    trong tuần.
+                    Cố định {DRAWS_PER_DAY} kỳ quay mỗi ngày — giờ quay áp dụng cho tất cả ngày trong tuần.
                   </p>
                 </div>
 
@@ -328,9 +319,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    Giờ quay
-                  </p>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giờ quay</p>
                   <div className="grid grid-cols-2 gap-3">
                     <FormField
                       control={form.control}

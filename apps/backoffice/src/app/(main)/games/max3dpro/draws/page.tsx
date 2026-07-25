@@ -1,15 +1,14 @@
 "use client";
 
-import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
 import Link from "next/link";
 
-import { useCurrentDraw } from "./_lib/use-draws";
+import { CalendarClock, ListOrdered, Loader2 } from "lucide-react";
+
+import { Max3dproPrimaryDrawCard, Max3dproQueueDrawCard } from "@/components/games/max3dpro/active-draw-card";
+
 import { useGameConfig } from "../config/game/_lib/use-game-config";
-import {
-  Max3dproPrimaryDrawCard,
-  Max3dproQueueDrawCard,
-} from "@/components/games/max3dpro/active-draw-card";
 import { DrawHistorySection } from "./_lib/draw-history-section";
+import { useCurrentDraw } from "./_lib/use-draws";
 
 export default function Max3dproDrawsPage() {
   const { data, isLoading } = useCurrentDraw();
@@ -30,9 +29,7 @@ export default function Max3dproDrawsPage() {
             <CalendarClock className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Max 3D Pro — Kỳ quay
-            </h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Max 3D Pro — Kỳ quay</h1>
             <p className="text-xs text-muted-foreground">
               {drawsPerDay} kỳ/ngày ({drawTimes.join(" & ")}). T3/T5/T7 hàng tuần.
             </p>
@@ -74,10 +71,7 @@ export default function Max3dproDrawsPage() {
             <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Vào trang{" "}
-              <Link
-                href="/games/max3dpro/operations"
-                className="underline underline-offset-2 hover:text-foreground"
-              >
+              <Link href="/games/max3dpro/operations" className="underline underline-offset-2 hover:text-foreground">
                 Vận hành
               </Link>{" "}
               để tạo kỳ mới.

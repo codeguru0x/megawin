@@ -1,19 +1,14 @@
 "use client";
 
-import { Ticket, RefreshCw } from "lucide-react";
+import { displayVNDateTime, formatNumber } from "@megawin/shared/utils";
+import { RefreshCw, Ticket } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatNumber, displayVNDateTime } from "@megawin/shared/utils";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import type { VoidEntryRow } from "./types";
 
 export interface VoidEntryListProps {
@@ -134,9 +129,7 @@ export function VoidEntryList({
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => onRowClick(entry)}
                   >
-                    <TableCell className="pl-5 font-mono text-sm">
-                      {entry.ticketNo ?? entry.id}
-                    </TableCell>
+                    <TableCell className="pl-5 font-mono text-sm">{entry.ticketNo ?? entry.id}</TableCell>
 
                     <TableCell className="text-right text-sm tabular-nums">
                       {showLineCount ? (

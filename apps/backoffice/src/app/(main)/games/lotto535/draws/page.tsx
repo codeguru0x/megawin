@@ -1,15 +1,15 @@
 "use client";
 
 import { Suspense } from "react";
+
 import Link from "next/link";
+
 import { CalendarClock, ListOrdered, Loader2 } from "lucide-react";
 
-import { useCurrentDraw } from "./_lib/use-draws";
-import {
-  Lotto535PrimaryDrawCard,
-  Lotto535QueueDrawCard,
-} from "@/components/games/lotto535/active-draw-card";
+import { Lotto535PrimaryDrawCard, Lotto535QueueDrawCard } from "@/components/games/lotto535/active-draw-card";
+
 import { DrawHistorySection } from "./_lib/draw-history-section";
+import { useCurrentDraw } from "./_lib/use-draws";
 
 export default function AdminDrawsPage() {
   const { data, isLoading } = useCurrentDraw();
@@ -27,9 +27,7 @@ export default function AdminDrawsPage() {
             <CalendarClock className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Lotto 5/35 — Kỳ quay
-            </h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Lotto 5/35 — Kỳ quay</h1>
             <p className="text-xs text-muted-foreground">Tổng quan kỳ quay hiện tại và lịch sử</p>
           </div>
         </div>
@@ -70,10 +68,7 @@ export default function AdminDrawsPage() {
             <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Vào trang{" "}
-              <Link
-                href="/games/lotto535/operations"
-                className="underline underline-offset-2 hover:text-foreground"
-              >
+              <Link href="/games/lotto535/operations" className="underline underline-offset-2 hover:text-foreground">
                 Vận hành
               </Link>{" "}
               để tạo kỳ mới.

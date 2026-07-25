@@ -1,26 +1,22 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
+
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
+import { BarChart2, PieChart as PieChartIcon } from "lucide-react";
+import type { SectorProps } from "recharts";
 import { Pie, PieChart, ResponsiveContainer, Sector, Tooltip } from "recharts";
 import type { PieLabelRenderProps } from "recharts/types/polar/Pie";
-import type { SectorProps } from "recharts";
-import { BarChart2, PieChart as PieChartIcon } from "lucide-react";
-import { getGameLabel, type DashboardDayKpis } from "../_lib/compute";
-import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getGameHex } from "@/lib/game-colors";
-import { GameTableSkeleton, ChartSkeleton } from "./skeletons";
-import Link from "next/link";
+import { cn } from "@/lib/utils";
+
+import { type DashboardDayKpis, getGameLabel } from "../_lib/compute";
+import { ChartSkeleton, GameTableSkeleton } from "./skeletons";
 
 // ─── Helpers color theo rule financial-report-ui ─────────────────────────────
 
@@ -57,14 +53,7 @@ function PieTooltip({ active, payload }: PieTooltipProps) {
 
 // ─── Recharts custom label trên pie slices ──────────────────────────────────
 
-function renderPieLabel({
-  cx,
-  cy,
-  midAngle,
-  innerRadius,
-  outerRadius,
-  percent,
-}: PieLabelRenderProps) {
+function renderPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelRenderProps) {
   if (!cx || !cy || !midAngle || !innerRadius || !outerRadius || !percent) return null;
   // Chỉ label slice >= 5% để tránh chồng chéo
   if (percent < 0.05) return null;
@@ -160,12 +149,8 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
               </ResponsiveContainer>
               {/* Center label — z-10 để nằm trên SVG, tooltip dùng z-20 nên sẽ đè lên được */}
               <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center">
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                  Tổng DT
-                </p>
-                <p className="text-sm font-bold tabular-nums text-foreground">
-                  {formatVNDCompact(kpis.totalStake)}
-                </p>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Tổng DT</p>
+                <p className="text-sm font-bold tabular-nums text-foreground">{formatVNDCompact(kpis.totalStake)}</p>
               </div>
             </div>
             {/* Mini legend dưới chart — text-[10px] chấp nhận vì trong vùng chart compact */}
@@ -189,21 +174,11 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="h-9 pl-5 text-xs">{REPORT_COLUMN_LABELS.game}</TableHead>
-                  <TableHead className="h-9 text-right text-xs">
-                    {REPORT_COLUMN_LABELS.totalStake}
-                  </TableHead>
-                  <TableHead className="h-9 text-right text-xs">
-                    {REPORT_COLUMN_LABELS.totalPayout}
-                  </TableHead>
-                  <TableHead className="h-9 text-right text-xs">
-                    {REPORT_COLUMN_LABELS.ggr}
-                  </TableHead>
-                  <TableHead className="h-9 text-right text-xs">
-                    {REPORT_COLUMN_LABELS.totalCommission}
-                  </TableHead>
-                  <TableHead className="h-9 pr-5 text-right text-xs">
-                    {REPORT_COLUMN_LABELS.netProfit}
-                  </TableHead>
+                  <TableHead className="h-9 text-right text-xs">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
+                  <TableHead className="h-9 text-right text-xs">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
+                  <TableHead className="h-9 text-right text-xs">{REPORT_COLUMN_LABELS.ggr}</TableHead>
+                  <TableHead className="h-9 text-right text-xs">{REPORT_COLUMN_LABELS.totalCommission}</TableHead>
+                  <TableHead className="h-9 pr-5 text-right text-xs">{REPORT_COLUMN_LABELS.netProfit}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -227,16 +202,12 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                     <TableCell className="py-0 text-right text-xs tabular-nums">
                       {formatNumber(row.totalPayout)}
                     </TableCell>
-                    <TableCell className="py-0 text-right text-xs tabular-nums">
-                      {formatNumber(row.ggr)}
-                    </TableCell>
+                    <TableCell className="py-0 text-right text-xs tabular-nums">{formatNumber(row.ggr)}</TableCell>
                     <TableCell className="py-0 text-right text-xs tabular-nums">
                       {formatNumber(row.totalCommission)}
                     </TableCell>
                     <TableCell className="py-0 pr-5 text-right">
-                      <span
-                        className={cn("text-xs tabular-nums", getNetProfitClass(row.netProfit))}
-                      >
+                      <span className={cn("text-xs tabular-nums", getNetProfitClass(row.netProfit))}>
                         {formatNumber(row.netProfit)}
                       </span>
                     </TableCell>
@@ -250,22 +221,13 @@ export function GameOverview({ kpis, isLoading }: GameOverviewProps) {
                   <TableCell className="py-0 text-right text-xs tabular-nums">
                     {formatNumber(kpis.totalStake)}
                   </TableCell>
-                  <TableCell className="py-0 text-right text-xs tabular-nums">
-                    {formatNumber(totalPayout)}
-                  </TableCell>
-                  <TableCell className="py-0 text-right text-xs tabular-nums">
-                    {formatNumber(kpis.totalGgr)}
-                  </TableCell>
+                  <TableCell className="py-0 text-right text-xs tabular-nums">{formatNumber(totalPayout)}</TableCell>
+                  <TableCell className="py-0 text-right text-xs tabular-nums">{formatNumber(kpis.totalGgr)}</TableCell>
                   <TableCell className="py-0 text-right text-xs tabular-nums">
                     {formatNumber(totalCommission)}
                   </TableCell>
                   <TableCell className="py-0 pr-5 text-right">
-                    <span
-                      className={cn(
-                        "text-xs tabular-nums font-semibold",
-                        getNetProfitClass(kpis.totalProfit),
-                      )}
-                    >
+                    <span className={cn("text-xs tabular-nums font-semibold", getNetProfitClass(kpis.totalProfit))}>
                       {formatNumber(kpis.totalProfit)}
                     </span>
                   </TableCell>
@@ -286,13 +248,7 @@ interface PayoutRatioChartProps {
   isLoading: boolean;
 }
 
-function PayoutRatioBar({
-  gameProduct,
-  payoutRatio,
-}: {
-  gameProduct: string;
-  payoutRatio: number;
-}) {
+function PayoutRatioBar({ gameProduct, payoutRatio }: { gameProduct: string; payoutRatio: number }) {
   const displayPct = Math.min(payoutRatio * 100, 100);
   const isOver = payoutRatio >= 1;
   const isDanger = payoutRatio >= 0.95;
@@ -303,9 +259,7 @@ function PayoutRatioBar({
 
   return (
     <div className="flex items-center gap-3">
-      <div className="w-20 shrink-0 truncate text-xs text-muted-foreground">
-        {getGameLabel(gameProduct)}
-      </div>
+      <div className="w-20 shrink-0 truncate text-xs text-muted-foreground">{getGameLabel(gameProduct)}</div>
       <div className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
         <div
           className="h-full rounded-full transition-all duration-500"
@@ -378,11 +332,7 @@ export function PayoutRatioChart({ kpis, isLoading }: PayoutRatioChartProps) {
         {/* Bars xếp sát nhau từ trên xuống, gap cố định — không rời rạc */}
         <div className="flex flex-col gap-2 py-2">
           {rows.map((row) => (
-            <PayoutRatioBar
-              key={row.gameProduct}
-              gameProduct={row.gameProduct}
-              payoutRatio={row.payoutRatio}
-            />
+            <PayoutRatioBar key={row.gameProduct} gameProduct={row.gameProduct} payoutRatio={row.payoutRatio} />
           ))}
         </div>
         {/* Chú thích: bar = màu game cố định; text % thay đổi theo mức cảnh báo */}
@@ -395,9 +345,7 @@ export function PayoutRatioChart({ kpis, isLoading }: PayoutRatioChartProps) {
             { textClass: "text-red-600 dark:text-red-400", label: "> 100%" },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1">
-              <span className={cn("text-xs tabular-nums font-medium", item.textClass)}>
-                {item.label}
-              </span>
+              <span className={cn("text-xs tabular-nums font-medium", item.textClass)}>{item.label}</span>
             </div>
           ))}
         </div>

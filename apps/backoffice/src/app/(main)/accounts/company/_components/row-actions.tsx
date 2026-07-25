@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { EllipsisVertical, KeyRound, ShieldCheck } from "lucide-react";
+
 import { CompanyRole } from "@megawin/identity/entities";
+import { EllipsisVertical, KeyRound, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,8 +15,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "@/lib/auth-client";
 
-import type { CompanyAccount } from "../_lib/schema";
 import { SetPasswordDialog } from "../../_shared/set-password-dialog";
+import type { CompanyAccount } from "../_lib/schema";
 
 export function AccountRowActions({ account }: { account: CompanyAccount }) {
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -51,9 +52,7 @@ export function AccountRowActions({ account }: { account: CompanyAccount }) {
           <DropdownMenuItem
             disabled={!canSetPassword}
             onClick={() => setPasswordOpen(true)}
-            title={
-              canSetPassword ? undefined : "Chỉ Admin mới được đổi mật khẩu cho tài khoản Admin."
-            }
+            title={canSetPassword ? undefined : "Chỉ Admin mới được đổi mật khẩu cho tài khoản Admin."}
           >
             <KeyRound className="mr-2 h-4 w-4" />
             Đặt mật khẩu mới
@@ -62,11 +61,7 @@ export function AccountRowActions({ account }: { account: CompanyAccount }) {
       </DropdownMenu>
 
       {canSetPassword && (
-        <SetPasswordDialog
-          open={passwordOpen}
-          onOpenChange={setPasswordOpen}
-          username={account.username}
-        />
+        <SetPasswordDialog open={passwordOpen} onOpenChange={setPasswordOpen} username={account.username} />
       )}
     </>
   );

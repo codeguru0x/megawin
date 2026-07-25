@@ -1,11 +1,13 @@
 "use client";
 
-import { toTenantUsername } from "@megawin/shared/utils";
 import type { TicketEntryEntity } from "@megawin/game-max3dpro/entities";
+import { toTenantUsername } from "@megawin/shared/utils";
+
+import { type EntryRow, GamePlayerEntryList } from "@/components/reports/game/settle";
+
 import { useMax3DProEntries } from "../use-report-queries";
-import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
 import { Max3dproEntryDetailDialog } from "./entry-detail-dialog";
-import { GamePlayerEntryList, type EntryRow } from "@/components/reports/game/settle";
+import { EmptyCard, ErrorCard, TableSkeleton } from "./shared-states";
 
 export function EntryList({
   drawId,

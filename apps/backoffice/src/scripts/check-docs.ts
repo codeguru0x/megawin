@@ -9,11 +9,12 @@
  *
  * Exit code != 0 nếu lệch → dùng trong CI chặn merge tài liệu lệch registry.
  */
+
+import { RUNBOOK_MANIFEST } from "@megawin/ops-docs/manifest";
+
 import { readdirSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative } from "node:path";
-
-import { RUNBOOK_MANIFEST } from "@megawin/ops-docs/manifest";
 
 const require = createRequire(import.meta.url);
 
@@ -42,9 +43,7 @@ function listStaffMarkdown(dir: string): string[] {
   return out;
 }
 
-const manifestFiles = new Set(
-  RUNBOOK_MANIFEST.flatMap((g) => g.topics.flatMap((t) => t.docs.map((d) => d.file))),
-);
+const manifestFiles = new Set(RUNBOOK_MANIFEST.flatMap((g) => g.topics.flatMap((t) => t.docs.map((d) => d.file))));
 const diskFiles = new Set(listStaffMarkdown(docsRoot));
 
 const missing = [...manifestFiles].filter((f) => !diskFiles.has(f));

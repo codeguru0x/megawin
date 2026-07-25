@@ -12,12 +12,12 @@
  * - void: có voidInfo. Dialog có thể hiển thị thông tin hoàn trả (xử lý bởi dialog game-specific).
  */
 
-import { Mega645EntryDetailDialog } from "@/app/(main)/games/mega645/reports/settle/_lib/sections/entry-detail-dialog";
-import { Lotto535EntryDetailDialog } from "@/app/(main)/games/lotto535/reports/settle/_lib/sections/entry-detail-dialog";
+import { Bingo18EntryDetailDialog } from "@/app/(main)/games/bingo18/reports/settle/_lib/sections/entry-detail-dialog";
 import { KenoEntryDetailDialog } from "@/app/(main)/games/keno/reports/settle/_lib/sections/entry-detail-dialog";
+import { Lotto535EntryDetailDialog } from "@/app/(main)/games/lotto535/reports/settle/_lib/sections/entry-detail-dialog";
 import { Max3dEntryDetailDialog } from "@/app/(main)/games/max3d/reports/settle/_lib/sections/entry-detail-dialog";
 import { Max3dproEntryDetailDialog } from "@/app/(main)/games/max3dpro/reports/settle/_lib/sections/entry-detail-dialog";
-import { Bingo18EntryDetailDialog } from "@/app/(main)/games/bingo18/reports/settle/_lib/sections/entry-detail-dialog";
+import { Mega645EntryDetailDialog } from "@/app/(main)/games/mega645/reports/settle/_lib/sections/entry-detail-dialog";
 import { Power655EntryDetailDialog } from "@/app/(main)/games/power655/reports/settle/_lib/sections/entry-detail-dialog";
 
 export interface GameEntryDetailDialogProps {

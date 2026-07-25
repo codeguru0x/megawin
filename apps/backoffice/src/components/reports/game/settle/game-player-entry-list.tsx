@@ -1,19 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Ticket } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { formatNumber } from "@megawin/shared/utils";
+
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { Ticket } from "lucide-react";
+
 import { getNetProfitColor } from "@/components/reports/payout-ratio";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -128,9 +123,7 @@ export function GamePlayerEntryList({
               </TableHeader>
               <TableBody>
                 {rows.map((entry) => {
-                  const playerNet = entry.isSettled
-                    ? (entry.payoutAmount ?? 0) - entry.amount
-                    : null;
+                  const playerNet = entry.isSettled ? (entry.payoutAmount ?? 0) - entry.amount : null;
 
                   return (
                     <TableRow
@@ -151,9 +144,7 @@ export function GamePlayerEntryList({
                       <TableCell className="text-right text-sm tabular-nums">
                         {formatNumber(entry.betUnitCount)}
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {formatNumber(entry.amount)}
-                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{formatNumber(entry.amount)}</TableCell>
                       <TableCell className="text-right text-sm tabular-nums">
                         {entry.isSettled ? (
                           formatNumber(entry.payoutAmount ?? 0)

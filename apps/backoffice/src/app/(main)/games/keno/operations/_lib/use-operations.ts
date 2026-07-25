@@ -1,47 +1,47 @@
 "use client";
 
 import { useEffect } from "react";
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+import type { GetDrawDetailOutput, PreviewDrawsOutput } from "@megawin/game-keno-application/use-cases/draws";
+import type {
+  GetDrawSelectorOutput,
+  GetLiveEntriesOutput,
+  GetTopCombosOutput,
+  GetWinningEntriesOutput,
+  NumberFrequencyOutput,
+  OpsSummaryOutput,
+  PlayTypeDistributionOutput,
+  TenantBreakdownOutput,
+} from "@megawin/game-keno-application/use-cases/operations";
+import type { GetEntryByIdOutput } from "@megawin/game-keno-application/use-cases/reports";
 import { apiClient, formatErrorToast } from "@megawin/next/client";
 import { Pagination } from "@megawin/shared/constants/pagination";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { kenoKeys } from "@/lib/query-keys";
-import type {
-  OpsSummaryOutput,
-  TenantBreakdownOutput,
-  NumberFrequencyOutput,
-  PlayTypeDistributionOutput,
-  GetLiveEntriesOutput,
-  GetDrawSelectorOutput,
-  GetTopCombosOutput,
-  GetWinningEntriesOutput,
-} from "@megawin/game-keno-application/use-cases/operations";
-import type { GetDrawDetailOutput } from "@megawin/game-keno-application/use-cases/draws";
-import type { PreviewDrawsOutput } from "@megawin/game-keno-application/use-cases/draws";
-import type { GetEntryByIdOutput } from "@megawin/game-keno-application/use-cases/reports";
 
-export type {
-  OpsSummaryOutput,
-  TenantBreakdownOutput,
-  TenantBreakdownItem,
-  NumberFrequencyOutput,
-  NumberFrequencyItem,
-  PlayTypeDistributionOutput,
-  PlayTypeDistributionItem,
-  GetLiveEntriesOutput,
-  LiveEntryItem,
-  LiveEntryBoard,
-  GetDrawSelectorOutput,
-  DrawSelectorItem,
-  GetTopCombosOutput,
-  TopComboItem,
-  GetWinningEntriesOutput,
-  WinningEntryItem,
-  WinningEntryBoardDetail,
-  WinningEntriesSummary,
-} from "@megawin/game-keno-application/use-cases/operations";
+import { kenoKeys } from "@/lib/query-keys";
 
 export type { GetDrawDetailOutput } from "@megawin/game-keno-application/use-cases/draws";
+export type {
+  DrawSelectorItem,
+  GetDrawSelectorOutput,
+  GetLiveEntriesOutput,
+  GetTopCombosOutput,
+  GetWinningEntriesOutput,
+  LiveEntryBoard,
+  LiveEntryItem,
+  NumberFrequencyItem,
+  NumberFrequencyOutput,
+  OpsSummaryOutput,
+  PlayTypeDistributionItem,
+  PlayTypeDistributionOutput,
+  TenantBreakdownItem,
+  TenantBreakdownOutput,
+  TopComboItem,
+  WinningEntriesSummary,
+  WinningEntryBoardDetail,
+  WinningEntryItem,
+} from "@megawin/game-keno-application/use-cases/operations";
 
 export interface OpsQueryParams {
   financialDate?: string;
@@ -229,14 +229,10 @@ export function useWinningEntries(drawId: string | undefined, enabled: boolean) 
  * Winning Entries Dialog để xem lại phiếu cược gốc (board, side bet, kết quả).
  * Tự báo toast lỗi khi không tìm thấy hoặc request thất bại.
  */
-export function useWinningEntryDetail(
-  entryId: string | null,
-  { onNotFound }: { onNotFound?: () => void } = {},
-) {
+export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { onNotFound?: () => void } = {}) {
   const query = useQuery({
     queryKey: kenoKeys.reportEntryById(entryId ?? ""),
-    queryFn: () =>
-      apiClient.get<GetEntryByIdOutput>(`/keno/reports/entries/${entryId}`).then((r) => r.entry),
+    queryFn: () => apiClient.get<GetEntryByIdOutput>(`/keno/reports/entries/${entryId}`).then((r) => r.entry),
     enabled: !!entryId,
   });
 
@@ -280,9 +276,7 @@ function useDrawAction<TBody = void>(
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
-      method === "post"
-        ? apiClient.post(actionPath(drawId), body)
-        : apiClient.patch(actionPath(drawId), body),
+      method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: kenoKeys.all });
       toast.success(successMessage);
@@ -338,11 +332,7 @@ export function useTriggerResettle() {
 }
 
 export function useVoidDraw() {
-  return useDrawAction<{ reason: string }>(
-    (id) => `/keno/draws/${id}/void`,
-    "post",
-    "Đã huỷ kỳ quay.",
-  );
+  return useDrawAction<{ reason: string }>((id) => `/keno/draws/${id}/void`, "post", "Đã huỷ kỳ quay.");
 }
 
 export function useUpdateSchedule() {

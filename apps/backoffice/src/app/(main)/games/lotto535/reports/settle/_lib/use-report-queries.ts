@@ -1,22 +1,23 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@megawin/next/client";
-import { lotto535Keys } from "@/lib/query-keys";
 import type {
   GetDrawSummaryOutput,
-  ListSettleDrawReportsOutput,
-  ListDrawTenantsOutput,
-  ListTenantReportsOutput,
-  ListTenantDrawsOutput,
-  ListPlayerBreakdownOutput,
-  ListEntryBreakdownOutput,
   GetOutstandingReportsOutput,
-  ListVoidReportsOutput,
+  ListDrawTenantsOutput,
+  ListEntryBreakdownOutput,
   ListOutstandingDrawTenantsOutput,
-  ListOutstandingTenantPlayersOutput,
   ListOutstandingPlayerEntriesOutput,
+  ListOutstandingTenantPlayersOutput,
+  ListPlayerBreakdownOutput,
+  ListSettleDrawReportsOutput,
+  ListTenantDrawsOutput,
+  ListTenantReportsOutput,
+  ListVoidReportsOutput,
 } from "@megawin/game-lotto535-application/use-cases/reports";
+import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
+
+import { lotto535Keys } from "@/lib/query-keys";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
 
@@ -51,9 +52,7 @@ export function useLotto535DrawTenants(drawId: string | null) {
   return useQuery({
     queryKey: lotto535Keys.reportDrawTenants(drawId ?? ""),
     queryFn: () =>
-      apiClient
-        .get<ListDrawTenantsOutput>(`/lotto535/reports/draws/${drawId}/tenants`)
-        .then((r) => r.data),
+      apiClient.get<ListDrawTenantsOutput>(`/lotto535/reports/draws/${drawId}/tenants`).then((r) => r.data),
     enabled: !!drawId,
   });
 }
@@ -122,10 +121,7 @@ export function useLotto535Entries(drawId: string, tenantId: string, accountId: 
 export function useLotto535Outstanding() {
   return useQuery({
     queryKey: lotto535Keys.outstandingDraws,
-    queryFn: () =>
-      apiClient
-        .get<GetOutstandingReportsOutput>("/lotto535/reports/outstanding")
-        .then((r) => r.data),
+    queryFn: () => apiClient.get<GetOutstandingReportsOutput>("/lotto535/reports/outstanding").then((r) => r.data),
     refetchInterval: 60_000,
   });
 }
@@ -136,9 +132,7 @@ export function useLotto535OutstandingDrawTenants(drawId: string | null) {
     queryKey: lotto535Keys.outstandingTenants(drawId ?? ""),
     queryFn: () =>
       apiClient
-        .get<ListOutstandingDrawTenantsOutput>(
-          `/lotto535/reports/outstanding/draws/${drawId}/tenants`,
-        )
+        .get<ListOutstandingDrawTenantsOutput>(`/lotto535/reports/outstanding/draws/${drawId}/tenants`)
         .then((r) => r.data),
     enabled: !!drawId,
     refetchInterval: 60_000,
@@ -151,9 +145,7 @@ export function useLotto535OutstandingTenantPlayers(drawId: string, tenantId: st
     queryKey: lotto535Keys.outstandingPlayers({ drawId, tenantId: tenantId ?? "" }),
     queryFn: () =>
       apiClient
-        .get<ListOutstandingTenantPlayersOutput>(
-          `/lotto535/reports/outstanding/draws/${drawId}/${tenantId}/players`,
-        )
+        .get<ListOutstandingTenantPlayersOutput>(`/lotto535/reports/outstanding/draws/${drawId}/${tenantId}/players`)
         .then((r) => r.data),
     enabled: !!(drawId && tenantId),
     refetchInterval: 60_000,
@@ -161,11 +153,7 @@ export function useLotto535OutstandingTenantPlayers(drawId: string, tenantId: st
 }
 
 /** Entries outstanding của 1 player trong 1 draw × tenant. Drill cấp 4. Tự refresh mỗi 60 giây. */
-export function useLotto535OutstandingPlayerEntries(
-  drawId: string,
-  tenantId: string,
-  accountId: string | null,
-) {
+export function useLotto535OutstandingPlayerEntries(drawId: string, tenantId: string, accountId: string | null) {
   return useQuery({
     queryKey: lotto535Keys.outstandingEntries({ drawId, tenantId, accountId: accountId ?? "" }),
     queryFn: () =>
@@ -234,18 +222,12 @@ export function useLotto535VoidTenantPlayers(drawId: string, tenantId: string | 
 }
 
 /** Entries void của 1 player trong 1 draw × tenant. Drill cấp 4. */
-export function useLotto535VoidPlayerEntries(
-  drawId: string,
-  tenantId: string,
-  accountId: string | null,
-) {
+export function useLotto535VoidPlayerEntries(drawId: string, tenantId: string, accountId: string | null) {
   return useQuery({
     queryKey: lotto535Keys.voidPlayerEntries({ drawId, tenantId, accountId: accountId ?? "" }),
     queryFn: () =>
       apiClient
-        .get<ListEntryBreakdownOutput>(
-          `/lotto535/reports/void/draws/${drawId}/${tenantId}/${accountId}/entries`,
-        )
+        .get<ListEntryBreakdownOutput>(`/lotto535/reports/void/draws/${drawId}/${tenantId}/${accountId}/entries`)
         .then((r) => r.data),
     enabled: !!(drawId && tenantId && accountId),
   });

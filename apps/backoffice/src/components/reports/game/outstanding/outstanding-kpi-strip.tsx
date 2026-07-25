@@ -1,9 +1,11 @@
 "use client";
 
-import { CalendarClock, Ticket, Rows3, Banknote, HandCoins } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
+import { Banknote, CalendarClock, HandCoins, Rows3, Ticket } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
 import type { OutstandingKpiData } from "./types";
 
 interface KpiCardProps {
@@ -49,11 +51,7 @@ interface OutstandingKpiStripProps {
  * - Luôn có: Kỳ đang hoạt động · Lượt cược · Hoa hồng ĐL · Tiền cược
  * - Có `showLineCount`: thêm KPI Bộ số / Dòng cược
  */
-export function OutstandingKpiStrip({
-  data,
-  showLineCount = false,
-  lineCountLabel,
-}: OutstandingKpiStripProps) {
+export function OutstandingKpiStrip({ data, showLineCount = false, lineCountLabel }: OutstandingKpiStripProps) {
   const lineLabel = lineCountLabel ?? REPORT_COLUMN_LABELS.lineCount;
   const cols = showLineCount ? "lg:grid-cols-5" : "lg:grid-cols-4";
 

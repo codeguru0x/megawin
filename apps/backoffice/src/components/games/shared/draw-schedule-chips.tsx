@@ -42,11 +42,7 @@ export function ScheduleChips({ draw }: { draw: DrawScheduleFields }) {
   if (draw.salesOpenAt) {
     const past = new Date(draw.salesOpenAt) < now;
     items.push({
-      icon: (
-        <Unlock
-          className={cn("size-3.5 shrink-0", past ? "text-emerald-400" : "text-emerald-500")}
-        />
-      ),
+      icon: <Unlock className={cn("size-3.5 shrink-0", past ? "text-emerald-400" : "text-emerald-500")} />,
       label: "Mở bán",
       time: displayVNTime(draw.salesOpenAt),
       fullDateTime: displayVNDateTime(draw.salesOpenAt),
@@ -57,9 +53,7 @@ export function ScheduleChips({ draw }: { draw: DrawScheduleFields }) {
 
   const closePast = new Date(draw.salesCloseAt) < now;
   items.push({
-    icon: (
-      <Lock className={cn("size-3.5 shrink-0", closePast ? "text-amber-400" : "text-amber-500")} />
-    ),
+    icon: <Lock className={cn("size-3.5 shrink-0", closePast ? "text-amber-400" : "text-amber-500")} />,
     label: "Đóng bán",
     time: displayVNTime(draw.salesCloseAt),
     fullDateTime: displayVNDateTime(draw.salesCloseAt),
@@ -70,9 +64,7 @@ export function ScheduleChips({ draw }: { draw: DrawScheduleFields }) {
   if (draw.drawResultAt) {
     const past = new Date(draw.drawResultAt) < now;
     items.push({
-      icon: (
-        <Clock className={cn("size-3.5 shrink-0", past ? "text-violet-400" : "text-violet-500")} />
-      ),
+      icon: <Clock className={cn("size-3.5 shrink-0", past ? "text-violet-400" : "text-violet-500")} />,
       label: "Quay số",
       time: displayVNTime(draw.drawResultAt),
       fullDateTime: displayVNDateTime(draw.drawResultAt),
@@ -88,9 +80,7 @@ export function ScheduleChips({ draw }: { draw: DrawScheduleFields }) {
           <TooltipTrigger asChild>
             <div className="flex items-center gap-1.5 cursor-default select-none">
               {item.icon}
-              <span
-                className={cn("text-xs", item.active ? "text-foreground" : "text-muted-foreground")}
-              >
+              <span className={cn("text-xs", item.active ? "text-foreground" : "text-muted-foreground")}>
                 {item.label}
               </span>
               <span

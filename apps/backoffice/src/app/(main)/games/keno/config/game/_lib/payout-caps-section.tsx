@@ -1,24 +1,16 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { formatNumber } from "@megawin/shared/utils";
-import { Save, Info } from "lucide-react";
-
 import { MoneyInput } from "@megawin/ui/components/money-input";
+import { Info, Save } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
@@ -90,8 +82,8 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
               <div className="flex items-start gap-2">
                 <Info className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
                 <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-400">
-                  Nếu số bộ trúng vượt ngưỡng, tổng giải tối đa / kỳ sẽ được chia đều cho số bộ
-                  trúng thay vì trả giải cố định.
+                  Nếu số bộ trúng vượt ngưỡng, tổng giải tối đa / kỳ sẽ được chia đều cho số bộ trúng thay vì trả giải
+                  cố định.
                 </p>
               </div>
             </div>
@@ -107,8 +99,7 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
                     <div className="flex items-center gap-2">
                       <Badge className={cn("text-white", cap.badge)}>Bậc {cap.pick}</Badge>
                       <span className="text-xs text-muted-foreground">
-                        Trùng {cap.pick}/{cap.pick} số · Giải cố định:{" "}
-                        <strong>{fmt(fixedPrize)} VND</strong>
+                        Trùng {cap.pick}/{cap.pick} số · Giải cố định: <strong>{fmt(fixedPrize)} VND</strong>
                       </span>
                     </div>
 
@@ -118,9 +109,7 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
                         name={cap.maxPerDrawField}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground">
-                              Tổng giải tối đa / kỳ (VND)
-                            </FormLabel>
+                            <FormLabel className="text-xs text-muted-foreground">Tổng giải tối đa / kỳ (VND)</FormLabel>
                             <FormControl>
                               <MoneyInput
                                 className="font-semibold"
@@ -140,9 +129,7 @@ export function PayoutCapsSection({ config, onSave, isPending }: PayoutCapsSecti
                         name={cap.maxSetsField}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs text-muted-foreground">
-                              Ngưỡng số bộ trả cố định
-                            </FormLabel>
+                            <FormLabel className="text-xs text-muted-foreground">Ngưỡng số bộ trả cố định</FormLabel>
                             <FormControl>
                               <MoneyInput
                                 className="font-semibold"

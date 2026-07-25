@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
 
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTablePagination } from "@/components/data-table/data-table-pagination";
@@ -9,9 +9,9 @@ import { DataTableViewOptions } from "@/components/data-table/data-table-view-op
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDataTableInstance } from "@/hooks/use-data-table-instance";
 
-import { tenantColumns } from "./columns";
 import type { Tenant } from "../_lib/schema";
 import type { ListTenantsResponse } from "../_lib/types";
+import { tenantColumns } from "./columns";
 
 export function TenantsTable() {
   const { data, isLoading, error } = useQuery({
@@ -29,9 +29,7 @@ export function TenantsTable() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-base md:text-lg">
-            Danh sách ứng dụng
-          </CardTitle>
+          <CardTitle className="text-base md:text-lg">Danh sách ứng dụng</CardTitle>
           <DataTableViewOptions table={table} />
         </div>
       </CardHeader>

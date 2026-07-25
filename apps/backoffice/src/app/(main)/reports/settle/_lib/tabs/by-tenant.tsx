@@ -1,45 +1,31 @@
 "use client";
 
-import React from "react";
+import type React from "react";
+
 import { useRouter } from "next/navigation";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Building2,
-  ChevronRight,
-  DollarSign,
-  Gamepad2,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { formatVNDCompact, formatNumber } from "@megawin/shared/utils";
-import { REPORT_COLUMN_LABELS, getGameLabel } from "@megawin/game-core/labels";
+
 import type { GameProduct } from "@megawin/game-core/entities";
-import { getGameHex } from "@/lib/game-colors";
+import { getGameLabel, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import type { TenantGameBreakdownRow, TenantSummaryRow } from "@megawin/game-core-application/repos";
+import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
+import { Building2, ChevronRight, DollarSign, Gamepad2, TrendingDown, TrendingUp } from "lucide-react";
+
 import {
   formatPayoutRatio,
-  getPayoutRatioColor,
   getNetProfitColor,
+  getPayoutRatioColor,
   PayoutRatioCell,
   PayoutRatioKpiBadge,
 } from "@/components/reports/payout-ratio";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getGameHex } from "@/lib/game-colors";
+import { cn } from "@/lib/utils";
+
+import { EmptyCard, ErrorCard, TableSkeleton } from "../sections/shared-states";
 import { useSystemReportFilters } from "../use-report-filters";
 import { useSystemByTenant, useSystemTenantBreakdown } from "../use-report-queries";
-import { TableSkeleton, ErrorCard, EmptyCard } from "../sections/shared-states";
-import type {
-  TenantSummaryRow,
-  TenantGameBreakdownRow,
-} from "@megawin/game-core-application/repos";
 
 // ─── KPI Card primitive ───────────────────────────────────────────────────────
 
@@ -54,16 +40,7 @@ interface KpiCardProps {
   subNode?: React.ReactNode;
 }
 
-function KpiCard({
-  icon: Icon,
-  iconBg,
-  iconColor,
-  label,
-  value,
-  valueClass,
-  sub,
-  subNode,
-}: KpiCardProps) {
+function KpiCard({ icon: Icon, iconBg, iconColor, label, value, valueClass, sub, subNode }: KpiCardProps) {
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
@@ -71,9 +48,7 @@ function KpiCard({
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className={cn("text-lg font-bold tabular-nums text-foreground", valueClass ?? "")}>
-          {value}
-        </p>
+        <p className={cn("text-lg font-bold tabular-nums text-foreground", valueClass ?? "")}>{value}</p>
         {subNode}
         {sub && <p className="truncate text-xs text-muted-foreground">{sub}</p>}
       </div>
@@ -115,12 +90,8 @@ function KpiStrip({ data }: { data: TenantSummaryRow[] }) {
       {/* Trả thưởng + Tỷ lệ TT — Phương án C: gộp 1 card */}
       <KpiCard
         icon={TrendingDown}
-        iconBg={
-          payoutColor ? "bg-red-100 dark:bg-red-900/50" : "bg-orange-100 dark:bg-orange-900/50"
-        }
-        iconColor={
-          payoutColor ? "text-red-600 dark:text-red-400" : "text-orange-600 dark:text-orange-400"
-        }
+        iconBg={payoutColor ? "bg-red-100 dark:bg-red-900/50" : "bg-orange-100 dark:bg-orange-900/50"}
+        iconColor={payoutColor ? "text-red-600 dark:text-red-400" : "text-orange-600 dark:text-orange-400"}
         label={REPORT_COLUMN_LABELS.totalPayout}
         value={formatVNDCompact(totalPayout)}
         subNode={<PayoutRatioKpiBadge ratio={payoutRatio} />}
@@ -145,12 +116,8 @@ function KpiStrip({ data }: { data: TenantSummaryRow[] }) {
       {/* Lợi nhuận ròng */}
       <KpiCard
         icon={TrendingUp}
-        iconBg={
-          netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50"
-        }
-        iconColor={
-          netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"
-        }
+        iconBg={netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50"}
+        iconColor={netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
         label={REPORT_COLUMN_LABELS.netProfit}
         value={formatVNDCompact(netProfit)}
         valueClass={getNetProfitColor(netProfit)}
@@ -225,12 +192,8 @@ function TenantListView() {
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.payoutPercent}</TableHead>
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.ggr}</TableHead>
-                  <TableHead className="text-right">
-                    {REPORT_COLUMN_LABELS.totalCommission}
-                  </TableHead>
-                  <TableHead className="pr-5 text-right">
-                    {REPORT_COLUMN_LABELS.netProfit}
-                  </TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalCommission}</TableHead>
+                  <TableHead className="pr-5 text-right">{REPORT_COLUMN_LABELS.netProfit}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -248,30 +211,18 @@ function TenantListView() {
                           <span className="text-sm font-medium">{row.tenantId}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {row.gameCount}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {formatNumber(row.playerCount)}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {formatNumber(row.drawCount)}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {formatNumber(row.entryCount)}
-                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{row.gameCount}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.playerCount)}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.drawCount)}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
                       <TableCell className="text-right text-sm tabular-nums font-medium">
                         {formatNumber(row.totalStake)}
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {formatNumber(row.totalPayout)}
-                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalPayout)}</TableCell>
                       <TableCell className="text-right text-sm">
                         <PayoutRatioCell ratio={payoutRatio} />
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {formatNumber(row.ggr)}
-                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.ggr)}</TableCell>
                       <TableCell className="text-right text-sm tabular-nums">
                         {formatNumber(row.totalCommission)}
                       </TableCell>
@@ -289,9 +240,7 @@ function TenantListView() {
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  <TableCell className="pl-5 text-sm font-semibold">
-                    {REPORT_COLUMN_LABELS.summary}
-                  </TableCell>
+                  <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
                   <TableCell />
                   <TableCell />
                   <TableCell className="text-right text-sm tabular-nums font-semibold">
@@ -412,30 +361,18 @@ function TenantDetailView({ tenantId }: { tenantId: string }) {
                         {getGameLabel(row.gameProduct as GameProduct)}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.playerCount)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.drawCount)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.playerCount)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.drawCount)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums font-medium">
                       {formatNumber(row.totalStake)}
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.totalPayout)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalPayout)}</TableCell>
                     <TableCell className="text-right text-sm">
                       <PayoutRatioCell ratio={payoutRatio} />
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.ggr)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.commission)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.ggr)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.commission)}</TableCell>
                     <TableCell
                       className={cn(
                         "pr-5 text-right text-sm tabular-nums font-medium",
@@ -450,10 +387,8 @@ function TenantDetailView({ tenantId }: { tenantId: string }) {
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell className="pl-5 text-sm font-semibold">
-                  {REPORT_COLUMN_LABELS.summary}
-                </TableCell>
-                <TableCell className="text-right text-sm tabular-nums font-semibold"></TableCell>
+                <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
+                <TableCell className="text-right text-sm tabular-nums font-semibold" />
                 <TableCell className="text-right text-sm tabular-nums font-semibold">
                   {formatNumber(totals.drawCount)}
                 </TableCell>
@@ -498,12 +433,7 @@ function Breadcrumb({ tenantId }: { tenantId: string }) {
   const { navigateBackToList } = useSystemReportFilters();
   return (
     <div className="flex flex-wrap items-center gap-1">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-auto px-2 py-1 text-xs"
-        onClick={navigateBackToList}
-      >
+      <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={navigateBackToList}>
         Theo đại lý
       </Button>
       <ChevronRight className="size-3 text-muted-foreground" />

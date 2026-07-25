@@ -7,14 +7,15 @@
  * Lotto 5/35: mainNumbers (01-35) + specialNumbers (01-12, chỉ khi SpecialCover).
  */
 
-import { cn } from "@/lib/utils";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber, displayVNTimeWithSeconds } from "@megawin/shared/utils";
+import { displayVNTimeWithSeconds, formatNumber, toTenantUsername } from "@megawin/shared/utils";
 import { Activity, Radio } from "lucide-react";
+
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+import type { LiveFeedEntry } from "../../types";
 import { PLAY_TYPE_COLORS } from "./analytics-panels";
 import { NumbersWithTooltip } from "./number-heatmap";
-import type { LiveFeedEntry } from "../../types";
-import { toTenantUsername } from "@megawin/shared/utils";
 
 /**
  * Ngưỡng (VND) đánh dấu "cược lớn" trong live feed — cược ≥ ngưỡng này được
@@ -30,13 +31,7 @@ const LARGE_BET_THRESHOLD = 5_000_000;
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function LiveFeed({
-  entries,
-  isSettled = false,
-}: {
-  entries: LiveFeedEntry[];
-  isSettled?: boolean;
-}) {
+export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntry[]; isSettled?: boolean }) {
   return (
     <Card className="gap-0 py-0 shadow-sm flex flex-col">
       <CardHeader className="px-5 pb-2 pt-4 shrink-0">
@@ -84,18 +79,8 @@ export function LiveFeed({
                   <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
                     {/* Row 1: play type label (left) — right cell empty */}
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <div
-                        className={cn(
-                          "size-1.5 rounded-full shrink-0",
-                          color?.dot ?? "bg-muted-foreground",
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "text-xs font-semibold truncate",
-                          color?.text ?? "text-muted-foreground",
-                        )}
-                      >
+                      <div className={cn("size-1.5 rounded-full shrink-0", color?.dot ?? "bg-muted-foreground")} />
+                      <span className={cn("text-xs font-semibold truncate", color?.text ?? "text-muted-foreground")}>
                         {e.playTypeLabel}
                       </span>
                       {isLargeBet && (
@@ -108,17 +93,11 @@ export function LiveFeed({
                     {/* Row 2: number badges (left) | amount (right) */}
                     <div className="min-w-0 overflow-hidden flex items-center gap-1">
                       <NumbersWithTooltip numbers={mainNumbers} variant="soft" ballVariant="main" />
-                      {suffix && (
-                        <span className="text-xs text-muted-foreground shrink-0">{suffix}</span>
-                      )}
+                      {suffix && <span className="text-xs text-muted-foreground shrink-0">{suffix}</span>}
                       {specialNumbers.length > 0 && (
                         <>
                           <span className="text-xs text-muted-foreground mx-0.5 shrink-0">+</span>
-                          <NumbersWithTooltip
-                            numbers={specialNumbers}
-                            variant="soft"
-                            ballVariant="special"
-                          />
+                          <NumbersWithTooltip numbers={specialNumbers} variant="soft" ballVariant="special" />
                         </>
                       )}
                     </div>
@@ -131,9 +110,7 @@ export function LiveFeed({
                     <div className="text-xs text-muted-foreground truncate">
                       {e.username && (
                         <>
-                          <span className="font-medium text-foreground/70">
-                            {toTenantUsername(e.username)}
-                          </span>
+                          <span className="font-medium text-foreground/70">{toTenantUsername(e.username)}</span>
                           <span className="mx-1">·</span>
                         </>
                       )}

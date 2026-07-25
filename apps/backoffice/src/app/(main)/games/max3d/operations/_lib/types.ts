@@ -12,12 +12,7 @@
  * - Kết quả: 20 bộ ba số (special x2, first x4, second x6, third x8)
  */
 
-import type {
-  BasicPrizeTier,
-  PlusPrizeTier,
-  PlayMode,
-  PlayType,
-} from "@megawin/game-max3d/entities";
+import type { BasicPrizeTier, PlayMode, PlayType, PlusPrizeTier } from "@megawin/game-max3d/entities";
 
 // ─── KPI ─────────────────────────────────────────────────────────────────────
 

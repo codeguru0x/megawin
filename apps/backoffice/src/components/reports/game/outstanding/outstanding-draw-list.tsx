@@ -1,17 +1,12 @@
 "use client";
 
-import { Clock } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { Clock } from "lucide-react";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import type { OutstandingDrawRow } from "./types";
 
 export interface OutstandingDrawListProps {
@@ -62,9 +57,7 @@ export function OutstandingDrawList({
       <CardHeader className="px-5 pb-2 pt-4">
         <div className="flex items-center gap-2">
           <Clock className="size-4 text-muted-foreground" />
-          <CardTitle className="text-sm font-semibold">
-            Kỳ quay đang hoạt động · Click để xem theo đại lý
-          </CardTitle>
+          <CardTitle className="text-sm font-semibold">Kỳ quay đang hoạt động · Click để xem theo đại lý</CardTitle>
         </div>
       </CardHeader>
       <CardContent className="px-0 pb-4 pt-0">
@@ -78,9 +71,7 @@ export function OutstandingDrawList({
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.tenantCount}</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
                 {showLineCount && <TableHead className="text-right">{lineLabel}</TableHead>}
-                <TableHead className="text-right">
-                  {REPORT_COLUMN_LABELS.estimatedCommission}
-                </TableHead>
+                <TableHead className="text-right">{REPORT_COLUMN_LABELS.estimatedCommission}</TableHead>
                 <TableHead className="pr-5 text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
               </TableRow>
             </TableHeader>
@@ -93,15 +84,9 @@ export function OutstandingDrawList({
                 >
                   <TableCell className="pl-5 text-sm tabular-nums">{row.financialDate}</TableCell>
                   <TableCell className="font-mono text-sm tabular-nums">{row.drawId}</TableCell>
-                  <TableCell className="text-right text-sm tabular-nums">
-                    {formatNumber(row.playerCount)}
-                  </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums">
-                    {formatNumber(row.tenantCount)}
-                  </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums">
-                    {formatNumber(row.entryCount)}
-                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.playerCount)}</TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.tenantCount)}</TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
                   {showLineCount && (
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(row.lineCount ?? 0)}

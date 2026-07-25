@@ -1,14 +1,12 @@
 "use client";
 
-import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
+import { CalendarClock, ListOrdered, Loader2 } from "lucide-react";
 
-import { useBingo18CurrentDraw } from "./_lib/use-draws";
+import { Bingo18PrimaryDrawCard, Bingo18QueueDrawCard } from "@/components/games/bingo18/active-draw-card";
+
 import { useBingo18GameConfig } from "../config/game/_lib/use-game-config";
-import {
-  Bingo18PrimaryDrawCard,
-  Bingo18QueueDrawCard,
-} from "@/components/games/bingo18/active-draw-card";
 import { Bingo18DrawHistorySection } from "./_lib/draw-history-section";
+import { useBingo18CurrentDraw } from "./_lib/use-draws";
 
 export default function Bingo18DrawsPage() {
   const { data, isLoading } = useBingo18CurrentDraw();
@@ -28,9 +26,7 @@ export default function Bingo18DrawsPage() {
           <CalendarClock className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">
-            Bingo 18 — Kỳ quay
-          </h1>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">Bingo 18 — Kỳ quay</h1>
           <p className="text-xs text-muted-foreground">
             Quay mỗi {interval} phút ({firstDraw}–{lastDraw}).
           </p>
@@ -69,9 +65,7 @@ export default function Bingo18DrawsPage() {
           </div>
           <div>
             <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Hãy truy cập trang vận hành để tạo kỳ quay mới.
-            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Hãy truy cập trang vận hành để tạo kỳ quay mới.</p>
           </div>
         </div>
       )}

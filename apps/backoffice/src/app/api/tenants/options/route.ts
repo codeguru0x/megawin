@@ -1,5 +1,6 @@
-import { withApi } from "@/lib/api";
 import { ListTenantOptionsUseCase } from "@megawin/identity-application/use-cases/tenants";
+
+import { withApi } from "@/lib/api";
 
 export const GET = withApi()
   .auth()

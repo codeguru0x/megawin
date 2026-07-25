@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 
+import { PlayerBackLink } from "./_components/player-back-link";
 import { PlayerDetailNav } from "./_components/player-detail-nav";
 import { PlayerPageTitle } from "./_components/player-page-title";
 import { PlayerSidebarProfile } from "./_components/player-sidebar-profile";
-import { PlayerBackLink } from "./_components/player-back-link";
 
 interface PlayerDetailLayoutProps {
   children: ReactNode;

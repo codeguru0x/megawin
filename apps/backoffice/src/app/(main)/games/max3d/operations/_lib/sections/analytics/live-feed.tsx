@@ -10,14 +10,16 @@
  * Chỉ hiển thị label khi play type khác default (combo3, combo6).
  */
 
-import { cn } from "@/lib/utils";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber, displayVNTimeWithSeconds, toTenantUsername } from "@megawin/shared/utils";
-import { Activity, Radio } from "lucide-react";
 import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
-import { PLAY_MODE_COLORS } from "./analytics-panels";
+import { displayVNTimeWithSeconds, formatNumber, toTenantUsername } from "@megawin/shared/utils";
+import { Activity, Radio } from "lucide-react";
+
 import { TripletDisplay } from "@/components/games/max3d/triplet-display";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
 import type { LiveFeedEntry } from "../../types";
+import { PLAY_MODE_COLORS } from "./analytics-panels";
 
 const COMBO_LABELS: Record<string, string> = {
   [PlayType.Combo3]: "Tổ hợp 3",
@@ -33,13 +35,7 @@ const COMBO_LABELS: Record<string, string> = {
  */
 const LARGE_BET_THRESHOLD = 2_000_000;
 
-export function LiveFeed({
-  entries,
-  isSettled = false,
-}: {
-  entries: LiveFeedEntry[];
-  isSettled?: boolean;
-}) {
+export function LiveFeed({ entries, isSettled = false }: { entries: LiveFeedEntry[]; isSettled?: boolean }) {
   return (
     <Card className="gap-0 py-0 shadow-sm flex flex-col">
       <CardHeader className="px-5 pb-2 pt-4 shrink-0">
@@ -92,16 +88,10 @@ export function LiveFeed({
                           {displayLabel && (
                             <>
                               <div
-                                className={cn(
-                                  "size-1.5 rounded-full shrink-0",
-                                  color?.dot ?? "bg-muted-foreground",
-                                )}
+                                className={cn("size-1.5 rounded-full shrink-0", color?.dot ?? "bg-muted-foreground")}
                               />
                               <span
-                                className={cn(
-                                  "text-xs font-semibold truncate",
-                                  color?.text ?? "text-muted-foreground",
-                                )}
+                                className={cn("text-xs font-semibold truncate", color?.text ?? "text-muted-foreground")}
                               >
                                 {displayLabel}
                               </span>
@@ -123,14 +113,10 @@ export function LiveFeed({
                         <TripletDisplay key={idx} value={t} variant="default" size="sm" />
                       ))}
                       {e.triplets.length > 4 && (
-                        <span className="text-xs text-muted-foreground shrink-0">
-                          +{e.triplets.length - 4}
-                        </span>
+                        <span className="text-xs text-muted-foreground shrink-0">+{e.triplets.length - 4}</span>
                       )}
                       {isCombo && e.lineCount > 1 && (
-                        <span className="text-xs text-muted-foreground shrink-0 ml-0.5">
-                          ({e.lineCount} lines)
-                        </span>
+                        <span className="text-xs text-muted-foreground shrink-0 ml-0.5">({e.lineCount} lines)</span>
                       )}
                       {e.betCount > 1 && (
                         <span className="text-xs font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1 rounded shrink-0 ml-0.5">
@@ -148,9 +134,7 @@ export function LiveFeed({
                     <div className="text-xs text-muted-foreground truncate">
                       {e.username && (
                         <>
-                          <span className="font-medium text-foreground/70">
-                            {toTenantUsername(e.username)}
-                          </span>
+                          <span className="font-medium text-foreground/70">{toTenantUsername(e.username)}</span>
                           <span className="mx-1">·</span>
                         </>
                       )}

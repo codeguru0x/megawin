@@ -1,7 +1,8 @@
 "use client";
 
-import { useQueryState, parseAsString } from "nuqs";
 import { useCallback } from "react";
+
+import { parseAsString, useQueryState } from "nuqs";
 
 /** Drill level trong Mega 6/45 Outstanding page. */
 export type OutstandingDrillLevel = "list" | "draw-tenants" | "players" | "entries";

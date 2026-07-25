@@ -1,11 +1,13 @@
 "use client";
 
-import { toTenantUsername } from "@megawin/shared/utils";
 import type { TicketEntryEntity } from "@megawin/game-power655/entities";
+import { toTenantUsername } from "@megawin/shared/utils";
+
+import { type EntryRow, GamePlayerEntryList } from "@/components/reports/game/settle";
+
 import { usePower655Entries } from "../use-report-queries";
-import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
 import { Power655EntryDetailDialog } from "./entry-detail-dialog";
-import { GamePlayerEntryList, type EntryRow } from "@/components/reports/game/settle";
+import { EmptyCard, ErrorCard, TableSkeleton } from "./shared-states";
 
 /** Cấp 4 drill-down: entries của 1 player × 1 draw × 1 tenant — Power 6/55. */
 export function EntryList({
@@ -23,8 +25,7 @@ export function EntryList({
 
   if (isLoading) return <TableSkeleton rows={5} />;
   if (error) return <ErrorCard message="Lỗi tải entries." />;
-  if (!data?.length)
-    return <EmptyCard icon="ticket" message="Không có dữ liệu" description="Không có entry nào." />;
+  if (!data?.length) return <EmptyCard icon="ticket" message="Không có dữ liệu" description="Không có entry nào." />;
 
   const rows: EntryRow[] = data.map((entry) => ({
     id: entry.id,

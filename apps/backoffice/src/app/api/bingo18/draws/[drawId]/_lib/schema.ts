@@ -1,9 +1,5 @@
+import { BINGO18_DICE_MAX, BINGO18_DICE_MIN, BINGO18_DRAW_COUNT } from "@megawin/game-bingo18/entities";
 import { z } from "zod";
-import {
-  BINGO18_DRAW_COUNT,
-  BINGO18_DICE_MIN,
-  BINGO18_DICE_MAX,
-} from "@megawin/game-bingo18/entities";
 
 const numbersSchema = z
   .array(z.number().int().min(BINGO18_DICE_MIN).max(BINGO18_DICE_MAX))

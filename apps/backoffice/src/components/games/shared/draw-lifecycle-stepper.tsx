@@ -62,32 +62,18 @@ export function getDrawLifecycleSteps(draw: DrawLifecycleFields): Step[] {
       label: "Mở bán",
       // salesOpenAt chỉ có sau khi kỳ đã mở bán — kỳ Scheduled sẽ không hiện giờ
       time: draw.salesOpenAt ? displayVNTime(draw.salesOpenAt) : undefined,
-      state: active(DrawStatus.SalesOpen)
-        ? "active"
-        : done([DrawStatus.SalesOpen])
-          ? "done"
-          : "pending",
+      state: active(DrawStatus.SalesOpen) ? "active" : done([DrawStatus.SalesOpen]) ? "done" : "pending",
     },
     {
       label: "Đóng bán",
       time: displayVNTime(draw.salesCloseAt),
-      state: active(DrawStatus.SalesClosed)
-        ? "active"
-        : done([DrawStatus.SalesClosed])
-          ? "done"
-          : "pending",
+      state: active(DrawStatus.SalesClosed) ? "active" : done([DrawStatus.SalesClosed]) ? "done" : "pending",
     },
     {
       label: "Công bố KQ",
       // drawResultAt = thời điểm publish thực tế; fallback giờ quay theo lịch khi chưa publish
-      time: draw.drawResultAt
-        ? displayVNTime(draw.drawResultAt)
-        : displayVNTime(draw.scheduledDrawAt),
-      state: active(DrawStatus.Published)
-        ? "active"
-        : done([DrawStatus.Published])
-          ? "done"
-          : "pending",
+      time: draw.drawResultAt ? displayVNTime(draw.drawResultAt) : displayVNTime(draw.scheduledDrawAt),
+      state: active(DrawStatus.Published) ? "active" : done([DrawStatus.Published]) ? "done" : "pending",
     },
     {
       label: "Kết sổ",
@@ -137,9 +123,7 @@ export function LifecycleStepper({ steps }: { steps: Step[] }) {
                 {step.label}
               </p>
               {step.time && (
-                <p className="text-[10px] font-mono tabular-nums text-muted-foreground/60 mt-0.5">
-                  {step.time}
-                </p>
+                <p className="text-[10px] font-mono tabular-nums text-muted-foreground/60 mt-0.5">{step.time}</p>
               )}
             </div>
           </div>

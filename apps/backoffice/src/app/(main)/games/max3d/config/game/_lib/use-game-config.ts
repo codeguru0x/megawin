@@ -1,13 +1,9 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient, ApiClientError } from "@megawin/next/client";
+import type { FinancialRates, Max3dPrizeConfig, PlayRules } from "@megawin/game-max3d/entities/types";
+import { ApiClientError, apiClient } from "@megawin/next/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type {
-  Max3dPrizeConfig,
-  FinancialRates,
-  PlayRules,
-} from "@megawin/game-max3d/entities/types";
 
 interface GameConfig {
   id: string;
@@ -28,8 +24,7 @@ const QUERY_KEY = ["max3d", "game-config"] as const;
 export function useGameConfig() {
   return useQuery({
     queryKey: QUERY_KEY,
-    queryFn: () =>
-      apiClient.get<{ config: GameConfig }>("/max3d/config").then((r) => r.config),
+    queryFn: () => apiClient.get<{ config: GameConfig }>("/max3d/config").then((r) => r.config),
   });
 }
 
@@ -44,9 +39,7 @@ export function useUpdateGameConfig() {
       toast.success(`Đã lưu cấu hình (v${res.version}).`);
     },
     onError: (err) => {
-      toast.error(
-        err instanceof ApiClientError ? err.message : "Lỗi khi cập nhật cấu hình.",
-      );
+      toast.error(err instanceof ApiClientError ? err.message : "Lỗi khi cập nhật cấu hình.");
     },
   });
 }

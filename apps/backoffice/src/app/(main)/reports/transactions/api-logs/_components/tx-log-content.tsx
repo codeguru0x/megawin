@@ -1,14 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
+
 import { Card, CardContent } from "@/components/ui/card";
 
 import { useTxLogFilters } from "../_lib/use-filters";
 import { useTxLogList, useTxLogSummary } from "../_lib/use-queries";
+import { TxLogDetailDrawer } from "./tx-log-detail-drawer";
 import { TxLogFilterBar } from "./tx-log-filter-bar";
 import { TxLogKpiStrip } from "./tx-log-kpi-strip";
 import { TxLogTable } from "./tx-log-table";
-import { TxLogDetailDrawer } from "./tx-log-detail-drawer";
 
 /**
  * Trang chính "Nhật ký giao dịch" — tổ hợp filter + KPI strip + table + drawer.
@@ -20,8 +21,7 @@ import { TxLogDetailDrawer } from "./tx-log-detail-drawer";
  * 4. Row click → set `detail` URL state → `TxLogDetailDrawer` auto fetch.
  */
 export function TxLogContent() {
-  const { tx, from, to, status, eventType, detail, isTxMode, openDetail, closeDetail } =
-    useTxLogFilters();
+  const { tx, from, to, status, eventType, detail, isTxMode, openDetail, closeDetail } = useTxLogFilters();
 
   const summaryQuery = useTxLogSummary({
     from,
@@ -43,9 +43,7 @@ export function TxLogContent() {
     <div className="flex flex-col gap-4">
       <TxLogFilterBar />
 
-      {!isTxMode && (
-        <TxLogKpiStrip data={summaryQuery.data} isLoading={summaryQuery.isLoading} />
-      )}
+      {!isTxMode && <TxLogKpiStrip data={summaryQuery.data} isLoading={summaryQuery.isLoading} />}
 
       <Card className="gap-0 overflow-hidden py-0">
         <CardContent className="px-0 pb-0 pt-0">

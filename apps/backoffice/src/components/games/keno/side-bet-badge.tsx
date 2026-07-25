@@ -45,11 +45,7 @@ export function KenoSideBetBadge({ type, bet, className }: KenoSideBetBadgeProps
 
   return (
     <span
-      className={cn(
-        "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium",
-        config.color,
-        className,
-      )}
+      className={cn("inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium", config.color, className)}
     >
       {config.label}
     </span>

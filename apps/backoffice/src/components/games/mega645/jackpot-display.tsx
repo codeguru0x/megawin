@@ -1,7 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { formatVND } from "@megawin/shared/utils";
+
+import { cn } from "@/lib/utils";
 
 interface JackpotDisplayProps {
   amount: number;
@@ -9,11 +10,7 @@ interface JackpotDisplayProps {
   className?: string;
 }
 
-export function JackpotDisplay({
-  amount,
-  size = "md",
-  className,
-}: JackpotDisplayProps) {
+export function JackpotDisplay({ amount, size = "md", className }: JackpotDisplayProps) {
   return (
     <div className={cn("flex flex-col", className)}>
       <span
@@ -21,7 +18,7 @@ export function JackpotDisplay({
           "font-bold tabular-nums text-amber-600 dark:text-amber-400",
           size === "sm" && "text-sm",
           size === "md" && "text-lg",
-          size === "lg" && "text-3xl"
+          size === "lg" && "text-3xl",
         )}
       >
         {formatVND(amount)}

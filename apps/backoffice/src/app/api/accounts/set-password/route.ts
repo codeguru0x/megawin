@@ -1,8 +1,9 @@
-import { z } from "zod";
-import { withApi } from "@/lib/api";
-import { actorFromSession } from "@/lib/audit-actor";
 import { CompanyRole } from "@megawin/identity/entities";
 import { SetAccountPasswordUseCase } from "@megawin/identity-application/use-cases/accounts";
+import { z } from "zod";
+
+import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 
 const setPasswordSchema = z.object({
   username: z.string().min(1),

@@ -46,10 +46,7 @@ const playSchema = z
     unitPrice: positiveInt,
     minBetCount: positiveInt,
     maxBetCount: positiveInt,
-    maxBoardsPerTicket: positiveInt.max(
-      LOTTO535_MAX_BOARDS,
-      `Số board tối đa không được vượt ${LOTTO535_MAX_BOARDS}.`,
-    ),
+    maxBoardsPerTicket: positiveInt.max(LOTTO535_MAX_BOARDS, `Số board tối đa không được vượt ${LOTTO535_MAX_BOARDS}.`),
     maxDrawCount: positiveInt,
     salesCloseBeforeMinutes: positiveInt,
     drawsPerDay: positiveInt,

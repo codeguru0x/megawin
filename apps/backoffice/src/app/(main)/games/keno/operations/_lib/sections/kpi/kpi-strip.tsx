@@ -1,9 +1,11 @@
 "use client";
 
-import { CircleDollarSign, FileText, Grid2x2, Users, Wallet } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { CircleDollarSign, FileText, Grid2x2, Users, Wallet } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
 import type { OpsKpi } from "../../types";
 
 interface KpiCardProps {

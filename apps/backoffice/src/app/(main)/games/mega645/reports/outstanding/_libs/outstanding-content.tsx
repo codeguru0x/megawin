@@ -1,23 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { GAME_COLORS } from "@/lib/game-colors";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { toTenantUsername } from "@megawin/shared/utils/player-username";
 import type { TicketEntryEntity } from "@megawin/game-mega645/entities";
-import { Mega645EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
-import { OutstandingContent } from "@/components/reports/game/outstanding";
+import { toTenantUsername } from "@megawin/shared/utils/player-username";
+
 import type {
   OutstandingDrawRow,
-  OutstandingTenantRow,
-  OutstandingPlayerRow,
   OutstandingEntryRow,
+  OutstandingPlayerRow,
+  OutstandingTenantRow,
 } from "@/components/reports/game/outstanding";
+import { OutstandingContent } from "@/components/reports/game/outstanding";
+import { GAME_COLORS } from "@/lib/game-colors";
+
+import { Mega645EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
 import {
   useMega645Outstanding,
   useMega645OutstandingDrawTenants,
-  useMega645OutstandingTenantPlayers,
   useMega645OutstandingPlayerEntries,
+  useMega645OutstandingTenantPlayers,
 } from "../../settle/_lib/use-report-queries";
 import { useMega645OutstandingFilters } from "./use-outstanding-filters";
 
@@ -189,11 +192,7 @@ export function Mega645OutstandingContent() {
       />
 
       {/* Dialog chi tiết entry — reuse từ reports/settle */}
-      <Mega645EntryDetailDialog
-        entry={selectedEntry}
-        open={!!selectedEntry}
-        onClose={() => setSelectedEntry(null)}
-      />
+      <Mega645EntryDetailDialog entry={selectedEntry} open={!!selectedEntry} onClose={() => setSelectedEntry(null)} />
     </>
   );
 }

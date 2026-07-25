@@ -1,24 +1,21 @@
 "use client";
 
+import { Pagination } from "@megawin/shared/constants/pagination";
 import { toTenantUsername } from "@megawin/shared/utils";
+
 import {
+  GameDrawBreadcrumb,
   GameDrawKpiStrip,
   GameDrawKpiStripSkeleton,
   GameDrawReportTable,
   GameDrawTenantTable,
   GamePlayerBreakdownTable,
-  GameDrawBreadcrumb,
 } from "@/components/reports/game/settle";
-import { Pagination } from "@megawin/shared/constants/pagination";
-import { useKenoReportFilters } from "../use-report-filters";
+
 import { EntryList } from "../sections/entry-list";
-import {
-  useKenoDrawSummary,
-  useKenoDrawList,
-  useKenoDrawTenants,
-  useKenoPlayers,
-} from "../use-report-queries";
-import { TableSkeleton, ErrorCard, EmptyCard } from "../sections/shared-states";
+import { EmptyCard, ErrorCard, TableSkeleton } from "../sections/shared-states";
+import { useKenoReportFilters } from "../use-report-filters";
+import { useKenoDrawList, useKenoDrawSummary, useKenoDrawTenants, useKenoPlayers } from "../use-report-queries";
 
 const LIMIT = Pagination.Default.Size;
 
@@ -72,11 +69,7 @@ function DrawTenantBreakdown({ drawId }: { drawId: string }) {
   if (isLoading) return <TableSkeleton rows={6} />;
   if (!data?.length)
     return (
-      <EmptyCard
-        icon="building"
-        message="Không có dữ liệu"
-        description="Không có đại lý nào tham gia kỳ quay này."
-      />
+      <EmptyCard icon="building" message="Không có dữ liệu" description="Không có đại lý nào tham gia kỳ quay này." />
     );
 
   return <GameDrawTenantTable drawId={drawId} rows={data} onRowClick={navigateToPlayersInDraw} />;
@@ -90,9 +83,7 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
 
   if (isLoading) return <TableSkeleton rows={5} />;
   if (!players?.length)
-    return (
-      <EmptyCard icon="ticket" message="Không có dữ liệu" description="Không có player nào." />
-    );
+    return <EmptyCard icon="ticket" message="Không có dữ liệu" description="Không có player nào." />;
 
   const rows = players.map((p) => ({
     accountId: p.accountId,
@@ -116,16 +107,8 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
 // ─── Breadcrumb ───────────────────────────────────────────────────────────────
 
 function Breadcrumb() {
-  const {
-    level,
-    drawId,
-    tenantId,
-    accountId,
-    playerName,
-    navigateToList,
-    navigateToDraw,
-    navigateBackToPlayers,
-  } = useKenoReportFilters();
+  const { level, drawId, tenantId, accountId, playerName, navigateToList, navigateToDraw, navigateBackToPlayers } =
+    useKenoReportFilters();
 
   return (
     <GameDrawBreadcrumb
@@ -133,16 +116,10 @@ function Breadcrumb() {
       drawId={drawId ?? undefined}
       tenantId={level === "players" || level === "entries" ? (tenantId ?? undefined) : undefined}
       playerName={
-        level === "entries" && accountId
-          ? (playerName ?? toTenantUsername(accountId) ?? accountId)
-          : undefined
+        level === "entries" && accountId ? (playerName ?? toTenantUsername(accountId) ?? accountId) : undefined
       }
       onRootClick={navigateToList}
-      onDrawClick={
-        drawId && (level === "players" || level === "entries")
-          ? () => navigateToDraw(drawId)
-          : undefined
-      }
+      onDrawClick={drawId && (level === "players" || level === "entries") ? () => navigateToDraw(drawId) : undefined}
       onTenantClick={tenantId && level === "entries" ? () => navigateBackToPlayers() : undefined}
     />
   );
@@ -164,18 +141,11 @@ export function ByDrawTab() {
       {level === "draw-tenants" && drawId && <DrawTenantBreakdown drawId={drawId} />}
 
       {/* Level 3 — Player list (có drawId + tenantId) */}
-      {level === "players" && drawId && tenantId && (
-        <PlayerBreakdown drawId={drawId} tenantId={tenantId} />
-      )}
+      {level === "players" && drawId && tenantId && <PlayerBreakdown drawId={drawId} tenantId={tenantId} />}
 
       {/* Level 4 — Entries của 1 player (có drawId + tenantId + accountId) */}
       {level === "entries" && drawId && tenantId && accountId && (
-        <EntryList
-          drawId={drawId}
-          tenantId={tenantId}
-          accountId={accountId}
-          playerDisplayName={playerDisplayName}
-        />
+        <EntryList drawId={drawId} tenantId={tenantId} accountId={accountId} playerDisplayName={playerDisplayName} />
       )}
     </div>
   );

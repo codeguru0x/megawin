@@ -8,6 +8,6 @@
  * ```
  */
 
-export * from "./settle";
 export * from "./outstanding";
+export * from "./settle";
 export * from "./void";

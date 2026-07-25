@@ -1,19 +1,19 @@
 "use client";
 
 import { useMemo } from "react";
-import { useForm } from "react-hook-form";
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Save, TrendingUp, TrendingDown, Info } from "lucide-react";
-import { formatNumber } from "@megawin/shared/utils";
-
-import { MoneyInput } from "@megawin/ui/components/money-input";
 import { analyzeProfitability, getOddsTable, TOTAL_OUTCOMES } from "@megawin/game-mega645/rules";
+import { formatNumber } from "@megawin/shared/utils";
+import { MoneyInput } from "@megawin/ui/components/money-input";
+import { Info, Save, TrendingDown, TrendingUp } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -62,15 +62,7 @@ const oddsMap = new Map(oddsTable.map((o) => [o.tier, o]));
 
 const fmt = formatNumber;
 
-function HeaderTooltip({
-  label,
-  tip,
-  className,
-}: {
-  label: string;
-  tip: string;
-  className?: string;
-}) {
+function HeaderTooltip({ label, tip, className }: { label: string; tip: string; className?: string }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -95,15 +87,9 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
   const watchedValues = form.watch();
   const unitPrice = config.play.unitPrice;
 
-  const profitAnalysis = useMemo(
-    () => analyzeProfitability(watchedValues, unitPrice),
-    [watchedValues, unitPrice],
-  );
+  const profitAnalysis = useMemo(() => analyzeProfitability(watchedValues, unitPrice), [watchedValues, unitPrice]);
 
-  const profitMap = useMemo(
-    () => new Map(profitAnalysis.tiers.map((t) => [t.tier, t])),
-    [profitAnalysis],
-  );
+  const profitMap = useMemo(() => new Map(profitAnalysis.tiers.map((t) => [t.tier, t])), [profitAnalysis]);
 
   function handleSubmit(values: PrizesFormValues) {
     onSave({ defaultPrizes: values });
@@ -120,9 +106,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                 <div className="mb-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h3 className="text-sm font-semibold text-foreground">
-                        Bảng giải thưởng cố định
-                      </h3>
+                      <h3 className="text-sm font-semibold text-foreground">Bảng giải thưởng cố định</h3>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Giá trị giải thưởng mặc định (VND) — Jackpot Độc Đắc là giải tích luỹ riêng
                         {" · "}Mẫu: <strong>{fmt(TOTAL_OUTCOMES)}</strong>
@@ -140,9 +124,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                         <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
                         <div
                           className={`font-bold tabular-nums ${
-                            profitAnalysis.grossMarginPercent >= 0
-                              ? "text-emerald-600"
-                              : "text-red-600"
+                            profitAnalysis.grossMarginPercent >= 0 ? "text-emerald-600" : "text-red-600"
                           }`}
                         >
                           {profitAnalysis.grossMarginPercent >= 0 ? (
@@ -206,9 +188,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                                 idx < PRIZE_FIELDS.length - 1 ? "border-b" : ""
                               }`}
                             >
-                              <Badge className={`${p.color} w-9 justify-center text-xs font-bold`}>
-                                {p.badge}
-                              </Badge>
+                              <Badge className={`${p.color} w-9 justify-center text-xs font-bold`}>{p.badge}</Badge>
                               <div>
                                 <span className="text-sm font-medium">{p.label}</span>
                                 <span className="ml-2 text-xs text-muted-foreground">{p.desc}</span>
@@ -257,9 +237,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                                 <TooltipTrigger asChild>
                                   <span
                                     className={`text-right text-xs tabular-nums cursor-help ${
-                                      isOverBreakEven
-                                        ? "text-red-600 font-bold"
-                                        : "text-muted-foreground"
+                                      isOverBreakEven ? "text-red-600 font-bold" : "text-muted-foreground"
                                     }`}
                                   >
                                     {profit ? `${fmt(Math.round(profit.breakEvenPrize))}` : "–"}
@@ -286,12 +264,8 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
               {/* ── Right: Full odds reference ────────────────── */}
               <div className="border-t p-6 lg:border-l lg:border-t-0 overflow-x-auto">
                 <div className="mb-4">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Xác suất &amp; tỷ lệ trả thưởng
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Toàn bộ hạng giải bao gồm Jackpot Độc Đắc.
-                  </p>
+                  <h3 className="text-sm font-semibold text-foreground">Xác suất &amp; tỷ lệ trả thưởng</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">Toàn bộ hạng giải bao gồm Jackpot Độc Đắc.</p>
                 </div>
 
                 <div className="rounded-lg border overflow-hidden">
@@ -353,13 +327,9 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                           </TooltipContent>
                         </Tooltip>
 
-                        <span className="text-right tabular-nums text-muted-foreground">
-                          {fmt(defaultPrize)}
-                        </span>
+                        <span className="text-right tabular-nums text-muted-foreground">{fmt(defaultPrize)}</span>
 
-                        <span className="text-right tabular-nums font-medium">
-                          {fmt(Math.round(expectedPayout))}
-                        </span>
+                        <span className="text-right tabular-nums font-medium">{fmt(Math.round(expectedPayout))}</span>
 
                         <span className="text-right tabular-nums font-semibold text-muted-foreground">
                           {payoutRate.toFixed(2)}%
@@ -380,9 +350,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                             const isJP = row.tier === "jackpot";
                             const prize = isJP
                               ? config.jackpot.seedAmount
-                              : (config.defaultPrizes[
-                                  row.tier as keyof typeof config.defaultPrizes
-                                ] ?? 0);
+                              : (config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes] ?? 0);
                             return sum + row.probability * prize;
                           }, 0),
                         ),
@@ -394,9 +362,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                           const isJP = row.tier === "jackpot";
                           const prize = isJP
                             ? config.jackpot.seedAmount
-                            : (config.defaultPrizes[
-                                row.tier as keyof typeof config.defaultPrizes
-                              ] ?? 0);
+                            : (config.defaultPrizes[row.tier as keyof typeof config.defaultPrizes] ?? 0);
                           const ep = row.probability * prize;
                           return sum + (unitPrice > 0 ? (ep / unitPrice) * 100 : 0);
                         }, 0)

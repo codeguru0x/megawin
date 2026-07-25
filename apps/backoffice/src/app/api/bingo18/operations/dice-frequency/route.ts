@@ -1,6 +1,8 @@
-import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities";
 import { GetDiceFrequencyUseCase } from "@megawin/game-bingo18-application/use-cases/operations";
+import { CompanyRole } from "@megawin/identity/entities";
+
+import { withApi } from "@/lib/api";
+
 import { opsQuerySchema } from "../_lib/schema";
 
 const useCase = new GetDiceFrequencyUseCase();

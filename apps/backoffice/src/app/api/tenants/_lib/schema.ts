@@ -1,5 +1,5 @@
+import { TENANT_STATUS_VALUES, type TenantStatus } from "@megawin/identity/entities";
 import { z } from "zod";
-import { TenantStatus, TENANT_STATUS_VALUES } from "@megawin/identity/entities";
 
 export const createTenantSchema = z.object({
   tenantId: z
@@ -25,7 +25,5 @@ export const updateTenantSchema = z.object({
   tenantId: z.string().min(1),
   displayName: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
-  callbackBaseUrl: z
-    .url({ message: "Callback Base URL không hợp lệ." })
-    .optional(),
+  callbackBaseUrl: z.url({ message: "Callback Base URL không hợp lệ." }).optional(),
 });

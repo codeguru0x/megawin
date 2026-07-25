@@ -1,7 +1,9 @@
 "use client";
 
 import { Suspense } from "react";
+
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { Mega645OutstandingContent } from "./_libs/outstanding-content";
 
 function OutstandingPageSkeleton() {

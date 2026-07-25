@@ -1,24 +1,16 @@
 "use client";
 
-import { CalendarDays } from "lucide-react";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { formatNumber } from "@megawin/shared/utils";
+import { CalendarDays } from "lucide-react";
 
+import { getNetProfitColor, PayoutRatioCell } from "@/components/reports/payout-ratio";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { PayoutRatioCell, getNetProfitColor } from "@/components/reports/payout-ratio";
 
-import { usePlayerFinancials, type PlayerFinancialRecord } from "../../_shared/queries";
+import { type PlayerFinancialRecord, usePlayerFinancials } from "../../_shared/queries";
 
 interface DailyByGameViewProps {
   accountId: string;
@@ -74,9 +66,7 @@ export function DailyByGameView({ accountId, from, to, game, onRowClick }: Daily
       <Card className="gap-0 py-0">
         <CardContent className="flex h-40 flex-col items-center justify-center gap-1 text-center">
           <p className="text-sm font-medium text-muted-foreground">Chưa có dữ liệu</p>
-          <p className="text-xs text-muted-foreground">
-            Không có dữ liệu trong khoảng thời gian đã chọn.
-          </p>
+          <p className="text-xs text-muted-foreground">Không có dữ liệu trong khoảng thời gian đã chọn.</p>
         </CardContent>
       </Card>
     );
@@ -137,21 +127,13 @@ export function DailyByGameView({ accountId, from, to, game, onRowClick }: Daily
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => onRowClick(row.financialDate)}
                   >
-                    <TableCell className="pl-5 font-mono text-sm font-medium">
-                      {row.financialDate}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.drawCount)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
+                    <TableCell className="pl-5 font-mono text-sm font-medium">{row.financialDate}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.drawCount)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums font-medium">
                       {formatNumber(row.totalStake)}
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.totalPayout)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalPayout)}</TableCell>
                     <TableCell className="text-right text-sm">
                       <PayoutRatioCell ratio={payoutRatio} />
                     </TableCell>
@@ -175,9 +157,7 @@ export function DailyByGameView({ accountId, from, to, game, onRowClick }: Daily
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell className="pl-5 text-sm font-semibold">
-                  {REPORT_COLUMN_LABELS.summary}
-                </TableCell>
+                <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
                 <TableCell className="text-right text-sm tabular-nums font-semibold">
                   {formatNumber(totals.drawCount)}
                 </TableCell>

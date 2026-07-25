@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-import { MfaStatusCard } from "./mfa-status-card";
-import { MfaSetupWizard } from "./mfa-setup-wizard";
 import { MfaDisableDialog } from "./mfa-disable-dialog";
+import { MfaSetupWizard } from "./mfa-setup-wizard";
+import { MfaStatusCard } from "./mfa-status-card";
 
 type MfaView = "status" | "setup";
 
@@ -19,11 +19,7 @@ export function MfaPage() {
       ) : (
         <>
           <MfaStatusCard onSetup={() => setView("setup")} onDisable={() => setDisableOpen(true)} />
-          <MfaDisableDialog
-            open={disableOpen}
-            onOpenChange={setDisableOpen}
-            onSuccess={() => setView("status")}
-          />
+          <MfaDisableDialog open={disableOpen} onOpenChange={setDisableOpen} onSuccess={() => setView("status")} />
         </>
       )}
     </div>

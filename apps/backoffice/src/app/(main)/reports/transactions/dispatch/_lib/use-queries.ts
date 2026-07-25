@@ -1,17 +1,17 @@
 "use client";
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { apiClient, ApiClientError } from "@megawin/next/client";
+import { ApiClientError, apiClient } from "@megawin/next/client";
 import type {
-  ListDispatchOrdersInput,
-  ListDispatchOrdersOutput,
-  GetDispatchSummaryOutput,
-  GetOrderByTxOutput,
   CancelOrderOutput,
   GetBatchProgressOutput,
   GetDispatchFacetsOutput,
+  GetDispatchSummaryOutput,
+  GetOrderByTxOutput,
+  ListDispatchOrdersInput,
+  ListDispatchOrdersOutput,
 } from "@megawin/tenant-dispatch/use-cases/admin";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { tenantDispatchKeys } from "@/lib/query-keys";
 
@@ -56,12 +56,7 @@ export interface DispatchListFilters {
  * - **Range mode**: `from` + `to` + dimension filters. Polling 30s khi live.
  */
 export function useDispatchList(filters: DispatchListFilters) {
-  const isIdentityMode = !!(
-    filters.tx ||
-    filters.batchKey ||
-    filters.accountId ||
-    filters.username
-  );
+  const isIdentityMode = !!(filters.tx || filters.batchKey || filters.accountId || filters.username);
 
   const qpBase: Record<string, string> = {};
   if (isIdentityMode) {
@@ -79,8 +74,7 @@ export function useDispatchList(filters: DispatchListFilters) {
   }
 
   // Polling 30s chỉ khi range mode + live filter (pending/stuck).
-  const isLive =
-    !isIdentityMode && (filters.status === "pending" || filters.retryMode === "stuck");
+  const isLive = !isIdentityMode && (filters.status === "pending" || filters.retryMode === "stuck");
 
   return useInfiniteQuery({
     queryKey: tenantDispatchKeys.list({
@@ -140,8 +134,7 @@ export function useDispatchSummary(filters: DispatchSummaryFilters) {
       stuckMinRetry: filters.stuckMinRetry ?? undefined,
     }),
     enabled: !!(filters.from && filters.to),
-    queryFn: () =>
-      apiClient.get<GetDispatchSummaryOutput>("/tenant-dispatch/summary", { params: qp }),
+    queryFn: () => apiClient.get<GetDispatchSummaryOutput>("/tenant-dispatch/summary", { params: qp }),
     staleTime: 15_000,
   });
 }
@@ -188,8 +181,7 @@ export function useDispatchFacets(filters: { from?: string; to?: string }) {
   return useQuery({
     queryKey: tenantDispatchKeys.facets(filters),
     enabled: !!(filters.from && filters.to),
-    queryFn: () =>
-      apiClient.get<GetDispatchFacetsOutput>("/tenant-dispatch/facets", { params: qp }),
+    queryFn: () => apiClient.get<GetDispatchFacetsOutput>("/tenant-dispatch/facets", { params: qp }),
     staleTime: 60_000,
   });
 }
@@ -203,8 +195,7 @@ export function useDispatchFacets(filters: { from?: string; to?: string }) {
 export function useCancelOrder() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (tx: string) =>
-      apiClient.post<CancelOrderOutput>("/tenant-dispatch/cancel-order", { tx }),
+    mutationFn: (tx: string) => apiClient.post<CancelOrderOutput>("/tenant-dispatch/cancel-order", { tx }),
     onSuccess: (res, tx) => {
       void qc.invalidateQueries({ queryKey: tenantDispatchKeys.all });
       if (res.cancelled) {

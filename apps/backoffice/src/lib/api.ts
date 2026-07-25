@@ -7,9 +7,10 @@
 
 import type { NextRequest } from "next/server";
 
-import { createApiRouteBuilder, type RouteSession } from "@megawin/next/server";
-import { ALL_ROLE_VALUES, AccountStatus, CompanyRole } from "@megawin/identity/entities";
 import type { AccountRole } from "@megawin/identity/entities";
+import { AccountStatus, ALL_ROLE_VALUES, CompanyRole } from "@megawin/identity/entities";
+import { createApiRouteBuilder, type RouteSession } from "@megawin/next/server";
+
 import { auth } from "@/lib/auth";
 
 function parseCognitoRoles(raw: unknown): AccountRole[] {
@@ -24,8 +25,7 @@ function parseCognitoRoles(raw: unknown): AccountRole[] {
   }
 
   return items.filter(
-    (r): r is AccountRole =>
-      typeof r === "string" && (ALL_ROLE_VALUES as readonly string[]).includes(r),
+    (r): r is AccountRole => typeof r === "string" && (ALL_ROLE_VALUES as readonly string[]).includes(r),
   );
 }
 

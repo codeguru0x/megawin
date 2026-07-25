@@ -1,11 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { CircleDollarSign, FileText, Hash, Users, Wallet } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { formatNumber } from "@megawin/shared/utils";
+
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { CircleDollarSign, FileText, Hash, Users, Wallet } from "lucide-react";
+
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
 import { useDrawContext } from "../../use-draw-context";
 import { useOpsSummary } from "../../use-operations";
 
@@ -58,9 +61,7 @@ export function KpiSection() {
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Tổng quan
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tổng quan</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <KpiCard
           icon={CircleDollarSign}

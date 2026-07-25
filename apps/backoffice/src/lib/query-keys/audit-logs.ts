@@ -29,8 +29,7 @@ export interface AuditLogsListFilters {
 export const auditLogsKeys = {
   all: [MODULE] as const,
 
-  list: (filters: AuditLogsListFilters, cursor?: string | null) =>
-    [MODULE, "list", filters, cursor ?? null] as const,
+  list: (filters: AuditLogsListFilters, cursor?: string | null) => [MODULE, "list", filters, cursor ?? null] as const,
 
   detail: (id: string) => [MODULE, "detail", id] as const,
 };

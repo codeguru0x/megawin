@@ -1,23 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { GAME_COLORS } from "@/lib/game-colors";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { toTenantUsername } from "@megawin/shared/utils/player-username";
 import type { TicketEntryEntity } from "@megawin/game-max3d/entities";
-import { Max3dEntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
+import { toTenantUsername } from "@megawin/shared/utils/player-username";
+
+import type { VoidDrawRow, VoidEntryRow, VoidPlayerRow, VoidTenantRow } from "@/components/reports/game/void";
 import { VoidContent } from "@/components/reports/game/void";
-import type {
-  VoidDrawRow,
-  VoidTenantRow,
-  VoidPlayerRow,
-  VoidEntryRow,
-} from "@/components/reports/game/void";
+import { GAME_COLORS } from "@/lib/game-colors";
+
+import { Max3dEntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
 import {
-  useMax3DVoidReports,
   useMax3DVoidDrawTenants,
-  useMax3DVoidTenantPlayers,
   useMax3DVoidPlayerEntries,
+  useMax3DVoidReports,
+  useMax3DVoidTenantPlayers,
 } from "../../settle/_lib/use-report-queries";
 import { useMax3DVoidFilters } from "./use-void-filters";
 
@@ -186,11 +184,7 @@ export function Max3DVoidReportsContent() {
         lineCountLabel="Bộ số"
       />
 
-      <Max3dEntryDetailDialog
-        entry={selectedEntry}
-        open={!!selectedEntry}
-        onClose={() => setSelectedEntry(null)}
-      />
+      <Max3dEntryDetailDialog entry={selectedEntry} open={!!selectedEntry} onClose={() => setSelectedEntry(null)} />
     </>
   );
 }

@@ -1,10 +1,11 @@
-import { withApi } from "@/lib/api";
-import { actorFromSession } from "@/lib/audit-actor";
-import { CompanyRole } from "@megawin/identity/entities";
 import {
   GetTenantConfigUseCase,
   UpdateTenantConfigUseCase,
 } from "@megawin/game-mega645-application/use-cases/tenant-config";
+import { CompanyRole } from "@megawin/identity/entities";
+
+import { withApi } from "@/lib/api";
+import { actorFromSession } from "@/lib/audit-actor";
 
 import { tenantIdParamSchema, updateTenantConfigSchema } from "../_lib/schema";
 

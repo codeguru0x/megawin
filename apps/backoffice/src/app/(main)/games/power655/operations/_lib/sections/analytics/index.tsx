@@ -11,23 +11,23 @@
  */
 
 import { useMemo } from "react";
+
 import { DrawStatus } from "@megawin/game-core/entities";
-import { PlayType } from "@megawin/game-power655/entities";
+import type { PlayType } from "@megawin/game-power655/entities";
 import { POWER655_PLAY_TYPE_LABELS } from "@megawin/game-power655/labels";
 
+import type { LiveFeedEntry, NumberFreq, PlayTypeRow, TenantRow } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
 import {
+  useOpsLiveEntries,
+  useOpsNumberFrequency,
   useOpsPlayTypeDistribution,
   useOpsTenantBreakdown,
-  useOpsNumberFrequency,
   useOpsTopCombos,
-  useOpsLiveEntries,
 } from "../../use-operations";
 import { PlayTypeCard } from "./analytics-panels";
-import { NumberHeatmap } from "./number-heatmap";
 import { LiveFeed } from "./live-feed";
-
-import type { PlayTypeRow, TenantRow, NumberFreq, LiveFeedEntry } from "../../types";
+import { NumberHeatmap } from "./number-heatmap";
 
 const ANALYTICS_SHOW = new Set([
   DrawStatus.SalesOpen,
@@ -96,9 +96,7 @@ export function AnalyticsSection() {
 
       // Tạo suffix mô tả kiểu bao cho Live Feed
       const suffix =
-        playType !== "standard"
-          ? `(${POWER655_PLAY_TYPE_LABELS[playType as PlayType] ?? playType})`
-          : undefined;
+        playType !== "standard" ? `(${POWER655_PLAY_TYPE_LABELS[playType as PlayType] ?? playType})` : undefined;
 
       return {
         entryId: e.entryId.slice(-6).toUpperCase(),
@@ -118,18 +116,12 @@ export function AnalyticsSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Phân tích cược
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Phân tích cược</h2>
 
       <PlayTypeCard distribution={playTypes} />
 
       <div className="grid gap-4 lg:grid-cols-[7fr_3fr] items-stretch">
-        <NumberHeatmap
-          mainNumbers={numberFreq}
-          topCombos={topCombosData?.combos}
-          tenants={tenants}
-        />
+        <NumberHeatmap mainNumbers={numberFreq} topCombos={topCombosData?.combos} tenants={tenants} />
         <LiveFeed entries={liveFeed} isSettled={isSettled} />
       </div>
     </section>

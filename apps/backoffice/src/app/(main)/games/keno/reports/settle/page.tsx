@@ -1,14 +1,16 @@
 "use client";
 
 import { Suspense } from "react";
-import { Building2, CalendarRange, CircleDollarSign } from "lucide-react";
-import { FinancialDateRangePicker } from "@/components/date-picker";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Building2, CalendarRange, CircleDollarSign } from "lucide-react";
+
+import { FinancialDateRangePicker } from "@/components/date-picker";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useKenoReportFilters } from "./_lib/use-report-filters";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { ByDrawTab } from "./_lib/tabs/by-draw";
 import { ByTenantTab } from "./_lib/tabs/by-tenant";
+import { useKenoReportFilters } from "./_lib/use-report-filters";
 
 function KenoFinancialContent() {
   const { tab, setTab, from, to, setFrom, setTo } = useKenoReportFilters();
@@ -21,12 +23,8 @@ function KenoFinancialContent() {
             <CircleDollarSign className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Keno — Báo cáo tài chính
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Doanh thu, trả thưởng, hoa hồng · ~120 kỳ/ngày
-            </p>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Keno — Báo cáo tài chính</h1>
+            <p className="text-xs text-muted-foreground">Doanh thu, trả thưởng, hoa hồng · ~120 kỳ/ngày</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

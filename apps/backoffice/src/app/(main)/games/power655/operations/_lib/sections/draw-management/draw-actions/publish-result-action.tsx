@@ -1,18 +1,23 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import { POWER655_MAIN_COUNT, POWER655_MAIN_MAX, POWER655_MAIN_MIN } from "@megawin/game-power655/entities";
+import { todayVN } from "@megawin/shared/utils";
 import {
-  Check,
-  Loader2,
-  ExternalLink,
-  CalendarDays,
-  Hash,
-  Dice5,
-  Star,
-  ClipboardCheck,
   AlertCircle,
   ArrowRight,
+  CalendarDays,
+  Check,
+  ClipboardCheck,
+  Dice5,
+  ExternalLink,
+  Hash,
+  Loader2,
+  Star,
 } from "lucide-react";
+
+import { generateRandomNumber, generateUniqueRandomNumbers, RandomFillButton } from "@/components/draws";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,17 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import {
-  RandomFillButton,
-  generateUniqueRandomNumbers,
-  generateRandomNumber,
-} from "@/components/draws";
-import {
-  POWER655_MAIN_MIN,
-  POWER655_MAIN_MAX,
-  POWER655_MAIN_COUNT,
-} from "@megawin/game-power655/entities";
-import { todayVN } from "@megawin/shared/utils";
+
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
 
@@ -82,9 +77,7 @@ function validatePower655(mains: string[], bonus: string): ValidationResult {
     }
     const n = parseInt(v, 10);
     if (isNaN(n) || n < POWER655_MAIN_MIN || n > POWER655_MAIN_MAX) {
-      messages.push(
-        `Ô ${i + 1}: số ${v} ngoài dải ${pad2(POWER655_MAIN_MIN)}–${pad2(POWER655_MAIN_MAX)}`,
-      );
+      messages.push(`Ô ${i + 1}: số ${v} ngoài dải ${pad2(POWER655_MAIN_MIN)}–${pad2(POWER655_MAIN_MAX)}`);
       mainErrors.add(i);
       parsed.push(null);
     } else {
@@ -93,9 +86,7 @@ function validatePower655(mains: string[], bonus: string): ValidationResult {
   }
 
   if (emptyIndices.length > 0) {
-    messages.push(
-      `Còn ${emptyIndices.length} ô số chính chưa nhập (ô ${emptyIndices.map((i) => i + 1).join(", ")})`,
-    );
+    messages.push(`Còn ${emptyIndices.length} ô số chính chưa nhập (ô ${emptyIndices.map((i) => i + 1).join(", ")})`);
   }
 
   // Check trùng số chính
@@ -125,9 +116,7 @@ function validatePower655(mains: string[], bonus: string): ValidationResult {
   } else {
     const bn = parseInt(bv, 10);
     if (isNaN(bn) || bn < POWER655_MAIN_MIN || bn > POWER655_MAIN_MAX) {
-      messages.push(
-        `Số thưởng ${bv} ngoài dải ${pad2(POWER655_MAIN_MIN)}–${pad2(POWER655_MAIN_MAX)}`,
-      );
+      messages.push(`Số thưởng ${bv} ngoài dải ${pad2(POWER655_MAIN_MIN)}–${pad2(POWER655_MAIN_MAX)}`);
       bonusError = true;
     } else {
       // Bonus phải khác tất cả 6 số chính
@@ -209,15 +198,9 @@ export function PublishResultAction({
   }
 
   function fillRandom() {
-    const mainNums = generateUniqueRandomNumbers(
-      POWER655_MAIN_COUNT,
-      POWER655_MAIN_MIN,
-      POWER655_MAIN_MAX,
-    );
+    const mainNums = generateUniqueRandomNumbers(POWER655_MAIN_COUNT, POWER655_MAIN_MIN, POWER655_MAIN_MAX);
     const mainSet = new Set(mainNums);
-    const remaining = Array.from({ length: POWER655_MAIN_MAX }, (_, i) => i + 1).filter(
-      (n) => !mainSet.has(n),
-    );
+    const remaining = Array.from({ length: POWER655_MAIN_MAX }, (_, i) => i + 1).filter((n) => !mainSet.has(n));
     const bonusNum = remaining[Math.floor(Math.random() * remaining.length)]!;
     setMains(mainNums.map((n) => pad2(n)));
     setBonus(pad2(bonusNum));
@@ -256,12 +239,12 @@ export function PublishResultAction({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ClipboardCheck className="size-4.5 text-purple-500" />
-            {isRepublish ? "Sửa kết quả" : "Công bố kết quả"} — Kỳ{" "}
-            {String(draw.drawNo).padStart(3, "0")} · {draw.drawDate}
+            {isRepublish ? "Sửa kết quả" : "Công bố kết quả"} — Kỳ {String(draw.drawNo).padStart(3, "0")} ·{" "}
+            {draw.drawDate}
           </DialogTitle>
           <DialogDescription>
-            Nhập {POWER655_MAIN_COUNT} số chính ({pad2(POWER655_MAIN_MIN)}–{pad2(POWER655_MAIN_MAX)}
-            ) và 1 số thưởng (khác 6 số chính).
+            Nhập {POWER655_MAIN_COUNT} số chính ({pad2(POWER655_MAIN_MIN)}–{pad2(POWER655_MAIN_MAX)}) và 1 số thưởng
+            (khác 6 số chính).
             {isRepublish && " Kết quả cũ sẽ bị ghi đè. Chỉ có hiệu lực trước khi kết sổ."}
           </DialogDescription>
         </DialogHeader>
@@ -280,15 +263,12 @@ export function PublishResultAction({
               <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">
-                    {POWER655_MAIN_COUNT} số chính (không trùng, {pad2(POWER655_MAIN_MIN)}–
-                    {pad2(POWER655_MAIN_MAX)})
+                    {POWER655_MAIN_COUNT} số chính (không trùng, {pad2(POWER655_MAIN_MIN)}–{pad2(POWER655_MAIN_MAX)})
                   </p>
                   <div className="grid grid-cols-6 gap-2">
                     {Array.from({ length: POWER655_MAIN_COUNT }, (_, i) => (
                       <div key={i} className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-muted-foreground text-center">
-                          {i + 1}
-                        </span>
+                        <span className="text-xs font-medium text-muted-foreground text-center">{i + 1}</span>
                         <Input
                           ref={(el) => {
                             inputRefs.current[i] = el;
@@ -310,8 +290,7 @@ export function PublishResultAction({
                   <div className="flex items-center gap-1.5">
                     <ArrowRight className="size-3 text-amber-500" />
                     <p className="text-xs text-muted-foreground">
-                      Số thưởng ({pad2(POWER655_MAIN_MIN)}–{pad2(POWER655_MAIN_MAX)}, khác 6 số
-                      chính)
+                      Số thưởng ({pad2(POWER655_MAIN_MIN)}–{pad2(POWER655_MAIN_MAX)}, khác 6 số chính)
                     </p>
                   </div>
                   <Input

@@ -1,4 +1,5 @@
 import { requireSession } from "@/lib/auth-server";
+
 import { DashboardContent } from "./dashboard-content";
 
 export const metadata = {

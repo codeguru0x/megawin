@@ -13,17 +13,19 @@
  */
 
 import { useMemo, useState } from "react";
+
 import { DrawStatus } from "@megawin/game-core/entities";
-import { cn } from "@/lib/utils";
+import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS } from "@megawin/game-keno/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { Coins, ExternalLink, Info, TrendingDown, TrendingUp, Trophy, Users } from "lucide-react";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber } from "@megawin/shared/utils";
-import { Trophy, TrendingDown, Users, Coins, TrendingUp, ExternalLink, Info } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 import { useDrawContext } from "../../use-draw-context";
 import { useDrawDetail } from "../../use-operations";
 import { WinningEntriesDialog } from "./winning-entries-dialog";
-import { KENO_BIG_SMALL_BET_LABELS, KENO_EVEN_ODD_BET_LABELS } from "@megawin/game-keno/labels";
 
 const RESULT_SHOW = new Set([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
 
@@ -112,29 +114,21 @@ function HighlightedBall({
   if (highlight === "dim") {
     // Số không thuộc nhóm chọn → mờ đi
     return (
-      <span className={cn(baseClass, "bg-orange-500 text-white opacity-20")}>
-        {String(number).padStart(2, "0")}
-      </span>
+      <span className={cn(baseClass, "bg-orange-500 text-white opacity-20")}>{String(number).padStart(2, "0")}</span>
     );
   }
 
   if (highlight === "match") {
     // Số thuộc nhóm chọn → giữ màu cam + thêm ring để nổi bật
     return (
-      <span
-        className={cn(baseClass, "bg-orange-500 text-white ring-2 ring-orange-400 ring-offset-1")}
-      >
+      <span className={cn(baseClass, "bg-orange-500 text-white ring-2 ring-orange-400 ring-offset-1")}>
         {String(number).padStart(2, "0")}
       </span>
     );
   }
 
   // none — mặc định không filter
-  return (
-    <span className={cn(baseClass, "bg-orange-500 text-white")}>
-      {String(number).padStart(2, "0")}
-    </span>
-  );
+  return <span className={cn(baseClass, "bg-orange-500 text-white")}>{String(number).padStart(2, "0")}</span>;
 }
 
 // ─── Filter Badge Button ──────────────────────────────────────────────────────
@@ -205,13 +199,9 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
             <div>
               <CardTitle className="text-sm font-semibold">Kết quả & Phân bổ giải thưởng</CardTitle>
               <CardDescription className="text-xs mt-0.5">
-                <span className="font-semibold text-foreground tabular-nums">
-                  {formatNumber(totalWinners)}
-                </span>{" "}
-                người trúng thưởng · Tổng giải{" "}
-                <span className="font-semibold text-foreground tabular-nums">
-                  {formatNumber(totalPrize)}
-                </span>
+                <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalWinners)}</span> người
+                trúng thưởng · Tổng giải{" "}
+                <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalPrize)}</span>
               </CardDescription>
             </div>
           </div>
@@ -223,9 +213,7 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
             {/* Header: "KẾT QUẢ" căn giữa + link xem entries */}
             <div className="flex items-center justify-between">
               <div className="flex-1" />
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
-                Kết quả
-              </span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Kết quả</span>
               <div className="flex-1 flex justify-end">
                 <button
                   type="button"
@@ -247,9 +235,7 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
                   .map((n) => {
                     const num = Number(n);
                     const hl = getNumberHighlight(num, highlight);
-                    return (
-                      <HighlightedBall key={n} number={num} highlight={hl} filter={highlight} />
-                    );
+                    return <HighlightedBall key={n} number={num} highlight={hl} filter={highlight} />;
                   })}
               </div>
             </div>
@@ -302,10 +288,8 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
             {/* Chú thích khi đang filter */}
             {highlight && (
               <p className="text-[10px] text-muted-foreground/60 text-center">
-                {highlight === "big" &&
-                  `${result.bigCount} số Lớn (≥41) · ${result.smallCount} số Nhỏ`}
-                {highlight === "small" &&
-                  `${result.smallCount} số Nhỏ (≤40) · ${result.bigCount} số Lớn`}
+                {highlight === "big" && `${result.bigCount} số Lớn (≥41) · ${result.smallCount} số Nhỏ`}
+                {highlight === "small" && `${result.smallCount} số Nhỏ (≤40) · ${result.bigCount} số Lớn`}
                 {highlight === "even" && `${result.evenCount} số Chẵn · ${result.oddCount} số Lẻ`}
                 {highlight === "odd" && `${result.oddCount} số Lẻ · ${result.evenCount} số Chẵn`}
               </p>
@@ -339,15 +323,11 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
                     r.winnerCount > 0 ? "bg-orange-50/40 dark:bg-orange-950/5" : "",
                   )}
                 >
-                  <span className="text-xs text-muted-foreground">
-                    {basicPrizeLabel(r.pickCount, r.matchCount)}
-                  </span>
+                  <span className="text-xs text-muted-foreground">{basicPrizeLabel(r.pickCount, r.matchCount)}</span>
                   <span
                     className={cn(
                       "text-right tabular-nums text-sm font-semibold",
-                      r.winnerCount > 0
-                        ? "text-orange-700 dark:text-orange-400"
-                        : "text-muted-foreground/40",
+                      r.winnerCount > 0 ? "text-orange-700 dark:text-orange-400" : "text-muted-foreground/40",
                     )}
                   >
                     {formatNumber(r.winnerCount)}
@@ -404,9 +384,7 @@ function ResultAndPrize({ result, drawId }: { result: KenoResultData; drawId: st
                   <span
                     className={cn(
                       "text-right tabular-nums text-sm font-semibold",
-                      r.winnerCount > 0
-                        ? "text-cyan-700 dark:text-cyan-400"
-                        : "text-muted-foreground/40",
+                      r.winnerCount > 0 ? "text-cyan-700 dark:text-cyan-400" : "text-muted-foreground/40",
                     )}
                   >
                     {formatNumber(r.winnerCount)}
@@ -460,9 +438,7 @@ function FinancialSummary({ financial: f }: { financial: KenoResultData["financi
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Phân bổ doanh thu sau kết sổ
-            </CardDescription>
+            <CardDescription className="text-xs mt-0.5">Phân bổ doanh thu sau kết sổ</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -504,12 +480,8 @@ function FinancialSummary({ financial: f }: { financial: KenoResultData["financi
           },
           {
             icon: isProfit ? TrendingUp : TrendingDown,
-            iconBg: isProfit
-              ? "bg-emerald-100 dark:bg-emerald-900/50"
-              : "bg-red-100 dark:bg-red-900/50",
-            iconColor: isProfit
-              ? "text-emerald-600 dark:text-emerald-400"
-              : "text-red-600 dark:text-red-400",
+            iconBg: isProfit ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50",
+            iconColor: isProfit ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
             label: "Kết quả công ty (P&L kỳ)",
             value: f.companyTake,
             sign: "=" as const,
@@ -535,20 +507,10 @@ function FinancialSummary({ financial: f }: { financial: KenoResultData["financi
               )}
             >
               <div className="flex items-center gap-2 min-w-0">
-                <div
-                  className={cn(
-                    "flex size-6 items-center justify-center rounded-md shrink-0",
-                    row.iconBg,
-                  )}
-                >
+                <div className={cn("flex size-6 items-center justify-center rounded-md shrink-0", row.iconBg)}>
                   <row.icon className={cn("size-3.5", row.iconColor)} />
                 </div>
-                <span
-                  className={cn(
-                    "text-sm",
-                    row.bold ? "font-semibold text-foreground" : "text-muted-foreground",
-                  )}
-                >
+                <span className={cn("text-sm", row.bold ? "font-semibold text-foreground" : "text-muted-foreground")}>
                   {row.label}
                 </span>
                 {row.hint && (
@@ -567,11 +529,7 @@ function FinancialSummary({ financial: f }: { financial: KenoResultData["financi
                 )}
               </div>
               <span
-                className={cn(
-                  "tabular-nums text-sm font-mono shrink-0",
-                  row.bold ? "font-bold" : "",
-                  displayColor,
-                )}
+                className={cn("tabular-nums text-sm font-mono shrink-0", row.bold ? "font-bold" : "", displayColor)}
               >
                 {displaySign !== "=" ? displaySign : ""}
                 {formatNumber(row.value)}
@@ -653,9 +611,7 @@ export function ResultSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Kết quả & Tài chính
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Kết quả & Tài chính</h2>
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <ResultAndPrize result={result} drawId={effectiveDrawId} />
         <FinancialSummary financial={result.financial} />

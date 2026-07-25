@@ -8,7 +8,7 @@
  * - 55 số (01-55)
  */
 
-import { PrizeTier, PlayType } from "@megawin/game-power655/entities";
+import type { PlayType, PrizeTier } from "@megawin/game-power655/entities";
 
 // ─── KPI ─────────────────────────────────────────────────────────────────────
 

@@ -1,19 +1,14 @@
 "use client";
 
-import { Building2, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { Building2, RefreshCw } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import type { OutstandingTenantRow } from "./types";
 
 export interface OutstandingTenantBreakdownProps {
@@ -88,9 +83,7 @@ export function OutstandingTenantBreakdown({
           <Building2 className="size-4 text-muted-foreground" />
           <CardTitle className="text-sm font-semibold">Đại lý — Kỳ {drawId}</CardTitle>
         </div>
-        <CardDescription className="text-xs">
-          {rows.length} đại lý · Click để xem tài khoản
-        </CardDescription>
+        <CardDescription className="text-xs">{rows.length} đại lý · Click để xem tài khoản</CardDescription>
       </CardHeader>
       <CardContent className="px-0 pb-4 pt-0">
         {rows.length === 0 ? (
@@ -106,12 +99,8 @@ export function OutstandingTenantBreakdown({
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.playerCount}</TableHead>
                   {showLineCount && <TableHead className="text-right">{lineLabel}</TableHead>}
-                  <TableHead className="text-right">
-                    {REPORT_COLUMN_LABELS.estimatedCommission}
-                  </TableHead>
-                  <TableHead className="pr-5 text-right">
-                    {REPORT_COLUMN_LABELS.totalStake}
-                  </TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.estimatedCommission}</TableHead>
+                  <TableHead className="pr-5 text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -122,12 +111,8 @@ export function OutstandingTenantBreakdown({
                     onClick={() => onRowClick(row.tenantId)}
                   >
                     <TableCell className="pl-5 text-sm font-medium">{row.tenantId}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.playerCount)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.playerCount)}</TableCell>
                     {showLineCount && (
                       <TableCell className="text-right text-sm tabular-nums">
                         {formatNumber(row.lineCount ?? 0)}
@@ -146,9 +131,7 @@ export function OutstandingTenantBreakdown({
               {rows.length > 1 && (
                 <tfoot>
                   <TableRow className="border-t bg-muted/50">
-                    <TableCell className="pl-5 text-sm font-semibold">
-                      {REPORT_COLUMN_LABELS.summary}
-                    </TableCell>
+                    <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums font-semibold">
                       {formatNumber(totalEntries)}
                     </TableCell>

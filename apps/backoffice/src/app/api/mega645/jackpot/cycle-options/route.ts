@@ -1,5 +1,6 @@
-import { withApi } from "@/lib/api";
 import { ListAllJackpotCycleOptionsUseCase } from "@megawin/game-mega645-application/use-cases/jackpot";
+
+import { withApi } from "@/lib/api";
 
 const useCase = new ListAllJackpotCycleOptionsUseCase();
 

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+
 import { BookOpen, EllipsisVertical, LogOut } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,16 +14,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar";
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { ACCOUNT_NAV_ITEMS } from "@/lib/account-nav";
-import { useAuth } from "@/providers/auth-provider";
 import { signOutAndRedirect } from "@/lib/auth/sign-out";
 import { getInitials } from "@/lib/utils";
+import { useAuth } from "@/providers/auth-provider";
 
 /**
  * Menu tài khoản ĐẦY ĐỦ ở sidebar footer (góc dưới trái) — "identity anchor".
@@ -36,10 +32,7 @@ export function NavUser() {
   const { isMobile } = useSidebar();
 
   const user = {
-    name:
-      ((session?.user as Record<string, unknown>)?.username as string) ??
-      session?.user?.name ??
-      "User",
+    name: ((session?.user as Record<string, unknown>)?.username as string) ?? session?.user?.name ?? "User",
     email: session?.user?.email ?? "",
     avatar: session?.user?.image ?? "",
   };

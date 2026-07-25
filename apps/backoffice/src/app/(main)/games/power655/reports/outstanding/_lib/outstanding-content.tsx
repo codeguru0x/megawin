@@ -1,23 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { GAME_COLORS } from "@/lib/game-colors";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { toTenantUsername } from "@megawin/shared/utils/player-username";
 import type { TicketEntryEntity } from "@megawin/game-power655/entities";
-import { Power655EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
-import { OutstandingContent } from "@/components/reports/game/outstanding";
+import { toTenantUsername } from "@megawin/shared/utils/player-username";
+
 import type {
   OutstandingDrawRow,
-  OutstandingTenantRow,
-  OutstandingPlayerRow,
   OutstandingEntryRow,
+  OutstandingPlayerRow,
+  OutstandingTenantRow,
 } from "@/components/reports/game/outstanding";
+import { OutstandingContent } from "@/components/reports/game/outstanding";
+import { GAME_COLORS } from "@/lib/game-colors";
+
+import { Power655EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
 import {
   usePower655Outstanding,
   usePower655OutstandingDrawTenants,
-  usePower655OutstandingTenantPlayers,
   usePower655OutstandingPlayerEntries,
+  usePower655OutstandingTenantPlayers,
 } from "../../settle/_lib/use-report-queries";
 import { usePower655OutstandingFilters } from "./use-outstanding-filters";
 
@@ -195,11 +198,7 @@ export function Power655OutstandingContent() {
         showLineCount={true}
         lineCountLabel="Bộ số"
       />
-      <Power655EntryDetailDialog
-        entry={selectedEntry}
-        open={!!selectedEntry}
-        onClose={() => setSelectedEntry(null)}
-      />
+      <Power655EntryDetailDialog entry={selectedEntry} open={!!selectedEntry} onClose={() => setSelectedEntry(null)} />
     </>
   );
 }

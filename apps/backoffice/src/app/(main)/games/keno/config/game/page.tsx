@@ -1,18 +1,18 @@
 "use client";
 
-import { Trophy, Percent, Settings2, Shield, Dices } from "lucide-react";
-import { useQueryState, parseAsStringEnum } from "nuqs";
-
 import { displayVNDateTime } from "@megawin/shared/utils";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dices, Percent, Settings2, Shield, Trophy } from "lucide-react";
+import { parseAsStringEnum, useQueryState } from "nuqs";
 
-import { useKenoGameConfig, useUpdateKenoGameConfig } from "./_lib/use-game-config";
-import { RatesSection } from "./_lib/rates-section";
-import { PrizesSection } from "./_lib/prizes-section";
-import { SideBetsSection } from "./_lib/side-bets-section";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { PayoutCapsSection } from "./_lib/payout-caps-section";
 import { PlayRulesSection } from "./_lib/play-rules-section";
+import { PrizesSection } from "./_lib/prizes-section";
+import { RatesSection } from "./_lib/rates-section";
+import { SideBetsSection } from "./_lib/side-bets-section";
+import { useKenoGameConfig, useUpdateKenoGameConfig } from "./_lib/use-game-config";
 
 function ConfigSkeleton() {
   return (

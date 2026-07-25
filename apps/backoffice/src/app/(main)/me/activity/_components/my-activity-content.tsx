@@ -1,12 +1,11 @@
 "use client";
 
+import { AuditLogDetailSheet } from "@/app/(main)/audit-logs/_components/audit-log-detail-sheet";
+import { AuditLogsTable } from "@/app/(main)/audit-logs/_components/audit-logs-table";
 import { Card, CardContent } from "@/components/ui/card";
 
-import { AuditLogsTable } from "@/app/(main)/audit-logs/_components/audit-logs-table";
-import { AuditLogDetailSheet } from "@/app/(main)/audit-logs/_components/audit-log-detail-sheet";
-
 import { useMyActivityFilters } from "../_lib/use-filters";
-import { useMyAuditLogList, useMyAuditLogDetail } from "../_lib/use-queries";
+import { useMyAuditLogDetail, useMyAuditLogList } from "../_lib/use-queries";
 import { MyActivityFilterBar } from "./my-activity-filter-bar";
 
 /**
@@ -18,19 +17,8 @@ import { MyActivityFilterBar } from "./my-activity-filter-bar";
  * account) mà user là actor hoặc target, qua {@link useMyAuditLogList}.
  */
 export function MyActivityContent() {
-  const {
-    from,
-    to,
-    action,
-    status,
-    cursor,
-    page,
-    detail,
-    goNext,
-    goPrev,
-    openDetail,
-    closeDetail,
-  } = useMyActivityFilters();
+  const { from, to, action, status, cursor, page, detail, goNext, goPrev, openDetail, closeDetail } =
+    useMyActivityFilters();
 
   const query = useMyAuditLogList(
     {

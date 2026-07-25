@@ -1,7 +1,7 @@
 "use client";
 
-import { Building2, Shield, Clock } from "lucide-react";
-import { AccountStatusLabel, AccountStatus } from "@megawin/identity/entities";
+import { type AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
+import { Building2, Clock, Shield } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,9 +55,7 @@ export function PlayerProfileBanner({ profile, isLoading, isError }: PlayerProfi
     <div className="flex flex-wrap items-center gap-x-6 gap-y-2.5 rounded-xl border bg-card px-5 py-3.5 shadow-sm">
       {/* Username — primary identifier */}
       <div className="flex items-center gap-2 min-w-0">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          Tài khoản
-        </span>
+        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Tài khoản</span>
         <span className="font-mono text-sm font-semibold text-foreground">{profile.username}</span>
       </div>
 
@@ -65,9 +63,7 @@ export function PlayerProfileBanner({ profile, isLoading, isError }: PlayerProfi
 
       {/* Display name */}
       <div className="flex items-center gap-2 min-w-0">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          Tên hiển thị
-        </span>
+        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Tên hiển thị</span>
         <span className="text-sm text-foreground">{profile.displayName}</span>
       </div>
 

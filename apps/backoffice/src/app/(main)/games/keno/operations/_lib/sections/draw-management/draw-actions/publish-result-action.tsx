@@ -1,16 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import {
-  Check,
-  Loader2,
-  Dice5,
-  ExternalLink,
-  CalendarDays,
-  Hash,
-  ClipboardCheck,
-  AlertCircle,
-} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+import { DrawStatus } from "@megawin/game-core/entities";
+import { KENO_DRAW_COUNT, KENO_NUMBER_MAX, KENO_NUMBER_MIN } from "@megawin/game-keno/entities";
+import { todayVN } from "@megawin/shared/utils";
+import { AlertCircle, CalendarDays, Check, ClipboardCheck, Dice5, ExternalLink, Hash, Loader2 } from "lucide-react";
+
+import { generateUniqueRandomNumbers, RandomFillButton } from "@/components/draws";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,12 +20,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { RandomFillButton, generateUniqueRandomNumbers } from "@/components/draws";
-import { todayVN } from "@megawin/shared/utils";
-import { KENO_NUMBER_MIN, KENO_NUMBER_MAX, KENO_DRAW_COUNT } from "@megawin/game-keno/entities";
+
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
-import { DrawStatus } from "@megawin/game-core/entities";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
@@ -70,9 +64,7 @@ function validateKenoNumbers(numbers: string[]): ValidationResult {
     }
     const n = parseInt(v, 10);
     if (isNaN(n) || n < KENO_NUMBER_MIN || n > KENO_NUMBER_MAX) {
-      messages.push(
-        `Ô ${i + 1}: số ${v} ngoài dải ${pad2(KENO_NUMBER_MIN)}–${pad2(KENO_NUMBER_MAX)}`,
-      );
+      messages.push(`Ô ${i + 1}: số ${v} ngoài dải ${pad2(KENO_NUMBER_MIN)}–${pad2(KENO_NUMBER_MAX)}`);
       fieldErrors.add(i);
       parsed.push(null);
     } else {
@@ -81,9 +73,7 @@ function validateKenoNumbers(numbers: string[]): ValidationResult {
   }
 
   if (emptyIndices.length > 0) {
-    messages.push(
-      `Còn ${emptyIndices.length} ô chưa nhập (ô ${emptyIndices.map((i) => i + 1).join(", ")})`,
-    );
+    messages.push(`Còn ${emptyIndices.length} ô chưa nhập (ô ${emptyIndices.map((i) => i + 1).join(", ")})`);
   }
 
   // Check trùng
@@ -200,8 +190,8 @@ export function PublishResultAction({
             {isRepublish ? "Sửa kết quả" : "Công bố kết quả"} — Kỳ {draw.drawId}
           </DialogTitle>
           <DialogDescription>
-            Nhập {KENO_DRAW_COUNT} số trúng ({pad2(KENO_NUMBER_MIN)}–{pad2(KENO_NUMBER_MAX)}). Thứ
-            tự nhập là thứ tự quay chính thức.
+            Nhập {KENO_DRAW_COUNT} số trúng ({pad2(KENO_NUMBER_MIN)}–{pad2(KENO_NUMBER_MAX)}). Thứ tự nhập là thứ tự
+            quay chính thức.
           </DialogDescription>
         </DialogHeader>
 
@@ -220,9 +210,7 @@ export function PublishResultAction({
                 <div className="grid grid-cols-5 gap-2">
                   {Array.from({ length: KENO_DRAW_COUNT }, (_, i) => (
                     <div key={i} className="flex flex-col gap-1">
-                      <span className="text-xs font-medium text-muted-foreground text-center">
-                        {i + 1}
-                      </span>
+                      <span className="text-xs font-medium text-muted-foreground text-center">{i + 1}</span>
                       <Input
                         ref={(el) => {
                           inputRefs.current[i] = el;

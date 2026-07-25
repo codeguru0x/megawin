@@ -1,13 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { CalendarIcon, Check } from "lucide-react";
+
+import { formatVN, formatVNDate, TZDate, todayVN, toVNStartOfDay, VN_TIMEZONE } from "@megawin/shared/utils";
 import { subDays } from "date-fns";
+import { CalendarIcon, Check } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { todayVN, formatVNDate, formatVN, toVNStartOfDay, TZDate, VN_TIMEZONE } from "@megawin/shared/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -94,18 +96,13 @@ export function FinancialDatePicker({
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      {label && (
-        <span className="text-sm font-medium text-muted-foreground">{label}</span>
-      )}
+      {label && <span className="text-sm font-medium text-muted-foreground">{label}</span>}
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
-            className={cn(
-              "h-9 gap-2 px-3 text-sm tabular-nums",
-              !value && "text-muted-foreground",
-            )}
+            className={cn("h-9 gap-2 px-3 text-sm tabular-nums", !value && "text-muted-foreground")}
           >
             <CalendarIcon className="size-4 text-muted-foreground" />
             <span className="font-medium">{displayDate(value)}</span>
@@ -138,9 +135,7 @@ export function FinancialDatePicker({
                     onClick={() => handlePreset(preset)}
                     className={cn(
                       "flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-sm transition-colors",
-                      isActive
-                        ? "bg-primary/10 font-medium text-primary"
-                        : "text-foreground hover:bg-accent",
+                      isActive ? "bg-primary/10 font-medium text-primary" : "text-foreground hover:bg-accent",
                     )}
                   >
                     {preset.label}

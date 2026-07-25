@@ -1,11 +1,13 @@
 "use client";
 
-import { toTenantUsername } from "@megawin/shared/utils";
 import type { TicketEntryEntity } from "@megawin/game-mega645/entities";
+import { toTenantUsername } from "@megawin/shared/utils";
+
+import { type EntryRow, GamePlayerEntryList } from "@/components/reports/game/settle";
+
 import { useMega645Entries } from "../use-report-queries";
-import { TableSkeleton, ErrorCard, EmptyCard } from "./shared-states";
 import { Mega645EntryDetailDialog } from "./entry-detail-dialog";
-import { GamePlayerEntryList, type EntryRow } from "@/components/reports/game/settle";
+import { EmptyCard, ErrorCard, TableSkeleton } from "./shared-states";
 
 /** Cấp 4: Danh sách entries của 1 player cho 1 draw × 1 tenant. */
 export function EntryList({

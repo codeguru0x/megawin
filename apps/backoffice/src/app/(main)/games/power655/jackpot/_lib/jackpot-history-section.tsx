@@ -1,45 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ArrowUpRight,
-  ChevronLeft,
-  ChevronRight,
-  History,
-  Loader2,
-  Sparkles,
-  TrendingDown,
-} from "lucide-react";
+
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { JackpotCycleStatus } from "@megawin/game-power655/entities";
+import { Pagination } from "@megawin/shared/constants";
+import { formatNumber } from "@megawin/shared/utils";
+import { ArrowUpRight, ChevronLeft, ChevronRight, History, Loader2, Sparkles, TrendingDown } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { formatNumber } from "@megawin/shared/utils";
-import { Pagination } from "@megawin/shared/constants";
-import { JackpotCycleStatus } from "@megawin/game-power655/entities";
-import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+
 import {
+  type JackpotCycleOption,
+  type JackpotHistoryItem,
   useJackpotCycleOptions,
   useJackpotHistoryByCycle,
-  type JackpotHistoryItem,
-  type JackpotCycleOption,
 } from "./use-jackpot";
 
 const PAGE_SIZE = Pagination.Default.Size;
@@ -80,10 +61,7 @@ export function JackpotHistorySection() {
 
   // Resolve cycleNo thực từ selectedCycleValue
   // "0" = active cycle → dùng activeCycleNo
-  const cycleNo =
-    selectedCycleValue === ACTIVE_CYCLE_VALUE
-      ? (activeCycleNo ?? 0)
-      : parseInt(selectedCycleValue, 10);
+  const cycleNo = selectedCycleValue === ACTIVE_CYCLE_VALUE ? (activeCycleNo ?? 0) : parseInt(selectedCycleValue, 10);
 
   const { data, isLoading, isFetching } = useJackpotHistoryByCycle({ cycleNo, page });
 
@@ -107,9 +85,7 @@ export function JackpotHistorySection() {
           </div>
           <div>
             <h2 className="text-sm font-semibold text-foreground">Lịch sử Jackpot</h2>
-            <p className="text-xs text-muted-foreground">
-              Biến động JP1 / JP2 qua từng kỳ quay đã kết sổ
-            </p>
+            <p className="text-xs text-muted-foreground">Biến động JP1 / JP2 qua từng kỳ quay đã kết sổ</p>
           </div>
         </div>
 
@@ -132,25 +108,17 @@ export function JackpotHistorySection() {
                   <TableHead className="text-right">{COL.totalFixedPrizes}</TableHead>
                   <TableHead className="text-right">{COL.actualCompanyTake}</TableHead>
                   {/* JP1 columns — red tint */}
-                  <TableHead className="text-right text-red-700/80 dark:text-red-400/80">
-                    {COL.jp1Opening}
-                  </TableHead>
+                  <TableHead className="text-right text-red-700/80 dark:text-red-400/80">{COL.jp1Opening}</TableHead>
                   <TableHead className="text-right text-red-700/80 dark:text-red-400/80">
                     {COL.jp1Contribution}
                   </TableHead>
-                  <TableHead className="text-right text-red-700/80 dark:text-red-400/80">
-                    {COL.jp1Closing}
-                  </TableHead>
+                  <TableHead className="text-right text-red-700/80 dark:text-red-400/80">{COL.jp1Closing}</TableHead>
                   {/* JP2 columns — blue tint */}
-                  <TableHead className="text-right text-blue-700/80 dark:text-blue-400/80">
-                    {COL.jp2Opening}
-                  </TableHead>
+                  <TableHead className="text-right text-blue-700/80 dark:text-blue-400/80">{COL.jp2Opening}</TableHead>
                   <TableHead className="text-right text-blue-700/80 dark:text-blue-400/80">
                     {COL.jp2Contribution}
                   </TableHead>
-                  <TableHead className="text-right text-blue-700/80 dark:text-blue-400/80">
-                    {COL.jp2Closing}
-                  </TableHead>
+                  <TableHead className="text-right text-blue-700/80 dark:text-blue-400/80">{COL.jp2Closing}</TableHead>
                   {/* JP1 Overflow */}
                   <TableHead className="text-right">{COL.jp1Overflow}</TableHead>
                   <TableHead className="pr-5 text-center">{COL.hasWinner}</TableHead>
@@ -167,9 +135,7 @@ export function JackpotHistorySection() {
                   <TableRow>
                     <TableCell colSpan={COL_COUNT} className="h-32 text-center">
                       <p className="text-sm font-medium text-muted-foreground">Chưa có dữ liệu</p>
-                      <p className="text-xs text-muted-foreground">
-                        Vòng này chưa có kỳ quay nào đã tính thưởng.
-                      </p>
+                      <p className="text-xs text-muted-foreground">Vòng này chưa có kỳ quay nào đã tính thưởng.</p>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -243,11 +209,7 @@ function CycleSelector({ cycles, value, isLoading, onChange }: CycleSelectorProp
         {cycles.map((cycle) => (
           <SelectItem
             key={cycle.cycleNo}
-            value={
-              cycle.status === JackpotCycleStatus.Active
-                ? ACTIVE_CYCLE_VALUE
-                : String(cycle.cycleNo)
-            }
+            value={cycle.status === JackpotCycleStatus.Active ? ACTIVE_CYCLE_VALUE : String(cycle.cycleNo)}
           >
             <CycleSelectorLabel cycle={cycle} />
           </SelectItem>
@@ -265,15 +227,12 @@ function CycleSelectorLabel({ cycle }: { cycle: JackpotCycleOption }) {
     <span className="flex items-center gap-2">
       <span className="tabular-nums">
         Vòng #{cycle.cycleNo}
-        {isActive && (
-          <span className="ml-1 text-xs text-emerald-600 dark:text-emerald-400">(hiện tại)</span>
-        )}
+        {isActive && <span className="ml-1 text-xs text-emerald-600 dark:text-emerald-400">(hiện tại)</span>}
       </span>
       {/* Power 6/55 đóng khi JP1 có winner — hiện Sparkles cho jackpot1_winner / both_winner */}
-      {!isActive &&
-        (cycle.closedReason === "jackpot1_winner" || cycle.closedReason === "both_winner") && (
-          <Sparkles className="size-3 text-green-600 dark:text-green-400" />
-        )}
+      {!isActive && (cycle.closedReason === "jackpot1_winner" || cycle.closedReason === "both_winner") && (
+        <Sparkles className="size-3 text-green-600 dark:text-green-400" />
+      )}
     </span>
   );
 }
@@ -286,8 +245,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
   const hasWinner = item.hasJackpot1Winner || item.hasJackpot2Winner;
 
   // Tỷ lệ % công ty thu, hiển thị 1 chữ số thập phân
-  const companyTakeRatePct =
-    item.companyTakeRate > 0 ? `${(item.companyTakeRate * 100).toFixed(1)}%` : null;
+  const companyTakeRatePct = item.companyTakeRate > 0 ? `${(item.companyTakeRate * 100).toFixed(1)}%` : null;
 
   return (
     <TableRow className={cn("transition-colors", hasWinner && "bg-blue-50/40 dark:bg-blue-950/20")}>

@@ -11,24 +11,15 @@
  */
 
 import Link from "next/link";
-import {
-  Ban,
-  CalendarCheck,
-  CircleDollarSign,
-  Clock,
-  Loader2,
-  Lock,
-  Radio,
-  Ticket,
-  Unlock,
-} from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { Power655DrawStatusBadge } from "@/components/games/power655/draw-status-badge";
-import { formatVNDCompact as formatVND, formatVNTime, displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
 import { DrawStatus } from "@megawin/game-core/entities";
 import type { CurrentDrawInfo } from "@megawin/game-power655-application/use-cases/draws";
+import { displayVNDateTime, displayVNTime, formatVNDCompact as formatVND, formatVNTime } from "@megawin/shared/utils";
+import { Ban, CalendarCheck, CircleDollarSign, Clock, Loader2, Lock, Radio, Ticket, Unlock } from "lucide-react";
+
+import { Power655DrawStatusBadge } from "@/components/games/power655/draw-status-badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 // ─── Status → visual mapping ─────────────────────────────────────────────────
 
@@ -167,14 +158,9 @@ export function Power655PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
 
   const showStats =
     draw.stats &&
-    (
-      [
-        DrawStatus.SalesClosed,
-        DrawStatus.Published,
-        DrawStatus.Settling,
-        DrawStatus.Settled,
-      ] as string[]
-    ).includes(status);
+    ([DrawStatus.SalesClosed, DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled] as string[]).includes(
+      status,
+    );
 
   return (
     <div className={cn("rounded-xl border overflow-hidden", vis.border, vis.cardBg)}>
@@ -190,24 +176,13 @@ export function Power655PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
                 vis.iconBg,
               )}
             >
-              <StatusIcon
-                className={cn(
-                  "size-4",
-                  vis.iconColor,
-                  status === DrawStatus.Settling && "animate-spin",
-                )}
-              />
+              <StatusIcon className={cn("size-4", vis.iconColor, status === DrawStatus.Settling && "animate-spin")} />
               {showPing && (
                 <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
                   <span
-                    className={cn(
-                      "absolute inline-flex size-full animate-ping rounded-full opacity-70",
-                      vis.pingColor,
-                    )}
+                    className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-70", vis.pingColor)}
                   />
-                  <span
-                    className={cn("relative inline-flex size-2.5 rounded-full", vis.dotColor)}
-                  />
+                  <span className={cn("relative inline-flex size-2.5 rounded-full", vis.dotColor)} />
                 </span>
               )}
             </div>
@@ -284,9 +259,7 @@ export function Power655PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
               </div>
               <div>
                 <p className="text-[11px] text-muted-foreground">Vé đã bán</p>
-                <p className="text-sm font-semibold tabular-nums">
-                  {draw.stats!.totalEntries.toLocaleString("vi-VN")}
-                </p>
+                <p className="text-sm font-semibold tabular-nums">{draw.stats!.totalEntries.toLocaleString("vi-VN")}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-xl border bg-white/80 dark:bg-card p-3">
@@ -295,9 +268,7 @@ export function Power655PrimaryDrawCard({ draw }: { draw: CurrentDrawInfo }) {
               </div>
               <div>
                 <p className="text-[11px] text-muted-foreground">Doanh thu</p>
-                <p className="text-sm font-semibold tabular-nums">
-                  {formatVND(draw.stats!.totalSalesAmount)}
-                </p>
+                <p className="text-sm font-semibold tabular-nums">{formatVND(draw.stats!.totalSalesAmount)}</p>
               </div>
             </div>
           </div>
@@ -324,20 +295,12 @@ export function Power655QueueDrawCard({ draw }: { draw: CurrentDrawInfo }) {
       <div className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div
-              className={cn(
-                "relative flex size-7 items-center justify-center rounded-lg shrink-0",
-                vis.iconBg,
-              )}
-            >
+            <div className={cn("relative flex size-7 items-center justify-center rounded-lg shrink-0", vis.iconBg)}>
               <StatusIcon className={cn("size-3", vis.iconColor)} />
               {showPing && (
                 <span className="absolute -right-0.5 -top-0.5 flex size-2">
                   <span
-                    className={cn(
-                      "absolute inline-flex size-full animate-ping rounded-full opacity-70",
-                      vis.pingColor,
-                    )}
+                    className={cn("absolute inline-flex size-full animate-ping rounded-full opacity-70", vis.pingColor)}
                   />
                   <span className={cn("relative inline-flex size-2 rounded-full", vis.dotColor)} />
                 </span>
