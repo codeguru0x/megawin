@@ -64,7 +64,9 @@ function buildIso(date: string, time: string): string {
 /** Kiểm tra row đã có đủ thông tin để submit. */
 function isRowComplete(row: DrawRow): boolean {
   return (
-    /^\d{4}-\d{2}-\d{2}$/.test(row.date) && (row.drawNo === 1 || row.drawNo === 2) && /^\d{2}:\d{2}$/.test(row.drawTime)
+    /^\d{4}-\d{2}-\d{2}$/.test(row.date) &&
+    (row.drawNo === 1 || row.drawNo === 2) &&
+    /^\d{2}:\d{2}$/.test(row.drawTime)
   );
 }
 
@@ -103,7 +105,12 @@ function DatePickerCell({
               : "border-input text-foreground",
           )}
         >
-          <CalendarIcon className={cn("size-3.5 shrink-0", hasError ? "text-amber-400" : "text-muted-foreground")} />
+          <CalendarIcon
+            className={cn(
+              "size-3.5 shrink-0",
+              hasError ? "text-amber-400" : "text-muted-foreground",
+            )}
+          />
           <span className={cn("flex-1 text-left font-mono", !value && "text-muted-foreground/60")}>
             {value || "Chọn ngày"}
           </span>
@@ -300,8 +307,8 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             Tạo kỳ quay Lotto 5/35
           </DialogTitle>
           <DialogDescription>
-            Tạo nhiều kỳ liên tiếp. Lịch gợi ý tự động tính theo cấu hình game — staff có thể chỉnh sửa bất kỳ ô nào
-            trước khi xác nhận.
+            Tạo nhiều kỳ liên tiếp. Lịch gợi ý tự động tính theo cấu hình game — staff có thể chỉnh
+            sửa bất kỳ ô nào trước khi xác nhận.
           </DialogDescription>
         </DialogHeader>
 
@@ -309,7 +316,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           {/* Row 1: Số kỳ + summary badges */}
           <div className="flex items-end gap-4 flex-wrap">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Số kỳ tạo</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Số kỳ tạo
+              </Label>
               <Input
                 type="number"
                 min={1}
@@ -331,7 +340,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                 </span>
               )}
               {openCount > 0 && (
-                <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white text-xs">{openCount} mở bán</Badge>
+                <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white text-xs">
+                  {openCount} mở bán
+                </Badge>
               )}
               {scheduledCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
@@ -340,6 +351,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               )}
               {preview.data && preview.data.draws.length > 0 && (
                 <button
+                  type="button"
                   onClick={applyPreview}
                   className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                   title="Áp lại gợi ý từ preview"
@@ -367,17 +379,30 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               className="grid items-center gap-x-3 px-4 py-2 bg-muted/40 border-b"
               style={{ gridTemplateColumns: "1.5rem 1fr 8.5rem 6.5rem 9rem" }}
             >
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">#</span>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ngày quay</span>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Kỳ</span>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Giờ quay</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                #
+              </span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Ngày quay
+              </span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Kỳ
+              </span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Giờ quay
+              </span>
               <div className="flex items-center justify-end">
                 <button
+                  type="button"
                   onClick={toggleAll}
                   className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                   title={allOpen ? "Tắt tất cả" : "Mở bán tất cả"}
                 >
-                  {allOpen ? <Unlock className="size-3 text-emerald-600" /> : <Lock className="size-3" />}
+                  {allOpen ? (
+                    <Unlock className="size-3 text-emerald-600" />
+                  ) : (
+                    <Lock className="size-3" />
+                  )}
                   <span className={cn(allOpen && "text-emerald-600 dark:text-emerald-400")}>
                     {allOpen ? "Đóng" : "Mở"}
                   </span>
@@ -417,17 +442,25 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                     </span>
 
                     {/* Ngày — date picker */}
-                    <DatePickerCell value={row.date} onChange={(date) => updateRow(i, { date })} hasError={dateErr} />
+                    <DatePickerCell
+                      value={row.date}
+                      onChange={(date) => updateRow(i, { date })}
+                      hasError={dateErr}
+                    />
 
                     {/* DrawNo: 1 = K1 (13h), 2 = K2 (21h) */}
                     <div className="relative">
                       <select
                         value={row.drawNo}
-                        onChange={(e) => updateRow(i, { drawNo: Number(e.target.value) as 1 | 2 | 0 })}
+                        onChange={(e) =>
+                          updateRow(i, { drawNo: Number(e.target.value) as 1 | 2 | 0 })
+                        }
                         className={cn(
                           "h-8 w-full rounded-md border bg-background px-2.5 text-xs font-mono tabular-nums",
                           "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 transition-colors",
-                          drawNoErr ? "border-dashed border-amber-400 text-amber-500" : "border-input text-foreground",
+                          drawNoErr
+                            ? "border-dashed border-amber-400 text-amber-500"
+                            : "border-input text-foreground",
                         )}
                       >
                         <option value={0} disabled>
@@ -446,8 +479,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                     />
 
                     {/* Per-row open switch */}
-                    <div
-                      onClick={() => toggleSlot(i)}
+                    {/* Click vào label toggle switch — Switch có pointer-events-none để label nhận click thay. */}
+                    <label
+                      htmlFor={`lotto535-slot-toggle-${i}`}
                       className="flex items-center justify-end gap-1.5 cursor-pointer select-none"
                     >
                       {row.isOpen ? (
@@ -456,6 +490,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                         <Lock className="size-3 text-muted-foreground/40 shrink-0" />
                       )}
                       <Switch
+                        id={`lotto535-slot-toggle-${i}`}
                         checked={row.isOpen}
                         onCheckedChange={() => toggleSlot(i)}
                         className="scale-75 origin-right pointer-events-none"
@@ -463,12 +498,14 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       <span
                         className={cn(
                           "text-[11px] font-medium min-w-12 text-left",
-                          row.isOpen ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
+                          row.isOpen
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-muted-foreground",
                         )}
                       >
                         {row.isOpen ? "Mở bán" : "Chờ lịch"}
                       </span>
-                    </div>
+                    </label>
                   </div>
                 );
               })}
@@ -492,7 +529,11 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             disabled={!canSubmit}
             className={cn(someOpen && "bg-emerald-600 hover:bg-emerald-700 text-white")}
           >
-            {createDraw.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+            {createDraw.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Check className="size-4" />
+            )}
             Tạo {count} kỳ{openCount > 0 ? ` · ${openCount} mở bán` : ""}
           </Button>
         </DialogFooter>

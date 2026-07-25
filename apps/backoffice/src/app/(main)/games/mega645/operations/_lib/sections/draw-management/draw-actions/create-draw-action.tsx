@@ -58,7 +58,9 @@ function buildIso(date: string, time: string): string {
 }
 
 function isRowComplete(row: DrawRow): boolean {
-  return /^\d{4}-\d{2}-\d{2}$/.test(row.date) && /^\d{2}:\d{2}$/.test(row.drawTime) && row.drawNo > 0;
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(row.date) && /^\d{2}:\d{2}$/.test(row.drawTime) && row.drawNo > 0
+  );
 }
 
 function parseDateStr(dateStr: string): Date | undefined {
@@ -95,7 +97,12 @@ function DatePickerCell({
               : "border-input text-foreground",
           )}
         >
-          <CalendarIcon className={cn("size-3.5 shrink-0", hasError ? "text-amber-400" : "text-muted-foreground")} />
+          <CalendarIcon
+            className={cn(
+              "size-3.5 shrink-0",
+              hasError ? "text-amber-400" : "text-muted-foreground",
+            )}
+          />
           <span className={cn("flex-1 text-left font-mono", !value && "text-muted-foreground/60")}>
             {value || "Chọn ngày"}
           </span>
@@ -297,7 +304,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
           {/* Số kỳ + summary badges */}
           <div className="flex items-end gap-4 flex-wrap">
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Số kỳ tạo</Label>
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Số kỳ tạo
+              </Label>
               <Input
                 type="number"
                 min={1}
@@ -318,7 +327,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                 </span>
               )}
               {openCount > 0 && (
-                <Badge className="bg-teal-600 hover:bg-teal-600 text-white text-xs">{openCount} mở bán</Badge>
+                <Badge className="bg-teal-600 hover:bg-teal-600 text-white text-xs">
+                  {openCount} mở bán
+                </Badge>
               )}
               {scheduledCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
@@ -327,6 +338,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               )}
               {preview.data && preview.data.draws.length > 0 && (
                 <button
+                  type="button"
                   onClick={applyPreview}
                   className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                   title="Áp lại gợi ý từ preview"
@@ -354,16 +366,29 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               className="grid items-center gap-x-3 px-4 py-2 bg-muted/40 border-b"
               style={{ gridTemplateColumns: "1.5rem 1fr 6.5rem 9rem" }}
             >
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">#</span>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ngày quay</span>
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Giờ quay</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                #
+              </span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Ngày quay
+              </span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Giờ quay
+              </span>
               <div className="flex items-center justify-end">
                 <button
+                  type="button"
                   onClick={toggleAll}
                   className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {allOpen ? <Unlock className="size-3 text-teal-600" /> : <Lock className="size-3" />}
-                  <span className={cn(allOpen && "text-teal-600 dark:text-teal-400")}>{allOpen ? "Đóng" : "Mở"}</span>
+                  {allOpen ? (
+                    <Unlock className="size-3 text-teal-600" />
+                  ) : (
+                    <Lock className="size-3" />
+                  )}
+                  <span className={cn(allOpen && "text-teal-600 dark:text-teal-400")}>
+                    {allOpen ? "Đóng" : "Mở"}
+                  </span>
                 </button>
               </div>
             </div>
@@ -400,14 +425,19 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                     >
                       {i + 1}
                     </span>
-                    <DatePickerCell value={row.date} onChange={(date) => updateRow(i, { date })} hasError={dateErr} />
+                    <DatePickerCell
+                      value={row.date}
+                      onChange={(date) => updateRow(i, { date })}
+                      hasError={dateErr}
+                    />
                     <TimePickerCell
                       value={row.drawTime}
                       onChange={(drawTime) => updateRow(i, { drawTime })}
                       hasError={timeErr}
                     />
-                    <div
-                      onClick={() => toggleSlot(i)}
+                    {/* Click vào label toggle switch — Switch có pointer-events-none để label nhận click thay. */}
+                    <label
+                      htmlFor={`mega645-slot-toggle-${i}`}
                       className="flex items-center justify-end gap-1.5 cursor-pointer select-none"
                     >
                       {row.isOpen ? (
@@ -416,6 +446,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                         <Lock className="size-3 text-muted-foreground/40 shrink-0" />
                       )}
                       <Switch
+                        id={`mega645-slot-toggle-${i}`}
                         checked={row.isOpen}
                         onCheckedChange={() => toggleSlot(i)}
                         className="scale-75 origin-right pointer-events-none"
@@ -428,7 +459,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       >
                         {row.isOpen ? "Mở bán" : "Chờ lịch"}
                       </span>
-                    </div>
+                    </label>
                   </div>
                 );
               })}
@@ -456,7 +487,11 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
             disabled={!canSubmit}
             className={cn(someOpen && "bg-teal-600 hover:bg-teal-700 text-white")}
           >
-            {createDraw.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+            {createDraw.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Check className="size-4" />
+            )}
             Tạo {count} kỳ{openCount > 0 ? ` · ${openCount} mở bán` : ""}
           </Button>
         </DialogFooter>

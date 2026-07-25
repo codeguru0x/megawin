@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 
 import type {
   GetDrawDetailOutput,
@@ -25,7 +25,10 @@ import { toast } from "sonner";
 
 import { power655Keys } from "@/lib/query-keys";
 
-export type { GetDrawDetailOutput, ResettlePreflightOutput } from "@megawin/game-power655-application/use-cases/draws";
+export type {
+  GetDrawDetailOutput,
+  ResettlePreflightOutput,
+} from "@megawin/game-power655-application/use-cases/draws";
 export type {
   DrawSelectorItem,
   GetDrawSelectorOutput,
@@ -245,11 +248,23 @@ export function useWinningEntries(drawId: string | undefined, enabled: boolean) 
  * Winning Entries Dialog để xem lại phiếu cược gốc (board, kết quả, giải trúng).
  * Tự báo toast lỗi khi không tìm thấy hoặc request thất bại.
  */
-export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { onNotFound?: () => void } = {}) {
+export function useWinningEntryDetail(
+  entryId: string | null,
+  { onNotFound }: { onNotFound?: () => void } = {},
+) {
   const query = useQuery({
     queryKey: power655Keys.reportEntryById(entryId ?? ""),
-    queryFn: () => apiClient.get<GetEntryByIdOutput>(`/power655/reports/entries/${entryId}`).then((r) => r.entry),
+    queryFn: () =>
+      apiClient
+        .get<GetEntryByIdOutput>(`/power655/reports/entries/${entryId}`)
+        .then((r) => r.entry),
     enabled: !!entryId,
+  });
+
+  // useEffectEvent: đọc `onNotFound` mới nhất mà không cần khai báo dependency —
+  // callback không nên trigger effect chạy lại.
+  const onNotFoundEvent = useEffectEvent(() => {
+    onNotFound?.();
   });
 
   useEffect(() => {
@@ -258,14 +273,13 @@ export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { 
       toast.error("Không thể tải thông tin phiếu cược", {
         description: "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     } else if (query.isFetched && !query.isLoading && !query.data) {
       toast.error("Không tìm thấy phiếu cược", {
         description: "Phiếu cược này không còn dữ liệu hoặc đã bị xóa.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.isError, query.isFetched, query.isLoading, query.data, entryId]);
 
   return query;
@@ -284,7 +298,9 @@ function useDrawAction<TBody = void>(
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
-      method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
+      method === "post"
+        ? apiClient.post(actionPath(drawId), body)
+        : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: power655Keys.all });
       toast.success(successMessage);
@@ -313,7 +329,11 @@ export function usePublishResult() {
 }
 
 export function useTriggerSettle() {
-  return useDrawAction((id) => `/power655/draws/${id}/trigger-settle`, "post", "Đã bắt đầu kết sổ.");
+  return useDrawAction(
+    (id) => `/power655/draws/${id}/trigger-settle`,
+    "post",
+    "Đã bắt đầu kết sổ.",
+  );
 }
 
 /**
@@ -381,7 +401,11 @@ export function useResettlePreflight() {
 }
 
 export function useVoidDraw() {
-  return useDrawAction<{ reason: string }>((id) => `/power655/draws/${id}/void`, "post", "Đã huỷ kỳ quay.");
+  return useDrawAction<{ reason: string }>(
+    (id) => `/power655/draws/${id}/void`,
+    "post",
+    "Đã huỷ kỳ quay.",
+  );
 }
 
 export function useUpdateSchedule() {

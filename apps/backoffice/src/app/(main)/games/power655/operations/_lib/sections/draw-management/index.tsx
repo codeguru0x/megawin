@@ -88,8 +88,7 @@ export function DrawManagementSection() {
     const tiers = tierOrder.map((tier) => {
       const t = tierMap.get(tier);
       const winnerCount = t?.winnerCount ?? 0;
-      const prizeAmount =
-        winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
+      const prizeAmount = winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         tier,
         label: POWER655_PRIZE_TIER_LABELS[tier] ?? String(tier),
@@ -184,21 +183,11 @@ export function DrawManagementSection() {
         onOpenChange={setPublishOpen}
         currentResult={currentResult}
       />
-      <EditScheduleAction
-        draw={draw}
-        disabled={false}
-        open={editScheduleOpen}
-        onOpenChange={setEditScheduleOpen}
-      />
+      <EditScheduleAction draw={draw} disabled={false} open={editScheduleOpen} onOpenChange={setEditScheduleOpen} />
       <VoidDrawAction draw={draw} disabled={false} open={voidOpen} onOpenChange={setVoidOpen} />
 
       {/* Resettle dialog — pre-flight + confirm */}
-      <ResettleAction
-        draw={draw}
-        open={resettleOpen}
-        onOpenChange={setResettleOpen}
-        currentResult={currentResult}
-      />
+      <ResettleAction draw={draw} open={resettleOpen} onOpenChange={setResettleOpen} currentResult={currentResult} />
 
       {/* Confirm: Mở để kết sổ lại (cascade B2, số không đổi) */}
       <AlertDialog open={reopenConfirm} onOpenChange={setReopenConfirm}>
@@ -208,10 +197,9 @@ export function DrawManagementSection() {
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <p>
-                  Kỳ <strong>{draw.drawDate}</strong> có số quay <strong>không thay đổi</strong>{" "}
-                  nhưng nằm trong chuỗi cascade (TYPE_B2) do kỳ trước được kết sổ lại. Thao tác này
-                  đưa kỳ về trạng thái <strong>Published</strong> để vào lại luồng kết sổ lại — số
-                  trúng được giữ nguyên.
+                  Kỳ <strong>{draw.drawDate}</strong> có số quay <strong>không thay đổi</strong> nhưng nằm trong chuỗi
+                  cascade (TYPE_B2) do kỳ trước được kết sổ lại. Thao tác này đưa kỳ về trạng thái{" "}
+                  <strong>Published</strong> để vào lại luồng kết sổ lại — số trúng được giữ nguyên.
                 </p>
                 <p className="font-medium text-orange-600 dark:text-orange-400">
                   Chỉ thực hiện khi DBA đã xác nhận cập nhật jackpot cycle thủ công.
@@ -284,8 +272,8 @@ export function DrawManagementSection() {
           <AlertDialogHeader>
             <AlertDialogTitle>Xác nhận kết sổ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Kỳ <strong>{draw.drawDate}</strong> sẽ được đưa vào quy trình kết sổ. Thao tác này sẽ
-              tính toán và phân bổ giải thưởng cho tất cả các vé.
+              Kỳ <strong>{draw.drawDate}</strong> sẽ được đưa vào quy trình kết sổ. Thao tác này sẽ tính toán và phân bổ
+              giải thưởng cho tất cả các vé.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

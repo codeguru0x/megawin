@@ -10,9 +10,23 @@ import { FinancialDateRangePicker } from "@/components/date-picker";
 import { getNetProfitColor } from "@/components/reports/payout-ratio";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { getGameColors } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
 
@@ -102,7 +116,11 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
           <BarChart3 className="size-4 shrink-0 text-muted-foreground" />
           {isDrilling ? (
             <div className="flex items-center gap-1 text-sm">
-              <button className="font-medium text-muted-foreground hover:text-foreground" onClick={handleBackToList}>
+              <button
+                type="button"
+                className="font-medium text-muted-foreground hover:text-foreground"
+                onClick={handleBackToList}
+              >
                 Chi tiết tài chính
               </button>
               <ChevronRight className="size-3.5 text-muted-foreground" />
@@ -182,7 +200,9 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
               ) : records.length === 0 ? (
                 <div className="flex h-40 flex-col items-center justify-center gap-1 text-center">
                   <p className="text-sm font-medium text-muted-foreground">Chưa có dữ liệu</p>
-                  <p className="text-xs text-muted-foreground">Thử thay đổi khoảng thời gian hoặc bộ lọc game.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Thử thay đổi khoảng thời gian hoặc bộ lọc game.
+                  </p>
                 </div>
               ) : (
                 <Table>
@@ -253,9 +273,13 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
                             {formatNumber(row.settledCount)}
                           </TableCell>
                           <TableCell className="text-right text-sm tabular-nums">
-                            <span className="text-emerald-600 dark:text-emerald-400">{formatNumber(row.winCount)}</span>
+                            <span className="text-emerald-600 dark:text-emerald-400">
+                              {formatNumber(row.winCount)}
+                            </span>
                             {" / "}
-                            <span className="text-muted-foreground">{formatNumber(row.voidCount)}</span>
+                            <span className="text-muted-foreground">
+                              {formatNumber(row.voidCount)}
+                            </span>
                           </TableCell>
                           <TableCell className="text-right text-sm tabular-nums">
                             {formatNumber(row.totalStake)}
@@ -264,7 +288,10 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
                             {formatNumber(row.totalPayout)}
                           </TableCell>
                           <TableCell
-                            className={cn("text-right text-sm tabular-nums font-medium", getNetProfitColor(row.ggr))}
+                            className={cn(
+                              "text-right text-sm tabular-nums font-medium",
+                              getNetProfitColor(row.ggr),
+                            )}
                           >
                             {formatNumber(row.ggr)}
                           </TableCell>
@@ -298,9 +325,13 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
                         {formatNumber(totals.settledCount)}
                       </TableCell>
                       <TableCell className="text-right text-sm tabular-nums font-semibold">
-                        <span className="text-emerald-600 dark:text-emerald-400">{formatNumber(totals.winCount)}</span>
+                        <span className="text-emerald-600 dark:text-emerald-400">
+                          {formatNumber(totals.winCount)}
+                        </span>
                         {" / "}
-                        <span className="text-muted-foreground">{formatNumber(totals.voidCount)}</span>
+                        <span className="text-muted-foreground">
+                          {formatNumber(totals.voidCount)}
+                        </span>
                       </TableCell>
                       <TableCell className="text-right text-sm tabular-nums font-semibold">
                         {formatNumber(totals.totalStake)}
@@ -309,7 +340,10 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
                         {formatNumber(totals.totalPayout)}
                       </TableCell>
                       <TableCell
-                        className={cn("text-right text-sm tabular-nums font-semibold", getNetProfitColor(totals.ggr))}
+                        className={cn(
+                          "text-right text-sm tabular-nums font-semibold",
+                          getNetProfitColor(totals.ggr),
+                        )}
                       >
                         {formatNumber(totals.ggr)}
                       </TableCell>

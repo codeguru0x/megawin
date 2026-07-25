@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 
 import type {
   GetJackpotCurrentOutput,
@@ -42,7 +42,8 @@ export function useJackpotCurrent() {
 export function useJackpotCycleOptions() {
   return useQuery({
     queryKey: power655Keys.jackpotCycleOptions,
-    queryFn: () => apiClient.get<ListAllJackpotCycleOptionsOutput>("/power655/jackpot/cycle-options"),
+    queryFn: () =>
+      apiClient.get<ListAllJackpotCycleOptionsOutput>("/power655/jackpot/cycle-options"),
   });
 }
 
@@ -89,11 +90,23 @@ export function useJackpotCycles(params: JackpotCyclesParams) {
  * Tự báo toast lỗi khi không tìm thấy hoặc request thất bại.
  * `onNotFound` được gọi để component có thể đóng dialog.
  */
-export function useJackpotEntryDetail(entryId: string | null, { onNotFound }: { onNotFound?: () => void } = {}) {
+export function useJackpotEntryDetail(
+  entryId: string | null,
+  { onNotFound }: { onNotFound?: () => void } = {},
+) {
   const query = useQuery({
     queryKey: power655Keys.reportEntryById(entryId ?? ""),
-    queryFn: () => apiClient.get<GetEntryByIdOutput>(`/power655/reports/entries/${entryId}`).then((r) => r.entry),
+    queryFn: () =>
+      apiClient
+        .get<GetEntryByIdOutput>(`/power655/reports/entries/${entryId}`)
+        .then((r) => r.entry),
     enabled: !!entryId,
+  });
+
+  // useEffectEvent: đọc `onNotFound` mới nhất mà không cần khai báo dependency —
+  // callback không nên trigger effect chạy lại.
+  const onNotFoundEvent = useEffectEvent(() => {
+    onNotFound?.();
   });
 
   useEffect(() => {
@@ -102,14 +115,13 @@ export function useJackpotEntryDetail(entryId: string | null, { onNotFound }: { 
       toast.error("Không thể tải thông tin phiếu cược", {
         description: "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     } else if (query.isFetched && !query.isLoading && !query.data) {
       toast.error("Không tìm thấy phiếu cược", {
         description: "Phiếu cược này không còn dữ liệu hoặc đã bị xóa.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.isError, query.isFetched, query.isLoading, query.data, entryId]);
 
   return query;

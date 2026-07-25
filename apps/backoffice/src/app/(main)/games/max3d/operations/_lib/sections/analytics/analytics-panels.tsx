@@ -10,39 +10,41 @@ import type { PlayTypeRow, TenantRow } from "../../types";
 
 // ─── Color palette cho play modes ────────────────────────────────────────────
 
-export const PLAY_MODE_COLORS: Record<string, { dot: string; text: string; fill: string; bg: string; border: string }> =
-  {
-    // Basic mode variants
-    "basic.straight": {
-      dot: "bg-emerald-500",
-      text: "text-emerald-600 dark:text-emerald-400",
-      fill: "#10b981",
-      bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
-      border: "border-emerald-200/60 dark:border-emerald-800/40",
-    },
-    "basic.combo3": {
-      dot: "bg-blue-500",
-      text: "text-blue-600 dark:text-blue-400",
-      fill: "#3b82f6",
-      bg: "bg-blue-50/60 dark:bg-blue-950/20",
-      border: "border-blue-200/60 dark:border-blue-800/40",
-    },
-    "basic.combo6": {
-      dot: "bg-violet-500",
-      text: "text-violet-600 dark:text-violet-400",
-      fill: "#8b5cf6",
-      bg: "bg-violet-50/60 dark:bg-violet-950/20",
-      border: "border-violet-200/60 dark:border-violet-800/40",
-    },
-    // Plus mode variants
-    "plus.straight": {
-      dot: "bg-rose-500",
-      text: "text-rose-600 dark:text-rose-400",
-      fill: "#f43f5e",
-      bg: "bg-rose-50/60 dark:bg-rose-950/20",
-      border: "border-rose-200/60 dark:border-rose-800/40",
-    },
-  };
+export const PLAY_MODE_COLORS: Record<
+  string,
+  { dot: string; text: string; fill: string; bg: string; border: string }
+> = {
+  // Basic mode variants
+  "basic.straight": {
+    dot: "bg-emerald-500",
+    text: "text-emerald-600 dark:text-emerald-400",
+    fill: "#10b981",
+    bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
+    border: "border-emerald-200/60 dark:border-emerald-800/40",
+  },
+  "basic.combo3": {
+    dot: "bg-blue-500",
+    text: "text-blue-600 dark:text-blue-400",
+    fill: "#3b82f6",
+    bg: "bg-blue-50/60 dark:bg-blue-950/20",
+    border: "border-blue-200/60 dark:border-blue-800/40",
+  },
+  "basic.combo6": {
+    dot: "bg-violet-500",
+    text: "text-violet-600 dark:text-violet-400",
+    fill: "#8b5cf6",
+    bg: "bg-violet-50/60 dark:bg-violet-950/20",
+    border: "border-violet-200/60 dark:border-violet-800/40",
+  },
+  // Plus mode variants
+  "plus.straight": {
+    dot: "bg-rose-500",
+    text: "text-rose-600 dark:text-rose-400",
+    fill: "#f43f5e",
+    bg: "bg-rose-50/60 dark:bg-rose-950/20",
+    border: "border-rose-200/60 dark:border-rose-800/40",
+  },
+};
 
 const DEFAULT_COLOR = {
   dot: "bg-muted-foreground/40",
@@ -65,7 +67,16 @@ function MiniPie({ pct, fill, size = 44 }: { pct: number; fill: string; size?: n
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeWidth={5} className="text-muted/60" />
+      <title>{Math.round(pct)}%</title>
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={5}
+        className="text-muted/60"
+      />
       <circle
         cx={cx}
         cy={cy}
@@ -108,13 +119,16 @@ function PlayTypeItem({ d }: { d: PlayTypeRow }) {
       </div>
       <div className="flex items-center gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-lg font-bold tabular-nums text-foreground leading-tight">{formatNumber(d.revenue)}</p>
+          <p className="text-lg font-bold tabular-nums text-foreground leading-tight">
+            {formatNumber(d.revenue)}
+          </p>
           <div className="flex items-baseline gap-2 mt-1 flex-wrap">
             <span className="text-xs text-muted-foreground tabular-nums">
               <span className="font-semibold text-foreground">{formatNumber(d.lines)}</span> lines
             </span>
             <span className="text-xs text-muted-foreground tabular-nums">
-              <span className="font-semibold text-foreground">{formatNumber(d.entries)}</span> entries
+              <span className="font-semibold text-foreground">{formatNumber(d.entries)}</span>{" "}
+              entries
             </span>
           </div>
         </div>
@@ -179,14 +193,21 @@ export function TenantBreakdown({ tenants }: { tenants: TenantRow[] }) {
             style={{ gridTemplateColumns: "6rem 5rem 5rem 5.5rem 1fr" }}
           >
             <span className="text-xs font-medium truncate">{t.tenantName}</span>
-            <span className="text-xs tabular-nums text-muted-foreground text-right">{formatNumber(t.entries)} ent</span>
-            <span className="text-xs tabular-nums text-muted-foreground text-right">{formatNumber(t.betUnits)} bu</span>
+            <span className="text-xs tabular-nums text-muted-foreground text-right">
+              {formatNumber(t.entries)} ent
+            </span>
+            <span className="text-xs tabular-nums text-muted-foreground text-right">
+              {formatNumber(t.betUnits)} bu
+            </span>
             <span className="text-xs tabular-nums font-semibold text-foreground text-right">
               {formatNumber(t.revenue)}
             </span>
             <div className="flex items-center gap-2">
               <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full bg-primary/60 transition-all" style={{ width: `${t.pct}%` }} />
+                <div
+                  className="h-full rounded-full bg-primary/60 transition-all"
+                  style={{ width: `${t.pct}%` }}
+                />
               </div>
               <span className="text-xs font-medium text-muted-foreground tabular-nums w-8 text-right shrink-0">
                 {t.pct.toFixed(0)}%

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 
 import type { GetDrawDetailOutput } from "@megawin/game-bingo18-application/use-cases/draws";
 import type {
@@ -227,11 +227,21 @@ export function useWinningEntries(drawId: string | undefined, enabled: boolean) 
  * Chi tiết đầy đủ 1 entry theo entryId — dùng cho dialog xem chi tiết từ Winning Entries Dialog.
  * Tự động toast lỗi + gọi `onNotFound` khi entry không tồn tại hoặc lỗi tải.
  */
-export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { onNotFound?: () => void } = {}) {
+export function useWinningEntryDetail(
+  entryId: string | null,
+  { onNotFound }: { onNotFound?: () => void } = {},
+) {
   const query = useQuery({
     queryKey: bingo18Keys.reportEntryById(entryId ?? ""),
-    queryFn: () => apiClient.get<GetEntryByIdOutput>(`/bingo18/reports/entries/${entryId}`).then((r) => r.entry),
+    queryFn: () =>
+      apiClient.get<GetEntryByIdOutput>(`/bingo18/reports/entries/${entryId}`).then((r) => r.entry),
     enabled: !!entryId,
+  });
+
+  // useEffectEvent: đọc `onNotFound` mới nhất mà không cần khai báo dependency —
+  // callback không nên trigger effect chạy lại.
+  const onNotFoundEvent = useEffectEvent(() => {
+    onNotFound?.();
   });
 
   useEffect(() => {
@@ -240,14 +250,13 @@ export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { 
       toast.error("Không thể tải thông tin phiếu cược", {
         description: "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     } else if (query.isFetched && !query.isLoading && !query.data) {
       toast.error("Không tìm thấy phiếu cược", {
         description: "Phiếu cược này không còn dữ liệu hoặc đã bị xóa.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.isError, query.isFetched, query.isLoading, query.data, entryId]);
 
   return query;
@@ -266,7 +275,9 @@ function useDrawAction<TBody = void>(
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
-      method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
+      method === "post"
+        ? apiClient.post(actionPath(drawId), body)
+        : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: bingo18Keys.all });
       toast.success(successMessage);
@@ -315,7 +326,11 @@ export function useTriggerResettle() {
 }
 
 export function useVoidDraw() {
-  return useDrawAction<{ reason: string }>((id) => `/bingo18/draws/${id}/void`, "post", "Đã huỷ kỳ quay.");
+  return useDrawAction<{ reason: string }>(
+    (id) => `/bingo18/draws/${id}/void`,
+    "post",
+    "Đã huỷ kỳ quay.",
+  );
 }
 
 export function useUpdateSchedule() {

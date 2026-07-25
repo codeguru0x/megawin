@@ -10,23 +10,25 @@ import type { PlayTypeRow, TenantRow } from "../../types";
 
 // ─── Color palette cho play modes Max 3D Pro ─────────────────────────────────
 
-export const PLAY_MODE_COLORS: Record<string, { dot: string; text: string; fill: string; bg: string; border: string }> =
-  {
-    multiNumber: {
-      dot: "bg-emerald-500",
-      text: "text-emerald-600 dark:text-emerald-400",
-      fill: "#10b981",
-      bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
-      border: "border-emerald-200/60 dark:border-emerald-800/40",
-    },
-    multiDigit: {
-      dot: "bg-violet-500",
-      text: "text-violet-600 dark:text-violet-400",
-      fill: "#8b5cf6",
-      bg: "bg-violet-50/60 dark:bg-violet-950/20",
-      border: "border-violet-200/60 dark:border-violet-800/40",
-    },
-  };
+export const PLAY_MODE_COLORS: Record<
+  string,
+  { dot: string; text: string; fill: string; bg: string; border: string }
+> = {
+  multiNumber: {
+    dot: "bg-emerald-500",
+    text: "text-emerald-600 dark:text-emerald-400",
+    fill: "#10b981",
+    bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
+    border: "border-emerald-200/60 dark:border-emerald-800/40",
+  },
+  multiDigit: {
+    dot: "bg-violet-500",
+    text: "text-violet-600 dark:text-violet-400",
+    fill: "#8b5cf6",
+    bg: "bg-violet-50/60 dark:bg-violet-950/20",
+    border: "border-violet-200/60 dark:border-violet-800/40",
+  },
+};
 
 const DEFAULT_COLOR = {
   dot: "bg-muted-foreground/40",
@@ -49,7 +51,16 @@ function MiniPie({ pct, fill, size = 44 }: { pct: number; fill: string; size?: n
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeWidth={5} className="text-muted/60" />
+      <title>{Math.round(pct)}%</title>
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={5}
+        className="text-muted/60"
+      />
       <circle
         cx={cx}
         cy={cy}
@@ -91,17 +102,24 @@ function PlayModeItem({ d }: { d: PlayTypeRow }) {
       </div>
       <div className="flex items-center gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-lg font-bold tabular-nums text-foreground leading-tight">{formatNumber(d.revenue)}</p>
+          <p className="text-lg font-bold tabular-nums text-foreground leading-tight">
+            {formatNumber(d.revenue)}
+          </p>
           <div className="flex items-baseline gap-2 mt-1 flex-wrap">
             <span className="text-xs text-muted-foreground tabular-nums">
               <span className="font-semibold text-foreground">{formatNumber(d.lines)}</span> cặp
             </span>
             <span className="text-xs text-muted-foreground tabular-nums">
-              <span className="font-semibold text-foreground">{formatNumber(d.entries)}</span> entries
+              <span className="font-semibold text-foreground">{formatNumber(d.entries)}</span>{" "}
+              entries
             </span>
             {d.avgPairsPerEntry > 0 && (
               <span className="text-xs text-muted-foreground tabular-nums">
-                ~<span className="font-semibold text-foreground">{d.avgPairsPerEntry.toFixed(1)}</span> cặp/entry
+                ~
+                <span className="font-semibold text-foreground">
+                  {d.avgPairsPerEntry.toFixed(1)}
+                </span>{" "}
+                cặp/entry
               </span>
             )}
           </div>
@@ -167,14 +185,21 @@ export function TenantBreakdown({ tenants }: { tenants: TenantRow[] }) {
             style={{ gridTemplateColumns: "6rem 5rem 5rem 5.5rem 1fr" }}
           >
             <span className="text-xs font-medium truncate">{t.tenantName}</span>
-            <span className="text-xs tabular-nums text-muted-foreground text-right">{formatNumber(t.entries)} ent</span>
-            <span className="text-xs tabular-nums text-muted-foreground text-right">{formatNumber(t.lines)} cặp</span>
+            <span className="text-xs tabular-nums text-muted-foreground text-right">
+              {formatNumber(t.entries)} ent
+            </span>
+            <span className="text-xs tabular-nums text-muted-foreground text-right">
+              {formatNumber(t.lines)} cặp
+            </span>
             <span className="text-xs tabular-nums font-semibold text-foreground text-right">
               {formatNumber(t.revenue)}
             </span>
             <div className="flex items-center gap-2">
               <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full bg-primary/60 transition-all" style={{ width: `${t.pct}%` }} />
+                <div
+                  className="h-full rounded-full bg-primary/60 transition-all"
+                  style={{ width: `${t.pct}%` }}
+                />
               </div>
               <span className="text-xs font-medium text-muted-foreground tabular-nums w-8 text-right shrink-0">
                 {t.pct.toFixed(0)}%

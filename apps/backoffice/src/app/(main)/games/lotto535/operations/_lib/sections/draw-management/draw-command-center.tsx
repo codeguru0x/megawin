@@ -322,10 +322,10 @@ export function DrawCommandCenter({
 
         {/* Overdue banners — cảnh báo scheduler/worker kẹt (dưới stepper). */}
         {closeOverdue && (
-          <OverdueBanner message="Đã quá giờ đóng bán nhưng kỳ vẫn đang mở bán — kiểm tra scheduler đóng bán." />
+          <OverdueBanner message="Đã quá giờ đóng bán nhưng kỳ vẫn đang mở bán — kiểm tra lịch đóng bán." />
         )}
         {publishOverdue && (
-          <OverdueBanner message="Đã quá giờ quay theo lịch nhưng chưa công bố kết quả — kiểm tra worker công bố kết quả." />
+          <OverdueBanner message="Đã quá giờ quay theo lịch nhưng chưa công bố kết quả — hãy công bố kết quả." />
         )}
 
         {/* Void info */}

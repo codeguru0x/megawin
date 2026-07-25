@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { DispatchOrderStatus, DispatchSourceKind } from "@megawin/tenant-dispatch/entities";
-import { DISPATCH_ORDER_STATUS_LABELS, DISPATCH_SOURCE_KIND_LABELS } from "@megawin/tenant-dispatch/shared/labels";
+import {
+  DISPATCH_ORDER_STATUS_LABELS,
+  DISPATCH_SOURCE_KIND_LABELS,
+} from "@megawin/tenant-dispatch/shared/labels";
 import { HelpCircle, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { FinancialDateRangePicker } from "@/components/date-picker";
@@ -11,10 +14,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-import { detectIdentity, IDENTITY_HINT, IDENTITY_KIND_LABELS, type IdentityKind } from "../_lib/identity-detector";
+import {
+  detectIdentity,
+  IDENTITY_HINT,
+  IDENTITY_KIND_LABELS,
+  type IdentityKind,
+} from "../_lib/identity-detector";
 import { useDispatchFilters } from "../_lib/use-filters";
 import { useDispatchFacets } from "../_lib/use-queries";
 import { TenantCombobox } from "./tenant-combobox";
@@ -106,7 +120,8 @@ export function DispatchFilterBar() {
   const hasAnyDimension = !!(tenantId || status || sourceKind || retryMode);
 
   // Count dimension filters đang active để hiện badge trên trigger Popover.
-  const activeDimensionCount = (tenantId ? 1 : 0) + (status ? 1 : 0) + (sourceKind ? 1 : 0) + (retryMode ? 1 : 0);
+  const activeDimensionCount =
+    (tenantId ? 1 : 0) + (status ? 1 : 0) + (sourceKind ? 1 : 0) + (retryMode ? 1 : 0);
 
   return (
     <div className="flex flex-col gap-3">
@@ -129,7 +144,10 @@ export function DispatchFilterBar() {
             {/* Detected-type badge bên phải input */}
             {searchInput.trim() && detectedKind && (
               <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
-                <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-medium uppercase tabular-nums">
+                <Badge
+                  variant="secondary"
+                  className="h-5 px-1.5 text-[10px] font-medium uppercase tabular-nums"
+                >
                   {IDENTITY_KIND_LABELS[detectedKind]}
                 </Badge>
               </span>
@@ -203,7 +221,10 @@ export function DispatchFilterBar() {
                 <SlidersHorizontal className="size-3.5" />
                 Bộ lọc
                 {activeDimensionCount > 0 && (
-                  <Badge variant="secondary" className="ml-0.5 h-4 min-w-4 px-1 text-[10px] tabular-nums">
+                  <Badge
+                    variant="secondary"
+                    className="ml-0.5 h-4 min-w-4 px-1 text-[10px] tabular-nums"
+                  >
                     {activeDimensionCount}
                   </Badge>
                 )}
@@ -235,12 +256,23 @@ export function DispatchFilterBar() {
 
                 {/* Status */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">Trạng thái</label>
+                  <label
+                    htmlFor="dispatch-filter-status"
+                    className="text-[11px] font-medium text-muted-foreground"
+                  >
+                    Trạng thái
+                  </label>
                   <Select
                     value={status ?? "all"}
-                    onValueChange={(v) => setStatus(v === "all" ? null : (v as DispatchOrderStatus))}
+                    onValueChange={(v) =>
+                      setStatus(v === "all" ? null : (v as DispatchOrderStatus))
+                    }
                   >
-                    <SelectTrigger size="sm" className="h-8 w-full text-xs">
+                    <SelectTrigger
+                      id="dispatch-filter-status"
+                      size="sm"
+                      className="h-8 w-full text-xs"
+                    >
                       <SelectValue placeholder="Trạng thái" />
                     </SelectTrigger>
                     <SelectContent>
@@ -256,12 +288,23 @@ export function DispatchFilterBar() {
 
                 {/* Source kind */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">Loại nguồn</label>
+                  <label
+                    htmlFor="dispatch-filter-source"
+                    className="text-[11px] font-medium text-muted-foreground"
+                  >
+                    Loại nguồn
+                  </label>
                   <Select
                     value={sourceKind ?? "all"}
-                    onValueChange={(v) => setSourceKind(v === "all" ? null : (v as DispatchSourceKind))}
+                    onValueChange={(v) =>
+                      setSourceKind(v === "all" ? null : (v as DispatchSourceKind))
+                    }
                   >
-                    <SelectTrigger size="sm" className="h-8 w-full text-xs">
+                    <SelectTrigger
+                      id="dispatch-filter-source"
+                      size="sm"
+                      className="h-8 w-full text-xs"
+                    >
                       <SelectValue placeholder="Loại nguồn" />
                     </SelectTrigger>
                     <SelectContent>
@@ -277,8 +320,14 @@ export function DispatchFilterBar() {
 
                 {/* Tenant */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">Tenant</label>
+                  <label
+                    htmlFor="dispatch-filter-tenant"
+                    className="text-[11px] font-medium text-muted-foreground"
+                  >
+                    Tenant
+                  </label>
                   <TenantCombobox
+                    id="dispatch-filter-tenant"
                     value={tenantId}
                     onChange={setTenantId}
                     options={facets?.tenants.map((t) => ({ value: t.value, count: t.count })) ?? []}
@@ -298,9 +347,14 @@ export function DispatchFilterBar() {
           <Search className="size-3.5 shrink-0 text-primary" />
           <span className="text-muted-foreground">
             Đang tra cứu theo{" "}
-            <span className="font-semibold text-foreground">{IDENTITY_KIND_LABELS[activeIdentity.kind]}</span>:
+            <span className="font-semibold text-foreground">
+              {IDENTITY_KIND_LABELS[activeIdentity.kind]}
+            </span>
+            :
           </span>
-          <code className="rounded bg-background px-1.5 py-0.5 font-mono">{activeIdentity.value}</code>
+          <code className="rounded bg-background px-1.5 py-0.5 font-mono">
+            {activeIdentity.value}
+          </code>
           <span className="text-muted-foreground">— các bộ lọc khác tạm bị tắt.</span>
         </div>
       )}

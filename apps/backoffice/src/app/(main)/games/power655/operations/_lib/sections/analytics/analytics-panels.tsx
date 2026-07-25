@@ -20,94 +20,96 @@ import type { PlayTypeRow, TenantRow } from "../../types";
 // ─── Color palette — Power 6/55 (red/orange theme) ──────────────────────────
 // Standard = red (brand color), các kiểu bao dùng màu phân biệt
 
-export const PLAY_TYPE_COLORS: Record<string, { dot: string; text: string; fill: string; bg: string; border: string }> =
-  {
-    standard: {
-      dot: "bg-red-500",
-      text: "text-red-600 dark:text-red-400",
-      fill: "#dc2626",
-      bg: "bg-red-50/60 dark:bg-red-950/20",
-      border: "border-red-200/60 dark:border-red-800/40",
-    },
-    /** Bao 5: 5 số → 50 lines (55-5=50, ghép bổ sung). Màu green để phân biệt với bao7-18. */
-    bao5: {
-      dot: "bg-green-500",
-      text: "text-green-600 dark:text-green-400",
-      fill: "#22c55e",
-      bg: "bg-green-50/60 dark:bg-green-950/20",
-      border: "border-green-200/60 dark:border-green-800/40",
-    },
-    bao7: {
-      dot: "bg-indigo-500",
-      text: "text-indigo-600 dark:text-indigo-400",
-      fill: "#6366f1",
-      bg: "bg-indigo-50/60 dark:bg-indigo-950/20",
-      border: "border-indigo-200/60 dark:border-indigo-800/40",
-    },
-    bao8: {
-      dot: "bg-blue-500",
-      text: "text-blue-600 dark:text-blue-400",
-      fill: "#3b82f6",
-      bg: "bg-blue-50/60 dark:bg-blue-950/20",
-      border: "border-blue-200/60 dark:border-blue-800/40",
-    },
-    bao9: {
-      dot: "bg-sky-500",
-      text: "text-sky-600 dark:text-sky-400",
-      fill: "#0ea5e9",
-      bg: "bg-sky-50/60 dark:bg-sky-950/20",
-      border: "border-sky-200/60 dark:border-sky-800/40",
-    },
-    bao10: {
-      dot: "bg-cyan-500",
-      text: "text-cyan-600 dark:text-cyan-400",
-      fill: "#06b6d4",
-      bg: "bg-cyan-50/60 dark:bg-cyan-950/20",
-      border: "border-cyan-200/60 dark:border-cyan-800/40",
-    },
-    bao11: {
-      dot: "bg-teal-500",
-      text: "text-teal-600 dark:text-teal-400",
-      fill: "#14b8a6",
-      bg: "bg-teal-50/60 dark:bg-teal-950/20",
-      border: "border-teal-200/60 dark:border-teal-800/40",
-    },
-    bao12: {
-      dot: "bg-emerald-500",
-      text: "text-emerald-600 dark:text-emerald-400",
-      fill: "#10b981",
-      bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
-      border: "border-emerald-200/60 dark:border-emerald-800/40",
-    },
-    bao13: {
-      dot: "bg-violet-500",
-      text: "text-violet-600 dark:text-violet-400",
-      fill: "#8b5cf6",
-      bg: "bg-violet-50/60 dark:bg-violet-950/20",
-      border: "border-violet-200/60 dark:border-violet-800/40",
-    },
-    bao14: {
-      dot: "bg-fuchsia-500",
-      text: "text-fuchsia-600 dark:text-fuchsia-400",
-      fill: "#d946ef",
-      bg: "bg-fuchsia-50/60 dark:bg-fuchsia-950/20",
-      border: "border-fuchsia-200/60 dark:border-fuchsia-800/40",
-    },
-    bao15: {
-      dot: "bg-pink-500",
-      text: "text-pink-600 dark:text-pink-400",
-      fill: "#ec4899",
-      bg: "bg-pink-50/60 dark:bg-pink-950/20",
-      border: "border-pink-200/60 dark:border-pink-800/40",
-    },
-    bao18: {
-      dot: "bg-rose-500",
-      text: "text-rose-600 dark:text-rose-400",
-      fill: "#f43f5e",
-      bg: "bg-rose-50/60 dark:bg-rose-950/20",
-      border: "border-rose-200/60 dark:border-rose-800/40",
-    },
-  };
+export const PLAY_TYPE_COLORS: Record<
+  string,
+  { dot: string; text: string; fill: string; bg: string; border: string }
+> = {
+  standard: {
+    dot: "bg-red-500",
+    text: "text-red-600 dark:text-red-400",
+    fill: "#dc2626",
+    bg: "bg-red-50/60 dark:bg-red-950/20",
+    border: "border-red-200/60 dark:border-red-800/40",
+  },
+  /** Bao 5: 5 số → 50 lines (55-5=50, ghép bổ sung). Màu green để phân biệt với bao7-18. */
+  bao5: {
+    dot: "bg-green-500",
+    text: "text-green-600 dark:text-green-400",
+    fill: "#22c55e",
+    bg: "bg-green-50/60 dark:bg-green-950/20",
+    border: "border-green-200/60 dark:border-green-800/40",
+  },
+  bao7: {
+    dot: "bg-indigo-500",
+    text: "text-indigo-600 dark:text-indigo-400",
+    fill: "#6366f1",
+    bg: "bg-indigo-50/60 dark:bg-indigo-950/20",
+    border: "border-indigo-200/60 dark:border-indigo-800/40",
+  },
+  bao8: {
+    dot: "bg-blue-500",
+    text: "text-blue-600 dark:text-blue-400",
+    fill: "#3b82f6",
+    bg: "bg-blue-50/60 dark:bg-blue-950/20",
+    border: "border-blue-200/60 dark:border-blue-800/40",
+  },
+  bao9: {
+    dot: "bg-sky-500",
+    text: "text-sky-600 dark:text-sky-400",
+    fill: "#0ea5e9",
+    bg: "bg-sky-50/60 dark:bg-sky-950/20",
+    border: "border-sky-200/60 dark:border-sky-800/40",
+  },
+  bao10: {
+    dot: "bg-cyan-500",
+    text: "text-cyan-600 dark:text-cyan-400",
+    fill: "#06b6d4",
+    bg: "bg-cyan-50/60 dark:bg-cyan-950/20",
+    border: "border-cyan-200/60 dark:border-cyan-800/40",
+  },
+  bao11: {
+    dot: "bg-teal-500",
+    text: "text-teal-600 dark:text-teal-400",
+    fill: "#14b8a6",
+    bg: "bg-teal-50/60 dark:bg-teal-950/20",
+    border: "border-teal-200/60 dark:border-teal-800/40",
+  },
+  bao12: {
+    dot: "bg-emerald-500",
+    text: "text-emerald-600 dark:text-emerald-400",
+    fill: "#10b981",
+    bg: "bg-emerald-50/60 dark:bg-emerald-950/20",
+    border: "border-emerald-200/60 dark:border-emerald-800/40",
+  },
+  bao13: {
+    dot: "bg-violet-500",
+    text: "text-violet-600 dark:text-violet-400",
+    fill: "#8b5cf6",
+    bg: "bg-violet-50/60 dark:bg-violet-950/20",
+    border: "border-violet-200/60 dark:border-violet-800/40",
+  },
+  bao14: {
+    dot: "bg-fuchsia-500",
+    text: "text-fuchsia-600 dark:text-fuchsia-400",
+    fill: "#d946ef",
+    bg: "bg-fuchsia-50/60 dark:bg-fuchsia-950/20",
+    border: "border-fuchsia-200/60 dark:border-fuchsia-800/40",
+  },
+  bao15: {
+    dot: "bg-pink-500",
+    text: "text-pink-600 dark:text-pink-400",
+    fill: "#ec4899",
+    bg: "bg-pink-50/60 dark:bg-pink-950/20",
+    border: "border-pink-200/60 dark:border-pink-800/40",
+  },
+  bao18: {
+    dot: "bg-rose-500",
+    text: "text-rose-600 dark:text-rose-400",
+    fill: "#f43f5e",
+    bg: "bg-rose-50/60 dark:bg-rose-950/20",
+    border: "border-rose-200/60 dark:border-rose-800/40",
+  },
+};
 
 const DEFAULT_COLOR = {
   dot: "bg-muted-foreground/40",
@@ -130,7 +132,16 @@ function MiniPie({ pct, fill, size = 44 }: { pct: number; fill: string; size?: n
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeWidth={5} className="text-muted/60" />
+      <title>{Math.round(pct)}%</title>
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={5}
+        className="text-muted/60"
+      />
       <circle
         cx={cx}
         cy={cy}
@@ -172,13 +183,16 @@ function PlayTypeItem({ d }: { d: PlayTypeRow }) {
       </div>
       <div className="flex items-center gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-lg font-bold tabular-nums text-foreground leading-tight">{formatNumber(d.revenue)}</p>
+          <p className="text-lg font-bold tabular-nums text-foreground leading-tight">
+            {formatNumber(d.revenue)}
+          </p>
           <div className="flex items-baseline gap-2 mt-1 flex-wrap">
             <span className="text-xs text-muted-foreground tabular-nums">
               <span className="font-semibold text-foreground">{formatNumber(d.lines)}</span> lines
             </span>
             <span className="text-xs text-muted-foreground tabular-nums">
-              <span className="font-semibold text-foreground">{formatNumber(d.entries)}</span> entries
+              <span className="font-semibold text-foreground">{formatNumber(d.entries)}</span>{" "}
+              entries
             </span>
           </div>
         </div>
@@ -243,14 +257,21 @@ export function TenantBreakdown({ tenants }: { tenants: TenantRow[] }) {
             style={{ gridTemplateColumns: "6rem 5rem 5rem 5.5rem 1fr" }}
           >
             <span className="text-xs font-medium truncate">{t.tenantName}</span>
-            <span className="text-xs tabular-nums text-muted-foreground text-right">{formatNumber(t.entries)} ent</span>
-            <span className="text-xs tabular-nums text-muted-foreground text-right">{formatNumber(t.lines)} ln</span>
+            <span className="text-xs tabular-nums text-muted-foreground text-right">
+              {formatNumber(t.entries)} ent
+            </span>
+            <span className="text-xs tabular-nums text-muted-foreground text-right">
+              {formatNumber(t.lines)} ln
+            </span>
             <span className="text-xs tabular-nums font-semibold text-foreground text-right">
               {formatNumber(t.revenue)}
             </span>
             <div className="flex items-center gap-2">
               <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full bg-red-500/60 transition-all" style={{ width: `${t.pct}%` }} />
+                <div
+                  className="h-full rounded-full bg-red-500/60 transition-all"
+                  style={{ width: `${t.pct}%` }}
+                />
               </div>
               <span className="text-xs font-medium text-muted-foreground tabular-nums w-8 text-right shrink-0">
                 {t.pct.toFixed(0)}%

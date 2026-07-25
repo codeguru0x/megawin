@@ -33,7 +33,10 @@ interface PlayTypeRow {
  * Mỗi pick số có màu riêng — gradient amber (Pick 1) → red (Pick 10).
  * Picks ít số → nhạt/ấm; picks nhiều số → đậm/đỏ.
  */
-const PICK_STYLES: Record<number, { dot: string; text: string; fill: string; bg: string; border: string }> = {
+const PICK_STYLES: Record<
+  number,
+  { dot: string; text: string; fill: string; bg: string; border: string }
+> = {
   1: {
     dot: "bg-amber-400",
     text: "text-amber-700 dark:text-amber-400",
@@ -142,7 +145,16 @@ function MiniDonut({ pct, fill, size }: { pct: number; fill: string; size: numbe
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="currentColor" strokeWidth={stroke} className="text-muted/60" />
+      <title>{Math.round(pct)}%</title>
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={stroke}
+        className="text-muted/60"
+      />
       <circle
         cx={cx}
         cy={cy}
@@ -200,9 +212,13 @@ function PickCard({ row }: { row: PlayTypeRow }) {
         <MiniDonut pct={row.pct} fill={s.fill} size={32} />
       </div>
       {/* Revenue */}
-      <p className="text-xs font-bold tabular-nums text-foreground leading-tight">{formatNumber(row.revenue)}</p>
+      <p className="text-xs font-bold tabular-nums text-foreground leading-tight">
+        {formatNumber(row.revenue)}
+      </p>
       {/* Count */}
-      <p className="text-xs text-muted-foreground tabular-nums leading-none">{formatNumber(row.selections)} lượt</p>
+      <p className="text-xs text-muted-foreground tabular-nums leading-none">
+        {formatNumber(row.selections)} lượt
+      </p>
     </div>
   );
 }
@@ -212,18 +228,28 @@ function PickCard({ row }: { row: PlayTypeRow }) {
 function SideBetCard({ row }: { row: PlayTypeRow }) {
   const s = SIDE_BET_STYLES[row.playType] ?? SIDE_BET_STYLES.bigSmall!;
   return (
-    <div className={cn("rounded-xl border p-3.5 flex flex-col gap-2 flex-1 transition-all", s.bg, s.border)}>
+    <div
+      className={cn(
+        "rounded-xl border p-3.5 flex flex-col gap-2 flex-1 transition-all",
+        s.bg,
+        s.border,
+      )}
+    >
       <div className="flex items-center gap-2">
         <div className={cn("size-2 rounded-full shrink-0", s.dot)} />
         <span className={cn("text-xs font-semibold flex-1", s.text)}>{s.label}</span>
       </div>
       <div className="flex items-center gap-3 flex-1">
         <div className="flex-1 min-w-0">
-          <p className="text-base font-bold tabular-nums text-foreground leading-tight">{formatNumber(row.revenue)}</p>
+          <p className="text-base font-bold tabular-nums text-foreground leading-tight">
+            {formatNumber(row.revenue)}
+          </p>
           <p className="text-xs text-muted-foreground tabular-nums mt-1">
-            <span className="font-semibold text-foreground">{formatNumber(row.selections)}</span> lượt
+            <span className="font-semibold text-foreground">{formatNumber(row.selections)}</span>{" "}
+            lượt
             {" · "}
-            <span className="font-semibold text-foreground">{formatNumber(row.entries)}</span> entries
+            <span className="font-semibold text-foreground">{formatNumber(row.entries)}</span>{" "}
+            entries
           </p>
         </div>
         <MiniDonut pct={row.pct} fill={s.fill} size={46} />
@@ -239,7 +265,9 @@ const ALL_PICKS = Array.from({ length: 10 }, (_, i) => `pick${i + 1}`);
 
 export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
   // Luôn hiển thị đủ 10 pick theo thứ tự 1→10 (fill zero nếu chưa có data)
-  const pickMap = new Map(playTypes.filter((r) => r.playType.startsWith("pick")).map((r) => [r.playType, r]));
+  const pickMap = new Map(
+    playTypes.filter((r) => r.playType.startsWith("pick")).map((r) => [r.playType, r]),
+  );
   const picks = ALL_PICKS.map(
     (pt) =>
       pickMap.get(pt) ?? {
@@ -267,7 +295,9 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
             </div>
             <div>
               <CardTitle className="text-sm font-semibold">Phân bổ kiểu chơi</CardTitle>
-              <CardDescription className="text-xs mt-0.5">Pick 1–10 · Lớn/Nhỏ · Chẵn/Lẻ</CardDescription>
+              <CardDescription className="text-xs mt-0.5">
+                Pick 1–10 · Lớn/Nhỏ · Chẵn/Lẻ
+              </CardDescription>
             </div>
           </div>
           <div className="flex items-center gap-1.5 text-xs tabular-nums text-muted-foreground">
@@ -299,7 +329,9 @@ export function PlayTypeCard({ playTypes }: { playTypes: PlayTypeRow[] }) {
 
             {/* ── Cột phải: Side bets stretch full height ── */}
             <div className="flex flex-col gap-2">
-              <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground/50">Side Bets</p>
+              <p className="text-xs uppercase tracking-wider font-semibold text-muted-foreground/50">
+                Side Bets
+              </p>
               {sideBets.length === 0 ? (
                 <p className="text-xs text-muted-foreground/50 py-2">Chưa có dữ liệu</p>
               ) : (
@@ -341,7 +373,9 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Phân tích theo đại lý</CardTitle>
-            <CardDescription className="text-xs mt-0.5">Doanh thu · Hoa hồng · Người chơi</CardDescription>
+            <CardDescription className="text-xs mt-0.5">
+              Doanh thu · Hoa hồng · Người chơi
+            </CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -375,9 +409,13 @@ export function TenantBreakdownCard({ tenants }: { tenants: TenantRow[] }) {
                       {i + 1}
                     </span>
                     <span className="text-sm font-medium truncate">{t.tenantId}</span>
-                    <span className="text-xs text-muted-foreground/50 shrink-0">{t.pct.toFixed(0)}%</span>
+                    <span className="text-xs text-muted-foreground/50 shrink-0">
+                      {t.pct.toFixed(0)}%
+                    </span>
                   </div>
-                  <span className="relative text-right tabular-nums text-sm">{formatNumber(t.entries)}</span>
+                  <span className="relative text-right tabular-nums text-sm">
+                    {formatNumber(t.entries)}
+                  </span>
                   <span className="relative text-right tabular-nums text-sm text-muted-foreground">
                     {formatNumber(t.players)}
                   </span>
