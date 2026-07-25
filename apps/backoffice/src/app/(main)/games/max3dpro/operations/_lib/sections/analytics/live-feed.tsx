@@ -15,6 +15,15 @@ import { PLAY_MODE_COLORS } from "./analytics-panels";
 import { TripletDisplay } from "@/components/games/max3d/triplet-display";
 import type { LiveFeedEntry } from "../../types";
 
+/**
+ * Ngưỡng "cược lớn" (VND): entry có amount ≥ ngưỡng được highlight border đỏ +
+ * chip để người trực ca chú ý dòng tiền lớn bất thường. Max3D Pro có giải ĐB
+ * tới 2 tỷ, cược multiNumber (tới 20 bộ ba → 380 cặp/kỳ) có thể lên tới vài
+ * triệu/kỳ — cao hơn game không-triplet (Keno/Bingo18). Đặt baseline
+ * 2.000.000 (quan sát thực tế rồi tinh chỉnh, xem ghi chú ở Keno LiveFeed).
+ */
+const LARGE_BET_THRESHOLD = 2_000_000;
+
 export function LiveFeed({
   entries,
   isSettled = false,
@@ -46,14 +55,18 @@ export function LiveFeed({
           <div className="space-y-0.5">
             {entries.map((e, i) => {
               const color = PLAY_MODE_COLORS[e.playMode];
+              const isLargeBet = e.amount >= LARGE_BET_THRESHOLD;
               return (
                 <div
                   key={e.entryId}
                   className={cn(
                     "rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/40 border-l-2",
                     i === 0 && "bg-muted/20",
+                    isLargeBet && "bg-red-500/5",
                   )}
-                  style={{ borderLeftColor: color?.fill ?? "transparent" }}
+                  style={{
+                    borderLeftColor: isLargeBet ? "#ef4444" : (color?.fill ?? "transparent"),
+                  }}
                 >
                   <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
                     {/* Row 1: play mode label */}
@@ -72,6 +85,11 @@ export function LiveFeed({
                       >
                         {e.playModeLabel}
                       </span>
+                      {isLargeBet && (
+                        <span className="inline-flex h-4 items-center rounded-full bg-red-500/15 px-1.5 text-[10px] font-semibold text-red-600 dark:text-red-400 shrink-0">
+                          Cược lớn
+                        </span>
+                      )}
                     </div>
                     <div />
 

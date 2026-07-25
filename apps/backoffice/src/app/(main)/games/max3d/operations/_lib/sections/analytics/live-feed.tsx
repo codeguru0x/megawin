@@ -24,6 +24,15 @@ const COMBO_LABELS: Record<string, string> = {
   [PlayType.Combo6]: "Tổ hợp 6",
 };
 
+/**
+ * Ngưỡng "cược lớn" (VND): entry có amount ≥ ngưỡng được highlight border đỏ +
+ * chip để người trực ca chú ý dòng tiền lớn bất thường. Max3D có giải ĐB Plus
+ * tới 1 tỷ, cược multiNumber/multiDigit nhiều board × betCount có thể lên tới
+ * vài triệu/kỳ — cao hơn game không-triplet (Keno/Bingo18). Đặt baseline
+ * 2.000.000 (quan sát thực tế rồi tinh chỉnh, xem ghi chú ở Keno LiveFeed).
+ */
+const LARGE_BET_THRESHOLD = 2_000_000;
+
 export function LiveFeed({
   entries,
   isSettled = false,
@@ -61,6 +70,7 @@ export function LiveFeed({
               const modeLabel = isPlus ? "3D+" : "";
               const comboLabel = COMBO_LABELS[e.playType] ?? "";
               const displayLabel = [modeLabel, comboLabel].filter(Boolean).join(" ");
+              const isLargeBet = e.amount >= LARGE_BET_THRESHOLD;
 
               return (
                 <div
@@ -68,28 +78,40 @@ export function LiveFeed({
                   className={cn(
                     "rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/40 border-l-2",
                     i === 0 && "bg-muted/20",
+                    isLargeBet && "bg-red-500/5",
                   )}
-                  style={{ borderLeftColor: color?.fill ?? "transparent" }}
+                  style={{
+                    borderLeftColor: isLargeBet ? "#ef4444" : (color?.fill ?? "transparent"),
+                  }}
                 >
                   <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
                     {/* Row 1: play type label (chỉ hiển thị khi khác default) */}
-                    {displayLabel ? (
+                    {displayLabel || isLargeBet ? (
                       <>
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <div
-                            className={cn(
-                              "size-1.5 rounded-full shrink-0",
-                              color?.dot ?? "bg-muted-foreground",
-                            )}
-                          />
-                          <span
-                            className={cn(
-                              "text-xs font-semibold truncate",
-                              color?.text ?? "text-muted-foreground",
-                            )}
-                          >
-                            {displayLabel}
-                          </span>
+                          {displayLabel && (
+                            <>
+                              <div
+                                className={cn(
+                                  "size-1.5 rounded-full shrink-0",
+                                  color?.dot ?? "bg-muted-foreground",
+                                )}
+                              />
+                              <span
+                                className={cn(
+                                  "text-xs font-semibold truncate",
+                                  color?.text ?? "text-muted-foreground",
+                                )}
+                              >
+                                {displayLabel}
+                              </span>
+                            </>
+                          )}
+                          {isLargeBet && (
+                            <span className="inline-flex h-4 items-center rounded-full bg-red-500/15 px-1.5 text-[10px] font-semibold text-red-600 dark:text-red-400 shrink-0">
+                              Cược lớn
+                            </span>
+                          )}
                         </div>
                         <div />
                       </>

@@ -3,6 +3,7 @@
 import { CircleDollarSign, FileText, Grid2x2, Users, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@megawin/shared/utils";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import type { OpsKpi } from "../../types";
 
 interface KpiCardProps {
@@ -78,7 +79,7 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
         icon={CircleDollarSign}
         iconBg="bg-orange-100 dark:bg-orange-900/50"
         iconColor="text-orange-600 dark:text-orange-400"
-        label="Doanh thu thuần"
+        label={REPORT_COLUMN_LABELS.netRevenueAfterCommission}
         value={formatNumber(kpi.netRevenue)}
         sub="Sau hoa hồng đại lý"
       />

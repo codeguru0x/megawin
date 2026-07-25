@@ -61,10 +61,7 @@ export function ResultSection() {
     return {
       // Mega 6/45: 6 số chính (01-45), không có winningSpecial
       winningNumbers: d.result.winningNumbers as [string, string, string, string, string, string],
-      settledAt:
-        d.result.publishedAt instanceof Date
-          ? d.result.publishedAt.toISOString()
-          : String(d.result.publishedAt ?? ""),
+      settledAt: d.result.publishedAt,
       tiers,
       financial: {
         totalRevenue: d.financial?.totalRevenue ?? 0,

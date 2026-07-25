@@ -66,10 +66,7 @@ export function ResultSection() {
     return {
       winningMain: d.result.winningMain as [string, string, string, string, string, string],
       bonusNumber: d.result.bonusNumber ?? "",
-      settledAt:
-        d.result.publishedAt instanceof Date
-          ? d.result.publishedAt.toISOString()
-          : String(d.result.publishedAt ?? ""),
+      settledAt: d.result.publishedAt,
       tiers,
       financial: {
         totalRevenue: d.financial?.totalRevenue ?? 0,

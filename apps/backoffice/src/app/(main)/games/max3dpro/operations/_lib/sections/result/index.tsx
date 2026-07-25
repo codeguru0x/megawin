@@ -430,8 +430,7 @@ export function ResultSection() {
       first: r.first as [string, string, string, string],
       second: r.second as [string, string, string, string, string, string],
       third: r.third as [string, string, string, string, string, string, string, string],
-      settledAt:
-        r.publishedAt instanceof Date ? r.publishedAt.toISOString() : String(r.publishedAt ?? ""),
+      settledAt: r.publishedAt,
       tiers,
       financial: {
         totalRevenue: d.financial?.totalRevenue ?? 0,

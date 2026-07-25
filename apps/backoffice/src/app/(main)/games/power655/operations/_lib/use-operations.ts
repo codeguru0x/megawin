@@ -336,7 +336,7 @@ export function useTriggerSettle() {
  *
  * Hiển thị nút này CHỈ khi:
  *   - `draw.settledAt` != null (đã từng settle).
- *   - `draw.resultPublishedAt > draw.settledAt` (có kết quả mới sau settle).
+ *   - `draw.drawResultAt > draw.settledAt` (có kết quả mới sau settle).
  */
 export function useTriggerResettle() {
   return useDrawAction<{ dbaConfirmed: boolean }>(

@@ -1,0 +1,11 @@
+# File này tồn tại CHỈ để Biome tìm thấy VCS ignore file.
+#
+# `biome.json` ở đây có `vcs.useIgnoreFile: true` nhưng Biome 2.x tìm ignore
+# file bắt đầu từ THƯ MỤC CHỨA `biome.json`, không tự đi lên repo root dù đã
+# cấu hình `vcs.root` (bug đã biết: https://github.com/biomejs/biome/issues/6964).
+# Không có file này → `biome lint`/`check` fail thẳng với lỗi cấu hình:
+# "Biome couldn't find an ignore file in the following folder: apps/backoffice".
+#
+# Nội dung thực tế không quan trọng — build output (.next, dist, out) đã bị
+# loại qua `files.includes` trong biome.json, và git ignore thật vẫn nằm ở
+# root .gitignore. Để trống có chủ đích, không trùng lặp rule với root.

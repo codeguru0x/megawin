@@ -19,7 +19,18 @@ export interface DrawSelectorItem {
   salesOpenAt?: string;
   /** Thời điểm đóng bán (ISO 8601). */
   salesCloseAt: string;
-  /** Thời điểm công bố kết quả (ISO 8601). */
+  /**
+   * Thời điểm quay theo lịch (ISO 8601) — luôn có, lấy từ `DrawDoc.drawTime`,
+   * không phụ thuộc trạng thái kỳ. Dùng cho countdown "Quay số sau" và
+   * overdue-publish check ở command center (khác `drawResultAt` — mốc quay
+   * *thực tế* chỉ có sau khi staff công bố kết quả).
+   */
+  scheduledDrawAt: string;
+  /**
+   * Thời điểm công bố kết quả thực tế (ISO 8601) — undefined nếu chưa publish.
+   * KHÔNG fallback về `scheduledDrawAt`: dùng để so sánh với `settledAt` nhằm
+   * phát hiện republish (xem `shouldShowResettle`).
+   */
   drawResultAt?: string;
   status: DrawStatus;
   /** Ngày tài chính của kỳ (YYYY-MM-DD). */
@@ -32,12 +43,6 @@ export interface DrawSelectorItem {
    * Dùng để UI xác định kỳ đủ điều kiện resettle.
    */
   settledAt?: string;
-  /**
-   * Thời điểm công bố kết quả gần nhất (ISO 8601).
-   * Dùng để so sánh với `settledAt` — nếu `resultPublishedAt > settledAt`
-   * thì đã có kết quả mới và có thể hiện nút "Kết sổ lại".
-   */
-  resultPublishedAt?: string;
 }
 
 export interface GetDrawSelectorOutput {

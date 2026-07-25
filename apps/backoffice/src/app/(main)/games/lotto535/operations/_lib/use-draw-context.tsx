@@ -107,17 +107,18 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
           drawId: remoteDraw.drawId,
           drawNo: remoteDraw.drawNo as 1 | 2,
           drawDate: remoteDraw.drawDate.split("-").reverse().join("/"),
-          drawTime: remoteDraw.drawTime as unknown as string,
-          salesOpenAt: remoteDraw.sales?.openAt as unknown as string | undefined,
-          salesCloseAt: (remoteDraw.sales?.closeAt as unknown as string) ?? "",
-          drawResultAt: remoteDraw.result?.publishedAt as unknown as string | undefined,
+          drawTime: remoteDraw.drawTime,
+          salesOpenAt: remoteDraw.sales?.openAt,
+          salesCloseAt: remoteDraw.sales?.closeAt ?? "",
+          // drawTime = giờ quay theo lịch, luôn có — cấp cho countdown/overdue-publish.
+          scheduledDrawAt: remoteDraw.drawTime,
+          drawResultAt: remoteDraw.result?.publishedAt,
           status: remoteDraw.status,
           financialDate: remoteDraw.financialDate ?? remoteDraw.drawDate,
           group: DrawSelectorGroup.Recent,
-          // High-water mark + mốc result mới — BẮT BUỘC có để nút "Kết sổ lại"
-          // hiển thị đúng cho kỳ historical (không nằm trong selector list).
-          settledAt: remoteDraw.settledAt as unknown as string | undefined,
-          resultPublishedAt: remoteDraw.result?.publishedAt as unknown as string | undefined,
+          // High-water mark — BẮT BUỘC có để nút "Kết sổ lại" hiển thị đúng
+          // cho kỳ historical (không nằm trong selector list).
+          settledAt: remoteDraw.settledAt,
         }
       : undefined;
   const draw = drawFromSelector ?? drawFromRemote;

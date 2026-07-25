@@ -36,6 +36,13 @@ export interface DrawSelectorItem {
   salesOpenAt?: string;
   /** Thời điểm đóng bán (ISO 8601). */
   salesCloseAt: string;
+  /**
+   * Thời điểm quay theo lịch (ISO 8601) — luôn có, lấy từ `DrawDoc.drawTime`,
+   * không phụ thuộc trạng thái kỳ. Dùng cho countdown "Quay số sau" và
+   * overdue-publish check ở command center (khác `drawResultAt` — mốc quay
+   * *thực tế* chỉ có sau khi staff công bố kết quả).
+   */
+  scheduledDrawAt: string;
   /** Thời điểm quay số dự kiến (ISO 8601) — undefined nếu chưa có. */
   drawResultAt?: string;
   /** Trạng thái kỳ quay. */

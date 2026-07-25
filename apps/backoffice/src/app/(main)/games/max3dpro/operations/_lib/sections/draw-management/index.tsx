@@ -105,7 +105,7 @@ export function DrawManagementSection() {
       third: r.third as [string, string, string, string, string, string, string, string],
       // settledAt = thời điểm kết sổ thật (hiển thị ở bước "Kết sổ" của stepper).
       // Lấy từ d.settledAt, KHÔNG phải result.publishedAt (đó là thời điểm công bố KQ).
-      settledAt: d.settledAt instanceof Date ? d.settledAt.toISOString() : undefined,
+      settledAt: d.settledAt,
       tiers,
       financial: {
         totalRevenue: d.financial?.totalRevenue ?? 0,
@@ -143,10 +143,7 @@ export function DrawManagementSection() {
     return {
       reason: d.voidInfo.reason,
       voidedBy: d.voidInfo.voidedBy ?? "system",
-      voidedAt:
-        d.voidInfo.voidedAt instanceof Date
-          ? d.voidInfo.voidedAt.toISOString()
-          : String(d.voidInfo.voidedAt ?? ""),
+      voidedAt: d.voidInfo.voidedAt,
       refundAmount: d.voidSummary?.totalRefundAmount ?? 0,
       entryCount: d.voidSummary?.totalVoidedEntries ?? 0,
     };

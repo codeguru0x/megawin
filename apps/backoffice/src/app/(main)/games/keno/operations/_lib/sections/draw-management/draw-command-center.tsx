@@ -11,30 +11,39 @@
  * - Màu accent: orange/amber (brand Keno)
  */
 
+import Link from "next/link";
+
+import { DrawStatus } from "@megawin/game-core/entities";
+import { displayVNDateTime, formatNumber } from "@megawin/shared/utils";
 import {
-  CheckCircle2,
-  Circle,
-  Clock,
-  Lock,
-  Unlock,
-  Radio,
-  Pencil,
-  Trash2,
-  RotateCcw,
-  FileText,
-  ChevronRight,
   AlertTriangle,
   Ban,
-  Loader2,
   CalendarCheck,
   ClipboardPen,
+  FileText,
+  Loader2,
   MoreVertical,
+  Pencil,
+  Radio,
+  RotateCcw,
+  Trash2,
+  Unlock,
 } from "lucide-react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { DrawStatus } from "@megawin/game-core/entities";
-import { formatNumber, displayVNTime, displayVNDateTime } from "@megawin/shared/utils";
+
 import { KenoDrawStatusBadge } from "@/components/games/keno/draw-status-badge";
+import {
+  Countdown,
+  DEFAULT_OVERDUE_GRACE,
+  OverdueBanner,
+  useOverdue,
+} from "@/components/games/shared/draw-countdown";
+import {
+  getDrawLifecycleSteps,
+  LifecycleStepper,
+} from "@/components/games/shared/draw-lifecycle-stepper";
+import { getNextAction } from "@/components/games/shared/draw-next-action";
+import { isResettleSession, shouldShowResettle } from "@/components/games/shared/draw-resettle";
+import { ScheduleChips } from "@/components/games/shared/draw-schedule-chips";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -44,15 +53,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { DrawSelectorItem } from "../../use-operations";
-import type { KenoDrawResult, VoidInfo } from "../../types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  Countdown,
-  OverdueBanner,
-  useOverdue,
-  DEFAULT_OVERDUE_GRACE,
-} from "@/components/games/shared/draw-countdown";
+import { cn } from "@/lib/utils";
+
+import type { KenoDrawResult, VoidInfo } from "../../types";
+import type { DrawSelectorItem } from "../../use-operations";
 
 interface DrawCommandProps {
   draw: DrawSelectorItem;
@@ -68,295 +73,10 @@ interface DrawCommandProps {
   onVoidDraw?: () => void;
 }
 
-// ─── Lifecycle Stepper ───────────────────────────────────────────────────────
-
-type StepState = "done" | "active" | "pending";
-
-interface Step {
-  label: string;
-  time?: string;
-  state: StepState;
-}
-
-function getSteps(draw: DrawSelectorItem, result?: KenoDrawResult): Step[] {
-  const s = draw.status;
-  const order = [
-    DrawStatus.Scheduled,
-    DrawStatus.SalesOpen,
-    DrawStatus.SalesClosed,
-    DrawStatus.Published,
-    DrawStatus.Settling,
-    DrawStatus.Settled,
-  ];
-  type OrderedStatus = (typeof order)[number];
-  const done = (statuses: string[]) =>
-    statuses.some((st) => order.indexOf(s as OrderedStatus) > order.indexOf(st as OrderedStatus));
-  const active = (target: string) => s === target;
-
-  return [
-    {
-      label: "Mở bán",
-      // salesOpenAt chỉ có sau khi kỳ đã mở bán — kỳ Scheduled sẽ không hiện giờ
-      time: draw.salesOpenAt ? displayVNTime(draw.salesOpenAt) : undefined,
-      state: active(DrawStatus.SalesOpen)
-        ? "active"
-        : done([DrawStatus.SalesOpen])
-          ? "done"
-          : "pending",
-    },
-    {
-      label: "Đóng bán",
-      time: displayVNTime(draw.salesCloseAt),
-      state: active(DrawStatus.SalesClosed)
-        ? "active"
-        : done([DrawStatus.SalesClosed])
-          ? "done"
-          : "pending",
-    },
-    {
-      label: "Công bố KQ",
-      // drawResultAt = thời điểm publish thực tế; fallback giờ quay theo lịch khi chưa publish
-      time: draw.drawResultAt
-        ? displayVNTime(draw.drawResultAt)
-        : displayVNTime(draw.scheduledDrawAt),
-      state: active(DrawStatus.Published)
-        ? "active"
-        : done([DrawStatus.Published])
-          ? "done"
-          : "pending",
-    },
-    {
-      label: "Kết sổ",
-      // Ưu tiên settledAt từ selector (luôn có sau settle) — result chỉ có khi đã load detail
-      time: draw.settledAt ? displayVNTime(draw.settledAt) : undefined,
-      state: active(DrawStatus.Settling) ? "active" : s === DrawStatus.Settled ? "done" : "pending",
-    },
-  ];
-}
-
-function LifecycleStepper({ steps }: { steps: Step[] }) {
-  return (
-    <div className="flex items-start w-full">
-      {steps.map((step, i) => (
-        <div key={i} className="flex items-start flex-1 min-w-0">
-          <div className="flex flex-col items-center gap-1 shrink-0">
-            <div
-              className={cn(
-                "flex size-6 items-center justify-center rounded-full border-2 transition-all",
-                step.state === "done" && "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40",
-                step.state === "active" && "border-orange-500 bg-orange-50 dark:bg-orange-950/40",
-                step.state === "pending" && "border-border bg-background",
-              )}
-            >
-              {step.state === "done" ? (
-                <CheckCircle2 className="size-3 text-emerald-500" />
-              ) : step.state === "active" ? (
-                <span className="size-1.5 rounded-full bg-orange-500 animate-pulse" />
-              ) : (
-                <Circle className="size-3 text-muted-foreground/30" />
-              )}
-            </div>
-            <div className="text-center w-16">
-              <p
-                className={cn(
-                  "text-[11px] font-medium leading-tight",
-                  step.state === "active" && "text-foreground font-semibold",
-                  step.state === "done" && "text-muted-foreground",
-                  step.state === "pending" && "text-muted-foreground/40",
-                )}
-              >
-                {step.label}
-              </p>
-              {step.time && (
-                <p className="text-[9px] font-mono tabular-nums text-muted-foreground/60 mt-0.5">
-                  {step.time}
-                </p>
-              )}
-            </div>
-          </div>
-          {i < steps.length - 1 && (
-            <div className="flex-1 mt-3 mx-1 min-w-4">
-              <div
-                className={cn(
-                  "h-[2px] w-full rounded-full",
-                  steps[i + 1]?.state !== "pending" ? "bg-emerald-400" : "bg-border/60",
-                )}
-              />
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Resettle detection helper ───────────────────────────────────────────────
-
-/**
- * Phân biệt 2 case có cùng `status === Published`:
- *   - draw vừa publish kết quả lần đầu, chưa từng settle → hiển thị "Kết sổ".
- *   - draw đã settle ≥ 1 lần và staff vừa republish kết quả mới → hiển thị "Kết sổ lại".
- *
- * Edge case quan trọng: nếu `settledAt` null hoặc `publishedAt <= settledAt`
- * → KHÔNG cho phép Resettle (chống staff bấm nhầm; backend cũng có guard tương ứng).
- */
-function shouldShowResettle(draw: DrawSelectorItem): boolean {
-  if (draw.status !== DrawStatus.Published) return false;
-  if (!draw.settledAt) return false;
-  if (!draw.drawResultAt) return false;
-  return new Date(draw.drawResultAt).getTime() > new Date(draw.settledAt).getTime();
-}
-
-/**
- * Khi draw đang `Settling`, xác định lần kết sổ đang chạy là Settle (lần đầu)
- * hay Resettle (kết sổ lại sau republish) — để nút "Thử lại" trong banner
- * gọi đúng action.
- *
- * Cùng tiêu chí với {@link shouldShowResettle} nhưng KHÔNG ràng buộc status
- * `Published` (status hiện tại là `Settling`): nếu đã settle ≥ 1 lần và kết quả
- * mới hơn lần settle trước → phiên này là Resettle.
- */
-function isResettleSession(draw: DrawSelectorItem): boolean {
-  if (!draw.settledAt) return false;
-  if (!draw.drawResultAt) return false;
-  return new Date(draw.drawResultAt).getTime() > new Date(draw.settledAt).getTime();
-}
-
-// ─── Next Action ─────────────────────────────────────────────────────────────
-
-function getNextAction(
-  draw: DrawSelectorItem,
-  handlers: Partial<DrawCommandProps>,
-  isResettleReady: boolean,
-) {
-  switch (draw.status) {
-    case DrawStatus.Scheduled:
-      return { label: "Mở bán", handler: handlers.onOpenSales, icon: Unlock, className: "" };
-    case DrawStatus.SalesOpen:
-      return {
-        label: "Đóng bán",
-        className: "bg-amber-600 hover:bg-amber-700 text-white",
-        handler: handlers.onCloseSales,
-        icon: Lock,
-      };
-    case DrawStatus.SalesClosed:
-      return {
-        label: "Công bố kết quả",
-        className: "bg-violet-600 hover:bg-violet-700 text-white",
-        handler: handlers.onPublishResult,
-        icon: Radio,
-      };
-    case DrawStatus.Published:
-      if (isResettleReady) {
-        return {
-          label: "Kết sổ lại",
-          handler: handlers.onTriggerResettle,
-          icon: RotateCcw,
-          className: "bg-orange-600 hover:bg-orange-700 text-white",
-        };
-      }
-      return {
-        label: "Kết sổ",
-        handler: handlers.onTriggerSettle,
-        icon: ChevronRight,
-        className: "",
-      };
-    default:
-      return null;
-  }
-}
-
-// ─── Schedule Chips ──────────────────────────────────────────────────────────
-
-function ScheduleChips({ draw }: { draw: DrawSelectorItem }) {
-  const now = new Date();
-  const items: {
-    icon: React.ReactNode;
-    label: string;
-    time: string;
-    fullDateTime: string;
-    active: boolean;
-    color: string;
-  }[] = [];
-
-  if (draw.salesOpenAt) {
-    const past = new Date(draw.salesOpenAt) < now;
-    items.push({
-      icon: (
-        <Unlock
-          className={cn("size-3.5 shrink-0", past ? "text-emerald-400" : "text-emerald-500")}
-        />
-      ),
-      label: "Mở bán",
-      time: displayVNTime(draw.salesOpenAt),
-      fullDateTime: displayVNDateTime(draw.salesOpenAt),
-      active: !past,
-      color: "text-emerald-600 dark:text-emerald-400",
-    });
-  }
-
-  const closePast = new Date(draw.salesCloseAt) < now;
-  items.push({
-    icon: (
-      <Lock className={cn("size-3.5 shrink-0", closePast ? "text-amber-400" : "text-amber-500")} />
-    ),
-    label: "Đóng bán",
-    time: displayVNTime(draw.salesCloseAt),
-    fullDateTime: displayVNDateTime(draw.salesCloseAt),
-    active: !closePast,
-    color: "text-amber-600 dark:text-amber-400",
-  });
-
-  if (draw.drawResultAt) {
-    const past = new Date(draw.drawResultAt) < now;
-    items.push({
-      icon: (
-        <Clock className={cn("size-3.5 shrink-0", past ? "text-violet-400" : "text-violet-500")} />
-      ),
-      label: "Quay số",
-      time: displayVNTime(draw.drawResultAt),
-      fullDateTime: displayVNDateTime(draw.drawResultAt),
-      active: !past,
-      color: "text-violet-600 dark:text-violet-400",
-    });
-  }
-
-  return (
-    <div className="flex items-center gap-3">
-      {items.map((item) => (
-        <Tooltip key={item.label}>
-          <TooltipTrigger asChild>
-            <div className="flex items-center gap-1.5 cursor-default select-none">
-              {item.icon}
-              <span
-                className={cn("text-xs", item.active ? "text-foreground" : "text-muted-foreground")}
-              >
-                {item.label}
-              </span>
-              <span
-                className={cn(
-                  "text-xs font-mono tabular-nums font-bold",
-                  item.active ? item.color : "text-muted-foreground",
-                )}
-              >
-                {item.time}
-              </span>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="font-mono text-xs">
-            {item.fullDateTime}
-          </TooltipContent>
-        </Tooltip>
-      ))}
-    </div>
-  );
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function DrawCommandCenter({
   draw,
-  result,
   voidInfo,
   onOpenSales,
   onCloseSales,
@@ -368,7 +88,7 @@ export function DrawCommandCenter({
   onVoidDraw,
 }: DrawCommandProps) {
   const status = draw.status;
-  const steps = getSteps(draw, result);
+  const steps = getDrawLifecycleSteps(draw);
   const isResettleReady = shouldShowResettle(draw);
   const nextAction = getNextAction(
     draw,

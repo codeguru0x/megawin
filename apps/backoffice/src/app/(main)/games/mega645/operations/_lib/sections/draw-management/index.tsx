@@ -106,10 +106,7 @@ export function DrawManagementSection() {
     return {
       // Mega 6/45: 6 số chính (01-45), cast cứng vì luôn đúng từ DB
       winningNumbers: d.result.winningNumbers as [string, string, string, string, string, string],
-      settledAt:
-        d.result.publishedAt instanceof Date
-          ? d.result.publishedAt.toISOString()
-          : String(d.result.publishedAt ?? ""),
+      settledAt: d.result.publishedAt,
       tiers,
       financial: {
         totalRevenue: d.financial?.totalRevenue ?? 0,
@@ -146,10 +143,7 @@ export function DrawManagementSection() {
     return {
       reason: d.voidInfo.reason,
       voidedBy: d.voidInfo.voidedBy ?? "system",
-      voidedAt:
-        d.voidInfo.voidedAt instanceof Date
-          ? d.voidInfo.voidedAt.toISOString()
-          : String(d.voidInfo.voidedAt ?? ""),
+      voidedAt: d.voidInfo.voidedAt,
       refundAmount: d.voidSummary?.totalRefundAmount ?? 0,
       entryCount: d.voidSummary?.totalVoidedEntries ?? 0,
     };

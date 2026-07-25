@@ -56,6 +56,8 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
         // d.sales luôn có (DrawSales bắt buộc); openAt optional, closeAt bắt buộc.
         salesOpenAt: d.sales.openAt?.toISOString(),
         salesCloseAt: d.sales.closeAt.toISOString(),
+        // drawTime luôn có — giờ quay theo lịch, dùng cho countdown/overdue-publish.
+        scheduledDrawAt: drawTimeDate.toISOString(),
         // `drawResultAt` = thời điểm publish kết quả thực tế (sau khi staff bấm
         // "Công bố"). KHÔNG fallback về drawTime: UI so sánh drawResultAt với
         // settledAt để quyết định "Kết sổ lại". Fallback về giờ quay dự kiến (luôn

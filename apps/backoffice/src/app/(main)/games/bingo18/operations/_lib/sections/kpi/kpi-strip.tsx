@@ -3,6 +3,7 @@
 import { CircleDollarSign, FileText, Grid2x2, Layers, Users, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@megawin/shared/utils";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import type { OpsKpi } from "../../types";
 
 interface KpiCardProps {
@@ -33,6 +34,11 @@ function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub }: KpiCardPr
  * KPI strip cho Bingo 18 Operations.
  *
  * Bingo 18: boards (singleNum/doubleMatch/tripleMatch) + sideBets (sumTotal/bigSmallDraw).
+ *
+ * Label metric chung (doanh thu, phiếu cược, người chơi, hoa hồng) đọc từ
+ * `REPORT_COLUMN_LABELS` (label language dùng chung mọi game/report) — tránh hardcode
+ * lệch chữ giữa operations và report. Card đặc thù game (Boards cơ bản / Side bets)
+ * giữ label riêng vì không phải metric chung.
  */
 export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
   return (
@@ -41,14 +47,14 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
         icon={CircleDollarSign}
         iconBg="bg-amber-100 dark:bg-amber-900/50"
         iconColor="text-amber-600 dark:text-amber-400"
-        label="Doanh thu"
+        label={REPORT_COLUMN_LABELS.totalStake}
         value={formatNumber(kpi.totalRevenue)}
       />
       <KpiCard
         icon={FileText}
         iconBg="bg-blue-100 dark:bg-blue-900/50"
         iconColor="text-blue-600 dark:text-blue-400"
-        label="Entries"
+        label={REPORT_COLUMN_LABELS.entryCount}
         value={formatNumber(kpi.totalEntries)}
       />
       <KpiCard
@@ -71,14 +77,14 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
         icon={Users}
         iconBg="bg-violet-100 dark:bg-violet-900/50"
         iconColor="text-violet-600 dark:text-violet-400"
-        label="Người chơi"
+        label={REPORT_COLUMN_LABELS.playerCount}
         value={formatNumber(kpi.uniquePlayers)}
       />
       <KpiCard
         icon={Wallet}
         iconBg="bg-orange-100 dark:bg-orange-900/50"
         iconColor="text-orange-600 dark:text-orange-400"
-        label="Hoa hồng ĐL"
+        label={REPORT_COLUMN_LABELS.totalCommission}
         value={formatNumber(kpi.totalCommission)}
       />
     </div>

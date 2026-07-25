@@ -16,6 +16,18 @@ import { NumbersWithTooltip } from "./number-heatmap";
 import type { LiveFeedEntry } from "../../types";
 import { toTenantUsername } from "@megawin/shared/utils";
 
+/**
+ * Ngưỡng (VND) đánh dấu "cược lớn" trong live feed — cược ≥ ngưỡng này được
+ * highlight (nền đỏ nhạt + viền trái đỏ + chip "Cược lớn") để người trực ca
+ * chú ý ngay.
+ *
+ * 5.000.000đ cho Lotto 5/35: cao hơn Max3D (2tr) vì các kiểu Bao sinh nhiều
+ * line/kỳ (VD Bao 15 = 3.003 line × 10k ≈ 30tr/kỳ) — ngưỡng thấp sẽ khiến chip
+ * hiện quá dày. Đây là baseline theo quan sát, tinh chỉnh sau khi có dữ liệu
+ * vận hành thực tế.
+ */
+const LARGE_BET_THRESHOLD = 5_000_000;
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function LiveFeed({
@@ -51,6 +63,7 @@ export function LiveFeed({
             {entries.map((e, i) => {
               const color = PLAY_TYPE_COLORS[e.playType];
               const { mainNumbers, specialNumbers, suffix } = e;
+              const isLargeBet = e.amount >= LARGE_BET_THRESHOLD;
 
               return (
                 <div
@@ -58,8 +71,11 @@ export function LiveFeed({
                   className={cn(
                     "rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/40 border-l-2",
                     i === 0 && "bg-muted/20",
+                    isLargeBet && "bg-red-500/5",
                   )}
-                  style={{ borderLeftColor: color?.fill ?? "transparent" }}
+                  style={{
+                    borderLeftColor: isLargeBet ? "#ef4444" : (color?.fill ?? "transparent"),
+                  }}
                 >
                   {/* Grid 3 rows × 2 cols:
                       row1: play-type label | (empty)
@@ -82,6 +98,11 @@ export function LiveFeed({
                       >
                         {e.playTypeLabel}
                       </span>
+                      {isLargeBet && (
+                        <span className="shrink-0 rounded-full bg-red-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-red-600 dark:text-red-400">
+                          Cược lớn
+                        </span>
+                      )}
                     </div>
                     <div /> {/* empty right cell for row 1 */}
                     {/* Row 2: number badges (left) | amount (right) */}

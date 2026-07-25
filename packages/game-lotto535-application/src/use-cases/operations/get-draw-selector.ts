@@ -64,12 +64,15 @@ export class GetDrawSelectorUseCase extends NextApiUseCase<void, GetDrawSelector
         // d.sales luôn có (DrawSales bắt buộc); openAt optional, closeAt bắt buộc.
         salesOpenAt: d.sales.openAt?.toISOString(),
         salesCloseAt: d.sales.closeAt.toISOString(),
-        // d.result optional (chưa publish); publishedAt bắt buộc bên trong result khi đã có.
-        drawResultAt: d.result?.publishedAt.toISOString() ?? drawTimeDate.toISOString(),
+        // drawTime luôn có — giờ quay theo lịch, dùng cho countdown/overdue-publish.
+        scheduledDrawAt: drawTimeDate.toISOString(),
+        // publishedAt của result gần nhất (ISO 8601), undefined nếu chưa publish — KHÔNG
+        // fallback về drawTime tại đây (fallback hiển thị xử lý ở getSteps() FE). Raw value
+        // dùng để check "đã publish chưa" cho shouldShowResettle.
+        drawResultAt: d.result?.publishedAt.toISOString(),
         settledAt: d.settledAt?.toISOString(),
-        resultPublishedAt: d.result?.publishedAt.toISOString(),
         status: d.status,
-        financialDate: d.financialDate ?? d.drawDate,
+        financialDate: d.financialDate ,
         group,
       };
     };

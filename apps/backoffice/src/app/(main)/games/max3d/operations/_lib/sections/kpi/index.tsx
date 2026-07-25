@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { CircleDollarSign, FileText, Hash, Users, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatNumber } from "@megawin/shared/utils";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDrawContext } from "../../use-draw-context";
 import { useOpsSummary } from "../../use-operations";
@@ -65,7 +66,7 @@ export function KpiSection() {
           icon={CircleDollarSign}
           iconBg="bg-emerald-100 dark:bg-emerald-900/50"
           iconColor="text-emerald-600 dark:text-emerald-400"
-          label="Doanh thu"
+          label={REPORT_COLUMN_LABELS.totalStake}
           value={kpi ? formatNumber(kpi.totalRevenue) : "—"}
           loading={loading}
         />
@@ -73,7 +74,7 @@ export function KpiSection() {
           icon={FileText}
           iconBg="bg-blue-100 dark:bg-blue-900/50"
           iconColor="text-blue-600 dark:text-blue-400"
-          label="Entries"
+          label={REPORT_COLUMN_LABELS.entryCount}
           value={kpi ? formatNumber(kpi.totalEntries) : "—"}
           loading={loading}
         />
@@ -89,7 +90,7 @@ export function KpiSection() {
           icon={Users}
           iconBg="bg-violet-100 dark:bg-violet-900/50"
           iconColor="text-violet-600 dark:text-violet-400"
-          label="Người chơi"
+          label={REPORT_COLUMN_LABELS.playerCount}
           value={kpi ? formatNumber(kpi.uniquePlayers) : "—"}
           loading={loading}
         />
@@ -97,7 +98,7 @@ export function KpiSection() {
           icon={Wallet}
           iconBg="bg-amber-100 dark:bg-amber-900/50"
           iconColor="text-amber-600 dark:text-amber-400"
-          label="Hoa hồng ĐL"
+          label={REPORT_COLUMN_LABELS.totalCommission}
           value={kpi ? formatNumber(kpi.totalCommission) : "—"}
           loading={loading}
         />

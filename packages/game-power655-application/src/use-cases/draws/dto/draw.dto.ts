@@ -2,6 +2,7 @@ import type { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawNo } from "@megawin/game-power655/entities";
 import type { DrawEntity } from "@megawin/game-power655/entities";
 import type { AuditActor } from "@megawin/audit/logger";
+import type { WireType } from "@megawin/shared/types";
 
 // ─────────────────────────────────────────────
 // CreateDraws (batch – tạo nhiều kỳ liên tiếp)
@@ -388,6 +389,6 @@ export interface GetDrawDetailInput {
 }
 
 export interface GetDrawDetailOutput {
-  /** Entity đầy đủ của kỳ quay Power 6/55. */
-  draw: DrawEntity;
+  /** Entity đầy đủ của kỳ quay Power 6/55 — Date fields đã serialize thành ISO string qua JSON response. */
+  draw: WireType<DrawEntity>;
 }

@@ -2,6 +2,7 @@ import type { DrawStatus } from "@megawin/game-core/entities";
 import type { Max3dproDrawResult } from "@megawin/game-max3dpro/entities";
 import type { DrawEntity } from "@megawin/game-max3dpro/entities";
 import type { AuditActor } from "@megawin/audit/logger";
+import type { WireType } from "@megawin/shared/types";
 
 // ─────────────────────────────────────────────
 // CreateDraws (batch – tạo nhiều kỳ liên tiếp)
@@ -261,6 +262,6 @@ export interface GetDrawDetailInput {
 }
 
 export interface GetDrawDetailOutput {
-  /** Thông tin chi tiết đầy đủ của kỳ quay. */
-  draw: DrawEntity;
+  /** Thông tin chi tiết đầy đủ của kỳ quay — Date fields đã serialize thành ISO string qua JSON response. */
+  draw: WireType<DrawEntity>;
 }

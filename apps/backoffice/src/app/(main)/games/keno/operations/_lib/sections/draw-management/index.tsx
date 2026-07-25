@@ -78,10 +78,7 @@ export function DrawManagementSection() {
       smallCount: d.result.smallCount ?? 0,
       evenCount: d.result.evenCount ?? 0,
       oddCount: d.result.oddCount ?? 0,
-      publishedAt:
-        d.result.publishedAt instanceof Date
-          ? d.result.publishedAt.toISOString()
-          : String(d.result.publishedAt ?? ""),
+      publishedAt: d.result.publishedAt,
     };
   })();
 
@@ -105,10 +102,7 @@ export function DrawManagementSection() {
     return {
       reason: d.voidInfo.reason,
       voidedBy: d.voidInfo.voidedBy ?? "system",
-      voidedAt:
-        d.voidInfo.voidedAt instanceof Date
-          ? d.voidInfo.voidedAt.toISOString()
-          : String(d.voidInfo.voidedAt ?? ""),
+      voidedAt: d.voidInfo.voidedAt,
       refundAmount: d.voidSummary?.totalRefundAmount ?? 0,
       entryCount: d.voidSummary?.totalVoidedEntries ?? 0,
     };
