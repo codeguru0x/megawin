@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 import { BarChart3, Clock } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -45,9 +46,7 @@ export function PlayerDetailNav({ accountId }: PlayerDetailNavProps) {
             href={href}
             className={cn(
               "flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-              isActive
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+              isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
             )}
           >
             <item.icon className="size-4 shrink-0" />

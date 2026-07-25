@@ -1,20 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle2, Circle, Clock, XCircle, TriangleAlert, FolderOpen } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
+
+import { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
+import { CheckCircle2, Circle, Clock, FolderOpen, TriangleAlert, XCircle } from "lucide-react";
+
 import { DrawStatusBadge } from "@/components/games/lotto535/draw-status-badge";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
-  SelectSeparator,
-  SelectGroup,
-  SelectLabel,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+
 import type { DrawSelectorItem } from "./use-operations";
 
 interface DrawSelectorProps {
@@ -68,12 +71,7 @@ function DrawRow({ draw }: { draw: DrawSelectorItem }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function DrawSelector({
-  draws,
-  selectedDrawId,
-  onSelect,
-  historicalDraw,
-}: DrawSelectorProps) {
+export function DrawSelector({ draws, selectedDrawId, onSelect, historicalDraw }: DrawSelectorProps) {
   const selected = draws.find((d) => d.drawId === selectedDrawId) ?? historicalDraw;
 
   const active = draws.filter((d) => d.group === DrawSelectorGroup.Active);
@@ -90,9 +88,7 @@ export function DrawSelector({
         <div className="flex items-center gap-2 min-w-0">
           {selected && STATUS_ICON[selected.status]}
           <SelectValue placeholder="Chọn kỳ quay">
-            {selected
-              ? `Kỳ ${selected.drawNo} · ${selected.drawDate} · ${selected.drawTime}`
-              : "Chọn kỳ quay"}
+            {selected ? `Kỳ ${selected.drawNo} · ${selected.drawDate} · ${selected.drawTime}` : "Chọn kỳ quay"}
           </SelectValue>
         </div>
       </SelectTrigger>

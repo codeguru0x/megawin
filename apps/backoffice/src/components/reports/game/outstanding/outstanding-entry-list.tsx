@@ -1,19 +1,14 @@
 "use client";
 
-import { Ticket, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { RefreshCw, Ticket } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import type { OutstandingEntryRow } from "./types";
 
 export interface OutstandingEntryListProps {
@@ -113,15 +108,9 @@ export function OutstandingEntryList({
                 <TableRow>
                   <TableHead className="w-50 pl-5">Mã vé</TableHead>
                   <TableHead className="w-30 text-right">{boardsLineColLabel}</TableHead>
-                  <TableHead className="w-[110px] text-right">
-                    {REPORT_COLUMN_LABELS.betUnitCount}
-                  </TableHead>
-                  <TableHead className="w-[150px] text-right">
-                    {REPORT_COLUMN_LABELS.estimatedCommission}
-                  </TableHead>
-                  <TableHead className="w-[150px] pr-5 text-right">
-                    {REPORT_COLUMN_LABELS.totalStake}
-                  </TableHead>
+                  <TableHead className="w-[110px] text-right">{REPORT_COLUMN_LABELS.betUnitCount}</TableHead>
+                  <TableHead className="w-[150px] text-right">{REPORT_COLUMN_LABELS.estimatedCommission}</TableHead>
+                  <TableHead className="w-[150px] pr-5 text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -131,9 +120,7 @@ export function OutstandingEntryList({
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => onRowClick(entry)}
                   >
-                    <TableCell className="pl-5 font-mono text-sm">
-                      {entry.ticketNo ?? entry.id}
-                    </TableCell>
+                    <TableCell className="pl-5 font-mono text-sm">{entry.ticketNo ?? entry.id}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
                       {showLineCount ? (
                         <>

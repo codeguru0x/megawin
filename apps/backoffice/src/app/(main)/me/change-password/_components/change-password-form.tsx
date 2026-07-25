@@ -1,31 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ApiClientError, apiClient } from "@megawin/next/client";
 import { useMutation } from "@tanstack/react-query";
-import { Eye, EyeOff, KeyRound, Check, X, ShieldCheck, Loader2, Info } from "lucide-react";
+import { Check, Eye, EyeOff, Info, KeyRound, Loader2, ShieldCheck, X } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { apiClient, ApiClientError } from "@megawin/next/client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-import {
-  changePasswordSchema,
-  PASSWORD_RULES,
-  type ChangePasswordFormValues,
-} from "../_lib/schema";
+import { type ChangePasswordFormValues, changePasswordSchema, PASSWORD_RULES } from "../_lib/schema";
 
 export function ChangePasswordForm() {
   const [showCurrent, setShowCurrent] = useState(false);
@@ -196,12 +186,7 @@ export function ChangePasswordForm() {
             />
 
             <div className="flex items-center justify-end gap-3 pt-1">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => form.reset()}
-                disabled={mutation.isPending}
-              >
+              <Button type="button" variant="outline" onClick={() => form.reset()} disabled={mutation.isPending}>
                 Huỷ
               </Button>
               <Button type="submit" disabled={mutation.isPending || !form.formState.isValid}>
@@ -223,9 +208,7 @@ export function ChangePasswordForm() {
             <div className="rounded-lg border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-800/40 dark:bg-amber-950/20">
               <div className="mb-2.5 flex items-center gap-2">
                 <Info className="size-3.5 text-amber-600 dark:text-amber-400" />
-                <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">
-                  Lưu ý bảo mật
-                </span>
+                <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">Lưu ý bảo mật</span>
               </div>
               <ul className="space-y-1.5 text-xs text-muted-foreground">
                 <li className="flex items-center gap-2">
@@ -284,10 +267,7 @@ function PasswordStrength({ password }: { password: string }) {
         {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
-            className={cn(
-              "h-1.5 flex-1 rounded-full transition-colors",
-              i <= passedCount ? config.color : "bg-muted",
-            )}
+            className={cn("h-1.5 flex-1 rounded-full transition-colors", i <= passedCount ? config.color : "bg-muted")}
           />
         ))}
       </div>

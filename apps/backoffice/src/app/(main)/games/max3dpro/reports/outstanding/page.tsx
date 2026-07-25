@@ -1,7 +1,9 @@
 "use client";
 
 import { Suspense } from "react";
+
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { Max3DProOutstandingContent } from "./_lib/outstanding-content";
 
 function OutstandingPageSkeleton() {

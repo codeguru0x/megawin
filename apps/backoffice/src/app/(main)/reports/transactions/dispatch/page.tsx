@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+
 import { Send } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,9 +20,7 @@ function DispatchPageInner() {
             <Send className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Lệnh gửi đại lý
-            </h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Lệnh gửi đại lý</h1>
             <p className="text-xs text-muted-foreground">
               Outbox gửi giao dịch sang tenant — theo dõi pending / dispatched / stuck.
             </p>

@@ -13,23 +13,23 @@
  */
 
 import { useMemo } from "react";
+
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PlayMode } from "@megawin/game-max3dpro/entities";
 import { MAX3DPRO_PLAY_MODE_LABELS } from "@megawin/game-max3dpro/labels";
 
+import type { LiveFeedEntry, PlayTypeRow, TenantRow, TripletFreq } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
 import {
+  useOpsLiveEntries,
   useOpsPlayTypeDistribution,
   useOpsTenantBreakdown,
-  useOpsTripletFrequency,
   useOpsTopCombos,
-  useOpsLiveEntries,
+  useOpsTripletFrequency,
 } from "../../use-operations";
 import { PlayModeCard, TenantBreakdown } from "./analytics-panels";
-import { TripletHeatmap } from "./triplet-heatmap";
 import { LiveFeed } from "./live-feed";
-
-import type { PlayTypeRow, TenantRow, TripletFreq, LiveFeedEntry } from "../../types";
+import { TripletHeatmap } from "./triplet-heatmap";
 
 // ─── Label maps ───────────────────────────────────────────────────────────────
 
@@ -56,18 +56,9 @@ export function AnalyticsSection() {
 
   const playTypes: PlayTypeRow[] = useMemo(() => {
     if (!playtypeData) return [];
-    const totalLines = playtypeData.distribution.reduce(
-      (a: number, d: { lineCount: number }) => a + d.lineCount,
-      0,
-    );
+    const totalLines = playtypeData.distribution.reduce((a: number, d: { lineCount: number }) => a + d.lineCount, 0);
     return playtypeData.distribution.map(
-      (d: {
-        playMode: string;
-        entryCount: number;
-        lineCount: number;
-        revenue: number;
-        avgPairsPerEntry?: number;
-      }) => ({
+      (d: { playMode: string; entryCount: number; lineCount: number; revenue: number; avgPairsPerEntry?: number }) => ({
         playMode: d.playMode as PlayMode,
         label: MAX3DPRO_PLAY_MODE_LABELS[d.playMode as PlayMode] ?? d.playMode,
         entries: d.entryCount,
@@ -81,10 +72,7 @@ export function AnalyticsSection() {
 
   const tenants: TenantRow[] = useMemo(() => {
     if (!tenantData) return [];
-    const totalRevenue = tenantData.tenants.reduce(
-      (a: number, t: { revenue: number }) => a + t.revenue,
-      0,
-    );
+    const totalRevenue = tenantData.tenants.reduce((a: number, t: { revenue: number }) => a + t.revenue, 0);
     return tenantData.tenants.map((t) => ({
       tenantId: t.tenantId,
       tenantName: t.tenantId,
@@ -143,18 +131,12 @@ export function AnalyticsSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Phân tích cược
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Phân tích cược</h2>
 
       <PlayModeCard distribution={playTypes} />
 
       <div className="grid gap-4 lg:grid-cols-[7fr_3fr] items-stretch">
-        <TripletHeatmap
-          triplets={triplets}
-          pairCombos={topCombosData?.pairCombos}
-          tenants={tenants}
-        />
+        <TripletHeatmap triplets={triplets} pairCombos={topCombosData?.pairCombos} tenants={tenants} />
         <LiveFeed entries={liveFeed} isSettled={isSettled} />
       </div>
     </section>

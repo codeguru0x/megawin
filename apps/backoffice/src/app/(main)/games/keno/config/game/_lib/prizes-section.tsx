@@ -1,25 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Save, TrendingUp, TrendingDown, Info, ChevronDown, ChevronUp } from "lucide-react";
-import { formatNumber } from "@megawin/shared/utils";
-
-import {
-  analyzeProfitabilityForPick,
-  getBasicOddsTable,
-  TOTAL_OUTCOMES,
-} from "@megawin/game-keno/rules";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { MoneyInput } from "@megawin/ui/components/money-input";
-import { cn } from "@/lib/utils";
 
 import type { BasicPrizes } from "@megawin/game-keno/entities";
+import { analyzeProfitabilityForPick, getBasicOddsTable, TOTAL_OUTCOMES } from "@megawin/game-keno/rules";
+import { formatNumber } from "@megawin/shared/utils";
+import { MoneyInput } from "@megawin/ui/components/money-input";
+import { ChevronDown, ChevronUp, Info, Save, TrendingDown, TrendingUp } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Spinner } from "@/components/ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+
 import type { KenoGameConfig } from "./use-game-config";
 
 const PICK_MATCH_COUNTS: Record<number, number[]> = {
@@ -51,9 +47,7 @@ const PICK_BADGE_COLORS: Record<number, string> = {
 };
 
 function isCapped(pick: number, match: number): boolean {
-  return (
-    (pick === 10 && match === 10) || (pick === 9 && match === 9) || (pick === 8 && match === 8)
-  );
+  return (pick === 10 && match === 10) || (pick === 9 && match === 9) || (pick === 8 && match === 8);
 }
 
 interface PrizesSectionProps {
@@ -62,15 +56,7 @@ interface PrizesSectionProps {
   isPending: boolean;
 }
 
-function HeaderTooltip({
-  label,
-  tip,
-  className,
-}: {
-  label: string;
-  tip: string;
-  className?: string;
-}) {
+function HeaderTooltip({ label, tip, className }: { label: string; tip: string; className?: string }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -100,15 +86,9 @@ function PickPrizeGroup({
   const [open, setOpen] = useState(pick >= 1);
   const matchCounts = PICK_MATCH_COUNTS[pick] ?? [];
 
-  const profitAnalysis = useMemo(
-    () => analyzeProfitabilityForPick(pick, prizes, unitPrice),
-    [pick, prizes, unitPrice],
-  );
+  const profitAnalysis = useMemo(() => analyzeProfitabilityForPick(pick, prizes, unitPrice), [pick, prizes, unitPrice]);
 
-  const profitMap = useMemo(
-    () => new Map(profitAnalysis.tiers.map((t) => [t.matchCount, t])),
-    [profitAnalysis],
-  );
+  const profitMap = useMemo(() => new Map(profitAnalysis.tiers.map((t) => [t.matchCount, t])), [profitAnalysis]);
 
   const marginColor =
     profitAnalysis.grossMarginPercent >= 50
@@ -133,10 +113,7 @@ function PickPrizeGroup({
               Chọn {pick} số &middot; {matchCounts.length} mức thưởng
             </span>
             {matchCounts.some((m) => isCapped(pick, m)) && (
-              <Badge
-                variant="outline"
-                className="text-xs border-red-300 text-red-600 dark:text-red-400"
-              >
+              <Badge variant="outline" className="text-xs border-red-300 text-red-600 dark:text-red-400">
                 Có giới hạn
               </Badge>
             )}
@@ -173,11 +150,7 @@ function PickPrizeGroup({
               tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%. Trên 100% = LỖ."
               className="justify-end"
             />
-            <HeaderTooltip
-              label="Hoà vốn"
-              tip="Giá trị giải thưởng tối đa để không lỗ."
-              className="justify-end"
-            />
+            <HeaderTooltip label="Hoà vốn" tip="Giá trị giải thưởng tối đa để không lỗ." className="justify-end" />
           </div>
           {matchCounts.map((match) => {
             const profit = profitMap.get(match);
@@ -215,8 +188,7 @@ function PickPrizeGroup({
                   <TooltipContent side="top" className="max-w-72 text-xs">
                     {profit && (
                       <>
-                        Số cách trúng:{" "}
-                        {fmt(Math.round(profit.probability * Number(TOTAL_OUTCOMES)))} /{" "}
+                        Số cách trúng: {fmt(Math.round(profit.probability * Number(TOTAL_OUTCOMES)))} /{" "}
                         {fmt(Number(TOTAL_OUTCOMES))}
                         <br />
                         Xác suất: {(profit.probability * 100).toFixed(6)}%
@@ -311,8 +283,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
     return results;
   }, [localPrizes, unitPrice]);
 
-  const avgMargin =
-    allSummaries.reduce((s, r) => s + r.grossMarginPercent, 0) / allSummaries.length;
+  const avgMargin = allSummaries.reduce((s, r) => s + r.grossMarginPercent, 0) / allSummaries.length;
 
   return (
     <Card className="overflow-hidden py-0 gap-0">
@@ -320,9 +291,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
         <div className="p-6 pb-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">
-                Giải thưởng cơ bản – Chọn số
-              </h3>
+              <h3 className="text-sm font-semibold text-foreground">Giải thưởng cơ bản – Chọn số</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Cấu hình giá trị cho từng bậc (1-10 số) theo số trùng
                 {" · "}Mệnh giá: <strong>{fmt(unitPrice)} VND</strong>
@@ -334,11 +303,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
               <div
                 className={cn(
                   "font-bold tabular-nums",
-                  avgMargin >= 50
-                    ? "text-emerald-600"
-                    : avgMargin >= 0
-                      ? "text-amber-600"
-                      : "text-red-600",
+                  avgMargin >= 50 ? "text-emerald-600" : avgMargin >= 0 ? "text-amber-600" : "text-red-600",
                 )}
               >
                 {avgMargin >= 0 ? (

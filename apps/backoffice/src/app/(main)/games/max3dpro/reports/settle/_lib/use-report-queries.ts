@@ -1,22 +1,23 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@megawin/next/client";
-import { max3dproKeys } from "@/lib/query-keys";
 import type {
   GetDrawSummaryOutput,
-  ListSettleDrawReportsOutput,
-  ListDrawTenantsOutput,
-  ListTenantReportsOutput,
-  ListTenantDrawsOutput,
-  ListPlayerBreakdownOutput,
-  ListEntryBreakdownOutput,
   GetOutstandingReportsOutput,
-  ListVoidReportsOutput,
+  ListDrawTenantsOutput,
+  ListEntryBreakdownOutput,
   ListOutstandingDrawTenantsOutput,
-  ListOutstandingTenantPlayersOutput,
   ListOutstandingPlayerEntriesOutput,
+  ListOutstandingTenantPlayersOutput,
+  ListPlayerBreakdownOutput,
+  ListSettleDrawReportsOutput,
+  ListTenantDrawsOutput,
+  ListTenantReportsOutput,
+  ListVoidReportsOutput,
 } from "@megawin/game-max3dpro-application/use-cases/reports";
+import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
+
+import { max3dproKeys } from "@/lib/query-keys";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
 
@@ -51,9 +52,7 @@ export function useMax3DProDrawTenants(drawId: string | null) {
   return useQuery({
     queryKey: max3dproKeys.reportDrawTenants(drawId ?? ""),
     queryFn: () =>
-      apiClient
-        .get<ListDrawTenantsOutput>(`/max3dpro/reports/draws/${drawId}/tenants`)
-        .then((r) => r.data),
+      apiClient.get<ListDrawTenantsOutput>(`/max3dpro/reports/draws/${drawId}/tenants`).then((r) => r.data),
     enabled: !!drawId,
   });
 }
@@ -122,10 +121,7 @@ export function useMax3DProEntries(drawId: string, tenantId: string, accountId: 
 export function useMax3DProOutstanding() {
   return useQuery({
     queryKey: max3dproKeys.outstandingDraws,
-    queryFn: () =>
-      apiClient
-        .get<GetOutstandingReportsOutput>("/max3dpro/reports/outstanding")
-        .then((r) => r.data),
+    queryFn: () => apiClient.get<GetOutstandingReportsOutput>("/max3dpro/reports/outstanding").then((r) => r.data),
     refetchInterval: 60_000,
   });
 }
@@ -136,9 +132,7 @@ export function useMax3DProOutstandingDrawTenants(drawId: string | null) {
     queryKey: max3dproKeys.outstandingTenants(drawId ?? ""),
     queryFn: () =>
       apiClient
-        .get<ListOutstandingDrawTenantsOutput>(
-          `/max3dpro/reports/outstanding/draws/${drawId}/tenants`,
-        )
+        .get<ListOutstandingDrawTenantsOutput>(`/max3dpro/reports/outstanding/draws/${drawId}/tenants`)
         .then((r) => r.data),
     enabled: !!drawId,
     refetchInterval: 60_000,
@@ -161,11 +155,7 @@ export function useMax3DProOutstandingTenantPlayers(drawId: string, tenantId: st
 }
 
 /** Entries outstanding của 1 player trong 1 draw × tenant. Drill cấp 4. Tự refresh mỗi 60 giây. */
-export function useMax3DProOutstandingPlayerEntries(
-  drawId: string,
-  tenantId: string,
-  accountId: string | null,
-) {
+export function useMax3DProOutstandingPlayerEntries(drawId: string, tenantId: string, accountId: string | null) {
   return useQuery({
     queryKey: max3dproKeys.outstandingEntries({ drawId, tenantId, accountId: accountId ?? "" }),
     queryFn: () =>
@@ -234,18 +224,12 @@ export function useMax3DProVoidTenantPlayers(drawId: string, tenantId: string | 
 }
 
 /** Entries void của 1 player trong 1 draw × tenant. Drill cấp 4. */
-export function useMax3DProVoidPlayerEntries(
-  drawId: string,
-  tenantId: string,
-  accountId: string | null,
-) {
+export function useMax3DProVoidPlayerEntries(drawId: string, tenantId: string, accountId: string | null) {
   return useQuery({
     queryKey: max3dproKeys.voidPlayerEntries({ drawId, tenantId, accountId: accountId ?? "" }),
     queryFn: () =>
       apiClient
-        .get<ListEntryBreakdownOutput>(
-          `/max3dpro/reports/void/draws/${drawId}/${tenantId}/${accountId}/entries`,
-        )
+        .get<ListEntryBreakdownOutput>(`/max3dpro/reports/void/draws/${drawId}/${tenantId}/${accountId}/entries`)
         .then((r) => r.data),
     enabled: !!(drawId && tenantId && accountId),
   });

@@ -1,8 +1,26 @@
 "use client";
 
 import { useMemo, useState } from "react";
+
+import type {
+  BigSmallDrawPrizes,
+  DoubleMatchPrizes,
+  SingleNumPrizes,
+  SumTotalPrizes,
+  TripleMatchPrizes,
+} from "@megawin/game-bingo18/entities";
 import {
-  Save,
+  analyzeBigSmallDrawProfitability,
+  analyzeDoubleMatchProfitability,
+  analyzeSingleNumProfitability,
+  analyzeSumTotalProfitability,
+  analyzeTripleMatchProfitability,
+  type PlayTypeProfitSummary,
+  type TierProfitAnalysis,
+  TOTAL_OUTCOMES,
+} from "@megawin/game-bingo18/rules";
+import { MoneyInput } from "@megawin/ui/components/money-input";
+import {
   ChevronDown,
   ChevronUp,
   Dice1,
@@ -11,36 +29,17 @@ import {
   Dice5,
   Hash,
   Info,
-  TrendingUp,
+  Save,
   TrendingDown,
+  TrendingUp,
 } from "lucide-react";
 
-import {
-  analyzeSingleNumProfitability,
-  analyzeDoubleMatchProfitability,
-  analyzeTripleMatchProfitability,
-  analyzeSumTotalProfitability,
-  analyzeBigSmallDrawProfitability,
-  TOTAL_OUTCOMES,
-  type PlayTypeProfitSummary,
-  type TierProfitAnalysis,
-} from "@megawin/game-bingo18/rules";
-
-import type {
-  SingleNumPrizes,
-  DoubleMatchPrizes,
-  TripleMatchPrizes,
-  SumTotalPrizes,
-  BigSmallDrawPrizes,
-} from "@megawin/game-bingo18/entities";
-
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { MoneyInput } from "@megawin/ui/components/money-input";
 import { cn } from "@/lib/utils";
 
 import type { Bingo18GameConfig } from "./use-game-config";
@@ -213,8 +212,7 @@ function analyzeGroup(
         totalExpectedPayout,
         totalPayoutRatio,
         grossMarginPerTicket: unitPrice - totalExpectedPayout,
-        grossMarginPercent:
-          unitPrice > 0 ? ((unitPrice - totalExpectedPayout) / unitPrice) * 100 : 0,
+        grossMarginPercent: unitPrice > 0 ? ((unitPrice - totalExpectedPayout) / unitPrice) * 100 : 0,
       };
     }
     case "sumTotal": {
@@ -269,15 +267,7 @@ function findTierForEntry(
 // UI Components
 // ─────────────────────────────────────────────
 
-function HeaderTooltip({
-  label,
-  tip,
-  className,
-}: {
-  label: string;
-  tip: string;
-  className?: string;
-}) {
+function HeaderTooltip({ label, tip, className }: { label: string; tip: string; className?: string }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -308,10 +298,7 @@ function PrizeGroup({
 }) {
   const [open, setOpen] = useState(defaultOpen ?? false);
 
-  const profitAnalysis = useMemo(
-    () => analyzeGroup(group.id, prizes, unitPrice),
-    [group.id, prizes, unitPrice],
-  );
+  const profitAnalysis = useMemo(() => analyzeGroup(group.id, prizes, unitPrice), [group.id, prizes, unitPrice]);
 
   const tierMargins = useMemo(() => {
     if (!profitAnalysis) return [];
@@ -323,12 +310,7 @@ function PrizeGroup({
 
   const displayMargin = group.isSingleBet ? (profitAnalysis?.grossMarginPercent ?? 0) : worstMargin;
 
-  const marginColor =
-    displayMargin >= 50
-      ? "text-emerald-600"
-      : displayMargin >= 0
-        ? "text-amber-600"
-        : "text-red-600";
+  const marginColor = displayMargin >= 50 ? "text-emerald-600" : displayMargin >= 0 ? "text-amber-600" : "text-red-600";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -388,16 +370,10 @@ function PrizeGroup({
               tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%. Trên 100% = LỖ."
               className="justify-end"
             />
-            <HeaderTooltip
-              label="Hoà vốn"
-              tip="Giá trị giải thưởng tối đa để không lỗ."
-              className="justify-end"
-            />
+            <HeaderTooltip label="Hoà vốn" tip="Giá trị giải thưởng tối đa để không lỗ." className="justify-end" />
           </div>
           {group.entries.map((entry) => {
-            const tier = profitAnalysis
-              ? findTierForEntry(group.id, entry.key, profitAnalysis.tiers)
-              : undefined;
+            const tier = profitAnalysis ? findTierForEntry(group.id, entry.key, profitAnalysis.tiers) : undefined;
             const isOverBreakEven = tier && tier.currentPrize > tier.breakEvenPrize;
 
             return (
@@ -426,8 +402,7 @@ function PrizeGroup({
                   <TooltipContent side="top" className="max-w-72 text-xs">
                     {tier && (
                       <>
-                        Số cách trúng: {fmt(Math.round(tier.probability * TOTAL_OUTCOMES))} /{" "}
-                        {TOTAL_OUTCOMES}
+                        Số cách trúng: {fmt(Math.round(tier.probability * TOTAL_OUTCOMES))} / {TOTAL_OUTCOMES}
                         <br />
                         Xác suất: {(tier.probability * 100).toFixed(4)}%
                       </>
@@ -464,8 +439,7 @@ function PrizeGroup({
             <div className="flex items-center justify-between px-2 py-2 border-t mt-1">
               <span className="text-xs font-medium text-muted-foreground">
                 Tổng {group.label}
-                {!group.isSingleBet &&
-                profitAnalysis.tiers.filter((t) => t.payoutRatio > 1).length > 0
+                {!group.isSingleBet && profitAnalysis.tiers.filter((t) => t.payoutRatio > 1).length > 0
                   ? ` · ${profitAnalysis.tiers.filter((t) => t.payoutRatio > 1).length} mức vượt hoà vốn`
                   : !group.isSingleBet
                     ? " · Tất cả an toàn"
@@ -563,8 +537,7 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
             <div>
               <h3 className="text-sm font-semibold text-foreground">Giải thưởng Bingo 18</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Cấu hình giá trị thưởng cho 5 loại cược: Một số, Hai số trùng, Ba số trùng, Cộng
-                tổng, Lớn/Hoà/Nhỏ
+                Cấu hình giá trị thưởng cho 5 loại cược: Một số, Hai số trùng, Ba số trùng, Cộng tổng, Lớn/Hoà/Nhỏ
                 {" · "}Mệnh giá: <strong>{fmt(unitPrice)} VND</strong>
                 {" · "}Không gian mẫu: <strong>{TOTAL_OUTCOMES}</strong> (6³)
               </p>
@@ -597,8 +570,8 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-72 text-xs">
-                  Biên lợi nhuận thấp nhất trong tất cả mức cược. Mỗi loại cược là độc lập — khách
-                  chỉ đặt 1 mức mỗi lần, nên con số này phản ánh trường hợp xấu nhất.
+                  Biên lợi nhuận thấp nhất trong tất cả mức cược. Mỗi loại cược là độc lập — khách chỉ đặt 1 mức mỗi
+                  lần, nên con số này phản ánh trường hợp xấu nhất.
                 </TooltipContent>
               </Tooltip>
             </div>

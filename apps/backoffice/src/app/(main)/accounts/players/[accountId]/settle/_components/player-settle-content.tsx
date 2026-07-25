@@ -1,19 +1,19 @@
 "use client";
 
-import { useQueryState, parseAsString } from "nuqs";
-import { BarChart3, ChevronRight } from "lucide-react";
-import { todayVN } from "@megawin/shared/utils";
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS } from "@megawin/game-core/labels";
+import { todayVN } from "@megawin/shared/utils";
+import { BarChart3, ChevronRight } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
 
 import { FinancialDateRangePicker } from "@/components/date-picker";
 
 import { usePlayerOverview, usePlayerProfile } from "../../_shared/queries";
-import { SettleKpiStrip } from "./settle-kpi-strip";
-import { GameOverviewView } from "./game-overview-view";
 import { DailyByGameView } from "./daily-by-game-view";
 import { DrawBreakdownView } from "./draw-breakdown-view";
 import { EntryListView } from "./entry-list-view";
+import { GameOverviewView } from "./game-overview-view";
+import { SettleKpiStrip } from "./settle-kpi-strip";
 
 function defaultFrom(): string {
   const d = new Date();
@@ -186,6 +186,7 @@ function SettleBreadcrumb({
   return (
     <div className="flex items-center gap-1 text-sm">
       <button
+        type="button"
         className="font-medium text-muted-foreground hover:text-foreground"
         onClick={onClickRoot}
       >
@@ -199,6 +200,7 @@ function SettleBreadcrumb({
             <span className="font-semibold text-foreground">{gameLabel}</span>
           ) : (
             <button
+              type="button"
               className="font-medium text-muted-foreground hover:text-foreground"
               onClick={onClickGame}
             >
@@ -215,6 +217,7 @@ function SettleBreadcrumb({
             <span className="font-semibold text-foreground">{fd}</span>
           ) : (
             <button
+              type="button"
               className="font-medium text-muted-foreground hover:text-foreground"
               onClick={onClickDate}
             >

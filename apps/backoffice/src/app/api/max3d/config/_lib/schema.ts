@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { MAX3D_MAX_BOARDS } from "@megawin/game-max3d/rules";
+import { z } from "zod";
 
 const positiveInt = z.number().int().positive();
 const rate = z.number().min(0).max(1);
@@ -53,18 +53,12 @@ const playSchema = z
     unitPrice: positiveInt,
     minBetCount: positiveInt,
     maxBetCount: positiveInt,
-    maxBoardsPerTicket: positiveInt.max(
-      MAX3D_MAX_BOARDS,
-      `Số board tối đa không được vượt ${MAX3D_MAX_BOARDS}.`,
-    ),
+    maxBoardsPerTicket: positiveInt.max(MAX3D_MAX_BOARDS, `Số board tối đa không được vượt ${MAX3D_MAX_BOARDS}.`),
     maxDrawCount: positiveInt,
     salesCloseBeforeMinutes: positiveInt,
     drawsPerDay: positiveInt,
     drawTimes: z.array(z.string().regex(timePattern, "Giờ phải có format HH:mm")).min(1),
-    drawDaysOfWeek: z
-      .array(z.number().int().min(0).max(6))
-      .min(1, "Phải chọn ít nhất 1 ngày quay.")
-      .max(7),
+    drawDaysOfWeek: z.array(z.number().int().min(0).max(6)).min(1, "Phải chọn ít nhất 1 ngày quay.").max(7),
   })
   .partial();
 

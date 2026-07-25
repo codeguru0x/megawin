@@ -12,11 +12,16 @@
  * - Validate: drawId không trùng (date + drawNo phải unique)
  */
 
-import { useState, useEffect, useRef } from "react";
-import { Check, Loader2, CalendarPlus, Unlock, Lock, RefreshCw, CalendarIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+
+import { formatVNDate, formatVNTime } from "@megawin/shared/utils";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import { CalendarIcon, CalendarPlus, Check, Loader2, Lock, RefreshCw, Unlock } from "lucide-react";
+
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -27,12 +32,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { formatVNTime, formatVNDate } from "@megawin/shared/utils";
+
 import { useCreateDraw, usePreviewDraws } from "../../../use-operations";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -351,6 +354,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               )}
               {preview.data && preview.data.draws.length > 0 && (
                 <button
+                  type="button"
                   onClick={applyPreview}
                   className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                   title="Áp lại gợi ý từ preview"
@@ -392,6 +396,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
               </span>
               <div className="flex items-center justify-end">
                 <button
+                  type="button"
                   onClick={toggleAll}
                   className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
@@ -474,8 +479,9 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       hasError={timeErr}
                     />
 
-                    <div
-                      onClick={() => toggleSlot(i)}
+                    {/* Click vào label toggle switch — Switch có pointer-events-none để label nhận click thay. */}
+                    <label
+                      htmlFor={`keno-slot-toggle-${i}`}
                       className="flex items-center justify-end gap-1.5 cursor-pointer select-none"
                     >
                       {row.isOpen ? (
@@ -484,6 +490,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                         <Lock className="size-3 text-muted-foreground/40 shrink-0" />
                       )}
                       <Switch
+                        id={`keno-slot-toggle-${i}`}
                         checked={row.isOpen}
                         onCheckedChange={() => toggleSlot(i)}
                         className="scale-75 origin-right pointer-events-none"
@@ -498,7 +505,7 @@ export function CreateDrawAction({ open, onOpenChange }: CreateDrawActionProps) 
                       >
                         {row.isOpen ? "Mở bán" : "Chờ lịch"}
                       </span>
-                    </div>
+                    </label>
                   </div>
                 );
               })}

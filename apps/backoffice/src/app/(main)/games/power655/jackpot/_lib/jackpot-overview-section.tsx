@@ -1,11 +1,12 @@
 "use client";
 
+import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
 import { CircleDollarSign, Flame, Hash, Layers, TrendingUp, Trophy, Zap } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
+
 import { useJackpotCurrent } from "./use-jackpot";
 
 // ─── JackpotHeroCard ──────────────────────────────────────────────────────────
@@ -109,12 +110,9 @@ export function JackpotHeroCard() {
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-xs">
             <span className="font-medium text-red-800/70 dark:text-red-300/70">
-              Tiến trình đến overflow —{" "}
-              <span className="font-semibold">{formatVNDCompact(overflowThreshold)}</span>
+              Tiến trình đến overflow — <span className="font-semibold">{formatVNDCompact(overflowThreshold)}</span>
             </span>
-            <span className="font-bold tabular-nums text-red-900 dark:text-red-200">
-              {jp1Pct.toFixed(1)}%
-            </span>
+            <span className="font-bold tabular-nums text-red-900 dark:text-red-200">{jp1Pct.toFixed(1)}%</span>
           </div>
           <div className="h-3 w-full overflow-hidden rounded-full bg-red-200/50 dark:bg-red-900/40">
             <div
@@ -182,12 +180,10 @@ export function JackpotKpiCards() {
   const jp2Contribution = jackpot2Progress.current - jackpot2Progress.seed;
 
   // % tăng JP1 so với khởi điểm seed
-  const jp1GrowthPct =
-    jackpot1Progress.seed > 0 ? Math.round((jp1Contribution / jackpot1Progress.seed) * 100) : 0;
+  const jp1GrowthPct = jackpot1Progress.seed > 0 ? Math.round((jp1Contribution / jackpot1Progress.seed) * 100) : 0;
 
   // % tăng JP2 so với khởi điểm seed hiện tại (seed reset mỗi lần JP2 trao thưởng)
-  const jp2GrowthPct =
-    jackpot2Progress.seed > 0 ? Math.round((jp2Contribution / jackpot2Progress.seed) * 100) : 0;
+  const jp2GrowthPct = jackpot2Progress.seed > 0 ? Math.round((jp2Contribution / jackpot2Progress.seed) * 100) : 0;
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -243,11 +239,7 @@ export function JackpotKpiCards() {
         iconColor="text-amber-600 dark:text-amber-400"
         label="Số lần JP2 trao thưởng"
         value={`${cycle.jackpot2ResetCount} lần`}
-        sub={
-          cycle.jackpot2ResetCount > 0
-            ? "JP2 đã reset, JP1 vẫn tích luỹ"
-            : "JP2 chưa trao thưởng vòng này"
-        }
+        sub={cycle.jackpot2ResetCount > 0 ? "JP2 đã reset, JP1 vẫn tích luỹ" : "JP2 chưa trao thưởng vòng này"}
       />
     </div>
   );

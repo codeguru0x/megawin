@@ -1,22 +1,23 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@megawin/next/client";
-import { mega645Keys } from "@/lib/query-keys";
 import type {
   GetDrawSummaryOutput,
-  ListSettleDrawReportsOutput,
-  ListDrawTenantsOutput,
-  ListTenantReportsOutput,
-  ListTenantDrawsOutput,
-  ListPlayerBreakdownOutput,
-  ListEntryBreakdownOutput,
   GetOutstandingReportsOutput,
-  ListVoidReportsOutput,
+  ListDrawTenantsOutput,
+  ListEntryBreakdownOutput,
   ListOutstandingDrawTenantsOutput,
-  ListOutstandingTenantPlayersOutput,
   ListOutstandingPlayerEntriesOutput,
+  ListOutstandingTenantPlayersOutput,
+  ListPlayerBreakdownOutput,
+  ListSettleDrawReportsOutput,
+  ListTenantDrawsOutput,
+  ListTenantReportsOutput,
+  ListVoidReportsOutput,
 } from "@megawin/game-mega645-application/use-cases/reports";
+import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
+
+import { mega645Keys } from "@/lib/query-keys";
 
 // ─── By-Draw Queries ──────────────────────────────────────────────────────────
 
@@ -50,10 +51,7 @@ export function useMega645DrawList(from: string, to: string, page: number) {
 export function useMega645DrawTenants(drawId: string | null) {
   return useQuery({
     queryKey: mega645Keys.reportDrawTenants(drawId ?? ""),
-    queryFn: () =>
-      apiClient
-        .get<ListDrawTenantsOutput>(`/mega645/reports/draws/${drawId}/tenants`)
-        .then((r) => r.data),
+    queryFn: () => apiClient.get<ListDrawTenantsOutput>(`/mega645/reports/draws/${drawId}/tenants`).then((r) => r.data),
     enabled: !!drawId,
   });
 }
@@ -122,10 +120,7 @@ export function useMega645Entries(drawId: string, tenantId: string, accountId: s
 export function useMega645Outstanding() {
   return useQuery({
     queryKey: mega645Keys.outstandingDraws,
-    queryFn: () =>
-      apiClient
-        .get<GetOutstandingReportsOutput>("/mega645/reports/outstanding")
-        .then((r) => r.data),
+    queryFn: () => apiClient.get<GetOutstandingReportsOutput>("/mega645/reports/outstanding").then((r) => r.data),
     refetchInterval: 60_000,
   });
 }
@@ -136,9 +131,7 @@ export function useMega645OutstandingDrawTenants(drawId: string | null) {
     queryKey: mega645Keys.outstandingTenants(drawId ?? ""),
     queryFn: () =>
       apiClient
-        .get<ListOutstandingDrawTenantsOutput>(
-          `/mega645/reports/outstanding/draws/${drawId}/tenants`,
-        )
+        .get<ListOutstandingDrawTenantsOutput>(`/mega645/reports/outstanding/draws/${drawId}/tenants`)
         .then((r) => r.data),
     enabled: !!drawId,
   });
@@ -159,11 +152,7 @@ export function useMega645OutstandingTenantPlayers(drawId: string, tenantId: str
 }
 
 /** Entries outstanding của 1 player. Drill cấp 4. */
-export function useMega645OutstandingPlayerEntries(
-  drawId: string,
-  tenantId: string,
-  accountId: string | null,
-) {
+export function useMega645OutstandingPlayerEntries(drawId: string, tenantId: string, accountId: string | null) {
   return useQuery({
     queryKey: mega645Keys.outstandingEntries({
       drawId,
@@ -235,18 +224,12 @@ export function useMega645VoidTenantPlayers(drawId: string, tenantId: string | n
 }
 
 /** Entries void của 1 player trong 1 draw × tenant. Drill cấp 4. */
-export function useMega645VoidPlayerEntries(
-  drawId: string,
-  tenantId: string,
-  accountId: string | null,
-) {
+export function useMega645VoidPlayerEntries(drawId: string, tenantId: string, accountId: string | null) {
   return useQuery({
     queryKey: mega645Keys.voidPlayerEntries({ drawId, tenantId, accountId: accountId ?? "" }),
     queryFn: () =>
       apiClient
-        .get<ListEntryBreakdownOutput>(
-          `/mega645/reports/void/draws/${drawId}/${tenantId}/${accountId}/entries`,
-        )
+        .get<ListEntryBreakdownOutput>(`/mega645/reports/void/draws/${drawId}/${tenantId}/${accountId}/entries`)
         .then((r) => r.data),
     enabled: !!(drawId && tenantId && accountId),
   });

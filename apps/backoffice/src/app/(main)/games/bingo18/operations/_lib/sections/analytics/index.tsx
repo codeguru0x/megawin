@@ -15,29 +15,29 @@
  */
 
 import { useMemo } from "react";
-import { DrawStatus } from "@megawin/game-core/entities";
-import { BINGO18_PLAY_TYPE_LABELS, BINGO18_TRIPLE_KIND_LABELS } from "@megawin/game-bingo18/labels";
-import { BINGO18_BASIC_PLAY_TYPE_SET } from "@megawin/game-bingo18/entities";
 
+import { BINGO18_BASIC_PLAY_TYPE_SET } from "@megawin/game-bingo18/entities";
+import { BINGO18_PLAY_TYPE_LABELS, BINGO18_TRIPLE_KIND_LABELS } from "@megawin/game-bingo18/labels";
+import type {
+  DiceFrequencyItem,
+  LiveEntryItem,
+  PlayTypeDistributionItem,
+  TenantBreakdownItem,
+} from "@megawin/game-bingo18-application/use-cases/operations";
+import { DrawStatus } from "@megawin/game-core/entities";
+
+import type { LiveFeedEntry, TenantRow } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
 import {
+  useOpsDiceFrequency,
+  useOpsLiveEntries,
   useOpsPlayTypeDistribution,
   useOpsTenantBreakdown,
-  useOpsDiceFrequency,
   useOpsTopCombos,
-  useOpsLiveEntries,
 } from "../../use-operations";
 import { PlayTypeCard } from "./analytics-panels";
 import { DiceHistogram } from "./dice-histogram";
 import { LiveFeed } from "./live-feed";
-
-import type { TenantRow, LiveFeedEntry } from "../../types";
-import type {
-  PlayTypeDistributionItem,
-  TenantBreakdownItem,
-  DiceFrequencyItem,
-  LiveEntryItem,
-} from "@megawin/game-bingo18-application/use-cases/operations";
 
 /** Compound key labels for tripleMatch subtypes in analytics */
 const BINGO18_ANALYTICS_LABELS: Record<string, string> = {
@@ -73,8 +73,7 @@ export function AnalyticsSection() {
     );
     return playtypeData.distribution.map((d: PlayTypeDistributionItem) => {
       // Key hoá riêng tripleMatch-specific vs tripleMatch-any
-      const key =
-        d.playType === "tripleMatch" && d.tripleKind ? `tripleMatch-${d.tripleKind}` : d.playType;
+      const key = d.playType === "tripleMatch" && d.tripleKind ? `tripleMatch-${d.tripleKind}` : d.playType;
       return {
         playType: key,
         label: BINGO18_ANALYTICS_LABELS[key] ?? d.playType,
@@ -87,10 +86,7 @@ export function AnalyticsSection() {
 
   const tenants: TenantRow[] = useMemo(() => {
     if (!tenantData) return [];
-    const totalRevenue = tenantData.tenants.reduce(
-      (a: number, t: TenantBreakdownItem) => a + t.revenue,
-      0,
-    );
+    const totalRevenue = tenantData.tenants.reduce((a: number, t: TenantBreakdownItem) => a + t.revenue, 0);
     return tenantData.tenants.map((t: TenantBreakdownItem) => ({
       tenantId: t.tenantId,
       entries: t.entries,
@@ -122,25 +118,20 @@ export function AnalyticsSection() {
       const rawType = firstBoard?.playType ?? "unknown";
       // Key hoá tripleMatch theo tripleKind
       const playType =
-        rawType === "tripleMatch" && firstBoard
-          ? `tripleMatch-${(firstBoard as any).tripleKind ?? "any"}`
-          : rawType;
+        rawType === "tripleMatch" && firstBoard ? `tripleMatch-${(firstBoard as any).tripleKind ?? "any"}` : rawType;
       return {
         entryId: e.entryId,
         time: e.createdAt,
         playType,
         // singleNum/doubleMatch có number; tripleMatch-specific có number; else []
         numbers:
-          firstBoard &&
-          BINGO18_BASIC_PLAY_TYPE_SET.has(firstBoard.playType) &&
-          (firstBoard as any).number !== undefined
+          firstBoard && BINGO18_BASIC_PLAY_TYPE_SET.has(firstBoard.playType) && (firstBoard as any).number !== undefined
             ? [(firstBoard as any).number as number]
             : [],
         // sumTotal: sum là tổng đã chọn (3-18)
         sum: rawType === "sumTotal" ? ((firstBoard as any).sum as number | undefined) : undefined,
         // bigSmallDraw: bet là "big" | "draw" | "small"
-        bet:
-          rawType === "bigSmallDraw" ? ((firstBoard as any).bet as string | undefined) : undefined,
+        bet: rawType === "bigSmallDraw" ? ((firstBoard as any).bet as string | undefined) : undefined,
         amount: e.amount,
         username: e.username,
         tenant: e.tenantId,
@@ -152,19 +143,13 @@ export function AnalyticsSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Phân tích cược
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Phân tích cược</h2>
 
       <PlayTypeCard playTypes={playTypes} />
 
       <div className="grid gap-4 lg:grid-cols-[7fr_3fr] items-stretch">
         <DiceHistogram diceFreq={diceFreq} combos={topCombos} tenants={tenants} />
-        <LiveFeed
-          entries={liveEntries}
-          totalCount={liveData?.totalCount ?? 0}
-          isSettled={isSettled}
-        />
+        <LiveFeed entries={liveEntries} totalCount={liveData?.totalCount ?? 0} isSettled={isSettled} />
       </div>
     </section>
   );

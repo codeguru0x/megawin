@@ -7,15 +7,16 @@
  * Thêm doc mới: thêm 1 import + 1 dòng trong `DOC_CONTENT`, đồng bộ với manifest
  * (`@megawin/ops-docs/manifest`). Script `docs:check` chặn nếu lệch file <-> manifest.
  */
-import p655_a from "@megawin/ops-docs/docs/resettle/power655/type-a.md";
-import p655_b1 from "@megawin/ops-docs/docs/resettle/power655/type-b1.md";
-import p655_b2 from "@megawin/ops-docs/docs/resettle/power655/type-b2.md";
+
 import l535_a from "@megawin/ops-docs/docs/resettle/lotto535/type-a.md";
 import l535_b1 from "@megawin/ops-docs/docs/resettle/lotto535/type-b1.md";
 import l535_b2 from "@megawin/ops-docs/docs/resettle/lotto535/type-b2.md";
 import m645_a from "@megawin/ops-docs/docs/resettle/mega645/type-a.md";
 import m645_b1 from "@megawin/ops-docs/docs/resettle/mega645/type-b1.md";
 import m645_b2 from "@megawin/ops-docs/docs/resettle/mega645/type-b2.md";
+import p655_a from "@megawin/ops-docs/docs/resettle/power655/type-a.md";
+import p655_b1 from "@megawin/ops-docs/docs/resettle/power655/type-b1.md";
+import p655_b2 from "@megawin/ops-docs/docs/resettle/power655/type-b2.md";
 
 /**
  * Key = `doc.file` trong manifest. Value = nội dung Markdown raw.

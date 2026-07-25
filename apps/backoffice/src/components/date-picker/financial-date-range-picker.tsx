@@ -1,27 +1,29 @@
 "use client";
 
 import * as React from "react";
-import { CalendarIcon, Check } from "lucide-react";
+
+import { formatVN, formatVNDate, TZDate, todayVN, toVNStartOfDay, VN_TIMEZONE } from "@megawin/shared/utils";
 import {
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  subWeeks,
-  subMonths,
-  subDays,
   differenceInCalendarDays,
-  parseISO,
+  endOfMonth,
+  endOfWeek,
+  isBefore,
   isValid,
   parse,
-  isBefore,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+  subDays,
+  subMonths,
+  subWeeks,
 } from "date-fns";
-import { type DateRange } from "react-day-picker";
+import { CalendarIcon, Check } from "lucide-react";
+import type { DateRange } from "react-day-picker";
+
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { todayVN, formatVNDate, formatVN, toVNStartOfDay, TZDate, VN_TIMEZONE } from "@megawin/shared/utils";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -274,9 +276,7 @@ export function FinancialDateRangePicker({
   const buttonLabel = isSameDay ? displayDate(from) : `${displayDate(from)} — ${displayDate(to)}`;
 
   const pendingDays =
-    pendingRange?.from && pendingRange?.to
-      ? differenceInCalendarDays(pendingRange.to, pendingRange.from) + 1
-      : 0;
+    pendingRange?.from && pendingRange?.to ? differenceInCalendarDays(pendingRange.to, pendingRange.from) + 1 : 0;
 
   const canConfirm = !!pendingRange?.from;
   const commonPresets = presets.filter((p) => p.group === "common");
@@ -400,9 +400,7 @@ export function FinancialDateRangePicker({
 
             {/* ── Cột phải: 8 Presets, 2 nhóm đều 4 ── */}
             <div className="flex w-40 shrink-0 flex-col gap-2 p-1.5">
-              <p className="px-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Phổ biến
-              </p>
+              <p className="px-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Phổ biến</p>
               <div className="flex flex-col gap-0.5">
                 {commonPresets.map((preset) => (
                   <PresetButton
@@ -416,9 +414,7 @@ export function FinancialDateRangePicker({
 
               <div className="h-px bg-border" />
 
-              <p className="px-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                Chu kỳ
-              </p>
+              <p className="px-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Chu kỳ</p>
               <div className="flex flex-col gap-0.5">
                 {periodPresets.map((preset) => (
                   <PresetButton
@@ -439,15 +435,7 @@ export function FinancialDateRangePicker({
 
 // ─── Preset Button ────────────────────────────────────────────────────────────
 
-function PresetButton({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+function PresetButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"

@@ -1,25 +1,27 @@
 "use client";
 
 import { useState } from "react";
+
+import { JackpotCycleCloseReason } from "@megawin/game-mega645/entities";
+import {
+  displayVNDateTime,
+  formatNumber,
+  formatVNDCompact,
+  toTenantUsername,
+} from "@megawin/shared/utils";
 import { ChevronDown, Crown, Loader2, RefreshCcw, Sparkles, Trophy, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+
+import { Mega645EntryDetailDialog } from "../../reports/settle/_lib/sections/entry-detail-dialog";
 import {
-  formatVNDCompact,
-  formatNumber,
-  displayVNDateTime,
-  toTenantUsername,
-} from "@megawin/shared/utils";
-import {
-  useJackpotCycles,
-  useJackpotEntryDetail,
   type JackpotCycleSummary,
   type JackpotWinnerSummary,
+  useJackpotCycles,
+  useJackpotEntryDetail,
 } from "./use-jackpot";
-import { JackpotCycleCloseReason } from "@megawin/game-mega645/entities";
-import { Mega645EntryDetailDialog } from "../../reports/settle/_lib/sections/entry-detail-dialog";
 
 const LATEST_COUNT = 3;
 
@@ -76,7 +78,10 @@ function CycleCard({ cycle }: { cycle: JackpotCycleSummary }) {
         )}
       >
         <CollapsibleTrigger asChild>
-          <button className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-accent/30">
+          <button
+            type="button"
+            className="flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-accent/30"
+          >
             {/* Icon */}
             <div
               className={cn(

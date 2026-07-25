@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,14 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -42,11 +36,7 @@ interface EditTenantDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditTenantDialog({
-  tenant,
-  open,
-  onOpenChange,
-}: EditTenantDialogProps) {
+export function EditTenantDialog({ tenant, open, onOpenChange }: EditTenantDialogProps) {
   const mutation = useUpdateTenant();
 
   const form = useForm<EditTenantValues>({
@@ -76,7 +66,7 @@ export function EditTenantDialog({
         description: values.description,
         callbackBaseUrl: values.callbackBaseUrl,
       },
-      { onSuccess: () => onOpenChange(false) }
+      { onSuccess: () => onOpenChange(false) },
     );
   }
 
@@ -86,16 +76,12 @@ export function EditTenantDialog({
         <DialogHeader>
           <DialogTitle>Chỉnh sửa đối tác</DialogTitle>
           <DialogDescription>
-            Tenant ID:{" "}
-            <code className="font-mono text-foreground">{tenant.tenantId}</code>
+            Tenant ID: <code className="font-mono text-foreground">{tenant.tenantId}</code>
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="displayName"
@@ -116,10 +102,7 @@ export function EditTenantDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Mô tả{" "}
-                    <span className="text-muted-foreground font-normal">
-                      (tuỳ chọn)
-                    </span>
+                    Mô tả <span className="text-muted-foreground font-normal">(tuỳ chọn)</span>
                   </FormLabel>
                   <FormControl>
                     <Textarea className="resize-none" rows={2} {...field} />
@@ -144,12 +127,7 @@ export function EditTenantDialog({
             />
 
             <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={mutation.isPending}
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={mutation.isPending}>
                 Huỷ
               </Button>
               <Button type="submit" disabled={mutation.isPending}>

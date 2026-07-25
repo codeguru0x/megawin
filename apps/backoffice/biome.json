@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.8/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.5/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -44,17 +44,20 @@
     "bracketSameLine": false,
     "bracketSpacing": true,
     "expand": "auto",
-    "useEditorconfig": true
+    "useEditorconfig": false
   },
   "linter": {
     "enabled": true,
     "rules": {
       "recommended": true,
-      "correctness": {
-        "noUndeclaredVariables": "error"
-      },
       "nursery": {
-        "useSortedClasses": "on"
+        "useSortedClasses": {
+          "level": "on",
+          "options": {
+            "attributes": ["className"],
+            "functions": ["clsx", "cva", "cn", "twMerge"]
+          }
+        }
       },
       "performance": {
         "noImgElement": "warn"

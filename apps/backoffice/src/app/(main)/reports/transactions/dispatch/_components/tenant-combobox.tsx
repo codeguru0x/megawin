@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+
 import { Check, ChevronsUpDown, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,8 @@ export interface TenantComboboxProps {
   /** Cho phép user gõ ID không có trong options (power user). */
   allowFreeType?: boolean;
   className?: string;
+  /** Id gắn cho trigger button — dùng để liên kết với `<label htmlFor>` bên ngoài. */
+  id?: string;
 }
 
 /**
@@ -50,6 +53,7 @@ export function TenantCombobox({
   placeholder = "Chọn Tenant…",
   allowFreeType = true,
   className,
+  id,
 }: TenantComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -64,6 +68,7 @@ export function TenantCombobox({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           type="button"
           variant="outline"
           size="sm"

@@ -2,20 +2,13 @@
 
 import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react";
 
-export default function GlobalError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <html lang="en">
       <body
         style={{
           margin: 0,
-          fontFamily:
-            "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         }}
       >
         <div
@@ -72,8 +65,7 @@ export default function GlobalError({
                 marginBottom: "1.5rem",
               }}
             >
-              Hệ thống gặp sự cố không mong muốn. Vui lòng thử lại hoặc quay về
-              trang chủ.
+              Hệ thống gặp sự cố không mong muốn. Vui lòng thử lại hoặc quay về trang chủ.
             </p>
 
             <div

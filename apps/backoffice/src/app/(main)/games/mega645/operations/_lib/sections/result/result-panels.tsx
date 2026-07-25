@@ -10,27 +10,30 @@
  */
 
 import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MegaNumberBall } from "@/components/games/mega645/mega-number-ball";
-import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
 import { PrizeTier } from "@megawin/game-mega645/entities";
 import { formatNumber } from "@megawin/shared/utils";
 import {
-  Trophy,
-  TrendingDown,
-  Users,
-  Coins,
   ArrowDownRight,
-  Gem,
-  TrendingUp,
-  Star,
-  Sparkles,
+  Coins,
   ExternalLink,
+  Gem,
   Info,
+  Sparkles,
+  Star,
+  TrendingDown,
+  TrendingUp,
+  Trophy,
+  Users,
 } from "lucide-react";
-import type { DrawResult, DrawFinancialDisplay } from "../../types";
+
+import { MegaNumberBall } from "@/components/games/mega645/mega-number-ball";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+
+import type { DrawFinancialDisplay, DrawResult } from "../../types";
 import { WinningEntriesDialog } from "./winning-entries-dialog";
 
 // ─── Tier config — Mega 6/45 teal/emerald theme ──────────────────────────────
@@ -46,8 +49,7 @@ const TIER_CONFIG: Partial<
   >
 > = {
   [PrizeTier.Jackpot]: {
-    badge:
-      "border-teal-300 bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-700",
+    badge: "border-teal-300 bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-700",
     row: "bg-teal-50/60 dark:bg-teal-950/10 border-l-2 border-l-teal-400",
     icon: Gem,
   },
@@ -58,26 +60,18 @@ const TIER_CONFIG: Partial<
     icon: Trophy,
   },
   [PrizeTier.Tier2]: {
-    badge:
-      "border-cyan-300 bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300 dark:border-cyan-700",
+    badge: "border-cyan-300 bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300 dark:border-cyan-700",
     row: "bg-cyan-50/30 dark:bg-cyan-950/5",
   },
   [PrizeTier.Tier3]: {
-    badge:
-      "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
+    badge: "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
     row: "",
   },
 };
 
 // ─── Jackpot Winner Banner ────────────────────────────────────────────────────
 
-function JackpotWinnerBanner({
-  winnerCount,
-  totalPrize,
-}: {
-  winnerCount: number;
-  totalPrize: number;
-}) {
+function JackpotWinnerBanner({ winnerCount, totalPrize }: { winnerCount: number; totalPrize: number }) {
   return (
     <div className="relative overflow-hidden rounded-xl border-2 border-teal-400/60 dark:border-teal-500/50">
       <div className="absolute inset-0 bg-linear-to-br from-teal-50 via-emerald-50 to-cyan-50 dark:from-teal-950/40 dark:via-emerald-950/30 dark:to-cyan-950/40" />
@@ -155,20 +149,13 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
 
   return (
     <>
-      <Card
-        className={cn(
-          "shadow-sm",
-          hasJackpotWinner && "ring-1 ring-teal-400/40 dark:ring-teal-500/30",
-        )}
-      >
+      <Card className={cn("shadow-sm", hasJackpotWinner && "ring-1 ring-teal-400/40 dark:ring-teal-500/30")}>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <div
               className={cn(
                 "flex size-7 items-center justify-center rounded-lg shrink-0",
-                hasJackpotWinner
-                  ? "bg-teal-200 dark:bg-teal-800/60"
-                  : "bg-teal-100 dark:bg-teal-900/50",
+                hasJackpotWinner ? "bg-teal-200 dark:bg-teal-800/60" : "bg-teal-100 dark:bg-teal-900/50",
               )}
             >
               {hasJackpotWinner ? (
@@ -180,23 +167,16 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
             <div>
               <CardTitle className="text-sm font-semibold">Kết quả & Phân bổ giải thưởng</CardTitle>
               <CardDescription className="text-xs mt-0.5">
-                <span className="font-semibold text-foreground tabular-nums">
-                  {formatNumber(totalWinningLines)}
-                </span>{" "}
+                <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalWinningLines)}</span>{" "}
                 line trúng thưởng · Tổng giải{" "}
-                <span className="font-semibold text-foreground tabular-nums">
-                  {formatNumber(totalPrize)}
-                </span>
+                <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalPrize)}</span>
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4 pt-0">
           {hasJackpotWinner && jackpotTier && (
-            <JackpotWinnerBanner
-              winnerCount={jackpotTier.winnerCount}
-              totalPrize={jackpotTier.totalPrize}
-            />
+            <JackpotWinnerBanner winnerCount={jackpotTier.winnerCount} totalPrize={jackpotTier.totalPrize} />
           )}
 
           {/* Winning numbers — Mega 6/45: 6 số chính, không có specialNumber */}
@@ -210,9 +190,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
           >
             <div className="flex items-center justify-between w-full">
               <div className="flex-1" />
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Kết quả
-              </span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kết quả</span>
               <div className="flex-1 flex justify-end">
                 <button
                   type="button"
@@ -234,9 +212,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
           {/* Prize table */}
           <div className="rounded-xl border overflow-hidden">
             <div className="grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2 bg-muted/40 border-b">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Hạng giải
-              </span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Hạng giải</span>
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
                 Lines
               </span>
@@ -280,10 +256,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                     ) : (
                       <span className="size-3.5 shrink-0" />
                     )}
-                    <Badge
-                      variant="outline"
-                      className={cn("text-xs border px-2 py-0 h-5", cfg?.badge)}
-                    >
+                    <Badge variant="outline" className={cn("text-xs border px-2 py-0 h-5", cfg?.badge)}>
                       {t.label}
                     </Badge>
                   </div>
@@ -291,9 +264,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                   <span
                     className={cn(
                       "text-right tabular-nums text-sm font-semibold",
-                      hasWinner
-                        ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-muted-foreground/40",
+                      hasWinner ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground/40",
                     )}
                   >
                     {formatNumber(t.winnerCount)}
@@ -321,9 +292,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
             })}
 
             <div className="grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2.5 items-center border-t bg-muted/20">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Tổng cộng
-              </span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tổng cộng</span>
               <span className="text-right tabular-nums text-sm font-bold text-foreground">
                 {formatNumber(totalWinningLines)}
               </span>
@@ -374,17 +343,10 @@ function AccountRow({ row }: { row: LedgerRow }) {
       )}
     >
       <div className="flex items-center gap-2 min-w-0">
-        <div
-          className={cn("flex size-6 items-center justify-center rounded-md shrink-0", row.iconBg)}
-        >
+        <div className={cn("flex size-6 items-center justify-center rounded-md shrink-0", row.iconBg)}>
           <Icon className={cn("size-3.5", row.iconColor)} />
         </div>
-        <span
-          className={cn(
-            "text-sm",
-            row.bold ? "font-semibold text-foreground" : "text-muted-foreground",
-          )}
-        >
+        <span className={cn("text-sm", row.bold ? "font-semibold text-foreground" : "text-muted-foreground")}>
           {row.label}
         </span>
         {row.hint && (
@@ -402,13 +364,7 @@ function AccountRow({ row }: { row: LedgerRow }) {
           </Tooltip>
         )}
       </div>
-      <span
-        className={cn(
-          "tabular-nums text-sm font-mono shrink-0",
-          row.bold ? "font-bold" : "",
-          displayColor,
-        )}
-      >
+      <span className={cn("tabular-nums text-sm font-mono shrink-0", row.bold ? "font-bold" : "", displayColor)}>
         {displaySign !== "=" ? displaySign : ""}
         {formatNumber(row.value)}
       </span>
@@ -495,19 +451,12 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
     },
     {
       icon: Coins,
-      iconBg:
-        companyResult >= 0
-          ? "bg-emerald-100 dark:bg-emerald-900/50"
-          : "bg-red-100 dark:bg-red-900/50",
-      iconColor:
-        companyResult >= 0
-          ? "text-emerald-600 dark:text-emerald-400"
-          : "text-red-600 dark:text-red-400",
+      iconBg: companyResult >= 0 ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50",
+      iconColor: companyResult >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
       label: "Kết quả công ty (P&L kỳ)",
       value: companyResult,
       sign: "=",
-      valueColor:
-        companyResult >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive",
+      valueColor: companyResult >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive",
       bold: true,
       separator: true,
       hint: resultHint,
@@ -523,9 +472,7 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Phân bổ doanh thu sau kết sổ
-            </CardDescription>
+            <CardDescription className="text-xs mt-0.5">Phân bổ doanh thu sau kết sổ</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -569,9 +516,7 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
               <>
                 {/* Có winner: toàn bộ pool (trước kỳ + đóng góp) được trao cho người trúng. */}
                 <div className="flex items-center justify-between gap-3 px-3 py-2">
-                  <span className="text-sm text-amber-700 dark:text-amber-400 pl-8">
-                    − Trao độc đắc
-                  </span>
+                  <span className="text-sm text-amber-700 dark:text-amber-400 pl-8">− Trao độc đắc</span>
                   <span className="tabular-nums text-sm font-mono font-semibold text-amber-700 dark:text-amber-400 shrink-0">
                     −{formatNumber(f.jackpotPrizeAwarded)}
                   </span>
@@ -590,15 +535,12 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
                         </button>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-64">
-                        Đã trao hết pool cho người trúng độc đắc. Chu kỳ Jackpot đóng lại, kỳ kế
-                        tiếp quỹ khởi động lại từ mức seed theo cấu hình — khoản seed này do công ty
-                        ứng (nghĩa vụ tài chính của chu kỳ mới).
+                        Đã trao hết pool cho người trúng độc đắc. Chu kỳ Jackpot đóng lại, kỳ kế tiếp quỹ khởi động lại
+                        từ mức seed theo cấu hình — khoản seed này do công ty ứng (nghĩa vụ tài chính của chu kỳ mới).
                       </TooltipContent>
                     </Tooltip>
                   </div>
-                  <span className="tabular-nums text-sm font-mono font-bold text-foreground shrink-0">
-                    0
-                  </span>
+                  <span className="tabular-nums text-sm font-mono font-bold text-foreground shrink-0">0</span>
                 </div>
                 <div className="px-3 py-1.5 bg-muted/10">
                   <p className="text-[11px] text-muted-foreground/70 pl-8">

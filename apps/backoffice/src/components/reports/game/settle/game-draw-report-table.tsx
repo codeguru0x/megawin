@@ -1,21 +1,14 @@
 "use client";
 
-import { CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
+
 import { getNetProfitColor, PayoutRatioCell } from "@/components/reports/payout-ratio";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 /**
  * Một hàng trong bảng danh sách kỳ quay.
@@ -150,9 +143,7 @@ export function GameDrawReportTable({
                 <TableHead>{REPORT_COLUMN_LABELS.drawId}</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.playerCount}</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
-                {showLineCount && (
-                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.lineCount}</TableHead>
-                )}
+                {showLineCount && <TableHead className="text-right">{REPORT_COLUMN_LABELS.lineCount}</TableHead>}
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
                 <TableHead className="text-right">{REPORT_COLUMN_LABELS.payoutPercent}</TableHead>
@@ -172,37 +163,24 @@ export function GameDrawReportTable({
                   >
                     <TableCell className="text-sm">{row.financialDate}</TableCell>
                     <TableCell className="text-sm font-mono">{row.drawId}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.playerCount)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.playerCount)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
                     {showLineCount && (
                       <TableCell className="text-right text-sm tabular-nums">
                         {formatNumber(row.lineCount ?? 0)}
                       </TableCell>
                     )}
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.totalStake)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.totalPayout)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalStake)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalPayout)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
                       <PayoutRatioCell ratio={payoutRatio} />
                     </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.ggr)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.ggr)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(row.totalCommission)}
                     </TableCell>
                     <TableCell
-                      className={cn(
-                        "text-right text-sm tabular-nums font-medium",
-                        getNetProfitColor(row.netProfit),
-                      )}
+                      className={cn("text-right text-sm tabular-nums font-medium", getNetProfitColor(row.netProfit))}
                     >
                       {formatNumber(row.netProfit)}
                     </TableCell>
@@ -242,10 +220,7 @@ export function GameDrawReportTable({
                   {formatNumber(totals.totalCommission)}
                 </TableCell>
                 <TableCell
-                  className={cn(
-                    "text-right text-sm tabular-nums font-semibold",
-                    getNetProfitColor(totals.netProfit),
-                  )}
+                  className={cn("text-right text-sm tabular-nums font-semibold", getNetProfitColor(totals.netProfit))}
                 >
                   {formatNumber(totals.netProfit)}
                 </TableCell>
@@ -261,21 +236,11 @@ export function GameDrawReportTable({
               Trang {page}/{totalPages} · {totalCount} kỳ quay
             </span>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page === 1}
-                onClick={() => onPageChange(page - 1)}
-              >
+              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => onPageChange(page - 1)}>
                 <ChevronLeft className="mr-1 size-3" />
                 Trước
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => onPageChange(page + 1)}
-              >
+              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>
                 Sau
                 <ChevronRight className="ml-1 size-3" />
               </Button>

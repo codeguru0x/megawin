@@ -1,14 +1,14 @@
 "use client";
 
-import { useQueryState, parseAsString } from "nuqs";
-import { LayoutDashboard } from "lucide-react";
 import { todayVN } from "@megawin/shared/utils";
+import { LayoutDashboard } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
 
 import { FinancialDateRangePicker } from "@/components/date-picker";
 
-import { usePlayerOverview } from "../../_shared/queries";
-import { PlayerKpiStrip } from "../../_components/player-kpi-strip";
 import { GameBreakdownTable } from "../../_components/game-breakdown-table";
+import { PlayerKpiStrip } from "../../_components/player-kpi-strip";
+import { usePlayerOverview } from "../../_shared/queries";
 
 function defaultFrom(): string {
   const d = new Date();
@@ -63,9 +63,7 @@ export function PlayerOverviewContent({ accountId }: PlayerOverviewContentProps)
       {/* 2. KPI strip — full width, 5 card, dữ liệu phụ thuộc date range */}
       <div className="flex flex-col gap-2">
         <PlayerKpiStrip data={overviewData} isLoading={overviewLoading} />
-        {overviewError && (
-          <p className="text-xs text-destructive">Không thể tải dữ liệu thống kê.</p>
-        )}
+        {overviewError && <p className="text-xs text-destructive">Không thể tải dữ liệu thống kê.</p>}
       </div>
 
       {/* 3. Game breakdown table */}

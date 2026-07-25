@@ -1,7 +1,7 @@
-import { z } from "zod";
 import { DRAW_STATUS_VALUES } from "@megawin/game-core/entities";
 import { MEGA645_NUMBER_COUNT } from "@megawin/game-mega645/entities";
 import { mega645NumberSchema } from "@megawin/game-mega645/schemas";
+import { z } from "zod";
 
 /**
  * Mảng 6 số chính Mega 6/45: đúng `MEGA645_NUMBER_COUNT` phần tử, mỗi phần tử là

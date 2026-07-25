@@ -5,12 +5,13 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, LogIn, Crown } from "lucide-react";
+
+import { Crown, Loader2, LogIn } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { signIn } from "@/lib/auth-client";
 import { APP_CONFIG } from "@/config/app-config";
+import { signIn } from "@/lib/auth-client";
 
 const AUTO_REDIRECT_SECONDS = 1;
 
@@ -79,9 +80,7 @@ export function LoginClient({ callbackUrl }: { readonly callbackUrl?: string }) 
         </CardHeader>
         <CardContent className="space-y-4">
           {error && (
-            <div className="rounded-md bg-destructive/10 p-3 text-center text-destructive text-sm">
-              {error}
-            </div>
+            <div className="rounded-md bg-destructive/10 p-3 text-center text-destructive text-sm">{error}</div>
           )}
           <Button onClick={handleSignIn} disabled={isLoading} className="w-full" size="lg">
             {isLoading ? (
@@ -98,8 +97,7 @@ export function LoginClient({ callbackUrl }: { readonly callbackUrl?: string }) 
           </Button>
           {!isLoading && (
             <p className="text-center text-muted-foreground text-sm">
-              Tự động chuyển hướng sau{" "}
-              <span className="font-semibold text-primary">{countdown}</span> giây
+              Tự động chuyển hướng sau <span className="font-semibold text-primary">{countdown}</span> giây
             </p>
           )}
           <p className="text-center text-muted-foreground text-xs">{APP_CONFIG.copyright}</p>

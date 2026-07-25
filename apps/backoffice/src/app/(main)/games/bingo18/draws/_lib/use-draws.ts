@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@megawin/next/client";
 import type { DrawStatus } from "@megawin/game-core/entities";
+import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
+
 import { bingo18Keys } from "@/lib/query-keys";
 
 export interface CurrentDrawInfo {

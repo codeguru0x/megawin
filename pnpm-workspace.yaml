@@ -25,3 +25,4 @@ minimumReleaseAgeExclude:
   - '@better-auth/telemetry@1.6.20'
   - better-auth@1.6.20
   - react-hook-form@7.80.0
+  - postcss@8.5.23

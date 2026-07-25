@@ -1,7 +1,7 @@
-import { z } from "zod";
 import { DRAW_STATUS_VALUES } from "@megawin/game-core/entities";
 import { POWER655_MAIN_COUNT } from "@megawin/game-power655/entities";
 import { power655MainNumberSchema } from "@megawin/game-power655/schemas";
+import { z } from "zod";
 
 /**
  * Mảng số chính Power 6/55: đúng POWER655_MAIN_COUNT phần tử, mỗi phần tử là

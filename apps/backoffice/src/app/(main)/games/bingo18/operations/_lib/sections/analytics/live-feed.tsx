@@ -8,16 +8,17 @@
  * Hiển thị board đầu tiên hoặc sideBet đầu tiên làm preview.
  */
 
-import { cn } from "@/lib/utils";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatNumber, displayVNTimeWithSeconds } from "@megawin/shared/utils";
-import { Activity, Radio } from "lucide-react";
-import { toTenantUsername } from "@megawin/shared/utils";
 import {
+  BINGO18_BIG_SMALL_BET_LABELS,
   BINGO18_PLAY_TYPE_LABELS,
   BINGO18_TRIPLE_KIND_LABELS,
-  BINGO18_BIG_SMALL_BET_LABELS,
 } from "@megawin/game-bingo18/labels";
+import { displayVNTimeWithSeconds, formatNumber, toTenantUsername } from "@megawin/shared/utils";
+import { Activity, Radio } from "lucide-react";
+
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
 import type { LiveFeedEntry } from "../../types";
 
 const PLAY_TYPE_COLORS: Record<string, { dot: string; text: string; fill: string }> = {
@@ -47,6 +48,22 @@ const BINGO18_ANALYTICS_LABELS: Record<string, string> = {
   "tripleMatch-specific": BINGO18_TRIPLE_KIND_LABELS["specific"],
   "tripleMatch-any": BINGO18_TRIPLE_KIND_LABELS["any"],
 };
+
+/**
+ * Ngưỡng "cược lớn" (VND): entry có amount ≥ ngưỡng được highlight border đỏ +
+ * chip để người trực ca chú ý dòng tiền lớn bất thường trong 1 kỳ Bingo18 ~6 phút.
+ *
+ * Guideline chọn ngưỡng per-game (khi rollout sang game khác):
+ * - Công thức gợi ý: `~100 × unitPrice` (mọi game hiện tại unitPrice = 10.000đ
+ *   → 1.000.000đ). Tức 1 vé gấp ~100 lần mức cược phổ thông mới đáng chú ý.
+ * - Game chu kỳ dài (mega645/power655/lotto535, 1 kỳ/ngày): doanh thu/kỳ lớn hơn
+ *   nhiều → có thể nâng lên 2–5 triệu để tránh highlight quá dày.
+ * - Game chu kỳ ngắn (keno/bingo18, 6–8 phút/kỳ): giữ 1 triệu — mỗi kỳ ít tiền,
+ *   1 triệu đã là outlier thật sự.
+ * - Mỗi game tự đặt const này trong live-feed.tsx của game đó; điều chỉnh sau khi
+ *   quan sát phân phối amount thực tế trong vận hành.
+ */
+const LARGE_BET_THRESHOLD = 1_000_000;
 
 export function LiveFeed({
   entries,
@@ -83,6 +100,7 @@ export function LiveFeed({
               const color = PLAY_TYPE_COLORS[e.playType];
               const label = BINGO18_ANALYTICS_LABELS[e.playType] ?? e.playType;
               const isSide = e.playType === "sumTotal" || e.playType === "bigSmallDraw";
+              const isLargeBet = e.amount >= LARGE_BET_THRESHOLD;
 
               return (
                 <div
@@ -90,25 +108,24 @@ export function LiveFeed({
                   className={cn(
                     "rounded-lg px-2.5 py-2 transition-colors hover:bg-muted/40 border-l-2",
                     i === 0 && "bg-muted/20",
+                    // Cược lớn: nền đỏ nhạt + border đỏ để nổi bật ngay trong feed
+                    isLargeBet && "bg-red-500/5",
                   )}
-                  style={{ borderLeftColor: color?.fill ?? "transparent" }}
+                  style={{
+                    borderLeftColor: isLargeBet ? "#ef4444" : (color?.fill ?? "transparent"),
+                  }}
                 >
                   <div className="grid gap-x-3" style={{ gridTemplateColumns: "1fr auto" }}>
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <div
-                        className={cn(
-                          "size-1.5 rounded-full shrink-0",
-                          color?.dot ?? "bg-muted-foreground",
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "text-xs font-semibold truncate",
-                          color?.text ?? "text-muted-foreground",
-                        )}
-                      >
+                      <div className={cn("size-1.5 rounded-full shrink-0", color?.dot ?? "bg-muted-foreground")} />
+                      <span className={cn("text-xs font-semibold truncate", color?.text ?? "text-muted-foreground")}>
                         {label}
                       </span>
+                      {isLargeBet && (
+                        <span className="inline-flex h-4 items-center rounded-full bg-red-500/15 px-1.5 text-[10px] font-semibold text-red-600 dark:text-red-400 shrink-0">
+                          Cược lớn
+                        </span>
+                      )}
                     </div>
                     <div />
                     <div className="flex items-center gap-1 flex-nowrap overflow-hidden">
@@ -124,9 +141,7 @@ export function LiveFeed({
                             }
                             if (e.playType === "bigSmallDraw" && e.bet !== undefined) {
                               // bigSmallDraw: hiển thị "Lớn" / "Hòa" / "Nhỏ"
-                              const betLabel =
-                                (BINGO18_BIG_SMALL_BET_LABELS as Record<string, string>)[e.bet] ??
-                                e.bet;
+                              const betLabel = (BINGO18_BIG_SMALL_BET_LABELS as Record<string, string>)[e.bet] ?? e.bet;
                               return (
                                 <span className="inline-flex h-5 items-center justify-center rounded-full bg-teal-500/15 px-2 text-xs font-semibold text-teal-700 dark:text-teal-400 shrink-0">
                                   {betLabel}
@@ -155,9 +170,7 @@ export function LiveFeed({
                     <div className="text-xs text-muted-foreground truncate">
                       {e.username && (
                         <>
-                          <span className="font-medium text-foreground/70">
-                            {toTenantUsername(e.username)}
-                          </span>
+                          <span className="font-medium text-foreground/70">{toTenantUsername(e.username)}</span>
                           <span className="mx-1">·</span>
                         </>
                       )}

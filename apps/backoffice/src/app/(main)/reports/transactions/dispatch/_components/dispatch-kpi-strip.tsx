@@ -1,8 +1,8 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Clock, FileStack } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
+import type { LucideIcon } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, FileStack } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -48,24 +48,12 @@ function DispatchKpiCard({
 }: DispatchKpiCardProps) {
   const content = (
     <>
-      <div
-        className={cn(
-          "flex size-10 shrink-0 items-center justify-center rounded-lg",
-          iconBg,
-          dim && "opacity-50",
-        )}
-      >
+      <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg, dim && "opacity-50")}>
         <Icon className={cn("size-5", iconColor)} />
       </div>
       <div className="min-w-0 flex-1 text-left">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p
-          className={cn(
-            "text-lg font-bold tabular-nums text-foreground",
-            dim && "text-muted-foreground",
-            valueClass,
-          )}
-        >
+        <p className={cn("text-lg font-bold tabular-nums text-foreground", dim && "text-muted-foreground", valueClass)}>
           {value}
         </p>
         <p className="truncate text-xs text-muted-foreground">{sub}</p>
@@ -144,13 +132,7 @@ export function DispatchKpiStrip({
         label="Tổng orders"
         value={placeholder ? "—" : formatNumber(total)}
         dim={!placeholder && total === 0}
-        sub={
-          placeholder
-            ? "\u00a0"
-            : total === 0
-              ? "Chưa có order nào"
-              : `Giá trị: ${formatVNDCompact(totalAmount)}`
-        }
+        sub={placeholder ? "\u00a0" : total === 0 ? "Chưa có order nào" : `Giá trị: ${formatVNDCompact(totalAmount)}`}
       />
       <DispatchKpiCard
         icon={Clock}

@@ -17,15 +17,8 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { arrayMove, SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { type ColumnDef, flexRender, type Table as TanStackTable } from "@tanstack/react-table";
 
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 import { DraggableRow } from "./draggable-row";
 
@@ -83,12 +76,8 @@ function renderTableBody<TData, TValue>({
           key={cell.id}
           style={{
             width: cell.column.columnDef.size ? `${cell.column.columnDef.size}px` : undefined,
-            minWidth: cell.column.columnDef.minSize
-              ? `${cell.column.columnDef.minSize}px`
-              : undefined,
-            maxWidth: cell.column.columnDef.maxSize
-              ? `${cell.column.columnDef.maxSize}px`
-              : undefined,
+            minWidth: cell.column.columnDef.minSize ? `${cell.column.columnDef.minSize}px` : undefined,
+            maxWidth: cell.column.columnDef.maxSize ? `${cell.column.columnDef.maxSize}px` : undefined,
           }}
         >
           {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -106,15 +95,9 @@ export function DataTable<TData, TValue>({
   headerClassName,
   onRowClick,
 }: DataTableProps<TData, TValue>) {
-  const dataIds: UniqueIdentifier[] = table
-    .getRowModel()
-    .rows.map((row) => Number(row.id) as UniqueIdentifier);
+  const dataIds: UniqueIdentifier[] = table.getRowModel().rows.map((row) => Number(row.id) as UniqueIdentifier);
   const sortableId = React.useId();
-  const sensors = useSensors(
-    useSensor(MouseSensor, {}),
-    useSensor(TouchSensor, {}),
-    useSensor(KeyboardSensor, {}),
-  );
+  const sensors = useSensors(useSensor(MouseSensor, {}), useSensor(TouchSensor, {}), useSensor(KeyboardSensor, {}));
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -139,20 +122,12 @@ export function DataTable<TData, TValue>({
                   key={header.id}
                   colSpan={header.colSpan}
                   style={{
-                    width: header.column.columnDef.size
-                      ? `${header.column.columnDef.size}px`
-                      : undefined,
-                    minWidth: header.column.columnDef.minSize
-                      ? `${header.column.columnDef.minSize}px`
-                      : undefined,
-                    maxWidth: header.column.columnDef.maxSize
-                      ? `${header.column.columnDef.maxSize}px`
-                      : undefined,
+                    width: header.column.columnDef.size ? `${header.column.columnDef.size}px` : undefined,
+                    minWidth: header.column.columnDef.minSize ? `${header.column.columnDef.minSize}px` : undefined,
+                    maxWidth: header.column.columnDef.maxSize ? `${header.column.columnDef.maxSize}px` : undefined,
                   }}
                 >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
+                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                 </TableHead>
               );
             })}

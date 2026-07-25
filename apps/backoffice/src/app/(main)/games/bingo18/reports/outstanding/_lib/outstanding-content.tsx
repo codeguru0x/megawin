@@ -1,23 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { GAME_COLORS } from "@/lib/game-colors";
+
+import type { TicketEntryEntity } from "@megawin/game-bingo18/entities";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { toTenantUsername } from "@megawin/shared/utils/player-username";
-import type { TicketEntryEntity } from "@megawin/game-bingo18/entities";
-import { Bingo18EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
-import { OutstandingContent } from "@/components/reports/game/outstanding";
+
 import type {
   OutstandingDrawRow,
-  OutstandingTenantRow,
-  OutstandingPlayerRow,
   OutstandingEntryRow,
+  OutstandingPlayerRow,
+  OutstandingTenantRow,
 } from "@/components/reports/game/outstanding";
+import { OutstandingContent } from "@/components/reports/game/outstanding";
+import { GAME_COLORS } from "@/lib/game-colors";
+
+import { Bingo18EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
 import {
   useBingo18Outstanding,
   useBingo18OutstandingDrawTenants,
-  useBingo18OutstandingTenantPlayers,
   useBingo18OutstandingPlayerEntries,
+  useBingo18OutstandingTenantPlayers,
 } from "../../settle/_lib/use-report-queries";
 import { useBingo18OutstandingFilters } from "./use-outstanding-filters";
 
@@ -195,11 +198,7 @@ export function Bingo18OutstandingContent() {
         }}
         showLineCount={false}
       />
-      <Bingo18EntryDetailDialog
-        entry={selectedEntry}
-        open={!!selectedEntry}
-        onClose={() => setSelectedEntry(null)}
-      />
+      <Bingo18EntryDetailDialog entry={selectedEntry} open={!!selectedEntry} onClose={() => setSelectedEntry(null)} />
     </>
   );
 }

@@ -1,19 +1,15 @@
-import { NextApiUseCase } from "@megawin/next/server";
-import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
-import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
-import { DrawRepository as Mega645DrawRepo } from "@megawin/game-mega645-application/repos";
-import { DrawRepository as Power655DrawRepo } from "@megawin/game-power655-application/repos";
-import { DrawRepository as Lotto535DrawRepo } from "@megawin/game-lotto535-application/repos";
-import { DrawRepository as KenoDrawRepo } from "@megawin/game-keno-application/repos";
 import { DrawRepository as Bingo18DrawRepo } from "@megawin/game-bingo18-application/repos";
+import type { UnfinishedDrawStatus } from "@megawin/game-core/entities";
+import { DrawStatus, GameProduct } from "@megawin/game-core/entities";
+import { DrawRepository as KenoDrawRepo } from "@megawin/game-keno-application/repos";
+import { DrawRepository as Lotto535DrawRepo } from "@megawin/game-lotto535-application/repos";
 import { DrawRepository as Max3dDrawRepo } from "@megawin/game-max3d-application/repos";
 import { DrawRepository as Max3dproDrawRepo } from "@megawin/game-max3dpro-application/repos";
-import type {
-  DrawTimelineEvent,
-  DrawEventStatus,
-  HighFreqGameSummary,
-  GetDashboardDrawsOutput,
-} from "./types";
+import { DrawRepository as Mega645DrawRepo } from "@megawin/game-mega645-application/repos";
+import { DrawRepository as Power655DrawRepo } from "@megawin/game-power655-application/repos";
+import { NextApiUseCase } from "@megawin/next/server";
+
+import type { DrawEventStatus, DrawTimelineEvent, GetDashboardDrawsOutput, HighFreqGameSummary } from "./types";
 
 /**
  * Statuses mà dashboard coi là "active" — đang diễn ra, chưa settle/void xong.
@@ -69,9 +65,7 @@ export class GetDashboardDrawsUseCase extends NextApiUseCase<void, GetDashboardD
 
   protected async execute(): Promise<GetDashboardDrawsOutput> {
     // Gọi song song tất cả game × 3 nhóm status
-    const results = await Promise.allSettled(
-      this.repos.map(({ game, repo }) => this.fetchGameDraws(game, repo)),
-    );
+    const results = await Promise.allSettled(this.repos.map(({ game, repo }) => this.fetchGameDraws(game, repo)));
 
     const events: DrawTimelineEvent[] = [];
     const highFreqGames: HighFreqGameSummary[] = [];
@@ -146,9 +140,7 @@ export class GetDashboardDrawsUseCase extends NextApiUseCase<void, GetDashboardD
           activeCount: activeDraws.length,
           settledCount: settledDraws.length,
           scheduledCount: scheduledDraws.length,
-          nextDrawAt: nextScheduled?.drawTime
-            ? new Date(nextScheduled.drawTime).toISOString()
-            : null,
+          nextDrawAt: nextScheduled?.drawTime ? new Date(nextScheduled.drawTime).toISOString() : null,
           totalPendingEntries,
           totalPendingStake,
         },

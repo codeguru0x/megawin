@@ -12,51 +12,34 @@
  */
 
 import { useCallback, useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { TripletDisplay } from "@/components/games/max3d/triplet-display";
-import { formatNumber, formatVN } from "@megawin/shared/utils";
-import { toTenantUsername } from "@megawin/shared/utils";
+
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import { Trophy, Loader2, FileSearch, Users, Banknote } from "lucide-react";
+import { BasicPrizeTier, PlusPrizeTier } from "@megawin/game-max3d/entities";
 import {
+  MAX3D_BASIC_PRIZE_TIER_LABELS,
   MAX3D_PLAY_MODE_LABELS,
   MAX3D_PLAY_TYPE_LABELS,
-  MAX3D_BASIC_PRIZE_TIER_LABELS,
   MAX3D_PLUS_PRIZE_TIER_LABELS,
 } from "@megawin/game-max3d/labels";
-import { BasicPrizeTier, PlusPrizeTier } from "@megawin/game-max3d/entities";
+import { formatNumber, formatVN, toTenantUsername } from "@megawin/shared/utils";
+import { Banknote, FileSearch, Loader2, Trophy, Users } from "lucide-react";
+
+import { TripletDisplay } from "@/components/games/max3d/triplet-display";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import {
-  useWinningEntries,
-  useWinningEntryDetail,
-  WINNING_ENTRIES_PAGE_SIZE,
-} from "../../use-operations";
-import type { WinningEntryItem } from "../../use-operations";
+
 import { Max3dEntryDetailDialog } from "../../../../reports/settle/_lib/sections/entry-detail-dialog";
+import type { WinningEntryItem } from "../../use-operations";
+import { useWinningEntries, useWinningEntryDetail, WINNING_ENTRIES_PAGE_SIZE } from "../../use-operations";
 
 // ─── Board chip ───────────────────────────────────────────────────────────────
 
-function BoardChip({
-  board,
-  winningSet,
-}: {
-  board: WinningEntryItem["boards"][number];
-  winningSet: Set<string>;
-}) {
-  const modeLabel =
-    MAX3D_PLAY_MODE_LABELS[board.playMode as keyof typeof MAX3D_PLAY_MODE_LABELS] ?? board.playMode;
-  const typeLabel =
-    MAX3D_PLAY_TYPE_LABELS[board.playType as keyof typeof MAX3D_PLAY_TYPE_LABELS] ?? board.playType;
+function BoardChip({ board, winningSet }: { board: WinningEntryItem["boards"][number]; winningSet: Set<string> }) {
+  const modeLabel = MAX3D_PLAY_MODE_LABELS[board.playMode as keyof typeof MAX3D_PLAY_MODE_LABELS] ?? board.playMode;
+  const typeLabel = MAX3D_PLAY_TYPE_LABELS[board.playType as keyof typeof MAX3D_PLAY_TYPE_LABELS] ?? board.playType;
 
   return (
     <div className="flex items-start gap-2">
@@ -66,12 +49,7 @@ function BoardChip({
       <div className="flex flex-col gap-0.5">
         <div className="flex items-center gap-1 flex-wrap">
           {board.triplets.map((t, i) => (
-            <TripletDisplay
-              key={i}
-              value={t}
-              variant={winningSet.has(t) ? "matched" : "default"}
-              size="sm"
-            />
+            <TripletDisplay key={i} value={t} variant={winningSet.has(t) ? "matched" : "default"} size="sm" />
           ))}
         </div>
         <span className="text-[10px] text-orange-600 dark:text-orange-400 font-medium">
@@ -104,17 +82,14 @@ function TierChip({ tier }: { tier: WinningEntryItem["tiers"][number] }) {
     MAX3D_BASIC_PRIZE_TIER_LABELS[tier.tier as BasicPrizeTier] ??
     MAX3D_PLUS_PRIZE_TIER_LABELS[tier.tier as PlusPrizeTier] ??
     tier.tier;
-  const badgeClass =
-    TIER_BADGE_COLORS[tier.tier] ?? "border-border bg-muted/40 text-muted-foreground";
+  const badgeClass = TIER_BADGE_COLORS[tier.tier] ?? "border-border bg-muted/40 text-muted-foreground";
 
   return (
     <div className="flex items-center gap-1.5">
       <Badge variant="outline" className={cn("text-[10px] py-0 h-4", badgeClass)}>
         {label}
       </Badge>
-      <span className="text-xs tabular-nums text-amber-700 dark:text-amber-400">
-        +{formatNumber(tier.amount)}
-      </span>
+      <span className="text-xs tabular-nums text-amber-700 dark:text-amber-400">+{formatNumber(tier.amount)}</span>
     </div>
   );
 }
@@ -151,13 +126,7 @@ function KpiCard({
   );
 }
 
-function KpiBar({
-  totalWinningEntries,
-  totalWinAmount,
-}: {
-  totalWinningEntries: number;
-  totalWinAmount: number;
-}) {
+function KpiBar({ totalWinningEntries, totalWinAmount }: { totalWinningEntries: number; totalWinAmount: number }) {
   return (
     <div className="flex gap-3 border-b bg-muted/20 px-6 py-3 shrink-0">
       <KpiCard
@@ -180,23 +149,12 @@ function KpiBar({
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
-function WinningEntryRow({
-  entry,
-  rowNo,
-  onClick,
-}: {
-  entry: WinningEntryItem;
-  rowNo: number;
-  onClick: () => void;
-}) {
+function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; rowNo: number; onClick: () => void }) {
   const displayName = toTenantUsername(entry.username) ?? entry.username;
   const winningSet = new Set(entry.winningTriplets);
 
   return (
-    <TableRow
-      onClick={onClick}
-      className="align-top group transition-colors hover:bg-muted/30 cursor-pointer"
-    >
+    <TableRow onClick={onClick} className="align-top group transition-colors hover:bg-muted/30 cursor-pointer">
       <TableCell className="pl-6 py-3 text-center">
         <span className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-xs font-semibold tabular-nums text-muted-foreground">
           {rowNo}
@@ -205,9 +163,7 @@ function WinningEntryRow({
       <TableCell className="py-3">
         <div>
           <p className="text-sm text-foreground">{displayName}</p>
-          <p className="text-[10px] text-muted-foreground/50 font-mono mt-0.5 truncate max-w-32">
-            @{entry.tenantId}
-          </p>
+          <p className="text-[10px] text-muted-foreground/50 font-mono mt-0.5 truncate max-w-32">@{entry.tenantId}</p>
         </div>
       </TableCell>
       <TableCell className="py-3 text-right">
@@ -228,9 +184,7 @@ function WinningEntryRow({
         </div>
       </TableCell>
       <TableCell className="py-3 pr-6 text-right">
-        <p className="text-sm tabular-nums text-foreground font-medium">
-          {formatNumber(entry.winAmount)}
-        </p>
+        <p className="text-sm tabular-nums text-foreground font-medium">{formatNumber(entry.winAmount)}</p>
         <p className="text-xs text-muted-foreground/50 tabular-nums mt-0.5">
           {formatVN(new Date(entry.createdAt), "HH:mm dd/MM")}
         </p>
@@ -248,10 +202,7 @@ interface WinningEntriesDialogProps {
 }
 
 export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntriesDialogProps) {
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useWinningEntries(
-    drawId,
-    open,
-  );
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useWinningEntries(drawId, open);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const { data: selectedEntry } = useWinningEntryDetail(selectedEntryId, {
     onNotFound: () => setSelectedEntryId(null),
@@ -280,9 +231,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
               <Trophy className="size-5 text-orange-500" />
             </div>
             <div>
-              <DialogTitle className="text-base font-bold tracking-tight">
-                Danh sách trúng thưởng
-              </DialogTitle>
+              <DialogTitle className="text-base font-bold tracking-tight">Danh sách trúng thưởng</DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                 Kỳ <span className="font-mono text-foreground">{drawId}</span>
               </DialogDescription>
@@ -291,10 +240,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
         </div>
 
         {summary && (
-          <KpiBar
-            totalWinningEntries={summary.totalWinningEntries}
-            totalWinAmount={summary.totalWinAmount}
-          />
+          <KpiBar totalWinningEntries={summary.totalWinningEntries} totalWinAmount={summary.totalWinAmount} />
         )}
 
         <div className="flex-1 overflow-auto min-h-0">
@@ -311,12 +257,8 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
                 <FileSearch className="size-7 text-muted-foreground/40" />
               </div>
               <div className="text-center">
-                <p className="text-base font-semibold text-foreground">
-                  Không có phiếu trúng thưởng
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Kỳ này không có phiếu cược nào trúng thưởng.
-                </p>
+                <p className="text-base font-semibold text-foreground">Không có phiếu trúng thưởng</p>
+                <p className="mt-1 text-sm text-muted-foreground">Kỳ này không có phiếu cược nào trúng thưởng.</p>
               </div>
             </div>
           ) : (
@@ -325,14 +267,10 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
                 <TableRow className="hover:bg-muted/40">
                   <TableHead className="pl-6 w-12 text-center">STT</TableHead>
                   <TableHead className="w-44">{REPORT_COLUMN_LABELS.player}</TableHead>
-                  <TableHead className="w-28 text-right">
-                    {REPORT_COLUMN_LABELS.totalStake}
-                  </TableHead>
+                  <TableHead className="w-28 text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                   <TableHead className="min-w-60">{REPORT_COLUMN_LABELS.tripletsPlayed}</TableHead>
                   <TableHead className="w-44">{REPORT_COLUMN_LABELS.prizeTier}</TableHead>
-                  <TableHead className="pr-6 w-40 text-right">
-                    {REPORT_COLUMN_LABELS.winAmount}
-                  </TableHead>
+                  <TableHead className="pr-6 w-40 text-right">{REPORT_COLUMN_LABELS.winAmount}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

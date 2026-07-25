@@ -1,43 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Ticket,
-  Building2,
-  User,
-  Clock,
-  Layers,
-  Banknote,
-  HandCoins,
-  CheckCircle2,
-  XCircle,
-  Timer,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber, toTenantUsername, formatVN } from "@megawin/shared/utils";
-import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import type { TicketEntryEntity, EntryPayoutTier } from "@megawin/game-power655/entities";
-import {
-  POWER655_PRIZE_TIER_LABELS,
-  getPower655PlayTypeLabel,
-} from "@megawin/game-power655/labels";
-import { PrizeTier } from "@megawin/game-power655/entities";
+
 import { EntryStatus } from "@megawin/game-core/entities";
-import { boardColorVar } from "@/lib/game-colors";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import type { EntryPayoutTier, TicketEntryEntity } from "@megawin/game-power655/entities";
+import { PrizeTier } from "@megawin/game-power655/entities";
+import { getPower655PlayTypeLabel, POWER655_PRIZE_TIER_LABELS } from "@megawin/game-power655/labels";
+import { formatNumber, formatVN, toTenantUsername } from "@megawin/shared/utils";
+import {
+  Banknote,
+  Building2,
+  CheckCircle2,
+  Clock,
+  HandCoins,
+  Layers,
+  Minus,
+  Ticket,
+  Timer,
+  TrendingDown,
+  TrendingUp,
+  User,
+  XCircle,
+} from "lucide-react";
+
 import { PowerMatchBall } from "@/components/games/power655/power-number-ball";
 import { EntryDetailDialogLoading } from "@/components/games/shared/skeletons/entry-detail-skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { boardColorVar } from "@/lib/game-colors";
 
 // ─── Entry Detail Dialog ──────────────────────────────────────────────────────
 
@@ -87,9 +80,7 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
     [PrizeTier.Tier2]: 3,
     [PrizeTier.Tier3]: 4,
   };
-  const sortedTiers = [...tiers].sort(
-    (a, b) => (TIER_ORDER[a.tier] ?? 99) - (TIER_ORDER[b.tier] ?? 99),
-  );
+  const sortedTiers = [...tiers].sort((a, b) => (TIER_ORDER[a.tier] ?? 99) - (TIER_ORDER[b.tier] ?? 99));
   const boards = entry.entrySummary.boards ?? [];
   const isScheduled = entry.status === EntryStatus.Scheduled;
   const isSettled = entry.status === EntryStatus.Settled;
@@ -112,9 +103,7 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
   const playerLink = `/accounts/players/${entry.accountId}`;
   const MAX_USERNAME_LEN = 14;
   const truncatedUsername =
-    tenantUsername.length > MAX_USERNAME_LEN
-      ? tenantUsername.slice(0, MAX_USERNAME_LEN) + "…"
-      : tenantUsername;
+    tenantUsername.length > MAX_USERNAME_LEN ? tenantUsername.slice(0, MAX_USERNAME_LEN) + "…" : tenantUsername;
 
   return (
     <>
@@ -154,10 +143,7 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link
-                        href={playerLink}
-                        className="cursor-pointer font-semibold hover:underline"
-                      >
+                      <Link href={playerLink} className="cursor-pointer font-semibold hover:underline">
                         {truncatedUsername}
                       </Link>
                     </TooltipTrigger>
@@ -221,12 +207,8 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalCommission}
-                  </p>
-                  <p className="text-sm font-bold tabular-nums">
-                    {formatNumber(entry.tenant.commissionAmount)}
-                  </p>
+                  <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
             </div>
@@ -253,12 +235,8 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <Banknote className="size-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalPayout}
-                  </p>
-                  <p className="text-sm font-bold tabular-nums">
-                    {formatNumber(entry.payout?.payoutAmount ?? 0)}
-                  </p>
+                  <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.totalPayout}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.payout?.payoutAmount ?? 0)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
@@ -266,12 +244,8 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalCommission}
-                  </p>
-                  <p className="text-sm font-bold tabular-nums">
-                    {formatNumber(entry.tenant.commissionAmount)}
-                  </p>
+                  <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
               {playerNet !== null && (
@@ -294,16 +268,10 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     )}
                   </div>
                   <div>
-                    <p className="text-[11px] text-muted-foreground">
-                      {REPORT_COLUMN_LABELS.playerNetProfit}
-                    </p>
+                    <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
                     <p
                       className={`text-sm font-bold tabular-nums ${
-                        playerNet > 0
-                          ? "text-profit"
-                          : playerNet < 0
-                            ? "text-loss"
-                            : "text-foreground"
+                        playerNet > 0 ? "text-profit" : playerNet < 0 ? "text-loss" : "text-foreground"
                       }`}
                     >
                       {playerNet > 0 ? "+" : ""}
@@ -324,20 +292,14 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
               <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
                 {entry.result.winningMain.map((n: string) => {
                   const playerPicked = boards.some((b) => b.mainNumbers.includes(n));
-                  return (
-                    <PowerMatchBall key={n} n={n} variant={playerPicked ? "matched" : "result"} />
-                  );
+                  return <PowerMatchBall key={n} n={n} variant={playerPicked ? "matched" : "result"} />;
                 })}
                 {bonusNumber && (
                   <>
                     <span className="text-muted-foreground/40 select-none">|</span>
                     <PowerMatchBall
                       n={bonusNumber}
-                      variant={
-                        boards.some((b) => b.mainNumbers.includes(bonusNumber))
-                          ? "bonus"
-                          : "result-bonus"
-                      }
+                      variant={boards.some((b) => b.mainNumbers.includes(bonusNumber)) ? "bonus" : "result-bonus"}
                     />
                   </>
                 )}
@@ -362,24 +324,17 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                       }}
                     >
                       <div className="flex items-center justify-center self-stretch">
-                        <span
-                          className="text-sm font-extrabold leading-none"
-                          style={{ color: boardColor }}
-                        >
+                        <span className="text-sm font-extrabold leading-none" style={{ color: boardColor }}>
                           {board.boardNo}
                         </span>
                       </div>
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-[11px] font-semibold leading-tight text-foreground">
-                          {playLabel}
-                        </span>
+                        <span className="text-[11px] font-semibold leading-tight text-foreground">{playLabel}</span>
                         <span className="text-[10px] leading-tight text-muted-foreground">
                           {formatNumber(board.expandedLines)} lines
                         </span>
                         {board.betCount > 1 && (
-                          <span className="text-[10px] leading-tight text-muted-foreground/70">
-                            ×{board.betCount}
-                          </span>
+                          <span className="text-[10px] leading-tight text-muted-foreground/70">×{board.betCount}</span>
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-1">
@@ -421,17 +376,12 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         }}
                       >
                         <div className="flex items-center justify-center self-stretch">
-                          <span
-                            className="text-sm font-extrabold leading-none"
-                            style={{ color: boardColor }}
-                          >
+                          <span className="text-sm font-extrabold leading-none" style={{ color: boardColor }}>
                             {board.boardNo}
                           </span>
                         </div>
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-[11px] font-semibold leading-tight text-foreground">
-                            {playLabel}
-                          </span>
+                          <span className="text-[11px] font-semibold leading-tight text-foreground">{playLabel}</span>
                           <span className="text-[10px] leading-tight text-muted-foreground">
                             {formatNumber(board.expandedLines)} lines
                           </span>
@@ -457,9 +407,7 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 6. Giải trúng ─────────────────────────────────────────── */}
           {tiers.length > 0 && !isScheduled && (
             <div className="rounded-lg border border-profit/30 bg-profit/5 p-4">
-              <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-profit">
-                Giải trúng
-              </p>
+              <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-profit">Giải trúng</p>
               <div className="space-y-2">
                 {sortedTiers.map((tier: EntryPayoutTier, i: number) => (
                   <div
@@ -474,9 +422,7 @@ function Power655EntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         ×{tier.hitCount} lần
                       </span>
                     </div>
-                    <span className="tabular-nums font-bold text-profit">
-                      {formatNumber(tier.amount)}
-                    </span>
+                    <span className="tabular-nums font-bold text-profit">{formatNumber(tier.amount)}</span>
                   </div>
                 ))}
               </div>

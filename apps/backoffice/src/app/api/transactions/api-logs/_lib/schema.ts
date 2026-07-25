@@ -1,5 +1,5 @@
+import { TxLogEventType, TxLogStatus } from "@megawin/tenant-gateway/entities";
 import { z } from "zod";
-import { TxLogStatus, TxLogEventType } from "@megawin/tenant-gateway/entities";
 
 const statusValues = Object.values(TxLogStatus) as [TxLogStatus, ...TxLogStatus[]];
 const eventTypeValues = Object.values(TxLogEventType) as [TxLogEventType, ...TxLogEventType[]];

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { RotateCcw, Search, Target } from "lucide-react";
+
+import type { AuditAction } from "@megawin/audit/entities";
 import {
   AUDIT_ACTIONS,
   AuditActionLabel,
@@ -14,18 +15,12 @@ import {
   AuditTargetType,
   AuditTargetTypeLabel,
 } from "@megawin/audit/entities";
-import type { AuditAction } from "@megawin/audit/entities";
+import { RotateCcw, Search, Target } from "lucide-react";
 
+import { FinancialDateRangePicker } from "@/components/date-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { FinancialDateRangePicker } from "@/components/date-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GAME_PRODUCT_OPTIONS } from "@/lib/game-labels";
 
 import { useAuditLogFilters } from "../_lib/use-filters";
@@ -84,14 +79,7 @@ export function AuditLogsFilterBar() {
   }, [category]);
 
   const hasActiveFilters =
-    !!actor ||
-    !!actorType ||
-    !!game ||
-    !!category ||
-    !!action ||
-    !!targetType ||
-    !!targetId ||
-    !!status;
+    !!actor || !!actorType || !!game || !!category || !!action || !!targetType || !!targetId || !!status;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -172,10 +160,7 @@ export function AuditLogsFilterBar() {
         </SelectContent>
       </Select>
 
-      <Select
-        value={category ?? "all"}
-        onValueChange={(v) => setCategory(v === "all" ? null : (v as AuditCategory))}
-      >
+      <Select value={category ?? "all"} onValueChange={(v) => setCategory(v === "all" ? null : (v as AuditCategory))}>
         <SelectTrigger size="sm" className="h-8 w-30 text-xs">
           <SelectValue placeholder="Nhóm" />
         </SelectTrigger>
@@ -220,10 +205,7 @@ export function AuditLogsFilterBar() {
         </SelectContent>
       </Select>
 
-      <Select
-        value={status ?? "all"}
-        onValueChange={(v) => setStatus(v === "all" ? null : (v as AuditStatus))}
-      >
+      <Select value={status ?? "all"} onValueChange={(v) => setStatus(v === "all" ? null : (v as AuditStatus))}>
         <SelectTrigger size="sm" className="h-8 w-30 text-xs">
           <SelectValue placeholder="Kết quả" />
         </SelectTrigger>

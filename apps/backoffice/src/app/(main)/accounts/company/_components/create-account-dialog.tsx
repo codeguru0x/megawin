@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+import { COMPANY_ROLE_VALUES, CompanyRole } from "@megawin/identity/entities";
+import { ApiClientError, apiClient } from "@megawin/next/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AtSign, Dices, Eye, EyeOff, Lock, Shield, User, UserPlus } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { cn } from "@/lib/utils";
-import { Dices, Eye, EyeOff, Shield, UserPlus, User, AtSign, Lock } from "lucide-react";
-import { apiClient, ApiClientError } from "@megawin/next/client";
-import { CompanyRole, COMPANY_ROLE_VALUES } from "@megawin/identity/entities";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,21 +21,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/lib/auth-client";
+import { accountsKeys } from "@/lib/query-keys/accounts";
+import { cn } from "@/lib/utils";
 
+import { generatePassword } from "../../_shared/generate-password";
 import { COMPANY_ROLES_OPTIONS } from "../_lib/constants";
 import type { CreateCompanyAccountResponse } from "../_lib/types";
-import { generatePassword } from "../../_shared/generate-password";
-import { accountsKeys } from "@/lib/query-keys/accounts";
 
 const createAccountSchema = z.object({
   username: z.string().min(3, "Tên tài khoản tối thiểu 3 ký tự."),
@@ -67,23 +61,21 @@ const STRENGTH_CONFIG = [
   { label: "Rất mạnh", color: "bg-emerald-600" },
 ] as const;
 
-const ROLE_META: Record<
-  CompanyRole,
-  { icon: typeof Shield; description: string; iconBg: string; iconColor: string }
-> = {
-  [CompanyRole.Admin]: {
-    icon: Shield,
-    description: "Toàn quyền quản trị hệ thống",
-    iconBg: "bg-violet-100 dark:bg-violet-900/50",
-    iconColor: "text-violet-600 dark:text-violet-400",
-  },
-  [CompanyRole.Staff]: {
-    icon: User,
-    description: "Xem và thao tác nghiệp vụ cơ bản",
-    iconBg: "bg-blue-100 dark:bg-blue-900/50",
-    iconColor: "text-blue-600 dark:text-blue-400",
-  },
-};
+const ROLE_META: Record<CompanyRole, { icon: typeof Shield; description: string; iconBg: string; iconColor: string }> =
+  {
+    [CompanyRole.Admin]: {
+      icon: Shield,
+      description: "Toàn quyền quản trị hệ thống",
+      iconBg: "bg-violet-100 dark:bg-violet-900/50",
+      iconColor: "text-violet-600 dark:text-violet-400",
+    },
+    [CompanyRole.Staff]: {
+      icon: User,
+      description: "Xem và thao tác nghiệp vụ cơ bản",
+      iconBg: "bg-blue-100 dark:bg-blue-900/50",
+      iconColor: "text-blue-600 dark:text-blue-400",
+    },
+  };
 
 export function CreateCompanyAccountDialog() {
   const queryClient = useQueryClient();
@@ -185,12 +177,7 @@ export function CreateCompanyAccountDialog() {
                   <FormControl>
                     <div className="relative">
                       <AtSign className="absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        placeholder="vd: admin.company"
-                        autoComplete="off"
-                        className="pl-8.5 text-sm"
-                        {...field}
-                      />
+                      <Input placeholder="vd: admin.company" autoComplete="off" className="pl-8.5 text-sm" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage className="text-xs" />
@@ -251,16 +238,12 @@ export function CreateCompanyAccountDialog() {
                             key={i}
                             className={cn(
                               "h-1 flex-1 rounded-full transition-all duration-300",
-                              i < strength
-                                ? (STRENGTH_CONFIG[strength]?.color ?? "bg-muted")
-                                : "bg-muted",
+                              i < strength ? (STRENGTH_CONFIG[strength]?.color ?? "bg-muted") : "bg-muted",
                             )}
                           />
                         ))}
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Độ mạnh: {STRENGTH_CONFIG[strength]?.label}
-                      </p>
+                      <p className="text-xs text-muted-foreground">Độ mạnh: {STRENGTH_CONFIG[strength]?.label}</p>
                     </div>
                   )}
                   <FormMessage className="text-xs" />
@@ -293,18 +276,13 @@ export function CreateCompanyAccountDialog() {
                           )}
                         >
                           <div
-                            className={cn(
-                              "flex size-8 shrink-0 items-center justify-center rounded-lg",
-                              meta?.iconBg,
-                            )}
+                            className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg", meta?.iconBg)}
                           >
                             <RoleIcon className={cn("size-4", meta?.iconColor)} />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium leading-none">{opt.label}</p>
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                              {meta?.description}
-                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">{meta?.description}</p>
                           </div>
                           <div
                             className={cn(

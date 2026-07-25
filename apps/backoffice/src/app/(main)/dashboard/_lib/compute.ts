@@ -1,6 +1,6 @@
-import type { DashboardGameDailyData } from "@megawin/game-core-application/repos";
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { getGameLabel as coreGetGameLabel } from "@megawin/game-core/labels";
+import type { DashboardGameDailyData } from "@megawin/game-core-application/repos";
 
 /**
  * Tổng hợp KPI toàn hệ thống từ raw per-game data của 1 ngày tài chính.
@@ -41,10 +41,7 @@ export function calcTrendPercent(current: number, base: number | undefined): num
 /**
  * Tổng hợp KPI từ raw per-game data cho 1 ngày tài chính cụ thể.
  */
-export function computeDayKpis(
-  data: DashboardGameDailyData[],
-  financialDate: string,
-): DashboardDayKpis {
+export function computeDayKpis(data: DashboardGameDailyData[], financialDate: string): DashboardDayKpis {
   const dayData = data.filter((r) => r.financialDate === financialDate);
 
   const totalStake = dayData.reduce((s, r) => s + r.totalStake, 0);

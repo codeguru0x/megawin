@@ -1,11 +1,12 @@
 "use client";
 
+import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
 import { CircleDollarSign, Flame, Layers, MoveUpRight, Sigma, Target, Trophy } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
+
 import { useJackpotCurrent } from "./use-jackpot";
 
 // ─── JackpotHeroCard ──────────────────────────────────────────────────────────
@@ -29,9 +30,7 @@ export function JackpotHeroCard() {
   const isWarm = pct >= 60;
 
   const growthPct =
-    cycle.seedAmount > 0
-      ? Math.round(((cycle.currentAmount - cycle.seedAmount) / cycle.seedAmount) * 100)
-      : 0;
+    cycle.seedAmount > 0 ? Math.round(((cycle.currentAmount - cycle.seedAmount) / cycle.seedAmount) * 100) : 0;
 
   return (
     <div
@@ -39,9 +38,7 @@ export function JackpotHeroCard() {
         "relative overflow-hidden rounded-2xl border-2 p-6",
         "bg-linear-to-br from-teal-50/90 via-cyan-50/70 to-emerald-50/50",
         "dark:from-teal-950/50 dark:via-cyan-950/40 dark:to-emerald-950/30",
-        isHot
-          ? "border-teal-400 dark:border-teal-700/70"
-          : "border-teal-200 dark:border-teal-800/50",
+        isHot ? "border-teal-400 dark:border-teal-700/70" : "border-teal-200 dark:border-teal-800/50",
       )}
     >
       {/* Decorative glows */}
@@ -91,13 +88,9 @@ export function JackpotHeroCard() {
           <div className="flex items-center justify-between text-xs">
             <span className="font-medium text-teal-800/70 dark:text-teal-300/70">
               Tiến trình đến{" "}
-              <span className="font-semibold">
-                {formatVNDCompact(progress?.milestoneThreshold ?? 0)}
-              </span>
+              <span className="font-semibold">{formatVNDCompact(progress?.milestoneThreshold ?? 0)}</span>
             </span>
-            <span className="font-bold tabular-nums text-teal-900 dark:text-teal-200">
-              {pct.toFixed(1)}%
-            </span>
+            <span className="font-bold tabular-nums text-teal-900 dark:text-teal-200">{pct.toFixed(1)}%</span>
           </div>
           <div className="h-3 w-full overflow-hidden rounded-full bg-teal-200/60 dark:bg-teal-900/50">
             <div
@@ -154,9 +147,7 @@ export function JackpotKpiCards() {
   const { cycle, progress } = data;
 
   const growthPct =
-    cycle.seedAmount > 0
-      ? Math.round(((cycle.currentAmount - cycle.seedAmount) / cycle.seedAmount) * 100)
-      : 0;
+    cycle.seedAmount > 0 ? Math.round(((cycle.currentAmount - cycle.seedAmount) / cycle.seedAmount) * 100) : 0;
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

@@ -1,46 +1,47 @@
 "use client";
 
-import { useEffect } from "react";
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useEffectEvent } from "react";
+
+import type { GetDrawDetailOutput } from "@megawin/game-bingo18-application/use-cases/draws";
+import type {
+  DiceFrequencyOutput,
+  GetDrawSelectorOutput,
+  GetLiveEntriesOutput,
+  GetTopCombosOutput,
+  GetWinningEntriesOutput,
+  OpsSummaryOutput,
+  PlayTypeDistributionOutput,
+  TenantBreakdownOutput,
+} from "@megawin/game-bingo18-application/use-cases/operations";
+import type { GetEntryByIdOutput } from "@megawin/game-bingo18-application/use-cases/reports";
 import { apiClient, formatErrorToast } from "@megawin/next/client";
 import { Pagination } from "@megawin/shared/constants/pagination";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { bingo18Keys } from "@/lib/query-keys";
-import type {
-  OpsSummaryOutput,
-  TenantBreakdownOutput,
-  DiceFrequencyOutput,
-  PlayTypeDistributionOutput,
-  GetLiveEntriesOutput,
-  GetDrawSelectorOutput,
-  GetTopCombosOutput,
-  GetWinningEntriesOutput,
-} from "@megawin/game-bingo18-application/use-cases/operations";
-import type { GetDrawDetailOutput } from "@megawin/game-bingo18-application/use-cases/draws";
-import type { GetEntryByIdOutput } from "@megawin/game-bingo18-application/use-cases/reports";
 
-export type {
-  OpsSummaryOutput,
-  TenantBreakdownOutput,
-  TenantBreakdownItem,
-  DiceFrequencyOutput,
-  DiceFrequencyItem,
-  PlayTypeDistributionOutput,
-  PlayTypeDistributionItem,
-  GetLiveEntriesOutput,
-  LiveEntryItem,
-  LiveEntryBoard,
-  GetDrawSelectorOutput,
-  DrawSelectorItem,
-  GetTopCombosOutput,
-  TopComboItem,
-  GetWinningEntriesOutput,
-  WinningEntryItem,
-  WinningBoardDetail,
-  WinningEntriesSummary,
-} from "@megawin/game-bingo18-application/use-cases/operations";
+import { bingo18Keys } from "@/lib/query-keys";
 
 export type { GetDrawDetailOutput } from "@megawin/game-bingo18-application/use-cases/draws";
+export type {
+  DiceFrequencyItem,
+  DiceFrequencyOutput,
+  DrawSelectorItem,
+  GetDrawSelectorOutput,
+  GetLiveEntriesOutput,
+  GetTopCombosOutput,
+  GetWinningEntriesOutput,
+  LiveEntryBoard,
+  LiveEntryItem,
+  OpsSummaryOutput,
+  PlayTypeDistributionItem,
+  PlayTypeDistributionOutput,
+  TenantBreakdownItem,
+  TenantBreakdownOutput,
+  TopComboItem,
+  WinningBoardDetail,
+  WinningEntriesSummary,
+  WinningEntryItem,
+} from "@megawin/game-bingo18-application/use-cases/operations";
 
 export interface OpsQueryParams {
   financialDate?: string;
@@ -237,20 +238,25 @@ export function useWinningEntryDetail(
     enabled: !!entryId,
   });
 
+  // useEffectEvent: đọc `onNotFound` mới nhất mà không cần khai báo dependency —
+  // callback không nên trigger effect chạy lại.
+  const onNotFoundEvent = useEffectEvent(() => {
+    onNotFound?.();
+  });
+
   useEffect(() => {
     if (!entryId) return;
     if (query.isError) {
       toast.error("Không thể tải thông tin phiếu cược", {
         description: "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     } else if (query.isFetched && !query.isLoading && !query.data) {
       toast.error("Không tìm thấy phiếu cược", {
         description: "Phiếu cược này không còn dữ liệu hoặc đã bị xóa.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.isError, query.isFetched, query.isLoading, query.data, entryId]);
 
   return query;

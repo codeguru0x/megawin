@@ -27,10 +27,7 @@ export function DocMeta({
 
   return (
     <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
-      <Badge
-        variant="outline"
-        className={cn("gap-1", meta.bgMuted, meta.text, "border-transparent")}
-      >
+      <Badge variant="outline" className={cn("gap-1", meta.bgMuted, meta.text, "border-transparent")}>
         <Icon className="size-3" />
         {gameTitle}
       </Badge>

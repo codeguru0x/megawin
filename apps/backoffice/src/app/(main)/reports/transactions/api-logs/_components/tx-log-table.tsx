@@ -1,27 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Inbox, Loader2, XCircle } from "lucide-react";
-import { displayVNDateTime } from "@megawin/shared/utils/date";
-import { formatNumber } from "@megawin/shared/utils/number";
+
 import { TRANSACTION_ACTION_LABELS, TRANSACTION_REASON_LABELS } from "@megawin/game-core/labels";
 import type { TransactionAction, TransactionReason } from "@megawin/shared/types";
+import { displayVNDateTime } from "@megawin/shared/utils/date";
+import { formatNumber } from "@megawin/shared/utils/number";
 import type { TxLogEntity } from "@megawin/tenant-gateway/entities";
 import { TxLogEventType, TxLogStatus } from "@megawin/tenant-gateway/entities";
-import {
-  TX_LOG_STATUS_LABELS,
-  TX_LOG_EVENT_TYPE_LABELS,
-} from "@megawin/tenant-gateway/shared/labels";
+import { TX_LOG_EVENT_TYPE_LABELS, TX_LOG_STATUS_LABELS } from "@megawin/tenant-gateway/shared/labels";
+import { CheckCircle2, Inbox, Loader2, XCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getGameLabel } from "@/lib/game-labels";
 import { cn } from "@/lib/utils";
 
@@ -195,10 +186,7 @@ export function TxLogTable({
                   </TableCell>
 
                   {/* Player ID — đây là tenant-side playerId gửi đi (đã strip @tenantId) */}
-                  <TableCell
-                    className="max-w-35 truncate font-mono text-sm"
-                    title={req.playerId ?? undefined}
-                  >
+                  <TableCell className="max-w-35 truncate font-mono text-sm" title={req.playerId ?? undefined}>
                     {req.playerId ?? <span className="text-muted-foreground">—</span>}
                   </TableCell>
 

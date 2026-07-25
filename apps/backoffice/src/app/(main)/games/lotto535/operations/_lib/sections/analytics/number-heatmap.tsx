@@ -8,23 +8,25 @@
  * 5-level heat intensity scale (cold → hot, amber cross-game cho hot).
  */
 
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber, formatCurrency } from "@megawin/shared/utils";
+import type { PlayType } from "@megawin/game-lotto535/entities";
+import { LOTTO535_PLAY_TYPE_LABELS_SHORT } from "@megawin/game-lotto535/labels";
+import { formatCurrency, formatNumber } from "@megawin/shared/utils";
 import { BarChart2, Star, Trophy } from "lucide-react";
+
 import {
   HEATMAP_BADGE_SIZE,
   HEATMAP_BADGE_TEXT,
-  HEATMAP_CELL_PT,
   HEATMAP_CELL_DATA_SIZE,
+  HEATMAP_CELL_PT,
   HEATMAP_CELL_SUB_SIZE,
 } from "@/components/games/shared/game-number-tokens";
-import { TenantBreakdown } from "./analytics-panels";
-import { LOTTO535_PLAY_TYPE_LABELS_SHORT } from "@megawin/game-lotto535/labels";
-import type { PlayType } from "@megawin/game-lotto535/entities";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+
 import type { NumberFreq, TenantRow } from "../../types";
 import type { TopComboItem } from "../../use-operations";
+import { TenantBreakdown } from "./analytics-panels";
 
 // ─── Lotto 5/35 color tokens ─────────────────────────────────────────────────
 
@@ -224,32 +226,17 @@ function NumberCell({
             )}
           >
             <span className="absolute top-1 left-1">
-              <NumberBadge
-                num={n.number}
-                muted={isEmpty}
-                ballVariant={ballVariant}
-                heatLevel={heatLevel}
-              />
+              <NumberBadge num={n.number} muted={isEmpty} ballVariant={ballVariant} heatLevel={heatLevel} />
             </span>
             <div className="flex flex-col items-center gap-0.5">
               {isEmpty ? (
                 <span className="text-[11px] text-muted-foreground/20 tabular-nums">–</span>
               ) : (
                 <>
-                  <span
-                    className={cn(
-                      HEATMAP_CELL_DATA_SIZE,
-                      "font-bold tabular-nums leading-tight text-foreground",
-                    )}
-                  >
+                  <span className={cn(HEATMAP_CELL_DATA_SIZE, "font-bold tabular-nums leading-tight text-foreground")}>
                     {formatCurrency(n.amount, { million: "tr", thousand: "k", decimals: 1 })}
                   </span>
-                  <span
-                    className={cn(
-                      HEATMAP_CELL_SUB_SIZE,
-                      "tabular-nums leading-none text-muted-foreground",
-                    )}
-                  >
+                  <span className={cn(HEATMAP_CELL_SUB_SIZE, "tabular-nums leading-none text-muted-foreground")}>
                     {formatNumber(n.count)} lần
                   </span>
                 </>
@@ -273,21 +260,15 @@ function NumberCell({
             <div className="space-y-1 min-w-37">
               <div className="flex justify-between gap-8">
                 <span className="text-xs text-muted-foreground">Tổng cược</span>
-                <span className="text-xs font-semibold tabular-nums text-foreground">
-                  {formatNumber(n.amount)}
-                </span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(n.amount)}</span>
               </div>
               <div className="flex justify-between gap-8">
                 <span className="text-xs text-muted-foreground">Lần xuất hiện</span>
-                <span className="text-xs font-semibold tabular-nums text-foreground">
-                  {formatNumber(n.count)}
-                </span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(n.count)}</span>
               </div>
               <div className="flex justify-between gap-8">
                 <span className="text-xs text-muted-foreground">Lines</span>
-                <span className="text-xs font-semibold tabular-nums text-foreground">
-                  {formatNumber(n.lines)}
-                </span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(n.lines)}</span>
               </div>
             </div>
           )}
@@ -321,8 +302,7 @@ function MainGrid({ numbers }: { numbers: NumberFreq[] }) {
           <span className="text-xs font-semibold text-foreground">Số chính (01–35)</span>
         </div>
         <span className="text-xs tabular-nums text-muted-foreground">
-          {formatNumber(totalCount)} lượt ·{" "}
-          {formatCurrency(totalAmount, { million: "tr", thousand: "k", decimals: 1 })}
+          {formatNumber(totalCount)} lượt · {formatCurrency(totalAmount, { million: "tr", thousand: "k", decimals: 1 })}
         </span>
       </div>
       <div
@@ -374,8 +354,7 @@ function SpecialGrid({ numbers }: { numbers: NumberFreq[] }) {
           <span className="text-xs font-semibold text-foreground">Số đặc biệt (01–12)</span>
         </div>
         <span className="text-xs tabular-nums text-muted-foreground">
-          {formatNumber(totalCount)} lượt ·{" "}
-          {formatCurrency(totalAmount, { million: "tr", thousand: "k", decimals: 1 })}
+          {formatNumber(totalCount)} lượt · {formatCurrency(totalAmount, { million: "tr", thousand: "k", decimals: 1 })}
         </span>
       </div>
       <div
@@ -421,20 +400,14 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
             key={c.rank}
             className="flex items-center gap-2.5 rounded-lg border border-border/40 bg-muted/10 px-3 py-2"
           >
-            <span className="text-sm leading-none shrink-0">
-              {medals[c.rank - 1] ?? `#${c.rank}`}
-            </span>
+            <span className="text-sm leading-none shrink-0">{medals[c.rank - 1] ?? `#${c.rank}`}</span>
             <div className="flex-1 min-w-0 overflow-hidden">
               <div className="flex items-center gap-1 flex-nowrap overflow-hidden">
                 <NumbersWithTooltip numbers={c.mainNumbers} variant="soft" ballVariant="main" />
                 {c.specialNumbers.length > 0 && (
                   <>
                     <span className="text-xs text-muted-foreground mx-0.5 shrink-0">+</span>
-                    <NumbersWithTooltip
-                      numbers={c.specialNumbers}
-                      variant="soft"
-                      ballVariant="special"
-                    />
+                    <NumbersWithTooltip numbers={c.specialNumbers} variant="soft" ballVariant="special" />
                   </>
                 )}
               </div>
@@ -443,12 +416,8 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
               </p>
             </div>
             <div className="text-right shrink-0">
-              <p className="text-xs font-semibold tabular-nums text-foreground">
-                {c.entryCount} vé
-              </p>
-              <p className="text-xs tabular-nums text-muted-foreground">
-                {formatNumber(c.totalAmount)}
-              </p>
+              <p className="text-xs font-semibold tabular-nums text-foreground">{c.entryCount} vé</p>
+              <p className="text-xs tabular-nums text-muted-foreground">{formatNumber(c.totalAmount)}</p>
             </div>
           </div>
         ))}

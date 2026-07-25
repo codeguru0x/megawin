@@ -1,22 +1,11 @@
 "use client";
 
+import { AuditActionLabel, AuditStatus, AuditStatusLabel, SELF_ACTIVITY_ACTIONS } from "@megawin/audit/entities";
 import { RotateCcw } from "lucide-react";
-import {
-  AuditActionLabel,
-  AuditStatus,
-  AuditStatusLabel,
-  SELF_ACTIVITY_ACTIONS,
-} from "@megawin/audit/entities";
 
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { FinancialDateRangePicker } from "@/components/date-picker";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { useMyActivityFilters } from "../_lib/use-filters";
 
@@ -31,8 +20,7 @@ const ACTION_OPTIONS = SELF_ACTIVITY_ACTIONS;
  * self-scoped và chỉ gồm nhóm action security.
  */
 export function MyActivityFilterBar() {
-  const { from, to, action, status, setRange, setAction, setStatus, resetFilters } =
-    useMyActivityFilters();
+  const { from, to, action, status, setRange, setAction, setStatus, resetFilters } = useMyActivityFilters();
 
   const hasActiveFilters = !!action || !!status;
 
@@ -60,10 +48,7 @@ export function MyActivityFilterBar() {
         </SelectContent>
       </Select>
 
-      <Select
-        value={status ?? "all"}
-        onValueChange={(v) => setStatus(v === "all" ? null : (v as AuditStatus))}
-      >
+      <Select value={status ?? "all"} onValueChange={(v) => setStatus(v === "all" ? null : (v as AuditStatus))}>
         <SelectTrigger size="sm" className="h-8 w-30 text-xs">
           <SelectValue placeholder="Kết quả" />
         </SelectTrigger>

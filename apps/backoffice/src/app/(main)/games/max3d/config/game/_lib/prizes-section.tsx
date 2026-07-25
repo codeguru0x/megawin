@@ -1,29 +1,29 @@
 "use client";
 
 import { useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Save, TrendingUp, TrendingDown, Info } from "lucide-react";
 
-import { MoneyInput } from "@megawin/ui/components/money-input";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   analyzeBasicStraightProfitability,
   analyzePlusProfitability,
+  BASIC_TOTAL_OUTCOMES,
   getBasicOddsTable,
   getCombo3OddsTable,
   getCombo6OddsTable,
   getPlusOddsTable,
-  BASIC_TOTAL_OUTCOMES,
   PLUS_TOTAL_OUTCOMES,
 } from "@megawin/game-max3d/rules";
+import { MoneyInput } from "@megawin/ui/components/money-input";
+import { Info, Save, TrendingDown, TrendingUp } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import type { GameConfig } from "./use-game-config";
@@ -224,15 +224,7 @@ const PLUS_FIELDS = [
   },
 ] as const;
 
-function HeaderTooltip({
-  label,
-  tip,
-  className,
-}: {
-  label: string;
-  tip: string;
-  className?: string;
-}) {
+function HeaderTooltip({ label, tip, className }: { label: string; tip: string; className?: string }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -257,13 +249,7 @@ interface ProfitBarProps {
   lineCount?: number;
 }
 
-function ProfitBar({
-  analysis,
-  unitPrice,
-  totalOutcomes,
-  modeLabel,
-  lineCount = 1,
-}: ProfitBarProps) {
+function ProfitBar({ analysis, unitPrice, totalOutcomes, modeLabel, lineCount = 1 }: ProfitBarProps) {
   const boardCost = unitPrice * lineCount;
   const isCombo = lineCount > 1;
 
@@ -291,12 +277,8 @@ function ProfitBar({
       </div>
       <div className="flex items-center gap-4 text-xs shrink-0">
         <div className="text-right">
-          <span className="text-muted-foreground">
-            CP kỳ vọng{isCombo ? " / board" : " / line"}
-          </span>
-          <div className="font-semibold tabular-nums">
-            {fmt(Math.round(analysis.totalExpectedPayout))} VND
-          </div>
+          <span className="text-muted-foreground">CP kỳ vọng{isCombo ? " / board" : " / line"}</span>
+          <div className="font-semibold tabular-nums">{fmt(Math.round(analysis.totalExpectedPayout))} VND</div>
         </div>
         <div className="text-right">
           <span className="text-muted-foreground">Biên lợi nhuận gộp</span>
@@ -356,9 +338,7 @@ function TableHeader() {
 interface OddsRowProps {
   field: { key: string; label: string; desc: string; badge: string; color: string };
   odds: { probability: number; oneInN: number; ways?: number } | undefined;
-  profit:
-    | { expectedPayout: number; payoutRatio: number; breakEvenPrize: number; currentPrize: number }
-    | undefined;
+  profit: { expectedPayout: number; payoutRatio: number; breakEvenPrize: number; currentPrize: number } | undefined;
   formField: any;
   isLast: boolean;
   totalOutcomes: number;
@@ -398,8 +378,7 @@ function OddsRow({ field: p, odds, profit, formField, isLast, totalOutcomes }: O
               <TooltipContent side="top" className="max-w-72 text-xs">
                 {odds && (
                   <>
-                    Số cách trúng: {fmt(Math.round(odds.probability * totalOutcomes))} /{" "}
-                    {fmt(totalOutcomes)}
+                    Số cách trúng: {fmt(Math.round(odds.probability * totalOutcomes))} / {fmt(totalOutcomes)}
                     <br />
                     Xác suất: {(odds.probability * 100).toFixed(6)}%
                   </>
@@ -580,37 +559,16 @@ export function PrizesSection({ config, onSave, isPending }: PrizesSectionProps)
         },
         unitPrice,
       ),
-    [
-      w.plusSpecial,
-      w.plusFirst,
-      w.plusSecond,
-      w.plusThird,
-      w.plusFourth,
-      w.plusFifth,
-      w.plusSixth,
-      unitPrice,
-    ],
+    [w.plusSpecial, w.plusFirst, w.plusSecond, w.plusThird, w.plusFourth, w.plusFifth, w.plusSixth, unitPrice],
   );
 
-  const basicProfitMap = useMemo(
-    () => new Map(basicAnalysis.tiers.map((t) => [t.tier, t])),
-    [basicAnalysis],
-  );
+  const basicProfitMap = useMemo(() => new Map(basicAnalysis.tiers.map((t) => [t.tier, t])), [basicAnalysis]);
   const basicOddsMap = useMemo(() => new Map(basicOdds.map((o) => [o.tier, o])), [basicOdds]);
-  const combo3ProfitMap = useMemo(
-    () => new Map(combo3Analysis.tiers.map((t) => [t.tier, t])),
-    [combo3Analysis],
-  );
+  const combo3ProfitMap = useMemo(() => new Map(combo3Analysis.tiers.map((t) => [t.tier, t])), [combo3Analysis]);
   const combo3OddsMap = useMemo(() => new Map(combo3Odds.map((o) => [o.tier, o])), [combo3Odds]);
-  const combo6ProfitMap = useMemo(
-    () => new Map(combo6Analysis.tiers.map((t) => [t.tier, t])),
-    [combo6Analysis],
-  );
+  const combo6ProfitMap = useMemo(() => new Map(combo6Analysis.tiers.map((t) => [t.tier, t])), [combo6Analysis]);
   const combo6OddsMap = useMemo(() => new Map(combo6Odds.map((o) => [o.tier, o])), [combo6Odds]);
-  const plusProfitMap = useMemo(
-    () => new Map(plusAnalysis.tiers.map((t) => [t.tier, t])),
-    [plusAnalysis],
-  );
+  const plusProfitMap = useMemo(() => new Map(plusAnalysis.tiers.map((t) => [t.tier, t])), [plusAnalysis]);
   const plusOddsMap = useMemo(() => new Map(plusOdds.map((o) => [o.tier, o])), [plusOdds]);
 
   function handleSubmit(values: PrizesFormValues) {

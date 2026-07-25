@@ -1,9 +1,11 @@
 "use client";
 
 import { Suspense, use, useMemo, useState } from "react";
+
 import Link from "next/link";
+
 import { FileSearch, Package2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,11 +14,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SYSTEM_ICON_GRADIENT } from "@/lib/game-colors";
 
-import { TxLogTable } from "../../_components/tx-log-table";
 import { TxLogDetailDrawer } from "../../_components/tx-log-detail-drawer";
+import { TxLogTable } from "../../_components/tx-log-table";
 import { useTxLogsByBatch } from "../../_lib/use-queries";
 
 function shortId(value: string, head = 12): string {
@@ -87,11 +90,7 @@ function BatchPageInner({ batchId }: { batchId: string }) {
           </Metric>
           <Metric label="Item đầu tiên">
             <span className="font-mono text-xs tabular-nums">
-              {firstCreatedAt
-                ? new Date(firstCreatedAt).toLocaleString("vi-VN")
-                : query.isLoading
-                  ? "…"
-                  : "—"}
+              {firstCreatedAt ? new Date(firstCreatedAt).toLocaleString("vi-VN") : query.isLoading ? "…" : "—"}
             </span>
           </Metric>
         </CardContent>
@@ -119,9 +118,7 @@ function BatchPageInner({ batchId }: { batchId: string }) {
 function Metric({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </span>
+      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
       <div className="min-w-0">{children}</div>
     </div>
   );

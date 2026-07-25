@@ -2,8 +2,8 @@ import { Users } from "lucide-react";
 
 import { SYSTEM_ICON_GRADIENT } from "@/lib/game-colors";
 
-import { CreateCompanyAccountDialog } from "./_components/create-account-dialog";
 import { CompanyAccountsTable } from "./_components/accounts-table";
+import { CreateCompanyAccountDialog } from "./_components/create-account-dialog";
 
 export default function CompanyAccountsPage() {
   return (
@@ -16,12 +16,8 @@ export default function CompanyAccountsPage() {
             <Users className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Tài khoản công ty
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Quản lý tài khoản Admin và Staff của công ty.
-            </p>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Tài khoản công ty</h1>
+            <p className="text-xs text-muted-foreground">Quản lý tài khoản Admin và Staff của công ty.</p>
           </div>
         </div>
         <CreateCompanyAccountDialog />

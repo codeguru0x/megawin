@@ -12,35 +12,26 @@
  */
 
 import { useCallback, useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { formatNumber, formatVN } from "@megawin/shared/utils";
-import { toTenantUsername } from "@megawin/shared/utils";
-import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import { Bingo18MatchDie } from "@/components/games/bingo18/dice-display";
-import { Trophy, Loader2, FileSearch, Users, Banknote } from "lucide-react";
-import {
-  BINGO18_PLAY_TYPE_LABELS,
-  BINGO18_TRIPLE_KIND_LABELS,
-  BINGO18_BIG_SMALL_BET_LABELS,
-} from "@megawin/game-bingo18/labels";
+
 import { BINGO18_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-bingo18/entities";
 import {
-  useWinningEntries,
-  useWinningEntryDetail,
-  WINNING_ENTRIES_PAGE_SIZE,
-} from "../../use-operations";
-import type { WinningEntryItem, WinningBoardDetail } from "../../use-operations";
+  BINGO18_BIG_SMALL_BET_LABELS,
+  BINGO18_PLAY_TYPE_LABELS,
+  BINGO18_TRIPLE_KIND_LABELS,
+} from "@megawin/game-bingo18/labels";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber, formatVN, toTenantUsername } from "@megawin/shared/utils";
+import { Banknote, FileSearch, Loader2, Trophy, Users } from "lucide-react";
+
+import { Bingo18MatchDie } from "@/components/games/bingo18/dice-display";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+
 import { Bingo18EntryDetailDialog } from "../../../../reports/settle/_lib/sections/entry-detail-dialog";
+import type { WinningBoardDetail, WinningEntryItem } from "../../use-operations";
+import { useWinningEntries, useWinningEntryDetail, WINNING_ENTRIES_PAGE_SIZE } from "../../use-operations";
 
 // ─── Labels ────────────────────────────────────────────────────────────────────
 
@@ -57,17 +48,8 @@ const BOARD_LABELS: Record<string, string> = {
  * nhãn loại cược · số khách chọn (highlight nếu khớp kết quả) · trúng gì (×matchCount + tiền).
  * tripleMatch-any không có số cụ thể → hiển thị nhãn "3 số bất kỳ".
  */
-function BasicBoardDetail({
-  board,
-  winningSet,
-}: {
-  board: WinningBoardDetail;
-  winningSet: Set<number>;
-}) {
-  const key =
-    board.playType === "tripleMatch" && board.tripleKind
-      ? `tripleMatch-${board.tripleKind}`
-      : board.playType;
+function BasicBoardDetail({ board, winningSet }: { board: WinningBoardDetail; winningSet: Set<number> }) {
+  const key = board.playType === "tripleMatch" && board.tripleKind ? `tripleMatch-${board.tripleKind}` : board.playType;
   const label = BOARD_LABELS[key] ?? board.playType;
   const isAnyTriple = board.playType === "tripleMatch" && board.tripleKind === "any";
 
@@ -84,11 +66,7 @@ function BasicBoardDetail({
             3 số bất kỳ
           </span>
         ) : board.number !== undefined ? (
-          <Bingo18MatchDie
-            n={board.number}
-            variant={winningSet.has(board.number) ? "matched" : "default"}
-            size="sm"
-          />
+          <Bingo18MatchDie n={board.number} variant={winningSet.has(board.number) ? "matched" : "default"} size="sm" />
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
         )}
@@ -115,9 +93,7 @@ function SideBetDetail({ board, drawSum }: { board: WinningBoardDetail; drawSum:
   const typeLabel = isSum ? "Tổng điểm" : "Lớn/Hòa/Nhỏ";
   const pick = isSum
     ? `Tổng ${board.sum ?? "?"}`
-    : (BINGO18_BIG_SMALL_BET_LABELS[board.bet as keyof typeof BINGO18_BIG_SMALL_BET_LABELS] ??
-      board.bet ??
-      "—");
+    : (BINGO18_BIG_SMALL_BET_LABELS[board.bet as keyof typeof BINGO18_BIG_SMALL_BET_LABELS] ?? board.bet ?? "—");
   return (
     <div
       className="grid items-center gap-x-2 rounded-md border-l-[3px] border-l-cyan-400 py-1.5 pl-2"
@@ -128,11 +104,7 @@ function SideBetDetail({ board, drawSum }: { board: WinningBoardDetail; drawSum:
           {typeLabel} · {pick}
         </span>
         {/* Trúng gì: kết quả thực tế của kỳ quay để đối chiếu */}
-        {drawSum > 0 && (
-          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-            KQ: tổng {drawSum}
-          </span>
-        )}
+        {drawSum > 0 && <span className="text-[11px] text-muted-foreground whitespace-nowrap">KQ: tổng {drawSum}</span>}
       </div>
       <span className="text-xs tabular-nums font-semibold text-cyan-700 dark:text-cyan-400 whitespace-nowrap justify-self-end">
         +{formatNumber(board.winAmount)}
@@ -173,13 +145,7 @@ function KpiCard({
   );
 }
 
-function KpiBar({
-  totalWinningEntries,
-  totalWinAmount,
-}: {
-  totalWinningEntries: number;
-  totalWinAmount: number;
-}) {
+function KpiBar({ totalWinningEntries, totalWinAmount }: { totalWinningEntries: number; totalWinAmount: number }) {
   return (
     <div className="flex gap-3 border-b bg-muted/20 px-6 py-3 shrink-0">
       <KpiCard
@@ -202,30 +168,15 @@ function KpiBar({
 
 // ─── Row ──────────────────────────────────────────────────────────────────────
 
-function WinningEntryRow({
-  entry,
-  rowNo,
-  onClick,
-}: {
-  entry: WinningEntryItem;
-  rowNo: number;
-  onClick: () => void;
-}) {
+function WinningEntryRow({ entry, rowNo, onClick }: { entry: WinningEntryItem; rowNo: number; onClick: () => void }) {
   const displayName = toTenantUsername(entry.username) ?? entry.username;
   const winningSet = new Set(entry.winningNumbers);
 
-  const basicBoards = entry.boardDetails.filter(
-    (b) => !BINGO18_SIDE_BET_PLAY_TYPE_SET.has(b.playType),
-  );
-  const sideBetBoards = entry.boardDetails.filter((b) =>
-    BINGO18_SIDE_BET_PLAY_TYPE_SET.has(b.playType),
-  );
+  const basicBoards = entry.boardDetails.filter((b) => !BINGO18_SIDE_BET_PLAY_TYPE_SET.has(b.playType));
+  const sideBetBoards = entry.boardDetails.filter((b) => BINGO18_SIDE_BET_PLAY_TYPE_SET.has(b.playType));
 
   return (
-    <TableRow
-      onClick={onClick}
-      className="align-top group transition-colors hover:bg-muted/30 cursor-pointer"
-    >
+    <TableRow onClick={onClick} className="align-top group transition-colors hover:bg-muted/30 cursor-pointer">
       <TableCell className="pl-6 py-3 text-center">
         <span className="inline-flex size-6 items-center justify-center rounded-full bg-muted text-xs font-semibold tabular-nums text-muted-foreground">
           {rowNo}
@@ -234,9 +185,7 @@ function WinningEntryRow({
       <TableCell className="py-3">
         <div>
           <p className="text-sm text-foreground">{displayName}</p>
-          <p className="text-xs text-muted-foreground/60 font-mono mt-0.5 truncate max-w-32">
-            @{entry.tenantId}
-          </p>
+          <p className="text-xs text-muted-foreground/60 font-mono mt-0.5 truncate max-w-32">@{entry.tenantId}</p>
         </div>
       </TableCell>
       <TableCell className="py-3 text-right">
@@ -253,9 +202,7 @@ function WinningEntryRow({
         </div>
       </TableCell>
       <TableCell className="py-3 pr-6 text-right">
-        <p className="text-sm tabular-nums text-foreground font-semibold">
-          {formatNumber(entry.winAmount)}
-        </p>
+        <p className="text-sm tabular-nums text-foreground font-semibold">{formatNumber(entry.winAmount)}</p>
         <p className="text-xs text-muted-foreground/50 tabular-nums mt-0.5">
           {formatVN(new Date(entry.createdAt), "HH:mm dd/MM")}
         </p>
@@ -273,10 +220,7 @@ interface WinningEntriesDialogProps {
 }
 
 export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntriesDialogProps) {
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useWinningEntries(
-    drawId,
-    open,
-  );
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useWinningEntries(drawId, open);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const { data: selectedEntry } = useWinningEntryDetail(selectedEntryId, {
     onNotFound: () => setSelectedEntryId(null),
@@ -305,9 +249,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
               <Trophy className="size-5 text-amber-500" />
             </div>
             <div>
-              <DialogTitle className="text-base font-bold tracking-tight">
-                Danh sách trúng thưởng
-              </DialogTitle>
+              <DialogTitle className="text-base font-bold tracking-tight">Danh sách trúng thưởng</DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                 Kỳ <span className="font-mono text-foreground">{drawId}</span>
               </DialogDescription>
@@ -316,10 +258,7 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
         </div>
 
         {summary && (
-          <KpiBar
-            totalWinningEntries={summary.totalWinningEntries}
-            totalWinAmount={summary.totalWinAmount}
-          />
+          <KpiBar totalWinningEntries={summary.totalWinningEntries} totalWinAmount={summary.totalWinAmount} />
         )}
 
         <div className="flex-1 overflow-auto min-h-0">
@@ -336,12 +275,8 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
                 <FileSearch className="size-7 text-muted-foreground/40" />
               </div>
               <div className="text-center">
-                <p className="text-base font-semibold text-foreground">
-                  Không có phiếu trúng thưởng
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Kỳ này không có phiếu cược nào trúng thưởng.
-                </p>
+                <p className="text-base font-semibold text-foreground">Không có phiếu trúng thưởng</p>
+                <p className="mt-1 text-sm text-muted-foreground">Kỳ này không có phiếu cược nào trúng thưởng.</p>
               </div>
             </div>
           ) : (
@@ -350,13 +285,9 @@ export function WinningEntriesDialog({ drawId, open, onOpenChange }: WinningEntr
                 <TableRow className="hover:bg-muted/40">
                   <TableHead className="pl-6 w-12 text-center">STT</TableHead>
                   <TableHead className="w-44">{REPORT_COLUMN_LABELS.player}</TableHead>
-                  <TableHead className="w-28 text-right">
-                    {REPORT_COLUMN_LABELS.totalStake}
-                  </TableHead>
+                  <TableHead className="w-28 text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                   <TableHead className="min-w-96">{REPORT_COLUMN_LABELS.winningDetail}</TableHead>
-                  <TableHead className="pr-6 w-40 text-right">
-                    {REPORT_COLUMN_LABELS.winAmount}
-                  </TableHead>
+                  <TableHead className="pr-6 w-40 text-right">{REPORT_COLUMN_LABELS.winAmount}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

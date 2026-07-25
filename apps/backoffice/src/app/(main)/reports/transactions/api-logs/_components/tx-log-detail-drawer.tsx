@@ -1,24 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, Loader2 } from "lucide-react";
+
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { TxLogEventType, TxLogStatus } from "@megawin/tenant-gateway/entities";
 import {
+  TX_LOG_EVENT_TYPE_LABELS,
   TX_LOG_STATUS_LABELS,
   TX_LOG_STATUS_VARIANT,
-  TX_LOG_EVENT_TYPE_LABELS,
 } from "@megawin/tenant-gateway/shared/labels";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+
 import { useTxLogDetail } from "../_lib/use-queries";
 
 export interface TxLogDetailDrawerProps {
@@ -102,9 +98,7 @@ export function TxLogDetailDrawer({ tx, onClose }: TxLogDetailDrawerProps) {
                     <span className="break-all font-mono text-sm">{log.batchId}</span>
                     {log.eventType === TxLogEventType.BatchTransaction && (
                       <Button asChild size="sm" variant="link" className="h-6 px-1 text-xs">
-                        <Link href={`/reports/transactions/api-logs/batches/${log.batchId}`}>
-                          Xem batch
-                        </Link>
+                        <Link href={`/reports/transactions/api-logs/batches/${log.batchId}`}>Xem batch</Link>
                       </Button>
                     )}
                   </div>
@@ -161,20 +155,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function PayloadSection({
-  title,
-  json,
-  emptyHint,
-}: {
-  title: string;
-  json: string;
-  emptyHint?: string;
-}) {
+function PayloadSection({ title, json, emptyHint }: { title: string; json: string; emptyHint?: string }) {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h3>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
       {json ? (
         <pre className="max-h-90 overflow-auto rounded-md border bg-muted/40 p-3 font-mono text-xs leading-relaxed">
           {json}

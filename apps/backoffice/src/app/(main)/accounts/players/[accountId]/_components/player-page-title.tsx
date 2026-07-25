@@ -1,8 +1,10 @@
 "use client";
 
 import { CircleUser } from "lucide-react";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { SYSTEM_ICON_GRADIENT } from "@/lib/game-colors";
+
 import { usePlayerProfile } from "../_shared/queries";
 
 interface PlayerPageTitleProps {
@@ -27,15 +29,11 @@ export function PlayerPageTitle({ accountId }: PlayerPageTitleProps) {
         <CircleUser className="size-4.5 text-white" />
       </div>
       <div>
-        <h1 className="text-lg font-semibold tracking-tight text-foreground">
-          Tài khoản người chơi
-        </h1>
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">Tài khoản người chơi</h1>
         {isLoading ? (
           <Skeleton className="mt-0.5 h-3.5 w-28" />
         ) : (
-          <p className="font-mono text-xs text-muted-foreground">
-            {profile?.username ?? accountId}
-          </p>
+          <p className="font-mono text-xs text-muted-foreground">{profile?.username ?? accountId}</p>
         )}
       </div>
     </div>

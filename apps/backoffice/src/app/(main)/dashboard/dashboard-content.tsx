@@ -1,23 +1,25 @@
 "use client";
 
-import { LayoutDashboard, LoaderCircle } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQueryClient } from "@tanstack/react-query";
+import { LayoutDashboard, LoaderCircle } from "lucide-react";
+
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { dashboardKeys } from "@/lib/query-keys/dashboard";
-import { useDashboardFilters } from "./_lib/use-dashboard-filters";
-import {
-  useDashboardKpis,
-  useDashboardJackpots,
-  useDashboardDraws,
-  useDashboardOutstanding,
-} from "./_lib/use-dashboard-queries";
-import { computeDayKpis } from "./_lib/compute";
+
+import { DrawTimeline } from "./_components/draw-timeline";
+import { GameOverview, PayoutRatioChart } from "./_components/game-performance";
 import { HeroKpis } from "./_components/hero-kpis";
 import { JackpotPools } from "./_components/jackpot-pools";
 import { OutstandingStrip } from "./_components/outstanding-strip";
-import { GameOverview, PayoutRatioChart } from "./_components/game-performance";
-import { DrawTimeline } from "./_components/draw-timeline";
 import { HeroKpisSkeleton } from "./_components/skeletons";
+import { computeDayKpis } from "./_lib/compute";
+import { useDashboardFilters } from "./_lib/use-dashboard-filters";
+import {
+  useDashboardDraws,
+  useDashboardJackpots,
+  useDashboardKpis,
+  useDashboardOutstanding,
+} from "./_lib/use-dashboard-queries";
 
 /**
  * DashboardContent — Client Component chính của trang dashboard.
@@ -47,10 +49,7 @@ export function DashboardContent() {
   const compareKpis = kpisQuery.data ? computeDayKpis(kpisQuery.data, compareFd) : undefined;
 
   const isAnyFetching =
-    kpisQuery.isFetching ||
-    jackpotsQuery.isFetching ||
-    drawsQuery.isFetching ||
-    outstandingQuery.isFetching;
+    kpisQuery.isFetching || jackpotsQuery.isFetching || drawsQuery.isFetching || outstandingQuery.isFetching;
 
   function handleRefresh() {
     qc.invalidateQueries({ queryKey: dashboardKeys.all });
@@ -99,12 +98,7 @@ export function DashboardContent() {
         <HeroKpisSkeleton />
       ) : (
         todayKpis && (
-          <HeroKpis
-            todayKpis={todayKpis}
-            yesterdayKpis={yesterdayKpis}
-            compareKpis={compareKpis}
-            isLoading={false}
-          />
+          <HeroKpis todayKpis={todayKpis} yesterdayKpis={yesterdayKpis} compareKpis={compareKpis} isLoading={false} />
         )
       )}
 

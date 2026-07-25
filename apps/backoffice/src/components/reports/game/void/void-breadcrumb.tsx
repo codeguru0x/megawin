@@ -1,7 +1,9 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+
 import type { VoidDrillLevel } from "./types";
 
 export interface VoidBreadcrumbProps {
@@ -50,9 +52,7 @@ export function VoidBreadcrumb({
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
           {level === "draw-tenants" ? (
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-mono font-medium">
-              {drawId}
-            </span>
+            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-mono font-medium">{drawId}</span>
           ) : (
             <Button
               variant="ghost"
@@ -70,9 +70,7 @@ export function VoidBreadcrumb({
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
           {level === "players" ? (
-            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-              {tenantId}
-            </span>
+            <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{tenantId}</span>
           ) : (
             <Button
               variant="ghost"
@@ -89,9 +87,7 @@ export function VoidBreadcrumb({
       {playerLabel && level === "entries" && (
         <>
           <ChevronRight className="size-3 text-muted-foreground" />
-          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">
-            {playerLabel}
-          </span>
+          <span className="rounded-md bg-secondary px-2 py-1 text-xs font-medium">{playerLabel}</span>
         </>
       )}
     </div>

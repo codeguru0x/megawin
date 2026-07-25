@@ -1,25 +1,20 @@
 "use client";
 
 import { Ban, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+
 import { FinancialDateRangePicker } from "@/components/date-picker";
-import { VoidKpiStrip } from "./void-kpi-strip";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
+import type { VoidDrawRow, VoidDrillLevel, VoidEntryRow, VoidKpiData, VoidPlayerRow, VoidTenantRow } from "./types";
 import { VoidBreadcrumb } from "./void-breadcrumb";
 import { VoidDrawList } from "./void-draw-list";
-import { VoidTenantBreakdown } from "./void-tenant-breakdown";
-import { VoidPlayerBreakdown } from "./void-player-breakdown";
 import { VoidEntryList } from "./void-entry-list";
-import type {
-  VoidDrillLevel,
-  VoidDrawRow,
-  VoidTenantRow,
-  VoidPlayerRow,
-  VoidEntryRow,
-  VoidKpiData,
-} from "./types";
+import { VoidKpiStrip } from "./void-kpi-strip";
+import { VoidPlayerBreakdown } from "./void-player-breakdown";
+import { VoidTenantBreakdown } from "./void-tenant-breakdown";
 
 // ─── Sub-types cho async data ─────────────────────────────────────────────────
 
@@ -168,12 +163,8 @@ export function VoidContent({
             <Ban className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              {gameName} — Kỳ huỷ
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Danh sách kỳ quay đã void và hoàn trả cho khách hàng
-            </p>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">{gameName} — Kỳ huỷ</h1>
+            <p className="text-xs text-muted-foreground">Danh sách kỳ quay đã void và hoàn trả cho khách hàng</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -212,9 +203,7 @@ export function VoidContent({
       )}
 
       {/* Level 1 — Draw List */}
-      {!drawsData.error && level === "list" && (
-        <VoidDrawList data={allRows} onRowClick={navigateToDraw} />
-      )}
+      {!drawsData.error && level === "list" && <VoidDrawList data={allRows} onRowClick={navigateToDraw} />}
 
       {/* Level 2 — Tenant Breakdown */}
       {level === "draw-tenants" && drawId && (

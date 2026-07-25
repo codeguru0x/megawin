@@ -1,9 +1,8 @@
 "use client";
 
-import { useQueryState, parseAsString, parseAsStringEnum, parseAsInteger } from "nuqs";
-import { todayVN, formatVNDate } from "@megawin/shared/utils";
+import { formatVNDate, TZDate, todayVN, VN_TIMEZONE } from "@megawin/shared/utils";
 import { subDays } from "date-fns";
-import { TZDate, VN_TIMEZONE } from "@megawin/shared/utils";
+import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
 
 type TabType = "draws" | "tenants";
 type LevelType = "list" | "draw-tenants" | "tenant-draws" | "players" | "entries";
@@ -12,10 +11,7 @@ type LevelType = "list" | "draw-tenants" | "tenant-draws" | "players" | "entries
 export function useMega645ReportFilters() {
   const today = todayVN();
   const sevenDaysAgo = formatVNDate(subDays(new TZDate(new Date(), VN_TIMEZONE), 6));
-  const [tab, rawSetTab] = useQueryState(
-    "tab",
-    parseAsStringEnum<TabType>(["draws", "tenants"]).withDefault("draws"),
-  );
+  const [tab, rawSetTab] = useQueryState("tab", parseAsStringEnum<TabType>(["draws", "tenants"]).withDefault("draws"));
   const [from, setFrom] = useQueryState("from", parseAsString.withDefault(sevenDaysAgo));
   const [to, setTo] = useQueryState("to", parseAsString.withDefault(today));
   const [level, setLevel] = useQueryState(
@@ -101,10 +97,29 @@ export function useMega645ReportFilters() {
   }
 
   return {
-    tab, setTab, from, setFrom, to, setTo, level, setLevel,
-    drawId, tenantId, accountId, playerName, page, setPage,
-    navigateToDraw, navigateToPlayersInDraw, navigateToEntries,
-    navigateToTenantDrills, navigateToTenantInDraw, navigateToDrawInTenant,
-    navigateToEntriesFromTenant, navigateBackToPlayers, navigateBackToTenantDraws, navigateToList,
+    tab,
+    setTab,
+    from,
+    setFrom,
+    to,
+    setTo,
+    level,
+    setLevel,
+    drawId,
+    tenantId,
+    accountId,
+    playerName,
+    page,
+    setPage,
+    navigateToDraw,
+    navigateToPlayersInDraw,
+    navigateToEntries,
+    navigateToTenantDrills,
+    navigateToTenantInDraw,
+    navigateToDrawInTenant,
+    navigateToEntriesFromTenant,
+    navigateBackToPlayers,
+    navigateBackToTenantDraws,
+    navigateToList,
   };
 }

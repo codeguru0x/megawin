@@ -1,15 +1,16 @@
 "use client";
 
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@megawin/next/client";
-import { txLogsKeys } from "@/lib/query-keys";
 import type {
+  GetTxLogByTxOutput,
+  GetTxLogsSummaryOutput,
+  ListTxLogsByBatchOutput,
   ListTxLogsInput,
   ListTxLogsOutput,
-  GetTxLogByTxOutput,
-  ListTxLogsByBatchOutput,
-  GetTxLogsSummaryOutput,
 } from "@megawin/tenant-gateway/use-cases/tx-logs";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+
+import { txLogsKeys } from "@/lib/query-keys";
 
 /**
  * Serialize cursor object → string `"{iso}|{id}"` để server parse.
@@ -78,8 +79,7 @@ export function useTxLogDetail(tx: string | null) {
   return useQuery({
     queryKey: tx ? txLogsKeys.byTx(tx) : txLogsKeys.all,
     enabled: !!tx,
-    queryFn: () =>
-      apiClient.get<GetTxLogByTxOutput>(`/transactions/api-logs/${encodeURIComponent(tx!)}`),
+    queryFn: () => apiClient.get<GetTxLogByTxOutput>(`/transactions/api-logs/${encodeURIComponent(tx!)}`),
   });
 }
 
@@ -96,10 +96,9 @@ export function useTxLogsByBatch(batchId: string | null) {
       const params: Record<string, string> = {};
       const serialized = serializeCursor(pageParam);
       if (serialized) params.cursor = serialized;
-      return apiClient.get<ListTxLogsByBatchOutput>(
-        `/transactions/api-logs/batches/${encodeURIComponent(batchId!)}`,
-        { params },
-      );
+      return apiClient.get<ListTxLogsByBatchOutput>(`/transactions/api-logs/batches/${encodeURIComponent(batchId!)}`, {
+        params,
+      });
     },
     getNextPageParam: (last) => last.nextCursor,
     staleTime: 10_000,
@@ -117,10 +116,7 @@ export function useTxLogsByBatch(batchId: string | null) {
  */
 export function useTxLogSummary(params: { from?: string; to?: string; enabled: boolean }) {
   return useQuery({
-    queryKey:
-      params.from && params.to
-        ? txLogsKeys.summary({ from: params.from, to: params.to })
-        : txLogsKeys.all,
+    queryKey: params.from && params.to ? txLogsKeys.summary({ from: params.from, to: params.to }) : txLogsKeys.all,
     enabled: params.enabled && !!params.from && !!params.to,
     queryFn: () =>
       apiClient.get<GetTxLogsSummaryOutput>("/transactions/api-logs/summary", {

@@ -12,7 +12,8 @@
  * để UI âm thầm fallback sang trạng thái "User" không đầy đủ thông tin.
  */
 
-import { createContext, useContext, useEffect, type ReactNode } from "react";
+import { createContext, type ReactNode, useContext, useEffect } from "react";
+
 import { usePathname, useRouter } from "next/navigation";
 
 import { useSession } from "@/lib/auth-client";
@@ -52,9 +53,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     router.replace(`/login?callbackUrl=${callbackUrl}`);
   }, [session, isPending, pathname, router]);
 
-  return (
-    <AuthContext.Provider value={{ session, isPending, error }}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ session, isPending, error }}>{children}</AuthContext.Provider>;
 }
 
 /**

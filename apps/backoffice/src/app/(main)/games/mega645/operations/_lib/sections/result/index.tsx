@@ -8,24 +8,19 @@
  */
 
 import { useMemo } from "react";
+
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-mega645/entities";
 import { MEGA645_PRIZE_TIER_LABELS } from "@megawin/game-mega645/labels";
 
+import type { DrawResult } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
 import { useDrawDetail } from "../../use-operations";
-import { ResultAndPrize, FinancialSummary } from "./result-panels";
-
-import type { DrawResult } from "../../types";
+import { FinancialSummary, ResultAndPrize } from "./result-panels";
 
 const RESULT_SHOW = new Set([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
 
-const TIER_ORDER: PrizeTier[] = [
-  PrizeTier.Jackpot,
-  PrizeTier.Tier1,
-  PrizeTier.Tier2,
-  PrizeTier.Tier3,
-];
+const TIER_ORDER: PrizeTier[] = [PrizeTier.Jackpot, PrizeTier.Tier1, PrizeTier.Tier2, PrizeTier.Tier3];
 
 export function ResultSection() {
   const { draw, effectiveDrawId } = useDrawContext();
@@ -41,8 +36,7 @@ export function ResultSection() {
     const tiers = TIER_ORDER.map((tier) => {
       const t = tierMap.get(tier);
       const winnerCount = t?.winnerCount ?? 0;
-      const prizeAmount =
-        winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
+      const prizeAmount = winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         tier,
         label: MEGA645_PRIZE_TIER_LABELS[tier] ?? String(tier),
@@ -61,10 +55,7 @@ export function ResultSection() {
     return {
       // Mega 6/45: 6 số chính (01-45), không có winningSpecial
       winningNumbers: d.result.winningNumbers as [string, string, string, string, string, string],
-      settledAt:
-        d.result.publishedAt instanceof Date
-          ? d.result.publishedAt.toISOString()
-          : String(d.result.publishedAt ?? ""),
+      settledAt: d.result.publishedAt,
       tiers,
       financial: {
         totalRevenue: d.financial?.totalRevenue ?? 0,
@@ -85,9 +76,7 @@ export function ResultSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Kết quả & Tài chính
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Kết quả & Tài chính</h2>
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <ResultAndPrize result={result} drawId={effectiveDrawId} />
         <FinancialSummary financial={result.financial} />

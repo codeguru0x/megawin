@@ -1,10 +1,12 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatNumber } from "@megawin/shared/utils";
 import { Layers } from "lucide-react";
-import type { TenantRow, PlayTypeRow } from "../../types";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+import type { PlayTypeRow, TenantRow } from "../../types";
 
 // ─── Color palette — synced across live-feed, heatmap, play types ────────────
 
@@ -72,6 +74,7 @@ function MiniPie({ pct, fill, size = 44 }: { pct: number; fill: string; size?: n
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+      <title>{Math.round(pct)}%</title>
       {/* Track */}
       <circle
         cx={cx}

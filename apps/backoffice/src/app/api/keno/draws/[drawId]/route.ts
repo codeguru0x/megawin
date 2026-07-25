@@ -1,6 +1,7 @@
-import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities";
 import { GetDrawDetailUseCase } from "@megawin/game-keno-application/use-cases/draws";
+import { CompanyRole } from "@megawin/identity/entities";
+
+import { withApi } from "@/lib/api";
 
 const getDrawDetailUseCase = new GetDrawDetailUseCase();
 

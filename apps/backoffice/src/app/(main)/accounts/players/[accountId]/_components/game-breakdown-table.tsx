@@ -1,25 +1,16 @@
 "use client";
 
-import { Layers } from "lucide-react";
+import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS } from "@megawin/game-core/labels";
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+import type { PlayerOverviewResult } from "@megawin/game-core-application/repos";
 import { formatNumber } from "@megawin/shared/utils";
+import { Layers } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getGameColors } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
-
-import type { PlayerOverviewResult } from "@megawin/game-core-application/repos";
 
 interface GameBreakdownTableProps {
   data: PlayerOverviewResult | undefined;
@@ -70,9 +61,7 @@ export function GameBreakdownTable({ data, isLoading, isError }: GameBreakdownTa
           ) : !data || data.games.length === 0 ? (
             <div className="flex h-40 flex-col items-center justify-center gap-1 text-center">
               <p className="text-sm font-medium text-muted-foreground">Chưa có dữ liệu</p>
-              <p className="text-xs text-muted-foreground">
-                Player chưa tham gia game nào trong khoảng thời gian này.
-              </p>
+              <p className="text-xs text-muted-foreground">Player chưa tham gia game nào trong khoảng thời gian này.</p>
             </div>
           ) : (
             <Table>
@@ -102,29 +91,14 @@ export function GameBreakdownTable({ data, isLoading, isError }: GameBreakdownTa
                           <span className="font-medium">{gameLabel}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatNumber(row.drawCount)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatNumber(row.entryCount)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatNumber(row.settledCount)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatNumber(row.winCount)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatNumber(row.totalStake)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatNumber(row.totalPayout)}
-                      </TableCell>
+                      <TableCell className="text-right tabular-nums">{formatNumber(row.drawCount)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatNumber(row.entryCount)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatNumber(row.settledCount)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatNumber(row.winCount)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatNumber(row.totalStake)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatNumber(row.totalPayout)}</TableCell>
                       <TableCell
-                        className={cn(
-                          "text-right tabular-nums font-medium",
-                          row.ggr < 0 ? "text-destructive" : "",
-                        )}
+                        className={cn("text-right tabular-nums font-medium", row.ggr < 0 ? "text-destructive" : "")}
                       >
                         {formatNumber(row.ggr)}
                       </TableCell>
@@ -146,41 +120,19 @@ export function GameBreakdownTable({ data, isLoading, isError }: GameBreakdownTa
               <TableFooter>
                 <TableRow className="h-10 text-sm font-semibold">
                   <TableCell>TỔNG CỘNG</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatNumber(data.totalDrawCount)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatNumber(data.totalEntryCount)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatNumber(data.totalSettledCount)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatNumber(data.totalWinCount)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatNumber(data.totalStake)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatNumber(data.totalPayout)}
-                  </TableCell>
-                  <TableCell
-                    className={cn(
-                      "text-right tabular-nums",
-                      data.ggr < 0 ? "text-destructive" : "",
-                    )}
-                  >
+                  <TableCell className="text-right tabular-nums">{formatNumber(data.totalDrawCount)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatNumber(data.totalEntryCount)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatNumber(data.totalSettledCount)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatNumber(data.totalWinCount)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatNumber(data.totalStake)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatNumber(data.totalPayout)}</TableCell>
+                  <TableCell className={cn("text-right tabular-nums", data.ggr < 0 ? "text-destructive" : "")}>
                     {formatNumber(data.ggr)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums text-muted-foreground">
                     {formatNumber(data.totalCommission)}
                   </TableCell>
-                  <TableCell
-                    className={cn(
-                      "text-right tabular-nums",
-                      data.netProfit < 0 ? "text-destructive" : "",
-                    )}
-                  >
+                  <TableCell className={cn("text-right tabular-nums", data.netProfit < 0 ? "text-destructive" : "")}>
                     {formatNumber(data.netProfit)}
                   </TableCell>
                 </TableRow>

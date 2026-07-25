@@ -1,27 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  EllipsisVertical,
-  Pencil,
-  ToggleLeft,
-  ToggleRight,
-  RefreshCw,
-  Copy,
-  Check,
-} from "lucide-react";
-import { toast } from "sonner";
-import { apiClient, ApiClientError } from "@megawin/next/client";
 
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ApiClientError, apiClient } from "@megawin/next/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Check, Copy, EllipsisVertical, Pencil, RefreshCw, ToggleLeft, ToggleRight } from "lucide-react";
+import { toast } from "sonner";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -40,12 +26,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import type { Tenant } from "../_lib/schema";
-import type {
-  UpdateTenantStatusResponse,
-  RegenerateApiKeyResponse,
-} from "../_lib/types";
+import type { RegenerateApiKeyResponse, UpdateTenantStatusResponse } from "../_lib/types";
 import { EditTenantDialog } from "./edit-tenant-dialog";
 
 export function TenantRowActions({ tenant }: { tenant: Tenant }) {
@@ -69,16 +59,10 @@ export function TenantRowActions({ tenant }: { tenant: Tenant }) {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["tenants"] });
       setStatusDialogOpen(false);
-      toast.success(
-        `Đã ${data.status === "active" ? "kích hoạt" : "vô hiệu hóa"} tenant "${tenant.tenantId}".`,
-      );
+      toast.success(`Đã ${data.status === "active" ? "kích hoạt" : "vô hiệu hóa"} tenant "${tenant.tenantId}".`);
     },
     onError: (error) => {
-      toast.error(
-        error instanceof ApiClientError
-          ? error.message
-          : "Không thể cập nhật trạng thái.",
-      );
+      toast.error(error instanceof ApiClientError ? error.message : "Không thể cập nhật trạng thái.");
     },
   });
 
@@ -93,11 +77,7 @@ export function TenantRowActions({ tenant }: { tenant: Tenant }) {
       toast.success("Đã tạo API key mới.");
     },
     onError: (error) => {
-      toast.error(
-        error instanceof ApiClientError
-          ? error.message
-          : "Không thể tạo API key mới.",
-      );
+      toast.error(error instanceof ApiClientError ? error.message : "Không thể tạo API key mới.");
     },
   });
 
@@ -135,11 +115,7 @@ export function TenantRowActions({ tenant }: { tenant: Tenant }) {
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setStatusDialogOpen(true)}>
-            {isActive ? (
-              <ToggleLeft className="mr-2 h-4 w-4" />
-            ) : (
-              <ToggleRight className="mr-2 h-4 w-4" />
-            )}
+            {isActive ? <ToggleLeft className="mr-2 h-4 w-4" /> : <ToggleRight className="mr-2 h-4 w-4" />}
             {nextStatusLabel}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -150,11 +126,7 @@ export function TenantRowActions({ tenant }: { tenant: Tenant }) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <EditTenantDialog
-        tenant={tenant}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-      />
+      <EditTenantDialog tenant={tenant} open={editOpen} onOpenChange={setEditOpen} />
 
       <AlertDialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
         <AlertDialogContent>
@@ -169,9 +141,7 @@ export function TenantRowActions({ tenant }: { tenant: Tenant }) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={statusMutation.isPending}>
-              Huỷ
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={statusMutation.isPending}>Huỷ</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -190,25 +160,12 @@ export function TenantRowActions({ tenant }: { tenant: Tenant }) {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>API Key mới</DialogTitle>
-              <DialogDescription>
-                Sao chép API key mới ngay. Key cũ đã bị thay thế.
-              </DialogDescription>
+              <DialogDescription>Sao chép API key mới ngay. Key cũ đã bị thay thế.</DialogDescription>
             </DialogHeader>
             <div className="flex items-center gap-2 rounded-md border bg-muted/50 p-3">
-              <code className="flex-1 break-all text-sm font-mono">
-                {newApiKey}
-              </code>
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0"
-                onClick={handleCopy}
-              >
-                {copied ? (
-                  <Check className="h-4 w-4 text-green-600" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
+              <code className="flex-1 break-all text-sm font-mono">{newApiKey}</code>
+              <Button variant="outline" size="icon" className="shrink-0" onClick={handleCopy}>
+                {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
               </Button>
             </div>
             <DialogFooter>
@@ -220,18 +177,13 @@ export function TenantRowActions({ tenant }: { tenant: Tenant }) {
         <AlertDialog open={regenDialogOpen} onOpenChange={setRegenDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>
-                Tạo API key mới cho &quot;{tenant.tenantId}&quot;?
-              </AlertDialogTitle>
+              <AlertDialogTitle>Tạo API key mới cho &quot;{tenant.tenantId}&quot;?</AlertDialogTitle>
               <AlertDialogDescription>
-                API key hiện tại sẽ bị vô hiệu ngay lập tức. Đối tác cần cập
-                nhật key mới để tiếp tục sử dụng dịch vụ.
+                API key hiện tại sẽ bị vô hiệu ngay lập tức. Đối tác cần cập nhật key mới để tiếp tục sử dụng dịch vụ.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={regenMutation.isPending}>
-                Huỷ
-              </AlertDialogCancel>
+              <AlertDialogCancel disabled={regenMutation.isPending}>Huỷ</AlertDialogCancel>
               <AlertDialogAction
                 onClick={(e) => {
                   e.preventDefault();

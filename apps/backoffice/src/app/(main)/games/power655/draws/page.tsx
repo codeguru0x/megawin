@@ -11,15 +11,15 @@
  */
 
 import { Suspense } from "react";
-import Link from "next/link";
-import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
 
-import { useCurrentDraw } from "./_lib/use-draws";
-import {
-  Power655PrimaryDrawCard,
-  Power655QueueDrawCard,
-} from "@/components/games/power655/active-draw-card";
+import Link from "next/link";
+
+import { CalendarClock, ListOrdered, Loader2 } from "lucide-react";
+
+import { Power655PrimaryDrawCard, Power655QueueDrawCard } from "@/components/games/power655/active-draw-card";
+
 import { DrawHistorySection } from "./_lib/draw-history-section";
+import { useCurrentDraw } from "./_lib/use-draws";
 
 export default function Power655DrawsPage() {
   const { data, isLoading } = useCurrentDraw();
@@ -36,9 +36,7 @@ export default function Power655DrawsPage() {
           <CalendarClock className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">
-            Power 6/55 — Kỳ quay
-          </h1>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">Power 6/55 — Kỳ quay</h1>
           <p className="text-xs text-muted-foreground">Tổng quan kỳ quay hiện tại và lịch sử</p>
         </div>
       </div>
@@ -78,10 +76,7 @@ export default function Power655DrawsPage() {
             <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Vào trang{" "}
-              <Link
-                href="/games/power655/operations"
-                className="underline underline-offset-2 hover:text-foreground"
-              >
+              <Link href="/games/power655/operations" className="underline underline-offset-2 hover:text-foreground">
                 Vận hành
               </Link>{" "}
               để tạo kỳ mới.

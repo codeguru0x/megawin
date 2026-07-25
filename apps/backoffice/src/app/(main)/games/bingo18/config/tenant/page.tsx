@@ -1,44 +1,31 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useForm } from "react-hook-form";
+import type React from "react";
+import { useMemo, useState } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { displayVNDateTime } from "@megawin/shared/utils";
+import { MoneyInput } from "@megawin/ui/components/money-input";
 import {
-  Building2,
-  Search,
-  Plus,
   AlertCircle,
-  TrendingUp,
-  Power,
-  Save,
+  Building2,
   CheckCircle2,
-  XCircle,
-  Users,
   CircleCheck,
   CircleX,
+  Plus,
+  Power,
+  Save,
+  Search,
+  TrendingUp,
+  Users,
+  XCircle,
 } from "lucide-react";
-
-import { displayVNDateTime } from "@megawin/shared/utils";
-
-import { MoneyInput } from "@megawin/ui/components/money-input";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
-import { Switch } from "@/components/ui/switch";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import {
   Dialog,
   DialogContent,
@@ -48,14 +35,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import { type TenantOption, useTenantOptions } from "@/hooks/use-tenant-options";
 
 import {
-  useTenantConfigs,
-  useCreateTenantConfig,
-  useUpdateTenantConfig,
   type TenantConfig,
+  useCreateTenantConfig,
+  useTenantConfigs,
+  useUpdateTenantConfig,
 } from "./_lib/use-tenant-config";
-import { useTenantOptions, type TenantOption } from "@/hooks/use-tenant-options";
 
 const tenantFormSchema = z.object({
   commissionRate: z.coerce
@@ -116,12 +109,8 @@ export default function Bingo18TenantConfigPage() {
             <Building2 className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Bingo 18 — Cấu hình đại lý
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Quản lý hoa hồng và trạng thái hoạt động của từng đại lý
-            </p>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Bingo 18 — Cấu hình đại lý</h1>
+            <p className="text-xs text-muted-foreground">Quản lý hoa hồng và trạng thái hoạt động của từng đại lý</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -184,18 +173,12 @@ export default function Bingo18TenantConfigPage() {
         </div>
       )}
 
-      {!isLoading && !isError && filtered.length === 0 && (
-        <EmptyState hasSearch={!!search.trim()} />
-      )}
+      {!isLoading && !isError && filtered.length === 0 && <EmptyState hasSearch={!!search.trim()} />}
 
       {!isLoading && !isError && filtered.length > 0 && (
         <div className="grid grid-cols-1 gap-4">
           {filtered.map((config) => (
-            <TenantCard
-              key={config.id}
-              config={config}
-              displayName={displayNameMap.get(config.tenantId)}
-            />
+            <TenantCard key={config.id} config={config} displayName={displayNameMap.get(config.tenantId)} />
           ))}
         </div>
       )}
@@ -274,25 +257,14 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h3 className="truncate text-sm font-semibold text-foreground">
-                    {displayName || config.tenantId}
-                  </h3>
+                  <h3 className="truncate text-sm font-semibold text-foreground">{displayName || config.tenantId}</h3>
                 </div>
-                {displayName && (
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{config.tenantId}</p>
-                )}
+                {displayName && <p className="mt-0.5 truncate text-xs text-muted-foreground">{config.tenantId}</p>}
               </div>
             </div>
 
-            <Badge
-              variant={config.isEnabled ? "default" : "destructive"}
-              className="shrink-0 gap-1 text-xs"
-            >
-              {config.isEnabled ? (
-                <CheckCircle2 className="size-3" />
-              ) : (
-                <XCircle className="size-3" />
-              )}
+            <Badge variant={config.isEnabled ? "default" : "destructive"} className="shrink-0 gap-1 text-xs">
+              {config.isEnabled ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
               {config.isEnabled ? "Hoạt động" : "Vô hiệu hoá"}
             </Badge>
           </CardHeader>
@@ -326,9 +298,7 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
                               ref={field.ref}
                               decimalScale={1}
                               thousandSeparator={false}
-                              isAllowed={({ floatValue }) =>
-                                floatValue === undefined || floatValue <= 100
-                              }
+                              isAllowed={({ floatValue }) => floatValue === undefined || floatValue <= 100}
                             />
                           </FormControl>
                           <span className="text-lg font-semibold text-muted-foreground">%</span>
@@ -349,16 +319,12 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
                       <div className="mb-4 flex items-center gap-3">
                         <div
                           className={`flex size-9 items-center justify-center rounded-lg ${
-                            isEnabled
-                              ? "bg-emerald-100 dark:bg-emerald-950/40"
-                              : "bg-red-100 dark:bg-red-950/40"
+                            isEnabled ? "bg-emerald-100 dark:bg-emerald-950/40" : "bg-red-100 dark:bg-red-950/40"
                           }`}
                         >
                           <Power
                             className={`size-4 ${
-                              isEnabled
-                                ? "text-emerald-600 dark:text-emerald-400"
-                                : "text-red-500 dark:text-red-400"
+                              isEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
                             }`}
                           />
                         </div>
@@ -373,9 +339,7 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
                         </FormControl>
                         <span
                           className={`text-sm font-medium ${
-                            isEnabled
-                              ? "text-emerald-600 dark:text-emerald-400"
-                              : "text-red-500 dark:text-red-400"
+                            isEnabled ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
                           }`}
                         >
                           {isEnabled ? "Đang hoạt động" : "Đã vô hiệu hoá"}
@@ -393,16 +357,8 @@ function TenantCard({ config, displayName }: { config: TenantConfig; displayName
             <p className="text-xs tabular-nums text-muted-foreground">
               v{config.version} · Cập nhật {displayVNDateTime(config.updatedAt)}
             </p>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={mutation.isPending || !form.formState.isDirty}
-            >
-              {mutation.isPending ? (
-                <Spinner className="mr-2" />
-              ) : (
-                <Save className="mr-2 size-3.5" />
-              )}
+            <Button type="submit" size="sm" disabled={mutation.isPending || !form.formState.isDirty}>
+              {mutation.isPending ? <Spinner className="mr-2" /> : <Save className="mr-2 size-3.5" />}
               Lưu thay đổi
             </Button>
           </CardFooter>
@@ -442,9 +398,7 @@ function AddTenantDialog({
   const filtered = useMemo(() => {
     if (!dialogSearch.trim()) return available;
     const q = dialogSearch.toLowerCase();
-    return available.filter(
-      (t) => t.tenantId.toLowerCase().includes(q) || t.displayName.toLowerCase().includes(q),
-    );
+    return available.filter((t) => t.tenantId.toLowerCase().includes(q) || t.displayName.toLowerCase().includes(q));
   }, [available, dialogSearch]);
 
   function handleOpenChange(v: boolean) {
@@ -533,10 +487,7 @@ function AddTenantDialog({
                     <p className="truncate text-sm font-medium">{t.displayName}</p>
                     <p className="truncate text-xs text-muted-foreground">{t.tenantId}</p>
                   </div>
-                  <Badge
-                    variant={t.status === "active" ? "default" : "secondary"}
-                    className="shrink-0 text-xs"
-                  >
+                  <Badge variant={t.status === "active" ? "default" : "secondary"} className="shrink-0 text-xs">
                     {t.status === "active" ? "Hoạt động" : t.status}
                   </Badge>
                 </button>

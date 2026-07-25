@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -16,15 +17,8 @@ function ApiKeyCell({ apiKey }: { apiKey: string }) {
 
   return (
     <div className="flex items-center gap-1.5">
-      <code className="text-xs font-mono truncate">
-        {visible ? apiKey : masked}
-      </code>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-6 w-6 shrink-0"
-        onClick={() => setVisible((v) => !v)}
-      >
+      <code className="text-xs font-mono truncate">{visible ? apiKey : masked}</code>
+      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => setVisible((v) => !v)}>
         {visible ? (
           <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
         ) : (
@@ -39,9 +33,7 @@ export const tenantColumns: ColumnDef<Tenant>[] = [
   {
     id: "rowNumber",
     header: "STT",
-    cell: ({ row }) => (
-      <span className="text-xs font-mono tabular-nums">{row.index + 1}</span>
-    ),
+    cell: ({ row }) => <span className="text-xs font-mono tabular-nums">{row.index + 1}</span>,
     enableSorting: false,
     enableHiding: false,
     size: 50,
@@ -50,11 +42,7 @@ export const tenantColumns: ColumnDef<Tenant>[] = [
     accessorKey: "tenantId",
     header: "Tenant ID",
     enableHiding: false,
-    cell: ({ row }) => (
-      <span className="font-medium font-mono text-sm">
-        {row.original.tenantId}
-      </span>
-    ),
+    cell: ({ row }) => <span className="font-medium font-mono text-sm">{row.original.tenantId}</span>,
   },
   {
     accessorKey: "displayName",
@@ -65,11 +53,7 @@ export const tenantColumns: ColumnDef<Tenant>[] = [
     header: "Trạng thái",
     cell: ({ row }) => {
       const isActive = row.original.status === "active";
-      return (
-        <Badge variant={isActive ? "default" : "outline"}>
-          {isActive ? "Hoạt động" : "Vô hiệu"}
-        </Badge>
-      );
+      return <Badge variant={isActive ? "default" : "outline"}>{isActive ? "Hoạt động" : "Vô hiệu"}</Badge>;
     },
     enableSorting: false,
   },
@@ -86,9 +70,7 @@ export const tenantColumns: ColumnDef<Tenant>[] = [
     accessorKey: "callbackBaseUrl",
     header: "Callback URL",
     cell: ({ row }) => (
-      <span className="text-muted-foreground text-xs max-w-50 truncate block">
-        {row.original.callbackBaseUrl}
-      </span>
+      <span className="text-muted-foreground text-xs max-w-50 truncate block">{row.original.callbackBaseUrl}</span>
     ),
     enableSorting: false,
   },

@@ -1,4 +1,5 @@
 import { apiClient } from "@megawin/next/client";
+
 import { signOut } from "@/lib/auth-client";
 
 interface SignOutRedirectResponse {
@@ -19,8 +20,7 @@ export async function signOutAndRedirect(): Promise<void> {
   // Lấy Cognito logout URL trước khi xóa session — API route yêu cầu authenticated.
   let cognitoLogoutUrl: string | null = null;
   try {
-    const { redirectUrl } =
-      await apiClient.post<SignOutRedirectResponse>("/auth/sign-out-redirect");
+    const { redirectUrl } = await apiClient.post<SignOutRedirectResponse>("/auth/sign-out-redirect");
     cognitoLogoutUrl = redirectUrl;
   } catch {
     // Nếu không lấy được URL, vẫn tiếp tục signOut — fallback về /login.

@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+
 import {
   LOTTO_MAIN_BG,
   LOTTO_MUTED_BG,
@@ -16,12 +17,7 @@ interface LottoNumberBallProps {
   muted?: boolean;
 }
 
-export function LottoNumberBall({
-  number,
-  variant = "main",
-  size = "md",
-  muted = false,
-}: LottoNumberBallProps) {
+export function LottoNumberBall({ number, variant = "main", size = "md", muted = false }: LottoNumberBallProps) {
   const { sizeClass, textClass } = LOTTO_NUMBER_SIZE[size];
   return (
     <span
@@ -46,13 +42,7 @@ export function LottoNumberBall({
  * - `result-special`: số ĐB kết quả kỳ quay player KHÔNG chọn (amber nhạt).
  * - `default`: số chính player chọn nhưng KHÔNG trúng.
  */
-export type LottoMatchBallVariant =
-  | "default"
-  | "matched"
-  | "special"
-  | "special-matched"
-  | "result"
-  | "result-special";
+export type LottoMatchBallVariant = "default" | "matched" | "special" | "special-matched" | "result" | "result-special";
 
 const LOTTO_MATCH_BALL_STYLE: Record<LottoMatchBallVariant, string> = {
   matched: "bg-primary text-primary-foreground ring-2 ring-primary/30",

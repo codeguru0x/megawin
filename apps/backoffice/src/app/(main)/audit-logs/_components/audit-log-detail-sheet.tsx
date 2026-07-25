@@ -1,7 +1,5 @@
 "use client";
 
-import { AlertCircle, Loader2 } from "lucide-react";
-import { displayVNDateTime } from "@megawin/shared/utils/date";
 import type { AuditLogEntity } from "@megawin/audit/entities";
 import {
   AuditActionLabel,
@@ -11,15 +9,11 @@ import {
   AuditStatusLabel,
   AuditTargetTypeLabel,
 } from "@megawin/audit/entities";
+import { displayVNDateTime } from "@megawin/shared/utils/date";
+import { AlertCircle, Loader2 } from "lucide-react";
 
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { GameBadge } from "@/components/game-badge";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 export interface AuditLogDetailSheetProps {
@@ -121,11 +115,8 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
   // thị/correlation) → thuộc khối "Nội dung" kỹ thuật.
   const ip = log.ip;
   const http = log.metadata?.http;
-  const hasChanges =
-    log.changes && (log.changes.before !== undefined || log.changes.after !== undefined);
-  const diffKeys = hasChanges
-    ? changedKeys(log.changes?.before, log.changes?.after)
-    : new Set<string>();
+  const hasChanges = log.changes && (log.changes.before !== undefined || log.changes.after !== undefined);
+  const diffKeys = hasChanges ? changedKeys(log.changes?.before, log.changes?.after) : new Set<string>();
 
   return (
     <div className="flex flex-col gap-5 px-5 py-4">
@@ -153,9 +144,7 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
       {/* Actor + target — 2 khối gọn, mã ID inline nhỏ dưới tên */}
       <div className="grid gap-3 rounded-md border p-3 sm:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-1">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            Thực hiện bởi
-          </span>
+          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Thực hiện bởi</span>
           <div className="flex min-w-0 items-center gap-1.5">
             <span className="truncate text-sm font-medium">{log.actorName}</span>
             <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -169,10 +158,7 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
           {(log.actorRoles.length > 0 || ip) && (
             <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               {log.actorRoles.length > 0 && (
-                <span
-                  className="min-w-0 truncate text-xs text-muted-foreground"
-                  title={log.actorRoles.join(", ")}
-                >
+                <span className="min-w-0 truncate text-xs text-muted-foreground" title={log.actorRoles.join(", ")}>
                   {log.actorRoles.join(", ")}
                 </span>
               )}
@@ -188,9 +174,7 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
           )}
         </div>
         <div className="flex min-w-0 flex-col gap-1">
-          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            Đối tượng
-          </span>
+          <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Đối tượng</span>
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className="text-sm">{AuditTargetTypeLabel[log.targetType]}</span>
             {log.game && <GameBadge gameProduct={log.game} />}
@@ -203,9 +187,7 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
               {log.targetLabel || log.targetId}
             </span>
           )}
-          {log.tenantId && (
-            <span className="truncate text-xs text-muted-foreground">Tenant: {log.tenantId}</span>
-          )}
+          {log.tenantId && <span className="truncate text-xs text-muted-foreground">Tenant: {log.tenantId}</span>}
         </div>
       </div>
 
@@ -217,9 +199,7 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
               {log.errorCode}
             </span>
           )}
-          {log.errorMessage && (
-            <p className="wrap-break-words text-sm text-destructive">{log.errorMessage}</p>
-          )}
+          {log.errorMessage && <p className="wrap-break-words text-sm text-destructive">{log.errorMessage}</p>}
         </div>
       )}
 
@@ -250,9 +230,7 @@ function DetailBody({ log }: { log: AuditLogEntity }) {
           hiển thị cạnh actor nên KHÔNG lặp ở đây. */}
       {(http?.userAgent || http?.requestId || worker || extra) && (
         <div className="flex flex-col gap-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Nội dung
-          </h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Nội dung</h3>
           <div className="flex flex-col gap-2 rounded-md border p-3">
             {http?.userAgent && (
               <Field label="Thiết bị">
@@ -308,23 +286,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function DiffPane({
-  title,
-  value,
-  highlight,
-}: {
-  title: string;
-  value: unknown;
-  highlight: Set<string>;
-}) {
+function DiffPane({ title, value, highlight }: { title: string; value: unknown; highlight: Set<string> }) {
   const formatted = formatValue(value);
   const isObject = value !== null && typeof value === "object";
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-        {title}
-      </span>
+      <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{title}</span>
       {formatted ? (
         isObject ? (
           <div className="flex flex-col gap-0.5 rounded-md border bg-muted/40 p-2 font-mono text-xs">
@@ -333,8 +301,7 @@ function DiffPane({
                 key={k}
                 className={cn(
                   "wrap-break-words",
-                  highlight.has(k) &&
-                    "rounded bg-amber-500/15 px-1 text-amber-800 dark:text-amber-300",
+                  highlight.has(k) && "rounded bg-amber-500/15 px-1 text-amber-800 dark:text-amber-300",
                 )}
               >
                 <span className="text-muted-foreground">{k}:</span> {formatValue(v)}
@@ -342,14 +309,10 @@ function DiffPane({
             ))}
           </div>
         ) : (
-          <pre className="wrap-break-words rounded-md border bg-muted/40 p-2 font-mono text-xs">
-            {formatted}
-          </pre>
+          <pre className="wrap-break-words rounded-md border bg-muted/40 p-2 font-mono text-xs">{formatted}</pre>
         )
       ) : (
-        <p className="rounded-md border border-dashed px-2 py-3 text-center text-xs text-muted-foreground">
-          —
-        </p>
+        <p className="rounded-md border border-dashed px-2 py-3 text-center text-xs text-muted-foreground">—</p>
       )}
     </div>
   );

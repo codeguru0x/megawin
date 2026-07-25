@@ -1,6 +1,7 @@
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawEntity } from "@megawin/game-bingo18/entities";
 import type { AuditActor } from "@megawin/audit/logger";
+import type { WireType } from "@megawin/shared/types";
 
 // ─────────────────────────────────────────────
 // CreateDraw (batch)
@@ -256,6 +257,6 @@ export interface GetDrawDetailInput {
 }
 
 export interface GetDrawDetailOutput {
-  /** Toàn bộ thông tin kỳ quay (entity đầy đủ). */
-  draw: DrawEntity;
+  /** Toàn bộ thông tin kỳ quay — Date fields đã serialize thành ISO string qua JSON response. */
+  draw: WireType<DrawEntity>;
 }

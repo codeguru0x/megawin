@@ -1,20 +1,15 @@
 "use client";
 
-import { Users, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatNumber } from "@megawin/shared/utils";
-import type { VoidPlayerRow } from "./types";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { RefreshCw, Users } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+import type { VoidPlayerRow } from "./types";
 
 export interface VoidPlayerBreakdownProps {
   drawId: string;
@@ -83,9 +78,7 @@ export function VoidPlayerBreakdown({
             Tài khoản — Kỳ {drawId} / {tenantId}
           </CardTitle>
         </div>
-        <CardDescription className="text-xs">
-          {rows.length} tài khoản · Click để xem phiếu cược
-        </CardDescription>
+        <CardDescription className="text-xs">{rows.length} tài khoản · Click để xem phiếu cược</CardDescription>
       </CardHeader>
       <CardContent className="px-0 pb-4 pt-0">
         {rows.length === 0 ? (
@@ -99,12 +92,8 @@ export function VoidPlayerBreakdown({
                 <TableRow>
                   <TableHead className="pl-5">{REPORT_COLUMN_LABELS.accountName}</TableHead>
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
-                  <TableHead className="text-right">
-                    {REPORT_COLUMN_LABELS.totalOriginalStake}
-                  </TableHead>
-                  <TableHead className="pr-5 text-right">
-                    {REPORT_COLUMN_LABELS.totalRefundAmount}
-                  </TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalOriginalStake}</TableHead>
+                  <TableHead className="pr-5 text-right">{REPORT_COLUMN_LABELS.totalRefundAmount}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -115,9 +104,7 @@ export function VoidPlayerBreakdown({
                     onClick={() => onRowClick(row.accountId, row.displayName)}
                   >
                     <TableCell className="pl-5 text-sm font-medium">{row.displayName}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums">
                       {formatNumber(row.totalOriginalStake)}
                     </TableCell>

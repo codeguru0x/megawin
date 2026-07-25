@@ -1,16 +1,16 @@
 "use client";
 
-import { DollarSign, Percent, Settings2 } from "lucide-react";
-import { useQueryState, parseAsStringEnum } from "nuqs";
-
 import { displayVNDateTime } from "@megawin/shared/utils";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DollarSign, Percent, Settings2 } from "lucide-react";
+import { parseAsStringEnum, useQueryState } from "nuqs";
 
-import { useGameConfig, useUpdateGameConfig } from "./_lib/use-game-config";
-import { RatesSection } from "./_lib/rates-section";
-import { PrizesSection } from "./_lib/prizes-section";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { PlayRulesSection } from "./_lib/play-rules-section";
+import { PrizesSection } from "./_lib/prizes-section";
+import { RatesSection } from "./_lib/rates-section";
+import { useGameConfig, useUpdateGameConfig } from "./_lib/use-game-config";
 
 function ConfigSkeleton() {
   return (
@@ -27,10 +27,7 @@ export default function Max3dConfigPage() {
 
   const handleSave = (data: Record<string, unknown>) => mutation.mutate(data);
 
-  const [tab, setTab] = useQueryState(
-    "tab",
-    parseAsStringEnum(["prizes", "rates", "play"]).withDefault("prizes"),
-  );
+  const [tab, setTab] = useQueryState("tab", parseAsStringEnum(["prizes", "rates", "play"]).withDefault("prizes"));
 
   return (
     <div className="@container/main flex flex-col gap-2">
@@ -39,9 +36,7 @@ export default function Max3dConfigPage() {
           <Settings2 className="size-4 text-white" />
         </div>
         <div>
-          <h1 className="text-base font-semibold tracking-tight text-foreground">
-            Max 3D — Cấu hình
-          </h1>
+          <h1 className="text-base font-semibold tracking-tight text-foreground">Max 3D — Cấu hình</h1>
           {config && (
             <p className="text-xs tabular-nums text-muted-foreground">
               v{config.version} · Cập nhật {displayVNDateTime(config.updatedAt)}

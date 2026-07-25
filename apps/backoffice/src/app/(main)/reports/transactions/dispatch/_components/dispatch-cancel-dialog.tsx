@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { Loader2, XCircle } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -16,14 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 import { useCancelOrder } from "../_lib/use-queries";
 
@@ -42,12 +36,7 @@ export interface DispatchCancelDialogProps {
   onSuccess?: () => void;
 }
 
-export function DispatchCancelDialog({
-  tx,
-  label,
-  onClose,
-  onSuccess,
-}: DispatchCancelDialogProps) {
+export function DispatchCancelDialog({ tx, label, onClose, onSuccess }: DispatchCancelDialogProps) {
   const isOpen = !!tx;
   const { mutateAsync, isPending } = useCancelOrder();
 
@@ -98,10 +87,7 @@ export function DispatchCancelDialog({
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start gap-3 rounded-md border bg-muted/30 px-3 py-2.5">
                   <FormControl>
-                    <Checkbox
-                      checked={!!field.value}
-                      onCheckedChange={(v) => field.onChange(v === true)}
-                    />
+                    <Checkbox checked={!!field.value} onCheckedChange={(v) => field.onChange(v === true)} />
                   </FormControl>
                   <div className="flex flex-col gap-1">
                     <FormLabel className="cursor-pointer text-sm font-medium">
@@ -114,13 +100,7 @@ export function DispatchCancelDialog({
             />
 
             <DialogFooter className="mt-1 gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onClose}
-                disabled={isPending}
-              >
+              <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={isPending}>
                 Đóng
               </Button>
               <Button type="submit" variant="destructive" size="sm" disabled={isPending}>

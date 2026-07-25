@@ -1,6 +1,7 @@
 "use client";
 
-import { CalendarRange, Building2, Ticket } from "lucide-react";
+import { Building2, CalendarRange, Ticket } from "lucide-react";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -20,11 +21,7 @@ export function TableSkeleton({ rows = 8 }: { rows?: number }) {
   );
 }
 
-export function ErrorCard({
-  message = "Vui lòng tải lại trang và thử lại.",
-}: {
-  message?: string;
-}) {
+export function ErrorCard({ message = "Vui lòng tải lại trang và thử lại." }: { message?: string }) {
   return (
     <Card className="gap-0 py-0">
       <CardContent className="flex flex-col items-center justify-center py-16 text-center">

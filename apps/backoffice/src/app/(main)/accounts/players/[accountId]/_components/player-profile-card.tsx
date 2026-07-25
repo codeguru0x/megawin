@@ -1,8 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { CircleUser, Building2, Shield, Clock, CalendarClock } from "lucide-react";
-import { AccountStatusLabel, AccountStatus } from "@megawin/identity/entities";
+
+import { type AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
+import { Building2, CalendarClock, CircleUser, Clock, Shield } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,11 +47,7 @@ export function PlayerProfileCard({ profile, isLoading, isError }: PlayerProfile
             ))}
           </div>
         )}
-        {isError && (
-          <p className="py-8 text-center text-sm text-destructive">
-            Không thể tải thông tin tài khoản.
-          </p>
-        )}
+        {isError && <p className="py-8 text-center text-sm text-destructive">Không thể tải thông tin tài khoản.</p>}
         {!isLoading && !isError && profile && (
           <div className="divide-y divide-border/50">
             <InfoRow
@@ -58,11 +55,7 @@ export function PlayerProfileCard({ profile, isLoading, isError }: PlayerProfile
               label="Tên tài khoản"
               value={<span className="font-mono text-sm">{profile.username}</span>}
             />
-            <InfoRow
-              icon={<CircleUser className="size-4" />}
-              label="Tên hiển thị"
-              value={profile.displayName}
-            />
+            <InfoRow icon={<CircleUser className="size-4" />} label="Tên hiển thị" value={profile.displayName} />
             <InfoRow
               icon={<Shield className="size-4" />}
               label="Trạng thái"

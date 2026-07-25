@@ -1,8 +1,10 @@
 "use client";
 
-import { Ban, Ticket, Banknote, Undo2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
+import { Ban, Banknote, Ticket, Undo2 } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
 import type { VoidKpiData } from "./types";
 
 interface KpiCardProps {
@@ -15,15 +17,7 @@ interface KpiCardProps {
   valueClassName?: string;
 }
 
-function KpiCard({
-  icon: Icon,
-  iconBg,
-  iconColor,
-  label,
-  value,
-  sub,
-  valueClassName,
-}: KpiCardProps) {
+function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub, valueClassName }: KpiCardProps) {
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
@@ -31,9 +25,7 @@ function KpiCard({
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className={cn("text-lg font-bold tabular-nums text-foreground", valueClassName)}>
-          {value}
-        </p>
+        <p className={cn("text-lg font-bold tabular-nums text-foreground", valueClassName)}>{value}</p>
         <p className="truncate text-xs text-muted-foreground">{sub}</p>
       </div>
     </div>

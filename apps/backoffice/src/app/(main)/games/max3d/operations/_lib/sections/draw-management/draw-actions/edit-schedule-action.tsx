@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
+import { formatVNDate, formatVNTime, toVNDate } from "@megawin/shared/utils";
 import { Check, Loader2 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,9 +16,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
 import type { DrawSelectorItem } from "../../../use-operations";
 import { useUpdateSchedule } from "../../../use-operations";
-import { formatVNDate, formatVNTime, toVNDate } from "@megawin/shared/utils";
 
 /** Chuyển "DD/MM/YYYY" → "YYYY-MM-DD" cho HTML input[type=date] */
 function vnDateToISO(vnDate: string): string {
@@ -48,15 +51,11 @@ export function EditScheduleAction({
   const [salesOpenDate, setSalesOpenDate] = useState(
     draw.salesOpenAt ? formatVNDate(new Date(draw.salesOpenAt)) : isoDrawDate,
   );
-  const [salesOpen, setSalesOpen] = useState(
-    draw.salesOpenAt ? formatVNTime(new Date(draw.salesOpenAt)) : "",
-  );
+  const [salesOpen, setSalesOpen] = useState(draw.salesOpenAt ? formatVNTime(new Date(draw.salesOpenAt)) : "");
   const [salesCloseDate, setSalesCloseDate] = useState(
     draw.salesCloseAt ? formatVNDate(new Date(draw.salesCloseAt)) : isoDrawDate,
   );
-  const [salesClose, setSalesClose] = useState(
-    draw.salesCloseAt ? formatVNTime(new Date(draw.salesCloseAt)) : "",
-  );
+  const [salesClose, setSalesClose] = useState(draw.salesCloseAt ? formatVNTime(new Date(draw.salesCloseAt)) : "");
   const [drawDate, setDrawDate] = useState(isoDrawDate);
   const [drawTimeVal, setDrawTimeVal] = useState(draw.drawTime);
   const [error, setError] = useState<string | null>(null);
@@ -104,10 +103,7 @@ export function EditScheduleAction({
       body.drawTime = toVNDate(drawDate, drawTimeVal).toISOString();
     }
 
-    updateSchedule.mutate(
-      { drawId: draw.drawId, body },
-      { onSuccess: () => onOpenChange?.(false) },
-    );
+    updateSchedule.mutate({ drawId: draw.drawId, body }, { onSuccess: () => onOpenChange?.(false) });
   }
 
   return (
@@ -115,16 +111,12 @@ export function EditScheduleAction({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Sửa lịch kỳ {draw.drawId}</DialogTitle>
-          <DialogDescription>
-            Giờ đóng bán phải lớn hơn giờ mở bán và nhỏ hơn giờ quay số.
-          </DialogDescription>
+          <DialogDescription>Giờ đóng bán phải lớn hơn giờ mở bán và nhỏ hơn giờ quay số.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           {/* Mở bán */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Giờ mở bán
-            </Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giờ mở bán</Label>
             <div className="flex gap-2">
               <Input
                 type="date"
@@ -149,9 +141,7 @@ export function EditScheduleAction({
 
           {/* Đóng bán */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Giờ đóng bán
-            </Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giờ đóng bán</Label>
             <div className="flex gap-2">
               <Input
                 type="date"
@@ -176,9 +166,7 @@ export function EditScheduleAction({
 
           {/* Quay số */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Giờ quay số
-            </Label>
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Giờ quay số</Label>
             <div className="flex gap-2">
               <Input
                 type="date"
@@ -199,9 +187,7 @@ export function EditScheduleAction({
                 }}
               />
             </div>
-            <p className="text-xs text-muted-foreground/70">
-              Mặc định 18:00, T2/T4/T6. Chỉ sửa nếu cần thiết.
-            </p>
+            <p className="text-xs text-muted-foreground/70">Mặc định 18:00, T2/T4/T6. Chỉ sửa nếu cần thiết.</p>
           </div>
 
           {error && <p className="text-sm font-medium text-destructive">{error}</p>}

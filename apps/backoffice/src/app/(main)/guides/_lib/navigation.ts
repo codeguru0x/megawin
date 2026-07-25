@@ -1,9 +1,4 @@
-import {
-  RUNBOOK_MANIFEST,
-  type RunbookDoc,
-  type RunbookGame,
-  type RunbookTopic,
-} from "@megawin/ops-docs/manifest";
+import { RUNBOOK_MANIFEST, type RunbookDoc, type RunbookGame, type RunbookTopic } from "@megawin/ops-docs/manifest";
 
 /** Một doc đã "phẳng hoá" kèm ngữ cảnh game/topic + route đầy đủ. */
 export interface FlatDoc {

@@ -1,23 +1,15 @@
 "use client";
 
-import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Save, Info, HelpCircle } from "lucide-react";
-
 import { MoneyInput } from "@megawin/ui/components/money-input";
+import { HelpCircle, Info, Save } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
+import { z } from "zod";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Badge } from "@/components/ui/badge";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -106,8 +98,8 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
             <div className="p-6 pb-4">
               <h3 className="text-sm font-semibold text-foreground">Jackpot kép (Dual Jackpot)</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Jackpot 1 (trùng 6/6 số chính, tối thiểu 30 tỷ) và Jackpot 2 (trùng 5/6 + số bonus,
-                tối thiểu 3 tỷ). Cả hai tích luỹ song song theo tỷ lệ đã cài đặt.
+                Jackpot 1 (trùng 6/6 số chính, tối thiểu 30 tỷ) và Jackpot 2 (trùng 5/6 + số bonus, tối thiểu 3 tỷ). Cả
+                hai tích luỹ song song theo tỷ lệ đã cài đặt.
               </p>
             </div>
 
@@ -219,9 +211,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                       {/* Input số cho cả 2 ô — luôn đồng bộ, tổng = 100 */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-muted-foreground">
-                            Jackpot 1 — Tỷ lệ tích luỹ
-                          </p>
+                          <p className="text-xs font-medium text-muted-foreground">Jackpot 1 — Tỷ lệ tích luỹ</p>
                           <div className="flex items-baseline gap-1.5">
                             <FormControl>
                               <MoneyInput
@@ -245,9 +235,7 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                           </div>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-xs font-medium text-muted-foreground">
-                            Jackpot 2 — Tỷ lệ tích luỹ
-                          </p>
+                          <p className="text-xs font-medium text-muted-foreground">Jackpot 2 — Tỷ lệ tích luỹ</p>
                           <div className="flex items-baseline gap-1.5">
                             <MoneyInput
                               className="h-9 w-20 text-center font-semibold"
@@ -268,11 +256,8 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
                       </div>
 
                       <p className="text-xs text-muted-foreground tabular-nums">
-                        Tổng:{" "}
-                        <span className="font-semibold text-foreground">
-                          {jp1Ratio + jp2Ratio}%
-                        </span>{" "}
-                        · JP1 + JP2 luôn = 100%
+                        Tổng: <span className="font-semibold text-foreground">{jp1Ratio + jp2Ratio}%</span> · JP1 + JP2
+                        luôn = 100%
                       </p>
 
                       <FormMessage />
@@ -318,11 +303,10 @@ export function JackpotSection({ config, onSave, isPending }: JackpotSectionProp
             <div className="flex items-start gap-2">
               <Info className="mt-0.5 size-3.5 shrink-0 text-blue-500" />
               <p className="text-xs leading-relaxed text-blue-700 dark:text-blue-400">
-                Power 6/55 có <strong>Dual Jackpot</strong>: Jackpot 1 (trùng 6/6) tối thiểu 30 tỷ,
-                Jackpot 2 (trùng 5/6 + bonus) tối thiểu 3 tỷ. Tích luỹ mỗi kỳ theo tỷ lệ Jackpot
-                1/Jackpot 2. Jackpot tích lũy không giới hạn đến khi có người trúng —{" "}
-                <strong>không có cơ chế chia giải (split)</strong>. Overflow Jackpot 1 chỉ kích hoạt
-                khi Jackpot 1 &gt; ngưỡng tràn, không có Jackpot 1 winner, và có Jackpot 2 winner.
+                Power 6/55 có <strong>Dual Jackpot</strong>: Jackpot 1 (trùng 6/6) tối thiểu 30 tỷ, Jackpot 2 (trùng 5/6
+                + bonus) tối thiểu 3 tỷ. Tích luỹ mỗi kỳ theo tỷ lệ Jackpot 1/Jackpot 2. Jackpot tích lũy không giới hạn
+                đến khi có người trúng — <strong>không có cơ chế chia giải (split)</strong>. Overflow Jackpot 1 chỉ kích
+                hoạt khi Jackpot 1 &gt; ngưỡng tràn, không có Jackpot 1 winner, và có Jackpot 2 winner.
               </p>
             </div>
           </div>

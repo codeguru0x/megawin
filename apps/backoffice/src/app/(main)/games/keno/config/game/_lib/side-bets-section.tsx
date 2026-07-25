@@ -1,9 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Save, TrendingUp, TrendingDown, Info, ChevronDown, ChevronUp } from "lucide-react";
-import { formatNumber } from "@megawin/shared/utils";
 
+import type { BigSmallPrizes, EvenOddPrizes } from "@megawin/game-keno/entities";
 import {
   analyzeBigSmallProfitability,
   analyzeEvenOddProfitability,
@@ -11,31 +10,23 @@ import {
   getEvenOddOdds,
   TOTAL_OUTCOMES,
 } from "@megawin/game-keno/rules";
+import { formatNumber } from "@megawin/shared/utils";
 import { MoneyInput } from "@megawin/ui/components/money-input";
+import { ChevronDown, ChevronUp, Info, Save, TrendingDown, TrendingUp } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-
-import type { BigSmallPrizes, EvenOddPrizes } from "@megawin/game-keno/entities";
 
 import type { KenoGameConfig } from "./use-game-config";
 
 const fmt = formatNumber;
 
-function HeaderTooltip({
-  label,
-  tip,
-  className,
-}: {
-  label: string;
-  tip: string;
-  className?: string;
-}) {
+function HeaderTooltip({ label, tip, className }: { label: string; tip: string; className?: string }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -86,16 +77,12 @@ function BigSmallGroup({
 }) {
   const [open, setOpen] = useState(true);
   const bsOdds = useMemo(() => getBigSmallOdds(), []);
-  const analysis = useMemo(
-    () => analyzeBigSmallProfitability(prizes, unitPrice),
-    [prizes, unitPrice],
-  );
+  const analysis = useMemo(() => analyzeBigSmallProfitability(prizes, unitPrice), [prizes, unitPrice]);
 
   const worstMargin = Math.min(...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100));
   const allSafe = analysis.tiers.every((t) => t.payoutRatio <= 1);
 
-  const marginColor =
-    worstMargin >= 50 ? "text-emerald-600" : worstMargin >= 0 ? "text-amber-600" : "text-red-600";
+  const marginColor = worstMargin >= 50 ? "text-emerald-600" : worstMargin >= 0 ? "text-amber-600" : "text-red-600";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -157,11 +144,7 @@ function BigSmallGroup({
               tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%. Trên 100% = LỖ."
               className="justify-end"
             />
-            <HeaderTooltip
-              label="Hoà vốn"
-              tip="Giá trị giải thưởng tối đa để không lỗ."
-              className="justify-end"
-            />
+            <HeaderTooltip label="Hoà vốn" tip="Giá trị giải thưởng tối đa để không lỗ." className="justify-end" />
           </div>
           {BS_FIELDS.map((f, i) => {
             const odds = bsOdds[f.key];
@@ -250,16 +233,12 @@ function EvenOddGroup({
 }) {
   const [open, setOpen] = useState(true);
   const eoOdds = useMemo(() => getEvenOddOdds(), []);
-  const analysis = useMemo(
-    () => analyzeEvenOddProfitability(prizes, unitPrice),
-    [prizes, unitPrice],
-  );
+  const analysis = useMemo(() => analyzeEvenOddProfitability(prizes, unitPrice), [prizes, unitPrice]);
 
   const worstMargin = Math.min(...analysis.tiers.map((t) => (1 - t.payoutRatio) * 100));
   const allSafe = analysis.tiers.every((t) => t.payoutRatio <= 1);
 
-  const marginColor =
-    worstMargin >= 50 ? "text-emerald-600" : worstMargin >= 0 ? "text-amber-600" : "text-red-600";
+  const marginColor = worstMargin >= 50 ? "text-emerald-600" : worstMargin >= 0 ? "text-amber-600" : "text-red-600";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -321,11 +300,7 @@ function EvenOddGroup({
               tip="Tỷ lệ trả thưởng = CP kỳ vọng ÷ Giá 1 line × 100%. Trên 100% = LỖ."
               className="justify-end"
             />
-            <HeaderTooltip
-              label="Hoà vốn"
-              tip="Giá trị giải thưởng tối đa để không lỗ."
-              className="justify-end"
-            />
+            <HeaderTooltip label="Hoà vốn" tip="Giá trị giải thưởng tối đa để không lỗ." className="justify-end" />
           </div>
           {EO_FIELDS.map((f, i) => {
             const odds = eoOdds[f.key];
@@ -426,9 +401,7 @@ export function SideBetsSection({ config, onSave, isPending }: SideBetsSectionPr
     <Card className="overflow-hidden py-0 gap-0">
       <CardContent className="p-0">
         <div className="p-6 pb-4">
-          <h3 className="text-sm font-semibold text-foreground">
-            Giải thưởng bổ sung – Lớn/Nhỏ & Chẵn/Lẻ
-          </h3>
+          <h3 className="text-sm font-semibold text-foreground">Giải thưởng bổ sung – Lớn/Nhỏ & Chẵn/Lẻ</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             Giải thưởng cho cách chơi bổ sung (Lớn/Nhỏ, Chẵn/Lẻ)
             {" · "}Mệnh giá: <strong>{fmt(unitPrice)} VND</strong>

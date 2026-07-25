@@ -9,11 +9,13 @@
  * Mega 6/45 play types: standard, bao5, bao7, bao8, bao9, bao10, bao12, bao13, bao14, bao15, bao18.
  */
 
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatNumber } from "@megawin/shared/utils";
 import { Layers } from "lucide-react";
-import type { TenantRow, PlayTypeRow } from "../../types";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+import type { PlayTypeRow, TenantRow } from "../../types";
 
 // ─── Color palette — Mega 6/45 (teal/emerald theme) ─────────────────────────
 
@@ -128,6 +130,7 @@ function MiniPie({ pct, fill, size = 44 }: { pct: number; fill: string; size?: n
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+      <title>{Math.round(pct)}%</title>
       <circle
         cx={cx}
         cy={cy}

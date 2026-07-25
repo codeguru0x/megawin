@@ -1,16 +1,18 @@
 "use client";
 
 import { toTenantUsername } from "@megawin/shared/utils";
+
 import {
-  GameTenantReportTable,
-  GameTenantDrawList,
   GamePlayerBreakdownTable,
   GameTenantBreadcrumb,
+  GameTenantDrawList,
+  GameTenantReportTable,
 } from "@/components/reports/game/settle";
-import { useMax3dReportFilters } from "../use-report-filters";
-import { useMax3DTenantList, useMax3DTenantDraws, useMax3DPlayers } from "../use-report-queries";
-import { TableSkeleton, ErrorCard, EmptyCard } from "../sections/shared-states";
+
 import { EntryList } from "../sections/entry-list";
+import { EmptyCard, ErrorCard, TableSkeleton } from "../sections/shared-states";
+import { useMax3dReportFilters } from "../use-report-filters";
+import { useMax3DPlayers, useMax3DTenantDraws, useMax3DTenantList } from "../use-report-queries";
 
 // ─── Level 1: Danh sách đại lý + KPI ─────────────────────────────────────────
 
@@ -46,9 +48,7 @@ function TenantDrawList({ tenantId }: { tenantId: string }) {
   if (isLoading) return <TableSkeleton rows={8} />;
   if (error) return <ErrorCard />;
   if (!data?.data.length)
-    return (
-      <EmptyCard icon="calendar" message="Không có dữ liệu" description="Không có kỳ quay nào." />
-    );
+    return <EmptyCard icon="calendar" message="Không có dữ liệu" description="Không có kỳ quay nào." />;
 
   const rows = data.data.map((r) => ({
     ...r,
@@ -74,9 +74,7 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
 
   if (isLoading) return <TableSkeleton rows={5} />;
   if (!players?.length)
-    return (
-      <EmptyCard icon="ticket" message="Không có dữ liệu" description="Không có player nào." />
-    );
+    return <EmptyCard icon="ticket" message="Không có dữ liệu" description="Không có player nào." />;
 
   const rows = players.map((p) => ({
     accountId: p.accountId,
@@ -102,16 +100,8 @@ function PlayerBreakdown({ drawId, tenantId }: { drawId: string; tenantId: strin
 // ─── Breadcrumb ───────────────────────────────────────────────────────────────
 
 function Breadcrumb() {
-  const {
-    level,
-    drawId,
-    tenantId,
-    accountId,
-    playerName,
-    navigateToList,
-    navigateBackToTenantDraws,
-    setLevel,
-  } = useMax3dReportFilters();
+  const { level, drawId, tenantId, accountId, playerName, navigateToList, navigateBackToTenantDraws, setLevel } =
+    useMax3dReportFilters();
 
   return (
     <GameTenantBreadcrumb
@@ -119,9 +109,7 @@ function Breadcrumb() {
       tenantId={tenantId ?? undefined}
       drawId={level === "draw-tenants" || level === "entries" ? (drawId ?? undefined) : undefined}
       playerName={
-        level === "entries" && accountId
-          ? (playerName ?? toTenantUsername(accountId) ?? accountId)
-          : undefined
+        level === "entries" && accountId ? (playerName ?? toTenantUsername(accountId) ?? accountId) : undefined
       }
       onRootClick={navigateToList}
       onTenantClick={tenantId ? () => navigateBackToTenantDraws() : undefined}
@@ -147,18 +135,11 @@ export function ByTenantTab() {
       {level === "tenant-draws" && tenantId && <TenantDrawList tenantId={tenantId} />}
 
       {/* Level 3 — Player list: drill từ kỳ quay trong tab đại lý */}
-      {level === "draw-tenants" && drawId && tenantId && (
-        <PlayerBreakdown drawId={drawId} tenantId={tenantId} />
-      )}
+      {level === "draw-tenants" && drawId && tenantId && <PlayerBreakdown drawId={drawId} tenantId={tenantId} />}
 
       {/* Level 4 — Entries của 1 player */}
       {level === "entries" && drawId && tenantId && accountId && (
-        <EntryList
-          drawId={drawId}
-          tenantId={tenantId}
-          accountId={accountId}
-          playerDisplayName={playerDisplayName}
-        />
+        <EntryList drawId={drawId} tenantId={tenantId} accountId={accountId} playerDisplayName={playerDisplayName} />
       )}
     </div>
   );

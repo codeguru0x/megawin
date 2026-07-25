@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState, use } from "react";
+import { use, useMemo, useState } from "react";
+
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Clock, Loader2, Send } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { formatNumber } from "@megawin/shared/utils/number";
+import type { LucideIcon } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Loader2, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,9 +15,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SYSTEM_ICON_GRADIENT } from "@/lib/game-colors";
 import { cn } from "@/lib/utils";
 
-import { DispatchTable } from "../../_components/dispatch-table";
-import { DispatchDetailDrawer } from "../../_components/dispatch-detail-drawer";
 import { DispatchCancelDialog } from "../../_components/dispatch-cancel-dialog";
+import { DispatchDetailDrawer } from "../../_components/dispatch-detail-drawer";
+import { DispatchTable } from "../../_components/dispatch-table";
 import { useDispatchFilters } from "../../_lib/use-filters";
 import { useBatchProgress, useDispatchList } from "../../_lib/use-queries";
 
@@ -83,11 +85,7 @@ export default function DispatchBatchPage({ params }: { params: Promise<{ batchI
         </CardContent>
       </Card>
 
-      <DispatchDetailDrawer
-        tx={f.detail || null}
-        onClose={f.closeDetail}
-        onRequestCancel={(tx) => setCancelTx(tx)}
-      />
+      <DispatchDetailDrawer tx={f.detail || null} onClose={f.closeDetail} onRequestCancel={(tx) => setCancelTx(tx)} />
 
       <DispatchCancelDialog
         tx={cancelTx}
@@ -109,13 +107,7 @@ interface BatchProgress {
   dispatchedAmount: number;
 }
 
-function BatchProgressCard({
-  data,
-  isLoading,
-}: {
-  data: BatchProgress | null;
-  isLoading: boolean;
-}) {
+function BatchProgressCard({ data, isLoading }: { data: BatchProgress | null; isLoading: boolean }) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -198,9 +190,7 @@ function BatchProgressCard({
           label="Thời gian hoàn tất"
           value={durationLabel ?? "—"}
           valueClass="text-profit"
-          sub={
-            data.cancelled > 0 ? `${formatNumber(data.cancelled)} đã huỷ` : "Toàn bộ đã dispatch"
-          }
+          sub={data.cancelled > 0 ? `${formatNumber(data.cancelled)} đã huỷ` : "Toàn bộ đã dispatch"}
         />
       ) : hasStarted ? (
         <KpiCard
@@ -211,11 +201,7 @@ function BatchProgressCard({
           label="Dispatch gần nhất"
           value={data.lastDispatchedAt ? displayVNDateTime(data.lastDispatchedAt) : "—"}
           valueSmall
-          sub={
-            data.cancelled > 0
-              ? `${formatNumber(data.cancelled)} đã huỷ`
-              : "Đang xử lý các order còn lại"
-          }
+          sub={data.cancelled > 0 ? `${formatNumber(data.cancelled)} đã huỷ` : "Đang xử lý các order còn lại"}
         />
       ) : (
         <KpiCard
@@ -262,13 +248,7 @@ function KpiCard({
 }: KpiCardProps) {
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
-      <div
-        className={cn(
-          "flex size-10 shrink-0 items-center justify-center rounded-lg",
-          iconBg,
-          dim && "opacity-50",
-        )}
-      >
+      <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg, dim && "opacity-50")}>
         <Icon className={cn("size-5", iconColor, iconSpin && "animate-spin")} />
       </div>
       <div className="min-w-0 flex-1">

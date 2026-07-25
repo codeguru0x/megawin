@@ -2,6 +2,7 @@ import type { DrawStatus } from "@megawin/game-core/entities";
 import type { DrawNo } from "@megawin/game-lotto535/entities";
 import type { DrawEntity } from "@megawin/game-lotto535/entities";
 import type { AuditActor } from "@megawin/audit/logger";
+import type { WireType } from "@megawin/shared/types";
 
 // ─────────────────────────────────────────────
 // CreateDraws (batch – tạo nhiều kỳ liên tiếp)
@@ -346,8 +347,8 @@ export interface GetDrawDetailInput {
 }
 
 export interface GetDrawDetailOutput {
-  /** Toàn bộ dữ liệu kỳ quay (entity đầy đủ từ DB). */
-  draw: DrawEntity;
+  /** Toàn bộ dữ liệu kỳ quay — Date fields đã serialize thành ISO string qua JSON response. */
+  draw: WireType<DrawEntity>;
   /**
    * Mức giải thưởng đơn vị theo từng tier (VND/line), từ game config.
    * Dùng để hiển thị cột "Tiền/line" ngay cả khi tier đó không có winner.

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { UserCog } from "lucide-react";
 
 import { SYSTEM_ICON_GRADIENT } from "@/lib/game-colors";
+
 import { AccountNav } from "./_components/account-nav";
 
 export default function AccountLayout({ children }: Readonly<{ children: ReactNode }>) {

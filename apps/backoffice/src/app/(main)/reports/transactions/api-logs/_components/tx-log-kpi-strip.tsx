@@ -1,8 +1,8 @@
 "use client";
 
-import { Activity, AlertTriangle, CheckCircle2, FileStack } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { formatNumber, formatPercent } from "@megawin/shared/utils";
+import type { LucideIcon } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, FileStack } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -36,15 +36,7 @@ interface TxLogKpiCardProps {
   valueClass?: string;
 }
 
-function TxLogKpiCard({
-  icon: Icon,
-  iconBg,
-  iconColor,
-  label,
-  value,
-  sub,
-  valueClass,
-}: TxLogKpiCardProps) {
+function TxLogKpiCard({ icon: Icon, iconBg, iconColor, label, value, sub, valueClass }: TxLogKpiCardProps) {
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
@@ -98,11 +90,7 @@ export function TxLogKpiStrip({ data, isLoading }: TxLogKpiStripProps) {
   const resolvedCount = failedCount - uncertainCount;
   const successRate = data?.successRate ?? null;
 
-  const successRateText = placeholder
-    ? "—"
-    : successRate === null
-      ? "—"
-      : formatPercent(successRate * 100, 1);
+  const successRateText = placeholder ? "—" : successRate === null ? "—" : formatPercent(successRate * 100, 1);
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -112,11 +100,7 @@ export function TxLogKpiStrip({ data, isLoading }: TxLogKpiStripProps) {
         iconColor="text-indigo-600 dark:text-indigo-400"
         label="Tổng giao dịch"
         value={placeholder ? "—" : formatNumber(total)}
-        sub={
-          placeholder
-            ? "\u00a0"
-            : `${formatNumber(successCount)} thành công · ${formatNumber(failedCount)} lỗi`
-        }
+        sub={placeholder ? "\u00a0" : `${formatNumber(successCount)} thành công · ${formatNumber(failedCount)} lỗi`}
       />
       <TxLogKpiCard
         icon={CheckCircle2}
@@ -125,11 +109,7 @@ export function TxLogKpiStrip({ data, isLoading }: TxLogKpiStripProps) {
         label="Tỷ lệ thành công"
         value={successRateText}
         valueClass={getSuccessRateColor(successRate)}
-        sub={
-          placeholder || total === 0
-            ? "\u00a0"
-            : `${formatNumber(successCount)}/${formatNumber(total)} giao dịch`
-        }
+        sub={placeholder || total === 0 ? "\u00a0" : `${formatNumber(successCount)}/${formatNumber(total)} giao dịch`}
       />
       <TxLogKpiCard
         icon={AlertTriangle}
@@ -153,13 +133,7 @@ export function TxLogKpiStrip({ data, isLoading }: TxLogKpiStripProps) {
         label="Cần reconcile"
         value={placeholder ? "—" : formatNumber(uncertainCount)}
         valueClass={uncertainCount > 0 ? "text-warning" : ""}
-        sub={
-          placeholder
-            ? "\u00a0"
-            : uncertainCount === 0
-              ? "Không có lỗi hạ tầng"
-              : "Timeout · Network · HTTP 5xx"
-        }
+        sub={placeholder ? "\u00a0" : uncertainCount === 0 ? "Không có lỗi hạ tầng" : "Timeout · Network · HTTP 5xx"}
       />
     </div>
   );

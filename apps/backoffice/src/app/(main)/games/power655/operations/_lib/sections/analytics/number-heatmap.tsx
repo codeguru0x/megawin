@@ -9,25 +9,27 @@
  * NumbersWithTooltip: collapse > 7 số, dùng cho TopCombos + LiveFeed.
  */
 
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber, formatCurrency } from "@megawin/shared/utils";
-import { BarChart2, Star, Trophy } from "lucide-react";
-import { POWER655_PLAY_TYPE_LABELS } from "@megawin/game-power655/labels";
+import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import type { PlayType } from "@megawin/game-power655/entities";
+import { POWER655_PLAY_TYPE_LABELS } from "@megawin/game-power655/labels";
+import { formatCurrency, formatNumber } from "@megawin/shared/utils";
+import { BarChart2, Star, Trophy } from "lucide-react";
+
 import {
   HEATMAP_BADGE_SIZE,
   HEATMAP_BADGE_TEXT,
-  HEATMAP_CELL_PT,
   HEATMAP_CELL_DATA_SIZE,
+  HEATMAP_CELL_PT,
   HEATMAP_CELL_SUB_SIZE,
 } from "@/components/games/shared/game-number-tokens";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { GAME_COLORS } from "@/lib/game-colors";
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { TenantBreakdown } from "./analytics-panels";
+import { cn } from "@/lib/utils";
+
 import type { NumberFreq, TenantRow } from "../../types";
 import type { TopComboItem } from "../../use-operations";
+import { TenantBreakdown } from "./analytics-panels";
 
 // ─── Power 6/55 color tokens ─────────────────────────────────────────────────
 // Brand: red-600 (#dc2626) — source of truth: GAME_COLORS[GameProduct.Power655].hex
@@ -96,8 +98,7 @@ export function NumberBadge({
   if (muted) {
     colorClass = POWER_MUTED_BG;
   } else if (variant === "outlined") {
-    colorClass =
-      "border border-red-400/70 text-red-600 bg-transparent dark:border-red-600 dark:text-red-400";
+    colorClass = "border border-red-400/70 text-red-600 bg-transparent dark:border-red-600 dark:text-red-400";
   } else if (variant === "soft") {
     colorClass = "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
   } else {
@@ -123,13 +124,7 @@ export function NumberBadge({
 
 const NUMBERS_VISIBLE_LIMIT = 7;
 
-export function NumbersWithTooltip({
-  numbers,
-  variant = "soft",
-}: {
-  numbers: string[];
-  variant?: "soft" | "filled";
-}) {
+export function NumbersWithTooltip({ numbers, variant = "soft" }: { numbers: string[]; variant?: "soft" | "filled" }) {
   const needsCollapse = numbers.length > NUMBERS_VISIBLE_LIMIT;
   const visible = needsCollapse ? numbers.slice(0, NUMBERS_VISIBLE_LIMIT) : numbers;
   const hidden = needsCollapse ? numbers.slice(NUMBERS_VISIBLE_LIMIT) : [];
@@ -215,20 +210,10 @@ function NumberCell({
                 <span className="text-[11px] text-muted-foreground/20 tabular-nums">–</span>
               ) : (
                 <>
-                  <span
-                    className={cn(
-                      HEATMAP_CELL_DATA_SIZE,
-                      "font-bold tabular-nums leading-tight text-foreground",
-                    )}
-                  >
+                  <span className={cn(HEATMAP_CELL_DATA_SIZE, "font-bold tabular-nums leading-tight text-foreground")}>
                     {formatCurrency(n.amount, { million: "tr", thousand: "k", decimals: 1 })}
                   </span>
-                  <span
-                    className={cn(
-                      HEATMAP_CELL_SUB_SIZE,
-                      "tabular-nums leading-none text-muted-foreground",
-                    )}
-                  >
+                  <span className={cn(HEATMAP_CELL_SUB_SIZE, "tabular-nums leading-none text-muted-foreground")}>
                     {formatNumber(n.count)} lần
                   </span>
                 </>
@@ -252,21 +237,15 @@ function NumberCell({
             <div className="space-y-1 min-w-37">
               <div className="flex justify-between gap-8">
                 <span className="text-xs text-muted-foreground">Tổng cược</span>
-                <span className="text-xs font-semibold tabular-nums text-foreground">
-                  {formatNumber(n.amount)}
-                </span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(n.amount)}</span>
               </div>
               <div className="flex justify-between gap-8">
                 <span className="text-xs text-muted-foreground">Lần xuất hiện</span>
-                <span className="text-xs font-semibold tabular-nums text-foreground">
-                  {formatNumber(n.count)}
-                </span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(n.count)}</span>
               </div>
               <div className="flex justify-between gap-8">
                 <span className="text-xs text-muted-foreground">Lines</span>
-                <span className="text-xs font-semibold tabular-nums text-foreground">
-                  {formatNumber(n.lines)}
-                </span>
+                <span className="text-xs font-semibold tabular-nums text-foreground">{formatNumber(n.lines)}</span>
               </div>
             </div>
           )}
@@ -300,8 +279,7 @@ function MainGrid({ numbers }: { numbers: NumberFreq[] }) {
           <span className="text-xs font-semibold text-foreground">Số chính (01–55)</span>
         </div>
         <span className="text-xs tabular-nums text-muted-foreground">
-          {formatNumber(totalCount)} lượt ·{" "}
-          {formatCurrency(totalAmount, { million: "tr", thousand: "k", decimals: 1 })}
+          {formatNumber(totalCount)} lượt · {formatCurrency(totalAmount, { million: "tr", thousand: "k", decimals: 1 })}
         </span>
       </div>
       <div
@@ -346,9 +324,7 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
             key={c.rank}
             className="flex items-center gap-2.5 rounded-lg border border-border/40 bg-muted/10 px-3 py-2"
           >
-            <span className="text-sm leading-none shrink-0">
-              {medals[c.rank - 1] ?? `#${c.rank}`}
-            </span>
+            <span className="text-sm leading-none shrink-0">{medals[c.rank - 1] ?? `#${c.rank}`}</span>
             <div className="flex-1 min-w-0 overflow-hidden">
               <NumbersWithTooltip numbers={c.mainNumbers} variant="soft" />
               <p className="text-xs text-muted-foreground mt-1">
@@ -356,12 +332,8 @@ function TopCombos({ combos }: { combos: TopComboItem[] }) {
               </p>
             </div>
             <div className="text-right shrink-0">
-              <p className="text-xs font-semibold tabular-nums text-foreground">
-                {c.entryCount} vé
-              </p>
-              <p className="text-xs tabular-nums text-muted-foreground">
-                {formatNumber(c.totalAmount)}
-              </p>
+              <p className="text-xs font-semibold tabular-nums text-foreground">{c.entryCount} vé</p>
+              <p className="text-xs tabular-nums text-muted-foreground">{formatNumber(c.totalAmount)}</p>
             </div>
           </div>
         ))}

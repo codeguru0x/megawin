@@ -13,15 +13,18 @@
  */
 
 import { useMemo } from "react";
+
+import { formatNumber } from "@megawin/shared/utils";
+import { AlertTriangle, Hash, Layers, TrendingUp } from "lucide-react";
+
+import { TripletDisplay } from "@/components/games/max3d/triplet-display";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber } from "@megawin/shared/utils";
-import { Hash, TrendingUp, AlertTriangle, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TripletDisplay } from "@/components/games/max3d/triplet-display";
+
+import type { TenantRow, TripletFreq } from "../../types";
+import type { TopPlusComboItem, TopSingleComboItem } from "../../use-operations";
 import { TenantBreakdown } from "./analytics-panels";
-import type { TripletFreq, TenantRow } from "../../types";
-import type { TopSingleComboItem, TopPlusComboItem } from "../../use-operations";
 
 // ─── Heat Intensity ──────────────────────────────────────────────────────────
 
@@ -57,13 +60,7 @@ const MEDALS = ["🥇", "🥈", "🥉"];
 
 // ─── Summary Ribbon ──────────────────────────────────────────────────────────
 
-function SummaryRibbon({
-  triplets,
-  totalRevenue,
-}: {
-  triplets: TripletFreq[];
-  totalRevenue: number;
-}) {
+function SummaryRibbon({ triplets, totalRevenue }: { triplets: TripletFreq[]; totalRevenue: number }) {
   const uniqueCount = triplets.length;
   const totalBets = triplets.reduce((a, t) => a + t.count, 0);
 
@@ -140,9 +137,7 @@ function RankedTripletList({ triplets }: { triplets: TripletFreq[] }) {
                   style={{ gridTemplateColumns: "1.5rem 2.5rem 1fr 4rem 5rem" }}
                 >
                   {/* Rank */}
-                  <span
-                    className={cn("text-xs font-bold tabular-nums text-center", RANK_STYLES[heat])}
-                  >
+                  <span className={cn("text-xs font-bold tabular-nums text-center", RANK_STYLES[heat])}>
                     {medal ?? `#${i + 1}`}
                   </span>
 
@@ -154,8 +149,7 @@ function RankedTripletList({ triplets }: { triplets: TripletFreq[] }) {
                     className={cn(
                       heat === "hot" &&
                         "!bg-amber-100 !text-amber-800 dark:!bg-amber-900/60 dark:!text-amber-200 ring-1 ring-amber-300/50",
-                      heat === "warm" &&
-                        "!bg-violet-100 !text-violet-800 dark:!bg-violet-900/60 dark:!text-violet-200",
+                      heat === "warm" && "!bg-violet-100 !text-violet-800 dark:!bg-violet-900/60 dark:!text-violet-200",
                     )}
                   />
 
@@ -207,17 +201,12 @@ function TopBasicCombos({ combos }: { combos: TopSingleComboItem[] }) {
       </p>
       <div className="grid grid-cols-2 gap-1.5">
         {combos.slice(0, 10).map((c) => (
-          <div
-            key={c.triplet}
-            className="flex items-center gap-2 rounded-lg border bg-muted/15 px-2.5 py-1.5"
-          >
+          <div key={c.triplet} className="flex items-center gap-2 rounded-lg border bg-muted/15 px-2.5 py-1.5">
             <span className="text-xs font-bold tabular-nums text-muted-foreground w-4">
               {MEDALS[c.rank - 1] ?? `#${c.rank}`}
             </span>
             <TripletDisplay value={c.triplet} variant="default" size="sm" />
-            <span className="text-xs tabular-nums text-muted-foreground ml-auto">
-              ×{formatNumber(c.boardCount)}
-            </span>
+            <span className="text-xs tabular-nums text-muted-foreground ml-auto">×{formatNumber(c.boardCount)}</span>
           </div>
         ))}
       </div>
@@ -246,9 +235,7 @@ function TopPlusCombos({ combos }: { combos: TopPlusComboItem[] }) {
             <TripletDisplay value={c.triplet1} variant="default" size="sm" />
             <span className="text-xs text-muted-foreground">+</span>
             <TripletDisplay value={c.triplet2} variant="default" size="sm" />
-            <span className="text-xs tabular-nums text-muted-foreground ml-auto">
-              ×{formatNumber(c.boardCount)}
-            </span>
+            <span className="text-xs tabular-nums text-muted-foreground ml-auto">×{formatNumber(c.boardCount)}</span>
           </div>
         ))}
       </div>
@@ -265,12 +252,7 @@ interface TripletHeatmapProps {
   tenants: TenantRow[];
 }
 
-export function TripletHeatmap({
-  triplets,
-  singleCombos,
-  plusCombos,
-  tenants,
-}: TripletHeatmapProps) {
+export function TripletHeatmap({ triplets, singleCombos, plusCombos, tenants }: TripletHeatmapProps) {
   const totalRevenue = useMemo(() => triplets.reduce((a, t) => a + t.revenue, 0), [triplets]);
 
   return (

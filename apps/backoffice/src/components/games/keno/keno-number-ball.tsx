@@ -55,13 +55,7 @@ const KENO_MATCH_BALL_STYLE: Record<KenoMatchBallVariant, string> = {
  * @param n - Số dạng string zero-padded ("01"-"80").
  * @param variant - Trạng thái đối chiếu với kết quả quay.
  */
-export function KenoMatchBall({
-  n,
-  variant = "default",
-}: {
-  n: string;
-  variant?: KenoMatchBallVariant;
-}) {
+export function KenoMatchBall({ n, variant = "default" }: { n: string; variant?: KenoMatchBallVariant }) {
   return (
     <span
       className={cn(

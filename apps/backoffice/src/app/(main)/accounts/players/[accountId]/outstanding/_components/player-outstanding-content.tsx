@@ -1,24 +1,30 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { useQueryState, parseAsString, parseAsInteger } from "nuqs";
-import {
-  Clock,
-  CalendarClock,
-  Ticket,
-  HandCoins,
-  Banknote,
-  ChevronRight,
-  ChevronLeft,
-} from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
-import { Pagination } from "@megawin/shared/constants/pagination";
+import type React from "react";
+import { useMemo, useState } from "react";
 
+import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
+import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { Pagination } from "@megawin/shared/constants/pagination";
+import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  Banknote,
+  CalendarClock,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  HandCoins,
+  Ticket,
+} from "lucide-react";
+import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
+
+import { GameEntryDetailDialog } from "@/components/reports/game/game-entry-detail-dialog";
+import { OutstandingEntryList } from "@/components/reports/game/outstanding/outstanding-entry-list";
+import type { OutstandingEntryRow } from "@/components/reports/game/outstanding/types";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -27,20 +33,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getGameColors } from "@/lib/game-colors";
 import { playerDetailKeys } from "@/lib/query-keys/player-detail";
 import { cn } from "@/lib/utils";
-import { GameEntryDetailDialog } from "@/components/reports/game/game-entry-detail-dialog";
-import { OutstandingEntryList } from "@/components/reports/game/outstanding/outstanding-entry-list";
-import type { OutstandingEntryRow } from "@/components/reports/game/outstanding/types";
 
 import {
-  usePlayerOutstanding,
-  usePlayerEntryDetail,
-  type PlayerOutstandingSummaryResponse,
   type PlayerOutstandingEntryResponse,
+  type PlayerOutstandingSummaryResponse,
+  usePlayerEntryDetail,
+  usePlayerOutstanding,
 } from "../../_shared/queries";
 
 interface PlayerOutstandingContentProps {
@@ -81,6 +83,7 @@ function LiveDot({ isFetching, onRefresh }: { isFetching: boolean; onRefresh: ()
     <Tooltip>
       <TooltipTrigger asChild>
         <button
+          type="button"
           onClick={onRefresh}
           className="flex items-center gap-1.5 rounded-md px-1.5 py-1 hover:bg-muted/60 transition-colors"
           aria-label="Lấy dữ liệu mới nhất"
@@ -261,6 +264,7 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
             ) : view === "draws" ? (
               <>
                 <button
+                  type="button"
                   className="text-muted-foreground hover:text-foreground"
                   onClick={handleBackToGames}
                 >
@@ -272,6 +276,7 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
             ) : (
               <>
                 <button
+                  type="button"
                   className="text-muted-foreground hover:text-foreground"
                   onClick={handleBackToGames}
                 >
@@ -279,6 +284,7 @@ export function PlayerOutstandingContent({ accountId }: PlayerOutstandingContent
                 </button>
                 <ChevronRight className="size-3.5 text-muted-foreground" />
                 <button
+                  type="button"
                   className="text-muted-foreground hover:text-foreground"
                   onClick={handleBackToDraws}
                 >
@@ -593,7 +599,10 @@ function EntriesView({
         rows={rows}
         isLoading={false}
         error={null}
-        onRefetch={() => {}}
+        // error luôn null (rows đã fetch xong từ parent) → nút "Thử lại" không bao giờ render, onRefetch chỉ là no-op bắt buộc theo props.
+        onRefetch={() => {
+          // no-op — intentional, xem comment phía trên.
+        }}
         onRowClick={onRowClick}
         showLineCount={showLineCount}
       />

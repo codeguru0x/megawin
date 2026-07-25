@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
+
+import { toTenantUsername } from "@megawin/shared/utils";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
 import { formatNumber } from "@megawin/shared/utils/number";
-import { toTenantUsername } from "@megawin/shared/utils";
 import type { TenantDispatchOrderEntity } from "@megawin/tenant-dispatch/entities";
 import { DispatchOrderStatus } from "@megawin/tenant-dispatch/entities";
 import {
@@ -12,16 +12,11 @@ import {
   DISPATCH_ORDER_STATUS_VARIANT,
   DISPATCH_SOURCE_KIND_LABELS,
 } from "@megawin/tenant-dispatch/shared/labels";
+import { AlertCircle, CheckCircle2, Clock, Loader2, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 import { useDispatchDetail } from "../_lib/use-queries";
 
@@ -76,9 +71,7 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
           {!isLoading && !error && !order && (
             <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
               <AlertCircle className="size-8 text-muted-foreground/40" />
-              <p className="text-sm font-medium text-muted-foreground">
-                Không tìm thấy order với Tx này.
-              </p>
+              <p className="text-sm font-medium text-muted-foreground">Không tìm thấy order với Tx này.</p>
             </div>
           )}
 
@@ -106,16 +99,11 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
                   </span>
                 </Field>
                 <Field label="Batch Key">
-                  <span
-                    className="min-w-0 flex-1 truncate font-mono text-sm"
-                    title={order.batchKey}
-                  >
+                  <span className="min-w-0 flex-1 truncate font-mono text-sm" title={order.batchKey}>
                     {order.batchKey}
                   </span>
                   <Button asChild size="sm" variant="link" className="h-6 shrink-0 px-1 text-xs">
-                    <Link
-                      href={`/reports/transactions/dispatch/batches/${encodeURIComponent(order.batchKey)}`}
-                    >
+                    <Link href={`/reports/transactions/dispatch/batches/${encodeURIComponent(order.batchKey)}`}>
                       Xem batch
                     </Link>
                   </Button>
@@ -132,17 +120,13 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
                   <span className="truncate font-mono text-sm" title={order.username}>
                     {order.username}
                   </span>
-                  <span className="shrink-0 font-mono text-sm text-muted-foreground">
-                    ({order.accountId})
-                  </span>
+                  <span className="shrink-0 font-mono text-sm text-muted-foreground">({order.accountId})</span>
                 </Field>
                 <Field label="Amount">
                   <span className="font-mono text-sm font-semibold tabular-nums text-foreground">
                     {formatNumber(order.amount)}
                   </span>
-                  <span className="shrink-0 font-mono text-sm text-muted-foreground">
-                    {order.currency}
-                  </span>
+                  <span className="shrink-0 font-mono text-sm text-muted-foreground">{order.currency}</span>
                 </Field>
               </div>
 
@@ -169,10 +153,7 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
 
               {/* Source context (internal) */}
               {order.sourceContext && (
-                <PayloadSection
-                  title="Source context (internal)"
-                  json={prettyJSON(order.sourceContext)}
-                />
+                <PayloadSection title="Source context (internal)" json={prettyJSON(order.sourceContext)} />
               )}
             </div>
           )}
@@ -183,20 +164,14 @@ export function DispatchDetailDrawer({ tx, onClose, onRequestCancel }: DispatchD
             <Button size="sm" variant="outline" onClick={onClose}>
               Đóng
             </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => onRequestCancel(order.tx)}
-              className="gap-1"
-            >
+            <Button size="sm" variant="destructive" onClick={() => onRequestCancel(order.tx)} className="gap-1">
               <XCircle className="size-3.5" />
               Huỷ order
             </Button>
           </div>
         )}
         {order &&
-          (order.status === DispatchOrderStatus.Dispatched ||
-            order.status === DispatchOrderStatus.Cancelled) && (
+          (order.status === DispatchOrderStatus.Dispatched || order.status === DispatchOrderStatus.Cancelled) && (
             <div className="flex items-center justify-between gap-2 border-t bg-muted/30 px-5 py-3">
               <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 {order.status === DispatchOrderStatus.Dispatched ? (
@@ -274,9 +249,7 @@ function RetryTimelineBlock({ order }: { order: TenantDispatchOrderEntity }) {
 
   return (
     <div className="flex flex-col gap-2 rounded-md border p-3">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Retry timeline
-      </h3>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Retry timeline</h3>
       <Field label="Retry count">
         <span className="font-mono text-sm tabular-nums">{retryCount}</span>
       </Field>
@@ -289,16 +262,12 @@ function RetryTimelineBlock({ order }: { order: TenantDispatchOrderEntity }) {
       )}
       {isPending && order.nextAttemptAt && (
         <Field label="Next attempt">
-          <span className="font-mono text-sm tabular-nums">
-            {displayVNDateTime(order.nextAttemptAt)}
-          </span>
+          <span className="font-mono text-sm tabular-nums">{displayVNDateTime(order.nextAttemptAt)}</span>
         </Field>
       )}
       {order.dispatchedAt && (
         <Field label="Dispatched">
-          <span className="font-mono text-sm tabular-nums text-profit">
-            {displayVNDateTime(order.dispatchedAt)}
-          </span>
+          <span className="font-mono text-sm tabular-nums text-profit">{displayVNDateTime(order.dispatchedAt)}</span>
         </Field>
       )}
       {order.lastError && (
@@ -313,17 +282,13 @@ function RetryTimelineBlock({ order }: { order: TenantDispatchOrderEntity }) {
 function PayloadSection({ title, json }: { title: string; json: string }) {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </h3>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
       {json ? (
         <pre className="max-h-90 overflow-auto rounded-md border bg-muted/40 p-3 font-mono text-xs leading-relaxed">
           {json}
         </pre>
       ) : (
-        <p className="rounded-md border border-dashed px-3 py-4 text-center text-xs text-muted-foreground">
-          —
-        </p>
+        <p className="rounded-md border border-dashed px-3 py-4 text-center text-xs text-muted-foreground">—</p>
       )}
     </div>
   );

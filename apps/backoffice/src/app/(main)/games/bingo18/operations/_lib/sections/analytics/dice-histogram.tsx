@@ -8,12 +8,14 @@
  * Thay thế NumberHeatmap của Keno.
  */
 
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatNumber } from "@megawin/shared/utils";
 import { Dice5, TrendingUp } from "lucide-react";
-import type { TopComboItem } from "../../use-operations";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
 import type { TenantRow } from "../../types";
+import type { TopComboItem } from "../../use-operations";
 
 // ─── Single Dice Face ─────────────────────────────────────────────────────────
 
@@ -81,10 +83,7 @@ function TenantBreakdown({ tenants }: { tenants: TenantRow[] }) {
             </span>
             <div className="flex items-center gap-2">
               <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-amber-500/60 transition-all"
-                  style={{ width: `${t.pct}%` }}
-                />
+                <div className="h-full rounded-full bg-amber-500/60 transition-all" style={{ width: `${t.pct}%` }} />
               </div>
               <span className="text-[11px] font-medium text-muted-foreground tabular-nums w-8 text-right shrink-0">
                 {t.pct.toFixed(0)}%
@@ -138,15 +137,9 @@ export function DiceHistogram({
                   const colors = DICE_COLORS[d.diceValue] ?? DICE_COLORS[1]!;
                   const barHeightPct = maxCount > 0 ? (d.count / maxCount) * 100 : 0;
                   return (
-                    <div
-                      key={d.diceValue}
-                      className="flex flex-col items-center gap-1 flex-1 h-full group"
-                    >
+                    <div key={d.diceValue} className="flex flex-col items-center gap-1 flex-1 h-full group">
                       <div className="flex-1 flex flex-col justify-end w-full">
-                        <div
-                          className="relative w-full flex flex-col justify-end"
-                          style={{ height: "100%" }}
-                        >
+                        <div className="relative w-full flex flex-col justify-end" style={{ height: "100%" }}>
                           <span
                             className={cn(
                               "text-[11px] font-semibold tabular-nums text-center mb-1 transition-opacity",
@@ -156,10 +149,7 @@ export function DiceHistogram({
                             {formatNumber(d.count)}
                           </span>
                           <div
-                            className={cn(
-                              "w-full rounded-t-md transition-all duration-700",
-                              colors.bar,
-                            )}
+                            className={cn("w-full rounded-t-md transition-all duration-700", colors.bar)}
                             style={{ height: `${Math.max(barHeightPct, d.count > 0 ? 4 : 0)}%` }}
                           />
                         </div>
@@ -193,17 +183,13 @@ export function DiceHistogram({
               <div className="space-y-1">
                 {combos.slice(0, 10).map((combo, i) => {
                   const label =
-                    combo.playType === "sumTotal"
-                      ? `Tổng ${combo.sum ?? "?"}`
-                      : `Lớn/Nhỏ — ${combo.bet ?? "?"}`;
+                    combo.playType === "sumTotal" ? `Tổng ${combo.sum ?? "?"}` : `Lớn/Nhỏ — ${combo.bet ?? "?"}`;
                   return (
                     <div
                       key={i}
                       className="flex items-center gap-2 py-1.5 px-2 -mx-2 rounded-lg hover:bg-muted/30 transition-colors"
                     >
-                      <span className="text-[10px] text-muted-foreground/40 w-4 tabular-nums shrink-0">
-                        {i + 1}
-                      </span>
+                      <span className="text-[10px] text-muted-foreground/40 w-4 tabular-nums shrink-0">{i + 1}</span>
                       <span className="text-xs font-medium flex-1 truncate">{label}</span>
                       <span className="text-xs tabular-nums font-semibold text-cyan-700 dark:text-cyan-400 shrink-0">
                         {formatNumber(combo.count)}

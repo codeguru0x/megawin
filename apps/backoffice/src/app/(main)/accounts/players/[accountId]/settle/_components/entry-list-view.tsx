@@ -1,21 +1,14 @@
 "use client";
 
+import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS } from "@megawin/game-core/labels";
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 
+import { GameEntryDetailDialog } from "@/components/reports/game/game-entry-detail-dialog";
+import { type EntryRow, GamePlayerEntryList } from "@/components/reports/game/settle/game-player-entry-list";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GameEntryDetailDialog } from "@/components/reports/game/game-entry-detail-dialog";
-import {
-  GamePlayerEntryList,
-  type EntryRow,
-} from "@/components/reports/game/settle/game-player-entry-list";
 
-import {
-  usePlayerEntries,
-  usePlayerEntryDetail,
-  type PlayerSettledEntryResponse,
-} from "../../_shared/queries";
+import { type PlayerSettledEntryResponse, usePlayerEntries, usePlayerEntryDetail } from "../../_shared/queries";
 
 interface EntryListViewProps {
   accountId: string;
@@ -45,18 +38,8 @@ function toEntryRow(entry: PlayerSettledEntryResponse): EntryRow {
  * Reuse GamePlayerEntryList (shared component).
  * Click row → fetch full entry doc → GameEntryDetailDialog.
  */
-export function EntryListView({
-  accountId,
-  financialDate,
-  game,
-  drawId,
-  playerDisplayName,
-}: EntryListViewProps) {
-  const {
-    data: entries,
-    isLoading,
-    isError,
-  } = usePlayerEntries(accountId, financialDate, game, drawId);
+export function EntryListView({ accountId, financialDate, game, drawId, playerDisplayName }: EntryListViewProps) {
+  const { data: entries, isLoading, isError } = usePlayerEntries(accountId, financialDate, game, drawId);
 
   const gameLabel = GAME_LABELS[game as GameProduct] ?? game;
   const tenantId = entries?.[0]?.tenantId ?? "";
@@ -137,11 +120,6 @@ function PlayerEntryDetailLoader({
   const { data: entryDetail, isLoading } = usePlayerEntryDetail(accountId, entryId ?? "", game);
 
   return (
-    <GameEntryDetailDialog
-      game={game}
-      entry={isLoading ? null : (entryDetail ?? null)}
-      open={open}
-      onClose={onClose}
-    />
+    <GameEntryDetailDialog game={game} entry={isLoading ? null : (entryDetail ?? null)} open={open} onClose={onClose} />
   );
 }

@@ -1,24 +1,19 @@
 "use client";
 
-import { Receipt, DollarSign, TrendingDown, TrendingUp, Building2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { formatVNDCompact, formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  getNetProfitColor,
-  getPayoutRatioColor,
-  formatPayoutRatio,
-} from "@/components/reports/payout-ratio";
-
 import type { PlayerOverviewResult } from "@megawin/game-core-application/repos";
+import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
+import { Building2, DollarSign, Receipt, TrendingDown, TrendingUp } from "lucide-react";
+
+import { formatPayoutRatio, getNetProfitColor, getPayoutRatioColor } from "@/components/reports/payout-ratio";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 /** Badge background tương ứng ngưỡng payout ratio. */
 function payoutBadgeClass(ratio: number): string {
   const color = getPayoutRatioColor(ratio);
   if (color === "text-loss") return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400";
-  if (color === "text-warning")
-    return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400";
+  if (color === "text-warning") return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400";
   return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400";
 }
 
@@ -77,10 +72,7 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
           <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
             Thắng {formatNumber(totalWinCount)}
             <span
-              className={cn(
-                "inline-flex items-center rounded px-1 py-0.5 font-semibold tabular-nums",
-                WIN_RATE_BADGE,
-              )}
+              className={cn("inline-flex items-center rounded px-1 py-0.5 font-semibold tabular-nums", WIN_RATE_BADGE)}
             >
               {formatNumber(winRate, { decimals: 1 })}%
             </span>
@@ -101,12 +93,8 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Trả thưởng + Tỷ lệ TT */}
       <KpiCard
         icon={TrendingDown}
-        iconBg={
-          payoutColor ? "bg-red-100 dark:bg-red-900/50" : "bg-orange-100 dark:bg-orange-900/50"
-        }
-        iconColor={
-          payoutColor ? "text-red-600 dark:text-red-400" : "text-orange-600 dark:text-orange-400"
-        }
+        iconBg={payoutColor ? "bg-red-100 dark:bg-red-900/50" : "bg-orange-100 dark:bg-orange-900/50"}
+        iconColor={payoutColor ? "text-red-600 dark:text-red-400" : "text-orange-600 dark:text-orange-400"}
         label={REPORT_COLUMN_LABELS.totalPayout}
         value={formatVNDCompact(totalPayout)}
         subNode={
@@ -145,12 +133,8 @@ export function SettleKpiStrip({ data, isLoading }: SettleKpiStripProps) {
       {/* Lợi nhuận ròng */}
       <KpiCard
         icon={TrendingUp}
-        iconBg={
-          netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50"
-        }
-        iconColor={
-          netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"
-        }
+        iconBg={netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50"}
+        iconColor={netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
         label={REPORT_COLUMN_LABELS.netProfit}
         value={formatVNDCompact(netProfit)}
         valueClass={getNetProfitColor(netProfit)}
@@ -172,16 +156,7 @@ interface KpiCardProps {
   subNode?: React.ReactNode;
 }
 
-function KpiCard({
-  icon: Icon,
-  iconBg,
-  iconColor,
-  label,
-  value,
-  valueClass,
-  sub,
-  subNode,
-}: KpiCardProps) {
+function KpiCard({ icon: Icon, iconBg, iconColor, label, value, valueClass, sub, subNode }: KpiCardProps) {
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
@@ -189,9 +164,7 @@ function KpiCard({
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className={cn("text-lg font-bold tabular-nums text-foreground", valueClass ?? "")}>
-          {value}
-        </p>
+        <p className={cn("text-lg font-bold tabular-nums text-foreground", valueClass ?? "")}>{value}</p>
         {subNode}
         {sub && <p className="truncate text-xs text-muted-foreground">{sub}</p>}
       </div>

@@ -12,8 +12,9 @@ export function generatePassword(length = 8): string {
     SPECIAL[Math.floor(Math.random() * SPECIAL.length)],
   ];
 
-  const remaining = Array.from({ length: length - required.length }, () =>
-    allChars[Math.floor(Math.random() * allChars.length)]
+  const remaining = Array.from(
+    { length: length - required.length },
+    () => allChars[Math.floor(Math.random() * allChars.length)],
   );
 
   const chars = [...required, ...remaining];

@@ -1,8 +1,9 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
   title: string;
@@ -13,14 +14,7 @@ interface StatCardProps {
   className?: string;
 }
 
-export function StatCard({
-  title,
-  value,
-  description,
-  icon: Icon,
-  trend,
-  className,
-}: StatCardProps) {
+export function StatCard({ title, value, description, icon: Icon, trend, className }: StatCardProps) {
   return (
     <Card className={cn("gap-4 py-4", className)}>
       <CardContent className="flex items-center gap-4 px-5">
@@ -32,20 +26,13 @@ export function StatCard({
           <div className="flex items-baseline gap-2">
             <p className="text-xl font-bold tabular-nums">{value}</p>
             {trend && (
-              <span
-                className={cn(
-                  "text-xs font-medium",
-                  trend.isPositive ? "text-green-600" : "text-red-600"
-                )}
-              >
+              <span className={cn("text-xs font-medium", trend.isPositive ? "text-green-600" : "text-red-600")}>
                 {trend.isPositive ? "+" : ""}
                 {trend.value}%
               </span>
             )}
           </div>
-          {description && (
-            <p className="text-xs text-muted-foreground">{description}</p>
-          )}
+          {description && <p className="text-xs text-muted-foreground">{description}</p>}
         </div>
       </CardContent>
     </Card>

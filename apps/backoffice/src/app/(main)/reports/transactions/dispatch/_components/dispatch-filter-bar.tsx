@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { HelpCircle, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
+
 import { DispatchOrderStatus, DispatchSourceKind } from "@megawin/tenant-dispatch/entities";
 import {
   DISPATCH_ORDER_STATUS_LABELS,
   DISPATCH_SOURCE_KIND_LABELS,
 } from "@megawin/tenant-dispatch/shared/labels";
+import { HelpCircle, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
 
+import { FinancialDateRangePicker } from "@/components/date-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,16 +22,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { FinancialDateRangePicker } from "@/components/date-picker";
 
-import { useDispatchFilters } from "../_lib/use-filters";
-import { useDispatchFacets } from "../_lib/use-queries";
 import {
   detectIdentity,
   IDENTITY_HINT,
   IDENTITY_KIND_LABELS,
   type IdentityKind,
 } from "../_lib/identity-detector";
+import { useDispatchFilters } from "../_lib/use-filters";
+import { useDispatchFacets } from "../_lib/use-queries";
 import { TenantCombobox } from "./tenant-combobox";
 
 /**
@@ -255,7 +256,10 @@ export function DispatchFilterBar() {
 
                 {/* Status */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">
+                  <label
+                    htmlFor="dispatch-filter-status"
+                    className="text-[11px] font-medium text-muted-foreground"
+                  >
                     Trạng thái
                   </label>
                   <Select
@@ -264,7 +268,11 @@ export function DispatchFilterBar() {
                       setStatus(v === "all" ? null : (v as DispatchOrderStatus))
                     }
                   >
-                    <SelectTrigger size="sm" className="h-8 w-full text-xs">
+                    <SelectTrigger
+                      id="dispatch-filter-status"
+                      size="sm"
+                      className="h-8 w-full text-xs"
+                    >
                       <SelectValue placeholder="Trạng thái" />
                     </SelectTrigger>
                     <SelectContent>
@@ -280,7 +288,10 @@ export function DispatchFilterBar() {
 
                 {/* Source kind */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">
+                  <label
+                    htmlFor="dispatch-filter-source"
+                    className="text-[11px] font-medium text-muted-foreground"
+                  >
                     Loại nguồn
                   </label>
                   <Select
@@ -289,7 +300,11 @@ export function DispatchFilterBar() {
                       setSourceKind(v === "all" ? null : (v as DispatchSourceKind))
                     }
                   >
-                    <SelectTrigger size="sm" className="h-8 w-full text-xs">
+                    <SelectTrigger
+                      id="dispatch-filter-source"
+                      size="sm"
+                      className="h-8 w-full text-xs"
+                    >
                       <SelectValue placeholder="Loại nguồn" />
                     </SelectTrigger>
                     <SelectContent>
@@ -305,8 +320,14 @@ export function DispatchFilterBar() {
 
                 {/* Tenant */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[11px] font-medium text-muted-foreground">Tenant</label>
+                  <label
+                    htmlFor="dispatch-filter-tenant"
+                    className="text-[11px] font-medium text-muted-foreground"
+                  >
+                    Tenant
+                  </label>
                   <TenantCombobox
+                    id="dispatch-filter-tenant"
                     value={tenantId}
                     onChange={setTenantId}
                     options={facets?.tenants.map((t) => ({ value: t.value, count: t.count })) ?? []}

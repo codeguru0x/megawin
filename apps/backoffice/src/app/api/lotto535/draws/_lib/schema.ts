@@ -1,10 +1,7 @@
-import { z } from "zod";
 import { DRAW_STATUS_VALUES } from "@megawin/game-core/entities";
-import {
-  lotto535MainNumberSchema,
-  lotto535SpecialNumberSchema,
-} from "@megawin/game-lotto535/schemas";
 import { LOTTO535_MAIN_COUNT } from "@megawin/game-lotto535/entities";
+import { lotto535MainNumberSchema, lotto535SpecialNumberSchema } from "@megawin/game-lotto535/schemas";
+import { z } from "zod";
 
 /** Mảng số chính Lotto 5/35 — đúng LOTTO535_MAIN_COUNT phần tử. */
 const winningMainArraySchema = z

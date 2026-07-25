@@ -1,12 +1,10 @@
-import type { RouteSession } from "@megawin/next/server";
 import type { NextRequest } from "next/server";
-import type { AuditActor } from "@megawin/audit/logger";
+
 import { AuditActorType } from "@megawin/audit/entities";
-import { AccountType, type AccountRole } from "@megawin/identity/entities";
-import {
-  extractClientIpFromWebHeaders,
-  extractHttpContextFromWebHeaders,
-} from "@megawin/shared/utils/ip";
+import type { AuditActor } from "@megawin/audit/logger";
+import { type AccountRole, AccountType } from "@megawin/identity/entities";
+import type { RouteSession } from "@megawin/next/server";
+import { extractClientIpFromWebHeaders, extractHttpContextFromWebHeaders } from "@megawin/shared/utils/ip";
 
 /**
  * Map `AccountType` (identity) → {@link AuditActorType} (audit) — tường minh.
@@ -100,10 +98,7 @@ function toActor(u: AuditActorSource): AuditActor {
  * });
  * ```
  */
-export function actorFromSession(
-  session: RouteSession<AccountRole>,
-  request?: NextRequest,
-): AuditActor {
+export function actorFromSession(session: RouteSession<AccountRole>, request?: NextRequest): AuditActor {
   return { ...toActor(session.user), ...httpActorFields(request?.headers) };
 }
 

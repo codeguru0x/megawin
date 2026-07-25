@@ -1,4 +1,4 @@
-import { CircleUser, History, KeyRound, ShieldCheck, type LucideIcon } from "lucide-react";
+import { CircleUser, History, KeyRound, type LucideIcon, ShieldCheck } from "lucide-react";
 
 /** 1 mục điều hướng trong khu vực tài khoản cá nhân (`/me/*`). */
 export interface AccountNavItem {

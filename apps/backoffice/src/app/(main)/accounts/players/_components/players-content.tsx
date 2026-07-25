@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useQueryStates, parseAsString } from "nuqs";
-import { Loader2, Search, SearchX, UserSearch, X } from "lucide-react";
+
 import { useRouter } from "next/navigation";
-import { AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
+
+import { type AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
+import { Loader2, Search, SearchX, UserSearch, X } from "lucide-react";
+import { parseAsString, useQueryStates } from "nuqs";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,8 +31,8 @@ import {
 import { useTenantOptions } from "@/hooks/use-tenant-options";
 
 import { useSearchPlayerAccounts } from "../../_shared/queries";
-import { PlayersTable } from "./players-table";
 import type { PlayerAccount } from "../_lib/schema";
+import { PlayersTable } from "./players-table";
 
 export function PlayersContent() {
   // URL state — tất cả params trong 1 object:
@@ -77,10 +79,10 @@ export function PlayersContent() {
     }
   }, [isSearchOpen]);
 
-  // Khởi tạo isSearchOpen từ URL khi mount lần đầu
+  // Khởi tạo isSearchOpen từ URL khi mount lần đầu — chỉ chạy 1 lần, không theo activeSearch thay đổi sau đó.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: chỉ chạy 1 lần lúc mount, không muốn re-run khi activeSearch đổi.
   useEffect(() => {
     if (activeSearch) setIsSearchOpen(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleOpenSearch = () => setIsSearchOpen(true);

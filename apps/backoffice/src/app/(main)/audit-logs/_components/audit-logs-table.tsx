@@ -1,25 +1,13 @@
 "use client";
 
-import { CheckCircle2, ChevronLeft, ChevronRight, Inbox, Loader2, XCircle } from "lucide-react";
-import { displayVNDateTime } from "@megawin/shared/utils/date";
 import type { AuditLogEntity } from "@megawin/audit/entities";
-import {
-  AuditActionLabel,
-  AuditActorTypeLabel,
-  AuditCategoryLabel,
-  AuditStatus,
-} from "@megawin/audit/entities";
+import { AuditActionLabel, AuditActorTypeLabel, AuditCategoryLabel, AuditStatus } from "@megawin/audit/entities";
+import { displayVNDateTime } from "@megawin/shared/utils/date";
+import { CheckCircle2, ChevronLeft, ChevronRight, Inbox, Loader2, XCircle } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { GameBadge } from "@/components/game-badge";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
 export interface AuditLogsTableProps {
@@ -93,9 +81,7 @@ export function AuditLogsTable({
                   className="cursor-pointer hover:bg-muted/40"
                   onClick={() => onOpenDetail(row.id)}
                 >
-                  <TableCell className="pl-5 font-mono text-sm tabular-nums">
-                    {displayVNDateTime(row.ts)}
-                  </TableCell>
+                  <TableCell className="pl-5 font-mono text-sm tabular-nums">{displayVNDateTime(row.ts)}</TableCell>
 
                   {/* Actor — tên + badge loại + roles gọn trên 1 dòng (roles nối "·") */}
                   <TableCell>
@@ -105,10 +91,7 @@ export function AuditLogsTable({
                         {AuditActorTypeLabel[row.actorType]}
                       </span>
                       {row.actorRoles.length > 0 && (
-                        <span
-                          className="truncate text-xs text-muted-foreground"
-                          title={row.actorRoles.join(", ")}
-                        >
+                        <span className="truncate text-xs text-muted-foreground" title={row.actorRoles.join(", ")}>
                           · {row.actorRoles.join(", ")}
                         </span>
                       )}
@@ -137,10 +120,7 @@ export function AuditLogsTable({
                   {/* Kết quả — icon + errorCode nếu fail */}
                   <TableCell className="pr-5 text-center">
                     {isSuccess ? (
-                      <CheckCircle2
-                        className="inline-block size-4 text-profit"
-                        aria-label="Thành công"
-                      />
+                      <CheckCircle2 className="inline-block size-4 text-profit" aria-label="Thành công" />
                     ) : (
                       <span
                         className={cn(

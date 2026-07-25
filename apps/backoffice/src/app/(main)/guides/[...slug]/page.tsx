@@ -1,9 +1,8 @@
-import type { Metadata } from "next";
-
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { findRunbookDoc, RUNBOOK_MANIFEST } from "@megawin/ops-docs/manifest";
+import type { Metadata } from "next";
 
 import {
   Breadcrumb,
@@ -18,8 +17,8 @@ import { DocMeta } from "../_lib/components/doc-meta";
 import { DocPager } from "../_lib/components/doc-pager";
 import { TableOfContents } from "../_lib/components/table-of-contents";
 import { DOC_CONTENT } from "../_lib/docs-content";
-import { MarkdownRenderer } from "../_lib/markdown-renderer";
 import { extractToc, readingTimeMinutes } from "../_lib/markdown";
+import { MarkdownRenderer } from "../_lib/markdown-renderer";
 import { getAdjacentDocs } from "../_lib/navigation";
 
 interface PageProps {
@@ -91,12 +90,7 @@ export default async function GuideDocPage({ params }: PageProps) {
           </BreadcrumbList>
         </Breadcrumb>
 
-        <DocMeta
-          gameKey={gameKey}
-          gameTitle={game.title}
-          topicTitle={topic.title}
-          minutes={minutes}
-        />
+        <DocMeta gameKey={gameKey} gameTitle={game.title} topicTitle={topic.title} minutes={minutes} />
 
         <div className="mt-6">
           <MarkdownRenderer content={content} basePath={basePath} />

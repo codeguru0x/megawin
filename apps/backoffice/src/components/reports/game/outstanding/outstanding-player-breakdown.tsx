@@ -1,19 +1,14 @@
 "use client";
 
-import { Users, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber } from "@megawin/shared/utils";
+import { RefreshCw, Users } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 import type { OutstandingPlayerRow } from "./types";
 
 export interface OutstandingPlayerBreakdownProps {
@@ -92,9 +87,7 @@ export function OutstandingPlayerBreakdown({
             Tài khoản — Kỳ {drawId} / {tenantId}
           </CardTitle>
         </div>
-        <CardDescription className="text-xs">
-          {rows.length} tài khoản · Click để xem phiếu cược
-        </CardDescription>
+        <CardDescription className="text-xs">{rows.length} tài khoản · Click để xem phiếu cược</CardDescription>
       </CardHeader>
       <CardContent className="px-0 pb-4 pt-0">
         {rows.length === 0 ? (
@@ -109,12 +102,8 @@ export function OutstandingPlayerBreakdown({
                   <TableHead className="pl-5">Tài khoản</TableHead>
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.entryCount}</TableHead>
                   {showLineCount && <TableHead className="text-right">{lineLabel}</TableHead>}
-                  <TableHead className="text-right">
-                    {REPORT_COLUMN_LABELS.estimatedCommission}
-                  </TableHead>
-                  <TableHead className="pr-5 text-right">
-                    {REPORT_COLUMN_LABELS.totalStake}
-                  </TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.estimatedCommission}</TableHead>
+                  <TableHead className="pr-5 text-right">{REPORT_COLUMN_LABELS.totalStake}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -125,9 +114,7 @@ export function OutstandingPlayerBreakdown({
                     onClick={() => onRowClick(row.accountId, row.displayName)}
                   >
                     <TableCell className="pl-5 text-sm font-medium">{row.displayName}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {formatNumber(row.entryCount)}
-                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
                     {showLineCount && (
                       <TableCell className="text-right text-sm tabular-nums">
                         {formatNumber(row.lineCount ?? 0)}
@@ -146,9 +133,7 @@ export function OutstandingPlayerBreakdown({
               {rows.length > 1 && (
                 <tfoot>
                   <TableRow className="border-t bg-muted/50">
-                    <TableCell className="pl-5 text-sm font-semibold">
-                      {REPORT_COLUMN_LABELS.summary}
-                    </TableCell>
+                    <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
                     <TableCell className="text-right text-sm tabular-nums font-semibold">
                       {formatNumber(totalEntries)}
                     </TableCell>

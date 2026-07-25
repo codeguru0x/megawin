@@ -2,9 +2,9 @@
 
 import { Trophy } from "lucide-react";
 
-import { JackpotOverviewSection } from "./_lib/jackpot-overview-section";
-import { JackpotHistorySection } from "./_lib/jackpot-history-section";
 import { JackpotCyclesSection } from "./_lib/jackpot-cycles-section";
+import { JackpotHistorySection } from "./_lib/jackpot-history-section";
+import { JackpotOverviewSection } from "./_lib/jackpot-overview-section";
 
 export default function AdminJackpotPage() {
   return (
@@ -15,12 +15,9 @@ export default function AdminJackpotPage() {
           <Trophy className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">
-            Mega 6/45 — Jackpot
-          </h1>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">Mega 6/45 — Jackpot</h1>
           <p className="text-xs text-muted-foreground">
-            Jackpot tích lũy vô hạn (roll-over) — không có trần, không có chia giải. Khởi điểm mặc
-            định 12 tỷ VND.
+            Jackpot tích lũy vô hạn (roll-over) — không có trần, không có chia giải. Khởi điểm mặc định 12 tỷ VND.
           </p>
         </div>
       </div>

@@ -1,52 +1,55 @@
 "use client";
 
-import { useEffect } from "react";
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient, formatErrorToast } from "@megawin/next/client";
-import { Pagination } from "@megawin/shared/constants/pagination";
-import { toast } from "sonner";
-import { power655Keys } from "@/lib/query-keys";
+import { useEffect, useEffectEvent } from "react";
+
 import type {
-  OpsSummaryOutput,
-  TenantBreakdownOutput,
-  NumberFrequencyOutput,
-  PlayTypeDistributionOutput,
-  GetLiveEntriesOutput,
+  GetDrawDetailOutput,
+  PreviewDrawsOutput,
+  ResettlePreflightOutput,
+} from "@megawin/game-power655-application/use-cases/draws";
+import type {
   GetDrawSelectorOutput,
+  GetLiveEntriesOutput,
   GetTopCombosOutput,
   GetWinningEntriesOutput,
+  NumberFrequencyOutput,
+  OpsSummaryOutput,
+  PlayTypeDistributionOutput,
+  TenantBreakdownOutput,
 } from "@megawin/game-power655-application/use-cases/operations";
 import type { GetEntryByIdOutput } from "@megawin/game-power655-application/use-cases/reports";
-import type {
+import { apiClient, formatErrorToast } from "@megawin/next/client";
+import { Pagination } from "@megawin/shared/constants/pagination";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { power655Keys } from "@/lib/query-keys";
+
+export type {
   GetDrawDetailOutput,
   ResettlePreflightOutput,
 } from "@megawin/game-power655-application/use-cases/draws";
-import type { PreviewDrawsOutput } from "@megawin/game-power655-application/use-cases/draws";
-
 export type {
-  OpsSummaryOutput,
-  TenantBreakdownOutput,
-  TenantBreakdownItem,
-  NumberFrequencyOutput,
-  NumberFrequencyItem,
-  PlayTypeDistributionOutput,
-  PlayTypeDistributionItem,
-  GetLiveEntriesOutput,
-  LiveEntryItem,
-  LiveEntryBoard,
-  GetDrawSelectorOutput,
   DrawSelectorItem,
+  GetDrawSelectorOutput,
+  GetLiveEntriesOutput,
   GetTopCombosOutput,
-  TopComboItem,
   GetWinningEntriesOutput,
-  WinningEntryItem,
-  WinningEntryBoard,
-  WinningEntryTierDetail,
+  LiveEntryBoard,
+  LiveEntryItem,
+  NumberFrequencyItem,
+  NumberFrequencyOutput,
+  OpsSummaryOutput,
+  PlayTypeDistributionItem,
+  PlayTypeDistributionOutput,
+  TenantBreakdownItem,
+  TenantBreakdownOutput,
+  TopComboItem,
   WinningEntriesSummary,
+  WinningEntryBoard,
+  WinningEntryItem,
+  WinningEntryTierDetail,
 } from "@megawin/game-power655-application/use-cases/operations";
-
-export type { GetDrawDetailOutput } from "@megawin/game-power655-application/use-cases/draws";
-export type { ResettlePreflightOutput } from "@megawin/game-power655-application/use-cases/draws";
 
 export interface OpsQueryParams {
   financialDate?: string;
@@ -258,20 +261,25 @@ export function useWinningEntryDetail(
     enabled: !!entryId,
   });
 
+  // useEffectEvent: đọc `onNotFound` mới nhất mà không cần khai báo dependency —
+  // callback không nên trigger effect chạy lại.
+  const onNotFoundEvent = useEffectEvent(() => {
+    onNotFound?.();
+  });
+
   useEffect(() => {
     if (!entryId) return;
     if (query.isError) {
       toast.error("Không thể tải thông tin phiếu cược", {
         description: "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     } else if (query.isFetched && !query.isLoading && !query.data) {
       toast.error("Không tìm thấy phiếu cược", {
         description: "Phiếu cược này không còn dữ liệu hoặc đã bị xóa.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.isError, query.isFetched, query.isLoading, query.data, entryId]);
 
   return query;
@@ -336,7 +344,7 @@ export function useTriggerSettle() {
  *
  * Hiển thị nút này CHỈ khi:
  *   - `draw.settledAt` != null (đã từng settle).
- *   - `draw.resultPublishedAt > draw.settledAt` (có kết quả mới sau settle).
+ *   - `draw.drawResultAt > draw.settledAt` (có kết quả mới sau settle).
  */
 export function useTriggerResettle() {
   return useDrawAction<{ dbaConfirmed: boolean }>(

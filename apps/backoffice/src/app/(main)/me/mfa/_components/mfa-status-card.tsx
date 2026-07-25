@@ -1,8 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { ShieldCheck, ShieldAlert, ShieldOff, Loader2 } from "lucide-react";
 import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2, ShieldAlert, ShieldCheck, ShieldOff } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -89,9 +89,8 @@ export function MfaStatusCard({ onSetup, onDisable }: MfaStatusCardProps) {
           <div className="rounded-lg border p-4">
             <h4 className="mb-2 text-sm font-medium">Xác thực 2 lớp (TOTP) là gì?</h4>
             <p className="text-sm text-muted-foreground">
-              Mỗi lần đăng nhập, ngoài mật khẩu, bạn cần nhập thêm mã 6 số từ app Authenticator
-              (Google Authenticator, Authy, Microsoft Authenticator...). Điều này giúp bảo vệ tài
-              khoản ngay cả khi mật khẩu bị lộ.
+              Mỗi lần đăng nhập, ngoài mật khẩu, bạn cần nhập thêm mã 6 số từ app Authenticator (Google Authenticator,
+              Authy, Microsoft Authenticator...). Điều này giúp bảo vệ tài khoản ngay cả khi mật khẩu bị lộ.
             </p>
           </div>
 

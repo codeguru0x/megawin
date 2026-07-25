@@ -23,10 +23,8 @@ const VARIANT_STYLES: Record<string, string> = {
   default: "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200",
   special:
     "bg-linear-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-amber-200/50 dark:shadow-amber-900/30",
-  first:
-    "bg-linear-to-br from-red-500 to-rose-600 text-white shadow-md shadow-red-200/40 dark:shadow-red-900/20",
-  second:
-    "bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-sm shadow-blue-200/40 dark:shadow-blue-900/20",
+  first: "bg-linear-to-br from-red-500 to-rose-600 text-white shadow-md shadow-red-200/40 dark:shadow-red-900/20",
+  second: "bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-sm shadow-blue-200/40 dark:shadow-blue-900/20",
   third:
     "bg-linear-to-br from-emerald-500 to-green-600 text-white shadow-sm shadow-emerald-200/40 dark:shadow-emerald-900/20",
   // Highlight đối chiếu kết quả (entry-detail + winning-entries dialog):
@@ -40,12 +38,7 @@ const SIZE_STYLES: Record<string, string> = {
   lg: "h-11 min-w-[3.75rem] px-3 text-base rounded-xl",
 };
 
-export function TripletDisplay({
-  value,
-  variant = "default",
-  size = "md",
-  className,
-}: TripletDisplayProps) {
+export function TripletDisplay({ value, variant = "default", size = "md", className }: TripletDisplayProps) {
   const padded = String(value).padStart(3, "0");
 
   return (

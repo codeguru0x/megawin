@@ -12,7 +12,7 @@
  * - 1 kỳ/ngày (drawNo luôn = 1)
  */
 
-import { PrizeTier, PlayType } from "@megawin/game-mega645/entities";
+import type { PlayType, PrizeTier } from "@megawin/game-mega645/entities";
 
 // ─── KPI ─────────────────────────────────────────────────────────────────────
 

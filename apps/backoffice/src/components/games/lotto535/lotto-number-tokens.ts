@@ -20,10 +20,9 @@ export const LOTTO_SPECIAL_HEX = "#818cf8"; // indigo-400
 
 export type LottoNumberSize = "xs" | "sm" | "md" | "lg";
 
-export const LOTTO_NUMBER_SIZE: Record<LottoNumberSize, { sizeClass: string; textClass: string }> =
-  {
-    xs: { sizeClass: "size-5", textClass: "text-[10px]" },
-    sm: { sizeClass: "size-7", textClass: "text-xs" },
-    md: { sizeClass: "size-9", textClass: "text-sm" },
-    lg: { sizeClass: "size-11", textClass: "text-base" },
-  };
+export const LOTTO_NUMBER_SIZE: Record<LottoNumberSize, { sizeClass: string; textClass: string }> = {
+  xs: { sizeClass: "size-5", textClass: "text-[10px]" },
+  sm: { sizeClass: "size-7", textClass: "text-xs" },
+  md: { sizeClass: "size-9", textClass: "text-sm" },
+  lg: { sizeClass: "size-11", textClass: "text-base" },
+};

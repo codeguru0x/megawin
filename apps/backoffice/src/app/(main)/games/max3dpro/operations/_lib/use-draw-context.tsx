@@ -13,15 +13,12 @@
  *  - Draw không tồn tại trong DB → drawNotFound = true, page hiển thị "Not Found".
  */
 
-import { createContext, useContext, useCallback, type ReactNode } from "react";
+import { createContext, type ReactNode, useCallback, useContext } from "react";
+
+import { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
 import { useQueryState } from "nuqs";
-import { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
-import {
-  useDrawSelectorList,
-  useDrawDetail,
-  type DrawSelectorItem,
-  type OpsQueryParams,
-} from "./use-operations";
+
+import { type DrawSelectorItem, type OpsQueryParams, useDrawDetail, useDrawSelectorList } from "./use-operations";
 
 // ─── Context shape ────────────────────────────────────────────────────────────
 
@@ -61,9 +58,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   const { data: selectorData, isLoading: selectorLoading } = useDrawSelectorList();
   const draws = selectorData?.draws ?? [];
 
-  const selectedInList = selectedDrawId
-    ? draws.some((d: DrawSelectorItem) => d.drawId === selectedDrawId)
-    : false;
+  const selectedInList = selectedDrawId ? draws.some((d: DrawSelectorItem) => d.drawId === selectedDrawId) : false;
 
   // Auto-select kỳ active nếu không có selectedDrawId
   const effectiveDrawId =
@@ -82,15 +77,10 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   const remoteDraw = remoteDrawData?.draw;
 
   // Kỳ cũ: selectedDrawId có giá trị, không trong list, và selector đã load xong
-  const isHistorical =
-    !!selectedDrawId && !selectorLoading && draws.length > 0 && !selectedInList && !!remoteDraw;
+  const isHistorical = !!selectedDrawId && !selectorLoading && draws.length > 0 && !selectedInList && !!remoteDraw;
 
   const drawNotFound =
-    !!selectedDrawId &&
-    !selectorLoading &&
-    !selectedInList &&
-    !remoteLoading &&
-    (remoteError || !remoteDraw);
+    !!selectedDrawId && !selectorLoading && !selectedInList && !remoteLoading && (remoteError || !remoteDraw);
 
   // Chưa có kỳ nào: không có ?draw param, selector đã load xong nhưng list rỗng.
   const noDrawAvailable = !selectedDrawId && !selectorLoading && draws.length === 0;
@@ -103,16 +93,18 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
           // Max 3D Pro: drawNo luôn là 1
           drawNo: remoteDraw.drawNo as 1,
           drawDate: remoteDraw.drawDate.split("-").reverse().join("/"),
-          drawTime: remoteDraw.drawTime as unknown as string,
-          salesOpenAt: remoteDraw.sales?.openAt as unknown as string | undefined,
-          salesCloseAt: (remoteDraw.sales?.closeAt as unknown as string) ?? "",
-          drawResultAt: remoteDraw.result?.publishedAt as unknown as string | undefined,
+          drawTime: remoteDraw.drawTime,
+          salesOpenAt: remoteDraw.sales?.openAt,
+          salesCloseAt: remoteDraw.sales?.closeAt ?? "",
+          // drawTime luôn có — giờ quay theo lịch, dùng cho countdown/overdue-publish.
+          scheduledDrawAt: remoteDraw.drawTime,
+          drawResultAt: remoteDraw.result?.publishedAt,
           // settledAt là high-water mark — bắt buộc map từ remote để UI phân biệt
           // "Kết sổ" (chưa từng settle) vs "Kết sổ lại" (đã settle, republish kết quả).
           // Thiếu field này → canVoid = true (Hủy kỳ hiện sai) + Resettle không hiện.
-          settledAt: remoteDraw.settledAt as unknown as string | undefined,
+          settledAt: remoteDraw.settledAt,
           status: remoteDraw.status,
-          financialDate: remoteDraw.financialDate ?? remoteDraw.drawDate,
+          financialDate: remoteDraw.financialDate,
           group: DrawSelectorGroup.Recent,
         }
       : undefined;
@@ -121,8 +113,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
   const status = draw?.status ?? remoteDraw?.status;
   const isSettled = status === DrawStatus.Settled;
   const isVoided = status === DrawStatus.Void || status === DrawStatus.Voiding;
-  const isActiveForRefresh =
-    !isHistorical && draw?.group === DrawSelectorGroup.Active && !isSettled;
+  const isActiveForRefresh = !isHistorical && draw?.group === DrawSelectorGroup.Active && !isSettled;
 
   const opsParams: OpsQueryParams = {
     drawId: effectiveDrawId,
@@ -133,8 +124,7 @@ export function DrawContextProvider({ children }: { children: ReactNode }) {
     (drawId: string) => {
       // Khi chọn active draw → xoá param khỏi URL để giữ URL gọn
       const activeDrawId =
-        draws.find((d: DrawSelectorItem) => d.group === DrawSelectorGroup.Active)?.drawId ||
-        draws[0]?.drawId;
+        draws.find((d: DrawSelectorItem) => d.group === DrawSelectorGroup.Active)?.drawId || draws[0]?.drawId;
       setSelectedDrawId(drawId === activeDrawId ? null : drawId);
     },
     [draws, setSelectedDrawId],

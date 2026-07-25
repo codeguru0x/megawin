@@ -10,8 +10,11 @@
  * - Scroll 300px per group
  */
 
+import { useEffect, useMemo, useRef, useState } from "react";
+
 import Link from "next/link";
-import { useState, useMemo, useRef, useEffect } from "react";
+
+import { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
 import {
   CheckCircle2,
   ChevronDown,
@@ -23,14 +26,15 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
+
 import { Bingo18DrawStatusBadge } from "@/components/games/bingo18/draw-status-badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+
 import type { DrawSelectorItem } from "./use-operations";
 
 interface DrawSelectorProps {
@@ -50,16 +54,10 @@ const STATUS_DOT: Record<string, React.ReactNode> = {
       <span className="relative inline-flex size-1.5 rounded-full bg-green-500" />
     </span>
   ),
-  [DrawStatus.SalesClosed]: (
-    <span className="size-1.5 rounded-full bg-amber-500 shrink-0 inline-block" />
-  ),
-  [DrawStatus.Published]: (
-    <span className="size-1.5 rounded-full bg-violet-500 shrink-0 inline-block" />
-  ),
+  [DrawStatus.SalesClosed]: <span className="size-1.5 rounded-full bg-amber-500 shrink-0 inline-block" />,
+  [DrawStatus.Published]: <span className="size-1.5 rounded-full bg-violet-500 shrink-0 inline-block" />,
   [DrawStatus.Settling]: <Clock className="size-2.5 text-orange-500 animate-spin shrink-0" />,
-  [DrawStatus.Scheduled]: (
-    <span className="size-1.5 rounded-full bg-slate-400 shrink-0 inline-block" />
-  ),
+  [DrawStatus.Scheduled]: <span className="size-1.5 rounded-full bg-slate-400 shrink-0 inline-block" />,
   [DrawStatus.Settled]: <CheckCircle2 className="size-2.5 text-emerald-500 shrink-0" />,
   [DrawStatus.Void]: <XCircle className="size-2.5 text-red-400 shrink-0" />,
   [DrawStatus.Voiding]: <XCircle className="size-2.5 text-red-500 animate-pulse shrink-0" />,
@@ -71,8 +69,7 @@ const GROUP_CONFIG = {
   [DrawSelectorGroup.Active]: {
     label: "Đang diễn ra",
     color: "text-green-600 dark:text-green-400",
-    badgeClass:
-      "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-green-200",
+    badgeClass: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 border-green-200",
     icon: (
       <span className="relative flex size-1.5">
         <span className="absolute inline-flex size-full animate-ping rounded-full bg-green-400 opacity-75" />
@@ -83,15 +80,13 @@ const GROUP_CONFIG = {
   [DrawSelectorGroup.Future]: {
     label: "Kỳ sắp tới",
     color: "text-slate-500 dark:text-slate-400",
-    badgeClass:
-      "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200",
+    badgeClass: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200",
     icon: <Circle className="size-1.5 fill-slate-400 text-slate-400" />,
   },
   [DrawSelectorGroup.Recent]: {
     label: "Vừa hoàn thành",
     color: "text-emerald-600 dark:text-emerald-400",
-    badgeClass:
-      "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border-emerald-200",
+    badgeClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border-emerald-200",
     icon: <CheckCircle2 className="size-2.5 text-emerald-500" />,
   },
 } as const;
@@ -116,28 +111,20 @@ function DrawRow({
         isSelected && "bg-accent font-medium",
       )}
     >
-      {STATUS_DOT[draw.status] ?? (
-        <span className="size-1.5 rounded-full bg-slate-300 shrink-0 inline-block" />
-      )}
+      {STATUS_DOT[draw.status] ?? <span className="size-1.5 rounded-full bg-slate-300 shrink-0 inline-block" />}
 
       {/* Giờ quay — thông tin quan trọng nhất */}
-      <span className="font-mono font-semibold tabular-nums text-foreground w-12 shrink-0">
-        {draw.drawTime}
-      </span>
+      <span className="font-mono font-semibold tabular-nums text-foreground w-12 shrink-0">{draw.drawTime}</span>
 
       {/* Số kỳ */}
-      <span className="text-muted-foreground shrink-0">
-        #{String(draw.drawNo).padStart(3, "0")}
-      </span>
+      <span className="text-muted-foreground shrink-0">#{String(draw.drawNo).padStart(3, "0")}</span>
 
       {/* Status badge compact */}
       <span className="ml-auto shrink-0">
         <Bingo18DrawStatusBadge status={draw.status} />
       </span>
 
-      {draw.status === DrawStatus.Void && (
-        <TriangleAlert className="size-3 text-red-400 shrink-0" />
-      )}
+      {draw.status === DrawStatus.Void && <TriangleAlert className="size-3 text-red-400 shrink-0" />}
     </button>
   );
 }
@@ -164,13 +151,8 @@ function GroupSection({
     <div>
       <div className="flex items-center gap-1.5 px-2 pb-1">
         {cfg.icon}
-        <span className={cn("text-[11px] font-semibold uppercase tracking-wider", cfg.color)}>
-          {cfg.label}
-        </span>
-        <Badge
-          variant="outline"
-          className={cn("ml-auto text-[10px] px-1.5 py-0 h-4 font-mono", cfg.badgeClass)}
-        >
+        <span className={cn("text-[11px] font-semibold uppercase tracking-wider", cfg.color)}>{cfg.label}</span>
+        <Badge variant="outline" className={cn("ml-auto text-[10px] px-1.5 py-0 h-4 font-mono", cfg.badgeClass)}>
           {draws.length}
         </Badge>
       </div>
@@ -198,24 +180,15 @@ function TriggerLabel({ draw }: { draw: DrawSelectorItem | undefined }) {
     <span className="flex items-center gap-1.5 min-w-0 overflow-hidden">
       {STATUS_DOT[draw.status]}
       <span className="font-mono text-sm font-semibold tabular-nums shrink-0">{draw.drawTime}</span>
-      <span className="text-muted-foreground text-xs shrink-0">
-        #{String(draw.drawNo).padStart(3, "0")}
-      </span>
-      <span className="text-xs text-muted-foreground truncate hidden sm:block">
-        · {draw.drawDate}
-      </span>
+      <span className="text-muted-foreground text-xs shrink-0">#{String(draw.drawNo).padStart(3, "0")}</span>
+      <span className="text-xs text-muted-foreground truncate hidden sm:block">· {draw.drawDate}</span>
     </span>
   );
 }
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
-export function DrawSelector({
-  draws,
-  selectedDrawId,
-  onSelect,
-  historicalDraw,
-}: DrawSelectorProps) {
+export function DrawSelector({ draws, selectedDrawId, onSelect, historicalDraw }: DrawSelectorProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -230,18 +203,9 @@ export function DrawSelector({
     }
   }, [open]);
 
-  const allActive = useMemo(
-    () => draws.filter((d) => d.group === DrawSelectorGroup.Active),
-    [draws],
-  );
-  const allFuture = useMemo(
-    () => draws.filter((d) => d.group === DrawSelectorGroup.Future),
-    [draws],
-  );
-  const allRecent = useMemo(
-    () => draws.filter((d) => d.group === DrawSelectorGroup.Recent),
-    [draws],
-  );
+  const allActive = useMemo(() => draws.filter((d) => d.group === DrawSelectorGroup.Active), [draws]);
+  const allFuture = useMemo(() => draws.filter((d) => d.group === DrawSelectorGroup.Future), [draws]);
+  const allRecent = useMemo(() => draws.filter((d) => d.group === DrawSelectorGroup.Recent), [draws]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return { active: allActive, future: allFuture, recent: allRecent };
@@ -277,10 +241,7 @@ export function DrawSelector({
         >
           <TriggerLabel draw={selected} />
           <ChevronDown
-            className={cn(
-              "size-3.5 text-muted-foreground shrink-0 transition-transform",
-              open && "rotate-180",
-            )}
+            className={cn("size-3.5 text-muted-foreground shrink-0 transition-transform", open && "rotate-180")}
           />
         </Button>
       </PopoverTrigger>
@@ -309,9 +270,7 @@ export function DrawSelector({
 
         <div className="max-h-105 overflow-y-auto space-y-2">
           {totalFiltered === 0 ? (
-            <p className="py-6 text-center text-xs text-muted-foreground">
-              Không tìm thấy kỳ quay.
-            </p>
+            <p className="py-6 text-center text-xs text-muted-foreground">Không tìm thấy kỳ quay.</p>
           ) : (
             <>
               <GroupSection
@@ -330,8 +289,9 @@ export function DrawSelector({
                 onSelect={handleSelect}
               />
 
-              {(filtered.active.length > 0 || filtered.future.length > 0) &&
-                filtered.recent.length > 0 && <Separator />}
+              {(filtered.active.length > 0 || filtered.future.length > 0) && filtered.recent.length > 0 && (
+                <Separator />
+              )}
 
               <GroupSection
                 group={DrawSelectorGroup.Recent}

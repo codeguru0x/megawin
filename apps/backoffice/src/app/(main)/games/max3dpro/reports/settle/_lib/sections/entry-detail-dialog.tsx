@@ -1,42 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Ticket,
-  Building2,
-  User,
-  Clock,
-  Layers,
-  Banknote,
-  HandCoins,
-  CheckCircle2,
-  XCircle,
-  Timer,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { formatNumber, toTenantUsername, formatVN } from "@megawin/shared/utils";
-import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import type {
-  TicketEntryEntity,
-  EntryBoardSnapshot,
-  EntryPayoutTier,
-} from "@megawin/game-max3dpro/entities";
+
 import { EntryStatus } from "@megawin/game-core/entities";
-import { boardColorVar } from "@/lib/game-colors";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import type { EntryBoardSnapshot, EntryPayoutTier, TicketEntryEntity } from "@megawin/game-max3dpro/entities";
+import { formatNumber, formatVN, toTenantUsername } from "@megawin/shared/utils";
+import {
+  Banknote,
+  Building2,
+  CheckCircle2,
+  Clock,
+  HandCoins,
+  Layers,
+  Minus,
+  Ticket,
+  Timer,
+  TrendingDown,
+  TrendingUp,
+  User,
+  XCircle,
+} from "lucide-react";
+
 import { TripletDisplay } from "@/components/games/max3dpro/triplet-display";
 import { EntryDetailDialogLoading } from "@/components/games/shared/skeletons/entry-detail-skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { boardColorVar } from "@/lib/game-colors";
 
 // ─── Prize Tier Labels ────────────────────────────────────────────────────────
 
@@ -52,16 +44,7 @@ const MAX3DPRO_PRIZE_LABELS: Record<string, string> = {
 };
 
 // Thứ tự hiển thị: Đặc Biệt → Phụ ĐB → Nhất → Nhì → Ba → Tư → Năm → Sáu
-const PRIZE_TIER_ORDER: string[] = [
-  "special",
-  "specialSub",
-  "first",
-  "second",
-  "third",
-  "fourth",
-  "fifth",
-  "sixth",
-];
+const PRIZE_TIER_ORDER: string[] = ["special", "specialSub", "first", "second", "third", "fourth", "fifth", "sixth"];
 
 // ─── Play Mode Label ──────────────────────────────────────────────────────────
 
@@ -149,9 +132,7 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
   const playerLink = `/accounts/players/${entry.accountId}`;
   const MAX_USERNAME_LEN = 14;
   const truncatedUsername =
-    tenantUsername.length > MAX_USERNAME_LEN
-      ? tenantUsername.slice(0, MAX_USERNAME_LEN) + "…"
-      : tenantUsername;
+    tenantUsername.length > MAX_USERNAME_LEN ? tenantUsername.slice(0, MAX_USERNAME_LEN) + "…" : tenantUsername;
 
   return (
     <>
@@ -191,10 +172,7 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link
-                        href={playerLink}
-                        className="cursor-pointer font-semibold hover:underline"
-                      >
+                      <Link href={playerLink} className="cursor-pointer font-semibold hover:underline">
                         {truncatedUsername}
                       </Link>
                     </TooltipTrigger>
@@ -258,12 +236,8 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalCommission}
-                  </p>
-                  <p className="text-sm font-bold tabular-nums">
-                    {formatNumber(entry.tenant.commissionAmount)}
-                  </p>
+                  <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
             </div>
@@ -290,12 +264,8 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <Banknote className="size-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalPayout}
-                  </p>
-                  <p className="text-sm font-bold tabular-nums">
-                    {formatNumber(entry.payout?.payoutAmount ?? 0)}
-                  </p>
+                  <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.totalPayout}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.payout?.payoutAmount ?? 0)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
@@ -303,12 +273,8 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                   <HandCoins className="size-4 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    {REPORT_COLUMN_LABELS.totalCommission}
-                  </p>
-                  <p className="text-sm font-bold tabular-nums">
-                    {formatNumber(entry.tenant.commissionAmount)}
-                  </p>
+                  <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.totalCommission}</p>
+                  <p className="text-sm font-bold tabular-nums">{formatNumber(entry.tenant.commissionAmount)}</p>
                 </div>
               </div>
               {playerNet !== null && (
@@ -331,16 +297,10 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                     )}
                   </div>
                   <div>
-                    <p className="text-[11px] text-muted-foreground">
-                      {REPORT_COLUMN_LABELS.playerNetProfit}
-                    </p>
+                    <p className="text-[11px] text-muted-foreground">{REPORT_COLUMN_LABELS.playerNetProfit}</p>
                     <p
                       className={`text-sm font-bold tabular-nums ${
-                        playerNet > 0
-                          ? "text-profit"
-                          : playerNet < 0
-                            ? "text-loss"
-                            : "text-foreground"
+                        playerNet > 0 ? "text-profit" : playerNet < 0 ? "text-loss" : "text-foreground"
                       }`}
                     >
                       {playerNet > 0 ? "+" : ""}
@@ -355,9 +315,7 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 4. Kết quả & Bộ số đã chọn ─────────────────────────────── */}
           {entry.result && !isScheduled && boards.length > 0 ? (
             <div className="rounded-lg border p-4">
-              <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Kết quả
-              </p>
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Kết quả</p>
               <div className="mb-4 space-y-1.5">
                 {(
                   [
@@ -369,17 +327,13 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                 ).map(({ label, values }) =>
                   values?.length ? (
                     <div key={label} className="flex flex-wrap items-center gap-1.5">
-                      <span className="w-16 shrink-0 text-[11px] text-muted-foreground">
-                        {label}
-                      </span>
+                      <span className="w-16 shrink-0 text-[11px] text-muted-foreground">{label}</span>
                       {values.map((t) => (
                         <TripletDisplay
                           key={t}
                           value={t}
                           size="sm"
-                          variant={
-                            boards.some((b) => b.triplets.includes(t)) ? "matched" : "result"
-                          }
+                          variant={boards.some((b) => b.triplets.includes(t)) ? "matched" : "result"}
                         />
                       ))}
                     </div>
@@ -406,10 +360,7 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                       }}
                     >
                       <div className="flex items-center justify-center self-stretch">
-                        <span
-                          className="text-sm font-extrabold leading-none"
-                          style={{ color: boardColor }}
-                        >
+                        <span className="text-sm font-extrabold leading-none" style={{ color: boardColor }}>
                           {board.boardNo}
                         </span>
                       </div>
@@ -421,15 +372,11 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           {formatNumber(board.lineCount)} cặp
                         </span>
                         {board.betCount > 1 && (
-                          <span className="text-[10px] leading-tight text-muted-foreground/70">
-                            ×{board.betCount}
-                          </span>
+                          <span className="text-[10px] leading-tight text-muted-foreground/70">×{board.betCount}</span>
                         )}
                       </div>
                       <div className="flex flex-wrap gap-1">
-                        {board.playMode === "multiDigit" &&
-                        board.frontDigits &&
-                        board.backDigits ? (
+                        {board.playMode === "multiDigit" && board.frontDigits && board.backDigits ? (
                           <>
                             {board.frontDigits.map((d, j) => (
                               <span
@@ -439,9 +386,7 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                                 {d}
                               </span>
                             ))}
-                            <span className="select-none px-0.5 text-[10px] text-muted-foreground/40">
-                              ×
-                            </span>
+                            <span className="select-none px-0.5 text-[10px] text-muted-foreground/40">×</span>
                             {board.backDigits.map((d, j) => (
                               <span
                                 key={`b-${j}`}
@@ -487,10 +432,7 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                         }}
                       >
                         <div className="flex items-center justify-center self-stretch">
-                          <span
-                            className="text-sm font-extrabold leading-none"
-                            style={{ color: boardColor }}
-                          >
+                          <span className="text-sm font-extrabold leading-none" style={{ color: boardColor }}>
                             {board.boardNo}
                           </span>
                         </div>
@@ -508,9 +450,7 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           )}
                         </div>
                         <div className="flex flex-wrap gap-1">
-                          {board.playMode === "multiDigit" &&
-                          board.frontDigits &&
-                          board.backDigits ? (
+                          {board.playMode === "multiDigit" && board.frontDigits && board.backDigits ? (
                             <>
                               {board.frontDigits.map((d, j) => (
                                 <span
@@ -520,9 +460,7 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                                   {d}
                                 </span>
                               ))}
-                              <span className="select-none px-0.5 text-[10px] text-muted-foreground/40">
-                                ×
-                              </span>
+                              <span className="select-none px-0.5 text-[10px] text-muted-foreground/40">×</span>
                               {board.backDigits.map((d, j) => (
                                 <span
                                   key={`b-${j}`}
@@ -549,15 +487,12 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
           {/* ── 6. Giải trúng ─────────────────────────────────────────── */}
           {tiers.length > 0 && !isScheduled && (
             <div className="rounded-lg border border-profit/30 bg-profit/5 p-4">
-              <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-profit">
-                Giải trúng
-              </p>
+              <p className="mb-3 text-[11px] font-medium uppercase tracking-wide text-profit">Giải trúng</p>
               <div className="space-y-2">
                 {[...tiers]
                   .sort(
                     (a, b) =>
-                      (PRIZE_TIER_ORDER.indexOf(a.tier) + 1 || 999) -
-                      (PRIZE_TIER_ORDER.indexOf(b.tier) + 1 || 999),
+                      (PRIZE_TIER_ORDER.indexOf(a.tier) + 1 || 999) - (PRIZE_TIER_ORDER.indexOf(b.tier) + 1 || 999),
                   )
                   .map((tier: EntryPayoutTier, i: number) => (
                     <div
@@ -572,9 +507,7 @@ function Max3dproEntryDetailContent({ entry }: { entry: TicketEntryEntity }) {
                           ×{tier.hitCount} cặp
                         </span>
                       </div>
-                      <span className="font-bold tabular-nums text-profit">
-                        {formatNumber(tier.amount)}
-                      </span>
+                      <span className="font-bold tabular-nums text-profit">{formatNumber(tier.amount)}</span>
                     </div>
                   ))}
               </div>

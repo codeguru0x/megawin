@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+
 import { History } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,9 +20,7 @@ function AuditLogsPageInner() {
             <History className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Lịch sử thao tác
-            </h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Lịch sử thao tác</h1>
             <p className="text-xs text-muted-foreground">
               Nhật ký audit — ai làm gì, lên đối tượng nào, lúc nào. Lưu trữ 90 ngày.
             </p>

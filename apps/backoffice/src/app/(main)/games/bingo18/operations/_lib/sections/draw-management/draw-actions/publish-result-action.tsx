@@ -1,16 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Check,
-  Loader2,
-  ExternalLink,
-  CalendarDays,
-  Hash,
-  Dice5,
-  ClipboardCheck,
-  AlertCircle,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+
+import { DrawStatus } from "@megawin/game-core/entities";
+import { todayVN } from "@megawin/shared/utils";
+import { AlertCircle, CalendarDays, Check, ClipboardCheck, Dice5, ExternalLink, Hash, Loader2 } from "lucide-react";
+
+import { generateRandomNumber, RandomFillButton } from "@/components/draws";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,19 +18,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { RandomFillButton, generateRandomNumber } from "@/components/draws";
-import { todayVN } from "@megawin/shared/utils";
+
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
-import { DrawStatus } from "@megawin/game-core/entities";
 
 const DICE_COUNT = 3;
 const DICE_MIN = 1;
@@ -185,9 +173,7 @@ export function PublishResultAction({
                 <div className="grid grid-cols-3 gap-3">
                   {dice.map((value, i) => (
                     <div key={i} className="space-y-1">
-                      <span className="block text-xs font-medium text-muted-foreground text-center">
-                        {i + 1}
-                      </span>
+                      <span className="block text-xs font-medium text-muted-foreground text-center">{i + 1}</span>
                       <Select
                         value={value != null ? String(value) : ""}
                         onValueChange={(v) => handleDiceChange(i, Number(v))}
@@ -214,17 +200,14 @@ export function PublishResultAction({
                   <div className="flex items-baseline gap-1.5">
                     <span
                       className={`text-2xl font-bold tabular-nums transition-colors ${
-                        allSelected
-                          ? "text-amber-600 dark:text-amber-400"
-                          : "text-muted-foreground/40"
+                        allSelected ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground/40"
                       }`}
                     >
                       {allSelected ? sum : "—"}
                     </span>
                     {allSelected && (
                       <span className="text-xs text-muted-foreground">
-                        ({sum <= 9 ? "Nhỏ" : sum <= 13 ? "Hoà" : "Lớn"} ·{" "}
-                        {sum % 2 === 0 ? "Chẵn" : "Lẻ"})
+                        ({sum <= 9 ? "Nhỏ" : sum <= 13 ? "Hoà" : "Lớn"} · {sum % 2 === 0 ? "Chẵn" : "Lẻ"})
                       </span>
                     )}
                   </div>

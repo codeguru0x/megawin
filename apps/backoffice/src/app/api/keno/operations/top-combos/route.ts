@@ -1,6 +1,8 @@
-import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities";
 import { GetTopCombosUseCase } from "@megawin/game-keno-application/use-cases/operations";
+import { CompanyRole } from "@megawin/identity/entities";
+
+import { withApi } from "@/lib/api";
+
 import { topCombosQuerySchema } from "../_lib/schema";
 
 const useCase = new GetTopCombosUseCase();

@@ -1,23 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { GAME_COLORS } from "@/lib/game-colors";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { toTenantUsername } from "@megawin/shared/utils/player-username";
 import type { TicketEntryEntity } from "@megawin/game-power655/entities";
-import { Power655EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
+import { toTenantUsername } from "@megawin/shared/utils/player-username";
+
+import type { VoidDrawRow, VoidEntryRow, VoidPlayerRow, VoidTenantRow } from "@/components/reports/game/void";
 import { VoidContent } from "@/components/reports/game/void";
-import type {
-  VoidDrawRow,
-  VoidTenantRow,
-  VoidPlayerRow,
-  VoidEntryRow,
-} from "@/components/reports/game/void";
+import { GAME_COLORS } from "@/lib/game-colors";
+
+import { Power655EntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
 import {
-  usePower655VoidReports,
   usePower655VoidDrawTenants,
-  usePower655VoidTenantPlayers,
   usePower655VoidPlayerEntries,
+  usePower655VoidReports,
+  usePower655VoidTenantPlayers,
 } from "../../settle/_lib/use-report-queries";
 import { usePower655VoidFilters } from "./use-void-filters";
 
@@ -177,11 +175,7 @@ export function Power655VoidReportsContent() {
         lineCountLabel="Bộ số"
       />
 
-      <Power655EntryDetailDialog
-        entry={selectedEntry}
-        open={!!selectedEntry}
-        onClose={() => setSelectedEntry(null)}
-      />
+      <Power655EntryDetailDialog entry={selectedEntry} open={!!selectedEntry} onClose={() => setSelectedEntry(null)} />
     </>
   );
 }

@@ -11,14 +11,13 @@
  */
 
 import Link from "next/link";
-import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
 
-import { useCurrentDraw } from "./_lib/use-draws";
-import {
-  Mega645PrimaryDrawCard,
-  Mega645QueueDrawCard,
-} from "@/components/games/mega645/active-draw-card";
+import { CalendarClock, ListOrdered, Loader2 } from "lucide-react";
+
+import { Mega645PrimaryDrawCard, Mega645QueueDrawCard } from "@/components/games/mega645/active-draw-card";
+
 import { DrawHistorySection } from "./_lib/draw-history-section";
+import { useCurrentDraw } from "./_lib/use-draws";
 
 export default function Mega645DrawsPage() {
   const { data, isLoading } = useCurrentDraw();
@@ -35,9 +34,7 @@ export default function Mega645DrawsPage() {
           <CalendarClock className="size-4.5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">
-            Mega 6/45 — Kỳ quay
-          </h1>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">Mega 6/45 — Kỳ quay</h1>
           <p className="text-xs text-muted-foreground">Tổng quan kỳ quay hiện tại và lịch sử</p>
         </div>
       </div>
@@ -77,10 +74,7 @@ export default function Mega645DrawsPage() {
             <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Vào trang{" "}
-              <Link
-                href="/games/mega645/operations"
-                className="underline underline-offset-2 hover:text-foreground"
-              >
+              <Link href="/games/mega645/operations" className="underline underline-offset-2 hover:text-foreground">
                 Vận hành
               </Link>{" "}
               để tạo kỳ mới.

@@ -1,5 +1,6 @@
-import { cn } from "@/lib/utils";
 import { formatNumber } from "@megawin/shared/utils";
+
+import { cn } from "@/lib/utils";
 
 /** Ngưỡng cảnh báo tỷ lệ trả thưởng (giá trị ratio, KHÔNG nhân 100). */
 const PAYOUT_THRESHOLDS = {
@@ -60,11 +61,7 @@ interface PayoutRatioProps {
  * Format: `formatNumber` với thousand separator + color coding theo ngưỡng.
  */
 export function PayoutRatioCell({ ratio, className }: PayoutRatioProps) {
-  return (
-    <span className={cn("tabular-nums", getPayoutRatioColor(ratio), className)}>
-      {formatPayoutRatio(ratio)}
-    </span>
-  );
+  return <span className={cn("tabular-nums", getPayoutRatioColor(ratio), className)}>{formatPayoutRatio(ratio)}</span>;
 }
 
 /**
@@ -72,11 +69,7 @@ export function PayoutRatioCell({ ratio, className }: PayoutRatioProps) {
  * Format: `formatPayoutRatio` + color coding theo ngưỡng.
  */
 export function PayoutRatioKpi({ ratio, className }: PayoutRatioProps) {
-  return (
-    <span className={cn("tabular-nums", getPayoutRatioColor(ratio), className)}>
-      {formatPayoutRatio(ratio)}
-    </span>
-  );
+  return <span className={cn("tabular-nums", getPayoutRatioColor(ratio), className)}>{formatPayoutRatio(ratio)}</span>;
 }
 
 // ─── Badge cho KPI card gộp ───────────────────────────────────────────────────

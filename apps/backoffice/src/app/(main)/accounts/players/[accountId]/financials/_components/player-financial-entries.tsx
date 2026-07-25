@@ -1,21 +1,14 @@
 "use client";
 
+import type { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS } from "@megawin/game-core/labels";
-import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 
+import { GameEntryDetailDialog } from "@/components/reports/game/game-entry-detail-dialog";
+import { type EntryRow, GamePlayerEntryList } from "@/components/reports/game/settle/game-player-entry-list";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GameEntryDetailDialog } from "@/components/reports/game/game-entry-detail-dialog";
-import {
-  GamePlayerEntryList,
-  type EntryRow,
-} from "@/components/reports/game/settle/game-player-entry-list";
 
-import {
-  usePlayerEntries,
-  usePlayerEntryDetail,
-  type PlayerSettledEntryResponse,
-} from "../../_shared/queries";
+import { type PlayerSettledEntryResponse, usePlayerEntries, usePlayerEntryDetail } from "../../_shared/queries";
 
 interface PlayerFinancialEntriesViewProps {
   accountId: string;
@@ -49,11 +42,7 @@ function toEntryRow(entry: PlayerSettledEntryResponse): EntryRow {
  *
  * Click row → fetch full entry doc → hiển thị EntryDetailDialog game-specific.
  */
-export function PlayerFinancialEntriesView({
-  accountId,
-  financialDate,
-  game,
-}: PlayerFinancialEntriesViewProps) {
+export function PlayerFinancialEntriesView({ accountId, financialDate, game }: PlayerFinancialEntriesViewProps) {
   const { data: entries, isLoading, isError } = usePlayerEntries(accountId, financialDate, game);
 
   const gameLabel = GAME_LABELS[game as GameProduct] ?? game;
@@ -108,9 +97,7 @@ export function PlayerFinancialEntriesView({
       rows={rows}
       renderDetailDialog={(selectedEntryId, onClose) => {
         // Lấy game từ entry đầu (tất cả entries cùng game)
-        const selectedEntry = selectedEntryId
-          ? entries.find((e) => e.entryId === selectedEntryId)
-          : null;
+        const selectedEntry = selectedEntryId ? entries.find((e) => e.entryId === selectedEntryId) : null;
 
         return (
           <PlayerEntryDetailLoader
@@ -151,11 +138,6 @@ function PlayerEntryDetailLoader({
   const { data: entryDetail, isLoading } = usePlayerEntryDetail(accountId, entryId ?? "", game);
 
   return (
-    <GameEntryDetailDialog
-      game={game}
-      entry={isLoading ? null : (entryDetail ?? null)}
-      open={open}
-      onClose={onClose}
-    />
+    <GameEntryDetailDialog game={game} entry={isLoading ? null : (entryDetail ?? null)} open={open} onClose={onClose} />
   );
 }

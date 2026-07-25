@@ -1,9 +1,8 @@
 "use client";
 
-import { useQueryState, parseAsString, parseAsStringEnum, parseAsInteger } from "nuqs";
-import { todayVN, formatVNDate } from "@megawin/shared/utils";
+import { formatVNDate, TZDate, todayVN, VN_TIMEZONE } from "@megawin/shared/utils";
 import { subDays } from "date-fns";
-import { TZDate, VN_TIMEZONE } from "@megawin/shared/utils";
+import { parseAsInteger, parseAsString, parseAsStringEnum, useQueryState } from "nuqs";
 
 type TabType = "draws" | "tenants";
 type LevelType = "list" | "draw-tenants" | "tenant-draws" | "players" | "entries";
@@ -12,21 +11,12 @@ type LevelType = "list" | "draw-tenants" | "tenant-draws" | "players" | "entries
 export function useMax3dReportFilters() {
   const today = todayVN();
   const sevenDaysAgo = formatVNDate(subDays(new TZDate(new Date(), VN_TIMEZONE), 6));
-  const [tab, rawSetTab] = useQueryState(
-    "tab",
-    parseAsStringEnum<TabType>(["draws", "tenants"]).withDefault("draws"),
-  );
+  const [tab, rawSetTab] = useQueryState("tab", parseAsStringEnum<TabType>(["draws", "tenants"]).withDefault("draws"));
   const [from, setFrom] = useQueryState("from", parseAsString.withDefault(sevenDaysAgo));
   const [to, setTo] = useQueryState("to", parseAsString.withDefault(today));
   const [level, setLevel] = useQueryState(
     "level",
-    parseAsStringEnum<LevelType>([
-      "list",
-      "draw-tenants",
-      "tenant-draws",
-      "players",
-      "entries",
-    ]).withDefault("list"),
+    parseAsStringEnum<LevelType>(["list", "draw-tenants", "tenant-draws", "players", "entries"]).withDefault("list"),
   );
   const [drawId, setDrawId] = useQueryState("drawId", parseAsString);
   const [tenantId, setTenantId] = useQueryState("tenantId", parseAsString);

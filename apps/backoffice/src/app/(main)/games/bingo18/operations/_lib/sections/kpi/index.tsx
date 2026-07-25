@@ -1,13 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
-import { DrawStatus } from "@megawin/game-core/entities";
+
 import { BINGO18_SIDE_BET_PLAY_TYPE_SET } from "@megawin/game-bingo18/entities";
-import { useDrawContext } from "../../use-draw-context";
-import { useOpsSummary, useOpsPlayTypeDistribution } from "../../use-operations";
-import { KpiStrip } from "./kpi-strip";
+import { DrawStatus } from "@megawin/game-core/entities";
+
 import type { OpsKpi } from "../../types";
+import { useDrawContext } from "../../use-draw-context";
 import type { PlayTypeDistributionItem } from "../../use-operations";
+import { useOpsPlayTypeDistribution, useOpsSummary } from "../../use-operations";
+import { KpiStrip } from "./kpi-strip";
 
 const KPI_SHOW = new Set([
   DrawStatus.SalesOpen,

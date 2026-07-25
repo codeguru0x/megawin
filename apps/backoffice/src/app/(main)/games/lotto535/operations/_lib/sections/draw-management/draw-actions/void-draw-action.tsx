@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+
 import { Loader2, XCircle } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+
 import type { DrawSelectorItem } from "../../../use-operations";
 import { useVoidDraw } from "../../../use-operations";
 
@@ -52,14 +55,12 @@ export function VoidDrawAction({
         <DialogHeader>
           <DialogTitle className="text-destructive">Huỷ kỳ quay</DialogTitle>
           <DialogDescription>
-            Kỳ <strong>{draw.drawId}</strong> sẽ bị huỷ vĩnh viễn. Tất cả vé đã bán sẽ được hoàn
-            lại. Thao tác này không thể hoàn tác.
+            Kỳ <strong>{draw.drawId}</strong> sẽ bị huỷ vĩnh viễn. Tất cả vé đã bán sẽ được hoàn lại. Thao tác này không
+            thể hoàn tác.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 py-4">
-          <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Lý do huỷ kỳ *
-          </Label>
+          <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Lý do huỷ kỳ *</Label>
           <Textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -71,11 +72,7 @@ export function VoidDrawAction({
           <Button variant="outline" onClick={() => setIsOpen(false)}>
             Quay lại
           </Button>
-          <Button
-            variant="destructive"
-            onClick={handleSubmit}
-            disabled={!reason.trim() || voidDraw.isPending}
-          >
+          <Button variant="destructive" onClick={handleSubmit} disabled={!reason.trim() || voidDraw.isPending}>
             {voidDraw.isPending ? (
               <Loader2 className="mr-2 size-4 animate-spin" />
             ) : (

@@ -1,37 +1,26 @@
 "use client";
 
 import { useState } from "react";
+
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { JackpotCycleStatus } from "@megawin/game-mega645/entities";
+import { Pagination } from "@megawin/shared/constants";
+import { formatNumber } from "@megawin/shared/utils";
 import { ArrowUpRight, ChevronLeft, ChevronRight, History, Loader2, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { formatNumber } from "@megawin/shared/utils";
-import { Pagination } from "@megawin/shared/constants";
-import { JackpotCycleStatus } from "@megawin/game-mega645/entities";
-import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+
 import {
+  type JackpotCycleOption,
+  type JackpotHistoryItem,
   useJackpotCycleOptions,
   useJackpotHistoryByCycle,
-  type JackpotHistoryItem,
-  type JackpotCycleOption,
 } from "./use-jackpot";
 
 const PAGE_SIZE = Pagination.Default.Size;
@@ -84,9 +73,7 @@ export function JackpotHistorySection() {
           </div>
           <div>
             <h2 className="text-sm font-semibold text-foreground">Lịch sử Jackpot</h2>
-            <p className="text-xs text-muted-foreground">
-              Biến động Jackpot qua từng kỳ quay đã kết sổ
-            </p>
+            <p className="text-xs text-muted-foreground">Biến động Jackpot qua từng kỳ quay đã kết sổ</p>
           </div>
         </div>
 
@@ -125,9 +112,7 @@ export function JackpotHistorySection() {
                   <TableRow>
                     <TableCell colSpan={8} className="h-32 text-center">
                       <p className="text-sm font-medium text-muted-foreground">Chưa có dữ liệu</p>
-                      <p className="text-xs text-muted-foreground">
-                        Vòng này chưa có kỳ quay nào đã tính thưởng.
-                      </p>
+                      <p className="text-xs text-muted-foreground">Vòng này chưa có kỳ quay nào đã tính thưởng.</p>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -201,11 +186,7 @@ function CycleSelector({ cycles, value, isLoading, onChange }: CycleSelectorProp
         {cycles.map((cycle) => (
           <SelectItem
             key={cycle.cycleNo}
-            value={
-              cycle.status === JackpotCycleStatus.Active
-                ? ACTIVE_CYCLE_VALUE
-                : String(cycle.cycleNo)
-            }
+            value={cycle.status === JackpotCycleStatus.Active ? ACTIVE_CYCLE_VALUE : String(cycle.cycleNo)}
           >
             <CycleSelectorLabel cycle={cycle} />
           </SelectItem>
@@ -223,9 +204,7 @@ function CycleSelectorLabel({ cycle }: { cycle: JackpotCycleOption }) {
     <span className="flex items-center gap-2">
       <span className="tabular-nums">
         Vòng #{cycle.cycleNo}
-        {isActive && (
-          <span className="ml-1 text-xs text-emerald-600 dark:text-emerald-400">(hiện tại)</span>
-        )}
+        {isActive && <span className="ml-1 text-xs text-emerald-600 dark:text-emerald-400">(hiện tại)</span>}
       </span>
       {/* Mega 6/45 chỉ đóng khi có winner — không có split */}
       {!isActive && cycle.closeReason === "winner" && (
@@ -243,8 +222,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
   const isWinner = item.hasWinner;
 
   // Tỷ lệ % công ty thu, hiển thị 1 chữ số thập phân
-  const companyTakeRatePct =
-    item.companyTakeRate > 0 ? `${(item.companyTakeRate * 100).toFixed(1)}%` : null;
+  const companyTakeRatePct = item.companyTakeRate > 0 ? `${(item.companyTakeRate * 100).toFixed(1)}%` : null;
 
   return (
     <TableRow className={cn("transition-colors", isWinner && "bg-teal-50/50 dark:bg-teal-950/20")}>
@@ -284,9 +262,7 @@ function HistoryRow({ item }: { item: JackpotHistoryItem }) {
       </TableCell>
 
       {/* Đầu kỳ */}
-      <TableCell className="text-right text-sm tabular-nums">
-        {formatNumber(item.openingAmount)}
-      </TableCell>
+      <TableCell className="text-right text-sm tabular-nums">{formatNumber(item.openingAmount)}</TableCell>
 
       {/* Tích luỹ */}
       <TableCell className="text-right">

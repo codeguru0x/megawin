@@ -1,20 +1,15 @@
 "use client";
 
-import React from "react";
+import type React from "react";
+
 import { useRouter } from "next/navigation";
 
+import type { GameProduct } from "@megawin/game-core/entities";
+import { getGameLabel, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import type { DailyOverviewRow } from "@megawin/game-core-application/repos";
+import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
+  Building2,
   CalendarDays,
   CalendarRange,
   ChevronRight,
@@ -22,24 +17,24 @@ import {
   Gamepad2,
   TrendingDown,
   TrendingUp,
-  Building2,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { formatVNDCompact, formatNumber } from "@megawin/shared/utils";
-import { REPORT_COLUMN_LABELS, getGameLabel } from "@megawin/game-core/labels";
-import type { GameProduct } from "@megawin/game-core/entities";
-import { getGameHex } from "@/lib/game-colors";
+
 import {
   formatPayoutRatio,
-  getPayoutRatioColor,
   getNetProfitColor,
+  getPayoutRatioColor,
   PayoutRatioCell,
   PayoutRatioKpiBadge,
 } from "@/components/reports/payout-ratio";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getGameHex } from "@/lib/game-colors";
+import { cn } from "@/lib/utils";
+
+import { EmptyCard, ErrorCard, TableSkeleton } from "../sections/shared-states";
 import { useSystemReportFilters } from "../use-report-filters";
 import { useSystemDailyOverview, useSystemDayBreakdown } from "../use-report-queries";
-import type { DailyOverviewRow } from "@megawin/game-core-application/repos";
-import { TableSkeleton, ErrorCard, EmptyCard } from "../sections/shared-states";
 
 // ─── KPI Strip ────────────────────────────────────────────────────────────────
 
@@ -77,12 +72,8 @@ function KpiStrip({ rows }: { rows: DailyOverviewRow[] }) {
       {/* Trả thưởng + Tỷ lệ TT — Phương án C: gộp 1 card */}
       <KpiCard
         icon={TrendingDown}
-        iconBg={
-          payoutColor ? "bg-red-100 dark:bg-red-900/50" : "bg-orange-100 dark:bg-orange-900/50"
-        }
-        iconColor={
-          payoutColor ? "text-red-600 dark:text-red-400" : "text-orange-600 dark:text-orange-400"
-        }
+        iconBg={payoutColor ? "bg-red-100 dark:bg-red-900/50" : "bg-orange-100 dark:bg-orange-900/50"}
+        iconColor={payoutColor ? "text-red-600 dark:text-red-400" : "text-orange-600 dark:text-orange-400"}
         label={REPORT_COLUMN_LABELS.totalPayout}
         value={formatVNDCompact(totalPayout)}
         subNode={<PayoutRatioKpiBadge ratio={payoutRatio} />}
@@ -107,12 +98,8 @@ function KpiStrip({ rows }: { rows: DailyOverviewRow[] }) {
       {/* Lợi nhuận ròng */}
       <KpiCard
         icon={TrendingUp}
-        iconBg={
-          netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50"
-        }
-        iconColor={
-          netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"
-        }
+        iconBg={netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50"}
+        iconColor={netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
         label={REPORT_COLUMN_LABELS.netProfit}
         value={formatVNDCompact(netProfit)}
         valueClass={getNetProfitColor(netProfit)}
@@ -134,16 +121,7 @@ interface KpiCardProps {
   subNode?: React.ReactNode;
 }
 
-function KpiCard({
-  icon: Icon,
-  iconBg,
-  iconColor,
-  label,
-  value,
-  valueClass,
-  sub,
-  subNode,
-}: KpiCardProps) {
+function KpiCard({ icon: Icon, iconBg, iconColor, label, value, valueClass, sub, subNode }: KpiCardProps) {
   return (
     <div className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
       <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", iconBg)}>
@@ -151,9 +129,7 @@ function KpiCard({
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className={cn("text-lg font-bold tabular-nums text-foreground", valueClass ?? "")}>
-          {value}
-        </p>
+        <p className={cn("text-lg font-bold tabular-nums text-foreground", valueClass ?? "")}>{value}</p>
         {subNode}
         {sub && <p className="truncate text-xs text-muted-foreground">{sub}</p>}
       </div>
@@ -225,12 +201,8 @@ function DailyListView() {
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalPayout}</TableHead>
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.payoutPercent}</TableHead>
                   <TableHead className="text-right">{REPORT_COLUMN_LABELS.ggr}</TableHead>
-                  <TableHead className="text-right">
-                    {REPORT_COLUMN_LABELS.totalCommission}
-                  </TableHead>
-                  <TableHead className="pr-5 text-right">
-                    {REPORT_COLUMN_LABELS.netProfit}
-                  </TableHead>
+                  <TableHead className="text-right">{REPORT_COLUMN_LABELS.totalCommission}</TableHead>
+                  <TableHead className="pr-5 text-right">{REPORT_COLUMN_LABELS.netProfit}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -242,30 +214,18 @@ function DailyListView() {
                       className="cursor-pointer hover:bg-muted/50"
                       onClick={() => navigateToDate(row.financialDate)}
                     >
-                      <TableCell className="pl-5 font-mono text-sm font-medium">
-                        {row.financialDate}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {formatNumber(row.playerCount)}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {formatNumber(row.drawCount)}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {formatNumber(row.entryCount)}
-                      </TableCell>
+                      <TableCell className="pl-5 font-mono text-sm font-medium">{row.financialDate}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.playerCount)}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.drawCount)}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.entryCount)}</TableCell>
                       <TableCell className="text-right text-sm tabular-nums font-medium">
                         {formatNumber(row.totalStake)}
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {formatNumber(row.totalPayout)}
-                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.totalPayout)}</TableCell>
                       <TableCell className="text-right text-sm">
                         <PayoutRatioCell ratio={payoutRatio} />
                       </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums">
-                        {formatNumber(row.ggr)}
-                      </TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{formatNumber(row.ggr)}</TableCell>
                       <TableCell className="text-right text-sm tabular-nums">
                         {formatNumber(row.totalCommission)}
                       </TableCell>
@@ -283,9 +243,7 @@ function DailyListView() {
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  <TableCell className="pl-5 text-sm font-semibold">
-                    {REPORT_COLUMN_LABELS.summary}
-                  </TableCell>
+                  <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
                   <TableCell />
                   <TableCell className="text-right text-sm tabular-nums font-semibold">
                     {formatNumber(totals.drawCount)}
@@ -336,13 +294,7 @@ function DayDetailView({ date }: { date: string }) {
   if (isLoading) return <TableSkeleton rows={8} />;
   if (error) return <ErrorCard />;
   if (!data || data.length === 0)
-    return (
-      <EmptyCard
-        icon="calendar"
-        message="Không có dữ liệu"
-        description="Không có dữ liệu game trong ngày này."
-      />
-    );
+    return <EmptyCard icon="calendar" message="Không có dữ liệu" description="Không có dữ liệu game trong ngày này." />;
 
   const totals = {
     drawCount: data.reduce((s, r) => s + r.drawCount, 0),
@@ -387,9 +339,7 @@ function DayDetailView({ date }: { date: string }) {
                 <TableRow
                   key={game.gameProduct}
                   className="cursor-pointer hover:bg-muted/50"
-                  onClick={() =>
-                    router.push(`/games/${game.gameProduct}/reports/settle?from=${date}&to=${date}`)
-                  }
+                  onClick={() => router.push(`/games/${game.gameProduct}/reports/settle?from=${date}&to=${date}`)}
                 >
                   <TableCell className="pl-5 font-medium">
                     <span className="inline-flex items-center gap-2">
@@ -400,30 +350,18 @@ function DayDetailView({ date }: { date: string }) {
                       {getGameLabel(game.gameProduct as GameProduct)}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums">
-                    {formatNumber(game.playerCount)}
-                  </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums">
-                    {formatNumber(game.drawCount)}
-                  </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums">
-                    {formatNumber(game.entryCount)}
-                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{formatNumber(game.playerCount)}</TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{formatNumber(game.drawCount)}</TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{formatNumber(game.entryCount)}</TableCell>
 
                   <TableCell className="text-right text-sm tabular-nums font-medium">
                     {formatNumber(game.totalStake)}
                   </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums">
-                    {formatNumber(game.totalPayout)}
-                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{formatNumber(game.totalPayout)}</TableCell>
                   <TableCell className="text-right text-sm">
-                    <PayoutRatioCell
-                      ratio={game.totalStake > 0 ? game.totalPayout / game.totalStake : 0}
-                    />
+                    <PayoutRatioCell ratio={game.totalStake > 0 ? game.totalPayout / game.totalStake : 0} />
                   </TableCell>
-                  <TableCell className="text-right text-sm tabular-nums">
-                    {formatNumber(game.ggr)}
-                  </TableCell>
+                  <TableCell className="text-right text-sm tabular-nums">{formatNumber(game.ggr)}</TableCell>
                   <TableCell className="text-right text-sm tabular-nums">
                     {formatNumber(game.totalCommission)}
                   </TableCell>
@@ -440,9 +378,7 @@ function DayDetailView({ date }: { date: string }) {
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell className="pl-5 text-sm font-semibold">
-                  {REPORT_COLUMN_LABELS.summary}
-                </TableCell>
+                <TableCell className="pl-5 text-sm font-semibold">{REPORT_COLUMN_LABELS.summary}</TableCell>
                 <TableCell />
                 <TableCell className="text-right text-sm tabular-nums font-semibold">
                   {formatNumber(totals.drawCount)}
@@ -492,12 +428,7 @@ function Breadcrumb({ date }: { date: string }) {
   const { navigateBackToList } = useSystemReportFilters();
   return (
     <div className="flex flex-wrap items-center gap-1">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-auto px-2 py-1 text-xs"
-        onClick={navigateBackToList}
-      >
+      <Button variant="ghost" size="sm" className="h-auto px-2 py-1 text-xs" onClick={navigateBackToList}>
         Tổng quan ngày
       </Button>
       <ChevronRight className="size-3 text-muted-foreground" />

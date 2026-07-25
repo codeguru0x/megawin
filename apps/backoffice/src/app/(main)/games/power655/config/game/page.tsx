@@ -1,17 +1,17 @@
 "use client";
 
-import { Trophy, DollarSign, Percent, Settings2 } from "lucide-react";
-import { useQueryState, parseAsStringEnum } from "nuqs";
-
 import { displayVNDateTime } from "@megawin/shared/utils";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DollarSign, Percent, Settings2, Trophy } from "lucide-react";
+import { parseAsStringEnum, useQueryState } from "nuqs";
 
-import { useGameConfig, useUpdateGameConfig } from "./_lib/use-game-config";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { JackpotSection } from "./_lib/jackpot-section";
-import { RatesSection } from "./_lib/rates-section";
-import { PrizesSection } from "./_lib/prizes-section";
 import { PlayRulesSection } from "./_lib/play-rules-section";
+import { PrizesSection } from "./_lib/prizes-section";
+import { RatesSection } from "./_lib/rates-section";
+import { useGameConfig, useUpdateGameConfig } from "./_lib/use-game-config";
 
 function ConfigSkeleton() {
   return (
@@ -39,9 +39,7 @@ export default function Power655ConfigPage() {
           <Settings2 className="size-4 text-white" />
         </div>
         <div>
-          <h1 className="text-base font-semibold tracking-tight text-foreground">
-            Power 6/55 — Cấu hình
-          </h1>
+          <h1 className="text-base font-semibold tracking-tight text-foreground">Power 6/55 — Cấu hình</h1>
           {config && (
             <p className="text-xs tabular-nums text-muted-foreground">
               v{config.version} · Cập nhật {displayVNDateTime(config.updatedAt)}

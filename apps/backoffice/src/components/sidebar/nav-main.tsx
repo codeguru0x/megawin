@@ -1,13 +1,13 @@
 "use client";
 
 import { Fragment } from "react";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { ChevronRight } from "lucide-react";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,8 +26,8 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { hasAnyRole, useUserRoles } from "@/hooks/use-user-roles";
 import type { NavGroup, NavMainItem, NavSubItem } from "@/navigation/sidebar/sidebar-items";
-import { useUserRoles, hasAnyRole } from "@/hooks/use-user-roles";
 
 interface NavMainProps {
   readonly items: readonly NavGroup[];
@@ -52,12 +52,7 @@ const NavItemExpanded = ({
   if (!item.subItems) {
     return (
       <SidebarMenuItem key={item.title}>
-        <SidebarMenuButton
-          asChild
-          aria-disabled={item.comingSoon}
-          isActive={isActive(item.url)}
-          tooltip={item.title}
-        >
+        <SidebarMenuButton asChild aria-disabled={item.comingSoon} isActive={isActive(item.url)} tooltip={item.title}>
           <Link prefetch={false} href={item.url} target={item.newTab ? "_blank" : undefined}>
             {item.icon && <item.icon />}
             <span>{item.title}</span>
@@ -69,12 +64,7 @@ const NavItemExpanded = ({
   }
 
   return (
-    <Collapsible
-      key={item.title}
-      asChild
-      defaultOpen={isSubmenuOpen(item.subItems)}
-      className="group/collapsible"
-    >
+    <Collapsible key={item.title} asChild defaultOpen={isSubmenuOpen(item.subItems)} className="group/collapsible">
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton
@@ -97,16 +87,8 @@ const NavItemExpanded = ({
                     {subItem.sectionLabel}
                   </p>
                 )}
-                <SidebarMenuSubButton
-                  aria-disabled={subItem.comingSoon}
-                  isActive={isActive(subItem.url)}
-                  asChild
-                >
-                  <Link
-                    prefetch={false}
-                    href={subItem.url}
-                    target={subItem.newTab ? "_blank" : undefined}
-                  >
+                <SidebarMenuSubButton aria-disabled={subItem.comingSoon} isActive={isActive(subItem.url)} asChild>
+                  <Link prefetch={false} href={subItem.url} target={subItem.newTab ? "_blank" : undefined}>
                     {subItem.icon && <subItem.icon />}
                     <span>{subItem.title}</span>
                     {subItem.comingSoon && <IsComingSoon />}
@@ -159,11 +141,7 @@ const NavItemCollapsed = ({
                   aria-disabled={subItem.comingSoon}
                   isActive={isActive(subItem.url)}
                 >
-                  <Link
-                    prefetch={false}
-                    href={subItem.url}
-                    target={subItem.newTab ? "_blank" : undefined}
-                  >
+                  <Link prefetch={false} href={subItem.url} target={subItem.newTab ? "_blank" : undefined}>
                     {subItem.icon && <subItem.icon className="[&>svg]:text-sidebar-foreground" />}
                     <span>{subItem.title}</span>
                     {subItem.comingSoon && <IsComingSoon />}
@@ -228,11 +206,7 @@ export function NavMain({ items }: NavMainProps) {
                           tooltip={item.title}
                           isActive={isItemActive(item.url)}
                         >
-                          <Link
-                            prefetch={false}
-                            href={item.url}
-                            target={item.newTab ? "_blank" : undefined}
-                          >
+                          <Link prefetch={false} href={item.url} target={item.newTab ? "_blank" : undefined}>
                             {item.icon && <item.icon />}
                             <span>{item.title}</span>
                           </Link>
@@ -245,12 +219,7 @@ export function NavMain({ items }: NavMainProps) {
                 }
                 // Expanded view
                 return (
-                  <NavItemExpanded
-                    key={item.title}
-                    item={item}
-                    isActive={isItemActive}
-                    isSubmenuOpen={isSubmenuOpen}
-                  />
+                  <NavItemExpanded key={item.title} item={item} isActive={isItemActive} isSubmenuOpen={isSubmenuOpen} />
                 );
               })}
             </SidebarMenu>

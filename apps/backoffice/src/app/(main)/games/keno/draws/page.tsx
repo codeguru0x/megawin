@@ -10,11 +10,13 @@
  */
 
 import Link from "next/link";
-import { CalendarClock, Loader2, ListOrdered } from "lucide-react";
 
-import { useKenoCurrentDraw } from "./_lib/use-draws";
+import { CalendarClock, ListOrdered, Loader2 } from "lucide-react";
+
 import { KenoPrimaryDrawCard, KenoQueueDrawCard } from "@/components/games/keno/active-draw-card";
+
 import { DrawHistorySection } from "./_lib/draw-history-section";
+import { useKenoCurrentDraw } from "./_lib/use-draws";
 
 export default function KenoDrawsPage() {
   const { data, isLoading } = useKenoCurrentDraw();
@@ -33,9 +35,7 @@ export default function KenoDrawsPage() {
           </div>
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-foreground">Keno — Kỳ quay</h1>
-            <p className="text-xs text-muted-foreground">
-              Tổng quan kỳ quay hiện tại và lịch sử (~120 kỳ/ngày)
-            </p>
+            <p className="text-xs text-muted-foreground">Tổng quan kỳ quay hiện tại và lịch sử (~120 kỳ/ngày)</p>
           </div>
         </div>
       </div>
@@ -77,10 +77,7 @@ export default function KenoDrawsPage() {
             <p className="text-sm font-medium text-foreground">Không có kỳ đang vận hành</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Vào trang{" "}
-              <Link
-                href="/games/keno/operations"
-                className="underline underline-offset-2 hover:text-foreground"
-              >
+              <Link href="/games/keno/operations" className="underline underline-offset-2 hover:text-foreground">
                 Vận hành
               </Link>{" "}
               để tạo kỳ mới.

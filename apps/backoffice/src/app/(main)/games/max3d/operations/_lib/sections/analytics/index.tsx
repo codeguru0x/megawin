@@ -12,23 +12,23 @@
  */
 
 import { useMemo } from "react";
+
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PlayMode, PlayType } from "@megawin/game-max3d/entities";
 import { MAX3D_MODE_TYPE_LABELS } from "@megawin/game-max3d/labels";
 
+import type { LiveFeedEntry, PlayTypeRow, TenantRow, TripletFreq } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
 import {
+  useOpsLiveEntries,
   useOpsPlayTypeDistribution,
   useOpsTenantBreakdown,
-  useOpsTripletFrequency,
   useOpsTopCombos,
-  useOpsLiveEntries,
+  useOpsTripletFrequency,
 } from "../../use-operations";
 import { PlayTypeCard, TenantBreakdown } from "./analytics-panels";
-import { TripletHeatmap } from "./triplet-heatmap";
 import { LiveFeed } from "./live-feed";
-
-import type { PlayTypeRow, TenantRow, TripletFreq, LiveFeedEntry } from "../../types";
+import { TripletHeatmap } from "./triplet-heatmap";
 
 const ANALYTICS_SHOW = new Set<string>([
   DrawStatus.SalesOpen,
@@ -118,9 +118,7 @@ export function AnalyticsSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Phân tích cược
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Phân tích cược</h2>
 
       <PlayTypeCard distribution={playTypes} />
 

@@ -1,22 +1,14 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Save, TrendingUp, Building2 } from "lucide-react";
-
 import { MoneyInput } from "@megawin/ui/components/money-input";
+import { Building2, Save, TrendingUp } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Spinner } from "@/components/ui/spinner";
 
 import type { GameConfig } from "./use-game-config";
@@ -73,8 +65,8 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
             <div className="p-6 pb-4">
               <h3 className="text-sm font-semibold text-foreground">Tỷ lệ tài chính</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Tiền cược thu về &rarr; hoa hồng đại lý &rarr; trừ giải thưởng cố định &rarr; thu
-                công ty. Phần còn lại bổ sung vào quỹ Jackpot.
+                Tiền cược thu về &rarr; hoa hồng đại lý &rarr; trừ giải thưởng cố định &rarr; thu công ty. Phần còn lại
+                bổ sung vào quỹ Jackpot.
               </p>
             </div>
 
@@ -126,9 +118,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                             <TrendingUp className="size-4 text-blue-600 dark:text-blue-400" />
                           </div>
                           <div>
-                            <FormLabel className="text-sm font-semibold">
-                              Hoa hồng đại lý
-                            </FormLabel>
+                            <FormLabel className="text-sm font-semibold">Hoa hồng đại lý</FormLabel>
                             <p className="text-xs text-muted-foreground">Thu trước từ tiền cược</p>
                           </div>
                         </div>
@@ -169,9 +159,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                           </div>
                           <div>
                             <FormLabel className="text-sm font-semibold">Thu công ty</FormLabel>
-                            <p className="text-xs text-muted-foreground">
-                              Sau khi trừ hoa hồng và giải cố định
-                            </p>
+                            <p className="text-xs text-muted-foreground">Sau khi trừ hoa hồng và giải cố định</p>
                           </div>
                         </div>
                         <div className="flex items-baseline gap-2">
@@ -186,8 +174,7 @@ export function RatesSection({ config, onSave, isPending }: RatesSectionProps) {
                               decimalScale={1}
                               thousandSeparator={false}
                               isAllowed={({ floatValue }) =>
-                                floatValue === undefined ||
-                                (floatValue >= 0 && floatValue <= Math.max(maxCompany, 0))
+                                floatValue === undefined || (floatValue >= 0 && floatValue <= Math.max(maxCompany, 0))
                               }
                             />
                           </FormControl>

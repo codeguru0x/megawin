@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  TrendingDown,
-  TrendingUp,
-  Minus,
-  CircleDollarSign,
-  BarChart3,
-  Wallet,
-  Ticket,
-  Users,
-} from "lucide-react";
+import { formatNumber, formatPercent, formatVNDCompact } from "@megawin/shared/utils";
+import { BarChart3, CircleDollarSign, Minus, Ticket, TrendingDown, TrendingUp, Users, Wallet } from "lucide-react";
+
 import { cn } from "@/lib/utils";
-import { formatVNDCompact, formatNumber, formatPercent } from "@megawin/shared/utils";
+
 import { calcTrendPercent, type DashboardDayKpis } from "../_lib/compute";
 import { HeroKpisSkeleton } from "./skeletons";
 
@@ -85,16 +78,12 @@ function KpiCard({
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
-        <p className={cn("text-lg font-bold tabular-nums text-foreground", todayValueClassName)}>
-          {todayValue}
-        </p>
+        <p className={cn("text-lg font-bold tabular-nums text-foreground", todayValueClassName)}>{todayValue}</p>
         {/* Dòng hôm qua + trend — chỉ hiện khi có data hôm qua */}
         <div className="mt-0.5 flex h-4 items-center gap-1.5">
           {yesterdayValue != null ? (
             <>
-              <span className="text-xs tabular-nums text-muted-foreground">
-                Qua: {yesterdayValue}
-              </span>
+              <span className="text-xs tabular-nums text-muted-foreground">Qua: {yesterdayValue}</span>
               {trend != null ? (
                 <TrendBadge value={trend} />
               ) : (
@@ -128,14 +117,8 @@ export function HeroKpis({ todayKpis, yesterdayKpis, compareKpis, isLoading }: H
   const stakeTrend = calcTrendPercent(yesterdayKpis?.totalStake ?? 0, compareKpis?.totalStake);
   const ggrTrend = calcTrendPercent(yesterdayKpis?.totalGgr ?? 0, compareKpis?.totalGgr);
   const profitTrend = calcTrendPercent(yesterdayKpis?.totalProfit ?? 0, compareKpis?.totalProfit);
-  const entriesTrend = calcTrendPercent(
-    yesterdayKpis?.totalEntries ?? 0,
-    compareKpis?.totalEntries,
-  );
-  const playersTrend = calcTrendPercent(
-    yesterdayKpis?.totalPlayers ?? 0,
-    compareKpis?.totalPlayers,
-  );
+  const entriesTrend = calcTrendPercent(yesterdayKpis?.totalEntries ?? 0, compareKpis?.totalEntries);
+  const playersTrend = calcTrendPercent(yesterdayKpis?.totalPlayers ?? 0, compareKpis?.totalPlayers);
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -164,9 +147,7 @@ export function HeroKpis({ todayKpis, yesterdayKpis, compareKpis, isLoading }: H
         iconColor="text-emerald-600 dark:text-emerald-400"
         label="Lợi nhuận"
         todayValue={formatVNDCompact(todayKpis.totalProfit)}
-        todayValueClassName={
-          todayKpis.totalProfit < 0 ? "text-red-600 dark:text-red-400" : undefined
-        }
+        todayValueClassName={todayKpis.totalProfit < 0 ? "text-red-600 dark:text-red-400" : undefined}
         yesterdayValue={yesterdayKpis ? formatVNDCompact(yesterdayKpis.totalProfit) : undefined}
         trend={yesterdayKpis ? profitTrend : undefined}
       />

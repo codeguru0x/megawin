@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import { ALL_ROLE_VALUES } from "@megawin/identity/entities";
+
 import type { AccountRole } from "@megawin/identity/entities";
+import { ALL_ROLE_VALUES } from "@megawin/identity/entities";
+
 import { useAuth } from "@/providers/auth-provider";
 
 /**
@@ -27,8 +29,7 @@ export function useUserRoles(): AccountRole[] {
     }
 
     return items.filter(
-      (r): r is AccountRole =>
-        typeof r === "string" && (ALL_ROLE_VALUES as readonly string[]).includes(r),
+      (r): r is AccountRole => typeof r === "string" && (ALL_ROLE_VALUES as readonly string[]).includes(r),
     );
   }, [session]);
 }
@@ -39,10 +40,7 @@ export function useUserRoles(): AccountRole[] {
  * @param allowedRoles - Danh sách roles cho phép. Nếu undefined/rỗng → không giới hạn → trả true.
  * @param userRoles    - Roles của user (từ useUserRoles).
  */
-export function hasAnyRole(
-  allowedRoles: AccountRole[] | undefined,
-  userRoles: AccountRole[],
-): boolean {
+export function hasAnyRole(allowedRoles: AccountRole[] | undefined, userRoles: AccountRole[]): boolean {
   // Không khai báo roles → không giới hạn → luôn hiển thị
   if (!allowedRoles || allowedRoles.length === 0) return true;
   return allowedRoles.some((r) => userRoles.includes(r));

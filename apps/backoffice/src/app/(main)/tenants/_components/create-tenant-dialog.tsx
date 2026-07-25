@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Check, Copy, Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Copy, Check, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,14 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -98,25 +92,13 @@ export function CreateTenantDialog() {
           <DialogHeader>
             <DialogTitle>API Key đã được tạo</DialogTitle>
             <DialogDescription>
-              Hãy sao chép API key này ngay. Sau khi đóng dialog bạn sẽ không
-              thể xem lại key dưới dạng đầy đủ.
+              Hãy sao chép API key này ngay. Sau khi đóng dialog bạn sẽ không thể xem lại key dưới dạng đầy đủ.
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center gap-2 rounded-md border bg-muted/50 p-3">
-            <code className="flex-1 break-all text-sm font-mono">
-              {createdApiKey}
-            </code>
-            <Button
-              variant="outline"
-              size="icon"
-              className="shrink-0"
-              onClick={handleCopy}
-            >
-              {copied ? (
-                <Check className="size-4 text-emerald-600" />
-              ) : (
-                <Copy className="size-4" />
-              )}
+            <code className="flex-1 break-all text-sm font-mono">{createdApiKey}</code>
+            <Button variant="outline" size="icon" className="shrink-0" onClick={handleCopy}>
+              {copied ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
             </Button>
           </div>
           <DialogFooter>
@@ -139,16 +121,12 @@ export function CreateTenantDialog() {
         <DialogHeader>
           <DialogTitle>Tạo đối tác mới</DialogTitle>
           <DialogDescription>
-            API key sẽ được tự động sinh sau khi tạo. Trạng thái mặc định là
-            &quot;Vô hiệu&quot;.
+            API key sẽ được tự động sinh sau khi tạo. Trạng thái mặc định là &quot;Vô hiệu&quot;.
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="tenantId"
@@ -183,10 +161,7 @@ export function CreateTenantDialog() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Mô tả{" "}
-                    <span className="text-muted-foreground font-normal">
-                      (tuỳ chọn)
-                    </span>
+                    Mô tả <span className="text-muted-foreground font-normal">(tuỳ chọn)</span>
                   </FormLabel>
                   <FormControl>
                     <Textarea
@@ -216,12 +191,7 @@ export function CreateTenantDialog() {
             />
 
             <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleClose(false)}
-                disabled={mutation.isPending}
-              >
+              <Button type="button" variant="outline" onClick={() => handleClose(false)} disabled={mutation.isPending}>
                 Huỷ
               </Button>
               <Button type="submit" disabled={mutation.isPending}>

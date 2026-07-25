@@ -1,13 +1,11 @@
 "use client";
 
-import { CalendarRange, DollarSign, Percent, TrendingDown, TrendingUp } from "lucide-react";
-import { formatVNDCompact, formatNumber } from "@megawin/shared/utils";
 import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import {
-  getPayoutRatioColor,
-  getNetProfitColor,
-  PayoutRatioKpiBadge,
-} from "@/components/reports/payout-ratio";
+import { formatNumber, formatVNDCompact } from "@megawin/shared/utils";
+import { CalendarRange, DollarSign, Percent, TrendingDown, TrendingUp } from "lucide-react";
+
+import { getNetProfitColor, getPayoutRatioColor, PayoutRatioKpiBadge } from "@/components/reports/payout-ratio";
+
 import { KpiCard } from "./kpi-card";
 
 /**
@@ -99,16 +97,8 @@ export function GameDrawKpiStrip({ data, drawCountSub = "kỳ đã settle" }: Ga
       {/* Lợi nhuận ròng */}
       <KpiCard
         icon={data.netProfit < 0 ? TrendingDown : TrendingUp}
-        iconBg={
-          data.netProfit < 0
-            ? "bg-red-100 dark:bg-red-900/50"
-            : "bg-violet-100 dark:bg-violet-900/50"
-        }
-        iconColor={
-          data.netProfit < 0
-            ? "text-red-600 dark:text-red-400"
-            : "text-violet-600 dark:text-violet-400"
-        }
+        iconBg={data.netProfit < 0 ? "bg-red-100 dark:bg-red-900/50" : "bg-violet-100 dark:bg-violet-900/50"}
+        iconColor={data.netProfit < 0 ? "text-red-600 dark:text-red-400" : "text-violet-600 dark:text-violet-400"}
         label={REPORT_COLUMN_LABELS.netProfit}
         value={formatVNDCompact(data.netProfit)}
         valueClass={getNetProfitColor(data.netProfit)}

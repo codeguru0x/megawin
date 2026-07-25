@@ -1,8 +1,8 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
-import { AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
+import { type AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
+import type { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "@/components/ui/badge";
 
@@ -33,11 +33,7 @@ export const playerAccountsColumns: ColumnDef<PlayerAccount>[] = [
     header: "Trạng thái",
     cell: ({ row }) => {
       const status = row.original.status as AccountStatus;
-      return (
-        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>
-          {AccountStatusLabel[status] ?? status}
-        </Badge>
-      );
+      return <Badge variant={STATUS_VARIANT[status] ?? "outline"}>{AccountStatusLabel[status] ?? status}</Badge>;
     },
     enableSorting: false,
   },
@@ -67,9 +63,7 @@ export const searchResultColumns: ColumnDef<PlayerAccount>[] = [
   {
     accessorKey: "tenantId",
     header: "Tenant",
-    cell: ({ row }) => (
-      <span className="font-mono text-sm text-muted-foreground">{row.original.tenantId}</span>
-    ),
+    cell: ({ row }) => <span className="font-mono text-sm text-muted-foreground">{row.original.tenantId}</span>,
     enableSorting: false,
   },
   {
@@ -83,11 +77,7 @@ export const searchResultColumns: ColumnDef<PlayerAccount>[] = [
     header: "Trạng thái",
     cell: ({ row }) => {
       const status = row.original.status as AccountStatus;
-      return (
-        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>
-          {AccountStatusLabel[status] ?? status}
-        </Badge>
-      );
+      return <Badge variant={STATUS_VARIANT[status] ?? "outline"}>{AccountStatusLabel[status] ?? status}</Badge>;
     },
     enableSorting: false,
   },

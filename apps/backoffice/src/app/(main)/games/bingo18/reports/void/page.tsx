@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { Bingo18VoidReportsContent } from "./_lib/void-content";
 
 export default function Bingo18VoidReportsPage() {

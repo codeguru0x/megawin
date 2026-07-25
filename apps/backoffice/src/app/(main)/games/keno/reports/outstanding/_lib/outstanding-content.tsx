@@ -1,23 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { GAME_COLORS } from "@/lib/game-colors";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { toTenantUsername } from "@megawin/shared/utils/player-username";
 import type { TicketEntryEntity } from "@megawin/game-keno/entities";
-import { KenoEntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
-import { OutstandingContent } from "@/components/reports/game/outstanding";
+import { toTenantUsername } from "@megawin/shared/utils/player-username";
+
 import type {
   OutstandingDrawRow,
-  OutstandingTenantRow,
-  OutstandingPlayerRow,
   OutstandingEntryRow,
+  OutstandingPlayerRow,
+  OutstandingTenantRow,
 } from "@/components/reports/game/outstanding";
+import { OutstandingContent } from "@/components/reports/game/outstanding";
+import { GAME_COLORS } from "@/lib/game-colors";
+
+import { KenoEntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
 import {
   useKenoOutstanding,
   useKenoOutstandingDrawTenants,
-  useKenoOutstandingTenantPlayers,
   useKenoOutstandingPlayerEntries,
+  useKenoOutstandingTenantPlayers,
 } from "../../settle/_lib/use-report-queries";
 import { useKenoOutstandingFilters } from "./use-outstanding-filters";
 
@@ -195,11 +198,7 @@ export function KenoOutstandingContent() {
         }}
         showLineCount={false}
       />
-      <KenoEntryDetailDialog
-        entry={selectedEntry}
-        open={!!selectedEntry}
-        onClose={() => setSelectedEntry(null)}
-      />
+      <KenoEntryDetailDialog entry={selectedEntry} open={!!selectedEntry} onClose={() => setSelectedEntry(null)} />
     </>
   );
 }

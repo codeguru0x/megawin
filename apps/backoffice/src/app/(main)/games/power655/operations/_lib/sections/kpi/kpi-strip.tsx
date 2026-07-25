@@ -1,8 +1,11 @@
 "use client";
 
-import { CircleDollarSign, FileText, Hash, Users, Wallet } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { formatNumber } from "@megawin/shared/utils";
+import { CircleDollarSign, FileText, Hash, Users, Wallet } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
 import type { OpsKpi } from "../../types";
 
 interface KpiCardProps {
@@ -36,42 +39,42 @@ export function KpiStrip({ kpi }: { kpi: OpsKpi }) {
         icon={CircleDollarSign}
         iconBg="bg-emerald-100 dark:bg-emerald-900/50"
         iconColor="text-emerald-600 dark:text-emerald-400"
-        label="Doanh thu"
+        label={REPORT_COLUMN_LABELS.totalStake}
         value={formatNumber(kpi.totalRevenue)}
       />
       <KpiCard
         icon={FileText}
         iconBg="bg-blue-100 dark:bg-blue-900/50"
         iconColor="text-blue-600 dark:text-blue-400"
-        label="Entries"
+        label={REPORT_COLUMN_LABELS.entryCount}
         value={formatNumber(kpi.totalEntries)}
       />
       <KpiCard
         icon={Hash}
         iconBg="bg-indigo-100 dark:bg-indigo-900/50"
         iconColor="text-indigo-600 dark:text-indigo-400"
-        label="Lines"
+        label={REPORT_COLUMN_LABELS.lineCount}
         value={formatNumber(kpi.totalLines)}
       />
       <KpiCard
         icon={Users}
         iconBg="bg-violet-100 dark:bg-violet-900/50"
         iconColor="text-violet-600 dark:text-violet-400"
-        label="Người chơi"
+        label={REPORT_COLUMN_LABELS.playerCount}
         value={formatNumber(kpi.uniquePlayers)}
       />
       <KpiCard
         icon={Wallet}
         iconBg="bg-amber-100 dark:bg-amber-900/50"
         iconColor="text-amber-600 dark:text-amber-400"
-        label="Hoa hồng ĐL"
+        label={REPORT_COLUMN_LABELS.totalCommission}
         value={formatNumber(kpi.totalCommission)}
       />
       <KpiCard
         icon={CircleDollarSign}
         iconBg="bg-red-100 dark:bg-red-900/50"
         iconColor="text-red-600 dark:text-red-400"
-        label="Doanh thu thuần"
+        label={REPORT_COLUMN_LABELS.netRevenueAfterCommission}
         value={formatNumber(kpi.netRevenue)}
         sub="Sau hoa hồng đại lý"
       />

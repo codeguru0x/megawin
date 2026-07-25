@@ -1,12 +1,15 @@
 "use client";
 
-import { useQueryState, parseAsString } from "nuqs";
-import { BarChart3, ChevronRight, Layers } from "lucide-react";
-import { todayVN, formatNumber } from "@megawin/shared/utils";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS } from "@megawin/game-core/labels";
+import { formatNumber, todayVN } from "@megawin/shared/utils";
+import { BarChart3, ChevronRight, Layers } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
 
 import { FinancialDateRangePicker } from "@/components/date-picker";
+import { getNetProfitColor } from "@/components/reports/payout-ratio";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -14,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -24,13 +27,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { getGameColors } from "@/lib/game-colors";
-import { getNetProfitColor } from "@/components/reports/payout-ratio";
 import { cn } from "@/lib/utils";
 
-import { usePlayerFinancials, type PlayerFinancialRecord } from "../../_shared/queries";
+import { type PlayerFinancialRecord, usePlayerFinancials } from "../../_shared/queries";
 import { PlayerFinancialEntriesView } from "./player-financial-entries";
 
 function defaultFrom(): string {
@@ -117,6 +117,7 @@ export function PlayerFinancialsContent({ accountId }: PlayerFinancialsContentPr
           {isDrilling ? (
             <div className="flex items-center gap-1 text-sm">
               <button
+                type="button"
                 className="font-medium text-muted-foreground hover:text-foreground"
                 onClick={handleBackToList}
               >

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import { EllipsisVertical, KeyRound, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -12,8 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import type { AgentAccount } from "../_lib/schema";
 import { SetPasswordDialog } from "../../_shared/set-password-dialog";
+import type { AgentAccount } from "../_lib/schema";
 
 export function AgentRowActions({ account }: { account: AgentAccount }) {
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -44,11 +45,7 @@ export function AgentRowActions({ account }: { account: AgentAccount }) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <SetPasswordDialog
-        open={passwordOpen}
-        onOpenChange={setPasswordOpen}
-        username={account.username}
-      />
+      <SetPasswordDialog open={passwordOpen} onOpenChange={setPasswordOpen} username={account.username} />
     </>
   );
 }

@@ -1,31 +1,34 @@
 "use client";
 
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { apiClient } from "@megawin/next/client";
-import { Pagination } from "@megawin/shared/constants";
-import { mega645Keys } from "@/lib/query-keys";
+import { useEffect, useEffectEvent } from "react";
+
 import type {
   GetJackpotCurrentOutput,
+  ListAllJackpotCycleOptionsOutput,
   ListJackpotCyclesOutput,
   ListJackpotHistoryByCycleOutput,
-  ListAllJackpotCycleOptionsOutput,
 } from "@megawin/game-mega645-application/use-cases/jackpot";
 import type { GetEntryByIdOutput } from "@megawin/game-mega645-application/use-cases/reports";
+import { apiClient } from "@megawin/next/client";
+import { Pagination } from "@megawin/shared/constants";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { mega645Keys } from "@/lib/query-keys";
+
+export type {
+  JackpotCycleOption,
+  JackpotCycleSummary,
+  JackpotHistoryItem,
+  JackpotWinnerSummary,
+} from "@megawin/game-mega645-application/use-cases/jackpot";
 
 export type {
   GetJackpotCurrentOutput,
+  ListAllJackpotCycleOptionsOutput,
   ListJackpotCyclesOutput,
   ListJackpotHistoryByCycleOutput,
-  ListAllJackpotCycleOptionsOutput,
 };
-export type {
-  JackpotHistoryItem,
-  JackpotCycleSummary,
-  JackpotWinnerSummary,
-  JackpotCycleOption,
-} from "@megawin/game-mega645-application/use-cases/jackpot";
 
 export function useJackpotCurrent() {
   return useQuery({
@@ -104,20 +107,25 @@ export function useJackpotEntryDetail(
     enabled: !!entryId,
   });
 
+  // useEffectEvent: đọc `onNotFound` mới nhất mà không cần khai báo dependency —
+  // callback không nên trigger effect chạy lại.
+  const onNotFoundEvent = useEffectEvent(() => {
+    onNotFound?.();
+  });
+
   useEffect(() => {
     if (!entryId) return;
     if (query.isError) {
       toast.error("Không thể tải thông tin phiếu cược", {
         description: "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     } else if (query.isFetched && !query.isLoading && !query.data) {
       toast.error("Không tìm thấy phiếu cược", {
         description: "Phiếu cược này không còn dữ liệu hoặc đã bị xóa.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.isError, query.isFetched, query.isLoading, query.data, entryId]);
 
   return query;

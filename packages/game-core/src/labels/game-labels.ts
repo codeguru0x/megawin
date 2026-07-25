@@ -261,8 +261,14 @@ export const REPORT_COLUMN_LABELS = {
   totalWin: "Tổng tiền thắng",
   /** Tổng tiền trả thưởng (VND). Settle reports. */
   totalPayout: "Trả thưởng",
-  /** Gross Gaming Revenue = totalStake - totalPayout (VND). */
+  /** Gross Gaming Revenue = totalStake - totalPayout (VND). Dùng ở settle reports (post-draw, đã có kết quả trả thưởng). */
   ggr: "Doanh thu thuần",
+  /**
+   * Doanh thu sau hoa hồng đại lý = totalRevenue - totalCommission (VND).
+   * Dùng ở KPI strip trang operations (pre-settle, kỳ quay chưa có kết quả nên chưa tính được payout).
+   * KHÁC với `ggr` (net-of-payout, post-settle) — không dùng lẫn 2 khái niệm.
+   */
+  netRevenueAfterCommission: "Doanh thu sau hoa hồng",
   /** Tỷ lệ trả thưởng = totalPayout / totalStake (%). */
   payoutPercent: "Tỷ lệ trả thưởng",
   /** Số lần cược (betUnitCount). Entry-level reports. */

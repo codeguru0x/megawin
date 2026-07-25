@@ -1,17 +1,28 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
 import {
-  Check,
-  Loader2,
-  ExternalLink,
-  CalendarDays,
-  Hash,
-  Dice5,
-  Star,
-  ClipboardCheck,
+  LOTTO535_MAIN_COUNT,
+  LOTTO535_MAIN_MAX,
+  LOTTO535_MAIN_MIN,
+  LOTTO535_SPECIAL_MAX,
+  LOTTO535_SPECIAL_MIN,
+} from "@megawin/game-lotto535/entities";
+import { todayVN } from "@megawin/shared/utils";
+import {
   AlertCircle,
+  CalendarDays,
+  Check,
+  ClipboardCheck,
+  Dice5,
+  ExternalLink,
+  Hash,
+  Loader2,
+  Star,
 } from "lucide-react";
+
+import { generateRandomNumber, generateUniqueRandomNumbers, RandomFillButton } from "@/components/draws";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,19 +35,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import {
-  RandomFillButton,
-  generateUniqueRandomNumbers,
-  generateRandomNumber,
-} from "@/components/draws";
-import {
-  LOTTO535_MAIN_MIN,
-  LOTTO535_MAIN_MAX,
-  LOTTO535_MAIN_COUNT,
-  LOTTO535_SPECIAL_MIN,
-  LOTTO535_SPECIAL_MAX,
-} from "@megawin/game-lotto535/entities";
-import { todayVN } from "@megawin/shared/utils";
+
 import type { DrawSelectorItem } from "../../../use-operations";
 import { usePublishResult } from "../../../use-operations";
 
@@ -83,9 +82,7 @@ function validateLotto535(mains: string[], special: string): ValidationResult {
     }
     const n = parseInt(v, 10);
     if (isNaN(n) || n < LOTTO535_MAIN_MIN || n > LOTTO535_MAIN_MAX) {
-      messages.push(
-        `Ô ${i + 1}: số ${v} ngoài dải ${pad2(LOTTO535_MAIN_MIN)}–${pad2(LOTTO535_MAIN_MAX)}`,
-      );
+      messages.push(`Ô ${i + 1}: số ${v} ngoài dải ${pad2(LOTTO535_MAIN_MIN)}–${pad2(LOTTO535_MAIN_MAX)}`);
       mainErrors.add(i);
       parsed.push(null);
     } else {
@@ -94,9 +91,7 @@ function validateLotto535(mains: string[], special: string): ValidationResult {
   }
 
   if (emptyIndices.length > 0) {
-    messages.push(
-      `Còn ${emptyIndices.length} ô số chính chưa nhập (ô ${emptyIndices.map((i) => i + 1).join(", ")})`,
-    );
+    messages.push(`Còn ${emptyIndices.length} ô số chính chưa nhập (ô ${emptyIndices.map((i) => i + 1).join(", ")})`);
   }
 
   // Check trùng số chính
@@ -110,9 +105,7 @@ function validateLotto535(mains: string[], special: string): ValidationResult {
   }
   for (const [value, positions] of posMap) {
     if (positions.length > 1) {
-      messages.push(
-        `Số chính ${pad2(value)} bị trùng (ô ${positions.map((i) => i + 1).join(", ")})`,
-      );
+      messages.push(`Số chính ${pad2(value)} bị trùng (ô ${positions.map((i) => i + 1).join(", ")})`);
       for (const idx of positions) mainErrors.add(idx);
     }
   }
@@ -128,9 +121,7 @@ function validateLotto535(mains: string[], special: string): ValidationResult {
   } else {
     const sn = parseInt(sv, 10);
     if (isNaN(sn) || sn < LOTTO535_SPECIAL_MIN || sn > LOTTO535_SPECIAL_MAX) {
-      messages.push(
-        `Số đặc biệt ${sv} ngoài dải ${pad2(LOTTO535_SPECIAL_MIN)}–${pad2(LOTTO535_SPECIAL_MAX)}`,
-      );
+      messages.push(`Số đặc biệt ${sv} ngoài dải ${pad2(LOTTO535_SPECIAL_MIN)}–${pad2(LOTTO535_SPECIAL_MAX)}`);
       specialError = true;
     }
   }
@@ -195,11 +186,7 @@ export function PublishResultAction({
   }
 
   function fillRandom() {
-    const mainNums = generateUniqueRandomNumbers(
-      LOTTO535_MAIN_COUNT,
-      LOTTO535_MAIN_MIN,
-      LOTTO535_MAIN_MAX,
-    );
+    const mainNums = generateUniqueRandomNumbers(LOTTO535_MAIN_COUNT, LOTTO535_MAIN_MIN, LOTTO535_MAIN_MAX);
     const specialNum = generateRandomNumber(LOTTO535_SPECIAL_MIN, LOTTO535_SPECIAL_MAX);
     setMains(mainNums.map((n) => pad2(n)));
     setSpecial(pad2(specialNum));
@@ -238,12 +225,12 @@ export function PublishResultAction({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ClipboardCheck className="size-4.5 text-emerald-500" />
-            {isRepublish ? "Sửa kết quả" : "Công bố kết quả"} — Kỳ{" "}
-            {String(draw.drawNo).padStart(3, "0")} · {draw.drawDate}
+            {isRepublish ? "Sửa kết quả" : "Công bố kết quả"} — Kỳ {String(draw.drawNo).padStart(3, "0")} ·{" "}
+            {draw.drawDate}
           </DialogTitle>
           <DialogDescription>
-            Nhập {LOTTO535_MAIN_COUNT} số chính ({pad2(LOTTO535_MAIN_MIN)}–{pad2(LOTTO535_MAIN_MAX)}
-            ) và 1 số đặc biệt ({pad2(LOTTO535_SPECIAL_MIN)}–{pad2(LOTTO535_SPECIAL_MAX)}).
+            Nhập {LOTTO535_MAIN_COUNT} số chính ({pad2(LOTTO535_MAIN_MIN)}–{pad2(LOTTO535_MAIN_MAX)}) và 1 số đặc biệt (
+            {pad2(LOTTO535_SPECIAL_MIN)}–{pad2(LOTTO535_SPECIAL_MAX)}).
             {isRepublish && " Kết quả cũ sẽ bị ghi đè. Chỉ có hiệu lực trước khi kết sổ."}
           </DialogDescription>
         </DialogHeader>
@@ -262,15 +249,12 @@ export function PublishResultAction({
               <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">
-                    {LOTTO535_MAIN_COUNT} số chính (không trùng, {pad2(LOTTO535_MAIN_MIN)}–
-                    {pad2(LOTTO535_MAIN_MAX)})
+                    {LOTTO535_MAIN_COUNT} số chính (không trùng, {pad2(LOTTO535_MAIN_MIN)}–{pad2(LOTTO535_MAIN_MAX)})
                   </p>
                   <div className="grid grid-cols-5 gap-2">
                     {Array.from({ length: LOTTO535_MAIN_COUNT }, (_, i) => (
                       <div key={i} className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-muted-foreground text-center">
-                          {i + 1}
-                        </span>
+                        <span className="text-xs font-medium text-muted-foreground text-center">{i + 1}</span>
                         <Input
                           ref={(el) => {
                             inputRefs.current[i] = el;

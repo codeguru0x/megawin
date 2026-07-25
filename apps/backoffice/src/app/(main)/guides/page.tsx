@@ -1,9 +1,8 @@
-import type { Metadata } from "next";
-
 import Link from "next/link";
 
 import { RUNBOOK_MANIFEST } from "@megawin/ops-docs/manifest";
 import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
+import type { Metadata } from "next";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,8 +25,8 @@ export default function GuidesLandingPage() {
         </div>
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Hướng dẫn sử dụng</h1>
         <p className="text-muted-foreground mt-3 max-w-2xl text-base">
-          Tài liệu vận hành dành cho nhân viên — các bước thao tác rõ ràng, không thuật ngữ kỹ
-          thuật. Chọn game để xem hướng dẫn chi tiết.
+          Tài liệu vận hành dành cho nhân viên — các bước thao tác rõ ràng, không thuật ngữ kỹ thuật. Chọn game để xem
+          hướng dẫn chi tiết.
         </p>
       </header>
 
@@ -68,31 +67,18 @@ export default function GuidesLandingPage() {
             return (
               <Link
                 key={game.gameKey}
-                href={
-                  firstTopic && firstDoc
-                    ? `/guides/${game.gameKey}/${firstTopic.key}/${firstDoc.slug}`
-                    : "/guides"
-                }
+                href={firstTopic && firstDoc ? `/guides/${game.gameKey}/${firstTopic.key}/${firstDoc.slug}` : "/guides"}
                 className="group"
               >
-                <Card
-                  className={cn("h-full border-l-4 transition-colors hover:shadow-sm", meta.border)}
-                >
+                <Card className={cn("h-full border-l-4 transition-colors hover:shadow-sm", meta.border)}>
                   <CardHeader>
                     <div className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          "flex size-9 items-center justify-center rounded-md",
-                          meta.bgMuted,
-                        )}
-                      >
+                      <span className={cn("flex size-9 items-center justify-center rounded-md", meta.bgMuted)}>
                         <Icon className={cn("size-5", meta.text)} />
                       </span>
                       <CardTitle className="text-base">{game.title}</CardTitle>
                     </div>
-                    <CardDescription className="mt-1">
-                      {game.topics.map((t) => t.title).join(", ")}
-                    </CardDescription>
+                    <CardDescription className="mt-1">{game.topics.map((t) => t.title).join(", ")}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between">

@@ -11,15 +11,15 @@
  */
 
 import { useMemo } from "react";
+
 import { DrawStatus } from "@megawin/game-core/entities";
 import { PrizeTier } from "@megawin/game-power655/entities";
 import { POWER655_PRIZE_TIER_LABELS } from "@megawin/game-power655/labels";
 
+import type { DrawResult } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
 import { useDrawDetail } from "../../use-operations";
-import { ResultAndPrize, FinancialSummary } from "./result-panels";
-
-import type { DrawResult } from "../../types";
+import { FinancialSummary, ResultAndPrize } from "./result-panels";
 
 const RESULT_SHOW = new Set([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
 
@@ -45,8 +45,7 @@ export function ResultSection() {
     const tiers = TIER_ORDER.map((tier) => {
       const t = tierMap.get(tier);
       const winnerCount = t?.winnerCount ?? 0;
-      const prizeAmount =
-        winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
+      const prizeAmount = winnerCount > 0 && t?.prizeAmount ? Math.round(t.prizeAmount / winnerCount) : 0;
       return {
         tier,
         label: POWER655_PRIZE_TIER_LABELS[tier] ?? String(tier),
@@ -64,12 +63,9 @@ export function ResultSection() {
     const hasJackpot2Winner = (jp2Tier?.winnerCount ?? 0) > 0;
 
     return {
-      winningMain: d.result.winningMain as [string, string, string, string, string, string],
-      bonusNumber: d.result.bonusNumber ?? "",
-      settledAt:
-        d.result.publishedAt instanceof Date
-          ? d.result.publishedAt.toISOString()
-          : String(d.result.publishedAt ?? ""),
+      winningMain: d.result.winningMain,
+      bonusNumber: d.result.bonusNumber,
+      settledAt: d.result.publishedAt,
       tiers,
       financial: {
         totalRevenue: d.financial?.totalRevenue ?? 0,
@@ -96,9 +92,7 @@ export function ResultSection() {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Kết quả & Tài chính
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Kết quả & Tài chính</h2>
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <ResultAndPrize result={result} drawId={effectiveDrawId} />
         <FinancialSummary financial={result.financial} />

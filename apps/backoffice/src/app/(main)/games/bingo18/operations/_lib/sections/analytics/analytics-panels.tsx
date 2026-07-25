@@ -10,10 +10,11 @@
  * TenantBreakdownCard: doanh thu / hoa hồng theo đại lý.
  */
 
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatNumber } from "@megawin/shared/utils";
 import { BarChart2, Store } from "lucide-react";
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -103,6 +104,7 @@ function MiniDonut({ pct, fill, size }: { pct: number; fill: string; size: numbe
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+      <title>{Math.round(pct)}%</title>
       <circle
         cx={cx}
         cy={cy}

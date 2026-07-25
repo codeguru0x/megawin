@@ -11,31 +11,19 @@
  */
 
 import type { ReactNode } from "react";
+
+import { DrawStatus } from "@megawin/game-core/entities";
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
+import { formatNumber, formatVNTime } from "@megawin/shared/utils";
 import { Loader2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { FinancialDateRangePicker } from "@/components/date-picker/financial-date-range-picker";
 import { getNetProfitColor } from "@/components/reports/payout-ratio";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { formatNumber, formatVNTime } from "@megawin/shared/utils";
-import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import { DrawStatus } from "@megawin/game-core/entities";
 
 // ─── Status options ───────────────────────────────────────────────────────────
 
@@ -148,9 +136,7 @@ export function DrawHistoryTable<T extends CommonDrawSummary>({
       <CardHeader className="px-5 pb-2 pt-4">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-semibold">Lịch sử kỳ quay</CardTitle>
-          {isFetching && !isLoading && (
-            <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
-          )}
+          {isFetching && !isLoading && <Loader2 className="size-3.5 animate-spin text-muted-foreground" />}
         </div>
       </CardHeader>
 
@@ -226,10 +212,7 @@ export function DrawHistoryTable<T extends CommonDrawSummary>({
                 </TableRow>
               ) : draws.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={12}
-                    className="h-24 text-center text-sm text-muted-foreground"
-                  >
+                  <TableCell colSpan={12} className="h-24 text-center text-sm text-muted-foreground">
                     Không có kỳ quay nào trong khoảng thời gian đã chọn.
                   </TableCell>
                 </TableRow>
@@ -293,14 +276,10 @@ function DrawRow<T extends CommonDrawSummary>({
   onClick: () => void;
 }) {
   // GGR = tiền cược - tổng trả thưởng thực tế (cố định + jackpot)
-  const ggr =
-    draw.totalRevenue != null && draw.totalPayout != null
-      ? draw.totalRevenue - draw.totalPayout
-      : undefined;
+  const ggr = draw.totalRevenue != null && draw.totalPayout != null ? draw.totalRevenue - draw.totalPayout : undefined;
 
   // Lợi nhuận ròng = GGR - hoa hồng đại lý
-  const netProfit =
-    ggr != null && draw.totalAgentCommission != null ? ggr - draw.totalAgentCommission : undefined;
+  const netProfit = ggr != null && draw.totalAgentCommission != null ? ggr - draw.totalAgentCommission : undefined;
 
   const resultNode = renderResult(draw);
 
@@ -313,9 +292,7 @@ function DrawRow<T extends CommonDrawSummary>({
       <TableCell className="font-mono text-sm tabular-nums">{draw.financialDate}</TableCell>
 
       {/* Đóng cược */}
-      <TableCell className="font-mono text-sm tabular-nums">
-        {formatVNTime(new Date(draw.closeAt))}
-      </TableCell>
+      <TableCell className="font-mono text-sm tabular-nums">{formatVNTime(new Date(draw.closeAt))}</TableCell>
 
       {/* Mở cược */}
       <TableCell className="font-mono text-sm tabular-nums">
@@ -344,9 +321,7 @@ function DrawRow<T extends CommonDrawSummary>({
       </TableCell>
 
       {/* Doanh thu thuần (GGR) */}
-      <TableCell className="text-right tabular-nums text-sm">
-        {ggr != null ? formatNumber(ggr) : "—"}
-      </TableCell>
+      <TableCell className="text-right tabular-nums text-sm">{ggr != null ? formatNumber(ggr) : "—"}</TableCell>
 
       {/* Hoa hồng đại lý */}
       <TableCell className="text-right tabular-nums text-sm">

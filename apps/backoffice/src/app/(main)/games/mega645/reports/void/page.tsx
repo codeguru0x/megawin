@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { Mega645VoidReportsContent } from "./_lib/void-content";
 
 export default function Mega645VoidReportsPage() {

@@ -1,12 +1,15 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import type {
+  GetDashboardKpisOutput,
+  GetSystemOutstandingOutput,
+} from "@megawin/game-core-application/use-cases/reports";
 import { apiClient } from "@megawin/next/client";
-import { dashboardKeys } from "@/lib/query-keys/dashboard";
-import type { GetDashboardKpisOutput } from "@megawin/game-core-application/use-cases/reports";
-import type { GetSystemOutstandingOutput } from "@megawin/game-core-application/use-cases/reports";
-import type { GetDashboardJackpotsOutput } from "@/app/api/dashboard/jackpots/_lib/types";
+import { useQuery } from "@tanstack/react-query";
+
 import type { GetDashboardDrawsOutput } from "@/app/api/dashboard/draws/_lib/types";
+import type { GetDashboardJackpotsOutput } from "@/app/api/dashboard/jackpots/_lib/types";
+import { dashboardKeys } from "@/lib/query-keys/dashboard";
 
 /**
  * Fetch per-game settle data cho dashboard KPIs + Game Performance table.
@@ -68,8 +71,7 @@ export function useDashboardJackpots() {
 export function useDashboardOutstanding() {
   return useQuery({
     queryKey: dashboardKeys.outstanding,
-    queryFn: () =>
-      apiClient.get<GetSystemOutstandingOutput>("/dashboard/outstanding").then((r) => r.data),
+    queryFn: () => apiClient.get<GetSystemOutstandingOutput>("/dashboard/outstanding").then((r) => r.data),
     refetchInterval: 30_000,
     staleTime: 0,
   });

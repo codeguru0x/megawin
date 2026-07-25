@@ -1,25 +1,22 @@
 "use client";
 
 import { Suspense } from "react";
-import { Clock, RefreshCw, CalendarClock, Ticket, HandCoins, Banknote } from "lucide-react";
+
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { formatNumber, formatVNDCompact, displayVNTimeWithSeconds } from "@megawin/shared/utils";
+
 import type { SystemOutstandingGameDaily } from "@megawin/game-core/entities";
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
 import { GAME_LABELS, REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
-import { SYSTEM_ICON_GRADIENT, getGameHex } from "@/lib/game-colors";
+import { displayVNTimeWithSeconds, formatNumber, formatVNDCompact } from "@megawin/shared/utils";
+import { Banknote, CalendarClock, Clock, HandCoins, RefreshCw, Ticket } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getGameHex, SYSTEM_ICON_GRADIENT } from "@/lib/game-colors";
+import { cn } from "@/lib/utils";
+
 import { useSystemOutstanding } from "../settle/_lib/use-report-queries";
 
 // Nhãn cột đặc thù trang hệ thống
@@ -157,9 +154,7 @@ function SystemOutstandingContent() {
             <Clock className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Outstanding — Số liệu đang chờ
-            </h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Outstanding — Số liệu đang chờ</h1>
             <p className="text-xs text-muted-foreground">
               Phiếu cược chưa settle trên toàn hệ thống · Tự động refresh mỗi 60s
             </p>
@@ -212,9 +207,7 @@ function SystemOutstandingContent() {
             </div>
           ) : rows.length === 0 ? (
             <div className="flex h-50 flex-col items-center justify-center gap-1 text-center">
-              <p className="text-sm font-medium text-muted-foreground">
-                Không có draw active nào trên hệ thống.
-              </p>
+              <p className="text-sm font-medium text-muted-foreground">Không có draw active nào trên hệ thống.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -233,8 +226,7 @@ function SystemOutstandingContent() {
                 <TableBody>
                   {rows.map((row) => {
                     const slug = GAME_OUTSTANDING_PATH[row.gameProduct as GameProduct];
-                    const gameName =
-                      GAME_LABELS[row.gameProduct as keyof typeof GAME_LABELS] ?? row.gameProduct;
+                    const gameName = GAME_LABELS[row.gameProduct as keyof typeof GAME_LABELS] ?? row.gameProduct;
                     const gameHex = getGameHex(row.gameProduct);
 
                     return (
@@ -245,25 +237,14 @@ function SystemOutstandingContent() {
                       >
                         <TableCell className="pl-5 font-medium">
                           <span className="inline-flex items-center gap-2">
-                            <span
-                              className="size-2 shrink-0 rounded-full"
-                              style={{ backgroundColor: gameHex }}
-                            />
+                            <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: gameHex }} />
                             {gameName}
                           </span>
                         </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {formatNumber(row.activeDrawCount)}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {formatNumber(row.totalPlayerCount)}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {formatNumber(row.totalTenantCount)}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {formatNumber(row.totalEntryCount)}
-                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{formatNumber(row.activeDrawCount)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatNumber(row.totalPlayerCount)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatNumber(row.totalTenantCount)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatNumber(row.totalEntryCount)}</TableCell>
                         <TableCell className="text-right tabular-nums">
                           {formatNumber(row.totalEstimatedCommission)}
                         </TableCell>
@@ -282,12 +263,8 @@ function SystemOutstandingContent() {
                       <TableCell className="pl-5 font-semibold" colSpan={4}>
                         {COL_LABELS.summary}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatNumber(totalEntries)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatNumber(totalCommission)}
-                      </TableCell>
+                      <TableCell className="text-right tabular-nums">{formatNumber(totalEntries)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatNumber(totalCommission)}</TableCell>
                       <TableCell className="pr-5 text-right tabular-nums font-semibold">
                         {formatNumber(totalStake)}
                       </TableCell>

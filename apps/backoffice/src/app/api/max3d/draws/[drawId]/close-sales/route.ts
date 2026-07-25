@@ -1,7 +1,8 @@
+import { CloseSalesUseCase } from "@megawin/game-max3d-application/use-cases/draws";
+import { CompanyRole } from "@megawin/identity/entities";
+
 import { withApi } from "@/lib/api";
 import { actorFromSession } from "@/lib/audit-actor";
-import { CompanyRole } from "@megawin/identity/entities";
-import { CloseSalesUseCase } from "@megawin/game-max3d-application/use-cases/draws";
 
 const closeSalesUseCase = new CloseSalesUseCase();
 

@@ -1,12 +1,11 @@
 "use client";
 
-import { Receipt, DollarSign, TrendingUp, Percent, Trophy } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { formatVNDCompact, formatPercent, formatNumber } from "@megawin/shared/utils";
+import type { PlayerOverviewResult } from "@megawin/game-core-application/repos";
+import { formatNumber, formatPercent, formatVNDCompact } from "@megawin/shared/utils";
+import { DollarSign, Percent, Receipt, TrendingUp, Trophy } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
-
-import type { PlayerOverviewResult } from "@megawin/game-core-application/repos";
+import { cn } from "@/lib/utils";
 
 interface PlayerKpiStripProps {
   data: PlayerOverviewResult | undefined;
@@ -62,9 +61,7 @@ export function PlayerKpiStrip({ data, isLoading }: PlayerKpiStripProps) {
     {
       icon: TrendingUp,
       iconBg: isGgrNeg ? "bg-rose-100 dark:bg-rose-900/50" : "bg-violet-100 dark:bg-violet-900/50",
-      iconColor: isGgrNeg
-        ? "text-rose-600 dark:text-rose-400"
-        : "text-violet-600 dark:text-violet-400",
+      iconColor: isGgrNeg ? "text-rose-600 dark:text-rose-400" : "text-violet-600 dark:text-violet-400",
       label: "GGR",
       value: formatVNDCompact(ggr),
       sub: isGgrNeg ? "Player trúng lớn" : "Doanh thu ròng",
@@ -91,23 +88,13 @@ export function PlayerKpiStrip({ data, isLoading }: PlayerKpiStripProps) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
       {cards.map((card) => (
-        <div
-          key={card.label}
-          className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm"
-        >
-          <div
-            className={cn(
-              "flex size-10 shrink-0 items-center justify-center rounded-lg",
-              card.iconBg,
-            )}
-          >
+        <div key={card.label} className="flex items-center gap-3 rounded-xl border bg-card p-4 shadow-sm">
+          <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", card.iconBg)}>
             <card.icon className={cn("size-5", card.iconColor)} />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p>
-            <p className={cn("text-lg font-bold tabular-nums text-foreground", card.valueClass)}>
-              {card.value}
-            </p>
+            <p className={cn("text-lg font-bold tabular-nums text-foreground", card.valueClass)}>{card.value}</p>
             <p className="truncate text-[11px] text-muted-foreground">{card.sub}</p>
           </div>
         </div>

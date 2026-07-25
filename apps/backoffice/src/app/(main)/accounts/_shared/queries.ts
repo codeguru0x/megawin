@@ -1,17 +1,14 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
 
 import { accountsKeys } from "@/lib/query-keys/accounts";
 
-import { ACCOUNTS_PAGE_SIZE } from "./constants";
-import type { ListCompanyAccountsResponse } from "../company/_lib/types";
 import type { ListAgentAccountsResponse } from "../agents/_lib/types";
-import type {
-  ListPlayerAccountsCursorResponse,
-  SearchPlayerAccountsResponse,
-} from "../players/_lib/types";
+import type { ListCompanyAccountsResponse } from "../company/_lib/types";
+import type { ListPlayerAccountsCursorResponse, SearchPlayerAccountsResponse } from "../players/_lib/types";
+import { ACCOUNTS_PAGE_SIZE } from "./constants";
 
 /** Danh sách tài khoản công ty (Admin/Staff). */
 export function useCompanyAccounts() {
@@ -36,18 +33,14 @@ export function useAgentAccounts() {
  * Truyền `before` để lấy trang trước (accountId đầu trang hiện tại).
  * Không truyền gì → trang đầu tiên.
  */
-export function usePlayerAccountsCursor(
-  tenantId: string,
-  cursor?: { after?: string; before?: string },
-) {
+export function usePlayerAccountsCursor(tenantId: string, cursor?: { after?: string; before?: string }) {
   const params = new URLSearchParams({ tenantId, limit: String(ACCOUNTS_PAGE_SIZE) });
   if (cursor?.after) params.set("after", cursor.after);
   if (cursor?.before) params.set("before", cursor.before);
 
   return useQuery({
     queryKey: accountsKeys.players(tenantId, cursor),
-    queryFn: () =>
-      apiClient.get<ListPlayerAccountsCursorResponse>(`/accounts/players?${params.toString()}`),
+    queryFn: () => apiClient.get<ListPlayerAccountsCursorResponse>(`/accounts/players?${params.toString()}`),
     enabled: !!tenantId,
   });
 }
@@ -65,9 +58,7 @@ export function useSearchPlayerAccounts(keyword: string) {
   return useQuery({
     queryKey: accountsKeys.search(keyword),
     queryFn: () =>
-      apiClient.get<SearchPlayerAccountsResponse>(
-        `/accounts/players/search?keyword=${encodeURIComponent(keyword)}`,
-      ),
+      apiClient.get<SearchPlayerAccountsResponse>(`/accounts/players/search?keyword=${encodeURIComponent(keyword)}`),
     enabled: keyword.trim().length > 0,
   });
 }

@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ApiClientError, apiClient } from "@megawin/next/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff, Loader2, ShieldOff } from "lucide-react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { apiClient, ApiClientError } from "@megawin/next/client";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,20 +19,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { meKeys } from "@/lib/query-keys";
 
-import { disableMfaSchema, type DisableMfaFormValues } from "../_lib/schema";
+import { type DisableMfaFormValues, disableMfaSchema } from "../_lib/schema";
 
 interface MfaDisableDialogProps {
   open: boolean;
@@ -57,9 +51,7 @@ export function MfaDisableDialog({ open, onOpenChange, onSuccess }: MfaDisableDi
       onSuccess();
     },
     onError: (error) => {
-      toast.error(
-        error instanceof ApiClientError ? error.message : "Tắt MFA thất bại. Vui lòng thử lại.",
-      );
+      toast.error(error instanceof ApiClientError ? error.message : "Tắt MFA thất bại. Vui lòng thử lại.");
     },
   });
 
@@ -81,15 +73,13 @@ export function MfaDisableDialog({ open, onOpenChange, onSuccess }: MfaDisableDi
             Tắt xác thực 2 lớp
           </DialogTitle>
           <DialogDescription>
-            Thao tác này sẽ giảm bảo mật tài khoản. Bạn cần xác nhận danh tính bằng mật khẩu và mã
-            TOTP hiện tại.
+            Thao tác này sẽ giảm bảo mật tài khoản. Bạn cần xác nhận danh tính bằng mật khẩu và mã TOTP hiện tại.
           </DialogDescription>
         </DialogHeader>
 
         <Alert variant="destructive" className="border-destructive/30">
           <AlertDescription className="text-sm">
-            Sau khi tắt MFA, tài khoản chỉ được bảo vệ bằng mật khẩu. Bạn có thể bật lại bất cứ lúc
-            nào.
+            Sau khi tắt MFA, tài khoản chỉ được bảo vệ bằng mật khẩu. Bạn có thể bật lại bất cứ lúc nào.
           </AlertDescription>
         </Alert>
 
@@ -155,12 +145,7 @@ export function MfaDisableDialog({ open, onOpenChange, onSuccess }: MfaDisableDi
             />
 
             <DialogFooter className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleClose(false)}
-                disabled={mutation.isPending}
-              >
+              <Button type="button" variant="outline" onClick={() => handleClose(false)} disabled={mutation.isPending}>
                 Huỷ
               </Button>
               <Button type="submit" variant="destructive" disabled={mutation.isPending}>

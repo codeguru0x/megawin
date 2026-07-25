@@ -1,6 +1,7 @@
-import { withApi } from "@/lib/api";
-import { CompanyRole } from "@megawin/identity/entities";
 import { ListTenantConfigsUseCase } from "@megawin/game-keno-application/use-cases/tenant-config";
+import { CompanyRole } from "@megawin/identity/entities";
+
+import { withApi } from "@/lib/api";
 
 export const GET = withApi()
   .auth({ roles: [CompanyRole.Staff] })

@@ -1,8 +1,9 @@
 "use client";
 
+import { AlertCircle, Building2, CalendarDays } from "lucide-react";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CalendarDays, Building2, AlertCircle } from "lucide-react";
 
 export function TableSkeleton({ rows = 6 }: { rows?: number }) {
   return (

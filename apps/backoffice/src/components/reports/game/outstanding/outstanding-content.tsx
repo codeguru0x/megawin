@@ -1,24 +1,26 @@
 "use client";
 
 import { Clock, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { OutstandingKpiStrip } from "./outstanding-kpi-strip";
+import { cn } from "@/lib/utils";
+
 import { OutstandingBreadcrumb } from "./outstanding-breadcrumb";
 import { OutstandingDrawList } from "./outstanding-draw-list";
-import { OutstandingTenantBreakdown } from "./outstanding-tenant-breakdown";
-import { OutstandingPlayerBreakdown } from "./outstanding-player-breakdown";
 import { OutstandingEntryList } from "./outstanding-entry-list";
+import { OutstandingKpiStrip } from "./outstanding-kpi-strip";
+import { OutstandingPlayerBreakdown } from "./outstanding-player-breakdown";
+import { OutstandingTenantBreakdown } from "./outstanding-tenant-breakdown";
 import type {
-  OutstandingDrillLevel,
   OutstandingDrawRow,
-  OutstandingTenantRow,
-  OutstandingPlayerRow,
+  OutstandingDrillLevel,
   OutstandingEntryRow,
   OutstandingKpiData,
+  OutstandingPlayerRow,
+  OutstandingTenantRow,
 } from "./types";
 
 // ─── Sub-types cho async data ─────────────────────────────────────────────────
@@ -90,6 +92,7 @@ function LiveDot({ isFetching, onRefresh }: { isFetching: boolean; onRefresh: ()
     <Tooltip>
       <TooltipTrigger asChild>
         <button
+          type="button"
           onClick={onRefresh}
           className="flex items-center gap-1.5 rounded-md px-1.5 py-1 hover:bg-muted/60 transition-colors"
           aria-label="Lấy dữ liệu mới nhất"

@@ -1,25 +1,17 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Save, HelpCircle } from "lucide-react";
-
-import { MoneyInput } from "@megawin/ui/components/money-input";
 import { MAX3DPRO_MAX_BOARDS } from "@megawin/game-max3dpro/rules";
+import { MoneyInput } from "@megawin/ui/components/money-input";
+import { HelpCircle, Save } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Spinner } from "@/components/ui/spinner";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
 import { TimeInput } from "@/components/ui/time-input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -102,9 +94,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
 
   function toggleDay(day: number) {
     const current = form.getValues("drawDaysOfWeek");
-    const next = current.includes(day)
-      ? current.filter((d) => d !== day)
-      : [...current, day].sort();
+    const next = current.includes(day) ? current.filter((d) => d !== day) : [...current, day].sort();
     form.setValue("drawDaysOfWeek", next, { shouldDirty: true });
   }
 
@@ -361,11 +351,7 @@ export function PlayRulesSection({ config, onSave, isPending }: PlayRulesSection
                         </button>
                       ))}
                     </div>
-                    <FormField
-                      control={form.control}
-                      name="drawDaysOfWeek"
-                      render={() => <FormMessage />}
-                    />
+                    <FormField control={form.control} name="drawDaysOfWeek" render={() => <FormMessage />} />
                   </div>
                 </div>
               </div>

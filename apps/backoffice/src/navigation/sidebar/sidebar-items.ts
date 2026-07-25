@@ -1,30 +1,29 @@
+import type { AccountRole } from "@megawin/identity/entities";
+import { CompanyRole } from "@megawin/identity/entities";
 import {
-  type LucideIcon,
-  Building2,
+  Activity,
+  Ban,
+  BarChart3,
   Briefcase,
-  User,
+  Building2,
+  CalendarClock,
   ChessBishop,
   ChessKing,
-  ChessQueen,
-  ChessRook,
   ChessKnight,
   ChessPawn,
-  Trophy,
-  Settings2,
-  CalendarClock,
-  Activity,
-  BarChart3,
-  Clock,
+  ChessQueen,
+  ChessRook,
   CircleDollarSign,
-  Ban,
+  Clock,
   FileSearch,
-  Send,
   History,
+  type LucideIcon,
+  Send,
+  Settings2,
+  Trophy,
   Tv,
+  User,
 } from "lucide-react";
-
-import { CompanyRole } from "@megawin/identity/entities";
-import type { AccountRole } from "@megawin/identity/entities";
 
 export interface NavSubItem {
   title: string;

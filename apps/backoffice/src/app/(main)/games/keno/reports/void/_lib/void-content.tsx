@@ -1,23 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { GAME_COLORS } from "@/lib/game-colors";
+
 import { GameProduct } from "@megawin/game-core/entities/game-core.enums";
-import { toTenantUsername } from "@megawin/shared/utils/player-username";
 import type { TicketEntryEntity } from "@megawin/game-keno/entities";
-import { KenoEntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
+import { toTenantUsername } from "@megawin/shared/utils/player-username";
+
+import type { VoidDrawRow, VoidEntryRow, VoidPlayerRow, VoidTenantRow } from "@/components/reports/game/void";
 import { VoidContent } from "@/components/reports/game/void";
-import type {
-  VoidDrawRow,
-  VoidTenantRow,
-  VoidPlayerRow,
-  VoidEntryRow,
-} from "@/components/reports/game/void";
+import { GAME_COLORS } from "@/lib/game-colors";
+
+import { KenoEntryDetailDialog } from "../../settle/_lib/sections/entry-detail-dialog";
 import {
-  useKenoVoidReports,
   useKenoVoidDrawTenants,
-  useKenoVoidTenantPlayers,
   useKenoVoidPlayerEntries,
+  useKenoVoidReports,
+  useKenoVoidTenantPlayers,
 } from "../../settle/_lib/use-report-queries";
 import { useKenoVoidFilters } from "./use-void-filters";
 
@@ -175,11 +173,7 @@ export function KenoVoidReportsContent() {
         showLineCount={false}
       />
 
-      <KenoEntryDetailDialog
-        entry={selectedEntry}
-        open={!!selectedEntry}
-        onClose={() => setSelectedEntry(null)}
-      />
+      <KenoEntryDetailDialog entry={selectedEntry} open={!!selectedEntry} onClose={() => setSelectedEntry(null)} />
     </>
   );
 }

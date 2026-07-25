@@ -1,20 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle2, Circle, Clock, XCircle, TriangleAlert, FolderOpen } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { DrawStatus, DrawSelectorGroup } from "@megawin/game-core/entities";
+
+import { DrawSelectorGroup, DrawStatus } from "@megawin/game-core/entities";
+import { CheckCircle2, Circle, Clock, FolderOpen, TriangleAlert, XCircle } from "lucide-react";
+
 import { DrawStatusBadge } from "@/components/games/max3d/draw-status-badge";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
-  SelectSeparator,
-  SelectGroup,
-  SelectLabel,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+
 import type { DrawSelectorItem } from "./use-operations";
 
 interface DrawSelectorProps {
@@ -56,9 +59,7 @@ function DrawRow({ draw }: { draw: DrawSelectorItem }) {
         <span className={cn("text-sm font-medium truncate", isFuture && "text-muted-foreground")}>
           Ngày {draw.drawDate}
         </span>
-        <span className="text-xs text-muted-foreground font-mono tabular-nums shrink-0">
-          {draw.drawTime}
-        </span>
+        <span className="text-xs text-muted-foreground font-mono tabular-nums shrink-0">{draw.drawTime}</span>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
         {draw.status === DrawStatus.Void && <TriangleAlert className="size-3 text-red-400" />}
@@ -69,12 +70,7 @@ function DrawRow({ draw }: { draw: DrawSelectorItem }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function DrawSelector({
-  draws,
-  selectedDrawId,
-  onSelect,
-  historicalDraw,
-}: DrawSelectorProps) {
+export function DrawSelector({ draws, selectedDrawId, onSelect, historicalDraw }: DrawSelectorProps) {
   const selected = draws.find((d) => d.drawId === selectedDrawId) ?? historicalDraw;
 
   const active = draws.filter((d) => d.group === DrawSelectorGroup.Active);

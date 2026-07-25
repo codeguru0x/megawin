@@ -1,10 +1,11 @@
-import { withApi } from "@/lib/api";
 import { CompanyRole } from "@megawin/identity/entities";
 import {
   CreateTenantUseCase,
   ListTenantsUseCase,
   UpdateTenantUseCase,
 } from "@megawin/identity-application/use-cases/tenants";
+
+import { withApi } from "@/lib/api";
 
 import { createTenantSchema, updateTenantSchema } from "./_lib/schema";
 
@@ -20,7 +21,7 @@ export const POST = withApi()
         description: body.description,
         callbackBaseUrl: body.callbackBaseUrl,
       },
-      { successStatus: 201 }
+      { successStatus: 201 },
     );
   });
 

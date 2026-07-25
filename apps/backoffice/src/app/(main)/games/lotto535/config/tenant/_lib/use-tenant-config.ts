@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient, ApiClientError } from "@megawin/next/client";
+import { ApiClientError, apiClient } from "@megawin/next/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 interface TenantConfig {
@@ -26,20 +26,14 @@ function detailKey(tenantId: string) {
 export function useTenantConfigs() {
   return useQuery({
     queryKey: LIST_KEY,
-    queryFn: () =>
-      apiClient
-        .get<{ configs: TenantConfig[] }>("/lotto535/tenant-config")
-        .then((r) => r.configs),
+    queryFn: () => apiClient.get<{ configs: TenantConfig[] }>("/lotto535/tenant-config").then((r) => r.configs),
   });
 }
 
 export function useTenantConfig(tenantId: string | null) {
   return useQuery({
     queryKey: detailKey(tenantId ?? ""),
-    queryFn: () =>
-      apiClient
-        .get<{ config: TenantConfig }>(`/lotto535/tenant-config/${tenantId}`)
-        .then((r) => r.config),
+    queryFn: () => apiClient.get<{ config: TenantConfig }>(`/lotto535/tenant-config/${tenantId}`).then((r) => r.config),
     enabled: !!tenantId,
   });
 }
@@ -49,21 +43,16 @@ export function useCreateTenantConfig() {
 
   return useMutation({
     mutationFn: (tenantId: string) =>
-      apiClient.put<{ config: TenantConfig; version: number }>(
-        `/lotto535/tenant-config/${tenantId}`,
-        { isEnabled: true },
-      ),
+      apiClient.put<{ config: TenantConfig; version: number }>(`/lotto535/tenant-config/${tenantId}`, {
+        isEnabled: true,
+      }),
     onSuccess: (res, tenantId) => {
       queryClient.setQueryData(detailKey(tenantId), res.config);
       queryClient.invalidateQueries({ queryKey: LIST_KEY });
       toast.success(`Đã tạo cấu hình cho đại lý "${tenantId}".`);
     },
     onError: (err) => {
-      toast.error(
-        err instanceof ApiClientError
-          ? err.message
-          : "Lỗi khi tạo cấu hình tenant.",
-      );
+      toast.error(err instanceof ApiClientError ? err.message : "Lỗi khi tạo cấu hình tenant.");
     },
   });
 }
@@ -73,21 +62,14 @@ export function useUpdateTenantConfig(tenantId: string) {
 
   return useMutation({
     mutationFn: (data: Record<string, unknown>) =>
-      apiClient.put<{ config: TenantConfig; version: number }>(
-        `/lotto535/tenant-config/${tenantId}`,
-        data,
-      ),
+      apiClient.put<{ config: TenantConfig; version: number }>(`/lotto535/tenant-config/${tenantId}`, data),
     onSuccess: (res) => {
       queryClient.setQueryData(detailKey(tenantId), res.config);
       queryClient.invalidateQueries({ queryKey: LIST_KEY });
       toast.success(`Đã lưu cấu hình tenant "${tenantId}" (v${res.version}).`);
     },
     onError: (err) => {
-      toast.error(
-        err instanceof ApiClientError
-          ? err.message
-          : "Lỗi khi cập nhật cấu hình tenant.",
-      );
+      toast.error(err instanceof ApiClientError ? err.message : "Lỗi khi cập nhật cấu hình tenant.");
     },
   });
 }

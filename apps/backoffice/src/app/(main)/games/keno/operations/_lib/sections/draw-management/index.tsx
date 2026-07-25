@@ -13,7 +13,11 @@
  */
 
 import { useState } from "react";
+
+import { DrawStatus } from "@megawin/game-core/entities";
+import { formatErrorToast } from "@megawin/next/client";
 import { AlertTriangle, RotateCcw } from "lucide-react";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,27 +28,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { DrawStatus } from "@megawin/game-core/entities";
-import { formatErrorToast } from "@megawin/next/client";
-
-import { useDrawContext } from "../../use-draw-context";
-import { DrawCommandCenter } from "./draw-command-center";
 import { Button } from "@/components/ui/button";
-import {
-  PublishResultAction,
-  EditScheduleAction,
-  VoidDrawAction,
-  type PublishResultCurrentValues,
-} from "./draw-actions";
-import {
-  useOpenSales,
-  useCloseSales,
-  useTriggerSettle,
-  useTriggerResettle,
-  useDrawDetail,
-} from "../../use-operations";
 
 import type { KenoDrawResult, VoidInfo } from "../../types";
+import { useDrawContext } from "../../use-draw-context";
+import { useCloseSales, useDrawDetail, useOpenSales, useTriggerResettle, useTriggerSettle } from "../../use-operations";
+import {
+  EditScheduleAction,
+  PublishResultAction,
+  type PublishResultCurrentValues,
+  VoidDrawAction,
+} from "./draw-actions";
+import { DrawCommandCenter } from "./draw-command-center";
 
 const RESULT_SHOW = new Set([DrawStatus.Published, DrawStatus.Settling, DrawStatus.Settled]);
 
@@ -78,10 +73,7 @@ export function DrawManagementSection() {
       smallCount: d.result.smallCount ?? 0,
       evenCount: d.result.evenCount ?? 0,
       oddCount: d.result.oddCount ?? 0,
-      publishedAt:
-        d.result.publishedAt instanceof Date
-          ? d.result.publishedAt.toISOString()
-          : String(d.result.publishedAt ?? ""),
+      publishedAt: d.result.publishedAt,
     };
   })();
 
@@ -105,10 +97,7 @@ export function DrawManagementSection() {
     return {
       reason: d.voidInfo.reason,
       voidedBy: d.voidInfo.voidedBy ?? "system",
-      voidedAt:
-        d.voidInfo.voidedAt instanceof Date
-          ? d.voidInfo.voidedAt.toISOString()
-          : String(d.voidInfo.voidedAt ?? ""),
+      voidedAt: d.voidInfo.voidedAt,
       refundAmount: d.voidSummary?.totalRefundAmount ?? 0,
       entryCount: d.voidSummary?.totalVoidedEntries ?? 0,
     };
@@ -140,12 +129,7 @@ export function DrawManagementSection() {
         onOpenChange={setPublishOpen}
         currentResult={currentResult}
       />
-      <EditScheduleAction
-        draw={draw}
-        disabled={false}
-        open={editScheduleOpen}
-        onOpenChange={setEditScheduleOpen}
-      />
+      <EditScheduleAction draw={draw} disabled={false} open={editScheduleOpen} onOpenChange={setEditScheduleOpen} />
       <VoidDrawAction draw={draw} disabled={false} open={voidOpen} onOpenChange={setVoidOpen} />
 
       {/* Confirm: Mở bán */}
@@ -233,9 +217,9 @@ export function DrawManagementSection() {
             <strong>
               {draw.drawDate} · Kỳ {String(draw.drawNo).padStart(3, "0")}
             </strong>{" "}
-            sẽ được kết sổ LẠI với kết quả vừa cập nhật. Hệ thống sẽ tự động hoàn lại các khoản chi
-            trả của lần kết sổ trước, sau đó tính toán và phân bổ giải thưởng theo kết quả mới. Thao
-            tác không thể hoàn tác — hãy chắc chắn kết quả mới đã đúng.
+            sẽ được kết sổ LẠI với kết quả vừa cập nhật. Hệ thống sẽ tự động hoàn lại các khoản chi trả của lần kết sổ
+            trước, sau đó tính toán và phân bổ giải thưởng theo kết quả mới. Thao tác không thể hoàn tác — hãy chắc chắn
+            kết quả mới đã đúng.
           </>
         }
       />
@@ -311,9 +295,7 @@ function SettleConfirmDialog({
             <div className="space-y-0.5">
               <p className="text-sm font-medium text-destructive">{errorToast.title}</p>
               {errorToast.description && (
-                <p className="text-xs text-muted-foreground whitespace-pre-line">
-                  {errorToast.description}
-                </p>
+                <p className="text-xs text-muted-foreground whitespace-pre-line">{errorToast.description}</p>
               )}
             </div>
           </div>

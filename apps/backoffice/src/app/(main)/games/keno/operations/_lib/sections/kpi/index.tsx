@@ -9,10 +9,11 @@
  */
 
 import { Skeleton } from "@/components/ui/skeleton";
+
+import type { OpsKpi } from "../../types";
 import { useDrawContext } from "../../use-draw-context";
 import { useOpsSummary } from "../../use-operations";
 import { KpiStrip } from "./kpi-strip";
-import type { OpsKpi } from "../../types";
 
 export function KpiSection() {
   const { opsParams, isSettled, effectiveDrawId } = useDrawContext();

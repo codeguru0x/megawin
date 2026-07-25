@@ -1,8 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@megawin/next/client";
 import type { PlayerOverviewResult } from "@megawin/game-core-application/repos";
+import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
 
 import { playerDetailKeys } from "@/lib/query-keys/player-detail";
 
@@ -41,9 +41,7 @@ export function usePlayerOverview(accountId: string, from: string, to: string) {
   return useQuery({
     queryKey: playerDetailKeys.overview(accountId, { from, to }),
     queryFn: () =>
-      apiClient.get<{ data: PlayerOverviewResult }>(
-        `/accounts/players/${accountId}/overview?from=${from}&to=${to}`,
-      ),
+      apiClient.get<{ data: PlayerOverviewResult }>(`/accounts/players/${accountId}/overview?from=${from}&to=${to}`),
     enabled: !!accountId && !!from && !!to,
     select: (res) => res.data,
   });
@@ -131,9 +129,7 @@ export function usePlayerOutstanding(accountId: string) {
   return useQuery({
     queryKey: playerDetailKeys.outstanding(accountId),
     queryFn: () =>
-      apiClient.get<{ data: PlayerOutstandingSummaryResponse }>(
-        `/accounts/players/${accountId}/outstanding`,
-      ),
+      apiClient.get<{ data: PlayerOutstandingSummaryResponse }>(`/accounts/players/${accountId}/outstanding`),
     enabled: !!accountId,
     staleTime: 0,
     refetchOnWindowFocus: true,
@@ -170,12 +166,7 @@ export interface PlayerSettledEntryResponse {
  * Danh sách entries settled/voided của 1 player trong 1 ngày × 1 game.
  * Drill cấp 2/4 từ bảng tài chính. Optional drawId filter cho View 4.
  */
-export function usePlayerEntries(
-  accountId: string,
-  financialDate: string,
-  game: string,
-  drawId?: string,
-) {
+export function usePlayerEntries(accountId: string, financialDate: string, game: string, drawId?: string) {
   const drawParam = drawId ? `&drawId=${drawId}` : "";
   return useQuery({
     queryKey: playerDetailKeys.entries(accountId, { financialDate, game, drawId }),
@@ -201,9 +192,7 @@ export function usePlayerEntryDetail(accountId: string, entryId: string, game: s
     queryKey: playerDetailKeys.entryDetail(accountId, entryId, game),
     queryFn: () =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      apiClient.get<{ data: any }>(
-        `/accounts/players/${accountId}/entries/${entryId}?game=${game}`,
-      ),
+      apiClient.get<{ data: any }>(`/accounts/players/${accountId}/entries/${entryId}?game=${game}`),
     enabled: !!accountId && !!entryId && !!game,
     select: (res) => res.data,
   });

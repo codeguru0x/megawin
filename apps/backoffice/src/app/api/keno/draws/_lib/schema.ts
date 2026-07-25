@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { DRAW_STATUS_VALUES } from "@megawin/game-core/entities";
+import { z } from "zod";
 
 const createDrawSlotSchema = z.object({
   /** Ngày quay, format YYYY-MM-DD. */
@@ -14,10 +14,7 @@ const createDrawSlotSchema = z.object({
 });
 
 export const createDrawSchema = z.object({
-  draws: z
-    .array(createDrawSlotSchema)
-    .min(1, "Cần ít nhất 1 kỳ.")
-    .max(30, "Tối đa 30 kỳ mỗi lần tạo."),
+  draws: z.array(createDrawSlotSchema).min(1, "Cần ít nhất 1 kỳ.").max(30, "Tối đa 30 kỳ mỗi lần tạo."),
 });
 
 export const previewDrawsSchema = z.object({

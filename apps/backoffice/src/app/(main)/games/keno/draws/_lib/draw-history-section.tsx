@@ -12,15 +12,16 @@
  */
 
 import { useRouter } from "next/navigation";
-import { useQueryState, parseAsString, parseAsInteger } from "nuqs";
 
-import { KenoNumberBall } from "@/components/games/keno/keno-number-ball";
-import { KenoDrawStatusBadge } from "@/components/games/keno/draw-status-badge";
-import { DrawHistoryTable } from "@/components/draws";
-import type { CommonDrawSummary } from "@/components/draws";
-import { formatVNDate, subDays, todayVN } from "@megawin/shared/utils";
-import { Pagination } from "@megawin/shared/constants";
 import type { DrawStatus } from "@megawin/game-core/entities";
+import { Pagination } from "@megawin/shared/constants";
+import { formatVNDate, subDays, todayVN } from "@megawin/shared/utils";
+import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
+
+import type { CommonDrawSummary } from "@/components/draws";
+import { DrawHistoryTable } from "@/components/draws";
+import { KenoDrawStatusBadge } from "@/components/games/keno/draw-status-badge";
+import { KenoNumberBall } from "@/components/games/keno/keno-number-ball";
 
 import type { DrawSummary } from "./use-draws";
 import { useKenoDrawsList } from "./use-draws";
@@ -50,19 +51,10 @@ function toCommon(draw: DrawSummary): DrawSummary & CommonDrawSummary {
 export function DrawHistorySection() {
   const router = useRouter();
 
-  const [statusParam, setStatusParam] = useQueryState(
-    "histStatus",
-    parseAsString.withDefault("all"),
-  );
-  const [fromDate, setFromDate] = useQueryState(
-    "histFrom",
-    parseAsString.withDefault(defaultFrom()),
-  );
+  const [statusParam, setStatusParam] = useQueryState("histStatus", parseAsString.withDefault("all"));
+  const [fromDate, setFromDate] = useQueryState("histFrom", parseAsString.withDefault(defaultFrom()));
   const [toDate, setToDate] = useQueryState("histTo", parseAsString.withDefault(defaultTo()));
-  const [page, setPage] = useQueryState(
-    "histPage",
-    parseAsInteger.withDefault(1).withOptions({ history: "push" }),
-  );
+  const [page, setPage] = useQueryState("histPage", parseAsInteger.withDefault(1).withOptions({ history: "push" }));
 
   const statusFilter = statusParam !== "all" ? (statusParam as DrawStatus) : undefined;
 

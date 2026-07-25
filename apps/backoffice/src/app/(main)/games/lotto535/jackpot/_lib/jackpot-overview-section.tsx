@@ -1,11 +1,12 @@
 "use client";
 
+import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
 import { CircleDollarSign, Flame, Layers, Target, TrendingUp, Trophy } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { formatVND, formatVNDCompact } from "@megawin/shared/utils";
+
 import { useJackpotCurrent } from "./use-jackpot";
 
 // ─── JackpotHeroCard ──────────────────────────────────────────────────────────
@@ -31,9 +32,7 @@ export function JackpotHeroCard() {
         "relative overflow-hidden rounded-2xl border-2 p-6",
         "bg-linear-to-br from-amber-50/90 via-yellow-50/70 to-orange-50/50",
         "dark:from-amber-950/50 dark:via-yellow-950/40 dark:to-orange-950/30",
-        isHot
-          ? "border-red-300 dark:border-red-800/60"
-          : "border-amber-200 dark:border-amber-800/50",
+        isHot ? "border-red-300 dark:border-red-800/60" : "border-amber-200 dark:border-amber-800/50",
       )}
     >
       {/* Decorative orbs */}
@@ -71,12 +70,9 @@ export function JackpotHeroCard() {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="font-medium text-amber-800/70 dark:text-amber-300/70">
-              Tiến trình đến ngưỡng chia —{" "}
-              <span className="font-semibold">{formatVNDCompact(progress.threshold)}</span>
+              Tiến trình đến ngưỡng chia — <span className="font-semibold">{formatVNDCompact(progress.threshold)}</span>
             </span>
-            <span className="font-bold tabular-nums text-amber-900 dark:text-amber-200">
-              {pct.toFixed(1)}%
-            </span>
+            <span className="font-bold tabular-nums text-amber-900 dark:text-amber-200">{pct.toFixed(1)}%</span>
           </div>
           <div className="h-3 w-full overflow-hidden rounded-full bg-amber-200/60 dark:bg-amber-900/50">
             <div
@@ -93,9 +89,7 @@ export function JackpotHeroCard() {
           </div>
           <div className="flex items-center justify-between text-[11px] text-amber-700/60 dark:text-amber-400/50">
             <span>
-              {progress.remaining > 0
-                ? `Còn thiếu ${formatVNDCompact(progress.remaining)}`
-                : "Đã đạt ngưỡng chia"}
+              {progress.remaining > 0 ? `Còn thiếu ${formatVNDCompact(progress.remaining)}` : "Đã đạt ngưỡng chia"}
             </span>
             <span>Khởi điểm {formatVNDCompact(cycle.seedAmount)}</span>
           </div>
@@ -128,9 +122,7 @@ export function JackpotKpiCards() {
 
   const { cycle, progress } = data;
   const growthPct =
-    cycle.seedAmount > 0
-      ? Math.round(((cycle.currentAmount - cycle.seedAmount) / cycle.seedAmount) * 100)
-      : 0;
+    cycle.seedAmount > 0 ? Math.round(((cycle.currentAmount - cycle.seedAmount) / cycle.seedAmount) * 100) : 0;
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -173,11 +165,7 @@ export function JackpotKpiCards() {
         iconColor="text-amber-600 dark:text-amber-400"
         label="Ngưỡng chia"
         value={formatVNDCompact(progress.threshold)}
-        sub={
-          progress.remaining > 0
-            ? `Còn thiếu ${formatVNDCompact(progress.remaining)}`
-            : "Đã đạt ngưỡng"
-        }
+        sub={progress.remaining > 0 ? `Còn thiếu ${formatVNDCompact(progress.remaining)}` : "Đã đạt ngưỡng"}
       />
     </div>
   );

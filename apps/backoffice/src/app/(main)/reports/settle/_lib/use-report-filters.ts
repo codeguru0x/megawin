@@ -1,9 +1,8 @@
 "use client";
 
-import { useQueryState, parseAsString, parseAsStringLiteral } from "nuqs";
-import { todayVN, formatVNDate } from "@megawin/shared/utils";
+import { formatVNDate, TZDate, todayVN, VN_TIMEZONE } from "@megawin/shared/utils";
 import { subDays } from "date-fns";
-import { TZDate, VN_TIMEZONE } from "@megawin/shared/utils";
+import { parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 
 const SYSTEM_TABS = ["daily", "by-game", "by-tenant"] as const;
 
@@ -12,10 +11,7 @@ export function useSystemReportFilters() {
   const today = todayVN();
   const sevenDaysAgo = formatVNDate(subDays(new TZDate(new Date(), VN_TIMEZONE), 6));
 
-  const [tab, rawSetTab] = useQueryState(
-    "tab",
-    parseAsStringLiteral(SYSTEM_TABS).withDefault("daily"),
-  );
+  const [tab, rawSetTab] = useQueryState("tab", parseAsStringLiteral(SYSTEM_TABS).withDefault("daily"));
   const [from, rawSetFrom] = useQueryState("from", parseAsString.withDefault(sevenDaysAgo));
   const [to, rawSetTo] = useQueryState("to", parseAsString.withDefault(today));
 

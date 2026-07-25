@@ -47,7 +47,7 @@ export function DocsSidebarShell() {
             <div className="border-b p-3">
               <DocsSearch />
             </div>
-            <div className="overflow-y-auto p-3" onClick={() => setSheetOpen(false)}>
+            <div className="overflow-y-auto p-3">
               <DocsSidebar onNavigate={() => setSheetOpen(false)} />
             </div>
           </SheetContent>

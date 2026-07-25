@@ -1,5 +1,6 @@
 import { NextApiUseCase } from "@megawin/next/server";
 import { AppException } from "@megawin/shared/errors";
+import { serializeDates } from "@megawin/shared/utils";
 import { DEFAULT_PRIZE_TIER_RULES } from "@megawin/game-lotto535/rules";
 import { DrawRepository } from "../../infras/repos/draw-repo";
 import { GameConfigRepository } from "../../infras/repos/game-config-repo";
@@ -34,6 +35,9 @@ export class GetDrawDetailUseCase extends NextApiUseCase<GetDrawDetailInput, Get
       prizeAmounts[rule.tier] = configAmount ?? rule.defaultAmount;
     }
 
-    return { draw, prizeAmounts };
+    // GetDrawDetailOutput.draw khai type WireType<DrawEntity> (Date → string).
+    // serializeDates convert THẬT tại runtime — không cast "as unknown as" (chỉ
+    // đổi type, không đổi giá trị, dễ tạo type lie nếu entity thêm field Date mới).
+    return { draw: serializeDates(draw), prizeAmounts };
   }
 }

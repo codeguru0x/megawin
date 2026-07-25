@@ -1,10 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { CircleDollarSign, FileText, Hash, Users, Wallet } from "lucide-react";
-import { cn } from "@/lib/utils";
+
+import { REPORT_COLUMN_LABELS } from "@megawin/game-core/labels";
 import { formatNumber } from "@megawin/shared/utils";
+import { CircleDollarSign, FileText, Hash, Users, Wallet } from "lucide-react";
+
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
 import { useDrawContext } from "../../use-draw-context";
 import { useOpsSummary } from "../../use-operations";
 
@@ -57,15 +61,13 @@ export function KpiSection() {
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-        Tổng quan
-      </h2>
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tổng quan</h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <KpiCard
           icon={CircleDollarSign}
           iconBg="bg-emerald-100 dark:bg-emerald-900/50"
           iconColor="text-emerald-600 dark:text-emerald-400"
-          label="Doanh thu"
+          label={REPORT_COLUMN_LABELS.totalStake}
           value={kpi ? formatNumber(kpi.totalRevenue) : "—"}
           loading={loading}
         />
@@ -73,7 +75,7 @@ export function KpiSection() {
           icon={FileText}
           iconBg="bg-blue-100 dark:bg-blue-900/50"
           iconColor="text-blue-600 dark:text-blue-400"
-          label="Entries"
+          label={REPORT_COLUMN_LABELS.entryCount}
           value={kpi ? formatNumber(kpi.totalEntries) : "—"}
           loading={loading}
         />
@@ -89,7 +91,7 @@ export function KpiSection() {
           icon={Users}
           iconBg="bg-violet-100 dark:bg-violet-900/50"
           iconColor="text-violet-600 dark:text-violet-400"
-          label="Người chơi"
+          label={REPORT_COLUMN_LABELS.playerCount}
           value={kpi ? formatNumber(kpi.uniquePlayers) : "—"}
           loading={loading}
         />
@@ -97,7 +99,7 @@ export function KpiSection() {
           icon={Wallet}
           iconBg="bg-amber-100 dark:bg-amber-900/50"
           iconColor="text-amber-600 dark:text-amber-400"
-          label="Hoa hồng ĐL"
+          label={REPORT_COLUMN_LABELS.totalCommission}
           value={kpi ? formatNumber(kpi.totalCommission) : "—"}
           loading={loading}
         />

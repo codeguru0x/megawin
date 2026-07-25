@@ -1,20 +1,17 @@
-import { z } from "zod";
 import {
-  MAX3D_DRAW_COUNT_SPECIAL,
   MAX3D_DRAW_COUNT_FIRST,
   MAX3D_DRAW_COUNT_SECOND,
+  MAX3D_DRAW_COUNT_SPECIAL,
   MAX3D_DRAW_COUNT_THIRD,
 } from "@megawin/game-max3d/entities";
+import { z } from "zod";
 
 const tripletSchema = z.string().regex(/^\d{3}$/, "Bộ ba số phải là 3 chữ số (000-999).");
 
 const resultSchema = z.object({
   special: z
     .array(tripletSchema)
-    .length(
-      MAX3D_DRAW_COUNT_SPECIAL,
-      `Giải Đặc Biệt phải có đúng ${MAX3D_DRAW_COUNT_SPECIAL} bộ ba số.`,
-    ),
+    .length(MAX3D_DRAW_COUNT_SPECIAL, `Giải Đặc Biệt phải có đúng ${MAX3D_DRAW_COUNT_SPECIAL} bộ ba số.`),
   first: z
     .array(tripletSchema)
     .length(MAX3D_DRAW_COUNT_FIRST, `Giải Nhất phải có đúng ${MAX3D_DRAW_COUNT_FIRST} bộ ba số.`),

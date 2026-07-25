@@ -1,21 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Info, List } from "lucide-react";
-import { AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
+
+import { type AccountStatus, AccountStatusLabel } from "@megawin/identity/entities";
 import { displayVNDateTime } from "@megawin/shared/utils/date";
+import { ChevronLeft, ChevronRight, Info, List } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 import { usePlayerAccountsCursor } from "../../_shared/queries";
 import type { PlayerAccount } from "../_lib/schema";
@@ -88,9 +82,7 @@ export function PlayersTable({
           </div>
           <div className="flex items-center gap-1.5">
             {accounts.length > 0 && !isLoading && (
-              <span className="text-xs tabular-nums text-muted-foreground">
-                {accounts.length} tài khoản
-              </span>
+              <span className="text-xs tabular-nums text-muted-foreground">{accounts.length} tài khoản</span>
             )}
             {toolbarControls}
           </div>
@@ -104,9 +96,7 @@ export function PlayersTable({
         ) : accounts.length === 0 ? (
           <div className="flex h-50 flex-col items-center justify-center gap-1 text-center">
             <p className="text-sm font-medium text-muted-foreground">Chưa có người chơi nào</p>
-            <p className="text-xs text-muted-foreground">
-              Tenant này chưa có tài khoản người chơi.
-            </p>
+            <p className="text-xs text-muted-foreground">Tenant này chưa có tài khoản người chơi.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -175,9 +165,7 @@ function AccountRow({ account, onClick }: { account: PlayerAccount; onClick: () 
       </TableCell>
       <TableCell className="text-sm">{account.displayName}</TableCell>
       <TableCell>
-        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>
-          {AccountStatusLabel[status] ?? status}
-        </Badge>
+        <Badge variant={STATUS_VARIANT[status] ?? "outline"}>{AccountStatusLabel[status] ?? status}</Badge>
       </TableCell>
       <TableCell className="pr-5 text-right text-sm tabular-nums text-muted-foreground">
         {account.createdAt ? displayVNDateTime(new Date(account.createdAt)) : "—"}

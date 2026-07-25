@@ -1,17 +1,18 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient, ApiClientError } from "@megawin/next/client";
-import { toast } from "sonner";
 import type { DrawStatus } from "@megawin/game-core/entities";
 import type {
-  CurrentDrawInfo,
-  GetCurrentDrawOutput,
-  DrawSummary,
-  ListDrawsOutput,
   CreateDrawOutput,
+  CurrentDrawInfo,
+  DrawSummary,
+  GetCurrentDrawOutput,
+  ListDrawsOutput,
   PreviewDrawsOutput,
 } from "@megawin/game-keno-application/use-cases/draws";
+import { ApiClientError, apiClient } from "@megawin/next/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
 import { kenoKeys } from "@/lib/query-keys";
 
 export type { CurrentDrawInfo, DrawSummary };
@@ -75,9 +76,7 @@ function useKenoDrawAction<TBody = void>(
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
-      method === "post"
-        ? apiClient.post(actionPath(drawId), body)
-        : apiClient.patch(actionPath(drawId), body),
+      method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: kenoKeys.all });
       toast.success(successMessage);
@@ -104,19 +103,11 @@ export function useKenoPublishResult() {
 }
 
 export function useKenoTriggerSettle() {
-  return useKenoDrawAction(
-    (id) => `/keno/draws/${id}/trigger-settle`,
-    "post",
-    "Đã bắt đầu kết sổ.",
-  );
+  return useKenoDrawAction((id) => `/keno/draws/${id}/trigger-settle`, "post", "Đã bắt đầu kết sổ.");
 }
 
 export function useKenoVoidDraw() {
-  return useKenoDrawAction<{ reason: string }>(
-    (id) => `/keno/draws/${id}/void`,
-    "post",
-    "Đã huỷ kỳ quay.",
-  );
+  return useKenoDrawAction<{ reason: string }>((id) => `/keno/draws/${id}/void`, "post", "Đã huỷ kỳ quay.");
 }
 
 export function useKenoUpdateSchedule() {
@@ -130,8 +121,7 @@ export function useKenoUpdateSchedule() {
 export function useKenoCreateDraw() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { drawDate: string; count: number }) =>
-      apiClient.post<CreateDrawOutput>("/keno/draws", data),
+    mutationFn: (data: { drawDate: string; count: number }) => apiClient.post<CreateDrawOutput>("/keno/draws", data),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: kenoKeys.all });
       toast.success(`Đã tạo ${res.draws.length} kỳ quay mới.`);

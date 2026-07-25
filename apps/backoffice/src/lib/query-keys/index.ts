@@ -47,39 +47,39 @@
  *   useQuery({ queryKey: lotto535Keys.draws({ page: 1 }), ... });
  */
 
-export { lotto535Keys } from "./lotto535";
+export { accountsKeys } from "./accounts";
+export { type AuditLogsListFilters, auditLogsKeys } from "./audit-logs";
+export { bingo18Keys } from "./bingo18";
+export { dashboardKeys } from "./dashboard";
 export { kenoKeys } from "./keno";
-export { power655Keys } from "./power655";
-export { mega645Keys } from "./mega645";
+export { lotto535Keys } from "./lotto535";
 export { max3dKeys } from "./max3d";
 export { max3dproKeys } from "./max3dpro";
-export { bingo18Keys } from "./bingo18";
-export { tenantsKeys } from "./tenants";
-export { accountsKeys } from "./accounts";
+export { type MyAuditLogsListFilters, meKeys } from "./me";
+export { mega645Keys } from "./mega645";
 export { playerDetailKeys } from "./player-detail";
-export { meKeys, type MyAuditLogsListFilters } from "./me";
+export { power655Keys } from "./power655";
 export { reportsKeys } from "./reports";
-export { dashboardKeys } from "./dashboard";
-export { txLogsKeys } from "./tx-logs";
 export { tenantDispatchKeys } from "./tenant-dispatch";
-export { auditLogsKeys, type AuditLogsListFilters } from "./audit-logs";
+export { tenantsKeys } from "./tenants";
+export { txLogsKeys } from "./tx-logs";
 
-import { lotto535Keys } from "./lotto535";
+import { accountsKeys } from "./accounts";
+import { auditLogsKeys } from "./audit-logs";
+import { bingo18Keys } from "./bingo18";
+import { dashboardKeys } from "./dashboard";
 import { kenoKeys } from "./keno";
-import { power655Keys } from "./power655";
-import { mega645Keys } from "./mega645";
+import { lotto535Keys } from "./lotto535";
 import { max3dKeys } from "./max3d";
 import { max3dproKeys } from "./max3dpro";
-import { bingo18Keys } from "./bingo18";
-import { tenantsKeys } from "./tenants";
-import { accountsKeys } from "./accounts";
-import { playerDetailKeys } from "./player-detail";
 import { meKeys } from "./me";
+import { mega645Keys } from "./mega645";
+import { playerDetailKeys } from "./player-detail";
+import { power655Keys } from "./power655";
 import { reportsKeys } from "./reports";
-import { dashboardKeys } from "./dashboard";
-import { txLogsKeys } from "./tx-logs";
 import { tenantDispatchKeys } from "./tenant-dispatch";
-import { auditLogsKeys } from "./audit-logs";
+import { tenantsKeys } from "./tenants";
+import { txLogsKeys } from "./tx-logs";
 
 export const queryKeys = {
   tenants: tenantsKeys,

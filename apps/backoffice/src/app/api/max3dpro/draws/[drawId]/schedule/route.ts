@@ -1,9 +1,9 @@
+import { UpdateScheduleUseCase } from "@megawin/game-max3dpro-application/use-cases/draws";
+import { CompanyRole } from "@megawin/identity/entities";
 import { z } from "zod";
 
 import { withApi } from "@/lib/api";
 import { actorFromSession } from "@/lib/audit-actor";
-import { CompanyRole } from "@megawin/identity/entities";
-import { UpdateScheduleUseCase } from "@megawin/game-max3dpro-application/use-cases/draws";
 
 const scheduleSchema = z.object({
   salesOpenAt: z.iso.datetime({
@@ -14,9 +14,7 @@ const scheduleSchema = z.object({
     offset: true,
     message: "Thời gian đóng bán phải là ISO datetime.",
   }),
-  drawTime: z.iso
-    .datetime({ offset: true, message: "Giờ quay số phải là ISO datetime." })
-    .optional(),
+  drawTime: z.iso.datetime({ offset: true, message: "Giờ quay số phải là ISO datetime." }).optional(),
 });
 
 const updateScheduleUseCase = new UpdateScheduleUseCase();

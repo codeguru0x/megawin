@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+
 import { FileSearch } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,9 +20,7 @@ function TxLogPageInner() {
             <FileSearch className="size-4.5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-foreground">
-              Lịch sử giao dịch
-            </h1>
+            <h1 className="text-lg font-semibold tracking-tight text-foreground">Lịch sử giao dịch</h1>
             <p className="text-xs text-muted-foreground">
               Audit log các lệnh gọi transaction đến tenant — lưu trữ 90 ngày.
             </p>

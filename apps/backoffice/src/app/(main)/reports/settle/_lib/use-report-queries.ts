@@ -1,19 +1,17 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@megawin/next/client";
-import { reportsKeys } from "@/lib/query-keys";
+import type { SystemSettleGameDaily } from "@megawin/game-core/entities";
+import type { TenantGameBreakdownRow, TenantSummaryRow } from "@megawin/game-core-application/repos";
 import type {
   GetDailyOverviewOutput,
   GetGameSummaryOutput,
-  GetTenantSummaryOutput,
   GetSystemOutstandingOutput,
+  GetTenantSummaryOutput,
 } from "@megawin/game-core-application/use-cases/reports";
-import type { SystemSettleGameDaily } from "@megawin/game-core/entities";
-import type {
-  TenantSummaryRow,
-  TenantGameBreakdownRow,
-} from "@megawin/game-core-application/repos";
+import { apiClient } from "@megawin/next/client";
+import { useQuery } from "@tanstack/react-query";
+
+import { reportsKeys } from "@/lib/query-keys";
 
 // ─── System Financial Queries ─────────────────────────────────────────────────
 
@@ -111,8 +109,7 @@ export function useSystemTenantBreakdown(tenantId: string, from: string, to: str
 export function useSystemOutstanding() {
   return useQuery({
     queryKey: reportsKeys.outstanding,
-    queryFn: () =>
-      apiClient.get<GetSystemOutstandingOutput>("/reports/outstanding").then((r) => r.data),
+    queryFn: () => apiClient.get<GetSystemOutstandingOutput>("/reports/outstanding").then((r) => r.data),
     refetchInterval: 60_000,
   });
 }

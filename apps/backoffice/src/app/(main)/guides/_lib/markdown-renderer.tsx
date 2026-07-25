@@ -1,21 +1,15 @@
 "use client";
 
+import { type ComponentPropsWithoutRef, type ReactNode, useState } from "react";
+
 import Link from "next/link";
-import { useState, type ComponentPropsWithoutRef, type ReactNode } from "react";
 
 import { Check, Copy } from "lucide-react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
 import { slugify } from "./markdown";
@@ -168,9 +162,7 @@ export function MarkdownRenderer({ content, basePath }: { content: string; baseP
     code: ({ className, children }) => {
       const isBlock = className?.includes("language-");
       if (!isBlock) {
-        return (
-          <code className="bg-muted rounded px-1.5 py-0.5 font-mono text-[0.85em]">{children}</code>
-        );
+        return <code className="bg-muted rounded px-1.5 py-0.5 font-mono text-[0.85em]">{children}</code>;
       }
       return <code className={className}>{children}</code>;
     },

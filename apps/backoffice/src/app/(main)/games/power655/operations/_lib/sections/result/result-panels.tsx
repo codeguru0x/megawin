@@ -11,35 +11,36 @@
  */
 
 import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PowerNumberBall } from "@/components/games/power655/power-number-ball";
-import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
 import { PrizeTier } from "@megawin/game-power655/entities";
 import { formatNumber } from "@megawin/shared/utils";
 import {
-  Trophy,
-  TrendingDown,
-  Users,
-  Coins,
   ArrowDownRight,
-  Gem,
-  TrendingUp,
-  Star,
-  Sparkles,
+  Coins,
   ExternalLink,
-  Zap,
+  Gem,
   Info,
+  Sparkles,
+  Star,
+  TrendingDown,
+  TrendingUp,
+  Trophy,
+  Users,
+  Zap,
 } from "lucide-react";
-import type { DrawResult, DrawFinancialDisplay } from "../../types";
+
+import { PowerNumberBall } from "@/components/games/power655/power-number-ball";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+
+import type { DrawFinancialDisplay, DrawResult } from "../../types";
 import { WinningEntriesDialog } from "./winning-entries-dialog";
 
 // ─── Tier config — Power 6/55 purple theme ───────────────────────────────────
 
-const TIER_CONFIG: Partial<
-  Record<PrizeTier, { badge: string; row: string; icon?: React.ElementType }>
-> = {
+const TIER_CONFIG: Partial<Record<PrizeTier, { badge: string; row: string; icon?: React.ElementType }>> = {
   [PrizeTier.Jackpot1]: {
     badge:
       "border-purple-300 bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-700",
@@ -59,13 +60,11 @@ const TIER_CONFIG: Partial<
     icon: Trophy,
   },
   [PrizeTier.Tier2]: {
-    badge:
-      "border-cyan-300 bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300 dark:border-cyan-700",
+    badge: "border-cyan-300 bg-cyan-50 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-300 dark:border-cyan-700",
     row: "bg-cyan-50/30 dark:bg-cyan-950/5",
   },
   [PrizeTier.Tier3]: {
-    badge:
-      "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
+    badge: "border-blue-300 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700",
     row: "",
   },
 };
@@ -84,9 +83,7 @@ function JackpotWinnerBanner({
     <div
       className={cn(
         "relative overflow-hidden rounded-xl border-2",
-        isJp1
-          ? "border-purple-400/60 dark:border-purple-500/50"
-          : "border-indigo-400/60 dark:border-indigo-500/50",
+        isJp1 ? "border-purple-400/60 dark:border-purple-500/50" : "border-indigo-400/60 dark:border-indigo-500/50",
       )}
     >
       <div
@@ -125,9 +122,7 @@ function JackpotWinnerBanner({
             <p
               className={cn(
                 "text-sm font-bold tracking-tight",
-                isJp1
-                  ? "text-purple-800 dark:text-purple-300"
-                  : "text-indigo-800 dark:text-indigo-300",
+                isJp1 ? "text-purple-800 dark:text-purple-300" : "text-indigo-800 dark:text-indigo-300",
               )}
             >
               🎉 {isJp1 ? "JACKPOT 1" : "JACKPOT 2"} — CÓ NGƯỜI TRÚNG!
@@ -147,18 +142,14 @@ function JackpotWinnerBanner({
           <p
             className={cn(
               "mt-0.5 text-xs",
-              isJp1
-                ? "text-purple-700/80 dark:text-purple-400/80"
-                : "text-indigo-700/80 dark:text-indigo-400/80",
+              isJp1 ? "text-purple-700/80 dark:text-purple-400/80" : "text-indigo-700/80 dark:text-indigo-400/80",
             )}
           >
             Tổng giải đã trao:{" "}
             <span
               className={cn(
                 "font-bold tabular-nums text-sm",
-                isJp1
-                  ? "text-purple-700 dark:text-purple-300"
-                  : "text-indigo-700 dark:text-indigo-300",
+                isJp1 ? "text-purple-700 dark:text-purple-300" : "text-indigo-700 dark:text-indigo-300",
               )}
             >
               {formatNumber(totalPrize)}
@@ -193,9 +184,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
             <div
               className={cn(
                 "flex size-7 items-center justify-center rounded-lg shrink-0",
-                hasJp1Winner
-                  ? "bg-purple-200 dark:bg-purple-800/60"
-                  : "bg-purple-100 dark:bg-purple-900/50",
+                hasJp1Winner ? "bg-purple-200 dark:bg-purple-800/60" : "bg-purple-100 dark:bg-purple-900/50",
               )}
             >
               {hasJp1Winner ? (
@@ -207,31 +196,19 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
             <div>
               <CardTitle className="text-sm font-semibold">Kết quả & Phân bổ giải thưởng</CardTitle>
               <CardDescription className="text-xs mt-0.5">
-                <span className="font-semibold text-foreground tabular-nums">
-                  {formatNumber(totalWinningLines)}
-                </span>{" "}
+                <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalWinningLines)}</span>{" "}
                 line trúng thưởng · Tổng giải{" "}
-                <span className="font-semibold text-foreground tabular-nums">
-                  {formatNumber(totalPrize)}
-                </span>
+                <span className="font-semibold text-foreground tabular-nums">{formatNumber(totalPrize)}</span>
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="px-5 pb-4 pt-0 space-y-4">
           {hasJp1Winner && jp1Tier && (
-            <JackpotWinnerBanner
-              winnerCount={jp1Tier.winnerCount}
-              totalPrize={jp1Tier.totalPrize}
-              tier="jp1"
-            />
+            <JackpotWinnerBanner winnerCount={jp1Tier.winnerCount} totalPrize={jp1Tier.totalPrize} tier="jp1" />
           )}
           {hasJp2Winner && jp2Tier && (
-            <JackpotWinnerBanner
-              winnerCount={jp2Tier.winnerCount}
-              totalPrize={jp2Tier.totalPrize}
-              tier="jp2"
-            />
+            <JackpotWinnerBanner winnerCount={jp2Tier.winnerCount} totalPrize={jp2Tier.totalPrize} tier="jp2" />
           )}
 
           {/* Winning numbers — Power 6/55: 6 số chính + 1 bonus number */}
@@ -245,9 +222,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
           >
             <div className="flex items-center justify-between w-full">
               <div className="flex-1" />
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Kết quả
-              </span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kết quả</span>
               <div className="flex-1 flex justify-end">
                 <button
                   type="button"
@@ -275,9 +250,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
           {/* Prize table */}
           <div className="rounded-xl border overflow-hidden">
             <div className="grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2 bg-muted/40 border-b">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Hạng giải
-              </span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Hạng giải</span>
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider text-right">
                 Lines
               </span>
@@ -317,10 +290,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                     ) : (
                       <span className="size-3.5 shrink-0" />
                     )}
-                    <Badge
-                      variant="outline"
-                      className={cn("text-xs border px-2 py-0 h-5", cfg?.badge)}
-                    >
+                    <Badge variant="outline" className={cn("text-xs border px-2 py-0 h-5", cfg?.badge)}>
                       {t.label}
                     </Badge>
                   </div>
@@ -328,9 +298,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
                   <span
                     className={cn(
                       "text-right tabular-nums text-sm font-semibold",
-                      hasWinner
-                        ? "text-emerald-700 dark:text-emerald-400"
-                        : "text-muted-foreground/40",
+                      hasWinner ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground/40",
                     )}
                   >
                     {formatNumber(t.winnerCount)}
@@ -362,9 +330,7 @@ export function ResultAndPrize({ result, drawId }: { result: DrawResult; drawId:
             })}
 
             <div className="grid grid-cols-[minmax(8rem,14rem)_1fr_1fr_1fr] gap-x-2 px-3 py-2.5 items-center border-t bg-muted/20">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Tổng cộng
-              </span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tổng cộng</span>
               <span className="text-right tabular-nums text-sm font-bold text-foreground">
                 {formatNumber(totalWinningLines)}
               </span>
@@ -415,17 +381,10 @@ function AccountRow({ row }: { row: LedgerRow }) {
       )}
     >
       <div className="flex items-center gap-2 min-w-0">
-        <div
-          className={cn("flex size-6 items-center justify-center rounded-md shrink-0", row.iconBg)}
-        >
+        <div className={cn("flex size-6 items-center justify-center rounded-md shrink-0", row.iconBg)}>
           <Icon className={cn("size-3.5", row.iconColor)} />
         </div>
-        <span
-          className={cn(
-            "text-sm",
-            row.bold ? "font-semibold text-foreground" : "text-muted-foreground",
-          )}
-        >
+        <span className={cn("text-sm", row.bold ? "font-semibold text-foreground" : "text-muted-foreground")}>
           {row.label}
         </span>
         {row.hint && (
@@ -443,13 +402,7 @@ function AccountRow({ row }: { row: LedgerRow }) {
           </Tooltip>
         )}
       </div>
-      <span
-        className={cn(
-          "tabular-nums text-sm font-mono shrink-0",
-          row.bold ? "font-bold" : "",
-          displayColor,
-        )}
-      >
+      <span className={cn("tabular-nums text-sm font-mono shrink-0", row.bold ? "font-bold" : "", displayColor)}>
         {displaySign !== "=" ? displaySign : ""}
         {formatNumber(row.value)}
       </span>
@@ -536,19 +489,12 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
     },
     {
       icon: Coins,
-      iconBg:
-        companyResult >= 0
-          ? "bg-emerald-100 dark:bg-emerald-900/50"
-          : "bg-red-100 dark:bg-red-900/50",
-      iconColor:
-        companyResult >= 0
-          ? "text-emerald-600 dark:text-emerald-400"
-          : "text-red-600 dark:text-red-400",
+      iconBg: companyResult >= 0 ? "bg-emerald-100 dark:bg-emerald-900/50" : "bg-red-100 dark:bg-red-900/50",
+      iconColor: companyResult >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400",
       label: "Kết quả công ty (P&L kỳ)",
       value: companyResult,
       sign: "=",
-      valueColor:
-        companyResult >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive",
+      valueColor: companyResult >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-destructive",
       bold: true,
       separator: true,
       hint: resultHint,
@@ -564,9 +510,7 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
           </div>
           <div>
             <CardTitle className="text-sm font-semibold">Tài chính kỳ</CardTitle>
-            <CardDescription className="text-xs mt-0.5">
-              Phân bổ doanh thu sau kết sổ
-            </CardDescription>
+            <CardDescription className="text-xs mt-0.5">Phân bổ doanh thu sau kết sổ</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -604,11 +548,7 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
                 {f.jp1Overflow > 0 && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex items-center"
-                        aria-label="Giải thích tràn quỹ"
-                      >
+                      <button type="button" className="flex items-center" aria-label="Giải thích tràn quỹ">
                         <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-400/40 text-[10px] px-1.5 h-4 gap-1 cursor-help">
                           <Info className="size-2.5" />
                           Tràn JP1→JP2
@@ -617,9 +557,8 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
                     </TooltipTrigger>
                     <TooltipContent className="max-w-64">
                       JP1 vượt ngưỡng ({formatNumber(f.jackpot1Before)} +{" "}
-                      {formatNumber(f.jackpot1Contribution + f.jp1Overflow)} đóng góp) và kỳ này có
-                      người trúng JP2 → phần vượt {formatNumber(f.jp1Overflow)} chuyển sang JP2 trao
-                      cho người trúng.
+                      {formatNumber(f.jackpot1Contribution + f.jp1Overflow)} đóng góp) và kỳ này có người trúng JP2 →
+                      phần vượt {formatNumber(f.jp1Overflow)} chuyển sang JP2 trao cho người trúng.
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -630,26 +569,20 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
           {/* JP1 */}
           <div className="divide-y divide-border/30">
             <div className="flex items-center justify-between gap-3 px-3 py-2">
-              <span className="text-sm font-medium text-purple-600 dark:text-purple-400">
-                JP1 trước
-              </span>
+              <span className="text-sm font-medium text-purple-600 dark:text-purple-400">JP1 trước</span>
               <span className="tabular-nums text-sm font-mono text-muted-foreground">
                 {formatNumber(f.jackpot1Before)}
               </span>
             </div>
             <div className="flex items-center justify-between gap-3 px-3 py-2">
-              <span className="text-sm text-purple-600/70 dark:text-purple-400/70 pl-3">
-                + Đóng góp
-              </span>
+              <span className="text-sm text-purple-600/70 dark:text-purple-400/70 pl-3">+ Đóng góp</span>
               <span className="tabular-nums text-sm font-mono font-semibold text-purple-600 dark:text-purple-400">
                 +{formatNumber(f.jackpot1Contribution + (f.jp1Overflow > 0 ? f.jp1Overflow : 0))}
               </span>
             </div>
             {f.jp1Overflow > 0 && (
               <div className="flex items-center justify-between gap-3 px-3 py-2">
-                <span className="text-sm text-amber-600 dark:text-amber-400 pl-3">
-                  → Tràn sang JP2
-                </span>
+                <span className="text-sm text-amber-600 dark:text-amber-400 pl-3">→ Tràn sang JP2</span>
                 <span className="tabular-nums text-sm font-mono font-semibold text-amber-600 dark:text-amber-400">
                   −{formatNumber(f.jp1Overflow)}
                 </span>
@@ -658,9 +591,7 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
             {f.hasJackpot1Winner ? (
               <>
                 <div className="flex items-center justify-between gap-3 px-3 py-2">
-                  <span className="text-sm text-amber-600 dark:text-amber-400 pl-3">
-                    − Trao JP1
-                  </span>
+                  <span className="text-sm text-amber-600 dark:text-amber-400 pl-3">− Trao JP1</span>
                   <span className="tabular-nums text-sm font-mono font-semibold text-amber-600 dark:text-amber-400">
                     −{formatNumber(f.jackpot1PrizeAwarded)}
                   </span>
@@ -675,8 +606,8 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
                         </button>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-64">
-                        Đã trao hết cho người trúng JP1. Cycle JP1 đóng, kỳ sau quỹ khởi động lại từ
-                        mức seed do công ty ứng.
+                        Đã trao hết cho người trúng JP1. Cycle JP1 đóng, kỳ sau quỹ khởi động lại từ mức seed do công ty
+                        ứng.
                       </TooltipContent>
                     </Tooltip>
                   </span>
@@ -687,9 +618,7 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
               </>
             ) : (
               <div className="flex items-center justify-between gap-3 px-3 py-2 bg-purple-50/30 dark:bg-purple-950/10">
-                <span className="text-sm font-bold text-purple-700 dark:text-purple-300 pl-3">
-                  JP1 sau
-                </span>
+                <span className="text-sm font-bold text-purple-700 dark:text-purple-300 pl-3">JP1 sau</span>
                 <span className="tabular-nums text-sm font-mono font-bold text-purple-600 dark:text-purple-400">
                   {formatNumber(f.jackpot1After)}
                 </span>
@@ -698,26 +627,20 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
 
             {/* JP2 */}
             <div className="flex items-center justify-between gap-3 px-3 py-2 border-t">
-              <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                JP2 trước
-              </span>
+              <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">JP2 trước</span>
               <span className="tabular-nums text-sm font-mono text-muted-foreground">
                 {formatNumber(f.jackpot2Before)}
               </span>
             </div>
             <div className="flex items-center justify-between gap-3 px-3 py-2">
-              <span className="text-sm text-indigo-600/70 dark:text-indigo-400/70 pl-3">
-                + Đóng góp
-              </span>
+              <span className="text-sm text-indigo-600/70 dark:text-indigo-400/70 pl-3">+ Đóng góp</span>
               <span className="tabular-nums text-sm font-mono font-semibold text-indigo-600 dark:text-indigo-400">
                 +{formatNumber(f.jackpot2Contribution - (f.jp1Overflow > 0 ? f.jp1Overflow : 0))}
               </span>
             </div>
             {f.jp1Overflow > 0 && (
               <div className="flex items-center justify-between gap-3 px-3 py-2">
-                <span className="text-sm text-amber-600 dark:text-amber-400 pl-3">
-                  + Nhận tràn từ JP1
-                </span>
+                <span className="text-sm text-amber-600 dark:text-amber-400 pl-3">+ Nhận tràn từ JP1</span>
                 <span className="tabular-nums text-sm font-mono font-semibold text-amber-600 dark:text-amber-400">
                   +{formatNumber(f.jp1Overflow)}
                 </span>
@@ -726,9 +649,7 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
             {f.hasJackpot2Winner ? (
               <>
                 <div className="flex items-center justify-between gap-3 px-3 py-2">
-                  <span className="text-sm text-amber-600 dark:text-amber-400 pl-3">
-                    − Trao JP2
-                  </span>
+                  <span className="text-sm text-amber-600 dark:text-amber-400 pl-3">− Trao JP2</span>
                   <span className="tabular-nums text-sm font-mono font-semibold text-amber-600 dark:text-amber-400">
                     −{formatNumber(f.jackpot2PrizeAwarded)}
                   </span>
@@ -743,8 +664,8 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
                         </button>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-64">
-                        Đã trao hết cho người trúng JP2. Cycle JP2 đóng, kỳ sau quỹ khởi động lại từ
-                        mức seed do công ty ứng.
+                        Đã trao hết cho người trúng JP2. Cycle JP2 đóng, kỳ sau quỹ khởi động lại từ mức seed do công ty
+                        ứng.
                       </TooltipContent>
                     </Tooltip>
                   </span>
@@ -755,9 +676,7 @@ export function FinancialSummary({ financial: f }: { financial: DrawFinancialDis
               </>
             ) : (
               <div className="flex items-center justify-between gap-3 px-3 py-2 bg-indigo-50/30 dark:bg-indigo-950/10">
-                <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300 pl-3">
-                  JP2 sau
-                </span>
+                <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300 pl-3">JP2 sau</span>
                 <span className="tabular-nums text-sm font-mono font-bold text-indigo-600 dark:text-indigo-400">
                   {formatNumber(f.jackpot2After)}
                 </span>

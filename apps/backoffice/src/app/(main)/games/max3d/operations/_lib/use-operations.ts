@@ -1,52 +1,53 @@
 "use client";
 
-import { useEffect } from "react";
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient, formatErrorToast } from "@megawin/next/client";
-import { Pagination } from "@megawin/shared/constants/pagination";
-import { toast } from "sonner";
-import { max3dKeys } from "@/lib/query-keys";
+import { useEffect, useEffectEvent } from "react";
+
 import type {
-  OpsSummaryOutput,
-  TenantBreakdownOutput,
-  TripletFrequencyOutput,
-  PlayTypeDistributionOutput,
-  GetLiveEntriesOutput,
-  GetDrawSelectorOutput,
-  GetTopCombosOutput,
-  GetWinningEntriesOutput,
-} from "@megawin/game-max3d-application/use-cases/operations";
-import type {
+  CreateDrawsOutput,
   GetDrawDetailOutput,
   PreviewDrawsOutput,
-  CreateDrawsOutput,
 } from "@megawin/game-max3d-application/use-cases/draws";
-import type { GetEntryByIdOutput } from "@megawin/game-max3d-application/use-cases/reports";
-
-export type {
-  OpsSummaryOutput,
-  TenantBreakdownOutput,
-  TenantBreakdownItem,
-  TripletFrequencyOutput,
-  TripletFrequencyItem,
-  PlayTypeDistributionOutput,
-  PlayTypeDistributionItem,
-  GetLiveEntriesOutput,
-  LiveEntryItem,
-  LiveEntryBoard,
+import type {
   GetDrawSelectorOutput,
-  DrawSelectorItem,
+  GetLiveEntriesOutput,
   GetTopCombosOutput,
-  TopSingleComboItem,
-  TopPlusComboItem,
   GetWinningEntriesOutput,
-  WinningEntryItem,
-  WinningEntryBoard,
-  WinningEntryTierDetail,
-  WinningEntriesSummary,
+  OpsSummaryOutput,
+  PlayTypeDistributionOutput,
+  TenantBreakdownOutput,
+  TripletFrequencyOutput,
 } from "@megawin/game-max3d-application/use-cases/operations";
+import type { GetEntryByIdOutput } from "@megawin/game-max3d-application/use-cases/reports";
+import { apiClient, formatErrorToast } from "@megawin/next/client";
+import { Pagination } from "@megawin/shared/constants/pagination";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { max3dKeys } from "@/lib/query-keys";
 
 export type { GetDrawDetailOutput } from "@megawin/game-max3d-application/use-cases/draws";
+export type {
+  DrawSelectorItem,
+  GetDrawSelectorOutput,
+  GetLiveEntriesOutput,
+  GetTopCombosOutput,
+  GetWinningEntriesOutput,
+  LiveEntryBoard,
+  LiveEntryItem,
+  OpsSummaryOutput,
+  PlayTypeDistributionItem,
+  PlayTypeDistributionOutput,
+  TenantBreakdownItem,
+  TenantBreakdownOutput,
+  TopPlusComboItem,
+  TopSingleComboItem,
+  TripletFrequencyItem,
+  TripletFrequencyOutput,
+  WinningEntriesSummary,
+  WinningEntryBoard,
+  WinningEntryItem,
+  WinningEntryTierDetail,
+} from "@megawin/game-max3d-application/use-cases/operations";
 
 export interface OpsQueryParams {
   financialDate?: string;
@@ -282,15 +283,17 @@ export function useWinningEntries(drawId: string | undefined, enabled: boolean) 
  * Chi tiết đầy đủ 1 entry theo entryId — dùng cho dialog xem chi tiết từ Winning Entries Dialog.
  * Tự động toast lỗi + gọi `onNotFound` khi entry không tồn tại hoặc lỗi tải.
  */
-export function useWinningEntryDetail(
-  entryId: string | null,
-  { onNotFound }: { onNotFound?: () => void } = {},
-) {
+export function useWinningEntryDetail(entryId: string | null, { onNotFound }: { onNotFound?: () => void } = {}) {
   const query = useQuery({
     queryKey: max3dKeys.reportEntryById(entryId ?? ""),
-    queryFn: () =>
-      apiClient.get<GetEntryByIdOutput>(`/max3d/reports/entries/${entryId}`).then((r) => r.entry),
+    queryFn: () => apiClient.get<GetEntryByIdOutput>(`/max3d/reports/entries/${entryId}`).then((r) => r.entry),
     enabled: !!entryId,
+  });
+
+  // useEffectEvent: đọc `onNotFound` mới nhất mà không cần khai báo dependency —
+  // callback không nên trigger effect chạy lại.
+  const onNotFoundEvent = useEffectEvent(() => {
+    onNotFound?.();
   });
 
   useEffect(() => {
@@ -299,14 +302,13 @@ export function useWinningEntryDetail(
       toast.error("Không thể tải thông tin phiếu cược", {
         description: "Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     } else if (query.isFetched && !query.isLoading && !query.data) {
       toast.error("Không tìm thấy phiếu cược", {
         description: "Phiếu cược này không còn dữ liệu hoặc đã bị xóa.",
       });
-      onNotFound?.();
+      onNotFoundEvent();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.isError, query.isFetched, query.isLoading, query.data, entryId]);
 
   return query;
@@ -325,9 +327,7 @@ function useDrawAction<TBody = void>(
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ drawId, body }: { drawId: string; body?: TBody }) =>
-      method === "post"
-        ? apiClient.post(actionPath(drawId), body)
-        : apiClient.patch(actionPath(drawId), body),
+      method === "post" ? apiClient.post(actionPath(drawId), body) : apiClient.patch(actionPath(drawId), body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: max3dKeys.all });
       toast.success(successMessage);
@@ -380,11 +380,7 @@ export function useTriggerResettle() {
 }
 
 export function useVoidDraw() {
-  return useDrawAction<{ reason: string }>(
-    (id) => `/max3d/draws/${id}/void`,
-    "post",
-    "Đã huỷ kỳ quay.",
-  );
+  return useDrawAction<{ reason: string }>((id) => `/max3d/draws/${id}/void`, "post", "Đã huỷ kỳ quay.");
 }
 
 export function useUpdateSchedule() {
